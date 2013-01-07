@@ -63,32 +63,6 @@ namespace hsm {
         ConstImageView<T> data, ConstImageView<int> mask, double& A, double& x0, double& y0,
         double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter);
 
-
-#define NSIG_RG   3.0
-#define NSIG_RG2  3.6
-#define REGAUSS_TOO_SMALL
-    // REGAUSS_TOO_SMALL: this prevents the re-Gaussianization PSF correction from completely
-    // failing at the beginning, before trying to do PSF correction, due to the crudest possible PSF
-    // correction (Gaussian approximation) suggesting that the galaxy is very small.  This could
-    // happen for some usable galaxies particularly when they have very non-Gaussian surface
-    // brightness profiles -- for example, if there's a prominent bulge that the adaptive moments
-    // attempt to fit, ignoring the more extended disk.  Setting REGAUSS_TOO_SMALL is useful for
-    // keeping galaxies that would have failed for that reason.  If they later turn out to be too
-    // small to really use, this will be reflected in the final estimate of the resolution factor,
-    // and they can be rejected after the fact.
-#define MAX_MOMENT_NSIG2 25.0
-    // MAX_MOMENT_NSIG2: if this is defined, then it's used to decide how many sigma^2 into the
-    // Gaussian adaptive moment to extend the moment calculation, with the weight being defined as 0
-    // beyond this point.  i.e., if MAX_MOMENT_NSIG2 is set to 25, then the Gaussian is extended to
-    // (r^2/sigma^2)=25, with proper accounting for elliptical geometry.  If this parameter is not
-    // defined, then the weight is never set to zero and the exponential function is always called.
-    // Note: GalSim script devel/modules/test_mom_timing.py was used to choose a value of 25 as being
-    // optimal, in that for the cases that were tested, the speedups were typically factors of
-    // several, but the results of moments and shear estimation were changed by <10^-5.  Not all
-    // possible cases were checked, and so for use of this code for unusual cases, it is recommended
-    // to either not define MAX_MOMENT_NSIG2 (no optimization at all), or to set up some more tests
-    // that can be done with various values of MAX_MOMENT_NSIG2.
-
     // Carry out PSF correction directly using ImageViews, repackaging for general_shear_estimator.
     template <typename T, typename U>
     CppHSMShapeData EstimateShearHSMView(
@@ -512,15 +486,11 @@ namespace hsm {
         double& x0, double& y0, double& sigma, double epsilon, int& num_iter) 
     {
 
-#define ADAPT_ORDER 2
-#define MAX_MOM2_ITER 400
-#define NUM_ITER_DEFAULT -1
-
         double sigma0 = sigma;
         double convergence_factor = 1; /* Ensure at least one iteration. */
 
         num_iter = 0;
-        tmv::Matrix<double> iter_moments(ADAPT_ORDER+1,ADAPT_ORDER+1);
+        tmv::Matrix<double> iter_moments(hsm::adapt_order+1,hsm::adapt_order+1);
 
 #ifdef N_CHECKVAL
         if (epsilon <= 0) {
@@ -532,7 +502,7 @@ namespace hsm {
         while(convergence_factor > epsilon) {
 
             /* Get moments */
-            find_mom_1(data,mask,iter_moments,ADAPT_ORDER,x0,y0,sigma);
+            find_mom_1(data,mask,iter_moments,hsm::adapt_order,x0,y0,sigma);
 
             /* Get updates to weight function */
             double dx     = 1.414213562373 * iter_moments(1,0) / iter_moments(0,0);
@@ -540,13 +510,12 @@ namespace hsm {
             double dsigma = 0.7071067811865
                 * (iter_moments(2,0)+iter_moments(0,2)) / iter_moments(0,0);
 
-#define BOUND_CORRECT_WEIGHT 0.25
-            if (dx     >  BOUND_CORRECT_WEIGHT) dx     =  BOUND_CORRECT_WEIGHT;
-            if (dx     < -BOUND_CORRECT_WEIGHT) dx     = -BOUND_CORRECT_WEIGHT;
-            if (dy     >  BOUND_CORRECT_WEIGHT) dy     =  BOUND_CORRECT_WEIGHT;
-            if (dy     < -BOUND_CORRECT_WEIGHT) dy     = -BOUND_CORRECT_WEIGHT;
-            if (dsigma >  BOUND_CORRECT_WEIGHT) dsigma =  BOUND_CORRECT_WEIGHT;
-            if (dsigma < -BOUND_CORRECT_WEIGHT) dsigma = -BOUND_CORRECT_WEIGHT;
+            if (dx     >  hsm::bound_correct_weight) dx     =  hsm::bound_correct_weight;
+            if (dx     < -hsm::bound_correct_weight) dx     = -hsm::bound_correct_weight;
+            if (dy     >  hsm::bound_correct_weight) dy     =  hsm::bound_correct_weight;
+            if (dy     < -hsm::bound_correct_weight) dy     = -hsm::bound_correct_weight;
+            if (dsigma >  hsm::bound_correct_weight) dsigma =  hsm::bound_correct_weight;
+            if (dsigma < -hsm::bound_correct_weight) dsigma = -hsm::bound_correct_weight;
 
             /* Convergence */
             convergence_factor = std::abs(dx)>std::abs(dy)? std::abs(dx): std::abs(dy);
@@ -558,9 +527,9 @@ namespace hsm {
             y0    += dy     * sigma;
             sigma += dsigma * sigma;
 
-            if (++num_iter > MAX_MOM2_ITER) {
+            if (++num_iter > hsm::max_mom2_iter) {
                 convergence_factor = 0.;
-                num_iter = NUM_ITER_DEFAULT;
+                num_iter = hsm::num_iter_default;
                 throw "Warning: too many iterations in find_mom_2.\n";
             }
         }
@@ -580,7 +549,7 @@ namespace hsm {
      *
      * where w(r) = exp(-rho^2/2), rho^2 = (x-x0) * M^{-1} * (y-y0),
      * M = adaptive covariance matrix, and note that the weight may be set to zero for rho^2 >
-     * MAX_MOMENT_NSIG2 if that parameter is defined.
+     * hsm::max_moment_nsig2 if that parameter is defined.
      *
      * Arguments:
      *   data: the input image (ImageView format)
@@ -652,8 +621,8 @@ namespace hsm {
                      */
                     double rho2 = Minv_yy__y_y0__y_y0 + TwoMinv_xy__y_y0*x_x0 + *(mxxptr++);
                     dbg<<"Using pixel: "<<x<<" "<<y<<" with value "<<*(imageptr)<<" rho2 "<<rho2<<" x_x0 "<<x_x0<<" y_y0 "<<y_y0<<std::endl;
-#ifdef MAX_MOMENT_NSIG2
-                    if (rho2 < MAX_MOMENT_NSIG2) {
+#ifdef hsm::max_moment_nsig2
+                    if (rho2 < hsm::max_moment_nsig2) {
 #endif
                         double intensity = std::exp(-0.5 * rho2) * *(imageptr++);
 
@@ -667,7 +636,7 @@ namespace hsm {
                         Cxy  += intensity__x_x0 * y_y0;
                         Cyy  += intensity__y_y0 * y_y0;
                         rho4w+= intensity * rho2 * rho2;
-#ifdef MAX_MOMENT_NSIG2
+#ifdef hsm::max_moment_nsig2
                     } else {
                         // if we are skipping this pixel because it's too far from center of
                         // Gaussian, then just increment the pointer to the next pixel in the image,
@@ -728,7 +697,7 @@ namespace hsm {
 
 #ifdef N_CHECKVAL
         if (epsilon <= 0) {
-            throw "Error: epsilon out of range in find_mom_2.\n";
+            throw "Error: epsilon out of range in find_ellipmom_2.\n";
         }
 #endif
 
@@ -757,16 +726,16 @@ namespace hsm {
             dxy = 4. * (Cxy/Amp - 0.5*Mxy) / semi_b2;
             dyy = 4. * (Cyy/Amp - 0.5*Myy) / semi_b2;
 
-            if (dx     >  BOUND_CORRECT_WEIGHT) dx     =  BOUND_CORRECT_WEIGHT;
-            if (dx     < -BOUND_CORRECT_WEIGHT) dx     = -BOUND_CORRECT_WEIGHT;
-            if (dy     >  BOUND_CORRECT_WEIGHT) dy     =  BOUND_CORRECT_WEIGHT;
-            if (dy     < -BOUND_CORRECT_WEIGHT) dy     = -BOUND_CORRECT_WEIGHT;
-            if (dxx    >  BOUND_CORRECT_WEIGHT) dxx    =  BOUND_CORRECT_WEIGHT;
-            if (dxx    < -BOUND_CORRECT_WEIGHT) dxx    = -BOUND_CORRECT_WEIGHT;
-            if (dxy    >  BOUND_CORRECT_WEIGHT) dxy    =  BOUND_CORRECT_WEIGHT;
-            if (dxy    < -BOUND_CORRECT_WEIGHT) dxy    = -BOUND_CORRECT_WEIGHT;
-            if (dyy    >  BOUND_CORRECT_WEIGHT) dyy    =  BOUND_CORRECT_WEIGHT;
-            if (dyy    < -BOUND_CORRECT_WEIGHT) dyy    = -BOUND_CORRECT_WEIGHT;
+            if (dx     >  hsm::bound_correct_weight) dx     =  hsm::bound_correct_weight;
+            if (dx     < -hsm::bound_correct_weight) dx     = -hsm::bound_correct_weight;
+            if (dy     >  hsm::bound_correct_weight) dy     =  hsm::bound_correct_weight;
+            if (dy     < -hsm::bound_correct_weight) dy     = -hsm::bound_correct_weight;
+            if (dxx    >  hsm::bound_correct_weight) dxx    =  hsm::bound_correct_weight;
+            if (dxx    < -hsm::bound_correct_weight) dxx    = -hsm::bound_correct_weight;
+            if (dxy    >  hsm::bound_correct_weight) dxy    =  hsm::bound_correct_weight;
+            if (dxy    < -hsm::bound_correct_weight) dxy    = -hsm::bound_correct_weight;
+            if (dyy    >  hsm::bound_correct_weight) dyy    =  hsm::bound_correct_weight;
+            if (dyy    < -hsm::bound_correct_weight) dyy    = -hsm::bound_correct_weight;
 
             /* Convergence tests */
             convergence_factor = std::abs(dx)>std::abs(dy)? std::abs(dx): std::abs(dy);
@@ -786,14 +755,13 @@ namespace hsm {
 
             /* If the moments have gotten too large, or the centroid is out of range,
              * report a failure */
-#define MAX_AMOMENT 8000.0
-#define MAX_ASHIFT 15.0
-            if (std::abs(Mxx)>MAX_AMOMENT || std::abs(Mxy)>MAX_AMOMENT || std::abs(Myy)>MAX_AMOMENT
-                || std::abs(x0-x00)>MAX_ASHIFT || std::abs(y0-y00)>MAX_ASHIFT) {
+            if (std::abs(Mxx)>hsm::max_amoment || std::abs(Mxy)>hsm::max_amoment
+                || std::abs(Myy)>hsm::max_amoment
+                || std::abs(x0-x00)>hsm::max_ashift || std::abs(y0-y00)>hsm::max_ashift) {
                 throw "Error: adaptive moment failed\n";
             }
 
-            if (++num_iter > MAX_MOM2_ITER) {
+            if (++num_iter > hsm::max_mom2_iter) {
                 throw "Error: too many iterations in adaptive moments\n";
             }
 
@@ -1107,8 +1075,6 @@ namespace hsm {
         double& sig_gal, double& flux_gal, double& x0_psf, double& y0_psf, double& sig_psf) 
     {
 
-#define KSB_MOMENTS_MAX 4
-
         unsigned int status = 0;
         int num_iter;
         double oT,oeQ,oeU,oegQ,oegU,opgQQ,opgQU,opgUQ,opgUU,oesQ,oesU,opsQQ,opsQU,opsUQ,opsUU;
@@ -1123,24 +1089,23 @@ namespace hsm {
         /* Initialize -- if we don't set the outputs, they will be reported
          * as failures.
          */
-#define FAILED_MOMENTS (-1000.0)
-        e1 = e2 = R = FAILED_MOMENTS;
+        e1 = e2 = R = hsm::failed_moments;
 
-        tmv::Matrix<double> moments(KSB_MOMENTS_MAX+1,KSB_MOMENTS_MAX+1);
-        tmv::Matrix<double> psfmoms(KSB_MOMENTS_MAX+1,KSB_MOMENTS_MAX+1);
+        tmv::Matrix<double> moments(hsm::ksb_moments_max+1,hsm::ksb_moments_max+1);
+        tmv::Matrix<double> psfmoms(hsm::ksb_moments_max+1,hsm::ksb_moments_max+1);
 
         /* Determine the adaptive variance of the measured galaxy */
         x0 = x0_gal;
         y0 = y0_gal;
         sigma0 = sig_gal;
-        find_mom_2(gal_image, gal_mask, moments, KSB_MOMENTS_MAX, x0_gal, y0_gal, sig_gal,
+        find_mom_2(gal_image, gal_mask, moments, hsm::ksb_moments_max, x0_gal, y0_gal, sig_gal,
                    1.0e-6, num_iter);
-        if (num_iter == NUM_ITER_DEFAULT) {
+        if (num_iter == hsm::num_iter_default) {
             status |= 0x0002; /* Report convergence failure */
             x0_gal = x0;
             y0_gal = y0;
             sig_gal = sigma0;
-            find_mom_1(gal_image, gal_mask, moments, KSB_MOMENTS_MAX, x0, y0, sigma0);
+            find_mom_1(gal_image, gal_mask, moments, hsm::ksb_moments_max, x0, y0, sigma0);
         }
         flux_gal = 3.544907701811 * sig_gal * moments(0,0);
 
@@ -1148,9 +1113,9 @@ namespace hsm {
         x0 = x0_psf;
         y0 = y0_psf;
         sigma0 = sig_psf;
-        find_mom_2(PSF_image, PSF_mask, psfmoms, KSB_MOMENTS_MAX, x0_psf, y0_psf, sig_psf,
+        find_mom_2(PSF_image, PSF_mask, psfmoms, hsm::ksb_moments_max, x0_psf, y0_psf, sig_psf,
                    1.0e-6, num_iter);
-        if (num_iter == NUM_ITER_DEFAULT) {
+        if (num_iter == hsm::num_iter_default) {
             status |= 0x0001; /* Report convergence failure */
             x0_psf = x0;
             y0_psf = y0;
@@ -1158,7 +1123,7 @@ namespace hsm {
         }
 
         /* ... but we want the moments with the galaxy weight fcn */
-        find_mom_1(PSF_image, PSF_mask, psfmoms, KSB_MOMENTS_MAX, x0_psf, y0_psf, sig_gal);
+        find_mom_1(PSF_image, PSF_mask, psfmoms, hsm::ksb_moments_max, x0_psf, y0_psf, sig_gal);
 
         /* Get resolution factor */
         R = 1. - (sig_psf*sig_psf)/(sig_gal*sig_gal);
@@ -1285,10 +1250,10 @@ namespace hsm {
      * flags:
      *   0x00000001: recompute galaxy flux by summing unmasked pixels
      *   0x00000002: recompute galaxy flux from Gaussian-quartic fit (overrides 0x00000001)
-     *   0x00000004: cut off Gaussian approximator at NSIG_RG sigma (saves computation time in
-     *      the convolution step)
-     *   0x00000008: cut off PSF residual at NSIG_RG2 sigma (saves computation time in
-     *      the convolution step)
+     *   0x00000004: cut off Gaussian approximator at hsm::nsig_rg sigma (saves computation time in
+     *               the convolution step)
+     *   0x00000008: cut off PSF residual at hsm::nsig_rg2 sigma (saves computation time in
+     *               the convolution step)
      *
      * Arguments:
      *   gal_image: image of the galaxy as measured (i.e. not deconvolved)
@@ -1327,9 +1292,7 @@ namespace hsm {
         double A_I, Mxxgal, Mxygal, Myygal, rho4gal;
         double Minvpsf_xx, Minvpsf_xy, Minvpsf_yy, detM, center_amp_psf;
         double dx, dy;
-#ifdef REGAUSS_TOO_SMALL
         double a2, b2, two_phi;
-#endif
         double x0_old=0., y0_old=0., Mfxx, Mfxy, Mfyy, detMf, Minvf_xx, Minvf_xy, Minvf_yy;
         double Tpsf, e1psf, e2psf;
         double Tgal, e1gal, e2gal;
@@ -1339,7 +1302,7 @@ namespace hsm {
         /* Initialize -- if we don't set the outputs, they will be reported
          * as failures.
          */
-        e1 = e2 = R = FAILED_MOMENTS;
+        e1 = e2 = R = hsm::failed_moments;
 
         /* Get the PSF flux */
         flux_psf = 0;
@@ -1363,7 +1326,7 @@ namespace hsm {
         find_ellipmom_2(PSF_image, PSF_mask, A_g, x0_psf, y0_psf, Mxxpsf, Mxypsf, Myypsf, rho4psf,
                         1.0e-6, num_iter);
 
-        if (num_iter == NUM_ITER_DEFAULT) {
+        if (num_iter == hsm::num_iter_default) {
             x0_psf = x0_old;
             y0_psf = y0_old;
             status |= 0x0001;
@@ -1375,7 +1338,7 @@ namespace hsm {
         find_ellipmom_2(gal_image, gal_mask, A_I, x0_gal, y0_gal, Mxxgal, Mxygal, Myygal, rho4gal,
                         1.0e-6, num_iter);
 
-        if (num_iter == NUM_ITER_DEFAULT) {
+        if (num_iter == hsm::num_iter_default) {
             x0_gal = x0_old;
             y0_gal = y0_old;
             status |= 0x0002;
@@ -1393,27 +1356,25 @@ namespace hsm {
         Mfxy = Mxygal - Mxypsf;
         Mfyy = Myygal - Myypsf;
         detMf = Mfxx * Mfyy - Mfxy * Mfxy;
-#ifndef REGAUSS_TOO_SMALL
-        if (Mfxx<=0 || Mfyy<=0 || detMf<=0) status |= 0x0004;
-#endif
-#ifdef REGAUSS_TOO_SMALL
+        if (hsm::regauss_too_small == 0) {
+            if (Mfxx<=0 || Mfyy<=0 || detMf<=0) status |= 0x0004;
+        } else {
 
-        /* Compute the semimajor and semiminor axes of Mf and the position angle */
-        two_phi = std::atan2(2*Mfxy, Mfxx-Mfyy);
-        a2 = 0.5 * ( Mfxx+Mfyy + (Mfxx-Mfyy)*std::cos(two_phi) ) + Mfxy*std::sin(two_phi);
-        b2 = Mfxx + Mfyy - a2;
+            /* Compute the semimajor and semiminor axes of Mf and the position angle */
+            two_phi = std::atan2(2*Mfxy, Mfxx-Mfyy);
+            a2 = 0.5 * ( Mfxx+Mfyy + (Mfxx-Mfyy)*std::cos(two_phi) ) + Mfxy*std::sin(two_phi);
+            b2 = Mfxx + Mfyy - a2;
 
-        /* Now impose restrictions to ensure this doesn't blow up */
-        if (a2<=0.25) a2=0.25;
-        if (b2<=0.25) b2=0.25;
+            /* Now impose restrictions to ensure this doesn't blow up */
+            if (a2<=0.25) a2=0.25;
+            if (b2<=0.25) b2=0.25;
 
-        /* Convert back to Mf matrix */
-        Mfxx = 0.5 * ( a2+b2 + (a2-b2)*std::cos(two_phi) );
-        Mfyy = 0.5 * ( a2+b2 - (a2-b2)*std::cos(two_phi) );
-        Mfxy = 0.5 * (a2-b2) * std::sin(two_phi);
-        detMf = Mfxx*Mfyy - Mfxy*Mfxy;
-
-#endif
+            /* Convert back to Mf matrix */
+            Mfxx = 0.5 * ( a2+b2 + (a2-b2)*std::cos(two_phi) );
+            Mfyy = 0.5 * ( a2+b2 - (a2-b2)*std::cos(two_phi) );
+            Mfxy = 0.5 * (a2-b2) * std::sin(two_phi);
+            detMf = Mfxx*Mfyy - Mfxy*Mfxy;
+        }
 
         /* Test to see if anything has gone wrong -- if so, complain! */
         if (status) return (status);
@@ -1428,16 +1389,16 @@ namespace hsm {
         fgauss_xsig = std::sqrt(Mfxx>1? Mfxx: 1);
         fgauss_ysig = std::sqrt(Mfyy>1? Mfyy: 1);
 
-        /* Shrink if the box extends beyond NSIG_RG sigma range */
+        /* Shrink if the box extends beyond hsm::nsig_rg sigma range */
         if (flags & 0x00000004) {
-            if (fgauss_xmin < fgauss_xctr - NSIG_RG*fgauss_xsig)
-                fgauss_xmin = (long) std::floor(fgauss_xctr - NSIG_RG*fgauss_xsig);
-            if (fgauss_xmax > fgauss_xctr + NSIG_RG*fgauss_xsig)
-                fgauss_xmax = (long) std::ceil (fgauss_xctr + NSIG_RG*fgauss_xsig);
-            if (fgauss_ymin < fgauss_yctr - NSIG_RG*fgauss_ysig)
-                fgauss_ymin = (long) std::floor(fgauss_yctr - NSIG_RG*fgauss_ysig);
-            if (fgauss_ymax > fgauss_yctr + NSIG_RG*fgauss_ysig)
-                fgauss_ymax = (long) std::ceil (fgauss_yctr + NSIG_RG*fgauss_ysig);
+            if (fgauss_xmin < fgauss_xctr - hsm::nsig_rg*fgauss_xsig)
+                fgauss_xmin = (long) std::floor(fgauss_xctr - hsm::nsig_rg*fgauss_xsig);
+            if (fgauss_xmax > fgauss_xctr + hsm::nsig_rg*fgauss_xsig)
+                fgauss_xmax = (long) std::ceil (fgauss_xctr + hsm::nsig_rg*fgauss_xsig);
+            if (fgauss_ymin < fgauss_yctr - hsm::nsig_rg*fgauss_ysig)
+                fgauss_ymin = (long) std::floor(fgauss_yctr - hsm::nsig_rg*fgauss_ysig);
+            if (fgauss_ymax > fgauss_yctr + hsm::nsig_rg*fgauss_ysig)
+                fgauss_ymax = (long) std::ceil (fgauss_yctr + hsm::nsig_rg*fgauss_ysig);
         }
 
         Minvf_xx =  Mfyy/detMf;
@@ -1463,19 +1424,19 @@ namespace hsm {
 
         /* Figure out the size of the bounding box for the PSF residual.
          * We don't necessarily need the whole PSF,
-         * just the part that will affect regions inside the NSIG_RG2 sigma ellipse 
+         * just the part that will affect regions inside the hsm::nsig_rg2 sigma ellipse 
          * of the Intensity.
          */
         Bounds<int> pbounds = PSF_image.getBounds();
         if (flags & 0x00000008) {
             int pxmin = (int) std::floor(
-                x0_psf - NSIG_RG2*std::sqrt(Mxxgal) - NSIG_RG*fgauss_xsig );
+                x0_psf - hsm::nsig_rg2*std::sqrt(Mxxgal) - hsm::nsig_rg*fgauss_xsig );
             int pxmax = (int) std::ceil (
-                x0_psf + NSIG_RG2*std::sqrt(Mxxgal) + NSIG_RG*fgauss_xsig );
+                x0_psf + hsm::nsig_rg2*std::sqrt(Mxxgal) + hsm::nsig_rg*fgauss_xsig );
             int pymin = (int) std::floor(
-                y0_psf - NSIG_RG2*std::sqrt(Myygal) - NSIG_RG*fgauss_ysig );
+                y0_psf - hsm::nsig_rg2*std::sqrt(Myygal) - hsm::nsig_rg*fgauss_ysig );
             int pymax = (int) std::ceil (
-                y0_psf + NSIG_RG2*std::sqrt(Myygal) + NSIG_RG*fgauss_ysig );
+                y0_psf + hsm::nsig_rg2*std::sqrt(Myygal) + hsm::nsig_rg*fgauss_ysig );
             if (PSF_image.getXMin() >= pxmin) pxmin = PSF_image.getXMin();
             if (PSF_image.getXMax() <= pxmax) pxmax = PSF_image.getXMax();
             if (PSF_image.getYMin() >= pymin) pymin = PSF_image.getYMin();
@@ -1515,7 +1476,7 @@ namespace hsm {
         /* Now that Iprime is constructed, we measure it */
         find_ellipmom_2(Iprime_cview, gal_mask, A_I, x0_gal, y0_gal, Mxxgal, Mxygal, Myygal,
                         rho4gal, 1.0e-6, num_iter);
-        if (num_iter == NUM_ITER_DEFAULT) {
+        if (num_iter == hsm::num_iter_default) {
             x0_gal = x0_old;
             y0_gal = y0_old;
             status |= 0x0008;
@@ -1581,7 +1542,7 @@ namespace hsm {
             Mxx_psf = Myy_psf = PSF_data.sigma * PSF_data.sigma; Mxy_psf = 0.;
             find_ellipmom_2(PSF_image, PSF_mask, A_psf, x0, y0, Mxx_psf, Mxy_psf, Myy_psf,
                             rho4_psf, 1.0e-6, num_iter);
-            if (num_iter == NUM_ITER_DEFAULT) {
+            if (num_iter == hsm::num_iter_default) {
                 return 1;
             } else {
                 PSF_data.x0 = x0;
@@ -1595,7 +1556,7 @@ namespace hsm {
             Mxx_gal = Myy_gal = gal_data.sigma * gal_data.sigma; Mxy_gal = 0.;
             find_ellipmom_2(gal_image, gal_mask, A_gal, x0, y0, Mxx_gal, Mxy_gal,
                             Myy_gal, rho4_gal, 1.0e-6, num_iter);
-            if (num_iter == NUM_ITER_DEFAULT) {
+            if (num_iter == hsm::num_iter_default) {
                 return 1;
             } else {
                 gal_data.x0 = x0;
