@@ -33,12 +33,13 @@ int verbose_level = 2;
 
 namespace galsim {
 
-    class SBCorrFunc::SBCorrFuncImpl: public SBInterpolatedImage::SBInterpolatedImageImpl
+    class CorrelationFunction::CorrelationFunctionImpl: 
+    public SBInterpolatedImage::SBInterpolatedImageImpl
     {
         public:
 
             template <typename T> 
-            SBCorrFuncImpl(
+            CorrelationFunctionImpl(
                 const BaseImage<T>& image, 
                 boost::shared_ptr<Interpolant2d> xInterp,
                 boost::shared_ptr<Interpolant2d> kInterp,
@@ -51,8 +52,8 @@ namespace galsim {
         private:
 
             // Copy constructor and op= are undefined.
-            SBCorrFuncImpl(const SBCorrFuncImpl& rhs);
-            void operator=(const SBCorrFuncImpl& rhs);
+            CorrelationFunctionImpl(const CorrelationFunctionImpl& rhs);
+            void operator=(const CorrelationFunctionImpl& rhs);
 
             const int _Ni; // dimension of input lookup table for correlation function along i
             const int _Nj; // ditto for j

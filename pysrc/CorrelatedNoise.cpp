@@ -6,7 +6,7 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBCorrFunc
+    struct PyCorrelationFunction
     {
 
         template <typename U, typename W>
@@ -23,27 +23,27 @@ namespace galsim {
                      ))
                .def(
                      "getCovarianceMatrix", (
-                         Image<double> (SBCorrFunc::*) (ImageView<U>, double) 
-                         const)&SBCorrFunc::getCovarianceMatrix, 
+                         Image<double> (CorrelationFunction::*) (ImageView<U>, double) 
+                         const)&CorrelationFunction::getCovarianceMatrix, 
                       (bp::arg("image"), bp::arg("dx")=0.))
                   ;
         }
 
         static void wrap() {
-            bp::class_< SBCorrFunc, bp::bases<SBProfile> > pySBCorrFunc(
-                "SBCorrFunc", bp::init<const SBCorrFunc &>()
+	  bp::class_< CorrelationFunction, bp::bases<SBInterpolatedImage> > pyCorrelationFunction(
+                "CorrelationFunction", bp::init<const CorrelationFunction &>()
             );
-            wrapTemplates<float>(pySBCorrFunc);
-            wrapTemplates<double>(pySBCorrFunc);
-            wrapTemplates<short>(pySBCorrFunc);
-            wrapTemplates<int>(pySBCorrFunc);
+            wrapTemplates<float>(pyCorrelationFunction);
+            wrapTemplates<double>(pyCorrelationFunction);
+            wrapTemplates<short>(pyCorrelationFunction);
+            wrapTemplates<int>(pyCorrelationFunction);
         }
 
     };
 
-    void pyExportSBCorrFunc() 
+    void pyExportCorrelationFunction() 
     {
-        PySBCorrFunc::wrap();
+        PyCorrelationFunction::wrap();
     }
 
 } // namespace galsim
