@@ -284,8 +284,67 @@ def test_masks():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_shearest_shape():
+    """Test that shear estimation is insensitive to shape of input images."""
+    # this test can help reveal bugs having to do with x / y indexing issues
+    import time
+    t1 = time.time()
+    # just do test for one particular gaussian
+    g1 = shear_values[1]
+    g2 = shear_values[2]
+    e1_psf = 0.05
+    e2_psf = -0.04
+    total_shear = np.sqrt(g1**2 + g2**2)
+    conversion_factor = np.tanh(2.0*math.atanh(total_shear))/total_shear
+    distortion_1 = g1*conversion_factor
+    distortion_2 = g2*conversion_factor
+    gal = galsim.Exponential(flux = 1.0, half_light_radius = 1.)
+    gal.applyShear(g1=g1, g2=g2)
+    psf = galsim.Kolmogorov(flux = 1.0, fwhm = 0.7)
+    psf.applyShear(e1=e1_psf, e2=e2_psf)
+    final = galsim.Convolve([gal, psf])
+
+    imsize = [128, 256]
+    for method_index in range(len(correction_methods)):
+        print correction_methods[method_index]
+
+        save_e1 = -100.
+        save_e2 = -100.
+        for gal_x_imsize in imsize:
+            for gal_y_imsize in imsize:
+                for psf_x_imsize in imsize:
+                    for psf_y_imsize in imsize:
+                        print gal_x_imsize, gal_y_imsize, psf_x_imsize, psf_y_imsize
+                        final_image = galsim.ImageF(gal_x_imsize, gal_y_imsize)
+                        epsf_image = galsim.ImageF(psf_x_imsize, psf_y_imsize)
+
+                        final_image = final.draw(image = final_image, dx = pixel_scale)
+                        epsf_image = psf.draw(image = epsf_image, dx = pixel_scale)
+                        result = galsim.EstimateShearHSM(final_image, epsf_image,
+                            shear_est = correction_methods[method_index])
+                        e1 = result.corrected_e1
+                        e2 = result.corrected_e2
+                        # make sure answers don't change as we vary image size
+
+                        tot_e = np.sqrt(save_e1**2 + save_e2**2)
+                        if tot_e < 99.:
+                            print "Testing!"
+                            np.testing.assert_almost_equal(e1, save_e1,
+                                err_msg = "- incorrect e1",
+                                decimal = decimal_shape)
+                            np.testing.assert_almost_equal(e2, save_e2,
+                                err_msg = "- incorrect e2",
+                                decimal = decimal_shape)
+                        print save_e1, save_e2, e1, e2
+                        save_e1 = e1
+                        save_e2 = e2
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_moments_basic()
     test_shearest_basic()
     test_shearest_precomputed()
     test_masks()
+    test_shearest_shape()
