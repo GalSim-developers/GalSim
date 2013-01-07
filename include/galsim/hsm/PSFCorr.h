@@ -362,7 +362,7 @@ namespace hsm {
      * result of the previous step as the weight function, and so on until the moments that are
      * measured are the same as those used for the weight function.
      * @param[in] data The Image for the object being measured.
-     * @param[in] data The mask Image for the object being measured  (integers: 1=use pixel, 0=do
+     * @param[in] mask The mask Image for the object being measured  (integers: 1=use pixel, 0=do
      *                 not use pixel).
      * @param[out] A The amplitude of the best-fit elliptical Gaussian (total image intensity for
      *             the Gaussian is 2A). 
