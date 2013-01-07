@@ -1396,7 +1396,6 @@ namespace hsm {
             if (fgauss_ymax > fgauss_yctr + hsm::nsig_rg*fgauss_ysig)
                 fgauss_ymax = (long) std::ceil (fgauss_yctr + hsm::nsig_rg*fgauss_ysig);
         }
-
         Minvf_xx =  Mfyy/detMf;
         Minvf_xy = -Mfxy/detMf;
         Minvf_yy =  Mfxx/detMf;
@@ -1406,9 +1405,9 @@ namespace hsm {
         for(int y=fgauss.getYMin();y<=fgauss.getYMax();y++) {
             for(int x=fgauss.getXMin();x<=fgauss.getXMax();x++) {
                 dx = x - x0_gal + x0_psf;
-                dy = y - y0_gal + x0_psf;
-                sum += fgauss(x,y) = 
-                    exp (-0.5 * ( Minvf_xx*dx*dx + Minvf_yy*dy*dy ) - Minvf_xy*dx*dy);
+                dy = y - y0_gal + y0_psf;
+                sum += fgauss(x,y) =
+                    std::exp (-0.5 * ( Minvf_xx*dx*dx + Minvf_yy*dy*dy ) - Minvf_xy*dx*dy);
             }
         }
 
@@ -1456,7 +1455,7 @@ namespace hsm {
 
                 if (PSF_mask(x,y))
                     PSF_resid(x,y) = -PSF_image(x,y) + center_amp_psf * 
-                        exp (-0.5 * ( Minvpsf_xx*dx*dx + Minvpsf_yy*dy*dy ) - Minvpsf_xy*dx*dy);
+                        std::exp (-0.5 * ( Minvpsf_xx*dx*dx + Minvpsf_yy*dy*dy ) - Minvpsf_xy*dx*dy);
             }
         }
 
