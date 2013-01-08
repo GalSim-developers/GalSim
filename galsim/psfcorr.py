@@ -138,6 +138,43 @@ class HSMShapeData(object):
             self.resolution_factor = -1.0
             self.error_message = ""
 
+# A helper function for taking input weight and badpix Images, and returning a weight Image in the
+# format that the C++ functions want
+def _convertWeight(image, weight = None, badpix = None):
+    """Convert from input weight and badpix images to a single mask image needed by C++ functions.
+
+       This is used by EstimateShearHSM and FindAdaptiveMom.
+    """
+    # if no weight image was supplied, make an int array (same size as gal image) filled with 1's
+    if weight == None:
+        weight = galsim.ImageI(bounds=gal_image.bounds, init_value=1)
+    else:
+        # if weight image was supplied, check if it has the right bounds
+        if weight.bounds != image.bounds:
+            raise ValueError("Weight image does not have same bounds as the input Image!")
+        # then check if it requires conversion, which is necessary if the weight image is not ints
+        if not isinstance(weight.view(), galsim.ImageViewI):
+            import numpy as np
+            orig_weight_arr = weight.array
+            weight_arr = np.zeros_like(orig_weight_arr)
+            weight_arr[orig_weight_arr > 0.] = 1
+            weight = galsim.ImageViewI(weight_arr.astype(np.int32))
+            if weight.bounds != image.bounds:
+                weight.shift(image.xmin-weight.xmin, image.ymin-weight.ymin)
+
+    # if badpix image was supplied, identify the nonzero (bad) pixels and set them to zero in weight
+    # image; also check bounds
+    if badpix != None:
+        if badpix.bounds != image.bounds:
+            raise ValueError("Badpix image does not have the same bounds as the input Image!")
+        import numpy as np
+        orig_weight_arr = weight.array
+        new_weight_arr = np.copy(orig_weight_arr)
+        new_weight_arr[badpix.array != 0] = 0
+        if weight.bounds != image.bounds:
+            weight.shift(image.xmin-weight.xmin, image.ymin-weight.ymin)
+    return weight
+
 def EstimateShearHSM(gal_image, PSF_image, weight = None, badpix = None, sky_var = 0.0,
                      shear_est = "REGAUSS", flags = 0xe, guess_sig_gal = 5.0, guess_sig_PSF = 3.0,
                      precision = 1.0e-6, guess_x_centroid = -1000.0, guess_y_centroid = -1000.0,
@@ -230,35 +267,13 @@ def EstimateShearHSM(gal_image, PSF_image, weight = None, badpix = None, sky_var
     """
     gal_image_view = gal_image.view()
     PSF_image_view = PSF_image.view()
-    # if no weight image was supplied, make an int array (same size as gal image) filled with 1's
-    if weight == None:
+
+    # if no weight or badpix image was supplied, make an int array (same size as gal image) filled
+    # with 1's
+    if weight == None and badpix == None:
         weight = galsim.ImageI(bounds=gal_image.bounds, init_value=1)
     else:
-        # if weight image was supplied, check if it has the right bounds
-        if weight.bounds != gal_image.bounds:
-            raise ValueError("Weight image does not have same bounds as the galaxy image!")
-        # then check if it requires conversion, which is necessary if the input weight image is not
-        # ints
-        if not isinstance(weight.view(), galsim.ImageViewI):
-            import numpy as np
-            orig_weight_arr = weight.view().array
-            weight_arr = np.zeros_like(orig_weight_arr)
-            weight_arr[orig_weight_arr > 0.] = 1
-            weight = galsim.ImageViewI(weight_arr.astype(np.int32))
-            weight.bounds = gal_image.bounds
-
-    # if badpix image was supplied, identify the nonzero (bad) pixels and set them to zero in weight
-    # image; also check bounds
-    if badpix != None:
-        if badpix.bounds != gal_image.bounds:
-            raise ValueError("Badpix image does not have the same bounds as the galaxy image!")
-        import numpy as np
-        orig_weight_arr = weight.view().array
-        new_weight_arr = np.copy(orig_weight_arr)
-        new_weight_arr[badpix.view().array != 0] = 0
-        weight = galsim.ImageViewI(new_weight_arr.astype(np.int32))
-        weight.bounds = gal_image.bounds
-
+        weight = _convertMask(gal_image, weight=weight, badpix=badpix)
     weight_view = weight.view()
     try:
         result = _galsim._EstimateShearHSMView(gal_image_view, PSF_image_view, weight_view,
@@ -338,35 +353,12 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
     @return                  A HSMShapeData object containing the results of moment measurement.
     """
     object_image_view = object_image.view()
-    # if no weight image was supplied, make an int array (same size as gal image) filled with 1's
-    if weight == None:
+    # if no weight or badpix image was supplied, make an int array (same size as gal image) filled
+    # with 1's
+    if weight == None and badpix == None:
         weight = galsim.ImageI(bounds=object_image.bounds, init_value=1)
     else:
-        # if weight image was supplied, check if it has the right bounds
-        if weight.bounds != object_image.bounds:
-            raise ValueError("Weight image does not have same bounds as image being measured!")
-        # then check if it requires conversion, which is necessary if the input weight image is not
-        # ints
-        if not isinstance(weight.view(), galsim.ImageViewI):
-            import numpy as np
-            orig_weight_arr = weight.view().array
-            weight_arr = np.zeros_like(orig_weight_arr)
-            weight_arr[orig_weight_arr > 0.] = 1
-            weight = galsim.ImageViewI(weight_arr.astype(np.int32))
-            weight.bounds = object_image.bounds
-
-    # if badpix image was supplied, identify the nonzero (bad) pixels and set them to zero in weight
-    # image; also check bounds
-    if badpix != None:
-        if badpix.bounds != object_image.bounds:
-            raise ValueError("Badpix image does not have the same bounds as image being measured!")
-        import numpy as np
-        orig_weight_arr = weight.view().array
-        new_weight_arr = np.copy(orig_weight_arr)
-        new_weight_arr[badpix.view().array != 0] = 0
-        weight = galsim.ImageViewI(new_weight_arr.astype(np.int32))
-        weight.bounds = object_image.bounds
-
+        weight = _convertMask(object_image, weight=weight, badpix=badpix)
     weight_view = weight.view()
 
     try:
