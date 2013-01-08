@@ -197,50 +197,54 @@ def test_masks():
     im = obj.draw(image = im, dx = my_pixscale)
     p_im = p.draw(image = p_im, dx = my_pixscale)
 
-    # make some screwy masks that should cause issues, and check that the exception is thrown
-    ## mask of floats
-    mask_im = galsim.ImageF(imsize, imsize)
-    np.testing.assert_raises(ValueError, galsim.FindAdaptiveMom, im, mask_im)
-    np.testing.assert_raises(ValueError, galsim.EstimateShearHSM, im, p_im, mask_im)
-    ## mask different size from image
-    mask_im = galsim.ImageI(imsize, 2*imsize)
-    np.testing.assert_raises(ValueError, galsim.FindAdaptiveMom, im, mask_im)
-    np.testing.assert_raises(ValueError, galsim.EstimateShearHSM, im, p_im, mask_im)
-    ## mask has weird values
-    mask_im = galsim.ImageI(imsize, imsize)-3
-    np.testing.assert_raises(ValueError, galsim.FindAdaptiveMom, im, mask_im)
-    np.testing.assert_raises(ValueError, galsim.EstimateShearHSM, im, p_im, mask_im)
-    ## mask excludes all pixels
-    mask_im = galsim.ImageI(imsize, imsize)
-    np.testing.assert_raises(RuntimeError, galsim.FindAdaptiveMom, im, mask_im)
-    np.testing.assert_raises(RuntimeError, galsim.EstimateShearHSM, im, p_im, mask_im)
+    # make some screwy weight and badpix images that should cause issues, and check that the
+    # exception is thrown
+    ## different size from image
+    weight_im = galsim.ImageI(imsize, 2*imsize)
+    good_weight_im = galsim.ImageI(imsize, imsize)+1
+    np.testing.assert_raises(ValueError, galsim.FindAdaptiveMom, im, weight_im)
+    np.testing.assert_raises(ValueError, galsim.EstimateShearHSM, im, p_im, weight_im)
+    badpix_im = galsim.ImageI(imsize, 2*imsize)
+    np.testing.assert_raises(ValueError, galsim.FindAdaptiveMom, im, badpix_im)
+    np.testing.assert_raises(ValueError, galsim.EstimateShearHSM, im, p_im, good_weight_im, badpix_im)
+    ## weird values
+    weight_im = galsim.ImageI(imsize, imsize)-3
+    np.testing.assert_raises(ValueError, galsim.FindAdaptiveMom, im, weight_im)
+    np.testing.assert_raises(ValueError, galsim.EstimateShearHSM, im, p_im, weight_im)
+    ## excludes all pixels
+    weight_im = galsim.ImageI(imsize, imsize)
+    np.testing.assert_raises(RuntimeError, galsim.FindAdaptiveMom, im, weight_im)
+    np.testing.assert_raises(RuntimeError, galsim.EstimateShearHSM, im, p_im, weight_im)
+    badpix_im = galsim.ImageI(imsize, imsize)-1
+    np.testing.assert_raises(RuntimeError, galsim.FindAdaptiveMom, im, good_weight_im, badpix_im)
+    np.testing.assert_raises(RuntimeError, galsim.EstimateShearHSM, im, p_im, good_weight_im, badpix_im)
 
     # check moments, shear without mask
     resm = im.FindAdaptiveMom()
     ress = galsim.EstimateShearHSM(im, p_im)
 
-    # check moments, shear with mask that includes all pixels
-    maskall1 = galsim.ImageI(imsize, imsize) + 1
-    resm_maskall1 = im.FindAdaptiveMom(maskall1)
-    ress_maskall1 = galsim.EstimateShearHSM(im, p_im, maskall1)
-    np.testing.assert_equal(resm.observed_shape.e1, resm_maskall1.observed_shape.e1,
-        err_msg="e1 from FindAdaptiveMom changes when using inclusive mask")
-    np.testing.assert_equal(resm.observed_shape.e2, resm_maskall1.observed_shape.e2,
-        err_msg="e2 from FindAdaptiveMom changes when using inclusive mask")
-    np.testing.assert_equal(resm.moments_sigma, resm_maskall1.moments_sigma,
-        err_msg="sigma from FindAdaptiveMom changes when using inclusive mask")
-    np.testing.assert_equal(ress.observed_shape.e1, ress_maskall1.observed_shape.e1,
-        err_msg="observed e1 from EstimateShearHSM changes when using inclusive mask")
-    np.testing.assert_equal(ress.observed_shape.e2, ress_maskall1.observed_shape.e2,
-        err_msg="observed e2 from EstimateShearHSM changes when using inclusive mask")
-    np.testing.assert_equal(ress.moments_sigma, ress_maskall1.moments_sigma,
-        err_msg="observed sigma from EstimateShearHSM changes when using inclusive mask")
-    np.testing.assert_equal(ress.corrected_e1, ress_maskall1.corrected_e1,
-        err_msg="corrected e1 from EstimateShearHSM changes when using inclusive mask")
-    np.testing.assert_equal(ress.corrected_e2, ress_maskall1.corrected_e2,
-        err_msg="corrected e2 from EstimateShearHSM changes when using inclusive mask")
-    np.testing.assert_equal(ress.resolution_factor, ress_maskall1.resolution_factor,
-        err_msg="resolution factor from EstimateShearHSM changes when using inclusive mask")
+    # check moments, shear with weight image that includes all pixels
+    weightall1 = galsim.ImageI(imsize, imsize) + 1
+    resm_weightall1 = im.FindAdaptiveMom(weightall1)
+    ress_weightall1 = galsim.EstimateShearHSM(im, p_im, weightall1)
+    np.testing.assert_equal(resm.observed_shape.e1, resm_weightall1.observed_shape.e1,
+        err_msg="e1 from FindAdaptiveMom changes when using inclusive weight")
+    np.testing.assert_equal(resm.observed_shape.e2, resm_weightall1.observed_shape.e2,
+        err_msg="e2 from FindAdaptiveMom changes when using inclusive weight")
+    np.testing.assert_equal(resm.moments_sigma, resm_weightall1.moments_sigma,
+        err_msg="sigma from FindAdaptiveMom changes when using inclusive weight")
+    np.testing.assert_equal(ress.observed_shape.e1, ress_weightall1.observed_shape.e1,
+        err_msg="observed e1 from EstimateShearHSM changes when using inclusive weight")
+    np.testing.assert_equal(ress.observed_shape.e2, ress_weightall1.observed_shape.e2,
+        err_msg="observed e2 from EstimateShearHSM changes when using inclusive weight")
+    np.testing.assert_equal(ress.moments_sigma, ress_weightall1.moments_sigma,
+        err_msg="observed sigma from EstimateShearHSM changes when using inclusive weight")
+    np.testing.assert_equal(ress.corrected_e1, ress_weightall1.corrected_e1,
+        err_msg="corrected e1 from EstimateShearHSM changes when using inclusive weight")
+    np.testing.assert_equal(ress.corrected_e2, ress_weightall1.corrected_e2,
+        err_msg="corrected e2 from EstimateShearHSM changes when using inclusive weight")
+    np.testing.assert_equal(ress.resolution_factor, ress_weightall1.resolution_factor,
+        err_msg="resolution factor from EstimateShearHSM changes when using inclusive weight")
 
     # check moments and shears with mask of edges, should be nearly the same
     # (this seems dumb, but it's helpful for keeping track of whether the pointers in the C++ code
