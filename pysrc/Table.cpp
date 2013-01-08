@@ -61,22 +61,25 @@ namespace {
             return new Table<double,double>(vargs,vvals,i);
         }
 
-        static bp::list convertVector(const std::vector<double>& v)
+        static bp::list convertGetArgs(const Table<double,double>& table)
         {
+            const std::vector<Table<double,double>::Entry>& v = table.getV();
             bp::list l;
-            for (size_t i=0; i!=v.size(); ++i) l.append(v[i]);
+            for (size_t i=0; i!=v.size(); ++i) l.append(v[i].arg);
             return l;
         }
 
-        static bp::list convertGetArgs(const Table<double,double>& table)
-        { return convertVector(table.getArgs()); }
-
         static bp::list convertGetVals(const Table<double,double>& table)
-        { return convertVector(table.getVals()); }
-
-        static std::string convertGetIType(const Table<double,double>& table)
         {
-            Table<double,double>::interpolant i = table.getIType();
+            const std::vector<Table<double,double>::Entry>& v = table.getV();
+            bp::list l;
+            for (size_t i=0; i!=v.size(); ++i) l.append(v[i].val);
+            return l;
+        }
+
+        static std::string convertGetInterp(const Table<double,double>& table)
+        {
+            Table<double,double>::interpolant i = table.getInterp();
             switch (i) {
                 case Table<double,double>::linear:
                      return std::string("linear");
@@ -114,7 +117,7 @@ namespace {
 
                 .def("getArgs", &convertGetArgs)
                 .def("getVals", &convertGetVals)
-                .def("getInterp", &convertGetIType)
+                .def("getInterp", &convertGetInterp)
                 .enable_pickling()
                 ;
         }

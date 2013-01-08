@@ -146,26 +146,11 @@ namespace galsim {
                 std::cout << p->arg << " " << p->val << std::endl; 
         }
 
-        std::vector<A> getArgs() const
-        {
-            const int n = v.size();
-            std::vector<A> args(n);
-            for (int i=0;i<n;++i) args[i] = v[i].arg;
-            return args;
-        }
-
-        std::vector<V> getVals() const
-        {
-            const int n = v.size();
-            std::vector<V> vals(n);
-            for (int i=0;i<n;++i) vals[i] = v[i].val;
-            return vals;
-        }
-
-        interpolant getIType() const { return iType; }
+        typedef TableEntry<V,A> Entry;
+        const std::vector<Entry>& getV() const { return v; }
+        interpolant getInterp() const { return iType; }
 
     private:
-        typedef TableEntry<V,A> Entry;
         typedef typename std::vector<Entry>::const_iterator citer;
         typedef typename std::vector<Entry>::iterator iter;
 
