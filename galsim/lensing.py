@@ -897,3 +897,64 @@ class NFWHalo(object):
             return mu[0]
         else:
             return [ m for m in mu ]
+
+class TabulatedPk(object):
+    """A class for storing a tabulated lensing power spectrum, for use by the lensing engine.
+
+    The TabulatedPk class uses the galsim LookupTable functionality to take some input P(k) that is
+    known at particular values of k, and interpolate it using spline interpolation.  Currently it is
+    the responsibility of the user to ensure that the power is defined for k down to zero, as is
+    required by the lensing engine.
+
+    @param k           The list of k values.
+    @param power       The list of P(k) values.
+    """
+    def __init__(self, k, power):
+        # make and store table
+        interp = 'spline'
+        self.table = galsim.LookupTable(k, power, interp)
+
+    def __call__(self, k):
+        """Interpolate the TabulatedPk to get power at some k value(s).
+
+        When the TabulatedPk object is called with a single argument, it returns the power at that
+        argument.  An exception will be thrown automatically by the LookupTable class if the k value
+        is outside the range of the original tabulated values.  The value that is returned is the
+        same type as that provided as an argument, e.g., if a single value k is provided then a
+        single value of P is returned; if a tuple of k values is provided then a tuple of P values
+        is returned; and so on.
+
+        @param k       The k value(s) for which the power should be calculated via interpolation on
+                       the original (k, P) lookup table.  k can be a single float/double, or a
+                       tuple, list, or arbitrarily shaped Numpy array.
+        @returns The power at the specified k value(s).
+        """
+        # figure out what we received, and return the same thing
+        # option 1: a Numpy array
+        if isinstance(k, np.ndarray):
+            dimen = len(k.shape)
+            if dimen > 2:
+                raise ValueError("Arrays with dimension larger than 2 not allowed!")
+            elif dimen == 2:
+                p = np.zeros_like(k)
+                for i in xrange(k.shape[1]):
+                    p[i,:] = np.fromiter((self.table(float(q)) for q in k[i,:]), dtype='float')
+            else:
+                p = np.fromiter((self.table(float(q)) for q in k), dtype='float')
+            return p
+        # option 2: a tuple
+        elif isinstance(k, tuple):
+            p = []
+            for q in k:
+                p.append(self.table(q))
+            return tuple(p)
+        # option 3: a list
+        elif isinstance(k, list):
+            p = []
+            for q in k:
+                p.append(self.table(q))
+            return p
+        # option 4: a single value
+        else:
+            # interpolate on table
+            return self.table(k)
