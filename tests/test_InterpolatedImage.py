@@ -250,9 +250,11 @@ def test_operations_simple():
     import time
     t1 = time.time()
 
-    # Make some nontrivial image that can be described in terms of sums and convolutions of GSObjects
+    # Make some nontrivial image that can be described in terms of sums and convolutions of
+    # GSObjects.  We want this to be somewhat hard to describe, but should be at least
+    # critically-sampled, so put in an Airy PSF.
     gal_flux = 1000.
-    pix_scale = 0.15 # arcsec
+    pix_scale = 0.03 # arcsec
     bulge_frac = 0.3
     bulge_hlr = 0.3 # arcsec
     bulge_e = 0.15
@@ -260,7 +262,11 @@ def test_operations_simple():
     disk_hlr = 0.6 # arcsec
     disk_e = 0.5
     disk_pos_angle = 60.*galsim.degrees
-    im_size = 256
+    lam = 800              # nm    NB: don't use lambda - that's a reserved word.
+    tel_diam = 2.4         # meters
+    lam_over_diam = lam * 1.e-9 / tel_diam # radians
+    lam_over_diam *= 206265  # arcsec
+    im_size = 512
 
     bulge = galsim.Sersic(4, half_light_radius=bulge_hlr)
     bulge.applyShear(e=bulge_e, beta=bulge_pos_angle)
@@ -268,8 +274,9 @@ def test_operations_simple():
     disk.applyShear(e=disk_e, beta=disk_pos_angle)
     gal = bulge_frac*bulge + (1.-bulge_frac)*disk
     gal.setFlux(gal_flux)
+    psf = galsim.Airy(lam_over_diam)
     pix = galsim.Pixel(pix_scale)
-    obj = galsim.Convolve(gal, pix)
+    obj = galsim.Convolve(gal, psf, pix)
     im = obj.draw(dx=pix_scale)
 
     # Turn it into an InterpolatedImage with default param settings
@@ -292,15 +299,11 @@ def test_operations_simple():
     new_bounds.shift((im_size-comp_region)/2, (im_size-comp_region)/2)
     im_sub = im.subImage(new_bounds)
     ref_im_sub = ref_im.subImage(new_bounds)
-    im_sub.write('im.fits')
-    ref_im_sub.write('ref_im.fits')
     diff_im=im_sub-ref_im_sub
-    diff_im.write('diff_im.fits')
     rel = diff_im/im_sub
-    rel.write('rel_im.fits')
     zeros_arr = np.zeros((comp_region, comp_region))
     # require relative difference to be smaller than some amount
-    np.testing.assert_array_almost_equal(rel.array, zeros_arr, 
+    np.testing.assert_array_almost_equal(rel.array, zeros_arr,
         test_decimal,
         err_msg='Sheared InterpolatedImage disagrees with reference')
 
@@ -320,34 +323,123 @@ def test_operations_simple():
     new_bounds.shift((im_size-comp_region)/2, (im_size-comp_region)/2)
     im_sub = im.subImage(new_bounds)
     ref_im_sub = ref_im.subImage(new_bounds)
-    im_sub.write('im.fits')
-    ref_im_sub.write('ref_im.fits')
     diff_im=im_sub-ref_im_sub
-    diff_im.write('diff_im.fits')
     rel = diff_im/im_sub
-    rel.write('rel_im.fits')
     zeros_arr = np.zeros((comp_region, comp_region))
     # require relative difference to be smaller than some amount
-    np.testing.assert_array_almost_equal(rel.array, zeros_arr, 
+    np.testing.assert_array_almost_equal(rel.array, zeros_arr,
         test_decimal,
         err_msg='Magnified InterpolatedImage disagrees with reference')
 
     # Rotate it, and compare with expectations from GSObjects directly
+    test_rot_angle = 32.*galsim.degrees
+    test_decimal=2 # in % difference, i.e. 2 means 1% agreement
+    comp_region=30 # compare the central region of this linear size
+    test_int_im = int_im.createRotated(test_rot_angle)
+    ref_obj = obj.createRotated(test_rot_angle)
+    # make large images
+    im = galsim.ImageD(im_size, im_size)
+    ref_im = galsim.ImageD(im_size, im_size)
+    im = test_int_im.draw(image=im, dx=pix_scale)
+    ref_im = ref_obj.draw(image=ref_im, dx=pix_scale)
+    # define subregion for comparison
+    new_bounds = galsim.BoundsI(1,comp_region,1,comp_region)
+    new_bounds.shift((im_size-comp_region)/2, (im_size-comp_region)/2)
+    im_sub = im.subImage(new_bounds)
+    ref_im_sub = ref_im.subImage(new_bounds)
+    diff_im=im_sub-ref_im_sub
+    rel = diff_im/im_sub
+    zeros_arr = np.zeros((comp_region, comp_region))
+    # require relative difference to be smaller than some amount
+    np.testing.assert_array_almost_equal(rel.array, zeros_arr,
+        test_decimal,
+        err_msg='Rotated InterpolatedImage disagrees with reference')
+
     # Shift it, and compare with expectations from GSObjects directly
+    x_shift = -0.31
+    y_shift = 0.87
+    test_decimal=2 # in % difference, i.e. 2 means 1% agreement
+    comp_region=30 # compare the central region of this linear size
+    test_int_im = int_im.createShifted(x_shift, y_shift)
+    ref_obj = obj.createShifted(x_shift, y_shift)
+    # make large images
+    im = galsim.ImageD(im_size, im_size)
+    ref_im = galsim.ImageD(im_size, im_size)
+    im = test_int_im.draw(image=im, dx=pix_scale)
+    ref_im = ref_obj.draw(image=ref_im, dx=pix_scale)
+    # define subregion for comparison
+    new_bounds = galsim.BoundsI(1,comp_region,1,comp_region)
+    new_bounds.shift((im_size-comp_region)/2, (im_size-comp_region)/2)
+    im_sub = im.subImage(new_bounds)
+    ref_im_sub = ref_im.subImage(new_bounds)
+    diff_im=im_sub-ref_im_sub
+    rel = diff_im/im_sub
+    zeros_arr = np.zeros((comp_region, comp_region))
+    # require relative difference to be smaller than some amount
+    np.testing.assert_array_almost_equal(rel.array, zeros_arr,
+        test_decimal,
+        err_msg='Shifted InterpolatedImage disagrees with reference')
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_operations():
     """Test of operations on complicated InterpolatedImage: shear, magnification, rotation, shifting."""
-    # Make some nontrivial image that is not analytic
-    # Shear by some amount and make sure change in moments is as expected
+    import time
+    t1 = time.time()
+    test_decimal = 3
+
+    # Make some nontrivial image
+    im = galsim.fits.read('./real_comparison_images/test_images.fits') # read in first real galaxy
+                                                                       # in test catalog
+    int_im = galsim.InterpolatedImage(im)
+    orig_mom = im.FindAdaptiveMom()
+
     # Magnify by some amount and make sure change is as expected
-    # Rotate, make sure change in moments is as expected
+    mag_scale = 0.92
+    new_int_im = int_im.createMagnified(mag_scale)
+    test_im = galsim.ImageF(im.bounds)
+    test_im = new_int_im.draw(image = test_im, dx = im.getScale())
+    new_mom = test_im.FindAdaptiveMom()
+    np.testing.assert_almost_equal(new_mom.moments_sigma/mag_scale, orig_mom.moments_sigma,
+        test_decimal,
+        err_msg = 'Size of magnified InterpolatedImage from HST disagrees with expectations')
+    np.testing.assert_almost_equal(new_mom.observed_shape.e1, orig_mom.observed_shape.e1,
+        test_decimal,
+        err_msg = 'e1 of magnified InterpolatedImage from HST disagrees with expectations')
+    np.testing.assert_almost_equal(new_mom.observed_shape.e2, orig_mom.observed_shape.e2,
+        test_decimal,
+        err_msg = 'e2 of magnified InterpolatedImage from HST disagrees with expectations')
+
     # Shift, make sure change in moments is as expected
+    x_shift = 0.92
+    y_shift = -0.16
+    new_int_im = int_im.createShifted(x_shift, y_shift)
+    test_im = galsim.ImageF(im.bounds)
+    test_im = new_int_im.draw(image = test_im, dx = im.getScale())
+    new_mom = test_im.FindAdaptiveMom()
+    np.testing.assert_almost_equal(new_mom.moments_sigma, orig_mom.moments_sigma,
+        test_decimal,
+        err_msg = 'Size of shifted InterpolatedImage from HST disagrees with expectations')
+    np.testing.assert_almost_equal(new_mom.moments_centroid.x-x_shift, orig_mom.moments_centroid.x,
+        test_decimal,
+        err_msg = 'x centroid of shifted InterpolatedImage from HST disagrees with expectations')
+    np.testing.assert_almost_equal(new_mom.moments_centroid.y-y_shift, orig_mom.moments_centroid.y,
+        test_decimal,
+        err_msg = 'y centroid of shifted InterpolatedImage from HST disagrees with expectations')
+    np.testing.assert_almost_equal(new_mom.observed_shape.e1, orig_mom.observed_shape.e1,
+        test_decimal,
+        err_msg = 'e1 of shifted InterpolatedImage from HST disagrees with expectations')
+    np.testing.assert_almost_equal(new_mom.observed_shape.e2, orig_mom.observed_shape.e2,
+        test_decimal,
+        err_msg = 'e2 of shifted InterpolatedImage from HST disagrees with expectations')
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_roundtrip()
     test_fluxnorm()
     test_exceptions()
     test_operations_simple()
-#    test_operations()
+    test_operations()
