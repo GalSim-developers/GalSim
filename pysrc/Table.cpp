@@ -1,6 +1,6 @@
 
-#include "boost/python.hpp" // header that includes Python.h always needs to come first
-#include "boost/python/stl_iterator.hpp"
+#include <boost/python.hpp> // header that includes Python.h always needs to come first
+#include <boost/python/stl_iterator.hpp>
 
 #include "Table.h"
 
@@ -61,21 +61,18 @@ namespace {
             return new Table<double,double>(vargs,vvals,i);
         }
 
-        static bp::list convertGetArgs(const Table<double,double>& table)
+        static bp::list convertVector(const std::vector<double>& v)
         {
-            bp::object get_iter = bp::iterator<std::vector<double> >();
-            bp::object iter = get_iter(table.getArgs());
-            bp::list l(iter);
+            bp::list l;
+            for (size_t i=0; i!=v.size(); ++i) l.append(v[i]);
             return l;
         }
 
-        static bp::object convertGetVals(const Table<double,double>& table)
-        {
-            bp::object get_iter = bp::iterator<std::vector<double> >();
-            bp::object iter = get_iter(table.getVals());
-            bp::list l(iter);
-            return l;
-        }
+        static bp::list convertGetArgs(const Table<double,double>& table)
+        { return convertVector(table.getArgs()); }
+
+        static bp::list convertGetVals(const Table<double,double>& table)
+        { return convertVector(table.getVals()); }
 
         static std::string convertGetIType(const Table<double,double>& table)
         {
@@ -115,8 +112,8 @@ namespace {
                 // Use version that throws expection if out of bounds
                 .def("__call__", &Table<double,double>::lookup) 
 
-                .def("getArgs", &Table<double,double>::getArgs)
-                .def("getVals", &Table<double,double>::getVals)
+                .def("getArgs", &convertGetArgs)
+                .def("getVals", &convertGetVals)
                 .def("getInterp", &convertGetIType)
                 .enable_pickling()
                 ;
