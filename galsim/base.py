@@ -1392,20 +1392,27 @@ class InterpolatedImage(GSObject):
 
     # Initialization parameters of the object, with type information
     # EDIT: update these as needed while coding this up
-    _req_params = { } #"image" : str}
+    _req_params = { 'image' : str }
     _opt_params = {
-        "interpolant" : str , # ??
-        "normalization" : str ,
-        "dx" : float ,
-        "flux" : float
-        }
+        'interpolant' : str ,
+        'normalization' : str ,
+        'dx' : float ,
+        'flux' : float
+    }
     _single_params = [ ]
 
     # --- Public Class methods ---
     def __init__(self, image, interpolant = None, normalization = 'flux', dx = None, flux = None,
                  pad_factor = 0.):
 
-        # make sure image is really an image
+        # first try to read the image as a file.  If its not either a string or a valid
+        # pyfits hdu or hdulist, then an exception will be raised, which we ignore and move on.
+        try:
+            image = galsim.fits.read(image)
+        except:
+            pass
+
+        # make sure image is really an image and has a float type
         if not isinstance(image, galsim.BaseImageF) and not isinstance(image, galsim.BaseImageD):
             raise ValueError("Supplied image is not an image of floats or doubles!")
 
@@ -1420,14 +1427,15 @@ class InterpolatedImage(GSObject):
         if interpolant == None:
             lan5 = galsim.Quintic(tol=1e-4)
             self.interpolant = galsim.InterpolantXY(lan5)
+        elif isinstance(interpolant, galsim.Interpolant2d):
+            self.interpolant = interpolant
+        elif isinstance(interpolant, galsim.Interpolant):
+            self.interpolant = galsim.InterpolantXY(interpolant)
         else:
-            if isinstance(interpolant, galsim.Interpolant):
-                self.interpolant = galsim.InterpolantXY(interpolant)
-            elif isinstance(interpolant, galsim.InterpolantXY):
-                self.interpolant = interpolant
-            else:
-                raise RuntimeError(
-                    'Specified interpolant is not an Interpolant or InterpolantXY instance!')
+            try:
+                self.interpolant = galsim.Interpolant2d(interpolant)
+            except:
+                raise RuntimeError('Specified interpolant is not valid!')
 
         # Check for input dx, and check whether Image already has one set.  At the end of this
         # code block, either an exception will have been raised, or the input image will have a
