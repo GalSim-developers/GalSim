@@ -40,26 +40,26 @@ namespace galsim {
      * @brief Class for storing 2D correlation functions represented by interpolation over a data
      * table/image.
      *
-     * This class inherits much from SBInterpolatedImage to store the 2D correlation function.
-     * The SBCorrFunc and SBInterpolatedImage classes represent a profile (supplied as an image),
-     * including rules for how to interpolate the profile between the supplied pixel values.  Many
-     * of the SBProfile methods are, however, disabled.
+     * This class inherits much (privately) from SBInterpolatedImage to store the 2D correlation 
+     * function.  The CorrelationFunction and SBInterpolatedImage classes represent a profile 
+     * (supplied as an image), including rules for how to interpolate the profile between the 
+     * supplied pixel values.  Many of the SBProfile methods are, however, not enabled.
      *
      * The input data table is assumed to be odd integer-sized in both dimensions (e.g. 31 x 31 or
      * 27 x 45) and centred on the central pixel.
      *
-     * SBCorrFunc also imposes two-fold rotational symmetry: all pixels in the positive
+     * CorrelationFunction also imposes two-fold rotational symmetry: all pixels in the positive
      * region of the input image above the line y = 0 will be ignored.  The reason we use the 
      * y-negative part of the input image is due to the way that the SBInterpolated image defines 
      * the center of the distribution.  However, in order for this simple prescription to work
      * requires input data tables with odd numbered dimensions, as discussed here
      * https://github.com/GalSim-developers/GalSim/pull/329#discussion-diff-2381280  
      *
-     * The SBCorrFunc therefore checks to see whether the input data table is odd dimensioned, and
-     * will throw an ImageError if not.  In GalSim, the SBCorrFunc is used by the CorrFunc class to
-     * store correlation functions based on both even and odd sized images: within the `__init__`
-     * function this class copies symmetric lookup table data to ensure that all the inputs to the
-     * SBCorrFunc are odd integer in each dimension.
+     * The CorrelationFunction therefore checks to see whether the input data table is odd
+     * dimensioned, and will throw an ImageError if not.  In GalSim, the CorrelationFunction is used
+     * by the CorrFunc class to store correlation functions based on both even and odd sized images:
+     * within the `__init__` function this class copies symmetric lookup table data to ensure that
+     * all the inputs to the CorrelationFunction are odd integer in each dimension.
      *
      * It is also assumed that the input image oversamples the correlation function profile they 
      * represent.  maxK() is set at the Nyquist frequency of the input image, although it should be
@@ -89,7 +89,7 @@ namespace galsim {
      * There are also optional arguments for the pixel size (default is to get it from
      * the image), and a factor by which to pad the image (default = 4).
      */
-    class SBCorrFunc: public SBInterpolatedImage
+    class CorrelationFunction: private SBInterpolatedImage
     {
     public:
         /** 
@@ -108,17 +108,22 @@ namespace galsim {
          *                      the Fourier transform (default `pad_factor = 4`)
          */
         template <typename T>
-        SBCorrFunc(
+        CorrelationFunction(
             const BaseImage<T>& image,
             boost::shared_ptr<Interpolant2d> xInterp = sbp::defaultXInterpolant2d,
             boost::shared_ptr<Interpolant2d> kInterp = sbp::defaultKInterpolant2d,
            double dx=0., double pad_factor=0.);
 
         /// @brief Copy Constructor.
-        SBCorrFunc(const SBCorrFunc& rhs);
+        CorrelationFunction(const CorrelationFunction& rhs);
 
         /// @brief Destructor
-        ~SBCorrFunc();
+        ~CorrelationFunction();
+
+      using SBInterpolatedImage::xValue;
+      using SBInterpolatedImage::kValue;
+      using SBInterpolatedImage::draw;
+      using SBInterpolatedImage::drawShoot;
 
         /** 
          * @brief Return value of correlation function at a chosen 2D position in real space.
@@ -165,7 +170,7 @@ namespace galsim {
 
     protected:
 
-        class SBCorrFuncImpl;
+        class CorrelationFunctionImpl;
 
          /**
          * @brief Return, as a TMV SymMatrix, a noise covariance matrix between every element in 

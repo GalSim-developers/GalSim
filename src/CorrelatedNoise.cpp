@@ -30,18 +30,20 @@ int verbose_level = 2;
 namespace galsim {
 
     template <typename T>
-    SBCorrFunc::SBCorrFunc(
+    CorrelationFunction::CorrelationFunction(
         const BaseImage<T>& image,
         boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
         double dx, double pad_factor) :
-        SBInterpolatedImage(new SBCorrFuncImpl(image,xInterp,kInterp,dx,pad_factor)) {}
+        SBInterpolatedImage(new CorrelationFunctionImpl(image,xInterp,kInterp,dx,pad_factor)) {}
 
-    SBCorrFunc::SBCorrFunc(const SBCorrFunc& rhs) : SBInterpolatedImage(rhs) {}
+    CorrelationFunction::CorrelationFunction(
+        const CorrelationFunction& rhs
+    ) : SBInterpolatedImage(rhs) {}
   
-    SBCorrFunc::~SBCorrFunc() {}
+    CorrelationFunction::~CorrelationFunction() {}
 
     template <typename T>
-    SBCorrFunc::SBCorrFuncImpl::SBCorrFuncImpl(
+    CorrelationFunction::CorrelationFunctionImpl::CorrelationFunctionImpl(
         const BaseImage<T>& image, 
         boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
         double dx, double pad_factor) :
@@ -49,20 +51,20 @@ namespace galsim {
         _Ni(1 + image.getXMax() - image.getXMin()), _Nj(1 + image.getYMax() - image.getYMin())
         { initialize(); }
 
-    void SBCorrFunc::SBCorrFuncImpl::initialize()
+    void CorrelationFunction::CorrelationFunctionImpl::initialize()
     {
         dbg<<"Initializing image with _Ni, _Nj = "<<_Ni<<", "<<_Nj<<std::endl;
         // Perform a check for the oddness of both dimensions of the input lookup table
         if (( _Ni % 2 == 0 ) | ( _Nj % 2 == 0) ) { 
             throw ImageError(
-                "Input lookup table is not odd in both dimensions as required for the SBCorrFunc"
+                "Input lookup table is not odd in both dimensions as required"
             );
         }
     }
 
     // Covariance matrix calculation using the dimensions of an input image, and a scale dx
     template <typename T>
-    Image<double> SBCorrFunc::getCovarianceMatrix(ImageView<T> image, double dx) const
+    Image<double> CorrelationFunction::getCovarianceMatrix(ImageView<T> image, double dx) const
     {
         // Calculate the required dimensions of the input image
         int idim = 1 + image.getXMax() - image.getXMin();
@@ -83,7 +85,9 @@ namespace galsim {
     }
 
     template <typename T>
-    tmv::SymMatrix<double, tmv::FortranStyle|tmv::Upper> SBCorrFunc::getCovarianceSymMatrix(
+    tmv::SymMatrix<
+        double, tmv::FortranStyle|tmv::Upper
+    > CorrelationFunction::getCovarianceSymMatrix(
         ImageView<T> image, double dx) const
     {
          // Calculate the required dimensions
@@ -121,7 +125,7 @@ namespace galsim {
     /* Here we redefine the xValue (as compared to the SBProfile version) to enforce two-fold
      * rotational symmetry.
      */
-    double SBCorrFunc::SBCorrFuncImpl::xValue(const Position<double>& p) const 
+    double CorrelationFunction::CorrelationFunctionImpl::xValue(const Position<double>& p) const 
     {
         /*
          * Here we do some case switching to access only part of the stored data table, enforcing
@@ -144,7 +148,7 @@ namespace galsim {
         }
     }
 
-    std::complex<double> SBCorrFunc::SBCorrFuncImpl::kValue(
+    std::complex<double> CorrelationFunction::CorrelationFunctionImpl::kValue(
         const Position<double> &p) const
     {
         const double TWOPI = 2.*M_PI;
@@ -166,39 +170,39 @@ namespace galsim {
     }
 
     // instantiate template functions for expected image types
-    template SBCorrFunc::SBCorrFunc(
+    template CorrelationFunction::CorrelationFunction(
         const BaseImage<float>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
-    template SBCorrFunc::SBCorrFunc(
+    template CorrelationFunction::CorrelationFunction(
         const BaseImage<double>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
-    template SBCorrFunc::SBCorrFunc(
+    template CorrelationFunction::CorrelationFunction(
         const BaseImage<int>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
-    template SBCorrFunc::SBCorrFunc(
+    template CorrelationFunction::CorrelationFunction(
         const BaseImage<short>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
 
-    template SBCorrFunc::SBCorrFuncImpl::SBCorrFuncImpl(
+    template CorrelationFunction::CorrelationFunctionImpl::CorrelationFunctionImpl(
         const BaseImage<float>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
-    template SBCorrFunc::SBCorrFuncImpl::SBCorrFuncImpl(
+    template CorrelationFunction::CorrelationFunctionImpl::CorrelationFunctionImpl(
         const BaseImage<double>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
-    template SBCorrFunc::SBCorrFuncImpl::SBCorrFuncImpl(
+    template CorrelationFunction::CorrelationFunctionImpl::CorrelationFunctionImpl(
         const BaseImage<int>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
-    template SBCorrFunc::SBCorrFuncImpl::SBCorrFuncImpl(
+    template CorrelationFunction::CorrelationFunctionImpl::CorrelationFunctionImpl(
         const BaseImage<short>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
 
-    template Image<double> SBCorrFunc::getCovarianceMatrix(
+    template Image<double> CorrelationFunction::getCovarianceMatrix(
         ImageView<float> image, double dx) const;
-    template Image<double> SBCorrFunc::getCovarianceMatrix(
+    template Image<double> CorrelationFunction::getCovarianceMatrix(
         ImageView<double> image, double dx) const;
-    template Image<double> SBCorrFunc::getCovarianceMatrix(
+    template Image<double> CorrelationFunction::getCovarianceMatrix(
         ImageView<int> image, double dx) const;
-    template Image<double> SBCorrFunc::getCovarianceMatrix(
+    template Image<double> CorrelationFunction::getCovarianceMatrix(
         ImageView<short> image, double dx) const;
 
 }
