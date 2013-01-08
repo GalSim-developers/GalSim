@@ -2,7 +2,7 @@
 """@brief Tests of the LookupTable class.
 
 Compares interpolated values a LookupTable that were created using a previous version of
-the code (commit: 4d71631d7379f76bb0e3ee582b5a1fbdc0def666), using the
+the code (commit: e267f058351899f1f820adf4d6ab409d5b2605d5), using the
 script devutils/external/make_table_testarrays.py
 """
 import os

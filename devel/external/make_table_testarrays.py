@@ -7,7 +7,7 @@ import os
 # Tabulate some interpolated values to use as a regression test for Table.h.
 #
 # To re-run this script:
-# - First type `git checkout c601a85034f89bba5d608ab6b2944f4f5f168491`
+# - First type `git checkout e267f058351899f1f820adf4d6ab409d5b2605d5`
 # - Type `scons install` in the main GalSim directory.
 # - Then type `python make_table_testarrays.py` in this directory.
 
