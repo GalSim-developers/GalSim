@@ -405,7 +405,6 @@ def test_output_generation_basic():
     ncf.applyNoiseTo(outimage, dx=1., dev=glob_ud)
     # Summed (average) CorrFuncs should be approximately equal to the input, so average multiple CFs
     ncf_2ndlevel = galsim.correlatednoise.CorrFunc(outimage, dx=1.)
-    nsum_test = 5
     for i in range(nsum_test - 1):
         # Then repeat
         outimage.setZero()
@@ -432,7 +431,7 @@ def test_output_generation_rotated():
     # well at 2dp.
     # TODO: I'd like to understand more about the former behaviour though...
     ncf = galsim.correlatednoise.CorrFunc(
-        ynoise_xlarge, dx=1., interpolant=galsim.Quintic(tol=1.e-4))
+        ynoise_xlarge, dx=1., interpolant=galsim.Linear(tol=1.e-4))
     # Then loop over some angles
     angles = [28.7 * galsim.degrees, 135. * galsim.degrees]
     for angle in angles:
