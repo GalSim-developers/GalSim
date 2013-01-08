@@ -154,6 +154,11 @@ This will then update your directory tree to the snapshot of the code at the
 milestone requested.  (You will also get a message about being in a "detached" 
 HEAD state.  That is normal.)
 
+For a version history and a description of how the current version of the code
+differs from the last tagged version, see HISTORY.md and CHANGELOG.md
+(respectively).  These files are found in the main GalSim directory, and are
+also displayed on our wiki which is linked above.
+
 
 Summary of current capabilities
 -------------------------------
