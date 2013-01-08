@@ -431,8 +431,14 @@ def test_output_generation_rotated():
     # well at 2dp.
     # TODO: I'd like to understand more about the former behaviour though...
     ncf = galsim.correlatednoise.CorrFunc(
-        ynoise_xlarge, dx=1., interpolant=galsim.Linear(tol=1.e-4))
-    # Then loop over some angles
+        ynoise_xlarge, dx=1., interpolant=galsim.Linear(tol=1.e-4)) # non-default bilinear
+                                                                    # interpolation gives best
+                                                                    # results, clearly the inability
+                                                                    # to zero-pad these images is
+                                                                    # making the interpolant choice
+                                                                    # important, and results will
+                                                                    # depend on the interpolatant's
+                                                                    # support.                          # Then loop over some angles
     angles = [28.7 * galsim.degrees, 135. * galsim.degrees]
     for angle in angles:
         ncf_rot = ncf.createRotated(angle)
@@ -453,13 +459,6 @@ def test_output_generation_rotated():
         # Then draw the summed CF to an image for comparison 
         testim = galsim.ImageD(smallim_size * 2, smallim_size * 2)
         ncf_2ndlevel.draw(testim, dx=1.)
-        #import matplotlib.pyplot as plt
-        #plt.pcolor(refim.array); plt.colorbar()
-        #plt.figure()
-        #plt.pcolor(testim.array); plt.colorbar()
-        #plt.figure()
-        #plt.pcolor(testim.array - refim.array); plt.colorbar()
-        #plt.show()
         np.testing.assert_array_almost_equal(
             testim.array, refim.array, decimal=decimal_approx,
             err_msg="Generated noise field (rotated) does not match input correlation properties.")
