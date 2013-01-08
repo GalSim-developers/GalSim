@@ -529,6 +529,58 @@ def test_realgalaxy():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
+def test_interpolated_image():
+    """Test various ways to build an InterpolatedImage
+    """
+    import time
+    t1 = time.time()
+
+    imgdir = 'SBProfile_comparison_images'
+    file_name = os.path.join(imgdir,'gauss_smallshear.fits')
+    config = {
+        'gal1' : { 'type' : 'InterpolatedImage',
+                   'image' : file_name },
+        'gal2' : { 'type' : 'InterpolatedImage',
+                   'image' : file_name,
+                   'interpolant' : 'linear' },
+        'gal3' : { 'type' : 'InterpolatedImage',
+                   'image' : file_name,
+                   'interpolant' : 'cubic',
+                   'normalization' : 'sb',
+                   'flux' : 1.e4 },
+        'gal4' : { 'type' : 'InterpolatedImage',
+                   'image' : file_name,
+                   'interpolant' : 'lanczos5',
+                   'dx' : 0.7,
+                   'flux' : 1.e5 },
+    }
+
+    gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
+    im = galsim.fits.read(file_name)
+    gal1b = galsim.InterpolatedImage(im)
+    gsobject_compare(gal1a, gal1b)
+
+    gal2a = galsim.config.BuildGSObject(config, 'gal2')[0]
+    interp = galsim.InterpolantXY(galsim.Linear())
+    gal2b = galsim.InterpolatedImage(im, interpolant=interp)
+    gsobject_compare(gal2a, gal2b)
+
+    gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
+    interp = galsim.InterpolantXY(galsim.Cubic())
+    gal3b = galsim.InterpolatedImage(im, interpolant=interp, normalization='surface brightness')
+    gal3b.setFlux(1.e4)
+    gsobject_compare(gal3a, gal3b)
+
+    gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
+    interp = galsim.InterpolantXY(galsim.Lanczos(n=5,conserve_flux=True))
+    gal4b = galsim.InterpolatedImage(im, interpolant=interp, dx=0.7)
+    gal4b.setFlux(1.e5)
+    gsobject_compare(gal4a, gal4b)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 def test_add():
     """Test various ways to build a Add
     """
@@ -829,6 +881,7 @@ if __name__ == "__main__":
     test_sersic()
     test_devaucouleurs()
     test_realgalaxy()
+    test_interpolated_image()
     test_add()
     test_convolve()
     test_list()
