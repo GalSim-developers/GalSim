@@ -7,6 +7,7 @@ script devutils/external/make_table_testarrays.py
 """
 import os
 import numpy as np
+import pickle
 
 path, filename = os.path.split(__file__) # Get the path to this file for use below...
 try:
@@ -69,6 +70,40 @@ def test_table():
         np.testing.assert_array_almost_equal(ref2, testvals2, DECIMAL,
                 err_msg="Interpolated values from LookupTable do not match saved "+
                 "data for non-evenly-spaced args, with interpolant %s."%interp)
+
+        # Check that out of bounds arguments raise an exception:
+        try:
+            np.testing.assert_raises(RuntimeError,table1,args1[0]-0.01)
+            np.testing.assert_raises(RuntimeError,table1,args1[-1]+0.01)
+            np.testing.assert_raises(RuntimeError,table2,args2[0]-0.01)
+            np.testing.assert_raises(RuntimeError,table2,args2[-1]+0.01)
+        except ImportError:
+            print 'The assert_raises tests require nose'
+
+        # These shouldn't raise any exception:
+        table1(args1[0]+0.01)
+        table1(args1[-1]-0.01)
+        table2(args2[0]+0.01)
+        table2(args2[-1]-0.01)
+
+        # Check that a LookupTable is picklable.
+        p1 = pickle.dumps(table1)
+        table1x = pickle.loads(p1)
+        np.testing.assert_equal(table1.getArgs(), table1x.getArgs(),
+                err_msg="Pickled LookupTable does not preserve correct args")
+        np.testing.assert_equal(table1.getVals(), table1x.getVals(),
+                err_msg="Pickled LookupTable does not preserve correct vals")
+        np.testing.assert_equal(table1.getInterp(), table1x.getInterp(),
+                err_msg="Pickled LookupTable does not preserve correct interp")
+
+        p2 = pickle.dumps(table2)
+        table2x = pickle.loads(p2)
+        np.testing.assert_equal(table2.getArgs(), table2x.getArgs(),
+                err_msg="Pickled LookupTable does not preserve correct args")
+        np.testing.assert_equal(table2.getVals(), table2x.getVals(),
+                err_msg="Pickled LookupTable does not preserve correct vals")
+        np.testing.assert_equal(table2.getInterp(), table2x.getInterp(),
+                err_msg="Pickled LookupTable does not preserve correct interp")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
