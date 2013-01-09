@@ -9,8 +9,8 @@ _galsim.LookupTable.__doc__ = """
     LookupTable represents a lookup table to store function values that may be slow to calculate,
     for which interpolating from a lookup table is sufficiently accurate.
 
-    A LookupTable is constructed from two arrays and a string indicating what kind of 
-    interpolation to use.
+    A LookupTable is constructed from two arrays (lists, tuples, or Numpy arrays of floats/doubles)
+    and a string indicating what kind of interpolation to use.
 
         args = [...]
         vals = []
