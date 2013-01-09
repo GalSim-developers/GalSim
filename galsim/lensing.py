@@ -902,17 +902,23 @@ class TabulatedPk(object):
     """A class for storing a tabulated lensing power spectrum, for use by the lensing engine.
 
     The TabulatedPk class uses the galsim LookupTable functionality to take some input P(k) that is
-    known at particular values of k, and interpolate it using spline interpolation.  Currently it is
-    the responsibility of the user to ensure that the power is defined for k down to zero, as is
+    known at particular values of k, and interpolate it to other values of k.  Currently it is the
+    responsibility of the user to ensure that the power is defined for k down to zero, as is
     required by the lensing engine.
 
-    @param k           The list of k values.
-    @param power       The list of P(k) values.
+    @param k             The list of k values.
+    @param power         The list of P(k) values.
+    @param interpolant   The interpolant to use, with the options being 'spline', 'linear', 'ceil',
+                         and 'floor' [Default: 'spline'].
     """
-    def __init__(self, k, power):
+    def __init__(self, k, power, interpolant = None):
         # make and store table
-        interp = 'spline'
-        self.table = galsim.LookupTable(k, power, interp)
+        if interpolant is None:
+            interpolant = 'spline'
+        else:
+            if interpolant not in ['spline', 'linear', 'ceil', 'floor']:
+                raise ValueError("Unknown interpolant: %s" % interpolant)
+        self.table = galsim.LookupTable(k, power, interpolant)
 
     def __call__(self, k):
         """Interpolate the TabulatedPk to get power at some k value(s).
