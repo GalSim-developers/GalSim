@@ -147,8 +147,8 @@ def write(image, fits, add_wcs=True, clobber=True, compression='auto'):
                         'gzip' = use gzip to compress the full file
                         'bzip2' = use bzip2 to compress the full file
                         'gzip_tile' = use gzip in tiles (preserves header readability)
-                        'hcompress' = use hcompress in tiles
-                        'plio' = use plio compression in tiles (only valid on pos integer data)
+                        'hcompress' = use hcompress in tiles (only valid for 2-d images)
+                        'plio' = use plio compression in tiles (only valid for pos integer data)
                         'auto' = determine the compression from the extension of the file name
                             (requires fits to be a string).  
                             '*.fz' => 'rice'

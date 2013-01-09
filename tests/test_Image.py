@@ -203,6 +203,10 @@ def test_Image_FITS_IO():
         # Test various compression schemes
         #
 
+        # These tests are a bit slow, so we only bother to run them for the first dtype.
+        # When working on the code, it is a good idea to comment out this line.
+        if i > 0: continue
+
         # Test full-file gzip
         test_file = os.path.join(datadir, "test"+tchar[i]+".fits.gz")
         test_image = galsim.fits.read(test_file, compression='gzip')
@@ -266,9 +270,28 @@ def test_Image_FITS_IO():
         np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array, 
                 err_msg="Image"+tchar[i]+" write failed for auto rice")
 
+        # Test gzip_tile
+        test_file = os.path.join(datadir, "test"+tchar[i]+"_internal.fits.gzt")
+        ref_image.write(test_file, compression='gzip_tile')
+        test_image = galsim.fits.read(test_file, compression='gzip_tile')
+        np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array, 
+                err_msg="Image"+tchar[i]+" write failed for gzip_tile")
 
+        # Test hcompress
+        test_file = os.path.join(datadir, "test"+tchar[i]+"_internal.fits.hc")
+        ref_image.write(test_file, compression='hcompress')
+        test_image = galsim.fits.read(test_file, compression='hcompress')
+        np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array, 
+                err_msg="Image"+tchar[i]+" write failed for hcompress")
 
- 
+        # Test plio (only valid on positive integer values)
+        if tchar[i] in ['S', 'I']:
+            test_file = os.path.join(datadir, "test"+tchar[i]+"_internal.fits.plio")
+            ref_image.write(test_file, compression='plio')
+            test_image = galsim.fits.read(test_file, compression='plio')
+            np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array, 
+                    err_msg="Image"+tchar[i]+" write failed for plio")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -346,6 +369,10 @@ def test_Image_MultiFITS_IO():
         #
         # Test various compression schemes
         #
+
+        # These tests are a bit slow, so we only bother to run them for the first dtype.
+        # When working on the code, it is a good idea to comment out this line.
+        if i > 0: continue
 
         # Test full-file gzip
         test_multi_file = os.path.join(datadir, "test_multi"+tchar[i]+".fits.gz")
@@ -434,11 +461,36 @@ def test_Image_MultiFITS_IO():
                     test_image_list[k].array, 
                     err_msg="Image"+tchar[i]+" writeMulti failed for auto rice")
 
+        # Test gzip_tile
+        test_multi_file = os.path.join(datadir, "test_multi"+tchar[i]+"_internal.fits.gzt")
+        galsim.fits.writeMulti(image_list,test_multi_file, compression='gzip_tile')
+        test_image_list = galsim.fits.readMulti(test_multi_file, compression='gzip_tile')
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]), 
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+" writeMulti failed for gzip_tile")
+
+        # Test hcompress
+        test_multi_file = os.path.join(datadir, "test_multi"+tchar[i]+"_internal.fits.hc")
+        galsim.fits.writeMulti(image_list,test_multi_file, compression='hcompress')
+        test_image_list = galsim.fits.readMulti(test_multi_file, compression='hcompress')
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]), 
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+" writeMulti failed for hcompress")
+
+        # Test plio (only valid on positive integer values)
+        if tchar[i] in ['S', 'I']:
+            test_multi_file = os.path.join(datadir, "test_multi"+tchar[i]+"_internal.fits.plio")
+            galsim.fits.writeMulti(image_list,test_multi_file, compression='plio')
+            test_image_list = galsim.fits.readMulti(test_multi_file, compression='plio')
+            for k in range(nimages):
+                np.testing.assert_array_equal((ref_array+k).astype(types[i]), 
+                        test_image_list[k].array, 
+                        err_msg="Image"+tchar[i]+" writeMulti failed for plio")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
-
-
 
 
 def test_Image_CubeFITS_IO():
@@ -516,6 +568,10 @@ def test_Image_CubeFITS_IO():
         #
         # Test various compression schemes
         #
+
+        # These tests are a bit slow, so we only bother to run them for the first dtype.
+        # When working on the code, it is a good idea to comment out this line.
+        if i > 0: continue
 
         # Test full-file gzip
         test_cube_file = os.path.join(datadir, "test_cube"+tchar[i]+".fits.gz")
@@ -604,11 +660,29 @@ def test_Image_CubeFITS_IO():
                     test_image_list[k].array, 
                     err_msg="Image"+tchar[i]+" writeCube failed for auto rice")
 
+        # Test gzip_tile
+        test_cube_file = os.path.join(datadir, "test_cube"+tchar[i]+".fits.gzt")
+        galsim.fits.writeCube(image_list,test_cube_file, compression='gzip_tile')
+        test_image_list = galsim.fits.readCube(test_cube_file, compression='gzip_tile')
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]), 
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+" writeCube failed for gzip_tile")
 
+        # Note: hcompress is invalid for data cubes
+
+        # Test plio (only valid on positive integer values)
+        if tchar[i] in ['S', 'I']:
+            test_cube_file = os.path.join(datadir, "test_cube"+tchar[i]+".fits.plio")
+            galsim.fits.writeCube(image_list,test_cube_file, compression='plio')
+            test_image_list = galsim.fits.readCube(test_cube_file, compression='plio')
+            for k in range(nimages):
+                np.testing.assert_array_equal((ref_array+k).astype(types[i]), 
+                        test_image_list[k].array, 
+                        err_msg="Image"+tchar[i]+" writeCube failed for plio")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
-
 
 
 def test_Image_array_view():
@@ -1220,10 +1294,6 @@ def test_ConstImageView_array_constness():
             
 
 if __name__ == "__main__":
-    test_Image_FITS_IO()
-    test_Image_MultiFITS_IO()
-    test_Image_CubeFITS_IO()
-
     test_Image_basic()
     test_Image_FITS_IO()
     test_Image_MultiFITS_IO()
