@@ -906,8 +906,8 @@ class TabulatedPk(object):
     responsibility of the user to ensure that the power is defined for k down to zero, as is
     required by the lensing engine.
 
-    @param k             The list of k values.
-    @param power         The list of P(k) values.
+    @param k             The list, tuple, or 1d Numpy array of k values (floats or doubles).
+    @param power         The list, tuple, or 1d Numpy array of P(k) values (floats or doubles).
     @param interpolant   The interpolant to use, with the options being 'spline', 'linear', 'ceil',
                          and 'floor' [Default: 'spline'].
     """
