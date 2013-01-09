@@ -1331,10 +1331,10 @@ class InterpolatedImage(GSObject):
 
     The constructor needs to know how the Image was drawn: is it an Image of flux or of surface
     brightness?  Since our default for drawing Images using draw() and drawShoot() is that
-    `normalization == 'flux'` (i.e., sum of pixel values equals the object flux), the default for the
-    InterpolatedImage class is to assume the same flux normalization.  However, the user can specify
-    'surface brightness' normalization if desired, or alternatively, can instead specify the desired
-    flux for the object.
+    `normalization == 'flux'` (i.e., sum of pixel values equals the object flux), the default for 
+    the InterpolatedImage class is to assume the same flux normalization.  However, the user can 
+    specify 'surface brightness' normalization if desired, or alternatively, can instead specify 
+    the desired flux for the object.
 
     If the input Image has a scale associated with it, then there is no need to specify an input
     scale `dx`.
@@ -1365,8 +1365,12 @@ class InterpolatedImage(GSObject):
     Initializes interpolated_image as a galsim.InterpolatedImage() instance.
 
     @param image           The Image from which to construct the object.
-    @param interpolant     Optional keyword for specifying the interpolation scheme [default 
-                           is quintic].
+                           This may be either an Image (or ImageView) instance or a string
+                           indicating a fits file from which to read the image.
+    @param interpolant     Either an Interpolant2d (or Interpolant) instance or a string indicating
+                           which interpolant should be used.  Options are 'nearest', 'sinc', 
+                           'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the 
+                           integer order to use. (Default `interpolant = Quintic()`)
     @param normalization   Two options for specifying the normalization of the input Image:
                               "flux" or "f" means that the sum of the pixels is normalized
                                   to be equal to the total flux.
