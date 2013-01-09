@@ -661,7 +661,7 @@ def test_Image_CubeFITS_IO():
                     err_msg="Image"+tchar[i]+" writeCube failed for auto rice")
 
         # Test gzip_tile
-        test_cube_file = os.path.join(datadir, "test_cube"+tchar[i]+".fits.gzt")
+        test_cube_file = os.path.join(datadir, "test_cube"+tchar[i]+"_internal.fits.gzt")
         galsim.fits.writeCube(image_list,test_cube_file, compression='gzip_tile')
         test_image_list = galsim.fits.readCube(test_cube_file, compression='gzip_tile')
         for k in range(nimages):
@@ -673,7 +673,7 @@ def test_Image_CubeFITS_IO():
 
         # Test plio (only valid on positive integer values)
         if tchar[i] in ['S', 'I']:
-            test_cube_file = os.path.join(datadir, "test_cube"+tchar[i]+".fits.plio")
+            test_cube_file = os.path.join(datadir, "test_cube"+tchar[i]+"_internal.fits.plio")
             galsim.fits.writeCube(image_list,test_cube_file, compression='plio')
             test_image_list = galsim.fits.readCube(test_cube_file, compression='plio')
             for k in range(nimages):
