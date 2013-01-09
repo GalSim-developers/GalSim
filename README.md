@@ -19,8 +19,8 @@ Distribution
 
 Please feel free to fork this repository at any time.  However, please be aware
 that the code is still actively being developed and tested (hence the current
-version number is v0.1).  The release of v1.0 in mid-2013 will be accompanied
-with a publication that users should cite.
+version number is below 1.0).  The release of v1.0 in mid-2013 will be
+accompanied with a publication that users should cite.
 
 
 How to communicate with the GalSim developers
@@ -42,8 +42,8 @@ For installation instructions, please see the file `INSTALL.md` in the main
 repository directory. 
 
 There are tagged versions of the code corresponding to specific project releases
-and development milestones, including v0.1 and several earlier milestones. (For
-more info, see the "Tagged versions" section below, and `devel/git.txt`)
+and development milestones. (For more info, see the "Tagged versions" section
+below, and `devel/git.txt`)
 
 
 Getting started
@@ -102,10 +102,10 @@ Demonstration scripts
 ---------------------
 
 There are a number of scripts in `examples/` that demonstrate how the code can
-be used.  These are called `demo1.py`-`demo8.py`, and can be run either using
+be used.  These are called `demo1.py`-`demo10.py`, and can be run either using
 (e.g.) `python demo1.py` while sitting in `examples/`, or by doing `scons
 examples` and then using the executable `bin/demo1`.  A completely parallel
-sequence of configuration scripts, `demo1.yaml`-`demo8.yaml`, demonstrates how
+sequence of configuration scripts, `demo1.yaml`-`demo10.yaml`, demonstrates how
 to make the same set of simulations using config scripts that can be input to
 `bin/galsim_yaml`.  As the project develops through further versions, and adds
 further capabilities to the software, more demo scripts will be added to
@@ -136,7 +136,8 @@ Tagged versions
 
 After every GalSim release and development milestone we tag a snapshot of the 
 code at that moment, with the tag name `vX.X` or `milestoneN` where N is the 
-milestone number.
+milestone number.  The milestoneN versions are not recommended now that we
+have official tagged versions, `vX.X`.
 
 You can see the available tags using the command
 
@@ -144,14 +145,19 @@ You can see the available tags using the command
 
 at a terminal from within the repository.
 
-The version of the code at any given snapshot can then be checked out using the
-tag name, e.g.:
+The version of the code at any given snapshot can be downloaded from our
+GitHub webpage, or checked out from the repository using the tag name, e.g.:
 
-    $ git checkout milestone2
+    $ git checkout v0.2
 
 This will then update your directory tree to the snapshot of the code at the 
 milestone requested.  (You will also get a message about being in a "detached" 
 HEAD state.  That is normal.)
+
+For a version history and a description of how the current version of the code
+differs from the last tagged version, see HISTORY.md and CHANGELOG.md
+(respectively).  These files are found in the main GalSim directory, and are
+also displayed on our wiki which is linked above.
 
 
 Summary of current capabilities
