@@ -35,25 +35,91 @@ def parse_compression(compression, fits):
         raise TypeError("Invalid compression")
     return file_compress, pyfits_compress
 
-# The docstring for the compression parameter is the same for each, so pull it out here to
-# make it easier to keep any changes consistent.
-compression_doc = \
- """@param compression  Which decompression scheme to use (if any).  Options are:
-                        None or 'none' = no decompression
-                        'rice' = use rice decompression in tiles
-                        'gzip' = use gzip to decompress the full file
-                        'bzip2' = use bzip2 to decompress the full file
-                        'gzip_tile' = use gzip decompression in tiles
-                        'hcompress' = use hcompress decompression in tiles
-                        'plio' = use plio decompression in tiles
-                        'auto' = determine the decompression from the extension of the file name
-                            (requires fits to be a string).  
-                            '*.fz' => 'rice'
-                            '*.gz' => 'gzip'
-                            '*.bz2' => 'bzip2'
-                            otherwise None
- """
- 
+def write_file(file, hdus, clobber, file_compress):
+    import os
+    if not clobber and os.path.isfile(file):
+        raise ValueError('File %s already exists'%file)
+
+    # The compression routines work better if we first write to an internal buffer
+    # and then output that to a file.  And it shouldn't be any less efficient for 
+    # the normal case of no compression.
+    import io
+    buf = io.BytesIO()
+    hdus.writeto(buf)
+
+    if file_compress == 'gzip':
+        import gzip
+        # There is a compresslevel option (for both gzip and bz2), but we just use the default.
+        fout = gzip.GzipFile(file, 'wb')  
+    elif file_compress == 'bzip2':
+        import bz2
+        fout = bz2.BZ2File(file, 'wb')
+    else:
+        fout = open(file, 'wb')
+
+    fout.write(buf.getvalue())
+    fout.close()
+
+def read_file(file, file_compress):
+    if file_compress == 'gzip':
+        import gzip
+        fin = gzip.GzipFile(file, 'rb') 
+    elif file_compress == 'bzip2':
+        import bz2
+        fin = bz2.BZ2File(file, 'rb')
+    else:
+        fin = open(file, 'rb')
+    import pyfits
+    return pyfits.open(fin)
+
+def write_header(hdu, add_wcs, scale, xmin, ymin):
+    # In PyFITS 3.1, the update method was deprecated in favor of subscript assignment.
+    # When we no longer care about supporting versions before 3.1, we can switch these
+    # to e.g. hdu.header['GS_SCALE'] = (image.scale , "GalSim Image scale")
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+
+        hdu.header.update("GS_SCALE", scale, "GalSim Image scale")
+        hdu.header.update("GS_XMIN", xmin, "GalSim Image minimum X coordinate")
+        hdu.header.update("GS_YMIN", ymin, "GalSim Image minimum Y coordinate")
+
+        if add_wcs:
+            if isinstance(add_wcs, basestring):
+                wcsname = add_wcs
+            else:
+                wcsname = ""
+            hdu.header.update("CTYPE1" + wcsname, "LINEAR", "name of the coordinate axis")
+            hdu.header.update("CTYPE2" + wcsname, "LINEAR", "name of the coordinate axis")
+            hdu.header.update("CRVAL1" + wcsname, xmin, 
+                            "coordinate system value at reference pixel")
+            hdu.header.update("CRVAL2" + wcsname, ymin, 
+                            "coordinate system value at reference pixel")
+            hdu.header.update("CRPIX1" + wcsname, 1, "coordinate system reference pixel")
+            hdu.header.update("CRPIX2" + wcsname, 1, "coordinate system reference pixel")
+            hdu.header.update("CD1_1" + wcsname, scale, "CD1_1 = pixel_scale")
+            hdu.header.update("CD2_2" + wcsname, scale, "CD2_2 = pixel_scale")
+            hdu.header.update("CD1_2" + wcsname, 0, "CD1_2 = 0")
+            hdu.header.update("CD2_1" + wcsname, 0, "CD2_1 = 0")
+
+
+def add_hdu(hdus, data, pyfits_compress):
+    import pyfits
+    if len(hdus) == 0:
+        if pyfits_compress:
+            hdus.append(pyfits.PrimaryHDU())  # Need a blank PrimaryHDU
+            hdu = pyfits.CompImageHDU(data, compressionType=pyfits_compress)
+        else:
+            hdu = pyfits.PrimaryHDU(data)
+    else:
+        if pyfits_compress:
+            hdu = pyfits.CompImageHDU(data, compressionType=pyfits_compress)
+        else:
+            hdu = pyfits.ImageHDU(data)
+    hdus.append(hdu)
+    return hdu
+
+
 def write(image, fits, add_wcs=True, clobber=True, compression='auto'):
     """Write a single image to a FITS file.
 
@@ -75,84 +141,38 @@ def write(image, fits, add_wcs=True, clobber=True, compression='auto'):
                      name. (Default `add_wcs = True`.)
     @param clobber   Setting `clobber=True` when `fits` is a string will silently overwrite existing
                      files. (Default `clobber = True`.)
-    """ + compression_doc
+    @param compression  Which compression scheme to use (if any).  Options are:
+                        None or 'none' = no compression
+                        'rice' = use rice compression in tiles (preserves header readability)
+                        'gzip' = use gzip to compress the full file
+                        'bzip2' = use bzip2 to compress the full file
+                        'gzip_tile' = use gzip in tiles (preserves header readability)
+                        'hcompress' = use hcompress in tiles
+                        'plio' = use plio compression in tiles (only valid on pos integer data)
+                        'auto' = determine the compression from the extension of the file name
+                            (requires fits to be a string).  
+                            '*.fz' => 'rice'
+                            '*.gz' => 'gzip'
+                            '*.bz2' => 'bzip2'
+                            otherwise None
+    """
     import pyfits    # put this at function scope to keep pyfits optional
+
+    file_compress, pyfits_compress = parse_compression(compression,fits)
 
     if isinstance(fits, pyfits.HDUList):
         hdus = fits
     else:
         hdus = pyfits.HDUList()
 
-    file_compress, pyfits_compress = parse_compression(compression,fits)
-
-    if len(hdus) == 0:
-        if pyfits_compress:
-            hdus.append(pyfits.PrimaryHDU())  # Need a blank PrimaryHDU
-            hdu = pyfits.CompImageHDU(image.array, compressionType=pyfits_compress)
-        else:
-            hdu = pyfits.PrimaryHDU(image.array)
-    else:
-        if pyfits_compress:
-            hdu = pyfits.CompImageHDU(image.array, compressionType=pyfits_compress)
-        else:
-            hdu = pyfits.ImageHDU(image.array)
-    hdus.append(hdu)
-
-    # In PyFITS 3.1, the update method was deprecated in favor of subscript assignment.
-    # When we no longer care about supporting versions before 3.1, we can switch these
-    # to e.g. hdu.header['GS_SCALE'] = (image.scale , "GalSim Image scale")
-    import warnings
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-
-        hdu.header.update("GS_SCALE", image.scale, "GalSim Image scale")
-        hdu.header.update("GS_XMIN", image.xmin, "GalSim Image minimum X coordinate")
-        hdu.header.update("GS_YMIN", image.xmin, "GalSim Image minimum Y coordinate")
-
-        if add_wcs:
-            if isinstance(add_wcs, basestring):
-                wcsname = add_wcs
-            else:
-                wcsname = ""
-            hdu.header.update("CTYPE1" + wcsname, "LINEAR", "name of the coordinate axis")
-            hdu.header.update("CTYPE2" + wcsname, "LINEAR", "name of the coordinate axis")
-            hdu.header.update("CRVAL1" + wcsname, 0, 
-                            "coordinate system value at reference pixel")
-            hdu.header.update("CRVAL2" + wcsname, 0, 
-                            "coordinate system value at reference pixel")
-            hdu.header.update("CRPIX1" + wcsname, 1-image.xmin, "coordinate system reference pixel")
-            hdu.header.update("CRPIX2" + wcsname, 1-image.ymin, "coordinate system reference pixel")
-            hdu.header.update("CD1_1" + wcsname, image.scale, "CD1_1 = pixel_scale")
-            hdu.header.update("CD2_2" + wcsname, image.scale, "CD2_2 = pixel_scale")
-            hdu.header.update("CD1_2" + wcsname, 0, "CD1_2 = 0")
-            hdu.header.update("CD2_1" + wcsname, 0, "CD2_1 = 0")
-    
+    hdu = add_hdu(hdus, image.array, pyfits_compress)
+    write_header(hdu, add_wcs, image.scale, image.xmin, image.ymin)
+   
     if isinstance(fits, basestring):
-        if clobber and os.path.isfile(fits):
-            os.remove(fits)
-
-        # The compression routines work better if we first write to an internal buffer
-        # and then output that to a file.  And it shouldn't be any less efficient for 
-        # the normal case of no compression.
-        import io
-        buf = io.BytesIO()
-        hdus.writeto(buf)
-
-        if file_compress == 'gzip':
-            import gzip
-            # There is a compresslevel option (for both gzip and bz2), but we just use the default.
-            fout = gzip.GzipFile(fits, 'wb')  
-        elif file_compress == 'bzip2':
-            import bz2
-            fout = bz2.BZ2File(fits, 'wb')
-        else:
-            fout = open(fits, 'wb')
-
-        fout.write(buf.getvalue())
-        fout.close()
+        write_file(fits,hdus,clobber,file_compress)
 
 
-def writeMulti(image_list, fits, add_wcs=True, clobber=True):
+def writeMulti(image_list, fits, add_wcs=True, clobber=True, compression='auto'):
     """Write a Python list of images to a multi-extension FITS file.
 
     The details of how the images are written to file depends on the arguments.
@@ -164,8 +184,11 @@ def writeMulti(image_list, fits, add_wcs=True, clobber=True):
                       file.
     @param add_wcs    See documentation for this parameter on the galsim.fits.write method.
     @param clobber    See documentation for this parameter on the galsim.fits.write method.
+    @param compression See documentation for this parameter on the galsim.fits.write method.
     """
     import pyfits    # put this at function scope to keep pyfits optional
+
+    file_compress, pyfits_compress = parse_compression(compression,fits)
 
     if isinstance(fits, pyfits.HDUList):
         hdus = fits
@@ -173,15 +196,14 @@ def writeMulti(image_list, fits, add_wcs=True, clobber=True):
         hdus = pyfits.HDUList()
 
     for image in image_list:
-        write(image, hdus, add_wcs=add_wcs, clobber=clobber)
-
+        hdu = add_hdu(hdus, image.array, pyfits_compress)
+        write_header(hdu, add_wcs, image.scale, image.xmin, image.ymin)
+   
     if isinstance(fits, basestring):
-        if clobber and os.path.isfile(fits):
-            os.remove(fits)
-        hdus.writeto(fits)
+        write_file(fits,hdus,clobber,file_compress)
 
 
-def writeCube(image_list, fits, add_wcs=True, clobber=True):
+def writeCube(image_list, fits, add_wcs=True, clobber=True, compression='auto'):
     """Write a Python list of images to a FITS file as a data cube.
 
     The details of how the images are written to file depends on the arguments.  Unlike for 
@@ -198,9 +220,12 @@ def writeCube(image_list, fits, add_wcs=True, clobber=True):
                       a string, it will be interpreted as a filename for a new FITS file.
     @param add_wcs    See documentation for this parameter on the galsim.fits.write method.
     @param clobber    See documentation for this parameter on the galsim.fits.write method.
+    @param compression See documentation for this parameter on the galsim.fits.write method.
     """
     import numpy
     import pyfits    # put this at function scope to keep pyfits optional
+
+    file_compress, pyfits_compress = parse_compression(compression,fits)
 
     if isinstance(fits, pyfits.HDUList):
         hdus = fits
@@ -241,42 +266,11 @@ def writeCube(image_list, fits, add_wcs=True, clobber=True):
                     "Shape is (%d,%d).  Should be (%d,%d)"%(nx_k,ny_k,nx,ny))
             cube[k,:,:] = image_list[k].array
 
-    if len(hdus) == 0:
-        hdu = pyfits.PrimaryHDU(cube)
-    else:
-        hdu = pyfits.ImageHDU(cube)
-    hdus.append(hdu)
+    hdu = add_hdu(hdus, cube, pyfits_compress)
+    write_header(hdu, add_wcs, scale, xmin, ymin)
 
-    import warnings
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-
-        hdu.header.update("GS_SCALE", scale, "GalSim Image scale")
-        hdu.header.update("GS_XMIN", xmin, "GalSim Image minimum X coordinate")
-        hdu.header.update("GS_YMIN", xmin, "GalSim Image minimum Y coordinate")
-
-        if add_wcs:
-            if isinstance(add_wcs, basestring):
-                wcsname = add_wcs
-            else:
-                wcsname = ""
-            hdu.header.update("CTYPE1" + wcsname, "LINEAR", "name of the coordinate axis")
-            hdu.header.update("CTYPE2" + wcsname, "LINEAR", "name of the coordinate axis")
-            hdu.header.update("CRVAL1" + wcsname, xmin, 
-                            "coordinate system value at reference pixel")
-            hdu.header.update("CRVAL2" + wcsname, ymin, 
-                            "coordinate system value at reference pixel")
-            hdu.header.update("CRPIX1" + wcsname, 1, "coordinate system reference pixel")
-            hdu.header.update("CRPIX2" + wcsname, 1, "coordinate system reference pixel")
-            hdu.header.update("CD1_1" + wcsname, scale, "CD1_1 = pixel_scale")
-            hdu.header.update("CD2_2" + wcsname, scale, "CD2_2 = pixel_scale")
-            hdu.header.update("CD1_2" + wcsname, 0, "CD1_2 = 0")
-            hdu.header.update("CD2_1" + wcsname, 0, "CD2_1 = 0")
-    
     if isinstance(fits, basestring):
-        if clobber and os.path.isfile(fits):
-            os.remove(fits)
-        pyfits.writeto(fits,cube)
+        write_file(fits,hdus,clobber,file_compress)
 
 
 def read(fits, compression='auto'):
@@ -293,21 +287,28 @@ def read(fits, compression='auto'):
                    `pyfits.PrimaryHDU` or `pyfits.ImageHDU`, that HDU will be used. If `fits` is a
                    string, it will be interpreted as a filename to open; the Primary HDU of that
                    file will be used.
-    """ + compression_doc
+    @param compression  Which decompression scheme to use (if any).  Options are:
+                        None or 'none' = no decompression
+                        'rice' = use rice decompression in tiles
+                        'gzip' = use gzip to decompress the full file
+                        'bzip2' = use bzip2 to decompress the full file
+                        'gzip_tile' = use gzip decompression in tiles
+                        'hcompress' = use hcompress decompression in tiles
+                        'plio' = use plio decompression in tiles
+                        'auto' = determine the decompression from the extension of the file name
+                            (requires fits to be a string).  
+                            '*.fz' => 'rice'
+                            '*.gz' => 'gzip'
+                            '*.bz2' => 'bzip2'
+                            otherwise None
+    """
     import pyfits     # put this at function scope to keep pyfits optional
     
     file_compress, pyfits_compress = parse_compression(compression,fits)
 
     if isinstance(fits, basestring):
-        if file_compress == 'gzip':
-            import gzip
-            fin = gzip.GzipFile(fits, 'rb') 
-        elif file_compress == 'bzip2':
-            import bz2
-            fin = bz2.BZ2File(fits, 'rb')
-        else:
-            fin = open(fits, 'rb')
-        fits = pyfits.open(fin)
+        fits = read_file(fits, file_compress)
+
     if isinstance(fits, pyfits.HDUList):
         # Note: Nothing special needs to be done when reading a compressed hdu.
         # However, such compressed hdu's may not be the PrimaryHDU, so if we think we are
@@ -343,7 +344,7 @@ def read(fits, compression='auto'):
     image.scale = scale
     return image
 
-def readMulti(fits):
+def readMulti(fits, compression='auto'):
     """Construct a Python list of ImageViews from a Multi-extension FITS file.
 
     Not all FITS pixel types are supported (only those with C++ Image template instantiations are:
@@ -360,19 +361,25 @@ def readMulti(fits):
 
     import pyfits     # put this at function scope to keep pyfits optional
     
+    file_compress, pyfits_compress = parse_compression(compression,fits)
+
     if isinstance(fits, basestring):
-        hdu_list = pyfits.open(fits)
+        hdus = read_file(fits, file_compress)
     elif isinstance(fits, pyfits.HDUList):
-        hdu_list = fits
+        hdus = fits
     else:
         raise TypeError("In readMulti, fits is not a string or HDUList")
 
     image_list = []
-    for hdu in hdu_list:
+    if pyfits_compress:
+        first = 1
+    else:
+        first = 0
+    for hdu in hdus[first:]:
         image_list.append(read(hdu))
     return image_list
 
-def readCube(fits):
+def readCube(fits, compression='auto'):
     """Construct a Python list of ImageViews from a FITS data cube.
 
     Not all FITS pixel types are supported (only those with C++ Image template instantiations are:
@@ -390,10 +397,19 @@ def readCube(fits):
     """
     import pyfits     # put this at function scope to keep pyfits optional
     
+    file_compress, pyfits_compress = parse_compression(compression,fits)
+
     if isinstance(fits, basestring):
-        fits = pyfits.open(fits)
+        fits = read_file(fits, file_compress)
+    
     if isinstance(fits, pyfits.HDUList):
-        fits = fits[0]
+        # Note: Nothing special needs to be done when reading a compressed hdu.
+        # However, such compressed hdu's may not be the PrimaryHDU, so if we think we are
+        # reading a compressed file, skip to hdu 1.
+        if pyfits_compress:
+            fits = fits[1]
+        else:
+            fits = fits[0]
 
     xmin = fits.header.get("GS_XMIN", 1)
     ymin = fits.header.get("GS_YMIN", 1)

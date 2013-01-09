@@ -343,6 +343,98 @@ def test_Image_MultiFITS_IO():
                     test_image_list[k].array, 
                     err_msg="Image"+tchar[i]+" readMulti failed reading from filename input.")
 
+        #
+        # Test various compression schemes
+        #
+
+        # Test full-file gzip
+        test_multi_file = os.path.join(datadir, "test_multi"+tchar[i]+".fits.gz")
+        test_image_list = galsim.fits.readMulti(test_multi_file, compression='gzip')
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]), 
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+" readMulti failed for explicit full-file gzip")
+
+        test_image_list = galsim.fits.readMulti(test_multi_file)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]), 
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+" readMulti failed for auto full-file gzip")
+
+        test_multi_file = os.path.join(datadir, "test_multi"+tchar[i]+"_internal.fits.gz")
+        galsim.fits.writeMulti(image_list,test_multi_file, compression='gzip')
+        test_image_list = galsim.fits.readMulti(test_multi_file)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]), 
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+" writeMulti failed for explicit full-file gzip")
+
+        galsim.fits.writeMulti(image_list,test_multi_file)
+        test_image_list = galsim.fits.readMulti(test_multi_file)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]), 
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+" writeMulti failed for auto full-file gzip")
+
+        # Test full-file bzip2
+        test_multi_file = os.path.join(datadir, "test_multi"+tchar[i]+".fits.bz2")
+        test_image_list = galsim.fits.readMulti(test_multi_file, compression='bzip2')
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]), 
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+" readMulti failed for explicit full-file bzip2")
+
+        test_image_list = galsim.fits.readMulti(test_multi_file)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]), 
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+" readMulti failed for auto full-file bzip2")
+
+        test_multi_file = os.path.join(datadir, "test_multi"+tchar[i]+"_internal.fits.bz2")
+        galsim.fits.writeMulti(image_list,test_multi_file, compression='bzip2')
+        test_image_list = galsim.fits.readMulti(test_multi_file)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]), 
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+" writeMulti failed for explicit full-file bzip2")
+
+        galsim.fits.writeMulti(image_list,test_multi_file)
+        test_image_list = galsim.fits.readMulti(test_multi_file)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]), 
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+" writeMulti failed for auto full-file bzip2")
+
+        # Test rice
+        test_multi_file = os.path.join(datadir, "test_multi"+tchar[i]+".fits.fz")
+        test_image_list = galsim.fits.readMulti(test_multi_file, compression='rice')
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]), 
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+" readMulti failed for explicit rice")
+
+        test_image_list = galsim.fits.readMulti(test_multi_file)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]), 
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+" readMulti failed for auto rice")
+
+        test_multi_file = os.path.join(datadir, "test_multi"+tchar[i]+"_internal.fits.fz")
+        galsim.fits.writeMulti(image_list,test_multi_file, compression='rice')
+        test_image_list = galsim.fits.readMulti(test_multi_file)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]), 
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+" writeMulti failed for explicit rice")
+
+        galsim.fits.writeMulti(image_list,test_multi_file)
+        test_image_list = galsim.fits.readMulti(test_multi_file)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]), 
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+" writeMulti failed for auto rice")
+
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -420,6 +512,99 @@ def test_Image_CubeFITS_IO():
             np.testing.assert_array_equal((ref_array+k).astype(types[i]),
                     test_image_list[k].array, 
                     err_msg="Image"+tchar[i]+" readCube failed reading from filename input.")
+
+        #
+        # Test various compression schemes
+        #
+
+        # Test full-file gzip
+        test_cube_file = os.path.join(datadir, "test_cube"+tchar[i]+".fits.gz")
+        test_image_list = galsim.fits.readCube(test_cube_file, compression='gzip')
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]), 
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+" readCube failed for explicit full-file gzip")
+
+        test_image_list = galsim.fits.readCube(test_cube_file)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]), 
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+" readCube failed for auto full-file gzip")
+
+        test_cube_file = os.path.join(datadir, "test_cube"+tchar[i]+"_internal.fits.gz")
+        galsim.fits.writeCube(image_list,test_cube_file, compression='gzip')
+        test_image_list = galsim.fits.readCube(test_cube_file)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]), 
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+" writeCube failed for explicit full-file gzip")
+
+        galsim.fits.writeCube(image_list,test_cube_file)
+        test_image_list = galsim.fits.readCube(test_cube_file)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]), 
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+" writeCube failed for auto full-file gzip")
+
+        # Test full-file bzip2
+        test_cube_file = os.path.join(datadir, "test_cube"+tchar[i]+".fits.bz2")
+        test_image_list = galsim.fits.readCube(test_cube_file, compression='bzip2')
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]), 
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+" readCube failed for explicit full-file bzip2")
+
+        test_image_list = galsim.fits.readCube(test_cube_file)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]), 
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+" readCube failed for auto full-file bzip2")
+
+        test_cube_file = os.path.join(datadir, "test_cube"+tchar[i]+"_internal.fits.bz2")
+        galsim.fits.writeCube(image_list,test_cube_file, compression='bzip2')
+        test_image_list = galsim.fits.readCube(test_cube_file)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]), 
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+" writeCube failed for explicit full-file bzip2")
+
+        galsim.fits.writeCube(image_list,test_cube_file)
+        test_image_list = galsim.fits.readCube(test_cube_file)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]), 
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+" writeCube failed for auto full-file bzip2")
+
+        # Test rice
+        test_cube_file = os.path.join(datadir, "test_cube"+tchar[i]+".fits.fz")
+        test_image_list = galsim.fits.readCube(test_cube_file, compression='rice')
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]), 
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+" readCube failed for explicit rice")
+
+        test_image_list = galsim.fits.readCube(test_cube_file)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]), 
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+" readCube failed for auto rice")
+
+        test_cube_file = os.path.join(datadir, "test_cube"+tchar[i]+"_internal.fits.fz")
+        galsim.fits.writeCube(image_list,test_cube_file, compression='rice')
+        test_image_list = galsim.fits.readCube(test_cube_file)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]), 
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+" writeCube failed for explicit rice")
+
+        galsim.fits.writeCube(image_list,test_cube_file)
+        test_image_list = galsim.fits.readCube(test_cube_file)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]), 
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+" writeCube failed for auto rice")
+
+
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
