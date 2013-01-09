@@ -1,6 +1,11 @@
 Changes from v0.2 to v0.3
 -------------------------
 
+* The moments and PSF correction code was updated to use the Image class and TMV. The python
+  interface to this software was also updated so that it can handle weight and bad pixel maps for
+  the input Images.  Finally, an optimization was introduced that typically speeds up these routines
+  by a factor of 2-3.  (Issues 331, 332)
+
 * Several bug fixes in the Fourier space parameters of the Sersic surface brightness profile, which
   improves some issues with ringing in images composed of Sersic profiles on their own or combined
   with other profiles. (Issues 319, 330)
@@ -25,7 +30,7 @@ Changes from v0.2 to v0.3
   (Issue 317)
 
 * Minor changes in the python interface to the outputs of the moments and shape estimation routines
-  (the HSMShapeData class).  (Issue 296)
+  (the HSMShapeData class).  (Issues 296, 316, 332)
 
 * Made default poisson_flux value = False when n_photons is explicitly given.  (Issue 319)
 
