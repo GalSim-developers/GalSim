@@ -18,6 +18,7 @@
 "#" : "- shear_value : Eta1Eta2 (eta1, eta2)",
 "#" : "- image type : Scattered (size, nobjects)",
 "#" : "- str_value type : NumberedFile (root, num, ext, digits)",
+"#" : "- str_value type : FormattedStr (format, items)",
 "#" : "- value type : Sequence (..., nitems)",
 "#" : "- output : nproc",
 "#" : "- output : weight",
@@ -204,9 +205,25 @@
         "#" : "    nfw3",
         "#" : "    nfw4",
         "#" : "as subdirectories of output_json.",
-        "type" : "NumberedFile",
-        "root" : "output_json/nfw",
-        "num" : {
+        "#" : "",
+        "#" : "This could be done using NumberedFile with ",
+        "#" : "    type : NumberedFile",
+        "#" : "    root : 'output_json/nfw'",
+        "#" : "    num : <the same as the single item below>",
+        "#" : "",
+        "#" : "however, we use FormattedStr instead to show how that works.",
+        "type" : "FormattedStr",
+
+        "#" : "The FormattedStr takes a format string and a list of items to use for ",
+        "#" : "the various %d, %f, etc.  In other words, once we construct a list of items,",
+        "#" : "the final string is calculated using",
+        "#" : "    format%tuple(items)",
+        "format" : "output_json/nfw%d",
+
+        "#" : "Only one item in this case, but in general you would have an item for each",
+        "#" : "% specified in the format string (except %% of course which is interpreted",
+        "#" : "as a literal '%').",
+        "items" : [  {
             "type" : "Sequence",
             "first" : 1,
             "last" : 4,
@@ -215,7 +232,7 @@
             "#" : "before moving on to the next value, since we have 5 files to put in each ",
             "#" : "directory.",
             "repeat" : 5
-        }
+            } ]
     },
 
     "#" : "The weight field means that a weight image should be built and written out.",
