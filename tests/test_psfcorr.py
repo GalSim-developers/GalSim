@@ -202,22 +202,39 @@ def test_masks():
     ## different size from image
     weight_im = galsim.ImageI(imsize, 2*imsize)
     good_weight_im = galsim.ImageI(imsize, imsize)+1
-    np.testing.assert_raises(ValueError, galsim.FindAdaptiveMom, im, weight_im)
-    np.testing.assert_raises(ValueError, galsim.EstimateShearHSM, im, p_im, weight_im)
+    try:
+        np.testing.assert_raises(ValueError, galsim.FindAdaptiveMom, im, weight_im)
+        np.testing.assert_raises(ValueError, galsim.EstimateShearHSM, im, p_im, weight_im)
+    except ImportError:
+        # assert_raises requires nose, which we don't want to force people to install.
+        # So if they are running this without nose, we just skip these tests.
+        pass
     badpix_im = galsim.ImageI(imsize, 2*imsize)
-    np.testing.assert_raises(ValueError, galsim.FindAdaptiveMom, im, badpix_im)
-    np.testing.assert_raises(ValueError, galsim.EstimateShearHSM, im, p_im, good_weight_im, badpix_im)
+    try:
+        np.testing.assert_raises(ValueError, galsim.FindAdaptiveMom, im, badpix_im)
+        np.testing.assert_raises(ValueError, galsim.EstimateShearHSM, im, p_im, good_weight_im, badpix_im)
+    except ImportError:
+        pass
     ## weird values
     weight_im = galsim.ImageI(imsize, imsize)-3
-    np.testing.assert_raises(ValueError, galsim.FindAdaptiveMom, im, weight_im)
-    np.testing.assert_raises(ValueError, galsim.EstimateShearHSM, im, p_im, weight_im)
+    try:
+        np.testing.assert_raises(ValueError, galsim.FindAdaptiveMom, im, weight_im)
+        np.testing.assert_raises(ValueError, galsim.EstimateShearHSM, im, p_im, weight_im)
+    except:
+        pass
     ## excludes all pixels
     weight_im = galsim.ImageI(imsize, imsize)
-    np.testing.assert_raises(RuntimeError, galsim.FindAdaptiveMom, im, weight_im)
-    np.testing.assert_raises(RuntimeError, galsim.EstimateShearHSM, im, p_im, weight_im)
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.FindAdaptiveMom, im, weight_im)
+        np.testing.assert_raises(RuntimeError, galsim.EstimateShearHSM, im, p_im, weight_im)
+    except ImportError:
+        pass
     badpix_im = galsim.ImageI(imsize, imsize)-1
-    np.testing.assert_raises(RuntimeError, galsim.FindAdaptiveMom, im, good_weight_im, badpix_im)
-    np.testing.assert_raises(RuntimeError, galsim.EstimateShearHSM, im, p_im, good_weight_im, badpix_im)
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.FindAdaptiveMom, im, good_weight_im, badpix_im)
+        np.testing.assert_raises(RuntimeError, galsim.EstimateShearHSM, im, p_im, good_weight_im, badpix_im)
+    except ImportError:
+        pass
 
     # check moments, shear without mask
     resm = im.FindAdaptiveMom()
