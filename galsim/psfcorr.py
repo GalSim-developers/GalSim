@@ -148,26 +148,31 @@ def _convertMask(image, weight = None, badpix = None):
     """
     # if no weight image was supplied, make an int array (same size as gal image) filled with 1's
     if weight == None:
-        weight = galsim.ImageI(bounds=image.bounds, init_value=1)
+        mask = galsim.ImageI(bounds=image.bounds, init_value=1)
+
     else:
         # if weight image was supplied, check if it has the right bounds and is non-negative
         if weight.bounds != image.bounds:
             raise ValueError("Weight image does not have same bounds as the input Image!")
-        # then check if it requires conversion, which is necessary if the weight image is not ints
+
+        # also make sure there are no negative values
         import numpy as np
         if np.any(weight.array < 0) == True:
             raise ValueError("Weight image cannot contain negative values!")
-        if not isinstance(weight.view(), galsim.ImageViewI):
-            orig_weight_arr = weight.array
-            weight_arr = np.zeros_like(orig_weight_arr)
-            weight_arr[orig_weight_arr > 0.] = 1
-            weight = galsim.ImageViewI(weight_arr.astype(np.int32))
-            if weight.bounds != image.bounds:
-                weight.shift(image.xmin-weight.xmin, image.ymin-weight.ymin)
 
-    # check if we're done here
-    if isinstance(weight.view(), galsim.ImageViewI) and not badpix and weight.array.sum() != 0:
-        return weight.view()
+        # if weight is an ImageI, then we can use it as the mask image:
+        if isinstance(weight.view(), galsim.ImageViewI):
+            if not badpix:
+                mask = weight
+            else:
+                # If we need to mask bad pixels, we'll need a copy anyway.
+                mask = galsim.ImageI(weight.bounds)
+                mask.array[:,:] = weight.array
+
+        # otherwise, we need to convert it to the right type
+        else:
+            mask = galsim.ImageI(bounds=image.bounds, init_value=0)
+            mask.array[weight.array > 0.] = 1
 
     # if badpix image was supplied, identify the nonzero (bad) pixels and set them to zero in weight
     # image; also check bounds
@@ -175,18 +180,14 @@ def _convertMask(image, weight = None, badpix = None):
         if badpix.bounds != image.bounds:
             raise ValueError("Badpix image does not have the same bounds as the input Image!")
         import numpy as np
-        new_weight_arr = weight.array
-        new_weight_arr[badpix.array != 0] = 0
-        weight = galsim.ImageViewI(new_weight_arr.astype(np.int32))
-        if weight.bounds != image.bounds:
-            weight.shift(image.xmin-weight.xmin, image.ymin-weight.ymin)
+        mask.array[badpix.array != 0] = 0
 
     # if no pixels are used, raise an exception
-    if weight.array.sum() == 0:
+    if mask.array.sum() == 0:
         raise RuntimeError("No pixels are being used!")
 
     # finally, return the ImageView for the weight map
-    return weight.view()
+    return mask.view()
 
 def EstimateShearHSM(gal_image, PSF_image, weight = None, badpix = None, sky_var = 0.0,
                      shear_est = "REGAUSS", flags = 0xe, guess_sig_gal = 5.0, guess_sig_PSF = 3.0,
