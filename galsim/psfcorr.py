@@ -180,7 +180,7 @@ def _convertMask(image, weight = None, badpix = None):
 
     if weight.array.sum() == 0:
         raise RuntimeError("No pixels are being used!")
-    return weight
+    return weight.view()
 
 def EstimateShearHSM(gal_image, PSF_image, weight = None, badpix = None, sky_var = 0.0,
                      shear_est = "REGAUSS", flags = 0xe, guess_sig_gal = 5.0, guess_sig_PSF = 3.0,
@@ -272,16 +272,11 @@ def EstimateShearHSM(gal_image, PSF_image, weight = None, badpix = None, sky_var
                              HSMShapeData object.
     @return                  A HSMShapeData object containing the results of shape measurement.
     """
+    # prepare inputs to C++ routines: ImageView for galaxy, PSF, and weight map
     gal_image_view = gal_image.view()
     PSF_image_view = PSF_image.view()
+    weight_view = _convertMask(gal_image, weight=weight, badpix=badpix)
 
-    # if no weight or badpix image was supplied, make an int array (same size as gal image) filled
-    # with 1's
-    if weight == None and badpix == None:
-        weight = galsim.ImageI(bounds=gal_image.bounds, init_value=1)
-    else:
-        weight = _convertMask(gal_image, weight=weight, badpix=badpix)
-    weight_view = weight.view()
     try:
         result = _galsim._EstimateShearHSMView(gal_image_view, PSF_image_view, weight_view,
                                                sky_var = sky_var,
@@ -359,14 +354,9 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
                              HSMShapeData object.
     @return                  A HSMShapeData object containing the results of moment measurement.
     """
+    # prepare inputs to C++ routines: ImageView for the object being measured and the weight map.
     object_image_view = object_image.view()
-    # if no weight or badpix image was supplied, make an int array (same size as gal image) filled
-    # with 1's
-    if weight == None and badpix == None:
-        weight = galsim.ImageI(bounds=object_image.bounds, init_value=1)
-    else:
-        weight = _convertMask(object_image, weight=weight, badpix=badpix)
-    weight_view = weight.view()
+    weight_view = _convertMask(object_image, weight=weight, badpix=badpix)
 
     try:
         result = _galsim._FindAdaptiveMomView(object_image_view, weight_view,
