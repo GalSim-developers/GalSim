@@ -8,7 +8,201 @@ from . import _galsim
 from . import base
 from . import utilities
 
-class CorrFunc(object):
+class BaseCorrFunc(object):
+    """A base class for correlation function objects, will not be instantiated directly in general
+    use.
+
+    This class defines the interface with which all GalSim correlation function objects access their
+    shared methods and attributes, particularly with respect to the CorrelationFunction attribute (a
+    GSObject).
+    """
+    def __init__(self, gsobject):
+        if not isinstance(gsobject, base.GSObject):
+            raise TypeError(
+                "Correlation function objects must be initialized with a GSObject.")
+        self._GSCorrelationFunction = gsobject
+
+        # Make op+ of two GSObjects work to return an CFAdd object
+    def __add__(self, other):
+        return AddCorrFunc(self, other)
+
+    # Ditto for op+=
+    def __iadd__(self, other):
+        return AddCorrFunc(self, other)
+
+    # Make op* and op*= work to scale the overall variance of a correlation function
+    def __imul__(self, other):
+        self.scaleVariance(other)
+        return self
+
+    def __mul__(self, other):
+        ret = self.copy()
+        ret *= other
+        return ret
+
+    def __rmul__(self, other):
+        ret = self.copy()
+        ret *= other
+        return ret
+
+    # Likewise for op/ and op/=
+    def __idiv__(self, other):
+        self.scaleVariance(1. / other)
+        return self
+
+    def __div__(self, other):
+        ret = self.copy()
+        ret /= other
+        return ret
+
+    def __itruediv__(self, other):
+        return __idiv__(self, other)
+
+    def __truediv__(self, other):
+        return __div__(self, other)
+
+    # Make a copy of the ImageCorrFunc
+    def copy(self):
+        """Returns a copy of the correlation function.
+        """
+        import copy
+        cf = _galsim._CorrelationFunction(self.CorrelationFunction)
+        ret = BaseCorrFunc(base.GSObject(cf))
+        ret.__class__ = self.__class__
+        return ret
+
+    def xValue(self, position):
+        """Returns the value of the correlation function at a chosen 2D position in real space.
+        
+        @param position  A 2D galsim.PositionD/galsim.PositionI instance giving the position in real
+                         space.
+        """
+        return self._GSCorrelationFunction.xValue(position)
+
+    def kValue(self, position):
+        """Returns the value of the correlation function at a chosen 2D position in k space.
+
+        @param position  A 2D galsim.PositionD/galsim.PositionI instance giving the position in k 
+                         space.
+        """
+        return self._GSCorrelationFunction.kValue(position)
+
+    def scaleVariance(self, variance_ratio):
+        """Multiply the overall variance of the correlation function by variance_ratio.
+
+        @param variance_ratio The factor by which to scale the variance of the correlation function.
+        """
+        self._GSCorrelationFunction.SBProfile.scaleVariance(variance_ratio)
+
+    def applyTransformation(self, ellipse):
+        """Apply a galsim.Ellipse distortion to this correlation function.
+           
+        galsim.Ellipse objects can be initialized in a variety of ways (see documentation of this
+        class, galsim.ellipse.Ellipse in the doxygen documentation, for details).  Resets the
+        internal `_rootps_store` attribute.
+
+        @param ellipse The galsim.Ellipse transformation to apply.
+        """
+        if not isinstance(ellipse, galsim.Ellipse):
+            raise TypeError("Argument to applyTransformation must be a galsim.Ellipse!")
+        self._GSCorrelationFunction.applyTransformation(ellipse._ellipse)
+        self._rootps_store = []
+
+    def applyScaling(self, scale):
+        """Scale the linear size of this CorrFunc by scale.  
+        
+        Scales the linear dimensions of the image by the factor scale, e.g.
+        `half_light_radius` <-- `half_light_radius * scale`.  Resets the internal `_rootps_store`
+        attribute.
+
+        @param scale The linear rescaling factor to apply.
+        """
+        self.applyTransformation(galsim.Ellipse(np.log(scale))) # _rootps_store is reset here too
+
+    def applyRotation(self, theta):
+        """Apply a rotation theta to this object.
+           
+        After this call, the caller's type will still be a CorrFunc, unlike in the GSObject base
+        class implementation of this method.  This is to allow CorrFunc methods to be available
+        after transformation, such as .applyNoiseTo().  Resets the internal `_rootps_store`
+        attribute.
+
+        @param theta Rotation angle (Angle object, +ve anticlockwise).
+        """
+        if not isinstance(theta, galsim.Angle):
+            raise TypeError("Input theta should be an Angle")
+        self._GSCorrelationFunction.applyRotation(theta)
+        self._rootps_store = []
+
+    def applyShear(self, *args, **kwargs):
+        """Apply a shear to this object, where arguments are either a galsim.Shear, or arguments
+        that will be used to initialize one.
+
+        For more details about the allowed keyword arguments, see the documentation for galsim.Shear
+        (for doxygen documentation, see galsim.shear.Shear).
+
+        After this call, the caller's type will still be a CorrFunc.  This is to allow CorrFunc
+        methods to be available after transformation, such as .applyNoiseTo().
+        Resets the internal `_rootps_store` attribute.
+        """
+        self._GSCorrelationFunction.applyShear(*args, **kwargs)
+        self._rootps_store = []
+
+    # Also add methods which create a new GSObject with the transformations applied...
+    #
+    def createTransformed(self, ellipse):
+        """Returns a new CorrFunc by applying a galsim.Ellipse transformation (shear, dilate).
+
+        Note that galsim.Ellipse objects can be initialized in a variety of ways (see documentation
+        of this class, galsim.ellipse.Ellipse in the doxygen documentation, for details).
+
+        @param ellipse The galsim.Ellipse transformation to apply
+        @returns The transformed GSObject.
+        """
+        if not isinstance(ellipse, galsim.Ellipse):
+            raise TypeError("Argument to createTransformed must be a galsim.Ellipse!")
+        ret = self.copy()
+        ret.applyTransformation(ellipse)
+        return ret
+
+    def createScaled(self, scale):
+        """Returns a new GSObject by applying a magnification by the given scale, scaling the linear
+        size by scale.  
+
+        Scales the linear dimensions of the image by the factor scale.
+        e.g. `half_light_radius` <-- `half_light_radius * scale`
+
+        @param scale The linear rescaling factor to apply.
+        @returns The rescaled GSObject.
+        """
+        ret = self.copy()
+        ret.applyTransformation(galsim.Ellipse(np.log(scale)))
+        return ret
+
+    def createRotated(self, theta):
+        """Returns a new GSObject by applying a rotation.
+
+        @param theta Rotation angle (Angle object, +ve anticlockwise).
+        @returns The rotated GSObject.
+        """
+        if not isinstance(theta, galsim.Angle):
+            raise TypeError("Input theta should be an Angle")
+        ret = self.copy()
+        ret.applyRotation(theta)
+        return ret
+
+    def createSheared(self, *args, **kwargs):
+        """Returns a new GSObject by applying a shear, where arguments are either a galsim.Shear or
+        keyword arguments that can be used to create one.
+
+        For more details about the allowed keyword arguments, see the documentation of galsim.Shear
+        (for doxygen documentation, see galsim.shear.Shear).
+        """
+        ret = self.copy()
+        ret.applyShear(*args, **kwargs)
+        return ret
+
+class ImageCorrFunc(BaseCorrFunc):
     """A class describing 2D Correlation Functions calculated from Images.
 
     Has an SBCorrFunc in the SBProfile attribute.  For more details of the SBCorrFunc object, please
@@ -127,201 +321,26 @@ class CorrFunc(object):
             (np.sqrt(self.original_ps_image.array), self.original_cf_image.getScale())]
 
         # Then initialize...
-        self.CorrelationFunction = _galsim.CorrelationFunction(
-                self.original_cf_image, self.interpolant, dx=self.original_image.getScale())
+        BaseCorrFunc.__init__(
+            self, base.GSObject(
+                _galsim._CorrelationFunction(
+                    self.original_cf_image, self.interpolant, dx=self.original_image.getScale()))
 
-    # Make op+ of two GSObjects work to return an CFAdd object
-    def __add__(self, other):
-        return CFAdd(self, other)
-
-    # Ditto for op+=
-    def __iadd__(self, other):
-        return CFAdd(self, other)
-
-    # Make op* and op*= work to scale the variance of a correlation function
-    def __imul__(self, other):
-        self.scaleVariance(other)
-        return self
-
-    def __mul__(self, other):
-        ret = self.copy()
-        ret *= other
-        return ret
-
-    def __rmul__(self, other):
-        ret = self.copy()
-        ret *= other
-        return ret
-
-    # Likewise for op/ and op/=
-    def __idiv__(self, other):
-        self.scaleVariance(1. / other)
-        return self
-
-    def __div__(self, other):
-        ret = self.copy()
-        ret /= other
-        return ret
-
-    def __itruediv__(self, other):
-        return __idiv__(self, other)
-
-    def __truediv__(self, other):
-        return __div__(self, other)
-
-    def xValue(self, position):
-        """Returns the value of the CorrFunc at a chosen 2D position in real space.
-        
-        @param position  A 2D galsim.PositionD/galsim.PositionI instance giving the position in real
-                         space.
-        """
-        return self.CorrelationFunction.xValue(position)
-
-    def kValue(self, position):
-        """Returns the value of the CorrFunc at a chosen 2D position in k space.
-
-        @param position  A 2D galsim.PositionD/galsim.PositionI instance giving the position in k 
-                         space.
-        """
-        return self.CorrelationFunction.kValue(position)
-
-    def scaleVariance(self, variance_ratio):
-        """Multiply the variance of the object by flux_ratio
-
-        @param variance_ratio The factor by which to scale the variance of the CorrelationFunction.
-        """
-        self.CorrelationFunction.scaleVariance(variance_ratio)
-
-   # Make a copy of the CorrFunc
+    # Make a copy of the ImageCorrFunc
     def copy(self):
-        """Returns a copy of the CorrFunc.
+        """Returns a copy of the ImageCorrFunc.
 
         All attributes (e.g. rootps_store, original_image) are copied.
         """
         import copy
-        sbp = self.SBProfile.__class__(self.SBProfile)
-        ret = base.GSObject(sbp)
+        cf = _galsim._CorrelationFunction(self.CorrelationFunction)
+        ret = BaseCorrFunc(base.GSObject(cf))
         ret.__class__ = self.__class__
         ret.original_image = self.original_image.copy()
         ret.original_cf_image = self.original_cf_image.copy()
         ret.original_ps_image = self.original_ps_image.copy()
         ret.interpolant = self.interpolant
         ret._rootps_store = copy.deepcopy(self._rootps_store) # possible due to Jim's image pickling
-        return ret
-
-    def applyTransformation(self, ellipse):
-        """Apply a galsim.Ellipse distortion to this CorrFunc.
-           
-        galsim.Ellipse objects can be initialized in a variety of ways (see documentation of this
-        class, galsim.ellipse.Ellipse in the doxygen documentation, for details).
-
-        @param ellipse The galsim.Ellipse transformation to apply.
-        """
-        if not isinstance(ellipse, galsim.Ellipse):
-            raise TypeError("Argument to applyTransformation must be a galsim.Ellipse!")
-        self.CorrelationFunction.applyTransformation(ellipse._ellipse)
-        self._rootps_store = []
-
-    def applyScaling(self, scale):
-        """Scale the linear size of this CorrFunc by scale.  
-        
-        Scales the linear dimensions of the image by the factor scale, e.g.
-        `half_light_radius` <-- `half_light_radius * scale`
-
-        @param scale The linear rescaling factor to apply.
-        """
-        self.applyTransformation(galsim.Ellipse(np.log(scale))) # _rootps_store is reset in here
-
-    def applyRotation(self, theta):
-        """Apply a rotation theta to this object.
-           
-        After this call, the caller's type will still be a CorrFunc, unlike in the GSObject base
-        class implementation of this method.  This is to allow CorrFunc methods to be available
-        after transformation, such as .applyNoiseTo().  Resets the internal _rootps_store.
-
-        @param theta Rotation angle (Angle object, +ve anticlockwise).
-        """
-        if not isinstance(theta, galsim.Angle):
-            raise TypeError("Input theta should be an Angle")
-        self.CorrelationFunction.applyRotation(theta)
-        self._rootps_store = []
-
-    def applyShear(self, *args, **kwargs):
-        """Apply a shear to this object, where arguments are either a galsim.Shear, or arguments
-        that will be used to initialize one.
-
-        For more details about the allowed keyword arguments, see the documentation for galsim.Shear
-        (for doxygen documentation, see galsim.shear.Shear).
-
-        After this call, the caller's type will still be a CorrFunc.  This is to allow CorrFunc
-        methods to be available after transformation, such as .applyNoiseTo().
-        Resets the internal _rootps_store.
-        """
-        if len(args) == 1:
-            if kwargs:
-                raise TypeError("Error, gave both unnamed and named arguments to applyShear!")
-            if not isinstance(args[0], galsim.Shear):
-                raise TypeError("Error, unnamed argument to applyShear is not a Shear!")
-            shear = args[0]
-        elif len(args) > 1:
-            raise TypeError("Error, too many unnamed arguments to applyShear!")
-        else:
-            shear = galsim.Shear(**kwargs)
-        self.CorrelationFunction.applyShear(shear._shear)
-        self._rootps_store = []
-
-    # Also add methods which create a new GSObject with the transformations applied...
-    #
-    def createTransformed(self, ellipse):
-        """Returns a new CorrFunc by applying a galsim.Ellipse transformation (shear, dilate).
-
-        Note that galsim.Ellipse objects can be initialized in a variety of ways (see documentation
-        of this class, galsim.ellipse.Ellipse in the doxygen documentation, for details).
-
-        @param ellipse The galsim.Ellipse transformation to apply
-        @returns The transformed GSObject.
-        """
-        if not isinstance(ellipse, galsim.Ellipse):
-            raise TypeError("Argument to createTransformed must be a galsim.Ellipse!")
-        ret = self.copy()
-        ret.applyTransformation(ellipse)
-        return ret
-
-    def createScaled(self, scale):
-        """Returns a new GSObject by applying a magnification by the given scale, scaling the linear
-        size by scale.  
-
-        Scales the linear dimensions of the image by the factor scale.
-        e.g. `half_light_radius` <-- `half_light_radius * scale`
-
-        @param scale The linear rescaling factor to apply.
-        @returns The rescaled GSObject.
-        """
-        ret = self.copy()
-        ret.applyTransformation(galsim.Ellipse(np.log(scale)))
-        return ret
-
-    def createRotated(self, theta):
-        """Returns a new GSObject by applying a rotation.
-
-        @param theta Rotation angle (Angle object, +ve anticlockwise).
-        @returns The rotated GSObject.
-        """
-        if not isinstance(theta, galsim.Angle):
-            raise TypeError("Input theta should be an Angle")
-        ret = self.copy()
-        ret.applyRotation(theta)
-        return ret
-
-    def createSheared(self, *args, **kwargs):
-        """Returns a new GSObject by applying a shear, where arguments are either a galsim.Shear or
-        keyword arguments that can be used to create one.
-
-        For more details about the allowed keyword arguments, see the documentation of galsim.Shear
-        (for doxygen documentation, see galsim.shear.Shear).
-        """
-        ret = self.copy()
-        ret.applyShear(*args, **kwargs)
         return ret
 
     def applyNoiseTo(self, image, dx=0., dev=None):

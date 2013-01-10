@@ -31,7 +31,7 @@ namespace galsim {
 
         static void wrap() {
             bp::class_< CorrelationFunction > pyCorrelationFunction(
-                "CorrelationFunction", bp::init<const CorrelationFunction &>()
+                "_CorrelationFunction", bp::init<const CorrelationFunction &>()
             );
             wrapTemplates<float>(pyCorrelationFunction);
             wrapTemplates<double>(pyCorrelationFunction);
@@ -41,7 +41,7 @@ namespace galsim {
 
     };
 
-    void pyExportCorrelationFunction() 
+    void pyExportCorrelationFunction()
     {
         PyCorrelationFunction::wrap();
     }
