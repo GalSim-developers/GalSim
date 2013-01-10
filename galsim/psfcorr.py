@@ -165,21 +165,27 @@ def _convertMask(image, weight = None, badpix = None):
             if weight.bounds != image.bounds:
                 weight.shift(image.xmin-weight.xmin, image.ymin-weight.ymin)
 
+    # check if we're done here
+    if isinstance(weight.view(), galsim.ImageViewI) and not badpix and weight.array.sum() != 0:
+        return weight.view()
+
     # if badpix image was supplied, identify the nonzero (bad) pixels and set them to zero in weight
     # image; also check bounds
     if badpix != None:
         if badpix.bounds != image.bounds:
             raise ValueError("Badpix image does not have the same bounds as the input Image!")
         import numpy as np
-        orig_weight_arr = weight.array
-        new_weight_arr = np.copy(orig_weight_arr)
+        new_weight_arr = weight.array
         new_weight_arr[badpix.array != 0] = 0
         weight = galsim.ImageViewI(new_weight_arr.astype(np.int32))
         if weight.bounds != image.bounds:
             weight.shift(image.xmin-weight.xmin, image.ymin-weight.ymin)
 
+    # if no pixels are used, raise an exception
     if weight.array.sum() == 0:
         raise RuntimeError("No pixels are being used!")
+
+    # finally, return the ImageView for the weight map
     return weight.view()
 
 def EstimateShearHSM(gal_image, PSF_image, weight = None, badpix = None, sky_var = 0.0,
