@@ -234,6 +234,13 @@ class PowerSpectrum(object):
            Both calls do the same thing.  The returned g1, g2 this time are lists of g1, g2 values.
            The lists are the same length as the number of input positions.
 
+        6. Make a PowerSpectrum from a tabulated P(k) that gets interpolated to find the power at
+        all necessary values of k, then generate shears on a grid.  Assuming that k and P_k are
+        either lists, tuples, or 1d Numpy arrays containing k and P(k):
+
+               tab_pk = galsim.lensing.TabulatedPk(k, P_k)
+               my_ps = galsim.PowerSpectrum(my_ps)
+               g1, g2 = my_ps.getShear(grid_spacing = 1., grid_nx = 100)
 
         @param pos              Position(s) of the source(s), assumed to be post-lensing!  (It is 
                                 up to the user to check that the units are consistent with those in 
