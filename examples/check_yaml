@@ -67,7 +67,12 @@ diff output/psf_real.fits output_yaml/psf_real.fits
 diff output/cube_real.fits output_yaml/cube_real.fits 
 
 # demo7:
-diff output/cube_phot.fits output_yaml/cube_phot.fits 
+# Note; the raw .gz files include the filename in them.
+# Since the file names are different, they don't match.
+# So unzip them first before running diff.
+gunzip output/cube_phot.fits.gz
+gunzip output_yaml/cube_phot.fits.gz
+diff output/cube_phot.fits output_yaml/cube_phot.fits
 
 # demo8:
 diff output/bpd_single.fits output_yaml/bpd_single.fits 
