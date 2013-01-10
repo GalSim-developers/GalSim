@@ -233,24 +233,28 @@ def test_masks():
     weightall1 = galsim.ImageI(imsize, imsize, init_value = 1)
     resm_weightall1 = im.FindAdaptiveMom(weightall1)
     ress_weightall1 = galsim.EstimateShearHSM(im, p_im, weightall1)
-    np.testing.assert_equal(resm.observed_shape.e1, resm_weightall1.observed_shape.e1,
-        err_msg="e1 from FindAdaptiveMom changes when using inclusive weight")
-    np.testing.assert_equal(resm.observed_shape.e2, resm_weightall1.observed_shape.e2,
-        err_msg="e2 from FindAdaptiveMom changes when using inclusive weight")
-    np.testing.assert_equal(resm.moments_sigma, resm_weightall1.moments_sigma,
-        err_msg="sigma from FindAdaptiveMom changes when using inclusive weight")
-    np.testing.assert_equal(ress.observed_shape.e1, ress_weightall1.observed_shape.e1,
-        err_msg="observed e1 from EstimateShearHSM changes when using inclusive weight")
-    np.testing.assert_equal(ress.observed_shape.e2, ress_weightall1.observed_shape.e2,
-        err_msg="observed e2 from EstimateShearHSM changes when using inclusive weight")
-    np.testing.assert_equal(ress.moments_sigma, ress_weightall1.moments_sigma,
-        err_msg="observed sigma from EstimateShearHSM changes when using inclusive weight")
-    np.testing.assert_equal(ress.corrected_e1, ress_weightall1.corrected_e1,
-        err_msg="corrected e1 from EstimateShearHSM changes when using inclusive weight")
-    np.testing.assert_equal(ress.corrected_e2, ress_weightall1.corrected_e2,
-        err_msg="corrected e2 from EstimateShearHSM changes when using inclusive weight")
-    np.testing.assert_equal(ress.resolution_factor, ress_weightall1.resolution_factor,
-        err_msg="resolution factor from EstimateShearHSM changes when using inclusive weight")
+
+    # We'll do this series of tests a few times, so encapsulate the code here.
+    def check_equal(resm, ress, resm_test, ress_test, tag):
+        np.testing.assert_equal(resm.observed_shape.e1, resm_test.observed_shape.e1,
+            err_msg="e1 from FindAdaptiveMom changes "+tag)
+        np.testing.assert_equal(resm.observed_shape.e2, resm_test.observed_shape.e2,
+            err_msg="e2 from FindAdaptiveMom changes "+tag)
+        np.testing.assert_equal(resm.moments_sigma, resm_test.moments_sigma,
+            err_msg="sigma from FindAdaptiveMom changes "+tag)
+        np.testing.assert_equal(ress.observed_shape.e1, ress_test.observed_shape.e1,
+            err_msg="observed e1 from EstimateShearHSM changes "+tag)
+        np.testing.assert_equal(ress.observed_shape.e2, ress_test.observed_shape.e2,
+            err_msg="observed e2 from EstimateShearHSM changes "+tag)
+        np.testing.assert_equal(ress.moments_sigma, ress_test.moments_sigma,
+            err_msg="observed sigma from EstimateShearHSM changes "+tag)
+        np.testing.assert_equal(ress.corrected_e1, ress_test.corrected_e1,
+            err_msg="corrected e1 from EstimateShearHSM changes "+tag)
+        np.testing.assert_equal(ress.corrected_e2, ress_test.corrected_e2,
+            err_msg="corrected e2 from EstimateShearHSM changes "+tag)
+        np.testing.assert_equal(ress.resolution_factor, ress_test.resolution_factor,
+            err_msg="resolution factor from EstimateShearHSM changes "+tag)
+    check_equal(resm,ress,resm_weightall1,ress_weightall1, "when using inclusive weight")
 
     # check moments and shears with mask of edges, should be nearly the same
     # (this seems dumb, but it's helpful for keeping track of whether the pointers in the C++ code
@@ -302,24 +306,8 @@ def test_masks():
                 maskedge.setValue(ind1, ind2, 0.)
     resm_maskedge1 = im.FindAdaptiveMom(maskedge)
     ress_maskedge1 = galsim.EstimateShearHSM(im, p_im, maskedge)
-    np.testing.assert_equal(resm_maskedge1.observed_shape.e1, resm_maskedge.observed_shape.e1,
-        err_msg="e1 from FindAdaptiveMom changes when masking with floats")
-    np.testing.assert_equal(resm_maskedge1.observed_shape.e2, resm_maskedge.observed_shape.e2,
-        err_msg="e2 from FindAdaptiveMom changes when masking with floats")
-    np.testing.assert_equal(resm_maskedge1.moments_sigma, resm_maskedge.moments_sigma,
-        err_msg="sigma from FindAdaptiveMom changes when masking with floats")
-    np.testing.assert_equal(ress_maskedge1.observed_shape.e1, ress_maskedge.observed_shape.e1,
-        err_msg="observed e1 from EstimateShearHSM changes when masking with floats")
-    np.testing.assert_equal(ress_maskedge1.observed_shape.e2, ress_maskedge.observed_shape.e2,
-        err_msg="observed e2 from EstimateShearHSM changes when masking with floats")
-    np.testing.assert_equal(ress_maskedge1.moments_sigma, ress_maskedge.moments_sigma,
-        err_msg="observed sigma from EstimateShearHSM changes when masking with floats")
-    np.testing.assert_equal(ress_maskedge1.corrected_e1, ress_maskedge.corrected_e1,
-        err_msg="corrected e1 from EstimateShearHSM changes when masking with floats")
-    np.testing.assert_equal(ress_maskedge1.corrected_e2, ress_maskedge.corrected_e2,
-        err_msg="corrected e2 from EstimateShearHSM changes when masking with floats")
-    np.testing.assert_equal(ress_maskedge1.resolution_factor, ress_maskedge.resolution_factor,
-        err_msg="resolution factor from EstimateShearHSM changes when masking with floats")
+    check_equal(resm_maskedge,ress_maskedge,resm_maskedge1,ress_maskedge1,
+                "when masking with floats")
 
     ## make the weight map for allowed pixels a nonzero value that also != 1
     maskedge = galsim.ImageF(imsize, imsize, init_value = 2.3)
@@ -329,24 +317,8 @@ def test_masks():
                 maskedge.setValue(ind1, ind2, 0.)
     resm_maskedge1 = im.FindAdaptiveMom(maskedge)
     ress_maskedge1 = galsim.EstimateShearHSM(im, p_im, maskedge)
-    np.testing.assert_equal(resm_maskedge1.observed_shape.e1, resm_maskedge.observed_shape.e1,
-        err_msg="e1 from FindAdaptiveMom changes when masking with floats != 1")
-    np.testing.assert_equal(resm_maskedge1.observed_shape.e2, resm_maskedge.observed_shape.e2,
-        err_msg="e2 from FindAdaptiveMom changes when masking with floats != 1")
-    np.testing.assert_equal(resm_maskedge1.moments_sigma, resm_maskedge.moments_sigma,
-        err_msg="sigma from FindAdaptiveMom changes when masking with floats != 1")
-    np.testing.assert_equal(ress_maskedge1.observed_shape.e1, ress_maskedge.observed_shape.e1,
-        err_msg="observed e1 from EstimateShearHSM changes when masking with floats != 1")
-    np.testing.assert_equal(ress_maskedge1.observed_shape.e2, ress_maskedge.observed_shape.e2,
-        err_msg="observed e2 from EstimateShearHSM changes when masking with floats != 1")
-    np.testing.assert_equal(ress_maskedge1.moments_sigma, ress_maskedge.moments_sigma,
-        err_msg="observed sigma from EstimateShearHSM changes when masking with floats != 1")
-    np.testing.assert_equal(ress_maskedge1.corrected_e1, ress_maskedge.corrected_e1,
-        err_msg="corrected e1 from EstimateShearHSM changes when masking with floats != 1")
-    np.testing.assert_equal(ress_maskedge1.corrected_e2, ress_maskedge.corrected_e2,
-        err_msg="corrected e2 from EstimateShearHSM changes when masking with floats != 1")
-    np.testing.assert_equal(ress_maskedge1.resolution_factor, ress_maskedge.resolution_factor,
-        err_msg="resolution factor from EstimateShearHSM changes when masking with floats != 1")
+    check_equal(resm_maskedge,ress_maskedge,resm_maskedge1,ress_maskedge1,
+                "when masking with floats != 1")
 
     ## make the weight map all equal to 1, and use a badpix map with a range of nonzero values
     maskedge = galsim.ImageI(imsize, imsize, init_value = 1)
@@ -357,24 +329,8 @@ def test_masks():
                 badpixedge.setValue(ind1, ind2, ind1+1)
     resm_maskedge1 = im.FindAdaptiveMom(maskedge, badpixedge)
     ress_maskedge1 = galsim.EstimateShearHSM(im, p_im, maskedge, badpixedge)
-    np.testing.assert_equal(resm_maskedge1.observed_shape.e1, resm_maskedge.observed_shape.e1,
-        err_msg="e1 from FindAdaptiveMom changes when masking with badpix")
-    np.testing.assert_equal(resm_maskedge1.observed_shape.e2, resm_maskedge.observed_shape.e2,
-        err_msg="e2 from FindAdaptiveMom changes when masking with badpix")
-    np.testing.assert_equal(resm_maskedge1.moments_sigma, resm_maskedge.moments_sigma,
-        err_msg="sigma from FindAdaptiveMom changes when masking with badpix")
-    np.testing.assert_equal(ress_maskedge1.observed_shape.e1, ress_maskedge.observed_shape.e1,
-        err_msg="observed e1 from EstimateShearHSM changes when masking with badpix")
-    np.testing.assert_equal(ress_maskedge1.observed_shape.e2, ress_maskedge.observed_shape.e2,
-        err_msg="observed e2 from EstimateShearHSM changes when masking with badpix")
-    np.testing.assert_equal(ress_maskedge1.moments_sigma, ress_maskedge.moments_sigma,
-        err_msg="observed sigma from EstimateShearHSM changes when masking with badpix")
-    np.testing.assert_equal(ress_maskedge1.corrected_e1, ress_maskedge.corrected_e1,
-        err_msg="corrected e1 from EstimateShearHSM changes when masking with badpix")
-    np.testing.assert_equal(ress_maskedge1.corrected_e2, ress_maskedge.corrected_e2,
-        err_msg="corrected e2 from EstimateShearHSM changes when masking with badpix")
-    np.testing.assert_equal(ress_maskedge1.resolution_factor, ress_maskedge.resolution_factor,
-        err_msg="resolution factor from EstimateShearHSM changes when masking with badpix")
+    check_equal(resm_maskedge,ress_maskedge,resm_maskedge1,ress_maskedge1,
+                "when masking with badpix")
 
     ## same as previous, but with badpix of floats
     maskedge = galsim.ImageI(imsize, imsize, init_value = 1)
@@ -385,24 +341,8 @@ def test_masks():
                 badpixedge.setValue(ind1, ind2, float(ind1+1))
     resm_maskedge1 = im.FindAdaptiveMom(maskedge, badpixedge)
     ress_maskedge1 = galsim.EstimateShearHSM(im, p_im, maskedge, badpixedge)
-    np.testing.assert_equal(resm_maskedge1.observed_shape.e1, resm_maskedge.observed_shape.e1,
-        err_msg="e1 from FindAdaptiveMom changes when masking with badpix (floats)")
-    np.testing.assert_equal(resm_maskedge1.observed_shape.e2, resm_maskedge.observed_shape.e2,
-        err_msg="e2 from FindAdaptiveMom changes when masking with badpix (floats)")
-    np.testing.assert_equal(resm_maskedge1.moments_sigma, resm_maskedge.moments_sigma,
-        err_msg="sigma from FindAdaptiveMom changes when masking with badpix (floats)")
-    np.testing.assert_equal(ress_maskedge1.observed_shape.e1, ress_maskedge.observed_shape.e1,
-        err_msg="observed e1 from EstimateShearHSM changes when masking with badpix (floats)")
-    np.testing.assert_equal(ress_maskedge1.observed_shape.e2, ress_maskedge.observed_shape.e2,
-        err_msg="observed e2 from EstimateShearHSM changes when masking with badpix (floats)")
-    np.testing.assert_equal(ress_maskedge1.moments_sigma, ress_maskedge.moments_sigma,
-        err_msg="observed sigma from EstimateShearHSM changes when masking with badpix (floats)")
-    np.testing.assert_equal(ress_maskedge1.corrected_e1, ress_maskedge.corrected_e1,
-        err_msg="corrected e1 from EstimateShearHSM changes when masking with badpix (floats)")
-    np.testing.assert_equal(ress_maskedge1.corrected_e2, ress_maskedge.corrected_e2,
-        err_msg="corrected e2 from EstimateShearHSM changes when masking with badpix (floats)")
-    np.testing.assert_equal(ress_maskedge1.resolution_factor, ress_maskedge.resolution_factor,
-        err_msg="resolution factor from EstimateShearHSM changes when masking with badpix (floats)")
+    check_equal(resm_maskedge,ress_maskedge,resm_maskedge1,ress_maskedge1,
+                "when masking with badpix (floats)")
 
     ## do some of the masking using weight map, and the rest using badpix
     maskedge = galsim.ImageI(imsize, imsize, init_value = 1)
@@ -417,24 +357,8 @@ def test_masks():
                     maskedge.setValue(ind1, ind2, 0)
     resm_maskedge1 = im.FindAdaptiveMom(maskedge, badpixedge)
     ress_maskedge1 = galsim.EstimateShearHSM(im, p_im, maskedge, badpixedge)
-    np.testing.assert_equal(resm_maskedge1.observed_shape.e1, resm_maskedge.observed_shape.e1,
-        err_msg="e1 from FindAdaptiveMom changes when masking with badpix and weight map")
-    np.testing.assert_equal(resm_maskedge1.observed_shape.e2, resm_maskedge.observed_shape.e2,
-        err_msg="e2 from FindAdaptiveMom changes when masking with badpix and weight map")
-    np.testing.assert_equal(resm_maskedge1.moments_sigma, resm_maskedge.moments_sigma,
-        err_msg="sigma from FindAdaptiveMom changes when masking with badpix and weight map")
-    np.testing.assert_equal(ress_maskedge1.observed_shape.e1, ress_maskedge.observed_shape.e1,
-        err_msg="observed e1 from EstimateShearHSM changes when masking with badpix and weight map")
-    np.testing.assert_equal(ress_maskedge1.observed_shape.e2, ress_maskedge.observed_shape.e2,
-        err_msg="observed e2 from EstimateShearHSM changes when masking with badpix and weight map")
-    np.testing.assert_equal(ress_maskedge1.moments_sigma, ress_maskedge.moments_sigma,
-        err_msg="observed sigma from EstimateShearHSM changes when masking with badpix and weight map")
-    np.testing.assert_equal(ress_maskedge1.corrected_e1, ress_maskedge.corrected_e1,
-        err_msg="corrected e1 from EstimateShearHSM changes when masking with badpix and weight map")
-    np.testing.assert_equal(ress_maskedge1.corrected_e2, ress_maskedge.corrected_e2,
-        err_msg="corrected e2 from EstimateShearHSM changes when masking with badpix and weight map")
-    np.testing.assert_equal(ress_maskedge1.resolution_factor, ress_maskedge.resolution_factor,
-        err_msg="resolution factor from EstimateShearHSM changes when masking with badpix and weight map")
+    check_equal(resm_maskedge,ress_maskedge,resm_maskedge1,ress_maskedge1,
+                "when masking with badpix and weight map")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
