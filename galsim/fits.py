@@ -55,6 +55,7 @@ def write_file(file, hdus, clobber, file_compress):
             hdus.writeto(file)
             buf = open(file,"r")
             data = buf.read()
+            buf.close()
         else:
             import io
             buf = io.BytesIO()
@@ -86,7 +87,10 @@ def read_file(file, file_compress):
     else:
         fin = open(file, 'rb')
     import pyfits
-    return pyfits.open(fin)
+    hdus = pyfits.open(fin)
+    # pyfits doesn't actually read the file yet, so we can't close fin here.  Need to pass
+    # it back to the caller and let them close it when they are done with hdus.
+    return hdus, fin
 
 def write_header(hdu, add_wcs, scale, xmin, ymin):
     # In PyFITS 3.1, the update method was deprecated in favor of subscript assignment.
@@ -322,8 +326,9 @@ def read(fits, compression='auto'):
     
     file_compress, pyfits_compress = parse_compression(compression,fits)
 
+    fin = None
     if isinstance(fits, basestring):
-        fits = read_file(fits, file_compress)
+        fits, fin = read_file(fits, file_compress)
 
     if isinstance(fits, pyfits.HDUList):
         # Note: Nothing special needs to be done when reading a compressed hdu.
@@ -358,6 +363,10 @@ def read(fits, compression='auto'):
 
     image = Class(array=fits.data, xmin=xmin, ymin=ymin)
     image.scale = scale
+
+    # If we opened a file, don't forget to close it.
+    if fin: fin.close()
+
     return image
 
 def readMulti(fits, compression='auto'):
@@ -379,8 +388,9 @@ def readMulti(fits, compression='auto'):
     
     file_compress, pyfits_compress = parse_compression(compression,fits)
 
+    fin = None
     if isinstance(fits, basestring):
-        hdus = read_file(fits, file_compress)
+        hdus, fin = read_file(fits, file_compress)
     elif isinstance(fits, pyfits.HDUList):
         hdus = fits
     else:
@@ -393,6 +403,10 @@ def readMulti(fits, compression='auto'):
         first = 0
     for hdu in hdus[first:]:
         image_list.append(read(hdu))
+
+    # If we opened a file, don't forget to close it.
+    if fin: fin.close()
+
     return image_list
 
 def readCube(fits, compression='auto'):
@@ -415,8 +429,9 @@ def readCube(fits, compression='auto'):
     
     file_compress, pyfits_compress = parse_compression(compression,fits)
 
+    fin = None
     if isinstance(fits, basestring):
-        fits = read_file(fits, file_compress)
+        fits, fin = read_file(fits, file_compress)
     
     if isinstance(fits, pyfits.HDUList):
         # Note: Nothing special needs to be done when reading a compressed hdu.
@@ -455,6 +470,10 @@ def readCube(fits, compression='auto'):
         image = Class(array=fits.data[k,:,:], xmin=xmin, ymin=ymin)
         image.scale = scale
         image_list.append(image)
+
+    # If we opened a file, don't forget to close it.
+    if fin: fin.close()
+
     return image_list
 
 
