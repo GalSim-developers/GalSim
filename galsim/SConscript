@@ -61,25 +61,24 @@ WARNING: The python installation prefix: %s
 
 env['BUILDERS']['CheckPyPrefix'] = Builder(action = CheckPyPrefix)
 
+# Special -- we used to have a file io.py in the galsim directory that clashed with 
+# the regular io module when doing `import io` within one of these files.
+# This file is now called catalog.py, which is a better name anyway, but we just make 
+# sure that the old io.py or io.pyc isn't still lingering and causing trouble.
+io_files = [ 'io.py', 'io.pyc' ]
+for f in io_files:
+    # Delete it here
+    if os.path.isfile(f): os.remove(f)
+    # And also in the install directory
+    installed_f = os.path.join(python_install_dir, f)
+    if os.path.isfile(installed_f): os.remove(installed_f)
+
 if 'install' in COMMAND_LINE_TARGETS:
 
     installed_py = env.Install(dir=python_install_dir, source=py_files)
 
     for i in range(len(subdir_list)):
         installed_py += env.Install(dir=python_install_subdir[i], source=py_files_sub[i])
-
-    # Special -- we used to have a file io.py in the galsim directory that clashed with 
-    # the regular io.py when doing import io within one of these files.
-    # This file is now called catalog.py, which is a better name anyway, but we just make 
-    # sure that the old io.py or io.pyc isn't still lingering and causing trouble.
-    deltarget = Delete("$TARGET")
-    io_files = [ 'io.py', 'io.pyc' ]
-    for f in io_files:
-        # Delete it here
-        if os.path.isfile(f): os.remove(f)
-        # And also in the install directory
-        installed_f = os.path.join(python_install_dir, f)
-        if os.path.isfile(installed_f): os.remove(installed_f)
 
     env.Alias(target='install', source=installed_py)
     env['all_builds'] += installed_py
