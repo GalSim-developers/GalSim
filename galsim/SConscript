@@ -76,12 +76,10 @@ if 'install' in COMMAND_LINE_TARGETS:
     io_files = [ 'io.py', 'io.pyc' ]
     for f in io_files:
         # Delete it here
-        if os.path.isfile(f):
-            installed_py += env.Command(f, None, deltarget)
+        if os.path.isfile(f): os.remove(f)
         # And also in the install directory
         installed_f = os.path.join(python_install_dir, f)
-        if os.path.isfile(installed_f):
-            installed_py += env.Command(installed_f, None, deltarget)
+        if os.path.isfile(installed_f): os.remove(installed_f)
 
     env.Alias(target='install', source=installed_py)
     env['all_builds'] += installed_py
