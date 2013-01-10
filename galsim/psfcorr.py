@@ -16,7 +16,8 @@ that is, they use an elliptical Gaussian weight that is matched to the image of 
 measured.  The observed moments can be represented as a Gaussian sigma and a Shear object
 representing the shape.
 
-The PSF correction includes several algorithms:
+The PSF correction includes several algorithms, three that are re-implementations of methods
+originated by others and one that was originated by Hirata & Seljak:
 
 - One from Kaiser, Squires, & Broadhurts (1995), "KSB"
 
@@ -25,7 +26,7 @@ The PSF correction includes several algorithms:
 - One that represents a modification by Hirata & Seljak (2003) of methods in Bernstein & Jarvis
 (2002), "LINEAR"
 
-- One new method from Hirata & Seljak (2003), "REGAUSS"
+- One method from Hirata & Seljak (2003), "REGAUSS" (re-Gaussianization)
 
 These methods return shear (or shape) estimators, which may not in fact satisfy conditions like
 |e|<=1, and so they are represented simply as e1/e2 or g1/g2 (depending on the method) rather than
