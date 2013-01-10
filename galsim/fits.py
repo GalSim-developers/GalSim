@@ -36,29 +36,45 @@ def parse_compression(compression, fits):
     return file_compress, pyfits_compress
 
 def write_file(file, hdus, clobber, file_compress):
+
     import os
-    if not clobber and os.path.isfile(file):
-        raise ValueError('File %s already exists'%file)
+    if os.path.isfile(file):
+        if clobber:
+            os.remove(file)
+        else:
+            raise IOError('File %r already exists'%file)
 
-    # The compression routines work better if we first write to an internal buffer
-    # and then output that to a file.  And it shouldn't be any less efficient for 
-    # the normal case of no compression.
-    import io
-    buf = io.BytesIO()
-    hdus.writeto(buf)
+    if file_compress:
+        # The compression routines work better if we first write to an internal buffer
+        # and then output that to a file.
+        import pyfits
+        if pyfits.__version__ < 2.3:
+            # However, pyfits versions before 2.3 do not support writing to a buffer, so we 
+            # need to use a temporary in that case.  We just use the eventual filename in
+            # in that case to write to and then read back in.
+            hdus.writeto(file)
+            buf = open(file,"r")
+            data = buf.read()
+        else:
+            import io
+            buf = io.BytesIO()
+            hdus.writeto(buf)
+            data = buf.getvalue()
 
-    if file_compress == 'gzip':
-        import gzip
-        # There is a compresslevel option (for both gzip and bz2), but we just use the default.
-        fout = gzip.GzipFile(file, 'wb')  
-    elif file_compress == 'bzip2':
-        import bz2
-        fout = bz2.BZ2File(file, 'wb')
+        if file_compress == 'gzip':
+            import gzip
+            # There is a compresslevel option (for both gzip and bz2), but we just use the default.
+            fout = gzip.GzipFile(file, 'wb')  
+        elif file_compress == 'bzip2':
+            import bz2
+            fout = bz2.BZ2File(file, 'wb')
+        else:
+            raise ValueError("Unknown file_compression")
+
+        fout.write(data)
+        fout.close()
     else:
-        fout = open(file, 'wb')
-
-    fout.write(buf.getvalue())
-    fout.close()
+        hdus.writeto(file)
 
 def read_file(file, file_compress):
     if file_compress == 'gzip':
