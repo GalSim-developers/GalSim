@@ -513,6 +513,8 @@ class PowerSpectrumRealizer(object):
         P_k = power_function(self.k)
         power_array[ self.kx, self.ky] = P_k
         power_array[-self.kx, self.ky] = P_k
+        if np.any(power_array < 0):
+            raise ValueError("Negative power required for some values of k!")
         return power_array
     
     def _generate_spin_weightings(self):
