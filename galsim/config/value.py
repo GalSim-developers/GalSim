@@ -46,7 +46,7 @@ def ParseValue(config, param_name, base, value_type):
                       'Sequence', 'List', 'Eval' ],
             int : [ 'InputCatalog', 'Random', 'Sequence', 'List', 'Eval' ],
             bool : [ 'InputCatalog', 'Random', 'Sequence', 'List', 'Eval' ],
-            str : [ 'InputCatalog', 'NumberedFile', 'List', 'Eval' ],
+            str : [ 'InputCatalog', 'NumberedFile', 'FormattedStr', 'List', 'Eval' ],
             galsim.Angle : [ 'Rad', 'Deg', 'Random', 'List', 'Eval' ],
             galsim.Shear : [ 'E1E2', 'EBeta', 'G1G2', 'GBeta', 'Eta1Eta2', 'EtaBeta', 'QBeta',
                              'NFWHaloShear', 'PowerSpectrumShear', 'List', 'Eval' ],
@@ -567,6 +567,69 @@ def _GenerateFromNumberedFile(param, param_name, base, value_type):
     #print 's = ',s
     
     return s, safe
+
+def _GenerateFromFormattedStr(param, param_name, base, value_type):
+    """@brief Create a string from a format string
+    """
+    #print 'Start FormattedStr for ',param_name,' -- param = ',param
+    req = { 'format' : str }
+    # Ignore items for now, we'll deal with it differently.
+    ignore = [ 'items' ]
+    params, safe = GetAllParams(param, param_name, base, req=req, ignore=ignore)
+    #print 'params = ',params
+    format = params['format']
+    #print 'format = ',format
+
+    # Check that items is present and is a list.
+    if 'items' not in param:
+        raise AttributeError("Attribute items is required for %s.type = FormattedStr"%param_name)
+    items = param['items']
+    if not isinstance(items,list):
+        raise AttributeError("items entry for parameter %s is not a list."%param_name)
+
+    # Figure out what types we are expecting for the list elements:
+    tokens = format.split('%')
+    val_types = []
+    skip = False 
+    for token in tokens[1:]:  # skip first one.
+        # It we have set skip, then skip this one.
+        if skip:
+            skip = False
+            continue
+        # If token == '', then this is a %% in the original string.  Skip this and the next token.
+        if len(token) == 0:
+            skip = True
+            continue
+        token = token.lstrip('0123456789lh') # ignore field size, and long specification
+        if len(token) == 0:
+            raise ValueError("Unable to parse '%s' as a valid format string"%format)
+        if token[0].lower() in ['d','i','o','u','x']:
+            val_types.append(int)
+        elif token[0].lower() in ['e', 'f', 'g']:
+            val_types.append(float)
+        elif token[0].lower() in ['r', 's']:
+            val_types.append(str)
+        else:
+            raise ValueError("Unable to parse '%s' as a valid format string"%format)
+    #print 'val_types = ',val_types
+
+    if len(val_types) != len(items):
+        raise ValueError(
+            "Number of items for FormatStr (%d) does not match number expected from "%len(items)+
+            "format string (%d)"%len(val_types))
+    vals = []
+    for index in range(len(items)):
+        #print 'index = ',index,', val_type = ',val_types[index]
+        val, safe1 = ParseValue(items, index, base, val_types[index])
+        #print 'val = ',val
+        safe = safe and safe1
+        vals.append(val)
+    #print 'vals = ',vals
+
+    final_str = format%tuple(vals)
+    #print 'final_str = ',final_str
+
+    return final_str, safe
 
 
 def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
