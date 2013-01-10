@@ -236,9 +236,69 @@ def test_shear_reference():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_tabulated():
+    """Test the TabulatedPk class, which is used to interpolate P(k) that is known only at certain
+    k"""
+    import time
+    t1 = time.time()
+
+    # make PowerSpectrum with some obvious analytic form, P(k)=k^2
+    ps_analytic = galsim.PowerSpectrum(pk2)
+
+    # now tabulate that analytic form at a range of k
+    k_arr = 0.01*np.arange(10000.)
+    p_arr = k_arr**(2.)
+
+    # make a TabulatedPk to initialize another PowerSpectrum
+    tab = galsim.lensing.TabulatedPk(k_arr, p_arr)
+    ps_tab = galsim.PowerSpectrum(tab)
+
+    # draw shears on a grid from both PowerSpectrum objects, with same random seed
+    seed = 12345
+    g1_analytic, g2_analytic = ps_analytic.getShear(grid_spacing = 1., grid_nx = 10,
+                                                    rng = galsim.BaseDeviate(seed))
+    g1_tab, g2_tab = ps_tab.getShear(grid_spacing = 1., grid_nx = 10,
+                                     rng = galsim.BaseDeviate(seed))
+    # make sure that shears that are drawn are essentially identical
+    np.testing.assert_almost_equal(g1_analytic, g1_tab, 6,
+        err_msg = "g1 of shear field from tabulated P(k) differs from expectation!")
+    np.testing.assert_almost_equal(g2_analytic, g2_tab, 6,
+        err_msg = "g2 of shear field from tabulated P(k) differs from expectation!")
+
+    # check for appropriate response to inputs when making/using TabulatedPk
+    try:
+        ## mistaken interpolant choice
+        np.testing.assert_raises(ValueError, galsim.lensing.TabulatedPk,
+                                 k_arr, p_arr, 'splin')
+        ## k, P arrays not the same size
+        np.testing.assert_raises(ValueError, galsim.lensing.TabulatedPk,
+                                 0.01*np.arange(100.), p_arr)
+    except ImportError:
+        pass
+
+    ## check that when calling TabulatedPk, the outputs have the same form as inputs
+    tab = galsim.lensing.TabulatedPk(k_arr, p_arr)
+    k = 0.5
+    assert type(tab(k)) == float
+    k = (0.5, 1.5)
+    result = tab(k)
+    assert type(result) == tuple and len(result) == len(k)
+    k = list(k)
+    result = tab(k)
+    assert type(result) == list and len(result) == len(k)
+    k = np.array(k)
+    result = tab(k)
+    assert type(result) == np.ndarray and len(result) == len(k)
+    k = np.zeros((2,2))
+    result = tab(k)
+    assert type(result) == np.ndarray and result.shape == k.shape
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_nfwhalo()
     test_shear_flatps()
     test_shear_seeds()
     test_shear_reference()
+    test_tabulated()

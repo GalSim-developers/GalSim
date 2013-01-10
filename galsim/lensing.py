@@ -903,7 +903,10 @@ class TabulatedPk(object):
     The TabulatedPk class uses the galsim LookupTable functionality to take some input P(k) that is
     known at particular values of k, and interpolate it to other values of k.  Currently it is the
     responsibility of the user to ensure that the power is defined for k down to zero, as is
-    required by the lensing engine.
+    required by the lensing engine.  The accuracy of the interpolation and the effective shear power
+    spectrum will in part depend on the user ensuring that the P(k) is adequately sampled for the
+    range of P(k) values of interest; very poor sampling could result in the interpolation being
+    quite inaccurate.
 
     @param k             The list, tuple, or 1d Numpy array of k values (floats or doubles).
     @param power         The list, tuple, or 1d Numpy array of P(k) values (floats or doubles).
