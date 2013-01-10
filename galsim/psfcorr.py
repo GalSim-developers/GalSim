@@ -164,8 +164,6 @@ def _convertMask(image, weight = None, badpix = None):
             weight = galsim.ImageViewI(weight_arr.astype(np.int32))
             if weight.bounds != image.bounds:
                 weight.shift(image.xmin-weight.xmin, image.ymin-weight.ymin)
-        if np.any(weight.array == np.abs(weight.array)) == False:
-            raise ValueError("Weight image cannot contain negative values!")
 
     # if badpix image was supplied, identify the nonzero (bad) pixels and set them to zero in weight
     # image; also check bounds
