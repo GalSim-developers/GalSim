@@ -148,7 +148,7 @@ def _convertMask(image, weight = None, badpix = None):
     """
     # if no weight image was supplied, make an int array (same size as gal image) filled with 1's
     if weight == None:
-        weight = galsim.ImageI(bounds=gal_image.bounds, init_value=1)
+        weight = galsim.ImageI(bounds=image.bounds, init_value=1)
     else:
         # if weight image was supplied, check if it has the right bounds and is non-negative
         if weight.bounds != image.bounds:
