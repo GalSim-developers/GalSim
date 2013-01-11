@@ -80,7 +80,9 @@ def write_file(file, hdus, clobber, file_compress):
 def read_file(file, file_compress):
     if file_compress == 'gzip':
         import gzip
-        fin = gzip.GzipFile(file, 'rb') 
+        fin = gzip.GzipFile(file, 'rb')
+        if fin.mode is not 'rb':
+            fin.mode = 'rb' # for some reason Gzipfiles sometimes store 'rb' as ingeter mode '1'
     elif file_compress == 'bzip2':
         import bz2
         fin = bz2.BZ2File(file, 'rb')
