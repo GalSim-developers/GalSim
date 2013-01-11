@@ -66,7 +66,7 @@ class BaseCorrFunc(object):
         """Returns a copy of the correlation function.
         """
         import copy
-        cf = _galsim._CorrelationFunction(self.CorrelationFunction)
+        cf = _galsim._CorrelationFunction(self._GSCorrelationFunction.SBProfile)
         ret = BaseCorrFunc(base.GSObject(cf))
         ret.__class__ = self.__class__
         return ret
@@ -202,6 +202,11 @@ class BaseCorrFunc(object):
         ret.applyShear(*args, **kwargs)
         return ret
 
+    #    def draw():
+
+
+    #def drawShoot():
+
 class ImageCorrFunc(BaseCorrFunc):
     """A class describing 2D Correlation Functions calculated from Images.
 
@@ -324,7 +329,7 @@ class ImageCorrFunc(BaseCorrFunc):
         BaseCorrFunc.__init__(
             self, base.GSObject(
                 _galsim._CorrelationFunction(
-                    self.original_cf_image, self.interpolant, dx=self.original_image.getScale()))
+                    self.original_cf_image, self.interpolant, dx=self.original_image.getScale())))
 
     # Make a copy of the ImageCorrFunc
     def copy(self):

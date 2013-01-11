@@ -120,10 +120,15 @@ namespace galsim {
         /// @brief Destructor
         ~CorrelationFunction();
 
-      using SBInterpolatedImage::xValue;
-      using SBInterpolatedImage::kValue;
-      using SBInterpolatedImage::draw;
-      using SBInterpolatedImage::drawShoot;
+        // CorrelationFunction privately inherits, so state methods we need from the base class
+        using SBInterpolatedImage::xValue;
+        using SBInterpolatedImage::kValue;
+        using SBInterpolatedImage::draw;
+        using SBInterpolatedImage::drawShoot;
+        using SBInterpolatedImage::drawK;
+        using SBInterpolatedImage::applyTransformation;
+        using SBInterpolatedImage::applyShear;
+        using SBInterpolatedImage::applyRotation;
 
         /** 
          * @brief Return value of correlation function at a chosen 2D position in real space.
