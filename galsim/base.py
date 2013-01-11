@@ -1395,7 +1395,6 @@ class InterpolatedImage(GSObject):
     """
 
     # Initialization parameters of the object, with type information
-    # EDIT: update these as needed while coding this up
     _req_params = { 'image' : str }
     _opt_params = {
         'interpolant' : str ,
