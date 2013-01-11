@@ -927,6 +927,7 @@ class TabulatedPk(object):
         # sanity check arguments
         if units is not galsim.arcsec:
             raise ValueError("Currently we require units of arcsec for the inverse wavenumber!")
+        self.units = units
 
         # make and store table
         if interpolant is None:
