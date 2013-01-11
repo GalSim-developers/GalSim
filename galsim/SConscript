@@ -71,7 +71,12 @@ for f in io_files:
     if os.path.isfile(f): os.remove(f)
     # And also in the install directory
     installed_f = os.path.join(python_install_dir, f)
-    if os.path.isfile(installed_f): os.remove(installed_f)
+    try:
+        if os.path.isfile(installed_f): os.remove(installed_f)
+    except:
+        # Might not have permission without sudo, so ignore errors that might happen here.
+        # It will get done when the user runs `sudo scons install`
+        pass
 
 if 'install' in COMMAND_LINE_TARGETS:
 
