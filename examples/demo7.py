@@ -23,7 +23,6 @@ New features introduced in this demo:
 - obj.draw(image)  -- i.e. taking the scale from the image rather than a dx= argument
 - obj.drawShoot(image, max_extra_noise, rng)
 - noise = galsim.PoissonDeviate(rng, mean)
-
 - writeCube(..., compress='gzip')
 """
 
