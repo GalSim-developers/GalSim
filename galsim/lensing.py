@@ -919,8 +919,15 @@ class TabulatedPk(object):
     @param power         The list, tuple, or 1d Numpy array of P(k) values (floats or doubles).
     @param interpolant   The interpolant to use, with the options being 'spline', 'linear', 'ceil',
                          and 'floor' [Default: 'spline'].
+    @param units         The angular units used for the power spectrum (i.e. the units of k^-1).
+                         Currently only arcsec is implemented.
+
     """
-    def __init__(self, k, power, interpolant = None):
+    def __init__(self, k, power, interpolant = None, units = galsim.arcsec):
+        # sanity check arguments
+        if units is not galsim.arcsec:
+            raise ValueError("Currently we require units of arcsec for the inverse wavenumber!")
+
         # make and store table
         if interpolant is None:
             interpolant = 'spline'
