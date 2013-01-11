@@ -915,27 +915,45 @@ class TabulatedPk(object):
     range of P(k) values of interest; very poor sampling could result in the interpolation being
     quite inaccurate.
 
+    The user must supply the arrays for k and P, or the name of an ascii file containing columns for
+    k and P.
+
     @param k             The list, tuple, or 1d Numpy array of k values (floats or doubles).
     @param power         The list, tuple, or 1d Numpy array of P(k) values (floats or doubles).
+    @param file          The name of the ascii file containing k and P (2 columns).
+    @param c_ell         Is the power actually given as C_ell, which requires us to multiply by
+                         k^2 / (2 pi) to get the shear power P(k)?  [Default: False]
     @param interpolant   The interpolant to use, with the options being 'spline', 'linear', 'ceil',
                          and 'floor' [Default: 'spline'].
     @param units         The angular units used for the power spectrum (i.e. the units of k^-1).
                          Currently only arcsec is implemented.
 
     """
-    def __init__(self, k, power, interpolant = None, units = galsim.arcsec):
-        # sanity check arguments
+    def __init__(self, k = None, power = None, file = None, c_ell = False, interpolant = None,
+                 units = galsim.arcsec):
+        # sanity check units
         if units is not galsim.arcsec:
             raise ValueError("Currently we require units of arcsec for the inverse wavenumber!")
         self.units = units
 
-        # make and store table
+        # read in from file if a filename was specified
+        if file:
+            data = np.loadtxt(file).transpose()
+            k=data[0]
+            power=data[1]
+
+        # check for proper interpolant
         if interpolant is None:
             interpolant = 'spline'
         else:
             if interpolant not in ['spline', 'linear', 'ceil', 'floor']:
                 raise ValueError("Unknown interpolant: %s" % interpolant)
-        self.table = galsim.LookupTable(k, power, interpolant)
+
+        # make and store table
+        if c_ell:
+            self.table = galsim.LookupTable(k, (k**2)*power/(2.*np.pi), interpolant)
+        else:
+            self.table = galsim.LookupTable(k, power, interpolant)
 
     def __call__(self, k):
         """Interpolate the TabulatedPk to get power at some k value(s).
