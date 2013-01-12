@@ -379,8 +379,12 @@ def read(fits, compression='auto'):
         # However, such compressed hdu's may not be the PrimaryHDU, so if we think we are
         # reading a compressed file, skip to hdu 1.
         if pyfits_compress:
+            if len(fits) < 2:
+                raise IOError('Expecting at least one extension HDU in galsim.read')
             fits = fits[1]
         else:
+            if len(fits) < 1:
+                raise IOError('Expecting at least one HDU in galsim.read')
             fits = fits[0]
 
     xmin = fits.header.get("GS_XMIN", 1)
@@ -443,8 +447,12 @@ def readMulti(fits, compression='auto'):
     image_list = []
     if pyfits_compress:
         first = 1
+        if len(hdus) < 2:
+            raise IOError('Expecting at least one extension HDU in galsim.readMulti')
     else:
         first = 0
+        if len(hdus) < 1:
+            raise IOError('Expecting at least one HDU in galsim.readMulti')
     for hdu in hdus[first:]:
         image_list.append(read(hdu))
 
@@ -482,8 +490,12 @@ def readCube(fits, compression='auto'):
         # However, such compressed hdu's may not be the PrimaryHDU, so if we think we are
         # reading a compressed file, skip to hdu 1.
         if pyfits_compress:
+            if len(fits) < 2:
+                raise IOError('Expecting at least one extension HDU in galsim.readCube')
             fits = fits[1]
         else:
+            if len(fits) < 1:
+                raise IOError('Expecting at least one HDU in galsim.readCube')
             fits = fits[0]
 
     xmin = fits.header.get("GS_XMIN", 1)
