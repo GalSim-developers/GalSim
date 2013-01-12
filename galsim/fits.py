@@ -77,22 +77,64 @@ def write_file(file, hdus, clobber, file_compress):
     else:
         hdus.writeto(file)
 
-def read_file(file, file_compress):
-    if file_compress == 'gzip':
-        import gzip
-        fin = gzip.GzipFile(file, 'rb')
-        if fin.mode is not 'rb':
-            fin.mode = 'rb' # for some reason Gzipfiles sometimes store 'rb' as integer mode '1'
-    elif file_compress == 'bzip2':
-        import bz2
-        fin = bz2.BZ2File(file, 'rb')
-    else:
-        fin = open(file, 'rb')
-    import pyfits
-    hdus = pyfits.open(fin)
-    # pyfits doesn't actually read the file yet, so we can't close fin here.  Need to pass
-    # it back to the caller and let them close it when they are done with hdus.
-    return hdus, fin
+# This is a class rather than a def, since we want to store a variable, and 
+# python doesn't really have static variables.  But this will be used as though
+# it were a normal function: read_file(file, file_compress)
+class _ReadFile:
+    def __init__(self):
+        # Store whether we have a bad interaction between gzip and pyfits, so we 
+        # don't need to keep trying code that doesn't work after the first time 
+        # we discover it fails.
+        self.normal_gzip = True
+
+    def __call__(self, file, file_compress):
+        import pyfits
+        if not file_compress:
+            hdus = pyfits.open(file, 'readonly')
+            return hdus, None
+        elif file_compress == 'gzip':
+            import gzip
+            if self.normal_gzip:
+                try:
+                    fin = gzip.GzipFile(file, 'rb')
+                    hdus = pyfits.open(fin, 'readonly')
+                    # Sometimes this doesn't work.  The symptoms may be that this raises an
+                    # exception, or possibly the hdus list is empty, in which case the next
+                    # line will raise an exception.
+                    hdu = hdus[0]
+                    # pyfits doesn't actually read the file yet, so we can't close fin here.
+                    # Need to pass it back to the caller and let them close it when they are 
+                    # done with hdus.
+                    return hdus, fin
+                except:
+                    # Mark that we can't do this the efficient way so next time (and afterward)
+                    # it will use the below code instead.
+                    self.normal_gzip = False
+                    return self(file,file_compress)
+            else:
+                try:
+                    # This usually works, although pyfits internally uses a temporary file,
+                    # which is why we prefer the above code if it works.
+                    hdus = pyfits.open(file, 'readonly')
+                    return hdus, None
+                except:
+                    # But just in case, here is an implementation that should always work.
+                    fin = gzip.GzipFile(file, 'rb')
+                    import tempfile
+                    tmp = tempfile.NamedTemporaryFile('wb+')
+                    data = fin.read()
+                    tmp.write(data)
+                    tmp.seek(0)
+                    hdus = pyfits.open(tmp)
+                    return hdus, tmp
+        elif file_compress == 'bzip2':
+            import bz2
+            fin = bz2.BZ2File(file, 'rb')
+            hdus = pyfits.open(fin, 'readonly')
+            return hdus, fin
+        else:
+            raise ValueError("Unknown file_compression")
+read_file = _ReadFile()
 
 def write_header(hdu, add_wcs, scale, xmin, ymin):
     # In PyFITS 3.1, the update method was deprecated in favor of subscript assignment.
