@@ -33,6 +33,16 @@ namespace galsim {
             bp::class_< CorrelationFunction > pyCorrelationFunction(
                 "_CorrelationFunction", bp::init<const CorrelationFunction &>()
             );
+            pyCorrelationFunction
+                .def("xValue", &CorrelationFunction::xValue, bp::args("p"))
+                .def("kValue", &CorrelationFunction::kValue, bp::args("k"))
+              //.def("applyTransformation",
+              //     &CorrelationFunction::applyTransformation, bp::args("e"))
+              //.def("applyShear",
+              //     (void (CorrelationFunction::*)(CppShear))&CorrelationFunction::applyShear,
+              //     bp::arg("s"))
+              //.def("applyRotation", &CorrelationFunction::applyRotation, bp::args("theta"))
+            ;
             wrapTemplates<float>(pyCorrelationFunction);
             wrapTemplates<double>(pyCorrelationFunction);
             wrapTemplates<short>(pyCorrelationFunction);

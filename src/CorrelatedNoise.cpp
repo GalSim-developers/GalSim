@@ -125,6 +125,12 @@ namespace galsim {
     /* Here we redefine the xValue (as compared to the SBProfile version) to enforce two-fold
      * rotational symmetry.
      */
+    double CorrelationFunction::xValue(const Position<double> &p) const
+    {
+        assert(_pimpl.get());
+        return _pimpl->xValue(p); 
+    }
+
     double CorrelationFunction::CorrelationFunctionImpl::xValue(const Position<double>& p) const 
     {
         /*
@@ -146,6 +152,12 @@ namespace galsim {
         } else {
             return _xtab->interpolate(-p.x, -p.y, *_xInterp);                
         }
+    }
+
+    std::complex<double> CorrelationFunction::kValue(const Position<double> &k) const
+    {
+        assert(_pimpl.get());
+        return _pimpl->kValue(k); 
     }
 
     std::complex<double> CorrelationFunction::CorrelationFunctionImpl::kValue(

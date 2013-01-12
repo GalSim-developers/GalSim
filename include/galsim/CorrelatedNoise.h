@@ -89,7 +89,7 @@ namespace galsim {
      * There are also optional arguments for the pixel size (default is to get it from
      * the image), and a factor by which to pad the image (default = 4).
      */
-    class CorrelationFunction: private SBInterpolatedImage
+    class CorrelationFunction: protected SBInterpolatedImage
     {
     public:
         /** 
@@ -121,14 +121,12 @@ namespace galsim {
         ~CorrelationFunction();
 
         // CorrelationFunction privately inherits, so state methods we need from the base class
-        using SBInterpolatedImage::xValue;
-        using SBInterpolatedImage::kValue;
-        using SBInterpolatedImage::draw;
-        using SBInterpolatedImage::drawShoot;
-        using SBInterpolatedImage::drawK;
-        using SBInterpolatedImage::applyTransformation;
-        using SBInterpolatedImage::applyShear;
-        using SBInterpolatedImage::applyRotation;
+        //using SBInterpolatedImage::draw;
+        //using SBInterpolatedImage::drawShoot;
+        //using SBInterpolatedImage::drawK;
+        //using SBInterpolatedImage::applyTransformation;
+        //using SBInterpolatedImage::applyShear;
+        //using SBInterpolatedImage::applyRotation;
 
         /** 
          * @brief Return value of correlation function at a chosen 2D position in real space.
