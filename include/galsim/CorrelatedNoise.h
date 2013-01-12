@@ -89,7 +89,7 @@ namespace galsim {
      * There are also optional arguments for the pixel size (default is to get it from
      * the image), and a factor by which to pad the image (default = 4).
      */
-    class CorrelationFunction: protected SBInterpolatedImage
+    class CorrelationFunction: private SBInterpolatedImage
     {
     public:
         /** 
