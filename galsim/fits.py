@@ -85,7 +85,7 @@ class _ReadFile:
         # Store whether we have a bad interaction between gzip and pyfits, so we 
         # don't need to keep trying code that doesn't work after the first time 
         # we discover it fails.
-        self.normal_gzip = True
+        self.gzip_in_mem = True
 
     def __call__(self, file, file_compress):
         import pyfits
@@ -94,13 +94,13 @@ class _ReadFile:
             return hdus, None
         elif file_compress == 'gzip':
             import gzip
-            if self.normal_gzip:
+            if self.gzip_in_mem:
                 try:
                     fin = gzip.GzipFile(file, 'rb')
                     hdus = pyfits.open(fin, 'readonly')
                     # Sometimes this doesn't work.  The symptoms may be that this raises an
-                    # exception, or possibly the hdus list is empty, in which case the next
-                    # line will raise an exception.
+                    # exception, or possibly the hdus list comes back empty, in which case the 
+                    # next line will raise an exception.
                     hdu = hdus[0]
                     # pyfits doesn't actually read the file yet, so we can't close fin here.
                     # Need to pass it back to the caller and let them close it when they are 
@@ -109,7 +109,7 @@ class _ReadFile:
                 except:
                     # Mark that we can't do this the efficient way so next time (and afterward)
                     # it will use the below code instead.
-                    self.normal_gzip = False
+                    self.gzip_in_mem = False
                     return self(file,file_compress)
             else:
                 try:
