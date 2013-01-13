@@ -195,18 +195,36 @@ namespace galsim {
         template <typename T>
         Image<double> getCovarianceMatrix(ImageView<T> image, double dx) const;
 
+        // Doxygen would automatically takes documentation from include/galsim/SBProfile.h for the
+        // draw methods below, but we don't want that as they reference SBProfiles...
+
+        /**
+         * Draw the CorrelationFunction in real space returning the total sum.
+         * 
+         * See documentation for the SBProfile::draw() member function for more information.
+         */
         template <typename T>
         double draw(ImageView<T> image, double gain=1., double wmult=1.) const
         {
             return SBInterpolatedImage::draw(image, gain, wmult);
         }
 
+        /**
+         * @brief Draw an image of the CorrelationFunction in k space.
+         *
+         * See documentation for the SBProfile::drawK() member function for more information.
+         */
         template <typename T>
         void drawK(ImageView<T> re, ImageView<T> im, double gain=1., double wmult=1.) const
         {
             return SBInterpolatedImage::drawK(re, im, gain, wmult);
         }
 
+        /** 
+         * @brief Draw this CorrelationFunction into an Image by shooting photons.
+         * 
+         * See documentation for the SBProfile::drawShoot() member function for more information.
+         */
         template <typename T>
         double drawShoot(ImageView<T> image, double N, UniformDeviate ud,
                          double gain=1., double max_extra_noise=0., bool poisson_flux=true) const
