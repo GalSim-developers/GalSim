@@ -125,12 +125,6 @@ namespace galsim {
     /* Here we redefine the xValue (as compared to the SBProfile version) to enforce two-fold
      * rotational symmetry.
      */
-    double CorrelationFunction::xValue(const Position<double> &p) const
-    {
-        assert(_pimpl.get());
-        return _pimpl->xValue(p); 
-    }
-
     double CorrelationFunction::CorrelationFunctionImpl::xValue(const Position<double>& p) const 
     {
         /*
@@ -152,12 +146,6 @@ namespace galsim {
         } else {
             return _xtab->interpolate(-p.x, -p.y, *_xInterp);                
         }
-    }
-
-    std::complex<double> CorrelationFunction::kValue(const Position<double> &k) const
-    {
-        assert(_pimpl.get());
-        return _pimpl->kValue(k); 
     }
 
     std::complex<double> CorrelationFunction::CorrelationFunctionImpl::kValue(
@@ -194,6 +182,37 @@ namespace galsim {
     template CorrelationFunction::CorrelationFunction(
         const BaseImage<short>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
+
+  //template double CorrelationFunction::draw(
+  //    ImageView<float> image, double gain, double wmult) const;
+  //template double CorrelationFunction::draw(
+  //    ImageView<double> image, double gain, double wmult) const;
+  //template double CorrelationFunction::draw(
+  //    ImageView<int> image, double gain, double wmult) const;
+  //template double CorrelationFunction::draw(
+  //    ImageView<short> image, double gain, double wmult) const;
+
+  //template void CorrelationFunction::drawK(
+  //    ImageView<float> re, ImageView<float> im, double gain, double wmult) const;
+  //template void CorrelationFunction::drawK(
+  //    ImageView<double> re, ImageView<double> im, double gain, double wmult) const;
+  //template void CorrelationFunction::drawK(
+  //    ImageView<int> re, ImageView<int> im, double gain, double wmult) const;
+  //template void CorrelationFunction::drawK(
+  //    ImageView<short> re, ImageView<short> im, double gain, double wmult) const;
+
+  //template double CorrelationFunction::drawShoot(
+  //    ImageView<float> image, double N, UniformDeviate ud, double gain, double max_extra_noise,
+  //    bool poisson_flux) const;
+  //template double CorrelationFunction::drawShoot(
+  //    ImageView<double> image, double N, UniformDeviate ud, double gain, double max_extra_noise,
+  //    bool poisson_flux) const;
+  //template double CorrelationFunction::drawShoot(
+  //    ImageView<int> image, double N, UniformDeviate ud, double gain, double max_extra_noise,
+  //    bool poisson_flux) const;
+  //template double CorrelationFunction::drawShoot(
+  //    ImageView<short> image, double N, UniformDeviate ud, double gain, double max_extra_noise,
+  //    bool poisson_flux) const;
 
     template CorrelationFunction::CorrelationFunctionImpl::CorrelationFunctionImpl(
         const BaseImage<float>& image, boost::shared_ptr<Interpolant2d> xInterp,

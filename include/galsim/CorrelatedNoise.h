@@ -141,7 +141,10 @@ namespace galsim {
          *
          * @param[in] p 2D position in real space.
          */
-        double xValue(const Position<double>& p) const;
+        double xValue(const Position<double>& p) const
+        {
+            return SBInterpolatedImage::xValue(p);
+        }
 
         /**
          * @brief Return value of correlation function at a chosen 2D position in k space.
@@ -152,7 +155,10 @@ namespace galsim {
          *
          * @param[in] k 2D position in k space.
          */
-        std::complex<double> kValue(const Position<double>& k) const;
+        std::complex<double> kValue(const Position<double>& k) const
+        {
+            return SBInterpolatedImage::kValue(k);
+        }
 
         /**
          * @brief Return, as a square Image, a noise covariance matrix between every element in an 
@@ -170,6 +176,27 @@ namespace galsim {
          */
         template <typename T>
         Image<double> getCovarianceMatrix(ImageView<T> image, double dx) const;
+
+        template <typename T>
+        double draw(ImageView<T> image, double gain=1., double wmult=1.) const
+        {
+            return SBInterpolatedImage::draw(image, gain, wmult);
+        }
+
+        template <typename T>
+        void drawK(ImageView<T> re, ImageView<T> im, double gain=1., double wmult=1.) const
+        {
+            return SBInterpolatedImage::drawK(re, im, gain, wmult);
+        }
+
+        template <typename T>
+        double drawShoot(ImageView<T> image, double N, UniformDeviate ud,
+                         double gain=1., double max_extra_noise=0., bool poisson_flux=true) const
+        {
+            return SBInterpolatedImage::drawShoot(
+                image, N, ud, gain, max_extra_noise, poisson_flux
+            );
+        }
 
     protected:
 
