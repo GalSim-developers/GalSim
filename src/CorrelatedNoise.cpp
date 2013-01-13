@@ -64,14 +64,15 @@ namespace galsim {
 
     // Covariance matrix calculation using the dimensions of an input image, and a scale dx
     template <typename T>
-    Image<double> CorrelationFunction::getCovarianceMatrix(ImageView<T> image, double dx) const
+    Image<double> CorrelationFunction::calculateCovarianceMatrix(
+        ImageView<T> image, double dx) const
     {
         // Calculate the required dimensions of the input image
         int idim = 1 + image.getXMax() - image.getXMin();
         int jdim = 1 + image.getYMax() - image.getYMin();
         int covdim = idim * jdim;
         tmv::SymMatrix<double, 
-            tmv::FortranStyle|tmv::Upper> symcov = getCovarianceSymMatrix(image, dx);
+            tmv::FortranStyle|tmv::Upper> symcov = calculateCovarianceSymMatrix(image, dx);
         Image<double> cov = Image<double>(covdim, covdim, 0.);
 
         for (int i=1; i<=covdim; i++){ // note that the Image indices use the FITS convention and 
@@ -87,7 +88,7 @@ namespace galsim {
     template <typename T>
     tmv::SymMatrix<
         double, tmv::FortranStyle|tmv::Upper
-    > CorrelationFunction::getCovarianceSymMatrix(
+    > CorrelationFunction::calculateCovarianceSymMatrix(
         ImageView<T> image, double dx) const
     {
          // Calculate the required dimensions
@@ -227,13 +228,13 @@ namespace galsim {
         const BaseImage<short>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor);
 
-    template Image<double> CorrelationFunction::getCovarianceMatrix(
+    template Image<double> CorrelationFunction::calculateCovarianceMatrix(
         ImageView<float> image, double dx) const;
-    template Image<double> CorrelationFunction::getCovarianceMatrix(
+    template Image<double> CorrelationFunction::calculateCovarianceMatrix(
         ImageView<double> image, double dx) const;
-    template Image<double> CorrelationFunction::getCovarianceMatrix(
+    template Image<double> CorrelationFunction::calculateCovarianceMatrix(
         ImageView<int> image, double dx) const;
-    template Image<double> CorrelationFunction::getCovarianceMatrix(
+    template Image<double> CorrelationFunction::calculateCovarianceMatrix(
         ImageView<short> image, double dx) const;
 
 }

@@ -25,9 +25,9 @@ namespace galsim {
                      )
                )
                .def(
-                     "getCovarianceMatrix", (
+                     "calculateCovarianceMatrix", (
                          Image<double> (CorrelationFunction::*) (ImageView<U>, double) 
-                         const)&CorrelationFunction::getCovarianceMatrix, 
+                         const)&CorrelationFunction::calculateCovarianceMatrix, 
                       (bp::arg("image"), bp::arg("dx")=0.)
                )
                .def("drawShoot", 

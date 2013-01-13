@@ -193,7 +193,7 @@ namespace galsim {
          * this can be revisited.
          */
         template <typename T>
-        Image<double> getCovarianceMatrix(ImageView<T> image, double dx) const;
+        Image<double> calculateCovarianceMatrix(ImageView<T> image, double dx) const;
 
         // Doxygen would automatically takes documentation from include/galsim/SBProfile.h for the
         // draw methods below, but we don't want that as they reference SBProfiles...
@@ -246,7 +246,7 @@ namespace galsim {
          * along with ColumnMajor ordering (the default), and Upper triangle storage.
          */
         template <typename T>
-        tmv::SymMatrix<double, tmv::FortranStyle|tmv::Upper> getCovarianceSymMatrix(
+        tmv::SymMatrix<double, tmv::FortranStyle|tmv::Upper> calculateCovarianceSymMatrix(
             ImageView<T> image, double dx) const;
 
     };
