@@ -28,12 +28,12 @@ namespace galsim {
                      "getCovarianceMatrix", (
                          Image<double> (CorrelationFunction::*) (ImageView<U>, double) 
                          const)&CorrelationFunction::getCovarianceMatrix, 
-                      (bp::arg("image"), bp::arg("dx")=0.))
-               ;
+                      (bp::arg("image"), bp::arg("dx")=0.)
+               )
                .def("drawShoot", 
                    (double (CorrelationFunction::*)(
                        ImageView<U>, double, UniformDeviate, double, double, bool
-                   ) const)&SBProfile::drawShoot, (
+                   ) const)&CorrelationFunction::drawShoot, (
                        bp::arg("image"), bp::arg("N")=0., bp::arg("ud"), bp::arg("gain")=1., 
                        bp::arg("max_extra_noise")=0., bp::arg("poisson_flux")=true
                    ),
@@ -45,15 +45,17 @@ namespace galsim {
                    "Returns total flux of photons that landed inside image bounds."
                 )
                 .def("draw", 
-                     (double (SBProfile::*)(ImageView<U>, double, double) const)&SBProfile::draw, (
+                     (
+                         double (CorrelationFunction::*)(ImageView<U>, double, double) const
+                     )&CorrelationFunction::draw, (
                          bp::arg("image"), bp::arg("gain")=1., bp::arg("wmult")=1.
                      ),
                      "Draw in-place and return the summed flux."
                 )
                 .def("drawK", 
-                     (void (SBProfile::*)(
+                     (void (CorrelationFunction::*)(
                          ImageView<U>, ImageView<U>, double, double
-                     ) const)&SBProfile::drawK, (
+                     ) const)&CorrelationFunction::drawK, (
                          bp::arg("re"), bp::arg("im"), bp::arg("gain")=1., bp::arg("wmult")=1.
                      ),
                      "Draw k-space image (real and imaginary components)."
