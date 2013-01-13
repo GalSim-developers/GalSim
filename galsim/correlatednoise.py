@@ -117,7 +117,7 @@ class BaseCorrFunc(object):
 
         @param scale The linear rescaling factor to apply.
         """
-        self.applyTransformation(galsim.Ellipse(np.log(scale))) # _rootps_store is reset here too
+        self.applyTransformation(_galsim.Ellipse(np.log(scale))) # _rootps_store is reset here too
 
     def applyRotation(self, theta):
         """Apply a rotation theta to this object.
@@ -129,7 +129,7 @@ class BaseCorrFunc(object):
 
         @param theta Rotation angle (Angle object, +ve anticlockwise).
         """
-        if not isinstance(theta, galsim.Angle):
+        if not isinstance(theta, _galsim.Angle):
             raise TypeError("Input theta should be an Angle")
         self._GSCorrelationFunction.applyRotation(theta)
         self._rootps_store = []
@@ -159,7 +159,7 @@ class BaseCorrFunc(object):
         @param ellipse The galsim.Ellipse transformation to apply
         @returns The transformed GSObject.
         """
-        if not isinstance(ellipse, galsim.Ellipse):
+        if not isinstance(ellipse, _galsim.Ellipse):
             raise TypeError("Argument to createTransformed must be a galsim.Ellipse!")
         ret = self.copy()
         ret.applyTransformation(ellipse)
@@ -176,7 +176,7 @@ class BaseCorrFunc(object):
         @returns The rescaled GSObject.
         """
         ret = self.copy()
-        ret.applyTransformation(galsim.Ellipse(np.log(scale)))
+        ret.applyTransformation(_galsim.Ellipse(np.log(scale)))
         return ret
 
     def createRotated(self, theta):
@@ -185,7 +185,7 @@ class BaseCorrFunc(object):
         @param theta Rotation angle (Angle object, +ve anticlockwise).
         @returns The rotated GSObject.
         """
-        if not isinstance(theta, galsim.Angle):
+        if not isinstance(theta, _galsim.Angle):
             raise TypeError("Input theta should be an Angle")
         ret = self.copy()
         ret.applyRotation(theta)
