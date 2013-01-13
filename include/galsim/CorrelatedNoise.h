@@ -160,6 +160,24 @@ namespace galsim {
             return SBInterpolatedImage::kValue(k);
         }
 
+        // Doxygen automatically takes relevant documentation from include/galsim/SBProfile.h
+        void applyTransformation(const CppEllipse& e)
+        {
+            return SBInterpolatedImage::applyTransformation(e);
+        }
+
+        // Doxygen automatically takes relevant documentation from include/galsim/SBProfile.h
+        void applyShear(CppShear s)
+        {
+            return SBInterpolatedImage::applyShear(s);
+        }
+
+        // Doxygen automatically takes relevant documentation from include/galsim/SBProfile.h
+        void applyRotation(const Angle& theta)
+        {
+            return SBInterpolatedImage::applyRotation(theta);
+        }
+
         /**
          * @brief Return, as a square Image, a noise covariance matrix between every element in an 
          * input Image with pixel scale dx.
