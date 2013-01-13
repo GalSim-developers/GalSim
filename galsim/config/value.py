@@ -600,14 +600,14 @@ def _GenerateFromFormattedStr(param, param_name, base, value_type):
         if len(token) == 0:
             skip = True
             continue
-        token = token.lstrip('0123456789lh') # ignore field size, and long specification
+        token = token.lstrip('0123456789lLh') # ignore field size, and long/short specification
         if len(token) == 0:
             raise ValueError("Unable to parse '%s' as a valid format string"%format)
-        if token[0].lower() in ['d','i','o','u','x']:
+        if token[0].lower() in 'diouxX':
             val_types.append(int)
-        elif token[0].lower() in ['e', 'f', 'g']:
+        elif token[0].lower() in 'eEfFgG':
             val_types.append(float)
-        elif token[0].lower() in ['r', 's']:
+        elif token[0].lower() in 'rs':
             val_types.append(str)
         else:
             raise ValueError("Unable to parse '%s' as a valid format string"%format)
