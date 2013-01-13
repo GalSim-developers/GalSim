@@ -1,4 +1,4 @@
-
+// -*- c++ -*-
 #ifndef SBPROFILE_H
 #define SBPROFILE_H
 /** 
