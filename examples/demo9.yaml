@@ -206,7 +206,7 @@ output :
         # the various %d, %f, etc.  In other words, once we construct a list of items,
         # the final string is calculated using
         #     format%tuple(items)
-        format : 'output_yaml/nfw%d'
+        format : output_yaml/nfw%d
 
         items : 
             # Only one item in this case, but in general you would have an item for each
