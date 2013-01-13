@@ -30,6 +30,11 @@ namespace galsim {
                          const)&CorrelationFunction::calculateCovarianceMatrix, 
                       (bp::arg("image"), bp::arg("dx")=0.)
                )
+               ;
+        }
+        template <typename U, typename W>
+        static void wrapTemplatesDraw(W & wrapper) {
+            wrapper
                .def("drawShoot", 
                    (double (CorrelationFunction::*)(
                        ImageView<U>, double, UniformDeviate, double, double, bool
@@ -81,6 +86,10 @@ namespace galsim {
             wrapTemplates<double>(pyCorrelationFunction);
             wrapTemplates<short>(pyCorrelationFunction);
             wrapTemplates<int>(pyCorrelationFunction);
+            // Then do the (float and double only) draw template functions
+            wrapTemplatesDraw<float>(pyCorrelationFunction);
+            wrapTemplatesDraw<double>(pyCorrelationFunction);
+
         }
 
     };
