@@ -4,7 +4,7 @@ Python layer documentation and functions for handling correlated noise in GalSim
 """
 
 import numpy as np
-from . import _galsim
+import galsim
 from . import base
 from . import utilities
 
@@ -66,7 +66,7 @@ class BaseCorrFunc(object):
         """Returns a copy of the correlation function.
         """
         import copy
-        cf = _galsim._CorrelationFunction(self._GSCorrelationFunction.SBProfile)
+        cf = galsim._galsim._CorrelationFunction(self._GSCorrelationFunction.SBProfile)
         ret = BaseCorrFunc(base.GSObject(cf))
         ret.__class__ = self.__class__
         return ret
@@ -105,7 +105,7 @@ class BaseCorrFunc(object):
         """
         if not isinstance(ellipse, galsim.Ellipse):
             raise TypeError("Argument to applyTransformation must be a galsim.Ellipse!")
-        self._GSCorrelationFunction.applyTransformation(ellipse._ellipse)
+        self._GSCorrelationFunction.applyTransformation(ellipse)
         self._rootps_store = []
 
     def applyScaling(self, scale):
@@ -117,7 +117,7 @@ class BaseCorrFunc(object):
 
         @param scale The linear rescaling factor to apply.
         """
-        self.applyTransformation(_galsim.Ellipse(np.log(scale))) # _rootps_store is reset here too
+        self.applyTransformation(galsim.Ellipse(np.log(scale))) # _rootps_store is reset here too
 
     def applyRotation(self, theta):
         """Apply a rotation theta to this object.
@@ -129,7 +129,7 @@ class BaseCorrFunc(object):
 
         @param theta Rotation angle (Angle object, +ve anticlockwise).
         """
-        if not isinstance(theta, _galsim.Angle):
+        if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
         self._GSCorrelationFunction.applyRotation(theta)
         self._rootps_store = []
@@ -159,7 +159,7 @@ class BaseCorrFunc(object):
         @param ellipse The galsim.Ellipse transformation to apply
         @returns The transformed GSObject.
         """
-        if not isinstance(ellipse, _galsim.Ellipse):
+        if not isinstance(ellipse, galsim.Ellipse):
             raise TypeError("Argument to createTransformed must be a galsim.Ellipse!")
         ret = self.copy()
         ret.applyTransformation(ellipse)
@@ -176,7 +176,7 @@ class BaseCorrFunc(object):
         @returns The rescaled GSObject.
         """
         ret = self.copy()
-        ret.applyTransformation(_galsim.Ellipse(np.log(scale)))
+        ret.applyTransformation(galsim.Ellipse(np.log(scale)))
         return ret
 
     def createRotated(self, theta):
@@ -185,7 +185,7 @@ class BaseCorrFunc(object):
         @param theta Rotation angle (Angle object, +ve anticlockwise).
         @returns The rotated GSObject.
         """
-        if not isinstance(theta, _galsim.Angle):
+        if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
         ret = self.copy()
         ret.applyRotation(theta)
@@ -292,8 +292,8 @@ class ImageCorrFunc(BaseCorrFunc):
 
         # Store local copies of the original image, power spectrum and modified correlation function
         self.original_image = image
-        self.original_ps_image = _galsim.ImageViewD(np.ascontiguousarray(ps_array))
-        self.original_cf_image = _galsim.ImageViewD(np.ascontiguousarray(cf_array))
+        self.original_ps_image = galsim.ImageViewD(np.ascontiguousarray(ps_array))
+        self.original_cf_image = galsim.ImageViewD(np.ascontiguousarray(cf_array))
 
         # Store the original image scale if set
         if dx > 0.:
@@ -308,12 +308,12 @@ class ImageCorrFunc(BaseCorrFunc):
 
         # If interpolant not specified on input, use a high-ish polynomial
         if interpolant == None:
-            quintic = _galsim.Quintic(tol=1.e-4)
-            self.interpolant = _galsim.InterpolantXY(quintic)
+            quintic = galsim.Quintic(tol=1.e-4)
+            self.interpolant = galsim.InterpolantXY(quintic)
         else:
-            if isinstance(interpolant, _galsim.Interpolant):
-                self.interpolant = _galsim.InterpolantXY(interpolant)
-            elif isinstance(interpolant, _galsim.InterpolantXY):
+            if isinstance(interpolant, galsim.Interpolant):
+                self.interpolant = galsim.InterpolantXY(interpolant)
+            elif isinstance(interpolant, galsim.InterpolantXY):
                 self.interpolant = interpolant
             else:
                 raise RuntimeError(
@@ -328,7 +328,7 @@ class ImageCorrFunc(BaseCorrFunc):
         # Then initialize...
         BaseCorrFunc.__init__(
             self, base.GSObject(
-                _galsim._CorrelationFunction(
+                galsim._galsim._CorrelationFunction(
                     self.original_cf_image, self.interpolant, dx=self.original_image.getScale())))
 
     # Make a copy of the ImageCorrFunc
@@ -338,7 +338,7 @@ class ImageCorrFunc(BaseCorrFunc):
         All attributes (e.g. rootps_store, original_image) are copied.
         """
         import copy
-        cf = _galsim._CorrelationFunction(self.CorrelationFunction)
+        cf = galsim._galsim._CorrelationFunction(self._GSCorrelationFunction.SBProfile)
         ret = BaseCorrFunc(base.GSObject(cf))
         ret.__class__ = self.__class__
         ret.original_image = self.original_image.copy()
@@ -373,10 +373,10 @@ class ImageCorrFunc(BaseCorrFunc):
 
         # Set up the Gaussian random deviate we will need later
         if dev is None:
-            g = _galsim.GaussianDeviate()
+            g = galsim.GaussianDeviate()
         else:
-            if isinstance(dev, _galsim.BaseDeviate):
-                g = _galsim.GaussianDeviate(dev)
+            if isinstance(dev, galsim.BaseDeviate):
+                g = galsim.GaussianDeviate(dev)
             else:
                 raise TypeError(
                     "Supplied input keyword dev must be a galsim.BaseDeviate or derived class "+
@@ -396,7 +396,7 @@ class ImageCorrFunc(BaseCorrFunc):
         # If not, draw the correlation function to the desired size and resolution, then DFT to
         # generate the required array of the square root of the power spectrum
         if use_stored is False:
-            newcf = _galsim.ImageD(image.bounds) # set the correlation func to be the correct size
+            newcf = galsim.ImageD(image.bounds) # set the correlation func to be the correct size
             # set the scale based on dx...
             if dx <= 0.:
                 if image.getScale() > 0.:
@@ -420,11 +420,11 @@ class ImageCorrFunc(BaseCorrFunc):
 
         # Finally generate a random field in Fourier space with the right PS, and inverse DFT back,
         # including factor of sqrt(2) to account for only adding noise to the real component:
-        gaussvec = _galsim.ImageD(image.bounds)
+        gaussvec = galsim.ImageD(image.bounds)
         gaussvec.addNoise(g)
         noise_array = np.sqrt(2.) * np.fft.ifft2(gaussvec.array * rootps)
         # Make contiguous and add to the image
-        image += _galsim.ImageViewD(np.ascontiguousarray(noise_array.real))
+        image += galsim.ImageViewD(np.ascontiguousarray(noise_array.real))
         return image
 
 
@@ -435,11 +435,11 @@ def Image_getCorrFunc(image):
     return CorrFunc(image.view())
 
 # Then add this Image method to the Image classes
-for Class in _galsim.Image.itervalues():
+for Class in galsim.Image.itervalues():
     Class.getCorrFunc = Image_getCorrFunc
 
-for Class in _galsim.ImageView.itervalues():
+for Class in galsim.ImageView.itervalues():
     Class.getCorrFunc = Image_getCorrFunc
 
-for Class in _galsim.ConstImageView.itervalues():
+for Class in galsim.ConstImageView.itervalues():
     Class.getCorrFunc = Image_getCorrFunc
