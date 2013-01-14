@@ -199,11 +199,11 @@ def test_fluxnorm():
     # Check that when drawing, the sum is equal to what we expect if the original image had been
     # surface brightness
     im3 = interp_sb.draw(dx = im_scale)
-    np.testing.assert_almost_equal(total_flux*(im_scale**2), im3.array.sum(), decimal=6,
+    np.testing.assert_almost_equal(total_flux*(im_scale**2)/im3.array.sum(), 1.0, decimal=6,
                                    err_msg='Did not use surface brightness normalization')
     # Check that when drawing with sb normalization, the sum is the same as the original
     im4 = interp_sb.draw(dx = im_scale, normalization = 'sb')
-    np.testing.assert_almost_equal(total_flux, im4.array.sum(), decimal=6,
+    np.testing.assert_almost_equal(total_flux/im4.array.sum(), 1.0, decimal=6,
                                    err_msg='Failed roundtrip for sb normalization')
 
     # Finally make an InterpolatedImage but give it some other flux value
@@ -213,7 +213,7 @@ def test_fluxnorm():
                             err_msg = 'InterpolatedImage did not use flux keyword')
     # Check that this is preserved when drawing
     im5 = interp_flux.draw(dx = im_scale)
-    np.testing.assert_almost_equal(test_flux, im5.array.sum(), decimal=6,
+    np.testing.assert_almost_equal(test_flux/im5.array.sum(), 1.0, decimal=6,
                                    err_msg = 'Drawn image does not reflect flux keyword')
 
     t2 = time.time()
