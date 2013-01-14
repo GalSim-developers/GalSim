@@ -51,12 +51,15 @@ def write_file(file, hdus, clobber, file_compress):
         if pyfits.__version__ < '2.3':
             # However, pyfits versions before 2.3 do not support writing to a buffer, so we 
             # need to use a temporary in that case.
-            import tempfile
-            tmp = tempfile.NamedTemporaryFile('w')
+            tmp = file + '.tmp'
+            # It would be pretty odd for this filename to already exist, but just in case...
+            while os.path.isfile(tmp):
+                tmp = tmp + '.tmp'
             hdus.writeto(tmp)
             buf = open(tmp,"r")
             data = buf.read()
             buf.close()
+            os.remove(tmp)
         else:
             import io
             buf = io.BytesIO()
