@@ -48,7 +48,7 @@ def write_file(file, hdus, clobber, file_compress):
         # The compression routines work better if we first write to an internal buffer
         # and then output that to a file.
         import pyfits
-        if pyfits.__version__ < 2.3:
+        if pyfits.__version__ < '2.3':
             # However, pyfits versions before 2.3 do not support writing to a buffer, so we 
             # need to use a temporary in that case.  We just use the eventual filename in
             # that case to write to and then read back in.
