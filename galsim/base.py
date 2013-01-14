@@ -1454,7 +1454,7 @@ class InterpolatedImage(GSObject):
             if dx == 0.0:
                 raise ValueError("dx may not be 0.0")
 
-        # If an image was provided, then make the SBInterpolatedImage out of it
+        # Make the SBInterpolatedImage out of the image.
         sbinterpolatedimage = galsim.SBInterpolatedImage(image, self.interpolant, dx=dx,
                                                          pad_factor=pad_factor)
 
