@@ -1795,18 +1795,19 @@ def test_rescale():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Drawing with add_to_image=True disagrees with expected result")
-    # With wmult = 2, the calculated flux should come out right so long as we also 
+    # With wmult = 3, the calculated flux should come out right so long as we also 
     # convolve by a pixel:
     sersic3 = galsim.Convolve([sersic, galsim.Pixel(xw=0.2)])
-    myImg2 = sersic3.draw(dx=0.2, wmult=2)
+    myImg2 = sersic3.draw(dx=0.2, wmult=3)
     sersic3.draw(myImg2, add_to_image=True)
+    print myImg2.array.sum()
     np.testing.assert_almost_equal(myImg2.array.sum(), 2., 3,
             err_msg="Drawing with add_to_image=True results in wrong flux")
 
     # Check that the flux works out when adding multiple times.
     gauss = galsim.Gaussian(flux=1.e5, sigma=2.)
     gauss2 = galsim.Convolve([gauss, galsim.Pixel(xw=0.2)])
-    myImg2 = gauss2.draw(dx=0.2, wmult=2)
+    myImg2 = gauss2.draw(dx=0.2, wmult=3)
     print 'image size = ',myImg2.array.shape
     print myImg2.array.sum()
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 1., 4,
@@ -1839,10 +1840,10 @@ def test_rescale():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Drawing with gain=0.5 disagrees with expected result")
-    myImg2 = sersic3.draw(dx=0.2, wmult=2, gain=0.5)
+    myImg2 = sersic3.draw(dx=0.2, wmult=3, gain=0.5)
     np.testing.assert_almost_equal(myImg2.array.sum(), 2., 3,
             err_msg="Drawing with gain=0.5 results in wrong flux")
-    myImg2 = sersic3.draw(dx=0.2, wmult=2, gain=4.)
+    myImg2 = sersic3.draw(dx=0.2, wmult=3, gain=4.)
     np.testing.assert_almost_equal(myImg2.array.sum(), 0.25, 3,
             err_msg="Drawing with gain=4. results in wrong flux")
     # Check add_to_image in conjunction with gain
