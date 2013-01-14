@@ -179,6 +179,18 @@ namespace galsim {
         }
 
         /**
+         * @brief Multiply the overall variance of the correlation function by varianceRatio.
+         *
+         * This resets the internal pointer to a new CorrelationFunction that wraps the old one
+         * with a scaled flux.  This does not change any previous uses (also see documentation to
+         * the SBProfile.scaleFlux() member function which this function reimplements).
+         */
+        void scaleVariance(double varianceRatio)
+        {
+            return SBInterpolatedImage::scaleFlux(varianceRatio);
+        }
+
+        /**
          * @brief Return, as a square Image, a noise covariance matrix between every element in an 
          * input Image with pixel scale dx.
          *
