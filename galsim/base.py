@@ -1451,6 +1451,8 @@ class InterpolatedImage(GSObject):
             if type(dx) != float:
                 dx = float(dx)
             image.setScale(dx)
+            if dx == 0.0:
+                raise ValueError("dx may not be 0.0")
 
         # If an image was provided, then make the SBInterpolatedImage out of it
         sbinterpolatedimage = galsim.SBInterpolatedImage(image, self.interpolant, dx=dx,
@@ -1464,9 +1466,8 @@ class InterpolatedImage(GSObject):
         # If the user specified a flux normalization for the input Image, then since
         # SBInterpolatedImage works in terms of surface brightness, have to rescale the values to
         # get proper normalization.
-        elif flux == None and (normalization.lower() == 'flux' or normalization.lower() == 'f') \
-                and sbinterpolatedimage.getFlux() != 0.0:
-            sbinterpolatedimage.setFlux(sbinterpolatedimage.getFlux()/(dx**2))
+        elif flux == None and normalization.lower() in ['flux','f'] and dx != 1.:
+            sbinterpolatedimage.scaleFlux(1./(dx**2))
         # If the input Image normalization is 'sb' then since that is the SBInterpolated default
         # assumption, no rescaling is needed.
         
