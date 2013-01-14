@@ -202,10 +202,65 @@ class BaseCorrFunc(object):
         ret.applyShear(*args, **kwargs)
         return ret
 
-    #    def draw():
+    def draw(self, image=None, dx=None, gain=1., wmult=1., add_to_image=False):
+        """Draws an Image of the correlation function, with bounds optionally set by an input Image.
 
+        The draw method is used to draw an Image of the correlation function, typically using
+        Fourier space convolution and using interpolation to carry out image transformations such as
+        shearing.  This method can create a new Image or can draw into an existing one, depending on
+        the choice of the `image` keyword parameter.  Other keywords of particular relevance for
+        users are those that set the pixel scale for the image (`dx`) and that decide whether the
+        clear the input Image before drawing into it (`add_to_image`).
 
-    #def drawShoot():
+        @param image  If provided, this will be the image on which to draw the profile.
+                      If `image = None`, then an automatically-sized image will be created.
+                      If `image != None`, but its bounds are undefined (e.g. if it was 
+                        constructed with `image = galsim.ImageF()`), then it will be resized
+                        appropriately based on the profile's size (default `image = None`).
+
+        @param dx     If provided, use this as the pixel scale for the image.
+                      If `dx` is `None` and `image != None`, then take the provided image's pixel 
+                        scale.
+                      If `dx` is `None` and `image == None`, then use the Nyquist scale 
+                        `= pi/maxK()`.
+                      If `dx <= 0` (regardless of image), then use the Nyquist scale `= pi/maxK()`.
+                      (Default `dx = None`.)
+
+        @param gain   The number of photons per ADU ("analog to digital units", the units of the 
+                      numbers output from a CCD).  (Default `gain =  1.`)
+
+        @param wmult  A factor by which to make an automatically-sized image larger than it would 
+                      normally be made.  This factor also applies to any intermediate images during
+                      Fourier calculations.  The size of the intermediate images are normally 
+                      automatically chosen to reach some preset accuracy targets (see 
+                      include/galsim/SBProfile.h); however, if you see strange artifacts in the 
+                      image, you might try using `wmult > 1`.  This will take longer of 
+                      course, but it will produce more accurate images, since they will have 
+                      less "folding" in Fourier space. (Default `wmult = 1.`)
+
+        @param add_to_image  Whether to add flux to the existing image rather than clear out
+                             anything in the image before drawing.
+                             Note: This requires that image be provided (i.e. `image` is not `None`)
+                             and that it have defined bounds (default `add_to_image = False`).
+
+        @returns      The drawn image.
+
+        Note: this method uses the .draw() method of GSObject instances, which are themselves used
+        to contain the internal representation of the correlation function.
+        """
+        # Call the GSObject draw method, but set the normalization to the surface brightness as
+        # appropriate for these correlation function objects
+        return self._GSCorrelationFunction.draw(
+            image=image, dx=dx, gain=gain, wmult=wmult, normalization="sb",
+            add_to_image=add_to_image)
+
+    def drawShoot():
+        """
+        """
+    
+    def drawK():
+        """
+        """
 
 class ImageCorrFunc(BaseCorrFunc):
     """A class describing 2D Correlation Functions calculated from Images.
