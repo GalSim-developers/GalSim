@@ -254,9 +254,112 @@ class BaseCorrFunc(object):
             image=image, dx=dx, gain=gain, wmult=wmult, normalization="sb",
             add_to_image=add_to_image)
 
-    def drawShoot():
+    def drawShoot(self, image=None, dx=None, gain=1., wmult=1., add_to_image=False, n_photons=0.,
+                  rng=None, max_extra_noise=0., poisson_flux=None):
+        """Draw an image of the correlation function by shooting individual photons drawn from the
+        internal representation of the profile.
+
+        The drawShoot() method is used to draw an image of a correlation function by shooting a
+        number of photons to randomly sample the profile. The resulting image will thus have Poisson
+        noise due to the finite number of photons shot.  drawShoot() can create a new Image or use
+        an existing one, depending on the choice of the `image` keyword parameter.  Other keywords
+        of particular relevance for users are those that set the pixel scale for the image (`dx`),
+        that choose the normalization convention for the flux (`normalization`), and that decide
+        whether the clear the input Image before shooting photons into it (`add_to_image`).
+
+        It is important to remember that the image produced by drawShoot() represents the
+        correlation function as convolved with a square image pixel.  So when using drawShoot()
+        instead of draw(), you implicitly include an additional pixel response equivalent to
+        convolving with a Pixel GSObject.  In other words, whereas draw() samples the correlation
+        function at the location of the pixel centre, in the asymptotic limit of large numbers of
+        photons drawShoot() returns the average of many samples taken throughout the area of each
+        pixel.
+
+        @param image  If provided, this will be the image on which to draw the profile.
+                      If `image = None`, then an automatically-sized image will be created.
+                      If `image != None`, but its bounds are undefined (e.g. if it was constructed 
+                        with `image = galsim.ImageF()`), then it will be resized appropriately base 
+                        on the profile's size.
+                      (Default `image = None`.)
+
+        @param dx     If provided, use this as the pixel scale for the image.
+                      If `dx` is `None` and `image != None`, then take the provided image's pixel 
+                        scale.
+                      If `dx` is `None` and `image == None`, then use the Nyquist scale 
+                        `= pi/maxK()`.
+                      If `dx <= 0` (regardless of image), then use the Nyquist scale `= pi/maxK()`.
+                      (Default `dx = None`.)
+
+        @param gain   The number of photons per ADU ("analog to digital units", the units of the 
+                      numbers output from a CCD).  (Default `gain =  1.`)
+
+        @param wmult  A factor by which to make an automatically-sized image larger than 
+                      it would normally be made. (Default `wmult = 1.`)
+
+        @param add_to_image     Whether to add flux to the existing image rather than clear out
+                                anything in the image before drawing.
+                                Note: This requires that image be provided (i.e. `image != None`)
+                                and that it have defined bounds (default `add_to_image = False`).
+                              
+        @param n_photons        If provided, the number of photons to use.
+                                If not provided (i.e. `n_photons = 0`), use as many photons as
+                                  necessary to result in an image with the correct Poisson shot 
+                                  noise for the object's flux.  For positive definite profiles, this
+                                  is equivalent to `n_photons = flux`.  However, some profiles need
+                                  more than this because some of the shot photons are negative 
+                                  (usually due to interpolants).
+                                (Default `n_photons = 0`).
+
+        @param rng              If provided, a random number generator to use for photon shooting.
+                                  (may be any kind of `galsim.BaseDeviate` object)
+                                If `rng=None`, one will be automatically created, using the time
+                                  as a seed.
+                                (Default `rng = None`)
+
+        @param max_extra_noise  If provided, the allowed extra noise in each pixel.
+                                  This is only relevant if `n_photons=0`, so the number of photons 
+                                  is being automatically calculated.  In that case, if the image 
+                                  noise is dominated by the sky background, you can get away with 
+                                  using fewer shot photons than the full `n_photons = flux`.
+                                  Essentially each shot photon can have a `flux > 1`, which 
+                                  increases the noise in each pixel.  The `max_extra_noise` 
+                                  parameter specifies how much extra noise per pixel is allowed 
+                                  because of this approximation.  A typical value for this might be
+                                  `max_extra_noise = sky_level / 100` where `sky_level` is the flux
+                                  per pixel due to the sky.  If the natural number of photons 
+                                  produces less noise than this value for all pixels, we lower the 
+                                  number of photons to bring the resultant noise up to this value.
+                                  If the natural value produces more noise than this, we accept it 
+                                  and just use the natural value.  Note that this uses a "variance"
+                                  definition of noise, not a "sigma" definition.
+                                (Default `max_extra_noise = 0.`)
+
+        @param poisson_flux     Whether to allow total object flux scaling to vary according to 
+                                Poisson statistics for `n_photons` samples (default 
+                                `poisson_flux = True` unless n_photons is given, in which case
+                                the default is `poisson_flux = False`).
+
+        @returns  The tuple (image, added_flux), where image is the input with drawn photons 
+                  added and added_flux is the total flux of photons that landed inside the image 
+                  bounds.
+
+        The second part of the return tuple may be useful as a sanity check that you have provided a
+        large enough image to catch most of the flux.  For example:
+        
+            image, added_flux = obj.drawShoot(image)
+            assert added_flux > 0.99 * obj.getFlux()
+        
+        However, the appropriate threshold will depend things like whether you are keeping 
+        `poisson_flux = True`, how high the flux is, how big your images are relative to the size of
+        your object, etc.
+
+        Note: this method uses the .drawShoot() method of GSObject instances, which are themselves
+        used to contain the internal representation of the correlation function.
         """
-        """
+        return self._GSCorrelationFunction.drawShoot(
+            image=image, dx=dx, gain=gain, wmult=wmult, add_to_image=ad_to_image,
+            n_photons=n_photons, rng=rng, max_extra_noise=max_extra_noise,
+            poisson_flux=poisson_flux)
     
     def drawK():
         """
