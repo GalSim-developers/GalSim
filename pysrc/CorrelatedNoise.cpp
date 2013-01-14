@@ -75,6 +75,8 @@ namespace galsim {
             pyCorrelationFunction
                 .def("xValue", &CorrelationFunction::xValue, bp::args("p"))
                 .def("kValue", &CorrelationFunction::kValue, bp::args("k"))
+                .def("scaleVariance",
+                     &CorrelationFunction::scaleVariance, bp::args("variance_ratio"))
                 .def("applyTransformation",
                      &CorrelationFunction::applyTransformation, bp::args("e"))
                 .def("applyShear",
