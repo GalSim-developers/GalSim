@@ -289,7 +289,7 @@ namespace galsim {
         // Transformations (all are special cases of affine transformations via SBTransform):
 
         /**
-         * @brief Multiple the flux by fluxRatio
+         * @brief Multiply the flux by fluxRatio
          *
          * This resets the internal pointer to a new SBProfile that wraps the old one
          * with a scaled flux.  This does not change any previous uses of the SBProfile, 
