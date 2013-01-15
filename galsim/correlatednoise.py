@@ -624,10 +624,10 @@ class ImageCorrFunc(BaseCorrFunc):
             self.original_image.setScale(1.)
             self.original_cf_image.setScale(1.)
 
-        # If interpolant not specified on input, use a high-ish polynomial
+        # If interpolant not specified on input, use bilinear
         if interpolant == None:
-            quintic = galsim.Quintic(tol=1.e-4)
-            self.interpolant = galsim.InterpolantXY(quintic)
+            linear = galsim.Linear(tol=1.e-4)
+            self.interpolant = galsim.InterpolantXY(linear)
         else:
             if isinstance(interpolant, galsim.Interpolant):
                 self.interpolant = galsim.InterpolantXY(interpolant)
