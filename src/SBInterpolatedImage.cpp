@@ -7,8 +7,8 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-std::ostream* dbgout = &std::cout;
-int verbose_level = 2;
+//std::ostream* dbgout = &std::cout;
+//int verbose_level = 2;
 #endif
 
 namespace galsim {

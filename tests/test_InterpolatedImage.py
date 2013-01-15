@@ -296,7 +296,9 @@ def test_operations_simple():
     ref_im = ref_obj.draw(image=ref_im, dx=pix_scale)
     # define subregion for comparison
     new_bounds = galsim.BoundsI(1,comp_region,1,comp_region)
+    print 'new_bounds = ',new_bounds
     new_bounds.shift((im_size-comp_region)/2, (im_size-comp_region)/2)
+    print 'new_bounds => ',new_bounds
     im_sub = im.subImage(new_bounds)
     ref_im_sub = ref_im.subImage(new_bounds)
     diff_im=im_sub-ref_im_sub
