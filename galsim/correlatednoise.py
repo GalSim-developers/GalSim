@@ -652,7 +652,7 @@ class ImageCorrFunc(BaseCorrFunc):
         # Make contiguous and add/assign to the image
         if add_to_image:
             image += galsim.ImageViewD(np.ascontiguousarray(noise_array.real))
-        else
+        else:
             image = galsim.ImageViewD(np.ascontiguousarray(noise_array.real))
         return image
 
