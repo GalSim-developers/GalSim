@@ -99,7 +99,10 @@ class BaseCorrFunc(object):
 
         @param variance_ratio The factor by which to scale the variance of the correlation function.
         """
-        self._GSCorrelationFunction.SBProfile.scaleVariance(variance_ratio)
+        if isinstance(self, AddCorrFunc):
+            self._GSCorrelationFunction.SBProfile.scaleFlux(variance_ratio)
+        else:
+            self._GSCorrelationFunction.SBProfile.scaleVariance(variance_ratio)
 
     def applyTransformation(self, ellipse):
         """Apply a galsim.Ellipse distortion to this correlation function.
@@ -662,18 +665,61 @@ class ImageCorrFunc(BaseCorrFunc):
         return ret
 
 
-# Make a function for returning Noise correlation
-def Image_getCorrFunc(image):
+class AddCorrFunc(BaseCorrFunc):
+    """A class for adding two or more correlation functions.
+
+    The AddCorrFunc class is used to represent the sum of multiple correlation functions.
+
+    Methods
+    -------
+    The AddCorrFunc is not a GSObject, but does inherit some of the GSObject methods (draw(),
+    drawShoot(), applyShear() etc.) and operator bindings.  Most of these work in the way you would
+    intuitively expect, but see the individual docstrings for details.
+
+    However, some methods are purposefully not implemented, e.g. applyShift(), createShifted().
+    """
+    
+    # --- Public Class methods ---
+    def __init__(self, *args):
+
+        if len(args) == 0:
+            # No arguments. Could initialize with an empty list but draw then segfaults. Raise an
+            # exception instead.
+            raise ValueError(
+                "AddCorrFunc must be initialized with at least one BaseCorrFunc or derived class "+
+                "instance.")
+        elif len(args) == 1:
+            # 1 argument.  Should be either a GSObject or a list of GSObjects
+            if isinstance(args[0], galsim.BaseCorrFunc):
+                CFList = [args[0]._GSCorrelationFunction.SBProfile]
+            elif isinstance(args[0], list):
+                CFList = []
+                for obj in args[0]:
+                    if isinstance(obj, galsim.BaseCorrFunc):
+                        GSList.append(obj._GSCorrelationFunction.SBProfile)
+                    else:
+                        raise TypeError("Input list must contain only GSObjects.")
+            else:
+                raise TypeError("Single input argument must be a GSObject or list of them.")
+            BaseCorrFunc.__init__(self, galsim.GSObject(galsim.SBAdd(GSList)))
+        elif len(args) >= 2:
+            # >= 2 arguments.  Convert to a list of SBProfiles
+            CFList = [obj._GSCorrelationFunction.SBProfile for obj in args]
+            BaseCorrFunc.__init__(self, galsim.GSObject(galsim.SBAdd(CFList)))
+
+
+# Make a function for returning Noise correlations
+def _Image_getCorrFunc(image):
     """Returns a CorrFunc instance by calculating the correlation function of image pixels.
     """
-    return CorrFunc(image.view())
+    return ImageCorrFunc(image.view())
 
 # Then add this Image method to the Image classes
 for Class in galsim.Image.itervalues():
-    Class.getCorrFunc = Image_getCorrFunc
+    Class.getCorrFunc = _Image_getCorrFunc
 
 for Class in galsim.ImageView.itervalues():
-    Class.getCorrFunc = Image_getCorrFunc
+    Class.getCorrFunc = _Image_getCorrFunc
 
 for Class in galsim.ConstImageView.itervalues():
-    Class.getCorrFunc = Image_getCorrFunc
+    Class.getCorrFunc = _Image_getCorrFunc
