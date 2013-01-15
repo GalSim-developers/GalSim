@@ -303,6 +303,10 @@ def test_operations_simple():
     rel = diff_im/im_sub
     zeros_arr = np.zeros((comp_region, comp_region))
     # require relative difference to be smaller than some amount
+    print 'im_sub = ',im_sub.array
+    print 'ref_im_sub = ',ref_im_sub.array
+    print 'diff_im = ',diff_im.array
+    print 'rel = ',rel.array
     np.testing.assert_array_almost_equal(rel.array, zeros_arr,
         test_decimal,
         err_msg='Sheared InterpolatedImage disagrees with reference')
@@ -438,6 +442,9 @@ def test_operations():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
+    test_operations_simple()
+    raise 'done'
+
     test_roundtrip()
     test_fluxnorm()
     test_exceptions()
