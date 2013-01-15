@@ -4,7 +4,7 @@ Python layer documentation and functions for handling correlated noise in GalSim
 """
 
 import numpy as np
-from . import _galsim
+import galsim
 from . import base
 from . import utilities
 
@@ -20,9 +20,15 @@ class BaseCorrFunc(object):
         if not isinstance(gsobject, base.GSObject):
             raise TypeError(
                 "Correlation function objects must be initialized with a GSObject.")
+        
+        # Act as a container for the GSObject used to represent the correlation funcion.
         self._GSCorrelationFunction = gsobject
+        # Setup a store for later, containing array representations of the sqrt(PowerSpectrum)
+        # [useful for later applying noise to images according to this correlation function].
+        # List items will store this data as (rootps, dx) tuples.
+        self._rootps_store = []
 
-        # Make op+ of two GSObjects work to return an CFAdd object
+    # Make op+ of two GSObjects work to return an CFAdd object
     def __add__(self, other):
         return AddCorrFunc(self, other)
 
@@ -66,9 +72,10 @@ class BaseCorrFunc(object):
         """Returns a copy of the correlation function.
         """
         import copy
-        cf = _galsim._CorrelationFunction(self.CorrelationFunction)
+        cf = galsim._galsim._CorrelationFunction(self._GSCorrelationFunction.SBProfile)
         ret = BaseCorrFunc(base.GSObject(cf))
         ret.__class__ = self.__class__
+        ret._rootps_store = copy.deepcopy(self._rootps_store) # possible due to Jim's image pickling
         return ret
 
     def xValue(self, position):
@@ -92,7 +99,10 @@ class BaseCorrFunc(object):
 
         @param variance_ratio The factor by which to scale the variance of the correlation function.
         """
-        self._GSCorrelationFunction.SBProfile.scaleVariance(variance_ratio)
+        if isinstance(self, AddCorrFunc):
+            self._GSCorrelationFunction.SBProfile.scaleFlux(variance_ratio)
+        else:
+            self._GSCorrelationFunction.SBProfile.scaleVariance(variance_ratio)
 
     def applyTransformation(self, ellipse):
         """Apply a galsim.Ellipse distortion to this correlation function.
@@ -105,7 +115,7 @@ class BaseCorrFunc(object):
         """
         if not isinstance(ellipse, galsim.Ellipse):
             raise TypeError("Argument to applyTransformation must be a galsim.Ellipse!")
-        self._GSCorrelationFunction.applyTransformation(ellipse._ellipse)
+        self._GSCorrelationFunction.applyTransformation(ellipse)
         self._rootps_store = []
 
     def applyScaling(self, scale):
@@ -202,15 +212,325 @@ class BaseCorrFunc(object):
         ret.applyShear(*args, **kwargs)
         return ret
 
-class ImageCorrFunc(BaseCorrFunc):
-    """A class describing 2D Correlation Functions calculated from Images.
+    def draw(self, image=None, dx=None, gain=1., wmult=1., add_to_image=False):
+        """Draws an Image of the correlation function, with bounds optionally set by an input Image.
 
-    Has an SBCorrFunc in the SBProfile attribute.  For more details of the SBCorrFunc object, please
-    see the documentation produced by doxygen.
+        The draw method is used to draw an Image of the correlation function, typically using
+        Fourier space convolution and using interpolation to carry out image transformations such as
+        shearing.  This method can create a new Image or can draw into an existing one, depending on
+        the choice of the `image` keyword parameter.  Other keywords of particular relevance for
+        users are those that set the pixel scale for the image (`dx`) and that decide whether the
+        clear the input Image before drawing into it (`add_to_image`).
+
+        @param image  If provided, this will be the image on which to draw the profile.
+                      If `image = None`, then an automatically-sized image will be created.
+                      If `image != None`, but its bounds are undefined (e.g. if it was 
+                        constructed with `image = galsim.ImageF()`), then it will be resized
+                        appropriately based on the profile's size (default `image = None`).
+
+        @param dx     If provided, use this as the pixel scale for the image.
+                      If `dx` is `None` and `image != None`, then take the provided image's pixel 
+                        scale.
+                      If `dx` is `None` and `image == None`, then use the Nyquist scale 
+                        `= pi/maxK()`.
+                      If `dx <= 0` (regardless of image), then use the Nyquist scale `= pi/maxK()`.
+                      (Default `dx = None`.)
+
+        @param gain   The number of photons per ADU ("analog to digital units", the units of the 
+                      numbers output from a CCD).  (Default `gain =  1.`)
+
+        @param wmult  A factor by which to make an automatically-sized image larger than it would 
+                      normally be made.  This factor also applies to any intermediate images during
+                      Fourier calculations.  The size of the intermediate images are normally 
+                      automatically chosen to reach some preset accuracy targets (see 
+                      include/galsim/SBProfile.h); however, if you see strange artifacts in the 
+                      image, you might try using `wmult > 1`.  This will take longer of 
+                      course, but it will produce more accurate images, since they will have 
+                      less "folding" in Fourier space. (Default `wmult = 1.`)
+
+        @param add_to_image  Whether to add flux to the existing image rather than clear out
+                             anything in the image before drawing.
+                             Note: This requires that image be provided (i.e. `image` is not `None`)
+                             and that it have defined bounds (default `add_to_image = False`).
+
+        @returns      The drawn image.
+
+        Note: this method uses the .draw() method of GSObject instances, which are themselves used
+        to contain the internal representation of the correlation function.
+        """
+        # Call the GSObject draw method, but set the normalization to the surface brightness as
+        # appropriate for these correlation function objects
+        return self._GSCorrelationFunction.draw(
+            image=image, dx=dx, gain=gain, wmult=wmult, normalization="sb",
+            add_to_image=add_to_image)
+
+    def drawShoot(self, image=None, dx=None, gain=1., wmult=1., add_to_image=False, n_photons=0.,
+                  rng=None, max_extra_noise=0., poisson_flux=None):
+        """Draw an image of the correlation function by shooting individual photons drawn from the
+        internal representation of the profile.
+
+        The drawShoot() method is used to draw an image of a correlation function by shooting a
+        number of photons to randomly sample the profile. The resulting image will thus have Poisson
+        noise due to the finite number of photons shot.  drawShoot() can create a new Image or use
+        an existing one, depending on the choice of the `image` keyword parameter.  Other keywords
+        of particular relevance for users are those that set the pixel scale for the image (`dx`),
+        that choose the normalization convention for the flux (`normalization`), and that decide
+        whether the clear the input Image before shooting photons into it (`add_to_image`).
+
+        It is important to remember that the image produced by drawShoot() represents the
+        correlation function as convolved with a square image pixel.  So when using drawShoot()
+        instead of draw(), you implicitly include an additional pixel response equivalent to
+        convolving with a Pixel GSObject.  In other words, whereas draw() samples the correlation
+        function at the location of the pixel centre, in the asymptotic limit of large numbers of
+        photons drawShoot() returns the average of many samples taken throughout the area of each
+        pixel.
+
+        @param image  If provided, this will be the image on which to draw the profile.
+                      If `image = None`, then an automatically-sized image will be created.
+                      If `image != None`, but its bounds are undefined (e.g. if it was constructed 
+                        with `image = galsim.ImageF()`), then it will be resized appropriately base 
+                        on the profile's size.
+                      (Default `image = None`.)
+
+        @param dx     If provided, use this as the pixel scale for the image.
+                      If `dx` is `None` and `image != None`, then take the provided image's pixel 
+                        scale.
+                      If `dx` is `None` and `image == None`, then use the Nyquist scale 
+                        `= pi/maxK()`.
+                      If `dx <= 0` (regardless of image), then use the Nyquist scale `= pi/maxK()`.
+                      (Default `dx = None`.)
+
+        @param gain   The number of photons per ADU ("analog to digital units", the units of the 
+                      numbers output from a CCD).  (Default `gain =  1.`)
+
+        @param wmult  A factor by which to make an automatically-sized image larger than 
+                      it would normally be made. (Default `wmult = 1.`)
+
+        @param add_to_image     Whether to add flux to the existing image rather than clear out
+                                anything in the image before drawing.
+                                Note: This requires that image be provided (i.e. `image != None`)
+                                and that it have defined bounds (default `add_to_image = False`).
+                              
+        @param n_photons        If provided, the number of photons to use.
+                                If not provided (i.e. `n_photons = 0`), use as many photons as
+                                  necessary to result in an image with the correct Poisson shot 
+                                  noise for the object's flux.  For positive definite profiles, this
+                                  is equivalent to `n_photons = flux`.  However, some profiles need
+                                  more than this because some of the shot photons are negative 
+                                  (usually due to interpolants).
+                                (Default `n_photons = 0`).
+
+        @param rng              If provided, a random number generator to use for photon shooting.
+                                  (may be any kind of `galsim.BaseDeviate` object)
+                                If `rng=None`, one will be automatically created, using the time
+                                  as a seed.
+                                (Default `rng = None`)
+
+        @param max_extra_noise  If provided, the allowed extra noise in each pixel.
+                                  This is only relevant if `n_photons=0`, so the number of photons 
+                                  is being automatically calculated.  In that case, if the image 
+                                  noise is dominated by the sky background, you can get away with 
+                                  using fewer shot photons than the full `n_photons = flux`.
+                                  Essentially each shot photon can have a `flux > 1`, which 
+                                  increases the noise in each pixel.  The `max_extra_noise` 
+                                  parameter specifies how much extra noise per pixel is allowed 
+                                  because of this approximation.  A typical value for this might be
+                                  `max_extra_noise = sky_level / 100` where `sky_level` is the flux
+                                  per pixel due to the sky.  If the natural number of photons 
+                                  produces less noise than this value for all pixels, we lower the 
+                                  number of photons to bring the resultant noise up to this value.
+                                  If the natural value produces more noise than this, we accept it 
+                                  and just use the natural value.  Note that this uses a "variance"
+                                  definition of noise, not a "sigma" definition.
+                                (Default `max_extra_noise = 0.`)
+
+        @param poisson_flux     Whether to allow total object flux scaling to vary according to 
+                                Poisson statistics for `n_photons` samples (default 
+                                `poisson_flux = True` unless n_photons is given, in which case
+                                the default is `poisson_flux = False`).
+
+        @returns  The tuple (image, added_flux), where image is the input with drawn photons 
+                  added and added_flux is the total flux of photons that landed inside the image 
+                  bounds.
+
+        The second part of the return tuple may be useful as a sanity check that you have provided a
+        large enough image to catch most of the flux.  For example:
+        
+            image, added_flux = obj.drawShoot(image)
+            assert added_flux > 0.99 * obj.getFlux()
+        
+        However, the appropriate threshold will depend things like whether you are keeping 
+        `poisson_flux = True`, how high the flux is, how big your images are relative to the size of
+        your object, etc.
+
+        Note: this method uses the .drawShoot() method of GSObject instances, which are themselves
+        used to contain the internal representation of the correlation function.
+        """
+        return self._GSCorrelationFunction.drawShoot(
+            image=image, dx=dx, gain=gain, wmult=wmult, add_to_image=ad_to_image,
+            n_photons=n_photons, rng=rng, max_extra_noise=max_extra_noise,
+            poisson_flux=poisson_flux)
+    
+    def drawK(self, re=None, im=None, dk=None, gain=1., wmult=1., add_to_image=False):
+        """Draws the k-space Images (real and imaginary parts) of the correlation function, also
+        known as the power spectrum, with bounds optionally set by input Images.
+
+        Normalization is always such that re(0,0) = flux.  The imaginary part of the k-space image
+        is expected to be vanishingly small.
+
+        @param re     If provided, this will be the real part of the k-space image.
+                      If `re = None`, then an automatically-sized image will be created.
+                      If `re != None`, but its bounds are undefined (e.g. if it was 
+                        constructed with `re = galsim.ImageF()`), then it will be resized
+                        appropriately based on the profile's size (default `re = None`).
+
+        @param im     If provided, this will be the imaginary part of the k-space image.
+                      A provided im must match the size and scale of re.
+                      If `im = None`, then an automatically-sized image will be created.
+                      If `im != None`, but its bounds are undefined (e.g. if it was 
+                        constructed with `im = galsim.ImageF()`), then it will be resized
+                        appropriately based on the profile's size (default `im = None`).
+
+        @param dk     If provided, use this as the pixel scale for the images.
+                      If `dk` is `None` and `re, im != None`, then take the provided images' pixel 
+                        scale (which must be equal).
+                      If `dk` is `None` and `re, im == None`, then use the Nyquist scale 
+                        `= pi/maxK()`.
+                      If `dk <= 0` (regardless of image), then use the Nyquist scale `= pi/maxK()`.
+                      (Default `dk = None`.)
+
+        @param gain   The number of photons per ADU ("analog to digital units", the units of the 
+                      numbers output from a CCD).  (Default `gain =  1.`)
+
+        @param wmult  A factor by which to make an automatically-sized image larger than it would 
+                      normally be made.  This factor also applies to any intermediate images during
+                      Fourier calculations.  The size of the intermediate images are normally 
+                      automatically chosen to reach some preset accuracy targets (see 
+                      include/galsim/SBProfile.h); however, if you see strange artifacts in the 
+                      image, you might try using `wmult > 1`.  This will take longer of 
+                      course, but it will produce more accurate images, since they will have 
+                      less "folding" in Fourier space. (Default `wmult = 1.`)
+
+        @param add_to_image  Whether to add to the existing images rather than clear out
+                             anything in the image before drawing.
+                             Note: This requires that images be provided (i.e. `re`, `im` are
+                             not `None`) and that they have defined bounds (default 
+                             `add_to_image = False`).
+
+        @returns      (re, im)  (created if necessary)
+
+        Note: this method uses the .drawK() method of GSObject instances, which are themselves used
+        to contain the internal representation of the correlation function.
+        """
+        return self._GSCorrelationFunction(
+            re=re, im=im, dk=dk, gain=gain, wmult=wmult, add_to_image=add_to_image)
+
+    def applyNoiseTo(self, image, dx=0., dev=None, add_to_image=True):
+        """Add noise as a Gaussian random field with this correlation function to an input Image.
+
+        If the optional image pixel scale `dx` is not specified, `image.getScale()` is used for the
+        input image pixel separation.
+        
+        If an optional random deviate `dev` is supplied, the application of noise will share the
+        same underlying random number generator when generating the vector of unit variance
+        Gaussians that seed the (Gaussian) noise field.
+
+        @param image The input Image object.
+        @param dx    The pixel scale to adopt for the input image; should use the same units the
+                     ImageCorrFunc instance for which this is a method.  If is specified,
+                     `image.getScale()` is used instead.
+        @param dev   Optional random deviate from which to draw pseudo-random numbers in generating
+                     the noise field.
+        @param add_to_image  Whether to add to the existing image rather than clear out anything
+                             in the image before drawing.
+                             Note: This requires that the image has defined bounds (default 
+                             `add_to_image = True`).
+        """
+        # Note that this uses the (fast) method of going via the power spectrum and FFTs to generate
+        # noise according to the correlation function represented by this instance.  An alternative
+        # would be to use the covariance matrices and eigendecomposition.  However, it is O(N^6)
+        # operations for an NxN image!  FFT-based noise realization is O(2 N^2 log[N]) so we use it
+        # for noise generation applications.
+
+        # Check that the input has defined bounds
+        if not hasattr(image, "bounds"):
+            raise ValueError(
+                "Input image argument does not have a bounds attribute, it must be a galsim.Image"+
+                "or galsim.ImageView-type object with defined bounds.")
+
+        # Set up the Gaussian random deviate we will need later
+        if dev is None:
+            g = galsim.GaussianDeviate()
+        else:
+            if isinstance(dev, galsim.BaseDeviate):
+                g = galsim.GaussianDeviate(dev)
+            else:
+                raise TypeError(
+                    "Supplied input keyword dev must be a galsim.BaseDeviate or derived class "+
+                    "(e.g. galsim.UniformDeviate, galsim.GaussianDeviate).")
+
+        # Then retrieve or redraw the sqrt(power spectrum) needed for making the noise field:
+
+        # First check whether we can just use the stored power spectrum (no drawing necessary if so)
+        use_stored = False
+        for rootps_array, scale in self._rootps_store:
+            if image.array.shape == rootps_array.shape:
+                if ((dx <= 0. and scale == 1.) or (dx == scale)):
+                    use_stored = True
+                    rootps = rootps_array
+                    break
+
+        # If not, draw the correlation function to the desired size and resolution, then DFT to
+        # generate the required array of the square root of the power spectrum
+        if use_stored is False:
+            newcf = galsim.ImageD(image.bounds) # set the correlation func to be the correct size
+            # set the scale based on dx...
+            if dx <= 0.:
+                if image.getScale() > 0.:
+                    newcf.setScale(image.getScale())
+                else:
+                    newcf.setScale(1.) # sometimes new Images have getScale() = 0
+            else:
+                newcf.setScale(dx)
+            # Then draw this correlation function into an array
+            self.draw(newcf, dx=None) # setting dx=None here uses the newcf image scale set above
+
+            # Roll to put the origin at the lower left pixel before FT-ing to get the PS...
+            rolled_cf_array = utilities.roll2d(
+                newcf.array, (-newcf.array.shape[0] / 2, -newcf.array.shape[1] / 2))
+
+            # Then calculate the sqrt(PS) that will be used to generate the actual noise
+            rootps = np.sqrt(np.abs(np.fft.fft2(newcf.array)) * np.product(image.array.shape))
+
+            # Then add this and the relevant scale to the _rootps_store for later use
+            self._rootps_store.append((rootps, newcf.getScale()))
+
+        # Finally generate a random field in Fourier space with the right PS, and inverse DFT back,
+        # including factor of sqrt(2) to account for only adding noise to the real component:
+        gaussvec = galsim.ImageD(image.bounds)
+        gaussvec.addNoise(g)
+        noise_array = np.sqrt(2.) * np.fft.ifft2(gaussvec.array * rootps)
+        # Make contiguous and add/assign to the image
+        if add_to_image:
+            image += galsim.ImageViewD(np.ascontiguousarray(noise_array.real))
+        else:
+            image = galsim.ImageViewD(np.ascontiguousarray(noise_array.real))
+        return image
+
+###
+# Then we define the ImageCorrFunc, which generates a correlation function by estimating it directly
+# from images:
+#
+class ImageCorrFunc(BaseCorrFunc):
+    """A class describing 2D correlation functions calculated from Images.
+
+    This class uses an internally-stored C++ CorrelationFunction object, wrapped using Boost.Python.
+    For more details of the CorrelationFunction object, please see the documentation produced by
+    doxygen.
 
     Initialization
     --------------
-    A CorrFunc is initialized using an input Image (or ImageView) instance.  The correlation
+    An ImageCorrFunc is initialized using an input Image (or ImageView) instance.  The correlation
     function for that image is then calculated from its pixel values using the NumPy FFT functions.
     Optionally, the pixel scale for the input `image` can be specified using the `dx` keyword
     argument. 
@@ -220,33 +540,36 @@ class ImageCorrFunc(BaseCorrFunc):
 
     Basic example:
 
-        >>> cf = galsim.correlatednoise.CorrFunc(image)
+        >>> cf = galsim.correlatednoise.ImageCorrFunc(image)
 
-    Instantiates a CorrFunc using the pixel scale information contained in image.getScale()
+    Instantiates an ImageCorrFunc using the pixel scale information contained in image.getScale()
     (assumes the scale is unity if image.getScale() <= 0.)
 
     Optional Inputs
     ---------------
 
-        >>> cf = galsim.correlatednoise.CorrFunc(image, dx=0.2)
+        >>> cf = galsim.correlatednoise.ImageCorrFunc(image, dx=0.2)
 
-    The example above instantiates a CorrFunc, but forces the use of the pixel scale dx to set the
-    units of the internal lookup table.
+    The example above instantiates an ImageCorrFunc, but forces the use of the pixel scale dx to
+    set the units of the internal lookup table.
 
-        >>> cf = galsim.correlatednoise.CorrFunc(image,
+        >>> cf = galsim.correlatednoise.ImageCorrFunc(image,
         ...     interpolant=galsim.InterpolantXY(galsim.Lanczos(5, tol=1.e-4))
 
-    The example above instantiates a CorrFunc, but forces the use of a non-default interpolant for
-    interpolation of the internal lookup table.  Must be an InterpolantXY instance or an Interpolant
-    instance (if the latter one-dimensional case is supplied an InterpolantXY will be automatically
-    generated from it).
+    The example above instantiates a ImageCorrFunc, but forces the use of a non-default interpolant
+    for interpolation of the internal lookup table.  Must be an InterpolantXY instance or an
+    Interpolant instance (if the latter one-dimensional case is supplied an InterpolantXY will be
+    automatically generated from it).
 
-    The default interpolant if None is set is a galsim.InterpolantXY(galsim.Quintic(tol=1.e-4)).
+    The default interpolant if None is set is a galsim.InterpolantXY(galsim.Linear(tol=1.e-4)),
+    which uses bilinear interpolation.  Initial tests indicate the favourable performance of this
+    interpolant in applications involving correlated pixel noise.
 
     Methods
     -------
-    The CorrFunc is a GSObject, and inherits most of the GSObject methods (draw(), drawShoot(),
-    applyShear() etc.) and operator bindings.  
+    The ImageCorrFunc is not a GSObject, but does inherit some of the GSObject methods (draw(),
+    drawShoot(), applyShear() etc.) and operator bindings.  Most of these work in the way you would
+    intuitively expect, but see the individual docstrings for details.
 
     However, some methods are purposefully not implemented, e.g. applyShift(), createShifted().
     """
@@ -287,8 +610,8 @@ class ImageCorrFunc(BaseCorrFunc):
 
         # Store local copies of the original image, power spectrum and modified correlation function
         self.original_image = image
-        self.original_ps_image = _galsim.ImageViewD(np.ascontiguousarray(ps_array))
-        self.original_cf_image = _galsim.ImageViewD(np.ascontiguousarray(cf_array))
+        self.original_ps_image = galsim.ImageViewD(np.ascontiguousarray(ps_array))
+        self.original_cf_image = galsim.ImageViewD(np.ascontiguousarray(cf_array))
 
         # Store the original image scale if set
         if dx > 0.:
@@ -301,30 +624,28 @@ class ImageCorrFunc(BaseCorrFunc):
             self.original_image.setScale(1.)
             self.original_cf_image.setScale(1.)
 
-        # If interpolant not specified on input, use a high-ish polynomial
+        # If interpolant not specified on input, use bilinear
         if interpolant == None:
-            quintic = _galsim.Quintic(tol=1.e-4)
-            self.interpolant = _galsim.InterpolantXY(quintic)
+            linear = galsim.Linear(tol=1.e-4)
+            self.interpolant = galsim.InterpolantXY(linear)
         else:
-            if isinstance(interpolant, _galsim.Interpolant):
-                self.interpolant = _galsim.InterpolantXY(interpolant)
-            elif isinstance(interpolant, _galsim.InterpolantXY):
+            if isinstance(interpolant, galsim.Interpolant):
+                self.interpolant = galsim.InterpolantXY(interpolant)
+            elif isinstance(interpolant, galsim.InterpolantXY):
                 self.interpolant = interpolant
             else:
                 raise RuntimeError(
                     'Specified interpolant is not an Interpolant or InterpolantXY instance!')
 
-        # Setup a store for later, containing array representations of the sqrt(PowerSpectrum)
-        # [useful for later applying noise to images according to this correlation function].
-        # Stores data as (rootps, dx) tuples.
-        self._rootps_store = [
-            (np.sqrt(self.original_ps_image.array), self.original_cf_image.getScale())]
-
         # Then initialize...
         BaseCorrFunc.__init__(
             self, base.GSObject(
-                _galsim._CorrelationFunction(
-                    self.original_cf_image, self.interpolant, dx=self.original_image.getScale()))
+                galsim._galsim._CorrelationFunction(
+                    self.original_cf_image, self.interpolant, dx=self.original_image.getScale())))
+        
+        # Finally store useful data as a (rootps, dx) tuple for efficient later use:
+        self._rootps_store.append(
+            (np.sqrt(self.original_ps_image.array), self.original_cf_image.getScale()))
 
     # Make a copy of the ImageCorrFunc
     def copy(self):
@@ -333,108 +654,72 @@ class ImageCorrFunc(BaseCorrFunc):
         All attributes (e.g. rootps_store, original_image) are copied.
         """
         import copy
-        cf = _galsim._CorrelationFunction(self.CorrelationFunction)
+        cf = galsim._galsim._CorrelationFunction(self._GSCorrelationFunction.SBProfile)
         ret = BaseCorrFunc(base.GSObject(cf))
         ret.__class__ = self.__class__
+        ret._rootps_store = copy.deepcopy(self._rootps_store) # possible due to Jim's image pickling
         ret.original_image = self.original_image.copy()
         ret.original_cf_image = self.original_cf_image.copy()
         ret.original_ps_image = self.original_ps_image.copy()
         ret.interpolant = self.interpolant
-        ret._rootps_store = copy.deepcopy(self._rootps_store) # possible due to Jim's image pickling
         return ret
 
-    def applyNoiseTo(self, image, dx=0., dev=None):
-        """Add noise as a Gaussian random field with this correlation function to an input Image.
 
-        If the optional image pixel scale `dx` is not specified, `image.getScale()` is used for the
-        input image pixel separation.
-        
-        If an optional random deviate `dev` is supplied, the application of noise will share the
-        same underlying random number generator when generating the vector of unit variance
-        Gaussians that seed the (Gaussian) noise field.
+class AddCorrFunc(BaseCorrFunc):
+    """A class for adding two or more correlation functions.
 
-        @param image The input Image object.
-        @param dx    The pixel scale to adopt for the input image; should use the same units the
-                     CorrFunc instance for which this is a method.  If is specified,
-                     `image.getScale()` is used instead.
-        @param dev   Optional random deviate from which to draw pseudo-random numbers in generating
-                     the noise field.
-        """
-        # Note that this uses the (fast) method of going via the power spectrum and FFTs to generate
-        # noise according to the correlation function represented by this instance.  An alternative
-        # would be to use the covariance matrices and eigendecomposition.  However, it is O(N^6)
-        # operations for an NxN image!  FFT-based noise realization is O(2 N^2 log[N]) so we use it
-        # for noise generation applications.
+    The AddCorrFunc class is used to represent the sum of multiple correlation functions.
 
-        # Set up the Gaussian random deviate we will need later
-        if dev is None:
-            g = _galsim.GaussianDeviate()
-        else:
-            if isinstance(dev, _galsim.BaseDeviate):
-                g = _galsim.GaussianDeviate(dev)
+    Methods
+    -------
+    The AddCorrFunc is not a GSObject, but does inherit some of the GSObject methods (draw(),
+    drawShoot(), applyShear() etc.) and operator bindings.  Most of these work in the way you would
+    intuitively expect, but see the individual docstrings for details.
+
+    However, some methods are purposefully not implemented, e.g. applyShift(), createShifted().
+    """
+    
+    # --- Public Class methods ---
+    def __init__(self, *args):
+
+        if len(args) == 0:
+            # No arguments. Could initialize with an empty list but draw then segfaults. Raise an
+            # exception instead.
+            raise ValueError(
+                "AddCorrFunc must be initialized with at least one BaseCorrFunc or derived class "+
+                "instance.")
+        elif len(args) == 1:
+            # 1 argument.  Should be either a GSObject or a list of GSObjects
+            if isinstance(args[0], galsim.BaseCorrFunc):
+                CFList = [args[0]._GSCorrelationFunction.SBProfile]
+            elif isinstance(args[0], list):
+                CFList = []
+                for obj in args[0]:
+                    if isinstance(obj, galsim.BaseCorrFunc):
+                        GSList.append(obj._GSCorrelationFunction.SBProfile)
+                    else:
+                        raise TypeError("Input list must contain only GSObjects.")
             else:
-                raise TypeError(
-                    "Supplied input keyword dev must be a galsim.BaseDeviate or derived class "+
-                    "(e.g. galsim.UniformDeviate, galsim.GaussianDeviate).")
-
-        # Then retrieve or redraw the sqrt(power spectrum) needed for making the noise field:
-
-        # First check whether we can just use the stored power spectrum (no drawing necessary if so)
-        use_stored = False
-        for rootps_array, scale in self._rootps_store:
-            if image.array.shape == rootps_array.shape:
-                if ((dx <= 0. and scale == 1.) or (dx == scale)):
-                    use_stored = True
-                    rootps = rootps_array
-                    break
-
-        # If not, draw the correlation function to the desired size and resolution, then DFT to
-        # generate the required array of the square root of the power spectrum
-        if use_stored is False:
-            newcf = _galsim.ImageD(image.bounds) # set the correlation func to be the correct size
-            # set the scale based on dx...
-            if dx <= 0.:
-                if image.getScale() > 0.:
-                    newcf.setScale(image.getScale())
-                else:
-                    newcf.setScale(1.) # sometimes new Images have getScale() = 0
-            else:
-                newcf.setScale(dx)
-            # Then draw this correlation function into an array
-            self.draw(newcf, dx=None, normalization="sb") # setting dx=None here uses the newcf
-                                                          # image scale set above
-            # Roll to put the origin at the lower left pixel before FT-ing to get the PS...
-            rolled_cf_array = utilities.roll2d(
-                newcf.array, (-newcf.array.shape[0] / 2, -newcf.array.shape[1] / 2))
-
-            # Then calculate the sqrt(PS) that will be used to generate the actual noise
-            rootps = np.sqrt(np.abs(np.fft.fft2(newcf.array)) * np.product(image.array.shape))
-
-            # Then add this and the relevant scale to the _rootps_store for later use
-            self._rootps_store.append((rootps, newcf.getScale()))
-
-        # Finally generate a random field in Fourier space with the right PS, and inverse DFT back,
-        # including factor of sqrt(2) to account for only adding noise to the real component:
-        gaussvec = _galsim.ImageD(image.bounds)
-        gaussvec.addNoise(g)
-        noise_array = np.sqrt(2.) * np.fft.ifft2(gaussvec.array * rootps)
-        # Make contiguous and add to the image
-        image += _galsim.ImageViewD(np.ascontiguousarray(noise_array.real))
-        return image
+                raise TypeError("Single input argument must be a GSObject or list of them.")
+            BaseCorrFunc.__init__(self, galsim.GSObject(galsim.SBAdd(GSList)))
+        elif len(args) >= 2:
+            # >= 2 arguments.  Convert to a list of SBProfiles
+            CFList = [obj._GSCorrelationFunction.SBProfile for obj in args]
+            BaseCorrFunc.__init__(self, galsim.GSObject(galsim.SBAdd(CFList)))
 
 
-# Make a function for returning Noise correlation
-def Image_getCorrFunc(image):
+# Make a function for returning Noise correlations
+def _Image_getCorrFunc(image):
     """Returns a CorrFunc instance by calculating the correlation function of image pixels.
     """
-    return CorrFunc(image.view())
+    return ImageCorrFunc(image.view())
 
 # Then add this Image method to the Image classes
-for Class in _galsim.Image.itervalues():
-    Class.getCorrFunc = Image_getCorrFunc
+for Class in galsim.Image.itervalues():
+    Class.getCorrFunc = _Image_getCorrFunc
 
-for Class in _galsim.ImageView.itervalues():
-    Class.getCorrFunc = Image_getCorrFunc
+for Class in galsim.ImageView.itervalues():
+    Class.getCorrFunc = _Image_getCorrFunc
 
-for Class in _galsim.ConstImageView.itervalues():
-    Class.getCorrFunc = Image_getCorrFunc
+for Class in galsim.ConstImageView.itervalues():
+    Class.getCorrFunc = _Image_getCorrFunc

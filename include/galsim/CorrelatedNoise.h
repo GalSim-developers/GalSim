@@ -120,10 +120,13 @@ namespace galsim {
         /// @brief Destructor
         ~CorrelationFunction();
 
-      using SBInterpolatedImage::xValue;
-      using SBInterpolatedImage::kValue;
-      using SBInterpolatedImage::draw;
-      using SBInterpolatedImage::drawShoot;
+        // CorrelationFunction privately inherits, so state methods we need from the base class
+        //using SBInterpolatedImage::draw;
+        //using SBInterpolatedImage::drawShoot;
+        //using SBInterpolatedImage::drawK;
+        //using SBInterpolatedImage::applyTransformation;
+        //using SBInterpolatedImage::applyShear;
+        //using SBInterpolatedImage::applyRotation;
 
         /** 
          * @brief Return value of correlation function at a chosen 2D position in real space.
@@ -138,7 +141,10 @@ namespace galsim {
          *
          * @param[in] p 2D position in real space.
          */
-        double xValue(const Position<double>& p) const;
+        double xValue(const Position<double>& p) const
+        {
+            return SBInterpolatedImage::xValue(p);
+        }
 
         /**
          * @brief Return value of correlation function at a chosen 2D position in k space.
@@ -149,7 +155,40 @@ namespace galsim {
          *
          * @param[in] k 2D position in k space.
          */
-        std::complex<double> kValue(const Position<double>& k) const;
+        std::complex<double> kValue(const Position<double>& k) const
+        {
+            return SBInterpolatedImage::kValue(k);
+        }
+
+        // Doxygen automatically takes relevant documentation from include/galsim/SBProfile.h
+        void applyTransformation(const CppEllipse& e)
+        {
+            return SBInterpolatedImage::applyTransformation(e);
+        }
+
+        // Doxygen automatically takes relevant documentation from include/galsim/SBProfile.h
+        void applyShear(CppShear s)
+        {
+            return SBInterpolatedImage::applyShear(s);
+        }
+
+        // Doxygen automatically takes relevant documentation from include/galsim/SBProfile.h
+        void applyRotation(const Angle& theta)
+        {
+            return SBInterpolatedImage::applyRotation(theta);
+        }
+
+        /**
+         * @brief Multiply the overall variance of the correlation function by varianceRatio.
+         *
+         * This resets the internal pointer to a new CorrelationFunction that wraps the old one
+         * with a scaled flux.  This does not change any previous uses (also see documentation to
+         * the SBProfile.scaleFlux() member function which this function reimplements).
+         */
+        void scaleVariance(double varianceRatio)
+        {
+            return SBInterpolatedImage::scaleFlux(varianceRatio);
+        }
 
         /**
          * @brief Return, as a square Image, a noise covariance matrix between every element in an 
@@ -166,7 +205,46 @@ namespace galsim {
          * this can be revisited.
          */
         template <typename T>
-        Image<double> getCovarianceMatrix(ImageView<T> image, double dx) const;
+        Image<double> calculateCovarianceMatrix(ImageView<T> image, double dx) const;
+
+        // Doxygen would automatically takes documentation from include/galsim/SBProfile.h for the
+        // draw methods below, but we don't want that as they reference SBProfiles...
+
+        /**
+         * Draw the CorrelationFunction in real space returning the total sum.
+         * 
+         * See documentation for the SBProfile::draw() member function for more information.
+         */
+        template <typename T>
+        double draw(ImageView<T> image, double gain=1., double wmult=1.) const
+        {
+            return SBInterpolatedImage::draw(image, gain, wmult);
+        }
+
+        /**
+         * @brief Draw an image of the CorrelationFunction in k space.
+         *
+         * See documentation for the SBProfile::drawK() member function for more information.
+         */
+        template <typename T>
+        void drawK(ImageView<T> re, ImageView<T> im, double gain=1., double wmult=1.) const
+        {
+            return SBInterpolatedImage::drawK(re, im, gain, wmult);
+        }
+
+        /** 
+         * @brief Draw this CorrelationFunction into an Image by shooting photons.
+         * 
+         * See documentation for the SBProfile::drawShoot() member function for more information.
+         */
+        template <typename T>
+        double drawShoot(ImageView<T> image, double N, UniformDeviate ud,
+                         double gain=1., double max_extra_noise=0., bool poisson_flux=true) const
+        {
+            return SBInterpolatedImage::drawShoot(
+                image, N, ud, gain, max_extra_noise, poisson_flux
+            );
+        }
 
     protected:
 
@@ -180,9 +258,49 @@ namespace galsim {
          * along with ColumnMajor ordering (the default), and Upper triangle storage.
          */
         template <typename T>
-        tmv::SymMatrix<double, tmv::FortranStyle|tmv::Upper> getCovarianceSymMatrix(
+        tmv::SymMatrix<double, tmv::FortranStyle|tmv::Upper> calculateCovarianceSymMatrix(
             ImageView<T> image, double dx) const;
 
+    };
+
+    /**
+     * @brief Sums CorrelationFunctions.
+     *
+     * The AddCorrelationFunction class can be used to add arbitrary numbers of CorrelationFunctions
+     * together.  It borrows heavily from the SBAdd class.
+     */
+    class AddCorrelationFunction: public CorrelationFunction
+    {
+    public:
+
+        /** 
+         * @brief Constructor, 2 inputs.
+         *
+         * @param[in] c1 first CorrelationFunction.
+         * @param[in] c2 second CorrelationFunction.
+         */
+        AddCorrelationFunction(const CorrelationFunction& c1, const CorrelationFunction& c2);
+
+        /** 
+         * @brief Constructor, list of inputs.
+         *
+         * @param[in] clist list of CorrelationFunctions.
+         */
+        AddCorrelationFunction(const std::list<CorrelationFunction>& clist);
+
+        /// @brief Copy constructor.
+        AddCorrelationFunction(const AddCorrelationFunction& rhs);
+
+        /// @brief Destructor.
+        ~AddCorrelationFunction();
+
+    protected:
+
+        class AddCorrelationFunctionImpl;
+
+    private:
+        // op= is undefined
+        void operator=(const AddCorrelationFunction& rhs);
     };
 
 }

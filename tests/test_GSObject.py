@@ -77,9 +77,15 @@ exponential_ref_scale_from_hlr = test_hlr / 1.6783469900166605
 # decimal point to go to for parameter value comparisons
 param_decimal = 12
 
+def funcname():
+    import inspect
+    return inspect.stack()[1][3]
+
 def test_gaussian_flux_scaling():
     """Test flux scaling for Gaussian.
     """
+    import time
+    t1 = time.time()
     # init with sigma and flux only (should be ok given last tests)
     obj = galsim.Gaussian(sigma=test_sigma, flux=test_flux)
     obj *= 2.
@@ -121,10 +127,14 @@ def test_gaussian_flux_scaling():
     np.testing.assert_almost_equal(
         obj2.getFlux(), test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_moffat_flux_scaling():
     """Test flux scaling for Moffat.
     """
+    import time
+    t1 = time.time()
     # init with scale_radius only (should be ok given last tests)
     obj = galsim.Moffat(scale_radius=test_scale, beta=test_beta, trunc=test_trunc, flux=test_flux)
     obj *= 2.
@@ -166,10 +176,14 @@ def test_moffat_flux_scaling():
     np.testing.assert_almost_equal(
         obj2.getFlux(), test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_atmos_flux_scaling():
     """Test flux scaling for AtmosphericPSF.
     """
+    import time
+    t1 = time.time()
     # init with lam_over_r0 and flux only (should be ok given last tests)
     obj = galsim.AtmosphericPSF(lam_over_r0=test_lor0, flux=test_flux)
     obj *= 2.
@@ -211,10 +225,14 @@ def test_atmos_flux_scaling():
     np.testing.assert_almost_equal(
         obj2.getFlux(), test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_kolmo_flux_scaling():
     """Test flux scaling for Kolmogorov.
     """
+    import time
+    t1 = time.time()
     # init with lam_over_r0 and flux only (should be ok given last tests)
     obj = galsim.Kolmogorov(lam_over_r0=test_lor0, flux=test_flux)
     obj *= 2.
@@ -256,10 +274,14 @@ def test_kolmo_flux_scaling():
     np.testing.assert_almost_equal(
         obj2.getFlux(), test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_airy_flux_scaling():
     """Test flux scaling for Airy.
     """
+    import time
+    t1 = time.time()
     # init with lam_over_r0 and flux only (should be ok given last tests)
     obj = galsim.Airy(lam_over_diam=test_loD, flux=test_flux, obscuration=test_obscuration)
     obj *= 2.
@@ -301,10 +323,14 @@ def test_airy_flux_scaling():
     np.testing.assert_almost_equal(
         obj2.getFlux(), test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_opticalpsf_flux_scaling():
     """Test flux scaling for OpticalPSF.
     """
+    import time
+    t1 = time.time()
     # init
     obj = galsim.OpticalPSF(
         lam_over_diam=test_loD, oversampling=test_oversampling, defocus=test_defocus,
@@ -356,10 +382,14 @@ def test_opticalpsf_flux_scaling():
     np.testing.assert_almost_equal(
         obj2.getFlux(), test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_sersic_flux_scaling():
     """Test flux scaling for Sersic.
     """
+    import time
+    t1 = time.time()
     # loop through sersic n
     for test_n in test_sersic_n:
         # init with hlr and flux only (should be ok given last tests)
@@ -403,10 +433,14 @@ def test_sersic_flux_scaling():
         np.testing.assert_almost_equal(
             obj2.getFlux(), test_flux / 2., decimal=param_decimal,
             err_msg="Flux param inconsistent after __div__ (result).")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_exponential_flux_scaling():
     """Test flux scaling for Exponential.
     """
+    import time
+    t1 = time.time()
     # init with scale and flux only (should be ok given last tests)
     obj = galsim.Exponential(scale_radius=test_scale, flux=test_flux)
     obj *= 2.
@@ -448,10 +482,14 @@ def test_exponential_flux_scaling():
     np.testing.assert_almost_equal(
         obj2.getFlux(), test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")   
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_devaucouleurs_flux_scaling():
     """Test flux scaling for DeVaucouleurs.
     """
+    import time
+    t1 = time.time()
     # init with half_light_radius and flux only (should be ok given last tests)
     obj = galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=test_flux)
     obj *= 2.
@@ -493,10 +531,14 @@ def test_devaucouleurs_flux_scaling():
     np.testing.assert_almost_equal(
         obj2.getFlux(), test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_add_flux_scaling():
     """Test flux scaling for Add.
     """
+    import time
+    t1 = time.time()
     # init with Gaussian and Exponential only (should be ok given last tests)
     obj = galsim.Add([galsim.Gaussian(sigma=test_sigma, flux=test_flux * .5),
                       galsim.Exponential(scale_radius=test_scale, flux=test_flux * .5)])
@@ -543,10 +585,14 @@ def test_add_flux_scaling():
     np.testing.assert_almost_equal(
         obj2.getFlux(), test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_convolve_flux_scaling():
     """Test flux scaling for Convolve.
     """
+    import time
+    t1 = time.time()
     # init with Gaussian and DeVauc only (should be ok given last tests)
     obj = galsim.Convolve(
         [galsim.Gaussian(sigma=test_sigma, flux=np.sqrt(test_flux)),
@@ -598,6 +644,8 @@ def test_convolve_flux_scaling():
     np.testing.assert_almost_equal(
         obj2.getFlux(), test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_gaussian_flux_scaling()
