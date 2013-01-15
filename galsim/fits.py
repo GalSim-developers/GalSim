@@ -431,10 +431,16 @@ def read(fits, compression='auto'):
     ymin = fits.header.get("GS_YMIN", 1)
     scale = fits.header.get("GS_SCALE", 1.0)
     pixel = fits.data.dtype.type
-    try:
+    if pixel in _galsim.ImageView.keys():
         Class = _galsim.ImageView[pixel]
-    except KeyError:
-        raise TypeError("No C++ Image template instantiation for pixel type %s" % pixel)
+        data = fits.data
+    else:
+        import warnings
+        warnings.warn("No C++ Image template instantiation for pixel type %s" % pixel)
+        warnings.warn("Using float")
+        Class = _galsim.ImageViewD
+        import numpy
+        data = fits.data.astype(numpy.float64)
 
     # Check through byteorder possibilities, compare to native (used for numpy and our default) and
     # swap if necessary so that C++ gets the correct view.
@@ -449,7 +455,7 @@ def read(fits, compression='auto'):
         fits.data.byteswap(True)   # Note inplace is just an arg, not a kwarg, inplace=True throws
                                    # a TypeError exception in EPD Python 2.7.2
 
-    image = Class(array=fits.data, xmin=xmin, ymin=ymin)
+    image = Class(array=data, xmin=xmin, ymin=ymin)
     image.scale = scale
 
     # If we opened a file, don't forget to close it.
@@ -556,11 +562,16 @@ def readCube(fits, compression='auto'):
     ymin = fits.header.get("GS_YMIN", 1)
     scale = fits.header.get("GS_SCALE", 1.0)
     pixel = fits.data.dtype.type
-
-    try:
+    if pixel in _galsim.ImageView.keys():
         Class = _galsim.ImageView[pixel]
-    except KeyError:
-        raise TypeError("No C++ Image template instantiation for pixel type %s" % pixel)
+        data = fits.data
+    else:
+        import warnings
+        warnings.warn("No C++ Image template instantiation for pixel type %s" % pixel)
+        warnings.warn("Using float")
+        Class = _galsim.ImageViewD
+        import numpy
+
     # Check through byteorder possibilities, compare to native (used for numpy and our default) and
     # swap if necessary so that C++ gets the correct view.
     if fits.data.dtype.byteorder == '!':
