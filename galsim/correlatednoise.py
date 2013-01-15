@@ -594,9 +594,9 @@ class ImageCorrFunc(BaseCorrFunc):
         # Check that the input has defined bounds
         if not hasattr(image, "bounds"):
             raise ValueError(
-                "Input image argument does not have a bounds attribute, it must be a galsim.Image
-                or galsim.ImageView-type object with defined bounds.")
-            
+                "Input image argument does not have a bounds attribute, it must be a galsim.Image"+
+                "or galsim.ImageView-type object with defined bounds.")
+
         # Set up the Gaussian random deviate we will need later
         if dev is None:
             g = galsim.GaussianDeviate()
