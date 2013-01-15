@@ -35,52 +35,6 @@ def parse_compression(compression, fits):
         raise TypeError("Invalid compression")
     return file_compress, pyfits_compress
 
-def write_file(file, hdus, clobber, file_compress):
-
-    import os
-    if os.path.isfile(file):
-        if clobber:
-            os.remove(file)
-        else:
-            raise IOError('File %r already exists'%file)
-
-    if file_compress:
-        # The compression routines work better if we first write to an internal buffer
-        # and then output that to a file.
-        import pyfits
-        if pyfits.__version__ < '2.3':
-            # However, pyfits versions before 2.3 do not support writing to a buffer, so we 
-            # need to use a temporary in that case.
-            tmp = file + '.tmp'
-            # It would be pretty odd for this filename to already exist, but just in case...
-            while os.path.isfile(tmp):
-                tmp = tmp + '.tmp'
-            hdus.writeto(tmp)
-            buf = open(tmp,"r")
-            data = buf.read()
-            buf.close()
-            os.remove(tmp)
-        else:
-            import io
-            buf = io.BytesIO()
-            hdus.writeto(buf)
-            data = buf.getvalue()
-
-        if file_compress == 'gzip':
-            import gzip
-            # There is a compresslevel option (for both gzip and bz2), but we just use the default.
-            fout = gzip.GzipFile(file, 'wb')  
-        elif file_compress == 'bzip2':
-            import bz2
-            fout = bz2.BZ2File(file, 'wb')
-        else:
-            raise ValueError("Unknown file_compression")
-
-        fout.write(data)
-        fout.close()
-    else:
-        hdus.writeto(file)
-
 # This is a class rather than a def, since we want to store a variable, and 
 # python doesn't really have static variables.  But this will be used as though
 # it were a normal function: read_file(file, file_compress)
@@ -90,6 +44,7 @@ class _ReadFile:
         # don't need to keep trying code that doesn't work after the first time 
         # we discover it fails.
         self.gzip_in_mem = True
+        self.bz2_in_mem = True
 
     def __call__(self, file, file_compress):
         import pyfits
@@ -133,12 +88,86 @@ class _ReadFile:
                     return hdus, tmp
         elif file_compress == 'bzip2':
             import bz2
-            fin = bz2.BZ2File(file, 'rb')
-            hdus = pyfits.open(fin, 'readonly')
-            return hdus, fin
+            if self.bz2_in_mem:
+                try:
+                    # This normally works.  But it might not on old versions of pyfits.
+                    fin = bz2.BZ2File(file, 'rb')
+                    hdus = pyfits.open(fin, 'readonly')
+                    hdu = hdus[0]
+                    return hdus, fin
+                except:
+                    # Mark that we can't do this the efficient way so next time (and afterward)
+                    # it will use the below code instead.
+                    self.bz2_in_mem = False
+                    return self(file,file_compress)
+            else:
+                fin = bz2.BZ2File(file, 'rb')
+                import tempfile
+                tmp = tempfile.NamedTemporaryFile('wb+')
+                data = fin.read()
+                tmp.write(data)
+                tmp.seek(0)
+                hdus = pyfits.open(tmp)
+                return hdus, tmp
         else:
             raise ValueError("Unknown file_compression")
 read_file = _ReadFile()
+
+# Do the same trick for write_file(file,hdus,clobber,file_compress):
+class _WriteFile:
+    def __init__(self):
+        # Store whether it is ok to use the in-memory version.
+        self.in_mem = True
+
+    def __call__(self, file, hdus, clobber, file_compress):
+        import os
+        if os.path.isfile(file):
+            if clobber:
+                os.remove(file)
+            else:
+                raise IOError('File %r already exists'%file)
+    
+        if not file_compress:
+            hdus.writeto(file)
+        else:
+            if self.in_mem:
+                try:
+                    # The compression routines work better if we first write to an internal buffer
+                    # and then output that to a file.
+                    import io
+                    buf = io.BytesIO()
+                    hdus.writeto(buf)
+                    data = buf.getvalue()
+                except:
+                    self.in_mem = False
+                    return self(file,hdus,clobber,file_compress)
+            else:
+                # However, pyfits versions before 2.3 do not support writing to a buffer, so the
+                # abover code with fail.  We need to use a temporary in that case.
+                tmp = file + '.tmp'
+                # It would be pretty odd for this filename to already exist, but just in case...
+                while os.path.isfile(tmp):
+                    tmp = tmp + '.tmp'
+                hdus.writeto(tmp)
+                buf = open(tmp,"r")
+                data = buf.read()
+                buf.close()
+                os.remove(tmp)
+
+            if file_compress == 'gzip':
+                import gzip
+                # There is a compresslevel option (for both gzip and bz2), but we just use the 
+                # default.
+                fout = gzip.GzipFile(file, 'wb')  
+            elif file_compress == 'bzip2':
+                import bz2
+                fout = bz2.BZ2File(file, 'wb')
+            else:
+                raise ValueError("Unknown file_compression")
+    
+            fout.write(data)
+            fout.close()
+write_file = _WriteFile()
 
 def write_header(hdu, add_wcs, scale, xmin, ymin):
     # In PyFITS 3.1, the update method was deprecated in favor of subscript assignment.
