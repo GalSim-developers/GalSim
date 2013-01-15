@@ -21,6 +21,7 @@ class BaseCorrFunc(object):
             raise TypeError(
                 "Correlation function objects must be initialized with a GSObject.")
         self._GSCorrelationFunction = gsobject
+        self._rootps_store = [] # setup the store for images of the sqrt(PS) as an empty list
 
         # Make op+ of two GSObjects work to return an CFAdd object
     def __add__(self, other):
@@ -69,6 +70,7 @@ class BaseCorrFunc(object):
         cf = galsim._galsim._CorrelationFunction(self._GSCorrelationFunction.SBProfile)
         ret = BaseCorrFunc(base.GSObject(cf))
         ret.__class__ = self.__class__
+        ret._rootps_store = copy.deepcopy(self._rootps_store) # possible due to Jim's image pickling
         return ret
 
     def xValue(self, position):
@@ -415,6 +417,98 @@ class BaseCorrFunc(object):
         return self._GSCorrelationFunction(
             re=re, im=im, dk=dk, gain=gain, wmult=wmult, add_to_image=add_to_image)
 
+    def applyNoiseTo(self, image, dx=0., dev=None, add_to_image=True):
+        """Add noise as a Gaussian random field with this correlation function to an input Image.
+
+        If the optional image pixel scale `dx` is not specified, `image.getScale()` is used for the
+        input image pixel separation.
+        
+        If an optional random deviate `dev` is supplied, the application of noise will share the
+        same underlying random number generator when generating the vector of unit variance
+        Gaussians that seed the (Gaussian) noise field.
+
+        @param image The input Image object.
+        @param dx    The pixel scale to adopt for the input image; should use the same units the
+                     ImageCorrFunc instance for which this is a method.  If is specified,
+                     `image.getScale()` is used instead.
+        @param dev   Optional random deviate from which to draw pseudo-random numbers in generating
+                     the noise field.
+        @param add_to_image  Whether to add to the existing image rather than clear out anything
+                             in the image before drawing.
+                             Note: This requires that the image has defined bounds (default 
+                             `add_to_image = True`).
+        """
+        # Note that this uses the (fast) method of going via the power spectrum and FFTs to generate
+        # noise according to the correlation function represented by this instance.  An alternative
+        # would be to use the covariance matrices and eigendecomposition.  However, it is O(N^6)
+        # operations for an NxN image!  FFT-based noise realization is O(2 N^2 log[N]) so we use it
+        # for noise generation applications.
+
+        # Check that the input has defined bounds
+        if not hasattr(image, "bounds"):
+            raise ValueError(
+                "Input image argument does not have a bounds attribute, it must be a galsim.Image"+
+                "or galsim.ImageView-type object with defined bounds.")
+
+        # Set up the Gaussian random deviate we will need later
+        if dev is None:
+            g = galsim.GaussianDeviate()
+        else:
+            if isinstance(dev, galsim.BaseDeviate):
+                g = galsim.GaussianDeviate(dev)
+            else:
+                raise TypeError(
+                    "Supplied input keyword dev must be a galsim.BaseDeviate or derived class "+
+                    "(e.g. galsim.UniformDeviate, galsim.GaussianDeviate).")
+
+        # Then retrieve or redraw the sqrt(power spectrum) needed for making the noise field:
+
+        # First check whether we can just use the stored power spectrum (no drawing necessary if so)
+        use_stored = False
+        for rootps_array, scale in self._rootps_store:
+            if image.array.shape == rootps_array.shape:
+                if ((dx <= 0. and scale == 1.) or (dx == scale)):
+                    use_stored = True
+                    rootps = rootps_array
+                    break
+
+        # If not, draw the correlation function to the desired size and resolution, then DFT to
+        # generate the required array of the square root of the power spectrum
+        if use_stored is False:
+            newcf = galsim.ImageD(image.bounds) # set the correlation func to be the correct size
+            # set the scale based on dx...
+            if dx <= 0.:
+                if image.getScale() > 0.:
+                    newcf.setScale(image.getScale())
+                else:
+                    newcf.setScale(1.) # sometimes new Images have getScale() = 0
+            else:
+                newcf.setScale(dx)
+            # Then draw this correlation function into an array
+            self.draw(newcf, dx=None) # setting dx=None here uses the newcf image scale set above
+
+            # Roll to put the origin at the lower left pixel before FT-ing to get the PS...
+            rolled_cf_array = utilities.roll2d(
+                newcf.array, (-newcf.array.shape[0] / 2, -newcf.array.shape[1] / 2))
+
+            # Then calculate the sqrt(PS) that will be used to generate the actual noise
+            rootps = np.sqrt(np.abs(np.fft.fft2(newcf.array)) * np.product(image.array.shape))
+
+            # Then add this and the relevant scale to the _rootps_store for later use
+            self._rootps_store.append((rootps, newcf.getScale()))
+
+        # Finally generate a random field in Fourier space with the right PS, and inverse DFT back,
+        # including factor of sqrt(2) to account for only adding noise to the real component:
+        gaussvec = galsim.ImageD(image.bounds)
+        gaussvec.addNoise(g)
+        noise_array = np.sqrt(2.) * np.fft.ifft2(gaussvec.array * rootps)
+        # Make contiguous and add/assign to the image
+        if add_to_image:
+            image += galsim.ImageViewD(np.ascontiguousarray(noise_array.real))
+        else:
+            image = galsim.ImageViewD(np.ascontiguousarray(noise_array.real))
+        return image
+
 ###
 # Then we define the ImageCorrFunc, which generates a correlation function by estimating it directly
 # from images:
@@ -557,104 +651,12 @@ class ImageCorrFunc(BaseCorrFunc):
         cf = galsim._galsim._CorrelationFunction(self._GSCorrelationFunction.SBProfile)
         ret = BaseCorrFunc(base.GSObject(cf))
         ret.__class__ = self.__class__
+        ret._rootps_store = copy.deepcopy(self._rootps_store) # possible due to Jim's image pickling
         ret.original_image = self.original_image.copy()
         ret.original_cf_image = self.original_cf_image.copy()
         ret.original_ps_image = self.original_ps_image.copy()
         ret.interpolant = self.interpolant
-        ret._rootps_store = copy.deepcopy(self._rootps_store) # possible due to Jim's image pickling
         return ret
-
-    def applyNoiseTo(self, image, dx=0., dev=None, add_to_image=True):
-        """Add noise as a Gaussian random field with this correlation function to an input Image.
-
-        If the optional image pixel scale `dx` is not specified, `image.getScale()` is used for the
-        input image pixel separation.
-        
-        If an optional random deviate `dev` is supplied, the application of noise will share the
-        same underlying random number generator when generating the vector of unit variance
-        Gaussians that seed the (Gaussian) noise field.
-
-        @param image The input Image object.
-        @param dx    The pixel scale to adopt for the input image; should use the same units the
-                     ImageCorrFunc instance for which this is a method.  If is specified,
-                     `image.getScale()` is used instead.
-        @param dev   Optional random deviate from which to draw pseudo-random numbers in generating
-                     the noise field.
-        @param add_to_image  Whether to add to the existing image rather than clear out anything
-                             in the image before drawing.
-                             Note: This requires that the image has defined bounds (default 
-                             `add_to_image = True`).
-        """
-        # Note that this uses the (fast) method of going via the power spectrum and FFTs to generate
-        # noise according to the correlation function represented by this instance.  An alternative
-        # would be to use the covariance matrices and eigendecomposition.  However, it is O(N^6)
-        # operations for an NxN image!  FFT-based noise realization is O(2 N^2 log[N]) so we use it
-        # for noise generation applications.
-
-        # Check that the input has defined bounds
-        if not hasattr(image, "bounds"):
-            raise ValueError(
-                "Input image argument does not have a bounds attribute, it must be a galsim.Image"+
-                "or galsim.ImageView-type object with defined bounds.")
-
-        # Set up the Gaussian random deviate we will need later
-        if dev is None:
-            g = galsim.GaussianDeviate()
-        else:
-            if isinstance(dev, galsim.BaseDeviate):
-                g = galsim.GaussianDeviate(dev)
-            else:
-                raise TypeError(
-                    "Supplied input keyword dev must be a galsim.BaseDeviate or derived class "+
-                    "(e.g. galsim.UniformDeviate, galsim.GaussianDeviate).")
-
-        # Then retrieve or redraw the sqrt(power spectrum) needed for making the noise field:
-
-        # First check whether we can just use the stored power spectrum (no drawing necessary if so)
-        use_stored = False
-        for rootps_array, scale in self._rootps_store:
-            if image.array.shape == rootps_array.shape:
-                if ((dx <= 0. and scale == 1.) or (dx == scale)):
-                    use_stored = True
-                    rootps = rootps_array
-                    break
-
-        # If not, draw the correlation function to the desired size and resolution, then DFT to
-        # generate the required array of the square root of the power spectrum
-        if use_stored is False:
-            newcf = galsim.ImageD(image.bounds) # set the correlation func to be the correct size
-            # set the scale based on dx...
-            if dx <= 0.:
-                if image.getScale() > 0.:
-                    newcf.setScale(image.getScale())
-                else:
-                    newcf.setScale(1.) # sometimes new Images have getScale() = 0
-            else:
-                newcf.setScale(dx)
-            # Then draw this correlation function into an array
-            self.draw(newcf, dx=None) # setting dx=None here uses the newcf image scale set above
-
-            # Roll to put the origin at the lower left pixel before FT-ing to get the PS...
-            rolled_cf_array = utilities.roll2d(
-                newcf.array, (-newcf.array.shape[0] / 2, -newcf.array.shape[1] / 2))
-
-            # Then calculate the sqrt(PS) that will be used to generate the actual noise
-            rootps = np.sqrt(np.abs(np.fft.fft2(newcf.array)) * np.product(image.array.shape))
-
-            # Then add this and the relevant scale to the _rootps_store for later use
-            self._rootps_store.append((rootps, newcf.getScale()))
-
-        # Finally generate a random field in Fourier space with the right PS, and inverse DFT back,
-        # including factor of sqrt(2) to account for only adding noise to the real component:
-        gaussvec = galsim.ImageD(image.bounds)
-        gaussvec.addNoise(g)
-        noise_array = np.sqrt(2.) * np.fft.ifft2(gaussvec.array * rootps)
-        # Make contiguous and add/assign to the image
-        if add_to_image:
-            image += galsim.ImageViewD(np.ascontiguousarray(noise_array.real))
-        else:
-            image = galsim.ImageViewD(np.ascontiguousarray(noise_array.real))
-        return image
 
 
 # Make a function for returning Noise correlation
