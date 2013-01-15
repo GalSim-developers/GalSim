@@ -263,5 +263,45 @@ namespace galsim {
 
     };
 
+    /**
+     * @brief Sums CorrelationFunctions.
+     *
+     * The AddCorrelationFunction class can be used to add arbitrary numbers of CorrelationFunctions
+     * together.  It borrows heavily from the SBAdd class.
+     */
+    class AddCorrelationFunction: public CorrelationFunction
+    {
+    public:
+
+        /** 
+         * @brief Constructor, 2 inputs.
+         *
+         * @param[in] c1 first CorrelationFunction.
+         * @param[in] c2 second CorrelationFunction.
+         */
+        AddCorrelationFunction(const CorrelationFunction& c1, const CorrelationFunction& c2);
+
+        /** 
+         * @brief Constructor, list of inputs.
+         *
+         * @param[in] clist list of CorrelationFunctions.
+         */
+        AddCorrelationFunction(const std::list<CorrelationFunction>& clist);
+
+        /// @brief Copy constructor.
+        AddCorrelationFunction(const AddCorrelationFunction& rhs);
+
+        /// @brief Destructor.
+        ~AddCorrelationFunction();
+
+    protected:
+
+        class AddCorrelationFunctionImpl;
+
+    private:
+        // op= is undefined
+        void operator=(const AddCorrelationFunction& rhs);
+    };
+
 }
 #endif
