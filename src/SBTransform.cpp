@@ -1,5 +1,5 @@
 
-#define DEBUGLOGGING
+//#define DEBUGLOGGING
 
 #include "TMV.h"
 #include "SBTransform.h"
