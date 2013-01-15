@@ -234,6 +234,13 @@ class PowerSpectrum(object):
            Both calls do the same thing.  The returned g1, g2 this time are lists of g1, g2 values.
            The lists are the same length as the number of input positions.
 
+        6. Make a PowerSpectrum from a tabulated P(k) that gets interpolated to find the power at
+        all necessary values of k, then generate shears on a grid.  Assuming that k and P_k are
+        either lists, tuples, or 1d Numpy arrays containing k and P(k):
+
+               tab_pk = galsim.lensing.TabulatedPk(k, P_k)
+               my_ps = galsim.PowerSpectrum(my_ps)
+               g1, g2 = my_ps.getShear(grid_spacing = 1., grid_nx = 100)
 
         @param pos              Position(s) of the source(s), assumed to be post-lensing!  (It is 
                                 up to the user to check that the units are consistent with those in 
@@ -513,6 +520,8 @@ class PowerSpectrumRealizer(object):
         P_k = power_function(self.k)
         power_array[ self.kx, self.ky] = P_k
         power_array[-self.kx, self.ky] = P_k
+        if np.any(power_array < 0):
+            raise ValueError("Negative power required for some values of k!")
         return power_array
     
     def _generate_spin_weightings(self):
@@ -894,3 +903,99 @@ class NFWHalo(object):
             return mu[0]
         else:
             return [ m for m in mu ]
+
+class TabulatedPk(object):
+    """A class for storing a tabulated lensing power spectrum, for use by the lensing engine.
+
+    The TabulatedPk class uses the galsim LookupTable functionality to take some input P(k) that is
+    known at particular values of k, and interpolate it to other values of k.  Currently it is the
+    responsibility of the user to ensure that the power is defined for k down to zero, as is
+    required by the lensing engine.  The accuracy of the interpolation and the effective shear power
+    spectrum will in part depend on the user ensuring that the P(k) is adequately sampled for the
+    range of P(k) values of interest; very poor sampling could result in the interpolation being
+    quite inaccurate.
+
+    The user must supply the arrays for k and P, or the name of an ascii file containing columns for
+    k and P.
+
+    @param k             The list, tuple, or 1d Numpy array of k values (floats or doubles).
+    @param power         The list, tuple, or 1d Numpy array of P(k) values (floats or doubles).
+    @param file          The name of the ascii file containing k and P (2 columns).
+    @param c_ell         Is the power actually given as C_ell, which requires us to multiply by
+                         k^2 / (2 pi) to get the shear power P(k)?  [Default: False]
+    @param interpolant   The interpolant to use, with the options being 'spline', 'linear', 'ceil',
+                         and 'floor' [Default: 'spline'].
+    @param units         The angular units used for the power spectrum (i.e. the units of k^-1).
+                         Currently only arcsec is implemented.
+
+    """
+    def __init__(self, k = None, power = None, file = None, c_ell = False, interpolant = None,
+                 units = galsim.arcsec):
+        # sanity check units
+        if units is not galsim.arcsec:
+            raise ValueError("Currently we require units of arcsec for the inverse wavenumber!")
+        self.units = units
+
+        # read in from file if a filename was specified
+        if file:
+            data = np.loadtxt(file).transpose()
+            k=data[0]
+            power=data[1]
+
+        # check for proper interpolant
+        if interpolant is None:
+            interpolant = 'spline'
+        else:
+            if interpolant not in ['spline', 'linear', 'ceil', 'floor']:
+                raise ValueError("Unknown interpolant: %s" % interpolant)
+
+        # make and store table
+        if c_ell:
+            self.table = galsim.LookupTable(k, (k**2)*power/(2.*np.pi), interpolant)
+        else:
+            self.table = galsim.LookupTable(k, power, interpolant)
+
+    def __call__(self, k):
+        """Interpolate the TabulatedPk to get power at some k value(s).
+
+        When the TabulatedPk object is called with a single argument, it returns the power at that
+        argument.  An exception will be thrown automatically by the LookupTable class if the k value
+        is outside the range of the original tabulated values.  The value that is returned is the
+        same type as that provided as an argument, e.g., if a single value k is provided then a
+        single value of P is returned; if a tuple of k values is provided then a tuple of P values
+        is returned; and so on.
+
+        @param k       The k value(s) for which the power should be calculated via interpolation on
+                       the original (k, P) lookup table.  k can be a single float/double, or a
+                       tuple, list, or arbitrarily shaped Numpy array.
+        @returns The power at the specified k value(s).
+        """
+        # figure out what we received, and return the same thing
+        # option 1: a Numpy array
+        if isinstance(k, np.ndarray):
+            dimen = len(k.shape)
+            if dimen > 2:
+                raise ValueError("Arrays with dimension larger than 2 not allowed!")
+            elif dimen == 2:
+                p = np.zeros_like(k)
+                for i in xrange(k.shape[1]):
+                    p[i,:] = np.fromiter((self.table(float(q)) for q in k[i,:]), dtype='float')
+            else:
+                p = np.fromiter((self.table(float(q)) for q in k), dtype='float')
+            return p
+        # option 2: a tuple
+        elif isinstance(k, tuple):
+            p = []
+            for q in k:
+                p.append(self.table(q))
+            return tuple(p)
+        # option 3: a list
+        elif isinstance(k, list):
+            p = []
+            for q in k:
+                p.append(self.table(q))
+            return p
+        # option 4: a single value
+        else:
+            # interpolate on table
+            return self.table(k)
