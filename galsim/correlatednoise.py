@@ -20,10 +20,15 @@ class BaseCorrFunc(object):
         if not isinstance(gsobject, base.GSObject):
             raise TypeError(
                 "Correlation function objects must be initialized with a GSObject.")
+        
+        # Act as a container for the GSObject used to represent the correlation funcion.
         self._GSCorrelationFunction = gsobject
-        self._rootps_store = [] # setup the store for images of the sqrt(PS) as an empty list
+        # Setup a store for later, containing array representations of the sqrt(PowerSpectrum)
+        # [useful for later applying noise to images according to this correlation function].
+        # List items will store this data as (rootps, dx) tuples.
+        self._rootps_store = []
 
-        # Make op+ of two GSObjects work to return an CFAdd object
+    # Make op+ of two GSObjects work to return an CFAdd object
     def __add__(self, other):
         return AddCorrFunc(self, other)
 
@@ -629,17 +634,15 @@ class ImageCorrFunc(BaseCorrFunc):
                 raise RuntimeError(
                     'Specified interpolant is not an Interpolant or InterpolantXY instance!')
 
-        # Setup a store for later, containing array representations of the sqrt(PowerSpectrum)
-        # [useful for later applying noise to images according to this correlation function].
-        # Stores data as (rootps, dx) tuples.
-        self._rootps_store = [
-            (np.sqrt(self.original_ps_image.array), self.original_cf_image.getScale())]
-
         # Then initialize...
         BaseCorrFunc.__init__(
             self, base.GSObject(
                 galsim._galsim._CorrelationFunction(
                     self.original_cf_image, self.interpolant, dx=self.original_image.getScale())))
+        
+        # Finally store useful data as a (rootps, dx) tuple for efficient later use:
+        self._rootps_store.append(
+            (np.sqrt(self.original_ps_image.array), self.original_cf_image.getScale()))
 
     # Make a copy of the ImageCorrFunc
     def copy(self):
