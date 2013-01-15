@@ -632,8 +632,8 @@ class ImageCorrFunc(BaseCorrFunc):
             else:
                 newcf.setScale(dx)
             # Then draw this correlation function into an array
-            self.draw(newcf, dx=None, normalization="sb") # setting dx=None here uses the newcf
-                                                          # image scale set above
+            self.draw(newcf, dx=None) # setting dx=None here uses the newcf image scale set above
+
             # Roll to put the origin at the lower left pixel before FT-ing to get the PS...
             rolled_cf_array = utilities.roll2d(
                 newcf.array, (-newcf.array.shape[0] / 2, -newcf.array.shape[1] / 2))
