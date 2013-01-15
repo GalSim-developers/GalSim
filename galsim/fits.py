@@ -33,6 +33,13 @@ def parse_compression(compression, fits):
             pass
     else:
         raise TypeError("Invalid compression")
+    if pyfits_compress:
+        import pyfits
+        if 'CompImageHDU' not in pyfits.__dict__:
+            raise NotImplementedError(
+                'Compressed Images not supported before pyfits version 2.0.  You have version %s'%(
+                    pyfits.__version__))
+            
     return file_compress, pyfits_compress
 
 # This is a class rather than a def, since we want to store a variable, and 
@@ -407,14 +414,12 @@ def read(fits, compression='auto'):
     """
     import pyfits     # put this at function scope to keep pyfits optional
     
-    print 'Start read: fits = ',fits
     file_compress, pyfits_compress = parse_compression(compression,fits)
 
     fin = None
     if isinstance(fits, basestring):
         hdus, fin = read_file(fits, file_compress)
         fits = hdus
-    print 'After read_file: fits = ',fits
 
     if isinstance(fits, pyfits.HDUList):
         # Note: Nothing special needs to be done when reading a compressed hdu.
@@ -428,7 +433,6 @@ def read(fits, compression='auto'):
             if len(fits) < 1:
                 raise IOError('Expecting at least one HDU in galsim.read')
             fits = fits[0]
-    print 'fits => ',fits
 
     xmin = fits.header.get("GS_XMIN", 1)
     ymin = fits.header.get("GS_YMIN", 1)
@@ -440,13 +444,9 @@ def read(fits, compression='auto'):
     else:
         import warnings
         warnings.warn("No C++ Image template instantiation for pixel type %s" % pixel)
-        warnings.warn("Using float")
+        warnings.warn("   Using float64 instead.")
         Class = _galsim.ImageViewD
         import numpy
-        print 'fits.data = ',fits.data
-        print 'dtype = ',fits.data.dtype
-        print 'dtype.type = ',fits.data.dtype.type
-        print 'shape = ',fits.data.shape
         data = fits.data.astype(numpy.float64)
 
     # Check through byteorder possibilities, compare to native (used for numpy and our default) and
