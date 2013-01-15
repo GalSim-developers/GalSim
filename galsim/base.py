@@ -471,6 +471,15 @@ class GSObject(object):
         the flux (`normalization`), and that decide whether the clear the input Image before drawing
         into it (`add_to_image`).
 
+        Note that when drawing a GSObject that was defined with a particular value of flux, it is
+        not necessarily the case that a drawn image with 'normalization=flux' will have the sum of
+        pixel values equal to flux.  That condition is guaranteed to be satisfied only if the
+        profile has been convolved with a pixel response. If there was no convolution by a pixel
+        response, then the draw method is effectively sampling the surface brightness profile of the
+        GSObject at pixel centers without integrating over the flux within pixels, so for profiles
+        that are poorly sampled and/or varying rapidly (e.g., high n Sersic profiles), the sum of
+        pixel values might differ significantly from the GSObject flux.
+
         @param image  If provided, this will be the image on which to draw the profile.
                       If `image = None`, then an automatically-sized image will be created.
                       If `image != None`, but its bounds are undefined (e.g. if it was 
@@ -500,7 +509,9 @@ class GSObject(object):
         @param normalization  Two options for the normalization:
                               "flux" or "f" means that the sum of the output pixels is normalized
                                   to be equal to the total flux.  (Modulo any flux that falls off 
-                                  the edge of the image of course.)
+                                  the edge of the image of course, and note the caveat in the draw
+                                  method documentation regarding the need to convolve with a pixel
+                                  response.)
                               "surface brightness" or "sb" means that the output pixels sample
                                   the surface brightness distribution at each location.
                               (Default `normalization = "flux"`)
