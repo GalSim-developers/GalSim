@@ -79,11 +79,14 @@ class _ReadFile:
                 except:
                     # But just in case, here is an implementation that should always work.
                     fin = gzip.GzipFile(file, 'rb')
-                    import tempfile
-                    tmp = tempfile.NamedTemporaryFile('wb+')
                     data = fin.read()
-                    tmp.write(data)
-                    tmp.seek(0)
+                    tmp = file + '.tmp'
+                    # It would be pretty odd for this filename to already exist, but just in case...
+                    while os.path.isfile(tmp):
+                        tmp = tmp + '.tmp'
+                    tmpout = open(tmp,"w")
+                    tmpout.write(data)
+                    tmpout.close()
                     hdus = pyfits.open(tmp)
                     return hdus, tmp
         elif file_compress == 'bzip2':
@@ -102,11 +105,14 @@ class _ReadFile:
                     return self(file,file_compress)
             else:
                 fin = bz2.BZ2File(file, 'rb')
-                import tempfile
-                tmp = tempfile.NamedTemporaryFile('wb+')
                 data = fin.read()
-                tmp.write(data)
-                tmp.seek(0)
+                tmp = file + '.tmp'
+                # It would be pretty odd for this filename to already exist, but just in case...
+                while os.path.isfile(tmp):
+                    tmp = tmp + '.tmp'
+                tmpout = open(tmp,"w")
+                tmpout.write(data)
+                tmpout.close()
                 hdus = pyfits.open(tmp)
                 return hdus, tmp
         else:
@@ -405,7 +411,8 @@ def read(fits, compression='auto'):
 
     fin = None
     if isinstance(fits, basestring):
-        fits, fin = read_file(fits, file_compress)
+        hdus, fin = read_file(fits, file_compress)
+        fits = hdus
 
     if isinstance(fits, pyfits.HDUList):
         # Note: Nothing special needs to be done when reading a compressed hdu.
@@ -446,7 +453,14 @@ def read(fits, compression='auto'):
     image.scale = scale
 
     # If we opened a file, don't forget to close it.
-    if fin: fin.close()
+    if fin: 
+        hdus.close()
+        if isinstance(fin, basestring):
+            # In this case, it is a file name that we need to delete.
+            import os
+            os.remove(fin)
+        else:
+            fin.close()
 
     return image
 
@@ -472,25 +486,31 @@ def readMulti(fits, compression='auto'):
     fin = None
     if isinstance(fits, basestring):
         hdus, fin = read_file(fits, file_compress)
-    elif isinstance(fits, pyfits.HDUList):
-        hdus = fits
-    else:
+        fits = hdus
+    elif not isinstance(fits, pyfits.HDUList):
         raise TypeError("In readMulti, fits is not a string or HDUList")
 
     image_list = []
     if pyfits_compress:
         first = 1
-        if len(hdus) < 2:
+        if len(fits) < 2:
             raise IOError('Expecting at least one extension HDU in galsim.readMulti')
     else:
         first = 0
-        if len(hdus) < 1:
+        if len(fits) < 1:
             raise IOError('Expecting at least one HDU in galsim.readMulti')
-    for hdu in hdus[first:]:
+    for hdu in fits[first:]:
         image_list.append(read(hdu))
 
     # If we opened a file, don't forget to close it.
-    if fin: fin.close()
+    if fin:
+        hdus.close()
+        if isinstance(fin, basestring):
+            # In this case, it is a file name that we need to delete.
+            import os
+            os.remove(fin)
+        else:
+            fin.close()
 
     return image_list
 
@@ -516,7 +536,8 @@ def readCube(fits, compression='auto'):
 
     fin = None
     if isinstance(fits, basestring):
-        fits, fin = read_file(fits, file_compress)
+        hdus, fin = read_file(fits, file_compress)
+        fits = hdus
     
     if isinstance(fits, pyfits.HDUList):
         # Note: Nothing special needs to be done when reading a compressed hdu.
@@ -561,7 +582,15 @@ def readCube(fits, compression='auto'):
         image_list.append(image)
 
     # If we opened a file, don't forget to close it.
-    if fin: fin.close()
+    if fin: 
+        hdus.close()
+        if isinstance(fin, basestring):
+            # In this case, it is a file name that we need to delete.
+            import os
+            os.remove(fin)
+        else:
+            fin.close()
+
 
     return image_list
 
