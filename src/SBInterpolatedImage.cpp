@@ -1,5 +1,5 @@
 
-#define DEBUGLOGGING
+//#define DEBUGLOGGING
 
 #include <algorithm>
 #include "SBInterpolatedImage.h"
@@ -7,8 +7,8 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-std::ostream* dbgout = &std::cout;
-int verbose_level = 2;
+//std::ostream* dbgout = new std::ofstream("debug.out");
+//int verbose_level = 2;
 #endif
 
 namespace galsim {
