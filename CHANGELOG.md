@@ -6,7 +6,7 @@ Changes from v0.2 to v0.3
 * Support reading and writing compressed fits files. (Issue #299)
 
 * Minor changes in the python interface to the outputs of the moments and shape estimation routines
-  (the HSMShapeData class).  (Issue #296)
+  (the HSMShapeData class).  (Issue 296, 316, 332)
 
 * On systems where a different C++ compiler was used for GalSim and for python, C++ exceptions show
   up with a non-informative error message.  While this is not easily fixable, there is now a test
@@ -43,3 +43,7 @@ Changes from v0.2 to v0.3
 * Fixed treatment of duplicate numpy.int32 types on some systems where the old check was not
   sufficient.
 
+* The moments and PSF correction code was updated to use the Image class and TMV. The python
+  interface to this software was also updated so that it can handle weight and bad pixel maps for
+  the input Images.  Finally, an optimization was introduced that typically speeds up these routines
+  by a factor of 2-3.  (Issues 331, 332)
