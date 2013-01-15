@@ -37,7 +37,7 @@ def parse_compression(compression, fits):
         import pyfits
         if 'CompImageHDU' not in pyfits.__dict__:
             raise NotImplementedError(
-                'Compressed Images not supported before pyfits version 2.0.  You have version %s'%(
+                'Compressed Images not supported before pyfits version 2.0. You have version %s.'%(
                     pyfits.__version__))
             
     return file_compress, pyfits_compress
