@@ -21,4 +21,3 @@ PhotonArray.cpp
 Random.cpp
 PSFCorr.cpp
 Integ.cpp
-CorrelatedNoise.cpp

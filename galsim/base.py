@@ -33,10 +33,6 @@ class GSObject(object):
     methods and attributes, particularly those from the C++ SBProfile classes.
     """
     def __init__(self, SBProfile):
-        # Note that the _CorrelationFunction option allows a GSObject to be stored as an attribute
-        # for the composition structure of the galsim.correlatednoise correlation function objects
-        if not isinstance(SBProfile, (galsim.SBProfile, galsim._galsim._CorrelationFunction)):
-            raise TypeError("GSObject must be initialized with an SBProfile!")
         self.SBProfile = SBProfile  # This guarantees that all GSObjects have an SBProfile
     
     # Make op+ of two GSObjects work to return an Add object
