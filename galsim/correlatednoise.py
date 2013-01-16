@@ -52,7 +52,7 @@ class CorrFunc(object):
     def copy(self):
         """Returns a copy of the correlation function.
         """
-        return BaseCorrFunc(profile.copy())
+        return CorrFunc(self.profile.copy())
 
     def applyNoiseTo(self, image, dx=0., dev=None, add_to_image=True):
         """Add noise as a Gaussian random field with this correlation function to an input Image.
@@ -129,7 +129,7 @@ class CorrFunc(object):
             else:
                 newcf.setScale(dx)
             # Then draw this correlation function into an array
-            self.draw(newcf, dx=None) # setting dx=None here uses the newcf image scale set above
+            self.profile.draw(newcf, dx=None) # setting dx=None here uses the newcf image scale set above
 
             # Roll to put the origin at the lower left pixel before FT-ing to get the PS...
             rolled_cf_array = utilities.roll2d(
@@ -169,7 +169,7 @@ def ImageCorrFunc(image, dx=0., interpolant=None):
 
     Basic example:
 
-        >>> cf = galsim.correlatednoise.ImageCorrFunc(image)
+        >>> cf = galsim.ImageCorrFunc(image)
 
     Instantiates an ImageCorrFunc using the pixel scale information contained in image.getScale()
     (assumes the scale is unity if image.getScale() <= 0.)
@@ -177,12 +177,12 @@ def ImageCorrFunc(image, dx=0., interpolant=None):
     Optional Inputs
     ---------------
 
-        >>> cf = galsim.correlatednoise.ImageCorrFunc(image, dx=0.2)
+        >>> cf = galsim.ImageCorrFunc(image, dx=0.2)
 
     The example above instantiates an ImageCorrFunc, but forces the use of the pixel scale dx to
     set the units of the internal lookup table.
 
-        >>> cf = galsim.correlatednoise.ImageCorrFunc(image,
+        >>> cf = galsim.ImageCorrFunc(image,
         ...     interpolant=galsim.InterpolantXY(galsim.Lanczos(5, tol=1.e-4))
 
     The example above instantiates a ImageCorrFunc, but forces the use of a non-default interpolant
