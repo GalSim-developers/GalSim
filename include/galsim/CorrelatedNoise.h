@@ -33,6 +33,7 @@ int verbose_level = 2;
 #include "TMV_Sym.h"
 #include "SBInterpolatedImage.h"
 #include "Random.h"
+#include "SBAdd.h"
 
 namespace galsim {
 
@@ -89,7 +90,7 @@ namespace galsim {
      * There are also optional arguments for the pixel size (default is to get it from
      * the image), and a factor by which to pad the image (default = 4).
      */
-    class CorrelationFunction: private SBInterpolatedImage
+    class CorrelationFunction : private SBInterpolatedImage
     {
     public:
         /** 
@@ -269,7 +270,7 @@ namespace galsim {
      * The AddCorrelationFunction class can be used to add arbitrary numbers of CorrelationFunctions
      * together.  It borrows heavily from the SBAdd class.
      */
-    class AddCorrelationFunction: public CorrelationFunction
+    class AddCorrelationFunction : private SBAdd, public CorrelationFunction
     {
     public:
 

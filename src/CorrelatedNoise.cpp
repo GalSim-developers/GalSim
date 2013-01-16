@@ -29,6 +29,7 @@ int verbose_level = 2;
 
 namespace galsim {
 
+    // Top level constructors, defined copy constructors, and destructors
     template <typename T>
     CorrelationFunction::CorrelationFunction(
         const BaseImage<T>& image,
@@ -37,8 +38,7 @@ namespace galsim {
         SBInterpolatedImage(new CorrelationFunctionImpl(image,xInterp,kInterp,dx,pad_factor)) {}
 
     CorrelationFunction::CorrelationFunction(
-        const CorrelationFunction& rhs
-    ) : SBInterpolatedImage(rhs) {}
+        const CorrelationFunction& rhs) : SBInterpolatedImage(rhs) {}
   
     CorrelationFunction::~CorrelationFunction() {}
 
@@ -61,6 +61,51 @@ namespace galsim {
             );
         }
     }
+
+    AddCorrelationFunction::AddCorrelationFunction(
+        const CorrelationFunction& c1, const CorrelationFunction& c2) :
+        CorrelationFunction(new AddCorrelationFunctionImpl(c1, c2)) {}
+
+    AddCorrelationFunction::AddCorrelationFunction(const std::list<CorrelationFunction>& clist) :
+        CorrelationFunction(new AddCorrelationFunctionImpl(clist)) {}
+
+    AddCorrelationFunction::AddCorrelationFunction(
+        const AddCorrelationFunction& rhs) : CorrelationFunction(rhs) {}
+
+    AddCorrelationFunction::~AddCorrelationFunction() {}
+
+    AddCorrelationFunction::AddCorrelationFunctionImpl::AddCorrelationFunctionImpl(
+        const CorrelationFunction& c1, const CorrelationFunction& c2)
+    {
+        add(c1);
+        add(c2);
+        initialize();
+    }
+
+    AddCorrelationFunction::AddCorrelationFunctionImpl::AddCorrelationFunctionImpl(
+        const std::list<CorrelationFunction>& clist)
+    {
+        for (ConstIter cptr = clist.begin(); cptr!=clist.end(); ++cptr) add(*cptr);
+        initialize();
+    }
+
+    void AddCorrelationFunction::AddCorrelationFunctionImpl::add(const CorrelationFunction& rhs)
+    {
+        xdbg<<"Start AddCorrelationFunction::add.  Adding item # "<<_plist.size()+1<<std::endl;
+        // Add new summand(s) to the _plist:
+        assert(SBProfile::GetImpl(rhs));
+        const AddCorrelationFunctionImpl *cfa = dynamic_cast<const AddCorrelationFunctionImpl*>(
+            SBProfile::GetImpl(rhs)
+        );
+        if (cfa) {
+            // If rhs is an AddCorrelationFunction, copy its full list here
+            _plist.insert(_plist.end(), cfa->_plist.begin(), cfa->_plist.end());
+        } else {
+            _plist.push_back(rhs);
+        }
+    }
+
+    // No need to reimplement the SBAdd::SBAddImpl::initialize()
 
     // Covariance matrix calculation using the dimensions of an input image, and a scale dx
     template <typename T>

@@ -63,27 +63,21 @@ namespace galsim {
 
     };
 
-    class AddCorrelationFunction::AddCorrelationFunctionImpl:
-    public SBAdd::SBAddImpl
+    class AddCorrelationFunction::AddCorrelationFunctionImpl: public SBAdd::SBAddImpl
     {
         public:
 
-            AddCorrelationFunctionImpl(const CorrelationFunction& c1, const CorrelationFunction& c2)
-            { add(c1); add(c2); initialize(); }
+            AddCorrelationFunctionImpl(
+                const CorrelationFunction& c1, const CorrelationFunction& c2);
 
-            AddCorrelationFunctionImpl(const std::list<CorrelationFunction>& clist)
-            {
-                for (ConstIter cptr = clist.begin(); cptr!=clist.end(); ++cptr)
-                    add(*cptr);
-                initialize();
-            }
+            AddCorrelationFunctionImpl(const std::list<CorrelationFunction>& clist);
 
             ~AddCorrelationFunctionImpl() {}
 
             void add(const CorrelationFunction& rhs);
 
-        typedef std::list<CorrelationFunction>::iterator Iter;
-        typedef std::list<CorrelationFunction>::const_iterator ConstIter;
+            typedef std::list<CorrelationFunction>::iterator Iter;
+            typedef std::list<CorrelationFunction>::const_iterator ConstIter;
 
         private:
 
@@ -91,7 +85,7 @@ namespace galsim {
             std::list<CorrelationFunction> _plist; 
 
             // Copy constructor and op= are undefined.
-            AddImpl(const AddCorrelationFunctionImpl& rhs);
+            AddCorrelationFunctionImpl(const AddCorrelationFunctionImpl& rhs);
             void operator=(const AddCorrelationFunctionImpl& rhs);
 
     };
