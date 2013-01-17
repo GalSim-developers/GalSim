@@ -77,21 +77,22 @@ class PowerSpectrum(object):
     `lambda k : k**2`.  But they can also be more complicated user-defined functions that take a
     single argument k and return the power at that k value, or they can be instances of the
     TabulatedPk class for power spectra that are known at particular k values but for which there is
-    not a simple analytic form.  The power function should return power P(k), not
-    Delta^2(k) = k^2 P(k) / 2pi.
+    not a simple analytic form.  The power function should return power P(k), not 
+    Delta^2(k) = k^2 P(k) / 2pi.  We assume that the P(k) goes to zero at k=0, as in any physically
+    reasonable cosmological model.
 
     @param e_power_function A function or other callable that accepts a Numpy array of |k| values,
                             and returns the E-mode power spectrum P_E(|k|) in an array of the same
-                            shape.  It should cope happily with |k|=0.  The function should return
-                            the power spectrum desired in the E (gradient) mode of the image.  Set
-                            to None (default) for there to be no E-mode power.
+                            shape.  The function should return the power spectrum desired in the E
+                            (gradient) mode of the image.  Set to None (default) for there to be no
+                            E-mode power.
                             It may also be a string that can be converted to a function using
                             eval('lambda k : ' + e_power_function)
     @param b_power_function A function or other callable that accepts a Numpy array of |k| values,
                             and returns the B-mode power spectrum P_B(|k|) in an array of the same
-                            shape.  It should cope happily with |k|=0.  The function should return
-                            the power spectrum desired in the B (curl) mode of the image.  Set to
-                            None (default) for there to be no B-mode power.
+                            shape.  The function should return the power spectrum desired in the B
+                            (curl) mode of the image.  Set to None (default) for there to be no
+                            B-mode power.
                             It may also be a string that can be converted to a function using
                             eval('lambda k : ' + b_power_function)
     @param units            The angular units used for the power spectrum (i.e. the units of 
@@ -115,10 +116,6 @@ class PowerSpectrum(object):
                     f1 = pf(1.)
                 except:
                     raise AttributeError("%s is not a valid function"%pf_str)
-                try:
-                    f0 = pf(0.)
-                except:
-                    raise AttributeError("%s is not well-behaved at k=0"%pf_str)
 
         # Check that at least one is not None
         if e_power_function is None and b_power_function is None:
@@ -141,6 +138,21 @@ class PowerSpectrum(object):
         @param units            See description of this parameter in the documentation for the
                                 PowerSpectrum class.
         """
+        # Check that the new power functions are valid:
+        for pf_str in [ 'e_power_function', 'b_power_function' ]:
+            pf = eval(pf_str)
+            if pf is not None:
+                if isinstance(pf,str):
+                    try : 
+                        pf = eval('lambda k : ' + pf)
+                    except :
+                        raise AttributeError(
+                            "Unable to turn %s = %s into a valid function"%(pf_str,pf))
+                try:
+                    f1 = pf(1.)
+                except:
+                    raise AttributeError("%s is not a valid function"%pf_str)
+
         self.p_E = e_power_function
         self.p_B = b_power_function
         if units is not galsim.arcsec:
@@ -179,7 +191,7 @@ class PowerSpectrum(object):
         given list of input positions (or just a single position).  This can be done in conjunction
         with the first functionality, in which case the grid will be computed using the `grid_*`
         parameters and then that new grid will be used to interpolate the shear values.  Or you can
-        omit the `grid_*` parameters, in which case the funciton will use the most recently computed
+        omit the `grid_*` parameters, in which case the function will use the most recently computed
         grid from a previous call.  Currently, if you try to interpolate a grid without having
         previously called `getShear` with the `grid_*` parameters, then an exception will be raised.
         A future version of the code will allow the estimation of shears on non-gridded points by
@@ -528,7 +540,14 @@ class PowerSpectrumRealizer(object):
         #Internal function to generate the result of a power function evaluated on a grid,
         #taking into account the symmetries.
         power_array = np.zeros((self.nx, self.ny/2+1))
-        P_k = power_function(self.k)
+
+        # make a faked-up self.k array that fudges the value at k=0, so we don't have to evaluate
+        # power there
+        fake_k = self.k
+        fake_k[0,0] = fake_k[1,0]
+        P_k = power_function(fake_k)
+        # now fix the k=0 value of power to zero
+        P_k[0,0] = 0.
         power_array[ self.kx, self.ky] = P_k
         power_array[-self.kx, self.ky] = P_k
         if np.any(power_array < 0):
