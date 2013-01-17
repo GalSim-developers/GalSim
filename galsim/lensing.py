@@ -114,14 +114,19 @@ class PowerSpectrum(object):
                     except :
                         raise AttributeError(
                             "Unable to turn %s = %s into a valid function"%(pf_str,pf))
-                try:
-                    f1 = pf(1.)
-                except:
-                    raise AttributeError("%s is not a valid function"%pf_str)
-                fake_arr = np.zeros(2)
-                fake_p = pf(fake_arr)
-                if isinstance(fake_p, float):
-                    raise AttributeError("Power function MUST return a list/array same length as input")
+                # Only try tests below if it's not a TabulatedPk.
+                # (If it's a TabulatedPk, then it could be a valid function that isn't defined at
+                # k=1, and by definition it must return something that is the same length as the
+                # input.)
+                if not isinstance(pf, TabulatedPk):
+                    try:
+                        f1 = pf(1.)
+                    except:
+                        raise AttributeError("%s is not a valid function"%pf_str)
+                    fake_arr = np.zeros(2)
+                    fake_p = pf(fake_arr)
+                    if isinstance(fake_p, float):
+                        raise AttributeError("Power function MUST return a list/array same length as input")
 
         # Check that at least one is not None
         if e_power_function is None and b_power_function is None:
@@ -144,7 +149,7 @@ class PowerSpectrum(object):
         @param units            See description of this parameter in the documentation for the
                                 PowerSpectrum class.
         """
-        # Check that the new power functions are valid:
+        # Check that the power functions are valid:
         for pf_str in [ 'e_power_function', 'b_power_function' ]:
             pf = eval(pf_str)
             if pf is not None:
@@ -154,10 +159,19 @@ class PowerSpectrum(object):
                     except :
                         raise AttributeError(
                             "Unable to turn %s = %s into a valid function"%(pf_str,pf))
-                try:
-                    f1 = pf(1.)
-                except:
-                    raise AttributeError("%s is not a valid function"%pf_str)
+                # Only try tests below if it's not a TabulatedPk.
+                # (If it's a TabulatedPk, then it could be a valid function that isn't defined at
+                # k=1, and by definition it must return something that is the same length as the
+                # input.)
+                if not isinstance(pf, TabulatedPk):
+                    try:
+                        f1 = pf(1.)
+                    except:
+                        raise AttributeError("%s is not a valid function"%pf_str)
+                    fake_arr = np.zeros(2)
+                    fake_p = pf(fake_arr)
+                    if isinstance(fake_p, float):
+                        raise AttributeError("Power function MUST return a list/array same length as input")
 
         self.p_E = e_power_function
         self.p_B = b_power_function
@@ -551,6 +565,12 @@ class PowerSpectrumRealizer(object):
         # power there
         fake_k = self.k
         fake_k[0,0] = fake_k[1,0]
+        # raise a clear exception for TabulatedPk that are not defined on the full k range!
+        if isinstance(power_function, TabulatedPk):
+            mink = min(fake_k)
+            maxk = max(fake_l)
+            if mink < power_function.k_min or maxk > power_function.k_max:
+                raise ValueError("Tabulated P(k) is not defined for full k range on grid, %f<k<%f"%(mink,maxk))
         P_k = power_function(fake_k)
         # now fix the k=0 value of power to zero
         if type(P_k) is np.ndarray:
