@@ -75,7 +75,9 @@ class PowerSpectrum(object):
     should be a function of k.  The typical thing is to just use a lambda function in Python (i.e.,
     a function that is not associated with a name); for example, to define P(k)=k^2, one would use
     `lambda k : k**2`.  But they can also be more complicated user-defined functions that take a
-    single argument k and return the power at that k value.  They should be power P(k), not
+    single argument k and return the power at that k value, or they can be instances of the
+    TabulatedPk class for power spectra that are known at particular k values but for which there is
+    not a simple analytic form.  The power function should return power P(k), not
     Delta^2(k) = k^2 P(k) / 2pi.
 
     @param e_power_function A function or other callable that accepts a Numpy array of |k| values,
