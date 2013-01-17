@@ -399,7 +399,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         stamp_size = max(stamp_xsize, stamp_ysize)
         grid_dx = stamp_size * pixel_scale
 
-        config['power_spectrum'].getShear(grid_spacing=grid_dx, grid_nx=n_tiles, rng=rng)
+        config['power_spectrum'].getShear(grid_spacing=grid_dx, ngrid=n_tiles, rng=rng)
         # We don't care about the output here.  This just builds the grid, which we'll
         # access for each object using its position.
 
@@ -593,7 +593,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         grid_dx = full_size * pixel_scale / 20.
         grid_nx = 21
 
-        config['power_spectrum'].getShear(grid_spacing=grid_dx, grid_nx=grid_nx, rng=rng)
+        config['power_spectrum'].getShear(grid_spacing=grid_dx, ngrid=grid_nx, rng=rng)
         # We don't care about the output here.  This just builds the grid, which we'll
         # access for each object using its position.
 
