@@ -45,3 +45,7 @@ Changes from v0.2 to v0.3
   interface to this software was also updated so that it can handle weight and bad pixel maps for
   the input Images.  Finally, an optimization was introduced that typically speeds up these routines
   by a factor of 2-3.  (Issues #331, #332)
+
+* There is a new base class, InterpolatedImage, which contains an SBInterpolatedImage.  Users who
+  wish to take some arbitrary input image and manipulate it (shear, convolved, etc.) can use this
+  base class as a way of easily carrying out those operations.  (Issue #333)
