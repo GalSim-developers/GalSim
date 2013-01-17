@@ -547,7 +547,10 @@ class PowerSpectrumRealizer(object):
         fake_k[0,0] = fake_k[1,0]
         P_k = power_function(fake_k)
         # now fix the k=0 value of power to zero
-        P_k[0,0] = 0.
+        if type(P_k) is np.ndarray:
+            P_k[0,0] = type(P_k[0,1])(0.)
+        else:
+            P_k = 0.
         power_array[ self.kx, self.ky] = P_k
         power_array[-self.kx, self.ky] = P_k
         if np.any(power_array < 0):
@@ -938,15 +941,16 @@ class TabulatedPk(object):
     """A class for storing a tabulated lensing power spectrum, for use by the lensing engine.
 
     The TabulatedPk class uses the galsim LookupTable functionality to take some input P(k) that is
-    known at particular values of k, and interpolate it to other values of k.  Currently it is the
-    responsibility of the user to ensure that the power is defined for k down to zero, as is
-    required by the lensing engine.  The accuracy of the interpolation and the effective shear power
-    spectrum will in part depend on the user ensuring that the P(k) is adequately sampled for the
-    range of P(k) values of interest; very poor sampling could result in the interpolation being
-    quite inaccurate.
+    known at particular values of k, and interpolate it to other values of k.  The accuracy of the
+    interpolation and the effective shear power spectrum will in part depend on the user ensuring
+    that the P(k) is adequately sampled for the range of P(k) values of interest; very poor sampling
+    could result in the interpolation being quite inaccurate.
 
     The user must supply the arrays for k and P, or the name of an ascii file containing columns for
     k and P.
+
+    The user can opt to interpolate in log(k) and/or log(P), though this is not the default. TODO:
+    actually put this code in...
 
     @param k             The list, tuple, or 1d Numpy array of k values (floats or doubles).
     @param power         The list, tuple, or 1d Numpy array of P(k) values (floats or doubles).
