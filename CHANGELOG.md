@@ -14,6 +14,8 @@ Changes from v0.2 to v0.3
 * Minor changes in the python interface to the outputs of the moments and shape estimation routines
   (the HSMShapeData class).  (Issue #296, #316, #332)
 
+* Add FormattedStr option for string values in config files.  (Issue #315)
+
 * On systems where a different C++ compiler was used for GalSim and for python, C++ exceptions show
   up with a non-informative error message.  While this is not easily fixable, there is now a test
   for this incompatibility when compiling, which results in a warning being generated.

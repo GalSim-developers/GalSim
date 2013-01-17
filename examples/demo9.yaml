@@ -18,6 +18,7 @@
 # - shear_value : Eta1Eta2 (eta1, eta2)
 # - image type : Scattered (size, nobjects)
 # - str_value type : NumberedFile (root, num, ext, digits)
+# - str_value type : FormattedStr (format, items)
 # - value type : Sequence (..., nitems)
 # - output : nproc
 # - output : weight
@@ -192,16 +193,33 @@ output :
         #     nfw3
         #     nfw4
         # as subdirectories of output_yaml.
-        type : NumberedFile
-        root : 'output_yaml/nfw'
-        num : 
-            type : Sequence
-            first : 1
-            last : 4
+        # 
+        # This could be done using NumberedFile with 
+        #     type : NumberedFile
+        #     root : 'output_yaml/nfw'
+        #     num : <the same as the single item below>
+        #
+        # however, we use FormattedStr instead to show how that works.
+        type : FormattedStr
 
-            # For our directory name, we have each number in the sequence repeat 5 times
-            # before moving on to the next value, since we have 5 files to put in each directory.
-            repeat : *n_clusters_per_mass
+        # The FormattedStr takes a format string and a list of items to use for 
+        # the various %d, %f, etc.  In other words, once we construct a list of items,
+        # the final string is calculated using
+        #     format%tuple(items)
+        format : output_yaml/nfw%d
+
+        items : 
+            # Only one item in this case, but in general you would have an item for each
+            # % specified in the format string (except %% of course which is interpreted
+            # as a literal '%').
+            -
+                type : Sequence
+                first : 1
+                last : 4
+                # For our directory name, we have each number in the sequence repeat 5 times
+                # before moving on to the next value, since we have 5 files to put in each 
+                # directory.
+                repeat : *n_clusters_per_mass
 
     # The weight field means that a weight image should be built and written out.
     # The weights are calculated as the inverse variance in each pixel.
