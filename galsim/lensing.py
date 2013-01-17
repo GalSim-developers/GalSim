@@ -259,7 +259,7 @@ class PowerSpectrum(object):
         either lists, tuples, or 1d Numpy arrays containing k and P(k):
 
                tab_pk = galsim.lensing.TabulatedPk(k, P_k)
-               my_ps = galsim.PowerSpectrum(my_ps)
+               my_ps = galsim.PowerSpectrum(tab_pk)
                g1, g2 = my_ps.getShear(grid_spacing = 1., grid_nx = 100)
 
         @param pos              Position(s) of the source(s), assumed to be post-lensing!  (It is 
@@ -953,7 +953,8 @@ class TabulatedPk(object):
     could result in the interpolation being quite inaccurate.
 
     The user must supply the arrays for k and P, or the name of an ascii file containing columns for
-    k and P.
+    k and P.  The TabulatedPk object will store some basic information like the minimum and maximum
+    k, and the number of k values used for interpolation.
 
     The user can opt to interpolate in log(k) and/or log(P), though this is not the default.  It may
     be a wise choice depending on the particular function, e.g., for a nearly power-law P(k) (or at
@@ -999,13 +1000,18 @@ class TabulatedPk(object):
             if interpolant not in ['spline', 'linear', 'ceil', 'floor']:
                 raise ValueError("Unknown interpolant: %s" % interpolant)
 
+        # store some information that will be useful later
+        self.k_min = min(k)
+        self.k_max = max(k)
+        self.n_k = len(k)
+
         # make and store table
         if c_ell:
             power = (k**2)*power/(2.*np.pi)
         if k_log:
             k = np.log(k)
         if p_log:
-            p = np.log(p)
+            power = np.log(power)
         self.table = galsim.LookupTable(k, power, interpolant)
 
     def __call__(self, k):
