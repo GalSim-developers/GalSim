@@ -1354,7 +1354,7 @@ class InterpolatedImage(GSObject):
     used.  Note that both the interpolant and the `pad_factor` determine the accuracy of
     interpolation on the Image when carrying out operations such as shifting, shearing, dilating,
     and rotating.  For some details of the typical accuracy of interpolants used in GalSim as a
-    function of the amount of padding, see Table 1 in devel/modules/finterp.pdf in the GalSim
+    function of the amount of padding, see table 1 in devel/modules/finterp.pdf in the GalSim
     repository.  A quick summary is that for precise calculations (~1% accuracy or better),
     nearest-neighbor and linear interpolants should not be used; cubic, quintic, and Lanczos with
     n=3 are acceptable with >4x padding; and higher-order Lanczos is okay even with just 2x padding.
@@ -1386,7 +1386,7 @@ class InterpolatedImage(GSObject):
                                   to be equal to the total flux.
                               "surface brightness" or "sb" means that the pixels sample
                                   the surface brightness distribution at each location.
-                              [Default `normalization = "flux"`]
+                              (Default `normalization = "flux"`)
     @param dx              If provided, use this as the pixel scale for the Image; this will
                            override the pixel scale stored by the provided Image, in any.  If `dx`
                            is `None`, then take the provided image's pixel scale.
