@@ -238,7 +238,7 @@ def main(argv):
                 results.observed_shape.e2, results.moments_sigma)
     logger.info('When carrying out Regaussianization PSF correction, HSM reports')
     logger.info('    e1, e2 = %.3f, %.3f',
-                results.corrected_shape.e1, results.corrected_shape.e2)
+                results.corrected_e1, results.corrected_e2)
     logger.info('Expected values in the limit that noise and non-Gaussianity are negligible:')
     # Convention for shear addition is to apply the second (RHS) term initially followed by the
     # first (LHS).
