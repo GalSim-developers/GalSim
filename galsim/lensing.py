@@ -487,7 +487,7 @@ class PowerSpectrumRealizer(object):
             self.set_power(self.p_E, self.p_B)
         
         if not isinstance(gd, galsim.GaussianDeviate):
-            raise TypeError("The gd provided to psr() is not a GaussianDeviate!")
+            raise TypeError("The gd provided to the PowerSpectrumRealizer is not a GaussianDeviate!")
 
         #Generate a random complex realization for the E-mode, if there is one
         if self.amplitude_E is not None:
