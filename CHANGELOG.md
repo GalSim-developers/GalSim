@@ -14,6 +14,8 @@ Changes from v0.2 to v0.3
 * Minor changes in the python interface to the outputs of the moments and shape estimation routines
   (the HSMShapeData class).  (Issue #296, #316, #332)
 
+* Support reading and writing compressed fits files. (Issue #299)
+
 * Add FormattedStr option for string values in config files.  (Issue #315)
 
 * On systems where a different C++ compiler was used for GalSim and for python, C++ exceptions show
