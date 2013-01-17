@@ -23,4 +23,3 @@ CppShear.cpp
 Table.cpp
 RealSpaceConvolve.cpp
 Random.cpp
-CorrelatedNoise.cpp
