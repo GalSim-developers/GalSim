@@ -79,7 +79,9 @@ class PowerSpectrum(object):
     TabulatedPk class for power spectra that are known at particular k values but for which there is
     not a simple analytic form.  The power function should return power P(k), not 
     Delta^2(k) = k^2 P(k) / 2pi.  We assume that the P(k) goes to zero at k=0, as in any physically
-    reasonable cosmological model.
+    reasonable cosmological model.  The power functions must return a list/array that is the same
+    size as what it was given, e.g., in the case of no power or constant power, a function that just
+    returns a zero would not be permitted; it would have to return an array of zeros.
 
     @param e_power_function A function or other callable that accepts a Numpy array of |k| values,
                             and returns the E-mode power spectrum P_E(|k|) in an array of the same
@@ -116,6 +118,10 @@ class PowerSpectrum(object):
                     f1 = pf(1.)
                 except:
                     raise AttributeError("%s is not a valid function"%pf_str)
+                fake_arr = np.zeros(2)
+                fake_p = pf(fake_arr)
+                if isinstance(fake_p, float):
+                    raise AttributeError("Power function MUST return a list/array same length as input")
 
         # Check that at least one is not None
         if e_power_function is None and b_power_function is None:

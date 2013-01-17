@@ -24,7 +24,7 @@ def pk1(k):
 
 def pkflat(k):
     # note: this gives random Gaussian shears with variance of 0.01
-    return 0.01
+    return 0.01+np.zeros_like(k)
 
 def test_nfwhalo():
     import time
