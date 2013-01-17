@@ -567,8 +567,8 @@ class PowerSpectrumRealizer(object):
         fake_k[0,0] = fake_k[1,0]
         # raise a clear exception for TabulatedPk that are not defined on the full k range!
         if isinstance(power_function, TabulatedPk):
-            mink = min(fake_k)
-            maxk = max(fake_l)
+            mink = np.min(fake_k)
+            maxk = np.max(fake_k)
             if mink < power_function.k_min or maxk > power_function.k_max:
                 raise ValueError("Tabulated P(k) is not defined for full k range on grid, %f<k<%f"%(mink,maxk))
         P_k = power_function(fake_k)
@@ -1029,8 +1029,12 @@ class TabulatedPk(object):
         if c_ell:
             power = (k**2)*power/(2.*np.pi)
         if k_log:
+            if np.any(np.array(k) <= 0.):
+                raise ValueError("Cannot interpolate in log(k) when table contains k<=0!")
             k = np.log(k)
         if p_log:
+            if np.any(np.array(power) <= 0.):
+                raise ValueError("Cannot interpolate in log(P) when table contains P<=0!")
             power = np.log(power)
         self.table = galsim.LookupTable(k, power, interpolant)
 
@@ -1067,7 +1071,7 @@ class TabulatedPk(object):
             else:
                 p = np.fromiter((self.table(float(q)) for q in k), dtype='float')
             if self.p_log:
-                p = exp(p)
+                p = np.exp(p)
             return p
         # option 2: a tuple
         elif isinstance(k, tuple):
@@ -1075,7 +1079,7 @@ class TabulatedPk(object):
             for q in k:
                 p.append(self.table(q))
             if self.p_log:
-                p = exp(p)
+                p = np.exp(p)
             return tuple(p)
         # option 3: a list
         elif isinstance(k, list):
@@ -1083,12 +1087,12 @@ class TabulatedPk(object):
             for q in k:
                 p.append(self.table(q))
             if self.p_log:
-                p = exp(p)
+                p = np.exp(p)
             return p
         # option 4: a single value
         else:
             # interpolate on table
             if self.p_log:
-                return exp(self.table(k))
+                return np.exp(self.table(k))
             else:
                 return self.table(k)
