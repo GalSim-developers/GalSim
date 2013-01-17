@@ -144,7 +144,7 @@ class PowerSpectrum(object):
         if units is not galsim.arcsec:
             raise ValueError("Currently we require units of arcsec for the inverse wavenumber!")
 
-    def getShear(self, pos=None, grid_spacing=None, grid_nx=None, rng=None,
+    def getShear(self, pos=None, grid_spacing=None, ngrid=None, rng=None,
                  interpolant=None, center=galsim.PositionD(0,0)):
         """Generate a realization of the current power spectrum at the specified positions.
 
@@ -153,7 +153,7 @@ class PowerSpectrum(object):
         
         First, it will generate a Gaussian random realization of the specified E and B mode shear
         power spectrum at a grid of positions, specified by the input parameters `grid_spacing` 
-        (distance between grid points) and `grid_nx` (number of grid points in each direction.)  
+        (distance between grid points) and `ngrid` (number of grid points in each direction.)
 
         The normalization of the shears from a given power spectrum is defined as follows: if 
         P_E(k)=P_B(k)=P [const],
@@ -189,17 +189,17 @@ class PowerSpectrum(object):
         1. Create a grid of points separated by 1":
 
                my_ps = galsim.PowerSpectrum(lambda k : k**2)
-               g1, g2 = my_ps.getShear(grid_spacing = 1., grid_nx = 100)
+               g1, g2 = my_ps.getShear(grid_spacing = 1., ngrid = 100)
 
            The returned g1,g2 are 2-d numpy arrays of values, corresponding to the values of 
            g1,g2 at the locations of the grid points.
 
-           For a given value of grid_spacing and grid_nx, we could get the x and y values on the
+           For a given value of grid_spacing and ngrid, we could get the x and y values on the
            grid using
 
                import numpy as np
-               min = (-grid_nx/2 + 0.5) * grid_spacing
-               max = (grid_nx/2 - 0.5) * grid_spacing
+               min = (-ngrid/2 + 0.5) * grid_spacing
+               max = (ngrid/2 - 0.5) * grid_spacing
                x, y = np.meshgrid(np.arange(min,max,grid_spacing),
                                   np.arange(min,max,grid_spacing))
 
@@ -208,7 +208,7 @@ class PowerSpectrum(object):
         2. Same thing, but use a particular rng and set the location of the center of the grid
            to be something other than the default (0,0)
 
-               g1, g2 = my_ps.getShear(grid_spacing = 8., grid_nx = 65,
+               g1, g2 = my_ps.getShear(grid_spacing = 8., ngrid = 65,
                                        rng = galsim.BaseDeviate(1413231),
                                        center = (256.5, 256.5) )
 
@@ -247,7 +247,9 @@ class PowerSpectrum(object):
         @param grid_spacing     Spacing for an evenly spaced grid of points, in arcsec for
                                 consistency with the natural length scale of images created using
                                 the draw or drawShoot methods.
-        @param grid_nx          Number of grid points in the x dimension.
+        @param ngrid            Number of grid points in each dimension.  If a number that is not
+                                an int (e.g., a float) is supplied, then it gets converted to an int
+                                automatically.
         @param rng              (Optional) A galsim.GaussianDeviate object for drawing the random
                                 numbers.  (Alternatively, any BaseDeviate can be used.)
         @param interpolant      (Optional) Interpolant to use for interpolating the shears on a grid
@@ -284,9 +286,16 @@ class PowerSpectrum(object):
                     "Calling PowerSpectrum.getShear without grid parameters, and " +
                     "no grid previously set up.")
 
+        # Check for non-integer ngrid
+        if not isinstance(ngrid, int) and not isinstance(ngrid, long):
+            if isinstance(ngrid, float):
+                ngrid = int(ngrid)
+            else:
+                raise ValueError("ngrid must be an int, or easily convertable to int!")
+
         # Check problem cases for regular grid of points
-        if grid_spacing is not None or grid_nx is not None:
-            if grid_spacing is None or grid_nx is None:
+        if grid_spacing is not None or ngrid is not None:
+            if grid_spacing is None or ngrid is None:
                 raise ValueError("When specifying grid, we require both a spacing and a size!")
 
         # Check if center is a Position
@@ -327,7 +336,7 @@ class PowerSpectrum(object):
 
         # Build the grid if requested.
         if grid_spacing is not None:
-            psr = PowerSpectrumRealizer(grid_nx, grid_nx, grid_spacing, self.p_E, self.p_B)
+            psr = PowerSpectrumRealizer(ngrid, ngrid, grid_spacing, self.p_E, self.p_B)
             self.grid_g1, self.grid_g2 = psr(gd)
             
             # Setup interpolated images
@@ -337,15 +346,15 @@ class PowerSpectrum(object):
             self.im_g2 = galsim.ImageViewD(self.grid_g2)
             self.im_g2.setScale(grid_spacing)
 
-            # Dealing with the center here is a bit confusing, especially if grid_nx is even.
+            # Dealing with the center here is a bit confusing, especially if ngrid is even.
             # The InterpolatedImage will consider position (0,0) to correspond to 
             # self.im_g1.bounds.center() on the image.  We call this nominal_center.
-            # However, if grid_nx is even, this is slightly up and to the right of the 
-            # true center. The true center x and y are at (1+grid_nx)/2 * grid_spacing.
+            # However, if ngrid is even, this is slightly up and to the right of the 
+            # true center. The true center x and y are at (1+ngrid)/2 * grid_spacing.
             # And finally, we may be passed a value to consider the center of the image.
             b = self.im_g1.bounds
             nominal_center = galsim.PositionD(b.center().x, b.center().y) * grid_spacing
-            true_center = galsim.PositionD( (1.+grid_nx)/2. , (1.+grid_nx)/2. ) * grid_spacing
+            true_center = galsim.PositionD( (1.+ngrid)/2. , (1.+ngrid)/2. ) * grid_spacing
             
             # The offset to be added to any position is then such that if we are 
             # provided the target center position, the result will be the location of 
