@@ -692,10 +692,17 @@ namespace hsm {
         num_iter = 0;
 
 #ifdef N_CHECKVAL
-        if (epsilon <= 0) {
+        if (epsilon <= 0 || epsilon >= convergence_factor) {
             throw "Error: epsilon out of range in find_ellipmom_2.\n";
         }
 #endif
+
+        /*
+         * Set Amp = -1000 as initial value just in case the while() block below is never triggered;
+         * in this case we have at least *something* defined to divide by, and for which the output
+         * will fairly clearly be junk.
+         */
+        Amp = -1000.;
 
         /* Iterate until we converge */
         while(convergence_factor > epsilon) {
@@ -761,8 +768,8 @@ namespace hsm {
                 throw "Error: too many iterations in adaptive moments\n";
             }
 
-            if (std::isnan(convergence_factor) || std::isnan(Mxx) || std::isnan(Myy) || std::isnan(Mxy)
-                || std::isnan(x0) || std::isnan(y0)) {
+            if (std::isnan(convergence_factor) || std::isnan(Mxx) || std::isnan(Myy)
+                || std::isnan(Mxy) || std::isnan(x0) || std::isnan(y0)) {
                 throw "Error: NaN in calculation of adaptive moments\n";
             }
         }
