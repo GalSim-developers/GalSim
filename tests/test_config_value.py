@@ -389,8 +389,20 @@ def test_str_value():
         'str2' : u"Blue",
         'cat1' : { 'type' : 'InputCatalog' , 'col' : 6 },
         'cat2' : { 'type' : 'InputCatalog' , 'col' : 7 },
-        'list1' : { 'type' : 'List', 'items' : [ 'Beautiful', 'plumage!', 'Ay?' ] }
-    } 
+        'list1' : { 'type' : 'List', 'items' : [ 'Beautiful', 'plumage!', 'Ay?' ] },
+        'file1' : { 'type' : 'NumberedFile', 'root' : 'file', 'num' : 5,
+                    'ext' : '.fits.fz', 'digits' : 3 },
+        'file2' : { 'type' : 'NumberedFile', 'root' : 'file', 'num' : 5 },
+        'fs1' : { 'type' : 'FormattedStr',
+                  'format' : 'realgal_type%02d_dilation%d.fits',
+                  'items' : [
+                      { 'type' : 'Sequence' , 'repeat' : 3 },
+                      { 'type' : 'Sequence' , 'nitems' : 3 } ] },
+        'fs2' : { 'type' : 'FormattedStr',
+                  'format' : '%%%d %i %x %o%i %lf=%g=%e %hi%u %r%s %%',
+                  'items' : [4, 5, 12, 9, 9, math.pi, math.pi, math.pi, 11, -11, 
+                             'Goodbye cruel world.', ', said Pink.'] },
+    }
 
     galsim.config.ProcessInput(config)
 
@@ -431,6 +443,25 @@ def test_str_value():
         list1.append(galsim.config.ParseValue(config,'list1',config, str)[0])
 
     np.testing.assert_array_equal(list1, ['Beautiful', 'plumage!', 'Ay?', 'Beautiful', 'plumage!'])
+
+    # Test values built using NumberedFile
+    file1 = galsim.config.ParseValue(config,'file1',config, str)[0]
+    np.testing.assert_equal(file1, 'file005.fits.fz')
+    file2 = galsim.config.ParseValue(config,'file2',config, str)[0]
+    np.testing.assert_equal(file2, 'file5')
+
+    # Test value built from FormattedStr
+    for k in range(9):
+        config['seq_index'] = k
+        type = k / 3
+        dil = k % 3
+        fs1 = galsim.config.ParseValue(config,'fs1',config, str)[0]
+        np.testing.assert_equal(fs1, 'realgal_type%02d_dilation%d.fits'%(type,dil))
+
+    fs2 = galsim.config.ParseValue(config,'fs2',config, str)[0]
+    np.testing.assert_equal(fs2, 
+        "%4 5 c 119 3.141593=3.14159=3.141593e+00 11-11 'Goodbye cruel world.', said Pink. %")
+
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
