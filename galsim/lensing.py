@@ -58,7 +58,7 @@ class PowerSpectrum(object):
     a specific length scale means that we should also use the same units (arcsec) for the positions
     at which we want our galaxies to be located when we draw shears from a power spectrum, and
     likewise the values of k (wavenumber) going into the power spectrum function should be inverse
-    arcsec.  To give a specific example, if we want to draw Gaussians on an image with dx=0.2"
+    arcsec.  To give a specific example, if we want to draw Gaussians on an image with dx=0.2 arcsec
     (i.e., the argument dx to the draw method will be =0.2), and if we want a grid of galaxies
     spaced 40 pixels apart, then when we call the getShear method of the PowerSpectrum class, we
     should use grid_spacing=8 [arcsec, =(40 pixels)*(0.2 arcsec/pixel)].
@@ -66,9 +66,8 @@ class PowerSpectrum(object):
     If the power spectrum used for this calculation comes from a standard cosmology calculator that
     uses units of inverse radians for the wavenumber, then it is important to convert such that the
     units are consistent with our choice of inverse arcsec.  If there is sufficient interest from
-    users for the code to have a "unit" class that handles conversions between the various units
-    that one might use, then future versions of GalSim might be updated to include this
-    functionality.
+    users for the code to support conversions between the various units that one might use, then
+    future versions of GalSim might be updated to include this functionality.
 
     When creating a PowerSpectrum instance, the E and B mode power spectra can optionally be set at
     initialization or later on with the method set_power_functions.  Note that the power spectra
@@ -220,7 +219,7 @@ class PowerSpectrum(object):
 
         Some examples of how to use getShear:
 
-        1. Create a grid of points separated by 1":
+        1. Create a grid of points separated by 1 arcsec:
 
                my_ps = galsim.PowerSpectrum(lambda k : k**2)
                g1, g2 = my_ps.getShear(grid_spacing = 1., ngrid = 100)
@@ -327,17 +326,17 @@ class PowerSpectrum(object):
                     "Calling PowerSpectrum.getShear without grid parameters, and " +
                     "no grid previously set up.")
 
-        # Check for non-integer ngrid
-        if not isinstance(ngrid, int) and not isinstance(ngrid, long):
-            if isinstance(ngrid, float):
-                ngrid = int(ngrid)
-            else:
-                raise ValueError("ngrid must be an int, or easily convertable to int!")
 
         # Check problem cases for regular grid of points
         if grid_spacing is not None or ngrid is not None:
             if grid_spacing is None or ngrid is None:
                 raise ValueError("When specifying grid, we require both a spacing and a size!")
+            # Check for non-integer ngrid
+            if not isinstance(ngrid, int) and not isinstance(ngrid, long):
+                if isinstance(ngrid, float):
+                    ngrid = int(ngrid)
+                else:
+                    raise ValueError("ngrid must be an int, or easily convertable to int!")
 
         # Check if center is a Position
         if isinstance(center,galsim.PositionD):
