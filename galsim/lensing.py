@@ -955,8 +955,10 @@ class TabulatedPk(object):
     The user must supply the arrays for k and P, or the name of an ascii file containing columns for
     k and P.
 
-    The user can opt to interpolate in log(k) and/or log(P), though this is not the default. TODO:
-    actually put this code in...
+    The user can opt to interpolate in log(k) and/or log(P), though this is not the default.  It may
+    be a wise choice depending on the particular function, e.g., for a nearly power-law P(k) (or at
+    least one that is locally power-law-ish for much of the k range) then it might be a good idea to
+    interpolate in log(k) and log(P), using a linear interpolant.
 
     @param k             The list, tuple, or 1d Numpy array of k values (floats or doubles).
     @param power         The list, tuple, or 1d Numpy array of P(k) values (floats or doubles).
@@ -965,16 +967,24 @@ class TabulatedPk(object):
                          k^2 / (2 pi) to get the shear power P(k)?  [Default: False]
     @param interpolant   The interpolant to use, with the options being 'spline', 'linear', 'ceil',
                          and 'floor' [Default: 'spline'].
+    @param k_log         Set to True if you wish to interpolate using log(k) rather than k.  Note
+                         that all inputs / outputs will still be k, it's just a question of how the
+                         interpolation is done. [Default: False]
+    @param p_log         Set to True if you wish to interpolate using log(P) rather than P.  Note
+                         that all inputs / outputs will still be P, it's just a question of how the
+                         interpolation is done. [Default: False]
     @param units         The angular units used for the power spectrum (i.e. the units of k^-1).
                          Currently only arcsec is implemented.
 
     """
     def __init__(self, k = None, power = None, file = None, c_ell = False, interpolant = None,
-                 units = galsim.arcsec):
+                 k_log = False, p_log = False, units = galsim.arcsec):
         # sanity check units
         if units is not galsim.arcsec:
             raise ValueError("Currently we require units of arcsec for the inverse wavenumber!")
         self.units = units
+        self.k_log = k_log
+        self.p_log = p_log
 
         # read in from file if a filename was specified
         if file:
@@ -991,9 +1001,12 @@ class TabulatedPk(object):
 
         # make and store table
         if c_ell:
-            self.table = galsim.LookupTable(k, (k**2)*power/(2.*np.pi), interpolant)
-        else:
-            self.table = galsim.LookupTable(k, power, interpolant)
+            power = (k**2)*power/(2.*np.pi)
+        if k_log:
+            k = np.log(k)
+        if p_log:
+            p = np.log(p)
+        self.table = galsim.LookupTable(k, power, interpolant)
 
     def __call__(self, k):
         """Interpolate the TabulatedPk to get power at some k value(s).
@@ -1003,13 +1016,18 @@ class TabulatedPk(object):
         is outside the range of the original tabulated values.  The value that is returned is the
         same type as that provided as an argument, e.g., if a single value k is provided then a
         single value of P is returned; if a tuple of k values is provided then a tuple of P values
-        is returned; and so on.
+        is returned; and so on.  Even if interpolation was done using the `k_log` option, the user
+        should still provide k rather than log(k).
 
         @param k       The k value(s) for which the power should be calculated via interpolation on
                        the original (k, P) lookup table.  k can be a single float/double, or a
                        tuple, list, or arbitrarily shaped Numpy array.
         @returns The power at the specified k value(s).
         """
+        # first, keep track of whether interpolation was done in k or log(k)
+        if self.k_log:
+            k = np.log(k)
+
         # figure out what we received, and return the same thing
         # option 1: a Numpy array
         if isinstance(k, np.ndarray):
@@ -1022,20 +1040,29 @@ class TabulatedPk(object):
                     p[i,:] = np.fromiter((self.table(float(q)) for q in k[i,:]), dtype='float')
             else:
                 p = np.fromiter((self.table(float(q)) for q in k), dtype='float')
+            if self.p_log:
+                p = exp(p)
             return p
         # option 2: a tuple
         elif isinstance(k, tuple):
             p = []
             for q in k:
                 p.append(self.table(q))
+            if self.p_log:
+                p = exp(p)
             return tuple(p)
         # option 3: a list
         elif isinstance(k, list):
             p = []
             for q in k:
                 p.append(self.table(q))
+            if self.p_log:
+                p = exp(p)
             return p
         # option 4: a single value
         else:
             # interpolate on table
-            return self.table(k)
+            if self.p_log:
+                return exp(self.table(k))
+            else:
+                return self.table(k)
