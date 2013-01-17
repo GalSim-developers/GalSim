@@ -981,11 +981,19 @@ class TabulatedPk(object):
     least one that is locally power-law-ish for much of the k range) then it might be a good idea to
     interpolate in log(k) and log(P), using a linear interpolant.
 
-    @param k             The list, tuple, or 1d Numpy array of k values (floats or doubles).
-    @param power         The list, tuple, or 1d Numpy array of P(k) values (floats or doubles).
-    @param file          The name of the ascii file containing k and P (2 columns).
-    @param c_ell         Is the power actually given as C_ell, which requires us to multiply by
-                         k^2 / (2 pi) to get the shear power P(k)?  [Default: False]
+    The k can in principle have any of the supported galsim AngleUnits (radians, degrees, hours,
+    arcmin, arcsec), however since PowerSpectrum works only in terms of arcsec, at least for now,
+    the input k will be automatically converted to 1/arcsec.  This means that when calling the
+    object to get power at some k, the input units of k MUST be 1/arcsec.
+
+    @param k             The list, tuple, or 1d Numpy array of k values (floats, doubles, or ints,
+                         which get silently converted to floats for the purpose of interpolation).
+    @param power         The list, tuple, or 1d Numpy array of P(k) values (floats, doubles, or ints,
+                         which get silently converted to floats for the purpose of interpolation).
+    @param delta2        Is the power actually given as Delta^2, which requires us to multiply by
+                         k^2 / (2pi) to get the shear power P(k)?  [Default: False]
+                         Note that if Delta^2 is provided, then it is critical that it have units
+                         consistent with the units for k.
     @param interpolant   The interpolant to use, with the options being 'spline', 'linear', 'ceil',
                          and 'floor' [Default: 'spline'].
     @param k_log         Set to True if you wish to interpolate using log(k) rather than k.  Note
@@ -995,15 +1003,13 @@ class TabulatedPk(object):
                          that all inputs / outputs will still be P, it's just a question of how the
                          interpolation is done. [Default: False]
     @param units         The angular units used for the power spectrum (i.e. the units of k^-1).
-                         Currently only arcsec is implemented.
+                         Since the PowerSpectrum class currently requires units of arcsec, for now
+                         we use the input value of `units` to convert k automatically to units of
+                         inverse arcsec before tabulating and storing k and P(k).
 
     """
-    def __init__(self, k = None, power = None, file = None, c_ell = False, interpolant = None,
+    def __init__(self, k = None, power = None, file = None, delta2 = False, interpolant = None,
                  k_log = False, p_log = False, units = galsim.arcsec):
-        # sanity check units
-        if units is not galsim.arcsec:
-            raise ValueError("Currently we require units of arcsec for the inverse wavenumber!")
-        self.units = units
         self.k_log = k_log
         self.p_log = p_log
 
@@ -1012,6 +1018,23 @@ class TabulatedPk(object):
             data = np.loadtxt(file).transpose()
             k=data[0]
             power=data[1]
+
+        # turn k and power into numpy arrays so that all subsequent math is possible
+        k = np.array(k)
+        p = np.array(power)
+
+        # first thing: if we actually have Delta^2, then we must convert to power, which is
+        # dimensionless.
+        if delta2:
+            power = (k**2)*power/(2.*np.pi)
+
+        # sanity check units
+        if not isinstance(units, galsim.AngleUnit):
+            raise ValueError("Input unit is not a galsim.AngleUnit!")
+        if units is not galsim.arcsec:
+            # Convert to galsim.arcsec for now; only k requires changing, since P is dimensionless.
+            k = np.array(k)*(1.*galsim.arcsec)/units
+        self.units = galsim.arcsec
 
         # check for proper interpolant
         if interpolant is None:
@@ -1026,8 +1049,6 @@ class TabulatedPk(object):
         self.n_k = len(k)
 
         # make and store table
-        if c_ell:
-            power = (k**2)*power/(2.*np.pi)
         if k_log:
             if np.any(np.array(k) <= 0.):
                 raise ValueError("Cannot interpolate in log(k) when table contains k<=0!")
@@ -1049,9 +1070,14 @@ class TabulatedPk(object):
         is returned; and so on.  Even if interpolation was done using the `k_log` option, the user
         should still provide k rather than log(k).
 
+        The input k should be in the same units as the TabulatedPk object; currently only
+        1/galsim.arcsec are supported units.  (The TabulatedPk constructor can take other units and
+        automatically convert to 1/arcsec.)
+
         @param k       The k value(s) for which the power should be calculated via interpolation on
                        the original (k, P) lookup table.  k can be a single float/double, or a
-                       tuple, list, or arbitrarily shaped Numpy array.
+                       tuple, list, or arbitrarily shaped Numpy array.  It should have units of
+                       inverse arcsec.
         @returns The power at the specified k value(s).
         """
         # first, keep track of whether interpolation was done in k or log(k)
