@@ -237,8 +237,7 @@ def test_shear_reference():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_tabulated():
-    """Test the TabulatedPk class, which is used to interpolate P(k) that is known only at certain
-    k"""
+    """Test the TabulatedPk class, which interpolates a P(k) that is known at certain k"""
     import time
     t1 = time.time()
 
@@ -246,7 +245,7 @@ def test_tabulated():
     ps_analytic = galsim.PowerSpectrum(pk2)
 
     # now tabulate that analytic form at a range of k
-    k_arr = 0.01*np.arange(10000.)
+    k_arr = 0.01*np.arange(10000.)+0.01
     p_arr = k_arr**(2.)
 
     # make a TabulatedPk to initialize another PowerSpectrum
@@ -264,6 +263,45 @@ def test_tabulated():
         err_msg = "g1 of shear field from tabulated P(k) differs from expectation!")
     np.testing.assert_almost_equal(g2_analytic, g2_tab, 6,
         err_msg = "g2 of shear field from tabulated P(k) differs from expectation!")
+    # now check that we get the same answer if we use file readin: write k and P(k) to a file then
+    # initialize TabulatedPk from that file
+    data_all = (k_arr, p_arr)
+    data = np.column_stack(data_all)
+    filename = 'lensing_reference_data/tmp.txt'
+    np.savetxt(filename, data)
+    tab2 = galsim.lensing.TabulatedPk(file = filename)
+    ps_tab2 = galsim.PowerSpectrum(tab2)
+    g1_tab2, g2_tab2 = ps_tab2.getShear(grid_spacing = 1., ngrid = 10,
+                                        rng = galsim.BaseDeviate(seed))
+    np.testing.assert_almost_equal(g1_analytic, g1_tab2, 6,
+        err_msg = "g1 from file-based tabulated P(k) differs from expectation!")
+    np.testing.assert_almost_equal(g2_analytic, g2_tab2, 6,
+        err_msg = "g2 from file-based tabulated P(k) differs from expectation!")
+    # check that we get the same answer whether we use interpolation in log for k, P, or both
+    tab = galsim.lensing.TabulatedPk(k_arr, p_arr, k_log = True)
+    ps_tab = galsim.PowerSpectrum(tab)
+    g1_tab, g2_tab = ps_tab.getShear(grid_spacing = 1., ngrid = 10,
+                                     rng = galsim.BaseDeviate(seed))
+    np.testing.assert_almost_equal(g1_analytic, g1_tab, 6,
+        err_msg = "g1 of shear field from tabulated P(k) with k_log differs from expectation!")
+    np.testing.assert_almost_equal(g2_analytic, g2_tab, 6,
+        err_msg = "g2 of shear field from tabulated P(k) with k_log differs from expectation!")
+    tab = galsim.lensing.TabulatedPk(k_arr, p_arr, p_log = True)
+    ps_tab = galsim.PowerSpectrum(tab)
+    g1_tab, g2_tab = ps_tab.getShear(grid_spacing = 1., ngrid = 10,
+                                     rng = galsim.BaseDeviate(seed))
+    np.testing.assert_almost_equal(g1_analytic, g1_tab, 6,
+        err_msg = "g1 of shear field from tabulated P(k) with p_log differs from expectation!")
+    np.testing.assert_almost_equal(g2_analytic, g2_tab, 6,
+        err_msg = "g2 of shear field from tabulated P(k) with p_log differs from expectation!")
+    tab = galsim.lensing.TabulatedPk(k_arr, p_arr, k_log = True, p_log = True)
+    ps_tab = galsim.PowerSpectrum(tab)
+    g1_tab, g2_tab = ps_tab.getShear(grid_spacing = 1., ngrid = 10,
+                                     rng = galsim.BaseDeviate(seed))
+    np.testing.assert_almost_equal(g1_analytic, g1_tab, 6,
+        err_msg = "g1 of shear field from tabulated P(k) with k_log, p_log differs from expectation!")
+    np.testing.assert_almost_equal(g2_analytic, g2_tab, 6,
+        err_msg = "g2 of shear field from tabulated P(k) with k_log, p_log differs from expectation!")
 
     # check for appropriate response to inputs when making/using TabulatedPk
     try:
@@ -273,10 +311,26 @@ def test_tabulated():
         ## k, P arrays not the same size
         np.testing.assert_raises(ValueError, galsim.lensing.TabulatedPk,
                                  0.01*np.arange(100.), p_arr)
+        ## arrays too small
+        np.testing.assert_raises(RuntimeError, galsim.lensing.TabulatedPk,
+                                 (1.,2.), (1., 2.))
+        ## try to make shears, but grid includes k values that were not part of the originally
+        ## tabulated P(k) (for this test we make a stupidly limited k grid just to ensure that an
+        ## exception should be raised)
+        t = galsim.lensing.TabulatedPk((0.99,1.,1.01),(0.99,1.,1.01))
+        ps = galsim.PowerSpectrum(t)
+        np.testing.assert_raises(ValueError, ps.getShear, grid_spacing=1., ngrid=100)
+        ## try to interpolate in log, but with zero values included
+        np.testing.assert_raises(ValueError, galsim.lensing.TabulatedPk, (0.,1.,2.), (0.,1.,2.),
+                                 k_log=True)
+        np.testing.assert_raises(ValueError, galsim.lensing.TabulatedPk, (0.,1.,2.), (0.,1.,2.),
+                                 p_log=True)
+        np.testing.assert_raises(ValueError, galsim.lensing.TabulatedPk, (0.,1.,2.), (0.,1.,2.),
+                                 k_log=True, p_log=True)
     except ImportError:
         pass
 
-    ## check that when calling TabulatedPk, the outputs have the same form as inputs
+    # check that when calling TabulatedPk, the outputs have the same form as inputs
     tab = galsim.lensing.TabulatedPk(k_arr, p_arr)
     k = 0.5
     assert type(tab(k)) == float
@@ -289,9 +343,22 @@ def test_tabulated():
     k = np.array(k)
     result = tab(k)
     assert type(result) == np.ndarray and len(result) == len(k)
-    k = np.zeros((2,2))
+    k = 0.01+np.zeros((2,2))
     result = tab(k)
     assert type(result) == np.ndarray and result.shape == k.shape
+
+    # check for expected behavior with log interpolation
+    k = (1., 2., 3.)
+    p = (1., 4., 9.)
+    t = galsim.lensing.TabulatedPk(k, p, interpolant = 'linear')
+    ## a linear interpolant should fail here because P(k) is a power-law, so make sure we get the
+    ## expected result with linear interpolation
+    np.testing.assert_almost_equal(t(2.5), 13./2., decimal = 6,
+        err_msg = 'Unexpected result for linear interpolation of power-law')
+    ## but a linear interpolant works if you work in log space, so check against real result
+    t = galsim.lensing.TabulatedPk(k, p, interpolant = 'linear', k_log = True, p_log = True)
+    np.testing.assert_almost_equal(t(2.5), 2.5**2, decimal = 6,
+        err_msg = 'Unexpected result for linear interpolation of power-law in log space')
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
