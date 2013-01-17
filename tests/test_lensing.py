@@ -92,7 +92,7 @@ def test_shear_flatps():
     # make a flat power spectrum for E, B modes
     test_ps = galsim.PowerSpectrum(e_power_function=pkflat, b_power_function=pkflat)
     # get shears on 500x500 grid
-    g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx=500, rng=rng)
+    g1, g2 = test_ps.getShear(grid_spacing=1.0, ngrid=500, rng=rng)
     # check: are shears consistent with variance=0.01 as we expect for pkflat?
     var1 = np.var(g1)
     var2 = np.var(g2)
@@ -113,7 +113,7 @@ def test_shear_flatps():
     # make a pure E-mode spectrum
     test_ps = galsim.PowerSpectrum(e_power_function=pkflat)
     # get shears on 500x500 grid
-    g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx=500, rng=rng)
+    g1, g2 = test_ps.getShear(grid_spacing=1.0, ngrid=500, rng=rng)
     # check: are shears consistent with variance=0.01 as we expect for pkflat?
     var1 = np.var(g1)
     var2 = np.var(g2)
@@ -143,7 +143,7 @@ def test_shear_flatps():
     # make a pure B-mode spectrum
     test_ps = galsim.PowerSpectrum(b_power_function=pkflat)
     # get shears on 500x500 grid
-    g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx=500, rng=rng)
+    g1, g2 = test_ps.getShear(grid_spacing=1.0, ngrid=500, rng=rng)
     # check: are shears consistent with variance=0.01 as we expect for pkflat?
     var1 = np.var(g1)
     var2 = np.var(g2)
@@ -181,23 +181,23 @@ def test_shear_seeds():
     test_ps = galsim.PowerSpectrum(e_power_function=pk2, b_power_function=pkflat)
 
     # get shears on a grid w/o specifying seed
-    g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx = 10)
+    g1, g2 = test_ps.getShear(grid_spacing=1.0, ngrid = 10)
     # do it again, w/o specifying seed: should differ
-    g1new, g2new = test_ps.getShear(grid_spacing=1.0, grid_nx = 10)
+    g1new, g2new = test_ps.getShear(grid_spacing=1.0, ngrid = 10)
     assert not ((g1[0,0]==g1new[0,0]) or (g2[0,0]==g2new[0,0]))
 
     # get shears on a grid w/ specified seed
-    g1, g2 = test_ps.getShear(grid_spacing=1.0, grid_nx = 10,
+    g1, g2 = test_ps.getShear(grid_spacing=1.0, ngrid = 10,
                               rng=galsim.BaseDeviate(13796))
     # get shears on a grid w/ same specified seed: should be same
-    g1new, g2new = test_ps.getShear(grid_spacing=1.0, grid_nx = 10,
+    g1new, g2new = test_ps.getShear(grid_spacing=1.0, ngrid = 10,
                                     rng=galsim.BaseDeviate(13796))
     np.testing.assert_array_equal(g1, g1new,
                                   err_msg="New shear field differs from previous (same seed)!")
     np.testing.assert_array_equal(g2, g2new,
                                   err_msg="New shear field differs from previous (same seed)!")
     # get shears on a grid w/ diff't specified seed: should differ
-    g1new, g2new = test_ps.getShear(grid_spacing=1.0, grid_nx = 10,
+    g1new, g2new = test_ps.getShear(grid_spacing=1.0, ngrid = 10,
                                     rng=galsim.BaseDeviate(1379))
     assert not ((g1[0,0]==g1new[0,0]) or (g2[0,0]==g2new[0,0]))
 
@@ -222,7 +222,7 @@ def test_shear_reference():
     # define power spectrum
     ps = galsim.PowerSpectrum(e_power_function=pk2, b_power_function=pk1)
     # get shears
-    g1, g2 = ps.getShear(grid_spacing = dx, grid_nx = n, rng=rng)
+    g1, g2 = ps.getShear(grid_spacing = dx, ngrid = n, rng=rng)
 
     # put in same format as data that got read in
     g1vec = g1.reshape(n*n)
@@ -255,9 +255,9 @@ def test_tabulated():
 
     # draw shears on a grid from both PowerSpectrum objects, with same random seed
     seed = 12345
-    g1_analytic, g2_analytic = ps_analytic.getShear(grid_spacing = 1., grid_nx = 10,
+    g1_analytic, g2_analytic = ps_analytic.getShear(grid_spacing = 1., ngrid = 10,
                                                     rng = galsim.BaseDeviate(seed))
-    g1_tab, g2_tab = ps_tab.getShear(grid_spacing = 1., grid_nx = 10,
+    g1_tab, g2_tab = ps_tab.getShear(grid_spacing = 1., ngrid = 10,
                                      rng = galsim.BaseDeviate(seed))
     # make sure that shears that are drawn are essentially identical
     np.testing.assert_almost_equal(g1_analytic, g1_tab, 6,
@@ -269,7 +269,7 @@ def test_tabulated():
     try:
         ## mistaken interpolant choice
         np.testing.assert_raises(ValueError, galsim.lensing.TabulatedPk,
-                                 k_arr, p_arr, 'splin')
+                                 k_arr, p_arr, interpolant='splin')
         ## k, P arrays not the same size
         np.testing.assert_raises(ValueError, galsim.lensing.TabulatedPk,
                                  0.01*np.arange(100.), p_arr)
