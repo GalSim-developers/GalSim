@@ -472,6 +472,15 @@ class GSObject(object):
         the flux (`normalization`), and that decide whether the clear the input Image before drawing
         into it (`add_to_image`).
 
+        Note that when drawing a GSObject that was defined with a particular value of flux, it is
+        not necessarily the case that a drawn image with 'normalization=flux' will have the sum of
+        pixel values equal to flux.  That condition is guaranteed to be satisfied only if the
+        profile has been convolved with a pixel response. If there was no convolution by a pixel
+        response, then the draw method is effectively sampling the surface brightness profile of the
+        GSObject at pixel centers without integrating over the flux within pixels, so for profiles
+        that are poorly sampled and/or varying rapidly (e.g., high n Sersic profiles), the sum of
+        pixel values might differ significantly from the GSObject flux.
+
         @param image  If provided, this will be the image on which to draw the profile.
                       If `image = None`, then an automatically-sized image will be created.
                       If `image != None`, but its bounds are undefined (e.g. if it was 
@@ -499,9 +508,11 @@ class GSObject(object):
                       less "folding" in Fourier space. (Default `wmult = 1.`)
 
         @param normalization  Two options for the normalization:
-                                "flux" or "f" means that the sum of the output pixels is normalized
+                              "flux" or "f" means that the sum of the output pixels is normalized
                                   to be equal to the total flux.  (Modulo any flux that falls off 
-                                  the edge of the image of course.)
+                                  the edge of the image of course, and note the caveat in the draw
+                                  method documentation regarding the need to convolve with a pixel
+                                  response.)
                               "surface brightness" or "sb" means that the output pixels sample
                                   the surface brightness distribution at each location.
                               (Default `normalization = "flux"`)
@@ -1319,6 +1330,161 @@ class OpticalPSF(GSObject):
         # Thus, we call the function calculateStepK() to refine the value.
         self.SBProfile.calculateStepK()
         self.SBProfile.calculateMaxK()
+
+class InterpolatedImage(GSObject):
+    """A class describing non-parametric objects specified using an Image, which can be interpolated
+    for the purpose of carrying out transformations.
+
+    The input Image and an interpolant are used to create an SBInterpolatedImage.  The
+    InterpolatedImage class is useful if you have a non-parametric description of an object as an
+    Image, that you wish to manipulate / transform using GSObject methods such as applyShear(),
+    applyMagnification(), applyShift(), etc.  The input Image can be any BaseImage (i.e., Image,
+    ImageView, or ConstImageView).
+
+    The constructor needs to know how the Image was drawn: is it an Image of flux or of surface
+    brightness?  Since our default for drawing Images using draw() and drawShoot() is that
+    `normalization == 'flux'` (i.e., sum of pixel values equals the object flux), the default for 
+    the InterpolatedImage class is to assume the same flux normalization.  However, the user can 
+    specify 'surface brightness' normalization if desired, or alternatively, can instead specify 
+    the desired flux for the object.
+
+    If the input Image has a scale associated with it, then there is no need to specify an input
+    scale `dx`.
+
+    If no interpolant is specified then by default a quintic interpolant is used.  The user also has
+    to specify how much zero-padding to include around an input image; by default, a value of 4 is
+    used.  Note that both the interpolant and the `pad_factor` determine the accuracy of
+    interpolation on the Image when carrying out operations such as shifting, shearing, dilating,
+    and rotating.  For some details of the typical accuracy of interpolants used in GalSim as a
+    function of the amount of padding, see table 1 in devel/modules/finterp.pdf in the GalSim
+    repository.  A quick summary is that for precise calculations (~1% accuracy or better),
+    nearest-neighbor and linear interpolants should not be used; cubic, quintic, and Lanczos with
+    n=3 are acceptable with >4x padding; and higher-order Lanczos is okay even with just 2x padding.
+    There is a tradeoff between speed and accuracy, and from this perspective, the quintic
+    interpolant with 4x padding seems optimal (errors <0.001), though for precise tests of shears
+    even greater accuracy is needed, so either 6x padding should be used, or a higher order Lanczos
+    interpolant should be used (modified to conserve flux).  The user is given complete freedom to
+    choose interpolants and pad factors, and no warnings are raised when the code is modified to
+    choose some combination that is known to give significant error.
+
+    Initialization
+    --------------
+    
+        >>> interpolated_image = galsim.InterpolatedImage(image, interpolant = None,
+                                                          normalization = 'f', dx = None,
+                                                          flux = None, pad_factor = 0.)
+
+    Initializes interpolated_image as a galsim.InterpolatedImage() instance.
+
+    @param image           The Image from which to construct the object.
+                           This may be either an Image (or ImageView) instance or a string
+                           indicating a fits file from which to read the image.
+    @param interpolant     Either an Interpolant2d (or Interpolant) instance or a string indicating
+                           which interpolant should be used.  Options are 'nearest', 'sinc', 
+                           'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the 
+                           integer order to use. (Default `interpolant = Quintic()`)
+    @param normalization   Two options for specifying the normalization of the input Image:
+                              "flux" or "f" means that the sum of the pixels is normalized
+                                  to be equal to the total flux.
+                              "surface brightness" or "sb" means that the pixels sample
+                                  the surface brightness distribution at each location.
+                              (Default `normalization = "flux"`)
+    @param dx              If provided, use this as the pixel scale for the Image; this will
+                           override the pixel scale stored by the provided Image, in any.  If `dx`
+                           is `None`, then take the provided image's pixel scale.
+                           (Default `dx = None`.)
+    @param flux            Optionally specify a total flux for the object, which overrides the
+                           implied flux normalization from the Image itself.
+    @param pad_factor      Factor by which to pad the Image when creating the SBInterpolatedImage;
+                           `pad_factor <= 0` results in the use of the default value, 4.  Note that
+                           the padding is with zeros; could be changed in future.
+                           (Default `pad_factor = 0`.)
+     
+    Methods
+    -------
+    The InterpolatedImage is a GSObject, and inherits all of the GSObject methods (draw(),
+    drawShoot(), applyShear() etc.) and operator bindings.
+    """
+
+    # Initialization parameters of the object, with type information
+    _req_params = { 'image' : str }
+    _opt_params = {
+        'interpolant' : str ,
+        'normalization' : str ,
+        'dx' : float ,
+        'flux' : float
+    }
+    _single_params = [ ]
+
+    # --- Public Class methods ---
+    def __init__(self, image, interpolant = None, normalization = 'flux', dx = None, flux = None,
+                 pad_factor = 0.):
+
+        # first try to read the image as a file.  If its not either a string or a valid
+        # pyfits hdu or hdulist, then an exception will be raised, which we ignore and move on.
+        try:
+            image = galsim.fits.read(image)
+        except:
+            pass
+
+        # make sure image is really an image and has a float type
+        if not isinstance(image, galsim.BaseImageF) and not isinstance(image, galsim.BaseImageD):
+            raise ValueError("Supplied image is not an image of floats or doubles!")
+
+        # it must have well-defined bounds, otherwise seg fault in SBInterpolatedImage constructor
+        if not image.getBounds().isDefined():
+            raise ValueError("Supplied image does not have bounds defined!")
+
+        if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
+            raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
+                              "'f', 'surface brightness', or 'sb'.") % normalization)
+
+        if interpolant == None:
+            lan5 = galsim.Quintic(tol=1e-4)
+            self.interpolant = galsim.InterpolantXY(lan5)
+        elif isinstance(interpolant, galsim.Interpolant2d):
+            self.interpolant = interpolant
+        elif isinstance(interpolant, galsim.Interpolant):
+            self.interpolant = galsim.InterpolantXY(interpolant)
+        else:
+            try:
+                self.interpolant = galsim.Interpolant2d(interpolant)
+            except:
+                raise RuntimeError('Specified interpolant is not valid!')
+
+        # Check for input dx, and check whether Image already has one set.  At the end of this
+        # code block, either an exception will have been raised, or the input image will have a
+        # valid scale set.
+        if dx == None:
+            dx = image.getScale()
+            if dx == 0:
+                raise ValueError("No information given with Image or keywords about pixel scale!")
+        else:
+            if type(dx) != float:
+                dx = float(dx)
+            image.setScale(dx)
+            if dx == 0.0:
+                raise ValueError("dx may not be 0.0")
+
+        # Make the SBInterpolatedImage out of the image.
+        sbinterpolatedimage = galsim.SBInterpolatedImage(image, self.interpolant, dx=dx,
+                                                         pad_factor=pad_factor)
+
+        # If the user specified a flux, then set to that flux value.
+        if flux != None:
+            if type(flux) != flux:
+                flux = float(flux)
+            sbinterpolatedimage.setFlux(flux)
+        # If the user specified a flux normalization for the input Image, then since
+        # SBInterpolatedImage works in terms of surface brightness, have to rescale the values to
+        # get proper normalization.
+        elif flux == None and normalization.lower() in ['flux','f'] and dx != 1.:
+            sbinterpolatedimage.scaleFlux(1./(dx**2))
+        # If the input Image normalization is 'sb' then since that is the SBInterpolated default
+        # assumption, no rescaling is needed.
+        
+        # Initialize the SBProfile
+        GSObject.__init__(self, sbinterpolatedimage)
 
 
 class Pixel(GSObject):

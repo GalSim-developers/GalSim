@@ -77,7 +77,8 @@ namespace galsim {
          */
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate u) const;
 
-        double getFlux() const;
+        double getFlux() const { return _flux; }
+        double calculateFlux() const;
 
         double getPositiveFlux() const { checkReadyToShoot(); return _positiveFlux; }
         double getNegativeFlux() const { checkReadyToShoot(); return _negativeFlux; }
@@ -127,6 +128,7 @@ namespace galsim {
         double _max_size; ///< Calculated value: Ninitial+2*xInterp->xrange())*dx
         mutable double _stepk; ///< Stored value of stepK
         mutable double _maxk; ///< Stored value of maxK
+        double _flux;
 
         void initialize(); ///< Put code common to both constructors here.
 

@@ -1,5 +1,4 @@
 #include "boost/python.hpp"
-#include "Interpolant.h"
 #include "SBInterpolatedImage.h"
 
 namespace bp = boost::python;

@@ -13,7 +13,11 @@ moment measurement and shear estimation are not accessible via config, only via 
 
 The moments that are estimated are "adaptive moments" (see the first paper cited above for details);
 that is, they use an elliptical Gaussian weight that is matched to the image of the object being
-measured.  The PSF correction includes several algorithms:
+measured.  The observed moments can be represented as a Gaussian sigma and a Shear object
+representing the shape.
+
+The PSF correction includes several algorithms, three that are re-implementations of methods
+originated by others and one that was originated by Hirata & Seljak:
 
 - One from Kaiser, Squires, & Broadhurts (1995), "KSB"
 
@@ -22,10 +26,14 @@ measured.  The PSF correction includes several algorithms:
 - One that represents a modification by Hirata & Seljak (2003) of methods in Bernstein & Jarvis
 (2002), "LINEAR"
 
-- One new method from Hirata & Seljak (2003), "REGAUSS"
+- One method from Hirata & Seljak (2003), "REGAUSS" (re-Gaussianization)
 
-These are all based on correction of moments, but with different sets of assumptions.  For more
-detailed discussion on all of these algorithms, see the relevant papers above.
+These methods return shear (or shape) estimators, which may not in fact satisfy conditions like
+|e|<=1, and so they are represented simply as e1/e2 or g1/g2 (depending on the method) rather than
+using a Shear object, which IS required to satisfy |e|<=1. 
+
+These methods are all based on correction of moments, but with different sets of assumptions.  For
+more detailed discussion on all of these algorithms, see the relevant papers above.
 """
 
 class HSMShapeData(object):
@@ -65,7 +73,11 @@ class HSMShapeData(object):
     - correction_status: the status flag resulting from PSF correction; -1 indicates no attempt to
       measure, 0 indicates success.
 
-    - corrected_shape: a galsim.Shear object representing the PSF-corrected shape.
+    - corrected_e1, corrected_e2, corrected_g1, corrected_g2: floats representing the estimated
+      shear after removing the effects of the PSF.  Either e1/e2 or g1/g2 will differ from the
+      default values of -10, with the choice of shape to use determined by the quantity meas_type (a
+      string that equals either 'e' or 'g') or, equivalently, by the correction method (since the
+      correction method determines what quantity is estimated, either the shear or the distortion).
 
     - corrected_shape_err: shape measurement uncertainty sigma_gamma per component.
 
@@ -98,7 +110,11 @@ class HSMShapeData(object):
             self.moments_rho4 = args[0].moments_rho4
             self.moments_n_iter = args[0].moments_n_iter
             self.correction_status = args[0].correction_status
-            self.corrected_shape = galsim.Shear(args[0].corrected_shape)
+            self.corrected_e1 = args[0].corrected_e1
+            self.corrected_e2 = args[0].corrected_e2
+            self.corrected_g1 = args[0].corrected_g1
+            self.corrected_g2 = args[0].corrected_g2
+            self.meas_type = args[0].meas_type
             self.corrected_shape_err = args[0].corrected_shape_err
             self.correction_method = args[0].correction_method
             self.resolution_factor = args[0].resolution_factor
@@ -113,15 +129,70 @@ class HSMShapeData(object):
             self.moments_rho4 = -1.0
             self.moments_n_iter = 0
             self.correction_status = -1
-            self.corrected_shape = galsim.Shear()
+            self.corrected_e1 = -10.
+            self.corrected_e2 = -10.
+            self.corrected_g1 = -10.
+            self.corrected_g2 = -10.
+            self.meas_type = "None"
             self.corrected_shape_err = -1.0
             self.correction_method = "None"
             self.resolution_factor = -1.0
             self.error_message = ""
 
-def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS", flags = 0xe,
-                     guess_sig_gal = 5.0, guess_sig_PSF = 3.0, precision = 1.0e-6,
-                     guess_x_centroid = -1000.0, guess_y_centroid = -1000.0, strict = True):
+# A helper function for taking input weight and badpix Images, and returning a weight Image in the
+# format that the C++ functions want
+def _convertMask(image, weight = None, badpix = None):
+    """Convert from input weight and badpix images to a single mask image needed by C++ functions.
+
+       This is used by EstimateShearHSM and FindAdaptiveMom.
+    """
+    # if no weight image was supplied, make an int array (same size as gal image) filled with 1's
+    if weight == None:
+        mask = galsim.ImageI(bounds=image.bounds, init_value=1)
+
+    else:
+        # if weight image was supplied, check if it has the right bounds and is non-negative
+        if weight.bounds != image.bounds:
+            raise ValueError("Weight image does not have same bounds as the input Image!")
+
+        # also make sure there are no negative values
+        import numpy as np
+        if np.any(weight.array < 0) == True:
+            raise ValueError("Weight image cannot contain negative values!")
+
+        # if weight is an ImageI, then we can use it as the mask image:
+        if isinstance(weight.view(), galsim.ImageViewI):
+            if not badpix:
+                mask = weight
+            else:
+                # If we need to mask bad pixels, we'll need a copy anyway.
+                mask = galsim.ImageI(weight.bounds)
+                mask.array[:,:] = weight.array
+
+        # otherwise, we need to convert it to the right type
+        else:
+            mask = galsim.ImageI(bounds=image.bounds, init_value=0)
+            mask.array[weight.array > 0.] = 1
+
+    # if badpix image was supplied, identify the nonzero (bad) pixels and set them to zero in weight
+    # image; also check bounds
+    if badpix != None:
+        if badpix.bounds != image.bounds:
+            raise ValueError("Badpix image does not have the same bounds as the input Image!")
+        import numpy as np
+        mask.array[badpix.array != 0] = 0
+
+    # if no pixels are used, raise an exception
+    if mask.array.sum() == 0:
+        raise RuntimeError("No pixels are being used!")
+
+    # finally, return the ImageView for the weight map
+    return mask.view()
+
+def EstimateShearHSM(gal_image, PSF_image, weight = None, badpix = None, sky_var = 0.0,
+                     shear_est = "REGAUSS", flags = 0xe, guess_sig_gal = 5.0, guess_sig_PSF = 3.0,
+                     precision = 1.0e-6, guess_x_centroid = -1000.0, guess_y_centroid = -1000.0,
+                     strict = True):
     """Carry out moments-based PSF correction routines.
 
     Carry out PSF correction using one of the methods of the HSM package (see references in
@@ -157,10 +228,10 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
         >>> final_epsf_image = final_epsf.draw(dx = 0.2)
         >>> result = galsim.EstimateShearHSM(final_image, final_epsf_image)
     
-    After running the above code, `result.observed_shape` ["shape" = distortion, the
+    After running the above code, `result.observed_shape` ["shape" = distortion, the 
     (a^2 - b^2)/(a^2 + b^2) definition of ellipticity] is `(0.0876162,1.23478e-17)` and
-    `result.corrected_shape` is `(0.0993412,-1.86255e-09)`, compared with the expected
-    `(0.09975, 0)` for a perfect PSF correction method.
+    `result.corrected_e1`, `result_corrected_e2` are `(0.0993412,-1.86255e-09)`, compared with the
+    expected `(0.09975, 0)` for a perfect PSF correction method.
 
     The code below gives an example of how one could run this routine on a large batch of galaxies,
     explicitly catching and tracking any failures:
@@ -176,6 +247,15 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
 
     @param gal_image         The Image or ImageView of the galaxy being measured.
     @param PSF_image         The Image or ImageView for the PSF.
+    @param weight            The optional weight image for the galaxy being measured.  Can be an int
+                             or a float array.  Currently, GalSim does not account for the variation
+                             in non-zero weights, i.e., a weight map is converted to an image with 0
+                             and 1 for pixels that are not and are used.  Full use of spatial
+                             variation in non-zero weights will be included in a future version of
+                             the code.
+    @param badpix            The optional bad pixel mask for the image being used.  Zero should be
+                             used for pixels that are good, and any nonzero value indicates a bad
+                             pixel.
     @param sky_var           The variance of the sky level, used for estimating uncertainty on the
                              measured shape; default `sky_var = 0.`.
     @param shear_est         A string indicating the desired method of PSF correction: REGAUSS,
@@ -199,10 +279,14 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
                              HSMShapeData object.
     @return                  A HSMShapeData object containing the results of shape measurement.
     """
+    # prepare inputs to C++ routines: ImageView for galaxy, PSF, and weight map
     gal_image_view = gal_image.view()
     PSF_image_view = PSF_image.view()
+    weight_view = _convertMask(gal_image, weight=weight, badpix=badpix)
+
     try:
-        result = _galsim._EstimateShearHSMView(gal_image_view, PSF_image_view, sky_var = sky_var,
+        result = _galsim._EstimateShearHSMView(gal_image_view, PSF_image_view, weight_view,
+                                               sky_var = sky_var,
                                                shear_est = shear_est, flags = flags,
                                                guess_sig_gal = guess_sig_gal,
                                                guess_sig_PSF = guess_sig_PSF,
@@ -217,8 +301,8 @@ def EstimateShearHSM(gal_image, PSF_image, sky_var = 0.0, shear_est = "REGAUSS",
             result.error_message = err.message
     return HSMShapeData(result)
 
-def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6, guess_x_centroid = -1000.0,
-                    guess_y_centroid = -1000.0, strict = True):
+def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0, precision = 1.0e-6,
+                    guess_x_centroid = -1000.0, guess_y_centroid = -1000.0, strict = True):
     """Measure adaptive moments of an object.
 
     This method estimates the best-fit elliptical Gaussian to the object (see Hirata & Seljak 2003
@@ -253,6 +337,15 @@ def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6, guess_x_c
     shear `g`, the conformal shear `eta`, and so on.
 
     @param object_image      The Image or ImageView for the object being measured.
+    @param weight            The optional weight image for the object being measured.  Can be an int
+                             or a float array.  Currently, GalSim does not account for the variation
+                             in non-zero weights, i.e., a weight map is converted to an image with 0
+                             and 1 for pixels that are not and are used.  Full use of spatial
+                             variation in non-zero weights will be included in a future version of
+                             the code.
+    @param badpix            The optional bad pixel mask for the image being used.  Zero should be
+                             used for pixels that are good, and any nonzero value indicates a bad
+                             pixel.
     @param guess_sig         Optional argument with an initial guess for the Gaussian sigma of the
                              object, default `guess_sig = 5.0` (pixels).
     @param precision         The convergence criterion for the moments; default `precision = 1e-6`.
@@ -268,10 +361,14 @@ def FindAdaptiveMom(object_image, guess_sig = 5.0, precision = 1.0e-6, guess_x_c
                              HSMShapeData object.
     @return                  A HSMShapeData object containing the results of moment measurement.
     """
+    # prepare inputs to C++ routines: ImageView for the object being measured and the weight map.
     object_image_view = object_image.view()
+    weight_view = _convertMask(object_image, weight=weight, badpix=badpix)
+
     try:
-        result = _galsim._FindAdaptiveMomView(object_image_view, guess_sig = guess_sig, precision =
-                                              precision, guess_x_centroid = guess_x_centroid,
+        result = _galsim._FindAdaptiveMomView(object_image_view, weight_view,
+                                              guess_sig = guess_sig, precision =  precision,
+                                              guess_x_centroid = guess_x_centroid,
                                               guess_y_centroid = guess_y_centroid)
     except RuntimeError as err:
         if (strict == True):
