@@ -76,7 +76,6 @@ class GSObject(object):
     def __truediv__(self, other):
         return __div__(self, other)
 
-
     # Make a copy of an object
     def copy(self):
         """Returns a copy of an object.

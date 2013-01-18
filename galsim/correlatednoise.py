@@ -41,14 +41,15 @@ class _CorrFunc(object):
         
         # The statements below replace the self.profile.scaleFlux method with the much more
         # appropriately named self.profile.scaleVariance method
-        self.profile.scaleVariance = self._scaleVariance
+        self.profile.scaleVariance = self.scaleVariance
         self.profile.scaleFlux = self._notImplemented
-
+        
         # We use a similar pattern to replace the GSObject draw() method with a version that always
         # uses the "surface brightness" normalization rather than the default "flux"
         if not hasattr(self.profile, "_drawHidden"): # only do following once or becomes circular...
             self.profile._drawHidden = self.profile.draw # hide the method for internal use
-        self.profile.draw = self._draw
+        self.profile.draw = self.draw
+
 
     # Make add work in the intuitive sense (variances being additive, correlation functions add as
     # you would expect)
@@ -196,10 +197,111 @@ class _CorrFunc(object):
             image = galsim.ImageViewD(np.ascontiguousarray(noise_array.real))
         return image
 
+    def applyTransformation(self, ellipse):
+        """Apply a galsim.Ellipse distortion to this correlation function.
+           
+        galsim.Ellipse objects can be initialized in a variety of ways (see documentation of this
+        class, galsim.ellipse.Ellipse in the doxygen documentation, for details).
+
+        @param ellipse The galsim.Ellipse transformation to apply.
+        """
+        if not isinstance(ellipse, galsim.Ellipse):
+            raise TypeError("Argument to applyTransformation must be a galsim.Ellipse!")
+        self.profile.applyTransformation(ellipse)
+
+    def applyMagnification(self, scale):
+        """Scale the linear size of this CorrFunc by scale.  
+        
+        Scales the linear dimensions of the image by the factor scale, e.g.
+        `half_light_radius` <-- `half_light_radius * scale`.
+
+        @param scale The linear rescaling factor to apply.
+        """
+        self.applyTransformation(galsim.Ellipse(np.log(scale)))
+
+    def applyRotation(self, theta):
+        """Apply a rotation theta to this object.
+           
+        After this call, the caller's type will still be a CorrFunc, unlike in the GSObject base
+        class implementation of this method.  This is to allow CorrFunc methods to be available
+        after transformation, such as .applyNoiseTo().
+
+        @param theta Rotation angle (Angle object, +ve anticlockwise).
+        """
+        if not isinstance(theta, galsim.Angle):
+            raise TypeError("Input theta should be an Angle")
+        self.profile.applyRotation(theta)
+
+    def applyShear(self, *args, **kwargs):
+        """Apply a shear to this object, where arguments are either a galsim.Shear, or arguments
+        that will be used to initialize one.
+
+        For more details about the allowed keyword arguments, see the documentation for galsim.Shear
+        (for doxygen documentation, see galsim.shear.Shear).
+
+        After this call, the caller's type will still be a CorrFunc.  This is to allow CorrFunc
+        methods to be available after transformation, such as .applyNoiseTo().
+        """
+        self.profile.applyShear(*args, **kwargs)
+
+    # Also add methods which create a new GSObject with the transformations applied...
+    #
+    def createTransformed(self, ellipse):
+        """Returns a new correlation function by applying a galsim.Ellipse transformation (shear,
+        dilate).
+
+        Note that galsim.Ellipse objects can be initialized in a variety of ways (see documentation         of this class, galsim.ellipse.Ellipse in the doxygen documentation, for details).
+
+        @param ellipse The galsim.Ellipse transformation to apply
+        @returns The transformed object.
+        """
+        if not isinstance(ellipse, galsim.Ellipse):
+            raise TypeError("Argument to createTransformed must be a galsim.Ellipse!")
+        ret = self.copy()
+        ret.applyTransformation(ellipse)
+        return ret
+
+    def createMagnified(self, scale):
+        """Returns a new correlation function by applying a magnification by the given scale,
+        scaling the linear size by scale.  
+ 
+        Scales the linear dimensions of the image by the factor scale.
+        e.g. `half_light_radius` <-- `half_light_radius * scale`
+ 
+        @param scale The linear rescaling factor to apply.
+        @returns The rescaled object.
+        """
+        ret = self.copy()
+        ret.applyTransformation(galsim.Ellipse(np.log(scale)))
+        return ret
+
+    def createRotated(self, theta):
+        """Returns a new correlation function by applying a rotation.
+
+        @param theta Rotation angle (Angle object, +ve anticlockwise).
+        @returns The rotated object.
+        """
+        if not isinstance(theta, galsim.Angle):
+            raise TypeError("Input theta should be an Angle")
+        ret = self.copy()
+        ret.applyRotation(theta)
+        return ret
+
+    def createSheared(self, *args, **kwargs):
+        """Returns a new correlation function by applying a shear, where arguments are either a
+        galsim.Shear or keyword arguments that can be used to create one.
+
+        For more details about the allowed keyword arguments, see the documentation of galsim.Shear
+        (for doxygen documentation, see galsim.shear.Shear).
+        """
+        ret = self.copy()
+        ret.applyShear(*args, **kwargs)
+        return ret
+
     # Now I define some methods that are not used by this instance directly, but are used to
     # redefine the behaviour of the stored profile, or print a method saying that this method is not
     # implemented
-    def _scaleVariance(self, variance_ratio):
+    def scaleVariance(self, variance_ratio):
         """Multiply the overall variance of the correlation function profile by variance_ratio.
 
         @param variance_ratio The factor by which to scale the variance of the correlation function
@@ -209,10 +311,9 @@ class _CorrFunc(object):
 
     def _notImplemented(self, *args, **kwargs):
         raise NotImplementedError(
-            "Sorry, this method is not available for profiles which represent correlation "+
-            "functions.")
+            "This method is not available for profiles which represent correlation functions.")
 
-    def _draw(self, image=None, dx=None, gain=1., wmult=1., add_to_image=False,
+    def draw(self, image=None, dx=None, gain=1., wmult=1., add_to_image=False,
               normalization="surface brightness"):
         """The draw method for profiles storing correlation functions.
 
@@ -225,7 +326,6 @@ class _CorrFunc(object):
         return self.profile._drawHidden(
             image=image, dx=dx, gain=gain, wmult=wmult, normalization=normalization,
             add_to_image=add_to_image)
-
 
 ###
 # Then we define the ImageCorrFunc, which generates a correlation function by estimating it directly
@@ -269,13 +369,27 @@ class ImageCorrFunc(_CorrFunc):
     The key attribue is `profile`, which is the internally stored GSObject profile.  It can be
     manipulated using many of the various methods of the GSObject.  The following are all legal:
     
+        cf.profile.xValue(galsim.PositionD(0., 0.5))
+        cf.profile.kValue(galsim.PositionD(0.5, 0.))
+        cf.profile.drawK(im, dk)
+        cf.profile.draw(im, dx)
         cf.profile.applyShear(s)
         cf.profile.applyMagnification(m)
         cf.profile.applyRotation(theta * galsim.degrees)
-        cf.profile.xValue(galsim.PositionD(0., 0.5))
-        cf.profile.kValue(galsim.PositionD(0.5, 0.))
-        cf.profile.draw(im, dx)
-        cf.profile.drawK(im, dk)
+        cf.profile.applyTransformation(ellipse)
+
+    A number of the GSObject functions have also been implemented directly as`cf` methods, so that
+    the following commands are also all legal:
+
+        cf.draw(im, dx, wmult=4)
+        cf.createSheared(s)
+        cf.createMagnified(m)
+        cf.createRotated(theta * galsim.degrees)
+        cf.createTransformed(ellipse)
+        cf.applyShear(s)
+        cf.applyMagnification(m)
+        cf.applyRotation(theta * galsim.degrees)
+        cf.applyTransformation(ellipse)
 
     However, some of the GSObject methods are not available, since they do not really make sense
     for correlation functions.  Calling any of
@@ -319,7 +433,6 @@ class ImageCorrFunc(_CorrFunc):
 
     but slightly more convenient.  The multiplication and division operators scale the overall
     correlation function for scalar operands, using the `cf.profile.scaleVariance()` method.
-     
 
     Methods
     -------
@@ -334,7 +447,9 @@ class ImageCorrFunc(_CorrFunc):
 
     If `dx` is not set the value returned by `image.getScale()` is used unless this is <= 0, in
     which case a scale of 1 is assumed.
-    
+
+    As already described, a number of the GSObject functions have also been implemented directly
+    as`cf` methods.  See the 'Attributes' Section above.
     """
     def __init__(self, image, dx=0., interpolant=None):
 
