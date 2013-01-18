@@ -311,7 +311,7 @@ class _CorrFunc(object):
 
     def _notImplemented(self, *args, **kwargs):
         raise NotImplementedError(
-            "This method is not available for profiles which represent correlation functions.")
+            "This method is not available for profiles that represent correlation functions.")
 
     def draw(self, image=None, dx=None, gain=1., wmult=1., add_to_image=False,
               normalization="surface brightness"):
