@@ -256,12 +256,13 @@ namespace galsim {
         _maxk = _xInterp->urange() * 2.*M_PI / _multi.getScale(); 
         dbg<<"maxk = "<<_maxk<<std::endl;
 
+        _flux = calculateFlux();
         dbg<<"flux = "<<getFlux()<<std::endl;
     }
 
     SBInterpolatedImage::SBInterpolatedImageImpl::~SBInterpolatedImageImpl() {}
 
-    double SBInterpolatedImage::SBInterpolatedImageImpl::getFlux() const 
+    double SBInterpolatedImage::SBInterpolatedImageImpl::calculateFlux() const 
     {
         double flux = 0.;
         for (size_t i=0; i<_multi.size(); ++i) flux += _wts[i] * _multi.getFlux(i);
