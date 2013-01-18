@@ -42,7 +42,6 @@ class _CorrFunc(object):
         # The statements below replace the self.profile.scaleFlux method with the much more
         # appropriately named self.profile.scaleVariance method
         self.profile.scaleVariance = self.scaleVariance
-        self.profile.scaleFlux = self._notImplemented
         
         # We use a similar pattern to replace the GSObject draw() method with a version that always
         # uses the "surface brightness" normalization rather than the default "flux"
@@ -50,6 +49,13 @@ class _CorrFunc(object):
             self.profile._drawHidden = self.profile.draw # hide the method for internal use
         self.profile.draw = self.draw
 
+        #
+        self.profile.__idiv__ = self.__idiv__
+        self.profile.__itruediv__ = self.__itruediv__
+        self.profile.__imul__ = self.__imul__
+        self.profile.__div__ = self.__div__
+        self.profile.__truediv__ = self.__truediv__
+        self.profile.__mul__ = self.__mul__
 
     # Make add work in the intuitive sense (variances being additive, correlation functions add as
     # you would expect)
@@ -210,7 +216,7 @@ class _CorrFunc(object):
         self.profile.applyTransformation(ellipse)
 
     def applyMagnification(self, scale):
-        """Scale the linear size of this CorrFunc by scale.  
+        """Scale the linear size of this _CorrFunc by scale.  
         
         Scales the linear dimensions of the image by the factor scale, e.g.
         `half_light_radius` <-- `half_light_radius * scale`.
@@ -222,8 +228,8 @@ class _CorrFunc(object):
     def applyRotation(self, theta):
         """Apply a rotation theta to this object.
            
-        After this call, the caller's type will still be a CorrFunc, unlike in the GSObject base
-        class implementation of this method.  This is to allow CorrFunc methods to be available
+        After this call, the caller's type will still be a _CorrFunc, unlike in the GSObject base
+        class implementation of this method.  This is to allow _CorrFunc methods to be available
         after transformation, such as .applyNoiseTo().
 
         @param theta Rotation angle (Angle object, +ve anticlockwise).
@@ -239,7 +245,7 @@ class _CorrFunc(object):
         For more details about the allowed keyword arguments, see the documentation for galsim.Shear
         (for doxygen documentation, see galsim.shear.Shear).
 
-        After this call, the caller's type will still be a CorrFunc.  This is to allow CorrFunc
+        After this call, the caller's type will still be a _CorrFunc.  This is to allow _CorrFunc
         methods to be available after transformation, such as .applyNoiseTo().
         """
         self.profile.applyShear(*args, **kwargs)
@@ -399,7 +405,6 @@ class ImageCorrFunc(_CorrFunc):
         cf.profile.applyDilation
         cf.profile.createDilated
         cf.profile.setFlux
-        cf.profile.scaleFlux
         cf.profile.getFlux
         cf.profile.drawShoot
         cf.profile.scaleFlux
@@ -408,9 +413,10 @@ class ImageCorrFunc(_CorrFunc):
     reimplemented to make the default normalization keyword take the value 'surface brightness' as
     is appropriate for rendering correlation functions.
 
-    A new method, which is in fact a reimplmentation of the `cf.profile.scaleFlux()` method, is
+    A new method, which is in fact a more appropriately named reimplmentation of the
+    `cf.profile.scaleFlux()` method, is
 
-        cf.profile.scaleVariance(variance_ratio)
+        cf.scaleVariance(variance_ratio)
 
     which scales the overall correlation function, and therefore its total variance, by a scalar
     factor `variance_ratio`.
