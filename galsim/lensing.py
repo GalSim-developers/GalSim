@@ -51,6 +51,20 @@ class PowerSpectrum(object):
     interpolates on that grid to the requested positions.  Finally, it carries around some
     information about the underlying shear power spectrum used to generate the field.
 
+    When creating a PowerSpectrum instance, the E and B mode power spectra can optionally be set at
+    initialization or later on with the method set_power_functions.  Note that the power spectra
+    should be a function of k.  The typical thing is to just use a lambda function in Python (i.e.,
+    a function that is not associated with a name); for example, to define P(k)=k^2, one would use
+    `lambda k : k**2`.  But they can also be more complicated user-defined functions that take a
+    single argument k and return the power at that k value, or they can be instances of the
+    TabulatedPk class for power spectra that are known at particular k values but for which there is
+    not a simple analytic form.  The power function should return power P(k), not Delta^2(k) = k^2
+    P(k) / 2pi; the TabulatedPk class can be instructed to convert between the two automatically.
+    We assume that P(k) goes to zero at k=0, as in any physically reasonable cosmological model.
+    The power functions must return a list/array that is the same size as what it was given, e.g.,
+    in the case of no power or constant power, a function that just returns a float would not be
+    permitted; it would have to return an array of floats all with the same value.
+
     It is important to note that the power spectrum used to initialize the PowerSpectrum object
     should be in the same units as any parameters to the getShear() method that define the locations
     at which we want to get shears.  When we actually draw images, there is a natural scale that
@@ -65,22 +79,10 @@ class PowerSpectrum(object):
 
     If the power spectrum used for this calculation comes from a standard cosmology calculator that
     uses units of inverse radians for the wavenumber, then it is important to convert such that the
-    units are consistent with our choice of inverse arcsec.  If there is sufficient interest from
-    users for the code to support conversions between the various units that one might use, then
-    future versions of GalSim might be updated to include this functionality.
-
-    When creating a PowerSpectrum instance, the E and B mode power spectra can optionally be set at
-    initialization or later on with the method set_power_functions.  Note that the power spectra
-    should be a function of k.  The typical thing is to just use a lambda function in Python (i.e.,
-    a function that is not associated with a name); for example, to define P(k)=k^2, one would use
-    `lambda k : k**2`.  But they can also be more complicated user-defined functions that take a
-    single argument k and return the power at that k value, or they can be instances of the
-    TabulatedPk class for power spectra that are known at particular k values but for which there is
-    not a simple analytic form.  The power function should return power P(k), not 
-    Delta^2(k) = k^2 P(k) / 2pi.  We assume that the P(k) goes to zero at k=0, as in any physically
-    reasonable cosmological model.  The power functions must return a list/array that is the same
-    size as what it was given, e.g., in the case of no power or constant power, a function that just
-    returns a zero would not be permitted; it would have to return an array of zeros.
+    units are consistent with our choice of inverse arcsec.  If reading in a tabulated P(k) from one
+    of those calculators into a TabulatedPk object, it is possible to automatically have GalSim
+    convert the units for you; this functionality is not currently available for other types of
+    power functions.
 
     @param e_power_function A function or other callable that accepts a Numpy array of |k| values,
                             and returns the E-mode power spectrum P_E(|k|) in an array of the same
@@ -88,14 +90,16 @@ class PowerSpectrum(object):
                             (gradient) mode of the image.  Set to None (default) for there to be no
                             E-mode power.
                             It may also be a string that can be converted to a function using
-                            eval('lambda k : ' + e_power_function)
+                            eval('lambda k : ' + e_power_function), or a tabulated P(k) represented
+                            using a TabulatedPk object.
     @param b_power_function A function or other callable that accepts a Numpy array of |k| values,
                             and returns the B-mode power spectrum P_B(|k|) in an array of the same
                             shape.  The function should return the power spectrum desired in the B
                             (curl) mode of the image.  Set to None (default) for there to be no
                             B-mode power.
                             It may also be a string that can be converted to a function using
-                            eval('lambda k : ' + b_power_function)
+                            eval('lambda k : ' + b_power_function), or a tabulated P(k) represented
+                            using a TabulatedPk object.
     @param units            The angular units used for the power spectrum (i.e. the units of 
                             k^-1).  Currently only arcsec is implemented.
     """
@@ -569,6 +573,7 @@ class PowerSpectrumRealizer(object):
             mink = np.min(fake_k)
             maxk = np.max(fake_k)
             if mink < power_function.k_min or maxk > power_function.k_max:
+                print power_function.k_min, power_function.k_max
                 raise ValueError("Tabulated P(k) is not defined for full k range on grid, %f<k<%f"%(mink,maxk))
         P_k = power_function(fake_k)
         # now fix the k=0 value of power to zero
@@ -1018,9 +1023,12 @@ class TabulatedPk(object):
             k=data[0]
             power=data[1]
 
-        # turn k and power into numpy arrays so that all subsequent math is possible
-        k = np.array(k)
-        p = np.array(power)
+        # turn k and power into numpy arrays so that all subsequent math is possible (unlike for
+        # lists, tuples).
+        if not isinstance(k, np.ndarray):
+            k = np.array(k)
+        if not isinstance(power, np.ndarray):
+            power = np.array(power)
 
         # first thing: if we actually have Delta^2, then we must convert to power, which is
         # dimensionless.
