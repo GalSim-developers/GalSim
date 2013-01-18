@@ -520,7 +520,7 @@ namespace galsim {
          *                          constant inputs.
          * @param[in] tol  Sets accuracy and extent of Fourier transform.
          */
-        Lanczos(int n, bool fluxConserve=false, double tol=1.e-3) :  
+        Lanczos(int n, bool fluxConserve=true, double tol=1.e-4) :  
             _n(n), _fluxConserve(fluxConserve), _tolerance(tol), 
             _xtab(Table<double,double>::spline), _utab(Table<double,double>::spline) 
         { setup(); }

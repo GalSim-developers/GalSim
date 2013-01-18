@@ -344,7 +344,11 @@ instance are:
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{image
       = obj.draw(image=None, dx=None, add\_to\_image=False, \dots)}}
   \newline {draw and return an \texttt{Image} (see Section \ref{sect:image}) of the \texttt{GSObject}~using Discrete Fourier
-  Transforms and interpolation to perform the image rendering.  
+  Transforms and interpolation to perform the image rendering.  Note
+  that if a profile is not convolved with a pixel response before drawing, then
+  \texttt{draw} samples the surface brightness distribution without
+  integrating within pixels, so the sum of pixel values might not
+  equal the GSObject flux.
   Some information about important optional parameters (see the
   linked / Python docstrings for more detail), along with default values:
   \begin{itemize}

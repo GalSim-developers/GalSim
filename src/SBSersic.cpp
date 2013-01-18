@@ -7,7 +7,7 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-//std::ostream* dbgout = new std::ofstream("debug.out");
+//std::ostream* dbgout = &std::cout;
 //int verbose_level = 2;
 #endif
 

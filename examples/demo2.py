@@ -127,16 +127,12 @@ def main(argv):
     logger.info('HSM reports that the image has observed shape and size:')
     logger.info('    e1 = %.3f, e2 = %.3f, sigma = %.3f (pixels)', results.observed_shape.e1,
                 results.observed_shape.e2, results.moments_sigma)
-    logger.info('When carrying out Regaussianization PSF correction, HSM reports')
-    e_temp = results.corrected_shape.e
-    if e_temp > 0.:
-        gfac = results.corrected_shape.g/e_temp
-    else:
-        gfac = 0.
-    logger.info('    g1, g2 = %.3f, %.3f', 
-                gfac*results.corrected_shape.e1, gfac*results.corrected_shape.e2)
+    logger.info('When carrying out Regaussianization PSF correction, HSM reports distortions')
+    logger.info('    e1, e2 = %.3f, %.3f', 
+                results.corrected_e1, results.corrected_e2)
     logger.info('Expected values in the limit that noise and non-Gaussianity are negligible:')
-    logger.info('    g1, g2 = %.3f, %.3f', g1,g2)
+    exp_shear = galsim.Shear(g1=g1, g2=g2)
+    logger.info('    g1, g2 = %.3f, %.3f', exp_shear.e1,exp_shear.e2)
 
 if __name__ == "__main__":
     main(sys.argv)

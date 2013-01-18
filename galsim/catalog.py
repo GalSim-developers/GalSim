@@ -1,4 +1,4 @@
-"""@file io.py
+"""@file catalog.py
 Routines for controlling catalog Input/Output with GalSim. 
 """
 

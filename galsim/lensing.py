@@ -208,8 +208,7 @@ class PowerSpectrum(object):
         2. Same thing, but use a particular rng and set the location of the center of the grid
            to be something other than the default (0,0)
 
-               im = galsim.ImageF(512, 512)
-               g1, g2 = my_ps.getShear(grid_spacing = 8., grid_nx = 65.,
+               g1, g2 = my_ps.getShear(grid_spacing = 8., grid_nx = 65,
                                        rng = galsim.BaseDeviate(1413231),
                                        center = (256.5, 256.5) )
 
@@ -535,8 +534,7 @@ class Cosmology(object):
 
     Cosmology calculates expansion function E(a) and angular diameter distances Da(z) for a
     LambdaCDM universe.  Radiation is assumed to be zero and Dark Energy constant with w = -1 (no
-    quintessence), but curvature is arbitrary.  Note: calculation of angular diameter distances
-    using the Cosmology class currently relies on the SciPy integration routines.
+    quintessence), but curvature is arbitrary.
 
     Based on Matthias Bartelmann's libastro.
 
@@ -573,8 +571,7 @@ class Cosmology(object):
     def Da(self, z, z_ref=0):
         """Compute angular diameter distance between two redshifts in units of c/H0.
 
-        In order to get the distance in Mpc/h, multiply by ~3000.  This method relies on the SciPy
-        integration routines.
+        In order to get the distance in Mpc/h, multiply by ~3000.
 
         @param z Redshift
         @param z_ref Reference redshift, with z_ref <= z.
