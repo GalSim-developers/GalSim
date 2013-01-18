@@ -415,8 +415,8 @@ def test_output_generation_basic():
         # Then repeat
         outimage.setZero()
         ncf.applyNoiseTo(outimage, dx=1., dev=glob_ud)
-        ncf_2ndlevel.profile += galsim.ImageCorrFunc(outimage, dx=1.).profile
-    ncf_2ndlevel.profile /= float(nsum_test)
+        ncf_2ndlevel += galsim.ImageCorrFunc(outimage, dx=1.)
+    ncf_2ndlevel /= float(nsum_test)
     # Then draw the summed CF to an image for comparison 
     testim = galsim.ImageD(smallim_size, smallim_size)
     ncf_2ndlevel.profile.draw(testim, dx=1.)
@@ -454,8 +454,8 @@ def test_output_generation_rotated():
             # Then repeat
             outimage.setZero()
             ncf_rot.applyNoiseTo(outimage, dx=1., dev=glob_ud)
-            ncf_2ndlevel.profile += galsim.ImageCorrFunc(outimage, dx=1.).profile
-        ncf_2ndlevel.profile /= float(nsum_test)
+            ncf_2ndlevel += galsim.ImageCorrFunc(outimage, dx=1.)
+        ncf_2ndlevel /= float(nsum_test)
         # Then draw the summed CF to an image for comparison 
         testim = galsim.ImageD(smallim_size * 2, smallim_size * 2)
         ncf_2ndlevel.profile.draw(testim, dx=1.)
@@ -488,10 +488,10 @@ def test_output_generation_magnified():
             outimage.setZero()
             ncf_scl.applyNoiseTo(outimage, dx=1., dev=glob_ud)
             ps += np.abs(np.fft.fft2(outimage.array))**2
-            ncf_2ndlevel.profile += galsim.ImageCorrFunc(outimage, dx=1.).profile
+            ncf_2ndlevel += galsim.ImageCorrFunc(outimage, dx=1.)
             # DEBUGGING: also calculate the sum of PS for investigation later
         # Divide by nsum_test to get average quantities
-        ncf_2ndlevel.profile /= float(nsum_test)
+        ncf_2ndlevel /= float(nsum_test)
         ps /= float(nsum_test)
         # Then draw the summed CF to an image for comparison 
         testim = galsim.ImageD(smallim_size, smallim_size)
