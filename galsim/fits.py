@@ -489,6 +489,20 @@ def readMulti(fits, compression='auto'):
 
     @param   fits  If `fits` is a `pyfits.HDUList`, readMulti will read images from these.  If 
                    `fits` is a string, it will be interpreted as a filename to open and read.
+    @param compression  Which decompression scheme to use (if any).  Options are:
+                        None or 'none' = no decompression
+                        'rice' = use rice decompression in tiles
+                        'gzip' = use gzip to decompress the full file
+                        'bzip2' = use bzip2 to decompress the full file
+                        'gzip_tile' = use gzip decompression in tiles
+                        'hcompress' = use hcompress decompression in tiles
+                        'plio' = use plio decompression in tiles
+                        'auto' = determine the decompression from the extension of the file name
+                            (requires fits to be a string).  
+                            '*.fz' => 'rice'
+                            '*.gz' => 'gzip'
+                            '*.bz2' => 'bzip2'
+                            otherwise None
     @returns A Python list of ImageView instances.
     """
 
@@ -541,6 +555,20 @@ def readCube(fits, compression='auto'):
                  `pyfits.PrimaryHDU` or `pyfits.ImageHDU`, that HDU will be used.  If `fits` is a
                  string, it will be interpreted as a filename to open; the Primary HDU of that file
                  will be used.
+    @param compression  Which decompression scheme to use (if any).  Options are:
+                        None or 'none' = no decompression
+                        'rice' = use rice decompression in tiles
+                        'gzip' = use gzip to decompress the full file
+                        'bzip2' = use bzip2 to decompress the full file
+                        'gzip_tile' = use gzip decompression in tiles
+                        'hcompress' = use hcompress decompression in tiles
+                        'plio' = use plio decompression in tiles
+                        'auto' = determine the decompression from the extension of the file name
+                            (requires fits to be a string).  
+                            '*.fz' => 'rice'
+                            '*.gz' => 'gzip'
+                            '*.bz2' => 'bzip2'
+                            otherwise None
     @returns     A Python list of ImageView instances.
     """
     import pyfits     # put this at function scope to keep pyfits optional
