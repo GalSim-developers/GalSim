@@ -436,7 +436,7 @@ def test_output_generation_rotated():
     # Therefore, we rotate a CF with a support larger than the output region we simulate: this works
     # well at 2dp.
     # TODO: I'd like to understand more about the former behaviour though...
-    ncf = galsim.ImageCorrFunc(ynoise_xlarge, dx=1.))
+    ncf = galsim.ImageCorrFunc(ynoise_xlarge, dx=1.)
     # Then loop over some angles
     angles = [28.7 * galsim.degrees, 135. * galsim.degrees]
     for angle in angles:
