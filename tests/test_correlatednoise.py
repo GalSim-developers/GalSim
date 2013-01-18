@@ -365,7 +365,7 @@ def test_draw():
     # Then use the ImageCorrFunc class for comparison
     ncf = galsim.ImageCorrFunc(uncorr_noise_small_odd, dx=1.)
     testim1 = galsim.ImageD(smallim_size_odd, smallim_size_odd)
-    ncf.profile.draw(testim1, dx=1.)
+    ncf.draw(testim1, dx=1.)
     # Then compare the odd-sized arrays:
     #np.testing.assert_array_almost_equal(
         #testim1.array, ncf.original_cf_image.array, decimal=decimal_precise, 
@@ -385,7 +385,7 @@ def test_draw():
     # Then use the ImageCorrFunc class for comparison
     ncf = galsim.ImageCorrFunc(uncorr_noise_small, dx=1.)
     testim1 = galsim.ImageD(smallim_size, smallim_size)
-    ncf.profile.draw(testim1, dx=1.)
+    ncf.draw(testim1, dx=1.)
     # Then compare the even-sized arrays:
     #np.testing.assert_array_almost_equal( # note in this first test we exclude the upper row and
                                           # rightmost column of the ncf.original_cf_image, since
@@ -404,7 +404,7 @@ def test_output_generation_basic():
     ncf = galsim.ImageCorrFunc(xnoise_large, dx=1.)
     refim = galsim.ImageD(smallim_size, smallim_size)
     # Draw this for reference
-    ncf.profile.draw(refim, dx=1.)
+    ncf.draw(refim, dx=1.)
     # Generate a large image containing noise according to this function
     outimage = galsim.ImageD(xnoise_large.bounds)
     ncf.applyNoiseTo(outimage, dx=1., dev=glob_ud)
@@ -419,7 +419,7 @@ def test_output_generation_basic():
     ncf_2ndlevel /= float(nsum_test)
     # Then draw the summed CF to an image for comparison 
     testim = galsim.ImageD(smallim_size, smallim_size)
-    ncf_2ndlevel.profile.draw(testim, dx=1.)
+    ncf_2ndlevel.draw(testim, dx=1.)
     np.testing.assert_array_almost_equal(
         testim.array, refim.array, decimal=decimal_approx,
         err_msg="Generated noise field (basic) does not match input correlation properties.")
@@ -443,7 +443,7 @@ def test_output_generation_rotated():
         ncf_rot = ncf.createRotated(angle)
         refim = galsim.ImageD(smallim_size * 2, smallim_size * 2)
         # Draw this for reference
-        ncf_rot.profile.draw(refim, dx=1.)
+        ncf_rot.draw(refim, dx=1.)
         # Generate a large image containing noise according to this function
         outimage = galsim.ImageD(largeim_size, largeim_size)
         ncf_rot.applyNoiseTo(outimage, dx=1., dev=glob_ud)
@@ -458,7 +458,7 @@ def test_output_generation_rotated():
         ncf_2ndlevel /= float(nsum_test)
         # Then draw the summed CF to an image for comparison 
         testim = galsim.ImageD(smallim_size * 2, smallim_size * 2)
-        ncf_2ndlevel.profile.draw(testim, dx=1.)
+        ncf_2ndlevel.draw(testim, dx=1.)
         np.testing.assert_array_almost_equal(
             testim.array, refim.array, decimal=decimal_approx,
             err_msg="Generated noise field (rotated) does not match input correlation properties.")
@@ -470,12 +470,12 @@ def test_output_generation_magnified():
     ncf = galsim.ImageCorrFunc(
         ynoise_large, dx=1., interpolant=galsim.Nearest(tol=1.e-4))
     # Then loop over some scales
-    scales = [3.] # these have to be half sensible I think
+    scales = [0.3, 3.] # these have to be half sensible I think
     for scale in scales:
         ncf_scl = ncf.createMagnified(scale)
         refim = galsim.ImageD(smallim_size, smallim_size)
         # Draw this for reference
-        ncf_scl.profile.draw(refim, dx=1., normalization="surface brightness")
+        ncf_scl.draw(refim, dx=1., normalization="surface brightness")
         # Generate a large image containing noise according to this function
         outimage = galsim.ImageD(largeim_size, largeim_size)
         ncf_scl.applyNoiseTo(outimage, dx=1., dev=glob_ud)
@@ -495,7 +495,7 @@ def test_output_generation_magnified():
         ps /= float(nsum_test)
         # Then draw the summed CF to an image for comparison 
         testim = galsim.ImageD(smallim_size, smallim_size)
-        ncf_2ndlevel.profile.draw(testim, dx=1., normalization="surface brightness")
+        ncf_2ndlevel.draw(testim, dx=1., normalization="surface brightness")
         try:
             # DEBUGGING: plot these average "generated" CF and PS, and take the difference between 
             # these and the "internal" functions used to generate them
