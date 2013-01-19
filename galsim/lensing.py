@@ -347,7 +347,7 @@ class PowerSpectrum(object):
             pass  # This is what it should be
         elif isinstance(center,galsim.PositionI):
             # Convert to a PositionD
-            center = galsim.PositionD(center.x, cetner.y)
+            center = galsim.PositionD(center.x, center.y)
         elif isinstance(center, tuple) and len(center) == 2:
             # Convert (x,y) tuple to PositionD
             center = galsim.PositionD(center[0], center[1])
@@ -714,7 +714,7 @@ class NFWHalo(object):
             pass  # This is what it should be
         elif isinstance(halo_pos,galsim.PositionI):
             # Convert to a PositionD
-            halo_pos = galsim.PositionD(halo_pos.x, cetner.y)
+            halo_pos = galsim.PositionD(halo_pos.x, halo_pos.y)
         elif isinstance(halo_pos, tuple) and len(halo_pos) == 2:
             # Convert (x,y) tuple to PositionD
             halo_pos = galsim.PositionD(halo_pos[0], halo_pos[1])

@@ -42,6 +42,7 @@ def main(argv):
       - Applied shear is from a cosmological power spectrum read in from file.
       - The PSF is a real one from SDSS but, in order that the galaxy resolution not be too poor, we
         tell GalSim that the pixel scale for that PSF image is 0.2" rather than 0.396".
+      - This also lets us include the pixel response in our PSF image already.
       - Galaxies are real galaxies, each with S/N~100.
       - Noise is Poisson using a nominal sky value of 1.e4.
     """
@@ -51,24 +52,22 @@ def main(argv):
     # Define some parameters we'll use below.
     # Normally these would be read in from some parameter file.
 
-    image_size = 0.25*galsim.degrees # size of big image in each dimension
     stamp_size = 48                  # number of pixels in each dimension of galaxy images
     pixel_scale = 0.2                # arcsec/pixel
-    total_image_size = int((image_size / galsim.arcsec)/pixel_scale) # size of big image in each
-                                                                     # dimension (pixels)
-    total_image_size_arcsec = total_image_size*pixel_scale # size of big image in each dimension
-                                                           # (arcsec)
+    image_size = 0.25*galsim.degrees # size of big image in each dimension
+    image_size = int((image_size / galsim.arcsec)/pixel_scale) # convert to pixels
+    image_size_arcsec = image_size*pixel_scale # size of big image in each dimension (arcsec)
     sky_level = 1.e4                 # ADU / arcsec^2
     nobj = 100                       # number of galaxies in entire field
+    grid_spacing = 10                # The spacing between the samples for the power spectrum 
+                                     # realization (arcsec)
+    gal_signal_to_noise = 100        # S/N of each galaxy
 
-    # random_seed is used for the power spectrum realization.
-    # random_seed_gal is used for the galaxy properties.
-    random_seed = 3339201
-    random_seed_gal = 1234567
+    # random_seed is used for both the power spectrum realization and the random properties
+    # of the galaxies.
+    random_seed = 24783923
 
     file_name = os.path.join('output','tabulated_power_spectrum.fits.fz')
-
-    gal_signal_to_noise = 100
 
     logger.info('Starting demo script 11')
  
@@ -126,90 +125,101 @@ def main(argv):
     psf = galsim.InterpolatedImage(psf_file, dx = pixel_scale, flux = 1.)
     logger.info('Read in PSF image from bzipped FITS file')
 
+    # Setup the image:
+    full_image = galsim.ImageF(image_size, image_size)
+    full_image.setScale(pixel_scale)
+    cenx = ceny = image_size/2 + 1
+    center = galsim.PositionD(cenx,ceny) * pixel_scale
+
+    # As for demo10, we use random_seed+nobj for the random numbers required for the 
+    # whole image.  In this case, both the power spectrum realization and the noise on the 
+    # full image we apply later.
+    rng = galsim.BaseDeviate(random_seed+nobj)
     # We want to make random positions within our image.  However, currently for shears from a power
     # spectrum we first have to get shears on a grid of positions, and then we can choose random
     # positions within that.  So, let's make the grid.  We're going to make it as large as the
     # image, with grid points spaced by 10 arcsec (hence interpolation only happens below 10"
     # scales, below the interesting scales on which we want the shear power spectrum to be
     # represented exactly).  Lensing engine wants positions in arcsec, so calculate that:
-    rng = galsim.BaseDeviate(random_seed)
-    g1_grid, g2_grid = ps.getShear(grid_spacing=10.0, ngrid=total_image_size_arcsec, rng=rng)
+    g1_grid, g2_grid = ps.getShear(grid_spacing = grid_spacing,
+                                   ngrid = (image_size_arcsec / grid_spacing),
+                                   center = center,
+                                   rng = rng)
     logger.info('Made gridded shears')
 
-    # Setup the image:
-    gal_image = galsim.ImageF(total_image_size, total_image_size)
-    gal_image.setScale(pixel_scale)
-
     # Now we need to loop over our objects:
-    rng = galsim.BaseDeviate(random_seed_gal)
-    ud = galsim.UniformDeviate(rng)
     for k in range(nobj):
         time1 = time.time()
-        # Choose a random position within a range that is not too close to the edge.
-        # Define this in arcsec and in pixel, rounding to the nearest pixel.  We are not including
-        # sub-pixel shifts in this demo.
-        x_pos = int(0.5*stamp_size + ud()*(total_image_size - stamp_size))
-        y_pos = int(0.5*stamp_size + ud()*(total_image_size - stamp_size))
-        x_pos_arcsec = x_pos*pixel_scale
-        y_pos_arcsec = y_pos*pixel_scale
+        # The usual random number generator using a differend seed for each galaxy.
+        ud = galsim.UniformDeviate(random_seed+k)
 
+        # Choose a random position within a range that is not too close to the edge.
+        x = 0.5*stamp_size + ud()*(image_size - stamp_size)
+        y = 0.5*stamp_size + ud()*(image_size - stamp_size)
+        print 'x,y = ',x,y
+
+        # Turn this into a position in arcsec
+        pos = galsim.PositionD(x,y) * pixel_scale
+        print 'pos = ',pos
+
+        # Get the shear at this position.
+        g1, g2 = ps.getShear(pos = pos)
+
+        # Construct the galaxy:
         # Loop over the galaxies within our list of 5.
         index = k % 5
         gal = gal_list[index]
 
-        # Get the shear at this position.
-        g1, g2 = ps.getShear(pos = (x_pos_arcsec, y_pos_arcsec))
-
-        # Construct the galaxy:
         #   Random rotation
         theta = ud()*2.0*numpy.pi*galsim.radians
+        # Use createRotated rather than applyRotation, so we don't change the galaxies in the 
+        # original gal_list -- createRotated makes a new copy.
         gal = gal.createRotated(theta)
         #   Apply the cosmological shear
         gal.applyShear(g1 = g1, g2 = g2)
         #   Convolve with the PSF.  We don't have to include a pixel response explicitly, since the
         #     SDSS PSF image that we are using included the pixel response already.
-        final = galsim.Convolve(gal, psf)
+        final = galsim.Convolve(psf, gal)
 
-        # Identify the bounds within which to draw the image.
-        b = galsim.BoundsI(int(x_pos - 0.5*stamp_size), int(x_pos + 0.5*stamp_size - 1),
-                           int(y_pos - 0.5*stamp_size), int(y_pos + 0.5*stamp_size - 1))
-        sub_gal_image = gal_image[b]
-        tmp_gal_image = galsim.ImageF(b)
-        tmp_gal_image.setScale(pixel_scale)
+        # Draw it with our desired stamp size
+        stamp = galsim.ImageF(stamp_size,stamp_size)
+        final.draw(image=stamp, dx=pixel_scale)
 
-        # Draw it; we first write into its own postage stamp so we can properly rescale flux to get
-        # the S/N we want.  We have to do that before we add it to the big image, which might have
-        # another galaxy near that point (so our S/N calculation would erroneously include the flux
-        # from the other object).
-        final.draw(tmp_gal_image)
-
-        # Now determine what we need to do to get our desired S/N
+        # Rescale flux to get the S/N we want.  We have to do that before we add it to the big 
+        # image, which might have another galaxy near that point (so our S/N calculation would 
+        # erroneously include the flux from the other object).
         # See demo5.py for the math behind this calculation.
         sky_level_pix = sky_level * pixel_scale**2
-        sn_meas = math.sqrt( numpy.sum(tmp_gal_image.array**2) / sky_level_pix )
+        sn_meas = math.sqrt( numpy.sum(stamp.array**2) / sky_level_pix )
         flux_scaling = gal_signal_to_noise / sn_meas
-        tmp_gal_image *= flux_scaling
+        stamp *= flux_scaling
 
-        # Now that we have scaled the galaxy flux properly, add it to the big image in the proper
-        # location.
-        sub_gal_image += tmp_gal_image
+        # Recenter the stamp at the desired position:
+        ix = int(math.floor(x+0.5))
+        iy = int(math.floor(y+0.5))
+        stamp.setCenter(ix,iy)
+        print 'stamp.bounds = ',stamp.bounds
+
+        # Find the overlapping bounds:
+        bounds = stamp.bounds & full_image.bounds
+        full_image[bounds] += stamp[bounds]
+
         time2 = time.time()
         tot_time = time2-time1
-        logger.info('Galaxy %d: position relative to corner = %s, t=%f s', k,
-                    str(galsim.PositionI(x_pos, y_pos)), tot_time)
+        logger.info('Galaxy %d: position relative to corner = %s, t=%f s', k, str(pos), tot_time)
 
     # Add Poisson noise -- the CCDNoise can also take another RNG as its argument
-    # so it will be part of the same stream of random numbers as ud above.  We have to do this step
+    # so it will be part of the same stream of random numbers as rng above.  We have to do this step
     # at the end, rather than adding to individual postage stamps, in order to get the noise level
     # right in the overlap regions between postage stamps.
-    gal_image += sky_level_pix
-    gal_image.addNoise(galsim.CCDNoise(rng))
-    gal_image -= sky_level_pix
+    full_image += sky_level_pix
+    full_image.addNoise(galsim.CCDNoise(rng))
+    full_image -= sky_level_pix
     logger.info('Added noise to final large image')
 
     # Now write the image to disk.  It's automatically compressed with Rice compression,
     # since the filename we provide ends in .fz
-    galsim.fits.write(gal_image, file_name)
+    full_image.write(file_name)
     logger.info('Wrote image to %r',file_name) 
 
 if __name__ == "__main__":
