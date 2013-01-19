@@ -36,34 +36,31 @@ int verbose_level = 2;
 
 namespace galsim {
 
-        /**
-         * @brief Return, as a square Image, a noise covariance matrix between every element in an 
-         * input Image with pixel scale dx.
-         *
-         * The matrix is symmetric, and therefore only the upper triangular elements are actually
-         * written into.  The rest are initialized and remain as zero.
-         *
-         * Currently, this actually copies elements from an internal calculation of the covariance
-         * matrix (using Mike Jarvis' TMV library).  It could, therefore, be calculated more 
-         * efficiently by direct assignment.  However, as this public member function is foreseen
-         * as being mainly for visualization/checking purposes, we go via the TMV intermediary to 
-         * avoid code duplication.  If, in future, it becomes critical to speed up this function
-         * this can be revisited.
-         */
-        Image<double> calculateCovarianceMatrix(
-            const SBProfile& sbp, const Bounds<int>& bounds, double dx) const;
+    /**
+     * @brief Return, as a square Image, a noise covariance matrix between every element in an input     * Image with pixel scale dx.
+     *
+     * The matrix is symmetric, and therefore only the upper triangular elements are actually
+     * written into.  The rest are initialized and remain as zero.
+     *
+     * Currently, this actually copies elements from an internal calculation of the covariance
+     * matrix (using Mike Jarvis' TMV library).  It could, therefore, be calculated more 
+     * efficiently by direct assignment.  However, as this public member function is foreseen as
+     * being mainly for visualization/checking purposes, we go via the TMV intermediary to avoid
+     * code duplication.  If, in future, it becomes critical to speed up this function this can be
+     * revisited.
+     */
+    Image<double> calculateCovarianceMatrix(
+        const SBProfile& sbp, const Bounds<int>& bounds, double dx);
 
-         /**
-         * @brief Return, as a TMV SymMatrix, a noise covariance matrix between every element in 
-         * an input Image with pixel scale dx.
-         *
-         * The TMV SymMatrix uses FortranStyle indexing (to match the FITS-compliant usage in Image)
-         * along with ColumnMajor ordering (the default), and Upper triangle storage.
-         */
-        tmv::SymMatrix<double, tmv::FortranStyle|tmv::Upper> calculateCovarianceSymMatrix(
-            const SBProfile& sbp, const Bounds<int>& bounds, double dx) const;
-
-    };
+    /**
+     * @brief Return, as a TMV SymMatrix, a noise covariance matrix between every element in an
+     * input Image with pixel scale dx.
+     *
+     * The TMV SymMatrix uses FortranStyle indexing (to match the FITS-compliant usage in Image)
+     * along with ColumnMajor ordering (the default), and Upper triangle storage.
+     */
+    tmv::SymMatrix<double, tmv::FortranStyle|tmv::Upper> calculateCovarianceSymMatrix(
+        const SBProfile& sbp, const Bounds<int>& bounds, double dx);
 
 }
 #endif

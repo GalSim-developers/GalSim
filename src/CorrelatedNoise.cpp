@@ -30,15 +30,15 @@ namespace galsim {
      * Covariance matrix calculation using the an input SBProfile, the dimensions of the image for
      * which a covariance matrix is desired (in the form of a Bounds), and a scale dx
      */
-    Image<double> CorrelationFunction::calculateCovarianceMatrix(
-        const SBProfile& sbp, const Bounds<int>& bounds, double dx) const
+    Image<double> calculateCovarianceMatrix(
+        const SBProfile& sbp, const Bounds<int>& bounds, double dx)
     {
         // Calculate the required dimensions of the image for which a covariance matrix is needed
         int idim = 1 + bounds.getXMax() - bounds.getXMin();
         int jdim = 1 + bounds.getYMax() - bounds.getYMin();
         int covdim = idim * jdim;
         tmv::SymMatrix<double, 
-	    tmv::FortranStyle|tmv::Upper> symcov = calculateCovarianceSymMatrix(&sbp, &bounds, dx);
+	    tmv::FortranStyle|tmv::Upper> symcov = calculateCovarianceSymMatrix(sbp, bounds, dx);
         Image<double> cov = Image<double>(covdim, covdim, 0.);
 
         for (int i=1; i<=covdim; i++){ // note that the Image indices use the FITS convention and 
@@ -52,7 +52,7 @@ namespace galsim {
     }
 
     tmv::SymMatrix<double, tmv::FortranStyle|tmv::Upper> calculateCovarianceSymMatrix(
-        const SBProfile& sbp, const Bounds<int>& bounds, double dx) const
+        const SBProfile& sbp, const Bounds<int>& bounds, double dx)
     {
          // Calculate the required dimensions
         int idim = 1 + bounds.getXMax() - bounds.getXMin();
