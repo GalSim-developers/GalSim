@@ -4,7 +4,7 @@ Demo #11
 The eleventh script in our tutorial about using GalSim in python scripts: examples/demo*.py.
 (This file is designed to be viewed in a window 100 characters wide.)
 
-This script uses a constant PSF from real data (an image read in from a gzipped FITS file, not a
+This script uses a constant PSF from real data (an image read in from a bzipped FITS file, not a
 parametric model) and variable shear according to some cosmological model for which we have a
 tabulated power spectrum at specific k values only.  The 100 galaxies in the 0.25x0.25 degree field
 (representing a low number density of 0.44/arcmin^2) are randomly located and permitted to overlap, but
@@ -21,9 +21,9 @@ New features introduced in this demo:
 
 - psf = galsim.InterpolatedImage(psf_filename, ...)
 - tab = galsim.lensing.TabulatedPk(file, ...)
-- Shears for non-gridded positions.
-- Use of galsim.fits.read for a zipped PSF image.
-- Writing a compressed FITS image for the output.
+- Power spectrum shears for non-gridded positions.
+- Reading a compressed FITS image (using BZip2 compression).
+- Writing a compressed FITS image (using Rice compression).
 """
 
 import sys
@@ -66,7 +66,7 @@ def main(argv):
     random_seed = 3339201
     random_seed_gal = 1234567
 
-    file_name = os.path.join('output','tabulated_power_spectrum.fits.gz')
+    file_name = os.path.join('output','tabulated_power_spectrum.fits.fz')
 
     gal_signal_to_noise = 100
 
@@ -117,14 +117,14 @@ def main(argv):
     # the typical seeing is 1.2" and we want to simulate better seeing, so we will just tell GalSim
     # that the pixel scale is 0.2".  We have to be careful with SDSS PSF images, as they have an
     # added 'soft bias' of 1000 which has been removed before creation of this file, so that the sky
-    # level is properly zero.  Also, the file is gzipped, to demonstrate the new capability of
+    # level is properly zero.  Also, the file is bzipped, to demonstrate the new capability of
     # reading in a file that has been compressed in various ways (which GalSim can infer from the
     # filename).  We want to read the image directly into an InterpolatedImage GSObject, so we can
     # manipulate it as needed (here, the only manipulation needed is convolution).  We want a PSF
     # with flux 1, and we can set the pixel scale using a keyword.
-    psf_file = os.path.join('data','example_sdss_psf_sky0.fits.gz')
+    psf_file = os.path.join('data','example_sdss_psf_sky0.fits.bz2')
     psf = galsim.InterpolatedImage(psf_file, dx = pixel_scale, flux = 1.)
-    logger.info('Read in PSF image from gzipped FITS file')
+    logger.info('Read in PSF image from bzipped FITS file')
 
     # We want to make random positions within our image.  However, currently for shears from a power
     # spectrum we first have to get shears on a grid of positions, and then we can choose random
@@ -207,8 +207,8 @@ def main(argv):
     gal_image -= sky_level_pix
     logger.info('Added noise to final large image')
 
-    # Now write the image to disk.  It's automatically gzipped since the filename we provide ends in
-    # .gz
+    # Now write the image to disk.  It's automatically compressed with Rice compression,
+    # since the filename we provide ends in .fz
     galsim.fits.write(gal_image, file_name)
     logger.info('Wrote image to %r',file_name) 
 
