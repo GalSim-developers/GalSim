@@ -1469,6 +1469,11 @@ class InterpolatedImage(GSObject):
         sbinterpolatedimage = galsim.SBInterpolatedImage(image, self.interpolant, dx=dx,
                                                          pad_factor=pad_factor)
 
+        # GalSim cannot automatically know what stepK and maxK are appropriate for the 
+        # input image.  So it is usually worth it to do a manual calculation here.
+        sbinterpolatedimage.calculateStepK()
+        sbinterpolatedimage.calculateMaxK()
+
         # If the user specified a flux, then set to that flux value.
         if flux != None:
             if type(flux) != flux:
@@ -1481,7 +1486,7 @@ class InterpolatedImage(GSObject):
             sbinterpolatedimage.scaleFlux(1./(dx**2))
         # If the input Image normalization is 'sb' then since that is the SBInterpolated default
         # assumption, no rescaling is needed.
-        
+
         # Initialize the SBProfile
         GSObject.__init__(self, sbinterpolatedimage)
 
