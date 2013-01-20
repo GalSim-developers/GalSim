@@ -333,6 +333,22 @@ class _CorrFunc(object):
             image=image, dx=dx, gain=gain, wmult=wmult, normalization=normalization,
             add_to_image=add_to_image)
 
+    def calculateCovarianceMatrix(self, bounds, dx):
+        """Calculate the covariance matrix for an image with specified properties.
+
+        A correlation function also specifies a covariance matrix for noise in an image of known
+        dimensions and pixel scale.  The user specifies these bounds and pixel scale, and this
+        method returns a covariance matrix as a square ImageD object, with the upper triangle
+        containing the covariance values.
+
+        @param  bounds Bounds corresponding to the dimensions of the image for which a covariance
+                       matrix is required.
+        @param  dx     Pixel scale of the image for which a covariance matrix is required.
+
+        @return The covariance matrix.
+        """
+        return galsim._galsim._calculateCovarianceMatrix(self.profile.SBProfile, bounds, dx)
+
 ###
 # Then we define the ImageCorrFunc, which generates a correlation function by estimating it directly
 # from images:
@@ -459,6 +475,11 @@ class ImageCorrFunc(_CorrFunc):
     """
     def __init__(self, image, dx=0., interpolant=None):
 
+        # Check that the input image is in fact a galsim.ImageSIFD class instance
+        if not isinstance(image, (
+            galsim.BaseImageD, galsim.BaseImageF, galsim.BaseImageS, galsim.BaseImageI)):
+            raise TypeError(
+                "Input image not a galsim.Image class object (e.g. ImageD, ImageViewS etc.)")
         # Build a noise correlation function (CF) from the input image, using DFTs
 
         # Calculate the power spectrum then a (preliminary) CF 

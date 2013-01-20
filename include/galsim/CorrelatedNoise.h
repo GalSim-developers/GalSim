@@ -37,7 +37,8 @@ int verbose_level = 2;
 namespace galsim {
 
     /**
-     * @brief Return, as a square Image, a noise covariance matrix between every element in an input     * Image with pixel scale dx.
+     * @brief Return, as a square Image, a noise covariance matrix between every element in an Image     * with supplied `bounds` and pixel scale `dx` for a correlation function represented as an
+     * SBProfile.
      *
      * The matrix is symmetric, and therefore only the upper triangular elements are actually
      * written into.  The rest are initialized and remain as zero.
