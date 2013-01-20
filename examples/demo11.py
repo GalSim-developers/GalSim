@@ -4,23 +4,20 @@ Demo #11
 The eleventh script in our tutorial about using GalSim in python scripts: examples/demo*.py.
 (This file is designed to be viewed in a window 100 characters wide.)
 
-This script uses a constant PSF from real data (an image read in from a bzipped FITS file, not a
-parametric model) and variable shear according to some cosmological model for which we have a
-tabulated power spectrum at specific k values only.  The 100 galaxies in the 0.25x0.25 degree field
-(representing a low number density of 0.44/arcmin^2) are randomly located and permitted to overlap, but
-we do take care to avoid being too close to the edge of the large image.  For the galaxies, we use a
-random selection from 5 specific RealGalaxy objects, selected to be 5 particularly irregular
-ones. These are taken from the same catalog of 100 objects that demo6 used.
-
-The process of drawing the galaxies in this demo is particularly slow because it is the most
-difficult possible case: realistic galaxy images and a non-parametric PSF profile.  However, because
-we have a relatively large image in the end, and we want to compress the file, the process of
-writing the results to file is also slow.
+This script uses a constant PSF from real data (an image read in from a bzipped FITS file, 
+not a parametric model) and variable shear according to some cosmological model for which we 
+have a tabulated power spectrum at specific k values only.  The 100 galaxies in the 0.25x0.25 
+degree field (representing a low number density of 0.44/arcmin^2) are randomly located and 
+permitted to overlap, but we do take care to avoid being too close to the edge of the large 
+image.  For the galaxies, we use a random selection from 5 specific RealGalaxy objects, 
+selected to be 5 particularly irregular ones. These are taken from the same catalog of 100 
+objects that demo6 used.
 
 New features introduced in this demo:
 
-- psf = galsim.InterpolatedImage(psf_filename, ...)
-- tab = galsim.lensing.TabulatedPk(file, ...)
+- psf = galsim.InterpolatedImage(psf_filename, dx, flux)
+- tab = galsim.lensing.TabulatedPk(file, delta2, units)
+
 - Power spectrum shears for non-gridded positions.
 - Reading a compressed FITS image (using BZip2 compression).
 - Writing a compressed FITS image (using Rice compression).
@@ -157,18 +154,18 @@ def main(argv):
         # Choose a random position within a range that is not too close to the edge.
         x = 0.5*stamp_size + ud()*(image_size - stamp_size)
         y = 0.5*stamp_size + ud()*(image_size - stamp_size)
-        print 'x,y = ',x,y
+        #print 'x,y = ',x,y
 
         # Turn this into a position in arcsec
         pos = galsim.PositionD(x,y) * pixel_scale
-        print 'pos = ',pos
+        #print 'pos = ',pos
 
         # Get the shear at this position.
         g1, g2 = ps.getShear(pos = pos)
 
         # Construct the galaxy:
-        # Loop over the galaxies within our list of 5.
-        index = k % 5
+        # Select randomly from among our list of galaxies.
+        index = int(ud() * len(gal_list))
         gal = gal_list[index]
 
         #   Random rotation
@@ -199,7 +196,7 @@ def main(argv):
         ix = int(math.floor(x+0.5))
         iy = int(math.floor(y+0.5))
         stamp.setCenter(ix,iy)
-        print 'stamp.bounds = ',stamp.bounds
+        #print 'stamp.bounds = ',stamp.bounds
 
         # Find the overlapping bounds:
         bounds = stamp.bounds & full_image.bounds
