@@ -126,13 +126,13 @@ class _ReadFile:
             raise ValueError("Unknown file_compression")
 read_file = _ReadFile()
 
-# Do the same trick for write_file(file,hdus,clobber,file_compress):
+# Do the same trick for write_file(file,hdus,clobber,file_compress,pyfits_compress):
 class _WriteFile:
     def __init__(self):
         # Store whether it is ok to use the in-memory version.
         self.in_mem = True
 
-    def __call__(self, file, hdus, clobber, file_compress):
+    def __call__(self, file, hdus, clobber, file_compress, pyfits_compress):
         import os
         if os.path.isfile(file):
             if clobber:
@@ -180,6 +180,41 @@ class _WriteFile:
     
             fout.write(data)
             fout.close()
+
+        # There is a bug in pyfits where they don't add the size of the variable length array
+        # to the TFORMx header keywords.  They should have a (8) at the end of them.
+        # This bug is not currently fixed as far as I know, but I've filed a tickes (199) 
+        # on the pyfits tracker, so presumably this will be fixed eventually.
+        # TODO: When they do fix it, change the version number here.
+        import pyfits
+        if pyfits_compress and pyfits.__version__ < '9.9':
+            # I couldn't figure out a pyfits way to fix this.  Fixing the hdu._header directly
+            # didn't work because pyfits redetermines the TFORM values in the header (to the 
+            # incorrect values) when it does hdus.writeto(file).  I thought opening the file
+            # with disable_image_compression=True, editing the header and then writing it 
+            # would work.  But apparently pyfits does something to the file that makes it not
+            # open back up as a CompImageHDU anymore when I do that.  So the only way I found
+            # to work is this super-hackish direct edit of the binary data.
+            f = open(file,'rb')
+            data = f.read()
+            f.close()
+            # find the TFORM header keywords
+            i = data.find('TFORM')
+            while i != -1:
+                # Only update if the form is a P = variable length data
+                if data[i+12] == 'P':
+                    # Note: python strings cannot be edited, so we need to make a new string
+                    # that splices in the change we need to make.
+                    data = data[:i+14] + '(8)' + data[i+17:]
+                    #data[i+14:i+17] = '(8)'
+                # find the next one
+                i = data.find('TFORM',i+80)
+            # Write the updated file
+            f = open(file,'wb')
+            f.write(data)
+            f.close()
+
+                
 write_file = _WriteFile()
 
 def write_header(hdu, add_wcs, scale, xmin, ymin):
@@ -215,15 +250,13 @@ def write_header(hdu, add_wcs, scale, xmin, ymin):
 
 def add_hdu(hdus, data, pyfits_compress):
     import pyfits
-    if len(hdus) == 0:
-        if pyfits_compress:
+    if pyfits_compress:
+        if len(hdus) == 0:
             hdus.append(pyfits.PrimaryHDU())  # Need a blank PrimaryHDU
-            hdu = pyfits.CompImageHDU(data, compressionType=pyfits_compress)
-        else:
-            hdu = pyfits.PrimaryHDU(data)
+        hdu = pyfits.CompImageHDU(data, compressionType=pyfits_compress)
     else:
-        if pyfits_compress:
-            hdu = pyfits.CompImageHDU(data, compressionType=pyfits_compress)
+        if len(hdus) == 0:
+            hdu = pyfits.PrimaryHDU(data)
         else:
             hdu = pyfits.ImageHDU(data)
     hdus.append(hdu)
@@ -279,7 +312,7 @@ def write(image, fits, add_wcs=True, clobber=True, compression='auto'):
     write_header(hdu, add_wcs, image.scale, image.xmin, image.ymin)
    
     if isinstance(fits, basestring):
-        write_file(fits,hdus,clobber,file_compress)
+        write_file(fits,hdus,clobber,file_compress, pyfits_compress)
 
 
 def writeMulti(image_list, fits, add_wcs=True, clobber=True, compression='auto'):
@@ -310,7 +343,7 @@ def writeMulti(image_list, fits, add_wcs=True, clobber=True, compression='auto')
         write_header(hdu, add_wcs, image.scale, image.xmin, image.ymin)
    
     if isinstance(fits, basestring):
-        write_file(fits,hdus,clobber,file_compress)
+        write_file(fits,hdus,clobber,file_compress, pyfits_compress)
 
 
 def writeCube(image_list, fits, add_wcs=True, clobber=True, compression='auto'):
@@ -380,7 +413,7 @@ def writeCube(image_list, fits, add_wcs=True, clobber=True, compression='auto'):
     write_header(hdu, add_wcs, scale, xmin, ymin)
 
     if isinstance(fits, basestring):
-        write_file(fits,hdus,clobber,file_compress)
+        write_file(fits,hdus,clobber,file_compress, pyfits_compress)
 
 
 def read(fits, compression='auto'):
