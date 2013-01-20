@@ -58,7 +58,8 @@ def main(argv):
     image_size = int((image_size / galsim.arcsec)/pixel_scale) # convert to pixels
     image_size_arcsec = image_size*pixel_scale # size of big image in each dimension (arcsec)
     sky_level = 1.e4                 # ADU / arcsec^2
-    nobj = 100                       # number of galaxies in entire field
+    nobj = 225                       # number of galaxies in entire field
+                                     # (This corresponds to 1 galaxy / arcmin^2)
     grid_spacing = 10                # The spacing between the samples for the power spectrum 
                                      # realization (arcsec)
     gal_signal_to_noise = 100        # S/N of each galaxy
