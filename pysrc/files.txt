@@ -22,3 +22,4 @@ Random.cpp
 PSFCorr.cpp
 Integ.cpp
 Interpolant.cpp
+CorrelatedNoise.cpp
