@@ -201,8 +201,8 @@ class _WriteFile:
             # find the TFORM header keywords
             i = data.find('TFORM')
             while i != -1:
-                # Only update if the form is a P = variable length data
-                if data[i+12] == 'P':
+                # Only update if the form is a P = variable length data and the (*) is not there.
+                if data[i+12] == 'P' and data[i+14] != '(':
                     # Note: python strings cannot be edited, so we need to make a new string
                     # that splices in the change we need to make.
                     data = data[:i+14] + '(8)' + data[i+17:]
