@@ -555,7 +555,10 @@ class ImageCorrFunc(_CorrFunc):
 
         # Then initialize...
         _CorrFunc.__init__(self, base.InterpolatedImage(
-            original_cf_image, interpolant, dx=original_cf_image.getScale(), normalization="sb"))
+            original_cf_image, interpolant, dx=original_cf_image.getScale(), normalization="sb",
+            calculate_stepk=False, calculate_maxk=False)) # these internal calculations do not seem
+                                                          # to do very well with often sharp-peaked
+                                                          # correlation function images...
 
         # Finally store useful data as a (rootps, dx) tuple for efficient later use:
         self.profile_for_stored = self.profile
