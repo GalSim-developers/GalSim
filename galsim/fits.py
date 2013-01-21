@@ -188,6 +188,17 @@ class _WriteFile:
         # TODO: When they do fix it, change the version number here.
         import pyfits
         if pyfits_compress and pyfits.__version__ < '9.9':
+            # As far as I can tell, the number in () must be = or larger than the size of 
+            # the arrays in question.  This should really be done for each hdu separately, 
+            # but given how I have to do the next step, I just find the maximum value for 
+            # all the hdus and use that for everything.
+            hdus = pyfits.open(file,'readonly',disable_image_compression=True)
+            max_ar_len = max([ len(ar[0]) for hdu in hdus[1:] for ar in hdu.data ])
+            s = '(%d)'%max_ar_len
+
+            # If this will overrun the original 8 char string, need to add a closing quote.
+            if len(s) > 3: s = s + "'"
+
             # I couldn't figure out a pyfits way to fix this.  Fixing the hdu._header directly
             # didn't work because pyfits redetermines the TFORM values in the header (to the 
             # incorrect values) when it does hdus.writeto(file).  I thought opening the file
@@ -205,8 +216,7 @@ class _WriteFile:
                 if data[i+12] == 'P' and data[i+14] != '(':
                     # Note: python strings cannot be edited, so we need to make a new string
                     # that splices in the change we need to make.
-                    data = data[:i+14] + '(8)' + data[i+17:]
-                    #data[i+14:i+17] = '(8)'
+                    data = data[:i+14] + s + data[i+14+len(s):]
                 # find the next one
                 i = data.find('TFORM',i+80)
             # Write the updated file
