@@ -78,7 +78,7 @@ image :
 
     size : 4500 # 0.25 degrees * 3600 arcsec/deg / 0.2 arcsec/pixel
 
-    nobjects : 2 # corresponds to 1 gal / arcmin^2
+    nobjects : 225 # corresponds to 1 gal / arcmin^2
 
     # This time we use stamp_size to set the size of the postage stamp image for each object.
     # In demo9, we left it out, so GalSim automatically determined a good size for each object.

@@ -55,7 +55,7 @@ def main(argv):
     image_size = int((image_size / galsim.arcsec)/pixel_scale) # convert to pixels
     image_size_arcsec = image_size*pixel_scale # size of big image in each dimension (arcsec)
     sky_level = 1.e4                 # ADU / arcsec^2
-    nobj = 2                       # number of galaxies in entire field
+    nobj = 225                       # number of galaxies in entire field
                                      # (This corresponds to 1 galaxy / arcmin^2)
     grid_spacing = 10                # The spacing between the samples for the power spectrum 
                                      # realization (arcsec)
@@ -139,12 +139,10 @@ def main(argv):
     # image, with grid points spaced by 10 arcsec (hence interpolation only happens below 10"
     # scales, below the interesting scales on which we want the shear power spectrum to be
     # represented exactly).  Lensing engine wants positions in arcsec, so calculate that:
-    print 'Before buildGridded: rng() = ',galsim.UniformDeviate(rng)()
     ps.buildGriddedShears(grid_spacing = grid_spacing,
                           ngrid = int(image_size_arcsec / grid_spacing)+1,
                           center = center,
                           rng = rng)
-    print 'After buildGridded: rng() = ',galsim.UniformDeviate(rng)()
     logger.info('Made gridded shears')
 
     # Now we need to loop over our objects:
@@ -162,7 +160,6 @@ def main(argv):
 
         # Get the shear at this position.
         g1, g2 = ps.getShear(pos = pos)
-        print 'shear = (%f, %f)'%(g1,g2)
 
         # Construct the galaxy:
         # Select randomly from among our list of galaxies.
@@ -210,7 +207,6 @@ def main(argv):
     # so it will be part of the same stream of random numbers as rng above.  We have to do this step
     # at the end, rather than adding to individual postage stamps, in order to get the noise level
     # right in the overlap regions between postage stamps.
-    print 'Before add noise: rng() = ',galsim.UniformDeviate(rng)()
     full_image += sky_level_pix
     full_image.addNoise(galsim.CCDNoise(rng))
     full_image -= sky_level_pix

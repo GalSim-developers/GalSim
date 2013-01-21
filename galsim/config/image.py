@@ -599,9 +599,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         full_size = max(full_xsize, full_ysize)
         grid_nx = full_size * pixel_scale / grid_dx + 1
 
-        print 'Before buildGridded: rng() = ',galsim.UniformDeviate(rng)()
         config['power_spectrum'].buildGriddedShears(grid_spacing=grid_dx, ngrid=grid_nx, rng=rng)
-        print 'After buildGridded: rng() = ',galsim.UniformDeviate(rng)()
         # We don't care about the output here.  This just builds the grid, which we'll
         # access for each object using its position.
 

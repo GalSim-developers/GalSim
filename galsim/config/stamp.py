@@ -431,7 +431,6 @@ def AddNoiseFFT(im, weight_im, noise, base, rng, sky_level, logger=None):
     Add noise to an image according to the noise specifications in the noise dict
     appropriate for an image that has been drawn using the FFT method.
     """
-    print 'Start AddNoiseFFT: rng() = ',galsim.UniformDeviate(rng)()
     if not isinstance(noise, dict):
         raise AttributeError("image.noise is not a dict.")
 

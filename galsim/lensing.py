@@ -316,8 +316,6 @@ class PowerSpectrum(object):
         # Build the grid 
         psr = PowerSpectrumRealizer(ngrid, ngrid, grid_spacing, p_E, p_B)
         self.grid_g1, self.grid_g2 = psr(gd)
-        print 'grid_g1 = ',self.grid_g1
-        print 'grid_g2 = ',self.grid_g2
             
         # Setup the images to be interpolated.
         # Note: We don't make the SBInterpolatedImages yet, since it's not picklable. 
@@ -335,26 +333,20 @@ class PowerSpectrum(object):
         # true center. The true center x and y are at (1+ngrid)/2 * grid_spacing.
         # And finally, we may be passed a value to consider the center of the image.
         b = self.im_g1.bounds
-        print 'b = ',b
         nominal_center = galsim.PositionD(b.center().x, b.center().y) * grid_spacing
-        print 'nominal_center = ',nominal_center
         true_center = galsim.PositionD( (1.+ngrid)/2. , (1.+ngrid)/2. ) * grid_spacing
-        print 'true_center = ',true_center
             
         # The offset to be added to any position is then such that if we are 
         # provided the target center position, the result will be the location of 
         # the true center with respect to the nominal center.  In other words:
         #   center + offset = true_center - nominal_center
         self.offset = true_center - nominal_center - center
-        print 'offset = ',self.offset
 
         # Construct a bounds that we can use to check if a provided position will
         # end up falling on the interpolating image.
         self.bounds = galsim.BoundsD((b.xmin-0.5)*grid_spacing, (b.xmax+0.5)*grid_spacing,
                                      (b.ymin-0.5)*grid_spacing, (b.ymax+0.5)*grid_spacing)
-        print 'bounds = ',self.bounds
         self.bounds.shift(-nominal_center - self.offset)
-        print 'bounds => ',self.bounds
 
         return self.grid_g1, self.grid_g2
 
@@ -445,8 +437,6 @@ class PowerSpectrum(object):
 
         # Convert to numpy arrays for internal usage:
         pos_x, pos_y = _convertPositions(pos, units, 'getShear')
-        print 'Start ps.getShear at pos ',pos
-        print 'converted to ',pos_x,pos_y
 
         # Set the interpolant:
         if self.interpolant is None:
@@ -476,8 +466,6 @@ class PowerSpectrum(object):
                 g1.append(0.)
                 g2.append(0.)
             else:
-                print 'get shear at pos = ',pos
-                print 'pos+offset = ',pos+self.offset
                 g1.append(sbii_g1.xValue(pos+self.offset))
                 g2.append(sbii_g2.xValue(pos+self.offset))
         if len(pos_x) == 1:
