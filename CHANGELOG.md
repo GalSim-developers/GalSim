@@ -53,3 +53,11 @@ Changes from v0.2 to v0.3
 * There is a new base class, InterpolatedImage, which contains an SBInterpolatedImage.  Users who
   wish to take some arbitrary input image and manipulate it (shear, convolved, etc.) can use this
   base class as a way of easily carrying out those operations.  (Issue #333)
+
+* There is a new class structure for representing 2D correlation functions, used to describe 
+  correlated noise in images (for example).  The intended user interface is using the
+  `cf = galsim.ImageCorrFunc(image)` constructor, which calculates the discrete correlation function
+  between pixels in the input image.  The `cf` instance acts as a container for an internal 
+  `GSObject` representation of this correlation function, making many `GSObject` operations
+  available (Issue #297).
+
