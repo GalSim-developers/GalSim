@@ -11,7 +11,7 @@ from . import utilities
 class _CorrFunc(object):
     """A class describing 2D correlation functions, typically calculated from Images.
 
-    A CorrFunc will not generally be instantiated directly.  It defines the way in which derived
+    A _CorrFunc will not generally be instantiated directly.  It defines the way in which derived
     classes (currently only the ImageCorrFunc) store the correlation function profile and generates
     images containing noise with these correlation properties.
     """
@@ -39,17 +39,17 @@ class _CorrFunc(object):
         self.profile.getFlux = self._notImplemented
         self.profile.drawShoot = self._notImplemented # this isn't really needed
         
-        # The statements below replace the self.profile.scaleFlux method with the much more
-        # appropriately named self.profile.scaleVariance method
+        # Add the much more appropriately named self.profile.scaleVariance method to the .profile
+        # as well has having it available directly as a _CorrFunc method
         self.profile.scaleVariance = self.scaleVariance
         
-        # We use a similar pattern to replace the GSObject draw() method with a version that always
+        # Use a similar pattern to replace the GSObject draw() method with a version that always
         # uses the "surface brightness" normalization rather than the default "flux"
         if not hasattr(self.profile, "_drawHidden"): # only do following once or becomes circular...
             self.profile._drawHidden = self.profile.draw # hide the method for internal use
         self.profile.draw = self.draw
 
-        #
+        # Redefine all of the .profile arithmetic operators to use the _CorrFunc implementations
         self.profile.__idiv__ = self.__idiv__
         self.profile.__itruediv__ = self.__itruediv__
         self.profile.__imul__ = self.__imul__
@@ -57,7 +57,7 @@ class _CorrFunc(object):
         self.profile.__truediv__ = self.__truediv__
         self.profile.__mul__ = self.__mul__
 
-    # Make add work in the intuitive sense (variances being additive, correlation functions add as
+    # Make "+" work in the intuitive sense (variances being additive, correlation functions add as
     # you would expect)
     def __add__(self, other):
         ret = self.copy()
@@ -85,7 +85,7 @@ class _CorrFunc(object):
 
     # Likewise for op/ and op/=
     def __idiv__(self, other):
-        self.profile.scaleVariance(1. / other)
+        self.scaleVariance(1. / other)
         return self
 
     def __div__(self, other):
@@ -470,6 +470,13 @@ class ImageCorrFunc(_CorrFunc):
     If `dx` is not set the value returned by `image.getScale()` is used unless this is <= 0, in
     which case a scale of 1 is assumed.
 
+    Another method that may be of use is
+
+        cf.calculateCovarianceMatrix(im.bounds, dx)
+
+    which can be used to generate a covariance matrix based on a user input image geometry.  See
+    the `calculateCovarianceMatrix` docstring for more information.
+
     As already described, a number of the GSObject functions have also been implemented directly
     as`cf` methods.  See the 'Attributes' Section above.
     """
@@ -553,7 +560,7 @@ class ImageCorrFunc(_CorrFunc):
 
 # Make a function for returning Noise correlations
 def _Image_getCorrFunc(image):
-    """Returns a CorrFunc instance by calculating the correlation function of image pixels.
+    """Returns an ImageCorrFunc instance by calculating the correlation function of image pixels.
     """
     return ImageCorrFunc(image)
 
