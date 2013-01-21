@@ -367,16 +367,10 @@ def test_draw():
     testim1 = galsim.ImageD(smallim_size_odd, smallim_size_odd)
     ncf.draw(testim1, dx=1.)
     # Then compare the odd-sized arrays:
-    #np.testing.assert_array_almost_equal(
-        #testim1.array, ncf.original_cf_image.array, decimal=decimal_precise, 
-        #err_msg="Drawn image does not match internal correlation function.")
     np.testing.assert_array_almost_equal(
         testim1.array, cf_array, decimal=decimal_precise, 
         err_msg="Drawn image does not match independently calculated correlation function.")
-    # Now we do even; we can use the pre-generated uncorr_noise_small, but we need to watch out for
-    # the fact that the internals of ImageCorrFunc.__init__ make the internally stored CF array odd
-    # sized by copy pasting, to make the interpolation and two-fold symmetry work better at the C++
-    # layer:
+    # Now we do even
     ft_array = np.fft.fft2(uncorr_noise_small.array)
     # Calculate the power spectrum then correlation function
     ps_array = (ft_array * ft_array.conj()).real
@@ -387,11 +381,6 @@ def test_draw():
     testim1 = galsim.ImageD(smallim_size, smallim_size)
     ncf.draw(testim1, dx=1.)
     # Then compare the even-sized arrays:
-    #np.testing.assert_array_almost_equal( # note in this first test we exclude the upper row and
-                                          # rightmost column of the ncf.original_cf_image, since
-                                          # these have been added within the ImageCorrFunc.__init__
-        #testim1.array, ncf.original_cf_image.array[0:-1, 0:-1], decimal=decimal_precise, 
-        #err_msg="Drawn image does not match internal correlation function.")
     np.testing.assert_array_almost_equal(
         testim1.array, cf_array, decimal=decimal_precise, 
         err_msg="Drawn image does not match independently calculated correlation function.")
@@ -432,10 +421,15 @@ def test_output_generation_rotated():
     # function (CF) brings in beyond-edge regions (imagine rotating a square but trimming within a
     # fixed square border of the same size).  These seem to add excess variance, perhaps due to
     # interpolant behaviour across transition to formal zero in the CF, which ruins agreement at
-    # 2dp (still OK to 1dp or better).  This might be related to ringing in the power spectrum.
+    # 2dp (still OK to 1dp or better).  This behaviour is quite strongly dependent on interpolant,
+    # with Linear seeming to provide the best performance.  This is also likely to be related to
+    # the fact that we do not zero-pad while generating the noise field as we might while generating
+    # a galaxy in an empty patch of sky: the Linear interpolatant has a limited real space support.
+    #
     # Therefore, we rotate a CF with a support larger than the output region we simulate: this works
     # well at 2dp.
-    # TODO: I'd like to understand more about the former behaviour though...
+    #
+    # TODO: It would be good to understand more about the detailed interpolant behaviour though...
     ncf = galsim.ImageCorrFunc(ynoise_xlarge, dx=1.)
     # Then loop over some angles
     angles = [28.7 * galsim.degrees, 135. * galsim.degrees]
@@ -471,8 +465,10 @@ def test_output_generation_magnified():
     refim = galsim.ImageD(smallim_size, smallim_size)
     # Draw this for reference
     ncf.draw(refim, dx=1.)
-    # Then loop over some scales
-    scales = [0.03, 10.] # these have to be half sensible I think
+    # Then loop over some scales, using `applyNoiseTo` with the relevant scaling in the `dx` to
+    # argument check that the underlying correlation function is preserved when both `dx` and
+    # a magnification factor `scale` change in the same sense
+    scales = [0.03, 11.]
     for scale in scales:
         ncf_scl = ncf.createMagnified(scale)
         # Generate a large image containing noise according to this function
@@ -481,7 +477,7 @@ def test_output_generation_magnified():
         # Summed (average) ImageCorrFuncs should be approximately equal to the input, so avg
         # multiple CFs
         ncf_2ndlevel = galsim.ImageCorrFunc(outimage, dx=1.)
-        for i in range(nsum_test + 3 - 1): # Need to add a little here to beat down noise
+        for i in range(nsum_test + 3 - 1): # Need to add here to nsum_test to beat down noise
             # Then repeat
             outimage.setZero()
             ncf_scl.applyNoiseTo(outimage, dx=scale, dev=glob_ud) # apply noise using scale
