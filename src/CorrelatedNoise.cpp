@@ -38,7 +38,7 @@ namespace galsim {
         int jdim = 1 + bounds.getYMax() - bounds.getYMin();
         int covdim = idim * jdim;
         tmv::SymMatrix<double,
-	    tmv::FortranStyle|tmv::Upper> symcov = calculateCovarianceSymMatrix(sbp, bounds, dx);
+        tmv::FortranStyle|tmv::Upper> symcov = calculateCovarianceSymMatrix(sbp, bounds, dx);
         Image<double> cov = Image<double>(covdim, covdim, 0.);
 
         for (int i=1; i<=covdim; i++){ // note that the Image indices use the FITS convention and 
@@ -70,8 +70,8 @@ namespace galsim {
                                        // start from 1!!
             for (int j=i; j<=covdim; j++){
 
-	        k = ((j - 1) / jdim) - ((i - 1) / idim);  // using integer division rules here
-	        ell = ((j - 1) % jdim) - ((i - 1) % idim);
+            k = ((j - 1) / jdim) - ((i - 1) / idim);  // using integer division rules here
+            ell = ((j - 1) % jdim) - ((i - 1) % idim);
                 x_k = double(k) * dx;
                 y_ell = double(ell) * dx;
                 Position<double> p = Position<double>(x_k, y_ell);
