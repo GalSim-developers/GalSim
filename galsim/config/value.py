@@ -93,22 +93,9 @@ def _GetAngleValue(param, param_name):
     try :
         value, unit = param.rsplit(None,1)
         value = float(value)
-        unit = unit.lower()
-        if unit.startswith('rad') :
-            return galsim.Angle(value, galsim.radians)
-        elif unit.startswith('deg') :
-            return galsim.Angle(value, galsim.degrees)
-        elif unit.startswith('hour') :
-            return galsim.Angle(value, galsim.hours)
-        elif unit.startswith('hr') :
-            return galsim.Angle(value, galsim.hours)
-        elif unit.startswith('arcmin') :
-            return galsim.Angle(value, galsim.arcmin)
-        elif unit.startswith('arcsec') :
-            return galsim.Angle(value, galsim.arcsec)
-        else :
-            raise AttributeError("Unknown Angle unit: %s for %s param"%(unit,param_name))
-    except :
+        unit = galsim.angle.get_angle_unit(unit)
+        return galsim.Angle(value, unit)
+    except Exception as e:
         raise AttributeError("Unable to parse %s param = %s as an Angle."%(param_name,param))
 
 
