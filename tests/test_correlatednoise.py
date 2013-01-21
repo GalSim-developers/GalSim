@@ -557,4 +557,4 @@ if __name__ == "__main__":
     test_draw()
     test_output_generation_basic()
     test_output_generation_rotated()
-    test_output_generation_scaled()
+    test_output_generation_magnified()
