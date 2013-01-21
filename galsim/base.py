@@ -782,7 +782,7 @@ class GSObject(object):
         else:
             if im == None:
                 raise ValueError("im is None, but re is not None")
-            if dx is None:
+            if dk is None:
                 if re.getScale() != im.getScale():
                     raise ValueError("re and im do not have the same input scale")
             if re.getBounds().isDefined() or im.getBounds().isDefined():
