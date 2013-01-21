@@ -1,6 +1,5 @@
 import galsim
 
-
 def ParseValue(config, param_name, base, value_type):
     """@brief Read or generate a parameter value from config.
 
@@ -702,7 +701,7 @@ def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
     # Only Check, not Get.  (There's nothing to get -- just make sure there aren't extra params.)
     CheckAllParams(param, param_name, req=req)
 
-    #print 'PowerSpectrumShear: pos = ',pos
+    print 'PowerSpectrumShear: pos = ',pos
     try:
         g1,g2 = base['power_spectrum'].getShear(pos)
         #print 'g1,g2 = ',g1,g2
@@ -712,7 +711,7 @@ def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
         warnings.warn("Warning: PowerSpectrum shear is invalid -- probably strong lensing!  " +
                       "Using shear = 0.")
         shear = galsim.Shear(g1=0,g2=0)
-    #print 'shear = ',shear
+    print 'shear = ',shear
     return shear, False
 
 

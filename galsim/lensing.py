@@ -132,40 +132,15 @@ class PowerSpectrum(object):
                 
         self.e_power_function = e_power_function
         self.b_power_function = b_power_function
-        for pf_str in [ 'e_power_function', 'b_power_function' ]:
-            pf = getattr(self,pf_str)
-            if pf is not None:
-                # Convert string inputs to either a lambda function or LookupTable
-                if isinstance(pf,str):
-                    import os
-                    if os.path.isfile(pf):
-                        try:
-                            pf = galsim.LookupTable(file=pf, x_log=True, f_log=True)
-                        except :
-                            raise AttributeError(
-                                "Unable to read %s = %s as a LookupTable"%(pf_str,pf))
-                    else:
-                        try : 
-                            pf = eval('lambda k : ' + pf)
-                        except :
-                            raise AttributeError(
-                                "Unable to turn %s = %s into a valid function"%(pf_str,pf))
-                    setattr(self,pf_str,pf)
-                # Check that the function is sane.
-                # Note: Only try tests below if it's not a LookupTable.
-                #       (If it's a LookupTable, then it could be a valid function that isn't 
-                #        defined at k=1, and by definition it must return something that is the 
-                #        same length as the input.)
-                if not isinstance(pf, galsim.LookupTable):
-                    try:
-                        f1 = pf(1.)
-                    except:
-                        raise AttributeError("%s is not a valid function"%pf_str)
-                    fake_arr = np.zeros(2)
-                    fake_p = pf(fake_arr)
-                    if isinstance(fake_p, float):
-                        raise AttributeError(
-                            "Power function MUST return a list/array same length as input")
+        self.delta2 = delta2
+
+        # Try these conversions, but we don't actually keep the output.  This just 
+        # provides a way to test if the arguments are sane.
+        # Note: we redo this in buildGriddedShears for real rather than keeping the outputs
+        # (e.g. in self.e_power_function, self.b_power_function) so that PowerSpectrum is 
+        # picklable.  It turns out lambda functions are not picklable.
+        self._convert_power_function(self.e_power_function,'e_power_function')
+        self._convert_power_function(self.b_power_function,'b_power_function')
 
         # Check validity of units
         if isinstance(units, basestring):
@@ -175,22 +150,9 @@ class PowerSpectrum(object):
             raise ValueError("units must be either an AngleUnit or a string")
 
         if units == galsim.arcsec:
-            scale = 1
+            self.scale = 1
         else:
-            scale = 1. * units / galsim.arcsec
-
-        # The functions we are actually going to use will be p_E and p_B.
-        # If we actually have Delta^2, then we must convert to power, which is
-        # dimensionless.  Also account for the possible unit scaling here.
-        if self.e_power_function is None: self.p_E = None
-        elif delta2: self.p_E = lambda k : (scale*k)**2 * self.e_power_function(scale*k)/(2.*np.pi)
-        elif scale != 1: self.p_E = lambda k : self.e_power_function(scale*k)
-        else: self.p_E = self.e_power_function
-
-        if self.b_power_function is None: self.p_B = None
-        elif delta2: self.p_B = lambda k : (scale*k)**2 * self.b_power_function(scale*k)/(2.*np.pi)
-        elif scale != 1: self.p_B = lambda k : self.b_power_function(scale*k)
-        else: self.p_B = self.b_power_function
+            self.scale = 1. * units / galsim.arcsec
 
 
     def buildGriddedShears(self, grid_spacing=None, ngrid=None, rng=None,
@@ -313,21 +275,53 @@ class PowerSpectrum(object):
         else:
             raise TypeError("The rng provided to getShear is not a BaseDeviate")
 
-        # Set default interpolant if none given
-        if interpolant is None:
-            interpolantxy = galsim.InterpolantXY(galsim.Linear())
-        elif isinstance(interpolant, galsim.Interpolant):
-            interpolantxy = galsim.InterpolantXY(interpolant)
-        elif isinstance(interpolant, galsim.InterpolantXY):
-            interpolantxy = interpolant
+        # Check that the interpolant is valid
+        self.interpolant = interpolant
+        try :
+            if self.interpolant is None:
+                pass
+            elif isinstance(interpolant, galsim.Interpolant):
+                galsim.InterpolantXY(self.interpolant)
+            elif isinstance(interpolant, galsim.InterpolantXY):
+                pass
+            else:
+                raise TypeError()
+        except:
+            raise TypeError("Invalid interpolant provided to PowerSpectrum.buildGriddedShears")
+
+        # Convert power_functions into callables:
+        e_power_function = self._convert_power_function(self.e_power_function,'e_power_function')
+        b_power_function = self._convert_power_function(self.b_power_function,'b_power_function')
+
+        # If we actually have Delta^2, then we must convert to power, which is
+        # dimensionless.  Also account for the possible unit scaling here.
+        if e_power_function is None:
+            p_E = None
+        elif self.delta2:
+            p_E = lambda k : (self.scale*k)**2 * e_power_function(self.scale*k)/(2.*np.pi)
+        elif self.scale != 1:
+            p_E = lambda k : e_power_function(self.scale*k)
+        else: 
+            p_E = e_power_function
+
+        if b_power_function is None:
+            p_B = None
+        elif self.delta2:
+            p_B = lambda k : (self.scale*k)**2 * b_power_function(self.scale*k)/(2.*np.pi)
+        elif self.scale != 1:
+            p_B = lambda k : b_power_function(self.scale*k)
         else:
-            raise TypeError("Invalid interpolant provided to PowerSpectrum.getShear")
+            p_B = b_power_function
 
         # Build the grid 
-        psr = PowerSpectrumRealizer(ngrid, ngrid, grid_spacing, self.p_E, self.p_B)
+        psr = PowerSpectrumRealizer(ngrid, ngrid, grid_spacing, p_E, p_B)
         self.grid_g1, self.grid_g2 = psr(gd)
+        print 'grid_g1 = ',self.grid_g1
+        print 'grid_g2 = ',self.grid_g2
             
-        # Setup interpolated images
+        # Setup the images to be interpolated.
+        # Note: We don't make the SBInterpolatedImages yet, since it's not picklable. 
+        #       So just created them when we are actually going to use them.
         self.im_g1 = galsim.ImageViewD(self.grid_g1)
         self.im_g1.setScale(grid_spacing)
 
@@ -341,26 +335,64 @@ class PowerSpectrum(object):
         # true center. The true center x and y are at (1+ngrid)/2 * grid_spacing.
         # And finally, we may be passed a value to consider the center of the image.
         b = self.im_g1.bounds
+        print 'b = ',b
         nominal_center = galsim.PositionD(b.center().x, b.center().y) * grid_spacing
+        print 'nominal_center = ',nominal_center
         true_center = galsim.PositionD( (1.+ngrid)/2. , (1.+ngrid)/2. ) * grid_spacing
+        print 'true_center = ',true_center
             
         # The offset to be added to any position is then such that if we are 
         # provided the target center position, the result will be the location of 
         # the true center with respect to the nominal center.  In other words:
         #   center + offset = true_center - nominal_center
         self.offset = true_center - nominal_center - center
+        print 'offset = ',self.offset
 
         # Construct a bounds that we can use to check if a provided position will
         # end up falling on the interpolating image.
         self.bounds = galsim.BoundsD((b.xmin-0.5)*grid_spacing, (b.xmax+0.5)*grid_spacing,
                                      (b.ymin-0.5)*grid_spacing, (b.ymax+0.5)*grid_spacing)
+        print 'bounds = ',self.bounds
         self.bounds.shift(-nominal_center - self.offset)
-
-        # Make an SBInterpolatedImage, which will do the heavy lifting for the interpolation.
-        self.sbii_g1 = galsim.SBInterpolatedImage(self.im_g1, xInterp = interpolantxy)
-        self.sbii_g2 = galsim.SBInterpolatedImage(self.im_g2, xInterp = interpolantxy)
+        print 'bounds => ',self.bounds
 
         return self.grid_g1, self.grid_g2
+
+    def _convert_power_function(self, pf, pf_str):
+        if pf is None: return None
+
+        # Convert string inputs to either a lambda function or LookupTable
+        if isinstance(pf,str):
+            import os
+            if os.path.isfile(pf):
+                try:
+                    pf = galsim.LookupTable(file=pf, x_log=True, f_log=True)
+                except :
+                    raise AttributeError(
+                        "Unable to read %s = %s as a LookupTable"%(pf_str,pf))
+            else:
+                try : 
+                    pf = eval('lambda k : ' + pf)
+                except :
+                    raise AttributeError(
+                        "Unable to turn %s = %s into a valid function"%(pf_str,pf))
+
+        # Check that the function is sane.
+        # Note: Only try tests below if it's not a LookupTable.
+        #       (If it's a LookupTable, then it could be a valid function that isn't 
+        #        defined at k=1, and by definition it must return something that is the 
+        #        same length as the input.)
+        if not isinstance(pf, galsim.LookupTable):
+            try:
+                f1 = pf(1.)
+            except:
+                raise AttributeError("%s is not a valid function"%pf_str)
+            fake_arr = np.zeros(2)
+            fake_p = pf(fake_arr)
+            if isinstance(fake_p, float):
+                raise AttributeError(
+                    "Power function MUST return a list/array same length as input")
+        return pf
 
 
     def getShear(self, pos=None, units=galsim.arcsec):
@@ -411,9 +443,25 @@ class PowerSpectrum(object):
         if not hasattr(self, 'im_g1'):
             raise RuntimeError("PowerSpectrum.buildGriddedShears must be called before getShear")
 
-
         # Convert to numpy arrays for internal usage:
         pos_x, pos_y = _convertPositions(pos, units, 'getShear')
+        print 'Start ps.getShear at pos ',pos
+        print 'converted to ',pos_x,pos_y
+
+        # Set the interpolant:
+        if self.interpolant is None:
+            interpolantxy = galsim.InterpolantXY(galsim.Linear())
+        elif isinstance(interpolant, galsim.Interpolant):
+            interpolantxy = galsim.InterpolantXY(self.interpolant)
+        elif isinstance(interpolant, galsim.InterpolantXY):
+            interpolantxy = self.interpolant
+        else:
+            raise TypeError("Invalid interpolant provided to PowerSpectrum.buildGriddedShears")
+
+        # Make an SBInterpolatedImage, which will do the heavy lifting for the 
+        # interpolation.
+        sbii_g1 = galsim.SBInterpolatedImage(self.im_g1, xInterp=interpolantxy)
+        sbii_g2 = galsim.SBInterpolatedImage(self.im_g2, xInterp=interpolantxy)
 
         # interpolate if necessary
         g1,g2 = [], []
@@ -428,8 +476,10 @@ class PowerSpectrum(object):
                 g1.append(0.)
                 g2.append(0.)
             else:
-                g1.append(self.sbii_g1.xValue(pos+self.offset))
-                g2.append(self.sbii_g2.xValue(pos+self.offset))
+                print 'get shear at pos = ',pos
+                print 'pos+offset = ',pos+self.offset
+                g1.append(sbii_g1.xValue(pos+self.offset))
+                g2.append(sbii_g2.xValue(pos+self.offset))
         if len(pos_x) == 1:
             return g1[0], g2[0]
         else:

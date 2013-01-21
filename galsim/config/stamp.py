@@ -215,9 +215,9 @@ def BuildSingleStamp(config, xsize, ysize,
     # Initialize the random number generator we will be using.
     if 'random_seed' in config['image']:
         seed = galsim.config.ParseValue(config['image'],'random_seed',config,int)[0]
-        rng = galsim.UniformDeviate(seed)
+        rng = galsim.BaseDeviate(seed)
     else:
-        rng = galsim.UniformDeviate()
+        rng = galsim.BaseDeviate()
     # Store the rng in the config for use by BuildGSObject function.
     config['rng'] = rng
     if 'gd' in config:
@@ -431,6 +431,7 @@ def AddNoiseFFT(im, weight_im, noise, base, rng, sky_level, logger=None):
     Add noise to an image according to the noise specifications in the noise dict
     appropriate for an image that has been drawn using the FFT method.
     """
+    print 'Start AddNoiseFFT: rng() = ',galsim.UniformDeviate(rng)()
     if not isinstance(noise, dict):
         raise AttributeError("image.noise is not a dict.")
 
