@@ -127,6 +127,12 @@ def BuildGSObject(config, key, base=None):
 
     return gsobject, safe
 
+def _BuildNone(config, key, base, ignore):
+    """@brief Special type=None returns None
+    """
+    return None, True
+
+
 def _BuildAdd(config, key, base, ignore):
     """@brief  Build an Add object
     """
