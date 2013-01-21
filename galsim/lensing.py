@@ -113,18 +113,30 @@ class PowerSpectrum(object):
                             eval('lambda k : ' + e_power_function), or file_name from which to
                             read in a LookupTable.
     @param delta2           Is the power actually given as Delta^2, which requires us to multiply 
-                            by k^2 / (2pi) to get the shear power P(k)?  [Default: False]
+                            by k^2 / (2pi) to get the shear power P(k)?  [default = False]
                             Note that if Delta^2 is provided, then it is critical that it have 
                             units consistent with the units for k.
     @param units            The angular units used for the power spectrum (i.e. the units of 
-                            k^-1). [Default: arcsec]
+                            k^-1). [default = arcsec]
+
+    The following parameters are passed to buildGriddedShears.  See that function for more details.
+
+    @param grid_spacing     Spacing for an evenly spaced grid of points, in arcsec.
+    @param ngrid            Number of grid points in each dimension.
+    @param rng              (Optional) A galsim.BaseDeviate object.
+    @param interpolant      (Optional) Interpolant to use for interpolating the shears on a grid
+                            to the requested positions. [default = galsim.Linear()]
+    @param center           (Optional) The position you want to consider the center of that grid.
+                            [default = (0,0)]
     """
-    _req_params = {}
+    _req_params = { 'grid_spacing' : float, 'ngrid' : int }
     _opt_params = { 'e_power_function' : str, 'b_power_function' : str,
                     'delta2' : bool, 'units' : str }
     _single_params = []
-    def __init__(self, e_power_function=None, b_power_function=None,
-                 delta2=False, units=galsim.arcsec):
+    def __init__(self, grid_spacing, ngrid, 
+                 e_power_function=None, b_power_function=None,
+                 delta2=False, units=galsim.arcsec,
+                 rng=None, interpolant=None, center=galsim.PositionD(0,0)):
         # Check that at least one power function is not None
         if e_power_function is None and b_power_function is None:
             raise AttributeError(
@@ -179,8 +191,9 @@ class PowerSpectrum(object):
         else:
             scale = 1. * galsim.arcsec / units
 
+        # The functions we are actually going to use will be p_E and p_B.
         # If we actually have Delta^2, then we must convert to power, which is
-        # dimensionless.
+        # dimensionless.  Also account for the possible unit scaling here.
         if delta2:
             self.p_E = lambda k : (scale*k)**2 * self.e_power_function(scale*k)/(2.*np.pi)
             self.p_B = lambda k : (scale*k)**2 * self.b_power_function(scale*k)/(2.*np.pi)
@@ -188,20 +201,19 @@ class PowerSpectrum(object):
             self.p_E = lambda k : self.e_power_function(scale*k)
             self.p_B = lambda k : self.b_power_function(scale*k)
         else:
-            self.p_E = e_power_function
-            self.p_B = b_power_function
+            self.p_E = self.e_power_function
+            self.p_B = self.b_power_function
+        self.buildGriddedShears(grid_spacing,ngrid,rng,interpolant,center)
 
 
-    def getShear(self, pos=None, units=galsim.arcsec, grid_spacing=None, ngrid=None, rng=None,
-                 interpolant=None, center=galsim.PositionD(0,0)):
-        """Generate a realization of the current power spectrum at the specified positions.
+    def buildGriddedShears(self, grid_spacing=None, ngrid=None, rng=None,
+                           interpolant=None, center=galsim.PositionD(0,0)):
+        """Generate a realization of the current power spectrum an the specified grid.
 
-        This function currently does two relatively separate things.  The plan is to split it into
-        two functions, but we haven't done so yet.
-        
-        First, it will generate a Gaussian random realization of the specified E and B mode shear
-        power spectrum at a grid of positions, specified by the input parameters `grid_spacing` 
-        (distance between grid points) and `ngrid` (number of grid points in each direction.)
+        This function will generate a Gaussian random realization of the specified E and B mode 
+        shear power spectra at a grid of positions, specified by the input parameters 
+        `grid_spacing` (distance between grid points) and `ngrid` (number of grid points in each 
+        direction.)
 
         The normalization of the shears from a given power spectrum is defined as follows: if 
         P_E(k)=P_B(k)=P [const],
@@ -221,23 +233,21 @@ class PowerSpectrum(object):
         challenge, so when using codes that deal with GREAT10 challenge outputs, the sign of our g2
         shear component must be flipped.
 
-        Second, this function can interpolate between the grid points to find the shear values for a
-        given list of input positions (or just a single position).  This can be done in conjunction
-        with the first functionality, in which case the grid will be computed using the `grid_*`
-        parameters and then that new grid will be used to interpolate the shear values.  Or you can
-        omit the `grid_*` parameters, in which case the function will use the most recently computed
-        grid from a previous call.  Currently, if you try to interpolate a grid without having
-        previously called `getShear` with the `grid_*` parameters, then an exception will be raised.
-        A future version of the code will allow the estimation of shears on non-gridded points by
-        first automatically choosing a grid spacing on which to estimate gridded shears before
-        interpolating, but this functionality is not implemented yet.
+        This function is called automatically from the constructor, but you can also call it
+        manually to re-build the grid.  If you want to access the grid that is build during
+        construction, you can use `getGriddedShears`.  On a rebuild, the grid is returned
+        by buildGriddedShears.
 
-        Some examples of how to use getShear:
+        Note that the interpolation modifies the effective power spectrum somewhat.  The user is 
+        responsible for choosing a grid size that is small enough not to significantly modify the
+        power spectrum on the scales of interest. 
 
-        1. Create a grid of points separated by 1 arcsec:
+        Some examples:
 
-               my_ps = galsim.PowerSpectrum(lambda k : k**2)
-               g1, g2 = my_ps.getShear(grid_spacing = 1., ngrid = 100)
+        1. Get shears on a grid of points separated by 1 arcsec:
+
+               my_ps = galsim.PowerSpectrum(lambda k : k**2, grid_spacing = 1., ngrid = 100)
+               g1, g2 = my_ps.getGriddedShears()
 
            The returned g1,g2 are 2-d numpy arrays of values, corresponding to the values of 
            g1,g2 at the locations of the grid points.
@@ -253,53 +263,20 @@ class PowerSpectrum(object):
 
            where the center of the grid is taken to be (0,0).
 
-        2. Same thing, but use a particular rng and set the location of the center of the grid
+        2. Rebuild the grid using a particular rng and set the location of the center of the grid
            to be something other than the default (0,0)
 
-               g1, g2 = my_ps.getShear(grid_spacing = 8., ngrid = 65,
-                                       rng = galsim.BaseDeviate(1413231),
-                                       center = (256.5, 256.5) )
+               g1, g2 = my_ps.buildGriddedShears(grid_spacing = 8., ngrid = 65,
+                                                 rng = galsim.BaseDeviate(1413231),
+                                                 center = (256.5, 256.5) )
 
-        3. Use the previously created grid to get the shear for a particular point:
-
-               g1, g2 = my_ps.getShear(pos = galsim.PositionD(12, 412))
-
-           This time the returned values are just floats and correspond to the shear for the
-           provided position.
-
-        4. You can also provide a position as a tuple to save the explicit PositionD construction:
-
-               g1, g2 = my_ps.getShear(pos = (12, 412))
-
-        5. Get the shears for a bunch of points at once:
-        
-               xlist = [ 141, 313,  12, 241, 342 ]
-               ylist = [  75, 199, 306, 225, 489 ]
-               poslist = [ galsim.PositionD(xlist[i],ylist[i]) for i in range(len(xlist)) ]
-               g1, g2 = my_ps.getShear( poslist )
-               g1, g2 = my_ps.getShear( (xlist, ylist) )
-
-           Both calls do the same thing.  The returned g1, g2 this time are lists of g1, g2 values.
-           The lists are the same length as the number of input positions.
-
-        6. Make a PowerSpectrum from a tabulated P(k) that gets interpolated to find the power at
-        all necessary values of k, then generate shears on a grid.  Assuming that k and P_k are
-        either lists, tuples, or 1d Numpy arrays containing k and P(k):
+        3. Make a PowerSpectrum from a tabulated P(k) that gets interpolated to find the power at
+           all necessary values of k, then generate shears on a grid.  Assuming that k and P_k are
+           either lists, tuples, or 1d Numpy arrays containing k and P(k):
 
                tab_pk = galsim.LookupTable(k, P_k)
-               my_ps = galsim.PowerSpectrum(tab_pk)
-               g1, g2 = my_ps.getShear(grid_spacing = 1., grid_nx = 100)
+               my_ps = galsim.PowerSpectrum(tab_pk, grid_spacing = 1., grid_nx = 100)
 
-        @param pos              Position(s) of the source(s), assumed to be post-lensing!  (It is 
-                                up to the user to check that the units are consistent with those in 
-                                the P(k) function, just as for the grid_spacing keyword.)
-                                Valid ways to input this:
-                                  - Single galsim.PositionD (or PositionI) instance
-                                  - tuple of floats: (x,y)
-                                  - list of galsim.PositionD (or PositionI) instances
-                                  - tuple of lists: ( xlist, ylist )
-                                pos may also be None to just build a gridded array of (g1,g2).
-        @param units            The angular units used for the positions.  [Default: arcsec]
         @param grid_spacing     Spacing for an evenly spaced grid of points, in arcsec for
                                 consistency with the natural length scale of images created using
                                 the draw or drawShoot methods.
@@ -309,13 +286,7 @@ class PowerSpectrum(object):
         @param rng              (Optional) A galsim.GaussianDeviate object for drawing the random
                                 numbers.  (Alternatively, any BaseDeviate can be used.)
         @param interpolant      (Optional) Interpolant to use for interpolating the shears on a grid
-                                to the requested positions.
-                                This is highly recommended to be Linear (which will become
-                                bi-linear, since it is in 2 dimensions).  Using other interpolants
-                                is likely to be inaccurate, though on small enough scales even the
-                                linear interpolant will be problematic.  A future version of the
-                                code will quantify this inaccuracy due to the interpolant in greater
-                                detail. [default = galsim.Linear()]
+                                to the requested positions.  [default = galsim.Linear()]
         @param center           (Optional) If setting up a new grid, define what position you
                                 want to consider the center of that grid. [default = (0,0)]
         
@@ -323,36 +294,15 @@ class PowerSpectrum(object):
                                 If given a list of positions: each is a python list of values.
                                 If pos=None, these are 2-d NumPy arrays.
         """
-        # This used to be part of the doc string.  It was moved here for now, since this 
-        # functionality isn't implemented yet.
-        #
-        # When using a non-gridded set of points, the code has to choose an appropriate spacing for
-        # a grid and then interpolate the gridded shears to the specified set of points.  It does
-        # this by requiring that the modification to the power spectrum due to a (bi)linear 
-        # interpolant should not be significant at the minimum separation between points.  The user
-        # should be aware that use of an interpolant that is not linear does not change how this 
-        # calculation is done, and therefore it is necessary to test the fidelity of the recovered 
-        # power spectrum for any errors due to the chosen non-linear interpolant.
-
-        # Convert to numpy arrays for internal usage:
-        if pos is not None:
-            pos_x, pos_y = _convertPositions(pos, units, 'getShear')
-
-            if grid_spacing is None and not hasattr(self,'im_g1'):
-                raise AttributeError(
-                    "Calling PowerSpectrum.getShear without grid parameters, and " +
-                    "no grid previously set up.")
-
         # Check problem cases for regular grid of points
-        if grid_spacing is not None or ngrid is not None:
-            if grid_spacing is None or ngrid is None:
-                raise ValueError("When specifying grid, we require both a spacing and a size!")
-            # Check for non-integer ngrid
-            if not isinstance(ngrid, int) and not isinstance(ngrid, long):
-                if isinstance(ngrid, float):
-                    ngrid = int(ngrid)
-                else:
-                    raise ValueError("ngrid must be an int, or easily convertable to int!")
+        if grid_spacing is None or ngrid is None:
+            raise ValueError("Both a spacing and a size are required for buildGriddedShears.")
+        # Check for non-integer ngrid
+        if not isinstance(ngrid, int):
+            try:
+                ngrid = int(ngrid)
+            except:
+                raise ValueError("ngrid must be an int, or easily convertable to int!")
 
         # Check if center is a Position
         if isinstance(center,galsim.PositionD):
@@ -365,10 +315,6 @@ class PowerSpectrum(object):
             center = galsim.PositionD(center[0], center[1])
         else:
             raise TypeError("Unable to parse the input center argument for getShear")
-
-        # Make sure that we've specified some power spectrum
-        if self.p_E is None and self.p_B is None:
-            raise ValueError("Cannot generate shears when no E or B mode power spectrum are given!")
 
         # Make a GaussianDeviate if necessary
         if rng is None:
@@ -390,64 +336,116 @@ class PowerSpectrum(object):
         else:
             raise TypeError("Invalid interpolant provided to PowerSpectrum.getShear")
 
-        # Build the grid if requested.
-        if grid_spacing is not None:
-            psr = PowerSpectrumRealizer(ngrid, ngrid, grid_spacing, self.p_E, self.p_B)
-            self.grid_g1, self.grid_g2 = psr(gd)
+        # Build the grid 
+        psr = PowerSpectrumRealizer(ngrid, ngrid, grid_spacing, self.p_E, self.p_B)
+        self.grid_g1, self.grid_g2 = psr(gd)
             
-            # Setup interpolated images
-            self.im_g1 = galsim.ImageViewD(self.grid_g1)
-            self.im_g1.setScale(grid_spacing)
+        # Setup interpolated images
+        self.im_g1 = galsim.ImageViewD(self.grid_g1)
+        self.im_g1.setScale(grid_spacing)
 
-            self.im_g2 = galsim.ImageViewD(self.grid_g2)
-            self.im_g2.setScale(grid_spacing)
+        self.im_g2 = galsim.ImageViewD(self.grid_g2)
+        self.im_g2.setScale(grid_spacing)
 
-            # Dealing with the center here is a bit confusing, especially if ngrid is even.
-            # The InterpolatedImage will consider position (0,0) to correspond to 
-            # self.im_g1.bounds.center() on the image.  We call this nominal_center.
-            # However, if ngrid is even, this is slightly up and to the right of the 
-            # true center. The true center x and y are at (1+ngrid)/2 * grid_spacing.
-            # And finally, we may be passed a value to consider the center of the image.
-            b = self.im_g1.bounds
-            nominal_center = galsim.PositionD(b.center().x, b.center().y) * grid_spacing
-            true_center = galsim.PositionD( (1.+ngrid)/2. , (1.+ngrid)/2. ) * grid_spacing
+        # Dealing with the center here is a bit confusing, especially if ngrid is even.
+        # The InterpolatedImage will consider position (0,0) to correspond to 
+        # self.im_g1.bounds.center() on the image.  We call this nominal_center.
+        # However, if ngrid is even, this is slightly up and to the right of the 
+        # true center. The true center x and y are at (1+ngrid)/2 * grid_spacing.
+        # And finally, we may be passed a value to consider the center of the image.
+        b = self.im_g1.bounds
+        nominal_center = galsim.PositionD(b.center().x, b.center().y) * grid_spacing
+        true_center = galsim.PositionD( (1.+ngrid)/2. , (1.+ngrid)/2. ) * grid_spacing
             
-            # The offset to be added to any position is then such that if we are 
-            # provided the target center position, the result will be the location of 
-            # the true center with respect to the nominal center.  In other words:
-            #   center + offset = true_center - nominal_center
-            self.offset = true_center - nominal_center - center
+        # The offset to be added to any position is then such that if we are 
+        # provided the target center position, the result will be the location of 
+        # the true center with respect to the nominal center.  In other words:
+        #   center + offset = true_center - nominal_center
+        self.offset = true_center - nominal_center - center
 
-            # Construct a bounds that we can use to check if a provided position will
-            # end up falling on the interpolating image.
-            self.bounds = galsim.BoundsD((b.xmin-0.5)*grid_spacing, (b.xmax+0.5)*grid_spacing,
-                                         (b.ymin-0.5)*grid_spacing, (b.ymax+0.5)*grid_spacing)
-            self.bounds.shift(-nominal_center - self.offset)
+        # Construct a bounds that we can use to check if a provided position will
+        # end up falling on the interpolating image.
+        self.bounds = galsim.BoundsD((b.xmin-0.5)*grid_spacing, (b.xmax+0.5)*grid_spacing,
+                                     (b.ymin-0.5)*grid_spacing, (b.ymax+0.5)*grid_spacing)
+        self.bounds.shift(-nominal_center - self.offset)
 
-        if pos is None:
-            return self.grid_g1, self.grid_g2
-        else:
-            # interpolate if necessary
-            g1,g2 = [], []
-            for pos in [ galsim.PositionD(pos_x[i],pos_y[i]) for i in range(len(pos_x)) ]:
-                # Check that the position is in the bounds of the interpolated image
-                if not self.bounds.includes(pos):
-                    import warnings
-                    warnings.warn(
-                        "Warning position (%f,%f) not within the bounds "%(pos.x,pos.y) +
-                        "of the gridded shear values: " + str(self.bounds) + 
-                        ".  Returning a shear of (0,0) for this point.")
-                    g1.append(0.)
-                    g2.append(0.)
-                else:
-                    sbii_g1 = galsim.SBInterpolatedImage(self.im_g1, xInterp = interpolantxy)
-                    sbii_g2 = galsim.SBInterpolatedImage(self.im_g2, xInterp = interpolantxy)
-                    g1.append(sbii_g1.xValue(pos+self.offset))
-                    g2.append(sbii_g2.xValue(pos+self.offset))
-            if len(pos_x) == 1:
-                return g1[0], g2[0]
+        return self.grid_g1, self.grid_g2
+
+
+    def getGriddedShears(self):
+        """Return the current grid of shears being used.
+        """
+        return self.grid_g1, self.grid_g2
+
+
+    def getShear(self, pos=None, units=galsim.arcsec):
+        """
+        This function can interpolate between the grid positions to find the shear values for a
+        given list of input positions (or just a single position).
+
+        Some examples of how to use getShear:
+
+        1. Get the shear for a particular point:
+
+               g1, g2 = my_ps.getShear(pos = galsim.PositionD(12, 412))
+
+           This time the returned values are just floats and correspond to the shear for the
+           provided position.
+
+        2. You can also provide a position as a tuple to save the explicit PositionD construction:
+
+               g1, g2 = my_ps.getShear(pos = (12, 412))
+
+        3. Get the shears for a bunch of points at once:
+        
+               xlist = [ 141, 313,  12, 241, 342 ]
+               ylist = [  75, 199, 306, 225, 489 ]
+               poslist = [ galsim.PositionD(xlist[i],ylist[i]) for i in range(len(xlist)) ]
+               g1, g2 = my_ps.getShear( poslist )
+               g1, g2 = my_ps.getShear( (xlist, ylist) )
+
+           Both calls do the same thing.  The returned g1, g2 this time are lists of g1, g2 values.
+           The lists are the same length as the number of input positions.
+
+        @param pos              Position(s) of the source(s), assumed to be post-lensing!  (It is 
+                                up to the user to check that the units are consistent with those in 
+                                the P(k) function, just as for the grid_spacing keyword.)
+                                Valid ways to input this:
+                                  - Single galsim.PositionD (or PositionI) instance
+                                  - tuple of floats: (x,y)
+                                  - list of galsim.PositionD (or PositionI) instances
+                                  - tuple of lists: ( xlist, ylist )
+                                pos may also be None to just build a gridded array of (g1,g2).
+        @param units            The angular units used for the positions.  [default = arcsec]
+        
+        @return g1,g2           If given a single position: the two shear components g_1 and g_2.
+                                If given a list of positions: each is a python list of values.
+        """
+
+        # Convert to numpy arrays for internal usage:
+        pos_x, pos_y = _convertPositions(pos, units, 'getShear')
+
+        # interpolate if necessary
+        g1,g2 = [], []
+        for pos in [ galsim.PositionD(pos_x[i],pos_y[i]) for i in range(len(pos_x)) ]:
+            # Check that the position is in the bounds of the interpolated image
+            if not self.bounds.includes(pos):
+                import warnings
+                warnings.warn(
+                    "Warning position (%f,%f) not within the bounds "%(pos.x,pos.y) +
+                    "of the gridded shear values: " + str(self.bounds) + 
+                    ".  Returning a shear of (0,0) for this point.")
+                g1.append(0.)
+                g2.append(0.)
             else:
-                return g1, g2
+                sbii_g1 = galsim.SBInterpolatedImage(self.im_g1, xInterp = interpolantxy)
+                sbii_g2 = galsim.SBInterpolatedImage(self.im_g2, xInterp = interpolantxy)
+                g1.append(sbii_g1.xValue(pos+self.offset))
+                g2.append(sbii_g2.xValue(pos+self.offset))
+        if len(pos_x) == 1:
+            return g1[0], g2[0]
+        else:
+            return g1, g2
 
 class PowerSpectrumRealizer(object):
     """Class for generating realizations of power spectra with any area and pixel size.
@@ -839,8 +837,8 @@ class NFWHalo(object):
                            - list of galsim.PositionD (or PositionI) instances
                            - tuple of lists: ( xlist, ylist )
         @param z_s       Source redshift(s).
-        @param units     Angular units of coordinates (default = arcsec)
-        @param reduced   Whether returned shear(s) should be reduced shears. (default=True)
+        @param units     Angular units of coordinates [default = arcsec]
+        @param reduced   Whether returned shear(s) should be reduced shears. [default=True]
 
         @return (g1,g2)   [g1 and g2 are each a list if input was a list]
         """
@@ -881,7 +879,7 @@ class NFWHalo(object):
                          - list of galsim.PositionD (or PositionI) instances
                          - tuple of lists: ( xlist, ylist )
         @param z_s     Source redshift(s)
-        @param units   Angular units of coordinates (default = arcsec)
+        @param units   Angular units of coordinates [default = arcsec]
 
         @return kappa or list of kappa values
         """
