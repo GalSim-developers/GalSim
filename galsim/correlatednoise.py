@@ -11,9 +11,17 @@ from . import utilities
 class _CorrFunc(object):
     """A class describing 2D correlation functions, typically calculated from Images.
 
-    A _CorrFunc will not generally be instantiated directly.  It defines the way in which derived
-    classes (currently only the ImageCorrFunc) store the correlation function profile and generates
-    images containing noise with these correlation properties.
+    A _CorrFunc will not generally be instantiated directly.  This is recommended as the current
+    `_CorrFunc.__init__` interface does not provide any guarantee that the input `GSObject`
+    represents a physical correlation function, e.g. a profile that is an even function (two-fold
+    rotationally symmetric in the plane) and peaked at the origin.  The proposed pattern is that
+    users instead instantiate derived classes, such as the `ImageCorrFunc`, which are able to
+    guarantee the above. 
+
+    The _CorrFunc is therefore here primarily to define the way in which derived classes (currently
+    only the  `ImageCorrFunc`) store the correlation function profile, allow operations with it,
+    generate images containing noise with these correlation properties, and generate covariance 
+    matrices according to the correlation function.
     """
     def __init__(self, gsobject):
         if not isinstance(gsobject, base.GSObject):
