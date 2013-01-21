@@ -188,42 +188,31 @@ class _WriteFile:
         # TODO: When they do fix it, change the version number here.
         import pyfits
         if pyfits_compress and pyfits.__version__ < '9.9':
-            # As far as I can tell, the number in () must be = or larger than the size of 
-            # the arrays in question.  This should really be done for each hdu separately, 
-            # but given how I have to do the next step, I just find the maximum value for 
-            # all the hdus and use that for everything.
-            hdus = pyfits.open(file,'readonly',disable_image_compression=True)
-            max_ar_len = max([ len(ar[0]) for hdu in hdus[1:] for ar in hdu.data ])
-            s = '(%d)'%max_ar_len
+            hdus = pyfits.open(file,'update',disable_image_compression=True)
+            for hdu in hdus[1:]:
+                max_ar_len = max([ len(ar[0]) for ar in hdu.data ])
 
-            # If this will overrun the original 8 char string, need to add a closing quote.
-            if len(s) > 3: s = s + "'"
+                s = '(%d)'%max_ar_len
+                # If this will overrun the original 8 char string, need to add a closing quote.
+                #if len(s) > 3: s = s + "'"
 
-            # I couldn't figure out a pyfits way to fix this.  Fixing the hdu._header directly
-            # didn't work because pyfits redetermines the TFORM values in the header (to the 
-            # incorrect values) when it does hdus.writeto(file).  I thought opening the file
-            # with disable_image_compression=True, editing the header and then writing it 
-            # would work.  But apparently pyfits does something to the file that makes it not
-            # open back up as a CompImageHDU anymore when I do that.  So the only way I found
-            # to work is this super-hackish direct edit of the binary data.
-            f = open(file,'rb')
-            data = f.read()
-            f.close()
-            # find the TFORM header keywords
-            i = data.find('TFORM')
-            while i != -1:
-                # Only update if the form is a P = variable length data and the (*) is not there.
-                if data[i+12] == 'P' and data[i+14] != '(':
-                    # Note: python strings cannot be edited, so we need to make a new string
-                    # that splices in the change we need to make.
-                    data = data[:i+14] + s + data[i+14+len(s):]
-                # find the next one
-                i = data.find('TFORM',i+80)
-            # Write the updated file
-            f = open(file,'wb')
-            f.write(data)
-            f.close()
+                for key in hdu.header.keys():
+                    if key.startswith('TFORM'):
+                        tform = hdu.header[key]
 
+                        # Only update if the form is a P = variable length data 
+                        # and the (*) is not there.
+                        if 'P' in tform and '(' not in tform:
+                            tform = tform + s
+                            hdu.header[key] = tform
+            hdus.close()
+
+            # Workaround for a bug in some pyfits 3.0.x versions
+            # It was fixed in 3.0.8.  I'm not sure when the bug was 
+            # introduced, but I believe it was 3.0.3.  
+            if (pyfits.__version__ > '3.0' and pyfits.__version__ < '3.0.8' and
+                'COMPRESSION_ENABLED' in pyfits.hdu.compressed.__dict__):
+                pyfits.hdu.compressed.COMPRESSION_ENABLED = True
                 
 write_file = _WriteFile()
 
