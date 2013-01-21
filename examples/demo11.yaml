@@ -5,13 +5,13 @@
 # (This file is designed to be viewed in a window 100 characters wide.)
 #
 # This script uses a constant PSF from real data (an image read in from a bzipped FITS file, 
-# not a parametric model) and variable shear according to some cosmological model for which we 
-# have a tabulated power spectrum at specific k values only.  The 225 galaxies in the 0.25x0.25 
-# degree field (representing a low number density of 1/arcmin^2) are randomly located and 
-# permitted to overlap, but we do take care to avoid being too close to the edge of the large 
-# image.  For the galaxies, we use a random selection from 5 specific RealGalaxy objects, 
-# selected to be 5 particularly irregular ones. These are taken from the same catalog of 100 
-# objects that demo6 used.
+# not a parametric model) and variable shear according to some cosmological model for which 
+# we have a tabulated power spectrum at specific k values only.  The 225 galaxies in the 
+# 0.25x0.25 degree field (representing a low number density of 1/arcmin^2) are randomly 
+# located and permitted to overlap, but we do take care to avoid being too close to the edge 
+# of the large image.  For the galaxies, we use a random selection from 5 specific RealGalaxy 
+# objects, selected to be 5 particularly irregular ones. These are taken from the same
+# catalog of 100 objects that demo6 used.
 #
 # New features introduced in this demo:
 #
@@ -37,9 +37,9 @@ psf :
     # If the fits file has a scale given in the header information, we can use that for 
     # the pixel scale.  If it is not given it will assume 1. 
     # Or we can also override that by providing an explicit pixel scale here.
-    # This file is a real SDSS PSF, which means pixel scale of 0.396".  However, the typical 
-    # seeing is 1.2" and we want to simulate better seeing, so we will just tell GalSim that 
-    # the pixel scale is 0.2" to match our image : pixel_scale below.
+    # This file is a real SDSS PSF, which means pixel scale of 0.396 arcsec.  However, the 
+    # typical seeing is 1.2 arcsec and we want to simulate better seeing, so we will just 
+    # tell GalSim that the pixel scale is 0.2 arcsec to match our image : pixel_scale below.
     dx : 0.2
  
 # Define the pixel profile
@@ -66,7 +66,7 @@ gal :
 
     # TODO: When Issue #304 is done, add PowerSpectrumMag here.
 
-    rotation:
+    rotation :
         type : Random
 
     signal_to_noise : 100
@@ -109,7 +109,11 @@ input :
     real_catalog :
         dir : data
         file_name : real_galaxy_catalog_example.fits
-        preload : False   # Not so important this time, since only using 5 items in the catalog.
+
+        # Even though we only have 5 galaxies again, preloading makes a big difference in the 
+        # running time, because we are selecting among the 5 in a random order, so it helps
+        # to have pyfits load all the images in memory and store them.
+        preload : True 
 
     # We also initialize the power spectrum here.
     power_spectrum :

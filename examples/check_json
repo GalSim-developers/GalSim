@@ -46,25 +46,25 @@ echo 'Checking diffs: (No output means success)'
 # Don't check demo1, since it doesn't use a deterministic seed.
 # If you add an initial seed in both places, then you can uncomment 
 # the next line and it should work.
-#diff output/demo1.fits output_json/demo1.fits 
+#diff -q output/demo1.fits output_json/demo1.fits 
 
 # demo2:
-diff output/demo2.fits output_json/demo2.fits 
+diff -q output/demo2.fits output_json/demo2.fits 
 
 # demo3:
-diff output/demo3.fits output_json/demo3.fits 
-diff output/demo3_epsf.fits output_json/demo3_epsf.fits 
+diff -q output/demo3.fits output_json/demo3.fits 
+diff -q output/demo3_epsf.fits output_json/demo3_epsf.fits 
 
 # demo4:
-diff output/multi.fits output_json/multi.fits 
+diff -q output/multi.fits output_json/multi.fits 
 
 # demo5:
-diff output/g08_psf.fits output_json/g08_psf.fits
-diff output/g08_gal.fits output_json/g08_gal.fits
+diff -q output/g08_psf.fits output_json/g08_psf.fits
+diff -q output/g08_gal.fits output_json/g08_gal.fits
 
 # demo6:
-diff output/psf_real.fits output_json/psf_real.fits
-diff output/cube_real.fits output_json/cube_real.fits 
+diff -q output/psf_real.fits output_json/psf_real.fits
+diff -q output/cube_real.fits output_json/cube_real.fits 
 
 # demo7:
 # Note; the raw .gz files include the filename in them.
@@ -72,11 +72,11 @@ diff output/cube_real.fits output_json/cube_real.fits
 # So unzip them first before running diff.
 gunzip output/cube_phot.fits.gz
 gunzip output_json/cube_phot.fits.gz
-diff output/cube_phot.fits output_json/cube_phot.fits
+diff -q output/cube_phot.fits output_json/cube_phot.fits
 
 # demo8:
-diff output/bpd_single.fits output_json/bpd_single.fits 
-diff output/bpd_multi.fits output_json/bpd_multi.fits 
+diff -q output/bpd_single.fits output_json/bpd_single.fits 
+diff -q output/bpd_multi.fits output_json/bpd_multi.fits 
 
 # demo9:
 for dir_num in {1..4} 
@@ -84,10 +84,12 @@ do
     for file_num in {0..4}
     do
         file_name=nfw$dir_num/cluster000$file_num.fits
-        diff output/$file_name output_json/$file_name
+        diff -q output/$file_name output_json/$file_name
     done
 done
 
 # demo10:
-diff output/power_spectrum.fits output_json/power_spectrum.fits 
+diff -q output/power_spectrum.fits output_json/power_spectrum.fits 
 
+# demo11:
+diff -q output/tabulated_power_spectrum.fits.fz output_json/tabulated_power_spectrum.fits.fz 
