@@ -189,10 +189,6 @@ class _CorrFunc(object):
             # Then draw this correlation function into an array
             self.profile.draw(newcf, dx=None) # setting dx=None uses the newcf image scale set above
 
-            # Roll to put the origin at the lower left pixel before FT-ing to get the PS...
-            rolled_cf_array = utilities.roll2d(
-                newcf.array, (-newcf.array.shape[0] / 2, -newcf.array.shape[1] / 2))
-
             # Then calculate the sqrt(PS) that will be used to generate the actual noise
             rootps = np.sqrt(np.abs(np.fft.fft2(newcf.array)) * np.product(image.array.shape))
 
