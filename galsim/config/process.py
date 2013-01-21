@@ -31,9 +31,13 @@ def ProcessInput(config, file_num=0, logger=None):
         for key in [ k for k in input_type.keys() if k in input ]:
             field = input[key]
             field['type'] = input_type[key]
+            ignore = []
             if key == 'catalog' and 'file_name' in field:
                 SetDefaultExt(field['file_name'],'.asc')
-            input_obj = galsim.config.gsobject._BuildSimple(field, key, config, {})[0]
+            if key == 'power_spectrum':
+                # This is used for buildGriddedShears later.
+                ignore += ['grid_spacing']
+            input_obj = galsim.config.gsobject._BuildSimple(field, key, config, ignore)[0]
             if logger and  key in ['catalog', 'real_catalog']:
                 logger.info('Read %d objects from %s',input_obj.nobjects,key)
             # Store input_obj in the config for use by BuildGSObject function.

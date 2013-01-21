@@ -15,7 +15,8 @@ ones. These are taken from the same catalog of 100 objects that demo6 used.
 New features introduced in this demo:
 
 - psf = galsim.InterpolatedImage(psf_filename, dx, flux)
-- tab = galsim.lensing.TabulatedPk(file, delta2, units)
+- tab = galsim.LookupTable(file)
+- ps = galsim.PowerSpectrum(..., delta2, units)
 
 - Power spectrum shears for non-gridded positions.
 - Reading a compressed FITS image (using BZip2 compression).
@@ -104,8 +105,8 @@ def main(argv):
     # of arcsec^-1.  Also, we need to tell GalSim that it is getting the C_ell (i.e., Delta^2) so it
     # can convert to power.
     pk_file = os.path.join('data','cosmo-fid.zmed1.00.out')
-    tab_pk = galsim.lensing.TabulatedPk(file = pk_file, delta2 = True, units = galsim.radians)
-    ps = galsim.PowerSpectrum(tab_pk)
+    tab_pk = galsim.LookupTable(file = pk_file)
+    ps = galsim.PowerSpectrum(tab_pk, delta2 = True, units = galsim.radians)
     # The argument here is "e_power_function" which defines the E-mode power to use.
     logger.info('Set up power spectrum from tabulated P(k)')
 
@@ -138,10 +139,14 @@ def main(argv):
     # image, with grid points spaced by 10 arcsec (hence interpolation only happens below 10"
     # scales, below the interesting scales on which we want the shear power spectrum to be
     # represented exactly).  Lensing engine wants positions in arcsec, so calculate that:
-    g1_grid, g2_grid = ps.getShear(grid_spacing = grid_spacing,
-                                   ngrid = (image_size_arcsec / grid_spacing),
-                                   center = center,
-                                   rng = rng)
+    print 'grid_spacing = ',grid_spacing
+    print 'ngrid = ',(image_size_arcsec / grid_spacing),
+    print 'center = ',center
+    print 'rng = ',rng
+    ps.buildGriddedShears(grid_spacing = grid_spacing,
+                          ngrid = (image_size_arcsec / grid_spacing),
+                          center = center,
+                          rng = rng)
     logger.info('Made gridded shears')
 
     # Now we need to loop over our objects:
@@ -153,14 +158,15 @@ def main(argv):
         # Choose a random position within a range that is not too close to the edge.
         x = 0.5*stamp_size + ud()*(image_size - stamp_size)
         y = 0.5*stamp_size + ud()*(image_size - stamp_size)
-        #print 'x,y = ',x,y
+        print 'x,y = ',x,y
 
         # Turn this into a position in arcsec
         pos = galsim.PositionD(x,y) * pixel_scale
-        #print 'pos = ',pos
+        print 'pos = ',pos
 
         # Get the shear at this position.
         g1, g2 = ps.getShear(pos = pos)
+        print 'g1,g2 = ',g1,g2
 
         # Construct the galaxy:
         # Select randomly from among our list of galaxies.

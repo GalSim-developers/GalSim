@@ -40,7 +40,7 @@ def _convertPositions(pos, units, func):
         # Check validity of units
         if isinstance(units, basestring):
             # if the string is invalid, this raises a reasonable error message.
-            units = galsim.get_angle_nit(units)
+            units = galsim.angle.get_angle_unit(units)
         if not isinstance(units, galsim.AngleUnit):
             raise ValueError("units must be either an AngleUnit or a string")
 
@@ -118,25 +118,13 @@ class PowerSpectrum(object):
                             units consistent with the units for k.
     @param units            The angular units used for the power spectrum (i.e. the units of 
                             k^-1). [default = arcsec]
-
-    The following parameters are passed to buildGriddedShears.  See that function for more details.
-
-    @param grid_spacing     Spacing for an evenly spaced grid of points, in arcsec.
-    @param ngrid            Number of grid points in each dimension.
-    @param rng              (Optional) A galsim.BaseDeviate object.
-    @param interpolant      (Optional) Interpolant to use for interpolating the shears on a grid
-                            to the requested positions. [default = galsim.Linear()]
-    @param center           (Optional) The position you want to consider the center of that grid.
-                            [default = (0,0)]
     """
-    _req_params = { 'grid_spacing' : float, 'ngrid' : int }
+    _req_params = {}
     _opt_params = { 'e_power_function' : str, 'b_power_function' : str,
                     'delta2' : bool, 'units' : str }
     _single_params = []
-    def __init__(self, grid_spacing, ngrid, 
-                 e_power_function=None, b_power_function=None,
-                 delta2=False, units=galsim.arcsec,
-                 rng=None, interpolant=None, center=galsim.PositionD(0,0)):
+    def __init__(self, e_power_function=None, b_power_function=None,
+                 delta2=False, units=galsim.arcsec):
         # Check that at least one power function is not None
         if e_power_function is None and b_power_function is None:
             raise AttributeError(
@@ -145,7 +133,7 @@ class PowerSpectrum(object):
         self.e_power_function = e_power_function
         self.b_power_function = b_power_function
         for pf_str in [ 'e_power_function', 'b_power_function' ]:
-            pf = self.__dict__[pf_str]
+            pf = getattr(self,pf_str)
             if pf is not None:
                 # Convert string inputs to either a lambda function or LookupTable
                 if isinstance(pf,str):
@@ -162,7 +150,7 @@ class PowerSpectrum(object):
                         except :
                             raise AttributeError(
                                 "Unable to turn %s = %s into a valid function"%(pf_str,pf))
-                    self.__dict__[pf_str] = pf
+                    setattr(self,pf_str,pf)
                 # Check that the function is sane.
                 # Note: Only try tests below if it's not a LookupTable.
                 #       (If it's a LookupTable, then it could be a valid function that isn't 
@@ -182,28 +170,27 @@ class PowerSpectrum(object):
         # Check validity of units
         if isinstance(units, basestring):
             # if the string is invalid, this raises a reasonable error message.
-            units = galsim.get_angle_nit(units)
+            units = galsim.angle.get_angle_unit(units)
         if not isinstance(units, galsim.AngleUnit):
             raise ValueError("units must be either an AngleUnit or a string")
 
         if units == galsim.arcsec:
             scale = 1
         else:
-            scale = 1. * galsim.arcsec / units
+            scale = 1. * units / galsim.arcsec
 
         # The functions we are actually going to use will be p_E and p_B.
         # If we actually have Delta^2, then we must convert to power, which is
         # dimensionless.  Also account for the possible unit scaling here.
-        if delta2:
-            self.p_E = lambda k : (scale*k)**2 * self.e_power_function(scale*k)/(2.*np.pi)
-            self.p_B = lambda k : (scale*k)**2 * self.b_power_function(scale*k)/(2.*np.pi)
-        elif scale != 1:
-            self.p_E = lambda k : self.e_power_function(scale*k)
-            self.p_B = lambda k : self.b_power_function(scale*k)
-        else:
-            self.p_E = self.e_power_function
-            self.p_B = self.b_power_function
-        self.buildGriddedShears(grid_spacing,ngrid,rng,interpolant,center)
+        if self.e_power_function is None: self.p_E = None
+        elif delta2: self.p_E = lambda k : (scale*k)**2 * self.e_power_function(scale*k)/(2.*np.pi)
+        elif scale != 1: self.p_E = lambda k : self.e_power_function(scale*k)
+        else: self.p_E = self.e_power_function
+
+        if self.b_power_function is None: self.p_B = None
+        elif delta2: self.p_B = lambda k : (scale*k)**2 * self.b_power_function(scale*k)/(2.*np.pi)
+        elif scale != 1: self.p_B = lambda k : self.b_power_function(scale*k)
+        else: self.p_B = self.b_power_function
 
 
     def buildGriddedShears(self, grid_spacing=None, ngrid=None, rng=None,
@@ -369,19 +356,18 @@ class PowerSpectrum(object):
                                      (b.ymin-0.5)*grid_spacing, (b.ymax+0.5)*grid_spacing)
         self.bounds.shift(-nominal_center - self.offset)
 
-        return self.grid_g1, self.grid_g2
+        # Make an SBInterpolatedImage, which will do the heavy lifting for the interpolation.
+        self.sbii_g1 = galsim.SBInterpolatedImage(self.im_g1, xInterp = interpolantxy)
+        self.sbii_g2 = galsim.SBInterpolatedImage(self.im_g2, xInterp = interpolantxy)
 
-
-    def getGriddedShears(self):
-        """Return the current grid of shears being used.
-        """
         return self.grid_g1, self.grid_g2
 
 
     def getShear(self, pos=None, units=galsim.arcsec):
         """
         This function can interpolate between the grid positions to find the shear values for a
-        given list of input positions (or just a single position).
+        given list of input positions (or just a single position).  Before calling this function,
+        you must call buildGriddedShears first to define the grid on which to interpolate.
 
         Some examples of how to use getShear:
 
@@ -422,6 +408,10 @@ class PowerSpectrum(object):
                                 If given a list of positions: each is a python list of values.
         """
 
+        if not hasattr(self, 'im_g1'):
+            raise RuntimeError("PowerSpectrum.buildGriddedShears must be called before getShear")
+
+
         # Convert to numpy arrays for internal usage:
         pos_x, pos_y = _convertPositions(pos, units, 'getShear')
 
@@ -438,10 +428,8 @@ class PowerSpectrum(object):
                 g1.append(0.)
                 g2.append(0.)
             else:
-                sbii_g1 = galsim.SBInterpolatedImage(self.im_g1, xInterp = interpolantxy)
-                sbii_g2 = galsim.SBInterpolatedImage(self.im_g2, xInterp = interpolantxy)
-                g1.append(sbii_g1.xValue(pos+self.offset))
-                g2.append(sbii_g2.xValue(pos+self.offset))
+                g1.append(self.sbii_g1.xValue(pos+self.offset))
+                g2.append(self.sbii_g2.xValue(pos+self.offset))
         if len(pos_x) == 1:
             return g1[0], g2[0]
         else:
@@ -504,7 +492,8 @@ class PowerSpectrumRealizer(object):
         ISQRT2 = np.sqrt(1.0/2.0)
 
         if not isinstance(gd, galsim.GaussianDeviate):
-            raise TypeError("The gd provided to the PowerSpectrumRealizer is not a GaussianDeviate!")
+            raise TypeError(
+                "The gd provided to the PowerSpectrumRealizer is not a GaussianDeviate!")
 
         #Generate a random complex realization for the E-mode, if there is one
         if self.amplitude_E is not None:
@@ -913,9 +902,6 @@ class NFWHalo(object):
         @param units   Angular units of coordinates (only arcsec implemented so far).
         @return mu     Numpy array containing the magnification at the specified position(s)
         """
-        if units != galsim.arcsec:
-            raise NotImplementedError("Only arcsec units implemented!")
-
         # Convert to numpy arrays for internal usage:
         pos_x, pos_y = _convertPositions(pos, units, 'getMag')
 

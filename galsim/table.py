@@ -135,24 +135,20 @@ class LookupTable(object):
                     f[i,:] = np.fromiter((self.table(float(q)) for q in x[i,:]), dtype='float')
             else:
                 f = np.fromiter((self.table(float(q)) for q in x), dtype='float')
-            if self.f_log:
-                f = np.exp(f)
-            return f
         # option 2: a tuple
         elif isinstance(x, tuple):
             f = [ self.table(q) for q in x ]
-            if self.f_log: f = np.exp(f)
-            return tuple(f)
+            f = tuple(f)
         # option 3: a list
         elif isinstance(x, list):
             f = [ self.table(q) for q in x ]
-            if self.f_log: f = np.exp(f)
-            return f
         # option 4: a single value
         else:
             f = self.table(x)
-            if self.f_log: f = np.exp(f)
-            return f
+
+        if self.f_log:
+            f = np.exp(f)
+        return f
 
     def getArgs(self):
         args = self.table.getArgs()

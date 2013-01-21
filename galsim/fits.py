@@ -189,22 +189,18 @@ class _WriteFile:
         import pyfits
         if pyfits_compress and pyfits.__version__ < '9.9':
             hdus = pyfits.open(file,'update',disable_image_compression=True)
-            for hdu in hdus[1:]:
+            for hdu in hdus[1:]: # Skip PrimaryHDU
+                # Find the maximum variable array length  
                 max_ar_len = max([ len(ar[0]) for ar in hdu.data ])
-
+                # Add '(N)' to the TFORMx keywords for the variable array items
                 s = '(%d)'%max_ar_len
-                # If this will overrun the original 8 char string, need to add a closing quote.
-                #if len(s) > 3: s = s + "'"
-
                 for key in hdu.header.keys():
                     if key.startswith('TFORM'):
                         tform = hdu.header[key]
-
-                        # Only update if the form is a P = variable length data 
-                        # and the (*) is not there.
+                        # Only update if the form is a P (= variable length data)
+                        # and the (*) is not there already.
                         if 'P' in tform and '(' not in tform:
-                            tform = tform + s
-                            hdu.header[key] = tform
+                            hdu.header[key] = tform + s
             hdus.close()
 
             # Workaround for a bug in some pyfits 3.0.x versions

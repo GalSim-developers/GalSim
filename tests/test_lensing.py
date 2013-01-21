@@ -89,11 +89,10 @@ def test_shear_flatps():
     # setup the random number generator to use for these tests
     rng = galsim.BaseDeviate(512342)
 
-    # make a flat power spectrum for E, B modes and build shears on 500x500 grid
-    test_ps = galsim.PowerSpectrum(e_power_function=pkflat, b_power_function=pkflat,
-                                   grid_spacing=1.0, ngrid=500, rng=rng)
-    # get the gridded shear values
-    g1, g2 = test_ps.getGriddedShears()
+    # make a flat power spectrum for E, B modes
+    test_ps = galsim.PowerSpectrum(e_power_function=pkflat, b_power_function=pkflat)
+    # get shears on 500x500 grid
+    g1, g2 = test_ps.buildGriddedShears(grid_spacing=1.0, ngrid=500, rng=rng)
     # check: are shears consistent with variance=0.01 as we expect for pkflat?
     var1 = np.var(g1)
     var2 = np.var(g2)
@@ -112,9 +111,9 @@ def test_shear_flatps():
 
 
     # make a pure E-mode spectrum
-    test_ps = galsim.PowerSpectrum(e_power_function=pkflat,
-                                   grid_spacing=1.0, ngrid=500, rng=rng)
-    g1, g2 = test_ps.getGriddedShears()
+    test_ps = galsim.PowerSpectrum(e_power_function=pkflat)
+    # get shears on 500x500 grid
+    g1, g2 = test_ps.buildGriddedShears(grid_spacing=1.0, ngrid=500, rng=rng)
     # check: are shears consistent with variance=0.01 as we expect for pkflat?
     var1 = np.var(g1)
     var2 = np.var(g2)
@@ -142,9 +141,9 @@ def test_shear_flatps():
 
 
     # make a pure B-mode spectrum
-    test_ps = galsim.PowerSpectrum(b_power_function=pkflat,
-                                   grid_spacing=1.0, ngrid=500, rng=rng)
-    g1, g2 = test_ps.getGriddedShears()
+    test_ps = galsim.PowerSpectrum(b_power_function=pkflat)
+    # get shears on 500x500 grid
+    g1, g2 = test_ps.buildGriddedShears(grid_spacing=1.0, ngrid=500, rng=rng)
     # check: are shears consistent with variance=0.01 as we expect for pkflat?
     var1 = np.var(g1)
     var2 = np.var(g2)
@@ -179,11 +178,10 @@ def test_shear_seeds():
     t1 = time.time()
 
     # make a power spectrum for some E, B power function
-    # get shears on a grid w/o specifying seed
-    test_ps = galsim.PowerSpectrum(e_power_function=pk2, b_power_function=pkflat,
-                                   grid_spacing=1.0, ngrid = 10)
-    g1, g2 = test_ps.getGriddedShears()
+    test_ps = galsim.PowerSpectrum(e_power_function=pk2, b_power_function=pkflat)
 
+    # get shears on a grid w/o specifying seed
+    g1, g2 = test_ps.buildGriddedShears(grid_spacing=1.0, ngrid = 10)
     # do it again, w/o specifying seed: should differ
     g1new, g2new = test_ps.buildGriddedShears(grid_spacing=1.0, ngrid = 10)
     assert not ((g1[0,0]==g1new[0,0]) or (g2[0,0]==g2new[0,0]))
@@ -222,10 +220,9 @@ def test_shear_reference():
     dx = 1.
 
     # define power spectrum
-    ps = galsim.PowerSpectrum(e_power_function=pk2, b_power_function=pk1,
-                              grid_spacing = dx, ngrid = n, rng=rng)
+    ps = galsim.PowerSpectrum(e_power_function=pk2, b_power_function=pk1)
     # get shears
-    g1, g2 = ps.getGriddedShears()
+    g1, g2 = ps.buildGriddedShears(grid_spacing = dx, ngrid = n, rng=rng)
 
     # put in same format as data that got read in
     g1vec = g1.reshape(n*n)
@@ -245,20 +242,22 @@ def test_tabulated():
     t1 = time.time()
 
     # make PowerSpectrum with some obvious analytic form, P(k)=k^2
-    seed = 12345
-    ps_analytic = galsim.PowerSpectrum(e_power_function=pk2, grid_spacing = 1., ngrid = 10,
-                                       rng = galsim.BaseDeviate(seed))
-    g1_analytic, g2_analytic = ps_analytic.getGriddedShears()
+    ps_analytic = galsim.PowerSpectrum(pk2)
 
     # now tabulate that analytic form at a range of k
     k_arr = 0.01*np.arange(10000.)+0.01
     p_arr = k_arr**(2.)
 
-    # make a LookupTable to initialize another PowerSpectrum, with the same grid and random seed
+    # make a LookupTable to initialize another PowerSpectrum
     tab = galsim.LookupTable(k_arr, p_arr)
-    ps_tab = galsim.PowerSpectrum(e_power_function=tab, grid_spacing = 1., ngrid = 10,
-                                  rng = galsim.BaseDeviate(seed))
-    g1_tab, g2_tab = ps_tab.getGriddedShears()
+    ps_tab = galsim.PowerSpectrum(tab)
+
+    # draw shears on a grid from both PowerSpectrum objects, with same random seed
+    seed = 12345
+    g1_analytic, g2_analytic = ps_analytic.buildGriddedShears(grid_spacing = 1., ngrid = 10,
+                                                              rng = galsim.BaseDeviate(seed))
+    g1_tab, g2_tab = ps_tab.buildGriddedShears(grid_spacing = 1., ngrid = 10,
+                                               rng = galsim.BaseDeviate(seed))
 
     # make sure that shears that are drawn are essentially identical
     np.testing.assert_almost_equal(g1_analytic, g1_tab, 6,
@@ -272,34 +271,34 @@ def test_tabulated():
     filename = 'lensing_reference_data/tmp.txt'
     np.savetxt(filename, data)
     tab2 = galsim.LookupTable(file = filename)
-    ps_tab2 = galsim.PowerSpectrum(e_power_function=tab2, grid_spacing = 1., ngrid = 10,
-                                   rng = galsim.BaseDeviate(seed))
-    g1_tab2, g2_tab2 = ps_tab2.getGriddedShears()
+    ps_tab2 = galsim.PowerSpectrum(tab2)
+    g1_tab2, g2_tab2 = ps_tab2.buildGriddedShears(grid_spacing = 1., ngrid = 10,
+                                                  rng = galsim.BaseDeviate(seed))
     np.testing.assert_almost_equal(g1_analytic, g1_tab2, 6,
         err_msg = "g1 from file-based tabulated P(k) differs from expectation!")
     np.testing.assert_almost_equal(g2_analytic, g2_tab2, 6,
         err_msg = "g2 from file-based tabulated P(k) differs from expectation!")
     # check that we get the same answer whether we use interpolation in log for k, P, or both
     tab = galsim.LookupTable(k_arr, p_arr, x_log = True)
-    ps_tab = galsim.PowerSpectrum(e_power_function=tab, grid_spacing = 1., ngrid = 10,
-                                  rng = galsim.BaseDeviate(seed))
-    g1_tab, g2_tab = ps_tab.getGriddedShears()
+    ps_tab = galsim.PowerSpectrum(tab)
+    g1_tab, g2_tab = ps_tab.buildGriddedShears(grid_spacing = 1., ngrid = 10,
+                                               rng = galsim.BaseDeviate(seed))
     np.testing.assert_almost_equal(g1_analytic, g1_tab, 6,
         err_msg = "g1 of shear field from tabulated P(k) with x_log differs from expectation!")
     np.testing.assert_almost_equal(g2_analytic, g2_tab, 6,
         err_msg = "g2 of shear field from tabulated P(k) with x_log differs from expectation!")
     tab = galsim.LookupTable(k_arr, p_arr, f_log = True)
-    ps_tab = galsim.PowerSpectrum(e_power_function=tab, grid_spacing = 1., ngrid = 10,
-                                  rng = galsim.BaseDeviate(seed))
-    g1_tab, g2_tab = ps_tab.getGriddedShears()
+    ps_tab = galsim.PowerSpectrum(tab)
+    g1_tab, g2_tab = ps_tab.buildGriddedShears(grid_spacing = 1., ngrid = 10,
+                                               rng = galsim.BaseDeviate(seed))
     np.testing.assert_almost_equal(g1_analytic, g1_tab, 6,
         err_msg = "g1 of shear field from tabulated P(k) with f_log differs from expectation!")
     np.testing.assert_almost_equal(g2_analytic, g2_tab, 6,
         err_msg = "g2 of shear field from tabulated P(k) with f_log differs from expectation!")
     tab = galsim.LookupTable(k_arr, p_arr, x_log = True, f_log = True)
-    ps_tab = galsim.PowerSpectrum(e_power_function=tab, grid_spacing = 1., ngrid = 10,
-                                  rng = galsim.BaseDeviate(seed))
-    g1_tab, g2_tab = ps_tab.getGriddedShears()
+    ps_tab = galsim.PowerSpectrum(tab)
+    g1_tab, g2_tab = ps_tab.buildGriddedShears(grid_spacing = 1., ngrid = 10,
+                                               rng = galsim.BaseDeviate(seed))
     np.testing.assert_almost_equal(g1_analytic, g1_tab, 6,
         err_msg = "g1 of shear field from tabulated P(k) with x_log, f_log differs from expectation!")
     np.testing.assert_almost_equal(g2_analytic, g2_tab, 6,
@@ -320,8 +319,8 @@ def test_tabulated():
         ## tabulated P(k) (for this test we make a stupidly limited k grid just to ensure that an
         ## exception should be raised)
         t = galsim.LookupTable((0.99,1.,1.01),(0.99,1.,1.01))
-        np.testing.assert_raises(ValueError, galsim.PowerSpectrum, 
-                                 e_power_function=t, grid_spacing=1., ngrid=100)
+        ps = galsim.PowerSpectrum(t)
+        np.testing.assert_raises(ValueError, ps.buildGriddedShears, grid_spacing=1., ngrid=100)
         ## try to interpolate in log, but with zero values included
         np.testing.assert_raises(ValueError, galsim.LookupTable, (0.,1.,2.), (0.,1.,2.),
                                  x_log=True)
