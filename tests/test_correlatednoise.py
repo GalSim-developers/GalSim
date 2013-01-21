@@ -1,3 +1,4 @@
+import time
 import numpy as np
 
 try:
@@ -60,12 +61,17 @@ decimal_precise = 7
 # number of positions to test in nonzero lag uncorrelated tests
 npos_test = 3
 
-# number of ImageCorrFuncs to average over to get slightly better statistics for noise generation test
+# number of ImageCorrFuncs to sum over to get slightly better statistics for noise generation test
 nsum_test = 5
+
+def funcname():
+    import inspect
+    return inspect.stack()[1][3]
 
 def test_uncorrelated_noise_zero_lag():
     """Test that the zero lag correlation of an input uncorrelated noise field matches its variance.
     """
+    t1 = time.time()
     sigmas = [3.e-9, 49., 1.11e11, 3.4e30]  # some wide ranging sigma values for the noise field
     # loop through the sigmas
     cf_zero = 0.
@@ -82,11 +88,14 @@ def test_uncorrelated_noise_zero_lag():
         np.testing.assert_almost_equal(
             cf_zero / sigma**2, 1., decimal=decimal_approx,
             err_msg="Zero distance noise correlation value does not match input noise variance.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
 def test_uncorrelated_noise_nonzero_lag():
     """Test that the non-zero lag correlation of an input uncorrelated noise field is zero at some
     randomly chosen positions.
     """
+    t1 = time.time()
     # Set up some random positions (within and outside) the bounds of the table inside the
     # ImageCorrFunc then test
     for i in range(npos_test):
@@ -108,11 +117,14 @@ def test_uncorrelated_noise_nonzero_lag():
             cf_test_value, 0., decimal=decimal_approx,
             err_msg="Non-zero distance noise correlation value not sufficiently close to target "+
             "value of zero.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
 def test_uncorrelated_noise_symmetry():
     """Test that the non-zero lag correlation of an input uncorrelated noise field has two-fold
     rotational symmetry.
     """
+    t1 = time.time()
     ncf = galsim.ImageCorrFunc(uncorr_noise_small, dx=1.) # small image is fine here
     # Set up some random positions (within and outside) the bounds of the table inside the corrfunc
     # then test
@@ -127,11 +139,14 @@ def test_uncorrelated_noise_symmetry():
             decimal=decimal_precise,
             err_msg="Non-zero distance noise correlation values not two-fold rotationally "+
             "symmetric.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
 def test_uncorrelated_noise_90degree_rotation():
     """Test that the ImageCorrFunc rotation methods produces the same output as initializing with a
     90 degree-rotated input field.
     """
+    t1 = time.time()
     ncf = galsim.ImageCorrFunc(uncorr_noise_large, dx=1.)
     ks = [1, 2, 3, 4]
     angles = [
@@ -160,11 +175,14 @@ def test_uncorrelated_noise_90degree_rotation():
             np.testing.assert_almost_equal(
                 cf_ref, cf_test2, decimal=decimal_precise,
                 err_msg="Uncorrelated noise failed 90 degree applyRotation() method test.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
 def test_xcorr_noise_basics():
     """Test the basic properties of a noise field, correlated in the x direction, generated using
     a simple shift-add prescription.
     """
+    t1 = time.time()
     # Use the xnoise defined above to make the x correlation function
     # Note we make multiple correlation funcs and average their zero lag to beat down noise
     cf_zero = 0.
@@ -189,11 +207,14 @@ def test_xcorr_noise_basics():
     np.testing.assert_almost_equal(
         cf_10, .5, decimal=decimal_approx,
         err_msg="Noise correlation value at (1, 0) does not match input covariance.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
 def test_ycorr_noise_basics():
     """Test the basic properties of a noise field, correlated in the y direction, generated using
     a simple shift-add prescription.
     """
+    t1 = time.time()
     # use the ynoise defined above to make the y correlation function
     # Note we make multiple correlation funcs and average their zero lag to beat down noise
     cf_zero = 0.
@@ -218,11 +239,14 @@ def test_ycorr_noise_basics():
     np.testing.assert_almost_equal(
         cf_01, .5, decimal=decimal_approx,
         err_msg="Noise correlation value at (0, 1) does not match input covariance.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
 def test_xcorr_noise_symmetry():
     """Test that the non-zero lag correlation of an input x correlated noise field has two-fold
     rotational symmetry.
     """
+    t1 = time.time()
     ncf = galsim.ImageCorrFunc(xnoise_small, dx=1.) # the small image is fine here
     # set up some random positions (within and outside) the bounds of the table inside the corrfunc
     # then test
@@ -237,11 +261,14 @@ def test_xcorr_noise_symmetry():
             cf_test1, cf_test2, decimal=decimal_precise, # should be good to machine precision
             err_msg="Non-zero distance noise correlation values not two-fold rotationally "+
             "symmetric for x correlated noise field.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
 def test_ycorr_noise_symmetry():
     """Test that the non-zero lag correlation of an input y correlated noise field has two-fold
     rotational symmetry.
     """
+    t1 = time.time()
     ncf = galsim.ImageCorrFunc(ynoise_small, dx=1.) # the small image is fine here
     # set up some random positions (within and outside) the bounds of the table inside the corrfunc
     # then test
@@ -256,6 +283,8 @@ def test_ycorr_noise_symmetry():
             cf_test1, cf_test2, decimal=decimal_precise, # should be good to machine precision
             err_msg="Non-zero distance noise correlation values not two-fold rotationally "+
             "symmetric for y correlated noise field.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
 def test_90degree_rotation(): # probably only need to do the x direction for this test if the 
                               # previous tests have passed OK
@@ -263,6 +292,7 @@ def test_90degree_rotation(): # probably only need to do the x direction for thi
     90 degree-rotated input field, this time with a noise field that's correlated in the x
     direction.
     """
+    t1 = time.time()
     ncf = galsim.ImageCorrFunc(xnoise_large, dx=1.)
     ks = [1, 2, 3, 4]
     angles = [
@@ -292,11 +322,14 @@ def test_90degree_rotation(): # probably only need to do the x direction for thi
                 cf_ref, cf_test2, decimal=decimal_precise,
                 err_msg="Noise correlated in the x direction failed 90 degree applyRotation() "+
                 "method test.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
 def test_arbitrary_rotation():
     """Check that rotated correlation function xValues() are correct for a correlation function with
     something in it.
     """
+    t1 = time.time()
     ncf = galsim.ImageCorrFunc(ynoise_small, dx=1.) # use something >0
     for i in range(npos_test):
         rot_angle = 2. * np.pi * glob_ud()
@@ -321,10 +354,13 @@ def test_arbitrary_rotation():
             decimal=decimal_precise, # ditto
             err_msg="Noise correlated in the y direction failed applyRotation() "+
             "method test for arbitrary rotations.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
 def test_scaling():
     """Test the scaling of correlation functions.
     """
+    t1 = time.time()
     ncf = galsim.ImageCorrFunc(ynoise_small, dx=1.)
     scalings = [7.e-13, 424., 7.9e23]
     for scale in scalings:
@@ -344,11 +380,14 @@ def test_scaling():
                decimal=decimal_precise,
                err_msg="Noise correlated in the y direction failed applyMagnification() scaling "+
                "test.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
 def test_draw():
     """Test that the ImageCorrFunc draw() method matches its internal, NumPy-derived estimate of the
     correlation function, and an independent calculation of the same thing.
     """
+    t1 = time.time()
     from galsim import utilities
     # We have slightly different expectations for how the ImageCorrFunc will represent and store CFs
     # from even and odd sized noise fields, so we will test both here.  
@@ -384,11 +423,14 @@ def test_draw():
     np.testing.assert_array_almost_equal(
         testim1.array, cf_array, decimal=decimal_precise, 
         err_msg="Drawn image does not match independently calculated correlation function.")
- 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(), t2 - t1)
+
 def test_output_generation_basic():
     """Test that noise generated by a ImageCorrFunc matches the correlation function.  Averages over
     a ImageCorrFuncs from a number of realizations.
     """
+    t1 = time.time()
     # Get the noise correlation function from an image
     ncf = galsim.ImageCorrFunc(xnoise_large, dx=1.)
     refim = galsim.ImageD(smallim_size, smallim_size)
@@ -412,10 +454,13 @@ def test_output_generation_basic():
     np.testing.assert_array_almost_equal(
         testim.array, refim.array, decimal=decimal_approx,
         err_msg="Generated noise field (basic) does not match input correlation properties.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
 def test_output_generation_rotated():
     """Test that noise generated by a rotated ImageCorrFunc matches the correlation function.
     """
+    t1 = time.time()
     # Get the noise correlation function
     # Note that here we use an extra large image: this is because rotating the noise correlation
     # function (CF) brings in beyond-edge regions (imagine rotating a square but trimming within a
@@ -456,10 +501,13 @@ def test_output_generation_rotated():
         np.testing.assert_array_almost_equal(
             testim.array, refim.array, decimal=decimal_approx,
             err_msg="Generated noise field (rotated) does not match input correlation properties.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
 def test_output_generation_magnified():
     """Test that noise generated by a magnified ImageCorrFunc matches the correlation function.
     """
+    t1 = time.time()
     # Get the noise correlation function
     ncf = galsim.ImageCorrFunc(ynoise_large, dx=1.)
     refim = galsim.ImageD(smallim_size, smallim_size)
@@ -490,6 +538,8 @@ def test_output_generation_magnified():
         np.testing.assert_array_almost_equal(
             testim.array, refim.array, decimal=decimal_approx,
             err_msg="Generated noise does not match (magnified) input correlation properties.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
 
 if __name__ == "__main__":
