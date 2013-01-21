@@ -25,8 +25,8 @@ namespace galsim {
     void pyExportSBInterpolatedImage();
     void pyExportSBKolmogorov();
     void pyExportRandom();
-    void pyExportSBCorrFunc();
     void pyExportInterpolant();
+    void pyExportCorrelationFunction();
 
     namespace hsm {
         void pyExportPSFCorr();
@@ -60,8 +60,8 @@ BOOST_PYTHON_MODULE(_galsim) {
     galsim::pyExportSBInterpolatedImage();
     galsim::pyExportSBKolmogorov();
     galsim::pyExportRandom();
-    galsim::pyExportSBCorrFunc();
     galsim::pyExportInterpolant();
+    galsim::pyExportCorrelationFunction();
     galsim::hsm::pyExportPSFCorr();
     galsim::integ::pyExportInteg();
 }
