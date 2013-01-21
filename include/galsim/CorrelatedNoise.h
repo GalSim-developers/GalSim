@@ -43,6 +43,8 @@ namespace galsim {
      * The matrix is symmetric, and therefore only the upper triangular elements are actually
      * written into.  The rest are initialized and remain as zero.
      *
+     * For an example of this function in use, see `galsim/correlatednoise.py`.
+     *
      * Currently, this actually copies elements from an internal calculation of the covariance
      * matrix (using Mike Jarvis' TMV library).  It could, therefore, be calculated more 
      * efficiently by direct assignment.  However, as this public member function is foreseen as
