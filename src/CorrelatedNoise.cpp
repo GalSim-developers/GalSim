@@ -27,7 +27,7 @@ int verbose_level = 2;
 namespace galsim {
 
     /*
-     * Covariance matrix calculation using the an input SBProfile, the dimensions of the image for
+     * Covariance matrix calculation using the input SBProfile, the dimensions of the image for
      * which a covariance matrix is desired (in the form of a Bounds), and a scale dx
      */
     Image<double> calculateCovarianceMatrix(

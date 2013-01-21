@@ -29,7 +29,7 @@ class _CorrFunc(object):
         # So for now, we start out with store_profile = None.
         self.profile_for_stored = None
 
-        # Delete some of the methods we don't want the use to have access to since they don't make
+        # Delete some of the methods we don't want the user to have access to since they don't make
         # sense
         self.profile.applyShift = self._notImplemented
         self.profile.createShifted = self._notImplemented
@@ -116,7 +116,7 @@ class _CorrFunc(object):
 
         @param image The input Image object.
         @param dx    The pixel scale to adopt for the input image; should use the same units the
-                     ImageCorrFunc instance for which this is a method.  If is specified,
+                     ImageCorrFunc instance for which this is a method.  If is not specified,
                      `image.getScale()` is used instead.
         @param dev   Optional random deviate from which to draw pseudo-random numbers in generating
                      the noise field.
@@ -256,7 +256,8 @@ class _CorrFunc(object):
         """Returns a new correlation function by applying a galsim.Ellipse transformation (shear,
         dilate).
 
-        Note that galsim.Ellipse objects can be initialized in a variety of ways (see documentation         of this class, galsim.ellipse.Ellipse in the doxygen documentation, for details).
+        Note that galsim.Ellipse objects can be initialized in a variety of ways (see documentation
+        of this class, galsim.ellipse.Ellipse in the doxygen documentation, for details).
 
         @param ellipse The galsim.Ellipse transformation to apply
         @returns The transformed object.
@@ -371,7 +372,7 @@ class ImageCorrFunc(_CorrFunc):
 
         >>> cf = galsim.ImageCorrFunc(image, dx=0.2)
 
-    The example above instantiates an ImageCorrFunc, but forces the use of the pixel scale dx to
+    The example above instantiates an ImageCorrFunc, but forces the use of the pixel scale `dx` to
     set the units of the internal lookup table.
 
         >>> cf = galsim.ImageCorrFunc(image,
@@ -388,7 +389,7 @@ class ImageCorrFunc(_CorrFunc):
 
     Attributes
     ----------
-    The key attribue is `profile`, which is the internally stored GSObject profile.  It can be
+    The key attribute is `profile`, which is the internally stored GSObject profile.  It can be
     manipulated using many of the various methods of the GSObject.  The following are all legal:
     
         cf.profile.xValue(galsim.PositionD(0., 0.5))
@@ -400,7 +401,7 @@ class ImageCorrFunc(_CorrFunc):
         cf.profile.applyRotation(theta * galsim.degrees)
         cf.profile.applyTransformation(ellipse)
 
-    A number of the GSObject functions have also been implemented directly as`cf` methods, so that
+    A number of the GSObject functions have also been implemented directly as `cf` methods, so that
     the following commands are also all legal:
 
         cf.draw(im, dx, wmult=4)
@@ -478,7 +479,7 @@ class ImageCorrFunc(_CorrFunc):
     the `calculateCovarianceMatrix` docstring for more information.
 
     As already described, a number of the GSObject functions have also been implemented directly
-    as`cf` methods.  See the 'Attributes' Section above.
+    as `cf` methods.  See the 'Attributes' Section above.
     """
     def __init__(self, image, dx=0., interpolant=None):
 
