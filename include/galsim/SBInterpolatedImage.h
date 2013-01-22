@@ -27,6 +27,8 @@ namespace galsim {
         const boost::shared_ptr<Lanczos> defaultXInterpolant1d(new Lanczos(5,true,kvalue_accuracy));
         const boost::shared_ptr<InterpolantXY> defaultXInterpolant2d(
             new InterpolantXY(defaultXInterpolant1d));
+
+        const boost::shared_ptr<GaussianDeviate> defaultGaussianDeviate(new GaussianDeviate(0.,1.));
     }
 
     /**
@@ -62,7 +64,7 @@ namespace galsim {
         template <typename T>
         MultipleImageHelper(const std::vector<boost::shared_ptr<BaseImage<T> > >& images,
                             double dx=0., double pad_factor=0., double pad_variance=0.,
-                            boost::shared_ptr<GaussianDeviate> gd = GaussianDeviate());
+                            boost::shared_ptr<GaussianDeviate> gd = sbp::defaultGaussianDeviate);
 
         /** 
          * @brief Convenience constructor that only takes a single image.
@@ -81,7 +83,7 @@ namespace galsim {
         template <typename T>
         MultipleImageHelper(const BaseImage<T>& image,
                             double dx=0., double pad_factor=0., double pad_variance=0.,
-                            boost::shared_ptr<GaussianDeviate> gd = GaussianDeviate());
+                            boost::shared_ptr<GaussianDeviate> gd = sbp::defaultGaussianDeviate);
 
         /// @brief Copies are shallow, so can pass by value without any copying.
         MultipleImageHelper(const MultipleImageHelper& rhs) : _pimpl(rhs._pimpl) {}
@@ -219,7 +221,7 @@ namespace galsim {
             boost::shared_ptr<Interpolant2d> xInterp = sbp::defaultXInterpolant2d,
             boost::shared_ptr<Interpolant2d> kInterp = sbp::defaultKInterpolant2d,
             double dx=0., double pad_factor=0., double pad_variance=0.,
-            boost::shared_ptr<GaussianDeviate> gd = GaussianDeviate());
+            boost::shared_ptr<GaussianDeviate> gd = sbp::defaultGaussianDeviate);
 
         /** 
          * @brief Initialize internal quantities and allocate data tables based on a supplied 2D 

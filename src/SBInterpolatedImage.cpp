@@ -98,8 +98,7 @@ namespace galsim {
             if (pad_factor > 0. && pad_variance > 0.) {
               int N=_pimpl->Nk/2;
               dbg<<"Adding noise with variance=  "<<pad_variance<<std::endl;
-              if (!gd.get()) GaussianDeviate gd(0., std::sqrt(pad_variance)); 
-              else gd->setSigma(std::sqrt(pad_variance));
+              gd->setSigma(std::sqrt(pad_variance));
               for(int ix = -N; ix < N; ++ix) {
                 for(int iy = -N; iy < N; ++iy) {
                     _pimpl->vx[i]->xSet(ix,iy,(*gd)());
@@ -175,10 +174,7 @@ namespace galsim {
         if (pad_factor > 0. && pad_variance > 0.) {
           int N=_pimpl->Nk/2;
           dbg<<"Adding noise with variance=  "<<pad_variance<<std::endl;
-          // if no shared_ptr to a GaussianDeviate was passed in, then make new one
-          if (!gd.get()) GaussianDeviate gd(0., std::sqrt(pad_variance)); 
-          // otherwise, just use the deviate that was passed in, but make sure it has the right variance
-          else gd->setSigma(std::sqrt(pad_variance));
+          gd->setSigma(std::sqrt(pad_variance));
           for(int ix = -N; ix < N; ++ix) {
             for(int iy = -N; iy < N; ++iy) {
                 _pimpl->vx[0]->xSet(ix,iy,(*gd)());
