@@ -402,8 +402,14 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
                                                'grid_spacing', config, float)[0]
         else:
             grid_dx = stamp_size * pixel_scale
+        if 'interpolant' in config['input']['power_spectrum']:
+            interpolant = galsim.config.ParseValue(config['input']['power_spectrum'],
+                                                   'interpolant', config, str)[0]
+        else:
+            interpolant = None
 
-        config['power_spectrum'].buildGriddedShears(grid_spacing=grid_dx, ngrid=n_tiles, rng=rng)
+        config['power_spectrum'].buildGriddedShears(grid_spacing=grid_dx, ngrid=n_tiles, rng=rng,
+                                                    interpolant=interpolant)
         # We don't care about the output here.  This just builds the grid, which we'll
         # access for each object using its position.
 
@@ -598,8 +604,14 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
                                            'grid_spacing', config, float)[0]
         full_size = max(full_xsize, full_ysize)
         grid_nx = full_size * pixel_scale / grid_dx + 1
+        if 'interpolant' in config['input']['power_spectrum']:
+            interpolant = galsim.config.ParseValue(config['input']['power_spectrum'],
+                                                   'interpolant', config, str)[0]
+        else:
+            interpolant = None
 
-        config['power_spectrum'].buildGriddedShears(grid_spacing=grid_dx, ngrid=grid_nx, rng=rng)
+        config['power_spectrum'].buildGriddedShears(grid_spacing=grid_dx, ngrid=grid_nx, rng=rng,
+                                                    interpolant=interpolant)
         # We don't care about the output here.  This just builds the grid, which we'll
         # access for each object using its position.
 

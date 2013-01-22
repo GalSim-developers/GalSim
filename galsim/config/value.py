@@ -641,7 +641,8 @@ def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
         g1,g2 = base['nfw_halo'].getShear(pos,redshift)
         #print 'g1,g2 = ',g1,g2
         shear = galsim.Shear(g1=g1,g2=g2)
-    except:
+    except Exception as e:
+        #print e
         import warnings
         warnings.warn("Warning: NFWHalo shear is invalid -- probably strong lensing!  " +
                       "Using shear = 0.")
@@ -677,6 +678,7 @@ def _GenerateFromNFWHaloMag(param, param_name, base, value_type):
             "Invalid max_scale=%f (must be > 0) for %s.type = NFWHaloMag"%(repeat,param_name))
 
     if mu < 0 or mu > max_scale**2:
+        #print 'mu = ',mu
         import warnings
         warnings.warn("Warning: NFWHalo mu = %f means strong lensing!  Using scale=5."%mu)
         scale = max_scale
@@ -706,7 +708,8 @@ def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
         g1,g2 = base['power_spectrum'].getShear(pos)
         #print 'g1,g2 = ',g1,g2
         shear = galsim.Shear(g1=g1,g2=g2)
-    except:
+    except Exception as e:
+        #print e
         import warnings
         warnings.warn("Warning: PowerSpectrum shear is invalid -- probably strong lensing!  " +
                       "Using shear = 0.")

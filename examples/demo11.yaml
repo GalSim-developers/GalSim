@@ -137,6 +137,11 @@ input :
         # locations to the actual position of each galaxy.
         grid_spacing : 10 # arcsec
 
+        # You can also specify the interpolation scheme to use.  The default is linear
+        # (really bilinear), which is also what we use here.  But you can also choose from
+        # nearest, sinc, cubic, quintic, lanczos.  For lanczos, you need add a number at the end
+        # to specify the order.  e.g. lanczos5 for 5th order Lanczos interpolation.
+        interpolant : linear
 
 # Define the names and format of the output files
 output :
