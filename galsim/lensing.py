@@ -61,11 +61,11 @@ class PowerSpectrum(object):
 
     A PowerSpectrum represents some (flat-sky) shear power spectrum, either for gridded points or at
     arbitary positions.  This class is originally initialized with a power spectrum from which we
-    would like to generate g1 and g2 values.  It generate shears on a grid, and if necessary,
-    when getShear is called, it wil interpolate to the requested positions. 
+    would like to generate g1 and g2 values.  It generates shears on a grid, and if necessary,
+    when getShear is called, it will interpolate to the requested positions. 
 
     When creating a PowerSpectrum instance, you need to specify at least one of the E or B mode 
-    power spectrum, which is normally given as a function P(k).  The typical thing is to just 
+    power spectra, which is normally given as a function P(k).  The typical thing is to just 
     use a lambda function in Python (i.e., a function that is not associated with a name); 
     for example, to define P(k)=k^2, one would use `lambda k : k**2`.  But they can also be more 
     complicated user-defined functions that take a single argument k and return the power at that 
@@ -73,7 +73,7 @@ class PowerSpectrum(object):
     at particular k values but for which there is not a simple analytic form.
     
     The power functions should return either power P(k), or Delta^2(k) = k^2 P(k) / 2pi.
-    If the latter, then you should set `delta2 = True` in teh constructor.  We assume that P(k)
+    If the latter, then you should set `delta2 = True` in the constructor.  We assume that P(k)
     goes to zero at k=0, as in any physically reasonable cosmological model.
 
     The power functions must return a list/array that is the same size as what it was given, e.g.,
@@ -92,9 +92,9 @@ class PowerSpectrum(object):
     spaced 40 pixels apart, then when we call the getShear method of the PowerSpectrum class, we
     should use grid_spacing=8 [arcsec, =(40 pixels)*(0.2 arcsec/pixel)].
 
-    To use a different unit for k, you may specify such with the units kwarg in the constructor.
-    This should be either a galsim.AngleUnit instance (e.g. galsim.radians) or a string 
-    (e.g. 'radians')
+    To use a different (inverse) unit for k, you may specify such with the units kwarg in the
+    constructor.  This should be either a galsim.AngleUnit instance (e.g. galsim.radians) or a
+    string (e.g. 'radians')
 
     @param e_power_function A function or other callable that accepts a Numpy array of |k| values,
                             and returns the E-mode power spectrum P_E(|k|) in an array of the same
@@ -102,16 +102,16 @@ class PowerSpectrum(object):
                             (gradient) mode of the image.  Set to None (default) for there to be no
                             E-mode power.
                             It may also be a string that can be converted to a function using
-                            eval('lambda k : ' + e_power_function), or file_name from which to
-                            read in a LookupTable.
+                            eval('lambda k : ' + e_power_function), a LookupTable, or file_name from
+                            which to read in a LookupTable.
     @param b_power_function A function or other callable that accepts a Numpy array of |k| values,
                             and returns the B-mode power spectrum P_B(|k|) in an array of the same
                             shape.  The function should return the power spectrum desired in the B
                             (curl) mode of the image.  Set to None (default) for there to be no
                             B-mode power.
                             It may also be a string that can be converted to a function using
-                            eval('lambda k : ' + e_power_function), or file_name from which to
-                            read in a LookupTable.
+                            eval('lambda k : ' + e_power_function), a LookupTable, or file_name from
+                            which to read in a LookupTable.
     @param delta2           Is the power actually given as Delta^2, which requires us to multiply 
                             by k^2 / (2pi) to get the shear power P(k)?  [default = False]
                             Note that if Delta^2 is provided, then it is critical that it have 
@@ -157,7 +157,7 @@ class PowerSpectrum(object):
 
     def buildGriddedShears(self, grid_spacing=None, ngrid=None, rng=None,
                            interpolant=None, center=galsim.PositionD(0,0)):
-        """Generate a realization of the current power spectrum an the specified grid.
+        """Generate a realization of the current power spectrum on the specified grid.
 
         This function will generate a Gaussian random realization of the specified E and B mode 
         shear power spectra at a grid of positions, specified by the input parameters 
@@ -183,7 +183,7 @@ class PowerSpectrum(object):
         shear component must be flipped.
 
         This function is called automatically from the constructor, but you can also call it
-        manually to re-build the grid.  If you want to access the grid that is build during
+        manually to rebuild the grid.  If you want to access the grid that is build during
         construction, you can use `getGriddedShears`.  On a rebuild, the grid is returned
         by buildGriddedShears.
 
@@ -195,8 +195,8 @@ class PowerSpectrum(object):
 
         1. Get shears on a grid of points separated by 1 arcsec:
 
-               my_ps = galsim.PowerSpectrum(lambda k : k**2, grid_spacing = 1., ngrid = 100)
-               g1, g2 = my_ps.getGriddedShears()
+               my_ps = galsim.PowerSpectrum(lambda k : k**2)
+               g1, g2 = my_ps.getGriddedShears(grid_spacing = 1., ngrid = 100)
 
            The returned g1,g2 are 2-d numpy arrays of values, corresponding to the values of 
            g1,g2 at the locations of the grid points.
@@ -224,7 +224,8 @@ class PowerSpectrum(object):
            either lists, tuples, or 1d Numpy arrays containing k and P(k):
 
                tab_pk = galsim.LookupTable(k, P_k)
-               my_ps = galsim.PowerSpectrum(tab_pk, grid_spacing = 1., grid_nx = 100)
+               my_ps = galsim.PowerSpectrum(tab_pk)
+               g1, g2 = my_ps.buildGriddedShears(grid_spacing = 1., grid_nx = 100)
 
         @param grid_spacing     Spacing for an evenly spaced grid of points, in arcsec for
                                 consistency with the natural length scale of images created using
