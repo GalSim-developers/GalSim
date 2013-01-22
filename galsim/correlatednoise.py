@@ -11,9 +11,17 @@ from . import utilities
 class _CorrFunc(object):
     """A class describing 2D correlation functions, typically calculated from Images.
 
-    A _CorrFunc will not generally be instantiated directly.  It defines the way in which derived
-    classes (currently only the ImageCorrFunc) store the correlation function profile and generates
-    images containing noise with these correlation properties.
+    A _CorrFunc will not generally be instantiated directly.  This is recommended as the current
+    `_CorrFunc.__init__` interface does not provide any guarantee that the input `GSObject`
+    represents a physical correlation function, e.g. a profile that is an even function (two-fold
+    rotationally symmetric in the plane) and peaked at the origin.  The proposed pattern is that
+    users instead instantiate derived classes, such as the `ImageCorrFunc`, which are able to
+    guarantee the above. 
+
+    The _CorrFunc is therefore here primarily to define the way in which derived classes (currently
+    only the  `ImageCorrFunc`) store the correlation function profile, allow operations with it,
+    generate images containing noise with these correlation properties, and generate covariance 
+    matrices according to the correlation function.
     """
     def __init__(self, gsobject):
         if not isinstance(gsobject, base.GSObject):
@@ -180,10 +188,6 @@ class _CorrFunc(object):
                 newcf.setScale(dx)
             # Then draw this correlation function into an array
             self.profile.draw(newcf, dx=None) # setting dx=None uses the newcf image scale set above
-
-            # Roll to put the origin at the lower left pixel before FT-ing to get the PS...
-            rolled_cf_array = utilities.roll2d(
-                newcf.array, (-newcf.array.shape[0] / 2, -newcf.array.shape[1] / 2))
 
             # Then calculate the sqrt(PS) that will be used to generate the actual noise
             rootps = np.sqrt(np.abs(np.fft.fft2(newcf.array)) * np.product(image.array.shape))
@@ -551,7 +555,10 @@ class ImageCorrFunc(_CorrFunc):
 
         # Then initialize...
         _CorrFunc.__init__(self, base.InterpolatedImage(
-            original_cf_image, interpolant, dx=original_cf_image.getScale(), normalization="sb"))
+            original_cf_image, interpolant, dx=original_cf_image.getScale(), normalization="sb",
+            calculate_stepk=False, calculate_maxk=False)) # these internal calculations do not seem
+                                                          # to do very well with often sharp-peaked
+                                                          # correlation function images...
 
         # Finally store useful data as a (rootps, dx) tuple for efficient later use:
         self.profile_for_stored = self.profile

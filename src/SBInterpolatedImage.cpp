@@ -485,7 +485,7 @@ namespace galsim {
         }
         dbg<<"Done: flux = "<<flux<<std::endl;
         // Should have added up to the total flux.
-        assert( std::abs(flux - fluxTot) < 1.e-6 * fluxTot );
+        assert( std::abs(flux - fluxTot) < 1.e-6 * std::abs(fluxTot) );
         if (d1 == 0) {
             dbg<<"No smaller radius found.  Keep current value of stepk\n";
             return;

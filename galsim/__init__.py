@@ -1,4 +1,4 @@
-from . _galsim import *
+from ._galsim import *
 from . import position
 from . import bounds
 from . import angle

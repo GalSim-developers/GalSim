@@ -780,7 +780,7 @@ class GSObject(object):
         else:
             if im == None:
                 raise ValueError("im is None, but re is not None")
-            if dx is None:
+            if dk is None:
                 if re.getScale() != im.getScale():
                     raise ValueError("re and im do not have the same input scale")
             if re.getBounds().isDefined() or im.getBounds().isDefined():
@@ -1409,7 +1409,16 @@ class InterpolatedImage(GSObject):
                            `galsim.BaseDeviate` object).
                            If `rng=None`, one will be automatically created, using the time as a
                            seed. (Default `rng = None`)
-     
+    @param calculate_stepk Set as `True` to perform an internal determination of the extent of the
+                           object being represented by the InterpolatedImage; often this is useful
+                           in choosing an optimal value for the stepsize in the Fourier space
+                           lookup table. (Default `calculate_stepk = True`)
+    @param calculate_maxk  Set as `True` to perform an internal determination of the highest spatial
+                           frequency needed to accurately render the object being represented by 
+                           the InterpolatedImage; often this is useful in choosing an optimal value
+                           for the extent of the Fourier space lookup table.
+                           (Default `calculate_maxk = True`)
+
     Methods
     -------
     The InterpolatedImage is a GSObject, and inherits all of the GSObject methods (draw(),
@@ -1428,8 +1437,8 @@ class InterpolatedImage(GSObject):
 
     # --- Public Class methods ---
     def __init__(self, image, interpolant = None, normalization = 'flux', dx = None, flux = None,
-                 pad_factor = 0., pad_variance = 0., rng = None):
-
+                 pad_factor = 0., pad_variance = 0., rng = None, calculate_stepk=True,
+                 calculate_maxk=True):
         # first try to read the image as a file.  If its not either a string or a valid
         # pyfits hdu or hdulist, then an exception will be raised, which we ignore and move on.
         try:
@@ -1498,6 +1507,13 @@ class InterpolatedImage(GSObject):
                                                          pad_variance=pad_variance,
                                                          gd=gaussian_deviate)
 
+        # GalSim cannot automatically know what stepK and maxK are appropriate for the 
+        # input image.  So it is usually worth it to do a manual calculation here.
+        if calculate_stepk:
+            sbinterpolatedimage.calculateStepK()
+        if calculate_maxk:
+            sbinterpolatedimage.calculateMaxK()
+
         # If the user specified a flux, then set to that flux value.
         if flux != None:
             if type(flux) != flux:
@@ -1510,7 +1526,7 @@ class InterpolatedImage(GSObject):
             sbinterpolatedimage.scaleFlux(1./(dx**2))
         # If the input Image normalization is 'sb' then since that is the SBInterpolated default
         # assumption, no rescaling is needed.
-        
+
         # Initialize the SBProfile
         GSObject.__init__(self, sbinterpolatedimage)
 
