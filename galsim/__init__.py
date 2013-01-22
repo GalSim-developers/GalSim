@@ -1,4 +1,4 @@
-from . _galsim import *
+from ._galsim import *
 from . import position
 from . import bounds
 from . import angle
@@ -18,4 +18,4 @@ from psfcorr import *
 from catalog import *
 from lensing import *
 from . import integ
-from . import correlatednoise
+from correlatednoise import *

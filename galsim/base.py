@@ -33,10 +33,6 @@ class GSObject(object):
     methods and attributes, particularly those from the C++ SBProfile classes.
     """
     def __init__(self, SBProfile):
-        # Note that the _CorrelationFunction option allows a GSObject to be stored as an attribute
-        # for the composition structure of the galsim.correlatednoise correlation function objects
-        if not isinstance(SBProfile, (galsim.SBProfile, galsim._galsim._CorrelationFunction)):
-            raise TypeError("GSObject must be initialized with an SBProfile!")
         self.SBProfile = SBProfile  # This guarantees that all GSObjects have an SBProfile
     
     # Make op+ of two GSObjects work to return an Add object
@@ -79,7 +75,6 @@ class GSObject(object):
 
     def __truediv__(self, other):
         return __div__(self, other)
-
 
     # Make a copy of an object
     def copy(self):
@@ -1388,7 +1383,15 @@ class InterpolatedImage(GSObject):
                            `pad_factor <= 0` results in the use of the default value, 4.  Note that
                            the padding is with zeros; could be changed in future.
                            (Default `pad_factor = 0`.)
-     
+    @param calculate_stepk Set as `True` to perform an internal determination of the extent of the
+                           object being represented by the InterpolatedImage; often this is useful
+                           in choosing an optimal value for the stepsize in the Fourier space
+                           lookup table.
+    @param calculate_maxk  Set as `True` to perform an internal determination of the highest spatial
+                           frequency needed to accurately render the object being represented by 
+                           the InterpolatedImage; often this is useful in choosing an optimal value
+                           for the extent of the Fourier space lookup table.
+
     Methods
     -------
     The InterpolatedImage is a GSObject, and inherits all of the GSObject methods (draw(),
@@ -1406,8 +1409,8 @@ class InterpolatedImage(GSObject):
     _single_params = [ ]
 
     # --- Public Class methods ---
-    def __init__(self, image, interpolant = None, normalization = 'flux', dx = None, flux = None,
-                 pad_factor = 0.):
+    def __init__(self, image, interpolant=None, normalization='flux', dx=None, flux=None, 
+                 pad_factor=0., calculate_stepk=True, calculate_maxk=True):
 
         # first try to read the image as a file.  If its not either a string or a valid
         # pyfits hdu or hdulist, then an exception will be raised, which we ignore and move on.
