@@ -36,9 +36,6 @@ class DistDeviate:
         if not args:
             raise TypeError("Too few unnamed arguments to initialize DistDeviate")
         if hasattr(args[0],'__call__'):
-            #Setting up the cumulative probability array from a function is different enough
-            #from the case where a file is given that it takes place mostly separately
-            #within this block.
             userfunction=args[0]
             filename=args[0] #for later error messages
             narg=1
@@ -50,48 +47,30 @@ class DistDeviate:
             else:
                 raise TypeError(
                     "DistDeviate called with a function must include min and max keywords")
-            xarray=xmin+(1.*xmax-xmin)/(npoints-1)*numpy.array(range(npoints),float)
-            cumulativeprobability=[]
-            for x in xarray:
-                cumulativeprobability.append(galsim.integ.int1d(userfunction,xmin,x))
-            cumulativeprobability=numpy.array(cumulativeprobability)
-
-        #If the first argument isn't callable, see if it's a list or tuple 
+        #If the first argument isn't callable, see if it's a list or filename (which have
+        #some setup in common, hence the else rather than elif)
         else:
             interp=kwargs.pop('interp','spline')
             if isinstance(args[0],(list,tuple,numpy.ndarray)):
                 filename=args[0] #just for later error outputs
                 if len(args)>1 and isinstance(args[1],(list,tuple,numpy.ndarray)):
-                    probabilityarray=galsim.LookupTable(args[0],args[1],interp)
+                    userfunction=galsim.LookupTable(args[0],args[1],interp)
                     narg=2
+                    xmin=min(args[0])
+                    xmax=max(args[0])
                 else:
                     raise TypeError('Only one list or array passed to DistDeviate: %s'%args[0])
             #If none of the above work, assume the unnamed argument is a filename
             elif isinstance(args[0], basestring):
                 filename=args[0]
-                probabilitytable=galsim.LookupTable(filename,interp)
+                userfunction=galsim.LookupTable(filename,interp)
                 narg=1
             else:
                 raise TypeError("Unnamed arguments to DistDeviate are not of permitted types")
-                        
-            #now do the cumulative probability for either of these types.
-            #Erase points <min or >max if they were given, otherwise set xmin and xmax
-            #to the min and max values from the file.
-            if 'min' in kwargs:
-                xmin=kwargs.pop('min',0.0)
-            else:
-                xmin=min(probabilityarray[:,0])
-            if 'max' in kwargs:
-                xmax=kwargs.pop('max',0.0)
-            else:
-                xmax=max(probabilityarray[:,0])
-            kwargs.pop('interp','spline')
-            userfunction=galsim.LookupTable(probabilityarray[:,0],probabilityarray[:,1],interp)
-            xarray=probabilityarray[:,0]
-            cumulativeprobability=[]
-            for x in xarray:
-                cumulativeprobability.append(galsim.integ.int1d(userfunction,xmin,x))
-            cumulativeprobability=numpy.array(cumulativeprobability)
+            xmin=kwargs.pop('min',xmin)
+            xmax=kwargs.pop('max',xmax)
+            if xmax<=xmin:
+            	raise ValueError('Max value <= min value in DistDeviate')
 
         #Set up the random number generator and check the number of arguments.
         if len(args)==narg+1:
@@ -103,29 +82,29 @@ class DistDeviate:
         if kwargs:
             raise TypeError("Keyword arguments to DistDeviate not permitted: %s"%kwargs.keys())
 
-        #At this point we have cumulativeprobability,xmax,xmin from any set of inputs.
+        xarray=xmin+(1.*xmax-xmin)/(npoints-1)*numpy.array(range(npoints),float)
+        cumulativeprobability=[]
+        for x in xarray:
+            cumulativeprobability.append(galsim.integ.int1d(userfunction,xmin,x))
+        cumulativeprobability=numpy.array(cumulativeprobability)
         #Check that cumulativeprobability is always increasing or always decreasing
         #and if it isn't, either tweak it to fix or return an error.
-
         if not numpy.all(cumulativeprobability>=0):
             raise ValueError('Negative probability passed to DistDeviate: %s'%filename)
         dx=numpy.diff(cumulativeprobability)
-        if numpy.all(dx <= 0.):
-            cumulativeprobability=cumulativeprobability[::-1]
-            xarray=xarray[::-1]
-            dx=numpy.diff(cumulativeprobability)
         if not numpy.all(dx >=0.):
+        	#This check plus the cumulativeprobability>=0 should capture any nonzero probabilities
             raise ValueError('Cumulative probability in DistDeviate is not monotonic')
         elif not numpy.all(dx > 0.):
-            #remove consecutive dx=0 points
+            #Remove consecutive dx=0 points, except endpoints
             zeroindex=numpy.squeeze(numpy.where(dx==0))
             dindexright=numpy.squeeze(numpy.where(numpy.diff(zeroindex)==1))
             dindexleft=numpy.squeeze(numpy.where(numpy.diff(zeroindex[1:])==1))
             removearray=dindexleft[numpy.in1d(dindexleft,dindexright)]
             cumulativeprobability=numpy.delete(cumulativeprobability,removearray)
             dx=numpy.diff(cumulativeprobability)
-            #tweak the edges of dx=0 regions so function is always increasing
-            for index in numpy.where(dx == 0)[0]:
+            #Tweak the edges of dx=0 regions so function is always increasing
+            for index in squeeze(numpy.where(dx == 0)):
                 if index+2<len(cumulativeprobability):
                    cumulativeprobability[index+1]+=0.0001*(
                        cumulativeprobability[index+2]-cumulativeprobability[index+1])
@@ -137,7 +116,7 @@ class DistDeviate:
                 raise RuntimeError(
                     'Cumulative probability in DistDeviate is too flat for program to fix')
                         
-        #Dumb check: make sure cumulativeprobability goes from 0 to 1
+        #Quietly renormalize the probability if it wasn't already normalized
         cumulativeprobability/=cumulativeprobability[-1]
         self._inverseprobabilitytable=galsim.LookupTable(cumulativeprobability,xarray,'spline')
         
