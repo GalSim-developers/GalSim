@@ -40,6 +40,9 @@ time ../bin/galsim_json json/demo9.json || exit
 time ../bin/demo10 || exit
 time ../bin/galsim_json json/demo10.json || exit
 
+time ../bin/demo11 || exit
+time ../bin/galsim_json json/demo11.json || exit
+
 echo 'Checking diffs: (No output means success)'
 
 # demo1:
