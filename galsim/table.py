@@ -114,8 +114,7 @@ class LookupTable(object):
 
         @param x       The x value(s) for which f(x) should be calculated via interpolation on
                        the original (x, f) lookup table.  x can be a single float/double, or a
-                       tuple, list, or arbitrarily shaped Numpy array.  It should have units of
-                       inverse arcsec.
+                       tuple, list, or arbitrarily shaped Numpy array.
         @returns The interpolated f(x) value(s)
         """
         import numpy as np
