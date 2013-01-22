@@ -27,15 +27,15 @@ def _convertPositions(pos, units, func):
         elif len(pos) != 2:
             raise TypeError() # This will be caught below and raised with a better error msg.
 
-        # Check for (x,y):
-        elif isinstance(pos[0],float):
-            pos = ( np.array([pos[0]], dtype='float'),
-                    np.array([pos[1]], dtype='float') )
-
-        # Only other valid option is ( xlist , ylist )
         else:
-            pos = ( np.array(pos[0], dtype='float'),
-                    np.array(pos[1], dtype='float') )
+            # Check for (x,y):
+            try:
+                pos = ( np.array([float(pos[0])], dtype='float'),
+                        np.array([float(pos[1])], dtype='float') )
+            except:
+                # Only other valid option is ( xlist , ylist )
+                pos = ( np.array(pos[0], dtype='float'),
+                        np.array(pos[1], dtype='float') )
 
         # Check validity of units
         if isinstance(units, basestring):
