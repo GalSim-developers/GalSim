@@ -17,8 +17,8 @@ namespace galsim {
     SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<T>& image,
         boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
-        double dx, double pad_factor, double pad_variance) :
-        SBProfile(new SBInterpolatedImageImpl(image,xInterp,kInterp,dx,pad_factor,pad_variance)) {}
+        double dx, double pad_factor, double pad_variance, boost::shared_ptr<GaussianDeviate> gd) :
+        SBProfile(new SBInterpolatedImageImpl(image,xInterp,kInterp,dx,pad_factor,pad_variance,gd)) {}
 
     SBInterpolatedImage::SBInterpolatedImage(
         const MultipleImageHelper& multi, const std::vector<double>& weights,
@@ -44,7 +44,7 @@ namespace galsim {
     template <class T>
     MultipleImageHelper::MultipleImageHelper(
         const std::vector<boost::shared_ptr<BaseImage<T> > >& images,
-        double dx, double pad_factor, double pad_variance) :
+        double dx, double pad_factor, double pad_variance, boost::shared_ptr<GaussianDeviate> gd) :
         _pimpl(new MultipleImageHelperImpl)
     {
         if (images.size() == 0) 
@@ -98,10 +98,11 @@ namespace galsim {
             if (pad_factor > 0. && pad_variance > 0.) {
               int N=_pimpl->Nk/2;
               dbg<<"Adding noise with variance=  "<<pad_variance<<std::endl;
-              GaussianDeviate gauss(0., sqrt(pad_variance));
+              if (!gd.get()) GaussianDeviate gd(0., std::sqrt(pad_variance)); 
+              else gd->setSigma(std::sqrt(pad_variance));
               for(int ix = -N; ix < N; ++ix) {
                 for(int iy = -N; iy < N; ++iy) {
-                  _pimpl->vx[i]->xSet(ix,iy,gauss());
+                    _pimpl->vx[i]->xSet(ix,iy,(*gd)());
                 }
               }
             }
@@ -132,7 +133,7 @@ namespace galsim {
 
     template <class T>
     MultipleImageHelper::MultipleImageHelper(
-        const BaseImage<T>& image, double dx, double pad_factor, double pad_variance) :
+        const BaseImage<T>& image, double dx, double pad_factor, double pad_variance, boost::shared_ptr<GaussianDeviate> gd) :
         _pimpl(new MultipleImageHelperImpl)
     {
         dbg<<"Start MultipleImageHelper constructor for one image\n";
@@ -174,10 +175,13 @@ namespace galsim {
         if (pad_factor > 0. && pad_variance > 0.) {
           int N=_pimpl->Nk/2;
           dbg<<"Adding noise with variance=  "<<pad_variance<<std::endl;
-          GaussianDeviate gauss(0., sqrt(pad_variance));
+          // if no shared_ptr to a GaussianDeviate was passed in, then make new one
+          if (!gd.get()) GaussianDeviate gd(0., std::sqrt(pad_variance)); 
+          // otherwise, just use the deviate that was passed in, but make sure it has the right variance
+          else gd->setSigma(std::sqrt(pad_variance));
           for(int ix = -N; ix < N; ++ix) {
             for(int iy = -N; iy < N; ++iy) {
-              _pimpl->vx[0]->xSet(ix,iy,gauss());
+                _pimpl->vx[0]->xSet(ix,iy,(*gd)());
             }
           }
         }
@@ -215,8 +219,8 @@ namespace galsim {
     SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
         const BaseImage<T>& image, 
         boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
-        double dx, double pad_factor, double pad_variance) : 
-        _multi(image,dx,pad_factor,pad_variance), _wts(1,1.), _xInterp(xInterp), _kInterp(kInterp),
+        double dx, double pad_factor, double pad_variance, boost::shared_ptr<GaussianDeviate> gd) : 
+        _multi(image,dx,pad_factor,pad_variance,gd), _wts(1,1.), _xInterp(xInterp), _kInterp(kInterp),
         _readyToShoot(false)
     { initialize(); }
 
@@ -650,51 +654,51 @@ namespace galsim {
     // instantiate template functions for expected image types
     template SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<float>& image, boost::shared_ptr<Interpolant2d> xInterp,
-        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor, double pad_variance);
+        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor, double pad_variance, boost::shared_ptr<GaussianDeviate> gd);
     template SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<double>& image, boost::shared_ptr<Interpolant2d> xInterp,
-        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor, double pad_variance);
+        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor, double pad_variance, boost::shared_ptr<GaussianDeviate> gd);
     template SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<int>& image, boost::shared_ptr<Interpolant2d> xInterp,
-        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor, double pad_variance);
+        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor, double pad_variance, boost::shared_ptr<GaussianDeviate> gd);
     template SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<short>& image, boost::shared_ptr<Interpolant2d> xInterp,
-        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor, double pad_variance);
+        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor, double pad_variance, boost::shared_ptr<GaussianDeviate> gd);
 
     template MultipleImageHelper::MultipleImageHelper(
         const std::vector<boost::shared_ptr<BaseImage<float> > >& images,
-        double dx, double pad_factor, double pad_variance);
+        double dx, double pad_factor, double pad_variance, boost::shared_ptr<GaussianDeviate> gd);
     template MultipleImageHelper::MultipleImageHelper(
         const std::vector<boost::shared_ptr<BaseImage<double> > >& images,
-        double dx, double pad_factor, double pad_variance);
+        double dx, double pad_factor, double pad_variance, boost::shared_ptr<GaussianDeviate> gd);
     template MultipleImageHelper::MultipleImageHelper(
         const std::vector<boost::shared_ptr<BaseImage<int> > >& images,
-        double dx, double pad_factor, double pad_variance);
+        double dx, double pad_factor, double pad_variance, boost::shared_ptr<GaussianDeviate> gd);
     template MultipleImageHelper::MultipleImageHelper(
         const std::vector<boost::shared_ptr<BaseImage<short> > >& images,
-        double dx, double pad_factor, double pad_variance);
+        double dx, double pad_factor, double pad_variance, boost::shared_ptr<GaussianDeviate> gd);
 
     template MultipleImageHelper::MultipleImageHelper(
-        const BaseImage<float>& image, double dx, double pad_factor, double pad_variance);
+        const BaseImage<float>& image, double dx, double pad_factor, double pad_variance, boost::shared_ptr<GaussianDeviate> gd);
     template MultipleImageHelper::MultipleImageHelper(
-        const BaseImage<double>& image, double dx, double pad_factor, double pad_variance);
+        const BaseImage<double>& image, double dx, double pad_factor, double pad_variance, boost::shared_ptr<GaussianDeviate> gd);
     template MultipleImageHelper::MultipleImageHelper(
-        const BaseImage<int>& image, double dx, double pad_factor, double pad_variance);
+        const BaseImage<int>& image, double dx, double pad_factor, double pad_variance, boost::shared_ptr<GaussianDeviate> gd);
     template MultipleImageHelper::MultipleImageHelper(
-        const BaseImage<short>& image, double dx, double pad_factor, double pad_variance);
+        const BaseImage<short>& image, double dx, double pad_factor, double pad_variance, boost::shared_ptr<GaussianDeviate> gd);
 
     template SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
         const BaseImage<float>& image, boost::shared_ptr<Interpolant2d> xInterp,
-        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor, double pad_variance);
+        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor, double pad_variance, boost::shared_ptr<GaussianDeviate> gd);
     template SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
         const BaseImage<double>& image, boost::shared_ptr<Interpolant2d> xInterp,
-        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor, double pad_variance);
+        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor, double pad_variance, boost::shared_ptr<GaussianDeviate> gd);
     template SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
         const BaseImage<int>& image, boost::shared_ptr<Interpolant2d> xInterp,
-        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor, double pad_variance);
+        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor, double pad_variance, boost::shared_ptr<GaussianDeviate> gd);
     template SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
         const BaseImage<short>& image, boost::shared_ptr<Interpolant2d> xInterp,
-        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor, double pad_variance);
+        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor, double pad_variance, boost::shared_ptr<GaussianDeviate> gd);
 
     template double SBInterpolatedImage::SBInterpolatedImageImpl::fillXImage(
         ImageView<float>& I, double gain) const;

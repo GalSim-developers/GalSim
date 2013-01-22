@@ -52,14 +52,17 @@ namespace galsim {
          *                      `dx = 0.` checks the Image header for a suitable stepsize, sets 
          *                      to `1.` if none is found). 
          * @param[in] pad_factor Multiple by which to increase the image size when zero-padding for 
-         *                      the Fourier transform (default `pad_factor = 4`)
+         *                       the Fourier transform (default `pad_factor = 4`)
          * @param[in] pad_variance Variance of zero-mean Gaussian to fill padded region with noise.  
-         *                      If value is <=0 no noise is added.
+         *                         If value is <=0 no noise is added.
+         * @param[in] gd        GaussianDeviate object to use for filling the padded region with
+         *                      noise.
          *
          */
         template <typename T>
         MultipleImageHelper(const std::vector<boost::shared_ptr<BaseImage<T> > >& images,
-                            double dx=0., double pad_factor=0., double pad_variance=0.);
+                            double dx=0., double pad_factor=0., double pad_variance=0.,
+                            boost::shared_ptr<GaussianDeviate> gd = GaussianDeviate());
 
         /** 
          * @brief Convenience constructor that only takes a single image.
@@ -72,10 +75,13 @@ namespace galsim {
          *                      the Fourier transform (default `pad_factor = 4`)
          * @param[in] pad_variance Variance of zero-mean Gaussian to fill padded region with noise.  
          *                      If value is <=0 no noise is added.
+         * @param[in] gd        GaussianDeviate object to use for filling the padded region with
+         *                      noise.
          */
         template <typename T>
         MultipleImageHelper(const BaseImage<T>& image,
-                            double dx=0., double pad_factor=0., double pad_variance=0.);
+                            double dx=0., double pad_factor=0., double pad_variance=0.,
+                            boost::shared_ptr<GaussianDeviate> gd = GaussianDeviate());
 
         /// @brief Copies are shallow, so can pass by value without any copying.
         MultipleImageHelper(const MultipleImageHelper& rhs) : _pimpl(rhs._pimpl) {}
@@ -204,13 +210,16 @@ namespace galsim {
          *                      the Fourier transform (default `pad_factor = 4`)
          * @param[in] pad_variance Variance of zero-mean Gaussian to fill padded region with noise.  
          *                      If value is <=0 no noise is added.
+         * @param[in] gd        GaussianDeviate object to use for filling the padded region with
+         *                      noise.
          */
         template <typename T> 
         SBInterpolatedImage(
             const BaseImage<T>& image,
             boost::shared_ptr<Interpolant2d> xInterp = sbp::defaultXInterpolant2d,
             boost::shared_ptr<Interpolant2d> kInterp = sbp::defaultKInterpolant2d,
-            double dx=0., double pad_factor=0., double pad_variance=0.);
+            double dx=0., double pad_factor=0., double pad_variance=0.,
+            boost::shared_ptr<GaussianDeviate> gd = GaussianDeviate());
 
         /** 
          * @brief Initialize internal quantities and allocate data tables based on a supplied 2D 
