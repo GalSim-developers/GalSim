@@ -1768,7 +1768,7 @@ class RealGalaxy(GSObject):
 
     # --- Public Class methods ---
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
-                 rng=None, interpolant=None, flux=None, noise_pad=False):
+                 rng=None, interpolant=None, flux=None, noise_pad=False, pad_rng=None):
 
         import pyfits
 
