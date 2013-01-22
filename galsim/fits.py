@@ -235,8 +235,8 @@ def check_hdu(hdu, pyfits_compress):
     import pyfits
     if pyfits_compress:
         if not isinstance(hdu, pyfits.CompImageHDU):
-            print 'pyfits_compress = ',pyfits_compress
-            print 'hdu = ',hdu
+            #print 'pyfits_compress = ',pyfits_compress
+            #print 'hdu = ',hdu
             if isinstance(hdu, pyfits.BinTableHDU):
                 raise IOError('Expecting a CompImageHDU, but got a BinTableHDU\n' +
                     'Probably your pyfits installation does not have the pyfitsComp module '+
@@ -248,8 +248,8 @@ def check_hdu(hdu, pyfits_compress):
                 raise IOError('Found invalid HDU reading FITS file (expected an ImageHDU)')
     else:
         if not isinstance(hdu, pyfits.ImageHDU) and not isinstance(hdu, pyfits.PrimaryHDU):
-            print 'pyfits_compress = ',pyfits_compress
-            print 'hdu = ',hdu
+            #print 'pyfits_compress = ',pyfits_compress
+            #print 'hdu = ',hdu
             raise IOError('Found invalid HDU reading FITS file (expected an ImageHDU)')
 
 
