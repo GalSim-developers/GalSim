@@ -1464,7 +1464,7 @@ class InterpolatedImage(GSObject):
             except:
                 raise RuntimeError('Specified interpolant is not valid!')
 
-        # Set up the gaussian_deviate if not provided one, or check that the user-provided one is of
+        # Set up the GaussianDeviate if not provided one, or check that the user-provided one is of
         # a valid type.
         # Note: we don't have to worry about setting the sigma for the GaussianDeviate; the C++
         # code does that for us, from sqrt(pad_variance).
@@ -1718,7 +1718,8 @@ class RealGalaxy(GSObject):
     --------------
     
         real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index=None, id=None, random=False, 
-                                        rng=None, interpolant=None, flux=None, pad=False)
+                                        rng=None, interpolant=None, flux=None, noise_pad=False,
+                                        pad_rng=None)
 
     This initializes real_galaxy with three SBInterpolatedImage objects (one for the deconvolved
     galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
@@ -1741,13 +1742,18 @@ class RealGalaxy(GSObject):
                                  conserve_flux=True, tol=1.e-4))`].
     @param flux                 Total flux, if None then original flux in galaxy is adopted without
                                 change [default `flux = None`].
-    @param pad                  When creating the SBProfile attribute for this GSObject, pad the
+    @param noise_pad            When creating the SBProfile attribute for this GSObject, pad the
                                 SBInterpolated image with zeros, or with random Gaussian noise of a
-                                level specified in the training dataset?  Use 'pad = True' if you
-                                wish to pad with noise, which will partially offset the effect of
-                                image artifacts due to zero-padding.  The fix is not 100% because
+                                level specified in the training dataset?  Use 'noise_pad = True' if
+                                you wish to pad with noise, which will partially offset the effect
+                                of image artifacts due to zero-padding.  The fix is not 100% because
                                 the actual noise in these images is correlated, unlike the noise
-                                field used for padding.  [default `pad = False`]
+                                field used for padding.  [default `noise_pad = False`]
+    @param pad_rng              If padding by noise, the user can optionally supply the random noise
+                                generator to use for drawing random numbers as `pad_rng` (may be any
+                                kind of `galsim.BaseDeviate` object).
+                                If `pad_rng=None`, one will be automatically created, using the time
+                                as a seed. (Default `rng = None`)
 
     Methods
     -------
@@ -1762,7 +1768,7 @@ class RealGalaxy(GSObject):
 
     # --- Public Class methods ---
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
-                 rng=None, interpolant=None, flux=None, pad=False):
+                 rng=None, interpolant=None, flux=None, noise_pad=False):
 
         import pyfits
 
@@ -1815,14 +1821,33 @@ class RealGalaxy(GSObject):
         self.catalog_file = real_galaxy_catalog.file_name
         self.index = use_index
         self.pixel_scale = float(real_galaxy_catalog.pixel_scale[use_index])
-        if pad: 
+
+        # handle noise-padding options
+        if noise_pad: 
             self.pad_variance= float(real_galaxy_catalog.variance[use_index])
+            # Set up the GaussianDeviate if not provided one, or check that the user-provided one
+            # is of a valid type.
+            # Note: we don't have to worry about setting the sigma for the GaussianDeviate; the C++
+            # code does that for us, from sqrt(pad_variance).
+            if pad_rng == None:
+                gaussian_deviate = galsim.GaussianDeviate()
+            elif isinstance(pad_rng,galsim.GaussianDeviate):
+                gaussian_deviate = rng
+            elif isinstance(pad_rng,galsim.BaseDeviate):
+                # If it's another kind of BaseDeviate, we can convert
+                gaussian_deviate = galsim.GaussianDeviate(rng)
+            else:
+                raise TypeError("rng provided to InterpolatedImage constructor is not a BaseDeviate")
         else:
             self.pad_variance=0.
+            gaussian_deviate=None
         # note: will be adding more parameters here about noise properties etc., but let's be basic
         # for now
+
+        # Now make the SBInterpolatedImage for the original object and the PSF
         self.original_image = galsim.SBInterpolatedImage(
-            gal_image, self.interpolant, dx=self.pixel_scale, pad_variance=self.pad_variance)
+            gal_image, self.interpolant, dx=self.pixel_scale,
+            pad_variance=self.pad_variance, gd=gaussian_deviate)
         self.original_PSF = galsim.SBInterpolatedImage(
             PSF_image, self.interpolant, dx=self.pixel_scale)
         
