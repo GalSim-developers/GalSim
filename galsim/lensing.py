@@ -51,6 +51,20 @@ class PowerSpectrum(object):
     interpolates on that grid to the requested positions.  Finally, it carries around some
     information about the underlying shear power spectrum used to generate the field.
 
+    When creating a PowerSpectrum instance, the E and B mode power spectra can optionally be set at
+    initialization or later on with the method set_power_functions.  Note that the power spectra
+    should be a function of k.  The typical thing is to just use a lambda function in Python (i.e.,
+    a function that is not associated with a name); for example, to define P(k)=k^2, one would use
+    `lambda k : k**2`.  But they can also be more complicated user-defined functions that take a
+    single argument k and return the power at that k value, or they can be instances of the
+    TabulatedPk class for power spectra that are known at particular k values but for which there is
+    not a simple analytic form.  The power function should return power P(k), not Delta^2(k) = k^2
+    P(k) / 2pi; the TabulatedPk class can be instructed to convert between the two automatically.
+    We assume that P(k) goes to zero at k=0, as in any physically reasonable cosmological model.
+    The power functions must return a list/array that is the same size as what it was given, e.g.,
+    in the case of no power or constant power, a function that just returns a float would not be
+    permitted; it would have to return an array of floats all with the same value.
+
     It is important to note that the power spectrum used to initialize the PowerSpectrum object
     should be in the same units as any parameters to the getShear() method that define the locations
     at which we want to get shears.  When we actually draw images, there is a natural scale that
@@ -58,40 +72,34 @@ class PowerSpectrum(object):
     a specific length scale means that we should also use the same units (arcsec) for the positions
     at which we want our galaxies to be located when we draw shears from a power spectrum, and
     likewise the values of k (wavenumber) going into the power spectrum function should be inverse
-    arcsec.  To give a specific example, if we want to draw Gaussians on an image with dx=0.2"
+    arcsec.  To give a specific example, if we want to draw Gaussians on an image with dx=0.2 arcsec
     (i.e., the argument dx to the draw method will be =0.2), and if we want a grid of galaxies
     spaced 40 pixels apart, then when we call the getShear method of the PowerSpectrum class, we
     should use grid_spacing=8 [arcsec, =(40 pixels)*(0.2 arcsec/pixel)].
 
     If the power spectrum used for this calculation comes from a standard cosmology calculator that
     uses units of inverse radians for the wavenumber, then it is important to convert such that the
-    units are consistent with our choice of inverse arcsec.  If there is sufficient interest from
-    users for the code to have a "unit" class that handles conversions between the various units
-    that one might use, then future versions of GalSim might be updated to include this
-    functionality.
-
-    When creating a PowerSpectrum instance, the E and B mode power spectra can optionally be set at
-    initialization or later on with the method set_power_functions.  Note that the power spectra
-    should be a function of k.  The typical thing is to just use a lambda function in Python (i.e.,
-    a function that is not associated with a name); for example, to define P(k)=k^2, one would use
-    `lambda k : k**2`.  But they can also be more complicated user-defined functions that take a
-    single argument k and return the power at that k value.  They should be power P(k), not
-    Delta^2(k) = k^2 P(k) / 2pi.
+    units are consistent with our choice of inverse arcsec.  If reading in a tabulated P(k) from one
+    of those calculators into a TabulatedPk object, it is possible to automatically have GalSim
+    convert the units for you; this functionality is not currently available for other types of
+    power functions.
 
     @param e_power_function A function or other callable that accepts a Numpy array of |k| values,
                             and returns the E-mode power spectrum P_E(|k|) in an array of the same
-                            shape.  It should cope happily with |k|=0.  The function should return
-                            the power spectrum desired in the E (gradient) mode of the image.  Set
-                            to None (default) for there to be no E-mode power.
+                            shape.  The function should return the power spectrum desired in the E
+                            (gradient) mode of the image.  Set to None (default) for there to be no
+                            E-mode power.
                             It may also be a string that can be converted to a function using
-                            eval('lambda k : ' + e_power_function)
+                            eval('lambda k : ' + e_power_function), or a tabulated P(k) represented
+                            using a TabulatedPk object.
     @param b_power_function A function or other callable that accepts a Numpy array of |k| values,
                             and returns the B-mode power spectrum P_B(|k|) in an array of the same
-                            shape.  It should cope happily with |k|=0.  The function should return
-                            the power spectrum desired in the B (curl) mode of the image.  Set to
-                            None (default) for there to be no B-mode power.
+                            shape.  The function should return the power spectrum desired in the B
+                            (curl) mode of the image.  Set to None (default) for there to be no
+                            B-mode power.
                             It may also be a string that can be converted to a function using
-                            eval('lambda k : ' + b_power_function)
+                            eval('lambda k : ' + b_power_function), or a tabulated P(k) represented
+                            using a TabulatedPk object.
     @param units            The angular units used for the power spectrum (i.e. the units of 
                             k^-1).  Currently only arcsec is implemented.
     """
@@ -109,14 +117,19 @@ class PowerSpectrum(object):
                     except :
                         raise AttributeError(
                             "Unable to turn %s = %s into a valid function"%(pf_str,pf))
-                try:
-                    f1 = pf(1.)
-                except:
-                    raise AttributeError("%s is not a valid function"%pf_str)
-                try:
-                    f0 = pf(0.)
-                except:
-                    raise AttributeError("%s is not well-behaved at k=0"%pf_str)
+                # Only try tests below if it's not a TabulatedPk.
+                # (If it's a TabulatedPk, then it could be a valid function that isn't defined at
+                # k=1, and by definition it must return something that is the same length as the
+                # input.)
+                if not isinstance(pf, TabulatedPk):
+                    try:
+                        f1 = pf(1.)
+                    except:
+                        raise AttributeError("%s is not a valid function"%pf_str)
+                    fake_arr = np.zeros(2)
+                    fake_p = pf(fake_arr)
+                    if isinstance(fake_p, float):
+                        raise AttributeError("Power function MUST return a list/array same length as input")
 
         # Check that at least one is not None
         if e_power_function is None and b_power_function is None:
@@ -139,12 +152,36 @@ class PowerSpectrum(object):
         @param units            See description of this parameter in the documentation for the
                                 PowerSpectrum class.
         """
+        # Check that the power functions are valid:
+        for pf_str in [ 'e_power_function', 'b_power_function' ]:
+            pf = eval(pf_str)
+            if pf is not None:
+                if isinstance(pf,str):
+                    try : 
+                        pf = eval('lambda k : ' + pf)
+                    except :
+                        raise AttributeError(
+                            "Unable to turn %s = %s into a valid function"%(pf_str,pf))
+                # Only try tests below if it's not a TabulatedPk.
+                # (If it's a TabulatedPk, then it could be a valid function that isn't defined at
+                # k=1, and by definition it must return something that is the same length as the
+                # input.)
+                if not isinstance(pf, TabulatedPk):
+                    try:
+                        f1 = pf(1.)
+                    except:
+                        raise AttributeError("%s is not a valid function"%pf_str)
+                    fake_arr = np.zeros(2)
+                    fake_p = pf(fake_arr)
+                    if isinstance(fake_p, float):
+                        raise AttributeError("Power function MUST return a list/array same length as input")
+
         self.p_E = e_power_function
         self.p_B = b_power_function
         if units is not galsim.arcsec:
             raise ValueError("Currently we require units of arcsec for the inverse wavenumber!")
 
-    def getShear(self, pos=None, grid_spacing=None, grid_nx=None, rng=None,
+    def getShear(self, pos=None, grid_spacing=None, ngrid=None, rng=None,
                  interpolant=None, center=galsim.PositionD(0,0)):
         """Generate a realization of the current power spectrum at the specified positions.
 
@@ -153,7 +190,7 @@ class PowerSpectrum(object):
         
         First, it will generate a Gaussian random realization of the specified E and B mode shear
         power spectrum at a grid of positions, specified by the input parameters `grid_spacing` 
-        (distance between grid points) and `grid_nx` (number of grid points in each direction.)  
+        (distance between grid points) and `ngrid` (number of grid points in each direction.)
 
         The normalization of the shears from a given power spectrum is defined as follows: if 
         P_E(k)=P_B(k)=P [const],
@@ -177,7 +214,7 @@ class PowerSpectrum(object):
         given list of input positions (or just a single position).  This can be done in conjunction
         with the first functionality, in which case the grid will be computed using the `grid_*`
         parameters and then that new grid will be used to interpolate the shear values.  Or you can
-        omit the `grid_*` parameters, in which case the funciton will use the most recently computed
+        omit the `grid_*` parameters, in which case the function will use the most recently computed
         grid from a previous call.  Currently, if you try to interpolate a grid without having
         previously called `getShear` with the `grid_*` parameters, then an exception will be raised.
         A future version of the code will allow the estimation of shears on non-gridded points by
@@ -186,20 +223,20 @@ class PowerSpectrum(object):
 
         Some examples of how to use getShear:
 
-        1. Create a grid of points separated by 1":
+        1. Create a grid of points separated by 1 arcsec:
 
                my_ps = galsim.PowerSpectrum(lambda k : k**2)
-               g1, g2 = my_ps.getShear(grid_spacing = 1., grid_nx = 100)
+               g1, g2 = my_ps.getShear(grid_spacing = 1., ngrid = 100)
 
            The returned g1,g2 are 2-d numpy arrays of values, corresponding to the values of 
            g1,g2 at the locations of the grid points.
 
-           For a given value of grid_spacing and grid_nx, we could get the x and y values on the
+           For a given value of grid_spacing and ngrid, we could get the x and y values on the
            grid using
 
                import numpy as np
-               min = (-grid_nx/2 + 0.5) * grid_spacing
-               max = (grid_nx/2 - 0.5) * grid_spacing
+               min = (-ngrid/2 + 0.5) * grid_spacing
+               max = (ngrid/2 - 0.5) * grid_spacing
                x, y = np.meshgrid(np.arange(min,max,grid_spacing),
                                   np.arange(min,max,grid_spacing))
 
@@ -208,7 +245,7 @@ class PowerSpectrum(object):
         2. Same thing, but use a particular rng and set the location of the center of the grid
            to be something other than the default (0,0)
 
-               g1, g2 = my_ps.getShear(grid_spacing = 8., grid_nx = 65,
+               g1, g2 = my_ps.getShear(grid_spacing = 8., ngrid = 65,
                                        rng = galsim.BaseDeviate(1413231),
                                        center = (256.5, 256.5) )
 
@@ -239,7 +276,7 @@ class PowerSpectrum(object):
         either lists, tuples, or 1d Numpy arrays containing k and P(k):
 
                tab_pk = galsim.lensing.TabulatedPk(k, P_k)
-               my_ps = galsim.PowerSpectrum(my_ps)
+               my_ps = galsim.PowerSpectrum(tab_pk)
                g1, g2 = my_ps.getShear(grid_spacing = 1., grid_nx = 100)
 
         @param pos              Position(s) of the source(s), assumed to be post-lensing!  (It is 
@@ -254,7 +291,9 @@ class PowerSpectrum(object):
         @param grid_spacing     Spacing for an evenly spaced grid of points, in arcsec for
                                 consistency with the natural length scale of images created using
                                 the draw or drawShoot methods.
-        @param grid_nx          Number of grid points in the x dimension.
+        @param ngrid            Number of grid points in each dimension.  If a number that is not
+                                an int (e.g., a float) is supplied, then it gets converted to an int
+                                automatically.
         @param rng              (Optional) A galsim.GaussianDeviate object for drawing the random
                                 numbers.  (Alternatively, any BaseDeviate can be used.)
         @param interpolant      (Optional) Interpolant to use for interpolating the shears on a grid
@@ -291,10 +330,17 @@ class PowerSpectrum(object):
                     "Calling PowerSpectrum.getShear without grid parameters, and " +
                     "no grid previously set up.")
 
+
         # Check problem cases for regular grid of points
-        if grid_spacing is not None or grid_nx is not None:
-            if grid_spacing is None or grid_nx is None:
+        if grid_spacing is not None or ngrid is not None:
+            if grid_spacing is None or ngrid is None:
                 raise ValueError("When specifying grid, we require both a spacing and a size!")
+            # Check for non-integer ngrid
+            if not isinstance(ngrid, int) and not isinstance(ngrid, long):
+                if isinstance(ngrid, float):
+                    ngrid = int(ngrid)
+                else:
+                    raise ValueError("ngrid must be an int, or easily convertable to int!")
 
         # Check if center is a Position
         if isinstance(center,galsim.PositionD):
@@ -334,7 +380,7 @@ class PowerSpectrum(object):
 
         # Build the grid if requested.
         if grid_spacing is not None:
-            psr = PowerSpectrumRealizer(grid_nx, grid_nx, grid_spacing, self.p_E, self.p_B)
+            psr = PowerSpectrumRealizer(ngrid, ngrid, grid_spacing, self.p_E, self.p_B)
             self.grid_g1, self.grid_g2 = psr(gd)
             
             # Setup interpolated images
@@ -344,15 +390,15 @@ class PowerSpectrum(object):
             self.im_g2 = galsim.ImageViewD(self.grid_g2)
             self.im_g2.setScale(grid_spacing)
 
-            # Dealing with the center here is a bit confusing, especially if grid_nx is even.
+            # Dealing with the center here is a bit confusing, especially if ngrid is even.
             # The InterpolatedImage will consider position (0,0) to correspond to 
             # self.im_g1.bounds.center() on the image.  We call this nominal_center.
-            # However, if grid_nx is even, this is slightly up and to the right of the 
-            # true center. The true center x and y are at (1+grid_nx)/2 * grid_spacing.
+            # However, if ngrid is even, this is slightly up and to the right of the 
+            # true center. The true center x and y are at (1+ngrid)/2 * grid_spacing.
             # And finally, we may be passed a value to consider the center of the image.
             b = self.im_g1.bounds
             nominal_center = galsim.PositionD(b.center().x, b.center().y) * grid_spacing
-            true_center = galsim.PositionD( (1.+grid_nx)/2. , (1.+grid_nx)/2. ) * grid_spacing
+            true_center = galsim.PositionD( (1.+ngrid)/2. , (1.+ngrid)/2. ) * grid_spacing
             
             # The offset to be added to any position is then such that if we are 
             # provided the target center position, the result will be the location of 
@@ -485,7 +531,7 @@ class PowerSpectrumRealizer(object):
             self.set_power(self.p_E, self.p_B)
         
         if not isinstance(gd, galsim.GaussianDeviate):
-            raise TypeError("The gd provided to psr() is not a GaussianDeviate!")
+            raise TypeError("The gd provided to the PowerSpectrumRealizer is not a GaussianDeviate!")
 
         #Generate a random complex realization for the E-mode, if there is one
         if self.amplitude_E is not None:
@@ -517,7 +563,24 @@ class PowerSpectrumRealizer(object):
         #Internal function to generate the result of a power function evaluated on a grid,
         #taking into account the symmetries.
         power_array = np.zeros((self.nx, self.ny/2+1))
-        P_k = power_function(self.k)
+
+        # make a faked-up self.k array that fudges the value at k=0, so we don't have to evaluate
+        # power there
+        fake_k = self.k
+        fake_k[0,0] = fake_k[1,0]
+        # raise a clear exception for TabulatedPk that are not defined on the full k range!
+        if isinstance(power_function, TabulatedPk):
+            mink = np.min(fake_k)
+            maxk = np.max(fake_k)
+            if mink < power_function.k_min or maxk > power_function.k_max:
+                print power_function.k_min, power_function.k_max
+                raise ValueError("Tabulated P(k) is not defined for full k range on grid, %f<k<%f"%(mink,maxk))
+        P_k = power_function(fake_k)
+        # now fix the k=0 value of power to zero
+        if type(P_k) is np.ndarray:
+            P_k[0,0] = type(P_k[0,1])(0.)
+        else:
+            P_k = 0.
         power_array[ self.kx, self.ky] = P_k
         power_array[-self.kx, self.ky] = P_k
         if np.any(power_array < 0):
@@ -908,39 +971,77 @@ class TabulatedPk(object):
     """A class for storing a tabulated lensing power spectrum, for use by the lensing engine.
 
     The TabulatedPk class uses the galsim LookupTable functionality to take some input P(k) that is
-    known at particular values of k, and interpolate it to other values of k.  Currently it is the
-    responsibility of the user to ensure that the power is defined for k down to zero, as is
-    required by the lensing engine.  The accuracy of the interpolation and the effective shear power
-    spectrum will in part depend on the user ensuring that the P(k) is adequately sampled for the
-    range of P(k) values of interest; very poor sampling could result in the interpolation being
-    quite inaccurate.
+    known at particular values of k, and interpolate it to other values of k.  The accuracy of the
+    interpolation and the effective shear power spectrum will in part depend on the user ensuring
+    that the P(k) is adequately sampled for the range of P(k) values of interest; very poor sampling
+    could result in the interpolation being quite inaccurate.
 
     The user must supply the arrays for k and P, or the name of an ascii file containing columns for
-    k and P.
+    k and P.  The TabulatedPk object will store some basic information like the minimum and maximum
+    k, and the number of k values used for interpolation.
 
-    @param k             The list, tuple, or 1d Numpy array of k values (floats or doubles).
-    @param power         The list, tuple, or 1d Numpy array of P(k) values (floats or doubles).
-    @param file          The name of the ascii file containing k and P (2 columns).
-    @param c_ell         Is the power actually given as C_ell, which requires us to multiply by
-                         k^2 / (2 pi) to get the shear power P(k)?  [Default: False]
+    The user can opt to interpolate in log(k) and/or log(P), though this is not the default.  It may
+    be a wise choice depending on the particular function, e.g., for a nearly power-law P(k) (or at
+    least one that is locally power-law-ish for much of the k range) then it might be a good idea to
+    interpolate in log(k) and log(P), using a linear interpolant.
+
+    The k can in principle have any of the supported galsim AngleUnits (radians, degrees, hours,
+    arcmin, arcsec), however since PowerSpectrum works only in terms of arcsec, at least for now,
+    the input k will be automatically converted to 1/arcsec.  This means that when calling the
+    object to get power at some k, the input units of k MUST be 1/arcsec.
+
+    @param k             The list, tuple, or 1d Numpy array of k values (floats, doubles, or ints,
+                         which get silently converted to floats for the purpose of interpolation).
+    @param power         The list, tuple, or 1d Numpy array of P(k) values (floats, doubles, or ints,
+                         which get silently converted to floats for the purpose of interpolation).
+    @param delta2        Is the power actually given as Delta^2, which requires us to multiply by
+                         k^2 / (2pi) to get the shear power P(k)?  [Default: False]
+                         Note that if Delta^2 is provided, then it is critical that it have units
+                         consistent with the units for k.
     @param interpolant   The interpolant to use, with the options being 'spline', 'linear', 'ceil',
                          and 'floor' [Default: 'spline'].
+    @param k_log         Set to True if you wish to interpolate using log(k) rather than k.  Note
+                         that all inputs / outputs will still be k, it's just a question of how the
+                         interpolation is done. [Default: False]
+    @param p_log         Set to True if you wish to interpolate using log(P) rather than P.  Note
+                         that all inputs / outputs will still be P, it's just a question of how the
+                         interpolation is done. [Default: False]
     @param units         The angular units used for the power spectrum (i.e. the units of k^-1).
-                         Currently only arcsec is implemented.
+                         Since the PowerSpectrum class currently requires units of arcsec, for now
+                         we use the input value of `units` to convert k automatically to units of
+                         inverse arcsec before tabulating and storing k and P(k).
 
     """
-    def __init__(self, k = None, power = None, file = None, c_ell = False, interpolant = None,
-                 units = galsim.arcsec):
-        # sanity check units
-        if units is not galsim.arcsec:
-            raise ValueError("Currently we require units of arcsec for the inverse wavenumber!")
-        self.units = units
+    def __init__(self, k = None, power = None, file = None, delta2 = False, interpolant = None,
+                 k_log = False, p_log = False, units = galsim.arcsec):
+        self.k_log = k_log
+        self.p_log = p_log
 
         # read in from file if a filename was specified
         if file:
             data = np.loadtxt(file).transpose()
             k=data[0]
             power=data[1]
+
+        # turn k and power into numpy arrays so that all subsequent math is possible (unlike for
+        # lists, tuples).
+        if not isinstance(k, np.ndarray):
+            k = np.array(k)
+        if not isinstance(power, np.ndarray):
+            power = np.array(power)
+
+        # first thing: if we actually have Delta^2, then we must convert to power, which is
+        # dimensionless.
+        if delta2:
+            power = (k**2)*power/(2.*np.pi)
+
+        # sanity check units
+        if not isinstance(units, galsim.AngleUnit):
+            raise ValueError("Input unit is not a galsim.AngleUnit!")
+        if units is not galsim.arcsec:
+            # Convert to galsim.arcsec for now; only k requires changing, since P is dimensionless.
+            k = np.array(k)*(1.*galsim.arcsec)/units
+        self.units = galsim.arcsec
 
         # check for proper interpolant
         if interpolant is None:
@@ -949,11 +1050,21 @@ class TabulatedPk(object):
             if interpolant not in ['spline', 'linear', 'ceil', 'floor']:
                 raise ValueError("Unknown interpolant: %s" % interpolant)
 
+        # store some information that will be useful later
+        self.k_min = min(k)
+        self.k_max = max(k)
+        self.n_k = len(k)
+
         # make and store table
-        if c_ell:
-            self.table = galsim.LookupTable(k, (k**2)*power/(2.*np.pi), interpolant)
-        else:
-            self.table = galsim.LookupTable(k, power, interpolant)
+        if k_log:
+            if np.any(np.array(k) <= 0.):
+                raise ValueError("Cannot interpolate in log(k) when table contains k<=0!")
+            k = np.log(k)
+        if p_log:
+            if np.any(np.array(power) <= 0.):
+                raise ValueError("Cannot interpolate in log(P) when table contains P<=0!")
+            power = np.log(power)
+        self.table = galsim.LookupTable(k, power, interpolant)
 
     def __call__(self, k):
         """Interpolate the TabulatedPk to get power at some k value(s).
@@ -963,13 +1074,23 @@ class TabulatedPk(object):
         is outside the range of the original tabulated values.  The value that is returned is the
         same type as that provided as an argument, e.g., if a single value k is provided then a
         single value of P is returned; if a tuple of k values is provided then a tuple of P values
-        is returned; and so on.
+        is returned; and so on.  Even if interpolation was done using the `k_log` option, the user
+        should still provide k rather than log(k).
+
+        The input k should be in the same units as the TabulatedPk object; currently only
+        1/galsim.arcsec are supported units.  (The TabulatedPk constructor can take other units and
+        automatically convert to 1/arcsec.)
 
         @param k       The k value(s) for which the power should be calculated via interpolation on
                        the original (k, P) lookup table.  k can be a single float/double, or a
-                       tuple, list, or arbitrarily shaped Numpy array.
+                       tuple, list, or arbitrarily shaped Numpy array.  It should have units of
+                       inverse arcsec.
         @returns The power at the specified k value(s).
         """
+        # first, keep track of whether interpolation was done in k or log(k)
+        if self.k_log:
+            k = np.log(k)
+
         # figure out what we received, and return the same thing
         # option 1: a Numpy array
         if isinstance(k, np.ndarray):
@@ -982,20 +1103,29 @@ class TabulatedPk(object):
                     p[i,:] = np.fromiter((self.table(float(q)) for q in k[i,:]), dtype='float')
             else:
                 p = np.fromiter((self.table(float(q)) for q in k), dtype='float')
+            if self.p_log:
+                p = np.exp(p)
             return p
         # option 2: a tuple
         elif isinstance(k, tuple):
             p = []
             for q in k:
                 p.append(self.table(q))
+            if self.p_log:
+                p = np.exp(p)
             return tuple(p)
         # option 3: a list
         elif isinstance(k, list):
             p = []
             for q in k:
                 p.append(self.table(q))
+            if self.p_log:
+                p = np.exp(p)
             return p
         # option 4: a single value
         else:
             # interpolate on table
-            return self.table(k)
+            if self.p_log:
+                return np.exp(self.table(k))
+            else:
+                return self.table(k)
