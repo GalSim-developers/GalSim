@@ -156,7 +156,7 @@ class PowerSpectrum(object):
 
 
     def buildGriddedShears(self, grid_spacing=None, ngrid=None, rng=None,
-                           center=galsim.PositionD(0,0)):
+                           interpolant=None, center=galsim.PositionD(0,0)):
         """Generate a realization of the current power spectrum on the specified grid.
 
         This function will generate a Gaussian random realization of the specified E and B mode 
@@ -226,6 +226,9 @@ class PowerSpectrum(object):
                                 automatically.
         @param rng              (Optional) A galsim.GaussianDeviate object for drawing the random
                                 numbers.  (Alternatively, any BaseDeviate can be used.)
+        @param interpolant      (Optional) Interpolant that will be used for interpolating the
+                                gridded shears by getShear() if that method is later
+                                called. [default=galsim.Linear()]
         @param center           (Optional) If setting up a new grid, define what position you
                                 want to consider the center of that grid. [default = (0,0)]
         
@@ -263,6 +266,20 @@ class PowerSpectrum(object):
             gd = galsim.GaussianDeviate(rng)
         else:
             raise TypeError("The rng provided to getShear is not a BaseDeviate")
+
+        # Check that the interpolant is valid:
+        self.interpolant = interpolant
+        try:
+            if self.interpolant is None:
+                pass
+            elif isinstance(interpolant, galsim.Interpolant):
+                self.interpolant = galsim.InterpolantXY(self.interpolant)
+            elif isinstance(interpolant, galsim.InterpolantXY):
+                pass
+            else:
+                raise TypeError()
+        except:
+            raise TypeError("Invalid interpolant provided to PowerSpectrum.buildGriddedShears")
 
         # Convert power_functions into callables:
         e_power_function = self._convert_power_function(self.e_power_function,'e_power_function')
@@ -363,15 +380,16 @@ class PowerSpectrum(object):
         return pf
 
 
-    def getShear(self, pos=None, units=galsim.arcsec, interpolant=None):
+    def getShear(self, pos, units=galsim.arcsec):
         """
-        This function can interpolate between the grid positions to find the shear values for a
-        given list of input positions (or just a single position).  Before calling this function,
-        you must call buildGriddedShears first to define the grid on which to interpolate.
+        This function can interpolate between grid positions to find the shear values for a given
+        list of input positions (or just a single position).  Before calling this function, you must
+        call buildGriddedShears first to define the grid on which to interpolate.
 
-        Note that the interpolation modifies the effective power spectrum somewhat.  The user is 
+        Note that the interpolation (carried out using the interpolant that was specified when
+        building the gridded shears) modifies the effective power spectrum somewhat.  The user is
         responsible for choosing a grid size that is small enough not to significantly modify the
-        power spectrum on the scales of interest. 
+        power spectrum on the scales of interest.
 
         Some examples of how to use getShear:
 
@@ -412,41 +430,23 @@ class PowerSpectrum(object):
         if not hasattr(self, 'im_g1'):
             raise RuntimeError("PowerSpectrum.buildGriddedShears must be called before getShear")
 
-        if pos is None:
-            raise ValueError("Must specify positions at which to interpolate the shear")
-
         # Convert to numpy arrays for internal usage:
         pos_x, pos_y = _convertPositions(pos, units, 'getShear')
 
         # Set the interpolant:
-        # Check that the interpolant is valid
-        if not hasattr(self, 'interpolant'):
-            if interpolant is None:
-                interpolant = galsim.InterpolantXY(galsim.Linear())
-                self.interpolant = interpolant
-            elif isinstance(interpolant, galsim.Interpolant):
-                interpolant = galsim.InterpolantXY(self.interpolant)
-                self.interpolant = interpolant
-            elif isinstance(interpolant, galsim.InterpolantXY):
-                self.interpolant = interpolant
-            else:
-                raise TypeError("Invalid interpolant provided to PowerSpectrum.getShear")
+        if self.interpolant is None:
+            interpolantxy = galsim.InterpolantXY(galsim.Linear())
+        elif isinstance(interpolant, galsim.Interpolant):
+            interpolantxy = galsim.InterpolantXY(self.interpolant)
+        elif isinstance(interpolant, galsim.InterpolantXY):
+           interpolantxy = self.interpolant
         else:
-            if interpolant is None:
-                pass
-            elif type(interpolant) is not type(self.interpolant):
-                if isinstance(interpolant, galsim.Interpolant):
-                    interpolant = galsim.InterpolantXY(self.interpolant)
-                    self.interpolant = interpolant
-                elif isinstance(interpolant, galsim.InterpolantXY):
-                    self.interpolant = interpolant
-                else:
-                    raise TypeError("Invalid interpolant provided to PowerSpectrum.getShear")
+            raise TypeError("Invalid interpolant provided to PowerSpectrum.getShear")
 
         # Make an SBInterpolatedImage, which will do the heavy lifting for the 
         # interpolation.
-        sbii_g1 = galsim.SBInterpolatedImage(self.im_g1, xInterp=interpolant)
-        sbii_g2 = galsim.SBInterpolatedImage(self.im_g2, xInterp=interpolant)
+        sbii_g1 = galsim.SBInterpolatedImage(self.im_g1, xInterp=interpolantxy)
+        sbii_g2 = galsim.SBInterpolatedImage(self.im_g2, xInterp=interpolantxy)
 
         # interpolate if necessary
         g1,g2 = [], []
