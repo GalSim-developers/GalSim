@@ -19,7 +19,7 @@ New features introduced in this demo:
 - obj = galsim.RealGalaxy(real_galaxy_catalog, id)
 - obj = galsim.Convolve([list], real_space)
 - ps = galsim.PowerSpectrum(e_power_function, b_power_function)
-- g1,g2 = ps.getShear(grid_spacing, ngrid, rng)
+- g1,g2 = ps.buildGriddedShears(grid_spacing, ngrid, rng)
 - g1,g2 = ps.getShear(pos)
 - galsim.random.permute(rng, list1, list2, ...)
 
@@ -122,7 +122,8 @@ def main(argv):
     rng = galsim.BaseDeviate(random_seed+nobj)
 
     # Now have the PowerSpectrum object build a grid of shear values for us to use.
-    grid_g1, grid_g2 = ps.getShear(grid_spacing=stamp_size*pixel_scale, ngrid=n_tiles, rng=rng)
+    grid_g1, grid_g2 = ps.buildGriddedShears(grid_spacing=stamp_size*pixel_scale,
+                                             ngrid=n_tiles, rng=rng)
 
     # Setup the images:
     gal_image = galsim.ImageF(stamp_size * n_tiles , stamp_size * n_tiles)

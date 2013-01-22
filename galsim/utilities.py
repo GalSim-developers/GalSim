@@ -137,3 +137,19 @@ def eval_sbinterpolatedimage(sbi, x_list, y_list):
         vals.append(sbi.xValue(galsim.PositionD(x_list[x_ind], y_list[x_ind])))
     return vals
 
+def convert_interpolant_to_2d(interpolant):
+    """Convert a given interpolant to an Interpolant2d if it is given as a string or 1-d.
+    """
+    if interpolant == None:
+        return None  # caller is responsible for setting a default if desired.
+    elif isinstance(interpolant, galsim.Interpolant2d):
+        return interpolant
+    elif isinstance(interpolant, galsim.Interpolant):
+        return galsim.InterpolantXY(interpolant)
+    else:
+        try:
+            return galsim.Interpolant2d(interpolant)
+        except:
+            raise RuntimeError('Specified interpolant is not valid!')
+
+

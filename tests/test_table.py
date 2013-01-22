@@ -44,7 +44,7 @@ def test_table():
     t1 = time.time()
 
     for interp in interps:
-        table1 = galsim.LookupTable(args1,vals1,interp)
+        table1 = galsim.LookupTable(x=args1,f=vals1,interpolant=interp)
         testvals1 = [ table1(x) for x in testargs1 ]
 
         # The 4th item is in the args list, so it should be exactly the same as the 
@@ -61,7 +61,7 @@ def test_table():
         # Same thing, but now for args that are not evenly spaced.
         # (The Table class uses a different algorithm when the arguments are evenly spaced
         #  than when they are not.)
-        table2 = galsim.LookupTable(args2,vals2,interp)
+        table2 = galsim.LookupTable(x=args2,f=vals2,interpolant=interp)
         testvals2 = [ table2(x) for x in testargs2 ]
 
         np.testing.assert_almost_equal(testvals2[3], vals2[3], DECIMAL,

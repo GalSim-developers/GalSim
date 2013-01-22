@@ -100,7 +100,7 @@ namespace {
         static void wrap() 
         {
             // docstrings are in galsim/table.py
-            bp::class_<Table<double,double> > pyTable("LookupTable", bp::no_init);
+            bp::class_<Table<double,double> > pyTable("_LookupTable", bp::no_init);
             pyTable
                 .def("__init__",
                      bp::make_constructor(
