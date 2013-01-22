@@ -15,10 +15,10 @@ native_byteorder = {'big': '>', 'little': '<'}[byteorder]
 def parse_compression(compression, fits):
     file_compress = None
     pyfits_compress = None
-    if compression == 'rice': pyfits_compress = 'RICE_1'
-    elif compression == 'gzip_tile': pyfits_compress = 'GZIP_1'
-    elif compression == 'hcompress': pyfits_compress = 'HCOMPRESS_1'
-    elif compression == 'plio': pyfits_compress = 'PLIO_1'
+    if compression == 'rice' or compression == 'RICE_1': pyfits_compress = 'RICE_1'
+    elif compression == 'gzip_tile' or compression == 'GZIP_1': pyfits_compress = 'GZIP_1'
+    elif compression == 'hcompress' or compression == 'HCOMPRESS_1': pyfits_compress = 'HCOMPRESS_1'
+    elif compression == 'plio' or compression == 'PLIO_1': pyfits_compress = 'PLIO_1'
     elif compression == 'gzip': file_compress = 'gzip'
     elif compression == 'bzip2': file_compress = 'bzip2'
     elif compression == 'none' or compression == None: pass
@@ -229,6 +229,30 @@ def add_hdu(hdus, data, pyfits_compress):
     hdus.append(hdu)
     return hdu
 
+def check_hdu(hdu, pyfits_compress):
+    """Check that an input hdu is valid
+    """
+    import pyfits
+    if pyfits_compress:
+        if not isinstance(hdu, pyfits.CompImageHDU):
+            print 'pyfits_compress = ',pyfits_compress
+            print 'hdu = ',hdu
+            if isinstance(hdu, pyfits.BinTableHDU):
+                raise IOError('Expecting a CompImageHDU, but got a BinTableHDU\n' +
+                    'Probably your pyfits installation does not have the pyfitsComp module '+
+                    'installed.')
+            elif isinstance(hdu, pyfits.ImageHDU):
+                import warnings
+                warnings.warn("Expecting a CompImageHDU, but found an uncompressed ImageHDU")
+            else:
+                raise IOError('Found invalid HDU reading FITS file (expected an ImageHDU)')
+    else:
+        if not isinstance(hdu, pyfits.ImageHDU) and not isinstance(hdu, pyfits.PrimaryHDU):
+            print 'pyfits_compress = ',pyfits_compress
+            print 'hdu = ',hdu
+            raise IOError('Found invalid HDU reading FITS file (expected an ImageHDU)')
+
+
 
 def write(image, fits, add_wcs=True, clobber=True, compression='auto'):
     """Write a single image to a FITS file.
@@ -433,6 +457,7 @@ def read(fits, compression='auto'):
             if len(fits) < 1:
                 raise IOError('Expecting at least one HDU in galsim.read')
             fits = fits[0]
+    check_hdu(fits, pyfits_compress)
 
     xmin = fits.header.get("GS_XMIN", 1)
     ymin = fits.header.get("GS_YMIN", 1)
@@ -513,7 +538,7 @@ def readMulti(fits, compression='auto'):
         if len(fits) < 1:
             raise IOError('Expecting at least one HDU in galsim.readMulti')
     for hdu in fits[first:]:
-        image_list.append(read(hdu))
+        image_list.append(read(hdu, compression=pyfits_compress))
 
     # If we opened a file, don't forget to close it.
     if fin:
@@ -564,6 +589,7 @@ def readCube(fits, compression='auto'):
             if len(fits) < 1:
                 raise IOError('Expecting at least one HDU in galsim.readCube')
             fits = fits[0]
+    check_hdu(fits, pyfits_compress)
 
     xmin = fits.header.get("GS_XMIN", 1)
     ymin = fits.header.get("GS_YMIN", 1)
@@ -578,6 +604,7 @@ def readCube(fits, compression='auto'):
         warnings.warn("Using float")
         Class = _galsim.ImageViewD
         import numpy
+        data = fits.data.astype(numpy.float64)
 
     # Check through byteorder possibilities, compare to native (used for numpy and our default) and
     # swap if necessary so that C++ gets the correct view.
