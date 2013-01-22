@@ -437,9 +437,66 @@ def test_operations():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_padding():
+    """Test for noise padding of InterpolatedImage."""
+    import time
+    t1 = time.time()
+
+    # set up some defaults: use weird image sizes / shapes and noise variances
+    decimal_precise=5
+    decimal_coarse=2
+    orig_nx = 347
+    orig_ny = 374
+    noise_var = 1.73
+    big_nx = 458
+    big_ny = 481
+    orig_seed = 151241
+
+    # first, make a noise image
+    orig_img = galsim.ImageF(orig_nx, orig_ny)
+    orig_img.setScale(1.)
+    gd = galsim.GaussianDeviate(orig_seed, mean=0., sigma=np.sqrt(noise_var))
+    gd.applyTo(orig_img.view())
+
+    # make it into an InterpolatedImage with some zero-padding
+    # (note that default is zero-padding, by factors of several)
+    int_im = galsim.InterpolatedImage(orig_img)
+    # draw into a larger image
+    big_img = galsim.ImageF(big_nx, big_ny)
+    big_img = int_im.draw(big_img, dx=1.)
+    # check that variance is diluted by expected amount - should be exact, so check precisely!
+    big_var_expected = np.var(orig_img.array)*float(orig_nx*orig_ny)/(big_nx*big_ny)
+    np.testing.assert_almost_equal(np.var(big_img.array), big_var_expected, decimal=decimal_precise,
+        err_msg='Variance not diluted by expected amount when zero-padding')
+
+    # make it into an InterpolatedImage with noise-padding
+    int_im = galsim.InterpolatedImage(orig_img, pad_variance=noise_var,
+                                      rng = galsim.GaussianDeviate(orig_seed))
+    # draw into a larger image
+    big_img = galsim.ImageF(big_nx, big_ny)
+    big_img = int_im.draw(big_img, dx=1.)
+    # check that variance is same as original - here, we cannot be too precise because the padded
+    # region is not huge and the comparison will be, well, noisy.
+    np.testing.assert_almost_equal(np.var(big_img.array), noise_var, decimal=decimal_coarse,
+        err_msg='Variance not correct after padding image with noise')
+
+    # check that if we pass in a RNG, it is actually used to pad with the same noise field
+    # basically, redo all of the above steps and draw into a new image, make sure it's the same as
+    # previous.
+    int_im = galsim.InterpolatedImage(orig_img, pad_variance=noise_var,
+                                      rng = galsim.GaussianDeviate(orig_seed))
+    big_img_2 = galsim.ImageF(big_nx, big_ny)
+    big_img_2 = int_im.draw(big_img_2, dx=1.)
+    np.testing.assert_array_almost_equal(big_img_2.array, big_img.array, decimal=decimal_precise,
+        err_msg='Cannot reproduce noise-padded image with same choice of seed')
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_roundtrip()
     test_fluxnorm()
     test_exceptions()
     test_operations_simple()
     test_operations()
+    test_padding()
