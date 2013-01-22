@@ -227,12 +227,16 @@ def BuildSingleStamp(config, xsize, ysize,
     if 'center' in config['image']:
         import math
         center = galsim.config.ParseValue(config['image'],'center',config,galsim.PositionD)[0]
+        #print 'center = ',center
         icenter = galsim.PositionI(
             int(math.floor(center.x+0.5)),
             int(math.floor(center.y+0.5)) )
+        #print 'icenter = ',icenter
         final_shift = galsim.PositionD(center.x-icenter.x , center.y-icenter.y)
+        #print 'final_shift = ',final_shift
         # Calculate and save the position relative to the image center
         config['pos'] = (center - config['image_cen']) * config['pixel_scale']
+        #print 'pos = ',config['pos']
     else:
         center = None
         icenter = None

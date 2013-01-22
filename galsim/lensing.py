@@ -358,7 +358,8 @@ class PowerSpectrum(object):
             import os
             if os.path.isfile(pf):
                 try:
-                    pf = galsim.LookupTable(file=pf, x_log=True, f_log=True)
+                    #pf = galsim.LookupTable(file=pf, x_log=True, f_log=True)
+                    pf = galsim.LookupTable(file=pf)
                 except :
                     raise AttributeError(
                         "Unable to read %s = %s as a LookupTable"%(pf_str,pf))
@@ -491,7 +492,6 @@ class PowerSpectrumRealizer(object):
                             PowerSpectrum class.
     """
     def __init__(self, nx, ny, pixel_size, p_E, p_B):
-
         # Set up the k grids in x and y, and the instance variables
         self.nx = nx
         self.ny = ny
@@ -510,7 +510,6 @@ class PowerSpectrumRealizer(object):
         self.p_B = p_B
         if p_E is None:  self.amplitude_E = None
         else:            self.amplitude_E = np.sqrt(self._generate_power_array(p_E))
-        
         if p_B is None:  self.amplitude_B = None
         else:            self.amplitude_B = np.sqrt(self._generate_power_array(p_B))
 
@@ -576,6 +575,7 @@ class PowerSpectrumRealizer(object):
                 raise ValueError(
                     "LookupTable P(k) is not defined for full k range on grid, %f<k<%f"%(mink,maxk))
         P_k = power_function(fake_k)
+        
         # now fix the k=0 value of power to zero
         if type(P_k) is np.ndarray:
             P_k[0,0] = type(P_k[0,1])(0.)
@@ -584,7 +584,7 @@ class PowerSpectrumRealizer(object):
         power_array[ self.kx, self.ky] = P_k
         power_array[-self.kx, self.ky] = P_k
         if np.any(power_array < 0):
-            raise ValueError("Negative power required for some values of k!")
+            raise ValueError("Negative power found for some values of k!")
         return power_array
     
     def _generate_spin_weightings(self):

@@ -57,7 +57,7 @@ def main(argv):
     sky_level = 1.e4                 # ADU / arcsec^2
     nobj = 225                       # number of galaxies in entire field
                                      # (This corresponds to 1 galaxy / arcmin^2)
-    grid_spacing = 10                # The spacing between the samples for the power spectrum 
+    grid_spacing = 10.0              # The spacing between the samples for the power spectrum 
                                      # realization (arcsec)
     gal_signal_to_noise = 100        # S/N of each galaxy
 
@@ -166,16 +166,21 @@ def main(argv):
         index = int(ud() * len(gal_list))
         gal = gal_list[index]
 
-        #   Random rotation
+        # Random rotation
         theta = ud()*2.0*numpy.pi*galsim.radians
         # Use createRotated rather than applyRotation, so we don't change the galaxies in the 
         # original gal_list -- createRotated makes a new copy.
         gal = gal.createRotated(theta)
-        #   Apply the cosmological shear
+        # Apply the cosmological shear
         gal.applyShear(g1 = g1, g2 = g2)
-        #   Convolve with the PSF.  We don't have to include a pixel response explicitly, since the
+        # Convolve with the PSF.  We don't have to include a pixel response explicitly, since the
         #     SDSS PSF image that we are using included the pixel response already.
         final = galsim.Convolve(psf, gal)
+
+        # Account for the fractional part of the position:
+        ix = int(math.floor(x+0.5))
+        iy = int(math.floor(y+0.5))
+        final.applyShift((x-ix)*pixel_scale,(y-iy)*pixel_scale)
 
         # Draw it with our desired stamp size
         stamp = galsim.ImageF(stamp_size,stamp_size)
@@ -191,8 +196,6 @@ def main(argv):
         stamp *= flux_scaling
 
         # Recenter the stamp at the desired position:
-        ix = int(math.floor(x+0.5))
-        iy = int(math.floor(y+0.5))
         stamp.setCenter(ix,iy)
 
         # Find the overlapping bounds:
@@ -212,8 +215,8 @@ def main(argv):
     full_image -= sky_level_pix
     logger.info('Added noise to final large image')
 
-    # Now write the image to disk.  It's automatically compressed with Rice compression,
-    # since the filename we provide ends in .fz
+    # Now write the image to disk.  It is automatically compressed with Rice compression,
+    # since the filename we provide ends in .fz.
     full_image.write(file_name)
     logger.info('Wrote image to %r',file_name) 
 
