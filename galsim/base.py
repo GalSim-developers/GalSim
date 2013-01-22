@@ -1364,12 +1364,18 @@ class InterpolatedImage(GSObject):
     choose interpolants and pad factors, and no warnings are raised when the code is modified to
     choose some combination that is known to give significant error.
 
+    The user can choose to have the image padding use Gaussian random noise of some variance, or
+    zeros.  If `pad_variance` is set to a value <=0 (as is the default) then the images are padded
+    with zeros, otherwise the chosen variance is used; in that case, the user can also pass in a
+    random number generator to be used for noise generation.
+
     Initialization
     --------------
     
         >>> interpolated_image = galsim.InterpolatedImage(image, interpolant = None,
                                                           normalization = 'f', dx = None,
-                                                          flux = None, pad_factor = 0.)
+                                                          flux = None, pad_factor = 0.,
+                                                          pad_variance = 0., rng = None)
 
     Initializes interpolated_image as a galsim.InterpolatedImage() instance.
 
@@ -1393,9 +1399,16 @@ class InterpolatedImage(GSObject):
     @param flux            Optionally specify a total flux for the object, which overrides the
                            implied flux normalization from the Image itself.
     @param pad_factor      Factor by which to pad the Image when creating the SBInterpolatedImage;
-                           `pad_factor <= 0` results in the use of the default value, 4.  Note that
-                           the padding is with zeros; could be changed in future.
+                           `pad_factor <= 0` results in the use of the default value, 4.
                            (Default `pad_factor = 0`.)
+    @param pad_variance    Variance to use for the random Gaussian noise in the padding regions, the
+                           size of which were determined by `pad_factor`.  `pad_variance <= 0`
+                           results in padding by zeros.  (Default `pad_variance = 0`.)
+    @param rng             If padding by noise, the user can optionally supply the random noise
+                           generator to use for drawing random numbers as `rng` (may be any kind of
+                           `galsim.BaseDeviate` object).
+                           If `rng=None`, one will be automatically created, using the time as a
+                           seed. (Default `rng = None`)
      
     Methods
     -------
@@ -1415,7 +1428,7 @@ class InterpolatedImage(GSObject):
 
     # --- Public Class methods ---
     def __init__(self, image, interpolant = None, normalization = 'flux', dx = None, flux = None,
-                 pad_factor = 0.):
+                 pad_factor = 0., pad_variance = 0., rng = None):
 
         # first try to read the image as a file.  If its not either a string or a valid
         # pyfits hdu or hdulist, then an exception will be raised, which we ignore and move on.
@@ -1436,6 +1449,8 @@ class InterpolatedImage(GSObject):
             raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
                               "'f', 'surface brightness', or 'sb'.") % normalization)
 
+        # set up the interpolant if none was provided by user, or check that the user-provided one
+        # is of a valid type
         if interpolant == None:
             lan5 = galsim.Quintic(tol=1e-4)
             self.interpolant = galsim.InterpolantXY(lan5)
@@ -1448,6 +1463,20 @@ class InterpolatedImage(GSObject):
                 self.interpolant = galsim.Interpolant2d(interpolant)
             except:
                 raise RuntimeError('Specified interpolant is not valid!')
+
+        # Set up the gaussian_deviate if not provided one, or check that the user-provided one is of
+        # a valid type.
+        # Note: we don't have to worry about setting the sigma for the GaussianDeviate; the C++
+        # code does that for us, from sqrt(pad_variance).
+        if rng == None:
+            gaussian_deviate = galsim.GaussianDeviate()
+        elif isinstance(rng,galsim.GaussianDeviate):
+            gaussian_deviate = rng
+        elif isinstance(rng,galsim.BaseDeviate):
+            # If it's another kind of BaseDeviate, we can convert
+            gaussian_deviate = galsim.GaussianDeviate(rng)
+        else:
+            raise TypeError("rng provided to InterpolatedImage constructor is not a BaseDeviate")
 
         # Check for input dx, and check whether Image already has one set.  At the end of this
         # code block, either an exception will have been raised, or the input image will have a
@@ -1465,7 +1494,9 @@ class InterpolatedImage(GSObject):
 
         # Make the SBInterpolatedImage out of the image.
         sbinterpolatedimage = galsim.SBInterpolatedImage(image, self.interpolant, dx=dx,
-                                                         pad_factor=pad_factor)
+                                                         pad_factor=pad_factor,
+                                                         pad_variance=pad_variance,
+                                                         gd=gaussian_deviate)
 
         # If the user specified a flux, then set to that flux value.
         if flux != None:
@@ -1687,7 +1718,7 @@ class RealGalaxy(GSObject):
     --------------
     
         real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index=None, id=None, random=False, 
-                                        rng=None, interpolant=None)
+                                        rng=None, interpolant=None, flux=None, pad=False)
 
     This initializes real_galaxy with three SBInterpolatedImage objects (one for the deconvolved
     galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
@@ -1710,6 +1741,13 @@ class RealGalaxy(GSObject):
                                  conserve_flux=True, tol=1.e-4))`].
     @param flux                 Total flux, if None then original flux in galaxy is adopted without
                                 change [default `flux = None`].
+    @param pad                  When creating the SBProfile attribute for this GSObject, pad the
+                                SBInterpolated image with zeros, or with random Gaussian noise of a
+                                level specified in the training dataset?  Use 'pad = True' if you
+                                wish to pad with noise, which will partially offset the effect of
+                                image artifacts due to zero-padding.  The fix is not 100% because
+                                the actual noise in these images is correlated, unlike the noise
+                                field used for padding.  [default `pad = False`]
 
     Methods
     -------
