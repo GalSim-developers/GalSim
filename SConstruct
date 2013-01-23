@@ -131,7 +131,7 @@ def ErrorExit(*args, **kwargs):
     libraries, compiler, etc., we don't want to cache the result.
     On the other hand, if we delete the .scon* files now, then the aren't 
     available to diagnose any problems.
-    So we write a file called gs_error that
+    So we write a file called gs.error that
     a) includes some relevant information to diagnose the problem.
     b) indicates that we should clear the cache the next time we run scons.
     """
@@ -195,6 +195,9 @@ def ErrorExit(*args, **kwargs):
 
     print
     print 'Please fix the above error(s) and re-run scons'
+    print 'Note: you may want to look through the file INSTALL.md for advice.'
+    print 'Also, if you are having trouble, please check the INSTALL FAQ at '
+    print '   https://github.com/GalSim-developers/GalSim/wiki/Installation%20FAQ'
     print
     Exit(1)
 
