@@ -181,6 +181,18 @@ class DistDeviate:
     def __call__(self):
         return self._inverseprobabilitytable(self._ud())
     
+	def applyTo.__func__(self, image):
+		for element in image.array:
+			element+=self()
+	
+		
+    def seed.__func__(self,*args):
+		_ud.seed(args)
+    
+    def reset.__func__(self,*args):
+    	_ud.seed(args)
+
+
 # BaseDeviate docstrings
 _galsim.BaseDeviate.__doc__ = """
 Base class for all the various random deviates.
