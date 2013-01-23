@@ -72,8 +72,10 @@ class PowerSpectrum(object):
     k value, or they can be instances of the LookupTable class for power spectra that are known 
     at particular k values but for which there is not a simple analytic form.
     
-    The power functions should return either power P(k), or Delta^2(k) = k^2 P(k) / 2pi.
-    If the latter, then you should set `delta2 = True` in the constructor.  We assume that P(k)
+    The power functions should return either power P(k) or Delta^2(k), defined as
+    P(k) = k^2 Delta^2(k) / 2pi.
+    If the latter, then you should set `delta2 = True` in the constructor.  (Or, in a power spectrum
+    calculator that returns C_ell, this option should be set to True.) We assume that P(k)
     goes to zero at k=0, as in any physically reasonable cosmological model.
 
     The power functions must return a list/array that is the same size as what it was given, e.g.,
