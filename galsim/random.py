@@ -1,10 +1,9 @@
 """
 @file random.py 
-Addition of docstrings to the Random deviate classes at the Python layer.
+Addition of docstrings to the Random deviate classes at the Python layer and definition of the 
+DistDeviate class.
 """
 from . import _galsim
-import galsim
-import numpy
 
 def permute(rng, *args):
     """Randomly permute one or more lists.
@@ -29,10 +28,65 @@ def permute(rng, *args):
 
 
 class DistDeviate:
+	"""A class to draw random numbers from a user-defined probability distribution.
+	
+	DistDeviate, unlike other galsim Deviates, is NOT an instance of the BaseDeviate class.  It
+	has the same methods as those objects, but it cannot be used to initialize other BaseDeviates
+	and it will not satisfy isinstance checks for BaseDeviate.  However, DistDeviate includes an 
+	internal UniformDeviate, _ud, which can be used to initialize other BaseDeviates if necessary.
+	
+	Initialization
+	--------------
+	
+	Some sample initialization calls:
+	
+	>>> d = galsim.random.DistDeviate(list1,list2)
+	# Initializes d to be a DistDeviate using the distribution P(x), where x is list1 and P(x) is
+	# list2, and seeds the PRNG using current time. The lists can also be tuples or numpy arrays.
+	
+    >>> d = galsim.random.DistDeviate(f,min=min,max=max)   
+    # Initializes d to be a DistDeviate instance with a distribution given by the callable function
+    # f(x) from x=min to x=max and seeds the PRNG using current time.  When a function is passed, 
+    # the keywords min and max are required.
+    
+    >>> d = galsim.random.DistDeviate(filename,1062533)
+    # Initializes d to be a DistDeviate instance with a distribution given by the data in file
+    # filename, which must be a 2-column ASCII table, and seeds the PRNG using the long int 
+    # seed 1062533.
+    
+    >>> d = galsim.random.DistDeviate(list1,list2,dev,interpolant='linear')
+    # Initializes d to be a DistDeviate instance using the distribution given by list1 and list2,
+    # using linear interpolation to get probabilities for intermediate points, and seeds the
+    # PRNG using the BaseDeviate dev.
 
+   	@param min          The minimum desired return value (required if a callable function is passed)
+   	@param max          The maximum desired return value (required if a callable function is passed)
+   	@param interpolant  Type of interpolation used for interpolating (x,p) or filename (causes an
+   	                    error if passed alongside a callable function). Options are given in the
+   	                    documentation for galsim.LookupTable.  (default: 'spline')
+   	@param npoints      Number of points in the internal interpolation (default: 256)
+
+	Calling
+	-------
+	Taking the instance from the above examples, successive calls to d() then generate pseudo-random
+	numbers distributed according to the initialized distribution.
+
+    >>> d = galsim.random.DistDeviate([1.,2.,3.],[1.,2.,3.])
+    >>> d()
+    >>> d()            
+"""	
     def __init__(self, *args, **kwargs):
-        npoints=kwargs.pop('npoints',1024)
-
+    	"""Initializes a DistDeviate instance.
+    	
+    	The first unnamed argument(s) must be a filename, callable function, or two one-dimensional
+    	lists, numpy arrays, or tuples.  The second unnamed argument, if given, must be something
+    	that can initialize a BaseDeviate instance, such as another BaseDeviate or a long int seed.
+    	
+    	"""
+    	
+       import numpy
+       npoints=kwargs.pop('npoints',256)
+ 
         if not args:
             raise TypeError("Too few unnamed arguments to initialize DistDeviate")
         if hasattr(args[0],'__call__'):
@@ -50,11 +104,11 @@ class DistDeviate:
         #If the first argument isn't callable, see if it's a list or filename (which have
         #some setup in common, hence the else rather than elif)
         else:
-            interp=kwargs.pop('interp','spline')
+            interpolant=kwargs.pop('interpolant','spline')
             if isinstance(args[0],(list,tuple,numpy.ndarray)):
                 filename=args[0] #just for later error outputs
                 if len(args)>1 and isinstance(args[1],(list,tuple,numpy.ndarray)):
-                    userfunction=galsim.LookupTable(args[0],args[1],interp)
+                    userfunction=galsim.LookupTable(args[0],args[1],interpolant=interpolant)
                     narg=2
                     xmin=min(args[0])
                     xmax=max(args[0])
@@ -63,7 +117,9 @@ class DistDeviate:
             #If none of the above work, assume the unnamed argument is a filename
             elif isinstance(args[0], basestring):
                 filename=args[0]
-                userfunction=galsim.LookupTable(filename,interp)
+                userfunction=galsim.LookupTable(file=filename,interpolant=interpolant)
+                xmin=min(userfunction.getArgs())
+                xmax=max(userfunction.getArgs())
                 narg=1
             else:
                 raise TypeError("Unnamed arguments to DistDeviate are not of permitted types")
@@ -118,14 +174,13 @@ class DistDeviate:
                         
         #Quietly renormalize the probability if it wasn't already normalized
         cumulativeprobability/=cumulativeprobability[-1]
-        self._inverseprobabilitytable=galsim.LookupTable(cumulativeprobability,xarray,'spline')
-        
+        self._inverseprobabilitytable=galsim.LookupTable(cumulativeprobability,xarray,
+                                                         interpolant='spline')
+
 
     def __call__(self):
         return self._inverseprobabilitytable(self._ud())
-        
-
-
+    
 # BaseDeviate docstrings
 _galsim.BaseDeviate.__doc__ = """
 Base class for all the various random deviates.
