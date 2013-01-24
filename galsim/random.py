@@ -28,22 +28,22 @@ def permute(rng, *args):
 
 
 class DistDeviate:
-	"""A class to draw random numbers from a user-defined probability distribution.
-	
-	DistDeviate, unlike other galsim Deviates, is NOT an instance of the BaseDeviate class.  It
-	has the same methods as those objects, but it cannot be used to initialize other BaseDeviates
-	and it will not satisfy isinstance checks for BaseDeviate.  However, DistDeviate includes an 
-	internal UniformDeviate, _ud, which can be used to initialize other BaseDeviates if necessary.
-	
-	Initialization
-	--------------
-	
-	Some sample initialization calls:
-	
-	>>> d = galsim.random.DistDeviate(list1,list2)
-	# Initializes d to be a DistDeviate using the distribution P(x), where x is list1 and P(x) is
-	# list2, and seeds the PRNG using current time. The lists can also be tuples or numpy arrays.
-	
+    """A class to draw random numbers from a user-defined probability distribution.
+    
+    DistDeviate, unlike other galsim Deviates, is NOT an instance of the BaseDeviate class.  It
+    has the same methods as those objects, but it cannot be used to initialize other BaseDeviates
+    and it will not satisfy isinstance checks for BaseDeviate.  However, DistDeviate includes an 
+    internal UniformDeviate, _ud, which can be used to initialize other BaseDeviates if necessary.
+    
+    Initialization
+    --------------
+    
+    Some sample initialization calls:
+    
+    >>> d = galsim.random.DistDeviate(list1,list2)
+    # Initializes d to be a DistDeviate using the distribution P(x), where x is list1 and P(x) is
+    # list2, and seeds the PRNG using current time. The lists can also be tuples or numpy arrays.
+    
     >>> d = galsim.random.DistDeviate(f,min=min,max=max)   
     # Initializes d to be a DistDeviate instance with a distribution given by the callable function
     # f(x) from x=min to x=max and seeds the PRNG using current time.  When a function is passed, 
@@ -59,33 +59,33 @@ class DistDeviate:
     # using linear interpolation to get probabilities for intermediate points, and seeds the
     # PRNG using the BaseDeviate dev.
 
-   	@param min          The minimum desired return value (required if a callable function is passed)
-   	@param max          The maximum desired return value (required if a callable function is passed)
-   	@param interpolant  Type of interpolation used for interpolating (x,p) or filename (causes an
-   	                    error if passed alongside a callable function). Options are given in the
-   	                    documentation for galsim.LookupTable.  (default: 'spline')
-   	@param npoints      Number of points in the internal interpolation (default: 256)
+       @param min          The minimum desired return value (required if a callable function is passed)
+       @param max          The maximum desired return value (required if a callable function is passed)
+       @param interpolant  Type of interpolation used for interpolating (x,p) or filename (causes an
+                           error if passed alongside a callable function). Options are given in the
+                           documentation for galsim.LookupTable.  (default: 'spline')
+       @param npoints      Number of points in the internal interpolation (default: 256)
 
-	Calling
-	-------
-	Taking the instance from the above examples, successive calls to d() then generate pseudo-random
-	numbers distributed according to the initialized distribution.
+    Calling
+    -------
+    Taking the instance from the above examples, successive calls to d() then generate pseudo-random
+    numbers distributed according to the initialized distribution.
 
     >>> d = galsim.random.DistDeviate([1.,2.,3.],[1.,2.,3.])
     >>> d()
     >>> d()            
-"""	
+"""    
     def __init__(self, *args, **kwargs):
-    	"""Initializes a DistDeviate instance.
-    	
-    	The first unnamed argument(s) must be a filename, callable function, or two one-dimensional
-    	lists, numpy arrays, or tuples.  The second unnamed argument, if given, must be something
-    	that can initialize a BaseDeviate instance, such as another BaseDeviate or a long int seed.
-    	
-    	"""
-    	
-       import numpy
-       npoints=kwargs.pop('npoints',256)
+        """Initializes a DistDeviate instance.
+        
+        The first unnamed argument(s) must be a filename, callable function, or two one-dimensional
+        lists, numpy arrays, or tuples.  The second unnamed argument, if given, must be something
+        that can initialize a BaseDeviate instance, such as another BaseDeviate or a long int seed.
+        
+        """
+        
+        import numpy
+        npoints=kwargs.pop('npoints',256)
  
         if not args:
             raise TypeError("Too few unnamed arguments to initialize DistDeviate")
@@ -126,7 +126,7 @@ class DistDeviate:
             xmin=kwargs.pop('min',xmin)
             xmax=kwargs.pop('max',xmax)
             if xmax<=xmin:
-            	raise ValueError('Max value <= min value in DistDeviate')
+                raise ValueError('Max value <= min value in DistDeviate')
 
         #Set up the random number generator and check the number of arguments.
         if len(args)==narg+1:
@@ -149,7 +149,7 @@ class DistDeviate:
             raise ValueError('Negative probability passed to DistDeviate: %s'%filename)
         dx=numpy.diff(cumulativeprobability)
         if not numpy.all(dx >=0.):
-        	#This check plus the cumulativeprobability>=0 should capture any nonzero probabilities
+            #This check plus the cumulativeprobability>=0 should capture any nonzero probabilities
             raise ValueError('Cumulative probability in DistDeviate is not monotonic')
         elif not numpy.all(dx > 0.):
             #Remove consecutive dx=0 points, except endpoints
@@ -181,16 +181,16 @@ class DistDeviate:
     def __call__(self):
         return self._inverseprobabilitytable(self._ud())
     
-	def applyTo.__func__(self, image):
-		for element in image.array:
-			element+=self()
-	
-		
-    def seed.__func__(self,*args):
-		_ud.seed(args)
+    def applyTo(self, image):
+        for element in image.array:
+            element+=self()
     
-    def reset.__func__(self,*args):
-    	_ud.seed(args)
+        
+    def seed(self,*args):
+        _ud.seed(args)
+    
+    def reset(self,*args):
+        _ud.seed(args)
 
 
 # BaseDeviate docstrings
