@@ -1,0 +1,163 @@
+{
+"#" : "Demo #11",
+
+"#" : "The eleventh JSON configuration file in our tutorial about using Galsim config files.",
+"#" : "(This file is designed to be viewed in a window 100 characters wide.)",
+
+"#" : "This script uses a constant PSF from real data (an image read in from a bzipped FITS file, ",
+"#" : "not a parametric model) and variable shear according to some cosmological model for which ",
+"#" : "we have a tabulated power spectrum at specific k values only.  The 225 galaxies in the ",
+"#" : "0.25x0.25 degree field (representing a low number density of 1/arcmin^2) are randomly ",
+"#" : "located and permitted to overlap, but we do take care to avoid being too close to the edge ",
+"#" : "of the large image.  For the galaxies, we use a random selection from 5 specific RealGalaxy",
+"#" : "objects, selected to be 5 particularly irregular ones. These are taken from the same ",
+"#" : "catalog of 100 objects that demo6 used.",
+
+"#" : "New features introduced in this demo:",
+
+"#" : "- obj type : InterpolatedImage(image, dx)",
+"#" : "- pix type : None",
+"#" : "- input.power_spectrum : (e_power_file, delta2, units)",
+
+"#" : "- Power spectrum shears for non-gridded positions.",
+"#" : "- Reading a compressed FITS image (using BZip2 compression).",
+"#" : "- Writing a compressed FITS image (using Rice compression).",
+
+"#" : "Define the PSF profile",
+"psf" : {
+    "#" : "We introduce here a new way to describe a profile.  We can use an image from a fits",
+    "#" : "file and interpolate between the pixels with type = InterpolatedImage.",
+    "type" : "InterpolatedImage",
+    
+    "#" : "The only required parameter is the name of the file with the image.  Note: the file is ",
+    "#" : "bzipped, to demonstrate the new capability of reading in a file that has been ",
+    "#" : "compressed in various ways (which GalSim can infer from the filename).",
+    "image" : "data/example_sdss_psf_sky0.fits.bz2",
+
+    "#" : "If the fits file has a scale given in the header information, we can use that for ",
+    "#" : "the pixel scale.  If it is not given it will assume 1. ",
+    "#" : "Or we can also override that by providing an explicit pixel scale here.",
+    "#" : "This file is a real SDSS PSF, which means pixel scale of 0.396 arcsec.  However, the ",
+    "#" : "typical seeing is 1.2 arcsec and we want to simulate better seeing, so we will just ",
+    "#" : "tell GalSim that the pixel scale is 0.2 arcsec to match our image : pixel_scale below.",
+    "dx" : 0.2
+},
+ 
+"#" : "Define the pixel profile",
+"pix" : {
+    "#" : "Normally, we don't include the pix item, since we just use the default pixel, which is ",
+    "#" : "a square box with sides equal to the pixel scale (defined as image.pixel_scale).",
+    "#" : "However, in this case, the psf already includes the convolution with the pixel, so we",
+    "#" : "don't want to put it in again.  There is a special type : None to account for this",
+    "#" : "case, which means to not use any pixel, rather than use the default.",
+    "type" : "None"
+},
+
+"#" : "Define the galaxy profile",
+"gal" : {
+    "type" : "RealGalaxy",
+    "id" : {
+        "#" : "We select randomly among these 5 IDs.",
+        "type" : "List",
+        "items" : [ 106416, 106731, 108402, 116045, 116448 ],
+        "index" : { "type" : "Random" }
+    },
+
+    "shear" : {
+        "#" : "We again use PowerSpectrumShear, which is set up below using input:power_spectrum.",
+        "type" : "PowerSpectrumShear"
+    },
+
+    "rotation" : {
+        "type" : "Random"
+    },
+
+    "signal_to_noise" : 100
+},
+
+
+"#" : "Define some other information about the images ",
+"image" : {
+    "type" : "Scattered",
+
+    "size" : 4500 ,
+
+    "nobjects" : 225,
+
+    "#" : "This time we use stamp_size to set the size of the postage stamp image for each object.",
+    "#" : "In demo9, we left it out, so GalSim automatically determined a good size for each object.",
+    "#" : "That's usually fine, but here we just want to demonstrate the stamp_size functionality.",
+    "stamp_size" : 48,
+    
+    "#" : "The default center of each stamp is to be random within the full bounds of the image.",
+    "#" : "Here, we limit the range to avoid locations within 1/2 stamp_size of the edge.",
+    "#" : "Note: It's not a problem to let stamps overlap the edge -- Galsim will clip them ",
+    "#" : "appropriately.  We just do this to demonstrate the functionality.",
+    "center" : {
+        "type" : "XY" ,
+        "x" : { "type" : "Random" , "min" : 24 , "max" : 4476 },
+        "y" : { "type" : "Random" , "min" : 24 , "max" : 4476 }
+    },
+
+    "pixel_scale" : 0.20,
+
+    "noise" : {
+        "sky_level" : 1.0e4
+    },
+
+    "random_seed" : 24783923
+},
+
+"#" : "Define the input files",
+"input" : {
+    "#" : "In this case, we need to define where the real galaxy input catalog is.",
+    "real_catalog" : {
+        "dir" : "data",
+        "file_name" : "real_galaxy_catalog_example.fits",
+
+        "#" : "Even though we only have 5 galaxies again, preloading makes a big difference in the",
+        "#" : "running time, because we are selecting among the 5 in a random order, so it helps ",
+        "#" : "to have pyfits load all the images in memory and store them.",
+        "preload" : "True"
+    },
+
+    "#" : "We also initialize the power spectrum here.",
+    "power_spectrum" : {
+        "#" : "In this case, we read the e_power_function from a file.  This is done simply by ",
+        "#" : "providing the file name for the e_power_function parameter.  The input file is",
+        "#" : "expected to have two columns of numbers:  k and P(k).",
+        "e_power_function" : "data/cosmo-fid.zmed1.00.out",
+
+        "#" : "The input function is normally P(k).  However, it is sometimes more convenient",
+        "#" : "to define Delta^2(k).  If the input function is Delta^2(k), set delta2 = true",
+        "delta2" : "true",
+
+        "#" : "The default units of k are arcsec^-1 to match all the other units.  But again,",
+        "#" : "sometimes it is more convenient to define them in different units.  You may",
+        "#" : "specify units = arcsec, arcmin, degrees, or radians.",
+        "units" : "radians",
+
+        "#" : "Since we are not providing galaxy positions on a grid (e.g. in demo10, where we",
+        "#" : "used a TiledImage), we need to define what grid spacing we want to use for",
+        "#" : "the power spectrum realization.  GalSim will then interpolate between these ",
+        "#" : "locations to the actual position of each galaxy.",
+        "grid_spacing" : 10
+    }
+},
+
+"#" : "Define the names and format of the output files",
+"output" : {
+
+    "dir" : "output_json",
+
+    "#" : "Note that the filename ends in .fz.  This is the standard ending for a Rice-compressed",
+    "#" : "fits file.  When GalSim sees that, it automatically applies Rice compression to the",
+    "#" : "output image.",
+    "#" : "Caveat: While the output file seems okay as far as I can tell, ds9 doesn't like it.",
+    "#" : "I think it's a bug in ds9, but we are still looking for a workaround.  For now, to ",
+    "#" : "view the file, you'll need to use funpack to convert it to a normal fits file first.",
+    "file_name" : "tabulated_power_spectrum.fits.fz"
+}
+
+}
+

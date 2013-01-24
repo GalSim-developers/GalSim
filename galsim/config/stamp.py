@@ -215,9 +215,9 @@ def BuildSingleStamp(config, xsize, ysize,
     # Initialize the random number generator we will be using.
     if 'random_seed' in config['image']:
         seed = galsim.config.ParseValue(config['image'],'random_seed',config,int)[0]
-        rng = galsim.UniformDeviate(seed)
+        rng = galsim.BaseDeviate(seed)
     else:
-        rng = galsim.UniformDeviate()
+        rng = galsim.BaseDeviate()
     # Store the rng in the config for use by BuildGSObject function.
     config['rng'] = rng
     if 'gd' in config:
@@ -227,12 +227,16 @@ def BuildSingleStamp(config, xsize, ysize,
     if 'center' in config['image']:
         import math
         center = galsim.config.ParseValue(config['image'],'center',config,galsim.PositionD)[0]
+        #print 'center = ',center
         icenter = galsim.PositionI(
             int(math.floor(center.x+0.5)),
             int(math.floor(center.y+0.5)) )
+        #print 'icenter = ',icenter
         final_shift = galsim.PositionD(center.x-icenter.x , center.y-icenter.y)
+        #print 'final_shift = ',final_shift
         # Calculate and save the position relative to the image center
         config['pos'] = (center - config['image_cen']) * config['pixel_scale']
+        #print 'pos = ',config['pos']
     else:
         center = None
         icenter = None
