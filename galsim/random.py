@@ -85,6 +85,7 @@ class DistDeviate:
         """
         
         import numpy
+        import galsim
         npoints=kwargs.pop('npoints',256)
  
         if not args:
@@ -182,15 +183,16 @@ class DistDeviate:
         return self._inverseprobabilitytable(self._ud())
     
     def applyTo(self, image):
-        for element in image.array:
-            element+=self()
+    	import numpy
+        shp=image.array.shape
+        image.array[:,:]+=numpy.array([[self() for col in range(shp[1])] for row in range(shp[0])])
     
         
     def seed(self,*args):
         _ud.seed(args)
     
     def reset(self,*args):
-        _ud.seed(args)
+        _ud.reset(args)
 
 
 # BaseDeviate docstrings
