@@ -116,6 +116,15 @@ Here I have simply written $\Delta^2(k)$ but in principle there can be
 two such functions, $\Delta^2_{E}$ and $\Delta^2_B$.  I believe these
 should simply be summed in the above equations, but should check this.
 
+A note about something possibly confusing: there are many papers that
+write equations for shear variances that include some window function,
+which we haven't included here.  I believe that is okay, because those
+papers are referring to a different calculation: they are averaging
+the shear in some cells, and computing the expected variance of those
+shears that have been averaged in cells.  In contrast, we're computing
+the variance of individual shears that have been defined within our
+grid, which is a completely different thing.
+
 \section{Comparison software}
 
 We will compare against a completely independent piece of software,
