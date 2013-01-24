@@ -96,7 +96,11 @@ class PowerSpectrum(object):
 
     To use a different (inverse) unit for k, you may specify such with the units kwarg in the
     constructor.  This should be either a galsim.AngleUnit instance (e.g. galsim.radians) or a
-    string (e.g. 'radians')
+    string (e.g. 'radians').  If you provide a power function that is actually C_ell or Delta^2
+    using the `delta2=True` option, then the Delta^2 function must also have consistent units with
+    k, i.e., for k in inverse radians the Delta^2 must be in radians^2.  This is typical for
+    cosmology calculators that return C_ell as a function of ell (which become our Delta^2 and k in
+    the flat-sky approximation).
 
     @param e_power_function A function or other callable that accepts a Numpy array of |k| values,
                             and returns the E-mode power spectrum P_E(|k|) in an array of the same
