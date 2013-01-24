@@ -1,0 +1,225 @@
+\documentclass[preprint]{aastex}
+
+% packages for figures
+\usepackage{graphicx}
+% packages for symbols
+\usepackage{latexsym,amssymb,hyperref}
+% AMS-LaTeX package for e.g. subequations
+\usepackage{amsmath}
+
+%=====================================================================
+% FRONT MATTER
+%=====================================================================
+
+\slugcomment{Draft \today}
+
+%=====================================================================
+% BEGIN DOCUMENT
+%=====================================================================
+
+\newcommand{\kmax}{\ensuremath{k_\mathrm{max}}}
+\newcommand{\kmin}{\ensuremath{k_\mathrm{min}}}
+\newcommand{\rmd}{\ensuremath{\mathrm{d}}}
+\newcommand{\beq}{\begin{equation}}
+\newcommand{\eeq}{\end{equation}}
+
+\begin{document}
+
+\title{Lensing engine testing and normalization convention (Issue \#248)}
+
+\begin{abstract}
+This document contains Rachel's notes on tests of the lensing engine
+for GalSim Issue \#248.  There are a number of questions we need to
+check to make sure that that software is doing what we want it to do,
+and all the relevant tests and equations are described below.
+\end{abstract}
+
+\section{Introduction}
+
+There are a few issues that we wish to check regarding the lensing
+engine.  They are:
+
+\begin{enumerate}
+\item $k$ definitions: the lensing engine seems to omit the $2\pi$
+  factor that seems standard, i.e., normally we say for some length
+  scale $x$ the corresponding $k$ should be $2\pi/x$ but the lensing
+  engine in its current form does $1/x$.
+\item Overall normalization of shear variance: Currently the shear
+  variance for a constant shear power $P(k)=P_0$ does not depend on
+  the grid size/shape.  This seems non-standard, so we should
+  investigate and understand this further.
+\item We need to check the scaling of either the observed correlation
+  function or power spectrum with $k$, to make sure it is done right.
+\item We must check whether unit conversions are done properly.
+  GalSim works in terms of arcsec, but it's common to input numbers in
+  terms of radians, so we should make sure that this works.
+\item What is the effect of interpolating between grid points?  does
+  the interpolant have the expected impact on the shear power?
+\item If we put in just $E$ or just $B$ mode power with a flat
+  spectrum, the variances of $\gamma_1^2$ and $\gamma_2^2$ differ; is
+  this expected for a flat power spectrum or sign of a problem?
+\item We should make sure that when we use both $E$ and $B$ mode
+  power, that we get the expected result, and that results with only
+  $E$ or only $B$ are also sane.
+\end{enumerate}
+
+\section{Theory}
+
+The lensing engine requires a shear power spectrum, $P(k)$.  We are
+working in the flat-sky limit, so when we see expressions in terms of
+$\ell$ we can swap $\ell$ and $k$, and
+\beq
+P = \frac{k^2 C_{\ell}}{2\pi}\equiv \frac{k^2 \Delta^2(k)}{2\pi}.
+\eeq
+
+If we identify pairs of galaxies and get the shears in a coordinate
+system defined along the vector connecting them ($\gamma_+$) and at 45
+degrees with respect to it ($\gamma_\times$), then we can compute
+correlation functions of the $\gamma_+$ and $\gamma_\times$ values,
+which we will call $\xi_{++}$ and $\xi_{\times\times}$.  Then the
+standard cosmological correlation functions $\xi_{\pm}$ are defined as
+\begin{align}
+\xi_{\pm}(\theta) &=  \xi_{++}\pm \xi_{xx} \\
+ &= \frac{1}{2\pi}\int k\,\rmd k \Delta^2(k) J_{0/4}(k\theta).
+\end{align}
+
+Since correlation functions are dimensionless, we immediately see that
+$\Delta^2$ has dimensions of angle$^2$ and $P$ is dimensionless.
+
+The variance of the shear values, 
+\beq
+\mathrm{Var}(\gamma) = \langle g_1^2 + g_2^2\rangle,
+\eeq
+is essentially $\xi_+(\theta=0)$.   Note that this is what we get for
+the defined $\xi_+$ in the limit of $\theta$ going to zero, but that
+equation was defined in terms of $\gamma_+$ and $\gamma_\times$ rather
+than $\gamma_1$ and $\gamma_2$.  On a grid, it's not clear that we
+can enforce/check behavior of Var($\gamma_1$) or Var($\gamma_2)$,
+particularly if the corners are important (which will be the case if
+there is a lot of shear power at small $k$), probably we should 
+ only expect normal behavior for Var($\gamma$), but it's still worth
+ verifying this.  So, combining several equations,
+\beq\label{E:shearvar}
+\mathrm{Var}(\gamma) = \frac{1}{2\pi}\int k\,\rmd k \Delta^2(k).
+\eeq
+
+None of these integrals have had limits on them.  Formally they should
+go from the minimum to the maximum accessible $k$ on our grid.  If our
+grid is defined by
+\begin{align}
+L &= \mbox{length of grid along one dimension (angular units)}\\
+d &= \mbox{spacing between grid points (angular units)}\\
+N &= \mbox{number of grid points along one dimension} = L/d
+\end{align}
+
+Here I have simply written $\Delta^2(k)$ but in principle there can be
+two such functions, $\Delta^2_{E}$ and $\Delta^2_B$.  I believe these
+should simply be summed in the above equations, but should check this.
+
+\section{Comparison software}
+
+We will compare against a completely independent piece of software,
+Chris Hirata's spherical harmonic transform code which is described in
+multiple papers (for example,
+\href{http://adsabs.harvard.edu/abs/2004PhRvD..70j3501H}{Hirata
+  et~al. 2004}).  This does not use the flat-sky
+approach, but that should not be huge important of a difference even
+for our $L=10$ deg.  It is something to bear in mind if we start
+looking for agreement at a few \% level on the largest $\theta$ or
+smallest $k$.  This software wants $C_\ell(\ell)$ as its inputs.
+
+\section{Test of constant shear power}
+
+Our first test uses constant shear power $P(k)=P_0$, or
+$\Delta^2(k)=2\pi P_0/k^2$.  Putting this into Eq.~\ref{E:shearvar},
+we expect a shear variance of
+\begin{align}
+\mathrm{Var}(\gamma) &= P_0 \int \frac{\rmd k}{k} \\
+ &= P_0 \ln{\left(\frac{\kmax}{\kmin}\right)}
+\end{align}
+
+Note that since this depends on a ratio of $k$'s, it doesn't matter
+what units we use for defining our grids, only on the number of grid
+points.  We have, for a grid\footnote{Note that I'm using what I think
+  the $k$ definition should be, i.e., with a $2\pi$.  That's not
+  what's in the code right now.},
+\begin{align}
+\kmax &= \frac{2\pi}{d} \\
+\kmin &= \frac{2\pi}{\sqrt{2}L}\\
+\frac{\kmax}{\kmin} &= \sqrt{2}N.
+\end{align}
+
+So we expect a shear variance defined over both components that is
+\beq
+\mathrm{Var}(\gamma) = \ln{(\sqrt{2}N)} P_0.
+\eeq
+
+Chris's SHT code seems to give exactly this result, as tested using
+two grid sizes.  In contrast, GalSim just gives $P_0$ (also tested
+using two grid sizes).  This does not quite seem to make sense, but
+let's move on for now.
+
+\section{Test of non-constant shear power}
+
+Constant shear power is rather unrealistic and leads to a lot of
+emphasis on the large scales corresponding to box diagonals.  Let's
+instead try this with $P(k) = 2 P_2 k^2$, or $\Delta^2(k) =
+4 \pi P_2$.  This should have a few advantages: first, we can check
+for differences in $\gamma_1^2$ vs. $\gamma_2^2$ in a more realistic
+scenario.  Second, the shear variance (as I will show) explicitly
+depends on the normalization of $k$, so we can use it for tests of
+normalization convention and dependence on the $2\pi$ factor that I
+think is missing from our $k$'s. Again going back to Eq.~\ref{E:shearvar},
+we expect a shear variance of
+\begin{align}
+\mathrm{Var}(\gamma) &= 2 P_2 \int k\,\rmd k\\
+ &= P_2 (\kmax^2-\kmin^2).
+\end{align}
+(Note regarding units: Since we want $P$ and shear variance to be dimensionless, $P_2$
+has dimensions of angle$^2$.)
+
+I start with Chris's code, which wants $\ell$ and $C_\ell$ in units of
+radians, and use $P_2=0.01$ for $E$ mode (no $B$ mode power).  When
+using our default grid that is $10\times 10$ deg with $N=100$ per
+dimension, then in terms of radians, we have $\kmin\sim 25.46$ and
+$\kmax=3600$, so we expect shear variance (over both components) of
+$1.3\times 10^5$.  For a grid that covers $5\times 5$ deg with $N=50$,
+then $\kmin$ doubles but $\kmax$ is the same, so the shear variance
+should be nearly identical (to sub-percent level).  For a third grid
+that covers the same area as original but with $N=50$, $\kmin$ is same
+as for the first grid, but $\kmax$ is halved, so the shear variance
+should decrease by a factor of $\sim 4$.  Result: in all {\em three}
+cases Chris's code gives a shear variance of $1.3\times 10^5$!  This
+is reassuring in the first two cases, completely perplexing for the
+last one.
+
+For GalSim, I want to start {\em without} testing our unit conversion,
+so I am going to convert to arcsec in advance.  We had $P_2=0.01$
+radian$^2$, so I will first convert it to
+$P_2=3600(180/\pi)0.01=2062.65$ arcsec$^2$ and $P(k)=2 P_2 k^2 = 4125.3
+k^2$ before trying this in
+GalSim.  For GalSim I will also try the calculation for the three
+types of grids. (See code snippet in comments in latex file.)
+The result is that the variances are $0.0052$, $0.0052$, $0.0013$.
+Good news: the relative variances behave as expected for the three
+grides.  Bad news: the normalization is way off, by a factor of
+$2.5\times 10^7$.
+% import galsim
+% import numpy as np
+% test_ps = galsim.PowerSpectrum(lambda k : 4125.3*(k**2))
+% g1, g2 = test_ps.buildGriddedShears(grid_spacing=360., ngrid=100)
+% print np.var(g1), np.var(g2)
+% g1, g2 = test_ps.buildGriddedShears(grid_spacing=360., ngrid=50)
+% print np.var(g1), np.var(g2)
+% g1, g2 = test_ps.buildGriddedShears(grid_spacing=720., ngrid=50)
+% print np.var(g1), np.var(g2)
+% -> results are around 0.0052.
+
+\textbf{Didn't try the stuff that comes after this:}
+
+Then, try it with the version that takes everything in radians, to
+check our units conversion.
+
+Finally, try the version that takes $\Delta^2$.
+
+\end{document}
