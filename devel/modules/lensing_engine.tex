@@ -223,7 +223,9 @@ print np.var(g1), np.var(g2), np.var(g1)+np.var(g2)
 The result is that the variances (over both components) are around
 $1070$, $1070$, $275$.  Good news: the relative variances behave
 approximately as expected for the three grides.  Bad news: the
-normalization is way off, by a factor of $0.0083$ for the default grid.
+normalization is way off, by a factor of $0.0083$ for the default
+grid.  Note that the variance of $\gamma_2$ is still larger than
+variance of $\gamma_1$ by a factor of $\sim 1.8$.
 
 Sanity check: say we have some length scale like 3 degrees, which is
 within the range of interesting scales.  This is 0.0524 radians, or
