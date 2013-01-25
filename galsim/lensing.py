@@ -269,6 +269,8 @@ class PowerSpectrum(object):
         if rng is None:
             gd = galsim.GaussianDeviate()
         elif isinstance(rng, galsim.GaussianDeviate):
+            # use the same random number sequence but enforce unit variance
+            rng.setSigma(1.0)
             gd = rng
         elif isinstance(rng, galsim.BaseDeviate):
             gd = galsim.GaussianDeviate(rng)
