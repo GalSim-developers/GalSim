@@ -22,6 +22,7 @@
 # - value type : Random (min, max)
 # - image type : Tiled (..., stamp_size, xborder, yborder)
 # - image : draw_method (fft or phot)
+# - output : file_name with .gz, .bz2 or .fz extension automatically uses compression.
 
 
 # Define the PSF profiles
@@ -141,5 +142,8 @@ image :
 output :
     type : DataCube
     dir : output_yaml
-    file_name : cube_phot.fits
+    # Adding a .gz to the end of the file_name automatically uses gzip to compress the 
+    # output file.
+    # Other options are .bz2 to use bzip2 and .fz to use rice compression.
+    file_name : cube_phot.fits.gz
     nimages : 100

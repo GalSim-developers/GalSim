@@ -23,6 +23,7 @@ New features introduced in this demo:
 - obj.draw(image)  -- i.e. taking the scale from the image rather than a dx= argument
 - obj.drawShoot(image, max_extra_noise, rng)
 - noise = galsim.PoissonDeviate(rng, mean)
+- writeCube(..., compress='gzip')
 """
 
 import sys
@@ -50,7 +51,7 @@ def main(argv):
 
     # Define some parameters we'll use below.
 
-    file_name = os.path.join('output','cube_phot.fits')
+    file_name = os.path.join('output','cube_phot.fits.gz')
 
     random_seed = 553728
     sky_level = 1.e4        # ADU / arcsec^2
@@ -246,7 +247,20 @@ def main(argv):
     logger.info('')
 
     # Now write the image to disk.
-    galsim.fits.writeCube(all_images, file_name)
+    # With any write command, you can optionally compress the file using several compression
+    # schemes:
+    #   'gzip' uses gzip on the full output file.
+    #   'bzip2' uses bzip2 on the full output file.
+    #   'rice' uses rice compression on the image, leaving the fits headers readable.
+    #   'gzip_tile' uses gzip in tiles on the output image, leaving the fits headers readable.
+    #   'hcompress' uses hcompress on the image, but it is only valid for 2-d data, so it 
+    #               doesn't work for writeCube.
+    #   'plio' uses plio on the image, but it is only valid for positive integer data.
+    # Furthermore, the first three have standard filename extensions associated with them,
+    # so if you don't specify a compression, but the filename ends with '.gz', '.bz2' or '.fz',
+    # the corresponding compression will be selected automatically.
+    # In other words, the `compression='gzip'` specification is actually optional here:
+    galsim.fits.writeCube(all_images, file_name, compression='gzip')
     logger.info('Wrote fft image to fits data cube %r',file_name)
 
 

@@ -208,8 +208,7 @@ class PowerSpectrum(object):
         2. Same thing, but use a particular rng and set the location of the center of the grid
            to be something other than the default (0,0)
 
-               im = galsim.ImageF(512, 512)
-               g1, g2 = my_ps.getShear(grid_spacing = 8., grid_nx = 65.,
+               g1, g2 = my_ps.getShear(grid_spacing = 8., grid_nx = 65,
                                        rng = galsim.BaseDeviate(1413231),
                                        center = (256.5, 256.5) )
 
