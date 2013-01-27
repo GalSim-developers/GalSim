@@ -282,23 +282,45 @@ the input $P(k)$.  This was the behavior that we have observed before.  {\em Bar
 
 First, I just realised something I should have pointed out before: in
 our PS code $k_{\rm min} = 0$, since this is the power represented by
-the $(0, 0)$ matrix element of the array.  The stepsize in $k$, which
-we have tend to refer to as $\Delta k$, is $2 \pi / L$.  If you
+the $(0, 0)$ matrix element of the array.  
+({\em From Rachel: this is now set automatically to zero (see branch
+  305).  All tests on this branch use that version of the lensing
+  engine, rather than the one on master.  However, the tests with the
+  constant power spectrum give the same results whether we use the
+  version on master or on 305, so this has not changed anything.  For
+  example, the lensing engine unit tests did not have to be modified
+  to account for this change in how $P(0)$ is defined.})
+The stepsize in $k$, which
+we have tend to refer to as $\Delta k$, is $2 \pi / L$.  ({\em From
+  Rachel: That's not true.  That's what I have been saying should be
+  the definition of $\Delta k$,
+  but if you read the code, it clearly has $\Delta k =1/L$ without a $2\pi$.  This is
+  the point I've been complaining about throughout these notes and on
+  the GitHub issue: I
+  think the code is wrong but nobody else has seemed alarmed
+  about it and this has been a big source of my confusion.  Do you
+  agree that the code is wrong?  Or am I misinterpreting it?  I'm
+  looking at line 498 of lensing.py on this branch.})  If you
 (somehow) ignored the $k=0$ element, or set it to zero, then I suppose
 the minimum $k$ would depend on whether you looked in rectilinear or diagonal direction,
-the smallest values being $k_{1, \rm min} = k_{2, \rm min} = 2 \pi / L$.
+the smallest values being $k_{1, \rm min} = k_{2, \rm min} = 2 \pi /
+L$.  {\em Yes.  I agree with this statement.}
 
 This has fairly profound implications for the results of the tests of constant
 $\Delta^2(k)$.  Indeed it suggests that the variance formally diverges for such
 a power spectrum, so it's probably not a good test case of our PS
 code and it may be a good sign that...  Just one question though: how did you assign a value of $P(k) = 2 \pi
 P_0/ k^2$ for the $k = k_x = k_y = 0$ element?  If you set it to zero
-then I think we should have expected better, but not matching, performance.
+then I think we should have expected better, but not matching,
+performance.  {\em Right.  So it's the $P(k=0)=0$ that we've enforced
+  that does this.}
 
 The fact that Chris's code is giving good results suggests that what
 is here being called $k_{\rm min}$ is indeed being interpreted as
 such, and Chris has put an option to allow you to explore a bounded
-range of scales.  Since the integral does not diverge for $k > 0$ you get a
+range of scales.  {\em As I understand his code, it defines $P(k)$ as
+  nonzero only for those $k$ values for which a value is entered.  I
+  routinely give it from $\ell=2$ to around $10000$.}  Since the integral does not diverge for $k > 0$ you get a
 meaningful result.  Our PS code currently has to start at $k=0$ and go
 up to $k_{\rm max}$.
 
@@ -315,7 +337,8 @@ of some sort of 2D boxcar that is $P_0$ up to $k_{\rm max}$, and then
 zero outside.  This is not the case: because we are representing delta
 function samples in real space the periodic series extends to positive
 and negative infinity in both $k$ directions.  So our representation
-of the power spectrum is not in fact bounded.
+of the power spectrum is not in fact bounded.  {\em Okay, this is what
+  I had not appreciated.}
 
 We know that the Fourier Transform of a flat function of value $P_0$ gives a Dirac delta
 function of area proportional to $P_0$.  So this is encouraging.  But
@@ -340,7 +363,7 @@ power spectrum that is guaranteed to be finite area and bounded within
 our periodic cells.  A suggestion is the Gaussian.  If we have $P(k) =
 e^{-\sigma^2 k^2 / 2}$ then we should get $\xi_+(\theta) =
 e^{-\theta^2/2\sigma^2}/(2 \pi \sigma^2)$ (I think)...
-
+{\em Will try this and report back.}
 
 \textbf{Didn't try the stuff that comes after this (yet):}
 
