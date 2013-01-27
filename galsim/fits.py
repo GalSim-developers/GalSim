@@ -189,22 +189,18 @@ class _WriteFile:
         import pyfits
         if pyfits_compress and pyfits.__version__ < '9.9':
             hdus = pyfits.open(file,'update',disable_image_compression=True)
-            for hdu in hdus[1:]:
+            for hdu in hdus[1:]: # Skip PrimaryHDU
+                # Find the maximum variable array length  
                 max_ar_len = max([ len(ar[0]) for ar in hdu.data ])
-
+                # Add '(N)' to the TFORMx keywords for the variable array items
                 s = '(%d)'%max_ar_len
-                # If this will overrun the original 8 char string, need to add a closing quote.
-                #if len(s) > 3: s = s + "'"
-
                 for key in hdu.header.keys():
                     if key.startswith('TFORM'):
                         tform = hdu.header[key]
-
-                        # Only update if the form is a P = variable length data 
-                        # and the (*) is not there.
+                        # Only update if the form is a P (= variable length data)
+                        # and the (*) is not there already.
                         if 'P' in tform and '(' not in tform:
-                            tform = tform + s
-                            hdu.header[key] = tform
+                            hdu.header[key] = tform + s
             hdus.close()
 
             # Workaround for a bug in some pyfits 3.0.x versions
@@ -546,6 +542,20 @@ def readMulti(fits, compression='auto'):
 
     @param   fits  If `fits` is a `pyfits.HDUList`, readMulti will read images from these.  If 
                    `fits` is a string, it will be interpreted as a filename to open and read.
+    @param compression  Which decompression scheme to use (if any).  Options are:
+                        None or 'none' = no decompression
+                        'rice' = use rice decompression in tiles
+                        'gzip' = use gzip to decompress the full file
+                        'bzip2' = use bzip2 to decompress the full file
+                        'gzip_tile' = use gzip decompression in tiles
+                        'hcompress' = use hcompress decompression in tiles
+                        'plio' = use plio decompression in tiles
+                        'auto' = determine the decompression from the extension of the file name
+                            (requires fits to be a string).  
+                            '*.fz' => 'rice'
+                            '*.gz' => 'gzip'
+                            '*.bz2' => 'bzip2'
+                            otherwise None
     @returns A Python list of ImageView instances.
     """
 
@@ -598,6 +608,20 @@ def readCube(fits, compression='auto'):
                  `pyfits.PrimaryHDU` or `pyfits.ImageHDU`, that HDU will be used.  If `fits` is a
                  string, it will be interpreted as a filename to open; the Primary HDU of that file
                  will be used.
+    @param compression  Which decompression scheme to use (if any).  Options are:
+                        None or 'none' = no decompression
+                        'rice' = use rice decompression in tiles
+                        'gzip' = use gzip to decompress the full file
+                        'bzip2' = use bzip2 to decompress the full file
+                        'gzip_tile' = use gzip decompression in tiles
+                        'hcompress' = use hcompress decompression in tiles
+                        'plio' = use plio decompression in tiles
+                        'auto' = determine the decompression from the extension of the file name
+                            (requires fits to be a string).  
+                            '*.fz' => 'rice'
+                            '*.gz' => 'gzip'
+                            '*.bz2' => 'bzip2'
+                            otherwise None
     @returns     A Python list of ImageView instances.
     """
     import pyfits     # put this at function scope to keep pyfits optional
