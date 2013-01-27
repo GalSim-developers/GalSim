@@ -278,6 +278,70 @@ the input $P(k)$.  This was the behavior that we have observed before.  {\em Bar
   this in words, but would you be willing to take a stab at an
   equation??  How is the area factor in $k$ space going away?}
 
+\textbf{Barney's response}:
+
+First, I just realised something I should have pointed out before: in
+our PS code $k_{\rm min} = 0$, since this is the power represented by
+the $(0, 0)$ matrix element of the array.  The stepsize in $k$, which
+we have tend to refer to as $\Delta k$, is $2 \pi / L$.  If you
+(somehow) ignored the $k=0$ element, or set it to zero, then I suppose
+the minimum $k$ would depend on whether you looked in rectilinear or diagonal direction,
+the smallest values being $k_{1, \rm min} = k_{2, \rm min} = 2 \pi / L$.
+
+This has fairly profound implications for the results of the tests of constant
+$\Delta^2(k)$.  Indeed it suggests that the variance formally diverges for such
+a power spectrum, so it's probably not a good test case of our PS
+code and it may be a good sign that...  Just one question though: how did you assign a value of $P(k) = 2 \pi
+P_0/ k^2$ for the $k = k_x = k_y = 0$ element?  If you set it to zero
+then I think we should have expected better, but not matching, performance.
+
+The fact that Chris's code is giving good results suggests that what
+is here being called $k_{\rm min}$ is indeed being interpreted as
+such, and Chris has put an option to allow you to explore a bounded
+range of scales.  Since the integral does not diverge for $k > 0$ you get a
+meaningful result.  Our PS code currently has to start at $k=0$ and go
+up to $k_{\rm max}$.
+
+For the second test, which doesn't diverge, 
+I believe the difference is related to the fact that our discrete
+representation of the $P(k)$ is in fact merely one complete cell of an infinite
+periodic series. This is what the Discrete Fourier Transform of a
+finite set of samples actually represents, just as the assumption is
+implicit that the samples in real space are also one cell of a
+periodic series.
+
+What is being assumed here is that our representation in $k$ spaces is
+of some sort of 2D boxcar that is $P_0$ up to $k_{\rm max}$, and then
+zero outside.  This is not the case: because we are representing delta
+function samples in real space the periodic series extends to positive
+and negative infinity in both $k$ directions.  So our representation
+of the power spectrum is not in fact bounded.
+
+We know that the Fourier Transform of a flat function of value $P_0$ gives a Dirac delta
+function of area proportional to $P_0$.  So this is encouraging.  But
+then what is the source of the contradiction with with equation (5)?  I think the issue is that
+care needs to be taken with the Bessel function $J_0(k \theta)$, which
+is highly oscillatory as $\theta \rightarrow 0$.  It might be simpler
+to treat the integral in Cartesian coordinates before setting $\theta=0$:
+\begin{equation}
+\xi_{\pm}(\theta) = \frac{P_0}{2 \pi} \int \! e^{ik_x \theta_x} dk_x
+\int \! e^{i k_y \theta_y} dk_y.
+\end{equation}
+The integrals on the RHS are the well known expressions for delta
+functions.  So we have
+\begin{equation}
+\xi_{\pm}(\theta) = \frac{P_0}{2 \pi} \delta(\theta_x) \delta(\theta_y)
+\end{equation}
+rather than an integral which diverges for large positive $k$ if you
+put $P(k) = P_0$ into equation (5).
+
+Both these test cases seem slightly problematic, so we should try a simple
+power spectrum that is guaranteed to be finite area and bounded within
+our periodic cells.  A suggestion is the Gaussian.  If we have $P(k) =
+e^{-\sigma^2 k^2 / 2}$ then we should get $\xi_+(\theta) =
+e^{-\theta^2/2\sigma^2}/(2 \pi \sigma^2)$ (I think)...
+
+
 \textbf{Didn't try the stuff that comes after this (yet):}
 
 Unit conversions, $P$ vs. $\Delta^2$, and scale-dependence of shear
