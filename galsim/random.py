@@ -35,6 +35,11 @@ class DistDeviate:
     and it will not satisfy isinstance checks for BaseDeviate.  However, DistDeviate includes an 
     internal UniformDeviate, _ud, which can be used to initialize other BaseDeviates if necessary.
     
+    DistDeviate creates a table of x value versus cumulative probability and draws from it using a
+    UniformDeviate.  If given a table in a file or a pair of 1d arrays, it will construct an 
+    interpolated LookupTable to obtain more finely gridded probabilities; the interpolant used is 
+    an optional keyword argument to DistDeviate.  
+    
     Initialization
     --------------
     
@@ -59,12 +64,12 @@ class DistDeviate:
     # using linear interpolation to get probabilities for intermediate points, and seeds the
     # PRNG using the BaseDeviate dev.
 
-       @param min          The minimum desired return value (required if a callable function is passed)
-       @param max          The maximum desired return value (required if a callable function is passed)
-       @param interpolant  Type of interpolation used for interpolating (x,p) or filename (causes an
-                           error if passed alongside a callable function). Options are given in the
-                           documentation for galsim.LookupTable.  (default: 'spline')
-       @param npoints      Number of points in the internal interpolation (default: 256)
+    @param min          The minimum desired return value (required if a callable function is passed)
+    @param max          The maximum desired return value (required if a callable function is passed)
+    @param interpolant  Type of interpolation used for interpolating (x,p) or filename (causes an
+                        error if passed alongside a callable function). Options are given in the
+                        documentation for galsim.LookupTable.  (default: 'spline')
+    @param npoints      Number of points in the internal x vs CP(x) interpolation (default: 256)
 
     Calling
     -------
@@ -143,28 +148,38 @@ class DistDeviate:
         xarray=xmin+dx*numpy.array(range(npoints),float)
         cumulativeprobability=[]
         for i in range(xarray.shape[0]):
-            cumulativeprobability.append(dx*numpy.sum(xarray[0:i]))
+            cumulativeprobability.append(dx*numpy.sum(userfunction(xarray[0:i])))
         cumulativeprobability=numpy.array(cumulativeprobability)
         #Check that cumulativeprobability is always increasing or always decreasing
         #and if it isn't, either tweak it to fix or return an error.
         if not numpy.all(cumulativeprobability>=0):
             raise ValueError('Negative probability passed to DistDeviate: %s'%filename)
         dx=numpy.diff(cumulativeprobability)
+        if numpy.all(dx==0):
+        	raise ValueError('All probabilities passed to DistDeviate are 0: %s'%filename)
+        #Clip any zero endpoints, as they'll cause the next block to blow up
+        while dx[0]==0.0:
+        	xarray=xarray[1:]
+        	cumulativeprobability=cumulativeprobability[1:]
+        	dx=numpy.diff(cumulativeprobability)
+        while dx[-1]==0.0:
+        	xarray=xarray[:-1]
+        	cumulativeprobability=cumulativeprobability[:-1]
+        	dx=numpy.diff(cumulativeprobability)
         if not numpy.all(dx >=0.):
             #This check plus the cumulativeprobability>=0 should capture any nonzero probabilities
             raise ValueError('Cumulative probability in DistDeviate is not monotonic')
         elif not numpy.all(dx > 0.):
             #Remove consecutive dx=0 points, except endpoints
             zeroindex=numpy.squeeze(numpy.where(dx==0))
-            dindexright=numpy.squeeze(numpy.where(numpy.diff(zeroindex)==1))
-            dindexleft=numpy.squeeze(numpy.where(numpy.diff(zeroindex[1:])==1))
-            removearray=dindexleft[numpy.in1d(dindexleft,dindexright)]
-            cumulativeprobability=numpy.delete(cumulativeprobability,removearray)
+            removearray=numpy.squeeze(numpy.where(numpy.diff(zeroindex)==1))
+            cumulativeprobability=numpy.delete(cumulativeprobability,zeroindex[removearray])
+            xarray=numpy.delete(xarray,zeroindex[removearray])
             dx=numpy.diff(cumulativeprobability)
             #Tweak the edges of dx=0 regions so function is always increasing
-            for index in squeeze(numpy.where(dx == 0)):
+            for index in numpy.where(dx == 0):
                 if index+2<len(cumulativeprobability):
-                   cumulativeprobability[index+1]+=0.0001*(
+                   cumulativeprobability[index+1]+=1.E-6*(
                        cumulativeprobability[index+2]-cumulativeprobability[index+1])
                 else:
                    cumulativeprobability=cumulativeprobability[:-1]
