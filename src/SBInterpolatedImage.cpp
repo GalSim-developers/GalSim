@@ -100,7 +100,7 @@ namespace galsim {
             _pimpl->vx[i].reset(new XTable(_pimpl->Nk, _pimpl->dx));
 
             // fill padded region with noise
-            if (pad_factor > 0. && (pad_image->getBounds()).isDefined()) {
+            if (pad_factor > 0. && (my_pad_image.getBounds()).isDefined()) {
               dbg<<"Adding noise from supplied image"<<std::endl;
               // make sure images are same size (but don't worry if bounds are not same)
               if ((1+my_pad_image.getXMax()-my_pad_image.getXMin() == _pimpl->Nk) &&
@@ -188,7 +188,7 @@ namespace galsim {
         _pimpl->vx[0].reset(new XTable(_pimpl->Nk, _pimpl->dx));
 
         // fill padded region with noise
-        if (pad_factor > 0. && (pad_image->getBounds()).isDefined()) {
+        if (pad_factor > 0. && (my_pad_image.getBounds()).isDefined()) {
             dbg<<"Adding noise from supplied image"<<std::endl;
             // make sure images are same size (but don't worry if bounds are not same)
             if ((1+my_pad_image.getXMax()-my_pad_image.getXMin() == _pimpl->Nk) &&
