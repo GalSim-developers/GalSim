@@ -137,3 +137,13 @@ def eval_sbinterpolatedimage(sbi, x_list, y_list):
         vals.append(sbi.xValue(galsim.PositionD(x_list[x_ind], y_list[x_ind])))
     return vals
 
+def goodFFTSize(input):
+    if input<=2: return 2
+
+    # Reduce slightly to eliminate potential rounding errors:
+    insize = (1.-1.e-5)*input;
+    log2n = np.log(2.)*np.ceil(np.log(insize)/np.log(2.))
+    log2n3 = np.log(3.) + np.log(2.)*np.ceil((np.log(insize)-np.log(3.))/np.log(2.))
+    log2n3 = max(log2n3, np.log(6.)) # must be even number
+    Nk = int(np.ceil(np.exp(min(log2n, log2n3))-1.e-5))
+    return Nk

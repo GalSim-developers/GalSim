@@ -1437,8 +1437,8 @@ class InterpolatedImage(GSObject):
 
     # --- Public Class methods ---
     def __init__(self, image, interpolant = None, normalization = 'flux', dx = None, flux = None,
-                 pad_factor = 0., pad_variance = 0., rng = None, calculate_stepk=True,
-                 calculate_maxk=True):
+                 pad_factor = 0., pad_variance = 0., rng = None, pad_corrnoise = None,
+                 calculate_stepk=True, calculate_maxk=True):
         # first try to read the image as a file.  If its not either a string or a valid
         # pyfits hdu or hdulist, then an exception will be raised, which we ignore and move on.
         try:
@@ -1473,20 +1473,6 @@ class InterpolatedImage(GSObject):
             except:
                 raise RuntimeError('Specified interpolant is not valid!')
 
-        # Set up the GaussianDeviate if not provided one, or check that the user-provided one is of
-        # a valid type.
-        # Note: we don't have to worry about setting the sigma for the GaussianDeviate; the C++
-        # code does that for us, from sqrt(pad_variance).
-        if rng == None:
-            gaussian_deviate = galsim.GaussianDeviate()
-        elif isinstance(rng,galsim.GaussianDeviate):
-            gaussian_deviate = rng
-        elif isinstance(rng,galsim.BaseDeviate):
-            # If it's another kind of BaseDeviate, we can convert
-            gaussian_deviate = galsim.GaussianDeviate(rng)
-        else:
-            raise TypeError("rng provided to InterpolatedImage constructor is not a BaseDeviate")
-
         # Check for input dx, and check whether Image already has one set.  At the end of this
         # code block, either an exception will have been raised, or the input image will have a
         # valid scale set.
@@ -1501,11 +1487,52 @@ class InterpolatedImage(GSObject):
             if dx == 0.0:
                 raise ValueError("dx may not be 0.0")
 
+        # now decide if information was passed in about noise padding
+        if pad_variance != 0. and pad_corrnoise is not None:
+            raise RuntimeError('Uncorrelated and correlated noise padding both requested!')
+        if pad_variance == 0. and pad_corrnoise is None:
+            # make fake / empty image for padding with noise
+            if isinstance(image, galsim.BaseImageF): pad_image = galsim.ImageF()
+            if isinstance(image, galsim.BaseImageD): pad_image = galsim.ImageD()
+        else:
+            # Set up the GaussianDeviate if not provided one, or check that the user-provided one is
+            # of a valid type.
+            if rng == None:
+                gaussian_deviate = galsim.GaussianDeviate()
+            elif isinstance(rng,galsim.GaussianDeviate):
+                gaussian_deviate = rng
+            elif isinstance(rng,galsim.BaseDeviate):
+                # If it's another kind of BaseDeviate, we can convert
+                gaussian_deviate = galsim.GaussianDeviate(rng)
+            else:
+                raise TypeError("rng provided to InterpolatedImage constructor is not a BaseDeviate")
+
+            # figure out proper size for padded image
+            n_init = max(1+image.getYMax()-image.getYMin(),
+                         1+image.getXMax()-image.getYMin())
+            n_init = n_init + (n_init%2)
+            if pad_factor <= 0.: pad_factor = 4.
+            padded_size = galsim.utilities.goodFFTSize(int(pad_factor*n_init))
+            if isinstance(image, galsim.BaseImageF): 
+                pad_image = galsim.ImageF(padded_size, padded_size)
+            if isinstance(image, galsim.BaseImageD):
+                pad_image = galsim.ImageD(padded_size, padded_size)
+
+            # if we want gaussian uncorrelated noise...
+            if pad_variance != 0.:
+                # Note: make sure the sigma is properly set to sqrt(pad_variance).
+                gaussian_deviate.setSigma(np.sqrt(pad_variance))
+                gaussian_deviate.applyTo(pad_image)
+            # if we want correlated noise...
+            elif pad_corrnoise is not None:
+                if not isinstance(pad_corrnoise,ImageCorrFunc) and not isinstance(pad_corrnoise,_CorrFunc):
+                    raise ValueError("Input pad_corrnoise must be an ImageCorrFunc!")
+                pad_corrnoise.applyNoiseTo(pad_image, dev=gaussian_deviate)
+
         # Make the SBInterpolatedImage out of the image.
         sbinterpolatedimage = galsim.SBInterpolatedImage(image, self.interpolant, dx=dx,
                                                          pad_factor=pad_factor,
-                                                         pad_variance=pad_variance,
-                                                         gd=gaussian_deviate)
+                                                         pad_image=pad_image)
 
         # GalSim cannot automatically know what stepK and maxK are appropriate for the 
         # input image.  So it is usually worth it to do a manual calculation here.
