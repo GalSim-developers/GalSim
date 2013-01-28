@@ -97,8 +97,8 @@ class DistDeviate:
             if 'min' in kwargs and 'max' in kwargs:
                 xmin=kwargs.pop('min',0.)
                 xmax=kwargs.pop('max',1.)
-                if xmin<=xmax:
-                    raise ValueError("Min value passed to DistDeviate is <= max value")
+                if xmax<=xmin:
+                    raise ValueError("Max value passed to DistDeviate is <= min value")
             else:
                 raise TypeError(
                     "DistDeviate called with a function must include min and max keywords")
@@ -188,11 +188,17 @@ class DistDeviate:
         image.array[:,:]+=numpy.array([[self() for col in range(shp[1])] for row in range(shp[0])])
     
         
-    def seed(self,*args):
-        _ud.seed(args)
+    def seed(self,arg=None):
+    	if arg is None:
+    		self._ud()
+    	else:
+	        self._ud.seed(arg)
     
-    def reset(self,*args):
-        _ud.reset(args)
+    def reset(self,arg=None):
+    	if arg is None:
+    		self._ud()
+    	else:
+        	self._ud.reset(arg)
 
 
 # BaseDeviate docstrings

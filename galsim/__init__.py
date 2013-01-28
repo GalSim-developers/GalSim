@@ -13,6 +13,7 @@ from . import optics
 from . import image
 from table import *
 from . import random
+from random import DistDeviate
 from . import config
 from psfcorr import *
 from catalog import *
