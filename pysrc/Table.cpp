@@ -9,7 +9,7 @@ namespace bp = boost::python;
 namespace galsim {
 namespace {
 
-    // We only export the Table<double,double>, so don't baother templatizing PyTable.
+    // We only export the Table<double,double>, so don't bother templatizing PyTable.
     struct PyTable {
 
         static void destroyCObjectOwner(void* p) {
