@@ -1867,8 +1867,20 @@ class RealGalaxy(GSObject):
         self.pixel_scale = float(real_galaxy_catalog.pixel_scale[use_index])
 
         # handle noise-padding options
-        if noise_pad: 
+        if noise_pad:
             self.pad_variance= float(real_galaxy_catalog.variance[use_index])
+
+            # Check, is it "True" or some other string?  If some other string, check for file
+            # existence and read image from it.
+            if type(noise_pad) is not bool:
+                try:
+                    tmp_im = galsim.fits.read(noise_pad)
+                    # this small patch may have different overall variance, so rescale
+                    tmp_im *= np.sqrt(self.pad_variance/np.var(tmp_im.array))
+                    cf = galsim.ImageCorrFunc(tmp_im)
+                except:
+                    raise RuntimeError("Can't read in image for noise padding from specified file!")
+                     
             # Set up the GaussianDeviate if not provided one, or check that the user-provided one
             # is of a valid type.
             # Note: we don't have to worry about setting the sigma for the GaussianDeviate; the C++
@@ -1893,7 +1905,11 @@ class RealGalaxy(GSObject):
                 pad_image = galsim.ImageF(padded_size, padded_size)
             if isinstance(gal_image, galsim.BaseImageD):
                 pad_image = galsim.ImageD(padded_size, padded_size)
-            gaussian_deviate.applyTo(pad_image)
+            # populate padding image with noise field
+            if type(noise_pad) is bool:
+                gaussian_deviate.applyTo(pad_image)
+            else:
+                cf.applyNoiseTo(pad_image, dev=gaussian_deviate)
             # Now make the SBInterpolatedImage for the original object and the PSF
             self.original_image = galsim.SBInterpolatedImage(
                 gal_image, xInterp=self.interpolant, dx=self.pixel_scale,
