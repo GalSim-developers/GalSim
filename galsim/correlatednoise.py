@@ -37,8 +37,9 @@ class _CorrFunc(object):
         # So for now, we start out with store_profile = None.
         self.profile_for_stored = None
 
-        # Delete some of the methods we don't want the user to have access to since they don't make
-        # sense
+        # Cause some of the methods we don't want the user to have access to, since they don't make
+        # sense for correlation functions and could cause errors in applyNoiseTo, to raise 
+        # exceptions
         self.profile.applyShift = self._notImplemented
         self.profile.createShifted = self._notImplemented
         self.profile.applyDilation = self._notImplemented
@@ -46,24 +47,6 @@ class _CorrFunc(object):
         self.profile.setFlux = self._notImplemented
         self.profile.getFlux = self._notImplemented
         self.profile.drawShoot = self._notImplemented # this isn't really needed
-        
-        # Add the much more appropriately named self.profile.scaleVariance method to the .profile
-        # as well has having it available directly as a _CorrFunc method
-        self.profile.scaleVariance = self.scaleVariance
-        
-        # Use a similar pattern to replace the GSObject draw() method with a version that always
-        # uses the "surface brightness" normalization rather than the default "flux"
-        if not hasattr(self.profile, "_drawHidden"): # only do following once or becomes circular...
-            self.profile._drawHidden = self.profile.draw # hide the method for internal use
-        self.profile.draw = self.draw
-
-        # Redefine all of the .profile arithmetic operators to use the _CorrFunc implementations
-        self.profile.__idiv__ = self.__idiv__
-        self.profile.__itruediv__ = self.__itruediv__
-        self.profile.__imul__ = self.__imul__
-        self.profile.__div__ = self.__div__
-        self.profile.__truediv__ = self.__truediv__
-        self.profile.__mul__ = self.__mul__
 
     # Make "+" work in the intuitive sense (variances being additive, correlation functions add as
     # you would expect)
@@ -324,18 +307,17 @@ class _CorrFunc(object):
         raise NotImplementedError(
             "This method is not available for profiles that represent correlation functions.")
 
-    def draw(self, image=None, dx=None, gain=1., wmult=1., add_to_image=False,
-              normalization="surface brightness"):
+    def draw(self, image=None, dx=None, wmult=1., add_to_image=False):
         """The draw method for profiles storing correlation functions.
 
         This is a very mild reimplementation of the draw() method for GSObjects.  The normalization
-        keyword argument default is changed to "surface brightness", as appropriate for this profile
-        which is being used to store a correlation function.
+        is automatically set to have the behviour appropriate for a correlation function, and the 
+        `gain` kwarg is automatically set to unity.
 
-        See the general GSObject draw() method for more information on the other parameters.
+        See the general GSObject draw() method for more information the input parameters.
         """
-        return self.profile._drawHidden(
-            image=image, dx=dx, gain=gain, wmult=wmult, normalization=normalization,
+        return self.profile.draw(
+            image=image, dx=dx, gain=1., wmult=wmult, normalization="surface brightness",
             add_to_image=add_to_image)
 
     def calculateCovarianceMatrix(self, bounds, dx):
