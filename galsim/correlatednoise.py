@@ -29,41 +29,17 @@ class _CorrFunc(object):
                 "Correlation function objects must be initialized with a GSObject.")
         
         # Act as a container for the GSObject used to represent the correlation funcion.
-        self.profile = gsobject
+        self._profile = gsobject
 
         # When applying noise to an image, we normally do a calculation. 
         # If store_profile is profile, then it means we can use the other stored values
         # and avoid having to redo the calculation.
         # So for now, we start out with store_profile = None.
-        self.profile_for_stored = None
+        self._profile_for_stored = None
 
-        # Delete some of the methods we don't want the user to have access to since they don't make
-        # sense
-        self.profile.applyShift = self._notImplemented
-        self.profile.createShifted = self._notImplemented
-        self.profile.applyDilation = self._notImplemented
-        self.profile.createDilated = self._notImplemented
-        self.profile.setFlux = self._notImplemented
-        self.profile.getFlux = self._notImplemented
-        self.profile.drawShoot = self._notImplemented # this isn't really needed
-        
-        # Add the much more appropriately named self.profile.scaleVariance method to the .profile
-        # as well has having it available directly as a _CorrFunc method
-        self.profile.scaleVariance = self.scaleVariance
-        
-        # Use a similar pattern to replace the GSObject draw() method with a version that always
-        # uses the "surface brightness" normalization rather than the default "flux"
-        if not hasattr(self.profile, "_drawHidden"): # only do following once or becomes circular...
-            self.profile._drawHidden = self.profile.draw # hide the method for internal use
-        self.profile.draw = self.draw
-
-        # Redefine all of the .profile arithmetic operators to use the _CorrFunc implementations
-        self.profile.__idiv__ = self.__idiv__
-        self.profile.__itruediv__ = self.__itruediv__
-        self.profile.__imul__ = self.__imul__
-        self.profile.__div__ = self.__div__
-        self.profile.__truediv__ = self.__truediv__
-        self.profile.__mul__ = self.__mul__
+        # Cause any methods we don't want the user to have access to, since they don't make sense
+        # for correlation functions and could cause errors in applyNoiseTo, to raise exceptions
+        self._profile.applyShift = self._notImplemented
 
     # Make "+" work in the intuitive sense (variances being additive, correlation functions add as
     # you would expect)
@@ -73,12 +49,12 @@ class _CorrFunc(object):
         return ret
 
     def __iadd__(self, other):
-        self.profile += other.profile
-        return _CorrFunc(self.profile)
+        self._profile += other._profile
+        return _CorrFunc(self._profile)
 
     # Make op* and op*= work to adjust the overall variance of an object
     def __imul__(self, other):
-        self.profile.scaleVariance(other)
+        self._profile.scaleVariance(other)
         return self
 
     def __mul__(self, other):
@@ -110,7 +86,7 @@ class _CorrFunc(object):
     def copy(self):
         """Returns a copy of the correlation function.
         """
-        return _CorrFunc(self.profile.copy())
+        return _CorrFunc(self._profile.copy())
 
     def applyNoiseTo(self, image, dx=0., dev=None, add_to_image=True):
         """Apply noise as a Gaussian random field with this correlation function to an input Image.
@@ -158,10 +134,10 @@ class _CorrFunc(object):
 
         # If the profile has changed since last time (or if we have never been here before),
         # clear out the stored values.
-        if self.profile_for_stored is not self.profile:
+        if self._profile_for_stored is not self._profile:
             self._rootps_store = []
         # Set profile_for_stored for next time.
-        self.profile_for_stored = self.profile
+        self._profile_for_stored = self._profile
 
         # Then retrieve or redraw the sqrt(power spectrum) needed for making the noise field:
 
@@ -187,7 +163,7 @@ class _CorrFunc(object):
             else:
                 newcf.setScale(dx)
             # Then draw this correlation function into an array
-            self.profile.draw(newcf, dx=None) # setting dx=None uses the newcf image scale set above
+            self.draw(newcf, dx=None) # setting dx=None uses the newcf image scale set above
 
             # Then calculate the sqrt(PS) that will be used to generate the actual noise
             rootps = np.sqrt(np.abs(np.fft.fft2(newcf.array)) * np.product(image.array.shape))
@@ -213,11 +189,16 @@ class _CorrFunc(object):
         galsim.Ellipse objects can be initialized in a variety of ways (see documentation of this
         class, galsim.ellipse.Ellipse in the doxygen documentation, for details).
 
+        Note that the correlation function must be peaked at the origin, and is translationally
+        invariant: any X0 shift in the input ellipse is therefore ignored.
+
         @param ellipse The galsim.Ellipse transformation to apply.
         """
         if not isinstance(ellipse, galsim.Ellipse):
             raise TypeError("Argument to applyTransformation must be a galsim.Ellipse!")
-        self.profile.applyTransformation(ellipse)
+        # Create a new ellipse without a shift
+        ellipse_noshift = galsim.Ellipse(shear=ellipse.getS(), mu=ellipse.getMu())
+        self._profile.applyTransformation(ellipse_noshift)
 
     def applyMagnification(self, scale):
         """Scale the linear size of this _CorrFunc by scale.  
@@ -240,7 +221,7 @@ class _CorrFunc(object):
         """
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
-        self.profile.applyRotation(theta)
+        self._profile.applyRotation(theta)
 
     def applyShear(self, *args, **kwargs):
         """Apply a shear to this object, where arguments are either a galsim.Shear, or arguments
@@ -252,7 +233,7 @@ class _CorrFunc(object):
         After this call, the caller's type will still be a _CorrFunc.  This is to allow _CorrFunc
         methods to be available after transformation, such as .applyNoiseTo().
         """
-        self.profile.applyShear(*args, **kwargs)
+        self._profile.applyShear(*args, **kwargs)
 
     # Also add methods which create a new GSObject with the transformations applied...
     #
@@ -262,6 +243,9 @@ class _CorrFunc(object):
 
         Note that galsim.Ellipse objects can be initialized in a variety of ways (see documentation
         of this class, galsim.ellipse.Ellipse in the doxygen documentation, for details).
+
+        Note also that the correlation function must be peaked at the origin, and is translationally
+        invariant: any X0 shift in the input ellipse is therefore ignored.
 
         @param ellipse The galsim.Ellipse transformation to apply
         @returns The transformed object.
@@ -318,24 +302,23 @@ class _CorrFunc(object):
         @param variance_ratio The factor by which to scale the variance of the correlation function
                               profile.
         """
-        self.profile.SBProfile.scaleFlux(variance_ratio)
+        self._profile.SBProfile.scaleFlux(variance_ratio)
 
     def _notImplemented(self, *args, **kwargs):
         raise NotImplementedError(
             "This method is not available for profiles that represent correlation functions.")
 
-    def draw(self, image=None, dx=None, gain=1., wmult=1., add_to_image=False,
-              normalization="surface brightness"):
+    def draw(self, image=None, dx=None, wmult=1., add_to_image=False):
         """The draw method for profiles storing correlation functions.
 
         This is a very mild reimplementation of the draw() method for GSObjects.  The normalization
-        keyword argument default is changed to "surface brightness", as appropriate for this profile
-        which is being used to store a correlation function.
+        is automatically set to have the behviour appropriate for a correlation function, and the 
+        `gain` kwarg is automatically set to unity.
 
-        See the general GSObject draw() method for more information on the other parameters.
+        See the general GSObject draw() method for more information the input parameters.
         """
-        return self.profile._drawHidden(
-            image=image, dx=dx, gain=gain, wmult=wmult, normalization=normalization,
+        return self._profile.draw(
+            image=image, dx=dx, gain=1., wmult=wmult, normalization="surface brightness",
             add_to_image=add_to_image)
 
     def calculateCovarianceMatrix(self, bounds, dx):
@@ -352,7 +335,7 @@ class _CorrFunc(object):
 
         @return The covariance matrix.
         """
-        return galsim._galsim._calculateCovarianceMatrix(self.profile.SBProfile, bounds, dx)
+        return galsim._galsim._calculateCovarianceMatrix(self._profile.SBProfile, bounds, dx)
 
 ###
 # Then we define the ImageCorrFunc, which generates a correlation function by estimating it directly
@@ -360,6 +343,17 @@ class _CorrFunc(object):
 #
 class ImageCorrFunc(_CorrFunc):
     """A class that represents 2D discrete correlation functions calculated from an input Image.
+
+    This class stores an internal representation of a 2D, discrete correlation function, and allows
+    a number of subsequent operations including interpolation, shearing, magnification and
+    rendering of the correlation function profile into an output Image.  The class also allows
+    Gaussian noise to be generated according to the correlation function, and added to an Image.
+
+    It also allows the combination of multiple correlation functions by addition, and for the
+    scaling of the total variance they represent by scalar factors.
+
+    Convolution of correlation functions with a GSObject is not yet supported, but will be in the 
+    near future.
 
     Initialization
     --------------
@@ -387,26 +381,33 @@ class ImageCorrFunc(_CorrFunc):
     Interpolant instance (if the latter one-dimensional case is supplied an InterpolantXY will be
     automatically generated from it).
 
-    The default interpolant if None is set is a galsim.InterpolantXY(galsim.Linear(tol=1.e-4)),
+    The default interpolant if `None` is set is a galsim.InterpolantXY(galsim.Linear(tol=1.e-4)),
     which uses bilinear interpolation.  Initial tests indicate the favourable performance of this
     interpolant in applications involving correlated pixel noise.
 
-    Attributes
-    ----------
-    The key attribute is `profile`, which is the internally stored GSObject profile.  It can be
-    manipulated using many of the various methods of the GSObject.  The following are all legal:
-    
-        cf.profile.xValue(galsim.PositionD(0., 0.5))
-        cf.profile.kValue(galsim.PositionD(0.5, 0.))
-        cf.profile.drawK(im, dk)
-        cf.profile.draw(im, dx)
-        cf.profile.applyShear(s)
-        cf.profile.applyMagnification(m)
-        cf.profile.applyRotation(theta * galsim.degrees)
-        cf.profile.applyTransformation(ellipse)
+    Methods
+    -------
+    The main way that ImageCorrFunc is used is to add or assign correlated noise to an image.
+    This is done with
 
-    A number of the GSObject functions have also been implemented directly as `cf` methods, so that
-    the following commands are also all legal:
+        cf.applyNoiseTo(im)
+
+    The correlation function is calculated from its pixel values using the NumPy FFT functions.
+    Optionally, the pixel scale for the input `image` can be specified using the `dx` keyword
+    argument.  See the .applyNoiseTo() method docstring for more information.
+
+    If `dx` is not set the value returned by `image.getScale()` is used unless this is <= 0, in
+    which case a scale of 1 is assumed.
+
+    Another method that may be of use is
+
+        cf.calculateCovarianceMatrix(im.bounds, dx)
+
+    which can be used to generate a covariance matrix based on a user input image geometry.  See
+    the .calculateCovarianceMatrix() method docstring for more information.
+
+    A number of methods familiar from GSObject instance have also been implemented directly as 
+    `cf` methods, so that the following commands are all legal:
 
         cf.draw(im, dx, wmult=4)
         cf.createSheared(s)
@@ -418,24 +419,10 @@ class ImageCorrFunc(_CorrFunc):
         cf.applyRotation(theta * galsim.degrees)
         cf.applyTransformation(ellipse)
 
-    However, some of the GSObject methods are not available, since they do not really make sense
-    for correlation functions.  Calling any of
-
-        cf.profile.applyShift
-        cf.profile.createShifted
-        cf.profile.applyDilation
-        cf.profile.createDilated
-        cf.profile.setFlux
-        cf.profile.getFlux
-        cf.profile.drawShoot
-        cf.profile.scaleFlux
-
-    will raise a `NotImplementedError`.  Note that while the `draw()` method is enabled, it has been
-    reimplemented to make the default normalization keyword take the value 'surface brightness' as
-    is appropriate for rendering correlation functions.
+    See the individual method docstrings for more details.
 
     A new method, which is in fact a more appropriately named reimplmentation of the
-    `cf.profile.scaleFlux()` method, is
+    .scaleFlux() method in GSObject instances, is
 
         cf.scaleVariance(variance_ratio)
 
@@ -447,43 +434,16 @@ class ImageCorrFunc(_CorrFunc):
     Addition, multiplication and division operators are defined to work in an intuitive way for
     correlation functions.
 
-    Addition works simply to add the correlation functions stored in the `.profile` attribute, so
-    that
+    Addition works simply to add the internally-stored correlation functions, so that
 
         >>> cf2 = cf0 + cf1
         >>> cf2 += cf1
 
-    are functionally equivalent to
+    provides a representation of the correlation function of two linearly summed fields represented
+    by the individual correlation function operands.
 
-        >>> cf2.profile = cf0.profile + cf1.profile
-        >>> cf2.profile += cf1.profile
-
-    but slightly more convenient.  The multiplication and division operators scale the overall
-    correlation function for scalar operands, using the `cf.profile.scaleVariance()` method.
-
-    Methods
-    -------
-    The main way that ImageCorrFunc is used is to add or assign correlated noise to an image.
-    This is done with
-
-        cf.applyNoiseTo(im)
-
-    The correlation function is calculated from its pixel values using the NumPy FFT functions.
-    Optionally, the pixel scale for the input `image` can be specified using the `dx` keyword
-    argument.  See the `applyNoiseTo` docstring for more information.
-
-    If `dx` is not set the value returned by `image.getScale()` is used unless this is <= 0, in
-    which case a scale of 1 is assumed.
-
-    Another method that may be of use is
-
-        cf.calculateCovarianceMatrix(im.bounds, dx)
-
-    which can be used to generate a covariance matrix based on a user input image geometry.  See
-    the `calculateCovarianceMatrix` docstring for more information.
-
-    As already described, a number of the GSObject functions have also been implemented directly
-    as `cf` methods.  See the 'Attributes' Section above.
+    The multiplication and division operators scale the overall correlation function by a scalar 
+    operand, using the .scaleVariance() method described above.
     """
     def __init__(self, image, dx=0., interpolant=None):
 
@@ -561,7 +521,7 @@ class ImageCorrFunc(_CorrFunc):
                                                           # correlation function images...
 
         # Finally store useful data as a (rootps, dx) tuple for efficient later use:
-        self.profile_for_stored = self.profile
+        self._profile_for_stored = self._profile
         self._rootps_store = []
         self._rootps_store.append(
             (np.sqrt(original_ps_image.array), original_cf_image.getScale()))
