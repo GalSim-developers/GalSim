@@ -37,11 +37,9 @@ class _CorrFunc(object):
         # So for now, we start out with store_profile = None.
         self._profile_for_stored = None
 
-        # Cause some of the methods we don't want the user to have access to, since they don't make
-        # sense for correlation functions and could cause errors in applyNoiseTo, to raise 
-        # exceptions
+        # Cause any methods we don't want the user to have access to, since they don't make sense
+        # for correlation functions and could cause errors in applyNoiseTo, to raise exceptions
         self._profile.applyShift = self._notImplemented
-        self._profile.applyDilation = self._notImplemented
 
     # Make "+" work in the intuitive sense (variances being additive, correlation functions add as
     # you would expect)
