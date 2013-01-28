@@ -139,10 +139,11 @@ class DistDeviate:
         if kwargs:
             raise TypeError("Keyword arguments to DistDeviate not permitted: %s"%kwargs.keys())
 
-        xarray=xmin+(1.*xmax-xmin)/(npoints-1)*numpy.array(range(npoints),float)
+        dx=(1.*xmax-xmin)/(npoints-1)
+        xarray=xmin+dx*numpy.array(range(npoints),float)
         cumulativeprobability=[]
-        for x in xarray:
-            cumulativeprobability.append(galsim.integ.int1d(userfunction,xmin,x))
+        for i in range(xarray.shape[0]):
+            cumulativeprobability.append(dx*numpy.sum(xarray[0:i]))
         cumulativeprobability=numpy.array(cumulativeprobability)
         #Check that cumulativeprobability is always increasing or always decreasing
         #and if it isn't, either tweak it to fix or return an error.
