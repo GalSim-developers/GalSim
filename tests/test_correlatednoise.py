@@ -83,7 +83,7 @@ def test_uncorrelated_noise_zero_lag():
             uncorr_noise_large_extra.addNoise(gd)
             noise_test = uncorr_noise_large_extra * sigma
             ncf = galsim.ImageCorrFunc(noise_test, dx=1.)
-            cf_zero += ncf.profile.xValue(galsim.PositionD(0., 0.))
+            cf_zero += ncf._profile.xValue(galsim.PositionD(0., 0.))
         cf_zero /= float(nsum_test)
         np.testing.assert_almost_equal(
             cf_zero / sigma**2, 1., decimal=decimal_approx,
@@ -110,7 +110,7 @@ def test_uncorrelated_noise_nonzero_lag():
             rpos = 1. + glob_ud() * (largeim_size - 1.) # this can go outside table bounds
             tpos = 2. * np.pi * glob_ud()
             pos = galsim.PositionD(rpos * np.cos(tpos), rpos * np.sin(tpos))
-            cf_test_value += ncf.profile.xValue(pos)
+            cf_test_value += ncf._profile.xValue(pos)
         cf_test_value /= float(nsum_test)
         # Then test this estimated value is good to within our chosen decimal place of zero
         np.testing.assert_almost_equal(
@@ -132,8 +132,8 @@ def test_uncorrelated_noise_symmetry():
         rpos = glob_ud() * smallim_size # this can go outside lookup table bounds
         tpos = 2. * np.pi * glob_ud()
         pos = galsim.PositionD(rpos * np.cos(tpos), rpos * np.sin(tpos))
-        cf_test1 = ncf.profile.xValue(pos)
-        cf_test2 = ncf.profile.xValue(-pos)
+        cf_test1 = ncf._profile.xValue(pos)
+        cf_test2 = ncf._profile.xValue(-pos)
         np.testing.assert_almost_equal(
             cf_test1, cf_test2,
             decimal=decimal_precise,
@@ -165,9 +165,9 @@ def test_uncorrelated_noise_90degree_rotation():
             rpos = glob_ud() * smallim_size
             tpos = 2. * np.pi * glob_ud()
             pos = galsim.PositionD(rpos * np.cos(tpos), rpos * np.sin(tpos))
-            cf_ref = ncf_ref.profile.xValue(pos)
-            cf_test1 = ncf_test1.profile.xValue(pos)
-            cf_test2 = ncf_test2.profile.xValue(pos)
+            cf_ref = ncf_ref._profile.xValue(pos)
+            cf_test1 = ncf_test1._profile.xValue(pos)
+            cf_test2 = ncf_test2._profile.xValue(pos)
             # Then test these estimated value is good to within our chosen decimal place
             np.testing.assert_almost_equal(
                 cf_ref, cf_test1, decimal=decimal_precise, # slightly FFT-dependent accuracy
@@ -195,8 +195,8 @@ def test_xcorr_noise_basics():
                 uncorr_noise_large_extra.array, 1, axis=1)) # note NumPy thus [y,x]
         xnoise_large_extra *= (np.sqrt(2.) / 2.) # make unit variance
         xncf = galsim.ImageCorrFunc(xnoise_large_extra, dx=1.)
-        cf_zero += xncf.profile.xValue(galsim.PositionD(0., 0.))
-        cf_10 += xncf.profile.xValue(galsim.PositionD(1., 0.))
+        cf_zero += xncf._profile.xValue(galsim.PositionD(0., 0.))
+        cf_10 += xncf._profile.xValue(galsim.PositionD(1., 0.))
     cf_zero /= float(nsum_test)
     cf_10 /= float(nsum_test)
     # Then test the zero-lag value is good to 1% of the input variance; we expect this!
@@ -227,8 +227,8 @@ def test_ycorr_noise_basics():
                 uncorr_noise_large_extra.array, 1, axis=0)) # note NumPy thus [y,x]
         ynoise_large_extra *= (np.sqrt(2.) / 2.) # make unit variance
         yncf = galsim.ImageCorrFunc(ynoise_large_extra, dx=1.)
-        cf_zero += yncf.profile.xValue(galsim.PositionD(0., 0.))
-        cf_01 += yncf.profile.xValue(galsim.PositionD(0., 1.))
+        cf_zero += yncf._profile.xValue(galsim.PositionD(0., 0.))
+        cf_01 += yncf._profile.xValue(galsim.PositionD(0., 1.))
     cf_zero /= float(nsum_test)
     cf_01 /= float(nsum_test)
     # Then test the zero-lag value is good to 1% of the input variance; we expect this!
@@ -254,8 +254,8 @@ def test_xcorr_noise_symmetry():
         rpos = glob_ud() * smallim_size # this can go outside lookup table bounds
         tpos = 2. * np.pi * glob_ud()
         pos = galsim.PositionD(rpos * np.cos(tpos), rpos * np.sin(tpos))
-        cf_test1 = ncf.profile.xValue(pos)
-        cf_test2 = ncf.profile.xValue(-pos)
+        cf_test1 = ncf._profile.xValue(pos)
+        cf_test2 = ncf._profile.xValue(-pos)
         # Then test this estimated value is good to within our chosen decimal place of zero
         np.testing.assert_almost_equal(
             cf_test1, cf_test2, decimal=decimal_precise, # should be good to machine precision
@@ -276,8 +276,8 @@ def test_ycorr_noise_symmetry():
         rpos = glob_ud() * smallim_size # this can go outside lookup table bounds
         tpos = 2. * np.pi * glob_ud()
         pos = galsim.PositionD(rpos * np.cos(tpos), rpos * np.sin(tpos))
-        cf_test1 = ncf.profile.xValue(pos)
-        cf_test2 = ncf.profile.xValue(-pos)
+        cf_test1 = ncf._profile.xValue(pos)
+        cf_test2 = ncf._profile.xValue(-pos)
         # Then test this estimated value is good to within our chosen decimal place of zero
         np.testing.assert_almost_equal(
             cf_test1, cf_test2, decimal=decimal_precise, # should be good to machine precision
@@ -311,9 +311,9 @@ def test_90degree_rotation(): # probably only need to do the x direction for thi
             rpos = glob_ud() * smallim_size # look in the vicinity of the action near the centre
             tpos = 2. * np.pi * glob_ud()
             pos = galsim.PositionD(rpos * np.cos(tpos), rpos * np.sin(tpos))
-            cf_ref = ncf_ref.profile.xValue(pos)
-            cf_test1 = ncf_test1.profile.xValue(pos)
-            cf_test2 = ncf_test2.profile.xValue(pos) 
+            cf_ref = ncf_ref._profile.xValue(pos)
+            cf_test1 = ncf_test1._profile.xValue(pos)
+            cf_test2 = ncf_test2._profile.xValue(pos) 
             np.testing.assert_almost_equal(
                 cf_ref, cf_test1, decimal=decimal_precise, # should be accurate, but FFT-dependent 
                 err_msg="Noise correlated in the x direction failed 90 degree createRotated() "+
@@ -345,12 +345,12 @@ def test_arbitrary_rotation():
         ncf_rot2 = ncf.copy()
         ncf_rot2.applyRotation(rot_angle * galsim.radians)
         np.testing.assert_almost_equal(
-            ncf.profile.xValue(pos_rot), ncf_rot1.profile.xValue(pos_ref), 
+            ncf._profile.xValue(pos_rot), ncf_rot1._profile.xValue(pos_ref), 
             decimal=decimal_precise, # this should be good at very high accuracy 
             err_msg="Noise correlated in the y direction failed createRotated() "+
             "method test for arbitrary rotations.")
         np.testing.assert_almost_equal(
-            ncf.profile.xValue(pos_rot), ncf_rot2.profile.xValue(pos_ref), 
+            ncf._profile.xValue(pos_rot), ncf_rot2._profile.xValue(pos_ref), 
             decimal=decimal_precise, # ditto
             err_msg="Noise correlated in the y direction failed applyRotation() "+
             "method test for arbitrary rotations.")
@@ -372,11 +372,11 @@ def test_scaling():
            tpos = 2. * np.pi * glob_ud()
            pos_ref = galsim.PositionD(rpos * np.cos(tpos), rpos * np.sin(tpos))
            np.testing.assert_almost_equal(
-               ncf_test1.profile.xValue(pos_ref), ncf.profile.xValue(pos_ref / scale),
+               ncf_test1._profile.xValue(pos_ref), ncf._profile.xValue(pos_ref / scale),
                decimal=decimal_precise,
                err_msg="Noise correlated in the y direction failed createMagnified() scaling test.")
            np.testing.assert_almost_equal(
-               ncf_test2.profile.xValue(pos_ref), ncf.profile.xValue(pos_ref / scale),
+               ncf_test2._profile.xValue(pos_ref), ncf._profile.xValue(pos_ref / scale),
                decimal=decimal_precise,
                err_msg="Noise correlated in the y direction failed applyMagnification() scaling "+
                "test.")
