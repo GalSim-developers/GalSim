@@ -1,5 +1,5 @@
 
-//#define DEBUGLOGGING
+#define DEBUGLOGGING
 
 #include <algorithm>
 #include "SBInterpolatedImage.h"
@@ -7,8 +7,8 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-//std::ostream* dbgout = new std::ofstream("debug.out");
-//int verbose_level = 2;
+std::ostream* dbgout = new std::ofstream("debug.out");
+int verbose_level = 2;
 #endif
 
 namespace galsim {
@@ -580,10 +580,12 @@ namespace galsim {
         _positiveFlux = 0.;
         _negativeFlux = 0.;
         _pt.clear();
+        dbg<<"Before loop for shooting: "<<_multi.getNin()/2<<std::endl;
         for (int iy=-_multi.getNin()/2; iy<_multi.getNin()/2; iy++) {
             double y = iy*_multi.getScale();
             for (int ix=-_multi.getNin()/2; ix<_multi.getNin()/2; ix++) {
                 double flux = _xtab->xval(ix,iy) * _multi.getScale()*_multi.getScale();
+                dbg<<"In loop for shooting: flux ="<<flux<<std::endl;
                 if (flux==0.) continue;
                 double x=ix*_multi.getScale();
                 if (flux > 0.) {
@@ -594,6 +596,7 @@ namespace galsim {
                 _pt.push_back(Pixel(x,y,flux));
             }
         }
+        dbg<<"After loop before shooting, now building tree..."<<std::endl;
         _pt.buildTree();
         dbg<<"Built tree\n";
 
