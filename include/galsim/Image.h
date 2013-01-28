@@ -228,7 +228,7 @@ namespace galsim {
         int getYMax() const { return getBounds().getYMax(); }
         //@}
         
-
+        int getPaddedSize(float pad_factor) const;
 
 #ifdef IMAGE_BOUNDS_CHECK
         /**

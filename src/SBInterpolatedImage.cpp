@@ -1,5 +1,5 @@
 
-#define DEBUGLOGGING
+//#define DEBUGLOGGING
 
 #include <algorithm>
 #include "SBInterpolatedImage.h"
@@ -7,8 +7,8 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-std::ostream* dbgout = new std::ofstream("debug.out");
-int verbose_level = 2;
+//std::ostream* dbgout = new std::ofstream("debug.out");
+//int verbose_level = 2;
 #endif
 
 namespace galsim {
@@ -125,12 +125,6 @@ namespace galsim {
     {
         dbg<<"Start MultipleImageHelper constructor for one image\n";
         dbg<<"image bounds = "<<image.getBounds()<<std::endl;
-        _pimpl->Ninitial= std::max( image.getYMax()-image.getYMin()+1,
-                                    image.getXMax()-image.getXMin()+1 );
-        _pimpl->Ninitial = _pimpl->Ninitial + _pimpl->Ninitial%2;
-        dbg<<"Ninitial = "<<_pimpl->Ninitial<<std::endl;
-        assert(_pimpl->Ninitial%2==0);
-        assert(_pimpl->Ninitial>=2);
 
         if (dx<=0.) _pimpl->dx = image.getScale();
         else _pimpl->dx = dx;
@@ -138,10 +132,13 @@ namespace galsim {
         dbg<<"dx = "<<_pimpl->dx<<std::endl;
 
         dbg<<"pad_factor = "<<pad_factor<<std::endl;
-        if (pad_factor <= 0.) pad_factor = sbp::oversample_x;
-        dbg<<"pad_factor => "<<pad_factor<<std::endl;
-        // NB: don't need floor, since rhs is positive, so floor is superfluous.
-        _pimpl->Nk = goodFFTSize(int(pad_factor*_pimpl->Ninitial));
+        _pimpl->Ninitial = std::max( image.getYMax()-image.getYMin()+1,
+                                    image.getXMax()-image.getXMin()+1 );
+        _pimpl->Ninitial = _pimpl->Ninitial + _pimpl->Ninitial%2;
+        _pimpl->Nk = image.getPaddedSize(pad_factor);
+        dbg<<"Ninitial = "<<_pimpl->Ninitial<<std::endl;
+        assert(_pimpl->Ninitial%2==0);
+        assert(_pimpl->Ninitial>=2);
         dbg<<"Nk = "<<_pimpl->Nk<<std::endl;
 
         double dx2 = _pimpl->dx*_pimpl->dx;
@@ -162,7 +159,7 @@ namespace galsim {
         int y = -((image.getYMax()-image.getYMin()+1)/2);
         dbg<<"xStart = "<<xStart<<", yStart = "<<y<<std::endl;
         // fill padded region with noise
-        if (pad_factor > 0. && pad_image.get()) {
+        if (pad_image.get()) {
             dbg<<"Adding noise from supplied image"<<std::endl;
             // make sure images are same size (but don't worry if bounds are not same)
             if ((1+pad_image->getXMax()-pad_image->getXMin() == _pimpl->Nk) &&
