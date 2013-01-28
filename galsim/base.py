@@ -1028,7 +1028,7 @@ class AtmosphericPSF(GSObject):
 
         # Then initialize the SBProfile
         GSObject.__init__(
-            self, galsim.SBInterpolatedImage(atmoimage, self.interpolant, dx=dx_lookup))
+            self, galsim.SBInterpolatedImage(atmoimage, xInterp=self.interpolant, dx=dx_lookup))
 
         # The above procedure ends up with a larger image than we really need, which
         # means that the default stepK value will be smaller than we need.  
@@ -1320,7 +1320,7 @@ class OpticalPSF(GSObject):
  
         # Initialize the SBProfile
         GSObject.__init__(
-            self, galsim.SBInterpolatedImage(optimage, self.interpolant, dx=dx_lookup))
+            self, galsim.SBInterpolatedImage(optimage, xInterp=self.interpolant, dx=dx_lookup))
 
         # The above procedure ends up with a larger image than we really need, which
         # means that the default stepK value will be smaller than we need.  
@@ -1491,9 +1491,9 @@ class InterpolatedImage(GSObject):
         if pad_variance != 0. and pad_corrnoise is not None:
             raise RuntimeError('Uncorrelated and correlated noise padding both requested!')
         if pad_variance == 0. and pad_corrnoise is None:
-            # make fake / empty image for padding with noise
-            if isinstance(image, galsim.BaseImageF): pad_image = galsim.ImageF()
-            if isinstance(image, galsim.BaseImageD): pad_image = galsim.ImageD()
+            sbinterpolatedimage = galsim.SBInterpolatedImage(image, xInterp=self.interpolant,
+                                                             dx=dx,
+                                                             pad_factor=pad_factor)
         else:
             # Set up the GaussianDeviate if not provided one, or check that the user-provided one is
             # of a valid type.
@@ -1522,17 +1522,23 @@ class InterpolatedImage(GSObject):
             if pad_variance != 0.:
                 # Note: make sure the sigma is properly set to sqrt(pad_variance).
                 gaussian_deviate.setSigma(np.sqrt(pad_variance))
-                gaussian_deviate.applyTo(pad_image)
+                gaussian_deviate.applyTo(pad_image.view())
             # if we want correlated noise...
             elif pad_corrnoise is not None:
                 if not isinstance(pad_corrnoise,ImageCorrFunc) and not isinstance(pad_corrnoise,_CorrFunc):
                     raise ValueError("Input pad_corrnoise must be an ImageCorrFunc!")
                 pad_corrnoise.applyNoiseTo(pad_image, dev=gaussian_deviate)
-
-        # Make the SBInterpolatedImage out of the image.
-        sbinterpolatedimage = galsim.SBInterpolatedImage(image, self.interpolant, dx=dx,
-                                                         pad_factor=pad_factor,
-                                                         pad_image=pad_image)
+            # Make the SBInterpolatedImage out of the image.
+            print self.interpolant
+            print dx
+            print pad_factor
+            print pad_image
+            print pad_image.getBounds().isDefined()
+            sbinterpolatedimage = galsim.SBInterpolatedImage(image,
+                                                             xInterp=self.interpolant,
+                                                             dx=dx,
+                                                             pad_factor=pad_factor,
+                                                             pad_image=pad_image.view())
 
         # GalSim cannot automatically know what stepK and maxK are appropriate for the 
         # input image.  So it is usually worth it to do a manual calculation here.
@@ -1889,10 +1895,10 @@ class RealGalaxy(GSObject):
 
         # Now make the SBInterpolatedImage for the original object and the PSF
         self.original_image = galsim.SBInterpolatedImage(
-            gal_image, self.interpolant, dx=self.pixel_scale,
+            gal_image, xInterp=self.interpolant, dx=self.pixel_scale,
             pad_variance=self.pad_variance, gd=gaussian_deviate)
         self.original_PSF = galsim.SBInterpolatedImage(
-            PSF_image, self.interpolant, dx=self.pixel_scale)
+            PSF_image, xInterp=self.interpolant, dx=self.pixel_scale)
         
         if flux != None:
             self.original_image.setFlux(flux)
