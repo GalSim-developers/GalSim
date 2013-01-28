@@ -45,64 +45,91 @@ class DistDeviate:
     
     Some sample initialization calls:
     
-    >>> d = galsim.DistDeviate(list1,list2)
-    # Initializes d to be a DistDeviate using the distribution P(x), where x is list1 and P(x) is
-    # list2, and seeds the PRNG using current time. The lists can also be tuples or numpy arrays.
+    >>> d = galsim.DistDeviate(x=list1,p=list2) 
+    # Initializes d to be a DistDeviate using the distribution P(x) and seeds the PRNG using 
+    # current time. The lists can also be tuples or numpy arrays.
     
-    >>> d = galsim.DistDeviate(f,min=min,max=max)   
+    >>> d = galsim.DistDeviate(function=f,min=min,max=max)   
     # Initializes d to be a DistDeviate instance with a distribution given by the callable function
     # f(x) from x=min to x=max and seeds the PRNG using current time.  When a function is passed, 
     # the keywords min and max are required.
     
-    >>> d = galsim.DistDeviate(filename,1062533)
+    >>> d = galsim.DistDeviate(1062533,filename=filename)
     # Initializes d to be a DistDeviate instance with a distribution given by the data in file
     # filename, which must be a 2-column ASCII table, and seeds the PRNG using the long int 
     # seed 1062533.
     
-    >>> d = galsim.DistDeviate(list1,list2,dev,interpolant='linear')
+    >>> d = galsim.DistDeviate(dev,x=list1,p=list2,interpolant='linear')
     # Initializes d to be a DistDeviate instance using the distribution given by list1 and list2,
     # using linear interpolation to get probabilities for intermediate points, and seeds the
     # PRNG using the BaseDeviate dev.
 
-    @param min          The minimum desired return value (required if a callable function is passed)
-    @param max          The maximum desired return value (required if a callable function is passed)
+    @param filename        The name of a file containing a probability distribution as a 2-column
+                        ASCII table,
+    @param x            The x values for a P(x) distribution as a list, tuple, or Numpy array.
+    @param p            The p values for a P(x) distribution as a list, tuple, or Numpy array.
+    @param function        A callable function giving a probability distribution; max and min    
+                        keywords are required with this option.
+    @param min          The minimum desired return value.
+    @param max          The maximum desired return value.
     @param interpolant  Type of interpolation used for interpolating (x,p) or filename (causes an
                         error if passed alongside a callable function). Options are given in the
-                        documentation for galsim.LookupTable.  (default: 'spline')
-    @param npoints      Number of points in the internal x vs CP(x) interpolation (default: 256)
+                        documentation for galsim.LookupTable.  (default: 'linear')
+    @param npoints      Number of points in the internal tables for interpolations (default: 256)
 
     Calling
     -------
     Taking the instance from the above examples, successive calls to d() then generate pseudo-random
     numbers distributed according to the initialized distribution.
 
-    >>> d = galsim.random.DistDeviate([1.,2.,3.],[1.,2.,3.])
+    >>> d = galsim.random.DistDeviate(x=[1.,2.,3.],p=[1.,2.,3.])
     >>> d()
     2.9886772666447365
-	>>> d()
-	1.897586098503296
-	>>> d()
-	2.7892018766454183
+    >>> d()
+    1.897586098503296
+    >>> d()
+    2.7892018766454183
 """    
-    def __init__(self, *args, **kwargs):
+    def __init__(self, arg=None, **kwargs):
         """Initializes a DistDeviate instance.
         
-        The first unnamed argument(s) must be a filename, callable function, or two one-dimensional
-        lists, numpy arrays, or tuples.  The second unnamed argument, if given, must be something
-        that can initialize a BaseDeviate instance, such as another BaseDeviate or a long int seed.
-        
+        The unnamed argument, if given, must be something that can initialize a BaseDeviate 
+        instance, such as another BaseDeviate or a long int seed.  At least one of the keyword args
+        filename, function, or the pair (x,p) must be given as well; see the documentation for the
+        DistDeviate class for more information.
         """
         
         import numpy
         import galsim
         npoints=kwargs.pop('npoints',256)
+        interpolant=kwargs.pop('interpolant','linear')
  
-        if not args:
-            raise TypeError("Too few unnamed arguments to initialize DistDeviate")
-        if hasattr(args[0],'__call__'):
-            userfunction=args[0]
-            filename=args[0] #for later error messages
-            narg=1
+        #Set up the PRNG
+        if arg is None:
+            self._ud=galsim.UniformDeviate()
+        else:
+            self._ud=galsim.UniformDeviate(arg)
+
+        #Check a few arguments before doing computations
+        if ('x' in kwargs and not 'p' in kwargs) or ('p' in kwargs and not 'x' in kwargs):
+            raise TypeError('Only one of x and p given as a keyword to DistDeviate')
+        if not ('filename' in kwargs or 'function' in kwargs or ('x' in kwargs and 'p' in kwargs)):
+            raise TypeError(
+                'At least one of the keywords filename, function, or the pair x and p must be set in calls to DistDeviate!')
+        if 'filename' in kwargs and 'function' in kwargs:
+            raise TypeError('Cannot pass both filename and function keywords to DistDeviate')
+        if 'filename' in kwargs and 'x' in kwargs:
+            raise TypeError('Cannot pass both filename and x&p keywords to DistDeviate')
+        if 'function' in kwargs and 'x' in kwargs:
+            raise TypeError('Cannot pass both function and x&p keywords to DistDeviate')
+
+        #Set up the probability function & min and max values for any inputs
+        if 'function' in kwargs:
+            userfunction=kwargs.pop('function')
+            if not hasattr(userfunction,'__call__'):
+                raise TypeError(
+                    'Function given to DistDeviate with keyword function is not callable: %s'%function)
+            filename=userfunction #for later error messages
             if 'min' in kwargs and 'max' in kwargs:
                 xmin=kwargs.pop('min',0.)
                 xmax=kwargs.pop('max',1.)
@@ -111,40 +138,24 @@ class DistDeviate:
             else:
                 raise TypeError(
                     "DistDeviate called with a function must include min and max keywords")
-        #If the first argument isn't callable, see if it's a list or filename (which have
-        #some setup in common, hence the else rather than elif)
-        else:
-            interpolant=kwargs.pop('interpolant','spline')
-            if isinstance(args[0],(list,tuple,numpy.ndarray)):
-                filename=args[0] #just for later error outputs
-                if len(args)>1 and isinstance(args[1],(list,tuple,numpy.ndarray)):
-                    userfunction=galsim.LookupTable(args[0],args[1],interpolant=interpolant)
-                    narg=2
-                    xmin=min(args[0])
-                    xmax=max(args[0])
-                else:
-                    raise TypeError('Only one list or array passed to DistDeviate: %s'%args[0])
-            #If none of the above work, assume the unnamed argument is a filename
-            elif isinstance(args[0], basestring):
-                filename=args[0]
+        else: #Some of the array & filename setup is the same
+            if 'x' in kwargs:
+                xarray=kwargs.pop('x')
+                parray=kwargs.pop('p')
+                filename=xarray #just for later error outputs
+                userfunction=galsim.LookupTable(x=xarray,f=parray,interpolant=interpolant)
+                xmin=min(xarray)
+                xmax=max(xarray)
+            else: #We know from earlier checks it must be a filename--no need to recheck
+                filename=kwargs.pop('filename')
                 userfunction=galsim.LookupTable(file=filename,interpolant=interpolant)
                 xmin=min(userfunction.getArgs())
                 xmax=max(userfunction.getArgs())
-                narg=1
-            else:
-                raise TypeError("Unnamed arguments to DistDeviate are not of permitted types")
             xmin=kwargs.pop('min',xmin)
             xmax=kwargs.pop('max',xmax)
             if xmax<=xmin:
                 raise ValueError('Max value <= min value in DistDeviate')
 
-        #Set up the random number generator and check the number of arguments.
-        if len(args)==narg+1:
-            self._ud=galsim.UniformDeviate(args[narg])
-        elif len(args)==narg:
-            self._ud=galsim.UniformDeviate()
-        else:
-            raise TypeError("Too many unnamed arguments to DistDeviate")
         if kwargs:
             raise TypeError("Keyword arguments to DistDeviate not permitted: %s"%kwargs.keys())
 
@@ -160,27 +171,27 @@ class DistDeviate:
             raise ValueError('Negative probability passed to DistDeviate: %s'%filename)
         dx=numpy.diff(cumulativeprobability)
         if numpy.all(dx==0):
-        	raise ValueError('All probabilities passed to DistDeviate are 0: %s'%filename)
+            raise ValueError('All probabilities passed to DistDeviate are 0: %s'%filename)
         #Clip any zero endpoints, as they'll cause the next block to blow up
         while dx[0]==0.0:
-        	xarray=xarray[1:]
-        	cumulativeprobability=cumulativeprobability[1:]
-        	dx=numpy.diff(cumulativeprobability)
+            xarray=xarray[1:]
+            cumulativeprobability=cumulativeprobability[1:]
+            dx=numpy.diff(cumulativeprobability)
         while dx[-1]==0.0:
-        	xarray=xarray[:-1]
-        	cumulativeprobability=cumulativeprobability[:-1]
-        	dx=numpy.diff(cumulativeprobability)
+            xarray=xarray[:-1]
+            cumulativeprobability=cumulativeprobability[:-1]
+            dx=numpy.diff(cumulativeprobability)
         if not numpy.all(dx >=0.):
             #This check plus the cumulativeprobability>=0 should capture any nonzero probabilities
             raise ValueError('Cumulative probability in DistDeviate is not monotonic')
         elif not numpy.all(dx > 0.):
-            #Remove consecutive dx=0 points, except endpoints
+            #Remove consecutive dx=0 points, except the higher-end endpoint
             zeroindex=numpy.squeeze(numpy.where(dx==0))
             removearray=numpy.squeeze(numpy.where(numpy.diff(zeroindex)==1))
             cumulativeprobability=numpy.delete(cumulativeprobability,zeroindex[removearray])
             xarray=numpy.delete(xarray,zeroindex[removearray])
             dx=numpy.diff(cumulativeprobability)
-            #Tweak the edges of dx=0 regions so function is always increasing
+            #Tweak the edge of dx=0 regions so function is always increasing
             for index in numpy.where(dx == 0):
                 if index+2<len(cumulativeprobability):
                    cumulativeprobability[index+1]+=1.E-6*(
@@ -196,29 +207,30 @@ class DistDeviate:
         #Quietly renormalize the probability if it wasn't already normalized
         cumulativeprobability/=cumulativeprobability[-1]
         self._inverseprobabilitytable=galsim.LookupTable(cumulativeprobability,xarray,
-                                                         interpolant='spline')
+                                                         interpolant=interpolant)
 
 
     def __call__(self):
         return self._inverseprobabilitytable(self._ud())
     
     def applyTo(self, image):
-    	import numpy
+        import numpy
         shp=image.array.shape
+        #seriously faster than doing this element by element
         image.array[:,:]+=numpy.array([[self() for col in range(shp[1])] for row in range(shp[0])])
     
         
     def seed(self,arg=None):
-    	if arg is None:
-    		self._ud()
-    	else:
-	        self._ud.seed(arg)
+        if arg is None:
+            self._ud()
+        else:
+            self._ud.seed(arg)
     
     def reset(self,arg=None):
-    	if arg is None:
-    		self._ud()
-    	else:
-        	self._ud.reset(arg)
+        if arg is None:
+            self._ud()
+        else:
+            self._ud.reset(arg)
 
 
 # BaseDeviate docstrings
