@@ -1882,16 +1882,29 @@ class RealGalaxy(GSObject):
                 gaussian_deviate = galsim.GaussianDeviate(rng)
             else:
                 raise TypeError("rng provided to InterpolatedImage constructor is not a BaseDeviate")
+            gaussian_deviate.setSigma(np.sqrt(self.pad_variance))
+
+            n_init = max(1+gal_image.getYMax()-gal_image.getYMin(),
+                         1+gal_image.getXMax()-gal_image.getYMin())
+            n_init = n_init + (n_init%2)
+            pad_factor = 4.
+            padded_size = galsim.utilities.goodFFTSize(int(pad_factor*n_init))
+            if isinstance(gal_image, galsim.BaseImageF):
+                pad_image = galsim.ImageF(padded_size, padded_size)
+            if isinstance(gal_image, galsim.BaseImageD):
+                pad_image = galsim.ImageD(padded_size, padded_size)
+            gaussian_deviate.applyTo(pad_image)
         else:
+            if isinstance(gal_image, galsim.BaseImageF): pad_image = galsim.ImageF()
+            if isinstance(gal_image, galsim.BaseImageD): pad_image = galsim.ImageD()
             self.pad_variance=0.
-            gaussian_deviate=None
         # note: will be adding more parameters here about noise properties etc., but let's be basic
         # for now
 
         # Now make the SBInterpolatedImage for the original object and the PSF
         self.original_image = galsim.SBInterpolatedImage(
             gal_image, xInterp=self.interpolant, dx=self.pixel_scale,
-            pad_variance=self.pad_variance, gd=gaussian_deviate)
+            pad_image=pad_image)
         self.original_PSF = galsim.SBInterpolatedImage(
             PSF_image, xInterp=self.interpolant, dx=self.pixel_scale)
         
