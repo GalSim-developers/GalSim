@@ -1525,7 +1525,7 @@ class InterpolatedImage(GSObject):
                 gaussian_deviate.applyTo(pad_image.view())
             # if we want correlated noise...
             elif pad_corrnoise is not None:
-                if not isinstance(pad_corrnoise,ImageCorrFunc) and not isinstance(pad_corrnoise,_CorrFunc):
+                if not isinstance(pad_corrnoise,galsim.ImageCorrFunc) and not isinstance(pad_corrnoise,galsim._CorrFunc):
                     raise ValueError("Input pad_corrnoise must be an ImageCorrFunc!")
                 pad_corrnoise.applyNoiseTo(pad_image, dev=gaussian_deviate)
             # Make the SBInterpolatedImage out of the image.
