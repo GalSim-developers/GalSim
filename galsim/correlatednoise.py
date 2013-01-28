@@ -189,11 +189,16 @@ class _CorrFunc(object):
         galsim.Ellipse objects can be initialized in a variety of ways (see documentation of this
         class, galsim.ellipse.Ellipse in the doxygen documentation, for details).
 
+        Note that the correlation function must be peaked at the origin, and is translationally
+        invariant: any X0 shift in the input ellipse is therefore ignored.
+
         @param ellipse The galsim.Ellipse transformation to apply.
         """
         if not isinstance(ellipse, galsim.Ellipse):
             raise TypeError("Argument to applyTransformation must be a galsim.Ellipse!")
-        self._profile.applyTransformation(ellipse)
+        # Create a new ellipse without a shift
+        ellipse_noshift = galsim.Ellipse(shear=ellipse.getS(), mu=ellipse.getMu())
+        self._profile.applyTransformation(ellipse_noshift)
 
     def applyMagnification(self, scale):
         """Scale the linear size of this _CorrFunc by scale.  
@@ -238,6 +243,9 @@ class _CorrFunc(object):
 
         Note that galsim.Ellipse objects can be initialized in a variety of ways (see documentation
         of this class, galsim.ellipse.Ellipse in the doxygen documentation, for details).
+
+        Note also that the correlation function must be peaked at the origin, and is translationally
+        invariant: any X0 shift in the input ellipse is therefore ignored.
 
         @param ellipse The galsim.Ellipse transformation to apply
         @returns The transformed object.
