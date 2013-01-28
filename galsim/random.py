@@ -45,21 +45,21 @@ class DistDeviate:
     
     Some sample initialization calls:
     
-    >>> d = galsim.random.DistDeviate(list1,list2)
+    >>> d = galsim.DistDeviate(list1,list2)
     # Initializes d to be a DistDeviate using the distribution P(x), where x is list1 and P(x) is
     # list2, and seeds the PRNG using current time. The lists can also be tuples or numpy arrays.
     
-    >>> d = galsim.random.DistDeviate(f,min=min,max=max)   
+    >>> d = galsim.DistDeviate(f,min=min,max=max)   
     # Initializes d to be a DistDeviate instance with a distribution given by the callable function
     # f(x) from x=min to x=max and seeds the PRNG using current time.  When a function is passed, 
     # the keywords min and max are required.
     
-    >>> d = galsim.random.DistDeviate(filename,1062533)
+    >>> d = galsim.DistDeviate(filename,1062533)
     # Initializes d to be a DistDeviate instance with a distribution given by the data in file
     # filename, which must be a 2-column ASCII table, and seeds the PRNG using the long int 
     # seed 1062533.
     
-    >>> d = galsim.random.DistDeviate(list1,list2,dev,interpolant='linear')
+    >>> d = galsim.DistDeviate(list1,list2,dev,interpolant='linear')
     # Initializes d to be a DistDeviate instance using the distribution given by list1 and list2,
     # using linear interpolation to get probabilities for intermediate points, and seeds the
     # PRNG using the BaseDeviate dev.
@@ -78,7 +78,11 @@ class DistDeviate:
 
     >>> d = galsim.random.DistDeviate([1.,2.,3.],[1.,2.,3.])
     >>> d()
-    >>> d()            
+    2.9886772666447365
+	>>> d()
+	1.897586098503296
+	>>> d()
+	2.7892018766454183
 """    
     def __init__(self, *args, **kwargs):
         """Initializes a DistDeviate instance.
