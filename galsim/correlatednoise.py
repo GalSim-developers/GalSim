@@ -41,12 +41,7 @@ class _CorrFunc(object):
         # sense for correlation functions and could cause errors in applyNoiseTo, to raise 
         # exceptions
         self.profile.applyShift = self._notImplemented
-        self.profile.createShifted = self._notImplemented
         self.profile.applyDilation = self._notImplemented
-        self.profile.createDilated = self._notImplemented
-        self.profile.setFlux = self._notImplemented
-        self.profile.getFlux = self._notImplemented
-        self.profile.drawShoot = self._notImplemented # this isn't really needed
 
     # Make "+" work in the intuitive sense (variances being additive, correlation functions add as
     # you would expect)
