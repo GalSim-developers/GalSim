@@ -1907,7 +1907,7 @@ class RealGalaxy(GSObject):
                 pad_image = galsim.ImageD(padded_size, padded_size)
             # populate padding image with noise field
             if type(noise_pad) is bool:
-                gaussian_deviate.applyTo(pad_image)
+                gaussian_deviate.applyTo(pad_image.view())
             else:
                 cf.applyNoiseTo(pad_image, dev=gaussian_deviate)
             # Now make the SBInterpolatedImage for the original object and the PSF
