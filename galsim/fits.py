@@ -126,13 +126,13 @@ class _ReadFile:
             raise ValueError("Unknown file_compression")
 read_file = _ReadFile()
 
-# Do the same trick for write_file(file,hdus,clobber,file_compress):
+# Do the same trick for write_file(file,hdus,clobber,file_compress,pyfits_compress):
 class _WriteFile:
     def __init__(self):
         # Store whether it is ok to use the in-memory version.
         self.in_mem = True
 
-    def __call__(self, file, hdus, clobber, file_compress):
+    def __call__(self, file, hdus, clobber, file_compress, pyfits_compress):
         import os
         if os.path.isfile(file):
             if clobber:
@@ -180,6 +180,36 @@ class _WriteFile:
     
             fout.write(data)
             fout.close()
+
+        # There is a bug in pyfits where they don't add the size of the variable length array
+        # to the TFORMx header keywords.  They should have a (8) at the end of them.
+        # This bug is not currently fixed as far as I know, but I've filed a tickes (199) 
+        # on the pyfits tracker, so presumably this will be fixed eventually.
+        # TODO: When they do fix it, change the version number here.
+        import pyfits
+        if pyfits_compress and pyfits.__version__ < '9.9':
+            hdus = pyfits.open(file,'update',disable_image_compression=True)
+            for hdu in hdus[1:]: # Skip PrimaryHDU
+                # Find the maximum variable array length  
+                max_ar_len = max([ len(ar[0]) for ar in hdu.data ])
+                # Add '(N)' to the TFORMx keywords for the variable array items
+                s = '(%d)'%max_ar_len
+                for key in hdu.header.keys():
+                    if key.startswith('TFORM'):
+                        tform = hdu.header[key]
+                        # Only update if the form is a P (= variable length data)
+                        # and the (*) is not there already.
+                        if 'P' in tform and '(' not in tform:
+                            hdu.header[key] = tform + s
+            hdus.close()
+
+            # Workaround for a bug in some pyfits 3.0.x versions
+            # It was fixed in 3.0.8.  I'm not sure when the bug was 
+            # introduced, but I believe it was 3.0.3.  
+            if (pyfits.__version__ > '3.0' and pyfits.__version__ < '3.0.8' and
+                'COMPRESSION_ENABLED' in pyfits.hdu.compressed.__dict__):
+                pyfits.hdu.compressed.COMPRESSION_ENABLED = True
+                
 write_file = _WriteFile()
 
 def write_header(hdu, add_wcs, scale, xmin, ymin):
@@ -215,15 +245,13 @@ def write_header(hdu, add_wcs, scale, xmin, ymin):
 
 def add_hdu(hdus, data, pyfits_compress):
     import pyfits
-    if len(hdus) == 0:
-        if pyfits_compress:
+    if pyfits_compress:
+        if len(hdus) == 0:
             hdus.append(pyfits.PrimaryHDU())  # Need a blank PrimaryHDU
-            hdu = pyfits.CompImageHDU(data, compressionType=pyfits_compress)
-        else:
-            hdu = pyfits.PrimaryHDU(data)
+        hdu = pyfits.CompImageHDU(data, compressionType=pyfits_compress)
     else:
-        if pyfits_compress:
-            hdu = pyfits.CompImageHDU(data, compressionType=pyfits_compress)
+        if len(hdus) == 0:
+            hdu = pyfits.PrimaryHDU(data)
         else:
             hdu = pyfits.ImageHDU(data)
     hdus.append(hdu)
@@ -303,7 +331,7 @@ def write(image, fits, add_wcs=True, clobber=True, compression='auto'):
     write_header(hdu, add_wcs, image.scale, image.xmin, image.ymin)
    
     if isinstance(fits, basestring):
-        write_file(fits,hdus,clobber,file_compress)
+        write_file(fits,hdus,clobber,file_compress, pyfits_compress)
 
 
 def writeMulti(image_list, fits, add_wcs=True, clobber=True, compression='auto'):
@@ -334,7 +362,7 @@ def writeMulti(image_list, fits, add_wcs=True, clobber=True, compression='auto')
         write_header(hdu, add_wcs, image.scale, image.xmin, image.ymin)
    
     if isinstance(fits, basestring):
-        write_file(fits,hdus,clobber,file_compress)
+        write_file(fits,hdus,clobber,file_compress, pyfits_compress)
 
 
 def writeCube(image_list, fits, add_wcs=True, clobber=True, compression='auto'):
@@ -404,7 +432,7 @@ def writeCube(image_list, fits, add_wcs=True, clobber=True, compression='auto'):
     write_header(hdu, add_wcs, scale, xmin, ymin)
 
     if isinstance(fits, basestring):
-        write_file(fits,hdus,clobber,file_compress)
+        write_file(fits,hdus,clobber,file_compress, pyfits_compress)
 
 
 def read(fits, compression='auto'):
@@ -514,6 +542,20 @@ def readMulti(fits, compression='auto'):
 
     @param   fits  If `fits` is a `pyfits.HDUList`, readMulti will read images from these.  If 
                    `fits` is a string, it will be interpreted as a filename to open and read.
+    @param compression  Which decompression scheme to use (if any).  Options are:
+                        None or 'none' = no decompression
+                        'rice' = use rice decompression in tiles
+                        'gzip' = use gzip to decompress the full file
+                        'bzip2' = use bzip2 to decompress the full file
+                        'gzip_tile' = use gzip decompression in tiles
+                        'hcompress' = use hcompress decompression in tiles
+                        'plio' = use plio decompression in tiles
+                        'auto' = determine the decompression from the extension of the file name
+                            (requires fits to be a string).  
+                            '*.fz' => 'rice'
+                            '*.gz' => 'gzip'
+                            '*.bz2' => 'bzip2'
+                            otherwise None
     @returns A Python list of ImageView instances.
     """
 
@@ -566,6 +608,20 @@ def readCube(fits, compression='auto'):
                  `pyfits.PrimaryHDU` or `pyfits.ImageHDU`, that HDU will be used.  If `fits` is a
                  string, it will be interpreted as a filename to open; the Primary HDU of that file
                  will be used.
+    @param compression  Which decompression scheme to use (if any).  Options are:
+                        None or 'none' = no decompression
+                        'rice' = use rice decompression in tiles
+                        'gzip' = use gzip to decompress the full file
+                        'bzip2' = use bzip2 to decompress the full file
+                        'gzip_tile' = use gzip decompression in tiles
+                        'hcompress' = use hcompress decompression in tiles
+                        'plio' = use plio decompression in tiles
+                        'auto' = determine the decompression from the extension of the file name
+                            (requires fits to be a string).  
+                            '*.fz' => 'rice'
+                            '*.gz' => 'gzip'
+                            '*.bz2' => 'bzip2'
+                            otherwise None
     @returns     A Python list of ImageView instances.
     """
     import pyfits     # put this at function scope to keep pyfits optional
