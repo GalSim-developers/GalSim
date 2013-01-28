@@ -17,7 +17,7 @@ namespace galsim {
             boost::shared_ptr<Interpolant2d> xInterp,
             boost::shared_ptr<Interpolant2d> kInterp,
             double dx, double pad_factor,
-            boost::shared_ptr<ImageView<T> > pad_image);
+            boost::shared_ptr<Image<T> > pad_image);
 
         SBInterpolatedImageImpl(
             const MultipleImageHelper& multi, const std::vector<double>& weights,

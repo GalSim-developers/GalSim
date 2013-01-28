@@ -442,14 +442,18 @@ def test_padding():
     import time
     t1 = time.time()
 
-    # set up some defaults: use weird image sizes / shapes and noise variances
+    # Set up some defaults: use weird image sizes / shapes and noise variances.  But, important
+    # note: SBInterpolatedImage identifies centroid via summation over pixels to get unweighted
+    # moments.  This means that if we make the noise images too huge, then those moments will
+    # diverge and the estimated centroids can be outside of the image, which causes seg faults in
+    # the C++ layer.  So make the images decently big but not enormous.
     decimal_precise=5
     decimal_coarse=2
-    orig_nx = 347
-    orig_ny = 374
+    orig_nx = 147
+    orig_ny = 174
     noise_var = 1.73
-    big_nx = 458
-    big_ny = 481
+    big_nx = 258
+    big_ny = 281
     orig_seed = 151241
 
     # first, make a noise image

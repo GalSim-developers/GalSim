@@ -1529,16 +1529,11 @@ class InterpolatedImage(GSObject):
                     raise ValueError("Input pad_corrnoise must be an ImageCorrFunc!")
                 pad_corrnoise.applyNoiseTo(pad_image, dev=gaussian_deviate)
             # Make the SBInterpolatedImage out of the image.
-            print self.interpolant
-            print dx
-            print pad_factor
-            print pad_image
-            print pad_image.getBounds().isDefined()
             sbinterpolatedimage = galsim.SBInterpolatedImage(image,
                                                              xInterp=self.interpolant,
                                                              dx=dx,
                                                              pad_factor=pad_factor,
-                                                             pad_image=pad_image.view())
+                                                             pad_image=pad_image)
 
         # GalSim cannot automatically know what stepK and maxK are appropriate for the 
         # input image.  So it is usually worth it to do a manual calculation here.
