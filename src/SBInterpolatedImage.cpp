@@ -189,7 +189,9 @@ namespace galsim {
                     }
                 }
             } else {
-                throw std::runtime_error("Supplied image of noise for padding is wrong size!");
+                char err_buff[500];
+                sprintf(err_buff,"Supplied image of noise for padding is wrong size: received %d by %d, expected %d by %d\n",1+pad_image->getXMax()-pad_image->getXMin(),1+pad_image->getYMax()-pad_image->getYMin(),_pimpl->Nk,_pimpl->Nk);
+                throw std::runtime_error(err_buff);
             }
         }
 

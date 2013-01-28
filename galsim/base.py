@@ -1894,17 +1894,16 @@ class RealGalaxy(GSObject):
             if isinstance(gal_image, galsim.BaseImageD):
                 pad_image = galsim.ImageD(padded_size, padded_size)
             gaussian_deviate.applyTo(pad_image)
+            # Now make the SBInterpolatedImage for the original object and the PSF
+            self.original_image = galsim.SBInterpolatedImage(
+                gal_image, xInterp=self.interpolant, dx=self.pixel_scale,
+                pad_image=pad_image)
         else:
-            if isinstance(gal_image, galsim.BaseImageF): pad_image = galsim.ImageF()
-            if isinstance(gal_image, galsim.BaseImageD): pad_image = galsim.ImageD()
             self.pad_variance=0.
-        # note: will be adding more parameters here about noise properties etc., but let's be basic
-        # for now
+            self.original_image = galsim.SBInterpolatedImage(
+                gal_image, xInterp=self.interpolant, dx=self.pixel_scale)
 
-        # Now make the SBInterpolatedImage for the original object and the PSF
-        self.original_image = galsim.SBInterpolatedImage(
-            gal_image, xInterp=self.interpolant, dx=self.pixel_scale,
-            pad_image=pad_image)
+        # also make the original PSF image
         self.original_PSF = galsim.SBInterpolatedImage(
             PSF_image, xInterp=self.interpolant, dx=self.pixel_scale)
         
