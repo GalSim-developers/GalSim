@@ -170,7 +170,7 @@ class _CorrFunc(object):
             else:
                 newcf.setScale(dx)
             # Then draw this correlation function into an array
-            self.profile.draw(newcf, dx=None) # setting dx=None uses the newcf image scale set above
+            self.draw(newcf, dx=None) # setting dx=None uses the newcf image scale set above
 
             # Then calculate the sqrt(PS) that will be used to generate the actual noise
             rootps = np.sqrt(np.abs(np.fft.fft2(newcf.array)) * np.product(image.array.shape))
