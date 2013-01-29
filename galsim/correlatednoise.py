@@ -32,10 +32,11 @@ class _CorrFunc(object):
         self._profile = gsobject
 
         # When applying noise to an image, we normally do a calculation. 
-        # If store_profile is profile, then it means we can use the other stored values
-        # and avoid having to redo the calculation.
-        # So for now, we start out with store_profile = None.
+        # If _profile_for_stored is profile, then it means that we can use the stored values
+        # in _rootps_store and avoid having to redo the calculation.
+        # So for now, we start out with _profile_for_stored = None and _rootps_store empty.
         self._profile_for_stored = None
+        self._rootps_store = []
 
         # Cause any methods we don't want the user to have access to, since they don't make sense
         # for correlation functions and could cause errors in applyNoiseTo, to raise exceptions
@@ -333,7 +334,7 @@ class _CorrFunc(object):
                        matrix is required.
         @param  dx     Pixel scale of the image for which a covariance matrix is required.
 
-        @return The covariance matrix.
+        @return The covariance matrix (as an ImageD)
         """
         return galsim._galsim._calculateCovarianceMatrix(self._profile.SBProfile, bounds, dx)
 
@@ -522,7 +523,6 @@ class ImageCorrFunc(_CorrFunc):
 
         # Finally store useful data as a (rootps, dx) tuple for efficient later use:
         self._profile_for_stored = self._profile
-        self._rootps_store = []
         self._rootps_store.append(
             (np.sqrt(original_ps_image.array), original_cf_image.getScale()))
 
