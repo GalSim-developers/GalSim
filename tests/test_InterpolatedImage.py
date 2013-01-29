@@ -501,6 +501,12 @@ def test_uncorr_padding():
     np.testing.assert_array_almost_equal(big_img_2.array, big_img.array, decimal=decimal_precise,
         err_msg='Cannot reproduce noise-padded image with same choice of seed')
 
+    # Finally check inputs: what if we give it an input variance that is neg?  A list?
+    try:
+        np.testing.assert_raises(ValueError,galsim.InterpolatedImage,orig_img,pad_variance=-1.)
+    except ImportError:
+        print 'The assert_raises tests require nose'
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -543,7 +549,7 @@ def test_corr_padding():
 
     # make it into an InterpolatedImage with noise-padding
     int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed),
-                                      pad_corrnoise = cf)
+                                      pad_corrnoise = im)
 
     # draw into a larger image
     big_img = galsim.ImageF(big_nx, big_ny)
@@ -563,6 +569,28 @@ def test_corr_padding():
     big_img_2 = int_im.draw(big_img_2, dx=1.)
     np.testing.assert_array_almost_equal(big_img_2.array, big_img.array, decimal=decimal_precise,
         err_msg='Cannot reproduce correlated noise-padded image with same choice of seed')
+
+    # Finally, check inputs:
+    # what if we give it a screwy way of defining the image padding?
+    try:
+        np.testing.assert_raises(ValueError,galsim.InterpolatedImage,orig_img,pad_corrnoise=1.)
+    except ImportError:
+        print 'The assert_raises tests require nose'
+    # also, check that whether we give it a string, image, or cf, it gives the same noise field
+    # (given the same random seed)
+    infile = 'blankimg.fits'
+    inimg = galsim.fits.read(infile)
+    incf = galsim.ImageCorrFunc(inimg)
+    int_im2 = galsim.InterpolatedImage(orig_img, rng=galsim.GaussianDeviate(orig_seed),
+                                       pad_corrnoise=inimg)
+    int_im3 = galsim.InterpolatedImage(orig_img, rng=galsim.GaussianDeviate(orig_seed),
+                                       pad_corrnoise=incf)
+    big_img2 = galsim.ImageF(big_nx, big_ny)
+    big_img3 = galsim.ImageF(big_nx, big_ny)
+    big_img2 = int_im2.draw(big_img2, dx=1.)
+    big_img3 = int_im3.draw(big_img3, dx=1.)
+    np.testing.assert_equal(big_img2.array, big_img3.array,
+                            err_msg='Diff ways of specifying correlated noise give diff answers')
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
