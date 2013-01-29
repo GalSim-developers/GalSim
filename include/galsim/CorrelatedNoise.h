@@ -25,8 +25,8 @@ int verbose_level = 2;
 #endif
 
 /**
- * @file CorrelatedNoise.h @brief Contains a class definition for handling the correlation
- * properties of noise in Images.
+ * @file CorrelatedNoise.h @brief Contains functions used with the python-layer CorrFunc
+ * classes for handling the correlation properties of noise in Images.
  */
 
 #include <complex>
