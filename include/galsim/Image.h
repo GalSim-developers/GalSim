@@ -228,6 +228,9 @@ namespace galsim {
         int getYMax() const { return getBounds().getYMax(); }
         //@}
         
+        /**
+         *  @brief Calculate the size of the image in one dimension after padding.
+         */
         int getPaddedSize(float pad_factor) const;
 
 #ifdef IMAGE_BOUNDS_CHECK

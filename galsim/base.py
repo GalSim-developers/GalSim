@@ -1364,10 +1364,18 @@ class InterpolatedImage(GSObject):
     choose interpolants and pad factors, and no warnings are raised when the code is modified to
     choose some combination that is known to give significant error.
 
-    The user can choose to have the image padding use Gaussian random noise of some variance, or
-    zeros.  If `pad_variance` is set to a value <=0 (as is the default) then the images are padded
-    with zeros, otherwise the chosen variance is used; in that case, the user can also pass in a
-    random number generator to be used for noise generation.
+    The user can choose to have the image padding use zero (default), Gaussian random noise of some
+    variance, or a Gaussian but correlated noise field that is specified either as an ImageCorrFunc,
+    an Image (from which a noise correlation function is derived), or a string (interpreted as a
+    filename containing an image to use for deriving the noise correlation function).  If
+    `pad_variance` is set to 0 (as is the default) then the images are padded with zeros, otherwise
+    the chosen variance is used; in that case, the user can also pass in a random number generator
+    to be used for noise generation.
+
+    By default, the InterpolatedImage recalculates the Fourier-space step and number of points to
+    use for further manipulations, rather than using the most conservative possibility.  For typical
+    objects representing galaxies and PSFs this can easily make the difference between several
+    seconds (conservative) and 0.04s (recalculated).  However, the user can turn off this option.
 
     Initialization
     --------------
@@ -1375,9 +1383,27 @@ class InterpolatedImage(GSObject):
         >>> interpolated_image = galsim.InterpolatedImage(image, interpolant = None,
                                                           normalization = 'f', dx = None,
                                                           flux = None, pad_factor = 0.,
-                                                          pad_variance = 0., rng = None)
+                                                          pad_variance = 0., rng = None,
+                                                          pad_corrnoise = None,
+                                                          calculate_stepk = True,
+                                                          calculate_maxk = True)
 
     Initializes interpolated_image as a galsim.InterpolatedImage() instance.
+
+    For comparison of the case of padding with noise or zero when the image itself includes noise,
+    compare the following (both of which can be executed from the examples/ directory):
+
+        image = galsim.fits.read('data/147246.0_150.416558_1.998697_masknoise.fits')
+        int_im1 = galsim.InterpolatedImage(image)
+        int_im2 = galsim.InterpolatedImage(image, pad_corrnoise='../tests/blankimg.fits')
+        im1 = galsim.ImageF(1000,1000)
+        im2 = galsim.ImageF(1000,1000)
+        im1 = int_im1.draw(im1)
+        im2 = int_im2.draw(im2)
+
+    Examination of these two images clearly shows how padding with a correlated noise field that is
+    similar to the one in the real data leads to a more reasonable appearance for the result when
+    re-drawn at a different size.
 
     @param image           The Image from which to construct the object.
                            This may be either an Image (or ImageView) instance or a string
@@ -1401,14 +1427,24 @@ class InterpolatedImage(GSObject):
     @param pad_factor      Factor by which to pad the Image when creating the SBInterpolatedImage;
                            `pad_factor <= 0` results in the use of the default value, 4.
                            (Default `pad_factor = 0`.)
-    @param pad_variance    Variance to use for the random Gaussian noise in the padding regions, the
-                           size of which were determined by `pad_factor`.  `pad_variance <= 0`
-                           results in padding by zeros.  (Default `pad_variance = 0`.)
+    @param pad_variance    Variance to use for the random, uncorrelated Gaussian noise in the padding
+                           regions, the size of which were determined by `pad_factor`.
+                           `pad_variance <= 0` results in padding by zeros.  (Default `pad_variance
+                           = 0`.)
     @param rng             If padding by noise, the user can optionally supply the random noise
                            generator to use for drawing random numbers as `rng` (may be any kind of
                            `galsim.BaseDeviate` object).
                            If `rng=None`, one will be automatically created, using the time as a
                            seed. (Default `rng = None`)
+    @param pad_corrnoise   Correlated noise properties to use when padding the original image with
+                           correlated noise.  This can be specified in several ways:
+                               As a galsim.ImageCorrFunc, which contains information about the
+                                   desired noise power spectrum.
+                               As a galsim.Image of a noise field, which is used to calculate the
+                                   desired noise power spectrum.
+                               As a string which is interpreted as a filename containing an example
+                                   noise field with the proper noise power spectrum.
+                           (Default `pad_corrnoise = None`.)
     @param calculate_stepk Set as `True` to perform an internal determination of the extent of the
                            object being represented by the InterpolatedImage; often this is useful
                            in choosing an optimal value for the stepsize in the Fourier space
@@ -1798,12 +1834,16 @@ class RealGalaxy(GSObject):
     @param flux                 Total flux, if None then original flux in galaxy is adopted without
                                 change [default `flux = None`].
     @param noise_pad            When creating the SBProfile attribute for this GSObject, pad the
-                                SBInterpolated image with zeros, or with random Gaussian noise of a
-                                level specified in the training dataset?  Use 'noise_pad = True' if
-                                you wish to pad with noise, which will partially offset the effect
-                                of image artifacts due to zero-padding.  The fix is not 100% because
-                                the actual noise in these images is correlated, unlike the noise
-                                field used for padding.  [default `noise_pad = False`]
+                                SBInterpolated image with zeros, or with noise of a level specified
+                                in the training dataset?  There are several options here: 
+                                    Use `noise_pad = False` if you wish to pad with zeros.
+                                    Use `noise_pad = True` if you wish to pad with uncorrelated
+                                        noise of the proper variance.
+                                    Set `noise_pad` equal to a galsim.ImageCorrFunc, an Image, or a
+                                        filename for a file containing an Image of an example noise
+                                        field that will be used to calculate the noise power
+                                        spectrum and generate noise in the padding region.
+                                [default `noise_pad = False`]
     @param pad_rng              If padding by noise, the user can optionally supply the random noise
                                 generator to use for drawing random numbers as `pad_rng` (may be any
                                 kind of `galsim.BaseDeviate` object).
@@ -1886,7 +1926,7 @@ class RealGalaxy(GSObject):
             # it directly; if it's an Image of some sort we use it to make an ImageCorrFunc; if it's
             # a string, we read in the image from file and make an ImageCorrFunc.
             if type(noise_pad) is not bool:
-                if isinstance(noise_pad, ImageCorrFunc):
+                if isinstance(noise_pad, galsim.ImageCorrFunc):
                     cf = noise_pad
                 elif isinstance(noise_pad,galsim.BaseImageF) or isinstance(noise_pad,galsim.BaseImageD):
                     cf = galsim.ImageCorrFunc(noise_pad)
