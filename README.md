@@ -217,6 +217,8 @@ Currently, GalSim has the following capabilities:
   clusters).  For gridded galaxy positions, lensing shears can be drawn randomly
   from a specified shear power spectrum.
 
+* Simulating correlated Gaussian noise fields as according to user-specified,
+  correlation functions derived from images.
 
 
 Summary of planned future development
@@ -233,9 +235,6 @@ GalSim:
   done.
 
 * Self-consistent shears AND magnifications from a power spectrum.
-
-* Simulating correlated noise fields with some user-specified correlation
-  function.
 
 * Handling (that is, whitening and imposing isotropy or four-fold symmetry on)
   the input noise in the HST training data, so that deeper training samples can
