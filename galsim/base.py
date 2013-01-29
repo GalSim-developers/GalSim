@@ -1462,7 +1462,8 @@ class InterpolatedImage(GSObject):
         'interpolant' : str ,
         'normalization' : str ,
         'dx' : float ,
-        'flux' : float
+        'flux' : float ,
+        'noise_pad' : str
     }
     _single_params = [ ]
 
@@ -1531,7 +1532,13 @@ class InterpolatedImage(GSObject):
             raise TypeError("rng provided to InterpolatedImage constructor is not a BaseDeviate")
 
         # now decide about noise padding
-        if isinstance(noise_pad, float) or isinstance(noise_pad, int):
+        # First, see if the input is consistent with a float.
+        # i.e. it could be an int, or a str that converts to a number.
+        try:
+            noise_pad = float(noise_pad)
+        except:
+            pass
+        if isinstance(noise_pad, float):
             if noise_pad < 0.:
                 raise ValueError("Noise variance cannot be negative!")
             elif noise_pad == 0.:
@@ -1567,7 +1574,7 @@ class InterpolatedImage(GSObject):
                     cf = galsim.ImageCorrFunc(tmp_im)
                 except:
                     raise RuntimeError("Can't read in Image to define correlated noise " +
-                                           "field for noise padding from specified file!")
+                                       "field for noise padding from specified file!")
             else:
                 raise ValueError("Input noise_pad must be a float/int, an ImageCorrFunc, " +
                                  "Image, or filename containing an image to use to make an " +
