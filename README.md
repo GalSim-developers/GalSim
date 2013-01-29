@@ -23,6 +23,30 @@ version number is below 1.0).  The release of v1.0 in mid-2013 will be
 accompanied with a publication that users should cite.
 
 
+Keeping up-to-date with GalSim
+------------------------------
+
+There is a GalSim mailing list, organized through the Google Group 
+galsim-announce.  Members of the group will receive news and updates about the
+GalSim code, including notifications of major version releases, new features
+and bugfixes.
+
+You do not need a Google Account to subscribe to the group, simply send any
+email to
+
+    galsim-announce+subscribe@googlegroups.com
+
+If you receive a confirmation request (check junk mail filters!) simply reply 
+directly to that email, with anything, to confirm.  You may also click the link
+in the confirmation request, but you may be asked for a Google Account login.
+
+To unsubscribe, simply send any email to
+
+    galsim-announce+unsubscribe@googlegroups.com
+
+You should receive notification that your unsubscription was successful.
+
+
 How to communicate with the GalSim developers
 ---------------------------------------------
 
