@@ -18,3 +18,4 @@ from psfcorr import *
 from catalog import *
 from lensing import *
 from . import integ
+from correlatednoise import *
