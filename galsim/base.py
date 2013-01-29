@@ -1456,8 +1456,10 @@ class InterpolatedImage(GSObject):
 
         # GalSim cannot automatically know what stepK and maxK are appropriate for the 
         # input image.  So it is usually worth it to do a manual calculation here.
-        sbinterpolatedimage.calculateStepK()
-        sbinterpolatedimage.calculateMaxK()
+        if calculate_stepk:
+            sbinterpolatedimage.calculateStepK()
+        if calculate_maxk:
+            sbinterpolatedimage.calculateMaxK()
 
         # If the user specified a flux, then set to that flux value.
         if flux != None:
