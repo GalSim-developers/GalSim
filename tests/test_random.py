@@ -80,6 +80,25 @@ chi2N = 30
 # Tabulated results for Chi2
 chi2Result = (32.209933900954049, 50.040002656028513, 24.301442486313896)
 
+#function and min&max to use for DistDeviate function call tests
+dnpoints=256
+dinterpolant='linear'
+dmin=0.0
+dmax=2.0
+def dfunction(x):
+	return x*x
+# Tabulated results for DistDeviate function call
+dFunctionResult = (0.98464215336031, 1.1989127131427726, 1.511552765897196)
+
+# x and y arrays and interpolant to use for DistDeviate array call tests
+# dnpoints and dinterpolant set in previous test
+dx=[0.,1.,2.,3.,4.,5.]
+dp=[0.1, 0.1, 0., 0., 0.1, 0.1]
+# Tabulated results for DistDeviate array call
+dArrayResult = (0.3558276852127155, 0.6437039889860879, 1.3507336341803322)
+
+
+
 def funcname():
     import inspect
     return inspect.stack()[1][3]
@@ -338,6 +357,70 @@ def test_chi2_image():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_distfunction_rand():
+    """Test distribution-defined random number generator with a function for expected result 
+    given the above seed.
+    """
+    import time
+    t1 = time.time()
+    u = galsim.UniformDeviate(testseed)
+    g = galsim.DistDeviate(
+        u, function=dfunction, min=dmin, max=dmax, npoints=dnpoints, interpolant=dinterpolant)
+    testResult = (g(), g(), g())
+    np.testing.assert_array_almost_equal(np.array(testResult), np.array(dFunctionResult), precision,
+                                       err_msg='Wrong DistDeviate random number sequence generated')
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_distfunction_image():
+    """Testing ability to apply distribution-defined random numbers from a function to images 
+    using their addNoise method, and reproduce sequence.
+    """
+    import time
+    t1 = time.time()
+    u = galsim.UniformDeviate(testseed)
+    g = galsim.DistDeviate(
+        u, function=dfunction, min=dmin, max=dmax, npoints=dnpoints, interpolant=dinterpolant)
+    testimage = galsim.ImageViewD(np.zeros((3, 1)))
+    testimage.addNoise(g)
+    np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(dFunctionResult), 
+                              precision, err_msg="DistDeviate generator applied to Images does not "
+                                                 "reproduce expected sequence")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
+def test_distarray_rand():
+    """Test distribution-defined random number generator with an array for expected result given 
+    the above seed.
+    """
+    import time
+    t1 = time.time()
+    u = galsim.UniformDeviate(testseed)
+    g = galsim.DistDeviate(u, x=dx, p=dp, npoints=dnpoints, interpolant=dinterpolant)
+    testResult = (g(), g(), g())
+    np.testing.assert_array_almost_equal(np.array(testResult), np.array(dArrayResult), precision,
+                                       err_msg='Wrong DistDeviate random number sequence generated')
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_distarray_image():
+    """Testing ability to apply distribution-defined random numbers from an array to images using 
+    their addNoise method, and reproduce sequence.
+    """
+    import time
+    t1 = time.time()
+    u = galsim.UniformDeviate(testseed)
+    g = galsim.DistDeviate(u, x=dx, p=dp, npoints=dnpoints, interpolant=dinterpolant)
+    testimage = galsim.ImageViewD(np.zeros((3, 1)))
+    testimage.addNoise(g)
+    np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(dArrayResult), 
+                              precision, err_msg="DistDeviate generator applied to Images does not "
+                                       "reproduce expected sequence")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 def test_multiprocess():
     """Test that the same random numbers are generated in single-process and multi-process modes.
     """
@@ -424,5 +507,9 @@ if __name__ == "__main__":
     test_gamma_image()
     test_chi2_rand()
     test_chi2_image()
+    test_distfunction_rand()
+    test_distfunction_image()
+    test_distarray_rand()
+    test_distarray_image()
     test_multiprocess()
 

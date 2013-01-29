@@ -161,10 +161,9 @@ class DistDeviate:
 
         dx=(1.*xmax-xmin)/(npoints-1)
         xarray=xmin+dx*numpy.array(range(npoints),float)
-        cumulativeprobability=[]
-        for i in range(xarray.shape[0]):
-            cumulativeprobability.append(dx*numpy.sum(userfunction(xarray[0:i])))
-        cumulativeprobability=numpy.array(cumulativeprobability)
+        probability = numpy.array([userfunction(x) for x in xarray])
+        cumulativeprobability=dx*numpy.array(
+            [numpy.sum(probability[0:i]) for i in range(probability.shape[0])])
         #Check that cumulativeprobability is always increasing or always decreasing
         #and if it isn't, either tweak it to fix or return an error.
         if not numpy.all(cumulativeprobability>=0):
