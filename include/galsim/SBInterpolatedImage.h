@@ -237,6 +237,9 @@ namespace galsim {
 
         class SBInterpolatedImageImpl;
 
+        // Regular SBProfile pimpl constructor so as to be available to derived classes
+        SBInterpolatedImage(SBProfileImpl* pimpl) : SBProfile(pimpl) {}
+
     private:
         // op= is undefined
         void operator=(const SBInterpolatedImage& rhs);

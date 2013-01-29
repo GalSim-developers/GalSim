@@ -111,7 +111,7 @@ namespace galsim {
         double doFillXImage(ImageView<double>& I, double gain) const
         { return fillXImage(I,gain); }
 
-    private:
+    protected:  // Made protected so that these can be used in the derived CorrelationFunction class
 
         MultipleImageHelper _multi;
         std::vector<double> _wts;
@@ -155,6 +155,8 @@ namespace galsim {
         mutable double _positiveFlux;    ///< Sum of all positive pixels' flux
         mutable double _negativeFlux;    ///< Sum of all negative pixels' flux
         mutable ProbabilityTree<Pixel> _pt; ///< Binary tree of pixels, for photon-shooting
+
+    private:
 
         // Copy constructor and op= are undefined.
         SBInterpolatedImageImpl(const SBInterpolatedImageImpl& rhs);
