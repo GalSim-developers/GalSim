@@ -20,6 +20,7 @@ class InputCatalog(object):
     _req_params = { 'file_name' : str }
     _opt_params = { 'dir' : str , 'file_type' : str , 'comments' : str }
     _single_params = []
+    _takes_rng = False
 
     def __init__(self, file_name, dir=None, file_type='ASCII', comments='#'):
         # First build full file_name

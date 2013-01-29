@@ -95,6 +95,7 @@ class RealGalaxyCatalog(object):
     _req_params = { 'file_name' : str }
     _opt_params = { 'image_dir' : str , 'dir' : str, 'preload' : bool }
     _single_params = []
+    _takes_rng = False
 
     def __init__(self, file_name, image_dir=None, dir=None, preload=False):
         import os

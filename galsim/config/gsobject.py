@@ -307,6 +307,10 @@ def _BuildRealGalaxy(config, key, base, ignore):
         single = galsim.__dict__['RealGalaxy']._single_params,
         ignore = ignore)
 
+    if 'rng' not in base:
+        raise ValueError("No base['rng'] available for %s.type = RealGalaxy"%(key))
+    kwargs['rng'] = base['rng']
+
     if 'index' in kwargs:
         index = kwargs['index']
         if index >= real_cat.nobjects:
@@ -331,6 +335,10 @@ def _BuildSimple(config, key, base, ignore):
         opt = galsim.__dict__[type]._opt_params,
         single = galsim.__dict__[type]._single_params,
         ignore = ignore)
+    if galsim.__dict__[type]._takes_rng:
+        if 'rng' not in base:
+            raise ValueError("No base['rng'] available for %s.type = %s"%(key,type))
+        kwargs['rng'] = base['rng']
 
     # Finally, after pulling together all the params, try making the GSObject.
     try:

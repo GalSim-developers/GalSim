@@ -98,6 +98,8 @@ class PowerSpectrum(object):
     _req_params = {}
     _opt_params = { 'e_power_function' : str, 'b_power_function' : str }
     _single_params = []
+    _takes_rng = False
+
     def __init__(self, e_power_function=None, b_power_function=None, units=galsim.arcsec):
         # Check that the power functions are valid:
         for pf_str in [ 'e_power_function', 'b_power_function' ]:
@@ -623,6 +625,7 @@ class NFWHalo(object):
     _req_params = { 'mass' : float , 'conc' : float , 'redshift' : float }
     _opt_params = { 'halo_pos' : galsim.PositionD , 'omega_m' : float , 'omega_lam' : float }
     _single_params = []
+    _takes_rng = False
 
     def __init__(self, mass, conc, redshift, halo_pos=galsim.PositionD(0,0), 
                  omega_m=None, omega_lam=None, cosmo=None):

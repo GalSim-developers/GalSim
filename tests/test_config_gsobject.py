@@ -488,6 +488,8 @@ def test_realgalaxy():
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
                    'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } }
     }
+    rng = galsim.UniformDeviate(1234)
+    config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
 
     galsim.config.ProcessInput(config)
 
@@ -554,6 +556,8 @@ def test_interpolated_image():
                    'dx' : 0.7,
                    'flux' : 1.e5 },
     }
+    rng = galsim.UniformDeviate(1234)
+    config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
     im = galsim.fits.read(file_name)

@@ -843,9 +843,11 @@ class Gaussian(GSObject):
     # _req_params are required
     # _opt_params are optional
     # _single_params are a list of sets for which exactly one in the list is required.
+    # _takes_rng indicates whether the constructor should be given the current rng.
     _req_params = {}
     _opt_params = { "flux" : float }
     _single_params = [ { "sigma" : float, "half_light_radius" : float, "fwhm" : float } ]
+    _takes_rng = False
     
     # --- Public Class methods ---
     def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1.):
@@ -911,6 +913,7 @@ class Moffat(GSObject):
     _req_params = { "beta" : float }
     _opt_params = { "trunc" : float , "flux" : float }
     _single_params = [ { "scale_radius" : float, "half_light_radius" : float, "fwhm" : float } ]
+    _takes_rng = False
 
     # --- Public Class methods ---
     def __init__(self, beta, scale_radius=None, half_light_radius=None,  fwhm=None, trunc=0.,
@@ -985,6 +988,7 @@ class AtmosphericPSF(GSObject):
     _req_params = {}
     _opt_params = { "flux" : float , "oversampling" : float }
     _single_params = [ { "lam_over_r0" : float , "fwhm" : float } ]
+    _takes_rng = False
 
     # --- Public Class methods ---
     def __init__(self, lam_over_r0=None, fwhm=None, interpolant=None, oversampling=1.5, flux=1.):
@@ -1074,6 +1078,7 @@ class Airy(GSObject):
     _req_params = { "lam_over_diam" : float }
     _opt_params = { "flux" : float , "obscuration" : float }
     _single_params = []
+    _takes_rng = False
 
     # --- Public Class methods ---
     def __init__(self, lam_over_diam, obscuration=0., flux=1.):
@@ -1168,6 +1173,7 @@ class Kolmogorov(GSObject):
     _req_params = {}
     _opt_params = { "flux" : float }
     _single_params = [ { "lam_over_r0" : float, "fwhm" : float, "half_light_radius" : float } ]
+    _takes_rng = False
 
     # --- Public Class methods ---
     def __init__(self, lam_over_r0=None, fwhm=None, half_light_radius=None, flux=1.):
@@ -1275,6 +1281,7 @@ class OpticalPSF(GSObject):
         "pad_factor" : float ,
         "flux" : float }
     _single_params = []
+    _takes_rng = False
 
     # --- Public Class methods ---
     def __init__(self, lam_over_diam, defocus=0.,
@@ -1466,6 +1473,7 @@ class InterpolatedImage(GSObject):
         'noise_pad' : str
     }
     _single_params = [ ]
+    _takes_rng = True
 
     # --- Public Class methods ---
     def __init__(self, image, interpolant = None, normalization = 'flux', dx = None, flux = None,
@@ -1639,6 +1647,7 @@ class Pixel(GSObject):
     _req_params = { "xw" : float }
     _opt_params = { "yw" : float , "flux" : float }
     _single_params = []
+    _takes_rng = False
 
     # --- Public Class methods ---
     def __init__(self, xw, yw=None, flux=1.):
@@ -1686,6 +1695,7 @@ class Sersic(GSObject):
     _req_params = { "n" : float , "half_light_radius" : float }
     _opt_params = { "flux" : float }
     _single_params = []
+    _takes_rng = False
 
     # --- Public Class methods ---
     def __init__(self, n, half_light_radius, flux=1.):
@@ -1741,6 +1751,7 @@ class Exponential(GSObject):
     _req_params = {}
     _opt_params = { "flux" : float }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
+    _takes_rng = False
 
     # --- Public Class methods ---
     def __init__(self, half_light_radius=None, scale_radius=None, flux=1.):
@@ -1792,6 +1803,7 @@ class DeVaucouleurs(GSObject):
     _req_params = { "half_light_radius" : float }
     _opt_params = { "flux" : float }
     _single_params = []
+    _takes_rng = False
 
     # --- Public Class methods ---
     def __init__(self, half_light_radius=None, flux=1.):
@@ -1871,6 +1883,7 @@ class RealGalaxy(GSObject):
     _req_params = {}
     _opt_params = { "flux" : float }
     _single_params = [ { "index" : int , "id" : str } ]
+    _takes_rng = True
 
     # --- Public Class methods ---
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,

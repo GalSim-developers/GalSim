@@ -345,7 +345,7 @@ def _GenerateFromRandom(param, param_name, base, value_type):
     """@brief Return a random value drawn from a uniform distribution
     """
     if 'rng' not in base:
-        raise ValueError("No rng available for %s.type = Random"%param_name)
+        raise ValueError("No base['rng'] available for %s.type = Random"%param_name)
     rng = base['rng']
     ud = galsim.UniformDeviate(rng)
 
@@ -384,7 +384,7 @@ def _GenerateFromRandomGaussian(param, param_name, base, value_type):
     """@brief Return a random value drawn from a Gaussian distribution
     """
     if 'rng' not in base:
-        raise ValueError("No rng available for %s.type = RandomGaussian"%param_name)
+        raise ValueError("No base['rng'] available for %s.type = RandomGaussian"%param_name)
     rng = base['rng']
 
     req = { 'sigma' : float }
@@ -453,7 +453,7 @@ def _GenerateFromRandomCircle(param, param_name, base, value_type):
     """@brief Return a PositionD drawn from a circular top hat distribution.
     """
     if 'rng' not in base:
-        raise ValueError("No rng available for %s.type = RandomCircle"%param_name)
+        raise ValueError("No base['rng'] available for %s.type = RandomCircle"%param_name)
     rng = base['rng']
 
     req = { 'radius' : float }
