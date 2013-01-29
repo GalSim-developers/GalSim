@@ -1515,15 +1515,30 @@ class InterpolatedImage(GSObject):
                 pad_image = galsim.ImageD(padded_size, padded_size)
 
             # if we want gaussian uncorrelated noise...
-            if pad_variance != 0.:
+            if pad_variance > 0.:
                 # Note: make sure the sigma is properly set to sqrt(pad_variance).
                 gaussian_deviate.setSigma(np.sqrt(pad_variance))
                 gaussian_deviate.applyTo(pad_image.view())
+            elif pad_variance < 0.:
+                raise ValueError("Noise variance cannot be negative!")
             # if we want correlated noise...
             elif pad_corrnoise is not None:
-                if not isinstance(pad_corrnoise,galsim.ImageCorrFunc) and not isinstance(pad_corrnoise,galsim._CorrFunc):
-                    raise ValueError("Input pad_corrnoise must be an ImageCorrFunc!")
-                pad_corrnoise.applyNoiseTo(pad_image, dev=gaussian_deviate)
+                if isinstance(pad_corrnoise, galsim.ImageCorrFunc):
+                    cf = pad_corrnoise
+                elif isinstance(pad_corrnoise,galsim.BaseImageF) or isinstance(pad_corrnoise,galsim.BaseImageD):
+                    cf = galsim.ImageCorrFunc(pad_corrnoise)
+                elif isinstance(pad_corrnoise, str):
+                    try:
+                        tmp_im = galsim.fits.read(pad_corrnoise)
+                        cf = galsim.ImageCorrFunc(tmp_im)
+                    except:
+                        raise RuntimeError("Can't read in Image to define correlated noise " +
+                                           "field for noise padding from specified file!")
+                else:
+                    raise ValueError("Input pad_corrnoise must be an ImageCorrFunc, Image, " +
+                                     "or filename containing an image to use to make an " +
+                                     "ImageCorrFunc!")
+                cf.applyNoiseTo(pad_image, dev=gaussian_deviate)
             # Make the SBInterpolatedImage out of the image.
             sbinterpolatedimage = galsim.SBInterpolatedImage(image,
                                                              xInterp=self.interpolant,
@@ -1866,16 +1881,28 @@ class RealGalaxy(GSObject):
         if noise_pad:
             self.pad_variance= float(real_galaxy_catalog.variance[use_index])
 
-            # Check, is it "True" or some other string?  If some other string, check for file
-            # existence and read image from it.
+            # Check, is it "True" or something else?  If True, we use Gaussian uncorrelated noise
+            # using the stored variance in the catalog.  Otherwise, if it's an ImageCorrFunc we use
+            # it directly; if it's an Image of some sort we use it to make an ImageCorrFunc; if it's
+            # a string, we read in the image from file and make an ImageCorrFunc.
             if type(noise_pad) is not bool:
-                try:
-                    tmp_im = galsim.fits.read(noise_pad)
-                    # this small patch may have different overall variance, so rescale
-                    tmp_im *= np.sqrt(self.pad_variance/np.var(tmp_im.array))
-                    cf = galsim.ImageCorrFunc(tmp_im)
-                except:
-                    raise RuntimeError("Can't read in image for noise padding from specified file!")
+                if isinstance(noise_pad, ImageCorrFunc):
+                    cf = noise_pad
+                elif isinstance(noise_pad,galsim.BaseImageF) or isinstance(noise_pad,galsim.BaseImageD):
+                    cf = galsim.ImageCorrFunc(noise_pad)
+                elif isinstance(noise_pad, str):
+                    try:
+                        tmp_im = galsim.fits.read(noise_pad)
+                        # this small patch may have different overall variance, so rescale while
+                        # preserving the correlation structure
+                        tmp_im *= np.sqrt(self.pad_variance/np.var(tmp_im.array))
+                        cf = galsim.ImageCorrFunc(tmp_im)
+                    except:
+                        raise RuntimeError("Can't read in Image to define correlated noise " +
+                                           "field for noise padding from specified file!")
+                else:
+                    raise RuntimeError("noise_pad must be either a bool, ImageCorrFunc, Image, "+
+                                       "or a filename for reading in an Image")
                      
             # Set up the GaussianDeviate if not provided one, or check that the user-provided one
             # is of a valid type.
