@@ -1919,7 +1919,7 @@ class RealGalaxy(GSObject):
                 raise TypeError("rng provided to InterpolatedImage constructor is not a BaseDeviate")
             gaussian_deviate.setSigma(np.sqrt(self.pad_variance))
 
-            padded_size = gal_image.getPaddedSize(pad_factor)
+            padded_size = gal_image.getPaddedSize(4.)
             if isinstance(gal_image, galsim.BaseImageF):
                 pad_image = galsim.ImageF(padded_size, padded_size)
             if isinstance(gal_image, galsim.BaseImageD):
