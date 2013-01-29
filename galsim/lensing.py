@@ -288,18 +288,27 @@ class PowerSpectrum(object):
         if e_power_function is None:
             p_E = None
         elif self.delta2:
-            p_E = lambda k : (2.*np.pi) * e_power_function(self.scale*k)/(self.scale*k)**2
+            # Here we have to go from Delta^2 (dimensionless) to P = 2pi Delta^2 / k^2.  We want to
+            # have P and therefore 1/k^2 in units of arcsec, so we won't rescale the k that goes in
+            # the denominator.  This naturally gives P(k) in arcsec^2.
+            p_E = lambda k : (2.*np.pi) * e_power_function(self.scale*k)/(k**2)
         elif self.scale != 1:
-            p_E = lambda k : e_power_function(self.scale*k)
+            # Here, the scale comes in two places:
+            # The units of k have to be converted from 1/arcsec, which GalSim wants to use, into
+            # whatever the power spectrum function was defined to use.
+            # The units of power have to be converted from (input units)^2 as returned by the power
+            # function, to Galsim's units of arcsec^2.
+            # Recall that scale is (input units)/arcsec.
+            p_E = lambda k : e_power_function(self.scale*k)*(self.scale**2)
         else: 
             p_E = e_power_function
 
         if b_power_function is None:
             p_B = None
         elif self.delta2:
-            p_B = lambda k : (2.*np.pi) * b_power_function(self.scale*k)/(self.scale*k)**2
+            p_B = lambda k : (2.*np.pi) * b_power_function(self.scale*k)/(k**2)
         elif self.scale != 1:
-            p_B = lambda k : b_power_function(self.scale*k)
+            p_B = lambda k : b_power_function(self.scale*k)*(self.scale**2)
         else:
             p_B = b_power_function
 
@@ -492,7 +501,7 @@ class PowerSpectrumRealizer(object):
 
         # Set up the scalar |k| grid. Generally, for a box size of L (in one dimension), the grid
         # spacing in k_x or k_y is Delta k=2pi/L.
-        self.k=np.pi*((kx/(pixel_size*nx))**2+(ky/(pixel_size*ny))**2)**0.5
+        self.k=2.*np.pi*((kx/(pixel_size*nx))**2+(ky/(pixel_size*ny))**2)**0.5
         
         #Compute the spin weightings
         self._cos, self._sin = self._generate_spin_weightings()
