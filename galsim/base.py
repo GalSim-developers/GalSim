@@ -1367,10 +1367,8 @@ class InterpolatedImage(GSObject):
     The user can choose to have the image padding use zero (default), Gaussian random noise of some
     variance, or a Gaussian but correlated noise field that is specified either as an ImageCorrFunc,
     an Image (from which a noise correlation function is derived), or a string (interpreted as a
-    filename containing an image to use for deriving the noise correlation function).  If
-    `pad_variance` is set to 0 (as is the default) then the images are padded with zeros, otherwise
-    the chosen variance is used; in that case, the user can also pass in a random number generator
-    to be used for noise generation.
+    filename containing an image to use for deriving the noise correlation function).  The user can
+    also pass in a random number generator to be used for noise generation.
 
     By default, the InterpolatedImage recalculates the Fourier-space step and number of points to
     use for further manipulations, rather than using the most conservative possibility.  For typical
@@ -1383,8 +1381,7 @@ class InterpolatedImage(GSObject):
         >>> interpolated_image = galsim.InterpolatedImage(image, interpolant = None,
                                                           normalization = 'f', dx = None,
                                                           flux = None, pad_factor = 0.,
-                                                          pad_variance = 0., rng = None,
-                                                          pad_corrnoise = None,
+                                                          noise_pad = 0., rng = None,
                                                           calculate_stepk = True,
                                                           calculate_maxk = True)
 
@@ -1395,7 +1392,7 @@ class InterpolatedImage(GSObject):
 
         image = galsim.fits.read('data/147246.0_150.416558_1.998697_masknoise.fits')
         int_im1 = galsim.InterpolatedImage(image)
-        int_im2 = galsim.InterpolatedImage(image, pad_corrnoise='../tests/blankimg.fits')
+        int_im2 = galsim.InterpolatedImage(image, noise_pad='../tests/blankimg.fits')
         im1 = galsim.ImageF(1000,1000)
         im2 = galsim.ImageF(1000,1000)
         im1 = int_im1.draw(im1)
@@ -1427,24 +1424,22 @@ class InterpolatedImage(GSObject):
     @param pad_factor      Factor by which to pad the Image when creating the SBInterpolatedImage;
                            `pad_factor <= 0` results in the use of the default value, 4.
                            (Default `pad_factor = 0`.)
-    @param pad_variance    Variance to use for the random, uncorrelated Gaussian noise in the padding
-                           regions, the size of which were determined by `pad_factor`.
-                           `pad_variance <= 0` results in padding by zeros.  (Default `pad_variance
-                           = 0`.)
-    @param rng             If padding by noise, the user can optionally supply the random noise
-                           generator to use for drawing random numbers as `rng` (may be any kind of
-                           `galsim.BaseDeviate` object).
-                           If `rng=None`, one will be automatically created, using the time as a
-                           seed. (Default `rng = None`)
-    @param pad_corrnoise   Correlated noise properties to use when padding the original image with
-                           correlated noise.  This can be specified in several ways:
+    @param noise_pad       Noise properties to use when padding the original image with
+                           noise.  This can be specified in several ways:
+                               As a float, which is interpreted as being a variance to use when
+                                   padding with uncorrelated Gaussian noise.
                                As a galsim.ImageCorrFunc, which contains information about the
                                    desired noise power spectrum.
                                As a galsim.Image of a noise field, which is used to calculate the
                                    desired noise power spectrum.
                                As a string which is interpreted as a filename containing an example
                                    noise field with the proper noise power spectrum.
-                           (Default `pad_corrnoise = None`.)
+                           (Default `noise_pad = 0.`, i.e., pad with zeros.)
+    @param rng             If padding by noise, the user can optionally supply the random noise
+                           generator to use for drawing random numbers as `rng` (may be any kind of
+                           `galsim.BaseDeviate` object).
+                           If `rng=None`, one will be automatically created, using the time as a
+                           seed. (Default `rng = None`)
     @param calculate_stepk Set as `True` to perform an internal determination of the extent of the
                            object being represented by the InterpolatedImage; often this is useful
                            in choosing an optimal value for the stepsize in the Fourier space
@@ -1473,8 +1468,8 @@ class InterpolatedImage(GSObject):
 
     # --- Public Class methods ---
     def __init__(self, image, interpolant = None, normalization = 'flux', dx = None, flux = None,
-                 pad_factor = 0., pad_variance = 0., rng = None, pad_corrnoise = None,
-                 calculate_stepk=True, calculate_maxk=True):
+                 pad_factor = 0., noise_pad = 0., rng = None, calculate_stepk=True,
+                 calculate_maxk=True):
         # first try to read the image as a file.  If its not either a string or a valid
         # pyfits hdu or hdulist, then an exception will be raised, which we ignore and move on.
         try:
@@ -1523,58 +1518,67 @@ class InterpolatedImage(GSObject):
             if dx == 0.0:
                 raise ValueError("dx may not be 0.0")
 
-        # now decide if information was passed in about noise padding
-        if pad_variance != 0. and pad_corrnoise is not None:
-            raise RuntimeError('Uncorrelated and correlated noise padding both requested!')
-        if pad_variance == 0. and pad_corrnoise is None:
-            sbinterpolatedimage = galsim.SBInterpolatedImage(image, xInterp=self.interpolant,
-                                                             dx=dx,
-                                                             pad_factor=pad_factor)
+        # Set up the GaussianDeviate if not provided one, or check that the user-provided one is
+        # of a valid type.
+        if rng == None:
+            gaussian_deviate = galsim.GaussianDeviate()
+        elif isinstance(rng,galsim.GaussianDeviate):
+            gaussian_deviate = rng
+        elif isinstance(rng,galsim.BaseDeviate):
+            # If it's another kind of BaseDeviate, we can convert
+            gaussian_deviate = galsim.GaussianDeviate(rng)
         else:
-            # Set up the GaussianDeviate if not provided one, or check that the user-provided one is
-            # of a valid type.
-            if rng == None:
-                gaussian_deviate = galsim.GaussianDeviate()
-            elif isinstance(rng,galsim.GaussianDeviate):
-                gaussian_deviate = rng
-            elif isinstance(rng,galsim.BaseDeviate):
-                # If it's another kind of BaseDeviate, we can convert
-                gaussian_deviate = galsim.GaussianDeviate(rng)
-            else:
-                raise TypeError("rng provided to InterpolatedImage constructor is not a BaseDeviate")
+            raise TypeError("rng provided to InterpolatedImage constructor is not a BaseDeviate")
 
+        # now decide about noise padding
+        if isinstance(noise_pad, float) or isinstance(noise_pad, int):
+            if noise_pad < 0.:
+                raise ValueError("Noise variance cannot be negative!")
+            elif noise_pad == 0.:
+                sbinterpolatedimage = galsim.SBInterpolatedImage(image,
+                                                                 xInterp=self.interpolant,
+                                                                 dx=dx,
+                                                                 pad_factor=pad_factor)
+            else:
+                # figure out proper size for padded image
+                padded_size = image.getPaddedSize(pad_factor)
+                if isinstance(image, galsim.BaseImageF): 
+                    pad_image = galsim.ImageF(padded_size, padded_size)
+                if isinstance(image, galsim.BaseImageD):
+                    pad_image = galsim.ImageD(padded_size, padded_size)
+
+                # Note: make sure the sigma is properly set to sqrt(noise_pad).
+                gaussian_deviate.setSigma(np.sqrt(noise_pad))
+                gaussian_deviate.applyTo(pad_image.view())                
+                # Make the SBInterpolatedImage out of the image.
+                sbinterpolatedimage = galsim.SBInterpolatedImage(image,
+                                                                 xInterp=self.interpolant,
+                                                                 dx=dx,
+                                                                 pad_factor=pad_factor,
+                                                                 pad_image=pad_image)
+        else:
+            if isinstance(noise_pad, galsim.ImageCorrFunc):
+                cf = noise_pad
+            elif isinstance(noise_pad,galsim.BaseImageF) or isinstance(noise_pad,galsim.BaseImageD):
+                cf = galsim.ImageCorrFunc(noise_pad)
+            elif isinstance(noise_pad, str):
+                try:
+                    tmp_im = galsim.fits.read(noise_pad)
+                    cf = galsim.ImageCorrFunc(tmp_im)
+                except:
+                    raise RuntimeError("Can't read in Image to define correlated noise " +
+                                           "field for noise padding from specified file!")
+            else:
+                raise ValueError("Input noise_pad must be a float/int, an ImageCorrFunc, " +
+                                 "Image, or filename containing an image to use to make an " +
+                                 "ImageCorrFunc!")
             # figure out proper size for padded image
             padded_size = image.getPaddedSize(pad_factor)
             if isinstance(image, galsim.BaseImageF): 
                 pad_image = galsim.ImageF(padded_size, padded_size)
             if isinstance(image, galsim.BaseImageD):
                 pad_image = galsim.ImageD(padded_size, padded_size)
-
-            # if we want gaussian uncorrelated noise...
-            if pad_variance > 0.:
-                # Note: make sure the sigma is properly set to sqrt(pad_variance).
-                gaussian_deviate.setSigma(np.sqrt(pad_variance))
-                gaussian_deviate.applyTo(pad_image.view())
-            elif pad_variance < 0.:
-                raise ValueError("Noise variance cannot be negative!")
-            # if we want correlated noise...
-            elif pad_corrnoise is not None:
-                if isinstance(pad_corrnoise, galsim.ImageCorrFunc):
-                    cf = pad_corrnoise
-                elif isinstance(pad_corrnoise,galsim.BaseImageF) or isinstance(pad_corrnoise,galsim.BaseImageD):
-                    cf = galsim.ImageCorrFunc(pad_corrnoise)
-                elif isinstance(pad_corrnoise, str):
-                    try:
-                        tmp_im = galsim.fits.read(pad_corrnoise)
-                        cf = galsim.ImageCorrFunc(tmp_im)
-                    except:
-                        raise RuntimeError("Can't read in Image to define correlated noise " +
-                                           "field for noise padding from specified file!")
-                else:
-                    raise ValueError("Input pad_corrnoise must be an ImageCorrFunc, Image, " +
-                                     "or filename containing an image to use to make an " +
-                                     "ImageCorrFunc!")
-                cf.applyNoiseTo(pad_image, dev=gaussian_deviate)
+            cf.applyNoiseTo(pad_image, dev=gaussian_deviate)
             # Make the SBInterpolatedImage out of the image.
             sbinterpolatedimage = galsim.SBInterpolatedImage(image,
                                                              xInterp=self.interpolant,

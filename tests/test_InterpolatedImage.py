@@ -481,7 +481,7 @@ def test_uncorr_padding():
         err_msg='Variance not diluted by expected amount when zero-padding')
 
     # make it into an InterpolatedImage with noise-padding
-    int_im = galsim.InterpolatedImage(orig_img, pad_variance=noise_var,
+    int_im = galsim.InterpolatedImage(orig_img, noise_pad=noise_var,
                                       rng = galsim.GaussianDeviate(orig_seed))
     # draw into a larger image
     big_img = galsim.ImageF(big_nx, big_ny)
@@ -494,7 +494,7 @@ def test_uncorr_padding():
     # check that if we pass in a RNG, it is actually used to pad with the same noise field
     # basically, redo all of the above steps and draw into a new image, make sure it's the same as
     # previous.
-    int_im = galsim.InterpolatedImage(orig_img, pad_variance=noise_var,
+    int_im = galsim.InterpolatedImage(orig_img, noise_pad=noise_var,
                                       rng = galsim.GaussianDeviate(orig_seed))
     big_img_2 = galsim.ImageF(big_nx, big_ny)
     big_img_2 = int_im.draw(big_img_2, dx=1.)
@@ -503,7 +503,7 @@ def test_uncorr_padding():
 
     # Finally check inputs: what if we give it an input variance that is neg?  A list?
     try:
-        np.testing.assert_raises(ValueError,galsim.InterpolatedImage,orig_img,pad_variance=-1.)
+        np.testing.assert_raises(ValueError,galsim.InterpolatedImage,orig_img,noise_pad=-1.)
     except ImportError:
         print 'The assert_raises tests require nose'
 
@@ -549,7 +549,7 @@ def test_corr_padding():
 
     # make it into an InterpolatedImage with noise-padding
     int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed),
-                                      pad_corrnoise = im)
+                                      noise_pad = im)
 
     # draw into a larger image
     big_img = galsim.ImageF(big_nx, big_ny)
@@ -564,7 +564,7 @@ def test_corr_padding():
     # basically, redo all of the above steps and draw into a new image, make sure it's the same as
     # previous.
     int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed),
-                                      pad_corrnoise = cf)
+                                      noise_pad = cf)
     big_img_2 = galsim.ImageF(big_nx, big_ny)
     big_img_2 = int_im.draw(big_img_2, dx=1.)
     np.testing.assert_array_almost_equal(big_img_2.array, big_img.array, decimal=decimal_precise,
@@ -573,7 +573,7 @@ def test_corr_padding():
     # Finally, check inputs:
     # what if we give it a screwy way of defining the image padding?
     try:
-        np.testing.assert_raises(ValueError,galsim.InterpolatedImage,orig_img,pad_corrnoise=1.)
+        np.testing.assert_raises(ValueError,galsim.InterpolatedImage,orig_img,noise_pad=-1.)
     except ImportError:
         print 'The assert_raises tests require nose'
     # also, check that whether we give it a string, image, or cf, it gives the same noise field
@@ -582,9 +582,9 @@ def test_corr_padding():
     inimg = galsim.fits.read(infile)
     incf = galsim.ImageCorrFunc(inimg)
     int_im2 = galsim.InterpolatedImage(orig_img, rng=galsim.GaussianDeviate(orig_seed),
-                                       pad_corrnoise=inimg)
+                                       noise_pad=inimg)
     int_im3 = galsim.InterpolatedImage(orig_img, rng=galsim.GaussianDeviate(orig_seed),
-                                       pad_corrnoise=incf)
+                                       noise_pad=incf)
     big_img2 = galsim.ImageF(big_nx, big_ny)
     big_img3 = galsim.ImageF(big_nx, big_ny)
     big_img2 = int_im2.draw(big_img2, dx=1.)
