@@ -185,10 +185,6 @@ namespace galsim {
             if ((1+pad_image->getXMax()-pad_image->getXMin() == _pimpl->Nk) &&
                 (1+pad_image->getYMax()-pad_image->getYMin() == _pimpl->Nk)) {
                 int N=_pimpl->Nk/2;
-                dbg<<"Beginning, ending x index for populating from pad_image "<<pad_image->getXMin()<<" "<<pad_image->getXMin()+2*N-1<<std::endl;
-                dbg<<"Beginning, ending y index for populating from pad_image "<<pad_image->getYMin()<<" "<<pad_image->getYMin()+2*N-1<<std::endl;
-                dbg<<"Beginning, ending x index for populating from pad_image into final image "<<-N<<" "<<N-1<<std::endl;
-                dbg<<"Beginning, ending y index for populating from pad_image into final image "<<-N<<" "<<N-1<<std::endl;
                 for(int ix = -N; ix < N; ++ix) {
                     for(int iy = -N; iy < N; ++iy) {
                         // Only set the image value and accumulate flux if outside of the part that
@@ -207,7 +203,11 @@ namespace galsim {
                 }
             } else {
                 char err_buff[500];
-                sprintf(err_buff,"Supplied image of noise for padding is wrong size: received %d by %d, expected %d by %d\n",1+pad_image->getXMax()-pad_image->getXMin(),1+pad_image->getYMax()-pad_image->getYMin(),_pimpl->Nk,_pimpl->Nk);
+                sprintf(err_buff,"Supplied image of noise for padding is wrong size: "
+                        "received %d by %d, expected %d by %d\n",
+                        1+pad_image->getXMax()-pad_image->getXMin(),
+                        1+pad_image->getYMax()-pad_image->getYMin(),
+                        _pimpl->Nk,_pimpl->Nk);
                 throw std::runtime_error(err_buff);
             }
         }
@@ -597,12 +597,10 @@ namespace galsim {
         _positiveFlux = 0.;
         _negativeFlux = 0.;
         _pt.clear();
-        dbg<<"Before loop for shooting: "<<_multi.getNin()/2<<std::endl;
         for (int iy=-_multi.getNin()/2; iy<_multi.getNin()/2; iy++) {
             double y = iy*_multi.getScale();
             for (int ix=-_multi.getNin()/2; ix<_multi.getNin()/2; ix++) {
                 double flux = _xtab->xval(ix,iy) * _multi.getScale()*_multi.getScale();
-                dbg<<"In loop for shooting: flux ="<<flux<<std::endl;
                 if (flux==0.) continue;
                 double x=ix*_multi.getScale();
                 if (flux > 0.) {
@@ -613,9 +611,7 @@ namespace galsim {
                 _pt.push_back(Pixel(x,y,flux));
             }
         }
-        dbg<<"After loop before shooting, now building tree..."<<std::endl;
         _pt.buildTree();
-        dbg<<"Built tree\n";
 
         // The above just computes the positive and negative flux for the main image.
         // This is convolved by the interpolant, so we need to correct these values

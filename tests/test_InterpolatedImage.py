@@ -94,8 +94,6 @@ def do_shoot(prof, img, name):
     print 'img.max => ',img.array.max()
     print 'nphot = ',nphot
     img2 = img.copy()
-    print "About to call drawShoot:"
-    img2.write('tmp2.fits')
     prof.drawShoot(img2, n_photons=nphot, poisson_flux=False, rng=glob_ud)
     print 'img2.sum => ',img2.array.sum()
     np.testing.assert_array_almost_equal(
@@ -158,19 +156,16 @@ def test_roundtrip():
         [0.04, 0.11, 0.10, 0.01] ]) 
 
     for array_type in ftypes:
-        print "First test"
         image_in = galsim.ImageView[array_type](ref_array.astype(array_type))
         np.testing.assert_array_equal(
                 ref_array.astype(array_type),image_in.array,
                 err_msg="Array from input Image differs from reference array for type %s"%
                         array_type)
-        print "Making into InterpolatedImage"
         interp = galsim.InterpolatedImage(image_in, dx=test_dx)
         test_array = np.zeros(ref_array.shape, dtype=array_type)
         image_out = galsim.ImageView[array_type](test_array)
         image_out.setScale(test_dx)
         interp.draw(image_out)
-        print "Before first assert statement"
         np.testing.assert_array_equal(
                 ref_array.astype(array_type),image_out.array,
                 err_msg="Array from output Image differs from reference array for type %s"%
@@ -183,9 +178,7 @@ def test_roundtrip():
         # Anyway, Quintic seems to be accurate enough.
         quint = galsim.Quintic(1.e-4)
         quint_2d = galsim.InterpolantXY(quint)
-        print "Making another interpolatedImage"
         interp = galsim.InterpolatedImage(image_in, interpolant=quint_2d, dx=test_dx, flux=1.)
-        print "About to do_shoot"
         do_shoot(interp,image_out,"InterpolatedImage")
 
     t2 = time.time()

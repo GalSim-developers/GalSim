@@ -1415,7 +1415,8 @@ class InterpolatedImage(GSObject):
     Initializes interpolated_image as a galsim.InterpolatedImage() instance.
 
     For comparison of the case of padding with noise or zero when the image itself includes noise,
-    compare the following (both of which can be executed from the examples/ directory):
+    compare `im1` and `im2` from the following code snippet (which can be executed from the
+    examples/ directory):
 
         image = galsim.fits.read('data/147246.0_150.416558_1.998697_masknoise.fits')
         int_im1 = galsim.InterpolatedImage(image)
@@ -1453,14 +1454,14 @@ class InterpolatedImage(GSObject):
                            (Default `pad_factor = 0`.)
     @param noise_pad       Noise properties to use when padding the original image with
                            noise.  This can be specified in several ways:
-                               As a float, which is interpreted as being a variance to use when
-                                   padding with uncorrelated Gaussian noise.
-                               As a galsim.ImageCorrFunc, which contains information about the
-                                   desired noise power spectrum.
-                               As a galsim.Image of a noise field, which is used to calculate the
-                                   desired noise power spectrum.
-                               As a string which is interpreted as a filename containing an example
-                                   noise field with the proper noise power spectrum.
+                               (a) as a float, which is interpreted as being a variance to use when
+                                   padding with uncorrelated Gaussian noise; 
+                               (b) as a galsim.ImageCorrFunc, which contains information about the
+                                   desired noise power spectrum; 
+                               (c) as a galsim.Image of a noise field, which is used to calculate
+                                   the desired noise power spectrum; or
+                               (d) as a string which is interpreted as a filename containing an
+                                   example noise field with the proper noise power spectrum.
                            (Default `noise_pad = 0.`, i.e., pad with zeros.)
     @param rng             If padding by noise, the user can optionally supply the random noise
                            generator to use for drawing random numbers as `rng` (may be any kind of
