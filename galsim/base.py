@@ -1541,7 +1541,6 @@ class InterpolatedImage(GSObject):
         # Check for input dx, and check whether Image already has one set.  At the end of this
         # code block, either an exception will have been raised, or the input image will have a
         # valid scale set.
-        orig_image = image
         if dx == None:
             dx = image.getScale()
             if dx == 0:
