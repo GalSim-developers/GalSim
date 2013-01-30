@@ -1324,7 +1324,7 @@ class OpticalPSF(GSObject):
             self.interpolant = galsim.InterpolantXY(quintic)
         else:
             self.interpolant = galsim.utilities.convert_interpolant_to_2d(interpolant)
-            
+
         # Initialize the SBProfile
         GSObject.__init__(
             self, galsim.SBInterpolatedImage(optimage, self.interpolant, dx=dx_lookup))
