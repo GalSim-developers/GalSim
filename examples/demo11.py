@@ -16,7 +16,7 @@ New features introduced in this demo:
 
 - psf = galsim.InterpolatedImage(psf_filename, dx, flux)
 - tab = galsim.LookupTable(file)
-- ps = galsim.PowerSpectrum(..., delta2, units)
+- ps = galsim.PowerSpectrum(..., units)
 
 - Power spectrum shears for non-gridded positions.
 - Reading a compressed FITS image (using BZip2 compression).
@@ -100,13 +100,12 @@ def main(argv):
     # Eisenstein & Hu transfer function with wiggles.
     # Default dN/dz with z_med = 1.0
     # The file has, as required, just two columns which are k and P(k).  However, iCosmo works in
-    # terms of ell and C_ell; ell is inverse radians.  Since GalSim tends to work in terms of
-    # arcsec, we have to tell it that the inputs are radians^-1 so it can convert to store in terms
-    # of arcsec^-1.  Also, we need to tell GalSim that it is getting the C_ell (i.e., Delta^2) so it
-    # can convert to power.
+    # terms of ell and C_ell; ell is inverse radians and C_ell in radians^2.  Since GalSim tends to
+    # work in terms of arcsec, we have to tell it that the inputs are radians^-1 so it can convert
+    # to store in terms of arcsec^-1.
     pk_file = os.path.join('data','cosmo-fid.zmed1.00.out')
     tab_pk = galsim.LookupTable(file = pk_file)
-    ps = galsim.PowerSpectrum(tab_pk, delta2 = True, units = galsim.radians)
+    ps = galsim.PowerSpectrum(tab_pk, units = galsim.radians)
     # The argument here is "e_power_function" which defines the E-mode power to use.
     logger.info('Set up power spectrum from tabulated P(k)')
 
