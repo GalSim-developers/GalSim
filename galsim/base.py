@@ -42,7 +42,7 @@ import numpy as np
 import galsim
 import utilities
 
-version = '0.2.1'
+version = '0.3'
 
 ALIAS_THRESHOLD = 0.005 # Matches hard coded value in src/SBProfile.cpp. TODO: bring these together
 
