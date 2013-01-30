@@ -1,5 +1,24 @@
 # vim: set filetype=python et ts=4 sw=4:
 
+# Copyright 2012, 2013 The GalSim developers:
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+#
+# GalSim is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# GalSim is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+#
+
 import os
 import sys
 import SCons
@@ -131,7 +150,7 @@ def ErrorExit(*args, **kwargs):
     libraries, compiler, etc., we don't want to cache the result.
     On the other hand, if we delete the .scon* files now, then the aren't 
     available to diagnose any problems.
-    So we write a file called gs_error that
+    So we write a file called gs.error that
     a) includes some relevant information to diagnose the problem.
     b) indicates that we should clear the cache the next time we run scons.
     """
@@ -194,7 +213,10 @@ def ErrorExit(*args, **kwargs):
         out.write(sys.exc_info()[0])
 
     print
-    print 'Please fix the above error(s) and re-run scons'
+    print 'Please fix the above error(s) and rerun scons.'
+    print 'Note: you may want to look through the file INSTALL.md for advice.'
+    print 'Also, if you are having trouble, please check the INSTALL FAQ at '
+    print '   https://github.com/GalSim-developers/GalSim/wiki/Installation%20FAQ'
     print
     Exit(1)
 

@@ -1,3 +1,23 @@
+// -*- c++ -*-
+/*
+ * Copyright 2012, 2013 The GalSim developers:
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ *
+ * GalSim is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * GalSim is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+ */
 
 #ifndef SBPROFILE_H
 #define SBPROFILE_H
@@ -289,7 +309,7 @@ namespace galsim {
         // Transformations (all are special cases of affine transformations via SBTransform):
 
         /**
-         * @brief Multiple the flux by fluxRatio
+         * @brief Multiply the flux by fluxRatio
          *
          * This resets the internal pointer to a new SBProfile that wraps the old one
          * with a scaled flux.  This does not change any previous uses of the SBProfile, 
@@ -430,7 +450,7 @@ namespace galsim {
 
         // **** Drawing routines ****
         /**
-         * @brief Draw this SBProfile into Image by shooting photons.
+         * @brief Draw this SBProfile into an Image by shooting photons.
          *
          * The drawShoot method produces a 2d sampled rendering of a given SBProfile using the Image
          * class.  The input image must have defined boundaries and pixel scale.  The photons

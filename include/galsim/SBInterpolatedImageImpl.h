@@ -1,4 +1,24 @@
 // -*- c++ -*-
+/*
+ * Copyright 2012, 2013 The GalSim developers:
+ * https://github.com/GalSim-developers
+ *
+ * This file is part of GalSim: The modular galaxy image simulation toolkit.
+ *
+ * GalSim is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * GalSim is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+ */
+
 #ifndef SBINTERPOLATED_IMAGE_IMPL_H
 #define SBINTERPOLATED_IMAGE_IMPL_H
 
@@ -111,7 +131,7 @@ namespace galsim {
         double doFillXImage(ImageView<double>& I, double gain) const
         { return fillXImage(I,gain); }
 
-    private:
+    protected:  // Made protected so that these can be used in the derived CorrelationFunction class
 
         MultipleImageHelper _multi;
         std::vector<double> _wts;
@@ -155,6 +175,8 @@ namespace galsim {
         mutable double _positiveFlux;    ///< Sum of all positive pixels' flux
         mutable double _negativeFlux;    ///< Sum of all negative pixels' flux
         mutable ProbabilityTree<Pixel> _pt; ///< Binary tree of pixels, for photon-shooting
+
+    private:
 
         // Copy constructor and op= are undefined.
         SBInterpolatedImageImpl(const SBInterpolatedImageImpl& rhs);

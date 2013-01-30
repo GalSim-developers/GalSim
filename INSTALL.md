@@ -195,8 +195,11 @@ followed by
 
     ./b2 link=shared
     ./b2 --prefix=<INSTALL_DIR> link=shared install
-(if you are installing to a system directory, the second needs to be run as
- root, of course `./b2`...)
+
+If you are installing to a system directory, the second needs to be run as
+root, of course: `sudo ./b2`...  Also, you should be aware that if you are
+running `b2` a second time, you should use `b2 -a` to tell boost to 
+recompile everything rather than use the existing libraries.
 
 The `link=shared` is necessary to ensure that they are built as shared 
 libraries; this is automatic on some platforms, but not all.
