@@ -504,7 +504,9 @@ def test_realgalaxy():
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees, 
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
-                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } }
+                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } },
+        'gal5' : { 'type' : 'RealGalaxy' , 'index' : 41, 'noise_pad' : 'True' },
+        'gal6' : { 'type' : 'RealGalaxy' , 'index' : 41, 'noise_pad' : 'blankimg.fits' }
     }
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
@@ -544,6 +546,15 @@ def test_realgalaxy():
     gal4b.applyShift(dx = 0.7, dy = -1.2) 
     gsobject_compare(gal4a, gal4b, True)
 
+    config['seq_index'] = 4
+    gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
+    gal5b = galsim.RealGalaxy(real_cat, index = 41, rng = rng, noise_pad = True)
+    gsobject_compare(gal5a, gal5b, True)
+
+    config['seq_index'] = 5
+    gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
+    gal6b = galsim.RealGalaxy(real_cat, index = 41, rng = rng, noise_pad = 'blankimg.fits')
+    gsobject_compare(gal6a, gal6b, True)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -573,6 +584,12 @@ def test_interpolated_image():
                    'interpolant' : 'lanczos5',
                    'dx' : 0.7,
                    'flux' : 1.e5 },
+        'gal5' : { 'type' : 'InterpolatedImage',
+                   'image' : file_name,
+                   'noise_pad' : 0.001 },
+        'gal6' : { 'type' : 'InterpolatedImage',
+                   'image' : file_name,
+                   'noise_pad' : 'blankimg.fits' }
     }
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
@@ -598,6 +615,14 @@ def test_interpolated_image():
     gal4b = galsim.InterpolatedImage(im, interpolant=interp, dx=0.7)
     gal4b.setFlux(1.e5)
     gsobject_compare(gal4a, gal4b)
+
+    gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
+    gal5b = galsim.InterpolatedImage(im, rng=rng, noise_pad=0.001)
+    gsobject_compare(gal5a, gal5b)
+
+    gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
+    gal6b = galsim.InterpolagedImage(im, rng=rng, noise_pad='blankimg.fits')
+    gsobject_compare(gal6a, gal6b)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

@@ -1903,7 +1903,7 @@ class RealGalaxy(GSObject):
 
     # Initialization parameters of the object, with type information
     _req_params = {}
-    _opt_params = { "flux" : float }
+    _opt_params = { "flux" : float , "noise_pad" : str }
     _single_params = [ { "index" : int , "id" : str } ]
     _takes_rng = True
 
@@ -1960,6 +1960,10 @@ class RealGalaxy(GSObject):
         self.pixel_scale = float(real_galaxy_catalog.pixel_scale[use_index])
 
         # handle noise-padding options
+        try:
+            noise_pad = galsim.config._GetBoolValue(noise_pad,'')
+        except:
+            pass
         if noise_pad:
             self.pad_variance= float(real_galaxy_catalog.variance[use_index])
 
@@ -1967,10 +1971,6 @@ class RealGalaxy(GSObject):
             # using the stored variance in the catalog.  Otherwise, if it's an ImageCorrFunc we use
             # it directly; if it's an Image of some sort we use it to make an ImageCorrFunc; if it's
             # a string, we read in the image from file and make an ImageCorrFunc.
-            try:
-                noise_pad = galsim.config._GetBoolValue(noise_pad,'')
-            except:
-                pass
             if type(noise_pad) is not bool:
                 if isinstance(noise_pad, galsim.ImageCorrFunc):
                     cf = noise_pad
