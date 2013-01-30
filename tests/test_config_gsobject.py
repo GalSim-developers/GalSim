@@ -621,7 +621,7 @@ def test_interpolated_image():
     gsobject_compare(gal5a, gal5b)
 
     gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
-    gal6b = galsim.InterpolagedImage(im, rng=rng, noise_pad='blankimg.fits')
+    gal6b = galsim.InterpolatedImage(im, rng=rng, noise_pad='blankimg.fits')
     gsobject_compare(gal6a, gal6b)
 
     t2 = time.time()

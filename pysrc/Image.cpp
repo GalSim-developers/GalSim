@@ -345,7 +345,7 @@ struct PyImage {
             )
             .def(bp::init<ImageView<T> const &>(bp::args("other")))
             .def("subImage", &ImageView<T>::subImage, bp::args("bounds"))
-            .def("view", &ImageView<T>::view, bp::return_self<>())
+            .def("view", &ImageView<T>::view)
             //.def("assign", &ImageView<T>::operator=, bp::return_self<>())
             .add_property("array", &getArray)
             .def("__call__", at) // always used checked accessors in Python
@@ -382,7 +382,7 @@ struct PyImage {
                 )
             )
             .def(bp::init<BaseImage<T> const &>(bp::args("other")))
-            .def("view", &ConstImageView<T>::view, bp::return_self<>())
+            .def("view", &ConstImageView<T>::view)
             .def("__call__", at) // always used checked accessors in Python
             .def("at", at)
             .enable_pickling()

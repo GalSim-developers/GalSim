@@ -174,8 +174,7 @@ namespace galsim {
          *
          *  The returned image will share data with this image
          */
-        ConstImageView<T> view() const
-        { return ConstImageView<T>(*this); }
+        ConstImageView<T> view() const { return ConstImageView<T>(*this); }
 
         /**
          *  @brief New image that is a subimage of this (shares pixels)
@@ -393,7 +392,7 @@ namespace galsim {
         /**
          *  @brief View just returns itself.
          */
-        const ConstImageView<T>& view() const { return *this; }
+        ConstImageView<T> view() const { return ConstImageView<T>(*this); }
  
     private:
         /**
@@ -509,8 +508,7 @@ namespace galsim {
         /**
          *  @brief View just returns itself.
          */
-        const ImageView<T>& view() const
-        { return *this; }
+        ImageView<T> view() const { return ImageView<T>(*this); }
  
         /**
          *  @brief New image that is a subimage of this (shares pixels)

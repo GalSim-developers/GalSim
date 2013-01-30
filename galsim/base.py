@@ -1490,7 +1490,10 @@ class InterpolatedImage(GSObject):
         'normalization' : str ,
         'dx' : float ,
         'flux' : float ,
-        'noise_pad' : str
+        'pad_factor' : float ,
+        'noise_pad' : str ,
+        'calculate_stepk' : bool ,
+        'calculate_maxk' : bool
     }
     _single_params = [ ]
     _takes_rng = True
@@ -1538,6 +1541,7 @@ class InterpolatedImage(GSObject):
         # Check for input dx, and check whether Image already has one set.  At the end of this
         # code block, either an exception will have been raised, or the input image will have a
         # valid scale set.
+        orig_image = image
         if dx == None:
             dx = image.getScale()
             if dx == 0:
@@ -1545,6 +1549,8 @@ class InterpolatedImage(GSObject):
         else:
             if type(dx) != float:
                 dx = float(dx)
+            # Don't change the original image.  Make a new view if we need to set the scale.
+            image = image.view()
             image.setScale(dx)
             if dx == 0.0:
                 raise ValueError("dx may not be 0.0")
@@ -1961,7 +1967,7 @@ class RealGalaxy(GSObject):
 
         # handle noise-padding options
         try:
-            noise_pad = galsim.config._GetBoolValue(noise_pad,'')
+            noise_pad = galsim.config.value._GetBoolValue(noise_pad,'')
         except:
             pass
         if noise_pad:
