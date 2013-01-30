@@ -1499,7 +1499,7 @@ class InterpolatedImage(GSObject):
     def __init__(self, image, interpolant = None, normalization = 'flux', dx = None, flux = None,
                  pad_factor = 0., noise_pad = 0., rng = None, calculate_stepk=True,
                  calculate_maxk=True):
-        # first try to read the image as a file.  If its not either a string or a valid
+        # first try to read the image as a file.  If it's not either a string or a valid
         # pyfits hdu or hdulist, then an exception will be raised, which we ignore and move on.
         try:
             image = galsim.fits.read(image)
@@ -1514,6 +1514,8 @@ class InterpolatedImage(GSObject):
         if not image.getBounds().isDefined():
             raise ValueError("Supplied image does not have bounds defined!")
 
+        # check what normalization was specified for the image: is it an image of surface
+        # brightness, or flux?
         if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
             raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
                               "'f', 'surface brightness', or 'sb'.") % normalization)
@@ -1907,7 +1909,7 @@ class RealGalaxy(GSObject):
 
     # --- Public Class methods ---
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
-                 rng=None, interpolant=None, flux=None, noise_pad=False, pad_rng=None):
+                 rng=None, interpolant=None, flux=None, noise_pad=False):
 
         import pyfits
 
@@ -1933,10 +1935,6 @@ class RealGalaxy(GSObject):
             use_index = int(real_galaxy_catalog.nobjects * uniform_deviate()) 
         else:
             raise AttributeError('No method specified for selecting a galaxy!')
-        if random == False and rng != None:
-            import warnings
-            msg = "Warning: rng provided to RealGalaxy, but random selection method was not chosen!"
-            warnings.warn(msg)
 
         # read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors. Should
         # consider exporting this code into fits.py in some function that takes a filename and HDU,
@@ -1969,6 +1967,10 @@ class RealGalaxy(GSObject):
             # using the stored variance in the catalog.  Otherwise, if it's an ImageCorrFunc we use
             # it directly; if it's an Image of some sort we use it to make an ImageCorrFunc; if it's
             # a string, we read in the image from file and make an ImageCorrFunc.
+            try:
+                noise_pad = galsim.config._GetBoolValue(noise_pad,'')
+            except:
+                pass
             if type(noise_pad) is not bool:
                 if isinstance(noise_pad, galsim.ImageCorrFunc):
                     cf = noise_pad
@@ -1992,11 +1994,11 @@ class RealGalaxy(GSObject):
             # is of a valid type.
             # Note: we don't have to worry about setting the sigma for the GaussianDeviate; the C++
             # code does that for us, from sqrt(pad_variance).
-            if pad_rng == None:
+            if rng == None:
                 gaussian_deviate = galsim.GaussianDeviate()
-            elif isinstance(pad_rng,galsim.GaussianDeviate):
+            elif isinstance(rng,galsim.GaussianDeviate):
                 gaussian_deviate = rng
-            elif isinstance(pad_rng,galsim.BaseDeviate):
+            elif isinstance(rng,galsim.BaseDeviate):
                 # If it's another kind of BaseDeviate, we can convert
                 gaussian_deviate = galsim.GaussianDeviate(rng)
             else:
