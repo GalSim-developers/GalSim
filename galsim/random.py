@@ -90,7 +90,8 @@ class DistDeviate:
     >>> d()
     2.7892018766454183
 """    
-    def __init__(self, arg=None, **kwargs):
+    def __init__(self, rng=None, x=None, p=None, function=None, xmin=None, xmax=None, 
+                 interpolant='linear', npoints=256):
         """Initializes a DistDeviate instance.
         
         The unnamed argument, if given, must be something that can initialize a BaseDeviate 
@@ -101,113 +102,117 @@ class DistDeviate:
         
         import numpy
         import galsim
-        npoints=kwargs.pop('npoints',256)
-        interpolant=kwargs.pop('interpolant','linear')
  
         #Set up the PRNG
-        if arg is None:
+        if isinstance(rng,UniformDeviate):
+            self._ud=rng
+        elif rng is None:
             self._ud=galsim.UniformDeviate()
-        else:
+        elif isinstance(rng,(BaseDeviate,int,long)):
             self._ud=galsim.UniformDeviate(arg)
+        else:
+            raise TypeError('Argument rng passed to DistDeviate cannot be used to initialize '
+                            'a UniformDeviate.')
 
         #Check a few arguments before doing computations
-        if ('x' in kwargs and not 'p' in kwargs) or ('p' in kwargs and not 'x' in kwargs):
+        if ('x' is not None and 'p' is none) or ('p' is not None and 'x' is None):
             raise TypeError('Only one of x and p given as a keyword to DistDeviate')
-        if not ('filename' in kwargs or 'function' in kwargs or ('x' in kwargs and 'p' in kwargs)):
-            raise TypeError(
-                'At least one of the keywords filename, function, or the pair x and p must be set in calls to DistDeviate!')
-        if 'filename' in kwargs and 'function' in kwargs:
+        if 'filename' is None or 'function' is None or 'x' is None:
+            raise TypeError('At least one of the keywords filename, function, or the pair '
+                            'x and p must be set in calls to DistDeviate!')
+        if 'filename' is not None and 'function' is not None:
             raise TypeError('Cannot pass both filename and function keywords to DistDeviate')
-        if 'filename' in kwargs and 'x' in kwargs:
+        if 'filename' is not None and 'x' is not None:
             raise TypeError('Cannot pass both filename and x&p keywords to DistDeviate')
-        if 'function' in kwargs and 'x' in kwargs:
+        if 'function' is not None and 'x' is not None:
             raise TypeError('Cannot pass both function and x&p keywords to DistDeviate')
 
         #Set up the probability function & min and max values for any inputs
-        if 'function' in kwargs:
-            userfunction=kwargs.pop('function')
-            if not hasattr(userfunction,'__call__'):
-                raise TypeError(
-                    'Function given to DistDeviate with keyword function is not callable: %s'%function)
-            filename=userfunction #for later error messages
-            if 'min' in kwargs and 'max' in kwargs:
-                xmin=kwargs.pop('min',0.)
-                xmax=kwargs.pop('max',1.)
-                if xmax<=xmin:
-                    raise ValueError("Max value passed to DistDeviate is <= min value")
+        if 'function' is not None:
+            if not hasattr(function,'__call__'):
+                raise TypeError('Function given to DistDeviate with keyword function is not '
+                                'callable: %s'%function)
+            filename=function #for later error messages
+            if xmin is None or xmax is None:
+                (xmin,xmax)=self._getBoundaries(function,xmin,xmax)
             else:
-                raise TypeError(
-                    "DistDeviate called with a function must include min and max keywords")
+                if isinstance(function,galsim.LookupTable):
+                    if function.x_min>xmin:
+                        raise ValueError('xmin passed to DistDeviate is less than the xmin of '
+                                         'LookupTable %s'%function)
+                    if function.x_max<xmax:
+                        raise ValueError('xmax passed to DistDeviate is greater than the xmax of '
+                                         'LookupTable %s'%function)
         else: #Some of the array & filename setup is the same
-            if 'x' in kwargs:
-                xarray=kwargs.pop('x')
-                parray=kwargs.pop('p')
-                filename=xarray #just for later error outputs
-                userfunction=galsim.LookupTable(x=xarray,f=parray,interpolant=interpolant)
-                xmin=min(xarray)
-                xmax=max(xarray)
+            if x is not None:
+                filename=x #just for later error outputs
+                function=galsim.LookupTable(x=x,f=p,interpolant=interpolant)
             else: #We know from earlier checks it must be a filename--no need to recheck
-                filename=kwargs.pop('filename')
-                userfunction=galsim.LookupTable(file=filename,interpolant=interpolant)
-                xmin=min(userfunction.getArgs())
-                xmax=max(userfunction.getArgs())
-            xmin=kwargs.pop('min',xmin)
-            xmax=kwargs.pop('max',xmax)
+                function=galsim.LookupTable(file=filename,interpolant=interpolant)
+            if xmin is None:
+                xmin=function.x_min
+            elif xmin<function.x_min:
+                raise ValueError('xmin passed to DistDeviate is less than the xmin of the '
+                                 'array passed')
+            if xmax is None:
+                xmax=function.x_max
+            elif xmax>function.x_max:
+                raise ValueError('xmax passed to DistDeviate is greater than the xmax of the '
+                                 'array passed')
             if xmax<=xmin:
                 raise ValueError('Max value <= min value in DistDeviate')
-
-        if kwargs:
-            raise TypeError("Keyword arguments to DistDeviate not permitted: %s"%kwargs.keys())
 
         dx=(1.*xmax-xmin)/(npoints-1)
         xarray=xmin+dx*numpy.array(range(npoints),float)
         probability = numpy.array([userfunction(x) for x in xarray])
-        cumulativeprobability=dx*numpy.array(
+        #cdf is the cumulative distribution function--just easier to type!
+        cdf=dx*numpy.array( 
             [numpy.sum(probability[0:i]) for i in range(probability.shape[0])])
-        #Check that cumulativeprobability is always increasing or always decreasing
+        #Check that cdf is always increasing or always decreasing
         #and if it isn't, either tweak it to fix or return an error.
-        if not numpy.all(cumulativeprobability>=0):
+        if not numpy.all(cdf>=0):
             raise ValueError('Negative probability passed to DistDeviate: %s'%filename)
-        dx=numpy.diff(cumulativeprobability)
+        dx=numpy.diff(cdf)
         if numpy.all(dx==0):
             raise ValueError('All probabilities passed to DistDeviate are 0: %s'%filename)
         #Clip any zero endpoints, as they'll cause the next block to blow up
         while dx[0]==0.0:
             xarray=xarray[1:]
-            cumulativeprobability=cumulativeprobability[1:]
-            dx=numpy.diff(cumulativeprobability)
+            cdf=cdf[1:]
+            dx=numpy.diff(cdf)
         while dx[-1]==0.0:
             xarray=xarray[:-1]
-            cumulativeprobability=cumulativeprobability[:-1]
-            dx=numpy.diff(cumulativeprobability)
+            cdf=cdf[:-1]
+            dx=numpy.diff(cdf)
         if not numpy.all(dx >=0.):
-            #This check plus the cumulativeprobability>=0 should capture any nonzero probabilities
+            #This check plus the cdf>=0 should capture any nonzero probabilities
             raise ValueError('Cumulative probability in DistDeviate is not monotonic')
         elif not numpy.all(dx > 0.):
             #Remove consecutive dx=0 points, except the higher-end endpoint
             zeroindex=numpy.squeeze(numpy.where(dx==0))
             removearray=numpy.squeeze(numpy.where(numpy.diff(zeroindex)==1))
-            cumulativeprobability=numpy.delete(cumulativeprobability,zeroindex[removearray])
+            cdf=numpy.delete(cdf,zeroindex[removearray])
             xarray=numpy.delete(xarray,zeroindex[removearray])
             dx=numpy.diff(cumulativeprobability)
             #Tweak the edge of dx=0 regions so function is always increasing
             for index in numpy.where(dx == 0):
-                if index+2<len(cumulativeprobability):
-                   cumulativeprobability[index+1]+=1.E-6*(
-                       cumulativeprobability[index+2]-cumulativeprobability[index+1])
+                if index+2<len(cdf):
+                   cdf[index+1]+=1.E-6*(
+                       cdf[index+2]-cdf[index+1])
                 else:
-                   cumulativeprobability=cumulativeprobability[:-1]
+                   cdf=cdf[:-1]
                    xarray=xarray[:-1]
-            dx=numpy.diff(cumulativeprobability)
+            dx=numpy.diff(cdf)
             if not (numpy.all(dx>0)):
                 raise RuntimeError(
                     'Cumulative probability in DistDeviate is too flat for program to fix')
                         
         #Quietly renormalize the probability if it wasn't already normalized
-        cumulativeprobability/=cumulativeprobability[-1]
-        self._inverseprobabilitytable=galsim.LookupTable(cumulativeprobability,xarray,
-                                                         interpolant=interpolant)
+        cdf/=cdf[-1]
+        self._inverseprobabilitytable=galsim.LookupTable(cdf,xarray,interpolant=interpolant)
 
+    def _getBoundaries(self,function,xmin,xmax):
+        return (xmin,xmax)
 
     def __call__(self):
         return self._inverseprobabilitytable(self._ud())
