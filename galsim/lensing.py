@@ -1,7 +1,28 @@
-"""\file lensing.py The "lensing engine" for drawing shears from some power spectrum or a NFW halo.
+# Copyright 2012, 2013 The GalSim developers:
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+#
+# GalSim is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# GalSim is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+#
+"""@file lensing.py The "lensing engine" for drawing shears from some power spectrum or a NFW halo.
 """
+
+
 import galsim
 import numpy as np
+
 
 # A helper function for parsing the input position arguments for PowerSpectrum and NFWHalo:
 def _convertPositions(pos, units, func):
@@ -72,35 +93,42 @@ class PowerSpectrum(object):
     k value, or they can be instances of the LookupTable class for power spectra that are known 
     at particular k values but for which there is not a simple analytic form.
     
-    The power functions should return either power P(k) or Delta^2(k), defined as
-    P(k) = k^2 Delta^2(k) / 2pi.
-    If the latter, then you should set `delta2 = True` in the constructor.  (Or, in a power spectrum
-    calculator that returns C_ell, this option should be set to True.) We assume that P(k)
-    goes to zero at k=0, as in any physically reasonable cosmological model.
+    Cosmologists often express the power spectra in terms of an expansion in spherical harmonics
+    (ell), i.e., the C_ell values.  In the flat-sky limit, we can replace ell with k and C_ell with
+    P(k).  Thus, k and P(k) have dimensions of inverse angle and angle^2, respectively.  It is quite
+    common for people to plot ell(ell+1)C_ell/2pi, a dimensionless quantity; the analogous flat-sky
+    quantity is Delta^2 = k^2 P(k)/2pi.  By default, the PowerSpectrum object assumes it is getting
+    P(k), but it is possible to instead give it Delta^2 by setting the optional keyword `delta2 =
+    True` in the constructor.
+
+    Also note that we generate the shears according to the input power spectrum using a DFT
+    approach, which means that we implicitly assume our discrete representation of P(k) on a grid is
+    one complete cell in an infinite periodic series.  We are making assumptions about what P(k) is
+    doing outside of our minimum and maximum k range, and those must be kept in mind when comparing
+    with theoretical expectations.  Furthermore, the shear generation currently does not include
+    sample variance due to coverage of a finite patch.  In other words, we explicitly enforce
+    `P(k=0)=0`, which is true for the full sky in any reasonable cosmological model, but it ignores
+    the fact that our little patch of sky might reasonably live in some special region with respect
+    to shear correlations.  Our `P(k=0)=0` is essentially setting the integrated power below our
+    minimum k value to zero (i.e., it's implicitly a statement about power in a k range, not just at
+    `k=0` itself).  Future versions of the lensing engine may change this behavior.  Moreover, a
+    full comparison of the GalSim power spectrum normalization conventions and behavior in various
+    regimes is in the works and will be available with a future version of GalSim.
 
     The power functions must return a list/array that is the same size as what it was given, e.g.,
     in the case of no power or constant power, a function that just returns a float would not be
     permitted; it would have to return an array of floats all with the same value.
 
     It is important to note that the power spectra used to initialize the PowerSpectrum object
-    should be in the same units as any parameters to the getShear() method that define the locations
-    at which we want to get shears.  When we actually draw images, there is a natural scale that
-    defines the pitch of the image (dx), which is typically taken to be arcsec.  This definition of
-    a specific length scale means that we should also use the same units (arcsec) for the positions
-    at which we want our galaxies to be located when we draw shears from a power spectrum, and
-    likewise the values of k (wavenumber) going into the power spectrum function should be inverse
-    arcsec.  To give a specific example, if we want to draw Gaussians on an image with dx=0.2 arcsec
-    (i.e., the argument dx to the draw method will be =0.2), and if we want a grid of galaxies
-    spaced 40 pixels apart, then when we call the getShear method of the PowerSpectrum class, we
-    should use grid_spacing=8 [arcsec, =(40 pixels)*(0.2 arcsec/pixel)].
-
-    To use a different (inverse) unit for k, you may specify such with the units kwarg in the
-    constructor.  This should be either a galsim.AngleUnit instance (e.g. galsim.radians) or a
-    string (e.g. 'radians').  If you provide a power function that is actually C_ell or Delta^2
-    using the `delta2=True` option, then the Delta^2 function must also have consistent units with
-    k, i.e., for k in inverse radians the Delta^2 must be in radians^2.  This is typical for
-    cosmology calculators that return C_ell as a function of ell (which become our Delta^2 and k in
-    the flat-sky approximation).
+    should use the same units for k and P(k), i.e., if k is in inverse radians then P(k) should be
+    in radians^2 (as is natural for outputs from a cosmological shear power spectrum calculator).
+    However, when we actually draw images, there is a natural scale that defines the pitch of the
+    image (dx), which is typically taken to be arcsec.  This definition of a specific length scale
+    means that by default we assume all quantities to the PowerSpectrum are in arcsec, and those are
+    the units used for internal calculations, but the `units` keyword can be used to specify
+    different input units for P(k) (again, within the constraint that k and P(k) must be
+    consistent).  If the `delta2` keyword is set to specify that the input is actually the
+    dimensionless power Delta^2, then the input `units` are taken to apply only to the k values.
 
     @param e_power_function A function or other callable that accepts a Numpy array of |k| values,
                             and returns the E-mode power spectrum P_E(|k|) in an array of the same
@@ -118,19 +146,19 @@ class PowerSpectrum(object):
                             It may also be a string that can be converted to a function using
                             eval('lambda k : ' + e_power_function), a LookupTable, or file_name from
                             which to read in a LookupTable.
-    @param delta2           Is the power actually given as Delta^2, which requires us to multiply 
-                            by k^2 / (2pi) to get the shear power P(k)?  [default = False]
-                            Note that if Delta^2 is provided, then it is critical that it have 
-                            units consistent with the units for k.
+    @param delta2           Is the power actually given as dimensionless Delta^2, which requires us
+                            to multiply by 2pi / k^2 to get the shear power P(k) in units of
+                            angle^2?  [default = False]
     @param units            The angular units used for the power spectrum (i.e. the units of 
-                            k^-1). [default = arcsec]
+                            k^-1 and sqrt(P)). This should be either a galsim.AngleUnit instance
+                            (e.g. galsim.radians) or a string (e.g. 'radians'). [default = arcsec]
     """
     _req_params = {}
     _opt_params = { 'e_power_function' : str, 'b_power_function' : str,
                     'delta2' : bool, 'units' : str }
     _single_params = []
-    def __init__(self, e_power_function=None, b_power_function=None,
-                 delta2=False, units=galsim.arcsec):
+    def __init__(self, e_power_function=None, b_power_function=None, delta2=False,
+                 units=galsim.arcsec):
         # Check that at least one power function is not None
         if e_power_function is None and b_power_function is None:
             raise AttributeError(
@@ -162,31 +190,18 @@ class PowerSpectrum(object):
 
 
     def buildGriddedShears(self, grid_spacing=None, ngrid=None, rng=None,
-                           interpolant=None, center=galsim.PositionD(0,0)):
+                           interpolant=None, center=galsim.PositionD(0,0), units=galsim.arcsec):
         """Generate a realization of the current power spectrum on the specified grid.
 
         This function will generate a Gaussian random realization of the specified E and B mode 
         shear power spectra at a grid of positions, specified by the input parameters 
         `grid_spacing` (distance between grid points) and `ngrid` (number of grid points in each 
-        direction.)
+        direction.)  Units for `grid_spacing` and `center` can be specified using the `units`
+        keyword; the default is arcsec, which is how all values are stored internally.
 
-        The normalization of the shears from a given power spectrum is defined as follows: if 
-        P_E(k)=P_B(k)=P [const],
-        i.e., white noise in both shear components, then the shears g1 and g2 will be random
-        Gaussian deviates with variance=P.  Note that if we really had power at all k, the variance
-        would be infinite.  But we are getting shears on a grid, which has a limited k range, and
-        hence the total power is finite.  For grid spacing dx and N grid points, the spacing between
-        k values is dk = 2pi/(N dx) and k ranges from +/-(N/2) dk.  There are alternate definitions
-        to consider, e.g., that the variance should be P*(dx)^2 for a grid spacing of dx (i.e., for
-        fixed total grid extent, a smaller grid spacing requires smaller shear variances since the
-        range of k values that are accessible is larger); those who input a continuum P(k) should,
-        when predicting the behavior of shears on a grid, keep in mind our normalization convention
-        and the fact that it's a discrete FFT.  If you strongly dislike our convention and would
-        like support for an alternate one, please indicate this on our GitHub issues page.
-
-        Also note that the convention for axis orientation differs from that for the GREAT10
-        challenge, so when using codes that deal with GREAT10 challenge outputs, the sign of our g2
-        shear component must be flipped.
+        Note that the convention for axis orientation differs from that for the GREAT10 challenge,
+        so when using codes that deal with GREAT10 challenge outputs, the sign of our g2 shear
+        component must be flipped.
 
         Some examples:
 
@@ -224,9 +239,10 @@ class PowerSpectrum(object):
                my_ps = galsim.PowerSpectrum(tab_pk)
                g1, g2 = my_ps.buildGriddedShears(grid_spacing = 1., grid_nx = 100)
 
-        @param grid_spacing     Spacing for an evenly spaced grid of points, in arcsec for
-                                consistency with the natural length scale of images created using
-                                the draw or drawShoot methods.
+        @param grid_spacing     Spacing for an evenly spaced grid of points, by default in arcsec
+                                for consistency with the natural length scale of images created
+                                using the draw or drawShoot methods.  Other units can be specified
+                                using the `units` keyword.
         @param ngrid            Number of grid points in each dimension.  If a number that is not
                                 an int (e.g., a float) is supplied, then it gets converted to an int
                                 automatically.
@@ -237,8 +253,10 @@ class PowerSpectrum(object):
                                 gridded shears by getShear() if that method is later
                                 called. [default `interpolant = galsim.Linear()`]
         @param center           (Optional) If setting up a new grid, define what position you
-                                want to consider the center of that grid. [default 
-                                `center = (0,0)`]
+                                want to consider the center of that grid.  Units must be consistent
+                                with those for `grid_spacing`.  [default `center = (0,0)`]
+        @param units            The angular units used for the positions.  [default = arcsec]
+
         
         @return g1,g2           These are 2-d NumPy arrays corresponding to shears at the gridded
                                 positions.
@@ -265,6 +283,19 @@ class PowerSpectrum(object):
         else:
             raise TypeError("Unable to parse the input center argument for getShear")
 
+        # Automatically convert units to arcsec at the outset, then forget about it.  This is
+        # because PowerSpectrum by default wants to work in arsec, and all power functions are
+        # automatically converted to do so, so we'll also do that here.
+        if isinstance(units, basestring):
+            # if the string is invalid, this raises a reasonable error message.
+            units = galsim.angle.get_angle_unit(units)
+        if not isinstance(units, galsim.AngleUnit):
+            raise ValueError("units must be either an AngleUnit or a string")
+        if units != galsim.arcsec:
+            scale_fac = (1.*units) / galsim.arcsec
+            center *= scale_fac
+            grid_spacing *= scale_fac
+
         # Make a GaussianDeviate if necessary
         if rng is None:
             gd = galsim.GaussianDeviate()
@@ -287,23 +318,33 @@ class PowerSpectrum(object):
         e_power_function = self._convert_power_function(self.e_power_function,'e_power_function')
         b_power_function = self._convert_power_function(self.b_power_function,'b_power_function')
 
-        # If we actually have Delta^2, then we must convert to power, which is
-        # dimensionless.  Also account for the possible unit scaling here.
+        # If we actually have dimensionless Delta^2, then we must convert to power
+        # P(k) = 2pi Delta^2 / k^2, 
+        # which has dimensions of angle^2.
         if e_power_function is None:
             p_E = None
         elif self.delta2:
-            p_E = lambda k : (self.scale*k)**2 * e_power_function(self.scale*k)/(2.*np.pi)
+            # Here we have to go from Delta^2 (dimensionless) to P = 2pi Delta^2 / k^2.  We want to
+            # have P and therefore 1/k^2 in units of arcsec, so we won't rescale the k that goes in
+            # the denominator.  This naturally gives P(k) in arcsec^2.
+            p_E = lambda k : (2.*np.pi) * e_power_function(self.scale*k)/(k**2)
         elif self.scale != 1:
-            p_E = lambda k : e_power_function(self.scale*k)
+            # Here, the scale comes in two places:
+            # The units of k have to be converted from 1/arcsec, which GalSim wants to use, into
+            # whatever the power spectrum function was defined to use.
+            # The units of power have to be converted from (input units)^2 as returned by the power
+            # function, to Galsim's units of arcsec^2.
+            # Recall that scale is (input units)/arcsec.
+            p_E = lambda k : e_power_function(self.scale*k)*(self.scale**2)
         else: 
             p_E = e_power_function
 
         if b_power_function is None:
             p_B = None
         elif self.delta2:
-            p_B = lambda k : (self.scale*k)**2 * b_power_function(self.scale*k)/(2.*np.pi)
+            p_B = lambda k : (2.*np.pi) * b_power_function(self.scale*k)/(k**2)
         elif self.scale != 1:
-            p_B = lambda k : b_power_function(self.scale*k)
+            p_B = lambda k : b_power_function(self.scale*k)*(self.scale**2)
         else:
             p_B = b_power_function
 
@@ -386,7 +427,9 @@ class PowerSpectrum(object):
         """
         This function can interpolate between grid positions to find the shear values for a given
         list of input positions (or just a single position).  Before calling this function, you must
-        call buildGriddedShears first to define the grid on which to interpolate.
+        call buildGriddedShears first to define the grid on which to interpolate.  However, unlike
+        buildGriddedShears, the getShear function can automatically convert between input units for
+        the input positions relative to the default units (arcsec).
 
         Note that the interpolation (carried out using the interpolant that was specified when
         building the gridded shears) modifies the effective power spectrum somewhat.  The user is
@@ -492,9 +535,10 @@ class PowerSpectrumRealizer(object):
         self.ky = ky
         pixel_size = float(pixel_size)
 
-        # Set up the scalar |k| grid.
-        self.k=((kx/(pixel_size*nx))**2+(ky/(pixel_size*ny))**2)**0.5
-        
+        # Set up the scalar |k| grid. Generally, for a box size of L (in one dimension), the grid
+        # spacing in k_x or k_y is Delta k=2pi/L.
+        self.k=2.*np.pi*((kx/(pixel_size*nx))**2+(ky/(pixel_size*ny))**2)**0.5
+
         #Compute the spin weightings
         self._cos, self._sin = self._generate_spin_weightings()
         

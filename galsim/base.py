@@ -1,3 +1,21 @@
+# Copyright 2012, 2013 The GalSim developers:
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+#
+# GalSim is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# GalSim is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+#
 """@file base.py 
 Definitions for the GalSim base classes and associated methods
 
@@ -78,14 +96,14 @@ class GSObject(object):
     def __truediv__(self, other):
         return __div__(self, other)
 
-
     # Make a copy of an object
     def copy(self):
         """Returns a copy of an object.
 
         This preserves the original type of the object, so if the caller is a Gaussian (for 
         example), the copy will also be a Gaussian, and can thus call the methods that are not in 
-        GSObject, but are in Gaussian (e.g. getSigma()).
+        GSObject, but are in Gaussian (e.g. getSigma()).  However, not necessarily all instance
+        attributes will be copied across (e.g. the interpolant stored by an OpticalPSF object).
         """
         # Re-initialize a return GSObject with self's SBProfile
         sbp = self.SBProfile.__class__(self.SBProfile)
@@ -250,7 +268,7 @@ class GSObject(object):
         Scales the linear dimensions of the image by the factor scale.
         e.g. `half_light_radius` <-- `half_light_radius * scale`
 
-        This operation preserves surface brightness, which means that the flux is scales 
+        This operation preserves surface brightness, which means that the flux scales 
         with the change in area.  
         See applyDilation for a version that preserves flux.
 
@@ -687,9 +705,9 @@ class GSObject(object):
         # Setup the uniform_deviate if not provided one.
         if rng is None:
             uniform_deviate = galsim.UniformDeviate()
-        elif isinstance(rng, galsim.UniformDeviate):
+        elif isinstance(rng,galsim.UniformDeviate):
             uniform_deviate = rng
-        elif isinstance(rng, galsim.BaseDeviate):
+        elif isinstance(rng,galsim.BaseDeviate):
             # If it's another kind of BaseDeviate, we can convert
             uniform_deviate = galsim.UniformDeviate(rng)
         else:
@@ -1306,7 +1324,7 @@ class OpticalPSF(GSObject):
             self.interpolant = galsim.InterpolantXY(quintic)
         else:
             self.interpolant = galsim.utilities.convert_interpolant_to_2d(interpolant)
-            
+
         # Initialize the SBProfile
         GSObject.__init__(
             self, galsim.SBInterpolatedImage(optimage, self.interpolant, dx=dx_lookup))
@@ -1385,7 +1403,15 @@ class InterpolatedImage(GSObject):
                            `pad_factor <= 0` results in the use of the default value, 4.  Note that
                            the padding is with zeros; could be changed in future.
                            (Default `pad_factor = 0`.)
-     
+    @param calculate_stepk Set as `True` to perform an internal determination of the extent of the
+                           object being represented by the InterpolatedImage; often this is useful
+                           in choosing an optimal value for the stepsize in the Fourier space
+                           lookup table.
+    @param calculate_maxk  Set as `True` to perform an internal determination of the highest spatial
+                           frequency needed to accurately render the object being represented by 
+                           the InterpolatedImage; often this is useful in choosing an optimal value
+                           for the extent of the Fourier space lookup table.
+
     Methods
     -------
     The InterpolatedImage is a GSObject, and inherits all of the GSObject methods (draw(),
@@ -1403,8 +1429,8 @@ class InterpolatedImage(GSObject):
     _single_params = [ ]
 
     # --- Public Class methods ---
-    def __init__(self, image, interpolant = None, normalization = 'flux', dx = None, flux = None,
-                 pad_factor = 0.):
+    def __init__(self, image, interpolant=None, normalization='flux', dx=None, flux=None, 
+                 pad_factor=0., calculate_stepk=True, calculate_maxk=True):
 
         # first try to read the image as a file.  If its not either a string or a valid
         # pyfits hdu or hdulist, then an exception will be raised, which we ignore and move on.
@@ -1450,8 +1476,10 @@ class InterpolatedImage(GSObject):
 
         # GalSim cannot automatically know what stepK and maxK are appropriate for the 
         # input image.  So it is usually worth it to do a manual calculation here.
-        sbinterpolatedimage.calculateStepK()
-        sbinterpolatedimage.calculateMaxK()
+        if calculate_stepk:
+            sbinterpolatedimage.calculateStepK()
+        if calculate_maxk:
+            sbinterpolatedimage.calculateMaxK()
 
         # If the user specified a flux, then set to that flux value.
         if flux != None:
