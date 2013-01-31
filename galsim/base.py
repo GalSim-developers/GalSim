@@ -1,3 +1,21 @@
+# Copyright 2012, 2013 The GalSim developers:
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+#
+# GalSim is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# GalSim is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+#
 """@file base.py 
 Definitions for the GalSim base classes and associated methods
 
@@ -24,7 +42,7 @@ import numpy as np
 import galsim
 import utilities
 
-version = '0.2.1'
+version = '0.3'
 
 ALIAS_THRESHOLD = 0.005 # Matches hard coded value in src/SBProfile.cpp. TODO: bring these together
 
@@ -33,6 +51,8 @@ class GSObject(object):
     methods and attributes, particularly those from the C++ SBProfile classes.
     """
     def __init__(self, SBProfile):
+        if not isinstance(SBProfile, galsim.SBProfile):
+            raise TypeError("GSObject must be initialized with an SBProfile!")
         self.SBProfile = SBProfile  # This guarantees that all GSObjects have an SBProfile
     
     # Make op+ of two GSObjects work to return an Add object

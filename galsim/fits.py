@@ -1,16 +1,36 @@
-"""
-@file fits.py
+# Copyright 2012, 2013 The GalSim developers:
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+#
+# GalSim is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# GalSim is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+#
+"""@file fits.py
 Support for reading and writing galsim.Image* objects to FITS.
 
 This file includes routines for reading and writing individual Images to/from FITS files, and also
 routines for handling multiple Images.
 """
+
+
 import os
 from sys import byteorder
 from . import _galsim
 
 # Convert sys.byteorder into the notation numpy dtypes use
 native_byteorder = {'big': '>', 'little': '<'}[byteorder]
+
  
 def parse_compression(compression, fits):
     file_compress = None

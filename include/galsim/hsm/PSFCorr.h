@@ -11,7 +11,7 @@
   Copyright 2003, 2004 Christopher Hirata: original code
   2007, 2009 Rachel Mandelbaum: minor modifications
 
-  For a copy of the license, see COPYING; for more information,
+  For a copy of the license, see LICENSE; for more information,
   including contact information, see README.
 
   This file is part of the meas_shape distribution.
