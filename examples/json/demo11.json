@@ -139,7 +139,7 @@
         "#" : "used a TiledImage), we need to define what grid spacing we want to use for",
         "#" : "the power spectrum realization.  GalSim will then interpolate between these ",
         "#" : "locations to the actual position of each galaxy.",
-        "grid_spacing" : 10
+        "grid_spacing" : 90
     }
 },
 
