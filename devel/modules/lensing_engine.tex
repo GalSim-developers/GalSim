@@ -194,6 +194,31 @@ last grid correctly preserved the variance despite the different grid
 spacing.  Moreover the variance doesn't depend significantly on \kmin,
 as predicted.
 
+\section{Test of $P(k)$}
+
+I have a WMAP7 LCDM prediction for the cosmic shear signal for a
+sample with $z_{med}\sim 0.55$, which I can use as an input to both
+Chris's code and ours.  Given the range of $\ell$ for which it is
+defined, $2<\ell<2000$, we cannot use our standard grid because that
+has $\kmax=3600$ radians$^{-1}$.  So, for this test I use a grid with
+the same $L$ as before, but $N=50$ (i.e., $d$ gets doubled), which
+means $\kmax=1800$ radians$^{-1}$.
+
+For Chris's code, I made gridded shears for each of 3 cases:
+$P_E=P(k)$ and $P_B=0$; $P_B=P(k)$ and $P_E=0$; and $P_E=P_B=P(k)$.
+
+The python script test_pk.py in this directory does the following:
+\begin{enumerate}
+\item Generates shears according to this PS using GalSim.
+\item Runs the GREAT10 power spectrum code on both, and averages it over several noise realizations.
+\end{enumerate}
+
+The python script test_pk_chris.py in this directory does the following:
+\begin{enumerate}
+\item Manipulate outputs of the SHT code to be consistent with expectations.
+\item Runs the GREAT10 power spectrum code on it.
+\end{enumerate}
+
 
 \textbf{Didn't try the stuff that comes after this (yet):}
 
