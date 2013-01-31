@@ -40,19 +40,12 @@ There are a few issues that we wish to check regarding the lensing
 engine.  They are:
 
 \begin{enumerate}
-\item $k$ definitions: the lensing engine seems to omit the $2\pi$
-  factor that seems standard, i.e., normally we say for some length
-  scale $x$ the corresponding $k$ should be $2\pi/x$ but the lensing
-  engine in its current form does $1/x$.
 \item Overall normalization of shear variance: Currently the shear
   variance for a constant input shear power does not depend on
   the grid size/shape.  This seems non-standard, so we should
   investigate and understand this further.
 \item We need to check the scaling of either the observed correlation
   function or power spectrum with $k$, to make sure it is done right.
-\item We must check whether unit conversions are done properly.
-  GalSim works in terms of arcsec, but it's common to input numbers in
-  terms of radians, so we should make sure that this works.
 \item What is the effect of interpolating between grid points?  does
   the interpolant have the expected impact on the shear power?
 \item If we put in just $E$ or just $B$ mode power with a flat
@@ -151,228 +144,60 @@ for our $L=10$ deg.  It is something to bear in mind if we start
 looking for agreement at a few \% level on the largest $\theta$ or
 smallest $k$.  This software wants $C_\ell(\ell)$ as its inputs.
 
-\section{Test of constant $\Delta^2(k)$}
+\section{General considerations for these tests}
 
-Our first test uses a constant value for $\Delta^2(k)=P_0$ (where
-$P_0$ is dimensionless), or
-$P(k)=2\pi P_0/k^2$ (which has a ton of power on large scales, so not
-very realistic, but at least the integrals are easy to do).  Putting this into Eq.~\ref{E:shearvar},
-we expect a shear variance of
-\begin{align}
-\mathrm{Var}(\gamma) &= P_0 \int \frac{\rmd k}{k} \\
- &= P_0 \ln{\left(\frac{\kmax}{\kmin}\right)}.
-\end{align}
+First, it's not clear that we should really be enforcing $P(0)=0$,
+i.e., no power below our \kmin.
+This is a valid condition for the full-sky power spectrum, but will
+not in general be valid for a small patch of the sky, due to sampling
+variance.  In order to include this sampling variance, it would be
+preferable to assign $P(0)=$ some kind of integral over $P(k<\kmin)$
+(perhaps an average power in that $k$ range; details to be worked out later) assuming the power function is
+defined for those value of $k$.
 
-Note that since this depends on a ratio of $k$'s, it doesn't matter
-what units we use for defining our grids, only on the number of grid
-points.  We have, for a grid\footnote{Note that I'm using what I think
-  the $k$ definition should be, i.e., with a $2\pi$.  That's not
-  what's in the code right now.},
-\begin{align}
-\kmax &= \frac{2\pi}{d} \\
-\kmin &= \frac{2\pi}{\sqrt{2}L} \qquad\qquad\mathrm{(2d)}\label{E:kmin2d}\\
-\kmin &= \frac{2\pi}{L}  \qquad\qquad\mathrm{ (1d)}\label{E:kmin1d}\\
-\frac{\kmax}{\kmin} &= \sqrt{2}N.
-\end{align}
-There are two different \kmin's, depending on whether you are talking
-about the maximum $|k|$ (1st option) or the maximum $k_x$ or $k_y$
-(2nd options).
+Second, since we use a DFT of a finite set of samples, we implicitly
+have a $k$ defined on a periodic grid, not simply $k=0$ for all
+$k>\kmax$.  This also means that we should possibly avoid using the
+variance as a metric, because what we really care about is whether the
+PS is represented properly within our $k$ range.
 
-So we expect a shear variance defined over both components that is
-\beq\label{E:var-test1}
-\mathrm{Var}(\gamma) = \ln{(\sqrt{2}N)} P_0.
-\eeq
+Moreover, we need to be well-sampled in $k$ space, so we should not
+use functions that do unreasonable things like $k^{-2}$.
 
-Alternatively if we use Eq.~\ref{E:alt-shearvar}, we expect
-\beq
-\mathrm{Var}(\gamma) = \frac{P_0}{2\pi} \int \frac{\rmd k_x \rmd k_y}{k_x^2+k_y^2}
-\eeq
-and I don't think this is a very nice integral that can be done
-analytically. 
-
-Chris's SHT code seems to give the result from Eq~\ref{E:var-test1}, as tested using
-two grid sizes.  If we try it with GalSim, using $P_0=0.01$, we can
-use this code:
+Barney suggested a test case that is a Gaussian, i.e., $P(k) =
+e^{-\sigma^2 k^2 / 2}$, so $\xi_+(\theta) =
+e^{-\theta^2/2\sigma^2}/(2 \pi \sigma^2)$ and the variance may be
+$\xi_+(0)=1/(2\pi\sigma^2)$.  I will define the Gaussian such that
+there is essentially no power left at our \kmax, which is
+$2\pi/d=0.0175$ arcsec$^{-1}$.  Let's use $\sigma \kmax=5$ or
+$\sigma=286.5$ arcsec for the first two grids, $\sigma=573.0$ for the
+third grid.  The code is:
 \begin{verbatim}
 import galsim
 import numpy as np
-test_ps = galsim.PowerSpectrum(lambda k : 0.01*2.*np.pi/k**2)
+test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((286.5*k)**2)))
 g1, g2 = test_ps.buildGriddedShears(grid_spacing=360., ngrid=100)
 print np.var(g1), np.var(g2), np.var(g1)+np.var(g2)
 g1, g2 = test_ps.buildGriddedShears(grid_spacing=360., ngrid=50)
 print np.var(g1), np.var(g2), np.var(g1)+np.var(g2)
+test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((573.0*k)**2)))
 g1, g2 = test_ps.buildGriddedShears(grid_spacing=720., ngrid=50)
 print np.var(g1), np.var(g2), np.var(g1)+np.var(g2)
 \end{verbatim}
 
-The result for the variances over both components in the three cases
-should, for consistency with Chris's code, be 2.65, 2.30, 2.30.
-However, we instead get large numbers, of order $2\times 10^5$,
-$2\times 10^5$, and $6\times 10^5$.
+The result is the same variance in each case (and the same for each
+component, unlike many of our other test cases which had different
+variances for the two components), around 0.24.  This is not the value
+that I expected numerically, but it at least means we understand the
+grid-dependence of the result, since my change in $\sigma$ for the
+last grid correctly preserved the variance despite the different grid
+spacing.  Moreover the variance doesn't depend significantly on \kmin,
+as predicted.
 
-\section{Test of constant shear power}
-
-Constant shear power is also rather unrealistic and leads to a lot of
-emphasis on the large scales corresponding to box diagonals.  Let's
-instead try this with $P(k) = 4\pi P_2$ (where $P_2$ has dimensions of ang$^2$), or $\Delta^2(k) =
-2 P_2 k^2$.  Again going back to Eq.~\ref{E:shearvar},
-we expect a shear variance of
-\begin{align}
-\mathrm{Var}(\gamma) &= 2 P_2 \int k\,\rmd k\\
- &= P_2 (\kmax^2-\kmin^2)\label{E:shearvar-c1}
-\end{align}
-where here the \kmin\ is the 2d version (Eq.~\ref{E:kmin2d}).
-
-If we use Eq.~\ref{E:alt-shearvar}, then we'd expect
-\begin{align}
-\mathrm{Var}(\gamma) &= \frac{P_2}{\pi} \int \rmd k_x \rmd k_y\\
-  &= \frac{P_2(\kmax-\kmin)^2}{\pi}\label{E:shearvar-c2}
-\end{align}
-where here the \kmin\ is the 1d version  (Eq.~\ref{E:kmin1d}).
-
-I start with Chris's code, which wants $\ell$ and $C_\ell$ in units of
-radians, and use $P_2=0.01$ radians$^2$ for $E$ mode (no $B$ mode
-power).  
-
-If we calculate our expectations using Eqs.~\ref{E:shearvar} and~\ref{E:shearvar-c1}, then when
-using our default grid that is $10\times 10$ deg with $N=100$ per
-dimension, then in terms of radians, we have $\kmin\sim 25.46$ and
-$\kmax=3600$, so we expect shear variance (over both components) of
-$1.3\times 10^5$.  For a grid that covers $5\times 5$ deg with $N=50$,
-then $\kmin$ doubles but $\kmax$ is the same, so the shear variance
-should be nearly identical (to sub-percent level).  For a third grid
-that covers the same area as original but with $N=50$, $\kmin$ is same
-as for the first grid, but $\kmax$ is halved, so the shear variance
-should decrease by a factor of $\sim 4$.  
-
-If we calculate our expectations using Eqs.~\ref{E:alt-shearvar} and~\ref{E:shearvar-c2}, then
-we have to use $\kmin=36$ (the 1d version) but it's also a different
-equation, which gives for the default grid $4\times 10^4$.  For the
-second and third grids, our expectations are $4\times 10^4$ and $10^4$.
-
-Result: in all {\em three} cases Chris's code gives a shear variance
-of $1.3\times 10^5$!  This is equal to our expectations when using
-Eq.~\ref{E:shearvar} in the first two cases, perplexing for the last
-one.
-
-For GalSim, I want to start {\em without} testing our unit conversion,
-so I am going to convert to arcsec in advance.  We had $P_2=0.01$
-radian$^2$, so I will first convert it to
-$P_2=0.01 (3600(180/\pi))^2=4.2545\times 10^8$ arcsec$^2$ and
-$P(k)=4\pi P_2 = 5.35\times 10^9$ arcsec$^2$ before trying this in
-GalSim.  For GalSim I will also try the calculation for the three
-types of grids:
-\begin{verbatim}
-import galsim
-import numpy as np
-test_ps = galsim.PowerSpectrum(lambda k : 5.35e9 + np.zeros_like(k))
-g1, g2 = test_ps.buildGriddedShears(grid_spacing=360., ngrid=100)
-print np.var(g1), np.var(g2), np.var(g1)+np.var(g2)
-g1, g2 = test_ps.buildGriddedShears(grid_spacing=360., ngrid=50)
-print np.var(g1), np.var(g2), np.var(g1)+np.var(g2)
-g1, g2 = test_ps.buildGriddedShears(grid_spacing=720., ngrid=50)
-print np.var(g1), np.var(g2), np.var(g1)+np.var(g2)
-\end{verbatim}
-The result is that the variances (over both components) are equal to
-the input $P(k)$.  This was the behavior that we have observed before.  {\em Barney, you tried explaining
-  this in words, but would you be willing to take a stab at an
-  equation??  How is the area factor in $k$ space going away?}
-
-\textbf{Barney's response}:
-
-First, I just realised something I should have pointed out before: in
-our PS code $k_{\rm min} = 0$, since this is the power represented by
-the $(0, 0)$ matrix element of the array.  
-({\em From Rachel: this is now set automatically to zero (see branch
-  305).  All tests on this branch use that version of the lensing
-  engine, rather than the one on master.  However, the tests with the
-  constant power spectrum give the same results whether we use the
-  version on master or on 305, so this has not changed anything.  For
-  example, the lensing engine unit tests did not have to be modified
-  to account for this change in how $P(0)$ is defined.})
-The stepsize in $k$, which
-we have tend to refer to as $\Delta k$, is $2 \pi / L$.  ({\em From
-  Rachel: That's not true.  That's what I have been saying should be
-  the definition of $\Delta k$,
-  but if you read the code, it clearly has $\Delta k =1/L$ without a $2\pi$.  This is
-  the point I've been complaining about throughout these notes and on
-  the GitHub issue: I
-  think the code is wrong but nobody else has seemed alarmed
-  about it and this has been a big source of my confusion.  Do you
-  agree that the code is wrong?  Or am I misinterpreting it?  I'm
-  looking at line 498 of lensing.py on this branch.})  If you
-(somehow) ignored the $k=0$ element, or set it to zero, then I suppose
-the minimum $k$ would depend on whether you looked in rectilinear or diagonal direction,
-the smallest values being $k_{1, \rm min} = k_{2, \rm min} = 2 \pi /
-L$.  {\em Yes.  I agree with this statement.}
-
-This has fairly profound implications for the results of the tests of constant
-$\Delta^2(k)$.  Indeed it suggests that the variance formally diverges for such
-a power spectrum, so it's probably not a good test case of our PS
-code and it may be a good sign that...  Just one question though: how did you assign a value of $P(k) = 2 \pi
-P_0/ k^2$ for the $k = k_x = k_y = 0$ element?  If you set it to zero
-then I think we should have expected better, but not matching,
-performance.  {\em Right.  So it's the $P(k=0)=0$ that we've enforced
-  that does this.}
-
-The fact that Chris's code is giving good results suggests that what
-is here being called $k_{\rm min}$ is indeed being interpreted as
-such, and Chris has put an option to allow you to explore a bounded
-range of scales.  {\em As I understand his code, it defines $P(k)$ as
-  nonzero only for those $k$ values for which a value is entered.  I
-  routinely give it from $\ell=2$ to around $10000$.}  Since the integral does not diverge for $k > 0$ you get a
-meaningful result.  Our PS code currently has to start at $k=0$ and go
-up to $k_{\rm max}$.
-
-For the second test, which doesn't diverge, 
-I believe the difference is related to the fact that our discrete
-representation of the $P(k)$ is in fact merely one complete cell of an infinite
-periodic series. This is what the Discrete Fourier Transform of a
-finite set of samples actually represents, just as the assumption is
-implicit that the samples in real space are also one cell of a
-periodic series.
-
-What is being assumed here is that our representation in $k$ spaces is
-of some sort of 2D boxcar that is $P_0$ up to $k_{\rm max}$, and then
-zero outside.  This is not the case: because we are representing delta
-function samples in real space the periodic series extends to positive
-and negative infinity in both $k$ directions.  So our representation
-of the power spectrum is not in fact bounded.  {\em Okay, this is what
-  I had not appreciated.}
-
-We know that the Fourier Transform of a flat function of value $P_0$ gives a Dirac delta
-function of area proportional to $P_0$.  So this is encouraging.  But
-then what is the source of the contradiction with with equation (5)?  I think the issue is that
-care needs to be taken with the Bessel function $J_0(k \theta)$, which
-is highly oscillatory as $\theta \rightarrow 0$.  It might be simpler
-to treat the integral in Cartesian coordinates before setting $\theta=0$:
-\begin{equation}
-\xi_{\pm}(\theta) = \frac{P_0}{2 \pi} \int \! e^{ik_x \theta_x} dk_x
-\int \! e^{i k_y \theta_y} dk_y.
-\end{equation}
-The integrals on the RHS are the well known expressions for delta
-functions.  So we have
-\begin{equation}
-\xi_{\pm}(\theta) = \frac{P_0}{2 \pi} \delta(\theta_x) \delta(\theta_y)
-\end{equation}
-rather than an integral which diverges for large positive $k$ if you
-put $P(k) = P_0$ into equation (5).
-
-Both these test cases seem slightly problematic, so we should try a simple
-power spectrum that is guaranteed to be finite area and bounded within
-our periodic cells.  A suggestion is the Gaussian.  If we have $P(k) =
-e^{-\sigma^2 k^2 / 2}$ then we should get $\xi_+(\theta) =
-e^{-\theta^2/2\sigma^2}/(2 \pi \sigma^2)$ (I think)...
-{\em Will try this and report back.  However, a more general
-  meta-question is do we actually want the lensing engine to be
-  behaving this way?  If someone gives a $k$ and $P(k)$ that are
-  actually the $\ell$ and $C_\ell$ from some cosmology calculator,
-  don't they usually expect that the $k$ is zero outside of that
-  range?}
 
 \textbf{Didn't try the stuff that comes after this (yet):}
 
-Unit conversions, $P$ vs. $\Delta^2$, and scale-dependence of shear
+Scale-dependence of shear
 correlation functions / power spectra.
 
 \end{document}
