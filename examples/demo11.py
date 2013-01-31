@@ -57,7 +57,7 @@ def main(argv):
     sky_level = 1.e4                 # ADU / arcsec^2
     nobj = 225                       # number of galaxies in entire field
                                      # (This corresponds to 1 galaxy / arcmin^2)
-    grid_spacing = 10.0              # The spacing between the samples for the power spectrum 
+    grid_spacing = 90.0              # The spacing between the samples for the power spectrum 
                                      # realization (arcsec)
     gal_signal_to_noise = 100        # S/N of each galaxy
 
@@ -104,8 +104,7 @@ def main(argv):
     # work in terms of arcsec, we have to tell it that the inputs are radians^-1 so it can convert
     # to store in terms of arcsec^-1.
     pk_file = os.path.join('data','cosmo-fid.zmed1.00.out')
-    tab_pk = galsim.LookupTable(file = pk_file)
-    ps = galsim.PowerSpectrum(tab_pk, units = galsim.radians)
+    ps = galsim.PowerSpectrum(pk_file, units = galsim.radians)
     # The argument here is "e_power_function" which defines the E-mode power to use.
     logger.info('Set up power spectrum from tabulated P(k)')
 
@@ -147,7 +146,7 @@ def main(argv):
     # Now we need to loop over our objects:
     for k in range(nobj):
         time1 = time.time()
-        # The usual random number generator using a differend seed for each galaxy.
+        # The usual random number generator using a different seed for each galaxy.
         ud = galsim.UniformDeviate(random_seed+k)
 
         # Choose a random position within a range that is not too close to the edge.
@@ -173,7 +172,7 @@ def main(argv):
         # Apply the cosmological shear
         gal.applyShear(g1 = g1, g2 = g2)
         # Convolve with the PSF.  We don't have to include a pixel response explicitly, since the
-        #     SDSS PSF image that we are using included the pixel response already.
+        # SDSS PSF image that we are using included the pixel response already.
         final = galsim.Convolve(psf, gal)
 
         # Account for the fractional part of the position:

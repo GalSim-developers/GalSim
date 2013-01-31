@@ -144,7 +144,7 @@ class PowerSpectrum(object):
                             (curl) mode of the image.  Set to None (default) for there to be no
                             B-mode power.
                             It may also be a string that can be converted to a function using
-                            eval('lambda k : ' + e_power_function), a LookupTable, or file_name from
+                            eval('lambda k : ' + b_power_function), a LookupTable, or file_name from
                             which to read in a LookupTable.
     @param delta2           Is the power actually given as dimensionless Delta^2, which requires us
                             to multiply by 2pi / k^2 to get the shear power P(k) in units of

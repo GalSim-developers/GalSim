@@ -128,20 +128,18 @@
         "#" : "expected to have two columns of numbers:  k and P(k).",
         "e_power_function" : "data/cosmo-fid.zmed1.00.out",
 
-        "#" : "The input function is normally P(k).  However, it is sometimes more convenient",
-        "#" : "to define Delta^2(k).  If the input function is Delta^2(k), set delta2 = true",
-        "delta2" : "true",
-
         "#" : "The default units of k are arcsec^-1 to match all the other units.  But again,",
         "#" : "sometimes it is more convenient to define them in different units.  You may",
-        "#" : "specify units = arcsec, arcmin, degrees, or radians.",
+        "#" : "specify units = arcsec, arcmin, degrees, or radians.  The units must be ",
+        "#" : "consistent for the input k and P(k), i.e., if k is in inverse radians then P must",
+        "#" : " be in radians^2.",
         "units" : "radians",
 
         "#" : "Since we are not providing galaxy positions on a grid (e.g. in demo10, where we",
         "#" : "used a TiledImage), we need to define what grid spacing we want to use for",
         "#" : "the power spectrum realization.  GalSim will then interpolate between these ",
         "#" : "locations to the actual position of each galaxy.",
-        "grid_spacing" : 10
+        "grid_spacing" : 90
     }
 },
 
