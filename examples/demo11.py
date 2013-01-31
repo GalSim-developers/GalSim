@@ -147,7 +147,7 @@ def main(argv):
     # Now we need to loop over our objects:
     for k in range(nobj):
         time1 = time.time()
-        # The usual random number generator using a differend seed for each galaxy.
+        # The usual random number generator using a different seed for each galaxy.
         ud = galsim.UniformDeviate(random_seed+k)
 
         # Choose a random position within a range that is not too close to the edge.
@@ -173,7 +173,7 @@ def main(argv):
         # Apply the cosmological shear
         gal.applyShear(g1 = g1, g2 = g2)
         # Convolve with the PSF.  We don't have to include a pixel response explicitly, since the
-        #     SDSS PSF image that we are using included the pixel response already.
+        # SDSS PSF image that we are using included the pixel response already.
         final = galsim.Convolve(psf, gal)
 
         # Account for the fractional part of the position:
