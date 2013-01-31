@@ -194,35 +194,114 @@ last grid correctly preserved the variance despite the different grid
 spacing.  Moreover the variance doesn't depend significantly on \kmin,
 as predicted.
 
-\section{Test of $P(k)$}
+\section{Test of $P(k)$}\label{S:testpk}
 
 I have a WMAP7 LCDM prediction for the cosmic shear signal for a
 sample with $z_{med}\sim 0.55$, which I can use as an input to both
-Chris's code and ours.  Given the range of $\ell$ for which it is
+the SHT code and ours.  Given the range of $\ell$ for which it is
 defined, $2<\ell<2000$, we cannot use our standard grid because that
 has $\kmax=3600$ radians$^{-1}$.  So, for this test I use a grid with
 the same $L$ as before, but $N=50$ (i.e., $d$ gets doubled), which
 means $\kmax=1800$ radians$^{-1}$.
 
-For Chris's code, I made gridded shears for each of 3 cases:
-$P_E=P(k)$ and $P_B=0$; $P_B=P(k)$ and $P_E=0$; and $P_E=P_B=P(k)$.
+Using the SHT code, I made gridded shears for each of 3 cases:
+$P_E=P(k)$ and $P_B=0$; $P_B=P(k)$ and $P_E=0$; and $P_E=P_B=P(k)$ (5
+realizations of each).
+For GalSim, since it's less computationally expensive I averaged over
+more realizations; for our code, it is crucial to inform the code that
+the inputs have units of radians.
 
-The python script test_pk.py in this directory does the following:
+The python script test\_pk.py in devel/external/test\_gridshear/ does the following:
 \begin{enumerate}
 \item Generates shears according to this PS using GalSim.
-\item Runs the GREAT10 power spectrum code on both, and averages it over several noise realizations.
+\item Runs the GREAT10 power spectrum code on both (must flip sign of
+  one shear component before doing so), and averages it over several
+  noise realizations.
 \end{enumerate}
 
-The python script test_pk_chris.py in this directory does the following:
+The python script test\_pk\_sht.py in that directory does the following:
 \begin{enumerate}
-\item Manipulate outputs of the SHT code to be consistent with expectations.
+\item Manipulate outputs of the SHT code to be consistent with
+  expectations (incl. one sign flip for e1).
 \item Runs the GREAT10 power spectrum code on it.
 \end{enumerate}
 
+Finally, plot\_pk\_test.py in that directory plots the original and
+simulated $P(k)$ based on these files.  The results for the three
+cases (input $P_E$, input $P_B$, and input $P_E=P_B$) are in
+Figures~\ref{F:pe}, \ref{F:pb}, \ref{F:peb}.
 
-\textbf{Didn't try the stuff that comes after this (yet):}
+\begin{figure}
+\begin{center}
+\includegraphics[width=3in]{../external/test_gridshear/output/compare_input_pe.eps}
+\caption{Output shear power spectra (plotted as the dimensionless
+  $\Delta^2$) for the grids described in Sec.~\ref{S:testpk}, where
+  the input $P_E$ is a realistic cosmological one (shown as the 'theory' line on
+  the plot) and the input $P_B=0$. The results for GalSim and the
+  comparison SHT code are both plotted.\label{F:pe}}
+\end{center}
+\end{figure}
 
-Scale-dependence of shear
-correlation functions / power spectra.
+\begin{figure}
+\begin{center}
+\includegraphics[width=3in]{../external/test_gridshear/output/compare_input_pb.eps}
+\caption{Output shear power spectra (plotted as the dimensionless
+  $\Delta^2$) for the grids described in Sec.~\ref{S:testpk}, where
+  the input $P_B$ is a theoretical one and the input $P_E=0$. The results for GalSim and the
+  comparison SHT code are both plotted.\label{F:pb}}
+\end{center}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=3in]{../external/test_gridshear/output/compare_input_peb.eps}
+\caption{Output shear power spectra (plotted as the dimensionless
+  $\Delta^2$) for the grids described in Sec.~\ref{S:testpk}, where
+  the input $P_E=P_B$ is shown as the 'theory' line. The results for GalSim and the
+  comparison SHT code are both plotted.\label{F:peb}}
+\end{center}
+\end{figure}
+
+Conclusions:
+\begin{itemize}
+\item SHT code: it gives roughly a consistent power spectrum compared
+  to our inputs (modulo possible slight differences in scaling that
+  may not be worth investigating until our own PS code is ready),
+  though there are signs of $E$ vs. $B$ leakage in the case where one
+  or the other is zero.
+\item GalSim: we don't see $E$ vs. $B$ leakage at any significant
+  level, but the amplitudes are consistently too high by $\sim 4\times
+  10^6$.  The scaling with $\ell$ is about right.
+\end{itemize}
+
+I am not sure where this amplitude offset could come from.  There are
+several large numbers that come into these calculations, e.g., there
+is the radians vs. arcsec conversion which is $\sim 2\times 10^5$,
+and there is the grid $N^2=2500$.  To check
+for possible dependence on grid $N$, which can sometimes show up if
+we've gotten something wrong about the FFT normalization conventions, I reran with the same $d$ but
+with $L$ and $N$ halved (5 degree grid, 0.2 degrees between grid
+points, $N$=25).  The results did not change (modulo a bit more noise
+as expected since there are fewer pairs of grid points with which to
+measure the power).  So I think it must be some other factor somewhere.
+\begin{figure}
+\begin{center}
+\includegraphics[width=3in]{../external/test_gridshear/output/compare_input_pe_halfn.eps}
+\caption{Output shear power spectra (plotted as the dimensionless
+  $\Delta^2$) for the grids described in Sec.~\ref{S:testpk} and for
+  one that covers half the linear extent ($1/4$ the area).  Both
+  results are for GalSim, comparing the previous grid with this one.\label{F:pe_halfn}}
+\end{center}
+\end{figure}
+
+I did a sanity check of the numbers that the lensing engine used when
+finding the power for each $k$ on the grid.  The grid has a $\Delta
+k_x=\Delta k_y = 0.00017453$.  We expected $2\pi/(10\times 3600)$
+arcsec$^{-1}$, so this is correct.  That corresponds to $36$
+radians$^{-1}$, so the power at that $k$ should be $5.23\times 10^{-9}$
+radians$^2$, which is $2.23\times 10^{2}$ arcsec$^2$.  That is the
+number that GalSim gives for $k_x=\kmin$ and $k_y=0$ (and vice versa),
+so it seems we've done the most basic part of the units conversions
+right.
 
 \end{document}
