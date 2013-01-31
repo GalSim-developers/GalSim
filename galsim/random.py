@@ -104,6 +104,8 @@ class DistDeviate:
         
         import numpy
         import galsim
+        tol=1.E-15 #Ignore decreases in cumulative probability less than this number
+                   #as errors in precision, not indications of negative probability
  
         #Set up the PRNG
         if rng is None:
@@ -170,32 +172,26 @@ class DistDeviate:
         #cdf is the cumulative distribution function--just easier to type!
         cdf=dx*numpy.array( 
             [numpy.sum(probability[0:i]) for i in range(probability.shape[0])])
+        t2=time.time()
         #Check that cdf is always increasing or always decreasing
         #and if it isn't, either tweak it to fix or return an error.
         if not numpy.all(cdf>=0):
             raise ValueError('Negative probability passed to DistDeviate: %s'%filename)
         dx=numpy.diff(cdf)
+        numpy.putmask(dx,numpy.absolute(dx)<tol,0.) #replace precision errors
         if numpy.all(dx==0):
             raise ValueError('All probabilities passed to DistDeviate are 0: %s'%filename)
-        #Clip any zero endpoints, as they'll cause the next block to blow up
-        while dx[0]==0.0:
-            xarray=xarray[1:]
-            cdf=cdf[1:]
-            dx=numpy.diff(cdf)
-        while dx[-1]==0.0:
-            xarray=xarray[:-1]
-            cdf=cdf[:-1]
-            dx=numpy.diff(cdf)
         if not numpy.all(dx >=0.):
             #This check plus the cdf>=0 should capture any nonzero probabilities
             raise ValueError('Cumulative probability in DistDeviate is not monotonic')
         elif not numpy.all(dx > 0.):
-            #Remove consecutive dx=0 points, except the higher-end endpoint
+            #Remove consecutive dx=0 points, except the higher-end endpoint of a run and xmin
             zeroindex=numpy.squeeze(numpy.where(dx==0))
+            zeroindex=numpy.delete(zeroindex,numpy.where(zeroindex==0)) 
             removearray=numpy.squeeze(numpy.where(numpy.diff(zeroindex)==1))
             cdf=numpy.delete(cdf,zeroindex[removearray])
             xarray=numpy.delete(xarray,zeroindex[removearray])
-            dx=numpy.diff(cumulativeprobability)
+            dx=numpy.diff(cdf)
             #Tweak the edge of dx=0 regions so function is always increasing
             for index in numpy.where(dx == 0):
                 if index+2<len(cdf):
