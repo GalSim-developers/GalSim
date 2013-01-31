@@ -46,36 +46,38 @@ class DistDeviate:
     Some sample initialization calls:
     
     >>> d = galsim.DistDeviate(x=list1,p=list2) 
-    # Initializes d to be a DistDeviate using the distribution P(x) and seeds the PRNG using 
-    # current time. The lists can also be tuples or numpy arrays.
+
+    Initializes d to be a DistDeviate using the distribution P(x) and seeds the PRNG using current
+    time. The lists can also be tuples or numpy arrays.
     
     >>> d = galsim.DistDeviate(function=f,min=min,max=max)   
-    # Initializes d to be a DistDeviate instance with a distribution given by the callable function
-    # f(x) from x=min to x=max and seeds the PRNG using current time.  When a function is passed, 
-    # the keywords min and max are required.
+    
+    Initializes d to be a DistDeviate instance with a distribution given by the callable function
+    f(x) from x=min to x=max and seeds the PRNG using current time.  
     
     >>> d = galsim.DistDeviate(1062533,filename=filename)
-    # Initializes d to be a DistDeviate instance with a distribution given by the data in file
-    # filename, which must be a 2-column ASCII table, and seeds the PRNG using the long int 
-    # seed 1062533.
     
-    >>> d = galsim.DistDeviate(dev,x=list1,p=list2,interpolant='linear')
-    # Initializes d to be a DistDeviate instance using the distribution given by list1 and list2,
-    # using linear interpolation to get probabilities for intermediate points, and seeds the
-    # PRNG using the BaseDeviate dev.
+    Initializes d to be a DistDeviate instance with a distribution given by the data in file
+    filename, which must be a 2-column ASCII table, and seeds the PRNG using the long int
+    seed 1062533.
+    
+    >>> d = galsim.DistDeviate(rng=dev,x=list1,p=list2,interpolant='linear')
+    
+    Initializes d to be a DistDeviate instance using the distribution given by list1 and list2,
+    using linear interpolation to get probabilities for intermediate points, and seeds the
+    PRNG using the BaseDeviate dev.
 
-    @param filename        The name of a file containing a probability distribution as a 2-column
-                        ASCII table,
+    @param filename     The name of a file containing a probability distribution as a 2-column
+                        ASCII table.
     @param x            The x values for a P(x) distribution as a list, tuple, or Numpy array.
     @param p            The p values for a P(x) distribution as a list, tuple, or Numpy array.
-    @param function        A callable function giving a probability distribution; max and min    
-                        keywords are required with this option.
+    @param function     A callable function giving a probability distribution
     @param min          The minimum desired return value.
     @param max          The maximum desired return value.
     @param interpolant  Type of interpolation used for interpolating (x,p) or filename (causes an
                         error if passed alongside a callable function). Options are given in the
                         documentation for galsim.LookupTable.  (default: 'linear')
-    @param npoints      Number of points in the internal tables for interpolations (default: 256)
+    @param npoints      Number of points in the internal tables for interpolations. (default: 256)
 
     Calling
     -------
@@ -212,7 +214,130 @@ class DistDeviate:
         self._inverseprobabilitytable=galsim.LookupTable(cdf,xarray,interpolant=interpolant)
 
     def _getBoundaries(self,function,xmin,xmax):
-        return (xmin,xmax)
+        maxblanktries=6 #Maximum number of times it will move the xrange around trying to find 
+                        #nonzero function(x)
+        maxrefinetries=10 #Maximum number of times it will refine the edge of nonzero function(x)
+        tolerance=1.E-6 #if our answer only improves by less than this much, stop
+        if isinstance(function,galsim.LookupTable):
+            if xmin is None:
+                xmin=function.x_min
+            elif xmin < function.x_min:
+                raise ValueError('xmin passed to DistDeviate is less than the xmin of the '
+                                 'LookupTable passed: %f'%function)
+            if xmax is None:
+                xmax=function.x_max
+            elif xmax < function.x_max:
+                raise ValueError('xmax passed to DistDeviate is less than the xmax of the '
+                                 'LookupTable passed: %f'%function)
+        else:
+            findxmin=True
+            findxmax=True
+
+            frange=1. #Frange, not xrange, since xrange is a python builtin
+            if xmin is not None:
+                findxmin=False
+                xmax=xmin+frange
+            elif xmax is not None:
+                findxmax=False
+                xmin=xmax-frange
+            else:
+                xmin=0.
+                xmax=xmin+frange
+            ntries=0
+            while ntries<0.5*(maxblanktries+1) and not found:
+                ntries+=1
+                (txmin,txmax,found)=self._testrange(function,xmin,frange)
+                if found:
+                    if findxmin:
+                        xmin=txmin
+                    if findxmax:
+                        xmax=txmax
+                else:
+                    frange*=10
+                    if findxmin:
+                        xmin=xmax-frange
+                    elif findxmax:
+                        xmax=xmin+frange
+                    else:
+                        xmin=0.5*(xmin+xmax-frange) #expands the range around the mean of xmin&xmax
+            if not found: #Try smaller steps instead of larger ones
+                frange=0.1
+                if xmin is not None:
+                    xmax=xmin+frange
+                elif xmax is not None:
+                    xmin=xmax-frange
+                else:
+                    xmin=0.
+                    xmax=xmin+frange
+                while ntries<maxblanktries and not found:                
+                    ntries+=1
+                    (txmin,txmax,found)=self._testrange(function,xmin,frange)
+                    if found:
+                        if findxmin:
+                            xmin=txmin
+                        if findxmax:
+                            xmax=txmax
+                    else:
+                        frange*=0.1
+                        if findxmin:
+                            xmin=xmax-frange
+                        elif findxmax:
+                            xmax=xmin+frange
+                        else:
+                            xmin=0.5*(xmin+xmax-frange)
+            if not found:
+                raise RuntimeError('Cannot find any positive function(x>xmin) for DistDeviate')
+            #Now we have a nonzero range...iterate until we have a reasonable endpoint
+            found=False
+            ntries=0
+            fxmax=function(xmax)
+            fxmin=function(xmin)
+            dxmax=10.
+            dxmin=10.
+            if findxmin:
+                xmin-=1.1*frange
+                if findxmax:
+                    frange=1.21*(xmax-xmin)
+                else:
+                    frange=1.1*(xmax-xmin)
+            else:
+                frange=1.1*(xmax-xmin)
+            while ntries<maxrefinetries and dxmin>tolerance and dxmax>tolerance:
+                ntries+=1
+                (txmin,txmax,found)=self._testrange(function,xmin,frange)
+                if findxmin:
+                    if txmin<xmin:
+                        xmin=txmin-0.1*frange
+                        frange*=1.1
+                    else:
+                        xmin=txmin
+                    dxmin=(function(xmin)-fxmin)/function(xmin)
+                    fxmin=function(xmin)
+                if findxmax:
+                    if txmax>xmax:
+                        xmax=txmax+0.1*frange
+                        frange*=1.1
+                    else:
+                        xmax=txmax
+                    dxmax=(function(xmax)-fxmax)/function(xmax)
+                    fxmax=function(xmax)
+
+    def _testrange(self, function, xmin, range):
+        xarr=xmin+0.1*frange*numpy.array([0. for x in range(10)])           
+        farr=[]
+        for x in xarr:
+            farr.append(function(x))
+        if numpy.any(farr>0):
+            farr=numpy.array(farr)
+            farr=farr[where(farr>0)]
+            xmax=max(farr)
+            xmin=min(farr)
+            found=True
+        else:
+            found=False
+            xmax=xmin
+        return (xmin,xmax,found)
+        
 
     def __call__(self):
         return self._inverseprobabilitytable(self._ud())
