@@ -84,7 +84,7 @@ class DistDeviate:
     Taking the instance from the above examples, successive calls to d() then generate pseudo-random
     numbers distributed according to the initialized distribution.
 
-    >>> d = galsim.random.DistDeviate(x=[1.,2.,3.],p=[1.,2.,3.])
+    >>> d = galsim.DistDeviate(x=[1.,2.,3.],p=[1.,2.,3.])
     >>> d()
     2.9886772666447365
     >>> d()
@@ -92,7 +92,7 @@ class DistDeviate:
     >>> d()
     2.7892018766454183
 """    
-    def __init__(self, rng=None, x=None, p=None, function=None, xmin=None, xmax=None, 
+    def __init__(self, rng=None, x=None, p=None, function=None, filename=None, xmin=None, xmax=None, 
                  interpolant='linear', npoints=256):
         """Initializes a DistDeviate instance.
         
@@ -106,31 +106,31 @@ class DistDeviate:
         import galsim
  
         #Set up the PRNG
-        if isinstance(rng,UniformDeviate):
-            self._ud=rng
-        elif rng is None:
+        if rng is None:
             self._ud=galsim.UniformDeviate()
-        elif isinstance(rng,(BaseDeviate,int,long)):
+        elif isinstance(rng,galsim.UniformDeviate):
+            self._ud=rng
+        elif isinstance(rng,(galsim.BaseDeviate,int,long)):
             self._ud=galsim.UniformDeviate(arg)
         else:
             raise TypeError('Argument rng passed to DistDeviate cannot be used to initialize '
                             'a UniformDeviate.')
 
         #Check a few arguments before doing computations
-        if ('x' is not None and 'p' is none) or ('p' is not None and 'x' is None):
+        if (x is not None and p is None) or (p is not None and x is None):
             raise TypeError('Only one of x and p given as a keyword to DistDeviate')
-        if 'filename' is None or 'function' is None or 'x' is None:
+        if filename is None and function is None and x is None:
             raise TypeError('At least one of the keywords filename, function, or the pair '
                             'x and p must be set in calls to DistDeviate!')
-        if 'filename' is not None and 'function' is not None:
+        if filename is not None and function is not None:
             raise TypeError('Cannot pass both filename and function keywords to DistDeviate')
-        if 'filename' is not None and 'x' is not None:
+        if filename is not None and x is not None:
             raise TypeError('Cannot pass both filename and x&p keywords to DistDeviate')
-        if 'function' is not None and 'x' is not None:
+        if function is not None and x is not None:
             raise TypeError('Cannot pass both function and x&p keywords to DistDeviate')
 
         #Set up the probability function & min and max values for any inputs
-        if 'function' is not None:
+        if function is not None:
             if not hasattr(function,'__call__'):
                 raise TypeError('Function given to DistDeviate with keyword function is not '
                                 'callable: %s'%function)
@@ -166,7 +166,7 @@ class DistDeviate:
 
         dx=(1.*xmax-xmin)/(npoints-1)
         xarray=xmin+dx*numpy.array(range(npoints),float)
-        probability = numpy.array([userfunction(x) for x in xarray])
+        probability = numpy.array([function(x) for x in xarray])
         #cdf is the cumulative distribution function--just easier to type!
         cdf=dx*numpy.array( 
             [numpy.sum(probability[0:i]) for i in range(probability.shape[0])])
