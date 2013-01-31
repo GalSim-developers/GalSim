@@ -23,7 +23,8 @@ Changes from v0.2 to v0.3
   for this incompatibility when compiling, which results in a warning being generated.
   (Issue #317)
 
-* Made default poisson_flux value = False when n_photons is explicitly given.  (Issue #319)
+* Made default poisson_flux value = False when n_photons is explicitly given to drawShoot. 
+  (Issue #319)
 
 * It is now possible to draw the Fourier images of GSObjects using the `drawK()` method, which was
   always available in C++ but now is visible in python as well. (Issue #319)

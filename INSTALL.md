@@ -493,9 +493,9 @@ different package than the boost1.35.python27 that gets installed using
     fink install scons fftw3 tmv0 boost1.46.1.cmake
     scons TMV_DIR=/sw
 
-For other Python versions, the fink-installed Boost usually will not work,
-so you can only use fink for SCons, FFTW and TMV.  So you will probably need
-to install Boost manually.  This can be done by following the instructions of 
+For other Python versions, the fink-installed Boost usually will not work, so
+you can only use fink for SCons, FFTW and TMV.  So you will probably need to 
+install Boost manually.  This can be done by following the instructions of 
 Section 1.v), above.
 
 b) MacPorts -- this is another popular Mac package management project
@@ -532,8 +532,8 @@ then switch to the system gcc version (either 4.0 or 4.2) with
 and compile GalSim with the system gcc.
 
 c) Homebrew (http://mxcl.github.com/homebrew/) -- another package manager for
-Max OSX.  Currently GalSim v0.2 is available on homebrew, so it (plus
-dependencies) should be installable via
+Max OSX.  Currently GalSim is available on homebrew, so it (plus dependencies)
+should be installable via
 
     brew tap camphogg/science
     brew install gal-sim
