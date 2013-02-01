@@ -545,9 +545,9 @@ class PowerSpectrumRealizer(object):
         self.p_E = p_E
         self.p_B = p_B
         if p_E is None:  self.amplitude_E = None
-        else:            self.amplitude_E = np.sqrt(self._generate_power_array(p_E))
+        else:            self.amplitude_E = np.sqrt(self._generate_power_array(p_E))/pixel_size
         if p_B is None:  self.amplitude_B = None
-        else:            self.amplitude_B = np.sqrt(self._generate_power_array(p_B))
+        else:            self.amplitude_B = np.sqrt(self._generate_power_array(p_B))/pixel_size
 
 
     def __call__(self, gd):
