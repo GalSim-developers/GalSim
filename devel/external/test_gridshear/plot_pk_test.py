@@ -22,11 +22,6 @@ sht_del_ee = (ell**2)*sht_data[:,1]/(2.*np.pi)
 sht_del_bb = (ell**2)*sht_data[:,2]/(2.*np.pi)
 sht_del_eb = (ell**2)*sht_data[:,3]/(2.*np.pi)
 
-tmp_file = 'output/ps.results.input_pe.halfn.dat'
-tmp_data = np.loadtxt(tmp_file)
-ell_half = tmp_data[:,0]
-tmp_del_ee = (ell_half**2)*tmp_data[:,1]/(2.*np.pi)
-
 fig = plt.figure()
 ax = fig.add_subplot(111)
 ax.plot(tell, tdel, color='black', linestyle='dotted', label='theory')
@@ -38,6 +33,8 @@ ax.plot(ell, sht_del_bb, color='blue', linestyle='dashed', label='SHT BB')
 #ax.plot(ell, sht_del_eb, color='green', linestyle='dashed', label='SHT EB')
 ax.set_xscale('log')
 ax.set_yscale('log')
+plt.ylim([1.e-7, 3.e-5])
+plt.xlim([10.,2000.])
 ax.set_xlabel('ell')
 ax.set_ylabel('ell^2 Cell/2pi')
 ax.set_title('Input P_E = P(k), P_B=0')
@@ -46,18 +43,6 @@ plt.savefig('output/compare_input_pe.eps')
 
 ratio = galsim_del_ee/sht_del_ee
 print ratio
-
-fig = plt.figure()
-ax =fig.add_subplot(111)
-ax.plot(ell, galsim_del_ee, color='red', label='P_EE, orig grid')
-ax.plot(ell_half, tmp_del_ee, color='green', label='P_EE, half grid')
-ax.set_xscale('log')
-ax.set_yscale('log')
-ax.set_xlabel('ell')
-ax.set_ylabel('ell^2 Cell(EE)/2pi')
-ax.set_title('Input P_E = P(k), P_B=0')
-plt.legend(loc='upper left')
-plt.savefig('output/compare_input_pe_halfn.eps')
 
 # next do P_B case
 ## read in data
@@ -84,6 +69,8 @@ ax.plot(ell, sht_del_bb, color='blue', linestyle='dashed', label='SHT BB')
 #ax.plot(ell, sht_del_eb, color='green', linestyle='dashed', label='SHT EB')
 ax.set_xscale('log')
 ax.set_yscale('log')
+plt.ylim([1.e-7, 3.e-5])
+plt.xlim([10.,2000.])
 ax.set_xlabel('ell')
 ax.set_ylabel('ell^2 Cell/2pi')
 ax.set_title('Input P_E = 0, P_B=P(k)')
@@ -115,6 +102,8 @@ ax.plot(ell, sht_del_bb, color='blue', linestyle='dashed', label='SHT BB')
 #ax.plot(ell, sht_del_eb, color='green', linestyle='dashed', label='SHT EB')
 ax.set_xscale('log')
 ax.set_yscale('log')
+plt.ylim([1.e-7, 3.e-5])
+plt.xlim([10.,2000.])
 ax.set_xlabel('ell')
 ax.set_ylabel('ell^2 Cell/2pi')
 ax.set_title('Input P_E = P_B = P(k)')
