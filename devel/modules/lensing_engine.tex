@@ -58,6 +58,14 @@ engine.  They are:
   representation?
 \end{enumerate}
 
+\textbf{Important update: In tracing through the code, I realized that
+  the dimensions were not being handled properly. We were taking the
+  square root of the power, which gives a quantity that has dimensions
+  of angle, and then using that to generate shears.  I propose a
+  division by grid spacing at that step, to get a dimensionless
+  quantity.  Given the size of the grid spacing, this can
+  change results by orders of magnitude!  Results below are discussed both without and with that fix.}
+
 \section{Theory}
 
 The lensing engine requires a shear power spectrum, $P(k)$.  We are
@@ -164,14 +172,22 @@ PS is represented properly within our $k$ range.
 Moreover, we need to be well-sampled in $k$ space, so we should not
 use functions that do unreasonable things like $k^{-2}$.
 
+\subsection{Variance for Gaussian $P(k)$}
+
 Barney suggested a test case that is a Gaussian, i.e., $P(k) =
-e^{-\sigma^2 k^2 / 2}$, so $\xi_+(\theta) =
-e^{-\theta^2/2\sigma^2}/(2 \pi \sigma^2)$ and the variance may be
-$\xi_+(0)=1/(2\pi\sigma^2)$.  I will define the Gaussian such that
+P_0 e^{-\sigma^2 k^2 / 2}$.  Here both $P_0$ and $\sigma^2$ both
+are dimensions of angle$^2$.  By my calculations, this means that
+\begin{align}
+\mathrm{Var}(\gamma) &= \frac{P_0}{2\pi}\int_{\kmin}^{\kmax} k \,
+e^{-\sigma^2 k^2/2} \,\rmd k \\
+ &= \frac{P_0}{2\pi\sigma^2} (e^{-\kmin^2\sigma^2/2}-e^{-\kmax^2\sigma^2/2}).
+\end{align}
+I will define the Gaussian such that
 there is essentially no power left at our \kmax, which is
 $2\pi/d=0.0175$ arcsec$^{-1}$.  Let's use $\sigma \kmax=5$ or
 $\sigma=286.5$ arcsec for the first two grids, $\sigma=573.0$ for the
-third grid.  The code is:
+third grid.  In all cases, $\sigma\kmin$ is quite close to zero, so
+the variance we expect should be quite close to $P_0/(2\pi\sigma^2)$. We will set $P_0=1$. The code is:
 \begin{verbatim}
 import galsim
 import numpy as np
@@ -185,12 +201,54 @@ g1, g2 = test_ps.buildGriddedShears(grid_spacing=720., ngrid=50)
 print np.var(g1), np.var(g2), np.var(g1)+np.var(g2)
 \end{verbatim}
 
-The result is the same variance in each case (and the same for each
-component, unlike many of our other test cases which had different
-variances for the two components), around 0.24.  This is not the value
-that I expected numerically.  In terms of the difference between the
-grids, we expect the result to go down by a factor of 4 in the last
-grid, since $\sigma^2$ is larger.  This did not happen.
+The results are around $1.8\times 10^{-6}$ in the first two cases, and
+$4.6\times 10^{-7}$ in the last case.  Our expectations are around
+$3\times 10^{-7}$ for the first two cases, and $7.7\times 10^{-8}$.
+So the scaling with the grid spacing and grid size is okay, but the
+amplitude is off by a factor of $\sim 6$. \textbf{These results are
+  with the version of GalSim with the dimensionality fix.  Before
+  that, the variances were all the same, which means the scaling with
+  $\sigma$ was wrong.}
+
+Note that the variance is evenly divided into the two components.
+
+\subsection{Variance for flat $P(k)$}
+
+This test is dangerous because of the amount of large-scale power, but
+let's check the results anyway.  If we say $P(k)=P_0$, then we expect
+\beq
+\mathrm{Var}(\gamma) = \frac{P_0}{(2\pi)^2} \times (\kmax-\kmin)^2
+\sim \frac{P_0 \kmax^2}{(2\pi)^2}.
+\eeq
+
+If I use $P_0=0.01$, and do 
+\begin{verbatim}
+import galsim
+import numpy as np
+test_ps = galsim.PowerSpectrum(lambda k : 0.01+np.zeros_like(k))
+g1, g2 = test_ps.buildGriddedShears(grid_spacing=360., ngrid=100)
+print np.var(g1), np.var(g2), np.var(g1)+np.var(g2)
+g1, g2 = test_ps.buildGriddedShears(grid_spacing=360., ngrid=50)
+print np.var(g1), np.var(g2), np.var(g1)+np.var(g2)
+g1, g2 = test_ps.buildGriddedShears(grid_spacing=720., ngrid=50)
+print np.var(g1), np.var(g2), np.var(g1)+np.var(g2)
+\end{verbatim}
+with the \textbf{updated} version of the lensing engine, then the variances are $\sim 7.7\times 10^{-8}$ (first two cases) and
+$1.9\times 10^{-8}$ (last case).  I was expecting, for the first two
+cases, a variance of $0.01 (0.0175/2\pi)^2=7.8\times 10^{-8}$, and for
+the last case, something that is four times smaller, which is exactly
+what I find.  So the variance test seems to work here.  \textbf{Note
+  that this did not work out right before the dimensionality issue was
+  fixed by dividing by grid spacing!  In that case, the power was
+  constant in all cases.}
+
+The variance is not quite divided evenly between components, but that
+might be okay; this calculation emphasizes large-scale power, and it's
+exactly on scales comparable to the grid size that we expect
+differences between $\gamma_1$ and $\gamma_2$ behavior.  In the
+previous test, the variance was evenly divided, so that supports this
+explanation and suggests we shouldn't worry about this uneven split
+for flat $P(k)$.
 
 \section{Test of $P(k)$}\label{S:testpk}
 
@@ -227,7 +285,9 @@ The python script test\_pk\_sht.py in that directory does the following:
 Finally, plot\_pk\_test.py in that directory plots the original and
 simulated $P(k)$ based on these files.  The results for the three
 cases (input $P_E$, input $P_B$, and input $P_E=P_B$) are in
-Figures~\ref{F:pe}, \ref{F:pb}, \ref{F:peb}.
+Figures~\ref{F:pe}, \ref{F:pb}, \ref{F:peb}.  \textbf{These plots have
+  all been updated to use the version of the lensing engine with the
+  dimensionality fix mentioned in the intro to these notes.}
 
 \begin{figure}
 \begin{center}
@@ -262,44 +322,24 @@ Figures~\ref{F:pe}, \ref{F:pb}, \ref{F:peb}.
 
 Conclusions:
 \begin{itemize}
+\item \textbf{The dimensionality fix, dividing by grid spacing, has
+    gotten rid of nearly all discrepancies between theoretical and
+    generated power spectra.}
 \item SHT code: it gives roughly a consistent power spectrum compared
   to our inputs (modulo possible slight differences in scaling that
   may not be worth investigating until our own PS code is ready),
   though there are signs of $E$ vs. $B$ leakage in the case where one
   or the other is zero.
 \item GalSim: we don't see $E$ vs. $B$ leakage at any significant
-  level, but the amplitudes are consistently too high by $\sim 4\times
-  10^6$.  The scaling with $\ell$ is about right.
+  level.  The amplitudes and scaling with $\ell$ are approximately
+  correct.
+\item While the big-picture results seem good, there are some finer
+  details that require investigation, in particular the fact that both
+  codes seem to give steeper $P(k)$ than the theory.  Given how these
+  tests were done, it could have to do with the $k$-space binning in
+  the power spectrum estimator.  I'm not sure how much detail we want
+  to dig into here, vs. waiting for our own power spectrum estimator.
 \end{itemize}
 
-I am not sure where this amplitude offset could come from.  There are
-several large numbers that come into these calculations, e.g., there
-is the radians vs. arcsec conversion which is $\sim 2\times 10^5$,
-and there is the grid $N^2=2500$.  To check
-for possible dependence on grid $N$, which can sometimes show up if
-we've gotten something wrong about the FFT normalization conventions, I reran with the same $d$ but
-with $L$ and $N$ halved (5 degree grid, 0.2 degrees between grid
-points, $N$=25).  The results did not change (modulo a bit more noise
-as expected since there are fewer pairs of grid points with which to
-measure the power).  So I think it must be some other factor somewhere.
-\begin{figure}
-\begin{center}
-\includegraphics[width=3in]{../external/test_gridshear/output/compare_input_pe_halfn.eps}
-\caption{Output shear power spectra (plotted as the dimensionless
-  $\Delta^2$) for the grids described in Sec.~\ref{S:testpk} and for
-  one that covers half the linear extent ($1/4$ the area).  Both
-  results are for GalSim, comparing the previous grid with this one.\label{F:pe_halfn}}
-\end{center}
-\end{figure}
-
-I did a sanity check of the numbers that the lensing engine used when
-finding the power for each $k$ on the grid.  The grid has a $\Delta
-k_x=\Delta k_y = 0.00017453$.  We expected $2\pi/(10\times 3600)$
-arcsec$^{-1}$, so this is correct.  That corresponds to $36$
-radians$^{-1}$, so the power at that $k$ should be $5.23\times 10^{-9}$
-radians$^2$, which is $2.23\times 10^{2}$ arcsec$^2$.  That is the
-number that GalSim gives for $k_x=\kmin$ and $k_y=0$ (and vice versa),
-so it seems we've done the most basic part of the units conversions
-right.
 
 \end{document}
