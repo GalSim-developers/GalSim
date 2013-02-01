@@ -11,8 +11,9 @@ Process for updating fink with a new version:
 - dpkg -c /sw/fink/debs/galsim_0.3-1_darwin-i386.deb
 - fink validate /sw/fink/debs/galsim_0.3-1_darwin-i386.deb
 - fink install galsim
+- git add new info file for this version.
 - Submit to: http://sourceforge.net/tracker/?func=add&group_id=17203&atid=414256
   - Don't forget to change the name to galsim.info (without the version number).
-  - Group = Undergoind Validation
+  - Group = Undergoing Validation
   - Mention that you have done the above tests.
   - If you comment-reply, rit reload on the page first to not change the status back.
