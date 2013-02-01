@@ -188,11 +188,9 @@ print np.var(g1), np.var(g2), np.var(g1)+np.var(g2)
 The result is the same variance in each case (and the same for each
 component, unlike many of our other test cases which had different
 variances for the two components), around 0.24.  This is not the value
-that I expected numerically, but it at least means we understand the
-grid-dependence of the result, since my change in $\sigma$ for the
-last grid correctly preserved the variance despite the different grid
-spacing.  Moreover the variance doesn't depend significantly on \kmin,
-as predicted.
+that I expected numerically.  In terms of the difference between the
+grids, we expect the result to go down by a factor of 4 in the last
+grid, since $\sigma^2$ is larger.  This did not happen.
 
 \section{Test of $P(k)$}\label{S:testpk}
 
