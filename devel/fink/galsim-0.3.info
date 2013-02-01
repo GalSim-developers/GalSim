@@ -33,5 +33,5 @@ InstallScript: <<
     rm %i/lib/libgalsim.dylib
 <<
 
-DocFiles: README.md doc/GalSim_Quick_Reference.pdf
+DocFiles: README.md CHANGELOG.md HISTORY.md LICENSE doc/GalSim_Quick_Reference.pdf
 Shlibs: !%p/lib/libgalsim.0.dylib 
