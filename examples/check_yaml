@@ -19,6 +19,9 @@
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
 
+bin1=../bin  # For python scripts
+bin2=../bin  # For yaml files
+
 if [ ! -d "output" ]; then
     mkdir output
 fi
@@ -29,35 +32,35 @@ fi
 /bin/rm -rf output/*
 /bin/rm -rf output_yaml/*
 
-time ../bin/demo1 || exit
-time ../bin/galsim_yaml demo1.yaml || exit
+time $bin1/demo1 || exit
+time $bin2/galsim_yaml demo1.yaml || exit
 
-time ../bin/demo2 || exit
-time ../bin/galsim_yaml demo2.yaml || exit
+time $bin1/demo2 || exit
+time $bin2/galsim_yaml demo2.yaml || exit
 
-time ../bin/demo3 || exit
-time ../bin/galsim_yaml demo3.yaml || exit
+time $bin1/demo3 || exit
+time $bin2/galsim_yaml demo3.yaml || exit
 
-time ../bin/demo4 || exit
-time ../bin/galsim_yaml demo4.yaml || exit
+time $bin1/demo4 || exit
+time $bin2/galsim_yaml demo4.yaml || exit
 
-time ../bin/demo5 || exit
-time ../bin/galsim_yaml demo5.yaml || exit
+time $bin1/demo5 || exit
+time $bin2/galsim_yaml demo5.yaml || exit
 
-time ../bin/demo6 || exit
-time ../bin/galsim_yaml demo6.yaml || exit
+time $bin1/demo6 || exit
+time $bin2/galsim_yaml demo6.yaml || exit
 
-time ../bin/demo7 || exit
-time ../bin/galsim_yaml demo7.yaml || exit
+time $bin1/demo7 || exit
+time $bin2/galsim_yaml demo7.yaml || exit
 
-time ../bin/demo8 || exit
-time ../bin/galsim_yaml demo8.yaml || exit
+time $bin1/demo8 || exit
+time $bin2/galsim_yaml demo8.yaml || exit
 
-time ../bin/demo9 || exit
-time ../bin/galsim_yaml demo9.yaml || exit
+time $bin1/demo9 || exit
+time $bin2/galsim_yaml demo9.yaml || exit
 
-time ../bin/demo10 || exit
-time ../bin/galsim_yaml demo10.yaml || exit
+time $bin1/demo10 || exit
+time $bin2/galsim_yaml demo10.yaml || exit
 
 time ../bin/demo11 || exit
 time ../bin/galsim_yaml demo11.yaml || exit
