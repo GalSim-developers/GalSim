@@ -1,0 +1,16 @@
+Process for updating fink with a new version:
+
+- Download the tagged tarball from GitHub.
+- Get the md5sum value for it.
+- Update the galsim.info file with the new URL and new Source-MD5 value.
+  (I keep these named by version number, but fink likes them as just galsim.info.)
+- Make sure the SourceRename value matches the directory name in the tarball.
+- Update /sw/fink/dists/local/main/finkinfo/galsim.info link to point to new info file.
+- fink validate galsim.info
+- fink -m --build-as-nobody rebuild galsim
+- dpkg -c /sw/fink/debs/galsim_0.3-1_darwin-i386.deb
+- fink validate /sw/fink/debs/galsim_0.3-1_darwin-i386.deb
+- fink install galsim
+- Submit to: http://sourceforge.net/tracker/?func=add&group_id=17203&atid=414256
+  - Group = Undergoind Validation
+  - Mention that you have done the above tests.
