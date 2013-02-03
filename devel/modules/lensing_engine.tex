@@ -164,7 +164,7 @@ preferable to assign $P(0)=$ some kind of integral over $P(k<\kmin)$
 defined for those value of $k$.
 
 Second, since we use a DFT of a finite set of samples, we implicitly
-have a $k$ defined on a periodic grid, not simply $k=0$ for all
+have a $k$ defined on a periodic grid, not simply $P(k)=0$ for all
 $k>\kmax$.  This also means that we should possibly avoid using the
 variance as a metric, because what we really care about is whether the
 PS is represented properly within our $k$ range.
@@ -182,12 +182,20 @@ are dimensions of angle$^2$.  By my calculations, this means that
 e^{-\sigma^2 k^2/2} \,\rmd k \\
  &= \frac{P_0}{2\pi\sigma^2} (e^{-\kmin^2\sigma^2/2}-e^{-\kmax^2\sigma^2/2}).
 \end{align}
-I will define the Gaussian such that
-there is essentially no power left at our \kmax, which is
-$2\pi/d=0.0175$ arcsec$^{-1}$.  Let's use $\sigma \kmax=5$ or
-$\sigma=286.5$ arcsec for the first two grids, $\sigma=573.0$ for the
-third grid.  In all cases, $\sigma\kmin$ is quite close to zero, so
-the variance we expect should be quite close to $P_0/(2\pi\sigma^2)$. We will set $P_0=1$. The code is:
+
+We use three grids. The first is the standard GREAT10 grid with $L=10$
+degrees and $N=100$, so $d=0.1$ deg $=360$ arcsec.  I will define the
+Gaussian such that there is essentially no power left at our \kmax,
+which is $2\pi/d=0.0175$ arcsec$^{-1}$.  the second grid has the same
+$d$ but only 50 grid points per dimension, so it covers $5$ degrees.
+Using this grid lets us test for sensitivity to \kmin\ at fixed \kmax.
+The third grid covers the original $L=10$ deg, but with $N=50$, so
+$d=0.2$ deg $=720$ arcsec; this grid (compared to the first one) has the same \kmin\ and different \kmax. We use $\sigma \kmax=5$ or $\sigma=286.5$
+arcsec for the first two grids; we want to keep the same condition on
+$\sigma\kmax$ for the last grid, so in that case we use
+$\sigma=573.0$.  In all cases, $\sigma\kmin$ is quite close to zero,
+so the variance we expect should be quite close to
+$P_0/(2\pi\sigma^2)$. We will set $P_0=1$. The code is:
 \begin{verbatim}
 import galsim
 import numpy as np
@@ -205,10 +213,11 @@ The results are around $1.8\times 10^{-6}$ in the first two cases, and
 $4.6\times 10^{-7}$ in the last case.  Our expectations are around
 $3\times 10^{-7}$ for the first two cases, and $7.7\times 10^{-8}$.
 So the scaling with the grid spacing and grid size is okay, but the
-amplitude is off by a factor of $\sim 6$. \textbf{These results are
-  with the version of GalSim with the dimensionality fix.  Before
-  that, the variances were all the same, which means the scaling with
-  $\sigma$ was wrong.}
+amplitude is off by a factor of $\sim 6$. Need to investigate whether
+this could be due to a missing factor of $2\pi$ in my prediction of
+the variance. \textbf{These results are with the version of GalSim
+  with the dimensionality fix.  Before that, the variances were all
+  the same, which means the scaling with $\sigma$ was wrong.}
 
 Note that the variance is evenly divided into the two components.
 
