@@ -137,16 +137,22 @@ class DistDeviate:
                 raise TypeError('Function given to DistDeviate with keyword function is not '
                                 'callable: %s'%function)
             filename=function #for later error messages
-            if xmin is None or xmax is None:
+            if isinstance(function,galsim.LookupTable):
+                if xmin is None:
+                    xmin=function.x_min
+                elif function.x_min>xmin:
+                    raise ValueError('xmin passed to DistDeviate is less than the xmin of '
+                                     'LookupTable %s'%function)
+                if xmax is None:
+                    xmax=function.x_max
+                elif function.x_max<xmax:
+                    raise ValueError('xmax passed to DistDeviate is greater than the xmax of '
+                                     'LookupTable %s'%function)
+            elif xmin is None or xmax is None:
                 (xmin,xmax)=self._getBoundaries(function,xmin,xmax)
-            else:
-                if isinstance(function,galsim.LookupTable):
-                    if function.x_min>xmin:
-                        raise ValueError('xmin passed to DistDeviate is less than the xmin of '
-                                         'LookupTable %s'%function)
-                    if function.x_max<xmax:
-                        raise ValueError('xmax passed to DistDeviate is greater than the xmax of '
-                                         'LookupTable %s'%function)
+            elif xmax<=xmin:
+                raise ValueError('xmax and xmin passed to DistDeviate are in the wrong order! '
+                                 'xmin: %d xmax: %d'%(xmin,xmax))
         else: #Some of the array & filename setup is the same
             if x is not None:
                 filename=x #just for later error outputs
@@ -172,7 +178,6 @@ class DistDeviate:
         #cdf is the cumulative distribution function--just easier to type!
         cdf=dx*numpy.array( 
             [numpy.sum(probability[0:i]) for i in range(probability.shape[0])])
-        t2=time.time()
         #Check that cdf is always increasing or always decreasing
         #and if it isn't, either tweak it to fix or return an error.
         if not numpy.all(cdf>=0):
@@ -212,35 +217,48 @@ class DistDeviate:
     def _getBoundaries(self,function,xmin,xmax):
         maxblanktries=6 #Maximum number of times it will move the xrange around trying to find 
                         #nonzero function(x)
-        maxrefinetries=10 #Maximum number of times it will refine the edge of nonzero function(x)
-        tolerance=1.E-6 #if our answer only improves by less than this much, stop
-        if isinstance(function,galsim.LookupTable):
-            if xmin is None:
-                xmin=function.x_min
-            elif xmin < function.x_min:
-                raise ValueError('xmin passed to DistDeviate is less than the xmin of the '
-                                 'LookupTable passed: %f'%function)
-            if xmax is None:
-                xmax=function.x_max
-            elif xmax < function.x_max:
-                raise ValueError('xmax passed to DistDeviate is less than the xmax of the '
-                                 'LookupTable passed: %f'%function)
-        else:
-            findxmin=True
-            findxmax=True
+        tolerance=1.E-8 #if our answer only improves by less than this much, stop
+        findxmin=True
+        findxmax=True
 
-            frange=1. #Frange, not xrange, since xrange is a python builtin
+        frange=1. #Frange, not xrange, since xrange is a python builtin
+        if xmin is not None:
+            findxmin=False
+            xmax=xmin+frange
+        elif xmax is not None:
+            findxmax=False
+            xmin=xmax-frange
+        else:
+            xmin=0.
+            xmax=xmin+frange
+        ntries=0
+        found=False
+        while ntries<0.5*(maxblanktries+1) and not found:
+            ntries+=1
+            (txmin,txmax,found)=self._testrange(function,xmin,frange)
+            if found:
+                if findxmin:
+                    xmin=txmin
+                if findxmax:
+                    xmax=txmax
+            else:
+                frange*=10
+                if findxmin:
+                    xmin=xmax-frange
+                elif findxmax:
+                    xmax=xmin+frange
+                else:
+                    xmin=0.5*(xmin+xmax-frange) #expands the range around the mean of xmin&xmax
+        if not found: #Try smaller steps instead of larger ones
+            frange=0.1
             if xmin is not None:
-                findxmin=False
                 xmax=xmin+frange
             elif xmax is not None:
-                findxmax=False
                 xmin=xmax-frange
             else:
                 xmin=0.
                 xmax=xmin+frange
-            ntries=0
-            while ntries<0.5*(maxblanktries+1) and not found:
+            while ntries<maxblanktries and not found:                
                 ntries+=1
                 (txmin,txmax,found)=self._testrange(function,xmin,frange)
                 if found:
@@ -249,89 +267,40 @@ class DistDeviate:
                     if findxmax:
                         xmax=txmax
                 else:
-                    frange*=10
+                    frange*=0.1
                     if findxmin:
                         xmin=xmax-frange
                     elif findxmax:
                         xmax=xmin+frange
                     else:
-                        xmin=0.5*(xmin+xmax-frange) #expands the range around the mean of xmin&xmax
-            if not found: #Try smaller steps instead of larger ones
-                frange=0.1
-                if xmin is not None:
-                    xmax=xmin+frange
-                elif xmax is not None:
-                    xmin=xmax-frange
-                else:
-                    xmin=0.
-                    xmax=xmin+frange
-                while ntries<maxblanktries and not found:                
-                    ntries+=1
-                    (txmin,txmax,found)=self._testrange(function,xmin,frange)
-                    if found:
-                        if findxmin:
-                            xmin=txmin
-                        if findxmax:
-                            xmax=txmax
-                    else:
-                        frange*=0.1
-                        if findxmin:
-                            xmin=xmax-frange
-                        elif findxmax:
-                            xmax=xmin+frange
-                        else:
-                            xmin=0.5*(xmin+xmax-frange)
-            if not found:
-                raise RuntimeError('Cannot find any positive function(x>xmin) for DistDeviate')
-            #Now we have a nonzero range...iterate until we have a reasonable endpoint
-            found=False
-            ntries=0
-            fxmax=function(xmax)
-            fxmin=function(xmin)
-            dxmax=10.
-            dxmin=10.
-            if findxmin:
-                xmin-=1.1*frange
-                if findxmax:
-                    frange=1.21*(xmax-xmin)
-                else:
-                    frange=1.1*(xmax-xmin)
-            else:
-                frange=1.1*(xmax-xmin)
-            while ntries<maxrefinetries and dxmin>tolerance and dxmax>tolerance:
-                ntries+=1
-                (txmin,txmax,found)=self._testrange(function,xmin,frange)
-                if findxmin:
-                    if txmin<xmin:
-                        xmin=txmin-0.1*frange
-                        frange*=1.1
-                    else:
-                        xmin=txmin
-                    dxmin=(function(xmin)-fxmin)/function(xmin)
-                    fxmin=function(xmin)
-                if findxmax:
-                    if txmax>xmax:
-                        xmax=txmax+0.1*frange
-                        frange*=1.1
-                    else:
-                        xmax=txmax
-                    dxmax=(function(xmax)-fxmax)/function(xmax)
-                    fxmax=function(xmax)
+                        xmin=0.5*(xmin+xmax-frange)
+        if not found:
+            raise RuntimeError('Cannot find any positive function(x) for DistDeviate')
+        #Now we have a nonzero range...make a guesstimate of the edge point
+        if findxmin:
+            xstep=frange*0.05
+            while abs(function(xmin))>tolerance:
+                xmin-=xstep
+        if findxmax:
+            xstep=frange*0.05
+            while abs(function(xmax))>tolerance:
+                xmax+=xstep
+        return (xmin,xmax)
 
-    def _testrange(self, function, xmin, range):
-        xarr=xmin+0.1*frange*numpy.array([0. for x in range(10)])           
+    def _testrange(self, function, xmin, frange):
+    	import numpy
+        xarr=xmin+0.1*frange*numpy.array([1.0*x for x in range(10)])           
         farr=[]
         for x in xarr:
             farr.append(function(x))
         if numpy.any(farr>0):
             farr=numpy.array(farr)
-            farr=farr[where(farr>0)]
-            xmax=max(farr)
-            xmin=min(farr)
+            xarr=xarr[numpy.where(farr>0)]
+            xmax=max(xarr)
+            xmin=min(xarr)
             found=True
         else:
             found=False
-            xmax=xmin
         return (xmin,xmax,found)
         
 
