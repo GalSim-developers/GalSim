@@ -133,7 +133,7 @@ class DistDeviate:
         elif isinstance(rng,galsim.UniformDeviate):
             self._ud=rng
         elif isinstance(rng,(galsim.BaseDeviate,int,long)):
-            self._ud=galsim.UniformDeviate(arg)
+            self._ud=galsim.UniformDeviate(rng)
         else:
             raise TypeError('Argument rng passed to DistDeviate cannot be used to initialize '
                             'a UniformDeviate.')
@@ -334,17 +334,17 @@ class DistDeviate:
         image.array[:,:]+=numpy.array([[self() for col in range(shp[1])] for row in range(shp[0])])
     
         
-    def seed(self,arg=None):
-        if arg is None:
+    def seed(self,rng=None):
+        if rng is None:
             self._ud()
         else:
-            self._ud.seed(arg)
+            self._ud.seed(rng)
     
-    def reset(self,arg=None):
-        if arg is None:
+    def reset(self,rng=None):
+        if rng is None:
             self._ud()
         else:
-            self._ud.reset(arg)
+            self._ud.reset(rng)
 
 
 # BaseDeviate docstrings
