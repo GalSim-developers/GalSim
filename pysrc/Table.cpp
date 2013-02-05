@@ -12,17 +12,6 @@ namespace {
     // We only export the Table<double,double>, so don't bother templatizing PyTable.
     struct PyTable {
 
-        static void destroyCObjectOwner(void* p) {
-            boost::shared_ptr<double>* owner = reinterpret_cast< boost::shared_ptr<double>*>(p);
-            delete owner;
-        }
-
-        struct PythonDeleter {
-            void operator()(double* p) { owner.reset(); }
-            explicit PythonDeleter(PyObject* o) : owner(bp::borrowed(o)) {}
-            bp::handle<> owner;
-        };
-
         static Table<double,double>* makeTable(
             const bp::object& args, const bp::object& vals, const std::string& interp)
         {

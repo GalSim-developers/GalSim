@@ -16,7 +16,7 @@ New features introduced in this demo:
 
 - psf = galsim.InterpolatedImage(psf_filename, dx, flux)
 - tab = galsim.LookupTable(file)
-- ps = galsim.PowerSpectrum(..., delta2, units)
+- ps = galsim.PowerSpectrum(..., units)
 
 - Power spectrum shears for non-gridded positions.
 - Reading a compressed FITS image (using BZip2 compression).
@@ -37,9 +37,12 @@ def main(argv):
       - The main image is 0.25 x 0.25 degrees.
       - Pixel scale is 0.2 arcsec, hence the image is 4500 x 4500 pixels.
       - Applied shear is from a cosmological power spectrum read in from file.
-      - The PSF is a real one from SDSS but, in order that the galaxy resolution not be too poor, we
-        tell GalSim that the pixel scale for that PSF image is 0.2" rather than 0.396".
-      - This also lets us include the pixel response in our PSF image already.
+      - The PSF is a real one from SDSS, and corresponds to a convolution of atmospheric PSF,
+        optical PSF, and pixel response, which has been sampled at pixel centers.  We used a PSF
+        from SDSS in order to have a PSF profile that could correspond to what you see with a real
+        telescope. However, in order that the galaxy resolution not be too poor, we tell GalSim that
+        the pixel scale for that PSF image is 0.2" rather than 0.396".  We are simultaneously lying
+        about the intrinsic size of the PSF and about the pixel scale when we do this.
       - Galaxies are real galaxies, each with S/N~100.
       - Noise is Poisson using a nominal sky value of 1.e4.
     """
@@ -57,7 +60,7 @@ def main(argv):
     sky_level = 1.e4                 # ADU / arcsec^2
     nobj = 225                       # number of galaxies in entire field
                                      # (This corresponds to 1 galaxy / arcmin^2)
-    grid_spacing = 10.0              # The spacing between the samples for the power spectrum 
+    grid_spacing = 90.0              # The spacing between the samples for the power spectrum 
                                      # realization (arcsec)
     gal_signal_to_noise = 100        # S/N of each galaxy
 
@@ -100,13 +103,11 @@ def main(argv):
     # Eisenstein & Hu transfer function with wiggles.
     # Default dN/dz with z_med = 1.0
     # The file has, as required, just two columns which are k and P(k).  However, iCosmo works in
-    # terms of ell and C_ell; ell is inverse radians.  Since GalSim tends to work in terms of
-    # arcsec, we have to tell it that the inputs are radians^-1 so it can convert to store in terms
-    # of arcsec^-1.  Also, we need to tell GalSim that it is getting the C_ell (i.e., Delta^2) so it
-    # can convert to power.
+    # terms of ell and C_ell; ell is inverse radians and C_ell in radians^2.  Since GalSim tends to
+    # work in terms of arcsec, we have to tell it that the inputs are radians^-1 so it can convert
+    # to store in terms of arcsec^-1.
     pk_file = os.path.join('data','cosmo-fid.zmed1.00.out')
-    tab_pk = galsim.LookupTable(file = pk_file)
-    ps = galsim.PowerSpectrum(tab_pk, delta2 = True, units = galsim.radians)
+    ps = galsim.PowerSpectrum(pk_file, units = galsim.radians)
     # The argument here is "e_power_function" which defines the E-mode power to use.
     logger.info('Set up power spectrum from tabulated P(k)')
 
@@ -121,6 +122,8 @@ def main(argv):
     # with flux 1, and we can set the pixel scale using a keyword.
     psf_file = os.path.join('data','example_sdss_psf_sky0.fits.bz2')
     psf = galsim.InterpolatedImage(psf_file, dx = pixel_scale, flux = 1.)
+    # We do not include a pixel response function galsim.Pixel here, because the image that was read
+    # in from file already included it.
     logger.info('Read in PSF image from bzipped FITS file')
 
     # Setup the image:
@@ -148,7 +151,7 @@ def main(argv):
     # Now we need to loop over our objects:
     for k in range(nobj):
         time1 = time.time()
-        # The usual random number generator using a differend seed for each galaxy.
+        # The usual random number generator using a different seed for each galaxy.
         ud = galsim.UniformDeviate(random_seed+k)
 
         # Choose a random position within a range that is not too close to the edge.
@@ -174,7 +177,7 @@ def main(argv):
         # Apply the cosmological shear
         gal.applyShear(g1 = g1, g2 = g2)
         # Convolve with the PSF.  We don't have to include a pixel response explicitly, since the
-        #     SDSS PSF image that we are using included the pixel response already.
+        # SDSS PSF image that we are using included the pixel response already.
         final = galsim.Convolve(psf, gal)
 
         # Account for the fractional part of the position:

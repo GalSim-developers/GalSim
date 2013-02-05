@@ -130,9 +130,6 @@ class PowerSpectrum(object):
     consistent).  If the `delta2` keyword is set to specify that the input is actually the
     dimensionless power Delta^2, then the input `units` are taken to apply only to the k values.
 
-    The `units` keyword should be either a galsim.AngleUnit instance (e.g. galsim.radians) or a
-    string (e.g. 'radians').
-
     @param e_power_function A function or other callable that accepts a Numpy array of |k| values,
                             and returns the E-mode power spectrum P_E(|k|) in an array of the same
                             shape.  The function should return the power spectrum desired in the E
@@ -147,13 +144,14 @@ class PowerSpectrum(object):
                             (curl) mode of the image.  Set to None (default) for there to be no
                             B-mode power.
                             It may also be a string that can be converted to a function using
-                            eval('lambda k : ' + e_power_function), a LookupTable, or file_name from
+                            eval('lambda k : ' + b_power_function), a LookupTable, or file_name from
                             which to read in a LookupTable.
     @param delta2           Is the power actually given as dimensionless Delta^2, which requires us
                             to multiply by 2pi / k^2 to get the shear power P(k) in units of
                             angle^2?  [default = False]
     @param units            The angular units used for the power spectrum (i.e. the units of 
-                            k^-1 and sqrt(P)). [default = arcsec]
+                            k^-1 and sqrt(P)). This should be either a galsim.AngleUnit instance
+                            (e.g. galsim.radians) or a string (e.g. 'radians'). [default = arcsec]
     """
     _req_params = {}
     _opt_params = { 'e_power_function' : str, 'b_power_function' : str,
@@ -192,13 +190,14 @@ class PowerSpectrum(object):
 
 
     def buildGriddedShears(self, grid_spacing=None, ngrid=None, rng=None,
-                           interpolant=None, center=galsim.PositionD(0,0)):
+                           interpolant=None, center=galsim.PositionD(0,0), units=galsim.arcsec):
         """Generate a realization of the current power spectrum on the specified grid.
 
         This function will generate a Gaussian random realization of the specified E and B mode 
         shear power spectra at a grid of positions, specified by the input parameters 
         `grid_spacing` (distance between grid points) and `ngrid` (number of grid points in each 
-        direction.)  Units for numbers such as grid_spacing are presumed to be arcsec.
+        direction.)  Units for `grid_spacing` and `center` can be specified using the `units`
+        keyword; the default is arcsec, which is how all values are stored internally.
 
         Note that the convention for axis orientation differs from that for the GREAT10 challenge,
         so when using codes that deal with GREAT10 challenge outputs, the sign of our g2 shear
@@ -240,9 +239,10 @@ class PowerSpectrum(object):
                my_ps = galsim.PowerSpectrum(tab_pk)
                g1, g2 = my_ps.buildGriddedShears(grid_spacing = 1., grid_nx = 100)
 
-        @param grid_spacing     Spacing for an evenly spaced grid of points, in arcsec for
-                                consistency with the natural length scale of images created using
-                                the draw or drawShoot methods.
+        @param grid_spacing     Spacing for an evenly spaced grid of points, by default in arcsec
+                                for consistency with the natural length scale of images created
+                                using the draw or drawShoot methods.  Other units can be specified
+                                using the `units` keyword.
         @param ngrid            Number of grid points in each dimension.  If a number that is not
                                 an int (e.g., a float) is supplied, then it gets converted to an int
                                 automatically.
@@ -253,8 +253,10 @@ class PowerSpectrum(object):
                                 gridded shears by getShear() if that method is later
                                 called. [default `interpolant = galsim.Linear()`]
         @param center           (Optional) If setting up a new grid, define what position you
-                                want to consider the center of that grid. [default 
-                                `center = (0,0)`]
+                                want to consider the center of that grid.  Units must be consistent
+                                with those for `grid_spacing`.  [default `center = (0,0)`]
+        @param units            The angular units used for the positions.  [default = arcsec]
+
         
         @return g1,g2           These are 2-d NumPy arrays corresponding to shears at the gridded
                                 positions.
@@ -280,6 +282,19 @@ class PowerSpectrum(object):
             center = galsim.PositionD(center[0], center[1])
         else:
             raise TypeError("Unable to parse the input center argument for getShear")
+
+        # Automatically convert units to arcsec at the outset, then forget about it.  This is
+        # because PowerSpectrum by default wants to work in arsec, and all power functions are
+        # automatically converted to do so, so we'll also do that here.
+        if isinstance(units, basestring):
+            # if the string is invalid, this raises a reasonable error message.
+            units = galsim.angle.get_angle_unit(units)
+        if not isinstance(units, galsim.AngleUnit):
+            raise ValueError("units must be either an AngleUnit or a string")
+        if units != galsim.arcsec:
+            scale_fac = (1.*units) / galsim.arcsec
+            center *= scale_fac
+            grid_spacing *= scale_fac
 
         # Make a GaussianDeviate if necessary
         if rng is None:
@@ -523,16 +538,16 @@ class PowerSpectrumRealizer(object):
         # Set up the scalar |k| grid. Generally, for a box size of L (in one dimension), the grid
         # spacing in k_x or k_y is Delta k=2pi/L.
         self.k=2.*np.pi*((kx/(pixel_size*nx))**2+(ky/(pixel_size*ny))**2)**0.5
-        
+
         #Compute the spin weightings
         self._cos, self._sin = self._generate_spin_weightings()
         
         self.p_E = p_E
         self.p_B = p_B
         if p_E is None:  self.amplitude_E = None
-        else:            self.amplitude_E = np.sqrt(self._generate_power_array(p_E))
+        else:            self.amplitude_E = np.sqrt(self._generate_power_array(p_E))/pixel_size
         if p_B is None:  self.amplitude_B = None
-        else:            self.amplitude_B = np.sqrt(self._generate_power_array(p_B))
+        else:            self.amplitude_B = np.sqrt(self._generate_power_array(p_B))/pixel_size
 
 
     def __call__(self, gd):
