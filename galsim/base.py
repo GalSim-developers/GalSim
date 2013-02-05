@@ -2048,7 +2048,7 @@ class RealGalaxy(GSObject):
                                    +"objects.")
 
 #
-# --- Compound GSObect classes: Add and Convolve ---
+# --- Compound GSObject classes: Add and Convolve ---
 
 class Add(GSObject):
     """A class for adding 2 or more GSObjects.  Has an SBAdd in the SBProfile attribute.
