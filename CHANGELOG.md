@@ -5,3 +5,6 @@ Changes from v0.3 to current version:
   file, for example from a cosmological shear power spectrum calculator.  This work also involved
   making a python interface to C++ tables that can be used for interpolation in a more general
   context. (Issue #305)
+
+* Added a DistDeviate class that generates pseudo-random numbers from a user-defined probability
+  distribution. (Issue #306)
