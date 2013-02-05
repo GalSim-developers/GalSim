@@ -55,10 +55,19 @@ class DistDeviate:
     and it will not satisfy isinstance checks for BaseDeviate.  However, DistDeviate includes an 
     internal UniformDeviate, _ud, which can be used to initialize other BaseDeviates if necessary.
     
-    DistDeviate creates a table of x value versus cumulative probability and draws from it using a
-    UniformDeviate.  If given a table in a file or a pair of 1d arrays, it will construct an 
-    interpolated LookupTable to obtain more finely gridded probabilities; the interpolant used is 
-    an optional keyword argument to DistDeviate.  
+    The probability passed to DistDeviate can be given one of three ways: as a pair of 1d arrays
+    giving x and P(x), as the name of a file containing a 2d array of x and P(x), or as a callable
+    function.  The min and max desired return value can be passed as optional keywords.  If they
+    are not, DistDeviate will attempt to determine a reasonable max and min value, either by using
+    the edges of the arrays (if discrete or if the callable function is a galsim.LookupTable) or by
+    trying to find the region where P(x)>0 for a callable function.  The range finder for callable 
+    functions is not particularly sophisticated, so if the shape of the P(x) described by the 
+    callable function is complicated, the use of the min and max keywords is recommended.
+
+    Once given a probability, DistDeviate creates a table of x value versus cumulative probability 
+    and draws from it using a UniformDeviate.  If given a table in a file or a pair of 1d arrays, 
+    it will construct an interpolated LookupTable to obtain more finely gridded probabilities; the 
+    interpolant used is an optional keyword argument to DistDeviate.  
     
     Initialization
     --------------
@@ -70,18 +79,18 @@ class DistDeviate:
     Initializes d to be a DistDeviate using the distribution P(x) and seeds the PRNG using current
     time. The lists can also be tuples or numpy arrays.
     
-    >>> d = galsim.DistDeviate(function=f,min=min,max=max)   
+    >>> d = galsim.DistDeviate(function=f,xmin=xmin,xmax=xmax)   
     
     Initializes d to be a DistDeviate instance with a distribution given by the callable function
-    f(x) from x=min to x=max and seeds the PRNG using current time.  
+    f(x) from x=xmin to x=xmax and seeds the PRNG using current time.  
     
-    >>> d = galsim.DistDeviate(1062533,filename=filename)
+    >>> d = galsim.DistDeviate(rng=1062533,filename=filename)
     
     Initializes d to be a DistDeviate instance with a distribution given by the data in file
     filename, which must be a 2-column ASCII table, and seeds the PRNG using the long int
     seed 1062533.
     
-    >>> d = galsim.DistDeviate(rng=dev,x=list1,p=list2,interpolant='linear')
+    >>> d = galsim.DistDeviate(dev,x=list1,p=list2,interpolant='linear')
     
     Initializes d to be a DistDeviate instance using the distribution given by list1 and list2,
     using linear interpolation to get probabilities for intermediate points, and seeds the
@@ -92,8 +101,8 @@ class DistDeviate:
     @param x            The x values for a P(x) distribution as a list, tuple, or Numpy array.
     @param p            The p values for a P(x) distribution as a list, tuple, or Numpy array.
     @param function     A callable function giving a probability distribution
-    @param min          The minimum desired return value.
-    @param max          The maximum desired return value.
+    @param xmin         The minimum desired return value.
+    @param xmax         The maximum desired return value.
     @param interpolant  Type of interpolation used for interpolating (x,p) or filename (causes an
                         error if passed alongside a callable function). Options are given in the
                         documentation for galsim.LookupTable.  (default: 'linear')
@@ -116,9 +125,9 @@ class DistDeviate:
                  interpolant='linear', npoints=256):
         """Initializes a DistDeviate instance.
         
-        The unnamed argument, if given, must be something that can initialize a BaseDeviate 
-        instance, such as another BaseDeviate or a long int seed.  At least one of the keyword args
-        filename, function, or the pair (x,p) must be given as well; see the documentation for the
+        The rng, if given, must be something that can initialize a BaseDeviate instance, such as 
+        another BaseDeviate or a long int seed.  At least one of the keyword args filename, 
+        function, or the pair (x,p) must be given as well; see the documentation for the
         DistDeviate class for more information.
         """
         
