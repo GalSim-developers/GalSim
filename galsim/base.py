@@ -1998,8 +1998,6 @@ class RealGalaxy(GSObject):
                      
             # Set up the GaussianDeviate if not provided one, or check that the user-provided one
             # is of a valid type.
-            # Note: we don't have to worry about setting the sigma for the GaussianDeviate; the C++
-            # code does that for us, from sqrt(pad_variance).
             if rng == None:
                 gaussian_deviate = galsim.GaussianDeviate()
             elif isinstance(rng,galsim.GaussianDeviate):
