@@ -37,9 +37,12 @@ def main(argv):
       - The main image is 0.25 x 0.25 degrees.
       - Pixel scale is 0.2 arcsec, hence the image is 4500 x 4500 pixels.
       - Applied shear is from a cosmological power spectrum read in from file.
-      - The PSF is a real one from SDSS but, in order that the galaxy resolution not be too poor, we
-        tell GalSim that the pixel scale for that PSF image is 0.2" rather than 0.396".
-      - This also lets us include the pixel response in our PSF image already.
+      - The PSF is a real one from SDSS, and corresponds to a convolution of atmospheric PSF,
+        optical PSF, and pixel response, which has been sampled at pixel centers.  We used a PSF
+        from SDSS in order to have a PSF profile that could correspond to what you see with a real
+        telescope. However, in order that the galaxy resolution not be too poor, we tell GalSim that
+        the pixel scale for that PSF image is 0.2" rather than 0.396".  We are simultaneously lying
+        about the intrinsic size of the PSF and about the pixel scale when we do this.
       - Galaxies are real galaxies, each with S/N~100.
       - Noise is Poisson using a nominal sky value of 1.e4.
     """
@@ -119,6 +122,8 @@ def main(argv):
     # with flux 1, and we can set the pixel scale using a keyword.
     psf_file = os.path.join('data','example_sdss_psf_sky0.fits.bz2')
     psf = galsim.InterpolatedImage(psf_file, dx = pixel_scale, flux = 1.)
+    # We do not include a pixel response function galsim.Pixel here, because the image that was read
+    # in from file already included it.
     logger.info('Read in PSF image from bzipped FITS file')
 
     # Setup the image:
