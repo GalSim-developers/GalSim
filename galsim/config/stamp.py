@@ -508,7 +508,7 @@ def AddNoiseFFT(im, weight_im, noise, base, rng, sky_level, logger=None):
         if logger:
             logger.debug('   Added CCD noise with sky_level = %f, ' +
                          'gain = %f, read_noise = %f',sky_level,gain,read_noise)
-    elif type == 'Dist':
+    elif type == 'Distribution':
         if weight_im:
             raise RuntimeError('Cannot make proper weight image when the noise is drawn from a '
                                'user-defined distribution.')
@@ -658,7 +658,7 @@ def AddNoisePhot(im, weight_im, noise, base, rng, sky_level, logger=None):
         if logger:
             logger.debug('   Added CCD noise with sky_level = %f, ' +
                          'gain = %f, read_noise = %f',sky_level,gain,read_noise)
-    elif type == 'Dist':
+    elif type == 'Distribution':
         if weight_im:
             raise RuntimeError('Cannot make proper weight image when the noise is drawn from a '
                                'user-defined distribution.')
