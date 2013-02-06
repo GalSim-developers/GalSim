@@ -49,20 +49,21 @@ def test_corr_padding_cf():
     # Make an ImageCorrFunc
     cf = galsim.ImageCorrFunc(galsim.fits.read(imgfile))
 
-    # first, make a noise image
-    for iter in range(n_iter):
-        orig_img = galsim.ImageF(orig_nx, orig_ny)
-        orig_img.setScale(1.)
-        orig_img.addNoise(galsim.GaussianDeviate(1234))
+    # first, make the base image
+    orig_img = galsim.ImageF(orig_nx, orig_ny)
+    orig_img.setScale(1.)
+    gal = galsim.Gaussian(sigma=2.5, flux=100.)
+    gal.draw(orig_img)
 
-    # make it into an InterpolatedImage padded with cf
+    for iter in range(n_iter):
+        # make it into an InterpolatedImage padded with cf
         int_im = galsim.InterpolatedImage(orig_img, noise_pad=cf)
         
-    # do it again with a particular seed
+        # do it again with a particular seed
         int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed),
                                           noise_pad = cf)
 
-    # repeat
+        # repeat
         int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed),
                                           noise_pad = cf)
 
@@ -83,20 +84,21 @@ def test_corr_padding_im():
     # Make an Image
     im = galsim.fits.read(imgfile)
 
-    # first, make a noise image
+    # first, make the base image
     orig_img = galsim.ImageF(orig_nx, orig_ny)
     orig_img.setScale(1.)
-    orig_img.addNoise(galsim.GaussianDeviate(1234))
+    gal = galsim.Gaussian(sigma=2.5, flux=100.)
+    gal.draw(orig_img)
 
-    # make it into an InterpolatedImage padded with im
     for iter in range(n_iter):
+        # make it into an InterpolatedImage padded with im
         int_im = galsim.InterpolatedImage(orig_img, noise_pad=im)
 
-    # do it again with a particular seed
+        # do it again with a particular seed
         int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed),
                                           noise_pad = im)
 
-    # repeat
+        # repeat
         int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed),
                                           noise_pad = im)
 
@@ -116,20 +118,21 @@ def test_corr_padding_imgfile():
 
     # Make an Image
 
-    # first, make a noise image
+    # first, make the base image
     orig_img = galsim.ImageF(orig_nx, orig_ny)
     orig_img.setScale(1.)
-    orig_img.addNoise(galsim.GaussianDeviate(1234))
+    gal = galsim.Gaussian(sigma=2.5, flux=100.)
+    gal.draw(orig_img)
 
-    # make it into an InterpolatedImage padded with imgfile
     for iter in range(n_iter):
+        # make it into an InterpolatedImage padded with imgfile
         int_im = galsim.InterpolatedImage(orig_img, noise_pad=imgfile)
 
-    # do it again with a particular seed
+        # do it again with a particular seed
         int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed),
                                           noise_pad = imgfile)
 
-    # repeat
+        # repeat
         int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed),
                                           noise_pad = imgfile)
 
