@@ -564,10 +564,20 @@ namespace galsim {
         thresh *= thresh; // Since values will be |kval|^2.
         double maxk_ksq = 0.;
         double maxk_norm_kval = 0.;
-        for(int ix=-N/2, j=0; ix<N/2; ++ix) for(int iy=-N/2; iy<N/2; ++iy, ++j) {
-            double norm_kval = std::norm(_ktab->kval(ix,iy));
+        std::vector<double> ksq_x(N/2+1);
+        for(int ix=0; ix<=N/2; ++ix) ksq_x[ix] = ix*ix*dk2;
+        for(int ix=0; ix<=N/2; ++ix) for(int iy=0; iy<=N/2; ++iy) {
+            double norm_kval = std::norm(_ktab->kval2(ix,iy)); 
+            if (iy > 0) {
+                // What would normally be iy<0.  The iy argument is wrapped to positive values.
+                double norm_kval2 = std::norm(_ktab->kval2(ix,N-iy));  
+                // Note: the ix<0 values are superfluous, since they are just the conjugate of the
+                // value at (-ix,-iy) and all we care about is the absolute value.
+                norm_kval = std::max(norm_kval,norm_kval2);
+            }
             if (norm_kval > thresh) {
-                double ksq = (ix*ix + iy*iy) * dk2;
+                //double ksq = (ix*ix + iy*iy) * dk2;
+                double ksq = ksq_x[ix] + ksq_x[iy];
                 if (ksq  > maxk_ksq) {
                     maxk_ksq = ksq;
                     maxk_norm_kval = norm_kval;
