@@ -1458,7 +1458,9 @@ class InterpolatedImage(GSObject):
                                    padding with uncorrelated Gaussian noise; 
                                (b) as a galsim.ImageCorrFunc, which contains information about the
                                    desired noise power spectrum; 
-                               (c) as a string which is interpreted as a filename containing an
+                               (c) as a galsim.Image of a noise field, which is used to calculate
+                                   the desired noise power spectrum; or
+                               (d) as a string which is interpreted as a filename containing an
                                    example noise field with the proper noise power spectrum.
                            (Default `noise_pad = 0.`, i.e., pad with zeros.)
     @param rng             If padding by noise, the user can optionally supply the random noise
