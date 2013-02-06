@@ -1458,9 +1458,7 @@ class InterpolatedImage(GSObject):
                                    padding with uncorrelated Gaussian noise; 
                                (b) as a galsim.ImageCorrFunc, which contains information about the
                                    desired noise power spectrum; 
-                               (c) as a galsim.Image of a noise field, which is used to calculate
-                                   the desired noise power spectrum; or
-                               (d) as a string which is interpreted as a filename containing an
+                               (c) as a string which is interpreted as a filename containing an
                                    example noise field with the proper noise power spectrum.
                            (Default `noise_pad = 0.`, i.e., pad with zeros.)
     @param rng             If padding by noise, the user can optionally supply the random noise
@@ -1859,8 +1857,7 @@ class RealGalaxy(GSObject):
     --------------
     
         real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index=None, id=None, random=False, 
-                                        rng=None, interpolant=None, flux=None, noise_pad=False,
-                                        pad_rng=None)
+                                        rng=None, interpolant=None, flux=None, noise_pad=False)
 
     This initializes real_galaxy with three SBInterpolatedImage objects (one for the deconvolved
     galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
@@ -1894,11 +1891,6 @@ class RealGalaxy(GSObject):
                                         field that will be used to calculate the noise power
                                         spectrum and generate noise in the padding region.
                                 [default `noise_pad = False`]
-    @param pad_rng              If padding by noise, the user can optionally supply the random noise
-                                generator to use for drawing random numbers as `pad_rng` (may be any
-                                kind of `galsim.BaseDeviate` object).
-                                If `pad_rng=None`, one will be automatically created, using the time
-                                as a seed. (Default `rng = None`)
 
     Methods
     -------
