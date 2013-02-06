@@ -20,6 +20,8 @@ import numpy as np
 import os
 import sys
 
+n_iter = 50
+
 """Unit tests for the InterpolatedImage class.
 """
 
@@ -48,20 +50,21 @@ def test_corr_padding_cf():
     cf = galsim.ImageCorrFunc(galsim.fits.read(imgfile))
 
     # first, make a noise image
-    orig_img = galsim.ImageF(orig_nx, orig_ny)
-    orig_img.setScale(1.)
-    orig_img.addNoise(galsim.GaussianDeviate(1234))
+    for iter in range(n_iter):
+        orig_img = galsim.ImageF(orig_nx, orig_ny)
+        orig_img.setScale(1.)
+        orig_img.addNoise(galsim.GaussianDeviate(1234))
 
     # make it into an InterpolatedImage padded with cf
-    int_im = galsim.InterpolatedImage(orig_img, noise_pad=cf)
-
+        int_im = galsim.InterpolatedImage(orig_img, noise_pad=cf)
+        
     # do it again with a particular seed
-    int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed),
-                                      noise_pad = cf)
+        int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed),
+                                          noise_pad = cf)
 
     # repeat
-    int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed),
-                                      noise_pad = cf)
+        int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed),
+                                          noise_pad = cf)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -86,15 +89,16 @@ def test_corr_padding_im():
     orig_img.addNoise(galsim.GaussianDeviate(1234))
 
     # make it into an InterpolatedImage padded with im
-    int_im = galsim.InterpolatedImage(orig_img, noise_pad=im)
+    for iter in range(n_iter):
+        int_im = galsim.InterpolatedImage(orig_img, noise_pad=im)
 
     # do it again with a particular seed
-    int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed),
-                                      noise_pad = im)
+        int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed),
+                                          noise_pad = im)
 
     # repeat
-    int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed),
-                                      noise_pad = im)
+        int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed),
+                                          noise_pad = im)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -118,15 +122,45 @@ def test_corr_padding_imgfile():
     orig_img.addNoise(galsim.GaussianDeviate(1234))
 
     # make it into an InterpolatedImage padded with imgfile
-    int_im = galsim.InterpolatedImage(orig_img, noise_pad=imgfile)
+    for iter in range(n_iter):
+        int_im = galsim.InterpolatedImage(orig_img, noise_pad=imgfile)
 
     # do it again with a particular seed
-    int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed),
-                                      noise_pad = imgfile)
+        int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed),
+                                          noise_pad = imgfile)
 
     # repeat
-    int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed),
-                                      noise_pad = imgfile)
+        int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed),
+                                          noise_pad = imgfile)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_corr_nopadding():
+    import time
+    t1 = time.time()
+
+    imgfile = 'blankimg.fits'
+    orig_nx = 147
+    orig_ny = 124
+    orig_seed = 151241
+
+    # Make an Image
+
+    # first, make a noise image
+    orig_img = galsim.ImageF(orig_nx, orig_ny)
+    orig_img.setScale(1.)
+    orig_img.addNoise(galsim.GaussianDeviate(1234))
+
+    # make it into an InterpolatedImage padded with imgfile
+    for iter in range(n_iter):
+        int_im = galsim.InterpolatedImage(orig_img)
+
+    # do it again with a particular seed
+        int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed))
+
+    # repeat
+        int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed))
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -135,3 +169,4 @@ if __name__ == "__main__":
     test_corr_padding_cf()
     test_corr_padding_im()
     test_corr_padding_imgfile()
+    test_corr_nopadding()
