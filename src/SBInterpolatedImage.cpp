@@ -52,13 +52,13 @@ namespace galsim {
     void SBInterpolatedImage::calculateStepK() const 
     { 
         assert(dynamic_cast<const SBInterpolatedImageImpl*>(_pimpl.get()));
-        return dynamic_cast<const SBInterpolatedImageImpl&>(*_pimpl).calculateStepK(); 
+        return static_cast<const SBInterpolatedImageImpl&>(*_pimpl).calculateStepK(); 
     }
 
     void SBInterpolatedImage::calculateMaxK() const {
 
         assert(dynamic_cast<const SBInterpolatedImageImpl*>(_pimpl.get()));
-        return dynamic_cast<const SBInterpolatedImageImpl&>(*_pimpl).calculateMaxK(); 
+        return static_cast<const SBInterpolatedImageImpl&>(*_pimpl).calculateMaxK(); 
     }
 
     template <class T>
@@ -376,7 +376,7 @@ namespace galsim {
     // Same deal: reverse axis order if we have separable interpolant in X domain
     void SBInterpolatedImage::SBInterpolatedImageImpl::fillXGrid(XTable& xt) const 
     {
-        if ( dynamic_cast<const InterpolantXY*> (_xInterp.get())) {
+        if (dynamic_cast<const InterpolantXY*> (_xInterp.get())) {
             int N = xt.getN();
             double dx = xt.getDx();
             for (int ix = -N/2; ix < N/2; ix++) {
@@ -398,7 +398,7 @@ namespace galsim {
         ImageView<T>& I, double gain) const 
     {
         double dx = I.getScale();
-        if ( dynamic_cast<const InterpolantXY*> (_xInterp.get())) {
+        if (dynamic_cast<const InterpolantXY*> (_xInterp.get())) {
             double sum=0.;
             for (int ix = I.getXMin(); ix <= I.getXMax(); ix++) {
                 for (int iy = I.getYMin(); iy <= I.getYMax(); iy++) {

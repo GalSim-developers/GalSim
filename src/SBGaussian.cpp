@@ -53,7 +53,7 @@ namespace galsim {
     double SBGaussian::getSigma() const 
     { 
         assert(dynamic_cast<const SBGaussianImpl*>(_pimpl.get()));
-        return dynamic_cast<const SBGaussianImpl&>(*_pimpl).getSigma(); 
+        return static_cast<const SBGaussianImpl&>(*_pimpl).getSigma(); 
     }
 
     SBGaussian::SBGaussianImpl::SBGaussianImpl(double sigma, double flux) :
