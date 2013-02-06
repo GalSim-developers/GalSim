@@ -148,21 +148,20 @@ def test_corr_nopadding():
     orig_ny = 124
     orig_seed = 151241
 
-    # Make an Image
-
-    # first, make a noise image
+    # first, make the base image
     orig_img = galsim.ImageF(orig_nx, orig_ny)
     orig_img.setScale(1.)
-    orig_img.addNoise(galsim.GaussianDeviate(1234))
+    gal = galsim.Gaussian(sigma=2.5, flux=100.)
+    gal.draw(orig_img)
 
-    # make it into an InterpolatedImage padded with imgfile
     for iter in range(n_iter):
+        # make it into an InterpolatedImage padded with imgfile
         int_im = galsim.InterpolatedImage(orig_img)
 
-    # do it again with a particular seed
+        # do it again with a particular seed
         int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed))
 
-    # repeat
+        # repeat
         int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed))
 
     t2 = time.time()
