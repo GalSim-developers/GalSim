@@ -694,7 +694,7 @@ class GSObject(object):
             n_photons = float(n_photons)
         if n_photons < 0.:
             raise ValueError("Invalid n_photons < 0. in draw command")
-        if poisson_flux == None:
+        if poisson_flux is None:
             if n_photons == 0.: poisson_flux = True
             else: poisson_flux = False
 
@@ -703,7 +703,7 @@ class GSObject(object):
             max_extra_noise = float(max_extra_noise)
 
         # Setup the uniform_deviate if not provided one.
-        if rng == None:
+        if rng is None:
             uniform_deviate = galsim.UniformDeviate()
         elif isinstance(rng,galsim.UniformDeviate):
             uniform_deviate = rng
@@ -794,11 +794,11 @@ class GSObject(object):
             gain = float(gain)
         if gain <= 0.:
             raise ValueError("Invalid gain <= 0. in draw command")
-        if re == None:
+        if re is None:
             if im != None:
                 raise ValueError("re is None, but im is not None")
         else:
-            if im == None:
+            if im is None:
                 raise ValueError("im is None, but re is not None")
             if dk is None:
                 if re.getScale() != im.getScale():
@@ -984,11 +984,10 @@ class AtmosphericPSF(GSObject):
                            [r0 ~ lambda^(-6/5)].
     @param fwhm            FWHM of the Kolmogorov PSF.
                            Either `fwhm` or `lam_over_r0` (and only one) must be specified.
-    @param interpolant     Optional keyword for specifying the interpolation scheme [default 
-                           `interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))`].  Any
-                           one-dimensional interpolants supplied, e.g. `galsim.Cubic`, 
-                           `galsim.Linear` etc., will be converted to a two-dimensional
-                           `galsim.InterpolantXY` object before use.
+    @param interpolant     Either an Interpolant2d (or Interpolant) instance or a string indicating
+                           which interpolant should be used.  Options are 'nearest', 'sinc', 
+                           'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the 
+                           integer order to use. [default `interpolant = galsim.Quintic()`]
     @param oversampling    Optional oversampling factor for the SBInterpolatedImage table 
                            [default `oversampling = 1.5`], setting `oversampling < 1` will produce 
                            aliasing in the PSF (not good).
@@ -1003,7 +1002,7 @@ class AtmosphericPSF(GSObject):
 
     # Initialization parameters of the object, with type information
     _req_params = {}
-    _opt_params = { "flux" : float , "oversampling" : float }
+    _opt_params = { "oversampling" : float , "interpolant" : str , "flux" : float }
     _single_params = [ { "lam_over_r0" : float , "fwhm" : float } ]
 
     # --- Public Class methods ---
@@ -1038,13 +1037,7 @@ class AtmosphericPSF(GSObject):
             quintic = galsim.Quintic(tol=1e-4)
             self.interpolant = galsim.InterpolantXY(quintic)
         else:
-            if isinstance(interpolant, galsim.Interpolant):
-                self.interpolant = galsim.InterpolantXY(interpolant)
-            elif isinstance(interpolant, galsim.InterpolantXY):
-                self.interpolant = interpolant
-            else:
-                raise RuntimeError(
-                    'Specified interpolant is not an Interpolant or InterpolantXY instance!')
+            self.interpolant = galsim.utilities.convert_interpolant_to_2d(interpolant)
 
         # Then initialize the SBProfile
         GSObject.__init__(
@@ -1260,11 +1253,10 @@ class OpticalPSF(GSObject):
     @param circular_pupil  Adopt a circular pupil? Alternative is square.
     @param obscuration     Linear dimension of central obscuration as fraction of pupil linear 
                            dimension, [0., 1.) [default `obscuration = 0.`].
-    @param interpolant     Optional keyword for specifying the interpolation scheme [default 
-                           `interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))`].  Any
-                           one-dimensional interpolants supplied, e.g. `galsim.Cubic`, 
-                           `galsim.Linear` etc., will be converted to a two-dimensional
-                           `galsim.InterpolantXY` object before use.
+    @param interpolant     Either an Interpolant2d (or Interpolant) instance or a string indicating
+                           which interpolant should be used.  Options are 'nearest', 'sinc', 
+                           'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the 
+                           integer order to use. [default `interpolant = galsim.Quintic()`]
     @param oversampling    Optional oversampling factor for the SBInterpolatedImage table 
                            [default `oversampling = 1.5`], setting oversampling < 1 will produce 
                            aliasing in the PSF (not good).
@@ -1293,6 +1285,7 @@ class OpticalPSF(GSObject):
         "obscuration" : float ,
         "oversampling" : float ,
         "pad_factor" : float ,
+        "interpolant" : str ,
         "flux" : float }
     _single_params = []
 
@@ -1326,18 +1319,12 @@ class OpticalPSF(GSObject):
             circular_pupil=circular_pupil, obscuration=obscuration, flux=flux)
         
         # If interpolant not specified on input, use a Quintic interpolant
-        if interpolant == None:
-            quintic = galsim.Quintic(tol=1.e-4)
+        if interpolant is None:
+            quintic = galsim.Quintic(tol=1e-4)
             self.interpolant = galsim.InterpolantXY(quintic)
         else:
-            if isinstance(interpolant, galsim.Interpolant):
-                self.interpolant = galsim.InterpolantXY(interpolant)
-            elif isinstance(interpolant, galsim.InterpolantXY):
-                self.interpolant = interpolant
-            else:
-                raise RuntimeError(
-                    'Specified interpolant is not an Interpolant or InterpolantXY instance!')
- 
+            self.interpolant = galsim.utilities.convert_interpolant_to_2d(interpolant)
+
         # Initialize the SBProfile
         GSObject.__init__(
             self, galsim.SBInterpolatedImage(optimage, self.interpolant, dx=dx_lookup))
@@ -1399,7 +1386,7 @@ class InterpolatedImage(GSObject):
     @param interpolant     Either an Interpolant2d (or Interpolant) instance or a string indicating
                            which interpolant should be used.  Options are 'nearest', 'sinc', 
                            'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the 
-                           integer order to use. (Default `interpolant = Quintic()`)
+                           integer order to use. (Default `interpolant = galsim.Quintic()`)
     @param normalization   Two options for specifying the normalization of the input Image:
                               "flux" or "f" means that the sum of the pixels is normalized
                                   to be equal to the total flux.
@@ -1464,23 +1451,15 @@ class InterpolatedImage(GSObject):
             raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
                               "'f', 'surface brightness', or 'sb'.") % normalization)
 
-        if interpolant == None:
-            lan5 = galsim.Quintic(tol=1e-4)
-            self.interpolant = galsim.InterpolantXY(lan5)
-        elif isinstance(interpolant, galsim.Interpolant2d):
-            self.interpolant = interpolant
-        elif isinstance(interpolant, galsim.Interpolant):
-            self.interpolant = galsim.InterpolantXY(interpolant)
+        if interpolant is None:
+            self.interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1e-4))
         else:
-            try:
-                self.interpolant = galsim.Interpolant2d(interpolant)
-            except:
-                raise RuntimeError('Specified interpolant is not valid!')
+            self.interpolant = galsim.utilities.convert_interpolant_to_2d(interpolant)
 
         # Check for input dx, and check whether Image already has one set.  At the end of this
         # code block, either an exception will have been raised, or the input image will have a
         # valid scale set.
-        if dx == None:
+        if dx is None:
             dx = image.getScale()
             if dx == 0:
                 raise ValueError("No information given with Image or keywords about pixel scale!")
@@ -1510,7 +1489,7 @@ class InterpolatedImage(GSObject):
         # If the user specified a flux normalization for the input Image, then since
         # SBInterpolatedImage works in terms of surface brightness, have to rescale the values to
         # get proper normalization.
-        elif flux == None and normalization.lower() in ['flux','f'] and dx != 1.:
+        elif flux is None and normalization.lower() in ['flux','f'] and dx != 1.:
             sbinterpolatedimage.scaleFlux(1./(dx**2))
         # If the input Image normalization is 'sb' then since that is the SBInterpolated default
         # assumption, no rescaling is needed.
@@ -1740,9 +1719,11 @@ class RealGalaxy(GSObject):
                                 catalog.
     @param rng                  A random number generator to use for selecting a random galaxy 
                                 (may be any kind of BaseDeviate or None)
-    @param interpolant          Optional keyword for specifying the real-space interpolation scheme
-                                [default `interpolant = galsim.InterpolantXY(galsim.Lanczos(5, 
-                                 conserve_flux=True, tol=1.e-4))`].
+    @param interpolant          Either an Interpolant2d (or Interpolant) instance or a string 
+                                indicating which interpolant should be used.  Options are 
+                                'nearest', 'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' 
+                                where N should be the integer order to use. [default 
+                                `interpolant = galsim.Lanczos(5)'].
     @param flux                 Total flux, if None then original flux in galaxy is adopted without
                                 change [default `flux = None`].
 
@@ -1754,7 +1735,7 @@ class RealGalaxy(GSObject):
 
     # Initialization parameters of the object, with type information
     _req_params = {}
-    _opt_params = { "flux" : float }
+    _opt_params = { "interpolant" : str , "flux" : float }
     _single_params = [ { "index" : int , "id" : str } ]
 
     # --- Public Class methods ---
@@ -1774,7 +1755,7 @@ class RealGalaxy(GSObject):
                 raise AttributeError('Too many methods for selecting a galaxy!')
             use_index = real_galaxy_catalog._get_index_for_id(id)
         elif random == True:
-            if rng == None:
+            if rng is None:
                 uniform_deviate = galsim.UniformDeviate()
             elif isinstance(rng, galsim.UniformDeviate):
                 uniform_deviate = rng
@@ -1798,13 +1779,11 @@ class RealGalaxy(GSObject):
         PSF_image = real_galaxy_catalog.getPSF(use_index)
 
         # choose proper interpolant
-        if interpolant == None:
+        if interpolant is None:
             lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4) # copied from Shera.py!
             self.interpolant = galsim.InterpolantXY(lan5)
         else:
-            if not isinstance(interpolant, galsim.InterpolantXY):
-                raise RuntimeError('Specified interpolant is not an InterpolantXY!')
-            self.interpolant = interpolant
+            self.interpolant = galsim.utilities.convert_interpolant_to_2d(interpolant)
 
         # read in data about galaxy from FITS binary table; store as normal attributes of RealGalaxy
 
