@@ -2,9 +2,10 @@ Changes from v0.3 to current version:
 ------------------------------------
 
 * Option for shears from a power spectrum: use a tabulated P(k), either input as arrays or read in from a
-  file, for example from a cosmological shear power spectrum calculator.  The PowerSpectrum class
+  file, for example from a cosmological shear power spectrum calculator.  Also, the PowerSpectrum class
   now properly handles conversions between different units for P(k) and the galaxy positions at
-  which we are calculating shear.  (Issue #305)
+  which we are calculating shear.  Finally, an important bug in how the shears were generated from
+  the power spectrum (which resulted in issues with overall normalization) was fixed. (Issue #305)
 
 * An optimization of the InterpolatedImage constructor.  (Issue #305)
 
