@@ -383,7 +383,7 @@ def test_distfunction_rand():
     t1 = time.time()
     u = galsim.UniformDeviate(testseed)
     g = galsim.DistDeviate(
-        u, function=dfunction, min=dmin, max=dmax, npoints=dnpoints, interpolant=dinterpolant)
+        u, function=dfunction, xmin=dmin, xmax=dmax, npoints=dnpoints, interpolant=dinterpolant)
     testResult = (g(), g(), g())
     np.testing.assert_array_almost_equal(np.array(testResult), np.array(dFunctionResult), precision,
                                        err_msg='Wrong DistDeviate random number sequence generated')
@@ -398,7 +398,7 @@ def test_distfunction_image():
     t1 = time.time()
     u = galsim.UniformDeviate(testseed)
     g = galsim.DistDeviate(
-        u, function=dfunction, min=dmin, max=dmax, npoints=dnpoints, interpolant=dinterpolant)
+        u, function=dfunction, xmin=dmin, xmax=dmax, npoints=dnpoints, interpolant=dinterpolant)
     testimage = galsim.ImageViewD(np.zeros((3, 1)))
     testimage.addNoise(g)
     np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(dFunctionResult), 
