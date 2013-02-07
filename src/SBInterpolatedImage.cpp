@@ -55,8 +55,8 @@ namespace galsim {
         return static_cast<const SBInterpolatedImageImpl&>(*_pimpl).calculateStepK(); 
     }
 
-    void SBInterpolatedImage::calculateMaxK() const {
-
+    void SBInterpolatedImage::calculateMaxK() const 
+    {
         assert(dynamic_cast<const SBInterpolatedImageImpl*>(_pimpl.get()));
         return static_cast<const SBInterpolatedImageImpl&>(*_pimpl).calculateMaxK(); 
     }
@@ -546,6 +546,13 @@ namespace galsim {
         { return p.second > _thresh; }
         double _thresh;
     };
+
+    // The std library norm function uses abs to get a more accurate value.
+    // We don't actually care about the slight accuracy gain, so we use a 
+    // fast norm that just does x^2 + y^2
+    inline double fast_norm(const std::complex<double>& z)
+    { return real(z)*real(z) + imag(z)*imag(z); }
+
     void SBInterpolatedImage::SBInterpolatedImageImpl::calculateMaxK() const
     {
         dbg<<"Start SBInterpolatedImage calculateMaxK()\n";
@@ -567,10 +574,10 @@ namespace galsim {
         std::vector<double> ksq_x(N/2+1);
         for(int ix=0; ix<=N/2; ++ix) ksq_x[ix] = ix*ix*dk2;
         for(int ix=0; ix<=N/2; ++ix) for(int iy=0; iy<=N/2; ++iy) {
-            double norm_kval = std::norm(_ktab->kval2(ix,iy)); 
+            double norm_kval = fast_norm(_ktab->kval2(ix,iy)); 
             if (iy > 0) {
                 // What would normally be iy<0.  The iy argument is wrapped to positive values.
-                double norm_kval2 = std::norm(_ktab->kval2(ix,N-iy));  
+                double norm_kval2 = fast_norm(_ktab->kval2(ix,N-iy));  
                 // Note: the ix<0 values are superfluous, since they are just the conjugate of the
                 // value at (-ix,-iy) and all we care about is the absolute value.
                 norm_kval = std::max(norm_kval,norm_kval2);
