@@ -47,7 +47,7 @@ def test_AtmosphericPSF_properties():
             [apsf.centroid().x, apsf.centroid().y], [cen.x, cen.y], 10,
             err_msg="Atmospheric PSF not centered on (0, 0)")
     # Check Fourier properties
-    np.testing.assert_almost_equal(apsf.maxK(), 5.7652449448168923, 9,
+    np.testing.assert_almost_equal(apsf.maxK(), 5.8341564391716183, 9,
                                    err_msg="Atmospheric PSF .maxk() does not return known value.")
     np.testing.assert_almost_equal(apsf.stepK(), 1.0275679547331542, 9,
                                    err_msg="Atmospheric PSF .stepk() does not return known value.")

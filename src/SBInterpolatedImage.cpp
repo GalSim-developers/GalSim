@@ -28,7 +28,7 @@
 #ifdef DEBUGLOGGING
 #include <fstream>
 std::ostream* dbgout = new std::ofstream("debug.out");
-int verbose_level = 1;
+int verbose_level = 2;
 #endif
 
 namespace galsim {
@@ -502,23 +502,6 @@ namespace galsim {
         dbg<<"stepk = "<<_stepk<<std::endl;
     }
 
-    // Helper struct to compare two pairs by their first value.
-    struct PairSorter 
-    { 
-        bool operator()(const std::pair<double,double>& p1,
-                        const std::pair<double,double>& p2) const
-        { return p1.first < p2.first; }
-    };
-
-    // Helper struct to find a pair whose second value is > thresh.
-    struct AboveThresh
-    {
-        AboveThresh(double thresh) : _thresh(thresh) {}
-        bool operator()(const std::pair<double,double>& p) const
-        { return p.second > _thresh; }
-        double _thresh;
-    };
-
     // The std library norm function uses abs to get a more accurate value.
     // We don't actually care about the slight accuracy gain, so we use a 
     // fast norm that just does x^2 + y^2
@@ -534,46 +517,67 @@ namespace galsim {
         checkK();
         dbg<<"ktab size = "<<_ktab->getN()<<", scale = "<<_ktab->getDk()<<std::endl;
         
-        int N = _ktab->getN();
         double dk = _ktab->getDk();
-        double dk2 = dk*dk;
 
         // Among the elements with kval > thresh, find the one with the maximum ksq
         double thresh = sbp::maxk_threshold * getFlux();
         thresh *= thresh; // Since values will be |kval|^2.
-        double maxk_ksq = 0.;
-        double maxk_norm_kval = 0.;
-        std::vector<double> ksq_x(N/2+1);
-        for(int ix=0; ix<=N/2; ++ix) ksq_x[ix] = ix*ix*dk2;
-        for(int ix=0; ix<=N/2; ++ix) for(int iy=0; iy<=N/2; ++iy) {
-            double norm_kval = fast_norm(_ktab->kval2(ix,iy)); 
-            if (iy > 0) {
-                // What would normally be iy<0.  The iy argument is wrapped to positive values.
-                double norm_kval2 = fast_norm(_ktab->kval2(ix,N-iy));  
-                // Note: the ix<0 values are superfluous, since they are just the conjugate of the
-                // value at (-ix,-iy) and all we care about is the absolute value.
-                norm_kval = std::max(norm_kval,norm_kval2);
-            }
-            if (norm_kval > thresh) {
-                //double ksq = (ix*ix + iy*iy) * dk2;
-                double ksq = ksq_x[ix] + ksq_x[iy];
-                if (ksq  > maxk_ksq) {
-                    maxk_ksq = ksq;
-                    maxk_norm_kval = norm_kval;
+        double maxk_ix = 0.;
+        // When we get 5 rows in a row all below thresh, stop.
+        int n_below_thresh = 0;
+        int N = _ktab->getN();
+        // Don't go past the current value of maxk
+        if (N/2 * dk > _maxk) 
+            N = int(_maxk*2./dk);
+        // We take the k value to be maximum of kx and ky.  This is appropriate, because
+        // this is how maxK() is eventually used -- it sets the size in k-space for both
+        // kx and ky when drawing.  Since kx<0 is just the conjugate of the corresponding
+        // point at (-kx,-ky), we only check the right half of the square.  i.e. the 
+        // upper-right and lower-right quadrants.
+        for(int ix=0; ix<=N/2; ++ix) {
+            xdbg<<"Start search for ix = "<<ix<<std::endl;
+            // Search along the two sides with either kx = ix or ky = ix.
+            for(int iy=0; iy<=ix; ++iy) {
+                // The right side of the square in the upper-right quadrant.
+                double norm_kval = fast_norm(_ktab->kval2(ix,iy)); 
+                xdbg<<"norm_kval at "<<ix<<','<<iy<<" = "<<norm_kval<<std::endl;
+                if (norm_kval <= thresh && iy != ix) {
+                    // The top side of the square in the upper-right quadrant.
+                    norm_kval = fast_norm(_ktab->kval2(iy,ix));  
+                    xdbg<<"norm_kval at "<<iy<<','<<ix<<" = "<<norm_kval<<std::endl;
+                }
+                if (norm_kval <= thresh && iy > 0) {
+                    // The right side of the square in the lower-right quadrant.
+                    // The ky argument is wrapped to positive values.
+                    norm_kval = fast_norm(_ktab->kval2(ix,N-iy));  
+                    xdbg<<"norm_kval at "<<ix<<','<<-iy<<" = "<<norm_kval<<std::endl;
+                }
+                if (norm_kval <= thresh && ix > 0) {
+                    // The bottom side of the square in the lower-right quadrant.
+                    // The ky argument is wrapped to positive values.
+                    norm_kval = fast_norm(_ktab->kval2(iy,N-ix));  
+                    xdbg<<"norm_kval at "<<iy<<','<<-ix<<" = "<<norm_kval<<std::endl;
+                }
+                if (norm_kval > thresh) {
+                    xdbg<<"This one is above thresh\n";
+                    // Mark this k value as being aboe the threshold.
+                    maxk_ix = ix;
+                    // Reset the count to 0
+                    n_below_thresh = 0;
+                    // Don't bother checking the rest of the pixels with this k value.
+                    break;
                 }
             }
+            xdbg<<"Done ix = "<<ix<<".  Current count = "<<n_below_thresh<<std::endl;
+            // If we get through 5 rows with nothing above the threshold, stop looking.
+            if (++n_below_thresh == 5) break;
         }
-        dbg<<"Found |kval|^2 = "<<maxk_norm_kval<<" at ksq = "<<maxk_ksq<<std::endl;
-
-        // Check if we want to use the new value.  (Only if smaller than the current value.)
-        double new_maxk = sqrt(maxk_ksq);
-        dbg<<"new_maxk = "<<new_maxk<<std::endl;
-        if (new_maxk < _maxk) {
-            dbg<<"New value is smaller, so update\n";
-            _maxk = new_maxk;
-        } else {
-            dbg<<"New value is not smaller, so keep the current value.\n";
-        }
+        xdbg<<"Finished.  maxk_ix = "<<maxk_ix<<std::endl;
+        // Add 1 to get the first row that is below the threshold.
+        ++maxk_ix;
+        // Scale by dk
+        _maxk = maxk_ix*dk;
+        dbg<<"new maxk = "<<_maxk<<std::endl;
     }
 
     void SBInterpolatedImage::SBInterpolatedImageImpl::checkReadyToShoot() const 
