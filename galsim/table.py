@@ -10,18 +10,14 @@ class LookupTable(object):
     for which interpolating from a lookup table is sufficiently accurate.
 
     A LookupTable may be constructed from two arrays (lists, tuples, or Numpy arrays of 
-    floats/doubles) and a string indicating what kind of interpolation to use.
+    floats/doubles).
 
         args = [...]
         vals = []
         for arg in args:
             val = calculateVal(arg)
             vals.append(val)
-        interp = 'spline'  # Other options are 'linear', 'floor' and 'ceil'. 
-        table = galsim.LookupTable(x=args,f=vals,interp=interp)
-
-    Another option is to read in the values from an ascii file.  The file should have two 
-    columns of numbers, which are taken to be the x and f values.
+        table = galsim.LookupTable(x=args,f=vals)
 
     Then you can use this table as a replacement for the slow calculation:
 
@@ -29,6 +25,20 @@ class LookupTable(object):
         for arg in other_args:
             val = table(arg)
             [... use val ...]
+
+
+    The default interpolation method is cubic spline interpolation.  This is usually the 
+    best choice, but we also provide three other options, which can be specified by
+    the `interpolant` kwarg.  The choices are 'floor', 'ceil', 'linear' and 'spline':
+
+    - 'floor' takes the value from the previous argument in the table.
+    - 'ceil' takes the value from the next argument in the table.
+    - 'linear' does linear interpolation between these two values.
+    - 'spline' uses a cubic spline interpolation, so the interpolated values are smooth at 
+      each argument in the table.
+
+    Another option is to read in the values from an ascii file.  The file should have two 
+    columns of numbers, which are taken to be the x and f values.
 
     The user can also opt to interpolate in log(x) and/or log(f), though this is not the default.
     It may be a wise choice depending on the particular function, e.g., for a nearly power-law
@@ -39,17 +49,17 @@ class LookupTable(object):
                          which get silently converted to floats for the purpose of interpolation).
     @param f             The list, tuple, or Numpy array of f(x) values (floats, doubles, or ints,
                          which get silently converted to floats for the purpose of interpolation).
+    @param interpolant   The interpolant to use, with the options being 'floor', 'ceil', 
+                         'linear' and 'spline'. [Default `interpolant = 'spline'`]
     @param file          A file from which to read the (x,f) pairs.
-    @param interpolant   The interpolant to use, with the options being 'spline', 'linear', 'ceil',
-                         and 'floor' [Default: 'spline'].
     @param x_log         Set to True if you wish to interpolate using log(x) rather than x.  Note
                          that all inputs / outputs will still be x, it's just a question of how the
-                         interpolation is done. [Default: False]
+                         interpolation is done. [Default `x_log = False`]
     @param f_log         Set to True if you wish to interpolate using log(f) rather than f.  Note
                          that all inputs / outputs will still be f, it's just a question of how the
-                         interpolation is done. [Default: False]
+                         interpolation is done. [Default `f_log = False`]
     """
-    def __init__(self, x = None, f = None, file = None, interpolant = None,
+    def __init__(self, x = None, f = None, interpolant = None, file = None,
                  x_log = False, f_log = False):
         import numpy as np
         self.x_log = x_log
