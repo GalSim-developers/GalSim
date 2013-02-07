@@ -125,6 +125,10 @@ namespace galsim {
         v.reserve(aa.size());
         if (vv.size() != aa.size()) 
             throw TableError("input vector lengths don't match");
+        if (iType == spline && vv.size() < 3)
+            throw TableError("input vectors are too short to spline interpolate");
+        if (vv.size() < 2 &&  (iType == linear || iType == ceil || iType == floor))
+            throw TableError("input vectors are too short for interpolation");
         typename std::vector<A>::const_iterator aptr=aa.begin();
         typename std::vector<V>::const_iterator vptr=vv.begin();
         for (size_t i=0; i<aa.size(); i++, ++aptr, ++vptr) {

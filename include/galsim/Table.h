@@ -166,8 +166,11 @@ namespace galsim {
                 std::cout << p->arg << " " << p->val << std::endl; 
         }
 
-    private:
         typedef TableEntry<V,A> Entry;
+        const std::vector<Entry>& getV() const { return v; }
+        interpolant getInterp() const { return iType; }
+
+    private:
         typedef typename std::vector<Entry>::const_iterator citer;
         typedef typename std::vector<Entry>::iterator iter;
 

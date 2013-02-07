@@ -126,10 +126,10 @@ Demonstration scripts
 ---------------------
 
 There are a number of scripts in `examples/` that demonstrate how the code can
-be used.  These are called `demo1.py`-`demo10.py`, and can be run either using
+be used.  These are called `demo1.py`-`demo11.py`, and can be run either using
 (e.g.) `python demo1.py` while sitting in `examples/`, or by doing `scons
 examples` and then using the executable `bin/demo1`.  A completely parallel
-sequence of configuration scripts, `demo1.yaml`-`demo10.yaml`, demonstrates how
+sequence of configuration scripts, `demo1.yaml`-`demo11.yaml`, demonstrates how
 to make the same set of simulations using config scripts that can be input to
 `bin/galsim_yaml`.  As the project develops through further versions, and adds
 further capabilities to the software, more demo scripts will be added to
@@ -215,7 +215,8 @@ Currently, GalSim has the following capabilities:
 * Non-constant shears and magnifications can be drawn from a shear field
   expected for an NFW profile dark matter halo (as for weak lensing by galaxy
   clusters).  For gridded galaxy positions, lensing shears can be drawn randomly
-  from a specified shear power spectrum.
+  from a specified shear power spectrum, and they can then be interpolated to
+  non-gridded positions.
 
 * Simulating correlated Gaussian noise fields as according to user-specified,
   correlation functions derived from images.
@@ -229,10 +230,6 @@ we plan to add the following additional capabilities in future versions of
 GalSim:
 
 * PSFs from stochastic atmosphere models.
-
-* Lensing shears from a power spectrum for arbitrary (non-gridded) galaxy
-  positions.  In addition, further testing of the power spectrum code will be
-  done.
 
 * Self-consistent shears AND magnifications from a power spectrum.
 

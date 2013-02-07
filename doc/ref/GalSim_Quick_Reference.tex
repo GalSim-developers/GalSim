@@ -189,6 +189,12 @@ Requires one of the
   optional \texttt{obscuration}.  For information
     about other optional parameters, see the documentation for this object.}
 \item[$\circ$]
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_interpolated_image.html}{\texttt{galsim.InterpolatedImage(image,
+      \dots)}} \newline {a base class representing in principle
+    arbitrary surface brightness
+    profiles for which we have an Image representation.  For information
+    about other optional parameters, see the documentation for this object.}
+\item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_pixel.html}{\texttt{galsim.Pixel(xw,
       yw = None, flux=1.)}} \newline {used for integrating light onto square or
   rectangular pixels, requires at least one side dimension
@@ -733,11 +739,10 @@ integer and double-precision floating point representations.
 
 \subsection{Lensing shear fields}\label{sect:lensing}
 
-GalSim has relatively new functionality to simulate scientifically-motivated
-lensing shear fields. Due to its newness, the user interface is subject to
-change, and it is not currently accessible via configuration files (only
-directly in Python).  The code and documentation for the ``lensing engine'' is
-in {\tt galsim/lensing.py}.  The two relevant classes for users are:
+GalSim has functionality to simulate scientifically-motivated lensing
+shear fields. The code and documentation for the
+``lensing engine'' is in {\tt galsim/lensing.py}.  The two relevant
+classes for users are:
 
 \begin{itemize}
 \item[$\circ$]
@@ -746,9 +751,7 @@ in {\tt galsim/lensing.py}.  The two relevant classes for users are:
     $B$-mode power spectra can be separately specified as 
     \texttt{E\_power\_function} and \texttt{B\_power\_function}.  The
     \texttt{getShear(\dots)} method is used to generate a random realization of
-    a shear field from a given \texttt{PowerSpectrum} object.  Currently, it is
-    only possible to generate shears at gridded positions, but in future
-    versions of GalSim this restriction will no longer be applicable.}
+    a shear field from a given \texttt{PowerSpectrum} object.}
 
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1lensing_1_1_n_f_w_halo.html}{\texttt{galsim.NFWHalo(\dots)}}
@@ -790,5 +793,8 @@ Multi-Extension FITS file or PyFITS HDU object, specified by the
     parameter (see \texttt{galsim/fits.py}).}
 
 \end{itemize}
+
+The routines for reading and writing FITS images are able to handle
+compressed inputs / outputs via keywords.
 
 \end{document}
