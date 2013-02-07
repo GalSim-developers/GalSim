@@ -151,9 +151,6 @@
     "#" : "Note that the filename ends in .fz.  This is the standard ending for a Rice-compressed",
     "#" : "fits file.  When GalSim sees that, it automatically applies Rice compression to the",
     "#" : "output image.",
-    "#" : "Caveat: While the output file seems okay as far as I can tell, ds9 doesn't like it.",
-    "#" : "I think it's a bug in ds9, but we are still looking for a workaround.  For now, to ",
-    "#" : "view the file, you'll need to use funpack to convert it to a normal fits file first.",
     "file_name" : "tabulated_power_spectrum.fits.fz"
 }
 
