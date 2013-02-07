@@ -150,6 +150,7 @@ namespace galsim {
         mutable double _stepk; ///< Stored value of stepK
         mutable double _maxk; ///< Stored value of maxK
         double _flux;
+        int _maxNin;
 
         void initialize(); ///< Put code common to both constructors here.
 

@@ -27,8 +27,8 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-//std::ostream* dbgout = new std::ofstream("debug.out");
-//int verbose_level = 2;
+std::ostream* dbgout = new std::ofstream("debug.out");
+int verbose_level = 1;
 #endif
 
 namespace galsim {
@@ -77,9 +77,9 @@ namespace galsim {
                                images[i]->getXMax()-images[i]->getXMin()+1 );
             if (Ni > _pimpl->Ninitial) _pimpl->Ninitial = Ni;
         }
-        _pimpl->Ninitial = _pimpl->Ninitial + _pimpl->Ninitial%2;
-        assert(_pimpl->Ninitial%2==0);
-        assert(_pimpl->Ninitial>=2);
+        _pimpl->Ninitial = _pimpl->Ninitial + (_pimpl->Ninitial+1)%2;
+        assert(_pimpl->Ninitial%2==1);
+        assert(_pimpl->Ninitial>=3);
 
         if (dx<=0.) {
             _pimpl->dx = images[0]->getScale();
@@ -118,9 +118,9 @@ namespace galsim {
             int xStart = -((img.getXMax()-img.getXMin()+1)/2);
             int y = -((img.getYMax()-img.getYMin()+1)/2);
             dbg<<"xStart = "<<xStart<<", yStart = "<<y<<std::endl;
-            for (int iy = img.getYMin(); iy<= img.getYMax(); iy++, y++) {
+            for (int iy = img.getYMin(); iy<= img.getYMax(); ++iy, ++y) {
                 int x = xStart;
-                for (int ix = img.getXMin(); ix<= img.getXMax(); ix++, x++) {
+                for (int ix = img.getXMin(); ix<= img.getXMax(); ++ix, ++x) {
                     double value = img(ix,iy);
                     _pimpl->vx[i]->xSet(x, y, value);
                     sum += value;
@@ -154,11 +154,11 @@ namespace galsim {
         dbg<<"pad_factor = "<<pad_factor<<std::endl;
         _pimpl->Ninitial = std::max( image.getYMax()-image.getYMin()+1,
                                     image.getXMax()-image.getXMin()+1 );
-        _pimpl->Ninitial = _pimpl->Ninitial + _pimpl->Ninitial%2;
+        _pimpl->Ninitial = _pimpl->Ninitial + (_pimpl->Ninitial+1)%2;
         _pimpl->Nk = image.getPaddedSize(pad_factor);
         dbg<<"Ninitial = "<<_pimpl->Ninitial<<std::endl;
-        assert(_pimpl->Ninitial%2==0);
-        assert(_pimpl->Ninitial>=2);
+        assert(_pimpl->Ninitial%2==1);
+        assert(_pimpl->Ninitial>=3);
         dbg<<"Nk = "<<_pimpl->Nk<<std::endl;
 
         double dx2 = _pimpl->dx*_pimpl->dx;
@@ -170,38 +170,13 @@ namespace galsim {
         _pimpl->flux.resize(1);
         _pimpl->xflux.resize(1);
         _pimpl->yflux.resize(1);
-        double sum = 0.;
-        double sumx = 0.;
-        double sumy = 0.;
         _pimpl->vx[0].reset(new XTable(_pimpl->Nk, _pimpl->dx));
 
-        int xStart = -((image.getXMax()-image.getXMin()+1)/2);
-        int y = -((image.getYMax()-image.getYMin()+1)/2);
-        dbg<<"xStart = "<<xStart<<", yStart = "<<y<<std::endl;
-        // fill padded region with noise
         if (pad_image.get()) {
-            dbg<<"Adding noise from supplied image"<<std::endl;
+            // Start by copying the pad_image
             // make sure images are same size (but don't worry if bounds are not same)
-            if ((1+pad_image->getXMax()-pad_image->getXMin() == _pimpl->Nk) &&
-                (1+pad_image->getYMax()-pad_image->getYMin() == _pimpl->Nk)) {
-                int N=_pimpl->Nk/2;
-                for(int ix = -N; ix < N; ++ix) {
-                    for(int iy = -N; iy < N; ++iy) {
-                        // Only set the image value and accumulate flux if outside of the part that
-                        // will be populated by the real image.  Otherwise it's hard to keep track
-                        // of the flux, and the total flux will not be properly accumulated
-                        if ((ix < xStart) || (ix > xStart + image.getXMax() - image.getXMin()) ||
-                            (iy < y) || ( iy > y + image.getYMax() - image.getYMin())) {
-                            double value = pad_image->at(pad_image->getXMin()+ix+N,
-                                                         pad_image->getYMin()+iy+N);
-                            _pimpl->vx[0]->xSet(ix,iy,value);
-                            sum += value;
-                            sumx += value*ix;
-                            sumy += value*iy;
-                        }
-                    }
-                }
-            } else {
+            if ((1+pad_image->getXMax()-pad_image->getXMin() != _pimpl->Nk) ||
+                (1+pad_image->getYMax()-pad_image->getYMin() != _pimpl->Nk)) {
                 char err_buff[500];
                 sprintf(err_buff,"Supplied image of noise for padding is wrong size: "
                         "received %d by %d, expected %d by %d\n",
@@ -210,18 +185,43 @@ namespace galsim {
                         _pimpl->Nk,_pimpl->Nk);
                 throw std::runtime_error(err_buff);
             }
+            dbg<<"Copying pad_image\n";
+            int xStart = -((pad_image->getXMax()-pad_image->getXMin()+1)/2);
+            int y = -((pad_image->getYMax()-pad_image->getYMin()+1)/2);
+            dbg<<"xStart = "<<xStart<<", yStart = "<<y<<std::endl;
+            for (int iy = pad_image->getYMin(); iy<=pad_image->getYMax(); ++iy, ++y) {
+                int x = xStart;
+                for (int ix = pad_image->getXMin(); ix<=pad_image->getXMax(); ++ix, ++x) {
+                    _pimpl->vx[0]->xSet(x, y, (*pad_image)(ix,iy));
+                }
+            }
         }
 
+        // Copy the given image to the center
+        int xStart = -((image.getXMax()-image.getXMin()+1)/2);
+        int y = -((image.getYMax()-image.getYMin()+1)/2);
+        dbg<<"xStart = "<<xStart<<", yStart = "<<y<<std::endl;
         for (int iy = image.getYMin(); iy<= image.getYMax(); iy++, y++) {
             int x = xStart;
             for (int ix = image.getXMin(); ix<= image.getXMax(); ix++, x++) {
-                double value = image(ix,iy);
-                _pimpl->vx[0]->xSet(x, y, value);
+                _pimpl->vx[0]->xSet(x, y, image(ix,iy));
+            }
+        }
+
+        // Accumulate the flux and centroid on a square region of size Ninitial x Ninitial
+        // (This isn't precisely the same as what was in the original image, since the
+        // padding can have some flux, so we do it this way to be consistent with how
+        // we use it later.)
+        double sum = 0.;
+        double sumx = 0.;
+        double sumy = 0.;
+        const int Nino2 = _pimpl->Ninitial/2;
+        for (int y = -Nino2; y<=Nino2; ++y) {
+            for (int x = -Nino2; x<=Nino2; ++x) {
+                double value = _pimpl->vx[0]->xval(x, y);
                 sum += value;
                 sumx += value*x;
                 sumy += value*y;
-                xxdbg<<"ix,iy,x,y = "<<ix<<','<<iy<<','<<x<<','<<y<<std::endl;
-                xxdbg<<"value = "<<value<<", sums = "<<sum<<','<<sumx<<','<<sumy<<std::endl;
             }
         }
         _pimpl->flux[0] = sum * dx2;
@@ -270,7 +270,7 @@ namespace galsim {
         } else {
             _xtab.reset(new XTable(*_multi.getXTable(0)));
             *_xtab *= _wts[0];
-            for (size_t i=1; i<_multi.size(); i++)
+            for (size_t i=1; i<_multi.size(); ++i) 
                 _xtab->accumulate(*_multi.getXTable(i), _wts[i]);
         }
         dbg<<"xtab size = "<<_xtab->getN()<<", scale = "<<_xtab->getDx()<<std::endl;
@@ -345,7 +345,7 @@ namespace galsim {
         } else {
             _ktab.reset(new KTable(*_multi.getKTable(0)));
             *_ktab *= _wts[0];
-            for (size_t i=1; i<_multi.size(); i++)
+            for (size_t i=1; i<_multi.size(); ++i)
                 _ktab->accumulate(*_multi.getKTable(i), _wts[i]);
         }
         dbg<<"Built ktab\n";
@@ -361,8 +361,8 @@ namespace galsim {
             int N = kt.getN();
             double dk = kt.getDk();
             // Only need ix>=0 because it's Hermitian:
-            for (int ix = 0; ix <= N/2; ix++) {
-                for (int iy = -N/2; iy < N/2; iy++) {
+            for (int ix = 0; ix <= N/2; ++ix) {
+                for (int iy = -N/2; iy < N/2; ++iy) {
                     Position<double> k(ix*dk,iy*dk);
                     kt.kSet(ix,iy,kValue(k));
                 }
@@ -379,8 +379,8 @@ namespace galsim {
         if (dynamic_cast<const InterpolantXY*> (_xInterp.get())) {
             int N = xt.getN();
             double dx = xt.getDx();
-            for (int ix = -N/2; ix < N/2; ix++) {
-                for (int iy = -N/2; iy < N/2; iy++) {
+            for (int ix = -N/2; ix < N/2; ++ix) {
+                for (int iy = -N/2; iy < N/2; ++iy) {
                     Position<double> x(ix*dx,iy*dx);
                     xt.xSet(ix,iy,xValue(x));
                 }
@@ -400,8 +400,8 @@ namespace galsim {
         double dx = I.getScale();
         if (dynamic_cast<const InterpolantXY*> (_xInterp.get())) {
             double sum=0.;
-            for (int ix = I.getXMin(); ix <= I.getXMax(); ix++) {
-                for (int iy = I.getYMin(); iy <= I.getYMax(); iy++) {
+            for (int ix = I.getXMin(); ix <= I.getXMax(); ++ix) {
+                for (int iy = I.getYMin(); iy <= I.getYMax(); ++iy) {
                     Position<double> x(ix*dx,iy*dx);
                     T val = xValue(x) / gain;
                     sum += val;
@@ -446,17 +446,12 @@ namespace galsim {
         dbg<<"Current value of stepk = "<<_stepk<<std::endl;
         dbg<<"Find box that encloses "<<1.-sbp::alias_threshold<<" of the flux.\n";
         dbg<<"xtab size = "<<_xtab->getN()<<", scale = "<<_xtab->getDx()<<std::endl;
-        int N = _xtab->getN();
+        //int N = _xtab->getN();
         double dx = _xtab->getDx();
         double dx2 = dx*dx;
-        Position<double> cen = centroid();
-        dbg<<"centroid = "<<cen<<std::endl;
-        int ixCen = int(floor(cen.x / dx + 0.5));
-        int iyCen = int(floor(cen.y / dx + 0.5));
-        dbg<<"center ix,iy = "<<ixCen<<','<<iyCen<<std::endl;
         double fluxTot = getFlux()/dx2;
         dbg<<"fluxTot = "<<fluxTot<<std::endl;
-        double flux = (*_xtab).xval(ixCen,iyCen);
+        double flux = (*_xtab).xval(0,0);
         double thresh = (1.-sbp::alias_threshold) * fluxTot;
         dbg<<"thresh = "<<thresh<<std::endl;
 
@@ -467,42 +462,19 @@ namespace galsim {
         // When this happens, we set d1 to 0 again and look for a larger value that 
         // enclosed enough flux again.
         int d1 = 0; 
-        for (int d=1; (ixCen-d >= -N/2 || ixCen+d < N/2 ||
-                       iyCen-d >= -N/2 || iyCen+d < N/2); ++d) {
+        const int Nino2 = _multi.getNin()/2;
+        for (int d=1; d<=Nino2; ++d) {
             dbg<<"d = "<<d<<std::endl;
             dbg<<"d1 = "<<d1<<std::endl;
             dbg<<"flux = "<<flux<<std::endl;
-            // Add the left side of box:
-            int ix = ixCen - d;
-            if (ix >= -N/2) {
-                for(int iy = std::max(iyCen-d,-N/2); iy <= std::min(iyCen+d,N/2-1); ++iy) {
-                    xxdbg<<"Add xval("<<ix<<','<<iy<<") = "<<_xtab->xval(ix,iy)<<std::endl;
-                    flux += _xtab->xval(ix,iy);
-                }
-            }
-            // Add the right size of box:
-            ix = ixCen + d;
-            if (ix < N/2) {
-                for(int iy = std::max(iyCen-d,-N/2); iy <= std::min(iyCen+d,N/2-1); ++iy) {
-                    xxdbg<<"Add xval("<<ix<<','<<iy<<") = "<<_xtab->xval(ix,iy)<<std::endl;
-                    flux += _xtab->xval(ix,iy);
-                }
-            }
-            // Add the bottom side of box:
-            int iy = iyCen - d;
-            if (iy >= -N/2) {
-                for(int ix = std::max(ixCen-d+1,-N/2); ix <= std::min(ixCen+d-1,N/2-1); ++ix) {
-                    xxdbg<<"Add xval("<<ix<<','<<iy<<") = "<<_xtab->xval(ix,iy)<<std::endl;
-                    flux += _xtab->xval(ix,iy);
-                }
-            }
-            // Add the top side of box:
-            iy = iyCen + d;
-            if (iy < N/2) {
-                for(int ix = std::max(ixCen-d+1,-N/2); ix <= std::min(ixCen+d-1,N/2-1); ++ix) {
-                    xxdbg<<"Add xval("<<ix<<','<<iy<<") = "<<_xtab->xval(ix,iy)<<std::endl;
-                    flux += _xtab->xval(ix,iy);
-                }
+            // Add the left, right, top and bottom sides of box:
+            for(int x = -d; x < d; ++x) {
+                // Note: All 4 corners are added exactly once by including x=-d but omitting 
+                // x=d from the loop.
+                flux += _xtab->xval(x,-d);  // bottom
+                flux += _xtab->xval(d,x);   // right
+                flux += _xtab->xval(-x,d);  // top
+                flux += _xtab->xval(-d,-x); // left
             }
             if (flux < thresh) {
                 d1 = 0; // Mark that we haven't gotten to a good enclosing radius yet.
@@ -512,7 +484,7 @@ namespace galsim {
         }
         dbg<<"Done: flux = "<<flux<<std::endl;
         // Should have added up to the total flux.
-        assert( std::abs(flux - fluxTot) < 1.e-6 * std::abs(fluxTot) );
+        assert( std::abs(flux - fluxTot) < 1.e-3 * std::abs(fluxTot) );
         if (d1 == 0) {
             dbg<<"No smaller radius found.  Keep current value of stepk\n";
             return;
@@ -614,9 +586,9 @@ namespace galsim {
         _positiveFlux = 0.;
         _negativeFlux = 0.;
         _pt.clear();
-        for (int iy=-_multi.getNin()/2; iy<_multi.getNin()/2; iy++) {
+        for (int iy=-_multi.getNin()/2; iy<_multi.getNin()/2; ++iy) {
             double y = iy*_multi.getScale();
-            for (int ix=-_multi.getNin()/2; ix<_multi.getNin()/2; ix++) {
+            for (int ix=-_multi.getNin()/2; ix<_multi.getNin()/2; ++ix) {
                 double flux = _xtab->xval(ix,iy) * _multi.getScale()*_multi.getScale();
                 if (flux==0.) continue;
                 double x=ix*_multi.getScale();
@@ -669,7 +641,7 @@ namespace galsim {
         dbg<<"posFlux = "<<_positiveFlux<<", negFlux = "<<_negativeFlux<<std::endl;
         dbg<<"totFlux = "<<_positiveFlux-_negativeFlux<<", totAbsFlux = "<<totalAbsFlux<<std::endl;
         dbg<<"fluxPerPhoton = "<<fluxPerPhoton<<std::endl;
-        for (int i=0; i<N; i++) {
+        for (int i=0; i<N; ++i) {
             double unitRandom = ud();
             const Pixel* p = _pt.find(unitRandom);
             result->setPhoton(i, p->x, p->y, 
