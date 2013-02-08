@@ -95,6 +95,10 @@ def BuildGSObject(config, key, base=None):
             ck['re_from_res'] = True
         ck['half_light_radius'] = gal_re
 
+    # Make sure the PSF gets flux=1 unless explicitly overridden by the user.
+    if key == 'psf' and 'flux' not in config:
+        ck['flux'] = 1
+
     # See if this type has a specialized build function:
     build_func_name  = '_Build' + type
     if build_func_name in galsim.config.gsobject.__dict__:
@@ -126,6 +130,12 @@ def BuildGSObject(config, key, base=None):
         ck['safe'] = safe
 
     return gsobject, safe
+
+def _BuildNone(config, key, base, ignore):
+    """@brief Special type=None returns None
+    """
+    return None, True
+
 
 def _BuildAdd(config, key, base, ignore):
     """@brief  Build an Add object

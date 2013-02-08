@@ -131,3 +131,23 @@ def __repr__(self):
 
 galsim.Angle.__str__ = __str__
 galsim.Angle.__repr__ = __repr__
+
+def get_angle_unit(unit):
+    """Convert a string into the corresponding AngleUnit
+    """
+    unit = unit.strip().lower()
+    if unit.startswith('rad') :
+        return galsim.radians
+    elif unit.startswith('deg') :
+        return galsim.degrees
+    elif unit.startswith('hour') :
+        return galsim.hours
+    elif unit.startswith('hr') :
+        return galsim.hours
+    elif unit.startswith('arcmin') :
+        return galsim.arcmin
+    elif unit.startswith('arcsec') :
+        return galsim.arcsec
+    else :
+        raise AttributeError("Unknown Angle unit: %s"%unit)
+ 
