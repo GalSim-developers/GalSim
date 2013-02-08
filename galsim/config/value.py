@@ -41,8 +41,8 @@ def ParseValue(config, param_name, base, value_type):
     else:
         # Otherwise, we need to generate the value according to its type
         valid_types = {
-            float : [ 'InputCatalog', 'Random', 'RandomGaussian', 'NFWHaloMag',
-                      'Sequence', 'List', 'Eval' ],
+            float : [ 'InputCatalog', 'Random', 'RandomGaussian', 'RandomDistribution',
+                      'NFWHaloMag', 'Sequence', 'List', 'Eval' ],
             int : [ 'InputCatalog', 'Random', 'Sequence', 'List', 'Eval' ],
             bool : [ 'InputCatalog', 'Random', 'Sequence', 'List', 'Eval' ],
             str : [ 'InputCatalog', 'NumberedFile', 'FormattedStr', 'List', 'Eval' ],
@@ -432,6 +432,45 @@ def _GenerateFromRandomGaussian(param, param_name, base, value_type):
         if 'mean' in kwargs: val += kwargs['mean']
 
     #print 'RandomGaussian: ',val
+    return val, False
+
+
+def _GenerateFromRandomDistribution(param, param_name, base, value_type):
+    """@brief Return a random value drawn from a user-defined probability distribution
+    """
+    if 'rng' not in base:
+        raise ValueError("No rng available for %s.type = RandomDistribution"%param_name)
+    rng = base['rng']
+
+    req = { 'filename' : str }
+    opt = {'interpolant' : str, 'npoints' : int}
+    kwargs, safe = GetAllParams(param, param_name, base, req=req, opt=opt)
+
+    filename = kwargs['filename']
+    interpolant = kwargs.get('interpolant','linear')
+    npoints = kwargs.get('npoints',256)
+    xmin = kwargs.get('min',None)
+    xmax = kwargs.get('max',None)
+
+    if 'ud' in base:
+        # The overhead for making a DistDeviate is large enough that we'd rather not do it every 
+        # time, so first check if we've already made one:
+        ud = base['ud']
+        if base['current_udfilename'] != filename:
+            ud=galsim.DistDeviate(rng,filename=filename,interpolant=interpolant,npoints=npoints,
+                                  xmin=xmin,xmax=xmax)
+            base['ud'] = ud
+            base['current_udfilename'] = filename
+    else:
+        # Otherwise, just go ahead and make a new one.
+        ud=galsim.DistDeviate(rng,filename=filename,interpolant=interpolant,npoints=npoints,
+                              xmin=xmin,xmax=xmax)
+        base['ud'] = ud
+        base['current_udfilename'] = filename
+
+    val = ud()
+
+    #print 'RandomDistribution: ',val
     return val, False
 
 
