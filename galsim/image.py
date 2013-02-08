@@ -216,11 +216,14 @@ def Image_idiv(self, other):
         self.array[:,:] /= other
     return self
 
-def Image_NoiseSNR(self, sn, rng=_galsim.UniformDeviate()):
-	sky_level=1.E6
-	sn_meas=numpy.sqrt( numpy.sum(self.array**2)/sky+level )
-	flux=sn/sn_meas
-	self*=flux
+def Image_NoiseSNR(self, sn, rng=_galsim.UniformDeviate(), conserveFlux=True):
+	if conserveFlux:
+		sky_level=numpy.sum(self.array**2)/sn/sn
+	else:
+		sky_level=1.E6
+		sn_meas=numpy.sqrt( numpy.sum(self.array**2)/sky_level )
+		flux=sn/sn_meas
+		self*=flux
 	self+=sky_level
 	self.addNoise(_galsim.CCDNoise(rng))
 	self-=sky_level
