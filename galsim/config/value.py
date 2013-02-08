@@ -443,7 +443,7 @@ def _GenerateFromRandomDistribution(param, param_name, base, value_type):
     rng = base['rng']
 
     req = { 'filename' : str }
-    opt = {'interpolant' : str, 'npoints' : int}
+    opt = {'interpolant' : str, 'npoints' : int, 'min' : float, 'max' : float }
     kwargs, safe = GetAllParams(param, param_name, base, req=req, opt=opt)
 
     filename = kwargs['filename']
