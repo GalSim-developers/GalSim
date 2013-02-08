@@ -96,6 +96,8 @@ class DistDeviate:
     using linear interpolation to get probabilities for intermediate points, and seeds the
     PRNG using the BaseDeviate dev.
 
+    @param rng          Something that can seed a BaseDeviate: a long int seed or another 
+                        BaseDeviate.
     @param filename     The name of a file containing a probability distribution as a 2-column
                         ASCII table.
     @param x            The x values for a P(x) distribution as a list, tuple, or Numpy array.
