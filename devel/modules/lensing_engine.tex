@@ -7,6 +7,10 @@
 % AMS-LaTeX package for e.g. subequations
 \usepackage{amsmath}
 
+
+\usepackage[OT2,T1]{fontenc}
+
+
 %=====================================================================
 % FRONT MATTER
 %=====================================================================
@@ -22,6 +26,11 @@
 \newcommand{\rmd}{\ensuremath{\mathrm{d}}}
 \newcommand{\beq}{\begin{equation}}
 \newcommand{\eeq}{\end{equation}}
+\newcommand{\mi}{{\rm i}}
+\newcommand{\me}{{\rm e}}
+
+\DeclareSymbolFont{cyrletters}{OT2}{wncyr}{m}{n}
+\DeclareMathSymbol{\Sha}{\mathalpha}{cyrletters}{"58}
 
 \begin{document}
 
@@ -85,7 +94,7 @@ which we will call $\xi_{++}$ and $\xi_{\times\times}$.  Then the
 standard cosmological correlation functions $\xi_{\pm}$ are defined as
 \begin{align}
 \xi_{\pm}(\theta) &=  \xi_{++}\pm \xi_{xx} \\
- &= \frac{1}{2\pi}\int k\,\rmd k P(k) J_{0/4}(k\theta).
+ &= \frac{1}{2\pi}\int k\,\rmd k P(k) J_{0/4}(k\theta).  \label{eq:xi}
 \end{align}
 
 Since correlation functions are dimensionless, we immediately see that
@@ -108,7 +117,8 @@ there is a lot of shear power at small $k$), probably we should
 \mathrm{Var}(\gamma) = \frac{1}{2\pi}\int k\,\rmd k P(k).
 \eeq
 which essentially says the shear variance is the power integrated over
-the allowed area in $k$ space.  I {\em think} that if we want to work
+the allowed area in $k$ space.  I {\em think} (Barney: \emph{you are
+  right I am almost certain, see Section \ref{sect:DFTPS}}) that if we want to work
 in terms of $k_x$ and $k_y$, we can replace $2\pi k\rmd k$
 (integrating within a circle) with $\rmd
 k_x \rmd k_y$ (integrating within our square grid), so the above might also be
@@ -350,5 +360,186 @@ Conclusions:
   to dig into here, vs. waiting for our own power spectrum estimator.
 \end{itemize}
 
+
+
+\section{Representing continuous fields using the Discrete Fourier Transform}
+
+Here is what Barney has managed to learn about this issue, and how we
+are numerically representing $P(k)$, in the course of many pages of
+handwritten derivation (much of which is of course now scribbled out).
+
+\subsection{Conventions}
+
+The definition of the correlation function in equation \eqref{eq:xi}
+employs the \emph{angular frequency, non-unitary}\footnote{According
+  to the paradigm setup in
+  http://en.wikipedia.org/wiki/Fourier\_transform\#Other\_conventions}
+definition of the (1D) Fourier transform:
+\begin{eqnarray}
+\tilde{f}(k) & = & \int_{-\infty}^{\infty} f(x) \me^{-\mi k x}
+dx ~ ~ \equiv ~ \mathcal{F} \{ f(x) \} \label{eq:ftfwd} ; \\
+f(x) & = & \frac{1}{2 \pi} \int_{-\infty}^{\infty} \tilde{f}(k) \me^{\mi k x}
+dk ~ ~ \equiv ~ \mathcal{F}^{-1}\{ \tilde{f}(k) \} \label{eq:invft}, 
+\end{eqnarray}
+with the usual simple generalizations to two or more dimensions.
+
+The standard results in Discrete Fourier Transform (DFT) and its
+halfway-house the Discrete Time Fourier Transform (DTFT) are all
+derived under the unitary (i.e. symmetric with no odd factors of $2
+\pi$ around) convention in the online literature, adding to the complexity of
+interpretation.  This led me to re-derive some standard results of
+Fourier theory using the conventions above, which it now makes sense
+to state as we will require them in Section \ref{sect:DFTPS}.
+
+\subsection{Fourier transform properties}
+It can be readily shown that if we define $g(x L) \equiv f(x)$ the following well-known identity holds
+under our Fourier transform convention:
+\begin{equation}
+\mathcal{F}\{g(x L)\} = \frac{1}{L}
+\tilde{g}\left(\frac{k}{L}\right). \label{eq:gmult}
+\end{equation}
+If we further define $s(h + x) \equiv g(x)$ then it is straightforward
+to show that
+\begin{equation}
+\mathcal{F}\{ s(h + x) \} = \me^{\mi k h} \tilde{s}(k).  \label{eq:sadd}
+\end{equation}
+Here we begin to get divergent results between conventions: there is
+an additional factor of $2\pi$ in the exponent for the normal frequency
+convention version of this property.
+
+The most important result for approximating continuous functions using
+DFTs is the Poisson summation formula, which under our conventions may
+be stated as
+\begin{equation}
+\sum_{n=-\infty}^{\infty} f(n) = \sum_{q=-\infty}^{\infty} \tilde{f}(2
+\pi q)
+\end{equation}
+for integers $n$ and $q$.  This result can be derived by writing the
+  expression for the inverse Fourier transform of $\tilde{f}(2 \pi
+q)$ and considering the Fourier series expansion of the periodic Dirac comb
+function
+\begin{equation}
+\Sha_L (x) = \sum_{n=-\infty}^{\infty} \delta(x - nL).
+\end{equation}
+It should be noted that in the normal frequency, unitary transform
+convention form of the Poisson summation formula the $2\pi$ within $\tilde{f}(2 \pi
+q)$ is absent.\footnote{Barney would heartily welcome \emph{anyone} wishing to
+check his derivations of these results using the non-symmetric
+convention!}  Using equation \eqref{eq:gmult} we then find
+\begin{equation}
+\sum_{n=-\infty}^{\infty} f(n L) = \frac{1}{L}
+\sum_{q=-\infty}^{\infty} \tilde{f} \left(\frac{2 \pi q}{L} \right),
+\end{equation}
+which can be modified further using equation \eqref{eq:sadd} to give
+the most useful expression of the Poisson summation formula:
+\begin{equation}
+\sum_{n=-\infty}^{\infty} f(n L + x) = \frac{1}{L}
+\sum_{q=-\infty}^{\infty} \tilde{f} \left(\frac{2 \pi  q}{L} \right)
+\me^{\mi 2 \pi x q / L}.
+\end{equation}
+If we define $\Delta k \equiv k_{\rm min} = 2 \pi / L$ we can also write
+this as
+\begin{equation}
+\sum_{n=-\infty}^{\infty} f\left(\frac{2\pi n}{\Delta k} + x \right) = 
+\left(\frac{\Delta k}{2 \pi} \right)
+\sum_{q=-\infty}^{\infty} \tilde{f} \left(q \Delta k \right)
+\me^{\mi x \Delta k q }. \label{eq:poisson}
+\end{equation}
+These results give us most of what we need to understand DFTs with the
+non-standard Fourier transform convention commonly adopted for weak
+lensing power spectra in the flat sky approximation.
+
+\subsection{The Fourier transform of discrete samples of the power spectra}\label{sect:DFTPS}
+In what follows we are going to derive results only for the $\xi_+$
+correlation function of equation \eqref{eq:xi}.  This will not
+not impact upon the understanding of how $P(k)$ is approximated using DFTs,
+but allows us to replace $\xi_{\pm}$ and $J_{0/4}(k \theta) $in
+equation \eqref{eq:xi} with $\xi$ and $J_0$, respectively.  We will
+just be aware subsquently that real ellipticity fields have two
+components, to be treated as described by equation \eqref{eq:xi}.
+
+The inverse Fourier transform of $P(k)$ to give $\xi_+(\theta)$ may 
+be written in Cartesian coordinates as
+\begin{equation}
+\xi_{+}(\theta_1, \theta_2)  = \frac{1}{(2 \pi)^2} \int \! \! \!
+\int_{-\infty}^{\infty} P(k_1, k_2) ~ \me^{\mi (k_1 \theta_1 + k_2
+  \theta_2)} dk_1 dk_2. \label{eq:xip}
+\end{equation}
+The relation between this and equation \eqref{eq:xi} makes use of Bessel's first
+integral:
+\begin{equation}
+J_n(z) = \frac{\mi^{-n}}{\pi} \int_0^{\pi} \me^{\mi z \cos{\theta}}
+\cos{(n \theta)} d \theta,  
+\end{equation}
+(\emph{which I believes shows you have the correct expression for the
+  variance on page 2, Rachel...}).
+
+What happens if we only have finite samples of $P(k_1, k_2)$?  To
+answer that, let us define the following function:
+\begin{equation}
+P_{\Delta k} [q, p] \equiv (\Delta k)^2 P(q \Delta k, p \Delta k).
+\end{equation}
+As here, we will use square brackets to denote functions with discrete input
+variables throughout what follows.  We will also use indices $n, m$ in
+real space summations and $q, p$ in Fourier space ($i,j$ are awkward
+due to the common notations for $\sqrt{-1}$).  Let us also define the 2D Dirac
+comb function in Fourier space
+\begin{equation}
+\Sha^2_{\Delta k} (k_1, k_2) = \sum_{q = -\infty}^{\infty} \delta(k_1
+- q \Delta k) \sum_{p = -\infty}^{\infty} \delta(k_2
+- p \Delta k).
+\end{equation}
+It can then be shown that
+\begin{eqnarray}
+\mathcal{F}^{-1} \left\{ P_{\Delta k} [q, p] \cdot  \Sha^2_{\Delta k} (k_1,
+  k_2) \right\} & = & \mathcal{F}^{-1} \left\{ P(k_1, k_2) \cdot  (\Delta
+  k)^2 \Sha^2_{\Delta k} (k_1,
+  k_2) \right\}  \nonumber  \\
+ & = & \mathcal{F}^{-1} \left\{ P(k_1, k_2) \right\} * \mathcal{F}^{-1} \left\{  (\Delta
+  k)^2 \Sha^2_{\Delta k} (k_1, k_2) \right\} \nonumber \\
+ & = & \xi_+(\theta_1, \theta_2 )  * \left\{ \sum_{n = -\infty}^{\infty} \delta\left(\theta_1
+- \frac{2 \pi n}{\Delta k} \right) \sum_{m = -\infty}^{\infty}
+\delta\left( \theta_2
+- \frac{2 \pi m}{\Delta k} \right)  \right\} \nonumber \\
+& = & = \sum_{n,m=-\infty}^{\infty} \xi_+\left(\theta_1
+- \frac{2 \pi n}{\Delta k},  \theta_2
+- \frac{2 \pi m}{\Delta k} \right) \label{eq:xisum}
+\end{eqnarray}
+Here we have again made use of the Fourier series expression for the
+Dirac comb function, and employed the convolution theorem (convolution
+denoted with $*$).  We note that the final expression \eqref{eq:xisum}
+is still continuous, but describes an infinite, periodic summation (of period $L = 2 \pi
+/ \Delta k$) of copies of the correlation function $\xi_+$.  For sufficiently small
+$\Delta k$, these copies may be well-enough spaced in the real domain to
+learn much about $\xi_+(\theta_1, \theta_2)$ in the non-overlapping
+regions.
+
+We therefore define this function as
+\begin{equation}
+\xi_{\frac{2\pi}{\Delta k}}(\theta_1, \theta_2) \equiv \sum_{n = -\infty}^{\infty} \xi_+\left(\theta_1
+- \frac{2 \pi n}{\Delta k},  \theta_2
+- \frac{2 \pi m}{\Delta k} \right).
+\end{equation}
+Using the expression of the Poisson summation formula in equation
+\eqref{eq:poisson}, we can also write the result
+\begin{equation}
+\xi_{\frac{2\pi}{\Delta k}}(\theta_1, \theta_2) =
+\sum_{q,p=-\infty}^{\infty} \left( \frac{\Delta k}{2 \pi} \right)^2 P(q \Delta k, p \Delta k) \me^{\mi \Delta
+  k (\theta_1 q + \theta_2 p)} = \frac{1}{( 2 \pi)^2}
+\sum_{q,p=-\infty}^{\infty} P_{\Delta k} [q, p] \me^{\mi \Delta
+  k (\theta_1 q + \theta_2 p)}.
+\end{equation}
+This is the expression for the inverse of what is known as the
+Discrete Time Fourier Transform (DTFT), although this result is
+normally derived using unitary conventions for the transform pair.
+Note that the terms $P_{\Delta k}[q, p]$ are dimensionless, being
+composed of $(\Delta k)^2 = (2 \pi / L)^2$ multiplied by the samples $P(q \Delta k, p \Delta
+k)$ of the power $P(k_1, k_2)$ (dimensions angle$^2$).  
+
+One intuitive way of looking at the approximation of equation \eqref{eq:xip} for the case of discretely
+sampled $P(k_1, k_2)$ is that the terms in the discrete sum should be
+considered as \emph{impulses} of area $(\Delta k)^2$ and height $P(q \Delta k, p \Delta k)$.
+
+\subsection{The Fourier transform of discrete, finite samples of the power spectra}
 
 \end{document}
