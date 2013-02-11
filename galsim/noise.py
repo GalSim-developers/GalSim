@@ -17,7 +17,7 @@
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
 """@file noise.py
-Module which adds the addNoise method to the galsim.Image classes at the Python layer.
+Module which adds the addNoise and addNoiseSNR methods to the galsim.Image classes at the Python layer.
 """
 
 from . import _galsim
@@ -39,11 +39,26 @@ def addNoise(image, noise):
     im_view = image.view()
     noise.applyTo(im_view)
 
+def addNoiseSNR(self, snr, rng=_galsim.UniformDeviate(), sky_level=None):
+	if sky_level is None:
+		sky_level=numpy.sum(self.array**2)/snr/snr
+	else:
+		sn_meas=numpy.sqrt( numpy.sum(self.array**2)/sky_level )
+		flux=snr/sn_meas
+		self*=flux
+	self+=sky_level
+	self.addNoise(_galsim.CCDNoise(rng))
+	self-=sky_level
+
+
+
 # inject addNoise as a method of Image classes
 for Class in _galsim.Image.itervalues():
     Class.addNoise = addNoise
+    Class.addNoiseSNR = addNoiseSNR
 
 for Class in _galsim.ImageView.itervalues():
     Class.addNoise = addNoise
+    Class.addNoiseSNR = addNoiseSNR
 
 del Class # cleanup public namespace
