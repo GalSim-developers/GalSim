@@ -216,11 +216,10 @@ def Image_idiv(self, other):
         self.array[:,:] /= other
     return self
 
-def Image_NoiseSNR(self, sn, rng=_galsim.UniformDeviate(), conserveFlux=True):
-	if conserveFlux:
+def Image_NoiseSNR(self, sn, rng=_galsim.UniformDeviate(), sky_level=None):
+	if sky_level is None:
 		sky_level=numpy.sum(self.array**2)/sn/sn
 	else:
-		sky_level=1.E6
 		sn_meas=numpy.sqrt( numpy.sum(self.array**2)/sky_level )
 		flux=sn/sn_meas
 		self*=flux
@@ -332,6 +331,7 @@ for Class in _galsim.ImageView.itervalues():
     Class.__idiv__ = Image_idiv
     Class.__itruediv__ = Image_idiv
     Class.copy = Image_copy
+    Class.addNoiseSNR = Image_NoiseSNR
     Class.__getinitargs__ = ImageView_getinitargs
 
 for Class in _galsim.ConstImageView.itervalues():
