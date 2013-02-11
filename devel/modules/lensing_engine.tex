@@ -377,7 +377,7 @@ employs the \emph{angular frequency, non-unitary}\footnote{According
 definition of the (1D) Fourier transform:
 \begin{eqnarray}
 \tilde{f}(k) & = & \int_{-\infty}^{\infty} f(x) \me^{-\mi k x}
-dx ~ ~ \equiv ~ \mathcal{F} \{ f(x) \} \label{eq:ftfwd} ; \\
+dx ~ ~ \equiv ~ \mathcal{F} \{ f(x) \} \label{eq:fwdft} ; \\
 f(x) & = & \frac{1}{2 \pi} \int_{-\infty}^{\infty} \tilde{f}(k) \me^{\mi k x}
 dk ~ ~ \equiv ~ \mathcal{F}^{-1}\{ \tilde{f}(k) \} \label{eq:invft}, 
 \end{eqnarray}
@@ -527,7 +527,7 @@ Using the expression of the Poisson summation formula in equation
 \sum_{q,p=-\infty}^{\infty} \left( \frac{\Delta k}{2 \pi} \right)^2 P(q \Delta k, p \Delta k) \me^{\mi \Delta
   k (\theta_1 q + \theta_2 p)} = \frac{1}{( 2 \pi)^2}
 \sum_{q,p=-\infty}^{\infty} P_{\Delta k} [q, p] \me^{\mi \Delta
-  k (\theta_1 q + \theta_2 p)}.
+  k (\theta_1 q + \theta_2 p)}. \label{eq:dtft}
 \end{equation}
 This is the expression for the inverse of what is known as the
 Discrete Time Fourier Transform (DTFT), although this result is
@@ -541,5 +541,65 @@ sampled $P(k_1, k_2)$ is that the terms in the discrete sum should be
 considered as \emph{impulses} of area $(\Delta k)^2$ and height $P(q \Delta k, p \Delta k)$.
 
 \subsection{The Fourier transform of discrete, finite samples of the power spectra}
+The expression in equation \eqref{eq:dtft} is periodic with period $2
+\pi / \Delta k = L$.  All of the information it contains about
+$\xi(\theta_1, \theta_2)$ is therefore also contained in one period
+of the functoin only.  For approximating this information discretely, as desired in
+numerical analysis, we can imagine taking $N$ equally spaced samples of
+the function in equation \eqref{eq:dtft} along a single period $L$ in each
+dimension (leading to $N^2$ samples total since we are working in 2D).
+These samples are therefore separated by $\Delta \theta \equiv 2 \pi /
+\Delta k N$ in real space, and we define the sampled
+function itself as
+\begin{equation}
+\xi_{\Delta \theta}[n, m] \equiv \xi_{\frac{2 \pi}{\Delta
+    k}} \left( n \Delta x, m \Delta x\right) = \frac{1}{( 2 \pi)^2}
+\sum_{q,p=-\infty}^{\infty} P_{\Delta k} [q, p] \me^{\mi 2 \pi (qn +
+  pm) / N}
+\end{equation}
+for the integer indices $n, m = 0, 1, \ldots, N-1$, substituting into equation
+\eqref{eq:dtft}.  Using the periodicity of the exponential term in the
+expression above, this may be written as
+\begin{equation}
+\xi_{\Delta \theta}[n, m] = \frac{1}{( 2 \pi)^2}
+\sum_{q,p=0}^{N-1} P_N [q, p] \me^{\mi 2 \pi (qn +
+  pm) / N}
+\end{equation}
+where we have defined
+\begin{equation}
+P_N[q, p] \equiv \sum_{i,j=-\infty}^{\infty}  P_{\Delta k} [q - i N, p
+- j N] .
+\end{equation}
+Needless to say, in order to be able to calculate the values of
+$P_N[q, p]$ in practice we must also truncate the 
+$P_{\Delta k}$ sequence to be finite in length.  A \emph{very} common
+choice is to use the same number $N$ of samples in both real and
+Fourier space: this is also efficient, as it allows the direct use of
+the Fast Fourier Transform algorithm.  We will say a little more about
+this below.
+
+Choosing to use only $N$
+samples from $P_{\Delta k}$ then gives us a more
+familiar expression for the inverse Discrete Fourier Transform (DFT),
+albeit for the non-unitary Fourier transform convention:
+\begin{equation}
+\xi_{\Delta \theta}[n, m] = \frac{1}{( 2 \pi)^2}
+\sum_{q,p=0}^{N-1} P_{\Delta k} [q, p] \me^{\mi 2 \pi (qn +
+  pm) / N}. \label{eq:dft}
+\end{equation}
+
+We said we would say little more about the choice to use $N$ as the
+number of samples in both real and Fourier space, the final step in
+arriving at equation \eqref{eq:dft}.  This ensures the
+close interrelation of $N$, $L$ and the grid spacings $\Delta \theta$,
+$\Delta k$.  The use of discrete, periodic sampling to approximate
+continuous, non-periodic functions is only that, an approximation, and
+one that depends heavily on good choices of these sampling
+parameters.  The two effects that must be mitigated as much as
+possible are aliasing and `ghosting' (sometimes referred to as
+`leakage', or just `overlapping').  Adequate sampling, and
+zero-padding to artificially extend $L$, are strategies for making the
+DFT a good approximation to the Fourier transforms of equations
+\eqref{eq:fwdft} and \eqref{eq:invft}.
 
 \end{document}
