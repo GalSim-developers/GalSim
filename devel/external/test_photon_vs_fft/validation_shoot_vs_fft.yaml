@@ -1,0 +1,33 @@
+galaxies: 
+ - 
+   gal:
+    type: 'sersics'
+    profile:
+     {nb: 1.5, nd: 1.0, rr: 1., bt: 0.000000000000001, rb: 1.4, rd: 2., eb: 0.0, ed: 0.3, abd: 0.,fwhm: 4.}
+    operations:
+     {flux: 1.0, dilation: 0}
+   psf: {type: 'moffat',  beta: 3.0,  fwhm: 2.85,  e1: 0.0202,  e2: 0.0}
+   name: 'disc'
+
+
+# - 
+#   gal:
+#    type: 'real'
+#    profile:
+#     {id: 42}
+#    operations:
+#     {flux: 1.0, dilation: 2.}
+#   psf: {type: 'moffat',  beta: 3.0,  fwhm: 1.00,  e1: 0.0202,  e2: 0.0}
+#   name: 'RealSpiral'
+
+
+image: 
+ n_pix: 100
+ scale: 0.5
+ n_photons: 10000000
+
+
+# file that will be
+paths:
+ directory_real_catalog: '/home/kacprzak/code/GalSim_install/Public/'
+ filename_real_catalog: '/home/kacprzak//code/GalSim_install/Public/real_galaxy_catalog.fits'
