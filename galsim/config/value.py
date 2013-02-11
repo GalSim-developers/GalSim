@@ -456,17 +456,22 @@ def _GenerateFromRandomDistribution(param, param_name, base, value_type):
         # The overhead for making a DistDeviate is large enough that we'd rather not do it every 
         # time, so first check if we've already made one:
         ud = base['ud']
-        if base['current_udfilename'] != filename:
+        if (base['current_udfilename'] != filename or xmin != base['current_udxmin'] or 
+            xmax != base['current_udxmax']):
             ud=galsim.DistDeviate(rng,filename=filename,interpolant=interpolant,npoints=npoints,
                                   xmin=xmin,xmax=xmax)
             base['ud'] = ud
             base['current_udfilename'] = filename
+            base['current_udxmin'] = xmin
+            base['current_udxmax'] = xmax
     else:
         # Otherwise, just go ahead and make a new one.
         ud=galsim.DistDeviate(rng,filename=filename,interpolant=interpolant,npoints=npoints,
                               xmin=xmin,xmax=xmax)
         base['ud'] = ud
         base['current_udfilename'] = filename
+        base['current_udxmin'] = xmin
+        base['current_udxmax'] = xmax
 
     val = ud()
 
