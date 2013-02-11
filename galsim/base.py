@@ -1423,7 +1423,7 @@ class InterpolatedImage(GSObject):
     @param x_interpolant   Either an Interpolant2d (or Interpolant) instance or a string indicating
                            which real-space interpolant should be used.  Options are 'nearest',
                            'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the
-                           integer order to use. (Default `interpolant = galsim.Lanczos(5,...)`)
+                           integer order to use. (Default `interpolant = galsim.Quintic()`)
     @param k_interpolant   Either an Interpolant2d (or Interpolant) instance or a string indicating
                            which k-space interpolant should be used.  Options are 'nearest',
                            'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the
@@ -1523,14 +1523,13 @@ class InterpolatedImage(GSObject):
         # set up the interpolants if none was provided by user, or check that the user-provided ones
         # are of a valid type
         if x_interpolant is None:
-            self.x_interpolant = galsim.InterpolantXY(galsim.Lanczos(5,
-                                                                     conserve_flux=True,tol=1e-4))
+            self.x_interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1e-4))
         else:
-            self.x_interpolant = galsim.utilities.convert_interpolant_to_2d(interpolant)
+            self.x_interpolant = galsim.utilities.convert_interpolant_to_2d(x_interpolant)
         if k_interpolant is None:
             self.k_interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1e-4))
         else:
-            self.k_interpolant = galsim.utilities.convert_interpolant_to_2d(interpolant)
+            self.k_interpolant = galsim.utilities.convert_interpolant_to_2d(k_interpolant)
 
         # Check for input dx, and check whether Image already has one set.  At the end of this
         # code block, either an exception will have been raised, or the input image will have a
@@ -1877,12 +1876,12 @@ class RealGalaxy(GSObject):
                                 indicating which real-space interpolant should be used.  Options are 
                                 'nearest', 'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' 
                                 where N should be the integer order to use. [default 
-                                `interpolant = galsim.Lanczos(5)'].
+                                `interpolant = galsim.Lanczos(5,...)'].
     @param k_interpolant        Either an Interpolant2d (or Interpolant) instance or a string 
                                 indicating which k-space interpolant should be used.  Options are 
                                 'nearest', 'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' 
                                 where N should be the integer order to use. [default 
-                                `interpolant = Quintic(5)'].
+                                `interpolant = Quintic()'].
     @param flux                 Total flux, if None then original flux in galaxy is adopted without
                                 change [default `flux = None`].
     @param pad_factor           Factor by which to pad the Image when creating the
@@ -1958,11 +1957,11 @@ class RealGalaxy(GSObject):
             lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4)
             self.x_interpolant = galsim.InterpolantXY(lan5)
         else:
-            self.x_interpolant = galsim.utilities.convert_interpolant_to_2d(interpolant)
+            self.x_interpolant = galsim.utilities.convert_interpolant_to_2d(x_interpolant)
         if k_interpolant is None:
             self.k_interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))
         else:
-            self.k_interpolant = galsim.utilities.convert_interpolant_to_2d(interpolant)
+            self.k_interpolant = galsim.utilities.convert_interpolant_to_2d(k_interpolant)
         if pad_factor <= 0.:
             pad_factor = 4.
 

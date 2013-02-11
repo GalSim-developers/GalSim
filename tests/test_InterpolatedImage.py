@@ -178,7 +178,7 @@ def test_roundtrip():
         # Anyway, Quintic seems to be accurate enough.
         quint = galsim.Quintic(1.e-4)
         quint_2d = galsim.InterpolantXY(quint)
-        interp = galsim.InterpolatedImage(image_in, interpolant=quint_2d, dx=test_dx, flux=1.)
+        interp = galsim.InterpolatedImage(image_in, x_interpolant=quint_2d, dx=test_dx, flux=1.)
         do_shoot(interp,image_out,"InterpolatedImage")
 
     t2 = time.time()
@@ -258,7 +258,7 @@ def test_exceptions():
     im.setScale(1.)
     np.testing.assert_raises(ValueError, galsim.InterpolatedImage, im, normalization = 'foo')
     # Weird interpolant - give it something random like a GSObject
-    np.testing.assert_raises(RuntimeError, galsim.InterpolatedImage, im, interpolant = g)
+    np.testing.assert_raises(RuntimeError, galsim.InterpolatedImage, im, x_interpolant = g)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

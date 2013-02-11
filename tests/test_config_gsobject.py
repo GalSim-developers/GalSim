@@ -573,15 +573,15 @@ def test_interpolated_image():
                    'image' : file_name },
         'gal2' : { 'type' : 'InterpolatedImage',
                    'image' : file_name,
-                   'interpolant' : 'linear' },
+                   'x_interpolant' : 'linear' },
         'gal3' : { 'type' : 'InterpolatedImage',
                    'image' : file_name,
-                   'interpolant' : 'cubic',
+                   'x_interpolant' : 'cubic',
                    'normalization' : 'sb',
                    'flux' : 1.e4 },
         'gal4' : { 'type' : 'InterpolatedImage',
                    'image' : file_name,
-                   'interpolant' : 'lanczos5',
+                   'x_interpolant' : 'lanczos5',
                    'dx' : 0.7,
                    'flux' : 1.e5 },
         'gal5' : { 'type' : 'InterpolatedImage',
@@ -601,18 +601,18 @@ def test_interpolated_image():
 
     gal2a = galsim.config.BuildGSObject(config, 'gal2')[0]
     interp = galsim.InterpolantXY(galsim.Linear())
-    gal2b = galsim.InterpolatedImage(im, interpolant=interp)
+    gal2b = galsim.InterpolatedImage(im, x_interpolant=interp)
     gsobject_compare(gal2a, gal2b)
 
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
     interp = galsim.InterpolantXY(galsim.Cubic())
-    gal3b = galsim.InterpolatedImage(im, interpolant=interp, normalization='surface brightness')
+    gal3b = galsim.InterpolatedImage(im, x_interpolant=interp, normalization='surface brightness')
     gal3b.setFlux(1.e4)
     gsobject_compare(gal3a, gal3b)
 
     gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
     interp = galsim.InterpolantXY(galsim.Lanczos(n=5,conserve_flux=True))
-    gal4b = galsim.InterpolatedImage(im, interpolant=interp, dx=0.7)
+    gal4b = galsim.InterpolatedImage(im, x_interpolant=interp, dx=0.7)
     gal4b.setFlux(1.e5)
     gsobject_compare(gal4a, gal4b)
 
