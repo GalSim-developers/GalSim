@@ -54,7 +54,7 @@ def addNoiseSNR(self, snr, sky_level=None, rng=_galsim.UniformDeviate()):
     
     If sky_level is passed to addNoiseSNR, the flux of the input image will be rescaled to achieve
     the desired signal-to-noise ratio.  If it is not, then the sky_level is chosen based on the
-    given flux in a Great08-like way.  Taking a weighted integral of the flux:
+    given flux and SNR in a Great08-like way.  Taking a weighted integral of the flux:
         S = sum W(x,y) I(x,y) / sum W(x,y)
         N^2 = Var(S) = sum W(x,y)^2 Var(I(x,y)) / (sum W(x,y))^2
     and assuming that Var(I(x,y)) is dominated by the sky noise:
