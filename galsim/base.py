@@ -1477,9 +1477,10 @@ class InterpolatedImage(GSObject):
                            If option (a) is used, then `pad_factor` is used to determine the amount
                            of image padding.  For options (b) and (c), the size of the image that is
                            passed in is taken to specify the amount of padding, and so the
-                           `pad_factor` keyword should be equal to 1, i.e., no padding.  Note that
-                           `pad_image` can be used together with `noise_pad`, for example to pad
-                           with some constant sky level and some associated noise.
+                           `pad_factor` keyword should be equal to 1, i.e., no padding.  The
+                           `pad_image` scale is ignored, and taken to be equal to that of the
+                           `image`. Note that `pad_image` can be used together with `noise_pad`, for
+                           example to pad with some constant sky level and some associated noise.
                            (Default `pad_image = 0.`, i.e., pad with zeros.)
     @param calculate_stepk Specify whether to perform an internal determination of the extent of 
                            the object being represented by the InterpolatedImage; often this is 
@@ -1606,14 +1607,15 @@ class InterpolatedImage(GSObject):
         #    Cannot use if too small.
         #    Use to define the final image size otherwise.
         if specify_size:
-            dx = (1+pad_image.getXMax()-pad_image.getXMin())-(1+image.getXMax()-image.getXMin())
-            dy = (1+pad_image.getYMax()-pad_image.getYMin())-(1+image.getYMax()-image.getYMin())
-            if dx < 0 or dy < 0:
+            deltax = (1+pad_image.getXMax()-pad_image.getXMin())-(1+image.getXMax()-image.getXMin())
+            deltay = (1+pad_image.getYMax()-pad_image.getYMin())-(1+image.getYMax()-image.getYMin())
+            if deltax < 0 or deltay < 0:
                 raise RuntimeError("Image supplied for padding is too small!")
-            if pad_factor is not 1.:
+            if pad_factor != 1.:
                 import warnings
                 msg = "Warning: ignoring specified pad_factor because user also specified\n"
                 msg += "an image to use directly for the padding"
+                warnings.warn(msg)
 
         # now decide about noise padding
         # First, see if the input is consistent with a float.
@@ -1655,7 +1657,7 @@ class InterpolatedImage(GSObject):
         # (1) If the former, then we can simply have the C++ handle the padding process.
         # (2) If the latter, then we have to do the padding ourselves, and pass the resulting image
         # to the C++ with pad_factor explicitly set to 1.
-        if specify_size = False:
+        if specify_size is False:
             # Make the SBInterpolatedImage out of the image.
             sbinterpolatedimage = galsim.SBInterpolatedImage(image,
                                                              xInterp=self.x_interpolant,
@@ -1663,21 +1665,26 @@ class InterpolatedImage(GSObject):
                                                              dx=dx,
                                                              pad_factor=pad_factor,
                                                              pad_image=pad_image)
+            self.x_size = padded_size
+            self.y_size = padded_size
         else:
             # Leave the original image as-is.  Instead, we shift around the image to be used for
             # padding.  Find out how much x and y margin there should be on lower end:
-            x_marg = int(np.round(0.5*dx))
-            y_marg = int(np.round(0.5*dy))
+            x_marg = int(np.round(0.5*deltax))
+            y_marg = int(np.round(0.5*deltay))
             # Now reset the pad_image to contain the original image in an even way
+            pad_image = pad_image.view()
+            pad_image.setScale(dx)
             pad_image.setOrigin(image.getXMin()-x_marg, image.getYMin()-y_marg)
             # Set the central values of pad_image to be equal to the input image
-            pad_image.subImage(image.bounds) = image
+            pad_image[image.bounds] = image
             sbinterpolatedimage = galsim.SBInterpolatedImage(pad_image,
                                                              xInterp=self.x_interpolant,
                                                              kInterp=self.k_interpolant,
                                                              dx=dx,
                                                              pad_factor=1.)
-
+            self.x_size = 1+pad_image.getXMax()-pad_image.getXMin()
+            self.y_size = 1+pad_image.getYMax()-pad_image.getYMin()
 
         # GalSim cannot automatically know what stepK and maxK are appropriate for the 
         # input image.  So it is usually worth it to do a manual calculation here.
