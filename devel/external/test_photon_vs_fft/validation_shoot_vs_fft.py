@@ -9,7 +9,6 @@ import pdb
 
 from matplotlib import pyplot as plt 
 
-
 def getGSObjects(observed_galaxy):
     
     gso = {}
