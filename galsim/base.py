@@ -1379,7 +1379,8 @@ class InterpolatedImage(GSObject):
     variance, or a Gaussian but correlated noise field that is specified either as an ImageCorrFunc,
     an Image (from which a noise correlation function is derived), or a string (interpreted as a
     filename containing an image to use for deriving the noise correlation function).  The user can
-    also pass in a random number generator to be used for noise generation.
+    also pass in a random number generator to be used for noise generation.  Finally, the user can
+    pass in a `pad_image` for deterministic image padding.
 
     By default, the InterpolatedImage recalculates the Fourier-space step and number of points to
     use for further manipulations, rather than using the most conservative possibility.  For typical
@@ -1396,6 +1397,7 @@ class InterpolatedImage(GSObject):
                                                           normalization = 'f', dx = None,
                                                           flux = None, pad_factor = 0.,
                                                           noise_pad = 0., rng = None,
+                                                          pad_image = 0.,
                                                           calculate_stepk = True,
                                                           calculate_maxk = True)
 
@@ -1465,6 +1467,20 @@ class InterpolatedImage(GSObject):
                            `galsim.BaseDeviate` object).
                            If `rng=None`, one will be automatically created, using the time as a
                            seed. (Default `rng = None`)
+    @param pad_image       Image to be used for deterministically padding the original image.  This
+                           can be specified in several ways:
+                               (a) as a float, which is interpreted as a constant value to be used
+                                   for the padding;
+                               (b) as a galsim.Image; or
+                               (c) as a string which is interpreted as a filename containing an
+                                   image to use.
+                           If option (a) is used, then `pad_factor` is used to determine the amount
+                           of image padding.  For options (b) and (c), the size of the image that is
+                           passed in is taken to specify the amount of padding, and so the
+                           `pad_factor` keyword should be equal to 1, i.e., no padding.  Note that
+                           `pad_image` can be used together with `noise_pad`, for example to pad
+                           with some constant sky level and some associated noise.
+                           (Default `pad_image = 0.`, i.e., pad with zeros.)
     @param calculate_stepk Specify whether to perform an internal determination of the extent of 
                            the object being represented by the InterpolatedImage; often this is 
                            useful in choosing an optimal value for the stepsize in the Fourier 
@@ -1504,7 +1520,7 @@ class InterpolatedImage(GSObject):
     # --- Public Class methods ---
     def __init__(self, image, x_interpolant = None, k_interpolant = None, normalization = 'flux',
                  dx = None, flux = None, pad_factor = 0., noise_pad = 0., rng = None,
-                 calculate_stepk=True, calculate_maxk=True, use_cache=True):
+                 pad_image = 0., calculate_stepk=True, calculate_maxk=True, use_cache=True):
         # first try to read the image as a file.  If it's not either a string or a valid
         # pyfits hdu or hdulist, then an exception will be raised, which we ignore and move on.
         try:
@@ -1565,6 +1581,40 @@ class InterpolatedImage(GSObject):
         else:
             raise TypeError("rng provided to InterpolatedImage constructor is not a BaseDeviate")
 
+        # decide about deterministic image padding
+        specify_size = True
+        padded_size = image.getPaddedSize(pad_factor)
+        try:
+            pad_image = float(pad_image)
+        except:
+            pass
+        if isinstance(pad_image, float):
+            specify_size = False
+            if isinstance(image, galsim.BaseImageF):
+                pad_image = galsim.ImageF(padded_size, padded_size, init_value = pad_image)
+            if isinstance(image, galsim.BaseImageD):
+                pad_image = galsim.ImageD(padded_size, padded_size, init_value = pad_image)
+        elif isinstance(pad_image, str):
+            try:
+                pad_image = galsim.fits.read(pad_image)
+            except:
+                raise RuntimeError("Can't read in Image for padding from specified file!")
+        if not isinstance(pad_image, galsim.BaseImageF) and not isinstance(pad_image,
+                                                                           galsim.BaseImageD):
+            raise ValueError("Supplied pad_image is not one of the allowed types!")
+        # If an image was supplied directly or from a file, check its size:
+        #    Cannot use if too small.
+        #    Use to define the final image size otherwise.
+        if specify_size:
+            dx = (1+pad_image.getXMax()-pad_image.getXMin())-(1+image.getXMax()-image.getXMin())
+            dy = (1+pad_image.getYMax()-pad_image.getYMin())-(1+image.getYMax()-image.getYMin())
+            if dx < 0 or dy < 0:
+                raise RuntimeError("Image supplied for padding is too small!")
+            if pad_factor is not 1.:
+                import warnings
+                msg = "Warning: ignoring specified pad_factor because user also specified\n"
+                msg += "an image to use directly for the padding"
+
         # now decide about noise padding
         # First, see if the input is consistent with a float.
         # i.e. it could be an int, or a str that converts to a number.
@@ -1575,16 +1625,7 @@ class InterpolatedImage(GSObject):
         if isinstance(noise_pad, float):
             if noise_pad < 0.:
                 raise ValueError("Noise variance cannot be negative!")
-            elif noise_pad == 0.:
-                pad_image = None
-            else:
-                # figure out proper size for padded image
-                padded_size = image.getPaddedSize(pad_factor)
-                if isinstance(image, galsim.BaseImageF): 
-                    pad_image = galsim.ImageF(padded_size, padded_size)
-                if isinstance(image, galsim.BaseImageD):
-                    pad_image = galsim.ImageD(padded_size, padded_size)
-
+            elif noise_pad > 0.:
                 # Note: make sure the sigma is properly set to sqrt(noise_pad).
                 gaussian_deviate.setSigma(np.sqrt(noise_pad))
                 gaussian_deviate.applyTo(pad_image.view())                
@@ -1607,21 +1648,36 @@ class InterpolatedImage(GSObject):
                 raise ValueError("Input noise_pad must be a float/int, an ImageCorrFunc, " +
                                  "Image, or filename containing an image to use to make an " +
                                  "ImageCorrFunc!")
-            # figure out proper size for padded image
-            padded_size = image.getPaddedSize(pad_factor)
-            if isinstance(image, galsim.BaseImageF): 
-                pad_image = galsim.ImageF(padded_size, padded_size)
-            if isinstance(image, galsim.BaseImageD):
-                pad_image = galsim.ImageD(padded_size, padded_size)
             cf.applyNoiseTo(pad_image, dev=gaussian_deviate)
 
-        # Make the SBInterpolatedImage out of the image.
-        sbinterpolatedimage = galsim.SBInterpolatedImage(image,
-                                                         xInterp=self.x_interpolant,
-                                                         kInterp=self.k_interpolant,
-                                                         dx=dx,
-                                                         pad_factor=pad_factor,
-                                                         pad_image=pad_image)
+        # Now we have to check: was the padding determined using pad_factor?  Or by passing in an
+        # image for padding?  Treat these cases differently:
+        # (1) If the former, then we can simply have the C++ handle the padding process.
+        # (2) If the latter, then we have to do the padding ourselves, and pass the resulting image
+        # to the C++ with pad_factor explicitly set to 1.
+        if specify_size = False:
+            # Make the SBInterpolatedImage out of the image.
+            sbinterpolatedimage = galsim.SBInterpolatedImage(image,
+                                                             xInterp=self.x_interpolant,
+                                                             kInterp=self.k_interpolant,
+                                                             dx=dx,
+                                                             pad_factor=pad_factor,
+                                                             pad_image=pad_image)
+        else:
+            # Leave the original image as-is.  Instead, we shift around the image to be used for
+            # padding.  Find out how much x and y margin there should be on lower end:
+            x_marg = int(np.round(0.5*dx))
+            y_marg = int(np.round(0.5*dy))
+            # Now reset the pad_image to contain the original image in an even way
+            pad_image.setOrigin(image.getXMin()-x_marg, image.getYMin()-y_marg)
+            # Set the central values of pad_image to be equal to the input image
+            pad_image.subImage(image.bounds) = image
+            sbinterpolatedimage = galsim.SBInterpolatedImage(pad_image,
+                                                             xInterp=self.x_interpolant,
+                                                             kInterp=self.k_interpolant,
+                                                             dx=dx,
+                                                             pad_factor=1.)
+
 
         # GalSim cannot automatically know what stepK and maxK are appropriate for the 
         # input image.  So it is usually worth it to do a manual calculation here.
