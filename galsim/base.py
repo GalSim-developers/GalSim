@@ -1613,8 +1613,8 @@ class InterpolatedImage(GSObject):
                 raise RuntimeError("Image supplied for padding is too small!")
             if pad_factor != 1.:
                 import warnings
-                msg = "Warning: ignoring specified pad_factor because user also specified\n"
-                msg += "an image to use directly for the padding"
+                msg =  "Warning: ignoring specified pad_factor because user also specified\n"
+                msg += "         an image to use directly for the padding."
                 warnings.warn(msg)
 
         # now decide about noise padding
