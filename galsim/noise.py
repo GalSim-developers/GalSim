@@ -39,20 +39,46 @@ def addNoise(image, noise):
     im_view = image.view()
     noise.applyTo(im_view)
 
-def addNoiseSNR(self, snr, rng=_galsim.UniformDeviate(), sky_level=None):
-	if sky_level is None:
-		sky_level=numpy.sum(self.array**2)/snr/snr
-	else:
-		sn_meas=numpy.sqrt( numpy.sum(self.array**2)/sky_level )
-		flux=snr/sn_meas
-		self*=flux
-	self+=sky_level
-	self.addNoise(_galsim.CCDNoise(rng))
-	self-=sky_level
+def addNoiseSNR(self, snr, sky_level=None, rng=_galsim.UniformDeviate()):
+    """Adds CCDNoise to an image in a way that achieves the specified signal-to-noise ratio.
+    
+    Possible ways to call addNoiseSNR:
+    
+    >>> Image.addNoiseSNR(snr)                     # Add noise so that the image has a 
+                                                   # signal-to-noise ratio snr
+                                                   
+    >>> Image.addNoiseSNR(snr,sky_level=sky_level) # Use the given sky_level and rescale the image
+                                                   # flux to get the given SNR
+                                                   
+    >>> Image.addNoiseSNR(snr,rng=rng)             # Add noise using the same underlying RNG as rng
+    
+    If sky_level is passed to addNoiseSNR, the flux of the input image will be rescaled to achieve
+    the desired signal-to-noise ratio.  If it is not, then the sky_level is chosen based on the
+    given flux in a Great08-like way.  Taking a weighted integral of the flux:
+        S = sum W(x,y) I(x,y) / sum W(x,y)
+        N^2 = Var(S) = sum W(x,y)^2 Var(I(x,y)) / (sum W(x,y))^2
+    and assuming that Var(I(x,y)) is dominated by the sky noise:
+        Var(I(x,y)) = sky_level
+    We then assume that we are using a matched filter for W, so W(x,y) = I(x,y).  Then a few things 
+    cancel and we find that
+        S/N = sqrt( sum I(x,y)^2 / sky_level )
+    and therefore, for a given I(x,y) and S/N,
+    sky_level = sum I(x,y)^2/(S/N)^2.
+    """
+    if not isinstance(rng,(_galsim.BaseDeviate,int,long)):
+        raise TypeError ("Rng %s passed to AddNoiseSNR cannot be used to initialize a "
+                         "BaseDeviate!"%rng)
+    if sky_level is None:
+        sky_level=numpy.sum(self.array**2)/snr/snr
+    else:
+        sn_meas=numpy.sqrt( numpy.sum(self.array**2)/sky_level )
+        flux=snr/sn_meas
+        self*=flux
+    self+=sky_level
+    self.addNoise(_galsim.CCDNoise(rng))
+    self-=sky_level
 
-
-
-# inject addNoise as a method of Image classes
+# inject addNoise and addNoiseSNR as methods of Image classes
 for Class in _galsim.Image.itervalues():
     Class.addNoise = addNoise
     Class.addNoiseSNR = addNoiseSNR
