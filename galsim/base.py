@@ -1453,6 +1453,12 @@ class InterpolatedImage(GSObject):
                                    the desired noise power spectrum; or
                                (d) as a string which is interpreted as a filename containing an
                                    example noise field with the proper noise power spectrum.
+                           It is important to keep in mind that the calculation of a
+                           galsim.ImageCorrFunc is a non-negligible amount of overhead, so the
+                           recommended ways are (b) or (d). In the case of (d), if the same file is
+                           used repeatedly, then use of the `use_cache` keyword (see below) can be
+                           used to prevent the need for repeated galsim.ImageCorrFunc
+                           initializations.
                            (Default `noise_pad = 0.`, i.e., pad with zeros.)
     @param rng             If padding by noise, the user can optionally supply the random noise
                            generator to use for drawing random numbers as `rng` (may be any kind of
