@@ -1,2 +1,9 @@
 test*fits
 test*out
+*.aux
+*.log
+*.dvi
+*.ps
+*.out
+texit
+lensing_engine.pdf
