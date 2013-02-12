@@ -250,17 +250,21 @@ def main(argv):
             # We also assume that we are using a matched filter for W, so W(x,y) = I(x,y).
             # Then a few things cancel and we find that
             # S/N = sqrt( sum I(x,y)^2 / sky_level )
-            # the addNoiseSNR method can also take another RNG as its argument
-            # so the added noise will be part of the same stream of random numbers as ud and gd.
+            #
+            # The above procedure is encapsulated in the function image.addNoiseSNR.
+            # The sky_level value is expected to be the sky level in each pixel, so we
+            # need to do that calculation first.
             sky_level_pix = sky_level * pixel_scale**2
+            # Note that we pass the current ud that we are using for our random numbers as
+            # the rng parameter to addNoiseSNR so the added noise will use the same stream 
+            # of random numbers as ud and gd.
             sub_gal_image.addNoiseSNR(gal_signal_to_noise,sky_level=sky_level_pix,rng=ud)
-
 
             # Draw the PSF image
             # No noise on PSF images.  Just draw it as is.
             this_psf.draw(sub_psf_image)
 
-            # for first instance, measure moments
+            # For first instance, measure moments
             if ix==0 and iy==0:
                 psf_shape = sub_psf_image.FindAdaptiveMom()
                 temp_e = psf_shape.observed_shape.e

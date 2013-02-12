@@ -238,8 +238,8 @@ def main(argv):
         # Draw the image
         final.draw(sub_gal_image)
 
-        # Now add noise to get our desired S/N -- addNoiseSNR can also take another RNG as its argument
-        # so the added noise will be part of the same stream of random numbers as ud above.
+        # Now add noise to get our desired S/N
+        # See demo5.py for more info about how this works.
         sky_level_pix = sky_level * pixel_scale**2
         sub_gal_image.addNoiseSNR(gal_signal_to_noise,sky_level=sky_level_pix,rng=rng)
 
