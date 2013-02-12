@@ -240,7 +240,7 @@ def main(argv):
             # Draw the image
             final_gal.draw(sub_gal_image)
 
-            # Now determine what we need to do to get our desired S/N
+            # Now add an appropriate amount of noise to get our desired S/N
             # There are lots of definitions of S/N, but here is the one used by Great08
             # We use a weighted integral of the flux:
             # S = sum W(x,y) I(x,y) / sum W(x,y)
@@ -250,17 +250,11 @@ def main(argv):
             # We also assume that we are using a matched filter for W, so W(x,y) = I(x,y).
             # Then a few things cancel and we find that
             # S/N = sqrt( sum I(x,y)^2 / sky_level )
+            # the addNoiseSNR method can also take another RNG as its argument
+            # so the added noise will be part of the same stream of random numbers as ud and gd.
             sky_level_pix = sky_level * pixel_scale**2
-            sn_meas = math.sqrt( numpy.sum(sub_gal_image.array**2) / sky_level_pix )
-            flux = gal_signal_to_noise / sn_meas
-            # Now we rescale the flux to get our desired S/N
-            sub_gal_image *= flux
+            sub_gal_image.addNoiseSNR(gal_signal_to_noise,sky_level=sky_level_pix,rng=ud)
 
-            # Add Poisson noise -- the CCDNoise can also take another RNG as its argument
-            # so it will be part of the same stream of random numbers as ud and gd.
-            sub_gal_image += sky_level_pix
-            sub_gal_image.addNoise(galsim.CCDNoise(ud))
-            sub_gal_image -= sky_level_pix
 
             # Draw the PSF image
             # No noise on PSF images.  Just draw it as is.

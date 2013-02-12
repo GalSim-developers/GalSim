@@ -238,18 +238,10 @@ def main(argv):
         # Draw the image
         final.draw(sub_gal_image)
 
-        # Now determine what we need to do to get our desired S/N
-        # See demo5.py for the math behind this calculation.
+        # Now add noise to get our desired S/N -- addNoiseSNR can also take another RNG as its argument
+        # so the added noise will be part of the same stream of random numbers as ud above.
         sky_level_pix = sky_level * pixel_scale**2
-        sn_meas = math.sqrt( numpy.sum(sub_gal_image.array**2) / sky_level_pix )
-        flux_scaling = gal_signal_to_noise / sn_meas
-        sub_gal_image *= flux_scaling
-
-        # Add Poisson noise -- the CCDNoise can also take another RNG as its argument
-        # so it will be part of the same stream of random numbers as ud above.
-        sub_gal_image += sky_level_pix
-        sub_gal_image.addNoise(galsim.CCDNoise(rng))
-        sub_gal_image -= sky_level_pix
+        sub_gal_image.addNoiseSNR(gal_signal_to_noise,sky_level=sky_level_pix,rng=rng)
 
         # Draw the PSF image:
         # We use real space convolution to avoid some of the 
