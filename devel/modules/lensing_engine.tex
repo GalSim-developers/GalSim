@@ -548,16 +548,16 @@ of the functoin only.  For approximating this information discretely, as desired
 numerical analysis, we can imagine taking $N$ equally spaced samples of
 the function in equation \eqref{eq:dtft} along a single period $L$ in each
 dimension (leading to $N^2$ samples total since we are working in 2D).
-These samples are therefore separated by $\Delta \theta \equiv 2 \pi /
+These samples are therefore separated by $\Delta \theta = 2 \pi /
 \Delta k N = d$ in real space, and we define the sampled
 function itself as
 \begin{equation}
 \xi_{\Delta \theta}[n, m] \equiv \xi_{\frac{2 \pi}{\Delta
     k}} \left( n \Delta \theta, m \Delta \theta \right) = \frac{1}{( 2 \pi)^2}
 \sum_{q,p=-\infty}^{\infty} P_{\Delta k} [q, p] \me^{\mi 2 \pi (qn +
-  pm) / N}
+  pm) / N},
 \end{equation}
-for the integer indices $n, m = 0, 1, \ldots, N-1$, substituting into equation
+for the integer indices $n, m = 0, 1, \ldots, N-1$, by substitution into equation
 \eqref{eq:dtft}.  Using the periodicity of the exponential term in the
 expression above, this may be written as
 \begin{equation}
@@ -579,9 +579,9 @@ the Fast Fourier Transform algorithm.  We will say a little more about
 this below.
 
 Choosing to use only $N$
-samples from $P_{\Delta k}$ then gives us a more
+samples from $P_{\Delta k}$ then gives us a somewhat more
 familiar expression for the inverse Discrete Fourier Transform (DFT),
-albeit for the non-unitary Fourier transform convention:
+written here for the non-unitary Fourier transform convention:
 \begin{equation}
 \xi_{\Delta \theta}[n, m] = \frac{1}{( 2 \pi)^2}
 \sum_{q,p=0}^{N-1} P_{\Delta k} [q, p] \me^{\mi 2 \pi (qn +
@@ -590,11 +590,11 @@ albeit for the non-unitary Fourier transform convention:
 The overwhelmingly more common definition of the inverse DFT, and that adopted by
 NumPy, instead reads as:
 \begin{equation}
-f[n, m] = \texttt{numpy.fft.ifft2}\left(\tilde{f}[p, q]\right) = \frac{1}{N^2}
+f[n, m] = \texttt{numpy.fft.ifft2}\left(\tilde{f}[p, q]\right) \equiv \frac{1}{N^2}
 \sum_{q,p=0}^{N-1} \tilde{f}[q, p] \me^{\mi 2 \pi (qn +
   pm) / N} ,~~~~ (\textrm{NumPy convention}) \label{eq:dftnumpy}
 \end{equation}
-where the factor of $1/N^2$ is a convention commonly with DFT
+where the factor of $1/N^2$ is a convention commonly found in DFT
 implementations, and ensures
 that the DFT followed by the inverse DFT yields the original, input array.
 
@@ -633,10 +633,10 @@ arriving at equation \eqref{eq:dft}.  This choice ensures the
 close interrelation of $N$, $L$ and the grid spacings $\Delta \theta$,
 $\Delta k$.  The use of discrete, periodic sampling to approximate
 continuous, non-periodic functions is only an approximation, and
-one that depends heavily on good choices of these inter-related sampling
+one that depends heavily on good choices of these interrelated sampling
 parameters.
 
-The two effects that must be minimized are of course
+The two effects that must be minimized for a good approximation are of course
 aliasing and unwanted
 `overlapping' of functions in either real or Fourier space due to the
 sampled, periodic
