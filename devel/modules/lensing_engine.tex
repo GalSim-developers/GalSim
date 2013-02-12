@@ -544,7 +544,7 @@ considered as \emph{impulses} of area $(\Delta k)^2$ and height $P(q \Delta k, p
 The expression in equation \eqref{eq:dtft} is periodic with period $2
 \pi / \Delta k = L$.  All of the information it contains about
 $\xi(\theta_1, \theta_2)$ is therefore also contained in one period
-of the functoin only.  For approximating this information discretely, as desired in
+of the function only.  For approximating this information discretely, as desired in
 numerical analysis, we can imagine taking $N$ equally spaced samples of
 the function in equation \eqref{eq:dtft} along a single period $L$ in each
 dimension (leading to $N^2$ samples total since we are working in 2D).
@@ -605,8 +605,8 @@ k$ ourselves.  Let us begin with the user specifying the
 key dimensions of the problem $L$ and $d = \Delta \theta$ at the
 outset, as assumed in Section \ref{sect:theory}, sensibly chosen (of
 course) so that $N=L/\Delta \theta$ is an integer.  These choices also
-define $\Delta k = 2 \pi / L$.  Beginning with equation
-\eqref{eq:dft}, we may express the convenient $P_{\Delta k}[q, p]$ as
+set $\Delta k = 2 \pi / L$.  Beginning with equation
+\eqref{eq:dft}, we may re-express the convenient $P_{\Delta k}[q, p]$ as
 samples of the the dimensional $P(k_1, k_2)$ once again:
 \begin{eqnarray}
 \xi_{\Delta \theta}[n, m] & = & \frac{1}{( 2 \pi)^2}
@@ -631,7 +631,7 @@ the choice to use $N$ as the
 number of samples in \emph{both} real and Fourier space, the final step in
 arriving at equation \eqref{eq:dft}.  This choice ensures the
 close interrelation of $N$, $L$ and the grid spacings $\Delta \theta$,
-$\Delta k$.  The use of discrete, periodic sampling to approximate
+$\Delta k$.  The use of discrete, periodic sampling to represent
 continuous, non-periodic functions is only an approximation, and
 one that depends heavily on good choices of these interrelated sampling
 parameters.
