@@ -75,7 +75,7 @@ engine.  They are:
   quantity.  Given the size of the grid spacing, this can
   change results by orders of magnitude!  Results below are discussed both without and with that fix.}
 
-\section{Theory}
+\section{Theory}\label{sect:theory}
 
 The lensing engine requires a shear power spectrum, $P(k)$.  We are
 working in the flat-sky limit, so when we see expressions in terms of
@@ -549,11 +549,11 @@ numerical analysis, we can imagine taking $N$ equally spaced samples of
 the function in equation \eqref{eq:dtft} along a single period $L$ in each
 dimension (leading to $N^2$ samples total since we are working in 2D).
 These samples are therefore separated by $\Delta \theta \equiv 2 \pi /
-\Delta k N$ in real space, and we define the sampled
+\Delta k N = d$ in real space, and we define the sampled
 function itself as
 \begin{equation}
 \xi_{\Delta \theta}[n, m] \equiv \xi_{\frac{2 \pi}{\Delta
-    k}} \left( n \Delta x, m \Delta x\right) = \frac{1}{( 2 \pi)^2}
+    k}} \left( n \Delta \theta, m \Delta \theta \right) = \frac{1}{( 2 \pi)^2}
 \sum_{q,p=-\infty}^{\infty} P_{\Delta k} [q, p] \me^{\mi 2 \pi (qn +
   pm) / N}
 \end{equation}
@@ -587,19 +587,63 @@ albeit for the non-unitary Fourier transform convention:
 \sum_{q,p=0}^{N-1} P_{\Delta k} [q, p] \me^{\mi 2 \pi (qn +
   pm) / N}. \label{eq:dft}
 \end{equation}
+The overwhelmingly more common definition of the inverse DFT, and that adopted by
+NumPy, instead reads as:
+\begin{equation}
+f[n, m] = \texttt{numpy.fft.ifft2}\left(\tilde{f}[p, q]\right) = \frac{1}{N^2}
+\sum_{q,p=0}^{N-1} \tilde{f}[q, p] \me^{\mi 2 \pi (qn +
+  pm) / N} ,~~~~ (\textrm{NumPy convention}) \label{eq:dftnumpy}
+\end{equation}
+where the factor of $1/N^2$ is a convention commonly with DFT
+implementations, and ensures
+that the DFT followed by the inverse DFT yields the original, input array.
 
-We said we would say little more about the choice to use $N$ as the
-number of samples in both real and Fourier space, the final step in
-arriving at equation \eqref{eq:dft}.  This ensures the
+We must use the convention of equation \eqref{eq:dftnumpy} for
+performing the calculation within the code, and so this means that we
+must attempt to account for the factors of $2 \pi$, $N$ and $\Delta
+k$ ourselves.  Let us begin with the user specifying the
+key dimensions of the problem $L$ and $d = \Delta \theta$ at the
+outset, as assumed in Section \ref{sect:theory}, sensibly chosen (of
+course) so that $N=L/\Delta \theta$ is an integer.  These choices also
+define $\Delta k = 2 \pi / L$.  Beginning with equation
+\eqref{eq:dft}, we may express the convenient $P_{\Delta k}[q, p]$ as
+samples of the the dimensional $P(k_1, k_2)$ once again:
+\begin{eqnarray}
+\xi_{\Delta \theta}[n, m] & = & \frac{1}{( 2 \pi)^2}
+\sum_{q,p=0}^{N-1} P_{\Delta k} [q, p] \me^{\mi 2 \pi (qn +
+  pm) / N}  \\ & = & \frac{1}{(2 \pi)^2} \times \frac{(2 \pi)^2}{L^2}
+ \sum_{q,p=0}^{N-1} P(q \Delta k, p \Delta k) \me^{\mi 2 \pi (qn +
+  pm) / N} \\
+& = & \frac{1}{L^2} \sum_{q,p=0}^{N-1} P(q \Delta k, p \Delta k) \me^{\mi 2 \pi (qn +
+  pm) / N} \\
+& = & \texttt{numpy.fft.ifft2}\left[P(q \Delta
+  k, q \Delta k) / (\Delta \theta)^2\right].
+\end{eqnarray}
+This seems to agree with Rachel's empirical finding that taking the
+output ellipticities of the original code, which scale in amplitude as the square root of
+of the power/correlation function, we must further divide by a factor
+$d = \Delta \theta$ to generate the output we expect.  Of course, I may
+easily be missing factors of $N$ or $2 \pi $ about the place, so I
+welcome anyone wishing to quickly scan through these steps I followed!
+
+Finally, we said we would say little more about the implications of
+the choice to use $N$ as the
+number of samples in \emph{both} real and Fourier space, the final step in
+arriving at equation \eqref{eq:dft}.  This choice ensures the
 close interrelation of $N$, $L$ and the grid spacings $\Delta \theta$,
 $\Delta k$.  The use of discrete, periodic sampling to approximate
-continuous, non-periodic functions is only that, an approximation, and
-one that depends heavily on good choices of these sampling
-parameters.  The two effects that must be mitigated as much as
-possible are aliasing and `ghosting' (sometimes referred to as
-`leakage', or just `overlapping').  Adequate sampling, and
-zero-padding to artificially extend $L$, are strategies for making the
-DFT a good approximation to the Fourier transforms of equations
-\eqref{eq:fwdft} and \eqref{eq:invft}.
+continuous, non-periodic functions is only an approximation, and
+one that depends heavily on good choices of these inter-related sampling
+parameters.
+
+The two effects that must be minimized are of course
+aliasing and unwanted
+`overlapping' of functions in either real or Fourier space due to the
+sampled, periodic
+representation inherent in the DFT.  Adequately sampling our functions, and zero-padding
+them where possible to artificially extend $L$, are the primary
+strategies for making the DFT and its inverse a good approximation to
+the Fourier transforms of equations \eqref{eq:fwdft} and
+\eqref{eq:invft}.
 
 \end{document}
