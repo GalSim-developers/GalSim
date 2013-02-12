@@ -452,28 +452,28 @@ def _GenerateFromRandomDistribution(param, param_name, base, value_type):
     xmin = kwargs.get('min',None)
     xmax = kwargs.get('max',None)
 
-    if 'ud' in base:
+    if 'distdev' in base:
         # The overhead for making a DistDeviate is large enough that we'd rather not do it every 
         # time, so first check if we've already made one:
-        ud = base['ud']
-        if (base['current_udfilename'] != filename or xmin != base['current_udxmin'] or 
-            xmax != base['current_udxmax']):
-            ud=galsim.DistDeviate(rng,filename=filename,interpolant=interpolant,npoints=npoints,
+        distdev = base['distdev']
+        if (base['current_distfilename'] != filename or xmin != base['current_distxmin'] or 
+            xmax != base['current_distxmax']):
+            distdev=galsim.DistDeviate(rng,filename=filename,interpolant=interpolant,npoints=npoints,
                                   xmin=xmin,xmax=xmax)
-            base['ud'] = ud
-            base['current_udfilename'] = filename
-            base['current_udxmin'] = xmin
-            base['current_udxmax'] = xmax
+            base['distdev'] = distdev
+            base['current_distfilename'] = filename
+            base['current_distxmin'] = xmin
+            base['current_distxmax'] = xmax
     else:
         # Otherwise, just go ahead and make a new one.
-        ud=galsim.DistDeviate(rng,filename=filename,interpolant=interpolant,npoints=npoints,
+        distdev=galsim.DistDeviate(rng,filename=filename,interpolant=interpolant,npoints=npoints,
                               xmin=xmin,xmax=xmax)
-        base['ud'] = ud
-        base['current_udfilename'] = filename
-        base['current_udxmin'] = xmin
-        base['current_udxmax'] = xmax
+        base['distdev'] = distdev
+        base['current_distfilename'] = filename
+        base['current_distxmin'] = xmin
+        base['current_distxmax'] = xmax
 
-    val = ud()
+    val = distdev()
 
     #print 'RandomDistribution: ',val
     return val, False
