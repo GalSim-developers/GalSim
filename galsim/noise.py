@@ -69,6 +69,7 @@ def addNoiseSNR(self, snr, sky_level=None, rng=_galsim.UniformDeviate()):
     and therefore, for a given I(x,y) and S/N,
     sky_level = sum I(x,y)^2/(S/N)^2.
     """
+    import numpy
     if not isinstance(rng,(_galsim.BaseDeviate,int,long)):
         raise TypeError ("Rng %s passed to AddNoiseSNR cannot be used to initialize a "
                          "BaseDeviate!"%rng)
