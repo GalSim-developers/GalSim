@@ -127,6 +127,14 @@ written as
 \mathrm{Var}(\gamma) = \frac{1}{(2\pi)^2} \int \rmd k_x \rmd k_y
 P(k_x, k_y).
 \eeq
+\textbf{More comments from Rachel: Actually on further reflection I
+  think that there is something to be careful about here.  You could
+  imagine that the two integrals might give the same thing if
+  $\kmin\ll\kmax$ and if the power at large $k$ is negligible, but
+  actually, Eq.~\ref{E:shearvar} is integrating effectively over all
+  four quadrants in the $k_x$ vs. $k_y$ plane, whereas
+  Eq.~\ref{E:alt-shearvar} integrates over only one of them.  So they
+  should give a factor of four difference in the results.}
 
 None of these integrals have had limits on them.  Formally they should
 go from the minimum to the maximum accessible $k$ on our grid.  Our
@@ -136,6 +144,10 @@ L &= \mbox{length of grid along one dimension (angular units)}\\
 d &= \mbox{spacing between grid points (angular units)}\\
 N &= \mbox{number of grid points along one dimension} = L/d
 \end{align}
+
+Given this grid, our $\kmax=2\pi/d$.  The \kmin\ depends on whether
+we are thinking about one dimension or two; it's either $2\pi/L$ or
+$2\pi/(\sqrt{2}L)$.
 
 In all of the above I have simply written $P(k)$ but in principle there can be
 two such functions, $P_{E}$ and $P_B$.  I believe these
@@ -186,15 +198,20 @@ use functions that do unreasonable things like $k^{-2}$.
 
 Barney suggested a test case that is a Gaussian, i.e., $P(k) =
 P_0 e^{-\sigma^2 k^2 / 2}$.  Here both $P_0$ and $\sigma^2$ both
-are dimensions of angle$^2$.  By my calculations, this means that
+are dimensions of angle$^2$.  By Eq.~\ref{E:shearvar} calculations, this means that
 \begin{align}
 \mathrm{Var}(\gamma) &= \frac{P_0}{2\pi}\int_{\kmin}^{\kmax} k \,
 e^{-\sigma^2 k^2/2} \,\rmd k \\
  &= \frac{P_0}{2\pi\sigma^2} (e^{-\kmin^2\sigma^2/2}-e^{-\kmax^2\sigma^2/2}).
 \end{align}
 
-\textbf{Note from Rachel: if we use the integration within a square, I
-  get something that is about a factor of 4 lower.}
+\textbf{Note from Rachel: That assumes we can integrate in a circle in
+  $k$-space.  Okay, really it's an annulus but $\kmin\ll\kmax$ so I'm
+  calling it a circle.  Anyway, if we use the Eq.~\ref{E:alt-shearvar}
+  for integration within a square, I
+  get something that is about a factor of 4 lower. My first gut
+  reaction is that this must be wrong, but then I noticed the issue
+  raised in the previous section on the same commit as this. }
 
 We use three grids. The first is the standard GREAT10 grid with $L=10$
 degrees and $N=100$, so $d=0.1$ deg $=360$ arcsec.  I will define the
@@ -229,8 +246,11 @@ with this\footnote{\textbf{Note that I used to complain about a factor
   plug numbers into a formula.  -RM}}.
 So the amplitude and the scaling with the grid spacing and grid size
 are all okay.  \textbf{But now I'm a tad confused why it's not
-  consistent with the variance calculation on a square grid, just as
-  in the next section. -RM}
+  consistent with the variance calculation on a square grid. However,
+  that calculation on the square grid seems to ignore 3 quadrants in
+  $k$-space, so perhaps that's the issue, and everything is fine here?
+  i.e., perhaps those predictions need to by multiplied by 4 anyway?
+  -RM}
 
  \textbf{These results are with the version of GalSim
   with the dimensionality fix.  Before that, the variances were all
@@ -241,11 +261,17 @@ Note that the variance is evenly divided into the two components.
 \subsection{Variance for flat $P(k)$}
 
 This test is dangerous because of the amount of large-scale power, but
-let's check the results anyway.  If we say $P(k)=P_0$, then we expect
+let's check the results anyway.  If we say $P(k)=P_0$, and use Eq.~\ref{E:alt-shearvar} then we expect
 \beq
 \mathrm{Var}(\gamma) = \frac{P_0}{(2\pi)^2} \times (\kmax-\kmin)^2
 \sim \frac{P_0 \kmax^2}{(2\pi)^2}.
 \eeq
+
+If we use Eq.~\ref{E:shearvar}, then we expect
+\beq
+\mathrm{Var}(\gamma) = \frac{P_0}{4\pi}\times (\kmax-\kmin)^2 \sim \frac{P_0\kmax^2}{4\pi}
+\eeq
+which is higher by a factor of $\pi$.
 
 If I use $P_0=0.01$, and do 
 \begin{verbatim}
@@ -263,7 +289,9 @@ with the \textbf{updated} version of the lensing engine, then the variances are 
 $1.9\times 10^{-8}$ (last case).  I was expecting, for the first two
 cases, a variance of $0.01 (0.0175/2\pi)^2=7.8\times 10^{-8}$, and for
 the last case, something that is four times smaller, which is exactly
-what I find.  So the variance test seems to work here.  \textbf{Note
+what I find.  So the variance test seems to work here, giving a result
+consistent with Eq.~\ref{E:alt-shearvar} (but note that the previous
+test gave results consistent with those from Eq.~\ref{E:shearvar}, hmmm).  \textbf{Note
   that this did not work out right before the dimensionality issue was
   fixed by dividing by grid spacing!  In that case, the power was
   constant in all cases.}
