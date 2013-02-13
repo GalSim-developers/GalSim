@@ -106,15 +106,15 @@ dmax=2.0
 def dfunction(x):
 	return x*x
 # Tabulated results for DistDeviate function call
-dFunctionResult = (0.98464215336031, 1.1989127131427726, 1.511552765897196)
+dFunctionResult = (0.9826461346196363, 1.197330733170133, 1.5105900949284945)
+
 
 # x and y arrays and interpolant to use for DistDeviate array call tests
 # dnpoints and dinterpolant set in previous test
 dx=[0.,1.,2.,3.,4.,5.]
 dp=[0.1, 0.1, 0., 0., 0.1, 0.1]
 # Tabulated results for DistDeviate array call
-dArrayResult = (0.3558276852127155, 0.6437039889860879, 1.3507336341803322)
-
+dArrayResult = (0.35582771788458956, 0.6437040480905831, 1.3558174425675618)
 
 
 def funcname():
@@ -382,9 +382,24 @@ def test_distfunction_rand():
     import time
     t1 = time.time()
     u = galsim.UniformDeviate(testseed)
-    g = galsim.DistDeviate(
+    d = galsim.DistDeviate(
         u, function=dfunction, xmin=dmin, xmax=dmax, npoints=dnpoints, interpolant=dinterpolant)
-    testResult = (g(), g(), g())
+    testResult = (d(), d(), d())
+    np.testing.assert_array_almost_equal(np.array(testResult), np.array(dFunctionResult), precision,
+                                       err_msg='Wrong DistDeviate random number sequence generated')
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_distlambdafunction_rand():
+    """Test distribution-defined random number generator with a function for expected result 
+    given the above seed.
+    """
+    import time
+    t1 = time.time()
+    u = galsim.UniformDeviate(testseed)
+    d = galsim.DistDeviate(
+        u, function=lambda x: x*x, xmin=dmin, xmax=dmax, npoints=dnpoints, interpolant=dinterpolant)
+    testResult = (d(), d(), d())
     np.testing.assert_array_almost_equal(np.array(testResult), np.array(dFunctionResult), precision,
                                        err_msg='Wrong DistDeviate random number sequence generated')
     t2 = time.time()
@@ -397,10 +412,10 @@ def test_distfunction_image():
     import time
     t1 = time.time()
     u = galsim.UniformDeviate(testseed)
-    g = galsim.DistDeviate(
+    d = galsim.DistDeviate(
         u, function=dfunction, xmin=dmin, xmax=dmax, npoints=dnpoints, interpolant=dinterpolant)
     testimage = galsim.ImageViewD(np.zeros((3, 1)))
-    testimage.addNoise(g)
+    testimage.addNoise(d)
     np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(dFunctionResult), 
                               precision, err_msg="DistDeviate generator applied to Images does not "
                                                  "reproduce expected sequence")
@@ -415,8 +430,8 @@ def test_distarray_rand():
     import time
     t1 = time.time()
     u = galsim.UniformDeviate(testseed)
-    g = galsim.DistDeviate(u, x=dx, p=dp, npoints=dnpoints, interpolant=dinterpolant)
-    testResult = (g(), g(), g())
+    d = galsim.DistDeviate(u, x=dx, p=dp, npoints=dnpoints, interpolant=dinterpolant)
+    testResult = (d(), d(), d())
     np.testing.assert_array_almost_equal(np.array(testResult), np.array(dArrayResult), precision,
                                        err_msg='Wrong DistDeviate random number sequence generated')
     t2 = time.time()
@@ -429,9 +444,9 @@ def test_distarray_image():
     import time
     t1 = time.time()
     u = galsim.UniformDeviate(testseed)
-    g = galsim.DistDeviate(u, x=dx, p=dp, npoints=dnpoints, interpolant=dinterpolant)
+    d = galsim.DistDeviate(u, x=dx, p=dp, npoints=dnpoints, interpolant=dinterpolant)
     testimage = galsim.ImageViewD(np.zeros((3, 1)))
-    testimage.addNoise(g)
+    testimage.addNoise(d)
     np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(dArrayResult), 
                               precision, err_msg="DistDeviate generator applied to Images does not "
                                        "reproduce expected sequence")

@@ -84,10 +84,10 @@ class DistDeviate:
     Initializes d to be a DistDeviate instance with a distribution given by the callable function
     f(x) from x=xmin to x=xmax and seeds the PRNG using current time.  
     
-    >>> d = galsim.DistDeviate(rng=1062533,filename=filename)
+    >>> d = galsim.DistDeviate(rng=1062533,file_name=file_name)
     
     Initializes d to be a DistDeviate instance with a distribution given by the data in file
-    filename, which must be a 2-column ASCII table, and seeds the PRNG using the long int
+    file_name, which must be a 2-column ASCII table, and seeds the PRNG using the long int
     seed 1062533.
     
     >>> d = galsim.DistDeviate(dev,x=list1,p=list2,interpolant='linear')
@@ -98,14 +98,14 @@ class DistDeviate:
 
     @param rng          Something that can seed a BaseDeviate: a long int seed or another 
                         BaseDeviate.
-    @param filename     The name of a file containing a probability distribution as a 2-column
+    @param file_name    The name of a file containing a probability distribution as a 2-column
                         ASCII table.
     @param x            The x values for a P(x) distribution as a list, tuple, or Numpy array.
     @param p            The p values for a P(x) distribution as a list, tuple, or Numpy array.
     @param function     A callable function giving a probability distribution
     @param xmin         The minimum desired return value.
     @param xmax         The maximum desired return value.
-    @param interpolant  Type of interpolation used for interpolating (x,p) or filename (causes an
+    @param interpolant  Type of interpolation used for interpolating (x,p) or file_name (causes an
                         error if passed alongside a callable function). Options are given in the
                         documentation for galsim.LookupTable.  (default: 'linear')
     @param npoints      Number of points in the internal tables for interpolations. (default: 256)
@@ -123,22 +123,22 @@ class DistDeviate:
     >>> d()
     2.7892018766454183
 """    
-    def __init__(self, rng=None, x=None, p=None, function=None, filename=None, xmin=None, xmax=None, 
+    def __init__(self, rng=None, x=None, p=None, function=None, file_name=None, xmin=None, xmax=None, 
                  interpolant='linear', npoints=256):
         """Initializes a DistDeviate instance.
         
         The rng, if given, must be something that can initialize a BaseDeviate instance, such as 
-        another BaseDeviate or a long int seed.  At least one of the keyword args filename, 
+        another BaseDeviate or a long int seed.  At least one of the keyword args file_name, 
         function, or the pair (x,p) must be given as well; see the documentation for the
         DistDeviate class for more information.
         """
         
         import numpy
         import galsim
-        tol=1.E-15 #Ignore decreases in cumulative probability less than this number
-                   #as errors in precision, not indications of negative probability
+        tol=1.E-4/npoints # Ignore fractional changes in probability less than this number
+                          # as errors in precision
  
-        #Set up the PRNG
+        # Set up the PRNG
         if rng is None:
             self._ud=galsim.UniformDeviate()
         elif isinstance(rng,galsim.UniformDeviate):
@@ -149,25 +149,25 @@ class DistDeviate:
             raise TypeError('Argument rng passed to DistDeviate cannot be used to initialize '
                             'a UniformDeviate.')
 
-        #Check a few arguments before doing computations
-        if (x is not None and p is None) or (p is not None and x is None):
+        # Check a few arguments before doing computations
+        if (p is None and x) or (x is None and p):
             raise TypeError('Only one of x and p given as a keyword to DistDeviate')
-        if filename is None and function is None and x is None:
-            raise TypeError('At least one of the keywords filename, function, or the pair '
+        if not file_name and not function and not x:
+            raise TypeError('At least one of the keywords file_name, function, or the pair '
                             'x and p must be set in calls to DistDeviate!')
-        if filename is not None and function is not None:
-            raise TypeError('Cannot pass both filename and function keywords to DistDeviate')
-        if filename is not None and x is not None:
-            raise TypeError('Cannot pass both filename and x&p keywords to DistDeviate')
-        if function is not None and x is not None:
+        if file_name and function:
+            raise TypeError('Cannot pass both file_name and function keywords to DistDeviate')
+        if file_name and x:
+            raise TypeError('Cannot pass both file_name and x&p keywords to DistDeviate')
+        if function and x:
             raise TypeError('Cannot pass both function and x&p keywords to DistDeviate')
 
-        #Set up the probability function & min and max values for any inputs
-        if function is not None:
+        # Set up the probability function & min and max values for any inputs
+        if function:
             if not hasattr(function,'__call__'):
                 raise TypeError('Function given to DistDeviate with keyword function is not '
                                 'callable: %s'%function)
-            filename=function #for later error messages
+            file_name=function # for later error messages
             if isinstance(function,galsim.LookupTable):
                 if xmin is None:
                     xmin=function.x_min
@@ -184,12 +184,12 @@ class DistDeviate:
             elif xmax<=xmin:
                 raise ValueError('xmax and xmin passed to DistDeviate are in the wrong order! '
                                  'xmin: %d xmax: %d'%(xmin,xmax))
-        else: #Some of the array & filename setup is the same
-            if x is not None:
-                filename=x #just for later error outputs
+        else: # Some of the array & file_name setup is the same
+            if x:
+                file_name=x # just for later error outputs
                 function=galsim.LookupTable(x=x,f=p,interpolant=interpolant)
-            else: #We know from earlier checks it must be a filename--no need to recheck
-                function=galsim.LookupTable(file=filename,interpolant=interpolant)
+            else: # We know from earlier checks it must be a file_name--no need to recheck
+                function=galsim.LookupTable(file=file_name,interpolant=interpolant)
             if xmin is None:
                 xmin=function.x_min
             elif xmin<function.x_min:
@@ -203,60 +203,59 @@ class DistDeviate:
             if xmax<=xmin:
                 raise ValueError('Max value <= min value in DistDeviate')
 
-        dx=(1.*xmax-xmin)/(npoints-1)
-        xarray=xmin+dx*numpy.array(range(npoints),float)
-        probability = numpy.array([function(x) for x in xarray])
-        #cdf is the cumulative distribution function--just easier to type!
-        cdf=dx*numpy.array( 
-            [numpy.sum(probability[0:i]) for i in range(probability.shape[0])])
-        #Check that cdf is always increasing or always decreasing
-        #and if it isn't, either tweak it to fix or return an error.
-        if not numpy.all(cdf>=0):
-            raise ValueError('Negative probability passed to DistDeviate: %s'%filename)
-        dx=numpy.diff(cdf)
-        numpy.putmask(dx,numpy.absolute(dx)<tol,0.) #replace precision errors
-        if numpy.all(dx==0):
-            raise ValueError('All probabilities passed to DistDeviate are 0: %s'%filename)
-        if not numpy.all(dx >=0.):
-            #This check plus the cdf>=0 should capture any nonzero probabilities
-            raise ValueError('Cumulative probability in DistDeviate is not monotonic')
-        elif not numpy.all(dx > 0.):
-            #Remove consecutive dx=0 points, except the higher-end endpoint of a run and xmin
-            zeroindex=numpy.squeeze(numpy.where(dx==0))
-            zeroindex=numpy.delete(zeroindex,numpy.where(zeroindex==0)) 
-            removearray=numpy.squeeze(numpy.where(numpy.diff(zeroindex)==1))
-            cdf=numpy.delete(cdf,zeroindex[removearray])
-            xarray=numpy.delete(xarray,zeroindex[removearray])
-            dx=numpy.diff(cdf)
-            #Tweak the edge of dx=0 regions so function is always increasing
-            for index in numpy.where(dx == 0):
-                if index+2<len(cdf):
-                   cdf[index+1]+=1.E-6*(
-                       cdf[index+2]-cdf[index+1])
-                else:
-                   cdf=cdf[:-1]
-                   xarray=xarray[:-1]
-            dx=numpy.diff(cdf)
-            if not (numpy.all(dx>0)):
-                raise RuntimeError(
-                    'Cumulative probability in DistDeviate is too flat for program to fix')
+        xarray=xmin+(1.*xmax-xmin)/(npoints-1)*numpy.array(range(npoints),float)
+        # cdf is the cumulative distribution function--just easier to type!
+        cdf=[]
+        probability=[]
+        for x in xarray:
+            cdf.append(galsim.integ.int1d(function,xmin,x,rel_err=tol))
+            probability.append(function(x))
+        cdf=numpy.array(cdf)
+        probability=numpy.array(probability)
+        # Check that the probability is nonnegative
+        if not numpy.all(probability>=0):
+            raise ValueError('Negative probability passed to DistDeviate: %s'%file_name)
+        #Now get rid of points with probability == 0
+        maxprobability=max(probability)
+        if maxprobability==0:
+        	raise ValueError('All probabilities passed to DistDeviate are 0: %s'%file_name)
+        for ip in range(len(probability)-1,-1,-1):
+        	if (probability[ip]/maxprobability<tol):
+        		probability=numpy.delete(probability,ip)
+        		cdf=numpy.delete(cdf,ip)
+        		xarray=numpy.delete(xarray,ip)
+        dcdf=numpy.diff(cdf)
+        for ip in range(len(dcdf)-1,-1,-1):
+        	# <tol misses some things, since int1d is checking a different quantity
+        	if (abs(dcdf[ip])<10*tol): 
+        		probability=numpy.delete(probability,ip)
+        		cdf=numpy.delete(cdf,ip)
+        		dcdf=numpy.delete(dcdf,ip)
+        		xarray=numpy.delete(xarray,ip)
+        if len(cdf)==0:
+            raise ValueError('All probabilities passed to DistDeviate are 0: %s'%file_name)
+        if not (numpy.all(dcdf>0)):
+            raise RuntimeError(
+                'Cumulative probability in DistDeviate is not monotonic despite probabilities>0, '
+                'probably a result of precision errors in the interpolation/integration routine; '
+                'try lowering npoints.')
                         
-        #Quietly renormalize the probability if it wasn't already normalized
+        # Quietly renormalize the probability if it wasn't already normalized
         cdf/=cdf[-1]
         self._inverseprobabilitytable=galsim.LookupTable(cdf,xarray,interpolant=interpolant)
 
     def _getBoundaries(self,function,xmin,xmax):
-        maxblanktries=6 #Maximum number of times it will move the xrange around trying to find 
-                        #nonzero function(x)
-        tolerance=1.E-8 #if our answer only improves by less than this much, stop
+        maxblanktries=6 # Maximum number of times it will move the xrange around trying to find 
+                        # nonzero function(x)
+        tolerance=1.E-8 # if our answer only improves by less than this much, stop
         findxmin=True
         findxmax=True
 
-        frange=1. #Frange, not xrange, since xrange is a python builtin
-        if xmin is not None:
+        frange=1. # Frange, not xrange, since xrange is a python builtin
+        if xmin:
             findxmin=False
             xmax=xmin+frange
-        elif xmax is not None:
+        elif xmax:
             findxmax=False
             xmin=xmax-frange
         else:
@@ -279,12 +278,12 @@ class DistDeviate:
                 elif findxmax:
                     xmax=xmin+frange
                 else:
-                    xmin=0.5*(xmin+xmax-frange) #expands the range around the mean of xmin&xmax
-        if not found: #Try smaller steps instead of larger ones
+                    xmin=0.5*(xmin+xmax-frange) # expands the range around the mean of xmin&xmax
+        if not found: # Try smaller steps instead of larger ones
             frange=0.1
-            if xmin is not None:
+            if xmin:
                 xmax=xmin+frange
-            elif xmax is not None:
+            elif xmax:
                 xmin=xmax-frange
             else:
                 xmin=0.
@@ -307,7 +306,7 @@ class DistDeviate:
                         xmin=0.5*(xmin+xmax-frange)
         if not found:
             raise RuntimeError('Cannot find any positive function(x) for DistDeviate')
-        #Now we have a nonzero range...make a guesstimate of the edge point
+        # Now we have a nonzero range...make a guesstimate of the edge point
         if findxmin:
             xstep=frange*0.05
             while abs(function(xmin))>tolerance:
@@ -341,7 +340,7 @@ class DistDeviate:
     def applyTo(self, image):
         import numpy
         shp=image.array.shape
-        #seriously faster than doing this element by element
+        # seriously faster than doing this element by element
         image.array[:,:]+=numpy.array([[self() for col in range(shp[1])] for row in range(shp[0])])
     
         

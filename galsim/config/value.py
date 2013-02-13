@@ -442,11 +442,11 @@ def _GenerateFromRandomDistribution(param, param_name, base, value_type):
         raise ValueError("No rng available for %s.type = RandomDistribution"%param_name)
     rng = base['rng']
 
-    req = { 'filename' : str }
+    req = { 'file_name' : str }
     opt = {'interpolant' : str, 'npoints' : int, 'min' : float, 'max' : float }
     kwargs, safe = GetAllParams(param, param_name, base, req=req, opt=opt)
 
-    filename = kwargs['filename']
+    file_name = kwargs['file_name']
     interpolant = kwargs.get('interpolant','linear')
     npoints = kwargs.get('npoints',256)
     xmin = kwargs.get('min',None)
@@ -456,26 +456,25 @@ def _GenerateFromRandomDistribution(param, param_name, base, value_type):
         # The overhead for making a DistDeviate is large enough that we'd rather not do it every 
         # time, so first check if we've already made one:
         distdev = base['distdev']
-        if (base['current_distfilename'] != filename or xmin != base['current_distxmin'] or 
+        if (base['current_distfile_name'] != file_name or xmin != base['current_distxmin'] or 
             xmax != base['current_distxmax']):
-            distdev=galsim.DistDeviate(rng,filename=filename,interpolant=interpolant,npoints=npoints,
-                                  xmin=xmin,xmax=xmax)
+            distdev=galsim.DistDeviate(rng,file_name=file_name,interpolant=interpolant,
+                                       npoints=npoints,xmin=xmin,xmax=xmax)
             base['distdev'] = distdev
-            base['current_distfilename'] = filename
+            base['current_distfile_name'] = file_name
             base['current_distxmin'] = xmin
             base['current_distxmax'] = xmax
     else:
         # Otherwise, just go ahead and make a new one.
-        distdev=galsim.DistDeviate(rng,filename=filename,interpolant=interpolant,npoints=npoints,
+        distdev=galsim.DistDeviate(rng,file_name=file_name,interpolant=interpolant,npoints=npoints,
                               xmin=xmin,xmax=xmax)
         base['distdev'] = distdev
-        base['current_distfilename'] = filename
+        base['current_distfile_name'] = file_name
         base['current_distxmin'] = xmin
         base['current_distxmax'] = xmax
 
     val = distdev()
 
-    #print 'RandomDistribution: ',val
     return val, False
 
 

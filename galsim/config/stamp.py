@@ -508,21 +508,6 @@ def AddNoiseFFT(im, weight_im, noise, base, rng, sky_level, logger=None):
         if logger:
             logger.debug('   Added CCD noise with sky_level = %f, ' +
                          'gain = %f, read_noise = %f',sky_level,gain,read_noise)
-    elif type == 'Distribution':
-        if weight_im:
-            raise RuntimeError('Cannot make proper weight image when the noise is drawn from a '
-                               'user-defined distribution.')
-        req = { 'filename' : str }
-        opt = {'interpolant' : str, 'npoints' : int}
-        params = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
-        filename = params['filename']
-        interpolant = params.get('interpolant','linear')
-        npoints = params.get('npoints',256)
-
-        im.addNoise(galsim.DistDeviate(rng,filename=filename,interpolant=interpolant,
-                                       npoints=npoints))
-        if logger:
-            logger.debug('   Added noise from distribution in file %f',filename)
     else:
         raise AttributeError("Invalid type %s for noise"%type)
 
@@ -658,22 +643,6 @@ def AddNoisePhot(im, weight_im, noise, base, rng, sky_level, logger=None):
         if logger:
             logger.debug('   Added CCD noise with sky_level = %f, ' +
                          'gain = %f, read_noise = %f',sky_level,gain,read_noise)
-    elif type == 'Distribution':
-        if weight_im:
-            raise RuntimeError('Cannot make proper weight image when the noise is drawn from a '
-                               'user-defined distribution.')
-        req = { 'filename' : string }
-        opt = {'interpolant' : string, 'npoints' : int}
-        params = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
-        filename = params['filename']
-        interpolant = params.get('interpolant','linear')
-        npoints = params.get('npoints',256)
-
-        im.addNoise(galsim.DistDeviate(rng,filename=filename,interpolation=interpolation,
-                                       npoints=npoints))
-        if logger:
-            logger.debug('   Added noise from distribution in file %f',filename)
-
     else:
         raise AttributeError("Invalid type %s for noise",type)
 

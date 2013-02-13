@@ -58,13 +58,13 @@ def test_float_value():
         'gauss4' : { 'type' : 'RandomGaussian', 'sigma' : 0.5, 'min' : 0, 'max' : 0.8 },
         'gauss5' : { 'type' : 'RandomGaussian',
                      'sigma' : 0.3, 'mean' : 0.5, 'min' : 0, 'max' : 0.5 },
-        'dist1' : { 'type' : 'RandomDistribution', 'filename' : 'config_input/distribution.txt', 
+        'dist1' : { 'type' : 'RandomDistribution', 'file_name' : 'config_input/distribution.txt', 
                      'interpolant' : 'linear', 'min' : 0, 'max' : 0.5 },
-        'dist2' : { 'type' : 'RandomDistribution', 'filename' : 'config_input/distribution.txt', 
+        'dist2' : { 'type' : 'RandomDistribution', 'file_name' : 'config_input/distribution.txt', 
                      'interpolant' : 'linear', 'min' : 0, 'max' : 1.0 },
-        'dist3' : { 'type' : 'RandomDistribution', 'filename' : 'config_input/distribution.txt', 
+        'dist3' : { 'type' : 'RandomDistribution', 'file_name' : 'config_input/distribution.txt', 
                      'interpolant' : 'linear', 'min' : 0.5, 'max' : 1.0 },
-        'dist4' : { 'type' : 'RandomDistribution', 'filename' : 'config_input/distribution2.txt', 
+        'dist4' : { 'type' : 'RandomDistribution', 'file_name' : 'config_input/distribution2.txt', 
                      'interpolant' : 'linear', 'min' : 0.5, 'max' : 1.0 },
         'seq1' : { 'type' : 'Sequence' },
         'seq2' : { 'type' : 'Sequence', 'step' : 0.1 },
@@ -160,19 +160,19 @@ def test_float_value():
         np.testing.assert_almost_equal(gauss5, gd_val)
 
     # Test values generated from a distribution in a file
-    dd=galsim.DistDeviate(rng,filename='config_input/distribution.txt',interpolant='linear',xmin=0.,xmax=0.5)
+    dd=galsim.DistDeviate(rng,file_name='config_input/distribution.txt',interpolant='linear',xmin=0.,xmax=0.5)
     for k in range(6):
         dist1 = galsim.config.ParseValue(config,'dist1',config, float)[0]
         np.testing.assert_almost_equal(dist1, dd())
-    dd=galsim.DistDeviate(rng,filename='config_input/distribution.txt',interpolant='linear',xmin=0.,xmax=1.0)
+    dd=galsim.DistDeviate(rng,file_name='config_input/distribution.txt',interpolant='linear',xmin=0.,xmax=1.0)
     for k in range(6):
         dist2 = galsim.config.ParseValue(config,'dist2',config, float)[0]
         np.testing.assert_almost_equal(dist2, dd())
-    dd=galsim.DistDeviate(rng,filename='config_input/distribution.txt',interpolant='linear',xmin=0.5,xmax=1.0)
+    dd=galsim.DistDeviate(rng,file_name='config_input/distribution.txt',interpolant='linear',xmin=0.5,xmax=1.0)
     for k in range(6):
         dist3 = galsim.config.ParseValue(config,'dist3',config, float)[0]
         np.testing.assert_almost_equal(dist3, dd())
-    dd=galsim.DistDeviate(rng,filename='config_input/distribution2.txt',interpolant='linear',xmin=0.5,xmax=1.0)
+    dd=galsim.DistDeviate(rng,file_name='config_input/distribution2.txt',interpolant='linear',xmin=0.5,xmax=1.0)
     for k in range(6):
         dist4 = galsim.config.ParseValue(config,'dist4',config, float)[0]
         np.testing.assert_almost_equal(dist4, dd())
