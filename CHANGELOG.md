@@ -17,3 +17,6 @@ Changes from v0.3 to current version:
 
 * Added a DistDeviate class that generates pseudo-random numbers from a user-defined probability
   distribution. (Issue #306)
+  
+* Added an addNoiseSNR() method to Image classes that adds noise such that the image has a 
+  specified signal-to-noise ratio. (Issue #349)
