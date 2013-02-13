@@ -1399,7 +1399,8 @@ class InterpolatedImage(GSObject):
                                                           noise_pad = 0., rng = None,
                                                           pad_image = 0.,
                                                           calculate_stepk = True,
-                                                          calculate_maxk = True)
+                                                          calculate_maxk = True,
+                                                          use_cache = True)
 
     Initializes interpolated_image as a galsim.InterpolatedImage() instance.
 
@@ -1918,7 +1919,8 @@ class RealGalaxy(GSObject):
     
         real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index=None, id=None, random=False, 
                                         rng=None, x_interpolant=None, k_interpolant=None,
-                                        flux=None, pad_factor = 0, noise_pad=False, pad_image=0.)
+                                        flux=None, pad_factor = 0, noise_pad=False, pad_image=0.,
+                                        use_cache = True)
 
     This initializes real_galaxy with three SBInterpolatedImage objects (one for the deconvolved
     galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
@@ -1966,6 +1968,9 @@ class RealGalaxy(GSObject):
                                         filename for a file containing an Image of an example noise
                                         field that will be used to calculate the noise power
                                         spectrum and generate noise in the padding region.
+                                In the last case, if the same file is used repeatedly, then use of
+                                the `use_cache` keyword (see below) can be used to prevent the need
+                                for repeated galsim.ImageCorrFunc initializations.
                                 [default `noise_pad = False`]
     @param pad_image            Image to be used for deterministically padding the original image.
                                 This can be specified in several ways:
@@ -1983,6 +1988,9 @@ class RealGalaxy(GSObject):
                                 `noise_pad`, for example to pad with some constant sky level and
                                 some associated noise. (Default `pad_image = 0.`, i.e., pad with
                                 zeros.)
+    @param use_cache            Specify whether to cache noise_pad read in from a file to save
+                                having to build an ImageCorrFunc repeatedly from the same image.
+                                (Default `use_cache = True`)
 
     Methods
     -------
@@ -2003,7 +2011,7 @@ class RealGalaxy(GSObject):
     # --- Public Class methods ---
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
                  rng=None, x_interpolant=None, k_interpolant=None, flux=None, pad_factor = 0,
-                 noise_pad=False, pad_image=0.):
+                 noise_pad=False, pad_image=0., use_cache=True):
 
         import pyfits
 
@@ -2108,16 +2116,24 @@ class RealGalaxy(GSObject):
                     cf = noise_pad
                 elif isinstance(noise_pad,galsim.BaseImageF) or isinstance(noise_pad,galsim.BaseImageD):
                     cf = galsim.ImageCorrFunc(noise_pad)
+                elif use_cache and noise_pad in RealGalaxy._cache_noise_pad:
+                    cf = RealGalaxy._cache_noise_pad[noise_pad]
+                    cf.scaleVariance(real_galaxy_catalog.variance[use_index] /
+                                     RealGalaxy._cache_variance[noise_pad])
                 elif isinstance(noise_pad, str):
                     try:
-                        tmp_im = galsim.fits.read(noise_pad)
-                        # this small patch may have different overall variance, so rescale while
-                        # preserving the correlation structure
-                        tmp_im *= np.sqrt(self.pad_variance/np.var(tmp_im.array))
-                        cf = galsim.ImageCorrFunc(tmp_im)
+                        tmp_img = galsim.fits.read(noise_pad)
+                        tmp_var = np.var(tmp_img.array)
+                        cf = galsim.ImageCorrFunc(tmp_img)
                     except:
                         raise RuntimeError("Can't read in Image to define correlated noise " +
                                            "field for noise padding from specified file!")
+                    if use_cache:
+                        RealGalaxy._cache_noise_pad[noise_pad] = cf
+                        RealGalaxy._cache_variance[noise_pad] = tmp_var
+                    # this small patch may have different overall variance, so rescale while
+                    # preserving the correlation structure
+                    cf.scaleVariance(self.pad_variance/tmp_var)
                 else:
                     raise RuntimeError("noise_pad must be either a bool, ImageCorrFunc, Image, "+
                                        "or a filename for reading in an Image")
