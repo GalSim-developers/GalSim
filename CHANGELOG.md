@@ -14,3 +14,6 @@ Changes from v0.3 to current version:
 
 * There is now a python interface to C++ tables that can be used for interpolation in a more general
   context. (Issue #305)
+
+* Added an addNoiseSNR() method to Image classes that adds noise such that the image has a 
+  specified signal-to-noise ratio. (Issue #349)
