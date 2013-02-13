@@ -193,6 +193,9 @@ e^{-\sigma^2 k^2/2} \,\rmd k \\
  &= \frac{P_0}{2\pi\sigma^2} (e^{-\kmin^2\sigma^2/2}-e^{-\kmax^2\sigma^2/2}).
 \end{align}
 
+\textbf{Note from Rachel: if we use the integration within a square, I
+  get something that is about a factor of 4 lower.}
+
 We use three grids. The first is the standard GREAT10 grid with $L=10$
 degrees and $N=100$, so $d=0.1$ deg $=360$ arcsec.  I will define the
 Gaussian such that there is essentially no power left at our \kmax,
@@ -219,13 +222,17 @@ g1, g2 = test_ps.buildGriddedShears(grid_spacing=720., ngrid=50)
 print np.var(g1), np.var(g2), np.var(g1)+np.var(g2)
 \end{verbatim}
 
-The results are around $1.8\times 10^{-6}$ in the first two cases, and
-$4.6\times 10^{-7}$ in the last case.  Our expectations are around
-$3\times 10^{-7}$ for the first two cases, and $7.7\times 10^{-8}$.
-So the scaling with the grid spacing and grid size is okay, but the
-amplitude is off by a factor of $\sim 6$. Need to investigate whether
-this could be due to a missing factor of $2\pi$ in my prediction of
-the variance. \textbf{These results are with the version of GalSim
+The results are around $1.9\times 10^{-6}$ in the first two cases, and
+$4.6\times 10^{-7}$ in the last case.  Our expectations are consistent
+with this\footnote{\textbf{Note that I used to complain about a factor
+  of $2\pi$ off.  That's because, apparently, I lack the ability to
+  plug numbers into a formula.  -RM}}.
+So the amplitude and the scaling with the grid spacing and grid size
+are all okay.  \textbf{But now I'm a tad confused why it's not
+  consistent with the variance calculation on a square grid, just as
+  in the next section. -RM}
+
+ \textbf{These results are with the version of GalSim
   with the dimensionality fix.  Before that, the variances were all
   the same, which means the scaling with $\sigma$ was wrong.}
 
