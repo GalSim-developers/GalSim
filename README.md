@@ -126,12 +126,19 @@ Demonstration scripts
 ---------------------
 
 There are a number of scripts in `examples/` that demonstrate how the code can
-be used.  These are called `demo1.py`-`demo11.py`, and can be run either using
+be used.  These are called `demo1.py`-`demo10.py`, and can be run either using
 (e.g.) `python demo1.py` while sitting in `examples/`, or by doing `scons
 examples` and then using the executable `bin/demo1`.  A completely parallel
-sequence of configuration scripts, `demo1.yaml`-`demo11.yaml`, demonstrates how
+sequence of configuration scripts, `demo1.yaml`-`demo10.yaml`, demonstrates how
 to make the same set of simulations using config scripts that can be input to
-`bin/galsim_yaml`.  As the project develops through further versions, and adds
+`bin/galsim_yaml`.  
+
+All demonstration scripts (including `bin/demo1`, etc) are meant to be run 
+within the `examples/` directory.  The demos can be run in a different 
+directory, but then the demo script will not be able to find the required files
+or directories.
+
+As the project develops through further versions, and adds
 further capabilities to the software, more demo scripts will be added to
 `examples/` to illustrate what GalSim can do.
 
