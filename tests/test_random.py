@@ -541,6 +541,7 @@ if __name__ == "__main__":
     test_chi2_rand()
     test_chi2_image()
     test_distfunction_rand()
+    test_distlambdafunction_rand()
     test_distfunction_image()
     test_distarray_rand()
     test_distarray_image()
