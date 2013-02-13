@@ -17,7 +17,8 @@
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
 """@file noise.py
-Module which adds the addNoise and addNoiseSNR methods to the galsim.Image classes at the Python layer.
+Module which adds the addNoise and addNoiseSNR methods to the galsim.Image classes at the Python
+layer.
 """
 
 from . import _galsim
@@ -67,7 +68,7 @@ def addNoiseSNR(self, snr, sky_level=None, rng=_galsim.UniformDeviate()):
     cancel and we find that
         S/N = sqrt( sum I(x,y)^2 / sky_level )
     and therefore, for a given I(x,y) and S/N,
-    sky_level = sum I(x,y)^2/(S/N)^2.
+        sky_level = sum I(x,y)^2/(S/N)^2.
     """
     import numpy
     if not isinstance(rng,(_galsim.BaseDeviate,int,long)):
