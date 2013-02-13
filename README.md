@@ -126,10 +126,10 @@ Demonstration scripts
 ---------------------
 
 There are a number of scripts in `examples/` that demonstrate how the code can
-be used.  These are called `demo1.py`-`demo10.py`, and can be run either using
+be used.  These are called `demo1.py`-`demo11.py`, and can be run either using
 (e.g.) `python demo1.py` while sitting in `examples/`, or by doing `scons
 examples` and then using the executable `bin/demo1`.  A completely parallel
-sequence of configuration scripts, `demo1.yaml`-`demo10.yaml`, demonstrates how
+sequence of configuration scripts, `demo1.yaml`-`demo11.yaml`, demonstrates how
 to make the same set of simulations using config scripts that can be input to
 `bin/galsim_yaml`.  
 
