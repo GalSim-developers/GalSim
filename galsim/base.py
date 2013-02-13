@@ -1918,7 +1918,7 @@ class RealGalaxy(GSObject):
     
         real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index=None, id=None, random=False, 
                                         rng=None, x_interpolant=None, k_interpolant=None,
-                                        flux=None, pad_factor = 0, noise_pad=False)
+                                        flux=None, pad_factor = 0, noise_pad=False, pad_image=0.)
 
     This initializes real_galaxy with three SBInterpolatedImage objects (one for the deconvolved
     galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
@@ -1967,6 +1967,22 @@ class RealGalaxy(GSObject):
                                         field that will be used to calculate the noise power
                                         spectrum and generate noise in the padding region.
                                 [default `noise_pad = False`]
+    @param pad_image            Image to be used for deterministically padding the original image.
+                                This can be specified in several ways:
+                                    (a) as a float, which is interpreted as a constant value to be
+                                        used for the padding;
+                                    (b) as a galsim.Image; or
+                                    (c) as a string which is interpreted as a filename containing an
+                                        image to use.
+                                If option (a) is used, then `pad_factor` is used to determine the
+                                amount of image padding.  For options (b) and (c), the size of the
+                                image that is passed in is taken to specify the amount of padding,
+                                and so the `pad_factor` keyword should be equal to 1, i.e., no
+                                padding.  The `pad_image` scale is ignored, and taken to be equal to
+                                that of the `image`. Note that `pad_image` can be used together with
+                                `noise_pad`, for example to pad with some constant sky level and
+                                some associated noise. (Default `pad_image = 0.`, i.e., pad with
+                                zeros.)
 
     Methods
     -------
@@ -1987,7 +2003,7 @@ class RealGalaxy(GSObject):
     # --- Public Class methods ---
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
                  rng=None, x_interpolant=None, k_interpolant=None, flux=None, pad_factor = 0,
-                 noise_pad=False):
+                 noise_pad=False, pad_image=0.):
 
         import pyfits
 
@@ -2031,8 +2047,6 @@ class RealGalaxy(GSObject):
             self.k_interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))
         else:
             self.k_interpolant = galsim.utilities.convert_interpolant_to_2d(k_interpolant)
-        if pad_factor <= 0.:
-            pad_factor = 4.
 
         # read in data about galaxy from FITS binary table; store as normal attributes of RealGalaxy
 
@@ -2040,6 +2054,42 @@ class RealGalaxy(GSObject):
         self.catalog_file = real_galaxy_catalog.file_name
         self.index = use_index
         self.pixel_scale = float(real_galaxy_catalog.pixel_scale[use_index])
+
+        # handle padding by an image
+        specify_size = True
+        padded_size = gal_image.getPaddedSize(pad_factor)
+        try:
+            pad_image = float(pad_image)
+        except:
+            pass
+        if isinstance(pad_image, float):
+            specify_size = False
+            if isinstance(gal_image, galsim.BaseImageF):
+                pad_image = galsim.ImageF(padded_size, padded_size, init_value = pad_image)
+            if isinstance(gal_image, galsim.BaseImageD):
+                pad_image = galsim.ImageD(padded_size, padded_size, init_value = pad_image)
+        elif isinstance(pad_image,str):
+            try:
+                pad_image = galsim.fits.read(pad_image)
+            except:
+                raise RuntimeError("Can't read in Image for padding from specified file!")
+        if not isinstance(pad_image, galsim.BaseImageF) and not isinstance(pad_image,
+                                                                           galsim.BaseImageD):
+            raise ValueError("Supplied pad_image is not one of the allowed types!")
+        # If an image was supplied directly or from a file, check its size:
+        #    Cannot use if too small.
+        #    Use to define the final image size otherwise.
+        if specify_size:
+            deltax = (1+pad_image.getXMax()-pad_image.getXMin())-(1+gal_image.getXMax()-gal_image.getXMin())
+            deltay = (1+pad_image.getYMax()-pad_image.getYMin())-(1+gal_image.getYMax()-gal_image.getYMin())
+            if deltax < 0 or deltay < 0:
+                raise RuntimeError("Image supplied for padding is too small!")
+            if pad_factor != 1.:
+                import warnings
+                msg =  "Warning: ignoring specified pad_factor because user also specified\n"
+                msg += "         an image to use directly for the padding."
+                warnings.warn(msg)
+
 
         # handle noise-padding options
         try:
@@ -2085,29 +2135,54 @@ class RealGalaxy(GSObject):
                 raise TypeError("rng provided to InterpolatedImage constructor is not a BaseDeviate")
             gaussian_deviate.setSigma(np.sqrt(self.pad_variance))
 
-            padded_size = gal_image.getPaddedSize(pad_factor)
-            if isinstance(gal_image, galsim.BaseImageF):
-                pad_image = galsim.ImageF(padded_size, padded_size)
-            if isinstance(gal_image, galsim.BaseImageD):
-                pad_image = galsim.ImageD(padded_size, padded_size)
             # populate padding image with noise field
             if type(noise_pad) is bool:
                 gaussian_deviate.applyTo(pad_image.view())
             else:
                 cf.applyNoiseTo(pad_image, dev=gaussian_deviate)
-            # Now make the SBInterpolatedImage for the original object and the PSF
-            self.original_image = galsim.SBInterpolatedImage(
-                gal_image, xInterp=self.x_interpolant, kInterp=self.k_interpolant,
-                dx=self.pixel_scale, pad_factor=pad_factor, pad_image=pad_image)
         else:
             self.pad_variance=0.
-            self.original_image = galsim.SBInterpolatedImage(
-                gal_image, xInterp=self.x_interpolant, kInterp=self.k_interpolant,
-                dx=self.pixel_scale, pad_factor=pad_factor)
 
-        # also make the original PSF image
+        # Now we have to check: was the padding determined using pad_factor?  Or by passing in an
+        # image for padding?  Treat these cases differently:
+        # (1) If the former, then we can simply have the C++ handle the padding process.
+        # (2) If the latter, then we have to do the padding ourselves, and pass the resulting image
+        # to the C++ with pad_factor explicitly set to 1.
+        if specify_size is False:
+            # Make the SBInterpolatedImage out of the image.
+            self.original_image = galsim.SBInterpolatedImage(gal_image,
+                                                             xInterp=self.x_interpolant,
+                                                             kInterp=self.k_interpolant,
+                                                             dx=self.pixel_scale,
+                                                             pad_factor=pad_factor,
+                                                             pad_image=pad_image)
+        else:
+            # Leave the original image as-is.  Instead, we shift around the image to be used for
+            # padding.  Find out how much x and y margin there should be on lower end:
+            x_marg = int(np.round(0.5*deltax))
+            y_marg = int(np.round(0.5*deltay))
+            # Now reset the pad_image to contain the original image in an even way
+            pad_image = pad_image.view()
+            pad_image.setScale(dx)
+            pad_image.setOrigin(image.getXMin()-x_marg, image.getYMin()-y_marg)
+            # Set the central values of pad_image to be equal to the input image
+            pad_image[image.bounds] = gal_image
+            self.original_image = galsim.SBInterpolatedImage(pad_image,
+                                                             xInterp=self.x_interpolant,
+                                                             kInterp=self.k_interpolant,
+                                                             dx=self.pixel_scale,
+                                                             pad_factor=1.)
+
+        # also make the original PSF image, with far less fanfare: we don't need to pad with
+        # anything interesting.
         self.original_PSF = galsim.SBInterpolatedImage(
             PSF_image, xInterp=self.x_interpolant, kInterp=self.k_interpolant, dx=self.pixel_scale)
+
+        # recalculate Fourier-space attributes rather than using overly-conservative defaults
+        self.original_image.calculateStepK()
+        self.original_image.calculateMaxK()
+        self.original_PSF.calculateStepK()
+        self.original_PSF.calculateMaxK()
         
         if flux != None:
             self.original_image.setFlux(flux)
