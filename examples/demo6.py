@@ -104,7 +104,7 @@ def main(argv):
     # Read in galaxy catalog
     # Note: dir is the directory both for the catalog itself and also the directory prefix
     # for the image files listed in the catalog.
-    # If the images are in a different directory, you may also specify dir, which gives
+    # If the images are in a different directory, you may also specify images_dir, which gives
     # the relative path from dir to wherever the images are located.
     real_galaxy_catalog = galsim.RealGalaxyCatalog(cat_file_name, dir=dir)
 
