@@ -202,12 +202,11 @@ class _WriteFile:
             fout.close()
 
         # There is a bug in pyfits where they don't add the size of the variable length array
-        # to the TFORMx header keywords.  They should have a (8) at the end of them.
-        # This bug is not currently fixed as far as I know, but I've filed a tickes (199) 
-        # on the pyfits tracker, so presumably this will be fixed eventually.
-        # TODO: When they do fix it, change the version number here.
+        # to the TFORMx header keywords.  They should have size at the end of them.
+        # This bug has been fixed in version 3.1.2.
+        # (See http://trac.assembla.com/pyfits/ticket/199)
         import pyfits
-        if pyfits_compress and pyfits.__version__ < '9.9':
+        if pyfits_compress and pyfits.__version__ < '3.1.2':
             hdus = pyfits.open(file,'update',disable_image_compression=True)
             for hdu in hdus[1:]: # Skip PrimaryHDU
                 # Find the maximum variable array length  

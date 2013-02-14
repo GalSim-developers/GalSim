@@ -402,6 +402,11 @@ same output images as the Python scripts. They are also well commented, and
 can be considered a parallel tutorial for learning the config file usage of
 GalSim.
 
+All demo scripts are designed to be run in the `GalSim/examples` directory. Or,
+the executable versions of the demos in `GalSim/bin` (which are the outputs of
+running `scons examples`) can be run from either `GalSim/bin` or
+`GalSim/examples`. 
+
 
 4. Platform-specific notes
 ==========================
