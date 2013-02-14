@@ -596,7 +596,7 @@ namespace galsim {
                 iterator it1 = rowBegin(y);
                 const iterator ee = rowEnd(y);      
                 typename BaseImage<U>::const_iterator it2 = rhs.rowBegin(y2);
-                while (it1 != ee) *(it1++) = *(it2++);
+                while (it1 != ee) *(it1++) = T(*(it2++));
             }
         }
     };
