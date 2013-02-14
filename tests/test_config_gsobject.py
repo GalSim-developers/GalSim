@@ -510,7 +510,7 @@ def test_realgalaxy():
         'gal7' : { 'type' : 'RealGalaxy' , 'index' : 32, 'pad_image' : 'blankimg.fits' },
         'gal8' : { 'type' : 'RealGalaxy' , 'index' : 99, 'pad_image' : '4.' },
         'gal9' : { 'type' : 'RealGalaxy' ,
-                   'index' : 87, 'pad_image' : 'blankimg.fits', 'noise_pad' : 'blank_img.fits'}
+                   'index' : 87, 'pad_image' : 'blankimg.fits', 'noise_pad' : 'blankimg.fits'}
     }
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
