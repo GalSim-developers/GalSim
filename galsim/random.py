@@ -314,7 +314,7 @@ class DistDeviate:
         return (x_min,x_max)
 
     def _testrange(self, function, x_min, frange):
-    	import numpy
+        import numpy
         xarr=x_min+0.1*frange*numpy.array([1.0*x for x in range(10)])           
         farr=[]
         for x in xarr:
