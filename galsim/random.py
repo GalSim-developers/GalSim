@@ -205,13 +205,16 @@ class DistDeviate:
 
         xarray=xmin+(1.*xmax-xmin)/(npoints-1)*numpy.array(range(npoints),float)
         # cdf is the cumulative distribution function--just easier to type!
-        cdf=[]
-        probability=[]
-        for x in xarray:
-            cdf.append(galsim.integ.int1d(function,xmin,x,rel_err=tol))
-            probability.append(function(x))
+        cdf=[0.]
+        dcdf=[]
+        probability=[function(xmin)]
+        for ip in range(1,len(xarray)):
+            probability.append(function(xarray[ip]))
+            dcdf.append(galsim.integ.int1d(function,xarray[ip-1],xarray[ip]))
+            cdf.append(cdf[-1]+dcdf[-1])
         cdf=numpy.array(cdf)
         probability=numpy.array(probability)
+        dcdf=numpy.array(dcdf)
         # Check that the probability is nonnegative
         if not numpy.all(probability>=0):
             raise ValueError('Negative probability passed to DistDeviate: %s'%file_name)
@@ -219,12 +222,12 @@ class DistDeviate:
         maxprobability=max(probability)
         if maxprobability==0:
         	raise ValueError('All probabilities passed to DistDeviate are 0: %s'%file_name)
-        for ip in range(len(probability)-1,-1,-1):
+        for ip in range(len(xarray)-1,-1,-1):
         	if (probability[ip]/maxprobability<tol):
         		probability=numpy.delete(probability,ip)
         		cdf=numpy.delete(cdf,ip)
         		xarray=numpy.delete(xarray,ip)
-        dcdf=numpy.diff(cdf)
+        dcdf=numpy.diff(cdf) # dcdf may have changed if we removed some points
         for ip in range(len(dcdf)-1,-1,-1):
         	# <tol misses some things, since int1d is checking a different quantity
         	if (abs(dcdf[ip])<10*tol): 

@@ -106,16 +106,14 @@ dmax=2.0
 def dfunction(x):
 	return x*x
 # Tabulated results for DistDeviate function call
-dFunctionResult = (0.9826461346196363, 1.197330733170133, 1.5105900949284945)
-
+dFunctionResult = (0.9826461346196363, 1.1973307331701328, 1.5105900949284945)
 
 # x and y arrays and interpolant to use for DistDeviate array call tests
 # dnpoints and dinterpolant set in previous test
 dx=[0.,1.,2.,3.,4.,5.]
 dp=[0.1, 0.1, 0., 0., 0.1, 0.1]
 # Tabulated results for DistDeviate array call
-dArrayResult = (0.35582771788458956, 0.6437040480905831, 1.3558174425675618)
-
+dArrayResult = (0.3558276852127166, 0.6437039889860897, 1.3560616118664859)
 
 def funcname():
     import inspect
