@@ -104,7 +104,7 @@ dinterpolant='linear'
 dmin=0.0
 dmax=2.0
 def dfunction(x):
-	return x*x
+    return x*x
 # Tabulated results for DistDeviate function call
 dFunctionResult = (0.9826461346196363, 1.1973307331701328, 1.5105900949284945)
 
@@ -429,7 +429,6 @@ def test_distfunction_image():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
 def test_distarray_rand():
     """Test distribution-defined random number generator with an array for expected result given 
     the above seed.
@@ -491,7 +490,6 @@ def test_distLookupTableboundaries():
                                                                  'upper bounds')
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
-
 
 def test_multiprocess():
     """Test that the same random numbers are generated in single-process and multi-process modes.
