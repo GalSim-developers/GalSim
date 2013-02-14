@@ -203,11 +203,12 @@ class DistDeviate:
 
         xarray=x_min+(1.*x_max-x_min)/(npoints-1)*numpy.array(range(npoints),float)
         # cdf is the cumulative distribution function--just easier to type!
-        cdf=[0.]
-        dcdf=[]
-        for ip in range(1,len(xarray)):
-            dcdf.append(galsim.integ.int1d(function,xarray[ip-1],xarray[ip]))
-            cdf.append(cdf[-1]+dcdf[-1])
+        dcdf = [galsim.integ.int1d(function, xarray[i], xarray[i+1]) for i in range(npoints - 1)]
+        cdf = [sum(dcdf[0:i]) for i in range(npoints)]
+#        cdf = [sum(dcdf.insert(0, 0.)[0:i+1]) for i in range(npoints)]
+#        for ip in range(1,len(xarray)):
+#            dcdf.append(galsim.integ.int1d(function,xarray[ip-1],xarray[ip]))
+#            cdf.append(cdf[-1]+dcdf[-1])
         #Quietly renormalize the probability if it wasn't already normalized
         totalprobability=cdf[-1]
         cdf=numpy.array(cdf)/totalprobability
@@ -226,8 +227,7 @@ class DistDeviate:
             #Tweak the edges of dx=0 regions so function is always increasing
             for index in numpy.where(dcdf == 0)[0]:
                 if index+2<len(cdf):
-                  cdf[index+1]+=2.23E-16*(
-                      cdf[index+2]-cdf[index+1])
+                  cdf[index+1]+=2.23E-16
                 else:
                   cdf=cdf[:-1]
                   xarray=xarray[:-1]
