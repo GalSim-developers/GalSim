@@ -226,7 +226,7 @@ class DistDeviate:
             #Tweak the edges of dx=0 regions so function is always increasing
             for index in numpy.where(dcdf == 0)[0]:
                 if index+2<len(cdf):
-                  cdf[index+1]+=1.E-6*(
+                  cdf[index+1]+=2.23E-16*(
                       cdf[index+2]-cdf[index+1])
                 else:
                   cdf=cdf[:-1]
