@@ -222,13 +222,13 @@ class DistDeviate:
         maxprobability=max(probability)
         if maxprobability==0:
         	raise ValueError('All probabilities passed to DistDeviate are 0: %s'%file_name)
-        for ip in range(len(xarray)-1,-1,-1):
+        for ip in range(len(xarray)-1,0,-1): #To 0 so we don't delete the cdf=0 point
         	if (probability[ip]/maxprobability<tol):
         		probability=numpy.delete(probability,ip)
         		cdf=numpy.delete(cdf,ip)
         		xarray=numpy.delete(xarray,ip)
         dcdf=numpy.diff(cdf) # dcdf may have changed if we removed some points
-        for ip in range(len(dcdf)-1,-1,-1):
+        for ip in range(len(dcdf)-1,0,-1):
         	# <tol misses some things, since int1d is checking a different quantity
         	if (abs(dcdf[ip])<10*tol): 
         		probability=numpy.delete(probability,ip)
