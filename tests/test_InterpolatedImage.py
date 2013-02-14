@@ -460,11 +460,7 @@ def test_uncorr_padding():
     import time
     t1 = time.time()
 
-    # Set up some defaults: use weird image sizes / shapes and noise variances.  But, important
-    # note: SBInterpolatedImage identifies centroid via summation over pixels to get unweighted
-    # moments.  This means that if we make the noise images too huge, then those moments will
-    # diverge and the estimated centroids can be outside of the image, which causes seg faults in
-    # the C++ layer.  So make the images decently big but not enormous.
+    # Set up some defaults: use weird image sizes / shapes and noise variances.
     decimal_precise=5
     decimal_coarse=2
     orig_nx = 147
@@ -606,6 +602,47 @@ def test_corr_padding():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_image_padding():
+    """Test for padding of InterpolatedImage with deterministic values."""
+    import time
+    t1 = time.time()
+
+    # Set up some defaults: use weird image sizes / shapes and noise variances.
+    decimal=2
+    orig_nx = 147
+    orig_ny = 174
+    init_value = -0.14
+    noise_var = 0.01
+    pad_val = 0.23
+    big_nx = 173
+    big_ny = 204
+    orig_seed = 1173
+
+    # make a small const image
+    orig_img = galsim.ImageF(orig_nx, orig_ny, init_value=init_value)
+    orig_img.setScale(1.)
+    # make an InterpolatedImage, padded with a (different) constant value
+    int_im = galsim.InterpolatedImage(orig_img, pad_image = pad_val)
+    # draw that into a larger image
+    big_img = galsim.ImageF(big_nx, big_ny)
+    big_img = int_im.draw(big_img, dx=1.)
+    # check the sum of pixel values
+    sum_expected = init_value*orig_nx*orig_ny + pad_val*(big_nx*big_ny-orig_nx*orig_ny)
+    np.testing.assert_almost_equal(np.sum(big_img.array)/sum_expected-1., 0.,decimal=decimal,
+        err_msg='Padding with constant value did not give expected sum of image values')
+
+    # now do the same process while having noise in padded region, too:
+    int_im = galsim.InterpolatedImage(orig_img, pad_image=pad_val, noise_pad=noise_var,
+                                      rng=galsim.BaseDeviate(orig_seed))
+    big_img = galsim.ImageF(big_nx, big_ny)
+    big_img = int_im.draw(big_img, dx=1.)    
+    # check that sums are reasonably consistent
+    np.testing.assert_almost_equal(np.sum(big_img.array)/sum_expected-1., 0., decimal=decimal,
+        err_msg='Padding with constant value + noise did not give expected sum of image values')
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_roundtrip()
     test_fluxnorm()
@@ -614,3 +651,4 @@ if __name__ == "__main__":
     test_operations()
     test_uncorr_padding()
     test_corr_padding()
+    test_image_padding()
