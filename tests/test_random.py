@@ -420,7 +420,6 @@ def test_distfunction_image():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
 def test_distarray_rand():
     """Test distribution-defined random number generator with an array for expected result given 
     the above seed.
@@ -450,7 +449,6 @@ def test_distarray_image():
                                        "reproduce expected sequence")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
-
 
 def test_multiprocess():
     """Test that the same random numbers are generated in single-process and multi-process modes.
