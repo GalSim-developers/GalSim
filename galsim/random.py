@@ -221,20 +221,20 @@ class DistDeviate:
         #Now get rid of points with probability == 0
         maxprobability=max(probability)
         if maxprobability==0:
-        	raise ValueError('All probabilities passed to DistDeviate are 0: %s'%file_name)
+            raise ValueError('All probabilities passed to DistDeviate are 0: %s'%file_name)
         for ip in range(len(xarray)-1,0,-1): #To 0 so we don't delete the cdf=0 point
-        	if (probability[ip]/maxprobability<tol):
-        		probability=numpy.delete(probability,ip)
-        		cdf=numpy.delete(cdf,ip)
-        		xarray=numpy.delete(xarray,ip)
+            if (probability[ip]/maxprobability<tol):
+                probability=numpy.delete(probability,ip)
+                cdf=numpy.delete(cdf,ip)
+                xarray=numpy.delete(xarray,ip)
         dcdf=numpy.diff(cdf) # dcdf may have changed if we removed some points
         for ip in range(len(dcdf)-1,0,-1):
-        	# <tol misses some things, since int1d is checking a different quantity
-        	if (abs(dcdf[ip])<10*tol): 
-        		probability=numpy.delete(probability,ip)
-        		cdf=numpy.delete(cdf,ip)
-        		dcdf=numpy.delete(dcdf,ip)
-        		xarray=numpy.delete(xarray,ip)
+            # <tol misses some things, since int1d is checking a different quantity
+            if (abs(dcdf[ip])<10*tol): 
+                probability=numpy.delete(probability,ip)
+                cdf=numpy.delete(cdf,ip)
+                dcdf=numpy.delete(dcdf,ip)
+                xarray=numpy.delete(xarray,ip)
         if len(cdf)==0:
             raise ValueError('All probabilities passed to DistDeviate are 0: %s'%file_name)
         if not (numpy.all(dcdf>0)):
@@ -321,7 +321,7 @@ class DistDeviate:
         return (xmin,xmax)
 
     def _testrange(self, function, xmin, frange):
-    	import numpy
+        import numpy
         xarr=xmin+0.1*frange*numpy.array([1.0*x for x in range(10)])           
         farr=[]
         for x in xarr:

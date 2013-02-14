@@ -104,7 +104,7 @@ dinterpolant='linear'
 dmin=0.0
 dmax=2.0
 def dfunction(x):
-	return x*x
+    return x*x
 # Tabulated results for DistDeviate function call
 dFunctionResult = (0.9826461346196363, 1.1973307331701328, 1.5105900949284945)
 
