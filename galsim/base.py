@@ -2004,9 +2004,12 @@ class RealGalaxy(GSObject):
                     "k_interpolant" : str,
                     "flux" : float ,
                     "pad_factor" : float,
-                    "noise_pad" : str }
+                    "noise_pad" : str,
+                    "pad_image" : str}
     _single_params = [ { "index" : int , "id" : str } ]
     _takes_rng = True
+    _cache_noise_pad = {}
+    _cache_variance = {}
 
     # --- Public Class methods ---
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
