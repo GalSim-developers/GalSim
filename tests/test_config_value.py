@@ -160,19 +160,19 @@ def test_float_value():
         np.testing.assert_almost_equal(gauss5, gd_val)
 
     # Test values generated from a distribution in a file
-    dd=galsim.DistDeviate(rng,file_name='config_input/distribution.txt',interpolant='linear',xmin=0.,xmax=0.5)
+    dd=galsim.DistDeviate(rng,file_name='config_input/distribution.txt',interpolant='linear',x_min=0.,x_max=0.5)
     for k in range(6):
         dist1 = galsim.config.ParseValue(config,'dist1',config, float)[0]
         np.testing.assert_almost_equal(dist1, dd())
-    dd=galsim.DistDeviate(rng,file_name='config_input/distribution.txt',interpolant='linear',xmin=0.,xmax=1.0)
+    dd=galsim.DistDeviate(rng,file_name='config_input/distribution.txt',interpolant='linear',x_min=0.,x_max=1.0)
     for k in range(6):
         dist2 = galsim.config.ParseValue(config,'dist2',config, float)[0]
         np.testing.assert_almost_equal(dist2, dd())
-    dd=galsim.DistDeviate(rng,file_name='config_input/distribution.txt',interpolant='linear',xmin=0.5,xmax=1.0)
+    dd=galsim.DistDeviate(rng,file_name='config_input/distribution.txt',interpolant='linear',x_min=0.5,x_max=1.0)
     for k in range(6):
         dist3 = galsim.config.ParseValue(config,'dist3',config, float)[0]
         np.testing.assert_almost_equal(dist3, dd())
-    dd=galsim.DistDeviate(rng,file_name='config_input/distribution2.txt',interpolant='linear',xmin=0.5,xmax=1.0)
+    dd=galsim.DistDeviate(rng,file_name='config_input/distribution2.txt',interpolant='linear',x_min=0.5,x_max=1.0)
     for k in range(6):
         dist4 = galsim.config.ParseValue(config,'dist4',config, float)[0]
         np.testing.assert_almost_equal(dist4, dd())

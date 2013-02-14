@@ -449,29 +449,25 @@ def _GenerateFromRandomDistribution(param, param_name, base, value_type):
     file_name = kwargs['file_name']
     interpolant = kwargs.get('interpolant','linear')
     npoints = kwargs.get('npoints',256)
-    xmin = kwargs.get('min',None)
-    xmax = kwargs.get('max',None)
+    x_min = kwargs.get('min',None)
+    x_max = kwargs.get('max',None)
 
     if 'distdev' in base:
         # The overhead for making a DistDeviate is large enough that we'd rather not do it every 
         # time, so first check if we've already made one:
         distdev = base['distdev']
-        if (base['current_distfile_name'] != file_name or xmin != base['current_distxmin'] or 
-            xmax != base['current_distxmax']):
+        if (base['current_distfile_name'] != file_name or x_min != distdev.x_min or 
+            x_max != distdev.x_max):
             distdev=galsim.DistDeviate(rng,file_name=file_name,interpolant=interpolant,
-                                       npoints=npoints,xmin=xmin,xmax=xmax)
+                                       npoints=npoints,x_min=x_min,x_max=x_max)
             base['distdev'] = distdev
             base['current_distfile_name'] = file_name
-            base['current_distxmin'] = xmin
-            base['current_distxmax'] = xmax
     else:
         # Otherwise, just go ahead and make a new one.
         distdev=galsim.DistDeviate(rng,file_name=file_name,interpolant=interpolant,npoints=npoints,
-                              xmin=xmin,xmax=xmax)
+                              x_min=x_min,x_max=x_max)
         base['distdev'] = distdev
         base['current_distfile_name'] = file_name
-        base['current_distxmin'] = xmin
-        base['current_distxmax'] = xmax
 
     val = distdev()
 

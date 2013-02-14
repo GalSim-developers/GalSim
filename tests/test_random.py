@@ -111,9 +111,18 @@ dFunctionResult = (0.9826461346196363, 1.1973307331701328, 1.5105900949284945)
 # x and y arrays and interpolant to use for DistDeviate array call tests
 # dnpoints and dinterpolant set in previous test
 dx=[0.,1.,2.,3.,4.,5.]
+dx_min=0.
+dx_max=5.
 dp=[0.1, 0.1, 0., 0., 0.1, 0.1]
 # Tabulated results for DistDeviate array call
 dArrayResult = (0.3558276852127166, 0.6437039889860897, 1.3560616118664859)
+
+# Function to test DistDeviate boundary finder
+def dboundaryfunction(x):
+    return np.exp(-0.5*x*x)
+# LookupTable to test DistDeviate boundary settings
+dLookupTable=galsim.LookupTable(x=dx,f=dp,interpolant=dinterpolant)
+
 
 def funcname():
     import inspect
@@ -381,7 +390,7 @@ def test_distfunction_rand():
     t1 = time.time()
     u = galsim.UniformDeviate(testseed)
     d = galsim.DistDeviate(
-        u, function=dfunction, xmin=dmin, xmax=dmax, npoints=dnpoints, interpolant=dinterpolant)
+        u, function=dfunction, x_min=dmin, x_max=dmax, npoints=dnpoints, interpolant=dinterpolant)
     testResult = (d(), d(), d())
     np.testing.assert_array_almost_equal(np.array(testResult), np.array(dFunctionResult), precision,
                                        err_msg='Wrong DistDeviate random number sequence generated')
@@ -396,7 +405,7 @@ def test_distlambdafunction_rand():
     t1 = time.time()
     u = galsim.UniformDeviate(testseed)
     d = galsim.DistDeviate(
-        u, function=lambda x: x*x, xmin=dmin, xmax=dmax, npoints=dnpoints, interpolant=dinterpolant)
+        u, function=lambda x: x*x, x_min=dmin, x_max=dmax, npoints=dnpoints, interpolant=dinterpolant)
     testResult = (d(), d(), d())
     np.testing.assert_array_almost_equal(np.array(testResult), np.array(dFunctionResult), precision,
                                        err_msg='Wrong DistDeviate random number sequence generated')
@@ -411,7 +420,7 @@ def test_distfunction_image():
     t1 = time.time()
     u = galsim.UniformDeviate(testseed)
     d = galsim.DistDeviate(
-        u, function=dfunction, xmin=dmin, xmax=dmax, npoints=dnpoints, interpolant=dinterpolant)
+        u, function=dfunction, x_min=dmin, x_max=dmax, npoints=dnpoints, interpolant=dinterpolant)
     testimage = galsim.ImageViewD(np.zeros((3, 1)))
     testimage.addNoise(d)
     np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(dFunctionResult), 
@@ -448,6 +457,38 @@ def test_distarray_image():
     np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(dArrayResult), 
                               precision, err_msg="DistDeviate generator applied to Images does not "
                                        "reproduce expected sequence")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_distboundaries():
+    """Test the boundary-finding method of the distribution-defined random number generator.
+    """
+    import time
+    t1 = time.time()
+    u = galsim.UniformDeviate(testseed)
+    d = galsim.DistDeviate(u, function=dboundaryfunction, npoints=dnpoints, interpolant=dinterpolant)
+    np.testing.assert_array_less(d.x_min, -5., err_msg='DistDeviate did not find appropriate lower boundary')
+    np.testing.assert_array_less(5., d.x_max, err_msg='DistDeviate did not find appropriate upper boundary')
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_distLookupTableboundaries():
+    """Test the boundary-finding method of the distribution-defined random number generator.
+    """
+    import time
+    t1 = time.time()
+    u = galsim.UniformDeviate(testseed)
+    d = galsim.DistDeviate(u, function=dLookupTable, npoints=dnpoints, interpolant=dinterpolant)
+    np.testing.assert_equal(d.x_min, dx_min, err_msg='DistDeviate did not find appropriate lower '
+                                                    'boundary when given a LookupTable')
+    np.testing.assert_equal(d.x_max, dx_max, err_msg='DistDeviate did not find appropriate upper '
+                                                    'boundary when given a LookupTable')
+    np.testing.assert_equal(d.x_min, dLookupTable.x_min, err_msg='DistDeviate and the LookupTable ' 
+                                                                 'passed to it have different '
+                                                                 'lower bounds')
+    np.testing.assert_equal(d.x_max, dLookupTable.x_max, err_msg='DistDeviate and the LookupTable ' 
+                                                                 'passed to it have different '
+                                                                 'upper bounds')
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -543,5 +584,7 @@ if __name__ == "__main__":
     test_distfunction_image()
     test_distarray_rand()
     test_distarray_image()
+    test_distboundaries()
+    test_distLookupTableboundaries()
     test_multiprocess()
 
