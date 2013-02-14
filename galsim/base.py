@@ -1512,6 +1512,7 @@ class InterpolatedImage(GSObject):
         'flux' : float ,
         'pad_factor' : float ,
         'noise_pad' : str ,
+        'pad_image' : str ,
         'calculate_stepk' : bool ,
         'calculate_maxk' : bool
     }
@@ -2182,10 +2183,10 @@ class RealGalaxy(GSObject):
             y_marg = int(np.round(0.5*deltay))
             # Now reset the pad_image to contain the original image in an even way
             pad_image = pad_image.view()
-            pad_image.setScale(dx)
-            pad_image.setOrigin(image.getXMin()-x_marg, image.getYMin()-y_marg)
+            pad_image.setScale(self.pixel_scale)
+            pad_image.setOrigin(gal_image.getXMin()-x_marg, gal_image.getYMin()-y_marg)
             # Set the central values of pad_image to be equal to the input image
-            pad_image[image.bounds] = gal_image
+            pad_image[gal_image.bounds] = gal_image
             self.original_image = galsim.SBInterpolatedImage(pad_image,
                                                              xInterp=self.x_interpolant,
                                                              kInterp=self.k_interpolant,
