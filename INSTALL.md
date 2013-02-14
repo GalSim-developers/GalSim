@@ -349,7 +349,7 @@ This is rather like a "make clean" command.
 
 If you are having trouble with installing, you may find some helpful hints at
 the GalSim Installation FAQ page on the Wiki:
-https://github.com/GalSim-developers/GalSim/wiki/Installation%20FAQs
+https://github.com/GalSim-developers/GalSim/wiki/Installation%20FAQ
 
 If you are still having trouble, please consider opening a new Issue on the
 GalSim Github page at https://github.com/GalSim-developers/GalSim to help find
