@@ -414,7 +414,7 @@ class PowerSpectrum(object):
         #        same length as the input.)
         if not isinstance(pf, galsim.LookupTable):
             try:
-                f1 = pf(1.)
+                f1 = pf(np.array((0.1,1.)))
             except:
                 raise AttributeError("%s is not a valid function"%pf_str)
             fake_arr = np.zeros(2)
