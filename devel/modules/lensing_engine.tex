@@ -21,6 +21,7 @@
 % BEGIN DOCUMENT
 %=====================================================================
 
+\newcommand{\klim}{\ensuremath{k_\mathrm{lim}}}
 \newcommand{\kmax}{\ensuremath{k_\mathrm{max}}}
 \newcommand{\kmin}{\ensuremath{k_\mathrm{min}}}
 \newcommand{\rmd}{\ensuremath{\mathrm{d}}}
@@ -114,30 +115,32 @@ there is a lot of shear power at small $k$), probably we should
  only expect normal behavior for Var($\gamma$), but it's still worth
  verifying this.  So, combining several equations,
 \beq\label{E:shearvar}
-\mathrm{Var}(\gamma) = \frac{1}{2\pi}\int k\,\rmd k P(k).
+\mathrm{Var}(\gamma) = \frac{1}{2\pi}\int_0^{\infty} k\,\rmd k P(k).
 \eeq
 which essentially says the shear variance is the power integrated over
-the allowed area in $k$ space.  I {\em think} (Barney: \emph{you are
-  right I am almost certain, see Section \ref{sect:DFTPS}}) that if we want to work
-in terms of $k_x$ and $k_y$, we can replace $2\pi k\rmd k$
-(integrating within a circle) with $\rmd
-k_x \rmd k_y$ (integrating within our square grid), so the above might also be
-written as
+the allowed area in $k$ space.  For the purpose of later calculations
+of power spectra for gridded quantities, it is more useful to think in
+terms of the 2d integral
 \beq\label{E:alt-shearvar}
-\mathrm{Var}(\gamma) = \frac{1}{(2\pi)^2} \int \rmd k_x \rmd k_y
+\mathrm{Var}(\gamma) = \frac{1}{(2\pi)^2} \int_{-\infty}^{\infty} \rmd k_x \rmd k_y
 P(k_x, k_y).
 \eeq
-\textbf{More comments from Rachel: Actually on further reflection I
-  think that there is something to be careful about here.  You could
-  imagine that the two integrals might give the same thing if
-  $\kmin\ll\kmax$ and if the power at large $k$ is negligible, but
-  actually, Eq.~\ref{E:shearvar} is integrating effectively over all
-  four quadrants in the $k_x$ vs. $k_y$ plane, whereas
-  Eq.~\ref{E:alt-shearvar} integrates over only one of them.  So they
-  should give a factor of four difference in the results.}
 
-None of these integrals have had limits on them.  Formally they should
-go from the minimum to the maximum accessible $k$ on our grid.  Our
+Alternatively, thinking ahead to when we will have a limited $k$
+range, we can rewrite this as
+\beq\label{E:alt-shearvar-limit}
+\mathrm{Var}(\gamma) = \frac{4}{(2\pi)^2} \int_{\kmin}^{\kmax} \rmd
+k_x \rmd k_y P(k).
+\eeq
+Here the factor of $4$ is meant to compensate for the other four
+quadrants that are not represented explicitly (i.e., negative $k_x$
+and/or $k_y$ values).
+
+In the limit that our power spectrum doesn't have much power at
+\kmax, Eq.~\ref{E:shearvar}, \ref{E:alt-shearvar}, and
+\ref{E:alt-shearvar-limit} should all give essentially the same answer.
+
+Our
 grid is defined by
 \begin{align}
 L &= \mbox{length of grid along one dimension (angular units)}\\
@@ -147,20 +150,11 @@ N &= \mbox{number of grid points along one dimension} = L/d
 
 Given this grid, our $\kmax=2\pi/d$.  The \kmin\ depends on whether
 we are thinking about one dimension or two; it's either $2\pi/L$ or
-$2\pi/(\sqrt{2}L)$.
+$2\pi/(\sqrt{2}L)$.  When integrating along the grid we use the former.
 
 In all of the above I have simply written $P(k)$ but in principle there can be
 two such functions, $P_{E}$ and $P_B$.  I believe these
 should simply be summed in the above variance equation, but should check this.
-
-A note about something possibly confusing: there are many papers that
-write equations for shear variances that include some window function,
-which we haven't included here.  I believe that is okay, because those
-papers are referring to a different calculation: they are averaging
-the shear in some cells, and computing the expected variance of those
-shears that have been averaged in cells.  In contrast, we're computing
-the variance of individual shears that have been defined within our
-grid, which is a completely different thing.
 
 \section{Comparison software}
 
@@ -183,13 +177,12 @@ not in general be valid for a small patch of the sky, due to sampling
 variance.  In order to include this sampling variance, it would be
 preferable to assign $P(0)=$ some kind of integral over $P(k<\kmin)$
 (perhaps an average power in that $k$ range; details to be worked out later) assuming the power function is
-defined for those value of $k$.
-
-Second, since we use a DFT of a finite set of samples, we implicitly
-have a $k$ defined on a periodic grid, not simply $P(k)=0$ for all
-$k>\kmax$.  This also means that we should possibly avoid using the
-variance as a metric, because what we really care about is whether the
-PS is represented properly within our $k$ range.
+defined for those value of $k$.  However, this limitation is only a
+problem if we are checking quantities like the shear correlation
+function or its value at $\theta=0$, i.e., the shear variance.  If we
+are testing the ability to recover a power spectrum $P(k)$ defined at
+the values of $k$ that are accessible to our grid, the $P(0)=0$
+condition that we've imposed is irrelevant.
 
 Moreover, we need to be well-sampled in $k$ space, so we should not
 use functions that do unreasonable things like $k^{-2}$.
@@ -198,34 +191,32 @@ use functions that do unreasonable things like $k^{-2}$.
 
 Barney suggested a test case that is a Gaussian, i.e., $P(k) =
 P_0 e^{-\sigma^2 k^2 / 2}$.  Here both $P_0$ and $\sigma^2$ both
-are dimensions of angle$^2$.  By Eq.~\ref{E:shearvar} calculations, this means that
+are dimensions of angle$^2$.  By Eq.~\ref{E:alt-shearvar-limit}, this means that
 \begin{align}
-\mathrm{Var}(\gamma) &= \frac{P_0}{2\pi}\int_{\kmin}^{\kmax} k \,
-e^{-\sigma^2 k^2/2} \,\rmd k \\
- &= \frac{P_0}{2\pi\sigma^2} (e^{-\kmin^2\sigma^2/2}-e^{-\kmax^2\sigma^2/2}).
+\mathrm{Var}(\gamma) &= \frac{4P_0}{(2\pi)^2} \left[\int_{\kmin}^{\kmax} 
+e^{-\sigma^2 k^2/2} \,\rmd k\right]^2 \\
+ &= \frac{P_0}{2\pi\sigma^2}\left[ Erf(\kmax\sigma/\sqrt{2}) - Erf(\kmin\sigma/\sqrt{2})\right]^2.
 \end{align}
-
-\textbf{Note from Rachel: That assumes we can integrate in a circle in
-  $k$-space.  Okay, really it's an annulus but $\kmin\ll\kmax$ so I'm
-  calling it a circle.  Anyway, if we use the Eq.~\ref{E:alt-shearvar}
-  for integration within a square, I
-  get something that is about a factor of 4 lower. My first gut
-  reaction is that this must be wrong, but then I noticed the issue
-  raised in the previous section on the same commit as this. }
 
 We use three grids. The first is the standard GREAT10 grid with $L=10$
 degrees and $N=100$, so $d=0.1$ deg $=360$ arcsec.  I will define the
 Gaussian such that there is essentially no power left at our \kmax,
-which is $2\pi/d=0.0175$ arcsec$^{-1}$.  the second grid has the same
+which is $2\pi/d=0.0175$ arcsec$^{-1}$.  The second grid has the same
 $d$ but only 50 grid points per dimension, so it covers $5$ degrees.
 Using this grid lets us test for sensitivity to \kmin\ at fixed \kmax.
 The third grid covers the original $L=10$ deg, but with $N=50$, so
-$d=0.2$ deg $=720$ arcsec; this grid (compared to the first one) has the same \kmin\ and different \kmax. We use $\sigma \kmax=5$ or $\sigma=286.5$
+$d=0.2$ deg $=720$ arcsec; this grid (compared to the first one) has
+the same \kmin\ and different \kmax. We use $\sigma \kmax=5$ or
+$\sigma=286.5$ 
 arcsec for the first two grids; we want to keep the same condition on
 $\sigma\kmax$ for the last grid, so in that case we use
-$\sigma=573.0$.  In all cases, $\sigma\kmin$ is quite close to zero,
-so the variance we expect should be quite close to
-$P_0/(2\pi\sigma^2)$. We will set $P_0=1$. The code is:
+$\sigma=573.0$; then $Erf(\kmax\sigma/\sqrt{2})=1$.  For the three cases, we have $\sigma\kmin=0.05$,
+$0.1$, and $0.1$, or $Erf(\kmin\sigma/\sqrt{2})=0.04$, $0.08$,
+$0.08$.  This means that with $P_0=1$, the predicted variances for the
+three grids are $1.8\times 10^{-6}$, $1.8\times 10^{-6}$, and
+$4.1\times 10^{-7}$ for the three grids.
+
+The code is:
 \begin{verbatim}
 import galsim
 import numpy as np
@@ -240,69 +231,61 @@ print np.var(g1), np.var(g2), np.var(g1)+np.var(g2)
 \end{verbatim}
 
 The results are around $1.9\times 10^{-6}$ in the first two cases, and
-$4.6\times 10^{-7}$ in the last case.  Our expectations are consistent
-with this\footnote{\textbf{Note that I used to complain about a factor
-  of $2\pi$ off.  That's because, apparently, I lack the ability to
-  plug numbers into a formula.  -RM}}.
-So the amplitude and the scaling with the grid spacing and grid size
-are all okay.  \textbf{But now I'm a tad confused why it's not
-  consistent with the variance calculation on a square grid. However,
-  that calculation on the square grid seems to ignore 3 quadrants in
-  $k$-space, so perhaps that's the issue, and everything is fine here?
-  i.e., perhaps those predictions need to by multiplied by 4 anyway?
-  -RM}
+$4.6\times 10^{-7}$ in the last case.  So we have the right scaling
+with the grid spacing and grid size, but the results are $\sim 6$--12\%
+higher than predictions. Essentially, they are what you would expect
+if the term with the Erf in it was 1, instead of a bit below 1 --
+i.e., it's kind of acting like our \kmin\ is zero instead of the real
+\kmin.
 
- \textbf{These results are with the version of GalSim
-  with the dimensionality fix.  Before that, the variances were all
-  the same, which means the scaling with $\sigma$ was wrong.}
-
-Note that the variance is evenly divided into the two components.
+Note that the variance is nearly evenly divided between the two components.
 
 \subsection{Variance for flat $P(k)$}
 
-This test is dangerous because of the amount of large-scale power, but
-let's check the results anyway.  If we say $P(k)=P_0$, and use Eq.~\ref{E:alt-shearvar} then we expect
-\beq
-\mathrm{Var}(\gamma) = \frac{P_0}{(2\pi)^2} \times (\kmax-\kmin)^2
-\sim \frac{P_0 \kmax^2}{(2\pi)^2}.
-\eeq
+This test is dangerous because of the amount of large-scale power, so
+we'll use a modified version of it.  Let's say $P(k)=P_0$ for
+$k<$\klim\ arcmin$^{-1}$, where \klim\ is well below \kmax\ for all the
+grids; and set $P$ to zero for all larger $k$. Using Eq.~\ref{E:alt-shearvar-limit}, we expect
+\begin{align}
+\mathrm{Var}(\gamma) &= \frac{4P_0}{(2\pi)^2}
+\left[\int_{\kmin}^{\klim} \rmd k\right]^2 \\
+ &= \frac{P_0}{\pi^2} \left(\klim-\kmin\right)^2.
+\end{align}
 
-If we use Eq.~\ref{E:shearvar}, then we expect
+For the set of grids from the previous test, \kmin\ is
+$0.000175$, $0.00035$, and $0.000175$.  We will set $\klim=10\kmin$,
+so we can write
 \beq
-\mathrm{Var}(\gamma) = \frac{P_0}{4\pi}\times (\kmax-\kmin)^2 \sim \frac{P_0\kmax^2}{4\pi}
+\mathrm{Var}(\gamma) = \frac{81 P_0 \kmin^2}{\pi^2}.
 \eeq
-which is higher by a factor of $\pi$.
+With $P_0=1$, we expect
+shear variances that are $2.5\times 10^{-7}$, $1\times 10^{-6}$,
+and $2.5\times 10^{-7}$.
 
-If I use $P_0=0.01$, and do 
+The code is
 \begin{verbatim}
 import galsim
 import numpy as np
-test_ps = galsim.PowerSpectrum(lambda k : 0.01+np.zeros_like(k))
-g1, g2 = test_ps.buildGriddedShears(grid_spacing=360., ngrid=100)
+def pfunc1(k):
+    parr = np.zeros_like(k)
+    parr[k<=0.00175] = 1.
+    return parr
+def pfunc2(k):
+    parr = np.zeros_like(k)
+    parr[k<=0.0035] = 1.
+    return parr
+test_ps1 = galsim.PowerSpectrum(pfunc1)
+test_ps2 = galsim.PowerSpectrum(pfunc2)
+g1, g2 = test_ps1.buildGriddedShears(grid_spacing=360., ngrid=100)
 print np.var(g1), np.var(g2), np.var(g1)+np.var(g2)
-g1, g2 = test_ps.buildGriddedShears(grid_spacing=360., ngrid=50)
+g1, g2 = test_ps2.buildGriddedShears(grid_spacing=360., ngrid=50)
 print np.var(g1), np.var(g2), np.var(g1)+np.var(g2)
-g1, g2 = test_ps.buildGriddedShears(grid_spacing=720., ngrid=50)
+g1, g2 = test_ps1.buildGriddedShears(grid_spacing=720., ngrid=50)
 print np.var(g1), np.var(g2), np.var(g1)+np.var(g2)
 \end{verbatim}
-with the \textbf{updated} version of the lensing engine, then the variances are $\sim 7.7\times 10^{-8}$ (first two cases) and
-$1.9\times 10^{-8}$ (last case).  I was expecting, for the first two
-cases, a variance of $0.01 (0.0175/2\pi)^2=7.8\times 10^{-8}$, and for
-the last case, something that is four times smaller, which is exactly
-what I find.  So the variance test seems to work here, giving a result
-consistent with Eq.~\ref{E:alt-shearvar} (but note that the previous
-test gave results consistent with those from Eq.~\ref{E:shearvar}, hmmm).  \textbf{Note
-  that this did not work out right before the dimensionality issue was
-  fixed by dividing by grid spacing!  In that case, the power was
-  constant in all cases.}
 
-The variance is not quite divided evenly between components, but that
-might be okay; this calculation emphasizes large-scale power, and it's
-exactly on scales comparable to the grid size that we expect
-differences between $\gamma_1$ and $\gamma_2$ behavior.  In the
-previous test, the variance was evenly divided, so that supports this
-explanation and suggests we shouldn't worry about this uneven split
-for flat $P(k)$.
+And the resulting variances are all approximately correct, give or
+take 10\%. \textbf{Need to make more realizations to beat down the scatter.}
 
 \section{Test of $P(k)$}\label{S:testpk}
 
