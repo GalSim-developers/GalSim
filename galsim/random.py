@@ -135,8 +135,6 @@ class DistDeviate:
         
         import numpy
         import galsim
-        tol=1.E-4/npoints # Ignore fractional changes in probability less than this number
-                          # as errors in precision
  
         # Set up the PRNG
         if rng is None:
@@ -207,44 +205,37 @@ class DistDeviate:
         # cdf is the cumulative distribution function--just easier to type!
         cdf=[0.]
         dcdf=[]
-        probability=[function(x_min)]
         for ip in range(1,len(xarray)):
-            probability.append(function(xarray[ip]))
             dcdf.append(galsim.integ.int1d(function,xarray[ip-1],xarray[ip]))
             cdf.append(cdf[-1]+dcdf[-1])
-        cdf=numpy.array(cdf)
-        probability=numpy.array(probability)
-        dcdf=numpy.array(dcdf)
+        #Quietly renormalize the probability if it wasn't already normalized
+        totalprobability=cdf[-1]
+        cdf=numpy.array(cdf)/totalprobability
+        dcdf=numpy.array(dcdf)/totalprobability
         # Check that the probability is nonnegative
-        if not numpy.all(probability>=0):
+        if not numpy.all(dcdf >= 0):
             raise ValueError('Negative probability passed to DistDeviate: %s'%file_name)
-        #Now get rid of points with probability == 0
-        maxprobability=max(probability)
-        if maxprobability==0:
-            raise ValueError('All probabilities passed to DistDeviate are 0: %s'%file_name)
-        for ip in range(len(xarray)-1,0,-1): #To 0 so we don't delete the cdf=0 point
-            if (probability[ip]/maxprobability<tol):
-                probability=numpy.delete(probability,ip)
-                cdf=numpy.delete(cdf,ip)
-                xarray=numpy.delete(xarray,ip)
-        dcdf=numpy.diff(cdf) # dcdf may have changed if we removed some points
-        for ip in range(len(dcdf)-1,0,-1):
-            # <tol misses some things, since int1d is checking a different quantity
-            if (abs(dcdf[ip])<10*tol): 
-                probability=numpy.delete(probability,ip)
-                cdf=numpy.delete(cdf,ip)
-                dcdf=numpy.delete(dcdf,ip)
-                xarray=numpy.delete(xarray,ip)
-        if len(cdf)==0:
-            raise ValueError('All probabilities passed to DistDeviate are 0: %s'%file_name)
-        if not (numpy.all(dcdf>0)):
-            raise RuntimeError(
-                'Cumulative probability in DistDeviate is not monotonic despite probabilities>0, '
-                'probably a result of precision errors in the interpolation/integration routine; '
-                'try lowering npoints.')
+        #Now get rid of points with dcdf == 0
+        elif not numpy.all(dcdf > 0.):
+            #Remove consecutive dx=0 points, except endpoints
+            zeroindex=numpy.where(dcdf==0)[0]
+            dindex=numpy.where(numpy.diff(zeroindex)==1)[0]+1 
+            cdf=numpy.delete(cdf,zeroindex[dindex])
+            xarray=numpy.delete(xarray,zeroindex[dindex])
+            dcdf=numpy.diff(cdf)
+            #Tweak the edges of dx=0 regions so function is always increasing
+            for index in numpy.where(dcdf == 0)[0]:
+                if index+2<len(cdf):
+                  cdf[index+1]+=1.E-6*(
+                      cdf[index+2]-cdf[index+1])
+                else:
+                  cdf=cdf[:-1]
+                  xarray=xarray[:-1]
+            dcdf=numpy.diff(cdf)
+            if not (numpy.all(dcdf>0)):
+                raise RuntimeError(
+                    'Cumulative probability in DistDeviate is too flat for program to fix')
                         
-        # Quietly renormalize the probability if it wasn't already normalized
-        cdf/=cdf[-1]
         self._inverseprobabilitytable=galsim.LookupTable(cdf,xarray,interpolant=interpolant)
         self.x_min=x_min
         self.x_max=x_max
