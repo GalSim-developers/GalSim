@@ -467,7 +467,7 @@ def _GenerateFromRandomDistribution(param, param_name, base, value_type):
     else:
         # Otherwise, just go ahead and make a new one.
         distdev=galsim.DistDeviate(rng,file_name=file_name,interpolant=interpolant,npoints=npoints,
-                              xmin=xmin,xmax=xmax)
+                                   xmin=xmin,xmax=xmax)
         base['distdev'] = distdev
         base['current_distfile_name'] = file_name
         base['current_distxmin'] = xmin
