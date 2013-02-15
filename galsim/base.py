@@ -1428,9 +1428,11 @@ class InterpolatedImage(GSObject):
                            'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the
                            integer order to use. (Default `interpolant = galsim.Quintic()`)
     @param k_interpolant   Either an Interpolant2d (or Interpolant) instance or a string indicating
-                           which k-space interpolant should be used.  Options are 'nearest',
-                           'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the
-                           integer order to use. (Default `interpolant = galsim.Quintic()`)
+                           which k-space interpolant should be used.  Options are 'nearest', 'sinc',
+                           'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the integer
+                           order to use.  We strongly recommend leaving this parameter at its
+                           default value; see text above for details.  (Default `interpolant =
+                           galsim.Quintic()`)
     @param normalization   Two options for specifying the normalization of the input Image:
                               "flux" or "f" means that the sum of the pixels is normalized
                                   to be equal to the total flux.
@@ -1444,7 +1446,9 @@ class InterpolatedImage(GSObject):
     @param flux            Optionally specify a total flux for the object, which overrides the
                            implied flux normalization from the Image itself.
     @param pad_factor      Factor by which to pad the Image when creating the SBInterpolatedImage;
-                           `pad_factor <= 0` results in the use of the default value, 4.
+                           `pad_factor <= 0` results in the use of the default value, 4.  We
+                           strongly recommend leaving this parameter at its default value; see text
+                           above for details.
                            (Default `pad_factor = 0`.)
     @param noise_pad       Noise properties to use when padding the original image with
                            noise.  This can be specified in several ways:
@@ -1953,13 +1957,16 @@ class RealGalaxy(GSObject):
     @param k_interpolant        Either an Interpolant2d (or Interpolant) instance or a string 
                                 indicating which k-space interpolant should be used.  Options are 
                                 'nearest', 'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' 
-                                where N should be the integer order to use. [default 
-                                `interpolant = Quintic()'].
+                                where N should be the integer order to use.  We strongly recommend
+                                leaving this parameter at its default value; see text above for
+                                details.  [default `interpolant = Quintic()'].
     @param flux                 Total flux, if None then original flux in galaxy is adopted without
                                 change [default `flux = None`].
     @param pad_factor           Factor by which to pad the Image when creating the
                                 SBInterpolatedImage; `pad_factor <= 0` results in the use of the
-                                default value, 4. (Default `pad_factor = 0`.)
+                                default value, 4.  We strongly recommend leaving this parameter at
+                                its default value; see text above for details.
+                                [Default `pad_factor = 0`.]
     @param noise_pad            When creating the SBProfile attribute for this GSObject, pad the
                                 SBInterpolated image with zeros, or with noise of a level specified
                                 in the training dataset?  There are several options here: 
