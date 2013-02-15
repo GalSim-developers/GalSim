@@ -91,15 +91,18 @@ namespace galsim {
     /** 
      * @brief Class implementing basic CCD noise model.  
      *
-     * CcdNoise instance is given a "read noise" and gain level.  With these parameters set,
-     * it can operate on an Image by adding noise to each pixel.  The noise has two
-     * components: first, a Poisson deviate with variance equal to ( max(pixel value, 0) / gain);
-     * second, Gaussian noise with RMS value of (readNoise / gain).  The class must
-     * be given a reference to a UniformDeviate when constructed, which will be the source
-     * of random values for the noise implementation.
-     * readNoise=0 will shut off the Gaussian noise.
-     * gain<=0 will shut off the Poisson noise, and Gaussian value will just have value 
-     * RMS=readNoise.
+     * The CCDNoise class encapsulates the noise model of a normal CCD image.  The noise has two
+     * components: first, Poisson noise corresponding to the number of electrons in each pixel
+     * (including an optional extra sky level); second, Gaussian read noise.
+     *
+     * read_noise=0 will shut off the Gaussian noise.
+     *
+     * gain<=0 will shut off the Poisson noise, and Gaussian noise will have RMS = reasNoise.
+     *
+     * Note that if the image to which you are adding noise already has a sky level on it,
+     * then you should not provide the sky level here as well.  The sky level here corresponds
+     * to a level is taken to be already subtracted from the image, but which was present
+     * for the Poisson noise.
      */
     class CCDNoise : public BaseNoise
     {
@@ -108,19 +111,17 @@ namespace galsim {
         /**
          * @brief Construct a new noise model, sharing the random number generator with dev.
          *
-         * @param[in] rng       The BaseDeviate to use for the random number generation.
-         * @param[in] gain      Electrons per ADU in the input Images, used for Poisson noise.
-         * @param[in] readNoise RMS of Gaussian noise, in electrons (if gain>0.) or ADU (gain<=0.)
+         * @param[in] rng        The BaseDeviate to use for the random number generation.
+         * @param[in] sky_level  The sky level in electrons per pixel that was originally in
+         *                       the input image, but which is taken to have already been 
+         *                       subtracted off.
+         * @param[in] gain       Electrons per ADU in the input Images, used for Poisson noise.
+         * @param[in] read_noise RMS of Gaussian noise, in electrons (if gain>0.) or ADU (gain<=0.)
          */
-        CCDNoise(BaseDeviate& rng, double gain=1., double readNoise=0.) :
+        CCDNoise(BaseDeviate& rng, double sky_level=0., double gain=1., double read_noise=0.) :
             BaseNoise(rng),
-            _gain(gain),
-            _readNoise(readNoise),
-            _gd(rng, 0., 1.),
-            _pd(rng) 
-        {
-            if (_readNoise > 0.) _gd.setSigma( _readNoise / (_gain > 0. ? _gain : 1.));
-        }
+            _sky_level(sky_level), _gain(gain), _read_noise(read_noise)
+        {}
 
         /**
          * @brief Construct a copy that shares the RNG with rhs.
@@ -128,44 +129,52 @@ namespace galsim {
          * Note: the default constructed op= function will do the same thing.
          */
         CCDNoise(const CCDNoise& rhs) : 
-            BaseNoise(rhs), _gain(rhs._gain), _readNoise(rhs._readNoise),
-            _gd(rhs._gd), _pd(rhs._pd) {}
+            BaseNoise(rhs),
+            _sky_level(rhs._sky_level), _gain(rhs._gain), _read_noise(rhs._read_noise)
+        {}
  
+
+        /**
+         * @brief Report current sky_level
+         *
+         * @return Sky level in electrons / pixel.
+         */
+        double getSkyLevel() const { return _sky_level; }
 
         /**
          * @brief Report current gain value
          *
-         * @return Gain value (e/ADU)
+         * @return Gain value (e-/ADU)
          */
         double getGain() const { return _gain; }
 
         /**
          * @brief Report current read noise
          *
-         * @return Read noise value (e, if gain>0, else in ADU)
+         * @return Read noise value (e-, if gain>0, else in ADU)
          */
-        double getReadNoise() const { return _readNoise; }
+        double getReadNoise() const { return _read_noise; }
+
+        /**
+         * @brief Set sky level
+         *
+         * @param[in] sky_level Sky level in electrons / pixel.
+         */
+        void setSkyLevel(double sky_level) { _sky_level = sky_level; }
 
         /**
          * @brief Set gain value
          *
-         * @param[in] gain Gain value (e/ADU)
+         * @param[in] gain Gain value (e-/ADU)
          */
-        void setGain(double gain) 
-        {
-            _gain = gain;
-            if (_readNoise > 0.) _gd.setSigma( _readNoise / (_gain > 0. ? _gain : 1.));
-        }
+        void setGain(double gain) { _gain = gain; }
+
         /**
          * @brief Set read noise
          *
-         * @param[in] readNoise Read noise value (e, if gain>0, else in ADU)
+         * @param[in] read_noise Read noise value (e-, if gain>0, else in ADU)
          */
-        void setReadNoise(double readNoise) 
-        {
-            _readNoise = readNoise;
-            if (_readNoise > 0.) _gd.setSigma( _readNoise / (_gain > 0. ? _gain : 1.));
-        }
+        void setReadNoise(double read_noise) { _read_noise = read_noise; }
 
         /**
          * @brief Add noise to an Image.
@@ -182,35 +191,41 @@ namespace galsim {
             // Typedef for image row iterable
             typedef typename ImageView<T>::iterator ImIter;
 
+            data += T(_sky_level);
+
             // Add the Poisson noise first:
             if (_gain > 0.) {
-                double sigma = _gd.getSigma();  // Save this
-                
+                PoissonDeviate pd(_rng, 1.); // will reset the mean for each pixel below.
+                GaussianDeviate gd(_rng, 0., 1.);
                 for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
                     ImIter ee = data.rowEnd(y);
                     for (ImIter it = data.rowBegin(y); it != ee; ++it) {
-                        double electrons=*it * _gain;
+                        double electrons = *it * _gain;
                         if (electrons <= 0.) continue;
                         if (electrons < MAX_POISSON) {
-                            _pd.setMean(electrons);
-                            *it = T(_pd() / _gain);
+                            pd.setMean(electrons);
+                            *it = T(pd() / _gain);
                         } else {
                             // ??? This might be even slower than large-N Poisson...
-                            _gd.setSigma(sqrt(electrons)/_gain);
-                            *it = T(*it + _gd());
+                            gd.setSigma(sqrt(electrons)/_gain);
+                            *it = T(*it + gd());
                         }
-                    } 
+                    }
                 }
-                _gd.setSigma(sigma);    // restore GaussianDeviate's level
             }
 
             // Next add the Gaussian noise:
-            if (_readNoise > 0.) {
+            if (_read_noise > 0.) {
+                GaussianDeviate gd(_rng, 0., _read_noise / (_gain > 0. ? _gain : 1.));
                 for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
                     ImIter ee = data.rowEnd(y);
-                    for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it = T(*it + _gd()); }
-                } 
+                    for (ImIter it = data.rowBegin(y); it != ee; ++it) {
+                        *it = T(*it + gd());
+                    }
+                }
             }
+
+            data -= T(_sky_level);
         }
 
         /**
@@ -230,20 +245,22 @@ namespace galsim {
             typedef typename ImageView<T>::iterator ImIter;
             assert(data.getBounds() == var.getBounds());
             // Fill with the (constant) Gaussian contribution to variance
-            double gaussVariance = (_readNoise > 0. ? std::pow(_gd.getSigma(),2.) : 0.);
-            var.fill(gaussVariance);
+            if (_read_noise > 0.) {
+                double sigma = _read_noise / (_gain > 0. ? _gain : 1.);
+                var.fill(sigma * sigma);
+            }
             // Add the Poisson variance:
             if (_gain > 0.) {
                 for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
                     ImIter ee = data.rowEnd(y);
                     ImIter it2 = var.rowBegin(y);
                     for (ImIter it = data.rowBegin(y); it != ee; ++it, ++it2) {
-                        if (*it > 0.) *it2 += *it / _gain;
+                        if (*it > 0.) *it2 += (*it + _sky_level) / _gain;
                     }
                 } 
             }
             // then call noise method to instantiate noise
-            (*this).applyTo(data);
+            applyTo(data);
         }
 
     protected:
@@ -253,11 +270,9 @@ namespace galsim {
         void doApplyTo(ImageView<short>& data) { applyTo(data); }
 
     private: 
-        double _gain;    // flux corresponding to one photon
-        double _readNoise; // std. dev. of uniform Gaussian noise (when divided by _gain).
-
-        GaussianDeviate _gd;
-        PoissonDeviate _pd;
+        double _sky_level;   // sky level in e- per pixel
+        double _gain;        // flux corresponding to one photon (e-/ADU)
+        double _read_noise;  // std. dev. of uniform Gaussian noise (when divided by _gain).
     };
 
 

@@ -498,46 +498,37 @@ _galsim.Chi2Deviate.setN.__func__.__doc__ = "Set current distribution n degrees 
 _galsim.CCDNoise.__doc__ = """
 Pseudo-random number generator with a basic CCD noise model.
 
-A CCDNoise instance is initialized given a gain level in Electrons per ADU used for the Poisson
-noise term, and a Gaussian read noise in electrons (if gain > 0.) or ADU (if gain <= 0.).  With 
-these parameters set, the CCDNoise operates on an Image, adding noise to each pixel following this 
-model. 
+The CCDNoise class encapsulates the noise model of a normal CCD image.  The noise has two
+components: first, Poisson noise corresponding to the number of electrons in each pixel
+(including an optional extra sky level); second, Gaussian read noise.
 
-Note that galsim.CCDNoise assumes the image it is applying the Poisson noise to has the sky level
-included, hence generating the appropriate image noise.  The user is responsible for the 
-addition of the sky level so that galsim.CCDNoise can add the proper sky noise, as well as sky
-subtraction after the noise has been added.
+Note that if the image to which you are adding noise already has a sky level on it,
+then you should not provide the sky level here as well.  The sky level here corresponds
+to a level is taken to be already subtracted from the image, but which was present
+for the Poisson noise.
 
 Initialization
 --------------
 
-    >>> ccd_noise = galsim.CCDNoise(gain=1., read_noise=0.)         # Initializes ccd_noise to be a
-                                                                    # CCDNoise instance using the
-                                                                    # current time for the seed.
-
-    >>> ccd_noise = galsim.CCDNoise(lseed, gain=1., read_noise=0.)  # Initializes ccd_noise to be a
-                                                                    # CCDNoise instance using the
-                                                                    # specified seed, where lseed is
-                                                                    # a long int.
-
-    >>> ccd_noise = galsim.CCDNoise(dev, gain=1., read_noise=0.)    # Initializes ccd_noise to share
-                                                                    # the same underlying random
-                                                                    # number generator as dev.
+    >>> ccd_noise = galsim.CCDNoise(rng, sky_level=0., gain=1., read_noise=0.)  
 
 Parameters:
 
-    gain        the gain for each pixel in electrons per ADU; setting gain <=0 will shut off the
-                Poisson noise, and the Gaussian rms will take the value read_noise as being in units
-                of ADU rather than electrons [default `gain = 1.`].
-    read_noise  the read noise on each pixel in electrons (gain > 0.) or ADU (gain <= 0.)
+    rng         A BaseDeviate instance to use for generating the random numbers.
+    sky_level   The sky level in electrons per pixel that was originally in the input image, 
+                but which is taken to have already been subtracted off [default `sky_level = 0.`].
+    gain        The gain for each pixel in electrons per ADU; setting gain<=0 will shut off the
+                Poisson noise, and the Gaussian rms will take the value read_noise as being in 
+                units of ADU rather than electrons [default `gain = 1.`].
+    read_noise  The read noise on each pixel in electrons (gain > 0.) or ADU (gain <= 0.)
                 setting read_noise=0. will shut off the Gaussian noise [default `read_noise = 0.`].
 
 Methods
 -------
 To add deviates to every element of an image, use the syntax image.addNoise(ccd_noise).
 
-To get and set the deviate parameters, see the docstrings for the .getGain(), .setGain(), 
-.getReadNoise() and .setReadNoise() methods of each instance.
+To get and set the deviate parameters, see the docstrings for the getSkyLevel(), getGain(), 
+getReadNoise(), setSkyLevel(), setGain(), and setReadNoise() methods of each instance.
 """
 
 _galsim.CCDNoise.applyTo.__func__.__doc__ = """
@@ -553,9 +544,11 @@ the gain and read noise settings of the CCDNoise instance.
 
 To add deviates to every element of an image, the syntax image.addNoise() is preferred.
 """
+_galsim.CCDNoise.getSkyLevel.__func__.__doc__ = "Get sky level in current noise model."
 _galsim.CCDNoise.getGain.__func__.__doc__ = "Get gain in current noise model."
-_galsim.CCDNoise.setGain.__func__.__doc__ = "Set gain in current noise model."
 _galsim.CCDNoise.getReadNoise.__func__.__doc__ = "Get read noise in current noise model."
+_galsim.CCDNoise.setSkyLevel.__func__.__doc__ = "Set sky level in current noise model."
+_galsim.CCDNoise.setGain.__func__.__doc__ = "Set gain in current noise model."
 _galsim.CCDNoise.setReadNoise.__func__.__doc__ = "Set read noise in current noise model."
 
 

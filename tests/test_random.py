@@ -132,6 +132,22 @@ def test_uniform_rand_reset():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_uniform_image():
+    """testing ability to apply uniform random numbers to images using their addNoise method, 
+    and reproduce sequence.
+    """
+    import time
+    t1 = time.time()
+    u = galsim.UniformDeviate(testseed)
+    testimage = galsim.ImageViewD(np.zeros((3, 1)))
+    testimage.addNoise(galsim.DeviateNoise(u))
+    np.testing.assert_array_almost_equal(
+            testimage.array.flatten(), np.array(uResult),
+            err_msg="UniformDeviate generator applied to Images does not "
+            "reproduce expected sequence")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_gaussian_rand():
     """Test Gaussian random number generator for expected result given the above seed.
     """
@@ -240,43 +256,6 @@ def test_poisson_image():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_ccdnoise_rand():
-    """Test CCD Noise generator on a 2x2 image against the expected result given the above seed.
-    """
-    import time
-    t1 = time.time()
-    for i in xrange(4):
-        rng = galsim.BaseDeviate(testseed)
-        ccdnoise = galsim.CCDNoise(rng, sky_level=sky, gain=cGain, read_noise=cReadNoise)
-        testImage = galsim.ImageView[types[i]]((np.zeros(2, 2)).astype(types[i]))
-        ccdnoise.applyTo(testImage)
-        np.testing.assert_array_almost_equal(
-                testImage.array, eval("cResult"+typestrings[i]),
-                eval("precision"+typestrings[i]),
-                err_msg="Wrong CCD noise random sequence generated "+
-                "for Image"+typestrings[i]+" images.")
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
-def test_ccdnoise_image():
-    """Test CCD Noise generator on a 2x2 image against the expected result given the above seed,
-    and using the image method version of the CCD Noise generator.
-    """
-    import time
-    t1 = time.time()
-    for i in xrange(4):
-        rng = galsim.BaseDeviate(testseed)
-        ccdnoise = galsim.CCDNoise(rng, sky_level=sky, gain=cGain, read_noise=cReadNoise)
-        testImage = galsim.ImageView[types[i]]((np.zeros(2, 2)).astype(types[i]))
-        testImage.addNoise(ccdnoise)
-        np.testing.assert_array_almost_equal(
-                testImage.array, eval("cResult"+typestrings[i]),
-                eval("precision"+typestrings[i]),
-                err_msg="Wrong CCD noise random sequence generated "+
-                "for Image"+typestrings[i]+" images.")
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
 def test_weibull_rand():
     """Test Weibull random number generator for expected result given the above seed.
     """
@@ -361,6 +340,64 @@ def test_chi2_image():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_ccdnoise_rand():
+    """Test CCD Noise generator on a 2x2 image against the expected result given the above seed.
+    """
+    import time
+    t1 = time.time()
+    for i in xrange(4):
+        rng = galsim.BaseDeviate(testseed)
+        ccdnoise = galsim.CCDNoise(rng, gain=cGain, read_noise=cReadNoise)
+        testImage = galsim.ImageView[types[i]]((np.zeros((2, 2))+sky).astype(types[i]))
+        ccdnoise.applyTo(testImage)
+        np.testing.assert_array_almost_equal(
+                testImage.array, eval("cResult"+typestrings[i]),
+                eval("precision"+typestrings[i]),
+                err_msg="Wrong CCD noise random sequence generated "+
+                "for Image"+typestrings[i]+" images.")
+
+        # Now include sky_level in ccdnoise
+        rng = galsim.BaseDeviate(testseed)
+        ccdnoise = galsim.CCDNoise(rng, sky_level=sky, gain=cGain, read_noise=cReadNoise)
+        testImage = galsim.ImageView[types[i]]((np.zeros((2, 2))).astype(types[i]))
+        ccdnoise.applyTo(testImage)
+        np.testing.assert_array_almost_equal(
+                testImage.array, eval("cResult"+typestrings[i])-sky,
+                eval("precision"+typestrings[i]),
+                err_msg="Wrong CCD noise random sequence generated "+
+                "for Image"+typestrings[i]+" images.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_ccdnoise_image():
+    """Test CCD Noise generator on a 2x2 image against the expected result given the above seed,
+    and using the image method version of the CCD Noise generator.
+    """
+    import time
+    t1 = time.time()
+    for i in xrange(4):
+        rng = galsim.BaseDeviate(testseed)
+        ccdnoise = galsim.CCDNoise(rng, gain=cGain, read_noise=cReadNoise)
+        testImage = galsim.ImageView[types[i]]((np.zeros((2, 2))+sky).astype(types[i]))
+        testImage.addNoise(ccdnoise)
+        np.testing.assert_array_almost_equal(
+                testImage.array, eval("cResult"+typestrings[i]),
+                eval("precision"+typestrings[i]),
+                err_msg="Wrong CCD noise random sequence generated "+
+                "for Image"+typestrings[i]+" images.")
+
+        rng = galsim.BaseDeviate(testseed)
+        ccdnoise = galsim.CCDNoise(rng, sky_level=sky, gain=cGain, read_noise=cReadNoise)
+        testImage = galsim.ImageView[types[i]]((np.zeros((2, 2))).astype(types[i]))
+        testImage.addNoise(ccdnoise)
+        np.testing.assert_array_almost_equal(
+                testImage.array, eval("cResult"+typestrings[i])-sky,
+                eval("precision"+typestrings[i]),
+                err_msg="Wrong CCD noise random sequence generated "+
+                "for Image"+typestrings[i]+" images.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_multiprocess():
     """Test that the same random numbers are generated in single-process and multi-process modes.
     """
@@ -439,13 +476,13 @@ if __name__ == "__main__":
     test_binomial_image()
     test_poisson_rand()
     test_poisson_image()
-    test_ccdnoise_rand()
-    test_ccdnoise_image()
     test_weibull_rand()
     test_weibull_image()
     test_gamma_rand()
     test_gamma_image()
     test_chi2_rand()
     test_chi2_image()
+    test_ccdnoise_rand()
+    test_ccdnoise_image()
     test_multiprocess()
 

@@ -140,12 +140,15 @@ struct PyCCDNoise{
 
         bp::class_<CCDNoise, bp::bases<BaseNoise> > pyCCDNoise("CCDNoise", "", bp::no_init);
         pyCCDNoise
-            .def(bp::init<BaseDeviate&, double, double>(
-                (bp::arg("rng"), bp::arg("gain")=1., bp::arg("read_noise")=0.)
+            .def(bp::init<BaseDeviate&, double, double, double>(
+                (bp::arg("rng"),
+                 bp::arg("sky_level")=0.,  bp::arg("gain")=1., bp::arg("read_noise")=0.)
                 ))
+            .def("getSkyLevel", &CCDNoise::getSkyLevel, "")
             .def("getGain", &CCDNoise::getGain, "")
-            .def("setGain", &CCDNoise::setGain, "")
             .def("getReadNoise", &CCDNoise::getReadNoise, "")
+            .def("setSkyLevel", &CCDNoise::getSkyLevel, "")
+            .def("setGain", &CCDNoise::setGain, "")
             .def("setReadNoise", &CCDNoise::setReadNoise, "")
             ;
     }
