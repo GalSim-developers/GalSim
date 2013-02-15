@@ -1369,7 +1369,7 @@ class InterpolatedImage(GSObject):
     to include around the original images (`pad_factor`).  The default values for `x_interpolant`,
     `k_interpolant`, and `pad_factor` were chosen based on preliminary tests suggesting that they
     lead to a high degree of accuracy without being excessively slow.  Users should be particularly
-    wary about changing `k_interpoland` and `pad_factor` from the defaults without careful testing.
+    wary about changing `k_interpolant` and `pad_factor` from the defaults without careful testing.
     The user is given complete freedom to choose interpolants and pad factors, and no warnings are
     raised when the code is modified to choose some combination that is known to give significant
     error.  More details can be found in devel/modules/finterp.pdf, especially table 1, in the
