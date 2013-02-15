@@ -32,10 +32,9 @@ New features introduced in this demo:
 - obj = galsim.Exponential(flux, scale_radius)
 - obj = galsim.Moffat(beta, flux, half_light_radius)
 - obj.applyShear(g1, g2)  -- with explanation of other ways to specify shear
-- image += constant
-- image -= constant
-- noise = galsim.CCDNoise(seed)
 - obj.draw(image, dx)
+= rng = galsim.BaseDeviate(seed)
+- noise = galsim.PoissonNoise(rng, sky_level)
 - galsim.EstimateShearHSM(image, image_epsf)
 """
 
@@ -70,12 +69,16 @@ def main(argv):
     # by the two methods will be precisely identical.
     random_seed = 1534225
 
+
     logger.info('Starting demo script 2 using:')
     logger.info('    - sheared (%.2f,%.2f) exponential galaxy (flux = %.1e, scale radius = %.2f),',
                 g1, g2, gal_flux, gal_r0)
     logger.info('    - circular Moffat PSF (beta = %.1f, re = %.2f),', psf_beta, psf_re)
     logger.info('    - pixel scale = %.2f,', pixel_scale)
     logger.info('    - Poisson noise (sky level = %.1e).', sky_level)
+
+    # Initialize the (pseudo-)random number generator that we will be using below.
+    rng = galsim.BaseDeviate(random_seed)
 
     # Define the galaxy profile.
     gal = galsim.Exponential(flux=gal_flux, scale_radius=gal_r0)
@@ -110,24 +113,16 @@ def main(argv):
     image_epsf = final_epsf.draw(dx=pixel_scale)
     logger.debug('Made image of the profile')
 
-    # To get Poisson noise on the image, we will use a class called CCDNoise.
+    # To get Poisson noise on the image, we will use a class called PoissonNoise.
     # However, we want the noise to correspond to what you would get with a significant
-    # flux from tke sky.  So first we have to add a constant sky level to the image.
-    image += sky_level * pixel_scale**2
-
-    # Now we can use the CCDNoise class to add Poisson noise to the image including the 
-    # sky level.  This takes each pixel's current value and replaces it with a random
-    # integer drawn from a Poisson distribution with that mean value.  This matches the 
-    # statistics of photons hitting the CCD.  Note that while the values drawn from a 
-    # Poisson distribution are integers, they are still stored as floats.  In this case,
-    # they are stored as 16-bit floats, which is the default type of image created by
-    # GalSim's draw command.  Also, the CCDNoise class can optionally take a gain and a 
-    # read_noise.  We'll get to them in demo3.
-    image.addNoise(galsim.CCDNoise(random_seed))
-
-    # Finally, we subtract off the sky flux, so the final image will have a background level
-    # of 0 (with noise).  In other words the image is "sky subtracted".
-    image -= sky_level * pixel_scale**2
+    # flux from tke sky.  This is done by telling PoissonNoise to add noise from a
+    # sky level in addition to the counts currently in the image.
+    #
+    # One wrinkle here is that the PoissonNoise class needs the sky level in each pixel,
+    # while we have a sky_level in counts per arcsec^2.  So we need to convert:
+    sky_level_pixel = sky_level * pixel_scale**2
+    noise = galsim.PoissonNoise(rng, sky_level=sky_level_pixel)
+    image.addNoise(noise)
     logger.debug('Added Poisson noise')
 
     # Write the image to a file.

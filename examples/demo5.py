@@ -243,22 +243,20 @@ def main(argv):
             # Now add an appropriate amount of noise to get our desired S/N
             # There are lots of definitions of S/N, but here is the one used by Great08
             # We use a weighted integral of the flux:
-            # S = sum W(x,y) I(x,y) / sum W(x,y)
-            # N^2 = Var(S) = sum W(x,y)^2 Var(I(x,y)) / (sum W(x,y))^2
-            # Now we assume that Var(I(x,y)) is dominated by the sky noise, so
-            # Var(I(x,y)) = sky_level
+            #   S = sum W(x,y) I(x,y) / sum W(x,y)
+            #   N^2 = Var(S) = sum W(x,y)^2 Var(I(x,y)) / (sum W(x,y))^2
+            # Now we assume that Var(I(x,y)) is constant so
+            #   Var(I(x,y)) = noise_var
             # We also assume that we are using a matched filter for W, so W(x,y) = I(x,y).
             # Then a few things cancel and we find that
-            # S/N = sqrt( sum I(x,y)^2 / sky_level )
+            # S/N = sqrt( sum I(x,y)^2 / noise_var )
             #
-            # The above procedure is encapsulated in the function image.addNoiseSNR.
-            # The sky_level value is expected to be the sky level in each pixel, so we
-            # need to do that calculation first.
-            sky_level_pix = sky_level * pixel_scale**2
-            # Note that we pass the current ud that we are using for our random numbers as
-            # the rng parameter to addNoiseSNR so the added noise will use the same stream 
-            # of random numbers as ud and gd.
-            sub_gal_image.addNoiseSNR(gal_signal_to_noise,sky_level=sky_level_pix,rng=ud)
+            # The above procedure is encapsulated in the function image.addNoiseSNR which
+            # sets the flux appropriately given the variance of the noise model.
+            # In our case, noise_var = sky_level_pixel
+            sky_level_pixel = sky_level * pixel_scale**2
+            noise = galsim.PoissonNoise(ud, sky_level=sky_level_pixel)
+            sub_gal_image.addNoiseSNR(noise, gal_signal_to_noise)
 
             # Draw the PSF image
             # No noise on PSF images.  Just draw it as is.

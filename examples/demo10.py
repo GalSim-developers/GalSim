@@ -240,8 +240,9 @@ def main(argv):
 
         # Now add noise to get our desired S/N
         # See demo5.py for more info about how this works.
-        sky_level_pix = sky_level * pixel_scale**2
-        sub_gal_image.addNoiseSNR(gal_signal_to_noise,sky_level=sky_level_pix,rng=rng)
+        sky_level_pixel = sky_level * pixel_scale**2
+        noise = galsim.PoissonNoise(rng,sky_level=sky_level_pixel)
+        sub_gal_image.addNoiseSNR(noise,gal_signal_to_noise)
 
         # Draw the PSF image:
         # We use real space convolution to avoid some of the 

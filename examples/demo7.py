@@ -40,7 +40,8 @@ New features introduced in this demo:
 - image.setScale(pixel_scale)
 - obj.draw(image)  -- i.e. taking the scale from the image rather than a dx= argument
 - obj.drawShoot(image, max_extra_noise, rng)
-- noise = galsim.PoissonDeviate(rng, mean)
+- dev = galsim.PoissonDeviate(rng, mean)
+= noise = galsim.DeviateNoise(dev)
 - writeCube(..., compress='gzip')
 """
 
@@ -198,9 +199,7 @@ def main(argv):
 
                 # Add Poisson noise
                 sky_level_pixel = sky_level * pixel_scale**2
-                fft_image += sky_level_pixel
-                fft_image.addNoise(galsim.CCDNoise(rng))
-                fft_image -= sky_level_pixel
+                fft_image.addNoise(galsim.PoissonNoise(rng, sky_level=sky_level_pixel))
 
                 t4 = time.time()
 
@@ -218,9 +217,12 @@ def main(argv):
                 # For photon shooting, galaxy already has Poisson noise, so we want to make 
                 # sure not to add that noise again!  Thus, we just add sky noise, which 
                 # is Poisson with the mean = sky_level_pixel
-                # Note: this won't add the mean level.  The effect on the pixels has an
-                # expectation value of 0 -- it just adds noise commensurate with the given mean.
-                phot_image.addNoise(galsim.PoissonDeviate(rng, mean=sky_level_pixel))
+                pd = galsim.PoissonDeviate(rng, mean=sky_level_pixel)
+                # DeviateNoise just adds the action of the given deviate to every pixel.
+                phot_image.addNoise(galsim.DeviateNoise(pd))
+                # For PoissonDeviate, the mean is not zero, so for a background-subtracted
+                # image, we need to subtract the mean back off when we are done.
+                phot_image -= sky_level_pixel
 
                 logger.debug('   Added Poisson noise.  Image fluxes are now %f and %f',
                              fft_image.array.sum(), phot_image.array.sum())

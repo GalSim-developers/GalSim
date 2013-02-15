@@ -45,8 +45,8 @@ struct PyBaseNoise {
 
         bp::class_<BaseNoise, boost::noncopyable> pyBaseNoise("BaseNoise", "", bp::no_init);
         pyBaseNoise
-            .def("getVariance", bp::pure_virtual(&PoissonNoise::getVariance), "")
-            .def("setVariance", bp::pure_virtual(&PoissonNoise::setVariance), "")
+            .def("getVariance", &PoissonNoise::getVariance, "")
+            .def("setVariance", &PoissonNoise::setVariance, "")
             ;
         wrapTemplates<double>(pyBaseNoise);
         wrapTemplates<float>(pyBaseNoise);
@@ -61,8 +61,8 @@ struct PyGaussianNoise {
     static void wrap() {
         // Note that class docstrings are now added in galsim/random.py
         bp::class_<GaussianNoise, bp::bases<BaseNoise> > pyGaussianNoise(
-            "GaussianNoise", "", bp::init<BaseDeviate&, double>(
-                (bp::arg("rng"), bp::arg("sigma")))
+            "GaussianNoise", "", bp::init<boost::shared_ptr<BaseDeviate>, double>(
+                (bp::arg("rng")=bp::object(), bp::arg("sigma")=1.))
         );
         pyGaussianNoise
             .def("getSigma", &GaussianNoise::getSigma, "")
@@ -78,8 +78,8 @@ struct PyPoissonNoise {
         // Note that class docstrings are now added in galsim/random.py
 
         bp::class_<PoissonNoise, bp::bases<BaseNoise> > pyPoissonNoise(
-            "PoissonNoise", "", bp::init<BaseDeviate&, double>(
-                (bp::arg("rng"), bp::arg("sky_level")=0.))
+            "PoissonNoise", "", bp::init<boost::shared_ptr<BaseDeviate>, double>(
+                (bp::arg("rng")=bp::object(), bp::arg("sky_level")=0.))
         );
         pyPoissonNoise
             .def("getSkyLevel", &PoissonNoise::getSkyLevel, "")
@@ -96,8 +96,8 @@ struct PyCCDNoise{
 
         bp::class_<CCDNoise, bp::bases<BaseNoise> > pyCCDNoise("CCDNoise", "", bp::no_init);
         pyCCDNoise
-            .def(bp::init<BaseDeviate&, double, double, double>(
-                (bp::arg("rng"),
+            .def(bp::init<boost::shared_ptr<BaseDeviate>, double, double, double>(
+                (bp::arg("rng")=bp::object(),
                  bp::arg("sky_level")=0.,  bp::arg("gain")=1., bp::arg("read_noise")=0.)
                 ))
             .def("getSkyLevel", &CCDNoise::getSkyLevel, "")
@@ -120,7 +120,7 @@ struct PyDeviateNoise{
         bp::class_<DeviateNoise, bp::bases<BaseNoise> > pyDeviateNoise(
             "DeviateNoise", "", bp::no_init);
         pyDeviateNoise
-            .def(bp::init<BaseDeviate&>(bp::arg("rng")))
+            .def(bp::init<boost::shared_ptr<BaseDeviate> >(bp::arg("dev")))
             ;
     }
 
