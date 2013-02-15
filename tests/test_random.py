@@ -109,8 +109,9 @@ def test_uniform_rand():
     t1 = time.time()
     u = galsim.UniformDeviate(testseed)
     testResult = (u(), u(), u())
-    np.testing.assert_array_almost_equal(np.array(testResult), np.array(uResult), precision, 
-                                         err_msg='Wrong uniform random number sequence generated')
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(uResult), precision, 
+            err_msg='Wrong uniform random number sequence generated')
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -123,25 +124,11 @@ def test_uniform_rand_reset():
     testResult1 = (u(), u(), u())
     u = galsim.UniformDeviate(testseed)
     testResult2 = (u(), u(), u())
-# note this one is still equal, not almost_equal, because we should be able to achieve complete
-# equality for the same seed and the same exact system
-    np.testing.assert_array_equal(np.array(testResult1), np.array(testResult2),
-                               err_msg='Cannot reset generator (same seed) to reproduce sequence')
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
-def test_uniform_image():
-    """Testing ability to apply uniform random numbers to images using their addNoise method, 
-    and reproduce sequence.
-    """
-    import time
-    t1 = time.time()
-    u = galsim.UniformDeviate(testseed)
-    testimage = galsim.ImageViewD(np.zeros((3, 1)))
-    testimage.addNoise(u)
-    np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(uResult),
-                               err_msg="UniformDeviate generator applied to Images does not "
-                                       "reproduce expected sequence")
+    # note this one is still equal, not almost_equal, because we should be able to achieve complete
+    # equality for the same seed and the same exact system
+    np.testing.assert_array_equal(
+            np.array(testResult1), np.array(testResult2),
+            err_msg='Cannot reset generator (same seed) to reproduce sequence')
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -150,11 +137,11 @@ def test_gaussian_rand():
     """
     import time
     t1 = time.time()
-    u = galsim.UniformDeviate(testseed)
-    g = galsim.GaussianDeviate(u, mean=gMean, sigma=gSigma)
+    g = galsim.GaussianDeviate(testseed, mean=gMean, sigma=gSigma)
     testResult = (g(), g(), g())
-    np.testing.assert_array_almost_equal(np.array(testResult), np.array(gResult), precision,
-                                         err_msg='Wrong Gaussian random number sequence generated')
+    np.testing.assert_array_almost_equal(   
+            np.array(testResult), np.array(gResult), precision,
+            err_msg='Wrong Gaussian random number sequence generated')
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -164,13 +151,24 @@ def test_gaussian_image():
     """
     import time
     t1 = time.time()
-    u = galsim.UniformDeviate(testseed)
-    g = galsim.GaussianDeviate(u, mean=gMean, sigma=gSigma)
+
+    gd = galsim.GaussianDeviate(testseed, mean=gMean, sigma=gSigma)
     testimage = galsim.ImageViewD(np.zeros((3, 1)))
-    testimage.addNoise(g)
-    np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(gResult), precision,
-                               err_msg="GaussianDeviate generator applied to Images does not "
-                                       "reproduce expected sequence")
+    testimage.addNoise(galsim.DeviateNoise(gd))
+    np.testing.assert_array_almost_equal(
+            testimage.array.flatten(), np.array(gResult), precision,
+            err_msg="GaussianDeviate generator applied to Images does not "
+            "reproduce expected sequence")
+    
+    # GaussianNoise is equivalent, but no mean allowed.
+    gn = galsim.GaussianNoise(galsim.BaseDeviate(testsed), sigma=gSigma)
+    testimage = galsim.ImageViewD(np.zeros((3, 1)))
+    testimage.addNoise(gn)
+    testimage += gMean
+    np.testing.assert_array_almost_equal(
+            testimage.array.flatten(), np.array(gResult), precision,
+            err_msg="GaussianDeviate generator applied to Images does not "
+            "reproduce expected sequence")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -179,11 +177,11 @@ def test_binomial_rand():
     """
     import time
     t1 = time.time()
-    u = galsim.UniformDeviate(testseed)
-    b = galsim.BinomialDeviate(u, N=bN, p=bp)
+    b = galsim.BinomialDeviate(testseed, N=bN, p=bp)
     testResult = (b(), b(), b())
-    np.testing.assert_array_almost_equal(np.array(testResult), np.array(bResult), precision,
-                                         err_msg='Wrong binomial random number sequence generated')
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(bResult), precision,
+            err_msg='Wrong binomial random number sequence generated')
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -193,13 +191,13 @@ def test_binomial_image():
     """
     import time
     t1 = time.time()
-    u = galsim.UniformDeviate(testseed)
-    b = galsim.BinomialDeviate(u, N=bN, p=bp)
+    b = galsim.BinomialDeviate(testseed, N=bN, p=bp)
     testimage = galsim.ImageViewD(np.zeros((3, 1)))
-    testimage.addNoise(b)
-    np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(bResult), precision,
-                               err_msg="BinomialDeviate generator applied to Images does not "
-                                       "reproduce expected sequence")
+    testimage.addNoise(galsim.DeviateNoise(b))
+    np.testing.assert_array_almost_equal(
+            testimage.array.flatten(), np.array(bResult), precision,
+            err_msg="BinomialDeviate generator applied to Images does not "
+            "reproduce expected sequence")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -208,11 +206,11 @@ def test_poisson_rand():
     """
     import time
     t1 = time.time()
-    u = galsim.UniformDeviate(testseed)
-    p = galsim.PoissonDeviate(u, mean=pMean)
+    p = galsim.PoissonDeviate(testseed, mean=pMean)
     testResult = (p(), p(), p())
-    np.testing.assert_array_almost_equal(np.array(testResult), np.array(pResult), precision, 
-                                         err_msg='Wrong Poisson random number sequence generated')
+    np.testing.assert_array_almost_equal(   
+            np.array(testResult), np.array(pResult), precision, 
+            err_msg='Wrong Poisson random number sequence generated')
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -222,13 +220,23 @@ def test_poisson_image():
     """
     import time
     t1 = time.time()
-    u = galsim.UniformDeviate(testseed)
-    p = galsim.PoissonDeviate(u, mean=pMean)
+    p = galsim.PoissonDeviate(testseed, mean=pMean)
     testimage = galsim.ImageViewI(np.zeros((3, 1), dtype=np.int32))
-    testimage.addNoise(p)
-    np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(pResult)-pMean,
-                               err_msg="PoissonDeviate generator applied to Images does not "
-                                       "reproduce expected sequence")
+    testimage.addNoise(galsim.DeviateNoise(p))
+    np.testing.assert_array_almost_equal(
+            testimage.array.flatten(), np.array(pResult),
+            err_msg="PoissonDeviate generator applied to Images does not "
+            "reproduce expected sequence")
+
+    # The PoissonNoise version also subtracts off the mean value
+    p = galsim.PoissonNoise(testseed, sky_level=pMean)
+    testimage = galsim.ImageViewI(np.zeros((3, 1), dtype=np.int32))
+    testimage.addNoise(galsim.DeviateNoise(p))
+    np.testing.assert_array_almost_equal(
+            testimage.array.flatten(), np.array(pResult)-pMean,
+            err_msg="PoissonNoise generator applied to Images does not "
+            "reproduce expected sequence")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -238,14 +246,15 @@ def test_ccdnoise_rand():
     import time
     t1 = time.time()
     for i in xrange(4):
-        u = galsim.UniformDeviate(testseed)
-        ccdnoise = galsim.CCDNoise(u, gain=cGain, read_noise=cReadNoise)
-        testImage = galsim.ImageView[types[i]]((np.zeros((2, 2)) + sky).astype(types[i]))
+        rng = galsim.BaseDeviate(testseed)
+        ccdnoise = galsim.CCDNoise(rng, sky_level=sky, gain=cGain, read_noise=cReadNoise)
+        testImage = galsim.ImageView[types[i]]((np.zeros(2, 2)).astype(types[i]))
         ccdnoise.applyTo(testImage)
-        np.testing.assert_array_almost_equal(testImage.array, eval("cResult"+typestrings[i]),
-                                             eval("precision"+typestrings[i]),
-                                             err_msg="Wrong CCD noise random sequence generated "+
-                                                     "for Image"+typestrings[i]+" images.")
+        np.testing.assert_array_almost_equal(
+                testImage.array, eval("cResult"+typestrings[i]),
+                eval("precision"+typestrings[i]),
+                err_msg="Wrong CCD noise random sequence generated "+
+                "for Image"+typestrings[i]+" images.")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -256,14 +265,15 @@ def test_ccdnoise_image():
     import time
     t1 = time.time()
     for i in xrange(4):
-        u = galsim.UniformDeviate(testseed)
-        ccdnoise = galsim.CCDNoise(u, gain=cGain, read_noise=cReadNoise)
-        testImage = galsim.ImageView[types[i]]((np.zeros((2, 2)) + sky).astype(types[i]))
+        rng = galsim.BaseDeviate(testseed)
+        ccdnoise = galsim.CCDNoise(rng, sky_level=sky, gain=cGain, read_noise=cReadNoise)
+        testImage = galsim.ImageView[types[i]]((np.zeros(2, 2)).astype(types[i]))
         testImage.addNoise(ccdnoise)
-        np.testing.assert_array_almost_equal(testImage.array, eval("cResult"+typestrings[i]),
-                                             eval("precision"+typestrings[i]),
-                                             err_msg="Wrong CCD noise random sequence generated "+
-                                                     "for Image"+typestrings[i]+" images.")
+        np.testing.assert_array_almost_equal(
+                testImage.array, eval("cResult"+typestrings[i]),
+                eval("precision"+typestrings[i]),
+                err_msg="Wrong CCD noise random sequence generated "+
+                "for Image"+typestrings[i]+" images.")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -272,11 +282,11 @@ def test_weibull_rand():
     """
     import time
     t1 = time.time()
-    u = galsim.UniformDeviate(testseed)
-    w = galsim.WeibullDeviate(u, a=wA, b=wB)
+    w = galsim.WeibullDeviate(testseed, a=wA, b=wB)
     testResult = (w(), w(), w())
-    np.testing.assert_array_almost_equal(np.array(testResult), np.array(wResult), precision, 
-                                         err_msg='Wrong Weibull random number sequence generated')
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(wResult), precision, 
+            err_msg='Wrong Weibull random number sequence generated')
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -286,13 +296,12 @@ def test_weibull_image():
     """
     import time
     t1 = time.time()
-    u = galsim.UniformDeviate(testseed)
-    w = galsim.WeibullDeviate(u, a=wA, b=wB)
+    w = galsim.WeibullDeviate(testseed, a=wA, b=wB)
     testimage = galsim.ImageViewD(np.zeros((3, 1)))
-    testimage.addNoise(w)
-    np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(wResult), precision, 
-                                         err_msg='Wrong Weibull random number sequence generated '
-                                                +'using image method.')
+    testimage.addNoise(galsim.DeviateNoise(w))
+    np.testing.assert_array_almost_equal(
+            testimage.array.flatten(), np.array(wResult), precision, 
+            err_msg='Wrong Weibull random number sequence generated using image method.')
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -301,11 +310,11 @@ def test_gamma_rand():
     """
     import time
     t1 = time.time()
-    u = galsim.UniformDeviate(testseed)
-    gam = galsim.GammaDeviate(u, alpha=gammaAlpha, beta=gammaBeta)
+    gam = galsim.GammaDeviate(testseed, alpha=gammaAlpha, beta=gammaBeta)
     testResult = (gam(), gam(), gam())
-    np.testing.assert_array_almost_equal(np.array(testResult), np.array(gammaResult), precision, 
-                                         err_msg='Wrong Gamma random number sequence generated')
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(gammaResult), precision, 
+            err_msg='Wrong Gamma random number sequence generated')
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -315,14 +324,12 @@ def test_gamma_image():
     """
     import time
     t1 = time.time()
-    u = galsim.UniformDeviate(testseed)
-    gam = galsim.GammaDeviate(u, alpha=gammaAlpha, beta=gammaBeta)
+    gam = galsim.GammaDeviate(testseed, alpha=gammaAlpha, beta=gammaBeta)
     testimage = galsim.ImageViewD(np.zeros((3, 1)))
-    testimage.addNoise(gam)
-    np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(gammaResult),
-                                         precision,
-                                         err_msg='Wrong Gamma random number sequence generated '
-                                                +'using image method.')
+    testimage.addNoise(galsim.DeviateNoise(gam))
+    np.testing.assert_array_almost_equal(
+            testimage.array.flatten(), np.array(gammaResult), precision,
+            err_msg='Wrong Gamma random number sequence generated using image method.')
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -331,11 +338,11 @@ def test_chi2_rand():
     """
     import time
     t1 = time.time()
-    u = galsim.UniformDeviate(testseed)
-    chi2 = galsim.Chi2Deviate(u, n=chi2N)
+    chi2 = galsim.Chi2Deviate(testseed, n=chi2N)
     testResult = (chi2(), chi2(), chi2())
-    np.testing.assert_array_almost_equal(np.array(testResult), np.array(chi2Result), precision, 
-                                         err_msg='Wrong Chi^2 random number sequence generated')
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(chi2Result), precision, 
+            err_msg='Wrong Chi^2 random number sequence generated')
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -345,14 +352,12 @@ def test_chi2_image():
     """
     import time
     t1 = time.time()
-    u = galsim.UniformDeviate(testseed)
-    chi2 = galsim.Chi2Deviate(u, n =chi2N)
+    chi2 = galsim.Chi2Deviate(testseed, n =chi2N)
     testimage = galsim.ImageViewD(np.zeros((3, 1)))
-    testimage.addNoise(chi2)
-    np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(chi2Result),
-                                         precision,
-                                         err_msg='Wrong Chi^2 random number sequence generated '
-                                                +'using image method.')
+    testimage.addNoise(galsim.DeviateNoise(chi2))
+    np.testing.assert_array_almost_equal(
+            testimage.array.flatten(), np.array(chi2Result), precision,
+            err_msg='Wrong Chi^2 random number sequence generated using image method.')
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 

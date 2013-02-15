@@ -44,8 +44,10 @@ struct PyBaseNoise {
         // Note that class docstrings are now added in galsim/random.py
 
         bp::class_<BaseNoise, boost::noncopyable> pyBaseNoise("BaseNoise", "", bp::no_init);
-        wrapTemplates<float>(pyBaseNoise);
         wrapTemplates<double>(pyBaseNoise);
+        wrapTemplates<float>(pyBaseNoise);
+        wrapTemplates<int32_t>(pyBaseNoise);
+        wrapTemplates<int16_t>(pyBaseNoise);
     }
 
 };
@@ -56,7 +58,7 @@ struct PyGaussianNoise {
     template <typename U, typename W>
     static void wrapTemplates(W & wrapper) {
         wrapper
-            .def("applyTo", (void (GaussianDeviate::*) (ImageView<U>) )&GaussianDeviate::applyTo,
+            .def("applyTo", (void (GaussianNoise::*) (ImageView<U>) )&GaussianNoise::applyTo,
                  "", (bp::arg("image")))
             ;
     }
@@ -65,28 +67,28 @@ struct PyGaussianNoise {
 
         // Note that class docstrings are now added in galsim/random.py
 
-        bp::class_<GaussianDeviate, bp::bases<BaseDeviate> > pyGaussianDeviate(
-            "GaussianDeviate", "", bp::init<double, double >(
+        bp::class_<GaussianNoise, bp::bases<BaseNoise> > pyGaussianNoise(
+            "GaussianNoise", "", bp::init<double, double >(
                 (bp::arg("mean")=0., bp::arg("sigma")=1.)
             )
         );
-        pyGaussianDeviate
+        pyGaussianNoise
             .def(bp::init<long, double, double>(
                 (bp::arg("lseed"), bp::arg("mean")=0., bp::arg("sigma")=1.)
                 ))
-            .def(bp::init<const BaseDeviate&, double, double>(
+            .def(bp::init<const BaseNoise&, double, double>(
                 (bp::arg("dev"), bp::arg("mean")=0., bp::arg("sigma")=1.)
                 ))
-            .def("__call__", &GaussianDeviate::operator(), "")
-            .def("getMean", &GaussianDeviate::getMean, "")
-            .def("setMean", &GaussianDeviate::setMean, "")
-            .def("getSigma", &GaussianDeviate::getSigma, "")
-            .def("setSigma", &GaussianDeviate::setSigma, "")
+            .def("__call__", &GaussianNoise::operator(), "")
+            .def("getMean", &GaussianNoise::getMean, "")
+            .def("setMean", &GaussianNoise::setMean, "")
+            .def("getSigma", &GaussianNoise::getSigma, "")
+            .def("setSigma", &GaussianNoise::setSigma, "")
             ;
-        wrapTemplates<int>(pyGaussianDeviate);
-        wrapTemplates<short>(pyGaussianDeviate);
-        wrapTemplates<float>(pyGaussianDeviate);
-        wrapTemplates<double>(pyGaussianDeviate);
+        wrapTemplates<int>(pyGaussianNoise);
+        wrapTemplates<short>(pyGaussianNoise);
+        wrapTemplates<float>(pyGaussianNoise);
+        wrapTemplates<double>(pyGaussianNoise);
     }
 
 };
@@ -96,7 +98,7 @@ struct PyPoissonNoise {
     template <typename U, typename W>
     static void wrapTemplates(W & wrapper) {
         wrapper
-            .def("applyTo", (void (PoissonDeviate::*) (ImageView<U>) )&PoissonDeviate::applyTo, "",
+            .def("applyTo", (void (PoissonNoise::*) (ImageView<U>) )&PoissonNoise::applyTo, "",
                  (bp::arg("image")))
             ;
     }
@@ -105,26 +107,26 @@ struct PyPoissonNoise {
 
         // Note that class docstrings are now added in galsim/random.py
 
-        bp::class_<PoissonDeviate, bp::bases<BaseDeviate> > pyPoissonDeviate(
-            "PoissonDeviate", "", bp::init<double>(
+        bp::class_<PoissonNoise, bp::bases<BaseNoise> > pyPoissonNoise(
+            "PoissonNoise", "", bp::init<double>(
                 (bp::arg("mean")=1.)
             )
         );
-        pyPoissonDeviate
+        pyPoissonNoise
             .def(bp::init<long, double>(
                 (bp::arg("lseed"), bp::arg("mean")=1.)
                 ))
-            .def(bp::init<const BaseDeviate&, double>(
+            .def(bp::init<const BaseNoise&, double>(
                 (bp::arg("dev"), bp::arg("mean")=1.)
                 ))
-            .def("__call__", &PoissonDeviate::operator(), "")
-            .def("getMean", &PoissonDeviate::getMean, "")
-            .def("setMean", &PoissonDeviate::setMean, "")
+            .def("__call__", &PoissonNoise::operator(), "")
+            .def("getMean", &PoissonNoise::getMean, "")
+            .def("setMean", &PoissonNoise::setMean, "")
             ;
-        wrapTemplates<int>(pyPoissonDeviate);
-        wrapTemplates<short>(pyPoissonDeviate);
-        wrapTemplates<float>(pyPoissonDeviate);
-        wrapTemplates<double>(pyPoissonDeviate);
+        wrapTemplates<int>(pyPoissonNoise);
+        wrapTemplates<short>(pyPoissonNoise);
+        wrapTemplates<float>(pyPoissonNoise);
+        wrapTemplates<double>(pyPoissonNoise);
     }
 
 };
@@ -138,13 +140,28 @@ struct PyCCDNoise{
 
         bp::class_<CCDNoise, bp::bases<BaseNoise> > pyCCDNoise("CCDNoise", "", bp::no_init);
         pyCCDNoise
-            .def(bp::init<const BaseDeviate&, double, double>(
+            .def(bp::init<BaseDeviate&, double, double>(
                 (bp::arg("rng"), bp::arg("gain")=1., bp::arg("read_noise")=0.)
                 ))
             .def("getGain", &CCDNoise::getGain, "")
             .def("setGain", &CCDNoise::setGain, "")
             .def("getReadNoise", &CCDNoise::getReadNoise, "")
             .def("setReadNoise", &CCDNoise::setReadNoise, "")
+            ;
+    }
+
+};
+
+struct PyDeviateNoise{
+
+    static void wrap() {
+
+        // Note that class docstrings are now added in galsim/random.py
+
+        bp::class_<DeviateNoise, bp::bases<BaseNoise> > pyDeviateNoise(
+            "DeviateNoise", "", bp::no_init);
+        pyDeviateNoise
+            .def(bp::init<BaseDeviate&>(bp::arg("rng")))
             ;
     }
 
@@ -157,6 +174,7 @@ void pyExportNoise() {
     //PyGaussianNoise::wrap();
     //PyPoissonNoise::wrap();
     PyCCDNoise::wrap();
+    PyDeviateNoise::wrap();
 }
 
 } // namespace galsim

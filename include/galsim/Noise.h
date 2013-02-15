@@ -48,7 +48,7 @@ namespace galsim {
          *
          * @param[in] rng   The BaseDeviate to use for the random number generation.
          */
-        BaseNoise(const BaseDeviate& rng) : _rng(rng) {}
+        BaseNoise(BaseDeviate& rng) : _rng(rng) {}
 
         /**
          * @brief Copy constructor shares the underlying rng.
@@ -66,7 +66,7 @@ namespace galsim {
          * @param[in,out] data The Image to be noise-ified.
          */
         template <typename T>
-        void applyTo(ImageView<T> data)
+        void applyTo(ImageView<T> data) 
         { 
             // This uses the standard workaround for the fact that you can't have a 
             // virtual template function.  The doApplyTo functions are virtual and 
@@ -74,32 +74,17 @@ namespace galsim {
             doApplyTo(data);
         }
 
-        /**
-         * @brief Add noise to an Image and also report variance of each pixel.
-         *
-         * Adds noise as in applyTo(Image) signature, but second Image is filled with
-         * variance of added noise.  Note: the variance image must be the same size as the 
-         * data image.
-         *
-         * @param[in,out] data The Image to be noise-ified.
-         * @param[in,out] var  The Image to fill with variance of applied noise.
-         */
-        template <class T>
-        void applyToVar(ImageView<T> data, ImageView<T> var) 
-        { doApplyToVar(data, var); }
-
     protected:
 
-        BaseDeviate _rng;
+        mutable BaseDeviate& _rng;
 
         // These need to be defined by the derived class.  They typically would in turn
         // immediately call their own templated applyTo function that defines the actual
         // application of the noise.
         virtual void doApplyTo(ImageView<double>& data) = 0;
         virtual void doApplyTo(ImageView<float>& data) = 0;
-
-        virtual void doApplyToVar(ImageView<double>& data, ImageView<double>& var) = 0;
-        virtual void doApplyToVar(ImageView<float>& data, ImageView<float>& var) = 0;
+        virtual void doApplyTo(ImageView<int>& data) = 0;
+        virtual void doApplyTo(ImageView<short>& data) = 0;
     };
 
 
@@ -127,7 +112,7 @@ namespace galsim {
          * @param[in] gain      Electrons per ADU in the input Images, used for Poisson noise.
          * @param[in] readNoise RMS of Gaussian noise, in electrons (if gain>0.) or ADU (gain<=0.)
          */
-        CCDNoise(const BaseDeviate& rng, double gain=1., double readNoise=0.) :
+        CCDNoise(BaseDeviate& rng, double gain=1., double readNoise=0.) :
             BaseNoise(rng),
             _gain(gain),
             _readNoise(readNoise),
@@ -264,9 +249,8 @@ namespace galsim {
     protected:
         void doApplyTo(ImageView<double>& data) { applyTo(data); }
         void doApplyTo(ImageView<float>& data) { applyTo(data); }
-
-        void doApplyToVar(ImageView<double>& data, ImageView<double>& var) { applyToVar(data,var); }
-        void doApplyToVar(ImageView<float>& data, ImageView<float>& var) { applyToVar(data,var); }
+        void doApplyTo(ImageView<int>& data) { applyTo(data); }
+        void doApplyTo(ImageView<short>& data) { applyTo(data); }
 
     private: 
         double _gain;    // flux corresponding to one photon
@@ -274,6 +258,55 @@ namespace galsim {
 
         GaussianDeviate _gd;
         PoissonDeviate _pd;
+    };
+
+
+    /** 
+     * @brief Add noise according to a given Deviate
+     *
+     * For each pixel, draw the amount of noise from the provided Deviate object.
+     */
+    class DeviateNoise : public BaseNoise
+    {
+    public:
+ 
+        /**
+         * @brief Construct a new noise model, sharing the random number generator with dev.
+         *
+         * @param[in] dev       The Deviate to use for the noise values
+         */
+        DeviateNoise(BaseDeviate& rng) : BaseNoise(rng) {}
+
+        /**
+         * @brief Construct a copy that shares the RNG with rhs.
+         *
+         * Note: the default constructed op= function will do the same thing.
+         */
+        DeviateNoise(const DeviateNoise& rhs) : BaseNoise(rhs) {}
+ 
+        /**
+         * @brief Add noise to an Image.
+         *
+         * @param[in,out] data The Image to be noise-ified.
+         */
+        template <typename T>
+        void applyTo(ImageView<T> data) 
+        {
+            // Typedef for image row iterable
+            typedef typename ImageView<T>::iterator ImIter;
+
+            for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
+                ImIter ee = data.rowEnd(y);
+                for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += T(_rng()); }
+            }
+        }
+
+    protected:
+        using BaseNoise::_rng;
+        void doApplyTo(ImageView<double>& data) { applyTo(data); }
+        void doApplyTo(ImageView<float>& data) { applyTo(data); }
+        void doApplyTo(ImageView<int>& data) { applyTo(data); }
+        void doApplyTo(ImageView<short>& data) { applyTo(data); }
     };
 
 };  // namespace galsim

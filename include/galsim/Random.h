@@ -189,9 +189,25 @@ namespace galsim {
          */
         void reset(const BaseDeviate& dev) { _rng = dev._rng; }
 
+        /**
+         * @brief Draw a new random number from the distribution
+         *
+         * This is invalid for a BaseDeviate object that is not a derived class.
+         * However, we don't make it pure virtual, since we want to be able to make
+         * BaseDeviate objects a direct way to define a common seed for other Deviates.
+         */
+        double operator()() { return val(); }
+
+
    protected:
 
         boost::shared_ptr<rng_type> _rng;
+
+        // This is the virtual function that is actually overridden.  This is because 
+        // some derived classes prefer to return an int.  (e.g. Binom, Poisson)
+        // So this provides the interface that returns a double.
+        virtual double val() 
+        { throw std::runtime_error("Cannot draw random values from a pure BaseDeviate object."); }
 
         /**
          * @brief Private routine to seed with microsecond counter from time-of-day structure.
@@ -222,15 +238,10 @@ namespace galsim {
          *
          * @return A uniform deviate in the interval [0.,1.)
          */
-        double operator() () { return _urd(*this->_rng); }
+        double operator()() { return _urd(*this->_rng); }
 
-        /**
-         * @brief Add Uniform pseudo-random deviates to every element in a supplied Image.
-         *
-         * @param[in,out] data The Image to be noise-ified.
-         */
-        template <typename T>
-        void applyTo(ImageView<T> data) { ApplyDeviateToImage(*this, data); }
+    protected:
+        double val() { return operator()(); }
 
     private:
         boost::random::uniform_real_distribution<> _urd;
@@ -284,7 +295,7 @@ namespace galsim {
          *
          * @return A Gaussian deviate with current mean and sigma
          */
-        double operator() () { return _normal(*this->_rng); }
+        double operator()() { return _normal(*this->_rng); }
 
         /**
          * @brief Get current distribution mean
@@ -317,13 +328,8 @@ namespace galsim {
         void setSigma(double sigma) 
         { _normal.param(boost::random::normal_distribution<>::param_type(_normal.mean(),sigma)); }
 
-        /**
-         * @brief Add Gaussian pseudo-random deviates to every element in a supplied Image.
-         *
-         * @param[in,out] data The Image to be noise-ified.
-         */
-        template <typename T>
-        void applyTo(ImageView<T> data) { ApplyDeviateToImage(*this, data); }
+    protected:
+        double val() { return operator()(); }
 
     private:
         boost::random::normal_distribution<> _normal;
@@ -412,14 +418,8 @@ namespace galsim {
             _bd.param(boost::random::binomial_distribution<>::param_type(_bd.t(),p));
         }
 
-        /**
-         * @brief Add Binomial pseudo-random deviates to every element in a supplied Image.
-         *
-         * @param[in,out] data The Image to be noise-ified.
-         */
-         template <typename T>
-         void applyTo(ImageView<T> data) { ApplyDeviateToImage(*this, data); }
-
+    protected:
+        double val() { return double(operator()()); }
 
     private:
         boost::random::binomial_distribution<> _bd;
@@ -486,20 +486,8 @@ namespace galsim {
             _pd.param(boost::random::poisson_distribution<>::param_type(mean));
         }
 
-        /**
-         * @brief Apply Poisson pseudo-random deviates to every element in a supplied Image.
-         *
-         * This adds Poisson noise with the given mean to the image, and then subtracts off
-         * that mean value again, so the expected value is 0.
-         *
-         * @param[in,out] data The Image to be noise-ified.
-         */
-        template <typename T>
-        void applyTo(ImageView<T> data) 
-        { 
-            ApplyDeviateToImage(*this, data); 
-            data -= T(getMean());
-        }
+    protected:
+        double val() { return double(operator()()); }
 
     private:
         boost::random::poisson_distribution<> _pd;
@@ -559,7 +547,7 @@ namespace galsim {
          *
          * @return A Weibull deviate with current shape k and scale lam.
          */
-        double operator() () { return _weibull(*this->_rng); }
+        double operator()() { return _weibull(*this->_rng); }
 
         /**
          * @brief Get current distribution shape parameter a.
@@ -595,14 +583,8 @@ namespace galsim {
             _weibull.param(boost::random::weibull_distribution<>::param_type(_weibull.a(), b));
         }
 
-        /**
-         * @brief Add Weibull pseudo-random deviates to every element in a supplied Image.
-         *
-         * @param[in,out] data  The Image.
-         */
-        template <typename T>
-        void applyTo(ImageView<T> data) { ApplyDeviateToImage(*this, data); }
-
+    protected:
+        double val() { return operator()(); }
 
     private:
         boost::random::weibull_distribution<> _weibull;
@@ -660,7 +642,7 @@ namespace galsim {
          *
          * @return A Gamma deviate with current shape alpha and scale beta.
          */
-        double operator() () { return _gamma(*this->_rng); }
+        double operator()() { return _gamma(*this->_rng); }
 
         /**
          * @brief Get current distribution shape parameter alpha.
@@ -696,14 +678,8 @@ namespace galsim {
             _gamma.param(boost::random::gamma_distribution<>::param_type(_gamma.alpha(), beta));
         }
 
-        /**
-         * @brief Add Gamma pseudo-random deviates to every element in a supplied Image.
-         *
-         * @param[in,out] data  The Image.
-         */
-        template <typename T>
-        void applyTo(ImageView<T> data) { ApplyDeviateToImage(*this, data); }
-
+    protected:
+        double val() { return operator()(); }
 
     private:
         boost::random::gamma_distribution<> _gamma;
@@ -755,7 +731,7 @@ namespace galsim {
          *
          * @return A Chi^2 deviate with current degrees-of-freedom parameter n.
          */
-        double operator() () { return _chi_squared(*this->_rng); }
+        double operator()() { return _chi_squared(*this->_rng); }
 
         /**
          * @brief Get current distribution degrees-of-freedom parameter n.
@@ -774,14 +750,8 @@ namespace galsim {
             _chi_squared.param(boost::random::chi_squared_distribution<>::param_type(n));
         }
 
-        /**
-         * @brief Add Chi^2 pseudo-random deviates to every element in a supplied Image.
-         *
-         * @param[in,out] data  The Image.
-         */
-        template <typename T>
-        void applyTo(ImageView<T> data) { ApplyDeviateToImage(*this, data); }
-
+    protected:
+        double val() { return operator()(); }
 
     private:
         boost::random::chi_squared_distribution<> _chi_squared;
