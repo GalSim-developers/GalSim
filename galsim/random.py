@@ -156,19 +156,6 @@ To add deviates to every element of an image, use the syntax image.addNoise(u).
 This docstring can be found using the Python interpreter or in pysrc/Random.cpp.
 """
 
-_galsim.UniformDeviate.applyTo.__func__.__doc__ = """
-Add Uniform deviates to every element in a supplied Image.
-
-Calling
--------
-
-    >>> galsim.UniformDeviate.applyTo(image)  
-
-On output each element of the input Image will have a pseudo-random UniformDeviate return value 
-added to it.
-
-To add deviates to every element of an image, the syntax image.addNoise() is preferred.
-"""
 _galsim.UniformDeviate.__call__.__func__.__doc__= "Draw a new random number from the distribution."
 
 
@@ -214,20 +201,6 @@ To add deviates to every element of an image, use the syntax image.addNoise(g).
 
 To get and set the deviate parameters, see the docstrings for the .getMean(), .setMean(), 
 .getSigma() and .setSigma() methods of each instance.
-"""
-
-_galsim.GaussianDeviate.applyTo.__func__.__doc__ = """
-Add Gaussian deviates to every element in a supplied Image.
-
-Calling
--------
-
-    >>> galsim.GaussianDeviate.applyTo(image)
-
-On output each element of the input Image will have a pseudo-random GaussianDeviate return value 
-added to it, with current values of mean and sigma.
-
-To add deviates to every element of an image, the syntax image.addNoise() is preferred.
 """
 
 _galsim.GaussianDeviate.__call__.__func__.__doc__ = """
@@ -286,20 +259,6 @@ To get and set the deviate parameters, see the docstrings for the .getN(), .setN
 .setP() methods of each instance.
 """
 
-_galsim.BinomialDeviate.applyTo.__func__.__doc__ = """
-Add Binomial deviates to every element in a supplied Image.
-
-Calling
--------
-
-    >>> galsim.BinomialDeviate.applyTo(image)    
-
-On output each element of the input Image will have a pseudo-random BinomialDeviate return value 
-added to it, with current values of N and p.
-
-To add deviates to every element of an image, the syntax image.addNoise() is preferred.
-"""
-
 _galsim.BinomialDeviate.__call__.__func__.__doc__ = """
 Draw a new random number from the distribution.
 
@@ -354,21 +313,6 @@ To get and set the deviate parameter, see the docstrings for the .getMean(), .se
 each instance.
 """
 
-_galsim.PoissonDeviate.applyTo.__func__.__doc__ = """
-Add Poisson deviates to every element in a supplied Image.
-
-Calling
--------
-
-    >>> galsim.PoissonDeviate.applyTo(image)
-
-On output each element of the input Image will have a pseudo-random PoissonDeviate return value 
-added to it, with current mean, and then that mean subtracted.  So the average  effect on each 
-pixel is zero, but there will be Poisson noise added to the image with the right variance.
-
-To add deviates to every element of an image, the syntax image.addNoise() is preferred.
-"""
-
 _galsim.PoissonDeviate.__call__.__func__.__doc__ = """
 Draw a new random number from the distribution.
 
@@ -376,6 +320,178 @@ Returns a Poisson deviate with current mean.
 """
 _galsim.PoissonDeviate.getMean.__func__.__doc__ = "Get current distribution mean."
 _galsim.PoissonDeviate.setMean.__func__.__doc__ = "Set current distribution mean."
+
+
+
+# WeibullDeviate docstrings
+_galsim.WeibullDeviate.__doc__ = """
+Pseudo-random Weibull-distributed deviate for shape parameter a & scale parameter b.
+
+The Weibull distribution is related to a number of other probability distributions;  in particular,
+it interpolates between the exponential distribution (a=1) and the Rayleigh distribution (a=2). 
+See http://en.wikipedia.org/wiki/Weibull_distribution (a=k and b=lambda in the notation adopted in 
+the Wikipedia article) for more details.  The Weibull distribution is real valued and produces 
+deviates >= 0.
+
+Initialization
+--------------
+
+    >>> w = galsim.WeibullDeviate(a=1., b=1.)         # Initializes w to be a WeibullDeviate
+                                                      # instance using the current time for the seed.
+
+    >>> w = galsim.WeibullDeviate(lseed, a=1., b=1.)  # Initializes w using the specified seed,
+                                                      # where lseed is a long int.
+
+    >>> w = galsim.WeibullDeviate(dev, a=1., b=1.)    # Initializes w to share the same underlying
+                                                      # random number generator as dev.
+
+Parameters:
+
+    a        shape parameter of the distribution [default `a = 1`].  Must be > 0.
+    b        scale parameter of the distribution [default `b = 1`].  Must be > 0.
+
+Calling
+-------
+Taking the instance from the above examples, successive calls to w() then generate pseudo-random 
+numbers Weibull-distributed with shape and scale parameters a and b.
+
+    >>> w = galsim.WeibullDeviate()
+    >>> w()
+    2.152873075208731
+    >>> w()
+    2.0826856212853846
+
+Methods
+-------
+To add deviates to every element of an image, use the syntax image.addNoise(w).
+
+To get and set the deviate parameters, see the docstrings for the .getA(), .setA(), .getB() and 
+.setB() methods of each instance.
+"""
+
+_galsim.WeibullDeviate.__call__.__func__.__doc__ = """
+Draw a new random number from the distribution.
+
+Returns a Weibull-distributed deviate with current a and b.
+"""
+_galsim.WeibullDeviate.getA.__func__.__doc__ = "Get current distribution shape parameter a."
+_galsim.WeibullDeviate.setA.__func__.__doc__ = "Set current distribution shape parameter a."
+_galsim.WeibullDeviate.getB.__func__.__doc__ = "Get current distribution shape parameter b."
+_galsim.WeibullDeviate.setB.__func__.__doc__ = "Set current distribution shape parameter b."
+
+
+# GammaDeviate docstrings
+_galsim.GammaDeviate.__doc__ = """
+Pseudo-random Gamma-distributed deviate for parameters alpha & beta.
+
+See http://en.wikipedia.org/wiki/Gamma_distribution (note that alpha=k and beta=theta in the
+notation adopted in the Boost.Random routine called by this class).  The Gamma distribution is a 
+real-valued distribution producing deviates >= 0.
+
+Initialization
+--------------
+
+    >>> gam = galsim.GammaDeviate(alpha=1., beta=1.)         # Initializes gam to be a GammaDeviate
+                                                             # instance using the current time for
+                                                             # the seed.
+
+    >>> gam = galsim.GammaDeviate(lseed, alpha=1., beta=1.)  # Initializes gam using the specified
+                                                             # seed, where lseed is a long int.
+
+    >>> gam = galsim.GammaDeviate(dev alpha=1., beta=1.)     # Initializes gam to share the same
+                                                             # underlying random number generator as
+                                                             # dev.
+
+Parameters:
+
+    alpha    shape parameter of the distribution [default `alpha = 1`].  Must be > 0.
+    beta     scale parameter of the distribution [default `beta = 1`].  Must be > 0.
+
+Calling
+-------
+Taking the instance from the above examples, successive calls to g() will return successive, 
+pseudo-random Gamma-distributed deviates with shape and scale parameters alpha and beta. 
+
+    >>> gam = galsim.GammaDeviate()
+    >>> gam()
+    0.020092014608829315
+    >>> gam()
+    0.5062533114685395
+
+Methods
+-------
+To add deviates to every element of an image, use the syntax image.addNoise(gam).
+
+To get and set the deviate parameters, see the docstrings for the .getAlpha(), .setAlpha(), 
+.getBeta() and .setBeta() methods of each instance.
+
+To add deviates to every element of an image, the syntax image.addNoise() is preferred.
+"""
+
+_galsim.GammaDeviate.__call__.__func__.__doc__ = """
+Draw a new random number from the distribution.
+
+Returns a Gamma-distributed deviate with current alpha and beta.
+"""
+_galsim.GammaDeviate.getAlpha.__func__.__doc__ = "Get current distribution shape parameter alpha."
+_galsim.GammaDeviate.setAlpha.__func__.__doc__ = "Set current distribution shape parameter alpha."
+_galsim.GammaDeviate.getBeta.__func__.__doc__ = "Get current distribution shape parameter beta."
+_galsim.GammaDeviate.setBeta.__func__.__doc__ = "Set current distribution shape parameter beta."
+
+
+# Chi2Deviate docstrings
+_galsim.Chi2Deviate.__doc__ = """
+Pseudo-random Chi^2-distributed deviate for degrees-of-freedom parameter n.
+
+See http://en.wikipedia.org/wiki/Chi-squared_distribution (note that k=n in the notation adopted in
+the Boost.Random routine called by this class).  The Chi^2 distribution is a real-valued 
+distribution producing deviates >= 0.
+
+Initialization
+--------------
+
+    >>> chis = galsim.Chi2Deviate(n=1.)          # Initializes chis to be a Chi2Deviate instance
+                                                 # using the current time for the seed.
+
+    >>> chis = galsim.Chi2Deviate(lseed, n=1.)   # Initializes chis using the specified seed, where
+                                                 # lseed is a long int.
+
+    >>> chis = galsim.Chi2Deviate(dev, n=1.)     # Initializes chis to share the same underlying
+                                                 # random number generator as dev.
+
+Parameters:
+    n   number of degrees of freedom for the output distribution [default `n = 1`].  Must be > 0.
+
+Calling
+-------
+Taking the instance from the above examples, successive calls to g() will return successive, 
+pseudo-random Chi^2-distributed deviates with degrees-of-freedom parameter n.
+
+    >>> chis = galsim.Chi2Deviate()
+    >>> chis()
+    0.35617890086874854
+    >>> chis()
+    0.17269982670901735
+
+Methods
+-------
+To add deviates to every element of an image, use the syntax image.addNoise(chis).
+
+To get and set the deviate parameter, see the docstrings for the .getN(), .setN() methods of each
+instance.
+"""
+
+_galsim.Chi2Deviate.__call__.__func__.__doc__ = """
+Draw a new random number from the distribution.
+
+Returns a Chi2-distributed deviate with current n degrees of freedom.
+"""
+_galsim.Chi2Deviate.getN.__func__.__doc__ = "Get current distribution n degrees of freedom."
+_galsim.Chi2Deviate.setN.__func__.__doc__ = "Set current distribution n degrees of freedom."
+
+
+#
+# The rest of these are from Noise.h in the C++ layer, not Randome.h.
 
 
 # CCDNoise deviate docstrings
@@ -442,210 +558,4 @@ _galsim.CCDNoise.setGain.__func__.__doc__ = "Set gain in current noise model."
 _galsim.CCDNoise.getReadNoise.__func__.__doc__ = "Get read noise in current noise model."
 _galsim.CCDNoise.setReadNoise.__func__.__doc__ = "Set read noise in current noise model."
 
-
-# WeibullDeviate docstrings
-_galsim.WeibullDeviate.__doc__ = """
-Pseudo-random Weibull-distributed deviate for shape parameter a & scale parameter b.
-
-The Weibull distribution is related to a number of other probability distributions;  in particular,
-it interpolates between the exponential distribution (a=1) and the Rayleigh distribution (a=2). 
-See http://en.wikipedia.org/wiki/Weibull_distribution (a=k and b=lambda in the notation adopted in 
-the Wikipedia article) for more details.  The Weibull distribution is real valued and produces 
-deviates >= 0.
-
-Initialization
---------------
-
-    >>> w = galsim.WeibullDeviate(a=1., b=1.)         # Initializes w to be a WeibullDeviate
-                                                      # instance using the current time for the seed.
-
-    >>> w = galsim.WeibullDeviate(lseed, a=1., b=1.)  # Initializes w using the specified seed,
-                                                      # where lseed is a long int.
-
-    >>> w = galsim.WeibullDeviate(dev, a=1., b=1.)    # Initializes w to share the same underlying
-                                                      # random number generator as dev.
-
-Parameters:
-
-    a        shape parameter of the distribution [default `a = 1`].  Must be > 0.
-    b        scale parameter of the distribution [default `b = 1`].  Must be > 0.
-
-Calling
--------
-Taking the instance from the above examples, successive calls to w() then generate pseudo-random 
-numbers Weibull-distributed with shape and scale parameters a and b.
-
-    >>> w = galsim.WeibullDeviate()
-    >>> w()
-    2.152873075208731
-    >>> w()
-    2.0826856212853846
-
-Methods
--------
-To add deviates to every element of an image, use the syntax image.addNoise(w).
-
-To get and set the deviate parameters, see the docstrings for the .getA(), .setA(), .getB() and 
-.setB() methods of each instance.
-"""
-
-_galsim.WeibullDeviate.applyTo.__func__.__doc__ = """
-Add Weibull-distributed deviates to every element in a supplied Image.
-
-Calling
--------
-
-    >>> galsim.WeibullDeviate.applyTo(image)
-
-On output each element of the input Image will have a pseudo-random WeibullDeviate return value 
-added to it, with current values of a and b.
-
-To add deviates to every element of an image, the syntax image.addNoise() is preferred.
-"""
-
-_galsim.WeibullDeviate.__call__.__func__.__doc__ = """
-Draw a new random number from the distribution.
-
-Returns a Weibull-distributed deviate with current a and b.
-"""
-_galsim.WeibullDeviate.getA.__func__.__doc__ = "Get current distribution shape parameter a."
-_galsim.WeibullDeviate.setA.__func__.__doc__ = "Set current distribution shape parameter a."
-_galsim.WeibullDeviate.getB.__func__.__doc__ = "Get current distribution shape parameter b."
-_galsim.WeibullDeviate.setB.__func__.__doc__ = "Set current distribution shape parameter b."
-
-
-# GammaDeviate docstrings
-_galsim.GammaDeviate.__doc__ = """
-Pseudo-random Gamma-distributed deviate for parameters alpha & beta.
-
-See http://en.wikipedia.org/wiki/Gamma_distribution (note that alpha=k and beta=theta in the
-notation adopted in the Boost.Random routine called by this class).  The Gamma distribution is a 
-real-valued distribution producing deviates >= 0.
-
-Initialization
---------------
-
-    >>> gam = galsim.GammaDeviate(alpha=1., beta=1.)         # Initializes gam to be a GammaDeviate
-                                                             # instance using the current time for
-                                                             # the seed.
-
-    >>> gam = galsim.GammaDeviate(lseed, alpha=1., beta=1.)  # Initializes gam using the specified
-                                                             # seed, where lseed is a long int.
-
-    >>> gam = galsim.GammaDeviate(dev alpha=1., beta=1.)     # Initializes gam to share the same
-                                                             # underlying random number generator as
-                                                             # dev.
-
-Parameters:
-
-    alpha    shape parameter of the distribution [default `alpha = 1`].  Must be > 0.
-    beta     scale parameter of the distribution [default `beta = 1`].  Must be > 0.
-
-Calling
--------
-Taking the instance from the above examples, successive calls to g() will return successive, 
-pseudo-random Gamma-distributed deviates with shape and scale parameters alpha and beta. 
-
-    >>> gam = galsim.GammaDeviate()
-    >>> gam()
-    0.020092014608829315
-    >>> gam()
-    0.5062533114685395
-
-Methods
--------
-To add deviates to every element of an image, use the syntax image.addNoise(gam).
-
-To get and set the deviate parameters, see the docstrings for the .getAlpha(), .setAlpha(), 
-.getBeta() and .setBeta() methods of each instance.
-
-To add deviates to every element of an image, the syntax image.addNoise() is preferred.
-"""
-
-_galsim.GammaDeviate.applyTo.__func__.__doc__ = """
-Add Gamma-distributed deviates to every element in a supplied Image.
-
-Calling
--------
-
-    >>> galsim.GammaDeviate.applyTo(image)
-
-On output each element of the input Image will have a pseudo-random GammaDeviate return value added
-to it, with current values of alpha and beta.
-"""
-
-_galsim.GammaDeviate.__call__.__func__.__doc__ = """
-Draw a new random number from the distribution.
-
-Returns a Gamma-distributed deviate with current alpha and beta.
-"""
-_galsim.GammaDeviate.getAlpha.__func__.__doc__ = "Get current distribution shape parameter alpha."
-_galsim.GammaDeviate.setAlpha.__func__.__doc__ = "Set current distribution shape parameter alpha."
-_galsim.GammaDeviate.getBeta.__func__.__doc__ = "Get current distribution shape parameter beta."
-_galsim.GammaDeviate.setBeta.__func__.__doc__ = "Set current distribution shape parameter beta."
-
-
-# Chi2Deviate docstrings
-_galsim.Chi2Deviate.__doc__ = """
-Pseudo-random Chi^2-distributed deviate for degrees-of-freedom parameter n.
-
-See http://en.wikipedia.org/wiki/Chi-squared_distribution (note that k=n in the notation adopted in
-the Boost.Random routine called by this class).  The Chi^2 distribution is a real-valued 
-distribution producing deviates >= 0.
-
-Initialization
---------------
-
-    >>> chis = galsim.Chi2Deviate(n=1.)          # Initializes chis to be a Chi2Deviate instance
-                                                 # using the current time for the seed.
-
-    >>> chis = galsim.Chi2Deviate(lseed, n=1.)   # Initializes chis using the specified seed, where
-                                                 # lseed is a long int.
-
-    >>> chis = galsim.Chi2Deviate(dev, n=1.)     # Initializes chis to share the same underlying
-                                                 # random number generator as dev.
-
-Parameters:
-    n   number of degrees of freedom for the output distribution [default `n = 1`].  Must be > 0.
-
-Calling
--------
-Taking the instance from the above examples, successive calls to g() will return successive, 
-pseudo-random Chi^2-distributed deviates with degrees-of-freedom parameter n.
-
-    >>> chis = galsim.Chi2Deviate()
-    >>> chis()
-    0.35617890086874854
-    >>> chis()
-    0.17269982670901735
-
-Methods
--------
-To add deviates to every element of an image, use the syntax image.addNoise(chis).
-
-To get and set the deviate parameter, see the docstrings for the .getN(), .setN() methods of each
-instance.
-"""
-
-_galsim.Chi2Deviate.applyTo.__func__.__doc__ = """
-Add Chi^2-distributed deviates to every element in a supplied Image.
-
-Calling
--------
-
-    >>> galsim.Chi2Deviate.applyTo(image)
-
-On output each element of the input Image will have a pseudo-random Chi2Deviate return value added 
-to it, with current degrees-of-freedom parameter n.
-
-To add deviates to every element of an image, the syntax image.addNoise() is preferred.
-"""
-
-_galsim.Chi2Deviate.__call__.__func__.__doc__ = """
-Draw a new random number from the distribution.
-
-Returns a Chi2-distributed deviate with current n degrees of freedom.
-"""
-_galsim.Chi2Deviate.getN.__func__.__doc__ = "Get current distribution n degrees of freedom."
-_galsim.Chi2Deviate.setN.__func__.__doc__ = "Set current distribution n degrees of freedom."
 
