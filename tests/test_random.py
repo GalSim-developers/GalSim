@@ -133,7 +133,7 @@ def test_uniform_rand_reset():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_uniform_image():
-    """testing ability to apply uniform random numbers to images using their addNoise method, 
+    """Testing ability to apply uniform random numbers to images using their addNoise method, 
     and reproduce sequence.
     """
     import time
