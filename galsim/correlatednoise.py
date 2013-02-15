@@ -112,7 +112,7 @@ class _CorrFunc(object):
         If the optional image pixel scale `dx` is not specified, `image.getScale()` is used for the
         input image pixel separation.
         
-        If an optional random deviate `dev` is supplied, the application of noise will share the
+        If an optional random deviate `rng` is supplied, the application of noise will share the
         same underlying random number generator when generating the vector of unit variance
         Gaussians that seed the (Gaussian) noise field.
 
@@ -120,7 +120,7 @@ class _CorrFunc(object):
         @param dx    The pixel scale to adopt for the input image; should use the same units the
                      ImageCorrFunc instance for which this is a method.  If is not specified,
                      `image.getScale()` is used instead.
-        @param dev   Optional random deviate from which to draw pseudo-random numbers in generating
+        @param rng   Optional BaseDeviate from which to draw pseudo-random numbers in generating
                      the noise field.
         @param add_to_image  Whether to add to the existing image rather than clear out anything
                              in the image before drawing.
@@ -139,16 +139,14 @@ class _CorrFunc(object):
                 "Input image argument does not have a bounds attribute, it must be a galsim.Image"+
                 "or galsim.ImageView-type object with defined bounds.")
 
-        # Set up the Gaussian random deviate we will need later
+        # Set up the GaussianNoise object we will need later
         if dev is None:
-            g = galsim.GaussianDeviate()
-        else:
-            if isinstance(dev, galsim.BaseDeviate):
-                g = galsim.GaussianDeviate(dev)
-            else:
-                raise TypeError(
-                    "Supplied input keyword dev must be a galsim.BaseDeviate or derived class "+
-                    "(e.g. galsim.UniformDeviate, galsim.GaussianDeviate).")
+            dev = galsim.BaseDeviate()
+        elif not isinstance(dev, galsim.BaseDeviate):
+            raise TypeError(
+                "Supplied input keyword rng must be a galsim.BaseDeviate or derived class "+
+                "(e.g. galsim.UniformDeviate, galsim.GaussianDeviate).")
+        g = galsim.GaussianNoise(rng, sigma=1.)
 
         # If the profile has changed since last time (or if we have never been here before),
         # clear out the stored values.

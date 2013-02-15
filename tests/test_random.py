@@ -177,7 +177,7 @@ def test_gaussian_image():
             "reproduce expected sequence")
     
     # GaussianNoise is equivalent, but no mean allowed.
-    gn = galsim.GaussianNoise(galsim.BaseDeviate(testsed), sigma=gSigma)
+    gn = galsim.GaussianNoise(galsim.BaseDeviate(testseed), sigma=gSigma)
     testimage = galsim.ImageViewD(np.zeros((3, 1)))
     testimage.addNoise(gn)
     testimage += gMean
@@ -236,18 +236,18 @@ def test_poisson_image():
     """
     import time
     t1 = time.time()
-    p = galsim.PoissonDeviate(testseed, mean=pMean)
+    pd = galsim.PoissonDeviate(testseed, mean=pMean)
     testimage = galsim.ImageViewI(np.zeros((3, 1), dtype=np.int32))
-    testimage.addNoise(galsim.DeviateNoise(p))
+    testimage.addNoise(galsim.DeviateNoise(pd))
     np.testing.assert_array_almost_equal(
             testimage.array.flatten(), np.array(pResult),
             err_msg="PoissonDeviate generator applied to Images does not "
             "reproduce expected sequence")
 
     # The PoissonNoise version also subtracts off the mean value
-    p = galsim.PoissonNoise(testseed, sky_level=pMean)
+    pn = galsim.PoissonNoise(galsim.BaseDeviate(testseed), sky_level=pMean)
     testimage = galsim.ImageViewI(np.zeros((3, 1), dtype=np.int32))
-    testimage.addNoise(galsim.DeviateNoise(p))
+    testimage.addNoise(pn)
     np.testing.assert_array_almost_equal(
             testimage.array.flatten(), np.array(pResult)-pMean,
             err_msg="PoissonNoise generator applied to Images does not "

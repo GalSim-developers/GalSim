@@ -89,6 +89,162 @@ namespace galsim {
 
 
     /** 
+     * @brief Class implementing simple Gaussain noise.
+     *
+     * The GaussianNoise class implements a simple Gaussian noise with a given sigma.
+     */
+    class GaussianNoise : public BaseNoise
+    {
+    public:
+ 
+        /**
+         * @brief Construct a new noise model with a given sigma.
+         *
+         * @param[in] rng      The BaseDeviate to use for the random number generation.
+         * @param[in] sigma    RMS of Gaussian noise
+         */
+        GaussianNoise(BaseDeviate& rng, double sigma) :
+            BaseNoise(rng), _sigma(sigma)
+        {}
+
+        /**
+         * @brief Construct a copy that shares the RNG with rhs.
+         *
+         * Note: the default constructed op= function will do the same thing.
+         */
+        GaussianNoise(const GaussianNoise& rhs) : 
+            BaseNoise(rhs), _sigma(rhs._sigma)
+        {}
+ 
+        /**
+         * @brief Report current sigma.
+         */
+        double getSigma() const { return _sigma; }
+
+        /**
+         * @brief Set sigma
+         */
+        void setSigma(double sigma) { _sigma = sigma; }
+
+        /**
+         * @brief Add noise to an Image.
+         */
+        template <typename T>
+        void applyTo(ImageView<T> data) 
+        {
+            // Typedef for image row iterable
+            typedef typename ImageView<T>::iterator ImIter;
+
+            GaussianDeviate gd(_rng, 0., _sigma);
+            for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
+                ImIter ee = data.rowEnd(y);
+                for (ImIter it = data.rowBegin(y); it != ee; ++it) {
+                    *it = T(*it + gd());
+                }
+            }
+        }
+
+    protected:
+        using BaseNoise::_rng;
+        void doApplyTo(ImageView<double>& data) { applyTo(data); }
+        void doApplyTo(ImageView<float>& data) { applyTo(data); }
+        void doApplyTo(ImageView<int>& data) { applyTo(data); }
+        void doApplyTo(ImageView<short>& data) { applyTo(data); }
+
+    private: 
+        double _sigma;
+    };
+
+    /** 
+     * @brief Class implementing simple Poisson noise.
+     *
+     * The PoissonNoise class encapsulates the noise model of Poisson noise corresponding 
+     * to the current value in each pixel (including an optional extra sky level).
+     *
+     * It is equivalent to CCDNoise with gain=1, read_noise=0.
+     */
+    class PoissonNoise : public BaseNoise
+    {
+    public:
+ 
+        /**
+         * @brief Construct a new noise model, sharing the random number generator with rng.
+         *
+         * @param[in] rng        The BaseDeviate to use for the random number generation.
+         * @param[in] sky_level  The sky level in counts per pixel that was originally in
+         *                       the input image, but which is taken to have already been 
+         *                       subtracted off.
+         */
+        PoissonNoise(BaseDeviate& rng, double sky_level=0.) :
+            BaseNoise(rng), _sky_level(sky_level)
+        {}
+
+        /**
+         * @brief Construct a copy that shares the RNG with rhs.
+         *
+         * Note: the default constructed op= function will do the same thing.
+         */
+        PoissonNoise(const PoissonNoise& rhs) : 
+            BaseNoise(rhs), _sky_level(rhs._sky_level)
+        {}
+ 
+
+        /**
+         * @brief Report current sky_level
+         */
+        double getSkyLevel() const { return _sky_level; }
+
+        /**
+         * @brief Set sky level
+         */
+        void setSkyLevel(double sky_level) { _sky_level = sky_level; }
+
+        /**
+         * @brief Add noise to an Image.
+         */
+        template <typename T>
+        void applyTo(ImageView<T> data) 
+        {
+            // Above this many e's, assume Poisson distribution =Gaussian 
+            static const double MAX_POISSON=1.e5;
+            // Typedef for image row iterable
+            typedef typename ImageView<T>::iterator ImIter;
+
+            data += T(_sky_level);
+
+            PoissonDeviate pd(_rng, 1.); // will reset the mean for each pixel below.
+            GaussianDeviate gd(_rng, 0., 1.);
+            for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
+                ImIter ee = data.rowEnd(y);
+                for (ImIter it = data.rowBegin(y); it != ee; ++it) {
+                    if (*it <= 0.) continue;
+                    if (*it < MAX_POISSON) {
+                        pd.setMean(*it);
+                        *it = T(pd());
+                    } else {
+                        // ??? This might be even slower than large-N Poisson...
+                        gd.setSigma(sqrt(*it));
+                        *it = T(*it + gd());
+                    }
+                }
+            }
+
+            data -= T(_sky_level);
+        }
+
+
+    protected:
+        using BaseNoise::_rng;
+        void doApplyTo(ImageView<double>& data) { applyTo(data); }
+        void doApplyTo(ImageView<float>& data) { applyTo(data); }
+        void doApplyTo(ImageView<int>& data) { applyTo(data); }
+        void doApplyTo(ImageView<short>& data) { applyTo(data); }
+
+    private: 
+        double _sky_level;
+    };
+
+    /** 
      * @brief Class implementing basic CCD noise model.  
      *
      * The CCDNoise class encapsulates the noise model of a normal CCD image.  The noise has two
@@ -109,7 +265,7 @@ namespace galsim {
     public:
  
         /**
-         * @brief Construct a new noise model, sharing the random number generator with dev.
+         * @brief Construct a new noise model, sharing the random number generator with rng.
          *
          * @param[in] rng        The BaseDeviate to use for the random number generation.
          * @param[in] sky_level  The sky level in electrons per pixel that was originally in
@@ -264,6 +420,7 @@ namespace galsim {
         }
 
     protected:
+        using BaseNoise::_rng;
         void doApplyTo(ImageView<double>& data) { applyTo(data); }
         void doApplyTo(ImageView<float>& data) { applyTo(data); }
         void doApplyTo(ImageView<int>& data) { applyTo(data); }
@@ -286,11 +443,11 @@ namespace galsim {
     public:
  
         /**
-         * @brief Construct a new noise model, sharing the random number generator with dev.
+         * @brief Construct a new noise model using a given BaseDeviate object.
          *
          * @param[in] dev       The Deviate to use for the noise values
          */
-        DeviateNoise(BaseDeviate& rng) : BaseNoise(rng) {}
+        DeviateNoise(BaseDeviate& dev) : BaseNoise(dev) {}
 
         /**
          * @brief Construct a copy that shares the RNG with rhs.
@@ -312,7 +469,7 @@ namespace galsim {
 
             for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
                 ImIter ee = data.rowEnd(y);
-                for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it += T(_rng()); }
+                for (ImIter it = data.rowBegin(y); it != ee; ++it) { *it = T(*it + _rng()); }
             }
         }
 

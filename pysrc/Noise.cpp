@@ -52,90 +52,42 @@ struct PyBaseNoise {
 
 };
 
-#if 0
 struct PyGaussianNoise {
 
-    template <typename U, typename W>
-    static void wrapTemplates(W & wrapper) {
-        wrapper
-            .def("applyTo", (void (GaussianNoise::*) (ImageView<U>) )&GaussianNoise::applyTo,
-                 "", (bp::arg("image")))
-            ;
-    }
-
     static void wrap() {
-
         // Note that class docstrings are now added in galsim/random.py
-
         bp::class_<GaussianNoise, bp::bases<BaseNoise> > pyGaussianNoise(
-            "GaussianNoise", "", bp::init<double, double >(
-                (bp::arg("mean")=0., bp::arg("sigma")=1.)
-            )
+            "GaussianNoise", "", bp::init<BaseDeviate&, double>(
+                (bp::arg("rng"), bp::arg("sigma")))
         );
         pyGaussianNoise
-            .def(bp::init<long, double, double>(
-                (bp::arg("lseed"), bp::arg("mean")=0., bp::arg("sigma")=1.)
-                ))
-            .def(bp::init<const BaseNoise&, double, double>(
-                (bp::arg("dev"), bp::arg("mean")=0., bp::arg("sigma")=1.)
-                ))
-            .def("__call__", &GaussianNoise::operator(), "")
-            .def("getMean", &GaussianNoise::getMean, "")
-            .def("setMean", &GaussianNoise::setMean, "")
             .def("getSigma", &GaussianNoise::getSigma, "")
             .def("setSigma", &GaussianNoise::setSigma, "")
             ;
-        wrapTemplates<int>(pyGaussianNoise);
-        wrapTemplates<short>(pyGaussianNoise);
-        wrapTemplates<float>(pyGaussianNoise);
-        wrapTemplates<double>(pyGaussianNoise);
     }
 
 };
 
 struct PyPoissonNoise {
 
-    template <typename U, typename W>
-    static void wrapTemplates(W & wrapper) {
-        wrapper
-            .def("applyTo", (void (PoissonNoise::*) (ImageView<U>) )&PoissonNoise::applyTo, "",
-                 (bp::arg("image")))
-            ;
-    }
-
     static void wrap() {
-
         // Note that class docstrings are now added in galsim/random.py
 
         bp::class_<PoissonNoise, bp::bases<BaseNoise> > pyPoissonNoise(
-            "PoissonNoise", "", bp::init<double>(
-                (bp::arg("mean")=1.)
-            )
+            "PoissonNoise", "", bp::init<BaseDeviate&, double>(
+                (bp::arg("rng"), bp::arg("sky_level")=0.))
         );
         pyPoissonNoise
-            .def(bp::init<long, double>(
-                (bp::arg("lseed"), bp::arg("mean")=1.)
-                ))
-            .def(bp::init<const BaseNoise&, double>(
-                (bp::arg("dev"), bp::arg("mean")=1.)
-                ))
-            .def("__call__", &PoissonNoise::operator(), "")
-            .def("getMean", &PoissonNoise::getMean, "")
-            .def("setMean", &PoissonNoise::setMean, "")
+            .def("getSkyLevel", &PoissonNoise::getSkyLevel, "")
+            .def("setSkyLevel", &PoissonNoise::setSkyLevel, "")
             ;
-        wrapTemplates<int>(pyPoissonNoise);
-        wrapTemplates<short>(pyPoissonNoise);
-        wrapTemplates<float>(pyPoissonNoise);
-        wrapTemplates<double>(pyPoissonNoise);
     }
 
 };
-#endif
 
 struct PyCCDNoise{
 
     static void wrap() {
-
         // Note that class docstrings are now added in galsim/random.py
 
         bp::class_<CCDNoise, bp::bases<BaseNoise> > pyCCDNoise("CCDNoise", "", bp::no_init);
@@ -174,8 +126,8 @@ struct PyDeviateNoise{
 
 void pyExportNoise() {
     PyBaseNoise::wrap();
-    //PyGaussianNoise::wrap();
-    //PyPoissonNoise::wrap();
+    PyGaussianNoise::wrap();
+    PyPoissonNoise::wrap();
     PyCCDNoise::wrap();
     PyDeviateNoise::wrap();
 }
