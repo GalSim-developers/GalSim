@@ -401,8 +401,15 @@ amplitude {\em and} slope are both close to theory for $\ell>100$.
 Note that the jitter in that curve does not go away if we use more
 realizations.  This could have to do with the exact locations of the
 annular $\ell$ bins as compared to the finite $\ell$ modes that are
-probed by our grid.  Based on this figure, it seems plausible that the
-power spectra that we're producing are just fine.  However, it also
+probed by our grid.  
+
+Since it's hard to see how large differences between theory and the
+GalSim results are, Fig.~\ref{F:pe-fine-ratio} shows the ratio between
+the GalSim outputs and the theory.  For $\ell<100$, the results are
+too low by $\sim 20$\%.  Above that, it seems to be 5\% too low, which
+is suspiciously similar to the results of the variance tests.
+However, this 5\% difference is better for the case with coarser
+$\ell$ binning for the PS measurement, which 
 suggests that for a user to realistically compare their output power
 spectrum against the theoretical one, they {\em must} account for
 the effects of finite $\ell$-binning on the theory.  Alternatively
@@ -418,8 +425,15 @@ they should choose rather fine $\ell$ bins to minimize the problem.
   $\ell$ bins in the PS estimation, rather than 20 as in Fig.~\ref{F:pe}.\label{F:pe-fine}}
 \end{center}
 \end{figure}
+\begin{figure}
+\begin{center}
+\includegraphics[width=3in]{../external/test_gridshear/output/compare_input_pe.fine.ratio.eps}
+\caption{Ratio of GalSim EE PS vs. theory from Fig.~\ref{F:pe-fine}.\label{F:pe-fine-ratio}}
+\end{center}
+\end{figure}
 
-\textbf{Need to test robustness to grid spacing and size.}
+\textbf{Need to test robustness to grid spacing and size, and whether
+  the above could be some discreteness issue.}
 
 \section{Representing continuous fields using the Discrete Fourier Transform}
 
