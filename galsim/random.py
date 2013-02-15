@@ -209,28 +209,37 @@ class DistDeviate:
 #        for ip in range(1,len(xarray)):
 #            dcdf.append(galsim.integ.int1d(function,xarray[ip-1],xarray[ip]))
 #            cdf.append(cdf[-1]+dcdf[-1])
-        #Quietly renormalize the probability if it wasn't already normalized
+        # Quietly renormalize the probability if it wasn't already normalized
         totalprobability=cdf[-1]
         cdf=numpy.array(cdf)/totalprobability
         dcdf=numpy.array(dcdf)/totalprobability
         # Check that the probability is nonnegative
         if not numpy.all(dcdf >= 0):
             raise ValueError('Negative probability passed to DistDeviate: %s'%file_name)
-        #Now get rid of points with dcdf == 0
+        # Now get rid of points with dcdf == 0
         elif not numpy.all(dcdf > 0.):
-            #Remove consecutive dx=0 points, except endpoints
+            # Remove consecutive dx=0 points, except endpoints
             zeroindex=numpy.where(dcdf==0)[0]
+            # numpy.where returns a tuple containing 1 array, which tends to be annoying for
+            # indexing, so the [0] returns the actual array of interest (indices of dcdf==0).
+            # Now, we want to remove consecutive dcdf=0 points, leaving the lower end.
+            # Zeroindex contains the indices of all the dcdf=0 points, so we look for ones that are
+            # only 1 apart; this tells us the *lower* of the two points, but we want to remove the
+            # *upper*, so we add 1 to the resultant array.
             dindex=numpy.where(numpy.diff(zeroindex)==1)[0]+1 
+            # So dindex contains the indices of the elements of array zeroindex, which tells us the 
+            # indices that we might want to delete from cdf and xarray, so we delete 
+            # zeroindex[dindex].
             cdf=numpy.delete(cdf,zeroindex[dindex])
             xarray=numpy.delete(xarray,zeroindex[dindex])
             dcdf=numpy.diff(cdf)
             #Tweak the edges of dx=0 regions so function is always increasing
             for index in numpy.where(dcdf == 0)[0]:
                 if index+2<len(cdf):
-                  cdf[index+1]+=2.23E-16
+                    cdf[index+1]+=2.23E-16
                 else:
-                  cdf=cdf[:-1]
-                  xarray=xarray[:-1]
+                    cdf=cdf[:-1]
+                    xarray=xarray[:-1]
             dcdf=numpy.diff(cdf)
             if not (numpy.all(dcdf>0)):
                 raise RuntimeError(
