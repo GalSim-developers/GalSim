@@ -44,6 +44,10 @@ struct PyBaseNoise {
         // Note that class docstrings are now added in galsim/random.py
 
         bp::class_<BaseNoise, boost::noncopyable> pyBaseNoise("BaseNoise", "", bp::no_init);
+        pyBaseNoise
+            .def("getVariance", bp::pure_virtual(&PoissonNoise::getVariance), "")
+            .def("setVariance", bp::pure_virtual(&PoissonNoise::setVariance), "")
+            ;
         wrapTemplates<double>(pyBaseNoise);
         wrapTemplates<float>(pyBaseNoise);
         wrapTemplates<int32_t>(pyBaseNoise);

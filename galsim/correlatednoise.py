@@ -112,7 +112,7 @@ class _CorrFunc(object):
         If the optional image pixel scale `dx` is not specified, `image.getScale()` is used for the
         input image pixel separation.
         
-        If an optional random deviate `rng` is supplied, the application of noise will share the
+        If an optional random deviate `dev` is supplied, the application of noise will share the
         same underlying random number generator when generating the vector of unit variance
         Gaussians that seed the (Gaussian) noise field.
 
@@ -120,7 +120,7 @@ class _CorrFunc(object):
         @param dx    The pixel scale to adopt for the input image; should use the same units the
                      ImageCorrFunc instance for which this is a method.  If is not specified,
                      `image.getScale()` is used instead.
-        @param rng   Optional BaseDeviate from which to draw pseudo-random numbers in generating
+        @param dev   Optional BaseDeviate from which to draw pseudo-random numbers in generating
                      the noise field.
         @param add_to_image  Whether to add to the existing image rather than clear out anything
                              in the image before drawing.
@@ -144,9 +144,9 @@ class _CorrFunc(object):
             dev = galsim.BaseDeviate()
         elif not isinstance(dev, galsim.BaseDeviate):
             raise TypeError(
-                "Supplied input keyword rng must be a galsim.BaseDeviate or derived class "+
+                "Supplied input keyword dev must be a galsim.BaseDeviate or derived class "+
                 "(e.g. galsim.UniformDeviate, galsim.GaussianDeviate).")
-        g = galsim.GaussianNoise(rng, sigma=1.)
+        g = galsim.GaussianNoise(dev, sigma=1.)
 
         # If the profile has changed since last time (or if we have never been here before),
         # clear out the stored values.

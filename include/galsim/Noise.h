@@ -61,6 +61,16 @@ namespace galsim {
         virtual ~BaseNoise() {}
  
         /**
+         * @brief Get the variance of the noise model
+         */
+        virtual double getVariance() const = 0;
+
+        /**
+         * @brief Set the variance of the noise model
+         */
+        virtual void setVariance(double variance) = 0;
+
+        /**
          * @brief Add noise to an Image.
          *
          * @param[in,out] data The Image to be noise-ified.
@@ -125,6 +135,21 @@ namespace galsim {
          * @brief Set sigma
          */
         void setSigma(double sigma) { _sigma = sigma; }
+ 
+        /**
+         * @brief Get the variance of the noise model
+         */
+        double getVariance() const { return _sigma*_sigma; }
+
+        /**
+         * @brief Set the variance of the noise model
+         */
+        void setVariance(double variance) 
+        {
+            if (!(variance >= 0.)) 
+                throw std::runtime_error("Cannot setVariance to < 0");
+            _sigma = sqrt(variance); 
+        }
 
         /**
          * @brief Add noise to an Image.
@@ -198,6 +223,21 @@ namespace galsim {
          * @brief Set sky level
          */
         void setSkyLevel(double sky_level) { _sky_level = sky_level; }
+ 
+        /**
+         * @brief Get the variance of the noise model
+         */
+        virtual double getVariance() const { return _sky_level; }
+
+        /**
+         * @brief Set the variance of the noise model
+         */
+        virtual void setVariance(double variance) 
+        { 
+            if (!(variance >= 0.)) 
+                throw std::runtime_error("Cannot setVariance to < 0");
+            _sky_level = variance; 
+        }
 
         /**
          * @brief Add noise to an Image.
@@ -331,6 +371,37 @@ namespace galsim {
          * @param[in] read_noise Read noise value (e-, if gain>0, else in ADU)
          */
         void setReadNoise(double read_noise) { _read_noise = read_noise; }
+ 
+        /**
+         * @brief Get the variance of the noise model
+         */
+        virtual double getVariance() const 
+        {
+            if (_gain > 0) return (_sky_level + _read_noise*_read_noise) / _gain;
+            else return _read_noise * _read_noise;
+        }
+
+        /**
+         * @brief Set the variance of the noise model
+         *
+         * If gain > 0, then update sky_level to reach the correct variance.
+         * Otherwise update read_noise.
+         */
+        virtual void setVariance(double variance)
+        {
+            if (!(variance >= 0.)) 
+                throw std::runtime_error("Cannot setVariance to < 0");
+            if (_gain > 0) {
+                if (variance > _read_noise*_read_noise) {
+                    _sky_level = (variance - _read_noise*_read_noise) * _gain;
+                } else {
+                    _sky_level = 0.;
+                    _read_noise = sqrt(variance);
+                }
+            } else {
+                _read_noise = sqrt(variance);
+            }
+        }
 
         /**
          * @brief Add noise to an Image.
@@ -455,7 +526,26 @@ namespace galsim {
          * Note: the default constructed op= function will do the same thing.
          */
         DeviateNoise(const DeviateNoise& rhs) : BaseNoise(rhs) {}
- 
+  
+        /**
+         * @brief Get the variance of the noise model
+         */
+        double getVariance() const 
+        {
+            throw std::runtime_error("getVariance not implemented for DeviateNoise");
+        }
+
+        /**
+         * @brief Set the variance of the noise model
+         */
+        void setVariance(double variance) 
+        {
+            if (!(variance >= 0.)) 
+                throw std::runtime_error("Cannot setVariance to < 0");
+            throw std::runtime_error("setVariance not implemented for DeviateNoise");
+        }
+
+
         /**
          * @brief Add noise to an Image.
          *
