@@ -558,3 +558,33 @@ for Class in galsim.ImageView.itervalues():
 
 for Class in galsim.ConstImageView.itervalues():
     Class.getCorrFunc = _Image_getCorrFunc
+
+# Free function for returning a COSMOS noise field correlation function
+def get_COSMOS_CorrFunc(dx=0.03):
+    """Returns a 2D discrete correlation function representing noise in the HST COSMOS F814W
+    unrotated science coadd images.
+
+    See http://cosmos.astro.caltech.edu/astronomer/hst.html for information about the COSMOS survey.
+
+    This function uses a stacked estimate of the correlation function in COSMOS noise fields, stored
+    in FITS image format, generated as described in `devel/external/hst/make_cosmos_cfimage.py`
+
+    Important note regarding units
+    ------------------------------
+    The ACS coadd images have a pixel scale of 0.03 arcsec, and so the pixel scale `dx` adopted
+    in the representation of of the correlation function takes a default value `dx=0.03`.  If you
+    wish to use other units, ensure that the input keyword `dx` takes the value corresponding to
+    0.03 arcsec in your chosen system.
+    """
+    # Read in the image of the COSMOS correlation function stored in the repository
+    import os
+    path, filename = os.path.split(__file__)
+    CIMFILE = os.path.join(path, "..", "devel", "external", "hst", "acs_I_unrot_sci_20_cf.fits")
+    cfimage = galsim.fits.read(CIMFILE)
+    # Use this to generate a correlation function DIRECTLY: note this is non-standard usage, but
+    # allowed since we can be sure that the input cfimage is appropriately symmetric and peaked at
+    # the origin
+    ret = _CorrFunc(base.InterpolatedImage(
+        cfimage, dx=dx, normalization="sb", calculate_stepk=False, calculate_maxk=False))
+    return ret
+
