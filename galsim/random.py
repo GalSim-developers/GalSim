@@ -162,6 +162,8 @@ class DistDeviate:
 
         # Set up the probability function & min and max values for any inputs
         if function:
+            if isinstance(function,str):
+                function=eval('lambda x : ' + function)
             if not hasattr(function,'__call__'):
                 raise TypeError('Function given to DistDeviate with keyword function is not '
                                 'callable: %s'%function)
@@ -235,7 +237,7 @@ class DistDeviate:
             dcdf=numpy.diff(cdf)
             #Tweak the edges of dx=0 regions so function is always increasing
             for index in numpy.where(dcdf == 0)[0]:
-                if index+2<len(cdf):
+                if index+1<len(cdf):
                     cdf[index+1]+=2.23E-16
                 else:
                     cdf=cdf[:-1]

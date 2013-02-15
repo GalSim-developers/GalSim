@@ -442,32 +442,23 @@ def _GenerateFromRandomDistribution(param, param_name, base, value_type):
         raise ValueError("No rng available for %s.type = RandomDistribution"%param_name)
     rng = base['rng']
 
-    req = { 'file_name' : str }
-    opt = {'interpolant' : str, 'npoints' : int, 'min' : float, 'max' : float }
-    kwargs, safe = GetAllParams(param, param_name, base, req=req, opt=opt)
-
-    file_name = kwargs['file_name']
-    interpolant = kwargs.get('interpolant','linear')
-    npoints = kwargs.get('npoints',256)
-    x_min = kwargs.get('min',None)
-    x_max = kwargs.get('max',None)
-
+    opt = {'file_name' : str, 'function' : str, 'interpolant' : str, 'npoints' : int, 
+           'x_min' : float, 'x_max' : float }
+    kwargs, safe = GetAllParams(param, param_name, base, opt=opt)
+    
     if 'distdev' in base:
         # The overhead for making a DistDeviate is large enough that we'd rather not do it every 
         # time, so first check if we've already made one:
         distdev = base['distdev']
-        if (base['current_distfile_name'] != file_name or x_min != distdev.x_min or 
-            x_max != distdev.x_max):
-            distdev=galsim.DistDeviate(rng,file_name=file_name,interpolant=interpolant,
-                                       npoints=npoints,x_min=x_min,x_max=x_max)
+        if base['distdev_kwargs'] != kwargs:
+            distdev=galsim.DistDeviate(rng,**kwargs)
             base['distdev'] = distdev
-            base['current_distfile_name'] = file_name
+            base['distdev_kwargs'] = kwargs
     else:
         # Otherwise, just go ahead and make a new one.
-        distdev=galsim.DistDeviate(rng,file_name=file_name,interpolant=interpolant,npoints=npoints,
-                              x_min=x_min,x_max=x_max)
+        distdev=galsim.DistDeviate(rng,**kwargs)
         base['distdev'] = distdev
-        base['current_distfile_name'] = file_name
+        base['distdev_kwargs'] = kwargs
 
     val = distdev()
 

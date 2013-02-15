@@ -59,13 +59,15 @@ def test_float_value():
         'gauss5' : { 'type' : 'RandomGaussian',
                      'sigma' : 0.3, 'mean' : 0.5, 'min' : 0, 'max' : 0.5 },
         'dist1' : { 'type' : 'RandomDistribution', 'file_name' : 'config_input/distribution.txt', 
-                     'interpolant' : 'linear', 'min' : 0, 'max' : 0.5 },
+                    'interpolant' : 'linear', 'x_min' : 0, 'x_max' : 0.5 },
         'dist2' : { 'type' : 'RandomDistribution', 'file_name' : 'config_input/distribution.txt', 
-                     'interpolant' : 'linear', 'min' : 0, 'max' : 1.0 },
+                    'interpolant' : 'linear', 'x_min' : 0, 'x_max' : 1.0 },
         'dist3' : { 'type' : 'RandomDistribution', 'file_name' : 'config_input/distribution.txt', 
-                     'interpolant' : 'linear', 'min' : 0.5, 'max' : 1.0 },
+                    'interpolant' : 'linear', 'x_min' : 0.5, 'x_max' : 1.0 },
         'dist4' : { 'type' : 'RandomDistribution', 'file_name' : 'config_input/distribution2.txt', 
-                     'interpolant' : 'linear', 'min' : 0.5, 'max' : 1.0 },
+                    'interpolant' : 'linear', 'x_min' : 0.5, 'x_max' : 1.0 },
+        'dist5' : { 'type' : 'RandomDistribution', 'function' : 'x*x', 
+                    'interpolant' : 'linear', 'x_min' : 0., 'x_max' : 2.0 },
         'seq1' : { 'type' : 'Sequence' },
         'seq2' : { 'type' : 'Sequence', 'step' : 0.1 },
         'seq3' : { 'type' : 'Sequence', 'first' : 1.5, 'step' : 0.5 },
@@ -176,6 +178,10 @@ def test_float_value():
     for k in range(6):
         dist4 = galsim.config.ParseValue(config,'dist4',config, float)[0]
         np.testing.assert_almost_equal(dist4, dd())
+    dd=galsim.DistDeviate(rng,function=lambda x: x*x,interpolant='linear',x_min=0.,x_max=2.)
+    for k in range(6):
+        dist5 = galsim.config.ParseValue(config,'dist5',config, float)[0]
+        np.testing.assert_almost_equal(dist5, dd())
 
     # Test values generated from a Sequence
     seq1 = []
