@@ -1576,10 +1576,11 @@ class InterpolatedImage(GSObject):
         # of a valid type.
         if rng == None:
             gaussian_deviate = galsim.GaussianDeviate()
-        elif isinstance(rng,galsim.GaussianDeviate):
-            gaussian_deviate = rng
         elif isinstance(rng,galsim.BaseDeviate):
-            # If it's another kind of BaseDeviate, we can convert
+            # Even if it's already a GaussianDeviate, we still want to make a new Gaussian deviate
+            # that would generate the same sequence, because later we change the sigma and we don't
+            # want to change it for the original one that was passed in.  So don't distinguish
+            # between GaussianDeviate and the other BaseDeviates here.
             gaussian_deviate = galsim.GaussianDeviate(rng)
         else:
             raise TypeError("rng provided to InterpolatedImage constructor is not a BaseDeviate")
@@ -2146,10 +2147,11 @@ class RealGalaxy(GSObject):
             # is of a valid type.
             if rng == None:
                 gaussian_deviate = galsim.GaussianDeviate()
-            elif isinstance(rng,galsim.GaussianDeviate):
-                gaussian_deviate = rng
             elif isinstance(rng,galsim.BaseDeviate):
-                # If it's another kind of BaseDeviate, we can convert
+                # Even if it's already a GaussianDeviate, we still want to make a new Gaussian
+                # deviate that would generate the same sequence, because later we change the sigma
+                # and we don't want to change it for the original one that was passed in.  So don't
+                # distinguish between GaussianDeviate and the other BaseDeviates here.
                 gaussian_deviate = galsim.GaussianDeviate(rng)
             else:
                 raise TypeError("rng provided to InterpolatedImage constructor is not a BaseDeviate")
