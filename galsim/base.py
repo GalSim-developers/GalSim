@@ -22,7 +22,7 @@ Definitions for the GalSim base classes and associated methods
 This file includes the key parts of the user interface to GalSim: base classes representing surface
 brightness profiles for astronomical objects (galaxies, PSFs, pixel response).  These base classes
 are collectively known as GSObjects.  They include both simple objects like the galsim.Gaussian, a 
-2d  Gaussian intensity profile, and compound objects like the galsim.Add and galsim.Convolve, which 
+2d Gaussian intensity profile, and compound objects like the galsim.Add and galsim.Convolve, which 
 represent the sum and convolution of multiple GSObjects, respectively. 
 
 These classes also have associated methods to (a) retrieve information (like the flux, half-light 
@@ -1397,7 +1397,7 @@ class InterpolatedImage(GSObject):
                                                           normalization = 'f', dx = None,
                                                           flux = None, pad_factor = 0.,
                                                           noise_pad = 0., rng = None,
-                                                          pad_image = 0.,
+                                                          pad_image = None,
                                                           calculate_stepk = True,
                                                           calculate_maxk = True,
                                                           use_cache = True)
@@ -1473,20 +1473,20 @@ class InterpolatedImage(GSObject):
                            If `rng=None`, one will be automatically created, using the time as a
                            seed. (Default `rng = None`)
     @param pad_image       Image to be used for deterministically padding the original image.  This
-                           can be specified in several ways:
-                               (a) as a float, which is interpreted as a constant value to be used
-                                   for the padding;
-                               (b) as a galsim.Image; or
-                               (c) as a string which is interpreted as a filename containing an
+                           can be specified in two ways:
+                               (a) as a galsim.Image; or
+                               (b) as a string which is interpreted as a filename containing an
                                    image to use.
-                           If option (a) is used, then `pad_factor` is used to determine the amount
-                           of image padding.  For options (b) and (c), the size of the image that is
-                           passed in is taken to specify the amount of padding, and so the
-                           `pad_factor` keyword should be equal to 1, i.e., no padding.  The
-                           `pad_image` scale is ignored, and taken to be equal to that of the
-                           `image`. Note that `pad_image` can be used together with `noise_pad`, for
-                           example to pad with some constant sky level and some associated noise.
-                           (Default `pad_image = 0.`, i.e., pad with zeros.)
+                           The size of the image that is passed in is taken to specify the amount of
+                           padding, and so the `pad_factor` keyword should be equal to 1, i.e., no
+                           padding.  The `pad_image` scale is ignored, and taken to be equal to that
+                           of the `image`. Note that `pad_image` can be used together with
+                           `noise_pad`.  However, the user should be careful to ensure that the
+                           image used for padding has roughly zero mean.  The purpose of this
+                           keyword is to allow for a more flexible representation of some noise
+                           field around an object; if the user wishes to represent the sky level
+                           around an object, they should do that when they have drawn the final
+                           image instead.  (Default `pad_image = None`.)
     @param calculate_stepk Specify whether to perform an internal determination of the extent of 
                            the object being represented by the InterpolatedImage; often this is 
                            useful in choosing an optimal value for the stepsize in the Fourier 
@@ -1527,7 +1527,7 @@ class InterpolatedImage(GSObject):
     # --- Public Class methods ---
     def __init__(self, image, x_interpolant = None, k_interpolant = None, normalization = 'flux',
                  dx = None, flux = None, pad_factor = 0., noise_pad = 0., rng = None,
-                 pad_image = 0., calculate_stepk=True, calculate_maxk=True, use_cache=True):
+                 pad_image = None, calculate_stepk=True, calculate_maxk=True, use_cache=True):
         # first try to read the image as a file.  If it's not either a string or a valid
         # pyfits hdu or hdulist, then an exception will be raised, which we ignore and move on.
         try:
@@ -1590,30 +1590,22 @@ class InterpolatedImage(GSObject):
             raise TypeError("rng provided to InterpolatedImage constructor is not a BaseDeviate")
 
         # decide about deterministic image padding
-        specify_size = True
+        specify_size = False
         padded_size = image.getPaddedSize(pad_factor)
-        try:
-            pad_image = float(pad_image)
-        except:
-            pass
-        if isinstance(pad_image, float):
-            specify_size = False
-            if isinstance(image, galsim.BaseImageF):
-                pad_image = galsim.ImageF(padded_size, padded_size, init_value = pad_image)
-            if isinstance(image, galsim.BaseImageD):
-                pad_image = galsim.ImageD(padded_size, padded_size, init_value = pad_image)
-        elif isinstance(pad_image, str):
-            try:
-                pad_image = galsim.fits.read(pad_image)
-            except:
-                raise RuntimeError("Can't read in Image for padding from specified file!")
-        if not isinstance(pad_image, galsim.BaseImageF) and not isinstance(pad_image,
-                                                                           galsim.BaseImageD):
-            raise ValueError("Supplied pad_image is not one of the allowed types!")
-        # If an image was supplied directly or from a file, check its size:
-        #    Cannot use if too small.
-        #    Use to define the final image size otherwise.
-        if specify_size:
+        if pad_image is not None:
+            specify_size = True
+            if isinstance(pad_image, str):
+                try:
+                    pad_image = galsim.fits.read(pad_image)
+                except:
+                    raise RuntimeError("Can't read in Image for padding from specified file!")
+            if not isinstance(pad_image, galsim.BaseImageF) and not isinstance(pad_image,
+                                                                               galsim.BaseImageD):
+                raise ValueError("Supplied pad_image is not one of the allowed types!")
+
+            # If an image was supplied directly or from a file, check its size:
+            #    Cannot use if too small.
+            #    Use to define the final image size otherwise.
             deltax = (1+pad_image.getXMax()-pad_image.getXMin())-(1+image.getXMax()-image.getXMin())
             deltay = (1+pad_image.getYMax()-pad_image.getYMin())-(1+image.getYMax()-image.getYMin())
             if deltax < 0 or deltay < 0:
@@ -1623,6 +1615,11 @@ class InterpolatedImage(GSObject):
                 msg =  "Warning: ignoring specified pad_factor because user also specified\n"
                 msg += "         an image to use directly for the padding."
                 warnings.warn(msg)
+        else:
+            if isinstance(image, galsim.BaseImageF):
+                pad_image = galsim.ImageF(padded_size, padded_size)
+            if isinstance(image, galsim.BaseImageD):
+                pad_image = galsim.ImageD(padded_size, padded_size)
 
         # now decide about noise padding
         # First, see if the input is consistent with a float.
@@ -1925,7 +1922,7 @@ class RealGalaxy(GSObject):
     
         real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index=None, id=None, random=False, 
                                         rng=None, x_interpolant=None, k_interpolant=None,
-                                        flux=None, pad_factor = 0, noise_pad=False, pad_image=0.,
+                                        flux=None, pad_factor = 0, noise_pad=False, pad_image=None,
                                         use_cache = True)
 
     This initializes real_galaxy with three SBInterpolatedImage objects (one for the deconvolved
@@ -1982,21 +1979,21 @@ class RealGalaxy(GSObject):
                                 for repeated galsim.ImageCorrFunc initializations.
                                 [default `noise_pad = False`]
     @param pad_image            Image to be used for deterministically padding the original image.
-                                This can be specified in several ways:
-                                    (a) as a float, which is interpreted as a constant value to be
-                                        used for the padding;
-                                    (b) as a galsim.Image; or
-                                    (c) as a string which is interpreted as a filename containing an
-                                        image to use.
-                                If option (a) is used, then `pad_factor` is used to determine the
-                                amount of image padding.  For options (b) and (c), the size of the
-                                image that is passed in is taken to specify the amount of padding,
-                                and so the `pad_factor` keyword should be equal to 1, i.e., no
-                                padding.  The `pad_image` scale is ignored, and taken to be equal to
-                                that of the `image`. Note that `pad_image` can be used together with
-                                `noise_pad`, for example to pad with some constant sky level and
-                                some associated noise. (Default `pad_image = 0.`, i.e., pad with
-                                zeros.)
+                                This can be specified in two ways:
+                                   (a) as a galsim.Image; or
+                                   (b) as a string which is interpreted as a filename containing an
+                                       image to use.
+                               The size of the image that is passed in is taken to specify the
+                                amount of padding, and so the `pad_factor` keyword should be equal
+                                to 1, i.e., no padding.  The `pad_image` scale is ignored, and taken
+                                to be equal to that of the `image`. Note that `pad_image` can be
+                                used together with `noise_pad`.  However, the user should be careful
+                                to ensure that the image used for padding has roughly zero mean.
+                                The purpose of this keyword is to allow for a more flexible
+                                representation of some noise field around an object; if the user
+                                wishes to represent the sky level around an object, they should do
+                                that when they have drawn the final image instead.  (Default
+                                `pad_image = None`.)
     @param use_cache            Specify whether to cache noise_pad read in from a file to save
                                 having to build an ImageCorrFunc repeatedly from the same image.
                                 (Default `use_cache = True`)
@@ -2023,7 +2020,7 @@ class RealGalaxy(GSObject):
     # --- Public Class methods ---
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
                  rng=None, x_interpolant=None, k_interpolant=None, flux=None, pad_factor = 0,
-                 noise_pad=False, pad_image=0., use_cache=True):
+                 noise_pad=False, pad_image=None, use_cache=True):
 
         import pyfits
 
@@ -2076,30 +2073,21 @@ class RealGalaxy(GSObject):
         self.pixel_scale = float(real_galaxy_catalog.pixel_scale[use_index])
 
         # handle padding by an image
-        specify_size = True
+        specify_size = False
         padded_size = gal_image.getPaddedSize(pad_factor)
-        try:
-            pad_image = float(pad_image)
-        except:
-            pass
-        if isinstance(pad_image, float):
-            specify_size = False
-            if isinstance(gal_image, galsim.BaseImageF):
-                pad_image = galsim.ImageF(padded_size, padded_size, init_value = pad_image)
-            if isinstance(gal_image, galsim.BaseImageD):
-                pad_image = galsim.ImageD(padded_size, padded_size, init_value = pad_image)
-        elif isinstance(pad_image,str):
-            try:
-                pad_image = galsim.fits.read(pad_image)
-            except:
-                raise RuntimeError("Can't read in Image for padding from specified file!")
-        if not isinstance(pad_image, galsim.BaseImageF) and not isinstance(pad_image,
-                                                                           galsim.BaseImageD):
-            raise ValueError("Supplied pad_image is not one of the allowed types!")
-        # If an image was supplied directly or from a file, check its size:
-        #    Cannot use if too small.
-        #    Use to define the final image size otherwise.
-        if specify_size:
+        if pad_image is not None:
+            specify_size = True
+            if isinstance(pad_image,str):
+                try:
+                    pad_image = galsim.fits.read(pad_image)
+                except:
+                    raise RuntimeError("Can't read in Image for padding from specified file!")
+            if not isinstance(pad_image, galsim.BaseImageF) and not isinstance(pad_image,
+                                                                               galsim.BaseImageD):
+                raise ValueError("Supplied pad_image is not one of the allowed types!")
+            # If an image was supplied directly or from a file, check its size:
+            #    Cannot use if too small.
+            #    Use to define the final image size otherwise.
             deltax = (1+pad_image.getXMax()-pad_image.getXMin())-(1+gal_image.getXMax()-gal_image.getXMin())
             deltay = (1+pad_image.getYMax()-pad_image.getYMin())-(1+gal_image.getYMax()-gal_image.getYMin())
             if deltax < 0 or deltay < 0:
@@ -2109,7 +2097,11 @@ class RealGalaxy(GSObject):
                 msg =  "Warning: ignoring specified pad_factor because user also specified\n"
                 msg += "         an image to use directly for the padding."
                 warnings.warn(msg)
-
+        else:
+            if isinstance(gal_image, galsim.BaseImageF):
+                pad_image = galsim.ImageF(padded_size, padded_size)
+            if isinstance(gal_image, galsim.BaseImageD):
+                pad_image = galsim.ImageD(padded_size, padded_size)
 
         # handle noise-padding options
         try:
