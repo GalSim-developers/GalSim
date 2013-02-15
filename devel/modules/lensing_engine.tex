@@ -284,8 +284,13 @@ g1, g2 = test_ps1.buildGriddedShears(grid_spacing=720., ngrid=50)
 print np.var(g1), np.var(g2), np.var(g1)+np.var(g2)
 \end{verbatim}
 
-And the resulting variances are all approximately correct, give or
-take 10\%. \textbf{Need to make more realizations to beat down the scatter.}
+Since the variances are noisy, I averaged the results over 10000
+realizations (this takes about 1min to run), and found $2.36\times
+10^{-7}$, $9.45\times 10^{-7}$, and $2.36\times 10^{-7}$.  These are all
+5\% below my naive calculation.  It seems possible that this is
+because of some finite-gridding effect; rather than pursuing this
+question further, I will investigate this question in the context of
+the full $P(k)$ in the next section.
 
 \section{Test of $P(k)$}\label{S:testpk}
 
@@ -370,15 +375,51 @@ Conclusions:
 \item GalSim: we don't see $E$ vs. $B$ leakage at any significant
   level.  The amplitudes and scaling with $\ell$ are approximately
   correct.
+\item The amplitude for the GalSim powerspectra is slightly below that
+  for the SHT code.  It is worth investigating whether this is some
+  finite-gridding effect on our part, which seems testable by
+  increasing the grid spacing.
 \item While the big-picture results seem good, there are some finer
   details that require investigation, in particular the fact that both
   codes seem to give steeper $P(k)$ than the theory.  Given how these
   tests were done, it could have to do with the $k$-space binning in
-  the power spectrum estimator.  I'm not sure how much detail we want
+  the power spectrum estimator, the sizes of the bins, etc.  I'm not sure how much detail we want
   to dig into here, vs. waiting for our own power spectrum estimator.
+  This is particularly true given that the SHT code was well-validated
+  and exhibits nearly the same slope as the GalSim outputs.
 \end{itemize}
 
+The simplest possible test is simply to change the $\ell$ binning in
+the PS estimation code.  This will let us see if we're running into
+some finite-binning effects in the PS estimation.  The original
+calculations had 20 $\ell$ bins; the new one uses 50 within the same
+$\ell$ range.  To beat down the noise, I used 400 realizations of the
+shears, instead of 20 as before.  The result is shown in
+Fig.~\ref{F:pe-fine}.  It is clear that the results are, as compared
+to Fig.~\ref{F:pe}, closer to the theory.  In particular, the
+amplitude {\em and} slope are both close to theory for $\ell>100$.
+Note that the jitter in that curve does not go away if we use more
+realizations.  This could have to do with the exact locations of the
+annular $\ell$ bins as compared to the finite $\ell$ modes that are
+probed by our grid.  Based on this figure, it seems plausible that the
+power spectra that we're producing are just fine.  However, it also
+suggests that for a user to realistically compare their output power
+spectrum against the theoretical one, they {\em must} account for
+the effects of finite $\ell$-binning on the theory.  Alternatively
+they should choose rather fine $\ell$ bins to minimize the problem.
+\begin{figure}
+\begin{center}
+\includegraphics[width=3in]{../external/test_gridshear/output/compare_input_pe.fine.eps}
+\caption{Output shear power spectra (plotted as the dimensionless
+  $\Delta^2$) for the grids described in Sec.~\ref{S:testpk}, where
+  the input $P_E$ is a realistic cosmological one (shown as the 'theory' line on
+  the plot) and the input $P_B=0$. The results for GalSim and the
+  comparison SHT code are both plotted, but for GalSim we used 50
+  $\ell$ bins in the PS estimation, rather than 20 as in Fig.~\ref{F:pe}.\label{F:pe-fine}}
+\end{center}
+\end{figure}
 
+\textbf{Need to test robustness to grid spacing and size.}
 
 \section{Representing continuous fields using the Discrete Fourier Transform}
 
