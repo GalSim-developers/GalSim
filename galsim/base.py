@@ -1592,7 +1592,7 @@ class InterpolatedImage(GSObject):
         # decide about deterministic image padding
         specify_size = False
         padded_size = image.getPaddedSize(pad_factor)
-        if pad_image is not None:
+        if pad_image:
             specify_size = True
             if isinstance(pad_image, str):
                 try:
@@ -1615,7 +1615,7 @@ class InterpolatedImage(GSObject):
                 msg =  "Warning: ignoring specified pad_factor because user also specified\n"
                 msg += "         an image to use directly for the padding."
                 warnings.warn(msg)
-        else:
+        elif noise_pad:
             if isinstance(image, galsim.BaseImageF):
                 pad_image = galsim.ImageF(padded_size, padded_size)
             if isinstance(image, galsim.BaseImageD):
