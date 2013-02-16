@@ -47,21 +47,17 @@ def permute(rng, *args):
             list[i], list[j] = list[j], list[i]
 
 
-class DistDeviate:
+class DistDeviate(_galsim.BaseDeviate):
     """A class to draw random numbers from a user-defined probability distribution.
     
-    DistDeviate, unlike other galsim Deviates, is NOT an instance of the BaseDeviate class.  It
-    has the same methods as those objects, but it cannot be used to initialize other BaseDeviates
-    and it will not satisfy isinstance checks for BaseDeviate.  However, DistDeviate includes an 
-    internal UniformDeviate, _ud, which can be used to initialize other BaseDeviates if necessary.
-    
-    The probability passed to DistDeviate can be given one of three ways: as a pair of 1d arrays
-    giving x and P(x), as the name of a file containing a 2d array of x and P(x), or as a callable
-    function.  If the probability passed to DistDeviate has well-defined endpoints--if it is an
-    array in a file, a pair of x and P(x) arrays, or a callable galsim.LookupTable--you cannot pass
-    the keywords x_min and x_max to DistDeviate or an error will result.  If, on the other hand,
-    a callable function that is NOT a galsim.LookupTable is passed to DistDeviate, then the 
-    keywords x_min and x_max are required.
+    DistDeviate is a BaseDeviate class that can be used to draw from an arbitrary probability
+    distribution.  The probability distribution passed to DistDeviate can be given one of three 
+    ways: as a pair of 1d arrays giving x and P(x), as the name of a file containing a 2d array of 
+    x and P(x), or as a callable function.  If the probability passed to DistDeviate has 
+    well-defined endpoints--if it is an array in a file, a pair of x and P(x) arrays, or a callable
+    galsim.LookupTable--you cannot pass the keywords x_min and x_max to DistDeviate or an error 
+    will result.  If, on the other hand, a callable function that is NOT a galsim.LookupTable is 
+    passed to DistDeviate, then the keywords x_min and x_max are required.
     
     Once given a probability, DistDeviate creates a table of x value versus cumulative probability 
     and draws from it using a UniformDeviate.  If given a table in a file or a pair of 1d arrays, 
@@ -103,10 +99,10 @@ class DistDeviate:
     @param p            The p values for a P(x) distribution as a list, tuple, or Numpy array.
     @param function     A callable function giving a probability distribution
     @param x_min        The minimum desired return value (required for non-galsim.LookupTable
-                        callable functions; will return an error if not passed in that case, or if
+                        callable functions; will raise an error if not passed in that case, or if
                         passed in any other case)
     @param x_min        The maximum desired return value (required for non-galsim.LookupTable
-                        callable functions; will return an error if not passed in that case, or if
+                        callable functions; will raise an error if not passed in that case, or if
                         passed in any other case)
     @param interpolant  Type of interpolation used for interpolating (x,p) or file_name (causes an
                         error if passed alongside a callable function). Options are given in the
@@ -125,9 +121,9 @@ class DistDeviate:
     1.897586098503296
     >>> d()
     2.7892018766454183
-"""    
-    def __init__(self, rng=None, x=None, p=None, function=None, file_name=None, x_min=None, x_max=None, 
-                 interpolant='linear', npoints=256):
+    """    
+    def __init__(self, rng=None, x=None, p=None, function=None, file_name=None,
+                 x_min=None, x_max=None, interpolant='linear', npoints=256):
         """Initializes a DistDeviate instance.
         
         The rng, if given, must be something that can initialize a BaseDeviate instance, such as 
@@ -140,15 +136,12 @@ class DistDeviate:
         import galsim
  
         # Set up the PRNG
-        if rng is None:
-            self._ud=galsim.UniformDeviate()
-        elif isinstance(rng,galsim.UniformDeviate):
-            self._ud=rng
-        elif isinstance(rng,(galsim.BaseDeviate,int,long)):
-            self._ud=galsim.UniformDeviate(rng)
-        else:
+        try:
+            _galsim.BaseDeviate.__init__(self,rng)
+        except:
             raise TypeError('Argument rng passed to DistDeviate cannot be used to initialize '
-                            'a UniformDeviate.')
+                            'a BaseDeviate.')
+        self._ud=galsim.UniformDeviate(self)
 
         # Check a few arguments before doing computations
         if (p is None and x) or (x is None and p):

@@ -460,7 +460,13 @@ def _GenerateFromRandomDistribution(param, param_name, base, value_type):
         base['distdev'] = distdev
         base['distdev_kwargs'] = kwargs
 
+    # Typically, the rng will change between successive calls to this, so reset the 
+    # seed.  (The other internal calcualtions don't need to be redone unless the rest of the
+    # kwargs have been changed.)
+    distdev.reset(rng)
+
     val = distdev()
+    #print 'distdev = ',val
 
     return val, False
 

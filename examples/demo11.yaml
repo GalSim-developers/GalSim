@@ -16,6 +16,7 @@
 # New features introduced in this demo:
 #
 # - obj type : InterpolatedImage(image, dx)
+# - float_value type : RandomDistribution(function, x_min, x_max)
 # - pix type : None
 # - input.power_spectrum : (e_power_file, delta2, units)
 #
@@ -60,6 +61,17 @@ gal :
         items : [ 106416, 106731, 108402, 116045, 116448 ]
         index : { type : Random }
 
+    dilation :
+        # We draw the sizes from a power law distribution.
+        # You can use any arbitrary function here, along with a min and max value,
+        # and values will be drawn within this probability distribution.
+        # The function should be given in terms of the variable x, since internally
+        # it is parsed with eval('lambda x : ' + function).
+        type : RandomDistribution
+        function : x**-3.5
+        x_min : 1
+        x_max : 5
+
     shear : 
         # We again use PowerSpectrumShear, which is set up below using input : power_spectrum.
         type : PowerSpectrumShear
@@ -83,7 +95,7 @@ image :
     # This time we use stamp_size to set the size of the postage stamp image for each object.
     # In demo9, we left it out, so GalSim automatically determined a good size for each object.
     # That's usually fine, but here we just want to demonstrate the stamp_size functionality.
-    stamp_size : 48 # pixels
+    stamp_size : 100 # pixels
     
     # The default center of each stamp is to be random within the full bounds of the image.
     # Here, we limit the range to avoid locations within 1/2 stamp_size of the edge.
@@ -91,8 +103,8 @@ image :
     # appropriately.  We just do this to demonstrate the functionality.
     center : 
         type : XY 
-        x : { type : Random , min : 24 , max : 4476 }
-        y : { type : Random , min : 24 , max : 4476 }
+        x : { type : Random , min : 50 , max : 4450 }
+        y : { type : Random , min : 50 , max : 4450 }
 
 
     pixel_scale : 0.20  # arcsec / pixel
