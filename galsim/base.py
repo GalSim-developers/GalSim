@@ -1426,12 +1426,12 @@ class InterpolatedImage(GSObject):
     @param x_interpolant   Either an Interpolant2d (or Interpolant) instance or a string indicating
                            which real-space interpolant should be used.  Options are 'nearest',
                            'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the
-                           integer order to use. (Default `interpolant = galsim.Quintic()`)
+                           integer order to use. (Default `x_interpolant = galsim.Quintic()`)
     @param k_interpolant   Either an Interpolant2d (or Interpolant) instance or a string indicating
                            which k-space interpolant should be used.  Options are 'nearest', 'sinc',
                            'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the integer
                            order to use.  We strongly recommend leaving this parameter at its
-                           default value; see text above for details.  (Default `interpolant =
+                           default value; see text above for details.  (Default `k_interpolant =
                            galsim.Quintic()`)
     @param normalization   Two options for specifying the normalization of the input Image:
                               "flux" or "f" means that the sum of the pixels is normalized
