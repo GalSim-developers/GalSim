@@ -47,7 +47,7 @@ def permute(rng, *args):
             list[i], list[j] = list[j], list[i]
 
 
-class DistDeviate:
+class DistDeviate(_galsim.BaseDeviate):
     """A class to draw random numbers from a user-defined probability distribution.
     
     DistDeviate, unlike other galsim Deviates, is NOT an instance of the BaseDeviate class.  It
@@ -137,15 +137,17 @@ class DistDeviate:
         import galsim
  
         # Set up the PRNG
-        if rng is None:
-            self._ud=galsim.UniformDeviate()
-        elif isinstance(rng,galsim.UniformDeviate):
-            self._ud=rng
-        elif isinstance(rng,(galsim.BaseDeviate,int,long)):
-            self._ud=galsim.UniformDeviate(rng)
-        else:
-            raise TypeError('Argument rng passed to DistDeviate cannot be used to initialize '
-                            'a UniformDeviate.')
+        _galsim.BaseDeviate.__init__(self,rng)
+        #if rng is None:
+            #self._ud=galsim.UniformDeviate()
+        #elif isinstance(rng,galsim.UniformDeviate):
+            #self._ud=rng
+        #elif isinstance(rng,(galsim.BaseDeviate,int,long)):
+            #self._ud=galsim.UniformDeviate(rng)
+        #else:
+            #raise TypeError('Argument rng passed to DistDeviate cannot be used to initialize '
+                            #'a UniformDeviate.')
+        self._ud=galsim.UniformDeviate(self)
 
         # Check a few arguments before doing computations
         if (p is None and x) or (x is None and p):
