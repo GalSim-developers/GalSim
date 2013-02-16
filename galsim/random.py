@@ -57,13 +57,12 @@ class DistDeviate:
     
     The probability passed to DistDeviate can be given one of three ways: as a pair of 1d arrays
     giving x and P(x), as the name of a file containing a 2d array of x and P(x), or as a callable
-    function.  The min and max desired return value can be passed as optional keywords.  If they
-    are not, DistDeviate will attempt to determine a reasonable max and min value, either by using
-    the edges of the arrays (if discrete or if the callable function is a galsim.LookupTable) or by
-    trying to find the region where P(x)>0 for a callable function.  The range finder for callable 
-    functions is not particularly sophisticated, so if the shape of the P(x) described by the 
-    callable function is complicated, the use of the min and max keywords is recommended.
-
+    function.  If the probability passed to DistDeviate has well-defined endpoints--if it is an
+    array in a file, a pair of x and P(x) arrays, or a callable galsim.LookupTable--you cannot pass
+    the keywords x_min and x_max to DistDeviate or an error will result.  If, on the other hand,
+    a callable function that is NOT a galsim.LookupTable is passed to DistDeviate, then the 
+    keywords x_min and x_max are required.
+    
     Once given a probability, DistDeviate creates a table of x value versus cumulative probability 
     and draws from it using a UniformDeviate.  If given a table in a file or a pair of 1d arrays, 
     it will construct an interpolated LookupTable to obtain more finely gridded probabilities; the 
@@ -103,8 +102,12 @@ class DistDeviate:
     @param x            The x values for a P(x) distribution as a list, tuple, or Numpy array.
     @param p            The p values for a P(x) distribution as a list, tuple, or Numpy array.
     @param function     A callable function giving a probability distribution
-    @param x_min         The minimum desired return value.
-    @param x_max         The maximum desired return value.
+    @param x_min        The minimum desired return value (required for non-galsim.LookupTable
+                        callable functions; will return an error if not passed in that case, or if
+                        passed in any other case)
+    @param x_min        The maximum desired return value (required for non-galsim.LookupTable
+                        callable functions; will return an error if not passed in that case, or if
+                        passed in any other case)
     @param interpolant  Type of interpolation used for interpolating (x,p) or file_name (causes an
                         error if passed alongside a callable function). Options are given in the
                         documentation for galsim.LookupTable.  (default: 'linear')
@@ -159,6 +162,13 @@ class DistDeviate:
             raise TypeError('Cannot pass both file_name and x&p keywords to DistDeviate')
         if function and x:
             raise TypeError('Cannot pass both function and x&p keywords to DistDeviate')
+        if x or file_name or isinstance(function,galsim.LookupTable):
+            if x_min or x_max:
+                raise TypeError('Cannot pass x_min or x_max alongside anything but a callable '
+                                'function in arguments to DistDeviate')
+        elif x_min is None or x_max is None:
+            raise TypeError('Must pass x_min and x_max alongside non-galsim.LookupTable callable '
+                            'functions in arguments to DistDeviate')
 
         # Set up the probability function & min and max values for any inputs
         if function:
@@ -169,48 +179,21 @@ class DistDeviate:
                                 'callable: %s'%function)
             file_name=function # for later error messages
             if isinstance(function,galsim.LookupTable):
-                if x_min is None:
-                    x_min=function.x_min
-                elif function.x_min>x_min:
-                    raise ValueError('x_min passed to DistDeviate is less than the x_min of '
-                                     'LookupTable %s'%function)
-                if x_max is None:
-                    x_max=function.x_max
-                elif function.x_max<x_max:
-                    raise ValueError('x_max passed to DistDeviate is greater than the x_max of '
-                                     'LookupTable %s'%function)
-            elif x_min is None or x_max is None:
-                (x_min,x_max)=self._getBoundaries(function,x_min,x_max)
-            elif x_max<=x_min:
-                raise ValueError('x_max and x_min passed to DistDeviate are in the wrong order! '
-                                 'x_min: %d x_max: %d'%(x_min,x_max))
+                x_min=function.x_min
+                x_max=function.x_max
         else: # Some of the array & file_name setup is the same
             if x:
                 file_name=x # just for later error outputs
                 function=galsim.LookupTable(x=x,f=p,interpolant=interpolant)
             else: # We know from earlier checks it must be a file_name--no need to recheck
                 function=galsim.LookupTable(file=file_name,interpolant=interpolant)
-            if x_min is None:
-                x_min=function.x_min
-            elif x_min<function.x_min:
-                raise ValueError('x_min passed to DistDeviate is less than the x_min of the '
-                                 'array passed')
-            if x_max is None:
-                x_max=function.x_max
-            elif x_max>function.x_max:
-                raise ValueError('x_max passed to DistDeviate is greater than the x_max of the '
-                                 'array passed')
-            if x_max<=x_min:
-                raise ValueError('Max value <= min value in DistDeviate')
+            x_min=function.x_min
+            x_max=function.x_max
 
         xarray=x_min+(1.*x_max-x_min)/(npoints-1)*numpy.array(range(npoints),float)
         # cdf is the cumulative distribution function--just easier to type!
         dcdf = [galsim.integ.int1d(function, xarray[i], xarray[i+1]) for i in range(npoints - 1)]
         cdf = [sum(dcdf[0:i]) for i in range(npoints)]
-#        cdf = [sum(dcdf.insert(0, 0.)[0:i+1]) for i in range(npoints)]
-#        for ip in range(1,len(xarray)):
-#            dcdf.append(galsim.integ.int1d(function,xarray[ip-1],xarray[ip]))
-#            cdf.append(cdf[-1]+dcdf[-1])
         # Quietly renormalize the probability if it wasn't already normalized
         totalprobability=cdf[-1]
         cdf=numpy.array(cdf)/totalprobability
@@ -251,96 +234,7 @@ class DistDeviate:
         self.x_min=x_min
         self.x_max=x_max
 
-    def _getBoundaries(self,function,x_min,x_max):
-        maxblanktries=6 # Maximum number of times it will move the xrange around trying to find 
-                        # nonzero function(x)
-        tolerance=1.E-8 # if our answer only improves by less than this much, stop
-        findx_min=True
-        findx_max=True
-
-        frange=1. # Frange, not xrange, since xrange is a python builtin
-        if x_min:
-            findx_min=False
-            x_max=x_min+frange
-        elif x_max:
-            findx_max=False
-            x_min=x_max-frange
-        else:
-            x_min=0.
-            x_max=x_min+frange
-        ntries=0
-        found=False
-        while ntries<0.5*(maxblanktries+1) and not found:
-            ntries+=1
-            (tx_min,tx_max,found)=self._testrange(function,x_min,frange)
-            if found:
-                if findx_min:
-                    x_min=tx_min
-                if findx_max:
-                    x_max=tx_max
-            else:
-                frange*=10
-                if findx_min:
-                    x_min=x_max-frange
-                elif findx_max:
-                    x_max=x_min+frange
-                else:
-                    x_min=0.5*(x_min+x_max-frange) # expands the range around the mean of x_min&x_max
-        if not found: # Try smaller steps instead of larger ones
-            frange=0.1
-            if x_min:
-                x_max=x_min+frange
-            elif x_max:
-                x_min=x_max-frange
-            else:
-                x_min=0.
-                x_max=x_min+frange
-            while ntries<maxblanktries and not found:                
-                ntries+=1
-                (tx_min,tx_max,found)=self._testrange(function,x_min,frange)
-                if found:
-                    if findx_min:
-                        x_min=tx_min
-                    if findx_max:
-                        x_max=tx_max
-                else:
-                    frange*=0.1
-                    if findx_min:
-                        x_min=x_max-frange
-                    elif findx_max:
-                        x_max=x_min+frange
-                    else:
-                        x_min=0.5*(x_min+x_max-frange)
-        if not found:
-            raise RuntimeError('Cannot find any positive function(x) for DistDeviate')
-        # Now we have a nonzero range...make a guesstimate of the edge point
-        if findx_min:
-            xstep=frange*0.05
-            while abs(function(x_min))>tolerance:
-                x_min-=xstep
-        if findx_max:
-            xstep=frange*0.05
-            while abs(function(x_max))>tolerance:
-                x_max+=xstep
-        return (x_min,x_max)
-
-    def _testrange(self, function, x_min, frange):
-        import numpy
-        xarr=x_min+0.1*frange*numpy.array([1.0*x for x in range(10)])           
-        farr=[]
-        for x in xarr:
-            farr.append(function(x))
-        if numpy.any(farr>0):
-            farr=numpy.array(farr)
-            xarr=xarr[numpy.where(farr>0)]
-            x_max=max(xarr)
-            x_min=min(xarr)
-            found=True
-        else:
-            found=False
-        return (x_min,x_max,found)
         
-
     def __call__(self):
         return self._inverseprobabilitytable(self._ud())
     
@@ -349,7 +243,6 @@ class DistDeviate:
         shp=image.array.shape
         # seriously faster than doing this element by element
         image.array[:,:]+=numpy.array([[self() for col in range(shp[1])] for row in range(shp[0])])
-    
         
     def seed(self,rng=None):
         if rng is None:

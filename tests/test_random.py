@@ -459,29 +459,13 @@ def test_distarray_image():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_distboundaries():
-    """Test the boundary-finding method of the distribution-defined random number generator.
-    """
-    import time
-    t1 = time.time()
-    u = galsim.UniformDeviate(testseed)
-    d = galsim.DistDeviate(u, function=dboundaryfunction, npoints=dnpoints, interpolant=dinterpolant)
-    np.testing.assert_array_less(d.x_min, -5., err_msg='DistDeviate did not find appropriate lower boundary')
-    np.testing.assert_array_less(5., d.x_max, err_msg='DistDeviate did not find appropriate upper boundary')
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
 def test_distLookupTableboundaries():
-    """Test the boundary-finding method of the distribution-defined random number generator.
+    """Test that DistDeviate understands LookupTable's boundaries.
     """
     import time
     t1 = time.time()
     u = galsim.UniformDeviate(testseed)
     d = galsim.DistDeviate(u, function=dLookupTable, npoints=dnpoints, interpolant=dinterpolant)
-    np.testing.assert_equal(d.x_min, dx_min, err_msg='DistDeviate did not find appropriate lower '
-                                                    'boundary when given a LookupTable')
-    np.testing.assert_equal(d.x_max, dx_max, err_msg='DistDeviate did not find appropriate upper '
-                                                    'boundary when given a LookupTable')
     np.testing.assert_equal(d.x_min, dLookupTable.x_min, err_msg='DistDeviate and the LookupTable ' 
                                                                  'passed to it have different '
                                                                  'lower bounds')
@@ -582,7 +566,6 @@ if __name__ == "__main__":
     test_distfunction_image()
     test_distarray_rand()
     test_distarray_image()
-    test_distboundaries()
     test_distLookupTableboundaries()
     test_multiprocess()
 
