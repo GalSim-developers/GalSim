@@ -97,10 +97,10 @@ Seed the pseudo-random number generator.
 Multiple Calling Options
 ------------------------
 
-    >>> galsim.BaseDeviate.seed()       # Re-seed the PRNG using current time.
+    >>> galsim.BaseDeviate.seed()       # Re-seed the PRNG using current time
 
     >>> galsim.BaseDeviate.seed(lseed)  # Re-seed the PRNG using specified seed, where lseed is a
-                                        # long int.
+                                        # long int
 
 """
 
@@ -111,13 +111,13 @@ Multiple Calling Options
 ------------------------
 
     >>> galsim.BaseDeviate.reset()        # Re-seed the PRNG using current time, and sever the
-                                          # connection to any other Deviate.
+                                          # connection to any other Deviate
 
     >>> galsim.BaseDeviate.reset(lseed)   # Re-seed the PRNG using specified seed, where lseed is a
-                                          # long int, and sever the connection to any other Deviate.
+                                          # long int, and sever the connection to any other Deviate
 
     >>> galsim.BaseDeviate.reset(dev)     # Re-connect this Deviate with the same underlying random
-                                          # number generator supplied in dev.
+                                          # number generator supplied in dev
 
 """
 
@@ -130,13 +130,13 @@ Initialization
 --------------
 
     >>> u = galsim.UniformDeviate()       # Initializes u to be a UniformDeviate instance, and seeds
-                                          # the PRNG using current time.
+                                          # the PRNG using current time
 
     >>> u = galsim.UniformDeviate(lseed)  # Initializes u to be a UniformDeviate instance, and seeds
-                                          # the PRNG using specified long integer lseed.
+                                          # the PRNG using specified long integer lseed
 
     >>> u = galsim.UniformDeviate(dev)    # Initializes u to be a UniformDeviate instance, and share
-                                          # the same underlying random number generator as dev.
+                                          # the same underlying random number generator as dev
 
 Calling
 -------
@@ -170,14 +170,14 @@ Initialization
 
     >>> g = galsim.GaussianDeviate(mean=0., sigma=1.)          # Initializes g to be a
                                                                # GaussianDeviate instance using the
-                                                               # current time for the seed.
+                                                               # current time for the seed
 
     >>> g = galsim.GaussianDeviate(lseed, mean=0., sigma=1.)   # Initializes g using the specified
-                                                               # seed, where lseed is a long int.
+                                                               # seed, where lseed is a long int
 
     >>> g = galsim.GaussianDeviate(dev, mean=0., sigma=1.)     # Initializes g to share the same
                                                                # underlying random number generator
-                                                               # as dev.
+                                                               # as dev
 
 Parameters:
 
@@ -227,13 +227,13 @@ Initialization
 
     >>> b = galsim.BinomialDeviate(N=1., p=0.5)          # Initializes b to be a BinomialDeviate
                                                          # instance using the current time for the
-                                                         # seed.
+                                                         # seed
 
     >>> b = galsim.BinomialDeviate(lseed, N=1., p=0.5)   # Initializes b using the specified seed,
-                                                         # where lseed is a long int.
+                                                         # where lseed is a long int
 
     >>> b = galsim.BinomialDeviate(dev, N=1., p=0.5)     # Initializes b to share the same
-                                                         # underlying random number generator as dev.
+                                                         # underlying random number generator as dev
 
 Parameters:
 
@@ -282,13 +282,13 @@ Initialization
 --------------
 
     >>> p = galsim.PoissonDeviate(mean=1.)         # Initializes g to be a PoissonDeviate instance
-                                                   # using the current time for the seed.
+                                                   # using the current time for the seed
 
     >>> p = galsim.PoissonDeviate(lseed, mean=1.)  # Initializes g using the specified seed, where
-                                                   # lseed is a long int.
+                                                   # lseed is a long int
 
     >>> p = galsim.PoissonDeviate(dev, mean=1.)    # Initializes g to share the same underlying
-                                                   # random number generator as dev.
+                                                   # random number generator as dev
 
 Parameters:
 
@@ -393,14 +393,14 @@ Initialization
 
     >>> gam = galsim.GammaDeviate(alpha=1., beta=1.)         # Initializes gam to be a GammaDeviate
                                                              # instance using the current time for
-                                                             # the seed.
+                                                             # the seed
 
     >>> gam = galsim.GammaDeviate(lseed, alpha=1., beta=1.)  # Initializes gam using the specified
-                                                             # seed, where lseed is a long int.
+                                                             # seed, where lseed is a long int
 
     >>> gam = galsim.GammaDeviate(dev alpha=1., beta=1.)     # Initializes gam to share the same
                                                              # underlying random number generator as
-                                                             # dev.
+                                                             # dev
 
 Parameters:
 
@@ -451,13 +451,13 @@ Initialization
 --------------
 
     >>> chis = galsim.Chi2Deviate(n=1.)          # Initializes chis to be a Chi2Deviate instance
-                                                 # using the current time for the seed.
+                                                 # using the current time for the seed
 
     >>> chis = galsim.Chi2Deviate(lseed, n=1.)   # Initializes chis using the specified seed, where
-                                                 # lseed is a long int.
+                                                 # lseed is a long int
 
     >>> chis = galsim.Chi2Deviate(dev, n=1.)     # Initializes chis to share the same underlying
-                                                 # random number generator as dev.
+                                                 # random number generator as dev
 
 Parameters:
     n   number of degrees of freedom for the output distribution [default `n = 1`].  Must be > 0.
@@ -634,8 +634,6 @@ _galsim.CCDNoise.setSkyLevel.__func__.__doc__ = "Set sky level in current noise 
 _galsim.CCDNoise.setGain.__func__.__doc__ = "Set gain in current noise model."
 _galsim.CCDNoise.setReadNoise.__func__.__doc__ = "Set read noise in current noise model."
 
-
-# DeviateNoise docstrings
 _galsim.DeviateNoise.__doc__ = """
 Class implementing noise with an arbitrary BaseDeviate object.
 
