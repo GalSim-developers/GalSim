@@ -51,61 +51,52 @@ class DistDeviate(_galsim.BaseDeviate):
     """A class to draw random numbers from a user-defined probability distribution.
     
     DistDeviate is a BaseDeviate class that can be used to draw from an arbitrary probability
-    distribution.  The probability distribution passed to DistDeviate can be given one of three 
-    ways: as a pair of 1d arrays giving x and P(x), as the name of a file containing a 2d array of 
-    x and P(x), or as a callable function.  If the probability passed to DistDeviate has 
-    well-defined endpoints--if it is an array in a file, a pair of x and P(x) arrays, or a callable
-    galsim.LookupTable--you cannot pass the keywords x_min and x_max to DistDeviate or an error 
-    will result.  If, on the other hand, a callable function that is NOT a galsim.LookupTable is 
-    passed to DistDeviate, then the keywords x_min and x_max are required.
+    distribution.  The probability distribution passed to DistDeviate can be given one of two 
+    ways: as the name of a file containing a 2d array of x and P(x) or as a callable function.  If 
+    the probability passed to DistDeviate has well-defined endpoints--if it is an array in a file
+    or a callable galsim.LookupTable--you cannot pass the keywords x_min and x_max to DistDeviate 
+    or an error will result.  If, on the other hand, a callable function that is NOT a 
+    galsim.LookupTable is passed to DistDeviate, then the keywords x_min and x_max are required.
     
     Once given a probability, DistDeviate creates a table of x value versus cumulative probability 
-    and draws from it using a UniformDeviate.  If given a table in a file or a pair of 1d arrays, 
-    it will construct an interpolated LookupTable to obtain more finely gridded probabilities; the 
-    interpolant used is an optional keyword argument to DistDeviate.  
+    and draws from it using a UniformDeviate.  If given a table in a file, it will construct an 
+    interpolated LookupTable to obtain more finely gridded probabilities to generate the cumulative
+    probability table; the interpolant used is an optional keyword argument to DistDeviate.  
     
     Initialization
     --------------
     
     Some sample initialization calls:
     
-    >>> d = galsim.DistDeviate(x=list1,p=list2) 
-
-    Initializes d to be a DistDeviate using the distribution P(x) and seeds the PRNG using current
-    time. The lists can also be tuples or numpy arrays.
-    
     >>> d = galsim.DistDeviate(function=f,x_min=x_min,x_max=x_max)   
     
     Initializes d to be a DistDeviate instance with a distribution given by the callable function
     f(x) from x=x_min to x=x_max and seeds the PRNG using current time.  
     
-    >>> d = galsim.DistDeviate(rng=1062533,file_name=file_name)
+    >>> d = galsim.DistDeviate(rng=1062533,function=file_name)
     
     Initializes d to be a DistDeviate instance with a distribution given by the data in file
     file_name, which must be a 2-column ASCII table, and seeds the PRNG using the long int
     seed 1062533.
     
-    >>> d = galsim.DistDeviate(dev,x=list1,p=list2,interpolant='linear')
+    >>> d = galsim.DistDeviate(rng,function=galsim.LookupTable(x,p))
     
-    Initializes d to be a DistDeviate instance using the distribution given by list1 and list2,
-    using linear interpolation to get probabilities for intermediate points, and seeds the
-    PRNG using the BaseDeviate dev.
-
+    Initializes d to be a DistDeviate instance with a distribution given by P(x), defined as two
+    arrays x and p which are used to make a callable galsim.LookupTable, and links the DistDeviate
+    PRNG to the already-existing random number generator rng.
+    
     @param rng          Something that can seed a BaseDeviate: a long int seed or another 
                         BaseDeviate.
-    @param file_name    The name of a file containing a probability distribution as a 2-column
-                        ASCII table.
-    @param x            The x values for a P(x) distribution as a list, tuple, or Numpy array.
-    @param p            The p values for a P(x) distribution as a list, tuple, or Numpy array.
-    @param function     A callable function giving a probability distribution
+    @param function     A callable function giving a probability distribution, or the name of a 
+                        file containing a probability distribution as a 2-column ASCII table.
     @param x_min        The minimum desired return value (required for non-galsim.LookupTable
                         callable functions; will raise an error if not passed in that case, or if
                         passed in any other case)
     @param x_min        The maximum desired return value (required for non-galsim.LookupTable
                         callable functions; will raise an error if not passed in that case, or if
                         passed in any other case)
-    @param interpolant  Type of interpolation used for interpolating (x,p) or file_name (causes an
-                        error if passed alongside a callable function). Options are given in the
+    @param interpolant  Type of interpolation used for interpolating a file (causes an error if 
+                        passed alongside a callable function). Options are given in the 
                         documentation for galsim.LookupTable.  (default: 'linear')
     @param npoints      Number of points in the internal tables for interpolations. (default: 256)
 
@@ -114,22 +105,20 @@ class DistDeviate(_galsim.BaseDeviate):
     Taking the instance from the above examples, successive calls to d() then generate pseudo-random
     numbers distributed according to the initialized distribution.
 
-    >>> d = galsim.DistDeviate(x=[1.,2.,3.],p=[1.,2.,3.])
     >>> d()
-    2.9886772666447365
+    1.396015204978437
     >>> d()
-    1.897586098503296
+    1.6481898771717463
     >>> d()
-    2.7892018766454183
+    2.108800962574702
     """    
-    def __init__(self, rng=None, x=None, p=None, function=None, file_name=None,
-                 x_min=None, x_max=None, interpolant='linear', npoints=256):
+    def __init__(self, rng=None, function=None, x_min=None, 
+                 x_max=None, interpolant='linear', npoints=256):
         """Initializes a DistDeviate instance.
         
         The rng, if given, must be something that can initialize a BaseDeviate instance, such as 
-        another BaseDeviate or a long int seed.  At least one of the keyword args file_name, 
-        function, or the pair (x,p) must be given as well; see the documentation for the
-        DistDeviate class for more information.
+        another BaseDeviate or a long int seed.  See the documentation for the DistDeviate class 
+        for more information.
         """
         
         import numpy
@@ -137,49 +126,55 @@ class DistDeviate(_galsim.BaseDeviate):
  
         # Set up the PRNG
         try:
-            _galsim.BaseDeviate.__init__(self,rng)
+            galsim.BaseDeviate.__init__(self,rng)
         except:
             raise TypeError('Argument rng passed to DistDeviate cannot be used to initialize '
                             'a BaseDeviate.')
         self._ud=galsim.UniformDeviate(self)
 
+        if not function:
+            raise TypeError('You must pass a function to DistDeviate!')
+
+        # Figure out if a string is a filename or something we should be using in an eval call
+        if isinstance(function,str):
+            input_function=function
+            function=eval('lambda x: ' + function)
+            try:
+                if x_min is not None: # is not None in case x_min=0.
+                    function(x_min)
+                else: 
+                    # Somebody would be silly to pass a string for evaluation without x_min,
+                    # but we'd like to throw reasonable errors in that case anyway
+                    function(0.6) # A value unlikely to be a singular point of a function
+            except: # Okay, maybe it's a file name after all
+                function=input_function
+                import os.path
+                if not os.path.isfile(function):
+                    raise ValueError('String passed with function keyword to DistDeviate does '
+                                     'not point to an existing file and cannot be evaluated via '
+                                     'an eval call with lambda x: %s'%function)
+                        
+
         # Check a few arguments before doing computations
-        if (p is None and x) or (x is None and p):
-            raise TypeError('Only one of x and p given as a keyword to DistDeviate')
-        if not file_name and not function and not x:
-            raise TypeError('At least one of the keywords file_name, function, or the pair '
-                            'x and p must be set in calls to DistDeviate!')
-        if file_name and function:
-            raise TypeError('Cannot pass both file_name and function keywords to DistDeviate')
-        if file_name and x:
-            raise TypeError('Cannot pass both file_name and x&p keywords to DistDeviate')
-        if function and x:
-            raise TypeError('Cannot pass both function and x&p keywords to DistDeviate')
-        if x or file_name or isinstance(function,galsim.LookupTable):
+        if isinstance(function,galsim.LookupTable) or isinstance(function,str):
             if x_min or x_max:
                 raise TypeError('Cannot pass x_min or x_max alongside anything but a callable '
-                                'function in arguments to DistDeviate')
-        elif x_min is None or x_max is None:
-            raise TypeError('Must pass x_min and x_max alongside non-galsim.LookupTable callable '
-                            'functions in arguments to DistDeviate')
+                                'non-LookupTable function in arguments to DistDeviate')
+        elif hasattr(function,'__call__'):
+            if x_min is None or x_max is None:
+                raise TypeError('Must pass x_min and x_max alongside non-galsim.LookupTable '
+                                'callable functions in arguments to DistDeviate')
+        else:
+            raise TypeError('Keyword function passed to DistDeviate must be a callable function or '
+                            'a string representing a file: %s'%function)
 
         # Set up the probability function & min and max values for any inputs
-        if function:
-            if isinstance(function,str):
-                function=eval('lambda x : ' + function)
-            if not hasattr(function,'__call__'):
-                raise TypeError('Function given to DistDeviate with keyword function is not '
-                                'callable: %s'%function)
-            file_name=function # for later error messages
+        if hasattr(function,'__call__'):
             if isinstance(function,galsim.LookupTable):
                 x_min=function.x_min
                 x_max=function.x_max
-        else: # Some of the array & file_name setup is the same
-            if x:
-                file_name=x # just for later error outputs
-                function=galsim.LookupTable(x=x,f=p,interpolant=interpolant)
-            else: # We know from earlier checks it must be a file_name--no need to recheck
-                function=galsim.LookupTable(file=file_name,interpolant=interpolant)
+        else: # must be a filename
+            function=galsim.LookupTable(file=function,interpolant=interpolant)
             x_min=function.x_min
             x_max=function.x_max
 
@@ -193,7 +188,7 @@ class DistDeviate(_galsim.BaseDeviate):
         dcdf=numpy.array(dcdf)/totalprobability
         # Check that the probability is nonnegative
         if not numpy.all(dcdf >= 0):
-            raise ValueError('Negative probability passed to DistDeviate: %s'%file_name)
+            raise ValueError('Negative probability passed to DistDeviate: %s'%function)
         # Now get rid of points with dcdf == 0
         elif not numpy.all(dcdf > 0.):
             # Remove consecutive dx=0 points, except endpoints
@@ -231,12 +226,6 @@ class DistDeviate(_galsim.BaseDeviate):
     def __call__(self):
         return self._inverseprobabilitytable(self._ud())
     
-    def applyTo(self, image):
-        import numpy
-        shp=image.array.shape
-        # seriously faster than doing this element by element
-        image.array[:,:]+=numpy.array([[self() for col in range(shp[1])] for row in range(shp[0])])
-        
     def seed(self,rng=None):
         if rng is None:
             self._ud()

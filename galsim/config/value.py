@@ -442,7 +442,7 @@ def _GenerateFromRandomDistribution(param, param_name, base, value_type):
         raise ValueError("No rng available for %s.type = RandomDistribution"%param_name)
     rng = base['rng']
 
-    opt = {'file_name' : str, 'function' : str, 'interpolant' : str, 'npoints' : int, 
+    opt = {'function' : str, 'interpolant' : str, 'npoints' : int, 
            'x_min' : float, 'x_max' : float }
     kwargs, safe = GetAllParams(param, param_name, base, opt=opt)
     

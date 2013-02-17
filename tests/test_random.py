@@ -412,53 +412,6 @@ def test_distlambdafunction_rand():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_distfunction_image():
-    """Testing ability to apply distribution-defined random numbers from a function to images 
-    using their addNoise method, and reproduce sequence.
-    """
-    import time
-    t1 = time.time()
-    u = galsim.UniformDeviate(testseed)
-    d = galsim.DistDeviate(
-        u, function=dfunction, x_min=dmin, x_max=dmax, npoints=dnpoints, interpolant=dinterpolant)
-    testimage = galsim.ImageViewD(np.zeros((3, 1)))
-    testimage.addNoise(d)
-    np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(dFunctionResult), 
-                              precision, err_msg="DistDeviate generator applied to Images does not "
-                                                 "reproduce expected sequence")
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
-def test_distarray_rand():
-    """Test distribution-defined random number generator with an array for expected result given 
-    the above seed.
-    """
-    import time
-    t1 = time.time()
-    u = galsim.UniformDeviate(testseed)
-    d = galsim.DistDeviate(u, x=dx, p=dp, npoints=dnpoints, interpolant=dinterpolant)
-    testResult = (d(), d(), d())
-    np.testing.assert_array_almost_equal(np.array(testResult), np.array(dArrayResult), precision,
-                                       err_msg='Wrong DistDeviate random number sequence generated')
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
-def test_distarray_image():
-    """Testing ability to apply distribution-defined random numbers from an array to images using 
-    their addNoise method, and reproduce sequence.
-    """
-    import time
-    t1 = time.time()
-    u = galsim.UniformDeviate(testseed)
-    d = galsim.DistDeviate(u, x=dx, p=dp, npoints=dnpoints, interpolant=dinterpolant)
-    testimage = galsim.ImageViewD(np.zeros((3, 1)))
-    testimage.addNoise(d)
-    np.testing.assert_array_almost_equal(testimage.array.flatten(), np.array(dArrayResult), 
-                              precision, err_msg="DistDeviate generator applied to Images does not "
-                                       "reproduce expected sequence")
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
 def test_distLookupTableboundaries():
     """Test that DistDeviate understands LookupTable's boundaries.
     """
@@ -563,9 +516,6 @@ if __name__ == "__main__":
     test_chi2_image()
     test_distfunction_rand()
     test_distlambdafunction_rand()
-    test_distfunction_image()
-    test_distarray_rand()
-    test_distarray_image()
     test_distLookupTableboundaries()
     test_multiprocess()
 
