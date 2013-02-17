@@ -634,6 +634,8 @@ _galsim.CCDNoise.setSkyLevel.__func__.__doc__ = "Set sky level in current noise 
 _galsim.CCDNoise.setGain.__func__.__doc__ = "Set gain in current noise model."
 _galsim.CCDNoise.setReadNoise.__func__.__doc__ = "Set read noise in current noise model."
 
+
+# DeviateNoise docstrings
 _galsim.DeviateNoise.__doc__ = """
 Class implementing noise with an arbitrary BaseDeviate object.
 
