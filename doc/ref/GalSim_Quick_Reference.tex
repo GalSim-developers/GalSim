@@ -485,14 +485,12 @@ with \texttt{mean} and standard deviation \texttt{sigma}.}
 \item[$\circ$] \texttt{galsim.Chi2Deviate(\emph{seed}, n=1.)} \newline {$\chi^2$ distribution
     with degrees-of-freedom parameter \texttt{n}.}
 
-\item[$\circ$] \texttt{galsim.DistDeviate(\emph{seed}, \emph{probability}, x\_min=None, x\_max=None, \newline 
+\item[$\circ$] \texttt{galsim.DistDeviate(\emph{seed}, function, x\_min=None, x\_max=None, \newline 
     npoints=256, interpolant={\char"0D}linear{\char"0D})} \newline {User-defined probability 
-    distribution from \texttt{x\_min} to \texttt{x\_max} (determined from inputs if not given), 
-    with an \texttt{npoints}-points interpolation table using the given \texttt{interpolant} 
-    ('ceil', 'floor', 'linear', or 'spline').  Requires one of the following 
-    \texttt{\emph{probability}} parameters to be set: callable \texttt{function}, 
-    \texttt{file\_name} containing the name of a 2-column ASCII file of $x$ and $P(x)$, or the pair 
-    \texttt{x} and \texttt{p} giving one-dimensional arrays of $x$ and $P(x)$.}
+    drawn from the given \texttt{function} with an \texttt{npoints}-points interpolation table 
+    using the given \texttt{interpolant} ('ceil', 'floor', 'linear', or 'spline').  
+    The \texttt{function} can be a callable function, in which case the parameters \texttt{x\_min}
+    and \texttt{x\_max} should be passed, or the name of a file containing two columns, x and P(x).}
 
 \end{itemize}
 
