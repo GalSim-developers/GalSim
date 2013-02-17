@@ -1449,7 +1449,8 @@ class InterpolatedImage(GSObject):
                            `pad_factor <= 0` results in the use of the default value, 4.  We
                            strongly recommend leaving this parameter at its default value; see text
                            above for details.
-                           (Default `pad_factor = 0`.)
+                           (Default `pad_factor = 0`, unless a `pad_image` is passed in, which
+                           results in a default value of `pad_factor = 1`.)
     @param noise_pad       Noise properties to use when padding the original image with
                            noise.  This can be specified in several ways:
                                (a) as a float, which is interpreted as being a variance to use when
@@ -1610,7 +1611,7 @@ class InterpolatedImage(GSObject):
             deltay = (1+pad_image.getYMax()-pad_image.getYMin())-(1+image.getYMax()-image.getYMin())
             if deltax < 0 or deltay < 0:
                 raise RuntimeError("Image supplied for padding is too small!")
-            if pad_factor != 1.:
+            if pad_factor != 1. and pad_factor != 0.:
                 import warnings
                 msg =  "Warning: ignoring specified pad_factor because user also specified\n"
                 msg += "         an image to use directly for the padding."
@@ -2092,7 +2093,7 @@ class RealGalaxy(GSObject):
             deltay = (1+pad_image.getYMax()-pad_image.getYMin())-(1+gal_image.getYMax()-gal_image.getYMin())
             if deltax < 0 or deltay < 0:
                 raise RuntimeError("Image supplied for padding is too small!")
-            if pad_factor != 1.:
+            if pad_factor != 1. and pad_factor != 0.:
                 import warnings
                 msg =  "Warning: ignoring specified pad_factor because user also specified\n"
                 msg += "         an image to use directly for the padding."
