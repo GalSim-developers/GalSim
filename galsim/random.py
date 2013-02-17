@@ -337,13 +337,13 @@ Initialization
 --------------
 
     >>> w = galsim.WeibullDeviate(a=1., b=1.)         # Initializes w to be a WeibullDeviate
-                                                      # instance using the current time for the seed.
+                                                      # instance using the current time for the seed
 
     >>> w = galsim.WeibullDeviate(lseed, a=1., b=1.)  # Initializes w using the specified seed,
-                                                      # where lseed is a long int.
+                                                      # where lseed is a long int
 
     >>> w = galsim.WeibullDeviate(dev, a=1., b=1.)    # Initializes w to share the same underlying
-                                                      # random number generator as dev.
+                                                      # random number generator as dev
 
 Parameters:
 
