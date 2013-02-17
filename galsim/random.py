@@ -125,7 +125,7 @@ class DistDeviate(_galsim.BaseDeviate):
         import galsim
  
         # Set up the PRNG
-        if rng is None:
+        if not rng:
             _galsim.BaseDeviate.__init__(self)
         else:
             try:
