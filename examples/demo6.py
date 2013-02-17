@@ -179,7 +179,7 @@ def main(argv):
         im += background
 
         # Add Poisson noise.  This time, we don't give a sky_level, since we have already
-        # added it to the image, so we don't want any more added.  The sky_levl parameter
+        # added it to the image, so we don't want any more added.  The sky_level parameter
         # really defines how much _extra_ sky should be added above what is already in the image.
         im.addNoise(galsim.PoissonNoise(rng)) 
 

@@ -491,7 +491,7 @@ _galsim.Chi2Deviate.setN.__func__.__doc__ = "Set current distribution n degrees 
 
 
 #
-# The rest of these are from Noise.h in the C++ layer, not Randome.h.
+# The rest of these are from Noise.h in the C++ layer, not Random.h.
 #
 
 
@@ -544,8 +544,8 @@ where each pixel has Poisson noise corresponding to the number of electrons in e
 
 Note that if the image to which you are adding noise already has a sky level on it,
 then you should not provide the sky level here as well.  The sky level here corresponds
-to a level is taken to be already subtracted from the image, but which was present
-for the Poisson noise.
+to a level that is taken to be already subtracted from the image, but that originally contributed to
+the addition of Poisson noise.
 
 Initialization
 --------------

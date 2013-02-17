@@ -33,7 +33,7 @@ New features introduced in this demo:
 - obj = galsim.Moffat(beta, flux, half_light_radius)
 - obj.applyShear(g1, g2)  -- with explanation of other ways to specify shear
 - obj.draw(image, dx)
-= rng = galsim.BaseDeviate(seed)
+- rng = galsim.BaseDeviate(seed)
 - noise = galsim.PoissonNoise(rng, sky_level)
 - galsim.EstimateShearHSM(image, image_epsf)
 """
