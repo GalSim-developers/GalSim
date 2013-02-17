@@ -560,14 +560,27 @@ for Class in galsim.ConstImageView.itervalues():
     Class.getCorrFunc = _Image_getCorrFunc
 
 # Free function for returning a COSMOS noise field correlation function
-def get_COSMOS_CorrFunc(dx_cosmos=0.03):
+def get_COSMOS_CorrFunc(file_name, dx_cosmos=0.03):
     """Returns a 2D discrete correlation function representing noise in the HST COSMOS F814W
     unrotated science coadd images.
 
-    See http://cosmos.astro.caltech.edu/astronomer/hst.html for information about the COSMOS survey.
+    See http://cosmos.astro.caltech.edu/astronomer/hst.html for information about the COSMOS survey,
+    and Leauthaud et al (2007) for detailed information about the unrotated F814W coadds used for
+    weak lensing science.
 
-    This function uses a stacked estimate of the correlation function in COSMOS noise fields, stored
-    in FITS image format, generated as described in `devel/external/hst/make_cosmos_cfimage.py`
+    This function uses a stacked estimate of the correlation function in COSMOS noise fields, the
+    location of which should be input to this function via the `file_name` argument.  This image is
+    stored in FITS format, and is generated as described in
+    `YOUR/REPO/PATH/GalSim/devel/external/hst/make_cosmos_cfimage.py`.  The image itself can also be
+    found within the GalSim repo, located at:
+
+        /YOUR/REPO/PATH/GalSim/devel/external/hst/acs_I_unrot_sci_20_cf.fits
+
+    @param file_name  String containing the path and filename above but modified to match the
+                      location of the GalSim repoistory on your system.
+    @param dx_cosmos  COSMOS ACS F814W coadd image pixel scale in the units you are using to
+                      describe GSObjects and image scales in GalSim: defaults to 0.03 arcsec, see
+                      below for more information.
 
     Important note regarding units
     ------------------------------
@@ -581,9 +594,16 @@ def get_COSMOS_CorrFunc(dx_cosmos=0.03):
     """
     # Read in the image of the COSMOS correlation function stored in the repository
     import os
-    path, filename = os.path.split(__file__)
-    CIMFILE = os.path.join(path, "..", "devel", "external", "hst", "acs_I_unrot_sci_20_cf.fits")
-    cfimage = galsim.fits.read(CIMFILE)
+    if not os.path.isfile(file_name):
+        raise IOError("The input file_name '"+str(file_name)+"' does not exist.")
+    try:
+        cfimage = galsim.fits.read(file_name)
+    except, original_exception:
+        # Give a vaguely helpful warning, then raise the original exception for extra diagnostics
+        import warnings.warn(
+            "Function get_COSMOS_CorrFunc() unable to read FITS image from "+str(file_name)+", "+
+            "more information on the error in the following Exception...")
+        raise original_exception
     # Use this to generate a correlation function DIRECTLY: note this is non-standard usage, but
     # allowed since we can be sure that the input cfimage is appropriately symmetric and peaked at
     # the origin
