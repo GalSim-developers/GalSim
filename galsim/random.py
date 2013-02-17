@@ -59,9 +59,15 @@ class DistDeviate(_galsim.BaseDeviate):
     galsim.LookupTable is passed to DistDeviate, then the keywords x_min and x_max are required.
     
     Once given a probability, DistDeviate creates a table of x value versus cumulative probability 
-    and draws from it using a UniformDeviate.  If given a table in a file, it will construct an 
-    interpolated LookupTable to obtain more finely gridded probabilities to generate the cumulative
-    probability table; the interpolant used is an optional keyword argument to DistDeviate.  
+    and draws from it using a UniformDeviate.  The precision of its outputs can be controlled with
+    the keyword npoints, the number of points in the table of x vs CDF(x), and the keyword 
+    interpolant, which sets the type of interpolant used.  Any interpolant understood by
+    LookupTable may be used, but we caution against the use of splines because they can cause
+    non-monotonic behavior.
+    
+    If given a table in a file, DistDeviate will construct an interpolated LookupTable to obtain 
+    more finely gridded probabilities to generate the cumulative probability table; this will also 
+    use the interpolant passed to DistDeviate.
     
     Initialization
     --------------
@@ -98,7 +104,8 @@ class DistDeviate(_galsim.BaseDeviate):
     @param interpolant  Type of interpolation used for interpolating a file (causes an error if 
                         passed alongside a callable function). Options are given in the 
                         documentation for galsim.LookupTable.  (default: 'linear')
-    @param npoints      Number of points in the internal tables for interpolations. (default: 256)
+    @param npoints      Number of points DistDeviate should create for its internal interpolation
+                        tables. (default: 256)
 
     Calling
     -------

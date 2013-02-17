@@ -487,10 +487,16 @@ with \texttt{mean} and standard deviation \texttt{sigma}.}
 
 \item[$\circ$] \texttt{galsim.DistDeviate(\emph{seed}, function, x\_min=None, x\_max=None, \newline 
     npoints=256, interpolant={\char"0D}linear{\char"0D})} \newline {User-defined probability 
-    drawn from the given \texttt{function} with an \texttt{npoints}-points interpolation table 
-    using the given \texttt{interpolant} ('ceil', 'floor', 'linear', or 'spline').  
-    The \texttt{function} can be a callable function, in which case the parameters \texttt{x\_min}
-    and \texttt{x\_max} should be passed, or the name of a file containing two columns, x and P(x).}
+    drawn from the given \texttt{function} by building a lookup table of x vs the cumulative 
+    probability distribution and then accessing it using uniform random numbers from 0 to 1. 
+    The \texttt{function} can be a callable function, in which case the parameters \texttt{x\_min} and 
+    \texttt{x\_max} should be passed, or the name of a file containing two columns, x and P(x), in 
+    which case specifying \texttt{x\_min} and \texttt{x\_max} would result in an error.  The precision
+    can be controlled by \texttt{npoints} and \texttt{interpolant}: \texttt{npoints} sets the number 
+    of points DistDeviate creates for its internal interpolation
+    table and \texttt{interpolant} controls the interpolation style for that table ('ceil', 'floor', 
+    'linear', or 'spline', although 'spline' is not recommended as it can cause non-monotonic behavior,
+    and this method only works correctly if the x vs CDF(x) relation is monotonic).}
 
 \end{itemize}
 
