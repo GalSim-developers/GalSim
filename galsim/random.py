@@ -126,7 +126,7 @@ class DistDeviate(_galsim.BaseDeviate):
  
         # Set up the PRNG
         try:
-            galsim.BaseDeviate.__init__(self,rng)
+            _galsim.BaseDeviate.__init__(self,rng)
         except:
             raise TypeError('Argument rng passed to DistDeviate cannot be used to initialize '
                             'a BaseDeviate.')
