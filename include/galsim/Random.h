@@ -148,7 +148,7 @@ namespace galsim {
          *
          * Only deletes the underlying RNG if this is the last one using it.
          */
-        ~BaseDeviate() {}
+        virtual ~BaseDeviate() {}
 
         /**
          * @brief Re-seed the PRNG using current time
