@@ -78,7 +78,9 @@ def main(argv):
     # Define some parameters we'll use below.
 
     cat_file_name = 'real_galaxy_catalog_example.fits'
-    dir = 'data'
+    # This script is designed to be run from the examples directory so dir is a relative path.  
+    # But the '../examples/' part lets bin/demo6 also be run from the bin directory.
+    dir = '../examples/data'
     cube_file_name = os.path.join('output','cube_real.fits')
     psf_file_name = os.path.join('output','psf_real.fits')
 
