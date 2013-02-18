@@ -50,8 +50,8 @@ g2 = 0.00
 wmult = 1.0 # oversampling to use in intermediate steps of calculations
 
 # read in a random galaxy from the training data
-rgc = galsim.RealGalaxyCatalog(real_catalog_filename, image_dir)
-real_galaxy = galsim.RealGalaxy(rgc, random=True)
+rgc = galsim.RealGalaxyCatalog(real_catalog_filename, dir=image_dir)
+real_galaxy = galsim.RealGalaxy(rgc, random=True, noise_pad=True)
 print 'Made real galaxy from catalog index ',real_galaxy.index
 
 # make a target PSF object

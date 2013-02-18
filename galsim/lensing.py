@@ -157,6 +157,8 @@ class PowerSpectrum(object):
     _opt_params = { 'e_power_function' : str, 'b_power_function' : str,
                     'delta2' : bool, 'units' : str }
     _single_params = []
+    _takes_rng = False
+
     def __init__(self, e_power_function=None, b_power_function=None, delta2=False,
                  units=galsim.arcsec):
         # Check that at least one power function is not None
@@ -299,10 +301,6 @@ class PowerSpectrum(object):
         # Make a GaussianDeviate if necessary
         if rng is None:
             gd = galsim.GaussianDeviate()
-        elif isinstance(rng, galsim.GaussianDeviate):
-            # use the same random number sequence but enforce unit variance
-            rng.setSigma(1.0)
-            gd = rng
         elif isinstance(rng, galsim.BaseDeviate):
             gd = galsim.GaussianDeviate(rng)
         else:
@@ -733,6 +731,7 @@ class NFWHalo(object):
     _req_params = { 'mass' : float , 'conc' : float , 'redshift' : float }
     _opt_params = { 'halo_pos' : galsim.PositionD , 'omega_m' : float , 'omega_lam' : float }
     _single_params = []
+    _takes_rng = False
 
     def __init__(self, mass, conc, redshift, halo_pos=galsim.PositionD(0,0), 
                  omega_m=None, omega_lam=None, cosmo=None):

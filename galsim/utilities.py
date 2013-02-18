@@ -154,5 +154,3 @@ def convert_interpolant_to_2d(interpolant):
             return galsim.Interpolant2d(interpolant)
         except:
             raise RuntimeError('Specified interpolant is not valid!')
-
-
