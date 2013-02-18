@@ -13,6 +13,9 @@ objects:
    
 
 image: 
- n_pix: 100 			# number of pixels in the postage stamp
- scale: 0.5				# pixel scale
- n_photons: 10000000	# use a lot of photons
+ # number of pixels in the postage stamp
+ n_pix: 100
+ # pixel scale
+ scale: 0.5
+ # use a lot of photons				
+ n_photons: 1000000.

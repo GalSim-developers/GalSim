@@ -91,6 +91,7 @@ def testShootVsFfft():
 
         # get the GSObjects 
         gso = getGSObjects(obj)
+        print gso
         logger.info('------------------ galaxy %g ------------------' % ig)
 
         # create the PSF
@@ -104,13 +105,15 @@ def testShootVsFfft():
         logger.info('drawing galaxy using drawShoot and %2.0e photons' % config['image']['n_photons'])
         image_gal_shoot = galsim.ImageF(config['image']['n_pix'],config['image']['n_pix'])
         final = galsim.Convolve([gso['gal'],gso['psf']])
-        final.drawShoot(image_gal_shoot,dx=config['image']['scale'],n_photons=config['image']['n_photons'])
-        logger.info('drawShoot is ready for galaxy %d' % ig )
+        final.setFlux(1.)
+        (im, added_flux) = final.drawShoot(image_gal_shoot,dx=config['image']['scale'],n_photons=config['image']['n_photons'])
+        logger.info('drawShoot is ready for galaxy %d, added_flux=%f, scale=%f' % (ig,added_flux,config['image']['scale']) )
 
         # create fft image
         logger.info('drawing galaxy using draw (FFT)')
         image_gal_fft = galsim.ImageF(config['image']['n_pix'],config['image']['n_pix'])
         final = galsim.Convolve([gso['gal'],gso['psf'],gso['pix']])
+        final.setFlux(1.)
         final.draw(image_gal_fft,dx=config['image']['scale'])
         logger.info('draw using FFT is ready for galaxy %s' % ig)
         
@@ -118,12 +121,32 @@ def testShootVsFfft():
         diff_image = image_gal_shoot.array - image_gal_fft.array
         max_diff_over_max_image = diff_image.flatten().max()/image_gal_fft.array.flatten().max()
 
-        logger.info('max(residual) / max(image_fft) %2.4e ' % ( max_diff_over_max_image )  )
-        pdb.set_trace()
+
+        # plot the pixel differences
+        plt.clf()
+        
+        plt.subplot(131)
+        plt.imshow(image_gal_shoot.array,interpolation='nearest')
+        plt.colorbar()
+        plt.title('image_shoot')
+        
+        plt.subplot(132)
+        plt.imshow(image_gal_fft.array,interpolation='nearest')
+        plt.colorbar()
+        plt.title('image_fft')
+        
+        plt.subplot(133)
+        plt.imshow(diff_image,interpolation='nearest')
+        plt.colorbar()
+        plt.title('image_shoot - image_fft')
+
+        plt.show()
+
+        logger.info('max(residual) / max(image_fft) = %2.4e ' % ( max_diff_over_max_image )  )
 
         # measure HSM moments
-        hsm_shoot = galsim.psfcorr.EstimateShearHSM(gal_image=image_gal_shoot,PSF_image=image_psf_shoot,strict=True,shear_est='LINEAR')
-        hsm_fft   = galsim.psfcorr.EstimateShearHSM(gal_image=image_gal_fft,PSF_image=image_psf_shoot,strict=True,shear_est='LINEAR')
+        hsm_shoot = galsim.EstimateShearHSM(gal_image=image_gal_shoot,PSF_image=image_psf_shoot,strict=True,shear_est='LINEAR')
+        hsm_fft   = galsim.EstimateShearHSM(gal_image=image_gal_fft,PSF_image=image_psf_shoot,strict=True,shear_est='LINEAR')
 
         # get the corrected moments
         hsm_corr_fft_g1= hsm_fft.corrected_shape.getG1()
@@ -153,25 +176,6 @@ def testShootVsFfft():
         logger.info('difference in corrected shape (shoot_gi - fft_gi) %2.4e %2.4e ' % ( hsm_corr_diff_g1, hsm_corr_diff_g2 )  )
 
                 
-        # plot the pixel differences
-        # plt.clf()
-        
-        # plt.subplot(131)
-        # plt.imshow(image_gal_shoot.array,interpolation='nearest')
-        # plt.colorbar()
-        # plt.title('image_shoot')
-        
-        # plt.subplot(132)
-        # plt.imshow(image_gal_fft.array,interpolation='nearest')
-        # plt.colorbar()
-        # plt.title('image_fft')
-        
-        # plt.subplot(133)
-        # plt.imshow(diff_image,interpolation='nearest')
-        # plt.colorbar()
-        # plt.title('image_shoot - image_fft')
-
-        # plt.show()
     
     
         
