@@ -42,7 +42,7 @@ New features introduced in this demo:
 - obj3 = x1 * obj1 + x2 * obj2
 - image = galsim.ImageF(image_size, image_size)
 - shear3 = shear1 + shear2
-- noise = galsim.CCDNoise(seed, gain, read_noise)
+- noise = galsim.CCDNoise(rng, sky_level, gain, read_noise)
 """
 
 import sys
@@ -122,6 +122,8 @@ def main(argv):
     logger.info('    - Poisson noise (sky level = %.1e, gain = %.1f).',sky_level, gain)
     logger.info('    - Gaussian read noise (sigma = %.2f).',read_noise)
 
+    # Initialize the (pseudo-)random number generator that we will be using below.
+    rng = galsim.BaseDeviate(random_seed)
  
     # Define the galaxy profile.
     bulge = galsim.Sersic(bulge_n, half_light_radius=bulge_re)
@@ -224,14 +226,17 @@ def main(argv):
     # Add a constant sky level to the image.
     image += sky_level * pixel_scale**2
 
-    # This time, we pass gain and read_noise values to the CCDNoise class.  The gain
-    # is in units of photons/ADU.  Technically, real CCD's quote the gain as e-/ADU.
+    # This time, we use CCDNoise to model the real noise in a CCD image.  It takes a sky level,
+    # gain, and read noise, so it can be a bit more realistic than the simpler GaussianNoise
+    # or PoissonNoise that we used in demos 1 and 2.  
+    # 
+    # The gain is in units of photons/ADU.  Technically, real CCDs quote the gain as e-/ADU.
     # An ideal CCD has one electron per incident photon, but real CCDs have quantum efficiencies
     # less than 1, so not every photon triggers an electron.  We are essentially folding
     # the quantum efficiency (and filter transmission and anything else like that) into the gain.
     # The read_noise value is given as ADU/pixel.  This is modeled as a pure Gaussian noise
     # added to the image after applying the pure Poisson noise.
-    image.addNoise(galsim.CCDNoise(random_seed, gain=gain, read_noise=read_noise))
+    image.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
 
     # Subtract off the sky.
     image -= sky_level * pixel_scale**2

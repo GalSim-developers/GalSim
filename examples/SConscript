@@ -47,7 +47,13 @@ scripts = [ 'demo1', 'demo2', 'demo3', 'demo4', 'demo5',
             'Shera', 'ShootInterpolated', 'TestOpticalPSFInterpolant', 'TestImages' ]
 
 for script in scripts:
-    targets.append(env.ExecScript(os.path.join('#bin',script), script + '.py'))
+    exec_script = env.ExecScript(os.path.join('#bin',script), script + '.py')
+    # SCons isn't clever enough to realize that these need to be rebuilt if the PYTHON
+    # value changes.  And since they are quick to build, might as well always do them 
+    # whenever someone runs scons examples.
+    AlwaysBuild(exec_script)
+    targets.append(exec_script)
+
 
 env.Alias(target='examples',source=targets)
 
