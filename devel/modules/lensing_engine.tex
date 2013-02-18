@@ -53,7 +53,7 @@ transform, and a validation of the outputs for several test cases.
 The lensing engine (in galsim/lensing.py) is the part of GalSim that
 is supposed to draw shears randomly according to a user-specified
 power spectrum.  In this document, we begin with a brief description
-of the theory behind shear power spectra, and then clarify the following
+of the theory behind shear power spectra (\S\ref{sect:theory}), and then clarify the following
 issues:
 \begin{enumerate}
 \item How does the discrete representation that we use (on a grid)
@@ -79,83 +79,92 @@ issues:
 
 \section{Theory}\label{sect:theory}
 
-The lensing engine requires a shear power spectrum, $P(k)$.  We are
-working in the flat-sky limit, so when we see expressions in terms of
-$\ell$ we can swap $\ell$ with $k$ and $C_\ell$ with $P$, and
+The lensing engine requires a shear power spectrum, $P(k)$, and
+assumes we are in the flat-sky limit.  Many standard references
+regarding lensing power spectra work in terms of the spherical
+harmonics $\ell$, with the power spectrum denoted $C_\ell$.  In the
+flat-sky limit we can simply swap $\ell$ with $k$ and $C_\ell$ with
+$P(k)$.  It is standard practice to plot a dimensionless quantity
+$\Delta^2$ defined as
 \beq
 \Delta^2 = \frac{\ell(\ell+1) C_{\ell}}{2\pi}\equiv \frac{k^2 P(k)}{2\pi}.
 \eeq
-When people plot shear power spectra they usually actually plot
-$\Delta^2(k)$ (or, in terms of the full-sky formalism, they plot $\ell(\ell+1)C_\ell/(2\pi)$).
 
-If we identify pairs of galaxies and get the shears in a coordinate
+If we identify pairs of galaxies separated by an angle $\theta$ on the
+sky, and compute their shears in a coordinate
 system defined along the vector connecting them ($\gamma_+$) and at 45
-degrees with respect to it ($\gamma_\times$), then we can compute
+degrees with respect to it ($\gamma_\times$), then we can estimate 
 correlation functions of the $\gamma_+$ and $\gamma_\times$ values,
 which we will call $\xi_{++}$ and $\xi_{\times\times}$.  Then the
 standard cosmological correlation functions $\xi_{\pm}$ are defined as
 \begin{align}
-\xi_{\pm}(\theta) &=  \xi_{++}\pm \xi_{xx} \\
- &= \frac{1}{2\pi}\int k\,\rmd k P(k) J_{0/4}(k\theta).  \label{eq:xi}
+\xi_{\pm}(\theta) &=  \xi_{++}(\theta)\pm \xi_{xx}(\theta) \\
+ &= \frac{1}{2\pi}\int_0^{\infty} k\,\rmd k P(k) J_{0/4}(k\theta)  \label{eq:xi}
 \end{align}
-
+where $J_{0/4}$ denotes the 0th and 4th Bessel function of the first
+kind, as is appropriate for $\xi_+$ and $\xi_-$, respectively. 
 Since correlation functions are dimensionless, we immediately see that
-$P(k)$ has dimensions of angle$^2$ and $\Delta^2(k)$ is dimensionless.
+$P(k)$ has dimensions of angle$^2$.
 
-The variance of the shear values, 
-\beq
-\mathrm{Var}(\gamma) = \langle g_1^2 + g_2^2\rangle,
+The variance of the shear values for all of our galaxies is the zero-lag value of $\xi_+$, 
+\beq\label{E:shearvar-basic}
+\mathrm{Var}(\gamma) = \xi_{+}(\theta=0) = \langle g_1^2 + g_2^2\rangle.
 \eeq
-is essentially $\xi_+(\theta=0)$.   Note that this is what we get for
-the defined $\xi_+$ in the limit of $\theta$ going to zero, but that
-equation was defined in terms of $\gamma_+$ and $\gamma_\times$ rather
-than $\gamma_1$ and $\gamma_2$.  On a grid, it's not clear that we
-can enforce/check behavior of Var($\gamma_1$) or Var($\gamma_2)$,
-particularly if the corners are important (which will be the case if
-there is a lot of shear power at small $k$), probably we should 
- only expect normal behavior for Var($\gamma$), but it's still worth
- verifying this.  So, combining several equations,
+Combining Eqs.~\ref{eq:xi} and \ref{E:shearvar-basic}, we can write
+the shear variance in terms of the power
+spectrum
 \beq\label{E:shearvar}
-\mathrm{Var}(\gamma) = \frac{1}{2\pi}\int_0^{\infty} k\,\rmd k P(k).
+\mathrm{Var}(\gamma) = \frac{1}{2\pi}\int_0^{\infty} k\,\rmd k P(k),
 \eeq
 which essentially says the shear variance is the power integrated over
-the allowed area in $k$ space.  For the purpose of later calculations
-of power spectra for gridded quantities, it is more useful to think in
-terms of the 2d integral
-\beq\label{E:alt-shearvar}
-\mathrm{Var}(\gamma) = \frac{1}{(2\pi)^2} \int_{-\infty}^{\infty} \rmd k_x \rmd k_y
-P(k_x, k_y).
-\eeq
+the allowed area in $k$ space.
 
-Alternatively, thinking ahead to when we will have a limited $k$
-range, we can rewrite this as
-\beq\label{E:alt-shearvar-limit}
-\mathrm{Var}(\gamma) = \frac{4}{(2\pi)^2} \int_{\kmin}^{\kmax} \rmd
-k_x \rmd k_y P(k).
-\eeq
-Here the factor of $4$ is meant to compensate for the other four
-quadrants that are not represented explicitly (i.e., negative $k_x$
-and/or $k_y$ values).
-
-In the limit that our power spectrum doesn't have much power at
-\kmax, Eq.~\ref{E:shearvar}, \ref{E:alt-shearvar}, and
-\ref{E:alt-shearvar-limit} should all give essentially the same answer.
-
-Our
+We will have to modify the above formalism to account for the fact
+that all of our calculations use a discrete representation on a finite
+grid.  This 
 grid is defined by
 \begin{align}
 L &= \mbox{length of grid along one dimension (angular units)}\\
 d &= \mbox{spacing between grid points (angular units)}\\
-N &= \mbox{number of grid points along one dimension} = L/d
+N &= \mbox{number of grid points along one dimension} = L/d.
 \end{align}
+Given this grid, our $\kmax=2\pi/d$.  The \kmin\ along one dimension
+is $2\pi/L$, so we can think of this quantity as the grid spacing in Fourier space.
 
-Given this grid, our $\kmax=2\pi/d$.  The \kmin\ depends on whether
-we are thinking about one dimension or two; it's either $2\pi/L$ or
-$2\pi/(\sqrt{2}L)$.  When integrating along the grid we use the former.
+In the context 
+of power spectra for gridded quantities, instead of using
+Eq.~\ref{E:shearvar} it is more useful to think in
+terms of the 2d integral
+\beq\label{E:alt-shearvar}
+\mathrm{Var}(\gamma) = \frac{1}{(2\pi)^2} \int_{-\infty}^{\infty} \rmd k_x \,\rmd k_y\,
+P(k_x, k_y).
+\eeq
+Note that this equation assumes that our grid is infinite.  With a limited $k$
+range, we can rewrite Eq.~\ref{E:alt-shearvar} as
+\beq\label{E:alt-shearvar-limit}
+\mathrm{Var}(\gamma) = \frac{4}{(2\pi)^2} \int_{\kmin}^{\kmax} \rmd
+k_x \rmd k_y P(k).
+\eeq
+Here the factor of $4$ compensates for the 
+quadrants that are not represented explicitly (i.e., negative $k_x$
+and/or $k_y$ values).
 
-In all of the above I have simply written $P(k)$ but in principle there can be
-two such functions, $P_{E}$ and $P_B$.  I believe these
-should simply be summed in the above variance equation, but should check this.
+Another interesting point about gridded quantities is that it is not
+clear that we 
+can enforce/check behavior of Var($\gamma_1$) or Var($\gamma_2)$,
+particularly if 
+there is a lot of shear power at small $k$.  Probably we should 
+ only expect normal behavior for Var($\gamma$), but it's still worth
+ verifying this explicitly in Sec.~\ref{S:testvar}.
+
+In the limit that our power spectrum drops to zero at
+\kmax, Eqs.~\ref{E:shearvar}, \ref{E:alt-shearvar}, and
+\ref{E:alt-shearvar-limit} should all give the same answer.
+
+The above equations just include $P(k)$, but in principle there can be
+two such functions, $P_{E}$ and $P_B$.  These should simply be summed
+in Eqs.~\ref{E:shearvar}, \ref{E:alt-shearvar}, and
+\ref{E:alt-shearvar-limit}.
 
 \section{Representing continuous fields using the Discrete Fourier Transform}\label{S:discrete}
 
