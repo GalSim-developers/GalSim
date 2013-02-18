@@ -54,25 +54,25 @@ namespace galsim {
     double SBMoffat::getBeta() const 
     {
         assert(dynamic_cast<const SBMoffatImpl*>(_pimpl.get()));
-        return dynamic_cast<const SBMoffatImpl&>(*_pimpl).getBeta(); 
+        return static_cast<const SBMoffatImpl&>(*_pimpl).getBeta(); 
     }
 
     double SBMoffat::getFWHM() const 
     {
         assert(dynamic_cast<const SBMoffatImpl*>(_pimpl.get()));
-        return dynamic_cast<const SBMoffatImpl&>(*_pimpl).getFWHM(); 
+        return static_cast<const SBMoffatImpl&>(*_pimpl).getFWHM(); 
     }
 
     double SBMoffat::getScaleRadius() const 
     {
         assert(dynamic_cast<const SBMoffatImpl*>(_pimpl.get()));
-        return dynamic_cast<const SBMoffatImpl&>(*_pimpl).getScaleRadius();
+        return static_cast<const SBMoffatImpl&>(*_pimpl).getScaleRadius();
     }
 
     double SBMoffat::getHalfLightRadius() const 
     {
         assert(dynamic_cast<const SBMoffatImpl*>(_pimpl.get()));
-        return dynamic_cast<const SBMoffatImpl&>(*_pimpl).getHalfLightRadius();
+        return static_cast<const SBMoffatImpl&>(*_pimpl).getHalfLightRadius();
     }
 
     class MoffatScaleRadiusFunc 

@@ -504,8 +504,15 @@ def test_realgalaxy():
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees, 
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
-                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } }
+                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } },
+        'gal5' : { 'type' : 'RealGalaxy' , 'index' : 41, 'noise_pad' : 'True' },
+        'gal6' : { 'type' : 'RealGalaxy' , 'index' : 41, 'noise_pad' : 'blankimg.fits' },
+        'gal7' : { 'type' : 'RealGalaxy' , 'index' : 32, 'pad_image' : 'blankimg.fits' },
+        'gal8' : { 'type' : 'RealGalaxy' ,
+                   'index' : 87, 'pad_image' : 'blankimg.fits', 'noise_pad' : 'blankimg.fits'}
     }
+    rng = galsim.UniformDeviate(1234)
+    config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
 
     galsim.config.ProcessInput(config)
 
@@ -542,6 +549,26 @@ def test_realgalaxy():
     gal4b.applyShift(dx = 0.7, dy = -1.2) 
     gsobject_compare(gal4a, gal4b, True)
 
+    config['seq_index'] = 4
+    gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
+    gal5b = galsim.RealGalaxy(real_cat, index = 41, rng = rng, noise_pad = True)
+    gsobject_compare(gal5a, gal5b, True)
+
+    config['seq_index'] = 5
+    gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
+    gal6b = galsim.RealGalaxy(real_cat, index = 41, rng = rng, noise_pad = 'blankimg.fits')
+    gsobject_compare(gal6a, gal6b, True)
+
+    config['seq_index'] = 6
+    gal7a = galsim.config.BuildGSObject(config, 'gal7')[0]
+    gal7b = galsim.RealGalaxy(real_cat, index = 32, pad_image = 'blankimg.fits')
+    gsobject_compare(gal7a, gal7b, True)
+    
+    config['seq_index'] = 7
+    gal8a = galsim.config.BuildGSObject(config, 'gal8')[0]
+    gal8b = galsim.RealGalaxy(real_cat, index = 87, rng = rng, noise_pad = 'blankimg.fits',
+                              pad_image = 'blankimg.fits')
+    gsobject_compare(gal8a, gal8b, True)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -560,18 +587,29 @@ def test_interpolated_image():
                    'image' : file_name },
         'gal2' : { 'type' : 'InterpolatedImage',
                    'image' : file_name,
-                   'interpolant' : 'linear' },
+                   'x_interpolant' : 'linear' },
         'gal3' : { 'type' : 'InterpolatedImage',
                    'image' : file_name,
-                   'interpolant' : 'cubic',
+                   'x_interpolant' : 'cubic',
                    'normalization' : 'sb',
                    'flux' : 1.e4 },
         'gal4' : { 'type' : 'InterpolatedImage',
                    'image' : file_name,
-                   'interpolant' : 'lanczos5',
+                   'x_interpolant' : 'lanczos5',
                    'dx' : 0.7,
                    'flux' : 1.e5 },
+        'gal5' : { 'type' : 'InterpolatedImage',
+                   'image' : file_name,
+                   'noise_pad' : 0.001 },
+        'gal6' : { 'type' : 'InterpolatedImage',
+                   'image' : file_name,
+                   'noise_pad' : 'blankimg.fits' },
+        'gal7' : { 'type' : 'InterpolatedImage',
+                   'image' : file_name,
+                   'pad_image' : 'blankimg.fits' }
     }
+    rng = galsim.UniformDeviate(1234)
+    config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
     im = galsim.fits.read(file_name)
@@ -580,20 +618,32 @@ def test_interpolated_image():
 
     gal2a = galsim.config.BuildGSObject(config, 'gal2')[0]
     interp = galsim.InterpolantXY(galsim.Linear())
-    gal2b = galsim.InterpolatedImage(im, interpolant=interp)
+    gal2b = galsim.InterpolatedImage(im, x_interpolant=interp)
     gsobject_compare(gal2a, gal2b)
 
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
     interp = galsim.InterpolantXY(galsim.Cubic())
-    gal3b = galsim.InterpolatedImage(im, interpolant=interp, normalization='surface brightness')
+    gal3b = galsim.InterpolatedImage(im, x_interpolant=interp, normalization='surface brightness')
     gal3b.setFlux(1.e4)
     gsobject_compare(gal3a, gal3b)
 
     gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
     interp = galsim.InterpolantXY(galsim.Lanczos(n=5,conserve_flux=True))
-    gal4b = galsim.InterpolatedImage(im, interpolant=interp, dx=0.7)
+    gal4b = galsim.InterpolatedImage(im, x_interpolant=interp, dx=0.7)
     gal4b.setFlux(1.e5)
     gsobject_compare(gal4a, gal4b)
+
+    gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
+    gal5b = galsim.InterpolatedImage(im, rng=rng, noise_pad=0.001)
+    gsobject_compare(gal5a, gal5b)
+
+    gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
+    gal6b = galsim.InterpolatedImage(im, rng=rng, noise_pad='blankimg.fits')
+    gsobject_compare(gal6a, gal6b)
+
+    gal7a = galsim.config.BuildGSObject(config, 'gal7')[0]
+    gal7b = galsim.InterpolatedImage(im, pad_image = 'blankimg.fits')
+    gsobject_compare(gal7a, gal7b)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
