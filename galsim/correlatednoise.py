@@ -600,7 +600,8 @@ def get_COSMOS_CorrFunc(file_name, dx_cosmos=0.03):
         cfimage = galsim.fits.read(file_name)
     except Exception as original_exception:
         # Give a vaguely helpful warning, then raise the original exception for extra diagnostics
-        import warnings.warn(
+        import warnings
+        warnings.warn(
             "Function get_COSMOS_CorrFunc() unable to read FITS image from "+str(file_name)+", "+
             "more information on the error in the following Exception...")
         raise original_exception
