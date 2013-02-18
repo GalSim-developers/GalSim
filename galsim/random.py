@@ -120,7 +120,7 @@ class DistDeviate(_galsim.BaseDeviate):
     2.108800962574702
     """    
     def __init__(self, rng=None, function=None, x_min=None, 
-                 x_max=None, interpolant='linear', npoints=256):
+                 x_max=None, interpolant=None, npoints=256):
         """Initializes a DistDeviate instance.
         
         The rng, if given, must be something that can initialize a BaseDeviate instance, such as 
@@ -163,27 +163,33 @@ class DistDeviate(_galsim.BaseDeviate):
                     raise ValueError('String passed with function keyword to DistDeviate does '
                                      'not point to an existing file and cannot be evaluated via '
                                      'an eval call with lambda x: %s'%function)
-                        
-
-        # Check a few arguments before doing computations
-        if isinstance(function, galsim.LookupTable) or isinstance(function, str):
-            if x_min or x_max:
-                raise TypeError('Cannot pass x_min or x_max alongside anything but a callable '
-                                'non-LookupTable function in arguments to DistDeviate')
-        elif hasattr(function,'__call__'):
-            if x_min is None or x_max is None:
-                raise TypeError('Must pass x_min and x_max alongside non-galsim.LookupTable '
-                                'callable functions in arguments to DistDeviate')
-        else:
+        # Check that the function is actually a function
+        if not (isinstance(function, galsim.LookupTable) or isinstance(function, str) or
+                hasattr(function,'__call__')):
             raise TypeError('Keyword function passed to DistDeviate must be a callable function or '
-                            'a string representing a file: %s'%function)
+                            'a string: %s'%function)
 
         # Set up the probability function & min and max values for any inputs
         if hasattr(function,'__call__'):
+            if interpolant:
+                raise TypeError('Cannot pass an interpolant with a callable '
+                                'function to DistDeviate')
             if isinstance(function,galsim.LookupTable):
+                if x_min or x_max:
+                    raise TypeError('Cannot pass x_min or x_max alongside a LookupTable '
+                                    'in arguments to DistDeviate')
                 x_min = function.x_min
                 x_max = function.x_max
+            else:
+                if x_min is None or x_max is None:
+                    raise TypeError('Must pass x_min and x_max alongside non-galsim.LookupTable '
+                                    'callable functions in arguments to DistDeviate')
         else: # must be a filename
+            if interpolant is None:
+                interpolant='linear'
+            if x_min or x_max:
+                raise TypeError('Cannot pass x_min or x_max alongside a '
+                                'filename in arguments to DistDeviate')
             function = galsim.LookupTable(file=function, interpolant=interpolant)
             x_min = function.x_min
             x_max = function.x_max
@@ -228,7 +234,7 @@ class DistDeviate(_galsim.BaseDeviate):
                 raise RuntimeError(
                     'Cumulative probability in DistDeviate is too flat for program to fix')
                         
-        self._inverseprobabilitytable = galsim.LookupTable(cdf, xarray, interpolant=interpolant)
+        self._inverseprobabilitytable = galsim.LookupTable(cdf, xarray, interpolant='linear')
         self.x_min = x_min
         self.x_max = x_max
 
