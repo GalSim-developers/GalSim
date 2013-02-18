@@ -14,7 +14,7 @@ SBExponential.cpp
 SBSersic.cpp
 SBMoffat.cpp
 SBAiry.cpp
-SBLaguerre.cpp
+SBShapelet.cpp
 SBInterpolatedImage.cpp
 SBKolmogorov.cpp
 PhotonArray.cpp
