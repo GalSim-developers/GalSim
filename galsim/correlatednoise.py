@@ -598,7 +598,7 @@ def get_COSMOS_CorrFunc(file_name, dx_cosmos=0.03):
         raise IOError("The input file_name '"+str(file_name)+"' does not exist.")
     try:
         cfimage = galsim.fits.read(file_name)
-    except, original_exception:
+    except Exception as original_exception:
         # Give a vaguely helpful warning, then raise the original exception for extra diagnostics
         import warnings.warn(
             "Function get_COSMOS_CorrFunc() unable to read FITS image from "+str(file_name)+", "+
