@@ -349,7 +349,7 @@ This is rather like a "make clean" command.
 
 If you are having trouble with installing, you may find some helpful hints at
 the GalSim Installation FAQ page on the Wiki:
-https://github.com/GalSim-developers/GalSim/wiki/Installation%20FAQs
+https://github.com/GalSim-developers/GalSim/wiki/Installation%20FAQ
 
 If you are still having trouble, please consider opening a new Issue on the
 GalSim Github page at https://github.com/GalSim-developers/GalSim to help find
@@ -401,6 +401,11 @@ These files can be run using the executable galsim_yaml, and will produce the
 same output images as the Python scripts. They are also well commented, and
 can be considered a parallel tutorial for learning the config file usage of
 GalSim.
+
+All demo scripts are designed to be run in the `GalSim/examples` directory. Or,
+the executable versions of the demos in `GalSim/bin` (which are the outputs of
+running `scons examples`) can be run from either `GalSim/bin` or
+`GalSim/examples`. 
 
 
 4. Platform-specific notes
