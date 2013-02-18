@@ -20,4 +20,4 @@ Changes from v0.3 to current version:
   noise in HST COSMOS F814W weak lensing science images (e.g. Leauthaud et al 2007).  Calling
   `galsim.correlatednoise.get_COSMOS_CorrFunc()` returns a correlation function that shares all the
   methods of a `galsim.ImageCorrFunc()`, and optional keyword inputs allow the physical scale of the
-  function to be set correctly.
+  function to be set correctly. (Issue #345)
