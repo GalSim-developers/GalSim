@@ -137,7 +137,8 @@ namespace galsim {
         return retval/(2.*M_PI);
     }
 
-    void Lanczos::setup() 
+    Lanczos::Lanczos(int n, bool fluxConserve, double tol) :  
+        _n(n), _fluxConserve(fluxConserve), _tolerance(tol)
     {
         // Reduce range slightly from n so we're not including points with zero weight in
         // interpolations:
@@ -145,47 +146,73 @@ namespace galsim {
 
         _u1 = uCalc(1.);
 
-        // Build utab = table of u values
-        // Spline is accurate to O(dx^3), so errors should be ~dx^4.
-        const double xStep1 = std::pow(sbp::xvalue_accuracy,0.25);
-        // Make sure steps hit the integer values exactly.
-        const double xStep = 1. / std::ceil(1./xStep1);
-        for(double x = 0.; x<_n; x+=xStep) _xtab.addEntry(x, xCalc(x));
+        // Strangely, not all compilers correctly setup an empty map when it is a 
+        // static variable, so you can get seg faults using it.
+        // Doing an explicit clear fixes the problem.
+        if (_cache_umax.size() == 0) {
+            _cache_umax.clear();
+            _cache_xtab.clear();
+            _cache_utab.clear();  
+        }
 
-        // Build utab = table of u values
-        const double uStep = std::pow(sbp::kvalue_accuracy,0.25) / _n;
-        _uMax = 0.;
-        double u = _utab.size()>0 ? _utab.argMax() + uStep : 0.;
-        if (_fluxConserve) {
-            while ( u - _uMax < 1./_n || u<1.1) {
-                double uval = uCalc(u);
-                uval *= 1.+2.*_u1;
-                uval -= _u1*uCalc(u+1.);
-                uval -= _u1*uCalc(u-1.);
-                _utab.addEntry(u, uval);
-                if (std::abs(uval) > _tolerance) _uMax = u;
-                u += uStep;
-            }
+        KeyType key(n,std::pair<bool,double>(fluxConserve,tol));
+
+        if (_cache_umax.count(key)) {
+            // Then uMax and tab are already cached.
+            _xtab = _cache_xtab[key];
+            _utab = _cache_utab[key];
+            _uMax = _cache_umax[key];
         } else {
-            while ( u - _uMax < 1./_n || u<1.1) {
-                double uval = uCalc(u);
-                _utab.addEntry(u, uval);
-                if (std::abs(uval) > _tolerance) _uMax = u;
-                u += uStep;
+            _xtab.reset(new Table<double,double>(Table<double,double>::spline));
+            _utab.reset(new Table<double,double>(Table<double,double>::spline));
+
+            // Build xtab = table of x values
+            // Spline is accurate to O(dx^3), so errors should be ~dx^4.
+            const double xStep1 = std::pow(sbp::xvalue_accuracy,0.25);
+            // Make sure steps hit the integer values exactly.
+            const double xStep = 1. / std::ceil(1./xStep1);
+            for(double x=0.; x<_n; x+=xStep) _xtab->addEntry(x, xCalc(x));
+
+            // Build utab = table of u values
+            const double uStep = std::pow(sbp::kvalue_accuracy,0.25) / _n;
+            _uMax = 0.;
+            if (_fluxConserve) {
+                for (double u=0.; u - _uMax < 1./_n || u<1.1; u+=uStep) {
+                    double uval = uCalc(u);
+                    uval *= 1.+2.*_u1;
+                    uval -= _u1*uCalc(u+1.);
+                    uval -= _u1*uCalc(u-1.);
+                    _utab->addEntry(u, uval);
+                    if (std::abs(uval) > _tolerance) _uMax = u;
+                }
+            } else {
+                for (double u=0.; u - _uMax < 1./_n || u<1.1; u+=uStep) {
+                    double uval = uCalc(u);
+                    _utab->addEntry(u, uval);
+                    if (std::abs(uval) > _tolerance) _uMax = u;
+                }
             }
+            // Save these values in the cache.
+            _cache_xtab[key] = _xtab;
+            _cache_utab[key] = _utab;
+            _cache_umax[key] = _uMax;
         }
     }
+
+    std::map<Lanczos::KeyType,boost::shared_ptr<Table<double,double> > > Lanczos::_cache_xtab;
+    std::map<Lanczos::KeyType,boost::shared_ptr<Table<double,double> > > Lanczos::_cache_utab;
+    std::map<Lanczos::KeyType,double> Lanczos::_cache_umax;
 
     double Lanczos::xval(double x) const
     {
         x = std::abs(x);
-        return x>=_n ? 0. : _xtab(x);
+        return x>=_n ? 0. : (*_xtab)(x);
     }
 
     double Lanczos::uval(double u) const
     {
         u = std::abs(u);
-        return u>_uMax ? 0. : _utab(u);
+        return u>_uMax ? 0. : (*_utab)(u);
     }
 
     class CubicIntegrand : public std::unary_function<double,double>
@@ -206,21 +233,40 @@ namespace galsim {
                     + integ::int1d(ci, 1., 2., 0.1*_tolerance, 0.1*_tolerance));
     }
 
-    void Cubic::setup() 
+    Cubic::Cubic(double tol) : _tolerance(tol)
     {
         // Reduce range slightly from n so we're not including points with zero weight in
         // interpolations:
         _range = 2.-0.1*_tolerance;
-        const double uStep = 0.001;
-        _uMax = 0.;
-        double u = _tab.size()>0 ? _tab.argMax() + uStep : 0.;
-        while ( u - _uMax < 1. || u<1.1) {
-            double ft = uCalc(u);
-            _tab.addEntry(u, ft);
-            if (std::abs(ft) > _tolerance) _uMax = u;
-            u += uStep;
+
+        // Strangely, not all compilers correctly setup an empty map when it is a 
+        // static variable, so you can get seg faults using it.
+        // Doing an explicit clear fixes the problem.
+        if (_cache_umax.size() == 0) { _cache_umax.clear(); _cache_tab.clear(); }
+
+        if (_cache_umax.count(tol)) {
+            // Then uMax and tab are already cached.
+            _tab = _cache_tab[tol];
+            _uMax = _cache_umax[tol];
+        } else {
+            // Then need to do the calculation and then cache it.
+            const double uStep = 0.001;
+            _uMax = 0.;
+            _tab.reset(new Table<double,double>(Table<double,double>::spline));
+            for (double u=0.; u - _uMax < 1. || u<1.1; u+=uStep) {
+                double ft = uCalc(u);
+                _tab->addEntry(u, ft);
+                if (std::abs(ft) > _tolerance) _uMax = u;
+            }
+            // Save these values in the cache.
+            _cache_tab[tol] = _tab;
+            _cache_umax[tol] = _uMax;
         }
     }
+
+    std::map<double,boost::shared_ptr<Table<double,double> > > Cubic::_cache_tab;
+    std::map<double,double> Cubic::_cache_umax;
+
 
     class QuinticIntegrand : public std::unary_function<double,double>
     {
@@ -240,21 +286,38 @@ namespace galsim {
                     + integ::int1d(qi, 2., 3., 0.1*_tolerance, 0.1*_tolerance));
     }
 
-    void Quintic::setup() 
+    Quintic::Quintic(double tol) : _tolerance(tol)
     {
         // Reduce range slightly from n so we're not including points with zero weight in
         // interpolations:
         _range = 3.-0.1*_tolerance;
-        const double uStep = 0.001;
-        _uMax = 0.;
-        double u = _tab.size()>0 ? _tab.argMax() + uStep : 0.;
-        while ( u - _uMax < 1. || u<1.1) {
-            double ft = uCalc(u);
-            _tab.addEntry(u, ft);
-            if (std::abs(ft) > _tolerance) _uMax = u;
-            u += uStep;
+
+        // Strangely, not all compilers correctly setup an empty map when it is a 
+        // static variable, so you can get seg faults using it.
+        // Doing an explicit clear fixes the problem.
+        if (_cache_umax.size() == 0) { _cache_umax.clear(); _cache_tab.clear(); }
+
+        if (_cache_umax.count(tol)) {
+            // Then uMax and tab are already cached.
+            _tab = _cache_tab[tol];
+            _uMax = _cache_umax[tol];
+        } else {
+            // Then need to do the calculation and then cache it.
+            const double uStep = 0.001;
+            _uMax = 0.;
+            _tab.reset(new Table<double,double>(Table<double,double>::spline));
+            for (double u=0.; u - _uMax < 1. || u<1.1; u+=uStep) {
+                double ft = uCalc(u);
+                _tab->addEntry(u, ft);
+                if (std::abs(ft) > _tolerance) _uMax = u;
+            }
+            // Save these values in the cache.
+            _cache_tab[tol] = _tab;
+            _cache_umax[tol] = _uMax;
         }
     }
 
+    std::map<double,boost::shared_ptr<Table<double,double> > > Quintic::_cache_tab;
+    std::map<double,double> Quintic::_cache_umax;
 }
 

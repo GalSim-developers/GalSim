@@ -887,7 +887,7 @@ def TryModule(config,text,name,pyscript=""):
     # We have an arbitrary requirement that the run() command output the answer 23.
     # So if we didn't get this answer, then something must have gone wrong.
     if ok and out != '23':
-        print "Script's run() command didn't output '23'."
+        #print "Script's run() command didn't output '23'."
         ok = False
 
     return ok
