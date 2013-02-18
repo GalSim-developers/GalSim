@@ -52,27 +52,30 @@ def getGSObjects(obj):
     # get pixel kernel
     gso['pix'] = galsim.Pixel(config['image']['scale'])
 
-    if obj['psf']['type'] == 'Moffat':
-            
-        gso['psf'] = galsim.Moffat(fwhm=obj['psf']['fwhm'],beta=obj['psf']['beta'])
-        
-    elif obj['psf']['type'] == 'Airy':
+    if obj['psf']['type'] == 'none':
 
-        gso['psf'] = galsim.Airy(fwhm=obj['psf']['fwhm'])
-
-    elif obj['psf']['type'] == 'Kolmogorov':
-
-        gso['psf'] = galsim.Kolmogorov(fwhm=obj['psf']['fwhm'])
-
+            gso['galpsf'] = gso['gal']
     else:
-        logger.error('unknown PSF type, use {Moffat,Airy,Kolmogorov}')
-        sys.exit() 
 
-        
-    gso['psf'].applyShear(g1=obj['psf']['g1'],g2=obj['psf']['g2'])
-    gso['psf'].setFlux(1.)
-        
-    
+        if obj['psf']['type'] == 'Moffat':
+                
+            gso['psf'] = galsim.Moffat(fwhm=obj['psf']['fwhm'],beta=obj['psf']['beta'])
+
+        elif obj['psf']['type'] == 'Airy':
+
+            gso['psf'] = galsim.Airy(fwhm=obj['psf']['fwhm'])
+
+        elif obj['psf']['type'] == 'Kolmogorov':
+
+            gso['psf'] = galsim.Kolmogorov(fwhm=obj['psf']['fwhm'])
+        else:
+            logger.error('unknown PSF type, use {Moffat,Airy,Kolmogorov,none}')
+            sys.exit() 
+
+        gso['psf'].applyShear(g1=obj['psf']['g1'],g2=obj['psf']['g2'])
+        gso['psf'].setFlux(1.)
+        gso['galpsf'] = galsim.Convolve([gso['gal'],gso['psf']])
+
     return gso
 
 
@@ -91,20 +94,23 @@ def testShootVsFfft():
 
         # get the GSObjects 
         gso = getGSObjects(obj)
-        print gso
+        
         logger.info('------------------ galaxy %g ------------------' % ig)
 
-        # create the PSF
-        logger.info('drawing PSF using drawShoot and %2.0e photons' % config['image']['n_photons'])
-        image_psf_shoot = galsim.ImageF(config['image']['n_pix'],config['image']['n_pix'])
-        gso['psf'].drawShoot(image_psf_shoot,dx=config['image']['scale'],n_photons=config['image']['n_photons'])
-        logger.info('drawShoot is ready for PSF of type %s' % obj['psf']['type'])
+
+        if obj['psf']['type'] != 'none':
+            
+            # create the PSF
+            logger.info('drawing PSF using drawShoot and %2.0e photons' % config['image']['n_photons'])
+            image_psf_shoot = galsim.ImageF(config['image']['n_pix'],config['image']['n_pix'])
+            gso['psf'].drawShoot(image_psf_shoot,dx=config['image']['scale'],n_photons=config['image']['n_photons'])
+            logger.info('drawShoot is ready for PSF of type %s' % obj['psf']['type'])
     
     
         # create shoot image
         logger.info('drawing galaxy using drawShoot and %2.0e photons' % config['image']['n_photons'])
         image_gal_shoot = galsim.ImageF(config['image']['n_pix'],config['image']['n_pix'])
-        final = galsim.Convolve([gso['gal'],gso['psf']])
+        final = gso['galpsf']
         final.setFlux(1.)
         (im, added_flux) = final.drawShoot(image_gal_shoot,dx=config['image']['scale'],n_photons=config['image']['n_photons'])
         logger.info('drawShoot is ready for galaxy %d, added_flux=%f, scale=%f' % (ig,added_flux,config['image']['scale']) )
@@ -112,14 +118,17 @@ def testShootVsFfft():
         # create fft image
         logger.info('drawing galaxy using draw (FFT)')
         image_gal_fft = galsim.ImageF(config['image']['n_pix'],config['image']['n_pix'])
-        final = galsim.Convolve([gso['gal'],gso['psf'],gso['pix']])
+        final = galsim.Convolve([gso['galpsf'],gso['pix']])
         final.setFlux(1.)
         final.draw(image_gal_fft,dx=config['image']['scale'])
         logger.info('draw using FFT is ready for galaxy %s' % ig)
         
         # create a residual image
         diff_image = image_gal_shoot.array - image_gal_fft.array
-        max_diff_over_max_image = diff_image.flatten().max()/image_gal_fft.array.flatten().max()
+        max_diff_over_max_image = abs(diff_image.flatten()).max()/image_gal_fft.array.flatten().max()
+
+        image_gal_fft.write('shifted_fft.fits')
+        image_gal_shoot.write('shifted_shoot.fits')
 
 
         # plot the pixel differences
@@ -144,41 +153,22 @@ def testShootVsFfft():
 
         logger.info('max(residual) / max(image_fft) = %2.4e ' % ( max_diff_over_max_image )  )
 
-        # measure HSM moments
-        hsm_shoot = galsim.EstimateShearHSM(gal_image=image_gal_shoot,PSF_image=image_psf_shoot,strict=True,shear_est='LINEAR')
-        hsm_fft   = galsim.EstimateShearHSM(gal_image=image_gal_fft,PSF_image=image_psf_shoot,strict=True,shear_est='LINEAR')
+        # find adaptive moments
+        moments_shoot = galsim.FindAdaptiveMom(image_gal_shoot)
+        moments_fft   = galsim.FindAdaptiveMom(image_gal_fft)
 
-        # get the corrected moments
-        hsm_corr_fft_g1= hsm_fft.corrected_shape.getG1()
-        hsm_corr_fft_g2= hsm_fft.corrected_shape.getG2()
-        hsm_corr_shoot_g1= hsm_shoot.corrected_shape.getG1()
-        hsm_corr_shoot_g2= hsm_shoot.corrected_shape.getG2()
-            
-        # get the uncorrected moments
-        hsm_obs_shoot_g1= hsm_shoot.observed_shape.getG1()
-        hsm_obs_shoot_g2= hsm_shoot.observed_shape.getG2()
-        hsm_obs_fft_g1= hsm_fft.observed_shape.getG1()
-        hsm_obs_fft_g2= hsm_fft.observed_shape.getG2()
-        
-        # get the differences
-        hsm_obs_diff_g1 =  hsm_obs_shoot_g1 - hsm_obs_fft_g1 
-        hsm_obs_diff_g2 =  hsm_obs_shoot_g2 - hsm_obs_fft_g2
-        
-        hsm_corr_diff_g1 =  hsm_corr_shoot_g1 - hsm_corr_fft_g1 
-        hsm_corr_diff_g2 =  hsm_corr_shoot_g2 - hsm_corr_fft_g2
-        
+        moments_shoot_e1 = moments_shoot.observed_shape.getE1()
+        moments_shoot_e2 = moments_shoot.observed_shape.getE2()
+        moments_fft_e1 = moments_fft.observed_shape.getE1()
+        moments_fft_e2 = moments_fft.observed_shape.getE2()
+        moments_diff_e1 =  moments_shoot_e1 - moments_fft_e1
+        moments_diff_e2 =  moments_shoot_e2 - moments_fft_e2
+
+
         # display resutls
-        logger.info('corrected shape fft   gi %2.4e %2.4e' %  (hsm_corr_fft_g1,  hsm_corr_fft_g1))
-        logger.info('corrected shape shoot gi %2.4e %2.4e' %  (hsm_corr_shoot_g1,hsm_corr_shoot_g2))
-        logger.info('observed shape fft    gi %2.4e %2.4e' %  (hsm_obs_fft_g1,   hsm_obs_fft_g2))
-        logger.info('observed shape shoot  gi %2.4e %2.4e' %  (hsm_obs_shoot_g1, hsm_obs_shoot_g2))     
-        logger.info('difference in observed  shape (shoot_gi - fft_gi) %2.4e %2.4e ' % ( hsm_obs_diff_g1, hsm_obs_diff_g2 ) )
-        logger.info('difference in corrected shape (shoot_gi - fft_gi) %2.4e %2.4e ' % ( hsm_corr_diff_g1, hsm_corr_diff_g2 )  )
-
-                
-    
-    
-        
+        logger.info('adaptive moments fft           gi % 2.6f % 2.6f' % (moments_fft_e1,  moments_fft_e2))
+        logger.info('adaptive moments shoot         gi % 2.6f % 2.6f' % (moments_shoot_e1,  moments_shoot_e2))
+        logger.info('adaptive moments difference    gi % 2.6f % 2.6f' % (moments_diff_e1,  moments_diff_e2))
 
 
 if __name__ == "__main__":
