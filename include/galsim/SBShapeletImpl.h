@@ -19,21 +19,21 @@
  * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#ifndef SBLAGUERRE_IMPL_H
-#define SBLAGUERRE_IMPL_H
+#ifndef SBSHAPELET_IMPL_H
+#define SBSHAPELET_IMPL_H
 
 #include "SBProfileImpl.h"
-#include "SBLaguerre.h"
+#include "SBShapelet.h"
 
 namespace galsim {
 
-    class SBLaguerre::SBLaguerreImpl : public SBProfile::SBProfileImpl 
+    class SBShapelet::SBShapeletImpl : public SBProfile::SBProfileImpl 
     {
     public:
-        SBLaguerreImpl(const LVector& bvec, double sigma) : 
+        SBShapeletImpl(const LVector& bvec, double sigma) : 
             _bvec(bvec.duplicate()), _sigma(sigma) {}
 
-        ~SBLaguerreImpl() {}
+        ~SBShapeletImpl() {}
 
         double xValue(const Position<double>& p) const;
         std::complex<double> kValue(const Position<double>& k) const;
@@ -47,26 +47,26 @@ namespace galsim {
         bool isAnalyticK() const { return true; }
 
         Position<double> centroid() const 
-        { throw SBError("SBLaguerre::centroid calculations not yet implemented"); }
+        { throw SBError("SBShapelet::centroid calculations not yet implemented"); }
 
         double getFlux() const;
 
-        /// @brief Photon-shooting is not implemented for SBLaguerre, will throw an exception.
+        /// @brief Photon-shooting is not implemented for SBShapelet, will throw an exception.
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const 
-        { throw SBError("SBLaguerre::shoot() is not implemented"); }
+        { throw SBError("SBShapelet::shoot() is not implemented"); }
 
     private:
-        /// `bvec[n,n]` contains flux information for the `(n, n)` basis function.
+        /// `bvec[n,m]` contains flux information for the `(n, m)` basis function.
         LVector _bvec;  
 
-        double _sigma;  ///< Scale size of Gauss-Laguerre basis set.
+        double _sigma;  ///< Scale size of Gauss-Shapelet basis set.
 
         // Copy constructor and op= are undefined.
-        SBLaguerreImpl(const SBLaguerreImpl& rhs);
-        void operator=(const SBLaguerreImpl& rhs);
+        SBShapeletImpl(const SBShapeletImpl& rhs);
+        void operator=(const SBShapeletImpl& rhs);
     };
 
 }
 
-#endif // SBLAGUERRE_IMPL_H
+#endif // SBSHAPELET_IMPL_H
 

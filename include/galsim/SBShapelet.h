@@ -19,10 +19,10 @@
  * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#ifndef SBLAGUERRE_H
-#define SBLAGUERRE_H
+#ifndef SBSHAPELET_H
+#define SBSHAPELET_H
 /** 
- * @file SBLaguerre.h @brief SBProfile that implements a 2-d Gauss-Laguerre profile (aka shapelets)
+ * @file SBShapelet.h @brief SBProfile that implements a polar shapelet profile 
  */
 
 #include "SBProfile.h"
@@ -30,32 +30,32 @@
 
 namespace galsim {
 
-    /// @brief Class for describing Gauss-Laguerre polynomial Surface Brightness Profiles.
-    class SBLaguerre : public SBProfile 
+    /// @brief Class for describing polar shapelet surface brightness plrofiles.
+    class SBShapelet : public SBProfile 
     {
     public:
         /** 
          * @brief Constructor.
          *
-         * @param[in] bvec   `bvec[n,n]` contains flux information for the `(n, n)` basis function.
+         * @param[in] bvec   `bvec[n,m]` contains flux information for the `(n, m)` basis function.
          * @param[in] sigma  scale size of Gauss-Laguerre basis set (default `sigma = 1.`).
          */
-        SBLaguerre(LVector bvec=LVector(), double sigma=1.);
+        SBShapelet(LVector bvec=LVector(), double sigma=1.);
 
         /// @brief Copy Constructor. 
-        SBLaguerre(const SBLaguerre& rhs);
+        SBShapelet(const SBShapelet& rhs);
 
         /// @brief Destructor. 
-        ~SBLaguerre();
+        ~SBShapelet();
 
     protected:
-        class SBLaguerreImpl;
+        class SBShapeletImpl;
 
     private:
         // op= is undefined
-        void operator=(const SBLaguerre& rhs);
+        void operator=(const SBShapelet& rhs);
     };
 }
 
-#endif // SBLAGUERRE_H
+#endif // SBSHAPELET_H
 

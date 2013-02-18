@@ -41,7 +41,7 @@ namespace galsim {
     void pyExportSBSersic();
     void pyExportSBMoffat();
     void pyExportSBAiry();
-    void pyExportSBLaguerre();
+    void pyExportSBShapelet();
     void pyExportSBInterpolatedImage();
     void pyExportSBKolmogorov();
     void pyExportRandom();
@@ -76,7 +76,7 @@ BOOST_PYTHON_MODULE(_galsim) {
     galsim::pyExportSBSersic();
     galsim::pyExportSBMoffat();
     galsim::pyExportSBAiry();
-    galsim::pyExportSBLaguerre();
+    galsim::pyExportSBShapelet();
     galsim::pyExportSBInterpolatedImage();
     galsim::pyExportSBKolmogorov();
     galsim::pyExportRandom();

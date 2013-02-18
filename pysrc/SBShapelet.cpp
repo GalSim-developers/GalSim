@@ -21,30 +21,30 @@
 #include "boost/python.hpp"
 #include "boost/python/stl_iterator.hpp"
 
-#include "SBLaguerre.h"
+#include "SBShapelet.h"
 
 namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBLaguerre 
+    struct PySBShapelet 
     {
         static void wrap() {
             // TODO: Need to wrap LVector before this will work.
 #if 0
-            bp::class_<SBLaguerre,bp::bases<SBProfile> >("SBLaguerre", bp::no_init)
+            bp::class_<SBShapelet,bp::bases<SBProfile> >("SBShapelet", bp::no_init)
                 .def(bp::init<LVector,double>(
                         (bp::arg("bvec"), bp::arg("sigma")=1.))
                 )
-                .def(bp::init<const SBLaguerre &>())
+                .def(bp::init<const SBShapelet &>())
                 ;
 #endif
         }
     };
 
-    void pyExportSBLaguerre() 
+    void pyExportSBShapelet() 
     {
-        PySBLaguerre::wrap();
+        PySBShapelet::wrap();
     }
 
 } // namespace galsim

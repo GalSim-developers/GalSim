@@ -21,8 +21,8 @@
 
 //#define DEBUGLOGGING
 
-#include "SBLaguerre.h"
-#include "SBLaguerreImpl.h"
+#include "SBShapelet.h"
+#include "SBShapeletImpl.h"
 
 #ifdef DEBUGLOGGING
 #include <fstream>
@@ -32,16 +32,15 @@ int verbose_level = 2;
 
 namespace galsim {
 
+    SBShapelet::SBShapelet(LVector bvec, double sigma) : 
+        SBProfile(new SBShapeletImpl(bvec,sigma)) {}
 
-    SBLaguerre::SBLaguerre(LVector bvec, double sigma) : 
-        SBProfile(new SBLaguerreImpl(bvec,sigma)) {}
+    SBShapelet::SBShapelet(const SBShapelet& rhs) : SBProfile(rhs) {}
 
-    SBLaguerre::SBLaguerre(const SBLaguerre& rhs) : SBProfile(rhs) {}
-
-    SBLaguerre::~SBLaguerre() {}
+    SBShapelet::~SBShapelet() {}
 
     // ??? Have not really investigated these:
-    double SBLaguerre::SBLaguerreImpl::maxK() const 
+    double SBShapelet::SBShapeletImpl::maxK() const 
     {
         // Start with value for plain old Gaussian:
         double maxk = sqrt(-2.*std::log(sbp::maxk_threshold))/_sigma; 
@@ -50,7 +49,7 @@ namespace galsim {
         return maxk;
     }
 
-    double SBLaguerre::SBLaguerreImpl::stepK() const 
+    double SBShapelet::SBShapeletImpl::stepK() const 
     {
         // Start with value for plain old Gaussian:
         double R = std::max(4., sqrt(-2.*std::log(sbp::alias_threshold)));
@@ -59,7 +58,7 @@ namespace galsim {
         return M_PI / (R*_sigma);
     }
 
-    double SBLaguerre::SBLaguerreImpl::xValue(const Position<double>& p) const 
+    double SBShapelet::SBShapeletImpl::xValue(const Position<double>& p) const 
     {
         LVector psi(_bvec.getOrder());
         psi.fillBasis(p.x/_sigma, p.y/_sigma, _sigma);
@@ -67,7 +66,7 @@ namespace galsim {
         return xval;
     }
 
-    std::complex<double> SBLaguerre::SBLaguerreImpl::kValue(const Position<double>& k) const 
+    std::complex<double> SBShapelet::SBShapeletImpl::kValue(const Position<double>& k) const 
     {
         int N=_bvec.getOrder();
         LVector psi(N);
@@ -100,13 +99,12 @@ namespace galsim {
         return std::complex<double>(2.*M_PI*rr, 2.*M_PI*ii);
     }
 
-    double SBLaguerre::SBLaguerreImpl::getFlux() const 
+    double SBShapelet::SBShapeletImpl::getFlux() const 
     {
         double flux=0.;
         for (PQIndex pp(0,0); !pp.pastOrder(_bvec.getOrder()); pp.incN())
             flux += _bvec[pp].real();  // _bvec[pp] is real, but need type conv.
         return flux;
     }
-
 
 }
