@@ -705,10 +705,8 @@ class GSObject(object):
         # Setup the uniform_deviate if not provided one.
         if rng is None:
             uniform_deviate = galsim.UniformDeviate()
-        elif isinstance(rng,galsim.UniformDeviate):
-            uniform_deviate = rng
         elif isinstance(rng,galsim.BaseDeviate):
-            # If it's another kind of BaseDeviate, we can convert
+            # If it's a BaseDeviate, we can convert to UniformDeviate
             uniform_deviate = galsim.UniformDeviate(rng)
         else:
             raise TypeError("The rng provided to drawShoot is not a BaseDeviate")
@@ -2038,8 +2036,6 @@ class RealGalaxy(GSObject):
         elif random == True:
             if rng is None:
                 uniform_deviate = galsim.UniformDeviate()
-            elif isinstance(rng, galsim.UniformDeviate):
-                uniform_deviate = rng
             elif isinstance(rng, galsim.BaseDeviate):
                 uniform_deviate = galsim.UniformDeviate(rng)
             else:

@@ -320,8 +320,6 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     elif rotation_angle == None and rand_rotate == True:
         if rng == None:
             uniform_deviate = galsim.UniformDeviate()
-        elif isinstance(rng,galsim.UniformDeviate):
-            uniform_deviate = rng
         elif isinstance(rng,galsim.BaseDeviate):
             uniform_deviate = galsim.UniformDeviate(rng)
         else:

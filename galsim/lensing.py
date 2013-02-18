@@ -301,8 +301,6 @@ class PowerSpectrum(object):
         # Make a GaussianDeviate if necessary
         if rng is None:
             gd = galsim.GaussianDeviate()
-        elif isinstance(rng, galsim.GaussianDeviate):
-            gd = rng
         elif isinstance(rng, galsim.BaseDeviate):
             gd = galsim.GaussianDeviate(rng)
         else:
