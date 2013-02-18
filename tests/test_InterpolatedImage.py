@@ -178,7 +178,7 @@ def test_roundtrip():
         # Anyway, Quintic seems to be accurate enough.
         quint = galsim.Quintic(1.e-4)
         quint_2d = galsim.InterpolantXY(quint)
-        interp = galsim.InterpolatedImage(image_in, interpolant=quint_2d, dx=test_dx, flux=1.)
+        interp = galsim.InterpolatedImage(image_in, x_interpolant=quint_2d, dx=test_dx, flux=1.)
         do_shoot(interp,image_out,"InterpolatedImage")
 
     t2 = time.time()
@@ -258,7 +258,7 @@ def test_exceptions():
     im.setScale(1.)
     np.testing.assert_raises(ValueError, galsim.InterpolatedImage, im, normalization = 'foo')
     # Weird interpolant - give it something random like a GSObject
-    np.testing.assert_raises(RuntimeError, galsim.InterpolatedImage, im, interpolant = g)
+    np.testing.assert_raises(RuntimeError, galsim.InterpolatedImage, im, x_interpolant = g)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -455,9 +455,158 @@ def test_operations():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_uncorr_padding():
+    """Test for uncorrelated noise padding of InterpolatedImage."""
+    import time
+    t1 = time.time()
+
+    # Set up some defaults: use weird image sizes / shapes and noise variances.
+    decimal_precise=5
+    decimal_coarse=2
+    orig_nx = 147
+    orig_ny = 174
+    noise_var = 1.73
+    big_nx = 258
+    big_ny = 281
+    orig_seed = 151241
+
+    # first, make a noise image
+    orig_img = galsim.ImageF(orig_nx, orig_ny)
+    orig_img.setScale(1.)
+    gd = galsim.GaussianDeviate(orig_seed, mean=0., sigma=np.sqrt(noise_var))
+    gd.applyTo(orig_img.view())
+
+    # make it into an InterpolatedImage with some zero-padding
+    # (note that default is zero-padding, by factors of several)
+    int_im = galsim.InterpolatedImage(orig_img)
+    # draw into a larger image
+    big_img = galsim.ImageF(big_nx, big_ny)
+    big_img = int_im.draw(big_img, dx=1.)
+    # check that variance is diluted by expected amount - should be exact, so check precisely!
+    big_var_expected = np.var(orig_img.array)*float(orig_nx*orig_ny)/(big_nx*big_ny)
+    np.testing.assert_almost_equal(np.var(big_img.array), big_var_expected, decimal=decimal_precise,
+        err_msg='Variance not diluted by expected amount when zero-padding')
+
+    # make it into an InterpolatedImage with noise-padding
+    int_im = galsim.InterpolatedImage(orig_img, noise_pad=noise_var,
+                                      rng = galsim.GaussianDeviate(orig_seed))
+    # draw into a larger image
+    big_img = galsim.ImageF(big_nx, big_ny)
+    big_img = int_im.draw(big_img, dx=1.)
+    # check that variance is same as original - here, we cannot be too precise because the padded
+    # region is not huge and the comparison will be, well, noisy.
+    np.testing.assert_almost_equal(np.var(big_img.array), noise_var, decimal=decimal_coarse,
+        err_msg='Variance not correct after padding image with noise')
+
+    # check that if we pass in a RNG, it is actually used to pad with the same noise field
+    # basically, redo all of the above steps and draw into a new image, make sure it's the same as
+    # previous.
+    int_im = galsim.InterpolatedImage(orig_img, noise_pad=noise_var,
+                                      rng = galsim.GaussianDeviate(orig_seed))
+    big_img_2 = galsim.ImageF(big_nx, big_ny)
+    big_img_2 = int_im.draw(big_img_2, dx=1.)
+    np.testing.assert_array_almost_equal(big_img_2.array, big_img.array, decimal=decimal_precise,
+        err_msg='Cannot reproduce noise-padded image with same choice of seed')
+
+    # Finally check inputs: what if we give it an input variance that is neg?  A list?
+    try:
+        np.testing.assert_raises(ValueError,galsim.InterpolatedImage,orig_img,noise_pad=-1.)
+    except ImportError:
+        print 'The assert_raises tests require nose'
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_corr_padding():
+    """Test for correlated noise padding of InterpolatedImage."""
+    import time
+    t1 = time.time()
+
+    # Set up some defaults for tests.
+    decimal_precise=4
+    decimal_coarse=2
+    imgfile = 'blankimg.fits'
+    orig_nx = 147
+    orig_ny = 124
+    big_nx = 258
+    big_ny = 281
+    orig_seed = 151241
+
+    # Read in some small image of a noise field from HST.
+    # Rescale it to have a decently large amplitude for the purpose of doing these tests.
+    im = 1.e2*galsim.fits.read(imgfile)
+    # Make an ImageCorrFunc out of it.
+    cf = galsim.ImageCorrFunc(im)
+
+    # first, make a noise image
+    orig_img = galsim.ImageF(orig_nx, orig_ny)
+    orig_img.setScale(1.)
+    cf.applyNoiseTo(orig_img, dev=galsim.BaseDeviate(orig_seed))
+
+    # make it into an InterpolatedImage with some zero-padding
+    # (note that default is zero-padding, by factors of several)
+    int_im = galsim.InterpolatedImage(orig_img)
+    # draw into a larger image
+    big_img = galsim.ImageF(big_nx, big_ny)
+    big_img = int_im.draw(big_img, dx=1.)
+    # check that variance is diluted by expected amount - should be exact, so check precisely!
+    big_var_expected = np.var(orig_img.array)*float(orig_nx*orig_ny)/(big_nx*big_ny)
+    np.testing.assert_almost_equal(np.var(big_img.array), big_var_expected, decimal=decimal_precise,
+        err_msg='Variance not diluted by expected amount when zero-padding')
+
+    # make it into an InterpolatedImage with noise-padding
+    int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed),
+                                      noise_pad = im)
+
+    # draw into a larger image
+    big_img = galsim.ImageF(big_nx, big_ny)
+    big_img = int_im.draw(big_img, dx=1.)
+    # check that variance is same as original - here, we cannot be too precise because the padded
+    # region is not huge and the comparison will be, well, noisy.
+    np.testing.assert_almost_equal(np.var(big_img.array), np.var(orig_img.array),
+        decimal=decimal_coarse,
+        err_msg='Variance not correct after padding image with correlated noise')
+
+    # check that if we pass in a RNG, it is actually used to pad with the same noise field
+    # basically, redo all of the above steps and draw into a new image, make sure it's the same as
+    # previous.
+    int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed),
+                                      noise_pad = cf)
+    big_img_2 = galsim.ImageF(big_nx, big_ny)
+    big_img_2 = int_im.draw(big_img_2, dx=1.)
+    np.testing.assert_array_almost_equal(big_img_2.array, big_img.array, decimal=decimal_precise,
+        err_msg='Cannot reproduce correlated noise-padded image with same choice of seed')
+
+    # Finally, check inputs:
+    # what if we give it a screwy way of defining the image padding?
+    try:
+        np.testing.assert_raises(ValueError,galsim.InterpolatedImage,orig_img,noise_pad=-1.)
+    except ImportError:
+        print 'The assert_raises tests require nose'
+    # also, check that whether we give it a string, image, or cf, it gives the same noise field
+    # (given the same random seed)
+    infile = 'blankimg.fits'
+    inimg = galsim.fits.read(infile)
+    incf = galsim.ImageCorrFunc(inimg)
+    int_im2 = galsim.InterpolatedImage(orig_img, rng=galsim.GaussianDeviate(orig_seed),
+                                       noise_pad=inimg)
+    int_im3 = galsim.InterpolatedImage(orig_img, rng=galsim.GaussianDeviate(orig_seed),
+                                       noise_pad=incf)
+    big_img2 = galsim.ImageF(big_nx, big_ny)
+    big_img3 = galsim.ImageF(big_nx, big_ny)
+    big_img2 = int_im2.draw(big_img2, dx=1.)
+    big_img3 = int_im3.draw(big_img3, dx=1.)
+    np.testing.assert_equal(big_img2.array, big_img3.array,
+                            err_msg='Diff ways of specifying correlated noise give diff answers')
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_roundtrip()
     test_fluxnorm()
     test_exceptions()
     test_operations_simple()
     test_operations()
+    test_uncorr_padding()
+    test_corr_padding()

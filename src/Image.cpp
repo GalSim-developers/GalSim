@@ -23,6 +23,8 @@
 
 #include "Image.h"
 #include "ImageArith.h"
+#include "FFT.h"
+#include "SBInterpolatedImage.h"
 
 namespace galsim {
 
@@ -227,6 +229,20 @@ ImageView<T> ImageView<T>::subImage(const Bounds<int>& bounds) const
         + (bounds.getXMin() - this->_bounds.getXMin());
     return ImageView<T>(newdata,this->_owner,this->_stride,bounds,this->_scale);
 }
+
+template <typename T>
+int BaseImage<T>::getPaddedSize(float pad_factor) const
+{
+    int Ninitial = std::max(this->getYMax()-this->getYMin()+1,
+                            this->getXMax()-this->getXMin()+1 );
+    Ninitial = Ninitial + Ninitial%2;
+    assert(Ninitial%2==0);
+    assert(Ninitial>=2);
+
+    if (pad_factor <= 0.) pad_factor = sbp::oversample_x;
+    return goodFFTSize(int(pad_factor*Ninitial));
+}
+
 
 namespace {
 
