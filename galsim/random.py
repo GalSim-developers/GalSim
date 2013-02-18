@@ -51,23 +51,26 @@ class DistDeviate(_galsim.BaseDeviate):
     """A class to draw random numbers from a user-defined probability distribution.
     
     DistDeviate is a BaseDeviate class that can be used to draw from an arbitrary probability
-    distribution.  The probability distribution passed to DistDeviate can be given one of two 
-    ways: as the name of a file containing a 2d array of x and P(x) or as a callable function.  If 
-    the probability passed to DistDeviate has well-defined endpoints--if it is an array in a file
-    or a callable galsim.LookupTable--you cannot pass the keywords x_min and x_max to DistDeviate 
-    or an error will result.  If, on the other hand, a callable function that is NOT a 
-    galsim.LookupTable is passed to DistDeviate, then the keywords x_min and x_max are required.
+    distribution.  The probability distribution passed to DistDeviate can be given one of three 
+    ways: as the name of a file containing a 2d ASCII array of x and P(x) or as a callable 
+    function.
     
     Once given a probability, DistDeviate creates a table of x value versus cumulative probability 
     and draws from it using a UniformDeviate.  The precision of its outputs can be controlled with
-    the keyword npoints, the number of points in the table of x vs CDF(x), and the keyword 
-    interpolant, which sets the type of interpolant used.  Any interpolant understood by
-    LookupTable may be used, but we caution against the use of splines because they can cause
-    non-monotonic behavior.
+    the keyword npoints, which sets the number of points DistDeviate creates for its internal table
+    of x vs CDF(x).  To prevent errors due to non-monotonicity, the interpolant for this internal
+    table is always linear.
     
+    Two keywords, x_min and x_max, define the support of the function.  They must be passed if a 
+    callable function is given to DistDeviate, unless the function is a galsim.LookupTable, which 
+    has its own defined endpoints.  If a filename or LookupTable is passed to DistDeviate, the use
+    of x_min or x_max will result in an error.
+        
     If given a table in a file, DistDeviate will construct an interpolated LookupTable to obtain 
-    more finely gridded probabilities to generate the cumulative probability table; this will also 
-    use the interpolant passed to DistDeviate.
+    more finely gridded probabilities for generating the cumulative probability table.  The default
+    interpolant is linear, but any interpolant understood by LookupTable may be used.  We caution 
+    against the use of splines because they can cause non-monotonic behavior.  Passing the 
+    interpolant keyword next to anything but a table in a file will result in an error.
     
     Initialization
     --------------
@@ -79,11 +82,11 @@ class DistDeviate(_galsim.BaseDeviate):
     Initializes d to be a DistDeviate instance with a distribution given by the callable function
     f(x) from x=x_min to x=x_max and seeds the PRNG using current time.  
     
-    >>> d = galsim.DistDeviate(rng=1062533, function=file_name)
+    >>> d = galsim.DistDeviate(rng=1062533, function=file_name, interpolant='floor')
     
     Initializes d to be a DistDeviate instance with a distribution given by the data in file
     file_name, which must be a 2-column ASCII table, and seeds the PRNG using the long int
-    seed 1062533.
+    seed 1062533. It generates probabilities from file_name using the interpolant 'floor'.
     
     >>> d = galsim.DistDeviate(rng, function=galsim.LookupTable(x,p))
     
@@ -93,7 +96,7 @@ class DistDeviate(_galsim.BaseDeviate):
     
     @param rng          Something that can seed a BaseDeviate: a long int seed or another 
                         BaseDeviate.
-    @param function     A callable function giving a probability distribution, or the name of a 
+    @param function     A callable function giving a probability distribution or the name of a 
                         file containing a probability distribution as a 2-column ASCII table.
     @param x_min        The minimum desired return value (required for non-galsim.LookupTable
                         callable functions; will raise an error if not passed in that case, or if
@@ -102,8 +105,8 @@ class DistDeviate(_galsim.BaseDeviate):
                         callable functions; will raise an error if not passed in that case, or if
                         passed in any other case)
     @param interpolant  Type of interpolation used for interpolating a file (causes an error if 
-                        passed alongside a callable function). Options are given in the 
-                        documentation for galsim.LookupTable.  (default: 'linear')
+                        passed alongside a callable function).  Options are given in the 
+                        documentation for galsim.LookupTable. (default: 'linear')
     @param npoints      Number of points DistDeviate should create for its internal interpolation
                         tables. (default: 256)
 
@@ -125,7 +128,7 @@ class DistDeviate(_galsim.BaseDeviate):
         
         The rng, if given, must be something that can initialize a BaseDeviate instance, such as 
         another BaseDeviate or a long int seed.  See the documentation for the DistDeviate class 
-        for more information.
+        for more information on this and other options.
         """
         
         import numpy
@@ -142,9 +145,9 @@ class DistDeviate(_galsim.BaseDeviate):
                                 'a BaseDeviate.')
         self._ud = galsim.UniformDeviate(self)
 
+        # Basic input checking and setups
         if not function:
             raise TypeError('You must pass a function to DistDeviate!')
-
         # Figure out if a string is a filename or something we should be using in an eval call
         if isinstance(function, str):
             input_function = function
@@ -194,6 +197,7 @@ class DistDeviate(_galsim.BaseDeviate):
             x_min = function.x_min
             x_max = function.x_max
 
+        # Compute the cumulative distribution function
         xarray = x_min+(1.*x_max-x_min)/(npoints-1)*numpy.array(range(npoints),float)
         # cdf is the cumulative distribution function--just easier to type!
         dcdf = [galsim.integ.int1d(function, xarray[i], xarray[i+1]) for i in range(npoints - 1)]
