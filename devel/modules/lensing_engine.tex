@@ -453,53 +453,69 @@ the Fourier transforms of equations \eqref{eq:fwdft} and
 
 \section{Comparison software}\label{S:comparison}
 
-We will compare against a completely independent piece of software,
+We will compare the outputs from GalSim against those from a completely independent piece of software,
 Chris Hirata's spherical harmonic transform code which is described in
 multiple papers (for example,
 \href{http://adsabs.harvard.edu/abs/2004PhRvD..70j3501H}{Hirata
   et~al. 2004}).  This does not use the flat-sky
-approach, but that should not be huge important of a difference even
+approach, but that should make too much difference even
 for our $L=10$ deg.  It is something to bear in mind if we start
 looking for agreement at a few \% level on the largest $\theta$ or
-smallest $k$.  This software wants $C_\ell(\ell)$ as its inputs.
+smallest $k$.  That software wants $C_\ell(\ell)$ as its inputs.
 
 \section{Tests of variances}\label{S:testvar}
 
+We begin with tests of the shear variances from GalSim and the SHT
+code.  The theoretical 
+description for the variances was outlined in \S\ref{sect:theory}.
+
 \subsection{General considerations}
 
-Moreover, we need to be well-sampled in $k$ space, so we should not
-use functions that do unreasonable things like $k^{-2}$.
+As discussed in \S\ref{sect:theory}, most of our tests of the variance
+will focus on the sum of the components, rather than the variance of
+individual components.  Also, for our grid to properly represent the
+theoretical power spectrum (and for the equations in
+\S\ref{sect:theory} to be valid), we need to be well-sampled in $k$
+space, so we should not use functions that do unreasonable things like
+$P(k)\propto k^{-2}$.
+
+Since we will want to check that the results behave properly when the
+grid changes, we will do all tests in this section with three
+different grids:
+\begin{enumerate}
+\item A standard GREAT10 grid, which has $L=10$ degrees and $N=100$,
+  so $d=0.1$ degree$=360$ arcsec.
+\item A grid with $L=5$ degrees and $N=50$, thus preserving $d$ and
+  \kmax, while increasing \kmin\ (the Fourier-space grid spacing) by a
+  factor of 2.
+\item A grid with $L=10$ degrees and $N=50$, thus doubling $d$ and
+  halving \kmax, while preserving the Fourier-space grid spacing
+  (\kmin) compared to the original case.
+\end{enumerate}
 
 \subsection{Variance for Gaussian $P(k)$}
 
-Barney suggested a test case that is a Gaussian, i.e., $P(k) =
+Our first test case is a Gaussian $P(k)$, i.e., $P(k) =
 P_0 e^{-\sigma^2 k^2 / 2}$.  Here both $P_0$ and $\sigma^2$ both
-are dimensions of angle$^2$.  By Eq.~\ref{E:alt-shearvar-limit}, this means that
+have dimensions of angle$^2$.  By Eq.~\ref{E:alt-shearvar-limit}, this
+means that we expect
 \begin{align}
 \mathrm{Var}(\gamma) &= \frac{4P_0}{(2\pi)^2} \left[\int_{\kmin}^{\kmax} 
 e^{-\sigma^2 k^2/2} \,\rmd k\right]^2 \\
- &= \frac{P_0}{2\pi\sigma^2}\left[ Erf(\kmax\sigma/\sqrt{2}) - Erf(\kmin\sigma/\sqrt{2})\right]^2.
+ &= \frac{P_0}{2\pi\sigma^2}\left[ \mathrm{Erf}(\kmax\sigma/\sqrt{2}) - \mathrm{Erf}(\kmin\sigma/\sqrt{2})\right]^2.\label{E:vargauss}
 \end{align}
 
-We use three grids. The first is the standard GREAT10 grid with $L=10$
-degrees and $N=100$, so $d=0.1$ deg $=360$ arcsec.  I will define the
-Gaussian such that there is essentially no power left at our \kmax,
-which is $2\pi/d=0.0175$ arcsec$^{-1}$.  The second grid has the same
-$d$ but only 50 grid points per dimension, so it covers $5$ degrees.
-Using this grid lets us test for sensitivity to \kmin\ at fixed \kmax.
-The third grid covers the original $L=10$ deg, but with $N=50$, so
-$d=0.2$ deg $=720$ arcsec; this grid (compared to the first one) has
-the same \kmin\ and different \kmax. We use $\sigma \kmax=5$ or
-$\sigma=286.5$ 
-arcsec for the first two grids; we want to keep the same condition on
-$\sigma\kmax$ for the last grid, so in that case we use
-$\sigma=573.0$; then $Erf(\kmax\sigma/\sqrt{2})=1$.  For the three cases, we have $\sigma\kmin=0.05$,
-$0.1$, and $0.1$, or $Erf(\kmin\sigma/\sqrt{2})=0.04$, $0.08$,
-$0.08$.  This means that with $P_0=1$, the predicted variances for the
-three grids are $1.8\times 10^{-6}$, $1.8\times 10^{-6}$, and
-$4.1\times 10^{-7}$ for the three grids.
+For each of the grids, we define the Gaussian $\sigma$ such that there
+is essentially no power left at our \kmax: $\sigma\kmax=5$, or
+$\sigma=286.5$ arcsec for the first two grids and $\sigma=573$ arcsec
+for the last grid.  Given how large $\sigma\kmax$ is, in all cases,
+$\mathrm{Erf}(\kmax\sigma/\sqrt{2})=1$.  The resulting values of
+$\sigma\kmin$ for the three grids are $0.05$, $0.1$, and $0.05$, or
+$\mathrm{Erf}(\kmin\sigma/\sqrt{2})=0.04$, $0.08$, and $0.04$.  With
+$P_0=1$ arcsec$^2$, the predicted variances for the three grids are
+$1.79\times 10^{-6}$, $1.64\times 10^{-6}$, and $4.47\times 10^{-7}$.
 
-The code is:
+The code to do this once is:
 \begin{verbatim}
 import galsim
 import numpy as np
@@ -512,23 +528,31 @@ test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((573.0*k)**2)))
 g1, g2 = test_ps.buildGriddedShears(grid_spacing=720., ngrid=50)
 print np.var(g1), np.var(g2), np.var(g1)+np.var(g2)
 \end{verbatim}
+We actually do this 1000 times to beat down the noise in the resulting
+variances.
 
-The results are around $1.9\times 10^{-6}$ in the first two cases, and
-$4.6\times 10^{-7}$ in the last case.  So we have the right scaling
-with the grid spacing and grid size, but the results are $\sim 6$--12\%
-higher than predictions. Essentially, they are what you would expect
-if the term with the Erf in it was 1, instead of a bit below 1 --
-i.e., it's kind of acting like our \kmin\ is zero instead of the real
-\kmin.
+The results are $1.87\times 10^{-6}$, $1.85\times 10^{-6}$, and
+$4.63\times 10^{-7}$ in the last case.  So we have the approximately
+correct amplitude and scaling with the grid spacing and grid size, but
+the results are 4, 12, and 4\% larger than the predictions.
+Alternatively, if we consider the prediction from
+Eq.~\ref{E:vargauss}, our results are consistently 4\% below what we
+would expect if $\kmin=0$; the significance of this last comparison is
+unclear, but it seems suspiciously similar to the final results in \S\ref{S:testpk}.
 
-Note that the variance is nearly evenly divided between the two components.
+The variance is fairly evenly divided between components, but the
+variance in $\gamma_2$ tends to be larger than the variance of
+$\gamma_1$ by several percent.  This is
+likely because the $P(k)$ emphasizes large scales, where the grid
+genuinely looks different along the diagonals as it does along the
+coordinate axes.
 
 \subsection{Variance for flat $P(k)$}
 
-This test is dangerous because of the amount of large-scale power, so
-we'll use a modified version of it.  Let's say $P(k)=P_0$ for
-$k<$\klim\ arcmin$^{-1}$, where \klim\ is well below \kmax\ for all the
-grids; and set $P$ to zero for all larger $k$. Using Eq.~\ref{E:alt-shearvar-limit}, we expect
+A flat $P(k)$ has a worrisome amount of power at large $k$, so we use
+a modified version of it: We use $P(k)=P_0$ for $k<$\klim, where
+$\klim<\kmax$ for all the grids; and we set $P(k>\klim)=0$. Using
+Eq.~\ref{E:alt-shearvar-limit}, we expect
 \begin{align}
 \mathrm{Var}(\gamma) &= \frac{4P_0}{(2\pi)^2}
 \left[\int_{\kmin}^{\klim} \rmd k\right]^2 \\
@@ -536,7 +560,7 @@ grids; and set $P$ to zero for all larger $k$. Using Eq.~\ref{E:alt-shearvar-lim
 \end{align}
 
 For the set of grids from the previous test, \kmin\ is
-$0.000175$, $0.00035$, and $0.000175$.  We will set $\klim=10\kmin$,
+$0.000175$, $0.00035$, and $0.000175$ arcsec$^{-1}$.  We will set $\klim=10\kmin$,
 so we can write
 \beq
 \mathrm{Var}(\gamma) = \frac{81 P_0 \kmin^2}{\pi^2}.
@@ -567,30 +591,31 @@ g1, g2 = test_ps1.buildGriddedShears(grid_spacing=720., ngrid=50)
 print np.var(g1), np.var(g2), np.var(g1)+np.var(g2)
 \end{verbatim}
 
-Since the variances are noisy, I averaged the results over 10000
-realizations (this takes about 1min to run), and found $2.36\times
-10^{-7}$, $9.45\times 10^{-7}$, and $2.36\times 10^{-7}$.  These are all
-5\% below my naive calculation.  It seems possible that this is
-because of some finite-gridding effect; rather than pursuing this
-question further, I will investigate this question in the context of
-the full $P(k)$ in the next section.
+Since the variances are noisy, we averaged the results over 10000
+realizations\footnote{This takes about 1 minute to run on a single
+  CPU.}, and found $2.36\times 10^{-7}$, $9.45\times 10^{-7}$, and
+$2.36\times 10^{-7}$.  These are all $\sim 5$\% below my naive calculation.
+Since the overall behavior is correct when we change the grid size and
+spacing, it seems possible that this small discrepancy comes from some
+finite-gridding effect.  Rather than pursuing this question further,
+we investigate it in the context of the full $P(k)$ in the next
+section.
 
 \section{Test of full $P(k)$}\label{S:testpk}
 
-I have a WMAP7 LCDM prediction for the cosmic shear signal for a
-sample with $z_{med}\sim 0.55$, which I can use as an input to both
+We use a WMAP7 LCDM prediction for the cosmic shear signal for a
+sample with $z_\mathrm{med}\sim 0.55$ as an input to both
 the SHT code and ours.  Given the range of $\ell$ for which it is
-defined, $2<\ell<2000$, we cannot use our standard grid because that
+defined, $2<\ell<2000$, we cannot use our standard grid, which 
 has $\kmax=3600$ radians$^{-1}$.  So, for this test I use a grid with
-the same $L$ as before, but $N=50$ (i.e., $d$ gets doubled), which
+$L=10$ degrees (as before), but $N=50$ (i.e., $d$ gets doubled), which
 means $\kmax=1800$ radians$^{-1}$.
 
-Using the SHT code, I made gridded shears for each of 3 cases:
+Using the SHT code (\S\ref{S:comparison}), we made gridded shears for
 $P_E=P(k)$ and $P_B=0$; $P_B=P(k)$ and $P_E=0$; and $P_E=P_B=P(k)$ (5
-realizations of each).
-For GalSim, since it's less computationally expensive I averaged over
-more realizations; for our code, it is crucial to inform the code that
-the inputs have units of radians.
+realizations of each).  For GalSim, since it is much faster, we
+averaged over several hundred realizations.  It is crucial to inform
+GalSim that the inputs have units of radians.
 
 The python script test\_pk.py in devel/external/test\_gridshear/ does the following:
 \begin{enumerate}
@@ -603,16 +628,14 @@ The python script test\_pk.py in devel/external/test\_gridshear/ does the follow
 The python script test\_pk\_sht.py in that directory does the following:
 \begin{enumerate}
 \item Manipulate outputs of the SHT code to be consistent with
-  expectations (incl. one sign flip for e1).
+  expectations (including one sign flip for e1).
 \item Runs the GREAT10 power spectrum code on it.
 \end{enumerate}
 
 Finally, plot\_pk\_test.py in that directory plots the original and
 simulated $P(k)$ based on these files.  The results for the three
 cases (input $P_E$, input $P_B$, and input $P_E=P_B$) are in
-Figures~\ref{F:pe}, \ref{F:pb}, \ref{F:peb}.  \textbf{These plots have
-  all been updated to use the version of the lensing engine with the
-  dimensionality fix mentioned in the intro to these notes.}
+Figures~\ref{F:pe}, \ref{F:pb}, \ref{F:peb}.
 
 \begin{figure}
 \begin{center}
@@ -645,58 +668,54 @@ Figures~\ref{F:pe}, \ref{F:pb}, \ref{F:peb}.  \textbf{These plots have
 \end{center}
 \end{figure}
 
-Conclusions:
+We can conclude several things from these figures:
 \begin{itemize}
-\item \textbf{The dimensionality fix, dividing by grid spacing, has
-    gotten rid of nearly all discrepancies between theoretical and
-    generated power spectra.}
-\item SHT code: it gives roughly a consistent power spectrum compared
+\item The SHT code gives roughly a consistent shear power spectrum compared
   to our inputs (modulo possible slight differences in scaling that
-  may not be worth investigating until our own PS code is ready),
+  may not be worth investigating until our own PS estimation code is ready),
   though there are signs of $E$ vs. $B$ leakage in the case where one
   or the other is zero.
 \item GalSim: we don't see $E$ vs. $B$ leakage at any significant
-  level.  The amplitudes and scaling with $\ell$ are approximately
-  correct.
-\item The amplitude for the GalSim powerspectra is slightly below that
+  level.  The amplitudes and scaling of our output power spectra with
+  $\ell$ are approximately correct.
+\item The amplitude for the GalSim power spectra is slightly below that
   for the SHT code.  It is worth investigating whether this is some
-  finite-gridding effect on our part, which seems testable by
-  increasing the grid spacing.
+  finite-gridding effect on our part.
 \item While the big-picture results seem good, there are some finer
   details that require investigation, in particular the fact that both
   codes seem to give steeper $P(k)$ than the theory.  Given how these
   tests were done, it could have to do with the $k$-space binning in
-  the power spectrum estimator, the sizes of the bins, etc.  I'm not sure how much detail we want
-  to dig into here, vs. waiting for our own power spectrum estimator.
+  the power spectrum estimator, the sizes of the bins, etc. rather
+  than some issue with GalSim.
   This is particularly true given that the SHT code was well-validated
   and exhibits nearly the same slope as the GalSim outputs.
 \end{itemize}
 
-The simplest possible test is simply to change the $\ell$ binning in
-the PS estimation code.  This will let us see if we're running into
-some finite-binning effects in the PS estimation.  The original
-calculations had 20 $\ell$ bins; the new one uses 50 within the same
-$\ell$ range.  To beat down the noise, I used 400 realizations of the
-shears, instead of 20 as before.  The result is shown in
-Fig.~\ref{F:pe-fine}.  It is clear that the results are, as compared
-to Fig.~\ref{F:pe}, closer to the theory.  In particular, the
-amplitude {\em and} slope are both close to theory for $\ell>100$.
-Note that the jitter in that curve does not go away if we use more
-realizations.  This could have to do with the exact locations of the
-annular $\ell$ bins as compared to the finite $\ell$ modes that are
-probed by our grid.  
+To address the last point, the simplest possible test is simply to
+change the $\ell$ binning in the PS estimation code.  This will let us
+check whether we are encountering some finite-binning effects in the
+PS estimation.  The original calculations had 20 $\ell$ bins; the new
+one uses 50 within the same $\ell$ range.  To beat down the noise, I
+used 400 realizations of the shears from GalSim, instead of 20 as
+before.  The result is shown in Fig.~\ref{F:pe-fine}.  It is clear
+that the results are, as compared to Fig.~\ref{F:pe}, closer to the
+theory.  In particular, the amplitude {\em and} slope are both close
+to theory for $\ell>100$.  Note that the jitter in that curve does not
+go away if we use more realizations.  This could have to do with the
+exact locations of the annular $\ell$ bins in the PS estimation code,
+as compared to the finite set of $\ell$ modes that are probed by our
+grid.
 
-Since it's hard to see how large differences between theory and the
-GalSim results are, Fig.~\ref{F:pe-fine-ratio} shows the ratio between
-the GalSim outputs and the theory.  For $\ell<100$, the results are
-too low by $\sim 20$\%.  Above that, it seems to be 5\% too low, which
-is suspiciously similar to the results of the variance tests.
-However, this 5\% difference is better for the case with coarser
-$\ell$ binning for the PS measurement, which 
-suggests that for a user to realistically compare their output power
-spectrum against the theoretical one, they {\em must} account for
-the effects of finite $\ell$-binning on the theory.  Alternatively
-they should choose rather fine $\ell$ bins to minimize the problem.
+Since the log plot makes it hard to see how large differences between
+theory and the GalSim results are, Fig.~\ref{F:pe-fine-ratio} shows
+the ratio between the GalSim outputs and the theory.  For $\ell<100$,
+the GalSim results are too low by $\sim 20$\%.  For $\ell>100$, the
+GalSim outputs seems to give power spectra that are 5\% too low, which
+is suspiciously similar to the results of the variance tests.  This
+finding suggests that users {\em must} account for the effects of
+finite $\ell$-binning on the theoretical power spectrum, unless they
+can choose sufficiently fine $\ell$ bins to minimize
+this problem.
 \begin{figure}
 \begin{center}
 \includegraphics[width=3in]{../external/test_gridshear/output/compare_input_pe.fine.eps}
@@ -716,23 +735,23 @@ they should choose rather fine $\ell$ bins to minimize the problem.
 \end{figure}
 
 \textbf{Need to test robustness to grid spacing and size, and whether
-  the above could be some discreteness issue.}
+  the above effects could be some discreteness issue for the GalSim grids.}
 
 \section{Shear power on larger scales than our grid}\label{S:pk0}
 
-It's not clear that we should really be enforcing $P(0)=0$, i.e., no
+It is not clear that we should really be enforcing $P(k=0)=0$, i.e., no
 power below our \kmin.  This is a valid condition for the full-sky
 power spectrum, but will not in general be valid for a small patch of
-the sky, due to sampling variance.  In order to include this sampling
-variance, it would be preferable to assign $P(0)=$ some kind of
+the sky, due to cosmic variance.  In order to include this sampling
+variance, it would be preferable to assign $P(k=0)$ to be some kind of
 integral over $P(k<\kmin)$ (perhaps an average power in that $k$
-range; details to be worked out later) assuming the power function is
+range; details to be worked out later), {\em if} the power function is
 defined for those value of $k$.  However, this limitation is only a
 problem if we are checking quantities like the shear correlation
 function or its value at $\theta=0$, i.e., the shear variance.  If we
 are testing the ability to recover a power spectrum $P(k)$ defined at
 the values of $k$ that are accessible to our grid, the $P(0)=0$
-condition that we've imposed is irrelevant.
+condition that we have imposed should be irrelevant.
 
 Nonetheless, we may wish to modify the lensing engine to check whether
 the power function is defined for $0\le k\le\kmin$, and assign some
