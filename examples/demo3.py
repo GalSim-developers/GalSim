@@ -230,7 +230,7 @@ def main(argv):
     # gain, and read noise, so it can be a bit more realistic than the simpler GaussianNoise
     # or PoissonNoise that we used in demos 1 and 2.  
     # 
-    # The gain is in units of photons/ADU.  Technically, real CCD's quote the gain as e-/ADU.
+    # The gain is in units of photons/ADU.  Technically, real CCDs quote the gain as e-/ADU.
     # An ideal CCD has one electron per incident photon, but real CCDs have quantum efficiencies
     # less than 1, so not every photon triggers an electron.  We are essentially folding
     # the quantum efficiency (and filter transmission and anything else like that) into the gain.
