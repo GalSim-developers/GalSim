@@ -27,7 +27,6 @@
 #include <string>
 #include <iostream>
 #include <sstream>
-#include <stdexcept>
 #include <boost/shared_ptr.hpp>
 #include "TMV.h"
 
@@ -35,27 +34,6 @@
 #include "CppShear.h"
 
 namespace galsim {
-
-    class LaguerreError : public std::runtime_error 
-    {
-    public: 
-        LaguerreError(const std::string& m="") : 
-            std::runtime_error("Laguerre Error: " + m) {}
-    };
-
-    class LaguerreInsufficientOrder : public LaguerreError
-    {
-    public: 
-        LaguerreInsufficientOrder(const std::string& m="") :  
-            LaguerreError("Requested order is beyond available order" + m) {}
-    };
-
-    class LaguerreNonConvergent : public LaguerreError
-    {
-    public: 
-        LaguerreNonConvergent(const std::string& m="") : 
-            LaguerreError("Failure to converge to centroid/size/roundness soln " + m) {}
-    };
 
     // LVector will store a coefficient array as a real vector of the real degrees of freedom
     // for a vector that is Hermitian. Indexing by integer will retrieve these values.
@@ -234,21 +212,23 @@ namespace galsim {
     public:
         // Construct/destruct:
         LVector(int order=0) : 
-            _order(new int(order)), _v(new tmv::Vector<double>(PQIndex::size(order),0.)) {}
+            _order(order), _v(new tmv::Vector<double>(PQIndex::size(order),0.)) {}
+
+        LVector(int order, const tmv::Vector<double>& v) :
+            _order(order), _v(new tmv::Vector<double>(v))
+        { assert(v.size() == PQIndex::size(order)); }
+
+        LVector(int order, boost::shared_ptr<tmv::Vector<double> > v) :
+            _order(order), _v(v)
+        { assert(v->size() == PQIndex::size(order)); }
 
         LVector(const LVector& rhs) : _order(rhs._order), _v(rhs._v) {}
-
-        LVector(const tmv::Vector<double>& v, int order) : 
-            _order(new int(order)), _v(new tmv::Vector<double>(v))
-        {
-            if (_v->size() != PQIndex::size(order)) 
-                throw LaguerreError("Input to LVector(Vector<double>) is wrong size for order");
-        }
 
         LVector& operator=(const LVector& rhs) 
         {
             if (_v.get()==rhs._v.get()) return *this;
-            _v = rhs._v; _order=rhs._order;
+            _order=rhs._order;
+            _v = rhs._v;
             return *this;
         }
 
@@ -256,34 +236,49 @@ namespace galsim {
 
         LVector duplicate() const 
         {
-            LVector fresh(*_order); 
+            LVector fresh(_order); 
             *(fresh._v) = *_v;
             return fresh;
         }
 
-        void resize(int neworder) 
+        void resize(int order) 
         {
-            if (neworder != *_order) {
-                _order.reset(new int(neworder));
-                _v.reset(new tmv::Vector<double>(PQIndex::size(*_order),0.));
+            if (_order != order) {
+                _order = order;
+                _v.reset(new tmv::Vector<double>(PQIndex::size(order),0.));
+            } else {
+                // The caller may be relying on resize to get a unique vector, so if 
+                // we don't make a new one, at least take ownership of the current one.
+                take_ownership();
             }
         }
 
-        void clear() { _v->setZero(); }
+        // We keep the Vector in a shared_ptr to make it cheap to return an LVector by value.
+        // However, this is confusing if you edit one LVector that had been originally made
+        // from another LVector, since then both objects' internal Vectors would be changed.
+        // So for all non-const methods, we first take ownership of the internal vector
+        // by making a new copy of the vector first.  If it is already the sole owner,
+        // then nothing is done.  (FYI: The term for this is "Copy on Write" semantics.)
+        void take_ownership() 
+        { if (!_v.unique()) { _v.reset(new tmv::Vector<double>(*_v)); } }
 
-        // size:
-        int getOrder() const { return *_order; }
+        void clear() { take_ownership(); _v->setZero(); }
+
+        int getOrder() const { return _order; }
+
         // Returns number of real DOF = number of complex coeffs
         int size() const { return _v->size(); }
 
         // Access the real-representation vector directly.
-        tmv::Vector<double>& rVector() { return *_v; }
         const tmv::Vector<double>& rVector() const { return *_v; }
+        tmv::Vector<double>& rVector() { take_ownership(); return *_v; }
+
+        // op[] with int returns real
         double operator[](int i) const { return (*_v)[i]; }
-        double& operator[](int i) { return (*_v)[i]; }
+        double& operator[](int i) { take_ownership(); return (*_v)[i]; }
 
         // Access as complex elements
-        // ??? no bounds checking
+        // op[] with PQIndex returns complex
         std::complex<double> operator[](PQIndex pq) const 
         {
             int isign=pq.iSign();
@@ -291,44 +286,62 @@ namespace galsim {
             else return std::complex<double>( (*_v)[pq.rIndex()], isign*(*_v)[pq.rIndex()+1]);
         }
         LVectorReference operator[](PQIndex pq) 
-        { return LVectorReference(*_v, pq); }
+        { take_ownership(); return LVectorReference(*_v, pq); }
+
+        // op() with p,q values returns complex
         std::complex<double> operator()(int p, int q) const 
         { return (*this)[PQIndex(p,q)]; }
         LVectorReference operator()(int p, int q) 
-        { return (*this)[PQIndex(p,q)]; }
+        { take_ownership(); return (*this)[PQIndex(p,q)]; }
 
         // scalar arithmetic:
         LVector& operator*=(double s) 
-        { *_v *= s; return *this; }
+        { take_ownership(); *_v *= s; return *this; }
         LVector& operator/=(double s) 
-        { *_v /= s; return *this; }
+        { take_ownership(); *_v /= s; return *this; }
 
         LVector operator*(double s) const 
         {
-            LVector fresh(*_order); 
-            *(fresh._v) = *_v * s;
+            LVector fresh = *this;
+            fresh *= s;
             return fresh;
         }
 
         LVector operator/(double s) const 
         {
-            LVector fresh(*_order); 
-            *(fresh._v) = *_v / s;
+            LVector fresh = *this;
+            fresh /= s;
             return fresh;
         }
 
         LVector& operator+=(const LVector& rhs) 
         {
-            assert(*_order== *(rhs._order));
+            take_ownership();
+            assert(_order==rhs._order);
             *_v += *(rhs._v); 
             return *this;
         }
 
         LVector& operator-=(const LVector& rhs) 
         {
-            assert(*_order== *(rhs._order));
+            take_ownership();
+            assert(_order==rhs._order);
             *_v -= *(rhs._v); 
             return *this;
+        }
+
+        LVector operator+(const LVector& rhs) const
+        {
+            LVector fresh = *this;
+            fresh += rhs;
+            return fresh;
+        }
+
+        LVector operator-(const LVector& rhs) const
+        {
+            LVector fresh = *this;
+            fresh -= rhs;
+            return fresh;
         }
 
         // Inner product of the real values.
@@ -413,7 +426,7 @@ namespace galsim {
             tmv::MatrixView<double>* mi,
             int order, bool isK, double sigma=1.);
 
-        boost::shared_ptr<int> _order;
+        int _order;
         boost::shared_ptr<tmv::Vector<double> > _v;
     };
 
@@ -440,28 +453,31 @@ namespace galsim {
     // for fresh copy, use duplicate() method.
     class LTransform 
     {
-    private:
-        boost::shared_ptr<int> _orderIn;
-        boost::shared_ptr<int> _orderOut;
-        boost::shared_ptr<tmv::Matrix<double> > _m;
     public:
         LTransform(int orderOut=0, int orderIn=0) : 
-            _orderIn(new int(orderIn)), _orderOut(new int(orderOut)), 
+            _orderIn(orderIn), _orderOut(orderOut), 
             _m(new tmv::Matrix<double>(PQIndex::size(orderOut),PQIndex::size(orderIn),0.))
         {}
 
-        LTransform(const LTransform& rhs) : 
-            _orderIn(rhs._orderIn), _orderOut(rhs._orderOut), _m(rhs._m) {}
-
         // Build an LTransform from a tmv::Matrix<double> for the real degrees of freedom.
         // Matrix must have correct dimensions.
-        LTransform(const tmv::Matrix<double>& rhs, int orderOut, int orderIn) :
-            _orderIn(new int(orderIn)), _orderOut(new int(orderOut)),
-            _m(new tmv::Matrix<double>(rhs))
+        LTransform(int orderOut, int orderIn, const tmv::Matrix<double>& m) :
+            _orderIn(orderIn), _orderOut(orderOut),
+            _m(new tmv::Matrix<double>(m))
         {
-            if (_m->ncols()!=PQIndex::size(orderIn) || _m->nrows()!=PQIndex::size(orderOut)) 
-                throw LaguerreError("Input to LTransform(Matrix<double>) is wrong size for orders");
+            assert(m.ncols() == PQIndex::size(orderIn));
+            assert(m.nrows() == PQIndex::size(orderOut));
         }
+
+        LTransform(int orderOut, int orderIn, boost::shared_ptr<tmv::Matrix<double> > m) :
+            _orderIn(orderIn), _orderOut(orderOut), _m(m)
+        {
+            assert(m->ncols() == PQIndex::size(orderIn));
+            assert(m->nrows() == PQIndex::size(orderOut));
+        }
+
+        LTransform(const LTransform& rhs) : 
+            _orderIn(rhs._orderIn), _orderOut(rhs._orderOut), _m(rhs._m) {}
 
         LTransform& operator=(const LTransform& rhs) 
         {
@@ -474,28 +490,37 @@ namespace galsim {
 
         LTransform duplicate() const 
         {
-            LTransform fresh(*_orderOut, *_orderIn); 
+            LTransform fresh(_orderOut, _orderIn); 
             *(fresh._m) = *_m;
             return fresh;
         }
 
-        int getOrderIn() const { return *_orderIn; }
-        int getOrderOut() const { return *_orderOut; }
+        int getOrderIn() const { return _orderIn; }
+        int getOrderOut() const { return _orderOut; }
         int sizeIn() const { return _m->ncols(); }
         int sizeOut() const { return _m->nrows(); }
 
-        void clear() { _m->setZero(); }
-        void identity() { _m->setToIdentity(); }
-
         void resize(int orderOut, int orderIn) 
         {
-            _orderIn.reset(new int(orderIn));
-            _orderOut.reset(new int(orderOut));
-            _m.reset(new tmv::Matrix<double>(PQIndex::size(orderOut),PQIndex::size(orderIn),0.));
+            if (_orderIn != orderIn || _orderOut != orderOut) {
+                _orderIn = orderIn;
+                _orderOut = orderOut;
+                _m.reset(new tmv::Matrix<double>(
+                        PQIndex::size(orderOut), PQIndex::size(orderIn), 0.));
+            } else {
+                take_ownership();
+            }
         }
 
+        // As above, we use take_ownership() to implement Copy on Write semantics.
+        void take_ownership() 
+        { if (!_m.unique()) { _m.reset(new tmv::Matrix<double>(*_m)); } }
+
+        void clear() { take_ownership(); _m->setZero(); }
+        void identity() { take_ownership(); _m->setToIdentity(); }
+
         // Access the real-representation vector directly.
-        tmv::Matrix<double>& rMatrix() { return *_m; }
+        tmv::Matrix<double>& rMatrix() { take_ownership(); return *_m; }
         const tmv::Matrix<double>& rMatrix() const { return *_m; }
 
         // Element read
@@ -514,6 +539,10 @@ namespace galsim {
         LTransform operator*(const LTransform rhs) const;
         LTransform& operator*=(const LTransform rhs);
 
+    private:
+        int _orderIn;
+        int _orderOut;
+        boost::shared_ptr<tmv::Matrix<double> > _m;
     };
 
     // Here are the primary types of transformations:

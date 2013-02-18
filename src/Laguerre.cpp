@@ -39,11 +39,12 @@ namespace galsim {
 
     void LVector::rotate(double theta) 
     {
+        take_ownership();
         std::complex<double> z(std::cos(theta), -std::sin(theta));
         std::complex<double> imz(1., 0.);
-        for (int m=1; m<=*_order; m++) {
+        for (int m=1; m<=_order; m++) {
             imz *= z;
-            for (PQIndex pq(m,0); !pq.pastOrder(*_order); pq.incN()) {
+            for (PQIndex pq(m,0); !pq.pastOrder(_order); pq.incN()) {
                 int r = pq.rIndex();
                 std::complex<double> newb = std::complex<double>((*_v)[r], (*_v)[r+1]) * imz;
                 (*_v)[r] = newb.real();
@@ -56,8 +57,8 @@ namespace galsim {
     // ???? Check these ???
     std::complex<double> LTransform::operator()(PQIndex pq1, PQIndex pq2) const 
     {
-        assert(pq1.pqValid() && !pq1.pastOrder(*_orderOut));
-        assert(pq2.pqValid() && !pq2.pastOrder(*_orderIn));
+        assert(pq1.pqValid() && !pq1.pastOrder(_orderOut));
+        assert(pq2.pqValid() && !pq2.pastOrder(_orderIn));
         int r1index=pq1.rIndex();
         int r2index=pq2.rIndex();
         int i1index=(pq1.isReal()? r1index: r1index+1);
@@ -75,9 +76,10 @@ namespace galsim {
     void LTransform::set(
         PQIndex pq1, PQIndex pq2, std::complex<double> Cpq1pq2, std::complex<double> Cqp1pq2) 
     {
-        assert(pq1.pqValid() && !pq1.pastOrder(*_orderOut));
-        assert(pq2.pqValid() && !pq2.pastOrder(*_orderIn));
+        assert(pq1.pqValid() && !pq1.pastOrder(_orderOut));
+        assert(pq2.pqValid() && !pq2.pastOrder(_orderIn));
 
+        take_ownership();
         const double RoundoffTolerance=1.e-15;
         std::complex<double> Cpq1qp2;
 
@@ -101,18 +103,16 @@ namespace galsim {
 
         if (pq1.isReal()) {
             if (Cpq1pq2!=Cqp1pq2) {
-                std::ostringstream oss;
-                oss << "Invalid LTransform elements for p1=q1, " << Cpq1pq2
+                FormatAndThrow<>() 
+                    << "Invalid LTransform elements for p1=q1, " << Cpq1pq2
                     << " != " << Cqp1pq2;
-                throw LaguerreError(oss.str());
             }
             (*_m)(rIndex1,rIndex2) = Cpq1pq2.real() * (pq2.isReal()? 1. : 2.);
             if (pq2.isReal()) {
                 if (std::abs(Cpq1pq2.imag()) > RoundoffTolerance) {
-                    std::ostringstream oss;
-                    oss << "Nonzero imaginary LTransform elements for p1=q1, p2=q2: " 
+                    FormatAndThrow<>() 
+                        << "Nonzero imaginary LTransform elements for p1=q1, p2=q2: " 
                         << Cpq1pq2;
-                    throw LaguerreError(oss.str());
                 }
             } else {
                 (*_m)(rIndex1,iIndex2) = -2.*Cpq1pq2.imag();
@@ -121,10 +121,9 @@ namespace galsim {
         } else if (pq2.isReal()) {
             // Here we know p1!=q1:
             if (norm(Cpq1pq2-conj(Cqp1pq2))>RoundoffTolerance) {
-                std::ostringstream oss;
-                oss << "Inputs to LTransform.set are not conjugate for p2=q2: "
+                FormatAndThrow<>() 
+                    << "Inputs to LTransform.set are not conjugate for p2=q2: "
                     << Cpq1pq2 << " vs " << Cqp1pq2 ;
-                throw LaguerreError(oss.str());
             }
             (*_m)(rIndex1, rIndex2) = Cpq1pq2.real();
             (*_m)(iIndex1, rIndex2) = Cpq1pq2.imag();
@@ -141,37 +140,39 @@ namespace galsim {
 
     LVector LTransform::operator*(const LVector rhs) const 
     {
-        if (*_orderIn != rhs.getOrder()) 
-            FormatAndThrow<LaguerreError>() 
-                << "Order mismatch between LTransform [" << *_orderIn
+        if (_orderIn != rhs.getOrder()) 
+            FormatAndThrow<>() 
+                << "Order mismatch between LTransform [" << _orderIn
                 << "] and LVector [" << rhs.getOrder()
                 << "]";
-        tmv::Vector<double> out = (*_m) * rhs.rVector();
-        // ??? avoid extra copy by assigning directly to output?
-        return LVector(out, *_orderOut);
+        boost::shared_ptr<tmv::Vector<double> > out(new tmv::Vector<double>(sizeOut()));
+        *out = (*_m) * rhs.rVector();
+        return LVector(_orderOut, out);
     }
 
     LTransform LTransform::operator*(const LTransform rhs) const 
     {
-        if (*_orderIn != rhs.getOrderOut()) 
-            FormatAndThrow<LaguerreError>()  
-                << "Order mismatch between LTransform [" << *_orderIn
+        if (_orderIn != rhs.getOrderOut()) 
+            FormatAndThrow<>()  
+                << "Order mismatch between LTransform [" << _orderIn
                 << "] and LTransform [" << rhs.getOrderOut()
                 << "]";
-        tmv::Matrix<double> out = (*_m) * (*rhs._m);
-        // ??? avoid extra copy by assigning directly to output?
-        return LTransform(out, *_orderOut, *(rhs._orderIn));
+        boost::shared_ptr<tmv::Matrix<double> > out(
+            new tmv::Matrix<double>(sizeOut(),rhs.sizeIn()));
+        *out = (*_m) * (*rhs._m);
+        return LTransform(_orderOut, rhs._orderIn, out);
     }
 
     LTransform& LTransform::operator*=(const LTransform rhs) 
     {
-        if (*_orderIn != rhs.getOrderOut())
-            FormatAndThrow<LaguerreError>()  
-                << "Order mismatch between LTransform [" << *_orderIn
+        take_ownership();
+        if (_orderIn != rhs.getOrderOut())
+            FormatAndThrow<>()
+                << "Order mismatch between LTransform [" << _orderIn
                 << "] and LTransform [" << rhs.getOrderOut()
                 << "]";
         (*_m) *= (*rhs._m);
-        *_orderIn = *(rhs._orderOut);
+        _orderIn = rhs._orderOut;
         return *this;
     }
 
@@ -182,6 +183,7 @@ namespace galsim {
     // Fill LVector with the basis functions corresponding to each real DOF
     void LVector::fillBasis(double xunit, double yunit, double sigma) 
     {
+        take_ownership();
         // fill with psi_pq(z), where psi now defined to have 1/sigma^2 in
         // front.
         std::complex<double> z(xunit,-yunit);
@@ -195,13 +197,13 @@ namespace galsim {
 
         (*_v)[PQIndex(0,0).rIndex()]=tq;
 
-        if (*_order>=2) {
+        if (_order>=2) {
             tq = (x-1)*tqm1;
             (*_v)[PQIndex(1,1).rIndex()] = tq;
         }
 
         PQIndex pq(2,2);
-        for (int p=2; 2*p<= *_order; ++p, pq.incN()) {
+        for (int p=2; 2*p<=_order; ++p, pq.incN()) {
             tqm2 = tqm1;
             tqm1 = tq;
             tq = ((x-2*p+1)*tqm1 - (p-1)*tqm2)/p;
@@ -211,7 +213,7 @@ namespace galsim {
         // Ascend all positive m's
         std::complex<double> zm = 2* (*_v)[PQIndex(0,0).rIndex()] * z;
 
-        for (int m=1; m<= *_order; m++) {
+        for (int m=1; m<=_order; m++) {
             pq.setPQ(m,0);
             double *r = &(*_v)[pq.rIndex()];
             *r = zm.real();
@@ -219,7 +221,7 @@ namespace galsim {
             tq = 1.;
             tqm1 = 0.;
 
-            for (pq.incN(); !pq.pastOrder(*_order); pq.incN()) {
+            for (pq.incN(); !pq.pastOrder(_order); pq.incN()) {
                 tqm2 = tqm1;
                 tqm1 = tq;
                 int p=pq.getP(); int q=pq.getQ(); 
@@ -235,7 +237,7 @@ namespace galsim {
 
     boost::shared_ptr<tmv::Matrix<double> > LVector::basis(
         const tmv::Vector<double>& xunit, const tmv::Vector<double>& yunit,
-        int order, double sigma) 
+        int order, double sigma)
     {
         assert(xunit.size()==yunit.size());
         //**/Stopwatch s; s.start();
@@ -248,7 +250,7 @@ namespace galsim {
 
     void LVector::basis(
         tmv::Matrix<double>& out, const tmv::Vector<double>& xunit,
-        const tmv::Vector<double>& yunit, int order, double sigma) 
+        const tmv::Vector<double>& yunit, int order, double sigma)
     {
         const int npts=xunit.size();
         assert(yunit.size() ==npts && out.nrows()==npts);
@@ -263,7 +265,7 @@ namespace galsim {
 
     boost::shared_ptr<tmv::Matrix<double> > LVector::design(
         const tmv::Vector<double>& xunit, const tmv::Vector<double>& yunit,
-        const tmv::Vector<double>& invsig, int order, double sigma) 
+        const tmv::Vector<double>& invsig, int order, double sigma)
     {
         //**/Stopwatch s; s.start();
         boost::shared_ptr<tmv::Matrix<double> > mr(
@@ -276,7 +278,7 @@ namespace galsim {
     void LVector::design(
         tmv::Matrix<double>& out, const tmv::Vector<double>& xunit,
         const tmv::Vector<double>& yunit, const tmv::Vector<double>& invsig,
-        int order, double sigma) 
+        int order, double sigma)
     {
         const int npts=xunit.size();
         assert(yunit.size()==npts && out.nrows()==npts && invsig.size()==npts);
@@ -293,7 +295,7 @@ namespace galsim {
     void LVector::kBasis(
         const tmv::Vector<double>& kxunit, const tmv::Vector<double>& kyunit,
         boost::shared_ptr<tmv::Matrix<double> >& kReal,
-        boost::shared_ptr<tmv::Matrix<double> >& kImag, int order) 
+        boost::shared_ptr<tmv::Matrix<double> >& kImag, int order)
     {
         const int ndof=PQIndex::size(order);
         const int npts = kxunit.size();
@@ -347,7 +349,7 @@ namespace galsim {
         const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
         const tmv::ConstVectorView<double>* invsig,
         tmv::MatrixView<double>* mr, tmv::MatrixView<double>* mi,
-        int order, bool isK, double sigma) 
+        int order, bool isK, double sigma)
     {
         const int N=order;
 #ifndef NDEBUG
@@ -630,9 +632,9 @@ namespace galsim {
     {
         int oldprec = os.precision(8);
         std::ios::fmtflags oldf = os.setf(std::ios::scientific,std::ios::floatfield);
-        if (maxorder < 0 || maxorder > *_order)
-            maxorder = *_order;
-        os << *_order << std::endl;
+        if (maxorder < 0 || maxorder > _order)
+            maxorder = _order;
+        os << _order << std::endl;
         for (int n=0; n<=maxorder; n++) {
             for(PQIndex pq(n,0); !pq.needsConjugation(); pq.decm()) {
                 os << " " << std::setw(2) << pq.getP() 
@@ -683,7 +685,7 @@ namespace galsim {
 
     // Transformation generators - these return a view into static quantities:
     const tmv::ConstMatrixView<double> LVector::Generator(
-        GType iparam, int orderOut, int orderIn) 
+        GType iparam, int orderOut, int orderIn)
     {
         static boost::shared_ptr<tmv::Matrix<double> > gmu;
         static boost::shared_ptr<tmv::Matrix<double> > gx;
@@ -923,7 +925,7 @@ namespace galsim {
             }
             return grot->subMatrix(0, sizeOut, 0, sizeIn);
         } else {
-            throw (LaguerreError("Unknown parameter for LVector::Generator()"));
+            throw std::runtime_error("Unknown parameter for LVector::Generator()");
         }
     }
 
