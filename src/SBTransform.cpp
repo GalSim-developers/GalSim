@@ -604,7 +604,7 @@ namespace galsim {
         // If there is overall magnification in the transform
         boost::shared_ptr<PhotonArray> result = _adaptee.shoot(N,u);
         for (int i=0; i<result->size(); i++) {
-            Position<double> xy = fwd(Position<double>(result->getX(i), result->getY(i))+_cen);
+            Position<double> xy = fwd(Position<double>(result->getX(i), result->getY(i)))+_cen;
             result->setPhoton(i,xy.x, xy.y, result->getFlux(i)*_absdet);
         }
         dbg<<"Distort Realized flux = "<<result->getTotalFlux()<<std::endl;
