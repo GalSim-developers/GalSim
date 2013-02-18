@@ -44,13 +44,13 @@ namespace galsim {
     double SBBox::getXWidth() const 
     {
         assert(dynamic_cast<const SBBoxImpl*>(_pimpl.get()));
-        return dynamic_cast<const SBBoxImpl&>(*_pimpl).getXWidth(); 
+        return static_cast<const SBBoxImpl&>(*_pimpl).getXWidth(); 
     }
 
     double SBBox::getYWidth() const 
     {
         assert(dynamic_cast<const SBBoxImpl*>(_pimpl.get()));
-        return dynamic_cast<const SBBoxImpl&>(*_pimpl).getYWidth(); 
+        return static_cast<const SBBoxImpl&>(*_pimpl).getYWidth(); 
     }
 
     double SBBox::SBBoxImpl::xValue(const Position<double>& p) const 

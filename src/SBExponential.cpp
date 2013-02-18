@@ -61,7 +61,7 @@ namespace galsim {
     double SBExponential::getScaleRadius() const 
     { 
         assert(dynamic_cast<const SBExponentialImpl*>(_pimpl.get()));
-        return dynamic_cast<const SBExponentialImpl&>(*_pimpl).getScaleRadius(); 
+        return static_cast<const SBExponentialImpl&>(*_pimpl).getScaleRadius(); 
     }
 
     SBExponential::SBExponentialImpl::SBExponentialImpl(double r0, double flux) :
