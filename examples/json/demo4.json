@@ -25,6 +25,7 @@
 "#" : "- top level field input",
 "#" : "- input : catalog (file_name, dir)",
 "#" : "- output type : MultiFits (file_name, dir)",
+
 "#" : "- Using both ellip and shear for the same object",
 "#" : "- Using variables in a JSON file",
 
@@ -124,7 +125,7 @@
 
     "#" : "Define what kind of noise to use",
     "noise" : {
-        "#" : "Since the default type is CCDNoise, we may omit it.",
+        "#" : "Since the default type is Poisson, we may omit it.",
         "sky_level" : 1e6
     },
 
