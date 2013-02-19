@@ -474,7 +474,7 @@ def test_uncorr_padding():
     orig_img = galsim.ImageF(orig_nx, orig_ny)
     orig_img.setScale(1.)
     gd = galsim.GaussianDeviate(orig_seed, mean=0., sigma=np.sqrt(noise_var))
-    gd.applyTo(orig_img.view())
+    orig_img.addNoise(galsim.DeviateNoise(gd))
 
     # make it into an InterpolatedImage with some zero-padding
     # (note that default is zero-padding, by factors of several)
