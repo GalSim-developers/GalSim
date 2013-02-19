@@ -36,8 +36,7 @@ namespace galsim {
                                 public bp::wrapper<BaseDeviate>
     {
     public:
-        BaseDeviateCallBack() : BaseDeviate() {}
-        BaseDeviateCallBack(long lseed) : BaseDeviate(lseed) {}
+        BaseDeviateCallBack(long lseed=0) : BaseDeviate(lseed) {}
         BaseDeviateCallBack(const BaseDeviate& rhs) : BaseDeviate(rhs) {}
         ~BaseDeviateCallBack() {}
 
@@ -60,18 +59,17 @@ namespace galsim {
     struct PyBaseDeviate {
 
         static void wrap() {
-            bp::class_<BaseDeviateCallBack> pyBaseDeviate("BaseDeviate", "", bp::init<>());
+            bp::class_<BaseDeviateCallBack> pyBaseDeviate("BaseDeviate", "", bp::no_init);
             pyBaseDeviate
-                .def(bp::init<long>(bp::arg("lseed")))
+                .def(bp::init<long>(bp::arg("lseed")=0))
                 .def(bp::init<const BaseDeviate&>(bp::arg("dev")))
-                .def("seed", (void (BaseDeviate::*) () )&BaseDeviate::seed, "")
                 .def("seed", (void (BaseDeviate::*) (long) )&BaseDeviate::seed,
-                     (bp::arg("lseed")), "")
-                .def("reset", (void (BaseDeviate::*) () )&BaseDeviate::reset, "")
+                     (bp::arg("lseed")=0), "")
                 .def("reset", (void (BaseDeviate::*) (long) )&BaseDeviate::reset,
-                     (bp::arg("lseed")), "")
+                     (bp::arg("lseed")=0), "")
                 .def("reset", (void (BaseDeviate::*) (const BaseDeviate&) )&BaseDeviate::reset, 
                      (bp::arg("dev")), "")
+                .def("clearCache", &BaseDeviate::clearCache, "")
                 ;
         }
 
@@ -81,10 +79,9 @@ namespace galsim {
 
         static void wrap() {
             bp::class_<UniformDeviate, bp::bases<BaseDeviate> > pyUniformDeviate(
-                "UniformDeviate", "", bp::init<>()
-            );
+                "UniformDeviate", "", bp::no_init);
             pyUniformDeviate
-                .def(bp::init<long>(bp::arg("lseed")))
+                .def(bp::init<long>(bp::arg("lseed")=0))
                 .def(bp::init<const BaseDeviate&>(bp::arg("dev")))
                 .def("__call__", &UniformDeviate::operator(), "")
                 ;
@@ -96,13 +93,10 @@ namespace galsim {
 
         static void wrap() {
             bp::class_<GaussianDeviate, bp::bases<BaseDeviate> > pyGaussianDeviate(
-                "GaussianDeviate", "", bp::init<double, double >(
-                    (bp::arg("mean")=0., bp::arg("sigma")=1.)
-                )
-            );
+                "GaussianDeviate", "", bp::no_init);
             pyGaussianDeviate
                 .def(bp::init<long, double, double>(
-                        (bp::arg("lseed"), bp::arg("mean")=0., bp::arg("sigma")=1.)
+                        (bp::arg("lseed")=0, bp::arg("mean")=0., bp::arg("sigma")=1.)
                 ))
                 .def(bp::init<const BaseDeviate&, double, double>(
                         (bp::arg("dev"), bp::arg("mean")=0., bp::arg("sigma")=1.)
@@ -121,13 +115,10 @@ namespace galsim {
 
         static void wrap() {
             bp::class_<BinomialDeviate, bp::bases<BaseDeviate> > pyBinomialDeviate(
-                "BinomialDeviate", "", bp::init<int, double >(
-                    (bp::arg("N")=1, bp::arg("p")=0.5)
-                )
-            );
+                "BinomialDeviate", "", bp::no_init);
             pyBinomialDeviate
                 .def(bp::init<long, int, double>(
-                        (bp::arg("lseed"), bp::arg("N")=1, bp::arg("p")=0.5)
+                        (bp::arg("lseed")=0, bp::arg("N")=1, bp::arg("p")=0.5)
                 ))
                 .def(bp::init<const BaseDeviate&, int, double>(
                         (bp::arg("dev"), bp::arg("N")=1, bp::arg("p")=0.5)
@@ -146,13 +137,10 @@ namespace galsim {
 
         static void wrap() {
             bp::class_<PoissonDeviate, bp::bases<BaseDeviate> > pyPoissonDeviate(
-                "PoissonDeviate", "", bp::init<double>(
-                    (bp::arg("mean")=1.)
-                )
-            );
+                "PoissonDeviate", "", bp::no_init);
             pyPoissonDeviate
                 .def(bp::init<long, double>(
-                        (bp::arg("lseed"), bp::arg("mean")=1.)
+                        (bp::arg("lseed")=0, bp::arg("mean")=1.)
                 ))
                 .def(bp::init<const BaseDeviate&, double>(
                         (bp::arg("dev"), bp::arg("mean")=1.)
@@ -170,13 +158,10 @@ namespace galsim {
         static void wrap() {
 
             bp::class_<WeibullDeviate, bp::bases<BaseDeviate> > pyWeibullDeviate(
-                "WeibullDeviate", "", bp::init<double, double >(
-                    (bp::arg("a")=1., bp::arg("b")=1.)
-                )
-            );
+                "WeibullDeviate", "", bp::no_init);
             pyWeibullDeviate
                 .def(bp::init<long, double, double>(
-                        (bp::arg("lseed"), bp::arg("a")=1., bp::arg("b")=1.)
+                        (bp::arg("lseed")=0, bp::arg("a")=1., bp::arg("b")=1.)
                 ))
                 .def(bp::init<const BaseDeviate&, double, double>(
                         (bp::arg("dev"), bp::arg("a")=1., bp::arg("b")=1.)
@@ -195,22 +180,19 @@ namespace galsim {
 
         static void wrap() {
             bp::class_<GammaDeviate, bp::bases<BaseDeviate> > pyGammaDeviate(
-                "GammaDeviate", "", bp::init<double, double >(
-                    (bp::arg("alpha")=1., bp::arg("beta")=1.)
-                )
-            );
+                "GammaDeviate", "", bp::no_init);
             pyGammaDeviate
                 .def(bp::init<long, double, double>(
-                        (bp::arg("lseed"), bp::arg("alpha")=1., bp::arg("beta")=1.)
+                        (bp::arg("lseed")=0, bp::arg("k")=1., bp::arg("theta")=1.)
                 ))
                 .def(bp::init<const BaseDeviate&, double, double>(
-                        (bp::arg("dev"), bp::arg("alpha")=1., bp::arg("beta")=1.)
+                        (bp::arg("dev"), bp::arg("k")=1., bp::arg("theta")=1.)
                 ))
                 .def("__call__", &GammaDeviate::operator(), "")
-                .def("getAlpha", &GammaDeviate::getAlpha, "")
-                .def("setAlpha", &GammaDeviate::setAlpha, "")
-                .def("getBeta", &GammaDeviate::getBeta, "")
-                .def("setBeta", &GammaDeviate::setBeta, "")
+                .def("getK", &GammaDeviate::getK, "")
+                .def("setK", &GammaDeviate::setK, "")
+                .def("getTheta", &GammaDeviate::getTheta, "")
+                .def("setTheta", &GammaDeviate::setTheta, "")
                 ;
         }
 
@@ -220,13 +202,10 @@ namespace galsim {
 
         static void wrap() {
             bp::class_<Chi2Deviate, bp::bases<BaseDeviate> > pyChi2Deviate(
-                "Chi2Deviate", "", bp::init<double >(
-                    (bp::arg("n")=1.)
-                )
-            );
+                "Chi2Deviate", "", bp::no_init);
             pyChi2Deviate
                 .def(bp::init<long, double>(
-                        (bp::arg("lseed"), bp::arg("n")=1.)
+                        (bp::arg("lseed")=0, bp::arg("n")=1.)
                 ))
                 .def(bp::init<const BaseDeviate&, double>(
                         (bp::arg("dev"), bp::arg("n")=1.)

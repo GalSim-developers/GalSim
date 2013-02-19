@@ -95,7 +95,8 @@ class DistDeviate(_galsim.BaseDeviate):
     PRNG to the already-existing random number generator rng.
     
     @param rng          Something that can seed a BaseDeviate: a long int seed or another 
-                        BaseDeviate.
+                        BaseDeviate.  Using 0 means to use the time of day as a seed.
+                        (default: 0)
     @param function     A callable function giving a probability distribution or the name of a 
                         file containing a probability distribution as a 2-column ASCII table.
     @param x_min        The minimum desired return value (required for non-galsim.LookupTable
@@ -122,7 +123,7 @@ class DistDeviate(_galsim.BaseDeviate):
     >>> d()
     2.108800962574702
     """    
-    def __init__(self, rng=None, function=None, x_min=None, 
+    def __init__(self, rng=0, function=None, x_min=None, 
                  x_max=None, interpolant=None, npoints=256):
         """Initializes a DistDeviate instance.
         
@@ -135,14 +136,11 @@ class DistDeviate(_galsim.BaseDeviate):
         import galsim
  
         # Set up the PRNG
-        if not rng:
-            _galsim.BaseDeviate.__init__(self)
-        else:
-            try:
-                _galsim.BaseDeviate.__init__(self,rng)
-            except:
-                raise TypeError('Argument rng passed to DistDeviate cannot be used to initialize '
-                                'a BaseDeviate.')
+        try:
+            _galsim.BaseDeviate.__init__(self,rng)
+        except:
+            raise TypeError('Argument rng passed to DistDeviate cannot be used to initialize '
+                            'a BaseDeviate.')
         self._ud = galsim.UniformDeviate(self)
 
         # Basic input checking and setups
@@ -249,11 +247,8 @@ class DistDeviate(_galsim.BaseDeviate):
     def __call__(self):
         return self.val()
 
-    def reset(self, rng=None):
-        if rng is None:
-            _galsim.BaseDeviate.reset(self)
-        else:
-            _galsim.BaseDeviate.reset(self,rng)
+    def reset(self, rng=0):
+        _galsim.BaseDeviate.reset(self,rng)
         # Make sure the stored _ud object stays in sync with self.
         self._ud.reset(self)
 
@@ -559,35 +554,34 @@ _galsim.WeibullDeviate.setB.__func__.__doc__ = "Set current distribution shape p
 
 # GammaDeviate docstrings
 _galsim.GammaDeviate.__doc__ = """
-Pseudo-random Gamma-distributed deviate for parameters alpha & beta.
-
-See http://en.wikipedia.org/wiki/Gamma_distribution (note that alpha=k and beta=theta in the
-notation adopted in the Boost.Random routine called by this class).  The Gamma distribution is a 
-real-valued distribution producing deviates >= 0.
+A Gamma-distributed deviate with shape parameter k and scale parameter theta.
+See http://en.wikipedia.org/wiki/Gamma_distribution.  
+(Note: we use the k, theta notation. If you prefer alpha, beta, use k=alpha, theta=1/beta.)
+The Gamma distribution is a real valued distribution producing deviates >= 0.
 
 Initialization
 --------------
 
-    >>> gam = galsim.GammaDeviate(alpha=1., beta=1.)         # Initializes gam to be a GammaDeviate
-                                                             # instance using the current time for
-                                                             # the seed
+    >>> gam = galsim.GammaDeviate(k=1., theta=1.)         # Initializes gam to be a GammaDeviate
+                                                          # instance using the current time for
+                                                          # the seed
 
-    >>> gam = galsim.GammaDeviate(lseed, alpha=1., beta=1.)  # Initializes gam using the specified
-                                                             # seed, where lseed is a long int
+    >>> gam = galsim.GammaDeviate(lseed, k=1., theta=1.)  # Initializes gam using the specified
+                                                          # seed, where lseed is a long int
 
-    >>> gam = galsim.GammaDeviate(dev alpha=1., beta=1.)     # Initializes gam to share the same
-                                                             # underlying random number generator as
-                                                             # dev
+    >>> gam = galsim.GammaDeviate(dev, k=1., theta=1.)    # Initializes gam to share the same
+                                                          # underlying random number generator as
+                                                          # dev
 
 Parameters:
 
-    alpha    shape parameter of the distribution [default `alpha = 1`].  Must be > 0.
-    beta     scale parameter of the distribution [default `beta = 1`].  Must be > 0.
+    k       shape parameter of the distribution [default `k = 1`].  Must be > 0.
+    theta   scale parameter of the distribution [default `theta = 1`].  Must be > 0.
 
 Calling
 -------
 Taking the instance from the above examples, successive calls to g() will return successive, 
-pseudo-random Gamma-distributed deviates with shape and scale parameters alpha and beta. 
+pseudo-random Gamma-distributed deviates with shape and scale parameters k and theta. 
 
     >>> gam = galsim.GammaDeviate()
     >>> gam()
@@ -599,12 +593,12 @@ pseudo-random Gamma-distributed deviates with shape and scale parameters alpha a
 _galsim.GammaDeviate.__call__.__func__.__doc__ = """
 Draw a new random number from the distribution.
 
-Returns a Gamma-distributed deviate with current alpha and beta.
+Returns a Gamma-distributed deviate with current k and theta.
 """
-_galsim.GammaDeviate.getAlpha.__func__.__doc__ = "Get current distribution shape parameter alpha."
-_galsim.GammaDeviate.setAlpha.__func__.__doc__ = "Set current distribution shape parameter alpha."
-_galsim.GammaDeviate.getBeta.__func__.__doc__ = "Get current distribution shape parameter beta."
-_galsim.GammaDeviate.setBeta.__func__.__doc__ = "Set current distribution shape parameter beta."
+_galsim.GammaDeviate.getK.__func__.__doc__ = "Get current distribution shape parameter k."
+_galsim.GammaDeviate.setK.__func__.__doc__ = "Set current distribution shape parameter k."
+_galsim.GammaDeviate.getTheta.__func__.__doc__ = "Get current distribution shape parameter theta."
+_galsim.GammaDeviate.setTheta.__func__.__doc__ = "Set current distribution shape parameter theta."
 
 
 # Chi2Deviate docstrings
