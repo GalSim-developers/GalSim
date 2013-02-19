@@ -20,8 +20,6 @@
  */
 #include "boost/python.hpp"
 #include "Random.h"
-#include "CCDNoise.h"
-#include "Image.h"
 
 namespace bp = boost::python;
 
@@ -51,14 +49,6 @@ struct PyBaseDeviate {
 };
 struct PyUniformDeviate {
 
-    template <typename U, typename W>
-    static void wrapTemplates(W & wrapper) {
-        wrapper
-            .def("applyTo", (void (UniformDeviate::*) (ImageView<U>) )&UniformDeviate::applyTo, "",
-                 (bp::arg("image")))
-            ;
-    }
-
     static void wrap() {
 
         // Note that class docstrings are now added in galsim/random.py
@@ -71,23 +61,11 @@ struct PyUniformDeviate {
             .def(bp::init<const BaseDeviate&>(bp::arg("dev")))
             .def("__call__", &UniformDeviate::operator(), "")
             ;
-        wrapTemplates<int>(pyUniformDeviate);
-        wrapTemplates<short>(pyUniformDeviate);
-        wrapTemplates<float>(pyUniformDeviate);
-        wrapTemplates<double>(pyUniformDeviate);
     }
 
 };
 
 struct PyGaussianDeviate {
-
-    template <typename U, typename W>
-    static void wrapTemplates(W & wrapper) {
-        wrapper
-            .def("applyTo", (void (GaussianDeviate::*) (ImageView<U>) )&GaussianDeviate::applyTo,
-                 "", (bp::arg("image")))
-            ;
-    }
 
     static void wrap() {
 
@@ -111,23 +89,11 @@ struct PyGaussianDeviate {
             .def("getSigma", &GaussianDeviate::getSigma, "")
             .def("setSigma", &GaussianDeviate::setSigma, "")
             ;
-        wrapTemplates<int>(pyGaussianDeviate);
-        wrapTemplates<short>(pyGaussianDeviate);
-        wrapTemplates<float>(pyGaussianDeviate);
-        wrapTemplates<double>(pyGaussianDeviate);
     }
 
 };
 
 struct PyBinomialDeviate {
-
-    template <typename U, typename W>
-    static void wrapTemplates(W & wrapper) {
-        wrapper
-            .def("applyTo", (void (BinomialDeviate::*) (ImageView<U>) )&BinomialDeviate::applyTo,
-                 "", (bp::arg("image")))
-            ;
-    }
 
     static void wrap() {
 
@@ -151,23 +117,11 @@ struct PyBinomialDeviate {
             .def("getP", &BinomialDeviate::getP, "")
             .def("setP", &BinomialDeviate::setP, "")
             ;
-        wrapTemplates<int>(pyBinomialDeviate);
-        wrapTemplates<short>(pyBinomialDeviate);
-        wrapTemplates<float>(pyBinomialDeviate);
-        wrapTemplates<double>(pyBinomialDeviate);
     }
 
 };
 
 struct PyPoissonDeviate {
-
-    template <typename U, typename W>
-    static void wrapTemplates(W & wrapper) {
-        wrapper
-            .def("applyTo", (void (PoissonDeviate::*) (ImageView<U>) )&PoissonDeviate::applyTo, "",
-                 (bp::arg("image")))
-            ;
-    }
 
     static void wrap() {
 
@@ -189,62 +143,11 @@ struct PyPoissonDeviate {
             .def("getMean", &PoissonDeviate::getMean, "")
             .def("setMean", &PoissonDeviate::setMean, "")
             ;
-        wrapTemplates<int>(pyPoissonDeviate);
-        wrapTemplates<short>(pyPoissonDeviate);
-        wrapTemplates<float>(pyPoissonDeviate);
-        wrapTemplates<double>(pyPoissonDeviate);
-    }
-
-};
-
-struct PyCCDNoise{
-
-    template <typename U, typename W>
-    static void wrapTemplates(W & wrapper) {
-        wrapper
-            .def("applyTo", (void (CCDNoise::*) (ImageView<U>) )&CCDNoise::applyTo, "", 
-                 (bp::arg("image")))
-            ;
-    }
-
-    static void wrap() {
-
-        // Note that class docstrings are now added in galsim/random.py
-
-        bp::class_<CCDNoise, bp::bases<BaseDeviate> > pyCCDNoise(
-            "CCDNoise", "", bp::init<double, double >(
-                (bp::arg("gain")=1., bp::arg("read_noise")=0.)
-            )
-        );
-        pyCCDNoise
-            .def(bp::init<long, double, double>(
-                (bp::arg("lseed"), bp::arg("gain")=1., bp::arg("read_noise")=0.)
-                ))
-            .def(bp::init<const BaseDeviate&, double, double>(
-                (bp::arg("dev"), bp::arg("gain")=1., bp::arg("read_noise")=0.)
-                ))
-            .def("getGain", &CCDNoise::getGain, "")
-            .def("setGain", &CCDNoise::setGain, "")
-            .def("getReadNoise", &CCDNoise::getReadNoise, "")
-            .def("setReadNoise", &CCDNoise::setReadNoise, "")
-            ;
-        wrapTemplates<int>(pyCCDNoise);
-        wrapTemplates<short>(pyCCDNoise);
-        wrapTemplates<float>(pyCCDNoise);
-        wrapTemplates<double>(pyCCDNoise);
     }
 
 };
 
 struct PyWeibullDeviate {
-
-    template <typename U, typename W>
-    static void wrapTemplates(W & wrapper) {
-        wrapper
-            .def("applyTo", (void (WeibullDeviate::*) (ImageView<U>) )&WeibullDeviate::applyTo,
-                 "", (bp::arg("image")))
-            ;
-    }
 
     static void wrap() {
 
@@ -268,23 +171,11 @@ struct PyWeibullDeviate {
             .def("getB", &WeibullDeviate::getB, "")
             .def("setB", &WeibullDeviate::setB, "")
             ;
-        wrapTemplates<int>(pyWeibullDeviate);
-        wrapTemplates<short>(pyWeibullDeviate);
-        wrapTemplates<float>(pyWeibullDeviate);
-        wrapTemplates<double>(pyWeibullDeviate);
     }
 
 };
 
 struct PyGammaDeviate {
-
-    template <typename U, typename W>
-    static void wrapTemplates(W & wrapper) {
-        wrapper
-            .def("applyTo", (void (GammaDeviate::*) (ImageView<U>) )&GammaDeviate::applyTo, "", 
-                 (bp::arg("image")))
-            ;
-    }
 
     static void wrap() {
 
@@ -308,23 +199,11 @@ struct PyGammaDeviate {
             .def("getBeta", &GammaDeviate::getBeta, "")
             .def("setBeta", &GammaDeviate::setBeta, "")
             ;
-        wrapTemplates<int>(pyGammaDeviate);
-        wrapTemplates<short>(pyGammaDeviate);
-        wrapTemplates<float>(pyGammaDeviate);
-        wrapTemplates<double>(pyGammaDeviate);
     }
 
 };
 
 struct PyChi2Deviate {
-
-    template <typename U, typename W>
-    static void wrapTemplates(W & wrapper) {
-        wrapper
-            .def("applyTo", (void (Chi2Deviate::*) (ImageView<U>) )&Chi2Deviate::applyTo, "",
-                 (bp::arg("image")))
-            ;
-    }
 
     static void wrap() {
 
@@ -346,10 +225,6 @@ struct PyChi2Deviate {
             .def("getN", &Chi2Deviate::getN, "")
             .def("setN", &Chi2Deviate::setN, "")
             ;
-        wrapTemplates<int>(pyChi2Deviate);
-        wrapTemplates<short>(pyChi2Deviate);
-        wrapTemplates<float>(pyChi2Deviate);
-        wrapTemplates<double>(pyChi2Deviate);
     }
 
 };
@@ -362,7 +237,6 @@ void pyExportRandom() {
     PyGaussianDeviate::wrap();
     PyBinomialDeviate::wrap();
     PyPoissonDeviate::wrap();
-    PyCCDNoise::wrap();
     PyWeibullDeviate::wrap();
     PyGammaDeviate::wrap();
     PyChi2Deviate::wrap();

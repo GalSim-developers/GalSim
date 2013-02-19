@@ -93,7 +93,7 @@ static bp::object MakeNumpyArray(
     int flags = NPY_ALIGNED;
     if (!isConst) flags |= NPY_WRITEABLE;
     npy_intp shape[2] = { n1, n2 };
-    npy_intp strides[2] = { stride * sizeof(T), sizeof(T) };
+    npy_intp strides[2] = { stride * int(sizeof(T)), int(sizeof(T)) };
     bp::object result(
         bp::handle<>(
             PyArray_New(
