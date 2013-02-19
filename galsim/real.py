@@ -115,6 +115,7 @@ class RealGalaxyCatalog(object):
     _req_params = { 'file_name' : str }
     _opt_params = { 'image_dir' : str , 'dir' : str, 'preload' : bool }
     _single_params = []
+    _takes_rng = False
 
     def __init__(self, file_name, image_dir=None, dir=None, preload=False):
         import os
@@ -152,6 +153,7 @@ class RealGalaxyCatalog(object):
             self.pixel_scale = cat.field('pixel_scale') # pixel scale for image (could be different
             # if we have training data from other datasets... let's be general here and make it a 
             # vector in case of mixed training set)
+            self.variance = cat.field('noise_variance') # noise variance for image
             self.mag = cat.field('mag')   # apparent magnitude
             self.band = cat.field('band') # bandpass in which apparent mag is measured, e.g., F814W
             self.weight = cat.field('weight') # weight factor to account for size-dependent
@@ -282,13 +284,15 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
             lan5 = galsim.Lanczos(5, conserve_flux = True, tol = 1.e-4)
             interp2d = galsim.InterpolantXY(lan5)
             target_PSF = galsim.SBInterpolatedImage(
-                target_PSF.view(), interp2d, dx = target_pixel_scale)
+                target_PSF.view(), xInterp=interp2d, dx = target_pixel_scale)
             break
     for Class in galsim.ImageView.itervalues():
         if isinstance(target_PSF, Class):
             lan5 = galsim.Lanczos(5, conserve_flux = True, tol = 1.e-4)
             interp2d = galsim.InterpolantXY(lan5)
-            target_PSF = galsim.SBInterpolatedImage(target_PSF, interp2d, dx = target_pixel_scale)
+            target_PSF = galsim.SBInterpolatedImage(target_PSF,
+                                                    xInterp=interp2d,
+                                                    dx = target_pixel_scale)
             break
     if isinstance(target_PSF, galsim.GSObject):
         target_PSF = target_PSF.SBProfile
@@ -316,8 +320,6 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     elif rotation_angle == None and rand_rotate == True:
         if rng == None:
             uniform_deviate = galsim.UniformDeviate()
-        elif isinstance(rng,galsim.UniformDeviate):
-            uniform_deviate = rng
         elif isinstance(rng,galsim.BaseDeviate):
             uniform_deviate = galsim.UniformDeviate(rng)
         else:

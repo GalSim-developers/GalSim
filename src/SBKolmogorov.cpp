@@ -54,7 +54,7 @@ namespace galsim {
     double SBKolmogorov::getLamOverR0() const 
     {
         assert(dynamic_cast<const SBKolmogorovImpl*>(_pimpl.get()));
-        return dynamic_cast<const SBKolmogorovImpl&>(*_pimpl).getLamOverR0(); 
+        return static_cast<const SBKolmogorovImpl&>(*_pimpl).getLamOverR0(); 
     }
 
     // The "magic" number 2.992934 below comes from the standard form of the Kolmogorov spectrum
