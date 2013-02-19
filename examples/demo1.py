@@ -50,7 +50,7 @@ New features introduced in this demo:
 - obj = galsim.Pixel(pixel_scale)
 - obj = galsim.Convolve([list of objects])
 - image = obj.draw(dx)
-- noise = galsim.GaussianDeviate(sigma)
+- noise = galsim.GaussianNoise(sigma)
 - image.addNoise(noise)
 - image.write(file_name)
 - image.FindAdaptiveMom()
@@ -108,7 +108,7 @@ def main(argv):
     logger.debug('Made image of the profile')
 
     # Add Gaussian noise to the image with specified sigma
-    image.addNoise(galsim.GaussianDeviate(sigma=noise))
+    image.addNoise(galsim.GaussianNoise(sigma=noise))
     logger.debug('Added Gaussian noise')
 
     # Write the image to a file

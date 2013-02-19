@@ -25,3 +25,13 @@ Changes from v0.3 to current version:
   `galsim.correlatednoise.get_COSMOS_CorrFunc()` returns a correlation function that shares all the
   methods of a `galsim.ImageCorrFunc()`, and optional keyword inputs allow the physical scale of the
   function to be set correctly. (Issue #345)
+
+* Added an addNoiseSNR() method to Image classes that adds noise such that the image has a 
+  specified signal-to-noise ratio. (Issue #349)
+
+* Made a new Noise hierarchy, and moved CCDNoise to that rather than have it be a BaseDeviate.
+  There are also now GaussianNoise, PoissonNoise, and DeviateNoise classes. (Issue #349)
+
+* Small bug fix for multiple operations on GSObjects when drawing images using photon shooting,
+  which affects combinations like shifting and shearing.  (Issue #359)
+

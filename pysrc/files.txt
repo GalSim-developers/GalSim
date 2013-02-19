@@ -19,6 +19,7 @@ SBInterpolatedImage.cpp
 SBKolmogorov.cpp
 PhotonArray.cpp
 Random.cpp
+Noise.cpp
 PSFCorr.cpp
 Integ.cpp
 Table.cpp

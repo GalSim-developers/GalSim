@@ -1633,7 +1633,7 @@ class InterpolatedImage(GSObject):
             elif noise_pad > 0.:
                 # Note: make sure the sigma is properly set to sqrt(noise_pad).
                 gaussian_deviate.setSigma(np.sqrt(noise_pad))
-                gaussian_deviate.applyTo(pad_image.view())                
+                pad_image.addNoise(galsim.DeviateNoise(gaussian_deviate))
         else:
             if isinstance(noise_pad, galsim.ImageCorrFunc):
                 cf = noise_pad
@@ -2155,7 +2155,7 @@ class RealGalaxy(GSObject):
 
             # populate padding image with noise field
             if type(noise_pad) is bool:
-                gaussian_deviate.applyTo(pad_image.view())
+                pad_image.addNoise(galsim.DeviateNoise(gaussian_deviate))
             else:
                 cf.applyNoiseTo(pad_image, dev=gaussian_deviate)
         else:

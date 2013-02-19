@@ -41,16 +41,16 @@ xlargeim_size =long(np.ceil(1.41421356 * largeim_size)) # sometimes, for precisi
                                                         # rotated
 
 # then make a small image of uncorrelated, unit variance noise for later tests
-gd = galsim.GaussianDeviate(glob_ud, mean=0., sigma=1.)
+gn = galsim.GaussianNoise(glob_ud, sigma=1.)
 uncorr_noise_small = galsim.ImageD(smallim_size, smallim_size)
-uncorr_noise_small.addNoise(gd)
+uncorr_noise_small.addNoise(gn)
 
 # then make a large image of uncorrelated, unit variance noise, also for later tests
 uncorr_noise_large = galsim.ImageD(largeim_size, largeim_size)
-uncorr_noise_large.addNoise(gd)
+uncorr_noise_large.addNoise(gn)
 # make an extra large image here for rotation generation tests
 uncorr_noise_xlarge = galsim.ImageD(xlargeim_size, xlargeim_size)
-uncorr_noise_xlarge.addNoise(gd)
+uncorr_noise_xlarge.addNoise(gn)
 
 # make some x-correlated noise using shift and add
 xnoise_large = galsim.ImageViewD(
@@ -98,7 +98,7 @@ def test_uncorrelated_noise_zero_lag():
         # Note we make multiple correlation funcs and average their zero lag to beat down noise
         for i in range(nsum_test):
             uncorr_noise_large_extra = galsim.ImageD(largeim_size, largeim_size)
-            uncorr_noise_large_extra.addNoise(gd)
+            uncorr_noise_large_extra.addNoise(gn)
             noise_test = uncorr_noise_large_extra * sigma
             ncf = galsim.ImageCorrFunc(noise_test, dx=1.)
             cf_zero += ncf._profile.xValue(galsim.PositionD(0., 0.))
@@ -121,7 +121,7 @@ def test_uncorrelated_noise_nonzero_lag():
         cf_test_value = 0.
         for i in range(nsum_test):
             uncorr_noise_large_extra = galsim.ImageD(largeim_size, largeim_size)
-            uncorr_noise_large_extra.addNoise(gd)
+            uncorr_noise_large_extra.addNoise(gn)
             noise_test = uncorr_noise_large_extra
             ncf = galsim.ImageCorrFunc(noise_test, dx=1.)
             # generate the test position at least one pixel away from the origin
@@ -207,7 +207,7 @@ def test_xcorr_noise_basics():
     cf_10 = 0.
     for i in range(nsum_test):
         uncorr_noise_large_extra = galsim.ImageD(largeim_size, largeim_size)
-        uncorr_noise_large_extra.addNoise(gd)
+        uncorr_noise_large_extra.addNoise(gn)
         xnoise_large_extra = galsim.ImageViewD(
             uncorr_noise_large_extra.array + np.roll(
                 uncorr_noise_large_extra.array, 1, axis=1)) # note NumPy thus [y,x]
@@ -239,7 +239,7 @@ def test_ycorr_noise_basics():
     cf_01 = 0.
     for i in range(nsum_test):
         uncorr_noise_large_extra = galsim.ImageD(largeim_size, largeim_size)
-        uncorr_noise_large_extra.addNoise(gd)
+        uncorr_noise_large_extra.addNoise(gn)
         ynoise_large_extra = galsim.ImageViewD(
             uncorr_noise_large_extra.array + np.roll(
                 uncorr_noise_large_extra.array, 1, axis=0)) # note NumPy thus [y,x]
@@ -412,7 +412,7 @@ def test_draw():
     #
     # First let's do odd (an uncorrelated noise field is fine for the tests we want to do):
     uncorr_noise_small_odd = galsim.ImageD(smallim_size_odd, smallim_size_odd)
-    uncorr_noise_small.addNoise(gd)
+    uncorr_noise_small.addNoise(gn)
     # Build a noise correlation function using DFTs
     ft_array = np.fft.fft2(uncorr_noise_small_odd.array)
     # Calculate the power spectrum then correlation function
