@@ -724,7 +724,11 @@ is suspiciously similar to the results of the variance tests.  This
 finding suggests that users {\em must} account for the effects of
 finite $\ell$-binning on the theoretical power spectrum, unless they
 can choose sufficiently fine $\ell$ bins to minimize
-this problem.
+this problem.  In support of this claim that finite gridding is
+responsible, we found that with a grid that is doubled in size (and
+hence a Fourier-space grid that is twice as finely spaced), the ratio
+of observed to expected power spectrum is closer to 1 (but still 3\%
+too low).
 \begin{figure}
 \begin{center}
 \includegraphics[width=3in]{../external/test_gridshear/output/compare_input_pe.fine.eps}
@@ -743,8 +747,11 @@ this problem.
 \end{center}
 \end{figure}
 
-\textbf{Need to test robustness to grid spacing and size, and whether
-  the above effects could be some discreteness issue for the GalSim grids.}
+We have confirmed that the results are fairly robust to the grid
+spacing, for example by making the grid a factor of two more finely
+spaced (and extending the WMAP7 $P(k)$ as a constant above $\ell=2000$
+so that we can do this) and confirming that the results agree with
+Fig.~\ref{F:pe}.
 
 \section{Shear power on larger scales than our grid}\label{S:pk0}
 
