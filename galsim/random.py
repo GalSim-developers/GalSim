@@ -246,17 +246,13 @@ class DistDeviate(_galsim.BaseDeviate):
     def __call__(self):
         return self._inverseprobabilitytable(self._ud())
     
-    #def seed(self, rng=None):
-        #if rng is None:
-            #self._ud()
-        #else:
-            #self._ud.seed(rng)
-    
-    #def reset(self, rng=None):
-        #if rng is None:
-            #self._ud()
-        #else:
-            #self._ud.reset(rng)
+    def reset(self, rng=None):
+        if rng is None:
+            _galsim.BaseDeviate.reset(self)
+        else:
+            _galsim.BaseDeviate.reset(self,rng)
+        # Make sure the stored _ud object stays in sync with self.
+        self._ud.reset(self)
 
 
 # BaseDeviate docstrings

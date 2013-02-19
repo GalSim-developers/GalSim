@@ -106,19 +106,14 @@ def dfunction(x):
 # Tabulated results for DistDeviate function call
 dFunctionResult = (0.9826461346196363, 1.1973307331701328, 1.5105900949284945)
 
-# x and y arrays and interpolant to use for DistDeviate array call tests
-dx=[0.,1.,2.,3.,4.,5.]
-dx_min=0.
-dx_max=5.
-dp=[0.1, 0.1, 0., 0., 0.1, 0.1]
-# Tabulated results for DistDeviate array call
-dArrayResult = (0.3558276852127166, 0.6437039889860897, 1.3560616118664859)
-
-# Function to test DistDeviate boundary finder
-def dboundaryfunction(x):
-    return np.exp(-0.5*x*x)
-# LookupTable to test DistDeviate boundary settings
+# x and p arrays and interpolant to use for DistDeviate LookupTable tests
+dx=[0.0, 1.0, 1.00001, 2.99999, 3.0, 4.0]
+dp=[0.1, 0.1, 0.0    , 0.0    , 0.1, 0.1]
 dLookupTable=galsim.LookupTable(x=dx,f=dp,interpolant='linear')
+# Tabulated results for DistDeviate LookupTable call
+dLookupTableResult = (0.23721845680847731, 0.42913599265739233, 0.86176396813243539)
+# File with the same values
+dLookupTableFile = os.path.join('random_data','dLookupTable.dat')
 
 
 def funcname():
@@ -145,7 +140,7 @@ def test_uniform_rand_reset():
     t1 = time.time()
     u = galsim.UniformDeviate(testseed)
     testResult1 = (u(), u(), u())
-    u = galsim.UniformDeviate(testseed)
+    u.seed(testseed)
     testResult2 = (u(), u(), u())
     # note this one is still equal, not almost_equal, because we should be able to achieve complete
     # equality for the same seed and the same exact system
@@ -380,7 +375,7 @@ def test_ccdnoise_rand():
                 "for Image"+typestrings[i]+" images.")
 
         # Now include sky_level in ccdnoise
-        rng = galsim.BaseDeviate(testseed)
+        rng.seed(testseed)
         ccdnoise = galsim.CCDNoise(rng, sky_level=sky, gain=cGain, read_noise=cReadNoise)
         testImage = galsim.ImageView[types[i]]((np.zeros((2, 2))).astype(types[i]))
         ccdnoise.applyTo(testImage)
@@ -409,7 +404,7 @@ def test_ccdnoise_image():
                 err_msg="Wrong CCD noise random sequence generated "+
                 "for Image"+typestrings[i]+" images.")
 
-        rng = galsim.BaseDeviate(testseed)
+        rng.seed(testseed)
         ccdnoise = galsim.CCDNoise(rng, sky_level=sky, gain=cGain, read_noise=cReadNoise)
         testImage = galsim.ImageView[types[i]]((np.zeros((2, 2))).astype(types[i]))
         testImage.addNoise(ccdnoise)
@@ -421,51 +416,136 @@ def test_ccdnoise_image():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_distfunction_rand():
-    """Test distribution-defined random number generator with a function for expected result 
-    given the above seed.
+def test_distfunction():
+    """Test distribution-defined random number generator with a function
     """
     import time
     t1 = time.time()
-    u = galsim.UniformDeviate(testseed)
-    d = galsim.DistDeviate(
-        u, function=dfunction, x_min=dmin, x_max=dmax)
+
+    rng = galsim.BaseDeviate(testseed)
+    d = galsim.DistDeviate(rng, function=dfunction, x_min=dmin, x_max=dmax)
     testResult = (d(), d(), d())
     np.testing.assert_array_almost_equal(
             np.array(testResult), np.array(dFunctionResult), precision,
             err_msg='Wrong DistDeviate random number sequence generated')
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_distlambdafunction_rand():
-    """Test distribution-defined random number generator with a function for expected result 
-    given the above seed.
-    """
-    import time
-    t1 = time.time()
-    u = galsim.UniformDeviate(testseed)
-    d = galsim.DistDeviate(
-        u, function=lambda x: x*x, x_min=dmin, x_max=dmax)
+    # Check that the mean and variance come out right
+    nvals = 10000
+    vals = [d() for i in range(nvals)]
+    mean = np.mean(vals)
+    var = np.var(vals)
+    print 'mean = ',mean
+    print 'var = ',var
+    np.testing.assert_almost_equal(mean, 3./2., 1,
+            err_msg='Wrong mean from DistDeviate random numbers using function')
+    np.testing.assert_almost_equal(var, 3./20., 1,
+            err_msg='Wrong variance from DistDeviate random numbers using function')
+
+
+    # Check that seed and reset work correctly.
+    d.seed(testseed)
     testResult = (d(), d(), d())
     np.testing.assert_array_almost_equal(
             np.array(testResult), np.array(dFunctionResult), precision,
-            err_msg='Wrong DistDeviate random number sequence generated')
+            err_msg='Wrong DistDeviate random number sequence generated after call seed')
+
+    d.reset(testseed)
+    testResult = (d(), d(), d())
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(dFunctionResult), precision,
+            err_msg='Wrong DistDeviate random number sequence generated after call reset')
+
+    rng.seed(testseed)
+    d.reset(rng)
+    testResult = (d(), d(), d())
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(dFunctionResult), precision,
+            err_msg='Wrong DistDeviate random number sequence generated after call reset(rng)')
+
+    # Check with lambda function
+    rng.seed(testseed)
+    d = galsim.DistDeviate(rng, function=lambda x: x*x, x_min=dmin, x_max=dmax)
+    testResult = (d(), d(), d())
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(dFunctionResult), precision,
+            err_msg='Wrong DistDeviate random number sequence generated with lambda function')
+
+    # Check auto-generated lambda function
+    rng.seed(testseed)
+    d = galsim.DistDeviate(rng, function='x*x', x_min=dmin, x_max=dmax)
+    testResult = (d(), d(), d())
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(dFunctionResult), precision,
+            err_msg='Wrong DistDeviate random number sequence generated with auto-lambda function')
+
+    # Check drawing to image with addNoise
+    d.seed(testseed)
+    testimage = galsim.ImageViewD(np.zeros((3, 1)))
+    testimage.addNoise(galsim.DeviateNoise(d))
+    np.testing.assert_array_almost_equal(
+            testimage.array.flatten(), np.array(dFunctionResult), precision,
+            err_msg='Wrong DistDeviate random number sequence generated using image method.')
+ 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_distLookupTableboundaries():
-    """Test that DistDeviate understands LookupTable's boundaries.
+def test_distLookupTable():
+    """Test distribution-defined random number generator with a LookupTable
     """
     import time
     t1 = time.time()
-    u = galsim.UniformDeviate(testseed)
-    d = galsim.DistDeviate(u, function=dLookupTable)
+
+    rng = galsim.BaseDeviate(testseed)
+    d = galsim.DistDeviate(rng, function=dLookupTable)
     np.testing.assert_equal(
             d.x_min, dLookupTable.x_min,
             err_msg='DistDeviate and the LookupTable passed to it have different lower bounds')
     np.testing.assert_equal(
             d.x_max, dLookupTable.x_max,
             err_msg='DistDeviate and the LookupTable passed to it have different upper bounds')
+
+    testResult = (d(), d(), d())
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(dLookupTableResult), precision,
+            err_msg='Wrong DistDeviate random number sequence using LookupTable')
+
+    # Check that the mean and variance come out right
+    nvals = 10000
+    vals = [d() for i in range(nvals)]
+    mean = np.mean(vals)
+    var = np.var(vals)
+    print 'mean = ',mean
+    print 'var = ',var
+    np.testing.assert_almost_equal(mean, 2., 1,
+            err_msg='Wrong mean from DistDeviate random numbers using LookupTable')
+    np.testing.assert_almost_equal(var, 7./3., 1,
+            err_msg='Wrong variance from DistDeviate random numbers using LookupTable')
+
+    # This should give the same values with only 6 points because of the particular nature
+    # of these arrays.
+    rng.seed(testseed)
+    d = galsim.DistDeviate(rng, function=dLookupTable, npoints=5)
+    testResult = (d(), d(), d())
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(dLookupTableResult), precision,
+            err_msg='Wrong DistDeviate random number sequence for LookupTable with 5 points')
+
+    # Also read these values from a file
+    rng.seed(testseed)
+    d = galsim.DistDeviate(rng, function=dLookupTableFile, interpolant='linear')
+    testResult = (d(), d(), d())
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(dLookupTableResult), precision,
+            err_msg='Wrong DistDeviate random number sequence for LookupTable from file')
+
+    rng.seed(testseed)
+    d = galsim.DistDeviate(rng, function=dLookupTableFile)
+    testResult = (d(), d(), d())
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(dLookupTableResult), precision,
+            err_msg='Wrong DistDeviate random number sequence for LookupTable with default '
+            'interpolant')
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -553,9 +633,8 @@ if __name__ == "__main__":
     test_gamma_image()
     test_chi2_rand()
     test_chi2_image()
-    test_distfunction_rand()
-    test_distlambdafunction_rand()
-    test_distLookupTableboundaries()
+    test_distfunction()
+    test_distLookupTable()
     test_ccdnoise_rand()
     test_ccdnoise_image()
     test_multiprocess()
