@@ -392,25 +392,27 @@ def test_binomial():
 
     # Check that seeding with the time works (although we cannot check the output.
     # We're mostly just checking that this doesn't raise an exception.
-    # The output could be anything.
+    # The output could be anything.  However, in this case, there are few enough options
+    # for the output that occasionally two of these match.  So we don't do the normal 
+    # testResult2 != testResult, etc.
     b.seed()
     testResult2 = (b(), b(), b())
-    assert testResult2 != testResult
+    #assert testResult2 != testResult
     b.reset()
     testResult3 = (b(), b(), b())
-    assert testResult3 != testResult
-    assert testResult3 != testResult2
+    #assert testResult3 != testResult
+    #assert testResult3 != testResult2
     b.reset()
     testResult4 = (b(), b(), b())
-    assert testResult4 != testResult
-    assert testResult4 != testResult2
-    assert testResult4 != testResult3
+    #assert testResult4 != testResult
+    #assert testResult4 != testResult2
+    #assert testResult4 != testResult3
     b = galsim.BinomialDeviate(N=bN, p=bp)
     testResult5 = (b(), b(), b())
-    assert testResult5 != testResult
-    assert testResult5 != testResult2
-    assert testResult5 != testResult3
-    assert testResult5 != testResult4
+    #assert testResult5 != testResult
+    #assert testResult5 != testResult2
+    #assert testResult5 != testResult3
+    #assert testResult5 != testResult4
     
     # Test filling an image
     b.seed(testseed)
