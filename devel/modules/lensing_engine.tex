@@ -168,9 +168,10 @@ in Eqs.~\ref{E:shearvar}, \ref{E:alt-shearvar}, and
 
 \section{Representing continuous fields using the Discrete Fourier Transform}\label{S:discrete}
 
-Here is what Barney has managed to learn about this issue, and how we
-are numerically representing $P(k)$, in the course of many pages of
-handwritten derivation (much of which is of course now scribbled out).
+This section includes is the formalism describing what the GalSim
+lensing engine is actually doing when representing shear fields as
+discrete fields defined on a finite grid, as opposed to the continuous
+representation in \S\ref{sect:theory}.
 
 \subsection{Conventions}
 
@@ -191,12 +192,11 @@ The standard results in Discrete Fourier Transform (DFT) and its
 halfway-house the Discrete Time Fourier Transform (DTFT) are all
 derived under the unitary (i.e. symmetric with no odd factors of $2
 \pi$ around) convention in the online literature, adding to the complexity of
-interpretation.  This led me to re-derive some standard results of
-Fourier theory using the conventions above, which it now makes sense
-to state as we will require them in Section \ref{sect:DFTPS}.
+interpretation.  In the next section, we present some of the standard results of
+Fourier theory using the angular frequency, non-unitary convention above, since we will require them in Section \ref{sect:DFTPS}.
 
 \subsection{Fourier transform properties}
-It can be readily shown that if we define $g(x L) \equiv f(x)$ the following well-known identity holds
+It can be readily shown that if we define $g(x L) \equiv f(x)$, the following well-known identity holds
 under our Fourier transform convention:
 \begin{equation}
 \mathcal{F}\{g(x L)\} = \frac{1}{L}
@@ -208,8 +208,9 @@ to show that
 \mathcal{F}\{ s(h + x) \} = \me^{\mi k h} \tilde{s}(k).  \label{eq:sadd}
 \end{equation}
 Here we begin to get divergent results between conventions: there is
-an additional factor of $2\pi$ in the exponent for the normal frequency
-convention version of this property.
+an additional factor of $2\pi$ in the exponent when this property of
+FTs is expressed using the normal frequency
+convention.
 
 The most important result for approximating continuous functions using
 DFTs is the Poisson summation formula, which under our conventions may
@@ -227,9 +228,7 @@ function
 \end{equation}
 It should be noted that in the normal frequency, unitary transform
 convention form of the Poisson summation formula the $2\pi$ within $\tilde{f}(2 \pi
-q)$ is absent.\footnote{Barney would heartily welcome \emph{anyone} wishing to
-check his derivations of these results using the non-symmetric
-convention!}  Using equation \eqref{eq:gmult} we then find
+q)$ is absent.  Using equation \eqref{eq:gmult} we then find
 \begin{equation}
 \sum_{n=-\infty}^{\infty} f(n L) = \frac{1}{L}
 \sum_{q=-\infty}^{\infty} \tilde{f} \left(\frac{2 \pi q}{L} \right),
@@ -241,6 +240,8 @@ the most useful expression of the Poisson summation formula:
 \sum_{q=-\infty}^{\infty} \tilde{f} \left(\frac{2 \pi  q}{L} \right)
 \me^{\mi 2 \pi x q / L}.
 \end{equation}
+{\it Query from Rachel: I don't understand the exponent factor on the RHS,
+  I would have thought it's just $\me^{\mi k x}$?}
 If we define $\Delta k \equiv k_{\rm min} = 2 \pi / L$ we can also write
 this as
 \begin{equation}
