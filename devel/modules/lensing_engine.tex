@@ -594,12 +594,21 @@ print np.var(g1), np.var(g2), np.var(g1)+np.var(g2)
 Since the variances are noisy, we averaged the results over 10000
 realizations\footnote{This takes about 1 minute to run on a single
   CPU.}, and found $2.36\times 10^{-7}$, $9.45\times 10^{-7}$, and
-$2.36\times 10^{-7}$.  These are all $\sim 5$\% below my naive calculation.
+$2.36\times 10^{-7}$.  These are all $\sim 5.5$\% below my naive calculation.
 Since the overall behavior is correct when we change the grid size and
 spacing, it seems possible that this small discrepancy comes from some
-finite-gridding effect.  Rather than pursuing this question further,
-we investigate it in the context of the full $P(k)$ in the next
-section.
+finite-gridding effect.
+
+If we redo the above test but double the values of `ngrid', thus
+halving the step size of the grid in Fourier space, then the variances
+increase slightly\footnote{This change is statistically significant given
+the number of realizations.} to $2.40\times 10^{-7}$, $9.60\times 10^{-7}$, and
+$2.40\times 10^{-7}$, so they are now only 4\% lower than the
+predictions.  This result supports the claim that finite-gridding
+effects might be responsible for the slightly low variances, rather
+than anything more problematic (i.e., a true bug).  Finite gridding
+effects can be accounted for in principle, by including them in the
+predictions before comparing with results.
 
 \section{Test of full $P(k)$}\label{S:testpk}
 
