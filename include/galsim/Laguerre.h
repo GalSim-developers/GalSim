@@ -62,19 +62,6 @@ namespace galsim {
         // 
         // Methods include increments for p, q, N, and m.  This object can 
         // be used as an index into any of our Laguerre arrays.
-    private:
-        int p;
-        int q;
-        // Index of this element into a complex-valued array
-        static int makeCIndex(const int p_, const int q_) {
-            return (p_+q_)*(p_+q_+1)/2+q_;
-        }
-        // Index of real part of this element in real-valued storage order.
-        // Gauranteed that imaginary part, if it exists, has 1-higher index.
-        static int makeRIndex(const int p_, const int q_) {
-            return (p_+q_)*(p_+q_+1)/2 + 2*std::min(p_,q_);
-        }
-
     public:
         PQIndex() : p(0), q(0) {} 
         PQIndex(const int p_, const int q_) { setPQ(p_,q_); }
@@ -158,6 +145,20 @@ namespace galsim {
 
         // Returns true if index has advanced past order:
         bool pastOrder(const int order) const { return p+q>order; }
+
+    private:
+        int p;
+        int q;
+        // Index of this element into a complex-valued array
+        static int makeCIndex(const int p_, const int q_) {
+            return (p_+q_)*(p_+q_+1)/2+q_;
+        }
+        // Index of real part of this element in real-valued storage order.
+        // Gauranteed that imaginary part, if it exists, has 1-higher index.
+        static int makeRIndex(const int p_, const int q_) {
+            return (p_+q_)*(p_+q_+1)/2 + 2*std::min(p_,q_);
+        }
+
     };
 
     inline std::ostream& operator<<(std::ostream& os, const PQIndex& pq) 
@@ -214,7 +215,7 @@ namespace galsim {
         LVector(int order=0) : 
             _order(order), _v(new tmv::Vector<double>(PQIndex::size(order),0.)) {}
 
-        LVector(int order, const tmv::Vector<double>& v) :
+        LVector(int order, const tmv::GenVector<double>& v) :
             _order(order), _v(new tmv::Vector<double>(v))
         { assert(v.size() == PQIndex::size(order)); }
 

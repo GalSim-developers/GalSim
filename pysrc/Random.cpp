@@ -23,10 +23,6 @@
 #include "CCDNoise.h"
 #include "Image.h"
 
-#define PY_ARRAY_UNIQUE_SYMBOL SBPROFILE_ARRAY_API
-#define NO_IMPORT_ARRAY
-#include "numpy/arrayobject.h"
-
 namespace bp = boost::python;
 
 namespace galsim {

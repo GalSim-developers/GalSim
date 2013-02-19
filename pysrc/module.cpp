@@ -20,7 +20,7 @@
  */
 #include "boost/python.hpp"
 
-#define PY_ARRAY_UNIQUE_SYMBOL SBPROFILE_ARRAY_API
+#define PY_ARRAY_UNIQUE_SYMBOL GALSIM_ARRAY_API
 #include "numpy/arrayobject.h"
 
 namespace galsim {
