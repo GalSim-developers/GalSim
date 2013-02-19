@@ -95,7 +95,7 @@ namespace galsim {
 
     void PhotonArray::convolve(const PhotonArray& rhs, UniformDeviate ud) 
     {
-        // If both arrays have corrlated photons, then we need to shuffle the photons
+        // If both arrays have correlated photons, then we need to shuffle the photons
         // as we convolve them.
         if (_is_correlated && rhs._is_correlated) return convolveShuffle(rhs,ud);
 

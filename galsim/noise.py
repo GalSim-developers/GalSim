@@ -17,7 +17,8 @@
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
 """@file noise.py
-Module which adds the addNoise method to the galsim.Image classes at the Python layer.
+Module which adds the addNoise and addNoiseSNR methods to the galsim.Image classes at the Python
+layer.
 """
 
 from . import _galsim
@@ -36,14 +37,60 @@ def addNoise(image, noise):
     If the supplied noise model object does not have an applyTo() method, then this will raise an
     AttributeError exception.
     """
-    im_view = image.view()
-    noise.applyTo(im_view)
+    noise.applyTo(image.view())
 
-# inject addNoise as a method of Image classes
+def addNoiseSNR(image, noise, snr, preserve_flux=False):
+    """Adds CCDNoise to an image in a way that achieves the specified signal-to-noise ratio.
+    
+    >>> Image.addNoiseSNR(noise, snr, preserve_flux)  
+                                                   
+    Noise following the suppled model will be added to the image modifying either the flux of the
+    object (if `preserve_flux=True`) or the variance of the noise (if `preserve_flux=False`) such
+    that the given signal-to-noise ratio, `snr`, is reached.
+
+    If `preserve_flux=False` (the default), the flux of the input image will be rescaled to achieve
+    the desired signal-to-noise ratio (useful if adding noise separately to multiple galaxies with
+    the same sky_level).
+    
+    If `preserve_flux=True`, then the variance of the noise model is modified.
+
+    The definition of SNR is equivalent to the one used by Great08.  Taking a weighted integral 
+    of the flux:
+        S = sum W(x,y) I(x,y) / sum W(x,y)
+        N^2 = Var(S) = sum W(x,y)^2 Var(I(x,y)) / (sum W(x,y))^2
+    and assuming that Var(I(x,y)) is constant
+        Var(I(x,y)) = noise_var
+    We then assume that we are using a matched filter for W, so W(x,y) = I(x,y).  Then a few things 
+    cancel and we find that
+        snr = S/N = sqrt( sum I(x,y)^2 / noise_var )
+    and therefore, for a given I(x,y) and snr,
+        noise_var = sum I(x,y)^2/snr^2.
+
+    Not that for noise models such as Poisson and CCDNoise, the constant Var(I(x,y)) assumption
+    is only approximate, since the flux of the object adds to the Poisson noise in those pixels.
+    Thus, the real S/N on the final image will be slightly lower than the target `snr` value, 
+    and this effect will be larger for brighter objects.
+    """
+    import numpy
+    noise_var = noise.getVariance()
+    if preserve_flux:
+        new_noise_var = numpy.sum(image.array**2)/snr/snr
+        noise.setVariance(new_noise_var)
+        image.addNoise(noise)
+        noise.setVariance(noise_var)  # Revert to condition on input.
+    else:
+        sn_meas = numpy.sqrt( numpy.sum(image.array**2)/noise_var )
+        flux = snr/sn_meas
+        image *= flux
+        image.addNoise(noise)
+
+# inject addNoise and addNoiseSNR as methods of Image classes
 for Class in _galsim.Image.itervalues():
     Class.addNoise = addNoise
+    Class.addNoiseSNR = addNoiseSNR
 
 for Class in _galsim.ImageView.itervalues():
     Class.addNoise = addNoise
+    Class.addNoiseSNR = addNoiseSNR
 
 del Class # cleanup public namespace

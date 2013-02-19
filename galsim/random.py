@@ -97,10 +97,10 @@ Seed the pseudo-random number generator.
 Multiple Calling Options
 ------------------------
 
-    >>> galsim.BaseDeviate.seed()       # Re-seed the PRNG using current time.
+    >>> galsim.BaseDeviate.seed()       # Re-seed the PRNG using current time
 
     >>> galsim.BaseDeviate.seed(lseed)  # Re-seed the PRNG using specified seed, where lseed is a
-                                        # long int.
+                                        # long int
 
 """
 
@@ -111,13 +111,13 @@ Multiple Calling Options
 ------------------------
 
     >>> galsim.BaseDeviate.reset()        # Re-seed the PRNG using current time, and sever the
-                                          # connection to any other Deviate.
+                                          # connection to any other Deviate
 
     >>> galsim.BaseDeviate.reset(lseed)   # Re-seed the PRNG using specified seed, where lseed is a
-                                          # long int, and sever the connection to any other Deviate.
+                                          # long int, and sever the connection to any other Deviate
 
     >>> galsim.BaseDeviate.reset(dev)     # Re-connect this Deviate with the same underlying random
-                                          # number generator supplied in dev.
+                                          # number generator supplied in dev
 
 """
 
@@ -130,13 +130,13 @@ Initialization
 --------------
 
     >>> u = galsim.UniformDeviate()       # Initializes u to be a UniformDeviate instance, and seeds
-                                          # the PRNG using current time.
+                                          # the PRNG using current time
 
     >>> u = galsim.UniformDeviate(lseed)  # Initializes u to be a UniformDeviate instance, and seeds
-                                          # the PRNG using specified long integer lseed.
+                                          # the PRNG using specified long integer lseed
 
     >>> u = galsim.UniformDeviate(dev)    # Initializes u to be a UniformDeviate instance, and share
-                                          # the same underlying random number generator as dev.
+                                          # the same underlying random number generator as dev
 
 Calling
 -------
@@ -156,19 +156,6 @@ To add deviates to every element of an image, use the syntax image.addNoise(u).
 This docstring can be found using the Python interpreter or in pysrc/Random.cpp.
 """
 
-_galsim.UniformDeviate.applyTo.__func__.__doc__ = """
-Add Uniform deviates to every element in a supplied Image.
-
-Calling
--------
-
-    >>> galsim.UniformDeviate.applyTo(image)  
-
-On output each element of the input Image will have a pseudo-random UniformDeviate return value 
-added to it.
-
-To add deviates to every element of an image, the syntax image.addNoise() is preferred.
-"""
 _galsim.UniformDeviate.__call__.__func__.__doc__= "Draw a new random number from the distribution."
 
 
@@ -183,14 +170,14 @@ Initialization
 
     >>> g = galsim.GaussianDeviate(mean=0., sigma=1.)          # Initializes g to be a
                                                                # GaussianDeviate instance using the
-                                                               # current time for the seed.
+                                                               # current time for the seed
 
     >>> g = galsim.GaussianDeviate(lseed, mean=0., sigma=1.)   # Initializes g using the specified
-                                                               # seed, where lseed is a long int.
+                                                               # seed, where lseed is a long int
 
     >>> g = galsim.GaussianDeviate(dev, mean=0., sigma=1.)     # Initializes g to share the same
                                                                # underlying random number generator
-                                                               # as dev.
+                                                               # as dev
 
 Parameters:
 
@@ -214,20 +201,6 @@ To add deviates to every element of an image, use the syntax image.addNoise(g).
 
 To get and set the deviate parameters, see the docstrings for the .getMean(), .setMean(), 
 .getSigma() and .setSigma() methods of each instance.
-"""
-
-_galsim.GaussianDeviate.applyTo.__func__.__doc__ = """
-Add Gaussian deviates to every element in a supplied Image.
-
-Calling
--------
-
-    >>> galsim.GaussianDeviate.applyTo(image)
-
-On output each element of the input Image will have a pseudo-random GaussianDeviate return value 
-added to it, with current values of mean and sigma.
-
-To add deviates to every element of an image, the syntax image.addNoise() is preferred.
 """
 
 _galsim.GaussianDeviate.__call__.__func__.__doc__ = """
@@ -254,13 +227,13 @@ Initialization
 
     >>> b = galsim.BinomialDeviate(N=1., p=0.5)          # Initializes b to be a BinomialDeviate
                                                          # instance using the current time for the
-                                                         # seed.
+                                                         # seed
 
     >>> b = galsim.BinomialDeviate(lseed, N=1., p=0.5)   # Initializes b using the specified seed,
-                                                         # where lseed is a long int.
+                                                         # where lseed is a long int
 
     >>> b = galsim.BinomialDeviate(dev, N=1., p=0.5)     # Initializes b to share the same
-                                                         # underlying random number generator as dev.
+                                                         # underlying random number generator as dev
 
 Parameters:
 
@@ -286,20 +259,6 @@ To get and set the deviate parameters, see the docstrings for the .getN(), .setN
 .setP() methods of each instance.
 """
 
-_galsim.BinomialDeviate.applyTo.__func__.__doc__ = """
-Add Binomial deviates to every element in a supplied Image.
-
-Calling
--------
-
-    >>> galsim.BinomialDeviate.applyTo(image)    
-
-On output each element of the input Image will have a pseudo-random BinomialDeviate return value 
-added to it, with current values of N and p.
-
-To add deviates to every element of an image, the syntax image.addNoise() is preferred.
-"""
-
 _galsim.BinomialDeviate.__call__.__func__.__doc__ = """
 Draw a new random number from the distribution.
 
@@ -323,13 +282,13 @@ Initialization
 --------------
 
     >>> p = galsim.PoissonDeviate(mean=1.)         # Initializes g to be a PoissonDeviate instance
-                                                   # using the current time for the seed.
+                                                   # using the current time for the seed
 
     >>> p = galsim.PoissonDeviate(lseed, mean=1.)  # Initializes g using the specified seed, where
-                                                   # lseed is a long int.
+                                                   # lseed is a long int
 
     >>> p = galsim.PoissonDeviate(dev, mean=1.)    # Initializes g to share the same underlying
-                                                   # random number generator as dev.
+                                                   # random number generator as dev
 
 Parameters:
 
@@ -354,21 +313,6 @@ To get and set the deviate parameter, see the docstrings for the .getMean(), .se
 each instance.
 """
 
-_galsim.PoissonDeviate.applyTo.__func__.__doc__ = """
-Add Poisson deviates to every element in a supplied Image.
-
-Calling
--------
-
-    >>> galsim.PoissonDeviate.applyTo(image)
-
-On output each element of the input Image will have a pseudo-random PoissonDeviate return value 
-added to it, with current mean, and then that mean subtracted.  So the average  effect on each 
-pixel is zero, but there will be Poisson noise added to the image with the right variance.
-
-To add deviates to every element of an image, the syntax image.addNoise() is preferred.
-"""
-
 _galsim.PoissonDeviate.__call__.__func__.__doc__ = """
 Draw a new random number from the distribution.
 
@@ -377,70 +321,6 @@ Returns a Poisson deviate with current mean.
 _galsim.PoissonDeviate.getMean.__func__.__doc__ = "Get current distribution mean."
 _galsim.PoissonDeviate.setMean.__func__.__doc__ = "Set current distribution mean."
 
-
-# CCDNoise deviate docstrings
-_galsim.CCDNoise.__doc__ = """
-Pseudo-random number generator with a basic CCD noise model.
-
-A CCDNoise instance is initialized given a gain level in Electrons per ADU used for the Poisson
-noise term, and a Gaussian read noise in electrons (if gain > 0.) or ADU (if gain <= 0.).  With 
-these parameters set, the CCDNoise operates on an Image, adding noise to each pixel following this 
-model. 
-
-Note that galsim.CCDNoise assumes the image it is applying the Poisson noise to has the sky level
-included, hence generating the appropriate image noise.  The user is responsible for the 
-addition of the sky level so that galsim.CCDNoise can add the proper sky noise, as well as sky
-subtraction after the noise has been added.
-
-Initialization
---------------
-
-    >>> ccd_noise = galsim.CCDNoise(gain=1., read_noise=0.)         # Initializes ccd_noise to be a
-                                                                    # CCDNoise instance using the
-                                                                    # current time for the seed.
-
-    >>> ccd_noise = galsim.CCDNoise(lseed, gain=1., read_noise=0.)  # Initializes ccd_noise to be a
-                                                                    # CCDNoise instance using the
-                                                                    # specified seed, where lseed is
-                                                                    # a long int.
-
-    >>> ccd_noise = galsim.CCDNoise(dev, gain=1., read_noise=0.)    # Initializes ccd_noise to share
-                                                                    # the same underlying random
-                                                                    # number generator as dev.
-
-Parameters:
-
-    gain        the gain for each pixel in electrons per ADU; setting gain <=0 will shut off the
-                Poisson noise, and the Gaussian rms will take the value read_noise as being in units
-                of ADU rather than electrons [default `gain = 1.`].
-    read_noise  the read noise on each pixel in electrons (gain > 0.) or ADU (gain <= 0.)
-                setting read_noise=0. will shut off the Gaussian noise [default `read_noise = 0.`].
-
-Methods
--------
-To add deviates to every element of an image, use the syntax image.addNoise(ccd_noise).
-
-To get and set the deviate parameters, see the docstrings for the .getGain(), .setGain(), 
-.getReadNoise() and .setReadNoise() methods of each instance.
-"""
-
-_galsim.CCDNoise.applyTo.__func__.__doc__ = """
-Add noise to an input Image.
-
-Calling
--------
-
-    >>> galsim.CCDNoise.applyTo(image)
-
-On output the Image instance image will have been given an additional stochastic noise according to 
-the gain and read noise settings of the CCDNoise instance.
-
-To add deviates to every element of an image, the syntax image.addNoise() is preferred.
-"""
-_galsim.CCDNoise.getGain.__func__.__doc__ = "Get gain in current noise model."
-_galsim.CCDNoise.setGain.__func__.__doc__ = "Set gain in current noise model."
-_galsim.CCDNoise.getReadNoise.__func__.__doc__ = "Get read noise in current noise model."
-_galsim.CCDNoise.setReadNoise.__func__.__doc__ = "Set read noise in current noise model."
 
 
 # WeibullDeviate docstrings
@@ -457,13 +337,13 @@ Initialization
 --------------
 
     >>> w = galsim.WeibullDeviate(a=1., b=1.)         # Initializes w to be a WeibullDeviate
-                                                      # instance using the current time for the seed.
+                                                      # instance using the current time for the seed
 
     >>> w = galsim.WeibullDeviate(lseed, a=1., b=1.)  # Initializes w using the specified seed,
-                                                      # where lseed is a long int.
+                                                      # where lseed is a long int
 
     >>> w = galsim.WeibullDeviate(dev, a=1., b=1.)    # Initializes w to share the same underlying
-                                                      # random number generator as dev.
+                                                      # random number generator as dev
 
 Parameters:
 
@@ -487,20 +367,6 @@ To add deviates to every element of an image, use the syntax image.addNoise(w).
 
 To get and set the deviate parameters, see the docstrings for the .getA(), .setA(), .getB() and 
 .setB() methods of each instance.
-"""
-
-_galsim.WeibullDeviate.applyTo.__func__.__doc__ = """
-Add Weibull-distributed deviates to every element in a supplied Image.
-
-Calling
--------
-
-    >>> galsim.WeibullDeviate.applyTo(image)
-
-On output each element of the input Image will have a pseudo-random WeibullDeviate return value 
-added to it, with current values of a and b.
-
-To add deviates to every element of an image, the syntax image.addNoise() is preferred.
 """
 
 _galsim.WeibullDeviate.__call__.__func__.__doc__ = """
@@ -527,14 +393,14 @@ Initialization
 
     >>> gam = galsim.GammaDeviate(alpha=1., beta=1.)         # Initializes gam to be a GammaDeviate
                                                              # instance using the current time for
-                                                             # the seed.
+                                                             # the seed
 
     >>> gam = galsim.GammaDeviate(lseed, alpha=1., beta=1.)  # Initializes gam using the specified
-                                                             # seed, where lseed is a long int.
+                                                             # seed, where lseed is a long int
 
     >>> gam = galsim.GammaDeviate(dev alpha=1., beta=1.)     # Initializes gam to share the same
                                                              # underlying random number generator as
-                                                             # dev.
+                                                             # dev
 
 Parameters:
 
@@ -562,18 +428,6 @@ To get and set the deviate parameters, see the docstrings for the .getAlpha(), .
 To add deviates to every element of an image, the syntax image.addNoise() is preferred.
 """
 
-_galsim.GammaDeviate.applyTo.__func__.__doc__ = """
-Add Gamma-distributed deviates to every element in a supplied Image.
-
-Calling
--------
-
-    >>> galsim.GammaDeviate.applyTo(image)
-
-On output each element of the input Image will have a pseudo-random GammaDeviate return value added
-to it, with current values of alpha and beta.
-"""
-
 _galsim.GammaDeviate.__call__.__func__.__doc__ = """
 Draw a new random number from the distribution.
 
@@ -597,13 +451,13 @@ Initialization
 --------------
 
     >>> chis = galsim.Chi2Deviate(n=1.)          # Initializes chis to be a Chi2Deviate instance
-                                                 # using the current time for the seed.
+                                                 # using the current time for the seed
 
     >>> chis = galsim.Chi2Deviate(lseed, n=1.)   # Initializes chis using the specified seed, where
-                                                 # lseed is a long int.
+                                                 # lseed is a long int
 
     >>> chis = galsim.Chi2Deviate(dev, n=1.)     # Initializes chis to share the same underlying
-                                                 # random number generator as dev.
+                                                 # random number generator as dev
 
 Parameters:
     n   number of degrees of freedom for the output distribution [default `n = 1`].  Must be > 0.
@@ -627,20 +481,6 @@ To get and set the deviate parameter, see the docstrings for the .getN(), .setN(
 instance.
 """
 
-_galsim.Chi2Deviate.applyTo.__func__.__doc__ = """
-Add Chi^2-distributed deviates to every element in a supplied Image.
-
-Calling
--------
-
-    >>> galsim.Chi2Deviate.applyTo(image)
-
-On output each element of the input Image will have a pseudo-random Chi2Deviate return value added 
-to it, with current degrees-of-freedom parameter n.
-
-To add deviates to every element of an image, the syntax image.addNoise() is preferred.
-"""
-
 _galsim.Chi2Deviate.__call__.__func__.__doc__ = """
 Draw a new random number from the distribution.
 
@@ -648,4 +488,185 @@ Returns a Chi2-distributed deviate with current n degrees of freedom.
 """
 _galsim.Chi2Deviate.getN.__func__.__doc__ = "Get current distribution n degrees of freedom."
 _galsim.Chi2Deviate.setN.__func__.__doc__ = "Set current distribution n degrees of freedom."
+
+
+#
+# The rest of these are from Noise.h in the C++ layer, not Random.h.
+#
+
+
+# GaussianNoise docstrings
+_galsim.GaussianNoise.__doc__ = """
+Class implementing simple Gaussian noise.
+
+This is a simple noise model where each pixel in the image gets Gaussian noise with a 
+given sigma.
+
+Initialization
+--------------
+
+    >>> gaussian_noise = galsim.GaussianNoise(rng, sigma=1.)
+
+Parameters:
+
+    rng       A BaseDeviate instance to use for generating the random numbers.
+    sigma     The rms noise on each pixel [default `sigma = 1.`].
+
+Methods
+-------
+To add noise to every element of an image, use the syntax image.addNoise(gaussian_noise).
+"""
+
+_galsim.GaussianNoise.applyTo.__func__.__doc__ = """
+Add Gaussian noise to an input Image.
+
+Calling
+-------
+
+    >>> gaussian_noise.applyTo(image)
+
+On output the Image instance image will have been given additional Gaussian noise according 
+to the given GaussianNoise instance.
+
+Note: The syntax image.addNoise(gaussian_noise) is preferred.
+"""
+_galsim.GaussianNoise.getSigma.__func__.__doc__ = "Get sigma in current noise model."
+_galsim.GaussianNoise.setSigma.__func__.__doc__ = "Set sigma in current noise model."
+
+
+# PoissonNoise docstrings
+_galsim.PoissonNoise.__doc__ = """
+Class implementing Poisson noise according to the flux (and sky level) present in the image.
+
+The PoissonNoise class encapsulates a simple version of the noise model of a normal CCD image
+where each pixel has Poisson noise corresponding to the number of electrons in each pixel
+(including an optional extra sky level).
+
+Note that if the image to which you are adding noise already has a sky level on it,
+then you should not provide the sky level here as well.  The sky level here corresponds
+to a level that is taken to be already subtracted from the image, but that originally contributed to
+the addition of Poisson noise.
+
+Initialization
+--------------
+
+    >>> poisson_noise = galsim.PoissonNoise(rng, sky_level=0.)
+
+Parameters:
+
+    rng         A BaseDeviate instance to use for generating the random numbers.
+    sky_level   The sky level in electrons per pixel that was originally in the input image, 
+                but which is taken to have already been subtracted off [default `sky_level = 0.`].
+
+Methods
+-------
+To add noise to every element of an image, use the syntax image.addNoise(poisson_noise).
+"""
+
+_galsim.PoissonNoise.applyTo.__func__.__doc__ = """
+Add Poisson noise to an input Image.
+
+Calling
+-------
+
+    >>> galsim.PoissonNoise.applyTo(image)
+
+On output the Image instance image will have been given additional Poisson noise according 
+to the given PoissonNoise instance.
+
+Note: the syntax image.addNoise(poisson_noise) is preferred.
+"""
+_galsim.PoissonNoise.getSkyLevel.__func__.__doc__ = "Get sky level in current noise model."
+_galsim.PoissonNoise.setSkyLevel.__func__.__doc__ = "Set sky level in current noise model."
+
+
+# CCDNoise docstrings
+_galsim.CCDNoise.__doc__ = """
+Class implementing a basic CCD noise model.
+
+The CCDNoise class encapsulates the noise model of a normal CCD image.  The noise has two
+components: first, Poisson noise corresponding to the number of electrons in each pixel
+(including an optional extra sky level); second, Gaussian read noise.
+
+Note that if the image to which you are adding noise already has a sky level on it,
+then you should not provide the sky level here as well.  The sky level here corresponds
+to a level is taken to be already subtracted from the image, but which was present
+for the Poisson noise.
+
+Initialization
+--------------
+
+    >>> ccd_noise = galsim.CCDNoise(rng, sky_level=0., gain=1., read_noise=0.)  
+
+Parameters:
+
+    rng         A BaseDeviate instance to use for generating the random numbers.
+    sky_level   The sky level in electrons per pixel that was originally in the input image, 
+                but which is taken to have already been subtracted off [default `sky_level = 0.`].
+    gain        The gain for each pixel in electrons per ADU; setting gain<=0 will shut off the
+                Poisson noise, and the Gaussian rms will take the value read_noise as being in 
+                units of ADU rather than electrons [default `gain = 1.`].
+    read_noise  The read noise on each pixel in electrons (gain > 0.) or ADU (gain <= 0.)
+                setting read_noise=0. will shut off the Gaussian noise [default `read_noise = 0.`].
+
+Methods
+-------
+To add noise to every element of an image, use the syntax image.addNoise(ccd_noise).
+"""
+
+_galsim.CCDNoise.applyTo.__func__.__doc__ = """
+Add noise to an input Image.
+
+Calling
+-------
+
+    >>> ccd_noise.applyTo(image)
+
+On output the Image instance image will have been given additional stochastic noise according to 
+the gain and read noise settings of the given CCDNoise instance.
+
+Note: the syntax image.addNoise(ccd_noise) is preferred.
+"""
+_galsim.CCDNoise.getSkyLevel.__func__.__doc__ = "Get sky level in current noise model."
+_galsim.CCDNoise.getGain.__func__.__doc__ = "Get gain in current noise model."
+_galsim.CCDNoise.getReadNoise.__func__.__doc__ = "Get read noise in current noise model."
+_galsim.CCDNoise.setSkyLevel.__func__.__doc__ = "Set sky level in current noise model."
+_galsim.CCDNoise.setGain.__func__.__doc__ = "Set gain in current noise model."
+_galsim.CCDNoise.setReadNoise.__func__.__doc__ = "Set read noise in current noise model."
+
+
+# DeviateNoise docstrings
+_galsim.DeviateNoise.__doc__ = """
+Class implementing noise with an arbitrary BaseDeviate object.
+
+The DeviateNoise class provides a way to treat an arbitrary deviate as the noise model for 
+each pixel in an image.
+
+Initialization
+--------------
+
+    >>> dev_noise = galsim.DeviateNoise(dev)
+
+Parameters:
+
+    dev         A BaseDeviate subclass to use as the noise deviate for each pixel.
+
+Methods
+-------
+To add noise to every element of an image, use the syntax image.addNoise(dev_noise).
+"""
+
+_galsim.DeviateNoise.applyTo.__func__.__doc__ = """
+Add noise to an input Image.
+
+Calling
+-------
+
+    >>> dev_noise.applyTo(image)
+
+On output the Image instance image will have been given additional noise according to 
+the given DeviateNoise instance.
+
+To add deviates to every element of an image, the syntax image.addNoise() is preferred.
+"""
 

@@ -105,6 +105,9 @@ def main(argv):
     # save a list of the galaxy images in the "images" list variable:
     images = []
     for k in range(cat.nObjects()):
+        # Initialize the (pseudo-)random number generator that we will be using below.
+        # Use a different random seed for each object to get different noise realizations.
+        rng = galsim.BaseDeviate(random_seed+k)
 
         # Take the Moffat beta from the first column (called 0) of the input catalog:
         # Note: cat.get(k,col) returns a string.  To get the value as a float, use either
@@ -150,11 +153,7 @@ def main(argv):
         image = final.draw(image = galsim.ImageF(xsize, ysize), dx=pixel_scale)
 
         # Add Poisson noise to the image:
-        image += sky_level * pixel_scale**2
-        # The default gain, read_noise are 1 and 0, so we can omit them.
-        # Also, use a different random seed for each object to get different noise realizations.
-        image.addNoise(galsim.CCDNoise(random_seed+k))
-        image -= sky_level * pixel_scale**2
+        image.addNoise(galsim.PoissonNoise(rng, sky_level * pixel_scale**2))
 
         logger.info('Drew image for object at row %d in the input catalog'%k)
    
