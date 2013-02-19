@@ -1949,13 +1949,13 @@ class RealGalaxy(GSObject):
                                 indicating which real-space interpolant should be used.  Options are 
                                 'nearest', 'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' 
                                 where N should be the integer order to use. [default 
-                                `interpolant = galsim.Lanczos(5,...)'].
+                                `x_interpolant = galsim.Lanczos(5,...)'].
     @param k_interpolant        Either an Interpolant2d (or Interpolant) instance or a string 
                                 indicating which k-space interpolant should be used.  Options are 
                                 'nearest', 'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' 
                                 where N should be the integer order to use.  We strongly recommend
                                 leaving this parameter at its default value; see text above for
-                                details.  [default `interpolant = Quintic()'].
+                                details.  [default `k_interpolant = Quintic()'].
     @param flux                 Total flux, if None then original flux in galaxy is adopted without
                                 change [default `flux = None`].
     @param pad_factor           Factor by which to pad the Image when creating the
