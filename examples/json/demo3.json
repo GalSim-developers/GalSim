@@ -21,7 +21,7 @@
 "#" : "- obj type : OpticalPSF (lam_over_diam, defocus, coma1, coma2, astig1, astig2, obscuration)",
 "#" : "- shear type : QBeta (q, beta) -- including how to specify an angle",
 "#" : "- shear type : EBeta (q, beta) ",
-"#" : "- noise type : CCDNoise (sky_level, gain, read_noise)",
+"#" : "- noise type : CCD (sky_level, gain, read_noise)",
 "#" : "- image : size",
 "#" : "- image : wcs (shear)",
 "#" : "- output : psf",
@@ -138,13 +138,13 @@
     },
 
     "noise" : {
-        "#" : "The CCDNoise type has the potential to be more sophisticated than just a ",
+        "#" : "The CCD noise type has the potential to be more sophisticated than just a ",
         "#" : "simple Poisson noise according to the flux of sky + object.",
         "#" : "You can also specify a gain and a read_noise for the CCD.",
         "#" : "The gain indicates how many photons (or electrons, technically) correspond",
         "#" : "to each final ADU.  And the read_noise is an additional Gaussian noise",
         "#" : "(specified as the sigma or rms value) to be added to each pixel at the end.",
-        "type" : "CCDNoise",
+        "type" : "CCD",
         "sky_level" : 2.5e4,
         "gain" : 1.7,
         "read_noise" : 0.3

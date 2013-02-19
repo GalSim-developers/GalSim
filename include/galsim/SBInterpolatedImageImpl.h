@@ -36,7 +36,8 @@ namespace galsim {
             const BaseImage<T>& image, 
             boost::shared_ptr<Interpolant2d> xInterp,
             boost::shared_ptr<Interpolant2d> kInterp,
-            double dx, double pad_factor);
+            double dx, double pad_factor,
+            boost::shared_ptr<Image<T> > pad_image);
 
         SBInterpolatedImageImpl(
             const MultipleImageHelper& multi, const std::vector<double>& weights,
@@ -149,6 +150,7 @@ namespace galsim {
         mutable double _stepk; ///< Stored value of stepK
         mutable double _maxk; ///< Stored value of maxK
         double _flux;
+        int _maxNin;
 
         void initialize(); ///< Put code common to both constructors here.
 

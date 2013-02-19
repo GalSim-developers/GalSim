@@ -149,7 +149,7 @@ image :
     ysize : *image_size
 
     noise : 
-        # Since the default type is CCDNoise, we may omit it.
+        # Since the default type is Poisson, we may omit it.
         sky_level : *sky_level
 
     random_seed : 8241573

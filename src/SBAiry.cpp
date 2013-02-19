@@ -45,13 +45,13 @@ namespace galsim {
     double SBAiry::getLamOverD() const 
     {
         assert(dynamic_cast<const SBAiryImpl*>(_pimpl.get()));
-        return dynamic_cast<const SBAiryImpl&>(*_pimpl).getLamOverD(); 
+        return static_cast<const SBAiryImpl&>(*_pimpl).getLamOverD(); 
     }
 
     double SBAiry::getObscuration() const 
     {
         assert(dynamic_cast<const SBAiryImpl*>(_pimpl.get()));
-        return dynamic_cast<const SBAiryImpl&>(*_pimpl).getObscuration(); 
+        return static_cast<const SBAiryImpl&>(*_pimpl).getObscuration(); 
     }
 
     SBAiry::SBAiryImpl::SBAiryImpl(double lam_over_D, double obscuration, double flux) :

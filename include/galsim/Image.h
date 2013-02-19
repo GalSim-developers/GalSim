@@ -174,8 +174,7 @@ namespace galsim {
          *
          *  The returned image will share data with this image
          */
-        ConstImageView<T> view() const
-        { return ConstImageView<T>(*this); }
+        ConstImageView<T> view() const { return ConstImageView<T>(*this); }
 
         /**
          *  @brief New image that is a subimage of this (shares pixels)
@@ -248,7 +247,10 @@ namespace galsim {
         int getYMax() const { return getBounds().getYMax(); }
         //@}
         
-
+        /**
+         *  @brief Calculate the size of the image in one dimension after padding.
+         */
+        int getPaddedSize(float pad_factor) const;
 
 #ifdef IMAGE_BOUNDS_CHECK
         /**
@@ -390,7 +392,7 @@ namespace galsim {
         /**
          *  @brief View just returns itself.
          */
-        const ConstImageView<T>& view() const { return *this; }
+        ConstImageView<T> view() const { return ConstImageView<T>(*this); }
  
     private:
         /**
@@ -506,8 +508,7 @@ namespace galsim {
         /**
          *  @brief View just returns itself.
          */
-        const ImageView<T>& view() const
-        { return *this; }
+        ImageView<T> view() const { return ImageView<T>(*this); }
  
         /**
          *  @brief New image that is a subimage of this (shares pixels)
@@ -595,7 +596,7 @@ namespace galsim {
                 iterator it1 = rowBegin(y);
                 const iterator ee = rowEnd(y);      
                 typename BaseImage<U>::const_iterator it2 = rhs.rowBegin(y2);
-                while (it1 != ee) *(it1++) = *(it2++);
+                while (it1 != ee) *(it1++) = T(*(it2++));
             }
         }
     };
