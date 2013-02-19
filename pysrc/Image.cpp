@@ -36,22 +36,22 @@ namespace bp = boost::python;
 // Note that docstrings are now added in galsim/image.py
 namespace galsim {
 
-    template <typename U, typename W>
-    static void wrapImageTemplates(W& wrapper) {
-        typedef void (Image<T>::* copyFrom_func_type)(const BaseImage<U>&);
-        wrapper
-            .def("copyFrom", copyFrom_func_type(&Image<T>::copyFrom));
-    }
-
-    template <typename U, typename W>
-    static void wrapImageViewTemplates(W& wrapper) {
-        typedef void (ImageView<T>::* copyFrom_func_type)(const BaseImage<U>&) const;
-        wrapper
-            .def("copyFrom", copyFrom_func_type(&ImageView<T>::copyFrom));
-    }
-
     template <typename T>
     struct PyImage {
+
+        template <typename U, typename W>
+        static void wrapImageTemplates(W& wrapper) {
+            typedef void (Image<T>::* copyFrom_func_type)(const BaseImage<U>&);
+            wrapper
+                .def("copyFrom", copyFrom_func_type(&Image<T>::copyFrom));
+        }
+
+        template <typename U, typename W>
+        static void wrapImageViewTemplates(W& wrapper) {
+            typedef void (ImageView<T>::* copyFrom_func_type)(const BaseImage<U>&) const;
+            wrapper
+                .def("copyFrom", copyFrom_func_type(&ImageView<T>::copyFrom));
+        }
 
         static bp::object GetArrayImpl(bp::object self, bool isConst) 
         {
