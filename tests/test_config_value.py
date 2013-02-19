@@ -63,7 +63,7 @@ def test_float_value():
         'dist2' : { 'type' : 'RandomDistribution', 'function' : 'config_input/distribution2.txt', 
                     'interpolant' : 'linear' },
         'dist3' : { 'type' : 'RandomDistribution', 'function' : 'x*x', 
-                    'interpolant' : 'linear', 'x_min' : 0., 'x_max' : 2.0 },
+                    'x_min' : 0., 'x_max' : 2.0 },
         'seq1' : { 'type' : 'Sequence' },
         'seq2' : { 'type' : 'Sequence', 'step' : 0.1 },
         'seq3' : { 'type' : 'Sequence', 'first' : 1.5, 'step' : 0.5 },
@@ -166,7 +166,7 @@ def test_float_value():
     for k in range(6):
         dist2 = galsim.config.ParseValue(config,'dist2',config, float)[0]
         np.testing.assert_almost_equal(dist2, dd())
-    dd=galsim.DistDeviate(rng,function=lambda x: x*x,interpolant='linear',x_min=0.,x_max=2.)
+    dd=galsim.DistDeviate(rng,function=lambda x: x*x,x_min=0.,x_max=2.)
     for k in range(6):
         dist3 = galsim.config.ParseValue(config,'dist3',config, float)[0]
         np.testing.assert_almost_equal(dist3, dd())

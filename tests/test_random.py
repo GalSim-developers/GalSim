@@ -99,8 +99,6 @@ chi2N = 30
 chi2Result = (32.209933900954049, 50.040002656028513, 24.301442486313896)
 
 #function and min&max to use for DistDeviate function call tests
-dnpoints=256
-dinterpolant='linear'
 dmin=0.0
 dmax=2.0
 def dfunction(x):
@@ -109,7 +107,6 @@ def dfunction(x):
 dFunctionResult = (0.9826461346196363, 1.1973307331701328, 1.5105900949284945)
 
 # x and y arrays and interpolant to use for DistDeviate array call tests
-# dnpoints and dinterpolant set in previous test
 dx=[0.,1.,2.,3.,4.,5.]
 dx_min=0.
 dx_max=5.
@@ -121,7 +118,7 @@ dArrayResult = (0.3558276852127166, 0.6437039889860897, 1.3560616118664859)
 def dboundaryfunction(x):
     return np.exp(-0.5*x*x)
 # LookupTable to test DistDeviate boundary settings
-dLookupTable=galsim.LookupTable(x=dx,f=dp,interpolant=dinterpolant)
+dLookupTable=galsim.LookupTable(x=dx,f=dp,interpolant='linear')
 
 
 def funcname():
@@ -432,10 +429,11 @@ def test_distfunction_rand():
     t1 = time.time()
     u = galsim.UniformDeviate(testseed)
     d = galsim.DistDeviate(
-        u, function=dfunction, x_min=dmin, x_max=dmax, npoints=dnpoints, interpolant=dinterpolant)
+        u, function=dfunction, x_min=dmin, x_max=dmax)
     testResult = (d(), d(), d())
-    np.testing.assert_array_almost_equal(np.array(testResult), np.array(dFunctionResult), precision,
-                                       err_msg='Wrong DistDeviate random number sequence generated')
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(dFunctionResult), precision,
+            err_msg='Wrong DistDeviate random number sequence generated')
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -447,10 +445,11 @@ def test_distlambdafunction_rand():
     t1 = time.time()
     u = galsim.UniformDeviate(testseed)
     d = galsim.DistDeviate(
-        u, function=lambda x: x*x, x_min=dmin, x_max=dmax, npoints=dnpoints, interpolant=dinterpolant)
+        u, function=lambda x: x*x, x_min=dmin, x_max=dmax)
     testResult = (d(), d(), d())
-    np.testing.assert_array_almost_equal(np.array(testResult), np.array(dFunctionResult), precision,
-                                       err_msg='Wrong DistDeviate random number sequence generated')
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(dFunctionResult), precision,
+            err_msg='Wrong DistDeviate random number sequence generated')
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -460,13 +459,13 @@ def test_distLookupTableboundaries():
     import time
     t1 = time.time()
     u = galsim.UniformDeviate(testseed)
-    d = galsim.DistDeviate(u, function=dLookupTable, npoints=dnpoints, interpolant=dinterpolant)
-    np.testing.assert_equal(d.x_min, dLookupTable.x_min, err_msg='DistDeviate and the LookupTable ' 
-                                                                 'passed to it have different '
-                                                                 'lower bounds')
-    np.testing.assert_equal(d.x_max, dLookupTable.x_max, err_msg='DistDeviate and the LookupTable ' 
-                                                                 'passed to it have different '
-                                                                 'upper bounds')
+    d = galsim.DistDeviate(u, function=dLookupTable)
+    np.testing.assert_equal(
+            d.x_min, dLookupTable.x_min,
+            err_msg='DistDeviate and the LookupTable passed to it have different lower bounds')
+    np.testing.assert_equal(
+            d.x_max, dLookupTable.x_max,
+            err_msg='DistDeviate and the LookupTable passed to it have different upper bounds')
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
