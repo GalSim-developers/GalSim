@@ -206,8 +206,8 @@ def main(argv):
         # image, which might have another galaxy near that point (so our S/N calculation would 
         # erroneously include the flux from the other object).
         # See demo5.py for the math behind this calculation.
-        sky_level_pix = sky_level * pixel_scale**2
-        sn_meas = math.sqrt( numpy.sum(stamp.array**2) / sky_level_pix )
+        sky_level_pixel = sky_level * pixel_scale**2
+        sn_meas = math.sqrt( numpy.sum(stamp.array**2) / sky_level_pixel )
         flux_scaling = gal_signal_to_noise / sn_meas
         stamp *= flux_scaling
 
@@ -226,9 +226,7 @@ def main(argv):
     # so it will be part of the same stream of random numbers as rng above.  We have to do this step
     # at the end, rather than adding to individual postage stamps, in order to get the noise level
     # right in the overlap regions between postage stamps.
-    full_image += sky_level_pix
-    full_image.addNoise(galsim.CCDNoise(rng))
-    full_image -= sky_level_pix
+    full_image.addNoise(galsim.PoissonNoise(rng,sky_level_pixel))
     logger.info('Added noise to final large image')
 
     # Now write the image to disk.  It is automatically compressed with Rice compression,

@@ -213,15 +213,13 @@ def main(argv):
 
         # Add Poisson noise to the full image
         sky_level_pixel = sky_level * pixel_scale**2
-        full_image += sky_level_pixel
 
         # Going to the next seed isn't really required, but it matches the behavior of the 
         # config parser, so doing this will result in identical output files.
         # If you didn't care about that, you could instead construct this as a continuation
-        # of the last RNG from the above loop: ccdnoise = galsim.CCDNoise(rng)
-        ccdnoise = galsim.CCDNoise(seed+nobj)
-        full_image.addNoise(ccdnoise)
-        full_image -= sky_level_pixel
+        # of the last RNG from the above loop
+        rng = galsim.BaseDeviate(seed+nobj)
+        full_image.addNoise(galsim.PoissonNoise(rng,sky_level=sky_level_pixel))
 
         # For the weight image, we only want the noise from the sky.  (If we were including
         # read_noise, we'd want that as well.)  Including the Poisson noise from the objects
