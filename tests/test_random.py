@@ -462,7 +462,7 @@ def test_distfunction():
             err_msg='Wrong DistDeviate random number sequence generated after call reset(rng)')
 
     ud = galsim.UniformDeviate(testseed)
-    d.reset(rng)
+    d.reset(ud)
     testResult = (d(), d(), d())
     np.testing.assert_array_almost_equal(
             np.array(testResult), np.array(dFunctionResult), precision,

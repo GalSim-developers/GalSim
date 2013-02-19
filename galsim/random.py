@@ -47,7 +47,7 @@ def permute(rng, *args):
             list[i], list[j] = list[j], list[i]
 
 
-class DistDeviate(_galsim.BaseDeviateCallBack):
+class DistDeviate(_galsim.BaseDeviate):
     """A class to draw random numbers from a user-defined probability distribution.
     
     DistDeviate is a BaseDeviate class that can be used to draw from an arbitrary probability
@@ -136,10 +136,10 @@ class DistDeviate(_galsim.BaseDeviateCallBack):
  
         # Set up the PRNG
         if not rng:
-            _galsim.BaseDeviateCallBack.__init__(self)
+            _galsim.BaseDeviate.__init__(self)
         else:
             try:
-                _galsim.BaseDeviateCallBack.__init__(self,rng)
+                _galsim.BaseDeviate.__init__(self,rng)
             except:
                 raise TypeError('Argument rng passed to DistDeviate cannot be used to initialize '
                                 'a BaseDeviate.')

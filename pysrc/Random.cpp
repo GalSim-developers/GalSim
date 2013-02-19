@@ -33,7 +33,7 @@ namespace bp = boost::python;
 namespace galsim {
 
     class BaseDeviateCallBack : public BaseDeviate,
-                                public bp::wrapper<BaseDeviateCallBack>
+                                public bp::wrapper<BaseDeviate>
     {
     public:
         BaseDeviateCallBack() : BaseDeviate() {}
@@ -60,7 +60,7 @@ namespace galsim {
     struct PyBaseDeviate {
 
         static void wrap() {
-            bp::class_<BaseDeviate> pyBaseDeviate("BaseDeviate", "", bp::init<>());
+            bp::class_<BaseDeviateCallBack> pyBaseDeviate("BaseDeviate", "", bp::init<>());
             pyBaseDeviate
                 .def(bp::init<long>(bp::arg("lseed")))
                 .def(bp::init<const BaseDeviate&>(bp::arg("dev")))
@@ -72,19 +72,6 @@ namespace galsim {
                      (bp::arg("lseed")), "")
                 .def("reset", (void (BaseDeviate::*) (const BaseDeviate&) )&BaseDeviate::reset, 
                      (bp::arg("dev")), "")
-                ;
-        }
-
-    };
-
-    struct PyBaseDeviateCallBack {
-
-        static void wrap() {
-            bp::class_<BaseDeviateCallBack> pyBaseDeviateCallBack(
-                "BaseDeviateCallBack", "", bp::init<>());
-            pyBaseDeviateCallBack
-                .def(bp::init<long>(bp::arg("lseed")))
-                .def(bp::init<const BaseDeviate&>(bp::arg("dev")))
                 ;
         }
 
@@ -262,7 +249,6 @@ namespace galsim {
         PyWeibullDeviate::wrap();
         PyGammaDeviate::wrap();
         PyChi2Deviate::wrap();
-        PyBaseDeviateCallBack::wrap();
     }
 
 } // namespace galsim
