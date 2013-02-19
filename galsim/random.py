@@ -246,17 +246,17 @@ class DistDeviate(_galsim.BaseDeviate):
     def __call__(self):
         return self._inverseprobabilitytable(self._ud())
     
-    def seed(self, rng=None):
-        if rng is None:
-            self._ud()
-        else:
-            self._ud.seed(rng)
+    #def seed(self, rng=None):
+        #if rng is None:
+            #self._ud()
+        #else:
+            #self._ud.seed(rng)
     
-    def reset(self, rng=None):
-        if rng is None:
-            self._ud()
-        else:
-            self._ud.reset(rng)
+    #def reset(self, rng=None):
+        #if rng is None:
+            #self._ud()
+        #else:
+            #self._ud.reset(rng)
 
 
 # BaseDeviate docstrings
@@ -360,12 +360,6 @@ numbers distributed uniformly in the interval [0., 1.).
     0.35068059829063714
     >>> u()            
     0.56841182382777333
-
-Methods
--------
-To add deviates to every element of an image, use the syntax image.addNoise(u).
-
-This docstring can be found using the Python interpreter or in pysrc/Random.cpp.
 """
 
 _galsim.UniformDeviate.__call__.__func__.__doc__= "Draw a new random number from the distribution."
@@ -406,13 +400,6 @@ numbers which Gaussian-distributed with the provided mean, sigma.
     1.398768034960607
     >>> g()
     -0.8456136323830128
-
-Methods
--------
-To add deviates to every element of an image, use the syntax image.addNoise(g).
-
-To get and set the deviate parameters, see the docstrings for the .getMean(), .setMean(), 
-.getSigma() and .setSigma() methods of each instance.
 """
 
 _galsim.GaussianDeviate.__call__.__func__.__doc__ = """
@@ -462,13 +449,6 @@ numbers binomial-distributed with the provided N, p.
     0
     >>> b()
     1
-
-Methods
--------
-To add deviates to every element of an image, use the syntax image.addNoise(b).
-
-To get and set the deviate parameters, see the docstrings for the .getN(), .setN(), .getP() and
-.setP() methods of each instance.
 """
 
 _galsim.BinomialDeviate.__call__.__func__.__doc__ = """
@@ -516,13 +496,6 @@ pseudo-random Poisson deviates with specified mean.
     1
     >>> p()
     2
-
-Methods
--------
-To add deviates to every element of an image, use the syntax image.addNoise(p).
-
-To get and set the deviate parameter, see the docstrings for the .getMean(), .setMean() method of 
-each instance.
 """
 
 _galsim.PoissonDeviate.__call__.__func__.__doc__ = """
@@ -572,13 +545,6 @@ numbers Weibull-distributed with shape and scale parameters a and b.
     2.152873075208731
     >>> w()
     2.0826856212853846
-
-Methods
--------
-To add deviates to every element of an image, use the syntax image.addNoise(w).
-
-To get and set the deviate parameters, see the docstrings for the .getA(), .setA(), .getB() and 
-.setB() methods of each instance.
 """
 
 _galsim.WeibullDeviate.__call__.__func__.__doc__ = """
@@ -629,15 +595,6 @@ pseudo-random Gamma-distributed deviates with shape and scale parameters alpha a
     0.020092014608829315
     >>> gam()
     0.5062533114685395
-
-Methods
--------
-To add deviates to every element of an image, use the syntax image.addNoise(gam).
-
-To get and set the deviate parameters, see the docstrings for the .getAlpha(), .setAlpha(), 
-.getBeta() and .setBeta() methods of each instance.
-
-To add deviates to every element of an image, the syntax image.addNoise() is preferred.
 """
 
 _galsim.GammaDeviate.__call__.__func__.__doc__ = """
@@ -684,13 +641,6 @@ pseudo-random Chi^2-distributed deviates with degrees-of-freedom parameter n.
     0.35617890086874854
     >>> chis()
     0.17269982670901735
-
-Methods
--------
-To add deviates to every element of an image, use the syntax image.addNoise(chis).
-
-To get and set the deviate parameter, see the docstrings for the .getN(), .setN() methods of each
-instance.
 """
 
 _galsim.Chi2Deviate.__call__.__func__.__doc__ = """
