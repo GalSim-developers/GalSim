@@ -1955,7 +1955,7 @@ class RealGalaxy(GSObject):
                                 'nearest', 'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' 
                                 where N should be the integer order to use.  We strongly recommend
                                 leaving this parameter at its default value; see text above for
-                                details.  [default `k_interpolant = Quintic()'].
+                                details.  [default `k_interpolant = galsim.Quintic()'].
     @param flux                 Total flux, if None then original flux in galaxy is adopted without
                                 change [default `flux = None`].
     @param pad_factor           Factor by which to pad the Image when creating the
