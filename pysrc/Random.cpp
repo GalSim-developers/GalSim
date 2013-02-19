@@ -27,223 +27,242 @@
 
 namespace bp = boost::python;
 
+
+// Note that class docstrings for all of these are now added in galsim/random.py     
+
 namespace galsim {
-namespace {
 
-struct PyBaseDeviate {
+    class BaseDeviateCallBack : public BaseDeviate,
+                                public bp::wrapper<BaseDeviateCallBack>
+    {
+    public:
+        BaseDeviateCallBack() : BaseDeviate() {}
+        BaseDeviateCallBack(long lseed) : BaseDeviate(lseed) {}
+        BaseDeviateCallBack(const BaseDeviate& rhs) : BaseDeviate(rhs) {}
+        ~BaseDeviateCallBack() {}
 
-    static void wrap() {
-        
-        // Note that class docstrings are now added in galsim/random.py
+    protected:
+        // This is the special magic needed so the virtual function calls back to the 
+        // function defined in the python layer.
+        double val()
+        {
+            if (bp::override py_val = this->get_override("val")) {
+#if BOOST_WORKAROUND(BOOST_MSVC, <= 1300) // Workaround for vc6/vc7
+                return bp::call<double>(py_val.ptr());
+#else 
+                return py_val();
+#endif 
+            }
+            return BaseDeviate::val();
+        }
+    };
 
-        bp::class_<BaseDeviate> pyBaseDeviate("BaseDeviate", "", bp::init<>());
-        pyBaseDeviate
-            .def(bp::init<long>(bp::arg("lseed")))
-            .def(bp::init<const BaseDeviate&>(bp::arg("dev")))
-            .def("seed", (void (BaseDeviate::*) () )&BaseDeviate::seed, "")
-            .def("seed", (void (BaseDeviate::*) (long) )&BaseDeviate::seed, (bp::arg("lseed")), "")
-            .def("reset", (void (BaseDeviate::*) () )&BaseDeviate::reset, "")
-            .def("reset", (void (BaseDeviate::*) (long) )&BaseDeviate::reset, (bp::arg("lseed")), 
-                 "")
-            .def("reset", (void (BaseDeviate::*) (const BaseDeviate&) )&BaseDeviate::reset, 
-                 (bp::arg("dev")), "")
-            ;
+    struct PyBaseDeviate {
+
+        static void wrap() {
+            bp::class_<BaseDeviate> pyBaseDeviate("BaseDeviate", "", bp::init<>());
+            pyBaseDeviate
+                .def(bp::init<long>(bp::arg("lseed")))
+                .def(bp::init<const BaseDeviate&>(bp::arg("dev")))
+                .def("seed", (void (BaseDeviate::*) () )&BaseDeviate::seed, "")
+                .def("seed", (void (BaseDeviate::*) (long) )&BaseDeviate::seed,
+                     (bp::arg("lseed")), "")
+                .def("reset", (void (BaseDeviate::*) () )&BaseDeviate::reset, "")
+                .def("reset", (void (BaseDeviate::*) (long) )&BaseDeviate::reset,
+                     (bp::arg("lseed")), "")
+                .def("reset", (void (BaseDeviate::*) (const BaseDeviate&) )&BaseDeviate::reset, 
+                     (bp::arg("dev")), "")
+                ;
+        }
+
+    };
+
+    struct PyBaseDeviateCallBack {
+
+        static void wrap() {
+            bp::class_<BaseDeviateCallBack> pyBaseDeviateCallBack(
+                "BaseDeviateCallBack", "", bp::init<>());
+            pyBaseDeviateCallBack
+                .def(bp::init<long>(bp::arg("lseed")))
+                .def(bp::init<const BaseDeviate&>(bp::arg("dev")))
+                ;
+        }
+
+    };
+
+    struct PyUniformDeviate {
+
+        static void wrap() {
+            bp::class_<UniformDeviate, bp::bases<BaseDeviate> > pyUniformDeviate(
+                "UniformDeviate", "", bp::init<>()
+            );
+            pyUniformDeviate
+                .def(bp::init<long>(bp::arg("lseed")))
+                .def(bp::init<const BaseDeviate&>(bp::arg("dev")))
+                .def("__call__", &UniformDeviate::operator(), "")
+                ;
+        }
+
+    };
+
+    struct PyGaussianDeviate {
+
+        static void wrap() {
+            bp::class_<GaussianDeviate, bp::bases<BaseDeviate> > pyGaussianDeviate(
+                "GaussianDeviate", "", bp::init<double, double >(
+                    (bp::arg("mean")=0., bp::arg("sigma")=1.)
+                )
+            );
+            pyGaussianDeviate
+                .def(bp::init<long, double, double>(
+                        (bp::arg("lseed"), bp::arg("mean")=0., bp::arg("sigma")=1.)
+                ))
+                .def(bp::init<const BaseDeviate&, double, double>(
+                        (bp::arg("dev"), bp::arg("mean")=0., bp::arg("sigma")=1.)
+                ))
+                .def("__call__", &GaussianDeviate::operator(), "")
+                .def("getMean", &GaussianDeviate::getMean, "")
+                .def("setMean", &GaussianDeviate::setMean, "")
+                .def("getSigma", &GaussianDeviate::getSigma, "")
+                .def("setSigma", &GaussianDeviate::setSigma, "")
+                ;
+        }
+
+    };
+
+    struct PyBinomialDeviate {
+
+        static void wrap() {
+            bp::class_<BinomialDeviate, bp::bases<BaseDeviate> > pyBinomialDeviate(
+                "BinomialDeviate", "", bp::init<int, double >(
+                    (bp::arg("N")=1, bp::arg("p")=0.5)
+                )
+            );
+            pyBinomialDeviate
+                .def(bp::init<long, int, double>(
+                        (bp::arg("lseed"), bp::arg("N")=1, bp::arg("p")=0.5)
+                ))
+                .def(bp::init<const BaseDeviate&, int, double>(
+                        (bp::arg("dev"), bp::arg("N")=1, bp::arg("p")=0.5)
+                ))
+                .def("__call__", &BinomialDeviate::operator(), "")
+                .def("getN", &BinomialDeviate::getN, "")
+                .def("setN", &BinomialDeviate::setN, "")
+                .def("getP", &BinomialDeviate::getP, "")
+                .def("setP", &BinomialDeviate::setP, "")
+                ;
+        }
+
+    };
+
+    struct PyPoissonDeviate {
+
+        static void wrap() {
+            bp::class_<PoissonDeviate, bp::bases<BaseDeviate> > pyPoissonDeviate(
+                "PoissonDeviate", "", bp::init<double>(
+                    (bp::arg("mean")=1.)
+                )
+            );
+            pyPoissonDeviate
+                .def(bp::init<long, double>(
+                        (bp::arg("lseed"), bp::arg("mean")=1.)
+                ))
+                .def(bp::init<const BaseDeviate&, double>(
+                        (bp::arg("dev"), bp::arg("mean")=1.)
+                ))
+                .def("__call__", &PoissonDeviate::operator(), "")
+                .def("getMean", &PoissonDeviate::getMean, "")
+                .def("setMean", &PoissonDeviate::setMean, "")
+                ;
+        }
+
+    };
+
+    struct PyWeibullDeviate {
+
+        static void wrap() {
+
+            bp::class_<WeibullDeviate, bp::bases<BaseDeviate> > pyWeibullDeviate(
+                "WeibullDeviate", "", bp::init<double, double >(
+                    (bp::arg("a")=1., bp::arg("b")=1.)
+                )
+            );
+            pyWeibullDeviate
+                .def(bp::init<long, double, double>(
+                        (bp::arg("lseed"), bp::arg("a")=1., bp::arg("b")=1.)
+                ))
+                .def(bp::init<const BaseDeviate&, double, double>(
+                        (bp::arg("dev"), bp::arg("a")=1., bp::arg("b")=1.)
+                ))
+                .def("__call__", &WeibullDeviate::operator(), "")
+                .def("getA", &WeibullDeviate::getA, "")
+                .def("setA", &WeibullDeviate::setA, "")
+                .def("getB", &WeibullDeviate::getB, "")
+                .def("setB", &WeibullDeviate::setB, "")
+                ;
+        }
+
+    };
+
+    struct PyGammaDeviate {
+
+        static void wrap() {
+            bp::class_<GammaDeviate, bp::bases<BaseDeviate> > pyGammaDeviate(
+                "GammaDeviate", "", bp::init<double, double >(
+                    (bp::arg("alpha")=1., bp::arg("beta")=1.)
+                )
+            );
+            pyGammaDeviate
+                .def(bp::init<long, double, double>(
+                        (bp::arg("lseed"), bp::arg("alpha")=1., bp::arg("beta")=1.)
+                ))
+                .def(bp::init<const BaseDeviate&, double, double>(
+                        (bp::arg("dev"), bp::arg("alpha")=1., bp::arg("beta")=1.)
+                ))
+                .def("__call__", &GammaDeviate::operator(), "")
+                .def("getAlpha", &GammaDeviate::getAlpha, "")
+                .def("setAlpha", &GammaDeviate::setAlpha, "")
+                .def("getBeta", &GammaDeviate::getBeta, "")
+                .def("setBeta", &GammaDeviate::setBeta, "")
+                ;
+        }
+
+    };
+
+    struct PyChi2Deviate {
+
+        static void wrap() {
+            bp::class_<Chi2Deviate, bp::bases<BaseDeviate> > pyChi2Deviate(
+                "Chi2Deviate", "", bp::init<double >(
+                    (bp::arg("n")=1.)
+                )
+            );
+            pyChi2Deviate
+                .def(bp::init<long, double>(
+                        (bp::arg("lseed"), bp::arg("n")=1.)
+                ))
+                .def(bp::init<const BaseDeviate&, double>(
+                        (bp::arg("dev"), bp::arg("n")=1.)
+                ))
+                .def("__call__", &Chi2Deviate::operator(), "")
+                .def("getN", &Chi2Deviate::getN, "")
+                .def("setN", &Chi2Deviate::setN, "")
+                ;
+        }
+
+    };
+
+
+    void pyExportRandom() {
+        PyBaseDeviate::wrap();
+        PyUniformDeviate::wrap();
+        PyGaussianDeviate::wrap();
+        PyBinomialDeviate::wrap();
+        PyPoissonDeviate::wrap();
+        PyWeibullDeviate::wrap();
+        PyGammaDeviate::wrap();
+        PyChi2Deviate::wrap();
+        PyBaseDeviateCallBack::wrap();
     }
-
-};
-struct PyUniformDeviate {
-
-    static void wrap() {
-
-        // Note that class docstrings are now added in galsim/random.py
-
-        bp::class_<UniformDeviate, bp::bases<BaseDeviate> > pyUniformDeviate(
-            "UniformDeviate", "", bp::init<>()
-        );
-        pyUniformDeviate
-            .def(bp::init<long>(bp::arg("lseed")))
-            .def(bp::init<const BaseDeviate&>(bp::arg("dev")))
-            .def("__call__", &UniformDeviate::operator(), "")
-            ;
-    }
-
-};
-
-struct PyGaussianDeviate {
-
-    static void wrap() {
-
-        // Note that class docstrings are now added in galsim/random.py
-
-        bp::class_<GaussianDeviate, bp::bases<BaseDeviate> > pyGaussianDeviate(
-            "GaussianDeviate", "", bp::init<double, double >(
-                (bp::arg("mean")=0., bp::arg("sigma")=1.)
-            )
-        );
-        pyGaussianDeviate
-            .def(bp::init<long, double, double>(
-                (bp::arg("lseed"), bp::arg("mean")=0., bp::arg("sigma")=1.)
-                ))
-            .def(bp::init<const BaseDeviate&, double, double>(
-                (bp::arg("dev"), bp::arg("mean")=0., bp::arg("sigma")=1.)
-                ))
-            .def("__call__", &GaussianDeviate::operator(), "")
-            .def("getMean", &GaussianDeviate::getMean, "")
-            .def("setMean", &GaussianDeviate::setMean, "")
-            .def("getSigma", &GaussianDeviate::getSigma, "")
-            .def("setSigma", &GaussianDeviate::setSigma, "")
-            ;
-    }
-
-};
-
-struct PyBinomialDeviate {
-
-    static void wrap() {
-
-        // Note that class docstrings are now added in galsim/random.py
-
-        bp::class_<BinomialDeviate, bp::bases<BaseDeviate> > pyBinomialDeviate(
-            "BinomialDeviate", "", bp::init<int, double >(
-                (bp::arg("N")=1, bp::arg("p")=0.5)
-            )
-        );
-        pyBinomialDeviate
-            .def(bp::init<long, int, double>(
-                (bp::arg("lseed"), bp::arg("N")=1, bp::arg("p")=0.5)
-                ))
-            .def(bp::init<const BaseDeviate&, int, double>(
-                (bp::arg("dev"), bp::arg("N")=1, bp::arg("p")=0.5)
-                ))
-            .def("__call__", &BinomialDeviate::operator(), "")
-            .def("getN", &BinomialDeviate::getN, "")
-            .def("setN", &BinomialDeviate::setN, "")
-            .def("getP", &BinomialDeviate::getP, "")
-            .def("setP", &BinomialDeviate::setP, "")
-            ;
-    }
-
-};
-
-struct PyPoissonDeviate {
-
-    static void wrap() {
-
-        // Note that class docstrings are now added in galsim/random.py
-
-        bp::class_<PoissonDeviate, bp::bases<BaseDeviate> > pyPoissonDeviate(
-            "PoissonDeviate", "", bp::init<double>(
-                (bp::arg("mean")=1.)
-            )
-        );
-        pyPoissonDeviate
-            .def(bp::init<long, double>(
-                (bp::arg("lseed"), bp::arg("mean")=1.)
-                ))
-            .def(bp::init<const BaseDeviate&, double>(
-                (bp::arg("dev"), bp::arg("mean")=1.)
-                ))
-            .def("__call__", &PoissonDeviate::operator(), "")
-            .def("getMean", &PoissonDeviate::getMean, "")
-            .def("setMean", &PoissonDeviate::setMean, "")
-            ;
-    }
-
-};
-
-struct PyWeibullDeviate {
-
-    static void wrap() {
-
-        // Note that class docstrings are now added in galsim/random.py     
-
-        bp::class_<WeibullDeviate, bp::bases<BaseDeviate> > pyWeibullDeviate(
-            "WeibullDeviate", "", bp::init<double, double >(
-                (bp::arg("a")=1., bp::arg("b")=1.)
-            )
-        );
-        pyWeibullDeviate
-            .def(bp::init<long, double, double>(
-                (bp::arg("lseed"), bp::arg("a")=1., bp::arg("b")=1.)
-                ))
-            .def(bp::init<const BaseDeviate&, double, double>(
-                (bp::arg("dev"), bp::arg("a")=1., bp::arg("b")=1.)
-                ))
-            .def("__call__", &WeibullDeviate::operator(), "")
-            .def("getA", &WeibullDeviate::getA, "")
-            .def("setA", &WeibullDeviate::setA, "")
-            .def("getB", &WeibullDeviate::getB, "")
-            .def("setB", &WeibullDeviate::setB, "")
-            ;
-    }
-
-};
-
-struct PyGammaDeviate {
-
-    static void wrap() {
-
-        // Note that class docstrings are now added in galsim/random.py
-
-        bp::class_<GammaDeviate, bp::bases<BaseDeviate> > pyGammaDeviate(
-            "GammaDeviate", "", bp::init<double, double >(
-                (bp::arg("alpha")=1., bp::arg("beta")=1.)
-            )
-        );
-        pyGammaDeviate
-            .def(bp::init<long, double, double>(
-                (bp::arg("lseed"), bp::arg("alpha")=1., bp::arg("beta")=1.)
-                ))
-            .def(bp::init<const BaseDeviate&, double, double>(
-                (bp::arg("dev"), bp::arg("alpha")=1., bp::arg("beta")=1.)
-                ))
-            .def("__call__", &GammaDeviate::operator(), "")
-            .def("getAlpha", &GammaDeviate::getAlpha, "")
-            .def("setAlpha", &GammaDeviate::setAlpha, "")
-            .def("getBeta", &GammaDeviate::getBeta, "")
-            .def("setBeta", &GammaDeviate::setBeta, "")
-            ;
-    }
-
-};
-
-struct PyChi2Deviate {
-
-    static void wrap() {
-
-        // Note that class docstrings are now added in galsim/random.py
-
-        bp::class_<Chi2Deviate, bp::bases<BaseDeviate> > pyChi2Deviate(
-            "Chi2Deviate", "", bp::init<double >(
-                (bp::arg("n")=1.)
-            )
-        );
-        pyChi2Deviate
-            .def(bp::init<long, double>(
-                (bp::arg("lseed"), bp::arg("n")=1.)
-                ))
-            .def(bp::init<const BaseDeviate&, double>(
-                (bp::arg("dev"), bp::arg("n")=1.)
-                ))
-            .def("__call__", &Chi2Deviate::operator(), "")
-            .def("getN", &Chi2Deviate::getN, "")
-            .def("setN", &Chi2Deviate::setN, "")
-            ;
-    }
-
-};
-
-} // anonymous
-
-void pyExportRandom() {
-    PyBaseDeviate::wrap();
-    PyUniformDeviate::wrap();
-    PyGaussianDeviate::wrap();
-    PyBinomialDeviate::wrap();
-    PyPoissonDeviate::wrap();
-    PyWeibullDeviate::wrap();
-    PyGammaDeviate::wrap();
-    PyChi2Deviate::wrap();
-}
 
 } // namespace galsim

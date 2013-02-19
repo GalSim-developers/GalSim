@@ -422,8 +422,7 @@ def test_distfunction():
     import time
     t1 = time.time()
 
-    rng = galsim.BaseDeviate(testseed)
-    d = galsim.DistDeviate(rng, function=dfunction, x_min=dmin, x_max=dmax)
+    d = galsim.DistDeviate(testseed, function=dfunction, x_min=dmin, x_max=dmax)
     testResult = (d(), d(), d())
     np.testing.assert_array_almost_equal(
             np.array(testResult), np.array(dFunctionResult), precision,
@@ -455,24 +454,29 @@ def test_distfunction():
             np.array(testResult), np.array(dFunctionResult), precision,
             err_msg='Wrong DistDeviate random number sequence generated after call reset')
 
-    rng.seed(testseed)
+    rng = galsim.BaseDeviate(testseed)
     d.reset(rng)
     testResult = (d(), d(), d())
     np.testing.assert_array_almost_equal(
             np.array(testResult), np.array(dFunctionResult), precision,
             err_msg='Wrong DistDeviate random number sequence generated after call reset(rng)')
 
+    ud = galsim.UniformDeviate(testseed)
+    d.reset(rng)
+    testResult = (d(), d(), d())
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(dFunctionResult), precision,
+            err_msg='Wrong DistDeviate random number sequence generated after call reset(ud)')
+
     # Check with lambda function
-    rng.seed(testseed)
-    d = galsim.DistDeviate(rng, function=lambda x: x*x, x_min=dmin, x_max=dmax)
+    d = galsim.DistDeviate(testseed, function=lambda x: x*x, x_min=dmin, x_max=dmax)
     testResult = (d(), d(), d())
     np.testing.assert_array_almost_equal(
             np.array(testResult), np.array(dFunctionResult), precision,
             err_msg='Wrong DistDeviate random number sequence generated with lambda function')
 
     # Check auto-generated lambda function
-    rng.seed(testseed)
-    d = galsim.DistDeviate(rng, function='x*x', x_min=dmin, x_max=dmax)
+    d = galsim.DistDeviate(testseed, function='x*x', x_min=dmin, x_max=dmax)
     testResult = (d(), d(), d())
     np.testing.assert_array_almost_equal(
             np.array(testResult), np.array(dFunctionResult), precision,
@@ -495,8 +499,7 @@ def test_distLookupTable():
     import time
     t1 = time.time()
 
-    rng = galsim.BaseDeviate(testseed)
-    d = galsim.DistDeviate(rng, function=dLookupTable)
+    d = galsim.DistDeviate(testseed, function=dLookupTable)
     np.testing.assert_equal(
             d.x_min, dLookupTable.x_min,
             err_msg='DistDeviate and the LookupTable passed to it have different lower bounds')
@@ -523,23 +526,20 @@ def test_distLookupTable():
 
     # This should give the same values with only 6 points because of the particular nature
     # of these arrays.
-    rng.seed(testseed)
-    d = galsim.DistDeviate(rng, function=dLookupTable, npoints=5)
+    d = galsim.DistDeviate(testseed, function=dLookupTable, npoints=5)
     testResult = (d(), d(), d())
     np.testing.assert_array_almost_equal(
             np.array(testResult), np.array(dLookupTableResult), precision,
             err_msg='Wrong DistDeviate random number sequence for LookupTable with 5 points')
 
     # Also read these values from a file
-    rng.seed(testseed)
-    d = galsim.DistDeviate(rng, function=dLookupTableFile, interpolant='linear')
+    d = galsim.DistDeviate(testseed, function=dLookupTableFile, interpolant='linear')
     testResult = (d(), d(), d())
     np.testing.assert_array_almost_equal(
             np.array(testResult), np.array(dLookupTableResult), precision,
             err_msg='Wrong DistDeviate random number sequence for LookupTable from file')
 
-    rng.seed(testseed)
-    d = galsim.DistDeviate(rng, function=dLookupTableFile)
+    d = galsim.DistDeviate(testseed, function=dLookupTableFile)
     testResult = (d(), d(), d())
     np.testing.assert_array_almost_equal(
             np.array(testResult), np.array(dLookupTableResult), precision,
