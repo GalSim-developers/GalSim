@@ -20,7 +20,7 @@
 #
 
 bin1=../bin  # For python scripts
-bin2=../bin  # For yaml files
+bin2=../bin  # For galsim_json executable
 
 if [ ! -d "output" ]; then
     mkdir output
@@ -118,3 +118,4 @@ diff -q output/power_spectrum.fits output_json/power_spectrum.fits
 
 # demo11:
 diff -q output/tabulated_power_spectrum.fits.fz output_json/tabulated_power_spectrum.fits.fz 
+
