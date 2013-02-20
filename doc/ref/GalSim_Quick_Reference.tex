@@ -449,13 +449,13 @@ component to the modelling of astronomical images, such as drawing
 object parameters according to a given distribution or generating random
 numbers to be added to image pixel values to model noise. 
 
-We now give a short summary of the 8 random deviates currently
+We now give a short summary of the 9 random deviates currently
 implemented in GalSim.   The optional parameter \emph{\texttt{seed}}
 listed below is used
 to seed the pseudo-random number generator: it can
 either be omitted (the random deviate seed will be set using the
 current time), set to an integer seed, or used to pass another random
-deviate (the new instance will then use and update the same underlying
+deviate except the DistDeviate (the new instance will then use and update the same underlying
 generator as the input deviate).
 The deviates, with a description of their distributions, parametrization and
 default parameter values, are as follows:
@@ -482,7 +482,8 @@ with \texttt{mean} and standard deviation \texttt{sigma}.}
 \item[$\circ$] \texttt{galsim.Chi2Deviate(\emph{seed}, n=1.)} \newline {$\chi^2$ distribution
     with degrees-of-freedom parameter \texttt{n}.}
 
-\item[$\circ$] \texttt{galsim.DistDeviate(\emph{seed}, function, x\_min, x\_max)}  \newline {Use an arbitrary function for $P(x)$ from \texttt{x\_min} .. \texttt{x\_max}.}
+\item[$\circ$] \texttt{galsim.DistDeviate(\emph{seed}, function, x\_min, x\_max)}  \newline {Use an 
+    arbitrary function for $P(x)$ from \texttt{x\_min} .. \texttt{x\_max}.}
 
 \end{itemize}
 
