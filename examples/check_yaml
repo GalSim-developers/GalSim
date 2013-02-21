@@ -20,7 +20,7 @@
 #
 
 bin1=../bin  # For python scripts
-bin2=../bin  # For yaml files
+bin2=../bin  # For galsim_yaml executable
 
 if [ ! -d "output" ]; then
     mkdir output

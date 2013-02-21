@@ -41,8 +41,8 @@ def ParseValue(config, param_name, base, value_type):
     else:
         # Otherwise, we need to generate the value according to its type
         valid_types = {
-            float : [ 'InputCatalog', 'Random', 'RandomGaussian', 'NFWHaloMag',
-                      'Sequence', 'List', 'Eval' ],
+            float : [ 'InputCatalog', 'Random', 'RandomGaussian', 'RandomDistribution',
+                      'NFWHaloMag', 'Sequence', 'List', 'Eval' ],
             int : [ 'InputCatalog', 'Random', 'Sequence', 'List', 'Eval' ],
             bool : [ 'InputCatalog', 'Random', 'Sequence', 'List', 'Eval' ],
             str : [ 'InputCatalog', 'NumberedFile', 'FormattedStr', 'List', 'Eval' ],
@@ -432,6 +432,42 @@ def _GenerateFromRandomGaussian(param, param_name, base, value_type):
         if 'mean' in kwargs: val += kwargs['mean']
 
     #print 'RandomGaussian: ',val
+    return val, False
+
+
+def _GenerateFromRandomDistribution(param, param_name, base, value_type):
+    """@brief Return a random value drawn from a user-defined probability distribution
+    """
+    if 'rng' not in base:
+        raise ValueError("No rng available for %s.type = RandomDistribution"%param_name)
+    rng = base['rng']
+
+    opt = {'function' : str, 'interpolant' : str, 'npoints' : int, 
+           'x_min' : float, 'x_max' : float }
+    kwargs, safe = GetAllParams(param, param_name, base, opt=opt)
+    
+    if 'distdev' in base:
+        # The overhead for making a DistDeviate is large enough that we'd rather not do it every 
+        # time, so first check if we've already made one:
+        distdev = base['distdev']
+        if base['distdev_kwargs'] != kwargs:
+            distdev=galsim.DistDeviate(rng,**kwargs)
+            base['distdev'] = distdev
+            base['distdev_kwargs'] = kwargs
+    else:
+        # Otherwise, just go ahead and make a new one.
+        distdev=galsim.DistDeviate(rng,**kwargs)
+        base['distdev'] = distdev
+        base['distdev_kwargs'] = kwargs
+
+    # Typically, the rng will change between successive calls to this, so reset the 
+    # seed.  (The other internal calculations don't need to be redone unless the rest of the
+    # kwargs have been changed.)
+    distdev.reset(rng)
+
+    val = distdev()
+    #print 'distdev = ',val
+
     return val, False
 
 

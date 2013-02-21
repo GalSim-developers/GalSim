@@ -704,7 +704,6 @@ def AddNoisePhot(im, weight_im, noise, base, rng, sky_level, logger=None):
         if logger:
             logger.debug('   Added CCD noise with sky_level = %f, ' +
                          'gain = %f, read_noise = %f',sky_level,gain,read_noise)
-
     else:
         raise AttributeError("Invalid type %s for noise",type)
 
