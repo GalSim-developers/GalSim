@@ -20,6 +20,9 @@ Changes from v0.3 to current version:
 * There is now a python interface to C++ tables that can be used for interpolation in a more general
   context. (Issue #305)
 
+* Added a DistDeviate class that generates pseudo-random numbers from a user-defined probability
+  distribution. (Issue #306)
+  
 * A free function added that gives the user quick access to the 2D spatial correlation function of
   noise in HST COSMOS F814W weak lensing science images (e.g. Leauthaud et al 2007).  Calling
   `galsim.correlatednoise.get_COSMOS_CorrFunc()` returns a correlation function that shares all the
@@ -35,3 +38,6 @@ Changes from v0.3 to current version:
 * Small bug fix for multiple operations on GSObjects when drawing images using photon shooting,
   which affects combinations like shifting and shearing.  (Issue #359)
 
+* New demo11 script that includes getting PowerSpectrum shears from a file, uses an 
+  InterpolatedImage for the PSF, and uses DistDeviate (RandomDistribution in the config)
+  for the sizes. (Issues #305, #306)
