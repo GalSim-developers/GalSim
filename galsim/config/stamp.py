@@ -881,6 +881,24 @@ def CalculateNoiseVar(noise, pixel_scale, sky_level):
         read_noise = params.get('read_noise',0.0)
         var = sky_level * pixel_scale**2 / gain + read_noise * read_noise
 
+    elif type == 'COSMOS':
+        req = { 'file_name' : str }
+        opt = { 'dx_cosmos' : float, 'variance' : float }
+        
+        params = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
+        file_name = params['file_name']
+        
+        # Variance to be used to specify zero-distance point variance
+        variance = params.get('variance', 0.) # variance=0. (default) means COSMOS value used
+        # Unless another value specifed, adopt default dx_cosmos=0.03 (implies arcsec units)
+        dx_cosmos = params.get('dx_cosmos', 0.03)
+
+        # Build the cf first (TODO: change this, see below)
+        cf = galsim.correlatednoise.get_COSMOS_CorrFunc(
+            file_name, dx_cosmos=dx_cosmos, variance=variance)
+        # zero distance correlation function value returned as variance
+        var = cf._profile.xValue(galsim.PositionD(0., 0.))
+
     else:
         raise AttributeError("Invalid type %s for noise",type)
 
