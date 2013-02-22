@@ -558,7 +558,7 @@ for Class in galsim.ConstImageView.itervalues():
     Class.getCorrFunc = _Image_getCorrFunc
 
 # Free function for returning a COSMOS noise field correlation function
-def get_COSMOS_CorrFunc(file_name, dx_cosmos=0.03):
+def get_COSMOS_CorrFunc(file_name, dx_cosmos=0.03, variance=0.):
     """Returns a 2D discrete correlation function representing noise in the HST COSMOS F814W
     unrotated science coadd images.
 
@@ -605,7 +605,7 @@ def get_COSMOS_CorrFunc(file_name, dx_cosmos=0.03):
 
     The FITS file `out.fits` should then contain an image of randomly-generated, COSMOS-like noise.
     """
-    # Read in the image of the COSMOS correlation function stored in the repository
+    # First try to read in the image of the COSMOS correlation function stored in the repository
     import os
     if not os.path.isfile(file_name):
         raise IOError("The input file_name '"+str(file_name)+"' does not exist.")
@@ -618,10 +618,20 @@ def get_COSMOS_CorrFunc(file_name, dx_cosmos=0.03):
             "Function get_COSMOS_CorrFunc() unable to read FITS image from "+str(file_name)+", "+
             "more information on the error in the following Exception...")
         raise original_exception
-    # Use this to generate a correlation function DIRECTLY: note this is non-standard usage, but
-    # allowed since we can be sure that the input cfimage is appropriately symmetric and peaked at
-    # the origin
+
+    # Then check for negative variance before doing anything time consuming
+    if variance < 0:
+        raise ValueError("Input keyword variance must be zero or positive.")
+    
+    # Use this info to then generate a correlation function DIRECTLY: note this is non-standard
+    # usage, but tolerated since we can be sure that the input cfimage is appropriately symmetric
+    # and peaked at the origin
     ret = _CorrFunc(base.InterpolatedImage(
         cfimage, dx=dx_cosmos, normalization="sb", calculate_stepk=False, calculate_maxk=False))
+    # If the input keyword variance is non-zero, scale the correlation function to have this
+    # variance
+    if variance > 0.:
+        var_original = ret._profile.xValue(galsim.PositionD(0., 0.))
+        ret.scaleVariance(variance / var_original)
     return ret
 
