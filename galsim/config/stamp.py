@@ -547,11 +547,11 @@ def AddNoiseFFT(im, weight_im, noise, base, rng, sky_level, logger=None):
         
         # Variance to be used to specify zero-distance point variance
         variance = params.get('variance', 0.) # variance=0. (default) means COSMOS value used
-        # Unless other units are being specifed, define physical scale in arcsec with dx_cosmos=0.03
+        # Unless another value specifed, adopt default dx_cosmos=0.03 (implies arcsec units)
         dx_cosmos = params.get('dx_cosmos', 0.03)
 
         # Build the cf first (TODO: change this, see below)
-        cf=galsim.correlatednoise.get_COSMOS_CorrFunc(
+        cf = galsim.correlatednoise.get_COSMOS_CorrFunc(
             file_name, dx_cosmos=dx_cosmos, variance=variance)
         # TODO: Harmonize the usage below with the other noise application methods once the CorrFunc
         # becomes a Noise class instance and cn be used directly with the im.addNoise method
