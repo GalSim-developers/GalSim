@@ -110,7 +110,11 @@ image :
     pixel_scale : 0.20  # arcsec / pixel
 
     noise :
-        sky_level : 1.0e4  # ADU / arcsec^2
+        type : "COSMOS"
+        file_name : "../devel/external/hst/acs_I_unrot_sci_20_cf.fits"
+        dx_cosmos : 0.20
+        variance : 1.
+        #sky_level : 1.0e4  # ADU / arcsec^2
 
     random_seed : 24783923
 
