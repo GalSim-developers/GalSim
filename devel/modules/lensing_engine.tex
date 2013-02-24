@@ -182,9 +182,9 @@ employs the \emph{angular frequency, non-unitary}\footnote{According
 definition of the (1D) Fourier transform:
 \begin{eqnarray}
 \tilde{f}(k) & = & \int_{-\infty}^{\infty} f(x) \me^{-\mi k x}
-dx ~ ~ \equiv ~ \mathcal{F} \{ f(x) \} \label{eq:fwdft} ; \\
+\rmd x ~ ~ \equiv ~ \mathcal{F} \{ f(x) \} \label{eq:fwdft} ; \\
 f(x) & = & \frac{1}{2 \pi} \int_{-\infty}^{\infty} \tilde{f}(k) \me^{\mi k x}
-dk ~ ~ \equiv ~ \mathcal{F}^{-1}\{ \tilde{f}(k) \} \label{eq:invft}, 
+\rmd k ~ ~ \equiv ~ \mathcal{F}^{-1}\{ \tilde{f}(k) \} \label{eq:invft}, 
 \end{eqnarray}
 with the usual simple generalizations to two or more dimensions.
 
@@ -256,13 +256,13 @@ The inverse Fourier transform of $P(k)$ to give $\xi_+(\theta)$ may be written i
 \begin{equation}
   \xi_{+}(\theta_1, \theta_2)  = \frac{1}{(2 \pi)^2} \int \! \! \!
   \int_{-\infty}^{\infty} P(k_1, k_2) ~ \me^{\mi (k_1 \theta_1 + k_2
-  \theta_2)} dk_1 dk_2. \label{eq:xip}
+  \theta_2)} \, \rmd k_1 \, \rmd k_2. \label{eq:xip}
 \end{equation}
 The relation between this and equation \eqref{eq:xi} makes use of Bessel's first
 integral:
 \begin{equation}
 J_n(z) = \frac{\mi^{-n}}{\pi} \int_0^{\pi} \me^{\mi z \cos{\theta}}
-\cos{(n \theta)} d \theta,  
+\cos{(n \theta)} \, \rmd \theta,  
 \end{equation}
 (\emph{which I believes shows you have the correct expression for the
   variance on page 2, Rachel...}).
