@@ -177,7 +177,7 @@ representation in \S\ref{sect:theory}.
 
 The definition of the correlation function in equation \eqref{eq:xi}
 employs the \emph{angular frequency, non-unitary}\footnote{According
-  to the paradigm setup in
+  to the paradigm described in
   http://en.wikipedia.org/wiki/Fourier\_transform\#Other\_conventions}
 definition of the (1D) Fourier transform:
 \begin{eqnarray}
@@ -188,12 +188,7 @@ dk ~ ~ \equiv ~ \mathcal{F}^{-1}\{ \tilde{f}(k) \} \label{eq:invft},
 \end{eqnarray}
 with the usual simple generalizations to two or more dimensions.
 
-The standard results in Discrete Fourier Transform (DFT) and its
-halfway-house the Discrete Time Fourier Transform (DTFT) are all
-derived under the unitary (i.e. symmetric with no odd factors of $2
-\pi$ around) convention in the online literature, adding to the complexity of
-interpretation.  In the next section, we present some of the standard results of
-Fourier theory using the angular frequency, non-unitary convention above, since we will require them in Section \ref{sect:DFTPS}.
+The standard results in Discrete Fourier Transform (DFT) and its halfway-house the Discrete Time Fourier Transform (DTFT) are all derived under the unitary (i.e.\ without asymmetric prefactors of $1/2\pi$) convention in the online literature, adding to the complexity of interpretation.  In the next section, we present some of the standard results of Fourier theory using the angular frequency, non-unitary convention above, since we will require them in Section \ref{sect:DFTPS}.
 
 \subsection{Fourier transform properties}
 It can be readily shown that if we define $g(x L) \equiv f(x)$, the following well-known identity holds
@@ -251,23 +246,16 @@ this as
 \me^{\mi x \Delta k q }. \label{eq:poisson}
 \end{equation}
 These results give us most of what we need to understand DFTs with the
-non-standard Fourier transform convention commonly adopted for weak
+non-unitary Fourier transform convention commonly adopted for weak
 lensing power spectra in the flat sky approximation.
 
 \subsection{The Fourier transform of discrete samples of the power spectra}\label{sect:DFTPS}
-In what follows we are going to derive results only for the $\xi_+$
-correlation function of equation \eqref{eq:xi}.  This will not
-not impact upon the understanding of how $P(k)$ is approximated using DFTs,
-but allows us to replace $\xi_{\pm}$ and $J_{0/4}(k \theta) $in
-equation \eqref{eq:xi} with $\xi$ and $J_0$, respectively.  We will
-just be aware subsquently that real ellipticity fields have two
-components, to be treated as described by equation \eqref{eq:xi}.
+In what follows we are going to derive results only for the $\xi_+$ correlation function of equation \eqref{eq:xi}.  This will not not impact upon the understanding of how $P(k)$ is approximated using DFTs, but allows us to replace $\xi_{\pm}$ and $J_{0/4}(k \theta)$ in equation \eqref{eq:xi} with $\xi_+$ and $J_0$, respectively.  We will just be aware subsquently that real ellipticity fields have two components, to be treated as described by equation \eqref{eq:xi}.
 
-The inverse Fourier transform of $P(k)$ to give $\xi_+(\theta)$ may 
-be written in Cartesian coordinates as
+The inverse Fourier transform of $P(k)$ to give $\xi_+(\theta)$ may be written in Cartesian coordinates as
 \begin{equation}
-\xi_{+}(\theta_1, \theta_2)  = \frac{1}{(2 \pi)^2} \int \! \! \!
-\int_{-\infty}^{\infty} P(k_1, k_2) ~ \me^{\mi (k_1 \theta_1 + k_2
+  \xi_{+}(\theta_1, \theta_2)  = \frac{1}{(2 \pi)^2} \int \! \! \!
+  \int_{-\infty}^{\infty} P(k_1, k_2) ~ \me^{\mi (k_1 \theta_1 + k_2
   \theta_2)} dk_1 dk_2. \label{eq:xip}
 \end{equation}
 The relation between this and equation \eqref{eq:xi} makes use of Bessel's first
@@ -306,7 +294,7 @@ It can then be shown that
 - \frac{2 \pi n}{\Delta k} \right) \sum_{m = -\infty}^{\infty}
 \delta\left( \theta_2
 - \frac{2 \pi m}{\Delta k} \right)  \right\} \nonumber \\
-& = & = \sum_{n,m=-\infty}^{\infty} \xi_+\left(\theta_1
+& = & \sum_{n,m=-\infty}^{\infty} \xi_+\left(\theta_1
 - \frac{2 \pi n}{\Delta k},  \theta_2
 - \frac{2 \pi m}{\Delta k} \right) \label{eq:xisum}
 \end{eqnarray}
@@ -332,7 +320,7 @@ Using the expression of the Poisson summation formula in equation
 \sum_{q,p=-\infty}^{\infty} \left( \frac{\Delta k}{2 \pi} \right)^2 P(q \Delta k, p \Delta k) \me^{\mi \Delta
   k (\theta_1 q + \theta_2 p)} = \frac{1}{( 2 \pi)^2}
 \sum_{q,p=-\infty}^{\infty} P_{\Delta k} [q, p] \me^{\mi \Delta
-  k (\theta_1 q + \theta_2 p)}. \label{eq:dtft}
+  k (\theta_1 q + \theta_2 p)} \label{eq:dtft} .
 \end{equation}
 This is the expression for the inverse of what is known as the
 Discrete Time Fourier Transform (DTFT), although this result is
@@ -348,7 +336,7 @@ considered as \emph{impulses} of area $(\Delta k)^2$ and height $P(q \Delta k, p
 \subsection{The Fourier transform of discrete, finite samples of the power spectra}
 The expression in equation \eqref{eq:dtft} is periodic with period $2
 \pi / \Delta k = L$.  All of the information it contains about
-$\xi(\theta_1, \theta_2)$ is therefore also contained in one period
+$\xi_+ (\theta_1, \theta_2)$ is therefore also contained in one period
 of the function only.  For approximating this information discretely, as desired in
 numerical analysis, we can imagine taking $N$ equally spaced samples of
 the function in equation \eqref{eq:dtft} along a single period $L$ in each
