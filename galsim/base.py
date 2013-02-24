@@ -39,6 +39,7 @@ Image is acceptable.
 import os
 import collections
 import numpy as np
+import _galsim
 import galsim
 import utilities
 
@@ -2402,5 +2403,137 @@ class Deconvolve(GSObject):
             GSObject.__init__(self, galsim.SBDeconvolve(self.farg.SBProfile))
         else:
             raise TypeError("Argument farg must be a GSObject.")
+
+class Shapelet(GSObject):
+    """A class describing polar shapelet surface brightness profiles.
+
+    This class describes an arbitrary profile in terms of a shapelet decomposition.  A shapelet
+    decomposition is an eigenfunction decomposition of a 2-d function using the eigenfunctions
+    of the 2-d quantum harmonic oscillator.  The functions are Laguerre polynomials multiplied
+    by a Gaussian.  See Bernstein & Jarvis, 2002 or Massey & Refregier, 2005 for more detailed 
+    information about this kind of decomposition.  For this class, we follow the notation of 
+    Bernstein & Jarvis.
+
+    The decomposition is described by an overall scale length, sigma, and a vector of 
+    coefficients, b.  The b vector is indexed by two values, which can be either (p,q) or (N,m).
+    In terms of the quantum solution of the 2-d harmonic oscillator, p and q are the number of 
+    quanta with positive and negative angular momentum (respectively).  Then, N=p+q, m=p-q.
+
+    The 2D image is given by (in polar coordinates):
+
+        I(r,theta) = 1/sigma^2 Sum_pq b_pq psi_pq(r/sigma, theta)
+
+    where psi_pq,sigma are the shapelet eigenfunctions, given by (in polar coordinates):
+
+        psi_pq(r,theta) = (-)^q/sqrt(pi) sqrt(q!/p!) r^m exp(i m theta) exp(-r^2/2) L_q^(m)(r^2)
+
+    and L_q^(m)(x) are generalized Laguerre polynomials.
+    
+    The coeffients b_pq are in general complex.  However, we require that the resulting 
+    I(r,theta) be pureley real, which implies that b_pq = b_qp* (where * mean complex conjugate).
+    This further implies that b_pp is real. 
+
+
+    Initialization
+    --------------
+    
+    1. Make a blank Shapelet instance with all b_pq = 0.
+
+        shapelet = galsim.Shapelet(sigma=sigam, order=order)
+
+    2. Make a Shapelet instance using a given vector for the b_pq values.
+
+        order = 2
+        bvec = [ 1, 0, 0, 0.2, 0.3, -0.1 ]
+        shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
+
+    We use the following order for the coeffiecients, where the subscripts are in terms of p,q.
+
+    [ b00  Re(b10)  Im(b10)  Re(b20)  Im(b20)  b11  Re(b30)  Im(b30)  Re(b21)  Im(b21) ... ]
+
+    i.e. we progressively increase N, and for each value of N, we start with m=N and go down to 
+    m=0 or 1 as appropriate.  And since m=0 is intrinsically real, it only requires one spot
+    in the list.
+
+    @param sigma          The scale size in the standard units (usually arcsec).
+    @param order          Specify the order of the shapelet decomposition.  This is the maximum
+                          N=p+q included in the decomposition.
+    @param bvec           The initial vector of coefficients.  (Default: all zeros)
+
+
+    Methods
+    -------
+
+    The Shapelet is a GSObject, and inherits most of the GSObject methods (draw(), applyShear(),
+    etc.) and operator bindings.  The exception is drawShoot, which is not yet implemented for 
+    Shapelet instances.
+    
+    In addition, Shapelet has the following methods:
+
+    getSigma()    Get the sigma value.
+    getOrder()    Get the order, the maximum N=p+q used by the decomposition.
+    getBVec()     Get the vector of coefficients, returned as a numpy array.
+    getPQ(p,q)    Get b_pq.  Returned as tuple (re, im) (even if p==q)
+    getNM(N,m)    Get b_Nm.  Returned as tuple (re, im) (even if m=0)
+
+    fitImage(image, cen=(0,0))   Fit for a shapelet decomposition of the given image.
+                                 You may either center the image first, with image.setCenter(),
+                                 or provide a center location around with to center the 
+                                 shapelet decomposition.
+
+    """
+
+    # Initialization parameters of the object, with type information
+    _req_params = { "sigma" : float, "order" : int }
+    _opt_params = {}
+    _single_params = []
+    _takes_rng = False
+
+    # --- Public Class methods ---
+    def __init__(self, sigma, order, bvec=None):
+        
+        # Make sure order and sigma are the right type:
+        try:
+            order = int(order)
+        except:
+            raise TypeError("The provided order is not an int")
+        try:
+            sigma = float(sigma)
+        except:
+            raise TypeError("The provided sigma is not a float")
+
+        # Make bvec if necessary
+        if bvec is None:
+            bvec = _galsim.LVector(order)
+        else:
+            bvec_size = _galsim.LVectorSize(order)
+            if len(bvec) != bvec_size:
+                raise ValueError("bvec is the wrong size for the provided order")
+            import numpy
+            bvec = _galsim.LVector(order,numpy.array(bvec))
+
+        GSObject.__init__(self, _galsim.SBShapelet(sigma, bvec))
+
+    def getSigma():
+        return self.SBProfile.getSigma()
+    def getOrder():
+        return self.SBProfile.getBVec().order
+    def getBVec():
+        return self.SBProfile.getBVec().array
+    def getPQ(p,q):
+        return self.SBProfile.getBVec().getPQ(p,q)
+    def getNM(N,m):
+        return self.SBProfile.getBVec().getPQ((N+m)/2,(N-m)/2)
+
+    def fitImage(image, center=_galsim.PositionD(0,0)):
+        sigma = self.SBProfile.getSigma()
+        bvec = self.SBProfile.getBVec().copy()
+
+        _galsim.ShapeletFitImage(sigma, bvec, image, center)
+
+        # SBShapelet, like all SBProfiles, is immutable, so we need to reinitialize with a 
+        # new Shapelet object.
+        GSObject.__init__(self, _galsim.SBShapelet(sigma, bvec))
+
 
 

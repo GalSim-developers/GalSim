@@ -37,16 +37,19 @@ namespace galsim {
         /** 
          * @brief Constructor.
          *
+         * @param[in] sigma  scale size of Gauss-Laguerre basis set.
          * @param[in] bvec   `bvec[n,m]` contains flux information for the `(n, m)` basis function.
-         * @param[in] sigma  scale size of Gauss-Laguerre basis set (default `sigma = 1.`).
          */
-        SBShapelet(LVector bvec=LVector(), double sigma=1.);
+        SBShapelet(double sigma, LVector bvec);
 
         /// @brief Copy Constructor. 
         SBShapelet(const SBShapelet& rhs);
 
         /// @brief Destructor. 
         ~SBShapelet();
+
+        double getSigma() const;
+        const LVector& getBVec() const;
 
     protected:
         class SBShapeletImpl;
@@ -55,6 +58,10 @@ namespace galsim {
         // op= is undefined
         void operator=(const SBShapelet& rhs);
     };
+
+    template <typename T>
+    void ShapeletFitImage(double sigma, LVector& bvec, const BaseImage<T>& image, 
+                          const Position<double>& center);
 }
 
 #endif // SBSHAPELET_H

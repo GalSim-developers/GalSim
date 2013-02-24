@@ -32,12 +32,24 @@ int verbose_level = 2;
 
 namespace galsim {
 
-    SBShapelet::SBShapelet(LVector bvec, double sigma) : 
-        SBProfile(new SBShapeletImpl(bvec,sigma)) {}
+    SBShapelet::SBShapelet(double sigma, LVector bvec) :
+        SBProfile(new SBShapeletImpl(sigma, bvec)) {}
 
     SBShapelet::SBShapelet(const SBShapelet& rhs) : SBProfile(rhs) {}
 
     SBShapelet::~SBShapelet() {}
+
+    const LVector& SBShapelet::getBVec() const
+    { 
+        assert(dynamic_cast<const SBShapeletImpl*>(_pimpl.get()));
+        return static_cast<const SBShapeletImpl&>(*_pimpl).getBVec(); 
+    }
+
+    double SBShapelet::getSigma() const 
+    {
+        assert(dynamic_cast<const SBShapeletImpl*>(_pimpl.get()));
+        return static_cast<const SBShapeletImpl&>(*_pimpl).getSigma();
+    }
 
     // ??? Have not really investigated these:
     double SBShapelet::SBShapeletImpl::maxK() const 
@@ -107,4 +119,29 @@ namespace galsim {
         return flux;
     }
 
+    double SBShapelet::SBShapeletImpl::getSigma() const { return _sigma; }
+    const LVector& SBShapelet::SBShapeletImpl::getBVec() const { return _bvec; }
+
+    template <typename T>
+    void ShapeletFitImage(double sigma, LVector& bvec, const BaseImage<T>& image,
+                          const Position<double>& center)
+    {
+        // TODO
+    }
+
+
+
+    template void ShapeletFitImage(
+        double sigma, LVector& bvec, const BaseImage<double>& image,
+        const Position<double>& center);
+    template void ShapeletFitImage(
+        double sigma, LVector& bvec, const BaseImage<float>& image,
+        const Position<double>& center);
+    template void ShapeletFitImage(
+        double sigma, LVector& bvec, const BaseImage<int32_t>& image,
+        const Position<double>& center);
+    template void ShapeletFitImage(
+        double sigma, LVector& bvec, const BaseImage<int16_t>& image,
+        const Position<double>& center);
 }
+

@@ -63,7 +63,7 @@ namespace galsim {
             // to go out of scope and possibly delete the memory for data.
         }
 
-        static bp::tuple GetPQ(const LVector& lvector, int p, int q, double& re, double& im)
+        static bp::tuple GetPQ(const LVector& lvector, int p, int q)
         {
             std::complex<double> val = lvector(p,q);
             return bp::make_tuple(real(val),imag(val));
@@ -71,7 +71,7 @@ namespace galsim {
         static void SetPQ(LVector& lvector, int p, int q, double re, double im)
         { lvector(p,q) = std::complex<double>(re,im); }
 
-        static bp::object wrap()
+        static void wrap()
         {
             bp::class_< LVector > pyLVector("LVector", "", bp::no_init);
             pyLVector
@@ -84,6 +84,7 @@ namespace galsim {
                     )
                 )
                 .def(bp::init<const LVector&>(bp::args("other")))
+                .def("copy", &LVector::copy)
                 .def("resize", &LVector::resize, bp::args("order"))
                 .add_property("array", &GetConstArray)
                 .add_property("order", &LVector::getOrder)
@@ -99,20 +100,39 @@ namespace galsim {
                 .enable_pickling()
                 ;
 
-            return pyLVector;
-        }
+            bp::def("LVectorSize", &PQIndex::size, bp::arg("order"), 
+                    "Calculate the size of a bvec for a given order");
 
+        }
     };
 
     struct PySBShapelet 
     {
+        template <typename U>
+        static void wrapImageTemplates() {
+            typedef void (*ShapeletFitImage_type)(
+                double sigma, LVector& bvec, const BaseImage<U>& image,
+                const Position<double>& center);
+
+            bp::def("ShapeletFitImage", ShapeletFitImage_type(&ShapeletFitImage),
+                    bp::args("sigma","bvec","image","center"),
+                    "Fit a Shapelet decomposition to the provided image");
+        }
+
         static void wrap() {
             bp::class_<SBShapelet,bp::bases<SBProfile> >("SBShapelet", bp::no_init)
-                .def(bp::init<LVector,double>(
-                        (bp::arg("bvec"), bp::arg("sigma")=1.))
+                .def(bp::init<double,LVector>(
+                        (bp::arg("sigma"), bp::arg("bvec")))
                 )
                 .def(bp::init<const SBShapelet &>())
+                .def("getSigma", &SBShapelet::getSigma)
+                .def("getBVec", &SBShapelet::getBVec,
+                     bp::return_value_policy<bp::copy_const_reference>())
                 ;
+            wrapImageTemplates<float>();
+            wrapImageTemplates<double>();
+            wrapImageTemplates<int16_t>();
+            wrapImageTemplates<int32_t>();
         }
     };
 

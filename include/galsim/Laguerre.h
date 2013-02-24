@@ -168,7 +168,7 @@ namespace galsim {
     // Next object is a vector of Laguerre coefficients.  Note this is
     // a HANDLE to the coefficient vector, so it can be passed into
     // subroutines without referencing.  Copy/assignment create a new link; 
-    // for fresh copy, use duplicate() method.
+    // for fresh copy, use copy() method.
     //
     // LVectors are assumed to be Hermitian complex (b_qp=b_pq*), and the
     // internal storage currently enforces this and actually stores the
@@ -235,7 +235,7 @@ namespace galsim {
 
         ~LVector() {}
 
-        LVector duplicate() const 
+        LVector copy() const 
         {
             LVector fresh(_order); 
             *(fresh._v) = *_v;
@@ -451,7 +451,7 @@ namespace galsim {
 
     // Again this is a HANDLE, so it can be passed into
     // subroutines without referencing.  Copy/assignment create a new link; 
-    // for fresh copy, use duplicate() method.
+    // for fresh copy, use copy() method.
     class LTransform 
     {
     public:
@@ -489,7 +489,7 @@ namespace galsim {
 
         ~LTransform() {}
 
-        LTransform duplicate() const 
+        LTransform copy() const 
         {
             LTransform fresh(_orderOut, _orderIn); 
             *(fresh._m) = *_m;

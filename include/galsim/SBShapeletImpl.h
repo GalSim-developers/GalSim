@@ -30,8 +30,10 @@ namespace galsim {
     class SBShapelet::SBShapeletImpl : public SBProfile::SBProfileImpl 
     {
     public:
-        SBShapeletImpl(const LVector& bvec, double sigma) : 
-            _bvec(bvec.duplicate()), _sigma(sigma) {}
+        SBShapeletImpl(double sigma, const LVector& bvec) :
+            // Make a fresh copy of bvec, so we don't need to worry about the source changing
+            // behind our backs.
+            _sigma(sigma), _bvec(bvec.copy()) {}
 
         ~SBShapeletImpl() {}
 
@@ -50,16 +52,16 @@ namespace galsim {
         { throw SBError("SBShapelet::centroid calculations not yet implemented"); }
 
         double getFlux() const;
+        double getSigma() const;
+        const LVector& getBVec() const;
 
         /// @brief Photon-shooting is not implemented for SBShapelet, will throw an exception.
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const 
         { throw SBError("SBShapelet::shoot() is not implemented"); }
 
     private:
-        /// `bvec[n,m]` contains flux information for the `(n, m)` basis function.
+        double _sigma;
         LVector _bvec;  
-
-        double _sigma;  ///< Scale size of Gauss-Shapelet basis set.
 
         // Copy constructor and op= are undefined.
         SBShapeletImpl(const SBShapeletImpl& rhs);
