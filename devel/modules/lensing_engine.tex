@@ -134,20 +134,20 @@ is $2\pi/L$, so we can think of this quantity as the grid spacing in Fourier spa
 In the context 
 of power spectra for gridded quantities, instead of using
 Eq.~\ref{E:shearvar} it is more useful to think in
-terms of the 2d integral
+terms of the 2D integral in Cartesian coordinates
 \beq\label{E:alt-shearvar}
-\mathrm{Var}(\gamma) = \frac{1}{(2\pi)^2} \int_{-\infty}^{\infty} \rmd k_x \,\rmd k_y\,
-P(k_x, k_y).
+\mathrm{Var}(\gamma) = \frac{1}{(2\pi)^2} \int_{-\infty}^{\infty} \rmd k_1 \,\rmd k_2 \,
+P(k_1, k_2).
 \eeq
 Note that this equation assumes that our grid is infinite.  With a limited $k$
 range, we can rewrite Eq.~\ref{E:alt-shearvar} as
 \beq\label{E:alt-shearvar-limit}
 \mathrm{Var}(\gamma) = \frac{4}{(2\pi)^2} \int_{\kmin}^{\kmax} \rmd
-k_x \rmd k_y P(k).
+k_1 \rmd k_2 P(k).
 \eeq
 Here the factor of $4$ compensates for the 
-quadrants that are not represented explicitly (i.e., negative $k_x$
-and/or $k_y$ values).
+quadrants that are not represented explicitly (i.e., negative $k_1$
+and/or $k_2$ values).
 
 Another interesting point about gridded quantities is that it is not
 clear that we 
