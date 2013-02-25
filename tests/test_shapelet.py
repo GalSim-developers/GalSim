@@ -142,35 +142,37 @@ def test_shapelet():
 
 
 def test_shapelet_properties():
-    """Test some basic properties of the SBShapelet profile.
+    """Test some specific numbers for a particular Shapelet profile.
     """
     import time
     t1 = time.time()
 
-    # Just a semi-random particular vector of coefficients.
-    order = 4
-    bvec = [1.3,                    # n = 0
-            0.02, 0.03,             # n = 1
-            0.23, -0.19, 0.08,      # n = 2
-            0, 0, 0, 0,             # n = 3
-            0, 0, 0, 0, 0.11]       # n = 4
+    # A semi-random particular vector of coefficients.
     sigma = 1.8
+    order = 4
+    bvec = [1.3,                               # n = 0
+            0.02, 0.03,                        # n = 1
+            0.23, -0.19, 0.08,                 # n = 2
+            0.01, 0.02, 0.04, -0.03,           # n = 3
+            -0.09, 0.07, -0.11, -0.08, 0.11]   # n = 4
 
     shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
 
-    # Check that we are centered on (0, 0)
-    flux = 1.3 + 0.08 + 0.11
+    # Check flux
+    flux = bvec[0] + bvec[5] + bvec[14]
     np.testing.assert_almost_equal(shapelet.getFlux(), flux, 10)
-    cen = galsim.PositionD(0.02, -0.03) * 2. * sigma / flux
+    # Check centroid
+    cen = galsim.PositionD(bvec[1],-bvec[2]) + np.sqrt(2.) * galsim.PositionD(bvec[8],-bvec[9])
+    cen *= 2. * sigma / flux
     np.testing.assert_almost_equal(shapelet.centroid().x, cen.x, 10)
     np.testing.assert_almost_equal(shapelet.centroid().y, cen.y, 10)
     # Check Fourier properties
-    np.testing.assert_almost_equal(shapelet.maxK(), 4.6173837118586389, 10)
-    np.testing.assert_almost_equal(shapelet.stepK(), 0.19513374252890903, 10)
+    np.testing.assert_almost_equal(shapelet.maxK(), 4.61738371186, 10)
+    np.testing.assert_almost_equal(shapelet.stepK(), 0.195133742529, 10)
     # Check image values in real and Fourier space
     zero = galsim.PositionD(0., 0.)
     np.testing.assert_almost_equal(shapelet.kValue(zero), flux+0j, 10)
-    np.testing.assert_almost_equal(shapelet.xValue(zero), 0.065332121701302717, 10)
+    np.testing.assert_almost_equal(shapelet.xValue(zero), 0.0653321217013, 10)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -656,7 +658,6 @@ def test_shapelet_shift():
 if __name__ == "__main__":
     #test_shapelet()
     test_shapelet_properties()
-    #test_shapelet_radii()
     #test_shapelet_smallshear()
     #test_shapelet_largeshear()
     #test_shapelet_convolve()

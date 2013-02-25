@@ -118,7 +118,7 @@ namespace galsim {
         return flux;
     }
 
-    Position<double> SBShapelet::SBShapeletImpl::entroid() const 
+    Position<double> SBShapelet::SBShapeletImpl::centroid() const 
     {
         std::complex<double> cen(0.);
         double n = 1.;
