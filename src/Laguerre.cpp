@@ -28,11 +28,6 @@
 #include "Laguerre.h"
 #include "Solve.h"
 
-//**/#include "Stopwatch.h"
-
-// To use explicit pointers rather than tmv code:
-//#define PTRLOOPS
-
 const int BLOCKING_FACTOR=1024;
 
 namespace galsim {
@@ -181,15 +176,15 @@ namespace galsim {
     // Calculate Laguerre polynomials and wavefunctions:
 
     // Fill LVector with the basis functions corresponding to each real DOF
-    void LVector::fillBasis(double xunit, double yunit, double sigma) 
+    void LVector::fillBasis(double x, double y, double sigma) 
     {
         take_ownership();
         // fill with psi_pq(z), where psi now defined to have 1/sigma^2 in
         // front.
-        std::complex<double> z(xunit,-yunit);
-        double x = norm(z);
+        std::complex<double> z(x,-y);
+        double rsq = norm(z);
 
-        double tq = std::exp(-0.5*x) / (2*M_PI*sigma*sigma);
+        double tq = std::exp(-0.5*rsq) / (2*M_PI*sigma*sigma);
         double tqm1=tq;
         double tqm2;
 
@@ -198,7 +193,7 @@ namespace galsim {
         (*_v)[PQIndex(0,0).rIndex()]=tq;
 
         if (_order>=2) {
-            tq = (x-1)*tqm1;
+            tq = (rsq-1.)*tqm1;
             (*_v)[PQIndex(1,1).rIndex()] = tq;
         }
 
@@ -206,7 +201,7 @@ namespace galsim {
         for (int p=2; 2*p<=_order; ++p, pq.incN()) {
             tqm2 = tqm1;
             tqm1 = tq;
-            tq = ((x-2*p+1)*tqm1 - (p-1)*tqm2)/p;
+            tq = ((rsq-2.*p+1.)*tqm1 - (p-1.)*tqm2)/p;
             (*_v)[pq.rIndex()] = tq;
         }
 
@@ -225,7 +220,7 @@ namespace galsim {
                 tqm2 = tqm1;
                 tqm1 = tq;
                 int p=pq.getP(); int q=pq.getQ(); 
-                tq = ( (x-(p+q-1))*tqm1 - sqrtn(p-1)*sqrtn(q-1)*tqm2) / (sqrtn(p)*sqrtn(q));
+                tq = ( (rsq-(p+q-1.))*tqm1 - sqrtn(p-1)*sqrtn(q-1)*tqm2) / (sqrtn(p)*sqrtn(q));
                 double *r = &(*_v)[pq.rIndex()];
                 *r = tq*zm.real();
                 *(r+1) = tq*zm.imag();
@@ -236,70 +231,64 @@ namespace galsim {
     }
 
     boost::shared_ptr<tmv::Matrix<double> > LVector::basis(
-        const tmv::Vector<double>& xunit, const tmv::Vector<double>& yunit,
+        const tmv::Vector<double>& x, const tmv::Vector<double>& y,
         int order, double sigma)
     {
-        assert(xunit.size()==yunit.size());
-        //**/Stopwatch s; s.start();
+        assert(x.size()==y.size());
         boost::shared_ptr<tmv::Matrix<double> > mr(
-            new tmv::Matrix<double>(xunit.size(), PQIndex::size(order)));
-        //**/s.stop(); std::cerr << "setup: " << s << "sec" << std::endl;
-        basis(*mr, xunit, yunit, order, sigma);
+            new tmv::Matrix<double>(x.size(), PQIndex::size(order)));
+        basis(*mr, x, y, order, sigma);
         return mr;
     }
 
     void LVector::basis(
-        tmv::Matrix<double>& out, const tmv::Vector<double>& xunit,
-        const tmv::Vector<double>& yunit, int order, double sigma)
+        tmv::Matrix<double>& out, const tmv::Vector<double>& x,
+        const tmv::Vector<double>& y, int order, double sigma)
     {
-        const int npts=xunit.size();
-        assert(yunit.size() ==npts && out.nrows()==npts);
+        const int npts=x.size();
+        assert(y.size() ==npts && out.nrows()==npts);
         assert(out.ncols()==PQIndex::size(order));
         for (int ilo=0; ilo<npts; ilo+=BLOCKING_FACTOR) {
             int ihi = std::min(npts, ilo + BLOCKING_FACTOR);
             tmv::MatrixView<double> mr = out.rowRange(ilo,ihi);
-            mBasis(xunit.subVector(ilo,ihi), yunit.subVector(ilo,ihi), 
-                   0, &mr, 0, order, false, sigma);
+            mBasis(x.subVector(ilo,ihi), y.subVector(ilo,ihi), 0, &mr, 0, order, false, sigma);
         }
     }
 
     boost::shared_ptr<tmv::Matrix<double> > LVector::design(
-        const tmv::Vector<double>& xunit, const tmv::Vector<double>& yunit,
+        const tmv::Vector<double>& x, const tmv::Vector<double>& y,
         const tmv::Vector<double>& invsig, int order, double sigma)
     {
-        //**/Stopwatch s; s.start();
         boost::shared_ptr<tmv::Matrix<double> > mr(
-            new tmv::Matrix<double>(xunit.size(), PQIndex::size(order),0.));
-        //**/s.stop(); std::cerr << "setup: " << s << "sec" << std::endl;
-        design(*mr, xunit, yunit, invsig, order, sigma);
+            new tmv::Matrix<double>(x.size(), PQIndex::size(order),0.));
+        design(*mr, x, y, invsig, order, sigma);
         return mr;
     }
 
     void LVector::design(
-        tmv::Matrix<double>& out, const tmv::Vector<double>& xunit,
-        const tmv::Vector<double>& yunit, const tmv::Vector<double>& invsig,
+        tmv::Matrix<double>& out, const tmv::Vector<double>& x,
+        const tmv::Vector<double>& y, const tmv::Vector<double>& invsig,
         int order, double sigma)
     {
-        const int npts=xunit.size();
-        assert(yunit.size()==npts && out.nrows()==npts && invsig.size()==npts);
+        const int npts=x.size();
+        assert(y.size()==npts && out.nrows()==npts && invsig.size()==npts);
         assert(out.ncols()==PQIndex::size(order));
         for (int ilo=0; ilo<npts; ilo+=BLOCKING_FACTOR) {
             int ihi = std::min(npts, ilo + BLOCKING_FACTOR);
             tmv::ConstVectorView<double> is = invsig.subVector(ilo,ihi);
             tmv::MatrixView<double> mr = out.rowRange(ilo,ihi);
-            mBasis(xunit.subVector(ilo,ihi), yunit.subVector(ilo,ihi), 
-                   &is, &mr, 0, order, false, sigma);
+            mBasis(x.subVector(ilo,ihi), y.subVector(ilo,ihi), &is, &mr, 0, order, false, sigma);
         }
     }
 
     void LVector::kBasis(
-        const tmv::Vector<double>& kxunit, const tmv::Vector<double>& kyunit,
+        const tmv::Vector<double>& kx, const tmv::Vector<double>& ky,
         boost::shared_ptr<tmv::Matrix<double> >& kReal,
         boost::shared_ptr<tmv::Matrix<double> >& kImag, int order)
     {
         const int ndof=PQIndex::size(order);
-        const int npts = kxunit.size();
-        assert (kyunit.size()==npts);
+        const int npts = kx.size();
+        assert (ky.size()==npts);
         if (!kReal.get() || kReal->nrows()!=npts || kReal->ncols()!=ndof) {
             kReal.reset(new tmv::Matrix<double>(npts, ndof, 0.));
         } else {
@@ -314,35 +303,9 @@ namespace galsim {
             int ihi = std::min(npts, ilo + BLOCKING_FACTOR);
             tmv::MatrixView<double> mr = kReal->rowRange(ilo,ihi);
             tmv::MatrixView<double> mi = kImag->rowRange(ilo,ihi);
-            mBasis(kxunit.subVector(ilo,ihi), kyunit.subVector(ilo,ihi), 
-                   0, &mr, &mi, order, true, 1.);
+            mBasis(kx.subVector(ilo,ihi), ky.subVector(ilo,ihi), 0, &mr, &mi, order, true, 1.);
         }
     }
-
-#ifdef PTRLOOPS
-    void vvmult(double* p1, const double* p2, const double* p3, const int npts) 
-    {
-        for (int i=0; i<npts; i++, p1++, p2++, p3++)
-            *p1 = *p2 * *p3;
-    }
-
-    void vsvs(double* p1, const double* p2, double f1, double f2, const int npts) 
-    {
-        for (int i=0; i<npts; i++, p1++, p2++)
-            *p1 = (*p2 + f1)*f2;
-    }
-
-    void qjump(
-        double* qp, const double* qm1p, const double* qm2p, const double* r2p,
-        double f1, double f2, double f3, const int npts) 
-    {
-        double* ptmp=qp;
-        for (int i=0; i<npts; i++, ++ptmp, ++qm1p, ++r2p)
-            *ptmp = (*r2p + f1) * *qm1p;
-        for (int i=0; i<npts; i++, ++qp, ++qm2p)
-            *qp = f2 * *qp  + f3 * *qm2p;
-    }
-#endif // PTRLOOPS
 
 
     void LVector::mBasis(
@@ -364,12 +327,8 @@ namespace galsim {
         // vectorized element-by-element multiplication
         tmv::DiagMatrix<double> X(x);
         tmv::DiagMatrix<double> Y(y);
-#ifdef PTRLOOPS
-        tmv::Vector<double> Rsq(npts);
-#else
         tmv::DiagMatrix<double> Rsq(npts);
-        //**/Stopwatch s; s.start(); std::cerr << "Start..."<<std::endl;
-#endif
+
         // These vectors will keep track of real & imag parts
         // of prefactor * exp(-r^2/2) (x+iy)^m / sqrt(m!)
         tmv::Vector<double> cosm(npts, isK ? 1. : 1./(2*M_PI*sigma*sigma));
@@ -385,7 +344,6 @@ namespace galsim {
         // Assign the m=0 column first:
         mr->col( PQIndex(0,0).rIndex() ) = cosm;
 
-        //**/s.stop(); std::cerr << "For pq=0: " << s << " sec" << std::endl; s.reset(); s.start();
         // Then ascend m's at q=0:
         for (int m=1; m<=N; m++) {
             int rIndex = PQIndex(m,0).rIndex();
@@ -420,91 +378,6 @@ namespace galsim {
                 mr->col(rIndex+1) = -sinm;
             }
         }
-
-        //**/s.stop(); std::cerr << "For q=0: " << s << " sec" << std::endl;   s.reset(); s.start();
-
-        // Now climb q's at each m
-#ifdef PTRLOOPS
-        // Compile these to do arithmetic with pointer loops (TMV DiagMatrix method below)
-        boost::shared_ptr<tmv::Vector<double> > Lmq(new tmv::Vector<double>(npts));
-        boost::shared_ptr<tmv::Vector<double> > Lmqm1(new tmv::Vector<double>(npts));
-        boost::shared_ptr<tmv::Vector<double> > Lmqm2(new tmv::Vector<double>(npts));
-        for (int m=0; m<=N; m++) {
-            PQIndex pq(m,0);
-            int iQ0 = pq.rIndex();
-            // Go to q=1:
-            pq.incN();
-            if (pq.pastOrder(N)) continue;
-            int iQ = pq.rIndex();
-            Lmqm1->setAllTo(1.);
-            const double f1= - (pq.getP()+pq.getQ()-1.);
-            const double f2 = (isK ? -1. : 1.) / sqrtn(pq.getP())/sqrtn(pq.getQ());
-            vsvs( Lmq->ptr(), Rsq.cptr(), f1, f2, npts);
-            if (isK) {
-                if (m%2==0) {
-                    // even m's have real transforms
-                    // mr->col(iQ) = (*Lmq) * mr->col(iQ0);
-                    vvmult(mr->col(iQ).ptr(), Lmq->cptr(), mr->col(iQ0).ptr(), npts);
-                    if (m>0) 
-                        //mr->col(iQ+1) = (*Lmq) * mr->col(iQ0+1);
-                        vvmult(mr->col(iQ+1).ptr(), Lmq->cptr(), mr->col(iQ0+1).ptr(), npts);
-                } else {
-                    // odd m's have imag transforms
-                    // mi->col(iQ) = (*Lmq) * mi->col(iQ0);
-                    vvmult(mi->col(iQ).ptr(), Lmq->cptr(), mi->col(iQ0).cptr(), npts);
-                    // mi->col(iQ+1) = (*Lmq) * mi->col(iQ0+1);
-                    vvmult(mi->col(iQ+1).ptr(), Lmq->cptr(), mi->col(iQ0+1).cptr(), npts);
-                }
-            } else {
-                //  mr->col(iQ) = (*Lmq) * mr->col(iQ0);
-                vvmult(mr->col(iQ).ptr(), Lmq->cptr(), mr->col(iQ0).cptr(), npts);
-                if (m>0)    //mr->col(iQ+1) = (*Lmq) * mr->col(iQ0+1);
-                vvmult(mr->col(iQ+1).ptr(), Lmq->cptr(), mr->col(iQ0+1).cptr(), npts);
-            }
-
-            // do q=2,...
-            for (pq.incN(); !pq.pastOrder(N); pq.incN()) {
-                {
-                    // cycle the Lmq vectors
-                    // Lmq <- Lmqm2
-                    // Lmqm1 <- Lmq
-                    // Lmqm2 <- Lmqm1
-                    Lmqm2.swap(Lmqm1);
-                    Lmqm1.swap(Lmq);
-                }
-                {
-                    double f1 = - (pq.getP()+pq.getQ()-1.);
-                    double invsqrtpq = 1./sqrtn(pq.getP())/sqrtn(pq.getQ());
-                    double f2 = isK ? -invsqrtpq : invsqrtpq;
-                    double f3 = -sqrtn(pq.getP()-1)*sqrtn(pq.getQ()-1) * invsqrtpq;
-                    qjump(Lmq->ptr(), Lmqm1->cptr(),Lmqm2->cptr(), Rsq.cptr(),
-                          f1, f2, f3, npts);
-                }
-                iQ = pq.rIndex();
-                if (isK) {
-                    if (m%2==0) {
-                        // mr->col(iQ) = (*Lmq) * mr->col(iQ0);
-                        vvmult(mr->col(iQ).ptr(), Lmq->cptr(), mr->col(iQ0).cptr(), npts);
-                        if (m>0) 
-                            //mr->col(iQ+1) = (*Lmq) * mr->col(iQ0+1);
-                            vvmult(mr->col(iQ+1).ptr(), Lmq->cptr(), mr->col(iQ0+1).cptr(), npts);
-                    } else {
-                        // odd m's have imag transforms
-                        // mi->col(iQ) = (*Lmq) * mi->col(iQ0);
-                        vvmult(mi->col(iQ).ptr(), Lmq->cptr(), mi->col(iQ0).cptr(), npts);
-                        // mi->col(iQ+1) = (*Lmq) * mi->col(iQ0+1);
-                        vvmult(mi->col(iQ+1).ptr(), Lmq->cptr(), mi->col(iQ0+1).cptr(), npts);
-                    }
-                } else {
-                    // mr->col(iQ) = (*Lmq) * mr->col(iQ0);
-                    vvmult(mr->col(iQ).ptr(), Lmq->cptr(), mr->col(iQ0).cptr(), npts);
-                    if (m>0)    //mr->col(iQ+1) = (*Lmq) * mr->col(iQ0+1);
-                    vvmult(mr->col(iQ+1).ptr(), Lmq->cptr(), mr->col(iQ0+1).cptr(), npts);
-                }
-            }
-        }
-
-#else
 
         // Make three DiagMatrix to hold Lmq's during recurrence calculations
         boost::shared_ptr<tmv::DiagMatrix<double> > Lmq(new tmv::DiagMatrix<double>(npts));
@@ -566,7 +439,6 @@ namespace galsim {
                 }
             }
         }
-#endif  // PTRLOOPS
     }
 
 
