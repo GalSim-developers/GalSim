@@ -9,8 +9,11 @@ parametric model) and variable shear according to some cosmological model for wh
 tabulated power spectrum at specific k values only.  The 225 galaxies in the 0.25x0.25 degree field
 (representing a low number density of 1/arcmin^2) are randomly located and permitted to overlap, but
 we do take care to avoid being too close to the edge of the large image.  For the galaxies, we use a
-random selection from 5 specific RealGalaxy objects, selected to be 5 particularly irregular
-ones. These are taken from the same catalog of 100 objects that demo6 used.
+random selection from 5 specific RealGalaxy objects, selected to be 5 particularly irregular ones.
+These are taken from the same catalog of 100 objects that demo6 used.  The noise added to the image
+is spatially correlated in the same way as found in coadd images from the Hubble Space Telescope
+(HST) Advanced Camera for Surveys, using a correlation function determined from the HST COSMOS
+coadd images in the F814W filter (see, e.g., Leauthaud et al 2007).
 
 New features introduced in this demo:
 
@@ -18,6 +21,8 @@ New features introduced in this demo:
 - tab = galsim.LookupTable(file)
 - ps = galsim.PowerSpectrum(..., units)
 - distdev = galsim.DistDeviate(rng, function, x_min, x_max)
+- cf = galsim.correlatednoise.get_COSMOS_CorrFunc(file_name, ...)
+- cf.applyNoiseTo(image, ...)
 
 - Power spectrum shears for non-gridded positions.
 - Reading a compressed FITS image (using BZip2 compression).
@@ -44,8 +49,10 @@ def main(argv):
         telescope. However, in order that the galaxy resolution not be too poor, we tell GalSim that
         the pixel scale for that PSF image is 0.2" rather than 0.396".  We are simultaneously lying
         about the intrinsic size of the PSF and about the pixel scale when we do this.
-      - Galaxies are real galaxies, each with S/N~100.
-      - Noise is Poisson using a nominal sky value of 1.e4.
+      - Noise is correlated with the same spatial correlation function as found in HST COSMOS weak
+        lensing science images, with a point (zero distance) variance of 1.
+      - Galaxies are real galaxies, each with S/N~100 based on a point variance-only calculation
+        (such as discussed in Leauthaud et al 2007).
     """
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger("demo11")
@@ -58,7 +65,7 @@ def main(argv):
     image_size = 0.25*galsim.degrees # size of big image in each dimension
     image_size = int((image_size / galsim.arcsec)/pixel_scale) # convert to pixels
     image_size_arcsec = image_size*pixel_scale # size of big image in each dimension (arcsec)
-    sky_level = 1.e4                 # ADU / arcsec^2
+    variance = 1.                    # ADU^2
     nobj = 225                       # number of galaxies in entire field
                                      # (This corresponds to 1 galaxy / arcmin^2)
     grid_spacing = 90.0              # The spacing between the samples for the power spectrum 
@@ -206,8 +213,7 @@ def main(argv):
         # image, which might have another galaxy near that point (so our S/N calculation would 
         # erroneously include the flux from the other object).
         # See demo5.py for the math behind this calculation.
-        sky_level_pixel = sky_level * pixel_scale**2
-        sn_meas = math.sqrt( numpy.sum(stamp.array**2) / sky_level_pixel )
+        sn_meas = math.sqrt( numpy.sum(stamp.array**2) / variance )
         flux_scaling = gal_signal_to_noise / sn_meas
         stamp *= flux_scaling
 
@@ -222,11 +228,27 @@ def main(argv):
         tot_time = time2-time1
         logger.info('Galaxy %d: position relative to corner = %s, t=%f s', k, str(pos), tot_time)
 
-    # Add Poisson noise -- the CCDNoise can also take another RNG as its argument
-    # so it will be part of the same stream of random numbers as rng above.  We have to do this step
-    # at the end, rather than adding to individual postage stamps, in order to get the noise level
-    # right in the overlap regions between postage stamps.
-    full_image.addNoise(galsim.PoissonNoise(rng,sky_level_pixel))
+    # Add correlated noise to the image -- the correlation function comes from the HST COSMOS images
+    # and is described in more detail in the galsim.correlatednoise.get_COSMOS_CorrFunc() docstring.
+    # This function requires a FITS file, stored in the GalSim repository, that represents this
+    # correlation information: the path to this file is a required argument.  THIS WILL NOT WORK
+    # unless this demo is run from its original location in the examples/ directory of the GalSim
+    # repository.  First we find the path to this file.
+    path, file = os.path.split(__file__)
+    cf_file_name = os.path.join(
+        path, "..", "devel", "external", "hst", "acs_I_unrot_sci_20_cf.fits")
+
+    # Then use this to initialize the correlation function that we will use to add noise to the
+    # full_image.  We set the dx_cosmos keyword equal to our pixel scale, so that our noise is
+    # correlated on the same scales as HST COSMOS, and we set the point (zero-distance) variance
+    # to our desired value.
+    cf = galsim.correlatednoise.get_COSMOS_CorrFunc(
+        cf_file_name, dx_cosmos=pixel_scale, variance=variance)
+
+    # Now add noise according to this correlation function to the full_image.  We have to do this
+    # step at the end, rather than adding to individual postage stamps, in order to get the noise
+    # level right in the overlap regions between postage stamps.
+    cf.applyNoiseTo(full_image, dx=pixel_scale, dev=rng)
     logger.info('Added noise to final large image')
 
     # Now write the image to disk.  It is automatically compressed with Rice compression,
