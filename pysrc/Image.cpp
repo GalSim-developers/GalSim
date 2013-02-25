@@ -138,6 +138,7 @@ namespace galsim {
                 .def("setOrigin", &BaseImage<T>::setOrigin, bp::args("x0", "y0"))
                 .def("setCenter", &BaseImage<T>::setCenter, bp::args("x0", "y0"))
                 .def("getBounds", getBounds)
+                .def("getPaddedSize", &BaseImage<T>::getPaddedSize, bp::args("pad_factor"))
                 .add_property("bounds", getBounds)
                 ;
             ADD_CORNER(pyBaseImage, getXMin, xmin);
