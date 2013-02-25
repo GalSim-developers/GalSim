@@ -2470,17 +2470,19 @@ class Shapelet(GSObject):
     
     In addition, Shapelet has the following methods:
 
-    getSigma()    Get the sigma value.
-    getOrder()    Get the order, the maximum N=p+q used by the decomposition.
-    getBVec()     Get the vector of coefficients, returned as a numpy array.
-    getPQ(p,q)    Get b_pq.  Returned as tuple (re, im) (even if p==q)
-    getNM(N,m)    Get b_Nm.  Returned as tuple (re, im) (even if m=0)
+    getSigma()         Get the sigma value.
+    getOrder()         Get the order, the maximum N=p+q used by the decomposition.
+    getBVec()          Get the vector of coefficients, returned as a numpy array.
+    getPQ(p,q)         Get b_pq.  Returned as tuple (re, im) (even if p==q).
+    getNM(N,m)         Get b_Nm.  Returned as tuple (re, im) (even if m=0).
 
-    fitImage(image, cen=(0,0))   Fit for a shapelet decomposition of the given image.
-                                 You may either center the image first, with image.setCenter(),
-                                 or provide a center location around with to center the 
-                                 shapelet decomposition.
+    setSigma(sigma)    Set the sigma value.
+    setOrder(order)    Set the order.
+    setBVec(bvec)      Set the vector of coefficients.
+    setPQ(p,q,re,im=0) Set b_pq.
+    setNM(N,m,re,im=0) Set b_Nm.
 
+    fitImage(image)    Fit for a shapelet decomposition of the given image.
     """
 
     # Initialization parameters of the object, with type information
@@ -2567,11 +2569,50 @@ class Shapelet(GSObject):
         #print 'setNM: ',N,m,re,im
         self.setPQ((N+m)/2,(N-m)/2,re,im)
 
-    def fitImage(self, image, center=_galsim.PositionD(0,0)):
+    def fitImage(self, image, center=None, normalization='flux'):
+        """Fit for a shapelet decomposition of a given image
+
+        The optional normalization parameter mirrors the parameter in the GSObject `draw` method.
+        If the fitted shapelet is drawn with the same normalization value as was used when it 
+        was fit, then the resulting image should be an approximate match to the original image.
+
+        For example:
+
+            image = ...
+            shapelet = galsim.Shapelet(sigma, order)
+            shapelet.fitImage(image,normalization='sb')
+            image2 = shapelet.draw(dx=image.scale, normalization='sb')
+
+        Then image2 and image should be as close to the same as possible for the given
+        sigma and order.  Incrasing the order can improve the fit, as can having sigma match
+        the natural scale size of the image.  However, it should be noted that some images
+        are not well fit by a shapelet for any (reasonable) order.
+
+        @param image          The Image for which to fit the shapelet decomposition
+        @param center         The position to use for the center of the decomposition.
+                              [Default: use the image center]
+        @param normalization  The normalization to assume for the image. 
+                              (Default `normalization = "flux"`)
+        """
+        if not center:
+            center = image.bounds.center()
+        try:
+            # convert from PositionI if necessary
+            center = galsim.PositionD(center.x,center.y)
+        except:
+            raise ValueError("Invalid center provided to fitImage: "+str(center))
+
+        if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
+            raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
+                              "'f', 'surface brightness' or 'sb'.") % normalization)
+
         sigma = self.SBProfile.getSigma()
         bvec = self.SBProfile.getBVec().copy()
 
         _galsim.ShapeletFitImage(sigma, bvec, image, center)
+
+        if normalization.lower() == "flux" or normalization.lower() == "f":
+            bvec /= image.scale**2
 
         # SBShapelet, like all SBProfiles, is immutable, so we need to reinitialize with a 
         # new Shapelet object.

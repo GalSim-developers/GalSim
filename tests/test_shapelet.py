@@ -177,492 +177,65 @@ def test_shapelet_properties():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_shapelet_smallshear():
-    """Test the application of a small shear to a Gaussian SBProfile against a known result.
+def test_shapelet_fit():
+    """Test fitting a Shapelet decomposition of an image
     """
     import time
     t1 = time.time()
-    e1 = 0.02
-    e2 = 0.02
-    myShear = galsim.Shear(e1=e1, e2=e2)
-    myEllipse = galsim.Ellipse(e1=e1, e2=e2)
-    # test the SBProfile version using applyShear
-    savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear.fits"))
-    myImg = galsim.ImageF(savedImg.bounds)
-    mySBP = galsim.SBGaussian(flux=1, sigma=1)
-    mySBP.applyShear(myShear._shear)
-    myImg.setScale(0.2)
-    mySBP.draw(myImg.view())
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Small-shear Gaussian profile disagrees with expected result")
-    # test the SBProfile version using applyTransformation
-    mySBP = galsim.SBGaussian(flux=1, sigma=1)
-    mySBP.applyTransformation(myEllipse._ellipse)
-    myImg.setZero()
-    mySBP.draw(myImg.view())
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Small-shear Gaussian profile disagrees with expected result")
 
-    # Repeat with the GSObject version of this:
-    gauss = galsim.Gaussian(flux=1, sigma=1)
-    gauss.applyShear(myShear)
-    gauss.draw(myImg,dx=0.2, normalization="surface brightness")
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyShear disagrees with expected result")
-    gauss = galsim.Gaussian(flux=1, sigma=1)
-    gauss2 = gauss.createSheared(myShear)
-    gauss2.draw(myImg,dx=0.2, normalization="surface brightness")
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject createSheared disagrees with expected result")
-    gauss = galsim.Gaussian(flux=1, sigma=1)
-    gauss.applyTransformation(myEllipse)
-    gauss.draw(myImg,dx=0.2, normalization="surface brightness")
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyTransformation disagrees with expected result")
-    gauss = galsim.Gaussian(flux=1, sigma=1)
-    gauss2 = gauss.createTransformed(myEllipse)
-    gauss2.draw(myImg,dx=0.2, normalization="surface brightness")
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject createTransformed disagrees with expected result")
- 
-    # Test photon shooting.
-    do_shoot(gauss,myImg,"sheared Gaussian")
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    for norm in ['f', 'sb']:
+        # We fit a shapelet approximation of a distorted Moffat profile:
+        flux = 20
+        psf = galsim.Moffat(beta=3.4, half_light_radius=1.2, flux=flux)
+        psf.applyShear(g1=0.11,g2=0.07)
+        psf.applyShift(0.03,0.04)
+        dx = 0.2
+        pixel = galsim.Pixel(dx)
+        conv = galsim.Convolve([psf,pixel])
+        im1 = conv.draw(dx=dx, normalization=norm)
+        im1.setCenter(0,0)
 
+        sigma = 1.2  # Match half-light-radius as a decent first approximation.
+        shapelet = galsim.Shapelet(sigma=sigma, order=10)
+        shapelet.fitImage(im1, normalization=norm)
+        #print 'fitted shapelet coefficients = ',shapelet.getBVec()
 
-def test_shapelet_largeshear():
-    """Test the application of a large shear to a Sersic SBProfile against a known result.
-    """
-    import time
-    t1 = time.time()
-    e1 = 0.0
-    e2 = 0.5
+        # Check flux
+        print 'flux = ',shapelet.getFlux(),'  cf. ',flux
+        np.testing.assert_almost_equal(shapelet.getFlux() / flux, 1., 1,
+                err_msg="Fitted shapelet has the wrong flux")
 
-    myShear = galsim.Shear(e1=e1, e2=e2)
-    myEllipse = galsim.Ellipse(e1=e1, e2=e2)
-    # test the SBProfile version using applyShear
-    savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_largeshear.fits"))
-    myImg = galsim.ImageF(savedImg.bounds)
-    mySBP = galsim.SBDeVaucouleurs(flux=1, half_light_radius=1)
-    mySBP.applyShear(myShear._shear)
-    myImg.setScale(0.2)
-    mySBP.draw(myImg.view())
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
-        err_msg="Large-shear DeVaucouleurs profile disagrees with expected result")
-    # test the SBProfile version using applyTransformation
-    mySBP = galsim.SBDeVaucouleurs(flux=1, half_light_radius=1)
-    mySBP.applyTransformation(myEllipse._ellipse)
-    myImg.setZero()
-    mySBP.draw(myImg.view())
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Large-shear DeVaucouleurs profile disagrees with expected result")
+        # Test centroid
+        print 'centroid = ',shapelet.centroid(),'  cf. ',conv.centroid()
+        np.testing.assert_almost_equal(shapelet.centroid().x, conv.centroid().x, 2,
+                err_msg="Fitted shapelet has the wrong centroid (x)")
+        np.testing.assert_almost_equal(shapelet.centroid().y, conv.centroid().y, 2,
+                err_msg="Fitted shapelet has the wrong centroid (y)")
 
-    # Repeat with the GSObject version of this:
-    devauc = galsim.DeVaucouleurs(flux=1, half_light_radius=1)
-    devauc.applyShear(myShear)
-    devauc.draw(myImg,dx=0.2, normalization="surface brightness")
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyShear disagrees with expected result")
-    devauc = galsim.DeVaucouleurs(flux=1, half_light_radius=1)
-    devauc2 = devauc.createSheared(myShear)
-    devauc2.draw(myImg,dx=0.2, normalization="surface brightness")
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject createSheared disagrees with expected result")
-    devauc = galsim.DeVaucouleurs(flux=1, half_light_radius=1)
-    devauc.applyTransformation(myEllipse)
-    devauc.draw(myImg,dx=0.2, normalization="surface brightness")
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyTransformation disagrees with expected result")
-    devauc = galsim.DeVaucouleurs(flux=1, half_light_radius=1)
-    devauc2 = devauc.createTransformed(myEllipse)
-    devauc2.draw(myImg,dx=0.2, normalization="surface brightness")
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject createTransformed disagrees with expected result")
+        # Test drawing image from shapelet
+        im2 = im1.copy()
+        shapelet.draw(im2, normalization=norm)
+        im2.write('junk2.fits')
+        # Check that images are close to the same:
+        print 'norm(diff) = ',np.sum((im1.array-im2.array)**2)
+        print 'norm(im) = ',np.sum(im1.array**2)
+        assert np.sum((im1.array-im2.array)**2) < 1.e-3 * np.sum(im1.array**2)
 
-    # Test photon shooting.
-    # Convolve with a small gaussian to smooth out the central peak.
-    devauc2 = galsim.Convolve(devauc, galsim.Gaussian(sigma=0.3))
-    do_shoot(devauc2,myImg,"sheared DeVauc")
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+        # Remeasure -- should now be very close to the same.
+        shapelet2 = shapelet.copy()
+        shapelet2.fitImage(im2, normalization=norm)
+        np.testing.assert_equal(shapelet.getSigma(), shapelet2.getSigma(),
+                err_msg="Second fitted shapelet has the wrong sigma")
+        np.testing.assert_equal(shapelet.getOrder(), shapelet2.getOrder(),
+                err_msg="Second fitted shapelet has the wrong order")
+        np.testing.assert_almost_equal(shapelet.getBVec(), shapelet2.getBVec(), 6,
+                err_msg="Second fitted shapelet coefficients do not match original")
 
- 
-def test_shapelet_convolve():
-    """Test the convolution of a Moffat and a Box SBProfile against a known result.
-    """
-    import time
-    t1 = time.time()
-    # Code was formerly:
-    # mySBP = galsim.SBMoffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
-    #
-    # ...but this is no longer quite so simple since we changed the handling of trunc to be in 
-    # physical units.  However, the same profile can be constructed using 
-    # fwhm=1.0927449310213702,
-    # as calculated by interval bisection in devutils/external/calculate_moffat_radii.py
-    fwhm_backwards_compatible = 1.0927449310213702
-    mySBP = galsim.SBMoffat(beta=1.5, fwhm=fwhm_backwards_compatible, 
-                            trunc=4*fwhm_backwards_compatible, flux=1)
-    mySBP2 = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
-    myConv = galsim.SBConvolve([mySBP,mySBP2])
-    # Using an exact Maple calculation for the comparison.  Only accurate to 4 decimal places.
-    savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_pixel.fits"))
-    myImg = galsim.ImageF(savedImg.bounds)
-    myImg.setScale(0.2)
-    myConv.draw(myImg.view())
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 4,
-            err_msg="Moffat convolved with Box SBProfile disagrees with expected result")
-
-    # Repeat with the GSObject version of this:
-    psf = galsim.Moffat(beta=1.5, fwhm=fwhm_backwards_compatible, trunc=4*fwhm_backwards_compatible,
-                        flux=1)
-    pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
-    # Note: Since both of these have hard edges, GalSim wants to do this with real_space=True.
-    # Here we are intentionally tesing the Fourier convolution, so we want to suppress the
-    # warning that GalSim emits.
-    import warnings
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        # We'll do the real space convolution below
-        conv = galsim.Convolve([psf,pixel],real_space=False)
-        conv.draw(myImg,dx=0.2, normalization="surface brightness")
-        np.testing.assert_array_almost_equal(
-                myImg.array, savedImg.array, 4,
-                err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
-
-        # Other ways to do the convolution:
-        conv = galsim.Convolve(psf,pixel,real_space=False)
-        conv.draw(myImg,dx=0.2, normalization="surface brightness")
-        np.testing.assert_array_almost_equal(
-                myImg.array, savedImg.array, 4,
-                err_msg="Using GSObject Convolve(psf,pixel) disagrees with expected result")
- 
-    # Test photon shooting.
-    do_shoot(conv,myImg,"Moffat * Pixel")
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
-
-def test_shapelet_shearconvolve():
-    """Test the convolution of a sheared Gaussian and a Box SBProfile against a known result.
-    """
-    import time
-    t1 = time.time()
-    e1 = 0.04
-    e2 = 0.0
-    myShear = galsim.Shear(e1=e1, e2=e2)
-    myEllipse = galsim.Ellipse(e1=e1, e2=e2)
-    # test at SBProfile level using applyShear
-    mySBP = galsim.SBGaussian(flux=1, sigma=1)
-    mySBP.applyShear(myShear._shear)
-    mySBP2 = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
-    myConv = galsim.SBConvolve([mySBP,mySBP2])
-    savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear_convolve_box.fits"))
-    myImg = galsim.ImageF(savedImg.bounds)
-    myImg.setScale(0.2)
-    myConv.draw(myImg.view())
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Sheared Gaussian convolved with Box SBProfile disagrees with expected result")
-
-    # test at SBProfile level using applyTransformation
-    mySBP = galsim.SBGaussian(flux=1, sigma=1)
-    mySBP.applyTransformation(myEllipse._ellipse)
-    mySBP2 = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
-    myConv = galsim.SBConvolve([mySBP,mySBP2])
-    myImg.setZero()
-    myConv.draw(myImg.view())
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Sheared Gaussian convolved with Box SBProfile disagrees with expected result")
-
-    # Repeat with the GSObject version of this:
-    psf = galsim.Gaussian(flux=1, sigma=1)
-    psf2 = psf.createSheared(e1=e1, e2=e2)
-    psf.applyShear(e1=e1, e2=e2)
-    pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
-    conv = galsim.Convolve([psf,pixel])
-    conv.draw(myImg,dx=0.2, normalization="surface brightness")
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
-    conv2 = galsim.Convolve([psf2,pixel])
-    conv2.draw(myImg,dx=0.2, normalization="surface brightness")
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
-    psf = galsim.Gaussian(flux=1, sigma=1)
-    psf2 = psf.createTransformed(myEllipse)
-    psf.applyTransformation(myEllipse)
-    pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
-    conv = galsim.Convolve([psf,pixel])
-    conv2 = galsim.Convolve([psf2,pixel])
-    conv.draw(myImg,dx=0.2, normalization="surface brightness")
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
-    conv2.draw(myImg,dx=0.2, normalization="surface brightness")
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
-
-    # Other ways to do the convolution:
-    conv = galsim.Convolve(psf,pixel)
-    conv.draw(myImg,dx=0.2, normalization="surface brightness")
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject Convolve(psf,pixel) disagrees with expected result")
- 
-    # Test photon shooting.
-    do_shoot(conv,myImg,"sheared Gaussian * Pixel")
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
-
-def test_shapelet_rotate():
-    """Test the 45 degree rotation of a sheared Sersic profile against a known result.
-    """
-    import time
-    t1 = time.time()
-    mySBP = galsim.SBSersic(n=2.5, flux=1, half_light_radius=1)
-    myShear = galsim.Shear(e1=0.2, e2=0.0)
-    myEllipse = galsim.Ellipse(e1=0.2, e2=0.0)
-    mySBP.applyTransformation(myEllipse._ellipse)
-    mySBP.applyRotation(45.0 * galsim.degrees)
-    savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_ellip_rotated.fits"))
-    myImg = galsim.ImageF(savedImg.bounds)
-    myImg.setScale(0.2)
-    mySBP.draw(myImg.view())
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="45-degree rotated elliptical Gaussian disagrees with expected result")
-
-    # Repeat with the GSObject version of this:
-    gal = galsim.Sersic(n=2.5, flux=1, half_light_radius=1)
-    gal.applyTransformation(myEllipse);
-    gal.applyRotation(45.0 * galsim.degrees)
-    gal.draw(myImg,dx=0.2, normalization="surface brightness")
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyRotation disagrees with expected result")
- 
-    # Test photon shooting.
-    # Convolve with a small gaussian to smooth out the central peak.
-    gal2 = galsim.Convolve(gal, galsim.Gaussian(sigma=0.3))
-    do_shoot(gal2,myImg,"rotated sheared Sersic")
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
-
-def test_shapelet_mag():
-    """Test the magnification (size x 1.5) of an exponential profile against a known result.
-    """
-    import time
-    t1 = time.time()
-    re = 1.0
-    r0 = re/1.67839
-    mySBP = galsim.SBExponential(flux=1, scale_radius=r0)
-    myEll = galsim.Ellipse(np.log(1.5))
-    mySBP.applyTransformation(myEll._ellipse)
-    savedImg = galsim.fits.read(os.path.join(imgdir, "exp_mag.fits"))
-    myImg = galsim.ImageF(savedImg.bounds)
-    myImg.setScale(0.2)
-    mySBP.draw(myImg.view())
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Magnification (x1.5) of exponential SBProfile disagrees with expected result")
-
-    # Repeat with the GSObject version of this:
-    gal = galsim.Exponential(flux=1, scale_radius=r0)
-    gal.applyTransformation(myEll)
-    gal.draw(myImg,dx=0.2, normalization="surface brightness")
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyTransformation disagrees with expected result")
-
-    # Use applyDilation
-    gal = galsim.Exponential(flux=1, scale_radius=r0)
-    gal.applyDilation(1.5)
-    gal.draw(myImg,dx=0.2, normalization="surface brightness")
-    printval(myImg, savedImg)
-    gal.scaleFlux(1.5**2) # Apply the flux magnification.
-    gal.draw(myImg,dx=0.2, normalization="surface brightness")
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyDilation disagrees with expected result")
- 
-    # Use applyMagnification
-    gal = galsim.Exponential(flux=1, scale_radius=r0)
-    gal.applyMagnification(1.5)
-    gal.draw(myImg,dx=0.2, normalization="surface brightness")
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyMagnification disagrees with expected result")
-
-    # Use createDilated
-    gal = galsim.Exponential(flux=1, scale_radius=r0)
-    gal2 = gal.createDilated(1.5)
-    gal2.scaleFlux(1.5**2) # Apply the flux magnification.
-    gal2.draw(myImg,dx=0.2, normalization="surface brightness")
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject createDilated disagrees with expected result")
- 
-    # Use createMagnified
-    gal = galsim.Exponential(flux=1, scale_radius=r0)
-    gal2 = gal.createMagnified(1.5)
-    gal2.draw(myImg,dx=0.2, normalization="surface brightness")
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject createMagnified disagrees with expected result")
- 
-    # Test photon shooting.
-    gal = galsim.Exponential(flux=1, scale_radius=r0)
-    gal.applyMagnification(1.5)
-    do_shoot(gal,myImg,"dilated Exponential")
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
-
-def test_shapelet_add():
-    """Test the addition of two rescaled Gaussian profiles against a known double Gaussian result.
-    """
-    import time
-    t1 = time.time()
-    mySBP = galsim.SBGaussian(flux=0.75, sigma=1)
-    mySBP2 = galsim.SBGaussian(flux=0.25, sigma=3)
-    myAdd = galsim.SBAdd(mySBP, mySBP2)
-    savedImg = galsim.fits.read(os.path.join(imgdir, "double_gaussian.fits"))
-    myImg = galsim.ImageF(savedImg.bounds)
-    myImg.setScale(0.2)
-    myAdd.draw(myImg.view())
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Addition of two rescaled Gaussian profiles disagrees with expected result")
-
-    # Repeat with the GSObject version of this:
-    gauss1 = galsim.Gaussian(flux=0.75, sigma=1)
-    gauss2 = galsim.Gaussian(flux=0.25, sigma=3)
-    sum = galsim.Add(gauss1,gauss2)
-    sum.draw(myImg,dx=0.2, normalization="surface brightness")
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject Add(gauss1,gauss2) disagrees with expected result")
-
-    # Other ways to do the sum:
-    sum = gauss1 + gauss2
-    sum.draw(myImg,dx=0.2, normalization="surface brightness")
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject gauss1 + gauss2 disagrees with expected result")
-    sum = gauss1.copy()
-    sum += gauss2
-    sum.draw(myImg,dx=0.2, normalization="surface brightness")
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject sum = gauss1; sum += gauss2 disagrees with expected result")
-    sum = galsim.Add([gauss1,gauss2])
-    sum.draw(myImg,dx=0.2, normalization="surface brightness")
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject Add([gauss1,gauss2]) disagrees with expected result")
-    gauss1 = galsim.Gaussian(flux=1, sigma=1)
-    gauss2 = galsim.Gaussian(flux=1, sigma=3)
-    sum = 0.75 * gauss1 + 0.25 * gauss2
-    sum.draw(myImg,dx=0.2, normalization="surface brightness")
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject 0.75 * gauss1 + 0.25 * gauss2 disagrees with expected result")
-    sum = 0.75 * gauss1
-    sum += 0.25 * gauss2
-    sum.draw(myImg,dx=0.2, normalization="surface brightness")
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject sum += 0.25 * gauss2 disagrees with expected result")
- 
-    # Test photon shooting.
-    do_shoot(sum,myImg,"sum of 2 Gaussians")
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
-
-def test_shapelet_shift():
-    """Test the translation of a Box profile against a known result.
-    """
-    import time
-    t1 = time.time()
-    mySBP = galsim.SBBox(xw=0.2, yw=0.2, flux=1)
-    mySBP.applyShift(0.2, -0.2)
-    savedImg = galsim.fits.read(os.path.join(imgdir, "box_shift.fits"))
-    myImg = galsim.ImageF(savedImg.bounds)
-    myImg.setScale(0.2)
-    mySBP.draw(myImg.view())
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Shifted box profile disagrees with expected result")
-
-    # Repeat with the GSObject version of this:
-    pixel = galsim.Pixel(xw=0.2, yw=0.2)
-    pixel.applyShift(0.2, -0.2)
-    pixel.draw(myImg,dx=0.2, normalization="surface brightness")
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyShift disagrees with expected result")
-    pixel = galsim.Pixel(xw=0.2, yw=0.2)
-    pixel.applyTransformation(galsim.Ellipse(galsim.PositionD(0.2, -0.2)))
-    pixel.draw(myImg,dx=0.2, normalization="surface brightness")
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyTransformation disagrees with expected result")
- 
-    # Test photon shooting.
-    do_shoot(pixel,myImg,"shifted Box")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 if __name__ == "__main__":
-    #test_shapelet()
+    test_shapelet()
     test_shapelet_properties()
-    #test_shapelet_smallshear()
-    #test_shapelet_largeshear()
-    #test_shapelet_convolve()
-    #test_shapelet_shearconvolve()
-    #test_shapelet_rotate()
-    #test_shapelet_mag()
-    #test_shapelet_add()
-    #test_shapelet_shift()
+    test_shapelet_fit()

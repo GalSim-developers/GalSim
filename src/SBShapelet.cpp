@@ -135,10 +135,34 @@ namespace galsim {
     void ShapeletFitImage(double sigma, LVector& bvec, const BaseImage<T>& image,
                           const Position<double>& center)
     {
-        // TODO
+        int order = bvec.getOrder();
+        double scale = image.getScale() / sigma;
+        double cenx = center.x / sigma;
+        double ceny = center.y / sigma;
+        const int nx = image.getXMax() - image.getXMin() + 1;
+        const int ny = image.getYMax() - image.getYMin() + 1;
+        const int npts = nx * ny;
+        tmv::Vector<double> x(npts);
+        tmv::Vector<double> y(npts);
+        tmv::Vector<double> I(npts);
+        int i=0;
+        for (int ix = image.getXMin(); ix <= image.getXMax(); ++ix) {
+            for (int iy = image.getYMin(); iy <= image.getYMax(); ++iy) {
+                x[i] = ix * scale - cenx;
+                y[i] = iy * scale - ceny;
+                I[i] = image(ix,iy);
+                ++i;
+            }
+        }
+
+        tmv::Matrix<double> psi(npts,bvec.size());
+        LVector::basis(psi,x,y,order,sigma);
+        // I = psi * b
+        // TMV solves this by writing b = I/psi.
+        // We use QRP in case the psi matrix is close to singular (although it shouldn't be).
+        psi.divideUsing(tmv::QRP);
+        bvec.rVector() = I/psi;
     }
-
-
 
     template void ShapeletFitImage(
         double sigma, LVector& bvec, const BaseImage<double>& image,
