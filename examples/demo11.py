@@ -119,7 +119,7 @@ def main(argv):
     # terms of ell and C_ell; ell is inverse radians and C_ell in radians^2.  Since GalSim tends to
     # work in terms of arcsec, we have to tell it that the inputs are radians^-1 so it can convert
     # to store in terms of arcsec^-1.
-    pk_file = os.path.join('data','cosmo-fid.zmed1.00.out')
+    pk_file = os.path.join('..', 'examples', 'data','cosmo-fid.zmed1.00.out')
     ps = galsim.PowerSpectrum(pk_file, units = galsim.radians)
     # The argument here is "e_power_function" which defines the E-mode power to use.
     logger.info('Set up power spectrum from tabulated P(k)')
@@ -133,7 +133,7 @@ def main(argv):
     # filename).  We want to read the image directly into an InterpolatedImage GSObject, so we can
     # manipulate it as needed (here, the only manipulation needed is convolution).  We want a PSF
     # with flux 1, and we can set the pixel scale using a keyword.
-    psf_file = os.path.join('data','example_sdss_psf_sky0.fits.bz2')
+    psf_file = os.path.join('..', 'examples', 'data','example_sdss_psf_sky0.fits.bz2')
     psf = galsim.InterpolatedImage(psf_file, dx = pixel_scale, flux = 1.)
     # We do not include a pixel response function galsim.Pixel here, because the image that was read
     # in from file already included it.
@@ -234,10 +234,8 @@ def main(argv):
     # Add correlated noise to the image -- the correlation function comes from the HST COSMOS images
     # and is described in more detail in the galsim.correlatednoise.get_COSMOS_CorrFunc() docstring.
     # This function requires a FITS file, stored in the GalSim repository, that represents this
-    # correlation information: the path to this file is a required argument.  THIS WILL NOT WORK
-    # unless this demo is run from its original location in the examples/ directory of the GalSim
-    # repository.  First we find the path to this file.
-    cf_file_name = os.path.join("data", "acs_I_unrot_sci_20_cf.fits")
+    # correlation information: the path to this file is a required argument. 
+    cf_file_name = os.path.join('..', 'examples', 'data', 'acs_I_unrot_sci_20_cf.fits')
 
     # Then use this to initialize the correlation function that we will use to add noise to the
     # full_image.  We set the dx_cosmos keyword equal to our pixel scale, so that the noise among

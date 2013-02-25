@@ -39,7 +39,7 @@
     "#" : "The only required parameter is the name of the file with the image.  Note: the file is ",
     "#" : "bzipped, to demonstrate the new capability of reading in a file that has been ",
     "#" : "compressed in various ways (which GalSim can infer from the filename).",
-    "image" : "data/example_sdss_psf_sky0.fits.bz2",
+    "image" : "../examples/data/example_sdss_psf_sky0.fits.bz2",
 
     "#" : "If the fits file has a scale given in the header information, we can use that for ",
     "#" : "the pixel scale.  If it is not given it will assume 1. ",
@@ -133,7 +133,7 @@
     "#" : "GalSim repository.",
     "noise" : {
         "type" : "COSMOS",
-        "file_name" : "./data/acs_I_unrot_sci_20_cf.fits",
+        "file_name" : "../examples/data/acs_I_unrot_sci_20_cf.fits",
         "#" : "Use the same pixel scale as image, reproducing COSMOS correlated noise: ",
         "dx_cosmos" : 0.20,
         "#" : "Variance sets value of zero distance correlation function: ",
@@ -147,7 +147,7 @@
 "input" : {
     "#" : "In this case, we need to define where the real galaxy input catalog is.",
     "real_catalog" : {
-        "dir" : "data",
+        "dir" : "../examples/data",
         "file_name" : "real_galaxy_catalog_example.fits",
 
         "#" : "Even though we only have 5 galaxies again, preloading makes a big difference in the",
@@ -161,7 +161,7 @@
         "#" : "In this case, we read the e_power_function from a file.  This is done simply by ",
         "#" : "providing the file name for the e_power_function parameter.  The input file is",
         "#" : "expected to have two columns of numbers:  k and P(k).",
-        "e_power_function" : "data/cosmo-fid.zmed1.00.out",
+        "e_power_function" : "../examples/data/cosmo-fid.zmed1.00.out",
 
         "#" : "The default units of k are arcsec^-1 to match all the other units.  But again,",
         "#" : "sometimes it is more convenient to define them in different units.  You may",
