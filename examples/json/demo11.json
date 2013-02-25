@@ -16,12 +16,11 @@
 "#" : "The noise added to the image is spatially correlated in the same way as often seen in ", 
 "#" : "coadd images from the Hubble Space Telescope (HST) Advanced Camera for Surveys, using a ",
 "#" : "correlation function determined from the HST COSMOS coadd images in the F814W filter ",
-"#" : "(see, e.g., Leauthaud et al 2007).  Generating this correlation function requires a FITS ",
-"#" : "file, stored in the GalSim repository, that represents the correlation information: the ",
-"#" : "path to this file is a required argument to the GalSim function ",
-"#" : "galsim.correlatednoise.get_COSMOS_CorrFunc(file_name).  This demo points to the relative ",
-"#" : "location of this file, and so WILL NOT WORK UNLESS it is run from its original location in ",
-"#" : "the examples/ directory of the GalSim repository. ",
+"#" : "(see, e.g., Leauthaud et al 2007).  This function is stored within the GalSim repository ",
+"#" : "as a FITS file, and this demo points to the relative location of that file.",
+
+"#" : "Therefore THIS DEMO WILL NOT WORK UNLESS it is run from its original location in the ",
+"#" : "examples/ directory of the GalSim repository.", 
 
 "#" : "New features introduced in this demo:",
 
