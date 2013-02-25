@@ -4,14 +4,23 @@
 # The eleventh YAML configuration file in our tutorial about using Galsim config files.
 # (This file is designed to be viewed in a window 100 characters wide.)
 #
-# This script uses a constant PSF from real data (an image read in from a bzipped FITS file, 
-# not a parametric model) and variable shear according to some cosmological model for which 
-# we have a tabulated power spectrum at specific k values only.  The 225 galaxies in the 
-# 0.25x0.25 degree field (representing a low number density of 1/arcmin^2) are randomly 
-# located and permitted to overlap, but we do take care to avoid being too close to the edge 
-# of the large image.  For the galaxies, we use a random selection from 5 specific RealGalaxy 
-# objects, selected to be 5 particularly irregular ones. These are taken from the same
-# catalog of 100 objects that demo6 used.
+# This script uses a constant PSF from real data (an image read in from a bzipped FITS file, not a
+# parametric model) and variable shear according to some cosmological model for which we have a
+# tabulated power spectrum at specific k values only.  The 225 galaxies in the 0.25x0.25 degree
+# field (representing a low number density of 1/arcmin^2) are randomly located and permitted to
+# overlap, but we do take care to avoid being too close to the edge of the large image.  For the
+# galaxies, we use a random selection from 5 specific RealGalaxy objects, selected to be 5
+# particularly irregular ones.  These are taken from the same catalog of 100 objects that demo6
+# used.
+#
+# The noise added to the image is spatially correlated in the same way as often seen in coadd images
+# from the Hubble Space Telescope (HST) Advanced Camera for Surveys, using a correlation function
+# determined from the HST COSMOS coadd images in the F814W filter (see, e.g., Leauthaud et al 2007).
+# Generating this correlation function requires a FITS file, stored in the GalSim repository, that
+# represents the correlation information: the path to this file is a required argument to the GalSim
+# function galsim.correlatednoise.get_COSMOS_CorrFunc(file_name).  This demo points to the relative
+# location of this file, and so WILL NOT WORK UNLESS it is run from its original location in the
+# examples/ directory of the GalSim repository.
 #
 # New features introduced in this demo:
 #
@@ -19,10 +28,12 @@
 # - float_value type : RandomDistribution(function, x_min, x_max)
 # - pix type : None
 # - input.power_spectrum : (e_power_file, delta2, units)
+# - noise type : COSMOS
 #
 # - Power spectrum shears for non-gridded positions.
 # - Reading a compressed FITS image (using BZip2 compression).
 # - Writing a compressed FITS image (using Rice compression).
+#
 
 # Define the PSF profile
 psf : 
@@ -81,6 +92,9 @@ gal :
     rotation :
         type : Random
 
+    # The galaxy S/N is set to be 100, but this is based on a point variance-only calculation
+    # (such as discussed in Leauthaud et al 2007).  The true SNR is somewhat lower, due to the
+    # presence of correlation in the noise.
     signal_to_noise : 100
 
 
@@ -109,12 +123,17 @@ image :
 
     pixel_scale : 0.20  # arcsec / pixel
 
+    # Add correlated noise to the image -- the correlation function comes from the HST COSMOS images
+    # and is described in more detail in the galsim.correlatednoise.get_COSMOS_CorrFunc() docstring.
+    # This function requires a FITS file, stored in the GalSim repository, that represents this
+    # correlation information: the path to this file must be given as file_name.  Therefore, THIS
+    # WILL NOT WORK unless this demo is run from its original location in the examples/ directory of
+    # the GalSim repository.
     noise :
         type : "COSMOS"
         file_name : "../devel/external/hst/acs_I_unrot_sci_20_cf.fits"
-        dx_cosmos : 0.20
-        variance : 1.
-        #sky_level : 1.0e4  # ADU / arcsec^2
+        dx_cosmos : 0.20  # use the same pixel scale as image, reproducing COSMOS correlated noise
+        variance : 1.     # variance sets value of zero distance correlation function
 
     random_seed : 24783923
 

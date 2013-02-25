@@ -58,7 +58,9 @@ def main(argv):
       - Noise is correlated with the same spatial correlation function as found in HST COSMOS weak
         lensing science images, with a point (zero distance) variance of 1.
       - Galaxies are real galaxies, each with S/N~100 based on a point variance-only calculation
-        (such as discussed in Leauthaud et al 2007).
+        (such as discussed in Leauthaud et al 2007).  The true SNR is somewhat lower, due to the
+        presence of correlation in the noise.
+
     """
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger("demo11")
