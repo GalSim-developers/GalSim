@@ -133,11 +133,11 @@
     "#" : "GalSim repository.",
     "noise" : {
         "type" : "COSMOS",
-        "file_name" : "../data/acs_I_unrot_sci_20_cf.fits",
+        "file_name" : "./data/acs_I_unrot_sci_20_cf.fits",
         "#" : "Use the same pixel scale as image, reproducing COSMOS correlated noise: ",
         "dx_cosmos" : 0.20,
         "#" : "Variance sets value of zero distance correlation function: ",
-        "variance" : 1.0
+        "variance" : 10000.0
     },
 
     "random_seed" : 24783923

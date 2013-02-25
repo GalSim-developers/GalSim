@@ -51,7 +51,7 @@ def main(argv):
         the pixel scale for that PSF image is 0.2" rather than 0.396".  We are simultaneously lying
         about the intrinsic size of the PSF and about the pixel scale when we do this.
       - Noise is correlated with the same spatial correlation function as found in HST COSMOS weak
-        lensing science images, with a point (zero distance) variance that we normalize to 1.
+        lensing science images, with a point (zero distance) variance that we normalize to 1.e4.
       - Galaxies are real galaxies, each with S/N~100 based on a point variance-only calculation
         (such as discussed in Leauthaud et al 2007).  The true SNR is somewhat lower, due to the
         presence of correlation in the noise.
@@ -68,7 +68,7 @@ def main(argv):
     image_size = 0.25*galsim.degrees # size of big image in each dimension
     image_size = int((image_size / galsim.arcsec)/pixel_scale) # convert to pixels
     image_size_arcsec = image_size*pixel_scale # size of big image in each dimension (arcsec)
-    variance = 1.                    # ADU^2
+    noise_variance = 1.e4            # ADU^2
     nobj = 225                       # number of galaxies in entire field
                                      # (This corresponds to 1 galaxy / arcmin^2)
     grid_spacing = 90.0              # The spacing between the samples for the power spectrum 
@@ -216,7 +216,7 @@ def main(argv):
         # image, which might have another galaxy near that point (so our S/N calculation would 
         # erroneously include the flux from the other object).
         # See demo5.py for the math behind this calculation.
-        sn_meas = math.sqrt( numpy.sum(stamp.array**2) / variance )
+        sn_meas = math.sqrt( numpy.sum(stamp.array**2) / noise_variance )
         flux_scaling = gal_signal_to_noise / sn_meas
         stamp *= flux_scaling
 
@@ -244,7 +244,7 @@ def main(argv):
     # correlated on the same scales as HST COSMOS, and we set the point (zero-distance) variance
     # to our desired value.
     cf = galsim.correlatednoise.get_COSMOS_CorrFunc(
-        cf_file_name, dx_cosmos=pixel_scale, variance=variance)
+        cf_file_name, dx_cosmos=pixel_scale, variance=noise_variance)
 
     # Now add noise according to this correlation function to the full_image.  We have to do this
     # step at the end, rather than adding to individual postage stamps, in order to get the noise

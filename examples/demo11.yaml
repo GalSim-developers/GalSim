@@ -128,7 +128,7 @@ image :
         type : "COSMOS"
         file_name : "./data/acs_I_unrot_sci_20_cf.fits"
         dx_cosmos : 0.20  # use the same pixel scale as image, reproducing COSMOS correlated noise
-        variance : 1.     # variance sets value of zero distance correlation function
+        variance : 1.e4   # variance sets value of zero distance correlation function
 
     random_seed : 24783923
 
