@@ -36,244 +36,244 @@ namespace bp = boost::python;
 // Note that docstrings are now added in galsim/image.py
 namespace galsim {
 
-    template <typename T>
-    struct PyImage {
+template <typename T>
+struct PyImage {
 
-        template <typename U, typename W>
-        static void wrapImageTemplates(W& wrapper) {
-            typedef void (Image<T>::* copyFrom_func_type)(const BaseImage<U>&);
-            wrapper
-                .def("copyFrom", copyFrom_func_type(&Image<T>::copyFrom));
-        }
-
-        template <typename U, typename W>
-        static void wrapImageViewTemplates(W& wrapper) {
-            typedef void (ImageView<T>::* copyFrom_func_type)(const BaseImage<U>&) const;
-            wrapper
-                .def("copyFrom", copyFrom_func_type(&ImageView<T>::copyFrom));
-        }
-
-        static bp::object GetArrayImpl(bp::object self, bool isConst) 
-        {
-            // --- Try to get cached array ---
-            if (PyObject_HasAttrString(self.ptr(), "_array")) return self.attr("_array");
-
-            const BaseImage<T>& image = bp::extract<const BaseImage<T>&>(self);
-
-            bp::object numpy_array = MakeNumpyArray(
-                image.getData(), 
-                image.getYMax() - image.getYMin() + 1,
-                image.getXMax() - image.getXMin() + 1,
-                image.getStride(), isConst, image.getOwner());
-
-            self.attr("_array") = numpy_array;
-            return numpy_array;
-        }
-
-        static bp::object GetArray(bp::object image) { return GetArrayImpl(image, false); }
-        static bp::object GetConstArray(bp::object image) { return GetArrayImpl(image, true); }
-
-        static void BuildConstructorArgs(
-            const bp::object& array, int xmin, int ymin, bool isConst,
-            T*& data, boost::shared_ptr<T>& owner, int& stride, Bounds<int>& bounds) 
-        {
-            CheckNumpyArray(array,2,isConst,data,owner,stride);
-            bounds = Bounds<int>(
-                xmin, xmin + PyArray_DIM(array.ptr(), 1) - 1,
-                ymin, ymin + PyArray_DIM(array.ptr(), 0) - 1
-            );
-        }
-
-        static ImageView<T>* MakeFromArray(
-            const bp::object& array, int xmin, int ymin, double scale) 
-        {
-            Bounds<int> bounds;
-            int stride = 0;
-            T* data = 0;
-            boost::shared_ptr<T> owner;
-            BuildConstructorArgs(array, xmin, ymin, false, data, owner, stride, bounds);
-            return new ImageView<T>(data, owner, stride, bounds, scale);
-        }
-
-        static ConstImageView<T>* MakeConstFromArray(
-            const bp::object& array, int xmin, int ymin, double scale) 
-        {
-            Bounds<int> bounds;
-            int stride = 0;
-            T* data = 0;
-            boost::shared_ptr<T> owner;
-            BuildConstructorArgs(array, xmin, ymin, true, data, owner, stride, bounds);
-            return new ConstImageView<T>(data, owner, stride, bounds, scale);
-        }
-
-        static bp::object wrapImage(const std::string& suffix) {
-            bp::object getScale = bp::make_function(&BaseImage<T>::getScale);
-            bp::object setScale = bp::make_function(&BaseImage<T>::setScale);
-
-            // Need some typedefs and explicit casts here to resolve overloads of methods
-            // that have both const and non-const versions:
-            typedef const T& (Image<T>::* at_func_type)(const int, const int) const;
-            typedef ImageView<T> (Image<T>::* subImage_func_type)(const Bounds<int>&);
-            typedef ImageView<T> (Image<T>::* view_func_type)();
-
-            bp::object at = bp::make_function(
-                at_func_type(&Image<T>::at),
-                bp::return_value_policy<bp::copy_const_reference>(),
-                bp::args("x", "y")
-            );
-            bp::object getBounds = bp::make_function(
-                &BaseImage<T>::getBounds, 
-                bp::return_value_policy<bp::copy_const_reference>()
-            ); 
-
-            bp::class_< BaseImage<T>, boost::noncopyable >
-                pyBaseImage(("BaseImage" + suffix).c_str(), "", bp::no_init);
-            pyBaseImage
-                .def("getScale", getScale)
-                .def("setScale", setScale)
-                .add_property("scale", getScale, setScale)
-                .def("subImage", &BaseImage<T>::subImage, bp::args("bounds"))
-                .add_property("array", &GetConstArray)
-                .def("shift", &BaseImage<T>::shift, bp::args("dx", "dy"))
-                .def("setOrigin", &BaseImage<T>::setOrigin, bp::args("x0", "y0"))
-                .def("setCenter", &BaseImage<T>::setCenter, bp::args("x0", "y0"))
-                .def("getBounds", getBounds)
-                .def("getPaddedSize", &BaseImage<T>::getPaddedSize, bp::args("pad_factor"))
-                .add_property("bounds", getBounds)
-                ;
-            ADD_CORNER(pyBaseImage, getXMin, xmin);
-            ADD_CORNER(pyBaseImage, getYMin, ymin);
-            ADD_CORNER(pyBaseImage, getXMax, xmax);
-            ADD_CORNER(pyBaseImage, getYMax, ymax);
-
-            bp::class_< Image<T>, bp::bases< BaseImage<T> > >
-                pyImage(("Image" + suffix).c_str(), "", bp::no_init);
-            pyImage
-                .def(bp::init<int,int,T>(
-                        (bp::args("ncol","nrow"), bp::arg("init_value")=T(0))
-                ))
-                .def(bp::init<const Bounds<int>&, T>(
-                        (bp::arg("bounds")=Bounds<int>(), bp::arg("init_value")=T(0))
-                ))
-                .def(bp::init<const BaseImage<T>&>(bp::args("other")))
-                .def("subImage", subImage_func_type(&Image<T>::subImage), bp::args("bounds"))
-                .def("view", view_func_type(&Image<T>::view))
-                //.def("assign", &Image<T>::operator=, bp::return_self<>())
-                .add_property("array", &GetArray)
-                // In python, there is no way to have a function return a mutable reference
-                // so you can't make im(x,y) = val work correctly.  Thus, the __call__
-                // funtion (which is the im(x,y) syntax) is just the const version.
-                .def("__call__", at) // always used checked accessors in Python
-                .def("at", at)
-                .def("setValue", &Image<T>::setValue, bp::args("x","y","value"))
-                .def("fill", &Image<T>::fill)
-                .def("setZero", &Image<T>::setZero)
-                .def("invertSelf", &Image<T>::invertSelf)
-                .def("resize", &Image<T>::resize)
-                .enable_pickling()
-                ;
-            wrapImageTemplates<float>(pyImage);
-            wrapImageTemplates<double>(pyImage);
-            wrapImageTemplates<int16_t>(pyImage);
-            wrapImageTemplates<int32_t>(pyImage);
-
-            return pyImage;
-        }
-
-        static bp::object wrapImageView(const std::string& suffix) {
-
-            bp::object at = bp::make_function(
-                &ImageView<T>::at,
-                bp::return_value_policy<bp::copy_non_const_reference>(),
-                bp::args("x", "y")
-            );
-            bp::class_< ImageView<T>, bp::bases< BaseImage<T> > >
-                pyImageView(("ImageView" + suffix).c_str(), "", bp::no_init);
-            pyImageView
-                .def(
-                    "__init__",
-                    bp::make_constructor(
-                        &MakeFromArray, bp::default_call_policies(),
-                        (bp::arg("array"), bp::arg("xmin")=1, bp::arg("ymin")=1, 
-                         bp::arg("scale")=1.0)
-                    )
-                )
-                .def(bp::init<const ImageView<T>&>(bp::args("other")))
-                .def("subImage", &ImageView<T>::subImage, bp::args("bounds"))
-                .def("view", &ImageView<T>::view, bp::return_self<>())
-                //.def("assign", &ImageView<T>::operator=, bp::return_self<>())
-                .add_property("array", &GetArray)
-                .def("__call__", at) // always used checked accessors in Python
-                .def("at", at)
-                .def("setValue", &ImageView<T>::setValue, bp::args("x","y","value"))
-                .def("fill", &ImageView<T>::fill)
-                .def("setZero", &ImageView<T>::setZero)
-                .def("invertSelf", &Image<T>::invertSelf)
-                .enable_pickling()
-                ;
-            wrapImageViewTemplates<float>(pyImageView);
-            wrapImageViewTemplates<double>(pyImageView);
-            wrapImageViewTemplates<int16_t>(pyImageView);
-            wrapImageViewTemplates<int32_t>(pyImageView);
-
-            return pyImageView;
-        }
-
-        static bp::object wrapConstImageView(const std::string& suffix) {
-            bp::object at = bp::make_function(
-                &BaseImage<T>::at,
-                bp::return_value_policy<bp::copy_const_reference>(),
-                bp::args("x", "y")
-            );
-            bp::class_< ConstImageView<T>, bp::bases< BaseImage<T> > >
-                pyConstImageView(("ConstImageView" + suffix).c_str(), "", bp::no_init);
-            pyConstImageView
-                .def(
-                    "__init__",
-                    bp::make_constructor(
-                        &MakeConstFromArray, bp::default_call_policies(),
-                        (bp::arg("array"), bp::arg("xmin")=1, bp::arg("ymin")=1,
-                         bp::arg("scale")=1.0)
-                    )
-                )
-                .def(bp::init<const BaseImage<T>&>(bp::args("other")))
-                .def("view", &ConstImageView<T>::view, bp::return_self<>())
-                .def("__call__", at) // always used checked accessors in Python
-                .def("at", at)
-                .enable_pickling()
-                ;
-
-            return pyConstImageView;
-        }
-
-    };
-
-    void pyExportImage() {
-        bp::dict pyImageDict;  // dict that lets us say "Image[numpy.float32]", etc.
-
-        pyImageDict[GetNumPyType<int16_t>()] = PyImage<int16_t>::wrapImage("S");
-        pyImageDict[GetNumPyType<int32_t>()] = PyImage<int32_t>::wrapImage("I");
-        pyImageDict[GetNumPyType<float>()] = PyImage<float>::wrapImage("F");
-        pyImageDict[GetNumPyType<double>()] = PyImage<double>::wrapImage("D");
-
-        bp::dict pyConstImageViewDict; 
-
-        pyConstImageViewDict[GetNumPyType<int16_t>()] = PyImage<int16_t>::wrapConstImageView("S");
-        pyConstImageViewDict[GetNumPyType<int32_t>()] = PyImage<int32_t>::wrapConstImageView("I");
-        pyConstImageViewDict[GetNumPyType<float>()] = PyImage<float>::wrapConstImageView("F");
-        pyConstImageViewDict[GetNumPyType<double>()] = PyImage<double>::wrapConstImageView("D");
-
-        bp::dict pyImageViewDict;
-
-        pyImageViewDict[GetNumPyType<int16_t>()] = PyImage<int16_t>::wrapImageView("S");
-        pyImageViewDict[GetNumPyType<int32_t>()] = PyImage<int32_t>::wrapImageView("I");
-        pyImageViewDict[GetNumPyType<float>()] = PyImage<float>::wrapImageView("F");
-        pyImageViewDict[GetNumPyType<double>()] = PyImage<double>::wrapImageView("D");
-
-        bp::scope scope;  // a default constructed scope represents the module we're creating
-        scope.attr("Image") = pyImageDict;
-        scope.attr("ConstImageView") = pyConstImageViewDict;
-        scope.attr("ImageView") = pyImageViewDict;
+    template <typename U, typename W>
+    static void wrapImageTemplates(W& wrapper) {
+        typedef void (Image<T>::* copyFrom_func_type)(const BaseImage<U>&);
+        wrapper
+            .def("copyFrom", copyFrom_func_type(&Image<T>::copyFrom));
     }
+
+    template <typename U, typename W>
+    static void wrapImageViewTemplates(W& wrapper) {
+        typedef void (ImageView<T>::* copyFrom_func_type)(const BaseImage<U>&) const;
+        wrapper
+            .def("copyFrom", copyFrom_func_type(&ImageView<T>::copyFrom));
+    }
+
+    static bp::object GetArrayImpl(bp::object self, bool isConst) 
+    {
+        // --- Try to get cached array ---
+        if (PyObject_HasAttrString(self.ptr(), "_array")) return self.attr("_array");
+
+        const BaseImage<T>& image = bp::extract<const BaseImage<T>&>(self);
+
+        bp::object numpy_array = MakeNumpyArray(
+            image.getData(), 
+            image.getYMax() - image.getYMin() + 1,
+            image.getXMax() - image.getXMin() + 1,
+            image.getStride(), isConst, image.getOwner());
+
+        self.attr("_array") = numpy_array;
+        return numpy_array;
+    }
+
+    static bp::object GetArray(bp::object image) { return GetArrayImpl(image, false); }
+    static bp::object GetConstArray(bp::object image) { return GetArrayImpl(image, true); }
+
+    static void BuildConstructorArgs(
+        const bp::object& array, int xmin, int ymin, bool isConst,
+        T*& data, boost::shared_ptr<T>& owner, int& stride, Bounds<int>& bounds) 
+    {
+        CheckNumpyArray(array,2,isConst,data,owner,stride);
+        bounds = Bounds<int>(
+            xmin, xmin + PyArray_DIM(array.ptr(), 1) - 1,
+            ymin, ymin + PyArray_DIM(array.ptr(), 0) - 1
+        );
+    }
+
+    static ImageView<T>* MakeFromArray(
+        const bp::object& array, int xmin, int ymin, double scale) 
+    {
+        Bounds<int> bounds;
+        int stride = 0;
+        T* data = 0;
+        boost::shared_ptr<T> owner;
+        BuildConstructorArgs(array, xmin, ymin, false, data, owner, stride, bounds);
+        return new ImageView<T>(data, owner, stride, bounds, scale);
+    }
+
+    static ConstImageView<T>* MakeConstFromArray(
+        const bp::object& array, int xmin, int ymin, double scale) 
+    {
+        Bounds<int> bounds;
+        int stride = 0;
+        T* data = 0;
+        boost::shared_ptr<T> owner;
+        BuildConstructorArgs(array, xmin, ymin, true, data, owner, stride, bounds);
+        return new ConstImageView<T>(data, owner, stride, bounds, scale);
+    }
+
+    static bp::object wrapImage(const std::string& suffix) {
+        bp::object getScale = bp::make_function(&BaseImage<T>::getScale);
+        bp::object setScale = bp::make_function(&BaseImage<T>::setScale);
+
+        // Need some typedefs and explicit casts here to resolve overloads of methods
+        // that have both const and non-const versions:
+        typedef const T& (Image<T>::* at_func_type)(const int, const int) const;
+        typedef ImageView<T> (Image<T>::* subImage_func_type)(const Bounds<int>&);
+        typedef ImageView<T> (Image<T>::* view_func_type)();
+
+        bp::object at = bp::make_function(
+            at_func_type(&Image<T>::at),
+            bp::return_value_policy<bp::copy_const_reference>(),
+            bp::args("x", "y")
+        );
+        bp::object getBounds = bp::make_function(
+            &BaseImage<T>::getBounds, 
+            bp::return_value_policy<bp::copy_const_reference>()
+        ); 
+
+        bp::class_< BaseImage<T>, boost::noncopyable >
+            pyBaseImage(("BaseImage" + suffix).c_str(), "", bp::no_init);
+        pyBaseImage
+            .def("getScale", getScale)
+            .def("setScale", setScale)
+            .add_property("scale", getScale, setScale)
+            .def("subImage", &BaseImage<T>::subImage, bp::args("bounds"))
+            .add_property("array", &GetConstArray)
+            .def("shift", &BaseImage<T>::shift, bp::args("dx", "dy"))
+            .def("setOrigin", &BaseImage<T>::setOrigin, bp::args("x0", "y0"))
+            .def("setCenter", &BaseImage<T>::setCenter, bp::args("x0", "y0"))
+            .def("getBounds", getBounds)
+            .def("getPaddedSize", &BaseImage<T>::getPaddedSize, bp::args("pad_factor"))
+            .add_property("bounds", getBounds)
+            ;
+        ADD_CORNER(pyBaseImage, getXMin, xmin);
+        ADD_CORNER(pyBaseImage, getYMin, ymin);
+        ADD_CORNER(pyBaseImage, getXMax, xmax);
+        ADD_CORNER(pyBaseImage, getYMax, ymax);
+
+        bp::class_< Image<T>, bp::bases< BaseImage<T> > >
+            pyImage(("Image" + suffix).c_str(), "", bp::no_init);
+        pyImage
+            .def(bp::init<int,int,T>(
+                    (bp::args("ncol","nrow"), bp::arg("init_value")=T(0))
+            ))
+            .def(bp::init<const Bounds<int>&, T>(
+                    (bp::arg("bounds")=Bounds<int>(), bp::arg("init_value")=T(0))
+            ))
+            .def(bp::init<const BaseImage<T>&>(bp::args("other")))
+            .def("subImage", subImage_func_type(&Image<T>::subImage), bp::args("bounds"))
+            .def("view", view_func_type(&Image<T>::view))
+            //.def("assign", &Image<T>::operator=, bp::return_self<>())
+            .add_property("array", &GetArray)
+            // In python, there is no way to have a function return a mutable reference
+            // so you can't make im(x,y) = val work correctly.  Thus, the __call__
+            // funtion (which is the im(x,y) syntax) is just the const version.
+            .def("__call__", at) // always used checked accessors in Python
+            .def("at", at)
+            .def("setValue", &Image<T>::setValue, bp::args("x","y","value"))
+            .def("fill", &Image<T>::fill)
+            .def("setZero", &Image<T>::setZero)
+            .def("invertSelf", &Image<T>::invertSelf)
+            .def("resize", &Image<T>::resize)
+            .enable_pickling()
+            ;
+        wrapImageTemplates<float>(pyImage);
+        wrapImageTemplates<double>(pyImage);
+        wrapImageTemplates<int16_t>(pyImage);
+        wrapImageTemplates<int32_t>(pyImage);
+
+        return pyImage;
+    }
+
+    static bp::object wrapImageView(const std::string& suffix) {
+
+        bp::object at = bp::make_function(
+            &ImageView<T>::at,
+            bp::return_value_policy<bp::copy_non_const_reference>(),
+            bp::args("x", "y")
+        );
+        bp::class_< ImageView<T>, bp::bases< BaseImage<T> > >
+            pyImageView(("ImageView" + suffix).c_str(), "", bp::no_init);
+        pyImageView
+            .def(
+                "__init__",
+                bp::make_constructor(
+                    &MakeFromArray, bp::default_call_policies(),
+                    (bp::arg("array"), bp::arg("xmin")=1, bp::arg("ymin")=1, 
+                     bp::arg("scale")=1.0)
+                )
+            )
+            .def(bp::init<const ImageView<T>&>(bp::args("other")))
+            .def("subImage", &ImageView<T>::subImage, bp::args("bounds"))
+            .def("view", &ImageView<T>::view, bp::return_self<>())
+            //.def("assign", &ImageView<T>::operator=, bp::return_self<>())
+            .add_property("array", &GetArray)
+            .def("__call__", at) // always used checked accessors in Python
+            .def("at", at)
+            .def("setValue", &ImageView<T>::setValue, bp::args("x","y","value"))
+            .def("fill", &ImageView<T>::fill)
+            .def("setZero", &ImageView<T>::setZero)
+            .def("invertSelf", &Image<T>::invertSelf)
+            .enable_pickling()
+            ;
+        wrapImageViewTemplates<float>(pyImageView);
+        wrapImageViewTemplates<double>(pyImageView);
+        wrapImageViewTemplates<int16_t>(pyImageView);
+        wrapImageViewTemplates<int32_t>(pyImageView);
+
+        return pyImageView;
+    }
+
+    static bp::object wrapConstImageView(const std::string& suffix) {
+        bp::object at = bp::make_function(
+            &BaseImage<T>::at,
+            bp::return_value_policy<bp::copy_const_reference>(),
+            bp::args("x", "y")
+        );
+        bp::class_< ConstImageView<T>, bp::bases< BaseImage<T> > >
+            pyConstImageView(("ConstImageView" + suffix).c_str(), "", bp::no_init);
+        pyConstImageView
+            .def(
+                "__init__",
+                bp::make_constructor(
+                    &MakeConstFromArray, bp::default_call_policies(),
+                    (bp::arg("array"), bp::arg("xmin")=1, bp::arg("ymin")=1,
+                     bp::arg("scale")=1.0)
+                )
+            )
+            .def(bp::init<const BaseImage<T>&>(bp::args("other")))
+            .def("view", &ConstImageView<T>::view, bp::return_self<>())
+            .def("__call__", at) // always used checked accessors in Python
+            .def("at", at)
+            .enable_pickling()
+            ;
+
+        return pyConstImageView;
+    }
+
+};
+
+void pyExportImage() {
+    bp::dict pyImageDict;  // dict that lets us say "Image[numpy.float32]", etc.
+
+    pyImageDict[GetNumPyType<int16_t>()] = PyImage<int16_t>::wrapImage("S");
+    pyImageDict[GetNumPyType<int32_t>()] = PyImage<int32_t>::wrapImage("I");
+    pyImageDict[GetNumPyType<float>()] = PyImage<float>::wrapImage("F");
+    pyImageDict[GetNumPyType<double>()] = PyImage<double>::wrapImage("D");
+
+    bp::dict pyConstImageViewDict; 
+
+    pyConstImageViewDict[GetNumPyType<int16_t>()] = PyImage<int16_t>::wrapConstImageView("S");
+    pyConstImageViewDict[GetNumPyType<int32_t>()] = PyImage<int32_t>::wrapConstImageView("I");
+    pyConstImageViewDict[GetNumPyType<float>()] = PyImage<float>::wrapConstImageView("F");
+    pyConstImageViewDict[GetNumPyType<double>()] = PyImage<double>::wrapConstImageView("D");
+
+    bp::dict pyImageViewDict;
+
+    pyImageViewDict[GetNumPyType<int16_t>()] = PyImage<int16_t>::wrapImageView("S");
+    pyImageViewDict[GetNumPyType<int32_t>()] = PyImage<int32_t>::wrapImageView("I");
+    pyImageViewDict[GetNumPyType<float>()] = PyImage<float>::wrapImageView("F");
+    pyImageViewDict[GetNumPyType<double>()] = PyImage<double>::wrapImageView("D");
+
+    bp::scope scope;  // a default constructed scope represents the module we're creating
+    scope.attr("Image") = pyImageDict;
+    scope.attr("ConstImageView") = pyConstImageViewDict;
+    scope.attr("ImageView") = pyImageViewDict;
+}
 
 } // namespace galsim
