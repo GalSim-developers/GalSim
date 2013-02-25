@@ -595,7 +595,6 @@ def get_COSMOS_CorrFunc(file_name, dx_cosmos=0.03, variance=0.):
     The following commands use this function to generate a 300 pixel x 300 pixel image of noise with
     HST COSMOS correlation properties (substitute in your own file and path for the `filestring`).
 
-
         >>> filestring='/YOUR/REPO/PATH/GalSim/devel/external/hst/acs_I_unrot_sci_20_cf.fits'
         >>> import galsim
         >>> cf = galsim.correlatednoise.get_COSMOS_CorrFunc(filestring)
