@@ -240,8 +240,10 @@ def main(argv):
     cf_file_name = os.path.join("data", "acs_I_unrot_sci_20_cf.fits")
 
     # Then use this to initialize the correlation function that we will use to add noise to the
-    # full_image.  We set the dx_cosmos keyword equal to our pixel scale, so that our noise is
-    # correlated on the same scales as HST COSMOS, and we set the point (zero-distance) variance
+    # full_image.  We set the dx_cosmos keyword equal to our pixel scale, so that the noise among
+    # neighboring pixels is correlated at the same level as it was among neighboring pixels in HST
+    # COSMOS.  Using the original pixel scale, dx_cosmos=0.03 [arcsec], would leave very little
+    # correlation among our larger 0.2 arcsec pixels. We also set the point (zero-distance) variance
     # to our desired value.
     cf = galsim.correlatednoise.get_COSMOS_CorrFunc(
         cf_file_name, dx_cosmos=pixel_scale, variance=noise_variance)
