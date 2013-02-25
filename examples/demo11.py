@@ -10,10 +10,16 @@ tabulated power spectrum at specific k values only.  The 225 galaxies in the 0.2
 (representing a low number density of 1/arcmin^2) are randomly located and permitted to overlap, but
 we do take care to avoid being too close to the edge of the large image.  For the galaxies, we use a
 random selection from 5 specific RealGalaxy objects, selected to be 5 particularly irregular ones.
-These are taken from the same catalog of 100 objects that demo6 used.  The noise added to the image
-is spatially correlated in the same way as found in coadd images from the Hubble Space Telescope
-(HST) Advanced Camera for Surveys, using a correlation function determined from the HST COSMOS
-coadd images in the F814W filter (see, e.g., Leauthaud et al 2007).
+These are taken from the same catalog of 100 objects that demo6 used.
+
+The noise added to the image is spatially correlated in the same way as often seen in coadd images
+from the Hubble Space Telescope (HST) Advanced Camera for Surveys, using a correlation function
+determined from the HST COSMOS coadd images in the F814W filter (see, e.g., Leauthaud et al 2007).
+Generating this correlation function requires a FITS file, stored in the GalSim repository, that
+represents the correlation information: the path to this file is a required argument to the GalSim
+function galsim.correlatednoise.get_COSMOS_CorrFunc(file_name).  This demo points to the relative
+location of this file, and so WILL NOT WORK UNLESS it is run from its original location in the
+examples/ directory of the GalSim repository.
 
 New features introduced in this demo:
 
