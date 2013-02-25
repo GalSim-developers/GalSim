@@ -158,7 +158,6 @@ struct PyImage {
             .def(bp::init<const BaseImage<T>&>(bp::args("other")))
             .def("subImage", subImage_func_type(&Image<T>::subImage), bp::args("bounds"))
             .def("view", view_func_type(&Image<T>::view))
-            //.def("assign", &Image<T>::operator=, bp::return_self<>())
             .add_property("array", &GetArray)
             // In python, there is no way to have a function return a mutable reference
             // so you can't make im(x,y) = val work correctly.  Thus, the __call__
@@ -200,8 +199,7 @@ struct PyImage {
             )
             .def(bp::init<const ImageView<T>&>(bp::args("other")))
             .def("subImage", &ImageView<T>::subImage, bp::args("bounds"))
-            .def("view", &ImageView<T>::view, bp::return_self<>())
-            //.def("assign", &ImageView<T>::operator=, bp::return_self<>())
+            .def("view", &ImageView<T>::view)
             .add_property("array", &GetArray)
             .def("__call__", at) // always used checked accessors in Python
             .def("at", at)
@@ -237,7 +235,7 @@ struct PyImage {
                 )
             )
             .def(bp::init<const BaseImage<T>&>(bp::args("other")))
-            .def("view", &ConstImageView<T>::view, bp::return_self<>())
+            .def("view", &ConstImageView<T>::view)
             .def("__call__", at) // always used checked accessors in Python
             .def("at", at)
             .enable_pickling()
