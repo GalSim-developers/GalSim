@@ -13,15 +13,27 @@
 "#" : "objects, selected to be 5 particularly irregular ones. These are taken from the same ",
 "#" : "catalog of 100 objects that demo6 used.",
 
+"#" : "The noise added to the image is spatially correlated in the same way as often seen in ", 
+"#" : "coadd images from the Hubble Space Telescope (HST) Advanced Camera for Surveys, using a ",
+"#" : "correlation function determined from the HST COSMOS coadd images in the F814W filter ",
+"#" : "(see, e.g., Leauthaud et al 2007).  Generating this correlation function requires a FITS ",
+"#" : "file, stored in the GalSim repository, that represents the correlation information: the ",
+"#" : "path to this file is a required argument to the GalSim function ",
+"#" : "galsim.correlatednoise.get_COSMOS_CorrFunc(file_name).  This demo points to the relative ",
+"#" : "location of this file, and so WILL NOT WORK UNLESS it is run from its original location in ",
+"#" : "the examples/ directory of the GalSim repository. ",
+
 "#" : "New features introduced in this demo:",
 
-"#" : "- obj type : InterpolatedImage(image, dx)",
-"#" : "- pix type : None",
-"#" : "- input.power_spectrum : (e_power_file, delta2, units)",
+"#" : " - obj type : InterpolatedImage(image, dx) ",
+"#" : " - float_value type : RandomDistribution(function, x_min, x_max) ",
+"#" : " - pix type : None ",
+"#" : " - input.power_spectrum : (e_power_file, delta2, units) ",
+"#" : " - noise type : COSMOS ",
 
-"#" : "- Power spectrum shears for non-gridded positions.",
-"#" : "- Reading a compressed FITS image (using BZip2 compression).",
-"#" : "- Writing a compressed FITS image (using Rice compression).",
+"#" : " - Power spectrum shears for non-gridded positions.",
+"#" : " - Reading a compressed FITS image (using BZip2 compression).",
+"#" : " - Writing a compressed FITS image (using Rice compression).",
 
 "#" : "Define the PSF profile",
 "psf" : {
@@ -84,6 +96,9 @@
         "type" : "Random"
     },
 
+    "#" : "The galaxy S/N is set to be 100, but this is based on a point variance-only calculation",
+    "#" : "(such as discussed in Leauthaud et al 2007).  The true SNR is somewhat lower, due to ",
+    "#" : "the presence of correlation in the noise.",
     "signal_to_noise" : 100
 },
 
@@ -97,8 +112,9 @@
     "nobjects" : 225,
 
     "#" : "This time we use stamp_size to set the size of the postage stamp image for each object.",
-    "#" : "In demo9, we left it out, so GalSim automatically determined a good size for each object.",
-    "#" : "That's usually fine, but here we just want to demonstrate the stamp_size functionality.",
+    "#" : "In demo9, we left it out, so GalSim automatically determined a good size for each ",
+    "#" : "object.  That's usually fine, but here we just want to demonstrate the stamp_size ",
+    "#" : "functionality.",
     "stamp_size" : 100,
     
     "#" : "The default center of each stamp is to be random within the full bounds of the image.",
@@ -113,8 +129,20 @@
 
     "pixel_scale" : 0.20,
 
+    "#" : "Add correlated noise to the image -- the correlation function comes from the HST COSMOS",
+    "#" : "images and is described in more detail in the ",
+    "#" : "galsim.correlatednoise.get_COSMOS_CorrFunc() docstring.  This function requires a FITS",
+    "#" : "file, stored in the GalSim repository, that represents this correlation information: ",
+    "#" : "the path to this file must be given as file_name.  Therefore, THIS WILL NOT WORK ",
+    "#" : "unless this demo is run from its original location in the examples/ directory of the ",
+    "#" : "GalSim repository.",
     "noise" : {
-        "sky_level" : 1.0e4
+        "type" : "COSMOS",
+        "file_name" : "../devel/external/hst/acs_I_unrot_sci_20_cf.fits",
+        "#" : "Use the same pixel scale as image, reproducing COSMOS correlated noise: ",
+        "dx_cosmos" : 0.20,
+        "#" : "Variance sets value of zero distance correlation function: ",
+        "variance" : 1.0
     },
 
     "random_seed" : 24783923
