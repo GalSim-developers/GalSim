@@ -157,7 +157,7 @@ def main(argv):
     # We want to make random positions within our image.  However, currently for shears from a power
     # spectrum we first have to get shears on a grid of positions, and then we can choose random
     # positions within that.  So, let's make the grid.  We're going to make it as large as the
-    # image, with grid points spaced by 10 arcsec (hence interpolation only happens below 10"
+    # image, with grid points spaced by 90 arcsec (hence interpolation only happens below 90"
     # scales, below the interesting scales on which we want the shear power spectrum to be
     # represented exactly).  Lensing engine wants positions in arcsec, so calculate that:
     ps.buildGriddedShears(grid_spacing = grid_spacing,
