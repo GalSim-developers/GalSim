@@ -51,13 +51,14 @@ namespace galsim {
         return static_cast<const SBShapeletImpl&>(*_pimpl).getSigma();
     }
 
-    // ??? Have not really investigated these:
     double SBShapelet::SBShapeletImpl::maxK() const 
     {
         // Start with value for plain old Gaussian:
         double maxk = sqrt(-2.*std::log(sbp::maxk_threshold))/_sigma; 
-        // Grow as sqrt of order
-        if (_bvec.getOrder() > 1) maxk *= sqrt(double(_bvec.getOrder()));
+        // Grow as sqrt of (order+1)
+        // Note: this is an approximation.  The right value would require looking at
+        // the actual coefficients and doing something smart with them.
+        maxk *= sqrt(double(_bvec.getOrder()+1));
         return maxk;
     }
 
@@ -65,8 +66,8 @@ namespace galsim {
     {
         // Start with value for plain old Gaussian:
         double R = std::max(4., sqrt(-2.*std::log(sbp::alias_threshold)));
-        // Grow as sqrt of order
-        if (_bvec.getOrder() > 1) R *= sqrt(double(_bvec.getOrder()));
+        // Grow as sqrt of (order+1)
+        R *= sqrt(double(_bvec.getOrder()+1));
         return M_PI / (R*_sigma);
     }
 
@@ -121,10 +122,10 @@ namespace galsim {
     {
         std::complex<double> cen(0.);
         double n = 1.;
-        for (PQIndex pq(1,0); !pq.pastOrder(_bvec.getOrder()); pq.incN(), ++n)
+        for (PQIndex pq(1,0); !pq.pastOrder(_bvec.getOrder()); pq.incN(), n+=2)
             cen += sqrt(n+1.) * _bvec[pq];
-        cen *= sqrt(2.)/getFlux();
-        return Position<double>(real(cen),imag(cen));
+        cen *= sqrt(2.)*_sigma/getFlux();
+        return Position<double>(real(cen),-imag(cen));
     }
 
     double SBShapelet::SBShapeletImpl::getSigma() const { return _sigma; }

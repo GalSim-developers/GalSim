@@ -314,6 +314,7 @@ namespace galsim {
         ySize = I.getYMax()-I.getYMin()+1;
         if (xSize  > Nnofold) Nnofold = xSize;
         if (ySize  > Nnofold) Nnofold = ySize;
+        dbg<<" After scale up to image size, Nnofole = "<<Nnofold<<std::endl;
 
         // Round up to a good size for making FFTs:
         int NFT = goodFFTSize(Nnofold);
