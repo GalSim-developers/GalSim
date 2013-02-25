@@ -87,26 +87,24 @@ namespace galsim {
         // dotting b_pq with psi in k-space:
         double rr=0.;
         double ii=0.;
-        {
-            for (PQIndex pq(0,0); !pq.pastOrder(N); pq.nextDistinct()) {
-                int j = pq.rIndex();
-                double x = _bvec[j]*psi[j] + (pq.isReal() ? 0 : _bvec[j+1]*psi[j+1]);
-                switch (pq.N() % 4) {
-                  case 0: 
-                       rr += x;
-                       break;
-                  case 1: 
-                       ii -= x;
-                       break;
-                  case 2: 
-                       rr -= x;
-                       break;
-                  case 3: 
-                       ii += x;
-                       break;
-                }
-            }  
-        }
+        for (PQIndex pq(0,0); !pq.pastOrder(N); pq.nextDistinct()) {
+            int j = pq.rIndex();
+            double x = _bvec[j]*psi[j] + (pq.isReal() ? 0 : _bvec[j+1]*psi[j+1]);
+            switch (pq.N() % 4) {
+              case 0: 
+                   rr += x;
+                   break;
+              case 1: 
+                   ii -= x;
+                   break;
+              case 2: 
+                   rr -= x;
+                   break;
+              case 3: 
+                   ii += x;
+                   break;
+            }
+        }  
         // difference in Fourier convention with FFTW ???
         return std::complex<double>(2.*M_PI*rr, 2.*M_PI*ii);
     }
@@ -117,6 +115,16 @@ namespace galsim {
         for (PQIndex pp(0,0); !pp.pastOrder(_bvec.getOrder()); pp.incN())
             flux += _bvec[pp].real();  // _bvec[pp] is real, but need type conv.
         return flux;
+    }
+
+    Position<double> SBShapelet::SBShapeletImpl::centroid() const 
+    {
+        std::complex<double> cen(0.);
+        double n = 1.;
+        for (PQIndex pq(1,0); !pq.pastOrder(_bvec.getOrder()); pq.incN(), ++n)
+            cen += sqrt(n+1.) * _bvec[pq];
+        cen *= sqrt(2.)/getFlux();
+        return Position<double>(real(cen),imag(cen));
     }
 
     double SBShapelet::SBShapeletImpl::getSigma() const { return _sigma; }

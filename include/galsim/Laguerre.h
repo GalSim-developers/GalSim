@@ -208,45 +208,64 @@ namespace galsim {
         friend class LVector;
     };
 
+    // A custom deleter to allow us to return views to the LVector as numpy arrays
+    // which will keep track of the Vector allocation.  When the last LVector _or_
+    // external view of _owner goes out of scope, then the tmv::Vector is destroyed.
+    class LVectorDeleter
+    {
+    public:
+        LVectorDeleter(boost::shared_ptr<tmv::Vector<double> > v) : _v(v) {}
+
+        void operator()(double * p) const {} // the _v shared_ptr will delete for us!
+
+        boost::shared_ptr<tmv::Vector<double> > _v;
+    };
+
     class LVector 
     {
     public:
         // Construct/destruct:
-        LVector(int order=0) : 
-            _order(order), _v(new tmv::Vector<double>(PQIndex::size(order),0.)) {}
+        LVector(int order=0) : _order(order) 
+        { 
+            allocateMem(); 
+            _v->setZero();
+        }
 
         LVector(int order, const tmv::GenVector<double>& v) :
-            _order(order), _v(new tmv::Vector<double>(v))
-        { assert(v.size() == PQIndex::size(order)); }
+            _order(order)
+        {
+            allocateMem();
+            *_v = v;
+            assert(v.size() == PQIndex::size(order)); 
+        }
 
         LVector(int order, boost::shared_ptr<tmv::Vector<double> > v) :
-            _order(order), _v(v)
+            _order(order), _v(v),
+            _owner(_v->ptr(), LVectorDeleter(_v))
         { assert(v->size() == PQIndex::size(order)); }
 
-        LVector(const LVector& rhs) : _order(rhs._order), _v(rhs._v) {}
+        LVector(const LVector& rhs) : _order(rhs._order), _v(rhs._v), _owner(rhs._owner) {}
 
         LVector& operator=(const LVector& rhs) 
         {
             if (_v.get()==rhs._v.get()) return *this;
             _order=rhs._order;
             _v = rhs._v;
+            _owner = rhs._owner;
             return *this;
         }
 
         ~LVector() {}
 
         LVector copy() const 
-        {
-            LVector fresh(_order); 
-            *(fresh._v) = *_v;
-            return fresh;
-        }
+        { return LVector(_order,*_v); }
 
         void resize(int order) 
         {
             if (_order != order) {
                 _order = order;
-                _v.reset(new tmv::Vector<double>(PQIndex::size(order),0.));
+                allocateMem();
+                _v->setZero();
             } else {
                 // The caller may be relying on resize to get a unique vector, so if 
                 // we don't make a new one, at least take ownership of the current one.
@@ -418,6 +437,8 @@ namespace galsim {
         static const tmv::ConstMatrixView<double> Generator(
             GType iparam, int orderOut, int orderIn);
 
+        boost::shared_ptr<double> getOwner() const { return _owner; }
+
     private:
         static void mBasis(
             const tmv::ConstVectorView<double>& x, 
@@ -427,8 +448,16 @@ namespace galsim {
             tmv::MatrixView<double>* mi,
             int order, bool isK, double sigma=1.);
 
+        void allocateMem()
+        {
+            int s = PQIndex::size(_order);
+            _v.reset(new tmv::Vector<double>(s));
+            _owner.reset(_v->ptr(), LVectorDeleter(_v));
+        }
+
         int _order;
         boost::shared_ptr<tmv::Vector<double> > _v;
+        boost::shared_ptr<double> _owner;
     };
 
     std::ostream& operator<<(std::ostream& os, const LVector& lv);

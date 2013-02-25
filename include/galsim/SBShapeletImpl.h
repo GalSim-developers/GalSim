@@ -48,8 +48,7 @@ namespace galsim {
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
 
-        Position<double> centroid() const 
-        { throw SBError("SBShapelet::centroid calculations not yet implemented"); }
+        Position<double> centroid() const;
 
         double getFlux() const;
         double getSigma() const;

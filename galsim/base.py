@@ -2491,6 +2491,7 @@ class Shapelet(GSObject):
 
     # --- Public Class methods ---
     def __init__(self, sigma, order, bvec=None):
+        #print 'constructor: ',sigma, order, bvec
         
         # Make sure order and sigma are the right type:
         try:
@@ -2510,22 +2511,63 @@ class Shapelet(GSObject):
             if len(bvec) != bvec_size:
                 raise ValueError("bvec is the wrong size for the provided order")
             import numpy
+            #print 'convert to LVector.  bvec = ',bvec
             bvec = _galsim.LVector(order,numpy.array(bvec))
+            #print 'bvec -> ',bvec.array
 
+        #print 'initial constructor: ',sigma,bvec.order,bvec.array
         GSObject.__init__(self, _galsim.SBShapelet(sigma, bvec))
 
-    def getSigma():
+    def getSigma(self):
         return self.SBProfile.getSigma()
-    def getOrder():
+    def getOrder(self):
         return self.SBProfile.getBVec().order
-    def getBVec():
+    def getBVec(self):
         return self.SBProfile.getBVec().array
-    def getPQ(p,q):
+    def getPQ(self,p,q):
         return self.SBProfile.getBVec().getPQ(p,q)
-    def getNM(N,m):
+    def getNM(self,N,m):
         return self.SBProfile.getBVec().getPQ((N+m)/2,(N-m)/2)
 
-    def fitImage(image, center=_galsim.PositionD(0,0)):
+    # Note: Since SBProfiles are officially immutable, these create a new
+    # SBProfile object for this GSObject.  This is of course inefficient, but not
+    # outrageously so, since the SBShapelet constructor is pretty minimalistic, and 
+    # presumably anyone who cares about efficiency would not be using these functions.
+    # They would create the Shapelet with the right bvec from the start.
+    def setSigma(self,sigma):
+        #print 'setSigma: ',sigma
+        bvec = self.SBProfile.getBVec()
+        #print 'setSigma: ',sigma,bvec.order,bvec.array
+        GSObject.__init__(self, _galsim.SBShapelet(sigma, bvec))
+    def setOrder(self,order):
+        #print 'setOrder: ',order
+        sigma = self.SBProfile.getSigma()
+        bvec = _galsim.LVector(order)
+        #print 'setOrder: ',sigma,bvec.order,bvec.array
+        GSObject.__init__(self, _galsim.SBShapelet(sigma, bvec))
+    def setBVec(self,bvec):
+        #print 'setBVec: ',bvec
+        sigma = self.SBProfile.getSigma()
+        order = self.SBProfile.getBVec().order
+        bvec_size = _galsim.LVectorSize(order)
+        if len(bvec) != bvec_size:
+            raise ValueError("bvec is the wrong size for the Shapelet order")
+        import numpy
+        bvec = _galsim.LVector(order,numpy.array(bvec))
+        #print 'setBVec: ',sigma,bvec.order,bvec.array
+        GSObject.__init__(self, _galsim.SBShapelet(sigma, bvec))
+    def setPQ(self,p,q,re,im=0.):
+        #print 'setPQ: ',p,q,re,im
+        sigma = self.SBProfile.getSigma()
+        bvec = self.SBProfile.getBVec().copy()
+        bvec.setPQ(p,q,re,im)
+        #print 'setPQ: ',sigma,bvec.order,bvec.array
+        GSObject.__init__(self, _galsim.SBShapelet(sigma, bvec))
+    def setNM(self,N,m,re,im=0.):
+        #print 'setNM: ',N,m,re,im
+        self.setPQ((N+m)/2,(N-m)/2,re,im)
+
+    def fitImage(self, image, center=_galsim.PositionD(0,0)):
         sigma = self.SBProfile.getSigma()
         bvec = self.SBProfile.getBVec().copy()
 

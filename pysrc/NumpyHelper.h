@@ -122,14 +122,14 @@ static bp::object MakeNumpyArray(
 
 template <typename T>
 static bp::object MakeNumpyArray(
-    const T* data, int n1, bool isConst,
+    const T* data, int n1, int stride, bool isConst,
     boost::shared_ptr<T> owner = boost::shared_ptr<T>())
 {
     // --- Create array ---
     int flags = NPY_ALIGNED;
     if (!isConst) flags |= NPY_WRITEABLE;
     npy_intp shape[1] = { n1 };
-    npy_intp strides[1] = { 1 };
+    npy_intp strides[1] = { stride * int(sizeof(T)) };
     bp::object result(
         bp::handle<>(
             PyArray_New(
