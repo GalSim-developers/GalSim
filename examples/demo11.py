@@ -237,9 +237,7 @@ def main(argv):
     # correlation information: the path to this file is a required argument.  THIS WILL NOT WORK
     # unless this demo is run from its original location in the examples/ directory of the GalSim
     # repository.  First we find the path to this file.
-    path, file = os.path.split(__file__)
-    cf_file_name = os.path.join(
-        path, "..", "devel", "external", "hst", "acs_I_unrot_sci_20_cf.fits")
+    cf_file_name = os.path.join("data", "acs_I_unrot_sci_20_cf.fits")
 
     # Then use this to initialize the correlation function that we will use to add noise to the
     # full_image.  We set the dx_cosmos keyword equal to our pixel scale, so that our noise is

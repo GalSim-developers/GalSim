@@ -126,7 +126,7 @@ image :
     # the GalSim repository.
     noise :
         type : "COSMOS"
-        file_name : "../devel/external/hst/acs_I_unrot_sci_20_cf.fits"
+        file_name : "./data/acs_I_unrot_sci_20_cf.fits"
         dx_cosmos : 0.20  # use the same pixel scale as image, reproducing COSMOS correlated noise
         variance : 1.     # variance sets value of zero distance correlation function
 

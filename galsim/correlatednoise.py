@@ -572,7 +572,7 @@ def get_COSMOS_CorrFunc(file_name, dx_cosmos=0.03, variance=0.):
     `YOUR/REPO/PATH/GalSim/devel/external/hst/make_cosmos_cfimage.py`.  The image itself can also be
     found within the GalSim repo, located at:
 
-        /YOUR/REPO/PATH/GalSim/devel/external/hst/acs_I_unrot_sci_20_cf.fits
+        /YOUR/REPO/PATH/GalSim/examples/data/acs_I_unrot_sci_20_cf.fits
 
     @param file_name  String containing the path and filename above but modified to match the
                       location of the GalSim repoistory on your system.
