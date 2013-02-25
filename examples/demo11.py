@@ -56,7 +56,7 @@ def main(argv):
         the pixel scale for that PSF image is 0.2" rather than 0.396".  We are simultaneously lying
         about the intrinsic size of the PSF and about the pixel scale when we do this.
       - Noise is correlated with the same spatial correlation function as found in HST COSMOS weak
-        lensing science images, with a point (zero distance) variance of 1.
+        lensing science images, with a point (zero distance) variance that we normalize to 1.
       - Galaxies are real galaxies, each with S/N~100 based on a point variance-only calculation
         (such as discussed in Leauthaud et al 2007).  The true SNR is somewhat lower, due to the
         presence of correlation in the noise.
