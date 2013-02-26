@@ -1,0 +1,2 @@
+#/bin/bash
+time run_all_tests | grep time | sort -n -k 5 | gawk '{print; sum+=$5} END { print "total time = ",sum }'
