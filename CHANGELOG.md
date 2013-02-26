@@ -42,3 +42,6 @@ Changes from v0.3 to current version:
   InterpolatedImage for the PSF, uses DistDeviate (RandomDistribution in the config)
   for the sizes, and applies correlated noise such as found in COSMOS to the output image.
   (Issues #305, #306, #345)
+
+* Minor bug fix for correct directory handling in the executable versions of the demo scripts, i.e.
+  those generated in the `bin/` subdirectory using `scons examples`. (Issue #345)
