@@ -439,11 +439,11 @@ def AddNoiseFFT(im, weight_im, noise, base, rng, sky_level, logger=None):
         raise AttributeError("image.noise is not a dict.")
 
     if 'type' not in noise:
-        noise['type'] = 'CCDNoise'  # Default is CCDNoise
+        noise['type'] = 'Poisson'  # Default is Poisson
     type = noise['type']
     pixel_scale = im.getScale()
 
-    # First add the sky noise, if provided
+    # First add the background sky level, if provided
     if sky_level:
         im += sky_level * pixel_scale**2
 
@@ -465,14 +465,43 @@ def AddNoiseFFT(im, weight_im, noise, base, rng, sky_level, logger=None):
         else:
             import math
             sigma = math.sqrt(params['variance'])
-        im.addNoise(galsim.GaussianDeviate(rng,sigma=sigma))
+        im.addNoise(galsim.GaussianNoise(rng,sigma=sigma))
 
         if weight_im:
             weight_im += sigma*sigma
         if logger:
             logger.debug('   Added Gaussian noise with sigma = %f',sigma)
 
-    elif type == 'CCDNoise':
+    elif type == 'Poisson':
+        req = {}
+        opt = {}
+        if sky_level:
+            # The noise sky_level is only required here if the image doesn't have any.
+            opt['sky_level'] = float
+        else:
+            req['sky_level'] = float
+        params = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
+
+        if 'sky_level' in params:
+            sky_level_pixel = params['sky_level'] * pixel_scale**2
+        else:
+            sky_level_pixel = 0
+
+        if weight_im:
+            import math
+            if include_obj_var:
+                # The image right now has the variance in each pixel.  So before going on with the 
+                # noise, copy these over to the weight image.  (We invert this later...)
+                weight_im.copyFrom(im)
+            else:
+                # Otherwise, just add the sky and read_noise:
+                weight_im += sky_level_pixel
+
+        im.addNoise(galsim.PoissonNoise(rng, sky_level=sky_level_pixel))
+        if logger:
+            logger.debug('   Added Poisson noise with sky_level = %f',sky_level)
+
+    elif type == 'CCD':
         req = {}
         opt = { 'gain' : float , 'read_noise' : float }
         if sky_level:
@@ -486,7 +515,8 @@ def AddNoiseFFT(im, weight_im, noise, base, rng, sky_level, logger=None):
 
         if 'sky_level' in params:
             sky_level_pixel = params['sky_level'] * pixel_scale**2
-            im += sky_level_pixel
+        else:
+            sky_level_pixel = 0
 
         if weight_im:
             import math
@@ -500,11 +530,10 @@ def AddNoiseFFT(im, weight_im, noise, base, rng, sky_level, logger=None):
                     weight_im += read_noise*read_noise
             else:
                 # Otherwise, just add the sky and read_noise:
-                weight_im += sky_level_pixel / math.sqrt(gain) + read_noise*read_noise
+                weight_im += sky_level_pixel / gain + read_noise*read_noise
 
-        im.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
-        if 'sky_level' in params:
-            im -= sky_level_pixel
+        im.addNoise(galsim.CCDNoise(rng, sky_level=sky_level_pixel, gain=gain,
+                                    read_noise=read_noise))
         if logger:
             logger.debug('   Added CCD noise with sky_level = %f, ' +
                          'gain = %f, read_noise = %f',sky_level,gain,read_noise)
@@ -581,7 +610,7 @@ def AddNoisePhot(im, weight_im, noise, base, rng, sky_level, logger=None):
         raise AttributeError("image.noise is not a dict.")
 
     if 'type' not in noise:
-        noise['type'] = 'CCDNoise'  # Default is CCDNoise
+        noise['type'] = 'Poisson'  # Default is Poisson
     type = noise['type']
     pixel_scale = im.getScale()
 
@@ -598,14 +627,45 @@ def AddNoisePhot(im, weight_im, noise, base, rng, sky_level, logger=None):
         else:
             import math
             sigma = math.sqrt(params['variance'])
-        im.addNoise(galsim.GaussianDeviate(rng,sigma=sigma))
+        im.addNoise(galsim.GaussianNoise(rng,sigma=sigma))
 
         if weight_im:
             weight_im += sigma*sigma
         if logger:
             logger.debug('   Added Gaussian noise with sigma = %f',sigma)
 
-    elif type == 'CCDNoise':
+    elif type == 'Poisson':
+        req = {}
+        opt = {}
+        if sky_level:
+            opt['sky_level'] = float
+        else:
+            req['sky_level'] = float
+            sky_level = 0. # Switch from None to 0.
+        params = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
+        if 'sky_level' in params:
+            sky_level += params['sky_level']
+
+        # We don't have an exact value for the variance in each pixel, but the drawn image
+        # before adding the Poisson noise is our best guess for the variance from the 
+        # object's flux, so just use that for starters.
+        if weight_im and include_obj_var:
+            weight_im.copyFrom(im)
+
+        # For photon shooting, galaxy already has Poisson noise, so we want 
+        # to make sure not to add that again!
+        if sky_level != 0.:
+            sky_level_pixel = sky_level * pixel_scale**2
+            im.addNoise(galsim.DeviateNoise(galsim.PoissonDeviate(rng, mean=sky_level_pixel)))
+            im -= sky_level_pixel
+            if weight_im:
+                weight_im += sky_level_pixel
+
+        if logger:
+            logger.debug('   Added Poisson noise with sky_level = %f',sky_level)
+
+
+    elif type == 'CCD':
         req = {}
         opt = { 'gain' : float , 'read_noise' : float }
         if sky_level:
@@ -630,20 +690,20 @@ def AddNoisePhot(im, weight_im, noise, base, rng, sky_level, logger=None):
         if sky_level != 0.:
             sky_level_pixel = sky_level * pixel_scale**2
             if gain != 1.0: im *= gain
-            im.addNoise(galsim.PoissonDeviate(rng, mean=sky_level_pixel*gain))
+            im.addNoise(galsim.DeviateNoise(galsim.PoissonDeviate(rng, mean=sky_level_pixel*gain)))
             if gain != 1.0: im /= gain
+            im -= sky_level_pixel*gain
         if read_noise != 0.:
-            im.addNoise(galsim.GaussianDeviate(rng, sigma=read_noise))
+            im.addNoise(galsim.GaussianNoise(rng, sigma=read_noise))
 
         # Add in these effects to the weight image:
         if weight_im:
             import math
             if sky_level != 0.0 or read_noise != 0.0:
-                weight_im += sky_level_pixel / math.sqrt(gain) + read_noise * read_noise
+                weight_im += sky_level_pixel / gain + read_noise * read_noise
         if logger:
             logger.debug('   Added CCD noise with sky_level = %f, ' +
                          'gain = %f, read_noise = %f',sky_level,gain,read_noise)
-
     else:
         raise AttributeError("Invalid type %s for noise",type)
 
@@ -725,7 +785,7 @@ def CalculateNoiseVar(noise, pixel_scale, sky_level):
         raise AttributeError("image.noise is not a dict.")
 
     if 'type' not in noise:
-        noise['type'] = 'CCDNoise'  # Default is CCDNoise
+        noise['type'] = 'Poisson'  # Default is Poisson
     type = noise['type']
 
     if type == 'Gaussian':
@@ -736,21 +796,35 @@ def CalculateNoiseVar(noise, pixel_scale, sky_level):
             var = sigma * sigma
         else:
             var = params['variance']
-    elif type == 'CCDNoise':
+
+    elif type == 'Poisson':
+        req = {}
+        opt = {}
+        if sky_level:
+            opt['sky_level'] = float
+        else:
+            req['sky_level'] = float
+            sky_level = 0. # Switch from None to 0.
+        params = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
+        if 'sky_level' in params:
+            sky_level += params['sky_level']
+        var = sky_level * pixel_scale**2 
+
+    elif type == 'CCD':
         req = {}
         opt = { 'gain' : float , 'read_noise' : float }
         if sky_level:
             opt['sky_level'] = float
         else:
             req['sky_level'] = float
+            sky_level = 0. # Switch from None to 0.
         params = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
         if 'sky_level' in params:
-            sky_level = params['sky_level']
+            sky_level += params['sky_level']
         gain = params.get('gain',1.0)
         read_noise = params.get('read_noise',0.0)
-        var = params['sky_level'] * pixel_scale**2
-        var /= gain
-        var += read_noise * read_noise
+        var = sky_level * pixel_scale**2 / gain + read_noise * read_noise
+
     else:
         raise AttributeError("Invalid type %s for noise",type)
 

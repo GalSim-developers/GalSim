@@ -17,6 +17,7 @@ New features introduced in this demo:
 - psf = galsim.InterpolatedImage(psf_filename, dx, flux)
 - tab = galsim.LookupTable(file)
 - ps = galsim.PowerSpectrum(..., units)
+- distdev = galsim.DistDeviate(rng, function, x_min, x_max)
 
 - Power spectrum shears for non-gridded positions.
 - Reading a compressed FITS image (using BZip2 compression).
@@ -52,7 +53,7 @@ def main(argv):
     # Define some parameters we'll use below.
     # Normally these would be read in from some parameter file.
 
-    stamp_size = 48                  # number of pixels in each dimension of galaxy images
+    stamp_size = 100                 # number of pixels in each dimension of galaxy images
     pixel_scale = 0.2                # arcsec/pixel
     image_size = 0.25*galsim.degrees # size of big image in each dimension
     image_size = int((image_size / galsim.arcsec)/pixel_scale) # convert to pixels
@@ -162,8 +163,7 @@ def main(argv):
 
         # Turn this into a position in arcsec
         pos = galsim.PositionD(x,y) * pixel_scale
-
-        # Get the shear at this position.
+        
         g1, g2 = ps.getShear(pos = pos)
 
         # Construct the galaxy:
@@ -171,13 +171,24 @@ def main(argv):
         index = int(ud() * len(gal_list))
         gal = gal_list[index]
 
-        # Random rotation
+        # Draw the size from a plausible size distribution: N(r) ~ r^-3.5
+        # For this, we use the class DistDeviate which can draw deviates from an arbitrary
+        # probability distribution.  This distribution can be defined either as a functional
+        # form as we do here, or as tabulated lists of x and p values, from which the 
+        # function is interpolated.
+        distdev = galsim.DistDeviate(ud, function=lambda x:x**-3.5, x_min=1, x_max=5)
+        dilat = distdev()
+        # Use createDilated rather than applyDilation, so we don't change the galaxies in the 
+        # original gal_list -- createDilated makes a new copy.
+        gal = gal.createDilated(dilat)
+
+        # Apply a random rotation
         theta = ud()*2.0*numpy.pi*galsim.radians
-        # Use createRotated rather than applyRotation, so we don't change the galaxies in the 
-        # original gal_list -- createRotated makes a new copy.
-        gal = gal.createRotated(theta)
-        # Apply the cosmological shear
+        gal.applyRotation(theta)
+
+        # Apply the cosmological shear at this position.
         gal.applyShear(g1 = g1, g2 = g2)
+
         # Convolve with the PSF.  We don't have to include a pixel response explicitly, since the
         # SDSS PSF image that we are using included the pixel response already.
         final = galsim.Convolve(psf, gal)
@@ -195,8 +206,8 @@ def main(argv):
         # image, which might have another galaxy near that point (so our S/N calculation would 
         # erroneously include the flux from the other object).
         # See demo5.py for the math behind this calculation.
-        sky_level_pix = sky_level * pixel_scale**2
-        sn_meas = math.sqrt( numpy.sum(stamp.array**2) / sky_level_pix )
+        sky_level_pixel = sky_level * pixel_scale**2
+        sn_meas = math.sqrt( numpy.sum(stamp.array**2) / sky_level_pixel )
         flux_scaling = gal_signal_to_noise / sn_meas
         stamp *= flux_scaling
 
@@ -215,9 +226,7 @@ def main(argv):
     # so it will be part of the same stream of random numbers as rng above.  We have to do this step
     # at the end, rather than adding to individual postage stamps, in order to get the noise level
     # right in the overlap regions between postage stamps.
-    full_image += sky_level_pix
-    full_image.addNoise(galsim.CCDNoise(rng))
-    full_image -= sky_level_pix
+    full_image.addNoise(galsim.PoissonNoise(rng,sky_level_pixel))
     logger.info('Added noise to final large image')
 
     # Now write the image to disk.  It is automatically compressed with Rice compression,

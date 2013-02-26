@@ -24,6 +24,7 @@
 
 #include <cmath>
 #include <boost/shared_ptr.hpp>
+#include <map>
 
 #include "Std.h"
 #include "Table.h"
@@ -540,11 +541,7 @@ namespace galsim {
          *                          constant inputs.
          * @param[in] tol  Sets accuracy and extent of Fourier transform.
          */
-        Lanczos(int n, bool fluxConserve=true, double tol=1.e-4) :  
-            _n(n), _fluxConserve(fluxConserve), _tolerance(tol), 
-            _xtab(Table<double,double>::spline), _utab(Table<double,double>::spline) 
-        { setup(); }
-
+        Lanczos(int n, bool fluxConserve=true, double tol=1.e-4);
         ~Lanczos() {}
 
         double getTolerance() const { return _tolerance; }
@@ -560,11 +557,16 @@ namespace galsim {
         double _tolerance;  ///< k-space accuracy parameter
         double _uMax;  ///< truncation point for Fourier transform
         double _u1; ///< coefficient for flux correction
-        Table<double,double> _xtab; ///< Table for x values
-        Table<double,double> _utab; ///< Table for Fourier transform
-        void setup();
+        boost::shared_ptr<Table<double,double> > _xtab; ///< Table for x values
+        boost::shared_ptr<Table<double,double> > _utab; ///< Table for Fourier transform
         double xCalc(double x) const;
         double uCalc(double u) const;
+
+        // Store the tables in a map, so repeat constructions are quick.
+        typedef std::pair<int,std::pair<bool,double> > KeyType;
+        static std::map<KeyType,boost::shared_ptr<Table<double,double> > > _cache_xtab; 
+        static std::map<KeyType,boost::shared_ptr<Table<double,double> > > _cache_utab; 
+        static std::map<KeyType,double> _cache_umax; 
     };
 
     /**
@@ -583,9 +585,7 @@ namespace galsim {
          *
          * @param[in] tol Sets accuracy and extent of Fourier transform.
          */
-        Cubic(double tol=1.e-4) : _tolerance(tol), _tab(Table<double,double>::spline) 
-        { setup(); }
-
+        Cubic(double tol=1.e-4);
         ~Cubic() {}
 
         double getTolerance() const { return _tolerance; }
@@ -601,7 +601,7 @@ namespace galsim {
         double uval(double u) const 
         {
             u = std::abs(u);
-            return u>_uMax ? 0. : _tab(u);
+            return u>_uMax ? 0. : (*_tab)(u);
         }
         double uCalc(double u) const;
 
@@ -615,10 +615,12 @@ namespace galsim {
         double _range; 
 
         double _tolerance;    
+        boost::shared_ptr<Table<double,double> > _tab; ///< Tabulated Fourier transform
         double _uMax;  ///< Truncation point for Fourier transform
-        Table<double,double> _tab; ///< Tabulated Fourier transform
 
-        void setup();
+        // Store the tables in a map, so repeat constructions are quick.
+        static std::map<double,boost::shared_ptr<Table<double,double> > > _cache_tab; 
+        static std::map<double,double> _cache_umax; 
     };
 
     /**
@@ -634,11 +636,9 @@ namespace galsim {
          * @brief Constructor
          * @param[in] tol Sets accuracy and extent of Fourier transform.
          */
-        Quintic(double tol=1.e-4) : _tolerance(tol), _tab(Table<double,double>::spline) 
-        { setup(); }
-
+        Quintic(double tol=1.e-4);
         ~Quintic() {}
-        // tol is error level desired for the Fourier transform
+
         double getTolerance() const { return _tolerance; }
         double xrange() const { return _range; }
         double urange() const { return _uMax; }
@@ -657,7 +657,7 @@ namespace galsim {
         double uval(double u) const 
         {
             u = std::abs(u);
-            return u>_uMax ? 0. : _tab(u);
+            return u>_uMax ? 0. : (*_tab)(u);
         }
         double uCalc(double u) const;
 
@@ -682,10 +682,12 @@ namespace galsim {
     private:
         double _range; // Reduce range slightly from n so we're not using zero-valued endpoints.
         double _tolerance;    
-        double _uMax;
-        Table<double,double> _tab;
+        boost::shared_ptr<Table<double,double> > _tab; ///< Tabulated Fourier transform
+        double _uMax;  ///< Truncation point for Fourier transform
 
-        void setup();
+        // Store the tables in a map, so repeat constructions are quick.
+        static std::map<double,boost::shared_ptr<Table<double,double> > > _cache_tab; 
+        static std::map<double,double> _cache_umax; 
     };
 
 }
