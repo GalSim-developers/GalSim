@@ -77,9 +77,10 @@ def main(argv):
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger("demo4")
 
-    # Define some parameters we'll use below.
-
-    cat_file_name = os.path.join('input','galsim_default_input.asc')
+    # Define some parameters we'll use below and make directories if needed.
+    cat_file_name = os.path.join('..', 'examples', 'input','galsim_default_input.asc')
+    if not os.path.isdir('output'):
+        os.mkdir('output')
     multi_file_name = os.path.join('output','multi.fits')
 
     random_seed = 8241573

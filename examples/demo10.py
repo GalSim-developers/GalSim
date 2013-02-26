@@ -83,6 +83,10 @@ def main(argv):
     # of the galaxies.
     random_seed = 3339201           
 
+    # Make output directory if not already present.
+    if not os.path.isdir('output'):
+        os.mkdir('output')
+
     file_name = os.path.join('output','power_spectrum.fits')
 
     # These will be created for each object below.  The values we'll use will be functions

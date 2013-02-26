@@ -263,6 +263,10 @@ def main(argv):
         nproc = 2
         logger.info("Unable to determine ncpu.  Using %d processes",nproc)
 
+    # Make output directory if not already present.
+    if not os.path.isdir('output'):
+        os.mkdir('output')
+
     # Set up the task list
     task_queue = Queue()
     seed = random_seed
