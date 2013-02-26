@@ -2248,9 +2248,6 @@ def test_draw():
 
 
 if __name__ == "__main__":
-    test_rescale()
-    exit
-
     test_gaussian()
     test_gaussian_properties()
     test_gaussian_radii()
