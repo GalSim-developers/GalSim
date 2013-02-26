@@ -39,11 +39,11 @@ namespace galsim {
             wrapper
                 .def("drawShoot", 
                      (double (SBProfile::*)(ImageView<U>, double, UniformDeviate,
-                                            double, double, bool)
+                                            double, double, bool, bool)
                       const)&SBProfile::drawShoot,
                      (bp::arg("image"), bp::arg("N")=0., bp::arg("ud"),
                       bp::arg("gain")=1., bp::arg("max_extra_noise")=0.,
-                      bp::arg("poisson_flux")=true),
+                      bp::arg("poisson_flux")=true, bp::arg("add_to_image")=false),
                      "Draw object into existing image using photon shooting.\n"
                      "\n"
                      "Setting optional integer arg possionFlux != 0 allows profile flux to vary \n"
