@@ -6,8 +6,8 @@ The eleventh script in our tutorial about using GalSim in python scripts: exampl
 
 This script uses a constant PSF from real data (an image read in from a bzipped FITS file, not a
 parametric model) and variable shear according to some cosmological model for which we have a
-tabulated power spectrum at specific k values only.  The 225 galaxies in the 0.25x0.25 degree field
-(representing a low number density of 1/arcmin^2) are randomly located and permitted to overlap, but
+tabulated power spectrum at specific k values only.  The 288 galaxies in the 0.2 x 0.2 degree field
+(representing a low number density of 2/arcmin^2) are randomly located and permitted to overlap, but
 we do take care to avoid being too close to the edge of the large image.  For the galaxies, we use a
 random selection from 5 specific RealGalaxy objects, selected to be 5 particularly irregular ones.
 These are taken from the same catalog of 100 objects that demo6 used.
@@ -15,6 +15,8 @@ These are taken from the same catalog of 100 objects that demo6 used.
 The noise added to the image is spatially correlated in the same way as often seen in coadd images
 from the Hubble Space Telescope (HST) Advanced Camera for Surveys, using a correlation function
 determined from the HST COSMOS coadd images in the F814W filter (see, e.g., Leauthaud et al 2007).
+Applying this noise uses an FFT of the size of the full output image: this may cause memory-related
+slowdowns in systems with less than 2GB RAM.
 
 New features introduced in this demo:
 
@@ -41,8 +43,8 @@ import galsim
 def main(argv):
     """
     Make images using constant PSF and variable shear:
-      - The main image is 0.25 x 0.25 degrees.
-      - Pixel scale is 0.2 arcsec, hence the image is 4500 x 4500 pixels.
+      - The main image is 0.2 x 0.2 degrees.
+      - Pixel scale is 0.2 arcsec, hence the image is 3600 x 3600 pixels.
       - Applied shear is from a cosmological power spectrum read in from file.
       - The PSF is a real one from SDSS, and corresponds to a convolution of atmospheric PSF,
         optical PSF, and pixel response, which has been sampled at pixel centers.  We used a PSF
@@ -63,17 +65,17 @@ def main(argv):
     # Define some parameters we'll use below.
     # Normally these would be read in from some parameter file.
 
-    stamp_size = 100                 # number of pixels in each dimension of galaxy images
-    pixel_scale = 0.2                # arcsec/pixel
-    image_size = 0.25*galsim.degrees # size of big image in each dimension
-    image_size = int((image_size / galsim.arcsec)/pixel_scale) # convert to pixels
+    stamp_size = 100                  # number of pixels in each dimension of galaxy images
+    pixel_scale = 0.2                 # arcsec/pixel
+    image_size = 0.2 * galsim.degrees # size of big image in each dimension
+    image_size = int((image_size / galsim.arcsec) / pixel_scale) # convert to pixels
     image_size_arcsec = image_size*pixel_scale # size of big image in each dimension (arcsec)
-    noise_variance = 1.e4            # ADU^2
-    nobj = 225                       # number of galaxies in entire field
-                                     # (This corresponds to 1 galaxy / arcmin^2)
-    grid_spacing = 90.0              # The spacing between the samples for the power spectrum 
-                                     # realization (arcsec)
-    gal_signal_to_noise = 100        # S/N of each galaxy
+    noise_variance = 1.e4             # ADU^2
+    nobj = 288                        # number of galaxies in entire field
+                                      # (This corresponds to 5 galaxy / arcmin^2)
+    grid_spacing = 90.0               # The spacing between the samples for the power spectrum 
+                                      # realization (arcsec)
+    gal_signal_to_noise = 100         # S/N of each galaxy
 
     # random_seed is used for both the power spectrum realization and the random properties
     # of the galaxies.

@@ -6,8 +6,8 @@
 
 "#" : "This script uses a constant PSF from real data (an image read in from a bzipped FITS file, ",
 "#" : "not a parametric model) and variable shear according to some cosmological model for which ",
-"#" : "we have a tabulated power spectrum at specific k values only.  The 225 galaxies in the ",
-"#" : "0.25x0.25 degree field (representing a low number density of 1/arcmin^2) are randomly ",
+"#" : "we have a tabulated power spectrum at specific k values only.  The 288 galaxies in the ",
+"#" : "0.2 x 0.2 degree field (representing a low number density of 2/arcmin^2) are randomly ",
 "#" : "located and permitted to overlap, but we do take care to avoid being too close to the edge ",
 "#" : "of the large image.  For the galaxies, we use a random selection from 5 specific RealGalaxy",
 "#" : "objects, selected to be 5 particularly irregular ones. These are taken from the same ",
@@ -16,7 +16,9 @@
 "#" : "The noise added to the image is spatially correlated in the same way as often seen in ", 
 "#" : "coadd images from the Hubble Space Telescope (HST) Advanced Camera for Surveys, using a ",
 "#" : "correlation function determined from the HST COSMOS coadd images in the F814W filter ",
-"#" : "(see, e.g., Leauthaud et al 2007).",
+"#" : "(see, e.g., Leauthaud et al 2007).  Applying this noise uses an FFT of the size of the ",
+"#" : "full output image: this may cause memory-related slowdowns in systems with less than 2GB ",
+"#" : "RAM.",
 
 "#" : "New features introduced in this demo:",
 
@@ -102,9 +104,9 @@
 "image" : {
     "type" : "Scattered",
 
-    "size" : 4500 ,
+    "size" : 3600 ,
 
-    "nobjects" : 225,
+    "nobjects" : 288,
 
     "#" : "This time we use stamp_size to set the size of the postage stamp image for each object.",
     "#" : "In demo9, we left it out, so GalSim automatically determined a good size for each ",
@@ -118,8 +120,8 @@
     "#" : "appropriately.  We just do this to demonstrate the functionality.",
     "center" : {
         "type" : "XY" ,
-        "x" : { "type" : "Random" , "min" : 50 , "max" : 4450 },
-        "y" : { "type" : "Random" , "min" : 50 , "max" : 4450 }
+        "x" : { "type" : "Random" , "min" : 50 , "max" : 3550 },
+        "y" : { "type" : "Random" , "min" : 50 , "max" : 3550 }
     },
 
     "pixel_scale" : 0.20,
