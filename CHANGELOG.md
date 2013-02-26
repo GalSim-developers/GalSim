@@ -25,9 +25,9 @@ Changes from v0.3 to current version:
   
 * A free function added that gives the user quick access to the 2D spatial correlation function of
   noise in HST COSMOS F814W weak lensing science images (e.g. Leauthaud et al 2007).  Calling
-  `galsim.correlatednoise.get_COSMOS_CorrFunc()` returns a correlation function that shares all the
-  methods of a `galsim.ImageCorrFunc()`, and optional keyword inputs allow the physical scale of the
-  function to be set correctly. (Issue #345)
+  `galsim.correlatednoise.get_COSMOS_CorrFunc(...)` returns a correlation function that shares all
+  the methods of a `galsim.ImageCorrFunc()`, and optional keyword inputs allow the point variance
+  and physical scale of the function to be set correctly. (Issue #345)
 
 * Added an addNoiseSNR() method to Image classes that adds noise such that the image has a 
   specified signal-to-noise ratio. (Issue #349)
@@ -39,5 +39,6 @@ Changes from v0.3 to current version:
   which affects combinations like shifting and shearing.  (Issue #359)
 
 * New demo11 script that includes getting PowerSpectrum shears from a file, uses an 
-  InterpolatedImage for the PSF, and uses DistDeviate (RandomDistribution in the config)
-  for the sizes. (Issues #305, #306)
+  InterpolatedImage for the PSF, uses DistDeviate (RandomDistribution in the config)
+  for the sizes, and applies correlated noise such as found in COSMOS to the output image.
+  (Issues #305, #306, #345)
