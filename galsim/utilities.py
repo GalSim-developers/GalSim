@@ -137,21 +137,20 @@ def rand_arr(shape, deviate):
         raise ValueError("Can only make a 2d array from this function!")
     # note reversed indices due to Numpy vs. Image array indexing conventions!
     tmp_img = galsim.ImageD(shape[1], shape[0])
-    deviate.applyTo(tmp_img.view())
+    galsim.DeviateNoise(deviate).applyTo(tmp_img.view())
     return tmp_img.array
 
-def eval_sbinterpolatedimage(sbi, x_list, y_list):
-    """Function to get the value of some SBInterpolatedImage at a list of positions.
-
-    @param sbi An SBInterpolatedImage on which we want to carry out the interpolation.
-    @param x_list A list of the x values at which we want to do the interpolation.
-    @param y_list A list of the y values at which we awnt to do the interpolation.
-    @returns A list of the image values at the desired (x, y) positions.
+def convert_interpolant_to_2d(interpolant):
+    """Convert a given interpolant to an Interpolant2d if it is given as a string or 1-d.
     """
-    if len(x_list) != len(y_list):
-        raise RuntimeError("x and y list lengths must match!")
-    vals = []
-    for x_ind in range(len(x_list)):
-        vals.append(sbi.xValue(galsim.PositionD(x_list[x_ind], y_list[x_ind])))
-    return vals
-
+    if interpolant == None:
+        return None  # caller is responsible for setting a default if desired.
+    elif isinstance(interpolant, galsim.Interpolant2d):
+        return interpolant
+    elif isinstance(interpolant, galsim.Interpolant):
+        return galsim.InterpolantXY(interpolant)
+    else:
+        try:
+            return galsim.Interpolant2d(interpolant)
+        except:
+            raise RuntimeError('Specified interpolant is not valid!')

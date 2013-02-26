@@ -43,13 +43,13 @@ namespace galsim {
     double SBSersic::getN() const
     { 
         assert(dynamic_cast<const SBSersicImpl*>(_pimpl.get()));
-        return dynamic_cast<const SBSersicImpl&>(*_pimpl).getN(); 
+        return static_cast<const SBSersicImpl&>(*_pimpl).getN(); 
     }
 
     double SBSersic::getHalfLightRadius() const 
     {
         assert(dynamic_cast<const SBSersicImpl*>(_pimpl.get()));
-        return dynamic_cast<const SBSersicImpl&>(*_pimpl).getHalfLightRadius(); 
+        return static_cast<const SBSersicImpl&>(*_pimpl).getHalfLightRadius(); 
     }
 
     SBSersic::InfoBarn SBSersic::nmap;

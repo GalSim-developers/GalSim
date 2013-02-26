@@ -1,6 +1,5 @@
 import galsim
 
-
 def ParseValue(config, param_name, base, value_type):
     """@brief Read or generate a parameter value from config.
 
@@ -42,8 +41,8 @@ def ParseValue(config, param_name, base, value_type):
     else:
         # Otherwise, we need to generate the value according to its type
         valid_types = {
-            float : [ 'InputCatalog', 'Random', 'RandomGaussian', 'NFWHaloMag',
-                      'Sequence', 'List', 'Eval' ],
+            float : [ 'InputCatalog', 'Random', 'RandomGaussian', 'RandomDistribution',
+                      'NFWHaloMag', 'Sequence', 'List', 'Eval' ],
             int : [ 'InputCatalog', 'Random', 'Sequence', 'List', 'Eval' ],
             bool : [ 'InputCatalog', 'Random', 'Sequence', 'List', 'Eval' ],
             str : [ 'InputCatalog', 'NumberedFile', 'FormattedStr', 'List', 'Eval' ],
@@ -93,22 +92,9 @@ def _GetAngleValue(param, param_name):
     try :
         value, unit = param.rsplit(None,1)
         value = float(value)
-        unit = unit.lower()
-        if unit.startswith('rad') :
-            return galsim.Angle(value, galsim.radians)
-        elif unit.startswith('deg') :
-            return galsim.Angle(value, galsim.degrees)
-        elif unit.startswith('hour') :
-            return galsim.Angle(value, galsim.hours)
-        elif unit.startswith('hr') :
-            return galsim.Angle(value, galsim.hours)
-        elif unit.startswith('arcmin') :
-            return galsim.Angle(value, galsim.arcmin)
-        elif unit.startswith('arcsec') :
-            return galsim.Angle(value, galsim.arcsec)
-        else :
-            raise AttributeError("Unknown Angle unit: %s for %s param"%(unit,param_name))
-    except :
+        unit = galsim.angle.get_angle_unit(unit)
+        return galsim.Angle(value, unit)
+    except Exception as e:
         raise AttributeError("Unable to parse %s param = %s as an Angle."%(param_name,param))
 
 
@@ -345,7 +331,7 @@ def _GenerateFromRandom(param, param_name, base, value_type):
     """@brief Return a random value drawn from a uniform distribution
     """
     if 'rng' not in base:
-        raise ValueError("No rng available for %s.type = Random"%param_name)
+        raise ValueError("No base['rng'] available for %s.type = Random"%param_name)
     rng = base['rng']
     ud = galsim.UniformDeviate(rng)
 
@@ -384,7 +370,7 @@ def _GenerateFromRandomGaussian(param, param_name, base, value_type):
     """@brief Return a random value drawn from a Gaussian distribution
     """
     if 'rng' not in base:
-        raise ValueError("No rng available for %s.type = RandomGaussian"%param_name)
+        raise ValueError("No base['rng'] available for %s.type = RandomGaussian"%param_name)
     rng = base['rng']
 
     req = { 'sigma' : float }
@@ -449,11 +435,47 @@ def _GenerateFromRandomGaussian(param, param_name, base, value_type):
     return val, False
 
 
+def _GenerateFromRandomDistribution(param, param_name, base, value_type):
+    """@brief Return a random value drawn from a user-defined probability distribution
+    """
+    if 'rng' not in base:
+        raise ValueError("No rng available for %s.type = RandomDistribution"%param_name)
+    rng = base['rng']
+
+    opt = {'function' : str, 'interpolant' : str, 'npoints' : int, 
+           'x_min' : float, 'x_max' : float }
+    kwargs, safe = GetAllParams(param, param_name, base, opt=opt)
+    
+    if 'distdev' in base:
+        # The overhead for making a DistDeviate is large enough that we'd rather not do it every 
+        # time, so first check if we've already made one:
+        distdev = base['distdev']
+        if base['distdev_kwargs'] != kwargs:
+            distdev=galsim.DistDeviate(rng,**kwargs)
+            base['distdev'] = distdev
+            base['distdev_kwargs'] = kwargs
+    else:
+        # Otherwise, just go ahead and make a new one.
+        distdev=galsim.DistDeviate(rng,**kwargs)
+        base['distdev'] = distdev
+        base['distdev_kwargs'] = kwargs
+
+    # Typically, the rng will change between successive calls to this, so reset the 
+    # seed.  (The other internal calculations don't need to be redone unless the rest of the
+    # kwargs have been changed.)
+    distdev.reset(rng)
+
+    val = distdev()
+    #print 'distdev = ',val
+
+    return val, False
+
+
 def _GenerateFromRandomCircle(param, param_name, base, value_type):
     """@brief Return a PositionD drawn from a circular top hat distribution.
     """
     if 'rng' not in base:
-        raise ValueError("No rng available for %s.type = RandomCircle"%param_name)
+        raise ValueError("No base['rng'] available for %s.type = RandomCircle"%param_name)
     rng = base['rng']
 
     req = { 'radius' : float }
@@ -655,7 +677,8 @@ def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
         g1,g2 = base['nfw_halo'].getShear(pos,redshift)
         #print 'g1,g2 = ',g1,g2
         shear = galsim.Shear(g1=g1,g2=g2)
-    except:
+    except Exception as e:
+        #print e
         import warnings
         warnings.warn("Warning: NFWHalo shear is invalid -- probably strong lensing!  " +
                       "Using shear = 0.")
@@ -691,6 +714,7 @@ def _GenerateFromNFWHaloMag(param, param_name, base, value_type):
             "Invalid max_scale=%f (must be > 0) for %s.type = NFWHaloMag"%(repeat,param_name))
 
     if mu < 0 or mu > max_scale**2:
+        #print 'mu = ',mu
         import warnings
         warnings.warn("Warning: NFWHalo mu = %f means strong lensing!  Using scale=5."%mu)
         scale = max_scale
@@ -720,7 +744,8 @@ def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
         g1,g2 = base['power_spectrum'].getShear(pos)
         #print 'g1,g2 = ',g1,g2
         shear = galsim.Shear(g1=g1,g2=g2)
-    except:
+    except Exception as e:
+        #print e
         import warnings
         warnings.warn("Warning: PowerSpectrum shear is invalid -- probably strong lensing!  " +
                       "Using shear = 0.")

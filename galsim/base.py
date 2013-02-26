@@ -22,7 +22,7 @@ Definitions for the GalSim base classes and associated methods
 This file includes the key parts of the user interface to GalSim: base classes representing surface
 brightness profiles for astronomical objects (galaxies, PSFs, pixel response).  These base classes
 are collectively known as GSObjects.  They include both simple objects like the galsim.Gaussian, a 
-2d  Gaussian intensity profile, and compound objects like the galsim.Add and galsim.Convolve, which 
+2d Gaussian intensity profile, and compound objects like the galsim.Add and galsim.Convolve, which 
 represent the sum and convolution of multiple GSObjects, respectively. 
 
 These classes also have associated methods to (a) retrieve information (like the flux, half-light 
@@ -42,7 +42,7 @@ import numpy as np
 import galsim
 import utilities
 
-version = '0.2.1'
+version = '0.3.1'
 
 ALIAS_THRESHOLD = 0.005 # Matches hard coded value in src/SBProfile.cpp. TODO: bring these together
 
@@ -694,7 +694,7 @@ class GSObject(object):
             n_photons = float(n_photons)
         if n_photons < 0.:
             raise ValueError("Invalid n_photons < 0. in draw command")
-        if poisson_flux == None:
+        if poisson_flux is None:
             if n_photons == 0.: poisson_flux = True
             else: poisson_flux = False
 
@@ -703,12 +703,10 @@ class GSObject(object):
             max_extra_noise = float(max_extra_noise)
 
         # Setup the uniform_deviate if not provided one.
-        if rng == None:
+        if rng is None:
             uniform_deviate = galsim.UniformDeviate()
-        elif isinstance(rng,galsim.UniformDeviate):
-            uniform_deviate = rng
         elif isinstance(rng,galsim.BaseDeviate):
-            # If it's another kind of BaseDeviate, we can convert
+            # If it's a BaseDeviate, we can convert to UniformDeviate
             uniform_deviate = galsim.UniformDeviate(rng)
         else:
             raise TypeError("The rng provided to drawShoot is not a BaseDeviate")
@@ -794,11 +792,11 @@ class GSObject(object):
             gain = float(gain)
         if gain <= 0.:
             raise ValueError("Invalid gain <= 0. in draw command")
-        if re == None:
+        if re is None:
             if im != None:
                 raise ValueError("re is None, but im is not None")
         else:
-            if im == None:
+            if im is None:
                 raise ValueError("im is None, but re is not None")
             if dk is None:
                 if re.getScale() != im.getScale():
@@ -863,9 +861,11 @@ class Gaussian(GSObject):
     # _req_params are required
     # _opt_params are optional
     # _single_params are a list of sets for which exactly one in the list is required.
+    # _takes_rng indicates whether the constructor should be given the current rng.
     _req_params = {}
     _opt_params = { "flux" : float }
     _single_params = [ { "sigma" : float, "half_light_radius" : float, "fwhm" : float } ]
+    _takes_rng = False
     
     # --- Public Class methods ---
     def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1.):
@@ -931,6 +931,7 @@ class Moffat(GSObject):
     _req_params = { "beta" : float }
     _opt_params = { "trunc" : float , "flux" : float }
     _single_params = [ { "scale_radius" : float, "half_light_radius" : float, "fwhm" : float } ]
+    _takes_rng = False
 
     # --- Public Class methods ---
     def __init__(self, beta, scale_radius=None, half_light_radius=None,  fwhm=None, trunc=0.,
@@ -984,11 +985,10 @@ class AtmosphericPSF(GSObject):
                            [r0 ~ lambda^(-6/5)].
     @param fwhm            FWHM of the Kolmogorov PSF.
                            Either `fwhm` or `lam_over_r0` (and only one) must be specified.
-    @param interpolant     Optional keyword for specifying the interpolation scheme [default 
-                           `interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))`].  Any
-                           one-dimensional interpolants supplied, e.g. `galsim.Cubic`, 
-                           `galsim.Linear` etc., will be converted to a two-dimensional
-                           `galsim.InterpolantXY` object before use.
+    @param interpolant     Either an Interpolant2d (or Interpolant) instance or a string indicating
+                           which interpolant should be used.  Options are 'nearest', 'sinc', 
+                           'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the 
+                           integer order to use. [default `interpolant = galsim.Quintic()`]
     @param oversampling    Optional oversampling factor for the SBInterpolatedImage table 
                            [default `oversampling = 1.5`], setting `oversampling < 1` will produce 
                            aliasing in the PSF (not good).
@@ -1003,8 +1003,9 @@ class AtmosphericPSF(GSObject):
 
     # Initialization parameters of the object, with type information
     _req_params = {}
-    _opt_params = { "flux" : float , "oversampling" : float }
+    _opt_params = { "oversampling" : float , "interpolant" : str , "flux" : float }
     _single_params = [ { "lam_over_r0" : float , "fwhm" : float } ]
+    _takes_rng = False
 
     # --- Public Class methods ---
     def __init__(self, lam_over_r0=None, fwhm=None, interpolant=None, oversampling=1.5, flux=1.):
@@ -1038,17 +1039,11 @@ class AtmosphericPSF(GSObject):
             quintic = galsim.Quintic(tol=1e-4)
             self.interpolant = galsim.InterpolantXY(quintic)
         else:
-            if isinstance(interpolant, galsim.Interpolant):
-                self.interpolant = galsim.InterpolantXY(interpolant)
-            elif isinstance(interpolant, galsim.InterpolantXY):
-                self.interpolant = interpolant
-            else:
-                raise RuntimeError(
-                    'Specified interpolant is not an Interpolant or InterpolantXY instance!')
+            self.interpolant = galsim.utilities.convert_interpolant_to_2d(interpolant)
 
         # Then initialize the SBProfile
         GSObject.__init__(
-            self, galsim.SBInterpolatedImage(atmoimage, self.interpolant, dx=dx_lookup))
+            self, galsim.SBInterpolatedImage(atmoimage, xInterp=self.interpolant, dx=dx_lookup))
 
         # The above procedure ends up with a larger image than we really need, which
         # means that the default stepK value will be smaller than we need.  
@@ -1094,6 +1089,7 @@ class Airy(GSObject):
     _req_params = { "lam_over_diam" : float }
     _opt_params = { "flux" : float , "obscuration" : float }
     _single_params = []
+    _takes_rng = False
 
     # --- Public Class methods ---
     def __init__(self, lam_over_diam, obscuration=0., flux=1.):
@@ -1188,6 +1184,7 @@ class Kolmogorov(GSObject):
     _req_params = {}
     _opt_params = { "flux" : float }
     _single_params = [ { "lam_over_r0" : float, "fwhm" : float, "half_light_radius" : float } ]
+    _takes_rng = False
 
     # --- Public Class methods ---
     def __init__(self, lam_over_r0=None, fwhm=None, half_light_radius=None, flux=1.):
@@ -1260,11 +1257,10 @@ class OpticalPSF(GSObject):
     @param circular_pupil  Adopt a circular pupil? Alternative is square.
     @param obscuration     Linear dimension of central obscuration as fraction of pupil linear 
                            dimension, [0., 1.) [default `obscuration = 0.`].
-    @param interpolant     Optional keyword for specifying the interpolation scheme [default 
-                           `interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))`].  Any
-                           one-dimensional interpolants supplied, e.g. `galsim.Cubic`, 
-                           `galsim.Linear` etc., will be converted to a two-dimensional
-                           `galsim.InterpolantXY` object before use.
+    @param interpolant     Either an Interpolant2d (or Interpolant) instance or a string indicating
+                           which interpolant should be used.  Options are 'nearest', 'sinc', 
+                           'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the 
+                           integer order to use. [default `interpolant = galsim.Quintic()`]
     @param oversampling    Optional oversampling factor for the SBInterpolatedImage table 
                            [default `oversampling = 1.5`], setting oversampling < 1 will produce 
                            aliasing in the PSF (not good).
@@ -1293,8 +1289,10 @@ class OpticalPSF(GSObject):
         "obscuration" : float ,
         "oversampling" : float ,
         "pad_factor" : float ,
+        "interpolant" : str ,
         "flux" : float }
     _single_params = []
+    _takes_rng = False
 
     # --- Public Class methods ---
     def __init__(self, lam_over_diam, defocus=0.,
@@ -1326,21 +1324,15 @@ class OpticalPSF(GSObject):
             circular_pupil=circular_pupil, obscuration=obscuration, flux=flux)
         
         # If interpolant not specified on input, use a Quintic interpolant
-        if interpolant == None:
-            quintic = galsim.Quintic(tol=1.e-4)
+        if interpolant is None:
+            quintic = galsim.Quintic(tol=1e-4)
             self.interpolant = galsim.InterpolantXY(quintic)
         else:
-            if isinstance(interpolant, galsim.Interpolant):
-                self.interpolant = galsim.InterpolantXY(interpolant)
-            elif isinstance(interpolant, galsim.InterpolantXY):
-                self.interpolant = interpolant
-            else:
-                raise RuntimeError(
-                    'Specified interpolant is not an Interpolant or InterpolantXY instance!')
- 
+            self.interpolant = galsim.utilities.convert_interpolant_to_2d(interpolant)
+
         # Initialize the SBProfile
         GSObject.__init__(
-            self, galsim.SBInterpolatedImage(optimage, self.interpolant, dx=dx_lookup))
+            self, galsim.SBInterpolatedImage(optimage, xInterp=self.interpolant, dx=dx_lookup))
 
         # The above procedure ends up with a larger image than we really need, which
         # means that the default stepK value will be smaller than we need.  
@@ -1352,7 +1344,7 @@ class InterpolatedImage(GSObject):
     """A class describing non-parametric objects specified using an Image, which can be interpolated
     for the purpose of carrying out transformations.
 
-    The input Image and an interpolant are used to create an SBInterpolatedImage.  The
+    The input Image and optional interpolants are used to create an SBInterpolatedImage.  The
     InterpolatedImage class is useful if you have a non-parametric description of an object as an
     Image, that you wish to manipulate / transform using GSObject methods such as applyShear(),
     applyMagnification(), applyShift(), etc.  The input Image can be any BaseImage (i.e., Image,
@@ -1368,38 +1360,77 @@ class InterpolatedImage(GSObject):
     If the input Image has a scale associated with it, then there is no need to specify an input
     scale `dx`.
 
-    If no interpolant is specified then by default a quintic interpolant is used.  The user also has
-    to specify how much zero-padding to include around an input image; by default, a value of 4 is
-    used.  Note that both the interpolant and the `pad_factor` determine the accuracy of
-    interpolation on the Image when carrying out operations such as shifting, shearing, dilating,
-    and rotating.  For some details of the typical accuracy of interpolants used in GalSim as a
-    function of the amount of padding, see table 1 in devel/modules/finterp.pdf in the GalSim
-    repository.  A quick summary is that for precise calculations (~1% accuracy or better),
-    nearest-neighbor and linear interpolants should not be used; cubic, quintic, and Lanczos with
-    n=3 are acceptable with >4x padding; and higher-order Lanczos is okay even with just 2x padding.
-    There is a tradeoff between speed and accuracy, and from this perspective, the quintic
-    interpolant with 4x padding seems optimal (errors <0.001), though for precise tests of shears
-    even greater accuracy is needed, so either 6x padding should be used, or a higher order Lanczos
-    interpolant should be used (modified to conserve flux).  The user is given complete freedom to
-    choose interpolants and pad factors, and no warnings are raised when the code is modified to
-    choose some combination that is known to give significant error.
+    The user may optionally specify an interpolant, `x_interpolant`, for real-space manipulations
+    (e.g., shearing, resampling).  If none is specified, then by default, a 5th order Lanczos
+    interpolant is used.  The user may also choose to specify two quantities that can affect the
+    Fourier space convolution: the k-space interpolant (`k_interpolant`) and the amount of padding
+    to include around the original images (`pad_factor`).  The default values for `x_interpolant`,
+    `k_interpolant`, and `pad_factor` were chosen based on preliminary tests suggesting that they
+    lead to a high degree of accuracy without being excessively slow.  Users should be particularly
+    wary about changing `k_interpolant` and `pad_factor` from the defaults without careful testing.
+    The user is given complete freedom to choose interpolants and pad factors, and no warnings are
+    raised when the code is modified to choose some combination that is known to give significant
+    error.  More details can be found in devel/modules/finterp.pdf, especially table 1, in the
+    GalSim repository.
+
+    The user can choose to have the image padding use zero (default), Gaussian random noise of some
+    variance, or a Gaussian but correlated noise field that is specified either as an ImageCorrFunc,
+    an Image (from which a noise correlation function is derived), or a string (interpreted as a
+    filename containing an image to use for deriving the noise correlation function).  The user can
+    also pass in a random number generator to be used for noise generation.  Finally, the user can
+    pass in a `pad_image` for deterministic image padding.
+
+    By default, the InterpolatedImage recalculates the Fourier-space step and number of points to
+    use for further manipulations, rather than using the most conservative possibility.  For typical
+    objects representing galaxies and PSFs this can easily make the difference between several
+    seconds (conservative) and 0.04s (recalculated).  However, the user can turn off this option,
+    and may especially wish to do so when using images that do not contain a high S/N object - e.g.,
+    images of noise fields.
 
     Initialization
     --------------
     
-        >>> interpolated_image = galsim.InterpolatedImage(image, interpolant = None,
+        >>> interpolated_image = galsim.InterpolatedImage(image, x_interpolant = None,
+                                                          k_interpolant = None,
                                                           normalization = 'f', dx = None,
-                                                          flux = None, pad_factor = 0.)
+                                                          flux = None, pad_factor = 0.,
+                                                          noise_pad = 0., rng = None,
+                                                          pad_image = None,
+                                                          calculate_stepk = True,
+                                                          calculate_maxk = True,
+                                                          use_cache = True)
 
     Initializes interpolated_image as a galsim.InterpolatedImage() instance.
+
+    For comparison of the case of padding with noise or zero when the image itself includes noise,
+    compare `im1` and `im2` from the following code snippet (which can be executed from the
+    examples/ directory):
+
+        image = galsim.fits.read('data/147246.0_150.416558_1.998697_masknoise.fits')
+        int_im1 = galsim.InterpolatedImage(image)
+        int_im2 = galsim.InterpolatedImage(image, noise_pad='../tests/blankimg.fits')
+        im1 = galsim.ImageF(1000,1000)
+        im2 = galsim.ImageF(1000,1000)
+        im1 = int_im1.draw(im1)
+        im2 = int_im2.draw(im2)
+
+    Examination of these two images clearly shows how padding with a correlated noise field that is
+    similar to the one in the real data leads to a more reasonable appearance for the result when
+    re-drawn at a different size.
 
     @param image           The Image from which to construct the object.
                            This may be either an Image (or ImageView) instance or a string
                            indicating a fits file from which to read the image.
-    @param interpolant     Either an Interpolant2d (or Interpolant) instance or a string indicating
-                           which interpolant should be used.  Options are 'nearest', 'sinc', 
-                           'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the 
-                           integer order to use. (Default `interpolant = Quintic()`)
+    @param x_interpolant   Either an Interpolant2d (or Interpolant) instance or a string indicating
+                           which real-space interpolant should be used.  Options are 'nearest',
+                           'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the
+                           integer order to use. (Default `x_interpolant = galsim.Quintic()`)
+    @param k_interpolant   Either an Interpolant2d (or Interpolant) instance or a string indicating
+                           which k-space interpolant should be used.  Options are 'nearest', 'sinc',
+                           'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the integer
+                           order to use.  We strongly recommend leaving this parameter at its
+                           default value; see text above for details.  (Default `k_interpolant =
+                           galsim.Quintic()`)
     @param normalization   Two options for specifying the normalization of the input Image:
                               "flux" or "f" means that the sum of the pixels is normalized
                                   to be equal to the total flux.
@@ -1413,17 +1444,60 @@ class InterpolatedImage(GSObject):
     @param flux            Optionally specify a total flux for the object, which overrides the
                            implied flux normalization from the Image itself.
     @param pad_factor      Factor by which to pad the Image when creating the SBInterpolatedImage;
-                           `pad_factor <= 0` results in the use of the default value, 4.  Note that
-                           the padding is with zeros; could be changed in future.
-                           (Default `pad_factor = 0`.)
-    @param calculate_stepk Set as `True` to perform an internal determination of the extent of the
-                           object being represented by the InterpolatedImage; often this is useful
-                           in choosing an optimal value for the stepsize in the Fourier space
-                           lookup table.
-    @param calculate_maxk  Set as `True` to perform an internal determination of the highest spatial
-                           frequency needed to accurately render the object being represented by 
-                           the InterpolatedImage; often this is useful in choosing an optimal value
-                           for the extent of the Fourier space lookup table.
+                           `pad_factor <= 0` results in the use of the default value, 4.  We
+                           strongly recommend leaving this parameter at its default value; see text
+                           above for details.
+                           (Default `pad_factor = 0`, unless a `pad_image` is passed in, which
+                           results in a default value of `pad_factor = 1`.)
+    @param noise_pad       Noise properties to use when padding the original image with
+                           noise.  This can be specified in several ways:
+                               (a) as a float, which is interpreted as being a variance to use when
+                                   padding with uncorrelated Gaussian noise; 
+                               (b) as a galsim.ImageCorrFunc, which contains information about the
+                                   desired noise power spectrum; 
+                               (c) as a galsim.Image of a noise field, which is used to calculate
+                                   the desired noise power spectrum; or
+                               (d) as a string which is interpreted as a filename containing an
+                                   example noise field with the proper noise power spectrum.
+                           It is important to keep in mind that the calculation of a
+                           galsim.ImageCorrFunc is a non-negligible amount of overhead, so the
+                           recommended ways are (b) or (d). In the case of (d), if the same file is
+                           used repeatedly, then use of the `use_cache` keyword (see below) can be
+                           used to prevent the need for repeated galsim.ImageCorrFunc
+                           initializations.
+                           (Default `noise_pad = 0.`, i.e., pad with zeros.)
+    @param rng             If padding by noise, the user can optionally supply the random noise
+                           generator to use for drawing random numbers as `rng` (may be any kind of
+                           `galsim.BaseDeviate` object).
+                           If `rng=None`, one will be automatically created, using the time as a
+                           seed. (Default `rng = None`)
+    @param pad_image       Image to be used for deterministically padding the original image.  This
+                           can be specified in two ways:
+                               (a) as a galsim.Image; or
+                               (b) as a string which is interpreted as a filename containing an
+                                   image to use.
+                           The size of the image that is passed in is taken to specify the amount of
+                           padding, and so the `pad_factor` keyword should be equal to 1, i.e., no
+                           padding.  The `pad_image` scale is ignored, and taken to be equal to that
+                           of the `image`. Note that `pad_image` can be used together with
+                           `noise_pad`.  However, the user should be careful to ensure that the
+                           image used for padding has roughly zero mean.  The purpose of this
+                           keyword is to allow for a more flexible representation of some noise
+                           field around an object; if the user wishes to represent the sky level
+                           around an object, they should do that when they have drawn the final
+                           image instead.  (Default `pad_image = None`.)
+    @param calculate_stepk Specify whether to perform an internal determination of the extent of 
+                           the object being represented by the InterpolatedImage; often this is 
+                           useful in choosing an optimal value for the stepsize in the Fourier 
+                           space lookup table. (Default `calculate_stepk = True`)
+    @param calculate_maxk  Specify whether to perform an internal determination of the highest 
+                           spatial frequency needed to accurately render the object being 
+                           represented by the InterpolatedImage; often this is useful in choosing 
+                           an optimal value for the extent of the Fourier space lookup table.
+                           (Default `calculate_maxk = True`)
+    @param use_cache       Specify whether to cache noise_pad read in from a file to save having
+                           to build an ImageCorrFunc repeatedly from the same image.
+                           (Default `use_cache = True`)
 
     Methods
     -------
@@ -1434,18 +1508,26 @@ class InterpolatedImage(GSObject):
     # Initialization parameters of the object, with type information
     _req_params = { 'image' : str }
     _opt_params = {
-        'interpolant' : str ,
+        'x_interpolant' : str ,
+        'k_interpolant' : str ,
         'normalization' : str ,
         'dx' : float ,
-        'flux' : float
+        'flux' : float ,
+        'pad_factor' : float ,
+        'noise_pad' : str ,
+        'pad_image' : str ,
+        'calculate_stepk' : bool ,
+        'calculate_maxk' : bool
     }
-    _single_params = [ ]
+    _single_params = []
+    _takes_rng = True
+    _cache_noise_pad = {}
 
     # --- Public Class methods ---
-    def __init__(self, image, interpolant=None, normalization='flux', dx=None, flux=None, 
-                 pad_factor=0., calculate_stepk=True, calculate_maxk=True):
-
-        # first try to read the image as a file.  If its not either a string or a valid
+    def __init__(self, image, x_interpolant = None, k_interpolant = None, normalization = 'flux',
+                 dx = None, flux = None, pad_factor = 0., noise_pad = 0., rng = None,
+                 pad_image = None, calculate_stepk=True, calculate_maxk=True, use_cache=True):
+        # first try to read the image as a file.  If it's not either a string or a valid
         # pyfits hdu or hdulist, then an exception will be raised, which we ignore and move on.
         try:
             image = galsim.fits.read(image)
@@ -1460,40 +1542,152 @@ class InterpolatedImage(GSObject):
         if not image.getBounds().isDefined():
             raise ValueError("Supplied image does not have bounds defined!")
 
+        # check what normalization was specified for the image: is it an image of surface
+        # brightness, or flux?
         if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
             raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
                               "'f', 'surface brightness', or 'sb'.") % normalization)
 
-        if interpolant == None:
-            lan5 = galsim.Quintic(tol=1e-4)
-            self.interpolant = galsim.InterpolantXY(lan5)
-        elif isinstance(interpolant, galsim.Interpolant2d):
-            self.interpolant = interpolant
-        elif isinstance(interpolant, galsim.Interpolant):
-            self.interpolant = galsim.InterpolantXY(interpolant)
+        # set up the interpolants if none was provided by user, or check that the user-provided ones
+        # are of a valid type
+        if x_interpolant is None:
+            self.x_interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1e-4))
         else:
-            try:
-                self.interpolant = galsim.Interpolant2d(interpolant)
-            except:
-                raise RuntimeError('Specified interpolant is not valid!')
+            self.x_interpolant = galsim.utilities.convert_interpolant_to_2d(x_interpolant)
+        if k_interpolant is None:
+            self.k_interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1e-4))
+        else:
+            self.k_interpolant = galsim.utilities.convert_interpolant_to_2d(k_interpolant)
 
         # Check for input dx, and check whether Image already has one set.  At the end of this
         # code block, either an exception will have been raised, or the input image will have a
         # valid scale set.
-        if dx == None:
+        if dx is None:
             dx = image.getScale()
             if dx == 0:
                 raise ValueError("No information given with Image or keywords about pixel scale!")
         else:
             if type(dx) != float:
                 dx = float(dx)
+            # Don't change the original image.  Make a new view if we need to set the scale.
+            image = image.view()
             image.setScale(dx)
             if dx == 0.0:
                 raise ValueError("dx may not be 0.0")
 
-        # Make the SBInterpolatedImage out of the image.
-        sbinterpolatedimage = galsim.SBInterpolatedImage(image, self.interpolant, dx=dx,
-                                                         pad_factor=pad_factor)
+        # Set up the GaussianDeviate if not provided one, or check that the user-provided one is
+        # of a valid type.
+        if rng == None:
+            gaussian_deviate = galsim.GaussianDeviate()
+        elif isinstance(rng,galsim.BaseDeviate):
+            # Even if it's already a GaussianDeviate, we still want to make a new Gaussian deviate
+            # that would generate the same sequence, because later we change the sigma and we don't
+            # want to change it for the original one that was passed in.  So don't distinguish
+            # between GaussianDeviate and the other BaseDeviates here.
+            gaussian_deviate = galsim.GaussianDeviate(rng)
+        else:
+            raise TypeError("rng provided to InterpolatedImage constructor is not a BaseDeviate")
+
+        # decide about deterministic image padding
+        specify_size = False
+        padded_size = image.getPaddedSize(pad_factor)
+        if pad_image:
+            specify_size = True
+            if isinstance(pad_image, str):
+                try:
+                    pad_image = galsim.fits.read(pad_image)
+                except:
+                    raise RuntimeError("Can't read in Image for padding from specified file!")
+            if not isinstance(pad_image, galsim.BaseImageF) and not isinstance(pad_image,
+                                                                               galsim.BaseImageD):
+                raise ValueError("Supplied pad_image is not one of the allowed types!")
+
+            # If an image was supplied directly or from a file, check its size:
+            #    Cannot use if too small.
+            #    Use to define the final image size otherwise.
+            deltax = (1+pad_image.getXMax()-pad_image.getXMin())-(1+image.getXMax()-image.getXMin())
+            deltay = (1+pad_image.getYMax()-pad_image.getYMin())-(1+image.getYMax()-image.getYMin())
+            if deltax < 0 or deltay < 0:
+                raise RuntimeError("Image supplied for padding is too small!")
+            if pad_factor != 1. and pad_factor != 0.:
+                import warnings
+                msg =  "Warning: ignoring specified pad_factor because user also specified\n"
+                msg += "         an image to use directly for the padding."
+                warnings.warn(msg)
+        elif noise_pad:
+            if isinstance(image, galsim.BaseImageF):
+                pad_image = galsim.ImageF(padded_size, padded_size)
+            if isinstance(image, galsim.BaseImageD):
+                pad_image = galsim.ImageD(padded_size, padded_size)
+
+        # now decide about noise padding
+        # First, see if the input is consistent with a float.
+        # i.e. it could be an int, or a str that converts to a number.
+        try:
+            noise_pad = float(noise_pad)
+        except:
+            pass
+        if isinstance(noise_pad, float):
+            if noise_pad < 0.:
+                raise ValueError("Noise variance cannot be negative!")
+            elif noise_pad > 0.:
+                # Note: make sure the sigma is properly set to sqrt(noise_pad).
+                gaussian_deviate.setSigma(np.sqrt(noise_pad))
+                pad_image.addNoise(galsim.DeviateNoise(gaussian_deviate))
+        else:
+            if isinstance(noise_pad, galsim.ImageCorrFunc):
+                cf = noise_pad
+            elif isinstance(noise_pad,galsim.BaseImageF) or isinstance(noise_pad,galsim.BaseImageD):
+                cf = galsim.ImageCorrFunc(noise_pad)
+            elif use_cache and noise_pad in InterpolatedImage._cache_noise_pad:
+                cf = InterpolatedImage._cache_noise_pad[noise_pad]
+            elif isinstance(noise_pad, str):
+                try:
+                    cf = galsim.ImageCorrFunc(galsim.fits.read(noise_pad))
+                except:
+                    raise RuntimeError("Can't read in Image to define correlated noise " +
+                                       "field for noise padding from specified file!")
+                if use_cache: 
+                    InterpolatedImage._cache_noise_pad[noise_pad] = cf
+            else:
+                raise ValueError("Input noise_pad must be a float/int, an ImageCorrFunc, " +
+                                 "Image, or filename containing an image to use to make an " +
+                                 "ImageCorrFunc!")
+            cf.applyNoiseTo(pad_image, dev=gaussian_deviate)
+
+        # Now we have to check: was the padding determined using pad_factor?  Or by passing in an
+        # image for padding?  Treat these cases differently:
+        # (1) If the former, then we can simply have the C++ handle the padding process.
+        # (2) If the latter, then we have to do the padding ourselves, and pass the resulting image
+        # to the C++ with pad_factor explicitly set to 1.
+        if specify_size is False:
+            # Make the SBInterpolatedImage out of the image.
+            sbinterpolatedimage = galsim.SBInterpolatedImage(image,
+                                                             xInterp=self.x_interpolant,
+                                                             kInterp=self.k_interpolant,
+                                                             dx=dx,
+                                                             pad_factor=pad_factor,
+                                                             pad_image=pad_image)
+            self.x_size = padded_size
+            self.y_size = padded_size
+        else:
+            # Leave the original image as-is.  Instead, we shift around the image to be used for
+            # padding.  Find out how much x and y margin there should be on lower end:
+            x_marg = int(np.round(0.5*deltax))
+            y_marg = int(np.round(0.5*deltay))
+            # Now reset the pad_image to contain the original image in an even way
+            pad_image = pad_image.view()
+            pad_image.setScale(dx)
+            pad_image.setOrigin(image.getXMin()-x_marg, image.getYMin()-y_marg)
+            # Set the central values of pad_image to be equal to the input image
+            pad_image[image.bounds] = image
+            sbinterpolatedimage = galsim.SBInterpolatedImage(pad_image,
+                                                             xInterp=self.x_interpolant,
+                                                             kInterp=self.k_interpolant,
+                                                             dx=dx,
+                                                             pad_factor=1.)
+            self.x_size = 1+pad_image.getXMax()-pad_image.getXMin()
+            self.y_size = 1+pad_image.getYMax()-pad_image.getYMin()
 
         # GalSim cannot automatically know what stepK and maxK are appropriate for the 
         # input image.  So it is usually worth it to do a manual calculation here.
@@ -1510,7 +1704,7 @@ class InterpolatedImage(GSObject):
         # If the user specified a flux normalization for the input Image, then since
         # SBInterpolatedImage works in terms of surface brightness, have to rescale the values to
         # get proper normalization.
-        elif flux == None and normalization.lower() in ['flux','f'] and dx != 1.:
+        elif flux is None and normalization.lower() in ['flux','f'] and dx != 1.:
             sbinterpolatedimage.scaleFlux(1./(dx**2))
         # If the input Image normalization is 'sb' then since that is the SBInterpolated default
         # assumption, no rescaling is needed.
@@ -1541,6 +1735,7 @@ class Pixel(GSObject):
     _req_params = { "xw" : float }
     _opt_params = { "yw" : float , "flux" : float }
     _single_params = []
+    _takes_rng = False
 
     # --- Public Class methods ---
     def __init__(self, xw, yw=None, flux=1.):
@@ -1594,6 +1789,7 @@ class Sersic(GSObject):
     _req_params = { "n" : float , "half_light_radius" : float }
     _opt_params = { "flux" : float }
     _single_params = []
+    _takes_rng = False
 
     # --- Public Class methods ---
     def __init__(self, n, half_light_radius, flux=1.):
@@ -1649,6 +1845,7 @@ class Exponential(GSObject):
     _req_params = {}
     _opt_params = { "flux" : float }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
+    _takes_rng = False
 
     # --- Public Class methods ---
     def __init__(self, half_light_radius=None, scale_radius=None, flux=1.):
@@ -1700,6 +1897,7 @@ class DeVaucouleurs(GSObject):
     _req_params = { "half_light_radius" : float }
     _opt_params = { "flux" : float }
     _single_params = []
+    _takes_rng = False
 
     # --- Public Class methods ---
     def __init__(self, half_light_radius=None, flux=1.):
@@ -1728,7 +1926,9 @@ class RealGalaxy(GSObject):
     --------------
     
         real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index=None, id=None, random=False, 
-                                        rng=None, interpolant=None)
+                                        rng=None, x_interpolant=None, k_interpolant=None,
+                                        flux=None, pad_factor = 0, noise_pad=False, pad_image=None,
+                                        use_cache = True)
 
     This initializes real_galaxy with three SBInterpolatedImage objects (one for the deconvolved
     galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
@@ -1738,6 +1938,11 @@ class RealGalaxy(GSObject):
     RealGalaxy contains an SBProfile attribute which is an SBConvolve representing the deconvolved
     HST galaxy.
 
+    Note that preliminary tests suggest that for optimal balance between accuracy and speed,
+    `k_interpolant` and `pad_factor` should be kept at their default values.  The user should be
+    aware that significant inaccuracy can result from using other combinations of these parameters;
+    see devel/modules/finterp.pdf, especially table 1, in the GalSim repository.
+
     @param real_galaxy_catalog  A RealGalaxyCatalog object with basic information about where to
                                 find the data, etc.
     @param index                Index of the desired galaxy in the catalog.
@@ -1746,11 +1951,57 @@ class RealGalaxy(GSObject):
                                 catalog.
     @param rng                  A random number generator to use for selecting a random galaxy 
                                 (may be any kind of BaseDeviate or None)
-    @param interpolant          Optional keyword for specifying the real-space interpolation scheme
-                                [default `interpolant = galsim.InterpolantXY(galsim.Lanczos(5, 
-                                 conserve_flux=True, tol=1.e-4))`].
+    @param x_interpolant        Either an Interpolant2d (or Interpolant) instance or a string 
+                                indicating which real-space interpolant should be used.  Options are 
+                                'nearest', 'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' 
+                                where N should be the integer order to use. [default 
+                                `x_interpolant = galsim.Lanczos(5,...)'].
+    @param k_interpolant        Either an Interpolant2d (or Interpolant) instance or a string 
+                                indicating which k-space interpolant should be used.  Options are 
+                                'nearest', 'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' 
+                                where N should be the integer order to use.  We strongly recommend
+                                leaving this parameter at its default value; see text above for
+                                details.  [default `k_interpolant = galsim.Quintic()'].
     @param flux                 Total flux, if None then original flux in galaxy is adopted without
                                 change [default `flux = None`].
+    @param pad_factor           Factor by which to pad the Image when creating the
+                                SBInterpolatedImage; `pad_factor <= 0` results in the use of the
+                                default value, 4.  We strongly recommend leaving this parameter at
+                                its default value; see text above for details.
+                                [Default `pad_factor = 0`.]
+    @param noise_pad            When creating the SBProfile attribute for this GSObject, pad the
+                                SBInterpolated image with zeros, or with noise of a level specified
+                                in the training dataset?  There are several options here: 
+                                    Use `noise_pad = False` if you wish to pad with zeros.
+                                    Use `noise_pad = True` if you wish to pad with uncorrelated
+                                        noise of the proper variance.
+                                    Set `noise_pad` equal to a galsim.ImageCorrFunc, an Image, or a
+                                        filename for a file containing an Image of an example noise
+                                        field that will be used to calculate the noise power
+                                        spectrum and generate noise in the padding region.
+                                In the last case, if the same file is used repeatedly, then use of
+                                the `use_cache` keyword (see below) can be used to prevent the need
+                                for repeated galsim.ImageCorrFunc initializations.
+                                [default `noise_pad = False`]
+    @param pad_image            Image to be used for deterministically padding the original image.
+                                This can be specified in two ways:
+                                   (a) as a galsim.Image; or
+                                   (b) as a string which is interpreted as a filename containing an
+                                       image to use.
+                               The size of the image that is passed in is taken to specify the
+                                amount of padding, and so the `pad_factor` keyword should be equal
+                                to 1, i.e., no padding.  The `pad_image` scale is ignored, and taken
+                                to be equal to that of the `image`. Note that `pad_image` can be
+                                used together with `noise_pad`.  However, the user should be careful
+                                to ensure that the image used for padding has roughly zero mean.
+                                The purpose of this keyword is to allow for a more flexible
+                                representation of some noise field around an object; if the user
+                                wishes to represent the sky level around an object, they should do
+                                that when they have drawn the final image instead.  (Default
+                                `pad_image = None`.)
+    @param use_cache            Specify whether to cache noise_pad read in from a file to save
+                                having to build an ImageCorrFunc repeatedly from the same image.
+                                (Default `use_cache = True`)
 
     Methods
     -------
@@ -1760,12 +2011,21 @@ class RealGalaxy(GSObject):
 
     # Initialization parameters of the object, with type information
     _req_params = {}
-    _opt_params = { "flux" : float }
+    _opt_params = { "x_interpolant" : str ,
+                    "k_interpolant" : str,
+                    "flux" : float ,
+                    "pad_factor" : float,
+                    "noise_pad" : str,
+                    "pad_image" : str}
     _single_params = [ { "index" : int , "id" : str } ]
+    _takes_rng = True
+    _cache_noise_pad = {}
+    _cache_variance = {}
 
     # --- Public Class methods ---
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
-                 rng=None, interpolant=None, flux=None):
+                 rng=None, x_interpolant=None, k_interpolant=None, flux=None, pad_factor = 0,
+                 noise_pad=False, pad_image=None, use_cache=True):
 
         import pyfits
 
@@ -1780,10 +2040,8 @@ class RealGalaxy(GSObject):
                 raise AttributeError('Too many methods for selecting a galaxy!')
             use_index = real_galaxy_catalog._get_index_for_id(id)
         elif random == True:
-            if rng == None:
+            if rng is None:
                 uniform_deviate = galsim.UniformDeviate()
-            elif isinstance(rng, galsim.UniformDeviate):
-                uniform_deviate = rng
             elif isinstance(rng, galsim.BaseDeviate):
                 uniform_deviate = galsim.UniformDeviate(rng)
             else:
@@ -1791,10 +2049,6 @@ class RealGalaxy(GSObject):
             use_index = int(real_galaxy_catalog.nobjects * uniform_deviate()) 
         else:
             raise AttributeError('No method specified for selecting a galaxy!')
-        if random == False and rng != None:
-            import warnings
-            msg = "Warning: rng provided to RealGalaxy, but random selection method was not chosen!"
-            warnings.warn(msg)
 
         # read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors. Should
         # consider exporting this code into fits.py in some function that takes a filename and HDU,
@@ -1804,13 +2058,15 @@ class RealGalaxy(GSObject):
         PSF_image = real_galaxy_catalog.getPSF(use_index)
 
         # choose proper interpolant
-        if interpolant == None:
-            lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4) # copied from Shera.py!
-            self.interpolant = galsim.InterpolantXY(lan5)
+        if x_interpolant is None:
+            lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4)
+            self.x_interpolant = galsim.InterpolantXY(lan5)
         else:
-            if not isinstance(interpolant, galsim.InterpolantXY):
-                raise RuntimeError('Specified interpolant is not an InterpolantXY!')
-            self.interpolant = interpolant
+            self.x_interpolant = galsim.utilities.convert_interpolant_to_2d(x_interpolant)
+        if k_interpolant is None:
+            self.k_interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))
+        else:
+            self.k_interpolant = galsim.utilities.convert_interpolant_to_2d(k_interpolant)
 
         # read in data about galaxy from FITS binary table; store as normal attributes of RealGalaxy
 
@@ -1818,14 +2074,139 @@ class RealGalaxy(GSObject):
         self.catalog_file = real_galaxy_catalog.file_name
         self.index = use_index
         self.pixel_scale = float(real_galaxy_catalog.pixel_scale[use_index])
-        # note: will be adding more parameters here about noise properties etc., but let's be basic
-        # for now
 
-        # save the original image and PSF too
-        self.original_image = galsim.SBInterpolatedImage(
-            gal_image, self.interpolant, dx=self.pixel_scale)
+        # handle padding by an image
+        specify_size = False
+        padded_size = gal_image.getPaddedSize(pad_factor)
+        if pad_image is not None:
+            specify_size = True
+            if isinstance(pad_image,str):
+                try:
+                    pad_image = galsim.fits.read(pad_image)
+                except:
+                    raise RuntimeError("Can't read in Image for padding from specified file!")
+            if not isinstance(pad_image, galsim.BaseImageF) and not isinstance(pad_image,
+                                                                               galsim.BaseImageD):
+                raise ValueError("Supplied pad_image is not one of the allowed types!")
+            # If an image was supplied directly or from a file, check its size:
+            #    Cannot use if too small.
+            #    Use to define the final image size otherwise.
+            deltax = (1+pad_image.getXMax()-pad_image.getXMin())-(1+gal_image.getXMax()-gal_image.getXMin())
+            deltay = (1+pad_image.getYMax()-pad_image.getYMin())-(1+gal_image.getYMax()-gal_image.getYMin())
+            if deltax < 0 or deltay < 0:
+                raise RuntimeError("Image supplied for padding is too small!")
+            if pad_factor != 1. and pad_factor != 0.:
+                import warnings
+                msg =  "Warning: ignoring specified pad_factor because user also specified\n"
+                msg += "         an image to use directly for the padding."
+                warnings.warn(msg)
+        else:
+            if isinstance(gal_image, galsim.BaseImageF):
+                pad_image = galsim.ImageF(padded_size, padded_size)
+            if isinstance(gal_image, galsim.BaseImageD):
+                pad_image = galsim.ImageD(padded_size, padded_size)
+
+        # handle noise-padding options
+        try:
+            noise_pad = galsim.config.value._GetBoolValue(noise_pad,'')
+        except:
+            pass
+        if noise_pad:
+            self.pad_variance= float(real_galaxy_catalog.variance[use_index])
+
+            # Check, is it "True" or something else?  If True, we use Gaussian uncorrelated noise
+            # using the stored variance in the catalog.  Otherwise, if it's an ImageCorrFunc we use
+            # it directly; if it's an Image of some sort we use it to make an ImageCorrFunc; if it's
+            # a string, we read in the image from file and make an ImageCorrFunc.
+            if type(noise_pad) is not bool:
+                if isinstance(noise_pad, galsim.ImageCorrFunc):
+                    cf = noise_pad
+                elif isinstance(noise_pad,galsim.BaseImageF) or isinstance(noise_pad,galsim.BaseImageD):
+                    cf = galsim.ImageCorrFunc(noise_pad)
+                elif use_cache and noise_pad in RealGalaxy._cache_noise_pad:
+                    cf = RealGalaxy._cache_noise_pad[noise_pad]
+                    cf.scaleVariance(real_galaxy_catalog.variance[use_index] /
+                                     RealGalaxy._cache_variance[noise_pad])
+                elif isinstance(noise_pad, str):
+                    try:
+                        tmp_img = galsim.fits.read(noise_pad)
+                        tmp_var = np.var(tmp_img.array)
+                        cf = galsim.ImageCorrFunc(tmp_img)
+                    except:
+                        raise RuntimeError("Can't read in Image to define correlated noise " +
+                                           "field for noise padding from specified file!")
+                    if use_cache:
+                        RealGalaxy._cache_noise_pad[noise_pad] = cf
+                        RealGalaxy._cache_variance[noise_pad] = tmp_var
+                    # this small patch may have different overall variance, so rescale while
+                    # preserving the correlation structure
+                    cf.scaleVariance(self.pad_variance/tmp_var)
+                else:
+                    raise RuntimeError("noise_pad must be either a bool, ImageCorrFunc, Image, "+
+                                       "or a filename for reading in an Image")
+                     
+            # Set up the GaussianDeviate if not provided one, or check that the user-provided one
+            # is of a valid type.
+            if rng == None:
+                gaussian_deviate = galsim.GaussianDeviate()
+            elif isinstance(rng,galsim.BaseDeviate):
+                # Even if it's already a GaussianDeviate, we still want to make a new Gaussian
+                # deviate that would generate the same sequence, because later we change the sigma
+                # and we don't want to change it for the original one that was passed in.  So don't
+                # distinguish between GaussianDeviate and the other BaseDeviates here.
+                gaussian_deviate = galsim.GaussianDeviate(rng)
+            else:
+                raise TypeError("rng provided to InterpolatedImage constructor is not a BaseDeviate")
+            gaussian_deviate.setSigma(np.sqrt(self.pad_variance))
+
+            # populate padding image with noise field
+            if type(noise_pad) is bool:
+                pad_image.addNoise(galsim.DeviateNoise(gaussian_deviate))
+            else:
+                cf.applyNoiseTo(pad_image, dev=gaussian_deviate)
+        else:
+            self.pad_variance=0.
+
+        # Now we have to check: was the padding determined using pad_factor?  Or by passing in an
+        # image for padding?  Treat these cases differently:
+        # (1) If the former, then we can simply have the C++ handle the padding process.
+        # (2) If the latter, then we have to do the padding ourselves, and pass the resulting image
+        # to the C++ with pad_factor explicitly set to 1.
+        if specify_size is False:
+            # Make the SBInterpolatedImage out of the image.
+            self.original_image = galsim.SBInterpolatedImage(gal_image,
+                                                             xInterp=self.x_interpolant,
+                                                             kInterp=self.k_interpolant,
+                                                             dx=self.pixel_scale,
+                                                             pad_factor=pad_factor,
+                                                             pad_image=pad_image)
+        else:
+            # Leave the original image as-is.  Instead, we shift around the image to be used for
+            # padding.  Find out how much x and y margin there should be on lower end:
+            x_marg = int(np.round(0.5*deltax))
+            y_marg = int(np.round(0.5*deltay))
+            # Now reset the pad_image to contain the original image in an even way
+            pad_image = pad_image.view()
+            pad_image.setScale(self.pixel_scale)
+            pad_image.setOrigin(gal_image.getXMin()-x_marg, gal_image.getYMin()-y_marg)
+            # Set the central values of pad_image to be equal to the input image
+            pad_image[gal_image.bounds] = gal_image
+            self.original_image = galsim.SBInterpolatedImage(pad_image,
+                                                             xInterp=self.x_interpolant,
+                                                             kInterp=self.k_interpolant,
+                                                             dx=self.pixel_scale,
+                                                             pad_factor=1.)
+
+        # also make the original PSF image, with far less fanfare: we don't need to pad with
+        # anything interesting.
         self.original_PSF = galsim.SBInterpolatedImage(
-            PSF_image, self.interpolant, dx=self.pixel_scale)
+            PSF_image, xInterp=self.x_interpolant, kInterp=self.k_interpolant, dx=self.pixel_scale)
+
+        # recalculate Fourier-space attributes rather than using overly-conservative defaults
+        self.original_image.calculateStepK()
+        self.original_image.calculateMaxK()
+        self.original_PSF.calculateStepK()
+        self.original_PSF.calculateMaxK()
         
         if flux != None:
             self.original_image.setFlux(flux)
@@ -1843,7 +2224,7 @@ class RealGalaxy(GSObject):
                                    +"objects.")
 
 #
-# --- Compound GSObect classes: Add and Convolve ---
+# --- Compound GSObject classes: Add and Convolve ---
 
 class Add(GSObject):
     """A class for adding 2 or more GSObjects.  Has an SBAdd in the SBProfile attribute.

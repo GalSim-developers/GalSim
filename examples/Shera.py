@@ -59,13 +59,13 @@ def main(argv):
     e = galsim.Ellipse(s, -(g1*g1+g2*g2), galsim.PositionD(xshift,yshift));
 
     galaxyImg = galsim.fits.read(rootname + "_masknoise.fits")
-    galaxy = galsim.InterpolatedImage(galaxyImg, interpolant=l32d, dx=dxHST, flux=0.804*1000.*dxSDSS*dxSDSS)
+    galaxy = galsim.InterpolatedImage(galaxyImg, x_interpolant=l32d, dx=dxHST, flux=0.804*1000.*dxSDSS*dxSDSS)
 
     psf1Img = galsim.fits.read(rootname + ".psf.fits")
-    psf1 = galsim.InterpolatedImage(psf1Img, interpolant=l32d, dx=dxHST, flux=1.)
+    psf1 = galsim.InterpolatedImage(psf1Img, x_interpolant=l32d, dx=dxHST, flux=1.)
 
     psf2Img = galsim.fits.read(rootname + ".sdsspsf.fits")
-    psf2 = galsim.InterpolatedImage(psf2Img, interpolant=l32d, dx=dxSDSS, flux=1.)
+    psf2 = galsim.InterpolatedImage(psf2Img, x_interpolant=l32d, dx=dxSDSS, flux=1.)
 
     outImg = galsim.fits.read(rootname + ".g1_0.02.g2_0.00.fits")
     result = outImg.copy()

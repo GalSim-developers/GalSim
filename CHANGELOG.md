@@ -1,63 +1,37 @@
-Changes from v0.2 to v0.3
--------------------------
+Changes from v0.3 to current version: 
+------------------------------------
 
-* Fixed bug in config RandomCircle when using inner_radius option.
+* Small bug fix for multiple operations on GSObjects when drawing images using photon shooting,
+  which affects combinations like shifting and shearing.  (Issue #359)
 
-* Fixed bug in config when trying to draw objects whose postage stamp falls entirely off the 
-  main image.
+* When making GSObjects out of real images that have noise, it is possible to pad those images with
+  a noise field (either correlated or uncorrelated) so that there is not an abrupt change of
+  properties in the noise field when crossing the border into the padding region.  (Issue #238)
 
-* Fixed treatment of duplicate numpy.int32 types on some systems where the old check was not
-  sufficient.
+* Option for shears from a power spectrum: use a tabulated P(k), either input as arrays or read in 
+  from a file, for example from a cosmological shear power spectrum calculator.  Also, the 
+  PowerSpectrum class now properly handles conversions between different units for P(k) and the 
+  galaxy positions at which we are calculating shear.  Finally, an important bug in how the shears 
+  were generated from the power spectrum (which resulted in issues with overall normalization) was
+  fixed. (Issue #305)
 
-* Fix warnings in boost::random stuff on some systems (Issue #250)
+* An optimization of the InterpolatedImage constructor.  (Issue #305)
 
-* Minor changes in the python interface to the outputs of the moments and shape estimation routines
-  (the HSMShapeData class).  (Issue #296, #316, #332)
+* A work-around for a pyfits bug that made our Rice-compressed output files (using pyfits)
+  unreadable by ds9.  (Issue #305)
 
-* Support reading and writing compressed fits files. (Issue #299)
+* There is now a python interface to C++ tables that can be used for interpolation in a more general
+  context. (Issue #305)
 
-* Add FormattedStr option for string values in config files.  (Issue #315)
+* Added a DistDeviate class that generates pseudo-random numbers from a user-defined probability
+  distribution. (Issue #306)
+  
+* Added an addNoiseSNR() method to Image classes that adds noise such that the image has a 
+  specified signal-to-noise ratio. (Issue #349)
 
-* On systems where a different C++ compiler was used for GalSim and for python, C++ exceptions show
-  up with a non-informative error message.  While this is not easily fixable, there is now a test
-  for this incompatibility when compiling, which results in a warning being generated.
-  (Issue #317)
+* Made a new Noise hierarchy, and moved CCDNoise to that rather than have it be a BaseDeviate.
+  There are also now GaussianNoise, PoissonNoise, and DeviateNoise classes. (Issue #349)
 
-* Made default poisson_flux value = False when n_photons is explicitly given.  (Issue #319)
-
-* It is now possible to draw the Fourier images of GSObjects using the `drawK()` method, which was
-  always available in C++ but now is visible in python as well. (Issue #319)
-
-* Several bug fixes in the Fourier space parameters of the Sersic surface brightness profile, which
-  improves some issues with ringing in images composed of Sersic profiles on their own or combined
-  with other profiles. (Issues #319, #330)
-
-* A minor fix for some issues with image types in `fits.writeCube()`. (Issue #320)
-
-* Minor change in the keywords related to directory specification for RealGalaxyCatalog.
-  (Issue #322)
-
-* Fixed several sources of memory leaks, with the most significant being in the moments and shape
-  estimation software and a minor one in CppShear. (Issue #327)
-
-* There is a useful new option when compiling, MEMTEST, that makes it easy to check for memory
-  leaks in the C++ side of GalSim. (Issue #327)
-
-* Enable copying Images of different types. (Issue #327)
-
-* The moments and PSF correction code was updated to use the Image class and TMV. The python
-  interface to this software was also updated so that it can handle weight and bad pixel maps for
-  the input Images.  Finally, an optimization was introduced that typically speeds up these routines
-  by a factor of 2-3.  (Issues #331, #332)
-
-* There is a new base class, InterpolatedImage, which contains an SBInterpolatedImage.  Users who
-  wish to take some arbitrary input image and manipulate it (shear, convolved, etc.) can use this
-  base class as a way of easily carrying out those operations.  (Issue #333)
-
-* There is a new class structure for representing 2D correlation functions, used to describe 
-  correlated noise in images (for example).  The intended user interface is using the
-  `cf = galsim.ImageCorrFunc(image)` constructor, which calculates the discrete correlation function
-  between pixels in the input image.  The `cf` instance acts as a container for an internal 
-  `GSObject` representation of this correlation function, making many `GSObject` operations
-  available (Issue #297).
-
+* New demo11 script that includes getting PowerSpectrum shears from a file, uses an 
+  InterpolatedImage for the PSF, and uses DistDeviate (RandomDistribution in the config)
+  for the sizes. (Issues #305, #306)
