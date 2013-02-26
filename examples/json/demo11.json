@@ -130,9 +130,7 @@
     "#" : "images and is described in more detail in the ",
     "#" : "galsim.correlatednoise.get_COSMOS_CorrFunc() docstring.  This function requires a FITS",
     "#" : "file, stored in the GalSim repository, that represents this correlation information: ",
-    "#" : "the path to this file must be given as file_name.  Therefore, THIS WILL NOT WORK ",
-    "#" : "unless this demo is run from its original location in the examples/ directory of the ",
-    "#" : "GalSim repository.",
+    "#" : "the path to this file must be given as file_name.",
     "noise" : {
         "type" : "COSMOS",
         "file_name" : "../examples/data/acs_I_unrot_sci_20_cf.fits",

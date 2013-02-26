@@ -72,7 +72,7 @@ def main(argv):
     image_size_arcsec = image_size*pixel_scale # size of big image in each dimension (arcsec)
     noise_variance = 1.e4             # ADU^2
     nobj = 288                        # number of galaxies in entire field
-                                      # (This corresponds to 5 galaxy / arcmin^2)
+                                      # (This corresponds to 2 galaxies / arcmin^2)
     grid_spacing = 90.0               # The spacing between the samples for the power spectrum 
                                       # realization (arcsec)
     gal_signal_to_noise = 100         # S/N of each galaxy
