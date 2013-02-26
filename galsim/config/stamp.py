@@ -542,20 +542,13 @@ def AddNoiseFFT(im, weight_im, noise, base, rng, sky_level, logger=None):
         req = { 'file_name' : str }
         opt = { 'dx_cosmos' : float, 'variance' : float }
         
-        params = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
-        file_name = params['file_name']
-        
-        # Variance to be used to specify zero-distance point variance
-        variance = params.get('variance', 0.) # variance=0. (default) means COSMOS value used
-        # Unless another value specifed, adopt default dx_cosmos=0.03 (implies arcsec units)
-        dx_cosmos = params.get('dx_cosmos', 0.03)
+        kwargs = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
 
         # Build the cf first (TODO: change this, see below)
-        cf = galsim.correlatednoise.get_COSMOS_CorrFunc(
-            file_name, dx_cosmos=dx_cosmos, variance=variance)
+        cf = galsim.correlatednoise.get_COSMOS_CorrFunc(**kwargs)
         # TODO: Harmonize the usage below with the other noise application methods once the CorrFunc
-        # becomes a Noise class instance and cn be used directly with the im.addNoise method
-        cf.applyNoiseTo(im, dx=pixel_scale, dev=rng)
+        # becomes a Noise class instance and can be used directly with the im.addNoise method
+        cf.applyNoiseTo(im, dev=rng)
 
         # Then add the variance to the weight image, using the zero-lag correlation function value
         if weight_im:
@@ -737,20 +730,13 @@ def AddNoisePhot(im, weight_im, noise, base, rng, sky_level, logger=None):
         req = { 'file_name' : str }
         opt = { 'dx_cosmos' : float, 'variance' : float }
         
-        params = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
-        file_name = params['file_name']
-        
-        # Variance to be used to specify zero-distance point variance
-        variance = params.get('variance', 0.) # variance=0. (default) means COSMOS value used
-        # Unless another value specifed, adopt default dx_cosmos=0.03 (implies arcsec units)
-        dx_cosmos = params.get('dx_cosmos', 0.03)
+        kwargs = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
 
         # Build the cf first (TODO: change this, see below)
-        cf = galsim.correlatednoise.get_COSMOS_CorrFunc(
-            file_name, dx_cosmos=dx_cosmos, variance=variance)
+        cf = galsim.correlatednoise.get_COSMOS_CorrFunc(**kwargs)
         # TODO: Harmonize the usage below with the other noise application methods once the CorrFunc
-        # becomes a Noise class instance and cn be used directly with the im.addNoise method
-        cf.applyNoiseTo(im, dx=pixel_scale, dev=rng)
+        # becomes a Noise class instance and can be used directly with the im.addNoise method
+        cf.applyNoiseTo(im, dev=rng)
 
         # Then add the variance to the weight image, using the zero-lag correlation function value
         if weight_im:
@@ -885,18 +871,12 @@ def CalculateNoiseVar(noise, pixel_scale, sky_level):
         req = { 'file_name' : str }
         opt = { 'dx_cosmos' : float, 'variance' : float }
         
-        params = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
-        file_name = params['file_name']
-        
-        # Variance to be used to specify zero-distance point variance
-        variance = params.get('variance', 0.) # variance=0. (default) means COSMOS value used
-        # Unless another value specifed, adopt default dx_cosmos=0.03 (implies arcsec units)
-        dx_cosmos = params.get('dx_cosmos', 0.03)
+        kwargs = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
 
-        # Build the cf first (TODO: change this, see below)
-        cf = galsim.correlatednoise.get_COSMOS_CorrFunc(
-            file_name, dx_cosmos=dx_cosmos, variance=variance)
+        # Build the cf first (TODO: change this)
+        cf = galsim.correlatednoise.get_COSMOS_CorrFunc(**kwargs)
         # zero distance correlation function value returned as variance
+        # TODO: Use getVariance once CorrFunc is a Noise sub-class
         var = cf._profile.xValue(galsim.PositionD(0., 0.))
 
     else:
