@@ -70,6 +70,10 @@ def main(argv):
 
     # Define some parameters we'll use below.
 
+    # Make output directory if not already present.
+    if not os.path.isdir('output'):
+        os.mkdir('output')
+
     file_name = os.path.join('output','cube_phot.fits.gz')
 
     random_seed = 553728

@@ -194,6 +194,11 @@ def main(argv):
     # measurement code here and pass it the image we just built.
     #
     # However, we're going to be boring and just write it to a file.
+
+    # Make output directory if not already present.
+    if not os.path.isdir('output'):
+        os.mkdir('output')
+
     single_file_name = os.path.join('output','bpd_single.fits')
     image.write(single_file_name)
 
