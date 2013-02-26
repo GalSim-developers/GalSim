@@ -731,7 +731,8 @@ class GSObject(object):
 
         try:
             added_flux = self.SBProfile.drawShoot(
-                image.view(), n_photons, uniform_deviate, gain, max_extra_noise, poisson_flux)
+                image.view(), n_photons, uniform_deviate, gain, max_extra_noise,
+                poisson_flux, add_to_image)
         except RuntimeError:
             raise RuntimeError(
                 "Unable to drawShoot from this GSObject, perhaps it contains an SBDeconvolve "+

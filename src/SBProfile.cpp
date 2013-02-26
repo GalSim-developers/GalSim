@@ -29,6 +29,7 @@
 #ifdef DEBUGLOGGING
 #include <fstream>
 std::ostream* dbgout = new std::ofstream("debug.out");
+//std::ostream* dbgout = &std::cout;
 int verbose_level = 2;
 // There are three levels of verbosity which can be helpful when debugging,
 // which are written as dbg, xdbg, xxdbg (all defined in Std.h).
@@ -537,8 +538,9 @@ namespace galsim {
     }
 
     template <class T>
-    double SBProfile::drawShoot(ImageView<T> img, double N, UniformDeviate u,
-                                double gain, double max_extra_noise, bool poisson_flux) const 
+    double SBProfile::drawShoot(
+        ImageView<T> img, double N, UniformDeviate u, double gain, double max_extra_noise,
+        bool poisson_flux, bool add_to_image) const 
     {
         // If N = 0, this routine will try to end up with an image with the number of real 
         // photons = flux that has the corresponding Poisson noise. For profiles that are 
@@ -619,7 +621,8 @@ namespace galsim {
         dbg<<"mod_flux = "<<mod_flux<<std::endl;
 
         // Use this for the factor by which to scale photon arrays.
-        double flux_scaling = eta_factor;
+        // Also need to scale flux by gain = photons/ADU so we add ADU to the image.
+        double flux_scaling = eta_factor/gain;
 
         // If requested, let the target flux value vary as a Poisson deviate
         if (poisson_flux) {
@@ -653,13 +656,25 @@ namespace galsim {
         if (N == 0.) N = mod_flux;
         double origN = N;
 
+        // If not adding to the current image, zero it out:
+        if (!add_to_image) img.setZero();
+
         // Center the image at 0,0:
         img.setCenter(0,0);
         dbg<<"On input, image has central value = "<<img(0,0)<<std::endl;
 
         // Store the PhotonArrays to be added here rather than add them as we go,
         // since we might need to rescale them all before adding.
+        // We only use this if max_extra_noise > 0 and add_to_image = true.
         std::vector<boost::shared_ptr<PhotonArray> > arrays;
+
+        // total flux falling inside image bounds, this will be returned on exit.
+        double added_flux = 0.; 
+#ifdef DEBUGLOGGING
+        double realized_flux = 0.;
+        double positive_flux = 0.;
+        double negative_flux = 0.;
+#endif
 
         // If we're automatically figuring out N based on max_extra_noise, start with 100 photons
         // Otherwise we'll do a maximum of maxN at a time until we go through all N.
@@ -685,7 +700,23 @@ namespace galsim {
             xdbg<<"scale flux by "<<(flux_scaling*thisN/origN)<<std::endl;
             pa->scaleFlux(flux_scaling * thisN / origN);
             xdbg<<"pa.flux => "<<pa->getTotalFlux()<<std::endl;
-            arrays.push_back(pa);
+
+            if (add_to_image && max_extra_noise > 0.) {
+                // Then we might need to rescale these, so store it and deal with it later.
+                arrays.push_back(pa);
+            } else {
+                // Otherwise, we can go ahead and apply it here.
+                added_flux += pa->addTo(img);
+#ifdef DEBUGLOGGING
+                realized_flux += pa->getTotalFlux();
+                for(int i=0; i<pa->size(); ++i) {
+                    double f = pa->getFlux(i);
+                    if (f >= 0.) positive_flux += f;
+                    else negative_flux += -f;
+                }
+#endif
+            }
+         
             N -= thisN;
             xdbg<<"N -> "<<N<<std::endl;
 
@@ -733,33 +764,41 @@ namespace galsim {
             // Need to rescale the arrays by factor of origN / (origN-N)
             dbg<<"Flux scalings were set according to origN = "<<origN<<std::endl;
             dbg<<"But only shot N = "<<origN-N<<std::endl;
-            double factor = origN / (origN-N) / gain;
-            dbg<<"Rescale arrays by factor = "<<factor<<std::endl;
-            for (size_t k=0; k<arrays.size(); ++k) arrays[k]->scaleFlux(factor);
-        } else if (gain != 1.0) {
-            // Also need to rescale if the gain != 1
-            dbg<<"Rescale arrays by 1./gain = "<<1./gain<<std::endl;
-            for (size_t k=0; k<arrays.size(); ++k) arrays[k]->scaleFlux(1./gain);
+            double factor = origN / (origN-N);
+            dbg<<"Rescale by factor = "<<factor<<std::endl;
+
+            if (arrays.size() > 0) {
+                // If using arrays, rescale the flux in each
+                for (size_t k=0; k<arrays.size(); ++k) arrays[k]->scaleFlux(factor);
+            } else {
+                // Otherwise, rescale the image itself
+                assert(!add_to_image);
+                img *= T(factor);
+                // Also fix the added_flux value
+                added_flux *= factor;
+#ifdef DEBUGLOGGING
+                realized_flux *= factor;
+                positive_flux *= factor;
+                negative_flux *= factor;
+#endif
+            }
         }
 
-        // Now we can go ahead and add all the arrays to the image:
-        double added_flux = 0.; // total flux falling inside image bounds, returned
+        if (arrays.size() > 0) {
+            // Now we can go ahead and add all the arrays to the image:
+            assert(added_flux == 0.);
+            for (size_t k=0; k<arrays.size(); ++k) {
+                PhotonArray* pa = arrays[k].get();
+                added_flux += pa->addTo(img);
 #ifdef DEBUGLOGGING
-        double realized_flux = 0.;
-        double positive_flux = 0.;
-        double negative_flux = 0.;
+                realized_flux += pa->getTotalFlux();
+                for(int i=0; i<pa->size(); ++i) {
+                    double f = pa->getFlux(i);
+                    if (f >= 0.) positive_flux += f;
+                    else negative_flux += -f;
+                }
 #endif
-        for (size_t k=0; k<arrays.size(); ++k) {
-            PhotonArray* pa = arrays[k].get();
-            added_flux += pa->addTo(img);
-#ifdef DEBUGLOGGING
-            realized_flux += pa->getTotalFlux();
-            for(int i=0; i<pa->size(); ++i) {
-                double f = pa->getFlux(i);
-                if (f >= 0.) positive_flux += f;
-                else negative_flux += -f;
             }
-#endif
         }
 
 #ifdef DEBUGLOGGING
@@ -786,10 +825,10 @@ namespace galsim {
 
     template double SBProfile::drawShoot(
         ImageView<float> image, double N, UniformDeviate ud, double gain,
-        double max_extra_noise, bool poisson_flux) const;
+        double max_extra_noise, bool poisson_flux, bool add_to_image) const;
     template double SBProfile::drawShoot(
         ImageView<double> image, double N, UniformDeviate ud, double gain,
-        double max_extra_noise, bool poisson_flux) const;
+        double max_extra_noise, bool poisson_flux, bool add_to_image) const;
 
     template double SBProfile::draw(ImageView<float> img, double gain, double wmult) const;
     template double SBProfile::draw(ImageView<double> img, double gain, double wmult) const;
