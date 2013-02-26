@@ -132,10 +132,109 @@ namespace galsim {
     const LVector& SBShapelet::SBShapeletImpl::getBVec() const { return _bvec; }
 
     template <typename T>
+    double SBShapelet::SBShapeletImpl::fillXImage(ImageView<T>& image, double gain) const 
+    {
+        dbg<<"Start fillXImage\n";
+        dbg<<"sigma = "<<_sigma<<std::endl;
+        dbg<<"bvec = "<<_bvec<<std::endl;
+        dbg<<"image.bounds = "<<image.getBounds()<<std::endl;
+        dbg<<"image.scale = "<<image.getScale()<<std::endl;
+        dbg<<"gain = "<<gain<<std::endl;
+        double dx = image.getScale();
+        double scale = dx / _sigma;
+        dbg<<"dx = "<<dx<<std::endl;
+        dbg<<"scale = "<<scale<<std::endl;
+        const int nx = image.getXMax() - image.getXMin() + 1;
+        const int ny = image.getYMax() - image.getYMin() + 1;
+        const int npts = nx * ny;
+        dbg<<"nx, ny, npts = "<<nx<<','<<ny<<','<<npts<<std::endl;
+        tmv::Vector<double> x(npts);
+        tmv::Vector<double> y(npts);
+        int i=0;
+        for (int ix = image.getXMin(); ix <= image.getXMax(); ++ix) {
+            for (int iy = image.getYMin(); iy <= image.getYMax(); ++iy) {
+                x[i] = ix * scale;
+                y[i] = iy * scale;
+                ++i;
+            }
+        }
+
+        tmv::Matrix<double> psi(npts,_bvec.size(),0.);
+        LVector::basis(psi,x,y,_bvec.getOrder(),_sigma);
+
+        tmv::Vector<double> I = psi * _bvec.rVector();
+        double totalflux = I.sumElements();
+
+        i=0;
+        for (int ix = image.getXMin(); ix <= image.getXMax(); ++ix) {
+            for (int iy = image.getYMin(); iy <= image.getYMax(); ++iy) {
+                image(ix,iy) = I[i++]/gain;
+            }
+        }
+
+        return totalflux * dx*dx;
+    }
+
+    void SBShapelet::SBShapeletImpl::fillXGrid(XTable& xt) const 
+    {
+        int N = xt.getN();
+        double scale = xt.getDx() / _sigma;
+        const int npts = N*N;
+        tmv::Vector<double> x(npts);
+        tmv::Vector<double> y(npts);
+        int i=0;
+        for (int iy = -N/2; iy < N/2; iy++) {
+            for (int ix = -N/2; ix < N/2; ix++) {
+                x[i] = ix * scale;
+                y[i] = iy * scale;
+                ++i;
+            }
+        }
+
+        tmv::Matrix<double> psi(npts,_bvec.size(),0.);
+        LVector::basis(psi,x,y,_bvec.getOrder(),_sigma);
+
+        tmv::VectorView<double> I = tmv::VectorViewOf(xt.getArray(),npts);
+        I = psi * _bvec.rVector();
+    }
+
+    void SBShapelet::SBShapeletImpl::fillKGrid(KTable& kt) const 
+    {
+        int N = kt.getN();
+        double scale = kt.getDk() * _sigma;
+        const int npts = N*(N/2+1);
+        tmv::Vector<double> kx(npts);
+        tmv::Vector<double> ky(npts);
+        int i=0;
+        for (int iy = 0; iy < N/2; iy++) {
+            // Negative ix are just the conjugate of positive ix, and are not stored
+            // in the array.
+            for (int ix = 0; ix <= N/2; ix++) {
+                kx[i] = ix * scale;
+                ky[i] = iy * scale;
+                ++i;
+            }
+        }
+        // Negative iy are wrapped to after 0..N/2
+        for (int iy = -N/2; iy < 0; iy++) {
+            for (int ix = 0; ix <= N/2; ix++) {
+                kx[i] = ix * scale;
+                ky[i] = iy * scale;
+                ++i;
+            }
+        }
+
+        tmv::Matrix<std::complex<double> > psi_k(npts,_bvec.size(),0.);
+        LVector::kBasis(psi_k,kx,ky,_bvec.getOrder(),_sigma);
+
+        tmv::VectorView<std::complex<double> > I = tmv::VectorViewOf(kt.getArray(),npts);
+        I = psi_k * _bvec.rVector();
+    }
+
+    template <typename T>
     void ShapeletFitImage(double sigma, LVector& bvec, const BaseImage<T>& image,
                           const Position<double>& center)
     {
-        int order = bvec.getOrder();
         double scale = image.getScale() / sigma;
         double cenx = center.x / sigma;
         double ceny = center.y / sigma;
@@ -155,8 +254,8 @@ namespace galsim {
             }
         }
 
-        tmv::Matrix<double> psi(npts,bvec.size());
-        LVector::basis(psi,x,y,order,sigma);
+        tmv::Matrix<double> psi(npts,bvec.size(),0.);
+        LVector::basis(psi,x,y,bvec.getOrder(),sigma);
         // I = psi * b
         // TMV solves this by writing b = I/psi.
         // We use QRP in case the psi matrix is close to singular (although it shouldn't be).

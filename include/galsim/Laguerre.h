@@ -385,34 +385,47 @@ namespace galsim {
         // Inputs assume that the x and y values have already been transformed
         // to a unit-circle basis, but can optionally rescale output
         // by 1/sigma^2 to obtain proper normalization:
-        void fillBasis(double xunit, double yunit, double sigma=1.);
+        void fillBasis(double x, double y, double sigma=1.);
 
         // Create a matrix containing basis values at vector of input points.
         // Output matrix has m(i,j) = jth basis function at ith point
         static boost::shared_ptr<tmv::Matrix<double> > basis(
-            const tmv::Vector<double>& xunit, const tmv::Vector<double>& yunit,
+            const tmv::Vector<double>& x, const tmv::Vector<double>& y,
             int order, double sigma=1.);
 
         // Create design matrix, including factors of 1/sigma stored in invsig
         static boost::shared_ptr<tmv::Matrix<double> > design(
-            const tmv::Vector<double>& xunit, const tmv::Vector<double>& yunit,
+            const tmv::Vector<double>& x, const tmv::Vector<double>& y,
             const tmv::Vector<double>& invsig, int order, double sigma=1.);
 
         // ...or provide your own matrix
         static void design(
-            tmv::Matrix<double>& out, const tmv::Vector<double>& xunit,
-            const tmv::Vector<double>& yunit, const tmv::Vector<double>& invsig,
+            tmv::Matrix<double>& out, const tmv::Vector<double>& x,
+            const tmv::Vector<double>& y, const tmv::Vector<double>& invsig,
             int order, double sigma=1.);
 
         static void basis(
-            tmv::Matrix<double>& out, const tmv::Vector<double>& xunit,
-            const tmv::Vector<double>& yunit, int order, double sigma=1.);
+            tmv::Matrix<double>& out, const tmv::Vector<double>& x,
+            const tmv::Vector<double>& y, int order, double sigma=1.);
 
         // Create matrices with real and imaginary parts of (Hermitian) FT of basis set:
         static void kBasis(
-            const tmv::Vector<double>& kxunit, const tmv::Vector<double>& kyunit,
-            boost::shared_ptr<tmv::Matrix<double> >& kReal,
-            boost::shared_ptr<tmv::Matrix<double> >& kImag, int order);
+            boost::shared_ptr<tmv::Matrix<double> >& psi_kReal,
+            boost::shared_ptr<tmv::Matrix<double> >& psi_kImag,
+            const tmv::Vector<double>& kx, const tmv::Vector<double>& ky,
+            int order, double sigma);
+        static void kBasis(
+            tmv::Matrix<double>& psi_kReal, tmv::Matrix<double>& psi_kImag,
+            const tmv::Vector<double>& kx, const tmv::Vector<double>& ky,
+            int order, double sigma);
+        static void kBasis(
+            boost::shared_ptr<tmv::Matrix<std::complex<double> > >& psi_k,
+            const tmv::Vector<double>& kx, const tmv::Vector<double>& ky,
+            int order, double sigma);
+        static void kBasis(
+            tmv::Matrix<std::complex<double> >& psi_k,
+            const tmv::Vector<double>& kx, const tmv::Vector<double>& ky,
+            int order, double sigma);
 
         // ?? Add routine to decompose a data vector into b's
         // ?? Add routines to evaluate summed basis at a set of x/k points

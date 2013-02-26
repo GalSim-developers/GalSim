@@ -58,6 +58,21 @@ namespace galsim {
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const 
         { throw SBError("SBShapelet::shoot() is not implemented"); }
 
+        // Override for better efficiency:
+        void fillKGrid(KTable& kt) const;
+        void fillXGrid(XTable& xt) const;
+        template <typename T>
+        double fillXImage(ImageView<T>& I, double gain) const;
+
+        double doFillXImage(ImageView<float>& I, double gain) const
+        { return fillXImage(I,gain); }
+        double doFillXImage(ImageView<double>& I, double gain) const
+        { return fillXImage(I,gain); }
+        double doFillXImage(ImageView<short>& I, double gain) const
+        { return fillXImage(I,gain); }
+        double doFillXImage(ImageView<int>& I, double gain) const
+        { return fillXImage(I,gain); }
+
     private:
         double _sigma;
         LVector _bvec;  

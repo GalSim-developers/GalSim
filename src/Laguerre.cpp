@@ -282,31 +282,72 @@ namespace galsim {
     }
 
     void LVector::kBasis(
+        boost::shared_ptr<tmv::Matrix<double> >& psi_kReal,
+        boost::shared_ptr<tmv::Matrix<double> >& psi_kImag,
         const tmv::Vector<double>& kx, const tmv::Vector<double>& ky,
-        boost::shared_ptr<tmv::Matrix<double> >& kReal,
-        boost::shared_ptr<tmv::Matrix<double> >& kImag, int order)
+        int order, double sigma)
     {
         const int ndof=PQIndex::size(order);
         const int npts = kx.size();
         assert (ky.size()==npts);
-        if (!kReal.get() || kReal->nrows()!=npts || kReal->ncols()!=ndof) {
-            kReal.reset(new tmv::Matrix<double>(npts, ndof, 0.));
+        if (!psi_kReal.get() || psi_kReal->nrows()!=npts || psi_kReal->ncols()!=ndof) {
+            psi_kReal.reset(new tmv::Matrix<double>(npts, ndof, 0.));
         } else {
-            kReal->setZero();
+            psi_kReal->setZero();
         }
-        if (!kImag.get() || kImag->nrows()!=npts || kImag->ncols()!=ndof) {
-            kImag.reset(new tmv::Matrix<double>(npts, ndof, 0.));
+        if (!psi_kImag.get() || psi_kImag->nrows()!=npts || psi_kImag->ncols()!=ndof) {
+            psi_kImag.reset(new tmv::Matrix<double>(npts, ndof, 0.));
         } else {
-            kImag->setZero();
+            psi_kImag->setZero();
         }
+        kBasis(*psi_kReal,*psi_kImag,kx,ky,order,sigma);
+    }
+
+    void LVector::kBasis(
+        tmv::Matrix<double>& psi_kReal, tmv::Matrix<double>& psi_kImag,
+        const tmv::Vector<double>& kx, const tmv::Vector<double>& ky,
+        int order, double sigma)
+    {
+        const int npts = kx.size();
+        assert (ky.size()==npts);
         for (int ilo=0; ilo<npts; ilo+=BLOCKING_FACTOR) {
             int ihi = std::min(npts, ilo + BLOCKING_FACTOR);
-            tmv::MatrixView<double> mr = kReal->rowRange(ilo,ihi);
-            tmv::MatrixView<double> mi = kImag->rowRange(ilo,ihi);
-            mBasis(kx.subVector(ilo,ihi), ky.subVector(ilo,ihi), 0, &mr, &mi, order, true, 1.);
+            tmv::MatrixView<double> mr = psi_kReal.rowRange(ilo,ihi);
+            tmv::MatrixView<double> mi = psi_kImag.rowRange(ilo,ihi);
+            mBasis(kx.subVector(ilo,ihi), ky.subVector(ilo,ihi), 0, &mr, &mi, order, true, sigma);
         }
     }
 
+    void LVector::kBasis(
+        boost::shared_ptr<tmv::Matrix<std::complex<double> > >& psi_k,
+        const tmv::Vector<double>& kx, const tmv::Vector<double>& ky,
+        int order, double sigma)
+    {
+        const int ndof=PQIndex::size(order);
+        const int npts = kx.size();
+        assert (ky.size()==npts);
+        if (!psi_k.get() || psi_k->nrows()!=npts || psi_k->ncols()!=ndof) {
+            psi_k.reset(new tmv::Matrix<std::complex<double> >(npts, ndof, 0.));
+        } else {
+            psi_k->setZero();
+        }
+        kBasis(*psi_k,kx,ky,order,sigma);
+    }
+
+    void LVector::kBasis(
+        tmv::Matrix<std::complex<double> >& psi_k,
+        const tmv::Vector<double>& kx, const tmv::Vector<double>& ky,
+        int order, double sigma)
+    {
+        const int npts = kx.size();
+        assert (ky.size()==npts);
+        for (int ilo=0; ilo<npts; ilo+=BLOCKING_FACTOR) {
+            int ihi = std::min(npts, ilo + BLOCKING_FACTOR);
+            tmv::MatrixView<double> mr = psi_k.rowRange(ilo,ihi).realPart();
+            tmv::MatrixView<double> mi = psi_k.rowRange(ilo,ihi).imagPart();
+            mBasis(kx.subVector(ilo,ihi), ky.subVector(ilo,ihi), 0, &mr, &mi, order, true, sigma);
+        }
+    }
 
     void LVector::mBasis(
         const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
