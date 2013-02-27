@@ -25,8 +25,8 @@ import galsim
 from . import base
 from . import utilities
 
-class _BaseCorrelatedNoise(galsim._galsim.BaseNoise):
-    """A Base Class describing 2D correlated noise fields.
+class _BaseCorrelatedNoise(galsim.GaussianNoise):
+    """A Base Class describing 2D correlated Gaussian random noise fields.
 
     A _BaseCorrelatedNoise will not generally be instantiated directly.  This is recommended as the
     current `_BaseCorrelatedNoise.__init__` interface does not provide any guarantee that the input
@@ -47,6 +47,9 @@ class _BaseCorrelatedNoise(galsim._galsim.BaseNoise):
         if not isinstance(gsobject, base.GSObject):
             raise TypeError(
                 "Supplied gsobject argument not a galsim.GSObject or derived class instance.")
+
+        # Initialize the GaussianNoise with our input random deviate
+        galsim._galsim.GaussianNoise.__init__(self, rng, sigma=1.) # We want unit noise for later
         
         # Act as a container for the GSObject used to represent the correlation funcion.
         self._profile = gsobject
@@ -360,7 +363,7 @@ class _BaseCorrelatedNoise(galsim._galsim.BaseNoise):
 # Then we define the ImageCorrFunc, which generates a correlation function by estimating it directly
 # from images:
 #
-class ImageCorrFunc(_BaseCorrelatedNoise):
+class CorrelatedNoise(_BaseCorrelatedNoise):
     """A class that represents 2D correlated noise fields calculated from an input Image.
 
     This class stores an internal representation of a 2D, discrete correlation function, and allows
@@ -380,20 +383,20 @@ class ImageCorrFunc(_BaseCorrelatedNoise):
 
     Basic example:
 
-        >>> cf = galsim.ImageCorrFunc(image)
+        >>> cn = galsim.CorrelatedNoise(image)
 
-    Instantiates an ImageCorrFunc using the pixel scale information contained in image.getScale()
+    Instantiates a CorrelatedNoise using the pixel scale information contained in image.getScale()
     (assumes the scale is unity if image.getScale() <= 0.)
 
     Optional Inputs
     ---------------
 
-        >>> cf = galsim.ImageCorrFunc(image, dx=0.2)
+        >>> cn = galsim.CorrelatedNoise(image, dx=0.2)
 
     The example above instantiates an ImageCorrFunc, but forces the use of the pixel scale `dx` to
     set the units of the internal lookup table.
 
-        >>> cf = galsim.ImageCorrFunc(image,
+        >>> cn = galsim.CorrelatedNoise(image,
         ...     interpolant=galsim.InterpolantXY(galsim.Lanczos(5, tol=1.e-4))
 
     The example above instantiates a ImageCorrFunc, but forces the use of a non-default interpolant
@@ -410,7 +413,7 @@ class ImageCorrFunc(_BaseCorrelatedNoise):
     The main way that ImageCorrFunc is used is to add or assign correlated noise to an image.
     This is done with
 
-        cf.applyNoiseTo(im)
+        cn.applyNoiseTo(im)
 
     The correlation function is calculated from its pixel values using the NumPy FFT functions.
     Optionally, the pixel scale for the input `image` can be specified using the `dx` keyword
@@ -421,7 +424,7 @@ class ImageCorrFunc(_BaseCorrelatedNoise):
 
     Another method that may be of use is
 
-        cf.calculateCovarianceMatrix(im.bounds, dx)
+        cn.calculateCovarianceMatrix(im.bounds, dx)
 
     which can be used to generate a covariance matrix based on a user input image geometry.  See
     the .calculateCovarianceMatrix() method docstring for more information.
@@ -429,22 +432,22 @@ class ImageCorrFunc(_BaseCorrelatedNoise):
     A number of methods familiar from GSObject instance have also been implemented directly as 
     `cf` methods, so that the following commands are all legal:
 
-        cf.draw(im, dx, wmult=4)
-        cf.createSheared(s)
-        cf.createMagnified(m)
-        cf.createRotated(theta * galsim.degrees)
-        cf.createTransformed(ellipse)
-        cf.applyShear(s)
-        cf.applyMagnification(m)
-        cf.applyRotation(theta * galsim.degrees)
-        cf.applyTransformation(ellipse)
+        cn.draw(im, dx, wmult=4)
+        cn.createSheared(s)
+        cn.createMagnified(m)
+        cn.createRotated(theta * galsim.degrees)
+        cn.createTransformed(ellipse)
+        cn.applyShear(s)
+        cn.applyMagnification(m)
+        cn.applyRotation(theta * galsim.degrees)
+        cn.applyTransformation(ellipse)
 
     See the individual method docstrings for more details.
 
     A new method, which is in fact a more appropriately named reimplmentation of the
     .scaleFlux() method in GSObject instances, is
 
-        cf.scaleVariance(variance_ratio)
+        cn.scaleVariance(variance_ratio)
 
     which scales the overall correlation function, and therefore its total variance, by a scalar
     factor `variance_ratio`.
@@ -454,10 +457,10 @@ class ImageCorrFunc(_BaseCorrelatedNoise):
     Addition, multiplication and division operators are defined to work in an intuitive way for
     correlation functions.
 
-    Addition works simply to add the internally-stored correlation functions, so that
+    Addition works simply to add the internally-stored correlated noise fields, so that
 
-        >>> cf2 = cf0 + cf1
-        >>> cf2 += cf1
+        >>> cn2 = cn0 + cn1
+        >>> cn2 += cn1
 
     provides a representation of the correlation function of two linearly summed fields represented
     by the individual correlation function operands.
@@ -546,20 +549,20 @@ class ImageCorrFunc(_BaseCorrelatedNoise):
             (np.sqrt(original_ps_image.array), original_cf_image.getScale()))
 
 # Make a function for returning Noise correlations
-def _Image_getCorrFunc(image):
-    """Returns an ImageCorrFunc instance by calculating the correlation function of image pixels.
+def _Image_getCorrelatedNoise(image):
+    """Returns a CorrelatedNoise instance by calculating the correlation function of image pixels.
     """
-    return ImageCorrFunc(image)
+    return CorrelatedNoise(image)
 
 # Then add this Image method to the Image classes
 for Class in galsim.Image.itervalues():
-    Class.getCorrFunc = _Image_getCorrFunc
+    Class.getCorrelatedNoise = _Image_getCorrelatedNoise
 
 for Class in galsim.ImageView.itervalues():
-    Class.getCorrFunc = _Image_getCorrFunc
+    Class.getCorrelatedNoise = _Image_getCorrelatedNoise
 
 for Class in galsim.ConstImageView.itervalues():
-    Class.getCorrFunc = _Image_getCorrFunc
+    Class.getCorrelatedNoise = _Image_getCorrelatedNoise
 
 # Free function for returning a COSMOS noise field correlation function
 def get_COSMOS_CorrFunc(file_name, dx_cosmos=0.03, variance=0.):
