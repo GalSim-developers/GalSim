@@ -81,6 +81,9 @@ def main(argv):
     # This script is designed to be run from the examples directory so dir is a relative path.  
     # But the '../examples/' part lets bin/demo6 also be run from the bin directory.
     dir = '../examples/data'
+    # Make output directory if not already present.
+    if not os.path.isdir('output'):
+        os.mkdir('output')
     cube_file_name = os.path.join('output','cube_real.fits')
     psf_file_name = os.path.join('output','psf_real.fits')
 

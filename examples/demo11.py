@@ -6,11 +6,17 @@ The eleventh script in our tutorial about using GalSim in python scripts: exampl
 
 This script uses a constant PSF from real data (an image read in from a bzipped FITS file, not a
 parametric model) and variable shear according to some cosmological model for which we have a
-tabulated power spectrum at specific k values only.  The 225 galaxies in the 0.25x0.25 degree field
-(representing a low number density of 1/arcmin^2) are randomly located and permitted to overlap, but
+tabulated power spectrum at specific k values only.  The 288 galaxies in the 0.2 x 0.2 degree field
+(representing a low number density of 2/arcmin^2) are randomly located and permitted to overlap, but
 we do take care to avoid being too close to the edge of the large image.  For the galaxies, we use a
-random selection from 5 specific RealGalaxy objects, selected to be 5 particularly irregular
-ones. These are taken from the same catalog of 100 objects that demo6 used.
+random selection from 5 specific RealGalaxy objects, selected to be 5 particularly irregular ones.
+These are taken from the same catalog of 100 objects that demo6 used.
+
+The noise added to the image is spatially correlated in the same way as often seen in coadd images
+from the Hubble Space Telescope (HST) Advanced Camera for Surveys, using a correlation function
+determined from the HST COSMOS coadd images in the F814W filter (see, e.g., Leauthaud et al 2007).
+Applying this noise uses an FFT of the size of the full output image: this may cause memory-related
+slowdowns in systems with less than 2GB RAM.
 
 New features introduced in this demo:
 
@@ -18,6 +24,8 @@ New features introduced in this demo:
 - tab = galsim.LookupTable(file)
 - ps = galsim.PowerSpectrum(..., units)
 - distdev = galsim.DistDeviate(rng, function, x_min, x_max)
+- cf = galsim.correlatednoise.get_COSMOS_CorrFunc(file_name, ...)
+- cf.applyNoiseTo(image, ...)
 
 - Power spectrum shears for non-gridded positions.
 - Reading a compressed FITS image (using BZip2 compression).
@@ -35,8 +43,8 @@ import galsim
 def main(argv):
     """
     Make images using constant PSF and variable shear:
-      - The main image is 0.25 x 0.25 degrees.
-      - Pixel scale is 0.2 arcsec, hence the image is 4500 x 4500 pixels.
+      - The main image is 0.2 x 0.2 degrees.
+      - Pixel scale is 0.2 arcsec, hence the image is 3600 x 3600 pixels.
       - Applied shear is from a cosmological power spectrum read in from file.
       - The PSF is a real one from SDSS, and corresponds to a convolution of atmospheric PSF,
         optical PSF, and pixel response, which has been sampled at pixel centers.  We used a PSF
@@ -44,8 +52,12 @@ def main(argv):
         telescope. However, in order that the galaxy resolution not be too poor, we tell GalSim that
         the pixel scale for that PSF image is 0.2" rather than 0.396".  We are simultaneously lying
         about the intrinsic size of the PSF and about the pixel scale when we do this.
-      - Galaxies are real galaxies, each with S/N~100.
-      - Noise is Poisson using a nominal sky value of 1.e4.
+      - Noise is correlated with the same spatial correlation function as found in HST COSMOS weak
+        lensing science images, with a point (zero distance) variance that we normalize to 1.e4.
+      - Galaxies are real galaxies, each with S/N~100 based on a point variance-only calculation
+        (such as discussed in Leauthaud et al 2007).  The true SNR is somewhat lower, due to the
+        presence of correlation in the noise.
+
     """
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger("demo11")
@@ -53,17 +65,17 @@ def main(argv):
     # Define some parameters we'll use below.
     # Normally these would be read in from some parameter file.
 
-    stamp_size = 100                 # number of pixels in each dimension of galaxy images
-    pixel_scale = 0.2                # arcsec/pixel
-    image_size = 0.25*galsim.degrees # size of big image in each dimension
-    image_size = int((image_size / galsim.arcsec)/pixel_scale) # convert to pixels
+    stamp_size = 100                  # number of pixels in each dimension of galaxy images
+    pixel_scale = 0.2                 # arcsec/pixel
+    image_size = 0.2 * galsim.degrees # size of big image in each dimension
+    image_size = int((image_size / galsim.arcsec) / pixel_scale) # convert to pixels
     image_size_arcsec = image_size*pixel_scale # size of big image in each dimension (arcsec)
-    sky_level = 1.e4                 # ADU / arcsec^2
-    nobj = 225                       # number of galaxies in entire field
-                                     # (This corresponds to 1 galaxy / arcmin^2)
-    grid_spacing = 90.0              # The spacing between the samples for the power spectrum 
-                                     # realization (arcsec)
-    gal_signal_to_noise = 100        # S/N of each galaxy
+    noise_variance = 1.e4             # ADU^2
+    nobj = 288                        # number of galaxies in entire field
+                                      # (This corresponds to 2 galaxies / arcmin^2)
+    grid_spacing = 90.0               # The spacing between the samples for the power spectrum 
+                                      # realization (arcsec)
+    gal_signal_to_noise = 100         # S/N of each galaxy
 
     # random_seed is used for both the power spectrum realization and the random properties
     # of the galaxies.
@@ -109,7 +121,7 @@ def main(argv):
     # terms of ell and C_ell; ell is inverse radians and C_ell in radians^2.  Since GalSim tends to
     # work in terms of arcsec, we have to tell it that the inputs are radians^-1 so it can convert
     # to store in terms of arcsec^-1.
-    pk_file = os.path.join('data','cosmo-fid.zmed1.00.out')
+    pk_file = os.path.join('..', 'examples', 'data','cosmo-fid.zmed1.00.out')
     ps = galsim.PowerSpectrum(pk_file, units = galsim.radians)
     # The argument here is "e_power_function" which defines the E-mode power to use.
     logger.info('Set up power spectrum from tabulated P(k)')
@@ -123,7 +135,7 @@ def main(argv):
     # filename).  We want to read the image directly into an InterpolatedImage GSObject, so we can
     # manipulate it as needed (here, the only manipulation needed is convolution).  We want a PSF
     # with flux 1, and we can set the pixel scale using a keyword.
-    psf_file = os.path.join('data','example_sdss_psf_sky0.fits.bz2')
+    psf_file = os.path.join('..', 'examples', 'data','example_sdss_psf_sky0.fits.bz2')
     psf = galsim.InterpolatedImage(psf_file, dx = pixel_scale, flux = 1.)
     # We do not include a pixel response function galsim.Pixel here, because the image that was read
     # in from file already included it.
@@ -142,7 +154,7 @@ def main(argv):
     # We want to make random positions within our image.  However, currently for shears from a power
     # spectrum we first have to get shears on a grid of positions, and then we can choose random
     # positions within that.  So, let's make the grid.  We're going to make it as large as the
-    # image, with grid points spaced by 10 arcsec (hence interpolation only happens below 10"
+    # image, with grid points spaced by 90 arcsec (hence interpolation only happens below 90"
     # scales, below the interesting scales on which we want the shear power spectrum to be
     # represented exactly).  Lensing engine wants positions in arcsec, so calculate that:
     ps.buildGriddedShears(grid_spacing = grid_spacing,
@@ -206,8 +218,7 @@ def main(argv):
         # image, which might have another galaxy near that point (so our S/N calculation would 
         # erroneously include the flux from the other object).
         # See demo5.py for the math behind this calculation.
-        sky_level_pixel = sky_level * pixel_scale**2
-        sn_meas = math.sqrt( numpy.sum(stamp.array**2) / sky_level_pixel )
+        sn_meas = math.sqrt( numpy.sum(stamp.array**2) / noise_variance )
         flux_scaling = gal_signal_to_noise / sn_meas
         stamp *= flux_scaling
 
@@ -222,11 +233,25 @@ def main(argv):
         tot_time = time2-time1
         logger.info('Galaxy %d: position relative to corner = %s, t=%f s', k, str(pos), tot_time)
 
-    # Add Poisson noise -- the CCDNoise can also take another RNG as its argument
-    # so it will be part of the same stream of random numbers as rng above.  We have to do this step
-    # at the end, rather than adding to individual postage stamps, in order to get the noise level
-    # right in the overlap regions between postage stamps.
-    full_image.addNoise(galsim.PoissonNoise(rng,sky_level_pixel))
+    # Add correlated noise to the image -- the correlation function comes from the HST COSMOS images
+    # and is described in more detail in the galsim.correlatednoise.get_COSMOS_CorrFunc() docstring.
+    # This function requires a FITS file, stored in the GalSim repository, that represents this
+    # correlation information: the path to this file is a required argument. 
+    cf_file_name = os.path.join('..', 'examples', 'data', 'acs_I_unrot_sci_20_cf.fits')
+
+    # Then use this to initialize the correlation function that we will use to add noise to the
+    # full_image.  We set the dx_cosmos keyword equal to our pixel scale, so that the noise among
+    # neighboring pixels is correlated at the same level as it was among neighboring pixels in HST
+    # COSMOS.  Using the original pixel scale, dx_cosmos=0.03 [arcsec], would leave very little
+    # correlation among our larger 0.2 arcsec pixels. We also set the point (zero-distance) variance
+    # to our desired value.
+    cf = galsim.correlatednoise.get_COSMOS_CorrFunc(
+        cf_file_name, dx_cosmos=pixel_scale, variance=noise_variance)
+
+    # Now add noise according to this correlation function to the full_image.  We have to do this
+    # step at the end, rather than adding to individual postage stamps, in order to get the noise
+    # level right in the overlap regions between postage stamps.
+    cf.applyNoiseTo(full_image, dx=pixel_scale, dev=rng)
     logger.info('Added noise to final large image')
 
     # Now write the image to disk.  It is automatically compressed with Rice compression,

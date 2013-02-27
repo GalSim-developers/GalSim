@@ -537,6 +537,27 @@ def AddNoiseFFT(im, weight_im, noise, base, rng, sky_level, logger=None):
         if logger:
             logger.debug('   Added CCD noise with sky_level = %f, ' +
                          'gain = %f, read_noise = %f',sky_level,gain,read_noise)
+
+    elif type == 'COSMOS':
+        req = { 'file_name' : str }
+        opt = { 'dx_cosmos' : float, 'variance' : float }
+        
+        kwargs = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
+
+        # Build the cf first (TODO: change this, see below)
+        cf = galsim.correlatednoise.get_COSMOS_CorrFunc(**kwargs)
+        # TODO: Harmonize the usage below with the other noise application methods once the CorrFunc
+        # becomes a Noise class instance and can be used directly with the im.addNoise method
+        cf.applyNoiseTo(im, dev=rng)
+
+        # Then add the variance to the weight image, using the zero-lag correlation function value
+        if weight_im:
+            weight_im += cf._profile.xValue(galsim.PositionD(0., 0.))
+        if logger:
+            logger.debug(
+                '   Added COSMOS correlated noise with variance = %f',
+                cf._profile.xValue(galsim.PositionD(0., 0.)))
+
     else:
         raise AttributeError("Invalid type %s for noise"%type)
 
@@ -704,6 +725,27 @@ def AddNoisePhot(im, weight_im, noise, base, rng, sky_level, logger=None):
         if logger:
             logger.debug('   Added CCD noise with sky_level = %f, ' +
                          'gain = %f, read_noise = %f',sky_level,gain,read_noise)
+
+    elif type == 'COSMOS':
+        req = { 'file_name' : str }
+        opt = { 'dx_cosmos' : float, 'variance' : float }
+        
+        kwargs = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
+
+        # Build the cf first (TODO: change this, see below)
+        cf = galsim.correlatednoise.get_COSMOS_CorrFunc(**kwargs)
+        # TODO: Harmonize the usage below with the other noise application methods once the CorrFunc
+        # becomes a Noise class instance and can be used directly with the im.addNoise method
+        cf.applyNoiseTo(im, dev=rng)
+
+        # Then add the variance to the weight image, using the zero-lag correlation function value
+        if weight_im:
+            weight_im += cf._profile.xValue(galsim.PositionD(0., 0.))
+        if logger:
+            logger.debug(
+                '   Added COSMOS correlated noise with variance = %f',
+                cf._profile.xValue(galsim.PositionD(0., 0.)))
+
     else:
         raise AttributeError("Invalid type %s for noise",type)
 
@@ -824,6 +866,18 @@ def CalculateNoiseVar(noise, pixel_scale, sky_level):
         gain = params.get('gain',1.0)
         read_noise = params.get('read_noise',0.0)
         var = sky_level * pixel_scale**2 / gain + read_noise * read_noise
+
+    elif type == 'COSMOS':
+        req = { 'file_name' : str }
+        opt = { 'dx_cosmos' : float, 'variance' : float }
+        
+        kwargs = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
+
+        # Build the cf first (TODO: change this)
+        cf = galsim.correlatednoise.get_COSMOS_CorrFunc(**kwargs)
+        # zero distance correlation function value returned as variance
+        # TODO: Use getVariance once CorrFunc is a Noise sub-class
+        var = cf._profile.xValue(galsim.PositionD(0., 0.))
 
     else:
         raise AttributeError("Invalid type %s for noise",type)
