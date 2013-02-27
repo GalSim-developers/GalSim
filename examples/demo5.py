@@ -89,6 +89,9 @@ def main(argv):
     pixel_scale = 1.0               # arcsec / pixel
     sky_level = 1.e6                # ADU / arcsec^2
 
+    # Make output directory if not already present.
+    if not os.path.isdir('output'):
+        os.mkdir('output')
     psf_file_name = os.path.join('output','g08_psf.fits')
     psf_beta = 3                    #
     psf_fwhm = 2.85                 # arcsec (=pixels)
