@@ -25,25 +25,28 @@ import galsim
 from . import base
 from . import utilities
 
-class _CorrFunc(object):
-    """A class describing 2D correlation functions, typically calculated from Images.
+class _BaseCorrelatedNoise(galsim._galsim.BaseNoise):
+    """A Base Class describing 2D correlated noise fields.
 
-    A _CorrFunc will not generally be instantiated directly.  This is recommended as the current
-    `_CorrFunc.__init__` interface does not provide any guarantee that the input `GSObject`
-    represents a physical correlation function, e.g. a profile that is an even function (two-fold
-    rotationally symmetric in the plane) and peaked at the origin.  The proposed pattern is that
-    users instead instantiate derived classes, such as the `ImageCorrFunc`, which are able to
-    guarantee the above. 
+    A _BaseCorrelatedNoise will not generally be instantiated directly.  This is recommended as the
+    current `_BaseCorrelatedNoise.__init__` interface does not provide any guarantee that the input
+    `GSObject` represents a physical correlation function, e.g. a profile that is an even function 
+    (two-fold rotationally symmetric in the plane) and peaked at the origin.  The proposed pattern
+    is that users instead instantiate derived classes, such as the CorrelatedNoise, which are able
+    to guarantee the above.
 
-    The _CorrFunc is therefore here primarily to define the way in which derived classes (currently
-    only the  `ImageCorrFunc`) store the correlation function profile, allow operations with it,
-    generate images containing noise with these correlation properties, and generate covariance 
-    matrices according to the correlation function.
+    The _BaseCorrelatedNoise is therefore here primarily to define the way in which derived classes 
+    (currently only the `CorrelatedNoise`) store the random deviate, noise correlation function
+    profile and allow operations with it, generate images containing noise with these correlation
+    properties, and generate covariance matrices according to the correlation function.
     """
-    def __init__(self, gsobject):
+    def __init__(self, rng, gsobject):
+        if not isinstance(rng, galsim.BaseDeviate):
+            raise TypeError(
+                "Supplied rng argument not a galsim.BaseDeviate or derived class instance.")
         if not isinstance(gsobject, base.GSObject):
             raise TypeError(
-                "Correlation function objects must be initialized with a GSObject.")
+                "Supplied gsobject argument not a galsim.GSObject or derived class instance.")
         
         # Act as a container for the GSObject used to represent the correlation funcion.
         self._profile = gsobject
@@ -357,13 +360,14 @@ class _CorrFunc(object):
 # Then we define the ImageCorrFunc, which generates a correlation function by estimating it directly
 # from images:
 #
-class ImageCorrFunc(_CorrFunc):
-    """A class that represents 2D discrete correlation functions calculated from an input Image.
+class ImageCorrFunc(_BaseCorrelatedNoise):
+    """A class that represents 2D correlated noise fields calculated from an input Image.
 
     This class stores an internal representation of a 2D, discrete correlation function, and allows
     a number of subsequent operations including interpolation, shearing, magnification and
     rendering of the correlation function profile into an output Image.  The class also allows
-    Gaussian noise to be generated according to the correlation function, and added to an Image.
+    correlated Gaussian noise fields to be generated according to the correlation function, and
+    added to an Image.
 
     It also allows the combination of multiple correlation functions by addition, and for the
     scaling of the total variance they represent by scalar factors.
