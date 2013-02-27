@@ -85,12 +85,12 @@ class DES_Shapelet(object):
                 fin = open(self.file_name, 'r')
                 lines = fin.readlines()
                 temp = lines[0].split()
-                self.psf_order = float(temp[0])
+                self.psf_order = int(temp[0])
                 self.psf_size = (self.psf_order+1) * (self.psf_order+2) / 2
                 self.sigma = float(temp[1])
-                self.fit_order = float(temp[2])
+                self.fit_order = int(temp[2])
                 self.fit_size = (self.fit_order+1) * (self.fit_order+2) / 2
-                self.npca = float(temp[3])
+                self.npca = int(temp[3])
 
                 temp = lines[1].split()
                 self.xmin = float(temp[0])
@@ -100,21 +100,23 @@ class DES_Shapelet(object):
 
                 temp = lines[2].split()
                 assert int(temp[0]) == self.psf_size
-                self.ave_psf = numpy.array(temp[2:self.psf_size+2])
+                self.ave_psf = numpy.array(temp[2:self.psf_size+2]).astype(float)
                 assert self.ave_psf.shape == (self.psf_size,)
 
                 temp = lines[3].split()
                 assert int(temp[0]) == self.npca
                 assert int(temp[1]) == self.psf_size
                 self.rot_matrix = numpy.array(
-                    [ lines[4+k].split()[1:self.psf_size+1] for k in range(self.npca) ] )
+                    [ lines[4+k].split()[1:self.psf_size+1] for k in range(self.npca) ]
+                    ).astype(float)
                 assert self.rot_matrix.shape == (self.npca, self.psf_size)
 
                 temp = lines[5+self.npca].split()
                 assert int(temp[0]) == self.fit_size
                 assert int(temp[1]) == self.npca
-                self.rot_matrix = numpy.array(
-                    [ lines[6+self.npca+k].split()[1:self.npca+1] for k in range(self.fit_size) ] )
+                self.interp_matrix = numpy.array(
+                    [ lines[6+self.npca+k].split()[1:self.npca+1] for k in range(self.fit_size) ]
+                    ).astype(float)
                 assert self.interp_matrix.shape == (self.fit_size, self.npca)
 
         except Exception, e:
