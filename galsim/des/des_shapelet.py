@@ -24,7 +24,7 @@ The DES_Shapelet class handles interpolated shapelet decompositions, which are g
 stored in *_fitpsf.fits files.
 
 The DES_PsfEx class handles interpolated PCA images, which are generally stored in 
-*_psfex.fits files.
+*_psfcat.psf files.
 """
 
 import galsim
@@ -49,7 +49,7 @@ class DES_Shapelet(object):
         if not file_type:
             if self.file_name.lower().endswith('.fits'):
                 file_type = 'FITS'
-            else
+            else:
                 file_type = 'ASCII'
         if file_type.upper() not in ['FITS', 'ASCII']:
             raise ValueError("file_type must be either FITS or ASCII if specified.")
@@ -132,8 +132,8 @@ class DES_Shapelet(object):
             raise ValueError("position in DES_Shapelet.getPSF is out of bounds")
 
         import numpy
-        Px = definePxy(pos.x,self.xmin,self.xmax)
-        Py = definePxy(pos.y,self.ymin,self.ymax)
+        Px = self.definePxy(pos.x,self.xmin,self.xmax)
+        Py = self.definePxy(pos.y,self.ymin,self.ymax)
         P = numpy.zeros(self.fit_size)
         i = 0
         for n in range(self.fit_order+1):
@@ -147,13 +147,13 @@ class DES_Shapelet(object):
         b += self.ave_psf
         return galsim.Shapelet(self.sigma, self.psf_order, b)
 
-    def definePxy(self, x, min, max)
+    def definePxy(self, x, min, max):
         import numpy
         x1 = (2.*x-min-max)/(max-min)
         temp = numpy.ones(self.fit_order+1)
         if self.fit_order > 0:
             temp[1] = x1
-        for i in range(2,order):
+        for i in range(2,self.fit_order):
             temp[i] = ((2.*i-1.)*x1*temp[i-1] - (i-1.)*temp[i-2]) / float(i)
         return temp
 
