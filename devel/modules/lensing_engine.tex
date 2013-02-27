@@ -79,6 +79,8 @@ issues:
 
 \section{Theory}\label{sect:theory}
 
+\subsection{Continuous representation}
+
 The lensing engine requires a shear power spectrum, $P(k)$, and
 assumes we are in the flat-sky limit.  Many standard references
 regarding lensing power spectra work in terms of the spherical
@@ -119,6 +121,8 @@ spectrum
 which essentially says the shear variance is the power integrated over
 the allowed area in $k$ space.
 
+\subsection{Representation on grids}
+
 We will have to modify the above formalism to account for the fact
 that all of our calculations use a discrete representation on a finite
 grid.  This 
@@ -129,7 +133,15 @@ d &= \mbox{spacing between grid points (angular units)}\\
 N &= \mbox{number of grid points along one dimension} = L/d.
 \end{align}
 Given this grid, our $\kmax=2\pi/d$.  The \kmin\ along one dimension
-is $2\pi/L$, so we can think of this quantity as the grid spacing in Fourier space.
+is $2\pi/L$, so we can think of this quantity as the grid spacing in
+Fourier space, i.e., $\kmin=\Delta k$.  For a given grid point in
+Fourier space, it is
+somewhat a matter of taste as to whether it is considered to start at
+that $k$ and extend to $k+\Delta k$, or whether it goes from $k-\Delta
+k/2$ to $k+\Delta k/2$.  For the examples we will consider, the
+difference between these two options is typically of order 1\%.  In
+practice, the choice of convention just shifts the limits of
+integration in the equations below by $\Delta k$.
 
 In the context 
 of power spectra for gridded quantities, instead of using
@@ -139,11 +151,14 @@ terms of the 2D integral in Cartesian coordinates
 \mathrm{Var}(\gamma) = \frac{1}{(2\pi)^2} \int_{-\infty}^{\infty} \rmd k_1 \,\rmd k_2 \,
 P(k_1, k_2).
 \eeq
-Note that this equation assumes that our grid is infinite.  With a limited $k$
-range, we can rewrite Eq.~\ref{E:alt-shearvar} as
+Note that this equation assumes that our grid is infinite and $P(k)$
+is defined for all $k$.  With a limited $k$
+range, and with the power spectrum forced to $P(0)=0$ (see \S\ref{S:pk0}
+for more discussion of this), we can rewrite Eq.~\ref{E:alt-shearvar} as
 \beq\label{E:alt-shearvar-limit}
-\mathrm{Var}(\gamma) = \frac{4}{(2\pi)^2} \int_{\kmin}^{\kmax} \rmd
-k_1 \rmd k_2 P(k).
+\mathrm{Var}(\gamma) = \frac{4}{(2\pi)^2} \left[\int_{0}^{\kmax}\int_{0}^{\kmax} \rmd
+k_1 \rmd k_2 P(k) - \int_{0}^{\kmin}\int_{0}^{\kmin} \rmd k_1 \rmd k_2
+P(k)\right].
 \eeq
 Here the factor of $4$ compensates for the 
 quadrants that are not represented explicitly (i.e., negative $k_1$
@@ -158,7 +173,8 @@ there is a lot of shear power at small $k$.  Probably we should
  verifying this explicitly in Sec.~\ref{S:testvar}.
 
 In the limit that our power spectrum drops to zero at
-\kmax, Eqs.~\ref{E:shearvar}, \ref{E:alt-shearvar}, and
+\kmax, and that there is not too much power in the range $0<k<\kmin$
+relative to that in $\kmin<k<\kmax$, Eqs.~\ref{E:shearvar}, \ref{E:alt-shearvar}, and
 \ref{E:alt-shearvar-limit} should all give the same answer.
 
 The above equations just include $P(k)$, but in principle there can be
@@ -489,9 +505,10 @@ P_0 e^{-\sigma^2 k^2 / 2}$.  Here both $P_0$ and $\sigma^2$ both
 have dimensions of angle$^2$.  By Eq.~\ref{E:alt-shearvar-limit}, this
 means that we expect
 \begin{align}
-\mathrm{Var}(\gamma) &= \frac{4P_0}{(2\pi)^2} \left[\int_{\kmin}^{\kmax} 
-e^{-\sigma^2 k^2/2} \,\rmd k\right]^2 \\
- &= \frac{P_0}{2\pi\sigma^2}\left[ \mathrm{Erf}(\kmax\sigma/\sqrt{2}) - \mathrm{Erf}(\kmin\sigma/\sqrt{2})\right]^2.\label{E:vargauss}
+\mathrm{Var}(\gamma) &= \frac{4P_0}{(2\pi)^2} \left[\left(\int_{0}^{\kmax} 
+e^{-\sigma^2 k^2/2} \,\rmd k\right)^2 - \left(\int_{0}^{\kmin} 
+e^{-\sigma^2 k^2/2} \,\rmd k\right)^2\right] \\
+ &= \frac{P_0}{2\pi\sigma^2}\left[ \left(\mathrm{Erf}(\kmax\sigma/\sqrt{2})\right)^2 - \left(\mathrm{Erf}(\kmin\sigma/\sqrt{2})\right)^2\right].\label{E:vargauss}
 \end{align}
 
 For each of the grids, we define the Gaussian $\sigma$ such that there
@@ -500,9 +517,11 @@ $\sigma=286.5$ arcsec for the first two grids and $\sigma=573$ arcsec
 for the last grid.  Given how large $\sigma\kmax$ is, in all cases,
 $\mathrm{Erf}(\kmax\sigma/\sqrt{2})=1$.  The resulting values of
 $\sigma\kmin$ for the three grids are $0.05$, $0.1$, and $0.05$, or
-$\mathrm{Erf}(\kmin\sigma/\sqrt{2})=0.04$, $0.08$, and $0.04$.  With
+$\mathrm{Erf}(\kmin\sigma/\sqrt{2})=0.04$, $0.08$, and $0.04$ (since
+these are squared in the above expression, they don't end up mattering
+much).  With
 $P_0=1$ arcsec$^2$, the predicted variances for the three grids are
-$1.79\times 10^{-6}$, $1.64\times 10^{-6}$, and $4.47\times 10^{-7}$.
+$1.94\times 10^{-6}$, $1.93\times 10^{-6}$, and $4.84\times 10^{-7}$.
 
 The code to do this once is:
 \begin{verbatim}
@@ -523,11 +542,13 @@ variances.
 The results are $1.87\times 10^{-6}$, $1.85\times 10^{-6}$, and
 $4.63\times 10^{-7}$ in the last case.  So we have the approximately
 correct amplitude and scaling with the grid spacing and grid size, but
-the results are 4, 12, and 4\% larger than the predictions.
-Alternatively, if we consider the prediction from
-Eq.~\ref{E:vargauss}, our results are consistently 4\% below what we
-would expect if $\kmin=0$; the significance of this last comparison is
-unclear, but it seems suspiciously similar to the final results in \S\ref{S:testpk}.
+the results are 4\% smaller than the predictions.
+
+We also check what happens if we make all the grids larger by a factor
+of 4 (in $N$, i.e., decrease \kmin\ by a factor of 4 while maintaining
+\kmax).  In this case, the variances increase by 1-2\%, whereas the 
+predictions  based on Eq.~\ref{E:vargauss} only increase by 0.1\%.
+This suggests some finite-binning / discreteness effect.
 
 The variance is fairly evenly divided between components, but the
 variance in $\gamma_2$ tends to be larger than the variance of
@@ -539,24 +560,24 @@ coordinate axes.
 \subsection{Variance for flat $P(k)$}
 
 A flat $P(k)$ has a worrisome amount of power at large $k$, so we use
-a modified version of it: We use $P(k)=P_0$ for $k<$\klim, where
+a modified version of it: We use $P(k)=P_0$ for $k\le$\klim, where
 $\klim<\kmax$ for all the grids; and we set $P(k>\klim)=0$. Using
 Eq.~\ref{E:alt-shearvar-limit}, we expect
 \begin{align}
 \mathrm{Var}(\gamma) &= \frac{4P_0}{(2\pi)^2}
-\left[\int_{\kmin}^{\klim} \rmd k\right]^2 \\
- &= \frac{P_0}{\pi^2} \left(\klim-\kmin\right)^2.
+\left[\frac{1}{4}\int_{0}^{\klim} 2\pi k\,\rmd k - \kmin^2\right] \\
+ &= \frac{P_0}{\pi^2} \left(\frac{\pi}{4} \klim^2 - \kmin^2\right).
 \end{align}
 
 For the set of grids from the previous test, \kmin\ is
 $0.000175$, $0.00035$, and $0.000175$ arcsec$^{-1}$.  We will set $\klim=10\kmin$,
 so we can write
 \beq
-\mathrm{Var}(\gamma) = \frac{81 P_0 \kmin^2}{\pi^2}.
+\mathrm{Var}(\gamma) = \frac{(25\pi-1) P_0 \kmin^2}{\pi^2}.
 \eeq
 With $P_0=1$, we expect
-shear variances that are $2.5\times 10^{-7}$, $1\times 10^{-6}$,
-and $2.5\times 10^{-7}$.
+shear variances that are $2.4\times 10^{-7}$, $9.6\times 10^{-7}$,
+and $2.4\times 10^{-7}$.
 
 The code is
 \begin{verbatim}
@@ -583,7 +604,7 @@ print np.var(g1), np.var(g2), np.var(g1)+np.var(g2)
 Since the variances are noisy, we averaged the results over 10000
 realizations\footnote{This takes about 1 minute to run on a single
   CPU.}, and found $2.36\times 10^{-7}$, $9.45\times 10^{-7}$, and
-$2.36\times 10^{-7}$.  These are all $\sim 5.5$\% below my naive calculation.
+$2.36\times 10^{-7}$.  These are all $\sim 2$\% below my naive calculation.
 Since the overall behavior is correct when we change the grid size and
 spacing, it seems possible that this small discrepancy comes from some
 finite-gridding effect.
@@ -591,9 +612,12 @@ finite-gridding effect.
 If we redo the above test but double the values of `ngrid', thus
 halving the step size of the grid in Fourier space, then the variances
 increase slightly\footnote{This change is statistically significant given
-the number of realizations.} to $2.40\times 10^{-7}$, $9.60\times 10^{-7}$, and
-$2.40\times 10^{-7}$, so they are now only 4\% lower than the
-predictions.  This result supports the claim that finite-gridding
+the number of realizations.} to $2.4\times 10^{-7}$, $9.6\times 10^{-7}$, and
+$2.4\times 10^{-7}$, so they are now completely consistent with the
+predictions from before.  In principle the predictions also have to
+change, since now we have $\klim=40\kmin$ and the \kmin\ decreases by
+a factor of 4, but the predictions only increased by 1\% whereas the
+results increased by 4\%.  This result supports the claim that finite-gridding
 effects might be responsible for the slightly low variances, rather
 than anything more problematic (i.e., a true bug).  Finite gridding
 effects can be accounted for in principle, by including them in the
@@ -711,7 +735,8 @@ the GalSim results are too low by $\sim 20$\%.  For $\ell>100$, the
 GalSim outputs seems to give power spectra that are 5\% too low, which
 is suspiciously similar to the results of the variance tests.  This
 finding suggests that users {\em must} account for the effects of
-finite $\ell$-binning on the theoretical power spectrum, unless they
+finite $\ell$-binning on the theoretical power spectrum when
+generating the shears, unless they
 can choose sufficiently fine $\ell$ bins to minimize
 this problem.  In support of this claim that finite gridding is
 responsible, we found that with a grid that is doubled in size (and
