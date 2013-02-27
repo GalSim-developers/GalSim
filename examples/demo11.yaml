@@ -4,14 +4,20 @@
 # The eleventh YAML configuration file in our tutorial about using Galsim config files.
 # (This file is designed to be viewed in a window 100 characters wide.)
 #
-# This script uses a constant PSF from real data (an image read in from a bzipped FITS file, 
-# not a parametric model) and variable shear according to some cosmological model for which 
-# we have a tabulated power spectrum at specific k values only.  The 225 galaxies in the 
-# 0.25x0.25 degree field (representing a low number density of 1/arcmin^2) are randomly 
-# located and permitted to overlap, but we do take care to avoid being too close to the edge 
-# of the large image.  For the galaxies, we use a random selection from 5 specific RealGalaxy 
-# objects, selected to be 5 particularly irregular ones. These are taken from the same
-# catalog of 100 objects that demo6 used.
+# This script uses a constant PSF from real data (an image read in from a bzipped FITS file, not a
+# parametric model) and variable shear according to some cosmological model for which we have a
+# tabulated power spectrum at specific k values only.  The 288 galaxies in the 0.2 x 0.2 degree
+# field (representing a low number density of 2/arcmin^2) are randomly located and permitted to
+# overlap, but we do take care to avoid being too close to the edge of the large image.  For the
+# galaxies, we use a random selection from 5 specific RealGalaxy objects, selected to be 5
+# particularly irregular ones.  These are taken from the same catalog of 100 objects that demo6
+# used.
+#
+# The noise added to the image is spatially correlated in the same way as often seen in coadd images
+# from the Hubble Space Telescope (HST) Advanced Camera for Surveys, using a correlation function
+# determined from the HST COSMOS coadd images in the F814W filter (see, e.g., Leauthaud et al 2007).
+# Applying this noise uses an FFT of the size of the full output image: this may cause
+# memory-related slowdowns in systems with less than 2GB RAM.
 #
 # New features introduced in this demo:
 #
@@ -19,10 +25,12 @@
 # - float_value type : RandomDistribution(function, x_min, x_max)
 # - pix type : None
 # - input.power_spectrum : (e_power_file, delta2, units)
+# - noise type : COSMOS
 #
 # - Power spectrum shears for non-gridded positions.
 # - Reading a compressed FITS image (using BZip2 compression).
 # - Writing a compressed FITS image (using Rice compression).
+#
 
 # Define the PSF profile
 psf : 
@@ -33,7 +41,7 @@ psf :
     # The only required parameter is the name of the file with the image.  Note: the file is 
     # bzipped, to demonstrate the new capability of reading in a file that has been compressed 
     # in various ways (which GalSim can infer from the filename).
-    image : data/example_sdss_psf_sky0.fits.bz2
+    image : "../examples/data/example_sdss_psf_sky0.fits.bz2"
 
     # If the fits file has a scale given in the header information, we can use that for 
     # the pixel scale.  If it is not given it will assume 1. 
@@ -81,6 +89,9 @@ gal :
     rotation :
         type : Random
 
+    # The galaxy S/N is set to be 100, but this is based on a point variance-only calculation
+    # (such as discussed in Leauthaud et al 2007).  The true SNR is somewhat lower, due to the
+    # presence of correlation in the noise.
     signal_to_noise : 100
 
 
@@ -88,9 +99,9 @@ gal :
 image :
     type : Scattered
 
-    size : 4500 # 0.25 degrees * 3600 arcsec/deg / 0.2 arcsec/pixel
+    size : 3600 # 0.2 degrees * 3600 arcsec/deg / 0.2 arcsec/pixel
 
-    nobjects : 225 # corresponds to 1 gal / arcmin^2
+    nobjects : 288 # corresponds to 2 gal / arcmin^2
 
     # This time we use stamp_size to set the size of the postage stamp image for each object.
     # In demo9, we left it out, so GalSim automatically determined a good size for each object.
@@ -103,14 +114,21 @@ image :
     # appropriately.  We just do this to demonstrate the functionality.
     center : 
         type : XY 
-        x : { type : Random , min : 50 , max : 4450 }
-        y : { type : Random , min : 50 , max : 4450 }
+        x : { type : Random , min : 50 , max : 3550 }
+        y : { type : Random , min : 50 , max : 3550 }
 
 
     pixel_scale : 0.20  # arcsec / pixel
 
+    # Add correlated noise to the image -- the correlation function comes from the HST COSMOS images
+    # and is described in more detail in the galsim.correlatednoise.get_COSMOS_CorrFunc() docstring.
+    # This function requires a FITS file, stored in the GalSim repository, that represents this
+    # correlation information: the path to this file must be given as file_name.
     noise :
-        sky_level : 1.0e4  # ADU / arcsec^2
+        type : "COSMOS"
+        file_name : "../examples/data/acs_I_unrot_sci_20_cf.fits"
+        dx_cosmos : 0.20  # use the same pixel scale as image, reproducing COSMOS correlated noise
+        variance : 1.e4   # variance sets value of zero distance correlation function
 
     random_seed : 24783923
 
@@ -119,7 +137,7 @@ image :
 input :
     # In this case, we need to define where the real galaxy input catalog is.
     real_catalog :
-        dir : data
+        dir : "../examples/data"
         file_name : real_galaxy_catalog_example.fits
 
         # Even though we only have 5 galaxies again, preloading makes a big difference in the 
@@ -132,7 +150,7 @@ input :
         # In this case, we read the e_power_function from a file.  This is done simply by 
         # providing the file name for the e_power_function parameter.  The input file is
         # expected to have two columns of numbers:  k and P(k).
-        e_power_function : data/cosmo-fid.zmed1.00.out
+        e_power_function : "../examples/data/cosmo-fid.zmed1.00.out"
 
         # The default units of k are arcsec^-1 to match all the other units.  But again,
         # sometimes it is more convenient to define them in different units.  You may
