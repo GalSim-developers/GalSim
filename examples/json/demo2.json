@@ -14,7 +14,7 @@
 "#" : "- obj type : Exponential (flux, scale_radius)",
 "#" : "- obj type : Moffat (flux, beta, half_light_radius)",
 "#" : "- shear type : G1G2 (g1, g2)",
-"#" : "- noise type : CCDNoise (sky_level)",
+"#" : "- noise type : Poisson (sky_level)",
 "#" : "- image : random_seed",
 
 "#" : "Define the galaxy profile",
@@ -52,9 +52,9 @@
     "pixel_scale" : 0.2,
 
     "noise" : {
-        "#" : "CCDNoise models how noise normally happens on CCD images -- each pixel",
+        "#" : "Poisson noise models how noise normally happens on CCD images -- each pixel",
         "#" : "has Poisson noise according to the number of photons hitting it.",
-        "type" : "CCDNoise",
+        "type" : "Poisson",
         "#" : "Most of the noise in the image is normally from the sky flux, rather than each",
         "#" : "object's flux, so you need to specify what the sky level should be.",
         "#" : "Note: the final image will be 'sky subtracted', so the mean background level",

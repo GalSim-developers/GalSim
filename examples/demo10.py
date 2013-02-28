@@ -37,7 +37,7 @@ New features introduced in this demo:
 - obj = galsim.RealGalaxy(real_galaxy_catalog, id)
 - obj = galsim.Convolve([list], real_space)
 - ps = galsim.PowerSpectrum(e_power_function, b_power_function)
-- g1,g2 = ps.getShear(grid_spacing, grid_nx, rng)
+- g1,g2 = ps.buildGriddedShears(grid_spacing, ngrid, rng)
 - g1,g2 = ps.getShear(pos)
 - galsim.random.permute(rng, list1, list2, ...)
 
@@ -83,6 +83,10 @@ def main(argv):
     # of the galaxies.
     random_seed = 3339201           
 
+    # Make output directory if not already present.
+    if not os.path.isdir('output'):
+        os.mkdir('output')
+
     file_name = os.path.join('output','power_spectrum.fits')
 
     # These will be created for each object below.  The values we'll use will be functions
@@ -98,7 +102,9 @@ def main(argv):
  
     # Read in galaxy catalog
     cat_file_name = 'real_galaxy_catalog_example.fits'
-    dir = 'data'
+    # This script is designed to be run from the examples directory so dir is a relative path.  
+    # But the '../examples/' part lets bin/demo10 also be run from the bin directory.
+    dir = '../examples/data'
     real_galaxy_catalog = galsim.RealGalaxyCatalog(cat_file_name, dir=dir)
     real_galaxy_catalog.preload()
     logger.info('Read in %d real galaxies from catalog', real_galaxy_catalog.nobjects)
@@ -140,7 +146,8 @@ def main(argv):
     rng = galsim.BaseDeviate(random_seed+nobj)
 
     # Now have the PowerSpectrum object build a grid of shear values for us to use.
-    grid_g1, grid_g2 = ps.getShear(grid_spacing=stamp_size*pixel_scale, grid_nx=n_tiles, rng=rng)
+    grid_g1, grid_g2 = ps.buildGriddedShears(grid_spacing=stamp_size*pixel_scale,
+                                             ngrid=n_tiles, rng=rng)
 
     # Setup the images:
     gal_image = galsim.ImageF(stamp_size * n_tiles , stamp_size * n_tiles)
@@ -237,18 +244,11 @@ def main(argv):
         # Draw the image
         final.draw(sub_gal_image)
 
-        # Now determine what we need to do to get our desired S/N
-        # See demo5.py for the math behind this calculation.
-        sky_level_pix = sky_level * pixel_scale**2
-        sn_meas = math.sqrt( numpy.sum(sub_gal_image.array**2) / sky_level_pix )
-        flux_scaling = gal_signal_to_noise / sn_meas
-        sub_gal_image *= flux_scaling
-
-        # Add Poisson noise -- the CCDNoise can also take another RNG as its argument
-        # so it will be part of the same stream of random numbers as ud above.
-        sub_gal_image += sky_level_pix
-        sub_gal_image.addNoise(galsim.CCDNoise(rng))
-        sub_gal_image -= sky_level_pix
+        # Now add noise to get our desired S/N
+        # See demo5.py for more info about how this works.
+        sky_level_pixel = sky_level * pixel_scale**2
+        noise = galsim.PoissonNoise(rng, sky_level=sky_level_pixel)
+        sub_gal_image.addNoiseSNR(noise, gal_signal_to_noise)
 
         # Draw the PSF image:
         # We use real space convolution to avoid some of the 

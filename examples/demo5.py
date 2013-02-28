@@ -89,6 +89,9 @@ def main(argv):
     pixel_scale = 1.0               # arcsec / pixel
     sky_level = 1.e6                # ADU / arcsec^2
 
+    # Make output directory if not already present.
+    if not os.path.isdir('output'):
+        os.mkdir('output')
     psf_file_name = os.path.join('output','g08_psf.fits')
     psf_beta = 3                    #
     psf_fwhm = 2.85                 # arcsec (=pixels)
@@ -240,33 +243,29 @@ def main(argv):
             # Draw the image
             final_gal.draw(sub_gal_image)
 
-            # Now determine what we need to do to get our desired S/N
+            # Now add an appropriate amount of noise to get our desired S/N
             # There are lots of definitions of S/N, but here is the one used by Great08
             # We use a weighted integral of the flux:
-            # S = sum W(x,y) I(x,y) / sum W(x,y)
-            # N^2 = Var(S) = sum W(x,y)^2 Var(I(x,y)) / (sum W(x,y))^2
-            # Now we assume that Var(I(x,y)) is dominated by the sky noise, so
-            # Var(I(x,y)) = sky_level
+            #   S = sum W(x,y) I(x,y) / sum W(x,y)
+            #   N^2 = Var(S) = sum W(x,y)^2 Var(I(x,y)) / (sum W(x,y))^2
+            # Now we assume that Var(I(x,y)) is constant so
+            #   Var(I(x,y)) = noise_var
             # We also assume that we are using a matched filter for W, so W(x,y) = I(x,y).
             # Then a few things cancel and we find that
-            # S/N = sqrt( sum I(x,y)^2 / sky_level )
-            sky_level_pix = sky_level * pixel_scale**2
-            sn_meas = math.sqrt( numpy.sum(sub_gal_image.array**2) / sky_level_pix )
-            flux = gal_signal_to_noise / sn_meas
-            # Now we rescale the flux to get our desired S/N
-            sub_gal_image *= flux
-
-            # Add Poisson noise -- the CCDNoise can also take another RNG as its argument
-            # so it will be part of the same stream of random numbers as ud and gd.
-            sub_gal_image += sky_level_pix
-            sub_gal_image.addNoise(galsim.CCDNoise(ud))
-            sub_gal_image -= sky_level_pix
+            # S/N = sqrt( sum I(x,y)^2 / noise_var )
+            #
+            # The above procedure is encapsulated in the function image.addNoiseSNR which
+            # sets the flux appropriately given the variance of the noise model.
+            # In our case, noise_var = sky_level_pixel
+            sky_level_pixel = sky_level * pixel_scale**2
+            noise = galsim.PoissonNoise(ud, sky_level=sky_level_pixel)
+            sub_gal_image.addNoiseSNR(noise, gal_signal_to_noise)
 
             # Draw the PSF image
             # No noise on PSF images.  Just draw it as is.
             this_psf.draw(sub_psf_image)
 
-            # for first instance, measure moments
+            # For first instance, measure moments
             if ix==0 and iy==0:
                 psf_shape = sub_psf_image.FindAdaptiveMom()
                 temp_e = psf_shape.observed_shape.e

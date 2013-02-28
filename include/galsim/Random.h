@@ -124,19 +124,15 @@ namespace galsim {
 
     public:
         /**
-         * @brief Construct and seed a new BaseDeviate, using time of day as seed
-         *
-         * Note that microsecond counter is the seed, so BaseDeviates constructed in rapid
-         * succession will not be independent. 
-         */
-        BaseDeviate() : _rng(new rng_type()) { seedtime(); }
-
-        /**
          * @brief Construct and seed a new BaseDeviate, using the provided value as seed.
          *
-         * @param[in] lseed A long-integer seed for the RNG.
+         * If lseed == 0, this means to use the time of day as the seed.  Note that microsecond 
+         * counter is the seed, so BaseDeviates constructed in rapid succession may not be 
+         * independent. 
+         *
+         * @param[in] lseed A long-integer seed for the RNG. (default=0)
          */
-        BaseDeviate(long lseed) : _rng(new rng_type()) { seed(lseed); }
+        BaseDeviate(long lseed=0) : _rng(new rng_type()) { seed(lseed); }
 
         /**
          * @brief Construct a new BaseDeviate, sharing the random number generator with rhs.
@@ -148,31 +144,20 @@ namespace galsim {
          *
          * Only deletes the underlying RNG if this is the last one using it.
          */
-        ~BaseDeviate() {}
-
-        /**
-         * @brief Re-seed the PRNG using current time
-         *
-         * Note that this will reseed all Deviates currently sharing the RNG with this one.
-         */
-        void seed() { seedtime(); }
+        virtual ~BaseDeviate() {}
 
         /**
          * @brief Re-seed the PRNG using specified seed
          *
-         * @param[in] lseed A long-integer seed for the RNG.
+         * If lseed == 0, this means to use the time of day as the seed.  Note that microsecond 
+         * counter is the seed, so BaseDeviates constructed in rapid succession may not be 
+         * independent. 
+         *
+         * @param[in] lseed A long-integer seed for the RNG. (default=0)
          *
          * Note that this will reseed all Deviates currently sharing the RNG with this one.
          */
-        void seed(long lseed);
-
-        /**
-         * @brief Like seed(), but severs the relationship between other Deviates.
-         *
-         * Other Deviates that had been using the same RNG will be unaffected, while this 
-         * Deviate will obtain a fresh RNG seeding by the current time.
-         */
-        void reset() { _rng.reset(new rng_type()); seedtime(); }
+        virtual void seed(long lseed);
 
         /**
          * @brief Like seed(lseed), but severs the relationship between other Deviates.
@@ -187,11 +172,40 @@ namespace galsim {
          *
          * It discards whatever rng it had been using and starts sharing the one held by dev.
          */
-        void reset(const BaseDeviate& dev) { _rng = dev._rng; }
+        void reset(const BaseDeviate& dev) { _rng = dev._rng; clearCache(); }
+
+        /**
+         * @brief Clear the internal cache of the rng object.  
+         *
+         * Sometimes this is required to get two sequences synced up if the other one
+         * is reseeded.  e.g. GaussianDeviate generates two deviates at a time for efficiency,
+         * so if you don't do this, and there is still an internal cached value, you'll get 
+         * that rather than a new one generated with the new seed.
+         *
+         * As far as I know, GaussianDeviate is the only one to require this, but just in 
+         * case something changes about how boost implements any of these deviates, I overload
+         * the virtual function for all of them and call the distribution's reset() method.
+         */
+        virtual void clearCache() {}
+
+        /**
+         * @brief Draw a new random number from the distribution
+         *
+         * This is invalid for a BaseDeviate object that is not a derived class.
+         * However, we don't make it pure virtual, since we want to be able to make
+         * BaseDeviate objects a direct way to define a common seed for other Deviates.
+         */
+        double operator()() { return val(); }
 
    protected:
 
         boost::shared_ptr<rng_type> _rng;
+
+        // This is the virtual function that is actually overridden.  This is because 
+        // some derived classes prefer to return an int.  (e.g. Binom, Poisson)
+        // So this provides the interface that returns a double.
+        virtual double val() 
+        { throw std::runtime_error("Cannot draw random values from a pure BaseDeviate object."); }
 
         /**
          * @brief Private routine to seed with microsecond counter from time-of-day structure.
@@ -205,11 +219,15 @@ namespace galsim {
     class UniformDeviate : public BaseDeviate
     {
     public:
-        /// @brief Construct and seed a new UniformDeviate, using time of day as seed.
-        UniformDeviate() : _urd(0.,1.) {}
-
-        /// @brief Construct and seed a new UniformDeviate, using the provided value as seed.
-        UniformDeviate(long lseed) : BaseDeviate(lseed), _urd(0.,1.) {} 
+        /** @brief Construct and seed a new UniformDeviate, using the provided value as seed.
+         *
+         * If lseed == 0, this means to use the time of day as the seed.  Note that microsecond 
+         * counter is the seed, so BaseDeviates constructed in rapid succession may not be 
+         * independent. 
+         *
+         * @param[in] lseed A long-integer seed for the RNG. (default=0)
+         */
+        UniformDeviate(long lseed=0) : BaseDeviate(lseed), _urd(0.,1.) {} 
 
         /// @brief Construct a new UniformDeviate, sharing the random number generator with rhs.
         UniformDeviate(const BaseDeviate& rhs) : BaseDeviate(rhs), _urd(0.,1.) {}
@@ -222,15 +240,15 @@ namespace galsim {
          *
          * @return A uniform deviate in the interval [0.,1.)
          */
-        double operator() () { return _urd(*this->_rng); }
+        double operator()() { return _urd(*this->_rng); }
 
         /**
-         * @brief Add Uniform pseudo-random deviates to every element in a supplied Image.
-         *
-         * @param[in,out] data The Image to be noise-ified.
+         * @brief Clear the internal cache
          */
-        template <typename T>
-        void applyTo(ImageView<T> data) { ApplyDeviateToImage(*this, data); }
+        void clearCache() { _urd.reset(); }
+
+    protected:
+        double val() { return operator()(); }
 
     private:
         boost::random::uniform_real_distribution<> _urd;
@@ -244,21 +262,17 @@ namespace galsim {
     public:
 
         /**
-         * @brief Construct a new Gaussian-distributed RNG, using time of day as seed.
-         *
-         * @param[in] mean  Mean of the output distribution
-         * @param[in] sigma Standard deviation of the distribution
-         */
-        GaussianDeviate(double mean=0., double sigma=1.) : _normal(mean,sigma) {}
-
-        /**
          * @brief Construct a new Gaussian-distributed RNG, using the provided value as seed.
          *
-         * @param[in] lseed Seed to use
-         * @param[in] mean  Mean of the output distribution
-         * @param[in] sigma Standard deviation of the distribution
+         * If lseed == 0, this means to use the time of day as the seed.  Note that microsecond 
+         * counter is the seed, so BaseDeviates constructed in rapid succession may not be 
+         * independent. 
+         *
+         * @param[in] lseed Seed to use. (default = 0)
+         * @param[in] mean  Mean of the output distribution (default = 0)
+         * @param[in] sigma Standard deviation of the distribution (default = 1)
          */
-        GaussianDeviate(long lseed, double mean=0., double sigma=1.) : 
+        GaussianDeviate(long lseed=0, double mean=0., double sigma=1.) : 
             BaseDeviate(lseed), _normal(mean,sigma) {}
 
         /**
@@ -284,7 +298,7 @@ namespace galsim {
          *
          * @return A Gaussian deviate with current mean and sigma
          */
-        double operator() () { return _normal(*this->_rng); }
+        double operator()() { return _normal(*this->_rng); }
 
         /**
          * @brief Get current distribution mean
@@ -318,12 +332,15 @@ namespace galsim {
         { _normal.param(boost::random::normal_distribution<>::param_type(_normal.mean(),sigma)); }
 
         /**
-         * @brief Add Gaussian pseudo-random deviates to every element in a supplied Image.
+         * @brief Clear the internal cache
          *
-         * @param[in,out] data The Image to be noise-ified.
+         * This one is definitely required, since _normal generates two deviates at a time
+         * and stores one for later.  So this clears that out when necessary.
          */
-        template <typename T>
-        void applyTo(ImageView<T> data) { ApplyDeviateToImage(*this, data); }
+        void clearCache() { _normal.reset(); }
+
+    protected:
+        double val() { return operator()(); }
 
     private:
         boost::random::normal_distribution<> _normal;
@@ -338,21 +355,17 @@ namespace galsim {
     public:
 
         /**
-         * @brief Construct a new binomial-distributed RNG, using time of day as seed.
-         *
-         * @param[in] N Number of "coin flips" per trial
-         * @param[in] p Probability of success per coin flip.
-         */
-        BinomialDeviate(int N=1, double p=0.5) : _bd(N,p) {}
-
-        /**
          * @brief Construct a new binomial-distributed RNG, using the provided value as seed.
          *
-         * @param[in] lseed Seed to use
-         * @param[in] N Number of "coin flips" per trial
-         * @param[in] p Probability of success per coin flip.
+         * If lseed == 0, this means to use the time of day as the seed.  Note that microsecond 
+         * counter is the seed, so BaseDeviates constructed in rapid succession may not be 
+         * independent. 
+         *
+         * @param[in] lseed Seed to use (default = 0)
+         * @param[in] N Number of "coin flips" per trial (default = 1)
+         * @param[in] p Probability of success per coin flip. (default = 0.5)
          */
-        BinomialDeviate(long lseed, int N=1, double p=0.5) :
+        BinomialDeviate(long lseed=0, int N=1, double p=0.5) :
             BaseDeviate(lseed), _bd(N,p) {}
 
         /**
@@ -413,13 +426,12 @@ namespace galsim {
         }
 
         /**
-         * @brief Add Binomial pseudo-random deviates to every element in a supplied Image.
-         *
-         * @param[in,out] data The Image to be noise-ified.
+         * @brief Clear the internal cache
          */
-         template <typename T>
-         void applyTo(ImageView<T> data) { ApplyDeviateToImage(*this, data); }
+        void clearCache() { _bd.reset(); }
 
+    protected:
+        double val() { return double(operator()()); }
 
     private:
         boost::random::binomial_distribution<> _bd;
@@ -433,19 +445,16 @@ namespace galsim {
     public:
 
         /**
-         * @brief Construct a new Poisson-distributed RNG, using time of day as seed.
-         *
-         * @param[in] mean  Mean of the output distribution
-         */
-        PoissonDeviate(double mean=1.) : _pd(mean) {}
-
-        /**
          * @brief Construct a new Poisson-distributed RNG, using the provided value as seed.
          *
-         * @param[in] lseed Seed to use
-         * @param[in] mean  Mean of the output distribution
+         * If lseed == 0, this means to use the time of day as the seed.  Note that microsecond 
+         * counter is the seed, so BaseDeviates constructed in rapid succession may not be 
+         * independent. 
+         *
+         * @param[in] lseed Seed to use (default = 0)
+         * @param[in] mean  Mean of the output distribution (default = 1)
          */
-        PoissonDeviate(long lseed, double mean=1.) : BaseDeviate(lseed), _pd(mean) {}
+        PoissonDeviate(long lseed=0, double mean=1.) : BaseDeviate(lseed), _pd(mean) {}
 
         /**
          * @brief Construct a new Poisson-distributed RNG, sharing the random number 
@@ -487,19 +496,12 @@ namespace galsim {
         }
 
         /**
-         * @brief Apply Poisson pseudo-random deviates to every element in a supplied Image.
-         *
-         * This adds Poisson noise with the given mean to the image, and then subtracts off
-         * that mean value again, so the expected value is 0.
-         *
-         * @param[in,out] data The Image to be noise-ified.
+         * @brief Clear the internal cache
          */
-        template <typename T>
-        void applyTo(ImageView<T> data) 
-        { 
-            ApplyDeviateToImage(*this, data); 
-            data -= T(getMean());
-        }
+        void clearCache() { _pd.reset(); }
+
+    protected:
+        double val() { return double(operator()()); }
 
     private:
         boost::random::poisson_distribution<> _pd;
@@ -519,21 +521,17 @@ namespace galsim {
     public:
     
         /**
-         * @brief Construct a new Weibull-distributed RNG, using time of day as seed.
-         *
-         * @param[in] a    Shape parameter of the output distribution, must be > 0.
-         * @param[in] b    Scale parameter of the distribution, must be > 0.
-         */
-        WeibullDeviate(double a=1., double b=1.) : _weibull(a,b) {}
-
-        /**
          * @brief Construct a new Weibull-distributed RNG, using the provided value as seed.
          *
-         * @param[in] lseed Seed to use
-         * @param[in] a    Shape parameter of the output distribution, must be > 0.
-         * @param[in] b    Scale parameter of the distribution, must be > 0.
+         * If lseed == 0, this means to use the time of day as the seed.  Note that microsecond 
+         * counter is the seed, so BaseDeviates constructed in rapid succession may not be 
+         * independent. 
+         *
+         * @param[in] lseed Seed to use (default = 0)
+         * @param[in] a    Shape parameter of the output distribution, must be > 0. (default = 1)
+         * @param[in] b    Scale parameter of the distribution, must be > 0. (default = 1)
          */
-        WeibullDeviate(long lseed, double a=1., double b=1.) : 
+        WeibullDeviate(long lseed=0, double a=1., double b=1.) : 
             BaseDeviate(lseed), _weibull(a,b) {}
 
         /**
@@ -559,7 +557,7 @@ namespace galsim {
          *
          * @return A Weibull deviate with current shape k and scale lam.
          */
-        double operator() () { return _weibull(*this->_rng); }
+        double operator()() { return _weibull(*this->_rng); }
 
         /**
          * @brief Get current distribution shape parameter a.
@@ -596,57 +594,52 @@ namespace galsim {
         }
 
         /**
-         * @brief Add Weibull pseudo-random deviates to every element in a supplied Image.
-         *
-         * @param[in,out] data  The Image.
+         * @brief Clear the internal cache
          */
-        template <typename T>
-        void applyTo(ImageView<T> data) { ApplyDeviateToImage(*this, data); }
+        void clearCache() { _weibull.reset(); }
 
+    protected:
+        double val() { return operator()(); }
 
     private:
         boost::random::weibull_distribution<> _weibull;
     };
 
     /**
-     * @brief A Gamma-distributed deviate with shape parameter alpha and scale parameter beta.
+     * @brief A Gamma-distributed deviate with shape parameter k and scale parameter beta.
      *
-     * See http://en.wikipedia.org/wiki/Gamma_distribution (although note that in the Boost random
-     * routine this class calls the notation is alpha=k and beta=theta).  The Gamma distribution is
-     * a real valued distribution producing deviates >= 0.
+     * See http://en.wikipedia.org/wiki/Gamma_distribution.  
+     * (Note: we use the k, theta notation. If you prefer alpha, beta, use k=alpha, theta=1/beta.)
+     * The Gamma distribution is a real valued distribution producing deviates >= 0.
      */
     class GammaDeviate : public BaseDeviate
     {
     public:
     
         /**
-         * @brief Construct a new Gamma-distributed RNG, using time of day as seed.
-         *
-         * @param[in] alpha  Shape parameter of the output distribution, must be > 0.
-         * @param[in] beta   Scale parameter of the distribution, must be > 0.
-         */
-        GammaDeviate(double alpha=0., double beta=1.) : _gamma(alpha,beta) {}
-
-        /**
          * @brief Construct a new Gamma-distributed RNG, using the provided value as seed.
          *
-         * @param[in] lseed  Seed to use
-         * @param[in] alpha  Shape parameter of the output distribution, must be > 0.
-         * @param[in] beta   Scale parameter of the distribution, must be > 0.
+         * If lseed == 0, this means to use the time of day as the seed.  Note that microsecond 
+         * counter is the seed, so BaseDeviates constructed in rapid succession may not be 
+         * independent. 
+         *
+         * @param[in] lseed  Seed to use (default = 0)
+         * @param[in] k      Shape parameter of the output distribution, must be > 0. (default = 0)
+         * @param[in] theta  Scale paramter of the distribution, must be > 0. (default = 1)
          */
-        GammaDeviate(long lseed, double alpha=0., double beta=1.) : 
-            BaseDeviate(lseed), _gamma(alpha,beta) {}
+        GammaDeviate(long lseed=0, double k=0., double beta=1.) : 
+            BaseDeviate(lseed), _gamma(k,beta) {}
 
         /**
          * @brief Construct a new Gamma-distributed RNG, sharing the random number 
          * generator with rhs.
          *
          * @param[in] rhs    Other deviate with which to share the RNG
-         * @param[in] alpha  Shape parameter of the output distribution, must be > 0.
-         * @param[in] beta   Scale parameter of the distribution, must be > 0.
+         * @param[in] k      Shape parameter of the output distribution, must be > 0.
+         * @param[in] theta  Scale parameter of the distribution, must be > 0.
          */
-        GammaDeviate(const BaseDeviate& rhs, double alpha=0., double beta=1.) :
-            BaseDeviate(rhs), _gamma(alpha,beta) {}
+        GammaDeviate(const BaseDeviate& rhs, double k=0., double theta=1.) :
+            BaseDeviate(rhs), _gamma(k,theta) {}
 
         /**
          * @brief Construct a copy that shares the RNG with rhs.
@@ -658,54 +651,55 @@ namespace galsim {
         /**
          * @brief Draw a new random number from the distribution.
          *
-         * @return A Gamma deviate with current shape alpha and scale beta.
+         * @return A Gamma deviate with current shape k and scale theta.
          */
-        double operator() () { return _gamma(*this->_rng); }
+        double operator()() { return _gamma(*this->_rng); }
 
         /**
-         * @brief Get current distribution shape parameter alpha.
+         * @brief Get current distribution shape parameter k.
          *
-         * @return Shape parameter alpha of distribution.
+         * @return Shape parameter k of distribution.
          */
-        double getAlpha() { return _gamma.alpha(); }
+        double getK() { return _gamma.alpha(); }
 
         /**
-         * @brief Get current distribution scale parameter beta.
+         * @brief Get current distribution scale parameter theta.
          *
-         * @return Scale parameter beta of distribution.
+         * @return Scale parameter theta of distribution.
          */
-        double getBeta() { return _gamma.beta(); }
+        double getTheta() { return _gamma.beta(); }
 
         /**
-         * @brief Set current distribution shape parameter alpha.
+         * @brief Set current distribution shape parameter k.
          *
-         * @param[in] alpha  New shape parameter for distribution. Behaviour for non-positive value
-         *                   is undefined.
+         * @param[in] k  New shape parameter for distribution. Behaviour for non-positive value
+         *               is undefined.
          */
-        void setAlpha(double alpha) {
-            _gamma.param(boost::random::gamma_distribution<>::param_type(alpha, _gamma.beta()));
+        void setK(double k) {
+            _gamma.param(boost::random::gamma_distribution<>::param_type(k, _gamma.beta()));
         }
 
         /**
-         * @brief Set current distribution scale parameter beta.
+         * @brief Set current distribution scale parameter theta.
          *
-         * @param[in] beta  New scale parameter for distribution.  Behavior for non-positive
-         *                  value is undefined. 
+         * @param[in] theta  New scale parameter for distribution.  Behavior for non-positive
+         *                   value is undefined. 
          */
-        void setBeta(double beta) {
-            _gamma.param(boost::random::gamma_distribution<>::param_type(_gamma.alpha(), beta));
+        void setTheta(double theta) {
+            _gamma.param(boost::random::gamma_distribution<>::param_type(_gamma.alpha(), theta));
         }
 
         /**
-         * @brief Add Gamma pseudo-random deviates to every element in a supplied Image.
-         *
-         * @param[in,out] data  The Image.
+         * @brief Clear the internal cache
          */
-        template <typename T>
-        void applyTo(ImageView<T> data) { ApplyDeviateToImage(*this, data); }
+        void clearCache() { _gamma.reset(); }
 
+    protected:
+        double val() { return operator()(); }
 
     private:
+        // Note: confusingly, boost calls the internal values alpha and beta, even though they
+        // don't conform to the normal beta=1/theta.  Rather, they have beta=theta.
         boost::random::gamma_distribution<> _gamma;
     };
 
@@ -719,20 +713,19 @@ namespace galsim {
     class Chi2Deviate : public BaseDeviate
     {
     public:
-        /**
-         * @brief Construct a new Chi^2-distributed RNG, using time of day as seed.
-         *
-         * @param[in] n    Number of degrees of freedom for the output distribution, must be > 0.
-         */
-        Chi2Deviate(double n=1.) : _chi_squared(n) {}
 
         /**
          * @brief Construct a new Chi^2-distributed RNG, using the provided value as seed.
          *
-         * @param[in] lseed Seed to use
+         * If lseed == 0, this means to use the time of day as the seed.  Note that microsecond 
+         * counter is the seed, so BaseDeviates constructed in rapid succession may not be 
+         * independent. 
+         *
+         * @param[in] lseed Seed to use (default = 0)
          * @param[in] n     Number of degrees of freedom for the output distribution, must be > 0.
+         *                  (default = 1)
          */
-        Chi2Deviate(long lseed, double n=1.) : BaseDeviate(lseed), _chi_squared(n) {}
+        Chi2Deviate(long lseed=0, double n=1.) : BaseDeviate(lseed), _chi_squared(n) {}
 
         /**
          * @brief Construct a new Chi^2-distributed RNG, sharing the random number 
@@ -755,7 +748,7 @@ namespace galsim {
          *
          * @return A Chi^2 deviate with current degrees-of-freedom parameter n.
          */
-        double operator() () { return _chi_squared(*this->_rng); }
+        double operator()() { return _chi_squared(*this->_rng); }
 
         /**
          * @brief Get current distribution degrees-of-freedom parameter n.
@@ -775,13 +768,12 @@ namespace galsim {
         }
 
         /**
-         * @brief Add Chi^2 pseudo-random deviates to every element in a supplied Image.
-         *
-         * @param[in,out] data  The Image.
+         * @brief Clear the internal cache
          */
-        template <typename T>
-        void applyTo(ImageView<T> data) { ApplyDeviateToImage(*this, data); }
+        void clearCache() { _chi_squared.reset(); }
 
+    protected:
+        double val() { return operator()(); }
 
     private:
         boost::random::chi_squared_distribution<> _chi_squared;

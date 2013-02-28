@@ -95,6 +95,10 @@ def BuildGSObject(config, key, base=None):
             ck['re_from_res'] = True
         ck['half_light_radius'] = gal_re
 
+    # Make sure the PSF gets flux=1 unless explicitly overridden by the user.
+    if key == 'psf' and 'flux' not in config:
+        ck['flux'] = 1
+
     # See if this type has a specialized build function:
     build_func_name  = '_Build' + type
     if build_func_name in galsim.config.gsobject.__dict__:
@@ -126,6 +130,12 @@ def BuildGSObject(config, key, base=None):
         ck['safe'] = safe
 
     return gsobject, safe
+
+def _BuildNone(config, key, base, ignore):
+    """@brief Special type=None returns None
+    """
+    return None, True
+
 
 def _BuildAdd(config, key, base, ignore):
     """@brief  Build an Add object
@@ -307,6 +317,10 @@ def _BuildRealGalaxy(config, key, base, ignore):
         single = galsim.__dict__['RealGalaxy']._single_params,
         ignore = ignore)
 
+    if 'rng' not in base:
+        raise ValueError("No base['rng'] available for %s.type = RealGalaxy"%(key))
+    kwargs['rng'] = base['rng']
+
     if 'index' in kwargs:
         index = kwargs['index']
         if index >= real_cat.nobjects:
@@ -331,6 +345,10 @@ def _BuildSimple(config, key, base, ignore):
         opt = galsim.__dict__[type]._opt_params,
         single = galsim.__dict__[type]._single_params,
         ignore = ignore)
+    if galsim.__dict__[type]._takes_rng:
+        if 'rng' not in base:
+            raise ValueError("No base['rng'] available for %s.type = %s"%(key,type))
+        kwargs['rng'] = base['rng']
 
     # Finally, after pulling together all the params, try making the GSObject.
     try:

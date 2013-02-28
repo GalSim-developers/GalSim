@@ -189,6 +189,12 @@ Requires one of the
   optional \texttt{obscuration}.  For information
     about other optional parameters, see the documentation for this object.}
 \item[$\circ$]
+  \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_interpolated_image.html}{\texttt{galsim.InterpolatedImage(image,
+      \dots)}} \newline {a base class representing in principle
+    arbitrary surface brightness
+    profiles for which we have an Image representation.  For information
+    about other optional parameters, see the documentation for this object.}
+\item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_pixel.html}{\texttt{galsim.Pixel(xw,
       yw = None, flux=1.)}} \newline {used for integrating light onto square or
   rectangular pixels, requires at least one side dimension
@@ -443,7 +449,7 @@ component to the modelling of astronomical images, such as drawing
 object parameters according to a given distribution or generating random
 numbers to be added to image pixel values to model noise. 
 
-We now give a short summary of the 8 random deviates currently
+We now give a short summary of the 9 random deviates currently
 implemented in GalSim.   The optional parameter \emph{\texttt{seed}}
 listed below is used
 to seed the pseudo-random number generator: it can
@@ -467,9 +473,6 @@ with \texttt{mean} and standard deviation \texttt{sigma}.}
 \item[$\circ$] \texttt{galsim.PoissonDeviate(\emph{seed}, mean=1.)} \newline {Poisson distribution
     with a single \texttt{mean} rate.}
 
-\item[$\circ$] \texttt{galsim.CCDNoise(\emph{seed}, gain=1., read\_noise=0.)}  \newline {a
-    basic detector noise model, parametrized by \texttt{gain} and \texttt{read\_noise}.}
-
 \item[$\circ$] \texttt{galsim.WeibullDeviate(\emph{seed}, a=1., b=1.)} \newline {Weibull distribution
     family (includes Rayleigh and Exponential) with shape parameters \texttt{a} and \texttt{b}.}
 
@@ -478,6 +481,9 @@ with \texttt{mean} and standard deviation \texttt{sigma}.}
 
 \item[$\circ$] \texttt{galsim.Chi2Deviate(\emph{seed}, n=1.)} \newline {$\chi^2$ distribution
     with degrees-of-freedom parameter \texttt{n}.}
+
+\item[$\circ$] \texttt{galsim.DistDeviate(\emph{seed}, function, x\_min, x\_max)}  \newline {Use an 
+    arbitrary function for $P(x)$ from \texttt{x\_min} .. \texttt{x\_max}.}
 
 \end{itemize}
 
@@ -516,16 +522,35 @@ instances is:
     {\tt 0.8901547130662948}}
 
 \end{itemize}
-This is available for all the random deviates \emph{except} the \texttt{CCDNoise}.
-However, there is also an important method of \texttt{Image} objects
-(see Section \ref{sect:image}, below) which relates to \emph{all} random
-deviates.  This takes the following form:
+
+\subsection{Noise models}\label{sect:noisemodels}
+
+One common way to use the random deviates is as part of a noise model for adding 
+noise to an image.  These have their own separate hierarchy of classes
+
+\begin{itemize}
+\item[$\circ$] \texttt{galsim.GaussianNoise(rng, sigma=1.)} 
+\newline {Every pixel gets Gaussian noise with rms \texttt{sigma}.}
+
+\item[$\circ$] \texttt{galsim.PoissonNoise(rng, sky\_level=0.)} 
+\newline {Every pixel gets Poisson noise according to the flux in the image plus an option sky level, \texttt{sky\_level}.}
+
+\item[$\circ$] \texttt{galsim.DeviateNoise(dev)} 
+\newline {The noise value for every pixel is drawn from the given Deviate instance.}
+
+\item[$\circ$] \texttt{galsim.CCDNoise(rng, sky\_level=0., gain=1., read\_noise=0.)}  
+\newline {A combination of Poisson noise (with a gain value in electrons/ADU) and Gaussian read noise.}
+
+\end{itemize}
+
+These noise models are used with a method of \texttt{Image} objects
+(see Section \ref{sect:image}, below).  This takes the following form:
 
 \begin{itemize}
 
-\item[$\circ$] \texttt{image.addNoise(dev)} \newline {this adds
-    stochastic noise, distributed as represented by the random deviate
-    instance \texttt{dev}, to each element of the data array in the
+\item[$\circ$] \texttt{image.addNoise(noise)} \newline {this adds
+    stochastic noise, according to the noise model \texttt{noise},
+    to each element of the data array in the
     \texttt{Image} instance \texttt{image}.}
 
 \end{itemize}
@@ -733,11 +758,10 @@ integer and double-precision floating point representations.
 
 \subsection{Lensing shear fields}\label{sect:lensing}
 
-GalSim has relatively new functionality to simulate scientifically-motivated
-lensing shear fields. Due to its newness, the user interface is subject to
-change, and it is not currently accessible via configuration files (only
-directly in Python).  The code and documentation for the ``lensing engine'' is
-in {\tt galsim/lensing.py}.  The two relevant classes for users are:
+GalSim has functionality to simulate scientifically-motivated lensing
+shear fields. The code and documentation for the
+``lensing engine'' is in {\tt galsim/lensing.py}.  The two relevant
+classes for users are:
 
 \begin{itemize}
 \item[$\circ$]
@@ -746,9 +770,7 @@ in {\tt galsim/lensing.py}.  The two relevant classes for users are:
     $B$-mode power spectra can be separately specified as 
     \texttt{E\_power\_function} and \texttt{B\_power\_function}.  The
     \texttt{getShear(\dots)} method is used to generate a random realization of
-    a shear field from a given \texttt{PowerSpectrum} object.  Currently, it is
-    only possible to generate shears at gridded positions, but in future
-    versions of GalSim this restriction will no longer be applicable.}
+    a shear field from a given \texttt{PowerSpectrum} object.}
 
 \item[$\circ$]
   \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1lensing_1_1_n_f_w_halo.html}{\texttt{galsim.NFWHalo(\dots)}}
@@ -790,5 +812,8 @@ Multi-Extension FITS file or PyFITS HDU object, specified by the
     parameter (see \texttt{galsim/fits.py}).}
 
 \end{itemize}
+
+The routines for reading and writing FITS images are able to handle
+compressed inputs / outputs via keywords.
 
 \end{document}

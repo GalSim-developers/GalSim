@@ -44,7 +44,8 @@ New features introduced in this demo:
 - obj = galsim.RealGalaxy(real_cat, index)
 - obj.applyRotation(theta)
 - obj.applyMagnification(scale)
-- image += image2
+- image += background
+- noise = galsim.PoissonNoise()  # with no sky_level given
 - galsim.fits.writeCube([list of images], file_name)
 """
 
@@ -77,7 +78,12 @@ def main(argv):
     # Define some parameters we'll use below.
 
     cat_file_name = 'real_galaxy_catalog_example.fits'
-    dir = 'data'
+    # This script is designed to be run from the examples directory so dir is a relative path.  
+    # But the '../examples/' part lets bin/demo6 also be run from the bin directory.
+    dir = '../examples/data'
+    # Make output directory if not already present.
+    if not os.path.isdir('output'):
+        os.mkdir('output')
     cube_file_name = os.path.join('output','cube_real.fits')
     psf_file_name = os.path.join('output','psf_real.fits')
 
@@ -171,17 +177,14 @@ def main(argv):
         logger.debug('   Drew image')
         t3 = time.time()
 
-        # Make an image for the background level.
-        # Here we just fill it with a constant value, but you could do something
-        # more complicated if you wanted.
-        background = galsim.ImageF(xsize,ysize)
-        background.fill(sky_level * pixel_scale**2)
-
-        # Add this to our drawn image of the object:
+        # Add a constant background level
+        background = sky_level * pixel_scale**2
         im += background
 
-        # Add Poisson noise
-        im.addNoise(galsim.CCDNoise(rng)) 
+        # Add Poisson noise.  This time, we don't give a sky_level, since we have already
+        # added it to the image, so we don't want any more added.  The sky_level parameter
+        # really defines how much _extra_ sky should be added above what is already in the image.
+        im.addNoise(galsim.PoissonNoise(rng)) 
 
         logger.debug('   Added Poisson noise')
         t4 = time.time()
