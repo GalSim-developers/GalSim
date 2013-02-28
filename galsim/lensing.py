@@ -554,13 +554,7 @@ class PowerSpectrumRealizer(object):
     def __call__(self, gd):
         """Generate a realization of the current power spectrum.
         
-        @param gd               A gaussian deviate to use when generating the shear fields.
-        @param new_power        If the power-spectrum functions that you specified are not
-                                deterministic then you can set this value to True to call them again
-                                to get new values.  For example, you could include a cosmic variance
-                                term in your power spectrum and get a new spectrum realization each
-                                time.
-        
+        @param gd               A gaussian deviate to use when generating the shear fields.        
         @return g1,g2           Two image arrays for the two shear components g_1 and g_2
         """
         ISQRT2 = np.sqrt(1.0/2.0)
