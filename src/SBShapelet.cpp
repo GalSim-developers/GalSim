@@ -194,8 +194,7 @@ namespace galsim {
         tmv::Matrix<double> psi(npts,_bvec.size(),0.);
         LVector::basis(psi,x,y,_bvec.getOrder(),_sigma);
 
-        tmv::VectorView<double> I = tmv::VectorViewOf(xt.getArray(),npts);
-        I = psi * _bvec.rVector();
+        tmv::VectorViewOf(xt.getArray(),npts) = psi * _bvec.rVector();
     }
 
     void SBShapelet::SBShapeletImpl::fillKGrid(KTable& kt) const 
@@ -227,8 +226,7 @@ namespace galsim {
         tmv::Matrix<std::complex<double> > psi_k(npts,_bvec.size(),0.);
         LVector::kBasis(psi_k,kx,ky,_bvec.getOrder(),_sigma);
 
-        tmv::VectorView<std::complex<double> > I = tmv::VectorViewOf(kt.getArray(),npts);
-        I = psi_k * _bvec.rVector();
+        tmv::VectorViewOf(kt.getArray(),npts) = psi_k * _bvec.rVector();
     }
 
     template <typename T>

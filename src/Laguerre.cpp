@@ -32,10 +32,10 @@ const int BLOCKING_FACTOR=1024;
 
 namespace galsim {
 
-    void LVector::rotate(double theta) 
+    void LVector::rotate(const Angle& theta) 
     {
         take_ownership();
-        std::complex<double> z(std::cos(theta), -std::sin(theta));
+        std::complex<double> z(std::cos(theta.rad()), -std::sin(theta.rad()));
         std::complex<double> imz(1., 0.);
         for (int m=1; m<=_order; m++) {
             imz *= z;

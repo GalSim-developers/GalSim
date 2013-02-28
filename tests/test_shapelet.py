@@ -57,8 +57,8 @@ def funcname():
 
 # define a series of tests
 
-def test_shapelet():
-    """Test the basic properties of the Shapelet class
+def test_shapelet_gaussian():
+    """Test that the simplest Shapelet profile is equivalent to a Gaussian
     """
     import time
     t1 = time.time()
@@ -83,7 +83,19 @@ def test_shapelet():
                     err_msg="Shapelet with (only) b00=1 disagrees with Gaussian result"
                     "for flux=%f, sigma=%f, order=%d"%(test_flux,sigma,order))
 
-    # Test expected behavior for a non-trivial shapelet profile.
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
+def test_shapelet_draw():
+    """Test some measured properties of a drawn shapelet against the supposed true values
+    """
+    import time
+    t1 = time.time()
+
+    ftypes = [np.float32, np.float64]
+    dx = 0.2
+
     pix = galsim.Pixel(dx)
     im = galsim.ImageF(128,128)
     im.scale = dx
@@ -234,8 +246,114 @@ def test_shapelet_fit():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_shapelet_adjustments():
+    """Test that adjusting the Shapelet profile in various ways does the right thing
+    """
+    import time
+    t1 = time.time()
+
+    ftypes = [np.float32, np.float64]
+
+    nx = 128
+    ny = 128
+    dx = 0.2
+    im = galsim.ImageF(nx,ny)
+
+    sigma = 1.8
+    order = 6
+    bvec = [1.3,                                            # n = 0
+            0.02, 0.03,                                     # n = 1
+            0.23, -0.19, 0.08,                              # n = 2
+            0.01, 0.02, 0.04, -0.03,                        # n = 3
+            -0.09, 0.07, -0.11, -0.08, 0.11,                # n = 4
+            -0.03, -0.02, -0.08, 0.01, -0.06, -0.03,        # n = 5
+            0.06, -0.02, 0.00, -0.05, -0.04, 0.01, 0.09 ]   # n = 6
+
+    ref_shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
+    ref_im = galsim.ImageF(nx,ny)
+    ref_shapelet.draw(ref_im, dx=dx)
+
+    # Test that setting a Shapelet with setNM gives the right profile
+    shapelet = galsim.Shapelet(sigma=sigma, order=order)
+    i = 0
+    for n in range(order+1):
+        for m in range(n,-1,-2):
+            if m == 0:
+                shapelet.setNM(n,m,bvec[i])
+                i = i+1
+            else
+                shapelet.setNM(n,m,bvec[i],bvec[i+1])
+                i = i+2
+    shapelet.draw(im, dx=dx)
+    np.testing.assert_array_almost_equal(
+        im.array, ref_im.array, 6,
+        err_msg="Shapelet set with setNM disagrees with reference Shapelet")
+
+    # Test that setting a Shapelet with setPQ gives the right profile
+    shapelet = galsim.Shapelet(sigma=sigma, order=order)
+    i = 0
+    for n in range(order+1):
+        for m in range(n,-1,-2):
+            p = (n+m)/2
+            q = (n-m)/2
+            if m == 0:
+                shapelet.setPQ(p,q,bvec[i])
+                i = i+1
+            else
+                shapelet.setPQ(p,q,bvec[i],bvec[i+1])
+                i = i+2
+    shapelet.draw(im, dx=dx)
+    np.testing.assert_array_almost_equal(
+        im.array, ref_im.array, 6,
+        err_msg="Shapelet set with setPQ disagrees with reference Shapelet")
+
+    # Test that the Shapelet setFlux does the same thing as the GSObject setFlux
+    gsref_shapelet = GSObject(ref_shapelet)  # Make it opaque to the Shapelet versions
+    gsref_shapelet.setFlux(23.)
+    shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
+
+
+            # Test normalization  (This is normally part of do_shoot.  When we eventually 
+            # implement photon shooting, we should go back to the normal do_shoot call, 
+            # and remove this section.)
+            shapelet.setFlux(test_flux)
+            # Need to convolve with a pixel if we want the flux to come out right.
+            conv = galsim.Convolve([pix,shapelet])
+            conv.draw(im, normalization="surface brightness")
+            flux = im.array.sum()
+            print 'img.sum = ',flux,'  cf. ',test_flux/(dx*dx)
+            np.testing.assert_almost_equal(flux * dx*dx / test_flux, 1., 4,
+                    err_msg="Surface brightness normalization for Shapelet "
+                    "disagrees with expected result")
+            conv.draw(im, normalization="flux")
+            flux = im.array.sum()
+            print 'im.sum = ',flux,'  cf. ',test_flux
+            np.testing.assert_almost_equal(flux / test_flux, 1., 4,
+                    err_msg="Flux normalization for Shapelet disagrees with expected result")
+
+            # Test centroid
+            im.setCenter(0,0)
+            x,y = np.meshgrid(np.arange(im.array.shape[0]).astype(float) + im.getXMin(), 
+                              np.arange(im.array.shape[1]).astype(float) + im.getYMin())
+            x *= dx
+            y *= dx
+            flux = im.array.sum()
+            mx = (x*im.array).sum() / flux
+            my = (y*im.array).sum() / flux
+            print 'centroid = ',mx,my,' cf. ',conv.centroid()
+            np.testing.assert_almost_equal(mx, shapelet.centroid().x, 3,
+                    err_msg="Measured centroid (x) for Shapelet disagrees with expected result")
+            np.testing.assert_almost_equal(my, shapelet.centroid().y, 3,
+                    err_msg="Measured centroid (y) for Shapelet disagrees with expected result")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 
 if __name__ == "__main__":
-    test_shapelet()
+    test_shapelet_gaussian()
+    test_shapelet_draw()
     test_shapelet_properties()
     test_shapelet_fit()
+    test_shapelet_adjustments()

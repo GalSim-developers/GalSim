@@ -32,6 +32,7 @@
 
 #include "Std.h"
 #include "CppShear.h"
+#include "Angle.h"
 
 namespace galsim {
 
@@ -435,7 +436,7 @@ namespace galsim {
         // Transformations of coefficient LVectors representing real objects:
         // Rotate represented object by theta:
         // (note this is faster than using RotationLTransform)
-        void rotate(double theta); 
+        void rotate(const Angle& theta);
 
         // Get the total flux or flux within an aperture of size R*sigma
         // Use all monopole terms unless maximum is specified by maxP.

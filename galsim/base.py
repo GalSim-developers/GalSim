@@ -368,9 +368,7 @@ class GSObject(object):
         @returns The rescaled GSObject.
         """
         ret = self.copy()
-        old_flux = self.getFlux()
-        ret.applyTransformation(galsim.Ellipse(np.log(scale)))
-        ret.setFlux(old_flux)
+        ret.applyDilation(scale)
         return ret
 
     def createMagnified(self, scale):
@@ -389,7 +387,7 @@ class GSObject(object):
         @returns The rescaled GSObject.
         """
         ret = self.copy()
-        ret.applyTransformation(galsim.Ellipse(np.log(scale)))
+        ret.applyMagnification(scale)
         return ret
 
     def createSheared(self, *args, **kwargs):
@@ -2493,7 +2491,6 @@ class Shapelet(GSObject):
 
     # --- Public Class methods ---
     def __init__(self, sigma, order, bvec=None):
-        #print 'constructor: ',sigma, order, bvec
         
         # Make sure order and sigma are the right type:
         try:
@@ -2513,11 +2510,8 @@ class Shapelet(GSObject):
             if len(bvec) != bvec_size:
                 raise ValueError("bvec is the wrong size for the provided order")
             import numpy
-            #print 'convert to LVector.  bvec = ',bvec
             bvec = _galsim.LVector(order,numpy.array(bvec))
-            #print 'bvec -> ',bvec.array
 
-        #print 'initial constructor: ',sigma,bvec.order,bvec.array
         GSObject.__init__(self, _galsim.SBShapelet(sigma, bvec))
 
     def getSigma(self):
@@ -2537,18 +2531,13 @@ class Shapelet(GSObject):
     # presumably anyone who cares about efficiency would not be using these functions.
     # They would create the Shapelet with the right bvec from the start.
     def setSigma(self,sigma):
-        #print 'setSigma: ',sigma
         bvec = self.SBProfile.getBVec()
-        #print 'setSigma: ',sigma,bvec.order,bvec.array
         GSObject.__init__(self, _galsim.SBShapelet(sigma, bvec))
     def setOrder(self,order):
-        #print 'setOrder: ',order
         sigma = self.SBProfile.getSigma()
         bvec = _galsim.LVector(order)
-        #print 'setOrder: ',sigma,bvec.order,bvec.array
         GSObject.__init__(self, _galsim.SBShapelet(sigma, bvec))
     def setBVec(self,bvec):
-        #print 'setBVec: ',bvec
         sigma = self.SBProfile.getSigma()
         order = self.SBProfile.getBVec().order
         bvec_size = _galsim.LVectorSize(order)
@@ -2556,18 +2545,44 @@ class Shapelet(GSObject):
             raise ValueError("bvec is the wrong size for the Shapelet order")
         import numpy
         bvec = _galsim.LVector(order,numpy.array(bvec))
-        #print 'setBVec: ',sigma,bvec.order,bvec.array
         GSObject.__init__(self, _galsim.SBShapelet(sigma, bvec))
     def setPQ(self,p,q,re,im=0.):
-        #print 'setPQ: ',p,q,re,im
         sigma = self.SBProfile.getSigma()
         bvec = self.SBProfile.getBVec().copy()
         bvec.setPQ(p,q,re,im)
-        #print 'setPQ: ',sigma,bvec.order,bvec.array
         GSObject.__init__(self, _galsim.SBShapelet(sigma, bvec))
     def setNM(self,N,m,re,im=0.):
-        #print 'setNM: ',N,m,re,im
         self.setPQ((N+m)/2,(N-m)/2,re,im)
+
+    def setFlux(self, flux):
+        # More efficient to change the bvector rather than add a transformation layer above 
+        # the SBShapelet, which is what the normal setFlux method does.
+        self.scaleFlux(flux/self.getFlux())
+
+    def scaleFlux(self, fluxRatio):
+        # More efficient to change the bvector rather than add a transformation layer above 
+        # the SBShapelet, which is what the normal setFlux method does.
+        sigma = self.SBProfile.getSigma()
+        bvec = self.SBProfile.getBVec() * fluxRatio
+        GSObject.__init__(self, _galsim.SBShapelet(sigma, bvec))
+
+    def applyRotation(self, theta):
+        if not isinstance(theta, galsim.Angle):
+            raise TypeError("Input theta should be an Angle")
+        sigma = self.SBProfile.getSigma()
+        bvec = self.SBProfile.getBVec().copy()
+        bvec.rotate(theta)
+        GSObject.__init__(self, _galsim.SBShapelet(sigma, bvec))
+
+    def applyDilation(self, scale):
+        sigma = self.SBProfile.getSigma() * scale
+        bvec = self.SBProfile.getBVec()
+        GSObject.__init__(self, _galsim.SBShapelet(sigma, bvec))
+
+    def applyMagnification(self, scale):
+        sigma = self.SBProfile.getSigma() * scale
+        bvec = self.SBProfile.getBVec() * scale**2
+        GSObject.__init__(self, _galsim.SBShapelet(sigma, bvec))
 
     def fitImage(self, image, center=None, normalization='flux'):
         """Fit for a shapelet decomposition of a given image
