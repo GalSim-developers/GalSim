@@ -251,8 +251,6 @@ the most useful expression of the Poisson summation formula:
 \sum_{q=-\infty}^{\infty} \tilde{f} \left(\frac{2 \pi  q}{L} \right)
 \me^{\mi 2 \pi x q / L}.
 \end{equation}
-{\it Query from Rachel: I don't understand the exponent factor on the RHS,
-  I would have thought it's just $\me^{\mi k x}$?}
 If we define $\Delta k \equiv k_{\rm min} = 2 \pi / L$ we can also write
 this as
 \begin{equation}
@@ -266,7 +264,7 @@ non-unitary Fourier transform convention commonly adopted for weak
 lensing power spectra in the flat sky approximation.
 
 \subsection{The Fourier transform of discrete samples of the power spectra}\label{sect:DFTPS}
-In what follows we are going to derive results only for the $\xi_+$ correlation function of equation \eqref{eq:xi}.  This will not not impact upon the understanding of how $P(k)$ is approximated using DFTs, but allows us to replace $\xi_{\pm}$ and $J_{0/4}(k \theta)$ in equation \eqref{eq:xi} with $\xi_+$ and $J_0$, respectively.  We will just be aware subsquently that real ellipticity fields have two components, to be treated as described by equation \eqref{eq:xi}.
+In what follows we are going to derive results only for the $\xi_+$ correlation function of equation \eqref{eq:xi}.  This will not impact the understanding of how $P(k)$ is approximated using DFTs, but allows us to replace $\xi_{\pm}$ and $J_{0/4}(k \theta)$ in equation \eqref{eq:xi} with $\xi_+$ and $J_0$, respectively.  We will just be aware subsquently that real ellipticity fields have two components, to be treated as described by equation \eqref{eq:xi}.
 
 The inverse Fourier transform of $P(k)$ to give $\xi_+(\theta)$ may be written in Cartesian coordinates as
 \begin{equation}
@@ -278,10 +276,8 @@ The relation between this and equation \eqref{eq:xi} makes use of Bessel's first
 integral:
 \begin{equation}
 J_n(z) = \frac{\mi^{-n}}{\pi} \int_0^{\pi} \me^{\mi z \cos{\theta}}
-\cos{(n \theta)} \, \rmd \theta,  
+\cos{(n \theta)} \, \rmd \theta.
 \end{equation}
-(\emph{which I believes shows you have the correct expression for the
-  variance on page 2, Rachel...}).
 
 What happens if we only have finite samples of $P(k_1, k_2)$?  To
 answer that, let us define the following function:
@@ -343,7 +339,7 @@ Discrete Time Fourier Transform (DTFT), although this result is
 normally derived using unitary conventions for the transform pair.
 Note that the terms $P_{\Delta k}[q, p]$ are dimensionless, being
 composed of $(\Delta k)^2 = (2 \pi / L)^2$ multiplied by the samples $P(q \Delta k, p \Delta
-k)$ of the power $P(k_1, k_2)$ (dimensions angle$^2$).  
+k)$ of the power $P(k_1, k_2)$ (with dimensions of angle$^2$).  
 
 One intuitive way of looking at the approximation of equation \eqref{eq:xip} for the case of discretely
 sampled $P(k_1, k_2)$ is that the terms in the discrete sum should be
@@ -416,7 +412,7 @@ outset, as assumed in Section \ref{sect:theory}, sensibly chosen (of
 course) so that $N=L/\Delta \theta$ is an integer.  These choices also
 set $\Delta k = 2 \pi / L$.  Beginning with equation
 \eqref{eq:dft}, we may re-express the convenient $P_{\Delta k}[q, p]$ as
-samples of the the dimensional $P(k_1, k_2)$ once again:
+samples of the dimensional $P(k_1, k_2)$ once again:
 \begin{eqnarray}
 \xi_{\Delta \theta}[n, m] & = & \frac{1}{( 2 \pi)^2}
 \sum_{q,p=0}^{N-1} P_{\Delta k} [q, p] \me^{\mi 2 \pi (qn +
@@ -428,12 +424,10 @@ samples of the the dimensional $P(k_1, k_2)$ once again:
 & = & \texttt{numpy.fft.ifft2}\left[P(q \Delta
   k, q \Delta k) / (\Delta \theta)^2\right].
 \end{eqnarray}
-This seems to agree with Rachel's empirical finding that taking the
-output ellipticities of the original code, which scale in amplitude as the square root of
-of the power/correlation function, we must further divide by a factor
-$d = \Delta \theta$ to generate the output we expect.  Of course, I may
-easily be missing factors of $N$ or $2 \pi $ about the place, so I
-welcome anyone wishing to quickly scan through these steps I followed!
+This equation explains why we require a division of the amplitudes by
+$d=\Delta\theta$ in the lensing engine.  Dimensional analysis tells us
+that we require a division by something with dimensions of angle, but
+this equation is justification for exactly what angle is used.
 
 Finally, we said we would say little more about the implications of
 the choice to use $N$ as the
