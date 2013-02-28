@@ -28,69 +28,103 @@ class InputCatalog(object):
     Each row corresponds to a different object to be built, and each column stores some item of
     information about that object (e.g. flux or half_light_radius).
 
+    After construction, the following fields are available:
+
+        self.nobjects   The number of objects in the catalog
+        self.ncols      The number of columns in the catalog
+        self.isfits     Whether the catalog is a fits catalog
+        self.names      For a fits catalog, the valid column names
+
+
     @param file_name     Filename of the input catalog. (Required)
-    @param dir           Directory catalog is in.
-    @param file_type     Either 'ASCII' (currently the only, default, option) or (soon) 'FITS'.
-                         (TODO: default = determine from extension or, if that fails, ASCII)
+    @param dir           Directory catalog is in.  (default `dir = None`)
+    @param file_type     Either 'ASCII' or 'FITS'.  If None, infer from the file name ending.
+                         (default `file_type = None`)
     @param comments      The character used to indicate the start of a comment in an
-                         ASCII catalog.  (default='#').
+                         ASCII catalog.  (default `comments='#'`)
+    @param hdu           Which hdu to use for FITS files.  (default `hdu = 1`)
     """
     _req_params = { 'file_name' : str }
-    _opt_params = { 'dir' : str , 'file_type' : str , 'comments' : str }
+    _opt_params = { 'dir' : str , 'file_type' : str , 'comments' : str , 'hdu' : int }
     _single_params = []
     _takes_rng = False
 
-    def __init__(self, file_name, dir=None, file_type='ASCII', comments='#'):
+    def __init__(self, file_name, dir=None, file_type=None, comments='#', hdu=1):
+
         # First build full file_name
-        self.file_name = file_name
+        self.file_name = file_name.strip()
         if dir:
             import os
             self.file_name = os.path.join(dir,self.file_name)
     
-        # Raise an apologetic exception for FITS input-wanting users
+        if not file_type:
+            if self.file_name.lower().endswith('.fits'):
+                file_type = 'FITS'
+            else:
+                file_type = 'ASCII'
+        file_type = file_type.upper()
+        if file_type not in ['FITS', 'ASCII']:
+            raise ValueError("file_type must be either FITS or ASCII if specified.")
         self.file_type = file_type
-        if self.file_type.upper() == 'FITS':
-            raise NotImplementedError("FITS catalog inputs not yet implemented, sorry!")
-        # Then read in from the ASCII-type catalogs
-        elif self.file_type.upper() ==  'ASCII':
-            self.read_ascii(comments)
-        else:
-            raise AttributeError("User must specify input catalog file type as either 'ASCII' "+
-                                 "or 'FITS' (case-insensitive).")
-        # Also store the number of objects as nobjects for easy access by other routines
-        self.nobjects = self.data.shape[0]
-        self.ncols = self.data.shape[1]
 
+        try:
+            if file_type == 'FITS':
+                self.read_fits(hdu)
+            else:
+                self.read_ascii(comments)
+        except Exception, e:
+            print e
+            raise RuntimeError("Unable to read %s catalog file %s."%(
+                    self.file_type, self.file_name))
+            
     def read_ascii(self, comments):
         """Read in an input catalog from an ASCII file.
-
-        Does not check for sensible inputs, leaving this up to the wrapper function read.
         """
-        from numpy import loadtxt
+        import numpy
         # Read in the data using the numpy convenience function
         # Note: we leave the data as str, rather than convert to float, so that if
         # we have any str fields, they don't give an error here.  They'll only give an 
         # error if one tries to convert them to float at some point.
-        self.data = loadtxt(self.file_name, comments=comments, dtype=str)
+        self.data = numpy.loadtxt(self.file_name, comments=comments, dtype=str)
+        self.names = None
+        self.nobjects = self.data.shape[0]
+        self.ncols = self.data.shape[1]
+        self.isfits = False
 
-    def nObjects(self):
-        """Return the number of objects in the catalog
+    def read_fits(self, hdu):
+        """Read in an input catalog from a FITS file.
         """
-        return self.nobjects
-
-    def nCols(self):
-        """Return the number of columns in the catalog
-        """
-        return self.ncols
+        import pyfits
+        import numpy
+        self.data = pyfits.getdata(self.file_name, hdu)
+        self.names = self.data.columns.names
+        self.ncols = len(self.names)
+        self.nobjects = numpy.min([ len(self.data.field(name)) for name in self.names])
+        self.isfits = True
 
     def get(self, index, col):
         """Return the data for the given index and col as a string
+
+        For ASCII catalogs, col is the column number.  
+        For FITS catalogs, col is a string giving the name of the column in the FITS table.
         """
-        if index < 0 or index >= self.nobjects:
-            raise ValueError("Object %d is invalid for catalog %s"%(index,self.file_name))
-        if col < 0 or col >= self.ncols:
-            raise ValueError("Column %d is invalid for catalog %s"%(col,self.file_name))
-        return self.data[index, col]
+        if self.isfits:
+            if col not in self.names:
+                raise KeyError("Column %s is invalid for catalog %s"%(col,self.file_name))
+
+            if index < 0 or index >= len(self.data.field(col)):
+                raise IndexError("Object %d is invalid for catalog %s"%(index,self.file_name))
+            return self.data.field(col)[index]
+        else:
+            try:
+                col = int(col)
+            except:
+                raise ValueError("For ASCII catalogs, col must be an integer")
+            if col < 0 or col >= self.ncols:
+                raise IndexError("Column %d is invalid for catalog %s"%(col,self.file_name))
+            if index < 0 or index >= self.nobjects:
+                raise IndexError("Object %d is invalid for catalog %s"%(index,self.file_name))
+            return self.data[index, col]
 
     def getFloat(self, index, col):
         """Return the data for the given index and col as a float if possible
@@ -109,5 +143,4 @@ class InputCatalog(object):
         except:
             raise TypeError("The data at (%d,%d) in catalog %s could not be converted to int"%(
                     index,col,self.file_name))
-
 

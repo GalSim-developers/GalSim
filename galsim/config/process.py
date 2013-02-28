@@ -32,8 +32,6 @@ def ProcessInput(config, file_num=0, logger=None):
             field = input[key]
             field['type'] = input_type[key]
             ignore = []
-            if key == 'catalog' and 'file_name' in field:
-                SetDefaultExt(field['file_name'],'.asc')
             if key == 'power_spectrum':
                 # This is used for buildGriddedShears later.
                 ignore += ['grid_spacing', 'interpolant']
