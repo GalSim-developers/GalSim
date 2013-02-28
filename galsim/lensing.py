@@ -437,7 +437,8 @@ class PowerSpectrum(object):
         Note that the interpolation (carried out using the interpolant that was specified when
         building the gridded shears) modifies the effective power spectrum somewhat.  The user is
         responsible for choosing a grid size that is small enough not to significantly modify the
-        power spectrum on the scales of interest.
+        power spectrum on the scales of interest.  Detailed tests of this functionality have not
+        been carried out.
 
         Some examples of how to use getShear:
 
