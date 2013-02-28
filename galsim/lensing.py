@@ -83,7 +83,9 @@ class PowerSpectrum(object):
     A PowerSpectrum represents some (flat-sky) shear power spectrum, either for gridded points or at
     arbitary positions.  This class is originally initialized with a power spectrum from which we
     would like to generate g1 and g2 values.  It generates shears on a grid, and if necessary,
-    when getShear is called, it will interpolate to the requested positions. 
+    when getShear is called, it will interpolate to the requested positions.  For detail on how
+    these processes are carried out, please see the document in the GalSim repository,
+    devel/modules/lensing_engine.pdf.
 
     When creating a PowerSpectrum instance, you need to specify at least one of the E or B mode 
     power spectra, which is normally given as a function P(k).  The typical thing is to just 
@@ -111,9 +113,8 @@ class PowerSpectrum(object):
     the fact that our little patch of sky might reasonably live in some special region with respect
     to shear correlations.  Our `P(k=0)=0` is essentially setting the integrated power below our
     minimum k value to zero (i.e., it's implicitly a statement about power in a k range, not just at
-    `k=0` itself).  Future versions of the lensing engine may change this behavior.  Moreover, a
-    full comparison of the GalSim power spectrum normalization conventions and behavior in various
-    regimes is in the works and will be available with a future version of GalSim.
+    `k=0` itself).  The implications of the discrete representation, and the `P(k=0)=0` choice, are
+    in devel/modules/lensing_engine.pdf.
 
     The power functions must return a list/array that is the same size as what it was given, e.g.,
     in the case of no power or constant power, a function that just returns a float would not be
