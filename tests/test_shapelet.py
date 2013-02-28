@@ -65,11 +65,11 @@ def test_shapelet_gaussian():
 
     ftypes = [np.float32, np.float64]
     dx = 0.2
+    test_flux = 23.
 
     # First, a Shapelet with only b_00 = 1 should be identically a Gaussian
     im1 = galsim.ImageF(64,64)
     im2 = galsim.ImageF(64,64)
-    test_flux = 23.
     for sigma in [1., 0.6, 2.4]:
         gauss = galsim.Gaussian(flux=test_flux, sigma=sigma)
         gauss.draw(im1, dx=0.2)
@@ -95,6 +95,7 @@ def test_shapelet_draw():
 
     ftypes = [np.float32, np.float64]
     dx = 0.2
+    test_flux = 23.
 
     pix = galsim.Pixel(dx)
     im = galsim.ImageF(128,128)
@@ -281,7 +282,7 @@ def test_shapelet_adjustments():
             if m == 0:
                 shapelet.setNM(n,m,bvec[i])
                 i = i+1
-            else
+            else:
                 shapelet.setNM(n,m,bvec[i],bvec[i+1])
                 i = i+2
     shapelet.draw(im, dx=dx)
@@ -299,7 +300,7 @@ def test_shapelet_adjustments():
             if m == 0:
                 shapelet.setPQ(p,q,bvec[i])
                 i = i+1
-            else
+            else:
                 shapelet.setPQ(p,q,bvec[i],bvec[i+1])
                 i = i+2
     shapelet.draw(im, dx=dx)
@@ -308,43 +309,52 @@ def test_shapelet_adjustments():
         err_msg="Shapelet set with setPQ disagrees with reference Shapelet")
 
     # Test that the Shapelet setFlux does the same thing as the GSObject setFlux
-    gsref_shapelet = GSObject(ref_shapelet)  # Make it opaque to the Shapelet versions
+    gsref_shapelet = galsim.GSObject(ref_shapelet)  # Make it opaque to the Shapelet versions
     gsref_shapelet.setFlux(23.)
+    gsref_shapelet.draw(ref_im, dx=dx)
     shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
+    shapelet.setFlux(23.)
+    shapelet.draw(im, dx=dx)
+    np.testing.assert_array_almost_equal(
+        im.array, ref_im.array, 6,
+        err_msg="Shapelet setFlux disagrees with GSObject setFlux")
 
+    # Test that the Shapelet scaleFlux does the same thing as the GSObject scaleFlux
+    gsref_shapelet.scaleFlux(0.23)
+    gsref_shapelet.draw(ref_im, dx=dx)
+    shapelet.scaleFlux(0.23)
+    shapelet.draw(im, dx=dx)
+    np.testing.assert_array_almost_equal(
+        im.array, ref_im.array, 6,
+        err_msg="Shapelet setFlux disagrees with SObject scaleFlux")
 
-            # Test normalization  (This is normally part of do_shoot.  When we eventually 
-            # implement photon shooting, we should go back to the normal do_shoot call, 
-            # and remove this section.)
-            shapelet.setFlux(test_flux)
-            # Need to convolve with a pixel if we want the flux to come out right.
-            conv = galsim.Convolve([pix,shapelet])
-            conv.draw(im, normalization="surface brightness")
-            flux = im.array.sum()
-            print 'img.sum = ',flux,'  cf. ',test_flux/(dx*dx)
-            np.testing.assert_almost_equal(flux * dx*dx / test_flux, 1., 4,
-                    err_msg="Surface brightness normalization for Shapelet "
-                    "disagrees with expected result")
-            conv.draw(im, normalization="flux")
-            flux = im.array.sum()
-            print 'im.sum = ',flux,'  cf. ',test_flux
-            np.testing.assert_almost_equal(flux / test_flux, 1., 4,
-                    err_msg="Flux normalization for Shapelet disagrees with expected result")
+    # Test that the Shapelet applyRotation does the same thing as the GSObject applyRotation
+    gsref_shapelet.applyRotation(23. * galsim.degrees)
+    gsref_shapelet.draw(ref_im, dx=dx)
+    shapelet.applyRotation(23. * galsim.degrees)
+    shapelet.draw(im, dx=dx)
+    np.testing.assert_array_almost_equal(
+        im.array, ref_im.array, 6,
+        err_msg="Shapelet applyRotation disagrees with GSObject applyRotation")
 
-            # Test centroid
-            im.setCenter(0,0)
-            x,y = np.meshgrid(np.arange(im.array.shape[0]).astype(float) + im.getXMin(), 
-                              np.arange(im.array.shape[1]).astype(float) + im.getYMin())
-            x *= dx
-            y *= dx
-            flux = im.array.sum()
-            mx = (x*im.array).sum() / flux
-            my = (y*im.array).sum() / flux
-            print 'centroid = ',mx,my,' cf. ',conv.centroid()
-            np.testing.assert_almost_equal(mx, shapelet.centroid().x, 3,
-                    err_msg="Measured centroid (x) for Shapelet disagrees with expected result")
-            np.testing.assert_almost_equal(my, shapelet.centroid().y, 3,
-                    err_msg="Measured centroid (y) for Shapelet disagrees with expected result")
+    # Test that the Shapelet applyDilation does the same thing as the GSObject applyDilation
+    gsref_shapelet.applyDilation(1.3)
+    gsref_shapelet.draw(ref_im, dx=dx)
+    shapelet.applyDilation(1.3)
+    shapelet.draw(im, dx=dx)
+    np.testing.assert_array_almost_equal(
+        im.array, ref_im.array, 6,
+        err_msg="Shapelet applyDilation disagrees with GSObject applyDilation")
+
+    # Test that the Shapelet applyMagnification does the same thing as the GSObject 
+    # applyMagnification
+    gsref_shapelet.applyMagnification(0.8)
+    gsref_shapelet.draw(ref_im, dx=dx)
+    shapelet.applyMagnification(0.8)
+    shapelet.draw(im, dx=dx)
+    np.testing.assert_array_almost_equal(
+        im.array, ref_im.array, 6,
+        err_msg="Shapelet applyMagnification disagrees with GSObject applyMagnification")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

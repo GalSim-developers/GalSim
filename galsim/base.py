@@ -51,10 +51,14 @@ class GSObject(object):
     """Base class for defining the interface with which all GalSim Objects access their shared 
     methods and attributes, particularly those from the C++ SBProfile classes.
     """
-    def __init__(self, SBProfile):
-        if not isinstance(SBProfile, galsim.SBProfile):
-            raise TypeError("GSObject must be initialized with an SBProfile!")
-        self.SBProfile = SBProfile  # This guarantees that all GSObjects have an SBProfile
+    def __init__(self, rhs):
+        # This guarantees that all GSObjects have an SBProfile
+        if isinstance(rhs, galsim.GSObject):
+            self.SBProfile = rhs.SBProfile
+        elif isinstance(rhs, galsim.SBProfile):
+            self.SBProfile = rhs
+        else:
+            raise TypeError("GSObject must be initialized with an SBProfile or another GSObject!")
     
     # Make op+ of two GSObjects work to return an Add object
     def __add__(self, other):
