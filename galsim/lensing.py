@@ -34,15 +34,15 @@ def _convertPositions(pos, units, func):
     try:
         # Check for PositionD or PositionI:
         if isinstance(pos,galsim.PositionD) or isinstance(pos,galsim.PositionI):
-            pos = ( np.array([pos.x], dtype='float'),
-                    np.array([pos.y], dtype='float') )
+            pos = [ np.array([pos.x], dtype='float'),
+                    np.array([pos.y], dtype='float') ]
 
         # Check for list of PositionD or PositionI:
         # The only other options allow pos[0], so if this is invalid, an exception 
         # will be raised and appropriately dealt with:
         elif isinstance(pos[0],galsim.PositionD) or isinstance(pos[0],galsim.PositionI):
-            pos = ( np.array([p.x for p in pos], dtype='float'),
-                    np.array([p.y for p in pos], dtype='float') )
+            pos = [ np.array([p.x for p in pos], dtype='float'),
+                    np.array([p.y for p in pos], dtype='float') ]
 
         # Now pos must be a tuple of length 2
         elif len(pos) != 2:
@@ -51,12 +51,12 @@ def _convertPositions(pos, units, func):
         else:
             # Check for (x,y):
             try:
-                pos = ( np.array([float(pos[0])], dtype='float'),
-                        np.array([float(pos[1])], dtype='float') )
+                pos = [ np.array([float(pos[0])], dtype='float'),
+                        np.array([float(pos[1])], dtype='float') ]
             except:
                 # Only other valid option is ( xlist , ylist )
-                pos = ( np.array(pos[0], dtype='float'),
-                        np.array(pos[1], dtype='float') )
+                pos = [ np.array(pos[0], dtype='float'),
+                        np.array(pos[1], dtype='float') ]
 
         # Check validity of units
         if isinstance(units, basestring):
@@ -68,6 +68,8 @@ def _convertPositions(pos, units, func):
         # Convert pos to arcsec
         if units != galsim.arcsec:
             scale = 1. * units / galsim.arcsec
+            # Note that for the next two lines, pos *must* be a list, not a tuple.  Assignments to
+            # elements of tuples is not allowed.
             pos[0] *= scale
             pos[1] *= scale
 
