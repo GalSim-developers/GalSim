@@ -205,7 +205,7 @@ namespace galsim {
         tmv::Vector<double> kx(npts);
         tmv::Vector<double> ky(npts);
         int i=0;
-        for (int iy = 0; iy < N/2; iy++) {
+        for (int iy = 0; iy <= N/2; iy++) {
             // Negative ix are just the conjugate of positive ix, and are not stored
             // in the array.
             for (int ix = 0; ix <= N/2; ix++) {
@@ -215,7 +215,7 @@ namespace galsim {
             }
         }
         // Negative iy are wrapped to after 0..N/2
-        for (int iy = -N/2; iy < 0; iy++) {
+        for (int iy = -N/2+1; iy < 0; iy++) {
             for (int ix = 0; ix <= N/2; ix++) {
                 kx[i] = ix * scale;
                 ky[i] = iy * scale;

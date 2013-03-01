@@ -25,6 +25,7 @@
 #include "SBProfile.h"
 #include "FFT.h"
 #include "integ/Int.h"
+#include "TMV.h"
 
 namespace galsim {
 
@@ -41,6 +42,27 @@ namespace galsim {
         // Pure virtual functions:
         virtual double xValue(const Position<double>& p) const =0;
         virtual std::complex<double> kValue(const Position<double>& k) const =0; 
+
+        // Caclulate xValues and kValues for a list of positions.
+        // For some profiles, this may be more efficient than repeated calls of xValue(pos)
+        // since it affords the opportunity for vectorization of the calculations, including
+        // SSE commands if TMV routines are used to perform the calculations.
+        //
+        // When x,y are vectors, then val(i,j) = xValue(x[i],y[j]).
+        // When x,y are matrices, then val(i,j) = xValue(x(i,j),y(i,j)).
+        // (Likewise for kValue variants.)
+        //
+        // If these aren't overridden, then the regular xValue or kValue will be called for each 
+        // position.
+        virtual void xValue(tmv::VectorView<double> x, tmv::VectorView<double> y,
+                            tmv::MatrixView<double> val) const;
+        virtual void xValue(tmv::MatrixView<double> x, tmv::MatrixView<double> y,
+                            tmv::MatrixView<double> val) const;
+        virtual void kValue(tmv::VectorView<double> kx, tmv::VectorView<double> ky,
+                            tmv::MatrixView<std::complex<double> > kval) const;
+        virtual void kValue(tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
+                            tmv::MatrixView<std::complex<double> > kval) const;
+
         virtual double maxK() const =0; 
         virtual double stepK() const =0;
         virtual bool isAxisymmetric() const =0;

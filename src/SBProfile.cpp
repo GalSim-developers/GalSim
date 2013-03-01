@@ -268,25 +268,137 @@ namespace galsim {
         return _pimpl->fillXImage(I, gain);
     }
 
+    void SBProfile::SBProfileImpl::xValue(
+        tmv::VectorView<double> x, tmv::VectorView<double> y,
+        tmv::MatrixView<double> val) const
+    {
+        assert(x.step() == 1);
+        assert(y.step() == 1);
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        assert(x.size() == val.colsize());
+        assert(y.size() == val.rowsize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        It yit = y.begin();
+        It valit = val.linearView().begin();
+        for (int j=0;j<n;++j,++yit) {
+            It xit = x.begin();
+            for (int i=0;i<m;++i) *valit++ = xValue(Position<double>(*xit++,*yit));
+        }
+    }
+
+    void SBProfile::SBProfileImpl::kValue(
+        tmv::VectorView<double> kx, tmv::VectorView<double> ky,
+        tmv::MatrixView<std::complex<double> > kval) const
+    { 
+        assert(kx.step() == 1);
+        assert(ky.step() == 1);
+        assert(kval.stepi() == 1);
+        assert(kval.canLinearize());
+        assert(kx.size() == kval.colsize());
+        assert(ky.size() == kval.rowsize());
+        const int m = kval.colsize();
+        const int n = kval.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
+        It kyit = ky.begin();
+        CIt kvalit(kval.linearView().begin().getP(),1);
+        for (int j=0;j<n;++j,++kyit) {
+            It kxit = kx.begin();
+            for (int i=0;i<m;++i) *kvalit++ = kValue(Position<double>(*kxit++,*kyit));
+        }
+    }
+
+    void SBProfile::SBProfileImpl::xValue(
+        tmv::MatrixView<double> x, tmv::MatrixView<double> y,
+        tmv::MatrixView<double> val) const
+    { 
+        assert(x.stepi() == 1);
+        assert(y.stepi() == 1);
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        assert(x.colsize() == val.colsize());
+        assert(x.rowsize() == val.rowsize());
+        assert(y.colsize() == val.colsize());
+        assert(y.rowsize() == val.rowsize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        It xit = x.linearView().begin();
+        It yit = y.linearView().begin();
+        It valit = val.linearView().begin();
+        const int ntot = m*n;
+        for (int i=0;i<ntot;++i) *valit++ = xValue(Position<double>(*xit++,*yit++));
+    }
+
+    void SBProfile::SBProfileImpl::kValue(
+        tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
+        tmv::MatrixView<std::complex<double> > kval) const
+    { 
+        assert(kx.stepi() == 1);
+        assert(ky.stepi() == 1);
+        assert(kval.stepi() == 1);
+        assert(kx.canLinearize());
+        assert(ky.canLinearize());
+        assert(kval.canLinearize());
+        assert(kx.colsize() == kval.colsize());
+        assert(kx.rowsize() == kval.rowsize());
+        assert(ky.colsize() == kval.colsize());
+        assert(ky.rowsize() == kval.rowsize());
+        const int m = kval.colsize();
+        const int n = kval.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
+        It kxit = kx.linearView().begin();
+        It kyit = ky.linearView().begin();
+        CIt kvalit(kval.linearView().begin().getP(),1);
+        const int ntot = m*n;
+        for (int i=0;i<ntot;++i) *kvalit++ = kValue(Position<double>(*kxit++,*kyit++));
+    }
+
+    // Note: Once we have TMV 0.90, this won't be necessary, since arithmetic between different
+    // types will be allowed.
+    template <typename T>
+    void addMatrix(tmv::MatrixView<T> m1, const tmv::ConstMatrixView<double>& m2)
+    {
+        tmv::Matrix<T> m2T = m2;
+        m1 += m2T;
+    }
+
+    void addMatrix(tmv::MatrixView<double> m1, const tmv::ConstMatrixView<double>& m2)
+    { m1 += m2; }
+
     template <typename T>
     double SBProfile::SBProfileImpl::doFillXImage2(ImageView<T>& I, double gain) const 
     {
         xdbg<<"Start doFillXImage2"<<std::endl;
         double dx = I.getScale();
         xdbg<<"dx = "<<dx<<", gain = "<<gain<<std::endl;
-        double totalflux=0;
-        for (int y = I.getYMin(); y <= I.getYMax(); y++) {
-            int x = I.getXMin(); 
-            typedef typename Image<T>::iterator ImIter;
-            ImIter ee=I.rowEnd(y);
-            for (ImIter it=I.rowBegin(y); it!=ee; ++it, ++x) {
-                Position<double> p(x*dx,y*dx); // since x,y are pixel indices
-                double temp = xValue(p) / gain;
-                *it += T(temp);
-                totalflux += temp;
-            } 
-        }
-        return totalflux * (dx*dx);
+
+        const int m = (I.getXMax()-I.getXMin()+1);
+        tmv::Vector<double> x(m);
+        const double xmin = I.getXMin();
+        for (int i=0;i<m;++i) x.ref(i) = (xmin+i)*dx;
+
+        const int n = (I.getYMax()-I.getYMin()+1);
+        tmv::Vector<double> y(n);
+        const double ymin = I.getYMin();
+        for (int i=0;i<n;++i) y.ref(i) = (ymin+i)*dx;
+
+        tmv::Matrix<double> val(m,n);
+        // Calculate all the xValues at once, since this is often faster than many calls to xValue.
+        xValue(x.view(),y.view(),val.view());
+
+        if (gain != 1.) val /= gain;
+        
+        tmv::MatrixView<T> mI(I.getData(),m,n,1,I.getStride(),tmv::NonConj);
+        //mI += val;
+        addMatrix(mI,val);
+
+        double totalflux=val.sumElements() * (dx*dx);
+        return totalflux;
     }
 
     // Now the more complex case: real space via FT from k space.
@@ -398,18 +510,26 @@ namespace galsim {
         Re.setCenter(0,0);
         Im.setCenter(0,0);
 
-        // ??? Make this into a virtual function to allow pipelining?
-        for (int y = Re.getYMin(); y <= Re.getYMax(); y++) {
-            int x = Re.getXMin(); 
-            typedef typename ImageView<T>::iterator ImIter;
-            ImIter ee=Re.rowEnd(y);
-            for (ImIter it=Re.rowBegin(y), it2=Im.rowBegin(y); it!=ee; ++it, ++it2, ++x) {
-                Position<double> p(x*dk,y*dk); // since x,y are pixel indicies
-                std::complex<double> c = this->kValue(p) / gain;
-                *it = c.real(); 
-                *it2 = c.imag(); 
-            } 
-        }
+        const int m = (Re.getXMax()-Re.getXMin()+1);
+        tmv::Vector<double> kx(m);
+        const double xmin = Re.getXMin();
+        for (int i=0;i<m;++i) kx.ref(i) = (xmin+i)*dk;
+
+        const int n = (Re.getYMax()-Re.getYMin()+1);
+        tmv::Vector<double> ky(n);
+        const double ymin = Re.getYMin();
+        for (int i=0;i<n;++i) ky.ref(i) = (ymin+i)*dk;
+
+        tmv::Matrix<std::complex<double> > kval(m,n);
+        // Calculate all the xValues at once, since this is often faster than many calls to xValue.
+        _pimpl->kValue(kx.view(),ky.view(),kval.view());
+
+        if (gain != 1.) kval /= gain;
+        
+        tmv::MatrixView<T> mRe(Re.getData(),m,n,1,Re.getStride(),tmv::NonConj);
+        tmv::MatrixView<T> mIm(Im.getData(),m,n,1,Im.getStride(),tmv::NonConj);
+        addMatrix(mRe,kval.realPart());
+        addMatrix(mIm,kval.realPart());
     }
 
     // Build K domain by transform from X domain.  This is likely
@@ -489,52 +609,43 @@ namespace galsim {
 
     void SBProfile::SBProfileImpl::fillXGrid(XTable& xt) const 
     {
+        xdbg<<"Start fillXGrid"<<std::endl;
+
         int N = xt.getN();
         double dx = xt.getDx();
-        for (int iy = -N/2; iy < N/2; iy++) {
-            double y = iy*dx;
-            for (int ix = -N/2; ix < N/2; ix++) {
-                Position<double> x(ix*dx,y);
-                xt.xSet(ix,iy,xValue(x));
-            }
-        }
+        xt.clearCache();
+
+        tmv::Vector<double> x(N);
+        for (int i=0;i<N;++i) x.ref(i) = (i-N/2.)*dx;
+
+        tmv::Vector<double> y = x;
+
+        tmv::Matrix<double> val(N,N);
+        // Calculate all the xValues at once, since this is often faster than many calls to xValue.
+        xValue(x.view(),y.view(),val.view());
+
+        tmv::MatrixView<double> mxt(xt.getArray(),N,N,1,N,tmv::NonConj);
+        mxt = val;
     }
 
     void SBProfile::SBProfileImpl::fillKGrid(KTable& kt) const 
     {
         int N = kt.getN();
         double dk = kt.getDk();
-#if 0
-        // The simple version, saved for reference
-        for (int iy = -N/2; iy < N/2; iy++) {
-            // Only need ix>=0 because it's Hermitian:
-            for (int ix = 0; ix <= N/2; ix++) {
-                Position<double> k(ix*dk,iy*dk);
-                kt.kSet(ix,iy,kValue(k));
-            }
-        }
-#else
-        // A faster version that pulls out all the if statements
         kt.clearCache();
-        // First iy=0
-        Position<double> k1(0.,0.);
-        for (int ix = 0; ix <= N/2; ix++, k1.x += dk) kt.kSet2(ix,0,kValue(k1));
 
-        // Then iy = 1..N/2-1
-        k1.y = dk;
-        Position<double> k2(0.,-dk);
-        for (int iy = 1; iy < N/2; iy++, k1.y += dk, k2.y -= dk) {
-            k1.x = k2.x = 0.;
-            for (int ix = 0; ix <= N/2; ix++, k1.x += dk, k2.x += dk) {
-                kt.kSet2(ix,iy,kValue(k1));
-                kt.kSet2(ix,N-iy,kValue(k2));
-            }
-        }
+        tmv::Vector<double> kx(N/2+1);
+        for (int i=0;i<=N/2;++i) kx.ref(i) = i*dk;
 
-        // Finally, iy = N/2
-        k1.x = 0.;
-        for (int ix = 0; ix <= N/2; ix++, k1.x += dk) kt.kSet2(ix,N/2,kValue(k1));
-#endif
+        tmv::Vector<double> ky(N);
+        for (int i=0;i<=N/2;++i) ky.ref(i) = i*dk;
+        for (int i=-N/2+1;i<0;++i) ky.ref(i+N) = i*dk;
+
+        tmv::Matrix<std::complex<double> > kval(N/2+1,N);
+        kValue(kx.view(),ky.view(),kval.view());
+
+        tmv::MatrixView<std::complex<double> > mkt(kt.getArray(),N/2+1,N,1,N/2+1,tmv::NonConj);
+        mkt = kval;
     }
 
     template <class T>
