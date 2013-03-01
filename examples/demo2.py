@@ -109,8 +109,8 @@ def main(argv):
     logger.debug('Convolved components into final profile')
 
     # Draw the image with a particular pixel scale.
-    image = final.draw(dx=pixel_scale)
-    image_epsf = final_epsf.draw(dx=pixel_scale)
+    image, flux_added = final.draw(dx=pixel_scale)
+    image_epsf, flux_added = final_epsf.draw(dx=pixel_scale)
     logger.debug('Made image of the profile')
 
     # To get Poisson noise on the image, we will use a class called PoissonNoise.

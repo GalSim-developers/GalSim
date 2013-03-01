@@ -49,7 +49,7 @@ New features introduced in this demo:
 - obj = galsim.Gaussian(flux, sigma)
 - obj = galsim.Pixel(pixel_scale)
 - obj = galsim.Convolve([list of objects])
-- image = obj.draw(dx)
+- image, flux_added = obj.draw(dx)
 - noise = galsim.GaussianNoise(sigma)
 - image.addNoise(noise)
 - image.write(file_name)
@@ -104,7 +104,10 @@ def main(argv):
     logger.debug('Convolved components into final profile')
 
     # Draw the image with a particular pixel scale
-    image = final.draw(dx=pixel_scale)
+    # The second item in the returned tuple is the total flux actually added to the image
+    # One could use this value to check if the image is large enough for some desired
+    # accuracy level.  Here, we just ignore it.
+    image, flux_added = final.draw(dx=pixel_scale)
     logger.debug('Made image of the profile')
 
     # Add Gaussian noise to the image with specified sigma

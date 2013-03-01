@@ -131,7 +131,7 @@ def main(argv):
     # convolve PSF and pixel response function to get the effective PSF (ePSF)
     epsf = galsim.Convolve([psf, pix])
     # Draw this one with no noise.
-    epsf_image = epsf.draw(dx = pixel_scale)
+    epsf_image, flux_added = epsf.draw(dx = pixel_scale)
     # write to file
     epsf_image.write(psf_file_name)
     logger.info('Created ePSF and wrote to file %r',psf_file_name)
@@ -168,7 +168,7 @@ def main(argv):
 
         # Draw the profile
         if k == 0:
-            im = final.draw(dx=pixel_scale)
+            im, flux_added = final.draw(dx=pixel_scale)
             xsize, ysize = im.array.shape
         else:
             im = galsim.ImageF(xsize,ysize)

@@ -220,7 +220,7 @@ def main(argv):
     final_epsf.draw(image_epsf, dx=pixel_scale)
     # Note: we draw the optical part of the PSF at its own Nyquist-sampled pixel size
     # in order to better see the features of the (highly structured) profile.
-    image_opticalpsf = optics.draw(dx=lam_over_diam/2.)
+    image_opticalpsf, flux_added = optics.draw(dx=lam_over_diam/2.)
     logger.debug('Made image of the profile')
 
     # Add a constant sky level to the image.

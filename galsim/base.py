@@ -566,9 +566,9 @@ class GSObject(object):
             # multiply the ADU by dx^2.  i.e. divide gain by dx^2.
             gain /= dx**2
 
-        self.SBProfile.draw(image.view(), gain, wmult)
+        added_flux = self.SBProfile.draw(image.view(), gain, wmult)
 
-        return image
+        return image, added_flux
 
     def drawShoot(self, image=None, dx=None, gain=1., wmult=1., normalization="flux",
                   add_to_image=False, n_photons=0., rng=None,
@@ -1414,8 +1414,8 @@ class InterpolatedImage(GSObject):
         int_im2 = galsim.InterpolatedImage(image, noise_pad='../tests/blankimg.fits')
         im1 = galsim.ImageF(1000,1000)
         im2 = galsim.ImageF(1000,1000)
-        im1 = int_im1.draw(im1)
-        im2 = int_im2.draw(im2)
+        int_im1.draw(im1)
+        int_im2.draw(im2)
 
     Examination of these two images clearly shows how padding with a correlated noise field that is
     similar to the one in the real data leads to a more reasonable appearance for the result when
@@ -2600,7 +2600,7 @@ class Shapelet(GSObject):
             image = ...
             shapelet = galsim.Shapelet(sigma, order)
             shapelet.fitImage(image,normalization='sb')
-            image2 = shapelet.draw(dx=image.scale, normalization='sb')
+            shapelet.draw(image=image2, dx=image.scale, normalization='sb')
 
         Then image2 and image should be as close to the same as possible for the given
         sigma and order.  Incrasing the order can improve the fit, as can having sigma match

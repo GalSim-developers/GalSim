@@ -379,6 +379,7 @@ namespace galsim {
 
         const int m = (I.getXMax()-I.getXMin()+1);
         const int n = (I.getYMax()-I.getYMin()+1);
+        double totalflux;
         if (isAxisymmetric()) {
             const double xmax = std::max(-I.getXMin(),I.getXMax());
             tmv::Vector<double> x(xmax+1);
@@ -412,7 +413,7 @@ namespace galsim {
                       val.subMatrix(-I.getXMin(),0,-I.getYMin(),0,-1,-1));
 
 #if 0
-            double totalflux = (
+            totalflux = (
                 val.subMatrix(0,I.getXMax()+1,0,I.getYMax()+1).sumElements() +
                 val.subMatrix(1,-I.getXMin()+1,0,I.getYMax()+1).sumElements() +
                 val.subMatrix(0,I.getXMax()+1,1,-I.getYMin()+1).sumElements() +
@@ -420,7 +421,7 @@ namespace galsim {
 #else
             const double xmin = std::min(-I.getXMin(),I.getXMax());
             const double ymin = std::min(-I.getYMin(),I.getYMax());
-            double totalflux = (
+            totalflux = (
                 val(0,0) +
                 2.*val.row(0,1,ymin+1).sumElements() +
                 2.*val.col(0,1,xmin+1).sumElements() +
@@ -431,7 +432,6 @@ namespace galsim {
                 2.*val.subMatrix(1,xmin+1,ymin+1,ymax+1).sumElements() +
                 val.subMatrix(xmin+1,xmax+1,ymin+1,ymax+1).sumElements());
 #endif
-            return totalflux;
         } else {
             tmv::Vector<double> x(m);
             const double xmin = I.getXMin();
@@ -449,8 +449,9 @@ namespace galsim {
             tmv::MatrixView<T> mI(I.getData(),m,n,1,I.getStride(),tmv::NonConj);
             //mI += val;
             addMatrix(mI,val);
-            return val.sumElements();
+            totalflux = val.sumElements();
         }
+        return totalflux * gain * (dx*dx);
     }
 
     // Now the more complex case: real space via FT from k space.
@@ -537,7 +538,7 @@ namespace galsim {
 
         I.setScale(dx);
 
-        return sum;
+        return sum * gain * (dx*dx);
     }
 
     template <typename T>

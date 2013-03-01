@@ -199,7 +199,7 @@ def test_OpticalPSF_flux():
     image = galsim.ImageF(nlook,nlook)
     for lod in lods:
         optics_test = galsim.OpticalPSF(lam_over_diam=lod, pad_factor=1)
-        optics_array = optics_test.draw(dx=.25*lod, image=image).array 
+        optics_array = optics_test.draw(dx=.25*lod, image=image)[0].array 
         np.testing.assert_almost_equal(optics_array.sum(), 1., 2, 
                 err_msg="Unaberrated Optical flux not quite unity.")
     t2 = time.time()
@@ -216,8 +216,8 @@ def test_OpticalPSF_vs_Airy():
     for lod in lods:
         airy_test = galsim.Airy(lam_over_diam=lod, obscuration=0., flux=1.)
         optics_test = galsim.OpticalPSF(lam_over_diam=lod, pad_factor=1)#pad same as an Airy, natch!
-        airy_array = airy_test.draw(dx=.25*lod, image=image).array
-        optics_array = optics_test.draw(dx=.25*lod, image=image).array 
+        airy_array = airy_test.draw(dx=.25*lod, image=image)[0].array
+        optics_array = optics_test.draw(dx=.25*lod, image=image)[0].array 
         np.testing.assert_array_almost_equal(optics_array, airy_array, decimal_dft, 
                 err_msg="Unaberrated Optical not quite equal to Airy")
     t2 = time.time()
@@ -235,8 +235,8 @@ def test_OpticalPSF_vs_Airy_with_obs():
     for obs in obses:
         airy_test = galsim.Airy(lam_over_diam=lod, obscuration=obs, flux=1.)
         optics_test = galsim.OpticalPSF(lam_over_diam=lod, pad_factor=1, obscuration=obs)
-        airy_array = airy_test.draw(dx=1.,image=image).array
-        optics_array = optics_test.draw(dx=1.,image=image).array 
+        airy_array = airy_test.draw(dx=1.,image=image)[0].array
+        optics_array = optics_test.draw(dx=1.,image=image)[0].array 
         np.testing.assert_array_almost_equal(optics_array, airy_array, decimal_dft, 
                 err_msg="Unaberrated Optical with obscuration not quite equal to Airy")
     t2 = time.time()

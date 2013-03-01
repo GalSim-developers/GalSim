@@ -98,7 +98,7 @@ def test_moments_basic():
                 distortion_2 = g2*conversion_factor
                 gal = galsim.Gaussian(flux = 1.0, sigma = sig)
                 gal.applyShear(g1=g1, g2=g2)
-                gal_image = gal.draw(dx = pixel_scale)
+                gal_image, tot = gal.draw(dx = pixel_scale)
                 result = gal_image.FindAdaptiveMom()
                 # make sure we find the right Gaussian sigma
                 np.testing.assert_almost_equal(np.fabs(result.moments_sigma-sig/pixel_scale), 0.0,
@@ -128,8 +128,8 @@ def test_shearest_basic():
                 psf = galsim.Gaussian(flux = 1.0, sigma = sig)
                 gal.applyShear(g1=g1, g2=g2)
                 final = galsim.Convolve([gal, psf])
-                final_image = final.draw(dx = pixel_scale)
-                epsf_image = psf.draw(dx = pixel_scale)
+                final_image, tot = final.draw(dx = pixel_scale)
+                epsf_image, tot = psf.draw(dx = pixel_scale)
                 result = galsim.EstimateShearHSM(final_image, epsf_image)
                 # make sure we find the right e after PSF correction
                 # with regauss, which returns a distortion
@@ -212,8 +212,8 @@ def test_masks():
     obj = galsim.Convolve(g, p)
     im = galsim.ImageF(imsize, imsize)
     p_im = galsim.ImageF(imsize, imsize)
-    im = obj.draw(image = im, dx = my_pixscale)
-    p_im = p.draw(image = p_im, dx = my_pixscale)
+    obj.draw(image = im, dx = my_pixscale)
+    p.draw(image = p_im, dx = my_pixscale)
 
     # make some screwy weight and badpix images that should cause issues, and check that the
     # exception is thrown
@@ -415,8 +415,8 @@ def test_shearest_shape():
                         final_image = galsim.ImageF(gal_x_imsize, gal_y_imsize)
                         epsf_image = galsim.ImageF(psf_x_imsize, psf_y_imsize)
 
-                        final_image = final.draw(image = final_image, dx = pixel_scale)
-                        epsf_image = psf.draw(image = epsf_image, dx = pixel_scale)
+                        final.draw(image = final_image, dx = pixel_scale)
+                        psf.draw(image = epsf_image, dx = pixel_scale)
                         result = galsim.EstimateShearHSM(final_image, epsf_image,
                             shear_est = correction_methods[method_index])
                         e1 = result.corrected_e1

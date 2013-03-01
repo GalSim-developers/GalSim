@@ -336,7 +336,7 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
 
     # convolve, resample
     out_gal = galsim.Convolve([real_galaxy_copy, galsim.GSObject(target_PSF)])
-    image = out_gal.draw(image=image, dx = target_pixel_scale)
+    image = out_gal.draw(image=image, dx = target_pixel_scale)[0]
 
     # return simulated image
     return image

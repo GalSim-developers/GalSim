@@ -396,7 +396,7 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level, final_shift):
     else:
         im = None
 
-    im = final.draw(image=im, dx=pixel_scale)
+    im = final.draw(image=im, dx=pixel_scale)[0]
 
     if 'gal' in config and 'signal_to_noise' in config['gal']:
         import math

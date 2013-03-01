@@ -208,7 +208,7 @@ def test_fluxnorm():
     np.testing.assert_equal(total_flux, interp.getFlux(),
                             err_msg='Did not keep flux normalization')
     # Check that this is preserved when drawing
-    im2 = interp.draw(dx = im_scale)
+    im2, tot = interp.draw(dx = im_scale)
     np.testing.assert_equal(total_flux, im2.array.sum(),
                             err_msg='Drawn image does not have expected flux normalization')
 
@@ -216,11 +216,11 @@ def test_fluxnorm():
     interp_sb = galsim.InterpolatedImage(im, normalization = 'sb')
     # Check that when drawing, the sum is equal to what we expect if the original image had been
     # surface brightness
-    im3 = interp_sb.draw(dx = im_scale)
+    im3, tot = interp_sb.draw(dx = im_scale)
     np.testing.assert_almost_equal(total_flux*(im_scale**2)/im3.array.sum(), 1.0, decimal=6,
                                    err_msg='Did not use surface brightness normalization')
     # Check that when drawing with sb normalization, the sum is the same as the original
-    im4 = interp_sb.draw(dx = im_scale, normalization = 'sb')
+    im4, tot = interp_sb.draw(dx = im_scale, normalization = 'sb')
     np.testing.assert_almost_equal(total_flux/im4.array.sum(), 1.0, decimal=6,
                                    err_msg='Failed roundtrip for sb normalization')
 
@@ -230,7 +230,7 @@ def test_fluxnorm():
     np.testing.assert_equal(test_flux, interp_flux.getFlux(),
                             err_msg = 'InterpolatedImage did not use flux keyword')
     # Check that this is preserved when drawing
-    im5 = interp_flux.draw(dx = im_scale)
+    im5, tot = interp_flux.draw(dx = im_scale)
     np.testing.assert_almost_equal(test_flux/im5.array.sum(), 1.0, decimal=6,
                                    err_msg = 'Drawn image does not reflect flux keyword')
 
@@ -295,7 +295,7 @@ def test_operations_simple():
     psf = galsim.Airy(lam_over_diam)
     pix = galsim.Pixel(pix_scale)
     obj = galsim.Convolve(gal, psf, pix)
-    im = obj.draw(dx=pix_scale)
+    im, tot = obj.draw(dx=pix_scale)
 
     # Turn it into an InterpolatedImage with default param settings
     int_im = galsim.InterpolatedImage(im)
@@ -310,8 +310,8 @@ def test_operations_simple():
     # make large images
     im = galsim.ImageD(im_size, im_size)
     ref_im = galsim.ImageD(im_size, im_size)
-    im = test_int_im.draw(image=im, dx=pix_scale)
-    ref_im = ref_obj.draw(image=ref_im, dx=pix_scale)
+    test_int_im.draw(image=im, dx=pix_scale)
+    ref_obj.draw(image=ref_im, dx=pix_scale)
     # define subregion for comparison
     new_bounds = galsim.BoundsI(1,comp_region,1,comp_region)
     new_bounds.shift((im_size-comp_region)/2, (im_size-comp_region)/2)
@@ -334,8 +334,8 @@ def test_operations_simple():
     # make large images
     im = galsim.ImageD(im_size, im_size)
     ref_im = galsim.ImageD(im_size, im_size)
-    im = test_int_im.draw(image=im, dx=pix_scale)
-    ref_im = ref_obj.draw(image=ref_im, dx=pix_scale)
+    test_int_im.draw(image=im, dx=pix_scale)
+    ref_obj.draw(image=ref_im, dx=pix_scale)
     # define subregion for comparison
     new_bounds = galsim.BoundsI(1,comp_region,1,comp_region)
     new_bounds.shift((im_size-comp_region)/2, (im_size-comp_region)/2)
@@ -358,8 +358,8 @@ def test_operations_simple():
     # make large images
     im = galsim.ImageD(im_size, im_size)
     ref_im = galsim.ImageD(im_size, im_size)
-    im = test_int_im.draw(image=im, dx=pix_scale)
-    ref_im = ref_obj.draw(image=ref_im, dx=pix_scale)
+    test_int_im.draw(image=im, dx=pix_scale)
+    ref_obj.draw(image=ref_im, dx=pix_scale)
     # define subregion for comparison
     new_bounds = galsim.BoundsI(1,comp_region,1,comp_region)
     new_bounds.shift((im_size-comp_region)/2, (im_size-comp_region)/2)
@@ -383,8 +383,8 @@ def test_operations_simple():
     # make large images
     im = galsim.ImageD(im_size, im_size)
     ref_im = galsim.ImageD(im_size, im_size)
-    im = test_int_im.draw(image=im, dx=pix_scale)
-    ref_im = ref_obj.draw(image=ref_im, dx=pix_scale)
+    test_int_im.draw(image=im, dx=pix_scale)
+    ref_obj.draw(image=ref_im, dx=pix_scale)
     # define subregion for comparison
     new_bounds = galsim.BoundsI(1,comp_region,1,comp_region)
     new_bounds.shift((im_size-comp_region)/2, (im_size-comp_region)/2)
@@ -417,7 +417,7 @@ def test_operations():
     mag_scale = 0.92
     new_int_im = int_im.createMagnified(mag_scale)
     test_im = galsim.ImageF(im.bounds)
-    test_im = new_int_im.draw(image = test_im, dx = im.getScale())
+    new_int_im.draw(image = test_im, dx = im.getScale())
     new_mom = test_im.FindAdaptiveMom()
     np.testing.assert_almost_equal(new_mom.moments_sigma/mag_scale, orig_mom.moments_sigma,
         test_decimal,
@@ -434,7 +434,7 @@ def test_operations():
     y_shift = -0.16
     new_int_im = int_im.createShifted(x_shift, y_shift)
     test_im = galsim.ImageF(im.bounds)
-    test_im = new_int_im.draw(image = test_im, dx = im.getScale())
+    new_int_im.draw(image = test_im, dx = im.getScale())
     new_mom = test_im.FindAdaptiveMom()
     np.testing.assert_almost_equal(new_mom.moments_sigma, orig_mom.moments_sigma,
         test_decimal,
@@ -481,7 +481,7 @@ def test_uncorr_padding():
     int_im = galsim.InterpolatedImage(orig_img)
     # draw into a larger image
     big_img = galsim.ImageF(big_nx, big_ny)
-    big_img = int_im.draw(big_img, dx=1.)
+    int_im.draw(big_img, dx=1.)
     # check that variance is diluted by expected amount - should be exact, so check precisely!
     big_var_expected = np.var(orig_img.array)*float(orig_nx*orig_ny)/(big_nx*big_ny)
     np.testing.assert_almost_equal(np.var(big_img.array), big_var_expected, decimal=decimal_precise,
@@ -492,7 +492,7 @@ def test_uncorr_padding():
                                       rng = galsim.GaussianDeviate(orig_seed))
     # draw into a larger image
     big_img = galsim.ImageF(big_nx, big_ny)
-    big_img = int_im.draw(big_img, dx=1.)
+    int_im.draw(big_img, dx=1.)
     # check that variance is same as original - here, we cannot be too precise because the padded
     # region is not huge and the comparison will be, well, noisy.
     np.testing.assert_almost_equal(np.var(big_img.array), noise_var, decimal=decimal_coarse,
@@ -504,7 +504,7 @@ def test_uncorr_padding():
     int_im = galsim.InterpolatedImage(orig_img, noise_pad=noise_var,
                                       rng = galsim.GaussianDeviate(orig_seed))
     big_img_2 = galsim.ImageF(big_nx, big_ny)
-    big_img_2 = int_im.draw(big_img_2, dx=1.)
+    int_im.draw(big_img_2, dx=1.)
     np.testing.assert_array_almost_equal(big_img_2.array, big_img.array, decimal=decimal_precise,
         err_msg='Cannot reproduce noise-padded image with same choice of seed')
 
@@ -548,7 +548,7 @@ def test_corr_padding():
     int_im = galsim.InterpolatedImage(orig_img)
     # draw into a larger image
     big_img = galsim.ImageF(big_nx, big_ny)
-    big_img = int_im.draw(big_img, dx=1.)
+    int_im.draw(big_img, dx=1.)
     # check that variance is diluted by expected amount - should be exact, so check precisely!
     big_var_expected = np.var(orig_img.array)*float(orig_nx*orig_ny)/(big_nx*big_ny)
     np.testing.assert_almost_equal(np.var(big_img.array), big_var_expected, decimal=decimal_precise,
@@ -560,7 +560,7 @@ def test_corr_padding():
 
     # draw into a larger image
     big_img = galsim.ImageF(big_nx, big_ny)
-    big_img = int_im.draw(big_img, dx=1.)
+    int_im.draw(big_img, dx=1.)
     # check that variance is same as original - here, we cannot be too precise because the padded
     # region is not huge and the comparison will be, well, noisy.
     np.testing.assert_almost_equal(np.var(big_img.array), np.var(orig_img.array),
@@ -573,7 +573,7 @@ def test_corr_padding():
     int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed),
                                       noise_pad = cf)
     big_img_2 = galsim.ImageF(big_nx, big_ny)
-    big_img_2 = int_im.draw(big_img_2, dx=1.)
+    int_im.draw(big_img_2, dx=1.)
     np.testing.assert_array_almost_equal(big_img_2.array, big_img.array, decimal=decimal_precise,
         err_msg='Cannot reproduce correlated noise-padded image with same choice of seed')
 
@@ -594,8 +594,8 @@ def test_corr_padding():
                                        noise_pad=incf)
     big_img2 = galsim.ImageF(big_nx, big_ny)
     big_img3 = galsim.ImageF(big_nx, big_ny)
-    big_img2 = int_im2.draw(big_img2, dx=1.)
-    big_img3 = int_im3.draw(big_img3, dx=1.)
+    int_im2.draw(big_img2, dx=1.)
+    int_im3.draw(big_img3, dx=1.)
     np.testing.assert_equal(big_img2.array, big_img3.array,
                             err_msg='Diff ways of specifying correlated noise give diff answers')
 
