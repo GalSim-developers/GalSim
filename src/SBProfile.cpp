@@ -378,27 +378,79 @@ namespace galsim {
         xdbg<<"dx = "<<dx<<", gain = "<<gain<<std::endl;
 
         const int m = (I.getXMax()-I.getXMin()+1);
-        tmv::Vector<double> x(m);
-        const double xmin = I.getXMin();
-        for (int i=0;i<m;++i) x.ref(i) = (xmin+i)*dx;
-
         const int n = (I.getYMax()-I.getYMin()+1);
-        tmv::Vector<double> y(n);
-        const double ymin = I.getYMin();
-        for (int i=0;i<n;++i) y.ref(i) = (ymin+i)*dx;
+        if (isAxisymmetric()) {
+            const double xmax = std::max(-I.getXMin(),I.getXMax());
+            tmv::Vector<double> x(xmax+1);
+            for (int i=0;i<=xmax;++i) x.ref(i) = i*dx;
 
-        tmv::Matrix<double> val(m,n);
-        // Calculate all the xValues at once, since this is often faster than many calls to xValue.
-        xValue(x.view(),y.view(),val.view());
+            const double ymax = std::max(-I.getYMin(),I.getYMax());
+            tmv::Vector<double> y(ymax+1);
+            for (int i=0;i<=ymax;++i) y.ref(i) = i*dx;
 
-        if (gain != 1.) val /= gain;
-        
-        tmv::MatrixView<T> mI(I.getData(),m,n,1,I.getStride(),tmv::NonConj);
-        //mI += val;
-        addMatrix(mI,val);
+            // Could do somewhat better by only filling half the square a reflecting,
+            // but I haven't bothered to code that up yet.  It gets tricky because the 
+            // image might not be square...
+            tmv::Matrix<double> val(xmax+1,ymax+1);
+            xValue(x.view(),y.view(),val.view());
 
-        double totalflux=val.sumElements() * (dx*dx);
-        return totalflux;
+            if (gain != 1.) val /= gain;
+
+            tmv::MatrixView<T> mI(I.getData(),m,n,1,I.getStride(),tmv::NonConj);
+
+            // Upper right quadrant
+            addMatrix(mI.subMatrix(-I.getXMin(),m,-I.getYMin(),n),
+                      val.subMatrix(0,I.getXMax()+1,0,I.getYMax()+1));
+            // Upper left quadrant
+            addMatrix(mI.subMatrix(0,-I.getXMin(),-I.getYMin(),n),
+                      val.subMatrix(-I.getXMin(),0,0,I.getYMax()+1,-1,1));
+            // Lower right quadrant
+            addMatrix(mI.subMatrix(-I.getXMin(),m,0,-I.getYMin()),
+                      val.subMatrix(0,I.getXMax()+1,-I.getYMin(),0,1,-1));
+            // Lower left quadrant
+            addMatrix(mI.subMatrix(0,-I.getXMin(),0,-I.getYMin()),
+                      val.subMatrix(-I.getXMin(),0,-I.getYMin(),0,-1,-1));
+
+#if 0
+            double totalflux = (
+                val.subMatrix(0,I.getXMax()+1,0,I.getYMax()+1).sumElements() +
+                val.subMatrix(1,-I.getXMin()+1,0,I.getYMax()+1).sumElements() +
+                val.subMatrix(0,I.getXMax()+1,1,-I.getYMin()+1).sumElements() +
+                val.subMatrix(1,-I.getXMin()+1,1,-I.getYMin()+1).sumElements());
+#else
+            const double xmin = std::min(-I.getXMin(),I.getXMax());
+            const double ymin = std::min(-I.getYMin(),I.getYMax());
+            double totalflux = (
+                val(0,0) +
+                2.*val.row(0,1,ymin+1).sumElements() +
+                2.*val.col(0,1,xmin+1).sumElements() +
+                val.row(0,ymin+1,ymax+1).sumElements() +
+                val.col(0,xmin+1,xmax+1).sumElements() +
+                4.*val.subMatrix(1,xmin+1,1,ymin+1).sumElements() +
+                2.*val.subMatrix(xmin+1,xmax+1,1,ymin+1).sumElements() +
+                2.*val.subMatrix(1,xmin+1,ymin+1,ymax+1).sumElements() +
+                val.subMatrix(xmin+1,xmax+1,ymin+1,ymax+1).sumElements());
+#endif
+            return totalflux;
+        } else {
+            tmv::Vector<double> x(m);
+            const double xmin = I.getXMin();
+            for (int i=0;i<m;++i) x.ref(i) = (xmin+i)*dx;
+
+            tmv::Vector<double> y(n);
+            const double ymin = I.getYMin();
+            for (int i=0;i<n;++i) y.ref(i) = (ymin+i)*dx;
+
+            tmv::Matrix<double> val(m,n);
+            xValue(x.view(),y.view(),val.view());
+
+            if (gain != 1.) val /= gain;
+
+            tmv::MatrixView<T> mI(I.getData(),m,n,1,I.getStride(),tmv::NonConj);
+            //mI += val;
+            addMatrix(mI,val);
+            return val.sumElements();
+        }
     }
 
     // Now the more complex case: real space via FT from k space.
@@ -485,7 +537,7 @@ namespace galsim {
 
         I.setScale(dx);
 
-        return sum*dx*dx;;
+        return sum;
     }
 
     template <typename T>
