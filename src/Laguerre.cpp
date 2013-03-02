@@ -231,7 +231,7 @@ namespace galsim {
     }
 
     boost::shared_ptr<tmv::Matrix<double> > LVector::basis(
-        const tmv::Vector<double>& x, const tmv::Vector<double>& y,
+        const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
         int order, double sigma)
     {
         assert(x.size()==y.size());
@@ -242,8 +242,9 @@ namespace galsim {
     }
 
     void LVector::basis(
-        tmv::Matrix<double>& out, const tmv::Vector<double>& x,
-        const tmv::Vector<double>& y, int order, double sigma)
+        tmv::Matrix<double>& out,
+        const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
+        int order, double sigma)
     {
         const int npts=x.size();
         assert(y.size() ==npts && out.nrows()==npts);
@@ -256,8 +257,8 @@ namespace galsim {
     }
 
     boost::shared_ptr<tmv::Matrix<double> > LVector::design(
-        const tmv::Vector<double>& x, const tmv::Vector<double>& y,
-        const tmv::Vector<double>& invsig, int order, double sigma)
+        const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
+        const tmv::ConstVectorView<double>& invsig, int order, double sigma)
     {
         boost::shared_ptr<tmv::Matrix<double> > mr(
             new tmv::Matrix<double>(x.size(), PQIndex::size(order),0.));
@@ -266,9 +267,9 @@ namespace galsim {
     }
 
     void LVector::design(
-        tmv::Matrix<double>& out, const tmv::Vector<double>& x,
-        const tmv::Vector<double>& y, const tmv::Vector<double>& invsig,
-        int order, double sigma)
+        tmv::Matrix<double>& out,
+        const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
+        const tmv::ConstVectorView<double>& invsig, int order, double sigma)
     {
         const int npts=x.size();
         assert(y.size()==npts && out.nrows()==npts && invsig.size()==npts);
@@ -284,7 +285,7 @@ namespace galsim {
     void LVector::kBasis(
         boost::shared_ptr<tmv::Matrix<double> >& psi_kReal,
         boost::shared_ptr<tmv::Matrix<double> >& psi_kImag,
-        const tmv::Vector<double>& kx, const tmv::Vector<double>& ky,
+        const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
         int order, double sigma)
     {
         const int ndof=PQIndex::size(order);
@@ -305,7 +306,7 @@ namespace galsim {
 
     void LVector::kBasis(
         tmv::Matrix<double>& psi_kReal, tmv::Matrix<double>& psi_kImag,
-        const tmv::Vector<double>& kx, const tmv::Vector<double>& ky,
+        const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
         int order, double sigma)
     {
         const int npts = kx.size();
@@ -320,7 +321,7 @@ namespace galsim {
 
     void LVector::kBasis(
         boost::shared_ptr<tmv::Matrix<std::complex<double> > >& psi_k,
-        const tmv::Vector<double>& kx, const tmv::Vector<double>& ky,
+        const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
         int order, double sigma)
     {
         const int ndof=PQIndex::size(order);
@@ -336,7 +337,7 @@ namespace galsim {
 
     void LVector::kBasis(
         tmv::Matrix<std::complex<double> >& psi_k,
-        const tmv::Vector<double>& kx, const tmv::Vector<double>& ky,
+        const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
         int order, double sigma)
     {
         const int npts = kx.size();

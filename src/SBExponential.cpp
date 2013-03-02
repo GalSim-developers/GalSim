@@ -65,25 +65,24 @@ namespace galsim {
     }
 
     SBExponential::SBExponentialImpl::SBExponentialImpl(double r0, double flux) :
-        _flux(flux), _r0(r0), _r0_sq(r0*r0)
+        _flux(flux), _r0(r0), _r0_sq(_r0*_r0), _inv_r0(1./r0), _inv_r0_sq(_inv_r0*_inv_r0)
     {
         // For large k, we clip the result of kValue to 0.
         // We do this when the correct answer is less than kvalue_accuracy.
         // (1+k^2 r0^2)^-1.5 = kvalue_accuracy
-        _ksq_max = (std::pow(sbp::kvalue_accuracy,-1./1.5)-1.) / _r0_sq;
+        _ksq_max = (std::pow(sbp::kvalue_accuracy,-1./1.5)-1.);
 
         // For small k, we can use up to quartic in the taylor expansion to avoid the sqrt.
         // This is acceptable when the next term is less than kvalue_accuracy.
         // 35/16 (k^2 r0^2)^3 = kvalue_accuracy
-        _ksq_min = std::pow(sbp::kvalue_accuracy * 16./35., 1./3.) / _r0_sq;
+        _ksq_min = std::pow(sbp::kvalue_accuracy * 16./35., 1./3.);
 
         _flux_over_2pi = _flux / (2. * M_PI);
-        _norm = _flux_over_2pi / _r0_sq;
+        _norm = _flux_over_2pi * _inv_r0_sq;
 
         dbg<<"Exponential:\n";
         dbg<<"_flux = "<<_flux<<std::endl;
         dbg<<"_r0 = "<<_r0<<std::endl;
-        dbg<<"_r0_sq = "<<_r0_sq<<std::endl;
         dbg<<"_ksq_max = "<<_ksq_max<<std::endl;
         dbg<<"_ksq_min = "<<_ksq_min<<std::endl;
         dbg<<"_norm = "<<_norm<<std::endl;
@@ -92,29 +91,156 @@ namespace galsim {
     }
 
     double SBExponential::SBExponentialImpl::maxK() const 
-    { return SBExponential::_info.maxK() / _r0; }
+    { return SBExponential::_info.maxK() * _inv_r0; }
     double SBExponential::SBExponentialImpl::stepK() const 
-    { return SBExponential::_info.stepK() / _r0; }
+    { return SBExponential::_info.stepK() * _inv_r0; }
 
     double SBExponential::SBExponentialImpl::xValue(const Position<double>& p) const
     {
         double r = sqrt(p.x*p.x + p.y*p.y);
-        return _norm * std::exp(-r/_r0);
+        return _norm * std::exp(-r*_inv_r0);
     }
 
     std::complex<double> SBExponential::SBExponentialImpl::kValue(const Position<double>& k) const 
     {
-        double ksq = k.x*k.x+k.y*k.y;
+        double ksq = (k.x*k.x+k.y*k.y)*_r0_sq;
 
         if (ksq > _ksq_max) {
             return 0.;
         } else if (ksq < _ksq_min) {
-            ksq *= _r0_sq;
             return _flux*(1. - 1.5*ksq*(1. - 1.25*ksq));
         } else {
-            double temp = 1. + ksq*_r0_sq;
+            double temp = 1. + ksq;
             return _flux/(temp*sqrt(temp));
             // NB: flux*std::pow(temp,-1.5) is slower.
+        }
+    }
+
+    void SBExponential::SBExponentialImpl::xValue(
+        tmv::VectorView<double> x, tmv::VectorView<double> y,
+        tmv::MatrixView<double> val) const
+    {
+        assert(x.step() == 1);
+        assert(y.step() == 1);
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        assert(x.size() == val.colsize());
+        assert(y.size() == val.rowsize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        x *= _inv_r0;
+        x = ElemProd(x,x);
+        y *= _inv_r0;
+        y = ElemProd(y,y);
+        It yit = y.begin();
+        It valit = val.linearView().begin();
+        for (int j=0;j<n;++j,++yit) {
+            It xit = x.begin();
+            for (int i=0;i<m;++i)  {
+                *valit++ = _norm * std::exp(-sqrt(*xit++ + *yit));
+            }
+        }
+     }
+
+    void SBExponential::SBExponentialImpl::kValue(
+        tmv::VectorView<double> kx, tmv::VectorView<double> ky,
+        tmv::MatrixView<std::complex<double> > kval) const
+    { 
+        assert(kx.step() == 1);
+        assert(ky.step() == 1);
+        assert(kval.stepi() == 1);
+        assert(kval.canLinearize());
+        assert(kx.size() == kval.colsize());
+        assert(ky.size() == kval.rowsize());
+        const int m = kval.colsize();
+        const int n = kval.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
+        kx *= _r0;
+        kx = ElemProd(kx,kx);
+        ky *= _r0;
+        ky = ElemProd(ky,ky);
+        It kyit = ky.begin();
+        CIt kvalit(kval.linearView().begin().getP(),1);
+        for (int j=0;j<n;++j,++kyit) {
+            It kxit = kx.begin();
+            for (int i=0;i<m;++i)  {
+                double ksq = *kxit++ + *kyit;
+                if (ksq > _ksq_max) {
+                    *kvalit++ = 0.;
+                } else if (ksq < _ksq_min) {
+                    *kvalit++ = _flux * (1. - 1.5*ksq*(1. - 1.25*ksq));
+                } else {
+                    double temp = 1. + ksq;
+                    *kvalit++ =  _flux/(temp*sqrt(temp));
+                }
+            }
+        }
+    }
+
+    void SBExponential::SBExponentialImpl::xValue(
+        tmv::MatrixView<double> x, tmv::MatrixView<double> y,
+        tmv::MatrixView<double> val) const
+    { 
+        assert(x.stepi() == 1);
+        assert(y.stepi() == 1);
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        assert(x.colsize() == val.colsize());
+        assert(x.rowsize() == val.rowsize());
+        assert(y.colsize() == val.colsize());
+        assert(y.rowsize() == val.rowsize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        x *= _inv_r0;
+        x = ElemProd(x,x);
+        y *= _inv_r0;
+        y = ElemProd(y,y);
+        x += y;
+        It xit = x.linearView().begin();
+        It valit = val.linearView().begin();
+        const int ntot = m*n;
+        for (int i=0;i<ntot;++i) *valit++ = _norm * std::exp(-sqrt(*xit++));
+     }
+
+    void SBExponential::SBExponentialImpl::kValue(
+        tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
+        tmv::MatrixView<std::complex<double> > kval) const
+    { 
+        assert(kx.stepi() == 1);
+        assert(ky.stepi() == 1);
+        assert(kval.stepi() == 1);
+        assert(kx.canLinearize());
+        assert(ky.canLinearize());
+        assert(kval.canLinearize());
+        assert(kx.colsize() == kval.colsize());
+        assert(kx.rowsize() == kval.rowsize());
+        assert(ky.colsize() == kval.colsize());
+        assert(ky.rowsize() == kval.rowsize());
+        const int m = kval.colsize();
+        const int n = kval.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
+        kx *= _r0;
+        kx = ElemProd(kx,kx);
+        ky *= _r0;
+        ky = ElemProd(ky,ky);
+        kx += ky;
+        It kxit = kx.linearView().begin();
+        CIt kvalit(kval.linearView().begin().getP(),1);
+        const int ntot = m*n;
+        for (int i=0;i<ntot;++i)  {
+            double ksq = *kxit++;
+            if (ksq > _ksq_max) {
+                *kvalit++ = 0.;
+            } else if (ksq < _ksq_min) {
+                *kvalit++ = _flux * (1. - 1.5*ksq*(1. - 1.25*ksq));
+            } else {
+                double temp = 1. + ksq;
+                *kvalit++ =  _flux/(temp*sqrt(temp));
+            }
         }
     }
 

@@ -208,11 +208,23 @@ namespace galsim {
         double getN() const { return _n; }
         double getHalfLightRadius() const { return _re; }
 
+        // Overrides for better efficiency 
+        void xValue(tmv::VectorView<double> x, tmv::VectorView<double> y,
+                    tmv::MatrixView<double> val) const;
+        void xValue(tmv::MatrixView<double> x, tmv::MatrixView<double> y,
+                    tmv::MatrixView<double> val) const;
+        void kValue(tmv::VectorView<double> kx, tmv::VectorView<double> ky,
+                    tmv::MatrixView<std::complex<double> > kval) const;
+        void kValue(tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
+                    tmv::MatrixView<std::complex<double> > kval) const;
+
     private:
         double _n; ///< Sersic index.
         double _flux; ///< Flux.
         double _re;   ///< Half-light radius.
-        double _re_sq; ///< Calculated value: _re*_re
+        double _re_sq;
+        double _inv_re;
+        double _inv_re_sq;
         double _norm; ///< Calculated value: _flux/_re_sq
         double _ksq_max; ///< The ksq_max value from info rescaled with this re value.
 

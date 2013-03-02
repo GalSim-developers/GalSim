@@ -46,8 +46,8 @@ namespace galsim {
     {
         xdbg<<"Start SBAdd::add.  Adding item # "<<_plist.size()+1<<std::endl;
         // Add new summand(s) to the _plist:
-        assert(SBProfile::GetImpl(rhs));
-        const SBAddImpl *sba = dynamic_cast<const SBAddImpl*>(SBProfile::GetImpl(rhs));
+        assert(GetImpl(rhs));
+        const SBAddImpl *sba = dynamic_cast<const SBAddImpl*>(GetImpl(rhs));
         if (sba) {
             // If rhs is an SBAdd, copy its full list here
             _plist.insert(_plist.end(),sba->_plist.begin(),sba->_plist.end());
@@ -102,35 +102,79 @@ namespace galsim {
         return kv;
     } 
 
-    void SBAdd::SBAddImpl::fillKGrid(KTable& kt) const 
+    void SBAdd::SBAddImpl::xValue(
+        tmv::VectorView<double> x, tmv::VectorView<double> y,
+        tmv::MatrixView<double> val) const
     {
-        if (_plist.empty()) kt.clear();
+        tmv::Vector<double> x2 = x;
+        tmv::Vector<double> y2 = y;
+        tmv::Matrix<double> val2(val.colsize(),val.rowsize());
+
         ConstIter pptr = _plist.begin();
-        assert(SBProfile::GetImpl(*pptr));
-        SBProfile::GetImpl(*pptr)->fillKGrid(kt);
-        if (++pptr != _plist.end()) {
-            KTable k2(kt.getN(),kt.getDk());
-            for ( ; pptr!= _plist.end(); ++pptr) {
-                assert(SBProfile::GetImpl(*pptr));
-                SBProfile::GetImpl(*pptr)->fillKGrid(k2);
-                kt.accumulate(k2);
-            }
+        assert(pptr != _plist.end());
+        GetImpl(*pptr)->xValue(x,y,val);
+        for (++pptr; pptr != _plist.end(); ++pptr) {
+            x = x2;
+            y = y2;
+            GetImpl(*pptr)->xValue(x,y,val2.view());
+            val += val2;
         }
     }
 
-    void SBAdd::SBAddImpl::fillXGrid(XTable& xt) const 
+    void SBAdd::SBAddImpl::kValue(
+        tmv::VectorView<double> kx, tmv::VectorView<double> ky,
+        tmv::MatrixView<std::complex<double> > kval) const
     {
-        if (_plist.empty()) xt.clear();
+        tmv::Vector<double> kx2 = kx;
+        tmv::Vector<double> ky2 = ky;
+        tmv::Matrix<std::complex<double> > kval2(kval.colsize(),kval.rowsize());
+
         ConstIter pptr = _plist.begin();
-        assert(SBProfile::GetImpl(*pptr));
-        SBProfile::GetImpl(*pptr)->fillXGrid(xt);
-        if (++pptr != _plist.end()) {
-            XTable x2(xt.getN(),xt.getDx());
-            for ( ; pptr!= _plist.end(); ++pptr) {
-                assert(SBProfile::GetImpl(*pptr));
-                SBProfile::GetImpl(*pptr)->fillXGrid(x2);
-                xt.accumulate(x2);
-            }
+        assert(pptr != _plist.end());
+        GetImpl(*pptr)->kValue(kx,ky,kval);
+        for (++pptr; pptr != _plist.end(); ++pptr) {
+            kx = kx2;
+            ky = ky2;
+            GetImpl(*pptr)->kValue(kx,ky,kval2.view());
+            kval += kval2;
+        }
+    }
+
+    void SBAdd::SBAddImpl::xValue(
+        tmv::MatrixView<double> x, tmv::MatrixView<double> y,
+        tmv::MatrixView<double> val) const
+    {
+        tmv::Matrix<double> x2 = x;
+        tmv::Matrix<double> y2 = y;
+        tmv::Matrix<double> val2(val.colsize(),val.rowsize());
+
+        ConstIter pptr = _plist.begin();
+        assert(pptr != _plist.end());
+        GetImpl(*pptr)->xValue(x,y,val);
+        for (++pptr; pptr != _plist.end(); ++pptr) {
+            x = x2;
+            y = y2;
+            GetImpl(*pptr)->xValue(x,y,val2.view());
+            val += val2;
+        }
+    }
+
+    void SBAdd::SBAddImpl::kValue(
+        tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
+        tmv::MatrixView<std::complex<double> > kval) const
+    {
+        tmv::Matrix<double> kx2 = kx;
+        tmv::Matrix<double> ky2 = ky;
+        tmv::Matrix<std::complex<double> > kval2(kval.colsize(),kval.rowsize());
+
+        ConstIter pptr = _plist.begin();
+        assert(pptr != _plist.end());
+        GetImpl(*pptr)->kValue(kx,ky,kval);
+        for (++pptr; pptr != _plist.end(); ++pptr) {
+            kx = kx2;
+            ky = ky2;
+            GetImpl(*pptr)->kValue(kx,ky,kval2.view());
+            kval += kval2;
         }
     }
 

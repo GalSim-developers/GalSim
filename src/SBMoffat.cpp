@@ -187,13 +187,16 @@ namespace galsim {
                throw SBError("Unknown SBMoffat::RadiusType");
         }
 
-        double maxRrD;
+        _rD_sq = _rD * _rD;
+        _inv_rD = 1./_rD;
+        _inv_rD_sq = _inv_rD*_inv_rD;
+
         if (trunc > 0.) {
-            maxRrD = trunc / _rD;  // note new usage of trunc in physical units requires _rD here
-            xdbg<<"maxRrD = "<<maxRrD<<"\n";
+            _maxRrD = trunc * _inv_rD;
+            xdbg<<"maxRrD = "<<_maxRrD<<"\n";
 
             // Analytic integration of total flux:
-            _fluxFactor = 1. - std::pow( 1+maxRrD*maxRrD, (1.-_beta));
+            _fluxFactor = 1. - std::pow( 1+_maxRrD*_maxRrD, (1.-_beta));
         } else {
             _fluxFactor = 1.;
 
@@ -202,18 +205,18 @@ namespace galsim {
             // is probably appropriate here.)
             // (1+R^2)^-beta = kvalue_accuracy
             // And ignore the 1+ part of (1+R^2), so
-            maxRrD = std::pow(sbp::kvalue_accuracy,-1./(2.*_beta));
-            xdbg<<"Not truncate.  Calculated maxRrD = "<<maxRrD<<"\n";
+            _maxRrD = std::pow(sbp::kvalue_accuracy,-1./(2.*_beta));
+            xdbg<<"Not truncate.  Calculated maxRrD = "<<_maxRrD<<"\n";
         }
 
         _FWHM = FWHMrD * _rD;
-        _maxR = maxRrD * _rD;
+        _maxR = _maxRrD * _rD;
         _maxR_sq = _maxR * _maxR;
-        _rD_sq = _rD * _rD;
+        _maxRrD_sq = _maxRrD * _maxRrD;
         _norm = _flux * (_beta-1.) / (M_PI * _fluxFactor * _rD_sq);
 
         dbg << "Moffat rD " << _rD << " fluxFactor " << _fluxFactor
-            << " norm " << _norm << " maxRrD " << _maxR << std::endl;
+            << " norm " << _norm << " maxR " << _maxR << std::endl;
 
         if (_beta == 1) pow_beta = &SBMoffat::pow_1;
         else if (_beta == 2) pow_beta = &SBMoffat::pow_2;
@@ -236,9 +239,9 @@ namespace galsim {
 
     double SBMoffat::SBMoffatImpl::xValue(const Position<double>& p) const 
     {
-        double rsq = p.x*p.x + p.y*p.y;
-        if (rsq > _maxR_sq) return 0.;
-        else return _norm / pow_beta(1.+rsq/_rD_sq, _beta);
+        double rsq = (p.x*p.x + p.y*p.y)*_inv_rD_sq;
+        if (rsq > _maxRrD_sq) return 0.;
+        else return _norm / pow_beta(1.+rsq, _beta);
     }
 
     std::complex<double> SBMoffat::SBMoffatImpl::kValue(const Position<double>& k) const 
@@ -247,6 +250,124 @@ namespace galsim {
         double ksq = k.x*k.x + k.y*k.y;
         if (ksq > _ft.argMax()) return 0.;
         else return _ft(ksq);
+    }
+
+    void SBMoffat::SBMoffatImpl::xValue(
+        tmv::VectorView<double> x, tmv::VectorView<double> y,
+        tmv::MatrixView<double> val) const
+    {
+        assert(x.step() == 1);
+        assert(y.step() == 1);
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        assert(x.size() == val.colsize());
+        assert(y.size() == val.rowsize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        x *= _inv_rD;
+        x = ElemProd(x,x);
+        y *= _inv_rD;
+        y = ElemProd(y,y);
+        It yit = y.begin();
+        It valit = val.linearView().begin();
+        for (int j=0;j<n;++j,++yit) {
+            It xit = x.begin();
+            for (int i=0;i<m;++i)  {
+                double rsq = *xit++ + *yit;
+                if (rsq > _maxRrD_sq) *valit++ = 0.;
+                else *valit++ = _norm / pow_beta(1.+rsq, _beta);
+            }
+        }
+     }
+
+    void SBMoffat::SBMoffatImpl::kValue(
+        tmv::VectorView<double> kx, tmv::VectorView<double> ky,
+        tmv::MatrixView<std::complex<double> > kval) const
+    { 
+        assert(kx.step() == 1);
+        assert(ky.step() == 1);
+        assert(kval.stepi() == 1);
+        assert(kval.canLinearize());
+        assert(kx.size() == kval.colsize());
+        assert(ky.size() == kval.rowsize());
+        const int m = kval.colsize();
+        const int n = kval.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
+        kx = ElemProd(kx,kx);
+        ky = ElemProd(ky,ky);
+        It kyit = ky.begin();
+        CIt kvalit(kval.linearView().begin().getP(),1);
+        for (int j=0;j<n;++j,++kyit) {
+            It kxit = kx.begin();
+            for (int i=0;i<m;++i)  {
+                double ksq = *kxit++ + *kyit;
+                if (ksq > _ft.argMax()) *kvalit++ = 0.;
+                else *kvalit++ = _ft(ksq);
+            }
+        }
+    }
+
+    void SBMoffat::SBMoffatImpl::xValue(
+        tmv::MatrixView<double> x, tmv::MatrixView<double> y,
+        tmv::MatrixView<double> val) const
+    { 
+        assert(x.stepi() == 1);
+        assert(y.stepi() == 1);
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        assert(x.colsize() == val.colsize());
+        assert(x.rowsize() == val.rowsize());
+        assert(y.colsize() == val.colsize());
+        assert(y.rowsize() == val.rowsize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        x *= _inv_rD;
+        x = ElemProd(x,x);
+        y *= _inv_rD;
+        y = ElemProd(y,y);
+        x += y;
+        It xit = x.linearView().begin();
+        It valit = val.linearView().begin();
+        const int ntot = m*n;
+        for (int i=0;i<ntot;++i) {
+            double rsq = *xit++;
+            if (rsq > _maxRrD_sq) *valit++ = 0.;
+            else *valit++ = _norm / pow_beta(1.+rsq, _beta);
+        }
+     }
+
+    void SBMoffat::SBMoffatImpl::kValue(
+        tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
+        tmv::MatrixView<std::complex<double> > kval) const
+    { 
+        assert(kx.stepi() == 1);
+        assert(ky.stepi() == 1);
+        assert(kval.stepi() == 1);
+        assert(kx.canLinearize());
+        assert(ky.canLinearize());
+        assert(kval.canLinearize());
+        assert(kx.colsize() == kval.colsize());
+        assert(kx.rowsize() == kval.rowsize());
+        assert(ky.colsize() == kval.colsize());
+        assert(ky.rowsize() == kval.rowsize());
+        const int m = kval.colsize();
+        const int n = kval.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
+        kx = ElemProd(kx,kx);
+        ky = ElemProd(ky,ky);
+        kx += ky;
+        It kxit = kx.linearView().begin();
+        CIt kvalit(kval.linearView().begin().getP(),1);
+        const int ntot = m*n;
+        for (int i=0;i<ntot;++i)  {
+            double ksq = *kxit++;
+            if (ksq > _ft.argMax()) *kvalit++ = 0.;
+            else *kvalit++ = _ft(ksq);
+        }
     }
 
     // Set maxK to the value where the FT is down to maxk_threshold
@@ -305,8 +426,6 @@ namespace galsim {
         // Do a Hankel transform and store the results in a lookup table.
 
         double nn = _norm * 2.*M_PI * _rD_sq;
-        //double maxR = _fluxFactor == 1. ? integ::MOCK_INF : _maxR / _rD;
-        double maxR = _maxR / _rD;
 
         // Along the way, find the last k that has a kValue > 1.e-3
         double maxK_val = sbp::maxk_threshold * _flux;
@@ -323,10 +442,10 @@ namespace galsim {
         for(double k=0.; k < 50; k += dk) {
             MoffatIntegrand I(_beta, k, pow_beta);
             double val = integ::int1d(
-                I, 0., maxR, sbp::integration_relerr, sbp::integration_abserr);
+                I, 0., _maxRrD, sbp::integration_relerr, sbp::integration_abserr);
             val *= nn;
 
-            double kreal = k / _rD;
+            double kreal = k * _inv_rD;
             xdbg<<"ft("<<kreal<<") = "<<val<<std::endl;
             _ft.addEntry( kreal*kreal, val );
 

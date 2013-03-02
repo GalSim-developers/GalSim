@@ -60,7 +60,8 @@ namespace galsim {
         _obscuration(obscuration), 
         _flux(flux), 
         _Dsq(_D*_D), _obssq(_obscuration*_obscuration),
-        _inv_Dsq_pisq(1. / (_Dsq * M_PI * M_PI)),
+        _inv_D_pi(1. / (_D * M_PI)),
+        _inv_Dsq_pisq(_inv_D_pi * _inv_D_pi),
         _xnorm(flux * _Dsq),
         _knorm(flux / (M_PI * (1.-_obssq))),
         _info(nmap.get(_obscuration,_obssq))
@@ -107,6 +108,112 @@ namespace galsim {
         double ksq_over_pisq = (k.x*k.x+k.y*k.y) * _inv_Dsq_pisq;
         // calculate circular FT(PSF) on p'=(x',y')
         return _knorm * _info->kValue(ksq_over_pisq);
+    }
+
+    void SBAiry::SBAiryImpl::xValue(
+        tmv::VectorView<double> x, tmv::VectorView<double> y,
+        tmv::MatrixView<double> val) const
+    {
+        assert(x.step() == 1);
+        assert(y.step() == 1);
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        assert(x.size() == val.colsize());
+        assert(y.size() == val.rowsize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        x *= _D;
+        x = ElemProd(x,x);
+        y *= _D;
+        y = ElemProd(y,y);
+        It yit = y.begin();
+        It valit = val.linearView().begin();
+        for (int j=0;j<n;++j,++yit) {
+            It xit = x.begin();
+            for (int i=0;i<m;++i) *valit++ = _xnorm * _info->xValue(sqrt(*xit++ + *yit));
+        }
+    }
+
+    void SBAiry::SBAiryImpl::kValue(
+        tmv::VectorView<double> kx, tmv::VectorView<double> ky,
+        tmv::MatrixView<std::complex<double> > kval) const
+    { 
+        assert(kx.step() == 1);
+        assert(ky.step() == 1);
+        assert(kval.stepi() == 1);
+        assert(kval.canLinearize());
+        assert(kx.size() == kval.colsize());
+        assert(ky.size() == kval.rowsize());
+        const int m = kval.colsize();
+        const int n = kval.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
+        kx *= _inv_D_pi;
+        kx = ElemProd(kx,kx);
+        ky *= _inv_D_pi;
+        ky = ElemProd(ky,ky);
+        It kyit = ky.begin();
+        CIt kvalit(kval.linearView().begin().getP(),1);
+        for (int j=0;j<n;++j,++kyit) {
+            It kxit = kx.begin();
+            for (int i=0;i<m;++i) *kvalit++ = _knorm * _info->kValue(*kxit++ + *kyit);
+        }
+    }
+
+    void SBAiry::SBAiryImpl::xValue(
+        tmv::MatrixView<double> x, tmv::MatrixView<double> y,
+        tmv::MatrixView<double> val) const
+    { 
+        assert(x.stepi() == 1);
+        assert(y.stepi() == 1);
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        assert(x.colsize() == val.colsize());
+        assert(x.rowsize() == val.rowsize());
+        assert(y.colsize() == val.colsize());
+        assert(y.rowsize() == val.rowsize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        x *= _D;
+        x = ElemProd(x,x);
+        y *= _D;
+        y = ElemProd(y,y);
+        x += y;
+        It xit = x.linearView().begin();
+        It valit = val.linearView().begin();
+        const int ntot = m*n;
+        for (int i=0;i<ntot;++i) *valit++ = _xnorm * _info->xValue(sqrt(*xit++));
+    }
+
+    void SBAiry::SBAiryImpl::kValue(
+        tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
+        tmv::MatrixView<std::complex<double> > kval) const
+    { 
+        assert(kx.stepi() == 1);
+        assert(ky.stepi() == 1);
+        assert(kval.stepi() == 1);
+        assert(kx.canLinearize());
+        assert(ky.canLinearize());
+        assert(kval.canLinearize());
+        assert(kx.colsize() == kval.colsize());
+        assert(kx.rowsize() == kval.rowsize());
+        assert(ky.colsize() == kval.colsize());
+        assert(ky.rowsize() == kval.rowsize());
+        const int m = kval.colsize();
+        const int n = kval.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
+        const int ntot = m*n;
+        kx *= _inv_D_pi;
+        kx = ElemProd(kx,kx);
+        ky *= _inv_D_pi;
+        ky = ElemProd(ky,ky);
+        kx += ky;
+        It kxit = kx.linearView().begin();
+        CIt kvalit(kval.linearView().begin().getP(),1);
+        for (int i=0;i<ntot;++i) *kvalit++ = _knorm * _info->kValue(*kxit++);
     }
 
     // Set maxK to hard limit for Airy disk.

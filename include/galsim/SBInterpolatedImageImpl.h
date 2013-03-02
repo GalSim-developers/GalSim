@@ -104,33 +104,15 @@ namespace galsim {
         double getPositiveFlux() const { checkReadyToShoot(); return _positiveFlux; }
         double getNegativeFlux() const { checkReadyToShoot(); return _negativeFlux; }
 
-        template <typename T>
-        double fillXImage(ImageView<T>& I, double gain) const;
-
         // Overrides for better efficiency with separable kernels:
-        void fillKGrid(KTable& kt) const;
-        void fillXGrid(XTable& xt) const;
-
-        // These are the virtual functions, but we don't want to have to duplicate the
-        // code implement these.  So each one just calls the template version.  The
-        // C++ overloading rules mean that it will call the local fillXImage template 
-        // function defined above, not the one in SBProfile (which would lead to an 
-        // infinite loop!). 
-        //
-        // So here is what happens when someone calls fillXImage(I,dx):
-        // 1) If they are calling this from an SBInterpolatedImage object, then
-        //    it just directly uses the above template version.
-        // 2) If they are calling this from an SBProfile object, the template version
-        //    there immediately calls doFillXImage for the appropriate type.
-        //    That's a virtual function, so if the SBProfile is really an SBInterpolatedImage,
-        //    it will find these virtual functions instead of the ones defined in
-        //    SBProfile.  Then these functions immediately call the template version
-        //    of fillXImage defined above.
-        //
-        double doFillXImage(ImageView<float>& I, double gain) const
-        { return fillXImage(I,gain); }
-        double doFillXImage(ImageView<double>& I, double gain) const
-        { return fillXImage(I,gain); }
+        void xValue(tmv::VectorView<double> x, tmv::VectorView<double> y,
+                    tmv::MatrixView<double> val) const;
+        void kValue(tmv::VectorView<double> kx, tmv::VectorView<double> ky,
+                    tmv::MatrixView<std::complex<double> > kval) const;
+        void xValue(tmv::MatrixView<double> x, tmv::MatrixView<double> y,
+                    tmv::MatrixView<double> val) const;
+        void kValue(tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
+                    tmv::MatrixView<std::complex<double> > kval) const;
 
     protected:  // Made protected so that these can be used in the derived CorrelationFunction class
 

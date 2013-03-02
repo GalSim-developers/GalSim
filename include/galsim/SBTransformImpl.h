@@ -78,8 +78,15 @@ namespace galsim {
          */
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
-        // Override for better efficiency:
-        void fillKGrid(KTable& kt) const; 
+        // Overrides for better efficiency 
+        void xValue(tmv::VectorView<double> x, tmv::VectorView<double> y,
+                    tmv::MatrixView<double> val) const;
+        void xValue(tmv::MatrixView<double> x, tmv::MatrixView<double> y,
+                    tmv::MatrixView<double> val) const;
+        void kValue(tmv::VectorView<double> kx, tmv::VectorView<double> ky,
+                    tmv::MatrixView<std::complex<double> > kval) const;
+        void kValue(tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
+                    tmv::MatrixView<std::complex<double> > kval) const;
 
     private:
         SBProfile _adaptee; ///< SBProfile being adapted/transformed
@@ -100,6 +107,7 @@ namespace galsim {
         double _xmin, _xmax, _ymin, _ymax; ///< Ranges propagated from adaptee
         double _coeff_b, _coeff_c, _coeff_c2; ///< Values used in getYRangeX(x,ymin,ymax);
         std::vector<double> _xsplits, _ysplits; ///< Good split points for the intetegrals
+        bool _zeroCen;
 
         void initialize();
 
@@ -134,6 +142,26 @@ namespace galsim {
             double mA, double mB, double mC, double mD, double x, double y, double );
         Position<double> (*_inv)(
             double mA, double mB, double mC, double mD, double x, double y, double invdet);
+
+        static std::complex<double> _kValueNoPhaseNoDet(
+            const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
+            const Position<double>& , const Position<double>& );
+        static std::complex<double> _kValueNoPhaseWithDet(
+            const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
+            const Position<double>& , const Position<double>& );
+        static std::complex<double> _kValueWithPhase(
+            const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
+            const Position<double>& k, const Position<double>& cen);
+
+        static Position<double> _fwd_normal(
+            double mA, double mB, double mC, double mD, double x, double y, double )
+        { return Position<double>(mA*x + mB*y, mC*x + mD*y); }
+        static Position<double> _inv_normal(
+            double mA, double mB, double mC, double mD, double x, double y, double invdet)
+        { return Position<double>(invdet*(mD*x - mB*y), invdet*(-mC*x + mA*y)); }
+        static Position<double> _ident(
+            double , double , double , double , double x, double y, double )
+        { return Position<double>(x,y); }
 
         // Copy constructor and op= are undefined.
         SBTransformImpl(const SBTransformImpl& rhs);

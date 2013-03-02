@@ -127,7 +127,11 @@ namespace galsim {
          */
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
-        void fillKGrid(KTable& kt) const;
+        // Overrides for better efficiency
+        void kValue(tmv::VectorView<double> kx, tmv::VectorView<double> ky,
+                    tmv::MatrixView<std::complex<double> > kval) const;
+        void kValue(tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
+                    tmv::MatrixView<std::complex<double> > kval) const;
 
     private:
         typedef std::list<SBProfile>::iterator Iter;

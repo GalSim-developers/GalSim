@@ -128,10 +128,22 @@ namespace galsim {
 
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
+        // Overrides for better efficiency
+        void xValue(tmv::VectorView<double> x, tmv::VectorView<double> y,
+                    tmv::MatrixView<double> val) const;
+        void xValue(tmv::MatrixView<double> x, tmv::MatrixView<double> y,
+                    tmv::MatrixView<double> val) const;
+        void kValue(tmv::VectorView<double> kx, tmv::VectorView<double> ky,
+                    tmv::MatrixView<std::complex<double> > kval) const;
+        void kValue(tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
+                    tmv::MatrixView<std::complex<double> > kval) const;
+
     private:
         double _flux; ///< Flux.
         double _r0;   ///< Characteristic size of profile `exp[-(r / r0)]`.
-        double _r0_sq; ///< Calculated value: r0*r0
+        double _r0_sq;
+        double _inv_r0;
+        double _inv_r0_sq;
         double _ksq_min; ///< If ksq < _kq_min, then use faster taylor approximation for kvalue
         double _ksq_max; ///< If ksq > _kq_max, then use kvalue = 0
         double _norm; ///< flux / r0^2 / 2pi

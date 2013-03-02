@@ -61,6 +61,16 @@ namespace galsim {
          */
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
+        // Overrides for better efficiency
+        void xValue(tmv::VectorView<double> x, tmv::VectorView<double> y,
+                    tmv::MatrixView<double> val) const;
+        void xValue(tmv::MatrixView<double> x, tmv::MatrixView<double> y,
+                    tmv::MatrixView<double> val) const;
+        void kValue(tmv::VectorView<double> kx, tmv::VectorView<double> ky,
+                    tmv::MatrixView<std::complex<double> > kval) const;
+        void kValue(tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
+                    tmv::MatrixView<std::complex<double> > kval) const;
+
     private:
         
         double _lam_over_D;  ///< inverse of _D (see below), harmonise inputs with other GSObjects
@@ -74,6 +84,7 @@ namespace galsim {
 
         double _Dsq; ///< Calculated value: D*D
         double _obssq; ///< Calculated value: _obscuration * _obscuration
+        double _inv_D_pi; ///< Calculated value: 1/(D pi)
         double _inv_Dsq_pisq; ///< Calculated value: 1/(D^2 pi^2)
         double _xnorm; ///< Calculated value: flux * D^2
         double _knorm; ///< Calculated value: flux / (pi (1-obs^2))

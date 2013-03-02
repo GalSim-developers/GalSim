@@ -123,12 +123,23 @@ namespace galsim {
          */
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
+        // Overrides for better efficiency 
+        void xValue(tmv::VectorView<double> x, tmv::VectorView<double> y,
+                    tmv::MatrixView<double> val) const;
+        void xValue(tmv::MatrixView<double> x, tmv::MatrixView<double> y,
+                    tmv::MatrixView<double> val) const;
+        void kValue(tmv::VectorView<double> kx, tmv::VectorView<double> ky,
+                    tmv::MatrixView<std::complex<double> > kval) const;
+        void kValue(tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
+                    tmv::MatrixView<std::complex<double> > kval) const;
+
     private:
         
         double _lam_over_r0; ///< lambda / r0
         double _k0; ///< Derived value so MTF is exp(-(k/k0)^5/3)
-        double _k0sq; ///< Calculated value: k0*k0
-        double _inv_k0sq; ///< Calculated value: 1/k0^2
+        double _k0sq;
+        double _inv_k0;
+        double _inv_k0sq;
 
         double _flux; ///< Flux.
         double _xnorm; ///< Calculated value for normalizing xValues returned from Info class.

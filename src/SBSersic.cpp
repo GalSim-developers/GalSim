@@ -55,23 +55,137 @@ namespace galsim {
     SBSersic::InfoBarn SBSersic::nmap;
 
     SBSersic::SBSersicImpl::SBSersicImpl(double n,  double re, double flux) :
-        _n(n), _flux(flux), _re(re), _re_sq(_re*_re), _norm(_flux/_re_sq),
-        _info(nmap.get(_n))
+        _n(n), _flux(flux), _re(re), _re_sq(_re*_re), _inv_re(1./_re), _inv_re_sq(_inv_re*_inv_re),
+        _norm(_flux*_inv_re_sq), _info(nmap.get(_n))
     {
-        _ksq_max = _info->getKsqMax() / _re_sq;
+        _ksq_max = _info->getKsqMax();
         dbg<<"_ksq_max for n = "<<n<<" = "<<_ksq_max<<std::endl;
     }
 
     double SBSersic::SBSersicImpl::xValue(const Position<double>& p) const
-    {  return _norm * _info->xValue((p.x*p.x+p.y*p.y)/_re_sq); }
+    {  return _norm * _info->xValue((p.x*p.x+p.y*p.y)*_inv_re_sq); }
 
     std::complex<double> SBSersic::SBSersicImpl::kValue(const Position<double>& k) const
     { 
-        double ksq = k.x*k.x + k.y*k.y;
-        if (ksq > _ksq_max) 
-            return 0.;
-        else
-            return _flux * _info->kValue(ksq * _re_sq);
+        double ksq = (k.x*k.x + k.y*k.y)*_re_sq;
+        if (ksq > _ksq_max) return 0.;
+        else return _flux * _info->kValue(ksq);
+    }
+
+    void SBSersic::SBSersicImpl::xValue(
+        tmv::VectorView<double> x, tmv::VectorView<double> y,
+        tmv::MatrixView<double> val) const
+    {
+        assert(x.step() == 1);
+        assert(y.step() == 1);
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        assert(x.size() == val.colsize());
+        assert(y.size() == val.rowsize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        x *= _inv_re;
+        x = ElemProd(x,x);
+        y *= _inv_re;
+        y = ElemProd(y,y);
+        It yit = y.begin();
+        It valit = val.linearView().begin();
+        for (int j=0;j<n;++j,++yit) {
+            It xit = x.begin();
+            for (int i=0;i<m;++i)  {
+                *valit++ = _norm * _info->xValue(*xit++ + *yit);
+            }
+        }
+     }
+
+    void SBSersic::SBSersicImpl::kValue(
+        tmv::VectorView<double> kx, tmv::VectorView<double> ky,
+        tmv::MatrixView<std::complex<double> > kval) const
+    { 
+        assert(kx.step() == 1);
+        assert(ky.step() == 1);
+        assert(kval.stepi() == 1);
+        assert(kval.canLinearize());
+        assert(kx.size() == kval.colsize());
+        assert(ky.size() == kval.rowsize());
+        const int m = kval.colsize();
+        const int n = kval.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
+        kx *= _re;
+        kx = ElemProd(kx,kx);
+        ky *= _re;
+        ky = ElemProd(ky,ky);
+        It kyit = ky.begin();
+        CIt kvalit(kval.linearView().begin().getP(),1);
+        for (int j=0;j<n;++j,++kyit) {
+            It kxit = kx.begin();
+            for (int i=0;i<m;++i)  {
+                double ksq = *kxit++ + *kyit;
+                if (ksq > _ksq_max) *kvalit++ = 0.;
+                else *kvalit++ = _flux * _info->kValue(ksq);
+            }
+        }
+    }
+
+    void SBSersic::SBSersicImpl::xValue(
+        tmv::MatrixView<double> x, tmv::MatrixView<double> y,
+        tmv::MatrixView<double> val) const
+    { 
+        assert(x.stepi() == 1);
+        assert(y.stepi() == 1);
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        assert(x.colsize() == val.colsize());
+        assert(x.rowsize() == val.rowsize());
+        assert(y.colsize() == val.colsize());
+        assert(y.rowsize() == val.rowsize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        x *= _inv_re;
+        x = ElemProd(x,x);
+        y *= _inv_re;
+        y = ElemProd(y,y);
+        x += y;
+        It xit = x.linearView().begin();
+        It valit = val.linearView().begin();
+        const int ntot = m*n;
+        for (int i=0;i<ntot;++i) *valit++ = _norm * _info->xValue(*xit++);
+     }
+
+    void SBSersic::SBSersicImpl::kValue(
+        tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
+        tmv::MatrixView<std::complex<double> > kval) const
+    { 
+        assert(kx.stepi() == 1);
+        assert(ky.stepi() == 1);
+        assert(kval.stepi() == 1);
+        assert(kx.canLinearize());
+        assert(ky.canLinearize());
+        assert(kval.canLinearize());
+        assert(kx.colsize() == kval.colsize());
+        assert(kx.rowsize() == kval.rowsize());
+        assert(ky.colsize() == kval.colsize());
+        assert(ky.rowsize() == kval.rowsize());
+        const int m = kval.colsize();
+        const int n = kval.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
+        kx *= _re;
+        kx = ElemProd(kx,kx);
+        ky *= _re;
+        ky = ElemProd(ky,ky);
+        kx += ky;
+        It kxit = kx.linearView().begin();
+        CIt kvalit(kval.linearView().begin().getP(),1);
+        const int ntot = m*n;
+        for (int i=0;i<ntot;++i)  {
+            double ksq = *kxit++;
+            if (ksq > _ksq_max) *kvalit++ = 0.;
+            else *kvalit++ = _flux * _info->kValue(ksq);
+        }
     }
 
     double SBSersic::SBSersicImpl::maxK() const { return _info->maxK() / _re; }

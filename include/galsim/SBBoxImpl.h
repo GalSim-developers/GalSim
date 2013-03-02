@@ -67,8 +67,12 @@ namespace galsim {
         /// @brief Boxcar is trivially sampled by drawing 2 uniform deviates.
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
-        // Override for better efficiency:
-        void fillKGrid(KTable& kt) const;
+        // Overrides for better efficiency
+        void kValue(tmv::VectorView<double> kx, tmv::VectorView<double> ky,
+                    tmv::MatrixView<std::complex<double> > kval) const;
+        void kValue(tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
+                    tmv::MatrixView<std::complex<double> > kval) const;
+
         // Override to put in fractional edge values:
         void fillXGrid(XTable& xt) const;
 

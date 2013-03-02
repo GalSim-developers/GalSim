@@ -72,6 +72,59 @@ namespace galsim {
         return _flux * sinc(0.5*k.x*_xw)*sinc(0.5*k.y*_yw);
     }
 
+    void SBBox::SBBoxImpl::kValue(
+        tmv::VectorView<double> kx, tmv::VectorView<double> ky,
+        tmv::MatrixView<std::complex<double> > kval) const
+    { 
+        assert(kx.step() == 1);
+        assert(ky.step() == 1);
+        assert(kval.stepi() == 1);
+        assert(kval.canLinearize());
+        assert(kx.size() == kval.colsize());
+        assert(ky.size() == kval.rowsize());
+        const int m = kval.colsize();
+        const int n = kval.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        kx *= 0.5*_xw;
+        It kxit = kx.begin();
+        for (int i=0;i<m;++i,++kxit) *kxit = sinc(*kxit);
+
+        ky *= 0.5*_yw;
+        It kyit = ky.begin();
+        for (int j=0;j<n;++j,++kyit) *kyit = sinc(*kyit);
+
+        kval = _flux * kx ^ ky;
+    }
+
+    void SBBox::SBBoxImpl::kValue(
+        tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
+        tmv::MatrixView<std::complex<double> > kval) const
+    { 
+        assert(kx.stepi() == 1);
+        assert(ky.stepi() == 1);
+        assert(kval.stepi() == 1);
+        assert(kx.canLinearize());
+        assert(ky.canLinearize());
+        assert(kval.canLinearize());
+        assert(kx.colsize() == kval.colsize());
+        assert(kx.rowsize() == kval.rowsize());
+        assert(ky.colsize() == kval.colsize());
+        assert(ky.rowsize() == kval.rowsize());
+        const int m = kval.colsize();
+        const int n = kval.rowsize();
+        const int ntot = m*n;
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        kx *= 0.5*_xw;
+        It kxit = kx.linearView().begin();
+        for (int i=0;i<ntot;++i,++kxit) *kxit = sinc(*kxit);
+
+        ky *= 0.5*_yw;
+        It kyit = ky.linearView().begin();
+        for (int j=0;j<ntot;++j,++kyit) *kyit = sinc(*kyit);
+
+        kval = _flux * ElemProd(kx , ky);
+    }
+
     // Set maxK to the value where the FT is down to maxk_threshold
     double SBBox::SBBoxImpl::maxK() const 
     { 
@@ -146,60 +199,6 @@ namespace galsim {
         }
 
         return totalflux * (dx*dx);
-    }
-
-    // Override fillKGrid for efficiency, since kValues are separable.
-    void SBBox::SBBoxImpl::fillKGrid(KTable& kt) const 
-    {
-        int N = kt.getN();
-        double dk = kt.getDk();
-
-#if 0
-        // The simple version, saved for reference
-        for (int iy = -N/2; iy < N/2; iy++) {
-            // Only need ix>=0 because it's Hermitian:
-            for (int ix = 0; ix <= N/2; ix++) {
-                Position<double> k(ix*dk,iy*dk);
-                // The value returned by kValue(k)
-                double kvalue = _flux * sinc(0.5*k.x*_xw) * sinc(0.5*k.y*_yw);
-                kt.kSet(ix,iy,kvalue);
-            }
-        }
-#else
-        // A faster version that pulls out all the if statements and store the 
-        // relevant sinc functions in two arrays, so we don't need to keep calling 
-        // sinc on the same values over and over.
-
-        kt.clearCache();
-        std::vector<double> sinc_x(N/2+1);
-        std::vector<double> sinc_y(N/2+1);
-        if (_xw == _yw) { // Typical
-            for (int i = 0; i <= N/2; i++) {
-                sinc_x[i] = sinc(0.5 * i * dk * _xw);
-                sinc_y[i] = sinc_x[i];
-            }
-        } else {
-            for (int i = 0; i <= N/2; i++) {
-                sinc_x[i] = sinc(0.5 * i * dk * _xw);
-                sinc_y[i] = sinc(0.5 * i * dk * _yw);
-            }
-        }
-
-        // Now do the unrolled version with kSet2
-        for (int ix = 0; ix <= N/2; ix++) {
-            kt.kSet2(ix,0, _flux * sinc_x[ix] * sinc_y[0]);
-        }
-        for (int iy = 1; iy < N/2; iy++) {
-            for (int ix = 0; ix <= N/2; ix++) {
-                double kval = _flux * sinc_x[ix] * sinc_y[iy];
-                kt.kSet2(ix,iy,kval);
-                kt.kSet2(ix,N-iy,kval);
-            }
-        }
-        for (int ix = 0; ix <= N/2; ix++) {
-            kt.kSet2(ix,N/2, _flux * sinc_x[ix] * sinc_y[N/2]);
-        }
-#endif
     }
 
     boost::shared_ptr<PhotonArray> SBBox::SBBoxImpl::shoot(int N, UniformDeviate u) const

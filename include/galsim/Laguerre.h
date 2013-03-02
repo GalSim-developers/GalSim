@@ -391,41 +391,42 @@ namespace galsim {
         // Create a matrix containing basis values at vector of input points.
         // Output matrix has m(i,j) = jth basis function at ith point
         static boost::shared_ptr<tmv::Matrix<double> > basis(
-            const tmv::Vector<double>& x, const tmv::Vector<double>& y,
+            const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
             int order, double sigma=1.);
 
         // Create design matrix, including factors of 1/sigma stored in invsig
         static boost::shared_ptr<tmv::Matrix<double> > design(
-            const tmv::Vector<double>& x, const tmv::Vector<double>& y,
-            const tmv::Vector<double>& invsig, int order, double sigma=1.);
+            const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
+            const tmv::ConstVectorView<double>& invsig, int order, double sigma=1.);
 
         // ...or provide your own matrix
         static void design(
-            tmv::Matrix<double>& out, const tmv::Vector<double>& x,
-            const tmv::Vector<double>& y, const tmv::Vector<double>& invsig,
-            int order, double sigma=1.);
+            tmv::Matrix<double>& out,
+            const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
+            const tmv::ConstVectorView<double>& invsig, int order, double sigma=1.);
 
         static void basis(
-            tmv::Matrix<double>& out, const tmv::Vector<double>& x,
-            const tmv::Vector<double>& y, int order, double sigma=1.);
+            tmv::Matrix<double>& out,
+            const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
+            int order, double sigma=1.);
 
         // Create matrices with real and imaginary parts of (Hermitian) FT of basis set:
         static void kBasis(
             boost::shared_ptr<tmv::Matrix<double> >& psi_kReal,
             boost::shared_ptr<tmv::Matrix<double> >& psi_kImag,
-            const tmv::Vector<double>& kx, const tmv::Vector<double>& ky,
+            const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
             int order, double sigma);
         static void kBasis(
             tmv::Matrix<double>& psi_kReal, tmv::Matrix<double>& psi_kImag,
-            const tmv::Vector<double>& kx, const tmv::Vector<double>& ky,
+            const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
             int order, double sigma);
         static void kBasis(
             boost::shared_ptr<tmv::Matrix<std::complex<double> > >& psi_k,
-            const tmv::Vector<double>& kx, const tmv::Vector<double>& ky,
+            const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
             int order, double sigma);
         static void kBasis(
             tmv::Matrix<std::complex<double> >& psi_k,
-            const tmv::Vector<double>& kx, const tmv::Vector<double>& ky,
+            const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
             int order, double sigma);
 
         // ?? Add routine to decompose a data vector into b's
@@ -455,8 +456,7 @@ namespace galsim {
 
     private:
         static void mBasis(
-            const tmv::ConstVectorView<double>& x, 
-            const tmv::ConstVectorView<double>& y,
+            const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
             const tmv::ConstVectorView<double>* invsig,
             tmv::MatrixView<double>* mr,
             tmv::MatrixView<double>* mi,

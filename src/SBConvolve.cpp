@@ -51,9 +51,10 @@ namespace galsim {
         dbg<<"Start SBConvolveImpl::add.  Adding item # "<<_plist.size()+1<<std::endl;
 
         // Add new terms(s) to the _plist:
-        assert(SBProfile::GetImpl(rhs));
-        const SBConvolveImpl *sbc = dynamic_cast<const SBConvolveImpl*>(SBProfile::GetImpl(rhs));
+        assert(GetImpl(rhs));
+        const SBConvolveImpl *sbc = dynamic_cast<const SBConvolveImpl*>(GetImpl(rhs));
         if (sbc) {  
+            dbg<<"  (Item is really "<<sbc->_plist.size()<<" items.)\n";
             // If rhs is an SBConvolve, copy its list here
             for (ConstIter pptr = sbc->_plist.begin(); pptr!=sbc->_plist.end(); ++pptr) {
                 if (!pptr->isAnalyticK() && !_real_space) 
@@ -94,22 +95,6 @@ namespace galsim {
         dbg<<"Net maxK, stepK = "<<_minMaxK<<" , "<<_netStepK<<std::endl;
     }
 
-    void SBConvolve::SBConvolveImpl::fillKGrid(KTable& kt) const 
-    {
-        if (_plist.empty()) kt.clear();
-        ConstIter pptr = _plist.begin();
-        assert(SBProfile::GetImpl(*pptr));
-        SBProfile::GetImpl(*pptr)->fillKGrid(kt);
-        if (++pptr != _plist.end()) {
-            KTable k2(kt.getN(),kt.getDk());
-            for ( ; pptr!= _plist.end(); ++pptr) {
-                assert(SBProfile::GetImpl(*pptr));
-                SBProfile::GetImpl(*pptr)->fillKGrid(k2);
-                kt *= k2;
-            }
-        }
-    }
-
     double SBConvolve::SBConvolveImpl::xValue(const Position<double>& pos) const
     {
         // Perform a direct calculation of the convolution at a particular point by
@@ -138,11 +123,47 @@ namespace galsim {
         ConstIter pptr = _plist.begin();
         assert(pptr != _plist.end());
         std::complex<double> kv = pptr->kValue(k);
-        for (++pptr; pptr != _plist.end(); ++pptr)
-            kv *= pptr->kValue(k);
+        for (++pptr; pptr != _plist.end(); ++pptr) kv *= pptr->kValue(k);
         return kv;
     } 
 
+    void SBConvolve::SBConvolveImpl::kValue(
+        tmv::VectorView<double> kx, tmv::VectorView<double> ky,
+        tmv::MatrixView<std::complex<double> > kval) const
+    {
+        tmv::Vector<double> kx2 = kx;
+        tmv::Vector<double> ky2 = ky;
+        tmv::Matrix<std::complex<double> > kval2(kval.colsize(),kval.rowsize());
+
+        ConstIter pptr = _plist.begin();
+        assert(pptr != _plist.end());
+        GetImpl(*pptr)->kValue(kx,ky,kval);
+        for (++pptr; pptr != _plist.end(); ++pptr) {
+            kx = kx2;
+            ky = ky2;
+            GetImpl(*pptr)->kValue(kx,ky,kval2.view());
+            kval = ElemProd(kval,kval2);
+        }
+    }
+
+    void SBConvolve::SBConvolveImpl::kValue(
+        tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
+        tmv::MatrixView<std::complex<double> > kval) const
+    {
+        tmv::Matrix<double> kx2 = kx;
+        tmv::Matrix<double> ky2 = ky;
+        tmv::Matrix<std::complex<double> > kval2(kval.colsize(),kval.rowsize());
+
+        ConstIter pptr = _plist.begin();
+        assert(pptr != _plist.end());
+        GetImpl(*pptr)->kValue(kx,ky,kval);
+        for (++pptr; pptr != _plist.end(); ++pptr) {
+            kx = kx2;
+            ky = ky2;
+            GetImpl(*pptr)->kValue(kx,ky,kval2.view());
+            kval = ElemProd(kval,kval2);
+        }
+    }
 
     double SBConvolve::SBConvolveImpl::getPositiveFlux() const 
     {

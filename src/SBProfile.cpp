@@ -668,17 +668,37 @@ namespace galsim {
         double dx = xt.getDx();
         xt.clearCache();
 
-        tmv::Vector<double> x(N);
-        for (int i=0;i<N;++i) x.ref(i) = (i-N/2.)*dx;
+        if (isAxisymmetric()) {
+            tmv::Vector<double> x(N/2+1);
+            for (int i=0;i<=N/2;++i) x.ref(i) = i*dx;
 
-        tmv::Vector<double> y = x;
+            tmv::Vector<double> y = x;
 
-        tmv::Matrix<double> val(N,N);
-        // Calculate all the xValues at once, since this is often faster than many calls to xValue.
-        xValue(x.view(),y.view(),val.view());
+            tmv::Matrix<double> val(N/2+1,N/2+1);
+            xValue(x.view(),y.view(),val.view());
 
-        tmv::MatrixView<double> mxt(xt.getArray(),N,N,1,N,tmv::NonConj);
-        mxt = val;
+            tmv::MatrixView<double> mxt(xt.getArray(),N,N,1,N,tmv::NonConj);
+
+            // Upper right quadrant
+            mxt.subMatrix(N/2,N,N/2,N) = val.subMatrix(0,N/2,0,N/2);
+            // Upper left quadrant
+            mxt.subMatrix(0,N/2,N/2,N) = val.subMatrix(N/2,0,0,N/2,-1,1);
+            // Lower right quadrant
+            mxt.subMatrix(N/2,N,0,N/2) = val.subMatrix(0,N/2,N/2,0,1,-1);
+            // Lower left quadrant
+            mxt.subMatrix(0,N/2,0,N/2) = val.subMatrix(N/2,0,N/2,0,-1,-1);
+        } else {
+            tmv::Vector<double> x(N);
+            for (int i=0;i<N;++i) x.ref(i) = (i-N/2.)*dx;
+
+            tmv::Vector<double> y = x;
+
+            tmv::Matrix<double> val(N,N);
+            xValue(x.view(),y.view(),val.view());
+
+            tmv::MatrixView<double> mxt(xt.getArray(),N,N,1,N,tmv::NonConj);
+            mxt = val;
+        }
     }
 
     void SBProfile::SBProfileImpl::fillKGrid(KTable& kt) const 

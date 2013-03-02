@@ -57,24 +57,24 @@ namespace galsim {
     }
 
     SBGaussian::SBGaussianImpl::SBGaussianImpl(double sigma, double flux) :
-        _flux(flux), _sigma(sigma), _sigma_sq(sigma*sigma)
+        _flux(flux), _sigma(sigma), _sigma_sq(_sigma*_sigma),
+        _inv_sigma(1./_sigma), _inv_sigma_sq(_inv_sigma*_inv_sigma)
     {
         // For large k, we clip the result of kValue to 0.
         // We do this when the correct answer is less than kvalue_accuracy.
         // exp(-k^2*sigma^2/2) = kvalue_accuracy
-        _ksq_max = -2. * std::log(sbp::kvalue_accuracy) / _sigma_sq;
+        _ksq_max = -2. * std::log(sbp::kvalue_accuracy);
 
         // For small k, we can use up to quartic in the taylor expansion to avoid the exp.
         // This is acceptable when the next term is less than kvalue_accuracy.
         // 1/48 (k^2 r0^2)^3 = kvalue_accuracy
-        _ksq_min = std::pow(sbp::kvalue_accuracy * 48., 1./3.) / _sigma_sq;
+        _ksq_min = std::pow(sbp::kvalue_accuracy * 48., 1./3.);
 
-        _norm = _flux / (_sigma_sq * 2. * M_PI);
+        _norm = _flux * _inv_sigma_sq / (2. * M_PI);
 
         dbg<<"Gaussian:\n";
         dbg<<"_flux = "<<_flux<<std::endl;
         dbg<<"_sigma = "<<_sigma<<std::endl;
-        dbg<<"_sigma_sq = "<<_sigma_sq<<std::endl;
         dbg<<"_ksq_max = "<<_ksq_max<<std::endl;
         dbg<<"_ksq_min = "<<_ksq_min<<std::endl;
         dbg<<"_norm = "<<_norm<<std::endl;
@@ -84,7 +84,7 @@ namespace galsim {
 
     // Set maxK to the value where the FT is down to maxk_threshold
     double SBGaussian::SBGaussianImpl::maxK() const 
-    { return sqrt(-2.*std::log(sbp::maxk_threshold))/_sigma; }
+    { return sqrt(-2.*std::log(sbp::maxk_threshold))*_inv_sigma; }
 
     // The amount of flux missed in a circle of radius pi/stepk should miss at 
     // most alias_threshold of the flux.
@@ -101,20 +101,131 @@ namespace galsim {
     double SBGaussian::SBGaussianImpl::xValue(const Position<double>& p) const
     {
         double rsq = p.x*p.x + p.y*p.y;
-        return _norm * std::exp( -rsq/(2.*_sigma_sq) );
+        return _norm * std::exp( -0.5 * rsq * _inv_sigma_sq );
     }
 
     std::complex<double> SBGaussian::SBGaussianImpl::kValue(const Position<double>& k) const
     {
-        double ksq = k.x*k.x+k.y*k.y;
+        double ksq = (k.x*k.x+k.y*k.y)*_sigma_sq;
 
         if (ksq > _ksq_max) {
             return 0.;
         } else if (ksq < _ksq_min) {
-            ksq *= _sigma_sq;
             return _flux*(1. - 0.5*ksq*(1. - 0.25*ksq));
         } else {
-            return _flux * std::exp(-ksq * _sigma_sq/2.);
+            return _flux * std::exp(-0.5*ksq);
+        }
+    }
+
+    void SBGaussian::SBGaussianImpl::xValue(
+        tmv::VectorView<double> x, tmv::VectorView<double> y,
+        tmv::MatrixView<double> val) const
+    {
+        assert(x.step() == 1);
+        assert(y.step() == 1);
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        assert(x.size() == val.colsize());
+        assert(y.size() == val.rowsize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        x *= _inv_sigma;
+        x = ElemProd(x,x);
+        y *= _inv_sigma;
+        y = ElemProd(y,y);
+        It xit = x.begin();
+        for (int i=0;i<m;++i,++xit) *xit = exp(-0.5* *xit);
+        It yit = y.begin();
+        for (int j=0;j<n;++j,++yit) *yit = exp(-0.5* *yit);
+        val = _norm * x ^ y;
+    }
+
+    void SBGaussian::SBGaussianImpl::kValue(
+        tmv::VectorView<double> kx, tmv::VectorView<double> ky,
+        tmv::MatrixView<std::complex<double> > kval) const
+    {
+        assert(kx.step() == 1);
+        assert(ky.step() == 1);
+        assert(kval.stepi() == 1);
+        assert(kval.canLinearize());
+        assert(kx.size() == kval.colsize());
+        assert(ky.size() == kval.rowsize());
+        const int m = kval.colsize();
+        const int n = kval.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        kx *= _sigma;
+        kx = ElemProd(kx,kx);
+        ky *= _sigma;
+        ky = ElemProd(ky,ky);
+        It kxit = kx.begin();
+        for (int i=0;i<m;++i,++kxit) *kxit = exp(-0.5* *kxit);
+        It kyit = ky.begin();
+        for (int j=0;j<n;++j,++kyit) *kyit = exp(-0.5* *kyit);
+        kval = _flux * kx ^ ky;
+    }
+
+    void SBGaussian::SBGaussianImpl::xValue(
+        tmv::MatrixView<double> x, tmv::MatrixView<double> y,
+        tmv::MatrixView<double> val) const
+    { 
+        assert(x.stepi() == 1);
+        assert(y.stepi() == 1);
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        assert(x.colsize() == val.colsize());
+        assert(x.rowsize() == val.rowsize());
+        assert(y.colsize() == val.colsize());
+        assert(y.rowsize() == val.rowsize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        x *= _inv_sigma;
+        x = ElemProd(x,x);
+        y *= _inv_sigma;
+        y = ElemProd(y,y);
+        x += y;
+        It xit = x.linearView().begin();
+        It valit = val.linearView().begin();
+        const int ntot = m*n;
+        for (int i=0;i<ntot;++i) *valit++ = _norm * std::exp(-0.5* *xit++);
+     }
+
+    void SBGaussian::SBGaussianImpl::kValue(
+        tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
+        tmv::MatrixView<std::complex<double> > kval) const
+    { 
+        assert(kx.stepi() == 1);
+        assert(ky.stepi() == 1);
+        assert(kval.stepi() == 1);
+        assert(kx.canLinearize());
+        assert(ky.canLinearize());
+        assert(kval.canLinearize());
+        assert(kx.colsize() == kval.colsize());
+        assert(kx.rowsize() == kval.rowsize());
+        assert(ky.colsize() == kval.colsize());
+        assert(ky.rowsize() == kval.rowsize());
+        const int m = kval.colsize();
+        const int n = kval.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
+        kx *= _sigma;
+        kx = ElemProd(kx,kx);
+        ky *= _sigma;
+        ky = ElemProd(ky,ky);
+        kx += ky;
+        It kxit = kx.linearView().begin();
+        CIt kvalit(kval.linearView().begin().getP(),1);
+        const int ntot = m*n;
+        for (int i=0;i<ntot;++i)  {
+            double ksq = *kxit++;
+            if (ksq > _ksq_max) {
+                *kvalit++ = 0.;
+            } else if (ksq < _ksq_min) {
+                *kvalit++ = _flux*(1. - 0.5*ksq*(1. - 0.25*ksq));
+            } else {
+                *kvalit++ = _flux * std::exp(-0.5*ksq);
+            }
         }
     }
 

@@ -27,8 +27,8 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-std::ostream* dbgout = new std::ofstream("debug.out");
-int verbose_level = 2;
+//std::ostream* dbgout = new std::ofstream("debug.out");
+//int verbose_level = 2;
 #endif
 
 namespace galsim {
@@ -352,88 +352,171 @@ namespace galsim {
         dbg<<"ktab size = "<<_ktab->getN()<<", scale = "<<_ktab->getDk()<<std::endl;
     }
 
-    void SBInterpolatedImage::SBInterpolatedImageImpl::fillKGrid(KTable& kt) const 
-    {
-        // This override of base class is to permit potential efficiency gain from
-        // separable interpolant kernel.  If so, the KTable interpolation routine
-        // will go faster if we make y iteration the inner loop.
-        if (dynamic_cast<const InterpolantXY*> (_kInterp.get())) {
-            int N = kt.getN();
-            double dk = kt.getDk();
-            // Only need ix>=0 because it's Hermitian:
-            for (int ix = 0; ix <= N/2; ++ix) {
-                for (int iy = -N/2; iy < N/2; ++iy) {
-                    Position<double> k(ix*dk,iy*dk);
-                    kt.kSet(ix,iy,kValue(k));
-                }
-            }
-        } else {
-            // Otherwise just use the normal routine to fill the grid:
-            SBProfileImpl::fillKGrid(kt);
-        }
-    }
-
-    // Same deal: reverse axis order if we have separable interpolant in X domain
-    void SBInterpolatedImage::SBInterpolatedImageImpl::fillXGrid(XTable& xt) const 
-    {
-        if (dynamic_cast<const InterpolantXY*> (_xInterp.get())) {
-            int N = xt.getN();
-            double dx = xt.getDx();
-            for (int ix = -N/2; ix < N/2; ++ix) {
-                for (int iy = -N/2; iy < N/2; ++iy) {
-                    Position<double> x(ix*dx,iy*dx);
-                    xt.xSet(ix,iy,xValue(x));
-                }
-            }
-        } else {
-            // Otherwise just use the normal routine to fill the grid:
-            SBProfileImpl::fillXGrid(xt);
-        }
-    }
-
-    // One more time: for images now
-    // Returns total flux
-    template <typename T>
-    double SBInterpolatedImage::SBInterpolatedImageImpl::fillXImage(
-        ImageView<T>& I, double gain) const 
-    {
-        double dx = I.getScale();
-        if (dynamic_cast<const InterpolantXY*> (_xInterp.get())) {
-            double sum=0.;
-            for (int ix = I.getXMin(); ix <= I.getXMax(); ++ix) {
-                for (int iy = I.getYMin(); iy <= I.getYMax(); ++iy) {
-                    Position<double> x(ix*dx,iy*dx);
-                    T val = xValue(x) / gain;
-                    sum += val;
-                    I(ix,iy) += val;
-                }
-            }
-            return sum;
-        } else {
-            // Otherwise just use the normal routine to fill the grid:
-            // Note that we need to call doFillXImage, not fillXImage here,
-            // to avoid the virtual function resolution.
-            return SBProfileImpl::doFillXImage(I,gain);
-        }
-    }
-
     double SBInterpolatedImage::SBInterpolatedImageImpl::xValue(const Position<double>& p) const 
     { return _xtab->interpolate(p.x, p.y, *_xInterp); }
 
     std::complex<double> SBInterpolatedImage::SBInterpolatedImageImpl::kValue(
-        const Position<double>& p) const 
+        const Position<double>& k) const 
     {
         const double TWOPI = 2.*M_PI;
 
         // Don't bother if the desired k value is cut off by the x interpolant:
-        double ux = p.x*_multi.getScale()/TWOPI;
+        double ux = k.x*_multi.getScale()/TWOPI;
         if (std::abs(ux) > _xInterp->urange()) return std::complex<double>(0.,0.);
-        double uy = p.y*_multi.getScale()/TWOPI;
+        double uy = k.y*_multi.getScale()/TWOPI;
         if (std::abs(uy) > _xInterp->urange()) return std::complex<double>(0.,0.);
         double xKernelTransform = _xInterp->uval(ux, uy);
 
         checkK();
-        return xKernelTransform * _ktab->interpolate(p.x, p.y, *_kInterp);
+        return xKernelTransform * _ktab->interpolate(k.x, k.y, *_kInterp);
+    }
+
+    void SBInterpolatedImage::SBInterpolatedImageImpl::xValue(
+        tmv::VectorView<double> x, tmv::VectorView<double> y,
+        tmv::MatrixView<double> val) const
+    {
+        assert(x.step() == 1);
+        assert(y.step() == 1);
+        assert(val.stepi() == 1);
+        assert(x.size() == val.colsize());
+        assert(y.size() == val.rowsize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        if (dynamic_cast<const InterpolantXY*> (_xInterp.get())) {
+            // If the interpolant is separable, the KTable interpolation routine
+            // will go faster if we make y iteration the inner loop.
+            typedef tmv::VIt<double,tmv::Unknown,tmv::NonConj> RMIt;
+            It xit = x.begin();
+            for (int i=0;i<m;++i,++xit) {
+                It yit = y.begin();
+                RMIt valit = val.row(i).begin();
+                for (int j=0;j<n;++j) *valit++ = _xtab->interpolate(*xit, *yit++, *_xInterp); 
+            }
+        } else {
+            // Otherwise, just do the values in storage order
+            It yit = y.begin();
+            It valit = val.linearView().begin();
+            for (int j=0;j<n;++j,++yit) {
+                It xit = x.begin();
+                for (int i=0;i<m;++i) *valit++ = _xtab->interpolate(*xit++, *yit, *_xInterp); 
+            }
+        }
+    }
+
+    void SBInterpolatedImage::SBInterpolatedImageImpl::kValue(
+        tmv::VectorView<double> kx, tmv::VectorView<double> ky,
+        tmv::MatrixView<std::complex<double> > kval) const
+    {
+        assert(kx.step() == 1);
+        assert(ky.step() == 1);
+        assert(kval.stepi() == 1);
+        assert(kx.size() == kval.colsize());
+        assert(ky.size() == kval.rowsize());
+        const int m = kval.colsize();
+        const int n = kval.rowsize();
+        const double TWOPI = 2.*M_PI;
+        tmv::Vector<double> ux = kx * _multi.getScale() / TWOPI;
+        tmv::Vector<double> uy = ky * _multi.getScale() / TWOPI;
+        checkK();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        const double maxu = _xInterp->urange();
+        if (dynamic_cast<const InterpolantXY*> (_kInterp.get())) {
+            It kxit = kx.begin();
+            It uxit = ux.begin();
+            typedef tmv::VIt<std::complex<double>,tmv::Unknown,tmv::NonConj> RMIt;
+            for (int i=0;i<m;++i,++kxit,++uxit) {
+                It kyit = ky.begin();
+                It uyit = uy.begin();
+                RMIt kvalit(kval.row(i).begin().getP(),kval.stepj());
+                for (int j=0;j<n;++j,++kyit,++uyit) {
+                    if (std::abs(*uxit) > maxu || std::abs(*uyit) > maxu) {
+                        *kvalit++ = 0.;
+                    } else {
+                        double xKernelTransform = _xInterp->uval(*uxit, *uyit);
+                        *kvalit++ = xKernelTransform * _ktab->interpolate(*kxit, *kyit, *_kInterp);
+                    }
+                }
+            }
+        } else {
+            It kyit = ky.begin();
+            It uyit = uy.begin();
+            typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
+            CIt kvalit(kval.linearView().begin().getP(),1);
+            for (int j=0;j<n;++j,++kyit,++uyit) {
+                It kxit = kx.begin();
+                It uxit = ux.begin();
+                for (int i=0;i<m;++i,++kxit,++uxit) {
+                    if (std::abs(*uxit) > maxu || std::abs(*uyit) > maxu) {
+                        *kvalit++ = 0.;
+                    } else {
+                        double xKernelTransform = _xInterp->uval(*uxit, *uyit);
+                        *kvalit++ = xKernelTransform * _ktab->interpolate(*kxit, *kyit, *_kInterp);
+                    }
+                }
+            }
+        }
+    }
+
+    void SBInterpolatedImage::SBInterpolatedImageImpl::xValue(
+        tmv::MatrixView<double> x, tmv::MatrixView<double> y,
+        tmv::MatrixView<double> val) const
+    {
+        assert(x.stepi() == 1);
+        assert(y.stepi() == 1);
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        assert(x.colsize() == val.colsize());
+        assert(x.rowsize() == val.rowsize());
+        assert(y.colsize() == val.colsize());
+        assert(y.rowsize() == val.rowsize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        const int ntot = m*n;
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        It xit = x.linearView().begin();
+        It yit = y.linearView().begin();
+        It valit = val.linearView().begin();
+        for (int i=0;i<ntot;++i) *valit++ = _xtab->interpolate(*xit++, *yit++, *_xInterp); 
+    }
+
+    void SBInterpolatedImage::SBInterpolatedImageImpl::kValue(
+        tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
+        tmv::MatrixView<std::complex<double> > kval) const
+    {
+        assert(kx.stepi() == 1);
+        assert(ky.stepi() == 1);
+        assert(kval.stepi() == 1);
+        assert(kx.canLinearize());
+        assert(ky.canLinearize());
+        assert(kval.canLinearize());
+        assert(kx.colsize() == kval.colsize());
+        assert(kx.rowsize() == kval.rowsize());
+        assert(ky.colsize() == kval.colsize());
+        assert(ky.rowsize() == kval.rowsize());
+        const int m = kval.colsize();
+        const int n = kval.rowsize();
+        const int ntot = m*n;
+        const double TWOPI = 2.*M_PI;
+        tmv::Matrix<double> ux = kx * _multi.getScale() / TWOPI;
+        tmv::Matrix<double> uy = ky * _multi.getScale() / TWOPI;
+        checkK();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        const double maxu = _xInterp->urange();
+        It kxit = kx.linearView().begin();
+        It kyit = ky.linearView().begin();
+        It uxit = ux.linearView().begin();
+        It uyit = uy.linearView().begin();
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
+        CIt kvalit(kval.linearView().begin().getP(),1);
+        for (int i=0;i<ntot;++i,++kxit,++uxit,++kyit,++uyit) {
+            if (std::abs(*uxit) > maxu || std::abs(*uyit) > maxu) {
+                *kvalit++ = 0.;
+            } else {
+                double xKernelTransform = _xInterp->uval(*uxit, *uyit);
+                *kvalit++ = xKernelTransform * _ktab->interpolate(*kxit, *kyit, *_kInterp);
+            }
+        }
     }
 
     // We provide an option to update the stepk value by directly calculating what
@@ -726,10 +809,5 @@ namespace galsim {
         const BaseImage<short>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor,
         boost::shared_ptr<Image<short> > pad_image);
-
-    template double SBInterpolatedImage::SBInterpolatedImageImpl::fillXImage(
-        ImageView<float>& I, double gain) const;
-    template double SBInterpolatedImage::SBInterpolatedImageImpl::fillXImage(
-        ImageView<double>& I, double gain) const;
 }
 

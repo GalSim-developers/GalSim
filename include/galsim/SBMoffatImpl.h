@@ -77,17 +77,31 @@ namespace galsim {
         double getFWHM() const { return _FWHM; }
         double getHalfLightRadius() const;
 
+        // Overrides for better efficiency 
+        void xValue(tmv::VectorView<double> x, tmv::VectorView<double> y,
+                    tmv::MatrixView<double> val) const;
+        void xValue(tmv::MatrixView<double> x, tmv::MatrixView<double> y,
+                    tmv::MatrixView<double> val) const;
+        void kValue(tmv::VectorView<double> kx, tmv::VectorView<double> ky,
+                    tmv::MatrixView<std::complex<double> > kval) const;
+        void kValue(tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
+                    tmv::MatrixView<std::complex<double> > kval) const;
+
     private:
         double _beta; ///< Moffat beta parameter for profile `[1 + (r / rD)^2]^beta`.
         double _flux; ///< Flux.
         double _norm; ///< Normalization. (Including the flux)
         double _rD;   ///< Scale radius for profile `[1 + (r / rD)^2]^beta`.
         double _maxR; ///< Maximum `r`
+        double _maxRrD; ///< maxR/rD
         double _FWHM;  ///< Full Width at Half Maximum.
         double _trunc;  ///< Outer truncation radius in same physical units as `_rD`
         double _fluxFactor; ///< Integral of total flux in terms of 'rD' units.
-        double _rD_sq; ///< Calculated value: rD*rD;
-        double _maxR_sq; ///< Calculated value: maxR * maxR
+        double _rD_sq;
+        double _inv_rD;
+        double _inv_rD_sq;
+        double _maxRrD_sq;
+        double _maxR_sq;
         mutable double _maxK; ///< Maximum k with kValue > 1.e-3
 
         mutable Table<double,double> _ft;  ///< Lookup table for Fourier transform of Moffat.

@@ -65,12 +65,24 @@ namespace galsim {
 
         double getSigma() const { return _sigma; }
 
+        // Overrides for better efficiency 
+        void xValue(tmv::VectorView<double> x, tmv::VectorView<double> y,
+                    tmv::MatrixView<double> val) const;
+        void xValue(tmv::MatrixView<double> x, tmv::MatrixView<double> y,
+                    tmv::MatrixView<double> val) const;
+        void kValue(tmv::VectorView<double> kx, tmv::VectorView<double> ky,
+                    tmv::MatrixView<std::complex<double> > kval) const;
+        void kValue(tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
+                    tmv::MatrixView<std::complex<double> > kval) const;
+
     private:
         double _flux; ///< Flux of the Surface Brightness Profile.
 
         /// Characteristic size, surface brightness scales as `exp[-r^2 / (2. * sigma^2)]`.
         double _sigma;
-        double _sigma_sq; ///< Calculated value: sigma*sigma
+        double _sigma_sq;
+        double _inv_sigma;
+        double _inv_sigma_sq;
         double _ksq_min; ///< If ksq < _kq_min, then use faster taylor approximation for kvalue
         double _ksq_max; ///< If ksq > _kq_max, then use kvalue = 0
         double _norm; ///< flux / sigma^2 / 2pi

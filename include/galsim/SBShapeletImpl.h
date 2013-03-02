@@ -40,6 +40,7 @@ namespace galsim {
         double xValue(const Position<double>& p) const;
         std::complex<double> kValue(const Position<double>& k) const;
 
+
         double maxK() const;
         double stepK() const;
 
@@ -59,19 +60,14 @@ namespace galsim {
         { throw SBError("SBShapelet::shoot() is not implemented"); }
 
         // Override for better efficiency:
-        void fillKGrid(KTable& kt) const;
-        void fillXGrid(XTable& xt) const;
-        template <typename T>
-        double fillXImage(ImageView<T>& I, double gain) const;
-
-        double doFillXImage(ImageView<float>& I, double gain) const
-        { return fillXImage(I,gain); }
-        double doFillXImage(ImageView<double>& I, double gain) const
-        { return fillXImage(I,gain); }
-        double doFillXImage(ImageView<short>& I, double gain) const
-        { return fillXImage(I,gain); }
-        double doFillXImage(ImageView<int>& I, double gain) const
-        { return fillXImage(I,gain); }
+        void xValue(tmv::VectorView<double> x, tmv::VectorView<double> y,
+                    tmv::MatrixView<double> val) const;
+        void xValue(tmv::MatrixView<double> x, tmv::MatrixView<double> y,
+                    tmv::MatrixView<double> val) const;
+        void kValue(tmv::VectorView<double> kx, tmv::VectorView<double> ky,
+                    tmv::MatrixView<std::complex<double> > kval) const;
+        void kValue(tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
+                    tmv::MatrixView<std::complex<double> > kval) const;
 
     private:
         double _sigma;
