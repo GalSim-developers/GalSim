@@ -42,8 +42,8 @@ def gsobject_compare(obj1, obj2, conv=False):
         obj1 = galsim.Convolve([obj1,gauss])
         obj2 = galsim.Convolve([obj2,gauss])
 
-    im1 = galsim.ImageF(16,16)
-    im2 = galsim.ImageF(16,16)
+    im1 = galsim.ImageD(16,16)
+    im2 = galsim.ImageD(16,16)
     obj1.draw(dx=0.2, image=im1)
     obj2.draw(dx=0.2, image=im2)
     np.testing.assert_array_almost_equal(im1.array, im2.array, 9)
@@ -528,7 +528,8 @@ def test_realgalaxy():
     gal2a = galsim.config.BuildGSObject(config, 'gal2')[0]
     gal2b = galsim.RealGalaxy(real_cat, index = 23)
     gal2b.setFlux(100)
-    gsobject_compare(gal2a, gal2b, True)
+    #gsobject_compare(gal2a, gal2b, True)
+    gsobject_compare(gal2a, gal2b)
 
     config['seq_index'] = 2
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
@@ -948,6 +949,7 @@ if __name__ == "__main__":
     test_exponential()
     test_sersic()
     test_devaucouleurs()
+    test_pixel()
     test_realgalaxy()
     test_interpolated_image()
     test_add()
