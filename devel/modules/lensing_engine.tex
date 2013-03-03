@@ -100,7 +100,7 @@ correlation functions of the $\gamma_+$ and $\gamma_\times$ values,
 which we will call $\xi_{++}$ and $\xi_{\times\times}$.  Then the
 standard cosmological correlation functions $\xi_{\pm}$ are defined as
 \begin{align}
-\xi_{\pm}(\theta) &=  \xi_{++}(\theta)\pm \xi_{xx}(\theta) \\
+\xi_{\pm}(\theta) &=  \xi_{++}(\theta)\pm \xi_{\times \times}(\theta) \\
  &= \frac{1}{2\pi}\int_0^{\infty} k\,\rmd k P(k) J_{0/4}(k\theta)  \label{eq:xi}
 \end{align}
 where $J_{0/4}$ denotes the 0th and 4th Bessel function of the first
@@ -141,7 +141,7 @@ that $k$ and extend to $k+\Delta k$, or whether it goes from $k-\Delta
 k/2$ to $k+\Delta k/2$.  For the examples we will consider, the
 difference between these two options is typically of order 1\%.  In
 practice, the choice of convention just shifts the limits of
-integration in the equations below by $\Delta k$.
+integration in the equations below by at most $\Delta k$.
 
 In the context 
 of power spectra for gridded quantities, instead of using
@@ -264,7 +264,11 @@ non-unitary Fourier transform convention commonly adopted for weak
 lensing power spectra in the flat sky approximation.
 
 \subsection{The Fourier transform of discrete samples of the power spectra}\label{sect:DFTPS}
-In what follows we are going to derive results only for the $\xi_+$ correlation function of equation \eqref{eq:xi}.  This will not impact the understanding of how $P(k)$ is approximated using DFTs, but allows us to replace $\xi_{\pm}$ and $J_{0/4}(k \theta)$ in equation \eqref{eq:xi} with $\xi_+$ and $J_0$, respectively.  We will just be aware subsquently that real ellipticity fields have two components, to be treated as described by equation \eqref{eq:xi}.
+In what follows we are going to derive results only for the $\xi_+$
+correlation function of equation \eqref{eq:xi}.  This will not impact
+the understanding of how $P(k)$ is approximated using DFTs, but allows
+us to replace $\xi_{\pm}$ and $J_{0/4}(k \theta)$ in equation
+\eqref{eq:xi} with the simpler $\xi_+$ and $J_0$, respectively.  We will just be aware subsquently that real ellipticity fields have two components, to be treated as described by equation \eqref{eq:xi}.
 
 The inverse Fourier transform of $P(k)$ to give $\xi_+(\theta)$ may be written in Cartesian coordinates as
 \begin{equation}
@@ -284,8 +288,8 @@ answer that, let us define the following function:
 \begin{equation}
 P_{\Delta k} [q, p] \equiv (\Delta k)^2 P(q \Delta k, p \Delta k).
 \end{equation}
-As here, we will use square brackets to denote functions with discrete input
-variables throughout what follows.  We will also use indices $n, m$ in
+As here, we will use square brackets to denote functions with
+discrete, integer input variables.  We will also use indices $n, m$ in
 real space summations and $q, p$ in Fourier space ($i,j$ are awkward
 due to the common notations for $\sqrt{-1}$).  Let us also define the 2D Dirac
 comb function in Fourier space
@@ -296,8 +300,10 @@ comb function in Fourier space
 \end{equation}
 It can then be shown that
 \begin{eqnarray}
-\mathcal{F}^{-1} \left\{ P_{\Delta k} [q, p] \cdot  \Sha^2_{\Delta k} (k_1,
-  k_2) \right\} & = & \mathcal{F}^{-1} \left\{ P(k_1, k_2) \cdot  (\Delta
+~ &~& \mathcal{F}^{-1} \left\{\sum_{q,p = -\infty}^{\infty} \delta(k_1
+- q \Delta k) \, \delta(k_2
+- p \Delta k) \, P_{\Delta k} [q, p] \right\} \nonumber \\
+~ & = & \mathcal{F}^{-1} \left\{ P(k_1, k_2) \cdot  (\Delta
   k)^2 \Sha^2_{\Delta k} (k_1,
   k_2) \right\}  \nonumber  \\
  & = & \mathcal{F}^{-1} \left\{ P(k_1, k_2) \right\} * \mathcal{F}^{-1} \left\{  (\Delta
@@ -332,14 +338,17 @@ Using the expression of the Poisson summation formula in equation
 \sum_{q,p=-\infty}^{\infty} \left( \frac{\Delta k}{2 \pi} \right)^2 P(q \Delta k, p \Delta k) \me^{\mi \Delta
   k (\theta_1 q + \theta_2 p)} = \frac{1}{( 2 \pi)^2}
 \sum_{q,p=-\infty}^{\infty} P_{\Delta k} [q, p] \me^{\mi \Delta
-  k (\theta_1 q + \theta_2 p)} \label{eq:dtft} .
+  k (\theta_1 q + \theta_2 p)} \label{eq:dtft} 
 \end{equation}
-This is the expression for the inverse of what is known as the
-Discrete Time Fourier Transform (DTFT), although this result is
-normally derived using unitary conventions for the transform pair.
-Note that the terms $P_{\Delta k}[q, p]$ are dimensionless, being
-composed of $(\Delta k)^2 = (2 \pi / L)^2$ multiplied by the samples $P(q \Delta k, p \Delta
-k)$ of the power $P(k_1, k_2)$ (with dimensions of angle$^2$).  
+(which, like the Poisson summation formula, can also be shown using
+equation \ref{eq:xisum} and substituting the Fourier series expression
+for $\Sha^2_{\Delta k}$).  This is the expression for the inverse of
+what is known as the Discrete Time Fourier Transform (DTFT), although
+this result is normally derived using unitary conventions for the
+transform pair.  Note that the terms $P_{\Delta k}[q, p]$ are
+dimensionless, being composed of $(\Delta k)^2 = (2 \pi / L)^2$
+multiplied by the samples $P(q \Delta k, p \Delta k)$ of the power
+$P(k_1, k_2)$ (with dimensions of angle$^2$).
 
 One intuitive way of looking at the approximation of equation \eqref{eq:xip} for the case of discretely
 sampled $P(k_1, k_2)$ is that the terms in the discrete sum should be
