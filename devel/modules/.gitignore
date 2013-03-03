@@ -5,4 +5,5 @@ test*out
 *.dvi
 *.ps
 *.out
-texit
+*.toc
+*.sh
