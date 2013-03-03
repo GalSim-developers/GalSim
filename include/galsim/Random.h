@@ -606,10 +606,10 @@ namespace galsim {
     };
 
     /**
-     * @brief A Gamma-distributed deviate with shape parameter k and scale parameter beta.
+     * @brief A Gamma-distributed deviate with shape parameter k and scale parameter theta.
      *
      * See http://en.wikipedia.org/wiki/Gamma_distribution.  
-     * (Note: we use the k, theta notation. If you prefer alpha, beta, use k=alpha, theta=1/beta.)
+     * (Note: we use the k, theta notation.  If you prefer alpha, beta, use k=alpha, theta=1/beta.)
      * The Gamma distribution is a real valued distribution producing deviates >= 0.
      */
     class GammaDeviate : public BaseDeviate
@@ -627,8 +627,8 @@ namespace galsim {
          * @param[in] k      Shape parameter of the output distribution, must be > 0. (default = 0)
          * @param[in] theta  Scale parameter of the distribution, must be > 0. (default = 1)
          */
-        GammaDeviate(long lseed=0, double k=0., double beta=1.) : 
-            BaseDeviate(lseed), _gamma(k,beta) {}
+        GammaDeviate(long lseed=0, double k=0., double theta=1.) : 
+            BaseDeviate(lseed), _gamma(k,theta) {}
 
         /**
          * @brief Construct a new Gamma-distributed RNG, sharing the random number 
