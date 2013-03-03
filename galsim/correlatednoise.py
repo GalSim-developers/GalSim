@@ -579,7 +579,7 @@ def get_COSMOS_CorrFunc(file_name, dx_cosmos=0.03, variance=0.):
     @param dx_cosmos  COSMOS ACS F814W coadd image pixel scale in the units you are using to
                       describe GSObjects and image scales in GalSim: defaults to 0.03 arcsec, see
                       below for more information.
-    @variance         Scales the correlation function so that its point variance, equivalent to its
+    @param variance   Scales the correlation function so that its point variance, equivalent to its
                       value at zero separation distance, matches this value.  The default
                       `variance = 0.` uses the variance in the original COSMOS noise fields.
 
