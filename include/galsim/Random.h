@@ -609,7 +609,7 @@ namespace galsim {
      * @brief A Gamma-distributed deviate with shape parameter k and scale parameter theta.
      *
      * See http://en.wikipedia.org/wiki/Gamma_distribution.  
-     * (Note: we use the k, theta notation. If you prefer alpha, beta, use k=alpha, theta=1/beta.)
+     * (Note: we use the k, theta notation.  If you prefer alpha, beta, use k=alpha, theta=1/beta.)
      * The Gamma distribution is a real valued distribution producing deviates >= 0.
      */
     class GammaDeviate : public BaseDeviate
