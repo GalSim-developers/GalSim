@@ -28,8 +28,6 @@
 #include "Laguerre.h"
 #include "Solve.h"
 
-const int BLOCKING_FACTOR=1024;
-
 namespace galsim {
 
     void LVector::rotate(const Angle& theta) 
@@ -237,23 +235,18 @@ namespace galsim {
         assert(x.size()==y.size());
         boost::shared_ptr<tmv::Matrix<double> > mr(
             new tmv::Matrix<double>(x.size(), PQIndex::size(order)));
-        basis(*mr, x, y, order, sigma);
+        basis(mr->view(), x, y, order, sigma);
         return mr;
     }
 
     void LVector::basis(
-        tmv::Matrix<double>& out,
+        tmv::MatrixView<double> psi,
         const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
         int order, double sigma)
     {
-        const int npts=x.size();
-        assert(y.size() ==npts && out.nrows()==npts);
-        assert(out.ncols()==PQIndex::size(order));
-        for (int ilo=0; ilo<npts; ilo+=BLOCKING_FACTOR) {
-            int ihi = std::min(npts, ilo + BLOCKING_FACTOR);
-            tmv::MatrixView<double> mr = out.rowRange(ilo,ihi);
-            mBasis(x.subVector(ilo,ihi), y.subVector(ilo,ihi), 0, &mr, 0, order, false, sigma);
-        }
+        assert(y.size() == x.size() && psi.nrows() == x.size());
+        assert(psi.ncols()==PQIndex::size(order));
+        mBasis(x, y, 0, &psi, 0, order, sigma);
     }
 
     boost::shared_ptr<tmv::Matrix<double> > LVector::design(
@@ -261,25 +254,19 @@ namespace galsim {
         const tmv::ConstVectorView<double>& invsig, int order, double sigma)
     {
         boost::shared_ptr<tmv::Matrix<double> > mr(
-            new tmv::Matrix<double>(x.size(), PQIndex::size(order),0.));
-        design(*mr, x, y, invsig, order, sigma);
+            new tmv::Matrix<double>(x.size(), PQIndex::size(order)));
+        design(mr->view(), x, y, invsig, order, sigma);
         return mr;
     }
 
     void LVector::design(
-        tmv::Matrix<double>& out,
+        tmv::MatrixView<double> psi,
         const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
         const tmv::ConstVectorView<double>& invsig, int order, double sigma)
     {
-        const int npts=x.size();
-        assert(y.size()==npts && out.nrows()==npts && invsig.size()==npts);
-        assert(out.ncols()==PQIndex::size(order));
-        for (int ilo=0; ilo<npts; ilo+=BLOCKING_FACTOR) {
-            int ihi = std::min(npts, ilo + BLOCKING_FACTOR);
-            tmv::ConstVectorView<double> is = invsig.subVector(ilo,ihi);
-            tmv::MatrixView<double> mr = out.rowRange(ilo,ihi);
-            mBasis(x.subVector(ilo,ihi), y.subVector(ilo,ihi), &is, &mr, 0, order, false, sigma);
-        }
+        assert(y.size() == x.size() && psi.nrows() == x.size() && invsig.size() == x.size());
+        assert(psi.ncols()==PQIndex::size(order));
+        mBasis(x, y, &invsig, &psi, 0, order, sigma);
     }
 
     void LVector::kBasis(
@@ -288,35 +275,29 @@ namespace galsim {
         const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
         int order, double sigma)
     {
-        const int ndof=PQIndex::size(order);
+        assert (ky.size() == kx.size());
         const int npts = kx.size();
-        assert (ky.size()==npts);
+        const int ndof=PQIndex::size(order);
         if (!psi_kReal.get() || psi_kReal->nrows()!=npts || psi_kReal->ncols()!=ndof) {
-            psi_kReal.reset(new tmv::Matrix<double>(npts, ndof, 0.));
-        } else {
-            psi_kReal->setZero();
+            psi_kReal.reset(new tmv::Matrix<double>(npts, ndof));
         }
         if (!psi_kImag.get() || psi_kImag->nrows()!=npts || psi_kImag->ncols()!=ndof) {
             psi_kImag.reset(new tmv::Matrix<double>(npts, ndof, 0.));
-        } else {
-            psi_kImag->setZero();
         }
-        kBasis(*psi_kReal,*psi_kImag,kx,ky,order,sigma);
+        kBasis(psi_kReal->view(),psi_kImag->view(),kx,ky,order,sigma);
     }
 
     void LVector::kBasis(
-        tmv::Matrix<double>& psi_kReal, tmv::Matrix<double>& psi_kImag,
+        tmv::MatrixView<double> psi_kReal, tmv::MatrixView<double> psi_kImag,
         const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
         int order, double sigma)
     {
-        const int npts = kx.size();
-        assert (ky.size()==npts);
-        for (int ilo=0; ilo<npts; ilo+=BLOCKING_FACTOR) {
-            int ihi = std::min(npts, ilo + BLOCKING_FACTOR);
-            tmv::MatrixView<double> mr = psi_kReal.rowRange(ilo,ihi);
-            tmv::MatrixView<double> mi = psi_kImag.rowRange(ilo,ihi);
-            mBasis(kx.subVector(ilo,ihi), ky.subVector(ilo,ihi), 0, &mr, &mi, order, true, sigma);
-        }
+        assert (ky.size() == kx.size());
+        assert (psi_kReal.nrows() == kx.size());
+        assert (psi_kImag.nrows() == kx.size());
+        assert (psi_kReal.ncols() == PQIndex::size(order));
+        assert (psi_kImag.ncols() == PQIndex::size(order));
+        mBasis(kx, ky, 0, &psi_kReal, &psi_kImag, order, sigma);
     }
 
     void LVector::kBasis(
@@ -324,160 +305,163 @@ namespace galsim {
         const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
         int order, double sigma)
     {
+        assert (ky.size() == kx.size());
         const int ndof=PQIndex::size(order);
         const int npts = kx.size();
-        assert (ky.size()==npts);
         if (!psi_k.get() || psi_k->nrows()!=npts || psi_k->ncols()!=ndof) {
             psi_k.reset(new tmv::Matrix<std::complex<double> >(npts, ndof, 0.));
-        } else {
-            psi_k->setZero();
         }
-        kBasis(*psi_k,kx,ky,order,sigma);
+        kBasis(psi_k->view(),kx,ky,order,sigma);
     }
 
     void LVector::kBasis(
-        tmv::Matrix<std::complex<double> >& psi_k,
+        tmv::MatrixView<std::complex<double> > psi_k,
         const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
         int order, double sigma)
-    {
-        const int npts = kx.size();
-        assert (ky.size()==npts);
-        for (int ilo=0; ilo<npts; ilo+=BLOCKING_FACTOR) {
-            int ihi = std::min(npts, ilo + BLOCKING_FACTOR);
-            tmv::MatrixView<double> mr = psi_k.rowRange(ilo,ihi).realPart();
-            tmv::MatrixView<double> mi = psi_k.rowRange(ilo,ihi).imagPart();
-            mBasis(kx.subVector(ilo,ihi), ky.subVector(ilo,ihi), 0, &mr, &mi, order, true, sigma);
-        }
-    }
+    { return kBasis(psi_k.realPart(), psi_k.imagPart(), kx, ky, order, sigma); }
 
     void LVector::mBasis(
         const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
         const tmv::ConstVectorView<double>* invsig,
         tmv::MatrixView<double>* mr, tmv::MatrixView<double>* mi,
-        int order, bool isK, double sigma)
+        int order, double sigma)
     {
+        assert (y.size()==x.size());
+        assert (mr->nrows()==x.size() && mr->ncols()==PQIndex::size(order));
+        if (mi) assert (mi->nrows()==x.size() && mi->ncols()==PQIndex::size(order));
+
         const int N=order;
-#ifndef NDEBUG
-        const int ndof=PQIndex::size(N);
-#endif
-        const int npts = x.size();
-        assert (y.size()==npts);
-        assert (mr->nrows()==npts && mr->ncols()==ndof);
-        if (isK) assert (mi->nrows()==npts && mi->ncols()==ndof);
+        const int npts_full = x.size();
+        const bool isK = mi;
+        if (isK) { mr->setZero(); mi->setZero(); }
 
-        // Cast arguments as diagonal matrices so we can access
-        // vectorized element-by-element multiplication
-        tmv::DiagMatrix<double> X(x);
-        tmv::DiagMatrix<double> Y(y);
-        tmv::DiagMatrix<double> Rsq(npts);
+        // It's faster to build the psi matrix in blocks so that more of the matrix stays in 
+        // L1 cache.  For a (typical) 256 KB L2 cache size, this corresponds to 8 columns in the 
+        // cache, which is pretty good, since we are usually working on 4 columns at a time, 
+        // plus either X and Y or 3 Lq vectors.
+        const int BLOCKING_FACTOR=4096;
 
-        // These vectors will keep track of real & imag parts
-        // of prefactor * exp(-r^2/2) (x+iy)^m / sqrt(m!)
-        tmv::Vector<double> cosm(npts, isK ? 1. : 1./(2*M_PI*sigma*sigma));
-        tmv::Vector<double> sinm(npts, 0.);
-        for (int i=0; i<Rsq.size(); i++) {
-            Rsq(i) = x[i]*x[i]+y[i]*y[i];
-            cosm[i] *= std::exp(-0.5*Rsq(i));
-        }
-        // Put 1/sigma factor into every point if doing a design matrix:
-        if (invsig) 
-            cosm *= tmv::DiagMatrixViewOf(*invsig);
+        const int max_npts = std::max(BLOCKING_FACTOR,npts_full);
+        tmv::DiagMatrix<double> Rsq_full(max_npts);
+        tmv::Matrix<double> A_full(max_npts,2);
+        tmv::Matrix<double> tmp_full(max_npts,2);
+        tmv::DiagMatrix<double> Lmq_full(max_npts);
+        tmv::DiagMatrix<double> Lmqm1_full(max_npts);
+        tmv::DiagMatrix<double> Lmqm2_full(max_npts);
 
-        // Assign the m=0 column first:
-        mr->col( PQIndex(0,0).rIndex() ) = cosm;
+        for (int ilo=0; ilo<npts_full; ilo+=BLOCKING_FACTOR) {
+            const int ihi = std::min(npts_full, ilo + BLOCKING_FACTOR);
+            const int npts = ihi-ilo;
 
-        // Then ascend m's at q=0:
-        for (int m=1; m<=N; m++) {
-            int rIndex = PQIndex(m,0).rIndex();
-            // Multiply by (X+iY)/sqrt(m), including a factor 2 first time through
-            tmv::Vector<double> ctmp = X*cosm - Y*sinm;
-            tmv::Vector<double> stmp = X*sinm + Y*cosm;
-            cosm = ctmp * (( m==1 ? 2. : 1.) /sqrtn(m));
-            sinm = stmp * (( m==1 ? 2. : 1.) /sqrtn(m));
+            // Cast arguments as diagonal matrices so we can access
+            // vectorized element-by-element multiplication
+            tmv::ConstDiagMatrixView<double> X = DiagMatrixViewOf(x.subVector(ilo,ihi));
+            tmv::ConstDiagMatrixView<double> Y = DiagMatrixViewOf(y.subVector(ilo,ihi));
 
-            if (isK) {
-                switch (m%4) {
-                  case 0:
-                       mr->col(rIndex) = cosm; 
-                       mr->col(rIndex+1) = -sinm;
-                       break;
-                  case 1:
-                       mi->col(rIndex) = -cosm; 
-                       mi->col(rIndex+1) = sinm;
-                       break;
-                  case 2:
-                       mr->col(rIndex) = -cosm; 
-                       mr->col(rIndex+1) = sinm;
-                       break;
-                  case 3:
-                       mi->col(rIndex) = cosm; 
-                       mi->col(rIndex+1) = -sinm; 
-                       break;
-                }
-            } else {
-                // Real-space
-                mr->col(rIndex) = cosm;
-                mr->col(rIndex+1) = -sinm;
-            }
-        }
+            // Get the appropriate portion of our temporary matrices.
+            tmv::DiagMatrixView<double> Rsq = Rsq_full.subDiagMatrix(0,npts);
+            tmv::MatrixView<double> A = A_full.rowRange(0,npts);
+            tmv::MatrixView<double> tmp = tmp_full.rowRange(0,npts);
 
-        // Make three DiagMatrix to hold Lmq's during recurrence calculations
-        boost::shared_ptr<tmv::DiagMatrix<double> > Lmq(new tmv::DiagMatrix<double>(npts));
-        boost::shared_ptr<tmv::DiagMatrix<double> > Lmqm1(new tmv::DiagMatrix<double>(npts));
-        boost::shared_ptr<tmv::DiagMatrix<double> > Lmqm2(new tmv::DiagMatrix<double>(npts));
-        for (int m=0; m<=N; m++) {
-            PQIndex pq(m,0);
-            int iQ0 = pq.rIndex();
-            // Go to q=1:
-            pq.incN();
-            if (pq.pastOrder(N)) continue;
-            int iQ = pq.rIndex();
-            Lmqm1->setAllTo(1.);
-            *Lmq = Rsq - (pq.getP()+pq.getQ()-1.);
-            *Lmq *= (isK ? -1. : 1.) / sqrtn(pq.getP())/sqrtn(pq.getQ());
-            if (isK) {
-                if (m%2==0) {
-                    // even m's have real transforms
-                    mr->col(iQ) = (*Lmq) * mr->col(iQ0);
-                    if (m>0) mr->col(iQ+1) = (*Lmq) * mr->col(iQ0+1);
-                } else {
-                    // odd m's have imag transforms
-                    mi->col(iQ) = (*Lmq) * mi->col(iQ0);
-                    mi->col(iQ+1) = (*Lmq) * mi->col(iQ0+1);
-                }
-            } else {
-                mr->col(iQ) = (*Lmq) * mr->col(iQ0);
-                if (m>0) mr->col(iQ+1) = (*Lmq) * mr->col(iQ0+1);
+            // We need rsq values twice, so store them here.
+            Rsq = X*X;
+            Rsq += Y*Y;
+
+            // This matrix will keep track of real & imag parts
+            // of prefactor * exp(-r^2/2) (x+iy)^m / sqrt(m!)
+
+            // Build the Gaussian factor
+            for (int i=0; i<npts; i++) A.ref(i,0) = std::exp(-0.5*Rsq(i));
+
+            // Apply the appropriate prefactor depending on real or fourier
+            A.col(0) *= isK ? 1. : 1./(2.*M_PI*sigma*sigma);
+            A.col(1).setZero();
+
+            // Put 1/sigma factor into every point if doing a design matrix:
+            if (invsig) A.col(0) *= tmv::DiagMatrixViewOf(invsig->subVector(ilo,ihi));
+
+            // Assign the m=0 column first:
+            mr->col( PQIndex(0,0).rIndex(), ilo,ihi ) = A.col(0);
+
+            // Then ascend m's at q=0:
+            for (int m=1; m<=N; m++) {
+                int rIndex = PQIndex(m,0).rIndex();
+                // Multiply by (X+iY)/sqrt(m), including a factor 2 first time through
+                tmp = Y * A;
+                A = X * A;
+                A.col(0) += tmp.col(1);
+                A.col(1) -= tmp.col(0);
+                A *= (( m==1 ? 2. : 1.) / sqrtn(m)) *
+                    ((isK && (m%4 == 1 || m%4 == 2)) ? -1. : 1.);
+
+                if (!isK || m%2 == 0) mr->subMatrix(ilo,ihi,rIndex,rIndex+2) = A;
+                else mi->subMatrix(ilo,ihi,rIndex,rIndex+2) = A;
             }
 
-            // do q=2,...
-            for (pq.incN(); !pq.pastOrder(N); pq.incN()) {
-                {
+            // Make three DiagMatrix to hold Lmq's during recurrence calculations
+            boost::shared_ptr<tmv::DiagMatrixView<double> > Lmq(
+                new tmv::DiagMatrixView<double>(Lmq_full.subDiagMatrix(0,npts)));
+            boost::shared_ptr<tmv::DiagMatrixView<double> > Lmqm1(
+                new tmv::DiagMatrixView<double>(Lmqm1_full.subDiagMatrix(0,npts)));
+            boost::shared_ptr<tmv::DiagMatrixView<double> > Lmqm2(
+                new tmv::DiagMatrixView<double>(Lmqm2_full.subDiagMatrix(0,npts)));
+
+            for (int m=0; m<=N; m++) {
+                PQIndex pq(m,0);
+                int iQ0 = pq.rIndex();
+                // Go to q=1:
+                pq.incN();
+                if (pq.pastOrder(N)) continue;
+               
+                { // q == 1
+                    const int p = pq.getP();
+                    const int q = pq.getQ();
+                    const int iQ = pq.rIndex();
+
+                    Lmqm1->setAllTo(1.); // This is Lm0.
+                    *Lmq = Rsq - (p+q-1.);
+                    *Lmq *= (isK ? -1. : 1.) / (sqrtn(p)*sqrtn(q));
+
+                    if (m==0) {
+                        // even m's have real transforms
+                        mr->col(iQ,ilo,ihi) = (*Lmq) * mr->col(iQ0,ilo,ihi);
+                    } else if (!isK || m%2==0) {
+                        // even m's have real transforms
+                        mr->subMatrix(ilo,ihi,iQ,iQ+2) = (*Lmq) * mr->subMatrix(ilo,ihi,iQ0,iQ0+2);
+                    } else {
+                        // odd m's have imag transforms
+                        mi->subMatrix(ilo,ihi,iQ,iQ+2) = (*Lmq) * mi->subMatrix(ilo,ihi,iQ0,iQ0+2);
+                    }
+                }
+
+                // do q=2,...
+                for (pq.incN(); !pq.pastOrder(N); pq.incN()) {
+                    const int p = pq.getP();
+                    const int q = pq.getQ();
+                    const int iQ = pq.rIndex();
+
                     // cycle the Lmq vectors
                     // Lmqm2 <- Lmqm1
                     // Lmqm1 <- Lmq
                     // Lmq <- Lmqm2
                     Lmqm2.swap(Lmqm1);
                     Lmqm1.swap(Lmq);
-                }
-                double invsqrtpq = 1./sqrtn(pq.getP())/sqrtn(pq.getQ());
-                *Lmq = (Rsq - (pq.getP()+pq.getQ()-1.)) * (*Lmqm1) * (isK ? -invsqrtpq : invsqrtpq);
-                *Lmq -= (sqrtn(pq.getP()-1)*sqrtn(pq.getQ()-1)*invsqrtpq) * (*Lmqm2);
 
-                iQ = pq.rIndex();
-                if (isK) {
-                    if (m%2==0) {
+                    double invsqrtpq = 1./sqrtn(p)/sqrtn(q);
+                    *Lmq = Rsq - (p+q-1.);
+                    *Lmq *= (isK ? -invsqrtpq : invsqrtpq) * *Lmqm1;
+                    *Lmq -= (sqrtn(p-1)*sqrtn(q-1)*invsqrtpq) * (*Lmqm2);
+
+                    if (m==0) {
                         // even m's have real transforms
-                        mr->col(iQ) = (*Lmq) * mr->col(iQ0);
-                        if (m>0) mr->col(iQ+1) = (*Lmq) * mr->col(iQ0+1);
+                        mr->col(iQ,ilo,ihi) = (*Lmq) * mr->col(iQ0,ilo,ihi);
+                    } else if (!isK || m%2==0) {
+                        // even m's have real transforms
+                        mr->subMatrix(ilo,ihi,iQ,iQ+2) = (*Lmq) * mr->subMatrix(ilo,ihi,iQ0,iQ0+2);
                     } else {
                         // odd m's have imag transforms
-                        mi->col(iQ) = (*Lmq) * mi->col(iQ0);
-                        mi->col(iQ+1) = (*Lmq) * mi->col(iQ0+1);
+                        mi->subMatrix(ilo,ihi,iQ,iQ+2) = (*Lmq) * mi->subMatrix(ilo,ihi,iQ0,iQ0+2);
                     }
-                } else {
-                    mr->col(iQ) = (*Lmq) * mr->col(iQ0);
-                    if (m>0) mr->col(iQ+1) = (*Lmq) * mr->col(iQ0+1);
                 }
             }
         }

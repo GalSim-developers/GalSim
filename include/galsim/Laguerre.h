@@ -401,12 +401,12 @@ namespace galsim {
 
         // ...or provide your own matrix
         static void design(
-            tmv::Matrix<double>& out,
+            tmv::MatrixView<double> psi,
             const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
             const tmv::ConstVectorView<double>& invsig, int order, double sigma=1.);
 
         static void basis(
-            tmv::Matrix<double>& out,
+            tmv::MatrixView<double> psi,
             const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
             int order, double sigma=1.);
 
@@ -417,7 +417,7 @@ namespace galsim {
             const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
             int order, double sigma);
         static void kBasis(
-            tmv::Matrix<double>& psi_kReal, tmv::Matrix<double>& psi_kImag,
+            tmv::MatrixView<double> psi_kReal, tmv::MatrixView<double> psi_kImag,
             const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
             int order, double sigma);
         static void kBasis(
@@ -425,7 +425,7 @@ namespace galsim {
             const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
             int order, double sigma);
         static void kBasis(
-            tmv::Matrix<std::complex<double> >& psi_k,
+            tmv::MatrixView<std::complex<double> > psi_k,
             const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
             int order, double sigma);
 
@@ -458,9 +458,8 @@ namespace galsim {
         static void mBasis(
             const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
             const tmv::ConstVectorView<double>* invsig,
-            tmv::MatrixView<double>* mr,
-            tmv::MatrixView<double>* mi,
-            int order, bool isK, double sigma=1.);
+            tmv::MatrixView<double>* mr, tmv::MatrixView<double>* mi,
+            int order, double sigma=1.);
 
         void allocateMem()
         {
@@ -505,7 +504,7 @@ namespace galsim {
 
         // Build an LTransform from a tmv::Matrix<double> for the real degrees of freedom.
         // Matrix must have correct dimensions.
-        LTransform(int orderOut, int orderIn, const tmv::Matrix<double>& m) :
+        LTransform(int orderOut, int orderIn, const tmv::GenMatrix<double>& m) :
             _orderIn(orderIn), _orderOut(orderOut),
             _m(new tmv::Matrix<double>(m))
         {
