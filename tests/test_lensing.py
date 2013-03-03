@@ -29,6 +29,9 @@ except ImportError:
 
 refdir = os.path.join(".", "lensing_reference_data") # Directory containing the reference
 
+klim_test = 0.00175 # Value of klim for flat (up to klim, then zero beyond) power spectrum test
+
+
 def funcname():
     import inspect
     return inspect.stack()[1][3]
@@ -43,7 +46,7 @@ def pk2(k):
 
 def pk_flat_lim(k):
     parr = np.zeros_like(k)
-    parr[k<=0.00175] = 1.
+    parr[k<=klim_test] = 1.
     return parr
 
 def test_nfwhalo():
@@ -112,7 +115,7 @@ def test_shear_variance():
     # set up grid parameters
     grid_size = 50. # degrees
     ngrid = 500 # grid points
-    klim = 0.00175 # this was hard-coded in pk_flat_lim, don't change without changing it there too
+    klim = klim_test
     # now get derived grid parameters
     kmin = 2.*np.pi/grid_size/3600. # arcsec^-1
 
@@ -121,8 +124,8 @@ def test_shear_variance():
     # Given our grid size of 50 degrees [which is silly to do for a flat-sky approximation, but
     # we're just doing it anyway to beat down the noise], the minimum k we can probe is 2pi/50
     # deg^{-1} = 3.49e-5 arcsec^-1.  With 500 grid points, the maximum k in one dimension is 500
-    # times as large, 0.0175 arcsec^-1.  The function pk_flat_lim is 0 for k>0.00175 which is a
-    # factor of 10 below our maximum k, a factor of ~50 above our minimum k.  For k<=0.00175,
+    # times as large, 0.0175 arcsec^-1.  The function pk_flat_lim is 0 for k>klim_test=0.00175 which
+    # is a factor of 10 below our maximum k, a factor of ~50 above our minimum k.  For k<=0.00175,
     # pk_flat_lim returns 1.
     test_ps = galsim.PowerSpectrum(e_power_function=pk_flat_lim, b_power_function=pk_flat_lim)
     # get shears on 500x500 grid with spacing 0.1 degree
@@ -174,7 +177,7 @@ def test_shear_variance():
     # check for proper scaling with grid spacing, for fixed number of grid points
     grid_size = 25. # degrees
     ngrid = 500 # grid points
-    klim = 0.00175 # this was hard-coded in pk_flat_lim, don't change without changing it there too
+    klim = klim_test
     kmin = 2.*np.pi/grid_size/3600. # arcsec^-1
     test_ps = galsim.PowerSpectrum(e_power_function=pk_flat_lim, b_power_function=pk_flat_lim)
     g1, g2 = test_ps.buildGriddedShears(grid_spacing=grid_size/ngrid, ngrid=ngrid, rng=rng,
@@ -189,7 +192,7 @@ def test_shear_variance():
     # check for proper scaling with number of grid points, for fixed grid spacing
     grid_size = 25. # degrees
     ngrid = 250 # grid points
-    klim = 0.00175 # this was hard-coded in pk_flat_lim, don't change without changing it there too
+    klim = klim_test 
     kmin = 2.*np.pi/grid_size/3600. # arcsec^-1
     test_ps = galsim.PowerSpectrum(e_power_function=pk_flat_lim, b_power_function=pk_flat_lim)
     g1, g2 = test_ps.buildGriddedShears(grid_spacing=grid_size/ngrid, ngrid=ngrid, rng=rng,
