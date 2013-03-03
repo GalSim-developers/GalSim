@@ -265,7 +265,7 @@ def BasicCCFlags(env):
                 env.Append(CCFLAGS=['-g3'])
     
         elif compiler == 'icpc':
-            env.Replace(CCFLAGS=['-O2'])
+            env.Replace(CCFLAGS=['-O2','-msse2'])
             if version >= 10:
                 env.Append(CCFLAGS=['-vec-report0'])
             if env['WITH_PROF']:

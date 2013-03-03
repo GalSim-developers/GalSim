@@ -312,8 +312,8 @@ namespace galsim {
     private:
 
         FFTW_Array<std::complex<double> > _array;
-        int _N; //Size in each dimension.
-        double _dk; //k-space increment
+        int _N; // Size in each dimension.
+        double _dk; // k-space increment
 
         size_t index(int ix, int iy) const  //Return index into data array.
         {
