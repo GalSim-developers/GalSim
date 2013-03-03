@@ -401,33 +401,20 @@ namespace galsim {
 
         // ...or provide your own matrix
         static void design(
-            tmv::MatrixView<double> psi,
             const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
-            const tmv::ConstVectorView<double>& invsig, int order, double sigma=1.);
+            const tmv::ConstVectorView<double>& invsig,
+            tmv::MatrixView<double> psi, int order, double sigma=1.);
 
         static void basis(
-            tmv::MatrixView<double> psi,
             const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
-            int order, double sigma=1.);
+            tmv::MatrixView<double> psi, int order, double sigma=1.);
 
-        // Create matrices with real and imaginary parts of (Hermitian) FT of basis set:
-        static void kBasis(
-            boost::shared_ptr<tmv::Matrix<double> >& psi_kReal,
-            boost::shared_ptr<tmv::Matrix<double> >& psi_kImag,
+        static boost::shared_ptr<tmv::Matrix<std::complex<double> > > kBasis(
             const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
             int order, double sigma);
         static void kBasis(
-            tmv::MatrixView<double> psi_kReal, tmv::MatrixView<double> psi_kImag,
             const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
-            int order, double sigma);
-        static void kBasis(
-            boost::shared_ptr<tmv::Matrix<std::complex<double> > >& psi_k,
-            const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
-            int order, double sigma);
-        static void kBasis(
-            tmv::MatrixView<std::complex<double> > psi_k,
-            const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
-            int order, double sigma);
+            tmv::MatrixView<std::complex<double> > psi_k, int order, double sigma);
 
         // ?? Add routine to decompose a data vector into b's
         // ?? Add routines to evaluate summed basis at a set of x/k points
@@ -455,11 +442,14 @@ namespace galsim {
         boost::shared_ptr<double> getOwner() const { return _owner; }
 
     private:
+        // real vs fourier is set by the type of psi.
+        // For real, T = double
+        // For fourier, T = std::complex<double>
+        template <typename T>
         static void mBasis(
-            const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
+            const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
             const tmv::ConstVectorView<double>* invsig,
-            tmv::MatrixView<double>* mr, tmv::MatrixView<double>* mi,
-            int order, double sigma=1.);
+            tmv::MatrixView<T> psi, int order, double sigma=1.);
 
         void allocateMem()
         {

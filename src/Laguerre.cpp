@@ -233,107 +233,110 @@ namespace galsim {
         int order, double sigma)
     {
         assert(x.size()==y.size());
-        boost::shared_ptr<tmv::Matrix<double> > mr(
+        boost::shared_ptr<tmv::Matrix<double> > psi(
             new tmv::Matrix<double>(x.size(), PQIndex::size(order)));
-        basis(mr->view(), x, y, order, sigma);
-        return mr;
+        basis(x, y, psi->view(), order, sigma);
+        return psi;
     }
 
     void LVector::basis(
-        tmv::MatrixView<double> psi,
         const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
-        int order, double sigma)
+        tmv::MatrixView<double> psi, int order, double sigma)
     {
         assert(y.size() == x.size() && psi.nrows() == x.size());
         assert(psi.ncols()==PQIndex::size(order));
-        mBasis(x, y, 0, &psi, 0, order, sigma);
+        mBasis(x, y, 0, psi, order, sigma);
     }
 
     boost::shared_ptr<tmv::Matrix<double> > LVector::design(
         const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
         const tmv::ConstVectorView<double>& invsig, int order, double sigma)
     {
-        boost::shared_ptr<tmv::Matrix<double> > mr(
+        boost::shared_ptr<tmv::Matrix<double> > psi(
             new tmv::Matrix<double>(x.size(), PQIndex::size(order)));
-        design(mr->view(), x, y, invsig, order, sigma);
-        return mr;
+        design(x, y, invsig, psi->view(), order, sigma);
+        return psi;
     }
 
     void LVector::design(
-        tmv::MatrixView<double> psi,
         const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
-        const tmv::ConstVectorView<double>& invsig, int order, double sigma)
+        const tmv::ConstVectorView<double>& invsig,
+        tmv::MatrixView<double> psi, int order, double sigma)
     {
         assert(y.size() == x.size() && psi.nrows() == x.size() && invsig.size() == x.size());
         assert(psi.ncols()==PQIndex::size(order));
-        mBasis(x, y, &invsig, &psi, 0, order, sigma);
+        mBasis(x, y, &invsig, psi, order, sigma);
     }
 
-    void LVector::kBasis(
-        boost::shared_ptr<tmv::Matrix<double> >& psi_kReal,
-        boost::shared_ptr<tmv::Matrix<double> >& psi_kImag,
-        const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
-        int order, double sigma)
-    {
-        assert (ky.size() == kx.size());
-        const int npts = kx.size();
-        const int ndof=PQIndex::size(order);
-        if (!psi_kReal.get() || psi_kReal->nrows()!=npts || psi_kReal->ncols()!=ndof) {
-            psi_kReal.reset(new tmv::Matrix<double>(npts, ndof));
-        }
-        if (!psi_kImag.get() || psi_kImag->nrows()!=npts || psi_kImag->ncols()!=ndof) {
-            psi_kImag.reset(new tmv::Matrix<double>(npts, ndof, 0.));
-        }
-        kBasis(psi_kReal->view(),psi_kImag->view(),kx,ky,order,sigma);
-    }
-
-    void LVector::kBasis(
-        tmv::MatrixView<double> psi_kReal, tmv::MatrixView<double> psi_kImag,
-        const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
-        int order, double sigma)
-    {
-        assert (ky.size() == kx.size());
-        assert (psi_kReal.nrows() == kx.size());
-        assert (psi_kImag.nrows() == kx.size());
-        assert (psi_kReal.ncols() == PQIndex::size(order));
-        assert (psi_kImag.ncols() == PQIndex::size(order));
-        mBasis(kx, ky, 0, &psi_kReal, &psi_kImag, order, sigma);
-    }
-
-    void LVector::kBasis(
-        boost::shared_ptr<tmv::Matrix<std::complex<double> > >& psi_k,
+    boost::shared_ptr<tmv::Matrix<std::complex<double> > > LVector::kBasis(
         const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
         int order, double sigma)
     {
         assert (ky.size() == kx.size());
         const int ndof=PQIndex::size(order);
         const int npts = kx.size();
-        if (!psi_k.get() || psi_k->nrows()!=npts || psi_k->ncols()!=ndof) {
-            psi_k.reset(new tmv::Matrix<std::complex<double> >(npts, ndof, 0.));
-        }
-        kBasis(psi_k->view(),kx,ky,order,sigma);
+        boost::shared_ptr<tmv::Matrix<std::complex<double> > > psi_k(
+            new tmv::Matrix<std::complex<double> >(npts, ndof, 0.));
+        kBasis(kx,ky,psi_k->view(),order,sigma);
+        return psi_k;
     }
 
     void LVector::kBasis(
-        tmv::MatrixView<std::complex<double> > psi_k,
         const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
-        int order, double sigma)
-    { return kBasis(psi_k.realPart(), psi_k.imagPart(), kx, ky, order, sigma); }
+        tmv::MatrixView<std::complex<double> > psi_k, int order, double sigma)
+    { 
+        assert(ky.size() == kx.size() && psi_k.nrows() == kx.size());
+        assert(psi_k.ncols()==PQIndex::size(order));
+        mBasis(kx, ky, 0, psi_k, order, sigma); 
+    }
 
+    // This helper class deals with the differences between the real and fourier calculations
+    // in mBasis.  First the real-space values:
+    template <typename T>
+    struct mBasisHelper
+    {
+        static double Asign(int ) { return 1.; } 
+
+        static double Lsign(double x) { return x; } 
+
+        template <class V>
+        static void applyPrefactor(V v, double sigma) { v *= 1./(2.*M_PI*sigma*sigma); }
+    };
+
+    // Now the fourier space version, marked by T being complex.
+    template <typename T>
+    struct mBasisHelper<std::complex<T> >
+    {
+        // The "sign" of the eigenvectors are 1, -I, -1, I, and then repeat.
+        // The input m4 should be m%4.
+        static std::complex<double> Asign(int m4)
+        {
+            static std::complex<double> vals[4] = {
+                std::complex<double>(1.,0.),
+                std::complex<double>(0.,-1.),
+                std::complex<double>(-1.,0.),
+                std::complex<double>(0.,1.) 
+            };
+            return vals[m4];
+        }
+
+        static double Lsign(double x) { return -x; } 
+
+        template <class V>
+        static void applyPrefactor(V , double ) {}
+    };
+
+    template <typename T>
     void LVector::mBasis(
         const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
         const tmv::ConstVectorView<double>* invsig,
-        tmv::MatrixView<double>* mr, tmv::MatrixView<double>* mi,
-        int order, double sigma)
+        tmv::MatrixView<T> psi, int order, double sigma)
     {
         assert (y.size()==x.size());
-        assert (mr->nrows()==x.size() && mr->ncols()==PQIndex::size(order));
-        if (mi) assert (mi->nrows()==x.size() && mi->ncols()==PQIndex::size(order));
+        assert (psi.nrows()==x.size() && psi.ncols()==PQIndex::size(order));
 
         const int N=order;
         const int npts_full = x.size();
-        const bool isK = mi;
-        if (isK) { mr->setZero(); mi->setZero(); }
 
         // It's faster to build the psi matrix in blocks so that more of the matrix stays in 
         // L1 cache.  For a (typical) 256 KB L2 cache size, this corresponds to 8 columns in the 
@@ -372,16 +375,14 @@ namespace galsim {
 
             // Build the Gaussian factor
             for (int i=0; i<npts; i++) A.ref(i,0) = std::exp(-0.5*Rsq(i));
-
-            // Apply the appropriate prefactor depending on real or fourier
-            A.col(0) *= isK ? 1. : 1./(2.*M_PI*sigma*sigma);
+            mBasisHelper<T>::applyPrefactor(A.col(0),sigma);
             A.col(1).setZero();
 
             // Put 1/sigma factor into every point if doing a design matrix:
             if (invsig) A.col(0) *= tmv::DiagMatrixViewOf(invsig->subVector(ilo,ihi));
 
             // Assign the m=0 column first:
-            mr->col( PQIndex(0,0).rIndex(), ilo,ihi ) = A.col(0);
+            psi.col( PQIndex(0,0).rIndex(), ilo,ihi ) = A.col(0);
 
             // Then ascend m's at q=0:
             for (int m=1; m<=N; m++) {
@@ -391,11 +392,9 @@ namespace galsim {
                 A = X * A;
                 A.col(0) += tmp.col(1);
                 A.col(1) -= tmp.col(0);
-                A *= (( m==1 ? 2. : 1.) / sqrtn(m)) *
-                    ((isK && (m%4 == 1 || m%4 == 2)) ? -1. : 1.);
+                A *= (m==1 ? 2. : 1.) / sqrtn(m);
 
-                if (!isK || m%2 == 0) mr->subMatrix(ilo,ihi,rIndex,rIndex+2) = A;
-                else mi->subMatrix(ilo,ihi,rIndex,rIndex+2) = A;
+                psi.subMatrix(ilo,ihi,rIndex,rIndex+2) = mBasisHelper<T>::Asign(m%4) * A;
             }
 
             // Make three DiagMatrix to hold Lmq's during recurrence calculations
@@ -420,17 +419,12 @@ namespace galsim {
 
                     Lmqm1->setAllTo(1.); // This is Lm0.
                     *Lmq = Rsq - (p+q-1.);
-                    *Lmq *= (isK ? -1. : 1.) / (sqrtn(p)*sqrtn(q));
+                    *Lmq *= mBasisHelper<T>::Lsign(1.) / (sqrtn(p)*sqrtn(q));
 
                     if (m==0) {
-                        // even m's have real transforms
-                        mr->col(iQ,ilo,ihi) = (*Lmq) * mr->col(iQ0,ilo,ihi);
-                    } else if (!isK || m%2==0) {
-                        // even m's have real transforms
-                        mr->subMatrix(ilo,ihi,iQ,iQ+2) = (*Lmq) * mr->subMatrix(ilo,ihi,iQ0,iQ0+2);
+                        psi.col(iQ,ilo,ihi) = (*Lmq) * psi.col(iQ0,ilo,ihi);
                     } else {
-                        // odd m's have imag transforms
-                        mi->subMatrix(ilo,ihi,iQ,iQ+2) = (*Lmq) * mi->subMatrix(ilo,ihi,iQ0,iQ0+2);
+                        psi.subMatrix(ilo,ihi,iQ,iQ+2) = (*Lmq) * psi.subMatrix(ilo,ihi,iQ0,iQ0+2);
                     }
                 }
 
@@ -449,18 +443,13 @@ namespace galsim {
 
                     double invsqrtpq = 1./sqrtn(p)/sqrtn(q);
                     *Lmq = Rsq - (p+q-1.);
-                    *Lmq *= (isK ? -invsqrtpq : invsqrtpq) * *Lmqm1;
+                    *Lmq *= mBasisHelper<T>::Lsign(invsqrtpq) * *Lmqm1;
                     *Lmq -= (sqrtn(p-1)*sqrtn(q-1)*invsqrtpq) * (*Lmqm2);
 
                     if (m==0) {
-                        // even m's have real transforms
-                        mr->col(iQ,ilo,ihi) = (*Lmq) * mr->col(iQ0,ilo,ihi);
-                    } else if (!isK || m%2==0) {
-                        // even m's have real transforms
-                        mr->subMatrix(ilo,ihi,iQ,iQ+2) = (*Lmq) * mr->subMatrix(ilo,ihi,iQ0,iQ0+2);
+                        psi.col(iQ,ilo,ihi) = (*Lmq) * psi.col(iQ0,ilo,ihi);
                     } else {
-                        // odd m's have imag transforms
-                        mi->subMatrix(ilo,ihi,iQ,iQ+2) = (*Lmq) * mi->subMatrix(ilo,ihi,iQ0,iQ0+2);
+                        psi.subMatrix(ilo,ihi,iQ,iQ+2) = (*Lmq) * psi.subMatrix(ilo,ihi,iQ0,iQ0+2);
                     }
                 }
             }

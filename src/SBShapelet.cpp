@@ -183,7 +183,7 @@ namespace galsim {
         y /= _sigma;
 
         tmv::Matrix<double> psi(ntot,_bvec.size());
-        LVector::basis(psi.view(),x.linearView(),y.linearView(),_bvec.getOrder(),_sigma);
+        LVector::basis(x.linearView(),y.linearView(),psi.view(),_bvec.getOrder(),_sigma);
         val.linearView() = psi * _bvec.rVector();
     }
 
@@ -211,7 +211,7 @@ namespace galsim {
         ky *= _sigma;
 
         tmv::Matrix<std::complex<double> > psi_k(ntot,_bvec.size());
-        LVector::kBasis(psi_k.view(),kx.linearView(),ky.linearView(),_bvec.getOrder(),_sigma);
+        LVector::kBasis(kx.linearView(),ky.linearView(),psi_k.view(),_bvec.getOrder(),_sigma);
         kval.linearView() = psi_k * _bvec.rVector();
     }
 
@@ -239,7 +239,7 @@ namespace galsim {
         }
 
         tmv::Matrix<double> psi(npts,bvec.size());
-        LVector::basis(psi.view(),x.view(),y.view(),bvec.getOrder(),sigma);
+        LVector::basis(x.view(),y.view(),psi.view(),bvec.getOrder(),sigma);
         // I = psi * b
         // TMV solves this by writing b = I/psi.
         // We use QRP in case the psi matrix is close to singular (although it shouldn't be).
