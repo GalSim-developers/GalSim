@@ -625,7 +625,7 @@ namespace galsim {
          *
          * @param[in] lseed  Seed to use (default = 0)
          * @param[in] k      Shape parameter of the output distribution, must be > 0. (default = 0)
-         * @param[in] theta  Scale paramter of the distribution, must be > 0. (default = 1)
+         * @param[in] theta  Scale parameter of the distribution, must be > 0. (default = 1)
          */
         GammaDeviate(long lseed=0, double k=0., double beta=1.) : 
             BaseDeviate(lseed), _gamma(k,beta) {}
