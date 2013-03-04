@@ -1,0 +1,70 @@
+
+# Define the PSF profile to use the DES shapelet files
+psf : 
+    type : DES_Shapelet
+
+    flux : { type : InputCatalog,  col : 'FLUX_AUTO' }
+
+
+# Setup input files
+input :
+    des_shapelet :
+        #dir : '/data3/DECAM/wl/DECam_00154912'
+        #dir : '/Users/Mike/Astro/des/SV/DECam_00154912_wl'
+        dir : 'des_data'
+        file_name :
+            type : NumberedFile
+            root : &root DECam_00154912_
+            digits : 2
+            ext : '_fitpsf.fits'
+            num : { type : Sequence, first : 1 }
+        
+    catalog :
+        #dir : '/data3/DECAM/SV/DECam_154912'
+        #dir : '/Users/Mike/Astro/des/SV/DECam_00154912_wl'
+        dir : 'des_data'
+        file_name : 
+            type : NumberedFile
+            root : *root
+            digits : 2
+            ext : '_cat.fits'
+            num : { type : Sequence, first : 1 }
+        hdu : 2
+
+# Define some other information about the images 
+image :
+    type : Scattered
+
+    xsize : 2048  # pixels
+    ysize : 4096  # pixels
+
+    center : 
+        type : XY 
+        x : { type : InputCatalog , col : 'X_IMAGE' }
+        y : { type : InputCatalog , col : 'Y_IMAGE' }
+
+    pixel_scale : 0.264  # arcsec / pixel
+
+    noise :
+        sky_level : 16000  # ADU / arcsec^2
+
+    random_seed : 1339201
+
+    nproc : -1
+
+# Define the names and format of the output files
+output :
+    #nfiles : 62
+    nfiles : 1
+
+    file_name :
+        type : NumberedFile
+        root : *root
+        digits : 2
+        ext : '_fitpsf_image.fits'
+        num : { type : Sequence, first : 1 }
+
+    dir : 'output_yaml'
+
+    #nproc : -1
+
