@@ -24,7 +24,7 @@ New features introduced in this demo:
 - tab = galsim.LookupTable(file)
 - ps = galsim.PowerSpectrum(..., units)
 - distdev = galsim.DistDeviate(rng, function, x_min, x_max)
-- cf = galsim.correlatednoise.get_COSMOS_CorrFunc(file_name, ...)
+- cf = galsim.correlatednoise.get_COSMOS_CorrelatedNoise(rng, file_name, ...)
 - cf.applyNoiseTo(image, ...)
 
 - Power spectrum shears for non-gridded positions.
@@ -245,13 +245,13 @@ def main(argv):
     # COSMOS.  Using the original pixel scale, dx_cosmos=0.03 [arcsec], would leave very little
     # correlation among our larger 0.2 arcsec pixels. We also set the point (zero-distance) variance
     # to our desired value.
-    cf = galsim.correlatednoise.get_COSMOS_CorrFunc(
-        cf_file_name, dx_cosmos=pixel_scale, variance=noise_variance)
+    cn = galsim.correlatednoise.get_COSMOS_CorrelatedNoise(
+        rng, cf_file_name, dx_cosmos=pixel_scale, variance=noise_variance)
 
     # Now add noise according to this correlation function to the full_image.  We have to do this
     # step at the end, rather than adding to individual postage stamps, in order to get the noise
     # level right in the overlap regions between postage stamps.
-    cf.applyNoiseTo(full_image, dx=pixel_scale, dev=rng)
+    full_image.addNoise(cn) # Note image must have the right scale [set by setScale()], as here
     logger.info('Added noise to final large image')
 
     # Now write the image to disk.  It is automatically compressed with Rice compression,

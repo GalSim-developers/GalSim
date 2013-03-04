@@ -43,7 +43,8 @@ struct PyBaseNoise {
     static void wrap() {
         // Note that class docstrings are now added in galsim/random.py
 
-        bp::class_<BaseNoise, boost::noncopyable> pyBaseNoise("BaseNoise", "", bp::no_init);
+        bp::class_<BaseNoise, boost::noncopyable> pyBaseNoise(
+            "BaseNoise", "", bp::init<boost::shared_ptr<BaseDeviate>>(bp::arg("rng")=bp::object()));
         pyBaseNoise
             .def("getRNG", &BaseNoise::getRNG, "")
             .def("setRNG", &BaseNoise::setRNG, "")
