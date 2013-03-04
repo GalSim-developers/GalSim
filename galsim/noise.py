@@ -96,6 +96,17 @@ for Class in _galsim.ImageView.itervalues():
 del Class # cleanup public namespace
 
 # Then add docstrings for C++ layer Noise classes
+
+# BaseNoise methods used by derived classes
+_galsim.BaseNoise.getRNG.__func__.__doc__ = """
+Get the galsim.BaseDeviate used to generate random numbers for the current noise model.
+"""
+_galsim.BaseNoise.setRNG.__func__.__doc__ = """
+Set the galsim.BaseDeviate used to generate random numbers for the current noise model.
+"""
+_galsim.BaseNoise.getVariance.__func__.__doc__ = "Get variance in current noise model."
+_galsim.BaseNoise.setVariance.__func__.__doc__ = "Set variance in current noise model."
+
 # GaussianNoise docstrings
 _galsim.GaussianNoise.__doc__ = """
 Class implementing simple Gaussian noise.
