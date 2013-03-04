@@ -316,19 +316,23 @@ def _GenerateFromInputCatalog(param, param_name, base, value_type):
     # so we don't require the user to specify that by hand.  We can do it for them.
     SetDefaultIndex(param, input_cat.nobjects)
 
-    # Coding note: the and/or bit is equivalent to a C trigraph:
+    # Coding note: the and/or bit is equivalent to a C ternary operator:
     #     input_cat.isfits ? str : int
     # which of course doesn't exist in python.  This does the same thing (so long as the 
     # middle item evaluates to true).
     req = { 'col' : input_cat.isfits and str or int , 'index' : int }
     kwargs, safe = GetAllParams(param, param_name, base, req=req)
 
-    str_val = input_cat.get(**kwargs)
-    # We want to parse this string with ParseValue, but we need a dict to do that:
-    temp_dict = { param_name : str_val }
-    val = ParseValue(temp_dict,param_name,base,value_type)[0]
+    if value_type is str:
+        val = input_cat.get(**kwargs)
+    elif value_type is float:
+        val = input_cat.getFloat(**kwargs)
+    elif value_type is int:
+        val = input_cat.getInt(**kwargs)
+    elif value_type is bool:
+        val = bool(input_cat.getInt(**kwargs))
 
-    #print 'InputCatalog: ',str,val
+    #print 'InputCatalog: ',val
     return val, False
 
 

@@ -20,11 +20,13 @@
 # would probably want to draw these with no noise on individual postage stamps or something like
 # that.
 
+
 # Define the PSF profile to use the DES shapelet files
 psf : 
     type : DES_Shapelet
 
-    flux : { type : InputCatalog,  col : 'FLUX_AUTO' }
+    skip : { type : InputCatalog, col : 'FLAGS' }
+    flux : { type : InputCatalog, col : 'FLUX_AUTO' }
 
 
 # Setup input files
@@ -52,6 +54,7 @@ input :
             num : { type : Sequence, first : 1 }
         hdu : 2
 
+
 # Define some other information about the images 
 image :
     type : Scattered
@@ -72,6 +75,7 @@ image :
     random_seed : 1339201
 
     nproc : -1
+
 
 # Define the names and format of the output files
 output :

@@ -76,13 +76,18 @@ def BuildGSObject(config, key, base=None):
     if type == 'Ring' and key != 'gal':
         raise AttributeError("Ring type only allowed for top level gal")
 
+    # Check if we need to skip this object
+    if 'skip' in ck:
+        skip = galsim.config.ParseValue(ck, 'skip', base, bool)[0]
+        if skip: 
+            raise SkipThisObject()
+
     # Set up the initial default list of attributes to ignore while building the object:
     ignore = [ 
-        'dilate', 'dilation',
-        'ellip', 'rotate', 'rotation',
-        'magnify', 'magnification',
-        'shear', 'shift', 
-        'current_val', 'safe' ]
+        'dilate', 'dilation', 'ellip', 'rotate', 'rotation',
+        'magnify', 'magnification', 'shear', 'shift', 
+        'skip', 'current_val', 'safe' 
+    ]
     # There are a few more that are specific to which key we have.
     if key == 'gal':
         ignore += [ 'resolution', 'signal_to_noise', 'redshift', 're_from_res' ]

@@ -68,6 +68,7 @@ def main(argv):
     x_col = 'X_IMAGE'
     y_col = 'Y_IMAGE'
     flux_col = 'FLUX_AUTO'
+    flag_col = 'FLAGS'
 
     # Make output directory if not already present.
     if not os.path.isdir(out_dir):
@@ -99,6 +100,10 @@ def main(argv):
             # I'm not actually using the rng for object creation (everything comes from # the 
             # input files), but the rng that matches the config version is here just in case.
             rng = galsim.BaseDeviate(random_seed+k)
+
+            # Skip objects with a non-zero flag
+            flag = cat.getInt(k,flag_col)
+            if flag: continue
 
             # Get the position from the galaxy catalog
             x = cat.getFloat(k,x_col)
