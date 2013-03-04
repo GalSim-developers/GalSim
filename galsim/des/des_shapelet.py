@@ -60,13 +60,16 @@ class DES_Shapelet(object):
                       (default = None).
     """
     _req_params = { 'file_name' : str }
-    _opt_params = { 'file_type' : str }
+    _opt_params = { 'file_type' : str , 'dir' : str }
     _single_params = []
     _takes_rng = False
 
-    def __init__(self, file_name, file_type=None):
+    def __init__(self, file_name, dir=None, file_type=None):
 
-        self.file_name = file_name.strip()
+        if dir:
+            import os
+            file_name = os.path.join(dir,file_name)
+        self.file_name = file_name
 
         if not file_type:
             if self.file_name.lower().endswith('.fits'):
