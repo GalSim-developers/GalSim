@@ -1,5 +1,20 @@
 import galsim
 
+# If you want to extend this, you need to add your item to the list for whatever type
+# you have a new generator for.  The generator should be called _GenerateFromMyType
+# where MyType is the new type you are implementing.  See the des module for some examples.
+valid_value_types = {
+    float : [ 'InputCatalog', 'Random', 'RandomGaussian', 'RandomDistribution',
+              'NFWHaloMag', 'Sequence', 'List', 'Eval' ],
+    int : [ 'InputCatalog', 'Random', 'Sequence', 'List', 'Eval' ],
+    bool : [ 'InputCatalog', 'Random', 'Sequence', 'List', 'Eval' ],
+    str : [ 'InputCatalog', 'NumberedFile', 'FormattedStr', 'List', 'Eval' ],
+    galsim.Angle : [ 'Rad', 'Radians', 'Deg', 'Degrees', 'Random', 'List', 'Eval' ],
+    galsim.Shear : [ 'E1E2', 'EBeta', 'G1G2', 'GBeta', 'Eta1Eta2', 'EtaBeta', 'QBeta',
+                     'NFWHaloShear', 'PowerSpectrumShear', 'List', 'Eval' ],
+    galsim.PositionD : [ 'XY', 'RTheta', 'RandomCircle', 'List', 'Eval' ],
+}
+ 
 def ParseValue(config, param_name, base, value_type):
     """@brief Read or generate a parameter value from config.
 
@@ -36,38 +51,24 @@ def ParseValue(config, param_name, base, value_type):
         return val, True
     elif 'type' not in param:
         raise AttributeError(
-            "%s.type attribute required in config for non-constant parameter %s."
-                    %(param_name,param_name))
+            "%s.type attribute required in config for non-constant parameter %s."%(
+                param_name,param_name))
     else:
         # Otherwise, we need to generate the value according to its type
-        valid_types = {
-            float : [ 'InputCatalog', 'Random', 'RandomGaussian', 'RandomDistribution',
-                      'NFWHaloMag', 'Sequence', 'List', 'Eval' ],
-            int : [ 'InputCatalog', 'Random', 'Sequence', 'List', 'Eval' ],
-            bool : [ 'InputCatalog', 'Random', 'Sequence', 'List', 'Eval' ],
-            str : [ 'InputCatalog', 'NumberedFile', 'FormattedStr', 'List', 'Eval' ],
-            galsim.Angle : [ 'Rad', 'Deg', 'Random', 'List', 'Eval' ],
-            galsim.Shear : [ 'E1E2', 'EBeta', 'G1G2', 'GBeta', 'Eta1Eta2', 'EtaBeta', 'QBeta',
-                             'NFWHaloShear', 'PowerSpectrumShear', 'List', 'Eval' ],
-            galsim.PositionD : [ 'XY', 'RTheta', 'RandomCircle', 'List', 'Eval' ] 
-        }
+        # (See valid_value_types defined at the top of the file.)
 
         type = param['type']
         #print 'type = ',type
 
-        # Apply valid aliases:
-        if type == 'Radians': type = 'Rad'
-        if type == 'Degrees': type = 'Deg'
-
         # First check if the value_type is valid.
-        if value_type not in valid_types.keys():
+        if value_type not in valid_value_types.keys():
             raise AttributeError(
                 "Unrecognized value_type = %s in ParseValue"%value_type)
             
-        if type not in valid_types[value_type]:
+        if type not in valid_value_types[value_type]:
             raise AttributeError(
                 "Invalid type = %s specified for parameter %s with value_type = %s."%(
-                        type, param_name, value_type))
+                    type, param_name, value_type))
 
         generate_func = eval('_GenerateFrom' + type)
         #print 'generate_func = ',generate_func
@@ -293,6 +294,15 @@ def _GenerateFromDeg(param, param_name, base, value_type):
     kwargs, safe = GetAllParams(param, param_name, base, req=req)
     return kwargs['theta'] * galsim.degrees, safe
 
+def _GenerateFromRadians(param, param_name, base, value_type):
+    """@brief Alias for Rad
+    """
+    return _GenerateFromRad(param, param_name, base, value_type)
+
+def _GenerateFromDegrees(param, param_name, base, value_type):
+    """@brief Alias for Deg
+    """
+    return _GenerateFromDeg(param, param_name, base, value_type)
 
 def _GenerateFromInputCatalog(param, param_name, base, value_type):
     """@brief Return a value read from an input catalog
@@ -313,9 +323,9 @@ def _GenerateFromInputCatalog(param, param_name, base, value_type):
     req = { 'col' : input_cat.isfits and str or int , 'index' : int }
     kwargs, safe = GetAllParams(param, param_name, base, req=req)
 
-    str = input_cat.get(**kwargs)
+    str_val = input_cat.get(**kwargs)
     # We want to parse this string with ParseValue, but we need a dict to do that:
-    temp_dict = { param_name : str }
+    temp_dict = { param_name : str_val }
     val = ParseValue(temp_dict,param_name,base,value_type)[0]
 
     #print 'InputCatalog: ',str,val
@@ -770,7 +780,7 @@ def _GenerateFromList(param, param_name, base, value_type):
     safe = safe and safe1
     return val, safe
  
-def type_by_letter(key):
+def _type_by_letter(key):
     if len(key) < 2:
         raise AttributeError("Invalid user-defined variable %r"%key)
     if key[0] == 'f':
@@ -799,7 +809,7 @@ def _GenerateFromEval(param, param_name, base, value_type):
     ignore = [ 'type' , 'current_val' ]
     for key in param.keys():
         if key not in (ignore + req.keys()):
-            opt[key] = type_by_letter(key)
+            opt[key] = _type_by_letter(key)
     #print 'opt = ',opt
             
     params, safe = GetAllParams(param, param_name, base, req=req, opt=opt, ignore=ignore)
@@ -820,7 +830,7 @@ def _GenerateFromEval(param, param_name, base, value_type):
         opt = {}
         for key in base['eval_variables'].keys():
             if key not in ignore:
-                opt[key] = type_by_letter(key)
+                opt[key] = _type_by_letter(key)
         #print 'opt = ',opt
         params, safe1 = GetAllParams(base['eval_variables'], 'eval_variables', base, opt=opt,
                                      ignore=ignore)

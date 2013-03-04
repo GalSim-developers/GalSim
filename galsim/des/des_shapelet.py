@@ -186,3 +186,50 @@ class DES_Shapelet(object):
             temp[i] = ((2.*i-1.)*x1*temp[i-1] - (i-1.)*temp[i-2]) / float(i)
         return temp
 
+# Now add this class to the config framework.
+import galsim.config
+
+# First we need to add the class itself as a valid input_type.
+galsim.config.process.valid_input_types['des_shapelet'] = ('des.DES_Shapelet', [])
+
+# Also make a builder to create the PSF object for a given position.
+# The builders require 4 args.
+# config is a dictionary that includes 'type' plus other items you might want to allow or require.
+# key is the key name one level up in the config structure.  Probably 'psf' in this case.
+# base is the top level config dictionary where some global variables are stored.
+# ignore is a list of key words that might be in the config dictionary that you should ignore.
+def BuildDES_Shapelet(config, key, base, ignore):
+    """@brief Build a RealGalaxy type GSObject from user input.
+    """
+    req = {}
+    opt = { 'flux' : float }
+    single = []
+    kwargs, safe = galsim.config.GetAllParams(
+        config, key, base, req=req, opt=opt, single=single, ignore=ignore)
+
+    if 'des_shapelet' not in base:
+        raise ValueError("No DES_Shapelet instance available for building type = DES_Shapelet")
+    des_shapelet = base['des_shapelet']
+
+    if 'chip_pos' not in base:
+        raise ValueError("DES_Shapelet requested, but no chip_pos defined in base.")
+    chip_pos = base['chip_pos']
+
+    try:
+        psf = des_shapelet.getPSF(chip_pos)
+    except IndexError:
+        message = 'Position '+str(chip_pos)+' not in interpolation bounds: '
+        message += str(des_shapelet.bounds)
+        raise galsim.config.gsobject.SkipThisObject(message)
+
+    if 'flux' in kwargs:
+        psf.setFlux(kwargs['flux'])
+
+    # The second item here is "safe", a boolean that declares whether the returned value is 
+    # safe to save and use again for later objects.  In this case, we wouldn't want to do 
+    # that, since they will be at different positions, so the interpolated PSF will be different.
+    return psf, False
+
+# Register this builder with the config framework:
+galsim.config.gsobject.valid_gsobject_types['DES_Shapelet'] = 'galsim.des.BuildDES_Shapelet'
+

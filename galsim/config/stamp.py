@@ -235,6 +235,7 @@ def BuildSingleStamp(config, xsize, ysize,
         final_shift = galsim.PositionD(center.x-icenter.x , center.y-icenter.y)
         #print 'final_shift = ',final_shift
         # Calculate and save the position relative to the image center
+        config['chip_pos'] = center
         config['pos'] = (center - config['image_cen']) * config['pixel_scale']
         #print 'pos = ',config['pos']
     else:
@@ -242,21 +243,53 @@ def BuildSingleStamp(config, xsize, ysize,
         icenter = None
         final_shift = None
 
-    psf = BuildPSF(config,logger)
-    t2 = time.time()
+    skip = False
+    try :
+        t4=t3=t2=t1  # in case we throw.
 
-    pix = BuildPix(config,logger)
-    t3 = time.time()
+        psf = BuildPSF(config,logger)
+        t2 = time.time()
 
-    gal = BuildGal(config,logger)
-    t4 = time.time()
+        pix = BuildPix(config,logger)
+        t3 = time.time()
 
-    # Check that we have at least gal or psf.
-    if not (gal or psf):
-        raise AttributeError("At least one of gal or psf must be specified in config.")
+        gal = BuildGal(config,logger)
+        t4 = time.time()
+
+        # Check that we have at least gal or psf.
+        if not (gal or psf):
+            raise AttributeError("At least one of gal or psf must be specified in config.")
+
+    except galsim.config.gsobject.SkipThisObject, e:
+        if logger:
+            if e.message:
+                # If there is a message, upgrade to warn level
+                logger.warn('Skipping object: %s',e.message)
+            else:
+                logger.debug('Skipping object')
+        skip = True
 
     draw_method = galsim.config.ParseValue(config['image'],'draw_method',config,str)[0]
-    if draw_method == 'fft':
+    if skip: 
+        if xsize:
+            im = galsim.ImageF(xsize, ysize)
+        else:
+            im = galsim.ImageF(1,1)
+        if 'image' in config and 'pixel_scale' in config['image']:
+            pixel_scale = galsim.config.ParseValue(config['image'], 'pixel_scale', config, float)[0]
+        else:
+            pixel_scale = 1.0
+        im.setScale(im.scale)
+        im.setZero()
+        if sky_level:
+            im += sky_level * pixel_scale**2
+        if make_weight_image:
+            weight_im = galsim.ImageF(im.bounds)
+            weight_im.setScale(im.scale)
+            weight_im.setZero()
+        else:
+            weight_im = None
+    elif draw_method == 'fft':
         im = DrawStampFFT(psf,pix,gal,config,xsize,ysize,sky_level,final_shift)
         if icenter:
             im.setCenter(icenter.x, icenter.y)

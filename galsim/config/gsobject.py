@@ -1,5 +1,31 @@
 import galsim
 
+# These are in addition to the classes in galsim/base.py that can use the default builder
+# using the req, opt, single class variables.  The types in this list require a special
+# builder function defined below.
+valid_gsobject_types = {
+    'None' : '_BuildNone',
+    'Add' : '_BuildAdd',
+    'Sum' : '_BuildAdd',
+    'Convolve' : '_BuildConvolve',
+    'Convolution' : '_BuildConvolve',
+    'List' : '_BuildList',
+    'Ring' : '_BuildRing',
+    'Pixel' : '_BuildPixel',
+    'RealGalaxy' : '_BuildRealGalaxy',
+}
+
+class SkipThisObject(Exception):
+    """
+    A class that a builder can throw to indicate that nothing went wrong, but for some
+    reason, this particular object should be skipped and just move onto the next object.
+    The constructor takes an optional message that will be output to the logger if 
+    logging is active.
+    """
+    def __init__(self, message=None):
+        self.message = message
+
+
 def BuildGSObject(config, key, base=None):
     """Build a GSObject using config dict for key=key.
 
@@ -43,10 +69,6 @@ def BuildGSObject(config, key, base=None):
     if 'current_val' in ck and ck['safe']:
         #print 'current is safe:  ',ck['current_val'], True
         return ck['current_val'], True
-
-    # Change the value for valid aliases:
-    if type == 'Sum': type = 'Add'
-    if type == 'Convolution': type = 'Convolve'
 
     # Ring is only allowed for top level gal (since it requires special handling in 
     # multiprocessing, and that's the only place we look for it currently).
@@ -100,9 +122,8 @@ def BuildGSObject(config, key, base=None):
         ck['flux'] = 1
 
     # See if this type has a specialized build function:
-    build_func_name  = '_Build' + type
-    if build_func_name in galsim.config.gsobject.__dict__:
-        build_func  = eval(build_func_name)
+    if type in valid_gsobject_types:
+        build_func = eval(valid_gsobject_types[type])
         gsobject, safe = build_func(ck, key, base, ignore)
     # Next, we check if this name is in the galsim dictionary.
     elif type in galsim.__dict__:
@@ -340,19 +361,25 @@ def _BuildSimple(config, key, base, ignore):
     """
     # Build the kwargs according to the various params objects in the class definition.
     type = config['type']
+    try:
+        init_func = eval("galsim."+type)
+    except:
+        raise TypeError('Invalid type = %s passed to BuildSimple'%type)
+
     kwargs, safe = galsim.config.GetAllParams(config, key, base, 
-        req = galsim.__dict__[type]._req_params,
-        opt = galsim.__dict__[type]._opt_params,
-        single = galsim.__dict__[type]._single_params,
-        ignore = ignore)
-    if galsim.__dict__[type]._takes_rng:
+                                              req = init_func._req_params,
+                                              opt = init_func._opt_params,
+                                              single = init_func._single_params,
+                                              ignore = ignore)
+
+    if init_func._takes_rng:
         if 'rng' not in base:
             raise ValueError("No base['rng'] available for %s.type = %s"%(key,type))
         kwargs['rng'] = base['rng']
+        safe = False
 
     # Finally, after pulling together all the params, try making the GSObject.
     try:
-        init_func = eval("galsim."+type)
         return init_func(**kwargs), safe
     except Exception, err_msg:
         raise RuntimeError("Unable to construct %s object with kwargs=%s.\n"%(type,str(kwargs)) +

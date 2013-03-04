@@ -3,6 +3,18 @@ import os
 import time
 import galsim
 
+valid_input_types = { 
+    # The values are tuples with the class name to build, and a list of keys to ignore
+    # on the initial creation.  (e.g. PowerSpectrum has values that are used later.)
+    'catalog' : ('InputCatalog', []), 
+    'real_catalog' : ('RealGalaxyCatalog', []),
+    'nfw_halo' : ('NFWHalo', []),
+    'power_spectrum' : ('PowerSpectrum',
+                        # power_spectrum uses these extra parameters for buildGriddedShears later.
+                        ['grid_spacing', 'interpolant']),
+}
+
+
 def ProcessInput(config, file_num=0, logger=None):
     """
     Process the input field, reading in any specified input files or setting up
@@ -22,27 +34,22 @@ def ProcessInput(config, file_num=0, logger=None):
 
         # Read all input fields provided and create the corresponding object
         # with the parameters given in the config file.
-        input_type = { 
-                'catalog' : 'InputCatalog' , 
-                'real_catalog' : 'RealGalaxyCatalog' ,
-                'nfw_halo' : 'NFWHalo',
-                'power_spectrum' : 'PowerSpectrum'
-                }
-        for key in [ k for k in input_type.keys() if k in input ]:
+        #print 'valid_input_types = ',valid_input_types
+        for key in [ k for k in valid_input_types.keys() if k in input ]:
+            #print 'key = ',key
             field = input[key]
-            field['type'] = input_type[key]
-            ignore = []
-            if key == 'power_spectrum':
-                # This is used for buildGriddedShears later.
-                ignore += ['grid_spacing', 'interpolant']
+            #print 'field = ',field
+            field['type'], ignore = valid_input_types[key]
+            #print 'type, ignore = ',field['type'],ignore
             input_obj = galsim.config.gsobject._BuildSimple(field, key, config, ignore)[0]
+            #print 'input_obj = ',input_obj
             if logger and  key in ['catalog', 'real_catalog']:
                 logger.info('Read %d objects from %s',input_obj.nobjects,key)
             # Store input_obj in the config for use by BuildGSObject function.
             config[key] = input_obj
 
         # Check that there are no other attributes specified.
-        valid_keys = input_type.keys()
+        valid_keys = valid_input_types.keys()
         galsim.config.CheckAllParams(input, 'input', ignore=valid_keys)
 
 

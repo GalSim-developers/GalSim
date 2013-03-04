@@ -99,7 +99,7 @@ class InputCatalog(object):
         self.data = pyfits.getdata(self.file_name, hdu)
         self.names = self.data.columns.names
         self.ncols = len(self.names)
-        self.nobjects = numpy.min([ len(self.data.field(name)) for name in self.names])
+        self.nobjects = int(numpy.min([ len(self.data.field(name)) for name in self.names]))
         self.isfits = True
 
     def get(self, index, col):
