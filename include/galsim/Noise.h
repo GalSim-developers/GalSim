@@ -60,7 +60,18 @@ namespace galsim {
          * @brief Destructor is virtual
          */
         virtual ~BaseNoise() {}
- 
+
+        /**
+         * @brief Get the BaseDeviate being used to generate random numbers for the noise model
+         */
+        boost::shared_ptr<BaseDeviate> getRNG() { return _rng; }
+
+        /**
+         * @brief Set the BaseDeviate that will be used to generate random numbers for the noise
+         * model
+         */
+        void setRNG(boost::shared_ptr<BaseDeviate> rng) { _rng = rng; }
+
         /**
          * @brief Get the variance of the noise model
          */
