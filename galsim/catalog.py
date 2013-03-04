@@ -96,10 +96,20 @@ class InputCatalog(object):
         """
         import pyfits
         import numpy
-        self.data = pyfits.getdata(self.file_name, hdu)
-        self.names = self.data.columns.names
-        self.ncols = len(self.names)
-        self.nobjects = int(numpy.min([ len(self.data.field(name)) for name in self.names]))
+        data = pyfits.getdata(self.file_name, hdu)
+        # data is an instance of a weird numpy FITS_rec class
+        # The main problem with it is that it isn't picklable, so using this 
+        # with multiprocessing will fail.
+        # So we turn this into a regular numpy array that looks just like the version
+        # we build in read_ascii with loadtxt.
+        self.names = data.columns.names
+        # This assumes all fields have the same length.  If we need to support tables
+        # where this isn't true, we might need to add an if clause in here.
+        # (i.e. check the maximum, and then only include keys whose length is the same as that.)
+        # Seems like this would be a rare case though, so I haven't implemented it yet.
+        self.data = numpy.array([ [ str(x) for x in data.field(k) ] for k in self.names ]).T
+        self.nobjects = self.data.shape[0]
+        self.ncols = self.data.shape[1]
         self.isfits = True
 
     def get(self, index, col):
@@ -111,20 +121,17 @@ class InputCatalog(object):
         if self.isfits:
             if col not in self.names:
                 raise KeyError("Column %s is invalid for catalog %s"%(col,self.file_name))
-
-            if index < 0 or index >= len(self.data.field(col)):
-                raise IndexError("Object %d is invalid for catalog %s"%(index,self.file_name))
-            return self.data.field(col)[index]
+            icol = self.names.index(col)
         else:
             try:
-                col = int(col)
+                icol = int(col)
             except:
                 raise ValueError("For ASCII catalogs, col must be an integer")
-            if col < 0 or col >= self.ncols:
-                raise IndexError("Column %d is invalid for catalog %s"%(col,self.file_name))
-            if index < 0 or index >= self.nobjects:
-                raise IndexError("Object %d is invalid for catalog %s"%(index,self.file_name))
-            return self.data[index, col]
+            if icol < 0 or icol >= self.ncols:
+                raise IndexError("Column %d is invalid for catalog %s"%(icol,self.file_name))
+        if index < 0 or index >= self.nobjects:
+            raise IndexError("Object %d is invalid for catalog %s"%(index,self.file_name))
+        return self.data[index, icol]
 
     def getFloat(self, index, col):
         """Return the data for the given index and col as a float if possible

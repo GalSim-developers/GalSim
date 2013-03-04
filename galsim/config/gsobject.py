@@ -23,7 +23,8 @@ class SkipThisObject(Exception):
     logging is active.
     """
     def __init__(self, message=None):
-        self.message = message
+        # Using self.message gives a deprecation warning.  Avoid this by using a different name.
+        self.msg = message
 
 
 def BuildGSObject(config, key, base=None):
@@ -118,7 +119,7 @@ def BuildGSObject(config, key, base=None):
         ck['half_light_radius'] = gal_re
 
     # Make sure the PSF gets flux=1 unless explicitly overridden by the user.
-    if key == 'psf' and 'flux' not in config:
+    if key == 'psf' and 'flux' not in ck:
         ck['flux'] = 1
 
     # See if this type has a specialized build function:

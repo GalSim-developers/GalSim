@@ -215,6 +215,7 @@ def BuildSingleStamp(config, xsize, ysize,
     # Initialize the random number generator we will be using.
     if 'random_seed' in config['image']:
         seed = galsim.config.ParseValue(config['image'],'random_seed',config,int)[0]
+        #print 'seed = ',seed
         rng = galsim.BaseDeviate(seed)
     else:
         rng = galsim.BaseDeviate()
@@ -262,9 +263,9 @@ def BuildSingleStamp(config, xsize, ysize,
 
     except galsim.config.gsobject.SkipThisObject, e:
         if logger:
-            if e.message:
+            if e.msg:
                 # If there is a message, upgrade to warn level
-                logger.warn('Skipping object: %s',e.message)
+                logger.warn('Skipping object: %s',e.msg)
             else:
                 logger.debug('Skipping object')
         skip = True
@@ -422,6 +423,7 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level, final_shift):
         pixel_scale = 1.0
 
     if final_shift:
+        #print 'shift = ',final_shift.x*pixel_scale, final_shift.y*pixel_scale
         final.applyShift(final_shift.x*pixel_scale, final_shift.y*pixel_scale)
 
     if xsize:
