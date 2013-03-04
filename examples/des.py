@@ -19,15 +19,20 @@
 """
 Draw DES PSFs at the locations of observed galaxies.
 
-This demo probably isn't so useful as an actual program, but it does showcase how to 
-use the DES module that comes with GalSim, which can be modified to do what you actually 
-need. 
+This demo probably isn't so useful as an actual program, but it does showcase how to
+use the DES module that comes with GalSim, which can be modified to do what you actually
+need.
 
-It works on a full DES exposure with 62 chip images and the files that are output by the 
-DESDM and WL pipelines.  The DESDM pipeline produces a catalog of detected objects for each
-image, and also an interpolated PSF using Emmanuel Bertin's PSFEx code, which are stored in 
-*_psfcat.psf files.  The WL pipeline produces a different estimate of the PSF using Mike Jarvis's
-shapelet code, which are stored in *_fitpsf.fits files.
+It works on a full DES exposure with 62 chip images and the files that are output by the
+DESDM and WL pipelines.  We don't include these files in the repo, since they total about
+700 MB.  You can download a tarball with the files used by this script at
+
+    http://www.sas.upenn.edu/~mjarvis/des_data.html
+
+The DESDM pipeline produces a catalog of detected objects for each image, and also an
+interpolated PSF using Emmanuel Bertin's PSFEx code, which are stored in *_psfcat.psf files.
+The WL pipeline produces a different estimate of the PSF using Mike Jarvis's shapelet code,
+which are stored in *_fitpsf.fits files.
 
 This script reads the appropriate files for each chip and builds two images, one for each kind
 of PSF estimate, and draws an image of the PSF at the location of each galaxy.  Normally, you
