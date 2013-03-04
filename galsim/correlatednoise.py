@@ -25,7 +25,7 @@ import galsim
 from . import base
 from . import utilities
 
-class _BaseCorrelatedNoise(galsim.GaussianNoise):
+class _BaseCorrelatedNoise(galsim.BaseNoise):
     """A Base Class describing 2D correlated Gaussian random noise fields.
 
     A _BaseCorrelatedNoise will not generally be instantiated directly.  This is recommended as the
@@ -189,7 +189,9 @@ class _BaseCorrelatedNoise(galsim.GaussianNoise):
         # Finally generate a random field in Fourier space with the right PS, and inverse DFT back,
         # including factor of sqrt(2) to account for only adding noise to the real component:
         gaussvec = galsim.ImageD(image.bounds)
-        galsim.GaussianNoise.applyTo(self, gaussvec)
+        gn = galsim.GaussianNoise(self.getRNG(), sigma=1.) # Create on the fly using this instance's
+                                                           # RNG (see discussion on Issue #352)
+        gaussvec.addNoise(gn)
         noise_array = np.sqrt(2.) * np.fft.ifft2(gaussvec.array * rootps)
         # Make contiguous and add to the image
         image += galsim.ImageViewD(np.ascontiguousarray(noise_array.real))
@@ -332,25 +334,9 @@ class _BaseCorrelatedNoise(galsim.GaussianNoise):
         variance_ratio = variance / self.getVariance()
         self.scaleVariance(variance_ratio)
 
-    # Redefine the inherited GaussianNoise getSigma and setSigma using sqrt(variance)
-    def getSigma(self):
-        """Return the point standard deviation of this field, the square root of the value returned 
-        by getVariance().
-        """
-        import math
-        return math.sqrt(self.getVariance())
-
-    def setSigma(self, sigma):
-        """Set the point standard deviation of the noise field, equal to setting the correlation
-        function value at zero distance to sigma**2.
-
-        @param sigma  The desired point variance in the noise.
-        """
-        self.setVariance(sigma * sigma)
-
     def _notImplemented(self, *args, **kwargs):
         raise NotImplementedError(
-            "This method is not available for profiles that represent correlation functions.")
+            "This method is not available for correlated noise class instances.")
 
     def draw(self, image=None, dx=None, wmult=1., add_to_image=False):
         """The draw method for profiles storing correlation functions.
