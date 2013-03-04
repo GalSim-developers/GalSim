@@ -615,9 +615,9 @@ for Class in galsim.ConstImageView.itervalues():
     Class.getCorrelatedNoise = _Image_getCorrelatedNoise
 
 # Free function for returning a COSMOS noise field correlation function
-def get_COSMOS_CorrFunc(rng, file_name, dx_cosmos=0.03, variance=0.):
-    """Returns a 2D discrete correlation function representing noise in the HST COSMOS F814W
-    unrotated science coadd images.
+def get_COSMOS_CorrelatedNoise(rng, file_name, dx_cosmos=0.03, variance=0.):
+    """Returns a representation of correlated noise in the HST COSMOS F814W unrotated science coadd
+    images.
 
     See http://cosmos.astro.caltech.edu/astronomer/hst.html for information about the COSMOS survey,
     and Leauthaud et al (2007) for detailed information about the unrotated F814W coadds used for
@@ -660,7 +660,7 @@ def get_COSMOS_CorrFunc(rng, file_name, dx_cosmos=0.03, variance=0.):
         >>> filestring='/YOUR/REPO/PATH/GalSim/devel/external/hst/acs_I_unrot_sci_20_cf.fits'
         >>> import galsim
         >>> rng = galsim.UniformDeviate(123456)
-        >>> cf = galsim.correlatednoise.get_COSMOS_CorrFunc(rng, filestring)
+        >>> cf = galsim.correlatednoise.get_COSMOS_CorrelatedNoise(rng, filestring)
         >>> im = galsim.ImageD(300, 300)
         >>> im.setScale(0.03)
         >>> cf.applyTo(im)
@@ -678,15 +678,15 @@ def get_COSMOS_CorrFunc(rng, file_name, dx_cosmos=0.03, variance=0.):
         # Give a vaguely helpful warning, then raise the original exception for extra diagnostics
         import warnings
         warnings.warn(
-            "Function get_COSMOS_CorrFunc() unable to read FITS image from "+str(file_name)+", "+
-            "more information on the error in the following Exception...")
+            "Function get_COSMOS_CorrelatedNoise() unable to read FITS image from "+
+            str(file_name)+", more information on the error in the following Exception...")
         raise original_exception
 
     # Then check for negative variance before doing anything time consuming
     if variance < 0:
         raise ValueError("Input keyword variance must be zero or positive.")
     
-    # Use this info to then generate a correlation function DIRECTLY: note this is non-standard
+    # Use this info to then generate a correlated noise model DIRECTLY: note this is non-standard
     # usage, but tolerated since we can be sure that the input cfimage is appropriately symmetric
     # and peaked at the origin
     ret = _BaseCorrelatedNoise(rng, base.InterpolatedImage(
