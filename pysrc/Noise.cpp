@@ -45,6 +45,8 @@ struct PyBaseNoise {
 
         bp::class_<BaseNoise, boost::noncopyable> pyBaseNoise("BaseNoise", "", bp::no_init);
         pyBaseNoise
+            .def("getRNG", &BaseNoise::getRNG, "")
+            .def("setRNG", &BaseNoise::setRNG, "")
             .def("getVariance", &BaseNoise::getVariance, "")
             .def("setVariance", &BaseNoise::setVariance, "")
             ;
