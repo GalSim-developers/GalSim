@@ -45,8 +45,8 @@ struct PyBaseNoise {
 
         bp::class_<BaseNoise, boost::noncopyable> pyBaseNoise("BaseNoise", "", bp::no_init);
         pyBaseNoise
-            .def("getVariance", &PoissonNoise::getVariance, "")
-            .def("setVariance", &PoissonNoise::setVariance, "")
+            .def("getVariance", &BaseNoise::getVariance, "")
+            .def("setVariance", &BaseNoise::setVariance, "")
             ;
         wrapTemplates<double>(pyBaseNoise);
         wrapTemplates<float>(pyBaseNoise);
