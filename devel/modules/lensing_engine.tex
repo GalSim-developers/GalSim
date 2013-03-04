@@ -466,7 +466,7 @@ Chris Hirata's spherical harmonic transform code which is described in
 multiple papers (for example,
 \href{http://adsabs.harvard.edu/abs/2004PhRvD..70j3501H}{Hirata
   et~al. 2004}).  This does not use the flat-sky
-approach, but that should make too much difference even
+approach, but that should not make too much difference even
 for our $L=10$ deg.  It is something to bear in mind if we start
 looking for agreement at a few \% level on the largest $\theta$ or
 smallest $k$.  That software wants $C_\ell(\ell)$ as its inputs.
@@ -791,7 +791,7 @@ the values of $k$ that are accessible to our grid, the $P(0)=0$
 condition that we have imposed should be irrelevant.
 
 Nonetheless, we may wish to modify the lensing engine to check whether
-the power function is defined for $0\le k\le\kmin$, and assign some
+the power function is defined for $0< k\le\kmin$, and assign some
 appropriately-weighted integral over that range as $P(k=0)$.
 
 \end{document}
