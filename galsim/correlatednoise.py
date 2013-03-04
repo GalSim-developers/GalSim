@@ -50,7 +50,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
                 "Supplied gsobject argument not a galsim.GSObject or derived class instance.")
 
         # Initialize the GaussianNoise with our input random deviate/GaussianNoise
-        galsim.GaussianNoise.__init__(self, rng, sigma=1.) # We want unit noise
+        galsim.BaseNoise.__init__(self, rng)
         # Act as a container for the GSObject used to represent the correlation funcion.
         self._profile = gsobject
 
@@ -68,15 +68,13 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
     # Make "+" work in the intuitive sense (variances being additive, correlation functions add as
     # you would expect)
     def __add__(self, other):
-        #TODO: THIS CURRENTLY RESETS THE RNG, FIX THIS!
         ret = self.copy()
         ret += other
         return ret
 
     def __iadd__(self, other):
-        #TODO: THIS CURRENTLY RESETS THE RNG, FIX THIS!
         self._profile += other._profile
-        return _BaseCorrelatedNoise(galsim.BaseDeviate(), self._profile)
+        return _BaseCorrelatedNoise(self.getRNG(), self._profile)
 
     # Make op* and op*= work to adjust the overall variance of an object
     def __imul__(self, other):
@@ -84,13 +82,11 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         return self
 
     def __mul__(self, other):
-        #TODO: THIS CURRENTLY RESETS THE RNG, FIX THIS!
         ret = self.copy()
         ret *= other
         return ret
 
     def __rmul__(self, other):
-        #TODO: THIS CURRENTLY RESETS THE RNG, FIX THIS!
         ret = self.copy()
         ret *= other
         return ret
@@ -101,7 +97,6 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         return self
 
     def __div__(self, other):
-        #TODO: THIS CURRENTLY RESETS THE RNG, FIX THIS!
         ret = self.copy()
         ret /= other
         return ret
@@ -113,11 +108,13 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         return __div__(self, other)
 
     def copy(self):
-        """Returns a copy of the correlation function.
+        """Returns a copy of the correlated noise model.
 
-        TODO: THIS CURRENTLY RESETS THE RNG, FIX THIS!
+        The copy will share the galsim.BaseDeviate random number generator with the parent instance.
+        Use the .setRNG() method after copying if you wish to use a different random number
+        sequence.
         """
-        return _BaseCorrelatedNoise(galsim.BaseDeviate(), self._profile.copy())
+        return _BaseCorrelatedNoise(self.getRNG(), self._profile.copy())
 
     def applyTo(self, image):
         """Apply this correlated Gaussian random noise field to an input Image.
@@ -131,7 +128,11 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         the given CorrelatedNoise instance.  image.getScale() is used to determine the input image
         pixel separation.
 
-        To add deviates to every element of an image, the syntax image.addNoise() is preferred.
+        To add deviates to every element of an image, the syntax 
+
+            >>> image.addNoise(correlated_noise)
+
+        is preferred.
 
         @param image The input Image object.
         """
@@ -198,7 +199,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         return image
 
     def applyTransformation(self, ellipse):
-        """Apply a galsim.Ellipse distortion to this correlation function.
+        """Apply a galsim.Ellipse distortion to the correlated noise model.
            
         galsim.Ellipse objects can be initialized in a variety of ways (see documentation of this
         class, galsim.ellipse.Ellipse in the doxygen documentation, for details).
@@ -215,7 +216,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         self._profile.applyTransformation(ellipse_noshift)
 
     def applyMagnification(self, scale):
-        """Scale the linear size of this _BaseCorrelatedNoise by scale.  
+        """Scale the linear scale of correlations in this noise model by scale.  
         
         Scales the linear dimensions of the image by the factor scale, e.g.
         `half_light_radius` <-- `half_light_radius * scale`.
@@ -225,7 +226,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         self.applyTransformation(galsim.Ellipse(np.log(scale)))
 
     def applyRotation(self, theta):
-        """Apply a rotation theta to this object.
+        """Apply a rotation theta to this correlated noise model.
            
         After this call, the caller's type will still be a _BaseCorrelatedNoise, unlike in the
         GSObject implementation of this method.  This is to allow _BaseCorrelatedNoise methods to
@@ -238,8 +239,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         self._profile.applyRotation(theta)
 
     def applyShear(self, *args, **kwargs):
-        """Apply a shear to this object, where arguments are either a galsim.Shear, or arguments
-        that will be used to initialize one.
+        """Apply a shear to this correlated noise model, where arguments are either a galsim.Shear,
+        or arguments that will be used to initialize one.
 
         For more details about the allowed keyword arguments, see the documentation for galsim.Shear
         (for doxygen documentation, see galsim.shear.Shear).
@@ -252,8 +253,12 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
     # Also add methods which create a new _BaseCorrelatedNoise with the transformations applied...
     #
     def createTransformed(self, ellipse):
-        """Returns a new correlation function by applying a galsim.Ellipse transformation (shear,
+        """Returns a new correlated noise model by applying a galsim.Ellipse transformation (shear,
         dilate).
+
+        The new instance will share the galsim.BaseDeviate random number generator with the parent.
+        Use the .setRNG() method after this operation if you wish to use a different random number
+        sequence.
 
         Note that galsim.Ellipse objects can be initialized in a variety of ways (see documentation
         of this class, galsim.ellipse.Ellipse in the doxygen documentation, for details).
@@ -264,7 +269,6 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         @param ellipse The galsim.Ellipse transformation to apply
         @returns The transformed object.
         """
-        #TODO: THIS CURRENTLY RESETS THE RNG, FIX THIS!
         if not isinstance(ellipse, galsim.Ellipse):
             raise TypeError("Argument to createTransformed must be a galsim.Ellipse!")
         ret = self.copy()
@@ -272,27 +276,33 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         return ret
 
     def createMagnified(self, scale):
-        """Returns a new correlation function by applying a magnification by the given scale,
+        """Returns a new correlated noise model by applying a magnification by the given scale,
         scaling the linear size by scale.  
- 
+
+        The new instance will share the galsim.BaseDeviate random number generator with the parent.
+        Use the .setRNG() method after this operation if you wish to use a different random number
+        sequence.
+
         Scales the linear dimensions of the image by the factor scale.
         e.g. `half_light_radius` <-- `half_light_radius * scale`
  
         @param scale The linear rescaling factor to apply.
         @returns The rescaled object.
         """
-        #TODO: THIS CURRENTLY RESETS THE RNG, FIX THIS!
         ret = self.copy()
         ret.applyTransformation(galsim.Ellipse(np.log(scale)))
         return ret
 
     def createRotated(self, theta):
-        """Returns a new correlation function by applying a rotation.
+        """Returns a new correlated noise model by applying a rotation.
+
+        The new instance will share the galsim.BaseDeviate random number generator with the parent.
+        Use the .setRNG() method after this operation if you wish to use a different random number
+        sequence.
 
         @param theta Rotation angle (Angle object, +ve anticlockwise).
         @returns The rotated object.
         """
-        #TODO: THIS CURRENTLY RESETS THE RNG, FIX THIS!
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
         ret = self.copy()
@@ -300,13 +310,16 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         return ret
 
     def createSheared(self, *args, **kwargs):
-        """Returns a new correlation function by applying a shear, where arguments are either a
+        """Returns a new correlated noise model by applying a shear, where arguments are either a
         galsim.Shear or keyword arguments that can be used to create one.
+
+        The new instance will share the galsim.BaseDeviate random number generator with the parent.
+        Use the .setRNG() method after this operation if you wish to use a different random number
+        sequence.
 
         For more details about the allowed keyword arguments, see the documentation of galsim.Shear
         (for doxygen documentation, see galsim.shear.Shear).
         """
-        #TODO: THIS CURRENTLY RESETS THE RNG, FIX THIS!
         ret = self.copy()
         ret.applyShear(*args, **kwargs)
         return ret
@@ -447,7 +460,6 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     A number of methods familiar from GSObject instance have also been implemented directly as 
     `cn` methods, so that the following commands are all legal:
 
-    #TODO: SOME OF THESE RESET THE RNG CURRENTLY, FIX THIS!
         >>> cn.draw(im, dx, wmult=4)
         >>> cn.createSheared(s)
         >>> cn.createMagnified(m)
@@ -484,14 +496,27 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
     Addition works simply to add the internally-stored correlated noise fields, so that
 
-        >>> cn2 = cn0 + cn1
-        >>> cn2 += cn1
+        >>> cn3 = cn2 + cn1
+        >>> cn4 += cn5
 
     provides a representation of the correlation function of two linearly summed fields represented
     by the individual correlation function operands.
 
-    The multiplication and division operators scale the overall correlation function by a scalar 
-    operand, using the .scaleVariance() method described above.
+    What happens to the internally stored random number generators in the examples above?  For all
+    addition operations it is the galsim.BaseDeviate belonging to the instance on the Left-Hand Side
+    of the operator that is retained. 
+
+    In the example above therefore, it is the random number generator from `cn2` that will be stored
+    and used by `cn3`, and `cn4` will retain it's random number generator after inplace addition of
+    `cn5`.  The random number generator of `cn5` is not affected by the operation.
+
+    The multiplication and division operators, e.g.
+
+        >>> cn1 /= 3.
+        >>> cn2 = cn1 * 3
+
+    scale the overall correlation function by a scalar operand using the .scaleVariance() method
+    described above.  The random number generators are not affected by these scaling operations.
     """
     def __init__(self, rng, image, dx=0., interpolant=None):
 
@@ -669,6 +694,5 @@ def get_COSMOS_CorrFunc(rng, file_name, dx_cosmos=0.03, variance=0.):
     # If the input keyword variance is non-zero, scale the correlation function to have this
     # variance
     if variance > 0.:
-        var_original = ret._profile.xValue(galsim.PositionD(0., 0.))
-        ret.scaleVariance(variance / var_original)
+        ret.setVariance(variance)
     return ret
