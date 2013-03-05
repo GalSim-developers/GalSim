@@ -189,9 +189,7 @@ class _BaseCorrelatedNoise(galsim.GaussianNoise):
         # Finally generate a random field in Fourier space with the right PS, and inverse DFT back,
         # including factor of sqrt(2) to account for only adding noise to the real component:
         gaussvec = galsim.ImageD(image.bounds)
-        GaussianNoise.applyTo(self, gaussvec) # Apply the internally stored Gaussian noise using
-                                              # base class method inheritance rules to access the
-                                              # GaussianNoise.applyTo method 
+        galsim.GaussianNoise.applyTo(self, gaussvec) # Apply the internally stored Gaussian noise:
         noise_array = np.sqrt(2.) * np.fft.ifft2(gaussvec.array * rootps)
         # Make contiguous and add to the image
         image += galsim.ImageViewD(np.ascontiguousarray(noise_array.real))
