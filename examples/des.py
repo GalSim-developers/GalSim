@@ -48,13 +48,13 @@ def main(argv):
     # For the file names, I pick a particular exposure.  The directory structure corresponds 
     # to where the files are stored on folio at UPenn.
 
-    #img_dir = '/data3/DECAM/SV/DECam_154912'
-    #wl_dir = '/data3/DECAM/wl/DECam_00154912_wl'
-    #img_dir = '/Users/Mike/Astro/des/SV/DECam_00154912_wl'
-    #wl_dir = '/Users/Mike/Astro/des/SV/DECam_00154912_wl'
-    img_dir = 'des_data'
-    wl_dir = 'des_data'
     root = 'DECam_00154912' 
+    #img_dir = '/data3/DECAM/SV/DECam_154912'
+    #img_dir = '/Users/Mike/Astro/des/SV/DECam_00154912_wl'
+    img_dir = 'des_data'
+    #wl_dir = '/data3/DECAM/wl/DECam_00154912_wl'
+    #wl_dir = '/Users/Mike/Astro/des/SV/DECam_00154912_wl'
+    wl_dir = 'des_data'
     out_dir = 'output'
 
     #nchips = 62
@@ -86,6 +86,7 @@ def main(argv):
         cat_file = '%s_%02d_cat.fits'%(root,chipnum)
         psfex_file = '%s_%02d_psfcat.psf'%(root,chipnum)
         fitpsf_file = '%s_%02d_fitpsf.fits'%(root,chipnum)
+        psfex_image_file = '%s_%02d_psfex_image.fits'%(root,chipnum)
         fitpsf_image_file = '%s_%02d_fitpsf_image.fits'%(root,chipnum)
     
         # Get some parameters about the image from the data image header information
@@ -105,13 +106,15 @@ def main(argv):
         #sky_level = 900
         #gain = 4
 
-        # Setup the image:
+        # Setup the images:
+        psfex_image = galsim.ImageF(xsize,ysize)
+        psfex_image.scale = pixel_scale
         fitpsf_image = galsim.ImageF(xsize,ysize)
         fitpsf_image.scale = pixel_scale
 
         # Read the other input files
         cat = galsim.InputCatalog(cat_file, hdu=2, dir=img_dir)
-        #psfex = galsim.des.DES_PSFEx(psfex_file)
+        psfex = galsim.des.DES_PSFEx(psfex_file, dir=wl_dir)
         fitpsf = galsim.des.DES_Shapelet(fitpsf_file, dir=wl_dir)
 
         nobj = cat.nobjects
@@ -143,36 +146,72 @@ def main(argv):
             # Define the pixel
             pix = galsim.Pixel(pixel_scale)
 
-            if not fitpsf.bounds.includes(image_pos):
-                print '...not in fitpsf.bounds'
-                continue
+            # Firstt do the PSFEx image:
+            if True:
+                # Define the PSF profile
+                psf = psfex.getPSF(image_pos, pixel_scale)
+                psf.setFlux(flux)
 
-            # Define the PSF profile
-            psf = fitpsf.getPSF(image_pos)
-            psf.setFlux(flux)
+                # Make the final image, convolving with pix
+                final = galsim.Convolve([pix,psf])
 
-            # Make the final image, convolving with pix
-            final = galsim.Convolve([pix,psf])
+                # Apply partial-pixel shift 
+                final.applyShift(dx*pixel_scale,dy*pixel_scale)
 
-            # Apply partial-pixel shift 
-            final.applyShift(dx*pixel_scale,dy*pixel_scale)
+                # Draw the postage stamp image
+                stamp = final.draw(dx=pixel_scale)[0]
 
-            # Draw the postage stamp image
-            stamp = final.draw(dx=pixel_scale)[0]
+                # Recenter the stamp at the desired position:
+                stamp.setCenter(ix,iy)
 
-            # Recenter the stamp at the desired position:
-            stamp.setCenter(ix,iy)
+                # Find overlapping bounds
+                bounds = stamp.bounds & psfex_image.bounds
+                psfex_image[bounds] += stamp[bounds]
 
-            # Find overlapping bounds
-            bounds = stamp.bounds & fitpsf_image.bounds
-            fitpsf_image[bounds] += stamp[bounds]
 
+            # Next do the ShapeletPSF image:
+            # If the position is not within the interpolation bounds, fitpsf will
+            # raise an exception telling us to skip this object.  Easier to check here.
+            if fitpsf.bounds.includes(image_pos):
+                # Define the PSF profile
+                psf = fitpsf.getPSF(image_pos)
+                psf.setFlux(flux)
+
+                # Make the final image, convolving with pix
+                final = galsim.Convolve([pix,psf])
+
+                # Apply partial-pixel shift 
+                final.applyShift(dx*pixel_scale,dy*pixel_scale)
+
+                # Draw the postage stamp image
+                stamp = final.draw(dx=pixel_scale)[0]
+
+                # Recenter the stamp at the desired position:
+                stamp.setCenter(ix,iy)
+
+                # Find overlapping bounds
+                bounds = stamp.bounds & fitpsf_image.bounds
+                fitpsf_image[bounds] += stamp[bounds]
+            else:
+                pass
+                #print '...not in fitpsf.bounds'
+
+        # Add noise
         rng = galsim.BaseDeviate(random_seed+nobj)
         noise = galsim.CCDNoise(rng, sky_level=sky_level, gain=gain)
+        psfex_image.addNoise(noise)
+        # Reset the random seed to match the action of the yaml version
+        # Note: the different between seed and reset matters here.
+        # reset would sever the connection between this rng instance and the one stored in noise.  
+        # seed changes the seed while keeping the connection between them.
+        rng.seed(random_seed+nobj)
         fitpsf_image.addNoise(noise)
 
         # Now write the images to disk.
+        psfex_image.write(psfex_image_file, dir=out_dir)
         fitpsf_image.write(fitpsf_image_file, dir=out_dir)
+
+        rng = galsim.BaseDeviate(random_seed+nobj)
 
 if __name__ == "__main__":
     import sys

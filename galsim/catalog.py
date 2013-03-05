@@ -37,7 +37,8 @@ class InputCatalog(object):
 
 
     @param file_name     Filename of the input catalog. (Required)
-    @param dir           Directory catalog is in.  (default `dir = None`)
+    @param dir           Optionally a directory name can be provided if the file_name does not 
+                         already include it.
     @param file_type     Either 'ASCII' or 'FITS'.  If None, infer from the file name ending.
                          (default `file_type = None`)
     @param comments      The character used to indicate the start of a comment in an

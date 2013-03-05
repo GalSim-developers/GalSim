@@ -16,15 +16,12 @@
 # You should have received a copy of the GNU General Public License
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
-"""@file des_psf.py
+"""@file des_shapelet.py
 
-Part of the DES module.  This file implements two ways that DES measures the PSF.
+Part of the DES module.  This file implements one way that DES measures the PSF.
 
 The DES_Shapelet class handles interpolated shapelet decompositions, which are generally
 stored in *_fitpsf.fits files.
-
-The DES_PsfEx class handles interpolated PCA images, which are generally stored in 
-*_psfcat.psf files.
 """
 
 import galsim
@@ -56,6 +53,8 @@ class DES_Shapelet(object):
 
 
     @param file_name  The file name to be read in.
+    @param dir        Optionally a directory name can be provided if the file_name does not 
+                      already include it.
     @param file_type  Either 'ASCII' or 'FITS' or None.  If None, infer from the file name ending
                       (default = None).
     """
@@ -163,7 +162,7 @@ class DES_Shapelet(object):
         import numpy
         Px = self._definePxy(pos.x,self.bounds.xmin,self.bounds.xmax)
         Py = self._definePxy(pos.y,self.bounds.ymin,self.bounds.ymax)
-        P = numpy.zeros(self.fit_size)
+        P = numpy.empty(self.fit_size)
         i = 0
         for n in range(self.fit_order+1):
             for q in range(n):
@@ -179,10 +178,11 @@ class DES_Shapelet(object):
     def _definePxy(self, x, min, max):
         import numpy
         x1 = (2.*x-min-max)/(max-min)
-        temp = numpy.ones(self.fit_order+1)
+        temp = numpy.empty(self.fit_order+1)
+        temp[0] = 1
         if self.fit_order > 0:
             temp[1] = x1
-        for i in range(2,self.fit_order):
+        for i in range(2,self.fit_order+1):
             temp[i] = ((2.*i-1.)*x1*temp[i-1] - (i-1.)*temp[i-2]) / float(i)
         return temp
 
@@ -201,26 +201,32 @@ galsim.config.process.valid_input_types['des_shapelet'] = ('des.DES_Shapelet', [
 def BuildDES_Shapelet(config, key, base, ignore):
     """@brief Build a RealGalaxy type GSObject from user input.
     """
-    req = {}
+    #print 'Start BuildDES_Shapelet'
+    #print 'config = ',config
+    #print 'key = ',key
+    #print 'base = ',base
+    #print 'ignore = ',ignore
     opt = { 'flux' : float }
-    single = []
-    kwargs, safe = galsim.config.GetAllParams(
-        config, key, base, req=req, opt=opt, single=single, ignore=ignore)
+    kwargs, safe = galsim.config.GetAllParams(config, key, base, opt=opt, ignore=ignore)
+    #print 'kwargs = ',kwargs
 
     if 'des_shapelet' not in base:
         raise ValueError("No DES_Shapelet instance available for building type = DES_Shapelet")
     des_shapelet = base['des_shapelet']
+    #print 'des_shapelet = ',des_shapelet
 
     if 'chip_pos' not in base:
         raise ValueError("DES_Shapelet requested, but no chip_pos defined in base.")
     chip_pos = base['chip_pos']
+    #print 'chip_pos = ',chip_pos
 
-    try:
+    if des_shapelet.bounds.includes(chip_pos):
         psf = des_shapelet.getPSF(chip_pos)
-    except IndexError:
+    else:
         message = 'Position '+str(chip_pos)+' not in interpolation bounds: '
         message += str(des_shapelet.bounds)
         raise galsim.config.gsobject.SkipThisObject(message)
+    #print 'psf = ',psf
 
     if 'flux' in kwargs:
         psf.setFlux(kwargs['flux'])

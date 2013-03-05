@@ -12,55 +12,60 @@
 #
 # The DESDM pipeline produces a catalog of detected objects for each image, and also an
 # interpolated # PSF using Emmanuel Bertin's PSFEx code, which are stored in *_psfcat.psf files.
-# The WL pipeline # produces a different estimate of the PSF using Mike Jarvis's shapelet code,
-# which are stored in # *_fitpsf.fits files.
+# The WL pipeline produces a different estimate of the PSF using Mike Jarvis's shapelet code,
+# which are stored in *_fitpsf.fits files.
 #
 # This script reads the appropriate files for each chip and builds two images, one for each kind
 # of PSF estimate, and draws an image of the PSF at the location of each galaxy.  Normally, you
 # would probably want to draw these with no noise on individual postage stamps or something like
 # that.
 
+# First define the aspects of the configuration that are common to both tasks
+
+# We define a few variables here that will be used multiple times below.
+# Also, it's convenient to define them near the top to make them easy to change to run on 
+# different exposures in other directories, etc.
+eval_variables :
+    # Note: the s at the start of sroot means the variable is a str.
+    # This will be used as simply root in the Eval items below that use it.
+    sroot : 'DECam_00154912_'
+
+    # Directories in the Galsim repo
+    simg_dir : 'des_data'
+    swl_dir : 'des_data'
+
+    # Directories on Mike's laptop
+    #simg_dir = '/Users/Mike/Astro/des/SV/DECam_00154912_wl'
+    #swl_dir = '/Users/Mike/Astro/des/SV/DECam_00154912_wl'
+    
+    # Directories on folio
+    #simg_dir = '/data3/DECAM/SV/DECam_154912'
+    #swl_dir = '/data3/DECAM/wl/DECam_00154912_wl'
+    
 
 # Define the PSF profile to use the DES shapelet files
 psf : 
-    type : DES_Shapelet
-
     skip : { type : InputCatalog, col : 'FLAGS' }
     flux : { type : InputCatalog, col : 'FLUX_AUTO' }
 
 
 # Setup input files
 input :
-    des_shapelet :
-        #dir : '/data3/DECAM/wl/DECam_00154912'
-        #dir : '/Users/Mike/Astro/des/SV/DECam_00154912_wl'
-        dir : 'des_data'
-        file_name :
-            type : NumberedFile
-            root : &root DECam_00154912_
-            digits : 2
-            ext : '_fitpsf.fits'
-            num : { type : Sequence, first : 1 }
-        
     catalog :
-        #dir : '/data3/DECAM/SV/DECam_154912'
-        #dir : '/Users/Mike/Astro/des/SV/DECam_00154912_wl'
-        dir : 'des_data'
+        dir : { type : Eval, str : 'img_dir' }
         file_name : 
             type : NumberedFile
-            root : *root
+            root : { type : Eval, str : 'root' }
             digits : 2
             ext : '_cat.fits'
             num : { type : Sequence, first : 1 }
         hdu : 2
 
     fits_header :
-        #dir : '/data3/DECAM/SV/DECam_154912'
-        #dir : '/Users/Mike/Astro/des/SV/DECam_00154912_wl'
-        dir : 'des_data'
+        dir : { type : Eval, str : 'img_dir' }
         file_name : 
             type : NumberedFile
-            root : *root
+            root : { type : Eval, str : 'root' }
             digits : 2
             ext : '.fits.fz'
             num : { type : Sequence, first : 1 }
@@ -101,7 +106,7 @@ image :
 
     random_seed : 1339201
 
-    nproc : -1
+    #nproc : -1
 
 
 # Define the names and format of the output files
@@ -111,12 +116,50 @@ output :
 
     file_name :
         type : NumberedFile
-        root : *root
+        root : { type : Eval, str : 'root' }
         digits : 2
-        ext : '_fitpsf_image.fits'
         num : { type : Sequence, first : 1 }
+        # ext is defined below, since it is different for the two runs
 
     dir : 'output_yaml'
 
     #nproc : -1
 
+---
+# Now the particulars that are specific to the shapelet PSFs
+
+psf :
+    type : DES_Shapelet
+
+input :
+    des_shapelet :
+        dir : { type : Eval, str : 'wl_dir' }
+        file_name :
+            type : NumberedFile
+            root : { type : Eval, str : 'root' }
+            digits : 2
+            ext : '_fitpsf.fits'
+            num : { type : Sequence, first : 1 }
+        
+output :
+    file_name :
+        ext : '_fitpsf_image.fits'
+---
+# Next the particulars that are specific to PSFEx
+
+psf :
+    type : DES_PSFEx
+
+input :
+    des_psfex :
+        dir : { type : Eval, str : 'wl_dir' }
+        file_name :
+            type : NumberedFile
+            root : { type : Eval, str : 'root' }
+            digits : 2
+            ext : '_psfcat.psf'
+            num : { type : Sequence, first : 1 }
+
+output :
+    file_name :
+        ext : '_psfex_image.fits'
