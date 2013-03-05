@@ -177,6 +177,15 @@ def main(argv):
                 psf = fitpsf.getPSF(image_pos)
                 psf.setFlux(flux)
 
+                # Galsim doesn't have WCS functionality yet.  
+                # But for the shapelet PSF, it is important, since it really describes the
+                # PSF in sky coordinates, not pixel coordinates.  But to first order,
+                # the DES WCS is 90 degrees rotated from the sky, so for now, just apply
+                # a 90 degree rotation to get the images to look approximately correct.
+                # Eventually, we'll want to have a DES_WCS that can read the full WCS from
+                # the fits header and account for all of the field distortion correctly.
+                psf.applyRotation(90*galsim.degrees)
+
                 # Make the final image, convolving with pix
                 final = galsim.Convolve([pix,psf])
 

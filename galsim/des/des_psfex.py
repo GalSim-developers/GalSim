@@ -120,9 +120,11 @@ class DES_PSFEx(object):
         @returns an InterpolatedImage instance.
         """
         import numpy
-        xtothe = self._define_tothe( (pos.x - self.x_zero) / self.x_scale )
-        ytothe = self._define_tothe( (pos.y - self.y_zero) / self.y_scale )
-        P = numpy.array([ xtothe[nx] * ytothe[ny] for ny in range(3) for nx in range(3-ny) ])
+        xto = self._define_xto( (pos.x - self.x_zero) / self.x_scale )
+        yto = self._define_xto( (pos.y - self.y_zero) / self.y_scale )
+        order = self.fit_order
+        P = numpy.array([ xto[nx] * yto[ny] for ny in range(order+1) for nx in range(order+1-ny) ])
+        assert len(P) == self.fit_size
 
         # Note: This is equivalent to:
         #
@@ -131,7 +133,7 @@ class DES_PSFEx(object):
         #     for ny in range(self.fit_order+1):
         #         for nx in range(self.fit_order+1-ny):
         #             assert k == nx+ny(self.fit_order+1)-(ny*ny-1))/2
-        #             P[k] = xtothe[nx] * ytothe[ny]
+        #             P[k] = xto[nx] * yto[ny]
         #             k == k+1
         #
         # which is pretty much Peter's version of this code.
@@ -141,13 +143,13 @@ class DES_PSFEx(object):
         im.scale = pixel_scale * self.sample_scale
         return galsim.InterpolatedImage(im, flux=1, x_interpolant=galsim.Lanczos(3))
 
-    def _define_tothe(self, x):
+    def _define_xto(self, x):
         import numpy
-        xtothe = numpy.empty(self.fit_order+1)
-        xtothe[0] = 1
+        xto = numpy.empty(self.fit_order+1)
+        xto[0] = 1
         for i in range(1,self.fit_order+1):
-            xtothe[i] = x*xtothe[i-1]
-        return xtothe
+            xto[i] = x*xto[i-1]
+        return xto
 
 # Now add this class to the config framework.
 import galsim.config

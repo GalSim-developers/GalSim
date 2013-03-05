@@ -162,12 +162,18 @@ class DES_Shapelet(object):
         import numpy
         Px = self._definePxy(pos.x,self.bounds.xmin,self.bounds.xmax)
         Py = self._definePxy(pos.y,self.bounds.ymin,self.bounds.ymax)
-        P = numpy.empty(self.fit_size)
-        i = 0
-        for n in range(self.fit_order+1):
-            for q in range(n):
-                P[i] = Px[n-q] * Py[q]
-                i = i+1
+        order = self.fit_order
+        P = numpy.array([ Px[n-q] * Py[q] for n in range(order+1) for q in range(n+1) ])
+        assert len(P) == self.fit_size
+
+        # Note: This is equivalent to:
+        #
+        #     P = numpy.empty(self.fit_size)
+        #     k = 0
+        #     for n in range(self.fit_order+1):
+        #         for q in range(n+1):
+        #             P[k] = Px[n-q] * Py[q]
+        #             k = k+1
 
         b1 = numpy.dot(P,self.interp_matrix)
         b = numpy.dot(b1,self.rot_matrix)

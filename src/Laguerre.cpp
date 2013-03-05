@@ -392,7 +392,7 @@ namespace galsim {
                 A = X * A;
                 A.col(0) += tmp.col(1);
                 A.col(1) -= tmp.col(0);
-                A *= (m==1 ? 2. : 1.) / sqrtn(m);
+                A *= m==1 ? 2. : 1./sqrtn(m);
 
                 psi.subMatrix(ilo,ihi,rIndex,rIndex+2) = mBasisHelper<T>::Asign(m%4) * A;
             }

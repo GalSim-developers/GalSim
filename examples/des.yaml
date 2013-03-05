@@ -41,6 +41,12 @@ eval_variables :
     # Directories on folio
     #simg_dir = '/data3/DECAM/SV/DECam_154912'
     #swl_dir = '/data3/DECAM/wl/DECam_00154912_wl'
+
+    # Set which chips to run on
+    #inchips : 62
+    #ifirst_chip : 1
+    inchips : 1
+    ifirst_chip : 12
     
 
 # Define the PSF profile to use the DES shapelet files
@@ -58,7 +64,7 @@ input :
             root : { type : Eval, str : 'root' }
             digits : 2
             ext : '_cat.fits'
-            num : { type : Sequence, first : 1 }
+            num : { type : Sequence, first : { type : Eval, str : 'first_chip' } }
         hdu : 2
 
     fits_header :
@@ -68,7 +74,7 @@ input :
             root : { type : Eval, str : 'root' }
             digits : 2
             ext : '.fits.fz'
-            num : { type : Sequence, first : 1 }
+            num : { type : Sequence, first : { type : Eval, str : 'first_chip' } }
 
 
 
@@ -92,7 +98,8 @@ image :
             # This is an approximation, since GAINA, GAINB are missing in SV files.
             type : Eval
             str : 'sky / sig**2'
-            fsky : { type : FitsHeader , key : 'SKYBRITE' }
+            #fsky : { type : FitsHeader , key : 'SKYBRITE' }
+            fsky : 10
             fsig : { type : FitsHeader , key : 'SKYSIGMA' }
 
         # If you don't have the images, you can use these values instead
@@ -111,14 +118,13 @@ image :
 
 # Define the names and format of the output files
 output :
-    #nfiles : 62
-    nfiles : 1
+    nfiles : { type : Eval, str : 'nchips' }
 
     file_name :
         type : NumberedFile
         root : { type : Eval, str : 'root' }
         digits : 2
-        num : { type : Sequence, first : 1 }
+        num : { type : Sequence, first : { type : Eval, str : 'first_chip' } }
         # ext is defined below, since it is different for the two runs
 
     dir : 'output_yaml'
@@ -131,6 +137,11 @@ output :
 psf :
     type : DES_Shapelet
 
+    # Account for the 1st order effect of the WCS.
+    # Eventually, we need an implementation of the DES WCS.  But Galsim doesn't really do 
+    # WCS at all yet, so wait for that.
+    rotation : '90 deg'
+
 input :
     des_shapelet :
         dir : { type : Eval, str : 'wl_dir' }
@@ -139,7 +150,7 @@ input :
             root : { type : Eval, str : 'root' }
             digits : 2
             ext : '_fitpsf.fits'
-            num : { type : Sequence, first : 1 }
+            num : { type : Sequence, first : { type : Eval, str : 'first_chip' } }
         
 output :
     file_name :
@@ -158,7 +169,7 @@ input :
             root : { type : Eval, str : 'root' }
             digits : 2
             ext : '_psfcat.psf'
-            num : { type : Sequence, first : 1 }
+            num : { type : Sequence, first : { type : Eval, str : 'first_chip' } }
 
 output :
     file_name :
