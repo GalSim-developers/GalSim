@@ -128,7 +128,7 @@ class _BaseCorrelatedNoise(galsim.GaussianNoise):
 
         On output the Image instance image will have been given additional noise according to 
         the given CorrelatedNoise instance.  image.getScale() is used to determine the input image
-        pixel separation.
+        pixel separation, and if image.getscale() <= 0 a pixel scale of 1 is assumed.
 
         To add deviates to every element of an image, the syntax 
 
@@ -158,7 +158,7 @@ class _BaseCorrelatedNoise(galsim.GaussianNoise):
         self._profile_for_stored = self._profile
 
         # Then retrieve or redraw the sqrt(power spectrum) needed for making the noise field:
-
+        dx = image.getScale()
         # First check whether we can just use the stored power spectrum (no drawing necessary if so)
         use_stored = False
         for rootps_array, scale in self._rootps_store:
@@ -174,10 +174,7 @@ class _BaseCorrelatedNoise(galsim.GaussianNoise):
             newcf = galsim.ImageD(image.bounds) # set the correlation func to be the correct size
             # set the scale based on dx...
             if dx <= 0.:
-                if image.getScale() > 0.:
-                    newcf.setScale(image.getScale())
-                else:
-                    newcf.setScale(1.) # sometimes new Images have getScale() = 0
+                newcf.setScale(1.) # sometimes new Images have getScale() = 0
             else:
                 newcf.setScale(dx)
             # Then draw this correlation function into an array
