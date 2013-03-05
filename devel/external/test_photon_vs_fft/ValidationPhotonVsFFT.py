@@ -65,11 +65,11 @@ def getGSObjects(obj):
 
             gso['psf'] = galsim.Airy(fwhm=obj['psf']['fwhm'])
 
-        elif obj['psf']['type'] == 'Kolmogorov':
+        elif obj['psf']['type'] == 'AtmosphericPSF':
 
-            gso['psf'] = galsim.Kolmogorov(fwhm=obj['psf']['fwhm'])
+            gso['psf'] = galsim.AtmosphericPSF(fwhm=obj['psf']['fwhm'])
         else:
-            logger.error('unknown PSF type, use {Moffat,Airy,Kolmogorov,none}')
+            logger.error('unknown PSF type, use {Moffat,Airy,AtmosphericPSF,none}')
             sys.exit() 
 
         gso['psf'].applyShear(g1=obj['psf']['g1'],g2=obj['psf']['g2'])
