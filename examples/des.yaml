@@ -54,23 +54,51 @@ input :
             num : { type : Sequence, first : 1 }
         hdu : 2
 
+    fits_header :
+        #dir : '/data3/DECAM/SV/DECam_154912'
+        #dir : '/Users/Mike/Astro/des/SV/DECam_00154912_wl'
+        dir : 'des_data'
+        file_name : 
+            type : NumberedFile
+            root : *root
+            digits : 2
+            ext : '.fits.fz'
+            num : { type : Sequence, first : 1 }
+
+
 
 # Define some other information about the images 
 image :
     type : Scattered
 
-    xsize : 2048  # pixels
-    ysize : 4096  # pixels
+    xsize : { type : FitsHeader , key : 'NAXIS1' }
+    ysize : { type : FitsHeader , key : 'NAXIS2' }
+    pixel_scale : { type : FitsHeader , key : 'PIXSCAL1' }
+
+    # If you don't have the images, you can use these values instead
+    #xsize : 2048
+    #ysize : 4096
+    #pixel_scale : 0.27
+    
+    noise :
+        type : CCD
+        #sky_level_pixel : { type : FitsHeader , key : 'SKYBRITE' }
+        sky_level : { type : FitsHeader , key : 'SKYBRITE' }
+        gain : 
+            # This is an approximation, since GAINA, GAINB are missing in SV files.
+            type : Eval
+            str : 'sky / sig**2'
+            fsky : { type : FitsHeader , key : 'SKYBRITE' }
+            fsig : { type : FitsHeader , key : 'SKYSIGMA' }
+
+        # If you don't have the images, you can use these values instead
+        #sky_level_pixel : 900
+        #gain : 4
 
     center : 
         type : XY 
         x : { type : InputCatalog , col : 'X_IMAGE' }
         y : { type : InputCatalog , col : 'Y_IMAGE' }
-
-    pixel_scale : 0.264  # arcsec / pixel
-
-    noise :
-        sky_level : 16000  # ADU / arcsec^2
 
     random_seed : 1339201
 

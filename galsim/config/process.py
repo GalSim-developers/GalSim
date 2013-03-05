@@ -12,6 +12,7 @@ valid_input_types = {
     'power_spectrum' : ('PowerSpectrum',
                         # power_spectrum uses these extra parameters for buildGriddedShears later.
                         ['grid_spacing', 'interpolant']),
+    'fits_header' : ('FitsHeader', []), 
 }
 
 

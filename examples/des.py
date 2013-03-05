@@ -59,8 +59,6 @@ def main(argv):
 
     #nchips = 62
     nchips = 1
-    pixel_scale = 0.264      # arcsec / pixel
-    sky_level = 16000        # ADU/arcsec^2
 
     # The random seed, so the results are deterministic
     random_seed = 1339201           
@@ -70,6 +68,12 @@ def main(argv):
     flux_col = 'FLUX_AUTO'
     flag_col = 'FLAGS'
 
+    xsize_key = 'NAXIS1'
+    ysize_key = 'NAXIS2'
+    pixel_scale_key = 'PIXSCAL1'
+    sky_level_key = 'SKYBRITE'
+    sky_sigma_key = 'SKYSIGMA'
+
     # Make output directory if not already present.
     if not os.path.isdir(out_dir):
         os.mkdir(out_dir)
@@ -77,20 +81,39 @@ def main(argv):
     for chipnum in range(1,nchips+1):
         print 'Start chip ',chipnum
 
+        # Setup the file names
         image_file = '%s_%02d.fits.fz'%(root,chipnum)
         cat_file = '%s_%02d_cat.fits'%(root,chipnum)
         psfex_file = '%s_%02d_psfcat.psf'%(root,chipnum)
         fitpsf_file = '%s_%02d_fitpsf.fits'%(root,chipnum)
         fitpsf_image_file = '%s_%02d_fitpsf_image.fits'%(root,chipnum)
     
-        image = galsim.fits.read(image_file, dir=img_dir)
+        # Get some parameters about the image from the data image header information
+        image_header = galsim.FitsHeader(image_file, dir=img_dir)
+        xsize = image_header[xsize_key]
+        ysize = image_header[ysize_key]
+        pixel_scale = image_header[pixel_scale_key]
+        sky_sigma = image_header[sky_sigma_key]
+        sky_level = image_header[sky_level_key]
+        sky_level_pixel = sky_level * pixel_scale**2
+        gain = sky_level / sky_sigma**2  # an approximation, since gain is missing.
+
+        # If you don't want to download the images just to get the headers, you can 
+        # comment the above section and use these values instead:
+        #xsize = 2048
+        #ysize = 4096
+        #pixel_scale = 0.27
+        #sky_level_pixel = 900
+        #gain = 4
+
+        # Setup the image:
+        fitpsf_image = galsim.ImageF(xsize,ysize)
+        fitpsf_image.scale = pixel_scale
+
+        # Read the other input files
         cat = galsim.InputCatalog(cat_file, hdu=2, dir=img_dir)
         #psfex = galsim.des.DES_PSFEx(psfex_file)
         fitpsf = galsim.des.DES_Shapelet(fitpsf_file, dir=wl_dir)
-
-        # Setup the images:
-        fitpsf_image = galsim.ImageF(image.bounds)
-        fitpsf_image.scale = pixel_scale
 
         nobj = cat.nobjects
         print 'Catalog has ',nobj,' objects'
@@ -146,8 +169,7 @@ def main(argv):
             fitpsf_image[bounds] += stamp[bounds]
 
         rng = galsim.BaseDeviate(random_seed+nobj)
-        sky_level_pixel = sky_level * pixel_scale**2
-        noise = galsim.PoissonNoise(rng, sky_level=sky_level_pixel)
+        noise = galsim.CCDNoise(rng, sky_level=sky_level_pixel, gain=gain)
         fitpsf_image.addNoise(noise)
 
         # Now write the images to disk.

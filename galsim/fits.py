@@ -798,6 +798,97 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto')
 
     return image_list
 
+class FitsHeader(object):
+    """A class storing key/value pairs from a FITS Header
+
+    This class works a lot like the regular read() function, but rather than returning
+    the image part of the FITS file, it stores the header from which you can access the
+    various key values. 
+
+    After construction, you can access a header value by
+
+        value = fits_header[key]
+        value = fite_header.get(key, default)
+
+    You can also get the list of keys with
+    
+        keys = fits_header.keys()
+
+    Constructor parameters:
+
+    @param file_name    The name of the file to read in.  Either `file_name` or `hdu_list` is 
+                        required.
+    @param dir          Optionally a directory name can be provided if the file_name does not 
+                        already include it.
+    @param hdu_list     Either a `pyfits.HDUList`, a `pyfits.PrimaryHDU`, or `pyfits.ImageHDU`.
+                        In the former case, the `hdu` in the list will be selected.  In the latter
+                        two cases, the `hdu` parameter is ignored.  Either `file_name` or 
+                        `hdu_list` is required.
+    @param hdu          The number of the HDU to use.  The default is to use the primary HDU,
+                        which is numbered 0.
+    @param compression  Which decompression scheme to use (if any).  Options are:
+                        - None or 'none' = no decompression
+                        - 'rice' = use rice decompression in tiles
+                        - 'gzip' = use gzip to decompress the full file
+                        - 'bzip2' = use bzip2 to decompress the full file
+                        - 'gzip_tile' = use gzip decompression in tiles
+                        - 'hcompress' = use hcompress decompression in tiles
+                        - 'plio' = use plio decompression in tiles
+                        - 'auto' = determine the decompression from the extension of the file name
+                                   (requires fits to be a string).  
+                                   '*.fz' => 'rice'
+                                   '*.gz' => 'gzip'
+                                   '*.bz2' => 'bzip2'
+                                   otherwise None
+    """
+    _req_params = { 'file_name' : str }
+    _opt_params = { 'dir' : str , 'hdu' : int , 'compression' : str }
+    _single_params = []
+    _takes_rng = False
+    def __init__(self, file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto'):
+        import pyfits     # put this at function scope to keep pyfits optional
+    
+        file_compress, pyfits_compress = parse_compression(compression,file_name)
+
+        if file_name and hdu_list:
+            raise TypeError("Cannot provide both file_name and hdu_list to read()")
+        if not (file_name or hdu_list):
+            raise TypeError("Must provide either file_name or hdu_list to read()")
+
+        fin = None
+        if file_name:
+            if dir:
+                import os
+                file_name = os.path.join(dir,file_name)
+            hdu_list, fin = read_file(file_name, file_compress)
+
+        if isinstance(hdu_list, pyfits.HDUList):
+            # Note: Nothing special needs to be done when reading a compressed hdu.
+            # However, such compressed hdu's may not be the PrimaryHDU, so if we think we are
+            # reading a compressed file, skip to hdu 1.
+            if pyfits_compress and hdu==0:
+                if len(hdu_list) <= 1:
+                    raise IOError('Expecting at least one extension HDU in galsim.read')
+                hdu = 1
+            elif len(hdu_list) <= hdu:
+                raise IOError('Expecting at least %d HDUs in galsim.read'%(hdu+1))
+            fits = hdu_list[hdu]
+        else:
+            fits = hdu_list
+        check_hdu(fits, pyfits_compress)
+        self.header = fits.header
+
+    def __getitem__(self, key):
+        return self.header[key]
+
+    def get(self, key, default=None):
+        return self.header.get(key, default)
+
+    def keys(self):
+        return self.header.keys()
+
+    # Are there any other dict methods we should enable here?
+
 
 # inject write as methods of Image classes
 for Class in _galsim.Image.itervalues():

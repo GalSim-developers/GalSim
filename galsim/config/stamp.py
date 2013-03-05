@@ -400,7 +400,7 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level, final_shift):
     @return the resulting image.
     """
     if 'image' in config and 'wcs' in config['image']:
-        wcs_shear = CalculateWCSShear(config['image']['wcs'])
+        wcs_shear = CalculateWCSShear(config['image']['wcs'], config)
     else:
         wcs_shear = None
 
@@ -441,7 +441,7 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level, final_shift):
                 'Only one of signal_to_noise or flux may be specified for gal')
 
         if 'image' in config and 'noise' in config['image']:
-            noise_var = CalculateNoiseVar(config['image']['noise'], pixel_scale, sky_level)
+            noise_var = CalculateNoiseVar(config['image']['noise'], config, pixel_scale, sky_level)
         else:
             raise AttributeError(
                 "Need to specify noise level when using gal.signal_to_noise")
@@ -493,7 +493,7 @@ def AddNoiseFFT(im, weight_im, noise, base, rng, sky_level, logger=None):
     # Then add the correct kind of noise
     if type == 'Gaussian':
         single = [ { 'sigma' : float , 'variance' : float } ]
-        params = galsim.config.GetAllParams(noise, 'noise', noise, single=single)[0]
+        params = galsim.config.GetAllParams(noise, 'noise', base, single=single)[0]
 
         if 'sigma' in params:
             sigma = params['sigma']
@@ -515,7 +515,7 @@ def AddNoiseFFT(im, weight_im, noise, base, rng, sky_level, logger=None):
             opt['sky_level'] = float
         else:
             req['sky_level'] = float
-        params = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
+        params = galsim.config.GetAllParams(noise, 'noise', base, req=req, opt=opt)[0]
 
         if 'sky_level' in params:
             sky_level_pixel = params['sky_level'] * pixel_scale**2
@@ -544,7 +544,7 @@ def AddNoiseFFT(im, weight_im, noise, base, rng, sky_level, logger=None):
             opt['sky_level'] = float
         else:
             req['sky_level'] = float
-        params = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
+        params = galsim.config.GetAllParams(noise, 'noise', base, req=req, opt=opt)[0]
         gain = params.get('gain',1.0)
         read_noise = params.get('read_noise',0.0)
 
@@ -577,7 +577,7 @@ def AddNoiseFFT(im, weight_im, noise, base, rng, sky_level, logger=None):
         req = { 'file_name' : str }
         opt = { 'dx_cosmos' : float, 'variance' : float }
         
-        kwargs = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
+        kwargs = galsim.config.GetAllParams(noise, 'noise', base, req=req, opt=opt)[0]
 
         # Build the cf first (TODO: change this, see below)
         cf = galsim.correlatednoise.get_COSMOS_CorrFunc(**kwargs)
@@ -609,7 +609,7 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level, final_shift):
     final = galsim.Convolve(phot_list)
 
     if 'image' in config and 'wcs' in config['image']:
-        wcs_shear = CalculateWCSShear(config['image']['wcs'])
+        wcs_shear = CalculateWCSShear(config['image']['wcs'], config)
     else:
         wcs_shear = None
 
@@ -640,7 +640,7 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level, final_shift):
 
     if max_extra_noise > 0.:
         if 'image' in config and 'noise' in config['image']:
-            noise_var = CalculateNoiseVar(config['image']['noise'], pixel_scale, sky_level)
+            noise_var = CalculateNoiseVar(config['image']['noise'], config, pixel_scale, sky_level)
         else:
             raise AttributeError(
                 "Need to specify noise level when using draw_method = phot")
@@ -676,7 +676,7 @@ def AddNoisePhot(im, weight_im, noise, base, rng, sky_level, logger=None):
 
     if type == 'Gaussian':
         single = [ { 'sigma' : float , 'variance' : float } ]
-        params = galsim.config.GetAllParams(noise, 'noise', noise, single=single)[0]
+        params = galsim.config.GetAllParams(noise, 'noise', base, single=single)[0]
 
         if 'sigma' in params:
             sigma = params['sigma']
@@ -698,7 +698,7 @@ def AddNoisePhot(im, weight_im, noise, base, rng, sky_level, logger=None):
         else:
             req['sky_level'] = float
             sky_level = 0. # Switch from None to 0.
-        params = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
+        params = galsim.config.GetAllParams(noise, 'noise', base, req=req, opt=opt)[0]
         if 'sky_level' in params:
             sky_level += params['sky_level']
 
@@ -729,7 +729,7 @@ def AddNoisePhot(im, weight_im, noise, base, rng, sky_level, logger=None):
         else:
             req['sky_level'] = float
             sky_level = 0. # Switch from None to 0.
-        params = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
+        params = galsim.config.GetAllParams(noise, 'noise', base, req=req, opt=opt)[0]
         if 'sky_level' in params:
             sky_level += params['sky_level']
         gain = params.get('gain',1.0)
@@ -765,7 +765,7 @@ def AddNoisePhot(im, weight_im, noise, base, rng, sky_level, logger=None):
         req = { 'file_name' : str }
         opt = { 'dx_cosmos' : float, 'variance' : float }
         
-        kwargs = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
+        kwargs = galsim.config.GetAllParams(noise, 'noise', base, req=req, opt=opt)[0]
 
         # Build the cf first (TODO: change this, see below)
         cf = galsim.correlatednoise.get_COSMOS_CorrFunc(**kwargs)
@@ -834,7 +834,7 @@ def DrawPSFStamp(psf, pix, config, bounds, final_shift):
 
     return psf_im
            
-def CalculateWCSShear(wcs):
+def CalculateWCSShear(wcs, base):
     """
     Calculate the WCS shear from the WCS specified in the wcs dict.
     TODO: Should add in more WCS types than just a simple shear
@@ -849,12 +849,12 @@ def CalculateWCSShear(wcs):
 
     if type == 'Shear':
         req = { 'shear' : galsim.Shear }
-        params = galsim.config.GetAllParams(wcs, 'wcs', wcs, req=req)[0]
+        params = galsim.config.GetAllParams(wcs, 'wcs', base, req=req)[0]
         return params['shear']
     else:
         raise AttributeError("Invalid type %s for wcs",type)
 
-def CalculateNoiseVar(noise, pixel_scale, sky_level):
+def CalculateNoiseVar(noise, base, pixel_scale, sky_level):
     """
     Calculate the noise variance from the noise specified in the noise dict.
     """
@@ -867,7 +867,7 @@ def CalculateNoiseVar(noise, pixel_scale, sky_level):
 
     if type == 'Gaussian':
         single = [ { 'sigma' : float , 'variance' : float } ]
-        params = galsim.config.GetAllParams(noise, 'noise', noise, single=single)[0]
+        params = galsim.config.GetAllParams(noise, 'noise', base, single=single)[0]
         if 'sigma' in params:
             sigma = params['sigma']
             var = sigma * sigma
@@ -882,7 +882,7 @@ def CalculateNoiseVar(noise, pixel_scale, sky_level):
         else:
             req['sky_level'] = float
             sky_level = 0. # Switch from None to 0.
-        params = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
+        params = galsim.config.GetAllParams(noise, 'noise', base, req=req, opt=opt)[0]
         if 'sky_level' in params:
             sky_level += params['sky_level']
         var = sky_level * pixel_scale**2 
@@ -895,7 +895,7 @@ def CalculateNoiseVar(noise, pixel_scale, sky_level):
         else:
             req['sky_level'] = float
             sky_level = 0. # Switch from None to 0.
-        params = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
+        params = galsim.config.GetAllParams(noise, 'noise', base, req=req, opt=opt)[0]
         if 'sky_level' in params:
             sky_level += params['sky_level']
         gain = params.get('gain',1.0)
@@ -906,7 +906,7 @@ def CalculateNoiseVar(noise, pixel_scale, sky_level):
         req = { 'file_name' : str }
         opt = { 'dx_cosmos' : float, 'variance' : float }
         
-        kwargs = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
+        kwargs = galsim.config.GetAllParams(noise, 'noise', base, req=req, opt=opt)[0]
 
         # Build the cf first (TODO: change this)
         cf = galsim.correlatednoise.get_COSMOS_CorrFunc(**kwargs)

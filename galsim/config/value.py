@@ -4,11 +4,11 @@ import galsim
 # you have a new generator for.  The generator should be called _GenerateFromMyType
 # where MyType is the new type you are implementing.  See the des module for some examples.
 valid_value_types = {
-    float : [ 'InputCatalog', 'Random', 'RandomGaussian', 'RandomDistribution',
+    float : [ 'InputCatalog', 'FitsHeader', 'Random', 'RandomGaussian', 'RandomDistribution',
               'NFWHaloMag', 'Sequence', 'List', 'Eval' ],
-    int : [ 'InputCatalog', 'Random', 'Sequence', 'List', 'Eval' ],
-    bool : [ 'InputCatalog', 'Random', 'Sequence', 'List', 'Eval' ],
-    str : [ 'InputCatalog', 'NumberedFile', 'FormattedStr', 'List', 'Eval' ],
+    int : [ 'InputCatalog', 'FitsHeader', 'Random', 'Sequence', 'List', 'Eval' ],
+    bool : [ 'InputCatalog', 'FitsHeader', 'Random', 'Sequence', 'List', 'Eval' ],
+    str : [ 'InputCatalog', 'FitsHeader', 'NumberedFile', 'FormattedStr', 'List', 'Eval' ],
     galsim.Angle : [ 'Rad', 'Radians', 'Deg', 'Degrees', 'Random', 'List', 'Eval' ],
     galsim.Shear : [ 'E1E2', 'EBeta', 'G1G2', 'GBeta', 'Eta1Eta2', 'EtaBeta', 'QBeta',
                      'NFWHaloShear', 'PowerSpectrumShear', 'List', 'Eval' ],
@@ -117,12 +117,16 @@ def _GetBoolValue(param, param_name):
     #print 'GetBoolValue: param = ',param
     if isinstance(param,str):
         #print 'param.strip.upper = ',param.strip().upper()
-        if param.strip().upper() in [ 'TRUE', 'YES', '1' ]:
+        if param.strip().upper() in [ 'TRUE', 'YES' ]:
             return True
-        elif param.strip().upper() in [ 'FALSE', 'NO', '0' ]:
+        elif param.strip().upper() in [ 'FALSE', 'NO' ]:
             return False
         else:
-            raise AttributeError("Unable to parse %s param = %s as a bool."%(param_name,param))
+            try:
+                val = bool(int(param))
+                return val
+            except:
+                raise AttributeError("Unable to parse %s param = %s as a bool."%(param_name,param))
     else:
         try:
             val = bool(param)
@@ -330,10 +334,26 @@ def _GenerateFromInputCatalog(param, param_name, base, value_type):
     elif value_type is int:
         val = input_cat.getInt(**kwargs)
     elif value_type is bool:
-        val = bool(input_cat.getInt(**kwargs))
+        val = _GetBoolValue(input_cat.get(**kwargs),param_name)
 
     #print 'InputCatalog: ',val
     return val, False
+
+
+def _GenerateFromFitsHeader(param, param_name, base, value_type):
+    """@brief Return a value read from a FITS header
+    """
+    if 'fits_header' not in base:
+        raise ValueError("No fits header available for %s.type = FitsHeader"%param_name)
+    header = base['fits_header']
+
+    req = { 'key' : str }
+    kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    key = kwargs['key']
+
+    if key not in header.keys():
+        raise ValueError("key %s not found in the FITS header in %s"%(key,kwargs['file_name']))
+    return header[key], safe
 
 
 def _GenerateFromRandom(param, param_name, base, value_type):
@@ -815,6 +835,7 @@ def _GenerateFromEval(param, param_name, base, value_type):
         if key not in (ignore + req.keys()):
             opt[key] = _type_by_letter(key)
     #print 'opt = ',opt
+    #print 'base has ',base.keys()
             
     params, safe = GetAllParams(param, param_name, base, req=req, opt=opt, ignore=ignore)
     #print 'params = ',params
