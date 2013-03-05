@@ -138,7 +138,7 @@ psf :
     # Account for the 1st order effect of the WCS.
     # Eventually, we need an implementation of the DES WCS.  But Galsim doesn't really do 
     # WCS at all yet, so wait for that.
-    rotation : '90 deg'
+    rotation : '-90 deg'
 
 input :
     des_shapelet :

@@ -187,7 +187,7 @@ def main(argv):
                 # a 90 degree rotation to get the images to look approximately correct.
                 # Eventually, we'll want to have a DES_WCS that can read the full WCS from
                 # the fits header and account for all of the field distortion correctly.
-                psf.applyRotation(90*galsim.degrees)
+                psf.applyRotation(-90*galsim.degrees)
 
                 # Make the final image, convolving with pix
                 final = galsim.Convolve([pix,psf])
