@@ -25,7 +25,7 @@ import galsim
 from . import base
 from . import utilities
 
-class _BaseCorrelatedNoise(galsim.GaussianNoise):
+class _BaseCorrelatedNoise(galsim.BaseNoise):
     """A Base Class describing 2D correlated Gaussian random noise fields.
 
     A _BaseCorrelatedNoise will not generally be instantiated directly.  This is recommended as the
@@ -49,10 +49,8 @@ class _BaseCorrelatedNoise(galsim.GaussianNoise):
             raise TypeError(
                 "Supplied gsobject argument not a galsim.GSObject or derived class instance.")
 
-        # Initialize the GaussianNoise with our input random deviate
-        galsim.GaussianNoise.__init__(self, rng, sigma=1.0) # sigma must be unity, and thus we
-                                                            # redefine the setSigma/getSigma methods
-
+        # Initialize the GaussianNoise with our input random deviate/GaussianNoise
+        galsim.BaseNoise.__init__(self, rng)
         # Act as a container for the GSObject used to represent the correlation funcion.
         self._profile = gsobject
 
@@ -128,7 +126,7 @@ class _BaseCorrelatedNoise(galsim.GaussianNoise):
 
         On output the Image instance image will have been given additional noise according to 
         the given CorrelatedNoise instance.  image.getScale() is used to determine the input image
-        pixel separation, and if image.getscale() <= 0 a pixel scale of 1 is assumed.
+        pixel separation, and if image.getScale() <= 0 a pixel scale of 1 is assumed.
 
         To add deviates to every element of an image, the syntax 
 
@@ -159,6 +157,7 @@ class _BaseCorrelatedNoise(galsim.GaussianNoise):
 
         # Then retrieve or redraw the sqrt(power spectrum) needed for making the noise field:
         dx = image.getScale()
+
         # First check whether we can just use the stored power spectrum (no drawing necessary if so)
         use_stored = False
         for rootps_array, scale in self._rootps_store:
@@ -189,7 +188,9 @@ class _BaseCorrelatedNoise(galsim.GaussianNoise):
         # Finally generate a random field in Fourier space with the right PS, and inverse DFT back,
         # including factor of sqrt(2) to account for only adding noise to the real component:
         gaussvec = galsim.ImageD(image.bounds)
-        galsim.GaussianNoise.applyTo(self, gaussvec) # Apply the internally stored Gaussian noise:
+        gn = galsim.GaussianNoise(self.getRNG(), sigma=1.) # Create on the fly using this instance's
+                                                           # RNG (see discussion on Issue #352)
+        gaussvec.addNoise(gn)
         noise_array = np.sqrt(2.) * np.fft.ifft2(gaussvec.array * rootps)
         # Make contiguous and add to the image
         image += galsim.ImageViewD(np.ascontiguousarray(noise_array.real))
@@ -343,22 +344,6 @@ class _BaseCorrelatedNoise(galsim.GaussianNoise):
         """
         variance_ratio = variance / self.getVariance()
         self.scaleVariance(variance_ratio)
-
-    # Redefine the inherited GaussianNoise getSigma and setSigma using sqrt(variance)
-    def getSigma(self):
-        """Return the point standard deviation of this noise model, the square root of the value
-        returned by getVariance().
-        """
-        import math
-        return math.sqrt(self.getVariance())
-
-    def setSigma(self, sigma):
-        """Set the point standard deviation of the noise model, equal to setting the correlation
-        function value at zero distance to sigma**2.
-
-        @param sigma  The desired point variance in the noise.
-        """
-        self.setVariance(sigma * sigma)
 
     def _notImplemented(self, *args, **kwargs):
         raise NotImplementedError(

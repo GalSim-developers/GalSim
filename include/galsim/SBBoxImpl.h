@@ -79,9 +79,9 @@ namespace galsim {
         { return fillXImage(I,gain); }
         double doFillXImage(ImageView<double>& I, double gain) const
         { return fillXImage(I,gain); }
-        double doFillXImage(ImageView<short>& I, double gain) const
+        double doFillXImage(ImageView<int32_t>& I, double gain) const
         { return fillXImage(I,gain); }
-        double doFillXImage(ImageView<int>& I, double gain) const
+        double doFillXImage(ImageView<int16_t>& I, double gain) const
         { return fillXImage(I,gain); }
 
     private:
