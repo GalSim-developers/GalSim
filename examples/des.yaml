@@ -43,10 +43,10 @@ eval_variables :
     #swl_dir = '/data3/DECAM/wl/DECam_00154912_wl'
 
     # Set which chips to run on
-    #inchips : 62
     #ifirst_chip : 1
-    inchips : 1
+    #ilast_chip : 62
     ifirst_chip : 12
+    ilast_chip : 12
     
 
 # Define the PSF profile to use the DES shapelet files
@@ -85,26 +85,24 @@ image :
     xsize : { type : FitsHeader , key : 'NAXIS1' }
     ysize : { type : FitsHeader , key : 'NAXIS2' }
     pixel_scale : { type : FitsHeader , key : 'PIXSCAL1' }
+    sky_level_pixel : { type : FitsHeader , key : 'SKYBRITE' }
 
     # If you don't have the images, you can use these values instead
     #xsize : 2048
     #ysize : 4096
     #pixel_scale : 0.27
-    
+    #sky_level_pixel : 900
+    # And use this below for noise:
+    #gain : 4
+
     noise :
         type : CCD
-        sky_level_pixel : { type : FitsHeader , key : 'SKYBRITE' }
         gain : 
             # This is an approximation, since GAINA, GAINB are missing in SV files.
             type : Eval
             str : 'sky / sig**2'
-            #fsky : { type : FitsHeader , key : 'SKYBRITE' }
-            fsky : 10
+            fsky : { type : FitsHeader , key : 'SKYBRITE' }
             fsig : { type : FitsHeader , key : 'SKYSIGMA' }
-
-        # If you don't have the images, you can use these values instead
-        #sky_level_pixel : 900
-        #gain : 4
 
     center : 
         type : XY 
@@ -118,7 +116,7 @@ image :
 
 # Define the names and format of the output files
 output :
-    nfiles : { type : Eval, str : 'nchips' }
+    nfiles : { type : Eval, str : 'last_chip - first_chip + 1' }
 
     file_name :
         type : NumberedFile

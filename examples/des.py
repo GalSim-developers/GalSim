@@ -57,8 +57,11 @@ def main(argv):
     wl_dir = 'des_data'
     out_dir = 'output'
 
-    #nchips = 62
-    nchips = 1
+    #first_chip = 1
+    #last_chip = 62
+    first_chip = 12
+    last_chip = 12
+
 
     # The random seed, so the results are deterministic
     random_seed = 1339201           
@@ -78,7 +81,7 @@ def main(argv):
     if not os.path.isdir(out_dir):
         os.mkdir(out_dir)
 
-    for chipnum in range(1,nchips+1):
+    for chipnum in range(first_chip,last_chip+1):
         print 'Start chip ',chipnum
 
         # Setup the file names
@@ -205,9 +208,15 @@ def main(argv):
                 pass
                 #print '...not in fitpsf.bounds'
 
+        # Add background level
+        psfex_image += sky_level
+        fitpsf_image += sky_level
+        print 'add background = ',sky_level
+
         # Add noise
         rng = galsim.BaseDeviate(random_seed+nobj)
-        noise = galsim.CCDNoise(rng, sky_level=sky_level, gain=gain)
+        print 'CCDNoise with ',gain
+        noise = galsim.CCDNoise(rng, gain=gain)
         psfex_image.addNoise(noise)
         # Reset the random seed to match the action of the yaml version
         # Note: the different between seed and reset matters here.

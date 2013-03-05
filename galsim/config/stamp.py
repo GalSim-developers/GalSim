@@ -276,13 +276,9 @@ def BuildSingleStamp(config, xsize, ysize,
             im = galsim.ImageF(xsize, ysize)
         else:
             im = galsim.ImageF(1,1)
-        if 'image' in config and 'pixel_scale' in config['image']:
-            pixel_scale = galsim.config.ParseValue(config['image'], 'pixel_scale', config, float)[0]
-        else:
-            pixel_scale = 1.0
         im.setScale(im.scale)
         im.setZero()
-        if sky_level_pixel:
+        if do_noise and sky_level_pixel:
             im += sky_level_pixel
         if make_weight_image:
             weight_im = galsim.ImageF(im.bounds)
@@ -305,7 +301,6 @@ def BuildSingleStamp(config, xsize, ysize,
                 AddNoiseFFT(im,weight_im,config['image']['noise'],config,rng,sky_level_pixel,
                             logger)
             elif sky_level_pixel:
-                pixel_scale = im.getScale()
                 im += sky_level_pixel
 
     elif draw_method == 'phot':
@@ -323,7 +318,6 @@ def BuildSingleStamp(config, xsize, ysize,
                 AddNoisePhot(im,weight_im,config['image']['noise'],config,rng,sky_level_pixel,
                              logger)
             elif sky_level_pixel:
-                pixel_scale = im.getScale()
                 im += sky_level_pixel
 
     else:
@@ -479,7 +473,6 @@ def AddNoiseFFT(im, weight_im, noise, base, rng, sky_level_pixel, logger=None):
     if 'type' not in noise:
         noise['type'] = 'Poisson'  # Default is Poisson
     type = noise['type']
-    pixel_scale = im.getScale()
 
     # First add the background sky level, if provided
     if sky_level_pixel:
@@ -526,6 +519,7 @@ def AddNoiseFFT(im, weight_im, noise, base, rng, sky_level_pixel, logger=None):
                 "noise.type = %s"%type)
         extra_sky_level_pixel = 0.
         if 'sky_level' in params:
+            pixel_scale = im.getScale()
             extra_sky_level_pixel = params['sky_level'] * pixel_scale**2
         if 'sky_level_pixel' in params:
             extra_sky_level_pixel = params['sky_level_pixel']
@@ -563,6 +557,7 @@ def AddNoiseFFT(im, weight_im, noise, base, rng, sky_level_pixel, logger=None):
                 "noise.type = %s"%type)
         extra_sky_level_pixel = 0.
         if 'sky_level' in params:
+            pixel_scale = im.getScale()
             extra_sky_level_pixel = params['sky_level'] * pixel_scale**2
         if 'sky_level_pixel' in params:
             extra_sky_level_pixel = params['sky_level_pixel']
@@ -582,6 +577,7 @@ def AddNoiseFFT(im, weight_im, noise, base, rng, sky_level_pixel, logger=None):
                 # Otherwise, just add the sky and read_noise:
                 weight_im += sky_level_pixel / gain + read_noise*read_noise
 
+        #print 'CCDNoise with ',extra_sky_level_pixel,gain,read_noise
         im.addNoise(galsim.CCDNoise(rng, sky_level=extra_sky_level_pixel, gain=gain,
                                     read_noise=read_noise))
         if logger:
@@ -684,7 +680,6 @@ def AddNoisePhot(im, weight_im, noise, base, rng, sky_level_pixel, logger=None):
     if 'type' not in noise:
         noise['type'] = 'Poisson'  # Default is Poisson
     type = noise['type']
-    pixel_scale = im.getScale()
 
     # First add the sky noise, if provided
     if sky_level_pixel:
@@ -719,6 +714,7 @@ def AddNoisePhot(im, weight_im, noise, base, rng, sky_level_pixel, logger=None):
             raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
                 "noise.type = %s"%type)
         if 'sky_level' in params:
+            pixel_scale = im.getScale()
             sky_level_pixel += params['sky_level'] * pixel_scale**2
         if 'sky_level_pixel' in params:
             sky_level_pixel += params['sky_level_pixel']
@@ -754,6 +750,7 @@ def AddNoisePhot(im, weight_im, noise, base, rng, sky_level_pixel, logger=None):
             raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
                 "noise.type = %s"%type)
         if 'sky_level' in params:
+            pixel_scale = im.getScale()
             sky_level_pixel += params['sky_level'] * pixel_scale**2
         if 'sky_level_pixel' in params:
             sky_level_pixel += params['sky_level_pixel']
