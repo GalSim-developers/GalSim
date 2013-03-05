@@ -82,8 +82,7 @@ image :
     
     noise :
         type : CCD
-        #sky_level_pixel : { type : FitsHeader , key : 'SKYBRITE' }
-        sky_level : { type : FitsHeader , key : 'SKYBRITE' }
+        sky_level_pixel : { type : FitsHeader , key : 'SKYBRITE' }
         gain : 
             # This is an approximation, since GAINA, GAINB are missing in SV files.
             type : Eval

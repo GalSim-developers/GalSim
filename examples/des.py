@@ -93,9 +93,8 @@ def main(argv):
         xsize = image_header[xsize_key]
         ysize = image_header[ysize_key]
         pixel_scale = image_header[pixel_scale_key]
-        sky_sigma = image_header[sky_sigma_key]
-        sky_level = image_header[sky_level_key]
-        sky_level_pixel = sky_level * pixel_scale**2
+        sky_sigma = image_header[sky_sigma_key]  # This is sqrt(variance) / pixel
+        sky_level = image_header[sky_level_key]  # This is in ADU / pixel
         gain = sky_level / sky_sigma**2  # an approximation, since gain is missing.
 
         # If you don't want to download the images just to get the headers, you can 
@@ -103,7 +102,7 @@ def main(argv):
         #xsize = 2048
         #ysize = 4096
         #pixel_scale = 0.27
-        #sky_level_pixel = 900
+        #sky_level = 900
         #gain = 4
 
         # Setup the image:
@@ -169,7 +168,7 @@ def main(argv):
             fitpsf_image[bounds] += stamp[bounds]
 
         rng = galsim.BaseDeviate(random_seed+nobj)
-        noise = galsim.CCDNoise(rng, sky_level=sky_level_pixel, gain=gain)
+        noise = galsim.CCDNoise(rng, sky_level=sky_level, gain=gain)
         fitpsf_image.addNoise(noise)
 
         # Now write the images to disk.
