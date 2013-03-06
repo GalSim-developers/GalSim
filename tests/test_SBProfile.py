@@ -1883,6 +1883,9 @@ def test_rescale():
     np.testing.assert_almost_equal(tot/1.e5, 1., 1,
             err_msg="Drawing Gaussian with drawShoot, add_to_image=True, poisson_flux=True "+
                     "returned wrong tot")
+    np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 3.+tot/1.e5, 4,
+            err_msg="Drawing Gaussian with drawShoot, add_to_image=True results in wrong flux "+
+                    "according to the returned tot")
 
     # Can also get a flux of 2 using gain = 0.5
     sersic.draw(myImg, dx=0.2, gain=0.5, normalization="surface brightness")

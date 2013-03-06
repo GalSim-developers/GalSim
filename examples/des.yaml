@@ -43,10 +43,10 @@ eval_variables :
     #swl_dir = '/data3/DECAM/wl/DECam_00154912_wl'
 
     # Set which chips to run on
-    #ifirst_chip : 1
-    #ilast_chip : 62
-    ifirst_chip : 12
-    ilast_chip : 12
+    ifirst_chip : 1
+    ilast_chip : 62
+    #ifirst_chip : 12
+    #ilast_chip : 12
     
 
 # Define the PSF profile to use the DES shapelet files
@@ -87,14 +87,6 @@ image :
     pixel_scale : { type : FitsHeader , key : 'PIXSCAL1' }
     sky_level_pixel : { type : FitsHeader , key : 'SKYBRITE' }
 
-    # If you don't have the images, you can use these values instead
-    #xsize : 2048
-    #ysize : 4096
-    #pixel_scale : 0.27
-    #sky_level_pixel : 900
-    # And use this below for noise:
-    #gain : 4
-
     noise :
         type : CCD
         gain : 
@@ -111,8 +103,6 @@ image :
 
     random_seed : 1339201
 
-    #nproc : -1
-
 
 # Define the names and format of the output files
 output :
@@ -127,7 +117,7 @@ output :
 
     dir : 'output_yaml'
 
-    #nproc : -1
+    nproc : -1
 
 ---
 # Now the particulars that are specific to the shapelet PSFs

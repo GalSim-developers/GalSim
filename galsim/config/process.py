@@ -21,10 +21,11 @@ def ProcessInput(config, file_num=0, logger=None):
     Process the input field, reading in any specified input files or setting up
     any objects that need to be initialized.
 
-    These objects are saved in the top level of config:
+    Each item in the above valid_input_types will be built and available at the top level
+    of config.  e.g.;
         config['catalog'] = the catalog specified by config.input.catalog, if provided.
         config['real_catalog'] = the catalog specified by config.input.real_catalog, if provided.
-        config['nfw_halo'] = an NFWHalo specified by config.input.nfw_halo, if provided.
+        etc.
     """
     config['seq_index'] = file_num
     # Process the input field (read any necessary input files)
@@ -109,9 +110,8 @@ def Process(config, logger=None):
     #          (3) there is an input catalog
     # we do the same thing for image['nobjects']
     if ( type == 'Fits' and 
-         'image' in config and 'type' in config['image'] and
-         config['image']['type'] == 'Scattered' and
-         'nobjects' not in config['image'] and
+         ( 'image' in config and 'nobjects' not in config['image'] ) and
+         ( 'type' in config['image'] and config['image']['type'] == 'Scattered' ) and
          'catalog' in config ):
         config['image']['nobjects'] = config['catalog'].nobjects
 

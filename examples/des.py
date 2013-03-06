@@ -49,19 +49,26 @@ def main(argv):
     # to where the files are stored on folio at UPenn.
 
     root = 'DECam_00154912' 
-    #img_dir = '/data3/DECAM/SV/DECam_154912'
-    #img_dir = '/Users/Mike/Astro/des/SV/DECam_00154912_wl'
+
+    # Directories in the Galsim repo
     img_dir = 'des_data'
-    #wl_dir = '/data3/DECAM/wl/DECam_00154912_wl'
-    #wl_dir = '/Users/Mike/Astro/des/SV/DECam_00154912_wl'
     wl_dir = 'des_data'
+
+    # Directories on Mike's laptop
+    #img_dir = '/Users/Mike/Astro/des/SV/DECam_00154912_wl'
+    #wl_dir = '/Users/Mike/Astro/des/SV/DECam_00154912_wl'
+
+    # Directories on folio
+    #img_dir = '/data3/DECAM/SV/DECam_154912'
+    #wl_dir = '/data3/DECAM/wl/DECam_00154912_wl'
+
+    # Set which chips to run on
+    first_chip = 1
+    last_chip = 62
+    #first_chip = 12
+    #last_chip = 12
+
     out_dir = 'output'
-
-    #first_chip = 1
-    #last_chip = 62
-    first_chip = 12
-    last_chip = 12
-
 
     # The random seed, so the results are deterministic
     random_seed = 1339201           
@@ -100,14 +107,6 @@ def main(argv):
         sky_sigma = image_header[sky_sigma_key]  # This is sqrt(variance) / pixel
         sky_level = image_header[sky_level_key]  # This is in ADU / pixel
         gain = sky_level / sky_sigma**2  # an approximation, since gain is missing.
-
-        # If you don't want to download the images just to get the headers, you can 
-        # comment the above section and use these values instead:
-        #xsize = 2048
-        #ysize = 4096
-        #pixel_scale = 0.27
-        #sky_level = 900
-        #gain = 4
 
         # Setup the images:
         psfex_image = galsim.ImageF(xsize,ysize)
@@ -228,8 +227,6 @@ def main(argv):
         # Now write the images to disk.
         psfex_image.write(psfex_image_file, dir=out_dir)
         fitpsf_image.write(fitpsf_image_file, dir=out_dir)
-
-        rng = galsim.BaseDeviate(random_seed+nobj)
 
 if __name__ == "__main__":
     import sys
