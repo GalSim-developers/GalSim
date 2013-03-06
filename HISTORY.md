@@ -3,6 +3,32 @@ Each version also includes various other minor changes and bug fixes, which are
 not listed here for brevity.  See the CHANGLELOG.md files associated with each 
 version for a more complete list.
 
+v0.4
+----
+
+* When making GSObjects out of real images that have noise, it is possible to pad those images with
+  a noise field (either correlated or uncorrelated) so that there is not an abrupt change of
+  properties in the noise field when crossing the border into the padding region.  (Issue #238)
+
+* There is now a python interface to C++ tables that can be used for interpolation in a more general
+  context. (Issue #305)
+
+* Lensing engine updates: Introduced the option of drawing shears from a tabulated P(k), for example
+  from a cosmological shear power spectrum calculator.  Also, the `PowerSpectrum` class now properly
+  handles conversions between different angular units.  Finally, an important bug in how the shears
+  were generated from the power spectrum (which resulted in significant issues with overall
+  normalization) was fixed. (Issue #305)
+
+* Added a DistDeviate class that generates pseudo-random numbers from a user-defined probability
+  distribution. (Issue #306)
+
+* Added a free function (`galsim.correlatednoise.get_COSMOS_CorrFunc(...)`) that gives the user
+  quick access to the 2D spatial correlation function of noise in HST COSMOS F814W weak lensing
+  science images (e.g. Leauthaud et al 2007). (Issue #345)
+
+* Made a new Noise hierarchy, and moved CCDNoise to that rather than have it be a BaseDeviate.
+  There are also now GaussianNoise, PoissonNoise, and DeviateNoise classes. (Issue #349)
+
 v0.3
 ----
 
