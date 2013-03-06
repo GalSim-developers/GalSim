@@ -182,7 +182,7 @@ def test_uniform():
             np.array(testResult), np.array(testResult2),
             err_msg='Wrong uniform random number sequence generated using two uds after seed')
 
-    # Check that seeding with the time works (although we cannot check the output.
+    # Check that seeding with the time works (although we cannot check the output).
     # We're mostly just checking that this doesn't raise an exception.
     # The output could be anything.
     u.seed()
@@ -282,7 +282,7 @@ def test_gaussian():
             np.array(testResult), np.array(testResult2),
             err_msg='Wrong Gaussian random number sequence generated using two gds after seed')
 
-    # Check that seeding with the time works (although we cannot check the output.
+    # Check that seeding with the time works (although we cannot check the output).
     # We're mostly just checking that this doesn't raise an exception.
     # The output could be anything.
     g.seed()
@@ -390,7 +390,7 @@ def test_binomial():
             np.array(testResult), np.array(testResult2),
             err_msg='Wrong binomial random number sequence generated using two bds after seed')
 
-    # Check that seeding with the time works (although we cannot check the output.
+    # Check that seeding with the time works (although we cannot check the output).
     # We're mostly just checking that this doesn't raise an exception.
     # The output could be anything.  However, in this case, there are few enough options
     # for the output that occasionally two of these match.  So we don't do the normal 
@@ -489,27 +489,29 @@ def test_poisson():
             np.array(testResult), np.array(testResult2),
             err_msg='Wrong poisson random number sequence generated using two pds after seed')
 
-    # Check that seeding with the time works (although we cannot check the output.
+    # Check that seeding with the time works (although we cannot check the output).
     # We're mostly just checking that this doesn't raise an exception.
-    # The output could be anything.
+    # The output could be anything.  However, in this case, there are few enough options
+    # for the output that occasionally two of these match.  So we don't do the normal 
+    # testResult2 != testResult, etc.
     p.seed()
     testResult2 = (p(), p(), p())
-    assert testResult2 != testResult
+    #assert testResult2 != testResult
     p.reset()
     testResult3 = (p(), p(), p())
-    assert testResult3 != testResult
-    assert testResult3 != testResult2
+    #assert testResult3 != testResult
+    #assert testResult3 != testResult2
     p.reset()
     testResult4 = (p(), p(), p())
-    assert testResult4 != testResult
-    assert testResult4 != testResult2
-    assert testResult4 != testResult3
+    #assert testResult4 != testResult
+    #assert testResult4 != testResult2
+    #assert testResult4 != testResult3
     p = galsim.PoissonDeviate(mean=pMean)
     testResult5 = (p(), p(), p())
-    assert testResult5 != testResult
-    assert testResult5 != testResult2
-    assert testResult5 != testResult3
-    assert testResult5 != testResult4
+    #assert testResult5 != testResult
+    #assert testResult5 != testResult2
+    #assert testResult5 != testResult3
+    #assert testResult5 != testResult4
     
     # Test filling an image
     p.seed(testseed)
@@ -605,7 +607,7 @@ def test_weibull():
             np.array(testResult), np.array(testResult2),
             err_msg='Wrong weibull random number sequence generated using two wds after seed')
 
-    # Check that seeding with the time works (although we cannot check the output.
+    # Check that seeding with the time works (although we cannot check the output).
     # We're mostly just checking that this doesn't raise an exception.
     # The output could be anything.
     w.seed()
@@ -702,7 +704,7 @@ def test_gamma():
             np.array(testResult), np.array(testResult2),
             err_msg='Wrong gamma random number sequence generated using two gds after seed')
 
-    # Check that seeding with the time works (although we cannot check the output.
+    # Check that seeding with the time works (although we cannot check the output).
     # We're mostly just checking that this doesn't raise an exception.
     # The output could be anything.
     g.seed()
@@ -799,7 +801,7 @@ def test_chi2():
             np.array(testResult), np.array(testResult2),
             err_msg='Wrong Chi^2 random number sequence generated using two cds after seed')
 
-    # Check that seeding with the time works (although we cannot check the output.
+    # Check that seeding with the time works (although we cannot check the output).
     # We're mostly just checking that this doesn't raise an exception.
     # The output could be anything.
     c.seed()
@@ -897,7 +899,7 @@ def test_distfunction():
             np.array(testResult), np.array(testResult2),
             err_msg='Wrong DistDeviate random number sequence generated using two dds after seed')
 
-    # Check that seeding with the time works (although we cannot check the output.
+    # Check that seeding with the time works (although we cannot check the output).
     # We're mostly just checking that this doesn't raise an exception.
     # The output could be anything.
     d.seed()
