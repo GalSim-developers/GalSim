@@ -26,8 +26,8 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-std::ostream* dbgout = new std::ofstream("debug.out");
-int verbose_level = 2;
+//std::ostream* dbgout = new std::ofstream("debug.out");
+//int verbose_level = 2;
 #endif
 
 // Uncomment this to do the calculation that solves for the conversion between lam_over_r0
@@ -85,12 +85,6 @@ namespace galsim {
     double SBKolmogorov::SBKolmogorovImpl::xValue(const Position<double>& p) const 
     {
         double r = sqrt(p.x*p.x+p.y*p.y) * _k0;
-#ifdef DEBUGLOGGING
-        xdbg<<"xValue: p = "<<p<<std::endl;
-        xdbg<<"r = "<<sqrt(p.x*p.x+p.y*p.y)<<" * "<<_k0<<" = "<<r<<std::endl;
-        xdbg<<"return "<<_flux<<" * "<<_k0sq<<" * "<<_info.xValue(r)<<" = "<<
-            (_xnorm * _info.xValue(r))<<std::endl;
-#endif
         return _xnorm * _info.xValue(r);
     }
 
@@ -100,126 +94,121 @@ namespace galsim {
     std::complex<double> SBKolmogorov::SBKolmogorovImpl::kValue(const Position<double>& k) const
     {
         double ksq = (k.x*k.x+k.y*k.y) * _inv_k0sq;
-#ifdef DEBUGLOGGING
-        xdbg<<"Kolmogorov kValue: ksq = "<<(k.x*k.x + k.y*k.y)<<" * "<<_inv_k0sq
-            <<" = "<<ksq<<std::endl;
-        xdbg<<"flux = "<<_flux<<std::endl;
-        xdbg<<"info.kval = "<<_info.kValue(ksq)<<std::endl;
-        xdbg<<"return "<<_flux * _info.kValue(ksq)<<std::endl;
-        double k1 = sqrt(k.x*k.x+k.y*k.y);
-        double dk = 6.8839 * std::pow(_lam_over_r0 * k1 / (2.*M_PI),5./3.);
-        double tk = exp(-0.5*dk);
-        xdbg<<"k = "<<k1<<", D(k) = "<<dk<<", T(k) = "<<tk<<std::endl;
-#endif
         return _flux * _info.kValue(ksq);
     }
 
-    void SBKolmogorov::SBKolmogorovImpl::xValue(
-        tmv::VectorView<double> x, tmv::VectorView<double> y,
-        tmv::MatrixView<double> val) const
+    void SBKolmogorov::SBKolmogorovImpl::fillXValue(tmv::MatrixView<double> val,
+                                                    double x0, double dx, int ix_zero,
+                                                    double y0, double dy, int iy_zero) const
     {
-        assert(x.step() == 1);
-        assert(y.step() == 1);
+        dbg<<"SBKolmogorov fillXValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
         assert(val.stepi() == 1);
-        assert(val.canLinearize());
-        assert(x.size() == val.colsize());
-        assert(y.size() == val.rowsize());
         const int m = val.colsize();
         const int n = val.rowsize();
         typedef tmv::VIt<double,1,tmv::NonConj> It;
-        x *= _k0;
-        x = ElemProd(x,x);
-        y *= _k0;
-        y = ElemProd(y,y);
-        It yit = y.begin();
-        It valit = val.linearView().begin();
-        for (int j=0;j<n;++j,++yit) {
-            It xit = x.begin();
-            for (int i=0;i<m;++i)  {
-                *valit++ = _xnorm * _info.xValue(sqrt(*xit++ + *yit));
+
+        x0 *= _k0;
+        dx *= _k0;
+        y0 *= _k0;
+        dy *= _k0;
+
+        for (int j=0;j<n;++j,y0+=dy) {
+            double x = x0;
+            double ysq = y0*y0;
+            It valit = val.col(j).begin();
+            for (int i=0;i<m;++i,x+=dx) {
+                double r = sqrt(x*x + ysq);
+                *valit++ = _xnorm * _info.xValue(r);
             }
         }
     }
 
-    void SBKolmogorov::SBKolmogorovImpl::kValue(
-        tmv::VectorView<double> kx, tmv::VectorView<double> ky,
-        tmv::MatrixView<std::complex<double> > kval) const
-    { 
-        assert(kx.step() == 1);
-        assert(ky.step() == 1);
-        assert(kval.stepi() == 1);
-        assert(kval.canLinearize());
-        assert(kx.size() == kval.colsize());
-        assert(ky.size() == kval.rowsize());
-        const int m = kval.colsize();
-        const int n = kval.rowsize();
-        typedef tmv::VIt<double,1,tmv::NonConj> It;
-        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
-        kx *= _inv_k0;
-        kx = ElemProd(kx,kx);
-        ky *= _inv_k0;
-        ky = ElemProd(ky,ky);
-        It kyit = ky.begin();
-        CIt kvalit(kval.linearView().begin().getP(),1);
-        for (int j=0;j<n;++j,++kyit) {
-            It kxit = kx.begin();
-            for (int i=0;i<m;++i) *kvalit++ = _flux * _info.kValue(*kxit++ + *kyit);
+    void SBKolmogorov::SBKolmogorovImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                                    double x0, double dx, int ix_zero,
+                                                    double y0, double dy, int iy_zero) const
+    {
+        dbg<<"SBKolmogorov fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
+        assert(val.stepi() == 1);
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+
+        x0 *= _inv_k0;
+        dx *= _inv_k0;
+        y0 *= _inv_k0;
+        dy *= _inv_k0;
+
+        for (int j=0;j<n;++j,y0+=dy) {
+            double x = x0;
+            double ysq = y0*y0;
+            It valit(val.col(j).begin().getP(),1);
+            for (int i=0;i<m;++i,x+=dx) *valit++ = _flux * _info.kValue(x*x + ysq);
         }
     }
 
-    void SBKolmogorov::SBKolmogorovImpl::xValue(
-        tmv::MatrixView<double> x, tmv::MatrixView<double> y,
-        tmv::MatrixView<double> val) const
-    { 
-        assert(x.stepi() == 1);
-        assert(y.stepi() == 1);
+    void SBKolmogorov::SBKolmogorovImpl::fillXValue(tmv::MatrixView<double> val,
+                                                    double x0, double dx, double dxy,
+                                                    double y0, double dy, double dyx) const
+    {
+        dbg<<"SBKolmogorov fillXValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
         assert(val.stepi() == 1);
         assert(val.canLinearize());
-        assert(x.colsize() == val.colsize());
-        assert(x.rowsize() == val.rowsize());
-        assert(y.colsize() == val.colsize());
-        assert(y.rowsize() == val.rowsize());
         const int m = val.colsize();
         const int n = val.rowsize();
         typedef tmv::VIt<double,1,tmv::NonConj> It;
-        x *= _k0;
-        x = ElemProd(x,x);
-        y *= _k0;
-        y = ElemProd(y,y);
-        x += y;
-        It xit = x.linearView().begin();
-        It valit = val.linearView().begin();
-        const int ntot = m*n;
-        for (int i=0;i<ntot;++i) *valit++ = _xnorm * _info.xValue(sqrt(*xit++));
-     }
 
-    void SBKolmogorov::SBKolmogorovImpl::kValue(
-        tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
-        tmv::MatrixView<std::complex<double> > kval) const
-    { 
-        assert(kx.stepi() == 1);
-        assert(ky.stepi() == 1);
-        assert(kval.stepi() == 1);
-        assert(kx.canLinearize());
-        assert(ky.canLinearize());
-        assert(kval.canLinearize());
-        assert(kx.colsize() == kval.colsize());
-        assert(kx.rowsize() == kval.rowsize());
-        assert(ky.colsize() == kval.colsize());
-        assert(ky.rowsize() == kval.rowsize());
-        const int m = kval.colsize();
-        const int n = kval.rowsize();
-        typedef tmv::VIt<double,1,tmv::NonConj> It;
-        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
-        kx *= _inv_k0;
-        kx = ElemProd(kx,kx);
-        ky *= _inv_k0;
-        ky = ElemProd(ky,ky);
-        kx += ky;
-        It kxit = kx.linearView().begin();
-        CIt kvalit(kval.linearView().begin().getP(),1);
-        const int ntot = m*n;
-        for (int i=0;i<ntot;++i) *kvalit++ = _flux * _info.kValue(*kxit++);
+        x0 *= _k0;
+        dx *= _k0;
+        dxy *= _k0;
+        y0 *= _k0;
+        dy *= _k0;
+        dyx *= _k0;
+
+        It valit = val.linearView().begin();
+        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+            double x = x0;
+            double y = y0;
+            It valit = val.col(j).begin();
+            for (int i=0;i<m;++i,x+=dx,y+=dyx) {
+                double r = sqrt(x*x + y*y);
+                *valit++ = _xnorm * _info.xValue(r);
+            }
+        }
+    }
+
+    void SBKolmogorov::SBKolmogorovImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                                    double x0, double dx, double dxy,
+                                                    double y0, double dy, double dyx) const
+    {
+        dbg<<"SBKolmogorov fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+
+        x0 *= _inv_k0;
+        dx *= _inv_k0;
+        dxy *= _inv_k0;
+        y0 *= _inv_k0;
+        dy *= _inv_k0;
+        dyx *= _inv_k0;
+
+        It valit(val.linearView().begin().getP(),1);
+        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+            double x = x0;
+            double y = y0;
+            It valit(val.col(j).begin().getP(),1);
+            for (int i=0;i<m;++i,x+=dx,y+=dyx) *valit++ = _flux * _info.kValue(x*x+y*y);
+        }
     }
 
     // Set maxK to where kValue drops to maxk_threshold
@@ -303,7 +292,7 @@ namespace galsim {
         double _target;
     };
 #endif
-     
+
     // Constructor to initialize Kolmogorov constants and xvalue lookup table
     KolmogorovInfo::KolmogorovInfo() : _radial(TableDD::spline)
     {

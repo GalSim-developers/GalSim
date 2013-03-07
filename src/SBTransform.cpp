@@ -29,7 +29,7 @@
 #include <fstream>
 //std::ostream* dbgout = new std::ofstream("debug.out");
 //std::ostream* dbgout = &std::cout;
-//int verbose_level = 2;
+//int verbose_level = 1;
 #endif
 
 namespace galsim {
@@ -480,221 +480,201 @@ namespace galsim {
         const Position<double>& k, const Position<double>& cen)
     { return adaptee.kValue(fwdTk) * std::polar(absdet , -k.x*cen.x-k.y*cen.y); }
 
-    void SBTransform::SBTransformImpl::xValue(
-        tmv::VectorView<double> x, tmv::VectorView<double> y,
-        tmv::MatrixView<double> val) const
+    void SBTransform::SBTransformImpl::fillXValue(tmv::MatrixView<double> val,
+                                                  double x0, double dx, int ix_zero,
+                                                  double y0, double dy, int iy_zero) const
     {
-        dbg<<"Start xValue with Vector x,y\n";
+        dbg<<"SBTransform fillXValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
         dbg<<"A,B,C,D = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
         dbg<<"cen = "<<_cen<<", zerocen = "<<_zeroCen<<std::endl;
         dbg<<"absdet = "<<_absdet<<", invdet = "<<_invdet<<std::endl;
         dbg<<"fluxScaling = "<<_fluxScaling<<std::endl;
+
         // Subtract cen
         if (!_zeroCen) {
-            x.addToAll(-_cen.x);
-            y.addToAll(-_cen.y);
+            x0 -= _cen.x;
+            y0 -= _cen.y;
+            int dix = int(_cen.x/dx);
+            int diy = int(_cen.y/dy);
+            if (std::abs(_cen.x - dix*dx) < 1.e-10) ix_zero += dix;
+            else ix_zero = 0;
+            if (std::abs(_cen.y - diy*dy) < 1.e-10) iy_zero += diy;
+            else iy_zero = 0;
         }
+
         // Apply inv to x,y
         if (_mB == 0. && _mC == 0.) {
-            if (_mA != 1.) x *= _invdet * _mD;
-            if (_mD != 1.) y *= _invdet * _mA;
-            GetImpl(_adaptee)->xValue(x,y,val);
+            double xscal = _invdet * _mD;
+            double yscal = _invdet * _mA;
+            x0 *= xscal;
+            dx *= xscal;
+            y0 *= yscal;
+            dy *= yscal;
+
+            GetImpl(_adaptee)->fillXValue(val,x0,dx,ix_zero,y0,dy,iy_zero);
         } else {
-            // NB: This is the reason we have the versions of xValue, kValue with a 
-            // matrix for x,y.  Shearing or rotating, doesn't keep (x,y) on a grid!
-            const int m = val.colsize();
-            const int n = val.rowsize();
-            tmv::Matrix<double> mx(m,n);
-            tmv::Matrix<double> my(m,n);
-            tmv::Vector<double> tempx = _invdet * _mD * x;
-            for (int j=0;j<n;++j) mx.col(j) = tempx;
-            tmv::Vector<double> tempy = _invdet * _mA * y;
-            for (int i=0;i<m;++i) my.row(i) = tempy;
-            tempy = _invdet * _mB * y;
-            for (int i=0;i<m;++i) mx.row(i) -= tempy;
-            tempx = _invdet * _mC * x;
-            for (int j=0;j<n;++j) my.col(j) -= tempx;
-            GetImpl(_adaptee)->xValue(mx.view(),my.view(),val);
+            Position<double> inv0 = inv(Position<double>(x0,y0));
+            Position<double> inv1 = inv(Position<double>(dx,0.));
+            Position<double> inv2 = inv(Position<double>(0.,dy));
+            xdbg<<"inv0 = "<<inv0<<std::endl;
+            xdbg<<"inv1 = "<<inv1<<std::endl;
+            xdbg<<"inv2 = "<<inv2<<std::endl;
+
+            GetImpl(_adaptee)->fillXValue(val,inv0.x,inv1.x,inv2.x,inv0.y,inv2.y,inv1.y);
         }
+
+        // Apply flux scaling
         val *= _fluxScaling;
     }
 
-    void SBTransform::SBTransformImpl::kValue(
-        tmv::VectorView<double> kx, tmv::VectorView<double> ky,
-        tmv::MatrixView<std::complex<double> > kval) const
+    void SBTransform::SBTransformImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                                  double x0, double dx, int ix_zero,
+                                                  double y0, double dy, int iy_zero) const
     {
-        dbg<<"Start kValue with Vector x,y\n";
+        dbg<<"SBTransform fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
         dbg<<"A,B,C,D = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
         dbg<<"cen = "<<_cen<<", zerocen = "<<_zeroCen<<std::endl;
         dbg<<"absdet = "<<_absdet<<", invdet = "<<_invdet<<std::endl;
         dbg<<"fluxScaling = "<<_fluxScaling<<std::endl;
-        dbg<<"kval shape = "<<kval.colsize()<<","<<kval.rowsize()<<std::endl;
-        dbg<<"kx[0] = "<<kx[0]<<std::endl;
-        dbg<<"ky[0] = "<<ky[0]<<std::endl;
-        if (_zeroCen) {
-            dbg<<"zeroCen\n";
-            // Apply fwdT to kx,ky
-            if (_mB == 0. && _mC == 0.) {
-                if (_mA != 1.) kx *= _mA;
-                if (_mD != 1.) ky *= _mD;
-                GetImpl(_adaptee)->kValue(kx,ky,kval);
-                dbg<<"Simple: kval(0,0) = "<<kval(0,0)<<std::endl;
-            } else {
-                const int m = kval.colsize();
-                const int n = kval.rowsize();
-                tmv::Matrix<double> mx(m,n);
-                tmv::Matrix<double> my(m,n);
-                tmv::Vector<double> tempx = _mA * kx;
-                for (int j=0;j<n;++j) mx.col(j) = tempx;
-                tmv::Vector<double> tempy = _mD * ky;
-                for (int i=0;i<m;++i) my.row(i) = tempy;
-                tempy = _mC * ky;
-                for (int i=0;i<m;++i) mx.row(i) += tempy;
-                tempx = _mB * kx;
-                for (int j=0;j<n;++j) my.col(j) += tempx;
-                GetImpl(_adaptee)->kValue(mx.view(),my.view(),kval);
-                dbg<<"Non-trivial: kval(0,0) = "<<kval(0,0)<<std::endl;
-            }
-            kval *= _absdet;
-            dbg<<"kval(0,0) => "<<kval(0,0)<<std::endl;
+
+        // Apply fwdT to kx,ky
+        if (_mB == 0. && _mC == 0.) {
+            double fwdT_x0 = _mA * x0;
+            double fwdT_dx = _mA * dx;
+            double fwdT_y0 = _mD * y0;
+            double fwdT_dy = _mD * dy;
+
+            GetImpl(_adaptee)->fillKValue(val,fwdT_x0,fwdT_dx,ix_zero,fwdT_y0,fwdT_dy,iy_zero);
         } else {
-            dbg<<"!zeroCen\n";
-            // First make phase terms = |det| exp(-i(kx*cenx + ky*ceny))
+            Position<double> fwdT0 = fwdT(Position<double>(x0,y0));
+            Position<double> fwdT1 = fwdT(Position<double>(dx,0.));
+            Position<double> fwdT2 = fwdT(Position<double>(0.,dy));
+            xdbg<<"fwdT0 = "<<fwdT0<<std::endl;
+            xdbg<<"fwdT1 = "<<fwdT1<<std::endl;
+            xdbg<<"fwdT2 = "<<fwdT2<<std::endl;
+
+            GetImpl(_adaptee)->fillKValue(val,fwdT0.x,fwdT1.x,fwdT2.x,fwdT0.y,fwdT2.y,fwdT1.y);
+        }
+
+        // Apply phases
+        if (_zeroCen) {
+            xdbg<<"zeroCen\n";
+            val *= _absdet;
+        } else {
+            xdbg<<"!zeroCen\n";
+            // Make phase terms = |det| exp(-i(kx*cenx + ky*ceny))
             // In this case, the terms are separable, so only need to make kx and ky phases
             // separately.
-            const int m = kval.colsize();
-            const int n = kval.rowsize();
+            const int m = val.colsize();
+            const int n = val.rowsize();
             tmv::Vector<std::complex<double> > kx_phase(m);
             tmv::Vector<std::complex<double> > ky_phase(n);
-            typedef tmv::VIt<double,1,tmv::NonConj> It;
             typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
-            It kxit = kx.begin();
-            It kyit = ky.begin();
             CIt kx_phit = kx_phase.begin();
             CIt ky_phit = ky_phase.begin();
-            for (int i=0;i<m;++i) *kx_phit++ = std::polar(_absdet, -*kxit++*_cen.x);
+            for (int i=0;i<m;++i,x0+=dx) *kx_phit++ = std::polar(_absdet, -x0*_cen.x);
             // Only use _absdet on one of them!
-            for (int j=0;j<n;++j) *ky_phit++ = std::polar(1., -*kyit++*_cen.y);
+            for (int j=0;j<n;++j,y0+=dy) *ky_phit++ = std::polar(1., -y0*_cen.y);
 
-            // Apply fwdT to kx,ky
-            if (_mB == 0. && _mC == 0.) {
-                if (_mA != 1.) kx *= _mA;
-                if (_mD != 1.) ky *= _mD;
-                GetImpl(_adaptee)->kValue(kx,ky,kval);
-                dbg<<"Simple: kval(0,0) = "<<kval(0,0)<<std::endl;
-            } else {
-                const int m = kval.colsize();
-                const int n = kval.rowsize();
-                tmv::Matrix<double> mx(m,n);
-                tmv::Matrix<double> my(m,n);
-                tmv::Vector<double> tempx = _mA * kx;
-                for (int j=0;j<n;++j) mx.col(j) = tempx;
-                tmv::Vector<double> tempy = _mD * ky;
-                for (int i=0;i<m;++i) my.row(i) = tempy;
-                tempy = _mC * ky;
-                for (int i=0;i<m;++i) mx.row(i) += tempy;
-                tempx = _mB * kx;
-                for (int j=0;j<n;++j) my.col(j) += tempx;
-                GetImpl(_adaptee)->kValue(mx.view(),my.view(),kval);
-                dbg<<"Non-trivial: kval(0,0) = "<<kval(0,0)<<std::endl;
-            }
-            kval = DiagMatrixViewOf(kx_phase) * kval;
-            kval = kval * DiagMatrixViewOf(ky_phase);
-            dbg<<"kval(0,0) => "<<kval(0,0)<<std::endl;
+            val = DiagMatrixViewOf(kx_phase) * val;
+            val = val * DiagMatrixViewOf(ky_phase);
         }
     }
 
-    void SBTransform::SBTransformImpl::xValue(
-        tmv::MatrixView<double> x, tmv::MatrixView<double> y,
-        tmv::MatrixView<double> val) const
+    void SBTransform::SBTransformImpl::fillXValue(tmv::MatrixView<double> val,
+                                                  double x0, double dx, double dxy,
+                                                  double y0, double dy, double dyx) const
     {
-        dbg<<"Start xValue with Matrix x,y\n";
+        dbg<<"SBTransform fillXValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
         dbg<<"A,B,C,D = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
         dbg<<"cen = "<<_cen<<", zerocen = "<<_zeroCen<<std::endl;
         dbg<<"absdet = "<<_absdet<<", invdet = "<<_invdet<<std::endl;
         dbg<<"fluxScaling = "<<_fluxScaling<<std::endl;
-        dbg<<"val shape = "<<val.colsize()<<","<<val.rowsize()<<std::endl;
+
         // Subtract cen
         if (!_zeroCen) {
-            x.addToAll(-_cen.x);
-            y.addToAll(-_cen.y);
+            x0 -= _cen.x;
+            y0 -= _cen.y;
         }
+
         // Apply inv to x,y
-        if (_mB == 0. || _mC == 0.) {
-            if (_mA != 1.) x *= _invdet * _mD; 
-            if (_mB != 0.) x -= _invdet * _mB * y;
-            if (_mC != 0.) y -= _invdet * _mC * x;
-            if (_mD != 1.) y *= _invdet * _mA;
-        } else {
-            tmv::Matrix<double> x_copy = x;
-            if (_mD != 1.) x *= _invdet * _mD;
-            x -= _invdet * _mB * y;
-            if (_mA != 1.) y *= _invdet * _mA;
-            y -= _invdet * _mC * x_copy;
-        }
-        GetImpl(_adaptee)->xValue(x,y,val);
+        Position<double> inv0 = inv(Position<double>(x0,y0));
+        Position<double> inv1 = inv(Position<double>(dx,dyx));
+        Position<double> inv2 = inv(Position<double>(dxy,dy));
+        xdbg<<"inv0 = "<<inv0<<std::endl;
+        xdbg<<"inv1 = "<<inv1<<std::endl;
+        xdbg<<"inv2 = "<<inv2<<std::endl;
+
+        GetImpl(_adaptee)->fillXValue(val,inv0.x,inv1.x,inv2.x,inv0.y,inv2.y,inv1.y);
+
+        // Apply flux scaling
         val *= _fluxScaling;
     }
 
-    void SBTransform::SBTransformImpl::kValue(
-        tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
-        tmv::MatrixView<std::complex<double> > kval) const
+    void SBTransform::SBTransformImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                                  double x0, double dx, double dxy,
+                                                  double y0, double dy, double dyx) const
     { 
-        dbg<<"Start kValue with Matrix x,y\n";
+        //if (dxy != 0. || dyx != 0.) 
+        //if ((_mB != 0. || _mC != 0.) && (dxy != 0. || dyx != 0.))
+            //return SBProfile::SBProfileImpl::fillKValue(val,x0,dx,dxy,y0,dy,dyx);
+        dbg<<"SBTransform fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
         dbg<<"A,B,C,D = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
         dbg<<"cen = "<<_cen<<", zerocen = "<<_zeroCen<<std::endl;
         dbg<<"absdet = "<<_absdet<<", invdet = "<<_invdet<<std::endl;
         dbg<<"fluxScaling = "<<_fluxScaling<<std::endl;
-        dbg<<"kval shape = "<<kval.colsize()<<","<<kval.rowsize()<<std::endl;
+
+        // Apply fwdT to kx,ky
+        // Original (x,y):
+        //     x = x0 + ix dx + iy dxy
+        //     y = y0 + ix dyx + iy dy
+        // (x',y') = fwdT(x,y)
+        //     x' = A x + C y
+        //        = (A x0 + C y0) + ix (A dx + C dyx) + iy (A dxy + C dy)
+        //     y' = B x + D y
+        //        = (B x0 + D y0) + ix (B dx + D dyx) + iy (B dxy + D dy)
+        //
+        Position<double> fwdT0 = fwdT(Position<double>(x0,y0));
+        Position<double> fwdT1 = fwdT(Position<double>(dx,dyx));
+        Position<double> fwdT2 = fwdT(Position<double>(dxy,dy));
+        xdbg<<"fwdT0 = "<<fwdT0<<std::endl;
+        xdbg<<"fwdT1 = "<<fwdT1<<std::endl;
+        xdbg<<"fwdT2 = "<<fwdT2<<std::endl;
+
+        GetImpl(_adaptee)->fillKValue(val,fwdT0.x,fwdT1.x,fwdT2.x,fwdT0.y,fwdT2.y,fwdT1.y);
+
+        // Apply phase terms = |det| exp(-i(kx*cenx + ky*ceny))
         if (_zeroCen) {
-            // Apply fwdT to kx,ky
-            if (_mC == 0.) {
-                if (_mD != 1.) ky *= _mD;
-                if (_mB != 0.) ky += _mB*kx;
-                if (_mA != 1.) kx *= _mA;
-            } else if (_mB == 0.) {
-                if (_mD != 1.) ky *= _mD;
-                kx += _mC*kx;
-                if (_mA != 1.) kx *= _mA;
-            } else {
-                tmv::Matrix<double> ky_copy = ky;
-                if (_mD != 1.) ky *= _mD;
-                ky += _mB*kx;
-                if (_mA != 1.) kx *= _mA;
-                kx += _mC*ky_copy;
-            }
-            GetImpl(_adaptee)->kValue(kx,ky,kval);
-            kval *= _absdet;
+            xdbg<<"zeroCen\n";
+            val *= _absdet;
         } else {
-            // First make phase terms = |det| exp(-i(kx*cenx + ky*ceny))
-            const int m = kval.colsize();
-            const int n = kval.rowsize();
-            tmv::Matrix<std::complex<double> > phase(m,n);
-            typedef tmv::VIt<double,1,tmv::NonConj> It;
-            typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
-            It kxit = kx.linearView().begin();
-            It kyit = ky.linearView().begin();
-            CIt phit(phase.linearView().begin().getP(),1);
-            const int ntot = m*n;
-            for (int i=0;i<ntot;++i) *phit++ = std::polar(_absdet, -*kxit++*_cen.x -*kyit++*_cen.y);
-            // Apply fwdT to kx,ky
-            if (_mC == 0.) {
-                if (_mD != 1.) ky *= _mD;
-                if (_mB != 0.) ky += _mB*kx;
-                if (_mA != 1.) kx *= _mA;
-            } else if (_mB == 0.) {
-                if (_mD != 1.) ky *= _mD;
-                kx += _mC*ky;
-                if (_mA != 1.) kx *= _mA;
-            } else {
-                tmv::Matrix<double> ky_copy = ky;
-                if (_mD != 1.) ky *= _mD;
-                ky += _mB*kx;
-                if (_mA != 1.) kx *= _mA;
-                kx += _mC*ky_copy;
+            xdbg<<"!zeroCen\n";
+            assert(val.stepi() == 1);
+            assert(val.canLinearize());
+            const int m = val.colsize();
+            const int n = val.rowsize();
+
+            typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+            It valit(val.linearView().begin().getP(),1);
+            x0 *= _cen.x;
+            dx *= _cen.x;
+            dxy *= _cen.x;
+            y0 *= _cen.y;
+            dy *= _cen.y;
+            dyx *= _cen.y;
+            for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+                double x = x0;
+                double y = y0;
+                for (int i=0;i<m;++i,x+=dx,y+=dyx) *valit++ *= std::polar(_absdet, -x-y);
             }
-            GetImpl(_adaptee)->kValue(kx,ky,kval);
-            kval = ElemProd(kval,phase);
         }
     }
 

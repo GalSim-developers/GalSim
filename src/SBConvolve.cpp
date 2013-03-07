@@ -127,41 +127,41 @@ namespace galsim {
         return kv;
     } 
 
-    void SBConvolve::SBConvolveImpl::kValue(
-        tmv::VectorView<double> kx, tmv::VectorView<double> ky,
-        tmv::MatrixView<std::complex<double> > kval) const
+    void SBConvolve::SBConvolveImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                                double x0, double dx, int ix_zero,
+                                                double y0, double dy, int iy_zero) const
     {
-        tmv::Vector<double> kx2 = kx;
-        tmv::Vector<double> ky2 = ky;
-        tmv::Matrix<std::complex<double> > kval2(kval.colsize(),kval.rowsize());
-
+        dbg<<"SBConvolve fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
         ConstIter pptr = _plist.begin();
         assert(pptr != _plist.end());
-        GetImpl(*pptr)->kValue(kx,ky,kval);
-        for (++pptr; pptr != _plist.end(); ++pptr) {
-            kx = kx2;
-            ky = ky2;
-            GetImpl(*pptr)->kValue(kx,ky,kval2.view());
-            kval = ElemProd(kval,kval2);
+        GetImpl(*pptr)->fillKValue(val,x0,dx,ix_zero,y0,dy,iy_zero);
+        if (++pptr != _plist.end()) {
+            tmv::Matrix<std::complex<double> > val2(val.colsize(),val.rowsize());
+            for (; pptr != _plist.end(); ++pptr) {
+                GetImpl(*pptr)->fillKValue(val2.view(),x0,dx,ix_zero,y0,dy,iy_zero);
+                val = ElemProd(val,val2);
+            }
         }
     }
 
-    void SBConvolve::SBConvolveImpl::kValue(
-        tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
-        tmv::MatrixView<std::complex<double> > kval) const
+    void SBConvolve::SBConvolveImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                                double x0, double dx, double dxy,
+                                                double y0, double dy, double dyx) const
     {
-        tmv::Matrix<double> kx2 = kx;
-        tmv::Matrix<double> ky2 = ky;
-        tmv::Matrix<std::complex<double> > kval2(kval.colsize(),kval.rowsize());
-
+        dbg<<"SBConvolve fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
         ConstIter pptr = _plist.begin();
         assert(pptr != _plist.end());
-        GetImpl(*pptr)->kValue(kx,ky,kval);
-        for (++pptr; pptr != _plist.end(); ++pptr) {
-            kx = kx2;
-            ky = ky2;
-            GetImpl(*pptr)->kValue(kx,ky,kval2.view());
-            kval = ElemProd(kval,kval2);
+        GetImpl(*pptr)->fillKValue(val,x0,dx,dxy,y0,dy,dyx);
+        if (++pptr != _plist.end()) {
+            tmv::Matrix<std::complex<double> > val2(val.colsize(),val.rowsize());
+            for (; pptr != _plist.end(); ++pptr) {
+                GetImpl(*pptr)->fillKValue(val2.view(),x0,dx,dxy,y0,dy,dyx);
+                val = ElemProd(val,val2);
+            }
         }
     }
 

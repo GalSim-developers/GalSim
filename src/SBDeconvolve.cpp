@@ -39,11 +39,11 @@ namespace galsim {
 
     SBDeconvolve::~SBDeconvolve() {}
 
-    SBDeconvolve::SBDeconvolveImpl::SBDeconvolveImpl(const SBProfile& adaptee) :
-        _adaptee(adaptee), _thresh(sbp::kvalue_accuracy * _adaptee.getFlux()),
-        _thresh_sq(_thresh*_thresh)
+    SBDeconvolve::SBDeconvolveImpl::SBDeconvolveImpl(const SBProfile& adaptee) : _adaptee(adaptee) 
     {
-        dbg<<"thresh = "<<_thresh<<std::endl;
+        double maxk = maxK();
+        _maxksq = maxk*maxk;
+        dbg<<"SBDeconvolve constructor: _maxksq = "<<_maxksq<<std::endl;
     }
 
     SBDeconvolve::SBDeconvolveImpl::~SBDeconvolveImpl() {}
@@ -54,34 +54,53 @@ namespace galsim {
 
     std::complex<double> SBDeconvolve::SBDeconvolveImpl::kValue(const Position<double>& k) const 
     {
-        std::complex<double> temp = _adaptee.kValue(k);
-        return std::norm(temp) > _thresh_sq ? 1./temp : 0;
+        return (k.x*k.x + k.y*k.y <= _maxksq) ? 1./_adaptee.kValue(k) : 0.;
     }
 
-    void SBDeconvolve::SBDeconvolveImpl::kValue(
-        tmv::VectorView<double> kx, tmv::VectorView<double> ky,
-        tmv::MatrixView<std::complex<double> > kval) const
+    void SBDeconvolve::SBDeconvolveImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                                    double x0, double dx, int ix_zero,
+                                                    double y0, double dy, int iy_zero) const
     {
-        GetImpl(_adaptee)->kValue(kx,ky,kval);
+        dbg<<"SBDeconvolve fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
+        GetImpl(_adaptee)->fillKValue(val,x0,dx,ix_zero,y0,dy,iy_zero);
 
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
         typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
-        It kvalit(kval.linearView().begin().getP(),1);
-        const int ntot = kval.colsize() * kval.rowsize();
-        for (int i=0;i<ntot;++i,++kvalit) 
-            *kvalit = std::norm(*kvalit) > _thresh_sq ? 1./(*kvalit) : 0;
+        It valit(val.linearView().begin().getP(),1);
+        for (int j=0;j<n;++j,y0+=dy) {
+            double x = x0;
+            double ysq = y0*y0;
+            for (int i=0;i<m;++i,x+=dx,++valit) 
+                *valit = (x*x+ysq <= _maxksq) ? 1./(*valit) : 0.;
+        }
     }
 
-    void SBDeconvolve::SBDeconvolveImpl::kValue(
-        tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
-        tmv::MatrixView<std::complex<double> > kval) const
+    void SBDeconvolve::SBDeconvolveImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                                    double x0, double dx, double dxy,
+                                                    double y0, double dy, double dyx) const
     {
-        GetImpl(_adaptee)->kValue(kx,ky,kval);
+        dbg<<"SBDeconvolve fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        GetImpl(_adaptee)->fillKValue(val,x0,dx,dxy,y0,dy,dyx);
 
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
         typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
-        It kvalit(kval.linearView().begin().getP(),1);
-        const int ntot = kval.colsize() * kval.rowsize();
-        for (int i=0;i<ntot;++i,++kvalit) 
-            *kvalit = std::norm(*kvalit) > _thresh_sq ? 1./(*kvalit) : 0;
+        It valit(val.linearView().begin().getP(),1);
+        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+            double x = x0;
+            double y = y0;
+            for (int i=0;i<m;++i,x+=dx,y+=dyx,++valit) 
+                *valit = (x*x+y*y <= _maxksq) ? 1./(*valit) : 0.;
+        }
     }
 
     Position<double> SBDeconvolve::SBDeconvolveImpl::centroid() const 

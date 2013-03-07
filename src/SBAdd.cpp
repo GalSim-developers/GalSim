@@ -102,79 +102,79 @@ namespace galsim {
         return kv;
     } 
 
-    void SBAdd::SBAddImpl::xValue(
-        tmv::VectorView<double> x, tmv::VectorView<double> y,
-        tmv::MatrixView<double> val) const
+    void SBAdd::SBAddImpl::fillXValue(tmv::MatrixView<double> val,
+                                      double x0, double dx, int ix_zero,
+                                      double y0, double dy, int iy_zero) const
     {
-        tmv::Vector<double> x2 = x;
-        tmv::Vector<double> y2 = y;
-        tmv::Matrix<double> val2(val.colsize(),val.rowsize());
-
+        dbg<<"SBAdd fillXValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
         ConstIter pptr = _plist.begin();
         assert(pptr != _plist.end());
-        GetImpl(*pptr)->xValue(x,y,val);
-        for (++pptr; pptr != _plist.end(); ++pptr) {
-            x = x2;
-            y = y2;
-            GetImpl(*pptr)->xValue(x,y,val2.view());
-            val += val2;
+        GetImpl(*pptr)->fillXValue(val,x0,dx,ix_zero,y0,dy,iy_zero);
+        if (++pptr != _plist.end()) {
+            tmv::Matrix<double> val2(val.colsize(),val.rowsize());
+            for (; pptr != _plist.end(); ++pptr) {
+                GetImpl(*pptr)->fillXValue(val2.view(),x0,dx,ix_zero,y0,dy,iy_zero);
+                val += val2;
+            }
         }
     }
 
-    void SBAdd::SBAddImpl::kValue(
-        tmv::VectorView<double> kx, tmv::VectorView<double> ky,
-        tmv::MatrixView<std::complex<double> > kval) const
+    void SBAdd::SBAddImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                      double x0, double dx, int ix_zero,
+                                      double y0, double dy, int iy_zero) const
     {
-        tmv::Vector<double> kx2 = kx;
-        tmv::Vector<double> ky2 = ky;
-        tmv::Matrix<std::complex<double> > kval2(kval.colsize(),kval.rowsize());
-
+        dbg<<"SBAdd fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
         ConstIter pptr = _plist.begin();
         assert(pptr != _plist.end());
-        GetImpl(*pptr)->kValue(kx,ky,kval);
-        for (++pptr; pptr != _plist.end(); ++pptr) {
-            kx = kx2;
-            ky = ky2;
-            GetImpl(*pptr)->kValue(kx,ky,kval2.view());
-            kval += kval2;
+        GetImpl(*pptr)->fillKValue(val,x0,dx,ix_zero,y0,dy,iy_zero);
+        if (++pptr != _plist.end()) {
+            tmv::Matrix<std::complex<double> > val2(val.colsize(),val.rowsize());
+            for (; pptr != _plist.end(); ++pptr) {
+                GetImpl(*pptr)->fillKValue(val2.view(),x0,dx,ix_zero,y0,dy,iy_zero);
+                val += val2;
+            }
         }
     }
 
-    void SBAdd::SBAddImpl::xValue(
-        tmv::MatrixView<double> x, tmv::MatrixView<double> y,
-        tmv::MatrixView<double> val) const
+    void SBAdd::SBAddImpl::fillXValue(tmv::MatrixView<double> val,
+                                      double x0, double dx, double dxy,
+                                      double y0, double dy, double dyx) const
     {
-        tmv::Matrix<double> x2 = x;
-        tmv::Matrix<double> y2 = y;
-        tmv::Matrix<double> val2(val.colsize(),val.rowsize());
-
+        dbg<<"SBAdd fillXValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
         ConstIter pptr = _plist.begin();
         assert(pptr != _plist.end());
-        GetImpl(*pptr)->xValue(x,y,val);
-        for (++pptr; pptr != _plist.end(); ++pptr) {
-            x = x2;
-            y = y2;
-            GetImpl(*pptr)->xValue(x,y,val2.view());
-            val += val2;
+        GetImpl(*pptr)->fillXValue(val,x0,dx,dxy,y0,dy,dyx);
+        if (++pptr != _plist.end()) {
+            tmv::Matrix<double> val2(val.colsize(),val.rowsize());
+            for (; pptr != _plist.end(); ++pptr) {
+                GetImpl(*pptr)->fillXValue(val2.view(),x0,dx,dxy,y0,dy,dyx);
+                val += val2;
+            }
         }
     }
 
-    void SBAdd::SBAddImpl::kValue(
-        tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
-        tmv::MatrixView<std::complex<double> > kval) const
+    void SBAdd::SBAddImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                      double x0, double dx, double dxy,
+                                      double y0, double dy, double dyx) const
     {
-        tmv::Matrix<double> kx2 = kx;
-        tmv::Matrix<double> ky2 = ky;
-        tmv::Matrix<std::complex<double> > kval2(kval.colsize(),kval.rowsize());
-
+        dbg<<"SBAdd fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
         ConstIter pptr = _plist.begin();
         assert(pptr != _plist.end());
-        GetImpl(*pptr)->kValue(kx,ky,kval);
-        for (++pptr; pptr != _plist.end(); ++pptr) {
-            kx = kx2;
-            ky = ky2;
-            GetImpl(*pptr)->kValue(kx,ky,kval2.view());
-            kval += kval2;
+        GetImpl(*pptr)->fillKValue(val,x0,dx,dxy,y0,dy,dyx);
+        if (++pptr != _plist.end()) {
+            tmv::Matrix<std::complex<double> > val2(val.colsize(),val.rowsize());
+            for (; pptr != _plist.end(); ++pptr) {
+                GetImpl(*pptr)->fillKValue(val2.view(),x0,dx,dxy,y0,dy,dyx);
+                val += val2;
+            }
         }
     }
 

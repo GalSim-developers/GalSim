@@ -26,8 +26,8 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-std::ostream* dbgout = new std::ofstream("debug.out");
-int verbose_level = 2;
+//std::ostream* dbgout = new std::ofstream("debug.out");
+//int verbose_level = 2;
 #endif
 
 namespace galsim {
@@ -131,88 +131,142 @@ namespace galsim {
     double SBShapelet::SBShapeletImpl::getSigma() const { return _sigma; }
     const LVector& SBShapelet::SBShapeletImpl::getBVec() const { return _bvec; }
 
-    void SBShapelet::SBShapeletImpl::xValue(
-        tmv::VectorView<double> x, tmv::VectorView<double> y,
-        tmv::MatrixView<double> val) const
+    void SBShapelet::SBShapeletImpl::fillXValue(tmv::MatrixView<double> val,
+                                                double x0, double dx, int ix_zero,
+                                                double y0, double dy, int iy_zero) const
     {
-        assert(x.size() == val.colsize());
-        assert(y.size() == val.rowsize());
+        dbg<<"SBShapelet fillXValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
         const int m = val.colsize();
         const int n = val.rowsize();
+
+        x0 /= _sigma;
+        dx /= _sigma;
+        y0 /= _sigma;
+        dy /= _sigma;
+
         tmv::Matrix<double> mx(m,n);
+        for (int i=0;i<m;++i,x0+=dx) mx.row(i).setAllTo(x0);
         tmv::Matrix<double> my(m,n);
-        for (int j=0;j<n;++j) mx.col(j) = x;
-        for (int i=0;i<m;++i) my.row(i) = y;
-        xValue(mx.view(),my.view(),val);
+        for (int j=0;j<n;++j,y0+=dy) my.col(j).setAllTo(y0);
+
+        fillXValue(val,mx,my);
     }
 
-    void SBShapelet::SBShapeletImpl::kValue(
-        tmv::VectorView<double> kx, tmv::VectorView<double> ky,
-        tmv::MatrixView<std::complex<double> > kval) const
+    void SBShapelet::SBShapeletImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                                double x0, double dx, int ix_zero,
+                                                double y0, double dy, int iy_zero) const
     {
-        assert(kx.size() == kval.colsize());
-        assert(ky.size() == kval.rowsize());
-        const int m = kval.colsize();
-        const int n = kval.rowsize();
-        tmv::Matrix<double> mx(m,n);
-        tmv::Matrix<double> my(m,n);
-        for (int j=0;j<n;++j) mx.col(j) = kx;
-        for (int i=0;i<m;++i) my.row(i) = ky;
-        kValue(mx.view(),my.view(),kval);
-    } 
-
-    void SBShapelet::SBShapeletImpl::xValue(
-        tmv::MatrixView<double> x, tmv::MatrixView<double> y,
-        tmv::MatrixView<double> val) const
-    {
-        dbg<<"Start Shapelet xValue\n";
-        dbg<<"sigma = "<<_sigma<<std::endl;
-        dbg<<"bvec = "<<_bvec<<std::endl;
-        assert(x.stepi() == 1);
-        assert(y.stepi() == 1);
-        assert(val.stepi() == 1);
-        assert(val.canLinearize());
-        assert(x.colsize() == val.colsize());
-        assert(x.rowsize() == val.rowsize());
-        assert(y.colsize() == val.colsize());
-        assert(y.rowsize() == val.rowsize());
+        dbg<<"SBShapelet fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
         const int m = val.colsize();
         const int n = val.rowsize();
-        const int ntot = m*n;
-        x /= _sigma;
-        y /= _sigma;
 
-        tmv::Matrix<double> psi(ntot,_bvec.size());
-        LVector::basis(x.linearView(),y.linearView(),psi.view(),_bvec.getOrder(),_sigma);
+        x0 *= _sigma;
+        dx *= _sigma;
+        y0 *= _sigma;
+        dy *= _sigma;
+
+        tmv::Matrix<double> mx(m,n);
+        for (int i=0;i<m;++i,x0+=dx) mx.row(i).setAllTo(x0);
+        tmv::Matrix<double> my(m,n);
+        for (int j=0;j<n;++j,y0+=dy) my.col(j).setAllTo(y0);
+
+        fillKValue(val,mx,my);
+    }
+
+    void SBShapelet::SBShapeletImpl::fillXValue(tmv::MatrixView<double> val,
+                                                double x0, double dx, double dxy,
+                                                double y0, double dy, double dyx) const
+    {
+        dbg<<"SBShapelet fillXValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        const int m = val.colsize();
+        const int n = val.rowsize();
+
+        x0 /= _sigma;
+        dx /= _sigma;
+        dxy /= _sigma;
+        y0 /= _sigma;
+        dy /= _sigma;
+        dyx /= _sigma;
+
+        tmv::Matrix<double> mx(m,n);
+        tmv::Matrix<double> my(m,n);
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        It xit = mx.linearView().begin();
+        It yit = my.linearView().begin();
+        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+            double x = x0;
+            double y = y0;
+            for (int i=0;i<m;++i,x+=dx,y+=dyx) { *xit++ = x; *yit++ = y; }
+        }
+
+        fillXValue(val,mx,my);
+    }
+
+    void SBShapelet::SBShapeletImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                                double x0, double dx, double dxy,
+                                                double y0, double dy, double dyx) const
+    {
+        dbg<<"SBShapelet fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        const int m = val.colsize();
+        const int n = val.rowsize();
+
+        x0 *= _sigma;
+        dx *= _sigma;
+        dxy *= _sigma;
+        y0 *= _sigma;
+        dy *= _sigma;
+        dyx *= _sigma;
+
+        tmv::Matrix<double> mx(m,n);
+        tmv::Matrix<double> my(m,n);
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        It xit = mx.linearView().begin();
+        It yit = my.linearView().begin();
+        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+            double x = x0;
+            double y = y0;
+            for (int i=0;i<m;++i,x+=dx,y+=dyx) { *xit++ = x; *yit++ = y; }
+        }
+
+        fillKValue(val,mx,my);
+    }
+
+    void SBShapelet::SBShapeletImpl::fillXValue(
+        tmv::MatrixView<double> val,
+        const tmv::Matrix<double>& x, const tmv::Matrix<double>& y) const
+    {
+        dbg<<"order = "<<_bvec.getOrder()<<", sigma = "<<_sigma<<std::endl;
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        tmv::Matrix<double> psi(m*n,_bvec.size());
+        LVector::basis(x.constLinearView(),y.constLinearView(),psi.view(),
+                       _bvec.getOrder(),_sigma);
         val.linearView() = psi * _bvec.rVector();
     }
 
-    void SBShapelet::SBShapeletImpl::kValue(
-        tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
-        tmv::MatrixView<std::complex<double> > kval) const
+    void SBShapelet::SBShapeletImpl::fillKValue(
+        tmv::MatrixView<std::complex<double> > val,
+        const tmv::Matrix<double>& x, const tmv::Matrix<double>& y) const
     {
-        dbg<<"Start Shapelet kValue\n";
-        dbg<<"sigma = "<<_sigma<<std::endl;
-        dbg<<"bvec = "<<_bvec<<std::endl;
-        assert(kx.stepi() == 1);
-        assert(ky.stepi() == 1);
-        assert(kval.stepi() == 1);
-        assert(kx.canLinearize());
-        assert(ky.canLinearize());
-        assert(kval.canLinearize());
-        assert(kx.colsize() == kval.colsize());
-        assert(kx.rowsize() == kval.rowsize());
-        assert(ky.colsize() == kval.colsize());
-        assert(ky.rowsize() == kval.rowsize());
-        const int m = kval.colsize();
-        const int n = kval.rowsize();
-        const int ntot = m*n;
-        kx *= _sigma;
-        ky *= _sigma;
-
-        tmv::Matrix<std::complex<double> > psi_k(ntot,_bvec.size());
-        LVector::kBasis(kx.linearView(),ky.linearView(),psi_k.view(),_bvec.getOrder(),_sigma);
-        kval.linearView() = psi_k * _bvec.rVector();
+        dbg<<"order = "<<_bvec.getOrder()<<", sigma = "<<_sigma<<std::endl;
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        tmv::Matrix<std::complex<double> > psi_k(m*n,_bvec.size());
+        LVector::kBasis(x.constLinearView(),y.constLinearView(),psi_k.view(),
+                        _bvec.getOrder(),_sigma);
+        val.linearView() = psi_k * _bvec.rVector();
     }
 
     template <typename T>

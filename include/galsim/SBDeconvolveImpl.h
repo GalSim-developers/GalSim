@@ -57,15 +57,16 @@ namespace galsim {
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate u) const;
 
         // Overrides for better efficiency
-        void kValue(tmv::VectorView<double> kx, tmv::VectorView<double> ky,
-                    tmv::MatrixView<std::complex<double> > kval) const;
-        void kValue(tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
-                    tmv::MatrixView<std::complex<double> > kval) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double x0, double dx, int ix_zero,
+                        double y0, double dy, int iy_zero) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
 
     private:
         SBProfile _adaptee;
-        double _thresh;  // A threshold below which kvalues are not inverted -- just use 0.
-        double _thresh_sq;
+        double _maxksq;
 
         // Copy constructor and op= are undefined.
         SBDeconvolveImpl(const SBDeconvolveImpl& rhs);

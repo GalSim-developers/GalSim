@@ -110,110 +110,114 @@ namespace galsim {
         return _knorm * _info->kValue(ksq_over_pisq);
     }
 
-    void SBAiry::SBAiryImpl::xValue(
-        tmv::VectorView<double> x, tmv::VectorView<double> y,
-        tmv::MatrixView<double> val) const
+    void SBAiry::SBAiryImpl::fillXValue(tmv::MatrixView<double> val,
+                                        double x0, double dx, int ix_zero,
+                                        double y0, double dy, int iy_zero) const
     {
-        assert(x.step() == 1);
-        assert(y.step() == 1);
+        dbg<<"SBAiry fillXValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
         assert(val.stepi() == 1);
-        assert(val.canLinearize());
-        assert(x.size() == val.colsize());
-        assert(y.size() == val.rowsize());
         const int m = val.colsize();
         const int n = val.rowsize();
         typedef tmv::VIt<double,1,tmv::NonConj> It;
-        x *= _D;
-        x = ElemProd(x,x);
-        y *= _D;
-        y = ElemProd(y,y);
-        It yit = y.begin();
-        It valit = val.linearView().begin();
-        for (int j=0;j<n;++j,++yit) {
-            It xit = x.begin();
-            for (int i=0;i<m;++i) *valit++ = _xnorm * _info->xValue(sqrt(*xit++ + *yit));
+
+        x0 *= _D;
+        dx *= _D;
+        y0 *= _D;
+        dy *= _D;
+
+        for (int j=0;j<n;++j,y0+=dy) {
+            double x = x0;
+            double ysq = y0*y0;
+            It valit = val.col(j).begin();
+            for (int i=0;i<m;++i,x+=dx) 
+                *valit++ = _xnorm * _info->xValue(sqrt(x*x + ysq));
         }
     }
 
-    void SBAiry::SBAiryImpl::kValue(
-        tmv::VectorView<double> kx, tmv::VectorView<double> ky,
-        tmv::MatrixView<std::complex<double> > kval) const
-    { 
-        assert(kx.step() == 1);
-        assert(ky.step() == 1);
-        assert(kval.stepi() == 1);
-        assert(kval.canLinearize());
-        assert(kx.size() == kval.colsize());
-        assert(ky.size() == kval.rowsize());
-        const int m = kval.colsize();
-        const int n = kval.rowsize();
-        typedef tmv::VIt<double,1,tmv::NonConj> It;
-        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
-        kx *= _inv_D_pi;
-        kx = ElemProd(kx,kx);
-        ky *= _inv_D_pi;
-        ky = ElemProd(ky,ky);
-        It kyit = ky.begin();
-        CIt kvalit(kval.linearView().begin().getP(),1);
-        for (int j=0;j<n;++j,++kyit) {
-            It kxit = kx.begin();
-            for (int i=0;i<m;++i) *kvalit++ = _knorm * _info->kValue(*kxit++ + *kyit);
+    void SBAiry::SBAiryImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                        double x0, double dx, int ix_zero,
+                                        double y0, double dy, int iy_zero) const
+    {
+        dbg<<"SBAiry fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
+        assert(val.stepi() == 1);
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+
+        x0 *= _inv_D_pi;
+        dx *= _inv_D_pi;
+        y0 *= _inv_D_pi;
+        dy *= _inv_D_pi;
+
+        for (int j=0;j<n;++j,y0+=dy) {
+            double x = x0;
+            double ysq = y0*y0;
+            It valit(val.col(j).begin().getP(),1);
+            for (int i=0;i<m;++i,x+=dx) 
+                *valit++ = _knorm * _info->kValue(x*x + ysq);
         }
     }
 
-    void SBAiry::SBAiryImpl::xValue(
-        tmv::MatrixView<double> x, tmv::MatrixView<double> y,
-        tmv::MatrixView<double> val) const
-    { 
-        assert(x.stepi() == 1);
-        assert(y.stepi() == 1);
+    void SBAiry::SBAiryImpl::fillXValue(tmv::MatrixView<double> val,
+                                        double x0, double dx, double dxy,
+                                        double y0, double dy, double dyx) const
+    {
+        dbg<<"SBAiry fillXValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
         assert(val.stepi() == 1);
         assert(val.canLinearize());
-        assert(x.colsize() == val.colsize());
-        assert(x.rowsize() == val.rowsize());
-        assert(y.colsize() == val.colsize());
-        assert(y.rowsize() == val.rowsize());
         const int m = val.colsize();
         const int n = val.rowsize();
         typedef tmv::VIt<double,1,tmv::NonConj> It;
-        x *= _D;
-        x = ElemProd(x,x);
-        y *= _D;
-        y = ElemProd(y,y);
-        x += y;
-        It xit = x.linearView().begin();
+
+        x0 *= _D;
+        dx *= _D;
+        dxy *= _D;
+        y0 *= _D;
+        dy *= _D;
+        dyx *= _D;
+
         It valit = val.linearView().begin();
-        const int ntot = m*n;
-        for (int i=0;i<ntot;++i) *valit++ = _xnorm * _info->xValue(sqrt(*xit++));
+        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+            double x = x0;
+            double y = y0;
+            for (int i=0;i<m;++i,x+=dx,y+=dyx) 
+                *valit++ = _xnorm * _info->xValue(sqrt(x*x + y*y));
+        }
     }
 
-    void SBAiry::SBAiryImpl::kValue(
-        tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
-        tmv::MatrixView<std::complex<double> > kval) const
-    { 
-        assert(kx.stepi() == 1);
-        assert(ky.stepi() == 1);
-        assert(kval.stepi() == 1);
-        assert(kx.canLinearize());
-        assert(ky.canLinearize());
-        assert(kval.canLinearize());
-        assert(kx.colsize() == kval.colsize());
-        assert(kx.rowsize() == kval.rowsize());
-        assert(ky.colsize() == kval.colsize());
-        assert(ky.rowsize() == kval.rowsize());
-        const int m = kval.colsize();
-        const int n = kval.rowsize();
-        typedef tmv::VIt<double,1,tmv::NonConj> It;
-        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
-        const int ntot = m*n;
-        kx *= _inv_D_pi;
-        kx = ElemProd(kx,kx);
-        ky *= _inv_D_pi;
-        ky = ElemProd(ky,ky);
-        kx += ky;
-        It kxit = kx.linearView().begin();
-        CIt kvalit(kval.linearView().begin().getP(),1);
-        for (int i=0;i<ntot;++i) *kvalit++ = _knorm * _info->kValue(*kxit++);
+    void SBAiry::SBAiryImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                        double x0, double dx, double dxy,
+                                        double y0, double dy, double dyx) const
+    {
+        dbg<<"SBAiry fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+
+        x0 *= _inv_D_pi;
+        dx *= _inv_D_pi;
+        dxy *= _inv_D_pi;
+        y0 *= _inv_D_pi;
+        dy *= _inv_D_pi;
+        dyx *= _inv_D_pi;
+
+        It valit(val.linearView().begin().getP(),1);
+        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+            double x = x0;
+            double y = y0;
+            for (int i=0;i<m;++i,x+=dx,y+=dyx) 
+                *valit++ = _knorm * _info->kValue(x*x + y*y);
+        }
     }
 
     // Set maxK to hard limit for Airy disk.

@@ -68,6 +68,10 @@ def printval(image1, image2):
     getmoments(image1)
     print "Moments Mx, My, Mxx, Myy, Mxy for saved array: "
     getmoments(image2)
+    #xcen = image2.array.shape[0]/2
+    #ycen = image2.array.shape[1]/2
+    #print "new image.center = ",image1.array[xcen-3:xcen+4,ycen-3:ycen+4]
+    #print "saved image.center = ",image2.array[xcen-3:xcen+4,ycen-3:ycen+4]
 
 def getmoments(image1):
     xgrid, ygrid = np.meshgrid(np.arange(np.shape(image1.array)[0]) + image1.getXMin(), 
@@ -1278,6 +1282,7 @@ def test_convolve():
     myImg.setScale(0.2)
     myConv.draw(myImg.view())
     printval(myImg, savedImg)
+ 
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 4,
             err_msg="Moffat convolved with Box SBProfile disagrees with expected result")

@@ -128,10 +128,12 @@ namespace galsim {
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
         // Overrides for better efficiency
-        void kValue(tmv::VectorView<double> kx, tmv::VectorView<double> ky,
-                    tmv::MatrixView<std::complex<double> > kval) const;
-        void kValue(tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
-                    tmv::MatrixView<std::complex<double> > kval) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double x0, double dx, int ix_zero,
+                        double y0, double dy, int iy_zero) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
 
     private:
         typedef std::list<SBProfile>::iterator Iter;

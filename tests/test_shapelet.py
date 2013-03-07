@@ -40,6 +40,10 @@ def printval(image1, image2):
     getmoments(image1)
     print "Moments Mx, My, Mxx, Myy, Mxy for saved array: "
     getmoments(image2)
+    xcen = image2.array.shape[0]/2
+    ycen = image2.array.shape[1]/2
+    print "new image.center = ",image1.array[xcen-3:xcen+4,ycen-3:ycen+4]
+    print "saved image.center = ",image2.array[xcen-3:xcen+4,ycen-3:ycen+4]
 
 def getmoments(image1):
     xgrid, ygrid = np.meshgrid(np.arange(np.shape(image1.array)[0]) + image1.getXMin(), 
@@ -78,6 +82,7 @@ def test_shapelet_gaussian():
             bvec[0] = test_flux
             shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
             shapelet.draw(im2, dx=0.2)
+            printval(im2,im1)
             np.testing.assert_array_almost_equal(
                     im1.array, im2.array, 5,
                     err_msg="Shapelet with (only) b00=1 disagrees with Gaussian result"

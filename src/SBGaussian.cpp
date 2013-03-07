@@ -117,114 +117,126 @@ namespace galsim {
         }
     }
 
-    void SBGaussian::SBGaussianImpl::xValue(
-        tmv::VectorView<double> x, tmv::VectorView<double> y,
-        tmv::MatrixView<double> val) const
+    void SBGaussian::SBGaussianImpl::fillXValue(tmv::MatrixView<double> val,
+                                                double x0, double dx, int ix_zero,
+                                                double y0, double dy, int iy_zero) const
     {
-        assert(x.step() == 1);
-        assert(y.step() == 1);
+        dbg<<"SBGaussian fillXValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
         assert(val.stepi() == 1);
-        assert(val.canLinearize());
-        assert(x.size() == val.colsize());
-        assert(y.size() == val.rowsize());
         const int m = val.colsize();
         const int n = val.rowsize();
         typedef tmv::VIt<double,1,tmv::NonConj> It;
-        x *= _inv_sigma;
-        x = ElemProd(x,x);
-        y *= _inv_sigma;
-        y = ElemProd(y,y);
-        It xit = x.begin();
-        for (int i=0;i<m;++i,++xit) *xit = exp(-0.5* *xit);
-        It yit = y.begin();
-        for (int j=0;j<n;++j,++yit) *yit = exp(-0.5* *yit);
-        val = _norm * x ^ y;
+
+        x0 *= _inv_sigma;
+        dx *= _inv_sigma;
+        y0 *= _inv_sigma;
+        dy *= _inv_sigma;
+
+        // The Gaussian profile is separable:
+        //    val = _norm * exp(-0.5 * (x*x + y*y) 
+        //        = _norm * exp(-0.5 * x*x) * exp(-0.5 * y*y)
+        tmv::Vector<double> gauss_x(m);
+        It xit = gauss_x.begin();
+        for (int i=0;i<m;++i,x0+=dx) *xit++ = exp(-0.5 * x0*x0);
+        tmv::Vector<double> gauss_y(n);
+        It yit = gauss_y.begin();
+        for (int j=0;j<n;++j,y0+=dy) *yit++ = exp(-0.5 * y0*y0);
+
+        val = _norm * gauss_x ^ gauss_y;
     }
 
-    void SBGaussian::SBGaussianImpl::kValue(
-        tmv::VectorView<double> kx, tmv::VectorView<double> ky,
-        tmv::MatrixView<std::complex<double> > kval) const
+    void SBGaussian::SBGaussianImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                                double x0, double dx, int ix_zero,
+                                                double y0, double dy, int iy_zero) const
     {
-        assert(kx.step() == 1);
-        assert(ky.step() == 1);
-        assert(kval.stepi() == 1);
-        assert(kval.canLinearize());
-        assert(kx.size() == kval.colsize());
-        assert(ky.size() == kval.rowsize());
-        const int m = kval.colsize();
-        const int n = kval.rowsize();
-        typedef tmv::VIt<double,1,tmv::NonConj> It;
-        kx *= _sigma;
-        kx = ElemProd(kx,kx);
-        ky *= _sigma;
-        ky = ElemProd(ky,ky);
-        It kxit = kx.begin();
-        for (int i=0;i<m;++i,++kxit) *kxit = exp(-0.5* *kxit);
-        It kyit = ky.begin();
-        for (int j=0;j<n;++j,++kyit) *kyit = exp(-0.5* *kyit);
-        kval = _flux * kx ^ ky;
-    }
-
-    void SBGaussian::SBGaussianImpl::xValue(
-        tmv::MatrixView<double> x, tmv::MatrixView<double> y,
-        tmv::MatrixView<double> val) const
-    { 
-        assert(x.stepi() == 1);
-        assert(y.stepi() == 1);
+        dbg<<"SBGaussian fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
         assert(val.stepi() == 1);
-        assert(val.canLinearize());
-        assert(x.colsize() == val.colsize());
-        assert(x.rowsize() == val.rowsize());
-        assert(y.colsize() == val.colsize());
-        assert(y.rowsize() == val.rowsize());
         const int m = val.colsize();
         const int n = val.rowsize();
         typedef tmv::VIt<double,1,tmv::NonConj> It;
-        x *= _inv_sigma;
-        x = ElemProd(x,x);
-        y *= _inv_sigma;
-        y = ElemProd(y,y);
-        x += y;
-        It xit = x.linearView().begin();
+
+        x0 *= _sigma;
+        dx *= _sigma;
+        y0 *= _sigma;
+        dy *= _sigma;
+
+        tmv::Vector<double> gauss_x(m);
+        It xit = gauss_x.begin();
+        for (int i=0;i<m;++i,x0+=dx) *xit++ = exp(-0.5 * x0*x0);
+        tmv::Vector<double> gauss_y(n);
+        It yit = gauss_y.begin();
+        for (int j=0;j<n;++j,y0+=dy) *yit++ = exp(-0.5 * y0*y0);
+
+        val = _flux * gauss_x ^ gauss_y;
+    }
+
+    void SBGaussian::SBGaussianImpl::fillXValue(tmv::MatrixView<double> val,
+                                                double x0, double dx, double dxy,
+                                                double y0, double dy, double dyx) const
+    {
+        dbg<<"SBGaussian fillXValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+
+        x0 *= _inv_sigma;
+        dx *= _inv_sigma;
+        dxy *= _inv_sigma;
+        y0 *= _inv_sigma;
+        dy *= _inv_sigma;
+        dyx *= _inv_sigma;
+
         It valit = val.linearView().begin();
-        const int ntot = m*n;
-        for (int i=0;i<ntot;++i) *valit++ = _norm * std::exp(-0.5* *xit++);
-     }
+        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+            double x = x0;
+            double y = y0;
+            for (int i=0;i<m;++i,x+=dx,y+=dyx) 
+                *valit++ = _norm * std::exp( -0.5 * (x*x + y*y) );
+        }
+    }
 
-    void SBGaussian::SBGaussianImpl::kValue(
-        tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
-        tmv::MatrixView<std::complex<double> > kval) const
-    { 
-        assert(kx.stepi() == 1);
-        assert(ky.stepi() == 1);
-        assert(kval.stepi() == 1);
-        assert(kx.canLinearize());
-        assert(ky.canLinearize());
-        assert(kval.canLinearize());
-        assert(kx.colsize() == kval.colsize());
-        assert(kx.rowsize() == kval.rowsize());
-        assert(ky.colsize() == kval.colsize());
-        assert(ky.rowsize() == kval.rowsize());
-        const int m = kval.colsize();
-        const int n = kval.rowsize();
-        typedef tmv::VIt<double,1,tmv::NonConj> It;
-        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
-        kx *= _sigma;
-        kx = ElemProd(kx,kx);
-        ky *= _sigma;
-        ky = ElemProd(ky,ky);
-        kx += ky;
-        It kxit = kx.linearView().begin();
-        CIt kvalit(kval.linearView().begin().getP(),1);
-        const int ntot = m*n;
-        for (int i=0;i<ntot;++i)  {
-            double ksq = *kxit++;
-            if (ksq > _ksq_max) {
-                *kvalit++ = 0.;
-            } else if (ksq < _ksq_min) {
-                *kvalit++ = _flux*(1. - 0.5*ksq*(1. - 0.25*ksq));
-            } else {
-                *kvalit++ = _flux * std::exp(-0.5*ksq);
+    void SBGaussian::SBGaussianImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                                double x0, double dx, double dxy,
+                                                double y0, double dy, double dyx) const
+    {
+        dbg<<"SBGaussian fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+
+        x0 *= _sigma;
+        dx *= _sigma;
+        dxy *= _sigma;
+        y0 *= _sigma;
+        dy *= _sigma;
+        dyx *= _sigma;
+
+        It valit(val.linearView().begin().getP(),1);
+        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+            double x = x0;
+            double y = y0;
+            It valit(val.col(j).begin().getP(),1);
+            for (int i=0;i<m;++i,x+=dx,y+=dyx) {
+                double ksq = x*x + y*y;
+                if (ksq > _ksq_max) {
+                    *valit++ = 0.;
+                } else if (ksq < _ksq_min) {
+                    *valit++ = _flux * (1. - 0.5*ksq*(1. - 0.25*ksq));
+                } else {
+                    *valit++ =  _flux * std::exp(-0.5*ksq);
+                }
             }
         }
     }

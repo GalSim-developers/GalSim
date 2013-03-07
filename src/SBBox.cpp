@@ -27,8 +27,8 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-std::ostream* dbgout = new std::ofstream("debug.out");
-int verbose_level = 2;
+//std::ostream* dbgout = new std::ofstream("debug.out");
+//int verbose_level = 2;
 #endif
 
 namespace galsim {
@@ -56,7 +56,7 @@ namespace galsim {
     double SBBox::SBBoxImpl::xValue(const Position<double>& p) const 
     {
         if (fabs(p.x) < 0.5*_xw && fabs(p.y) < 0.5*_yw) return _norm;
-        else return 0.;  // do not use this function for fillXGrid()!
+        else return 0.;  // do not use this function for filling image!
     }
 
     double SBBox::SBBoxImpl::sinc(double u) const 
@@ -72,57 +72,183 @@ namespace galsim {
         return _flux * sinc(0.5*k.x*_xw)*sinc(0.5*k.y*_yw);
     }
 
-    void SBBox::SBBoxImpl::kValue(
-        tmv::VectorView<double> kx, tmv::VectorView<double> ky,
-        tmv::MatrixView<std::complex<double> > kval) const
-    { 
-        assert(kx.step() == 1);
-        assert(ky.step() == 1);
-        assert(kval.stepi() == 1);
-        assert(kval.canLinearize());
-        assert(kx.size() == kval.colsize());
-        assert(ky.size() == kval.rowsize());
-        const int m = kval.colsize();
-        const int n = kval.rowsize();
+    void SBBox::SBBoxImpl::fillXValue(tmv::MatrixView<double> val,
+                                      double x0, double dx, int ix_zero,
+                                      double y0, double dy, int iy_zero) const
+    {
+        dbg<<"SBBox fillXValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
+        assert(val.stepi() == 1);
+        const int m = val.colsize();
+        const int n = val.rowsize();
         typedef tmv::VIt<double,1,tmv::NonConj> It;
-        kx *= 0.5*_xw;
-        It kxit = kx.begin();
-        for (int i=0;i<m;++i,++kxit) *kxit = sinc(*kxit);
 
-        ky *= 0.5*_yw;
-        It kyit = ky.begin();
-        for (int j=0;j<n;++j,++kyit) *kyit = sinc(*kyit);
+        // We need to make sure the pixels where the edges of the box fall only get
+        // a fraction of the flux.
+        //
+        // We divide up the range into 3 sections in x: 
+        //    left of the box where val = 0
+        //    in the box where val = _norm
+        //    right of the box where val = 0 again
+        //
+        // ... and 3 sections in y:
+        //    below the box where val = 0
+        //    in the box where val = _norm
+        //    above the box where val = 0 again
+        //
+        // Furthermore, we have to calculate the correct values for the pixels on the border.
+        
+        // It will be useful to do everything in units of dx,dy
+        x0 /= dx;
+        double xw = _xw / dx;
+        y0 /= dy;
+        double yw = _yw / dy;
+        xdbg<<"x0,y0 -> "<<x0<<','<<y0<<std::endl;
+        xdbg<<"xw,yw -> "<<xw<<','<<yw<<std::endl;
 
-        kval = _flux * kx ^ ky;
+        int ix_left, ix_right, iy_bottom, iy_top;
+        double x_left, x_right, y_bottom, y_top;
+
+        // Find the x edges:
+        double tmp = 0.5*xw + 0.5;
+        ix_left = int(-tmp-x0+1);
+        ix_right = int(tmp-x0);
+
+        // If the box goes off the image, it's ok, but it will cause us problems
+        // later on if we don't change it.  Just use ix_left = 0.
+        if (ix_left < 0) { ix_left = 0; x_left = 1.; } 
+
+        // If the whole box is off the image, just zero and return.
+        else if (ix_left >= m) { val.setZero(); return; } 
+
+        // Normal case: calculate the fractional flux in the edge
+        else x_left = tmp+x0+ix_left;
+
+        // Now the right side.
+        if (ix_right >= m) { ix_right = m-1; x_right = 1.; } 
+        else if (ix_right < 0) { val.setZero(); return; } 
+        else x_right = tmp-x0-ix_right;
+        xdbg<<"ix_left = "<<ix_left<<" with partial flux "<<x_left<<std::endl;
+        xdbg<<"ix_right = "<<ix_right<<" with partial flux "<<x_right<<std::endl;
+        
+        // Repeat for y values
+        tmp = 0.5*yw + 0.5;
+        iy_bottom = int(-tmp-y0+1);
+        iy_top = int(tmp-y0);
+
+        if (iy_bottom < 0) { iy_bottom = 0; y_bottom = 1.; } 
+        else if (iy_bottom >= n) { val.setZero(); return; } 
+        else y_bottom = tmp+y0+iy_bottom;
+
+        if (iy_top >= n) { iy_top = n-1; y_top = 1.; } 
+        else if (iy_top < 0) { val.setZero(); return; } 
+        else y_top = tmp-y0-iy_top;
+        xdbg<<"iy_bottom = "<<iy_bottom<<" with partial flux "<<y_bottom<<std::endl;
+        xdbg<<"iy_top = "<<iy_top<<" with partial flux "<<y_top<<std::endl;
+        xdbg<<"m,n = "<<m<<','<<n<<std::endl;
+
+        // Now we need to fill the matrix with the appropriate values in each section.
+        // Start with the zeros:
+        if (0 < ix_left)
+            val.subMatrix(0,ix_left,iy_bottom,iy_top+1).setZero();
+        if (ix_right+1 < m)
+            val.subMatrix(ix_right+1,m,iy_bottom,iy_top+1).setZero();
+        if (0 < iy_bottom)
+            val.colRange(0,iy_bottom).setZero();
+        if (iy_top+1 < n)
+            val.colRange(iy_top+1,n).setZero();
+        // Then the interior:
+        if (ix_left+1 < ix_right && iy_bottom+1 < iy_top)
+            val.subMatrix(ix_left+1,ix_right,iy_bottom+1,iy_top).setAllTo(_norm);
+        // And now the edges:
+        if (ix_left+1 < ix_right) {
+            val.col(iy_bottom,ix_left+1,ix_right).setAllTo(y_bottom * _norm);
+            val.col(iy_top,ix_left+1,ix_right).setAllTo(y_top * _norm);
+        }
+        if (iy_bottom+1 < iy_top) {
+            val.row(ix_left,iy_bottom+1,iy_top).setAllTo(x_left * _norm);
+            val.row(ix_right,iy_bottom+1,iy_top).setAllTo(x_right * _norm);
+        }
+        // Finally the corners
+        val(ix_left,iy_bottom) = x_left * y_bottom * _norm;
+        val(ix_right,iy_bottom) = x_right * y_bottom * _norm;
+        val(ix_left,iy_top) = x_left * y_top * _norm;
+        val(ix_right,iy_top) = x_right * y_top * _norm;
     }
 
-    void SBBox::SBBoxImpl::kValue(
-        tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
-        tmv::MatrixView<std::complex<double> > kval) const
-    { 
-        assert(kx.stepi() == 1);
-        assert(ky.stepi() == 1);
-        assert(kval.stepi() == 1);
-        assert(kx.canLinearize());
-        assert(ky.canLinearize());
-        assert(kval.canLinearize());
-        assert(kx.colsize() == kval.colsize());
-        assert(kx.rowsize() == kval.rowsize());
-        assert(ky.colsize() == kval.colsize());
-        assert(ky.rowsize() == kval.rowsize());
-        const int m = kval.colsize();
-        const int n = kval.rowsize();
-        const int ntot = m*n;
+    void SBBox::SBBoxImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                      double x0, double dx, int ix_zero,
+                                      double y0, double dy, int iy_zero) const
+    {
+        dbg<<"SBBox fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
+        assert(val.stepi() == 1);
+        const int m = val.colsize();
+        const int n = val.rowsize();
         typedef tmv::VIt<double,1,tmv::NonConj> It;
-        kx *= 0.5*_xw;
-        It kxit = kx.linearView().begin();
-        for (int i=0;i<ntot;++i,++kxit) *kxit = sinc(*kxit);
 
-        ky *= 0.5*_yw;
-        It kyit = ky.linearView().begin();
-        for (int j=0;j<ntot;++j,++kyit) *kyit = sinc(*kyit);
+        x0 *= 0.5*_xw;
+        dx *= 0.5*_xw;
+        y0 *= 0.5*_yw;
+        dy *= 0.5*_yw;
 
-        kval = _flux * ElemProd(kx , ky);
+        // The Box profile in Fourier space is separable:
+        //    val = _flux * sinc(0.5 * x * _yw) * sinc(0.5 * y * _yw) 
+        tmv::Vector<double> sinc_x(m);
+        It xit = sinc_x.begin();
+        for (int i=0;i<m;++i,x0+=dx) *xit++ = sinc(x0);
+        tmv::Vector<double> sinc_y(n);
+        It yit = sinc_y.begin();
+        for (int j=0;j<n;++j,y0+=dy) *yit++ = sinc(y0);
+
+        val = _flux * sinc_x ^ sinc_y;
+    }
+
+    void SBBox::SBBoxImpl::fillXValue(tmv::MatrixView<double> val,
+                                      double x0, double dx, double dxy,
+                                      double y0, double dy, double dyx) const
+    {
+        // This is complicated to get right, since the edges cut through the image grid
+        // at angles.  Fortunately, we also don't really have any need for it.
+        // It would only get called if you draw a sheared or rotated Pixel without convolving 
+        // it by anything else, which we don't really do.  If we ever decide we need this,
+        // someone can try to figure out all the math involved here.
+        if (dxy == 0. && dyx == 0.)
+            fillXValue(val,x0,dx,0,y0,dy,0);
+        else
+            throw std::runtime_error(
+                "fillXValue for a sheared or rotated SBBox is not implemented.");
+    }
+
+    void SBBox::SBBoxImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                      double x0, double dx, double dxy,
+                                      double y0, double dy, double dyx) const
+    {
+        dbg<<"SBBox fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+
+        x0 *= 0.5*_xw;
+        dx *= 0.5*_xw;
+        dxy *= 0.5*_xw;
+        y0 *= 0.5*_yw;
+        dy *= 0.5*_yw;
+        dyx *= 0.5*_yw;
+
+        It valit(val.linearView().begin().getP(),1);
+        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+            double x = x0;
+            double y = y0;
+            for (int i=0;i<m;++i,x+=dx,y+=dyx) 
+                *valit++ = _flux * sinc(x) * sinc(y);
+        }
     }
 
     // Set maxK to the value where the FT is down to maxk_threshold
@@ -137,68 +263,6 @@ namespace galsim {
     {
         // In this case max(xw,yw) encloses all the flux, so use that.
         return M_PI / std::max(_xw,_yw);
-    }
-
-    // Override fillXGrid so we can partially fill pixels at edge of box.
-    void SBBox::SBBoxImpl::fillXGrid(XTable& xt) const 
-    {
-        int N = xt.getN();
-        double dx = xt.getDx(); // pixel grid size
-
-        // Pixel index where edge of box falls:
-        int xedge = int( std::ceil(_xw / (2*dx) - 0.5) );
-        int yedge = int( std::ceil(_yw / (2*dx) - 0.5) );
-        // Fraction of edge pixel that is filled by box:
-        double xfrac = _xw / (2*dx) - xedge + 0.5;
-        assert(xfrac>0. && xfrac<=1.);
-        double yfrac = _yw / (2*dx) - yedge + 0.5;
-        assert(yfrac>0. && yfrac<=1.);
-        if (xedge==0) xfrac = _xw/dx;
-        if (yedge==0) yfrac = _yw/dx;
-
-        double yfac;
-        for (int iy = -N/2; iy < N/2; iy++) {
-            if ( std::abs(iy) < yedge ) yfac = 0.;
-            else if (std::abs(iy)==yedge) yfac = _norm*yfrac;
-            else yfac = _norm;
-
-            for (int ix = -N/2; ix < N/2; ix++) {
-                if (yfac==0. || std::abs(ix)>xedge) xt.xSet(ix, iy ,0.);
-                else if (std::abs(ix)==xedge) xt.xSet(ix, iy ,xfrac*yfac);
-                else xt.xSet(ix,iy,yfac);
-            }
-        }
-    }
-
-    // Override x-domain writing so we can partially fill pixels at edge of box.
-    template <typename T>
-    double SBBox::SBBoxImpl::fillXImage(ImageView<T>& I, double gain) const 
-    {
-        double dx = I.getScale();
-        // Pixel index where edge of box falls:
-        int xedge = int( std::ceil(_xw / (2*dx) - 0.5) );
-        int yedge = int( std::ceil(_yw / (2*dx) - 0.5) );
-        // Fraction of edge pixel that is filled by box:
-        double xfrac = _xw / (2*dx) - xedge + 0.5;
-        assert(xfrac>0. && xfrac<=1.);
-        double yfrac = _yw / (2*dx) - yedge + 0.5;
-        assert(yfrac>0. && yfrac<=1.);
-        if (xedge==0) xfrac = _xw/dx;
-        if (yedge==0) yfrac = _yw/dx;
-
-        double totalflux = 0.;
-        double norm = _norm / gain; // norm is now total normalization.
-        for (int i=I.getXMin(); i<=I.getXMax(); ++i) if (std::abs(i) <= xedge) {
-            double xfac = std::abs(i)==xedge ? norm*xfrac : norm;
-
-            for (int j=I.getYMin(); j<=I.getYMax(); ++j) if (std::abs(j) <= yedge) {
-                double temp = std::abs(j)==yedge ? xfac*yfrac : xfac;
-                I(i,j) += T(temp);
-                totalflux += temp;
-            }
-        }
-
-        return totalflux * (dx*dx);
     }
 
     boost::shared_ptr<PhotonArray> SBBox::SBBoxImpl::shoot(int N, UniformDeviate u) const

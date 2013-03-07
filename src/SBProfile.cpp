@@ -29,7 +29,7 @@
 #ifdef DEBUGLOGGING
 #include <fstream>
 std::ostream* dbgout = new std::ofstream("debug.out");
-int verbose_level = 2;
+int verbose_level = 1;
 // There are three levels of verbosity which can be helpful when debugging,
 // which are written as dbg, xdbg, xxdbg (all defined in Std.h).
 // It's Mike's way to have debug statements in the code that are really easy to turn 
@@ -268,94 +268,96 @@ namespace galsim {
         return _pimpl->fillXImage(I, gain);
     }
 
-    void SBProfile::SBProfileImpl::xValue(
-        tmv::VectorView<double> x, tmv::VectorView<double> y,
-        tmv::MatrixView<double> val) const
+    // The derived classes pretty much all override these functions, since there are
+    // almost always (at least minor) efficiency gains from doing so.  But we have
+    // them here in case someone doesn't want to bother for a new class.
+    void SBProfile::SBProfileImpl::fillXValue(tmv::MatrixView<double> val,
+                                              double x0, double dx, int ix_zero,
+                                              double y0, double dy, int iy_zero) const
     {
-        assert(x.step() == 1);
-        assert(y.step() == 1);
+        dbg<<"SBProfile fillXValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
         assert(val.stepi() == 1);
         assert(val.canLinearize());
-        assert(x.size() == val.colsize());
-        assert(y.size() == val.rowsize());
         const int m = val.colsize();
         const int n = val.rowsize();
         typedef tmv::VIt<double,1,tmv::NonConj> It;
-        It yit = y.begin();
+
         It valit = val.linearView().begin();
-        for (int j=0;j<n;++j,++yit) {
-            It xit = x.begin();
-            for (int i=0;i<m;++i) *valit++ = xValue(Position<double>(*xit++,*yit));
+        double y = y0;
+        for (int j=0;j<n;++j,y+=dy) {
+            double x = x0;
+            for (int i=0;i<m;++i,x+=dx) {
+                *valit++ = xValue(Position<double>(x,y));
+            }
         }
     }
 
-    void SBProfile::SBProfileImpl::kValue(
-        tmv::VectorView<double> kx, tmv::VectorView<double> ky,
-        tmv::MatrixView<std::complex<double> > kval) const
+    void SBProfile::SBProfileImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                              double x0, double dx, int ix_zero,
+                                              double y0, double dy, int iy_zero) const
     { 
-        assert(kx.step() == 1);
-        assert(ky.step() == 1);
-        assert(kval.stepi() == 1);
-        assert(kval.canLinearize());
-        assert(kx.size() == kval.colsize());
-        assert(ky.size() == kval.rowsize());
-        const int m = kval.colsize();
-        const int n = kval.rowsize();
-        typedef tmv::VIt<double,1,tmv::NonConj> It;
-        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
-        It kyit = ky.begin();
-        CIt kvalit(kval.linearView().begin().getP(),1);
-        for (int j=0;j<n;++j,++kyit) {
-            It kxit = kx.begin();
-            for (int i=0;i<m;++i) *kvalit++ = kValue(Position<double>(*kxit++,*kyit));
-        }
-    }
-
-    void SBProfile::SBProfileImpl::xValue(
-        tmv::MatrixView<double> x, tmv::MatrixView<double> y,
-        tmv::MatrixView<double> val) const
-    { 
-        assert(x.stepi() == 1);
-        assert(y.stepi() == 1);
+        dbg<<"SBProfile fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
         assert(val.stepi() == 1);
         assert(val.canLinearize());
-        assert(x.colsize() == val.colsize());
-        assert(x.rowsize() == val.rowsize());
-        assert(y.colsize() == val.colsize());
-        assert(y.rowsize() == val.rowsize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+
+        //It valit = val.linearView().begin();
+        // There is a bug in TMV v0.71 that the above line doesn't work.
+        // The workaround is the following:
+        It valit(val.linearView().begin().getP(),1);
+        double y = y0;
+        for (int j=0;j<n;++j,y+=dy) {
+            double x = x0;
+            for (int i=0;i<m;++i,x+=dx) *valit++ = kValue(Position<double>(x,y));
+        }
+    }
+
+    void SBProfile::SBProfileImpl::fillXValue(tmv::MatrixView<double> val,
+                                              double x0, double dx, double dxy,
+                                              double y0, double dy, double dyx) const
+    { 
+        dbg<<"SBProfile fillXValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
         const int m = val.colsize();
         const int n = val.rowsize();
         typedef tmv::VIt<double,1,tmv::NonConj> It;
-        It xit = x.linearView().begin();
-        It yit = y.linearView().begin();
+
         It valit = val.linearView().begin();
-        const int ntot = m*n;
-        for (int i=0;i<ntot;++i) *valit++ = xValue(Position<double>(*xit++,*yit++));
+        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+            double x = x0;
+            double y = y0;
+            for (int i=0;i<m;++i,x+=dx,y+=dyx) *valit++ = xValue(Position<double>(x,y));
+        }
     }
 
-    void SBProfile::SBProfileImpl::kValue(
-        tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
-        tmv::MatrixView<std::complex<double> > kval) const
+    void SBProfile::SBProfileImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                              double x0, double dx, double dxy,
+                                              double y0, double dy, double dyx) const
     { 
-        assert(kx.stepi() == 1);
-        assert(ky.stepi() == 1);
-        assert(kval.stepi() == 1);
-        assert(kx.canLinearize());
-        assert(ky.canLinearize());
-        assert(kval.canLinearize());
-        assert(kx.colsize() == kval.colsize());
-        assert(kx.rowsize() == kval.rowsize());
-        assert(ky.colsize() == kval.colsize());
-        assert(ky.rowsize() == kval.rowsize());
-        const int m = kval.colsize();
-        const int n = kval.rowsize();
-        typedef tmv::VIt<double,1,tmv::NonConj> It;
-        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
-        It kxit = kx.linearView().begin();
-        It kyit = ky.linearView().begin();
-        CIt kvalit(kval.linearView().begin().getP(),1);
-        const int ntot = m*n;
-        for (int i=0;i<ntot;++i) *kvalit++ = kValue(Position<double>(*kxit++,*kyit++));
+        dbg<<"SBProfile fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+
+        It valit(val.linearView().begin().getP(),1);
+        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+            double x = x0;
+            double y = y0;
+            for (int i=0;i<m;++i,x+=dx,y+=dyx) *valit++ = kValue(Position<double>(x,y));
+        }
     }
 
     // Note: Once we have TMV 0.90, this won't be necessary, since arithmetic between different
@@ -377,80 +379,33 @@ namespace galsim {
         double dx = I.getScale();
         xdbg<<"dx = "<<dx<<", gain = "<<gain<<std::endl;
 
-        const int m = (I.getXMax()-I.getXMin()+1);
-        const int n = (I.getYMax()-I.getYMin()+1);
-        double totalflux;
-        if (isAxisymmetric()) {
-            const double xmax = std::max(-I.getXMin(),I.getXMax());
-            tmv::Vector<double> x(xmax+1);
-            for (int i=0;i<=xmax;++i) x.ref(i) = i*dx;
+        const int m = I.getXMax()-I.getXMin()+1;
+        const int n = I.getYMax()-I.getYMin()+1;
+        tmv::Vector<double> x(m);
+        const int xmin = I.getXMin();
+        for (int i=0;i<m;++i) x.ref(i) = (xmin+i)*dx;
 
-            const double ymax = std::max(-I.getYMin(),I.getYMax());
-            tmv::Vector<double> y(ymax+1);
-            for (int i=0;i<=ymax;++i) y.ref(i) = i*dx;
+        tmv::Vector<double> y(n);
+        const int ymin = I.getYMin();
+        for (int i=0;i<n;++i) y.ref(i) = (ymin+i)*dx;
 
-            // Could do somewhat better by only filling half the square a reflecting,
-            // but I haven't bothered to code that up yet.  It gets tricky because the 
-            // image might not be square...
-            tmv::Matrix<double> val(xmax+1,ymax+1);
-            xValue(x.view(),y.view(),val.view());
+        tmv::Matrix<double> val(m,n);
+        assert(xmin <= 0 && ymin <= 0 && -xmin < m && -ymin < n);
+        fillXValue(val.view(),xmin*dx,dx,-xmin,ymin*dx,dx,-ymin);
 
-            if (gain != 1.) val /= gain;
+        // Sometimes rounding errors cause the nominal (0,0) to be slightly off.
+        // So redo (0,0) just to be sure.
+        // TODO: This is really just to get the unit tests to pass.  It's usually the value
+        // for Sersic that fails to match the central peak at 5 digits of accuracy.
+        // Probaby, we should just update reference images and remove this line...
+        val(-xmin,-ymin) = xValue(Position<double>(0.,0.));
 
-            tmv::MatrixView<T> mI(I.getData(),m,n,1,I.getStride(),tmv::NonConj);
+        if (gain != 1.) val /= gain;
 
-            // Upper right quadrant
-            addMatrix(mI.subMatrix(-I.getXMin(),m,-I.getYMin(),n),
-                      val.subMatrix(0,I.getXMax()+1,0,I.getYMax()+1));
-            // Upper left quadrant
-            addMatrix(mI.subMatrix(0,-I.getXMin(),-I.getYMin(),n),
-                      val.subMatrix(-I.getXMin(),0,0,I.getYMax()+1,-1,1));
-            // Lower right quadrant
-            addMatrix(mI.subMatrix(-I.getXMin(),m,0,-I.getYMin()),
-                      val.subMatrix(0,I.getXMax()+1,-I.getYMin(),0,1,-1));
-            // Lower left quadrant
-            addMatrix(mI.subMatrix(0,-I.getXMin(),0,-I.getYMin()),
-                      val.subMatrix(-I.getXMin(),0,-I.getYMin(),0,-1,-1));
-
-#if 0
-            totalflux = (
-                val.subMatrix(0,I.getXMax()+1,0,I.getYMax()+1).sumElements() +
-                val.subMatrix(1,-I.getXMin()+1,0,I.getYMax()+1).sumElements() +
-                val.subMatrix(0,I.getXMax()+1,1,-I.getYMin()+1).sumElements() +
-                val.subMatrix(1,-I.getXMin()+1,1,-I.getYMin()+1).sumElements());
-#else
-            const double xmin = std::min(-I.getXMin(),I.getXMax());
-            const double ymin = std::min(-I.getYMin(),I.getYMax());
-            totalflux = (
-                val(0,0) +
-                2.*val.row(0,1,ymin+1).sumElements() +
-                2.*val.col(0,1,xmin+1).sumElements() +
-                val.row(0,ymin+1,ymax+1).sumElements() +
-                val.col(0,xmin+1,xmax+1).sumElements() +
-                4.*val.subMatrix(1,xmin+1,1,ymin+1).sumElements() +
-                2.*val.subMatrix(xmin+1,xmax+1,1,ymin+1).sumElements() +
-                2.*val.subMatrix(1,xmin+1,ymin+1,ymax+1).sumElements() +
-                val.subMatrix(xmin+1,xmax+1,ymin+1,ymax+1).sumElements());
-#endif
-        } else {
-            tmv::Vector<double> x(m);
-            const double xmin = I.getXMin();
-            for (int i=0;i<m;++i) x.ref(i) = (xmin+i)*dx;
-
-            tmv::Vector<double> y(n);
-            const double ymin = I.getYMin();
-            for (int i=0;i<n;++i) y.ref(i) = (ymin+i)*dx;
-
-            tmv::Matrix<double> val(m,n);
-            xValue(x.view(),y.view(),val.view());
-
-            if (gain != 1.) val /= gain;
-
-            tmv::MatrixView<T> mI(I.getData(),m,n,1,I.getStride(),tmv::NonConj);
-            //mI += val;
-            addMatrix(mI,val);
-            totalflux = val.sumElements();
-        }
+        tmv::MatrixView<T> mI(I.getData(),m,n,1,I.getStride(),tmv::NonConj);
+        //mI += val;
+        addMatrix(mI,val);
+        double totalflux = val.sumElements();
         return totalflux * gain * (dx*dx);
     }
 
@@ -564,25 +519,21 @@ namespace galsim {
         Im.setCenter(0,0);
 
         const int m = (Re.getXMax()-Re.getXMin()+1);
-        tmv::Vector<double> kx(m);
-        const double xmin = Re.getXMin();
-        for (int i=0;i<m;++i) kx.ref(i) = (xmin+i)*dk;
-
         const int n = (Re.getYMax()-Re.getYMin()+1);
-        tmv::Vector<double> ky(n);
+        const double xmin = Re.getXMin();
         const double ymin = Re.getYMin();
-        for (int i=0;i<n;++i) ky.ref(i) = (ymin+i)*dk;
 
-        tmv::Matrix<std::complex<double> > kval(m,n);
-        // Calculate all the xValues at once, since this is often faster than many calls to xValue.
-        _pimpl->kValue(kx.view(),ky.view(),kval.view());
+        tmv::Matrix<std::complex<double> > val(m,n);
+        // Calculate all the kValues at once, since this is often faster than many calls to kValue.
+        assert(xmin <= 0 && ymin <= 0 && -xmin < m && -ymin < n);
+        _pimpl->fillKValue(val.view(),xmin*dk,dk,-xmin,ymin*dk,dk,-ymin);
 
-        if (gain != 1.) kval /= gain;
-        
+        if (gain != 1.) val /= gain;
+
         tmv::MatrixView<T> mRe(Re.getData(),m,n,1,Re.getStride(),tmv::NonConj);
         tmv::MatrixView<T> mIm(Im.getData(),m,n,1,Im.getStride(),tmv::NonConj);
-        addMatrix(mRe,kval.realPart());
-        addMatrix(mIm,kval.realPart());
+        addMatrix(mRe,val.realPart());
+        addMatrix(mIm,val.realPart());
     }
 
     // Build K domain by transform from X domain.  This is likely
@@ -601,7 +552,7 @@ namespace galsim {
         // Do we need to oversample in k to avoid folding from real space?
         // Note a little room for numerical slop before triggering oversampling:
         int oversamp = int( std::ceil(dk/stepK() - 0.0001));
- 
+
         // Now decide how big the FT must be to avoid folding
         double kRange = 2*maxK()*wmult;
         // Some slop to keep from getting extra pixels due to roundoff errors in calculations.
@@ -668,37 +619,11 @@ namespace galsim {
         double dx = xt.getDx();
         xt.clearCache();
 
-        if (isAxisymmetric()) {
-            tmv::Vector<double> x(N/2+1);
-            for (int i=0;i<=N/2;++i) x.ref(i) = i*dx;
+        tmv::Matrix<double> val(N,N);
+        fillXValue(val.view(),-(N/2)*dx,dx,N/2,-(N/2)*dx,dx,N/2);
 
-            tmv::Vector<double> y = x;
-
-            tmv::Matrix<double> val(N/2+1,N/2+1);
-            xValue(x.view(),y.view(),val.view());
-
-            tmv::MatrixView<double> mxt(xt.getArray(),N,N,1,N,tmv::NonConj);
-
-            // Upper right quadrant
-            mxt.subMatrix(N/2,N,N/2,N) = val.subMatrix(0,N/2,0,N/2);
-            // Upper left quadrant
-            mxt.subMatrix(0,N/2,N/2,N) = val.subMatrix(N/2,0,0,N/2,-1,1);
-            // Lower right quadrant
-            mxt.subMatrix(N/2,N,0,N/2) = val.subMatrix(0,N/2,N/2,0,1,-1);
-            // Lower left quadrant
-            mxt.subMatrix(0,N/2,0,N/2) = val.subMatrix(N/2,0,N/2,0,-1,-1);
-        } else {
-            tmv::Vector<double> x(N);
-            for (int i=0;i<N;++i) x.ref(i) = (i-N/2.)*dx;
-
-            tmv::Vector<double> y = x;
-
-            tmv::Matrix<double> val(N,N);
-            xValue(x.view(),y.view(),val.view());
-
-            tmv::MatrixView<double> mxt(xt.getArray(),N,N,1,N,tmv::NonConj);
-            mxt = val;
-        }
+        tmv::MatrixView<double> mxt(xt.getArray(),N,N,1,N,tmv::NonConj);
+        mxt = val;
     }
 
     void SBProfile::SBProfileImpl::fillKGrid(KTable& kt) const 
@@ -714,11 +639,113 @@ namespace galsim {
         for (int i=0;i<=N/2;++i) ky.ref(i) = i*dk;
         for (int i=-N/2+1;i<0;++i) ky.ref(i+N) = i*dk;
 
-        tmv::Matrix<std::complex<double> > kval(N/2+1,N);
-        kValue(kx.view(),ky.view(),kval.view());
+        tmv::Matrix<std::complex<double> > val(N/2+1,N);
+        fillKValue(val.view(),0.,dk,0,(-N/2+1)*dk,dk,N/2-1);
 
         tmv::MatrixView<std::complex<double> > mkt(kt.getArray(),N/2+1,N,1,N/2+1,tmv::NonConj);
-        mkt = kval;
+        // The KTable wants the locations of the + and - ky values swapped.
+        mkt.colRange(0,N/2+1) = val.colRange(N/2-1,N);
+        mkt.colRange(N/2+1,N) = val.colRange(0,N/2-1);
+    }
+
+    // The type of T (real or complex) determines whether the call-back is to 
+    // fillXValue or fillKValue.
+    template <typename T>
+    struct QuadrantHelper
+    {
+        template <class Prof>
+        static void fill(const Prof& prof, tmv::MatrixView<T> q,
+                         double x0, double dx, double y0, double dy)
+        { prof.fillXValue(q,x0,dx,0,y0,dy,0); }
+    };
+
+    template <typename T>
+    struct QuadrantHelper<std::complex<T> >
+    {
+        typedef std::complex<T> CT;
+        template <class Prof>
+        static void fill(const Prof& prof, tmv::MatrixView<CT> q,
+                         double x0, double dx, double y0, double dy)
+        { prof.fillKValue(q,x0,dx,0,y0,dy,0); }
+    };
+
+    // The code is basically the same for X or K.
+    template <class Prof, typename T>
+    static void FillQuadrant(const Prof& prof, tmv::MatrixView<T> val,
+                             double x0, double dx, int nx1, double y0, double dy, int ny1)
+    {
+        dbg<<"Start FillQuadrant\n";
+        // Figure out which quadrant is the largest.  Need to use that one.
+        const int nx = val.colsize();
+        const int nx2 = nx - nx1-1;
+        const int ny = val.rowsize();
+        const int ny2 = ny - ny1-1;
+        dbg<<"nx = "<<nx1<<" + "<<nx2<<" = "<<nx<<std::endl;
+        dbg<<"ny = "<<ny1<<" + "<<ny2<<" = "<<ny<<std::endl;
+        // Keep track of which quadrant is done in the first section.
+        bool ur_done = false;
+        bool ul_done = false;
+        bool lr_done = false;
+        bool ll_done = false;
+        boost::shared_ptr<tmv::MatrixView<T> > q; // The matrix to copy to each quadrant
+        if (nx2 >= nx1) {
+            if (ny2 >= ny1) {
+                // Upper right is the big quadrant
+                q.reset(new tmv::MatrixView<T>(val.subMatrix(nx1,nx,ny1,ny)));
+                QuadrantHelper<T>::fill(prof,*q,0.,dx,0.,dy);
+                ur_done = true;
+                // Also do the rest of the ix=0 row and iy=0 col
+                val.row(nx1,0,ny1).reverse() = q->row(0,1,ny1+1);
+                val.col(ny1,0,nx1).reverse() = q->col(0,1,nx1+1);
+            } else {
+                // Upper left is the big quadrant
+                q.reset(new tmv::MatrixView<T>(val.subMatrix(nx1,nx,ny1,-1,1,-1)));
+                QuadrantHelper<T>::fill(prof,val.subMatrix(nx1,nx,0,ny1+1),0.,dx,y0,dy);
+                ul_done = true;
+                val.row(nx1,0,ny1).reverse() = q->row(0,1,ny1+1);
+                val.col(ny1,nx1+1,nx) = q->col(0,1,nx2+1);
+            }
+        } else {
+            if (ny2 >= ny1) {
+                // Lower right is the big quadrant
+                q.reset(new tmv::MatrixView<T>(val.subMatrix(nx1,-1,ny1,ny,-1,1)));
+                QuadrantHelper<T>::fill(prof,val.subMatrix(0,nx1+1,ny1,ny),x0,dx,0.,dy);
+                lr_done = true;
+                val.row(nx1,ny1+1,ny) = q->row(0,1,ny2+1);
+                val.col(ny1,0,nx1).reverse() = q->row(0,1,nx1+1);
+            } else {
+                // Lower left is the big quadrant
+                q.reset(new tmv::MatrixView<T>(val.subMatrix(nx1,-1,ny1,-1,-1,-1)));
+                QuadrantHelper<T>::fill(prof,val.subMatrix(0,nx1+1,0,ny1+1),x0,dx,y0,dy);
+                ll_done = true;
+                val.row(nx1,ny1+1,ny) = q->row(0,1,ny2+1);
+                val.col(ny1,nx1+1,nx) = q->col(0,1,nx2+1);
+            }
+        }
+        if (!ur_done && nx2 > 0 && ny2 > 0)
+            val.subMatrix(nx1+1,nx,ny1+1,ny) = q->subMatrix(1,nx2+1,1,ny2+1);
+        if (!ul_done && nx1 > 0 && ny2 > 0)
+            val.subMatrix(nx1-1,-1,ny1+1,ny,-1,1) = q->subMatrix(1,nx1+1,1,ny2+1);
+        if (!lr_done && nx2 > 0 && ny1 > 0)
+            val.subMatrix(nx1+1,nx,ny1-1,-1,1,-1) = q->subMatrix(1,nx2+1,1,ny1+1);
+        if (!ll_done && nx1 > 0 && ny1 > 0)
+            val.subMatrix(nx1-1,-1,ny1+1,ny,-1,-1) = q->subMatrix(1,nx1+1,1,ny1+1);
+    }
+    void SBProfile::SBProfileImpl::fillXValueQuadrant(tmv::MatrixView<double> val,
+                                                      double x0, double dx, int nx1,
+                                                      double y0, double dy, int ny1) const
+    {
+        // Guard against infinite loop.
+        assert(nx1 != 0 || ny1 != 0);
+        FillQuadrant(*this,val,x0,dx,nx1,y0,dy,ny1);
+    }
+    void SBProfile::SBProfileImpl::fillKValueQuadrant(tmv::MatrixView<std::complex<double> > val,
+                                                      double x0, double dx, int nx1,
+                                                      double y0, double dy, int ny1) const
+    {
+        // Guard against infinite loop.
+        assert(nx1 != 0 || ny1 != 0);
+        FillQuadrant(*this,val,x0,dx,nx1,y0,dy,ny1);
     }
 
     template <class T>
@@ -783,7 +810,7 @@ namespace galsim {
         //
         // Returns the total flux placed inside the image bounds by photon shooting.
         // 
-        
+
         dbg<<"Start drawShoot.\n";
         dbg<<"N = "<<N<<std::endl;
         dbg<<"gain = "<<gain<<std::endl;
@@ -858,7 +885,7 @@ namespace galsim {
         while (true) {
             // We break out of the loop when either N drops to 0 (if max_extra_noise = 0) or 
             // we find that the max pixel has a noise level < max_extra_noise
-            
+
             if (thisN > maxN) thisN = maxN;
             // NB: don't need floor, since rhs is positive, so floor is superfluous.
             if (thisN > N) thisN = int(N+0.5);

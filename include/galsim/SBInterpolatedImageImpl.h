@@ -104,15 +104,19 @@ namespace galsim {
         double getPositiveFlux() const { checkReadyToShoot(); return _positiveFlux; }
         double getNegativeFlux() const { checkReadyToShoot(); return _negativeFlux; }
 
-        // Overrides for better efficiency with separable kernels:
-        void xValue(tmv::VectorView<double> x, tmv::VectorView<double> y,
-                    tmv::MatrixView<double> val) const;
-        void kValue(tmv::VectorView<double> kx, tmv::VectorView<double> ky,
-                    tmv::MatrixView<std::complex<double> > kval) const;
-        void xValue(tmv::MatrixView<double> x, tmv::MatrixView<double> y,
-                    tmv::MatrixView<double> val) const;
-        void kValue(tmv::MatrixView<double> kx, tmv::MatrixView<double> ky,
-                    tmv::MatrixView<std::complex<double> > kval) const;
+        // Overrides for better efficiency
+        void fillXValue(tmv::MatrixView<double> val,
+                        double x0, double dx, int ix_zero,
+                        double y0, double dy, int iy_zero) const;
+        void fillXValue(tmv::MatrixView<double> val,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double x0, double dx, int ix_zero,
+                        double y0, double dy, int iy_zero) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
 
     protected:  // Made protected so that these can be used in the derived CorrelationFunction class
 
