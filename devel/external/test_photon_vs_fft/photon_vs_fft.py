@@ -13,9 +13,9 @@ import numpy
 import argparse
 import yaml
 import pdb
+import pylab
 
-from matplotlib import pyplot as plt 
-
+filename_output = 'photon_vs_fft_results.txt'
 
 def getGSObjects(obj):
     """
@@ -63,7 +63,7 @@ def getGSObjects(obj):
 
         elif obj['psf']['type'] == 'Airy':
 
-            gso['psf'] = galsim.Airy(fwhm=obj['psf']['fwhm'])
+            gso['psf'] = galsim.Airy(lam_over_diam=obj['psf']['lam_over_diam'])
 
         elif obj['psf']['type'] == 'AtmosphericPSF':
 
@@ -84,11 +84,27 @@ def testShootVsFfft():
     """
     For each of the galaxies in the config['galaxies'], produces the images using FFT and photon shooting.
     Displays plots of image residuals and shows differences in the moments measurements.
+    Saves the Adaptive moments resutls to file.
     """
 
     if config['image']['n_photons'] < 100000:
         logger.warning('small number of photons, results may me meaningless, HSM may crash')
+
+    file_output = open(filename_output,'w')
+
+    # things to output:
+    # id of the test object
+    # g1_fft
+    # g2_fft
+    # g1_photon
+    # g2_photon
+    # max_diff_over_max_image
     
+
+    output_row_fmt = "%d\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\n"
+    output_header = '# id of the test object g1_fft g2_fft g1_photon g2_photon max_diff_over_max_image\n'
+    file_output.write(output_header)
+
     # loop throught the galaxy catalog
     for ig,obj in enumerate(config['objects']):
 
@@ -132,24 +148,29 @@ def testShootVsFfft():
 
 
         # plot the pixel differences
-        plt.clf()
+        pylab.figure()
+        pylab.clf()
         
-        plt.subplot(131)
-        plt.imshow(image_gal_shoot.array,interpolation='nearest')
-        plt.colorbar()
-        plt.title('image_shoot')
+        pylab.subplot(131)
+        pylab.imshow(image_gal_shoot.array,interpolation='nearest')
+        pylab.colorbar()
+        pylab.title('image_shoot')
         
-        plt.subplot(132)
-        plt.imshow(image_gal_fft.array,interpolation='nearest')
-        plt.colorbar()
-        plt.title('image_fft')
+        pylab.subplot(132)
+        pylab.imshow(image_gal_fft.array,interpolation='nearest')
+        pylab.colorbar()
+        pylab.title('image_fft')
         
-        plt.subplot(133)
-        plt.imshow(diff_image,interpolation='nearest')
-        plt.colorbar()
-        plt.title('image_shoot - image_fft')
+        pylab.subplot(133)
+        pylab.imshow(diff_image,interpolation='nearest')
+        pylab.colorbar()
+        pylab.title('image_shoot - image_fft')
 
-        plt.show()
+        filename_fig = 'photon_vs_fft_gal%d.png' % ig
+        pylab.gcf().set_size_inches(20,10)
+        pylab.savefig(filename_fig)
+        pylab.close()
+        logger.info('saved figure %s' % filename_fig)
 
         logger.info('max(residual) / max(image_fft) = %2.4e ' % ( max_diff_over_max_image )  )
 
@@ -157,19 +178,55 @@ def testShootVsFfft():
         moments_shoot = galsim.FindAdaptiveMom(image_gal_shoot)
         moments_fft   = galsim.FindAdaptiveMom(image_gal_fft)
 
-        moments_shoot_e1 = moments_shoot.observed_shape.getE1()
-        moments_shoot_e2 = moments_shoot.observed_shape.getE2()
-        moments_fft_e1 = moments_fft.observed_shape.getE1()
-        moments_fft_e2 = moments_fft.observed_shape.getE2()
-        moments_diff_e1 =  moments_shoot_e1 - moments_fft_e1
-        moments_diff_e2 =  moments_shoot_e2 - moments_fft_e2
+        moments_shoot_g1 = moments_shoot.observed_shape.getG1()
+        moments_shoot_g2 = moments_shoot.observed_shape.getG2()
+        moments_fft_g1   = moments_fft.observed_shape.getG1()
+        moments_fft_g2   = moments_fft.observed_shape.getG2()
+        moments_diff_g1  = moments_shoot_g1 - moments_fft_g1
+        moments_diff_g2  = moments_shoot_g2 - moments_fft_g2
 
 
         # display resutls
-        logger.info('adaptive moments fft           gi % 2.6f % 2.6f' % (moments_fft_e1,  moments_fft_e2))
-        logger.info('adaptive moments shoot         gi % 2.6f % 2.6f' % (moments_shoot_e1,  moments_shoot_e2))
-        logger.info('adaptive moments difference    gi % 2.6f % 2.6f' % (moments_diff_e1,  moments_diff_e2))
+        logger.info('adaptive moments fft           gi % 2.6f % 2.6f' % (moments_fft_g1,  moments_fft_g2))
+        logger.info('adaptive moments shoot         gi % 2.6f % 2.6f' % (moments_shoot_g1,  moments_shoot_g2))
+        logger.info('adaptive moments difference    gi % 2.6f % 2.6f' % (moments_diff_g1,  moments_diff_g2))
 
+        file_output.write(output_row_fmt % (ig, moments_fft_g1,  moments_fft_g2, moments_shoot_g1,  moments_shoot_g2, max_diff_over_max_image))
+
+def plotEllipticityBiases():
+    """
+    This function is a prototype for a plotting function. 
+    I am not sure what is the best plots/subplots combination to show what we want to see, so for now 
+    let's use this form.
+    """
+
+    data = numpy.loadtxt(filename_output)
+
+    n_test_gals = data.shape[0]
+
+    g1_photon=data[:,3]
+    g2_photon=data[:,4]
+    g1_fft=data[:,1]
+    g2_fft=data[:,2]
+
+    de1 = g1_fft-g1_photon
+    de2 = g2_fft-g2_photon 
+    
+    pylab.plot(de1/g1_photon,'x',label='g1')
+    pylab.plot(de2/g2_photon,'+',label='g2')
+                
+    pylab.xlabel('test galaxy #')
+    pylab.ylabel('de/e')
+    pylab.xlim([-1,n_test_gals])
+
+    pylab.gcf().set_size_inches(20,10)
+    pylab.legend()
+
+    filename_fig = 'photon_vs_fft_differences.png';
+    pylab.savefig(filename_fig)
+    pylab.close()
+
+    logger.info('saved figure %s' % filename_fig)
 
 if __name__ == "__main__":
 
@@ -190,10 +247,12 @@ if __name__ == "__main__":
     global config
     config = yaml.load(open(filename_config,'r'))
 
-    # pdb.set_trace()
-
-    # launch the test
+    # run the test
     testShootVsFfft()
+
+    # save the figure
+    plotEllipticityBiases()
+
 
 
 
