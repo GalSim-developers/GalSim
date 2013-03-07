@@ -170,20 +170,51 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # If not, draw the correlation function to the desired size and resolution, then DFT to
         # generate the required array of the square root of the power spectrum
         if use_stored is False:
-            newcf = galsim.ImageD(image.bounds) # set the correlation func to be the correct size
-            # set the scale based on dx...
-            if dx <= 0.:
-                newcf.setScale(1.) # sometimes new Images have getScale() = 0
+
+            # First we test to see if we have a square input image: if so, dk_x = dk_y & this allows
+            # us to draw the power spectrum directly using the drawK method; if not we must draw
+            # the correlation function onto a rectangular image and FFT to get the power
+            if image.array.shape[0] != image.array.shape[1]:
+                newcf = galsim.ImageD(image.bounds) # set the corr func to be the correct size
+                # set the scale based on dx...
+                if dx <= 0.:
+                    newcf.setScale(1.) # sometimes new Images have getScale() = 0
+                else:
+                    newcf.setScale(dx)
+
+                # Then draw this correlation function into a rectangular image
+                self.draw(newcf, dx=None) # setting dx=None uses the newcf image scale set above
+
+                # Then calculate the sqrt(PS) that will be used to generate the actual noise
+                rootps = np.sqrt(np.abs(np.fft.fft2(newcf.array)) * np.product(image.array.shape))
+
+                # Then add this and the relevant scale to the _rootps_store for later use
+                self._rootps_store.append((rootps, newcf.getScale()))
+
             else:
-                newcf.setScale(dx)
-            # Then draw this correlation function into an array
-            self.draw(newcf, dx=None) # setting dx=None uses the newcf image scale set above
+                # TODO: Note I am finding artifacts in the images produced using the methods below,
+                # I would like to get to the bottom of this! It looks as if there is maybe some 
+                # additional kernel being added... Need to think
+                ps_real = galsim.ImageD(image.bounds)
+                ps_imag = galsim.ImageD(image.bounds)
+                # Set the Fourier sample spacing dk using dx
+                if dx <= 0.:
+                    scale = 1. # our convention is dx<=0 means pixel units
+                else:
+                    scale = dx
+                dk = 2. * np.pi / float(image.array.shape[0]) / scale
+                
+                # Then use the drawK method of the stored _profile to generate the PS directly
+                self._profile.drawK(ps_real, ps_imag, dk=dk, wmult=8)
+                rollback = (-(ps_real.array.shape[0] / 2), -(ps_real.array.shape[1] / 2))
+                ps_rolled = galsim.utilities.roll2d(ps_real.array, rollback)
 
-            # Then calculate the sqrt(PS) that will be used to generate the actual noise
-            rootps = np.sqrt(np.abs(np.fft.fft2(newcf.array)) * np.product(image.array.shape))
+                # Then calculate the sqrt(PS) that will be used to generate the actual noise
+                rootps = np.sqrt(np.abs(ps_rolled)) * float(ps_rolled.shape[0]) / scale
 
-            # Then add this and the relevant scale to the _rootps_store for later use
-            self._rootps_store.append((rootps, newcf.getScale()))
+                # Then add this and the relevant scale to the _rootps_store for later use
+                self._rootps_store.append((rootps, scale))
+ 
 
         # Finally generate a random field in Fourier space with the right PS, and inverse DFT back,
         # including factor of sqrt(2) to account for only adding noise to the real component:
