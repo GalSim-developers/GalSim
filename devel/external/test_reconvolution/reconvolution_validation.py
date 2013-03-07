@@ -73,15 +73,13 @@ def getTestGals():
 
 	# set the number and scale of pixels used for mock real galaxies
 	# this is fixed now but may be used later as a parameter of to explore
-	img_pix = 200
-	img_scale = 0.25
-
+	
 	test_gals = []
 	
 	tg = {}
 	tg['id'] = 0
-	tg['n_pix'] = 300
-	tg['pix_scale'] = 0.1
+	tg['n_pix'] = 200
+	tg['pix_scale'] = 0.25
 	tg['gal'] = galsim.DeVaucouleurs(half_light_radius=4.)   # create a galaxy
 	tg['gal'].applyShear(g1=0.3, g2=0.2);                           # get some intrinsic ellipticity
 	tg['gal'].setFlux(flux)                                         # set flux for the galaxy
@@ -100,8 +98,8 @@ def getTestGals():
 
 	tg = {}
 	tg['id'] = 1
-	tg['n_pix'] = 300
-	tg['pix_scale'] = 0.1
+	tg['n_pix'] = 200
+	tg['pix_scale'] = 0.25
 	tg['gal'] = galsim.Exponential(half_light_radius=2.)     # create a galaxy
 	tg['gal'].applyShear(g1=0.3, g2=0.2);                           # get some intrinsic ellipticity
 	tg['gal'].setFlux(flux)                                         # set flux for the galaxy
@@ -415,15 +413,16 @@ def plotEllipticityBiases(filaname_catalog):
 	g1_true= data[:,9]
 	g2_true= data[:,10]
 
-	pylab.plot(de1/e1_conv,'x')
-	pylab.plot(de2/e2_conv,'+')
-				
+	pylab.plot(de1/e1_conv,'x',label='g1')
+	pylab.plot(de2/e2_conv,'+',label='g2')
+			
 	pylab.xlabel('test galaxy #')
 	pylab.ylabel('de/e')
 	pylab.xlim([-1,n_test_gals])
 
-	pylab.gcf().set_size_inches(20,10)
-	pylab.savefig('shear_bias.png')
+	pylab.gcf().set_size_inches(10,5)
+	pylab.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+	pylab.savefig('reconvolution_shear_bias.png')
 	pylab.close()
 
 	
@@ -480,7 +479,7 @@ def plotPixelDifferences(reconvolved_gals):
 if __name__ == "__main__":
 
 	logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
-	logger = logging.getLogger("demo1") 
+	logger = logging.getLogger("reconvolution_validation") 
 
 	# get the objects that we will want to save in mock real galaxy catalogs
 	test_gals = getTestGals();  createRGC(test_gals)
@@ -501,9 +500,9 @@ if __name__ == "__main__":
 	plotPixelDifferences(reconvolved_gals)
 
 	# save a table containing with quantities needed to analyse results
-	saveComparisonCatalog(reconvolved_gals,'test.out.txt')
+	saveComparisonCatalog(reconvolved_gals,'test.reconvolution.results.txt')
 
 	# plot the de/e from the comparison catalog
-	plotEllipticityBiases('test.out.txt')
+	plotEllipticityBiases('test.reconvolution.results.txt')
 
 
