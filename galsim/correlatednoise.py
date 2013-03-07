@@ -414,13 +414,13 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
         >>> cn = galsim.CorrelatedNoise(rng, image, dx=0.2)
 
-    The example above instantiates an ImageCorrFunc, but forces the use of the pixel scale `dx` to
+    The example above instantiates a CorrelatedNoise, but forces the use of the pixel scale `dx` to
     set the units of the internal lookup table.
 
         >>> cn = galsim.CorrelatedNoise(rng, image,
         ...     interpolant=galsim.InterpolantXY(galsim.Lanczos(5, tol=1.e-4))
 
-    The example above instantiates a ImageCorrFunc, but forces the use of a non-default interpolant
+    The example above instantiates a CorrelatedNoise, but forces use of a non-default interpolant
     for interpolation of the internal lookup table.  Must be an InterpolantXY instance or an
     Interpolant instance (if the latter one-dimensional case is supplied an InterpolantXY will be
     automatically generated from it).
@@ -431,8 +431,8 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
     Methods
     -------
-    The main way that ImageCorrFunc is used is to add or assign correlated noise to an image.
-    This is done with
+    The main way that a CorrelatedNoise is used is to add or assign correlated noise to an image.
+    This is common to all the classes that inherit from BaseNoise, e.g.:
 
         >>> cn.applyTo(im)
 
@@ -440,8 +440,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
         >>> im.addNoise(cn)
 
-    is valid since the CorrelatedNoise inherits from the GaussianNoise class, and this syntax is 
-    preferred.
+    is preferred.
 
     The correlation function is calculated from its pixel values using the NumPy FFT functions.
     See the .addNoise() method docstring for more information.  The image.getScale() is used to
