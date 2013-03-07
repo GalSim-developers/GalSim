@@ -1454,7 +1454,9 @@ class InterpolatedImage(GSObject):
                                (a) as a float, which is interpreted as being a variance to use when
                                    padding with uncorrelated Gaussian noise; 
                                (b) as a galsim.CorrelatedNoise, which contains information about the
-                                   desired noise power spectrum; 
+                                   desired noise power spectrum - any random number generator passed
+                                   to the `rng` keyword will take precedence over that carried in an
+                                   input galsim.CorrelatedNoise;
                                (c) as a galsim.Image of a noise field, which is used to calculate
                                    the desired noise power spectrum; or
                                (d) as a string which is interpreted as a filename containing an
@@ -1469,7 +1471,9 @@ class InterpolatedImage(GSObject):
                            (Default `noise_pad = 0.`, i.e., pad with zeros.)
     @param rng             If padding by noise, the user can optionally supply the random noise
                            generator to use for drawing random numbers as `rng` (may be any kind of
-                           `galsim.BaseDeviate` object).
+                           `galsim.BaseDeviate` object).  Such a user-input random number generator
+                           takes precedence over any stored within a user-input CorrelatedNoise 
+                           instance (see the `noise_pad` param).
                            If `rng=None`, one will be automatically created, using the time as a
                            seed. (Default `rng = None`)
     @param pad_image       Image to be used for deterministically padding the original image.  This
@@ -1578,9 +1582,9 @@ class InterpolatedImage(GSObject):
 
         # Set up the GaussianDeviate if not provided one, or check that the user-provided one is
         # of a valid type.
-        if rng == None:
+        if rng is None:
             gaussian_deviate = galsim.GaussianDeviate()
-        elif isinstance(rng,galsim.BaseDeviate):
+        elif isinstance(rng, galsim.BaseDeviate):
             # Even if it's already a GaussianDeviate, we still want to make a new Gaussian deviate
             # that would generate the same sequence, because later we change the sigma and we don't
             # want to change it for the original one that was passed in.  So don't distinguish
@@ -1636,12 +1640,18 @@ class InterpolatedImage(GSObject):
                 gaussian_deviate.setSigma(np.sqrt(noise_pad))
                 pad_image.addNoise(galsim.DeviateNoise(gaussian_deviate))
         else:
-            if isinstance(noise_pad, galsim._BaseCorrelatedNoise):
-                cn = noise_pad
+            if isinstance(noise_pad, galsim.correlatednoise._BaseCorrelatedNoise):
+                cn = noise_pad.copy()
+                if rng is not None: # Let a user supplied RNG take precedence over that in user CN
+                    cn.setRNG(gaussian_deviate)
             elif isinstance(noise_pad,galsim.BaseImageF) or isinstance(noise_pad,galsim.BaseImageD):
                 cn = galsim.CorrelatedNoise(gaussian_deviate, noise_pad)
             elif use_cache and noise_pad in InterpolatedImage._cache_noise_pad:
                 cn = InterpolatedImage._cache_noise_pad[noise_pad]
+                # Make sure that we are using the desired RNG by resetting that in this cached
+                # CorrelatedNoise instance
+                # (Barney: don't think it makes sense to prefer a cached RNG to a new one...)
+                cn.setRNG(gaussian_deviate)
             elif isinstance(noise_pad, str):
                 try:
                     cn = galsim.CorrelatedNoise(gaussian_deviate, galsim.fits.read(noise_pad))
@@ -1946,7 +1956,10 @@ class RealGalaxy(GSObject):
     @param random               If true, then just select a completely random galaxy from the
                                 catalog.
     @param rng                  A random number generator to use for selecting a random galaxy 
-                                (may be any kind of BaseDeviate or None)
+                                (may be any kind of BaseDeviate or None) and to use in generating
+                                any noise field when padding.  This user-input random number
+                                generator takes precedence over any stored within a user-input
+                                CorrelatedNoise instance (see `noise_pad` param below).
     @param x_interpolant        Either an Interpolant2d (or Interpolant) instance or a string 
                                 indicating which real-space interpolant should be used.  Options are 
                                 'nearest', 'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' 
@@ -1974,7 +1987,9 @@ class RealGalaxy(GSObject):
                                     Set `noise_pad` equal to a galsim.CorrelatedNoise, an Image, or
                                         a filename containing an Image of an example noise field
                                         that will be used to calculate the noise power spectrum and
-                                        generate noise in the padding region.
+                                        generate noise in the padding region.  Any random number
+                                        generator passed to the `rng` keyword will take precedence
+                                        over that carried in an input galsim.CorrelatedNoise.
                                 In the last case, if the same file is used repeatedly, then use of
                                 the `use_cache` keyword (see below) can be used to prevent the need
                                 for repeated galsim.CorrelatedNoise initializations.
@@ -2105,17 +2120,20 @@ class RealGalaxy(GSObject):
                 pad_image = galsim.ImageD(padded_size, padded_size)
 
         # Set up the GaussianDeviate if not provided one, or check that the user-provided one
-        # is of a valid type.
-        if rng == None:
-            gaussian_deviate = galsim.GaussianDeviate()
-        elif isinstance(rng,galsim.BaseDeviate):
-            # Even if it's already a GaussianDeviate, we still want to make a new Gaussian
-            # deviate that would generate the same sequence, because later we change the sigma
-            # and we don't want to change it for the original one that was passed in.  So don't
-            # distinguish between GaussianDeviate and the other BaseDeviates here.
-            gaussian_deviate = galsim.GaussianDeviate(rng)
+        # is of a valid type.  Note if random was selected, we can use that uniform_deviate safely.
+        if random == True:
+            gaussian_deviate = galsim.GaussianDeviate(uniform_deviate)
         else:
-            raise TypeError("rng provided to RealGalaxy constructor is not a BaseDeviate")
+            if rng is None:
+                gaussian_deviate = galsim.GaussianDeviate()
+            elif isinstance(rng,galsim.BaseDeviate):
+                # Even if it's already a GaussianDeviate, we still want to make a new Gaussian
+                # deviate that would generate the same sequence, because later we change the sigma
+                # and we don't want to change it for the original one that was passed in.  So don't
+                # distinguish between GaussianDeviate and the other BaseDeviates here.
+                gaussian_deviate = galsim.GaussianDeviate(rng)
+            else:
+                raise TypeError("rng provided to RealGalaxy constructor is not a BaseDeviate")
 
         # handle noise-padding options
         try:
@@ -2130,8 +2148,10 @@ class RealGalaxy(GSObject):
             # it directly; if it's an Image of some sort we use it to make a CorrelatedNoise; if
             # it's a string, we read in the image from file and make a CorrelatedNoise.
             if type(noise_pad) is not bool:
-                if isinstance(noise_pad, galsim._BaseCorrelatedNoise):
-                    cn = noise_pad
+                if isinstance(noise_pad, galsim.correlatednoise._BaseCorrelatedNoise):
+                    cn = noise_pad.copy()
+                    if rng is not None: # Let user supplied RNG take precedence over that in user CN
+                        cn.setRNG(gaussian_deviate)
                 elif (isinstance(noise_pad,galsim.BaseImageF) or 
                       isinstance(noise_pad,galsim.BaseImageD)):
                     cn = galsim.CorrelatedNoise(gaussian_deviate, noise_pad)
@@ -2139,6 +2159,7 @@ class RealGalaxy(GSObject):
                     cn = RealGalaxy._cache_noise_pad[noise_pad]
                     # Make sure that we are using the desired RNG by resetting that in this cached
                     # CorrelatedNoise instance
+                    # (Barney: don't think it makes sense to prefer a cached RNG to a new one...)
                     cn.setRNG(gaussian_deviate)
                     # This small patch may have different overall variance, so rescale while
                     # preserving the correlation structure
