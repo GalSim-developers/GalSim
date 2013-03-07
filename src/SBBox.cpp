@@ -184,26 +184,32 @@ namespace galsim {
         dbg<<"SBBox fillKValue\n";
         dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
         dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
-        assert(val.stepi() == 1);
-        const int m = val.colsize();
-        const int n = val.rowsize();
-        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        if (ix_zero != 0 || iy_zero != 0) {
+            xdbg<<"Use Quadrant\n";
+            fillKValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            assert(val.stepi() == 1);
+            const int m = val.colsize();
+            const int n = val.rowsize();
+            typedef tmv::VIt<double,1,tmv::NonConj> It;
 
-        x0 *= 0.5*_xw;
-        dx *= 0.5*_xw;
-        y0 *= 0.5*_yw;
-        dy *= 0.5*_yw;
+            x0 *= 0.5*_xw;
+            dx *= 0.5*_xw;
+            y0 *= 0.5*_yw;
+            dy *= 0.5*_yw;
 
-        // The Box profile in Fourier space is separable:
-        //    val = _flux * sinc(0.5 * x * _yw) * sinc(0.5 * y * _yw) 
-        tmv::Vector<double> sinc_x(m);
-        It xit = sinc_x.begin();
-        for (int i=0;i<m;++i,x0+=dx) *xit++ = sinc(x0);
-        tmv::Vector<double> sinc_y(n);
-        It yit = sinc_y.begin();
-        for (int j=0;j<n;++j,y0+=dy) *yit++ = sinc(y0);
+            // The Box profile in Fourier space is separable:
+            //    val = _flux * sinc(0.5 * x * _yw) * sinc(0.5 * y * _yw) 
+            tmv::Vector<double> sinc_x(m);
+            It xit = sinc_x.begin();
+            for (int i=0;i<m;++i,x0+=dx) *xit++ = sinc(x0);
+            tmv::Vector<double> sinc_y(n);
+            It yit = sinc_y.begin();
+            for (int j=0;j<n;++j,y0+=dy) *yit++ = sinc(y0);
 
-        val = _flux * sinc_x ^ sinc_y;
+            val = _flux * sinc_x ^ sinc_y;
+        }
     }
 
     void SBBox::SBBoxImpl::fillXValue(tmv::MatrixView<double> val,

@@ -117,22 +117,28 @@ namespace galsim {
         dbg<<"SBAiry fillXValue\n";
         dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
         dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
-        assert(val.stepi() == 1);
-        const int m = val.colsize();
-        const int n = val.rowsize();
-        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        if (ix_zero != 0 || iy_zero != 0) {
+            xdbg<<"Use Quadrant\n";
+            fillXValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            assert(val.stepi() == 1);
+            const int m = val.colsize();
+            const int n = val.rowsize();
+            typedef tmv::VIt<double,1,tmv::NonConj> It;
 
-        x0 *= _D;
-        dx *= _D;
-        y0 *= _D;
-        dy *= _D;
+            x0 *= _D;
+            dx *= _D;
+            y0 *= _D;
+            dy *= _D;
 
-        for (int j=0;j<n;++j,y0+=dy) {
-            double x = x0;
-            double ysq = y0*y0;
-            It valit = val.col(j).begin();
-            for (int i=0;i<m;++i,x+=dx) 
-                *valit++ = _xnorm * _info->xValue(sqrt(x*x + ysq));
+            for (int j=0;j<n;++j,y0+=dy) {
+                double x = x0;
+                double ysq = y0*y0;
+                It valit = val.col(j).begin();
+                for (int i=0;i<m;++i,x+=dx) 
+                    *valit++ = _xnorm * _info->xValue(sqrt(x*x + ysq));
+            }
         }
     }
 
@@ -143,22 +149,28 @@ namespace galsim {
         dbg<<"SBAiry fillKValue\n";
         dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
         dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
-        assert(val.stepi() == 1);
-        const int m = val.colsize();
-        const int n = val.rowsize();
-        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+        if (ix_zero != 0 || iy_zero != 0) {
+            xdbg<<"Use Quadrant\n";
+            fillKValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            assert(val.stepi() == 1);
+            const int m = val.colsize();
+            const int n = val.rowsize();
+            typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
 
-        x0 *= _inv_D_pi;
-        dx *= _inv_D_pi;
-        y0 *= _inv_D_pi;
-        dy *= _inv_D_pi;
+            x0 *= _inv_D_pi;
+            dx *= _inv_D_pi;
+            y0 *= _inv_D_pi;
+            dy *= _inv_D_pi;
 
-        for (int j=0;j<n;++j,y0+=dy) {
-            double x = x0;
-            double ysq = y0*y0;
-            It valit(val.col(j).begin().getP(),1);
-            for (int i=0;i<m;++i,x+=dx) 
-                *valit++ = _knorm * _info->kValue(x*x + ysq);
+            for (int j=0;j<n;++j,y0+=dy) {
+                double x = x0;
+                double ysq = y0*y0;
+                It valit(val.col(j).begin().getP(),1);
+                for (int i=0;i<m;++i,x+=dx) 
+                    *valit++ = _knorm * _info->kValue(x*x + ysq);
+            }
         }
     }
 

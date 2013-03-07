@@ -84,8 +84,6 @@ namespace galsim {
             fillXValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
         } else {
             xdbg<<"Non-Quadrant\n";
-            xdbg<<x0<<','<<dx<<','<<ix_zero<<std::endl;
-            xdbg<<y0<<','<<dy<<','<<iy_zero<<std::endl;
             assert(val.stepi() == 1);
             const int m = val.colsize();
             const int n = val.rowsize();
@@ -112,24 +110,30 @@ namespace galsim {
         dbg<<"SBSersic fillKValue\n";
         dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
         dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
-        assert(val.stepi() == 1);
-        const int m = val.colsize();
-        const int n = val.rowsize();
-        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+        if (ix_zero != 0 || iy_zero != 0) {
+            xdbg<<"Use Quadrant\n";
+            fillKValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            assert(val.stepi() == 1);
+            const int m = val.colsize();
+            const int n = val.rowsize();
+            typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
 
-        x0 *= _re;
-        dx *= _re;
-        y0 *= _re;
-        dy *= _re;
+            x0 *= _re;
+            dx *= _re;
+            y0 *= _re;
+            dy *= _re;
 
-        for (int j=0;j<n;++j,y0+=dy) {
-            double x = x0;
-            double ysq = y0*y0;
-            It valit(val.col(j).begin().getP(),1);
-            for (int i=0;i<m;++i,x+=dx) {
-                double ksq = x*x + ysq;
-                if (ksq > _ksq_max) *valit++ = 0.;
-                else *valit++ = _flux * _info->kValue(ksq);
+            for (int j=0;j<n;++j,y0+=dy) {
+                double x = x0;
+                double ysq = y0*y0;
+                It valit(val.col(j).begin().getP(),1);
+                for (int i=0;i<m;++i,x+=dx) {
+                    double ksq = x*x + ysq;
+                    if (ksq > _ksq_max) *valit++ = 0.;
+                    else *valit++ = _flux * _info->kValue(ksq);
+                }
             }
         }
     }

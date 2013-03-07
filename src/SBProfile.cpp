@@ -29,7 +29,7 @@
 #ifdef DEBUGLOGGING
 #include <fstream>
 std::ostream* dbgout = new std::ofstream("debug.out");
-int verbose_level = 1;
+int verbose_level = 2;
 // There are three levels of verbosity which can be helpful when debugging,
 // which are written as dbg, xdbg, xxdbg (all defined in Std.h).
 // It's Mike's way to have debug statements in the code that are really easy to turn 
@@ -390,6 +390,9 @@ namespace galsim {
         for (int i=0;i<n;++i) y.ref(i) = (ymin+i)*dx;
 
         tmv::Matrix<double> val(m,n);
+#ifdef DEBUGLOGGING
+        val.setAllTo(999.);
+#endif
         assert(xmin <= 0 && ymin <= 0 && -xmin < m && -ymin < n);
         fillXValue(val.view(),xmin*dx,dx,-xmin,ymin*dx,dx,-ymin);
 
@@ -524,6 +527,9 @@ namespace galsim {
         const double ymin = Re.getYMin();
 
         tmv::Matrix<std::complex<double> > val(m,n);
+#ifdef DEBUGLOGGING
+        val.setAllTo(999.);
+#endif
         // Calculate all the kValues at once, since this is often faster than many calls to kValue.
         assert(xmin <= 0 && ymin <= 0 && -xmin < m && -ymin < n);
         _pimpl->fillKValue(val.view(),xmin*dk,dk,-xmin,ymin*dk,dk,-ymin);
@@ -620,6 +626,9 @@ namespace galsim {
         xt.clearCache();
 
         tmv::Matrix<double> val(N,N);
+#ifdef DEBUGLOGGING
+        val.setAllTo(999.);
+#endif
         fillXValue(val.view(),-(N/2)*dx,dx,N/2,-(N/2)*dx,dx,N/2);
 
         tmv::MatrixView<double> mxt(xt.getArray(),N,N,1,N,tmv::NonConj);
@@ -640,6 +649,9 @@ namespace galsim {
         for (int i=-N/2+1;i<0;++i) ky.ref(i+N) = i*dk;
 
         tmv::Matrix<std::complex<double> > val(N/2+1,N);
+#ifdef DEBUGLOGGING
+        val.setAllTo(999.);
+#endif
         fillKValue(val.view(),0.,dk,0,(-N/2+1)*dk,dk,N/2-1);
 
         tmv::MatrixView<std::complex<double> > mkt(kt.getArray(),N/2+1,N,1,N/2+1,tmv::NonConj);
@@ -680,8 +692,8 @@ namespace galsim {
         const int nx2 = nx - nx1-1;
         const int ny = val.rowsize();
         const int ny2 = ny - ny1-1;
-        dbg<<"nx = "<<nx1<<" + "<<nx2<<" = "<<nx<<std::endl;
-        dbg<<"ny = "<<ny1<<" + "<<ny2<<" = "<<ny<<std::endl;
+        xdbg<<"nx = "<<nx1<<" + "<<nx2<<" + 1 = "<<nx<<std::endl;
+        xdbg<<"ny = "<<ny1<<" + "<<ny2<<" + 1 = "<<ny<<std::endl;
         // Keep track of which quadrant is done in the first section.
         bool ur_done = false;
         bool ul_done = false;
@@ -691,6 +703,7 @@ namespace galsim {
         if (nx2 >= nx1) {
             if (ny2 >= ny1) {
                 // Upper right is the big quadrant
+                xdbg<<"Use Upper right (nx2,ny2)"<<std::endl;
                 q.reset(new tmv::MatrixView<T>(val.subMatrix(nx1,nx,ny1,ny)));
                 QuadrantHelper<T>::fill(prof,*q,0.,dx,0.,dy);
                 ur_done = true;
@@ -698,23 +711,26 @@ namespace galsim {
                 val.row(nx1,0,ny1).reverse() = q->row(0,1,ny1+1);
                 val.col(ny1,0,nx1).reverse() = q->col(0,1,nx1+1);
             } else {
-                // Upper left is the big quadrant
+                // Lower right is the big quadrant
+                xdbg<<"Use Lower right (nx2,ny1)"<<std::endl;
                 q.reset(new tmv::MatrixView<T>(val.subMatrix(nx1,nx,ny1,-1,1,-1)));
                 QuadrantHelper<T>::fill(prof,val.subMatrix(nx1,nx,0,ny1+1),0.,dx,y0,dy);
-                ul_done = true;
-                val.row(nx1,0,ny1).reverse() = q->row(0,1,ny1+1);
-                val.col(ny1,nx1+1,nx) = q->col(0,1,nx2+1);
-            }
-        } else {
-            if (ny2 >= ny1) {
-                // Lower right is the big quadrant
-                q.reset(new tmv::MatrixView<T>(val.subMatrix(nx1,-1,ny1,ny,-1,1)));
-                QuadrantHelper<T>::fill(prof,val.subMatrix(0,nx1+1,ny1,ny),x0,dx,0.,dy);
                 lr_done = true;
                 val.row(nx1,ny1+1,ny) = q->row(0,1,ny2+1);
                 val.col(ny1,0,nx1).reverse() = q->row(0,1,nx1+1);
+            }
+        } else {
+            if (ny2 >= ny1) {
+                // Upper left is the big quadrant
+                xdbg<<"Use Upper left (nx1,ny2)"<<std::endl;
+                q.reset(new tmv::MatrixView<T>(val.subMatrix(nx1,-1,ny1,ny,-1,1)));
+                QuadrantHelper<T>::fill(prof,val.subMatrix(0,nx1+1,ny1,ny),x0,dx,0.,dy);
+                ul_done = true;
+                val.row(nx1,0,ny1).reverse() = q->row(0,1,ny1+1);
+                val.col(ny1,nx1+1,nx) = q->col(0,1,nx2+1);
             } else {
                 // Lower left is the big quadrant
+                xdbg<<"Use Lower left (nx1,ny1)"<<std::endl;
                 q.reset(new tmv::MatrixView<T>(val.subMatrix(nx1,-1,ny1,-1,-1,-1)));
                 QuadrantHelper<T>::fill(prof,val.subMatrix(0,nx1+1,0,ny1+1),x0,dx,y0,dy);
                 ll_done = true;
@@ -722,14 +738,15 @@ namespace galsim {
                 val.col(ny1,nx1+1,nx) = q->col(0,1,nx2+1);
             }
         }
-        if (!ur_done && nx2 > 0 && ny2 > 0)
+        if (!ur_done && nx2 > 0 && ny2 > 0) 
             val.subMatrix(nx1+1,nx,ny1+1,ny) = q->subMatrix(1,nx2+1,1,ny2+1);
-        if (!ul_done && nx1 > 0 && ny2 > 0)
-            val.subMatrix(nx1-1,-1,ny1+1,ny,-1,1) = q->subMatrix(1,nx1+1,1,ny2+1);
-        if (!lr_done && nx2 > 0 && ny1 > 0)
+        if (!lr_done && nx2 > 0 && ny1 > 0) 
             val.subMatrix(nx1+1,nx,ny1-1,-1,1,-1) = q->subMatrix(1,nx2+1,1,ny1+1);
-        if (!ll_done && nx1 > 0 && ny1 > 0)
-            val.subMatrix(nx1-1,-1,ny1+1,ny,-1,-1) = q->subMatrix(1,nx1+1,1,ny1+1);
+        if (!ul_done && nx1 > 0 && ny2 > 0) 
+            val.subMatrix(nx1-1,-1,ny1+1,ny,-1,1) = q->subMatrix(1,nx1+1,1,ny2+1);
+        if (!ll_done && nx1 > 0 && ny1 > 0) 
+            val.subMatrix(nx1-1,-1,ny1-1,-1,-1,-1) = q->subMatrix(1,nx1+1,1,ny1+1);
+        xdbg<<"Done copying quadrants"<<std::endl;
     }
     void SBProfile::SBProfileImpl::fillXValueQuadrant(tmv::MatrixView<double> val,
                                                       double x0, double dx, int nx1,

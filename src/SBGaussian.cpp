@@ -37,7 +37,7 @@
 #ifdef DEBUGLOGGING
 #include <fstream>
 //std::ostream* dbgout = new std::ofstream("debug.out");
-//int verbose_level = 2;
+//int verbose_level = 1;
 #endif
 
 namespace galsim {
@@ -124,27 +124,33 @@ namespace galsim {
         dbg<<"SBGaussian fillXValue\n";
         dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
         dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
-        assert(val.stepi() == 1);
-        const int m = val.colsize();
-        const int n = val.rowsize();
-        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        if (ix_zero != 0 || iy_zero != 0) {
+            xdbg<<"Use Quadrant\n";
+            fillXValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            assert(val.stepi() == 1);
+            const int m = val.colsize();
+            const int n = val.rowsize();
+            typedef tmv::VIt<double,1,tmv::NonConj> It;
 
-        x0 *= _inv_sigma;
-        dx *= _inv_sigma;
-        y0 *= _inv_sigma;
-        dy *= _inv_sigma;
+            x0 *= _inv_sigma;
+            dx *= _inv_sigma;
+            y0 *= _inv_sigma;
+            dy *= _inv_sigma;
 
-        // The Gaussian profile is separable:
-        //    val = _norm * exp(-0.5 * (x*x + y*y) 
-        //        = _norm * exp(-0.5 * x*x) * exp(-0.5 * y*y)
-        tmv::Vector<double> gauss_x(m);
-        It xit = gauss_x.begin();
-        for (int i=0;i<m;++i,x0+=dx) *xit++ = exp(-0.5 * x0*x0);
-        tmv::Vector<double> gauss_y(n);
-        It yit = gauss_y.begin();
-        for (int j=0;j<n;++j,y0+=dy) *yit++ = exp(-0.5 * y0*y0);
+            // The Gaussian profile is separable:
+            //    val = _norm * exp(-0.5 * (x*x + y*y) 
+            //        = _norm * exp(-0.5 * x*x) * exp(-0.5 * y*y)
+            tmv::Vector<double> gauss_x(m);
+            It xit = gauss_x.begin();
+            for (int i=0;i<m;++i,x0+=dx) *xit++ = exp(-0.5 * x0*x0);
+            tmv::Vector<double> gauss_y(n);
+            It yit = gauss_y.begin();
+            for (int j=0;j<n;++j,y0+=dy) *yit++ = exp(-0.5 * y0*y0);
 
-        val = _norm * gauss_x ^ gauss_y;
+            val = _norm * gauss_x ^ gauss_y;
+        }
     }
 
     void SBGaussian::SBGaussianImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
@@ -154,24 +160,30 @@ namespace galsim {
         dbg<<"SBGaussian fillKValue\n";
         dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
         dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
-        assert(val.stepi() == 1);
-        const int m = val.colsize();
-        const int n = val.rowsize();
-        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        if (ix_zero != 0 || iy_zero != 0) {
+            xdbg<<"Use Quadrant\n";
+            fillKValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            assert(val.stepi() == 1);
+            const int m = val.colsize();
+            const int n = val.rowsize();
+            typedef tmv::VIt<double,1,tmv::NonConj> It;
 
-        x0 *= _sigma;
-        dx *= _sigma;
-        y0 *= _sigma;
-        dy *= _sigma;
+            x0 *= _sigma;
+            dx *= _sigma;
+            y0 *= _sigma;
+            dy *= _sigma;
 
-        tmv::Vector<double> gauss_x(m);
-        It xit = gauss_x.begin();
-        for (int i=0;i<m;++i,x0+=dx) *xit++ = exp(-0.5 * x0*x0);
-        tmv::Vector<double> gauss_y(n);
-        It yit = gauss_y.begin();
-        for (int j=0;j<n;++j,y0+=dy) *yit++ = exp(-0.5 * y0*y0);
+            tmv::Vector<double> gauss_x(m);
+            It xit = gauss_x.begin();
+            for (int i=0;i<m;++i,x0+=dx) *xit++ = exp(-0.5 * x0*x0);
+            tmv::Vector<double> gauss_y(n);
+            It yit = gauss_y.begin();
+            for (int j=0;j<n;++j,y0+=dy) *yit++ = exp(-0.5 * y0*y0);
 
-        val = _flux * gauss_x ^ gauss_y;
+            val = _flux * gauss_x ^ gauss_y;
+        }
     }
 
     void SBGaussian::SBGaussianImpl::fillXValue(tmv::MatrixView<double> val,
