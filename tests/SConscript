@@ -56,9 +56,14 @@ def run_tests(target, source, env):
 
     # We only run nosetests if we found nosetests in the path.
     if env['NOSETESTS']:
+        cmd = env['NOSETESTS']
+        print 'cmd = ',cmd
+        if env['NOSETESTSVERSION'] >= '1.1':
+            cmd += ' --processes=%d --process-timeout=30'%(env.GetOption('num_jobs'))
+            print 'cmd => ',cmd
         print '\nStarting python tests...'
         py_proc = subprocess.Popen(
-            env['NOSETESTS'],
+            cmd.split(),
             cwd='tests',
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,

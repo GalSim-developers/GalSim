@@ -414,7 +414,7 @@ def which(program):
     return None
 
 def GetCompilerVersion(env):
-    """
+    """Determine the version of the compiler
     """
     compiler = which(env['CXX'])
     if compiler is None:
@@ -504,6 +504,17 @@ def GetCompilerVersion(env):
     env['CXXTYPE'] = compilertype
     env['CXXVERSION'] = version
     env['CXXVERSION_NUMERICAL'] = float(vnum)
+
+def GetNosetestsVersion(env):
+    """Determine the version of nosetests
+    """
+    cmd = env['NOSETESTS'] + ' --version 2>&1'
+    p = subprocess.Popen([cmd],stdout=subprocess.PIPE,shell=True)
+    line = p.stdout.readlines()[0]
+    version = line.split()[2]
+    print 'nosetests version:',version
+    env['NOSETESTSVERSION'] = version
+
 
 def ExpandPath(path):
     p=os.path.expanduser(path)
@@ -1596,6 +1607,7 @@ if not GetOption('help'):
                 env['NOSETESTS'] = None
             else:
                 env['NOSETESTS'] = nosetests
+        GetNosetestsVersion(env)
         subdirs += ['tests']
 
     # subdirectores to process.  We process src and pysrc by default
