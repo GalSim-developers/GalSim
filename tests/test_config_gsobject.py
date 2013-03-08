@@ -530,8 +530,7 @@ def test_realgalaxy():
     gal2a = galsim.config.BuildGSObject(config, 'gal2')[0]
     gal2b = galsim.RealGalaxy(real_cat, index = 23)
     gal2b.setFlux(100)
-    #gsobject_compare(gal2a, gal2b, True)
-    gsobject_compare(gal2a, gal2b)
+    gsobject_compare(gal2a, gal2b, True)
 
     config['seq_index'] = 2
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
