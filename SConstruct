@@ -508,6 +508,7 @@ def GetCompilerVersion(env):
 def GetNosetestsVersion(env):
     """Determine the version of nosetests
     """
+    import subprocess
     cmd = env['NOSETESTS'] + ' --version 2>&1'
     p = subprocess.Popen([cmd],stdout=subprocess.PIPE,shell=True)
     line = p.stdout.readlines()[0]
