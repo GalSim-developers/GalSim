@@ -196,7 +196,7 @@ class DES_Shapelet(object):
 import galsim.config
 
 # First we need to add the class itself as a valid input_type.
-galsim.config.process.valid_input_types['des_shapelet'] = ('des.DES_Shapelet', [])
+galsim.config.process.valid_input_types['des_shapelet'] = ('galsim.des.DES_Shapelet', [])
 
 # Also make a builder to create the PSF object for a given position.
 # The builders require 4 args.

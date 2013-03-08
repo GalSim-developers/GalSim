@@ -368,7 +368,10 @@ def _BuildSimple(config, key, base, ignore):
     # Build the kwargs according to the various params objects in the class definition.
     type = config['type']
     try:
-        init_func = eval("galsim."+type)
+        if type in galsim.__dict__:
+            init_func = eval("galsim."+type)
+        else:
+            init_func = eval(type)
     except:
         raise TypeError('Invalid type = %s passed to BuildSimple'%type)
 

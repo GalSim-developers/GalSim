@@ -4,15 +4,33 @@ import galsim
 # you have a new generator for.  The generator should be called _GenerateFromMyType
 # where MyType is the new type you are implementing.  See the des module for some examples.
 valid_value_types = {
-    float : [ 'InputCatalog', 'FitsHeader', 'Random', 'RandomGaussian', 'RandomDistribution',
-              'NFWHaloMag', 'Sequence', 'List', 'Eval' ],
-    int : [ 'InputCatalog', 'FitsHeader', 'Random', 'Sequence', 'List', 'Eval' ],
-    bool : [ 'InputCatalog', 'FitsHeader', 'Random', 'Sequence', 'List', 'Eval' ],
-    str : [ 'InputCatalog', 'FitsHeader', 'NumberedFile', 'FormattedStr', 'List', 'Eval' ],
-    galsim.Angle : [ 'Rad', 'Radians', 'Deg', 'Degrees', 'Random', 'List', 'Eval' ],
-    galsim.Shear : [ 'E1E2', 'EBeta', 'G1G2', 'GBeta', 'Eta1Eta2', 'EtaBeta', 'QBeta',
-                     'NFWHaloShear', 'PowerSpectrumShear', 'List', 'Eval' ],
-    galsim.PositionD : [ 'XY', 'RTheta', 'RandomCircle', 'List', 'Eval' ],
+    'List' : [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ],
+    'Eval' : [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ],
+    'InputCatalog' : [ float, int, bool, str ],
+    'FitsHeader' : [ float, int, bool, str ],
+    'Sequence' : [ float, int, bool ],
+    'Random' : [ float, int, bool, galsim.Angle ],
+    'RandomGaussian' : [ float ],
+    'RandomDistribution' : [ float ],
+    'RandomCircle' : [ galsim.PositionD ],
+    'NumberedFile' : [ str ],
+    'FormattedStr' : [ str ],
+    'Rad' : [ galsim.Angle ],
+    'Radians' : [ galsim.Angle ],
+    'Deg' : [ galsim.Angle ],
+    'Degrees' : [ galsim.Angle ],
+    'E1E2' : [ galsim.Shear ],
+    'EBeta' : [ galsim.Shear ],
+    'G1G2' : [ galsim.Shear ],
+    'GBeta' : [ galsim.Shear ],
+    'Eta1Eta2' : [ galsim.Shear ],
+    'EtaBeta' : [ galsim.Shear ],
+    'QBeta' : [ galsim.Shear ],
+    'XY' : [ galsim.PositionD ],
+    'RTheta' : [ galsim.PositionD ],
+    'NFWHaloShear' : [ galsim.Shear ],
+    'NFWHaloMag' : [ float ],
+    'PowerSpectrumShear' : [ galsim.Shear ],
 }
  
 def ParseValue(config, param_name, base, value_type):
@@ -61,14 +79,14 @@ def ParseValue(config, param_name, base, value_type):
         #print 'type = ',type
 
         # First check if the value_type is valid.
-        if value_type not in valid_value_types.keys():
+        if type not in valid_value_types.keys():
             raise AttributeError(
-                "Unrecognized value_type = %s in ParseValue"%value_type)
+                "Unrecognized type = %s specified for parameter %s"%(type,param_name))
             
-        if type not in valid_value_types[value_type]:
+        if value_type not in valid_value_types[type]:
             raise AttributeError(
-                "Invalid type = %s specified for parameter %s with value_type = %s."%(
-                    type, param_name, value_type))
+                "Invalid value_type = %s specified for parameter %s with type = %s."%(
+                    value_type, param_name, type))
 
         generate_func = eval('_GenerateFrom' + type)
         #print 'generate_func = ',generate_func
