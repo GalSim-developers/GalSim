@@ -60,7 +60,18 @@ namespace galsim {
          * @brief Destructor is virtual
          */
         virtual ~BaseNoise() {}
- 
+
+        /**
+         * @brief Get the BaseDeviate being used to generate random numbers for the noise model
+         */
+        boost::shared_ptr<BaseDeviate> getRNG() { return _rng; }
+
+        /**
+         * @brief Set the BaseDeviate that will be used to generate random numbers for the noise
+         * model
+         */
+        void setRNG(boost::shared_ptr<BaseDeviate> rng) { _rng = rng; }
+
         /**
          * @brief Get the variance of the noise model
          */
@@ -94,8 +105,8 @@ namespace galsim {
         // application of the noise.
         virtual void doApplyTo(ImageView<double>& data) = 0;
         virtual void doApplyTo(ImageView<float>& data) = 0;
-        virtual void doApplyTo(ImageView<int>& data) = 0;
-        virtual void doApplyTo(ImageView<short>& data) = 0;
+        virtual void doApplyTo(ImageView<int32_t>& data) = 0;
+        virtual void doApplyTo(ImageView<int16_t>& data) = 0;
     };
 
 
@@ -174,8 +185,8 @@ namespace galsim {
         using BaseNoise::_rng;
         void doApplyTo(ImageView<double>& data) { applyTo(data); }
         void doApplyTo(ImageView<float>& data) { applyTo(data); }
-        void doApplyTo(ImageView<int>& data) { applyTo(data); }
-        void doApplyTo(ImageView<short>& data) { applyTo(data); }
+        void doApplyTo(ImageView<int32_t>& data) { applyTo(data); }
+        void doApplyTo(ImageView<int16_t>& data) { applyTo(data); }
 
     private: 
         double _sigma;
@@ -228,12 +239,12 @@ namespace galsim {
         /**
          * @brief Get the variance of the noise model
          */
-        virtual double getVariance() const { return _sky_level; }
+        double getVariance() const { return _sky_level; }
 
         /**
          * @brief Set the variance of the noise model
          */
-        virtual void setVariance(double variance) 
+        void setVariance(double variance) 
         { 
             if (!(variance >= 0.)) 
                 throw std::runtime_error("Cannot setVariance to < 0");
@@ -279,8 +290,8 @@ namespace galsim {
         using BaseNoise::_rng;
         void doApplyTo(ImageView<double>& data) { applyTo(data); }
         void doApplyTo(ImageView<float>& data) { applyTo(data); }
-        void doApplyTo(ImageView<int>& data) { applyTo(data); }
-        void doApplyTo(ImageView<short>& data) { applyTo(data); }
+        void doApplyTo(ImageView<int32_t>& data) { applyTo(data); }
+        void doApplyTo(ImageView<int16_t>& data) { applyTo(data); }
 
     private: 
         double _sky_level;
@@ -366,7 +377,7 @@ namespace galsim {
         /**
          * @brief Get the variance of the noise model
          */
-        virtual double getVariance() const 
+        double getVariance() const 
         {
             if (_gain > 0) return (_sky_level + _read_noise*_read_noise) / _gain;
             else return _read_noise * _read_noise;
@@ -378,7 +389,7 @@ namespace galsim {
          * If gain > 0, then update sky_level to reach the correct variance.
          * Otherwise update read_noise.
          */
-        virtual void setVariance(double variance)
+        void setVariance(double variance)
         {
             if (!(variance >= 0.)) 
                 throw std::runtime_error("Cannot setVariance to < 0");
@@ -486,8 +497,8 @@ namespace galsim {
         using BaseNoise::_rng;
         void doApplyTo(ImageView<double>& data) { applyTo(data); }
         void doApplyTo(ImageView<float>& data) { applyTo(data); }
-        void doApplyTo(ImageView<int>& data) { applyTo(data); }
-        void doApplyTo(ImageView<short>& data) { applyTo(data); }
+        void doApplyTo(ImageView<int32_t>& data) { applyTo(data); }
+        void doApplyTo(ImageView<int16_t>& data) { applyTo(data); }
 
     private: 
         double _sky_level;
@@ -559,8 +570,8 @@ namespace galsim {
         using BaseNoise::_rng;
         void doApplyTo(ImageView<double>& data) { applyTo(data); }
         void doApplyTo(ImageView<float>& data) { applyTo(data); }
-        void doApplyTo(ImageView<int>& data) { applyTo(data); }
-        void doApplyTo(ImageView<short>& data) { applyTo(data); }
+        void doApplyTo(ImageView<int32_t>& data) { applyTo(data); }
+        void doApplyTo(ImageView<int16_t>& data) { applyTo(data); }
     };
 
 };  // namespace galsim
