@@ -373,9 +373,9 @@ namespace galsim {
     { m1 += m2; }
 
     template <typename T>
-    double SBProfile::SBProfileImpl::doFillXImage2(ImageView<T>& I, double gain) const 
+    double SBProfile::SBProfileImpl::fillXImage(ImageView<T>& I, double gain) const 
     {
-        xdbg<<"Start doFillXImage2"<<std::endl;
+        xdbg<<"Start fillXImage"<<std::endl;
         double dx = I.getScale();
         xdbg<<"dx = "<<dx<<", gain = "<<gain<<std::endl;
 
@@ -1008,9 +1008,9 @@ namespace galsim {
     }
 
     // instantiate template functions for expected image types
-    template double SBProfile::SBProfileImpl::doFillXImage2(
+    template double SBProfile::SBProfileImpl::fillXImage(
         ImageView<float>& img, double gain) const;
-    template double SBProfile::SBProfileImpl::doFillXImage2(
+    template double SBProfile::SBProfileImpl::fillXImage(
         ImageView<double>& img, double gain) const;
 
     template double SBProfile::drawShoot(

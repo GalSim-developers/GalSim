@@ -102,30 +102,13 @@ namespace galsim {
         // Utility for drawing into Image data structures.
         // returns flux integral
         template <typename T>
-        double fillXImage(ImageView<T>& image, double gain) const  
-        { return doFillXImage(image, gain); }
+        double fillXImage(ImageView<T>& image, double gain) const;
 
         // Utility for drawing a k grid into FFT data structures 
-        virtual void fillKGrid(KTable& kt) const;
+        void fillKGrid(KTable& kt) const;
 
         // Utility for drawing an x grid into FFT data structures 
-        virtual void fillXGrid(XTable& xt) const;
-
-        // Virtual functions cannot be templates, so to make fillXImage work like a virtual
-        // function, we have it call these, which need to include all the types of Image
-        // that we want to use.
-        //
-        // Then in the derived class, these functions should call a template version of 
-        // fillXImage in that derived class that implements the functionality you want.
-        virtual double doFillXImage(ImageView<float>& image, double gain) const
-        { return doFillXImage2(image,gain); }
-        virtual double doFillXImage(ImageView<double>& image, double gain) const
-        { return doFillXImage2(image,gain); }
-
-        // Here in the base class, we need yet another name for the version that actually
-        // implements this as a template:
-        template <typename T>
-        double doFillXImage2(ImageView<T>& image, double gain) const;
+        void fillXGrid(XTable& xt) const;
 
     protected:
 
