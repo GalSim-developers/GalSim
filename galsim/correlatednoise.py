@@ -152,39 +152,11 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # clear out the stored values.
         if self._profile_for_stored is not self._profile:
             self._rootps_store = []
-            self._rootps_store_whitening = []
         # Set profile_for_stored for next time.
         self._profile_for_stored = self._profile
 
-        # Then retrieve or redraw the sqrt(power spectrum) needed for making the noise field:
-        dx = image.getScale()
-
-        # First check whether we can just use the stored power spectrum (no drawing necessary if so)
-        use_stored = False
-        for rootps_array, scale in self._rootps_store:
-            if image.array.shape == rootps_array.shape:
-                if ((dx <= 0. and scale == 1.) or (dx == scale)):
-                    use_stored = True
-                    rootps = rootps_array
-                    break
-
-        # If not, draw the correlation function to the desired size and resolution, then DFT to
-        # generate the required array of the square root of the power spectrum
-        if use_stored is False:
-            newcf = galsim.ImageD(image.bounds) # set the correlation func to be the correct size
-            # set the scale based on dx...
-            if dx <= 0.:
-                newcf.setScale(1.) # sometimes new Images have getScale() = 0
-            else:
-                newcf.setScale(dx)
-            # Then draw this correlation function into an array
-            self.draw(newcf, dx=None) # setting dx=None uses the newcf image scale set above
-
-            # Then calculate the sqrt(PS) that will be used to generate the actual noise
-            rootps = np.sqrt(np.abs(np.fft.fft2(newcf.array)) * np.product(image.array.shape))
-
-            # Then add this and the relevant scale to the _rootps_store for later use
-            self._rootps_store.append((rootps, newcf.getScale()))
+        # Then retrieve or redraw the sqrt(power spectrum) needed for making the noise field
+        rootps = self._get_update_rootps(image.array.shape, image.getScale())
 
         # Finally generate a random field in Fourier space with the right PS
         noise_array = _generate_noise_from_rootps(self.getRNG(), rootps)
@@ -236,43 +208,22 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # Set profile_for_stored for next time.
         self._profile_for_stored = self._profile
 
-        # Then retrieve or redraw the sqrt(power spectrum) needed for making the noise field:
-        dx = image.getScale()
-
-        # First check whether we can just use a stored power spectrum (no drawing necessary if so)
-        use_stored = False
-        for rootps_array, scale in self._rootps_store:
-            if image.array.shape == rootps_array.shape:
-                if ((dx <= 0. and scale == 1.) or (dx == scale)):
-                    use_stored = True
-                    rootps = rootps_array
-                    break
-
-        # If not, draw the correlation function to the desired size and resolution, then DFT to
-        # generate the required array of the square root of the power spectrum
-        if use_stored is False:
-            newcf = galsim.ImageD(image.bounds) # set the correlation func to be the correct size
-            # set the scale based on dx...
-            if dx <= 0.:
-                newcf.setScale(1.) # sometimes new Images have getScale() = 0
-            else:
-                newcf.setScale(dx)
-            # Then draw this correlation function into an array
-            self.draw(newcf, dx=None) # setting dx=None uses the newcf image scale set above
-
-            # Then calculate the sqrt(PS) that will be used to generate the actual noise
-            rootps = np.sqrt(np.abs(np.fft.fft2(newcf.array)) * np.product(image.array.shape))
-
-            # Then add this and the relevant scale to the _rootps_store for later use
-            self._rootps_store.append((rootps, newcf.getScale()))
+        # Then retrieve or redraw the sqrt(power spectrum) needed for making the noise field
+        rootps = self._get_update_rootps(image.array.shape, image.getScale())
 
         # Then calculate the whitening power spectrum as (almost) the smallest power spectrum that 
         # when added to rootps**2 gives a flat resultant power that is nowhere negative
         ps_whitening = -rootps * rootps
         ps_whitening += np.abs(np.min(ps_whitening)) * 1.05 # Give ourselves 5% headroom in variance
         rootps_whitening = np.sqrt(ps_whitening)
+        # TODO: Cache this like we do the rootps?  Not sure that N^2 sqrt()s is such a great cost
+        # compared to the N^2 log(2N) operations required for making the field (N=image dimension),
+        # but should test if overall whitening proves to be slow.
+
         # Calculate the theoretical combined variance to output alongside the image we're about to
-        # generate (factor of product of the image shape required due to inverse FFT convention)
+        # generate.  The factor of product of the image shape is required due to inverse FFT
+        # conventions, and note that although we use the [0, 0] element we could use any as the PS
+        # should be flat
         variance = (rootps[0, 0]**2 + ps_whitening[0, 0]) / np.product(image.array.shape)
 
         # Finally generate a random field in Fourier space with the right PS and add to image
@@ -462,7 +413,44 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         """
         return galsim._galsim._calculateCovarianceMatrix(self._profile.SBProfile, bounds, dx)
 
+    def _get_update_rootps(self, shape, dx):
+        """Internal utility function for querying the rootps cache, used by applyTo and 
+        applyWhiteningTo methods.
+        """ 
+        # First check whether we can just use a stored power spectrum (no drawing necessary if so)
+        use_stored = False
+        for rootps_array, scale in self._rootps_store:
+            if shape == rootps_array.shape:
+                if ((dx <= 0. and scale == 1.) or (dx == scale)):
+                    use_stored = True
+                    rootps = rootps_array
+                    break
 
+        # If not, draw the correlation function to the desired size and resolution, then DFT to
+        # generate the required array of the square root of the power spectrum
+        if use_stored is False:
+            newcf = galsim.ImageD(shape[1], shape[0]) # set the corr func to be the correct size
+            # set the scale based on dx...
+            if dx <= 0.:
+                newcf.setScale(1.) # sometimes new Images have getScale() = 0
+            else:
+                newcf.setScale(dx)
+            # Then draw this correlation function into an array
+            self.draw(newcf, dx=None) # setting dx=None uses the newcf image scale set above
+
+            # Then calculate the sqrt(PS) that will be used to generate the actual noise
+            rootps = np.sqrt(np.abs(np.fft.fft2(newcf.array)) * np.product(shape))
+
+            # Then add this and the relevant scale to the _rootps_store for later use
+            self._rootps_store.append((rootps, newcf.getScale()))
+
+        return rootps
+
+
+###
+# Now a standalone utility function for generating noise according to an input (square rooted)
+# Power Spectrum
+#
 def _generate_noise_from_rootps(rng, rootps):
     """Utility function for generating a NumPy array containing a Gaussian random noise field with
     a user-specified power spectrum also supplied as a NumPy array.
@@ -472,13 +460,15 @@ def _generate_noise_from_rootps(rng, rootps):
                   in two dimensions according to the usual DFT pattern (see np.fft.fftfreq)
     @return A NumPy array (contiguous) of the same shape as rootps, filled with the noise field.
     """
-    gaussvec_real = galsim.ImageD(rootps.shape[1], rootps.shape[0])
+    # I believe it is cheaper to make two random vectors than to make a single one (for a phase)
+    # and then apply cos(), sin() to it...
+    gaussvec_real = galsim.ImageD(rootps.shape[1], rootps.shape[0]) # Remember NumPy is [y, x]
     gaussvec_imag = galsim.ImageD(rootps.shape[1], rootps.shape[0])
     gn = galsim.GaussianNoise(rng, sigma=1.) # Create on the fly using an input RNG (cheap: see 
                                              # discussion on Issue #352)
     gaussvec_real.addNoise(gn)
     gaussvec_imag.addNoise(gn)
-    noise_array = np.fft.ifft2((gaussvec_real.array + gaussvec_imag.array*1j) * rootps)
+    noise_array = np.fft.ifft2((gaussvec_real.array + gaussvec_imag.array * 1j) * rootps)
     return np.ascontiguousarray(noise_array.real)
 
 
