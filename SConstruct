@@ -1608,7 +1608,8 @@ if not GetOption('help'):
                 env['NOSETESTS'] = None
             else:
                 env['NOSETESTS'] = nosetests
-        GetNosetestsVersion(env)
+        if env['NOSETESTS']:
+            GetNosetestsVersion(env)
         subdirs += ['tests']
 
     # subdirectores to process.  We process src and pysrc by default
