@@ -92,6 +92,17 @@ namespace galsim {
                           bp::arg("integration_relerr")=1.e-5,
                           bp::arg("integration_abserr")=1.e-7))
                 )
+                .def_readonly("minimum_fft_size", &GSParams::minimum_fft_size)
+                .def_readonly("maximum_fft_size", &GSParams::maximum_fft_size)
+                .def_readonly("alias_threshold", &GSParams::alias_threshold)
+                .def_readonly("maxk_threshold", &GSParams::maxk_threshold)
+                .def_readonly("kvalue_accuracy", &GSParams::kvalue_accuracy)
+                .def_readonly("xvalue_accuracy", &GSParams::xvalue_accuracy)
+                .def_readonly("shoot_accuracy", &GSParams::shoot_accuracy)
+                .def_readonly("realspace_relerr", &GSParams::realspace_relerr)
+                .def_readonly("realspace_abserr", &GSParams::realspace_abserr)
+                .def_readonly("integration_relerr", &GSParams::integration_relerr)
+                .def_readonly("integration_abserr", &GSParams::integration_abserr)
                 ;
         }
     };
