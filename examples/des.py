@@ -124,7 +124,7 @@ def main(argv):
 
         for k in range(nobj):
             # The usual random number generator using a different seed for each galaxy.
-            # I'm not actually using the rng for object creation (everything comes from # the 
+            # I'm not actually using the rng for object creation (everything comes from the
             # input files), but the rng that matches the config version is here just in case.
             rng = galsim.BaseDeviate(random_seed+k)
 
@@ -148,7 +148,7 @@ def main(argv):
             # Define the pixel
             pix = galsim.Pixel(pixel_scale)
 
-            # Firstt do the PSFEx image:
+            # First do the PSFEx image:
             if True:
                 # Define the PSF profile
                 psf = psfex.getPSF(image_pos, pixel_scale)
