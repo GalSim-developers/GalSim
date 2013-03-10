@@ -33,8 +33,8 @@ namespace galsim {
     {
     public:
 
-        // Constructor doesn't do anything
-        SBProfileImpl() {}
+        // Constructor 
+        SBProfileImpl(boost::shared_ptr<GSParams> _gsparams);
 
         // Virtual destructor
         virtual ~SBProfileImpl() {}
@@ -110,6 +110,9 @@ namespace galsim {
         // Utility for drawing an x grid into FFT data structures 
         void fillXGrid(XTable& xt) const;
 
+        // Public so it can be directly used from SBProfile.
+        boost::shared_ptr<GSParams> gsparams;
+
     protected:
 
         // A helper function for cases where the profile has f(x,y) = f(|x|,|y|).
@@ -124,11 +127,13 @@ namespace galsim {
                                 double x0, double dx, int nx1,
                                 double y0, double dy, int ny1) const;
 
-
     private:
         // Copy constructor and op= are undefined.
         SBProfileImpl(const SBProfileImpl& rhs);
         void operator=(const SBProfileImpl& rhs);
+
+        // Default GSParams to use when input is None
+        static boost::shared_ptr<GSParams> default_gsparams;
     };
 
 }

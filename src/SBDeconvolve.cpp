@@ -32,21 +32,24 @@
 
 namespace galsim {
 
-    SBDeconvolve::SBDeconvolve(const SBProfile& adaptee) :
-        SBProfile(new SBDeconvolveImpl(adaptee)) {}
+    SBDeconvolve::SBDeconvolve(const SBProfile& adaptee,
+                               boost::shared_ptr<GSParams> gsparams) :
+        SBProfile(new SBDeconvolveImpl(adaptee,gsparams)) {}
 
     SBDeconvolve::SBDeconvolve(const SBDeconvolve& rhs) : SBProfile(rhs) {}
 
     SBDeconvolve::~SBDeconvolve() {}
 
-    SBDeconvolve::SBDeconvolveImpl::SBDeconvolveImpl(const SBProfile& adaptee) : _adaptee(adaptee) 
+    SBDeconvolve::SBDeconvolveImpl::SBDeconvolveImpl(const SBProfile& adaptee,
+                                                     boost::shared_ptr<GSParams> gsparams) :
+        SBProfileImpl(gsparams.get() ? gsparams :
+                      GetImpl(adaptee)->gsparams),
+        _adaptee(adaptee)
     {
         double maxk = maxK();
         _maxksq = maxk*maxk;
         dbg<<"SBDeconvolve constructor: _maxksq = "<<_maxksq<<std::endl;
     }
-
-    SBDeconvolve::SBDeconvolveImpl::~SBDeconvolveImpl() {}
 
     // xValue() not implemented for SBDeconvolve.
     double SBDeconvolve::SBDeconvolveImpl::xValue(const Position<double>& p) const 

@@ -30,8 +30,8 @@ namespace galsim {
     class SBDeconvolve::SBDeconvolveImpl : public SBProfile::SBProfileImpl
     {
     public:
-        SBDeconvolveImpl(const SBProfile& adaptee);
-        ~SBDeconvolveImpl();
+        SBDeconvolveImpl(const SBProfile& adaptee, boost::shared_ptr<GSParams> gsparams);
+        ~SBDeconvolveImpl() {}
 
         // xValue() not implemented for SBDeconvolve.
         double xValue(const Position<double>& p) const;

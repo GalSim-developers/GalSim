@@ -54,9 +54,9 @@ namespace galsim {
          * @param[in] cen 2-element (x, y) Position for the translational shift.
          * @param[in] fluxScaling Amount by which the flux should be multiplied.
          */
-        SBTransform(const SBProfile& sbin,
-                    double mA, double mB, double mC, double mD,
-                    const Position<double>& cen=Position<double>(0.,0.), double fluxScaling=1.);
+        SBTransform(const SBProfile& sbin, double mA, double mB, double mC, double mD,
+                    const Position<double>& cen=Position<double>(0.,0.), double fluxScaling=1.,
+                    boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
 
         /** 
          * @brief Construct from an input CppEllipse 
@@ -65,9 +65,8 @@ namespace galsim {
          * @param[in] e  CppEllipse.
          * @param[in] fluxScaling Amount by which the flux should be multiplied.
          */
-        SBTransform(const SBProfile& sbin,
-                    const CppEllipse& e=CppEllipse(),
-                    double fluxScaling=1.);
+        SBTransform(const SBProfile& sbin, const CppEllipse& e=CppEllipse(), double fluxScaling=1.,
+                    boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
 
         /// @brief Copy constructor
         SBTransform(const SBTransform& rhs);

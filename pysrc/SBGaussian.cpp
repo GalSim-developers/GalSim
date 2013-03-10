@@ -44,12 +44,10 @@ namespace galsim {
     struct PySBGaussian 
     {
 
-        static SBGaussian * construct(
-            const bp::object & half_light_radius,
-            const bp::object & sigma,
-            const bp::object & fwhm,
-            double flux
-        ) {
+        static SBGaussian* construct(
+            const bp::object& half_light_radius, const bp::object& sigma, const bp::object& fwhm,
+            double flux, boost::shared_ptr<GSParams> gsparams) 
+        {
             double s = 1.0;
             checkRadii(half_light_radius, sigma, fwhm);
             if (half_light_radius.ptr() != Py_None) {
@@ -61,22 +59,24 @@ namespace galsim {
             if (fwhm.ptr() != Py_None) {
                 s = bp::extract<double>(fwhm) * 0.42466090014400953; // 1 / (2(2\ln2)^(1/2))
             }
-            return new SBGaussian(s, flux);
+            return new SBGaussian(s, flux, gsparams);
         }
 
-        static void wrap() {
-            bp::class_<SBGaussian,bp::bases<SBProfile> >(
+        static void wrap() 
+        {
+            bp::class_<SBGaussian,bp::bases<SBProfile> > pySBGaussian(
                 "SBGaussian",
                 "SBGaussian(flux=1., half_light_radius=None, sigma=None, fwhm=None)\n\n"
                 "Construct an exponential profile with the given flux and half-light radius,\n"
                 "sigma, or FWHM.  Exactly one radius must be provided.\n",
-                bp::no_init)
-                .def(
-                    "__init__", bp::make_constructor(
+                bp::no_init);
+            pySBGaussian
+                .def("__init__", bp::make_constructor(
                         &construct, bp::default_call_policies(),
                         (bp::arg("half_light_radius")=bp::object(), bp::arg("sigma")=bp::object(), 
-                         bp::arg("fwhm")=bp::object(), bp::arg("flux")=1.))
-                )
+                         bp::arg("fwhm")=bp::object(), bp::arg("flux")=1.,
+                         bp::arg("gsparams")=bp::object())
+                ))
                 .def(bp::init<const SBGaussian &>())
                 .def("getSigma", &SBGaussian::getSigma)
                 ;

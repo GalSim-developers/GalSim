@@ -24,6 +24,7 @@
 
 #include "SBProfileImpl.h"
 #include "SBKolmogorov.h"
+#include "LRUCache.h"
 
 namespace galsim {
 
@@ -37,7 +38,7 @@ namespace galsim {
         /** 
          * @brief Constructor
          */
-        KolmogorovInfo();
+        KolmogorovInfo(const GSParams* gsparams);
 
         /// @brief Destructor: deletes photon-shooting classes if necessary
         ~KolmogorovInfo() {}
@@ -93,7 +94,8 @@ namespace galsim {
     class SBKolmogorov::SBKolmogorovImpl : public SBProfileImpl 
     {
     public:
-        SBKolmogorovImpl(double lam_over_r0, double flux);
+        SBKolmogorovImpl(double lam_over_r0, double flux,
+                         boost::shared_ptr<GSParams> gsparams);
 
         ~SBKolmogorovImpl() {}
 
@@ -148,12 +150,13 @@ namespace galsim {
         double _flux; ///< Flux.
         double _xnorm; ///< Calculated value for normalizing xValues returned from Info class.
 
-        /// One static `KolmogorovInfo` object for whole program.
-        static KolmogorovInfo _info;
+        const KolmogorovInfo* _info;
 
         // Copy constructor and op= are undefined.
         SBKolmogorovImpl(const SBKolmogorovImpl& rhs);
         void operator=(const SBKolmogorovImpl& rhs);
+
+        static LRUCache<const GSParams*, KolmogorovInfo> cache;
     };
 
 }

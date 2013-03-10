@@ -31,23 +31,8 @@ namespace galsim {
     {
     public:
 
-        SBConvolveImpl(const SBProfile& s1, const SBProfile& s2, bool real_space) : 
-            _real_space(real_space)
-        { add(s1);  add(s2); initialize(); }
-
-        SBConvolveImpl(const SBProfile& s1, const SBProfile& s2, const SBProfile& s3,
-                       bool real_space) :
-            _real_space(real_space)
-        { add(s1);  add(s2);  add(s3); initialize(); }
-
-        SBConvolveImpl(const std::list<SBProfile>& slist, bool real_space) :
-            _real_space(real_space)
-        {
-            for (ConstIter sptr = slist.begin(); sptr!=slist.end(); ++sptr) 
-                add(*sptr); 
-            initialize(); 
-        }
-
+        SBConvolveImpl(const std::list<SBProfile>& slist, bool real_space,
+                       boost::shared_ptr<GSParams> gsparams);
         ~SBConvolveImpl() {}
 
         void add(const SBProfile& rhs); 

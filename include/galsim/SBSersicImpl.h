@@ -24,6 +24,7 @@
 
 #include "SBProfileImpl.h"
 #include "SBSersic.h"
+#include "LRUCache.h"
 
 namespace galsim {
 
@@ -33,7 +34,7 @@ namespace galsim {
      * Serves as interface to `OneDimensionalDeviate` used for sampling from this 
      * distribution.
      */
-    class SBSersic::SersicRadialFunction: public FluxDensity 
+    class SersicRadialFunction: public FluxDensity 
     {
     public:
         /**
@@ -55,14 +56,14 @@ namespace galsim {
     };
 
     /// @brief A private class that caches the needed parameters for each Sersic index `n`.
-    class SBSersic::SersicInfo 
+    class SersicInfo 
     {
     public:
         /** 
          * @brief Constructor
          * @param[in] n Sersic index
          */
-        SersicInfo(double n); 
+        SersicInfo(double n, const GSParams* gsparams); 
 
         /// @brief Destructor: deletes photon-shooting classes if necessary
         ~SersicInfo() {}
@@ -96,6 +97,7 @@ namespace galsim {
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
     private:
+
         SersicInfo(const SersicInfo& rhs); ///< Hides the copy constructor.
         void operator=(const SersicInfo& rhs); ///<Hide assignment operator.
 
@@ -127,50 +129,11 @@ namespace galsim {
         double findMaxR(double missing_flux_fraction, double gamma2n);
     };
 
-    /** 
-     * @brief A map to hold one copy of the SersicInfo for each `n` ever used during the 
-     * program run.  Make one static copy of this map.  
-     * *Be careful of this when multithreading:*
-     * Should build one `SBSersic` with each `n` value before dispatching multiple threads.
-     */
-    class SBSersic::InfoBarn : public std::map<double, boost::shared_ptr<SersicInfo> > 
-    {
-    public:
-
-        /**
-         * @brief Get the SersicInfo table for a specified `n`.
-         *
-         * @param[in] n Sersic index for which the information table is required.
-         */
-        const SersicInfo* get(double n) 
-        {
-            /** 
-             * @brief The currently hardwired max number of Sersic `n` info tables that can be 
-             * stored.  Should be plenty.
-             */
-            const int MAX_SERSIC_TABLES = 100; 
-
-            MapIter it = _map.find(n);
-            if (it == _map.end()) {
-                boost::shared_ptr<SersicInfo> info(new SersicInfo(n));
-                _map[n] = info;
-                if (int(_map.size()) > MAX_SERSIC_TABLES)
-                    throw SBError("Storing Sersic info for too many n values");
-                return info.get();
-            } else {
-                return it->second.get();
-            }
-        }
-
-    private:
-        typedef std::map<double, boost::shared_ptr<SersicInfo> >::iterator MapIter;
-        std::map<double, boost::shared_ptr<SersicInfo> > _map;
-    };
-
     class SBSersic::SBSersicImpl : public SBProfileImpl
     {
     public:
-        SBSersicImpl(double n, double re, double flux);
+        SBSersicImpl(double n, double re, double flux,
+                     boost::shared_ptr<GSParams> gsparams);
 
         ~SBSersicImpl() {}
 
@@ -237,6 +200,8 @@ namespace galsim {
         // Copy constructor and op= are undefined.
         SBSersicImpl(const SBSersicImpl& rhs);
         void operator=(const SBSersicImpl& rhs);
+
+        static LRUCache<std::pair<double, const GSParams*>, SersicInfo> cache;
     };
 }
 
