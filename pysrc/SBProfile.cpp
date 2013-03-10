@@ -32,7 +32,7 @@ namespace galsim {
         static void wrap() {
 
             static const char* doc = 
-                "GSParams stores a set of numbers that gover how GSObjects make various\n"
+                "GSParams stores a set of numbers that govern how GSObjects make various\n"
                 "speed/accuracy tradeoff decisions.\n"
                 "\n"
                 "The parameters, along with their default values are the following:\n"

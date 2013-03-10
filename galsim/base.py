@@ -63,7 +63,7 @@ class GSObject(object):
     For all documentation about the specific derived classes, please see the docstring for each 
     one individually.  
     
-    The gsparams argument can be used to specify various numbers that gover the tradeoff between 
+    The gsparams argument can be used to specify various numbers that govern the tradeoff between 
     accuracy and speed for the calculations made in drawing a GSObject.  The numbers are 
     encapsulated in a class called GSParams.  The parameters, along with their default values are 
     the following:
