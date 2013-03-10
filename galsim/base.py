@@ -59,9 +59,71 @@ class GSObject(object):
     """Base class for defining the interface with which all GalSim Objects access their shared 
     methods and attributes, particularly those from the C++ SBProfile classes.
 
-    All GSObject classes take an optional `gsparams` argument.  This argument can be used
-    to specify various numbers that gover the tradeoff between accuracy and speed for the 
-    calculations made in drawing j
+    All GSObject classes take an optional `gsparams` argument so we document that feature here.
+    For all documentation about the specific derived classes, please see the docstring for each 
+    one individually.  
+    
+    The gsparams argument can be used to specify various numbers that gover the tradeoff between 
+    accuracy and speed for the calculations made in drawing a GSObject.  The numbers are 
+    encapsulated in a class called GSParams.  The parameters, along with their default values are 
+    the following:
+
+    minimum_fft_size=128      The minimum FFT size we're willing to do.
+    maximum_fft_size=4096     The maximum FFT size we're willing to do.
+    alias_threshold=5.e-3     A threshold parameter used for setting the stepK value for FFTs.
+                              The FFT's stepK is set so that at most a fraction alias_threshold 
+                              of the flux of any profile is aliased.
+    maxk_threshold=1.e-3      A threshold parameter used for setting the maxK value for FFTs.
+                              The FFT's maxK is set so that the k-values that are excluded off the 
+                              edge of the image are less than maxk_threshold.
+    kvalue_accuracy=1.e-5     Accuracy of values in k-space.
+                              If a k-value is less than kvalue_accuracy, then it may be set to 
+                              zero. Similarly, if an alternate calculation has errors less than 
+                              kvalue_accuracy, then it may be used instead of an exact calculation.
+                              Note: This does not necessarily imply that all kvalues are this 
+                              accurate.  There may be cases where other choices we have made lead
+                              to errors greater than this.  But whenever we do an explicit 
+                              calculation about this, this is the value we use.
+                              This would typically be smaller than maxk_threshold.
+    xvalue_accuracy=1.e-5     Accuracy of values in real space.
+                              If a value in real space is less than xvalue_accuracy, then it may be
+                              set to zero. Similarly, if an alternate calculation has errors less 
+                              than xvalue_accuracy, then it may be used instead of an exact 
+                              calculation.
+    shoot_accuracy=1.e-5      Accuracy of total flux for photon shooting
+                              The photon shooting algorithm sometimes needs to sample the radial 
+                              profile out to some value.  We choose the outer radius such that the 
+                              integral encloses at least (1-shoot_accuracy) of the flux.
+    realspace_relerr=1.e-3    The relative accuracy for realspace convolution.
+    realspace_relerr=1.e-6    The absolute accuracy for realspace convolution.
+    integration_relerr=1.e-5  The relative accuracy for integrals (other than real-space 
+                              convolution).
+    integration_abserr=1.e-7  The absolute accuracy for integrals (other than real-space 
+                              convolution).
+
+    Example:
+    
+    Let's say you want to do something that requires an FFT larger than 4096 x 4096 (and you have 
+    enough memory to handle it!).  Then you can create a new GSParams object with a larger 
+    maximum_fft_size and pass that to your GSObject on construction:
+
+        >>> gal = galsim.Sersic(n=4, half_light_radius=4.3)
+        >>> psf = galsim.Moffat(beta=3, fwhm=2.85)
+        >>> pix = galsim.Pixel(0.05)                       # Note the very small pixel scale!
+        >>> conv = galsim.Convolve([gal,psf,pix])
+        >>> im = galsim.ImageD(1000,1000)
+        >>> im.scale = 0.05                                # Use the same pixel scale on the image.
+        >>> conv.draw(im,normalization='sb')               # This uses the default GSParams.
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+          File "/Library/Python/2.6/site-packages/galsim/base.py", line 579, in draw
+            self.SBProfile.draw(image.view(), gain, wmult)
+        RuntimeError: SB Error: fourierDraw() requires an FFT that is too large, 6144
+        >>> big_fft_params = galsim.GSParams(maximum_fft_size = 10240)
+        >>> conv = galsim.Convolve([gal,psf,pix],gsparams=big_fft_params)
+        >>> conv.draw(im,normalization='sb')               # Now it works (but is slow!)
+        <galsim._galsim.ImageD object at 0x1037823c0>
+        >>> im.write('high_res_sersic.fits')
     """
     def __init__(self, rhs):
         # This guarantees that all GSObjects have an SBProfile
@@ -923,6 +985,9 @@ class Gaussian(GSObject):
     Attempting to initialize with more than one size parameter is ambiguous, and will raise a
     TypeError exception.
 
+    You may also specify a gsparams argument.  See the docstring for GSObject for more 
+    information about this option.
+
     Methods
     -------
     The Gaussian is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
@@ -994,6 +1059,9 @@ class Moffat(GSObject):
 
     Attempting to initialize with more than one size parameter is ambiguous, and will raise a
     TypeError exception.
+
+    You may also specify a gsparams argument.  See the docstring for GSObject for more 
+    information about this option.
 
     Methods
     -------
@@ -1067,7 +1135,9 @@ class AtmosphericPSF(GSObject):
                            [default `oversampling = 1.5`], setting `oversampling < 1` will produce 
                            aliasing in the PSF (not good).
     @param flux            Total flux of the profile [default `flux=1.`]
-    
+    @param gsobject        You may also specify a gsparams argument.  See the docstring for 
+                           GSObject for more information about this option.
+
     Methods
     -------
     The AtmosphericPSF is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
@@ -1154,6 +1224,9 @@ class Airy(GSObject):
 
     Attempting to initialize with more than one size parameter is ambiguous, and will raise a
     TypeError exception.
+
+    You may also specify a gsparams argument.  See the docstring for GSObject for more 
+    information about this option.
 
     Methods
     -------
@@ -1243,6 +1316,8 @@ class Kolmogorov(GSObject):
                               One of `lam_over_r0`, `fwhm` and `half_light_radius` (and only one) 
                               must be specified.
     @param flux               Optional flux value [default `flux = 1.`].
+    @param gsobject           You may also specify a gsparams argument.  See the docstring for 
+                              GSObject for more information about this option.
     
     Methods
     -------
@@ -1348,6 +1423,8 @@ class OpticalPSF(GSObject):
                            [default `pad_factor = 1.5`].  Note that `pad_factor` may need to be 
                            increased for stronger aberrations, i.e. those larger than order unity.
     @param flux            Total flux of the profile [default `flux=1.`].
+    @param gsobject        You may also specify a gsparams argument.  See the docstring for 
+                           GSObject for more information about this option.
      
     Methods
     -------
@@ -1578,6 +1655,8 @@ class InterpolatedImage(GSObject):
     @param use_cache       Specify whether to cache noise_pad read in from a file to save having
                            to build an ImageCorrFunc repeatedly from the same image.
                            (Default `use_cache = True`)
+    @param gsobject        You may also specify a gsparams argument.  See the docstring for 
+                           GSObject for more information about this option.
 
     Methods
     -------
@@ -1801,6 +1880,9 @@ class Pixel(GSObject):
     A Pixel is initialized with an x dimension width `xw`, an optional y dimension width (if
     unspecifed `yw=xw` is assumed) and an optional flux parameter [default `flux = 1.`].
 
+    You may also specify a gsparams argument.  See the docstring for GSObject for more 
+    information about this option.
+
     Methods
     -------
     The Pixel is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(), 
@@ -1856,6 +1938,9 @@ class Sersic(GSObject):
         2.5
         >>> sersic_obj.getN()
         3.5
+
+    You may also specify a gsparams argument.  See the docstring for GSObject for more 
+    information about this option.
 
     Methods
     -------
@@ -1914,6 +1999,9 @@ class Exponential(GSObject):
     Attempting to initialize with more than one size parameter is ambiguous, and will raise a
     TypeError exception.
 
+    You may also specify a gsparams argument.  See the docstring for GSObject for more 
+    information about this option.
+
     Methods
     -------
     The Exponential is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
@@ -1966,6 +2054,9 @@ class DeVaucouleurs(GSObject):
         2.5
         >>> dvc_obj.getFlux()
         40.0
+
+    You may also specify a gsparams argument.  See the docstring for GSObject for more 
+    information about this option.
 
     Methods
     -------
@@ -2083,6 +2174,8 @@ class RealGalaxy(GSObject):
     @param use_cache            Specify whether to cache noise_pad read in from a file to save
                                 having to build an ImageCorrFunc repeatedly from the same image.
                                 (Default `use_cache = True`)
+    @param gsobject             You may also specify a gsparams argument.  See the docstring for 
+                                GSObject for more information about this option.
 
     Methods
     -------
@@ -2312,6 +2405,9 @@ class Add(GSObject):
     to represent a multiple-component galaxy as the sum of an Exponential and a DeVaucouleurs, or to
     represent a PSF as the sum of multiple Gaussians.
 
+    You may also specify a gsparams argument.  See the docstring for GSObject for more 
+    information about this option.
+
     Methods
     -------
     The Add is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
@@ -2377,6 +2473,9 @@ class Convolve(GSObject):
     If you do not specify either `real_space = True` or `False` explicitly, then we check if there 
     are 2 profiles, both of which have hard edges.  In this case, we automatically use real-space 
     convolution.  In all other cases, the default is not to use real-space convolution.
+
+    You may also specify a gsparams argument.  See the docstring for GSObject for more 
+    information about this option.
     """
                     
     # --- Public Class methods ---
@@ -2492,6 +2591,9 @@ class Deconvolve(GSObject):
     The Deconvolve class represents a deconvolution kernel.  Note that the Deconvolve class, or
     compound objects (Add, Convolve) that include a Deconvolve as one of the components, cannot be
     photon-shot using the drawShoot method.
+
+    You may also specify a gsparams argument.  See the docstring for GSObject for more 
+    information about this option.
     """
     # --- Public Class methods ---
     def __init__(self, farg, gsparams=None):
