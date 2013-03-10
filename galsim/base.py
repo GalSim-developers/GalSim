@@ -2406,7 +2406,8 @@ class Add(GSObject):
     represent a PSF as the sum of multiple Gaussians.
 
     You may also specify a gsparams argument.  See the docstring for GSObject for more 
-    information about this option.
+    information about this option.  Note: if gsparams is unspecified (or None), then the
+    Add instance inherits the same GSParams as the first item in the list.
 
     Methods
     -------
@@ -2475,7 +2476,8 @@ class Convolve(GSObject):
     convolution.  In all other cases, the default is not to use real-space convolution.
 
     You may also specify a gsparams argument.  See the docstring for GSObject for more 
-    information about this option.
+    information about this option.  Note: if gsparams is unspecified (or None), then the
+    Convolve instance inherits the same GSParams as the first item in the list.
     """
                     
     # --- Public Class methods ---
@@ -2593,7 +2595,8 @@ class Deconvolve(GSObject):
     photon-shot using the drawShoot method.
 
     You may also specify a gsparams argument.  See the docstring for GSObject for more 
-    information about this option.
+    information about this option.  Note: if gsparams is unspecified (or None), then the
+    Deconvolve instance inherits the same GSParams as the object being deconvolved.
     """
     # --- Public Class methods ---
     def __init__(self, farg, gsparams=None):
