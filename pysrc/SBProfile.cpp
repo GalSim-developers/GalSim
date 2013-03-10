@@ -38,7 +38,7 @@ namespace galsim {
                 "The parameters, along with their default values are the following:\n"
                 "\n"
                 "minimum_fft_size=128      Constant giving minimum FFT size we're willing to do.\n"
-                "maximum_fft_size=2048     Constant giving maximum FFT size we're willing to do.\n"
+                "maximum_fft_size=4096     Constant giving maximum FFT size we're willing to do.\n"
                 "alias_threshold=5.e-3     A threshold parameter used for setting the stepK value\n"
                 "                          for FFTs.  The FFT's stepK is set so that at most a\n"
                 "                          fraction alias_threshold of the flux of any profile is\n"
