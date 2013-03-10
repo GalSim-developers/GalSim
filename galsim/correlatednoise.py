@@ -698,7 +698,6 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
             original_cf_image.setScale(image.getScale())
         else: # sometimes Images are instantiated with scale=0, in which case we will assume unit
               # pixel scale
-            original_image.setScale(1.)
             original_cf_image.setScale(1.)
 
         # If interpolant not specified on input, use bilinear
