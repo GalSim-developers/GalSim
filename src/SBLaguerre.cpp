@@ -33,18 +33,23 @@ int verbose_level = 2;
 namespace galsim {
 
 
-    SBLaguerre::SBLaguerre(LVector bvec, double sigma) : 
-        SBProfile(new SBLaguerreImpl(bvec,sigma)) {}
+    SBLaguerre::SBLaguerre(LVector bvec, double sigma,
+                           boost::shared_ptr<GSParams> gsparams) :
+        SBProfile(new SBLaguerreImpl(bvec,sigma,gsparams)) {}
 
     SBLaguerre::SBLaguerre(const SBLaguerre& rhs) : SBProfile(rhs) {}
 
     SBLaguerre::~SBLaguerre() {}
 
+    SBLaguerre::SBLaguerreImpl::SBLaguerreImpl(const LVector& bvec, double sigma,
+                                               boost::shared_ptr<GSParams> gsparams) :
+        SBProfileImpl(gsparams), _bvec(bvec.duplicate()), _sigma(sigma) {}
+
     // ??? Have not really investigated these:
     double SBLaguerre::SBLaguerreImpl::maxK() const 
     {
         // Start with value for plain old Gaussian:
-        double maxk = sqrt(-2.*std::log(sbp::maxk_threshold))/_sigma; 
+        double maxk = sqrt(-2.*std::log(this->gsparams->maxk_threshold))/_sigma; 
         // Grow as sqrt of order
         if (_bvec.getOrder() > 1) maxk *= sqrt(double(_bvec.getOrder()));
         return maxk;
@@ -53,7 +58,7 @@ namespace galsim {
     double SBLaguerre::SBLaguerreImpl::stepK() const 
     {
         // Start with value for plain old Gaussian:
-        double R = std::max(4., sqrt(-2.*std::log(sbp::alias_threshold)));
+        double R = std::max(4., sqrt(-2.*std::log(this->gsparams->alias_threshold)));
         // Grow as sqrt of order
         if (_bvec.getOrder() > 1) R *= sqrt(double(_bvec.getOrder()));
         return M_PI / (R*_sigma);

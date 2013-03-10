@@ -47,84 +47,109 @@
 
 namespace galsim {
 
-    namespace sbp {
-
-        // Magic numbers:
-
-        /// @brief Constant giving minimum FFT size we're willing to do.
-        const int minimum_fft_size = 128;
-
-        /// @brief Constant giving maximum FFT size we're willing to do.
-        const int maximum_fft_size = 4096;
+    struct GSParams {
 
         /**
-         * @brief A threshold parameter used for setting the stepK value for FFTs.
+         * @brief A set of numbers that govern how SBProfiles make various speed/accuracy
+         *        tradeoff decisions.
          *
-         * The FFT's stepK is set so that at most a fraction alias_threshold
-         * of the flux of any profile is aliased.
+         * @param minimum_fft_size    Constant giving minimum FFT size we're willing to do.
+         * @param maximum_fft_size    Constant giving maximum FFT size we're willing to do.
+         * @param alias_threshold     A threshold parameter used for setting the stepK value for 
+         *                            FFTs.  The FFT's stepK is set so that at most a fraction 
+         *                            alias_threshold of the flux of any profile is aliased.
+         * @param maxk_threshold      A threshold parameter used for setting the maxK value for 
+         *                            FFTs.  The FFT's maxK is set so that the k-values that are 
+         *                            excluded off the edge of the image are less than 
+         *                            maxk_threshold.
+         * @param kvalue_accuracy     Accuracy of values in k-space.
+         *                            If a k-value is less than kvalue_accuracy, then it may be set 
+         *                            to zero.  Similarly, if an alternate calculation has errors 
+         *                            less than kvalue_accuracy, then it may be used instead of an 
+         *                            exact calculation. 
+         *                            Note: This does not necessarily imply that all kvalues are 
+         *                            this accurate.  There may be cases where other choices we 
+         *                            have made lead to errors greater than this.  But whenever we 
+         *                            do an explicit calculation about this, this is the value we 
+         *                            use.  
+         *                            This would typically be more stringent than maxk_threshold.
+         * @param xvalue_accuracy     Accuracy of values in real space.
+         *                            If a value in real space is less than xvalue_accuracy, then 
+         *                            it may be set to zero.  Similarly, if an alternate 
+         *                            calculation has errors less than xvalue_accuracy, then it may 
+         *                            be used instead of an exact calculation.
+         * @param shoot_accuracy      Accuracy of total flux for photon shooting
+         *                            The photon shooting algorithm sometimes needs to sample the 
+         *                            radial profile out to some value.  We choose the outer radius
+         *                            such that the integral encloses at least (1-shoot_accuracy) 
+         *                            of the flux.
+         * @param realspace_relerr    The target relative accuracy for realspace convolution.
+         * @param realspace_abserr    The target absolute accuracy for realspace convolution.
+         * @param integration_relerr  Target relative accuracy for integrals (other than real-space
+         *                            convolution).
+         * @param integration_abserr  Target absolute accuracy for integrals (other than real-space
+         *                            convolution).
+         *
          */
-        const double alias_threshold = 5.e-3;
+        GSParams(int _minimum_fft_size,
+                 int _maximum_fft_size,
+                 double _alias_threshold,
+                 double _maxk_threshold,
+                 double _xvalue_accuracy,
+                 double _kvalue_accuracy,
+                 double _shoot_accuracy,
+                 double _realspace_relerr,
+                 double _realspace_abserr,
+                 double _integration_relerr,
+                 double _integration_abserr) : 
+            minimum_fft_size(_minimum_fft_size),
+            maximum_fft_size(_maximum_fft_size),
+            alias_threshold(_alias_threshold),
+            maxk_threshold(_maxk_threshold),
+            kvalue_accuracy(_kvalue_accuracy),
+            xvalue_accuracy(_xvalue_accuracy),
+            shoot_accuracy(_shoot_accuracy),
+            realspace_relerr(_realspace_relerr),
+            realspace_abserr(_realspace_abserr),
+            integration_relerr(_integration_relerr),
+            integration_abserr(_integration_abserr) 
+        {}
 
         /**
-         * @brief A threshold parameter used for setting the maxK value for FFTs.
-         *
-         * The FFT's maxK is set so that the k-values that are excluded off the edge of 
-         * the image are less than maxk_threshold.
+         * A reasonable set of default values
          */
-        const double maxk_threshold = 1.e-3;
+        GSParams() :
+            minimum_fft_size(128),
+            maximum_fft_size(4096),
+            alias_threshold(5.e-3),
+            maxk_threshold(1.e-3),
 
-        //@{
-        /** 
-         * @brief The target accuracy for realspace convolution.
-         */
-        const double realspace_conv_relerr = 1.e-3;
-        const double realspace_conv_abserr = 1.e-6;
-        //@}
+            kvalue_accuracy(1.e-5),
+            xvalue_accuracy(1.e-5),
+            shoot_accuracy(1.e-5),
 
-        /**
-         * @brief Accuracy of values in k-space.
-         *
-         * If a k-value is less than kvalue_accuracy, then it may be set to zero.
-         * Similarly, if an alternate calculation has errors less than kvalue_accuracy,
-         * then it may be used instead of an exact calculation.
-         * Note: This does not necessarily imply that all kvalues are this accurate.
-         * There may be cases where other choices we have made lead to errors greater 
-         * than this.  But whenever we do an explicit calculation about this, this is
-         * the value we use.
-         *
-         * Note that this would typically be more stringent than maxk_threshold.
-         */
-        const double kvalue_accuracy = 1.e-5;
+            realspace_relerr(1.e-3),
+            realspace_abserr(1.e-6),
+            integration_relerr(1.e-5),
+            integration_abserr(1.e-7)
+            {}
 
-        /**
-         * @brief Accuracy of values in real space.
-         *
-         * If a value in real space is less than xvalue_accuracy, then it may be set to zero.
-         * Similarly, if an alternate calculation has errors less than xvalue_accuracy,
-         * then it may be used instead of an exact calculation.
-         */
-        const double xvalue_accuracy = 1.e-5;
+        // These are all public.  So you access them just as member values.
+        const int minimum_fft_size;
+        const int maximum_fft_size;
 
-        /**
-         * @brief Accuracy of total flux for photon shooting
-         *
-         * The photon shooting algorithm sometimes needs to sample the radial profile
-         * out to some value.  We choose the outer radius such that the integral encloses
-         * at least (1-shoot_flux_accuracy) of the flux.
-         */
-        const double shoot_flux_accuracy = 1.e-5;
+        const double alias_threshold;
+        const double maxk_threshold;
 
-        //@{
-        /**
-         * @brief Target accuracy for other integrations in SBProfile
-         *
-         * For Sersic and Moffat, we numerically integrate the Hankel transform.
-         * These are used for the precision in those integrals.
-         */
-        const double integration_relerr = kvalue_accuracy;
-        const double integration_abserr = kvalue_accuracy * 1.e-2;
-        //@}
-    }
+        const double kvalue_accuracy;
+        const double xvalue_accuracy;
+        const double shoot_accuracy;
+
+        const double realspace_relerr;
+        const double realspace_abserr;
+        const double integration_relerr;
+        const double integration_abserr;
+    };
 
     // All code between the @cond and @endcond is excluded from Doxygen documentation
     //! @cond

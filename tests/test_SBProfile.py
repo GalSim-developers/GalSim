@@ -1667,7 +1667,7 @@ def test_add():
     t1 = time.time()
     mySBP = galsim.SBGaussian(flux=0.75, sigma=1)
     mySBP2 = galsim.SBGaussian(flux=0.25, sigma=3)
-    myAdd = galsim.SBAdd(mySBP, mySBP2)
+    myAdd = galsim.SBAdd([mySBP, mySBP2])
     savedImg = galsim.fits.read(os.path.join(imgdir, "double_gaussian.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
     myImg.setScale(0.2)

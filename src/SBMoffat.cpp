@@ -44,8 +44,9 @@ int verbose_level = 2;
 
 namespace galsim {
 
-    SBMoffat::SBMoffat(double beta, double size, RadiusType rType, double trunc, double flux) :
-        SBProfile(new SBMoffatImpl(beta, size, rType, trunc, flux)) {}
+    SBMoffat::SBMoffat(double beta, double size, RadiusType rType, double trunc, double flux,
+                       boost::shared_ptr<GSParams> gsparams) :
+        SBProfile(new SBMoffatImpl(beta, size, rType, trunc, flux, gsparams)) {}
 
     SBMoffat::SBMoffat(const SBMoffat& rhs) : SBProfile(rhs) {}
 
@@ -152,7 +153,9 @@ namespace galsim {
     }
 
     SBMoffat::SBMoffatImpl::SBMoffatImpl(double beta, double size, RadiusType rType,
-                                         double trunc, double flux) : 
+                                         double trunc, double flux,
+                                         boost::shared_ptr<GSParams> gsparams) :
+        SBProfileImpl(gsparams),
         _beta(beta), _flux(flux), _trunc(trunc), _ft(Table<double,double>::spline),
         _re(0.) // initially set to zero, may be updated by size or getHalfLightRadius()
     {
@@ -202,7 +205,7 @@ namespace galsim {
             // is probably appropriate here.)
             // (1+R^2)^-beta = kvalue_accuracy
             // And ignore the 1+ part of (1+R^2), so
-            maxRrD = std::pow(sbp::kvalue_accuracy,-1./(2.*_beta));
+            maxRrD = std::pow(this->gsparams->kvalue_accuracy,-1./(2.*_beta));
             xdbg<<"Not truncate.  Calculated maxRrD = "<<maxRrD<<"\n";
         }
 
@@ -272,7 +275,7 @@ namespace galsim {
             return M_PI / _maxR;
         } else {
             // Ignore the 1 in (1+R^2), so approximately:
-            double R = std::pow(sbp::alias_threshold, 0.5/(1.-_beta)) * _rD;
+            double R = std::pow(this->gsparams->alias_threshold, 0.5/(1.-_beta)) * _rD;
             dbg<<"R = "<<R<<std::endl;
             // If it is truncated at less than this, drop to that value.
             if (R > _maxR) R = _maxR;
@@ -309,11 +312,11 @@ namespace galsim {
         double maxR = _maxR / _rD;
 
         // Along the way, find the last k that has a kValue > 1.e-3
-        double maxK_val = sbp::maxk_threshold * _flux;
+        double maxK_val = this->gsparams->maxk_threshold * _flux;
         dbg<<"Looking for maxK_val = "<<maxK_val<<std::endl;
         // Keep going until at least 5 in a row have kvalues below kvalue_accuracy.
         // (It's oscillatory, so want to make sure not to stop at a zero crossing.)
-        double thresh = sbp::kvalue_accuracy * _flux;
+        double thresh = this->gsparams->kvalue_accuracy * _flux;
 
         // These are dimensionless k values for doing the integral.
         double dk = 0.1;
@@ -322,8 +325,9 @@ namespace galsim {
         // Don't go past k = 50
         for(double k=0.; k < 50; k += dk) {
             MoffatIntegrand I(_beta, k, pow_beta);
-            double val = integ::int1d(
-                I, 0., maxR, sbp::integration_relerr, sbp::integration_abserr);
+            double val = integ::int1d(I, 0., maxR,
+                                      this->gsparams->integration_relerr, 
+                                      this->gsparams->integration_abserr);
             val *= nn;
 
             double kreal = k / _rD;

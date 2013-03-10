@@ -57,7 +57,8 @@ namespace galsim {
          *                           trunc = 0. for no truncation (default `trunc = 0.`). 
          * @param[in] flux           Flux (default `flux = 1.`).
          */
-        SBMoffat(double beta, double size, RadiusType rType, double trunc=0., double flux=1.);
+        SBMoffat(double beta, double size, RadiusType rType, double trunc=0., double flux=1.,
+                 boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
 
 
         /// @brief Copy constructor.

@@ -30,9 +30,7 @@ namespace galsim {
     class SBLaguerre::SBLaguerreImpl : public SBProfile::SBProfileImpl 
     {
     public:
-        SBLaguerreImpl(const LVector& bvec, double sigma) : 
-            _bvec(bvec.duplicate()), _sigma(sigma) {}
-
+        SBLaguerreImpl(const LVector& bvec, double sigma, boost::shared_ptr<GSParams> gsparams);
         ~SBLaguerreImpl() {}
 
         double xValue(const Position<double>& p) const;

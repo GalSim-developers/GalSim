@@ -32,9 +32,11 @@ namespace galsim {
     public:
 
         SBTransformImpl(const SBProfile& sbin, double mA, double mB, double mC, double mD,
-                        const Position<double>& cen, double fluxScaling);
+                        const Position<double>& cen, double fluxScaling,
+                        boost::shared_ptr<GSParams> gsparams);
 
-        SBTransformImpl(const SBProfile& sbin, const CppEllipse& e, double fluxScaling);
+        SBTransformImpl(const SBProfile& sbin, const CppEllipse& e, double fluxScaling,
+                        boost::shared_ptr<GSParams> gsparams);
 
         ~SBTransformImpl() {}
 

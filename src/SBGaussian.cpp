@@ -43,8 +43,9 @@
 namespace galsim {
 
 
-    SBGaussian::SBGaussian(double sigma, double flux) : 
-        SBProfile(new SBGaussianImpl(sigma, flux)) {}
+    SBGaussian::SBGaussian(double sigma, double flux,
+                           boost::shared_ptr<GSParams> gsparams) : 
+        SBProfile(new SBGaussianImpl(sigma, flux, gsparams)) {}
 
     SBGaussian::SBGaussian(const SBGaussian& rhs) : SBProfile(rhs) {}
 
@@ -56,18 +57,20 @@ namespace galsim {
         return static_cast<const SBGaussianImpl&>(*_pimpl).getSigma(); 
     }
 
-    SBGaussian::SBGaussianImpl::SBGaussianImpl(double sigma, double flux) :
+    SBGaussian::SBGaussianImpl::SBGaussianImpl(double sigma, double flux,
+                                               boost::shared_ptr<GSParams> gsparams) :
+        SBProfileImpl(gsparams),
         _flux(flux), _sigma(sigma), _sigma_sq(sigma*sigma)
     {
         // For large k, we clip the result of kValue to 0.
         // We do this when the correct answer is less than kvalue_accuracy.
         // exp(-k^2*sigma^2/2) = kvalue_accuracy
-        _ksq_max = -2. * std::log(sbp::kvalue_accuracy) / _sigma_sq;
+        _ksq_max = -2. * std::log(this->gsparams->kvalue_accuracy) / _sigma_sq;
 
         // For small k, we can use up to quartic in the taylor expansion to avoid the exp.
         // This is acceptable when the next term is less than kvalue_accuracy.
         // 1/48 (k^2 r0^2)^3 = kvalue_accuracy
-        _ksq_min = std::pow(sbp::kvalue_accuracy * 48., 1./3.) / _sigma_sq;
+        _ksq_min = std::pow(this->gsparams->kvalue_accuracy * 48., 1./3.) / _sigma_sq;
 
         _norm = _flux / (_sigma_sq * 2. * M_PI);
 
@@ -84,7 +87,7 @@ namespace galsim {
 
     // Set maxK to the value where the FT is down to maxk_threshold
     double SBGaussian::SBGaussianImpl::maxK() const 
-    { return sqrt(-2.*std::log(sbp::maxk_threshold))/_sigma; }
+    { return sqrt(-2.*std::log(this->gsparams->maxk_threshold))/_sigma; }
 
     // The amount of flux missed in a circle of radius pi/stepk should miss at 
     // most alias_threshold of the flux.
@@ -92,7 +95,7 @@ namespace galsim {
     {
         // int( exp(-r^2/2) r, r=0..R) = 1 - exp(-R^2/2)
         // exp(-R^2/2) = alias_threshold
-        double R = sqrt(-2.*std::log(sbp::alias_threshold));
+        double R = sqrt(-2.*std::log(this->gsparams->alias_threshold));
         // Make sure it is at least 4 sigma;
         R = std::max(4., R);
         return M_PI / (R*_sigma);

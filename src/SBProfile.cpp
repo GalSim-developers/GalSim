@@ -161,8 +161,12 @@ namespace galsim {
         return _pimpl->getNegativeFlux(); 
     }
 
-    SBProfile::SBProfile(SBProfileImpl* pimpl) : _pimpl(pimpl) 
-    {}
+    SBProfile::SBProfile(SBProfileImpl* pimpl) : _pimpl(pimpl) {}
+
+    boost::shared_ptr<GSParams> SBProfile::SBProfileImpl::default_gsparams(new GSParams());
+
+    SBProfile::SBProfileImpl::SBProfileImpl(boost::shared_ptr<GSParams> gsparams) :
+        gsparams(gsparams.get() ? gsparams : default_gsparams) {}
 
     SBProfile::SBProfileImpl* SBProfile::GetImpl(const SBProfile& rhs) 
     { return rhs._pimpl.get(); }
@@ -318,9 +322,9 @@ namespace galsim {
 
         // Round up to a good size for making FFTs:
         int NFT = goodFFTSize(Nnofold);
-        NFT = std::max(NFT,sbp::minimum_fft_size);
+        NFT = std::max(NFT,_pimpl->gsparams->minimum_fft_size);
         dbg << " After adjustments: Nnofold " << Nnofold << " NFT " << NFT << std::endl;
-        if (NFT > sbp::maximum_fft_size)
+        if (NFT > _pimpl->gsparams->maximum_fft_size)
             FormatAndThrow<SBError>() << 
                 "fourierDraw() requires an FFT that is too large, " << NFT;
 
@@ -447,9 +451,9 @@ namespace galsim {
         // Round up to a power of 2 to get required FFT size
         // Round up to a good size for making FFTs:
         int NFT = goodFFTSize(Nnofold);
-        NFT = std::max(NFT,sbp::minimum_fft_size);
+        NFT = std::max(NFT,_pimpl->gsparams->minimum_fft_size);
         dbg << " After adjustments: Nnofold " << Nnofold << " NFT " << NFT << std::endl;
-        if (NFT > sbp::maximum_fft_size)
+        if (NFT > _pimpl->gsparams->maximum_fft_size)
             FormatAndThrow<SBError>() << 
                 "fourierDrawK() requires an FFT that is too large, " << NFT;
 

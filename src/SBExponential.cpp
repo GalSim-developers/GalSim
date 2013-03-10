@@ -51,8 +51,9 @@ int verbose_level = 2;
 
 namespace galsim {
 
-    SBExponential::SBExponential(double r0, double flux) :
-        SBProfile(new SBExponentialImpl(r0, flux)) {}
+    SBExponential::SBExponential(double r0, double flux,
+                                 boost::shared_ptr<GSParams> gsparams) :
+        SBProfile(new SBExponentialImpl(r0, flux, gsparams)) {}
 
     SBExponential::SBExponential(const SBExponential& rhs) : SBProfile(rhs) {}
 
@@ -64,18 +65,26 @@ namespace galsim {
         return static_cast<const SBExponentialImpl&>(*_pimpl).getScaleRadius(); 
     }
 
-    SBExponential::SBExponentialImpl::SBExponentialImpl(double r0, double flux) :
-        _flux(flux), _r0(r0), _r0_sq(r0*r0)
+    const int MAX_EXPONENTIAL_INFO = 100;
+
+    LRUCache<const GSParams*, ExponentialInfo>
+        SBExponential::SBExponentialImpl::cache(MAX_EXPONENTIAL_INFO);
+
+    SBExponential::SBExponentialImpl::SBExponentialImpl(
+        double r0, double flux, boost::shared_ptr<GSParams> gsparams) :
+        SBProfileImpl(gsparams),
+        _flux(flux), _r0(r0), _r0_sq(r0*r0),
+        _info(cache.get(this->gsparams.get()))
     {
         // For large k, we clip the result of kValue to 0.
         // We do this when the correct answer is less than kvalue_accuracy.
         // (1+k^2 r0^2)^-1.5 = kvalue_accuracy
-        _ksq_max = (std::pow(sbp::kvalue_accuracy,-1./1.5)-1.) / _r0_sq;
+        _ksq_max = (std::pow(this->gsparams->kvalue_accuracy,-1./1.5)-1.) / _r0_sq;
 
         // For small k, we can use up to quartic in the taylor expansion to avoid the sqrt.
         // This is acceptable when the next term is less than kvalue_accuracy.
         // 35/16 (k^2 r0^2)^3 = kvalue_accuracy
-        _ksq_min = std::pow(sbp::kvalue_accuracy * 16./35., 1./3.) / _r0_sq;
+        _ksq_min = std::pow(this->gsparams->kvalue_accuracy * 16./35., 1./3.) / _r0_sq;
 
         _flux_over_2pi = _flux / (2. * M_PI);
         _norm = _flux_over_2pi / _r0_sq;
@@ -92,9 +101,9 @@ namespace galsim {
     }
 
     double SBExponential::SBExponentialImpl::maxK() const 
-    { return SBExponential::_info.maxK() / _r0; }
+    { return _info->maxK() / _r0; }
     double SBExponential::SBExponentialImpl::stepK() const 
-    { return SBExponential::_info.stepK() / _r0; }
+    { return _info->stepK() / _r0; }
 
     double SBExponential::SBExponentialImpl::xValue(const Position<double>& p) const
     {
@@ -119,18 +128,22 @@ namespace galsim {
     }
 
     // Constructor to initialize Exponential functions for 1D deviate photon shooting
-    SBExponential::ExponentialInfo::ExponentialInfo()
+    ExponentialInfo::ExponentialInfo(const GSParams* gsparams)
     {
+        dbg<<"Start ExponentialInfo with gsparams = "<<gsparams<<std::endl;
 #ifndef USE_NEWTON_RAPHSON
         // Next, set up the classes for photon shooting
         _radial.reset(new ExponentialRadialFunction());
+        dbg<<"Made radial"<<std::endl;
         std::vector<double> range(2,0.);
-        range[1] = -std::log(sbp::shoot_flux_accuracy);
+        range[1] = -std::log(gsparams->shoot_accuracy);
         _sampler.reset(new OneDimensionalDeviate( *_radial, range, true));
+        dbg<<"Made sampler"<<std::endl;
 #endif
 
         // Calculate maxk:
-        _maxk = std::pow(sbp::maxk_threshold, -1./3.);
+        _maxk = std::pow(gsparams->maxk_threshold, -1./3.);
+        dbg<<"maxk = "<<_maxk<<std::endl;
 
         // Calculate stepk:
         // int( exp(-r) r, r=0..R) = (1 - exp(-R) - Rexp(-R))
@@ -138,25 +151,25 @@ namespace galsim {
         // A fast solution to (1+R)exp(-R) = x:
         // log(1+R) - R = log(x)
         // R = log(1+R) - log(x)
-        double logx = std::log(sbp::alias_threshold);
+        double logx = std::log(gsparams->alias_threshold);
         double R = -logx;
         for (int i=0; i<3; i++) R = std::log(1.+R) - logx;
         // Make sure it is at least 6 scale radii.
         R = std::max(6., R);
         _stepk = M_PI / R;
+        dbg<<"stepk = "<<_stepk<<std::endl;
     }
 
     // Set maxK to the value where the FT is down to maxk_threshold
-    double SBExponential::ExponentialInfo::maxK() const 
+    double ExponentialInfo::maxK() const 
     { return _maxk; }
 
     // The amount of flux missed in a circle of radius pi/stepk should miss at 
     // most alias_threshold of the flux.
-    double SBExponential::ExponentialInfo::stepK() const
+    double ExponentialInfo::stepK() const
     { return _stepk; }
 
-    boost::shared_ptr<PhotonArray> SBExponential::ExponentialInfo::shoot(
-        int N, UniformDeviate ud) const
+    boost::shared_ptr<PhotonArray> ExponentialInfo::shoot(int N, UniformDeviate ud) const
     {
         dbg<<"ExponentialInfo shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.0\n";
@@ -165,8 +178,6 @@ namespace galsim {
         dbg<<"ExponentialInfo Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }
-
-    SBExponential::ExponentialInfo SBExponential::_info;
 
     boost::shared_ptr<PhotonArray> SBExponential::SBExponentialImpl::shoot(
         int N, UniformDeviate u) const
@@ -180,7 +191,7 @@ namespace galsim {
         // the most efficient thing since there are logs in the iteration.
 
         // Accuracy to which to solve for (log of) cumulative flux distribution:
-        const double Y_TOLERANCE=sbp::shoot_flux_accuracy;
+        const double Y_TOLERANCE=this->gsparams->shoot_accuracy;
 
         double fluxPerPhoton = _flux / N;
         boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
@@ -226,7 +237,7 @@ namespace galsim {
         }
 #else
         // Get photons from the ExponentialInfo structure, rescale flux and size for this instance
-        boost::shared_ptr<PhotonArray> result = SBExponential::_info.shoot(N,u);
+        boost::shared_ptr<PhotonArray> result = _info->shoot(N,u);
         result->scaleFlux(_flux_over_2pi);
         result->scaleXY(_r0);
 #endif

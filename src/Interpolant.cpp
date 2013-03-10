@@ -140,6 +140,11 @@ namespace galsim {
     Lanczos::Lanczos(int n, bool fluxConserve, double tol) :  
         _n(n), _fluxConserve(fluxConserve), _tolerance(tol)
     {
+        // TODO: These can't be retrieved from any GSParams object.
+        //       Should they be tol?  0.01*tol?
+        const double xvalue_accuracy = 1.e-5;
+        const double kvalue_accuracy = 1.e-5;
+
         // Reduce range slightly from n so we're not including points with zero weight in
         // interpolations:
         _range = _n*(1-0.1*std::sqrt(_tolerance));
@@ -168,13 +173,13 @@ namespace galsim {
 
             // Build xtab = table of x values
             // Spline is accurate to O(dx^3), so errors should be ~dx^4.
-            const double xStep1 = std::pow(sbp::xvalue_accuracy,0.25);
+            const double xStep1 = std::pow(xvalue_accuracy,0.25);
             // Make sure steps hit the integer values exactly.
             const double xStep = 1. / std::ceil(1./xStep1);
             for(double x=0.; x<_n; x+=xStep) _xtab->addEntry(x, xCalc(x));
 
             // Build utab = table of u values
-            const double uStep = std::pow(sbp::kvalue_accuracy,0.25) / _n;
+            const double uStep = std::pow(kvalue_accuracy,0.25) / _n;
             _uMax = 0.;
             if (_fluxConserve) {
                 for (double u=0.; u - _uMax < 1./_n || u<1.1; u+=uStep) {

@@ -43,15 +43,11 @@ namespace galsim {
 
     struct PySBMoffat 
     {
-
-        static SBMoffat * construct(
-            double beta, 
-            const bp::object & fwhm,
-            const bp::object & scale_radius,
-            const bp::object & half_light_radius,
-            double trunc, 
-            double flux
-        ) {
+        static SBMoffat* construct(
+            double beta, const bp::object & fwhm, const bp::object & scale_radius,
+            const bp::object & half_light_radius, double trunc, double flux,
+            boost::shared_ptr<GSParams> gsparams) 
+        {
             double s = 1.0;
             checkRadii(half_light_radius, scale_radius, fwhm);
             SBMoffat::RadiusType rType = SBMoffat::FWHM;
@@ -66,10 +62,11 @@ namespace galsim {
                 s = bp::extract<double>(half_light_radius);
                 rType = SBMoffat::HALF_LIGHT_RADIUS;
             }
-            return new SBMoffat(beta, s, rType, trunc, flux);
+            return new SBMoffat(beta, s, rType, trunc, flux, gsparams);
         }
 
-        static void wrap() {
+        static void wrap() 
+        {
             bp::class_<SBMoffat,bp::bases<SBProfile> >("SBMoffat", bp::no_init)
                 .def("__init__", 
                      bp::make_constructor(
@@ -77,7 +74,8 @@ namespace galsim {
                          (bp::arg("beta"), bp::arg("fwhm")=bp::object(), 
                           bp::arg("scale_radius")=bp::object(),
                           bp::arg("half_light_radius")=bp::object(),
-                          bp::arg("trunc")=0., bp::arg("flux")=1.)
+                          bp::arg("trunc")=0., bp::arg("flux")=1.,
+                          bp::arg("gsparams")=bp::object())
                      )
                 )
                 .def(bp::init<const SBMoffat &>())

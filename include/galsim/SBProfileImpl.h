@@ -32,8 +32,8 @@ namespace galsim {
     {
     public:
 
-        // Constructor doesn't do anything
-        SBProfileImpl() {}
+        // Constructor 
+        SBProfileImpl(boost::shared_ptr<GSParams> _gsparams);
 
         // Virtual destructor
         virtual ~SBProfileImpl() {}
@@ -94,10 +94,16 @@ namespace galsim {
         template <typename T>
         double doFillXImage2(ImageView<T>& image, double gain) const;
 
+        // Public so it can be directly used from SBProfile.
+        boost::shared_ptr<GSParams> gsparams;
+
     private:
         // Copy constructor and op= are undefined.
         SBProfileImpl(const SBProfileImpl& rhs);
         void operator=(const SBProfileImpl& rhs);
+
+        // Default GSParams to use when input is None
+        static boost::shared_ptr<GSParams> default_gsparams;
     };
 
 }
