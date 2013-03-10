@@ -11,7 +11,7 @@
 #     http://www.sas.upenn.edu/~mjarvis/des_data.html
 #
 # The DESDM pipeline produces a catalog of detected objects for each image, and also an
-# interpolated # PSF using Emmanuel Bertin's PSFEx code, which are stored in *_psfcat.psf files.
+# interpolated PSF using Emmanuel Bertin's PSFEx code, which are stored in *_psfcat.psf files.
 # The WL pipeline produces a different estimate of the PSF using Mike Jarvis's shapelet code,
 # which are stored in *_fitpsf.fits files.
 #
@@ -35,12 +35,12 @@ eval_variables :
     swl_dir : 'des_data'
 
     # Directories on Mike's laptop
-    #simg_dir = '/Users/Mike/Astro/des/SV/DECam_00154912_wl'
-    #swl_dir = '/Users/Mike/Astro/des/SV/DECam_00154912_wl'
+    #simg_dir : '/Users/Mike/Astro/des/SV/DECam_00154912_wl'
+    #swl_dir : '/Users/Mike/Astro/des/SV/DECam_00154912_wl'
     
     # Directories on folio
-    #simg_dir = '/data3/DECAM/SV/DECam_154912'
-    #swl_dir = '/data3/DECAM/wl/DECam_00154912_wl'
+    #simg_dir : '/data3/DECAM/SV/DECam_154912'
+    #swl_dir : '/data3/DECAM/wl/DECam_00154912_wl'
 
     # Set which chips to run on
     ifirst_chip : 1
