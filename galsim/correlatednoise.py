@@ -384,6 +384,21 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         raise NotImplementedError(
             "This method is not available for correlated noise class instances.")
 
+    def convolveWith(self, gsobject):
+        """Convolve the correlated noise model with an input GSObject.
+
+        The resulting correlated noise model will then give a statistical description of the noise
+        field that would result from convolving noise generated according to the inital correlated
+        noise with a kernel represented by `gsobject` (e.g. a PSF).
+
+        This modifies the representation of the correlation function, but leaves the random number
+        generator unchanges.
+
+        @param gsobject  A galsim.GSObject or derived class instance representing the function with
+                         which the user wants to convolve the correlated noise model.
+        """
+        self._profile = galsim.Convolve([self._profile, gsobject, gsobject])
+
     def draw(self, image=None, dx=None, wmult=1., add_to_image=False):
         """The draw method for profiles storing correlation functions.
 
