@@ -44,17 +44,6 @@ import utilities
 
 version = '0.3.1'
 
-ALIAS_THRESHOLD = 0.005 # Matches hard coded value in src/SBProfile.cpp. TODO: bring these together
-
-# Set the default gsparams to use for the GSObject drawing routines.
-# This provides a compromise between speed and accuracy that should be appropriate for 
-# most users.  However, if you need better accuracy, or faster drawing (at the expense of 
-# accuracy), then you can pass a different MagicNumbers object to any GSObject as a 
-# gsparams kwarg.
-# Note: these numbers are actually the default values for each arg, so this could have 
-# equivalently been written as default_gsparams = galsim.GSParams()
-# Writing it this way essentially documents what the default values are.
-
 class GSObject(object):
     """Base class for defining the interface with which all GalSim Objects access their shared 
     methods and attributes, particularly those from the C++ SBProfile classes.
@@ -1404,10 +1393,15 @@ class OpticalPSF(GSObject):
         # oversampling factor
         dx_lookup = .5 * lam_over_diam / oversampling
         
+        # We need alias_threshold here, so don't wait to make this a default GSParams instance
+        # if the user didn't specify anything else.
+        if not gsparams:
+            gsparams = galsim.GSParams()
+
         # Use a similar prescription as SBAiry to set Airy stepK and thus reference unpadded image
         # size in physical units
         stepk_airy = min(
-            ALIAS_THRESHOLD * .5 * np.pi**3 * (1. - obscuration) / lam_over_diam,
+            gsparams.alias_threshold * .5 * np.pi**3 * (1. - obscuration) / lam_over_diam,
             np.pi / 5. / lam_over_diam)
         
         # Boost Airy image size by a user-specifed pad_factor to allow for larger, aberrated PSFs,
