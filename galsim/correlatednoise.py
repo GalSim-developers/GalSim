@@ -394,6 +394,28 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         This modifies the representation of the correlation function, but leaves the random number
         generator unchanges.
 
+        Examples
+        --------
+        The following command simply applies a galsim.Moffat PSF with slope parameter `beta`=3. and
+        FWHM 0.7:
+
+            >>> correlated_noise.convolveWith(galsim.Moffat(beta=3., fwhm=0.7))
+
+        Often we will want to apply with more than one function.  For example, if wanting to
+        simulate how noise in space-based images would look if convolved with a ground-based PSF
+        (such as the Moffat above) and then rendered onto a new (typically larger) pixel grid, the
+        following example command demonstrates the syntax: 
+
+            >>> correlated_noise.convolveWith(
+            ...    galsim.Convolve([galsim.Pixel(0.2), galsim.Moffat(3., fwhm=0.7)]))
+
+        This is functionally equivalent to
+
+            >>> correlated_noise.convolveWith(galsim.Moffat(beta=3., fwhm=0.7))
+            >>> correlated_noise.convolveWith(galsim.Pixel(0.2))
+
+        as is demanded for a linear operation such as convolution.
+
         @param gsobject  A galsim.GSObject or derived class instance representing the function with
                          which the user wants to convolve the correlated noise model.
         """
