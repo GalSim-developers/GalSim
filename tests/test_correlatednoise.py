@@ -30,7 +30,7 @@ except ImportError:
 
 # Use a deterministic random number generator so we don't fail tests because of rare flukes
 # in the random numbers.
-glob_ud = galsim.UniformDeviate(12345)
+rseed=12345
 
 smallim_size = 16 # size of image when we test correlated noise properties using small inputs
 smallim_size_odd = 17 # odd-sized version of the above for odd/even relevant tests (e.g. draw)
@@ -40,67 +40,61 @@ xlargeim_size =long(np.ceil(1.41421356 * largeim_size)) # sometimes, for precisi
                                                         # fit a large image within it, even if 
                                                         # rotated
 
-# then make a small image of uncorrelated, unit variance noise for later tests
-gn = galsim.GaussianNoise(glob_ud, sigma=1.)
-uncorr_noise_small = galsim.ImageD(smallim_size, smallim_size)
-uncorr_noise_small.addNoise(gn)
-
-# then make a large image of uncorrelated, unit variance noise, also for later tests
-uncorr_noise_large = galsim.ImageD(largeim_size, largeim_size)
-uncorr_noise_large.addNoise(gn)
-# make an extra large image here for rotation generation tests
-uncorr_noise_xlarge = galsim.ImageD(xlargeim_size, xlargeim_size)
-uncorr_noise_xlarge.addNoise(gn)
-
-# make some x-correlated noise using shift and add
-xnoise_large = galsim.ImageViewD(
-    uncorr_noise_large.array + np.roll(uncorr_noise_large.array, 1, axis=1)) # note NumPy thus [y,x]
-xnoise_large *= (np.sqrt(2.) / 2.) # make unit variance
-xnoise_small = galsim.ImageViewD(
-    uncorr_noise_small.array + np.roll(uncorr_noise_small.array, 1, axis=1)) # note NumPy thus [y,x]
-xnoise_small *= (np.sqrt(2.) / 2.) # make unit variance
- 
-# make some y-correlated noise using shift and add
-ynoise_large = galsim.ImageViewD(
-    uncorr_noise_large.array + np.roll(uncorr_noise_large.array, 1, axis=0)) # note NumPy thus [y,x]
-ynoise_large *= (np.sqrt(2.) / 2.) # make unit variance
-ynoise_small = galsim.ImageViewD(
-    uncorr_noise_small.array + np.roll(uncorr_noise_small.array, 1, axis=0)) # note NumPy thus [y,x]
-ynoise_small *= (np.sqrt(2.) / 2.) # make unit variance
-# make an extra large image here for rotation generation tests
-ynoise_xlarge = galsim.ImageViewD(
-    uncorr_noise_xlarge.array + np.roll(uncorr_noise_xlarge.array, 1, axis=0))
-ynoise_xlarge *= (np.sqrt(2.) / 2.) # make unit variance
-
-# decimals for comparison (one for fine detail, another for comparing stochastic quantities)
+# Decimals for comparison (one for fine detail, another for comparing stochastic quantities)
 decimal_approx = 2
 decimal_precise = 7
 
-# number of positions to test in nonzero lag uncorrelated tests
+# Number of positions to test in nonzero lag uncorrelated tests
 npos_test = 3
 
-# number of CorrelatedNoises to sum over to get slightly better statistics for noise generation test
+# Number of CorrelatedNoises to sum over to get slightly better statistics for noise generation test
 nsum_test = 5
+
+
+def setup_uncorrelated_noise(deviate, size):
+    """Makes and returns uncorrelated noise fields for later use in generating derived correlated
+    noise fields.  Field has unit variance.
+    """
+    gn = galsim.GaussianNoise(deviate, sigma=1.)
+    uncorr_noise = galsim.ImageD(size, size)
+    uncorr_noise.addNoise(gn)
+    return uncorr_noise
+
+def make_xcorr_from_uncorr(uncorr_image):
+    """Make some x-correlated noise using shift and add using an input uncorrelated noise field.
+    """
+    xnoise_image = galsim.ImageViewD(
+        uncorr_image.array + np.roll(uncorr_image.array, 1, axis=1)) # note NumPy thus [y,x]
+    xnoise_image *= (np.sqrt(2.) / 2.) # Preserve variance
+    return xnoise_image
+
+def make_ycorr_from_uncorr(uncorr_image):
+    """Make some y-correlated noise using shift and add using an input uncorrelated noise field.
+    """
+    ynoise_image = galsim.ImageViewD(
+        uncorr_image.array + np.roll(uncorr_image.array, 1, axis=0)) # note NumPy thus [y,x]
+    ynoise_image *= (np.sqrt(2.) / 2.) # Preserve variance
+    return ynoise_image
 
 def funcname():
     import inspect
     return inspect.stack()[1][3]
 
+
 def test_uncorrelated_noise_zero_lag():
     """Test that the zero lag correlation of an input uncorrelated noise field matches its variance.
     """
     t1 = time.time()
-    sigmas = [3.e-9, 49., 1.11e11, 3.4e30]  # some wide ranging sigma values for the noise field
+    sigmas = [3.e-9, 49., 1.11e11]  # some wide ranging sigma values for the noise field
     # loop through the sigmas
     cf_zero = 0.
+    gd = galsim.GaussianDeviate(rseed)
     for sigma in sigmas:
         # Test the estimated value is good to 1% of the input variance; we expect this!
         # Note we make multiple correlation funcs and average their zero lag to beat down noise
         for i in range(nsum_test):
-            uncorr_noise_large_extra = galsim.ImageD(largeim_size, largeim_size)
-            uncorr_noise_large_extra.addNoise(gn)
-            noise_test = uncorr_noise_large_extra * sigma
-            cn = galsim.CorrelatedNoise(gn.getRNG(), noise_test, dx=1.)
+            uncorr_noise_image = setup_uncorrelated_noise(gd, largeim_size) * sigma
+            cn = galsim.CorrelatedNoise(gd, uncorr_noise_image, dx=1.)
             cf_zero += cn._profile.xValue(galsim.PositionD(0., 0.))
         cf_zero /= float(nsum_test)
         np.testing.assert_almost_equal(
@@ -116,19 +110,22 @@ def test_uncorrelated_noise_nonzero_lag():
     t1 = time.time()
     # Set up some random positions (within and outside) the bounds of the table inside the
     # CorrelatedNoise then test
+    uncorr_noise_image = galsim.ImageD(largeim_size, largeim_size)
+    ud = galsim.UniformDeviate(rseed)
+    gn = galsim.GaussianNoise(ud, sigma=1.)
     for i in range(npos_test):
-        # Note we make multiple correlation funcs and average their zero lag to beat down noise
+        # Note we make multiple noise fields and correlation funcs and average non-zero lag values
+        # to beat down noise
         cf_test_value = 0.
         for i in range(nsum_test):
-            uncorr_noise_large_extra = galsim.ImageD(largeim_size, largeim_size)
-            uncorr_noise_large_extra.addNoise(gn)
-            noise_test = uncorr_noise_large_extra
-            cn = galsim.CorrelatedNoise(gn.getRNG(), noise_test, dx=1.)
+            uncorr_noise_image.addNoise(gn)
+            cn = galsim.CorrelatedNoise(ud, uncorr_noise_image, dx=1.)
             # generate the test position at least one pixel away from the origin
-            rpos = 1. + glob_ud() * (largeim_size - 1.) # this can go outside table bounds
-            tpos = 2. * np.pi * glob_ud()
+            rpos = 2. + ud() * (largeim_size - 2.) # this can go outside table bounds
+            tpos = 2. * np.pi * ud()
             pos = galsim.PositionD(rpos * np.cos(tpos), rpos * np.sin(tpos))
             cf_test_value += cn._profile.xValue(pos)
+            uncorr_noise_image.setZero()
         cf_test_value /= float(nsum_test)
         # Then test this estimated value is good to within our chosen decimal place of zero
         np.testing.assert_almost_equal(
@@ -138,17 +135,20 @@ def test_uncorrelated_noise_nonzero_lag():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
-def test_uncorrelated_noise_symmetry():
+def test_uncorrelated_noise_symmetry_90degree_rotation():
     """Test that the non-zero lag correlation of an input uncorrelated noise field has two-fold
-    rotational symmetry.
+    rotational symmetry and that CorrelatedNoise rotation methods produce the same output when 
+    initializing with a 90 degree-rotated input field.
     """
     t1 = time.time()
-    cn = galsim.CorrelatedNoise(gn.getRNG(), uncorr_noise_small, dx=1.) # small image is fine here
+    ud = galsim.UniformDeviate(rseed)
+    uncorr_noise_small = setup_uncorrelated_noise(ud, smallim_size)
+    cn = galsim.CorrelatedNoise(ud, uncorr_noise_small, dx=1.) # small image is fine here
     # Set up some random positions (within and outside) the bounds of the table inside the corrfunc
     # then test
     for i in range(npos_test):
-        rpos = glob_ud() * smallim_size # this can go outside lookup table bounds
-        tpos = 2. * np.pi * glob_ud()
+        rpos = ud() * smallim_size # this can go outside lookup table bounds
+        tpos = 2. * np.pi * ud()
         pos = galsim.PositionD(rpos * np.cos(tpos), rpos * np.sin(tpos))
         cf_test1 = cn._profile.xValue(pos)
         cf_test2 = cn._profile.xValue(-pos)
@@ -157,62 +157,52 @@ def test_uncorrelated_noise_symmetry():
             decimal=decimal_precise,
             err_msg="Non-zero distance noise correlation values not two-fold rotationally "+
             "symmetric.")
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(), t2 - t1)
-
-def test_uncorrelated_noise_90degree_rotation():
-    """Test that the CorrelatedNoise rotation methods produces the same output as initializing with
-    a 90 degree-rotated input field.
-    """
-    t1 = time.time()
-    cn = galsim.CorrelatedNoise(gn.getRNG(), uncorr_noise_large, dx=1.)
-    ks = [1, 2, 3, 4]
+    # Then test that CorrelatedNoise rotation methods produces the same output as initializing 
+    # with a 90 degree-rotated input field
     angles = [
         90. * galsim.degrees, 180. * galsim.degrees, 270. * galsim.degrees, 360. * galsim.degrees]
     # loop over rotation angles and check
-    for k, angle in zip(ks, angles):
-        noise_ref = galsim.ImageViewD(np.ascontiguousarray(np.rot90(uncorr_noise_large.array, k=k)))
-        cn_ref = galsim.CorrelatedNoise(gn.getRNG(), noise_ref, dx=1.)
-        # first we'll check the createRotated() method
+    for i, angle in zip(range(len(angles)), angles):
+        noise_ref = galsim.ImageViewD(
+            np.ascontiguousarray(np.rot90(uncorr_noise_small.array, k=i+1)))
+        cn_ref = galsim.CorrelatedNoise(ud, noise_ref, dx=1.)
+        # First we'll check the createRotated() method
         cn_test1 = cn.createRotated(angle)
-        # then we'll check the applyRotation() method
+        # Then we'll check the applyRotation() method
         cn_test2 = cn.copy()
         cn_test2.applyRotation(angle)
-        # then check some positions
+        # Then check some positions inside the bounds of the original image
         for i in range(npos_test):
-            rpos = glob_ud() * smallim_size
-            tpos = 2. * np.pi * glob_ud()
+            rpos = .5 * ud() * smallim_size
+            tpos = 2. * np.pi * ud()
             pos = galsim.PositionD(rpos * np.cos(tpos), rpos * np.sin(tpos))
             cf_ref = cn_ref._profile.xValue(pos)
             cf_test1 = cn_test1._profile.xValue(pos)
             cf_test2 = cn_test2._profile.xValue(pos)
             # Then test these estimated value is good to within our chosen decimal place
             np.testing.assert_almost_equal(
-                cf_ref, cf_test1, decimal=decimal_precise, # slightly FFT-dependent accuracy
+                cf_test1, cf_ref, decimal=decimal_precise,
                 err_msg="Uncorrelated noise failed 90 degree createRotated() method test.")
             np.testing.assert_almost_equal(
-                cf_ref, cf_test2, decimal=decimal_precise,
+                cf_test2, cf_ref, decimal=decimal_precise,
                 err_msg="Uncorrelated noise failed 90 degree applyRotation() method test.")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
-def test_xcorr_noise_basics():
+def test_xcorr_noise_basics_symmetry_90degree_rotation():
     """Test the basic properties of a noise field, correlated in the x direction, generated using
-    a simple shift-add prescription.
+    a simple shift-add prescription, check it has two-fold rotational symmetry and behaves
+    correctly under 90 degree rotations.
     """
     t1 = time.time()
-    # Use the xnoise defined above to make the x correlated noise
-    # Note we make multiple correlation funcs and average their zero lag to beat down noise
+    ud = galsim.UniformDeviate(rseed)
+    # We make multiple correlation funcs and average their zero lag to beat down noise
     cf_zero = 0.
     cf_10 = 0.
     for i in range(nsum_test):
-        uncorr_noise_large_extra = galsim.ImageD(largeim_size, largeim_size)
-        uncorr_noise_large_extra.addNoise(gn)
-        xnoise_large_extra = galsim.ImageViewD(
-            uncorr_noise_large_extra.array + np.roll(
-                uncorr_noise_large_extra.array, 1, axis=1)) # note NumPy thus [y,x]
-        xnoise_large_extra *= (np.sqrt(2.) / 2.) # make unit variance
-        xcn = galsim.CorrelatedNoise(gn.getRNG(), xnoise_large_extra, dx=1.)
+        uncorr_noise = setup_uncorrelated_noise(ud, largeim_size)
+        xnoise = make_xcorr_from_uncorr(uncorr_noise)
+        xcn = galsim.CorrelatedNoise(ud, xnoise, dx=1.)
         cf_zero += xcn._profile.xValue(galsim.PositionD(0., 0.))
         cf_10 += xcn._profile.xValue(galsim.PositionD(1., 0.))
     cf_zero /= float(nsum_test)
@@ -225,10 +215,52 @@ def test_xcorr_noise_basics():
     np.testing.assert_almost_equal(
         cf_10, .5, decimal=decimal_approx,
         err_msg="Noise correlation value at (1, 0) does not match input covariance.")
+    # Then set up some random positions (within and outside) the bounds of the table inside the 
+    # corrfunc (the last one made is fine) then test for symmetry
+    for i in range(npos_test):
+        rpos = ud() * smallim_size # this can go outside lookup table bounds
+        tpos = 2. * np.pi * ud()
+        pos = galsim.PositionD(rpos * np.cos(tpos), rpos * np.sin(tpos))
+        cf_test1 = xcn._profile.xValue(pos)
+        cf_test2 = xcn._profile.xValue(-pos)
+        # Then test this estimated value is good to within our chosen decimal place of zero
+        np.testing.assert_almost_equal(
+            cf_test1, cf_test2, decimal=decimal_precise, # should be good to machine precision
+            err_msg="Non-zero distance noise correlation values not two-fold rotationally "+
+            "symmetric for x correlated noise field.")
+    # Then test that CorrelatedNoise rotation methods produces the same output as initializing 
+    # with a 90 degree-rotated input field
+    angles = [
+        90. * galsim.degrees, 180. * galsim.degrees, 270. * galsim.degrees, 360. * galsim.degrees]
+    # loop over rotation angles and check
+    for i, angle in zip(range(len(angles)), angles):
+        noise_ref = galsim.ImageViewD(
+            np.ascontiguousarray(np.rot90(xnoise.array, k=i+1)))
+        xcn_ref = galsim.CorrelatedNoise(ud, noise_ref, dx=1.)
+        # First we'll check the createRotated() method
+        xcn_test1 = xcn.createRotated(angle)
+        # Then we'll check the applyRotation() method
+        xcn_test2 = xcn.copy()
+        xcn_test2.applyRotation(angle)
+        # Then check some positions inside the bounds of the original image
+        for i in range(npos_test):
+            rpos = .5 * ud() * smallim_size
+            tpos = 2. * np.pi * ud()
+            pos = galsim.PositionD(rpos * np.cos(tpos), rpos * np.sin(tpos))
+            xcf_ref = xcn_ref._profile.xValue(pos)
+            xcf_test1 = xcn_test1._profile.xValue(pos)
+            xcf_test2 = xcn_test2._profile.xValue(pos)
+            # Then test these estimated value is good to within our chosen decimal place
+            np.testing.assert_almost_equal(
+                xcf_test1, xcf_ref, decimal=decimal_precise,
+                err_msg="x-correlated noise failed 90 degree createRotated() method test.")
+            np.testing.assert_almost_equal(
+                xcf_test2, xcf_ref, decimal=decimal_precise,
+                err_msg="x-correlated noise failed 90 degree applyRotation() method test.")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
-def test_ycorr_noise_basics():
+def test_ycorr_noise_basics_symmetry_90degree_rotation():
     """Test the basic properties of a noise field, correlated in the y direction, generated using
     a simple shift-add prescription.
     """
@@ -301,45 +333,6 @@ def test_ycorr_noise_symmetry():
             cf_test1, cf_test2, decimal=decimal_precise, # should be good to machine precision
             err_msg="Non-zero distance noise correlation values not two-fold rotationally "+
             "symmetric for y correlated noise field.")
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(), t2 - t1)
-
-def test_90degree_rotation(): # probably only need to do the x direction for this test if the 
-                              # previous tests have passed OK
-    """Test that the CorrelatedNoise rotation methods produces the same output as initializing with
-    a 90 degree-rotated input field, this time with a noise field that's correlated in the x
-    direction.
-    """
-    t1 = time.time()
-    cn = galsim.CorrelatedNoise(gn.getRNG(), xnoise_large, dx=1.)
-    ks = [1, 2, 3, 4]
-    angles = [
-        90. * galsim.degrees, 180. * galsim.degrees, 270. * galsim.degrees, 360. * galsim.degrees]
-    # loop over rotation angles and check
-    for k, angle in zip(ks, angles):
-        noise_ref = galsim.ImageViewD(np.ascontiguousarray(np.rot90(xnoise_large.array, k=k)))
-        cn_ref = galsim.CorrelatedNoise(gn.getRNG(), noise_ref, dx=1.)
-        # first we'll check the createRotated() method
-        cn_test1 = cn.createRotated(angle)
-        # then we'll check the createRotation() method
-        cn_test2 = cn.copy()
-        cn_test2.applyRotation(angle) 
-        # then check some positions
-        for i in range(npos_test):
-            rpos = glob_ud() * smallim_size # look in the vicinity of the action near the centre
-            tpos = 2. * np.pi * glob_ud()
-            pos = galsim.PositionD(rpos * np.cos(tpos), rpos * np.sin(tpos))
-            cf_ref = cn_ref._profile.xValue(pos)
-            cf_test1 = cn_test1._profile.xValue(pos)
-            cf_test2 = cn_test2._profile.xValue(pos) 
-            np.testing.assert_almost_equal(
-                cf_ref, cf_test1, decimal=decimal_precise, # should be accurate, but FFT-dependent 
-                err_msg="Noise correlated in the x direction failed 90 degree createRotated() "+
-                "method test.")
-            np.testing.assert_almost_equal(
-                cf_ref, cf_test2, decimal=decimal_precise,
-                err_msg="Noise correlated in the x direction failed 90 degree applyRotation() "+
-                "method test.")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
@@ -643,13 +636,9 @@ def test_cosmos_and_whitening():
 if __name__ == "__main__":
     test_uncorrelated_noise_zero_lag()
     test_uncorrelated_noise_nonzero_lag()
-    test_uncorrelated_noise_symmetry()
-    test_uncorrelated_noise_90degree_rotation()
-    test_xcorr_noise_basics()
-    test_ycorr_noise_basics()
-    test_xcorr_noise_symmetry()
-    test_ycorr_noise_symmetry()
-    test_90degree_rotation()
+    test_uncorrelated_noise_symmetry_90degree_rotation()
+    test_xcorr_noise_basics_symmetry_90degree_rotation()
+    test_ycorr_noise_basics_symmetry_90degree_rotation()
     test_arbitrary_rotation()
     test_scaling()
     test_draw()
