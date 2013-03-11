@@ -22,22 +22,24 @@ print 'Checking radial integration of profile....'
 hlr_sum = radial_integrate(s, 0., test_hlr, 1.e-4)
 print 'Sum of profile to half-light-radius: ',hlr_sum
 
-# make Sersic convolved with some ground-based PSF
+# make Sersic convolved with some ground-based PSF (Kolmogorov x optical PSF)
 print "Testing sersic ground-based sim..."
 ground_psf_fwhm = 0.7
 ground_pix_scale = 0.2
+space_psf_fwhm = 0.1
 imsize = 512
 n_photons = 1000000
 psf = galsim.Kolmogorov(fwhm = ground_psf_fwhm)
+opt_psf = galsim.Airy(space_psf_fwhm)
 pix = galsim.Pixel(ground_pix_scale)
-epsf = galsim.Convolve(psf, pix)
-obj_epsf = galsim.Convolve(s, psf, pix)
-obj_psf = galsim.Convolve(s, psf)
+epsf = galsim.Convolve(psf, opt_psf, pix)
+obj_epsf = galsim.Convolve(s, psf, opt_psf, pix)
+obj_psf = galsim.Convolve(s, psf, opt_psf)
 # compare photon-shot vs. Fourier draw image, directly and with moments
 im_draw = galsim.ImageF(imsize, imsize)
 im_shoot = galsim.ImageF(imsize, imsize)
 im_epsf = galsim.ImageF(imsize, imsize)
-im_draw = obj_epsf.draw(image = im_draw, dx = ground_pix_scale)
+im_draw = obj_epsf.draw(image = im_draw, dx = ground_pix_scale, wmult=4.)
 im_shoot, _ = obj_psf.drawShoot(image = im_shoot, dx = ground_pix_scale, n_photons = n_photons)
 im_epsf = epsf.draw(image = im_epsf, dx = ground_pix_scale)
 res_draw = im_draw.FindAdaptiveMom()
