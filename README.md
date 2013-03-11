@@ -10,8 +10,8 @@ can operate directly on "config" files, for those users who prefer not to work
 in python.  The code is being developed as a collaborative project for the
 upcoming weak lensing community data challenge, GREAT3
 (http://great3challenge.info/), though it has additional capabilities beyond
-those needed for the challenge.  At the end of this file, there is a list of the
-code capabilities and plans for future development.
+those needed for the challenge.  At the end of this file, there is a list of 
+the code capabilities and plans for future development.
 
 
 Distribution
@@ -65,9 +65,9 @@ Installation
 For installation instructions, please see the file `INSTALL.md` in the main
 repository directory. 
 
-There are tagged versions of the code corresponding to specific project releases
-and development milestones. (For more info, see the "Tagged versions" section
-below, and `devel/git.txt`)
+There are tagged versions of the code corresponding to specific project 
+releases and development milestones. (For more info, see the "Tagged versions" 
+section below, and `devel/git.txt`)
 
 
 Getting started
@@ -76,22 +76,24 @@ Getting started
 * Install the code as in `INSTALL.md`.
 
 * Optional, but recommended whenever you try a new version of the code: run the
-unit tests to make sure that there are no errors.  You can do this by running
-`scons tests`.  If there are any issues, please open an Issue on our GitHub page.
+  unit tests to make sure that there are no errors.  You can do this by running
+  `scons tests`.  If there are any issues, please open an Issue on our GitHub 
+  page.
 
 * Optional: run `doxygen` to generate documentation, using `Doxyfile` in the
-main repository directory to specify all doxygen settings.  You can 
-alternatively view the documentation online at
-http://galsim-developers.github.com/GalSim/
+  main repository directory to specify all doxygen settings.  Alternatively,
+  you can view the documentation online at
+
+  http://galsim-developers.github.com/GalSim/
 
 
 Reference documentation
 -----------------------
 
 For an overview of GalSim workflow and python tools, please see
-`doc/GalSim_Quick_Reference.pdf` in the GalSim repository.  A guide to using the
-configuration files to generate simulations, a FAQ for installation issues, and
-other useful references can be found on the GalSim wiki,
+`doc/GalSim_Quick_Reference.pdf` in the GalSim repository.  A guide to using 
+the configuration files to generate simulations, a FAQ for installation issues,
+and other useful references can be found on the GalSim wiki,
 
 https://github.com/GalSim-developers/GalSim/wiki
 
@@ -147,9 +149,9 @@ Additional scripts
 ------------------
 
 While the demo scripts can be run from the command-line while sitting in
-`examples/` without any arguments, the remaining scripts are auxiliary utilities
-that take various command-line arguments, which are always explained in comments
-at the top of the file.
+`examples/` without any arguments, the remaining scripts are auxiliary 
+utilities that take various command-line arguments, which are always explained 
+in comments at the top of the file.
 
 * `ShootInterpolated.py` is a script that takes as input a filename for a FITS
 image, which it will simulate (optionally sheared and/or resampled) via
@@ -200,9 +202,9 @@ Currently, GalSim has the following capabilities:
   optics.
 
 * Can simulate galaxies from a variety of simple parametric models and based on
-  HST training data.  Some additional testing will be done in future versions to
-  ensure that the treatment of the latter is sufficiently accurate to use for
-  precision tests of shear.
+  HST training data.  Some additional testing will be done in future versions 
+  to ensure that the treatment of the latter is sufficiently accurate to use 
+  for precision tests of shear.
 
 * Can make the images either via i) Fourier transform / real-space convolution 
   (real-space being occasionally faster than Fourier), and interpolation (for 
@@ -213,17 +215,17 @@ Currently, GalSim has the following capabilities:
 
 * Can draw galaxy images into arbitrary locations within a larger image.
 
-* It is possible to carry out nearly any simulation that a user might want using
-  two parallel methods: directly using python code, or by specifying the
+* It is possible to carry out nearly any simulation that a user might want 
+  using two parallel methods: directly using python code, or by specifying the
   simulation properties in an input configuration script.
 
 * Constant shears and lensing magnifications can be applied to the galaxies.
 
 * Non-constant shears and magnifications can be drawn from a shear field
   expected for an NFW profile dark matter halo (as for weak lensing by galaxy
-  clusters).  For gridded galaxy positions, lensing shears can be drawn randomly
-  from a specified shear power spectrum, and they can then be interpolated to
-  non-gridded positions.
+  clusters).  For gridded galaxy positions, lensing shears can be drawn 
+  randomly from a specified shear power spectrum, and they can then be 
+  interpolated to non-gridded positions.
 
 * Simulating correlated Gaussian noise fields as according to user-specified,
   correlation functions derived from images.
