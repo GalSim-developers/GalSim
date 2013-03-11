@@ -627,7 +627,7 @@ a factor of 4, but the predictions only increased by 1\% whereas the
 results increased by 2\%.  This result supports the claim that finite-gridding
 effects might be responsible for the slightly low variances, rather
 than anything more problematic (i.e., a true bug).  Finite gridding
-effects can be accounted for in principle, by including them in the
+effects can be accounted for by including them in the
 predictions before comparing with results.
 
 \section{Test of full $P(k)$}\label{S:testpk}
@@ -750,6 +750,22 @@ responsible, we found that with a grid that is doubled in size (and
 hence a Fourier-space grid that is twice as finely spaced), the ratio
 of observed to expected power spectrum is closer to 1 (but still 3\%
 too low).
+
+In detail, finite-gridding effects can arise because our gridded
+approach amounts to estimating the power at specific $k_1$ and $k_2$
+values (or rather in $k_1$ and $k_2$ bins of width $\Delta k$).  When
+the PS estimator gets the power using the DFT approach, it's
+essentially calculating these as $P(k=\sqrt{k_1^2 +k_2^2})$ which are,
+again, defined at a set of specific values.  However, we then tell the
+PS estimator ``tell me the power in some set of bins in $\log{k}$'', the
+edges of which are not aligned in any particular way with respect to
+our actual $k$ values at which we have estimated the power using the DFT
+approach.  The PS estimator gets the power in each of our logarithmic
+bins via summation over the $P(k)$ for all $k$ values that happen to fall
+into that logarithmic bin.  This means there is some interplay between
+the grid geometry (determining the $k$ values for which we'll have $P(k)$)
+and the choice of log bins, which could result in jitter depending on
+how the two relate.
 \begin{figure}
 \begin{center}
 \includegraphics[width=3in]{../external/test_gridshear/output/compare_input_pe.fine.eps}
@@ -773,6 +789,13 @@ spacing, for example by making the grid a factor of two more finely
 spaced (and extending the WMAP7 $P(k)$ as a constant above $\ell=2000$
 so that we can do this) and confirming that the results agree with
 Fig.~\ref{F:pe}.
+
+A final comment about noise: shape noise and the effect of pixel noise
+in galaxy shape measurements add a term to the power, however here we
+are doing tests of just the cosmological shear without either of the
+above effect, so that is why it is not included in the above
+formalism.  A realistic test of power spectra from simulated images
+would have to include these effects.
 
 \section{Shear power on larger scales than our grid}\label{S:pk0}
 
