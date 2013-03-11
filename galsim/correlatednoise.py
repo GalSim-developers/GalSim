@@ -183,6 +183,32 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         image.getScale() is used to determine the input image pixel separation, and if 
         image.getScale() <= 0 a pixel scale of 1 is assumed.
 
+        If you are interested in a theoretical calculation of the variance in the final noise field
+        after whitening, the applyWhiteningTo() method in fact returns a tuple containing the
+        updated image and this variance.  For example:
+
+            >>> image, variance = correlated_noise.applyWhiteningTo(image)
+
+        Example
+        -------
+        To see noise whitening in action, let us use a model of the correlated noise in COSMOS 
+        as returned by the get_COSMOS_CorrelatedNoise() function.  Let's initialize and add noise
+        to an image:
+
+            >>> cosmos_file='YOUR/REPO/PATH/GalSim/examples/data/acs_I_unrot_sci_20_cf.fits'
+            >>> cn = galsim.get_COSMOS_CorrelatedNoise(galsim.BaseDeviate(), cosmos_file)
+            >>> image = galsim.ImageD(256, 256)
+            >>> image.setScale(0.03) # Should match the COSMOS default since didn't specify another
+            >>> image.addNoise(cn)
+
+        The `image` will then contain a realization of a random noise field with COSMOS-like
+        correlation.  Using the applyWhiteningTo() method, we can now add more noise to `image`
+        with a power spectrum specifically designed to make the combined noise fields uncorrelated:
+
+            >>> cn.applyWhiteningTo(image)
+
+        Of course, this whitening comes at the cost of adding further noise to the image.
+
         @param image The input Image object.
 
         @return (image, variance)  A tuple containing: the input galsim.Image with added whitening
