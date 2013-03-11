@@ -52,10 +52,11 @@ class GSObject(object):
     For all documentation about the specific derived classes, please see the docstring for each 
     one individually.  
     
-    The gsparams argument can be used to specify various numbers that govern the tradeoff between 
-    accuracy and speed for the calculations made in drawing a GSObject.  The numbers are 
-    encapsulated in a class called GSParams.  The parameters, along with their default values are 
-    the following:
+    The gsparams argument can be used to specify various numbers that govern the tradeoff between
+    accuracy and speed for the calculations made in drawing a GSObject.  The numbers are
+    encapsulated in a class called GSParams, and the user should make careful choices whenever they
+    opt to deviate from the defaults.  The parameters, along with their default values, are the
+    following:
 
     minimum_fft_size=128      The minimum FFT size we're willing to do.
     maximum_fft_size=4096     The maximum FFT size we're willing to do.
