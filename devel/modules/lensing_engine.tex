@@ -132,9 +132,17 @@ L &= \mbox{length of grid along one dimension (angular units)}\\
 d &= \mbox{spacing between grid points (angular units)}\\
 N &= \mbox{number of grid points along one dimension} = L/d.
 \end{align}
-Given this grid, our $\kmax=2\pi/d$.  The \kmin\ along one dimension
-is $2\pi/L$, so we can think of this quantity as the grid spacing in
-Fourier space, i.e., $\kmin=\Delta k$.  For a given grid point in
+Given this grid, the \kmin\ along one dimension is $2\pi/L$, so we can
+think of this quantity as the grid spacing in Fourier space, i.e.,
+$\kmin=\Delta k$.  This value of \kmin\ corresponds to a Fourier mode
+that exactly fits inside of our square grid (in one dimension).  The
+$k$ range, again in one dimension, is from $k_1=-\pi/d$ to $\pi/d$,
+i.e., $|k_1|<\kmax=\pi/d$.  This corresponds to a mode that is sampled
+exactly twice (the minimum possible) given our choice of grid
+spacing.  For the two-dimensional grid, the maximum value of $|k|$ is
+then $\sqrt{2}\pi/d$.
+
+For a given grid point in
 Fourier space, it is
 somewhat a matter of taste as to whether it is considered to start at
 that $k$ and extend to $k+\Delta k$, or whether it goes from $k-\Delta
@@ -515,16 +523,16 @@ e^{-\sigma^2 k^2/2} \,\rmd k\right)^2\right] \\
 \end{align}
 
 For each of the grids, we define the Gaussian $\sigma$ such that there
-is essentially no power left at our \kmax: $\sigma\kmax=5$, or
+is essentially no power left at our \kmax: $\sigma\kmax=2.5$, or
 $\sigma=286.5$ arcsec for the first two grids and $\sigma=573$ arcsec
 for the last grid.  Given how large $\sigma\kmax$ is, in all cases,
-$\mathrm{Erf}(\kmax\sigma/\sqrt{2})=1$.  The resulting values of
+$\mathrm{Erf}(\kmax\sigma/\sqrt{2})=0.988$.  The resulting values of
 $\sigma\kmin$ for the three grids are $0.05$, $0.1$, and $0.05$, or
 $\mathrm{Erf}(\kmin\sigma/\sqrt{2})=0.04$, $0.08$, and $0.04$ (since
 these are squared in the above expression, they don't end up mattering
 much).  With
 $P_0=1$ arcsec$^2$, the predicted variances for the three grids are
-$1.94\times 10^{-6}$, $1.93\times 10^{-6}$, and $4.84\times 10^{-7}$.
+$1.89\times 10^{-6}$, $1.88\times 10^{-6}$, and $4.72\times 10^{-7}$.
 
 The code to do this once is:
 \begin{verbatim}
@@ -544,14 +552,16 @@ variances.
 
 The results are $1.87\times 10^{-6}$, $1.85\times 10^{-6}$, and
 $4.63\times 10^{-7}$ in the last case.  So we have the approximately
-correct amplitude and scaling with the grid spacing and grid size, but
-the results are 4\% smaller than the predictions.
+correct amplitude and scaling with the grid spacing and grid size, and
+the results are 1\%, 1.5\%, and 2\% smaller than the predictions.
 
 We also check what happens if we make all the grids larger by a factor
 of 4 (in $N$, i.e., decrease \kmin\ by a factor of 4 while maintaining
 \kmax).  In this case, the variances increase by 1-2\%, whereas the 
 predictions  based on Eq.~\ref{E:vargauss} only increase by 0.1\%.
-This suggests some finite-binning / discreteness effect.
+Thus, the results with grids that are a factor of two larger are
+completely in accordance with the predictions, and the percent-level deviations for the
+original grids can be explained by finite-gridding effects.
 
 The variance is fairly evenly divided between components, but the
 variance in $\gamma_2$ tends to be larger than the variance of
@@ -636,9 +646,9 @@ We use a WMAP7 LCDM prediction for the cosmic shear signal for a
 sample with $z_\mathrm{med}\sim 0.55$ as an input to both
 the SHT code and ours.  Given the range of $\ell$ for which it is
 defined, $2<\ell<2000$, we cannot use our standard grid, which 
-has $\kmax=3600$ radians$^{-1}$.  So, for this test I use a grid with
+has $\kmax=\sqrt{2}\times 1800=2546$ radians$^{-1}$.  So, for this test we use a grid with
 $L=10$ degrees (as before), but $N=50$ (i.e., $d$ gets doubled), which
-means $\kmax=1800$ radians$^{-1}$.
+means a two-dimensional $\kmax=1273$ radians$^{-1}$.
 
 Using the SHT code (\S\ref{S:comparison}), we made gridded shears for
 $P_E=P(k)$ and $P_B=0$; $P_B=P(k)$ and $P_E=0$; and $P_E=P_B=P(k)$ (5
@@ -724,7 +734,7 @@ To address the last point, the simplest possible test is simply to
 change the $\ell$ binning in the PS estimation code.  This will let us
 check whether we are encountering some finite-binning effects in the
 PS estimation.  The original calculations had 20 $\ell$ bins; the new
-one uses 50 within the same $\ell$ range.  To beat down the noise, I
+one uses 50 within the same $\ell$ range.  To beat down the noise, we
 used 400 realizations of the shears from GalSim, instead of 20 as
 before.  The result is shown in Fig.~\ref{F:pe-fine}.  It is clear
 that the results are, as compared to Fig.~\ref{F:pe}, closer to the
