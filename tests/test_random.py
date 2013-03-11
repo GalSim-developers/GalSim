@@ -1075,6 +1075,14 @@ def test_multiprocess():
     import time
     t1 = time.time()
 
+    # Workaround for a bug in python 2.6.  We apply it always, just in case, but I think this
+    # bit is unnecessary in python 2.7.  The bug is that sys.stdin can be double closed if
+    # multiprocessing is used within something that already uses multiprocessing.
+    # Specifically, if we are using nosetests with multiple processes.
+    # See http://bugs.python.org/issue5313 for more info.
+    sys.stdin.close()
+    sys.stdin = open(os.devnull)
+
     def generate_list(seed):
         """Given a particular seed value, generate a list of random numbers.
            Should be deterministic given the input seed value.
