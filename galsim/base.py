@@ -2152,6 +2152,7 @@ class RealGalaxy(GSObject):
                     cn = noise_pad.copy()
                     if rng is not None: # Let user supplied RNG take precedence over that in user CN
                         cn.setRNG(gaussian_deviate)
+                    # TODO: Should we set the variance as we do below?  Ought to decide...
                 elif (isinstance(noise_pad,galsim.BaseImageF) or 
                       isinstance(noise_pad,galsim.BaseImageD)):
                     cn = galsim.CorrelatedNoise(gaussian_deviate, noise_pad)
