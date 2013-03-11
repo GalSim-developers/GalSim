@@ -271,10 +271,17 @@ def Process(config, logger=None):
         if nproc2:
             kwargs['nproc'] = nproc2
 
+        import copy
+        kwargs['config'] = copy.deepcopy(config)
+        output = kwargs['config']['output']
+        # This also updates nimages or nobjects as needed if they are being automatically
+        # set from an input catalog.
+        nobj = nobj_func(kwargs['config'],file_num,image_num)
+
         if type in [ 'MultiFits', 'DataCube' ]:
             if 'nimages' not in output:
                 raise AttributeError("Attribute nimages is required for output.type = %s"%type)
-            kwargs['nimages'] = galsim.config.ParseValue(output, 'nimages', config, int)[0]
+            kwargs['nimages'] = galsim.config.ParseValue(output,'nimages',kwargs['config'],int)[0]
 
         # Check if we need to build extra images for write out as well
         for extra_key in [ key for key in extra_keys if key in output ]:
@@ -292,7 +299,7 @@ def Process(config, logger=None):
                 ignore.append('include_obj_var')
             if 'file_name' in output_extra:
                 SetDefaultExt(output_extra['file_name'],'.fits')
-            params, safe = galsim.config.GetAllParams(output_extra, extra_key, config,
+            params, safe = galsim.config.GetAllParams(output_extra,extra_key,kwargs['config'],
                                                       opt=opt, single=single, ignore=ignore)
 
             if 'file_name' in params:
@@ -320,12 +327,6 @@ def Process(config, logger=None):
             else:
                 kwargs[ extra_key+'_hdu' ] = params['hdu']
     
-        # Do this before building the file in case we need to setup the number of objects
-        # in config automatically from an input catalog.
-        import copy
-        kwargs['config'] = copy.deepcopy(config)
-        nobj = nobj_func(kwargs['config'],file_num,image_num)
-
         # This is where we actually build the file.
         # If we're doing multiprocessing, we send this information off to the task_queue.
         # Otherwise, we just call build_func.
