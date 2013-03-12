@@ -1029,3 +1029,47 @@ class NFWHalo(object):
             return mu[0]
         else:
             return [ m for m in mu ]
+
+
+def invert_kappa_from_shear(g1, g2):
+    """Perform a Kaiser & Squires (1993) inversion to get a convergence map from gridded shears.
+
+    @param g1  Square galsim.ImageF, galsim.ImageD or NumPy array containing the first component of
+               shear.
+    @param g2  Square galsim.ImageF, galsim.ImageD or NumPy array containing the second component of
+               shear.
+
+    @return kappa_E, kappa_B  The first element of this tuple represents the convergence field
+                              underlying the input shears; the second element is the convergence
+                              field generated were all shears rotated by 45 degrees prior to input.
+                              Both are NumPy arrays.
+    """
+    import galsim.utilities
+
+    # Checks on inputs
+    if (isinstance(g1, (galsim.ImageD, galsim.ImageF)) and
+        isinstance(g2, (galsim.ImageD, galsim.ImageF))):
+        g1 = g1.array
+        g2 = g2.array
+    elif isinstance(g1, np.ndarray) and isinstance(g2, np.ndarray):
+        pass
+    else:
+        raise TypeError("Input g1 and g2 must be galsim Image (float types) or NumPy arrays.")
+    if g1.shape != g2.shape:
+        raise ValueError("Input g1 and g2 must be the same shape.")
+    if g1.shape[0] != g1.shape[1]:
+        raise NotImplementedError("Non-square input shear grids not supported.")
+    # Then setup the kx, ky grids
+    kx, ky = galsim.utilities.kxky(g1.shape)
+    k2 = kx * kx + ky * ky
+    # Transform to Fourier space
+    g1t = np.fft.fft2(g1)
+    g2t = np.fft.fft2(g2)
+    kappat = np.zeros(g1.shape) + np.zeros(g1.shape) * 1j
+    kappat[k2 > 0.] = .5 * ((kx * kx - ky * ky) * g1t)[k2 > 0.] / k2[k2 > 0.] + \
+                      (kx * ky * g2t)[k2 > 0.] / k2[k2 > 0.]
+    # Transform back, then return contiguous versions of real and imaginary parts
+    kappa = np.fft.ifft2(kappat)
+    return np.ascontiguousarray(kappa.real), np.ascontiguousarray(kappa.imag)
+
+
