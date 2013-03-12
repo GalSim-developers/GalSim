@@ -2424,7 +2424,7 @@ class Shapelet(GSObject):
 
         I(r,theta) = 1/sigma^2 Sum_pq b_pq psi_pq(r/sigma, theta)
 
-    where psi_pq,sigma are the shapelet eigenfunctions, given by (in polar coordinates):
+    where psi_pq are the shapelet eigenfunctions, given by:
 
         psi_pq(r,theta) = (-)^q/sqrt(pi) sqrt(q!/p!) r^m exp(i m theta) exp(-r^2/2) L_q^(m)(r^2)
 
