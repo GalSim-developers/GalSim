@@ -563,7 +563,11 @@ class PowerSpectrumRealizer(object):
         """Generate a realization of the current power spectrum.
         
         @param gd               A gaussian deviate to use when generating the shear fields.
-        @return g1,g2           Two image arrays for the two shear components g_1 and g_2
+        @param get_kappa        Get the convergence in addition to the shear?
+                                [Default: `get_kappa=False`]
+        @return g1,g2,kappa     NumPy arrays for the shear components g_1, g_2 and convergence
+                                kappa.  If `get_kappa` is False, then the kappa that is returned
+                                will be identically zero.
         """
         ISQRT2 = np.sqrt(1.0/2.0)
 
@@ -571,15 +575,14 @@ class PowerSpectrumRealizer(object):
             raise TypeError(
                 "The gd provided to the PowerSpectrumRealizer is not a GaussianDeviate!")
 
-        #Generate a random complex realization for the E-mode, if there is one
+        # Generate a random complex realization for the E-mode, if there is one
         if self.amplitude_E is not None:
             r1 = galsim.utilities.rand_arr(self.amplitude_E.shape, gd)
             r2 = galsim.utilities.rand_arr(self.amplitude_E.shape, gd)
             E_k = self.amplitude_E * (r1 + 1j*r2) * ISQRT2  
-            #Do we need to multiply one of the rows by two to account for the reality?
         else: E_k = 0
 
-        #Generate a random complex realization for the B-mode, if there is one
+        # Generate a random complex realization for the B-mode, if there is one
         if self.amplitude_B is not None:
             r1 = galsim.utilities.rand_arr(self.amplitude_B.shape, gd)
             r2 = galsim.utilities.rand_arr(self.amplitude_B.shape, gd)
@@ -587,25 +590,23 @@ class PowerSpectrumRealizer(object):
         else:
             B_k = 0
 
-        #Now convert from E,B to g1,g2  still in fourier space
+        # Now convert from E,B to g1,g2  still in fourier space
         g1_k = self._cos*E_k - self._sin*B_k
         g2_k = self._sin*E_k + self._cos*B_k
 
         #Get kappa, the magnification field.
         if get_kappa:
-            #Convert the self.kx, which are indices, into
-            #kx, which are wavenumbers
+            # Convert the self.kx, which are indices, into kx, which are wavenumbers
             kx = self.kx/(self.pixel_size*self.nx)
             ky = self.ky/(self.pixel_size*self.ny)
 
-            #Set up the convergence field in Fourier space - 
-            #same structure as the shear fields
+            # Set up the convergence field in Fourier space - same structure as the shear fields
             kappa_k = np.zeros_like(g1_k)
 
-            #Compute the convergence fourier components
-            #using the simple relation in Kaiser & Squires 1994, equation 2.1.12
-            #To avoid NaNs we set the (0,0) DC term in k**2 to unity first, and then 
-            #set the corresponding kappa term to zero manually
+            # Compute the convergence fourier components using the simple relation in Kaiser &
+            # Squires (1994), equation 2.1.12.
+            # To avoid NaNs we set the (0,0) DC term in k**2 to unity first, and then set the
+            # corresponding kappa term to zero manually.
             k2 = self.k**2
             k2[0,0] = 1
             kappa_k[ self.kx, self.ky] =  -g1_k[ self.kx, self.ky] * (kx**2 - ky**2) / k2
@@ -613,30 +614,29 @@ class PowerSpectrumRealizer(object):
             kappa_k[-self.kx, self.ky] =  -g1_k[-self.kx, self.ky] * ((-kx)**2 - ky**2) / k2
             kappa_k[-self.kx, self.ky] += -g2_k[-self.kx, self.ky] * 2*(-kx) * ky / k2
 
-            #Set the DC term to zero
+            # Set the DC term to zero.
             kappa_k[0,0] = 0
 
-            #Transform into real space
+            # Transform into real space.
             kappa = kappa_k.shape[0]*np.fft.irfft2(kappa_k,s=(self.nx,self.ny))
-
-        #And go to real space to get the images
-        g1=g1_k.shape[0]*np.fft.irfft2(g1_k, s=(self.nx,self.ny))
-        g2=g2_k.shape[0]*np.fft.irfft2(g2_k, s=(self.nx,self.ny))
-        if get_kappa:
-            return g1, g2, kappa
         else:
-            return g1, g2
+            kappa = np.zeros_like(g1)
+
+        # And go to real space to get the real-space shear fields
+        g1 = g1_k.shape[0]*np.fft.irfft2(g1_k, s=(self.nx,self.ny))
+        g2 = g2_k.shape[0]*np.fft.irfft2(g2_k, s=(self.nx,self.ny))
+        return g1, g2, kappa
 
     def _generate_power_array(self, power_function):
-        #Internal function to generate the result of a power function evaluated on a grid,
-        #taking into account the symmetries.
+        # Internal function to generate the result of a power function evaluated on a grid,
+        # taking into account the symmetries.
         power_array = np.zeros((self.nx, self.ny/2+1))
 
-        # make a faked-up self.k array that fudges the value at k=0, so we don't have to evaluate
+        # Make a faked-up self.k array that fudges the value at k=0, so we don't have to evaluate
         # power there
         fake_k = self.k.copy()
         fake_k[0,0] = fake_k[1,0]
-        # raise a clear exception for LookupTable that are not defined on the full k range!
+        # Raise a clear exception for LookupTable that are not defined on the full k range!
         if isinstance(power_function, galsim.LookupTable):
             mink = np.min(fake_k)
             maxk = np.max(fake_k)
@@ -645,7 +645,7 @@ class PowerSpectrumRealizer(object):
                     "LookupTable P(k) is not defined for full k range on grid, %f<k<%f"%(mink,maxk))
         P_k = power_function(fake_k)
         
-        # now fix the k=0 value of power to zero
+        # Now fix the k=0 value of power to zero
         if type(P_k) is np.ndarray:
             P_k[0,0] = type(P_k[0,1])(0.)
         else:
@@ -657,8 +657,8 @@ class PowerSpectrumRealizer(object):
         return power_array
     
     def _generate_spin_weightings(self):
-        #Internal function to generate the cosine and sine spin weightings for the current 
-        #array set up
+        # Internal function to generate the cosine and sine spin weightings for the current array
+        # set-up.
         C=np.zeros((self.nx,self.ny/2+1))
         S=np.zeros((self.nx,self.ny/2+1))
         kx = self.kx
