@@ -92,7 +92,9 @@ class DES_PSFEx(object):
         if pol_ngrp != 1:
             raise IOError("PSFEx: Current implementation requires POLNGRP == 1, got %d"%pol_ngrp)
 
-        basis = hdu.data.field('PSF_MASK')[0]
+        # Note: older pyfits versions don't get the shape right.
+        # For newer pyfits versions the reshape command should be a no op.
+        basis = hdu.data.field('PSF_MASK')[0].reshape(psf_axis3,psf_axis2,psf_axis1)
         if basis.shape[0] != psf_axis3:
             raise IOError("PSFEx: PSFAXIS3 disagrees with actual basis size")
         if basis.shape[1] != psf_axis2:

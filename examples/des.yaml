@@ -139,7 +139,26 @@ output :
     nproc : -1
 
 ---
-# Now the particulars that are specific to the shapelet PSFs
+# Now the particulars that are specific to PSFEx
+
+psf :
+    type : DES_PSFEx
+
+input :
+    des_psfex :
+        dir : { type : Eval, str : 'wl_dir' }
+        file_name :
+            type : NumberedFile
+            root : { type : Eval, str : 'root' }
+            digits : 2
+            ext : '_psfcat.psf'
+            num : { type : Sequence, first : { type : Eval, str : 'first_chip' } }
+
+output :
+    file_name :
+        ext : '_psfex_image.fits'
+---
+# Next the particulars that are specific to the shapelet PSFs
 
 psf :
     type : DES_Shapelet
@@ -162,22 +181,4 @@ input :
 output :
     file_name :
         ext : '_fitpsf_image.fits'
----
-# Next the particulars that are specific to PSFEx
 
-psf :
-    type : DES_PSFEx
-
-input :
-    des_psfex :
-        dir : { type : Eval, str : 'wl_dir' }
-        file_name :
-            type : NumberedFile
-            root : { type : Eval, str : 'root' }
-            digits : 2
-            ext : '_psfcat.psf'
-            num : { type : Sequence, first : { type : Eval, str : 'first_chip' } }
-
-output :
-    file_name :
-        ext : '_psfex_image.fits'
