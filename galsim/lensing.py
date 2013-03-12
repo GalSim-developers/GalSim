@@ -263,9 +263,8 @@ class PowerSpectrum(object):
         @param get_kappa        Get the convergence in addition to the shear?
                                 [Default: `get_kappa=False`]
 
-        @return g1,g2,kappa     2-d NumPy arrays for the shear components g_1, g_2 and convergence
-                                kappa.  If `get_kappa` is False, then the kappa that is returned
-                                will be identically zero.
+        @return g1,g2[,kappa]   2-d NumPy arrays for the shear components g_1, g_2 and (if
+                                `get_kappa=True`) convergence kappa.
         """
         # Check problem cases for regular grid of points
         if grid_spacing is None or ngrid is None:
@@ -390,7 +389,10 @@ class PowerSpectrum(object):
                                      (b.ymin-0.5)*grid_spacing, (b.ymax+0.5)*grid_spacing)
         self.bounds.shift(-nominal_center - self.offset)
 
-        return self.grid_g1, self.grid_g2, self.grid_kappa
+        if get_kappa:
+            return self.grid_g1, self.grid_g2, self.grid_kappa
+        else:
+            return self.grid_g1, self.grid_g2
 
     def _convert_power_function(self, pf, pf_str):
         if pf is None: return None
@@ -480,8 +482,8 @@ class PowerSpectrum(object):
                                 then if setting `get_kappa=True` in this method, the grid must have
                                 been built with `get_kappa=True` when calling buildGriddedShears.
 
-        @return g1,g2,kappa     If given a single position: the two shear components g_1 and g_2 and
-                                the convergence, kappa.
+        @return g1,g2[,kappa]   If given a single position: the two shear components g_1 and g_2 and
+                                (if `get_kappa=True`) the convergence, kappa.
                                 If given a list of positions: each is a python list of values.
         """
 
@@ -511,7 +513,7 @@ class PowerSpectrum(object):
             if not self.bounds.includes(pos):
                 import warnings
                 warnings.warn(
-                    "Warning position (%f,%f) not within the bounds "%(pos.x,pos.y) +
+                    "Warning: position (%f,%f) not within the bounds "%(pos.x,pos.y) +
                     "of the gridded shear values: " + str(self.bounds) + 
                     ".  Returning a shear of (0,0) for this point.")
                 g1.append(0.)
@@ -525,9 +527,15 @@ class PowerSpectrum(object):
                 else:
                     kappa.append(0.)
         if len(pos_x) == 1:
-            return g1[0], g2[0], kappa[0]
+            if get_kappa:
+                return g1[0], g2[0], kappa[0]
+            else:
+                return g1[0], g2[0]
         else:
-            return g1, g2, kappa
+            if get_kappa:
+                return g1, g2, kappa
+            else:
+                return g1, g2
 
 class PowerSpectrumRealizer(object):
     """Class for generating realizations of power spectra with any area and pixel size.
@@ -614,6 +622,10 @@ class PowerSpectrumRealizer(object):
         g1_k = self._cos*E_k - self._sin*B_k
         g2_k = self._sin*E_k + self._cos*B_k
 
+        # And go to real space to get the real-space shear fields
+        g1 = g1_k.shape[0]*np.fft.irfft2(g1_k, s=(self.nx,self.ny))
+        g2 = g2_k.shape[0]*np.fft.irfft2(g2_k, s=(self.nx,self.ny))
+
         #Get kappa, the magnification field.
         if get_kappa:
             # Convert the self.kx, which are indices, into kx, which are wavenumbers
@@ -640,11 +652,8 @@ class PowerSpectrumRealizer(object):
             # Transform into real space.
             kappa = kappa_k.shape[0]*np.fft.irfft2(kappa_k,s=(self.nx,self.ny))
         else:
-            kappa = np.zeros_like(g1)
+            kappa = np.zeros(g1.shape, dtype=g1.dtype)
 
-        # And go to real space to get the real-space shear fields
-        g1 = g1_k.shape[0]*np.fft.irfft2(g1_k, s=(self.nx,self.ny))
-        g2 = g2_k.shape[0]*np.fft.irfft2(g2_k, s=(self.nx,self.ny))
         return g1, g2, kappa
 
     def _generate_power_array(self, power_function):
