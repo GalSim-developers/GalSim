@@ -64,6 +64,7 @@ class DES_Shapelet(object):
     _takes_rng = False
 
     def __init__(self, file_name, dir=None, file_type=None):
+        print 'DES_Shapelet init: ',file_name, dir, file_type
 
         if dir:
             import os
@@ -170,14 +171,20 @@ class DES_Shapelet(object):
 
         This returns a Shapelet instance.
         """
+        print 'Start DES_Shapelet::getPSF for pos = ',pos
         if not self.bounds.includes(pos):
+            print 'pos not in bounds: ',bounds
             raise IndexError("position in DES_Shapelet.getPSF is out of bounds")
+        print 'pos in bounds'
 
         import numpy
         Px = self._definePxy(pos.x,self.bounds.xmin,self.bounds.xmax)
+        print 'Px = ',Px
         Py = self._definePxy(pos.y,self.bounds.ymin,self.bounds.ymax)
+        print 'Py = ',Py
         order = self.fit_order
         P = numpy.array([ Px[n-q] * Py[q] for n in range(order+1) for q in range(n+1) ])
+        print 'P = ',P
         assert len(P) == self.fit_size
 
         # Note: This is equivalent to:
@@ -190,9 +197,12 @@ class DES_Shapelet(object):
         #             k = k+1
 
         b1 = numpy.dot(P,self.interp_matrix)
+        print 'b1 = ',b1
         b = numpy.dot(b1,self.rot_matrix)
+        print 'b = ',b
         assert len(b) == self.psf_size
         b += self.ave_psf
+        print 'b => ',b
         return galsim.Shapelet(self.sigma, self.psf_order, b)
 
     def _definePxy(self, x, min, max):

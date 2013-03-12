@@ -2494,6 +2494,7 @@ class Shapelet(GSObject):
 
     # --- Public Class methods ---
     def __init__(self, sigma, order, bvec=None):
+        print 'Build shapelet with sigma = %f, order = %d, bvec = '%(sigma,order), bvec
         
         # Make sure order and sigma are the right type:
         try:
@@ -2514,8 +2515,10 @@ class Shapelet(GSObject):
                 raise ValueError("bvec is the wrong size for the provided order")
             import numpy
             bvec = galsim.LVector(order,numpy.array(bvec))
+        print 'Made bvec into LVector: ',bvec
 
         GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
+        print 'Built SBShapelet'
 
     def getSigma(self):
         return self.SBProfile.getSigma()
