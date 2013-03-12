@@ -30,10 +30,10 @@ class InputCatalog(object):
 
     After construction, the following fields are available:
 
-        self.nobjects   The number of objects in the catalog
-        self.ncols      The number of columns in the catalog
-        self.isfits     Whether the catalog is a fits catalog
-        self.names      For a fits catalog, the valid column names
+        self.nobjects   The number of objects in the catalog.
+        self.ncols      The number of columns in the catalog.
+        self.isfits     Whether the catalog is a fits catalog.
+        self.names      For a fits catalog, the valid column names.
 
 
     @param file_name     Filename of the input catalog. (Required)

@@ -2431,7 +2431,7 @@ class Shapelet(GSObject):
     and L_q^(m)(x) are generalized Laguerre polynomials.
     
     The coeffients b_pq are in general complex.  However, we require that the resulting 
-    I(r,theta) be pureley real, which implies that b_pq = b_qp* (where * mean complex conjugate).
+    I(r,theta) be purely real, which implies that b_pq = b_qp* (where * means complex conjugate).
     This further implies that b_pp is real. 
 
 
@@ -2440,7 +2440,7 @@ class Shapelet(GSObject):
     
     1. Make a blank Shapelet instance with all b_pq = 0.
 
-        shapelet = galsim.Shapelet(sigma=sigam, order=order)
+        shapelet = galsim.Shapelet(sigma=sigma, order=order)
 
     2. Make a Shapelet instance using a given vector for the b_pq values.
 
