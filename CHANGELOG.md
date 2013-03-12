@@ -12,7 +12,7 @@ Changes from v0.4 to current version:
 * A bug is fixed in the generation of correlated noise fields (Issue #352); formerly these
   erroneously had two-fold rotational symmetry.
 
-* The the correlated noise classes now have an applyWhiteningTo() method.  The purpose of this
+* The correlated noise classes now have an applyWhiteningTo() method.  The purpose of this
   function is to add noise to images that contain correlated noise; the power spectrum of the added 
   noise is specifically designed to result in white (uncorrelated) noise in the final image (Issue
   #352).

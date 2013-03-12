@@ -1501,7 +1501,7 @@ class InterpolatedImage(GSObject):
                            an optimal value for the extent of the Fourier space lookup table.
                            (Default `calculate_maxk = True`)
     @param use_cache       Specify whether to cache noise_pad read in from a file to save having
-                           to build an CorrelatedNoise repeatedly from the same image.
+                           to build a CorrelatedNoise object repeatedly from the same image.
                            (Default `use_cache = True`)
 
     Methods

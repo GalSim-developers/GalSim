@@ -160,7 +160,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         # Finally generate a random field in Fourier space with the right PS
         noise_array = _generate_noise_from_rootps(self.getRNG(), rootps)
-        # Make add to the image
+        # Add it to the image
         image += galsim.ImageViewD(noise_array)
         return image
 
@@ -213,7 +213,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         @return (image, variance)  A tuple containing: the input galsim.Image with added whitening
                                    noise added; a float storing the theoretically calculated
-                                   variance of the the combined noise fields.
+                                   variance of the combined noise fields.
         """
         # Note that this uses the (fast) method of going via the power spectrum and FFTs to generate
         # noise according to the correlation function represented by this instance.  An alternative
@@ -414,20 +414,20 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         """Convolve the correlated noise model with an input GSObject.
 
         The resulting correlated noise model will then give a statistical description of the noise
-        field that would result from convolving noise generated according to the inital correlated
+        field that would result from convolving noise generated according to the initial correlated
         noise with a kernel represented by `gsobject` (e.g. a PSF).
 
         This modifies the representation of the correlation function, but leaves the random number
-        generator unchanges.
+        generator unchanged.
 
         Examples
         --------
         The following command simply applies a galsim.Moffat PSF with slope parameter `beta`=3. and
-        FWHM 0.7:
+        FWHM=0.7:
 
             >>> correlated_noise.convolveWith(galsim.Moffat(beta=3., fwhm=0.7))
 
-        Often we will want to apply with more than one function.  For example, if wanting to
+        Often we will want to convolve with more than one function.  For example, if we want to
         simulate how noise in space-based images would look if convolved with a ground-based PSF
         (such as the Moffat above) and then rendered onto a new (typically larger) pixel grid, the
         following example command demonstrates the syntax: 
@@ -704,7 +704,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
         # Then put the data from the prelim CF into this array
         cf_array[0:cf_array_prelim.shape[0], 0:cf_array_prelim.shape[1]] = cf_array_prelim
         # Then copy-invert-paste data from the leftmost column to the rightmost column, and lowest
-        # row to the uppermost row, if the the original CF had even dimensions in the x and y 
+        # row to the uppermost row, if the original CF had even dimensions in the x and y 
         # directions, respectively (remembering again that NumPy stores data [y,x] in arrays)
         if cf_array_prelim.shape[1] % 2 == 0: # first do x
             lhs_column = cf_array[:, 0]
