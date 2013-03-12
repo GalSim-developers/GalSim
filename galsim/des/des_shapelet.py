@@ -128,27 +128,41 @@ class DES_Shapelet(object):
         assert self.interp_matrix.shape == (self.fit_size, self.npca)
 
     def read_fits(self):
+        print 'start DES_Shapelet read_fits'
         import pyfits
         cat = pyfits.getdata(self.file_name,1)
+        print 'cat.dtype.names = ',cat.dtype.names
         # These fields each only contain one element, hence the [0]'s.
         self.psf_order = cat.field('psf_order')[0]
+        print 'psf_order = ',self.psf_order
         self.psf_size = (self.psf_order+1) * (self.psf_order+2) / 2
+        print 'psf_size = ',self.psf_size
         self.sigma = cat.field('sigma')[0]
+        print 'sigma = ',self.sigma
         self.fit_order = cat.field('fit_order')[0]
+        print 'fit_order = ',self.fit_order
         self.fit_size = (self.fit_order+1) * (self.fit_order+2) / 2
+        print 'fit_size = ',self.fit_size
         self.npca = cat.field('npca')[0]
+        print 'npca = ',self.npca
 
         self.bounds = galsim.BoundsD(
             float(cat.field('xmin')[0]), float(cat.field('xmax')[0]),
             float(cat.field('ymin')[0]), float(cat.field('ymax')[0]))
+        print 'bounds = ',self.bounds
 
         self.ave_psf = cat.field('ave_psf')[0]
+        print 'ave_psf = ',self.ave_psf.shape
         assert self.ave_psf.shape == (self.psf_size,)
 
-        self.rot_matrix = cat.field('rot_matrix')[0].T
+        # Note: older pyfits versions don't get the shape right.
+        # For newer pyfits versions the reshape command should be a no op.
+        self.rot_matrix = cat.field('rot_matrix')[0].reshape((self.psf_size,self.npca)).T
+        print 'rot_matrix = ',self.rot_matrix.shape
         assert self.rot_matrix.shape == (self.npca, self.psf_size)
 
-        self.interp_matrix = cat.field('interp_matrix')[0].T
+        self.interp_matrix = cat.field('interp_matrix')[0].reshape((self.npca,self.fit_size)).T
+        print 'self.interp_matrix = ',self.interp_matrix.shape
         assert self.interp_matrix.shape == (self.fit_size, self.npca)
 
     def getPSF(self, pos):

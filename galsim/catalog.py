@@ -104,10 +104,14 @@ class InputCatalog(object):
         import pyfits
         import numpy
         data = pyfits.getdata(self.file_name, hdu)
+        if pyfits.__version__ > '3.0':
+            self.names = data.columns.names
+        else:
+            self.names = data.dtype.names
 
         # If all we care about is nobjects, we can do that quickly here.
         if nobjects_only: 
-            self.nobjects = len(data.field(data.columns.names[0]))
+            self.nobjects = len(data.field(self.names[0]))
             return
 
         # data is an instance of a weird numpy FITS_rec class
@@ -115,7 +119,6 @@ class InputCatalog(object):
         # with multiprocessing will fail.
         # So we turn this into a regular numpy array that looks just like the version
         # we build in read_ascii with loadtxt.
-        self.names = data.columns.names
         # This assumes all fields have the same length.  If we need to support tables
         # where this isn't true, we might need to add an if clause in here.
         # (i.e. check the maximum, and then only include keys whose length is the same as that.)
