@@ -59,15 +59,15 @@ def ProcessInput(config, file_num=0, logger=None):
 
         # Read all input fields provided and create the corresponding object
         # with the parameters given in the config file.
-        print 'valid_input_types = ',valid_input_types
+        #print 'valid_input_types = ',valid_input_types
         for key in [ k for k in valid_input_types.keys() if k in input ]:
-            print 'key = ',key
+            #print 'key = ',key
             field = input[key]
-            print 'field = ',field
+            #print 'field = ',field
             field['type'], ignore = valid_input_types[key][0:2]
-            print 'type, ignore = ',field['type'],ignore
+            #print 'type, ignore = ',field['type'],ignore
             input_obj = galsim.config.gsobject._BuildSimple(field, key, config, ignore)[0]
-            print 'input_obj = ',input_obj
+            #print 'input_obj = ',input_obj
             if logger and  valid_input_types[key][2]:
                 logger.info('Read %d objects from %s',input_obj.nobjects,key)
             # Store input_obj in the config for use by BuildGSObject function.
@@ -86,15 +86,15 @@ def ProcessInputNObjects(config):
         if not isinstance(input, dict):
             raise AttributeError("config.input is not a dict.")
 
-        print 'valid_input_types = ',valid_input_types
+        #print 'valid_input_types = ',valid_input_types
         for key in valid_input_types.keys():
-            print 'key = ',key
-            print 'valid_input_types[key] = ',valid_input_types[key]
+            #print 'key = ',key
+            #print 'valid_input_types[key] = ',valid_input_types[key]
             if key in input and valid_input_types[key][2]:
                 field = input[key]
-                print 'field = ',field
+                #print 'field = ',field
                 type, ignore = valid_input_types[key][0:2]
-                print 'type, ignore = ',type,ignore
+                #print 'type, ignore = ',type,ignore
                 try:
                     if type in galsim.__dict__:
                         init_func = eval("galsim."+type)
@@ -113,7 +113,7 @@ def ProcessInputNObjects(config):
                 except Exception, err:
                     raise RuntimeError("Unable to build %s with nobjects_only=True.\n"%type +
                                     "Original error message: %s"%err)
-                print 'Found nobjects = %d for %s'%(input_obj.nobjects,key)
+                #print 'Found nobjects = %d for %s'%(input_obj.nobjects,key)
                 return input_obj.nobjects
     # If didn't find anything, return None.
     return None
@@ -166,7 +166,7 @@ def Process(config, logger=None):
         nfiles = galsim.config.ParseValue(output, 'nfiles', config, int)[0]
     else:
         nfiles = 1 
-    print 'nfiles = ',nfiles
+    #print 'nfiles = ',nfiles
 
     # Figure out how many processes we will use for building the files.
     # (If nfiles = 1, but nimages > 1, we'll do the multi-processing at the image stage.)
@@ -219,13 +219,13 @@ def Process(config, logger=None):
 
         def worker(input, output):
             for (kwargs, file_num, file_name) in iter(input.get, 'STOP'):
-                print 'worker got: ',file_num,file_name,kwargs
+                print current_process().name,': worker got: ',file_num,file_name,kwargs
                 ProcessInput(kwargs['config'], file_num=file_num)
-                print 'After ProcessInput for file ',file_num
+                print current_process().name,': After ProcessInput for file ',file_num
                 result = build_func(**kwargs)
-                print 'result for ',file_num,' = ',result
+                print current_process().name,': result for ',file_num,' = ',result
                 output.put( (result, file_num, file_name, current_process().name) )
-                print 'put the result for ',file_num,' on the output queue'
+                print current_process().name,': put the result for ',file_num,' on the output queue'
 
         # Set up the task list
         task_queue = Queue()
@@ -241,7 +241,7 @@ def Process(config, logger=None):
         last_file_name[key] = None
 
     for file_num in range(nfiles):
-        print 'file, image, obj = ',file_num, image_num, obj_num
+        #print 'file, image, obj = ',file_num, image_num, obj_num
         # Set the index for any sequences in the input or output parameters.
         # These sequences are indexed by the file_num.
         # (In image, they are indexed by image_num, and after that by obj_num.)
@@ -289,7 +289,7 @@ def Process(config, logger=None):
 
         # Check if we need to build extra images for write out as well
         for extra_key in [ key for key in extra_keys if key in output ]:
-            print 'extra = ',extra
+            #print 'extra = ',extra
             extra_file_name = None
             output_extra = output[extra_key]
 
@@ -316,12 +316,12 @@ def Process(config, logger=None):
                     extra_file_name = os.path.join(dir,extra_file_name)
                 # If we already wrote this file, skip it this time around.
                 # (Typically this is applicable for psf, where we only want 1 psf file.)
-                print 'last_file_name for ',key,' = ',last_file_name[key]
-                print 'extra_file_name = ',extra_file_name
+                #print 'last_file_name for ',key,' = ',last_file_name[key]
+                #print 'extra_file_name = ',extra_file_name
                 if last_file_name[key] == extra_file_name:
-                    print 'skipping'
+                    #print 'skipping'
                     continue
-                print 'assigning this to kwargs'
+                #print 'assigning this to kwargs'
                 kwargs[ extra_key+'_file_name' ] = extra_file_name
                 last_file_name[key] = extra_file_name
             elif type != 'Fits':
@@ -335,7 +335,7 @@ def Process(config, logger=None):
         # If we're doing multiprocessing, we send this information off to the task_queue.
         # Otherwise, we just call build_func.
         if nproc > 1:
-            print 'put task on the queue: ',file_num,file_name,kwargs
+            #print 'put task on the queue: ',file_num,file_name,kwargs
             task_queue.put( (kwargs, file_num, file_name) )
         else:
             ProcessInput(kwargs['config'], file_num=file_num, logger=logger)

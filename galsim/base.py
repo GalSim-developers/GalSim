@@ -2518,7 +2518,7 @@ class Shapelet(GSObject):
         print 'Made bvec into LVector: ',bvec
 
         GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
-        print 'Built SBShapelet'
+        print 'Built SBShapelet: ',self
 
     def getSigma(self):
         return self.SBProfile.getSigma()
