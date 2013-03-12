@@ -13,7 +13,7 @@ def scale_free_spectrum(k):
 
 
 def show_shear(E,B,title):
-	R=galsim.lensing.PowerSpectrumRealizer(128,128,0.1, E, B)
+	R=galsim.lensing.PowerSpectrumRealizer(160, 160, 0.1, E, B)
 	gd=galsim.GaussianDeviate(lseed=int(time.time()))
 
 	g1, g2, kappa = R(gd, get_kappa=True)
@@ -29,7 +29,17 @@ def show_shear(E,B,title):
 	pylab.colorbar()
 	pylab.quiver(gx, gy, scale=50, headwidth=0, pivot='middle')
 	pylab.title(title)
+        pylab.figure()
+        ke, kb = galsim.lensing.invert_kappa_from_shear(g1, g2)
+        pylab.pcolor(ke); pylab.colorbar()
+        pylab.title('kappa_E')
+        pylab.quiver(gx, gy, scale=50, headwidth=0, pivot='middle')
+        pylab.figure()
+        pylab.pcolor(kb); pylab.colorbar()
+        pylab.title('kappa_B')
 
 show_shear(scale_free_spectrum, None, "E-mode")
-show_shear(None, scale_free_spectrum, "B-mode")
+#show_shear(None, scale_free_spectrum, "B-mode")
+
+
 pylab.show()
