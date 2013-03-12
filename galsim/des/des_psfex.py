@@ -64,6 +64,7 @@ class DES_PSFEx(object):
             raise IOError("Unable to read DES_PSFEx file %s."%self.file_name)
 
     def read(self):
+        print 'start DES_PSFEx read'
         import pyfits
         hdu = pyfits.open(self.file_name)[1]
         pol_naxis = hdu.header['POLNAXIS']
@@ -108,6 +109,7 @@ class DES_PSFEx(object):
         self.x_scale = pol_scal1
         self.y_scale = pol_scal2
         self.sample_scale = psf_samp
+        print 'done read psfex file'
 
 
     def getPSF(self, pos, pixel_scale):
