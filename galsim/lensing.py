@@ -619,8 +619,8 @@ class PowerSpectrumRealizer(object):
             B_k = 0
 
         # Now convert from E,B to g1,g2  still in fourier space
-        g1_k = self._cos*E_k - self._sin*B_k
-        g2_k = self._sin*E_k + self._cos*B_k
+        g1_k = self._cos*E_k + self._sin*B_k
+        g2_k = -self._sin*E_k + self._cos*B_k
 
         # And go to real space to get the real-space shear fields
         g1 = g1_k.shape[0]*np.fft.irfft2(g1_k, s=(self.nx,self.ny))
@@ -642,9 +642,9 @@ class PowerSpectrumRealizer(object):
             k2 = self.k**2
             k2[0,0] = 1
             kappa_k[ self.kx, self.ky] =  -g1_k[ self.kx, self.ky] * (kx**2 - ky**2) / k2
-            kappa_k[ self.kx, self.ky] += -g2_k[ self.kx, self.ky] * 2*kx * ky / k2
+            kappa_k[ self.kx, self.ky] += +g2_k[ self.kx, self.ky] * 2*kx * ky / k2
             kappa_k[-self.kx, self.ky] =  -g1_k[-self.kx, self.ky] * ((-kx)**2 - ky**2) / k2
-            kappa_k[-self.kx, self.ky] += -g2_k[-self.kx, self.ky] * 2*(-kx) * ky / k2
+            kappa_k[-self.kx, self.ky] += +g2_k[-self.kx, self.ky] * 2*(-kx) * ky / k2
 
             # Set the DC term to zero.
             kappa_k[0,0] = 0
