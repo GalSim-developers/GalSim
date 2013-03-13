@@ -320,9 +320,9 @@ def test_tabulated():
     g1_tab, g2_tab = ps_tab.buildGriddedShears(grid_spacing = 1., ngrid = 10,
                                                rng = galsim.BaseDeviate(seed))
     np.testing.assert_almost_equal(g1_analytic, g1_tab, 6,
-        err_msg = "g1 of shear field from tabulated P(k) with x_log, f_log differs from expectation!")
+        err_msg="g1 of shear field from tabulated P(k) with x_log, f_log differs from expectation!")
     np.testing.assert_almost_equal(g2_analytic, g2_tab, 6,
-        err_msg = "g2 of shear field from tabulated P(k) with x_log, f_log differs from expectation!")
+        err_msg="g2 of shear field from tabulated P(k) with x_log, f_log differs from expectation!")
 
     # check for appropriate response to inputs when making/using LookupTable
     try:
