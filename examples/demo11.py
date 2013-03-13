@@ -24,7 +24,7 @@ New features introduced in this demo:
 - tab = galsim.LookupTable(file)
 - ps = galsim.PowerSpectrum(..., units)
 - distdev = galsim.DistDeviate(rng, function, x_min, x_max)
-- cf = galsim.correlatednoise.get_COSMOS_CorrelatedNoise(rng, file_name, ...)
+- cf = galsim.correlatednoise.getCOSMOSNoise(rng, file_name, ...)
 - cf.applyNoiseTo(image, ...)
 
 - Power spectrum shears for non-gridded positions.
@@ -234,7 +234,7 @@ def main(argv):
         logger.info('Galaxy %d: position relative to corner = %s, t=%f s', k, str(pos), tot_time)
 
     # Add correlated noise to the image -- the correlation function comes from the HST COSMOS images
-    # and is described in more detail in the galsim.correlatednoise.get_COSMOS_CorrFunc() docstring.
+    # and is described in more detail in the galsim.correlatednoise.getCOSMOSNoise() docstring.
     # This function requires a FITS file, stored in the GalSim repository, that represents this
     # correlation information: the path to this file is a required argument. 
     cf_file_name = os.path.join('..', 'examples', 'data', 'acs_I_unrot_sci_20_cf.fits')
@@ -245,7 +245,7 @@ def main(argv):
     # COSMOS.  Using the original pixel scale, dx_cosmos=0.03 [arcsec], would leave very little
     # correlation among our larger 0.2 arcsec pixels. We also set the point (zero-distance) variance
     # to our desired value.
-    cn = galsim.correlatednoise.get_COSMOS_CorrelatedNoise(
+    cn = galsim.correlatednoise.getCOSMOSNoise(
         rng, cf_file_name, dx_cosmos=pixel_scale, variance=noise_variance)
 
     # Now add noise according to this correlation function to the full_image.  We have to do this

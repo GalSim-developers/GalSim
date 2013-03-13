@@ -667,7 +667,7 @@ def test_cosmos_and_whitening():
     t1 = time.time()
     gd = galsim.GaussianDeviate(rseed)
     dx_cosmos = 7.5 # Use some non-default, non-unity value of COSMOS pixel spacing
-    ccn = galsim.get_COSMOS_CorrelatedNoise(
+    ccn = galsim.getCOSMOSNoise(
         gd, '../examples/data/acs_I_unrot_sci_20_cf.fits', dx_cosmos=dx_cosmos)
     outimage = galsim.ImageD(3 * largeim_size, 3 * largeim_size) # large image to beat down noise
     outimage.setScale(dx_cosmos) # Set image scale 

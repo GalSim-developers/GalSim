@@ -192,11 +192,10 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         Example
         -------
         To see noise whitening in action, let us use a model of the correlated noise in COSMOS 
-        as returned by the get_COSMOS_CorrelatedNoise() function.  Let's initialize and add noise
-        to an image:
+        as returned by the getCOSMOSNoise() function.  Let's initialize and add noise to an image:
 
             >>> cosmos_file='YOUR/REPO/PATH/GalSim/examples/data/acs_I_unrot_sci_20_cf.fits'
-            >>> cn = galsim.get_COSMOS_CorrelatedNoise(galsim.BaseDeviate(), cosmos_file)
+            >>> cn = galsim.getCOSMOSNoise(galsim.BaseDeviate(), cosmos_file)
             >>> image = galsim.ImageD(256, 256)
             >>> image.setScale(0.03) # Should match the COSMOS default since didn't specify another
             >>> image.addNoise(cn)
@@ -768,7 +767,7 @@ for Class in galsim.ConstImageView.itervalues():
     Class.getCorrelatedNoise = _Image_getCorrelatedNoise
 
 # Free function for returning a COSMOS noise field correlation function
-def get_COSMOS_CorrelatedNoise(rng, file_name, dx_cosmos=0.03, variance=0.):
+def getCOSMOSNoise(rng, file_name, dx_cosmos=0.03, variance=0.):
     """Returns a representation of correlated noise in the HST COSMOS F814W unrotated science coadd
     images.
 
@@ -813,7 +812,7 @@ def get_COSMOS_CorrelatedNoise(rng, file_name, dx_cosmos=0.03, variance=0.):
         >>> filestring='/YOUR/REPO/PATH/GalSim/devel/external/hst/acs_I_unrot_sci_20_cf.fits'
         >>> import galsim
         >>> rng = galsim.UniformDeviate(123456)
-        >>> cf = galsim.correlatednoise.get_COSMOS_CorrelatedNoise(rng, filestring)
+        >>> cf = galsim.correlatednoise.getCOSMOSNoise(rng, filestring)
         >>> im = galsim.ImageD(300, 300)
         >>> im.setScale(0.03)
         >>> cf.applyTo(im)
@@ -831,8 +830,8 @@ def get_COSMOS_CorrelatedNoise(rng, file_name, dx_cosmos=0.03, variance=0.):
         # Give a vaguely helpful warning, then raise the original exception for extra diagnostics
         import warnings
         warnings.warn(
-            "Function get_COSMOS_CorrelatedNoise() unable to read FITS image from "+
-            str(file_name)+", more information on the error in the following Exception...")
+            "Function getCOSMOSNoise() unable to read FITS image from "+str(file_name)+", "+
+            "more information on the error in the following Exception...")
         raise original_exception
 
     # Then check for negative variance before doing anything time consuming
