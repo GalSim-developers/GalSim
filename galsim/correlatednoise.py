@@ -423,13 +423,16 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         example command demonstrates the syntax: 
 
             >>> correlated_noise.convolveWith(
-            ...    galsim.Convolve([galsim.Pixel(0.2), galsim.Moffat(3., fwhm=0.7)]))
+            ...    galsim.Convolve([galsim.Deconvolve(galsim.Pixel(0.03)),
+            ...                     galsim.Pixel(0.2), galsim.Moffat(3., fwhm=0.7),
 
-        Note, we are not deconvolving for the original pixels in the `correlated_noise` model in
-        this example.  This command above is functionally equivalent to
+        Note, we also deconvolve by the original pixel, which should be the pixel size of the 
+        image from which the `correlated_noise` was made.  This command above is functionally 
+        equivalent to
 
-            >>> correlated_noise.convolveWith(galsim.Moffat(beta=3., fwhm=0.7))
+            >>> correlated_noise.convolveWith(galsim.Deconvolve(galsim.Pixel(0.2)))
             >>> correlated_noise.convolveWith(galsim.Pixel(0.2))
+            >>> correlated_noise.convolveWith(galsim.Moffat(beta=3., fwhm=0.7))
 
         as is demanded for a linear operation such as convolution.
 
