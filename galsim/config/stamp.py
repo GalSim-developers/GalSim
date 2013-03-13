@@ -871,7 +871,9 @@ def CalculateNoiseVar(noise, pixel_scale, sky_level):
 
         # Build and add the correlated noise (lets the cn internals handle dealing with the options
         # for default variance: quick and ensures we don't needlessly duplicate code) 
-        cn = galsim.correlatednoise.getCOSMOSNoise(galsim.BaseDeviate(), **kwargs)
+        # Note: the rng being passed here is arbitrary, since we don't need it to calculate the
+        # variance.  Building a BaseDeviate with a particular seed is the fastest option.
+        cn = galsim.correlatednoise.getCOSMOSNoise(galsim.BaseDeviate(123), **kwargs)
 
         # zero distance correlation function value returned as variance
         var = cn.getVariance()
