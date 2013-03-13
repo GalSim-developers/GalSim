@@ -184,10 +184,9 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         image.getScale() <= 0 a pixel scale of 1 is assumed.
 
         If you are interested in a theoretical calculation of the variance in the final noise field
-        after whitening, the applyWhiteningTo() method in fact returns a tuple containing the
-        updated image and this variance.  For example:
+        after whitening, the applyWhiteningTo() method in fact returns this variance.  For example:
 
-            >>> image, variance = correlated_noise.applyWhiteningTo(image)
+            >>> variance = correlated_noise.applyWhiteningTo(image)
 
         Example
         -------
@@ -210,9 +209,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         @param image The input Image object.
 
-        @return (image, variance)  A tuple containing: the input galsim.Image with added whitening
-                                   noise added; a float storing the theoretically calculated
-                                   variance of the combined noise fields.
+        @return variance  A float containing the theoretically calculated variance of the combined
+                          noise fields in the updated image.
         """
         # Note that this uses the (fast) method of going via the power spectrum and FFTs to generate
         # noise according to the correlation function represented by this instance.  An alternative
@@ -254,7 +252,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # Finally generate a random field in Fourier space with the right PS and add to image
         noise_array = _generate_noise_from_rootps(self.getRNG(), rootps_whitening)
         image += galsim.ImageViewD(noise_array)
-        return image, variance
+        return variance
 
     def applyTransformation(self, ellipse):
         """Apply a galsim.Ellipse distortion to the correlated noise model.
