@@ -1648,10 +1648,10 @@ class InterpolatedImage(GSObject):
                 cn = galsim.CorrelatedNoise(gaussian_deviate, noise_pad)
             elif use_cache and noise_pad in InterpolatedImage._cache_noise_pad:
                 cn = InterpolatedImage._cache_noise_pad[noise_pad]
-                # Make sure that we are using the desired RNG by resetting that in this cached
-                # CorrelatedNoise instance
-                # (Barney: don't think it makes sense to prefer a cached RNG to a new one...)
-                cn.setRNG(gaussian_deviate)
+                if rng:
+                    # Make sure that we are using a specified RNG by resetting that in this cached
+                    # CorrelatedNoise instance, otherwise preserve the cached RNG
+                    cn.setRNG(gaussian_deviate)
             elif isinstance(noise_pad, str):
                 try:
                     cn = galsim.CorrelatedNoise(gaussian_deviate, galsim.fits.read(noise_pad))
