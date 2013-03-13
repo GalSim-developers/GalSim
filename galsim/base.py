@@ -1642,7 +1642,7 @@ class InterpolatedImage(GSObject):
         else:
             if isinstance(noise_pad, galsim.correlatednoise._BaseCorrelatedNoise):
                 cn = noise_pad.copy()
-                if rng is not None: # Let a user supplied RNG take precedence over that in user CN
+                if rng: # Let a user supplied RNG take precedence over that in user CN
                     cn.setRNG(gaussian_deviate)
             elif isinstance(noise_pad,galsim.BaseImageF) or isinstance(noise_pad,galsim.BaseImageD):
                 cn = galsim.CorrelatedNoise(gaussian_deviate, noise_pad)
@@ -2150,7 +2150,7 @@ class RealGalaxy(GSObject):
             if type(noise_pad) is not bool:
                 if isinstance(noise_pad, galsim.correlatednoise._BaseCorrelatedNoise):
                     cn = noise_pad.copy()
-                    if rng is not None: # Let user supplied RNG take precedence over that in user CN
+                    if rng: # Let user supplied RNG take precedence over that in user CN
                         cn.setRNG(gaussian_deviate)
                     # TODO: Should we set the variance as we do below?  Ought to decide...
                 elif (isinstance(noise_pad,galsim.BaseImageF) or 
@@ -2160,8 +2160,8 @@ class RealGalaxy(GSObject):
                     cn = RealGalaxy._cache_noise_pad[noise_pad]
                     # Make sure that we are using the desired RNG by resetting that in this cached
                     # CorrelatedNoise instance
-                    # (Barney: don't think it makes sense to prefer a cached RNG to a new one...)
-                    cn.setRNG(gaussian_deviate)
+                    if rng:
+                        cn.setRNG(gaussian_deviate)
                     # This small patch may have different overall variance, so rescale while
                     # preserving the correlation structure
                     cn.setVariance(self.pad_variance)
