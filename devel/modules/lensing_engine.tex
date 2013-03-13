@@ -807,6 +807,13 @@ above effect, so that is why it is not included in the above
 formalism.  A realistic test of power spectra from simulated images
 would have to include these effects.
 
+The deficit in power at low $\ell$ is likely the same phenomenon  seem
+in the CMB: the assumption of Gaussian distributions for $C_\ell$
+stops being true because there aren't enough samples for the central
+limit theorem to apply.  As a result, using the RMS $a_{\ell m}$ as
+the inputs to the shear generation code (which is what we are
+effectively doing) starts to be wrong.
+
 \section{Shear power on larger scales than our grid}\label{S:pk0}
 
 It is not clear that we should really be enforcing $P(k=0)=0$, i.e., no
