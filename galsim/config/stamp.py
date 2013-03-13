@@ -554,7 +554,7 @@ def AddNoiseFFT(im, weight_im, noise, base, rng, sky_level, logger=None):
         if logger:
             logger.debug(
                 '   Added COSMOS correlated noise with variance = %f',
-                cn.getVariance()
+                cn.getVariance())
 
     else:
         raise AttributeError("Invalid type %s for noise"%type)
@@ -740,7 +740,7 @@ def AddNoisePhot(im, weight_im, noise, base, rng, sky_level, logger=None):
         if logger:
             logger.debug(
                 '   Added COSMOS correlated noise with variance = %f',
-                cn.getVariance()
+                cn.getVariance())
 
     else:
         raise AttributeError("Invalid type %s for noise",type)
@@ -869,9 +869,9 @@ def CalculateNoiseVar(noise, pixel_scale, sky_level):
         
         kwargs = galsim.config.GetAllParams(noise, 'noise', noise, req=req, opt=opt)[0]
 
-        # Build and add the correlated noise 
-        cn = galsim.correlatednoise.getCOSMOSNoise(rng, **kwargs)
-        im.addNoise(cn)
+        # Build and add the correlated noise (lets the cn internals handle dealing with the options
+        # for default variance: quick and ensures we don't needlessly duplicate code) 
+        cn = galsim.correlatednoise.getCOSMOSNoise(galsim.BaseDeviate(), **kwargs)
 
         # zero distance correlation function value returned as variance
         var = cn.getVariance()
