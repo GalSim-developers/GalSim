@@ -2419,6 +2419,19 @@ class Convolve(GSObject):
         GSObject.__init__(self, galsim.SBConvolve(SBList, real_space=real_space))
 
 
+class AutoConvolve(GSObject):
+    """A special class for convolving a GSObject with itself.
+
+    It is equivalent in functionality to galsim.Convolve([obj,obj]), but takes advantage of
+    the fact that the two profiles are the same for some efficiency gains.
+    """
+    # --- Public Class methods ---
+    def __init__(self, obj):
+        if not isinstance(obj, GSObject):
+            raise TypeError("Argument to AutoConvolve must be a GSObject.")
+        GSObject.__init__(self, galsim.SBAutoConvolve(obj.SBProfile))
+
+
 class Deconvolve(GSObject):
     """Base class for defining the python interface to the SBDeconvolve C++ class.
 
@@ -2427,11 +2440,8 @@ class Deconvolve(GSObject):
     photon-shot using the drawShoot method.
     """
     # --- Public Class methods ---
-    def __init__(self, farg):
-        if isinstance(farg, GSObject):
-            self.farg = farg
-            GSObject.__init__(self, galsim.SBDeconvolve(self.farg.SBProfile))
-        else:
-            raise TypeError("Argument farg must be a GSObject.")
-
+    def __init__(self, obj):
+        if not isinstance(obj, GSObject):
+            raise TypeError("Argument to Deconvolve must be a GSObject.")
+        GSObject.__init__(self, galsim.SBDeconvolve(obj.SBProfile))
 

@@ -195,4 +195,43 @@ namespace galsim {
         dbg<<"Convolve Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }
+
+    //
+    // Autoconvolve 
+    // 
+    
+    SBAutoConvolve::SBAutoConvolve(const SBProfile& s) : SBProfile(new SBAutoConvolveImpl(s)) {}
+    SBAutoConvolve::SBAutoConvolve(const SBAutoConvolve& rhs) : SBProfile(rhs) {}
+    SBAutoConvolve::~SBAutoConvolve() {}
+
+    double SBAutoConvolve::SBAutoConvolveImpl::getPositiveFlux() const 
+    {
+        double p = _adaptee.getPositiveFlux();
+        double n = _adaptee.getNegativeFlux();
+        return p*p + n*n;
+    }
+
+    double SBAutoConvolve::SBAutoConvolveImpl::getNegativeFlux() const 
+    {
+        double p = _adaptee.getPositiveFlux();
+        double n = _adaptee.getNegativeFlux();
+        return 2.*p*n;
+    }
+
+    boost::shared_ptr<PhotonArray> SBAutoConvolve::SBAutoConvolveImpl::shoot(
+        int N, UniformDeviate u) const 
+    {
+        dbg<<"AutoConvolve shoot: N = "<<N<<std::endl;
+        dbg<<"Target flux = "<<getFlux()<<std::endl;
+        boost::shared_ptr<PhotonArray> result = _adaptee.shoot(N, u);
+        result->convolve(*_adaptee.shoot(N, u), u);
+        dbg<<"AutoConvolve Realized flux = "<<result->getTotalFlux()<<std::endl;
+        return result;
+    }
+
+    void SBAutoConvolve::SBAutoConvolveImpl::fillKGrid(KTable& kt) const 
+    {
+        SBProfile::GetImpl(_adaptee)->fillKGrid(kt);
+        kt *= kt;
+    }
 }

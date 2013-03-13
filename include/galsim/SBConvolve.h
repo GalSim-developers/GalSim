@@ -113,6 +113,34 @@ namespace galsim {
         void operator=(const SBConvolve& rhs);
     };
 
+    // A special case of a convolution of a profile with itself, which allows for some 
+    // efficiency gains over SBConvolve(s,s)
+    class SBAutoConvolve : public SBProfile
+    {
+    public:
+        /**
+         * @brief Constructor
+         *
+         * @param[in] s SBProfile to be convolved with itself.
+         */
+        SBAutoConvolve(const SBProfile& s);
+
+        /// @brief Copy constructor.
+        SBAutoConvolve(const SBAutoConvolve& rhs);
+
+        /// @brief Destructor.
+        ~SBAutoConvolve();
+
+    protected:
+
+        class SBAutoConvolveImpl;
+
+    private:
+        // op= is undefined
+        void operator=(const SBAutoConvolve& rhs);
+    };
+
+
 }
 
 #endif // SBCONVOLVE_H

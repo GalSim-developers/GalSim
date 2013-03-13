@@ -57,9 +57,21 @@ namespace galsim {
 
     };
 
+    struct PySBAutoConvolve 
+    {
+        static void wrap() {
+            bp::class_< SBAutoConvolve, bp::bases<SBProfile> >("SBAutoConvolve", bp::no_init)
+                .def(bp::init<const SBProfile &>((bp::args("s"))))
+                .def(bp::init<const SBAutoConvolve &>())
+                ;
+        }
+
+    };
+
     void pyExportSBConvolve() 
     {
         PySBConvolve::wrap();
+        PySBAutoConvolve::wrap();
     }
 
 } // namespace galsim
