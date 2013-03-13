@@ -417,15 +417,16 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
             >>> correlated_noise.convolveWith(galsim.Moffat(beta=3., fwhm=0.7))
 
-        Often we will want to convolve with more than one function.  For example, if we want to
-        simulate how noise in space-based images would look if convolved with a ground-based PSF
-        (such as the Moffat above) and then rendered onto a new (typically larger) pixel grid, the
-        following example command demonstrates the syntax: 
+        Often we will want to convolve with more than one function.  For example, if we wanted to
+        simulate how a noise field would look if convolved with a ground-based PSF (such as the 
+        Moffat above) and then rendered onto a new (typically larger) pixel grid, the following
+        example command demonstrates the syntax: 
 
             >>> correlated_noise.convolveWith(
             ...    galsim.Convolve([galsim.Pixel(0.2), galsim.Moffat(3., fwhm=0.7)]))
 
-        This is functionally equivalent to
+        Note, we are not deconvolving for the original pixels in the `correlated_noise` model in
+        this example.  This command above is functionally equivalent to
 
             >>> correlated_noise.convolveWith(galsim.Moffat(beta=3., fwhm=0.7))
             >>> correlated_noise.convolveWith(galsim.Pixel(0.2))
