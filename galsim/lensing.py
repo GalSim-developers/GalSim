@@ -623,7 +623,7 @@ class PowerSpectrumRealizer(object):
         g1 = g1_k.shape[0] * np.fft.irfft2(g1_k, s=(self.nx,self.ny))
         g2 = g2_k.shape[0] * np.fft.irfft2(g2_k, s=(self.nx,self.ny))
 
-        #Get kappa, the convergence field.
+        # Get kappa, the convergence field.
         if get_kappa:
             # Convert the self.kx, which are indices, into kx, which are wavenumbers (note: must
             # match units convention adopted for dimensional self.k)
@@ -1060,17 +1060,25 @@ class NFWHalo(object):
 def kappaKaiserSquires(g1, g2):
     """Perform a Kaiser & Squires (1993) inversion to get a convergence map from gridded shears.
 
+    This function takes gridded shears and constructs a convergence map from them.  While this is
+    complicated in reality by the non-gridded galaxy positions, it is a straightforward
+    implementation using Fourier transforms for the case of gridded galaxy positions.  Note that
+    there are additional complications when dealing with real observational issues like shape noise
+    that are not handled by this function.
+
+    Note that, like any process that attempts to recover information from discretely sampled data,
+    the `kappa_E` and `kappa_B` maps returned by this function are subject to aliasing.  There will
+    be distortions if there are non-zero frequency modes in the lensing field represented by g1 and
+    g2 at more than half the frequency represented by the g1, g2 grid spacing.  To avoid this issue
+    in practice you can smooth the input g1, g2 to effectively bandlimit them (the same smoothing
+    kernel will be present in the output `kappa_E`, `kappa_B`).  If applying this function to shears
+    drawn randomly according to some power spectrum, the power spectrum that is used should be
+    modified to go to zero above the relevant maximum k value for the grid being used.
+
     @param g1  Square galsim.ImageF, galsim.ImageD or NumPy array containing the first component of
                shear.
     @param g2  Square galsim.ImageF, galsim.ImageD or NumPy array containing the second component of
                shear.
-
-    Note that, like any process that attempts to recover information from discretely sampled data,
-    the `kappa_E` and `kappa_B` maps returns by this function are subject to aliasing.  There will
-    be distortions if there are non-zero frequency modes in the lensing field represented by g1 and
-    g2 at more than half the frequency represented by the g1, g2 grid spacing.  To avoid this issue
-    in practice you can smooth the input g1, g2 to effectively bandlimit them (the same smoothing
-    kernel will be present in the output `kappa_E`, `kappa_B`).
 
     @return kappa_E, kappa_B  The first element of this tuple represents the convergence field
                               underlying the input shears; the second element is the convergence
@@ -1091,25 +1099,30 @@ def kappaKaiserSquires(g1, g2):
         raise ValueError("Input g1 and g2 must be the same shape.")
     if g1.shape[0] != g1.shape[1]:
         raise NotImplementedError("Non-square input shear grids not supported.")
+
     # Then setup the kx, ky grids
     kx, ky = galsim.utilities.kxky(g1.shape)
     kx = kx[:, 0:g1.shape[1]/2 + 1] # Use Hermitian symmetry for speed
     ky = ky[:, 0:g1.shape[1]/2 + 1] # Use Hermitian symmetry for speed
     k2 = (kx * kx + ky * ky)
+
     # Transform to Fourier space
-    g1t = np.fft.rfft2(g1)
-    g2t = np.fft.rfft2(g2)
-    # Use Joe's trick of setting k2=unity then later setting kappaX[0,0] = 0
+    g1_k = np.fft.rfft2(g1)
+    g2_k = np.fft.rfft2(g2)
+
+    # Use trick from buildGriddedShears, setting k2=1 to avoid division by zero, then later setting
+    # kappa[0,0] = 0.
     k2[0, 0] = 1.
-    # Calculate
-    kappaEt = ((kx * kx - ky * ky) * g1t + 2. * kx * ky * g2t) / k2
+    # Calculate, using Kaiser & Squires (1993)
+    kappaE_k = ((kx * kx - ky * ky) * g1_k + 2. * kx * ky * g2_k) / k2
     # For B rotation (g1)<-(-g2) and (g2)<-(g1)
-    kappaBt = (-(kx * kx - ky * ky) * g2t + 2. * kx * ky * g1t) / k2
-    kappaEt[0, 0] = 0.
-    kappaBt[0, 0] = 0.
-    # Transform back, then return
-    kappaE = np.fft.irfft2(kappaEt)
-    kappaB = np.fft.irfft2(kappaBt)
+    kappaB_k = (-(kx * kx - ky * ky) * g2_k + 2. * kx * ky * g1_k) / k2
+    kappaE_k[0, 0] = 0.
+    kappaB_k[0, 0] = 0.
+
+    # Transform back to real space, then return
+    kappaE = np.fft.irfft2(kappaE_k)
+    kappaB = np.fft.irfft2(kappaB_k)
     return kappaE, kappaB
 
 
