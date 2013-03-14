@@ -495,6 +495,9 @@ def test_power_spectrum_kappa():
         grid_spacing=dx_grid_arcmin, ngrid=ngrid, units=galsim.arcmin,
         rng=galsim.BaseDeviate(rseed), get_kappa=True)
     kE_ks, kB_ks = galsim.lensing.kappaKaiserSquires(g1E, g2E)
+    #import matplotlib.pyplot as plt
+    #plt.pcolor(k_test); plt.colorbar(); plt.figure()
+    #plt.pcolor(kE_ks); plt.colorbar(); plt.show()
     # Test that E-mode kappa matches to some sensible accuracy
     np.testing.assert_array_almost_equal(
         k_test, kE_ks, decimal=3,
@@ -519,8 +522,7 @@ def test_power_spectrum_kappa():
         err_msg="B-mode only PowerSpectrum output kappaE from KS does not match zero to 3d.p.")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
-    import matplotlib.pyplot as plt
-    plt.pcolor(kE_ks); plt.colorbar(); plt.show()
+
 
 if __name__ == "__main__":
 #    test_nfwhalo()
