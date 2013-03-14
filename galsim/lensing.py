@@ -568,8 +568,8 @@ class PowerSpectrumRealizer(object):
         self.pixel_size = pixel_size
 
         # Set up the scalar |k| grid. Generally, for a box size of L (in one dimension), the grid
-        # spacing in k_x or k_y is Delta k=2pi/L.
-        self.k=2.*np.pi*((kx/(pixel_size*nx))**2+(ky/(pixel_size*ny))**2)**0.5
+        # spacing in k_x or k_y is Delta k=2pi/L (Barney edit: sqrt faster than **.5 I think...)
+        self.k = 2. * np.pi * np.sqrt((kx / (pixel_size * nx))**2 + (ky / (pixel_size * ny))**2)
 
         #Compute the spin weightings
         self._cos, self._sin = self._generate_spin_weightings()
@@ -618,7 +618,7 @@ class PowerSpectrumRealizer(object):
             B_k = 0
 
         # Now convert from E,B to g1,g2  still in fourier space
-        g1_k = self._cos*E_k + self._sin*B_k
+        g1_k =  self._cos*E_k + self._sin*B_k
         g2_k = -self._sin*E_k + self._cos*B_k
 
         # And go to real space to get the real-space shear fields
@@ -627,9 +627,10 @@ class PowerSpectrumRealizer(object):
 
         #Get kappa, the magnification field.
         if get_kappa:
-            # Convert the self.kx, which are indices, into kx, which are wavenumbers
-            kx = self.kx/(self.pixel_size*self.nx)
-            ky = self.ky/(self.pixel_size*self.ny)
+            # Convert the self.kx, which are indices, into kx, which are wavenumbers (note must
+            # match units convention adopted for dimensional self.k)
+            kx = 2. * np.pi * self.kx / (self.pixel_size * self.nx)
+            ky = 2. * np.pi * self.ky / (self.pixel_size * self.ny)
 
             # Set up the convergence field in Fourier space - same structure as the shear fields
             kappa_k = np.zeros_like(g1_k)
@@ -640,16 +641,16 @@ class PowerSpectrumRealizer(object):
             # corresponding kappa term to zero manually.
             k2 = self.k**2
             k2[0,0] = 1
-            kappa_k[ self.kx, self.ky] =  -g1_k[ self.kx, self.ky] * (kx**2 - ky**2) / k2
-            kappa_k[ self.kx, self.ky] += +g2_k[ self.kx, self.ky] * 2*kx * ky / k2
-            kappa_k[-self.kx, self.ky] =  -g1_k[-self.kx, self.ky] * ((-kx)**2 - ky**2) / k2
-            kappa_k[-self.kx, self.ky] += +g2_k[-self.kx, self.ky] * 2*(-kx) * ky / k2
+            kappa_k[ self.kx, self.ky] = -g1_k[ self.kx, self.ky] * (kx**2 - ky**2) / k2
+            kappa_k[ self.kx, self.ky] += g2_k[ self.kx, self.ky] * 2*kx * ky / k2
+            kappa_k[-self.kx, self.ky] = -g1_k[-self.kx, self.ky] * ((-kx)**2 - ky**2) / k2
+            kappa_k[-self.kx, self.ky] += g2_k[-self.kx, self.ky] * 2*(-kx) * ky / k2
 
             # Set the DC term to zero.
             kappa_k[0,0] = 0
 
             # Transform into real space.
-            kappa = kappa_k.shape[0]*np.fft.irfft2(kappa_k,s=(self.nx,self.ny))
+            kappa = kappa_k.shape[0] * np.fft.irfft2(kappa_k,s=(self.nx,self.ny))
         else:
             kappa = np.zeros(g1.shape, dtype=g1.dtype)
 
