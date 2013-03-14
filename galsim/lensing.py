@@ -354,9 +354,9 @@ class PowerSpectrum(object):
         psr = PowerSpectrumRealizer(ngrid, ngrid, grid_spacing, p_E, p_B)
         self.grid_g1, self.grid_g2, self.grid_kappa = psr(gd, get_kappa=get_kappa)
             
-        # Setup the images to be interpolated.
+        # Set up the images to be interpolated.
         # Note: We don't make the SBInterpolatedImages yet, since it's not picklable. 
-        #       So just created them when we are actually going to use them.
+        #       So we wait to create them when we are actually going to use them.
         self.im_g1 = galsim.ImageViewD(self.grid_g1)
         self.im_g1.setScale(grid_spacing)
 
@@ -401,7 +401,6 @@ class PowerSpectrum(object):
             import os
             if os.path.isfile(pf):
                 try:
-                    #pf = galsim.LookupTable(file=pf, x_log=True, f_log=True)
                     pf = galsim.LookupTable(file=pf)
                 except :
                     raise AttributeError(
@@ -588,7 +587,7 @@ class PowerSpectrumRealizer(object):
     def __call__(self, gd, get_kappa=False):
         """Generate a realization of the current power spectrum.
         
-        @param gd               A gaussian deviate to use when generating the shear fields.
+        @param gd               A Gaussian deviate to use when generating the shear fields.
         @param get_kappa        Get the convergence in addition to the shear?
                                 [Default: `get_kappa=False`]
         @return g1,g2,kappa     NumPy arrays for the shear components g_1, g_2 and convergence
@@ -621,12 +620,12 @@ class PowerSpectrumRealizer(object):
         g2_k = -self._sin*E_k + self._cos*B_k
 
         # And go to real space to get the real-space shear fields
-        g1 = g1_k.shape[0]*np.fft.irfft2(g1_k, s=(self.nx,self.ny))
-        g2 = g2_k.shape[0]*np.fft.irfft2(g2_k, s=(self.nx,self.ny))
+        g1 = g1_k.shape[0] * np.fft.irfft2(g1_k, s=(self.nx,self.ny))
+        g2 = g2_k.shape[0] * np.fft.irfft2(g2_k, s=(self.nx,self.ny))
 
-        #Get kappa, the magnification field.
+        #Get kappa, the convergence field.
         if get_kappa:
-            # Convert the self.kx, which are indices, into kx, which are wavenumbers (note must
+            # Convert the self.kx, which are indices, into kx, which are wavenumbers (note: must
             # match units convention adopted for dimensional self.k)
             kx = 2. * np.pi * self.kx / (self.pixel_size * self.nx)
             ky = 2. * np.pi * self.ky / (self.pixel_size * self.ny)
@@ -636,8 +635,8 @@ class PowerSpectrumRealizer(object):
 
             # Compute the convergence fourier components using the simple relation in Kaiser &
             # Squires (1994), equation 2.1.12.
-            # To avoid NaNs we set the (0,0) DC term in k**2 to unity first, and then set the
-            # corresponding kappa term to zero manually.
+            # To avoid NaNs when dividing by k**2, we set the (0,0) DC term in k**2 to unity first,
+            # and then set the corresponding kappa term to zero manually.
             k2 = self.k**2
             k2[0,0] = 1
             kappa_k[ self.kx, self.ky] =  -g1_k[ self.kx, self.ky] * (kx * kx - ky * ky) / k2
@@ -649,7 +648,7 @@ class PowerSpectrumRealizer(object):
             kappa_k[0,0] = 0
 
             # Transform into real space.
-            kappa = kappa_k.shape[0] * np.fft.irfft2(kappa_k,s=(self.nx,self.ny))
+            kappa = kappa_k.shape[0] * np.fft.irfft2(kappa_k, s=(self.nx,self.ny))
         else:
             kappa = np.zeros(g1.shape, dtype=g1.dtype)
 
@@ -691,7 +690,7 @@ class PowerSpectrumRealizer(object):
         S = np.zeros((self.nx, self.ny / 2 + 1))
         kx = self.kx
         ky = self.ky
-        TwoPsi=2*np.arctan2(1.0*self.ky, 1.0*self.kx)
+        TwoPsi = 2 * np.arctan2(1.0*self.ky, 1.0*self.kx)
         C[kx,ky] = np.cos(TwoPsi)
         S[kx,ky] = np.sin(TwoPsi)
         C[-kx,ky] =  C[kx,ky]
