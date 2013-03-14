@@ -1064,7 +1064,7 @@ def kappaKaiserSquires(g1, g2):
     complicated in reality by the non-gridded galaxy positions, it is a straightforward
     implementation using Fourier transforms for the case of gridded galaxy positions.  Note that
     there are additional complications when dealing with real observational issues like shape noise
-    that are not handled by this function.
+    that are not handled by this function, and likewise there are known edge effects.
 
     Note that, like any process that attempts to recover information from discretely sampled data,
     the `kappa_E` and `kappa_B` maps returned by this function are subject to aliasing.  There will

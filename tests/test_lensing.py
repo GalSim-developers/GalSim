@@ -55,10 +55,13 @@ def kappa_gaussian(theta1_array, theta2_array, sigma, pos, amp=1.):
     return amp * np.exp(-.5 * theta2 / sigma2)
 
 def shear_gaussian(theta1_array, theta2_array, sigma, pos, amp=1., rotate45=False):
-    """Return an array of kappa values given input arrays of theta1, theta2, float for sigma in the
+    """Return arrays of shear values given input arrays of theta1, theta2, float for sigma in the
     units of theta and a galsim.PositionD for pos.
 
-    Scaled to be amp at origin.
+    The surface density kappa is scaled to be amp at origin.  Tangential shear around the origin
+    relates to kappa_gaussian function by the usual relation,
+    gamma_t(theta) = <kappa(<theta)> - kappa(theta)
+    The rotate45 keyword can be used to specify rotation of the shears at each point by 45 degrees.
     """
     sigma2 = sigma * sigma
     t1 = theta1_array - pos.x
@@ -417,15 +420,16 @@ def test_tabulated():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_kappa_nfw():
-    """Test that our Kaiser-Squires inversion routines correctly recover the convergence map
+    """Test that our Kaiser-Squires inversion routine correctly recovers the convergence map
     for a field containing known NFW halos.
     """
     import time
     t1 = time.time()
     # Setup coordinates for gridded kappa/gamma
     # Note: if the grid extent is made larger (i.e. the image is zero padded) then accuracy on
-    # the output kappa map is increased, and decimal can be increased too.  We checked this behavior
-    # but have an interest in efficient unit tests.
+    # the output kappa map is increased, and decimal can be increased too.  We confirmed this
+    # behavior, but do not use the higher resolution for unit tests due to the inefficiency of
+    # calculations on larger grids.
     grid_spacing_arcsec = 1
     grid_extent_arcsec = 100.
     ngrid = int(grid_extent_arcsec / grid_spacing_arcsec)
@@ -482,13 +486,10 @@ def test_power_spectrum_with_kappa():
     """
     import time
     t1 = time.time()
-    # BARNEY NOTE: I did not fully understand some of the changes needed within buildGriddedShears
-    # in order to get the kappa produced there to match the independently tested kappa inversion
-    # from kappaKaiserSquires().
-    # However, now that we are controlling aliasing by smoothing the power spectrum I do get
-    # agreement at very high precision.  This combined with the results from the tests above (and 
-    # our independent NFW test on normalization) should give good confidence in our consistency of 
-    # the handling of kappa.
+    # Note that in order for this test to pass, we have to control aliasing by smoothing the power
+    # spectrum to go to zero above some maximum k.  This is the only way to get agreement at high
+    # precision between the gamma's and kappa's from the lensing engine vs. that from a Kaiser and
+    # Squires inversion.
     rseed=177774
     ngrid=100
     dx_grid_arcmin = .1
@@ -496,6 +497,7 @@ def test_power_spectrum_with_kappa():
     # and allow high-precision comparison).
     tab_ps = galsim.LookupTable(
         file='../examples/data/cosmo-fid.zmed1.00_smoothed.out', interpolant='linear')
+
     # Begin with E-mode input power
     psE = galsim.PowerSpectrum(tab_ps, None, units=galsim.radians)
     g1E, g2E, k_test = psE.buildGriddedShears(
@@ -510,7 +512,8 @@ def test_power_spectrum_with_kappa():
     np.testing.assert_array_almost_equal(
         kB_ks, np.zeros_like(kE_ks), decimal=16,
         err_msg="E-mode only PowerSpectrum output kappaB from KS does not match zero to 16 d.p.")
-    #Then do B-mode only input power
+
+    # Then do B-mode only input power
     psB = galsim.PowerSpectrum(None, tab_ps, units=galsim.radians)
     g1B, g2B, k_test = psB.buildGriddedShears(
         grid_spacing=dx_grid_arcmin, ngrid=ngrid, units=galsim.arcmin,
@@ -524,6 +527,7 @@ def test_power_spectrum_with_kappa():
     np.testing.assert_array_almost_equal(
         kE_ks, np.zeros_like(kB_ks), decimal=16,
         err_msg="B-mode only PowerSpectrum output kappaE from KS does not match zero to 16 d.p.")
+
     # Then for luck take B-mode only shears but rotate by 45 degrees before KS, and check
     # consistency 
     kE_ks_rotated, kB_ks_rotated = galsim.lensing.kappaKaiserSquires(g2B, -g1B)
@@ -536,12 +540,11 @@ def test_power_spectrum_with_kappa():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
 if __name__ == "__main__":
-#    test_nfwhalo()
-#    test_shear_flatps()
-#    test_shear_seeds()
-#    test_shear_reference()
-#    test_tabulated()
+    test_nfwhalo()
+    test_shear_flatps()
+    test_shear_seeds()
+    test_shear_reference()
+    test_tabulated()
     test_kappa_nfw()
     test_power_spectrum_with_kappa()
