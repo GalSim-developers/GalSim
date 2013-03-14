@@ -640,10 +640,10 @@ class PowerSpectrumRealizer(object):
             # corresponding kappa term to zero manually.
             k2 = self.k**2
             k2[0,0] = 1
-            kappa_k[ self.kx, self.ky] = -g1_k[ self.kx, self.ky] * (kx**2 - ky**2) / k2
-            kappa_k[ self.kx, self.ky] += g2_k[ self.kx, self.ky] * 2*kx * ky / k2
-            kappa_k[-self.kx, self.ky] = -g1_k[-self.kx, self.ky] * ((-kx)**2 - ky**2) / k2
-            kappa_k[-self.kx, self.ky] += g2_k[-self.kx, self.ky] * 2*(-kx) * ky / k2
+            kappa_k[ self.kx, self.ky] =  -g1_k[ self.kx, self.ky] * (kx * kx - ky * ky) / k2
+            kappa_k[ self.kx, self.ky] += g2_k[ self.kx, self.ky] * 2. * kx * ky / k2
+            kappa_k[-self.kx, self.ky] =  -g1_k[-self.kx, self.ky] * ((-kx) * (-kx) - ky * ky) / k2
+            kappa_k[-self.kx, self.ky] += g2_k[-self.kx, self.ky] * 2. * (-kx) * ky / k2
 
             # Set the DC term to zero.
             kappa_k[0,0] = 0
@@ -1095,16 +1095,15 @@ def kappaKaiserSquires(g1, g2):
     # Transform to Fourier space
     g1t = np.fft.rfft2(g1)
     g2t = np.fft.rfft2(g2)
-    # Setup kappaE/B transform storage
-    kappaEt = np.zeros(g1t.shape) + np.zeros(g1t.shape) * 1j
-    kappaBt = np.zeros(g1t.shape) + np.zeros(g1t.shape) * 1j
+    # Use Joe's trick of setting k2=unity then later setting kappaX[0,0] = 0
+    k2[0, 0] = 1.
     # Calculate
-    kappaEt[k2 > 0.] = (kx * kx - ky * ky)[k2 > 0.] * g1t[k2 > 0.] / k2[k2 > 0.] + \
-        2. * kx[k2 > 0.] * ky[k2 > 0.] * g2t[k2 > 0.] / k2[k2 > 0.]
+    kappaEt = ((kx * kx - ky * ky) * g1t + 2. * kx * ky * g2t) / k2
     # For B rotation (g1)<-(-g2) and (g2)<-(g1)
-    kappaBt[k2 > 0.] = -(kx * kx - ky * ky)[k2 > 0.] * g2t[k2 > 0.] / k2[k2 > 0.] + \
-        2. * kx[k2 > 0.] * ky[k2 > 0.] * g1t[k2 > 0.] / k2[k2 > 0.]
-    # Transform back, then return contiguous versions of real parts
+    kappaBt = (-(kx * kx - ky * ky) * g2t + 2. * kx * ky * g1t) / k2
+    kappaEt[0, 0] = 0.
+    kappaBt[0, 0] = 0.
+    # Transform back, then return
     kappaE = np.fft.irfft2(kappaEt)
     kappaB = np.fft.irfft2(kappaBt)
     return kappaE, kappaB
