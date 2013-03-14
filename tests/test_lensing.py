@@ -268,6 +268,7 @@ def test_shear_reference():
     ref = np.loadtxt(refdir + '/shearfield_reference.dat')
     g1_in = ref[:,0]
     g2_in = ref[:,1]
+    kappa_in = ref[:,2]
 
     # set up params
     rng = galsim.BaseDeviate(14136)
@@ -275,18 +276,21 @@ def test_shear_reference():
     dx = 1.
 
     # define power spectrum
-    ps = galsim.PowerSpectrum(e_power_function=pk2, b_power_function=pk1)
+    ps = galsim.PowerSpectrum(e_power_function=lambda k : k**0.5, b_power_function=lambda k : k)
     # get shears
-    g1, g2 = ps.buildGriddedShears(grid_spacing = dx, ngrid = n, rng=rng)
+    g1, g2, kappa = ps.buildGriddedShears(grid_spacing = dx, ngrid = n, rng=rng, get_kappa=True)
 
     # put in same format as data that got read in
     g1vec = g1.reshape(n*n)
     g2vec = g2.reshape(n*n)
+    kappavec = kappa.reshape(n*n)
     # compare input vs. calculated values
     np.testing.assert_almost_equal(g1_in, g1vec, 9,
                                    err_msg = "Shear field differs from reference shear field!")
     np.testing.assert_almost_equal(g2_in, g2vec, 9,
                                    err_msg = "Shear field differs from reference shear field!")
+    np.testing.assert_almost_equal(kappa_in, kappavec, 9,
+                                   err_msg = "Convergence differences from references!")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

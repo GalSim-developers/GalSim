@@ -81,8 +81,9 @@ class PowerSpectrum(object):
 
     A PowerSpectrum represents some (flat-sky) shear power spectrum, either for gridded points or at
     arbitary positions.  This class is originally initialized with a power spectrum from which we
-    would like to generate g1 and g2 values.  It generates shears on a grid, and if necessary,
-    when getShear is called, it will interpolate to the requested positions. 
+    would like to generate g1 and g2 (and, optionally, convergence kappa) values.  It generates shears
+    on a grid, and if necessary, when getShear is called, it will interpolate to the requested
+    positions.
 
     When creating a PowerSpectrum instance, you need to specify at least one of the E or B mode 
     power spectra, which is normally given as a function P(k).  The typical thing is to just 

@@ -240,8 +240,6 @@ GalSim:
 
 * PSFs from stochastic atmosphere models.
 
-* Self-consistent shears AND magnifications from a power spectrum.
-
 * Handling (that is, whitening and imposing isotropy or four-fold symmetry on)
   the input noise in the HST training data, so that deeper training samples can
   be used for simulations of realistic galaxies.
