@@ -572,8 +572,7 @@ class PowerSpectrumRealizer(object):
         self.k = 2. * np.pi * np.sqrt((kx / (pixel_size * nx))**2 + (ky / (pixel_size * ny))**2)
 
         #Compute the spin weightings
-        self._cos, self._sin = self._generate_spin_weightings()
-        
+        self._cos, self._sin = self._generate_spin_weightings()        
 
     def set_power(self, p_E, p_B):
         self.p_E = p_E
@@ -622,8 +621,8 @@ class PowerSpectrumRealizer(object):
         g2_k = -self._sin*E_k + self._cos*B_k
 
         # And go to real space to get the real-space shear fields
-        g1 = g1_k.shape[0]*np.fft.irfft2(g1_k, s=(self.nx,self.ny))
-        g2 = g2_k.shape[0]*np.fft.irfft2(g2_k, s=(self.nx,self.ny))
+        g1 = g1_k.shape[0]*np.fft.irfft2(g1_k)#, s=(self.nx,self.ny))
+        g2 = g2_k.shape[0]*np.fft.irfft2(g2_k)#, s=(self.nx,self.ny))
 
         #Get kappa, the magnification field.
         if get_kappa:
@@ -688,15 +687,17 @@ class PowerSpectrumRealizer(object):
     def _generate_spin_weightings(self):
         # Internal function to generate the cosine and sine spin weightings for the current array
         # set-up.
-        C=np.zeros((self.nx,self.ny/2+1))
-        S=np.zeros((self.nx,self.ny/2+1))
-        kx = self.kx
-        ky = self.ky
-        TwoPsi=2*np.arctan2(1.0*self.ky, 1.0*self.kx)
-        C[kx,ky]=np.cos(TwoPsi)
-        S[kx,ky]=np.sin(TwoPsi)
-        C[-kx,ky]=np.cos(TwoPsi)
-        S[-kx,ky]=-np.sin(TwoPsi)
+        C = np.zeros((self.nx, self.ny / 2 + 1))
+        S = np.zeros((self.nx, self.ny / 2 + 1))
+        # Define some float ks we'll need for Trig.
+        kx = 1. * self.kx
+        ky = 1. * self.ky
+        k2 = kx * kx + ky * ky
+        # Generate sine cosins spin weightings
+        C[ self.kx, self.ky] = (kx * kx - ky * ky) / k2
+        S[ self.kx, self.ky] = 2. * kx * ky / k2
+        C[-self.kx, self.ky] = C[kx,ky]
+        S[-self.kx, self.ky] =-S[kx,ky]
 
         return C,S
 
