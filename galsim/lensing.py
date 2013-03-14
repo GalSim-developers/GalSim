@@ -621,8 +621,8 @@ class PowerSpectrumRealizer(object):
         g2_k = -self._sin*E_k + self._cos*B_k
 
         # And go to real space to get the real-space shear fields
-        g1 = g1_k.shape[0]*np.fft.irfft2(g1_k), s=(self.nx,self.ny))
-        g2 = g2_k.shape[0]*np.fft.irfft2(g2_k), s=(self.nx,self.ny))
+        g1 = g1_k.shape[0]*np.fft.irfft2(g1_k, s=(self.nx,self.ny))
+        g2 = g2_k.shape[0]*np.fft.irfft2(g2_k, s=(self.nx,self.ny))
 
         #Get kappa, the magnification field.
         if get_kappa:
