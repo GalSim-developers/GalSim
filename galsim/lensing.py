@@ -561,7 +561,7 @@ class PowerSpectrumRealizer(object):
     def set_size(self, nx, ny, pixel_size):
         self.nx = nx
         self.ny = ny
-        kx, ky=np.mgrid[0:nx/2+1,0:ny/2+1]
+        kx, ky = np.mgrid[0: nx / 2 + 1, 0: ny / 2 + 1]
         self.kx = kx
         self.ky = ky
         pixel_size = float(pixel_size)
@@ -689,16 +689,15 @@ class PowerSpectrumRealizer(object):
         # set-up.
         C = np.zeros((self.nx, self.ny / 2 + 1))
         S = np.zeros((self.nx, self.ny / 2 + 1))
-        # Define some float ks we'll need for Trig.
-        kx = 1. * self.kx
-        ky = 1. * self.ky
-        k2 = kx * kx + ky * ky
-        # Generate sine cosins spin weightings
-        C[ self.kx, self.ky] = (kx * kx - ky * ky) / k2
-        S[ self.kx, self.ky] = 2. * kx * ky / k2
-        C[-self.kx, self.ky] = C[kx,ky]
-        S[-self.kx, self.ky] =-S[kx,ky]
-
+        C=np.zeros((self.nx,self.ny/2+1))
+        S=np.zeros((self.nx,self.ny/2+1))
+        kx = self.kx
+        ky = self.ky
+        TwoPsi=2*np.arctan2(1.0*self.ky, 1.0*self.kx)
+        C[kx,ky] = np.cos(TwoPsi)
+        S[kx,ky] = np.sin(TwoPsi)
+        C[-kx,ky] =  C[kx,ky]
+        S[-kx,ky] = -S[kx,ky]
         return C,S
 
 class Cosmology(object):
