@@ -36,7 +36,7 @@ def ProcessInput(config, file_num=0, logger=None):
                 SetDefaultExt(field['file_name'],'.asc')
             if key == 'power_spectrum':
                 # This is used for buildGriddedShears later.
-                ignore += ['grid_spacing', 'interpolant']
+                ignore += ['grid_spacing', 'interpolant', 'get_kappa']
             input_obj = galsim.config.gsobject._BuildSimple(field, key, config, ignore)[0]
             if logger and  key in ['catalog', 'real_catalog']:
                 logger.info('Read %d objects from %s',input_obj.nobjects,key)

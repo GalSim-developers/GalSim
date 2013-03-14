@@ -42,7 +42,7 @@ def ParseValue(config, param_name, base, value_type):
         # Otherwise, we need to generate the value according to its type
         valid_types = {
             float : [ 'InputCatalog', 'Random', 'RandomGaussian', 'RandomDistribution',
-                      'NFWHaloMag', 'Sequence', 'List', 'Eval' ],
+                      'NFWHaloMag', 'PowerSpectrumMag', 'Sequence', 'List', 'Eval' ],
             int : [ 'InputCatalog', 'Random', 'Sequence', 'List', 'Eval' ],
             bool : [ 'InputCatalog', 'Random', 'Sequence', 'List', 'Eval' ],
             str : [ 'InputCatalog', 'NumberedFile', 'FormattedStr', 'List', 'Eval' ],
@@ -753,6 +753,24 @@ def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
     #print 'shear = ',shear
     return shear, False
 
+def _GenerateFromPowerSpectrumMag(param, param_name, base, value_type):
+    """@brief Return a magnification calculated from a PowerSpectrum object.
+    """
+    if 'pos' not in base:
+        raise ValueError("PowerSpectrumMag requested, but no position defined.")
+    pos = base['pos']
+
+    if 'power_spectrum' not in base:
+        raise ValueError("PowerSpectrumMag requested, but no input.power_spectrum defined.")
+    
+    req = { }
+    # Only Check, not Get.  (There's nothing to get -- just make sure there aren't extra params.)
+    CheckAllParams(param, param_name, req=req)
+
+    g1,g2,kappa = base['power_spectrum'].getShear(pos, get_kappa=True)
+    mu = 1. / ( (1.-kappa)**2 - (g1**2 + g2**2) )
+
+    return mu, False
 
 def _GenerateFromList(param, param_name, base, value_type):
     """@brief Return next item from a provided list
