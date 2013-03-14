@@ -44,6 +44,32 @@ def pkflat(k):
     # note: this gives random Gaussian shears with variance of 0.01
     return 0.01+np.zeros_like(k)
 
+def kappa_gaussian(theta1_array, theta2_array, sigma, pos, amp=1.):
+    """Return an array of kappa values given input arrays of theta1, theta2, float for sigma in the
+    units of theta and a galsim.PositionD for pos.
+
+    Scaled to be amp at origin.
+    """
+    sigma2 = sigma * sigma
+    theta2 = (theta1_array - pos.x)**2 + (theta2_array - pos.y)**2
+    return amp * np.exp(-.5 * theta2 / sigma2)
+
+def shear_gaussian(theta1_array, theta2_array, sigma, pos, amp=1.):
+    """Return an array of kappa values given input arrays of theta1, theta2, float for sigma in the
+    units of theta and a galsim.PositionD for pos.
+
+    Scaled to be amp at origin.
+    """
+    sigma2 = sigma * sigma
+    t1 = theta1_array - pos.x
+    t2 = theta2_array - pos.y
+    theta2 = t1 * t1 + t2 * t2
+    gammat = 2. * amp * sigma2 * (
+        1. - (1. + .5 * theta2 / sigma2) * np.exp(-.5 * theta2 / sigma2)) / theta2 
+    g1 = -gammat * (t1**2 - t2**2) / theta2
+    g2 = -gammat * 2. * t1 * t2 / theta2
+    return g1, g2
+
 def test_nfwhalo():
     """Test that NFWHalo computations are consistent with expectations from external reference
     """
@@ -383,6 +409,65 @@ def test_tabulated():
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_kappa_nfw():
+    """Test that our Kaiser-Squires inversion routines correctly recover the convergence map
+    for a field containing known NFW halos.
+    """
+    import time
+    t1 = time.time()
+    #icosmo_test = galsim.lensing.Cosmology(omega_m=0.25, omega_lam=0.75) # fairly vanilla LCDM
+    # Let's put down two halos, one big and one smaller
+    #halo_big = galsim.lensing.NFWHalo(
+    #    mass=1.e13, conc=6., redshift=0.4, halo_pos=galsim.PositionD(-6., -6.), cosmo=cosmo_test)
+    #halo_sml = galsim.lensing.NFWHalo(
+    #    mass=3.e12, conc=8., redshift=0.41, halo_pos=galsim.PositionD(6., 6.), cosmo=cosmo_test)
+    #source_redshift = 0.8
+    # Setup coordinates for gridded kappa/gamma
+    grid_spacing_arcsec = 1
+    grid_extent_arcsec = 100.
+    ngrid = int(grid_extent_arcsec / grid_spacing_arcsec)
+    grid_side = (np.arange(ngrid, dtype=float) + .5) * grid_spacing_arcsec - .5 * grid_extent_arcsec
+    x, y = np.meshgrid(grid_side, grid_side)
+    # Get the kappas
+    #k_big = halo_big.getConvergence(
+    #    pos=(list(x.flatten()), list(y.flatten())), z_s=source_redshift, units=galsim.arcsec)
+    #k_sml = halo_sml.getConvergence(
+    #    pos=(list(x.flatten()), list(y.flatten())), z_s=source_redshift, units=galsim.arcsec)
+    #k_big = (np.array(k_big)).reshape(ngrid, ngrid)
+    #k_sml = (np.array(k_sml)).reshape(ngrid, ngrid)
+    # 
+    # Put two Gaussian halos in the field
+    k_big = kappa_gaussian(x, y, sigma=5., pos=galsim.PositionD(-6., -6.), amp=.5)
+    k_sml = kappa_gaussian(x, y, sigma=4., pos=galsim.PositionD(6., 6.), amp=.2)
+    # Get the shears for the same halos
+    #g1_big, g2_big = halo_big.getShear(
+    #    pos=(list(x.flatten()), list(y.flatten())), z_s=source_redshift, units=galsim.arcsec)
+    #g1_sml, g2_sml = halo_sml.getShear(
+    #    pos=(list(x.flatten()), list(y.flatten())), z_s=source_redshift, units=galsim.arcsec)
+    #g1_big = (np.array(g1_big)).reshape(ngrid, ngrid)
+    #g2_big = (np.array(g2_big)).reshape(ngrid, ngrid)
+    #g1_sml = (np.array(g1_sml)).reshape(ngrid, ngrid)
+    #g2_sml = (np.array(g2_sml)).reshape(ngrid, ngrid)
+    g1_big, g2_big = shear_gaussian(x, y, sigma=5., pos=galsim.PositionD(-6., -6.), amp=.5)
+    g1_sml, g2_sml = shear_gaussian(x, y, sigma=4., pos=galsim.PositionD(6., 6.), amp=.2)
+    # Combine the big and small halos into the field
+    g1 = g1_big + g1_sml
+    g2 = g2_big + g2_sml
+    # Get the reference kappa
+    k_ref = k_big + k_sml
+    # Invert to get the test kappa
+    k_test = galsim.lensing.invert_kappa_from_shear(g1, g2)
+    # Then run tests based on the central region to avoid edge effects (known issue with KS
+    # inversion)
+    icent = np.arange(ngrid / 2) + ngrid / 4
+    np.testing.assert_array_almost_equal(
+        k_test[0][icent, icent], k_ref[icent, icent], decimal=2,
+        err_msg="Reconstructed kappa does not match input to 2 decimal places.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 
 if __name__ == "__main__":
     test_nfwhalo()
