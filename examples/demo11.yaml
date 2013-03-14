@@ -27,7 +27,7 @@
 # - input.power_spectrum : (e_power_file, delta2, units)
 # - noise type : COSMOS
 #
-# - Power spectrum shears for non-gridded positions.
+# - Power spectrum shears and convergences for non-gridded positions.
 # - Reading a compressed FITS image (using BZip2 compression).
 # - Writing a compressed FITS image (using Rice compression).
 #
@@ -84,7 +84,10 @@ gal :
         # We again use PowerSpectrumShear, which is set up below using input : power_spectrum.
         type : PowerSpectrumShear
 
-    # TODO: When Issue #304 is done, add PowerSpectrumMag here.
+    magnification :
+        # We use PowerSpectrumMag for this, which is set up below using input : power_spectrum with
+        # the get_kappa option
+        type : PowerSpectrumMag
 
     rotation :
         type : Random
@@ -169,6 +172,13 @@ input :
         # nearest, sinc, cubic, quintic, lanczos.  For lanczos, you need to add a number at 
         # the end to specify the order.  e.g. lanczos5 for 5th order Lanczos interpolation.
         interpolant : linear
+
+        # The calculation of the convergence field and therefore the lensing magnification is an
+        # additional, optional step done by the lensing engine.  (It adds to the computational
+        # expense and hence is not done by default.  Thus there is a get_kappa option which should
+        # be set to true if the user wants to later use PowerSpectrumMag to apply lensing
+        # magnification.
+        get_kappa : True
 
 # Define the names and format of the output files
 output :

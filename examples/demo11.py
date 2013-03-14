@@ -27,7 +27,7 @@ New features introduced in this demo:
 - cf = galsim.correlatednoise.get_COSMOS_CorrFunc(file_name, ...)
 - cf.applyNoiseTo(image, ...)
 
-- Power spectrum shears for non-gridded positions.
+- Power spectrum shears and convergences for non-gridded positions.
 - Reading a compressed FITS image (using BZip2 compression).
 - Writing a compressed FITS image (using Rice compression).
 """
@@ -160,7 +160,7 @@ def main(argv):
     ps.buildGriddedShears(grid_spacing = grid_spacing,
                           ngrid = int(image_size_arcsec / grid_spacing)+1,
                           center = center,
-                          rng = rng)
+                          rng = rng, get_kappa = True)
     logger.info('Made gridded shears')
 
     # Now we need to loop over our objects:
@@ -176,7 +176,7 @@ def main(argv):
         # Turn this into a position in arcsec
         pos = galsim.PositionD(x,y) * pixel_scale
         
-        g1, g2 = ps.getShear(pos = pos)
+        g1, g2, kappa = ps.getShear(pos = pos, get_kappa = True)
 
         # Construct the galaxy:
         # Select randomly from among our list of galaxies.
@@ -198,8 +198,10 @@ def main(argv):
         theta = ud()*2.0*numpy.pi*galsim.radians
         gal.applyRotation(theta)
 
-        # Apply the cosmological shear at this position.
+        # Apply the cosmological shear and magnification at this position.
         gal.applyShear(g1 = g1, g2 = g2)
+        mu = 1. / ( (1. - kappa)**2 - (g1**2 + g2**2) )
+        gal.applyMagnification(mu)
 
         # Convolve with the PSF.  We don't have to include a pixel response explicitly, since the
         # SDSS PSF image that we are using included the pixel response already.

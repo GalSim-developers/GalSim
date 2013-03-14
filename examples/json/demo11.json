@@ -28,7 +28,7 @@
 "#" : " - input.power_spectrum : (e_power_file, delta2, units) ",
 "#" : " - noise type : COSMOS ",
 
-"#" : " - Power spectrum shears for non-gridded positions.",
+"#" : " - Power spectrum shears and convergences for non-gridded positions.",
 "#" : " - Reading a compressed FITS image (using BZip2 compression).",
 "#" : " - Writing a compressed FITS image (using Rice compression).",
 
@@ -75,6 +75,12 @@
     "shear" : {
         "#" : "We again use PowerSpectrumShear, which is set up below using input:power_spectrum.",
         "type" : "PowerSpectrumShear"
+    },
+
+    "magnification" : {
+        "#" : "We use PowerSpectrumMag for this, which is set up below using input :",
+        "#" : "power_spectrum with the get_kappa option.",
+        "type" : "PowerSpectrumMag"
     },
 
     "dilation" : {
@@ -174,7 +180,15 @@
         "#" : "used a TiledImage), we need to define what grid spacing we want to use for",
         "#" : "the power spectrum realization.  GalSim will then interpolate between these ",
         "#" : "locations to the actual position of each galaxy.",
-        "grid_spacing" : 90
+        "grid_spacing" : 90,
+
+        "#" : "The calculation of the convergence field and therefore the lensing magnification",
+        "#" : "is an additional, optional step done by the lensing engine.  (It adds to the",
+        "#" : "computational expense and hence is not done by default.  Thus there is a",
+        "#" : "get_kappa option which should be set to true if the user wants to later use",
+        "#" : "PowerSpectrumMag to apply lensing magnification.",
+        "get_kappa" : "True"
+
     }
 },
 
