@@ -283,8 +283,7 @@ def BuildSingleStamp(config, xsize, ysize,
             raise AttributeError("At least one of gal or psf must be specified in config.")
 
     except galsim.config.gsobject.SkipThisObject, e:
-        print 'Caught SkipThisObject: e = ',e
-        print e.msg
+        print 'Caught SkipThisObject: e =',e.msg
         if logger:
             if e.msg:
                 # If there is a message, upgrade to warn level

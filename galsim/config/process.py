@@ -220,10 +220,10 @@ def Process(config, logger=None):
         def worker(input, output):
             import time
             proc_num = int(current_process().name.split('-')[1])
-            print 'Process %s has proc_num = %d'%(current_process().name,proc_num)
+            print 'Process named %s has proc_num = %d'%(current_process().name,proc_num)
             assert proc_num > 0
             for (kwargs, file_num, file_name) in iter(input.get, 'STOP'):
-                time.sleep((proc_num-1) * 15)
+                time.sleep(proc_num * 15)
                 print current_process().name,': worker got: ',file_num,file_name,kwargs
                 ProcessInput(kwargs['config'], file_num=file_num)
                 print current_process().name,': After ProcessInput for file ',file_num
