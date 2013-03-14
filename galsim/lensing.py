@@ -19,7 +19,6 @@
 """@file lensing.py The "lensing engine" for drawing shears from some power spectrum or a NFW halo.
 """
 
-
 import galsim
 import numpy as np
 
@@ -1074,6 +1073,7 @@ def kappaKaiserSquires(g1, g2):
                               Both are NumPy arrays.
     """
     # Checks on inputs
+    import galsim.utilities
     if (isinstance(g1, (galsim.ImageD, galsim.ImageF)) and
         isinstance(g2, (galsim.ImageD, galsim.ImageF))):
         g1 = g1.array
@@ -1086,7 +1086,6 @@ def kappaKaiserSquires(g1, g2):
         raise ValueError("Input g1 and g2 must be the same shape.")
     if g1.shape[0] != g1.shape[1]:
         raise NotImplementedError("Non-square input shear grids not supported.")
-    import galsim.utilities
     # Then setup the kx, ky grids
     kx, ky = galsim.utilities.kxky(g1.shape)
     kx = kx[:, 0:g1.shape[1]/2 + 1] # Use Hermitian symmetry for speed
