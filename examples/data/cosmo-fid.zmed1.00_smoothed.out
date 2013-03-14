@@ -1,4 +1,4 @@
-# Low pass filtered power spectrum which drops to zero between ell=2e4-3e4 and is zero from 3e4-4e4 
+# Low pass filtered power spectrum which drops to zero between ell=2e4-3e4 and is zero from 3e4-1e6 
  1.000000E+01 3.512672E-08
  1.019184E+01 3.499462E-08
  1.038736E+01 3.485440E-08
@@ -402,4 +402,4 @@
  2.006635E+04 8.000000E-13
  2.520573E+04 4.000000E-13
  3.000000E+04 0.000000E-13
- 4.000000E+04 0.000000E-13
+ 1.000000E+06 0.000000E-13
