@@ -522,7 +522,7 @@ class PowerSpectrum(object):
                 g1.append(sbii_g1.xValue(pos+self.offset))
                 g2.append(sbii_g2.xValue(pos+self.offset))
                 if get_kappa:
-                    kappa.append(sbii_kappa.Value(pos+self.offset))
+                    kappa.append(sbii_kappa.xValue(pos+self.offset))
                 else:
                     kappa.append(0.)
         if len(pos_x) == 1:
