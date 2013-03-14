@@ -689,8 +689,6 @@ class PowerSpectrumRealizer(object):
         # set-up.
         C = np.zeros((self.nx, self.ny / 2 + 1))
         S = np.zeros((self.nx, self.ny / 2 + 1))
-        C=np.zeros((self.nx,self.ny/2+1))
-        S=np.zeros((self.nx,self.ny/2+1))
         kx = self.kx
         ky = self.ky
         TwoPsi=2*np.arctan2(1.0*self.ky, 1.0*self.kx)
@@ -1067,6 +1065,13 @@ def kappaKaiserSquires(g1, g2):
                shear.
     @param g2  Square galsim.ImageF, galsim.ImageD or NumPy array containing the second component of
                shear.
+
+    Note that, like any process that attempts to recover information from discretely sampled data,
+    the `kappa_E` and `kappa_B` maps returns by this function are subject to aliasing.  There will
+    be distortions if there are non-zero frequency modes in the lensing field represented by g1 and
+    g2 at more than half the frequency represented by the g1, g2 grid spacing.  To avoid this issue
+    in practice you can smooth the input g1, g2 to effectively bandlimit them (the same smoothing
+    kernel will be present in the output `kappa_E`, `kappa_B`).
 
     @return kappa_E, kappa_B  The first element of this tuple represents the convergence field
                               underlying the input shears; the second element is the convergence
