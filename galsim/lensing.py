@@ -1060,7 +1060,7 @@ class NFWHalo(object):
             return [ m for m in mu ]
 
 
-def invert_kappa_from_shear(g1, g2):
+def kappaKaiserSquires(g1, g2):
     """Perform a Kaiser & Squires (1993) inversion to get a convergence map from gridded shears.
 
     @param g1  Square galsim.ImageF, galsim.ImageD or NumPy array containing the first component of
@@ -1073,8 +1073,6 @@ def invert_kappa_from_shear(g1, g2):
                               field generated were all shears rotated by 45 degrees prior to input.
                               Both are NumPy arrays.
     """
-    import galsim.utilities
-
     # Checks on inputs
     if (isinstance(g1, (galsim.ImageD, galsim.ImageF)) and
         isinstance(g2, (galsim.ImageD, galsim.ImageF))):
@@ -1088,6 +1086,7 @@ def invert_kappa_from_shear(g1, g2):
         raise ValueError("Input g1 and g2 must be the same shape.")
     if g1.shape[0] != g1.shape[1]:
         raise NotImplementedError("Non-square input shear grids not supported.")
+    import galsim.utilities
     # Then setup the kx, ky grids
     kx, ky = galsim.utilities.kxky(g1.shape)
     kx = kx[:, 0:g1.shape[1]/2 + 1] # Use Hermitian symmetry for speed
