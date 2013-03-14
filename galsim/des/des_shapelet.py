@@ -203,7 +203,9 @@ class DES_Shapelet(object):
         assert len(b) == self.psf_size
         b += self.ave_psf
         print 'b = ',b
-        return galsim.Shapelet(self.sigma, self.psf_order, b)
+        ret = galsim.Shapelet(self.sigma, self.psf_order, b)
+        print 'Made Shapelet: ',ret
+        return ret
 
     def _definePxy(self, x, min, max):
         import numpy
@@ -231,7 +233,7 @@ galsim.config.process.valid_input_types['des_shapelet'] = ('galsim.des.DES_Shape
 def BuildDES_Shapelet(config, key, base, ignore):
     """@brief Build a RealGalaxy type GSObject from user input.
     """
-    #print 'Start BuildDES_Shapelet'
+    print 'Start BuildDES_Shapelet'
     #print 'config = ',config
     #print 'key = ',key
     #print 'base = ',base
@@ -248,18 +250,21 @@ def BuildDES_Shapelet(config, key, base, ignore):
     if 'chip_pos' not in base:
         raise ValueError("DES_Shapelet requested, but no chip_pos defined in base.")
     chip_pos = base['chip_pos']
-    #print 'chip_pos = ',chip_pos
+    print 'chip_pos = ',chip_pos
 
     if des_shapelet.bounds.includes(chip_pos):
+        print 'in bounds'
         psf = des_shapelet.getPSF(chip_pos)
     else:
+        print 'not in bounds -- skip'
         message = 'Position '+str(chip_pos)+' not in interpolation bounds: '
         message += str(des_shapelet.bounds)
         raise galsim.config.gsobject.SkipThisObject(message)
-    #print 'psf = ',psf
+    print 'psf = ',psf
 
     if 'flux' in kwargs:
         psf.setFlux(kwargs['flux'])
+    print 'After setFlux: psf = ',psf
 
     # The second item here is "safe", a boolean that declares whether the returned value is 
     # safe to save and use again for later objects.  In this case, we wouldn't want to do 

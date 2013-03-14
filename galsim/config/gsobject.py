@@ -98,7 +98,7 @@ def BuildGSObject(config, key, base=None):
     if 'skip' in ck:
         skip = galsim.config.ParseValue(ck, 'skip', base, bool)[0]
         if skip: 
-            raise SkipThisObject()
+            raise SkipThisObject('config.skip = True')
 
     # Set up the initial default list of attributes to ignore while building the object:
     ignore = [ 
