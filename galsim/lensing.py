@@ -1090,15 +1090,24 @@ def invert_kappa_from_shear(g1, g2):
         raise NotImplementedError("Non-square input shear grids not supported.")
     # Then setup the kx, ky grids
     kx, ky = galsim.utilities.kxky(g1.shape)
-    k2 = kx * kx + ky * ky
+    kx = kx[:, 0:g1.shape[1]/2 + 1] # Use Hermitian symmetry for speed
+    ky = ky[:, 0:g1.shape[1]/2 + 1] # Use Hermitian symmetry for speed
+    k2 = (kx * kx + ky * ky)
     # Transform to Fourier space
-    g1t = np.fft.fft2(g1)
-    g2t = np.fft.fft2(g2)
-    kappat = np.zeros(g1.shape) + np.zeros(g1.shape) * 1j
-    kappat[k2 > 0.] = .5 * ((kx * kx - ky * ky) * g1t)[k2 > 0.] / k2[k2 > 0.] + \
-                      (kx * ky * g2t)[k2 > 0.] / k2[k2 > 0.]
-    # Transform back, then return contiguous versions of real and imaginary parts
-    kappa = np.fft.ifft2(kappat)
-    return np.ascontiguousarray(kappa.real), np.ascontiguousarray(kappa.imag)
+    g1t = np.fft.rfft2(g1)
+    g2t = np.fft.rfft2(g2)
+    # Setup kappaE/B transform storage
+    kappaEt = np.zeros(g1t.shape) + np.zeros(g1t.shape) * 1j
+    kappaBt = np.zeros(g1t.shape) + np.zeros(g1t.shape) * 1j
+    # Calculate
+    kappaEt[k2 > 0.] = (kx * kx - ky * ky)[k2 > 0.] * g1t[k2 > 0.] / k2[k2 > 0.] + \
+        2. * kx[k2 > 0.] * ky[k2 > 0.] * g2t[k2 > 0.] / k2[k2 > 0.]
+    # For B rotation (g1)<-(-g2) and (g2)<-(g1)
+    kappaBt[k2 > 0.] = -(kx * kx - ky * ky)[k2 > 0.] * g2t[k2 > 0.] / k2[k2 > 0.] + \
+        2. * kx[k2 > 0.] * ky[k2 > 0.] * g1t[k2 > 0.] / k2[k2 > 0.]
+    # Transform back, then return contiguous versions of real parts
+    kappaE = np.fft.irfft2(kappaEt)
+    kappaB = np.fft.irfft2(kappaBt)
+    return kappaE, kappaB
 
 
