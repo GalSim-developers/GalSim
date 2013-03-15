@@ -504,8 +504,11 @@ class GSObject(object):
         flux added to the image.  This may be useful as a sanity check that you have provided a 
         large enough image to catch most of the flux.  For example:
         
-            obj.drawShoot(image)
+            obj.draw(image)
             assert image.added_flux > 0.99 * obj.getFlux()
+
+        The appropriate threshold will depend on your particular application, including what kind
+        of profile the object has, how big your image is relative to the size of your object, etc.
 
         @param image  If provided, this will be the image on which to draw the profile.
                       If `image = None`, then an automatically-sized image will be created.
@@ -604,12 +607,12 @@ class GSObject(object):
         flux of photons that landed inside the image bounds.  This may be useful as a sanity check 
         that you have provided a large enough image to catch most of the flux.  For example:
         
-            image, added_flux = obj.drawShoot(image)
+            obj.drawShoot(image)
             assert added_flux > 0.99 * obj.getFlux()
-        
-        However, the appropriate threshold will depend things like whether you are keeping 
-        `poisson_flux = True`, how high the flux is, how big your images are relative to the size of
-        your object, etc.
+
+        The appropriate threshold will depend on your particular application, including what kind
+        of profile the object has, how big your image is relative to the size of your object, 
+        whether you are keeping `poisson_flux = True`, etc.
 
         @param image  If provided, this will be the image on which to draw the profile.
                       If `image = None`, then an automatically-sized image will be created.
