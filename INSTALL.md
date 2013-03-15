@@ -533,6 +533,10 @@ Below is a list of steps to take to install GalSim using MacPorts:
     ix) `sudo port install galsim`
     x) Add /opt/local/lib to DYLD_LIBRARY_PATH
 
+Some users may find that the last step results in an inability to import the
+GalSim module.  In that case, you can clear that addition to DYLD_LIBRARY_PATH
+and instead add /opt/local/lib to DYLD_FALLBACK_LIBRARY_PATH.
+
 Notes on MacPorts with Mac OS X 10.8:
 The use of `sudo` in the above commands may elicit an error message that says
 "dyld: DYLD_ environment variables being ignored because main executable
