@@ -561,15 +561,15 @@ class PowerSpectrumRealizer(object):
     def set_size(self, nx, ny, pixel_size):
         self.nx = nx
         self.ny = ny
-        kx, ky = np.mgrid[0: nx / 2 + 1, 0: ny / 2 + 1]
-        self.kx = kx
-        self.ky = ky
+        i_kx, i_ky = np.mgrid[0: nx / 2 + 1, 0: ny / 2 + 1]
+        self.i_kx = i_kx
+        self.i_ky = i_ky
         pixel_size = float(pixel_size)
         self.pixel_size = pixel_size
 
         # Set up the scalar |k| grid. Generally, for a box size of L (in one dimension), the grid
         # spacing in k_x or k_y is Delta k=2pi/L (Barney edit: sqrt faster than **.5 I think...)
-        self.k = 2. * np.pi * np.sqrt((kx / (pixel_size * nx))**2 + (ky / (pixel_size * ny))**2)
+        self.k = 2. * np.pi * np.sqrt((i_kx / (pixel_size * nx))**2 + (i_ky / (pixel_size * ny))**2)
 
         #Compute the spin weightings
         self._cos, self._sin = self._generate_spin_weightings()        
@@ -626,10 +626,10 @@ class PowerSpectrumRealizer(object):
 
         # Get kappa, the convergence field.
         if get_kappa:
-            # Convert the self.kx, which are indices, into kx, which are wavenumbers (note: must
+            # Convert the self.i_kx, which are indices, into kx, which are wavenumbers (note: must
             # match units convention adopted for dimensional self.k)
-            kx = 2. * np.pi * self.kx / (self.pixel_size * self.nx)
-            ky = 2. * np.pi * self.ky / (self.pixel_size * self.ny)
+            kx = 2. * np.pi * self.i_kx / (self.pixel_size * self.nx)
+            ky = 2. * np.pi * self.i_ky / (self.pixel_size * self.ny)
 
             # Set up the convergence field in Fourier space - same structure as the shear fields
             kappa_k = np.zeros_like(g1_k)
@@ -640,10 +640,10 @@ class PowerSpectrumRealizer(object):
             # and then set the corresponding kappa term to zero manually.
             k2 = self.k**2
             k2[0,0] = 1
-            kappa_k[ self.kx, self.ky] =  -g1_k[ self.kx, self.ky] * (kx * kx - ky * ky) / k2
-            kappa_k[ self.kx, self.ky] += g2_k[ self.kx, self.ky] * 2. * kx * ky / k2
-            kappa_k[-self.kx, self.ky] =  -g1_k[-self.kx, self.ky] * ((-kx) * (-kx) - ky * ky) / k2
-            kappa_k[-self.kx, self.ky] += g2_k[-self.kx, self.ky] * 2. * (-kx) * ky / k2
+            kappa_k[ self.i_kx, self.i_ky] =  -g1_k[ self.i_kx, self.i_ky] * (kx * kx - ky * ky) / k2
+            kappa_k[ self.i_kx, self.i_ky] +=  g2_k[ self.i_kx, self.i_ky] * 2. * kx * ky / k2
+            kappa_k[-self.i_kx, self.i_ky] =  -g1_k[-self.i_kx, self.i_ky] * ((-kx) * (-kx) - ky * ky) / k2
+            kappa_k[-self.i_kx, self.i_ky] +=  g2_k[-self.i_kx, self.i_ky] * 2. * (-kx) * ky / k2
 
             # Set the DC term to zero.
             kappa_k[0,0] = 0
@@ -678,8 +678,8 @@ class PowerSpectrumRealizer(object):
             P_k[0,0] = type(P_k[0,1])(0.)
         else:
             P_k = 0.
-        power_array[ self.kx, self.ky] = P_k
-        power_array[-self.kx, self.ky] = P_k
+        power_array[ self.i_kx, self.i_ky] = P_k
+        power_array[-self.i_kx, self.i_ky] = P_k
         if np.any(power_array < 0):
             raise ValueError("Negative power found for some values of k!")
         return power_array
@@ -689,13 +689,13 @@ class PowerSpectrumRealizer(object):
         # set-up.
         C = np.zeros((self.nx, self.ny / 2 + 1))
         S = np.zeros((self.nx, self.ny / 2 + 1))
-        kx = self.kx
-        ky = self.ky
-        TwoPsi = 2 * np.arctan2(1.0*self.ky, 1.0*self.kx)
-        C[kx,ky] = np.cos(TwoPsi)
-        S[kx,ky] = np.sin(TwoPsi)
-        C[-kx,ky] =  C[kx,ky]
-        S[-kx,ky] = -S[kx,ky]
+        i_kx = self.i_kx
+        i_ky = self.i_ky
+        TwoPsi = 2 * np.arctan2(1.0*self.i_ky, 1.0*self.i_kx)
+        C[ i_kx, i_ky] = np.cos(TwoPsi)
+        S[ i_kx, i_ky] = np.sin(TwoPsi)
+        C[-i_kx, i_ky] =  C[i_kx,i_ky]
+        S[-i_kx, i_ky] = -S[i_kx,i_ky]
         return C,S
 
 class Cosmology(object):
