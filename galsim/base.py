@@ -504,8 +504,8 @@ class GSObject(object):
         flux added to the image.  This may be useful as a sanity check that you have provided a 
         large enough image to catch most of the flux.  For example:
         
-            image, added_flux = obj.drawShoot(image)
-            assert added_flux > 0.99 * obj.getFlux()
+            obj.drawShoot(image)
+            assert image.added_flux > 0.99 * obj.getFlux()
 
         @param image  If provided, this will be the image on which to draw the profile.
                       If `image = None`, then an automatically-sized image will be created.
