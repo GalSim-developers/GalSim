@@ -48,14 +48,12 @@ template <> struct NumPyTraits<double> { static int getCode() { return NPY_FLOAT
 
 static int Normalize(int code) 
 {
-    // Normally the return of PyArray_TYPE is a code that indicates what 
-    // type the data is.  However, this gets confusing for integer types, since
-    // different integer types may be equivalent.  In particular int and long
-    // might be the same thing (typically on 32 bit machines, they can both
-    // be 4 bytes).  For some reason in this case, PyArray_TYPE sometimes returns
-    // NPY_INT and sometimes NPY_LONG.  So this function normalizes these answers
-    // to make sure that if they are equivalent, we convert NPY_INT to the
-    // equivalent other type.
+    // Normally the return of PyArray_TYPE is a code that indicates what type the data is.  However,
+    // this gets confusing for integer types, since different integer types may be equivalent.  In
+    // particular int and long might be the same thing (typically on 32 bit machines, they can both
+    // be 4 bytes).  For some reason in this case, PyArray_TYPE sometimes returns NPY_INT and
+    // sometimes NPY_LONG.  So this function normalizes these answers to make sure that if they are
+    // equivalent, we convert NPY_INT to the equivalent other type.
     if (sizeof(int) == sizeof(int16_t) && code == NPY_INT) return NPY_INT16;
     if (sizeof(int) == sizeof(int32_t) && code == NPY_INT) return NPY_INT32;
     if (sizeof(int) == sizeof(int64_t) && code == NPY_INT) return NPY_INT64;

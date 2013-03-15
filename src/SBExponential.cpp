@@ -287,7 +287,7 @@ namespace galsim {
     double SBExponential::ExponentialInfo::maxK() const 
     { return _maxk; }
 
-    // The amount of flux missed in a circle of radius pi/stepk should miss at 
+    // The amount of flux missed in a circle of radius pi/stepk should be at 
     // most alias_threshold of the flux.
     double SBExponential::ExponentialInfo::stepK() const
     { return _stepk; }

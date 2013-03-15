@@ -227,7 +227,7 @@ namespace galsim {
     double SBKolmogorov::SBKolmogorovImpl::maxK() const 
     { return _info.maxK() * _k0; }
 
-    // The amount of flux missed in a circle of radius pi/stepk should miss at 
+    // The amount of flux missed in a circle of radius pi/stepk should be at 
     // most alias_threshold of the flux.
     double SBKolmogorov::SBKolmogorovImpl::stepK() const
     { return _info.stepK() * _k0; }
