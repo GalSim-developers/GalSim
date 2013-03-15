@@ -2619,7 +2619,7 @@ class Shapelet(GSObject):
             shapelet.draw(image=image2, dx=image.scale, normalization='sb')
 
         Then image2 and image should be as close to the same as possible for the given
-        sigma and order.  Incrasing the order can improve the fit, as can having sigma match
+        sigma and order.  Increasing the order can improve the fit, as can having sigma match
         the natural scale size of the image.  However, it should be noted that some images
         are not well fit by a shapelet for any (reasonable) order.
 
