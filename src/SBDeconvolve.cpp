@@ -32,11 +32,20 @@ int verbose_level = 2;
 
 namespace galsim {
 
-    SBDeconvolve::SBDeconvolve(const SBProfile& adaptee) :
-        SBProfile(new SBDeconvolveImpl(adaptee)) {}
+    SBDeconvolve::SBDeconvolve(const SBProfile& adaptee,
+                               boost::shared_ptr<GSParams> gsparams) :
+        SBProfile(new SBDeconvolveImpl(adaptee,gsparams)) {}
 
     SBDeconvolve::SBDeconvolve(const SBDeconvolve& rhs) : SBProfile(rhs) {}
 
     SBDeconvolve::~SBDeconvolve() {}
+
+    SBDeconvolve::SBDeconvolveImpl::SBDeconvolveImpl(
+        const SBProfile& adaptee, boost::shared_ptr<GSParams> gsparams) :
+        SBProfileImpl(gsparams.get() ? gsparams :
+                      SBProfile::GetImpl(adaptee)->gsparams),
+        _adaptee(adaptee)
+    { _maxksq = std::pow(maxK(),2.); }
+
 
 }

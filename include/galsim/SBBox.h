@@ -47,7 +47,8 @@ namespace galsim {
          * @param[in] yw    width of Boxcar function along y.
          * @param[in] flux  flux (default `flux = 1.`).
          */
-        SBBox(double xw, double yw=0., double flux=1.);
+        SBBox(double xw, double yw=0., double flux=1.,
+              boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
 
         /// @brief Copy constructor.
         SBBox(const SBBox& rhs);

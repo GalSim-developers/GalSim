@@ -32,15 +32,23 @@
 
 namespace galsim {
 
-    SBAdd::SBAdd(const SBProfile& s1, const SBProfile& s2) :
-        SBProfile(new SBAddImpl(s1,s2)) {}
-
-    SBAdd::SBAdd(const std::list<SBProfile>& slist) :
-        SBProfile(new SBAddImpl(slist)) {}
+    SBAdd::SBAdd(const std::list<SBProfile>& slist, boost::shared_ptr<GSParams> gsparams) :
+        SBProfile(new SBAddImpl(slist,gsparams)) {}
 
     SBAdd::SBAdd(const SBAdd& rhs) : SBProfile(rhs) {}
     
     SBAdd::~SBAdd() {}
+
+    SBAdd::SBAddImpl::SBAddImpl(const std::list<SBProfile>& slist,
+                                boost::shared_ptr<GSParams> gsparams) :
+        SBProfileImpl(gsparams.get() ? gsparams : 
+                      SBProfile::GetImpl(slist.front())->gsparams)
+    {
+        for (ConstIter sptr = slist.begin(); sptr!=slist.end(); ++sptr)
+            add(*sptr);
+        initialize();
+    }
+
 
     void SBAdd::SBAddImpl::add(const SBProfile& rhs)
     {
@@ -200,4 +208,5 @@ namespace galsim {
         
         return result;
     }
+
 }

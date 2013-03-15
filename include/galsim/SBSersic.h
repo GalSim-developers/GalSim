@@ -52,7 +52,8 @@ namespace galsim {
          * @param[in] re    half-light radius.
          * @param[in] flux  flux (default `flux = 1.`).
          */
-        SBSersic(double n, double re, double flux=1.);
+        SBSersic(double n, double re, double flux=1.,
+                 boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
 
         /// @brief Copy constructor.
         SBSersic(const SBSersic& rhs);
@@ -67,15 +68,11 @@ namespace galsim {
         double getHalfLightRadius() const;
 
     protected:
-        class SersicInfo;
-        class SersicRadialFunction;
-        class SBSersicImpl;
-        class InfoBarn;
 
-        /// One static map of all `SersicInfo` structures for whole program.
-        static InfoBarn nmap; 
+        class SBSersicImpl;
 
     private:
+
         // op= is undefined
         void operator=(const SBSersic& rhs);
     };
@@ -93,7 +90,9 @@ namespace galsim {
          * @param[in] re    Half-light radius.
          * @param[in] flux  flux (default `flux = 1.`).
          */
-        SBDeVaucouleurs(double re, double flux=1.) : SBSersic(4., re, flux) {}
+        SBDeVaucouleurs(double re, double flux=1.,
+                        boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>()) :
+            SBSersic(4., re, flux, gsparams) {}
     };
 
 }

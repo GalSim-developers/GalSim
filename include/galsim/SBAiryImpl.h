@@ -24,76 +24,9 @@
 
 #include "SBProfileImpl.h"
 #include "SBAiry.h"
+#include "LRUCache.h"
 
 namespace galsim {
-
-    class SBAiry::SBAiryImpl : public SBProfileImpl 
-    {
-    public:
-        SBAiryImpl(double lam_over_D, double obs, double flux);
-
-        ~SBAiryImpl() {}
-
-        double xValue(const Position<double>& p) const;
-        std::complex<double> kValue(const Position<double>& k) const;
-
-        bool isAxisymmetric() const { return true; } 
-        bool hasHardEdges() const { return false; }
-        bool isAnalyticX() const { return true; }
-        bool isAnalyticK() const { return true; }
-
-        double maxK() const;
-        double stepK() const;
-
-        Position<double> centroid() const 
-        { return Position<double>(0., 0.); }
-
-        double getFlux() const { return _flux; }
-        double getLamOverD() const { return _lam_over_D; }
-        double getObscuration() const { return _obscuration; }
-
-        /**
-         * @brief Airy photon-shooting is done numerically with `OneDimensionalDeviate` class.
-         *
-         * @param[in] N Total number of photons to produce.
-         * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
-         * @returns PhotonArray containing all the photons' info.
-         */
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
-
-    private:
-        
-        double _lam_over_D;  ///< inverse of _D (see below), harmonise inputs with other GSObjects
-        /** 
-         * `_D` = (telescope diam) / (lambda * focal length) if arg is focal plane position, 
-         *  else `_D` = (telescope diam) / lambda if arg is in radians of field angle.
-         */
-        double _D;
-        double _obscuration; ///< Radius ratio of central obscuration.
-        double _flux; ///< Flux.
-
-        double _Dsq; ///< Calculated value: D*D
-        double _obssq; ///< Calculated value: _obscuration * _obscuration
-        double _inv_Dsq_pisq; ///< Calculated value: 1/(D^2 pi^2)
-        double _xnorm; ///< Calculated value: flux * D^2
-        double _knorm; ///< Calculated value: flux / (pi (1-obs^2))
-
-        // Copy constructor and op= are undefined.
-        SBAiryImpl(const SBAiryImpl& rhs);
-        void operator=(const SBAiryImpl& rhs);
-
-        class AiryInfo;
-        class AiryInfoObs;
-        class AiryInfoNoObs;
-        class InfoBarn;
-
-        /// Info object that stores things that are common to all Airy functions with this 
-        /// obscuration value.
-        const AiryInfo* _info; 
-
-        /// One static map of all `AiryInfo` structures for whole program.
-        static InfoBarn nmap; 
-    };
 
     /**
      * @brief A private class that caches the photon shooting objects for a given
@@ -101,7 +34,7 @@ namespace galsim {
      * 
      * This is helpful if people use only 1 or a small number of obscuration values.
      */
-    class SBAiry::SBAiryImpl::AiryInfo
+    class AiryInfo
     {
     public:
         /** 
@@ -161,10 +94,10 @@ namespace galsim {
     };
 
     // The definition for obs != 0
-    class SBAiry::SBAiryImpl::AiryInfoObs : public SBAiry::SBAiryImpl::AiryInfo
+    class AiryInfoObs : public AiryInfo
     {
     public:
-        AiryInfoObs(double obscuration, double obssq); 
+        AiryInfoObs(double obscuration, const GSParams* _gsparams); 
         ~AiryInfoObs() {}
 
         double xValue(double r) const;
@@ -187,9 +120,9 @@ namespace galsim {
              * @param[in] obscuration Fractional linear size of central obscuration of pupil.
              * @param[in] obssq       Pre-computed obscuration^2 supplied as input for speed.
              */
-            RadialFunction(double obscuration, double obssq) : 
+            RadialFunction(double obscuration, double obssq, const GSParams* gsparams) : 
                 _obscuration(obscuration), _obssq(obssq),
-                _norm(M_PI / (1.-_obssq)) {}
+                _norm(M_PI / (1.-_obssq)), _gsparams(gsparams) {}
 
             /**
              * @brief Return the Airy function
@@ -202,12 +135,14 @@ namespace galsim {
             double _obscuration; ///< Central obstruction size
             double _obssq; ///< _obscuration*_obscuration
             double _norm; ///< Calculated value M_PI / (1-obs^2)
+            const GSParams* _gsparams;
         };
 
         double _obscuration; ///< Radius ratio of central obscuration.
         double _obssq; ///< _obscuration*_obscuration
 
         RadialFunction _radial;  ///< Class that embodies the radial Airy function.
+        const GSParams* _gsparams;
 
         /// Circle chord length at `h < r`.
         double chord(double r, double h, double rsq, double hsq) const; 
@@ -225,10 +160,10 @@ namespace galsim {
     };
 
     // The definition for obs -= 0
-    class SBAiry::SBAiryImpl::AiryInfoNoObs : public SBAiry::SBAiryImpl::AiryInfo
+    class AiryInfoNoObs : public AiryInfo
     {
     public:
-        AiryInfoNoObs();
+        AiryInfoNoObs(const GSParams* gsparams);
         ~AiryInfoNoObs() {}
 
         double xValue(double r) const;
@@ -238,64 +173,83 @@ namespace galsim {
         class RadialFunction : public FluxDensity 
         {
         public:
+            RadialFunction(const GSParams* gsparams) : _gsparams(gsparams) {}
+
             double operator()(double radius) const;
+
+        private:
+            const GSParams* _gsparams;
         };
 
 
         RadialFunction _radial;  ///< Class that embodies the radial Airy function.
+        const GSParams* _gsparams;
 
         void checkSampler() const; ///< Check if `OneDimensionalDeviate` is configured.
     };
 
-    /** 
-     * @brief A map to hold one copy of the AiryInfo for each obscuration value ever used 
-     * during the program run.  Make one static copy of this map.  
-     * *Be careful of this when multithreading:*
-     * Should build one `SBAiry` with each `obscuration` value before dispatching 
-     * multiple threads.
-     */
-    class SBAiry::SBAiryImpl::InfoBarn : public std::map<double, boost::shared_ptr<AiryInfo> > 
+    class SBAiry::SBAiryImpl : public SBProfileImpl 
     {
     public:
+        SBAiryImpl(double lam_over_D, double obs, double flux,
+                   boost::shared_ptr<GSParams> gsparams);
+
+        ~SBAiryImpl() {}
+
+        double xValue(const Position<double>& p) const;
+        std::complex<double> kValue(const Position<double>& k) const;
+
+        bool isAxisymmetric() const { return true; } 
+        bool hasHardEdges() const { return false; }
+        bool isAnalyticX() const { return true; }
+        bool isAnalyticK() const { return true; }
+
+        double maxK() const;
+        double stepK() const;
+
+        Position<double> centroid() const 
+        { return Position<double>(0., 0.); }
+
+        double getFlux() const { return _flux; }
+        double getLamOverD() const { return _lam_over_D; }
+        double getObscuration() const { return _obscuration; }
 
         /**
-         * @brief Get the AiryInfo table for a specified `obscuration`.
+         * @brief Airy photon-shooting is done numerically with `OneDimensionalDeviate` class.
          *
-         * @param[in] obscuration Fractional linear size of central obscuration of pupil.
-         * @param[in] obssq       Pre-computed obscuration^2 supplied as input for speed.
+         * @param[in] N Total number of photons to produce.
+         * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
+         * @returns PhotonArray containing all the photons' info.
          */
-        const AiryInfo* get(double obscuration, double obssq) 
-        {
-            /** 
-             * @brief The currently hardwired max number of Airy `obscuration` values
-             * that can be stored.  Should be plenty.
-             * TODO: What if it's not?  People could conceivably be running with obscuration
-             * as a random variate.  Should we clear out the InfoBarn if MAX_AIRY_TABLES is 
-             * exceeded?  Or remove the limit?  Or allow an option to not store the Info 
-             * objects, but create them fresh each time?
-             */
-            const int MAX_AIRY_TABLES = 100; 
-
-            MapIter it = _map.find(obscuration);
-            if (it == _map.end()) {
-                boost::shared_ptr<AiryInfo> info;
-                if (obscuration == 0.0) {
-                    info.reset(new AiryInfoNoObs());
-                } else {
-                    info.reset(new AiryInfoObs(obscuration,obssq));
-                }
-                _map[obscuration] = info;
-                if (int(_map.size()) > MAX_AIRY_TABLES)
-                    throw SBError("Storing Airy info for too many obscuration values");
-                return info.get();
-            } else {
-                return it->second.get();
-            }
-        }
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
     private:
-        typedef std::map<double, boost::shared_ptr<AiryInfo> >::iterator MapIter;
-        std::map<double, boost::shared_ptr<AiryInfo> > _map;
+        
+        double _lam_over_D;  ///< inverse of _D (see below), harmonise inputs with other GSObjects
+        /** 
+         * `_D` = (telescope diam) / (lambda * focal length) if arg is focal plane position, 
+         *  else `_D` = (telescope diam) / lambda if arg is in radians of field angle.
+         */
+        double _D;
+        double _obscuration; ///< Radius ratio of central obscuration.
+        double _flux; ///< Flux.
+
+        double _Dsq; ///< Calculated value: D*D
+        double _obssq; ///< Calculated value: _obscuration * _obscuration
+        double _inv_Dsq_pisq; ///< Calculated value: 1/(D^2 pi^2)
+        double _xnorm; ///< Calculated value: flux * D^2
+        double _knorm; ///< Calculated value: flux / (pi (1-obs^2))
+
+        // Copy constructor and op= are undefined.
+        SBAiryImpl(const SBAiryImpl& rhs);
+        void operator=(const SBAiryImpl& rhs);
+
+        /// Info object that stores things that are common to all Airy functions with this 
+        /// obscuration value.
+        const AiryInfo* _info; 
+
+        /// One static map of all `AiryInfo` structures for whole program.
+        static LRUCache<std::pair<double,const GSParams*>, AiryInfo> cache;
     };
 
 

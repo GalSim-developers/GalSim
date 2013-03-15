@@ -35,8 +35,24 @@
 
 namespace galsim {
 
-    SBAiry::SBAiry(double lam_over_D, double obscuration, double flux) :
-        SBProfile(new SBAiryImpl(lam_over_D, obscuration, flux)) {}
+    // Specialize the NewValue function used by LRUCache:
+    template <>
+    struct LRUCacheHelper<AiryInfo,std::pair<double,const GSParams*> >
+    {
+        static AiryInfo* NewValue(const std::pair<double, const GSParams*>& key)
+        {
+            const double obscuration = key.first;
+            const GSParams* gsparams = key.second;
+            if (obscuration == 0.0)
+                return new AiryInfoNoObs(gsparams);
+            else
+                return new AiryInfoObs(obscuration,gsparams);
+        }
+    };
+
+    SBAiry::SBAiry(double lam_over_D, double obscuration, double flux,
+                   boost::shared_ptr<GSParams> gsparams) :
+        SBProfile(new SBAiryImpl(lam_over_D, obscuration, flux, gsparams)) {}
 
     SBAiry::SBAiry(const SBAiry& rhs) : SBProfile(rhs) {}
 
@@ -54,7 +70,9 @@ namespace galsim {
         return static_cast<const SBAiryImpl&>(*_pimpl).getObscuration(); 
     }
 
-    SBAiry::SBAiryImpl::SBAiryImpl(double lam_over_D, double obscuration, double flux) :
+    SBAiry::SBAiryImpl::SBAiryImpl(double lam_over_D, double obscuration, double flux,
+                                   boost::shared_ptr<GSParams> gsparams) :
+        SBProfileImpl(gsparams),
         _lam_over_D(lam_over_D), 
         _D(1. / lam_over_D), 
         _obscuration(obscuration), 
@@ -63,22 +81,25 @@ namespace galsim {
         _inv_Dsq_pisq(1. / (_Dsq * M_PI * M_PI)),
         _xnorm(flux * _Dsq),
         _knorm(flux / (M_PI * (1.-_obssq))),
-        _info(nmap.get(_obscuration,_obssq))
+        _info(cache.get(std::make_pair(_obscuration,this->gsparams.get())))
     {}
 
-    SBAiry::SBAiryImpl::InfoBarn SBAiry::SBAiryImpl::nmap;
+    const int MAX_AIRY_INFO = 100;
+
+    LRUCache<std::pair<double, const GSParams*>, AiryInfo>
+        SBAiry::SBAiryImpl::cache(MAX_AIRY_INFO);
 
     // This is a scale-free version of the Airy radial function.
     // Input radius is in units of lambda/D.  Output normalized
     // to integrate to unity over input units.
-    double SBAiry::SBAiryImpl::AiryInfoObs::RadialFunction::operator()(double radius) const 
+    double AiryInfoObs::RadialFunction::operator()(double radius) const 
     {
         double nu = radius*M_PI;
         // Taylor expansion of j1(u)/u = 1/2 - 1/16 x^2 + ...
         // We can truncate this to 1/2 when neglected term is less than xvalue_accuracy
         // (relative error, so divide by 1/2)
         // xvalue_accuracy = 1/8 x^2
-        const double thresh = sqrt(8.*sbp::xvalue_accuracy);
+        const double thresh = sqrt(8.*_gsparams->xvalue_accuracy);
         double xval;
         if (nu < thresh) {
             // lim j1(u)/u = 1/2
@@ -99,7 +120,7 @@ namespace galsim {
         return _xnorm * _info->xValue(r);
     }
 
-    double SBAiry::SBAiryImpl::AiryInfoObs::xValue(double r) const 
+    double AiryInfoObs::xValue(double r) const 
     { return _radial(r); }
 
     std::complex<double> SBAiry::SBAiryImpl::kValue(const Position<double>& k) const
@@ -118,7 +139,7 @@ namespace galsim {
     double SBAiry::SBAiryImpl::stepK() const
     { return _info->stepK() * _D; }
 
-    double SBAiry::SBAiryImpl::AiryInfoObs::chord(double r, double h, double rsq, double hsq) const 
+    double AiryInfoObs::chord(double r, double h, double rsq, double hsq) const 
     {
         if (r==0.) 
             return 0.;
@@ -133,7 +154,7 @@ namespace galsim {
     }
 
     /* area inside intersection of 2 circles radii r & s, seperated by t*/
-    double SBAiry::SBAiryImpl::AiryInfoObs::circle_intersection(
+    double AiryInfoObs::circle_intersection(
         double r, double s, double rsq, double ssq, double tsq) const 
     {
         assert(r >= s);
@@ -157,7 +178,7 @@ namespace galsim {
     }
 
     /* area inside intersection of 2 circles both with radius r, seperated by t*/
-    double SBAiry::SBAiryImpl::AiryInfoObs::circle_intersection(
+    double AiryInfoObs::circle_intersection(
         double r, double rsq, double tsq) const 
     {
         assert(r >= 0.);
@@ -175,7 +196,7 @@ namespace galsim {
     }
 
     /* area of two intersecting identical annuli */
-    double SBAiry::SBAiryImpl::AiryInfoObs::annuli_intersect(
+    double AiryInfoObs::annuli_intersect(
         double r1, double r2, double r1sq, double r2sq, double tsq) const 
     {
         assert(r1 >= r2);
@@ -187,20 +208,21 @@ namespace galsim {
     // Beam pattern of annular aperture, in k space, which is just the
     // autocorrelation of two annuli.
     // Unnormalized -- value at k=0 is Pi * (1-obs^2)
-    double SBAiry::SBAiryImpl::AiryInfoObs::kValue(double ksq_over_pisq) const 
+    double AiryInfoObs::kValue(double ksq_over_pisq) const 
     { return annuli_intersect(1.,_obscuration,1.,_obssq,ksq_over_pisq); }
 
     // Constructor to initialize Airy constants and k lookup table
-    SBAiry::SBAiryImpl::AiryInfoObs::AiryInfoObs(double obscuration, double obssq) : 
+    AiryInfoObs::AiryInfoObs(double obscuration, const GSParams* gsparams) : 
         _obscuration(obscuration), 
-        _obssq(obssq),
-        _radial(_obscuration,_obssq)
+        _obssq(obscuration * obscuration),
+        _radial(_obscuration,_obssq,gsparams),
+        _gsparams(gsparams)
     {
-        dbg<<"Initializing AiryInfo for obs = "<<obscuration<<", obssq = "<<obssq<<std::endl;
+        dbg<<"Initializing AiryInfo for obs = "<<obscuration<<std::endl;
         // Calculate stepK:
         // Schroeder (10.1.18) gives limit of EE at large radius.
         // This stepK could probably be relaxed, it makes overly accurate FFTs.
-        double R = 1. / (sbp::alias_threshold * 0.5 * M_PI * M_PI * (1.-_obscuration));
+        double R = 1. / (_gsparams->alias_threshold * 0.5 * M_PI * M_PI * (1.-_obscuration));
         // Use at least 5 lam/D
         R = std::max(R,5.);
         this->_stepk = M_PI / R;
@@ -218,7 +240,7 @@ namespace galsim {
         return result;
     }
 
-    boost::shared_ptr<PhotonArray> SBAiry::SBAiryImpl::AiryInfo::shoot(
+    boost::shared_ptr<PhotonArray> AiryInfo::shoot(
         int N, UniformDeviate u) const
     {
         // Use the OneDimensionalDeviate to sample from scale-free distribution
@@ -227,15 +249,15 @@ namespace galsim {
         return _sampler->shoot(N, u);
     }
 
-    void SBAiry::SBAiryImpl::AiryInfoObs::checkSampler() const 
+    void AiryInfoObs::checkSampler() const 
     {
         if (this->_sampler.get()) return;
         std::vector<double> ranges(1,0.);
         // Break Airy function into ranges that will not have >1 extremum:
         double rmin = 1.1 - 0.5*_obscuration;
         // Use Schroeder (10.1.18) limit of EE at large radius.
-        // to stop sampler at radius with EE>(1-shoot_flux_accuracy)
-        double rmax = 2./(sbp::shoot_flux_accuracy * M_PI*M_PI * (1.-_obscuration));
+        // to stop sampler at radius with EE>(1-shoot_accuracy)
+        double rmax = 2./(_gsparams->shoot_accuracy * M_PI*M_PI * (1.-_obscuration));
         dbg<<"Airy sampler\n";
         dbg<<"obsc = "<<_obscuration<<std::endl;
         dbg<<"rmin = "<<rmin<<std::endl;
@@ -247,10 +269,10 @@ namespace galsim {
     }
 
     // Now the specializations for when obs = 0
-    double SBAiry::SBAiryImpl::AiryInfoNoObs::xValue(double r) const 
+    double AiryInfoNoObs::xValue(double r) const 
     { return _radial(r); }
 
-    double SBAiry::SBAiryImpl::AiryInfoNoObs::kValue(double ksq_over_pisq) const 
+    double AiryInfoNoObs::kValue(double ksq_over_pisq) const 
     {
         if (ksq_over_pisq >= 4.) return 0.;
         if (ksq_over_pisq == 0.) return M_PI;
@@ -265,14 +287,14 @@ namespace galsim {
         return 2. * (std::asin(h) - h*sqrt(1.-hsq));
     }
 
-    double SBAiry::SBAiryImpl::AiryInfoNoObs::RadialFunction::operator()(double radius) const 
+    double AiryInfoNoObs::RadialFunction::operator()(double radius) const 
     {
         double nu = radius*M_PI;
         // Taylor expansion of j1(u)/u = 1/2 - 1/16 x^2 + ...
         // We can truncate this to 1/2 when neglected term is less than xvalue_accuracy
         // (relative error, so divide by 1/2)
         // xvalue_accuracy = 1/8 x^2
-        const double thresh = sqrt(8.*sbp::xvalue_accuracy);
+        const double thresh = sqrt(8.*_gsparams->xvalue_accuracy);
         double xval;
         if (nu < thresh) {
             // lim j1(u)/u = 1/2
@@ -287,22 +309,24 @@ namespace galsim {
     }
 
     // Constructor to initialize Airy constants and k lookup table
-    SBAiry::SBAiryImpl::AiryInfoNoObs::AiryInfoNoObs() 
+    AiryInfoNoObs::AiryInfoNoObs(const GSParams* gsparams) :
+        _radial(gsparams),
+        _gsparams(gsparams)
     {
         dbg<<"Initializing AiryInfoNoObs\n";
         // Calculate stepK:
-        double R = 1. / (sbp::alias_threshold * 0.5 * M_PI * M_PI);
+        double R = 1. / (_gsparams->alias_threshold * 0.5 * M_PI * M_PI);
         // Use at least 5 lam/D
         R = std::max(R,5.);
         this->_stepk = M_PI / R;
     }
 
-    void SBAiry::SBAiryImpl::AiryInfoNoObs::checkSampler() const 
+    void AiryInfoNoObs::checkSampler() const 
     {
         if (this->_sampler.get()) return;
         std::vector<double> ranges(1,0.);
         double rmin = 1.1;
-        double rmax = 2./(sbp::shoot_flux_accuracy * M_PI*M_PI);
+        double rmax = 2./(_gsparams->shoot_accuracy * M_PI*M_PI);
         dbg<<"AiryNoObs sampler\n";
         dbg<<"rmin = "<<rmin<<std::endl;
         dbg<<"rmax = "<<rmax<<std::endl;

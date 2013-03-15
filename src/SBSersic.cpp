@@ -33,8 +33,9 @@
 
 namespace galsim {
 
-    SBSersic::SBSersic(double n, double re, double flux) : 
-        SBProfile(new SBSersicImpl(n, re, flux)) {}
+    SBSersic::SBSersic(double n, double re, double flux,
+                       boost::shared_ptr<GSParams> gsparams) :
+        SBProfile(new SBSersicImpl(n, re, flux, gsparams)) {}
 
     SBSersic::SBSersic(const SBSersic& rhs) : SBProfile(rhs) {}
 
@@ -52,11 +53,16 @@ namespace galsim {
         return static_cast<const SBSersicImpl&>(*_pimpl).getHalfLightRadius(); 
     }
 
-    SBSersic::InfoBarn SBSersic::nmap;
+    const int MAX_SERSIC_INFO = 100;
 
-    SBSersic::SBSersicImpl::SBSersicImpl(double n,  double re, double flux) :
+    LRUCache<std::pair<double, const GSParams*>, SersicInfo> 
+        SBSersic::SBSersicImpl::cache(MAX_SERSIC_INFO);
+
+    SBSersic::SBSersicImpl::SBSersicImpl(double n,  double re, double flux,
+                                         boost::shared_ptr<GSParams> gsparams) :
+        SBProfileImpl(gsparams),
         _n(n), _flux(flux), _re(re), _re_sq(_re*_re), _norm(_flux/_re_sq),
-        _info(nmap.get(_n))
+        _info(cache.get(std::make_pair(_n,this->gsparams.get())))
     {
         _ksq_max = _info->getKsqMax() / _re_sq;
         dbg<<"_ksq_max for n = "<<n<<" = "<<_ksq_max<<std::endl;
@@ -77,10 +83,10 @@ namespace galsim {
     double SBSersic::SBSersicImpl::maxK() const { return _info->maxK() / _re; }
     double SBSersic::SBSersicImpl::stepK() const { return _info->stepK() / _re; }
 
-    double SBSersic::SersicInfo::xValue(double xsq) const 
+    double SersicInfo::xValue(double xsq) const 
     { return _norm * std::exp(-_b*std::pow(xsq,_inv2n)); }
 
-    double SBSersic::SersicInfo::kValue(double ksq) const 
+    double SersicInfo::kValue(double ksq) const 
     {
         // TODO: Use asymptotic formula for high-k?
         
@@ -112,7 +118,7 @@ namespace galsim {
     };
 
     // Find what radius encloses (1-missing_flux_frac) of the total flux in a Sersic profile
-    double SBSersic::SersicInfo::findMaxR(double missing_flux_frac, double gamma2n)
+    double SersicInfo::findMaxR(double missing_flux_frac, double gamma2n)
     { 
         // int(exp(-b r^1/n) r, r=R..inf) = x * int(exp(-b r^1/n) r, r=0..inf)
         //                                = x n b^-2n Gamma(2n)
@@ -153,7 +159,8 @@ namespace galsim {
     }
 
     // Constructor to initialize Sersic constants and k lookup table
-    SBSersic::SersicInfo::SersicInfo(double n) : _n(n), _inv2n(1./(2.*n)) 
+    SersicInfo::SersicInfo(double n, const GSParams* gsparams) :
+        _n(n), _inv2n(1./(2.*n))
     {
         // Going to constrain range of allowed n to those for which testing was done
         if (_n<0.5 || _n>4.2) throw SBError("Requested Sersic index out of range");
@@ -186,13 +193,13 @@ namespace galsim {
         // See when next term past quartic is at accuracy threshold
         double kderiv6 = tgamma(8*_n) / (2304.*b4n*b2n*gamma2n);
         dbg<<"kderiv6 = "<<kderiv6<<std::endl;
-        double kmin = std::pow(sbp::kvalue_accuracy / kderiv6, 1./6.);
+        double kmin = std::pow(gsparams->kvalue_accuracy / kderiv6, 1./6.);
         dbg<<"kmin = "<<kmin<<std::endl;
         _ksq_min = kmin * kmin;
 
         // How far should nominal profile extend?
         // Estimate number of effective radii needed to enclose (1-alias_threshold) of flux
-        double R = findMaxR(sbp::alias_threshold,gamma2n);
+        double R = findMaxR(gsparams->alias_threshold,gamma2n);
         // Go to at least 5 re
         if (R < 5.) R = 5.;
         dbg<<"R => "<<R<<std::endl;
@@ -208,7 +215,7 @@ namespace galsim {
         // Keep going until at least 5 in a row have kvalues below kvalue_accuracy.
         int n_below_thresh = 0;
 
-        double integ_maxR = findMaxR(sbp::kvalue_accuracy * hankel_norm,gamma2n);
+        double integ_maxR = findMaxR(gsparams->kvalue_accuracy * hankel_norm,gamma2n);
         //double integ_maxR = integ::MOCK_INF;
 
         // There are two "max k" values that we care about.
@@ -223,16 +230,17 @@ namespace galsim {
         // Don't go past k = 500
         for (double logk = std::log(kmin)-0.001; logk < std::log(500.); logk += dlogk) {
             SersicIntegrand I(_n, _b, std::exp(logk));
-            double val = integ::int1d(
-                I, 0., integ_maxR, sbp::integration_relerr, sbp::integration_abserr*hankel_norm);
+            double val = integ::int1d(I, 0., integ_maxR,
+                                      gsparams->integration_relerr,
+                                      gsparams->integration_abserr*hankel_norm);
             val /= hankel_norm;
             xdbg<<"logk = "<<logk<<", ft("<<exp(logk)<<") = "<<val<<std::endl;
             _ft.addEntry(logk,val);
 
-            if (std::abs(val) > sbp::maxk_threshold) maxlogk_1 = logk;
-            if (std::abs(val) > sbp::kvalue_accuracy) maxlogk_2 = logk;
+            if (std::abs(val) > gsparams->maxk_threshold) maxlogk_1 = logk;
+            if (std::abs(val) > gsparams->kvalue_accuracy) maxlogk_2 = logk;
 
-            if (std::abs(val) > sbp::kvalue_accuracy) n_below_thresh = 0;
+            if (std::abs(val) > gsparams->kvalue_accuracy) n_below_thresh = 0;
             else ++n_below_thresh;
             if (n_below_thresh == 5) break;
         }
@@ -242,7 +250,7 @@ namespace galsim {
         maxlogk_2 += dlogk;
         _maxK = exp(maxlogk_1);
         xdbg<<"maxlogk_1 = "<<maxlogk_1<<std::endl;
-        xdbg<<"maxK with val >= "<<sbp::maxk_threshold<<" = "<<_maxK<<std::endl;
+        xdbg<<"maxK with val >= "<<gsparams->maxk_threshold<<" = "<<_maxK<<std::endl;
         _ksq_max = exp(2.*maxlogk_2);
         xdbg<<"ft.argMax = "<<_ft.argMax()<<std::endl;
         xdbg<<"maxlogk_2 = "<<maxlogk_2<<std::endl;
@@ -251,11 +259,11 @@ namespace galsim {
         // Next, set up the classes for photon shooting
         _radial.reset(new SersicRadialFunction(_n, _b));
         std::vector<double> range(2,0.);
-        range[1] = findMaxR(sbp::shoot_flux_accuracy,gamma2n);
+        range[1] = findMaxR(gsparams->shoot_accuracy,gamma2n);
         _sampler.reset(new OneDimensionalDeviate( *_radial, range, true));
     }
 
-    boost::shared_ptr<PhotonArray> SBSersic::SersicInfo::shoot(int N, UniformDeviate ud) const
+    boost::shared_ptr<PhotonArray> SersicInfo::shoot(int N, UniformDeviate ud) const
     {
         dbg<<"SersicInfo shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.0\n";

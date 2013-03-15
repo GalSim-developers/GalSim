@@ -36,15 +36,15 @@ namespace galsim {
         // Magic numbers:
 
         /// @brief FT must be at least this much larger than input
-        const double oversample_x = 4.;
+        const double default_pad_factor = 4.;
 
         /// @brief The default k-space interpolator
-        const boost::shared_ptr<Quintic> defaultKInterpolant1d(new Quintic(sbp::kvalue_accuracy));
+        const boost::shared_ptr<Quintic> defaultKInterpolant1d(new Quintic(1.e-5));
         const boost::shared_ptr<InterpolantXY> defaultKInterpolant2d(
             new InterpolantXY(defaultKInterpolant1d));
 
         /// @brief The default real-space interpolator
-        const boost::shared_ptr<Lanczos> defaultXInterpolant1d(new Lanczos(5,true,kvalue_accuracy));
+        const boost::shared_ptr<Lanczos> defaultXInterpolant1d(new Lanczos(5,true,1.e-5));
         const boost::shared_ptr<InterpolantXY> defaultXInterpolant2d(
             new InterpolantXY(defaultXInterpolant1d));
     }
@@ -231,7 +231,8 @@ namespace galsim {
             boost::shared_ptr<Interpolant2d> xInterp = sbp::defaultXInterpolant2d,
             boost::shared_ptr<Interpolant2d> kInterp = sbp::defaultKInterpolant2d,
             double dx=0., double pad_factor=0.,
-            boost::shared_ptr<Image<T> > pad_image = Image<T>());
+            boost::shared_ptr<Image<T> > pad_image = Image<T>(),
+            boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
 
         /** 
          * @brief Initialize internal quantities and allocate data tables based on a supplied 2D 
@@ -247,7 +248,8 @@ namespace galsim {
             const MultipleImageHelper& multi,
             const std::vector<double>& weights,
             boost::shared_ptr<Interpolant2d> xInterp = sbp::defaultXInterpolant2d,
-            boost::shared_ptr<Interpolant2d> kInterp = sbp::defaultKInterpolant2d);
+            boost::shared_ptr<Interpolant2d> kInterp = sbp::defaultKInterpolant2d,
+            boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
 
         /// @brief Copy Constructor.
         SBInterpolatedImage(const SBInterpolatedImage& rhs);

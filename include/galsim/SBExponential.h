@@ -47,7 +47,8 @@ namespace galsim {
          *                  half-light radius `re`.
          * @param[in] flux  flux (default `flux = 1.`).
          */
-        SBExponential(double r0, double flux=1.);
+        SBExponential(double r0, double flux=1.,
+                      boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
 
         /// @brief Copy constructor.
         SBExponential(const SBExponential& rhs);
@@ -60,13 +61,7 @@ namespace galsim {
 
     protected:
 
-        class ExponentialRadialFunction;
-        class ExponentialInfo;
         class SBExponentialImpl;
-
-        // Static class-wide object that does some calculations applicable to all 
-        // SBExponential instantiations.
-        static ExponentialInfo _info; 
 
     private:
         // op= is undefined

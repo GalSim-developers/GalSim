@@ -48,7 +48,8 @@ namespace galsim {
          *                   `exp[-r^2 / (2. * sigma^2)]`.
          * @param[in] flux   flux of the Surface Brightness Profile (default `flux = 1.`).
          */
-        SBGaussian(double sigma, double flux=1.);
+        SBGaussian(double sigma, double flux=1.,
+                   boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
 
         /// @brief Copy constructor.
         SBGaussian(const SBGaussian& rhs);

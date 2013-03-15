@@ -40,7 +40,8 @@ namespace galsim {
          * @param[in] bvec   `bvec[n,n]` contains flux information for the `(n, n)` basis function.
          * @param[in] sigma  scale size of Gauss-Laguerre basis set (default `sigma = 1.`).
          */
-        SBLaguerre(LVector bvec=LVector(), double sigma=1.);
+        SBLaguerre(LVector bvec=LVector(), double sigma=1., 
+                   boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
 
         /// @brief Copy Constructor. 
         SBLaguerre(const SBLaguerre& rhs);

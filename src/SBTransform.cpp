@@ -33,23 +33,28 @@
 
 namespace galsim {
    
-    SBTransform::SBTransform(const SBProfile& sbin,
-                double mA, double mB, double mC, double mD,
-                const Position<double>& cen, double fluxScaling) :
-        SBProfile(new SBTransformImpl(sbin,mA,mB,mC,mD,cen,fluxScaling)) {}
+    SBTransform::SBTransform(const SBProfile& adaptee,
+                             double mA, double mB, double mC, double mD,
+                             const Position<double>& cen, double fluxScaling,
+                             boost::shared_ptr<GSParams> gsparams) :
+        SBProfile(new SBTransformImpl(adaptee,mA,mB,mC,mD,cen,fluxScaling,gsparams)) {}
 
-    SBTransform::SBTransform(const SBProfile& sbin,
-                const CppEllipse& e, double fluxScaling) :
-        SBProfile(new SBTransformImpl(sbin,e,fluxScaling)) {}
+    SBTransform::SBTransform(const SBProfile& adaptee,
+                             const CppEllipse& e, double fluxScaling,
+                             boost::shared_ptr<GSParams> gsparams) :
+        SBProfile(new SBTransformImpl(adaptee,e,fluxScaling,gsparams)) {}
 
     SBTransform::SBTransform(const SBTransform& rhs) : SBProfile(rhs) {}
 
     SBTransform::~SBTransform() {}
 
     SBTransform::SBTransformImpl::SBTransformImpl(
-        const SBProfile& sbin, double mA, double mB, double mC, double mD,
-        const Position<double>& cen, double fluxScaling) :
-        _adaptee(sbin), _mA(mA), _mB(mB), _mC(mC), _mD(mD), _cen(cen), _fluxScaling(fluxScaling)
+        const SBProfile& adaptee, double mA, double mB, double mC, double mD,
+        const Position<double>& cen, double fluxScaling,
+        boost::shared_ptr<GSParams> gsparams) :
+        SBProfileImpl(gsparams.get() ? gsparams :
+                      SBProfile::GetImpl(adaptee)->gsparams),
+        _adaptee(adaptee), _mA(mA), _mB(mB), _mC(mC), _mD(mD), _cen(cen), _fluxScaling(fluxScaling)
     {
         dbg<<"Start TransformImpl (1)\n";
         dbg<<"matrix = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
@@ -61,8 +66,11 @@ namespace galsim {
     }
 
     SBTransform::SBTransformImpl::SBTransformImpl(
-        const SBProfile& sbin, const CppEllipse& e, double fluxScaling) :
-        _adaptee(sbin), _cen(e.getX0()), _fluxScaling(fluxScaling)
+        const SBProfile& adaptee, const CppEllipse& e, double fluxScaling,
+        boost::shared_ptr<GSParams> gsparams) :
+        SBProfileImpl(gsparams.get() ? gsparams :
+                      SBProfile::GetImpl(adaptee)->gsparams),
+        _adaptee(adaptee), _cen(e.getX0()), _fluxScaling(fluxScaling)
     {
         dbg<<"Start TransformImpl (2)\n";
         dbg<<"e = "<<e<<", fluxScaling = "<<_fluxScaling<<std::endl;
@@ -314,7 +322,7 @@ namespace galsim {
         xdbg<<"_absdet -> "<<_absdet<<std::endl;
 
         // Figure out which function we need for kValue and kValueNoPhase
-        if (std::abs(_absdet-1.) < sbp::kvalue_accuracy) {
+        if (std::abs(_absdet-1.) < this->gsparams->kvalue_accuracy) {
             xdbg<<"absdet*fluxScaling = "<<_absdet<<" = 1, so use NoDet version.\n";
             _kValueNoPhase = &SBTransform::_kValueNoPhaseNoDet;
         } else {

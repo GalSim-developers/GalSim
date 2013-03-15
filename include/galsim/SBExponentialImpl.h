@@ -24,6 +24,7 @@
 
 #include "SBProfileImpl.h"
 #include "SBExponential.h"
+#include "LRUCache.h"
 
 namespace galsim {
 
@@ -33,8 +34,7 @@ namespace galsim {
      * Serves as interface to `OneDimensionalDeviate` used for sampling from this 
      * distribution.
      */
-    class SBExponential::ExponentialRadialFunction : 
-        public FluxDensity 
+    class ExponentialRadialFunction : public FluxDensity 
     {
     public:
         /**
@@ -50,13 +50,13 @@ namespace galsim {
     };
 
     /// @brief A private class that stores photon shooting functions for the Exponential profile
-    class SBExponential::ExponentialInfo
+    class ExponentialInfo
     {
     public:
         /** 
          * @brief Constructor
          */
-        ExponentialInfo(); 
+        ExponentialInfo(const GSParams* gsparams); 
 
         /// @brief Destructor: deletes photon-shooting classes if necessary
         ~ExponentialInfo() {}
@@ -76,6 +76,7 @@ namespace galsim {
         double stepK() const;
 
     private:
+
         ExponentialInfo(const ExponentialInfo& rhs); ///< Hides the copy constructor.
         void operator=(const ExponentialInfo& rhs); ///<Hide assignment operator.
 
@@ -93,7 +94,7 @@ namespace galsim {
     {
     public:
 
-        SBExponentialImpl(double r0, double flux);
+        SBExponentialImpl(double r0, double flux, boost::shared_ptr<GSParams> gsparams);
 
         ~SBExponentialImpl() {}
 
@@ -137,9 +138,13 @@ namespace galsim {
         double _norm; ///< flux / r0^2 / 2pi
         double _flux_over_2pi; ///< Flux / 2pi
 
+        const ExponentialInfo* _info;
+
         // Copy constructor and op= are undefined.
         SBExponentialImpl(const SBExponentialImpl& rhs);
         void operator=(const SBExponentialImpl& rhs);
+
+        static LRUCache<const GSParams*, ExponentialInfo> cache;
     };
 
 }

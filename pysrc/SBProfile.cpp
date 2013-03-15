@@ -27,6 +27,87 @@ namespace bp = boost::python;
 
 namespace galsim {
 
+    struct PyGSParams {
+
+        static void wrap() {
+
+            static const char* doc = 
+                "GSParams stores a set of numbers that govern how GSObjects make various\n"
+                "speed/accuracy tradeoff decisions.\n"
+                "\n"
+                "The parameters, along with their default values are the following:\n"
+                "\n"
+                "minimum_fft_size=128      Constant giving minimum FFT size we're willing to do.\n"
+                "maximum_fft_size=4096     Constant giving maximum FFT size we're willing to do.\n"
+                "alias_threshold=5.e-3     A threshold parameter used for setting the stepK value\n"
+                "                          for FFTs.  The FFT's stepK is set so that at most a\n"
+                "                          fraction alias_threshold of the flux of any profile is\n"
+                "                          aliased.\n"
+                "maxk_threshold=1.e-3      A threshold parameter used for setting the maxK value\n"
+                "                          for FFTs.  The FFT's maxK is set so that the k-values\n"
+                "                          that are excluded off the edge of the image are less\n"
+                "                          than maxk_threshold.\n"
+                "kvalue_accuracy=1.e-5     Accuracy of values in k-space.\n"
+                "                          If a k-value is less than kvalue_accuracy, then it may\n"
+                "                          be set to zero. Similarly, if an alternate calculation\n"
+                "                          has errors less than kvalue_accuracy, then it may be\n"
+                "                          used instead of an exact calculation.\n"
+                "                          Note: This does not necessarily imply that all kvalues\n"
+                "                          are this accurate.  There may be cases where other\n"
+                "                          choices we have made lead to errors greater than this.\n"
+                "                          But whenever we do an explicit calculation about this,\n"
+                "                          this is the value we use.\n"
+                "                          This would typically be smaller than maxk_threshold.\n"
+                "xvalue_accuracy=1.e-5     Accuracy of values in real space.\n"
+                "                          If a value in real space is less than xvalue_accuracy,\n"
+                "                          then it may be set to zero. Similarly, if an alternate\n"
+                "                          calculation has errors less than xvalue_accuracy, then\n"
+                "                          it may be used instead of an exact calculation.\n"
+                "shoot_accuracy=1.e-5      Accuracy of total flux for photon shooting\n"
+                "                          The photon shooting algorithm sometimes needs to\n"
+                "                          sample the radial profile out to some value.  We\n"
+                "                          choose the outer radius such that the integral\n"
+                "                          encloses at least (1-shoot_accuracy) of the flux.\n"
+                "realspace_relerr=1.e-3    The relative accuracy for realspace convolution.\n"
+                "realspace_relerr=1.e-6    The absolute accuracy for realspace convolution.\n"
+                "integration_relerr=1.e-5  The relative accuracy for integrals (other than\n"
+                "                          real-space convolution).\n"
+                "integration_abserr=1.e-7  The absolute accuracy for integrals (other than\n"
+                "                          real-space convolution).\n";
+
+            bp::class_<GSParams> pyGSParams("GSParams", doc, bp::no_init);
+            pyGSParams
+                .def(bp::init<
+                     int, int, double, double, double, double, double, double, double,
+                     double, double>(
+                         (bp::arg("minimum_fft_size")=128, 
+                          bp::arg("maximum_fft_size")=4096,
+                          bp::arg("alias_threshold")=5.e-3,
+                          bp::arg("maxk_threshold")=1.e-3,
+                          bp::arg("kvalue_accuracy")=1.e-5,
+                          bp::arg("xvalue_accuracy")=1.e-5,
+                          bp::arg("shoot_accuracy")=1.e-5,
+                          bp::arg("realspace_relerr")=1.e-3,
+                          bp::arg("realspace_abserr")=1.e-6,
+                          bp::arg("integration_relerr")=1.e-5,
+                          bp::arg("integration_abserr")=1.e-7))
+                )
+                .def_readonly("minimum_fft_size", &GSParams::minimum_fft_size)
+                .def_readonly("maximum_fft_size", &GSParams::maximum_fft_size)
+                .def_readonly("alias_threshold", &GSParams::alias_threshold)
+                .def_readonly("maxk_threshold", &GSParams::maxk_threshold)
+                .def_readonly("kvalue_accuracy", &GSParams::kvalue_accuracy)
+                .def_readonly("xvalue_accuracy", &GSParams::xvalue_accuracy)
+                .def_readonly("shoot_accuracy", &GSParams::shoot_accuracy)
+                .def_readonly("realspace_relerr", &GSParams::realspace_relerr)
+                .def_readonly("realspace_abserr", &GSParams::realspace_abserr)
+                .def_readonly("integration_relerr", &GSParams::integration_relerr)
+                .def_readonly("integration_abserr", &GSParams::integration_abserr)
+                ;
+        }
+    };
+
+
     struct PySBProfile 
     {
 
@@ -46,7 +127,7 @@ namespace galsim {
                       bp::arg("poisson_flux")=true, bp::arg("add_to_image")=false),
                      "Draw object into existing image using photon shooting.\n"
                      "\n"
-                     "Setting optional integer arg possionFlux != 0 allows profile flux to vary \n"
+                     "Setting optional integer arg possionFlux != 0 allows profile flux to vary\n"
                      "according to Poisson statistics for N samples.\n"
                      "\n"
                      "Returns total flux of photons that landed inside image bounds.")
@@ -84,14 +165,14 @@ namespace galsim {
                 "SBAdd: sum of SBProfiles\n"
                 "SBConvolve: convolution of other SBProfiles\n"
                 "\n"
-                "==== Drawing routines ==== \n"
+                "==== Drawing routines ====\n"
                 "Grid on which SBProfile is drawn has pitch dx, which is taken from the\n"
                 "image's scale parameter.\n"
                 "\n"
                 "Note that in an FFT the image may be calculated internally on a\n"
                 "larger grid than the provided image to avoid folding.\n"
-                "Specifying wmult > 1 will draw an image that is wmult times larger than the \n"
-                "default choice, i.e. it will have finer sampling in k space and have less \n"
+                "Specifying wmult > 1 will draw an image that is wmult times larger than the\n"
+                "default choice, i.e. it will have finer sampling in k space and have less\n"
                 "folding.\n"
                 ;
 
@@ -141,6 +222,7 @@ namespace galsim {
     void pyExportSBProfile() 
     {
         PySBProfile::wrap();
+        PyGSParams::wrap();
     }
 
 } // namespace galsim

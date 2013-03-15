@@ -31,7 +31,8 @@ namespace galsim {
 
     // Defined in RealSpaceConvolve.cpp
     double RealSpaceConvolve(
-        const SBProfile& p1, const SBProfile& p2, const Position<double>& pos, double flux);
+        const SBProfile& p1, const SBProfile& p2, const Position<double>& pos, double flux,
+        const GSParams* gsparams);
 
     /**
      * @brief Convolve SBProfiles.
@@ -71,32 +72,13 @@ namespace galsim {
     {
     public:
         /**
-         * @brief Constructor, 2 inputs.
-         *
-         * @param[in] s1 first SBProfile.
-         * @param[in] s2 second SBProfile.
-         * @param[in] real_space  Do convolution in real space? (default `real_space = false`).
-         */
-        SBConvolve(const SBProfile& s1, const SBProfile& s2, bool real_space=false);
-
-        /**
-         * @brief Constructor, 3 inputs.
-         *
-         * @param[in] s1 first SBProfile.
-         * @param[in] s2 second SBProfile.
-         * @param[in] s3 third SBProfile.
-         * @param[in] real_space  Do convolution in real space? (default `real_space = false`).
-         */
-        SBConvolve(const SBProfile& s1, const SBProfile& s2, const SBProfile& s3,
-                   bool real_space=false);
-
-        /**
          * @brief Constructor, list of inputs.
          *
          * @param[in] slist Input: list of SBProfiles.
          * @param[in] real_space  Do convolution in real space? (default `real_space = false`).
          */
-        SBConvolve(const std::list<SBProfile>& slist, bool real_space=false);
+        SBConvolve(const std::list<SBProfile>& slist, bool real_space=false,
+                   boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
 
         /// @brief Copy constructor.
         SBConvolve(const SBConvolve& rhs);
