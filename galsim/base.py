@@ -2449,7 +2449,7 @@ class Shapelet(GSObject):
     
     The coeffients b_pq are in general complex.  However, we require that the resulting 
     I(r,theta) be purely real, which implies that b_pq = b_qp* (where * means complex conjugate).
-    This further implies that b_pp is real. 
+    This further implies that b_pp (i.e. b_pq with p==q) is real. 
 
 
     Initialization
