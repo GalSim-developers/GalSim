@@ -1731,6 +1731,14 @@ class Pixel(GSObject):
     -------
     The Pixel is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(), 
     applyShear() etc.) and operator bindings.
+
+    Note: We have not implemented drawing a sheared or rotated Pixel in real space.  It's a 
+          bit tricky to get right at the edges where fractional fluxes are required.  
+          Fortunately, this is almost never needed.  Pixels are almost always convolved by
+          something else rather than drawn by themselves, in which case either the fourier
+          space method is used, or photon shooting.  Both of these are implemented in GalSim.
+          If need to draw sheared or rotated Pixels in real space, please file an issue, and
+          maybe we'll implement that function.  Until then, you will get an exception if you try.
     """
 
     # Initialization parameters of the object, with type information

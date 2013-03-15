@@ -50,7 +50,7 @@ namespace galsim {
 
     // xValue() not implemented for SBDeconvolve.
     double SBDeconvolve::SBDeconvolveImpl::xValue(const Position<double>& p) const 
-    { throw SBError("SBDeconvolve::xValue() not implemented"); }
+    { throw SBError("SBDeconvolve::xValue() not implemented (and not possible)"); }
 
     std::complex<double> SBDeconvolve::SBDeconvolveImpl::kValue(const Position<double>& k) const 
     {

@@ -91,6 +91,8 @@ class DES_Shapelet(object):
                     file_type,self.file_name))
 
     def read_ascii(self):
+        """Read in a DES_Shapelet stored using the the ASCII-file version.
+        """
         import numpy
         fin = open(self.file_name, 'r')
         lines = fin.readlines()
@@ -129,6 +131,8 @@ class DES_Shapelet(object):
         assert self.interp_matrix.shape == (self.fit_size, self.npca)
 
     def read_fits(self):
+        """Read in a DES_Shapelet stored using the the FITS-file version.
+        """
         #print 'start DES_Shapelet read_fits'
         import pyfits
         cat = pyfits.getdata(self.file_name,1)
@@ -169,7 +173,9 @@ class DES_Shapelet(object):
     def getPSF(self, pos):
         """Returns the PSF at position pos
 
-        This returns a Shapelet instance.
+        @param pos   The position in pixel units for which to build the PSF.
+
+        @returns a Shapelet instance.
         """
         print 'Start DES_Shapelet::getPSF for pos = ',pos
         if not self.bounds.includes(pos):

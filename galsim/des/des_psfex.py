@@ -121,6 +121,9 @@ class DES_PSFEx(object):
         For Galsim, we do everything in physical units (i.e. arcsec typically), so the returned 
         psf needs to account for the pixel_scale.
 
+        @param pos          The position in pixel units for which to build the PSF.
+        @param pixel_scale  The pixel scale in arcsec/pixel.
+
         @returns an InterpolatedImage instance.
         """
         import numpy
