@@ -62,4 +62,4 @@ image:
  # pixel scale
  scale: 1
  # use a lot of photons				
- n_photons: 50000000
+ n_photons: 10000000

@@ -219,7 +219,7 @@ def plotEllipticityBiases():
     pylab.ylabel('de/e')
     pylab.xlim([-1,n_test_gals])
 
-    pylab.gcf().set_size_inches(20,10)
+    pylab.gcf().set_size_inches(10,5)
     pylab.legend()
 
     filename_fig = 'photon_vs_fft_differences.png';
