@@ -222,25 +222,25 @@ def test_gaussian():
 
     # Repeat with the GSObject version of this:
     gauss = galsim.Gaussian(flux=1, sigma=1)
-    myImg, tot = gauss.draw(myImg, dx=dx, normalization="surface brightness")
+    myImg = gauss.draw(myImg, dx=dx, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Gaussian disagrees with expected result")
     np.testing.assert_almost_equal(
-            myImg.array.sum() *dx**2, tot, 5,
-            err_msg="Gaussian profile GSObject::draw returned wrong tot")
+            myImg.array.sum() *dx**2, myImg.added_flux, 5,
+            err_msg="Gaussian profile GSObject::draw returned wrong added_flux")
 
     # Check a non-square image
     print myImg.bounds
     recImg = galsim.ImageF(45,66)
     recImg.setCenter(0,0)
-    recImg, tot = gauss.draw(recImg, dx=dx, normalization="surface brightness")
+    recImg = gauss.draw(recImg, dx=dx, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             recImg[savedImg.bounds].array, savedImg.array, 5,
             err_msg="Drawing Gaussian on non-square image disagrees with expected result")
     np.testing.assert_almost_equal(
-            recImg.array.sum() *dx**2, tot, 5,
-            err_msg="Gaussian profile GSObject::draw on non-square image returned wrong tot")
+            recImg.array.sum() *dx**2, recImg.added_flux, 5,
+            err_msg="Gaussian profile GSObject::draw on non-square image returned wrong added_flux")
 
     # Test photon shooting.
     do_shoot(gauss,myImg,"Gaussian")
@@ -1842,65 +1842,65 @@ def test_rescale():
     # With wmult = 3, the calculated flux should come out right so long as we also 
     # convolve by a pixel:
     sersic3 = galsim.Convolve([sersic, galsim.Pixel(xw=0.2)])
-    myImg2, tot = sersic3.draw(dx=0.2, wmult=3)
-    print myImg2.array.sum(), tot
+    myImg2 = sersic3.draw(dx=0.2, wmult=3)
+    print myImg2.array.sum(), myImg2.added_flux
     np.testing.assert_almost_equal(myImg2.array.sum(), 1., 3,
             err_msg="Drawing with wmult=3 results in wrong flux")
-    np.testing.assert_almost_equal(tot, 1., 3,
-            err_msg="Drawing with wmult=3 returned wrong tot")
-    myImg2, tot = sersic3.draw(myImg2, add_to_image=True)
-    print myImg2.array.sum(), tot
+    np.testing.assert_almost_equal(myImg2.added_flux, 1., 3,
+            err_msg="Drawing with wmult=3 returned wrong added_flux")
+    myImg2 = sersic3.draw(myImg2, add_to_image=True)
+    print myImg2.array.sum(), myImg2.added_flux
     np.testing.assert_almost_equal(myImg2.array.sum(), 2., 3,
             err_msg="Drawing with add_to_image=True results in wrong flux")
-    np.testing.assert_almost_equal(tot, 1., 3,
-            err_msg="Drawing with add_to_image=True returned wrong tot")
+    np.testing.assert_almost_equal(myImg2.added_flux, 1., 3,
+            err_msg="Drawing with add_to_image=True returned wrong added_flux")
 
     # Check that the flux works out when adding multiple times.
     gauss = galsim.Gaussian(flux=1.e5, sigma=2.)
     gauss2 = galsim.Convolve([gauss, galsim.Pixel(xw=0.2)])
-    myImg2, tot = gauss2.draw(dx=0.2, wmult=3)
+    myImg2 = gauss2.draw(dx=0.2, wmult=3)
     print 'image size = ',myImg2.array.shape
-    print myImg2.array.sum(), tot
+    print myImg2.array.sum(), myImg2.added_flux
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 1., 4,
             err_msg="Drawing Gaussian results in wrong flux")
-    np.testing.assert_almost_equal(tot/1.e5, 1., 4,
-            err_msg="Drawing Gaussian returns wrong tot")
-    myImg2, tot = gauss2.draw(myImg2, add_to_image=True)
-    print myImg2.array.sum(), tot
+    np.testing.assert_almost_equal(myImg2.added_flux/1.e5, 1., 4,
+            err_msg="Drawing Gaussian returns wrong added_flux")
+    myImg2 = gauss2.draw(myImg2, add_to_image=True)
+    print myImg2.array.sum(), myImg2.added_flux
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 2., 4,
             err_msg="Drawing Gaussian with add_to_image=True results in wrong flux")
-    np.testing.assert_almost_equal(tot/1.e5, 1., 4,
-            err_msg="Drawing Gaussian with add_to_image=True returns wrong tot")
-    myImg2, tot = gauss.drawShoot(myImg2, add_to_image=True, poisson_flux=False,
+    np.testing.assert_almost_equal(myImg2.added_flux/1.e5, 1., 4,
+            err_msg="Drawing Gaussian with add_to_image=True returns wrong added_flux")
+    myImg2 = gauss.drawShoot(myImg2, add_to_image=True, poisson_flux=False,
                                   rng=glob_ud)
-    print myImg2.array.sum(), tot
+    print myImg2.array.sum(), myImg2.added_flux
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 3., 4,
             err_msg="Drawing Gaussian with drawShoot, add_to_image=True, poisson_flux=False "+
                     "results in wrong flux")
-    np.testing.assert_almost_equal(tot/1.e5, 1., 4,
+    np.testing.assert_almost_equal(myImg2.added_flux/1.e5, 1., 4,
             err_msg="Drawing Gaussian with drawShoot, add_to_image=True, poisson_flux=False "+
-                    "returned wrong tot")
-    myImg2, tot = gauss.drawShoot(myImg2, add_to_image=True, rng=glob_ud)
-    print myImg2.array.sum(), tot
+                    "returned wrong added_flux")
+    myImg2 = gauss.drawShoot(myImg2, add_to_image=True, rng=glob_ud)
+    print myImg2.array.sum(), myImg2.added_flux
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 4., 1,
             err_msg="Drawing Gaussian with drawShoot, add_to_image=True, poisson_flux=True "+
                     "results in wrong flux")
-    np.testing.assert_almost_equal(tot/1.e5, 1., 1,
+    np.testing.assert_almost_equal(myImg2.added_flux/1.e5, 1., 1,
             err_msg="Drawing Gaussian with drawShoot, add_to_image=True, poisson_flux=True "+
-                    "returned wrong tot")
-    np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 3.+tot/1.e5, 4,
+                    "returned wrong added_flux")
+    np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 3.+myImg2.added_flux/1.e5, 4,
             err_msg="Drawing Gaussian with drawShoot, add_to_image=True results in wrong flux "+
-                    "according to the returned tot")
+                    "according to the returned added_flux")
 
     # Can also get a flux of 2 using gain = 0.5
     sersic.draw(myImg, dx=0.2, gain=0.5, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Drawing with gain=0.5 disagrees with expected result")
-    myImg2, tot = sersic3.draw(dx=0.2, wmult=3, gain=0.5)
+    myImg2 = sersic3.draw(dx=0.2, wmult=3, gain=0.5)
     np.testing.assert_almost_equal(myImg2.array.sum(), 2., 3,
             err_msg="Drawing with gain=0.5 results in wrong flux")
-    myImg2, tot = sersic3.draw(dx=0.2, wmult=3, gain=4.)
+    myImg2 = sersic3.draw(dx=0.2, wmult=3, gain=4.)
     np.testing.assert_almost_equal(myImg2.array.sum(), 0.25, 3,
             err_msg="Drawing with gain=4. results in wrong flux")
     # Check add_to_image in conjunction with gain
@@ -1998,7 +1998,7 @@ def test_draw():
     #   - return the new image
     #   - set the scale to obj.nyquistDx()
     #   - set the size large enough to contain 99.5% of the flux
-    im1, tot = obj.draw()
+    im1 = obj.draw()
     dx_nyq = obj.nyquistDx()
     np.testing.assert_almost_equal(im1.scale, dx_nyq, 9,
                                    "obj.draw() produced image with wrong scale")
@@ -2010,7 +2010,7 @@ def test_draw():
     # The flux is only really expected to come out right if the object has been
     # convoled with a pixel:
     obj2 = galsim.Convolve([ obj, galsim.Pixel(im1.scale) ])
-    im2, tot = obj2.draw()
+    im2 = obj2.draw()
     dx_nyq = obj2.nyquistDx()
     np.testing.assert_almost_equal(im2.scale, dx_nyq, 9,
                                    "obj2.draw() produced image with wrong scale")
@@ -2027,7 +2027,7 @@ def test_draw():
     #   - set the scale to obj2.nyquistDx()
     #   - zero out any existing data
     im3 = galsim.ImageD(48,48)
-    im4, tot = obj2.draw(im3)
+    im4 = obj2.draw(im3)
     np.testing.assert_almost_equal(im3.scale, dx_nyq, 9,
                                    "obj2.draw(im3) produced image with wrong scale")
     np.testing.assert_almost_equal(im3.array.sum(), test_flux, 2,
@@ -2041,7 +2041,7 @@ def test_draw():
     im3.fill(9.8)
     np.testing.assert_array_equal(im3.array, im4.array,
                                   "im4 = obj2.draw(im3) produced im4 is not im3")
-    im4, tot = obj2.draw(im3)
+    im4 = obj2.draw(im3)
     np.testing.assert_almost_equal(im3.array.sum(), im2.array.astype(float).sum(), 6,
                                    "obj2.draw(im3) doesn't zero out existing data")
     
@@ -2066,7 +2066,7 @@ def test_draw():
     #   - create a new image that is wmult times larger in each direction.
     #   - return the new image
     #   - set the scale to obj2.nyquistDx()
-    im6, tot = obj2.draw(wmult=4.)
+    im6 = obj2.draw(wmult=4.)
     np.testing.assert_almost_equal(im6.scale, dx_nyq, 9,
                                    "obj2.draw(wmult) produced image with wrong scale")
     # Can assert accuracy to 5 decimal places now, since we're capturing much more
@@ -2101,7 +2101,7 @@ def test_draw():
     #   - create a new image using that dx for the scale
     #   - return the new image
     #   - set the size large enough to contain 99.5% of the flux
-    im7, tot = obj2.draw(dx=0.51)
+    im7 = obj2.draw(dx=0.51)
     np.testing.assert_almost_equal(im7.scale, 0.51, 9,
                                    "obj2.draw(dx) produced image with wrong scale")
     np.testing.assert_almost_equal(im7.array.astype(float).sum(), test_flux, 2,
@@ -2115,7 +2115,7 @@ def test_draw():
     #   - create a new image using that dx for the scale
     #   - set the size a factor of wmult times larger in each direction.
     #   - return the new image
-    im8, tot = obj2.draw(dx=0.51, wmult=4.)
+    im8 = obj2.draw(dx=0.51, wmult=4.)
     np.testing.assert_almost_equal(im8.scale, 0.51, 9,
                                    "obj2.draw(dx,wmult) produced image with wrong scale")
     np.testing.assert_almost_equal(im8.array.astype(float).sum(), test_flux, 5,

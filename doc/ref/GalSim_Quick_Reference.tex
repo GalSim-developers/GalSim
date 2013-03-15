@@ -363,11 +363,9 @@ instance are:
   \newline {apply a $(dx, dy)$ position shift to the
     \texttt{GSObject} centroid.}
 \item[$\circ$]
-  \texttt{image, flux\_added = obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{draw}}\texttt{(image=None, dx=None, add\_to\_image=False, \dots)}
+  \texttt{image = obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#ae0b346a8b438dedbc7f60a52220869d8}{\texttt{draw}}\texttt{(image=None, dx=None, add\_to\_image=False, \dots)}
   \newline {draw and return an \texttt{Image} (see Section \ref{sect:image}) of the \texttt{GSObject}~using Discrete Fourier
-  Transforms and interpolation to perform the image rendering.  In addition to the image, 
-  the total flux added to the image is also returned, which may be useful in determining
-  if a provided image is too small (and hence misses too much of the object's flux).
+  Transforms and interpolation to perform the image rendering.  
   Note
   that if a profile is not convolved with a pixel response before drawing, then
   \texttt{draw} samples the surface brightness distribution without
@@ -396,10 +394,10 @@ The \texttt{draw} method has a number of additional optional
  details.
  }
 \item[$\circ$]
-  \texttt{image, flux\_added = obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{drawShoot}}\texttt{(image=None, dx=None, \\~~ add\_to\_image=False, \dots)}
+  \texttt{image = obj.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_g_s_object.html#a42ac334d2840ba3fa832988e998beca0}{\texttt{drawShoot}}\texttt{(image=None, dx=None, \\~~ add\_to\_image=False, \dots)}
   \newline {draw and return an \texttt{Image} (see
     Section \ref{sect:image}) of the \texttt{GSObject}~by shooting a
-    finite number of photons, along with the total flux added.
+    finite number of photons.
     The resulting rendering therefore
     contains stochastic noise, but uses few approximations.  Note
     however, that you cannot \texttt{drawShoot} with a

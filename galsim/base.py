@@ -500,6 +500,13 @@ class GSObject(object):
         that are poorly sampled and/or varying rapidly (e.g., high n Sersic profiles), the sum of
         pixel values might differ significantly from the GSObject flux.
 
+        On return, the image will have a member `added_flux`, which will be set to be the total
+        flux added to the image.  This may be useful as a sanity check that you have provided a 
+        large enough image to catch most of the flux.  For example:
+        
+            image, added_flux = obj.drawShoot(image)
+            assert added_flux > 0.99 * obj.getFlux()
+
         @param image  If provided, this will be the image on which to draw the profile.
                       If `image = None`, then an automatically-sized image will be created.
                       If `image != None`, but its bounds are undefined (e.g. if it was 
@@ -565,9 +572,9 @@ class GSObject(object):
             # multiply the ADU by dx^2.  i.e. divide gain by dx^2.
             gain /= dx**2
 
-        added_flux = self.SBProfile.draw(image.view(), gain, wmult)
+        image.added_flux = self.SBProfile.draw(image.view(), gain, wmult)
 
-        return image, added_flux
+        return image
 
     def drawShoot(self, image=None, dx=None, gain=1., wmult=1., normalization="flux",
                   add_to_image=False, n_photons=0., rng=None,
@@ -592,6 +599,17 @@ class GSObject(object):
 
         Note that the drawShoot method is unavailable for objects which contain an SBDeconvolve,
         or are compound objects (e.g. Add, Convolve) that include an SBDeconvolve.
+
+        On return, the image will have a member `added_flux`, which will be set to be the total
+        flux of photons that landed inside the image bounds.  This may be useful as a sanity check 
+        that you have provided a large enough image to catch most of the flux.  For example:
+        
+            image, added_flux = obj.drawShoot(image)
+            assert added_flux > 0.99 * obj.getFlux()
+        
+        However, the appropriate threshold will depend things like whether you are keeping 
+        `poisson_flux = True`, how high the flux is, how big your images are relative to the size of
+        your object, etc.
 
         @param image  If provided, this will be the image on which to draw the profile.
                       If `image = None`, then an automatically-sized image will be created.
@@ -665,19 +683,7 @@ class GSObject(object):
                                 `poisson_flux = True` unless n_photons is given, in which case
                                 the default is `poisson_flux = False`).
 
-        @returns  The tuple (image, added_flux), where image is the input with drawn photons 
-                  added and added_flux is the total flux of photons that landed inside the image 
-                  bounds.
-
-        The second part of the return tuple may be useful as a sanity check that you have provided a
-        large enough image to catch most of the flux.  For example:
-        
-            image, added_flux = obj.drawShoot(image)
-            assert added_flux > 0.99 * obj.getFlux()
-        
-        However, the appropriate threshold will depend things like whether you are keeping 
-        `poisson_flux = True`, how high the flux is, how big your images are relative to the size of
-        your object, etc.
+        @returns      The drawn image.
         """
 
         # Raise an exception immediately if the normalization type is not recognized
@@ -732,7 +738,7 @@ class GSObject(object):
             gain /= dx**2
 
         try:
-            added_flux = self.SBProfile.drawShoot(
+            image.added_flux = self.SBProfile.drawShoot(
                 image.view(), n_photons, uniform_deviate, gain, max_extra_noise, poisson_flux)
         except RuntimeError:
             raise RuntimeError(
@@ -740,7 +746,7 @@ class GSObject(object):
                 "in the SBProfile attribute or is a compound including one or more Deconvolve "+
                 "objects.")
 
-        return image, added_flux
+        return image
 
     def drawK(self, re=None, im=None, dk=None, gain=1., wmult=1., add_to_image=False):
         """Draws the k-space Images (real and imaginary parts) of the object, with bounds

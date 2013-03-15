@@ -41,6 +41,7 @@ New features introduced in this demo:
 - obj.applyShear(shear)
 - obj3 = x1 * obj1 + x2 * obj2
 - image = galsim.ImageF(image_size, image_size)
+- obj.draw(image, dx)
 - shear3 = shear1 + shear2
 - noise = galsim.CCDNoise(rng, sky_level, gain, read_noise)
 """
@@ -220,7 +221,7 @@ def main(argv):
     final_epsf.draw(image_epsf, dx=pixel_scale)
     # Note: we draw the optical part of the PSF at its own Nyquist-sampled pixel size
     # in order to better see the features of the (highly structured) profile.
-    image_opticalpsf, flux_added = optics.draw(dx=lam_over_diam/2.)
+    image_opticalpsf = optics.draw(dx=lam_over_diam/2.)
     logger.debug('Made image of the profile')
 
     # Add a constant sky level to the image.

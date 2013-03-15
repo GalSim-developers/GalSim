@@ -161,7 +161,7 @@ def main(argv):
                 final.applyShift(dx*pixel_scale,dy*pixel_scale)
 
                 # Draw the postage stamp image
-                stamp = final.draw(dx=pixel_scale)[0]
+                stamp = final.draw(dx=pixel_scale)
 
                 # Recenter the stamp at the desired position:
                 stamp.setCenter(ix,iy)
@@ -195,7 +195,7 @@ def main(argv):
                 final.applyShift(dx*pixel_scale,dy*pixel_scale)
 
                 # Draw the postage stamp image
-                stamp = final.draw(dx=pixel_scale)[0]
+                stamp = final.draw(dx=pixel_scale)
 
                 # Recenter the stamp at the desired position:
                 stamp.setCenter(ix,iy)

@@ -210,7 +210,7 @@ def test_shapelet_fit():
         dx = 0.2
         pixel = galsim.Pixel(dx)
         conv = galsim.Convolve([psf,pixel])
-        im1, tot = conv.draw(dx=dx, normalization=norm)
+        im1 = conv.draw(dx=dx, normalization=norm)
         im1.setCenter(0,0)
 
         sigma = 1.2  # Match half-light-radius as a decent first approximation.
