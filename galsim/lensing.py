@@ -242,7 +242,7 @@ class PowerSpectrum(object):
 
                tab_pk = galsim.LookupTable(k, P_k)
                my_ps = galsim.PowerSpectrum(tab_pk)
-               g1, g2 = my_ps.buildGriddedShears(grid_spacing = 1., grid_nx = 100)
+               g1, g2 = my_ps.buildGriddedShears(grid_spacing = 1., ngrid = 100)
 
         @param grid_spacing     Spacing for an evenly spaced grid of points, by default in arcsec
                                 for consistency with the natural length scale of images created
