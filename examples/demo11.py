@@ -27,7 +27,7 @@ New features introduced in this demo:
 - cf = galsim.correlatednoise.get_COSMOS_CorrFunc(file_name, ...)
 - cf.applyNoiseTo(image, ...)
 
-- Power spectrum shears and convergences for non-gridded positions.
+- Power spectrum shears and magnifications for non-gridded positions.
 - Reading a compressed FITS image (using BZip2 compression).
 - Writing a compressed FITS image (using Rice compression).
 """
