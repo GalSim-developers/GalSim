@@ -384,7 +384,7 @@ namespace galsim {
         return _maxK;
     }
 
-    // The amount of flux missed in a circle of radius pi/stepk should miss at 
+    // The amount of flux missed in a circle of radius pi/stepk should be at 
     // most alias_threshold of the flux.
     double SBMoffat::SBMoffatImpl::stepK() const
     {

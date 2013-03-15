@@ -278,7 +278,7 @@ namespace galsim {
 
         // Calculate stepK:
         // 
-        // The amount of flux missed in a circle of radius pi/stepk should miss at 
+        // The amount of flux missed in a circle of radius pi/stepk should be at 
         // most alias_threshold of the flux.
         //
         // We add the size of the image and the size of the interpolant in quadrature.

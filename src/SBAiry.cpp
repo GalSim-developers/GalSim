@@ -236,7 +236,7 @@ namespace galsim {
     double SBAiry::SBAiryImpl::maxK() const 
     { return 2.*M_PI*_D; }
 
-    // The amount of flux missed in a circle of radius pi/stepk should miss at 
+    // The amount of flux missed in a circle of radius pi/stepk should be at 
     // most alias_threshold of the flux.
     double SBAiry::SBAiryImpl::stepK() const
     { return _info->stepK() * _D; }
