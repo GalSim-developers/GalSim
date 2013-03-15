@@ -2557,8 +2557,18 @@ class Shapelet(GSObject):
         bvec = self.SBProfile.getBVec()
         GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
     def setOrder(self,order):
+        curr_bvec = self.SBProfile.getBVec()
+        curr_order = curr_bvec.order
+        if curr_order == order: return
+        # Preserve the existing values as much as possible.
         sigma = self.SBProfile.getSigma()
-        bvec = galsim.LVector(order)
+        if curr_order > order:
+            bvec = galsim.LVector(order, curr_bvec.array[0:galsim.LVectorSize(order)])
+        else:
+            import numpy
+            a = numpy.zeros(galsim.LVectorSize(order))
+            a[0:len(curr_bvec.array)] = curr_bvec.array
+            bvec = galsim.LVector(order,a)
         GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
     def setBVec(self,bvec):
         sigma = self.SBProfile.getSigma()
