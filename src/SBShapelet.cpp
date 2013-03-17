@@ -266,7 +266,10 @@ namespace galsim {
         tmv::Matrix<std::complex<double> > psi_k(m*n,_bvec.size());
         LVector::kBasis(x.constLinearView(),y.constLinearView(),psi_k.view(),
                         _bvec.getOrder(),_sigma);
-        val.linearView() = psi_k * _bvec.rVector();
+        // Note: the explicit cast to Vector<complex<double> > shouldn't be necessary.
+        // But not doing so fails for Apple's default BLAS library.  It should be a pretty
+        // minimal efficiency difference, so we always do the explicit cast to be safe.
+        val.linearView() = psi_k * tmv::Vector<std::complex<double> >(_bvec.rVector());
     }
 
     template <typename T>
@@ -284,11 +287,10 @@ namespace galsim {
         tmv::Vector<double> I(npts);
         int i=0;
         for (int ix = image.getXMin(); ix <= image.getXMax(); ++ix) {
-            for (int iy = image.getYMin(); iy <= image.getYMax(); ++iy) {
+            for (int iy = image.getYMin(); iy <= image.getYMax(); ++iy,++i) {
                 x[i] = ix * scale - cenx;
                 y[i] = iy * scale - ceny;
                 I[i] = image(ix,iy);
-                ++i;
             }
         }
 
