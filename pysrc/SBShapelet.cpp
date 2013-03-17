@@ -32,20 +32,12 @@ namespace galsim {
 
         static bp::object GetArrayImpl(bp::object self, bool isConst) 
         {
-            //std::cout<<"Start GetArrayImpl: "<<std::endl;
-
             // --- Try to get cached array ---
             if (PyObject_HasAttrString(self.ptr(), "_array")) return self.attr("_array");
-            //std::cout<<"No saved _array \n";
-
             const LVector& lvector = bp::extract<const LVector&>(self);
-            //std::cout<<"lvector = "<<lvector.rVector()<<std::endl;
-            //std::cout<<"step = "<<lvector.rVector().step()<<std::endl;
-
             bp::object numpy_array = MakeNumpyArray(
                 lvector.rVector().cptr(), lvector.size(), lvector.rVector().step(), isConst,
                 lvector.getOwner());
-
             self.attr("_array") = numpy_array;
             return numpy_array;
         }
@@ -55,23 +47,15 @@ namespace galsim {
 
         static LVector* MakeFromArray(int order, const bp::object& array)
         {
-            //std::cout<<"Start MakeFromArray: order = "<<order<<std::endl;
             double* data = 0;
             boost::shared_ptr<double> owner;
             int stride = 0;
             CheckNumpyArray(array,1,true,data,owner,stride);
             int size = PyArray_DIM(array.ptr(), 0);
-            //std::cout<<"data = "<<data<<std::endl;
-            //std::cout<<"stride = "<<stride<<std::endl;
-            //std::cout<<"size = "<<size<<std::endl;
-            //std::cout<<"data = "<<tmv::VectorViewOf(data,size)<<std::endl;
             if (size != PQIndex::size(order)) {
                 PyErr_SetString(PyExc_ValueError, "Array for LVector is the wrong size");
                 bp::throw_error_already_set();
             }
-            //LVector* ret = new LVector(order,tmv::ConstVectorView<double>(data,size,stride,tmv::NonConj));
-            //std::cout<<"lvector = "<<ret->rVector()<<std::endl;
-            //return ret;
             return new LVector(order,tmv::ConstVectorView<double>(data,size,stride,tmv::NonConj));
             // Note: after building the LVector for return, it is now safe for the owner
             // to go out of scope and possibly delete the memory for data.

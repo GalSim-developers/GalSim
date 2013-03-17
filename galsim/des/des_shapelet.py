@@ -64,8 +64,6 @@ class DES_Shapelet(object):
     _takes_rng = False
 
     def __init__(self, file_name, dir=None, file_type=None):
-        #print 'DES_Shapelet init: ',file_name, dir, file_type
-
         if dir:
             import os
             file_name = os.path.join(dir,file_name)
@@ -86,9 +84,8 @@ class DES_Shapelet(object):
             else:
                 self.read_ascii()
         except Exception, e:
-            print e
-            raise RuntimeError("Unable to read %s DES_Shapelet file %s."%(
-                    file_type,self.file_name))
+            raise IOError("Unable to read %s DES_Shapelet file %s.  Error = %s"%(
+                    file_type,self.file_name,str(e)))
 
     def read_ascii(self):
         """Read in a DES_Shapelet stored using the the ASCII-file version.
@@ -133,41 +130,29 @@ class DES_Shapelet(object):
     def read_fits(self):
         """Read in a DES_Shapelet stored using the the FITS-file version.
         """
-        #print 'start DES_Shapelet read_fits'
         import pyfits
         cat = pyfits.getdata(self.file_name,1)
-        #print 'cat.dtype.names = ',cat.dtype.names
         # These fields each only contain one element, hence the [0]'s.
         self.psf_order = cat.field('psf_order')[0]
-        #print 'psf_order = ',self.psf_order
         self.psf_size = (self.psf_order+1) * (self.psf_order+2) / 2
-        #print 'psf_size = ',self.psf_size
         self.sigma = cat.field('sigma')[0]
-        #print 'sigma = ',self.sigma
         self.fit_order = cat.field('fit_order')[0]
-        #print 'fit_order = ',self.fit_order
         self.fit_size = (self.fit_order+1) * (self.fit_order+2) / 2
-        #print 'fit_size = ',self.fit_size
         self.npca = cat.field('npca')[0]
-        #print 'npca = ',self.npca
 
         self.bounds = galsim.BoundsD(
             float(cat.field('xmin')[0]), float(cat.field('xmax')[0]),
             float(cat.field('ymin')[0]), float(cat.field('ymax')[0]))
-        #print 'bounds = ',self.bounds
 
         self.ave_psf = cat.field('ave_psf')[0]
-        #print 'ave_psf = ',self.ave_psf.shape
         assert self.ave_psf.shape == (self.psf_size,)
 
         # Note: older pyfits versions don't get the shape right.
         # For newer pyfits versions the reshape command should be a no op.
         self.rot_matrix = cat.field('rot_matrix')[0].reshape((self.psf_size,self.npca)).T
-        #print 'rot_matrix = ',self.rot_matrix.shape
         assert self.rot_matrix.shape == (self.npca, self.psf_size)
 
         self.interp_matrix = cat.field('interp_matrix')[0].reshape((self.npca,self.fit_size)).T
-        #print 'self.interp_matrix = ',self.interp_matrix.shape
         assert self.interp_matrix.shape == (self.fit_size, self.npca)
 
     def getPSF(self, pos):
@@ -177,20 +162,14 @@ class DES_Shapelet(object):
 
         @returns a Shapelet instance.
         """
-        print 'Start DES_Shapelet::getPSF for pos = ',pos
         if not self.bounds.includes(pos):
-            #print 'pos not in bounds: ',bounds
             raise IndexError("position in DES_Shapelet.getPSF is out of bounds")
-        #print 'pos in bounds'
 
         import numpy
         Px = self._definePxy(pos.x,self.bounds.xmin,self.bounds.xmax)
-        #print 'Px = ',Px
         Py = self._definePxy(pos.y,self.bounds.ymin,self.bounds.ymax)
-        #print 'Py = ',Py
         order = self.fit_order
         P = numpy.array([ Px[n-q] * Py[q] for n in range(order+1) for q in range(n+1) ])
-        #print 'P = ',P
         assert len(P) == self.fit_size
 
         # Note: This is equivalent to:
@@ -203,14 +182,10 @@ class DES_Shapelet(object):
         #             k = k+1
 
         b1 = numpy.dot(P,self.interp_matrix)
-        #print 'b1 = ',b1
         b = numpy.dot(b1,self.rot_matrix)
-        #print 'b = ',b
         assert len(b) == self.psf_size
         b += self.ave_psf
-        print 'b = ',b
         ret = galsim.Shapelet(self.sigma, self.psf_order, b)
-        print 'Made Shapelet: ',ret
         return ret
 
     def _definePxy(self, x, min, max):
@@ -239,38 +214,26 @@ galsim.config.process.valid_input_types['des_shapelet'] = ('galsim.des.DES_Shape
 def BuildDES_Shapelet(config, key, base, ignore):
     """@brief Build a RealGalaxy type GSObject from user input.
     """
-    print 'Start BuildDES_Shapelet'
-    #print 'config = ',config
-    #print 'key = ',key
-    #print 'base = ',base
-    #print 'ignore = ',ignore
     opt = { 'flux' : float }
     kwargs, safe = galsim.config.GetAllParams(config, key, base, opt=opt, ignore=ignore)
-    #print 'kwargs = ',kwargs
 
     if 'des_shapelet' not in base:
         raise ValueError("No DES_Shapelet instance available for building type = DES_Shapelet")
     des_shapelet = base['des_shapelet']
-    #print 'des_shapelet = ',des_shapelet
 
     if 'chip_pos' not in base:
         raise ValueError("DES_Shapelet requested, but no chip_pos defined in base.")
     chip_pos = base['chip_pos']
-    print 'chip_pos = ',chip_pos
 
     if des_shapelet.bounds.includes(chip_pos):
-        print 'in bounds'
         psf = des_shapelet.getPSF(chip_pos)
     else:
-        print 'not in bounds -- skip'
         message = 'Position '+str(chip_pos)+' not in interpolation bounds: '
         message += str(des_shapelet.bounds)
         raise galsim.config.gsobject.SkipThisObject(message)
-    print 'psf = ',psf
 
     if 'flux' in kwargs:
         psf.setFlux(kwargs['flux'])
-    print 'After setFlux: psf = ',psf
 
     # The second item here is "safe", a boolean that declares whether the returned value is 
     # safe to save and use again for later objects.  In this case, we wouldn't want to do 

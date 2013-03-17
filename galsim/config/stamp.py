@@ -267,15 +267,12 @@ def BuildSingleStamp(config, xsize, ysize,
         t4=t3=t2=t1  # in case we throw.
 
         psf = BuildPSF(config,logger)
-        print 'psf = ',psf
         t2 = time.time()
 
         pix = BuildPix(config,logger)
-        print 'pix = ',pix
         t3 = time.time()
 
         gal = BuildGal(config,logger)
-        print 'gal = ',gal
         t4 = time.time()
 
         # Check that we have at least gal or psf.
@@ -283,7 +280,7 @@ def BuildSingleStamp(config, xsize, ysize,
             raise AttributeError("At least one of gal or psf must be specified in config.")
 
     except galsim.config.gsobject.SkipThisObject, e:
-        print 'Caught SkipThisObject: e =',e.msg
+        #print 'Caught SkipThisObject: e =',e.msg
         if logger:
             if e.msg:
                 # If there is a message, upgrade to warn level
@@ -294,7 +291,6 @@ def BuildSingleStamp(config, xsize, ysize,
 
     draw_method = galsim.config.ParseValue(config['image'],'draw_method',config,str)[0]
     if skip: 
-        print 'skip'
         if xsize:
             im = galsim.ImageF(xsize, ysize)
         else:
@@ -310,7 +306,6 @@ def BuildSingleStamp(config, xsize, ysize,
         else:
             weight_im = None
     elif draw_method == 'fft':
-        print 'fft'
         im = DrawStampFFT(psf,pix,gal,config,xsize,ysize,sky_level_pixel,final_shift)
         if icenter:
             im.setCenter(icenter.x, icenter.y)
@@ -328,7 +323,6 @@ def BuildSingleStamp(config, xsize, ysize,
                 im += sky_level_pixel
 
     elif draw_method == 'phot':
-        print 'phot'
         im = DrawStampPhot(psf,gal,config,xsize,ysize,rng,sky_level_pixel,final_shift)
         if icenter:
             im.setCenter(icenter.x, icenter.y)

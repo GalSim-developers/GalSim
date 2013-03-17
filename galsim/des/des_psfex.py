@@ -60,11 +60,9 @@ class DES_PSFEx(object):
         try:
             self.read()
         except Exception, e:
-            print e
-            raise IOError("Unable to read DES_PSFEx file %s."%self.file_name)
+            raise IOError("Unable to read DES_PSFEx file %s.  Error = %s"%(self.file_name,str(e)))
 
     def read(self):
-        print 'start DES_PSFEx read'
         import pyfits
         hdu = pyfits.open(self.file_name)[1]
         pol_naxis = hdu.header['POLNAXIS']
@@ -111,7 +109,6 @@ class DES_PSFEx(object):
         self.x_scale = pol_scal1
         self.y_scale = pol_scal2
         self.sample_scale = psf_samp
-        print 'done read psfex file'
 
 
     def getPSF(self, pos, pixel_scale):
@@ -173,32 +170,22 @@ galsim.config.process.valid_input_types['des_psfex'] = ('galsim.des.DES_PSFEx', 
 def BuildDES_PSFEx(config, key, base, ignore):
     """@brief Build a RealGalaxy type GSObject from user input.
     """
-    #print 'Start BuildDES_PSFEx'
-    #print 'config = ',config
-    #print 'key = ',key
-    #print 'base = ',base
-    #print 'ignore = ',ignore
     opt = { 'flux' : float }
     kwargs, safe = galsim.config.GetAllParams(config, key, base, opt=opt, ignore=ignore)
-    #print 'kwargs = ',kwargs
 
     if 'des_psfex' not in base:
         raise ValueError("No DES_PSFEx instance available for building type = DES_PSFEx")
     des_psfex = base['des_psfex']
-    #print 'des_psfex = ',des_psfex
 
     if 'chip_pos' not in base:
         raise ValueError("DES_PSFEx requested, but no chip_pos defined in base.")
     chip_pos = base['chip_pos']
-    #print 'chip_pos = ',chip_pos
 
     if 'pixel_scale' not in base:
         raise ValueError("DES_PSFEx requested, but no pixel_scale defined in base.")
     pixel_scale = base['pixel_scale']
-    #print 'pixel_scale = ',pixel_scale
 
     psf = des_psfex.getPSF(chip_pos, pixel_scale)
-    #print 'psf = ',psf
 
     if 'flux' in kwargs:
         psf.setFlux(kwargs['flux'])

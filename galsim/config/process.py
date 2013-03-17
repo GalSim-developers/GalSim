@@ -219,18 +219,14 @@ def Process(config, logger=None):
 
         def worker(input, output):
             import time
-            proc_num = int(current_process().name.split('-')[1])
-            print 'Process named %s has proc_num = %d'%(current_process().name,proc_num)
-            assert proc_num > 0
             for (kwargs, file_num, file_name) in iter(input.get, 'STOP'):
-                time.sleep(proc_num * 15)
-                print current_process().name,': worker got: ',file_num,file_name,kwargs
+                #print current_process().name,': worker got: ',file_num,file_name,kwargs
                 ProcessInput(kwargs['config'], file_num=file_num)
-                print current_process().name,': After ProcessInput for file ',file_num
+                #print current_process().name,': After ProcessInput for file ',file_num
                 result = build_func(**kwargs)
-                print current_process().name,': result for ',file_num,' = ',result
+                #print current_process().name,': result for ',file_num,' = ',result
                 output.put( (result, file_num, file_name, current_process().name) )
-                print current_process().name,': put the result for ',file_num,' on the output queue'
+                #print current_process().name,': put the result for ',file_num,' on output queue'
 
         # Set up the task list
         task_queue = Queue()
@@ -370,7 +366,7 @@ def Process(config, logger=None):
         # Log the results.
         for k in range(nfiles):
             t, file_num, file_name, proc = done_queue.get()
-            print 'received results for ',file_num,file_name,t,proc
+            #print 'received results for ',file_num,file_name,t,proc
             if logger:
                 logger.warn('%s: File %d = %s: time = %f sec', proc, file_num, file_name, t)
 
