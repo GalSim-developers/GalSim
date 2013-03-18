@@ -202,8 +202,8 @@ namespace galsim {
 
             // Set maxRrD to the radius where missing fractional flux is xvalue_accuracy
             // (1+R^2)^(1-beta) = xvalue_accuracy
-            maxRrD = sqrt(std::pow(sbp::xvalue_accuracy,1./(1.-_beta))-1.);
-            xdbg<<"Not truncate.  Calculated maxRrD = "<<maxRrD<<"\n";
+            _maxRrD = sqrt(std::pow(sbp::xvalue_accuracy,1./(1.-_beta))-1.);
+            xdbg<<"Not truncated.  Calculated maxRrD = "<<_maxRrD<<"\n";
         }
 
         _FWHM = FWHMrD * _rD;
