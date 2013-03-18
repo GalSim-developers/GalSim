@@ -68,6 +68,8 @@ opts.Add(BoolVariable('EXTRA_DEBUG','Turn on extra debugging info',False))
 opts.Add(BoolVariable('WARN','Add warning compiler flags, like -Wall', True))
 opts.Add('PYTHON','Name of python executable','')
 
+opts.Add(BoolVariable('WITH_UPS','Install ups/ directory for use with EUPS', False))
+
 opts.Add(PathVariable('PREFIX','prefix for installation',
          '', PathVariable.PathAccept))
 opts.Add(PathVariable('PYPREFIX','location of your site-packages directory',
@@ -1613,6 +1615,9 @@ if not GetOption('help'):
         if env['NOSETESTS']:
             GetNosetestsVersion(env)
         subdirs += ['tests']
+
+    if env['WITH_UPS']:
+       subdirs += ['ups']
 
     # subdirectores to process.  We process src and pysrc by default
     script_files = []

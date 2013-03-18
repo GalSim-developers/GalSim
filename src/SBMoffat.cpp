@@ -200,13 +200,10 @@ namespace galsim {
         } else {
             _fluxFactor = 1.;
 
-            // Set maxRrD to the radius where surface brightness is kvalue_accuracy
-            // of center value.  (I know this isn't  a kvalue, but the same level 
-            // is probably appropriate here.)
-            // (1+R^2)^-beta = kvalue_accuracy
-            // And ignore the 1+ part of (1+R^2), so
-            _maxRrD = std::pow(sbp::kvalue_accuracy,-1./(2.*_beta));
-            xdbg<<"Not truncate.  Calculated maxRrD = "<<_maxRrD<<"\n";
+            // Set maxRrD to the radius where missing fractional flux is xvalue_accuracy
+            // (1+R^2)^(1-beta) = xvalue_accuracy
+            maxRrD = sqrt(std::pow(sbp::xvalue_accuracy,1./(1.-_beta))-1.);
+            xdbg<<"Not truncate.  Calculated maxRrD = "<<maxRrD<<"\n";
         }
 
         _FWHM = FWHMrD * _rD;

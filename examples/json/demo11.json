@@ -128,7 +128,7 @@
 
     "#" : "Add correlated noise to the image -- the correlation function comes from the HST COSMOS",
     "#" : "images and is described in more detail in the ",
-    "#" : "galsim.correlatednoise.get_COSMOS_CorrFunc() docstring.  This function requires a FITS",
+    "#" : "galsim.correlatednoise.getCOSMOSNoise() docstring.  This function requires a FITS",
     "#" : "file, stored in the GalSim repository, that represents this correlation information: ",
     "#" : "the path to this file must be given as file_name.",
     "noise" : {

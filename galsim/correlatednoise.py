@@ -54,12 +54,14 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # Act as a container for the GSObject used to represent the correlation funcion.
         self._profile = gsobject
 
-        # When applying noise to an image, we normally do a calculation. 
-        # If _profile_for_stored is profile, then it means that we can use the stored values
-        # in _rootps_store and avoid having to redo the calculation.
-        # So for now, we start out with _profile_for_stored = None and _rootps_store empty.
+        # When applying normal or whitening noise to an image, we normally do calculations. 
+        # If _profile_for_stored is profile, then it means that we can use the stored values in
+        # _rootps_store and/or _rootps_whitening_store and avoid having to redo the calculations.
+        # So for now, we start out with _profile_for_stored = None and _rootps_store and 
+        # _rootps_whitening_store empty.
         self._profile_for_stored = None
         self._rootps_store = []
+        self._rootps_whitening_store = []
 
         # Cause any methods we don't want the user to have access to, since they don't make sense
         # for correlation functions and could cause errors in applyNoiseTo, to raise exceptions
@@ -152,6 +154,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # clear out the stored values.
         if self._profile_for_stored is not self._profile:
             self._rootps_store = []
+            self._rootps_whitening_store = []
         # Set profile_for_stored for next time.
         self._profile_for_stored = self._profile
 
@@ -160,7 +163,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         # Finally generate a random field in Fourier space with the right PS
         noise_array = _generate_noise_from_rootps(self.getRNG(), rootps)
-        # Make add to the image
+        # Add it to the image
         image += galsim.ImageViewD(noise_array)
         return image
 
@@ -183,11 +186,34 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         image.getScale() is used to determine the input image pixel separation, and if 
         image.getScale() <= 0 a pixel scale of 1 is assumed.
 
+        If you are interested in a theoretical calculation of the variance in the final noise field
+        after whitening, the applyWhiteningTo() method in fact returns this variance.  For example:
+
+            >>> variance = correlated_noise.applyWhiteningTo(image)
+
+        Example
+        -------
+        To see noise whitening in action, let us use a model of the correlated noise in COSMOS 
+        as returned by the getCOSMOSNoise() function.  Let's initialize and add noise to an image:
+
+            >>> cosmos_file='YOUR/REPO/PATH/GalSim/examples/data/acs_I_unrot_sci_20_cf.fits'
+            >>> cn = galsim.getCOSMOSNoise(galsim.BaseDeviate(), cosmos_file)
+            >>> image = galsim.ImageD(256, 256)
+            >>> image.setScale(0.03) # Should match the COSMOS default since didn't specify another
+            >>> image.addNoise(cn)
+
+        The `image` will then contain a realization of a random noise field with COSMOS-like
+        correlation.  Using the applyWhiteningTo() method, we can now add more noise to `image`
+        with a power spectrum specifically designed to make the combined noise fields uncorrelated:
+
+            >>> cn.applyWhiteningTo(image)
+
+        Of course, this whitening comes at the cost of adding further noise to the image.
+
         @param image The input Image object.
 
-        @return (image, variance)  A tuple containing: the input galsim.Image with added whitening
-                                   noise added; a float storing the theoretically calculated
-                                   variance of the the combined noise fields.
+        @return variance  A float containing the theoretically calculated variance of the combined
+                          noise fields in the updated image.
         """
         # Note that this uses the (fast) method of going via the power spectrum and FFTs to generate
         # noise according to the correlation function represented by this instance.  An alternative
@@ -205,31 +231,21 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # clear out the stored values.
         if self._profile_for_stored is not self._profile:
             self._rootps_store = []
+            self._rootps_whitening_store = []
         # Set profile_for_stored for next time.
         self._profile_for_stored = self._profile
 
-        # Then retrieve or redraw the sqrt(power spectrum) needed for making the noise field
-        rootps = self._get_update_rootps(image.array.shape, image.getScale())
-
-        # Then calculate the whitening power spectrum as (almost) the smallest power spectrum that 
-        # when added to rootps**2 gives a flat resultant power that is nowhere negative
-        ps_whitening = -rootps * rootps
-        ps_whitening += np.abs(np.min(ps_whitening)) * 1.05 # Give ourselves 5% headroom in variance
-        rootps_whitening = np.sqrt(ps_whitening)
-        # TODO: Cache this like we do the rootps?  Not sure that N^2 sqrt()s is such a great cost
-        # compared to the N^2 log(2N) operations required for making the field (N=image dimension),
-        # but should test if overall whitening proves to be slow.
-
-        # Calculate the theoretical combined variance to output alongside the image we're about to
-        # generate.  The factor of product of the image shape is required due to inverse FFT
-        # conventions, and note that although we use the [0, 0] element we could use any as the PS
-        # should be flat
-        variance = (rootps[0, 0]**2 + ps_whitening[0, 0]) / np.product(image.array.shape)
+        # Then retrieve or redraw the sqrt(power spectrum) needed for making the whitening noise,
+        # and the total variance of the combination
+        rootps_whitening, variance = self._get_update_rootps_whitening(
+            image.array.shape, image.getScale())
 
         # Finally generate a random field in Fourier space with the right PS and add to image
         noise_array = _generate_noise_from_rootps(self.getRNG(), rootps_whitening)
         image += galsim.ImageViewD(noise_array)
-        return image, variance
+
+        # Return the variance to the interested user
+        return variance
 
     def applyTransformation(self, ellipse):
         """Apply a galsim.Ellipse distortion to the correlated noise model.
@@ -388,38 +404,42 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         """Convolve the correlated noise model with an input GSObject.
 
         The resulting correlated noise model will then give a statistical description of the noise
-        field that would result from convolving noise generated according to the inital correlated
+        field that would result from convolving noise generated according to the initial correlated
         noise with a kernel represented by `gsobject` (e.g. a PSF).
 
         This modifies the representation of the correlation function, but leaves the random number
-        generator unchanges.
+        generator unchanged.
 
         Examples
         --------
         The following command simply applies a galsim.Moffat PSF with slope parameter `beta`=3. and
-        FWHM 0.7:
+        FWHM=0.7:
 
             >>> correlated_noise.convolveWith(galsim.Moffat(beta=3., fwhm=0.7))
 
-        Often we will want to apply with more than one function.  For example, if wanting to
-        simulate how noise in space-based images would look if convolved with a ground-based PSF
-        (such as the Moffat above) and then rendered onto a new (typically larger) pixel grid, the
-        following example command demonstrates the syntax: 
+        Often we will want to convolve with more than one function.  For example, if we wanted to
+        simulate how a noise field would look if convolved with a ground-based PSF (such as the 
+        Moffat above) and then rendered onto a new (typically larger) pixel grid, the following
+        example command demonstrates the syntax: 
 
             >>> correlated_noise.convolveWith(
-            ...    galsim.Convolve([galsim.Pixel(0.2), galsim.Moffat(3., fwhm=0.7)]))
+            ...    galsim.Convolve([galsim.Deconvolve(galsim.Pixel(0.03)),
+            ...                     galsim.Pixel(0.2), galsim.Moffat(3., fwhm=0.7),
 
-        This is functionally equivalent to
+        Note, we also deconvolve by the original pixel, which should be the pixel size of the 
+        image from which the `correlated_noise` was made.  This command above is functionally 
+        equivalent to
 
-            >>> correlated_noise.convolveWith(galsim.Moffat(beta=3., fwhm=0.7))
+            >>> correlated_noise.convolveWith(galsim.Deconvolve(galsim.Pixel(0.2)))
             >>> correlated_noise.convolveWith(galsim.Pixel(0.2))
+            >>> correlated_noise.convolveWith(galsim.Moffat(beta=3., fwhm=0.7))
 
         as is demanded for a linear operation such as convolution.
 
         @param gsobject  A galsim.GSObject or derived class instance representing the function with
                          which the user wants to convolve the correlated noise model.
         """
-        self._profile = galsim.Convolve([self._profile, gsobject, gsobject])
+        self._profile = galsim.Convolve([self._profile, galsim.AutoConvolve(gsobject)])
 
     def draw(self, image=None, dx=None, wmult=1., add_to_image=False):
         """The draw method for profiles storing correlation functions.
@@ -483,6 +503,44 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         return rootps
 
+    def _get_update_rootps_whitening(self, shape, dx, headroom=1.05):
+        """Internal utility function for querying the rootps_whitening cache, used by the
+        applyWhiteningTo method, and calculate & update it if not present.
+
+        @return rootps_whitening, variance
+        """ 
+        # First check whether we can just use a stored whitening power spectrum
+        use_stored = False
+        for rootps_whitening_array, scale, var in self._rootps_whitening_store:
+            if shape == rootps_whitening_array.shape:
+                if ((dx <= 0. and scale == 1.) or (dx == scale)):
+                    use_stored = True
+                    rootps_whitening = rootps_whitening_array
+                    variance = var
+                    break
+
+        # If not, calculate the whitening power spectrum as (almost) the smallest power spectrum 
+        # that  when added to rootps**2 gives a flat resultant power that is nowhere negative.
+        # Note that rootps = sqrt(power spectrum), and this procedure therefore works since power
+        # spectra add (rather like variances).  The resulting power spectrum will be all positive
+        # (and thus physical).
+        if use_stored is False:
+
+            rootps = self._get_update_rootps(shape, dx)
+            ps_whitening = -rootps * rootps
+            ps_whitening += np.abs(np.min(ps_whitening)) * headroom # Headroom adds a little extra
+            rootps_whitening = np.sqrt(ps_whitening)                # variance, for "safety"
+
+            # Finally calculate the theoretical combined variance to output alongside the image 
+            # to be generated with the rootps_whitening.  The factor of product of the image shape
+            # is required due to inverse FFT conventions, and note that although we use the [0, 0] 
+            # element we could use any as the PS should be flat
+            variance = (rootps[0, 0]**2 + ps_whitening[0, 0]) / np.product(shape)
+
+            # Then add all this and the relevant scale dx to the _rootps_whitening_store
+            self._rootps_whitening_store.append((rootps_whitening, dx, variance))
+
+        return rootps_whitening, variance
 
 ###
 # Now a standalone utility function for generating noise according to an input (square rooted)
@@ -678,7 +736,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
         # Then put the data from the prelim CF into this array
         cf_array[0:cf_array_prelim.shape[0], 0:cf_array_prelim.shape[1]] = cf_array_prelim
         # Then copy-invert-paste data from the leftmost column to the rightmost column, and lowest
-        # row to the uppermost row, if the the original CF had even dimensions in the x and y 
+        # row to the uppermost row, if the original CF had even dimensions in the x and y 
         # directions, respectively (remembering again that NumPy stores data [y,x] in arrays)
         if cf_array_prelim.shape[1] % 2 == 0: # first do x
             lhs_column = cf_array[:, 0]
@@ -742,7 +800,7 @@ for Class in galsim.ConstImageView.itervalues():
     Class.getCorrelatedNoise = _Image_getCorrelatedNoise
 
 # Free function for returning a COSMOS noise field correlation function
-def get_COSMOS_CorrelatedNoise(rng, file_name, dx_cosmos=0.03, variance=0.):
+def getCOSMOSNoise(rng, file_name, dx_cosmos=0.03, variance=0.):
     """Returns a representation of correlated noise in the HST COSMOS F814W unrotated science coadd
     images.
 
@@ -787,7 +845,7 @@ def get_COSMOS_CorrelatedNoise(rng, file_name, dx_cosmos=0.03, variance=0.):
         >>> filestring='/YOUR/REPO/PATH/GalSim/devel/external/hst/acs_I_unrot_sci_20_cf.fits'
         >>> import galsim
         >>> rng = galsim.UniformDeviate(123456)
-        >>> cf = galsim.correlatednoise.get_COSMOS_CorrelatedNoise(rng, filestring)
+        >>> cf = galsim.correlatednoise.getCOSMOSNoise(rng, filestring)
         >>> im = galsim.ImageD(300, 300)
         >>> im.setScale(0.03)
         >>> cf.applyTo(im)
@@ -805,8 +863,8 @@ def get_COSMOS_CorrelatedNoise(rng, file_name, dx_cosmos=0.03, variance=0.):
         # Give a vaguely helpful warning, then raise the original exception for extra diagnostics
         import warnings
         warnings.warn(
-            "Function get_COSMOS_CorrelatedNoise() unable to read FITS image from "+
-            str(file_name)+", more information on the error in the following Exception...")
+            "Function getCOSMOSNoise() unable to read FITS image from "+str(file_name)+", "+
+            "more information on the error in the following Exception...")
         raise original_exception
 
     # Then check for negative variance before doing anything time consuming

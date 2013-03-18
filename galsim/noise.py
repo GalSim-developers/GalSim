@@ -111,7 +111,7 @@ _galsim.BaseNoise.setVariance.__func__.__doc__ = "Set variance in current noise 
 _galsim.GaussianNoise.__doc__ = """
 Class implementing simple Gaussian noise.
 
-This is a simple noise model where each pixel in the image gets Gaussian noise with a 
+This is a simple noise model where each pixel in the image gets Gaussian noise with a
 given sigma.
 
 Initialization

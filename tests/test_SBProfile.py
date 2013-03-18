@@ -153,11 +153,11 @@ def do_shoot(prof, img, name):
     compar.setFlux(test_flux)
     compar.draw(img, normalization="surface brightness")
     print 'img.sum = ',img.array.sum(),'  cf. ',test_flux/(dx*dx)
-    np.testing.assert_almost_equal(img.array.sum() * dx*dx, test_flux, 5,
+    np.testing.assert_almost_equal(img.array.sum() * dx*dx, test_flux, 4,
             err_msg="Surface brightness normalization for %s disagrees with expected result"%name)
     compar.draw(img, normalization="flux")
     print 'img.sum = ',img.array.sum(),'  cf. ',test_flux
-    np.testing.assert_almost_equal(img.array.sum(), test_flux, 5,
+    np.testing.assert_almost_equal(img.array.sum(), test_flux, 4,
             err_msg="Flux normalization for %s disagrees with expected result"%name)
 
     prof.setFlux(test_flux)
@@ -2201,6 +2201,46 @@ def test_draw():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_autoconvolve():
+    """Test that auto-convolution works the same as convolution with itself.
+    """
+    import time
+    t1 = time.time()
+
+    mySBP = galsim.SBMoffat(beta=3.8, fwhm=1.3, flux=5)
+    mySBP2 = galsim.SBMoffat(beta=3.8, fwhm=1.3, flux=5)
+    myConv = galsim.SBConvolve([mySBP,mySBP2])
+    myImg = galsim.ImageF(80,80)
+    myImg.setScale(0.4)
+    myConv.draw(myImg.view())
+    myAutoConv = galsim.SBAutoConvolve(mySBP)
+    myImg2 = galsim.ImageF(80,80)
+    myImg2.setScale(0.4)
+    myAutoConv.draw(myImg2.view())
+    printval(myImg, myImg2)
+    np.testing.assert_array_almost_equal(
+            myImg.array, myImg2.array, 4,
+            err_msg="Moffat convolved with self disagrees with SBAutoConvolve result")
+
+    # Repeat with the GSObject version of this:
+    psf = galsim.Moffat(beta=3.8, fwhm=1.3, flux=5)
+    psf2 = galsim.Moffat(beta=3.8, fwhm=1.3, flux=5)
+    conv = galsim.Convolve([psf,psf2])
+    conv.draw(myImg)
+    conv2 = galsim.AutoConvolve(psf)
+    conv2.draw(myImg2)
+    printval(myImg, myImg2)
+    np.testing.assert_array_almost_equal(
+            myImg.array, myImg2.array, 4,
+            err_msg="Moffat convolved with self disagrees with AutoConvolve result")
+
+    # Test photon shooting.
+    do_shoot(conv2,myImg2,"AutoConvolve(Moffat)")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
+
 
 if __name__ == "__main__":
     test_gaussian()
@@ -2233,3 +2273,4 @@ if __name__ == "__main__":
     test_rescale()
     test_sbinterpolatedimage()
     test_draw()
+    test_autoconvolve()
