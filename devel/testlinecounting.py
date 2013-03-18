@@ -32,16 +32,26 @@ def dumbcount(filename):
     f.close()
     return nr_of_lines
 
+def dumbcount_v2(filename):
+    f = open(filename)
+    nr_of_lines = sum(1 for line in f if not line[0] == '#')
+    f.close()
+    return nr_of_lines
+
+
+
 def main():
     filename = '../tests/lensing_reference_data/tmp.txt'
     filename_with_hashes = '../tests/lensing_reference_data/nfw_lens.dat'
     
-    numpytime=0
-    numpyhashtime=0
-    dumbtime=0
-    dumbhashtime=0
-    buftime=0 
-    bufhashtime=0
+    numpytime=0.
+    numpyhashtime=0.
+    dumbtime=0.
+    dumbhashtime=0.
+    dumbtimev2=0.
+    dumbhashtimev2=0.
+    buftime=0.
+    bufhashtime=0.
     
     for i in range(ntrials):
         t1=time.time()
@@ -55,6 +65,19 @@ def main():
         t2=time.time()
         print "Dumb test: trial with comments", i, "took", t2-t1, "with result", n, "(should be 599)"
         dumbhashtime+=t2-t1
+
+    for i in range(ntrials):
+        t1=time.time()
+        n = dumbcount_v2(filename)
+        t2=time.time()
+        print "Dumb test v2: trial without comments", i, "took", t2-t1, "with result", n, "(should be 10000)"
+        dumbtimev2+=t2-t1
+    for i in range(ntrials):
+        t1=time.time()
+        n = dumbcount_v2(filename_with_hashes)
+        t2=time.time()
+        print "Dumb test v2: trial with comments", i, "took", t2-t1, "with result", n, "(should be 599)"
+        dumbhashtimev2+=t2-t1
     
     for i in range(ntrials):
         t1=time.time()
@@ -85,6 +108,8 @@ def main():
     print "***FINAL RESULTS***"
     print "Dumb test:", dumbtime/ntrials, "without comments"
     print "Dumb test:", dumbhashtime/ntrials, "with comments"
+    print "Dumb test v2:", dumbtimev2/ntrials, "without comments"
+    print "Dumb test v2:", dumbhashtimev2/ntrials, "with comments"
     print "Buffer test:", buftime/ntrials, "without comments"
     print "Buffer test:", bufhashtime/ntrials, "with comments"
     print "Numpy test:", numpytime/ntrials, "without comments"
