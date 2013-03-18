@@ -808,7 +808,7 @@ class FitsHeader(object):
     After construction, you can access a header value by
 
         value = fits_header[key]
-        value = fite_header.get(key, default)
+        value = fits_header.get(key, default)
 
     You can also get the list of keys with
     
