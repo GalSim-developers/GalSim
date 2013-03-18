@@ -14,6 +14,11 @@ def bufcount(filename):
 
     buf = read_f(buf_size)
     while buf:
+        # Note: Melanie points out that this next line isn't exactly correct...
+        # There's a slight chance the buffer test could undercount lines: it tests for the first 
+        # character being # and for the pattern \n#, but if the buffer happened to break in the 
+        # middle of a line where there was a random hash, it will mistakenly decrement the count.
+        # So be aware of that if you're thinking of using it.
         if buf[0]=='#':
             lines -= 1
         lines += buf.count('\n')

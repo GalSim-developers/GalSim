@@ -87,6 +87,9 @@ class InputCatalog(object):
         """
         # If all we care about is nobjects, this is quicker:
         if nobjects_only:
+            # See the script devel/testlinecounting.py that tests several possibilities.
+            # An even faster version using buffering is possible although it requires some care
+            # around edge cases, so we use this one instead, which is "correct by inspection".
             f = open(self.file_name)
             if (len(comments) == 1):
                 c = comments[0]
