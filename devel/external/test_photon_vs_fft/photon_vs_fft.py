@@ -102,11 +102,13 @@ def testShootVsFfft():
     # g2_photon
     # max_diff_over_max_image
     
-    output_row_fmt = "%d\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\n"
+    output_row_fmt = '%d\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t' + \
+                        '%2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\n'
     output_header = '# id max_diff_over_max_image ' +  \
-                                'g1_moments_fft g2_moments_fft g1_moments_photon g2_moments_photon ' + \
-                                'g1_hsm_obs_fft g2_hsm_obs_fft g1_hsm_obs_photon g2_hsm_obs_photon ' + \
-                                'g1_hsm_corr_fft g2_hsm_corr_fft g1_hsm_corr_photon g2_hsm_corr_photon\n'
+                                'E1_moments_fft E2_moments_fft E1_moments_photon E2_moments_photon ' + \
+                                'E1_hsm_obs_fft E2_hsm_obs_fft E1_hsm_obs_photon E2_hsm_obs_photon ' + \
+                                'E1_hsm_corr_fft E2_hsm_corr_fft E1_hsm_corr_photon E2_hsm_corr_photon ' + \
+                                'moments_fft_sigma moments_shoot_sigma hsm_fft_sigma hsm_shoot_sigma\n'
 
     file_output.write(output_header)
 
@@ -160,55 +162,30 @@ def testShootVsFfft():
         diff_image = image_gal_shoot.array - image_gal_fft.array
         max_diff_over_max_image = abs(diff_image.flatten()).max()/image_gal_fft.array.flatten().max()
 
-        # plot the pixel differences
-        pylab.figure()
-        pylab.clf()
-        
-        pylab.subplot(131)
-        pylab.imshow(image_gal_shoot.array,interpolation='nearest')
-        pylab.colorbar()
-        pylab.title('image_shoot')
-        
-        pylab.subplot(132)
-        pylab.imshow(image_gal_fft.array,interpolation='nearest')
-        pylab.colorbar()
-        pylab.title('image_fft')
-        
-        pylab.subplot(133)
-        pylab.imshow(diff_image,interpolation='nearest')
-        pylab.colorbar()
-        pylab.title('image_shoot - image_fft')
-
-        filename_fig = 'photon_vs_fft_gal%d.png' % ig
-        pylab.gcf().set_size_inches(20,10)
-        pylab.savefig(filename_fig)
-        pylab.close()
-        logger.info('saved figure %s' % filename_fig)
-
-        logger.info('max(residual) / max(image_fft) = %2.4e ' % ( max_diff_over_max_image )  )
-
-
         # find adaptive moments
         moments_shoot = galsim.FindAdaptiveMom(image_gal_shoot)
         moments_fft   = galsim.FindAdaptiveMom(image_gal_fft)
 
-        moments_shoot_g1 = moments_shoot.observed_shape.getG1()
-        moments_shoot_g2 = moments_shoot.observed_shape.getG2()
-        moments_fft_g1   = moments_fft.observed_shape.getG1()
-        moments_fft_g2   = moments_fft.observed_shape.getG2()
-        moments_diff_g1  = moments_shoot_g1 - moments_fft_g1
-        moments_diff_g2  = moments_shoot_g2 - moments_fft_g2
-
+        moments_shoot_g1 = moments_shoot.observed_shape.getE1()
+        moments_shoot_g2 = moments_shoot.observed_shape.getE2()
+        moments_shoot_sigma = moments_shoot.moments_sigma
+        moments_fft_g1   = moments_fft.observed_shape.getE1()
+        moments_fft_g2   = moments_fft.observed_shape.getE2()
+        moments_fft_sigma = moments_fft.moments_sigma
+        
         # display resutls
-        logger.debug('adaptive moments fft                gi % 2.6f % 2.6f' % (moments_fft_g1, moments_fft_g2))
-        logger.debug('adaptive moments shoot              gi % 2.6f % 2.6f' % (moments_shoot_g1, moments_shoot_g2))
-        logger.debug('adaptive moments difference         gi % 2.6f % 2.6f' % (moments_diff_g1, moments_diff_g2))
+
+        logger.info('max(residual) / max(image_fft) = %2.4e ' % ( max_diff_over_max_image )  )
+        logger.debug('adaptive moments fft                E1=% 2.6f\tE2=% 2.6f\tsigma=%2.6f' % (moments_fft_g1, moments_fft_g2, moments_fft_sigma))
+        logger.debug('adaptive moments shoot              E1=% 2.6f\tE2=% 2.6f\tsigma=%2.6f' % (moments_shoot_g1, moments_shoot_g2, moments_shoot_sigma))
 
 
+        
         if obj['psf']['type'] == 'none':
 
             hsm_obs_shoot_e1 = hsm_obs_shoot_e2 = hsm_obs_fft_e1 = hsm_obs_fft_e2 = \
             hsm_corr_shoot_e1 =  hsm_corr_shoot_e2  = hsm_corr_fft_e1 = hsm_corr_fft_e2 =\
+            hsm_fft_sigma = hsm_shoot_sigma = \
             no_psf_value 
         
         else:
@@ -218,41 +195,74 @@ def testShootVsFfft():
             hsm_shoot = galsim.EstimateShearHSM(image_gal_shoot,image_psf,strict=True)
             hsm_fft   = galsim.EstimateShearHSM(image_gal_fft,image_psf,strict=True)
 
-            # pdb.set_trace()
-
             if hsm_shoot.error_message != "":
                 logger.debug('hsm_shoot failed with message %s' % hsm_shoot.error_message)
                 hsm_obs_shoot_e1 = hsm_obs_shoot_e2  = \
-                hsm_corr_shoot_e1 =  hsm_corr_shoot_e2  =  hsm_error_value
+                hsm_corr_shoot_e1 =  hsm_corr_shoot_e2  = hsm_shoot_sigma = \
+                hsm_error_value
             else:
                 hsm_obs_shoot_e1 = hsm_shoot.observed_shape.getE1()
                 hsm_obs_shoot_e2 = hsm_shoot.observed_shape.getE2()
                 hsm_corr_shoot_e1 = hsm_shoot.corrected_e1
                 hsm_corr_shoot_e2 = hsm_shoot.corrected_e2
+                hsm_shoot_sigma = hsm_shoot.moments_sigma
         
             if hsm_fft.error_message != "":
                 logger.debug('hsm_fft failed with message %s' % hsm_fft.error_message)
                 hsm_obs_fft_e1 = hsm_obs_fft_e2  = \
-                hsm_corr_fft_e1 = hsm_corr_fft_e2  =  hsm_error_value  
+                hsm_corr_fft_e1 = hsm_corr_fft_e2  = hsm_fft_sigma = \
+                hsm_error_value  
             else:
                 hsm_obs_fft_e1 = hsm_fft.observed_shape.getE1()
                 hsm_obs_fft_e2 = hsm_fft.observed_shape.getE2()
                 hsm_corr_fft_e1 = hsm_fft.corrected_e1
                 hsm_corr_fft_e2 = hsm_fft.corrected_e2
-        
-            logger.debug('hsm observed moments fft            Ei % 2.6f % 2.6f' % (hsm_obs_fft_e1, hsm_obs_fft_e2))
-            logger.debug('hsm observed moments shoot          Ei % 2.6f % 2.6f' % (hsm_obs_shoot_e1, hsm_obs_shoot_e2))
+                hsm_fft_sigma = hsm_fft.moments_sigma
 
-            logger.debug('hsm corrected moments fft           Ei % 2.6f % 2.6f' % (hsm_corr_fft_e1, hsm_corr_fft_e2))
-            logger.debug('hsm corrected moments shoot         Ei % 2.6f % 2.6f' % (hsm_corr_shoot_e1, hsm_corr_shoot_e2))
+            logger.debug('hsm observed moments fft      E1=% 2.6f\tE2=% 2.6f' % (hsm_obs_fft_e1, hsm_obs_fft_e2))
+            logger.debug('hsm observed moments shoot    E1=% 2.6f\tE2=% 2.6f' % (hsm_obs_shoot_e1, hsm_obs_shoot_e2))
+
+            logger.debug('hsm corrected moments fft     E1=% 2.6f\tE2=% 2.6f' % (hsm_corr_fft_e1, hsm_corr_fft_e2))
+            logger.debug('hsm corrected moments shoot   E1=% 2.6f\tE2=% 2.6f' % (hsm_corr_shoot_e1, hsm_corr_shoot_e2))
+            
+            logger.debug('hsm size sigma fft   % 2.6f' % hsm_fft_sigma)
+            logger.debug('hsm size sigma shoot % 2.6f' % hsm_shoot_sigma)
 
      
-
         file_output.write(output_row_fmt % (ig, max_diff_over_max_image, 
-            moments_fft_g1,  moments_fft_g2, moments_shoot_g1,  moments_shoot_g2,  
+            moments_fft_g1,  moments_fft_g2, moments_shoot_g1,  moments_shoot_g2,
             hsm_obs_fft_e1, hsm_obs_fft_e2, hsm_obs_shoot_e1, hsm_obs_shoot_e2,
             hsm_corr_fft_e1, hsm_corr_fft_e2, hsm_corr_shoot_e1, hsm_corr_shoot_e2,
+            moments_fft_sigma, moments_shoot_sigma, hsm_fft_sigma, hsm_shoot_sigma
             ))
+
+        if args.save_plots:
+
+            # plot the pixel differences
+            pylab.figure()
+            pylab.clf()
+            
+            pylab.subplot(131)
+            pylab.imshow(image_gal_shoot.array,interpolation='nearest')
+            pylab.colorbar()
+            pylab.title('image_shoot')
+            
+            pylab.subplot(132)
+            pylab.imshow(image_gal_fft.array,interpolation='nearest')
+            pylab.colorbar()
+            pylab.title('image_fft')
+            
+            pylab.subplot(133)
+            pylab.imshow(diff_image,interpolation='nearest')
+            pylab.colorbar()
+            pylab.title('image_shoot - image_fft')
+
+            filename_fig = 'photon_vs_fft_gal%d.png' % ig
+            pylab.gcf().set_size_inches(20,10)
+            pylab.savefig(filename_fig)
+            pylab.close()
+            logger.info('saved figure %s' % filename_fig)
+
 
 
 
@@ -275,8 +285,8 @@ def plotEllipticityBiases():
     de1 = g1_fft-g1_photon
     de2 = g2_fft-g2_photon 
     
-    pylab.plot(de1/g1_photon,'x',label='g1')
-    pylab.plot(de2/g2_photon,'+',label='g2')
+    pylab.plot(de1/g1_photon,'x',label='E1')
+    pylab.plot(de2/g2_photon,'+',label='E2')
                 
     pylab.xlabel('test galaxy #')
     pylab.ylabel('de/e')
@@ -298,8 +308,11 @@ if __name__ == "__main__":
 
     # parse arguments
     parser = argparse.ArgumentParser(description=description, add_help=True)
-    parser.add_argument('filename_config', type=str, help='yaml config file, see validation_shoot_vs_fft.yaml for example.')
+    parser.add_argument('filename_config', type=str, help='yaml config file, see photon_vs_fft.yaml for example.')
+    parser.add_argument('--save_plots', action="store_true", help='Whether to generate_images', default=False)
+    global args
     args = parser.parse_args()
+
 
     # set up logger
     logging.basicConfig(format="%(message)s", level=logging.DEBUG, stream=sys.stdout)
@@ -314,7 +327,7 @@ if __name__ == "__main__":
     testShootVsFfft()
 
     # save the figure
-    # plotEllipticityBiases()
+    plotEllipticityBiases()
 
 
 
