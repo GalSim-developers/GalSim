@@ -474,6 +474,10 @@ class PowerSpectrum(object):
                                   - tuple of floats: (x,y)
                                   - list of galsim.PositionD (or PositionI) instances
                                   - tuple of lists: ( xlist, ylist )
+                                  - NumPy array of galsim.PositionD (or PositionI) instances
+                                  - tuple of NumPy arrays: ( xarray, yarray )
+                                  - Multidimensional NumPy array, as long as array[0] contains
+                                    x-positions and array[1] contains y-positions
         @param units            The angular units used for the positions.  [default = arcsec]
         @param get_kappa        Get the convergence in addition to the shear?
                                 [Default: `get_kappa=False`]  Note that since this method works by
@@ -484,6 +488,7 @@ class PowerSpectrum(object):
         @return g1,g2[,kappa]   If given a single position: the two shear components g_1 and g_2 and
                                 (if `get_kappa=True`) the convergence, kappa.
                                 If given a list of positions: each is a python list of values.
+                                If given a NumPy array of positions: each is a NumPy array.
         """
 
         if not hasattr(self, 'im_g1'):
@@ -525,7 +530,12 @@ class PowerSpectrum(object):
                     kappa.append(sbii_kappa.xValue(pos+self.offset))
                 else:
                     kappa.append(0.)
-        if len(pos_x) == 1:
+        if isinstance(pos[0], np.ndarray):
+            if get_kappa:
+                return np.array(g1), np.array(g2), np.array(kappa)
+            else:
+                return np.array(g1), np.array(g2)
+        elif len(pos_x) == 1 and not isinstance(pos[0],list): 
             if get_kappa:
                 return g1[0], g2[0], kappa[0]
             else:
@@ -961,6 +971,10 @@ class NFWHalo(object):
                            - tuple of floats: (x,y)
                            - list of galsim.PositionD (or PositionI) instances
                            - tuple of lists: ( xlist, ylist )
+                           - NumPy array of galsim.PositionD (or PositionI) instances
+                           - tuple of NumPy arrays: ( xarray, yarray )
+                           - Multidimensional NumPy array, as long as array[0] contains
+                             x-positions and array[1] contains y-positions
         @param z_s       Source redshift(s).
         @param units     Angular units of coordinates [default = arcsec]
         @param reduced   Whether returned shear(s) should be reduced shears. [default=True]
@@ -987,8 +1001,10 @@ class NFWHalo(object):
         g1 = -g / (np.cos(2*phi) + np.sin(2*phi)*np.tan(2*phi))
         g2 = g1 * np.tan(2*phi)
 
-        # Convert to a tuple of floats or lists of floats
-        if len(g) == 1:
+        # Return numpy arrays, or convert to a tuple of floats or lists of floats
+        if isinstance(pos[0], np.ndarray):
+            return g1, g2
+        elif len(g) == 1 and not isinstance(pos[0],list):
             return g1[0], g2[0]
         else:
             return g1.tolist(), g2.tolist()
@@ -1003,6 +1019,10 @@ class NFWHalo(object):
                          - tuple of floats: (x,y)
                          - list of galsim.PositionD (or PositionI) instances
                          - tuple of lists: ( xlist, ylist )
+                         - NumPy array of galsim.PositionD (or PositionI) instances
+                         - tuple of NumPy arrays: ( xarray, yarray )
+                         - Multidimensional NumPy array, as long as array[0] contains
+                           x-positions and array[1] contains y-positions
         @param z_s     Source redshift(s)
         @param units   Angular units of coordinates [default = arcsec]
 
@@ -1019,8 +1039,10 @@ class NFWHalo(object):
             ks = ks*np.ones_like(r)
         kappa = self.__kappa(r, ks)
 
-        # Convert to a float or list of floats
-        if len(kappa) == 1:
+        # Return a numpy array, or convert to a float or list of floats
+        if isinstance(pos[0], np.ndarray):
+            return kappa
+        elif len(kappa) == 1 and not isinstance(pos[0], list):
             return kappa[0]
         else:
             return [ k for k in kappa ]
@@ -1034,6 +1056,10 @@ class NFWHalo(object):
                          - tuple of floats: (x,y)
                          - list of galsim.PositionD (or PositionI) instances
                          - tuple of lists: ( xlist, ylist )
+                         - NumPy array of galsim.PositionD (or PositionI) instances
+                         - tuple of NumPy arrays: ( xarray, yarray )
+                         - Multidimensional NumPy array, as long as array[0] contains
+                           x-positions and array[1] contains y-positions
         @param z_s     Source redshift(s)
         @param units   Angular units of coordinates (only arcsec implemented so far).
         @return mu     Numpy array containing the magnification at the specified position(s)
@@ -1051,8 +1077,10 @@ class NFWHalo(object):
 
         mu = 1. / ( (1.-kappa)**2 - g**2 )
 
-        # Convert to a float or list of floats
-        if len(mu) == 1:
+        # Return a numpy array, or convert to a float or list of floats
+        if isinstance(pos[0], np.ndarray):
+            return mu
+        elif len(mu) == 1 and not isinstance(pos[0],list):
             return mu[0]
         else:
             return [ m for m in mu ]
