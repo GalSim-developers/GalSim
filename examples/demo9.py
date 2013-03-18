@@ -201,7 +201,7 @@ def main(argv):
             final.applyShift(dx*pixel_scale,dy*pixel_scale)
 
             # Draw the stamp image
-            stamp, flux_added = final.draw(dx=pixel_scale)
+            stamp = final.draw(dx=pixel_scale)
 
             # Recenter the stamp at the desired position:
             stamp.setCenter(ix,iy)

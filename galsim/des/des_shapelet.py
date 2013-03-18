@@ -64,7 +64,6 @@ class DES_Shapelet(object):
     _takes_rng = False
 
     def __init__(self, file_name, dir=None, file_type=None):
-
         if dir:
             import os
             file_name = os.path.join(dir,file_name)
@@ -85,11 +84,12 @@ class DES_Shapelet(object):
             else:
                 self.read_ascii()
         except Exception, e:
-            print e
-            raise RuntimeError("Unable to read %s DES_Shapelet file %s."%(
-                    file_type,self.file_name))
+            raise IOError("Unable to read %s DES_Shapelet file %s.  Error = %s"%(
+                    file_type,self.file_name,str(e)))
 
     def read_ascii(self):
+        """Read in a DES_Shapelet stored using the the ASCII-file version.
+        """
         import numpy
         fin = open(self.file_name, 'r')
         lines = fin.readlines()
@@ -128,6 +128,8 @@ class DES_Shapelet(object):
         assert self.interp_matrix.shape == (self.fit_size, self.npca)
 
     def read_fits(self):
+        """Read in a DES_Shapelet stored using the the FITS-file version.
+        """
         import pyfits
         cat = pyfits.getdata(self.file_name,1)
         # These fields each only contain one element, hence the [0]'s.
@@ -145,16 +147,20 @@ class DES_Shapelet(object):
         self.ave_psf = cat.field('ave_psf')[0]
         assert self.ave_psf.shape == (self.psf_size,)
 
-        self.rot_matrix = cat.field('rot_matrix')[0].T
+        # Note: older pyfits versions don't get the shape right.
+        # For newer pyfits versions the reshape command should be a no op.
+        self.rot_matrix = cat.field('rot_matrix')[0].reshape((self.psf_size,self.npca)).T
         assert self.rot_matrix.shape == (self.npca, self.psf_size)
 
-        self.interp_matrix = cat.field('interp_matrix')[0].T
+        self.interp_matrix = cat.field('interp_matrix')[0].reshape((self.npca,self.fit_size)).T
         assert self.interp_matrix.shape == (self.fit_size, self.npca)
 
     def getPSF(self, pos):
         """Returns the PSF at position pos
 
-        This returns a Shapelet instance.
+        @param pos   The position in pixel units for which to build the PSF.
+
+        @returns a Shapelet instance.
         """
         if not self.bounds.includes(pos):
             raise IndexError("position in DES_Shapelet.getPSF is out of bounds")
@@ -179,7 +185,8 @@ class DES_Shapelet(object):
         b = numpy.dot(b1,self.rot_matrix)
         assert len(b) == self.psf_size
         b += self.ave_psf
-        return galsim.Shapelet(self.sigma, self.psf_order, b)
+        ret = galsim.Shapelet(self.sigma, self.psf_order, b)
+        return ret
 
     def _definePxy(self, x, min, max):
         import numpy
@@ -196,7 +203,7 @@ class DES_Shapelet(object):
 import galsim.config
 
 # First we need to add the class itself as a valid input_type.
-galsim.config.process.valid_input_types['des_shapelet'] = ('galsim.des.DES_Shapelet', [])
+galsim.config.process.valid_input_types['des_shapelet'] = ('galsim.des.DES_Shapelet', [], False)
 
 # Also make a builder to create the PSF object for a given position.
 # The builders require 4 args.
@@ -207,24 +214,16 @@ galsim.config.process.valid_input_types['des_shapelet'] = ('galsim.des.DES_Shape
 def BuildDES_Shapelet(config, key, base, ignore):
     """@brief Build a RealGalaxy type GSObject from user input.
     """
-    #print 'Start BuildDES_Shapelet'
-    #print 'config = ',config
-    #print 'key = ',key
-    #print 'base = ',base
-    #print 'ignore = ',ignore
     opt = { 'flux' : float }
     kwargs, safe = galsim.config.GetAllParams(config, key, base, opt=opt, ignore=ignore)
-    #print 'kwargs = ',kwargs
 
     if 'des_shapelet' not in base:
         raise ValueError("No DES_Shapelet instance available for building type = DES_Shapelet")
     des_shapelet = base['des_shapelet']
-    #print 'des_shapelet = ',des_shapelet
 
     if 'chip_pos' not in base:
         raise ValueError("DES_Shapelet requested, but no chip_pos defined in base.")
     chip_pos = base['chip_pos']
-    #print 'chip_pos = ',chip_pos
 
     if des_shapelet.bounds.includes(chip_pos):
         psf = des_shapelet.getPSF(chip_pos)
@@ -232,7 +231,6 @@ def BuildDES_Shapelet(config, key, base, ignore):
         message = 'Position '+str(chip_pos)+' not in interpolation bounds: '
         message += str(des_shapelet.bounds)
         raise galsim.config.gsobject.SkipThisObject(message)
-    #print 'psf = ',psf
 
     if 'flux' in kwargs:
         psf.setFlux(kwargs['flux'])

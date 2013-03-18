@@ -1,3 +1,21 @@
+# Copyright 2012, 2013 The GalSim developers:
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+#
+# GalSim is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# GalSim is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+#
 
 import time
 import galsim
@@ -262,6 +280,7 @@ def BuildSingleStamp(config, xsize, ysize,
             raise AttributeError("At least one of gal or psf must be specified in config.")
 
     except galsim.config.gsobject.SkipThisObject, e:
+        #print 'Caught SkipThisObject: e =',e.msg
         if logger:
             if e.msg:
                 # If there is a message, upgrade to warn level
@@ -427,7 +446,7 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level_pixel, final_shi
     else:
         im = None
 
-    im = final.draw(image=im, dx=pixel_scale)[0]
+    im = final.draw(image=im, dx=pixel_scale)
 
     if 'gal' in config and 'signal_to_noise' in config['gal']:
         import math
@@ -665,7 +684,7 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, final_sh
     else:
         im = None
 
-    im = final.drawShoot(image=im, dx=pixel_scale, max_extra_noise=max_extra_noise, rng=rng)[0]
+    im = final.drawShoot(image=im, dx=pixel_scale, max_extra_noise=max_extra_noise, rng=rng)
 
     return im
     

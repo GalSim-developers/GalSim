@@ -500,6 +500,16 @@ class GSObject(object):
         that are poorly sampled and/or varying rapidly (e.g., high n Sersic profiles), the sum of
         pixel values might differ significantly from the GSObject flux.
 
+        On return, the image will have a member `added_flux`, which will be set to be the total
+        flux added to the image.  This may be useful as a sanity check that you have provided a 
+        large enough image to catch most of the flux.  For example:
+        
+            obj.draw(image)
+            assert image.added_flux > 0.99 * obj.getFlux()
+
+        The appropriate threshold will depend on your particular application, including what kind
+        of profile the object has, how big your image is relative to the size of your object, etc.
+
         @param image  If provided, this will be the image on which to draw the profile.
                       If `image = None`, then an automatically-sized image will be created.
                       If `image != None`, but its bounds are undefined (e.g. if it was 
@@ -565,9 +575,9 @@ class GSObject(object):
             # multiply the ADU by dx^2.  i.e. divide gain by dx^2.
             gain /= dx**2
 
-        added_flux = self.SBProfile.draw(image.view(), gain, wmult)
+        image.added_flux = self.SBProfile.draw(image.view(), gain, wmult)
 
-        return image, added_flux
+        return image
 
     def drawShoot(self, image=None, dx=None, gain=1., wmult=1., normalization="flux",
                   add_to_image=False, n_photons=0., rng=None,
@@ -592,6 +602,17 @@ class GSObject(object):
 
         Note that the drawShoot method is unavailable for objects which contain an SBDeconvolve,
         or are compound objects (e.g. Add, Convolve) that include an SBDeconvolve.
+
+        On return, the image will have a member `added_flux`, which will be set to be the total
+        flux of photons that landed inside the image bounds.  This may be useful as a sanity check 
+        that you have provided a large enough image to catch most of the flux.  For example:
+        
+            obj.drawShoot(image)
+            assert added_flux > 0.99 * obj.getFlux()
+
+        The appropriate threshold will depend on your particular application, including what kind
+        of profile the object has, how big your image is relative to the size of your object, 
+        whether you are keeping `poisson_flux = True`, etc.
 
         @param image  If provided, this will be the image on which to draw the profile.
                       If `image = None`, then an automatically-sized image will be created.
@@ -665,19 +686,7 @@ class GSObject(object):
                                 `poisson_flux = True` unless n_photons is given, in which case
                                 the default is `poisson_flux = False`).
 
-        @returns  The tuple (image, added_flux), where image is the input with drawn photons 
-                  added and added_flux is the total flux of photons that landed inside the image 
-                  bounds.
-
-        The second part of the return tuple may be useful as a sanity check that you have provided a
-        large enough image to catch most of the flux.  For example:
-        
-            image, added_flux = obj.drawShoot(image)
-            assert added_flux > 0.99 * obj.getFlux()
-        
-        However, the appropriate threshold will depend things like whether you are keeping 
-        `poisson_flux = True`, how high the flux is, how big your images are relative to the size of
-        your object, etc.
+        @returns      The drawn image.
         """
 
         # Raise an exception immediately if the normalization type is not recognized
@@ -732,7 +741,7 @@ class GSObject(object):
             gain /= dx**2
 
         try:
-            added_flux = self.SBProfile.drawShoot(
+            image.added_flux = self.SBProfile.drawShoot(
                 image.view(), n_photons, uniform_deviate, gain, max_extra_noise, poisson_flux)
         except RuntimeError:
             raise RuntimeError(
@@ -740,7 +749,7 @@ class GSObject(object):
                 "in the SBProfile attribute or is a compound including one or more Deconvolve "+
                 "objects.")
 
-        return image, added_flux
+        return image
 
     def drawK(self, re=None, im=None, dk=None, gain=1., wmult=1., add_to_image=False):
         """Draws the k-space Images (real and imaginary parts) of the object, with bounds
@@ -1743,6 +1752,14 @@ class Pixel(GSObject):
     -------
     The Pixel is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(), 
     applyShear() etc.) and operator bindings.
+
+    Note: We have not implemented drawing a sheared or rotated Pixel in real space.  It's a 
+          bit tricky to get right at the edges where fractional fluxes are required.  
+          Fortunately, this is almost never needed.  Pixels are almost always convolved by
+          something else rather than drawn by themselves, in which case either the fourier
+          space method is used, or photon shooting.  Both of these are implemented in GalSim.
+          If need to draw sheared or rotated Pixels in real space, please file an issue, and
+          maybe we'll implement that function.  Until then, you will get an exception if you try.
     """
 
     # Initialization parameters of the object, with type information
@@ -2454,15 +2471,15 @@ class Shapelet(GSObject):
 
         I(r,theta) = 1/sigma^2 Sum_pq b_pq psi_pq(r/sigma, theta)
 
-    where psi_pq,sigma are the shapelet eigenfunctions, given by (in polar coordinates):
+    where psi_pq are the shapelet eigenfunctions, given by:
 
         psi_pq(r,theta) = (-)^q/sqrt(pi) sqrt(q!/p!) r^m exp(i m theta) exp(-r^2/2) L_q^(m)(r^2)
 
     and L_q^(m)(x) are generalized Laguerre polynomials.
     
     The coeffients b_pq are in general complex.  However, we require that the resulting 
-    I(r,theta) be pureley real, which implies that b_pq = b_qp* (where * mean complex conjugate).
-    This further implies that b_pp is real. 
+    I(r,theta) be purely real, which implies that b_pq = b_qp* (where * means complex conjugate).
+    This further implies that b_pp (i.e. b_pq with p==q) is real. 
 
 
     Initialization
@@ -2470,7 +2487,7 @@ class Shapelet(GSObject):
     
     1. Make a blank Shapelet instance with all b_pq = 0.
 
-        shapelet = galsim.Shapelet(sigma=sigam, order=order)
+        shapelet = galsim.Shapelet(sigma=sigma, order=order)
 
     2. Make a Shapelet instance using a given vector for the b_pq values.
 
@@ -2524,7 +2541,6 @@ class Shapelet(GSObject):
 
     # --- Public Class methods ---
     def __init__(self, sigma, order, bvec=None):
-        
         # Make sure order and sigma are the right type:
         try:
             order = int(order)
@@ -2567,8 +2583,18 @@ class Shapelet(GSObject):
         bvec = self.SBProfile.getBVec()
         GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
     def setOrder(self,order):
+        curr_bvec = self.SBProfile.getBVec()
+        curr_order = curr_bvec.order
+        if curr_order == order: return
+        # Preserve the existing values as much as possible.
         sigma = self.SBProfile.getSigma()
-        bvec = galsim.LVector(order)
+        if curr_order > order:
+            bvec = galsim.LVector(order, curr_bvec.array[0:galsim.LVectorSize(order)])
+        else:
+            import numpy
+            a = numpy.zeros(galsim.LVectorSize(order))
+            a[0:len(curr_bvec.array)] = curr_bvec.array
+            bvec = galsim.LVector(order,a)
         GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
     def setBVec(self,bvec):
         sigma = self.SBProfile.getSigma()
@@ -2632,7 +2658,7 @@ class Shapelet(GSObject):
             shapelet.draw(image=image2, dx=image.scale, normalization='sb')
 
         Then image2 and image should be as close to the same as possible for the given
-        sigma and order.  Incrasing the order can improve the fit, as can having sigma match
+        sigma and order.  Increasing the order can improve the fit, as can having sigma match
         the natural scale size of the image.  However, it should be noted that some images
         are not well fit by a shapelet for any (reasonable) order.
 

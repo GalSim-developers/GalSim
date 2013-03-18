@@ -71,7 +71,7 @@ def test_AtmosphericPSF_flux():
         # have the test pass.
         dx = float(lor / 10.)
         img = galsim.ImageF(256,256)
-        img_array = apsf.draw(image=img, dx=dx)[0].array
+        img_array = apsf.draw(image=img, dx=dx).array
         np.testing.assert_almost_equal(img_array.sum(), 1., 3,
                                        err_msg="Flux of atmospheric PSF (image array) is not 1.")
     t2 = time.time()
@@ -89,7 +89,7 @@ def test_AtmosphericPSF_fwhm():
         # have the test pass.
         dx_scale = 10
         dx = float(lor / dx_scale)
-        psf_array = apsf.draw(dx=dx)[0].array
+        psf_array = apsf.draw(dx=dx).array
         nx, ny = psf_array.shape
         profile = psf_array[nx / 2, ny / 2:]
         # Now get the last array index where the profile value exceeds half the peak value as a 

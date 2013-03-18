@@ -54,6 +54,7 @@ config_file = 'gs_scons.conf'
 default_prefix = '/usr/local'  
 
 default_python = '/usr/bin/env python'
+default_cxx = 'c++'
 
 # first check for a saved conf file
 opts = Variables(config_file)
@@ -195,7 +196,7 @@ def ErrorExit(*args, **kwargs):
         import subprocess
         cmd = ("ls -d .sconf_temp/conftest* | grep -v '\.out' | grep -v '\.cpp' "+
                "| grep -v '\.o' | grep -v '\_mod'")
-        p = subprocess.Popen([cmd],stdout=subprocess.PIPE,shell=True)
+        p = subprocess.Popen([cmd],stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         conftest_list = p.stdout.readlines()
         for conftest in conftest_list:
             conftest = conftest.strip()
@@ -410,12 +411,13 @@ def which(program):
              exe_file = os.path.join(path, program)
              if is_exe(exe_file):
                  return exe_file
-
     return None
 
 def GetCompilerVersion(env):
     """Determine the version of the compiler
     """
+    if env['CXX'] is None:
+        env['CXX'] = default_cxx
     compiler = which(env['CXX'])
     if compiler is None:
         ErrorExit('Specified compiler not found in path: %s' % env['CXX'])

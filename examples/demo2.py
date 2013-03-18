@@ -32,7 +32,6 @@ New features introduced in this demo:
 - obj = galsim.Exponential(flux, scale_radius)
 - obj = galsim.Moffat(beta, flux, half_light_radius)
 - obj.applyShear(g1, g2)  -- with explanation of other ways to specify shear
-- obj.draw(image, dx)
 - rng = galsim.BaseDeviate(seed)
 - noise = galsim.PoissonNoise(rng, sky_level)
 - galsim.EstimateShearHSM(image, image_epsf)
@@ -109,8 +108,8 @@ def main(argv):
     logger.debug('Convolved components into final profile')
 
     # Draw the image with a particular pixel scale.
-    image, flux_added = final.draw(dx=pixel_scale)
-    image_epsf, flux_added = final_epsf.draw(dx=pixel_scale)
+    image = final.draw(dx=pixel_scale)
+    image_epsf = final_epsf.draw(dx=pixel_scale)
     logger.debug('Made image of the profile')
 
     # To get Poisson noise on the image, we will use a class called PoissonNoise.

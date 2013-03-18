@@ -98,7 +98,7 @@ def test_moments_basic():
                 distortion_2 = g2*conversion_factor
                 gal = galsim.Gaussian(flux = 1.0, sigma = sig)
                 gal.applyShear(g1=g1, g2=g2)
-                gal_image, tot = gal.draw(dx = pixel_scale)
+                gal_image = gal.draw(dx = pixel_scale)
                 result = gal_image.FindAdaptiveMom()
                 # make sure we find the right Gaussian sigma
                 np.testing.assert_almost_equal(np.fabs(result.moments_sigma-sig/pixel_scale), 0.0,
@@ -128,8 +128,8 @@ def test_shearest_basic():
                 psf = galsim.Gaussian(flux = 1.0, sigma = sig)
                 gal.applyShear(g1=g1, g2=g2)
                 final = galsim.Convolve([gal, psf])
-                final_image, tot = final.draw(dx = pixel_scale)
-                epsf_image, tot = psf.draw(dx = pixel_scale)
+                final_image = final.draw(dx = pixel_scale)
+                epsf_image = psf.draw(dx = pixel_scale)
                 result = galsim.EstimateShearHSM(final_image, epsf_image)
                 # make sure we find the right e after PSF correction
                 # with regauss, which returns a distortion

@@ -86,7 +86,7 @@ namespace galsim {
     double SBGaussian::SBGaussianImpl::maxK() const 
     { return sqrt(-2.*std::log(sbp::maxk_threshold))*_inv_sigma; }
 
-    // The amount of flux missed in a circle of radius pi/stepk should miss at 
+    // The amount of flux missed in a circle of radius pi/stepk should be at 
     // most alias_threshold of the flux.
     double SBGaussian::SBGaussianImpl::stepK() const
     {

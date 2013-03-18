@@ -263,7 +263,7 @@ namespace galsim {
         return 2. / (sbp::maxk_threshold * std::min(_xw,_yw));
     }
 
-    // The amount of flux missed in a circle of radius pi/stepk should miss at 
+    // The amount of flux missed in a circle of radius pi/stepk should be at 
     // most alias_threshold of the flux.
     double SBBox::SBBoxImpl::stepK() const
     {

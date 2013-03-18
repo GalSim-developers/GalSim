@@ -60,8 +60,7 @@ class DES_PSFEx(object):
         try:
             self.read()
         except Exception, e:
-            print e
-            raise IOError("Unable to read DES_PSFEx file %s."%self.file_name)
+            raise IOError("Unable to read DES_PSFEx file %s.  Error = %s"%(self.file_name,str(e)))
 
     def read(self):
         import pyfits
@@ -91,7 +90,9 @@ class DES_PSFEx(object):
         if pol_ngrp != 1:
             raise IOError("PSFEx: Current implementation requires POLNGRP == 1, got %d"%pol_ngrp)
 
-        basis = hdu.data.field('PSF_MASK')[0]
+        # Note: older pyfits versions don't get the shape right.
+        # For newer pyfits versions the reshape command should be a no op.
+        basis = hdu.data.field('PSF_MASK')[0].reshape(psf_axis3,psf_axis2,psf_axis1)
         if basis.shape[0] != psf_axis3:
             raise IOError("PSFEx: PSFAXIS3 disagrees with actual basis size")
         if basis.shape[1] != psf_axis2:
@@ -116,6 +117,9 @@ class DES_PSFEx(object):
         The PSFEx class does everything in pixel units, so it has no concept of the pixel_scale.
         For Galsim, we do everything in physical units (i.e. arcsec typically), so the returned 
         psf needs to account for the pixel_scale.
+
+        @param pos          The position in pixel units for which to build the PSF.
+        @param pixel_scale  The pixel scale in arcsec/pixel.
 
         @returns an InterpolatedImage instance.
         """
@@ -155,7 +159,7 @@ class DES_PSFEx(object):
 import galsim.config
 
 # First we need to add the class itself as a valid input_type.
-galsim.config.process.valid_input_types['des_psfex'] = ('des.DES_PSFEx', [])
+galsim.config.process.valid_input_types['des_psfex'] = ('galsim.des.DES_PSFEx', [], False)
 
 # Also make a builder to create the PSF object for a given position.
 # The builders require 4 args.
@@ -166,32 +170,22 @@ galsim.config.process.valid_input_types['des_psfex'] = ('des.DES_PSFEx', [])
 def BuildDES_PSFEx(config, key, base, ignore):
     """@brief Build a RealGalaxy type GSObject from user input.
     """
-    #print 'Start BuildDES_PSFEx'
-    #print 'config = ',config
-    #print 'key = ',key
-    #print 'base = ',base
-    #print 'ignore = ',ignore
     opt = { 'flux' : float }
     kwargs, safe = galsim.config.GetAllParams(config, key, base, opt=opt, ignore=ignore)
-    #print 'kwargs = ',kwargs
 
     if 'des_psfex' not in base:
         raise ValueError("No DES_PSFEx instance available for building type = DES_PSFEx")
     des_psfex = base['des_psfex']
-    #print 'des_psfex = ',des_psfex
 
     if 'chip_pos' not in base:
         raise ValueError("DES_PSFEx requested, but no chip_pos defined in base.")
     chip_pos = base['chip_pos']
-    #print 'chip_pos = ',chip_pos
 
     if 'pixel_scale' not in base:
         raise ValueError("DES_PSFEx requested, but no pixel_scale defined in base.")
     pixel_scale = base['pixel_scale']
-    #print 'pixel_scale = ',pixel_scale
 
     psf = des_psfex.getPSF(chip_pos, pixel_scale)
-    #print 'psf = ',psf
 
     if 'flux' in kwargs:
         psf.setFlux(kwargs['flux'])

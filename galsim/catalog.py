@@ -30,10 +30,10 @@ class InputCatalog(object):
 
     After construction, the following fields are available:
 
-        self.nobjects   The number of objects in the catalog
-        self.ncols      The number of columns in the catalog
-        self.isfits     Whether the catalog is a fits catalog
-        self.names      For a fits catalog, the valid column names
+        self.nobjects   The number of objects in the catalog.
+        self.ncols      The number of columns in the catalog.
+        self.isfits     Whether the catalog is a fits catalog.
+        self.names      For a fits catalog, the valid column names.
 
 
     @param file_name     Filename of the input catalog. (Required)
@@ -50,7 +50,11 @@ class InputCatalog(object):
     _single_params = []
     _takes_rng = False
 
-    def __init__(self, file_name, dir=None, file_type=None, comments='#', hdu=1):
+    # nobject_only is an intentionally undocumented kwarg that should be used only by
+    # the config structure.  It indicates that all we care about is the nobjects parameter.
+    # So skip any other calculations that might normally be necessary on construction.
+    def __init__(self, file_name, dir=None, file_type=None, comments='#', hdu=1,
+                 nobjects_only=False):
 
         # First build full file_name
         self.file_name = file_name.strip()
@@ -70,15 +74,15 @@ class InputCatalog(object):
 
         try:
             if file_type == 'FITS':
-                self.read_fits(hdu)
+                self.read_fits(hdu, nobjects_only)
             else:
-                self.read_ascii(comments)
+                self.read_ascii(comments, nobjects_only)
         except Exception, e:
             print e
             raise RuntimeError("Unable to read %s catalog file %s."%(
                     self.file_type, self.file_name))
             
-    def read_ascii(self, comments):
+    def read_ascii(self, comments, nobjects_only):
         """Read in an input catalog from an ASCII file.
         """
         import numpy
@@ -87,23 +91,34 @@ class InputCatalog(object):
         # we have any str fields, they don't give an error here.  They'll only give an 
         # error if one tries to convert them to float at some point.
         self.data = numpy.loadtxt(self.file_name, comments=comments, dtype=str)
-        self.names = None
-        self.nobjects = self.data.shape[0]
+
+        # TODO: Is there a faster way to do this if all we care about is nobjects?
+        self.nobjects = self.data.shape[0]  
+
         self.ncols = self.data.shape[1]
         self.isfits = False
 
-    def read_fits(self, hdu):
+    def read_fits(self, hdu, nobjects_only):
         """Read in an input catalog from a FITS file.
         """
         import pyfits
         import numpy
         data = pyfits.getdata(self.file_name, hdu)
+        if pyfits.__version__ > '3.0':
+            self.names = data.columns.names
+        else:
+            self.names = data.dtype.names
+
+        # If all we care about is nobjects, we can do that quickly here.
+        if nobjects_only: 
+            self.nobjects = len(data.field(self.names[0]))
+            return
+
         # data is an instance of a weird numpy FITS_rec class
         # The main problem with it is that it isn't picklable, so using this 
         # with multiprocessing will fail.
         # So we turn this into a regular numpy array that looks just like the version
         # we build in read_ascii with loadtxt.
-        self.names = data.columns.names
         # This assumes all fields have the same length.  If we need to support tables
         # where this isn't true, we might need to add an if clause in here.
         # (i.e. check the maximum, and then only include keys whose length is the same as that.)
@@ -139,8 +154,9 @@ class InputCatalog(object):
         """
         try:
             return float(self.get(index,col))
-        except:
-            raise TypeError("The data at (%d,%d) in catalog %s could not be converted to float"%(
+        except Exception,e:
+            print e
+            raise TypeError("The data at (%d,%s) in catalog %s could not be converted to float"%(
                     index,col,self.file_name))
 
     def getInt(self, index, col):
@@ -148,7 +164,8 @@ class InputCatalog(object):
         """
         try:
             return int(self.get(index,col))
-        except:
-            raise TypeError("The data at (%d,%d) in catalog %s could not be converted to int"%(
+        except Exception,e:
+            print e
+            raise TypeError("The data at (%d,%s) in catalog %s could not be converted to int"%(
                     index,col,self.file_name))
 

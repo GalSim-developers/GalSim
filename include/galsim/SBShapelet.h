@@ -30,7 +30,7 @@
 
 namespace galsim {
 
-    /// @brief Class for describing polar shapelet surface brightness plrofiles.
+    /// @brief Class for describing polar shapelet surface brightness profiles.
     class SBShapelet : public SBProfile 
     {
     public:

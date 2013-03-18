@@ -124,7 +124,7 @@ def main(argv):
 
         for k in range(nobj):
             # The usual random number generator using a different seed for each galaxy.
-            # I'm not actually using the rng for object creation (everything comes from # the 
+            # I'm not actually using the rng for object creation (everything comes from the
             # input files), but the rng that matches the config version is here just in case.
             rng = galsim.BaseDeviate(random_seed+k)
 
@@ -140,7 +140,7 @@ def main(argv):
             dx = x-ix
             dy = y-iy
             image_pos = galsim.PositionD(x,y)
-            print 'pos = ',image_pos
+            print '    pos = ',image_pos
 
             # Also get the flux of the galaxy from the catalog
             flux = cat.getFloat(k,flux_col)
@@ -148,7 +148,7 @@ def main(argv):
             # Define the pixel
             pix = galsim.Pixel(pixel_scale)
 
-            # Firstt do the PSFEx image:
+            # First do the PSFEx image:
             if True:
                 # Define the PSF profile
                 psf = psfex.getPSF(image_pos, pixel_scale)
@@ -161,7 +161,7 @@ def main(argv):
                 final.applyShift(dx*pixel_scale,dy*pixel_scale)
 
                 # Draw the postage stamp image
-                stamp = final.draw(dx=pixel_scale)[0]
+                stamp = final.draw(dx=pixel_scale)
 
                 # Recenter the stamp at the desired position:
                 stamp.setCenter(ix,iy)
@@ -195,7 +195,7 @@ def main(argv):
                 final.applyShift(dx*pixel_scale,dy*pixel_scale)
 
                 # Draw the postage stamp image
-                stamp = final.draw(dx=pixel_scale)[0]
+                stamp = final.draw(dx=pixel_scale)
 
                 # Recenter the stamp at the desired position:
                 stamp.setCenter(ix,iy)
@@ -210,11 +210,9 @@ def main(argv):
         # Add background level
         psfex_image += sky_level
         fitpsf_image += sky_level
-        print 'add background = ',sky_level
 
         # Add noise
         rng = galsim.BaseDeviate(random_seed+nobj)
-        print 'CCDNoise with ',gain
         noise = galsim.CCDNoise(rng, gain=gain)
         psfex_image.addNoise(noise)
         # Reset the random seed to match the action of the yaml version
@@ -227,6 +225,9 @@ def main(argv):
         # Now write the images to disk.
         psfex_image.write(psfex_image_file, dir=out_dir)
         fitpsf_image.write(fitpsf_image_file, dir=out_dir)
+        print 'Wrote images to %s and %s'%(
+                os.path.join(out_dir,psfex_image_file),
+                os.path.join(out_dir,fitpsf_image_file))
 
 if __name__ == "__main__":
     import sys

@@ -208,7 +208,7 @@ def test_fluxnorm():
     np.testing.assert_equal(total_flux, interp.getFlux(),
                             err_msg='Did not keep flux normalization')
     # Check that this is preserved when drawing
-    im2, tot = interp.draw(dx = im_scale)
+    im2 = interp.draw(dx = im_scale)
     np.testing.assert_equal(total_flux, im2.array.sum(),
                             err_msg='Drawn image does not have expected flux normalization')
 
@@ -216,11 +216,11 @@ def test_fluxnorm():
     interp_sb = galsim.InterpolatedImage(im, normalization = 'sb')
     # Check that when drawing, the sum is equal to what we expect if the original image had been
     # surface brightness
-    im3, tot = interp_sb.draw(dx = im_scale)
+    im3 = interp_sb.draw(dx = im_scale)
     np.testing.assert_almost_equal(total_flux*(im_scale**2)/im3.array.sum(), 1.0, decimal=6,
                                    err_msg='Did not use surface brightness normalization')
     # Check that when drawing with sb normalization, the sum is the same as the original
-    im4, tot = interp_sb.draw(dx = im_scale, normalization = 'sb')
+    im4 = interp_sb.draw(dx = im_scale, normalization = 'sb')
     np.testing.assert_almost_equal(total_flux/im4.array.sum(), 1.0, decimal=6,
                                    err_msg='Failed roundtrip for sb normalization')
 
@@ -230,7 +230,7 @@ def test_fluxnorm():
     np.testing.assert_equal(test_flux, interp_flux.getFlux(),
                             err_msg = 'InterpolatedImage did not use flux keyword')
     # Check that this is preserved when drawing
-    im5, tot = interp_flux.draw(dx = im_scale)
+    im5 = interp_flux.draw(dx = im_scale)
     np.testing.assert_almost_equal(test_flux/im5.array.sum(), 1.0, decimal=6,
                                    err_msg = 'Drawn image does not reflect flux keyword')
 
@@ -295,7 +295,7 @@ def test_operations_simple():
     psf = galsim.Airy(lam_over_diam)
     pix = galsim.Pixel(pix_scale)
     obj = galsim.Convolve(gal, psf, pix)
-    im, tot = obj.draw(dx=pix_scale)
+    im = obj.draw(dx=pix_scale)
 
     # Turn it into an InterpolatedImage with default param settings
     int_im = galsim.InterpolatedImage(im)
