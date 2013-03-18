@@ -16,6 +16,8 @@ import pdb
 import pylab
 
 filename_output = 'photon_vs_fft_results.txt'
+hsm_error_value = -1
+no_psf_value = -1
 
 def getGSObjects(obj):
     """
@@ -87,7 +89,7 @@ def testShootVsFfft():
     Saves the Adaptive moments resutls to file.
     """
 
-    if config['image']['n_photons'] < 100000:
+    if config['image']['n_photons'] < 1e5:
         logger.warning('small number of photons, results may me meaningless, HSM may crash')
 
     file_output = open(filename_output,'w')
@@ -100,9 +102,12 @@ def testShootVsFfft():
     # g2_photon
     # max_diff_over_max_image
     
+    output_row_fmt = "%d\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\n"
+    output_header = '# id max_diff_over_max_image ' +  \
+                                'g1_moments_fft g2_moments_fft g1_moments_photon g2_moments_photon ' + \
+                                'g1_hsm_obs_fft g2_hsm_obs_fft g1_hsm_obs_photon g2_hsm_obs_photon ' + \
+                                'g1_hsm_corr_fft g2_hsm_corr_fft g1_hsm_corr_photon g2_hsm_corr_photon\n'
 
-    output_row_fmt = "%d\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\n"
-    output_header = '# id of the test object g1_fft g2_fft g1_photon g2_photon max_diff_over_max_image\n'
     file_output.write(output_header)
 
     # loop throught the galaxy catalog
@@ -117,11 +122,23 @@ def testShootVsFfft():
         if obj['psf']['type'] != 'none':
             
             # create the PSF
-            logger.info('drawing PSF using drawShoot and %2.0e photons' % config['image']['n_photons'])
-            image_psf_shoot = galsim.ImageF(config['image']['n_pix'],config['image']['n_pix'])
-            gso['psf'].drawShoot(image_psf_shoot,dx=config['image']['scale'],n_photons=config['image']['n_photons'])
-            logger.info('drawShoot is ready for PSF of type %s' % obj['psf']['type'])
-    
+
+            if config['psf_draw_method'] == 'fft':
+                logger.info('drawing PSF using draw()')
+                image_psf = galsim.ImageF(config['image']['n_pix'],config['image']['n_pix'])
+                final_psf = galsim.Convolve([gso['psf'],gso['pix']])
+                final_psf.draw(image_psf,dx=config['image']['scale'])
+                logger.info('PSF of type %s is ready' % obj['psf']['type'])
+            elif config['psf_draw_method'] == 'shoot':
+                logger.info('drawing PSF using drawShoot and %2.0e photons' % config['image']['n_photons'])
+                image_psf = galsim.ImageF(config['image']['n_pix'],config['image']['n_pix'])
+                gso['psf'].drawShoot(image_psf,dx=config['image']['scale'],n_photons=config['image']['n_photons'])
+                logger.info('drawShoot is ready for PSF of type %s' % obj['psf']['type'])
+            else:
+                logger.error('%s not a valid PSF drawing method, use \'fft\' or \'shoot\' in the config file' % config['psf_draw_method'])
+                # warnings.error('')
+
+        # just draw the pixel PSF
     
         # create shoot image
         logger.info('drawing galaxy using drawShoot and %2.0e photons' % config['image']['n_photons'])
@@ -142,10 +159,6 @@ def testShootVsFfft():
         # create a residual image
         diff_image = image_gal_shoot.array - image_gal_fft.array
         max_diff_over_max_image = abs(diff_image.flatten()).max()/image_gal_fft.array.flatten().max()
-
-        image_gal_fft.write('shifted_fft.fits')
-        image_gal_shoot.write('shifted_shoot.fits')
-
 
         # plot the pixel differences
         pylab.figure()
@@ -174,6 +187,7 @@ def testShootVsFfft():
 
         logger.info('max(residual) / max(image_fft) = %2.4e ' % ( max_diff_over_max_image )  )
 
+
         # find adaptive moments
         moments_shoot = galsim.FindAdaptiveMom(image_gal_shoot)
         moments_fft   = galsim.FindAdaptiveMom(image_gal_fft)
@@ -185,13 +199,62 @@ def testShootVsFfft():
         moments_diff_g1  = moments_shoot_g1 - moments_fft_g1
         moments_diff_g2  = moments_shoot_g2 - moments_fft_g2
 
-
         # display resutls
-        logger.info('adaptive moments fft           gi % 2.6f % 2.6f' % (moments_fft_g1,  moments_fft_g2))
-        logger.info('adaptive moments shoot         gi % 2.6f % 2.6f' % (moments_shoot_g1,  moments_shoot_g2))
-        logger.info('adaptive moments difference    gi % 2.6f % 2.6f' % (moments_diff_g1,  moments_diff_g2))
+        logger.debug('adaptive moments fft                gi % 2.6f % 2.6f' % (moments_fft_g1, moments_fft_g2))
+        logger.debug('adaptive moments shoot              gi % 2.6f % 2.6f' % (moments_shoot_g1, moments_shoot_g2))
+        logger.debug('adaptive moments difference         gi % 2.6f % 2.6f' % (moments_diff_g1, moments_diff_g2))
 
-        file_output.write(output_row_fmt % (ig, moments_fft_g1,  moments_fft_g2, moments_shoot_g1,  moments_shoot_g2, max_diff_over_max_image))
+
+        if obj['psf']['type'] == 'none':
+
+            hsm_obs_shoot_e1 = hsm_obs_shoot_e2 = hsm_obs_fft_e1 = hsm_obs_fft_e2 = \
+            hsm_corr_shoot_e1 =  hsm_corr_shoot_e2  = hsm_corr_fft_e1 = hsm_corr_fft_e2 =\
+            no_psf_value 
+        
+        else:
+
+            # find HSM moments   
+
+            hsm_shoot = galsim.EstimateShearHSM(image_gal_shoot,image_psf,strict=True)
+            hsm_fft   = galsim.EstimateShearHSM(image_gal_fft,image_psf,strict=True)
+
+            # pdb.set_trace()
+
+            if hsm_shoot.error_message != "":
+                logger.debug('hsm_shoot failed with message %s' % hsm_shoot.error_message)
+                hsm_obs_shoot_e1 = hsm_obs_shoot_e2  = \
+                hsm_corr_shoot_e1 =  hsm_corr_shoot_e2  =  hsm_error_value
+            else:
+                hsm_obs_shoot_e1 = hsm_shoot.observed_shape.getE1()
+                hsm_obs_shoot_e2 = hsm_shoot.observed_shape.getE2()
+                hsm_corr_shoot_e1 = hsm_shoot.corrected_e1
+                hsm_corr_shoot_e2 = hsm_shoot.corrected_e2
+        
+            if hsm_fft.error_message != "":
+                logger.debug('hsm_fft failed with message %s' % hsm_fft.error_message)
+                hsm_obs_fft_e1 = hsm_obs_fft_e2  = \
+                hsm_corr_fft_e1 = hsm_corr_fft_e2  =  hsm_error_value  
+            else:
+                hsm_obs_fft_e1 = hsm_fft.observed_shape.getE1()
+                hsm_obs_fft_e2 = hsm_fft.observed_shape.getE2()
+                hsm_corr_fft_e1 = hsm_fft.corrected_e1
+                hsm_corr_fft_e2 = hsm_fft.corrected_e2
+        
+            logger.debug('hsm observed moments fft            Ei % 2.6f % 2.6f' % (hsm_obs_fft_e1, hsm_obs_fft_e2))
+            logger.debug('hsm observed moments shoot          Ei % 2.6f % 2.6f' % (hsm_obs_shoot_e1, hsm_obs_shoot_e2))
+
+            logger.debug('hsm corrected moments fft           Ei % 2.6f % 2.6f' % (hsm_corr_fft_e1, hsm_corr_fft_e2))
+            logger.debug('hsm corrected moments shoot         Ei % 2.6f % 2.6f' % (hsm_corr_shoot_e1, hsm_corr_shoot_e2))
+
+     
+
+        file_output.write(output_row_fmt % (ig, max_diff_over_max_image, 
+            moments_fft_g1,  moments_fft_g2, moments_shoot_g1,  moments_shoot_g2,  
+            hsm_obs_fft_e1, hsm_obs_fft_e2, hsm_obs_shoot_e1, hsm_obs_shoot_e2,
+            hsm_corr_fft_e1, hsm_corr_fft_e2, hsm_corr_shoot_e1, hsm_corr_shoot_e2,
+            ))
+
+
 
 def plotEllipticityBiases():
     """
@@ -204,10 +267,10 @@ def plotEllipticityBiases():
 
     n_test_gals = data.shape[0]
 
-    g1_photon=data[:,3]
-    g2_photon=data[:,4]
-    g1_fft=data[:,1]
-    g2_fft=data[:,2]
+    g1_photon=data[:,4]
+    g2_photon=data[:,5]
+    g1_fft=data[:,2]
+    g2_fft=data[:,3]
 
     de1 = g1_fft-g1_photon
     de2 = g2_fft-g2_photon 
@@ -239,7 +302,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # set up logger
-    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
+    logging.basicConfig(format="%(message)s", level=logging.DEBUG, stream=sys.stdout)
     logger = logging.getLogger("validation_shoot_vs_fft") 
 
     # load the configuration file
@@ -251,7 +314,7 @@ if __name__ == "__main__":
     testShootVsFfft()
 
     # save the figure
-    plotEllipticityBiases()
+    # plotEllipticityBiases()
 
 
 
