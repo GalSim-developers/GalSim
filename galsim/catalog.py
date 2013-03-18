@@ -50,7 +50,7 @@ class InputCatalog(object):
     _single_params = []
     _takes_rng = False
 
-    # nobject_only is an intentionally undocumented kwarg that should be used only by
+    # nobjects_only is an intentionally undocumented kwarg that should be used only by
     # the config structure.  It indicates that all we care about is the nobjects parameter.
     # So skip any other calculations that might normally be necessary on construction.
     def __init__(self, file_name, dir=None, file_type=None, comments='#', hdu=1,
@@ -85,16 +85,23 @@ class InputCatalog(object):
     def read_ascii(self, comments, nobjects_only):
         """Read in an input catalog from an ASCII file.
         """
+        # If all we care about is nobjects, this is quicker:
+        if nobjects_only:
+            f = open(self.file_name)
+            if (len(comments) == 1):
+                c = comments[0]
+                self.nobjects = sum(1 for line in f if line[0] != c)
+            else:
+                self.nobjects = sum(1 for line in f if not line.startswith(comments))
+            return
+
         import numpy
         # Read in the data using the numpy convenience function
         # Note: we leave the data as str, rather than convert to float, so that if
         # we have any str fields, they don't give an error here.  They'll only give an 
         # error if one tries to convert them to float at some point.
         self.data = numpy.loadtxt(self.file_name, comments=comments, dtype=str)
-
-        # TODO: Is there a faster way to do this if all we care about is nobjects?
         self.nobjects = self.data.shape[0]  
-
         self.ncols = self.data.shape[1]
         self.isfits = False
 
