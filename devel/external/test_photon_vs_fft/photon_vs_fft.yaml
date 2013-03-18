@@ -1,34 +1,62 @@
-# this dictionary contains the list of galaxies, for which the test will be ran
-objects: 
+filename_output : photon_vs_fft_results.txt
+
+# how to draw the PSF for HSM moments correction? 'fft' or 'shoot'
+psf_draw_method: 'fft'  
+
+image: 
+ # number of pixels in the postage stamp
+ n_pix: 50
+ # pixel scale
+ scale: 0.28   # arcsec
+ # use a lot of photons          
+ n_photons: 10000
+
+# decide whether you want to use the galaxies in the 'objects' key (see below)
+# or the provided sersics catalog with random ellipticity angles
+# with two hardcoded PSFs (space and ground)
+# with random PSF ellipticities and random centers
+use_galaxies_from: 'list_gals' # 'list_gals' or 'sersics_sample'
+
+# details for the sersics sample
+sersics_sample:
+   catalog_filename: cosmos_sersics_sample_N300.asc
+   psf_type: ground         # 'space' or 'ground'
+   max_random_dx: 0.5      # will be drawn from uniform (arcsec)
+   max_random_psf_g: 0.2   # will be drawn from uniform
+
+
+# this dictionary contains the list of custom galaxies and PSFs, for which the test will be ran
+list_gals: 
+
 # shifts unconvolved
  - 
-   bulge: {half_light_radius: 7.0, sersic_index: 4.0, g1: 0.3, g2: 0.2, dx: 5., dy: 0.0, flux: 1.}
-   disc:  {half_light_radius: 4.0, sersic_index: 1.0, g1: 0.3, g2: 0.2, dx: 5., dy: 0.0, flux: 1.}
+   bulge: {half_light_radius: 2.0, sersic_index: 4.0, g1: 0.3, g2: 0.2, dx: 0.5, dy: 0.0, flux: 1.}
+   disc:  {half_light_radius: 1.5, sersic_index: 1.0, g1: 0.3, g2: 0.2, dx: 0.5, dy: 0.0, flux: 1.}
    psf: {type: 'none'}
  - 
-   bulge: {half_light_radius: 7.0, sersic_index: 4.0, g1: 0.3, g2: 0.2, dx: 5.5, dy: 2.3, flux: 1.}
-   disc:  {half_light_radius: 4.0, sersic_index: 1.0, g1: 0.3, g2: 0.2, dx: 5.5, dy: 2.3, flux: 1.}
+   bulge: {half_light_radius: 2.0, sersic_index: 4.0, g1: 0.3, g2: 0.2, dx: 0.55, dy: 0.23, flux: 1.}
+   disc:  {half_light_radius: 1.5, sersic_index: 1.0, g1: 0.3, g2: 0.2, dx: 0.55, dy: 0.23, flux: 1.}
    psf: {type: 'none'}
 # shifts convolved
  - 
-   bulge: {half_light_radius: 3.5, sersic_index: 4.0, g1: 0.3, g2: -0.2, dx: 2.5, dy: -3.1, flux: 1.}
-   disc:  {half_light_radius: 2.0, sersic_index: 1.0, g1: 0.5, g2:  0.5, dx: 2.5, dy: -3.1, flux: 1.}
-   psf: {type: 'Moffat',  beta: 3.0,  fwhm: 2.85,  g1: -0.1,  g2: 0.1}
+   bulge: {half_light_radius: 1., sersic_index: 4.0, g1: 0.3, g2: -0.2, dx: 0.25, dy: -0.31, flux: 1.}
+   disc:  {half_light_radius: 0.75, sersic_index: 1.0, g1: 0.5, g2:  0.5, dx: 0.25, dy: -0.31, flux: 1.}
+   psf: {type: 'Moffat',  beta: 3.0,  fwhm: 0.65,  g1: -0.1,  g2: 0.1}
 # different bulge and disc ellipticities
  - 
-   bulge: {half_light_radius: 3.5, sersic_index: 4.0, g1: 0.3, g2: -0.2, dx: 0.0, dy: 0.0, flux: 1.}
-   disc:  {half_light_radius: 2.0, sersic_index: 1.0, g1: 0.5, g2:  0.5, dx: 0.0, dy: 0.0, flux: 1.}
-   psf: {type: 'Moffat',  beta: 3.0,  fwhm: 2.85,  g1: 0.0202,  g2: 0.0}
+   bulge: {half_light_radius: 1., sersic_index: 4.0, g1: 0.3, g2: -0.2, dx: 0.0, dy: 0.0, flux: 1.}
+   disc:  {half_light_radius: 0.75, sersic_index: 1.0, g1: 0.5, g2:  0.5, dx: 0.0, dy: 0.0, flux: 1.}
+   psf: {type: 'Moffat',  beta: 3.0,  fwhm: 0.65,  g1: 0.0202,  g2: 0.0}
 # Kolmogorov PSF
  - 
-   bulge: {half_light_radius: 3.5, sersic_index: 4.0, g1: 0.3, g2: -0.2, dx: 0.0, dy: 0.0, flux: 1.}
-   disc:  {half_light_radius: 2.0, sersic_index: 1.0, g1: 0.5, g2:  0.5, dx: 0.0, dy: 0.0, flux: 1.}
-   psf: {type: 'AtmosphericPSF',  fwhm: 2.85,  g1: 0.0202,  g2: 0.0}
+   bulge: {half_light_radius: 1., sersic_index: 4.0, g1: 0.3, g2: -0.2, dx: 0.0, dy: 0.0, flux: 1.}
+   disc:  {half_light_radius: 0.75, sersic_index: 1.0, g1: 0.5, g2:  0.5, dx: 0.0, dy: 0.0, flux: 1.}
+   psf: {type: 'AtmosphericPSF',  fwhm: 0.65,  g1: 0.0202,  g2: 0.0}
 # Airy PSF
  - 
-   bulge: {half_light_radius: 3.5, sersic_index: 4.0, g1: 0.3, g2: -0.2, dx: 0.0, dy: 0.0, flux: 1.}
-   disc:  {half_light_radius: 2.0, sersic_index: 1.0, g1: 0.5, g2:  0.5, dx: 0.0, dy: 0.0, flux: 1.}
-   psf: {type: 'Airy',  lam_over_diam: 3.,  g1: 0.0202,  g2: 0.0}
+   bulge: {half_light_radius: 1., sersic_index: 4.0, g1: 0.3, g2: -0.2, dx: 0.0, dy: 0.0, flux: 1.}
+   disc:  {half_light_radius: 0.75, sersic_index: 1.0, g1: 0.5, g2:  0.5, dx: 0.0, dy: 0.0, flux: 1.}
+   psf: {type: 'Airy',  lam_over_diam: 0.5,  g1: 0.0202,  g2: 0.0}
 # optical PSF?
 # - 
 #   bulge: {half_light_radius: 3.5, sersic_index: 4.0, g1: 0.3, g2: -0.2, dx: 0.0, dy: 0.0, flux: 1.}
@@ -39,30 +67,17 @@ objects:
  - 
    bulge: {half_light_radius: 1. , sersic_index: 4.0, g1: -0.3, g2: -0.2, dx: 0.01, dy: 0.01, flux: 1.}
    disc:  {half_light_radius: 2.0, sersic_index: 1.0, g1: -0.5, g2:  0.5, dx: 0.01, dy: 0.01, flux: 1.}
-   psf: {type: 'AtmosphericPSF',  fwhm: 2.85,  g1: 0.0202,  g2: 0.0}
+   psf: {type: 'AtmosphericPSF',  fwhm: 0.65,  g1: 0.0202,  g2: 0.0}
    
 # big galaxy size
  - 
-   bulge: {half_light_radius: 5., sersic_index: 4.0, g1: -0.3, g2: -0.2, dx: 0.01, dy: 0.01, flux: 1.}
-   disc:  {half_light_radius: 3., sersic_index: 1.0, g1: -0.5, g2:  0.5, dx: 0.01, dy: 0.01, flux: 1.}
+   bulge: {half_light_radius: 2., sersic_index: 4.0, g1: -0.3, g2: -0.2, dx: 0.01, dy: 0.01, flux: 1.}
+   disc:  {half_light_radius: 1., sersic_index: 1.0, g1: -0.5, g2:  0.5, dx: 0.01, dy: 0.01, flux: 1.}
    psf: {type: 'AtmosphericPSF',  fwhm: 2.85,  g1: 0.0202,  g2: 0.0}
 
 # different bulge and disc shift
 
  - 
-   bulge: {half_light_radius: 5., sersic_index: 4.0, g1: -0.3, g2: -0.2, dx: 0.5, dy: 0.5, flux: 1.}
-   disc:  {half_light_radius: 3., sersic_index: 1.0, g1: -0.5, g2:  0.5, dx: 0.01, dy: 0.01, flux: 1.}
-   psf: {type: 'Moffat',  fwhm: 2.85, beta: 3.0, g1: 0.0202,  g2: 0.0}
-
- 
-# how to draw the PSF for HSM moments correction? 'fft' or 'shoot'
-psf_draw_method: 'fft'  
-
-image: 
- # number of pixels in the postage stamp
- n_pix: 50
- # pixel scale
- scale: 1
- # use a lot of photons				
- n_photons: 10000000
-
+   bulge: {half_light_radius: 2., sersic_index: 4.0, g1: -0.3, g2: -0.2, dx: 0.5, dy: 0.5, flux: 1.}
+   disc:  {half_light_radius: 1., sersic_index: 1.0, g1: -0.5, g2:  0.5, dx: 0.01, dy: 0.01, flux: 1.}
+   psf: {type: 'Moffat',  fwhm: 0.65, beta: 3.0, g1: 0.0202,  g2: 0.0}

@@ -14,12 +14,12 @@ import argparse
 import yaml
 import pdb
 import pylab
+import math
 
-filename_output = 'photon_vs_fft_results.txt'
 hsm_error_value = -1
 no_psf_value = -1
 
-def getGSObjects(obj):
+def getGSObjectListGals(i):
     """
     This function generates all GSObjects which are necessary to create an image of an object.
     This involves a galaxy, PSF and pixel kernels.
@@ -30,7 +30,9 @@ def getGSObjects(obj):
     Output:
     gso - dictionary with GSObjects gso['gal'], gso['psf'], gso['pix'] 
     """
-    
+
+    obj = config['list_gals'][i]
+        
     gso = {}
 
     # get the galaxy if it is a sersics bulge + disc model    
@@ -56,7 +58,9 @@ def getGSObjects(obj):
 
     if obj['psf']['type'] == 'none':
 
+            gso['psf'] = None
             gso['galpsf'] = gso['gal']
+
     else:
 
         if obj['psf']['type'] == 'Moffat':
@@ -80,9 +84,8 @@ def getGSObjects(obj):
 
     return gso
 
-
 #
-def testShootVsFfft():
+def testShootVsFft():
     """
     For each of the galaxies in the config['galaxies'], produces the images using FFT and photon shooting.
     Displays plots of image residuals and shows differences in the moments measurements.
@@ -90,18 +93,10 @@ def testShootVsFfft():
     """
 
     if config['image']['n_photons'] < 1e5:
-        logger.warning('small number of photons, results may me meaningless, HSM may crash')
+        logger.warning('small number of photons, results may me meaningless')
 
-    file_output = open(filename_output,'w')
-
-    # things to output:
-    # id of the test object
-    # g1_fft
-    # g2_fft
-    # g1_photon
-    # g2_photon
-    # max_diff_over_max_image
-    
+    file_output = open(config['filename_output'],'w')
+       
     output_row_fmt = '%d\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t' + \
                         '%2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\n'
     output_header = '# id max_diff_over_max_image ' +  \
@@ -112,16 +107,32 @@ def testShootVsFfft():
 
     file_output.write(output_header)
 
-    # loop throught the galaxy catalog
-    for ig,obj in enumerate(config['objects']):
+    # decide if we use list of galaxies in the yaml file or a sersic catalog
 
-        # get the GSObjects 
-        gso = getGSObjects(obj)
-        
+    if config['use_galaxies_from'] == 'list_gals':
+        n_gals = len(config['list_gals'])
+        gso_next = getGSObjectListGals      
+    elif config['use_galaxies_from'] == 'sersics_sample':
+        global sersic_sample_catalog
+        sersic_sample_catalog = numpy.loadtxt(config['sersics_sample']['catalog_filename'])
+        n_gals = sersic_sample_catalog.shape[0]
+        gso_next = getGSObjectSersicsSample  
+    else:
+        logger.error('%s in unknown galaxies input form - use list_gals or sersics_sample' % use_galaxies_from )
+
+    # loop through the galaxies
+
+    for ig in range(n_gals):
+
         logger.info('------------------ galaxy %g ------------------' % ig)
 
+        # get the next galaxy
+        gso = gso_next(ig)
 
-        if obj['psf']['type'] != 'none':
+        # if somehow we counldn't get the next galaxy
+        if gso == None: continue
+
+        if gso['psf'] != None:
             
             # create the PSF
 
@@ -130,12 +141,10 @@ def testShootVsFfft():
                 image_psf = galsim.ImageF(config['image']['n_pix'],config['image']['n_pix'])
                 final_psf = galsim.Convolve([gso['psf'],gso['pix']])
                 final_psf.draw(image_psf,dx=config['image']['scale'])
-                logger.info('PSF of type %s is ready' % obj['psf']['type'])
             elif config['psf_draw_method'] == 'shoot':
                 logger.info('drawing PSF using drawShoot and %2.0e photons' % config['image']['n_photons'])
                 image_psf = galsim.ImageF(config['image']['n_pix'],config['image']['n_pix'])
                 gso['psf'].drawShoot(image_psf,dx=config['image']['scale'],n_photons=config['image']['n_photons'])
-                logger.info('drawShoot is ready for PSF of type %s' % obj['psf']['type'])
             else:
                 logger.error('%s not a valid PSF drawing method, use \'fft\' or \'shoot\' in the config file' % config['psf_draw_method'])
                 # warnings.error('')
@@ -162,6 +171,35 @@ def testShootVsFfft():
         diff_image = image_gal_shoot.array - image_gal_fft.array
         max_diff_over_max_image = abs(diff_image.flatten()).max()/image_gal_fft.array.flatten().max()
 
+
+        if args.save_plots:
+
+            # plot the pixel differences
+            pylab.figure()
+            pylab.clf()
+            
+            pylab.subplot(131)
+            pylab.imshow(image_gal_shoot.array,interpolation='nearest')
+            pylab.colorbar()
+            pylab.title('image_shoot')
+            
+            pylab.subplot(132)
+            pylab.imshow(image_gal_fft.array,interpolation='nearest')
+            pylab.colorbar()
+            pylab.title('image_fft')
+            
+            pylab.subplot(133)
+            pylab.imshow(diff_image,interpolation='nearest')
+            pylab.colorbar()
+            pylab.title('image_shoot - image_fft')
+
+            filename_fig = 'photon_vs_fft_gal%d.png' % ig
+            pylab.gcf().set_size_inches(20,10)
+            pylab.savefig(filename_fig)
+            pylab.close()
+            logger.info('saved figure %s' % filename_fig)
+
+
         # find adaptive moments
         moments_shoot = galsim.FindAdaptiveMom(image_gal_shoot)
         moments_fft   = galsim.FindAdaptiveMom(image_gal_fft)
@@ -176,12 +214,12 @@ def testShootVsFfft():
         # display resutls
 
         logger.info('max(residual) / max(image_fft) = %2.4e ' % ( max_diff_over_max_image )  )
-        logger.debug('adaptive moments fft                E1=% 2.6f\tE2=% 2.6f\tsigma=%2.6f' % (moments_fft_g1, moments_fft_g2, moments_fft_sigma))
-        logger.debug('adaptive moments shoot              E1=% 2.6f\tE2=% 2.6f\tsigma=%2.6f' % (moments_shoot_g1, moments_shoot_g2, moments_shoot_sigma))
+        logger.debug('adaptive moments fft     E1=% 2.6f\tE2=% 2.6f\tsigma=%2.6f' % (moments_fft_g1, moments_fft_g2, moments_fft_sigma))
+        logger.debug('adaptive moments shoot   E1=% 2.6f\tE2=% 2.6f\tsigma=%2.6f' % (moments_shoot_g1, moments_shoot_g2, moments_shoot_sigma))
 
 
         
-        if obj['psf']['type'] == 'none':
+        if gso['psf'] == None:
 
             hsm_obs_shoot_e1 = hsm_obs_shoot_e2 = hsm_obs_fft_e1 = hsm_obs_fft_e2 = \
             hsm_corr_shoot_e1 =  hsm_corr_shoot_e2  = hsm_corr_fft_e1 = hsm_corr_fft_e2 =\
@@ -236,32 +274,50 @@ def testShootVsFfft():
             moments_fft_sigma, moments_shoot_sigma, hsm_fft_sigma, hsm_shoot_sigma
             ))
 
-        if args.save_plots:
 
-            # plot the pixel differences
-            pylab.figure()
-            pylab.clf()
-            
-            pylab.subplot(131)
-            pylab.imshow(image_gal_shoot.array,interpolation='nearest')
-            pylab.colorbar()
-            pylab.title('image_shoot')
-            
-            pylab.subplot(132)
-            pylab.imshow(image_gal_fft.array,interpolation='nearest')
-            pylab.colorbar()
-            pylab.title('image_fft')
-            
-            pylab.subplot(133)
-            pylab.imshow(diff_image,interpolation='nearest')
-            pylab.colorbar()
-            pylab.title('image_shoot - image_fft')
+def getGSObjectSersicsSample(i):
 
-            filename_fig = 'photon_vs_fft_gal%d.png' % ig
-            pylab.gcf().set_size_inches(20,10)
-            pylab.savefig(filename_fig)
-            pylab.close()
-            logger.info('saved figure %s' % filename_fig)
+    random_seed = 1512413
+    rng = galsim.UniformDeviate(random_seed) 
+
+    # ident  n_sersic  half_light_radius [arcsec] |g|
+    pix = galsim.Pixel(config['image']['scale'])
+
+    sersic_index=sersic_sample_catalog[i,1]
+    if sersic_index < 0.5 or sersic_index > 4.2:
+        logger.warning('skipping galaxy %d in the Sersics catalogue - value %2.2f is out of range [0.5,4.2]' % (i,sersic_index))
+        return None
+
+    hlr = sersic_sample_catalog[i,2]
+    g = sersic_sample_catalog[i,3]
+
+    profile = galsim.Sersic(n=sersic_index, half_light_radius=hlr)
+    beta = 2.*math.pi * rng() * galsim.radians
+    profile.applyShear(g=g,beta=beta)
+    dx = rng()* config['sersics_sample']['max_random_dx']
+    dy = rng()* config['sersics_sample']['max_random_dx']
+    profile.applyShift(dx=dx, dy=dy)
+
+    if config['sersics_sample']['psf_type'] == 'space':
+        lam=700.
+        diam=1.3
+        psf = galsim.Airy(lam_over_diam=lam/diam/100.)
+    elif config['sersics_sample']['psf_type'] == 'ground':
+        fwhm = 0.65 # arcsec
+        atmos = galsim.Moffat(beta=3,fwhm=fwhm)
+        optics = galsim.Airy(lam_over_diam = 0.5 * fwhm )
+        psf = galsim.Convolve([atmos,optics])
+    else:
+        logger.error('%s in unknown psf_type. Use \'space\' or \'ground' % config['sersics_sample']['psf_type'])
+        return None
+
+    gso = {}
+    gso['pix'] = pix
+    gso['gal'] = profile
+    gso['psf'] = psf
+    gso['galpsf'] = galsim.Convolve([gso['gal'],gso['psf']])
+
+    return gso
 
 
 
@@ -273,7 +329,7 @@ def plotEllipticityBiases():
     let's use this form.
     """
 
-    data = numpy.loadtxt(filename_output)
+    data = numpy.loadtxt(config['filename_output'],ndmin=2)
 
     n_test_gals = data.shape[0]
 
@@ -324,9 +380,9 @@ if __name__ == "__main__":
     config = yaml.load(open(filename_config,'r'))
 
     # run the test
-    testShootVsFfft()
+    testShootVsFft()
 
-    # save the figure
+    # save a figure showing scatter on ellipticity fractional difference between shoot and fft
     plotEllipticityBiases()
 
 
