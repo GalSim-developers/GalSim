@@ -42,8 +42,8 @@ def gsobject_compare(obj1, obj2, conv=False):
         obj1 = galsim.Convolve([obj1,gauss])
         obj2 = galsim.Convolve([obj2,gauss])
 
-    im1 = galsim.ImageF(16,16)
-    im2 = galsim.ImageF(16,16)
+    im1 = galsim.ImageD(16,16)
+    im2 = galsim.ImageD(16,16)
     obj1.draw(dx=0.2, image=im1)
     obj2.draw(dx=0.2, image=im2)
     np.testing.assert_array_almost_equal(im1.array, im2.array, 9)
@@ -464,7 +464,9 @@ def test_pixel():
         gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
         gal3b = galsim.Pixel(xw = 2, yw = 2.1, flux = 1.e6)
         gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
-        gsobject_compare(gal3a, gal3b)
+        # Drawing sheared Pixel without convolution doesn't work, so we need to 
+        # do the extra convolution by a Gaussian here (hence the final True arg.).
+        gsobject_compare(gal3a, gal3b, True)
 
         gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
         gal4b = galsim.Pixel(xw = 1, yw = 1.2, flux = 50)
@@ -474,7 +476,7 @@ def test_pixel():
         gal4b.applyMagnification(1.03)
         gal4b.applyShear(g1 = 0.03, g2 = -0.05)
         gal4b.applyShift(dx = 0.7, dy = -1.2) 
-        gsobject_compare(gal4a, gal4b)
+        gsobject_compare(gal4a, gal4b, True)
 
 
     t2 = time.time()
@@ -948,6 +950,7 @@ if __name__ == "__main__":
     test_exponential()
     test_sersic()
     test_devaucouleurs()
+    test_pixel()
     test_realgalaxy()
     test_interpolated_image()
     test_add()

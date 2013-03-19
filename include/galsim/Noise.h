@@ -246,8 +246,10 @@ namespace galsim {
         template <typename T>
         void applyTo(ImageView<T> data) 
         {
-            // Above this many e's, assume Poisson distribution =Gaussian 
-            static const double MAX_POISSON=1.e5;
+            // Above this many e's, assume Poisson distribution == Gaussian 
+            // The Gaussian deviate is about 20% faster than Poisson, and for high N
+            // they are virtually identical.
+            const double MAX_POISSON=1.e5;
             // Typedef for image row iterable
             typedef typename ImageView<T>::iterator ImIter;
 
@@ -263,7 +265,6 @@ namespace galsim {
                         pd.setMean(*it);
                         *it = T(pd());
                     } else {
-                        // ??? This might be even slower than large-N Poisson...
                         gd.setSigma(sqrt(*it));
                         *it = T(*it + gd());
                     }
@@ -403,8 +404,10 @@ namespace galsim {
         template <typename T>
         void applyTo(ImageView<T> data) 
         {
-            // Above this many e's, assume Poisson distribution =Gaussian 
-            static const double MAX_POISSON=1.e5;
+            // Above this many e's, assume Poisson distribution == Gaussian 
+            // The Gaussian deviate is about 20% faster than Poisson, and for high N
+            // they are virtually identical.
+            const double MAX_POISSON=1.e5;
             // Typedef for image row iterable
             typedef typename ImageView<T>::iterator ImIter;
 
@@ -417,13 +420,12 @@ namespace galsim {
                 for (int y = data.getYMin(); y <= data.getYMax(); y++) {  // iterate over y
                     ImIter ee = data.rowEnd(y);
                     for (ImIter it = data.rowBegin(y); it != ee; ++it) {
+                        if (*it <= 0.) continue;
                         double electrons = *it * _gain;
-                        if (electrons <= 0.) continue;
                         if (electrons < MAX_POISSON) {
                             pd.setMean(electrons);
                             *it = T(pd() / _gain);
                         } else {
-                            // ??? This might be even slower than large-N Poisson...
                             gd.setSigma(sqrt(electrons)/_gain);
                             *it = T(*it + gd());
                         }

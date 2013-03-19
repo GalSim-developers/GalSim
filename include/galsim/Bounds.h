@@ -61,10 +61,13 @@ namespace galsim {
         /// @brief Overloaded /= operator for scalar division.
         Position<T>& operator/=(const T rhs) { x/=rhs; y/=rhs; return *this; }
 
-        /// @brief Overloaded * vector multiplication operator for scalar on rhs.
+        /// @brief Overloaded * operator for scalar on rhs.
         Position<T> operator*(const T rhs) const { return Position<T>(x*rhs, y*rhs); }
 
-        /// @brief Overloaded / vector division operator for scalar on rhs.
+        /// @brief Allow T * Position as well.
+        friend Position<T> operator*(const T lhs, const Position<T>& rhs) { return rhs*lhs; }
+
+        /// @brief Overloaded / operator for scalar on rhs.
         Position<T> operator/(const T rhs) const { return Position<T>(x/rhs, y/rhs); }
 
         /// @brief Unary negation (x, y) -> (-x, -y).

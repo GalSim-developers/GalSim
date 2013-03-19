@@ -1,17 +1,54 @@
+# Copyright 2012, 2013 The GalSim developers:
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+#
+# GalSim is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# GalSim is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+#
 
 import os
 import time
 import galsim
+
+valid_input_types = { 
+    # The values are tuples with:
+    # - the class name to build.
+    # - a list of keys to ignore on the initial creation (e.g. PowerSpectrum has values that are 
+    #   used later).
+    # - whether the class has a nobjects field, in which case it also must have a constructor
+    #   kwarg nobjects_only to efficiently do only enough to calculate nobjects.
+    'catalog' : ('InputCatalog', [], True), 
+    'real_catalog' : ('RealGalaxyCatalog', [], True),
+    'nfw_halo' : ('NFWHalo', [], False),
+    'power_spectrum' : ('PowerSpectrum',
+                        # power_spectrum uses these extra parameters for buildGriddedShears later.
+                        ['grid_spacing', 'interpolant'], 
+                        False),
+    'fits_header' : ('FitsHeader', [], False), 
+}
+
 
 def ProcessInput(config, file_num=0, logger=None):
     """
     Process the input field, reading in any specified input files or setting up
     any objects that need to be initialized.
 
-    These objects are saved in the top level of config:
+    Each item in the above valid_input_types will be built and available at the top level
+    of config.  e.g.;
         config['catalog'] = the catalog specified by config.input.catalog, if provided.
         config['real_catalog'] = the catalog specified by config.input.real_catalog, if provided.
-        config['nfw_halo'] = an NFWHalo specified by config.input.nfw_halo, if provided.
+        etc.
     """
     config['seq_index'] = file_num
     # Process the input field (read any necessary input files)
@@ -22,30 +59,64 @@ def ProcessInput(config, file_num=0, logger=None):
 
         # Read all input fields provided and create the corresponding object
         # with the parameters given in the config file.
-        input_type = { 
-                'catalog' : 'InputCatalog' , 
-                'real_catalog' : 'RealGalaxyCatalog' ,
-                'nfw_halo' : 'NFWHalo',
-                'power_spectrum' : 'PowerSpectrum'
-                }
-        for key in [ k for k in input_type.keys() if k in input ]:
+        #print 'valid_input_types = ',valid_input_types
+        for key in [ k for k in valid_input_types.keys() if k in input ]:
+            #print 'key = ',key
             field = input[key]
-            field['type'] = input_type[key]
-            ignore = []
-            if key == 'catalog' and 'file_name' in field:
-                SetDefaultExt(field['file_name'],'.asc')
-            if key == 'power_spectrum':
-                # This is used for buildGriddedShears later.
-                ignore += ['grid_spacing', 'interpolant']
+            #print 'field = ',field
+            field['type'], ignore = valid_input_types[key][0:2]
+            #print 'type, ignore = ',field['type'],ignore
             input_obj = galsim.config.gsobject._BuildSimple(field, key, config, ignore)[0]
-            if logger and  key in ['catalog', 'real_catalog']:
+            #print 'input_obj = ',input_obj
+            if logger and  valid_input_types[key][2]:
                 logger.info('Read %d objects from %s',input_obj.nobjects,key)
             # Store input_obj in the config for use by BuildGSObject function.
             config[key] = input_obj
 
         # Check that there are no other attributes specified.
-        valid_keys = input_type.keys()
+        valid_keys = valid_input_types.keys()
         galsim.config.CheckAllParams(input, 'input', ignore=valid_keys)
+
+
+def ProcessInputNObjects(config):
+    """Process the input field, just enough to determine the number of objects.
+    """
+    if 'input' in config:
+        input = config['input']
+        if not isinstance(input, dict):
+            raise AttributeError("config.input is not a dict.")
+
+        #print 'valid_input_types = ',valid_input_types
+        for key in valid_input_types.keys():
+            #print 'key = ',key
+            #print 'valid_input_types[key] = ',valid_input_types[key]
+            if key in input and valid_input_types[key][2]:
+                field = input[key]
+                #print 'field = ',field
+                type, ignore = valid_input_types[key][0:2]
+                #print 'type, ignore = ',type,ignore
+                try:
+                    if type in galsim.__dict__:
+                        init_func = eval("galsim."+type)
+                    else:
+                        init_func = eval(type)
+                except:
+                    raise TypeError('Invalid input type = %s in valid_input_types'%type)
+                kwargs = galsim.config.GetAllParams(field, key, config,
+                                                    req = init_func._req_params,
+                                                    opt = init_func._opt_params,
+                                                    single = init_func._single_params,
+                                                    ignore = ignore)[0]
+                kwargs['nobjects_only'] = True
+                try:
+                    input_obj = init_func(**kwargs)
+                except Exception, err:
+                    raise RuntimeError("Unable to build %s with nobjects_only=True.\n"%type +
+                                    "Original error message: %s"%err)
+                #print 'Found nobjects = %d for %s'%(input_obj.nobjects,key)
+                return input_obj.nobjects
+    # If didn't find anything, return None.
+    return None
 
 
 def Process(config, logger=None):
@@ -80,34 +151,6 @@ def Process(config, logger=None):
     valid_types = [ 'Fits' , 'MultiFits', 'DataCube' ]
     if type not in valid_types:
         raise AttributeError("Invalid output.type=%s."%type)
-
-    # Process the input field.  We'll do this again before subsequent files, 
-    # but we may need some information from the input catalogs to help out on 
-    # the number of images and such.
-    ProcessInput(config, file_num=0, logger=logger)
-
-    # If (1) type is MultiFits or DataCube,
-    #    (2) the image type is Single, and
-    #    (3) there is an input catalog,
-    # then we don't require the nimages to be set in advance.
-    # We let nimages default to input_cat.nobjects
-    if ( ( type == 'MultiFits' or type == 'DataCube' ) and
-         'nimages' not in output and
-         ( 'image' not in config or 'type' not in config['image'] or 
-           config['image']['type'] == 'Single' ) and
-         'catalog' in config ):
-        output['nimages'] = config['catalog'].nobjects
-
-    # Also, if (1) type is Fits,
-    #          (2) the image type is Scattered, and
-    #          (3) there is an input catalog
-    # we do the same thing for image['nobjects']
-    if ( type == 'Fits' and 
-         'image' in config and 'type' in config['image'] and
-         config['image']['type'] == 'Scattered' and
-         'nobjects' not in config['image'] and
-         'catalog' in config ):
-        config['image']['nobjects'] = config['catalog'].nobjects
 
     # build_func is the function we'll call to build each file.
     build_func = eval('Build'+type)
@@ -175,9 +218,15 @@ def Process(config, logger=None):
         from multiprocessing import Process, Queue, current_process
 
         def worker(input, output):
+            import time
             for (kwargs, file_num, file_name) in iter(input.get, 'STOP'):
+                #print current_process().name,': worker got: ',file_num,file_name,kwargs
+                ProcessInput(kwargs['config'], file_num=file_num)
+                #print current_process().name,': After ProcessInput for file ',file_num
                 result = build_func(**kwargs)
+                #print current_process().name,': result for ',file_num,' = ',result
                 output.put( (result, file_num, file_name, current_process().name) )
+                #print current_process().name,': put the result for ',file_num,' on output queue'
 
         # Set up the task list
         task_queue = Queue()
@@ -193,6 +242,7 @@ def Process(config, logger=None):
         last_file_name[key] = None
 
     for file_num in range(nfiles):
+        #print 'file, image, obj = ',file_num, image_num, obj_num
         # Set the index for any sequences in the input or output parameters.
         # These sequences are indexed by the file_num.
         # (In image, they are indexed by image_num, and after that by obj_num.)
@@ -226,10 +276,17 @@ def Process(config, logger=None):
         if nproc2:
             kwargs['nproc'] = nproc2
 
+        import copy
+        kwargs['config'] = copy.deepcopy(config)
+        output = kwargs['config']['output']
+        # This also updates nimages or nobjects as needed if they are being automatically
+        # set from an input catalog.
+        nobj = nobj_func(kwargs['config'],file_num,image_num)
+
         if type in [ 'MultiFits', 'DataCube' ]:
             if 'nimages' not in output:
                 raise AttributeError("Attribute nimages is required for output.type = %s"%type)
-            kwargs['nimages'] = galsim.config.ParseValue(output, 'nimages', config, int)[0]
+            kwargs['nimages'] = galsim.config.ParseValue(output,'nimages',kwargs['config'],int)[0]
 
         # Check if we need to build extra images for write out as well
         for extra_key in [ key for key in extra_keys if key in output ]:
@@ -247,7 +304,7 @@ def Process(config, logger=None):
                 ignore.append('include_obj_var')
             if 'file_name' in output_extra:
                 SetDefaultExt(output_extra['file_name'],'.fits')
-            params, safe = galsim.config.GetAllParams(output_extra, extra_key, config,
+            params, safe = galsim.config.GetAllParams(output_extra,extra_key,kwargs['config'],
                                                       opt=opt, single=single, ignore=ignore)
 
             if 'file_name' in params:
@@ -275,27 +332,20 @@ def Process(config, logger=None):
             else:
                 kwargs[ extra_key+'_hdu' ] = params['hdu']
     
-        # Before building each file, (re-)process the input field.
-        #print 'Before re-processInput k = ',k
-        if file_num > 0:
-            ProcessInput(config, file_num=file_num, logger=logger)
-
         # This is where we actually build the file.
         # If we're doing multiprocessing, we send this information off to the task_queue.
         # Otherwise, we just call build_func.
         if nproc > 1:
-            import copy
-            kwargs['config'] = copy.deepcopy(config)
+            #print 'put task on the queue: ',file_num,file_name,kwargs
             task_queue.put( (kwargs, file_num, file_name) )
         else:
-            kwargs['config'] = config
+            ProcessInput(kwargs['config'], file_num=file_num, logger=logger)
             # Apparently the logger isn't picklable, so can't send that for nproc > 1
             kwargs['logger'] = logger 
             t = build_func(**kwargs)
             if logger:
                 logger.warn('File %d = %s: time = %f sec', file_num, file_name, t)
 
-        nobj = nobj_func(config,file_num,image_num)
         # nobj is a list of nobj for each image in that file.
         # So len(nobj) = nimages and sum(nobj) is the total number of objects
         image_num += len(nobj)
@@ -316,6 +366,7 @@ def Process(config, logger=None):
         # Log the results.
         for k in range(nfiles):
             t, file_num, file_name, proc = done_queue.get()
+            #print 'received results for ',file_num,file_name,t,proc
             if logger:
                 logger.warn('%s: File %d = %s: time = %f sec', proc, file_num, file_name, t)
 
@@ -609,6 +660,13 @@ def GetNObjForFits(config, file_num, image_num):
 def GetNObjForMultiFits(config, file_num, image_num):
     ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc' ]
     req = { 'nimages' : int }
+    # Allow nimages to be automatic based on input catalog if image type is Single
+    if ( 'nimages' not in config['output'] and 
+         ( 'image' not in config or 'type' not in config['image'] or 
+           config['image']['type'] == 'Single' ) ):
+        nobj = ProcessInputNObjects(config)
+        if nobj:
+            config['output']['nimages'] = ProcessInputNObjects(config)
     params = galsim.config.GetAllParams(config['output'],'output',config,ignore=ignore,req=req)[0]
     config['seq_index'] = file_num
     nimages = params['nimages']
@@ -620,6 +678,13 @@ def GetNObjForMultiFits(config, file_num, image_num):
 def GetNObjForDataCube(config, file_num, image_num):
     ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc' ]
     req = { 'nimages' : int }
+    # Allow nimages to be automatic based on input catalog if image type is Single
+    if ( 'nimages' not in config['output'] and 
+         ( 'image' not in config or 'type' not in config['image'] or 
+           config['image']['type'] == 'Single' ) ):
+        nobj = ProcessInputNObjects(config)
+        if nobj:
+            config['output']['nimages'] = ProcessInputNObjects(config)
     params = galsim.config.GetAllParams(config['output'],'output',config,ignore=ignore,req=req)[0]
     config['seq_index'] = file_num
     nimages = params['nimages']
@@ -639,9 +704,16 @@ def GetNObjForImage(config, image_num):
     if image_type == 'Single':
         return 1
     elif image_type == 'Scattered':
+        # Allow nobjects to be automatic based on input catalog
         if 'nobjects' not in config['image']:
-            raise AttributeError("Attribute nobjects is required for image.type = Scattered")
-        return galsim.config.ParseValue(config['image'],'nobjects',config,int)[0]
+            nobj = ProcessInputNObjects(config)
+            if nobj:
+                config['image']['nobjects'] = nobj
+                return nobj
+            else:
+                raise AttributeError("Attribute nobjects is required for image.type = Scattered")
+        else:
+            return galsim.config.ParseValue(config['image'],'nobjects',config,int)[0]
     elif image_type == 'Tiled':
         if 'nx_tiles' not in config['image'] or 'ny_tiles' not in config['image']:
             raise AttributeError(

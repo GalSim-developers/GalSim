@@ -12,13 +12,13 @@ python_install_dir = os.path.join(env['PYPREFIX'], python_dir)
 
 py_files = glob.glob("*.py")
 
-subdir_list = [ 'config' ]
+subdir_list = [ 'config', 'des' ]
 
 py_files_sub = []
 python_install_subdir = []
 for subdir in subdir_list:
-    py_files_sub.append(glob.glob(os.path.join("config","*.py")))
-    python_install_subdir.append(os.path.join(python_install_dir,"config"))
+    py_files_sub.append(glob.glob(os.path.join(subdir,"*.py")))
+    python_install_subdir.append(os.path.join(python_install_dir,subdir))
 
 # If the python_install_dir being used isn't in the sys.path, then warn the user
 # that they should add that path to their PYTHONPATH environment variable.

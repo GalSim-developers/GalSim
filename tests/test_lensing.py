@@ -45,6 +45,7 @@ def pkflat(k):
     return 0.01+np.zeros_like(k)
 
 def test_nfwhalo():
+    """Various tests of the NFWHalo class (against reference data, and basic sanity tests)"""
     import time
     t1 = time.time()
 
