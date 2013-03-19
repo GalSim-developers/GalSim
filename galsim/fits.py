@@ -808,11 +808,15 @@ class FitsHeader(object):
     After construction, you can access a header value by
 
         value = fits_header[key]
-        value = fits_header.get(key, default)
 
-    You can also get the list of keys with
+    In fact, all the normal functions available for an immutable dict are available:
     
         keys = fits_header.keys()
+        items = fits_header.items()
+        for key in fits_header:
+            value = fits_header[key]
+        value = fits_header.get(key, default)
+        etc.
 
     Constructor parameters:
 
@@ -876,10 +880,32 @@ class FitsHeader(object):
         else:
             fits = hdu_list
         check_hdu(fits, pyfits_compress)
-        self.header = fits.header
+        import copy
+        self.header = copy.copy(fits.header)
+
+        # If we opened a file, don't forget to close it.
+        if fin: 
+            hdu_list.close()
+            if isinstance(fin, basestring):
+                # In this case, it is a file name that we need to delete.
+                import os
+                os.remove(fin)
+            else:
+                fin.close()
+
+    # The rest of the functions are typical non-mutating functions for a dict, for which we just
+    # pass the request along to self.header.
+    def __len__(self):
+        return len(self.header)
 
     def __getitem__(self, key):
         return self.header[key]
+
+    def __contains__(self, key):
+        return key in self.header
+
+    def __iter__(self):
+        return self.header.__iter__
 
     def get(self, key, default=None):
         return self.header.get(key, default)
@@ -887,7 +913,20 @@ class FitsHeader(object):
     def keys(self):
         return self.header.keys()
 
-    # Are there any other dict methods we should enable here?
+    def values(self):
+        return self.header.values()
+
+    def items(self):
+        return self.header.iteritems()
+
+    def iterkeys(self):
+        return self.header.iterkeys()
+
+    def itervalues(self):
+        return self.header.itervalues()
+
+    def iteritems(self):
+        return self.header.iteritems()
 
 
 # inject write as methods of Image classes
