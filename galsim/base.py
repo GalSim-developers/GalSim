@@ -608,7 +608,7 @@ class GSObject(object):
         that you have provided a large enough image to catch most of the flux.  For example:
         
             obj.drawShoot(image)
-            assert added_flux > 0.99 * obj.getFlux()
+            assert image.added_flux > 0.99 * obj.getFlux()
 
         The appropriate threshold will depend on your particular application, including what kind
         of profile the object has, how big your image is relative to the size of your object, 
