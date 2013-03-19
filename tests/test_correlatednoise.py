@@ -599,7 +599,6 @@ def test_copy():
             cf_test1, cf_test2,
             err_msg="Copied correlation function does not replicate the parent correlation "+
             "funtion when queried using ._profile.xValue().")
-    t2 = time.time()
     # Check that the copied correlated noise generates the same noise field as its parent when
     # they are initialized with the same RNG immediately prior to noise generation
     outim1 = galsim.ImageD(smallim_size, smallim_size)
@@ -620,6 +619,7 @@ def test_copy():
         outim1.array, outim2.array, decimal=decimal_high_precision,
         err_msg="Copied correlated noise does not produce the same noise field as the parent "+
         "despite sharing the same RNG.")
+    t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
 def test_convolve_multiple_kernel_consistency():
@@ -770,6 +770,48 @@ def test_cosmos_and_whitening():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
+def test_convolve_cosmos():
+    """Test that a COSMOS noise field convolved with a ground based PSF-style kernel matches the
+    output of the correlated noise model modified with the convolveWith method.
+    """
+    t1 = time.time()
+    gd = galsim.GaussianDeviate(rseed)
+    cn = galsim.getCOSMOSNoise(gd, '../examples/data/acs_I_unrot_sci_20_cf.fits')
+    cosimage = galsim.ImageD(largeim_size, largeim_size) # large image to beat down noise
+    cosimage.setScale(1.)
+    # Define a PSF with which to convolve the noise field
+    psf = galsim.Moffat(beta=3.85, fwhm=2.7)
+    # Then define the convolved cosmos correlated noise model
+    conv_cn = cn.copy()
+    conv_cn.convolveWith(psf)
+    conv_cn.setVariance(3.)
+    # Then draw the correlation function for this correlated noise as the reference
+    refim = galsim.ImageD(smallim_size, smallim_size)
+    conv_cn.draw(refim, dx=1.)
+    # Now start the tests
+    # Generate a COSMOS noise field, read it into an InterpolatedImage and then convolve it with psf
+    cosimage.addNoise(cn)
+    imobj = galsim.InterpolatedImage(
+        cosimage, calculate_stepk=False, calculate_maxk=False, normalization='sb')
+    cimobj = galsim.Convolve(imobj, psf)
+    convimage = galsim.ImageD(largeim_size, largeim_size)
+    cimobj.draw(convimage, dx=1., normalization='sb')
+    cn_test = galsim.CorrelatedNoise(gd, convimage, dx=1.) 
+    for i in range(nsum_test - 1):
+        cosimage.setZero()
+        cosimage.addNoise(cn)
+        imobj = galsim.InterpolatedImage(
+            cosimage, calculate_stepk=False, calculate_maxk=False, normalization='sb')
+        cimobj = galsim.Convolve(imobj, psf)
+        convimage.setZero()
+        cimobj.draw(convimage, dx=1., normalization='sb')
+        cn_test += galsim.CorrelatedNoise(gd, convimage, dx=1.) 
+    cn_test /= float(nsum_test)
+    testim = galsim.ImageD(smallim_size, smallim_size)
+    cn_test.draw(testim, dx=1.)
+    import matplotlib.pyplot as plt
+    plt.pcolor(testim.array); plt.colorbar()
+    plt.figure(); plt.pcolor(refim.array); plt.colorbar(); plt.show()
 
 if __name__ == "__main__":
     test_uncorrelated_noise_zero_lag()
@@ -786,3 +828,4 @@ if __name__ == "__main__":
     test_copy()
     test_convolve_multiple_kernel_consistency()
     test_cosmos_and_whitening()
+    test_convolve_cosmos()
