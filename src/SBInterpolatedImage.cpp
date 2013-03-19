@@ -308,7 +308,8 @@ namespace galsim {
         // probably not worth it.  It will probably be very rare that the final maxK
         // value of the FFT will be due to an SBInterpolatedImage.  Usually, this will
         // be convolved by a PSF that will have a smaller maxK.
-        _maxk = _xInterp->urange() * 2.*M_PI / _multi.getScale(); 
+        _uscale = _multi.getScale() / (2.*M_PI);
+        _maxk = _maxk1 = _xInterp->urange()/_uscale;
         dbg<<"maxk = "<<_maxk<<std::endl;
 
         _flux = calculateFlux();
@@ -359,16 +360,10 @@ namespace galsim {
     std::complex<double> SBInterpolatedImage::SBInterpolatedImageImpl::kValue(
         const Position<double>& k) const 
     {
-        const double TWOPI = 2.*M_PI;
-
         // Don't bother if the desired k value is cut off by the x interpolant:
-        double ux = k.x*_multi.getScale()/TWOPI;
-        if (std::abs(ux) > _xInterp->urange()) return std::complex<double>(0.,0.);
-        double uy = k.y*_multi.getScale()/TWOPI;
-        if (std::abs(uy) > _xInterp->urange()) return std::complex<double>(0.,0.);
-        double xKernelTransform = _xInterp->uval(ux, uy);
-
+        if (std::abs(k.x) > _maxk1 || std::abs(k.y) > _maxk1) return std::complex<double>(0.,0.);
         checkK();
+        double xKernelTransform = _xInterp->uval(k.x*_uscale, k.y*_uscale);
         return xKernelTransform * _ktab->interpolate(k.x, k.y, *_kInterp);
     }
 
@@ -418,19 +413,17 @@ namespace galsim {
         checkK();
 
         // Assign zeros for range that has |u| > maxu
-        const double uscale = _multi.getScale() / (2.*M_PI);
-        const double maxu = _xInterp->urange()/uscale;
-        int i1 = std::max( int((-maxu-x0)/dx) , 0 );
-        int i2 = std::min( int((maxu-x0)/dx)+1 , m );
-        int j1 = std::max( int((-maxu-y0)/dy) , 0 );
-        int j2 = std::min( int((maxu-y0)/dy)+1 , n );
+        int i1 = std::max( int((-_maxk1-x0)/dx) , 0 );
+        int i2 = std::min( int((_maxk1-x0)/dx)+1 , m );
+        int j1 = std::max( int((-_maxk1-y0)/dy) , 0 );
+        int j2 = std::min( int((_maxk1-y0)/dy)+1 , n );
         val.colRange(0,j1).setZero();
         val.subMatrix(0,i1,j1,j2).setZero();
         val.subMatrix(i2,m,j1,j2).setZero();
         val.colRange(j2,n).setZero();
         x0 += i1*dx;
         y0 += j1*dy;
-        xdbg<<"maxu = "<<maxu<<std::endl;
+        xdbg<<"_maxk1 = "<<_maxk1<<std::endl;
         xdbg<<"i1,i2 = "<<i1<<','<<i2<<std::endl;
         xdbg<<"j1,j2 = "<<j1<<','<<j2<<std::endl;
 
@@ -439,12 +432,12 @@ namespace galsim {
         typedef tmv::VIt<double,1,tmv::NonConj> It;
         It uxit = ux.begin();
         double x = x0;
-        for (int i=i1;i<i2;++i,x+=dx) *uxit++ = x * uscale;
+        for (int i=i1;i<i2;++i,x+=dx) *uxit++ = x * _uscale;
             
         tmv::Vector<double> uy(j2-j1);
         It uyit = uy.begin();
         double y = y0;
-        for (int j=j1;j<j2;++j,y+=dy) *uyit++ = y * uscale;
+        for (int j=j1;j<j2;++j,y+=dy) *uyit++ = y * _uscale;
 
         const InterpolantXY* kInterpXY = dynamic_cast<const InterpolantXY*>(_kInterp.get());
         if (kInterpXY) {
@@ -554,14 +547,12 @@ namespace galsim {
         typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
         checkK();
 
-        const double uscale = _multi.getScale() / (2.*M_PI);
-        double ux0 = x0 * uscale;
-        double uy0 = y0 * uscale;
-        double dux = dx * uscale;
-        double duy = dy * uscale;
-        double duxy = dxy * uscale;
-        double duyx = dyx * uscale;
-        const double maxu = _xInterp->urange();
+        double ux0 = x0 * _uscale;
+        double uy0 = y0 * _uscale;
+        double dux = dx * _uscale;
+        double duy = dy * _uscale;
+        double duxy = dxy * _uscale;
+        double duyx = dyx * _uscale;
 
         It valit(val.linearView().begin().getP(),1);
         for (int j=0;j<n;++j,x0+=dxy,y0+=dy,ux0+=duxy,uy0+=duy) {
@@ -570,7 +561,7 @@ namespace galsim {
             double ux = ux0;
             double uy = uy0;
             for (int i=0;i<m;++i,x+=dx,y+=dyx,ux+=dux,uy+=duyx) {
-                if (std::abs(ux) > maxu || std::abs(uy) > maxu) {
+                if (std::abs(x) > _maxk1 || std::abs(y) > _maxk1) {
                     *valit++ = 0.;
                 } else {
                     double xKernelTransform = _xInterp->uval(ux, uy);
