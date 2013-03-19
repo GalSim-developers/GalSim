@@ -183,6 +183,9 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         `correlated_noise` instance, the combined noise after using the applyWhiteningTo() method
         will be uncorrelated to a good approximation.
 
+        Note that the code doesn't check that the "if" above s true: the user MUST make sure this is
+        the case for the final noise to be uncorrelated.
+
         image.getScale() is used to determine the input image pixel separation, and if 
         image.getScale() <= 0 a pixel scale of 1 is assumed.
 
