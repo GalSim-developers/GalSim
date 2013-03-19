@@ -112,13 +112,19 @@ class InputCatalog(object):
         """Read in an input catalog from a FITS file.
         """
         import pyfits
-        import numpy
-        self.data = pyfits.getdata(self.file_name, hdu)
+        raw_data = pyfits.getdata(self.file_name, hdu)
         if pyfits.__version__ > '3.0':
-            self.names = self.data.columns.names
+            self.names = raw_data.columns.names
         else:
-            self.names = self.data.dtype.names
-        self.nobjects = len(self.data.field(self.names[0]))
+            self.names = raw_data.dtype.names
+        self.nobjects = len(raw_data.field(self.names[0]))
+        if (nobjects_only): return
+        # The pyfits raw_data is a FITS_rec object, which isn't picklable, so we need to 
+        # copy the fields into a new structure to make sure our InputCatalog is picklable.
+        # The simplest is probably a dict keyed by the field names, which we save as self.data.
+        self.data = {}
+        for name in self.names:
+            self.data[name] = raw_data.field(name)
         self.ncols = len(self.names)
         self.isfits = True
 
@@ -136,9 +142,9 @@ class InputCatalog(object):
                 raise KeyError("Column %s is invalid for catalog %s"%(col,self.file_name))
             if index < 0 or index >= self.nobjects:
                 raise IndexError("Object %d is invalid for catalog %s"%(index,self.file_name))
-            if index >= len(self.data.field(col)):
+            if index >= len(self.data[col]):
                 raise IndexError("Object %d is invalid for column %s"%(index,col))
-            return self.data.field(col)[index]
+            return self.data[col][index]
         else:
             try:
                 icol = int(col)
