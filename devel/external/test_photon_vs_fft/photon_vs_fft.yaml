@@ -1,21 +1,21 @@
-filename_output : photon_vs_fft_results.txt
+filename_output : photon_vs_fft_results_n300_nphot_2e7.txt
 
 # how to draw the PSF for HSM moments correction? 'fft' or 'shoot'
 psf_draw_method: 'fft'  
 
 image: 
  # number of pixels in the postage stamp
- n_pix: 50
+ n_pix: 64
  # pixel scale
  scale: 0.28   # arcsec
  # use a lot of photons          
- n_photons: 10000
+ n_photons: 20000000
 
 # decide whether you want to use the galaxies in the 'objects' key (see below)
 # or the provided sersics catalog with random ellipticity angles
 # with two hardcoded PSFs (space and ground)
 # with random PSF ellipticities and random centers
-use_galaxies_from: 'list_gals' # 'list_gals' or 'sersics_sample'
+use_galaxies_from: 'sersics_sample' # 'list_gals' or 'sersics_sample'
 
 # details for the sersics sample
 sersics_sample:
@@ -24,7 +24,19 @@ sersics_sample:
    max_random_dx: 0.5      # will be drawn from uniform (arcsec)
    max_random_psf_g: 0.2   # will be drawn from uniform
 
-
+# gsparams:
+#  minimum_fft_size: 128      
+#  maximum_fft_size: 4096     
+#  alias_threshold: 5.e-3     
+#  maxk_threshold: 1.e-3      
+#  kvalue_accuracy: 1.e-5     
+#  xvalue_accuracy: 1.e-5     
+#  shoot_accuracy: 1.e-5      
+#  realspace_relerr: 1.e-3    
+#  realspace_relerr: 1.e-6    
+#  integration_relerr: 1.e-5  
+#  integration_abserr: 1.e-7  
+ 
 # this dictionary contains the list of custom galaxies and PSFs, for which the test will be ran
 list_gals: 
 

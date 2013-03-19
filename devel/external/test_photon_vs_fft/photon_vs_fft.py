@@ -1,7 +1,7 @@
-"""@file validate_shoot_vs_fft.py 
+"""@file photon_vs_fft.py 
 Compare images created by FFT and photon shooting rendering methods in GalSim. 
 All configuration is specified in a config yaml file.
-See validate_shoot_vs_fft.yaml for an example.
+See photon_vs_fft.yaml for an example.
 The script generates the images and compares the pixel intensities as well as images moments.
 """
 
@@ -18,6 +18,7 @@ import math
 
 hsm_error_value = -1
 no_psf_value = -1
+dirname_figs = 'figures'
 
 def getGSObjectListGals(i):
     """
@@ -25,18 +26,19 @@ def getGSObjectListGals(i):
     This involves a galaxy, PSF and pixel kernels.
 
     Input:
-    obj - dictionary of a single object as defined in the config file
+    i - identifier of the object in the config file, under key list_gals 
 
     Output:
     gso - dictionary with GSObjects gso['gal'], gso['psf'], gso['pix'] 
     """
-
-    obj = config['list_gals'][i]
-        
+    
+    # initialise the output dict            
     gso = {}
 
-    # get the galaxy if it is a sersics bulge + disc model    
-          
+    # get the dictionary information about object i
+    obj = config['list_gals'][i]
+
+    # get the galaxy if it is a sersics bulge + disc model          
     logger.info('creating galaxy with PSF type %s' % (obj['psf']['type']))
 
     bulge = galsim.Sersic(n=obj['bulge']['sersic_index'], half_light_radius=obj['bulge']['half_light_radius'])
@@ -56,6 +58,7 @@ def getGSObjectListGals(i):
     # get pixel kernel
     gso['pix'] = galsim.Pixel(config['image']['scale'])
 
+    # get the PSF
     if obj['psf']['type'] == 'none':
 
             gso['psf'] = None
@@ -84,23 +87,28 @@ def getGSObjectListGals(i):
 
     return gso
 
-#
+
 def testShootVsFft():
     """
-    For each of the galaxies in the config['galaxies'], produces the images using FFT and photon shooting.
-    Displays plots of image residuals and shows differences in the moments measurements.
-    Saves the Adaptive moments resutls to file.
-    """
+    For all galaxies specified, produces the images using FFT and photon shooting.
+    Saves plots of image residuals and shows differences in the moments measurements.
+    Saves the adaptive moments and HSM results resutls to file if needed.
+    If HSM fails or no PSF is used, then all the HSM measurements are set to -1.
+    The galaxies can be suplied either from:
+    1) list_gals in the config file (see example photon_vs_fft.yaml)
+    2) a catalog of single Sersic profiles (see cosmos_sersics_sample_N300.asc) and additional configuration in the config file
+    """ 
 
     if config['image']['n_photons'] < 1e5:
         logger.warning('small number of photons, results may me meaningless')
 
+    # initialise the output file
     file_output = open(config['filename_output'],'w')
        
     output_row_fmt = '%d\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t' + \
                         '%2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\n'
     output_header = '# id max_diff_over_max_image ' +  \
-                                'E1_moments_fft E2_moments_fft E1_moments_photon E2_moments_photon ' + \
+                                'G1_moments_fft G2_moments_fft G1_moments_photon G2_moments_photon ' + \
                                 'E1_hsm_obs_fft E2_hsm_obs_fft E1_hsm_obs_photon E2_hsm_obs_photon ' + \
                                 'E1_hsm_corr_fft E2_hsm_corr_fft E1_hsm_corr_photon E2_hsm_corr_photon ' + \
                                 'moments_fft_sigma moments_shoot_sigma hsm_fft_sigma hsm_shoot_sigma\n'
@@ -108,7 +116,6 @@ def testShootVsFft():
     file_output.write(output_header)
 
     # decide if we use list of galaxies in the yaml file or a sersic catalog
-
     if config['use_galaxies_from'] == 'list_gals':
         n_gals = len(config['list_gals'])
         gso_next = getGSObjectListGals      
@@ -119,10 +126,15 @@ def testShootVsFft():
         gso_next = getGSObjectSersicsSample  
     else:
         logger.error('%s in unknown galaxies input form - use list_gals or sersics_sample' % use_galaxies_from )
+        sys.exit() 
+
 
     # loop through the galaxies
-
     for ig in range(n_gals):
+
+        # temporarily disable more than 100 Sersics, because the limit imposed in the C code
+        # if ig >= 100: break
+
 
         logger.info('------------------ galaxy %g ------------------' % ig)
 
@@ -147,10 +159,8 @@ def testShootVsFft():
                 gso['psf'].drawShoot(image_psf,dx=config['image']['scale'],n_photons=config['image']['n_photons'])
             else:
                 logger.error('%s not a valid PSF drawing method, use \'fft\' or \'shoot\' in the config file' % config['psf_draw_method'])
-                # warnings.error('')
+                sys.exit() 
 
-        # just draw the pixel PSF
-    
         # create shoot image
         logger.info('drawing galaxy using drawShoot and %2.0e photons' % config['image']['n_photons'])
         image_gal_shoot = galsim.ImageF(config['image']['n_pix'],config['image']['n_pix'])
@@ -171,7 +181,7 @@ def testShootVsFft():
         diff_image = image_gal_shoot.array - image_gal_fft.array
         max_diff_over_max_image = abs(diff_image.flatten()).max()/image_gal_fft.array.flatten().max()
 
-
+        # save plots if requested
         if args.save_plots:
 
             # plot the pixel differences
@@ -193,7 +203,7 @@ def testShootVsFft():
             pylab.colorbar()
             pylab.title('image_shoot - image_fft')
 
-            filename_fig = 'photon_vs_fft_gal%d.png' % ig
+            filename_fig = os.path.join(dirname_figs,'photon_vs_fft_gal%d.png' % ig)
             pylab.gcf().set_size_inches(20,10)
             pylab.savefig(filename_fig)
             pylab.close()
@@ -204,21 +214,21 @@ def testShootVsFft():
         moments_shoot = galsim.FindAdaptiveMom(image_gal_shoot)
         moments_fft   = galsim.FindAdaptiveMom(image_gal_fft)
 
-        moments_shoot_g1 = moments_shoot.observed_shape.getE1()
-        moments_shoot_g2 = moments_shoot.observed_shape.getE2()
+        moments_shoot_g1 = moments_shoot.observed_shape.getG1()
+        moments_shoot_g2 = moments_shoot.observed_shape.getG2()
         moments_shoot_sigma = moments_shoot.moments_sigma
-        moments_fft_g1   = moments_fft.observed_shape.getE1()
-        moments_fft_g2   = moments_fft.observed_shape.getE2()
+        moments_fft_g1   = moments_fft.observed_shape.getG1()
+        moments_fft_g2   = moments_fft.observed_shape.getG2()
         moments_fft_sigma = moments_fft.moments_sigma
         
         # display resutls
 
         logger.info('max(residual) / max(image_fft) = %2.4e ' % ( max_diff_over_max_image )  )
-        logger.debug('adaptive moments fft     E1=% 2.6f\tE2=% 2.6f\tsigma=%2.6f' % (moments_fft_g1, moments_fft_g2, moments_fft_sigma))
-        logger.debug('adaptive moments shoot   E1=% 2.6f\tE2=% 2.6f\tsigma=%2.6f' % (moments_shoot_g1, moments_shoot_g2, moments_shoot_sigma))
+        logger.debug('adaptive moments fft     G1=% 2.6f\tG2=% 2.6f\tsigma=%2.6f' % (moments_fft_g1, moments_fft_g2, moments_fft_sigma))
+        logger.debug('adaptive moments shoot   G1=% 2.6f\tG2=% 2.6f\tsigma=%2.6f' % (moments_shoot_g1, moments_shoot_g2, moments_shoot_sigma))
 
 
-        
+        # find HSM moments
         if gso['psf'] == None:
 
             hsm_obs_shoot_e1 = hsm_obs_shoot_e2 = hsm_obs_fft_e1 = hsm_obs_fft_e2 = \
@@ -228,11 +238,10 @@ def testShootVsFft():
         
         else:
 
-            # find HSM moments   
-
             hsm_shoot = galsim.EstimateShearHSM(image_gal_shoot,image_psf,strict=True)
             hsm_fft   = galsim.EstimateShearHSM(image_gal_fft,image_psf,strict=True)
 
+            # check if HSM has failed
             if hsm_shoot.error_message != "":
                 logger.debug('hsm_shoot failed with message %s' % hsm_shoot.error_message)
                 hsm_obs_shoot_e1 = hsm_obs_shoot_e2  = \
@@ -244,7 +253,8 @@ def testShootVsFft():
                 hsm_corr_shoot_e1 = hsm_shoot.corrected_e1
                 hsm_corr_shoot_e2 = hsm_shoot.corrected_e2
                 hsm_shoot_sigma = hsm_shoot.moments_sigma
-        
+
+            # check if HSM has failed       
             if hsm_fft.error_message != "":
                 logger.debug('hsm_fft failed with message %s' % hsm_fft.error_message)
                 hsm_obs_fft_e1 = hsm_obs_fft_e2  = \
@@ -266,7 +276,9 @@ def testShootVsFft():
             logger.debug('hsm size sigma fft   % 2.6f' % hsm_fft_sigma)
             logger.debug('hsm size sigma shoot % 2.6f' % hsm_shoot_sigma)
 
-     
+            
+
+        # save the output in the file
         file_output.write(output_row_fmt % (ig, max_diff_over_max_image, 
             moments_fft_g1,  moments_fft_g2, moments_shoot_g1,  moments_shoot_g2,
             hsm_obs_fft_e1, hsm_obs_fft_e2, hsm_obs_shoot_e1, hsm_obs_shoot_e2,
@@ -274,29 +286,59 @@ def testShootVsFft():
             moments_fft_sigma, moments_shoot_sigma, hsm_fft_sigma, hsm_shoot_sigma
             ))
 
+        del_gso(gso)
+
+# delete all GSObjects in the gso dict, and the dict itself
+def del_gso(gso):
+
+    for key in gso.keys():
+        del gso[key]
+
+    del gso
+
+
 
 def getGSObjectSersicsSample(i):
+    """
+    Gets all the objects needed to draw images of Sersic galaxy with index i, supplied in the Sersics sample.
+    Requiers a global sersic_sample_catalog to be initialised earlier.
+    Returns gso containig fields 'gal','psf','pix','galpsf'.
+    The PSF used here can be either 'ground' or 'space', 
+    is configured in the config['sersics_sample']['psf_type'].
+    Parameters of both PSFs are hardcoded here.
+    The angle for the galaxy is random.
+    The centroid shift is random uniform, according to configuration in config['sersics_sample'].
+    PSF ellipticity is random uniform, according to configuration in config['sersics_sample'].
+    """
 
+    # init random numbers
     random_seed = 1512413
     rng = galsim.UniformDeviate(random_seed) 
 
     # ident  n_sersic  half_light_radius [arcsec] |g|
     pix = galsim.Pixel(config['image']['scale'])
 
+    # get sersic profile parameter
     sersic_index=sersic_sample_catalog[i,1]
     if sersic_index < 0.5 or sersic_index > 4.2:
         logger.warning('skipping galaxy %d in the Sersics catalogue - value %2.2f is out of range [0.5,4.2]' % (i,sersic_index))
         return None
 
+    # get rest of parameters
     hlr = sersic_sample_catalog[i,2]
     g = sersic_sample_catalog[i,3]
 
+    # build the galaxy
     profile = galsim.Sersic(n=sersic_index, half_light_radius=hlr)
     beta = 2.*math.pi * rng() * galsim.radians
     profile.applyShear(g=g,beta=beta)
     dx = rng()* config['sersics_sample']['max_random_dx']
     dy = rng()* config['sersics_sample']['max_random_dx']
     profile.applyShift(dx=dx, dy=dy)
+
+    # build the PSF
+    psf_g = rng() * config['sersics_sample']['max_random_psf_g']
+    psf_beta = 2.*math.pi * rng() * galsim.radians
 
     if config['sersics_sample']['psf_type'] == 'space':
         lam=700.
@@ -309,8 +351,11 @@ def getGSObjectSersicsSample(i):
         psf = galsim.Convolve([atmos,optics])
     else:
         logger.error('%s in unknown psf_type. Use \'space\' or \'ground' % config['sersics_sample']['psf_type'])
-        return None
+        sys.exit()
 
+    psf.applyShear(g=g,beta=psf_beta)
+
+    # build the output dict
     gso = {}
     gso['pix'] = pix
     gso['gal'] = profile
@@ -322,57 +367,24 @@ def getGSObjectSersicsSample(i):
 
 
 
-def plotEllipticityBiases():
-    """
-    This function is a prototype for a plotting function. 
-    I am not sure what is the best plots/subplots combination to show what we want to see, so for now 
-    let's use this form.
-    """
 
-    data = numpy.loadtxt(config['filename_output'],ndmin=2)
 
-    n_test_gals = data.shape[0]
-
-    g1_photon=data[:,4]
-    g2_photon=data[:,5]
-    g1_fft=data[:,2]
-    g2_fft=data[:,3]
-
-    de1 = g1_fft-g1_photon
-    de2 = g2_fft-g2_photon 
-    
-    pylab.plot(de1/g1_photon,'x',label='E1')
-    pylab.plot(de2/g2_photon,'+',label='E2')
-                
-    pylab.xlabel('test galaxy #')
-    pylab.ylabel('de/e')
-    pylab.xlim([-1,n_test_gals])
-
-    pylab.gcf().set_size_inches(10,5)
-    pylab.legend()
-
-    filename_fig = 'photon_vs_fft_differences.png';
-    pylab.savefig(filename_fig)
-    pylab.close()
-
-    logger.info('saved figure %s' % filename_fig)
 
 if __name__ == "__main__":
 
 
-    description = 'Compare FFT vs photon shooting. Use the galaxies specified in the corresponding yaml file (see validation_shoot_vs_fft.yaml for an example)'
+    description = 'Compare FFT vs photon shooting. Use the galaxies specified in the corresponding yaml file (see photon_vs_fft.yaml for an example)'
 
     # parse arguments
     parser = argparse.ArgumentParser(description=description, add_help=True)
     parser.add_argument('filename_config', type=str, help='yaml config file, see photon_vs_fft.yaml for example.')
-    parser.add_argument('--save_plots', action="store_true", help='Whether to generate_images', default=False)
+    parser.add_argument('--save_plots', action="store_true", help='if to generate_images of galaxies and store them in ./images/', default=False)
     global args
     args = parser.parse_args()
 
-
     # set up logger
     logging.basicConfig(format="%(message)s", level=logging.DEBUG, stream=sys.stdout)
-    logger = logging.getLogger("validation_shoot_vs_fft") 
+    logger = logging.getLogger("photon_vs_fft") 
 
     # load the configuration file
     filename_config = args.filename_config
@@ -381,10 +393,5 @@ if __name__ == "__main__":
 
     # run the test
     testShootVsFft()
-
-    # save a figure showing scatter on ellipticity fractional difference between shoot and fft
-    plotEllipticityBiases()
-
-
 
 
