@@ -67,22 +67,21 @@ namespace galsim {
         /// @brief Boxcar is trivially sampled by drawing 2 uniform deviates.
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
-        // Override for better efficiency:
-        void fillKGrid(KTable& kt) const;
-        // Override to put in fractional edge values:
-        void fillXGrid(XTable& xt) const;
-
-        template <typename T>
-        double fillXImage(ImageView<T>& I, double gain) const;
-
-        double doFillXImage(ImageView<float>& I, double gain) const
-        { return fillXImage(I,gain); }
-        double doFillXImage(ImageView<double>& I, double gain) const
-        { return fillXImage(I,gain); }
-        double doFillXImage(ImageView<short>& I, double gain) const
-        { return fillXImage(I,gain); }
-        double doFillXImage(ImageView<int>& I, double gain) const
-        { return fillXImage(I,gain); }
+        // Override both for efficiency and to put in fractional edge values which
+        // don't happen with normal calls to xValue.
+        void fillXValue(tmv::MatrixView<double> val,
+                        double x0, double dx, int ix_zero,
+                        double y0, double dy, int iy_zero) const;
+        void fillXValue(tmv::MatrixView<double> val,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
+        // Overrides for better efficiency
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double x0, double dx, int ix_zero,
+                        double y0, double dy, int iy_zero) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
 
     private:
         double _xw;   ///< Boxcar function is `xw` x `yw` across.

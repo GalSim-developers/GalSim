@@ -50,6 +50,7 @@ def pk_flat_lim(k):
     return parr
 
 def test_nfwhalo():
+    """Various tests of the NFWHalo class (against reference data, and basic sanity tests)"""
     import time
     t1 = time.time()
 
