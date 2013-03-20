@@ -62,6 +62,9 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         self._profile_for_stored = None
         self._rootps_store = []
         self._rootps_whitening_store = []
+        # Also set up the cache for a stored value of the variance, needed for efficiency once the
+        # noise field can get convolved with other GSObjects making isAnalyticX() False
+        self._variance_stored = None
 
         # Cause any methods we don't want the user to have access to, since they don't make sense
         # for correlation functions and could cause errors in applyNoiseTo, to raise exceptions
@@ -155,6 +158,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         if self._profile_for_stored is not self._profile:
             self._rootps_store = []
             self._rootps_whitening_store = []
+            self._variance_stored = None
         # Set profile_for_stored for next time.
         self._profile_for_stored = self._profile
 
@@ -235,6 +239,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         if self._profile_for_stored is not self._profile:
             self._rootps_store = []
             self._rootps_whitening_store = []
+            self._variance_stored = None
         # Set profile_for_stored for next time.
         self._profile_for_stored = self._profile
 
@@ -379,8 +384,31 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
     def getVariance(self):
         """Return the point variance of this noise field, equal to its correlation function value at
         zero distance.
+
+        This is the variance of values in an image filled with noise according to this model.
         """
-        return self._profile.xValue(galsim.PositionD(0., 0.))
+        # Test whether we can simply return the zero-lag correlation function value, which gives the
+        # variance of an image of noise generated according to this model
+        if self._profile.isAnalyticX():
+            variance = self._profile.xValue(galsim.PositionD(0., 0.))
+        else:
+            # If the profile has changed since last time (or if we have never been here before),
+            # clear out the stored values.
+            if self._profile_for_stored is not self._profile:
+                self._rootps_store = []
+                self._rootps_whitening_store = []
+                self._variance_stored = None
+            # Set profile_for_stored for next time.
+            self._profile_for_stored = self._profile
+            # Then use cached version or rebuild if necessary
+            if self._variance_stored is not None:
+                variance = self._variance_stored
+            else:
+                imtmp = galsim.ImageD(1, 1)
+                self.draw(imtmp, dx=1.) # GalSim internals handle this correctly w/out folding
+                variance = imtmp.at(1, 1)
+                self._variance_stored = variance # Store variance and return 
+            return variance
 
     def scaleVariance(self, variance_ratio):
         """Multiply the variance of the noise field by variance_ratio.
