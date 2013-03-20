@@ -512,9 +512,9 @@ class PowerSpectrum(object):
 
         # interpolate if necessary
         g1,g2,kappa = [], [], []
-        for pos in [ galsim.PositionD(pos_x[i],pos_y[i]) for i in range(len(pos_x)) ]:
+        for iter_pos in [ galsim.PositionD(pos_x[i],pos_y[i]) for i in range(len(pos_x)) ]:
             # Check that the position is in the bounds of the interpolated image
-            if not self.bounds.includes(pos):
+            if not self.bounds.includes(iter_pos):
                 import warnings
                 warnings.warn(
                     "Warning: position (%f,%f) not within the bounds "%(pos.x,pos.y) +
@@ -524,13 +524,18 @@ class PowerSpectrum(object):
                 g2.append(0.)
                 kappa.append(0.)
             else:
-                g1.append(sbii_g1.xValue(pos+self.offset))
-                g2.append(sbii_g2.xValue(pos+self.offset))
+                g1.append(sbii_g1.xValue(iter_pos+self.offset))
+                g2.append(sbii_g2.xValue(iter_pos+self.offset))
                 if get_kappa:
-                    kappa.append(sbii_kappa.xValue(pos+self.offset))
+                    kappa.append(sbii_kappa.xValue(iter_pos+self.offset))
                 else:
                     kappa.append(0.)
-        if isinstance(pos[0], np.ndarray):
+        if isinstance(pos, galsim.PositionD):
+            if get_kappa:
+                return g1[0], g2[0], kappa[0]
+            else:
+                return g1[0], g2[0]
+        elif isinstance(pos[0], np.ndarray):
             if get_kappa:
                 return np.array(g1), np.array(g2), np.array(kappa)
             else:
@@ -1001,7 +1006,12 @@ class NFWHalo(object):
         g1 = -g / (np.cos(2*phi) + np.sin(2*phi)*np.tan(2*phi))
         g2 = g1 * np.tan(2*phi)
 
-        # Return numpy arrays, or convert to a tuple of floats or lists of floats
+        # Make outputs in proper format: be careful here, we want consistent inputs and outputs
+        # (e.g., if given a Numpy array, return one as well).  But don't attempt to index "pos"
+        # until you know that it can be indexed, i.e., that it's not just a single PositionD,
+        # because then bad things will happen (i.e., TypeError).
+        if isinstance(pos, galsim.PositionD):
+            return g1, g2
         if isinstance(pos[0], np.ndarray):
             return g1, g2
         elif len(g) == 1 and not isinstance(pos[0],list):
@@ -1039,8 +1049,13 @@ class NFWHalo(object):
             ks = ks*np.ones_like(r)
         kappa = self.__kappa(r, ks)
 
-        # Return a numpy array, or convert to a float or list of floats
-        if isinstance(pos[0], np.ndarray):
+        # Make outputs in proper format: be careful here, we want consistent inputs and outputs
+        # (e.g., if given a Numpy array, return one as well).  But don't attempt to index "pos"
+        # until you know that it can be indexed, i.e., that it's not just a single PositionD,
+        # because then bad things will happen (i.e., TypeError).
+        if isinstance(pos, galsim.PositionD):
+            return kappa
+        elif isinstance(pos[0], np.ndarray):
             return kappa
         elif len(kappa) == 1 and not isinstance(pos[0], list):
             return kappa[0]
@@ -1077,8 +1092,13 @@ class NFWHalo(object):
 
         mu = 1. / ( (1.-kappa)**2 - g**2 )
 
-        # Return a numpy array, or convert to a float or list of floats
-        if isinstance(pos[0], np.ndarray):
+        # Make outputs in proper format: be careful here, we want consistent inputs and outputs
+        # (e.g., if given a Numpy array, return one as well).  But don't attempt to index "pos"
+        # until you know that it can be indexed, i.e., that it's not just a single PositionD,
+        # because then bad things will happen (i.e., TypeError).
+        if isinstance(pos, galsim.PositionD):
+            return mu
+        elif isinstance(pos[0], np.ndarray):
             return mu
         elif len(mu) == 1 and not isinstance(pos[0],list):
             return mu[0]
