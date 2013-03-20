@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 python=python
 for test in `ls test*.py`
 do
