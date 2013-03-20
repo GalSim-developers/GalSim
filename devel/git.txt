@@ -274,6 +274,10 @@ This is obviously completely optional, but I've found it pretty helpful when usi
 Note: Paul gives due credit, saying he "stole the idea and much of the implementation from 
 http://rubyglazed.com/post/15772234418/git-ify-your-command-line."
 
+Finally, I discovered that after a while of using git, the command prompt started to get a bit
+slow.  It turns out the 'git gc --aggressive' cleaned out a lot of the junk and made it run 
+much faster again.
+
 
 # Copyright 2012, 2013 The GalSim developers:
 # https://github.com/GalSim-developers

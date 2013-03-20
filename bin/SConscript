@@ -10,6 +10,7 @@ targets = []
 for script in scripts:
     targets.append(env.ExecScript(script, script + '.py'))
 
+AlwaysBuild(targets)
 Default(targets)
         
 if 'install' in COMMAND_LINE_TARGETS:

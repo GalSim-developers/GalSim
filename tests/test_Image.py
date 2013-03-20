@@ -182,7 +182,7 @@ def test_Image_FITS_IO():
         # Then use galsim fits.read function
         # First version: use pyfits HDUList
         hdu = pyfits.open(test_file)
-        test_image = galsim.fits.read(hdu)
+        test_image = galsim.fits.read(hdu_list=hdu)
         np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array, 
                 err_msg="Failed reading from PyFITS PrimaryHDU input.")
 
@@ -208,7 +208,7 @@ def test_Image_FITS_IO():
         # Then use galsim fits.read function
         # First version: use pyfits HDUList
         hdu = pyfits.open(test_file)
-        test_image = galsim.fits.read(hdu)
+        test_image = galsim.fits.read(hdu_list=hdu)
         np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array, 
                 err_msg="Failed reading from PyFITS PrimaryHDU input.")
 
@@ -336,7 +336,7 @@ def test_Image_MultiFITS_IO():
         # Then use galsim fits.readMulti function
         # First version: use pyfits HDUList
         hdu = pyfits.open(test_multi_file)
-        test_image_list = galsim.fits.readMulti(hdu)
+        test_image_list = galsim.fits.readMulti(hdu_list=hdu)
         for k in range(nimages):
             np.testing.assert_array_equal((ref_array+k).astype(types[i]),
                     test_image_list[k].array, 
@@ -371,7 +371,7 @@ def test_Image_MultiFITS_IO():
         # Then use galsim fits.readMulti function
         # First version: use pyfits HDUList
         hdu = pyfits.open(test_multi_file)
-        test_image_list = galsim.fits.readMulti(hdu)
+        test_image_list = galsim.fits.readMulti(hdu_list=hdu)
         for k in range(nimages):
             np.testing.assert_array_equal((ref_array+k).astype(types[i]),
                     test_image_list[k].array, 
@@ -533,7 +533,7 @@ def test_Image_CubeFITS_IO():
         # Then use galsim fits.readCube function
         # First version: use pyfits HDUList
         hdu = pyfits.open(test_cube_file)
-        test_image_list = galsim.fits.readCube(hdu)
+        test_image_list = galsim.fits.readCube(hdu_list=hdu)
         for k in range(nimages):
             np.testing.assert_array_equal((ref_array+k).astype(types[i]),
                     test_image_list[k].array, 
@@ -570,7 +570,7 @@ def test_Image_CubeFITS_IO():
         # Then use galsim fits.readCube function
         # First version: use pyfits HDUList
         hdu = pyfits.open(test_cube_file)
-        test_image_list = galsim.fits.readCube(hdu)
+        test_image_list = galsim.fits.readCube(hdu_list=hdu)
         for k in range(nimages):
             np.testing.assert_array_equal((ref_array+k).astype(types[i]),
                     test_image_list[k].array, 

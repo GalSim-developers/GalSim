@@ -702,7 +702,7 @@ def test_shear_value():
 
 
 def test_pos_value():
-    """Test various ways to generate a Postion value
+    """Test various ways to generate a Position value
     """
     import time
     t1 = time.time()

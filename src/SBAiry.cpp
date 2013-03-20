@@ -60,7 +60,8 @@ namespace galsim {
         _obscuration(obscuration), 
         _flux(flux), 
         _Dsq(_D*_D), _obssq(_obscuration*_obscuration),
-        _inv_Dsq_pisq(1. / (_Dsq * M_PI * M_PI)),
+        _inv_D_pi(1. / (_D * M_PI)),
+        _inv_Dsq_pisq(_inv_D_pi * _inv_D_pi),
         _xnorm(flux * _Dsq),
         _knorm(flux / (M_PI * (1.-_obssq))),
         _info(nmap.get(_obscuration,_obssq))
@@ -109,11 +110,133 @@ namespace galsim {
         return _knorm * _info->kValue(ksq_over_pisq);
     }
 
+    void SBAiry::SBAiryImpl::fillXValue(tmv::MatrixView<double> val,
+                                        double x0, double dx, int ix_zero,
+                                        double y0, double dy, int iy_zero) const
+    {
+        dbg<<"SBAiry fillXValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
+        if (ix_zero != 0 || iy_zero != 0) {
+            xdbg<<"Use Quadrant\n";
+            fillXValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            assert(val.stepi() == 1);
+            const int m = val.colsize();
+            const int n = val.rowsize();
+            typedef tmv::VIt<double,1,tmv::NonConj> It;
+
+            x0 *= _D;
+            dx *= _D;
+            y0 *= _D;
+            dy *= _D;
+
+            for (int j=0;j<n;++j,y0+=dy) {
+                double x = x0;
+                double ysq = y0*y0;
+                It valit = val.col(j).begin();
+                for (int i=0;i<m;++i,x+=dx) 
+                    *valit++ = _xnorm * _info->xValue(sqrt(x*x + ysq));
+            }
+        }
+    }
+
+    void SBAiry::SBAiryImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                        double x0, double dx, int ix_zero,
+                                        double y0, double dy, int iy_zero) const
+    {
+        dbg<<"SBAiry fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
+        if (ix_zero != 0 || iy_zero != 0) {
+            xdbg<<"Use Quadrant\n";
+            fillKValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            assert(val.stepi() == 1);
+            const int m = val.colsize();
+            const int n = val.rowsize();
+            typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+
+            x0 *= _inv_D_pi;
+            dx *= _inv_D_pi;
+            y0 *= _inv_D_pi;
+            dy *= _inv_D_pi;
+
+            for (int j=0;j<n;++j,y0+=dy) {
+                double x = x0;
+                double ysq = y0*y0;
+                It valit(val.col(j).begin().getP(),1);
+                for (int i=0;i<m;++i,x+=dx) 
+                    *valit++ = _knorm * _info->kValue(x*x + ysq);
+            }
+        }
+    }
+
+    void SBAiry::SBAiryImpl::fillXValue(tmv::MatrixView<double> val,
+                                        double x0, double dx, double dxy,
+                                        double y0, double dy, double dyx) const
+    {
+        dbg<<"SBAiry fillXValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+
+        x0 *= _D;
+        dx *= _D;
+        dxy *= _D;
+        y0 *= _D;
+        dy *= _D;
+        dyx *= _D;
+
+        It valit = val.linearView().begin();
+        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+            double x = x0;
+            double y = y0;
+            for (int i=0;i<m;++i,x+=dx,y+=dyx) 
+                *valit++ = _xnorm * _info->xValue(sqrt(x*x + y*y));
+        }
+    }
+
+    void SBAiry::SBAiryImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                        double x0, double dx, double dxy,
+                                        double y0, double dy, double dyx) const
+    {
+        dbg<<"SBAiry fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+
+        x0 *= _inv_D_pi;
+        dx *= _inv_D_pi;
+        dxy *= _inv_D_pi;
+        y0 *= _inv_D_pi;
+        dy *= _inv_D_pi;
+        dyx *= _inv_D_pi;
+
+        It valit(val.linearView().begin().getP(),1);
+        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+            double x = x0;
+            double y = y0;
+            for (int i=0;i<m;++i,x+=dx,y+=dyx) 
+                *valit++ = _knorm * _info->kValue(x*x + y*y);
+        }
+    }
+
     // Set maxK to hard limit for Airy disk.
     double SBAiry::SBAiryImpl::maxK() const 
     { return 2.*M_PI*_D; }
 
-    // The amount of flux missed in a circle of radius pi/stepk should miss at 
+    // The amount of flux missed in a circle of radius pi/stepk should be at 
     // most alias_threshold of the flux.
     double SBAiry::SBAiryImpl::stepK() const
     { return _info->stepK() * _D; }

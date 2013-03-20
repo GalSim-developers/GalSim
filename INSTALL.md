@@ -504,9 +504,11 @@ install Boost manually.  This can be done by following the instructions of
 Section 1.v), above.
 
 b) MacPorts -- this is another popular Mac package management project
-(http://www.macports.org/) with similar functionality to fink, although TMV
-is not supported but can be easily installed by following the instructions
-in Section 1.iv).
+(http://www.macports.org/) with similar functionality to fink.  Neither TMV nor
+GalSim are currently on the official MacPorts distribution list, so users cannot
+find them by searching the MacPorts site.  However, it is possible to install
+both TMV and GalSim, plus the other dependencies of GalSim, using MacPorts
+following the instructions below.
 
 It is in general a good idea to upgrade all modules, prior to installing any new
 modules:
@@ -514,13 +516,33 @@ modules:
     sudo port selfupdate
     sudo port upgrade outdated
 
-The following modules relevant to GalSim are available on MacPorts (note that
-when using MacPorts to install Boost, you may need to explicitly indicate 
-Boost.Python):
+Below is a list of steps to take to install GalSim using MacPorts:
 
-    sudo port install scons fftw-3 python27 py27-nose py27-numpy py27-pyfits \
-    	 py27-yaml
-    sudo port install boost +python27
+    i) Take the `Portfiles` from the GalSim repository:
+    https://github.com/GalSim-developers/GalSim/blob/master/devel/ports.tar.gz
+    (If you do not clone the repository, there is a "copy" button on the website
+    that you can use to download the file directly.)
+    ii) Place the file in your home directory.
+    iii) `tar xvzf ports.tar.gz`
+    iv) `cd ports`
+    v) `sudo portindex`
+    vi) `sudo port install python27`
+    vii) `sudo port select --set python python27`
+    viii) `sudo sh -c "echo file:///Users/username/ports >>
+          /opt/local/etc/macports/sources.conf"`
+    ix) `sudo port install galsim`
+    x) Add /opt/local/lib to DYLD_LIBRARY_PATH
+
+Some users may find that the last step results in an inability to import the
+GalSim module.  In that case, you can clear that addition to DYLD_LIBRARY_PATH
+and instead add /opt/local/lib to DYLD_FALLBACK_LIBRARY_PATH.
+
+Notes on MacPorts with Mac OS X 10.8:
+The use of `sudo` in the above commands may elicit an error message that says
+"dyld: DYLD_ environment variables being ignored because main executable
+(/usr/bin/sudo) is setuid or setgid".  This is the result of a bug in Mac OS X
+10.8, and will not prevent the installation of GalSim with the above steps from
+being successful.
 
 Notes on MacPorts version of gcc with Mac OS X 10.5.8:
 If you have installed a MacPorts version of gcc (e.g., "mp-gcc47"), it may not 
