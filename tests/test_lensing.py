@@ -212,6 +212,11 @@ def test_shear_variance():
     ngrid = 500 # grid points
     kmin = 2.*np.pi/grid_size/3600.
     kmax = 2.*np.pi/(grid_size/ngrid)/3600.
+    # For explanation of these two variables, see below, the comment starting "Note: the next..."
+    # These numbers are, however, hard-coded up here with the grid parameters because if the grid is
+    # changed, the erfmax and erfmin must change.
+    erfmax = 0.999999426697
+    erfmin = 0.00797871262926
     # Now choose s such that s*kmax=5, i.e., almost no power at kmax.
     s = 5./kmax
     test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((s*k)**2)))
@@ -219,40 +224,47 @@ def test_shear_variance():
                                         units=galsim.degrees)
     # For this case, the prediction for the variance is:
     # Var(g1) + Var(g2) = [1/(2 pi s^2)] * ( (Erf(s*kmax/sqrt(2)))^2 - (Erf(s*kmin/sqrt(2)))^2 )
-    erfmax = math.erf(s*kmax/math.sqrt(2.))
-    erfmin = math.erf(s*kmin/math.sqrt(2.))
+    # Note: the next two lines of code are commented out because math.erf is not available in python
+    # v2.6, with which we must be compatible.  So instead the values of erf are hard-coded (above)
+    # based on the calculations from a machine that has python v2.7.  The implications here are that
+    # if one changes the grid parameters for this test in a way that also changes the values of
+    # these Erf[...] calculations, then the hard-coded erfmax and erfmin must be changed.
+    # erfmax = math.erf(s*kmax/math.sqrt(2.))
+    # erfmin = math.erf(s*kmin/math.sqrt(2.))
     predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
     # here we know that the results are typically 2.5% too low, and we again allow wiggle room of 3%
     # due to noise.
     comparison_val = (np.var(g1)+np.var(g2))/(0.975*predicted_variance)-1.0
     np.testing.assert_almost_equal(comparison_val/3., 0., decimal=2,
                                    err_msg="Incorrect variance from Gaussian PS")
+
     # check for proper scaling with grid spacing, for fixed number of grid points
     grid_size = 25. # degrees
     ngrid = 500 # grid points
     kmin = 2.*np.pi/grid_size/3600.
     kmax = 2.*np.pi/(grid_size/ngrid)/3600.
     s = 5./kmax
+    # Note that because of how s, kmin, and kmax change, the Erf[...] quantities do not change.  So
+    # we don't have to reset the values here.
     test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((s*k)**2)))
     g1, g2 = test_ps.buildGriddedShears(grid_spacing = grid_size/ngrid, ngrid=ngrid,
                                         rng=rng, units=galsim.degrees)
-    erfmax = math.erf(s*kmax/math.sqrt(2.))
-    erfmin = math.erf(s*kmin/math.sqrt(2.))
     predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
     comparison_val = (np.var(g1)+np.var(g2))/(0.975*predicted_variance)-1.0
     np.testing.assert_almost_equal(comparison_val/3., 0., decimal=2,
                                    err_msg="Incorrect variance from Gaussian PS")
+
     # check for proper scaling with number of grid points, for fixed grid spacing
     grid_size = 25. # degrees
     ngrid = 250 # grid points
     kmin = 2.*np.pi/grid_size/3600.
     kmax = 2.*np.pi/(grid_size/ngrid)/3600.
+    # Here one of the Erf[...] values does change.
+    erfmin = 0.0159566274338
     s = 5./kmax
     test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((s*k)**2)))
     g1, g2 = test_ps.buildGriddedShears(grid_spacing = grid_size/ngrid, ngrid=ngrid,
                                         rng=rng, units=galsim.degrees)
-    erfmax = math.erf(s*kmax/math.sqrt(2.))
-    erfmin = math.erf(s*kmin/math.sqrt(2.))
     predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
     comparison_val = (np.var(g1)+np.var(g2))/(0.975*predicted_variance)-1.0
     np.testing.assert_almost_equal(comparison_val/3., 0., decimal=2,
