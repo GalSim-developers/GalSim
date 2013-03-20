@@ -52,7 +52,7 @@ For a list of places to download Python, see http://www.python.org/getit/.
 
 The GalSim package also requires
 
-* the numerical Python module NumPy (http://numpy.scipy.org)
+* the numerical Python module NumPy (http://www.numpy.org)
 
 * the astronomical FITS file input/output module PyFITS
   (http://www.stsci.edu/institute/software_hardware/pyfits)
