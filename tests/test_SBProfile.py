@@ -68,6 +68,10 @@ def printval(image1, image2):
     getmoments(image1)
     print "Moments Mx, My, Mxx, Myy, Mxy for saved array: "
     getmoments(image2)
+    #xcen = image2.array.shape[0]/2
+    #ycen = image2.array.shape[1]/2
+    #print "new image.center = ",image1.array[xcen-3:xcen+4,ycen-3:ycen+4]
+    #print "saved image.center = ",image2.array[xcen-3:xcen+4,ycen-3:ycen+4]
 
 def getmoments(image1):
     xgrid, ygrid = np.meshgrid(np.arange(np.shape(image1.array)[0]) + image1.getXMin(), 
@@ -202,20 +206,41 @@ def test_gaussian():
     t1 = time.time()
     mySBP = galsim.SBGaussian(flux=1, sigma=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_1.fits"))
+    savedImg.setCenter(0,0)
     myImg = galsim.ImageF(savedImg.bounds)
-    myImg.setScale(0.2)
-    mySBP.draw(myImg.view())
+    myImg.setCenter(0,0)
+    dx = 0.2
+    myImg.setScale(dx)
+    tot = mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Gaussian profile disagrees with expected result")
+    np.testing.assert_almost_equal(
+            myImg.array.sum() *dx**2, tot, 5,
+            err_msg="Gaussian profile SBProfile::draw returned wrong tot")
 
     # Repeat with the GSObject version of this:
     gauss = galsim.Gaussian(flux=1, sigma=1)
-    gauss.draw(myImg,dx=0.2, normalization="surface brightness")
+    myImg = gauss.draw(myImg, dx=dx, normalization="surface brightness")
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Gaussian disagrees with expected result")
+    np.testing.assert_almost_equal(
+            myImg.array.sum() *dx**2, myImg.added_flux, 5,
+            err_msg="Gaussian profile GSObject::draw returned wrong added_flux")
+
+    # Check a non-square image
+    print myImg.bounds
+    recImg = galsim.ImageF(45,66)
+    recImg.setCenter(0,0)
+    recImg = gauss.draw(recImg, dx=dx, normalization="surface brightness")
+    np.testing.assert_array_almost_equal(
+            recImg[savedImg.bounds].array, savedImg.array, 5,
+            err_msg="Drawing Gaussian on non-square image disagrees with expected result")
+    np.testing.assert_almost_equal(
+            recImg.array.sum() *dx**2, recImg.added_flux, 5,
+            err_msg="Gaussian profile GSObject::draw on non-square image returned wrong added_flux")
 
     # Test photon shooting.
     do_shoot(gauss,myImg,"Gaussian")
@@ -1257,6 +1282,7 @@ def test_convolve():
     myImg.setScale(0.2)
     myConv.draw(myImg.view())
     printval(myImg, savedImg)
+ 
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 4,
             err_msg="Moffat convolved with Box SBProfile disagrees with expected result")
@@ -1817,41 +1843,54 @@ def test_rescale():
     # convolve by a pixel:
     sersic3 = galsim.Convolve([sersic, galsim.Pixel(xw=0.2)])
     myImg2 = sersic3.draw(dx=0.2, wmult=3)
-    sersic3.draw(myImg2, add_to_image=True)
-    print myImg2.array.sum()
+    print myImg2.array.sum(), myImg2.added_flux
+    np.testing.assert_almost_equal(myImg2.array.sum(), 1., 3,
+            err_msg="Drawing with wmult=3 results in wrong flux")
+    np.testing.assert_almost_equal(myImg2.added_flux, 1., 3,
+            err_msg="Drawing with wmult=3 returned wrong added_flux")
+    myImg2 = sersic3.draw(myImg2, add_to_image=True)
+    print myImg2.array.sum(), myImg2.added_flux
     np.testing.assert_almost_equal(myImg2.array.sum(), 2., 3,
             err_msg="Drawing with add_to_image=True results in wrong flux")
+    np.testing.assert_almost_equal(myImg2.added_flux, 1., 3,
+            err_msg="Drawing with add_to_image=True returned wrong added_flux")
 
     # Check that the flux works out when adding multiple times.
     gauss = galsim.Gaussian(flux=1.e5, sigma=2.)
     gauss2 = galsim.Convolve([gauss, galsim.Pixel(xw=0.2)])
     myImg2 = gauss2.draw(dx=0.2, wmult=3)
     print 'image size = ',myImg2.array.shape
-    print myImg2.array.sum()
+    print myImg2.array.sum(), myImg2.added_flux
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 1., 4,
             err_msg="Drawing Gaussian results in wrong flux")
+    np.testing.assert_almost_equal(myImg2.added_flux/1.e5, 1., 4,
+            err_msg="Drawing Gaussian returns wrong added_flux")
     myImg2 = gauss2.draw(myImg2, add_to_image=True)
-    print myImg2.array.sum()
+    print myImg2.array.sum(), myImg2.added_flux
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 2., 4,
             err_msg="Drawing Gaussian with add_to_image=True results in wrong flux")
-    myImg2, tot = gauss.drawShoot(myImg2, add_to_image=True, poisson_flux=False,
+    np.testing.assert_almost_equal(myImg2.added_flux/1.e5, 1., 4,
+            err_msg="Drawing Gaussian with add_to_image=True returns wrong added_flux")
+    myImg2 = gauss.drawShoot(myImg2, add_to_image=True, poisson_flux=False,
                                   rng=glob_ud)
-    print myImg2.array.sum(), tot
+    print myImg2.array.sum(), myImg2.added_flux
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 3., 4,
             err_msg="Drawing Gaussian with drawShoot, add_to_image=True, poisson_flux=False "+
                     "results in wrong flux")
-    np.testing.assert_almost_equal(tot/1.e5, 1., 4,
+    np.testing.assert_almost_equal(myImg2.added_flux/1.e5, 1., 4,
             err_msg="Drawing Gaussian with drawShoot, add_to_image=True, poisson_flux=False "+
-                    "returned wrong tot")
-    myImg2, tot = gauss.drawShoot(myImg2, add_to_image=True, rng=glob_ud)
-    print myImg2.array.sum(), tot
+                    "returned wrong added_flux")
+    myImg2 = gauss.drawShoot(myImg2, add_to_image=True, rng=glob_ud)
+    print myImg2.array.sum(), myImg2.added_flux
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 4., 1,
-            err_msg="Drawing Gaussian with drawShoot, add_to_image=True results in wrong flux")
-    np.testing.assert_almost_equal(tot/1.e5, 1., 1,
-            err_msg="Drawing Gaussian with drawShoot, add_to_image=True returned wrong tot")
-    np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 3.+tot/1.e5, 4,
+            err_msg="Drawing Gaussian with drawShoot, add_to_image=True, poisson_flux=True "+
+                    "results in wrong flux")
+    np.testing.assert_almost_equal(myImg2.added_flux/1.e5, 1., 1,
+            err_msg="Drawing Gaussian with drawShoot, add_to_image=True, poisson_flux=True "+
+                    "returned wrong added_flux")
+    np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 3.+myImg2.added_flux/1.e5, 4,
             err_msg="Drawing Gaussian with drawShoot, add_to_image=True results in wrong flux "+
-                    "according to the returned tot")
+                    "according to the returned added_flux")
 
     # Can also get a flux of 2 using gain = 0.5
     sersic.draw(myImg, dx=0.2, gain=0.5, normalization="surface brightness")

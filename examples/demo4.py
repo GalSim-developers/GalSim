@@ -105,7 +105,7 @@ def main(argv):
 
     # save a list of the galaxy images in the "images" list variable:
     images = []
-    for k in range(cat.nObjects()):
+    for k in range(cat.nobjects):
         # Initialize the (pseudo-)random number generator that we will be using below.
         # Use a different random seed for each object to get different noise realizations.
         rng = galsim.BaseDeviate(random_seed+k)
@@ -151,7 +151,8 @@ def main(argv):
         final = galsim.Convolve([psf, pix, gal])
 
         # Draw the profile
-        image = final.draw(image = galsim.ImageF(xsize, ysize), dx=pixel_scale)
+        image = galsim.ImageF(xsize, ysize)
+        final.draw(image, dx=pixel_scale)
 
         # Add Poisson noise to the image:
         image.addNoise(galsim.PoissonNoise(rng, sky_level * pixel_scale**2))

@@ -28,22 +28,16 @@
 #include "Laguerre.h"
 #include "Solve.h"
 
-//**/#include "Stopwatch.h"
-
-// To use explicit pointers rather than tmv code:
-//#define PTRLOOPS
-
-const int BLOCKING_FACTOR=1024;
-
 namespace galsim {
 
-    void LVector::rotate(double theta) 
+    void LVector::rotate(const Angle& theta) 
     {
-        std::complex<double> z(std::cos(theta), -std::sin(theta));
+        take_ownership();
+        std::complex<double> z(std::cos(theta.rad()), -std::sin(theta.rad()));
         std::complex<double> imz(1., 0.);
-        for (int m=1; m<=*_order; m++) {
+        for (int m=1; m<=_order; m++) {
             imz *= z;
-            for (PQIndex pq(m,0); !pq.pastOrder(*_order); pq.incN()) {
+            for (PQIndex pq(m,0); !pq.pastOrder(_order); pq.incN()) {
                 int r = pq.rIndex();
                 std::complex<double> newb = std::complex<double>((*_v)[r], (*_v)[r+1]) * imz;
                 (*_v)[r] = newb.real();
@@ -56,8 +50,8 @@ namespace galsim {
     // ???? Check these ???
     std::complex<double> LTransform::operator()(PQIndex pq1, PQIndex pq2) const 
     {
-        assert(pq1.pqValid() && !pq1.pastOrder(*_orderOut));
-        assert(pq2.pqValid() && !pq2.pastOrder(*_orderIn));
+        assert(pq1.pqValid() && !pq1.pastOrder(_orderOut));
+        assert(pq2.pqValid() && !pq2.pastOrder(_orderIn));
         int r1index=pq1.rIndex();
         int r2index=pq2.rIndex();
         int i1index=(pq1.isReal()? r1index: r1index+1);
@@ -75,9 +69,10 @@ namespace galsim {
     void LTransform::set(
         PQIndex pq1, PQIndex pq2, std::complex<double> Cpq1pq2, std::complex<double> Cqp1pq2) 
     {
-        assert(pq1.pqValid() && !pq1.pastOrder(*_orderOut));
-        assert(pq2.pqValid() && !pq2.pastOrder(*_orderIn));
+        assert(pq1.pqValid() && !pq1.pastOrder(_orderOut));
+        assert(pq2.pqValid() && !pq2.pastOrder(_orderIn));
 
+        take_ownership();
         const double RoundoffTolerance=1.e-15;
         std::complex<double> Cpq1qp2;
 
@@ -101,18 +96,16 @@ namespace galsim {
 
         if (pq1.isReal()) {
             if (Cpq1pq2!=Cqp1pq2) {
-                std::ostringstream oss;
-                oss << "Invalid LTransform elements for p1=q1, " << Cpq1pq2
+                FormatAndThrow<>() 
+                    << "Invalid LTransform elements for p1=q1, " << Cpq1pq2
                     << " != " << Cqp1pq2;
-                throw LaguerreError(oss.str());
             }
             (*_m)(rIndex1,rIndex2) = Cpq1pq2.real() * (pq2.isReal()? 1. : 2.);
             if (pq2.isReal()) {
                 if (std::abs(Cpq1pq2.imag()) > RoundoffTolerance) {
-                    std::ostringstream oss;
-                    oss << "Nonzero imaginary LTransform elements for p1=q1, p2=q2: " 
+                    FormatAndThrow<>() 
+                        << "Nonzero imaginary LTransform elements for p1=q1, p2=q2: " 
                         << Cpq1pq2;
-                    throw LaguerreError(oss.str());
                 }
             } else {
                 (*_m)(rIndex1,iIndex2) = -2.*Cpq1pq2.imag();
@@ -121,10 +114,9 @@ namespace galsim {
         } else if (pq2.isReal()) {
             // Here we know p1!=q1:
             if (norm(Cpq1pq2-conj(Cqp1pq2))>RoundoffTolerance) {
-                std::ostringstream oss;
-                oss << "Inputs to LTransform.set are not conjugate for p2=q2: "
+                FormatAndThrow<>() 
+                    << "Inputs to LTransform.set are not conjugate for p2=q2: "
                     << Cpq1pq2 << " vs " << Cqp1pq2 ;
-                throw LaguerreError(oss.str());
             }
             (*_m)(rIndex1, rIndex2) = Cpq1pq2.real();
             (*_m)(iIndex1, rIndex2) = Cpq1pq2.imag();
@@ -141,37 +133,39 @@ namespace galsim {
 
     LVector LTransform::operator*(const LVector rhs) const 
     {
-        if (*_orderIn != rhs.getOrder()) 
-            FormatAndThrow<LaguerreError>() 
-                << "Order mismatch between LTransform [" << *_orderIn
+        if (_orderIn != rhs.getOrder()) 
+            FormatAndThrow<>() 
+                << "Order mismatch between LTransform [" << _orderIn
                 << "] and LVector [" << rhs.getOrder()
                 << "]";
-        tmv::Vector<double> out = (*_m) * rhs.rVector();
-        // ??? avoid extra copy by assigning directly to output?
-        return LVector(out, *_orderOut);
+        boost::shared_ptr<tmv::Vector<double> > out(new tmv::Vector<double>(sizeOut()));
+        *out = (*_m) * rhs.rVector();
+        return LVector(_orderOut, out);
     }
 
     LTransform LTransform::operator*(const LTransform rhs) const 
     {
-        if (*_orderIn != rhs.getOrderOut()) 
-            FormatAndThrow<LaguerreError>()  
-                << "Order mismatch between LTransform [" << *_orderIn
+        if (_orderIn != rhs.getOrderOut()) 
+            FormatAndThrow<>()  
+                << "Order mismatch between LTransform [" << _orderIn
                 << "] and LTransform [" << rhs.getOrderOut()
                 << "]";
-        tmv::Matrix<double> out = (*_m) * (*rhs._m);
-        // ??? avoid extra copy by assigning directly to output?
-        return LTransform(out, *_orderOut, *(rhs._orderIn));
+        boost::shared_ptr<tmv::Matrix<double> > out(
+            new tmv::Matrix<double>(sizeOut(),rhs.sizeIn()));
+        *out = (*_m) * (*rhs._m);
+        return LTransform(_orderOut, rhs._orderIn, out);
     }
 
     LTransform& LTransform::operator*=(const LTransform rhs) 
     {
-        if (*_orderIn != rhs.getOrderOut())
-            FormatAndThrow<LaguerreError>()  
-                << "Order mismatch between LTransform [" << *_orderIn
+        take_ownership();
+        if (_orderIn != rhs.getOrderOut())
+            FormatAndThrow<>()
+                << "Order mismatch between LTransform [" << _orderIn
                 << "] and LTransform [" << rhs.getOrderOut()
                 << "]";
         (*_m) *= (*rhs._m);
-        *_orderIn = *(rhs._orderOut);
+        _orderIn = rhs._orderOut;
         return *this;
     }
 
@@ -180,14 +174,15 @@ namespace galsim {
     // Calculate Laguerre polynomials and wavefunctions:
 
     // Fill LVector with the basis functions corresponding to each real DOF
-    void LVector::fillBasis(double xunit, double yunit, double sigma) 
+    void LVector::fillBasis(double x, double y, double sigma) 
     {
+        take_ownership();
         // fill with psi_pq(z), where psi now defined to have 1/sigma^2 in
         // front.
-        std::complex<double> z(xunit,-yunit);
-        double x = norm(z);
+        std::complex<double> z(x,-y);
+        double rsq = norm(z);
 
-        double tq = std::exp(-0.5*x) / (2*M_PI*sigma*sigma);
+        double tq = std::exp(-0.5*rsq) / (2*M_PI*sigma*sigma);
         double tqm1=tq;
         double tqm2;
 
@@ -195,23 +190,23 @@ namespace galsim {
 
         (*_v)[PQIndex(0,0).rIndex()]=tq;
 
-        if (*_order>=2) {
-            tq = (x-1)*tqm1;
+        if (_order>=2) {
+            tq = (rsq-1.)*tqm1;
             (*_v)[PQIndex(1,1).rIndex()] = tq;
         }
 
         PQIndex pq(2,2);
-        for (int p=2; 2*p<= *_order; ++p, pq.incN()) {
+        for (int p=2; 2*p<=_order; ++p, pq.incN()) {
             tqm2 = tqm1;
             tqm1 = tq;
-            tq = ((x-2*p+1)*tqm1 - (p-1)*tqm2)/p;
+            tq = ((rsq-2.*p+1.)*tqm1 - (p-1.)*tqm2)/p;
             (*_v)[pq.rIndex()] = tq;
         }
 
         // Ascend all positive m's
         std::complex<double> zm = 2* (*_v)[PQIndex(0,0).rIndex()] * z;
 
-        for (int m=1; m<= *_order; m++) {
+        for (int m=1; m<=_order; m++) {
             pq.setPQ(m,0);
             double *r = &(*_v)[pq.rIndex()];
             *r = zm.real();
@@ -219,11 +214,11 @@ namespace galsim {
             tq = 1.;
             tqm1 = 0.;
 
-            for (pq.incN(); !pq.pastOrder(*_order); pq.incN()) {
+            for (pq.incN(); !pq.pastOrder(_order); pq.incN()) {
                 tqm2 = tqm1;
                 tqm1 = tq;
                 int p=pq.getP(); int q=pq.getQ(); 
-                tq = ( (x-(p+q-1))*tqm1 - sqrtn(p-1)*sqrtn(q-1)*tqm2) / (sqrtn(p)*sqrtn(q));
+                tq = ( (rsq-(p+q-1.))*tqm1 - sqrtn(p-1)*sqrtn(q-1)*tqm2) / (sqrtn(p)*sqrtn(q));
                 double *r = &(*_v)[pq.rIndex()];
                 *r = tq*zm.real();
                 *(r+1) = tq*zm.imag();
@@ -234,337 +229,231 @@ namespace galsim {
     }
 
     boost::shared_ptr<tmv::Matrix<double> > LVector::basis(
-        const tmv::Vector<double>& xunit, const tmv::Vector<double>& yunit,
-        int order, double sigma) 
+        const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
+        int order, double sigma)
     {
-        assert(xunit.size()==yunit.size());
-        //**/Stopwatch s; s.start();
-        boost::shared_ptr<tmv::Matrix<double> > mr(
-            new tmv::Matrix<double>(xunit.size(), PQIndex::size(order)));
-        //**/s.stop(); std::cerr << "setup: " << s << "sec" << std::endl;
-        basis(*mr, xunit, yunit, order, sigma);
-        return mr;
+        assert(x.size()==y.size());
+        boost::shared_ptr<tmv::Matrix<double> > psi(
+            new tmv::Matrix<double>(x.size(), PQIndex::size(order)));
+        basis(x, y, psi->view(), order, sigma);
+        return psi;
     }
 
     void LVector::basis(
-        tmv::Matrix<double>& out, const tmv::Vector<double>& xunit,
-        const tmv::Vector<double>& yunit, int order, double sigma) 
+        const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
+        tmv::MatrixView<double> psi, int order, double sigma)
     {
-        const int npts=xunit.size();
-        assert(yunit.size() ==npts && out.nrows()==npts);
-        assert(out.ncols()==PQIndex::size(order));
-        for (int ilo=0; ilo<npts; ilo+=BLOCKING_FACTOR) {
-            int ihi = std::min(npts, ilo + BLOCKING_FACTOR);
-            tmv::MatrixView<double> mr = out.rowRange(ilo,ihi);
-            mBasis(xunit.subVector(ilo,ihi), yunit.subVector(ilo,ihi), 
-                   0, &mr, 0, order, false, sigma);
-        }
+        assert(y.size() == x.size() && psi.nrows() == x.size());
+        assert(psi.ncols()==PQIndex::size(order));
+        mBasis(x, y, 0, psi, order, sigma);
     }
 
     boost::shared_ptr<tmv::Matrix<double> > LVector::design(
-        const tmv::Vector<double>& xunit, const tmv::Vector<double>& yunit,
-        const tmv::Vector<double>& invsig, int order, double sigma) 
+        const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
+        const tmv::ConstVectorView<double>& invsig, int order, double sigma)
     {
-        //**/Stopwatch s; s.start();
-        boost::shared_ptr<tmv::Matrix<double> > mr(
-            new tmv::Matrix<double>(xunit.size(), PQIndex::size(order),0.));
-        //**/s.stop(); std::cerr << "setup: " << s << "sec" << std::endl;
-        design(*mr, xunit, yunit, invsig, order, sigma);
-        return mr;
+        boost::shared_ptr<tmv::Matrix<double> > psi(
+            new tmv::Matrix<double>(x.size(), PQIndex::size(order)));
+        design(x, y, invsig, psi->view(), order, sigma);
+        return psi;
     }
 
     void LVector::design(
-        tmv::Matrix<double>& out, const tmv::Vector<double>& xunit,
-        const tmv::Vector<double>& yunit, const tmv::Vector<double>& invsig,
-        int order, double sigma) 
+        const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
+        const tmv::ConstVectorView<double>& invsig,
+        tmv::MatrixView<double> psi, int order, double sigma)
     {
-        const int npts=xunit.size();
-        assert(yunit.size()==npts && out.nrows()==npts && invsig.size()==npts);
-        assert(out.ncols()==PQIndex::size(order));
-        for (int ilo=0; ilo<npts; ilo+=BLOCKING_FACTOR) {
-            int ihi = std::min(npts, ilo + BLOCKING_FACTOR);
-            tmv::ConstVectorView<double> is = invsig.subVector(ilo,ihi);
-            tmv::MatrixView<double> mr = out.rowRange(ilo,ihi);
-            mBasis(xunit.subVector(ilo,ihi), yunit.subVector(ilo,ihi), 
-                   &is, &mr, 0, order, false, sigma);
-        }
+        assert(y.size() == x.size() && psi.nrows() == x.size() && invsig.size() == x.size());
+        assert(psi.ncols()==PQIndex::size(order));
+        mBasis(x, y, &invsig, psi, order, sigma);
+    }
+
+    boost::shared_ptr<tmv::Matrix<std::complex<double> > > LVector::kBasis(
+        const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
+        int order, double sigma)
+    {
+        assert (ky.size() == kx.size());
+        const int ndof=PQIndex::size(order);
+        const int npts = kx.size();
+        boost::shared_ptr<tmv::Matrix<std::complex<double> > > psi_k(
+            new tmv::Matrix<std::complex<double> >(npts, ndof, 0.));
+        kBasis(kx,ky,psi_k->view(),order,sigma);
+        return psi_k;
     }
 
     void LVector::kBasis(
-        const tmv::Vector<double>& kxunit, const tmv::Vector<double>& kyunit,
-        boost::shared_ptr<tmv::Matrix<double> >& kReal,
-        boost::shared_ptr<tmv::Matrix<double> >& kImag, int order) 
+        const tmv::ConstVectorView<double>& kx, const tmv::ConstVectorView<double>& ky,
+        tmv::MatrixView<std::complex<double> > psi_k, int order, double sigma)
+    { 
+        assert(ky.size() == kx.size() && psi_k.nrows() == kx.size());
+        assert(psi_k.ncols()==PQIndex::size(order));
+        mBasis(kx, ky, 0, psi_k, order, sigma); 
+    }
+
+    // This helper class deals with the differences between the real and fourier calculations
+    // in mBasis.  First the real-space values:
+    template <typename T>
+    struct mBasisHelper
     {
-        const int ndof=PQIndex::size(order);
-        const int npts = kxunit.size();
-        assert (kyunit.size()==npts);
-        if (!kReal.get() || kReal->nrows()!=npts || kReal->ncols()!=ndof) {
-            kReal.reset(new tmv::Matrix<double>(npts, ndof, 0.));
-        } else {
-            kReal->setZero();
+        static double Asign(int ) { return 1.; } 
+
+        static double Lsign(double x) { return x; } 
+
+        template <class V>
+        static void applyPrefactor(V v, double sigma) { v *= 1./(2.*M_PI*sigma*sigma); }
+    };
+
+    // Now the fourier space version, marked by T being complex.
+    template <typename T>
+    struct mBasisHelper<std::complex<T> >
+    {
+        // The "sign" of the eigenvectors are 1, -I, -1, I, and then repeat.
+        // The input m4 should be m%4.
+        static std::complex<double> Asign(int m4)
+        {
+            static std::complex<double> vals[4] = {
+                std::complex<double>(1.,0.),
+                std::complex<double>(0.,-1.),
+                std::complex<double>(-1.,0.),
+                std::complex<double>(0.,1.) 
+            };
+            return vals[m4];
         }
-        if (!kImag.get() || kImag->nrows()!=npts || kImag->ncols()!=ndof) {
-            kImag.reset(new tmv::Matrix<double>(npts, ndof, 0.));
-        } else {
-            kImag->setZero();
-        }
-        for (int ilo=0; ilo<npts; ilo+=BLOCKING_FACTOR) {
-            int ihi = std::min(npts, ilo + BLOCKING_FACTOR);
-            tmv::MatrixView<double> mr = kReal->rowRange(ilo,ihi);
-            tmv::MatrixView<double> mi = kImag->rowRange(ilo,ihi);
-            mBasis(kxunit.subVector(ilo,ihi), kyunit.subVector(ilo,ihi), 
-                   0, &mr, &mi, order, true, 1.);
-        }
-    }
 
-#ifdef PTRLOOPS
-    void vvmult(double* p1, const double* p2, const double* p3, const int npts) 
-    {
-        for (int i=0; i<npts; i++, p1++, p2++, p3++)
-            *p1 = *p2 * *p3;
-    }
+        static double Lsign(double x) { return -x; } 
 
-    void vsvs(double* p1, const double* p2, double f1, double f2, const int npts) 
-    {
-        for (int i=0; i<npts; i++, p1++, p2++)
-            *p1 = (*p2 + f1)*f2;
-    }
+        template <class V>
+        static void applyPrefactor(V , double ) {}
+    };
 
-    void qjump(
-        double* qp, const double* qm1p, const double* qm2p, const double* r2p,
-        double f1, double f2, double f3, const int npts) 
-    {
-        double* ptmp=qp;
-        for (int i=0; i<npts; i++, ++ptmp, ++qm1p, ++r2p)
-            *ptmp = (*r2p + f1) * *qm1p;
-        for (int i=0; i<npts; i++, ++qp, ++qm2p)
-            *qp = f2 * *qp  + f3 * *qm2p;
-    }
-#endif // PTRLOOPS
-
-
+    template <typename T>
     void LVector::mBasis(
         const tmv::ConstVectorView<double>& x, const tmv::ConstVectorView<double>& y,
         const tmv::ConstVectorView<double>* invsig,
-        tmv::MatrixView<double>* mr, tmv::MatrixView<double>* mi,
-        int order, bool isK, double sigma) 
+        tmv::MatrixView<T> psi, int order, double sigma)
     {
+        assert (y.size()==x.size());
+        assert (psi.nrows()==x.size() && psi.ncols()==PQIndex::size(order));
+
         const int N=order;
-#ifndef NDEBUG
-        const int ndof=PQIndex::size(N);
-#endif
-        const int npts = x.size();
-        assert (y.size()==npts);
-        assert (mr->nrows()==npts && mr->ncols()==ndof);
-        if (isK) assert (mi->nrows()==npts && mi->ncols()==ndof);
+        const int npts_full = x.size();
 
-        // Cast arguments as diagonal matrices so we can access
-        // vectorized element-by-element multiplication
-        tmv::DiagMatrix<double> X(x);
-        tmv::DiagMatrix<double> Y(y);
-#ifdef PTRLOOPS
-        tmv::Vector<double> Rsq(npts);
-#else
-        tmv::DiagMatrix<double> Rsq(npts);
-        //**/Stopwatch s; s.start(); std::cerr << "Start..."<<std::endl;
-#endif
-        // These vectors will keep track of real & imag parts
-        // of prefactor * exp(-r^2/2) (x+iy)^m / sqrt(m!)
-        tmv::Vector<double> cosm(npts, isK ? 1. : 1./(2*M_PI*sigma*sigma));
-        tmv::Vector<double> sinm(npts, 0.);
-        for (int i=0; i<Rsq.size(); i++) {
-            Rsq(i) = x[i]*x[i]+y[i]*y[i];
-            cosm[i] *= std::exp(-0.5*Rsq(i));
-        }
-        // Put 1/sigma factor into every point if doing a design matrix:
-        if (invsig) 
-            cosm *= tmv::DiagMatrixViewOf(*invsig);
+        // It's faster to build the psi matrix in blocks so that more of the matrix stays in 
+        // L1 cache.  For a (typical) 256 KB L2 cache size, this corresponds to 8 columns in the 
+        // cache, which is pretty good, since we are usually working on 4 columns at a time, 
+        // plus either X and Y or 3 Lq vectors.
+        const int BLOCKING_FACTOR=4096;
 
-        // Assign the m=0 column first:
-        mr->col( PQIndex(0,0).rIndex() ) = cosm;
+        const int max_npts = std::max(BLOCKING_FACTOR,npts_full);
+        tmv::DiagMatrix<double> Rsq_full(max_npts);
+        tmv::Matrix<double> A_full(max_npts,2);
+        tmv::Matrix<double> tmp_full(max_npts,2);
+        tmv::DiagMatrix<double> Lmq_full(max_npts);
+        tmv::DiagMatrix<double> Lmqm1_full(max_npts);
+        tmv::DiagMatrix<double> Lmqm2_full(max_npts);
 
-        //**/s.stop(); std::cerr << "For pq=0: " << s << " sec" << std::endl; s.reset(); s.start();
-        // Then ascend m's at q=0:
-        for (int m=1; m<=N; m++) {
-            int rIndex = PQIndex(m,0).rIndex();
-            // Multiply by (X+iY)/sqrt(m), including a factor 2 first time through
-            tmv::Vector<double> ctmp = X*cosm - Y*sinm;
-            tmv::Vector<double> stmp = X*sinm + Y*cosm;
-            cosm = ctmp * (( m==1 ? 2. : 1.) /sqrtn(m));
-            sinm = stmp * (( m==1 ? 2. : 1.) /sqrtn(m));
+        for (int ilo=0; ilo<npts_full; ilo+=BLOCKING_FACTOR) {
+            const int ihi = std::min(npts_full, ilo + BLOCKING_FACTOR);
+            const int npts = ihi-ilo;
 
-            if (isK) {
-                switch (m%4) {
-                  case 0:
-                       mr->col(rIndex) = cosm; 
-                       mr->col(rIndex+1) = -sinm;
-                       break;
-                  case 1:
-                       mi->col(rIndex) = -cosm; 
-                       mi->col(rIndex+1) = sinm;
-                       break;
-                  case 2:
-                       mr->col(rIndex) = -cosm; 
-                       mr->col(rIndex+1) = sinm;
-                       break;
-                  case 3:
-                       mi->col(rIndex) = cosm; 
-                       mi->col(rIndex+1) = -sinm; 
-                       break;
-                }
-            } else {
-                // Real-space
-                mr->col(rIndex) = cosm;
-                mr->col(rIndex+1) = -sinm;
-            }
-        }
+            // Cast arguments as diagonal matrices so we can access
+            // vectorized element-by-element multiplication
+            tmv::ConstDiagMatrixView<double> X = DiagMatrixViewOf(x.subVector(ilo,ihi));
+            tmv::ConstDiagMatrixView<double> Y = DiagMatrixViewOf(y.subVector(ilo,ihi));
 
-        //**/s.stop(); std::cerr << "For q=0: " << s << " sec" << std::endl;   s.reset(); s.start();
+            // Get the appropriate portion of our temporary matrices.
+            tmv::DiagMatrixView<double> Rsq = Rsq_full.subDiagMatrix(0,npts);
+            tmv::MatrixView<double> A = A_full.rowRange(0,npts);
+            tmv::MatrixView<double> tmp = tmp_full.rowRange(0,npts);
 
-        // Now climb q's at each m
-#ifdef PTRLOOPS
-        // Compile these to do arithmetic with pointer loops (TMV DiagMatrix method below)
-        boost::shared_ptr<tmv::Vector<double> > Lmq(new tmv::Vector<double>(npts));
-        boost::shared_ptr<tmv::Vector<double> > Lmqm1(new tmv::Vector<double>(npts));
-        boost::shared_ptr<tmv::Vector<double> > Lmqm2(new tmv::Vector<double>(npts));
-        for (int m=0; m<=N; m++) {
-            PQIndex pq(m,0);
-            int iQ0 = pq.rIndex();
-            // Go to q=1:
-            pq.incN();
-            if (pq.pastOrder(N)) continue;
-            int iQ = pq.rIndex();
-            Lmqm1->setAllTo(1.);
-            const double f1= - (pq.getP()+pq.getQ()-1.);
-            const double f2 = (isK ? -1. : 1.) / sqrtn(pq.getP())/sqrtn(pq.getQ());
-            vsvs( Lmq->ptr(), Rsq.cptr(), f1, f2, npts);
-            if (isK) {
-                if (m%2==0) {
-                    // even m's have real transforms
-                    // mr->col(iQ) = (*Lmq) * mr->col(iQ0);
-                    vvmult(mr->col(iQ).ptr(), Lmq->cptr(), mr->col(iQ0).ptr(), npts);
-                    if (m>0) 
-                        //mr->col(iQ+1) = (*Lmq) * mr->col(iQ0+1);
-                        vvmult(mr->col(iQ+1).ptr(), Lmq->cptr(), mr->col(iQ0+1).ptr(), npts);
-                } else {
-                    // odd m's have imag transforms
-                    // mi->col(iQ) = (*Lmq) * mi->col(iQ0);
-                    vvmult(mi->col(iQ).ptr(), Lmq->cptr(), mi->col(iQ0).cptr(), npts);
-                    // mi->col(iQ+1) = (*Lmq) * mi->col(iQ0+1);
-                    vvmult(mi->col(iQ+1).ptr(), Lmq->cptr(), mi->col(iQ0+1).cptr(), npts);
-                }
-            } else {
-                //  mr->col(iQ) = (*Lmq) * mr->col(iQ0);
-                vvmult(mr->col(iQ).ptr(), Lmq->cptr(), mr->col(iQ0).cptr(), npts);
-                if (m>0)    //mr->col(iQ+1) = (*Lmq) * mr->col(iQ0+1);
-                vvmult(mr->col(iQ+1).ptr(), Lmq->cptr(), mr->col(iQ0+1).cptr(), npts);
+            // We need rsq values twice, so store them here.
+            Rsq = X*X;
+            Rsq += Y*Y;
+
+            // This matrix will keep track of real & imag parts
+            // of prefactor * exp(-r^2/2) (x+iy)^m / sqrt(m!)
+
+            // Build the Gaussian factor
+            for (int i=0; i<npts; i++) A.ref(i,0) = std::exp(-0.5*Rsq(i));
+            mBasisHelper<T>::applyPrefactor(A.col(0),sigma);
+            A.col(1).setZero();
+
+            // Put 1/sigma factor into every point if doing a design matrix:
+            if (invsig) A.col(0) *= tmv::DiagMatrixViewOf(invsig->subVector(ilo,ihi));
+
+            // Assign the m=0 column first:
+            psi.col( PQIndex(0,0).rIndex(), ilo,ihi ) = A.col(0);
+
+            // Then ascend m's at q=0:
+            for (int m=1; m<=N; m++) {
+                int rIndex = PQIndex(m,0).rIndex();
+                // Multiply by (X+iY)/sqrt(m), including a factor 2 first time through
+                tmp = Y * A;
+                A = X * A;
+                A.col(0) += tmp.col(1);
+                A.col(1) -= tmp.col(0);
+                A *= m==1 ? 2. : 1./sqrtn(m);
+
+                psi.subMatrix(ilo,ihi,rIndex,rIndex+2) = mBasisHelper<T>::Asign(m%4) * A;
             }
 
-            // do q=2,...
-            for (pq.incN(); !pq.pastOrder(N); pq.incN()) {
-                {
-                    // cycle the Lmq vectors
-                    // Lmq <- Lmqm2
-                    // Lmqm1 <- Lmq
-                    // Lmqm2 <- Lmqm1
-                    Lmqm2.swap(Lmqm1);
-                    Lmqm1.swap(Lmq);
-                }
-                {
-                    double f1 = - (pq.getP()+pq.getQ()-1.);
-                    double invsqrtpq = 1./sqrtn(pq.getP())/sqrtn(pq.getQ());
-                    double f2 = isK ? -invsqrtpq : invsqrtpq;
-                    double f3 = -sqrtn(pq.getP()-1)*sqrtn(pq.getQ()-1) * invsqrtpq;
-                    qjump(Lmq->ptr(), Lmqm1->cptr(),Lmqm2->cptr(), Rsq.cptr(),
-                          f1, f2, f3, npts);
-                }
-                iQ = pq.rIndex();
-                if (isK) {
-                    if (m%2==0) {
-                        // mr->col(iQ) = (*Lmq) * mr->col(iQ0);
-                        vvmult(mr->col(iQ).ptr(), Lmq->cptr(), mr->col(iQ0).cptr(), npts);
-                        if (m>0) 
-                            //mr->col(iQ+1) = (*Lmq) * mr->col(iQ0+1);
-                            vvmult(mr->col(iQ+1).ptr(), Lmq->cptr(), mr->col(iQ0+1).cptr(), npts);
+            // Make three DiagMatrix to hold Lmq's during recurrence calculations
+            boost::shared_ptr<tmv::DiagMatrixView<double> > Lmq(
+                new tmv::DiagMatrixView<double>(Lmq_full.subDiagMatrix(0,npts)));
+            boost::shared_ptr<tmv::DiagMatrixView<double> > Lmqm1(
+                new tmv::DiagMatrixView<double>(Lmqm1_full.subDiagMatrix(0,npts)));
+            boost::shared_ptr<tmv::DiagMatrixView<double> > Lmqm2(
+                new tmv::DiagMatrixView<double>(Lmqm2_full.subDiagMatrix(0,npts)));
+
+            for (int m=0; m<=N; m++) {
+                PQIndex pq(m,0);
+                int iQ0 = pq.rIndex();
+                // Go to q=1:
+                pq.incN();
+                if (pq.pastOrder(N)) continue;
+               
+                { // q == 1
+                    const int p = pq.getP();
+                    const int q = pq.getQ();
+                    const int iQ = pq.rIndex();
+
+                    Lmqm1->setAllTo(1.); // This is Lm0.
+                    *Lmq = Rsq - (p+q-1.);
+                    *Lmq *= mBasisHelper<T>::Lsign(1.) / (sqrtn(p)*sqrtn(q));
+
+                    if (m==0) {
+                        psi.col(iQ,ilo,ihi) = (*Lmq) * psi.col(iQ0,ilo,ihi);
                     } else {
-                        // odd m's have imag transforms
-                        // mi->col(iQ) = (*Lmq) * mi->col(iQ0);
-                        vvmult(mi->col(iQ).ptr(), Lmq->cptr(), mi->col(iQ0).cptr(), npts);
-                        // mi->col(iQ+1) = (*Lmq) * mi->col(iQ0+1);
-                        vvmult(mi->col(iQ+1).ptr(), Lmq->cptr(), mi->col(iQ0+1).cptr(), npts);
+                        psi.subMatrix(ilo,ihi,iQ,iQ+2) = (*Lmq) * psi.subMatrix(ilo,ihi,iQ0,iQ0+2);
                     }
-                } else {
-                    // mr->col(iQ) = (*Lmq) * mr->col(iQ0);
-                    vvmult(mr->col(iQ).ptr(), Lmq->cptr(), mr->col(iQ0).cptr(), npts);
-                    if (m>0)    //mr->col(iQ+1) = (*Lmq) * mr->col(iQ0+1);
-                    vvmult(mr->col(iQ+1).ptr(), Lmq->cptr(), mr->col(iQ0+1).cptr(), npts);
                 }
-            }
-        }
 
-#else
+                // do q=2,...
+                for (pq.incN(); !pq.pastOrder(N); pq.incN()) {
+                    const int p = pq.getP();
+                    const int q = pq.getQ();
+                    const int iQ = pq.rIndex();
 
-        // Make three DiagMatrix to hold Lmq's during recurrence calculations
-        boost::shared_ptr<tmv::DiagMatrix<double> > Lmq(new tmv::DiagMatrix<double>(npts));
-        boost::shared_ptr<tmv::DiagMatrix<double> > Lmqm1(new tmv::DiagMatrix<double>(npts));
-        boost::shared_ptr<tmv::DiagMatrix<double> > Lmqm2(new tmv::DiagMatrix<double>(npts));
-        for (int m=0; m<=N; m++) {
-            PQIndex pq(m,0);
-            int iQ0 = pq.rIndex();
-            // Go to q=1:
-            pq.incN();
-            if (pq.pastOrder(N)) continue;
-            int iQ = pq.rIndex();
-            Lmqm1->setAllTo(1.);
-            *Lmq = Rsq - (pq.getP()+pq.getQ()-1.);
-            *Lmq *= (isK ? -1. : 1.) / sqrtn(pq.getP())/sqrtn(pq.getQ());
-            if (isK) {
-                if (m%2==0) {
-                    // even m's have real transforms
-                    mr->col(iQ) = (*Lmq) * mr->col(iQ0);
-                    if (m>0) mr->col(iQ+1) = (*Lmq) * mr->col(iQ0+1);
-                } else {
-                    // odd m's have imag transforms
-                    mi->col(iQ) = (*Lmq) * mi->col(iQ0);
-                    mi->col(iQ+1) = (*Lmq) * mi->col(iQ0+1);
-                }
-            } else {
-                mr->col(iQ) = (*Lmq) * mr->col(iQ0);
-                if (m>0) mr->col(iQ+1) = (*Lmq) * mr->col(iQ0+1);
-            }
-
-            // do q=2,...
-            for (pq.incN(); !pq.pastOrder(N); pq.incN()) {
-                {
                     // cycle the Lmq vectors
                     // Lmqm2 <- Lmqm1
                     // Lmqm1 <- Lmq
                     // Lmq <- Lmqm2
                     Lmqm2.swap(Lmqm1);
                     Lmqm1.swap(Lmq);
-                }
-                double invsqrtpq = 1./sqrtn(pq.getP())/sqrtn(pq.getQ());
-                *Lmq = (Rsq - (pq.getP()+pq.getQ()-1.)) * (*Lmqm1) * (isK ? -invsqrtpq : invsqrtpq);
-                *Lmq -= (sqrtn(pq.getP()-1)*sqrtn(pq.getQ()-1)*invsqrtpq) * (*Lmqm2);
 
-                iQ = pq.rIndex();
-                if (isK) {
-                    if (m%2==0) {
-                        // even m's have real transforms
-                        mr->col(iQ) = (*Lmq) * mr->col(iQ0);
-                        if (m>0) mr->col(iQ+1) = (*Lmq) * mr->col(iQ0+1);
+                    double invsqrtpq = 1./sqrtn(p)/sqrtn(q);
+                    *Lmq = Rsq - (p+q-1.);
+                    *Lmq *= mBasisHelper<T>::Lsign(invsqrtpq) * *Lmqm1;
+                    *Lmq -= (sqrtn(p-1)*sqrtn(q-1)*invsqrtpq) * (*Lmqm2);
+
+                    if (m==0) {
+                        psi.col(iQ,ilo,ihi) = (*Lmq) * psi.col(iQ0,ilo,ihi);
                     } else {
-                        // odd m's have imag transforms
-                        mi->col(iQ) = (*Lmq) * mi->col(iQ0);
-                        mi->col(iQ+1) = (*Lmq) * mi->col(iQ0+1);
+                        psi.subMatrix(ilo,ihi,iQ,iQ+2) = (*Lmq) * psi.subMatrix(ilo,ihi,iQ0,iQ0+2);
                     }
-                } else {
-                    mr->col(iQ) = (*Lmq) * mr->col(iQ0);
-                    if (m>0) mr->col(iQ+1) = (*Lmq) * mr->col(iQ0+1);
                 }
             }
         }
-#endif  // PTRLOOPS
     }
 
 
@@ -630,9 +519,9 @@ namespace galsim {
     {
         int oldprec = os.precision(8);
         std::ios::fmtflags oldf = os.setf(std::ios::scientific,std::ios::floatfield);
-        if (maxorder < 0 || maxorder > *_order)
-            maxorder = *_order;
-        os << *_order << std::endl;
+        if (maxorder < 0 || maxorder > _order)
+            maxorder = _order;
+        os << _order << std::endl;
         for (int n=0; n<=maxorder; n++) {
             for(PQIndex pq(n,0); !pq.needsConjugation(); pq.decm()) {
                 os << " " << std::setw(2) << pq.getP() 
@@ -683,7 +572,7 @@ namespace galsim {
 
     // Transformation generators - these return a view into static quantities:
     const tmv::ConstMatrixView<double> LVector::Generator(
-        GType iparam, int orderOut, int orderIn) 
+        GType iparam, int orderOut, int orderIn)
     {
         static boost::shared_ptr<tmv::Matrix<double> > gmu;
         static boost::shared_ptr<tmv::Matrix<double> > gx;
@@ -923,7 +812,7 @@ namespace galsim {
             }
             return grot->subMatrix(0, sizeOut, 0, sizeIn);
         } else {
-            throw (LaguerreError("Unknown parameter for LVector::Generator()"));
+            throw std::runtime_error("Unknown parameter for LVector::Generator()");
         }
     }
 

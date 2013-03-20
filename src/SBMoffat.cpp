@@ -38,8 +38,8 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-std::ostream* dbgout = new std::ofstream("debug.out");
-int verbose_level = 2;
+//std::ostream* dbgout = new std::ofstream("debug.out");
+//int verbose_level = 2;
 #endif
 
 namespace galsim {
@@ -187,30 +187,33 @@ namespace galsim {
                throw SBError("Unknown SBMoffat::RadiusType");
         }
 
-        double maxRrD;
+        _rD_sq = _rD * _rD;
+        _inv_rD = 1./_rD;
+        _inv_rD_sq = _inv_rD*_inv_rD;
+
         if (trunc > 0.) {
-            maxRrD = trunc / _rD;  // note new usage of trunc in physical units requires _rD here
-            xdbg<<"maxRrD = "<<maxRrD<<"\n";
+            _maxRrD = trunc * _inv_rD;
+            xdbg<<"maxRrD = "<<_maxRrD<<"\n";
 
             // Analytic integration of total flux:
-            _fluxFactor = 1. - std::pow( 1+maxRrD*maxRrD, (1.-_beta));
+            _fluxFactor = 1. - std::pow( 1+_maxRrD*_maxRrD, (1.-_beta));
         } else {
             _fluxFactor = 1.;
 
             // Set maxRrD to the radius where missing fractional flux is xvalue_accuracy
             // (1+R^2)^(1-beta) = xvalue_accuracy
-            maxRrD = sqrt(std::pow(sbp::xvalue_accuracy,1./(1.-_beta))-1.);
-            xdbg<<"Not truncate.  Calculated maxRrD = "<<maxRrD<<"\n";
+            _maxRrD = sqrt(std::pow(sbp::xvalue_accuracy,1./(1.-_beta))-1.);
+            xdbg<<"Not truncate.  Calculated maxRrD = "<<_maxRrD<<"\n";
         }
 
         _FWHM = FWHMrD * _rD;
-        _maxR = maxRrD * _rD;
+        _maxR = _maxRrD * _rD;
         _maxR_sq = _maxR * _maxR;
-        _rD_sq = _rD * _rD;
+        _maxRrD_sq = _maxRrD * _maxRrD;
         _norm = _flux * (_beta-1.) / (M_PI * _fluxFactor * _rD_sq);
 
         dbg << "Moffat rD " << _rD << " fluxFactor " << _fluxFactor
-            << " norm " << _norm << " maxRrD " << _maxR << std::endl;
+            << " norm " << _norm << " maxR " << _maxR << std::endl;
 
         if (_beta == 1) pow_beta = &SBMoffat::pow_1;
         else if (_beta == 2) pow_beta = &SBMoffat::pow_2;
@@ -233,9 +236,9 @@ namespace galsim {
 
     double SBMoffat::SBMoffatImpl::xValue(const Position<double>& p) const 
     {
-        double rsq = p.x*p.x + p.y*p.y;
-        if (rsq > _maxR_sq) return 0.;
-        else return _norm / pow_beta(1.+rsq/_rD_sq, _beta);
+        double rsq = (p.x*p.x + p.y*p.y)*_inv_rD_sq;
+        if (rsq > _maxRrD_sq) return 0.;
+        else return _norm / pow_beta(1.+rsq, _beta);
     }
 
     std::complex<double> SBMoffat::SBMoffatImpl::kValue(const Position<double>& k) const 
@@ -246,6 +249,130 @@ namespace galsim {
         else return _ft(ksq);
     }
 
+    void SBMoffat::SBMoffatImpl::fillXValue(tmv::MatrixView<double> val,
+                                            double x0, double dx, int ix_zero,
+                                            double y0, double dy, int iy_zero) const
+    {
+        dbg<<"SBMoffat fillXValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
+        if (ix_zero != 0 || iy_zero != 0) {
+            xdbg<<"Use Quadrant\n";
+            fillXValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            assert(val.stepi() == 1);
+            const int m = val.colsize();
+            const int n = val.rowsize();
+            typedef tmv::VIt<double,1,tmv::NonConj> It;
+
+            x0 *= _inv_rD;
+            dx *= _inv_rD;
+            y0 *= _inv_rD;
+            dy *= _inv_rD;
+
+            for (int j=0;j<n;++j,y0+=dy) {
+                double x = x0;
+                double ysq = y0*y0;
+                It valit = val.col(j).begin();
+                for (int i=0;i<m;++i,x+=dx) {
+                    double rsq = x*x + ysq;
+                    if (rsq > _maxRrD_sq) *valit++ = 0.;
+                    else *valit++ = _norm / pow_beta(1.+rsq, _beta);
+                }
+            }
+        }
+    }
+
+    void SBMoffat::SBMoffatImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                            double x0, double dx, int ix_zero,
+                                            double y0, double dy, int iy_zero) const
+    {
+        dbg<<"SBMoffat fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
+        if (ix_zero != 0 || iy_zero != 0) {
+            xdbg<<"Use Quadrant\n";
+            fillKValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            assert(val.stepi() == 1);
+            const int m = val.colsize();
+            const int n = val.rowsize();
+            typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+
+            for (int j=0;j<n;++j,y0+=dy) {
+                double x = x0;
+                double ysq = y0*y0;
+                It valit(val.col(j).begin().getP(),1);
+                for (int i=0;i<m;++i,x+=dx) {
+                    double ksq = x*x + ysq;
+                    if (ksq > _ft.argMax()) *valit++ = 0.;
+                    else *valit++ = _ft(ksq);
+                }
+            }
+        }
+    }
+
+    void SBMoffat::SBMoffatImpl::fillXValue(tmv::MatrixView<double> val,
+                                            double x0, double dx, double dxy,
+                                            double y0, double dy, double dyx) const
+    {
+        dbg<<"SBMoffat fillXValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+
+        x0 *= _inv_rD;
+        dx *= _inv_rD;
+        dxy *= _inv_rD;
+        y0 *= _inv_rD;
+        dy *= _inv_rD;
+        dyx *= _inv_rD;
+
+        It valit = val.linearView().begin();
+        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+            double x = x0;
+            double y = y0;
+            It valit = val.col(j).begin();
+            for (int i=0;i<m;++i,x+=dx,y+=dyx) {
+                double rsq = x*x + y*y;
+                if (rsq > _maxRrD_sq) *valit++ = 0.;
+                else *valit++ = _norm / pow_beta(1.+rsq, _beta);
+            }
+        }
+    }
+
+    void SBMoffat::SBMoffatImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                            double x0, double dx, double dxy,
+                                            double y0, double dy, double dyx) const
+    {
+        dbg<<"SBMoffat fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+
+        It valit(val.linearView().begin().getP());
+        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+            double x = x0;
+            double y = y0;
+            It valit(val.col(j).begin().getP(),1);
+            for (int i=0;i<m;++i,x+=dx,y+=dyx) {
+                double ksq = x*x + y*y;
+                if (ksq > _ft.argMax()) *valit++ = 0.;
+                else *valit++ = _ft(ksq);
+            }
+        }
+    }
+
     // Set maxK to the value where the FT is down to maxk_threshold
     double SBMoffat::SBMoffatImpl::maxK() const 
     {
@@ -254,13 +381,13 @@ namespace galsim {
         return _maxK;
     }
 
-    // The amount of flux missed in a circle of radius pi/stepk should miss at 
+    // The amount of flux missed in a circle of radius pi/stepk should be at 
     // most alias_threshold of the flux.
     double SBMoffat::SBMoffatImpl::stepK() const
     {
         dbg<<"Find Moffat stepK\n";
         dbg<<"beta = "<<_beta<<std::endl;
-        
+
         // The fractional flux out to radius R is (if not truncated)
         // 1 - (1+R^2)^(1-beta)
         // So solve (1+R^2)^(1-beta) = alias_threshold
@@ -302,8 +429,6 @@ namespace galsim {
         // Do a Hankel transform and store the results in a lookup table.
 
         double nn = _norm * 2.*M_PI * _rD_sq;
-        //double maxR = _fluxFactor == 1. ? integ::MOCK_INF : _maxR / _rD;
-        double maxR = _maxR / _rD;
 
         // Along the way, find the last k that has a kValue > 1.e-3
         double maxK_val = sbp::maxk_threshold * _flux;
@@ -320,10 +445,10 @@ namespace galsim {
         for(double k=0.; k < 50; k += dk) {
             MoffatIntegrand I(_beta, k, pow_beta);
             double val = integ::int1d(
-                I, 0., maxR, sbp::integration_relerr, sbp::integration_abserr);
+                I, 0., _maxRrD, sbp::integration_relerr, sbp::integration_abserr);
             val *= nn;
 
-            double kreal = k / _rD;
+            double kreal = k * _inv_rD;
             xdbg<<"ft("<<kreal<<") = "<<val<<std::endl;
             _ft.addEntry( kreal*kreal, val );
 

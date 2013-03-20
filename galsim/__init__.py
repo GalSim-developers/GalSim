@@ -23,6 +23,7 @@ from . import angle
 from shear import *
 from ellipse import *
 from . import fits
+from fits import FitsHeader
 from real import *
 from base import *
 from . import noise
@@ -38,3 +39,4 @@ from catalog import *
 from lensing import *
 from . import integ
 from correlatednoise import *
+from . import des
