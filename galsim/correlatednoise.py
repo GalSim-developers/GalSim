@@ -407,8 +407,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
                 imtmp = galsim.ImageD(1, 1)
                 self.draw(imtmp, dx=1.) # GalSim internals handle this correctly w/out folding
                 variance = imtmp.at(1, 1)
-                self._variance_stored = variance # Store variance and return 
-            return variance
+                self._variance_stored = variance # Store variance for next time 
+        return variance
 
     def scaleVariance(self, variance_ratio):
         """Multiply the variance of the noise field by variance_ratio.
