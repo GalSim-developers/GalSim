@@ -2434,6 +2434,19 @@ class AutoConvolve(GSObject):
         GSObject.__init__(self, galsim.SBAutoConvolve(obj.SBProfile))
 
 
+class AutoCorrelate(GSObject):
+    """A special class for autocorrelating a GSObject with itself.
+
+    This function is targeted primarily for use by the galsim.CorrelatedNoise models.  It takes
+    advantage of the fact that the two profiles are the same for some efficiency gains.
+    """
+    # --- Public Class methods ---
+    def __init__(self, obj):
+        if not isinstance(obj, GSObject):
+            raise TypeError("Argument to AutoCorrelate must be a GSObject.")
+        GSObject.__init__(self, galsim.SBAutoCorrelate(obj.SBProfile))
+
+
 class Deconvolve(GSObject):
     """Base class for defining the python interface to the SBDeconvolve C++ class.
 

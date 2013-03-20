@@ -299,6 +299,9 @@ namespace galsim {
         /// New table is function of this one:
         boost::shared_ptr<KTable> function(function2 func) const;
 
+        /// Return the complex conjugate of this KTable
+        boost::shared_ptr<KTable> getConj() const;
+
         /// Integrate a function over d^2k:
         std::complex<double> integrate(function2 func) const;
 

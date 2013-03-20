@@ -547,6 +547,14 @@ namespace galsim {
         return lhs;
     }
 
+    // Return the complex conjugate of this KTable
+    boost::shared_ptr<KTable> KTable::getConj() const
+    {
+        check_array();
+        boost::shared_ptr<KTable> lhs(new KTable(_N, _dk));
+    }
+
+
     // Transform to a single x point:
     // assumes (x,y) in physical units
     double KTable::xval(double x, double y) const 
