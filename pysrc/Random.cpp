@@ -21,10 +21,6 @@
 #include "boost/python.hpp"
 #include "Random.h"
 
-#define PY_ARRAY_UNIQUE_SYMBOL SBPROFILE_ARRAY_API
-#define NO_IMPORT_ARRAY
-#include "numpy/arrayobject.h"
-
 namespace bp = boost::python;
 
 

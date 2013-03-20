@@ -104,33 +104,19 @@ namespace galsim {
         double getPositiveFlux() const { checkReadyToShoot(); return _positiveFlux; }
         double getNegativeFlux() const { checkReadyToShoot(); return _negativeFlux; }
 
-        template <typename T>
-        double fillXImage(ImageView<T>& I, double gain) const;
-
-        // Overrides for better efficiency with separable kernels:
-        void fillKGrid(KTable& kt) const;
-        void fillXGrid(XTable& xt) const;
-
-        // These are the virtual functions, but we don't want to have to duplicate the
-        // code implement these.  So each one just calls the template version.  The
-        // C++ overloading rules mean that it will call the local fillXImage template 
-        // function defined above, not the one in SBProfile (which would lead to an 
-        // infinite loop!). 
-        //
-        // So here is what happens when someone calls fillXImage(I,dx):
-        // 1) If they are calling this from an SBInterpolatedImage object, then
-        //    it just directly uses the above template version.
-        // 2) If they are calling this from an SBProfile object, the template version
-        //    there immediately calls doFillXImage for the appropriate type.
-        //    That's a virtual function, so if the SBProfile is really an SBInterpolatedImage,
-        //    it will find these virtual functions instead of the ones defined in
-        //    SBProfile.  Then these functions immediately call the template version
-        //    of fillXImage defined above.
-        //
-        double doFillXImage(ImageView<float>& I, double gain) const
-        { return fillXImage(I,gain); }
-        double doFillXImage(ImageView<double>& I, double gain) const
-        { return fillXImage(I,gain); }
+        // Overrides for better efficiency
+        void fillXValue(tmv::MatrixView<double> val,
+                        double x0, double dx, int ix_zero,
+                        double y0, double dy, int iy_zero) const;
+        void fillXValue(tmv::MatrixView<double> val,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double x0, double dx, int ix_zero,
+                        double y0, double dy, int iy_zero) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
 
     protected:  // Made protected so that these can be used in the derived CorrelationFunction class
 
@@ -149,6 +135,8 @@ namespace galsim {
         double _max_size; ///< Calculated value: Ninitial+2*xInterp->xrange())*dx
         mutable double _stepk; ///< Stored value of stepK
         mutable double _maxk; ///< Stored value of maxK
+        double _maxk1; ///< maxk based just on the xInterp urange
+        double _uscale; ///< conversion from k to u for xInterpolant
         double _flux;
         int _maxNin;
 

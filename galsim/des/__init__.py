@@ -16,8 +16,5 @@
 # You should have received a copy of the GNU General Public License
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
-from process import *
-from image import *
-from stamp import *
-from gsobject import *
-from value import *
+from des_shapelet import *
+from des_psfex import *

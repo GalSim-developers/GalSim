@@ -12,7 +12,7 @@ SBExponential.cpp
 SBSersic.cpp
 SBMoffat.cpp
 SBAiry.cpp
-SBLaguerre.cpp
+SBShapelet.cpp
 SBAdd.cpp
 SBConvolve.cpp
 SBTransform.cpp
