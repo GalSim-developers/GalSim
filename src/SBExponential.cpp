@@ -84,7 +84,7 @@ namespace galsim {
         // For small k, we can use up to quartic in the taylor expansion to avoid the sqrt.
         // This is acceptable when the next term is less than kvalue_accuracy.
         // 35/16 (k^2 r0^2)^3 = kvalue_accuracy
-        _ksq_min = std::pow(this->gsparams->kvalue_accuracy * 16./35., 1./3.):
+        _ksq_min = std::pow(this->gsparams->kvalue_accuracy * 16./35., 1./3.);
 
         _flux_over_2pi = _flux / (2. * M_PI);
         _norm = _flux_over_2pi * _inv_r0_sq;

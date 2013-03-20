@@ -110,6 +110,9 @@ namespace galsim {
         // Utility for drawing an x grid into FFT data structures 
         void fillXGrid(XTable& xt) const;
 
+        // Public so it can be directly used from SBProfile.
+        boost::shared_ptr<GSParams> gsparams;
+
     protected:
 
         // A helper function for cases where the profile has f(x,y) = f(|x|,|y|).
@@ -123,10 +126,6 @@ namespace galsim {
         void fillKValueQuadrant(tmv::MatrixView<std::complex<double> > val,
                                 double x0, double dx, int nx1,
                                 double y0, double dy, int ny1) const;
-
-
-        // Public so it can be directly used from SBProfile.
-        boost::shared_ptr<GSParams> gsparams;
 
     private:
         // Copy constructor and op= are undefined.

@@ -132,7 +132,7 @@ namespace galsim {
                 It valit = val.col(j).begin();
                 for (int i=0;i<m;++i,x+=dx) {
                     double r = sqrt(x*x + ysq);
-                    *valit++ = _xnorm * _info.xValue(r);
+                    *valit++ = _xnorm * _info->xValue(r);
                 }
             }
         }
@@ -164,7 +164,7 @@ namespace galsim {
                 double x = x0;
                 double ysq = y0*y0;
                 It valit(val.col(j).begin().getP(),1);
-                for (int i=0;i<m;++i,x+=dx) *valit++ = _flux * _info.kValue(x*x + ysq);
+                for (int i=0;i<m;++i,x+=dx) *valit++ = _flux * _info->kValue(x*x + ysq);
             }
         }
     }
@@ -196,7 +196,7 @@ namespace galsim {
             It valit = val.col(j).begin();
             for (int i=0;i<m;++i,x+=dx,y+=dyx) {
                 double r = sqrt(x*x + y*y);
-                *valit++ = _xnorm * _info.xValue(r);
+                *valit++ = _xnorm * _info->xValue(r);
             }
         }
     }
@@ -226,7 +226,7 @@ namespace galsim {
             double x = x0;
             double y = y0;
             It valit(val.col(j).begin().getP(),1);
-            for (int i=0;i<m;++i,x+=dx,y+=dyx) *valit++ = _flux * _info.kValue(x*x+y*y);
+            for (int i=0;i<m;++i,x+=dx,y+=dyx) *valit++ = _flux * _info->kValue(x*x+y*y);
         }
     }
 

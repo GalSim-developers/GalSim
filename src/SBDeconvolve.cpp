@@ -51,8 +51,6 @@ namespace galsim {
         dbg<<"SBDeconvolve constructor: _maxksq = "<<_maxksq<<std::endl;
     }
 
-    SBDeconvolve::SBDeconvolveImpl::~SBDeconvolveImpl() {}
-
     // xValue() not implemented for SBDeconvolve.
     double SBDeconvolve::SBDeconvolveImpl::xValue(const Position<double>& p) const 
     { throw SBError("SBDeconvolve::xValue() not implemented (and not possible)"); }
@@ -120,6 +118,5 @@ namespace galsim {
         throw SBError("SBDeconvolve::shoot() not implemented");
         return boost::shared_ptr<PhotonArray>();
     }
->>>>>>> master
 
 }
