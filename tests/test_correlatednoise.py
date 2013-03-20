@@ -809,12 +809,15 @@ def test_convolve_cosmos():
     cn_test /= float(nsum_test)
     testim = galsim.ImageD(smallim_size, smallim_size)
     cn_test.draw(testim, dx=1.)
-    import matplotlib.pyplot as plt
-    print testim.at(9, 9), refim.at(9, 9), testim.at(9, 9) / refim.at(9, 9)
-    plt.pcolor(convimage.array); plt.colorbar()
-    cosimage.setZero()
-    conv_cn.applyTo(cosimage)
-    plt.figure(); plt.pcolor(cosimage.array); plt.colorbar(); plt.show()
+    try:
+        import matplotlib.pyplot as plt
+        print testim.at(9, 9), refim.at(9, 9), testim.at(9, 9) / refim.at(9, 9)
+        plt.pcolor(convimage.array); plt.colorbar()
+        cosimage.setZero()
+        conv_cn.applyTo(cosimage)
+        plt.figure(); plt.pcolor(cosimage.array); plt.colorbar(); plt.show()
+    except: 
+        pass
 
 if __name__ == "__main__":
     #test_uncorrelated_noise_zero_lag()

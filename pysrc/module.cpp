@@ -20,7 +20,7 @@
  */
 #include "boost/python.hpp"
 
-#define PY_ARRAY_UNIQUE_SYMBOL SBPROFILE_ARRAY_API
+#define PY_ARRAY_UNIQUE_SYMBOL GALSIM_ARRAY_API
 #include "numpy/arrayobject.h"
 
 namespace galsim {
@@ -41,7 +41,7 @@ namespace galsim {
     void pyExportSBSersic();
     void pyExportSBMoffat();
     void pyExportSBAiry();
-    void pyExportSBLaguerre();
+    void pyExportSBShapelet();
     void pyExportSBInterpolatedImage();
     void pyExportSBKolmogorov();
     void pyExportRandom();
@@ -78,7 +78,7 @@ BOOST_PYTHON_MODULE(_galsim) {
     galsim::pyExportSBSersic();
     galsim::pyExportSBMoffat();
     galsim::pyExportSBAiry();
-    galsim::pyExportSBLaguerre();
+    galsim::pyExportSBShapelet();
     galsim::pyExportSBInterpolatedImage();
     galsim::pyExportSBKolmogorov();
     galsim::pyExportRandom();

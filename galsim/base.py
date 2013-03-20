@@ -50,10 +50,14 @@ class GSObject(object):
     """Base class for defining the interface with which all GalSim Objects access their shared 
     methods and attributes, particularly those from the C++ SBProfile classes.
     """
-    def __init__(self, SBProfile):
-        if not isinstance(SBProfile, galsim.SBProfile):
-            raise TypeError("GSObject must be initialized with an SBProfile!")
-        self.SBProfile = SBProfile  # This guarantees that all GSObjects have an SBProfile
+    def __init__(self, rhs):
+        # This guarantees that all GSObjects have an SBProfile
+        if isinstance(rhs, galsim.GSObject):
+            self.SBProfile = rhs.SBProfile
+        elif isinstance(rhs, galsim.SBProfile):
+            self.SBProfile = rhs
+        else:
+            raise TypeError("GSObject must be initialized with an SBProfile or another GSObject!")
     
     # Make op+ of two GSObjects work to return an Add object
     def __add__(self, other):
@@ -367,9 +371,7 @@ class GSObject(object):
         @returns The rescaled GSObject.
         """
         ret = self.copy()
-        old_flux = self.getFlux()
-        ret.applyTransformation(galsim.Ellipse(np.log(scale)))
-        ret.setFlux(old_flux)
+        ret.applyDilation(scale)
         return ret
 
     def createMagnified(self, scale):
@@ -388,7 +390,7 @@ class GSObject(object):
         @returns The rescaled GSObject.
         """
         ret = self.copy()
-        ret.applyTransformation(galsim.Ellipse(np.log(scale)))
+        ret.applyMagnification(scale)
         return ret
 
     def createSheared(self, *args, **kwargs):
@@ -498,6 +500,16 @@ class GSObject(object):
         that are poorly sampled and/or varying rapidly (e.g., high n Sersic profiles), the sum of
         pixel values might differ significantly from the GSObject flux.
 
+        On return, the image will have a member `added_flux`, which will be set to be the total
+        flux added to the image.  This may be useful as a sanity check that you have provided a 
+        large enough image to catch most of the flux.  For example:
+        
+            obj.draw(image)
+            assert image.added_flux > 0.99 * obj.getFlux()
+
+        The appropriate threshold will depend on your particular application, including what kind
+        of profile the object has, how big your image is relative to the size of your object, etc.
+
         @param image  If provided, this will be the image on which to draw the profile.
                       If `image = None`, then an automatically-sized image will be created.
                       If `image != None`, but its bounds are undefined (e.g. if it was 
@@ -563,7 +575,7 @@ class GSObject(object):
             # multiply the ADU by dx^2.  i.e. divide gain by dx^2.
             gain /= dx**2
 
-        self.SBProfile.draw(image.view(), gain, wmult)
+        image.added_flux = self.SBProfile.draw(image.view(), gain, wmult)
 
         return image
 
@@ -590,6 +602,17 @@ class GSObject(object):
 
         Note that the drawShoot method is unavailable for objects which contain an SBDeconvolve,
         or are compound objects (e.g. Add, Convolve) that include an SBDeconvolve.
+
+        On return, the image will have a member `added_flux`, which will be set to be the total
+        flux of photons that landed inside the image bounds.  This may be useful as a sanity check 
+        that you have provided a large enough image to catch most of the flux.  For example:
+        
+            obj.drawShoot(image)
+            assert image.added_flux > 0.99 * obj.getFlux()
+
+        The appropriate threshold will depend on your particular application, including what kind
+        of profile the object has, how big your image is relative to the size of your object, 
+        whether you are keeping `poisson_flux = True`, etc.
 
         @param image  If provided, this will be the image on which to draw the profile.
                       If `image = None`, then an automatically-sized image will be created.
@@ -663,19 +686,7 @@ class GSObject(object):
                                 `poisson_flux = True` unless n_photons is given, in which case
                                 the default is `poisson_flux = False`).
 
-        @returns  The tuple (image, added_flux), where image is the input with drawn photons 
-                  added and added_flux is the total flux of photons that landed inside the image 
-                  bounds.
-
-        The second part of the return tuple may be useful as a sanity check that you have provided a
-        large enough image to catch most of the flux.  For example:
-        
-            image, added_flux = obj.drawShoot(image)
-            assert added_flux > 0.99 * obj.getFlux()
-        
-        However, the appropriate threshold will depend things like whether you are keeping 
-        `poisson_flux = True`, how high the flux is, how big your images are relative to the size of
-        your object, etc.
+        @returns      The drawn image.
         """
 
         # Raise an exception immediately if the normalization type is not recognized
@@ -730,7 +741,7 @@ class GSObject(object):
             gain /= dx**2
 
         try:
-            added_flux = self.SBProfile.drawShoot(
+            image.added_flux = self.SBProfile.drawShoot(
                 image.view(), n_photons, uniform_deviate, gain, max_extra_noise, poisson_flux)
         except RuntimeError:
             raise RuntimeError(
@@ -738,7 +749,7 @@ class GSObject(object):
                 "in the SBProfile attribute or is a compound including one or more Deconvolve "+
                 "objects.")
 
-        return image, added_flux
+        return image
 
     def drawK(self, re=None, im=None, dk=None, gain=1., wmult=1., add_to_image=False):
         """Draws the k-space Images (real and imaginary parts) of the object, with bounds
@@ -1411,8 +1422,8 @@ class InterpolatedImage(GSObject):
         int_im2 = galsim.InterpolatedImage(image, noise_pad='../tests/blankimg.fits')
         im1 = galsim.ImageF(1000,1000)
         im2 = galsim.ImageF(1000,1000)
-        im1 = int_im1.draw(im1)
-        im2 = int_im2.draw(im2)
+        int_im1.draw(im1)
+        int_im2.draw(im2)
 
     Examination of these two images clearly shows how padding with a correlated noise field that is
     similar to the one in the real data leads to a more reasonable appearance for the result when
@@ -1741,6 +1752,14 @@ class Pixel(GSObject):
     -------
     The Pixel is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(), 
     applyShear() etc.) and operator bindings.
+
+    Note: We have not implemented drawing a sheared or rotated Pixel in real space.  It's a 
+          bit tricky to get right at the edges where fractional fluxes are required.  
+          Fortunately, this is almost never needed.  Pixels are almost always convolved by
+          something else rather than drawn by themselves, in which case either the fourier
+          space method is used, or photon shooting.  Both of these are implemented in GalSim.
+          If need to draw sheared or rotated Pixels in real space, please file an issue, and
+          maybe we'll implement that function.  Until then, you will get an exception if you try.
     """
 
     # Initialization parameters of the object, with type information
@@ -2459,4 +2478,246 @@ class Deconvolve(GSObject):
         if not isinstance(obj, GSObject):
             raise TypeError("Argument to Deconvolve must be a GSObject.")
         GSObject.__init__(self, galsim.SBDeconvolve(obj.SBProfile))
+
+class Shapelet(GSObject):
+    """A class describing polar shapelet surface brightness profiles.
+
+    This class describes an arbitrary profile in terms of a shapelet decomposition.  A shapelet
+    decomposition is an eigenfunction decomposition of a 2-d function using the eigenfunctions
+    of the 2-d quantum harmonic oscillator.  The functions are Laguerre polynomials multiplied
+    by a Gaussian.  See Bernstein & Jarvis, 2002 or Massey & Refregier, 2005 for more detailed 
+    information about this kind of decomposition.  For this class, we follow the notation of 
+    Bernstein & Jarvis.
+
+    The decomposition is described by an overall scale length, sigma, and a vector of 
+    coefficients, b.  The b vector is indexed by two values, which can be either (p,q) or (N,m).
+    In terms of the quantum solution of the 2-d harmonic oscillator, p and q are the number of 
+    quanta with positive and negative angular momentum (respectively).  Then, N=p+q, m=p-q.
+
+    The 2D image is given by (in polar coordinates):
+
+        I(r,theta) = 1/sigma^2 Sum_pq b_pq psi_pq(r/sigma, theta)
+
+    where psi_pq are the shapelet eigenfunctions, given by:
+
+        psi_pq(r,theta) = (-)^q/sqrt(pi) sqrt(q!/p!) r^m exp(i m theta) exp(-r^2/2) L_q^(m)(r^2)
+
+    and L_q^(m)(x) are generalized Laguerre polynomials.
+    
+    The coeffients b_pq are in general complex.  However, we require that the resulting 
+    I(r,theta) be purely real, which implies that b_pq = b_qp* (where * means complex conjugate).
+    This further implies that b_pp (i.e. b_pq with p==q) is real. 
+
+
+    Initialization
+    --------------
+    
+    1. Make a blank Shapelet instance with all b_pq = 0.
+
+        shapelet = galsim.Shapelet(sigma=sigma, order=order)
+
+    2. Make a Shapelet instance using a given vector for the b_pq values.
+
+        order = 2
+        bvec = [ 1, 0, 0, 0.2, 0.3, -0.1 ]
+        shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
+
+    We use the following order for the coeffiecients, where the subscripts are in terms of p,q.
+
+    [ b00  Re(b10)  Im(b10)  Re(b20)  Im(b20)  b11  Re(b30)  Im(b30)  Re(b21)  Im(b21) ... ]
+
+    i.e. we progressively increase N, and for each value of N, we start with m=N and go down to 
+    m=0 or 1 as appropriate.  And since m=0 is intrinsically real, it only requires one spot
+    in the list.
+
+    @param sigma          The scale size in the standard units (usually arcsec).
+    @param order          Specify the order of the shapelet decomposition.  This is the maximum
+                          N=p+q included in the decomposition.
+    @param bvec           The initial vector of coefficients.  (Default: all zeros)
+
+
+    Methods
+    -------
+
+    The Shapelet is a GSObject, and inherits most of the GSObject methods (draw(), applyShear(),
+    etc.) and operator bindings.  The exception is drawShoot, which is not yet implemented for 
+    Shapelet instances.
+    
+    In addition, Shapelet has the following methods:
+
+    getSigma()         Get the sigma value.
+    getOrder()         Get the order, the maximum N=p+q used by the decomposition.
+    getBVec()          Get the vector of coefficients, returned as a numpy array.
+    getPQ(p,q)         Get b_pq.  Returned as tuple (re, im) (even if p==q).
+    getNM(N,m)         Get b_Nm.  Returned as tuple (re, im) (even if m=0).
+
+    setSigma(sigma)    Set the sigma value.
+    setOrder(order)    Set the order.
+    setBVec(bvec)      Set the vector of coefficients.
+    setPQ(p,q,re,im=0) Set b_pq.
+    setNM(N,m,re,im=0) Set b_Nm.
+
+    fitImage(image)    Fit for a shapelet decomposition of the given image.
+    """
+
+    # Initialization parameters of the object, with type information
+    _req_params = { "sigma" : float, "order" : int }
+    _opt_params = {}
+    _single_params = []
+    _takes_rng = False
+
+    # --- Public Class methods ---
+    def __init__(self, sigma, order, bvec=None):
+        # Make sure order and sigma are the right type:
+        try:
+            order = int(order)
+        except:
+            raise TypeError("The provided order is not an int")
+        try:
+            sigma = float(sigma)
+        except:
+            raise TypeError("The provided sigma is not a float")
+
+        # Make bvec if necessary
+        if bvec is None:
+            bvec = galsim.LVector(order)
+        else:
+            bvec_size = galsim.LVectorSize(order)
+            if len(bvec) != bvec_size:
+                raise ValueError("bvec is the wrong size for the provided order")
+            import numpy
+            bvec = galsim.LVector(order,numpy.array(bvec))
+
+        GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
+
+    def getSigma(self):
+        return self.SBProfile.getSigma()
+    def getOrder(self):
+        return self.SBProfile.getBVec().order
+    def getBVec(self):
+        return self.SBProfile.getBVec().array
+    def getPQ(self,p,q):
+        return self.SBProfile.getBVec().getPQ(p,q)
+    def getNM(self,N,m):
+        return self.SBProfile.getBVec().getPQ((N+m)/2,(N-m)/2)
+
+    # Note: Since SBProfiles are officially immutable, these create a new
+    # SBProfile object for this GSObject.  This is of course inefficient, but not
+    # outrageously so, since the SBShapelet constructor is pretty minimalistic, and 
+    # presumably anyone who cares about efficiency would not be using these functions.
+    # They would create the Shapelet with the right bvec from the start.
+    def setSigma(self,sigma):
+        bvec = self.SBProfile.getBVec()
+        GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
+    def setOrder(self,order):
+        curr_bvec = self.SBProfile.getBVec()
+        curr_order = curr_bvec.order
+        if curr_order == order: return
+        # Preserve the existing values as much as possible.
+        sigma = self.SBProfile.getSigma()
+        if curr_order > order:
+            bvec = galsim.LVector(order, curr_bvec.array[0:galsim.LVectorSize(order)])
+        else:
+            import numpy
+            a = numpy.zeros(galsim.LVectorSize(order))
+            a[0:len(curr_bvec.array)] = curr_bvec.array
+            bvec = galsim.LVector(order,a)
+        GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
+    def setBVec(self,bvec):
+        sigma = self.SBProfile.getSigma()
+        order = self.SBProfile.getBVec().order
+        bvec_size = galsim.LVectorSize(order)
+        if len(bvec) != bvec_size:
+            raise ValueError("bvec is the wrong size for the Shapelet order")
+        import numpy
+        bvec = galsim.LVector(order,numpy.array(bvec))
+        GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
+    def setPQ(self,p,q,re,im=0.):
+        sigma = self.SBProfile.getSigma()
+        bvec = self.SBProfile.getBVec().copy()
+        bvec.setPQ(p,q,re,im)
+        GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
+    def setNM(self,N,m,re,im=0.):
+        self.setPQ((N+m)/2,(N-m)/2,re,im)
+
+    def setFlux(self, flux):
+        # More efficient to change the bvector rather than add a transformation layer above 
+        # the SBShapelet, which is what the normal setFlux method does.
+        self.scaleFlux(flux/self.getFlux())
+
+    def scaleFlux(self, fluxRatio):
+        # More efficient to change the bvector rather than add a transformation layer above 
+        # the SBShapelet, which is what the normal setFlux method does.
+        sigma = self.SBProfile.getSigma()
+        bvec = self.SBProfile.getBVec() * fluxRatio
+        GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
+
+    def applyRotation(self, theta):
+        if not isinstance(theta, galsim.Angle):
+            raise TypeError("Input theta should be an Angle")
+        sigma = self.SBProfile.getSigma()
+        bvec = self.SBProfile.getBVec().copy()
+        bvec.rotate(theta)
+        GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
+
+    def applyDilation(self, scale):
+        sigma = self.SBProfile.getSigma() * scale
+        bvec = self.SBProfile.getBVec()
+        GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
+
+    def applyMagnification(self, scale):
+        sigma = self.SBProfile.getSigma() * scale
+        bvec = self.SBProfile.getBVec() * scale**2
+        GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
+
+    def fitImage(self, image, center=None, normalization='flux'):
+        """Fit for a shapelet decomposition of a given image
+
+        The optional normalization parameter mirrors the parameter in the GSObject `draw` method.
+        If the fitted shapelet is drawn with the same normalization value as was used when it 
+        was fit, then the resulting image should be an approximate match to the original image.
+
+        For example:
+
+            image = ...
+            shapelet = galsim.Shapelet(sigma, order)
+            shapelet.fitImage(image,normalization='sb')
+            shapelet.draw(image=image2, dx=image.scale, normalization='sb')
+
+        Then image2 and image should be as close to the same as possible for the given
+        sigma and order.  Increasing the order can improve the fit, as can having sigma match
+        the natural scale size of the image.  However, it should be noted that some images
+        are not well fit by a shapelet for any (reasonable) order.
+
+        @param image          The Image for which to fit the shapelet decomposition
+        @param center         The position to use for the center of the decomposition.
+                              [Default: use the image center]
+        @param normalization  The normalization to assume for the image. 
+                              (Default `normalization = "flux"`)
+        """
+        if not center:
+            center = image.bounds.center()
+        try:
+            # convert from PositionI if necessary
+            center = galsim.PositionD(center.x,center.y)
+        except:
+            raise ValueError("Invalid center provided to fitImage: "+str(center))
+
+        if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
+            raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
+                              "'f', 'surface brightness' or 'sb'.") % normalization)
+
+        sigma = self.SBProfile.getSigma()
+        bvec = self.SBProfile.getBVec().copy()
+
+        galsim.ShapeletFitImage(sigma, bvec, image, center)
+
+        if normalization.lower() == "flux" or normalization.lower() == "f":
+            bvec /= image.scale**2
+
+        # SBShapelet, like all SBProfiles, is immutable, so we need to reinitialize with a 
+        # new Shapelet object.
+        GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
+
+
 

@@ -19,85 +19,78 @@
  * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#ifndef SBBOX_IMPL_H
-#define SBBOX_IMPL_H
+#ifndef SBSHAPELET_IMPL_H
+#define SBSHAPELET_IMPL_H
 
 #include "SBProfileImpl.h"
-#include "SBBox.h"
+#include "SBShapelet.h"
 
 namespace galsim {
 
-    class SBBox::SBBoxImpl : public SBProfileImpl 
+    class SBShapelet::SBShapeletImpl : public SBProfile::SBProfileImpl 
     {
     public:
-        SBBoxImpl(double xw, double yw, double flux) :
-            _xw(xw), _yw(yw), _flux(flux)
-        {
-            if (_yw==0.) _yw=_xw; 
-            _norm = _flux / (_xw * _yw);
-        }
+        SBShapeletImpl(double sigma, const LVector& bvec) :
+            // Make a fresh copy of bvec, so we don't need to worry about the source changing
+            // behind our backs.
+            _sigma(sigma), _bvec(bvec.copy()) {}
 
-        ~SBBoxImpl() {}
+        ~SBShapeletImpl() {}
 
         double xValue(const Position<double>& p) const;
         std::complex<double> kValue(const Position<double>& k) const;
 
-        bool isAxisymmetric() const { return false; } 
-        bool hasHardEdges() const { return true; }
-        bool isAnalyticX() const { return true; }
-        bool isAnalyticK() const { return true; }
 
         double maxK() const;
         double stepK() const;
 
-        void getXRange(double& xmin, double& xmax, std::vector<double>& ) const 
-        { xmin = -0.5*_xw;  xmax = 0.5*_xw; }
+        bool isAxisymmetric() const { return false; }
+        bool hasHardEdges() const { return false; }
+        bool isAnalyticX() const { return true; }
+        bool isAnalyticK() const { return true; }
 
-        void getYRange(double& ymin, double& ymax, std::vector<double>& ) const 
-        { ymin = -0.5*_yw;  ymax = 0.5*_yw; }
+        Position<double> centroid() const;
 
-        Position<double> centroid() const 
-        { return Position<double>(0., 0.); }
+        double getFlux() const;
+        double getSigma() const;
+        const LVector& getBVec() const;
 
-        double getFlux() const { return _flux; }
+        /// @brief Photon-shooting is not implemented for SBShapelet, will throw an exception.
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const 
+        { throw SBError("SBShapelet::shoot() is not implemented"); }
 
-        double getXWidth() const { return _xw; }
-        double getYWidth() const { return _yw; }
-
-        /// @brief Boxcar is trivially sampled by drawing 2 uniform deviates.
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
-
-        // Override both for efficiency and to put in fractional edge values which
-        // don't happen with normal calls to xValue.
-        void fillXValue(tmv::MatrixView<double> val,
-                        double x0, double dx, int ix_zero,
-                        double y0, double dy, int iy_zero) const;
-        void fillXValue(tmv::MatrixView<double> val,
-                        double x0, double dx, double dxy,
-                        double y0, double dy, double dyx) const;
         // Overrides for better efficiency
+        void fillXValue(tmv::MatrixView<double> val,
+                        double x0, double dx, int ix_zero,
+                        double y0, double dy, int iy_zero) const;
+        void fillXValue(tmv::MatrixView<double> val,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
         void fillKValue(tmv::MatrixView<std::complex<double> > val,
                         double x0, double dx, int ix_zero,
                         double y0, double dy, int iy_zero) const;
         void fillKValue(tmv::MatrixView<std::complex<double> > val,
                         double x0, double dx, double dxy,
                         double y0, double dy, double dyx) const;
+
+        // The above functions just build a list of (x,y) values and then call these:
+        void fillXValue(tmv::MatrixView<double> val,
+                        const tmv::Matrix<double>& mx,
+                        const tmv::Matrix<double>& my) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        const tmv::Matrix<double>& mx,
+                        const tmv::Matrix<double>& my) const;
 
     private:
-        double _xw;   ///< Boxcar function is `xw` x `yw` across.
-        double _yw;   ///< Boxcar function is `xw` x `yw` across.
-        double _flux; ///< Flux.
-        double _norm; ///< Calculated value: flux / (xw*yw)
-
-        // Sinc function used to describe Boxcar in k space. 
-        double sinc(double u) const; 
+        double _sigma;
+        LVector _bvec;  
 
         // Copy constructor and op= are undefined.
-        SBBoxImpl(const SBBoxImpl& rhs);
-        void operator=(const SBBoxImpl& rhs);
+        SBShapeletImpl(const SBShapeletImpl& rhs);
+        void operator=(const SBShapeletImpl& rhs);
     };
 
 }
 
-#endif // SBBOX_IMPL_H
+#endif // SBSHAPELET_IMPL_H
 

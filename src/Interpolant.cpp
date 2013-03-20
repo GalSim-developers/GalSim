@@ -100,7 +100,7 @@ namespace galsim {
         // sum over all arguments x+jN that are within range.
         // Start by finding x+jN closest to zero
         double xdown = x - N*std::floor(x/N + 0.5);
-        assert(std::abs(xdown) <= N);
+        xassert(std::abs(xdown) <= N);
         if (xrange() <= N) {
             // This is the usual case.
             return xval(xdown);

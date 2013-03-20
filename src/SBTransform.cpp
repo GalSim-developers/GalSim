@@ -28,7 +28,8 @@
 #ifdef DEBUGLOGGING
 #include <fstream>
 //std::ostream* dbgout = new std::ofstream("debug.out");
-//int verbose_level = 2;
+//std::ostream* dbgout = &std::cout;
+//int verbose_level = 1;
 #endif
 
 namespace galsim {
@@ -81,9 +82,8 @@ namespace galsim {
     {
         dbg<<"Start SBTransformImpl initialize\n";
         // First check if our adaptee is really another SBTransform:
-        assert(SBProfile::GetImpl(_adaptee));
-        const SBTransformImpl* sbd = dynamic_cast<const SBTransformImpl*>(
-            SBProfile::GetImpl(_adaptee));
+        assert(GetImpl(_adaptee));
+        const SBTransformImpl* sbd = dynamic_cast<const SBTransformImpl*>(GetImpl(_adaptee));
         dbg<<"sbd = "<<sbd<<std::endl;
         if (sbd) {
             dbg<<"wrapping another transformation.\n";
@@ -122,12 +122,12 @@ namespace galsim {
         // versions of fwd and inv:
         if (_mA == 1. && _mB == 0. && _mC == 0. && _mD == 1.) {
             dbg<<"Using identity functions for fwd and inv\n";
-            _fwd = &SBTransform::_ident;
-            _inv = &SBTransform::_ident;
+            _fwd = &SBTransform::SBTransformImpl::_ident;
+            _inv = &SBTransform::SBTransformImpl::_ident;
         } else {
             dbg<<"Using normal fwd and inv\n";
-            _fwd = &SBTransform::_fwd_normal;
-            _inv = &SBTransform::_inv_normal;
+            _fwd = &SBTransform::SBTransformImpl::_fwd_normal;
+            _inv = &SBTransform::SBTransformImpl::_inv_normal;
         }
 
         // Calculate some derived quantities:
@@ -316,13 +316,18 @@ namespace galsim {
         // Figure out which function we need for kValue and kValueNoPhase
         if (std::abs(_absdet-1.) < sbp::kvalue_accuracy) {
             xdbg<<"absdet*fluxScaling = "<<_absdet<<" = 1, so use NoDet version.\n";
-            _kValueNoPhase = &SBTransform::_kValueNoPhaseNoDet;
+            _kValueNoPhase = &SBTransform::SBTransformImpl::_kValueNoPhaseNoDet;
         } else {
             xdbg<<"absdet*fluxScaling = "<<_absdet<<" != 1, so use WithDet version.\n";
-            _kValueNoPhase = &SBTransform::_kValueNoPhaseWithDet;
+            _kValueNoPhase = &SBTransform::SBTransformImpl::_kValueNoPhaseWithDet;
         }
-        if (_cen.x == 0. && _cen.y == 0.) _kValue = _kValueNoPhase;
-        else _kValue = &SBTransform::_kValueWithPhase;
+        if (_cen.x == 0. && _cen.y == 0.) {
+            _zeroCen = true;
+            _kValue = _kValueNoPhase;
+        } else {
+            _zeroCen = false;
+            _kValue = &SBTransform::SBTransformImpl::_kValueWithPhase;
+        }
     }
 
     void SBTransform::SBTransformImpl::getXRange(
@@ -453,147 +458,225 @@ namespace galsim {
         }
     }
 
-    // Specialization of fillKGrid is desired since the phase terms from shift 
-    // are factorizable:
-    void SBTransform::SBTransformImpl::fillKGrid(KTable& kt) const
-    {
-        int N = kt.getN();
-        double dk = kt.getDk();
-
-        dbg<<"Start SBTransformation fillKGrid\n";
-        dbg<<"N = "<<N<<", dk = "<<dk<<std::endl;
-        dbg<<"matrix = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
-        dbg<<"_cen = "<<_cen<<std::endl;
-        dbg<<"_invdet = "<<_invdet<<std::endl;
-        dbg<<"_absdet = "<<_absdet<<std::endl;
-        dbg<<"_fluxScaling = "<<_fluxScaling<<std::endl;
-
-#if 0
-        // The simpler version, saved for reference
-        if (_cen.x==0. && _cen.y==0.) {
-            // Branch to faster calculation if there is no centroid shift:
-            for (int iy = -N/2; iy < N/2; iy++) {
-                // only need ix>=0 since it's Hermitian:
-                for (int ix = 0; ix <= N/2; ix++) {
-                    Position<double> k(ix*dk,iy*dk);
-                    kt.kSet(ix,iy,kValueNoPhase(k));
-                }
-            }
-        } else {
-            std::complex<double> dxexp(0,-dk*_cen.x),   dyexp(0,-dk*_cen.y);
-            std::complex<double> dxphase(std::exp(dxexp)), dyphase(std::exp(dyexp));
-            // xphase, yphase: current phase value
-            std::complex<double> yphase(std::exp(-dyexp*double(N)/2.));
-            for (int iy = -N/2; iy < N/2; iy++) {
-                std::complex<double> phase = yphase; // since kx=0 to start
-                // Only ix>=0 since it's Hermitian:
-                for (int ix = 0; ix <= N/2; ix++) {
-                    Position<double> k(ix*dk,iy*dk);
-                    kt.kSet(ix,iy,kValueNoPhase(k) * phase);
-                    phase *= dxphase;
-                }
-                yphase *= dyphase;
-            }
-        }
-#else
-        // A faster version that pulls out all the if statements
-        // and keeps track of fwdT(k) as we go
-
-        if (_mA == 1. && _mB == 0. && _mC == 0. && _mD == 1. && 
-            _cen.x == 0. && _cen.y == 0.) {
-            dbg<<"Simple transformation.  Only flux scaling required.\n";
-            dbg<<"Passing onto the adapteed.\n";
-            // Then only a fluxScaling.  Call the adaptee's fillKGrid directly and rescale:
-            SBProfile::GetImpl(_adaptee)->fillKGrid(kt);
-            dbg<<"And now scale flux by "<<_absdet<<std::endl;
-            kt *= _absdet;
-            return;
-        } 
-
-        kt.clearCache();
-        double dkA = dk*_mA;
-        double dkB = dk*_mB;
-        if (_cen.x==0. && _cen.y==0.) {
-            dbg<<"No centroid shift, so no need to deal with phases.\n";
-            // Branch to faster calculation if there is no centroid shift:
-            Position<double> k1(0.,0.);
-            Position<double> fwdTk1(0.,0.);
-            for (int ix = 0; ix <= N/2; ix++, fwdTk1.x += dkA, fwdTk1.y += dkB) {
-                // NB: the last two terms are not used by _kValueNoPhase,
-                // so it's ok that k1.x is not kept up to date.
-                kt.kSet2(ix,0,_kValueNoPhase(_adaptee,fwdTk1,_absdet,k1,_cen));
-            }
-            k1.y = dk; 
-            Position<double> k2(0.,-dk);
-            Position<double> fwdTk2;
-            for (int iy = 1; iy < N/2; ++iy, k1.y += dk, k2.y -= dk) {
-                fwdTk1 = fwdT(k1); fwdTk2 = fwdT(k2);
-                for (int ix = 0; ix <= N/2; ++ix,
-                     fwdTk1.x += dkA, fwdTk1.y += dkB, fwdTk2.x += dkA, fwdTk2.y += dkB) {
-                    kt.kSet2(ix,iy, _kValueNoPhase(_adaptee,fwdTk1,_absdet,k1,_cen));
-                    kt.kSet2(ix,N-iy, _kValueNoPhase(_adaptee,fwdTk2,_absdet,k2,_cen));
-                }
-            }
-            fwdTk1 = fwdT(k1);
-            for (int ix = 0; ix <= N/2; ix++, fwdTk1.x += dkA, fwdTk1.y += dkB) {
-                kt.kSet2(ix,N/2,_kValueNoPhase(_adaptee,fwdTk1,_absdet,k1,_cen));
-            }
-        } else {
-            dbg<<"Has centroid shift, so use phases.\n";
-            std::complex<double> dxphase = std::polar(1.,-dk*_cen.x);
-            std::complex<double> dyphase = std::polar(1.,-dk*_cen.y);
-            // xphase, yphase: current phase value
-            std::complex<double> yphase = 1.;
-            Position<double> k1(0.,0.);
-            Position<double> fwdTk1(0.,0.);
-            std::complex<double> phase = yphase; // since kx=0 to start
-            for (int ix = 0; ix <= N/2; ++ix,
-                 fwdTk1.x += dkA, fwdTk1.y += dkB, phase *= dxphase) {
-                kt.kSet2(ix,0, _kValueNoPhase(_adaptee,fwdTk1,_absdet,k1,_cen) * phase);
-            }
-            k1.y = dk; yphase *= dyphase;
-            Position<double> k2(0.,-dk);  
-            Position<double> fwdTk2;
-            std::complex<double> phase2;
-            for (int iy = 1; iy < N/2; iy++, k1.y += dk, k2.y -= dk, yphase *= dyphase) {
-                fwdTk1 = fwdT(k1); fwdTk2 = fwdT(k2);
-                phase = yphase; phase2 = conj(yphase);
-                for (int ix = 0; ix <= N/2; ++ix,
-                     fwdTk1.x += dkA, fwdTk1.y += dkB, fwdTk2.x += dkA, fwdTk2.y += dkB,
-                     phase *= dxphase, phase2 *= dxphase) {
-                    kt.kSet2(ix,iy, _kValueNoPhase(_adaptee,fwdTk1,_absdet,k1,_cen) * phase);
-                    kt.kSet2(ix,N-iy, _kValueNoPhase(_adaptee,fwdTk2,_absdet,k1,_cen) * phase2);
-                }
-            }
-            fwdTk1 = fwdT(k1);
-            phase = yphase; 
-            for (int ix = 0; ix <= N/2; ++ix, fwdTk1.x += dkA, fwdTk1.y += dkB, phase *= dxphase) {
-                kt.kSet2(ix,N/2, _kValueNoPhase(_adaptee,fwdTk1,_absdet,k1,_cen) * phase);
-            }
-        }
-#endif
-    }
-
     std::complex<double> SBTransform::SBTransformImpl::kValue(const Position<double>& k) const
     { return _kValue(_adaptee,fwdT(k),_absdet,k,_cen); }
 
-    std::complex<double> SBTransform::SBTransformImpl::kValueNoPhase(const Position<double>& k) const
+    std::complex<double> SBTransform::SBTransformImpl::kValueNoPhase(
+        const Position<double>& k) const
     { return _kValueNoPhase(_adaptee,fwdT(k),_absdet,k,_cen); }
 
-    std::complex<double> SBTransform::_kValueNoPhaseNoDet(
+    std::complex<double> SBTransform::SBTransformImpl::_kValueNoPhaseNoDet(
         const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
         const Position<double>& , const Position<double>& )
     { return adaptee.kValue(fwdTk); }
 
-    std::complex<double> SBTransform::_kValueNoPhaseWithDet(
+    std::complex<double> SBTransform::SBTransformImpl::_kValueNoPhaseWithDet(
         const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
         const Position<double>& , const Position<double>& )
     { return absdet * adaptee.kValue(fwdTk); }
 
-    std::complex<double> SBTransform::_kValueWithPhase(
+    std::complex<double> SBTransform::SBTransformImpl::_kValueWithPhase(
         const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
         const Position<double>& k, const Position<double>& cen)
     { return adaptee.kValue(fwdTk) * std::polar(absdet , -k.x*cen.x-k.y*cen.y); }
+
+    void SBTransform::SBTransformImpl::fillXValue(tmv::MatrixView<double> val,
+                                                  double x0, double dx, int ix_zero,
+                                                  double y0, double dy, int iy_zero) const
+    {
+        dbg<<"SBTransform fillXValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
+        dbg<<"A,B,C,D = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
+        dbg<<"cen = "<<_cen<<", zerocen = "<<_zeroCen<<std::endl;
+        dbg<<"absdet = "<<_absdet<<", invdet = "<<_invdet<<std::endl;
+        dbg<<"fluxScaling = "<<_fluxScaling<<std::endl;
+
+        // Subtract cen
+        if (!_zeroCen) {
+            x0 -= _cen.x;
+            y0 -= _cen.y;
+            int dix = int(_cen.x/dx);
+            int diy = int(_cen.y/dy);
+            if (std::abs(_cen.x - dix*dx) < 1.e-10) ix_zero += dix;
+            else ix_zero = 0;
+            if (std::abs(_cen.y - diy*dy) < 1.e-10) iy_zero += diy;
+            else iy_zero = 0;
+        }
+
+        // Apply inv to x,y
+        if (_mB == 0. && _mC == 0.) {
+            double xscal = _invdet * _mD;
+            double yscal = _invdet * _mA;
+            x0 *= xscal;
+            dx *= xscal;
+            y0 *= yscal;
+            dy *= yscal;
+
+            GetImpl(_adaptee)->fillXValue(val,x0,dx,ix_zero,y0,dy,iy_zero);
+        } else {
+            Position<double> inv0 = inv(Position<double>(x0,y0));
+            Position<double> inv1 = inv(Position<double>(dx,0.));
+            Position<double> inv2 = inv(Position<double>(0.,dy));
+            xdbg<<"inv0 = "<<inv0<<std::endl;
+            xdbg<<"inv1 = "<<inv1<<std::endl;
+            xdbg<<"inv2 = "<<inv2<<std::endl;
+
+            GetImpl(_adaptee)->fillXValue(val,inv0.x,inv1.x,inv2.x,inv0.y,inv2.y,inv1.y);
+        }
+
+        // Apply flux scaling
+        val *= _fluxScaling;
+    }
+
+    void SBTransform::SBTransformImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                                  double x0, double dx, int ix_zero,
+                                                  double y0, double dy, int iy_zero) const
+    {
+        dbg<<"SBTransform fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
+        dbg<<"A,B,C,D = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
+        dbg<<"cen = "<<_cen<<", zerocen = "<<_zeroCen<<std::endl;
+        dbg<<"absdet = "<<_absdet<<", invdet = "<<_invdet<<std::endl;
+        dbg<<"fluxScaling = "<<_fluxScaling<<std::endl;
+
+        // Apply fwdT to kx,ky
+        if (_mB == 0. && _mC == 0.) {
+            double fwdT_x0 = _mA * x0;
+            double fwdT_dx = _mA * dx;
+            double fwdT_y0 = _mD * y0;
+            double fwdT_dy = _mD * dy;
+
+            GetImpl(_adaptee)->fillKValue(val,fwdT_x0,fwdT_dx,ix_zero,fwdT_y0,fwdT_dy,iy_zero);
+        } else {
+            Position<double> fwdT0 = fwdT(Position<double>(x0,y0));
+            Position<double> fwdT1 = fwdT(Position<double>(dx,0.));
+            Position<double> fwdT2 = fwdT(Position<double>(0.,dy));
+            xdbg<<"fwdT0 = "<<fwdT0<<std::endl;
+            xdbg<<"fwdT1 = "<<fwdT1<<std::endl;
+            xdbg<<"fwdT2 = "<<fwdT2<<std::endl;
+
+            GetImpl(_adaptee)->fillKValue(val,fwdT0.x,fwdT1.x,fwdT2.x,fwdT0.y,fwdT2.y,fwdT1.y);
+        }
+
+        // Apply phases
+        if (_zeroCen) {
+            xdbg<<"zeroCen\n";
+            val *= _absdet;
+        } else {
+            xdbg<<"!zeroCen\n";
+            // Make phase terms = |det| exp(-i(kx*cenx + ky*ceny))
+            // In this case, the terms are separable, so only need to make kx and ky phases
+            // separately.
+            const int m = val.colsize();
+            const int n = val.rowsize();
+            tmv::Vector<std::complex<double> > kx_phase(m);
+            tmv::Vector<std::complex<double> > ky_phase(n);
+            typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
+            CIt kx_phit = kx_phase.begin();
+            CIt ky_phit = ky_phase.begin();
+            for (int i=0;i<m;++i,x0+=dx) *kx_phit++ = std::polar(_absdet, -x0*_cen.x);
+            // Only use _absdet on one of them!
+            for (int j=0;j<n;++j,y0+=dy) *ky_phit++ = std::polar(1., -y0*_cen.y);
+
+            val = DiagMatrixViewOf(kx_phase) * val;
+            val = val * DiagMatrixViewOf(ky_phase);
+        }
+    }
+
+    void SBTransform::SBTransformImpl::fillXValue(tmv::MatrixView<double> val,
+                                                  double x0, double dx, double dxy,
+                                                  double y0, double dy, double dyx) const
+    {
+        dbg<<"SBTransform fillXValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        dbg<<"A,B,C,D = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
+        dbg<<"cen = "<<_cen<<", zerocen = "<<_zeroCen<<std::endl;
+        dbg<<"absdet = "<<_absdet<<", invdet = "<<_invdet<<std::endl;
+        dbg<<"fluxScaling = "<<_fluxScaling<<std::endl;
+
+        // Subtract cen
+        if (!_zeroCen) {
+            x0 -= _cen.x;
+            y0 -= _cen.y;
+        }
+
+        // Apply inv to x,y
+        Position<double> inv0 = inv(Position<double>(x0,y0));
+        Position<double> inv1 = inv(Position<double>(dx,dyx));
+        Position<double> inv2 = inv(Position<double>(dxy,dy));
+        xdbg<<"inv0 = "<<inv0<<std::endl;
+        xdbg<<"inv1 = "<<inv1<<std::endl;
+        xdbg<<"inv2 = "<<inv2<<std::endl;
+
+        GetImpl(_adaptee)->fillXValue(val,inv0.x,inv1.x,inv2.x,inv0.y,inv2.y,inv1.y);
+
+        // Apply flux scaling
+        val *= _fluxScaling;
+    }
+
+    void SBTransform::SBTransformImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                                  double x0, double dx, double dxy,
+                                                  double y0, double dy, double dyx) const
+    { 
+        //if (dxy != 0. || dyx != 0.) 
+        //if ((_mB != 0. || _mC != 0.) && (dxy != 0. || dyx != 0.))
+            //return SBProfile::SBProfileImpl::fillKValue(val,x0,dx,dxy,y0,dy,dyx);
+        dbg<<"SBTransform fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        dbg<<"A,B,C,D = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
+        dbg<<"cen = "<<_cen<<", zerocen = "<<_zeroCen<<std::endl;
+        dbg<<"absdet = "<<_absdet<<", invdet = "<<_invdet<<std::endl;
+        dbg<<"fluxScaling = "<<_fluxScaling<<std::endl;
+
+        // Apply fwdT to kx,ky
+        // Original (x,y):
+        //     x = x0 + ix dx + iy dxy
+        //     y = y0 + ix dyx + iy dy
+        // (x',y') = fwdT(x,y)
+        //     x' = A x + C y
+        //        = (A x0 + C y0) + ix (A dx + C dyx) + iy (A dxy + C dy)
+        //     y' = B x + D y
+        //        = (B x0 + D y0) + ix (B dx + D dyx) + iy (B dxy + D dy)
+        //
+        Position<double> fwdT0 = fwdT(Position<double>(x0,y0));
+        Position<double> fwdT1 = fwdT(Position<double>(dx,dyx));
+        Position<double> fwdT2 = fwdT(Position<double>(dxy,dy));
+        xdbg<<"fwdT0 = "<<fwdT0<<std::endl;
+        xdbg<<"fwdT1 = "<<fwdT1<<std::endl;
+        xdbg<<"fwdT2 = "<<fwdT2<<std::endl;
+
+        GetImpl(_adaptee)->fillKValue(val,fwdT0.x,fwdT1.x,fwdT2.x,fwdT0.y,fwdT2.y,fwdT1.y);
+
+        // Apply phase terms = |det| exp(-i(kx*cenx + ky*ceny))
+        if (_zeroCen) {
+            xdbg<<"zeroCen\n";
+            val *= _absdet;
+        } else {
+            xdbg<<"!zeroCen\n";
+            assert(val.stepi() == 1);
+            assert(val.canLinearize());
+            const int m = val.colsize();
+            const int n = val.rowsize();
+
+            typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+            It valit(val.linearView().begin().getP(),1);
+            x0 *= _cen.x;
+            dx *= _cen.x;
+            dxy *= _cen.x;
+            y0 *= _cen.y;
+            dy *= _cen.y;
+            dyx *= _cen.y;
+            for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+                double x = x0;
+                double y = y0;
+                for (int i=0;i<m;++i,x+=dx,y+=dyx) *valit++ *= std::polar(_absdet, -x-y);
+            }
+        }
+    }
 
     boost::shared_ptr<PhotonArray> SBTransform::SBTransformImpl::shoot(
         int N, UniformDeviate u) const 

@@ -33,6 +33,7 @@
 #include <cstdlib>
 #include <string>
 #include <cassert>
+#include <stdexcept>
 
 // A nice memory checker if you need to track down some memory problem.
 #ifdef MEM_TEST
@@ -74,7 +75,7 @@ extern int verbose_level;
 // A nice way to throw exceptions that take a string argument and have that string
 // include double or int information as well.
 // e.g. FormatAndThrow<std::runtime_error>() << "x = "<<x<<" is invalid.";
-template <class E>
+template <class E=std::runtime_error>
 class FormatAndThrow 
 {
 public:
