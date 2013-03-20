@@ -54,6 +54,7 @@ config_file = 'gs_scons.conf'
 default_prefix = '/usr/local'  
 
 default_python = '/usr/bin/env python'
+default_cxx = 'c++'
 
 # first check for a saved conf file
 opts = Variables(config_file)
@@ -66,6 +67,8 @@ opts.Add(BoolVariable('DEBUG','Turn on debugging statements',True))
 opts.Add(BoolVariable('EXTRA_DEBUG','Turn on extra debugging info',False))
 opts.Add(BoolVariable('WARN','Add warning compiler flags, like -Wall', True))
 opts.Add('PYTHON','Name of python executable','')
+
+opts.Add(BoolVariable('WITH_UPS','Install ups/ directory for use with EUPS', False))
 
 opts.Add(PathVariable('PREFIX','prefix for installation',
          '', PathVariable.PathAccept))
@@ -195,7 +198,7 @@ def ErrorExit(*args, **kwargs):
         import subprocess
         cmd = ("ls -d .sconf_temp/conftest* | grep -v '\.out' | grep -v '\.cpp' "+
                "| grep -v '\.o' | grep -v '\_mod'")
-        p = subprocess.Popen([cmd],stdout=subprocess.PIPE,shell=True)
+        p = subprocess.Popen([cmd],stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         conftest_list = p.stdout.readlines()
         for conftest in conftest_list:
             conftest = conftest.strip()
@@ -265,7 +268,7 @@ def BasicCCFlags(env):
                 env.Append(CCFLAGS=['-g3'])
     
         elif compiler == 'icpc':
-            env.Replace(CCFLAGS=['-O2'])
+            env.Replace(CCFLAGS=['-O2','-msse2'])
             if version >= 10:
                 env.Append(CCFLAGS=['-vec-report0'])
             if env['WITH_PROF']:
@@ -410,12 +413,13 @@ def which(program):
              exe_file = os.path.join(path, program)
              if is_exe(exe_file):
                  return exe_file
-
     return None
 
 def GetCompilerVersion(env):
     """
     """
+    if env['CXX'] is None:
+        env['CXX'] = default_cxx
     compiler = which(env['CXX'])
     if compiler is None:
         ErrorExit('Specified compiler not found in path: %s' % env['CXX'])
@@ -1597,6 +1601,9 @@ if not GetOption('help'):
             else:
                 env['NOSETESTS'] = nosetests
         subdirs += ['tests']
+
+    if env['WITH_UPS']:
+       subdirs += ['ups']
 
     # subdirectores to process.  We process src and pysrc by default
     script_files = []

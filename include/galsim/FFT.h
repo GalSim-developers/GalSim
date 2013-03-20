@@ -305,11 +305,15 @@ namespace galsim {
         /// Integrate KTable over d^2k (sum of all pixels * dk * dk)
         std::complex<double> integratePixels() const;
 
+        /// Allow the ability to directly write to the array.
+        std::complex<double>* getArray() { return _array.get(); }
+        const std::complex<double>* getArray() const { return _array.get(); }
+
     private:
 
         FFTW_Array<std::complex<double> > _array;
-        int _N; //Size in each dimension.
-        double _dk; //k-space increment
+        int _N; // Size in each dimension.
+        double _dk; // k-space increment
 
         size_t index(int ix, int iy) const  //Return index into data array.
         {
@@ -434,10 +438,14 @@ namespace galsim {
         void fill(function1 func);
 
         /// Integrate a (real) function over d^2x; set flag for sum:
-        double  integrate(function2 func, bool sumonly=false) const;
+        double integrate(function2 func, bool sumonly=false) const;
 
         /// Integrate XTable over d^2x (sum of all pixels * dx * dx)
         double integratePixels() const;
+
+        /// Allow the ability to directly write to the array.
+        double* getArray() { return _array.get(); }
+        const double* getArray() const { return _array.get(); }
 
     private:
         FFTW_Array<double>  _array; //hold the values.
