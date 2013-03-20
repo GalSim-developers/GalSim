@@ -135,6 +135,8 @@ namespace galsim {
         double _max_size; ///< Calculated value: Ninitial+2*xInterp->xrange())*dx
         mutable double _stepk; ///< Stored value of stepK
         mutable double _maxk; ///< Stored value of maxK
+        double _maxk1; ///< maxk based just on the xInterp urange
+        double _uscale; ///< conversion from k to u for xInterpolant
         double _flux;
         int _maxNin;
 

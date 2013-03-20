@@ -50,7 +50,7 @@ class InputCatalog(object):
     _single_params = []
     _takes_rng = False
 
-    # nobject_only is an intentionally undocumented kwarg that should be used only by
+    # nobjects_only is an intentionally undocumented kwarg that should be used only by
     # the config structure.  It indicates that all we care about is the nobjects parameter.
     # So skip any other calculations that might normally be necessary on construction.
     def __init__(self, file_name, dir=None, file_type=None, comments='#', hdu=1,
@@ -85,16 +85,26 @@ class InputCatalog(object):
     def read_ascii(self, comments, nobjects_only):
         """Read in an input catalog from an ASCII file.
         """
+        # If all we care about is nobjects, this is quicker:
+        if nobjects_only:
+            # See the script devel/testlinecounting.py that tests several possibilities.
+            # An even faster version using buffering is possible although it requires some care
+            # around edge cases, so we use this one instead, which is "correct by inspection".
+            f = open(self.file_name)
+            if (len(comments) == 1):
+                c = comments[0]
+                self.nobjects = sum(1 for line in f if line[0] != c)
+            else:
+                self.nobjects = sum(1 for line in f if not line.startswith(comments))
+            return
+
         import numpy
         # Read in the data using the numpy convenience function
         # Note: we leave the data as str, rather than convert to float, so that if
         # we have any str fields, they don't give an error here.  They'll only give an 
         # error if one tries to convert them to float at some point.
         self.data = numpy.loadtxt(self.file_name, comments=comments, dtype=str)
-
-        # TODO: Is there a faster way to do this if all we care about is nobjects?
         self.nobjects = self.data.shape[0]  
-
         self.ncols = self.data.shape[1]
         self.isfits = False
 
@@ -102,42 +112,39 @@ class InputCatalog(object):
         """Read in an input catalog from a FITS file.
         """
         import pyfits
-        import numpy
-        data = pyfits.getdata(self.file_name, hdu)
+        raw_data = pyfits.getdata(self.file_name, hdu)
         if pyfits.__version__ > '3.0':
-            self.names = data.columns.names
+            self.names = raw_data.columns.names
         else:
-            self.names = data.dtype.names
-
-        # If all we care about is nobjects, we can do that quickly here.
-        if nobjects_only: 
-            self.nobjects = len(data.field(self.names[0]))
-            return
-
-        # data is an instance of a weird numpy FITS_rec class
-        # The main problem with it is that it isn't picklable, so using this 
-        # with multiprocessing will fail.
-        # So we turn this into a regular numpy array that looks just like the version
-        # we build in read_ascii with loadtxt.
-        # This assumes all fields have the same length.  If we need to support tables
-        # where this isn't true, we might need to add an if clause in here.
-        # (i.e. check the maximum, and then only include keys whose length is the same as that.)
-        # Seems like this would be a rare case though, so I haven't implemented it yet.
-        self.data = numpy.array([ [ str(x) for x in data.field(k) ] for k in self.names ]).T
-        self.nobjects = self.data.shape[0]
-        self.ncols = self.data.shape[1]
+            self.names = raw_data.dtype.names
+        self.nobjects = len(raw_data.field(self.names[0]))
+        if (nobjects_only): return
+        # The pyfits raw_data is a FITS_rec object, which isn't picklable, so we need to 
+        # copy the fields into a new structure to make sure our InputCatalog is picklable.
+        # The simplest is probably a dict keyed by the field names, which we save as self.data.
+        self.data = {}
+        for name in self.names:
+            self.data[name] = raw_data.field(name)
+        self.ncols = len(self.names)
         self.isfits = True
 
     def get(self, index, col):
-        """Return the data for the given index and col as a string
+        """Return the data for the given index and col in its native type.
 
         For ASCII catalogs, col is the column number.  
         For FITS catalogs, col is a string giving the name of the column in the FITS table.
+
+        Also, for ASCII catalogs, the "native type" is always str.  For FITS catalogs, it is 
+        whatever type is specified for each field in the binary table.
         """
         if self.isfits:
             if col not in self.names:
                 raise KeyError("Column %s is invalid for catalog %s"%(col,self.file_name))
-            icol = self.names.index(col)
+            if index < 0 or index >= self.nobjects:
+                raise IndexError("Object %d is invalid for catalog %s"%(index,self.file_name))
+            if index >= len(self.data[col]):
+                raise IndexError("Object %d is invalid for column %s"%(index,col))
+            return self.data[col][index]
         else:
             try:
                 icol = int(col)
@@ -145,9 +152,9 @@ class InputCatalog(object):
                 raise ValueError("For ASCII catalogs, col must be an integer")
             if icol < 0 or icol >= self.ncols:
                 raise IndexError("Column %d is invalid for catalog %s"%(icol,self.file_name))
-        if index < 0 or index >= self.nobjects:
-            raise IndexError("Object %d is invalid for catalog %s"%(index,self.file_name))
-        return self.data[index, icol]
+            if index < 0 or index >= self.nobjects:
+                raise IndexError("Object %d is invalid for catalog %s"%(index,self.file_name))
+            return self.data[index, icol]
 
     def getFloat(self, index, col):
         """Return the data for the given index and col as a float if possible

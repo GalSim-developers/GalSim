@@ -41,6 +41,12 @@ class DES_Shapelet(object):
                                                  # NOT in arcsec on the sky!
         psf = des_shapelet.getPSF(pos)
 
+    Note that the DES_Shapelet profile is measured with respect to sky coordinates, not 
+    pixel coordinates.  So if you want the drawn image to look like the original, it should be
+    drawn with the same WCS as found in the original image.  However, GalSim doesn't yet have
+    the ability to handle such WCS functions.  This is Issue #364.  Until then, an approximate
+    workaround is to use pixel_scale=0.262, and apply a rotation of -90 degrees before drawing.
+
     This class will only interpolate within the defining bounds.  It won't extrapolate
     beyond the bounding box of where the stars defined the interpolation.
     If you try to use it with an invalid position, it will throw an IndexError.
