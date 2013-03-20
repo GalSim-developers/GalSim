@@ -51,6 +51,7 @@ struct PyPosition {
             .def(bp::self /= bp::other<T>())
             .def(bp::self * bp::other<T>())
             .def(bp::self / bp::other<T>())
+            .def(bp::other<T>() * bp::self)
             .def(-bp::self)
             .def(bp::self + bp::self)
             .def(bp::self - bp::self)

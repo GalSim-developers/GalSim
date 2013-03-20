@@ -80,8 +80,7 @@ def shear_gaussian(theta1_array, theta2_array, sigma, pos, amp=1., rotate45=Fals
     return g1, g2
 
 def test_nfwhalo():
-    """Test that NFWHalo computations are consistent with expectations from external reference
-    """
+    """Various tests of the NFWHalo class (against reference data, and basic sanity tests)"""
     import time
     t1 = time.time()
 

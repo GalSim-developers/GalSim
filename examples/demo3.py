@@ -41,6 +41,7 @@ New features introduced in this demo:
 - obj.applyShear(shear)
 - obj3 = x1 * obj1 + x2 * obj2
 - image = galsim.ImageF(image_size, image_size)
+- obj.draw(image, dx)
 - shear3 = shear1 + shear2
 - noise = galsim.CCDNoise(rng, sky_level, gain, read_noise)
 """

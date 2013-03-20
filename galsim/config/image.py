@@ -1,3 +1,21 @@
+# Copyright 2012, 2013 The GalSim developers:
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+#
+# GalSim is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# GalSim is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+#
 
 import galsim
 
@@ -277,7 +295,7 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
 
     ignore = [ 'draw_method', 'noise', 'wcs', 'nproc' , 'random_seed' ]
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int ,
-            'pixel_scale' : float , 'sky_level' : float }
+            'pixel_scale' : float , 'sky_level' : float, 'sky_level_pixel' : float }
     params = galsim.config.GetAllParams(
         config['image'], 'image', config, opt=opt, ignore=ignore)[0]
 
@@ -299,11 +317,16 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
     if 'pix' not in config:
         config['pix'] = { 'type' : 'Pixel' , 'xw' : pixel_scale }
 
-    sky_level = params.get('sky_level',None)
+    if 'sky_level' in params and 'sky_level_pixel' in params:
+        raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
+            "noise.type = %s"%type)
+    sky_level_pixel = params.get('sky_level_pixel',None)
+    if 'sky_level' in params:
+        sky_level_pixel = params['sky_level'] * pixel_scale**2
 
     return galsim.config.BuildSingleStamp(
             config=config, xsize=xsize, ysize=ysize, obj_num=obj_num,
-            sky_level=sky_level, do_noise=True, logger=logger,
+            sky_level_pixel=sky_level_pixel, do_noise=True, logger=logger,
             make_psf_image=make_psf_image, 
             make_weight_image=make_weight_image,
             make_badpix_image=make_badpix_image)
@@ -333,7 +356,8 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     req = { 'nx_tiles' : int , 'ny_tiles' : int }
     opt = { 'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
             'border' : int , 'xborder' : int , 'yborder' : int ,
-            'pixel_scale' : float , 'nproc' : int , 'sky_level' : float, 
+            'pixel_scale' : float , 'nproc' : int ,
+            'sky_level' : float, 'sky_level_pixel' : float,
             'order' : str }
     params = galsim.config.GetAllParams(
         config['image'], 'image', config, req=req, opt=opt, ignore=ignore)[0]
@@ -354,7 +378,15 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     xborder = params.get("xborder",border)
     yborder = params.get("yborder",border)
 
-    sky_level = params.get('sky_level',None)
+    pixel_scale = params.get('pixel_scale',1.0)
+    config['pixel_scale'] = pixel_scale
+
+    if 'sky_level' in params and 'sky_level_pixel' in params:
+        raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
+            "noise.type = %s"%type)
+    sky_level_pixel = params.get('sky_level_pixel',None)
+    if 'sky_level' in params:
+        sky_level_pixel = params['sky_level'] * pixel_scale**2
 
     do_noise = xborder >= 0 and yborder >= 0
     # TODO: Note: if one of these is < 0 and the other is > 0, then
@@ -375,8 +407,6 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
             "Calculated full_size = (%d,%d) "%(full_xsize,full_ysize)+
             "!= required (%d,%d)."%(config['image_xsize'],config['image_ysize']))
 
-    pixel_scale = params.get('pixel_scale',1.0)
-    config['pixel_scale'] = pixel_scale
     if 'pix' not in config:
         config['pix'] = { 'type' : 'Pixel' , 'xw' : pixel_scale }
 
@@ -387,6 +417,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         # image's first object (if there is a next image).  But I don't think that will have 
         # any adverse effects.
         seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+        #print 'seed = ',seed
         rng = galsim.BaseDeviate(seed)
     else:
         rng = galsim.BaseDeviate()
@@ -478,7 +509,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     stamp_images = galsim.config.BuildStamps(
             nobjects=nobjects, config=config,
             xsize=stamp_xsize, ysize=stamp_ysize, obj_num=obj_num, 
-            nproc=nproc, sky_level=sky_level, do_noise=do_noise, logger=logger,
+            nproc=nproc, sky_level_pixel=sky_level_pixel, do_noise=do_noise, logger=logger,
             make_psf_image=make_psf_image,
             make_weight_image=make_weight_image,
             make_badpix_image=make_badpix_image)
@@ -510,15 +541,17 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
             draw_method = galsim.config.GetCurrentValue(config['image'],'draw_method')
             if draw_method == 'fft':
                 galsim.config.AddNoiseFFT(
-                    full_image,full_weight_image,config['image']['noise'],config,rng,sky_level)
+                    full_image,full_weight_image,config['image']['noise'],config,rng,
+                    sky_level_pixel)
             elif draw_method == 'phot':
                 galsim.config.AddNoisePhot(
-                    full_image,full_weight_image,config['image']['noise'],config,rng,sky_level)
+                    full_image,full_weight_image,config['image']['noise'],config,rng,
+                    sky_level_pixel)
             else:
                 raise AttributeError("Unknown draw_method %s."%draw_method)
-        elif sky_level:
+        elif sky_level_pixel:
             # If we aren't doing noise, we still need to add a non-zero sky_level
-            full_image += sky_level * pixel_scale**2
+            full_image += sky_level_pixel
 
     return full_image, full_psf_image, full_weight_image, full_badpix_image
 
@@ -547,7 +580,8 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     req = { 'nobjects' : int }
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 
             'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
-            'pixel_scale' : float , 'nproc' : int , 'sky_level' : float }
+            'pixel_scale' : float , 'nproc' : int ,
+            'sky_level' : float , 'sky_level_pixel' : float }
     params = galsim.config.GetAllParams(
         config['image'], 'image', config, req=req, opt=opt, ignore=ignore)[0]
 
@@ -574,7 +608,15 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     stamp_xsize = params.get('stamp_xsize',stamp_size)
     stamp_ysize = params.get('stamp_ysize',stamp_size)
 
-    sky_level = params.get('sky_level',None)
+    pixel_scale = params.get('pixel_scale',1.0)
+    config['pixel_scale'] = pixel_scale
+
+    if 'sky_level' in params and 'sky_level_pixel' in params:
+        raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
+            "noise.type = %s"%type)
+    sky_level_pixel = params.get('sky_level_pixel',None)
+    if 'sky_level' in params:
+        sky_level_pixel = params['sky_level'] * pixel_scale**2
 
     # If image_xsize and image_ysize were set in config, make sure it matches.
     if ( 'image_xsize' in config and 'image_ysize' in config and
@@ -583,18 +625,19 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
             "Unable to reconcile saved image_xsize and image_ysize with provided "+
             "xsize=%d, ysize=%d, "%(full_xsize,full_ysize))
 
-    pixel_scale = params.get('pixel_scale',1.0)
-    config['pixel_scale'] = pixel_scale
     if 'pix' not in config:
         config['pix'] = { 'type' : 'Pixel' , 'xw' : pixel_scale }
 
     # Set the rng to use for image stuff.
     if 'random_seed' in config['image']:
+        #print 'random_seed = ',config['image']['random_seed']
         config['seq_index'] = obj_num+nobjects
+        #print 'seq_index = ',config['seq_index']
         # Technically obj_num+nobjects will be the index of the random seed used for the next 
         # image's first object (if there is a next image).  But I don't think that will have 
         # any adverse effects.
         seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+        #print 'seed = ',seed
         rng = galsim.BaseDeviate(seed)
     else:
         rng = galsim.BaseDeviate()
@@ -667,7 +710,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     stamp_images = galsim.config.BuildStamps(
             nobjects=nobjects, config=config,
             xsize=stamp_xsize, ysize=stamp_ysize, obj_num=obj_num,
-            nproc=nproc, sky_level=sky_level, do_noise=False, logger=logger,
+            nproc=nproc, sky_level_pixel=sky_level_pixel, do_noise=False, logger=logger,
             make_psf_image=make_psf_image,
             make_weight_image=make_weight_image,
             make_badpix_image=make_badpix_image)
@@ -683,7 +726,9 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         #print 'full bounds = ',full_image.bounds
         #print 'Overlap = ',bounds
         if bounds.isDefined():
+            #print 'stamp = ',images[k][bounds].array
             full_image[bounds] += images[k][bounds]
+            #print 'on image = ',full_image[bounds].array
             if make_psf_image:
                 full_psf_image[bounds] += psf_images[k][bounds]
             if make_weight_image:
@@ -704,16 +749,16 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         draw_method = galsim.config.GetCurrentValue(config['image'],'draw_method')
         if draw_method == 'fft':
             galsim.config.AddNoiseFFT(
-                full_image,full_weight_image,config['image']['noise'],config,rng,sky_level)
+                full_image,full_weight_image,config['image']['noise'],config,rng,sky_level_pixel)
         elif draw_method == 'phot':
             galsim.config.AddNoisePhot(
-                full_image,full_weight_image,config['image']['noise'],config,rng,sky_level)
+                full_image,full_weight_image,config['image']['noise'],config,rng,sky_level_pixel)
         else:
             raise AttributeError("Unknown draw_method %s."%draw_method)
 
-    elif sky_level:
+    elif sky_level_pixel:
         # If we aren't doing noise, we still need to add a non-zero sky_level
-        full_image += sky_level * pixel_scale**2
+        full_image += sky_level_pixel
 
     return full_image, full_psf_image, full_weight_image, full_badpix_image
 
