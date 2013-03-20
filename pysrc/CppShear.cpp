@@ -21,7 +21,7 @@
 #include "boost/python.hpp"
 #include "CppShear.h"
 
-#define PY_ARRAY_UNIQUE_SYMBOL SBPROFILE_ARRAY_API
+#define PY_ARRAY_UNIQUE_SYMBOL GALSIM_ARRAY_API
 #define NO_IMPORT_ARRAY
 #include "numpy/arrayobject.h"
 

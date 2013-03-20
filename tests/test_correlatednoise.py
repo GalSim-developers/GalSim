@@ -161,7 +161,7 @@ def test_uncorrelated_noise_symmetry():
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
 
 def test_uncorrelated_noise_90degree_rotation():
-    """Test that the ImageCorrFunc rotation methods produces the same output as initializing with a
+    """Test that the ImageCorrFunc rotation method produces the same output as initializing with a
     90 degree-rotated input field.
     """
     t1 = time.time()
