@@ -461,7 +461,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         image from which the `correlated_noise` was made.  This command above is functionally 
         equivalent to
 
-            >>> correlated_noise.convolveWith(galsim.Deconvolve(galsim.Pixel(0.2)))
+            >>> correlated_noise.convolveWith(galsim.Deconvolve(galsim.Pixel(0.03)))
             >>> correlated_noise.convolveWith(galsim.Pixel(0.2))
             >>> correlated_noise.convolveWith(galsim.Moffat(beta=3., fwhm=0.7))
 
