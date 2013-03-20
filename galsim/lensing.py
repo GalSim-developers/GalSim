@@ -1009,7 +1009,7 @@ class NFWHalo(object):
         # Make outputs in proper format: be careful here, we want consistent inputs and outputs
         # (e.g., if given a Numpy array, return one as well).  But don't attempt to index "pos"
         # until you know that it can be indexed, i.e., that it's not just a single PositionD,
-        # because then bad things will happen (i.e., TypeError).
+        # because then bad things will happen (TypeError).
         if isinstance(pos, galsim.PositionD):
             return g1, g2
         if isinstance(pos[0], np.ndarray):
@@ -1052,7 +1052,7 @@ class NFWHalo(object):
         # Make outputs in proper format: be careful here, we want consistent inputs and outputs
         # (e.g., if given a Numpy array, return one as well).  But don't attempt to index "pos"
         # until you know that it can be indexed, i.e., that it's not just a single PositionD,
-        # because then bad things will happen (i.e., TypeError).
+        # because then bad things will happen (TypeError).
         if isinstance(pos, galsim.PositionD):
             return kappa
         elif isinstance(pos[0], np.ndarray):
@@ -1095,7 +1095,7 @@ class NFWHalo(object):
         # Make outputs in proper format: be careful here, we want consistent inputs and outputs
         # (e.g., if given a Numpy array, return one as well).  But don't attempt to index "pos"
         # until you know that it can be indexed, i.e., that it's not just a single PositionD,
-        # because then bad things will happen (i.e., TypeError).
+        # because then bad things will happen (TypeError).
         if isinstance(pos, galsim.PositionD):
             return mu
         elif isinstance(pos[0], np.ndarray):

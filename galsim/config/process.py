@@ -33,7 +33,7 @@ valid_input_types = {
     'nfw_halo' : ('NFWHalo', [], False),
     'power_spectrum' : ('PowerSpectrum',
                         # power_spectrum uses these extra parameters for buildGriddedShears later.
-                        ['grid_spacing', 'interpolant'], 
+                        ['grid_spacing', 'interpolant', 'get_kappa'], 
                         False),
     'fits_header' : ('FitsHeader', [], False), 
 }
