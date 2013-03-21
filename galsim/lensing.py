@@ -750,12 +750,19 @@ class PowerSpectrumRealizer(object):
         S = np.zeros((self.nx, self.ny / 2 + 1))
         i_kx = self.i_kx
         i_ky = self.i_ky
-        TwoPsi = 2 * np.arctan2(1.0*self.i_ky, 1.0*self.i_kx)
-        C[ i_kx, i_ky] = np.cos(TwoPsi)
-        S[ i_kx, i_ky] = np.sin(TwoPsi)
+        fi_kx = i_kx.astype(float)
+        fi_ky = i_ky.astype(float)
+        fi_k2 = (fi_kx * fi_kx + fi_ky * fi_ky)
+        # Use Joe's cheap trick to avoid zero division at origin...
+        fi_k2[0, 0] = 1.
+        C[ i_kx, i_ky] = (fi_kx * fi_kx - fi_ky * fi_ky) / fi_k2
+        S[ i_kx, i_ky] = 2. * fi_kx * fi_ky / fi_k2
         C[-i_kx, i_ky] =  C[i_kx,i_ky]
         S[-i_kx, i_ky] = -S[i_kx,i_ky]
-        return C,S
+        # ...Hand enter correct values at origin
+        C[0, 0] = 1.
+        S[0, 0] = 0.
+        return C, S
 
 class Cosmology(object):
     """Basic cosmology calculations.
