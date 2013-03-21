@@ -271,7 +271,7 @@ namespace galsim {
         return boost::shared_ptr<PhotonArray>();
     }
 
-    void SBAutoConvolve::SBAutoConvolveImpl::fillKGrid(KTable& kt) const 
+    void SBAutoCorrelate::SBAutoCorrelateImpl::fillKGrid(KTable& kt) const 
     {
         SBProfile::GetImpl(_adaptee)->fillKGrid(kt);
         kt = *kt.getAbsSquared();
