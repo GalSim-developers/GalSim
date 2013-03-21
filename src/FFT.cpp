@@ -582,8 +582,22 @@ namespace galsim {
     {
         check_array();
         boost::shared_ptr<KTable> lhs(new KTable(_N, _dk));
+        const std::complex<double>* zptr=_array.get();
+        std::complex<double>* lptr=lhs->_array.get();
+        // Do the positive y frequencies
+        for (int iy=0; iy< _N/2; iy++) {
+            for (int ix=0; ix<= _N/2 ; ix++) {
+                *(lptr++)= conj(*(zptr++));
+            }
+        }
+        // Then do the negative y's
+        for (int iy=-_N/2; iy< 0; iy++) {
+            for (int ix=0; ix<= _N/2 ; ix++) {
+                *(lptr++)= conj(*(zptr++));
+            }
+        }
+        return lhs;
     }
-
 
     // Transform to a single x point:
     // assumes (x,y) in physical units
