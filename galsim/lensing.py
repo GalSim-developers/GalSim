@@ -27,7 +27,7 @@ import numpy as np
 def _convertPositions(pos, units, func):
     """Convert pos from the valid ways to input positions to two numpy arrays
 
-       This is used by the functions getShear, getConvergence, and getMag for both 
+       This is used by the functions getShear, getConvergence, and getMagnification for both 
        PowerSpectrum and NFWHalo (the former only has getShear currently).
     """
     try:
@@ -1062,7 +1062,7 @@ class NFWHalo(object):
         else:
             return [ k for k in kappa ]
 
-    def getMag(self, pos, z_s, units=galsim.arcsec):
+    def getMagnification(self, pos, z_s, units=galsim.arcsec):
         """Calculate magnification of halo at specified positions.
 
         @param pos     Position(s) of the source(s), assumed to be post-lensing!
@@ -1080,7 +1080,7 @@ class NFWHalo(object):
         @return mu     Numpy array containing the magnification at the specified position(s)
         """
         # Convert to numpy arrays for internal usage:
-        pos_x, pos_y = _convertPositions(pos, units, 'getMag')
+        pos_x, pos_y = _convertPositions(pos, units, 'getMagnification')
 
         r = ((pos_x - self.halo_pos.x)**2 + (pos_y - self.halo_pos.y)**2)**0.5/self.rs_arcsec
         # compute strength of lensing fields
