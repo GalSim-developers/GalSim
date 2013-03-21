@@ -68,10 +68,22 @@ namespace galsim {
 
     };
 
+    struct PySBAutoCorrelate 
+    {
+        static void wrap() {
+            bp::class_< SBAutoCorrelate, bp::bases<SBProfile> >("SBAutoCorrelate", bp::no_init)
+                .def(bp::init<const SBProfile &>((bp::args("s"))))
+                .def(bp::init<const SBAutoConvolve &>())
+                ;
+        }
+
+    };
+
     void pyExportSBConvolve() 
     {
         PySBConvolve::wrap();
         PySBAutoConvolve::wrap();
+        PySBAutoCorrelate::wrap();
     }
 
 } // namespace galsim
