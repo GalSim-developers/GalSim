@@ -157,10 +157,10 @@ def main(argv):
     # image, with grid points spaced by 90 arcsec (hence interpolation only happens below 90"
     # scales, below the interesting scales on which we want the shear power spectrum to be
     # represented exactly).  Lensing engine wants positions in arcsec, so calculate that:
-    ps.buildGriddedShears(grid_spacing = grid_spacing,
-                          ngrid = int(image_size_arcsec / grid_spacing)+1,
-                          center = center,
-                          rng = rng, get_kappa = True)
+    ps.buildGrid(grid_spacing = grid_spacing,
+                 ngrid = int(image_size_arcsec / grid_spacing)+1,
+                 center = center,
+                 rng = rng)
     logger.info('Made gridded shears')
 
     # Now we need to loop over our objects:

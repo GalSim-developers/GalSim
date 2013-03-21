@@ -32,8 +32,8 @@ valid_input_types = {
     'real_catalog' : ('RealGalaxyCatalog', [], True),
     'nfw_halo' : ('NFWHalo', [], False),
     'power_spectrum' : ('PowerSpectrum',
-                        # power_spectrum uses these extra parameters for buildGriddedShears later.
-                        ['grid_spacing', 'interpolant', 'get_kappa'], 
+                        # power_spectrum uses these extra parameters for buildGrid later.
+                        ['grid_spacing', 'interpolant'], 
                         False),
     'fits_header' : ('FitsHeader', [], False), 
 }

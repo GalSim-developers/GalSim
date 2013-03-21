@@ -79,7 +79,7 @@
 
     "magnification" : {
         "#" : "We use PowerSpectrumMag for this, which is set up below using input :",
-        "#" : "power_spectrum with the get_kappa option.",
+        "#" : "power_spectrum.",
         "type" : "PowerSpectrumMag"
     },
 
@@ -181,13 +181,6 @@
         "#" : "the power spectrum realization.  GalSim will then interpolate between these ",
         "#" : "locations to the actual position of each galaxy.",
         "grid_spacing" : 90,
-
-        "#" : "The calculation of the convergence field and therefore the lensing magnification",
-        "#" : "is an additional, optional step done by the lensing engine.  (It adds to the",
-        "#" : "computational expense and hence is not done by default.  Thus there is a",
-        "#" : "get_kappa option which should be set to true if the user wants to later use",
-        "#" : "PowerSpectrumMag to apply lensing magnification.",
-        "get_kappa" : "True"
 
     }
 },
