@@ -180,7 +180,7 @@ namespace galsim {
         double maxK() const { return _adaptee.maxK(); }
         double stepK() const { return _adaptee.stepK() / sqrt(2.); }
 
-        Position<double> centroid() const { return _adaptee.centroid()*2.; }
+        Position<double> centroid() const { return _adaptee.centroid() * 2.; }
 
         double getFlux() const { return SQR(_adaptee.getFlux()); }
 
@@ -214,7 +214,10 @@ namespace galsim {
         { throw SBError("SBAutoCorrelate::xValue() not implemented"); }
 
         std::complex<double> kValue(const Position<double>& k) const
-        { return ABS2(_adaptee.kValue(k)); }
+        {
+            std::complex<double> kvtmp = _adaptee.kValue(k);
+            return conj(kvtmp) * kvtmp;
+        }
 
         bool isAxisymmetric() const { return _adaptee.isAxisymmetric(); }
         bool hasHardEdges() const { return false; }
@@ -239,7 +242,6 @@ namespace galsim {
 
         template <typename T>
         static T SQR(T x) { return x*x; }
-        static T ABS2(T x) { return conj(x)*x; }
 
         // Copy constructor and op= are undefined.
         SBAutoCorrelateImpl(const SBAutoCorrelateImpl& rhs);
@@ -249,4 +251,3 @@ namespace galsim {
 }
 
 #endif // SBCONVOLVE_IMPL_H
-
