@@ -28,7 +28,7 @@ def _convertPositions(pos, units, func):
     """Convert pos from the valid ways to input positions to two numpy arrays
 
        This is used by the functions getShear, getConvergence, and getMagnification for both 
-       PowerSpectrum and NFWHalo (the former only has getShear currently).
+       PowerSpectrum and NFWHalo.
     """
     try:
         # Check for PositionD or PositionI:
@@ -433,13 +433,11 @@ class PowerSpectrum(object):
         return pf
 
 
-    def getShear(self, pos, units=galsim.arcsec, get_kappa=False):
+    def getShear(self, pos, units=galsim.arcsec):
         """
-        This function can interpolate between grid positions to find the shear and, optionally,
-        convergence values for a given list of input positions (or just a single position).  Before
-        calling this function, you must call buildGrid first to define the grid on which to
-        interpolate.  However, unlike buildGrid, the getShear function can automatically convert
-        between input units for the input positions relative to the default units (arcsec).
+        This function can interpolate between grid positions to find the shear values for a given
+        list of input positions (or just a single position).  Before calling this function, you must
+        call buildGrid first to define the grid on which to interpolate.
 
         Note that the interpolation (carried out using the interpolant that was specified when
         building the gridded shears) modifies the effective power spectrum somewhat.  The user is
@@ -481,14 +479,8 @@ class PowerSpectrum(object):
                                   - Multidimensional NumPy array, as long as array[0] contains
                                     x-positions and array[1] contains y-positions
         @param units            The angular units used for the positions.  [default = arcsec]
-        @param get_kappa        Get the convergence in addition to the shear?
-                                [Default: `get_kappa=False`]  Note that since this method works by
-                                interpolating a previously-built grid of shears and convergences,
-                                then if setting `get_kappa=True` in this method, the grid must have
-                                been built with `get_kappa=True` when calling buildGrid.
 
-        @return g1,g2[,kappa]   If given a single position: the two shear components g_1 and g_2 and
-                                (if `get_kappa=True`) the convergence, kappa.
+        @return g1,g2           If given a single position: the two shear components g_1 and g_2.
                                 If given a list of positions: each is a python list of values.
                                 If given a NumPy array of positions: each is a NumPy array.
         """
@@ -509,11 +501,9 @@ class PowerSpectrum(object):
         # interpolation.
         sbii_g1 = galsim.SBInterpolatedImage(self.im_g1, xInterp=interpolant2d)
         sbii_g2 = galsim.SBInterpolatedImage(self.im_g2, xInterp=interpolant2d)
-        if get_kappa:
-            sbii_kappa = galsim.SBInterpolatedImage(self.im_kappa, xInterp=interpolant2d)
 
         # interpolate if necessary
-        g1,g2,kappa = [], [], []
+        g1,g2 = [], []
         for iter_pos in [ galsim.PositionD(pos_x[i],pos_y[i]) for i in range(len(pos_x)) ]:
             # Check that the position is in the bounds of the interpolated image
             if not self.bounds.includes(iter_pos):
@@ -524,34 +514,87 @@ class PowerSpectrum(object):
                     ".  Returning a shear of (0,0) for this point.")
                 g1.append(0.)
                 g2.append(0.)
-                kappa.append(0.)
             else:
                 g1.append(sbii_g1.xValue(iter_pos+self.offset))
                 g2.append(sbii_g2.xValue(iter_pos+self.offset))
-                if get_kappa:
-                    kappa.append(sbii_kappa.xValue(iter_pos+self.offset))
-                else:
-                    kappa.append(0.)
         if isinstance(pos, galsim.PositionD):
-            if get_kappa:
-                return g1[0], g2[0], kappa[0]
-            else:
-                return g1[0], g2[0]
+            return g1[0], g2[0]
         elif isinstance(pos[0], np.ndarray):
-            if get_kappa:
-                return np.array(g1), np.array(g2), np.array(kappa)
-            else:
-                return np.array(g1), np.array(g2)
+            return np.array(g1), np.array(g2)
         elif len(pos_x) == 1 and not isinstance(pos[0],list): 
-            if get_kappa:
-                return g1[0], g2[0], kappa[0]
-            else:
-                return g1[0], g2[0]
+            return g1[0], g2[0]
         else:
-            if get_kappa:
-                return g1, g2, kappa
+            return g1, g2
+
+    def getConvergence(self, pos, units=galsim.arcsec):
+        """
+        This function can interpolate between grid positions to find the convergence values for a
+        given list of input positions (or just a single position).  Before calling this function,
+        you must call buildGrid first to define the grid on which to interpolate.
+
+        Note that the interpolation (carried out using the interpolant that was specified when
+        building the gridded shears) modifies the effective power spectrum somewhat.  The user is
+        responsible for choosing a grid size that is small enough not to significantly modify the
+        power spectrum on the scales of interest.
+
+        The usage of getConvergence is the same as for getShear, except that it returns only a
+        single number rather than a pair of numbers.  See documentation for getShear for some
+        examples.
+
+        @param pos              Position(s) of the source(s), assumed to be post-lensing!
+                                Valid ways to input this:
+                                  - Single galsim.PositionD (or PositionI) instance
+                                  - tuple of floats: (x,y)
+                                  - list of galsim.PositionD (or PositionI) instances
+                                  - tuple of lists: ( xlist, ylist )
+                                  - NumPy array of galsim.PositionD (or PositionI) instances
+                                  - tuple of NumPy arrays: ( xarray, yarray )
+                                  - Multidimensional NumPy array, as long as array[0] contains
+                                    x-positions and array[1] contains y-positions
+        @param units            The angular units used for the positions.  [default = arcsec]
+
+        @return kappa           If given a single position: the convergence kappa.
+                                If given a list of positions: a python list of values.
+                                If given a NumPy array of positions: a NumPy array of values.
+        """
+
+        if not hasattr(self, 'im_kappa'):
+            raise RuntimeError("PowerSpectrum.buildGrid must be called before getConvergence")
+
+        # Convert to numpy arrays for internal usage:
+        pos_x, pos_y = _convertPositions(pos, units, 'getConvergence')
+
+        # Set the interpolant:
+        if self.interpolant is None:
+            interpolant2d = galsim.InterpolantXY(galsim.Linear())
+        else:
+            interpolant2d = galsim.utilities.convert_interpolant_to_2d(self.interpolant)
+
+        # Make an SBInterpolatedImage, which will do the heavy lifting for the 
+        # interpolation.
+        sbii_kappa = galsim.SBInterpolatedImage(self.im_kappa, xInterp=interpolant2d)
+
+        # interpolate if necessary
+        kappa = []
+        for iter_pos in [ galsim.PositionD(pos_x[i],pos_y[i]) for i in range(len(pos_x)) ]:
+            # Check that the position is in the bounds of the interpolated image
+            if not self.bounds.includes(iter_pos):
+                import warnings
+                warnings.warn(
+                    "Warning: position (%f,%f) not within the bounds "%(pos.x,pos.y) +
+                    "of the gridded convergence values: " + str(self.bounds) + 
+                    ".  Returning a convergence of 0 for this point.")
+                kappa.append(0.)
             else:
-                return g1, g2
+                kappa.append(sbii_kappa.xValue(iter_pos+self.offset))
+        if isinstance(pos, galsim.PositionD):
+            return kappa[0]
+        elif isinstance(pos[0], np.ndarray):
+            return np.array(kappa)
+        elif len(pos_x) == 1 and not isinstance(pos[0],list): 
+            return kappa[0]
+        else:
+            return kappa
 
 class PowerSpectrumRealizer(object):
     """Class for generating realizations of power spectra with any area and pixel size.

@@ -50,7 +50,7 @@ valid_value_types = {
     'NFWHaloShear' : [ galsim.Shear ],
     'NFWHaloMagnification' : [ float ],
     'PowerSpectrumShear' : [ galsim.Shear ],
-    'PowerSpectrumMag' : [ float ],
+    'PowerSpectrumMagnification' : [ float ],
 }
  
 def ParseValue(config, param_name, base, value_type):
@@ -820,21 +820,22 @@ def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
     #print 'shear = ',shear
     return shear, False
 
-def _GenerateFromPowerSpectrumMag(param, param_name, base, value_type):
+def _GenerateFromPowerSpectrumMagnification(param, param_name, base, value_type):
     """@brief Return a magnification calculated from a PowerSpectrum object.
     """
     if 'pos' not in base:
-        raise ValueError("PowerSpectrumMag requested, but no position defined.")
+        raise ValueError("PowerSpectrumMagnification requested, but no position defined.")
     pos = base['pos']
 
     if 'power_spectrum' not in base:
-        raise ValueError("PowerSpectrumMag requested, but no input.power_spectrum defined.")
+        raise ValueError("PowerSpectrumMagnification requested, but no input.power_spectrum defined.")
     
     req = { }
     # Only Check, not Get.  (There's nothing to get -- just make sure there aren't extra params.)
     CheckAllParams(param, param_name, req=req)
 
-    g1,g2,kappa = base['power_spectrum'].getShear(pos, get_kappa=True)
+    g1,g2 = base['power_spectrum'].getShear(pos)
+    kappa = base['power_spectrum'].getConvergence(pos)
     mu = 1. / ( (1.-kappa)**2 - (g1**2 + g2**2) )
 
     return mu, False
