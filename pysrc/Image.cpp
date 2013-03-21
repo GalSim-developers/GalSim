@@ -79,8 +79,8 @@ struct PyImage {
     {
         CheckNumpyArray(array,2,isConst,data,owner,stride);
         bounds = Bounds<int>(
-            xmin, xmin + PyArray_DIM(array.ptr(), 1) - 1,
-            ymin, ymin + PyArray_DIM(array.ptr(), 0) - 1
+            xmin, xmin + GetNumpyArrayDim(array.ptr(), 1) - 1,
+            ymin, ymin + GetNumpyArrayDim(array.ptr(), 0) - 1
         );
     }
 
