@@ -37,7 +37,7 @@ class DES_PSFEx(object):
         ...
 
         pos = galsim.PositionD(image_x, image_y)  # position in pixels on the image
-                                                 # NOT in arcsec on the sky!
+                                                  # NOT in arcsec on the sky!
         psf = des_psfex.getPSF(pos, pixel_scale=0.27)
 
 
