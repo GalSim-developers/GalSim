@@ -176,8 +176,8 @@ def main(argv):
         # Turn this into a position in arcsec
         pos = galsim.PositionD(x,y) * pixel_scale
         
-        g1, g2 = ps.getShear(pos = pos)
-        kappa = ps.getConvergence(pos = pos)
+        # Get the reduced shears and magnification at this point
+        g1, g2, mu = ps.getLensing(pos = pos)
 
         # Construct the galaxy:
         # Select randomly from among our list of galaxies.
@@ -199,9 +199,8 @@ def main(argv):
         theta = ud()*2.0*numpy.pi*galsim.radians
         gal.applyRotation(theta)
 
-        # Apply the cosmological shear and magnification at this position.
+        # Apply the cosmological (reduced) shear and magnification at this position.
         gal.applyShear(g1 = g1, g2 = g2)
-        mu = 1. / ( (1. - kappa)**2 - (g1**2 + g2**2) )
         gal.applyMagnification(mu)
 
         # Convolve with the PSF.  We don't have to include a pixel response explicitly, since the

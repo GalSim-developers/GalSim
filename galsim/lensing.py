@@ -27,8 +27,8 @@ import numpy as np
 def _convertPositions(pos, units, func):
     """Convert pos from the valid ways to input positions to two numpy arrays
 
-       This is used by the functions getShear, getConvergence, and getMagnification for both 
-       PowerSpectrum and NFWHalo.
+       This is used by the functions getShear, getConvergence, getMagnification, and getLensing for
+       both PowerSpectrum and NFWHalo.
     """
     try:
         # Check for PositionD or PositionI:
@@ -714,7 +714,7 @@ class PowerSpectrum(object):
             raise RuntimeError("PowerSpectrum.buildGrid must be called before getMagnification")
 
         # Convert to numpy arrays for internal usage:
-        pos_x, pos_y = _convertPositions(pos, units, 'getConvergence')
+        pos_x, pos_y = _convertPositions(pos, units, 'getMagnification')
 
         # Set the interpolant:
         if self.interpolant is None:
@@ -741,7 +741,7 @@ class PowerSpectrum(object):
                 warnings.warn(
                     "Warning: position (%f,%f) not within the bounds "%(pos.x,pos.y) +
                     "of the gridded convergence values: " + str(self.bounds) + 
-                    ".  Returning a convergence of 0 for this point.")
+                    ".  Returning a magnification of 0 for this point.")
                 mu.append(0.)
             else:
                 mu.append(sbii_mu.xValue(iter_pos+self.offset))
@@ -753,6 +753,95 @@ class PowerSpectrum(object):
             return mu[0]
         else:
             return mu
+
+    def getLensing(self, pos, units=galsim.arcsec):
+        """
+        This function can interpolate between grid positions to find the lensing observable
+        quantities (reduced shears g1 and g2, and magnification mu) for a given list of input
+        positions (or just a single position).  Before calling this function, you must call
+        buildGrid first to define the grid of shears and convergences on which to interpolate.
+
+        Note that the interpolation (carried out using the interpolant that was specified when
+        building the gridded shears) modifies the effective power spectrum somewhat.  The user is
+        responsible for choosing a grid size that is small enough not to significantly modify the
+        power spectrum on the scales of interest.
+
+        The usage of getLensing is the same as for getShear, except that it returns only a single
+        number rather than a pair of numbers.  See documentation for getShear for some examples.
+
+        @param pos              Position(s) of the source(s), assumed to be post-lensing!
+                                Valid ways to input this:
+                                  - Single galsim.PositionD (or PositionI) instance
+                                  - tuple of floats: (x,y)
+                                  - list of galsim.PositionD (or PositionI) instances
+                                  - tuple of lists: ( xlist, ylist )
+                                  - NumPy array of galsim.PositionD (or PositionI) instances
+                                  - tuple of NumPy arrays: ( xarray, yarray )
+                                  - Multidimensional NumPy array, as long as array[0] contains
+                                    x-positions and array[1] contains y-positions
+        @param units            The angular units used for the positions.  [default = arcsec]
+
+        @return g1,g2,mu        If given a single position: the reduced shears g1 and g2, and
+                                magnification mu.
+                                If given a list of positions: python lists of values.
+                                If given a NumPy array of positions: NumPy arrays of values.
+        """
+
+        if not hasattr(self, 'im_kappa'):
+            raise RuntimeError("PowerSpectrum.buildGrid must be called before getLensing")
+
+        # Convert to numpy arrays for internal usage:
+        pos_x, pos_y = _convertPositions(pos, units, 'getLensing')
+
+        # Set the interpolant:
+        if self.interpolant is None:
+            interpolant2d = galsim.InterpolantXY(galsim.Linear())
+        else:
+            interpolant2d = galsim.utilities.convert_interpolant_to_2d(self.interpolant)
+
+        # Calculate the magnification based on the convergence and shear
+        g1_r, g2_r, mu = galsim.lensing.theoryToObserved(self.im_g1.array, self.im_g2.array,
+                                                         self.im_kappa.array)
+        g1_r = galsim.ImageViewD(g1_r)
+        g1_r.setScale(self.im_kappa.getScale())
+        g1_r.setOrigin(self.im_kappa.getXMin(), self.im_kappa.getYMin())
+        g2_r = galsim.ImageViewD(g2_r)
+        g2_r.setScale(self.im_kappa.getScale())
+        g2_r.setOrigin(self.im_kappa.getXMin(), self.im_kappa.getYMin())
+        mu = galsim.ImageViewD(mu)
+        mu.setScale(self.im_kappa.getScale())
+        mu.setOrigin(self.im_kappa.getXMin(), self.im_kappa.getYMin())
+        # Make an SBInterpolatedImage, which will do the heavy lifting for the 
+        # interpolation.
+        sbii_g1 = galsim.SBInterpolatedImage(g1_r, xInterp=interpolant2d)
+        sbii_g2 = galsim.SBInterpolatedImage(g2_r, xInterp=interpolant2d)
+        sbii_mu = galsim.SBInterpolatedImage(mu, xInterp=interpolant2d)
+
+        # interpolate if necessary
+        g1, g2, mu = [], [], []
+        for iter_pos in [ galsim.PositionD(pos_x[i],pos_y[i]) for i in range(len(pos_x)) ]:
+            # Check that the position is in the bounds of the interpolated image
+            if not self.bounds.includes(iter_pos):
+                import warnings
+                warnings.warn(
+                    "Warning: position (%f,%f) not within the bounds "%(pos.x,pos.y) +
+                    "of the gridded convergence values: " + str(self.bounds) + 
+                    ".  Returning 0 for lensing observables at this point.")
+                g1.append(0.)
+                g2.append(0.)
+                mu.append(0.)
+            else:
+                g1.append(sbii_g1.xValue(iter_pos+self.offset))
+                g2.append(sbii_g2.xValue(iter_pos+self.offset))
+                mu.append(sbii_mu.xValue(iter_pos+self.offset))
+        if isinstance(pos, galsim.PositionD):
+            return g1[0], g2[0], mu[0]
+        elif isinstance(pos[0], np.ndarray):
+            return np.array(g1), np.array(g2), np.array(mu)
+        elif len(pos_x) == 1 and not isinstance(pos[0],list): 
+            return g1[0], g2[0], mu[0]
+        else:
+            return g1, g2, mu
 
 class PowerSpectrumRealizer(object):
     """Class for generating realizations of power spectra with any area and pixel size.
