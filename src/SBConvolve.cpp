@@ -255,4 +255,44 @@ namespace galsim {
         SBProfile::GetImpl(_adaptee)->fillKGrid(kt);
         kt *= kt;
     }
+
+    //
+    // Autocorrelate
+    // 
+    
+    SBAutoCorrelate::SBAutoCorrelate(const SBProfile& s) : SBProfile(new SBAutoCorrelateImpl(s)) {}
+    SBAutoCorrelate::SBAutoCorrelate(const SBAutoCorrelate& rhs) : SBProfile(rhs) {}
+    SBAutoCorrelate::~SBAutoCorrelate() {}
+
+    //double SBAutoCorrelate::SBAutoCorrelateImpl::getPositiveFlux() const 
+    //{
+    //    double p = _adaptee.getPositiveFlux();
+    //    double n = _adaptee.getNegativeFlux();
+    //    return p*p + n*n;
+    //}
+
+    //double SBAutoCorrelate::SBAutoCorrelateImpl::getNegativeFlux() const 
+    //{
+    //    double p = _adaptee.getPositiveFlux();
+    //    double n = _adaptee.getNegativeFlux();
+    //    return 2.*p*n;
+    //}
+
+    //boost::shared_ptr<PhotonArray> SBAutoCorrelate::SBAutoCorrelateImpl::shoot(
+    //    int N, UniformDeviate u) const 
+    //{
+    //    dbg<<"AutoCorrelate shoot: N = "<<N<<std::endl;
+    //    dbg<<"Target flux = "<<getFlux()<<std::endl;
+    //    boost::shared_ptr<PhotonArray> result = _adaptee.shoot(N, u);
+    //    result->convolve(*_adaptee.shoot(N, u), u);
+    //    dbg<<"AutoCorrelate Realized flux = "<<result->getTotalFlux()<<std::endl;
+    //    return result;
+    //}
+
+    void SBAutoConvolve::SBAutoConvolveImpl::fillKGrid(KTable& kt) const 
+    {
+        SBProfile::GetImpl(_adaptee)->fillKGrid(kt);
+        kt = *kt.getAbsSquared();
+    }
+
 }
