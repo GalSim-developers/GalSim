@@ -577,23 +577,26 @@ namespace galsim {
         return lhs;
     }
 
-    // Return the complex conjugate of this KTable
-    boost::shared_ptr<KTable> KTable::getConj() const
+    // Return the absolute magnitude squared of this KTable
+    boost::shared_ptr<KTable> KTable::getAbsSquared() const
     {
         check_array();
         boost::shared_ptr<KTable> lhs(new KTable(_N, _dk));
         const std::complex<double>* zptr=_array.get();
         std::complex<double>* lptr=lhs->_array.get();
+        std::complex<double> val;
         // Do the positive y frequencies
         for (int iy=0; iy< _N/2; iy++) {
             for (int ix=0; ix<= _N/2 ; ix++) {
-                *(lptr++)= conj(*(zptr++));
+                val = *(zptr++);
+                *(lptr++)= conj(val) * val;
             }
         }
         // Then do the negative y's
         for (int iy=-_N/2; iy< 0; iy++) {
             for (int ix=0; ix<= _N/2 ; ix++) {
-                *(lptr++)= conj(*(zptr++));
+                val = *(zptr++);
+                *(lptr++)= conj(val) * val;
             }
         }
         return lhs;
