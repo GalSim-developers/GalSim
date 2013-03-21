@@ -275,7 +275,7 @@ def test_shear_reference():
     # define power spectrum
     ps = galsim.PowerSpectrum(e_power_function=lambda k : k**0.5, b_power_function=lambda k : k)
     # get shears
-    g1, g2, kappa = ps.buildGrid(grid_spacing = dx, ngrid = n, rng=rng, get_kappa=True)
+    g1, g2, kappa = ps.buildGrid(grid_spacing = dx, ngrid = n, rng=rng, get_convergence=True)
 
     # put in same format as data that got read in
     g1vec = g1.reshape(n*n)
@@ -499,7 +499,7 @@ def test_power_spectrum_with_kappa():
     psE = galsim.PowerSpectrum(tab_ps, None, units=galsim.radians)
     g1E, g2E, k_test = psE.buildGrid(
         grid_spacing=dx_grid_arcmin, ngrid=ngrid, units=galsim.arcmin,
-        rng=galsim.BaseDeviate(rseed), get_kappa=True)
+        rng=galsim.BaseDeviate(rseed), get_convergence=True)
     kE_ks, kB_ks = galsim.lensing.kappaKaiserSquires(g1E, g2E)
     # Test that E-mode kappa matches to some sensible accuracy
     np.testing.assert_array_almost_equal(
@@ -514,7 +514,7 @@ def test_power_spectrum_with_kappa():
     psB = galsim.PowerSpectrum(None, tab_ps, units=galsim.radians)
     g1B, g2B, k_test = psB.buildGrid(
         grid_spacing=dx_grid_arcmin, ngrid=ngrid, units=galsim.arcmin,
-        rng=galsim.BaseDeviate(rseed), get_kappa=True)
+        rng=galsim.BaseDeviate(rseed), get_convergence=True)
     kE_ks, kB_ks = galsim.lensing.kappaKaiserSquires(g1B, g2B)
     # Test that kappa output by PS code matches zero to some sensible accuracy
     np.testing.assert_array_almost_equal(
