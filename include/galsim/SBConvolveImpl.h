@@ -230,9 +230,7 @@ namespace galsim {
 
         double getFlux() const { return SQR(_adaptee.getFlux()); }
 
-        double getPositiveFlux() const;
-        double getNegativeFlux() const;
-
+        // shoot() not yet implemented: need to work out how positive and negative fluxes propagate
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
         void fillKGrid(KTable& kt) const;
