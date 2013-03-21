@@ -34,7 +34,7 @@ New features introduced in this demo:
 - pos = galsim.PositionD(x, y)
 - nfw = galsim.NFWHalo(mass, conc, z, pos, omega_m, omega_lam)
 - g1,g2 = nfw.getShear(pos, z)
-- mag = nfw.getMag(pos, z)
+- mag = nfw.getMagnification(pos, z)
 
 - Make multiple output files.
 - Place galaxies at random positions on a larger image.
@@ -179,7 +179,7 @@ def main(argv):
                               "Using shear = 0.")
                 shear = galsim.Shear(g1=0,g2=0)
 
-            mu = nfw.getMag( pos , nfw_z_source )
+            mu = nfw.getMagnification( pos , nfw_z_source )
             if mu < 0:
                 import warnings
                 warnings.warn("Warning: mu < 0 means strong lensing!  Using scale=5.")

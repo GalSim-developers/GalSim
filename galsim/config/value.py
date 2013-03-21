@@ -48,9 +48,9 @@ valid_value_types = {
     'XY' : [ galsim.PositionD ],
     'RTheta' : [ galsim.PositionD ],
     'NFWHaloShear' : [ galsim.Shear ],
-    'NFWHaloMag' : [ float ],
+    'NFWHaloMagnification' : [ float ],
     'PowerSpectrumShear' : [ galsim.Shear ],
-    'PowerSpectrumMag' : [ float ],
+    'PowerSpectrumMagnification' : [ float ],
 }
  
 def ParseValue(config, param_name, base, value_type):
@@ -754,31 +754,31 @@ def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
     return shear, False
 
 
-def _GenerateFromNFWHaloMag(param, param_name, base, value_type):
+def _GenerateFromNFWHaloMagnification(param, param_name, base, value_type):
     """@brief Return a magnification calculated from an NFWHalo object.
     """
     if 'pos' not in base:
-        raise ValueError("NFWHaloMag requested, but no position defined.")
+        raise ValueError("NFWHaloMagnification requested, but no position defined.")
     pos = base['pos']
 
     if 'gal' not in base or 'redshift' not in base['gal']:
-        raise ValueError("NFWHaloMag requested, but no gal.redshift defined.")
+        raise ValueError("NFWHaloMagnification requested, but no gal.redshift defined.")
     redshift = GetCurrentValue(base['gal'],'redshift')
 
     if 'nfw_halo' not in base:
-        raise ValueError("NFWHaloMag requested, but no input.nfw_halo defined.")
+        raise ValueError("NFWHaloMagnification requested, but no input.nfw_halo defined.")
     
     opt = { 'max_scale' : float }
     kwargs = GetAllParams(param, param_name, base, opt=opt)[0]
 
-    #print 'NFWHaloMag: pos = ',pos,' z = ',redshift
-    mu = base['nfw_halo'].getMag(pos,redshift)
+    #print 'NFWHaloMagnification: pos = ',pos,' z = ',redshift
+    mu = base['nfw_halo'].getMagnification(pos,redshift)
     #print 'mu = ',mu
 
     max_scale = kwargs.get('max_scale', 5.)
     if not max_scale > 0.: 
         raise ValueError(
-            "Invalid max_scale=%f (must be > 0) for %s.type = NFWHaloMag"%(repeat,param_name))
+            "Invalid max_scale=%f (must be > 0) for %s.type = NFWHaloMagnification"%(repeat,param_name))
 
     if mu < 0 or mu > max_scale**2:
         #print 'mu = ',mu
@@ -820,21 +820,22 @@ def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
     #print 'shear = ',shear
     return shear, False
 
-def _GenerateFromPowerSpectrumMag(param, param_name, base, value_type):
+def _GenerateFromPowerSpectrumMagnification(param, param_name, base, value_type):
     """@brief Return a magnification calculated from a PowerSpectrum object.
     """
     if 'pos' not in base:
-        raise ValueError("PowerSpectrumMag requested, but no position defined.")
+        raise ValueError("PowerSpectrumMagnification requested, but no position defined.")
     pos = base['pos']
 
     if 'power_spectrum' not in base:
-        raise ValueError("PowerSpectrumMag requested, but no input.power_spectrum defined.")
+        raise ValueError("PowerSpectrumMagnification requested, but no input.power_spectrum defined.")
     
     req = { }
     # Only Check, not Get.  (There's nothing to get -- just make sure there aren't extra params.)
     CheckAllParams(param, param_name, req=req)
 
-    g1,g2,kappa = base['power_spectrum'].getShear(pos, get_kappa=True)
+    g1,g2 = base['power_spectrum'].getShear(pos)
+    kappa = base['power_spectrum'].getConvergence(pos)
     mu = 1. / ( (1.-kappa)**2 - (g1**2 + g2**2) )
 
     return mu, False

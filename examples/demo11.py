@@ -5,12 +5,12 @@ The eleventh script in our tutorial about using GalSim in python scripts: exampl
 (This file is designed to be viewed in a window 100 characters wide.)
 
 This script uses a constant PSF from real data (an image read in from a bzipped FITS file, not a
-parametric model) and variable shear according to some cosmological model for which we have a
-tabulated power spectrum at specific k values only.  The 288 galaxies in the 0.2 x 0.2 degree field
-(representing a low number density of 2/arcmin^2) are randomly located and permitted to overlap, but
-we do take care to avoid being too close to the edge of the large image.  For the galaxies, we use a
-random selection from 5 specific RealGalaxy objects, selected to be 5 particularly irregular ones.
-These are taken from the same catalog of 100 objects that demo6 used.
+parametric model) and variable shear and magnification according to some cosmological model for
+which we have a tabulated power spectrum at specific k values only.  The 288 galaxies in the 0.2 x
+0.2 degree field (representing a low number density of 2/arcmin^2) are randomly located and
+permitted to overlap, but we do take care to avoid being too close to the edge of the large image.
+For the galaxies, we use a random selection from 5 specific RealGalaxy objects, selected to be 5
+particularly irregular ones.  These are taken from the same catalog of 100 objects that demo6 used.
 
 The noise added to the image is spatially correlated in the same way as often seen in coadd images
 from the Hubble Space Telescope (HST) Advanced Camera for Surveys, using a correlation function
@@ -157,10 +157,10 @@ def main(argv):
     # image, with grid points spaced by 90 arcsec (hence interpolation only happens below 90"
     # scales, below the interesting scales on which we want the shear power spectrum to be
     # represented exactly).  Lensing engine wants positions in arcsec, so calculate that:
-    ps.buildGriddedShears(grid_spacing = grid_spacing,
-                          ngrid = int(image_size_arcsec / grid_spacing)+1,
-                          center = center,
-                          rng = rng, get_kappa = True)
+    ps.buildGrid(grid_spacing = grid_spacing,
+                 ngrid = int(image_size_arcsec / grid_spacing)+1,
+                 center = center,
+                 rng = rng)
     logger.info('Made gridded shears')
 
     # Now we need to loop over our objects:
@@ -176,7 +176,8 @@ def main(argv):
         # Turn this into a position in arcsec
         pos = galsim.PositionD(x,y) * pixel_scale
         
-        g1, g2, kappa = ps.getShear(pos = pos, get_kappa = True)
+        g1, g2 = ps.getShear(pos = pos)
+        kappa = ps.getConvergence(pos = pos)
 
         # Construct the galaxy:
         # Select randomly from among our list of galaxies.

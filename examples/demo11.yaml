@@ -5,11 +5,11 @@
 # (This file is designed to be viewed in a window 100 characters wide.)
 #
 # This script uses a constant PSF from real data (an image read in from a bzipped FITS file, not a
-# parametric model) and variable shear according to some cosmological model for which we have a
-# tabulated power spectrum at specific k values only.  The 288 galaxies in the 0.2 x 0.2 degree
-# field (representing a low number density of 2/arcmin^2) are randomly located and permitted to
-# overlap, but we do take care to avoid being too close to the edge of the large image.  For the
-# galaxies, we use a random selection from 5 specific RealGalaxy objects, selected to be 5
+# parametric model) and variable shear and magnification according to some cosmological model for
+# which we have a tabulated power spectrum at specific k values only.  The 288 galaxies in the 0.2 x
+# 0.2 degree field (representing a low number density of 2/arcmin^2) are randomly located and
+# permitted to overlap, but we do take care to avoid being too close to the edge of the large image.
+# For the galaxies, we use a random selection from 5 specific RealGalaxy objects, selected to be 5
 # particularly irregular ones.  These are taken from the same catalog of 100 objects that demo6
 # used.
 #
@@ -85,9 +85,9 @@ gal :
         type : PowerSpectrumShear
 
     magnification :
-        # We use PowerSpectrumMag for this, which is set up below using input : power_spectrum with
-        # the get_kappa option
-        type : PowerSpectrumMag
+        # We use PowerSpectrumMagnification for this, which is set up below using input : 
+        # power_spectrum.
+        type : PowerSpectrumMagnification
 
     rotation :
         type : Random
@@ -172,13 +172,6 @@ input :
         # nearest, sinc, cubic, quintic, lanczos.  For lanczos, you need to add a number at 
         # the end to specify the order.  e.g. lanczos5 for 5th order Lanczos interpolation.
         interpolant : linear
-
-        # The calculation of the convergence field and therefore the lensing magnification is an
-        # additional, optional step done by the lensing engine.  (It adds to the computational
-        # expense and hence is not done by default.  Thus there is a get_kappa option which should
-        # be set to true if the user wants to later use PowerSpectrumMag to apply lensing
-        # magnification.
-        get_kappa : True
 
 # Define the names and format of the output files
 output :
