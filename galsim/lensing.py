@@ -1391,6 +1391,53 @@ class NFWHalo(object):
         else:
             return [ m for m in mu ]
 
+    def getLensing(self, pos, z_s, units=galsim.arcsec):
+        """Calculate lensing shear and magnification of halo at specified positions.
+
+        @param pos         Position(s) of the source(s), assumed to be post-lensing!
+                           Valid ways to input this:
+                             - Single galsim.PositionD (or PositionI) instance
+                             - tuple of floats: (x,y)
+                             - list of galsim.PositionD (or PositionI) instances
+                             - tuple of lists: ( xlist, ylist )
+                             - NumPy array of galsim.PositionD (or PositionI) instances
+                             - tuple of NumPy arrays: ( xarray, yarray )
+                             - Multidimensional NumPy array, as long as array[0] contains
+                               x-positions and array[1] contains y-positions
+        @param z_s         Source redshift(s)
+        @param units       Angular units of coordinates (only arcsec implemented so far).
+        @return g1,g2,mu   Reduced shears and magnifications.
+        """
+        # Convert to numpy arrays for internal usage:
+        pos_x, pos_y = _convertPositions(pos, units, 'getLensing')
+
+        r = ((pos_x - self.halo_pos.x)**2 + (pos_y - self.halo_pos.y)**2)**0.5/self.rs_arcsec
+        # compute strength of lensing fields
+        ks = self.__ks(z_s)
+        if isinstance(z_s, np.ndarray) == False:
+            ks = ks*np.ones_like(r)
+        g = self.__gamma(r, ks)
+        kappa = self.__kappa(r, ks)
+
+        g /= 1 - kappa
+        mu = 1. / ( (1.-kappa)**2 - g**2 )
+        # Get the tangential shear (no x component)
+        phi = np.arctan2(pos_y - self.halo_pos.y, pos_x - self.halo_pos.x)
+        g1 = -g / (np.cos(2*phi) + np.sin(2*phi)*np.tan(2*phi))
+        g2 = g1 * np.tan(2*phi)
+
+        # Make outputs in proper format: be careful here, we want consistent inputs and outputs
+        # (e.g., if given a Numpy array, return one as well).  But don't attempt to index "pos"
+        # until you know that it can be indexed, i.e., that it's not just a single PositionD,
+        # because then bad things will happen (TypeError).
+        if isinstance(pos, galsim.PositionD):
+            return g1, g2, mu
+        elif isinstance(pos[0], np.ndarray):
+            return g1, g2, mu
+        elif len(mu) == 1 and not isinstance(pos[0],list):
+            return g1[0], g2[0], mu[0]
+        else:
+            return g1.tolist(), g2.tolist(), m.tolist()
 
 def kappaKaiserSquires(g1, g2):
     """Perform a Kaiser & Squires (1993) inversion to get a convergence map from gridded shears.
