@@ -834,9 +834,7 @@ def _GenerateFromPowerSpectrumMagnification(param, param_name, base, value_type)
     # Only Check, not Get.  (There's nothing to get -- just make sure there aren't extra params.)
     CheckAllParams(param, param_name, req=req)
 
-    g1,g2 = base['power_spectrum'].getShear(pos)
-    kappa = base['power_spectrum'].getConvergence(pos)
-    mu = 1. / ( (1.-kappa)**2 - (g1**2 + g2**2) )
+    mu = base['power_spectrum'].getMagnification(pos)
 
     return mu, False
 

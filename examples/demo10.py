@@ -218,16 +218,13 @@ def main(argv):
         gal.applyShear(g1 = grid_g1[iy,ix], g2 = grid_g2[iy,ix])
 
         # Note: another way to access this after having built the g1,g2 grid
-        # is to use ps.getShear(pos) which just returns a single shear for that position.
+        # is to use ps.getShear(pos) which just returns a single (reduced) shear for that position.
         # The provided position does not have to be on the original grid, but it does
         # need to be contained within the bounds of the full grid. 
-        # i.e. only interpolation is allowed -- not extrapolation.
+        # i.e. only interpolation is allowed -- not extrapolation.  Note that the results will not
+        # be exactly consistent with the saved grid_g1, grid_g2, because those grids are the shear
+        # and the getShear() function returns the reduced shear.
         alt_g1,alt_g2 = ps.getShear(pos)
-
-        # These assert statements demonstrate the the values agree to 1.e-15.
-        # (They might not be exactly equal due to numerical rounding errors, but close enough.)
-        assert math.fabs(alt_g1 - grid_g1[iy,ix]) < 1.e-15
-        assert math.fabs(alt_g2 - grid_g2[iy,ix]) < 1.e-15
 
         # Apply half-pixel shift in a random direction.
         shift_r = pixel_scale * 0.5
