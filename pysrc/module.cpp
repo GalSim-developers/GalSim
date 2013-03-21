@@ -20,7 +20,9 @@
  */
 #include "boost/python.hpp"
 
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #define PY_ARRAY_UNIQUE_SYMBOL GALSIM_ARRAY_API
+// This is the only one that doesn't have NO_IMPORT_ARRAY.
 #include "numpy/arrayobject.h"
 
 namespace galsim {
