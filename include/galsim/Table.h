@@ -48,8 +48,17 @@ namespace galsim {
     /// @brief Exception class for Table access ouside the allowed range
     class TableOutOfRange : public TableError 
     {
+        template <typename A>
+        static std::string BuildErrorMessage(A val, A min, A max)
+        {
+            std::ostringstream oss;
+            oss << "Argument "<<val<<" out of range ("<<min<<".."<<max<<")";
+            return oss.str();
+        }
     public:
-        TableOutOfRange() : TableError("Argument out of range") {}
+        template <typename A>
+        TableOutOfRange(A val, A min, A max) : 
+            TableError(BuildErrorMessage(val,min,max)) {}
     };
 
     /// @brief Exception class for I/O errors when reading in a Table
