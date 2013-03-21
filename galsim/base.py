@@ -310,6 +310,30 @@ class GSObject(object):
         self.SBProfile.applyShear(shear._shear)
         self.__class__ = GSObject
 
+    def applyLensing(self, g1, g2, mu):
+        """Apply a lensing shear and magnification to this object.
+
+        This GSObject method applies a lensing (reduced) shear and magnification.  The shear must be
+        specified using the g1, g2 definition of shear (see galsim.Shear documentation for more
+        details).  This is the same definition as the outputs of the galsim.PowerSpectrum and
+        galsim.NFWHalo classes, which compute shears according to some lensing power spectrum or
+        lensing by an NFW dark matter halo.
+
+        After this call, the caller's type will be a GSObject.
+        This means that if the caller was a derived type that had extra methods beyond
+        those defined in GSObject (e.g. getSigma() for a Gaussian), then these methods
+        are no longer available.
+
+        @param g1      First component of lensing (reduced) shear to apply to the object.
+        @param g2      Second component of lensing (reduced) shear to apply to the object.
+        @param mu      Lensing magnification to apply to the object.
+        """
+        shear = galsim.Shear(g1=g1, g2=g2)
+        scale = np.sqrt(mu)
+        self.SBProfile.applyShear(shear._shear)
+        self.SBProfile.applyTransformation(galsim.Ellipse(np.log(scale))._ellipse)
+        self.__class__ = GSObject
+
     def applyRotation(self, theta):
         """Apply a rotation theta to this object.
            
@@ -399,9 +423,29 @@ class GSObject(object):
 
         For more details about the allowed keyword arguments, see the documentation of galsim.Shear
         (for doxygen documentation, see galsim.shear.Shear).
+
+        @returns The sheared GSObject.
         """
         ret = self.copy()
         ret.applyShear(*args, **kwargs)
+        return ret
+
+    def createLensed(self, g1, g2, mu):
+        """Returns a new GSObject by applying a lensing shear and magnification.
+
+        This method returns a new GSObject to which the supplied lensing (reduced) shear and
+        magnification has been applied.  The shear must be specified using the g1, g2 definition of
+        shear (see galsim.Shear documentation for more details).  This is the same definition as the
+        outputs of the galsim.PowerSpectrum and galsim.NFWHalo classes, which compute shears
+        according to some lensing power spectrum or lensing by an NFW dark matter halo.
+
+        @param g1      First component of lensing (reduced) shear to apply to the object.
+        @param g2      Second component of lensing (reduced) shear to apply to the object.
+        @param mu      Lensing magnification to apply to the object.
+        @returns       The lensed GSObject.
+        """
+        ret = self.copy()
+        ret.applyLensing(g1, g2, mu)
         return ret
 
     def createRotated(self, theta):

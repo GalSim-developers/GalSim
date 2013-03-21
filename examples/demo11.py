@@ -24,6 +24,7 @@ New features introduced in this demo:
 - tab = galsim.LookupTable(file)
 - ps = galsim.PowerSpectrum(..., units)
 - distdev = galsim.DistDeviate(rng, function, x_min, x_max)
+- gal.applyLensing(g1, g2, mu)
 - cf = galsim.correlatednoise.get_COSMOS_CorrFunc(file_name, ...)
 - cf.applyNoiseTo(image, ...)
 
@@ -199,9 +200,9 @@ def main(argv):
         theta = ud()*2.0*numpy.pi*galsim.radians
         gal.applyRotation(theta)
 
-        # Apply the cosmological (reduced) shear and magnification at this position.
-        gal.applyShear(g1 = g1, g2 = g2)
-        gal.applyMagnification(mu)
+        # Apply the cosmological (reduced) shear and magnification at this position using a single
+        # GSObject method.
+        gal.applyLensing(g1, g2, mu)
 
         # Convolve with the PSF.  We don't have to include a pixel response explicitly, since the
         # SDSS PSF image that we are using included the pixel response already.
