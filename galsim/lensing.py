@@ -137,7 +137,12 @@ class PowerSpectrum(object):
                             E-mode power.
                             It may also be a string that can be converted to a function using
                             eval('lambda k : ' + e_power_function), a LookupTable, or file_name from
-                            which to read in a LookupTable.
+                            which to read in a LookupTable.  If a file_name is given, the resulting
+                            LookupTable uses the defaults for the LookupTable class, namely spline
+                            interpolation in P(k).  Users who wish to deviate from those defaults
+                            (for example, to interpolate in log(P) and log(k), as might be more
+                            natural for power-law functions) should instead read in the file to
+                            create a LookupTable using the necessary non-default settings.
     @param b_power_function A function or other callable that accepts a Numpy array of |k| values,
                             and returns the B-mode power spectrum P_B(|k|) in an array of the same
                             shape.  The function should return the power spectrum desired in the B
