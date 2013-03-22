@@ -1349,7 +1349,7 @@ class NFWHalo(object):
         # until you know that it can be indexed, i.e., that it's not just a single PositionD,
         # because then bad things will happen (TypeError).
         if isinstance(pos, galsim.PositionD):
-            return kappa
+            return kappa[0]
         elif isinstance(pos[0], np.ndarray):
             return kappa
         elif len(kappa) == 1 and not isinstance(pos[0], list):
@@ -1392,7 +1392,7 @@ class NFWHalo(object):
         # until you know that it can be indexed, i.e., that it's not just a single PositionD,
         # because then bad things will happen (TypeError).
         if isinstance(pos, galsim.PositionD):
-            return mu
+            return mu[0]
         elif isinstance(pos[0], np.ndarray):
             return mu
         elif len(mu) == 1 and not isinstance(pos[0],list):
@@ -1440,7 +1440,7 @@ class NFWHalo(object):
         # until you know that it can be indexed, i.e., that it's not just a single PositionD,
         # because then bad things will happen (TypeError).
         if isinstance(pos, galsim.PositionD):
-            return g1, g2, mu
+            return g1[0], g2[0], mu[0]
         elif isinstance(pos[0], np.ndarray):
             return g1, g2, mu
         elif len(mu) == 1 and not isinstance(pos[0],list):
