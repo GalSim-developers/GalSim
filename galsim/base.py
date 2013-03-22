@@ -331,8 +331,7 @@ class GSObject(object):
         shear = galsim.Shear(g1=g1, g2=g2)
         scale = np.sqrt(mu)
         self.SBProfile.applyShear(shear._shear)
-        self.SBProfile.applyTransformation(galsim.Ellipse(np.log(scale))._ellipse)
-        self.__class__ = GSObject
+        self.applyMagnification(scale)
 
     def applyRotation(self, theta):
         """Apply a rotation theta to this object.
