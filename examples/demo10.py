@@ -213,18 +213,14 @@ def main(argv):
         # This makes a new copy so we're not changing the object in the gal_list.
         gal = gal.createRotated(theta)
 
-        # Apply the shear from the power spectrum.
-        # Note: numpy likes to access values by [iy,ix]
-        gal.applyShear(g1 = grid_g1[iy,ix], g2 = grid_g2[iy,ix])
-
-        # Note: another way to access this after having built the g1,g2 grid
-        # is to use ps.getShear(pos) which just returns a single (reduced) shear for that position.
-        # The provided position does not have to be on the original grid, but it does
-        # need to be contained within the bounds of the full grid. 
-        # i.e. only interpolation is allowed -- not extrapolation.  Note that the results will not
-        # be exactly consistent with the saved grid_g1, grid_g2, because those grids are the shear
-        # and the getShear() function returns the reduced shear.
+        # Apply the shear from the power spectrum.  We should either turn the gridded shears
+        # grid_g1[iy, ix] and grid_g2[iy, ix] into gridded reduced shears using a utility called
+        # galsim.lensing.theoryToObserved, or use ps.getShear() which by default gets the reduced
+        # shear.  ps.getShear() is also more flexible because it can get the shear at positions that
+        # are not on the original grid, as long as they are contained within the bounds of the full
+        # grid. So in this example we'll use ps.getShear().
         alt_g1,alt_g2 = ps.getShear(pos)
+        gal.applyShear(g1=alt_g1, g2=alt_g2)
 
         # Apply half-pixel shift in a random direction.
         shift_r = pixel_scale * 0.5

@@ -836,7 +836,16 @@ def _GenerateFromPowerSpectrumMagnification(param, param_name, base, value_type)
 
     mu = base['power_spectrum'].getMagnification(pos)
 
-    return mu, False
+    if mu <= 0:
+        #print 'mu = ',mu
+        import warnings
+        warnings.warn("Warning: PowerSpectrum mu = %f means strong lensing!  Using scale=0.01."%mu)
+        scale = 0.01
+    else:
+        import math
+        scale = math.sqrt(mu)
+
+    return scale, False
 
 def _GenerateFromList(param, param_name, base, value_type):
     """@brief Return next item from a provided list
