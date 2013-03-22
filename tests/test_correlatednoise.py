@@ -746,6 +746,7 @@ def test_convolve_cosmos():
     cosimage = galsim.ImageD(largeim_size, largeim_size) # large image to beat down noise
     cosimage.setScale(dx_cosmos) # Use COSMOS pixel scale
     # Define a PSF with which to convolve the noise field, one WITHOUT 2-fold rotational symmetry
+    # (see test_autocorrelate in test_SBProfile.py for more info as to why this is relevant)
     psf = galsim.Convolve([
         galsim.Kolmogorov(fwhm=3. * dx_cosmos),
         galsim.OpticalPSF(lam_over_diam=2.4 * dx_cosmos, coma2=0.4, defocus=-0.6)])
