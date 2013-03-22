@@ -415,6 +415,16 @@ def test_shapelet_adjustments():
         im.array, ref_im.array, 6,
         err_msg="Shapelet applyMagnification disagrees with GSObject applyMagnification")
 
+    # Test that the Shapelet applyLensing does the same thing as the GSObject 
+    # applyLensing
+    gsref_shapelet.applyLensing(-0.05, 0.15, 1.1)
+    gsref_shapelet.draw(ref_im)
+    shapelet.applyLensing(-0.05, 0.15, 1.1)
+    shapelet.draw(im)
+    np.testing.assert_array_almost_equal(
+        im.array, ref_im.array, 6,
+        err_msg="Shapelet applyLensing disagrees with GSObject applyLensing")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
