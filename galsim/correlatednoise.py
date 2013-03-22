@@ -470,7 +470,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         @param gsobject  A galsim.GSObject or derived class instance representing the function with
                          which the user wants to convolve the correlated noise model.
         """
-        self._profile = galsim.Convolve([self._profile, galsim.AutoConvolve(gsobject)])
+        self._profile = galsim.Convolve([self._profile, galsim.AutoCorrelate(gsobject)])
 
     def draw(self, image=None, dx=None, wmult=1., add_to_image=False):
         """The draw method for profiles storing correlation functions.
