@@ -352,6 +352,32 @@ def test_operations_simple():
         test_decimal,
         err_msg='Magnified InterpolatedImage disagrees with reference')
 
+    # Lens it (shear and magnify), and compare with expectations from GSObjects directly
+    test_g1 = -0.03
+    test_g2 = -0.04
+    test_mag = 0.74
+    test_decimal=2 # in % difference, i.e. 2 means 1% agreement
+    comp_region=30 # compare the central region of this linear size
+    test_int_im = int_im.createLensed(test_g1, test_g2, test_mag)
+    ref_obj = obj.createLensed(test_g1, test_g2, test_mag)
+    # make large images
+    im = galsim.ImageD(im_size, im_size)
+    ref_im = galsim.ImageD(im_size, im_size)
+    test_int_im.draw(image=im, dx=pix_scale)
+    ref_obj.draw(image=ref_im, dx=pix_scale)
+    # define subregion for comparison
+    new_bounds = galsim.BoundsI(1,comp_region,1,comp_region)
+    new_bounds.shift((im_size-comp_region)/2, (im_size-comp_region)/2)
+    im_sub = im.subImage(new_bounds)
+    ref_im_sub = ref_im.subImage(new_bounds)
+    diff_im=im_sub-ref_im_sub
+    rel = diff_im/im_sub
+    zeros_arr = np.zeros((comp_region, comp_region))
+    # require relative difference to be smaller than some amount
+    np.testing.assert_array_almost_equal(rel.array, zeros_arr,
+        test_decimal,
+        err_msg='Lensed InterpolatedImage disagrees with reference')
+
     # Rotate it, and compare with expectations from GSObjects directly
     test_rot_angle = 32.*galsim.degrees
     test_decimal=2 # in % difference, i.e. 2 means 1% agreement
