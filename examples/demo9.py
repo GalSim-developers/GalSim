@@ -182,16 +182,14 @@ def main(argv):
             mu = nfw.getMagnification( pos , nfw_z_source )
             if mu < 0:
                 import warnings
-                warnings.warn("Warning: mu < 0 means strong lensing!  Using scale=5.")
-                scale = 5
+                warnings.warn("Warning: mu < 0 means strong lensing!  Using mu=25.")
+                mu = 25
             elif mu > 25:
                 import warnings
-                warnings.warn("Warning: mu > 25 means strong lensing!  Using scale=5.")
-                scale = 5
-            else:
-                scale = math.sqrt(mu)
+                warnings.warn("Warning: mu > 25 means strong lensing!  Using mu=25.")
+                mu = 25
 
-            gal.applyMagnification(scale)
+            gal.applyMagnification(mu)
             gal.applyShear(shear)
 
             # Build the final object

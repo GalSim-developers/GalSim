@@ -784,12 +784,11 @@ def _GenerateFromNFWHaloMagnification(param, param_name, base, value_type):
         #print 'mu = ',mu
         import warnings
         warnings.warn("Warning: NFWHalo mu = %f means strong lensing!  Using scale=5."%mu)
-        scale = max_scale
+        mu = max_scale**2
     else:
         import math
-        scale = math.sqrt(mu)
     #print 'scale = ',scale
-    return scale, False
+    return mu, False
 
 
 def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
@@ -840,12 +839,11 @@ def _GenerateFromPowerSpectrumMagnification(param, param_name, base, value_type)
         #print 'mu = ',mu
         import warnings
         warnings.warn("Warning: PowerSpectrum mu = %f means strong lensing!  Using scale=0.01."%mu)
-        scale = 0.01
+        mu = 0.01
     else:
         import math
-        scale = math.sqrt(mu)
 
-    return scale, False
+    return mu, False
 
 def _GenerateFromList(param, param_name, base, value_type):
     """@brief Return next item from a provided list

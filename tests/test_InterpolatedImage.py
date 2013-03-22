@@ -422,8 +422,8 @@ def test_operations():
     test_im = galsim.ImageF(im.bounds)
     new_int_im.draw(image = test_im, dx = im.getScale())
     new_mom = test_im.FindAdaptiveMom()
-    np.testing.assert_almost_equal(new_mom.moments_sigma/mag_scale, orig_mom.moments_sigma,
-        test_decimal,
+    np.testing.assert_almost_equal(new_mom.moments_sigma/np.sqrt(mag_scale),
+        orig_mom.moments_sigma, test_decimal,
         err_msg = 'Size of magnified InterpolatedImage from HST disagrees with expectations')
     np.testing.assert_almost_equal(new_mom.observed_shape.e1, orig_mom.observed_shape.e1,
         test_decimal,

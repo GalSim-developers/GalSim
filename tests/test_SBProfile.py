@@ -1652,7 +1652,7 @@ def test_mag():
  
     # Use applyMagnification
     gal = galsim.Exponential(flux=1, scale_radius=r0)
-    gal.applyMagnification(1.5)
+    gal.applyMagnification(1.5**2) # area rescaling factor
     gal.draw(myImg,dx=0.2, normalization="surface brightness")
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
@@ -1671,7 +1671,7 @@ def test_mag():
  
     # Use createMagnified
     gal = galsim.Exponential(flux=1, scale_radius=r0)
-    gal2 = gal.createMagnified(1.5)
+    gal2 = gal.createMagnified(1.5**2) # area rescaling factor
     gal2.draw(myImg,dx=0.2, normalization="surface brightness")
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
@@ -1680,7 +1680,7 @@ def test_mag():
  
     # Test photon shooting.
     gal = galsim.Exponential(flux=1, scale_radius=r0)
-    gal.applyMagnification(1.5)
+    gal.applyMagnification(1.5**2) # area rescaling factor
     do_shoot(gal,myImg,"dilated Exponential")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
