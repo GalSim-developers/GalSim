@@ -284,8 +284,8 @@ class PowerSpectrum(object):
                import numpy as np
                min = (-ngrid/2 + 0.5) * grid_spacing
                max = (ngrid/2 - 0.5) * grid_spacing
-               x, y = np.meshgrid(np.arange(min,max,grid_spacing),
-                                  np.arange(min,max,grid_spacing))
+               x, y = np.meshgrid(np.arange(min,max+grid_spacing,grid_spacing),
+                                  np.arange(min,max+grid_spacing,grid_spacing))
 
            where the center of the grid is taken to be (0,0).
 

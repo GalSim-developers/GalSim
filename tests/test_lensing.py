@@ -292,6 +292,54 @@ def test_shear_reference():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_shear_get():
+    """Check that using gridded outputs and the various getFoo methods gives consistent results"""
+    import time
+    t1 = time.time()
+
+    # choose a power spectrum and grid setup
+    my_ps = galsim.PowerSpectrum(lambda k : k**0.5)
+    # build the grid
+    grid_spacing = 1.
+    ngrid = 100
+    g1, g2, kappa = my_ps.buildGrid(grid_spacing = grid_spacing, ngrid = ngrid,
+                                    get_convergence = True)
+    min = (-ngrid/2 + 0.5) * grid_spacing
+    max = (ngrid/2 - 0.5) * grid_spacing
+    x, y = np.meshgrid(np.arange(min,max+grid_spacing,grid_spacing),
+                       np.arange(min,max+grid_spacing,grid_spacing))
+
+    # convert theoretical to observed quantities for grid
+    g1_r, g2_r, mu = galsim.lensing.theoryToObserved(g1, g2, kappa)
+
+    # use getShear, getConvergence, getMagnification, getLensing do appropriate consistency checks
+    test_g1_r, test_g2_r = my_ps.getShear((x.flatten(), y.flatten()))
+    test_g1, test_g2 = my_ps.getShear((x.flatten(), y.flatten()), reduced = False)
+    test_kappa = my_ps.getConvergence((x.flatten(), y.flatten()))
+    test_mu = my_ps.getMagnification((x.flatten(), y.flatten()))
+    test_g1_r_2, test_g2_r_2, test_mu_2 = my_ps.getLensing((x.flatten(), y.flatten()))
+    np.testing.assert_almost_equal(g1.flatten(), test_g1, 9,
+                                   err_msg="Shears from grid and getShear disagree!")
+    np.testing.assert_almost_equal(g2.flatten(), test_g2, 9,
+                                   err_msg="Shears from grid and getShear disagree!")
+    np.testing.assert_almost_equal(g1_r.flatten(), test_g1_r, 9,
+                                   err_msg="Reduced shears from grid and getShear disagree!")
+    np.testing.assert_almost_equal(g2_r.flatten(), test_g2_r, 9,
+                                   err_msg="Reduced shears from grid and getShear disagree!")
+    np.testing.assert_almost_equal(g1_r.flatten(), test_g1_r_2, 9,
+                                   err_msg="Reduced shears from grid and getLensing disagree!")
+    np.testing.assert_almost_equal(g2_r.flatten(), test_g2_r_2, 9,
+                                   err_msg="Reduced shears from grid and getLensing disagree!")
+    np.testing.assert_almost_equal(kappa.flatten(), test_kappa, 9,
+                                   err_msg="Convergences from grid and getConvergence disagree!")
+    np.testing.assert_almost_equal(mu.flatten(), test_mu, 9,
+                                   err_msg="Magnifications from grid and getMagnification disagree!")
+    np.testing.assert_almost_equal(mu.flatten(), test_mu_2, 9,
+                                   err_msg="Magnifications from grid and getLensing disagree!")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_tabulated():
     """Test using a LookupTable to interpolate a P(k) that is known at certain k"""
     import time
@@ -542,6 +590,7 @@ if __name__ == "__main__":
     test_shear_flatps()
     test_shear_seeds()
     test_shear_reference()
+    test_shear_get()
     test_tabulated()
     test_kappa_nfw()
     test_power_spectrum_with_kappa()
