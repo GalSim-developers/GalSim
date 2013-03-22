@@ -936,20 +936,9 @@ class PowerSpectrumRealizer(object):
         kx = 2. * np.pi * self.i_kx / (self.pixel_size * self.nx)
         ky = 2. * np.pi * self.i_ky / (self.pixel_size * self.ny)
 
-        # Set up the convergence field in Fourier space - same structure as the shear fields
-        kappa_k = np.zeros_like(g1_k)
-
         # Compute the convergence fourier components using the simple relation in Kaiser & Squires
         # (1994), equation 2.1.12.
-        # To avoid NaNs when dividing by k**2, we set the (0,0) DC term in k**2 to unity first, and
-        # then set the corresponding kappa term to zero manually.
-        k2 = self.k**2
-        k2[0,0] = 1
-        kappa_k[ self.i_kx, self.i_ky] =  -g1_k[ self.i_kx, self.i_ky] * (kx * kx - ky * ky) / k2
-        kappa_k[ self.i_kx, self.i_ky] +=  g2_k[ self.i_kx, self.i_ky] * 2. * kx * ky / k2
-        kappa_k[-self.i_kx, self.i_ky] =  -g1_k[-self.i_kx, self.i_ky] * ((-kx) * (-kx) - ky * ky) / k2
-        kappa_k[-self.i_kx, self.i_ky] +=  g2_k[-self.i_kx, self.i_ky] * 2. * (-kx) * ky / k2
-
+        kappa_k = -self._cos*g1_k + self._sin*g2_k
         # Set the DC term to zero.
         kappa_k[0,0] = 0
 
