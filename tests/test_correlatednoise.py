@@ -776,62 +776,68 @@ def test_convolve_cosmos():
     """
     t1 = time.time()
     gd = galsim.GaussianDeviate(rseed)
-    cn = galsim.getCOSMOSNoise(gd, '../examples/data/acs_I_unrot_sci_20_cf.fits')
-    cn.setVariance(3.)
+    dx_cosmos=0.19 # Non-unity, non-default value to be used below
+    cn = galsim.getCOSMOSNoise(
+        gd, '../examples/data/acs_I_unrot_sci_20_cf.fits', dx_cosmos=dx_cosmos)
+    cn.setVariance(3.89) # Again chosen to be non-unity
     cosimage = galsim.ImageD(largeim_size, largeim_size) # large image to beat down noise
-    cosimage.setScale(1.)
+    cosimage.setScale(dx_cosmos) # Use COSMOS pixel scale
     # Define a PSF with which to convolve the noise field
-    psf = galsim.Gaussian(sigma=30.)
+    psf = galsim.Moffat(beta=2.6, fwhm=3. * dx_cosmos)
     # Then define the convolved cosmos correlated noise model
     conv_cn = cn.copy()
     conv_cn.convolveWith(psf)
     # Then draw the correlation function for this correlated noise as the reference
     refim = galsim.ImageD(smallim_size, smallim_size)
-    conv_cn.draw(refim, dx=1.)
+    conv_cn.draw(refim, dx=dx_cosmos)
     # Now start the tests
     # Generate a COSMOS noise field, read it into an InterpolatedImage and then convolve it with psf
+    # Note that the normalization here must be flux to avoid the SBProfile internals from taking
+    # the pixel scale into account...
     cosimage.addNoise(cn)
     imobj = galsim.InterpolatedImage(
-        cosimage, calculate_stepk=False, calculate_maxk=False, normalization='sb', x_interpolant=galsim.Linear())
+        cosimage, calculate_stepk=False, calculate_maxk=False, normalization='flux',
+        dx=dx_cosmos)
     cimobj = galsim.Convolve(imobj, psf)
     convimage = galsim.ImageD(largeim_size, largeim_size)
-    cimobj.draw(convimage, dx=1., normalization='sb')
-    cn_test = galsim.CorrelatedNoise(gd, convimage, dx=1.) 
+    # Then draw, calculate a correlation function for the resulting field, and repeat to get an
+    # average over nsum_test trials
+    cimobj.draw(convimage, dx=dx_cosmos, normalization='flux')
+    cn_test = galsim.CorrelatedNoise(gd, convimage, dx=dx_cosmos)
     for i in range(nsum_test - 1):
         cosimage.setZero()
         cosimage.addNoise(cn)
         imobj = galsim.InterpolatedImage(
-            cosimage, calculate_stepk=False, calculate_maxk=False, normalization='f', x_interpolant=galsim.Linear())
+            cosimage, calculate_stepk=False, calculate_maxk=False, normalization='flux',
+            dx=dx_cosmos)
         cimobj = galsim.Convolve(imobj, psf)
         convimage.setZero()
-        cimobj.draw(convimage, dx=1., normalization='sb')
-        cn_test += galsim.CorrelatedNoise(gd, convimage, dx=1.) 
-    cn_test /= float(nsum_test)
+        cimobj.draw(convimage, dx=dx_cosmos, normalization='flux')
+        cn_test += galsim.CorrelatedNoise(gd, convimage, dx=dx_cosmos) 
+    cn_test /= float(nsum_test) # Take average CF of trials
     testim = galsim.ImageD(smallim_size, smallim_size)
-    cn_test.draw(testim, dx=1.)
-    try:
-        import matplotlib.pyplot as plt
-        print testim.at(9, 9), refim.at(9, 9), testim.at(9, 9) / refim.at(9, 9)
-        plt.pcolor(convimage.array); plt.colorbar()
-        cosimage.setZero()
-        conv_cn.applyTo(cosimage)
-        plt.figure(); plt.pcolor(cosimage.array); plt.colorbar(); plt.show()
-    except: 
-        pass
+    cn_test.draw(testim, dx=dx_cosmos) # Draw to an image for array-level comparison
+    # Test
+    np.testing.assert_array_almost_equal(
+        testim.array, refim.array, decimal=decimal_approx,
+        err_msg="Convolved COSMOS noise fields do not match the convolved correlated noise model.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(), t2 - t1)
+
 
 if __name__ == "__main__":
-    #test_uncorrelated_noise_zero_lag()
-    #test_uncorrelated_noise_nonzero_lag()
-    #test_uncorrelated_noise_symmetry_90degree_rotation()
-    #test_xcorr_noise_basics_symmetry_90degree_rotation()
-    #test_ycorr_noise_basics_symmetry_90degree_rotation()
-    #test_arbitrary_rotation()
-    #test_scaling()
-    #test_draw()
-    #test_output_generation_basic()
-    #test_output_generation_rotated()
-    #test_output_generation_magnified()
-    #test_copy()
-    #test_convolve_multiple_kernel_consistency()
-    #test_cosmos_and_whitening()
+    test_uncorrelated_noise_zero_lag()
+    test_uncorrelated_noise_nonzero_lag()
+    test_uncorrelated_noise_symmetry_90degree_rotation()
+    test_xcorr_noise_basics_symmetry_90degree_rotation()
+    test_ycorr_noise_basics_symmetry_90degree_rotation()
+    test_arbitrary_rotation()
+    test_scaling()
+    test_draw()
+    test_output_generation_basic()
+    test_output_generation_rotated()
+    test_output_generation_magnified()
+    test_copy()
+    test_convolve_multiple_kernel_consistency()
+    test_cosmos_and_whitening()
     test_convolve_cosmos()
