@@ -418,7 +418,7 @@ class PowerSpectrum(object):
             p_B = b_power_function
 
         # Build the grid 
-        psr = PowerSpectrumRealizer(ngrid, ngrid, grid_spacing, p_E, p_B)
+        psr = PowerSpectrumRealizer(ngrid, grid_spacing, p_E, p_B)
         self.grid_g1, self.grid_g2, self.grid_kappa = psr(gd)
             
         # Set up the images to be interpolated.
@@ -849,10 +849,12 @@ class PowerSpectrumRealizer(object):
     This class is not one that end-users should expect to interact with.  It is designed to quickly
     generate many realizations of the same shear power spectra on a square grid.  The initializer
     sets up the grids in k-space and computes the power on them.  It also computes spin weighting
-    terms.  You can alter any of the setup properties later.
+    terms.  You can alter any of the setup properties later.  It currently only works for square
+    grids (at least, much of the internals would be incorrect for non-square grids), so while it
+    nominally contains arrays that could be allowed to be non-square, the constructor itself
+    enforces squareness.
 
-    @param nx               The x-dimension of the desired image.
-    @param ny               The y-dimension of the desired image.
+    @param ngrid            The size of the grid in one dimension.
     @param pixel_size       The size of the pixel sides, in units consistent with the units expected
                             by the power spectrum functions.
     @param e_power_function See description of this parameter in the documentation for the
@@ -860,15 +862,15 @@ class PowerSpectrumRealizer(object):
     @param b_power_function See description of this parameter in the documentation for the
                             PowerSpectrum class.
     """
-    def __init__(self, nx, ny, pixel_size, p_E, p_B):
-        self.set_size(nx, ny, pixel_size)
-        self.set_power(p_E, p_B)
+    def __init__(self, ngrid, pixel_size, p_E, p_B):
         # Set up the k grids in x and y, and the instance variables
+        self.set_size(ngrid, pixel_size)
+        self.set_power(p_E, p_B)
 
-    def set_size(self, nx, ny, pixel_size):
-        self.nx = nx
-        self.ny = ny
-        i_kx, i_ky = np.mgrid[0: nx / 2 + 1, 0: ny / 2 + 1]
+    def set_size(self, ngrid, pixel_size):
+        self.nx = ngrid
+        self.ny = ngrid
+        i_kx, i_ky = np.mgrid[0: self.nx / 2 + 1, 0: self.ny / 2 + 1]
         self.i_kx = i_kx
         self.i_ky = i_ky
         pixel_size = float(pixel_size)
@@ -876,7 +878,7 @@ class PowerSpectrumRealizer(object):
 
         # Set up the scalar |k| grid. Generally, for a box size of L (in one dimension), the grid
         # spacing in k_x or k_y is Delta k=2pi/L (Barney edit: sqrt faster than **.5 I think...)
-        self.k = 2. * np.pi * np.sqrt((i_kx / (pixel_size * nx))**2 + (i_ky / (pixel_size * ny))**2)
+        self.k = 2.*np.pi*np.sqrt((i_kx / (pixel_size * self.nx))**2 + (i_ky / (pixel_size * self.ny))**2)
 
         #Compute the spin weightings
         self._cos, self._sin = self._generate_spin_weightings()        
