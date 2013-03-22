@@ -2240,37 +2240,89 @@ def test_autoconvolve():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
+def test_autocorrelate():
+    """Test that auto-correlation works the same as convolution with the mirror image of itself.
+
+    (See the Signal processing Section of http://en.wikipedia.org/wiki/Autocorrelation)
+    """
+    import time
+    t1 = time.time()
+    # Use a function that is NOT two-fold rotationally symmetric, e.g. two different flux Gaussians
+    myGauss1 = galsim.SBGaussian(sigma=3., flux=4)
+    myGauss1.applyShift(-0.2, -0.4)
+    myGauss2 = (galsim.SBGaussian(sigma=6., flux=1.3))
+    myGauss2.applyShift(0.3, 0.3)
+    mySBP1 = galsim.SBAdd([myGauss1, myGauss2])
+    mySBP2 = galsim.SBAdd([myGauss1, myGauss2])
+    # Here we rotate by 180 degrees to create mirror image
+    mySBP2.applyRotation(180. * galsim.degrees)
+    myConv = galsim.SBConvolve([mySBP1, mySBP2])
+    myImg1 = galsim.ImageF(80,80)
+    myImg1.setScale(0.7)
+    myConv.draw(myImg1.view())
+    myAutoCorr = galsim.SBAutoCorrelate(mySBP1)
+    myImg2 = galsim.ImageF(80,80)
+    myImg2.setScale(0.7)
+    myAutoCorr.draw(myImg2.view())
+    printval(myImg1, myImg2)
+    np.testing.assert_array_almost_equal(
+            myImg1.array, myImg2.array, 4,
+            err_msg="Asymmetric sum of Gaussians convolved with mirror of self disagrees with "+
+            "SBAutoCorrelate result")
+
+    # Repeat with the GSObject version of this:
+    obj1 = galsim.Gaussian(sigma=3., flux=4)
+    obj1.applyShift(-0.2, -0.4)
+    obj2 = galsim.Gaussian(sigma=6., flux=1.3)
+    obj2.applyShift(0.3, 0.3)
+    add1 = galsim.Add(obj1, obj2)
+    add2 = (galsim.Add(obj1, obj2)).createRotated(180. * galsim.degrees)
+    conv = galsim.Convolve([add1, add2])
+    conv.draw(myImg1)
+    corr = galsim.AutoCorrelate(add1)
+    corr.draw(myImg2)
+    printval(myImg1, myImg2)
+    np.testing.assert_array_almost_equal(
+            myImg1.array, myImg2.array, 4,
+            err_msg="Asymmetric sum of Gaussians convolved with mirror of self disagrees with "+
+            "AutoCorrelate result")
+
+    # Photon shooting not implemented yet
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 
 if __name__ == "__main__":
-    test_gaussian()
-    test_gaussian_properties()
-    test_gaussian_radii()
-    test_exponential()
-    test_exponential_radii()
-    test_sersic()
-    test_sersic_radii()
-    test_airy()
-    test_airy_radii()
-    test_box()
-    test_moffat()
-    test_moffat_properties()
-    test_moffat_radii()
-    test_kolmogorov()
-    test_kolmogorov_properties()
-    test_kolmogorov_radii()
-    test_smallshear()
-    test_largeshear()
-    test_convolve()
-    test_shearconvolve()
-    test_realspace_convolve()
-    test_realspace_distorted_convolve()
-    test_realspace_shearconvolve()
-    test_rotate()
-    test_mag()
-    test_add()
-    test_shift()
-    test_rescale()
-    test_sbinterpolatedimage()
-    test_draw()
-    test_autoconvolve()
+    #test_gaussian()
+    #test_gaussian_properties()
+    #test_gaussian_radii()
+    #test_exponential()
+    #test_exponential_radii()
+    #test_sersic()
+    #test_sersic_radii()
+    #test_airy()
+    #test_airy_radii()
+    #test_box()
+    #test_moffat()
+    #test_moffat_properties()
+    #test_moffat_radii()
+    #test_kolmogorov()
+    #test_kolmogorov_properties()
+    #test_kolmogorov_radii()
+    #test_smallshear()
+    #test_largeshear()
+    #test_convolve()
+    #test_shearconvolve()
+    #test_realspace_convolve()
+    #test_realspace_distorted_convolve()
+    #test_realspace_shearconvolve()
+    #test_rotate()
+    #test_mag()
+    #test_add()
+    #test_shift()
+    #test_rescale()
+    #test_sbinterpolatedimage()
+    #test_draw()
+    #test_autoconvolve()
+    test_autocorrelate()
