@@ -2659,10 +2659,10 @@ class Shapelet(GSObject):
         GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
 
     def applyLensing(self, g1, g2, mu):
-        self.applyShear(g1=g1, g2=g2)
         sigma = self.SBProfile.getSigma() * np.sqrt(mu)
         bvec = self.SBProfile.getBVec() * mu
         GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
+        self.applyShear(g1=g1, g2=g2)
 
     def fitImage(self, image, center=None, normalization='flux'):
         """Fit for a shapelet decomposition of a given image
