@@ -2208,34 +2208,58 @@ def test_autoconvolve():
     t1 = time.time()
 
     mySBP = galsim.SBMoffat(beta=3.8, fwhm=1.3, flux=5)
-    mySBP2 = galsim.SBMoffat(beta=3.8, fwhm=1.3, flux=5)
-    myConv = galsim.SBConvolve([mySBP,mySBP2])
-    myImg = galsim.ImageF(80,80)
-    myImg.setScale(0.4)
-    myConv.draw(myImg.view())
+    myConv = galsim.SBConvolve([mySBP,mySBP])
+    myImg1 = galsim.ImageF(80,80)
+    myImg1.setScale(0.4)
+    myConv.draw(myImg1.view())
     myAutoConv = galsim.SBAutoConvolve(mySBP)
     myImg2 = galsim.ImageF(80,80)
     myImg2.setScale(0.4)
     myAutoConv.draw(myImg2.view())
-    printval(myImg, myImg2)
+    printval(myImg1, myImg2)
     np.testing.assert_array_almost_equal(
-            myImg.array, myImg2.array, 4,
+            myImg1.array, myImg2.array, 4,
             err_msg="Moffat convolved with self disagrees with SBAutoConvolve result")
 
     # Repeat with the GSObject version of this:
     psf = galsim.Moffat(beta=3.8, fwhm=1.3, flux=5)
-    psf2 = galsim.Moffat(beta=3.8, fwhm=1.3, flux=5)
-    conv = galsim.Convolve([psf,psf2])
-    conv.draw(myImg)
+    conv = galsim.Convolve([psf,psf])
+    conv.draw(myImg1)
     conv2 = galsim.AutoConvolve(psf)
     conv2.draw(myImg2)
-    printval(myImg, myImg2)
+    printval(myImg1, myImg2)
     np.testing.assert_array_almost_equal(
-            myImg.array, myImg2.array, 4,
+            myImg1.array, myImg2.array, 4,
             err_msg="Moffat convolved with self disagrees with AutoConvolve result")
+
+    # For a symmetric profile, AutoCorrelate is the same thing:
+    conv2 = galsim.AutoCorrelate(psf)
+    conv2.draw(myImg2)
+    printval(myImg1, myImg2)
+    np.testing.assert_array_almost_equal(
+            myImg1.array, myImg2.array, 4,
+            err_msg="Moffat convolved with self disagrees with AutoCorrelate result")
 
     # Test photon shooting.
     do_shoot(conv2,myImg2,"AutoConvolve(Moffat)")
+
+    # Also check AutoConvolve with an assymetric profile.
+    # (AutoCorrelate with this profile is done below...)
+    obj1 = galsim.Gaussian(sigma=3., flux=4)
+    obj1.applyShift(-0.2, -0.4)
+    obj2 = galsim.Gaussian(sigma=6., flux=1.3)
+    obj2.applyShift(0.3, 0.3)
+    add = galsim.Add(obj1, obj2)
+    conv = galsim.Convolve([add, add])
+    conv.draw(myImg1)
+    corr = galsim.AutoConvolve(add)
+    corr.draw(myImg2)
+    printval(myImg1, myImg2)
+    np.testing.assert_array_almost_equal(
+            myImg1.array, myImg2.array, 4,
+            err_msg="Asymmetric sum of Gaussians convolved with self disagrees with "+
+            "AutoConvolve result")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -2287,7 +2311,8 @@ def test_autocorrelate():
             err_msg="Asymmetric sum of Gaussians convolved with mirror of self disagrees with "+
             "AutoCorrelate result")
 
-    # Photon shooting not implemented yet
+    # Test photon shooting.
+    do_shoot(corr,myImg2,"AutoCorrelate")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
