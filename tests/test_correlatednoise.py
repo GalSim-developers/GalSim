@@ -41,7 +41,7 @@ xlargeim_size =long(np.ceil(1.41421356 * largeim_size)) # sometimes, for precisi
                                                         # rotated
 
 # Decimals for comparison (one for fine detail, another for comparing stochastic quantities)
-decimal_approx = 2
+decimal_approx = 3
 decimal_precise = 7
 
 # Number of positions to test in nonzero lag uncorrelated tests
@@ -770,6 +770,7 @@ def test_convolve_cosmos():
     # average over nsum_test trials
     cimobj.draw(convimage, dx=dx_cosmos, normalization='flux')
     cn_test = galsim.CorrelatedNoise(gd, convimage, dx=dx_cosmos)
+    nsum_test = 1000
     for i in range(nsum_test - 1):
         cosimage.setZero()
         cosimage.addNoise(cn)
@@ -783,6 +784,16 @@ def test_convolve_cosmos():
     cn_test /= float(nsum_test) # Take average CF of trials
     testim = galsim.ImageD(smallim_size, smallim_size)
     cn_test.draw(testim, dx=dx_cosmos) # Draw to an image for array-level comparison
+    print 'mean diff = ',np.mean(testim.array - refim.array)
+    print 'var diff = ',np.var(testim.array - refim.array)
+    print 'min diff = ',np.min(testim.array - refim.array)
+    print 'max diff = ',np.max(testim.array - refim.array)
+    print 'mean ratio = ',np.mean(testim.array / refim.array)
+    print 'var ratio = ',np.var(testim.array / refim.array)
+    print 'min ratio = ',np.min(testim.array / refim.array)
+    print 'max ratio = ',np.max(testim.array / refim.array)
+    #testim.write("junk1.fits")
+    #refim.write("junk2.fits")
     # Test
     np.testing.assert_array_almost_equal(
         testim.array, refim.array, decimal=decimal_approx,
@@ -792,6 +803,10 @@ def test_convolve_cosmos():
 
 
 if __name__ == "__main__":
+    test_convolve_cosmos()
+    import sys
+    sys.exit()
+
     test_uncorrelated_noise_zero_lag()
     test_uncorrelated_noise_nonzero_lag()
     test_uncorrelated_noise_symmetry_90degree_rotation()
