@@ -317,11 +317,28 @@ def test_gaussian():
     gn = galsim.GaussianNoise(rng, sigma=gSigma)
     testimage = galsim.ImageViewD(np.zeros((3, 1)))
     testimage.addNoise(gn)
-    testimage += gMean
     np.testing.assert_array_almost_equal(
-            testimage.array.flatten(), np.array(gResult), precision,
-            err_msg="GaussianDeviate generator applied to Images does not "
-            "reproduce expected sequence")
+            testimage.array.flatten(), np.array(gResult)-gMean, precision,
+            err_msg="GaussianNoise applied to Images does not reproduce expected sequence")
+
+    # Check changing GaussianNoise variance:
+    np.testing.assert_almost_equal(
+            gSigma**2, gn.getVariance(), precision, 
+            err_msg="GaussianNoise getVariance returns wrong variance")
+    gn.scaleVariance(0.5)
+    np.testing.assert_almost_equal(
+            0.5 * gSigma**2, gn.getVariance(), precision, 
+            err_msg="GaussianNoise scaletVariance results in wrong variance")
+    gn.setVariance(0.5)
+    np.testing.assert_almost_equal(
+            0.5, gn.getVariance(), precision, 
+            err_msg="GaussianNoise setVariance results in wrong variance")
+    rng.seed(testseed)
+    testimage.setZero()
+    testimage.addNoise(gn)
+    np.testing.assert_array_almost_equal(
+            testimage.array.flatten(), (np.array(gResult)-gMean)*np.sqrt(0.5)/gSigma, precision,
+            err_msg="GaussianNoise after setVariance does not reproduce expected sequence")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -529,6 +546,19 @@ def test_poisson():
     np.testing.assert_array_equal(
             testimage.array.flatten(), np.array(pResult)-pMean,
             err_msg='Wrong poisson random number sequence generated using PoissonNoise')
+
+    # Check changing PoissonNoise variance:
+    np.testing.assert_almost_equal(
+            pMean, pn.getVariance(), precision, 
+            err_msg="PoissonNoise getVariance returns wrong variance")
+    pn.scaleVariance(0.5)
+    np.testing.assert_almost_equal(
+            0.5 * pMean, pn.getVariance(), precision, 
+            err_msg="PoissonNoise scaletVariance results in wrong variance")
+    pn.setVariance(0.5)
+    np.testing.assert_almost_equal(
+            0.5, pn.getVariance(), precision, 
+            err_msg="PoissonNoise setVariance results in wrong variance")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1064,6 +1094,47 @@ def test_ccdnoise():
                 err_msg="Wrong CCD noise random sequence generated for Image"+typestrings[i]+
                 " using addNoise with sky_level included in noise")
 
+    # Check changing CCDNoise variance:
+    var1 = (sky+cReadNoise**2)/cGain
+    np.testing.assert_almost_equal(
+            var1, ccdnoise.getVariance(), precision, 
+            err_msg="CCDNoise getVariance returns wrong variance")
+    np.testing.assert_almost_equal(
+            sky, ccdnoise.getSkyLevel(), precision, 
+            err_msg="CCDNoise getSkyLevel returns wrong value")
+    np.testing.assert_almost_equal(
+            cGain, ccdnoise.getGain(), precision, 
+            err_msg="CCDNoise getGain returns wrong value")
+    np.testing.assert_almost_equal(
+            cReadNoise, ccdnoise.getReadNoise(), precision, 
+            err_msg="CCDNoise getReadNoise returns wrong value")
+    ccdnoise.scaleVariance(0.5)
+    np.testing.assert_almost_equal(
+            0.5 * var1, ccdnoise.getVariance(), precision, 
+            err_msg="CCDNoise scaletVariance results in wrong variance")
+    np.testing.assert_almost_equal(
+            0.5 * sky, ccdnoise.getSkyLevel(), precision, 
+            err_msg="CCDNoise scaletVariance results in wrong SkyLevel")
+    np.testing.assert_almost_equal(
+            cGain, ccdnoise.getGain(), precision, 
+            err_msg="CCDNoise scaletVariance results in wrong Gain")
+    np.testing.assert_almost_equal(
+            np.sqrt(0.5) * cReadNoise, ccdnoise.getReadNoise(), precision, 
+            err_msg="CCDNoise scaletVariance results in wrong ReadNoise")
+    ccdnoise.setVariance(0.5)
+    np.testing.assert_almost_equal(
+            0.5, ccdnoise.getVariance(), precision, 
+            err_msg="CCDNoise setVariance results in wrong variance")
+    np.testing.assert_almost_equal(
+            sky * 0.5/var1, ccdnoise.getSkyLevel(), precision, 
+            err_msg="CCDNoise setVariance results in wrong SkyLevel")
+    np.testing.assert_almost_equal(
+            cGain, ccdnoise.getGain(), precision, 
+            err_msg="CCDNoise setVariance results in wrong Gain")
+    np.testing.assert_almost_equal(
+            cReadNoise * np.sqrt(0.5/var1), ccdnoise.getReadNoise(), precision, 
+            err_msg="CCDNoise setVariance results in wrong ReadNoise")
+ 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
