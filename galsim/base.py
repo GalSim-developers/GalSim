@@ -2454,11 +2454,14 @@ class AutoConvolve(GSObject):
 
 
 class AutoCorrelate(GSObject):
-    """A special class for autocorrelating a GSObject with itself.
+    """A special class for correlating a GSObject with itself.
 
-    This function is targeted primarily for use by the galsim.CorrelatedNoise models when convolving
-    with a GSObject.  It takes advantage of the fact that the two profiles are the same for some
-    efficiency gains.
+    It is equivalent in functionality to 
+        galsim.Convolve([obj,obj.createRotated(180.*galsim.degrees)])
+    but takes advantage of the fact that the two profiles are the same for some efficiency gains.
+
+    This class is primarily targeted for use by the galsim.CorrelatedNoise models when convolving 
+    with a GSObject.
     """
     # --- Public Class methods ---
     def __init__(self, obj):

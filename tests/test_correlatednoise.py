@@ -268,23 +268,23 @@ def test_ycorr_noise_basics_symmetry_90degree_rotation():
     ud = galsim.UniformDeviate(rseed)
     # We make multiple correlation funcs and average their zero lag to beat down noise
     cf_zero = 0.
-    cf_10 = 0.
+    cf_01 = 0.
     for i in range(nsum_test):
         uncorr_noise = setup_uncorrelated_noise(ud, largeim_size)
         ynoise = make_ycorr_from_uncorr(uncorr_noise)
         ycn = galsim.CorrelatedNoise(ud, ynoise, dx=1.)
         cf_zero += ycn._profile.xValue(galsim.PositionD(0., 0.))
-        cf_10 += ycn._profile.xValue(galsim.PositionD(0., 1.))
+        cf_01 += ycn._profile.xValue(galsim.PositionD(0., 1.))
     cf_zero /= float(nsum_test)
-    cf_10 /= float(nsum_test)
+    cf_01 /= float(nsum_test)
     # Then test the zero-lag value is good to 1% of the input variance; we expect this!
     np.testing.assert_almost_equal(
         cf_zero, 1., decimal=decimal_approx,
         err_msg="Zero distance noise correlation value does not match input noise variance.")
     # Then test the (0, 1) value is good to 1% of the input variance (0.5); we expect this!
     np.testing.assert_almost_equal(
-        cf_10, .5, decimal=decimal_approx,
-        err_msg="Noise correlation value at (1, 0) does not match input covariance.")
+        cf_01, .5, decimal=decimal_approx,
+        err_msg="Noise correlation value at (0, 1) does not match input covariance.")
     # Then set up some random positions (within and outside) the bounds of the table inside the 
     # corrfunc (the last one made is fine) then test for symmetry
     for i in range(npos_test):

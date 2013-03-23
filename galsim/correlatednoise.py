@@ -187,8 +187,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         `correlated_noise` instance, the combined noise after using the applyWhiteningTo() method
         will be uncorrelated to a good approximation.
 
-        Note that the code doesn't check that the "if" above s true: the user MUST make sure this is
-        the case for the final noise to be uncorrelated.
+        Note that the code doesn't check that the "if" above is true: the user MUST make sure this 
+        is the case for the final noise to be uncorrelated.
 
         image.getScale() is used to determine the input image pixel separation, and if 
         image.getScale() <= 0 a pixel scale of 1 is assumed.
@@ -215,7 +215,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
             >>> cn.applyWhiteningTo(image)
 
-        Of course, this whitening comes at the cost of adding further noise to the image.
+        Of course, this whitening comes at the cost of adding further noise to the image, but 
+        the algorithm is designed to make this additional noise (nearly) as small as possible.
 
         @param image The input Image object.
 
@@ -280,15 +281,11 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         @param scale The linear rescaling factor to apply.
         """
-        self.applyTransformation(galsim.Ellipse(np.log(scale)))
+        self._profile.applyMagnification(scale)
 
     def applyRotation(self, theta):
         """Apply a rotation theta to this correlated noise model.
            
-        After this call, the caller's type will still be a _BaseCorrelatedNoise, unlike in the
-        GSObject implementation of this method.  This is to allow _BaseCorrelatedNoise methods to
-        be available after transformation, such as .applyTo().
-
         @param theta Rotation angle (Angle object, +ve anticlockwise).
         """
         if not isinstance(theta, galsim.Angle):
@@ -301,9 +298,6 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         For more details about the allowed keyword arguments, see the documentation for galsim.Shear
         (for doxygen documentation, see galsim.shear.Shear).
-
-        After this call, the caller's type will still be a _BaseCorrelatedNoise.  This is to allow
-        _BaseCorrelatedNoise methods to be available after transformation, such as .applyTo().
         """
         self._profile.applyShear(*args, **kwargs)
 
@@ -347,7 +341,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         @returns The rescaled object.
         """
         ret = self.copy()
-        ret.applyTransformation(galsim.Ellipse(np.log(scale)))
+        ret.applyMagnification(scale)
         return ret
 
     def createRotated(self, theta):
@@ -590,8 +584,8 @@ def _generate_noise_from_rootps(rng, rootps):
     # and then apply cos(), sin() to it...
     gaussvec_real = galsim.ImageD(rootps.shape[1], rootps.shape[0]) # Remember NumPy is [y, x]
     gaussvec_imag = galsim.ImageD(rootps.shape[1], rootps.shape[0])
-    gn = galsim.GaussianNoise(rng, sigma=1.) # Create on the fly using an input RNG (cheap: see 
-                                             # discussion on Issue #352)
+    gn = galsim.GaussianNoise(rng, sigma=1.) # Quicker to create anew each time than to save it and
+                                             # then check if its rng needs to be changed or not.
     gaussvec_real.addNoise(gn)
     gaussvec_imag.addNoise(gn)
     noise_array = np.fft.ifft2((gaussvec_real.array + gaussvec_imag.array * 1j) * rootps)
@@ -691,20 +685,13 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
     The BaseNoise methods
 
-        >>> cn.setVariance(variance)
         >>> cn.getVariance()
+        >>> cn.setVariance(variance)
+        >>> cn.scaleVariance(variance_ratio)
  
-    can be used to set and get the point variance of the correlated noise, equivalent to the zero
+    can be used to get and set the point variance of the correlated noise, equivalent to the zero
     separation distance correlation function value.  The .setVariance(variance) method scales the
     whole internal correlation function so that its point variance matches `variance`.
-
-    A new method, which is in fact a more appropriately named reimplmentation of the
-    .scaleFlux() method in GSObject instances for the internally stored correlation function, is
-
-        >>> cn.scaleVariance(variance_ratio)
-
-    which scales the overall correlation function, and therefore variance, by a scalar factor
-    `variance_ratio`.
 
     Arithmetic Operators
     --------------------
