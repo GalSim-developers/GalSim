@@ -770,6 +770,9 @@ def test_convolve_cosmos():
     # average over nsum_test trials
     cimobj.draw(convimage, dx=dx_cosmos, normalization='flux')
     cn_test = galsim.CorrelatedNoise(gd, convimage, dx=dx_cosmos)
+    testim = galsim.ImageD(smallim_size, smallim_size)
+    testim.setScale(dx_cosmos)
+    cn_test.draw(testim)
     nsum_test = 1000
     for i in range(nsum_test - 1):
         cosimage.setZero()
@@ -780,10 +783,12 @@ def test_convolve_cosmos():
         cimobj = galsim.Convolve(imobj, psf)
         convimage.setZero()
         cimobj.draw(convimage, dx=dx_cosmos, normalization='flux')
-        cn_test += galsim.CorrelatedNoise(gd, convimage, dx=dx_cosmos) 
-    cn_test /= float(nsum_test) # Take average CF of trials
-    testim = galsim.ImageD(smallim_size, smallim_size)
-    cn_test.draw(testim, dx=dx_cosmos) # Draw to an image for array-level comparison
+        cn_test = galsim.CorrelatedNoise(gd, convimage, dx=dx_cosmos) 
+        cn_test.draw(testim, dx=dx_cosmos, add_to_image=True)
+        del imobj
+        del cimobj
+        del cn_test
+    testim /= float(nsum_test) # Take average CF of trials
     print 'mean diff = ',np.mean(testim.array - refim.array)
     print 'var diff = ',np.var(testim.array - refim.array)
     print 'min diff = ',np.min(testim.array - refim.array)
