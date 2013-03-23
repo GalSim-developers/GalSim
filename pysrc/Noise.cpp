@@ -159,7 +159,7 @@ namespace galsim {
                 .def("getSkyLevel", &CCDNoise::getSkyLevel, "")
                 .def("getGain", &CCDNoise::getGain, "")
                 .def("getReadNoise", &CCDNoise::getReadNoise, "")
-                .def("setSkyLevel", &CCDNoise::getSkyLevel, "")
+                .def("setSkyLevel", &CCDNoise::setSkyLevel, "")
                 .def("setGain", &CCDNoise::setGain, "")
                 .def("setReadNoise", &CCDNoise::setReadNoise, "")
                 ;

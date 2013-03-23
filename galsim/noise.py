@@ -115,7 +115,7 @@ def Noise_imul(self, other):
 
 def Noise_mul(self, other):
     ret = self.copy()
-    ret *= other
+    Noise_imul(ret, other)
     return ret
 
 # Likewise for op/ and op/=
@@ -125,7 +125,7 @@ def Noise_idiv(self, other):
 
 def Noise_div(self, other):
     ret = self.copy()
-    ret /= other
+    Noise_idiv(ret, other)
     return ret
 
 _galsim.BaseNoise.__imul__ = Noise_imul
