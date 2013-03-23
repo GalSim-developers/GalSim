@@ -83,6 +83,11 @@ namespace galsim {
         virtual void setVariance(double variance) = 0;
 
         /**
+         * @brief Set the variance of the noise model
+         */
+        virtual void scaleVariance(double variance_ratio) = 0;
+
+        /**
          * @brief Add noise to an Image.
          *
          * @param[in,out] data The Image to be noise-ified.
@@ -161,6 +166,16 @@ namespace galsim {
             if (!(variance >= 0.)) 
                 throw std::runtime_error("Cannot setVariance to < 0");
             _sigma = sqrt(variance); 
+        }
+
+        /**
+         * @brief Scale the variance of the noise model
+         */
+        void scaleVariance(double variance_ratio) 
+        {
+            if (!(variance_ratio >= 0.)) 
+                throw std::runtime_error("Cannot scaleVariance to < 0");
+            _sigma *= sqrt(variance_ratio); 
         }
 
         /**
@@ -249,6 +264,16 @@ namespace galsim {
             if (!(variance >= 0.)) 
                 throw std::runtime_error("Cannot setVariance to < 0");
             _sky_level = variance; 
+        }
+
+        /**
+         * @brief Scale the variance of the noise model
+         */
+        void scaleVariance(double variance_ratio) 
+        { 
+            if (!(variance_ratio >= 0.)) 
+                throw std::runtime_error("Cannot scaleVariance to < 0");
+            _sky_level *= variance_ratio; 
         }
 
         /**
@@ -386,23 +411,26 @@ namespace galsim {
         /**
          * @brief Set the variance of the noise model
          *
-         * If gain > 0, then update sky_level to reach the correct variance.
-         * Otherwise update read_noise.
+         * This keeps the same relative contribution of sky noise and read noise.
          */
         void setVariance(double variance)
         {
             if (!(variance >= 0.)) 
                 throw std::runtime_error("Cannot setVariance to < 0");
-            if (_gain > 0) {
-                if (variance > _read_noise*_read_noise) {
-                    _sky_level = (variance - _read_noise*_read_noise) * _gain;
-                } else {
-                    _sky_level = 0.;
-                    _read_noise = sqrt(variance);
-                }
-            } else {
-                _read_noise = sqrt(variance);
-            }
+            scaleVariance(variance / getVariance());
+        }
+
+        /**
+         * @brief Scale the variance of the noise model
+         *
+         * This keeps the same relative contribution of sky noise and read noise.
+         */
+        void scaleVariance(double variance_ratio)
+        {
+            if (!(variance_ratio >= 0.)) 
+                throw std::runtime_error("Cannot scaleVariance to < 0");
+            _sky_level *= variance_ratio;
+            _read_noise *= sqrt(variance_ratio);
         }
 
         /**
@@ -546,6 +574,16 @@ namespace galsim {
             if (!(variance >= 0.)) 
                 throw std::runtime_error("Cannot setVariance to < 0");
             throw std::runtime_error("setVariance not implemented for DeviateNoise");
+        }
+
+        /**
+         * @brief Set the variance of the noise model
+         */
+        void scaleVariance(double variance_ratio) 
+        {
+            if (!(variance_ratio >= 0.)) 
+                throw std::runtime_error("Cannot scaleVariance to < 0");
+            throw std::runtime_error("scaleVariance not implemented for DeviateNoise");
         }
 
 
