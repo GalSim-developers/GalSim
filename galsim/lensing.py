@@ -937,7 +937,7 @@ class PowerSpectrumRealizer(object):
         ky = 2. * np.pi * self.i_ky / (self.pixel_size * self.ny)
 
         # Compute the convergence fourier components using the simple relation in Kaiser & Squires
-        # (1994), equation 2.1.12.
+        # (1993, ApJ, 404, 441), equation 2.1.12.
         kappa_k = -self._cos*g1_k + self._sin*g2_k
         # Set the DC term to zero.
         kappa_k[0,0] = 0
