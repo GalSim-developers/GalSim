@@ -2160,7 +2160,7 @@ class RealGalaxy(GSObject):
         except:
             pass
         if noise_pad:
-            self.pad_variance= float(real_galaxy_catalog.variance[use_index])
+            self.pad_variance = float(real_galaxy_catalog.variance[use_index])
 
             # Check, is it "True" or something else?  If True, we use Gaussian uncorrelated noise
             # using the stored variance in the catalog.  Otherwise, if it's a CorrelatedNoise we use
