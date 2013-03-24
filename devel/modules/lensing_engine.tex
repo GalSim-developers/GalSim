@@ -644,17 +644,17 @@ predictions before comparing with results.
 
 We use a WMAP7 LCDM prediction for the cosmic shear signal for a
 sample with $z_\mathrm{med}\sim 0.55$ as an input to both
-the SHT code and ours.  Given the range of $\ell$ for which it is
-defined, $2<\ell<2000$, we cannot use our standard grid, which 
-has $\kmax=\sqrt{2}\times 1800=2546$ radians$^{-1}$.  So, for this test we use a grid with
+the SHT code and ours.  For this test we use a grid with
 $L=10$ degrees (as before), but $N=50$ (i.e., $d$ gets doubled), which
-means a two-dimensional $\kmax=1273$ radians$^{-1}$.
+means a one-dimensional $\kmax=\ell=900$ radians$^{-1}$.
 
 Using the SHT code (\S\ref{S:comparison}), we made gridded shears for
 $P_E=P(k)$ and $P_B=0$; $P_B=P(k)$ and $P_E=0$; and $P_E=P_B=P(k)$ (5
 realizations of each).  For GalSim, since it is much faster, we
 averaged over several hundred realizations.  It is crucial to inform
-GalSim that the inputs have units of radians.
+GalSim that the inputs have units of radians.  For the SHT code, we
+instruct it to zero out the power spectrum for $\ell>900$ to avoid
+spurious power in $E$ and $B$ modes due to aliasing.
 
 The python script test\_pk.py in devel/external/test\_gridshear/ does the following:
 \begin{enumerate}
@@ -710,27 +710,15 @@ Figures~\ref{F:pe}, \ref{F:pb}, \ref{F:peb}.
 We can conclude several things from these figures:
 \begin{itemize}
 \item The SHT code gives roughly a consistent shear power spectrum compared
-  to our inputs (modulo possible slight differences in scaling that
-  may not be worth investigating until our own PS estimation code is ready),
-  though there are signs of $E$ vs. $B$ leakage in the case where one
-  or the other is zero.
-\item GalSim: we don't see $E$ vs. $B$ leakage at any significant
+  to our GalSim outputs.
+\item We don't see $E$ vs. $B$ leakage at any significant
   level.  The amplitudes and scaling of our output power spectra with
   $\ell$ are approximately correct.
-\item The amplitude for the GalSim power spectra is slightly below that
-  for the SHT code.  It is worth investigating whether this is some
-  finite-gridding effect on our part.
 \item While the big-picture results seem good, there are some finer
-  details that require investigation, in particular the fact that both
-  codes seem to give steeper $P(k)$ than the theory.  Given how these
-  tests were done, it could have to do with the $k$-space binning in
-  the power spectrum estimator, the sizes of the bins, etc. rather
-  than some issue with GalSim.
-  This is particularly true given that the SHT code was well-validated
-  and exhibits nearly the same slope as the GalSim outputs.
+  details that require investigation.
 \end{itemize}
 
-To address the last point, the simplest possible test is simply to
+To address the last point, the simplest possible test is to
 change the $\ell$ binning in the PS estimation code.  This will let us
 check whether we are encountering some finite-binning effects in the
 PS estimation.  The original calculations had 20 $\ell$ bins; the new

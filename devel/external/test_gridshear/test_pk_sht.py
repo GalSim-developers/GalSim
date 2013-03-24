@@ -3,12 +3,12 @@ import numpy as np
 import g10_powerspec
 
 n_realization = 5
-pkpref = 'sht_outputs/gridshear.pb.'
+pkpref = 'sht_outputs/gridshear.peb.'
 pksuff = '.out'
 grid_nx = 50
 grid_spacing = 96. # pixels
 tmpfile = 'tmp.out'
-outfile = 'output/ps.results.input_pb.sht.dat'
+outfile = 'output/ps.results.input_peb.sht.dat'
 n_ell = 20
 
 ellvals = np.zeros(n_ell)
