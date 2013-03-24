@@ -464,9 +464,9 @@ def test_tabulated():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_kappa_nfw():
+def test_kappa_gauss():
     """Test that our Kaiser-Squires inversion routine correctly recovers the convergence map
-    for a field containing known NFW halos.
+    for a field containing known Gaussian-profile halos.
     """
     import time
     t1 = time.time()
@@ -592,5 +592,5 @@ if __name__ == "__main__":
     test_shear_reference()
     test_shear_get()
     test_tabulated()
-    test_kappa_nfw()
+    test_kappa_gauss()
     test_power_spectrum_with_kappa()
