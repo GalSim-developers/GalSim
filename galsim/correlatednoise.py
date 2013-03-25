@@ -673,7 +673,9 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
         >>> cn.applyRotation(theta * galsim.degrees)
         >>> cn.applyTransformation(ellipse)
 
-    See the individual method docstrings for more details.
+    See the individual method docstrings for more details.  The .applyShift() and .createShifted()
+    methods are not available since a correlation function must always be centred and peaked at the
+    origin.
 
     The BaseNoise methods
 
