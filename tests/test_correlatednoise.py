@@ -743,7 +743,7 @@ def test_convolve_cosmos():
     cn = galsim.getCOSMOSNoise(
         gd, '../examples/data/acs_I_unrot_sci_20_cf.fits', dx_cosmos=dx_cosmos)
     cn.setVariance(3.89) # Again chosen to be non-unity
-    cosimage = galsim.ImageD(largeim_size, largeim_size) # large image to beat down noise
+    cosimage = galsim.ImageD(3 * largeim_size, 3 * largeim_size) # large image to beat down noise
     cosimage.setScale(dx_cosmos) # Use COSMOS pixel scale
     # Define a PSF with which to convolve the noise field, one WITHOUT 2-fold rotational symmetry
     # (see test_autocorrelate in test_SBProfile.py for more info as to why this is relevant)
@@ -773,7 +773,7 @@ def test_convolve_cosmos():
     testim = galsim.ImageD(smallim_size, smallim_size)
     testim.setScale(dx_cosmos)
     cn_test.draw(testim)
-    nsum_test = 1000
+    nsum_test = 300
     for i in range(nsum_test - 1):
         cosimage.setZero()
         cosimage.addNoise(cn)
@@ -797,6 +797,9 @@ def test_convolve_cosmos():
     print 'var ratio = ',np.var(testim.array / refim.array)
     print 'min ratio = ',np.min(testim.array / refim.array)
     print 'max ratio = ',np.max(testim.array / refim.array)
+    #import matplotlib.pyplot as plt
+    #plt.pcolor(testim.array); plt.colorbar()
+    #plt.figure(); plt.pcolor(refim.array); plt.colorbar(); plt.show()
     #testim.write("junk1.fits")
     #refim.write("junk2.fits")
     # Test
