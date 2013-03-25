@@ -66,19 +66,6 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # noise field can get convolved with other GSObjects making isAnalyticX() False
         self._variance_stored = None
 
-        # Cause any methods we don't want the user to have access to, since they don't make sense
-        # for correlation functions and could cause errors in applyNoiseTo, to raise exceptions
-        # 
-        # This next line causes BaseCorrelatedNoise instances to not be garbage collected.
-        # So if you create a lot of them or they have a large memory footprint each (e.g. if the
-        # profile is an InterpolatedImage), then the memory blows up.
-        # I think the reason is that there is a circular reference:
-        #    self points to _profile
-        #    _profile.applyShift points back to something in self
-        # So neither one is reference-free and garbage collection won't release it.
-        #
-        #self._profile.applyShift = self._notImplemented
-
     # Make "+" work in the intuitive sense (variances being additive, correlation functions add as
     # you would expect)
     def __add__(self, other):
@@ -429,10 +416,6 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         """
         variance_ratio = variance / self.getVariance()
         self.scaleVariance(variance_ratio)
-
-    def _notImplemented(self, *args, **kwargs):
-        raise NotImplementedError(
-            "This method is not available for correlated noise class instances.")
 
     def convolveWith(self, gsobject):
         """Convolve the correlated noise model with an input GSObject.
