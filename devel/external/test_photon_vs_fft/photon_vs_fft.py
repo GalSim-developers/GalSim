@@ -111,7 +111,7 @@ def testShootVsFft():
                                 'G1_moments_fft G2_moments_fft G1_moments_photon G2_moments_photon ' + \
                                 'E1_hsm_obs_fft E2_hsm_obs_fft E1_hsm_obs_photon E2_hsm_obs_photon ' + \
                                 'E1_hsm_corr_fft E2_hsm_corr_fft E1_hsm_corr_photon E2_hsm_corr_photon ' + \
-                                'moments_fft_sigma moments_shoot_sigma hsm_fft_sigma hsm_shoot_sigma\n'
+                                'moments_fft_sigma moments_photon_sigma hsm_fft_sigma hsm_photon_sigma\n'
 
     file_output.write(output_header)
 
