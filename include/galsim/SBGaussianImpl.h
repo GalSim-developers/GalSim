@@ -31,7 +31,6 @@ namespace galsim {
     {
     public:
         SBGaussianImpl(double sigma, double flux, boost::shared_ptr<GSParams> gsparams);
-
         ~SBGaussianImpl() {}
 
         double xValue(const Position<double>& p) const;
@@ -65,12 +64,28 @@ namespace galsim {
 
         double getSigma() const { return _sigma; }
 
+        // Overrides for better efficiency
+        void fillXValue(tmv::MatrixView<double> val,
+                        double x0, double dx, int ix_zero,
+                        double y0, double dy, int iy_zero) const;
+        void fillXValue(tmv::MatrixView<double> val,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double x0, double dx, int ix_zero,
+                        double y0, double dy, int iy_zero) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
+
     private:
         double _flux; ///< Flux of the Surface Brightness Profile.
 
         /// Characteristic size, surface brightness scales as `exp[-r^2 / (2. * sigma^2)]`.
         double _sigma;
-        double _sigma_sq; ///< Calculated value: sigma*sigma
+        double _sigma_sq;
+        double _inv_sigma;
+        double _inv_sigma_sq;
         double _ksq_min; ///< If ksq < _kq_min, then use faster taylor approximation for kvalue
         double _ksq_max; ///< If ksq > _kq_max, then use kvalue = 0
         double _norm; ///< flux / sigma^2 / 2pi

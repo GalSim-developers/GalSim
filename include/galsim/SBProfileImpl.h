@@ -25,6 +25,7 @@
 #include "SBProfile.h"
 #include "FFT.h"
 #include "integ/Int.h"
+#include "TMV.h"
 
 namespace galsim {
 
@@ -41,6 +42,38 @@ namespace galsim {
         // Pure virtual functions:
         virtual double xValue(const Position<double>& p) const =0;
         virtual std::complex<double> kValue(const Position<double>& k) const =0; 
+
+        // Caclulate xValues and kValues for a bunch of positions at once.
+        // For some profiles, this may be more efficient than repeated calls of xValue(pos)
+        // since it affords the opportunity for vectorization of the calculations.
+        //
+        // For the first two versions, the x,y values for val(ix,iy) are
+        //     x = x0 + ix dx 
+        //     y = y0 + iy dy
+        // The ix_zero, iy_zero values are the indices where x=0, y=0.
+        // For some profiles (e.g. axi-symmetric profiles), this affords further opportunities
+        // for optimization.  If there is no such index, then ix_zero, iy_zero = 0, which indicates 
+        // that all the values need to be used.
+        //
+        // For the latter two versions, the x,y values for val(ix,iy) are
+        //     x = x0 + ix dx + iy dxy
+        //     y = y0 + iy dy + ix dyx
+        //
+        // If these aren't overridden, then the regular xValue or kValue will be called for each 
+        // position.
+        virtual void fillXValue(tmv::MatrixView<double> val,
+                                double x0, double dx, int ix_zero,
+                                double y0, double dy, int iy_zero) const;
+        virtual void fillXValue(tmv::MatrixView<double> val,
+                                double x0, double dx, double dxy,
+                                double y0, double dy, double dyx) const;
+        virtual void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                double x0, double dx, int ix_zero,
+                                double y0, double dy, int iy_zero) const;
+        virtual void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                double x0, double dx, double dxy,
+                                double y0, double dy, double dyx) const;
+
         virtual double maxK() const =0; 
         virtual double stepK() const =0;
         virtual bool isAxisymmetric() const =0;
@@ -69,33 +102,30 @@ namespace galsim {
         // Utility for drawing into Image data structures.
         // returns flux integral
         template <typename T>
-        double fillXImage(ImageView<T>& image, double gain) const  
-        { return doFillXImage(image, gain); }
+        double fillXImage(ImageView<T>& image, double gain) const;
 
         // Utility for drawing a k grid into FFT data structures 
-        virtual void fillKGrid(KTable& kt) const;
+        void fillKGrid(KTable& kt) const;
 
         // Utility for drawing an x grid into FFT data structures 
-        virtual void fillXGrid(XTable& xt) const;
-
-        // Virtual functions cannot be templates, so to make fillXImage work like a virtual
-        // function, we have it call these, which need to include all the types of Image
-        // that we want to use.
-        //
-        // Then in the derived class, these functions should call a template version of 
-        // fillXImage in that derived class that implements the functionality you want.
-        virtual double doFillXImage(ImageView<float>& image, double gain) const
-        { return doFillXImage2(image,gain); }
-        virtual double doFillXImage(ImageView<double>& image, double gain) const
-        { return doFillXImage2(image,gain); }
-
-        // Here in the base class, we need yet another name for the version that actually
-        // implements this as a template:
-        template <typename T>
-        double doFillXImage2(ImageView<T>& image, double gain) const;
+        void fillXGrid(XTable& xt) const;
 
         // Public so it can be directly used from SBProfile.
         boost::shared_ptr<GSParams> gsparams;
+
+    protected:
+
+        // A helper function for cases where the profile has f(x,y) = f(|x|,|y|).
+        // This includes axisymmetric profiles, but also a few other cases.
+        // Only one quadrant has its values computed.  Then these values are copied to the other
+        // 3 quadrants.  The input values ix_zero, iy_zero are the index of x=0, y=0.
+        // At least one of these needs to be != 0.
+        void fillXValueQuadrant(tmv::MatrixView<double> val,
+                                double x0, double dx, int nx1,
+                                double y0, double dy, int ny1) const;
+        void fillKValueQuadrant(tmv::MatrixView<std::complex<double> > val,
+                                double x0, double dx, int nx1,
+                                double y0, double dy, int ny1) const;
 
     private:
         // Copy constructor and op= are undefined.

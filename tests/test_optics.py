@@ -59,7 +59,7 @@ def test_check_all_contiguous():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_simple_wavefront():
-    """Test the MTF of a pure circular pupil against the known result.
+    """Test the wavefront of a pure circular pupil against the known result.
     """
     import time
     t1 = time.time()
@@ -224,7 +224,7 @@ def test_OpticalPSF_vs_Airy():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_OpticalPSF_vs_Airy_with_obs():
-    """Compare the array view on an unaberrated OpticalPSF with osbcuration to that of an Airy.
+    """Compare the array view on an unaberrated OpticalPSF with obscuration to that of an Airy.
     """
     import time
     t1 = time.time()

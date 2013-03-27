@@ -193,7 +193,6 @@ namespace galsim {
     public:
         SBAiryImpl(double lam_over_D, double obs, double flux,
                    boost::shared_ptr<GSParams> gsparams);
-
         ~SBAiryImpl() {}
 
         double xValue(const Position<double>& p) const;
@@ -223,6 +222,20 @@ namespace galsim {
          */
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
+        // Overrides for better efficiency
+        void fillXValue(tmv::MatrixView<double> val,
+                        double x0, double dx, int ix_zero,
+                        double y0, double dy, int iy_zero) const;
+        void fillXValue(tmv::MatrixView<double> val,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double x0, double dx, int ix_zero,
+                        double y0, double dy, int iy_zero) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
+
     private:
         
         double _lam_over_D;  ///< inverse of _D (see below), harmonise inputs with other GSObjects
@@ -236,6 +249,7 @@ namespace galsim {
 
         double _Dsq; ///< Calculated value: D*D
         double _obssq; ///< Calculated value: _obscuration * _obscuration
+        double _inv_D_pi; ///< Calculated value: 1/(D pi)
         double _inv_Dsq_pisq; ///< Calculated value: 1/(D^2 pi^2)
         double _xnorm; ///< Calculated value: flux * D^2
         double _knorm; ///< Calculated value: flux / (pi (1-obs^2))

@@ -78,26 +78,6 @@ namespace galsim {
 
         class SBTransformImpl;
 
-        static std::complex<double> _kValueNoPhaseNoDet(
-            const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
-            const Position<double>& , const Position<double>& );
-        static std::complex<double> _kValueNoPhaseWithDet(
-            const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
-            const Position<double>& , const Position<double>& );
-        static std::complex<double> _kValueWithPhase(
-            const SBProfile& adaptee, const Position<double>& fwdTk, double absdet,
-            const Position<double>& k, const Position<double>& cen);
-
-        static Position<double> _fwd_normal(
-            double mA, double mB, double mC, double mD, double x, double y, double )
-        { return Position<double>(mA*x + mB*y, mC*x + mD*y); }
-        static Position<double> _inv_normal(
-            double mA, double mB, double mC, double mD, double x, double y, double invdet)
-        { return Position<double>(invdet*(mD*x - mB*y), invdet*(-mC*x + mA*y)); }
-        static Position<double> _ident(
-            double , double , double , double , double x, double y, double )
-        { return Position<double>(x,y); }
-
     private:
         // op= is undefined
         void operator=(const SBTransform& rhs);

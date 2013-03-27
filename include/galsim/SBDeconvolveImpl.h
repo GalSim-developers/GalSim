@@ -34,15 +34,9 @@ namespace galsim {
         ~SBDeconvolveImpl() {}
 
         // xValue() not implemented for SBDeconvolve.
-        double xValue(const Position<double>& p) const 
-        { throw SBError("SBDeconvolve::xValue() not implemented"); }
+        double xValue(const Position<double>& p) const;
 
-        std::complex<double> kValue(const Position<double>& k) const 
-        {
-            return (k.x*k.x+k.y*k.y) <= _maxksq ?
-                1./_adaptee.kValue(k) :
-                std::complex<double>(0.,0.); 
-        }
+        std::complex<double> kValue(const Position<double>& k) const;
 
         double maxK() const { return _adaptee.maxK(); }
         double stepK() const { return _adaptee.stepK(); }
@@ -56,50 +50,19 @@ namespace galsim {
         bool isAnalyticX() const { return false; }
         bool isAnalyticK() const { return true; }
 
-        Position<double> centroid() const { return -_adaptee.centroid(); }
+        Position<double> centroid() const;
+        double getFlux() const;
 
-        double getFlux() const { return 1./_adaptee.getFlux(); }
+        // shoot also not implemented.
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate u) const;
 
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate u) const 
-        {
-            throw SBError("SBDeconvolve::shoot() not implemented");
-            return boost::shared_ptr<PhotonArray>();
-        }
-
-    protected:
-
-        // Override for better efficiency if adaptee has it:
-        void fillKGrid(KTable& kt) const 
-        {
-            assert(SBProfile::GetImpl(_adaptee));
-            SBProfile::GetImpl(_adaptee)->fillKGrid(kt);
-            // Flip or clip:
-            int N = kt.getN();
-            // NB: don't need floor, since rhs is positive, so floor is superfluous.
-            int maxiksq = int(_maxksq / (kt.getDk()*kt.getDk()));
-            // Only need ix>=0 because it's Hermitian, but also
-            // don't want to repeat the ix=0, N/2 twice:
-            for (int iy = -N/2; iy < N/2; iy++) {
-                if (iy>=0) {
-                    int ix=0;
-                    if (ix*ix+iy*iy <= maxiksq) 
-                        kt.kSet(ix,iy,1./kt.kval(ix,iy));
-                    else
-                        kt.kSet(ix,iy,std::complex<double>(0.,0.));
-                    ix=N/2;
-                    if (ix*ix+iy*iy <= maxiksq) 
-                        kt.kSet(ix,iy,1./kt.kval(ix,iy));
-                    else
-                        kt.kSet(ix,iy,std::complex<double>(0.,0.));
-                }
-                for (int ix = 0; ix <= N/2; ix++) {
-                    if (ix*ix+iy*iy <= maxiksq) 
-                        kt.kSet(ix,iy,1./kt.kval(ix,iy));
-                    else
-                        kt.kSet(ix,iy,std::complex<double>(0.,0.));
-                }
-            }
-        }
+        // Overrides for better efficiency
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double x0, double dx, int ix_zero,
+                        double y0, double dy, int iy_zero) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
 
     private:
         SBProfile _adaptee;

@@ -61,23 +61,150 @@ namespace galsim {
     SBSersic::SBSersicImpl::SBSersicImpl(double n,  double re, double flux,
                                          boost::shared_ptr<GSParams> gsparams) :
         SBProfileImpl(gsparams),
-        _n(n), _flux(flux), _re(re), _re_sq(_re*_re), _norm(_flux/_re_sq),
+        _n(n), _flux(flux), _re(re), _re_sq(_re*_re), _inv_re(1./_re), 
+        _inv_re_sq(_inv_re*_inv_re), _norm(_flux*_inv_re_sq),
         _info(cache.get(std::make_pair(_n,this->gsparams.get())))
     {
-        _ksq_max = _info->getKsqMax() / _re_sq;
+        _ksq_max = _info->getKsqMax();
         dbg<<"_ksq_max for n = "<<n<<" = "<<_ksq_max<<std::endl;
     }
 
     double SBSersic::SBSersicImpl::xValue(const Position<double>& p) const
-    {  return _norm * _info->xValue((p.x*p.x+p.y*p.y)/_re_sq); }
+    {  return _norm * _info->xValue((p.x*p.x+p.y*p.y)*_inv_re_sq); }
 
     std::complex<double> SBSersic::SBSersicImpl::kValue(const Position<double>& k) const
-    { 
-        double ksq = k.x*k.x + k.y*k.y;
-        if (ksq > _ksq_max) 
-            return 0.;
-        else
-            return _flux * _info->kValue(ksq * _re_sq);
+    {
+        double ksq = (k.x*k.x + k.y*k.y)*_re_sq;
+        if (ksq > _ksq_max) return 0.;
+        else return _flux * _info->kValue(ksq);
+    }
+
+    void SBSersic::SBSersicImpl::fillXValue(tmv::MatrixView<double> val,
+                                            double x0, double dx, int ix_zero,
+                                            double y0, double dy, int iy_zero) const
+    {
+        dbg<<"SBSersic fillXValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
+        if (ix_zero != 0 || iy_zero != 0) {
+            xdbg<<"Use Quadrant\n";
+            fillXValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            assert(val.stepi() == 1);
+            const int m = val.colsize();
+            const int n = val.rowsize();
+            typedef tmv::VIt<double,1,tmv::NonConj> It;
+
+            x0 *= _inv_re;
+            dx *= _inv_re;
+            y0 *= _inv_re;
+            dy *= _inv_re;
+
+            for (int j=0;j<n;++j,y0+=dy) {
+                double x = x0;
+                double ysq = y0*y0;
+                It valit = val.col(j).begin();
+                for (int i=0;i<m;++i,x+=dx) *valit++ = _norm * _info->xValue(x*x + ysq);
+            }
+        }
+    }
+
+    void SBSersic::SBSersicImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                            double x0, double dx, int ix_zero,
+                                            double y0, double dy, int iy_zero) const
+    {
+        dbg<<"SBSersic fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
+        if (ix_zero != 0 || iy_zero != 0) {
+            xdbg<<"Use Quadrant\n";
+            fillKValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            assert(val.stepi() == 1);
+            const int m = val.colsize();
+            const int n = val.rowsize();
+            typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+
+            x0 *= _re;
+            dx *= _re;
+            y0 *= _re;
+            dy *= _re;
+
+            for (int j=0;j<n;++j,y0+=dy) {
+                double x = x0;
+                double ysq = y0*y0;
+                It valit(val.col(j).begin().getP(),1);
+                for (int i=0;i<m;++i,x+=dx) {
+                    double ksq = x*x + ysq;
+                    if (ksq > _ksq_max) *valit++ = 0.;
+                    else *valit++ = _flux * _info->kValue(ksq);
+                }
+            }
+        }
+    }
+
+    void SBSersic::SBSersicImpl::fillXValue(tmv::MatrixView<double> val,
+                                            double x0, double dx, double dxy,
+                                            double y0, double dy, double dyx) const
+    {
+        dbg<<"SBSersic fillXValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+
+        x0 *= _inv_re;
+        dx *= _inv_re;
+        dxy *= _inv_re;
+        y0 *= _inv_re;
+        dy *= _inv_re;
+        dyx *= _inv_re;
+
+        It valit = val.linearView().begin();
+        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+            double x = x0;
+            double y = y0;
+            It valit = val.col(j).begin();
+            for (int i=0;i<m;++i,x+=dx,y+=dyx) *valit++ = _norm * _info->xValue(x*x + y*y);
+        }
+    }
+
+    void SBSersic::SBSersicImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                            double x0, double dx, double dxy,
+                                            double y0, double dy, double dyx) const
+    {
+        dbg<<"SBSersic fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+
+        x0 *= _re;
+        dx *= _re;
+        dxy *= _re;
+        y0 *= _re;
+        dy *= _re;
+        dyx *= _re;
+
+        It valit(val.linearView().begin().getP(),1);
+        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+            double x = x0;
+            double y = y0;
+            It valit(val.col(j).begin().getP(),1);
+            for (int i=0;i<m;++i,x+=dx,y+=dyx) {
+                double ksq = x*x + y*y;
+                if (ksq > _ksq_max) *valit++ = 0.;
+                else *valit++ = _flux * _info->kValue(ksq);
+            }
+        }
     }
 
     double SBSersic::SBSersicImpl::maxK() const { return _info->maxK() / _re; }
@@ -89,7 +216,7 @@ namespace galsim {
     double SersicInfo::kValue(double ksq) const 
     {
         // TODO: Use asymptotic formula for high-k?
-        
+
         assert(ksq >= 0.);
 
         if (ksq>=_ksq_max)
@@ -225,7 +352,7 @@ namespace galsim {
         // We keep track of maxlogk_1 and maxlogk_2 to keep track of each of these.
         double maxlogk_1 = 0.;
         double maxlogk_2 = 0.;
-        
+
         double dlogk = 0.1;
         // Don't go past k = 500
         for (double logk = std::log(kmin)-0.001; logk < std::log(500.); logk += dlogk) {

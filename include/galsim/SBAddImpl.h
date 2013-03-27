@@ -118,8 +118,18 @@ namespace galsim {
         double getNegativeFlux() const;
 
         // Overrides for better efficiency
-        void fillKGrid(KTable& kt) const;
-        void fillXGrid(XTable& xt) const;
+        void fillXValue(tmv::MatrixView<double> val,
+                        double x0, double dx, int ix_zero,
+                        double y0, double dy, int iy_zero) const;
+        void fillXValue(tmv::MatrixView<double> val,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double x0, double dx, int ix_zero,
+                        double y0, double dy, int iy_zero) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
 
         typedef std::list<SBProfile>::iterator Iter;
         typedef std::list<SBProfile>::const_iterator ConstIter;

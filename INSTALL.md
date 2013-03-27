@@ -52,7 +52,7 @@ For a list of places to download Python, see http://www.python.org/getit/.
 
 The GalSim package also requires
 
-* the numerical Python module NumPy (http://numpy.scipy.org)
+* the numerical Python module NumPy (http://www.numpy.org)
 
 * the astronomical FITS file input/output module PyFITS
   (http://www.stsci.edu/institute/software_hardware/pyfits)
@@ -532,6 +532,10 @@ Below is a list of steps to take to install GalSim using MacPorts:
           /opt/local/etc/macports/sources.conf"`
     ix) `sudo port install galsim`
     x) Add /opt/local/lib to DYLD_LIBRARY_PATH
+
+Some users may find that the last step results in an inability to import the
+GalSim module.  In that case, you can clear that addition to DYLD_LIBRARY_PATH
+and instead add /opt/local/lib to DYLD_FALLBACK_LIBRARY_PATH.
 
 Notes on MacPorts with Mac OS X 10.8:
 The use of `sudo` in the above commands may elicit an error message that says
