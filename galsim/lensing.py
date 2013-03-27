@@ -872,15 +872,15 @@ class PowerSpectrumRealizer(object):
         self.ny = ngrid
 
         # Setup some handy slices for indexing different parts of k space
-        self.ikx = slice(0,self.nx/2+1)     # positive kx values, including 0, nx/2
-        self.ikxp = slice(1,self.nx/2)      # limit to only values with a negative value
-        self.ikxn = slice(-1,-self.nx/2,-1) # negative kx values
+        self.ikx = slice(0,self.nx/2+1)       # positive kx values, including 0, nx/2
+        self.ikxp = slice(1,(self.nx+1)/2)    # limit to only values with a negative value
+        self.ikxn = slice(-1,self.nx/2,-1)    # negative kx values
 
         # We always call this with nx=ny, so behavior with nx != ny is not tested.
         # However, we make a basic attempt to enable such behavior in the future if needed.
         self.iky = slice(0,self.ny/2+1)
-        self.ikyp = slice(1,self.ny/2)
-        self.ikyn = slice(-1,-self.ny/2,-1)
+        self.ikyp = slice(1,(self.ny+1)/2)
+        self.ikyn = slice(-1,self.ny/2,-1)
 
         # Set up the scalar k grid. Generally, for a box size of L (in one dimension), the grid
         # spacing in k_x or k_y is Delta k=2pi/L 
@@ -973,7 +973,8 @@ class PowerSpectrumRealizer(object):
         P_k[self.ikyp,self.ikxn] = np.conj(P_k[self.ikyn,self.ikxp])
         P_k[self.ikyn,self.ikxn] = np.conj(P_k[self.ikyp,self.ikxp])
         P_k[0,self.ikxn] = np.conj(P_k[0,self.ikxp])
-        P_k[self.ny/2,self.ikxn] = np.conj(P_k[self.ny/2,self.ikxp])
+        if self.ny % 2 == 0:
+            P_k[self.ny/2,self.ikxn] = np.conj(P_k[self.ny/2,self.ikxp])
 
     def _generate_power_array(self, power_function):
         # Internal function to generate the result of a power function evaluated on a grid,
