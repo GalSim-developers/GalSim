@@ -739,72 +739,86 @@ def test_convolve_cosmos():
     """
     t1 = time.time()
     gd = galsim.GaussianDeviate(rseed)
-    dx_cosmos=0.19 # Non-unity, non-default value to be used below
+    dx_cosmos=0.03 # Non-unity, non-default value to be used below
     cn = galsim.getCOSMOSNoise(
         gd, '../examples/data/acs_I_unrot_sci_20_cf.fits', dx_cosmos=dx_cosmos)
-    cn.setVariance(3.89) # Again chosen to be non-unity
-    cosimage = galsim.ImageD(3 * largeim_size, 3 * largeim_size) # large image to beat down noise
-    cosimage.setScale(dx_cosmos) # Use COSMOS pixel scale
+    cn.setVariance(1000.) # Again chosen to be non-unity
     # Define a PSF with which to convolve the noise field, one WITHOUT 2-fold rotational symmetry
     # (see test_autocorrelate in test_SBProfile.py for more info as to why this is relevant)
-    psf = galsim.Convolve([
-        galsim.Kolmogorov(fwhm=3. * dx_cosmos),
-        galsim.OpticalPSF(lam_over_diam=2.4 * dx_cosmos, coma2=0.4, defocus=-0.6)])
+    # Make a relatively realistic mockup of a GREAT3 target image
+    lam_over_diam_cosmos = (814.e-9 / 2.4) * (180. / np.pi) * 3600. # ~lamda/D in arcsec
+    lam_over_diam_ground = lam_over_diam_cosmos * 2.4 / 4. # Generic 4m at same lambda
+    psf_cosmos = galsim.Convolve([
+        galsim.Airy(lam_over_diam=lam_over_diam_cosmos, obscuration=0.4), galsim.Pixel(0.05)])
+    psf_ground = galsim.Convolve([
+        galsim.Kolmogorov(fwhm=0.8), galsim.Pixel(0.18),
+        galsim.OpticalPSF(lam_over_diam=lam_over_diam_ground, coma2=0.4, defocus=-0.6)])
+    psf_shera = galsim.Convolve([
+        psf_ground, (galsim.Deconvolve(psf_cosmos)).createSheared(g1=0.03, g2=-0.01)])
     # Then define the convolved cosmos correlated noise model
     conv_cn = cn.copy()
-    conv_cn.convolveWith(psf)
+    conv_cn.convolveWith(psf_shera)
     # Then draw the correlation function for this correlated noise as the reference
     refim = galsim.ImageD(smallim_size, smallim_size)
-    conv_cn.draw(refim, dx=dx_cosmos)
+    conv_cn.draw(refim, dx=0.18)
     # Now start the tests
     # Generate a COSMOS noise field, read it into an InterpolatedImage and then convolve it with psf
     # Note that the normalization here must be flux to avoid the SBProfile internals from taking
     # the pixel scale into account...
+    size_factor = 2
+    print "Calculating results for size_factor = "+str(size_factor)
+    cosimage = galsim.ImageD(
+        size_factor * largeim_size * 6, # Note 6 here since 0.18 = 6 * 0.03
+        size_factor * largeim_size * 6) # large image to beat down noise
+    cosimage.setScale(dx_cosmos) # Use COSMOS pixel scale
     cosimage.addNoise(cn)
+    interp=galsim.Linear()
     imobj = galsim.InterpolatedImage(
-        cosimage, calculate_stepk=False, calculate_maxk=False, normalization='flux',
-        dx=dx_cosmos)
-    cimobj = galsim.Convolve(imobj, psf)
-    convimage = galsim.ImageD(largeim_size, largeim_size)
+        cosimage, calculate_stepk=False, calculate_maxk=False, normalization='sb',
+        dx=dx_cosmos, x_interpolant=interp)
+    cimobj = galsim.Convolve(imobj, psf_shera)
+    convimage = galsim.ImageD(largeim_size * size_factor, largeim_size * size_factor)
     # Then draw, calculate a correlation function for the resulting field, and repeat to get an
     # average over nsum_test trials
-    cimobj.draw(convimage, dx=dx_cosmos, normalization='flux')
-    cn_test = galsim.CorrelatedNoise(gd, convimage, dx=dx_cosmos)
+    cimobj.draw(convimage, dx=0.18, normalization='sb')
+    cosimage.write('junk_cos.fits')
+    convimage.write('junk_conv.fits')
+    cn_test = galsim.CorrelatedNoise(gd, convimage, dx=0.18)
     testim = galsim.ImageD(smallim_size, smallim_size)
-    testim.setScale(dx_cosmos)
-    cn_test.draw(testim)
+    cn_test.draw(testim, dx=0.18)
     nsum_test = 300
     for i in range(nsum_test - 1):
         cosimage.setZero()
         cosimage.addNoise(cn)
         imobj = galsim.InterpolatedImage(
-            cosimage, calculate_stepk=False, calculate_maxk=False, normalization='flux',
-            dx=dx_cosmos)
-        cimobj = galsim.Convolve(imobj, psf)
+            cosimage, calculate_stepk=False, calculate_maxk=False, normalization='sb',
+            dx=dx_cosmos, x_interpolant=interp)
+        cimobj = galsim.Convolve(imobj, psf_shera)
         convimage.setZero()
-        cimobj.draw(convimage, dx=dx_cosmos, normalization='flux')
-        cn_test = galsim.CorrelatedNoise(gd, convimage, dx=dx_cosmos) 
-        cn_test.draw(testim, dx=dx_cosmos, add_to_image=True)
+        cimobj.draw(convimage, dx=0.18, normalization='sb')
+        cn_test = galsim.CorrelatedNoise(gd, convimage, dx=0.18) 
+        cn_test.draw(testim, dx=0.18, add_to_image=True)
         del imobj
         del cimobj
         del cn_test
     testim /= float(nsum_test) # Take average CF of trials
-    print 'mean diff = ',np.mean(testim.array - refim.array)
-    print 'var diff = ',np.var(testim.array - refim.array)
-    print 'min diff = ',np.min(testim.array - refim.array)
-    print 'max diff = ',np.max(testim.array - refim.array)
-    print 'mean ratio = ',np.mean(testim.array / refim.array)
-    print 'var ratio = ',np.var(testim.array / refim.array)
-    print 'min ratio = ',np.min(testim.array / refim.array)
-    print 'max ratio = ',np.max(testim.array / refim.array)
+    # Show ratios etc in central 4x4 where CF is definitely non-zero
+    print 'mean diff = ',np.mean(testim.array[4:12, 4:12] - refim.array[4:12, 4:12])
+    print 'var diff = ',np.var(testim.array[4:12, 4:12] - refim.array[4:12, 4:12])
+    print 'min diff = ',np.min(testim.array[4:12, 4:12] - refim.array[4:12, 4:12])
+    print 'max diff = ',np.max(testim.array[4:12, 4:12] - refim.array[4:12, 4:12])
+    print 'mean ratio = ',np.mean(testim.array[4:12, 4:12] / refim.array[4:12, 4:12])
+    print 'var ratio = ',np.var(testim.array[4:12, 4:12] / refim.array[4:12, 4:12])
+    print 'min ratio = ',np.min(testim.array[4:12, 4:12] / refim.array[4:12, 4:12])
+    print 'max ratio = ',np.max(testim.array[4:12, 4:12] / refim.array[4:12, 4:12])
     #import matplotlib.pyplot as plt
     #plt.pcolor(testim.array); plt.colorbar()
     #plt.figure(); plt.pcolor(refim.array); plt.colorbar(); plt.show()
-    #testim.write("junk1.fits")
-    #refim.write("junk2.fits")
-    # Test
+    testim.write("junk_test.fits")
+    refim.write("junk_ref.fits")
+    # Test (ditto only look at central 4x4)
     np.testing.assert_array_almost_equal(
-        testim.array, refim.array, decimal=decimal_approx,
+        testim.array[4:12, 4:12], refim.array[4:12, 4:12], decimal=decimal_approx,
         err_msg="Convolved COSMOS noise fields do not match the convolved correlated noise model.")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
