@@ -1313,9 +1313,14 @@ class NFWHalo(object):
             g /= 1 - kappa
 
         # pure tangential shear, no cross component
-        phi = np.arctan2(pos_y - self.halo_pos.y, pos_x - self.halo_pos.x)
-        g1 = -g / (np.cos(2*phi) + np.sin(2*phi)*np.tan(2*phi))
-        g2 = g1 * np.tan(2*phi)
+        dx = pos_x - self.halo_pos.x
+        dy = pos_y - self.halo_pos.y
+        drsq = dx*dx+dy*dy
+        drsq[drsq==0.] = 1. # Avoid division by 0
+        cos2phi = (dx*dx-dy*dy)/drsq
+        sin2phi = 2*dx*dy/drsq
+        g1 = -g*cos2phi
+        g2 = -g*sin2phi
 
         # Make outputs in proper format: be careful here, we want consistent inputs and outputs
         # (e.g., if given a Numpy array, return one as well).  But don't attempt to index "pos"
@@ -1447,9 +1452,14 @@ class NFWHalo(object):
         g /= 1 - kappa
         mu = 1. / ( (1.-kappa)**2 - g**2 )
         # Get the tangential shear (no x component)
-        phi = np.arctan2(pos_y - self.halo_pos.y, pos_x - self.halo_pos.x)
-        g1 = -g / (np.cos(2*phi) + np.sin(2*phi)*np.tan(2*phi))
-        g2 = g1 * np.tan(2*phi)
+        dx = pos_x - self.halo_pos.x
+        dy = pos_y - self.halo_pos.y
+        drsq = dx*dx+dy*dy
+        drsq[drsq==0.] = 1. # Avoid division by 0
+        cos2phi = (dx*dx-dy*dy)/drsq
+        sin2phi = 2*dx*dy/drsq
+        g1 = -g*cos2phi
+        g2 = -g*sin2phi
 
         # Make outputs in proper format: be careful here, we want consistent inputs and outputs
         # (e.g., if given a Numpy array, return one as well).  But don't attempt to index "pos"
