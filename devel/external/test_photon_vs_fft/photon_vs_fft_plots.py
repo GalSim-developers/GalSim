@@ -78,60 +78,93 @@ def plotEllipticityBiasesHistogram():
     data = numpy.loadtxt(config['filename_output'],ndmin=2)
     n_test_gals = data.shape[0]
     n_bins = 25
+    n_ticks= 3
 
     E1_fft=data[:,2]
     E2_fft=data[:,3]
     E1_photon=data[:,4]
     E2_photon=data[:,5]
-    pylab.subplot(231)
+    pylab.subplot(241)
     # pylab.hist((E1_fft-E1_photon)/E1_fft,label='E1',bins=n_bins)
     pylab.hist((E1_fft-E1_photon),label='E1',bins=n_bins)
     pylab.title('adaptive moments')
     pylab.xlabel('g1_fft - g1_photon')
     pylab.ylabel('count')
+    pylab.xticks(numpy.linspace(min(pylab.xticks()[0]),max(pylab.xticks()[0]),n_ticks))
+
     
-    pylab.subplot(234)
+    pylab.subplot(245)
     # pylab.hist((E2_fft-E2_photon)/E2_fft,label='E1',bins=n_bins)
     pylab.hist((E2_fft-E2_photon),label='E2',bins=n_bins)
     pylab.xlabel('g2_fft - g2_photon')
     pylab.ylabel('count')
+    pylab.xticks(numpy.linspace(min(pylab.xticks()[0]),max(pylab.xticks()[0]),n_ticks))
 
     E1_fft=data[:,6]
     E2_fft=data[:,7]
     E1_photon=data[:,8]
     E2_photon=data[:,9]
-    pylab.subplot(232)
+    pylab.subplot(242)
     # pylab.hist((E1_fft-E1_photon)/E1_fft,label='E1',bins=n_bins)
     pylab.hist((E1_fft-E1_photon),label='E1',bins=n_bins)
     pylab.title('HSM observed')
     pylab.xlabel('E1_fft - E1_photon')
     pylab.ylabel('count')
-    
+    pylab.xticks(numpy.linspace(min(pylab.xticks()[0]),max(pylab.xticks()[0]),n_ticks))
 
-    pylab.subplot(235)
+    
+    pylab.subplot(246)
     # pylab.hist((E2_fft-E2_photon)/E2_fft,label='E1',bins=n_bins)
     pylab.hist((E2_fft-E2_photon),label='E2',bins=n_bins)
     pylab.xlabel('E2_fft - E2_photon')
     pylab.ylabel('count')
+    pylab.xticks(numpy.linspace(min(pylab.xticks()[0]),max(pylab.xticks()[0]),n_ticks))
+
+
 
     E1_fft=data[:,10]
     E2_fft=data[:,11]
     E1_photon=data[:,12]
     E2_photon=data[:,13]
-    pylab.subplot(233)
+    pylab.subplot(243)
     # pylab.hist((E1_fft-E1_photon)/E1_fft,label='E1',bins=n_bins)
     pylab.hist((E1_fft-E1_photon),label='E1',bins=n_bins)
     pylab.title('HSM corrected')
     pylab.xlabel('E1_fft - E1_photon')
     pylab.ylabel('count')
+    pylab.xticks(numpy.linspace(min(pylab.xticks()[0]),max(pylab.xticks()[0]),n_ticks))
 
 
-    pylab.subplot(236)
+    pylab.subplot(247)
     # pylab.hist((E2_fft-E2_photon)/E2_fft,label='E1',bins=n_bins)
     pylab.hist((E2_fft-E2_photon),label='E2',bins=n_bins)           
     pylab.xlabel('E2_fft - E2_photon')
     pylab.ylabel('count')
-    
+    pylab.xticks(numpy.linspace(min(pylab.xticks()[0]),max(pylab.xticks()[0]),n_ticks))
+
+
+    # plot moments differnces
+
+    sigma_moments_fft=data[:,14]
+    sigma_moments_photon=data[:,15]
+    sigma_hsm_fft=data[:,16]
+    sigma_hsm_photon=data[:,17]
+
+    pylab.subplot(244)
+    pylab.hist((sigma_moments_fft-sigma_moments_photon),label='sigma',bins=n_bins)
+    pylab.title('moments')
+    pylab.xlabel('sigma_fft - sigma_photon')
+    pylab.ylabel('count')
+    pylab.xticks(numpy.linspace(min(pylab.xticks()[0]),max(pylab.xticks()[0]),n_ticks))
+
+    pylab.subplot(248)
+    pylab.hist((sigma_hsm_fft-sigma_hsm_photon),label='sigma',bins=n_bins)           
+    pylab.title('HSM')
+    pylab.xlabel('sigma_fft - sigma_photon')
+    pylab.ylabel('count')
+    pylab.xticks(numpy.linspace(min(pylab.xticks()[0]),max(pylab.xticks()[0]),n_ticks))
+
+        
     pylab.gcf().set_size_inches(20,10)
 
     filename_fig = os.path.join(dirname_figs,'photon_vs_fft_histogram.png');
