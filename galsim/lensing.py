@@ -870,18 +870,35 @@ class PowerSpectrumRealizer(object):
     def set_size(self, ngrid, pixel_size):
         self.nx = ngrid
         self.ny = ngrid
-        i_kx, i_ky = np.mgrid[0: self.nx / 2 + 1, 0: self.ny / 2 + 1]
-        self.i_kx = i_kx
-        self.i_ky = i_ky
+
+        # Setup some handy numpy indices for indexing different parts of k space
+        self.ikx = slice(0,self.nx/2+1)     # positive kx values, including 0, nx/2
+        self.ikxp = slice(1,self.nx/2)      # limit to only values with a negative value
+        self.ikxn = slice(-1,-self.nx/2,-1) # negative kx values
+
+        # We always call this with nx=ny, so behavior with nx != ny is not tested.
+        # However, we make a basic attempt to enable such behavior in the future if needed.
+        self.iky = slice(0,self.ny/2+1)
+        self.ikyp = slice(1,self.ny/2)
+        self.ikyn = slice(-1,-self.ny/2,-1)
+
+        # Set up the scalar k grid. Generally, for a box size of L (in one dimension), the grid
+        # spacing in k_x or k_y is Delta k=2pi/L 
         pixel_size = float(pixel_size)
         self.pixel_size = pixel_size
+        i_ky, i_kx = np.mgrid[self.iky, self.ikx]
+        self.kx = i_kx * 2. * np.pi / (pixel_size * self.nx)
+        self.ky = i_ky * 2. * np.pi / (pixel_size * self.ny)
 
-        # Set up the scalar |k| grid. Generally, for a box size of L (in one dimension), the grid
-        # spacing in k_x or k_y is Delta k=2pi/L (Barney edit: sqrt faster than **.5 I think...)
-        self.k = 2.*np.pi*np.sqrt((i_kx / (pixel_size * self.nx))**2 + (i_ky / (pixel_size * self.ny))**2)
-
-        #Compute the spin weightings
-        self._cos, self._sin = self._generate_spin_weightings()        
+        # Compute the spin weightings
+        kz = self.kx + self.ky*1j
+        # exp(2i psi) = kz^2 / |kz|^2
+        ksq = kz*np.conj(kz)
+        # Need to adjust denominator for kz=0 to avoid division by 0.
+        ksq[0,0] = 1.
+        self.exp2ipsi = kz*kz/ksq
+        # Note: this leaves exp2ipsi[0,0] = 0, but it turns out that's ok, since we only
+        # ever multiply it by something that is 0 anyway (amplitude[0,0] = 0).
 
     def set_power(self, p_E, p_B):
         self.p_E = p_E
@@ -908,95 +925,100 @@ class PowerSpectrumRealizer(object):
                 "The gd provided to the PowerSpectrumRealizer is not a GaussianDeviate!")
 
         # Generate a random complex realization for the E-mode, if there is one
+        nx = self.nx
+        ny = self.ny
         if self.amplitude_E is not None:
             r1 = galsim.utilities.rand_arr(self.amplitude_E.shape, gd)
             r2 = galsim.utilities.rand_arr(self.amplitude_E.shape, gd)
-            E_k = self.amplitude_E * (r1 + 1j*r2) * ISQRT2  
+            E_k = np.empty((ny,nx)).astype(type(1.+1.j))
+            E_k[:,self.ikx] = self.amplitude_E * (r1 + 1j*r2) * ISQRT2
+            # E_k corresponds to real kappa, so E_k[-k] = conj(E_k[k])
+            # First update the kx=0 values to be consistent with that fact:
+            E_k[self.ikyn,0] = np.conj(E_k[self.ikyp,0])
+            # Then fill the kx<0 values appropriately
+            E_k[self.ikyp,self.ikxn] = np.conj(E_k[self.ikyn,self.ikxp])
+            E_k[self.ikyn,self.ikxn] = np.conj(E_k[self.ikyp,self.ikxp])
+            E_k[0,self.ikxn] = np.conj(E_k[0,self.ikxp])
+            E_k[ny/2,self.ikxn] = np.conj(E_k[ny/2,self.ikxp])
         else: E_k = 0
 
         # Generate a random complex realization for the B-mode, if there is one
         if self.amplitude_B is not None:
             r1 = galsim.utilities.rand_arr(self.amplitude_B.shape, gd)
             r2 = galsim.utilities.rand_arr(self.amplitude_B.shape, gd)
-            B_k = self.amplitude_B * (r1 + 1j*r2) * ISQRT2
+            B_k = np.empty((ny,nx)).astype(type(1.+1.j))
+            B_k[:,self.ikx] = self.amplitude_B * (r1 + 1j*r2) * ISQRT2
+            # B_k corresponds to imag kappa, so B_k[-k] = -conj(B_k[k])
+            # However, we later multiply this by i, so that means here B_k[-k] = conj(B_k[k])
+            B_k[self.ikyn,0] = np.conj(B_k[self.ikyp,0])
+            B_k[self.ikyp,self.ikxn] = np.conj(B_k[self.ikyn,self.ikxp])
+            B_k[self.ikyn,self.ikxn] = np.conj(B_k[self.ikyp,self.ikxp])
+            B_k[0,self.ikxn] = np.conj(B_k[0,self.ikxp])
+            B_k[ny/2,self.ikxn] = np.conj(B_k[ny/2,self.ikxp])
         else:
             B_k = 0
 
-        # Now convert from E,B to g1,g2  still in fourier space
-        g1_k =  self._cos*E_k + self._sin*B_k
-        g2_k = -self._sin*E_k + self._cos*B_k
+        # In terms of kappa, the E mode is the real kappa, and the B mode is imaginary kappa:
+        # In fourier space, both E_k and B_k are complex, but the same E + i B relation holds.
+        kappa_k = E_k + 1j * B_k
 
-        # And go to real space to get the real-space shear fields
-        g1 = g1_k.shape[0] * np.fft.irfft2(g1_k, s=(self.nx,self.ny))
-        g2 = g2_k.shape[0] * np.fft.irfft2(g2_k, s=(self.nx,self.ny))
+        # Build full-sized exp2ipsi array
+        exp2ipsi = np.empty((ny,nx)).astype(type(1.+1.j))
+        exp2ipsi[self.iky,self.ikx] = self.exp2ipsi
+        exp2ipsi[self.iky,self.ikxn] = np.conj(self.exp2ipsi[self.iky,self.ikxp])
+        exp2ipsi[self.ikyn,:] = np.conj(exp2ipsi[self.ikyp,:])
 
-        # Get kappa, the convergence field.
-        # Convert the self.i_kx, which are indices, into kx, which are wavenumbers (note: must match
-        # units convention adopted for dimensional self.k)
-        kx = 2. * np.pi * self.i_kx / (self.pixel_size * self.nx)
-        ky = 2. * np.pi * self.i_ky / (self.pixel_size * self.ny)
+        # Compute gamma_k as exp(2i psi) kappa_k
+        # Equation 2.1.12 of Kaiser & Squires (1993, ApJ, 404, 441) is equivalent to:
+        #   gamma_k = -exp2ipsi * kappa_k
+        # But of course, they only considered real (E-mode) kappa.
+        # However, this equation has a sign error.  There should not be a minus in front.
+        # If you follow their subsequent deviation, you will see that they drop the minus sign
+        # when they get to 2.1.15 (another - appears from the derivative).  2.1.15 is correct.
+        # e.g. it correctly produces a positive point mass for tangential shear ~ 1/r^2.
+        # So this implies that the minus sign in 2.1.12 should not be there.
+        gamma_k = exp2ipsi * kappa_k
 
-        # Compute the convergence fourier components using the simple relation in Kaiser & Squires
-        # (1993, ApJ, 404, 441), equation 2.1.12.
-        kappa_k = -self._cos*g1_k + self._sin*g2_k
-        # Set the DC term to zero.
-        kappa_k[0,0] = 0
+        # And go to real space to get the real-space shear and convergence fields
+        gamma = self.nx * np.fft.ifft2(gamma_k)
+        kappa = self.nx * np.fft.ifft2(kappa_k)
 
-        # Transform into real space.
-        kappa = kappa_k.shape[0] * np.fft.irfft2(kappa_k, s=(self.nx,self.ny))
+        # Make them contiguous, since we need to use them in an Image, which requires it.
+        g1 = np.ascontiguousarray(np.real(gamma))
+        g2 = np.ascontiguousarray(np.imag(gamma))
+        k = np.ascontiguousarray(np.real(kappa))
 
-        return g1, g2, kappa
+        return g1, g2, k
 
     def _generate_power_array(self, power_function):
         # Internal function to generate the result of a power function evaluated on a grid,
         # taking into account the symmetries.
-        power_array = np.zeros((self.nx, self.ny/2+1))
+        power_array = np.empty((self.ny, self.nx/2+1))
 
-        # Make a faked-up self.k array that fudges the value at k=0, so we don't have to evaluate
-        # power there
-        fake_k = self.k.copy()
-        fake_k[0,0] = fake_k[1,0]
+        # Set up the scalar |k| grid
+        k = np.sqrt(self.kx**2 + self.ky**2)
+
+        # Fudge the value at k=0, so we don't have to evaluate power there
+        k[0,0] = k[1,0]
         # Raise a clear exception for LookupTable that are not defined on the full k range!
         if isinstance(power_function, galsim.LookupTable):
-            mink = np.min(fake_k)
-            maxk = np.max(fake_k)
+            mink = np.min(k)
+            maxk = np.max(k)
             if mink < power_function.x_min or maxk > power_function.x_max:
                 raise ValueError(
                     "LookupTable P(k) is not defined for full k range on grid, %f<k<%f"%(mink,maxk))
-        P_k = power_function(fake_k)
+        P_k = power_function(k)
         
         # Now fix the k=0 value of power to zero
-        if type(P_k) is np.ndarray:
-            P_k[0,0] = type(P_k[0,1])(0.)
-        else:
-            P_k = 0.
-        power_array[ self.i_kx, self.i_ky] = P_k
-        power_array[-self.i_kx, self.i_ky] = P_k
-        if np.any(power_array < 0):
+        assert type(P_k) is np.ndarray
+        P_k[0,0] = type(P_k[0,1])(0.)
+        if np.any(P_k < 0):
             raise ValueError("Negative power found for some values of k!")
+
+        power_array[self.iky, self.ikx] = P_k
+        power_array[self.ikyn, self.ikx] = P_k[self.ikyp, self.ikx]
         return power_array
     
-    def _generate_spin_weightings(self):
-        # Internal function to generate the cosine and sine spin weightings for the current array
-        # set-up.
-        C = np.zeros((self.nx, self.ny / 2 + 1))
-        S = np.zeros((self.nx, self.ny / 2 + 1))
-        i_kx = self.i_kx
-        i_ky = self.i_ky
-        fi_kx = i_kx.astype(float)
-        fi_ky = i_ky.astype(float)
-        fi_k2 = (fi_kx * fi_kx + fi_ky * fi_ky)
-        # Use Joe's cheap trick to avoid zero division at origin...
-        fi_k2[0, 0] = 1.
-        C[ i_kx, i_ky] = (fi_kx * fi_kx - fi_ky * fi_ky) / fi_k2
-        S[ i_kx, i_ky] = 2. * fi_kx * fi_ky / fi_k2
-        C[-i_kx, i_ky] =  C[i_kx,i_ky]
-        S[-i_kx, i_ky] = -S[i_kx,i_ky]
-        # ...Hand enter correct values at origin
-        C[0, 0] = 1.
-        S[0, 0] = 0.
-        return C, S
-
 class Cosmology(object):
     """Basic cosmology calculations.
 
@@ -1482,27 +1504,35 @@ def kappaKaiserSquires(g1, g2):
 
     # Then setup the kx, ky grids
     kx, ky = galsim.utilities.kxky(g1.shape)
-    kx = kx[:, 0:g1.shape[1]/2 + 1] # Use Hermitian symmetry for speed
-    ky = ky[:, 0:g1.shape[1]/2 + 1] # Use Hermitian symmetry for speed
-    k2 = (kx * kx + ky * ky)
+    kz = kx + ky*1j
 
-    # Transform to Fourier space
-    g1_k = np.fft.rfft2(g1)
-    g2_k = np.fft.rfft2(g2)
+    # exp(2i psi) = kz^2 / |kz|^2
+    ksq = kz*np.conj(kz)
+    # Need to adjust denominator for kz=0 to avoid division by 0.
+    ksq[0,0] = 1.
+    exp2ipsi = kz*kz/ksq
 
-    # Use trick from buildGrid, setting k2=1 to avoid division by zero, then later setting
-    # kappa[0,0] = 0.
-    k2[0, 0] = 1.
-    # Calculate, using Kaiser & Squires (1993)
-    kappaE_k = ((kx * kx - ky * ky) * g1_k + 2. * kx * ky * g2_k) / k2
-    # For B rotation (g1)<-(-g2) and (g2)<-(g1)
-    kappaB_k = (-(kx * kx - ky * ky) * g2_k + 2. * kx * ky * g1_k) / k2
-    kappaE_k[0, 0] = 0.
-    kappaB_k[0, 0] = 0.
+    # Build complex g = g1 + i g2
+    gz = g1 + g2*1j
 
-    # Transform back to real space, then return
-    kappaE = np.fft.irfft2(kappaE_k)
-    kappaB = np.fft.irfft2(kappaB_k)
+    # Go to fourier space
+    gz_k = np.fft.fft2(gz)
+
+    # Equation 2.1.12 of Kaiser & Squires (1993) is equivalent to:
+    #   kz_k = -np.conj(exp2ipsi)*gz_k
+    # However, this equation has a sign error.  There should not be a minus in front.
+    # If you follow their subsequent deviation, you will see that they drop the minus sign
+    # when they get to 2.1.15 (another - appears from the derivative).  2.1.15 is correct.
+    # e.g. it correctly produces a positive point mass for tangential shear ~ 1/r^2.
+    # So this implies that the minus sign in 2.1.12 should not be there.
+    kz_k = np.conj(exp2ipsi)*gz_k
+
+    # Come back to real space
+    kz = np.fft.ifft2(kz_k)
+
+    # kz = kappa_E + i kappa_B
+    kappaE = np.real(kz)
+    kappaB = np.imag(kz)
     return kappaE, kappaB
 
 
