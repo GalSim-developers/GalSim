@@ -588,7 +588,7 @@ if __name__ == "__main__":
     test_nfwhalo()
     test_shear_flatps()
     test_shear_seeds()
-    #test_shear_reference()
+    test_shear_reference()
     test_shear_get()
     test_tabulated()
     test_kappa_gauss()

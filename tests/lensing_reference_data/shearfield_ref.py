@@ -34,7 +34,7 @@ dx = 1.
 # define power spectrum
 ps = galsim.lensing.PowerSpectrum(e_power_function="k**0.5", b_power_function="k")
 # get shears and convergences
-g1, g2, kappa = ps.buildGriddedShears(grid_spacing=dx, ngrid=n, rng=rng, get_kappa=True)
+g1, g2, kappa = ps.buildGrid(grid_spacing=dx, ngrid=n, rng=rng, get_convergence=True)
 
 # write to file
 g1vec = g1.reshape(n*n)
