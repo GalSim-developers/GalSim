@@ -871,7 +871,7 @@ class PowerSpectrumRealizer(object):
         self.nx = ngrid
         self.ny = ngrid
 
-        # Setup some handy numpy indices for indexing different parts of k space
+        # Setup some handy slices for indexing different parts of k space
         self.ikx = slice(0,self.nx/2+1)     # positive kx values, including 0, nx/2
         self.ikxp = slice(1,self.nx/2)      # limit to only values with a negative value
         self.ikxn = slice(-1,-self.nx/2,-1) # negative kx values
@@ -891,14 +891,7 @@ class PowerSpectrumRealizer(object):
         self.ky = i_ky * 2. * np.pi / (pixel_size * self.ny)
 
         # Compute the spin weightings
-        kz = self.kx + self.ky*1j
-        # exp(2i psi) = kz^2 / |kz|^2
-        ksq = kz*np.conj(kz)
-        # Need to adjust denominator for kz=0 to avoid division by 0.
-        ksq[0,0] = 1.
-        self.exp2ipsi = kz*kz/ksq
-        # Note: this leaves exp2ipsi[0,0] = 0, but it turns out that's ok, since we only
-        # ever multiply it by something that is 0 anyway (amplitude[0,0] = 0).
+        self._generate_exp2ipsi()
 
     def set_power(self, p_E, p_B):
         self.p_E = p_E
@@ -925,36 +918,24 @@ class PowerSpectrumRealizer(object):
                 "The gd provided to the PowerSpectrumRealizer is not a GaussianDeviate!")
 
         # Generate a random complex realization for the E-mode, if there is one
-        nx = self.nx
-        ny = self.ny
         if self.amplitude_E is not None:
             r1 = galsim.utilities.rand_arr(self.amplitude_E.shape, gd)
             r2 = galsim.utilities.rand_arr(self.amplitude_E.shape, gd)
-            E_k = np.empty((ny,nx)).astype(type(1.+1.j))
+            E_k = np.empty((self.ny,self.nx)).astype(type(1.+1.j))
             E_k[:,self.ikx] = self.amplitude_E * (r1 + 1j*r2) * ISQRT2
             # E_k corresponds to real kappa, so E_k[-k] = conj(E_k[k])
-            # First update the kx=0 values to be consistent with that fact:
-            E_k[self.ikyn,0] = np.conj(E_k[self.ikyp,0])
-            # Then fill the kx<0 values appropriately
-            E_k[self.ikyp,self.ikxn] = np.conj(E_k[self.ikyn,self.ikxp])
-            E_k[self.ikyn,self.ikxn] = np.conj(E_k[self.ikyp,self.ikxp])
-            E_k[0,self.ikxn] = np.conj(E_k[0,self.ikxp])
-            E_k[ny/2,self.ikxn] = np.conj(E_k[ny/2,self.ikxp])
+            self._make_hermitian(E_k)
         else: E_k = 0
 
         # Generate a random complex realization for the B-mode, if there is one
         if self.amplitude_B is not None:
             r1 = galsim.utilities.rand_arr(self.amplitude_B.shape, gd)
             r2 = galsim.utilities.rand_arr(self.amplitude_B.shape, gd)
-            B_k = np.empty((ny,nx)).astype(type(1.+1.j))
+            B_k = np.empty((self.ny,self.nx)).astype(type(1.+1.j))
             B_k[:,self.ikx] = self.amplitude_B * (r1 + 1j*r2) * ISQRT2
             # B_k corresponds to imag kappa, so B_k[-k] = -conj(B_k[k])
             # However, we later multiply this by i, so that means here B_k[-k] = conj(B_k[k])
-            B_k[self.ikyn,0] = np.conj(B_k[self.ikyp,0])
-            B_k[self.ikyp,self.ikxn] = np.conj(B_k[self.ikyn,self.ikxp])
-            B_k[self.ikyn,self.ikxn] = np.conj(B_k[self.ikyp,self.ikxp])
-            B_k[0,self.ikxn] = np.conj(B_k[0,self.ikxp])
-            B_k[ny/2,self.ikxn] = np.conj(B_k[ny/2,self.ikxp])
+            self._make_hermitian(B_k)
         else:
             B_k = 0
 
@@ -962,22 +943,16 @@ class PowerSpectrumRealizer(object):
         # In fourier space, both E_k and B_k are complex, but the same E + i B relation holds.
         kappa_k = E_k + 1j * B_k
 
-        # Build full-sized exp2ipsi array
-        exp2ipsi = np.empty((ny,nx)).astype(type(1.+1.j))
-        exp2ipsi[self.iky,self.ikx] = self.exp2ipsi
-        exp2ipsi[self.iky,self.ikxn] = np.conj(self.exp2ipsi[self.iky,self.ikxp])
-        exp2ipsi[self.ikyn,:] = np.conj(exp2ipsi[self.ikyp,:])
-
         # Compute gamma_k as exp(2i psi) kappa_k
         # Equation 2.1.12 of Kaiser & Squires (1993, ApJ, 404, 441) is equivalent to:
-        #   gamma_k = -exp2ipsi * kappa_k
+        #   gamma_k = -self.exp2ipsi * kappa_k
         # But of course, they only considered real (E-mode) kappa.
         # However, this equation has a sign error.  There should not be a minus in front.
         # If you follow their subsequent deviation, you will see that they drop the minus sign
         # when they get to 2.1.15 (another - appears from the derivative).  2.1.15 is correct.
         # e.g. it correctly produces a positive point mass for tangential shear ~ 1/r^2.
         # So this implies that the minus sign in 2.1.12 should not be there.
-        gamma_k = exp2ipsi * kappa_k
+        gamma_k = self.exp2ipsi * kappa_k
 
         # And go to real space to get the real-space shear and convergence fields
         gamma = self.nx * np.fft.ifft2(gamma_k)
@@ -989,6 +964,16 @@ class PowerSpectrumRealizer(object):
         k = np.ascontiguousarray(np.real(kappa))
 
         return g1, g2, k
+
+    def _make_hermitian(self, P_k):
+        # Make P_k[-k] = conj(P_k[-k])
+        # First update the kx=0 values to be consistent with this.
+        P_k[self.ikyn,0] = np.conj(P_k[self.ikyp,0])
+        # Then fill the kx<0 values appropriately
+        P_k[self.ikyp,self.ikxn] = np.conj(P_k[self.ikyn,self.ikxp])
+        P_k[self.ikyn,self.ikxn] = np.conj(P_k[self.ikyp,self.ikxp])
+        P_k[0,self.ikxn] = np.conj(P_k[0,self.ikxp])
+        P_k[self.ny/2,self.ikxn] = np.conj(P_k[self.ny/2,self.ikxp])
 
     def _generate_power_array(self, power_function):
         # Internal function to generate the result of a power function evaluated on a grid,
@@ -1019,6 +1004,26 @@ class PowerSpectrumRealizer(object):
         power_array[self.ikyn, self.ikx] = P_k[self.ikyp, self.ikx]
         return power_array
     
+    def _generate_exp2ipsi(self):
+        # exp2ipsi = (kx + iky)^2 / |kx + iky|^2 is the phase of the k vector.
+        self.exp2ipsi = np.empty((self.ny,self.nx)).astype(type(1.+1.j))
+
+        # First build the values in the kx>=0, ky>=0 quadrant:
+        kz = self.kx + self.ky*1j
+        # exp(2i psi) = kz^2 / |kz|^2
+        ksq = kz*np.conj(kz)
+        # Need to adjust denominator for kz=0 to avoid division by 0.
+        ksq[0,0] = 1.
+        self.exp2ipsi[self.iky,self.ikx] = kz*kz/ksq
+        # Note: this leaves exp2ipsi[0,0] = 0, but it turns out that's ok, since we only
+        # ever multiply it by something that is 0 anyway (amplitude[0,0] = 0).
+
+        # Copy these values to other quadrants, keeping in mind that flipping the sign of
+        # either kx or ky results in a conjugation.
+        self.exp2ipsi[self.iky,self.ikxn] = np.conj(self.exp2ipsi[self.iky,self.ikxp])
+        self.exp2ipsi[self.ikyn,:] = np.conj(self.exp2ipsi[self.ikyp,:])
+
+
 class Cosmology(object):
     """Basic cosmology calculations.
 
