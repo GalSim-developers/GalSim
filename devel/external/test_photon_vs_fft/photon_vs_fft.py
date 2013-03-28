@@ -166,7 +166,8 @@ def testShootVsFft():
         image_gal_shoot = galsim.ImageF(config['image']['n_pix'],config['image']['n_pix'])
         final = gso['galpsf']
         final.setFlux(1.)
-        (im, added_flux) = final.drawShoot(image_gal_shoot,dx=config['image']['scale'],n_photons=config['image']['n_photons'])
+        im = final.drawShoot(image_gal_shoot,dx=config['image']['scale'],n_photons=config['image']['n_photons'])
+        added_flux = im.added_flux
         logger.info('drawShoot is ready for galaxy %d, added_flux=%f, scale=%f' % (ig,added_flux,config['image']['scale']) )
 
         # create fft image
