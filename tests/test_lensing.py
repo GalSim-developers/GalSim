@@ -581,6 +581,26 @@ def test_power_spectrum_with_kappa():
     np.testing.assert_array_almost_equal(
         kB_ks_rotated, np.zeros_like(kB_ks), decimal=exact_dp,
         err_msg="KS inverted kappaB from B-mode only PowerSpectrum fails rotation test.")
+
+    # Finally, do E- and B-mode power
+    psB = galsim.PowerSpectrum(tab_ps, tab_ps, units=galsim.radians)
+    g1EB, g2EB, k_test = psB.buildGrid(
+        grid_spacing=dx_grid_arcmin, ngrid=ngrid, units=galsim.arcmin,
+        rng=galsim.BaseDeviate(rseed), get_convergence=True)
+    kE_ks, kB_ks = galsim.lensing.kappaKaiserSquires(g1EB, g2EB)
+    # Test that E-mode kappa matches to some sensible accuracy
+    np.testing.assert_array_almost_equal(
+        k_test, kE_ks, decimal=exact_dp,
+        err_msg="E/B PowerSpectrum output kappa does not match KS inversion to 16 d.p.")
+    # Test rotating the shears by 45 degrees
+    kE_ks_rotated, kB_ks_rotated = galsim.lensing.kappaKaiserSquires(g2EB, -g1EB)
+    np.testing.assert_array_almost_equal(
+        kE_ks_rotated, kB_ks, decimal=exact_dp,
+        err_msg="KS inverted kappaE from E/B PowerSpectrum fails rotation test.")
+    np.testing.assert_array_almost_equal(
+        kB_ks_rotated, -kE_ks, decimal=exact_dp,
+        err_msg="KS inverted kappaB from E/B PowerSpectrum fails rotation test.")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
