@@ -765,7 +765,7 @@ def test_convolve_cosmos():
     # Generate a COSMOS noise field, read it into an InterpolatedImage and then convolve it with psf
     # Note that the normalization here must be flux to avoid the SBProfile internals from taking
     # the pixel scale into account...
-    size_factor = 2
+    size_factor = 1
     print "Calculating results for size_factor = "+str(size_factor)
     cosimage = galsim.ImageD(
         size_factor * largeim_size * 6, # Note 6 here since 0.18 = 6 * 0.03
@@ -786,9 +786,9 @@ def test_convolve_cosmos():
     cn_test = galsim.CorrelatedNoise(gd, convimage, dx=0.18)
     testim = galsim.ImageD(smallim_size, smallim_size)
     cn_test.draw(testim, dx=0.18)
-    nsum_test = 300
+    nsum_test = 1000
     conv_list = [convimage.array]
-    var_list = [convimage.array.var()]
+    mnsq_list = [np.mean(convimage.array**2)]
     for i in range(nsum_test - 1):
         cosimage.setZero()
         cosimage.addNoise(cn)
@@ -799,19 +799,20 @@ def test_convolve_cosmos():
         convimage.setZero()
         cimobj.draw(convimage, dx=0.18, normalization='sb')
         conv_list.append(convimage.array)
-        var_list.append(convimage.array.var())
+        mnsq_list.append(np.mean(convimage.array**2))
         cn_test = galsim.CorrelatedNoise(gd, convimage, dx=0.18) 
         cn_test.draw(testim, dx=0.18, add_to_image=True)
         #print convimage.array.var(), cn_test.getVariance()
+        if ((i + 2) % 100 == 0): print "Completed "+str(i + 2)+"/"+str(nsum_test)+" trials"
         del imobj
         del cimobj
         del cn_test
-    var_individual = sum(var_list) / float(nsum_test)
-    print "Variance from mean of individual field variances = "+str(var_individual)
+    mnsq_individual = sum(mnsq_list) / float(nsum_test)
+    print "Mean square estimate from avg. of individual field mean squares = "+str(mnsq_individual)
     conv_array = np.asarray(conv_list)
-    var_all = conv_array.var()
-    print "Variance from all fields = "+str(var_all)
-    print "Ratio of variances = "+str(var_individual / var_all)
+    mnsq_all= np.mean(conv_array**2)
+    print "Mean square estimate from all fields = "+str(mnsq_all)
+    print "Ratio of mean squares = "+str(mnsq_individual / mnsq_all)
     testim /= float(nsum_test) # Take average CF of trials
     print "Zero lag correlation from mean of individual fields = "+str(testim.array[8, 8])
     print "Zero lag correlation in reference case = "+str(refim.array[8, 8])
