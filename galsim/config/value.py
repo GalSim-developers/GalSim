@@ -768,26 +768,25 @@ def _GenerateFromNFWHaloMagnification(param, param_name, base, value_type):
     if 'nfw_halo' not in base:
         raise ValueError("NFWHaloMagnification requested, but no input.nfw_halo defined.")
     
-    opt = { 'max_scale' : float }
+    opt = { 'max_mu' : float }
     kwargs = GetAllParams(param, param_name, base, opt=opt)[0]
 
     #print 'NFWHaloMagnification: pos = ',pos,' z = ',redshift
     mu = base['nfw_halo'].getMagnification(pos,redshift)
     #print 'mu = ',mu
 
-    max_scale = kwargs.get('max_scale', 5.)
-    if not max_scale > 0.: 
+    max_mu = kwargs.get('max_mu', 25.)
+    if not max_mu > 0.: 
         raise ValueError(
-            "Invalid max_scale=%f (must be > 0) for %s.type = NFWHaloMagnification"%(repeat,param_name))
+            "Invalid max_mu=%f (must be > 0) for %s.type = NFWHaloMagnification"%(
+                max_mu,param_name))
 
-    if mu < 0 or mu > max_scale**2:
+    if mu < 0 or mu > max_mu:
         #print 'mu = ',mu
         import warnings
-        warnings.warn("Warning: NFWHalo mu = %f means strong lensing!  Using scale=5."%mu)
-        mu = max_scale**2
-    else:
-        import math
-    #print 'scale = ',scale
+        warnings.warn("Warning: NFWHalo mu = %f means strong lensing!  Using mu=%f"%(mu,max_mu))
+        mu = max_mu
+
     return mu, False
 
 
@@ -827,22 +826,26 @@ def _GenerateFromPowerSpectrumMagnification(param, param_name, base, value_type)
     pos = base['pos']
 
     if 'power_spectrum' not in base:
-        raise ValueError("PowerSpectrumMagnification requested, but no input.power_spectrum defined.")
+        raise ValueError("PowerSpectrumMagnification requested, but no input.power_spectrum "
+                         "defined.")
     
-    req = { }
-    # Only Check, not Get.  (There's nothing to get -- just make sure there aren't extra params.)
-    CheckAllParams(param, param_name, req=req)
+    opt = { 'max_mu' : float }
+    kwargs = GetAllParams(param, param_name, base, opt=opt)[0]
 
     mu = base['power_spectrum'].getMagnification(pos)
 
-    if mu <= 0:
+    max_mu = kwargs.get('max_mu', 25.)
+    if not max_mu > 0.: 
+        raise ValueError(
+            "Invalid max_mu=%f (must be > 0) for %s.type = PowerSpectrumMagnification"%(
+                max_mu,param_name))
+
+    if mu < 0 or mu > max_mu:
         #print 'mu = ',mu
         import warnings
-        warnings.warn("Warning: PowerSpectrum mu = %f means strong lensing!  Using scale=0.01."%mu)
-        mu = 0.01
-    else:
-        import math
-
+        warnings.warn("Warning: PowerSpectrum mu = %f means strong lensing!  Using mu=%f"%(
+            mu,max_mu))
+        mu = max_mu
     return mu, False
 
 def _GenerateFromList(param, param_name, base, value_type):
