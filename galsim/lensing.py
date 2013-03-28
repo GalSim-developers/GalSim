@@ -956,25 +956,41 @@ class PowerSpectrumRealizer(object):
 
         # And go to real space to get the real-space shear and convergence fields
         gamma = self.nx * np.fft.ifft2(gamma_k)
-        kappa = self.nx * np.fft.ifft2(kappa_k)
-
         # Make them contiguous, since we need to use them in an Image, which requires it.
         g1 = np.ascontiguousarray(np.real(gamma))
         g2 = np.ascontiguousarray(np.imag(gamma))
-        k = np.ascontiguousarray(np.real(kappa))
+
+        # Could do the same thing with kappa..
+        #kappa = self.nx * np.fft.ifft2(kappa_k)
+        #k = np.ascontiguousarray(np.real(kappa))
+    
+        # But, since we don't care about imag(kappa), this is a bit faster:
+        if E_k is 0:
+            k = np.zeros((self.ny,self.nx))
+        else:
+            k = self.nx * np.fft.irfft2(E_k[:,self.ikx], s=(self.ny,self.nx))
 
         return g1, g2, k
 
     def _make_hermitian(self, P_k):
-        # Make P_k[-k] = conj(P_k[-k])
+        # Make P_k[-k] = conj(P_k[k])
         # First update the kx=0 values to be consistent with this.
         P_k[self.ikyn,0] = np.conj(P_k[self.ikyp,0])
+        P_k[0,0] = np.real(P_k[0,0])  # Not reall necessary, since P_k[0,0] = 0, but 
+                                      # I do it anyway for the sake of pedantry...
         # Then fill the kx<0 values appropriately
         P_k[self.ikyp,self.ikxn] = np.conj(P_k[self.ikyn,self.ikxp])
         P_k[self.ikyn,self.ikxn] = np.conj(P_k[self.ikyp,self.ikxp])
         P_k[0,self.ikxn] = np.conj(P_k[0,self.ikxp])
+        # For even nx,ny, there are a few more changes needed.
         if self.ny % 2 == 0:
+            # Note: this is a bit more complicated if you have to separately check whether
+            # nx and/or ny are even.  I ignore this subtlety until we decide it is needed.
+            P_k[self.ikyn,self.nx/2] = np.conj(P_k[self.ikyp,self.nx/2])
             P_k[self.ny/2,self.ikxn] = np.conj(P_k[self.ny/2,self.ikxp])
+            P_k[self.ny/2,0] = np.real(P_k[self.ny/2,0])
+            P_k[0,self.nx/2] = np.real(P_k[0,self.nx/2])
+            P_k[self.ny/2,self.nx/2] = np.real(P_k[self.ny/2,self.nx/2])
 
     def _generate_power_array(self, power_function):
         # Internal function to generate the result of a power function evaluated on a grid,
