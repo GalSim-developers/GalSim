@@ -727,8 +727,9 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
         # Calculate the power spectrum then a (preliminary) CF 
         ft_array = np.fft.fft2(image.array)
-        ps_array = np.abs(ft_array * ft_array.conj())
-        cf_array_prelim = (np.fft.ifft2(ps_array)).real / float(np.product(np.shape(ft_array)))
+        ps_array = (ft_array * ft_array.conj()).real
+        # Note need to normalize due to one-directional 1/N^2 in FFT conventions
+        cf_array_prelim = (np.fft.ifft2(ps_array)).real / np.product(image.array.shape)
 
         # Roll CF array to put the centre in image centre.  Remember that numpy stores data [y,x]
         cf_array_prelim = utilities.roll2d(
@@ -756,9 +757,9 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
         if cf_array_prelim.shape[0] % 2 == 0: # then do y
             bottom_row = cf_array[0, :]
             cf_array[cf_array_prelim.shape[0], :] = bottom_row[::-1] # inverts order as required
-
+  
         # Store power spectrum and correlation function in an image 
-        original_ps_image = galsim.ImageViewD(np.ascontiguousarray(ps_array))
+        original_ps_image = galsim.ImageViewD(np.ascontiguousarray(ps_array.real))
         original_cf_image = galsim.ImageViewD(np.ascontiguousarray(cf_array))
 
         # Correctly record the original image scale if set

@@ -774,34 +774,49 @@ def test_convolve_cosmos():
     cosimage.addNoise(cn)
     interp=galsim.Linear()
     imobj = galsim.InterpolatedImage(
-        cosimage, calculate_stepk=False, calculate_maxk=False, normalization='sb',
-        dx=dx_cosmos, x_interpolant=interp)
+        cosimage, calculate_stepk=False, calculate_maxk=False, normalization='sb', dx=dx_cosmos,
+        x_interpolant=interp)
     cimobj = galsim.Convolve(imobj, psf_shera)
     convimage = galsim.ImageD(largeim_size * size_factor, largeim_size * size_factor)
     # Then draw, calculate a correlation function for the resulting field, and repeat to get an
     # average over nsum_test trials
     cimobj.draw(convimage, dx=0.18, normalization='sb')
-    cosimage.write('junk_cos.fits')
-    convimage.write('junk_conv.fits')
+    #cosimage.write('junk_cos.fits')
+    #convimage.write('junk_conv.fits')
     cn_test = galsim.CorrelatedNoise(gd, convimage, dx=0.18)
     testim = galsim.ImageD(smallim_size, smallim_size)
     cn_test.draw(testim, dx=0.18)
     nsum_test = 300
+    conv_list = [convimage.array]
+    var_list = [convimage.array.var()]
     for i in range(nsum_test - 1):
         cosimage.setZero()
         cosimage.addNoise(cn)
         imobj = galsim.InterpolatedImage(
-            cosimage, calculate_stepk=False, calculate_maxk=False, normalization='sb',
-            dx=dx_cosmos, x_interpolant=interp)
+            cosimage, calculate_stepk=False, calculate_maxk=False, normalization='sb', dx=dx_cosmos,
+            x_interpolant=interp)
         cimobj = galsim.Convolve(imobj, psf_shera)
         convimage.setZero()
         cimobj.draw(convimage, dx=0.18, normalization='sb')
+        conv_list.append(convimage.array)
+        var_list.append(convimage.array.var())
         cn_test = galsim.CorrelatedNoise(gd, convimage, dx=0.18) 
         cn_test.draw(testim, dx=0.18, add_to_image=True)
+        #print convimage.array.var(), cn_test.getVariance()
         del imobj
         del cimobj
         del cn_test
+    var_individual = sum(var_list) / float(nsum_test)
+    print "Variance from mean of individual field variances = "+str(var_individual)
+    conv_array = np.asarray(conv_list)
+    var_all = conv_array.var()
+    print "Variance from all fields = "+str(var_all)
+    print "Ratio of variances = "+str(var_individual / var_all)
     testim /= float(nsum_test) # Take average CF of trials
+    print "Zero lag correlation from mean of individual fields = "+str(testim.array[8, 8])
+    print "Zero lag correlation in reference case = "+str(refim.array[8, 8])
+    print "Ratio of zero lag correlations = "+str(testim.array[8, 8] / refim.array[8, 8])
+    print "Printing analysis of central 4x4 of CF:"
     # Show ratios etc in central 4x4 where CF is definitely non-zero
     print 'mean diff = ',np.mean(testim.array[4:12, 4:12] - refim.array[4:12, 4:12])
     print 'var diff = ',np.var(testim.array[4:12, 4:12] - refim.array[4:12, 4:12])
@@ -814,8 +829,8 @@ def test_convolve_cosmos():
     #import matplotlib.pyplot as plt
     #plt.pcolor(testim.array); plt.colorbar()
     #plt.figure(); plt.pcolor(refim.array); plt.colorbar(); plt.show()
-    testim.write("junk_test.fits")
-    refim.write("junk_ref.fits")
+    #testim.write("junk_test.fits")
+    #refim.write("junk_ref.fits")
     # Test (ditto only look at central 4x4)
     np.testing.assert_array_almost_equal(
         testim.array[4:12, 4:12], refim.array[4:12, 4:12], decimal=decimal_approx,
