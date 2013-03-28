@@ -535,7 +535,7 @@ def test_power_spectrum_with_kappa():
     # Squires inversion.
     rseed=177774
     ngrid=100
-    dx_grid_arcmin = .1
+    dx_grid_arcmin = 6
     # First lookup a cosmologically relevant power spectrum (bandlimited version to remove aliasing
     # and allow high-precision comparison).
     tab_ps = galsim.LookupTable(

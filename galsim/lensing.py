@@ -870,6 +870,7 @@ class PowerSpectrumRealizer(object):
     def set_size(self, ngrid, pixel_size):
         self.nx = ngrid
         self.ny = ngrid
+        self.pixel_size = float(pixel_size)
 
         # Setup some handy slices for indexing different parts of k space
         self.ikx = slice(0,self.nx/2+1)       # positive kx values, including 0, nx/2
@@ -884,11 +885,9 @@ class PowerSpectrumRealizer(object):
 
         # Set up the scalar k grid. Generally, for a box size of L (in one dimension), the grid
         # spacing in k_x or k_y is Delta k=2pi/L 
-        pixel_size = float(pixel_size)
-        self.pixel_size = pixel_size
-        i_ky, i_kx = np.mgrid[self.iky, self.ikx]
-        self.kx = i_kx * 2. * np.pi / (pixel_size * self.nx)
-        self.ky = i_ky * 2. * np.pi / (pixel_size * self.ny)
+        self.kx, self.ky = galsim.utilities.kxky((self.ny,self.nx))
+        self.kx /= self.pixel_size
+        self.ky /= self.pixel_size
 
         # Compute the spin weightings
         self._generate_exp2ipsi()
@@ -997,8 +996,8 @@ class PowerSpectrumRealizer(object):
         # taking into account the symmetries.
         power_array = np.empty((self.ny, self.nx/2+1))
 
-        # Set up the scalar |k| grid
-        k = np.sqrt(self.kx**2 + self.ky**2)
+        # Set up the scalar |k| grid using just the positive kx,ky
+        k = np.sqrt(self.kx[self.iky,self.ikx]**2 + self.ky[self.iky,self.ikx]**2)
 
         # Fudge the value at k=0, so we don't have to evaluate power there
         k[0,0] = k[1,0]
@@ -1023,23 +1022,14 @@ class PowerSpectrumRealizer(object):
     
     def _generate_exp2ipsi(self):
         # exp2ipsi = (kx + iky)^2 / |kx + iky|^2 is the phase of the k vector.
-        self.exp2ipsi = np.empty((self.ny,self.nx)).astype(type(1.+1.j))
-
-        # First build the values in the kx>=0, ky>=0 quadrant:
         kz = self.kx + self.ky*1j
         # exp(2i psi) = kz^2 / |kz|^2
         ksq = kz*np.conj(kz)
         # Need to adjust denominator for kz=0 to avoid division by 0.
         ksq[0,0] = 1.
-        self.exp2ipsi[self.iky,self.ikx] = kz*kz/ksq
+        self.exp2ipsi = kz*kz/ksq
         # Note: this leaves exp2ipsi[0,0] = 0, but it turns out that's ok, since we only
         # ever multiply it by something that is 0 anyway (amplitude[0,0] = 0).
-
-        # Copy these values to other quadrants, keeping in mind that flipping the sign of
-        # either kx or ky results in a conjugation.
-        self.exp2ipsi[self.iky,self.ikxn] = np.conj(self.exp2ipsi[self.iky,self.ikxp])
-        self.exp2ipsi[self.ikyn,:] = np.conj(self.exp2ipsi[self.ikyp,:])
-
 
 class Cosmology(object):
     """Basic cosmology calculations.
