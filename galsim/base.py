@@ -330,8 +330,7 @@ class GSObject(object):
         @param g2      Second component of lensing (reduced) shear to apply to the object.
         @param mu      Lensing magnification to apply to the object.
         """
-        shear = galsim.Shear(g1=g1, g2=g2)
-        self.SBProfile.applyShear(shear._shear)
+        self.applyShear(g1=g1, g2=g2)
         self.applyMagnification(mu)
 
     def applyRotation(self, theta):
@@ -2657,12 +2656,6 @@ class Shapelet(GSObject):
         sigma = self.SBProfile.getSigma() * np.sqrt(mu)
         bvec = self.SBProfile.getBVec() * mu
         GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
-
-    def applyLensing(self, g1, g2, mu):
-        sigma = self.SBProfile.getSigma() * np.sqrt(mu)
-        bvec = self.SBProfile.getBVec() * mu
-        GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
-        self.applyShear(g1=g1, g2=g2)
 
     def fitImage(self, image, center=None, normalization='flux'):
         """Fit for a shapelet decomposition of a given image
