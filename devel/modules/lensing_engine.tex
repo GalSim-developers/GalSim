@@ -818,10 +818,42 @@ problem if we are checking quantities like the shear correlation
 function or its value at $\theta=0$, i.e., the shear variance.  If we
 are testing the ability to recover a power spectrum $P(k)$ defined at
 the values of $k$ that are accessible to our grid, the $P(0)=0$
-condition that we have imposed should be irrelevant.
-
+condition that we have imposed should be irrelevant. 
 Nonetheless, we may wish to modify the lensing engine to check whether
 the power function is defined for $0< k\le\kmin$, and assign some
 appropriately-weighted integral over that range as $P(k=0)$.
+
+Figure~\ref{F:cf} illustrates the impact of the limitation in the
+range of $k$ modes represented by our grid.  In the left panel, a
+comparison of the theoretical shear correlation functions $\xi_+$ and
+$\xi_-$ (in the case of infinite $k$ range when integrating over the
+Bessel functions in Eq.~\ref{eq:xi}) versus the observed one after
+generating shears on our default grid reveals that the limitation in
+$k$ modes represented by our grid leads to substantial reduction in
+large-scale shear correlations compared to the theory.  In the right
+panel, the same quantities are shown, but this time the grid has been
+expanded by a factor of 10, thus lowering the minimum $k$ value for
+the grid by a factor of 10.  In this case, the theoretical and
+observed correlation functions are nearly identical, illustrating that
+the limitation in \kmin\ for the gridded representation in Fourier
+space was the key issue in getting the correlation function correct on
+large scales in the left panel.  The current version of GalSim thus
+has a warning about this band-limitation on the power spectrum in the
+docstrings for the lensing engine.  Future work should allow the user
+to circumvent this limitation and properly represent the shear
+correlation function, at the expense of increased computation time.
+\begin{figure}
+\begin{center}
+\includegraphics[width=3in]{cf.eps}
+\includegraphics[width=3in]{cf10.eps}
+\caption{{\em Left:} Shear correlation functions $\xi_+$ and $\xi_-$
+  that should correspond to some reasonable input $P(k)$, and the
+  observed shear correlation functions after generation of shears on
+  our default grid. {\em Right:} Same as left, but after artificially
+  extending the grid by a factor of 10 in length, so that the minimum
+  value of $k$ that can be represented is reduced by a factor of
+  10.\label{F:cf}}
+\end{center}
+\end{figure}
 
 \end{document}
