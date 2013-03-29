@@ -158,9 +158,9 @@ def test_shear_variance():
     # value of k.
     # Given our grid size of 50 degrees [which is silly to do for a flat-sky approximation, but
     # we're just doing it anyway to beat down the noise], the minimum k we can probe is 2pi/50
-    # deg^{-1} = 3.49e-5 arcsec^-1.  With 500 grid points, the maximum k in one dimension is 500
-    # times as large, 0.0175 arcsec^-1.  The function pk_flat_lim is 0 for k>klim_test=0.00175 which
-    # is a factor of 10 below our maximum k, a factor of ~50 above our minimum k.  For k<=0.00175,
+    # deg^{-1} = 3.49e-5 arcsec^-1.  With 500 grid points, the maximum k in one dimension is 250
+    # times as large, 0.00873 arcsec^-1.  The function pk_flat_lim is 0 for k>klim_test=0.00175 which
+    # is a factor of 5 below our maximum k, a factor of ~50 above our minimum k.  For k<=0.00175,
     # pk_flat_lim returns 1.
     test_ps = galsim.PowerSpectrum(e_power_function=pk_flat_lim, b_power_function=pk_flat_lim)
     # get shears on 500x500 grid with spacing 0.1 degree
@@ -245,12 +245,12 @@ def test_shear_variance():
     grid_size = 50. # degrees
     ngrid = 500 # grid points
     kmin = 2.*np.pi/grid_size/3600.
-    kmax = 2.*np.pi/(grid_size/ngrid)/3600.
+    kmax = np.pi/(grid_size/ngrid)/3600.
     # For explanation of these two variables, see below, the comment starting "Note: the next..."
     # These numbers are, however, hard-coded up here with the grid parameters because if the grid is
     # changed, the erfmax and erfmin must change.
     erfmax = 0.999999426697
-    erfmin = 0.00797871262926
+    erfmin = 0.0159566274338
     # Now choose s such that s*kmax=5, i.e., almost no power at kmax.
     s = 5./kmax
     test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((s*k)**2)))
@@ -266,17 +266,17 @@ def test_shear_variance():
     # erfmax = math.erf(s*kmax/math.sqrt(2.))
     # erfmin = math.erf(s*kmin/math.sqrt(2.))
     predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
-    # here we know that the results are typically 2.5% too low, and we again allow wiggle room of 3%
+    # here we know that the results are typically 2.5% too low, and we again allow wiggle room of 3.5%
     # due to noise.
     comparison_val = (np.var(g1)+np.var(g2))/(0.975*predicted_variance)-1.0
-    np.testing.assert_almost_equal(comparison_val/3., 0., decimal=2,
+    np.testing.assert_almost_equal(comparison_val/3.5, 0., decimal=2,
                                    err_msg="Incorrect variance from Gaussian PS")
 
     # check for proper scaling with grid spacing, for fixed number of grid points
     grid_size = 25. # degrees
     ngrid = 500 # grid points
     kmin = 2.*np.pi/grid_size/3600.
-    kmax = 2.*np.pi/(grid_size/ngrid)/3600.
+    kmax = np.pi/(grid_size/ngrid)/3600.
     s = 5./kmax
     # Note that because of how s, kmin, and kmax change, the Erf[...] quantities do not change.  So
     # we don't have to reset the values here.
@@ -285,23 +285,23 @@ def test_shear_variance():
                                rng=rng, units=galsim.degrees)
     predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
     comparison_val = (np.var(g1)+np.var(g2))/(0.975*predicted_variance)-1.0
-    np.testing.assert_almost_equal(comparison_val/3., 0., decimal=2,
+    np.testing.assert_almost_equal(comparison_val/5., 0., decimal=2,
                                    err_msg="Incorrect variance from Gaussian PS")
 
     # check for proper scaling with number of grid points, for fixed grid spacing
     grid_size = 25. # degrees
     ngrid = 250 # grid points
     kmin = 2.*np.pi/grid_size/3600.
-    kmax = 2.*np.pi/(grid_size/ngrid)/3600.
+    kmax = np.pi/(grid_size/ngrid)/3600.
     # Here one of the Erf[...] values does change.
-    erfmin = 0.0159566274338
+    erfmin = 0.0319068737057
     s = 5./kmax
     test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((s*k)**2)))
     g1, g2 = test_ps.buildGrid(grid_spacing = grid_size/ngrid, ngrid=ngrid,
                                rng=rng, units=galsim.degrees)
     predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
     comparison_val = (np.var(g1)+np.var(g2))/(0.975*predicted_variance)-1.0
-    np.testing.assert_almost_equal(comparison_val/3., 0., decimal=2,
+    np.testing.assert_almost_equal(comparison_val/3.5, 0., decimal=2,
                                    err_msg="Incorrect variance from Gaussian PS")
 
     t2 = time.time()
