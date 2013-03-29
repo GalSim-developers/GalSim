@@ -48,7 +48,7 @@ namespace galsim {
     template<class V, class A>
     int Table<V,A>::upperIndex(const A a) const 
     {
-        if (a<_argMin() || a>_argMax()) throw TableOutOfRange();
+        if (a<_argMin() || a>_argMax()) throw TableOutOfRange(a,_argMin(),_argMax());
         // Go directly to index if arguments are regularly spaced.
         if (equalSpaced) {
             int index = int( std::ceil( (a-_argMin()) / dx) );

@@ -243,22 +243,25 @@ def test_exceptions():
     import time
     t1 = time.time()
 
-    # What if it receives as input something that is not an Image? Give it a GSObject to check.
-    g = galsim.Gaussian(sigma=1.)
-    np.testing.assert_raises(ValueError, galsim.InterpolatedImage, g)
-    # What if Image does not have a scale set, but dx keyword is not specified?
-    im = galsim.ImageF(5, 5)
-    np.testing.assert_raises(ValueError, galsim.InterpolatedImage, im)
-    # Image must have bounds defined
-    im = galsim.ImageF()
-    im.setScale(1.)
-    np.testing.assert_raises(ValueError, galsim.InterpolatedImage, im)
-    # Weird flux normalization
-    im = galsim.ImageF(5, 5)
-    im.setScale(1.)
-    np.testing.assert_raises(ValueError, galsim.InterpolatedImage, im, normalization = 'foo')
-    # Weird interpolant - give it something random like a GSObject
-    np.testing.assert_raises(RuntimeError, galsim.InterpolatedImage, im, x_interpolant = g)
+    try:
+        # What if it receives as input something that is not an Image? Give it a GSObject to check.
+        g = galsim.Gaussian(sigma=1.)
+        np.testing.assert_raises(ValueError, galsim.InterpolatedImage, g)
+        # What if Image does not have a scale set, but dx keyword is not specified?
+        im = galsim.ImageF(5, 5)
+        np.testing.assert_raises(ValueError, galsim.InterpolatedImage, im)
+        # Image must have bounds defined
+        im = galsim.ImageF()
+        im.setScale(1.)
+        np.testing.assert_raises(ValueError, galsim.InterpolatedImage, im)
+        # Weird flux normalization
+        im = galsim.ImageF(5, 5)
+        im.setScale(1.)
+        np.testing.assert_raises(ValueError, galsim.InterpolatedImage, im, normalization = 'foo')
+        # Weird interpolant - give it something random like a GSObject
+        np.testing.assert_raises(RuntimeError, galsim.InterpolatedImage, im, x_interpolant = g)
+    except ImportError:
+        print 'The assert_raises tests require nose'
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
