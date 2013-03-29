@@ -56,7 +56,7 @@ def getGSObjectListGals(i):
     gso['gal'] = bulge + disc
     
     # get pixel kernel
-    gso['pix'] = galsim.Pixel(config['image']['scale'])
+    gso['pix'] = galsim.Pixel(pixel_scale)
 
     # get the PSF
     if obj['psf']['type'] == 'none':
@@ -105,11 +105,10 @@ def testShootVsFft():
     # initialise the output file
     file_output = open(config['filename_output'],'w')
        
-    output_row_fmt = '%d\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t' + \
+    output_row_fmt = '%d\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t' + \
                         '%2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\n'
     output_header = '# id max_diff_over_max_image ' +  \
-                                'G1_moments_fft G2_moments_fft G1_moments_photon G2_moments_photon ' + \
-                                'E1_hsm_obs_fft E2_hsm_obs_fft E1_hsm_obs_photon E2_hsm_obs_photon ' + \
+                                'E1_moments_fft E2_moments_fft E1_moments_photon E2_moments_photon ' + \
                                 'E1_hsm_corr_fft E2_hsm_corr_fft E1_hsm_corr_photon E2_hsm_corr_photon ' + \
                                 'moments_fft_sigma moments_photon_sigma hsm_fft_sigma hsm_photon_sigma\n'
 
@@ -125,8 +124,13 @@ def testShootVsFft():
         n_gals = sersic_sample_catalog.shape[0]
         gso_next = getGSObjectSersicsSample  
     else:
-        logger.error('%s in unknown galaxies input form - use list_gals or sersics_sample' % use_galaxies_from )
-        sys.exit() 
+        raise ValueError('%s in unknown galaxies input form - use list_gals or sersics_sample' % use_galaxies_from )
+
+    global pixel_scale
+    if config['image']['observe_from'] == 'space':     pixel_scale = 0.03
+    elif config['image']['observe_from'] == 'ground':   pixel_scale = 0.2
+    else: raise ValueError('%s is an invalid name for config[image][observe_from] - use \'space\' or \'ground\'')
+
 
 
     # loop through the galaxies
@@ -152,11 +156,11 @@ def testShootVsFft():
                 logger.info('drawing PSF using draw()')
                 image_psf = galsim.ImageF(config['image']['n_pix'],config['image']['n_pix'])
                 final_psf = galsim.Convolve([gso['psf'],gso['pix']])
-                final_psf.draw(image_psf,dx=config['image']['scale'])
+                final_psf.draw(image_psf,dx=pixel_scale)
             elif config['psf_draw_method'] == 'shoot':
                 logger.info('drawing PSF using drawShoot and %2.0e photons' % config['image']['n_photons'])
                 image_psf = galsim.ImageF(config['image']['n_pix'],config['image']['n_pix'])
-                gso['psf'].drawShoot(image_psf,dx=config['image']['scale'],n_photons=config['image']['n_photons'])
+                gso['psf'].drawShoot(image_psf,dx=pixel_scale,n_photons=config['image']['n_photons'])
             else:
                 logger.error('%s not a valid PSF drawing method, use \'fft\' or \'shoot\' in the config file' % config['psf_draw_method'])
                 sys.exit() 
@@ -166,16 +170,16 @@ def testShootVsFft():
         image_gal_shoot = galsim.ImageF(config['image']['n_pix'],config['image']['n_pix'])
         final = gso['galpsf']
         final.setFlux(1.)
-        im = final.drawShoot(image_gal_shoot,dx=config['image']['scale'],n_photons=config['image']['n_photons'])
+        im = final.drawShoot(image_gal_shoot,dx=pixel_scale,n_photons=config['image']['n_photons'])
         added_flux = im.added_flux
-        logger.info('drawShoot is ready for galaxy %d, added_flux=%f, scale=%f' % (ig,added_flux,config['image']['scale']) )
+        logger.info('drawShoot is ready for galaxy %d, added_flux=%f, scale=%f' % (ig,added_flux,pixel_scale) )
 
         # create fft image
         logger.info('drawing galaxy using draw (FFT)')
         image_gal_fft = galsim.ImageF(config['image']['n_pix'],config['image']['n_pix'])
         final = galsim.Convolve([gso['galpsf'],gso['pix']])
         final.setFlux(1.)
-        final.draw(image_gal_fft,dx=config['image']['scale'])
+        final.draw(image_gal_fft,dx=pixel_scale)
         logger.info('draw using FFT is ready for galaxy %s' % ig)
         
         # create a residual image
@@ -215,24 +219,23 @@ def testShootVsFft():
         moments_shoot = galsim.FindAdaptiveMom(image_gal_shoot)
         moments_fft   = galsim.FindAdaptiveMom(image_gal_fft)
 
-        moments_shoot_g1 = moments_shoot.observed_shape.getG1()
-        moments_shoot_g2 = moments_shoot.observed_shape.getG2()
+        moments_shoot_e1 = moments_shoot.observed_shape.getE1()
+        moments_shoot_e2 = moments_shoot.observed_shape.getE2()
         moments_shoot_sigma = moments_shoot.moments_sigma
-        moments_fft_g1   = moments_fft.observed_shape.getG1()
-        moments_fft_g2   = moments_fft.observed_shape.getG2()
+        moments_fft_e1   = moments_fft.observed_shape.getE1()
+        moments_fft_e2   = moments_fft.observed_shape.getE2()
         moments_fft_sigma = moments_fft.moments_sigma
         
         # display resutls
 
         logger.info('max(residual) / max(image_fft) = %2.4e ' % ( max_diff_over_max_image )  )
-        logger.debug('adaptive moments fft     G1=% 2.6f\tG2=% 2.6f\tsigma=%2.6f' % (moments_fft_g1, moments_fft_g2, moments_fft_sigma))
-        logger.debug('adaptive moments shoot   G1=% 2.6f\tG2=% 2.6f\tsigma=%2.6f' % (moments_shoot_g1, moments_shoot_g2, moments_shoot_sigma))
+        logger.debug('adaptive moments fft     E1=% 2.6f\t2=% 2.6f\tsigma=%2.6f' % (moments_fft_e1, moments_fft_e2, moments_fft_sigma))
+        logger.debug('adaptive moments shoot   E1=% 2.6f\t2=% 2.6f\tsigma=%2.6f' % (moments_shoot_e1, moments_shoot_e2, moments_shoot_sigma))
 
 
         # find HSM moments
         if gso['psf'] == None:
 
-            hsm_obs_shoot_e1 = hsm_obs_shoot_e2 = hsm_obs_fft_e1 = hsm_obs_fft_e2 = \
             hsm_corr_shoot_e1 =  hsm_corr_shoot_e2  = hsm_corr_fft_e1 = hsm_corr_fft_e2 =\
             hsm_fft_sigma = hsm_shoot_sigma = \
             no_psf_value 
@@ -242,47 +245,38 @@ def testShootVsFft():
             hsm_shoot = galsim.EstimateShearHSM(image_gal_shoot,image_psf,strict=True)
             hsm_fft   = galsim.EstimateShearHSM(image_gal_fft,image_psf,strict=True)
 
+            # for photon
+
             # check if HSM has failed
             if hsm_shoot.error_message != "":
                 logger.debug('hsm_shoot failed with message %s' % hsm_shoot.error_message)
-                hsm_obs_shoot_e1 = hsm_obs_shoot_e2  = \
                 hsm_corr_shoot_e1 =  hsm_corr_shoot_e2  = hsm_shoot_sigma = \
                 hsm_error_value
             else:
-                hsm_obs_shoot_e1 = hsm_shoot.observed_shape.getE1()
-                hsm_obs_shoot_e2 = hsm_shoot.observed_shape.getE2()
                 hsm_corr_shoot_e1 = hsm_shoot.corrected_e1
                 hsm_corr_shoot_e2 = hsm_shoot.corrected_e2
                 hsm_shoot_sigma = hsm_shoot.moments_sigma
 
+            # for fft
+
             # check if HSM has failed       
             if hsm_fft.error_message != "":
                 logger.debug('hsm_fft failed with message %s' % hsm_fft.error_message)
-                hsm_obs_fft_e1 = hsm_obs_fft_e2  = \
                 hsm_corr_fft_e1 = hsm_corr_fft_e2  = hsm_fft_sigma = \
                 hsm_error_value  
             else:
-                hsm_obs_fft_e1 = hsm_fft.observed_shape.getE1()
-                hsm_obs_fft_e2 = hsm_fft.observed_shape.getE2()
                 hsm_corr_fft_e1 = hsm_fft.corrected_e1
                 hsm_corr_fft_e2 = hsm_fft.corrected_e2
                 hsm_fft_sigma = hsm_fft.moments_sigma
 
-            logger.debug('hsm observed moments fft      E1=% 2.6f\tE2=% 2.6f' % (hsm_obs_fft_e1, hsm_obs_fft_e2))
-            logger.debug('hsm observed moments shoot    E1=% 2.6f\tE2=% 2.6f' % (hsm_obs_shoot_e1, hsm_obs_shoot_e2))
-
-            logger.debug('hsm corrected moments fft     E1=% 2.6f\tE2=% 2.6f' % (hsm_corr_fft_e1, hsm_corr_fft_e2))
-            logger.debug('hsm corrected moments shoot   E1=% 2.6f\tE2=% 2.6f' % (hsm_corr_shoot_e1, hsm_corr_shoot_e2))
+            logger.debug('hsm corrected moments fft     E1=% 2.6f\tE2=% 2.6f\tsigma=% 2.6f' % (hsm_corr_fft_e1, hsm_corr_fft_e2, hsm_fft_sigma))
+            logger.debug('hsm corrected moments shoot   E1=% 2.6f\tE2=% 2.6f\tsigma=% 2.6f' % (hsm_corr_shoot_e1, hsm_corr_shoot_e2, hsm_shoot_sigma))
             
-            logger.debug('hsm size sigma fft   % 2.6f' % hsm_fft_sigma)
-            logger.debug('hsm size sigma shoot % 2.6f' % hsm_shoot_sigma)
-
             
 
         # save the output in the file
         file_output.write(output_row_fmt % (ig, max_diff_over_max_image, 
-            moments_fft_g1,  moments_fft_g2, moments_shoot_g1,  moments_shoot_g2,
-            hsm_obs_fft_e1, hsm_obs_fft_e2, hsm_obs_shoot_e1, hsm_obs_shoot_e2,
+            moments_fft_e1,  moments_fft_e2, moments_shoot_e1,  moments_shoot_e2,
             hsm_corr_fft_e1, hsm_corr_fft_e2, hsm_corr_shoot_e1, hsm_corr_shoot_e2,
             moments_fft_sigma, moments_shoot_sigma, hsm_fft_sigma, hsm_shoot_sigma
             ))
@@ -317,7 +311,7 @@ def getGSObjectSersicsSample(i):
     rng = galsim.UniformDeviate(random_seed) 
 
     # ident  n_sersic  half_light_radius [arcsec] |g|
-    pix = galsim.Pixel(config['image']['scale'])
+    pix = galsim.Pixel(pixel_scale)
 
     # get sersic profile parameter
     sersic_index=sersic_sample_catalog[i,1]
@@ -341,18 +335,17 @@ def getGSObjectSersicsSample(i):
     psf_g = rng() * config['sersics_sample']['max_random_psf_g']
     psf_beta = 2.*math.pi * rng() * galsim.radians
 
-    if config['sersics_sample']['psf_type'] == 'space':
+    if config['image']['observe_from'] == 'space':
         lam=700.
         diam=1.3
         psf = galsim.Airy(lam_over_diam=lam/diam/100.)
-    elif config['sersics_sample']['psf_type'] == 'ground':
+    elif config['image']['observe_from'] == 'ground':
         fwhm = 0.65 # arcsec
         atmos = galsim.Moffat(beta=3,fwhm=fwhm)
         optics = galsim.Airy(lam_over_diam = 0.5 * fwhm )
         psf = galsim.Convolve([atmos,optics])
     else:
-        logger.error('%s in unknown psf_type. Use \'space\' or \'ground' % config['sersics_sample']['psf_type'])
-        sys.exit()
+        raise ValueError('%s in unknown psf_type. Use \'space\' or \'ground' % config['image']['observe_from'])
 
     psf.applyShear(g=g,beta=psf_beta)
 

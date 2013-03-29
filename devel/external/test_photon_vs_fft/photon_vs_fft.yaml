@@ -9,7 +9,9 @@ image:
  # pixel scale
  scale: 0.28   # arcsec
  # use a lot of photons          
- n_photons: 20000000
+ n_photons: 200000
+ # 'space' or 'ground'
+ observe_from: ground         
 
 # decide whether you want to use the galaxies in the 'objects' key (see below)
 # or the provided sersics catalog with random ellipticity angles
@@ -20,7 +22,6 @@ use_galaxies_from: 'sersics_sample' # 'list_gals' or 'sersics_sample'
 # details for the sersics sample
 sersics_sample:
    catalog_filename: cosmos_sersics_sample_N300.asc
-   psf_type: ground         # 'space' or 'ground'
    max_random_dx: 0.5      # will be drawn from uniform (arcsec)
    max_random_psf_g: 0.2   # will be drawn from uniform
 
