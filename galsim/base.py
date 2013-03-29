@@ -328,7 +328,9 @@ class GSObject(object):
 
         @param g1      First component of lensing (reduced) shear to apply to the object.
         @param g2      Second component of lensing (reduced) shear to apply to the object.
-        @param mu      Lensing magnification to apply to the object.
+        @param mu      Lensing magnification to apply to the object.  This is the factor by which
+                       the solid angle subtended by the object is magnified, preserving surface
+                       brightness.
         """
         self.applyShear(g1=g1, g2=g2)
         self.applyMagnification(mu)
@@ -441,7 +443,9 @@ class GSObject(object):
 
         @param g1      First component of lensing (reduced) shear to apply to the object.
         @param g2      Second component of lensing (reduced) shear to apply to the object.
-        @param mu      Lensing magnification to apply to the object.
+        @param mu      Lensing magnification to apply to the object.  This is the factor by which
+                       the solid angle subtended by the object is magnified, preserving surface
+                       brightness.
         @returns       The lensed GSObject.
         """
         ret = self.copy()
