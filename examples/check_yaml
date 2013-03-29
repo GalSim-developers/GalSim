@@ -62,8 +62,8 @@ time $bin2/galsim_yaml demo9.yaml || exit
 time $bin1/demo10 || exit
 time $bin2/galsim_yaml demo10.yaml || exit
 
-time ../bin/demo11 || exit
-time ../bin/galsim_yaml demo11.yaml || exit
+time $bin1/demo11 || exit
+time $bin2/galsim_yaml demo11.yaml || exit
 
 echo 'Checking diffs: (No output means success)'
 

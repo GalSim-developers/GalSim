@@ -50,6 +50,39 @@ def pk_flat_lim(k):
     parr[k<=klim_test] = 1.
     return parr
 
+def kappa_gaussian(theta1_array, theta2_array, sigma, pos, amp=1.):
+    """Return an array of kappa values given input arrays of theta1, theta2, float for sigma in the
+    units of theta and a galsim.PositionD for pos.
+
+    Scaled to be amp at origin.
+    """
+    sigma2 = sigma * sigma
+    theta2 = (theta1_array - pos.x)**2 + (theta2_array - pos.y)**2
+    return amp * np.exp(-.5 * theta2 / sigma2)
+
+def shear_gaussian(theta1_array, theta2_array, sigma, pos, amp=1., rotate45=False):
+    """Return arrays of shear values given input arrays of theta1, theta2, float for sigma in the
+    units of theta and a galsim.PositionD for pos.
+
+    The surface density kappa is scaled to be amp at origin.  Tangential shear around the origin
+    relates to kappa_gaussian function by the usual relation,
+    gamma_t(theta) = <kappa(<theta)> - kappa(theta)
+    The rotate45 keyword can be used to specify rotation of the shears at each point by 45 degrees.
+    """
+    sigma2 = sigma * sigma
+    t1 = theta1_array - pos.x
+    t2 = theta2_array - pos.y
+    theta2 = t1 * t1 + t2 * t2
+    gammat = 2. * amp * sigma2 * (
+        1. - (1. + .5 * theta2 / sigma2) * np.exp(-.5 * theta2 / sigma2)) / theta2 
+    if rotate45:
+        g2 = -gammat * (t1**2 - t2**2) / theta2
+        g1 =  gammat * 2. * t1 * t2 / theta2
+    else:
+        g1 = -gammat * (t1**2 - t2**2) / theta2
+        g2 = -gammat * 2. * t1 * t2 / theta2
+    return g1, g2
+
 def test_nfwhalo():
     """Various tests of the NFWHalo class (against reference data, and basic sanity tests)"""
     import time
@@ -131,8 +164,8 @@ def test_shear_variance():
     # pk_flat_lim returns 1.
     test_ps = galsim.PowerSpectrum(e_power_function=pk_flat_lim, b_power_function=pk_flat_lim)
     # get shears on 500x500 grid with spacing 0.1 degree
-    g1, g2 = test_ps.buildGriddedShears(grid_spacing=grid_size/ngrid, ngrid=ngrid, rng=rng,
-                                        units=galsim.degrees)
+    g1, g2 = test_ps.buildGrid(grid_spacing=grid_size/ngrid, ngrid=ngrid, rng=rng,
+                               units=galsim.degrees)
     # Now we should compare the variance with the predictions.  We use
     # ../devel/modules/lensing_engine.pdf section 5.3 to get
     # Var(g1) + Var(g2) = (1/pi^2) [(pi klim^2 / 4) - kmin^2]
@@ -159,8 +192,8 @@ def test_shear_variance():
 
     # Now do the same test as previously, but with E-mode power only.
     test_ps = galsim.PowerSpectrum(e_power_function=pk_flat_lim)
-    g1, g2 = test_ps.buildGriddedShears(grid_spacing=grid_size/ngrid, ngrid=ngrid, rng=rng,
-                                        units=galsim.degrees)
+    g1, g2 = test_ps.buildGrid(grid_spacing=grid_size/ngrid, ngrid=ngrid, rng=rng,
+                               units=galsim.degrees)
     predicted_variance = (1./np.pi**2)*(0.25*np.pi*(klim**2) - kmin**2)
     var1 = np.var(g1)
     var2 = np.var(g2)
@@ -182,8 +215,8 @@ def test_shear_variance():
     klim = klim_test
     kmin = 2.*np.pi/grid_size/3600. # arcsec^-1
     test_ps = galsim.PowerSpectrum(e_power_function=pk_flat_lim, b_power_function=pk_flat_lim)
-    g1, g2 = test_ps.buildGriddedShears(grid_spacing=grid_size/ngrid, ngrid=ngrid, rng=rng,
-                                        units=galsim.degrees)
+    g1, g2 = test_ps.buildGrid(grid_spacing=grid_size/ngrid, ngrid=ngrid, rng=rng,
+                               units=galsim.degrees)
     predicted_variance = (1./np.pi**2)*(0.25*np.pi*(klim**2) - kmin**2)
     var1 = np.var(g1)
     var2 = np.var(g2)
@@ -197,8 +230,8 @@ def test_shear_variance():
     klim = klim_test 
     kmin = 2.*np.pi/grid_size/3600. # arcsec^-1
     test_ps = galsim.PowerSpectrum(e_power_function=pk_flat_lim, b_power_function=pk_flat_lim)
-    g1, g2 = test_ps.buildGriddedShears(grid_spacing=grid_size/ngrid, ngrid=ngrid, rng=rng,
-                                        units=galsim.degrees)
+    g1, g2 = test_ps.buildGrid(grid_spacing=grid_size/ngrid, ngrid=ngrid, rng=rng,
+                               units=galsim.degrees)
     predicted_variance = (1./np.pi**2)*(0.25*np.pi*(klim**2) - kmin**2)
     var1 = np.var(g1)
     var2 = np.var(g2)
@@ -221,8 +254,8 @@ def test_shear_variance():
     # Now choose s such that s*kmax=5, i.e., almost no power at kmax.
     s = 5./kmax
     test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((s*k)**2)))
-    g1, g2 = test_ps.buildGriddedShears(grid_spacing = grid_size/ngrid, ngrid=ngrid, rng=rng,
-                                        units=galsim.degrees)
+    g1, g2 = test_ps.buildGrid(grid_spacing = grid_size/ngrid, ngrid=ngrid, rng=rng,
+                               units=galsim.degrees)
     # For this case, the prediction for the variance is:
     # Var(g1) + Var(g2) = [1/(2 pi s^2)] * ( (Erf(s*kmax/sqrt(2)))^2 - (Erf(s*kmin/sqrt(2)))^2 )
     # Note: the next two lines of code are commented out because math.erf is not available in python
@@ -248,8 +281,8 @@ def test_shear_variance():
     # Note that because of how s, kmin, and kmax change, the Erf[...] quantities do not change.  So
     # we don't have to reset the values here.
     test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((s*k)**2)))
-    g1, g2 = test_ps.buildGriddedShears(grid_spacing = grid_size/ngrid, ngrid=ngrid,
-                                        rng=rng, units=galsim.degrees)
+    g1, g2 = test_ps.buildGrid(grid_spacing = grid_size/ngrid, ngrid=ngrid,
+                               rng=rng, units=galsim.degrees)
     predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
     comparison_val = (np.var(g1)+np.var(g2))/(0.975*predicted_variance)-1.0
     np.testing.assert_almost_equal(comparison_val/3., 0., decimal=2,
@@ -264,8 +297,8 @@ def test_shear_variance():
     erfmin = 0.0159566274338
     s = 5./kmax
     test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((s*k)**2)))
-    g1, g2 = test_ps.buildGriddedShears(grid_spacing = grid_size/ngrid, ngrid=ngrid,
-                                        rng=rng, units=galsim.degrees)
+    g1, g2 = test_ps.buildGrid(grid_spacing = grid_size/ngrid, ngrid=ngrid,
+                               rng=rng, units=galsim.degrees)
     predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
     comparison_val = (np.var(g1)+np.var(g2))/(0.975*predicted_variance)-1.0
     np.testing.assert_almost_equal(comparison_val/3., 0., decimal=2,
@@ -283,24 +316,21 @@ def test_shear_seeds():
     test_ps = galsim.PowerSpectrum(e_power_function=pk2, b_power_function=pk2)
 
     # get shears on a grid w/o specifying seed
-    g1, g2 = test_ps.buildGriddedShears(grid_spacing=1.0, ngrid = 10)
+    g1, g2 = test_ps.buildGrid(grid_spacing=1.0, ngrid = 10)
     # do it again, w/o specifying seed: should differ
-    g1new, g2new = test_ps.buildGriddedShears(grid_spacing=1.0, ngrid = 10)
+    g1new, g2new = test_ps.buildGrid(grid_spacing=1.0, ngrid = 10)
     assert not ((g1[0,0]==g1new[0,0]) or (g2[0,0]==g2new[0,0]))
 
     # get shears on a grid w/ specified seed
-    g1, g2 = test_ps.buildGriddedShears(grid_spacing=1.0, ngrid = 10,
-                                        rng=galsim.BaseDeviate(13796))
+    g1, g2 = test_ps.buildGrid(grid_spacing=1.0, ngrid = 10, rng=galsim.BaseDeviate(13796))
     # get shears on a grid w/ same specified seed: should be same
-    g1new, g2new = test_ps.buildGriddedShears(grid_spacing=1.0, ngrid = 10,
-                                              rng=galsim.BaseDeviate(13796))
+    g1new, g2new = test_ps.buildGrid(grid_spacing=1.0, ngrid = 10, rng=galsim.BaseDeviate(13796))
     np.testing.assert_array_equal(g1, g1new,
                                   err_msg="New shear field differs from previous (same seed)!")
     np.testing.assert_array_equal(g2, g2new,
                                   err_msg="New shear field differs from previous (same seed)!")
     # get shears on a grid w/ diff't specified seed: should differ
-    g1new, g2new = test_ps.buildGriddedShears(grid_spacing=1.0, ngrid = 10,
-                                              rng=galsim.BaseDeviate(1379))
+    g1new, g2new = test_ps.buildGrid(grid_spacing=1.0, ngrid = 10, rng=galsim.BaseDeviate(1379))
     assert not ((g1[0,0]==g1new[0,0]) or (g2[0,0]==g2new[0,0]))
 
     t2 = time.time()
@@ -315,6 +345,7 @@ def test_shear_reference():
     ref = np.loadtxt(refdir + '/shearfield_reference.dat')
     g1_in = ref[:,0]
     g2_in = ref[:,1]
+    kappa_in = ref[:,2]
 
     # set up params
     rng = galsim.BaseDeviate(14136)
@@ -322,18 +353,69 @@ def test_shear_reference():
     dx = 1.
 
     # define power spectrum
-    ps = galsim.PowerSpectrum(e_power_function=pk2, b_power_function=pk1)
+    ps = galsim.PowerSpectrum(e_power_function=lambda k : k**0.5, b_power_function=lambda k : k)
     # get shears
-    g1, g2 = ps.buildGriddedShears(grid_spacing = dx, ngrid = n, rng=rng)
+    g1, g2, kappa = ps.buildGrid(grid_spacing = dx, ngrid = n, rng=rng, get_convergence=True)
 
     # put in same format as data that got read in
     g1vec = g1.reshape(n*n)
     g2vec = g2.reshape(n*n)
+    kappavec = kappa.reshape(n*n)
     # compare input vs. calculated values
     np.testing.assert_almost_equal(g1_in, g1vec, 9,
                                    err_msg = "Shear field differs from reference shear field!")
     np.testing.assert_almost_equal(g2_in, g2vec, 9,
                                    err_msg = "Shear field differs from reference shear field!")
+    np.testing.assert_almost_equal(kappa_in, kappavec, 9,
+                                   err_msg = "Convergence differences from references!")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_shear_get():
+    """Check that using gridded outputs and the various getFoo methods gives consistent results"""
+    import time
+    t1 = time.time()
+
+    # choose a power spectrum and grid setup
+    my_ps = galsim.PowerSpectrum(lambda k : k**0.5)
+    # build the grid
+    grid_spacing = 1.
+    ngrid = 100
+    g1, g2, kappa = my_ps.buildGrid(grid_spacing = grid_spacing, ngrid = ngrid,
+                                    get_convergence = True)
+    min = (-ngrid/2 + 0.5) * grid_spacing
+    max = (ngrid/2 - 0.5) * grid_spacing
+    x, y = np.meshgrid(np.arange(min,max+grid_spacing,grid_spacing),
+                       np.arange(min,max+grid_spacing,grid_spacing))
+
+    # convert theoretical to observed quantities for grid
+    g1_r, g2_r, mu = galsim.lensing.theoryToObserved(g1, g2, kappa)
+
+    # use getShear, getConvergence, getMagnification, getLensing do appropriate consistency checks
+    test_g1_r, test_g2_r = my_ps.getShear((x.flatten(), y.flatten()))
+    test_g1, test_g2 = my_ps.getShear((x.flatten(), y.flatten()), reduced = False)
+    test_kappa = my_ps.getConvergence((x.flatten(), y.flatten()))
+    test_mu = my_ps.getMagnification((x.flatten(), y.flatten()))
+    test_g1_r_2, test_g2_r_2, test_mu_2 = my_ps.getLensing((x.flatten(), y.flatten()))
+    np.testing.assert_almost_equal(g1.flatten(), test_g1, 9,
+                                   err_msg="Shears from grid and getShear disagree!")
+    np.testing.assert_almost_equal(g2.flatten(), test_g2, 9,
+                                   err_msg="Shears from grid and getShear disagree!")
+    np.testing.assert_almost_equal(g1_r.flatten(), test_g1_r, 9,
+                                   err_msg="Reduced shears from grid and getShear disagree!")
+    np.testing.assert_almost_equal(g2_r.flatten(), test_g2_r, 9,
+                                   err_msg="Reduced shears from grid and getShear disagree!")
+    np.testing.assert_almost_equal(g1_r.flatten(), test_g1_r_2, 9,
+                                   err_msg="Reduced shears from grid and getLensing disagree!")
+    np.testing.assert_almost_equal(g2_r.flatten(), test_g2_r_2, 9,
+                                   err_msg="Reduced shears from grid and getLensing disagree!")
+    np.testing.assert_almost_equal(kappa.flatten(), test_kappa, 9,
+                                   err_msg="Convergences from grid and getConvergence disagree!")
+    np.testing.assert_almost_equal(mu.flatten(), test_mu, 9,
+                                   err_msg="Magnifications from grid and getMagnification disagree!")
+    np.testing.assert_almost_equal(mu.flatten(), test_mu_2, 9,
+                                   err_msg="Magnifications from grid and getLensing disagree!")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -351,19 +433,19 @@ def test_shear_units():
     # Define a PS with some normalization value P(k=1/arcsec)=1 arcsec^2.
     # For this case we are getting the shears using units of arcsec for everything.
     ps = galsim.PowerSpectrum(lambda k : k)
-    g1, g2 = ps.buildGriddedShears(grid_spacing = 3600.*grid_size/ngrid, ngrid=ngrid,
-                                   rng = galsim.BaseDeviate(rand_seed))
+    g1, g2 = ps.buildGrid(grid_spacing = 3600.*grid_size/ngrid, ngrid=ngrid,
+                          rng = galsim.BaseDeviate(rand_seed))
     # The above was done with all inputs given in arcsec.  Now, redo it, inputting the PS
     # information in degrees and the grid info in arcsec.
     # We know that if k=1/arcsec, then when expressed as 1/degrees, it is
     # k=3600/degree.  So define the PS as P(k=3600/degree)=(1/3600.)^2 degree^2.
     ps = galsim.PowerSpectrum(lambda k : (1./3600.**2)*(k/3600.), units=galsim.degrees)
-    g1_2, g2_2 = ps.buildGriddedShears(grid_spacing = 3600.*grid_size/ngrid, ngrid=ngrid,
-                                           rng=galsim.BaseDeviate(rand_seed))
+    g1_2, g2_2 = ps.buildGrid(grid_spacing = 3600.*grid_size/ngrid, ngrid=ngrid,
+                              rng=galsim.BaseDeviate(rand_seed))
     # Finally redo it, inputting the PS and grid info in degrees.
     ps = galsim.PowerSpectrum(lambda k : (1./3600.**2)*(k/3600.), units=galsim.degrees)
-    g1_3, g2_3 = ps.buildGriddedShears(grid_spacing = grid_size/ngrid, ngrid=ngrid,
-                                       units = galsim.degrees, rng=galsim.BaseDeviate(rand_seed))
+    g1_3, g2_3 = ps.buildGrid(grid_spacing = grid_size/ngrid, ngrid=ngrid,
+                              units = galsim.degrees, rng=galsim.BaseDeviate(rand_seed))
 
     # Since same random seed was used, require complete equality of shears, which would show that
     # all unit conversions were properly handled.
@@ -396,10 +478,9 @@ def test_tabulated():
 
     # draw shears on a grid from both PowerSpectrum objects, with same random seed
     seed = 12345
-    g1_analytic, g2_analytic = ps_analytic.buildGriddedShears(grid_spacing = 1., ngrid = 10,
-                                                              rng = galsim.BaseDeviate(seed))
-    g1_tab, g2_tab = ps_tab.buildGriddedShears(grid_spacing = 1., ngrid = 10,
-                                               rng = galsim.BaseDeviate(seed))
+    g1_analytic, g2_analytic = ps_analytic.buildGrid(grid_spacing = 1., ngrid = 10,
+                                                     rng = galsim.BaseDeviate(seed))
+    g1_tab, g2_tab = ps_tab.buildGrid(grid_spacing = 1., ngrid = 10, rng = galsim.BaseDeviate(seed))
 
     # make sure that shears that are drawn are essentially identical
     np.testing.assert_almost_equal(g1_analytic, g1_tab, 6,
@@ -414,8 +495,8 @@ def test_tabulated():
     np.savetxt(filename, data)
     tab2 = galsim.LookupTable(file = filename)
     ps_tab2 = galsim.PowerSpectrum(tab2)
-    g1_tab2, g2_tab2 = ps_tab2.buildGriddedShears(grid_spacing = 1., ngrid = 10,
-                                                  rng = galsim.BaseDeviate(seed))
+    g1_tab2, g2_tab2 = ps_tab2.buildGrid(grid_spacing = 1., ngrid = 10,
+                                         rng = galsim.BaseDeviate(seed))
     np.testing.assert_almost_equal(g1_analytic, g1_tab2, 6,
         err_msg = "g1 from file-based tabulated P(k) differs from expectation!")
     np.testing.assert_almost_equal(g2_analytic, g2_tab2, 6,
@@ -423,28 +504,25 @@ def test_tabulated():
     # check that we get the same answer whether we use interpolation in log for k, P, or both
     tab = galsim.LookupTable(k_arr, p_arr, x_log = True)
     ps_tab = galsim.PowerSpectrum(tab)
-    g1_tab, g2_tab = ps_tab.buildGriddedShears(grid_spacing = 1., ngrid = 10,
-                                               rng = galsim.BaseDeviate(seed))
+    g1_tab, g2_tab = ps_tab.buildGrid(grid_spacing = 1., ngrid = 10, rng = galsim.BaseDeviate(seed))
     np.testing.assert_almost_equal(g1_analytic, g1_tab, 6,
         err_msg = "g1 of shear field from tabulated P(k) with x_log differs from expectation!")
     np.testing.assert_almost_equal(g2_analytic, g2_tab, 6,
         err_msg = "g2 of shear field from tabulated P(k) with x_log differs from expectation!")
     tab = galsim.LookupTable(k_arr, p_arr, f_log = True)
     ps_tab = galsim.PowerSpectrum(tab)
-    g1_tab, g2_tab = ps_tab.buildGriddedShears(grid_spacing = 1., ngrid = 10,
-                                               rng = galsim.BaseDeviate(seed))
+    g1_tab, g2_tab = ps_tab.buildGrid(grid_spacing = 1., ngrid = 10, rng = galsim.BaseDeviate(seed))
     np.testing.assert_almost_equal(g1_analytic, g1_tab, 6,
         err_msg = "g1 of shear field from tabulated P(k) with f_log differs from expectation!")
     np.testing.assert_almost_equal(g2_analytic, g2_tab, 6,
         err_msg = "g2 of shear field from tabulated P(k) with f_log differs from expectation!")
     tab = galsim.LookupTable(k_arr, p_arr, x_log = True, f_log = True)
     ps_tab = galsim.PowerSpectrum(tab)
-    g1_tab, g2_tab = ps_tab.buildGriddedShears(grid_spacing = 1., ngrid = 10,
-                                               rng = galsim.BaseDeviate(seed))
+    g1_tab, g2_tab = ps_tab.buildGrid(grid_spacing = 1., ngrid = 10, rng = galsim.BaseDeviate(seed))
     np.testing.assert_almost_equal(g1_analytic, g1_tab, 6,
-        err_msg = "g1 of shear field from tabulated P(k) with x_log, f_log differs from expectation!")
+        err_msg="g1 of shear field from tabulated P(k) with x_log, f_log differs from expectation!")
     np.testing.assert_almost_equal(g2_analytic, g2_tab, 6,
-        err_msg = "g2 of shear field from tabulated P(k) with x_log, f_log differs from expectation!")
+        err_msg="g2 of shear field from tabulated P(k) with x_log, f_log differs from expectation!")
 
     # check for appropriate response to inputs when making/using LookupTable
     try:
@@ -462,7 +540,7 @@ def test_tabulated():
         ## exception should be raised)
         t = galsim.LookupTable((0.99,1.,1.01),(0.99,1.,1.01))
         ps = galsim.PowerSpectrum(t)
-        np.testing.assert_raises(ValueError, ps.buildGriddedShears, grid_spacing=1., ngrid=100)
+        np.testing.assert_raises(ValueError, ps.buildGrid, grid_spacing=1., ngrid=100)
         ## try to interpolate in log, but with zero values included
         np.testing.assert_raises(ValueError, galsim.LookupTable, (0.,1.,2.), (0.,1.,2.),
                                  x_log=True)
@@ -506,10 +584,155 @@ def test_tabulated():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_kappa_gauss():
+    """Test that our Kaiser-Squires inversion routine correctly recovers the convergence map
+    for a field containing known Gaussian-profile halos.
+    """
+    import time
+    t1 = time.time()
+    # Setup coordinates for gridded kappa/gamma
+    # Note: if the grid extent is made larger (i.e. the image is zero padded) then accuracy on
+    # the output kappa map is increased, and decimal can be increased too.  We confirmed this
+    # behavior, but do not use the higher resolution for unit tests due to the inefficiency of
+    # calculations on larger grids.
+    grid_spacing_arcsec = 1
+    grid_extent_arcsec = 100.
+    ngrid = int(grid_extent_arcsec / grid_spacing_arcsec)
+    grid_side = (np.arange(ngrid, dtype=float) + .5) * grid_spacing_arcsec - .5 * grid_extent_arcsec
+    x, y = np.meshgrid(grid_side, grid_side)
+    # Get the kappas by putting two Gaussian halos in the field
+    k_big = kappa_gaussian(x, y, sigma=5., pos=galsim.PositionD(-6., -6.), amp=.5)
+    k_sml = kappa_gaussian(x, y, sigma=4., pos=galsim.PositionD(6., 6.), amp=.2)
+    # Get the shears for the same halos
+    g1_big, g2_big = shear_gaussian(x, y, sigma=5., pos=galsim.PositionD(-6., -6.), amp=.5)
+    g1_sml, g2_sml = shear_gaussian(x, y, sigma=4., pos=galsim.PositionD(6., 6.), amp=.2)
+    # Combine the big and small halos into the field
+    g1 = g1_big + g1_sml
+    g2 = g2_big + g2_sml
+    # Get the reference kappa
+    k_ref = k_big + k_sml
+    # Invert to get the test kappa
+    k_testE, k_testB = galsim.lensing.kappaKaiserSquires(g1, g2)
+    # Then run tests based on the central region to avoid edge effects (known issue with KS
+    # inversion)
+    icent = np.arange(ngrid / 2) + ngrid / 4
+    # Test that E-mode kappa matches
+    np.testing.assert_array_almost_equal(
+        k_testE[np.ix_(icent, icent)], k_ref[np.ix_(icent, icent)], decimal=2,
+        err_msg="Reconstructed kappa does not match input to 2 decimal places.")
+    # Test B-mode kappa is consistent with zero
+    np.testing.assert_array_almost_equal(
+        k_testB[np.ix_(icent, icent)], np.zeros((ngrid / 2, ngrid / 2)), decimal=3,
+        err_msg="Reconstructed B-mode kappa is non-zero at greater than 3 decimal places.")
+    # Generate shears using the 45 degree rotation option
+    g1r_big, g2r_big = shear_gaussian(
+        x, y, sigma=5., pos=galsim.PositionD(-6., -6.), amp=.5, rotate45=True)
+    g1r_sml, g2r_sml = shear_gaussian(
+        x, y, sigma=4., pos=galsim.PositionD(6., 6.), amp=.2, rotate45=True)
+    g1r = g1r_big + g1r_sml
+    g2r = g2r_big + g2r_sml
+    kr_testE, kr_testB = galsim.lensing.kappaKaiserSquires(g1r, g2r)
+    # Test that B-mode kappa for rotated shear field matches E mode
+    np.testing.assert_array_almost_equal(
+        kr_testB[np.ix_(icent, icent)], k_ref[np.ix_(icent, icent)], decimal=2,
+        err_msg="Reconstructed kappaB in rotated shear field does not match original kappaE to 2 "+
+        "decimal places.")
+    # Test E-mode kappa is consistent with zero for rotated shear field
+    np.testing.assert_array_almost_equal(
+        kr_testE[np.ix_(icent, icent)], np.zeros((ngrid / 2, ngrid / 2)), decimal=3,
+        err_msg="Reconstructed kappaE is non-zero at greater than 3 decimal places for rotated "+
+        "shear field.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_power_spectrum_with_kappa():
+    """Test that the convergence map generated by the PowerSpectrum class is consistent with the
+    Kaiser Squires inversion of the corresponding shear field.
+    """
+    import time
+    t1 = time.time()
+    # Note that in order for this test to pass, we have to control aliasing by smoothing the power
+    # spectrum to go to zero above some maximum k.  This is the only way to get agreement at high
+    # precision between the gamma's and kappa's from the lensing engine vs. that from a Kaiser and
+    # Squires inversion.
+    rseed=177774
+    ngrid=100
+    dx_grid_arcmin = 6
+    # First lookup a cosmologically relevant power spectrum (bandlimited version to remove aliasing
+    # and allow high-precision comparison).
+    tab_ps = galsim.LookupTable(
+        file='../examples/data/cosmo-fid.zmed1.00_smoothed.out', interpolant='linear')
+
+    # Begin with E-mode input power
+    psE = galsim.PowerSpectrum(tab_ps, None, units=galsim.radians)
+    g1E, g2E, k_test = psE.buildGrid(
+        grid_spacing=dx_grid_arcmin, ngrid=ngrid, units=galsim.arcmin,
+        rng=galsim.BaseDeviate(rseed), get_convergence=True)
+    kE_ks, kB_ks = galsim.lensing.kappaKaiserSquires(g1E, g2E)
+    # Test that E-mode kappa matches to some sensible accuracy
+    exact_dp = 15
+    np.testing.assert_array_almost_equal(
+        k_test, kE_ks, decimal=exact_dp,
+        err_msg="E-mode only PowerSpectrum output kappaE does not match KS inversion to 16 d.p.")
+    # Test that B-mode kappa matches zero to some sensible accuracy
+    np.testing.assert_array_almost_equal(
+        kB_ks, np.zeros_like(kE_ks), decimal=exact_dp,
+        err_msg="E-mode only PowerSpectrum output kappaB from KS does not match zero to 16 d.p.")
+
+    # Then do B-mode only input power
+    psB = galsim.PowerSpectrum(None, tab_ps, units=galsim.radians)
+    g1B, g2B, k_test = psB.buildGrid(
+        grid_spacing=dx_grid_arcmin, ngrid=ngrid, units=galsim.arcmin,
+        rng=galsim.BaseDeviate(rseed), get_convergence=True)
+    kE_ks, kB_ks = galsim.lensing.kappaKaiserSquires(g1B, g2B)
+    # Test that kappa output by PS code matches zero to some sensible accuracy
+    np.testing.assert_array_almost_equal(
+        k_test, np.zeros_like(k_test), decimal=exact_dp,
+        err_msg="B-mode only PowerSpectrum output kappa does not match zero to 16 d.p.")
+    # Test that E-mode kappa inferred via KS also matches zero to some sensible accuracy
+    np.testing.assert_array_almost_equal(
+        kE_ks, np.zeros_like(kB_ks), decimal=exact_dp,
+        err_msg="B-mode only PowerSpectrum output kappaE from KS does not match zero to 16 d.p.")
+
+    # Then for luck take B-mode only shears but rotate by 45 degrees before KS, and check
+    # consistency 
+    kE_ks_rotated, kB_ks_rotated = galsim.lensing.kappaKaiserSquires(g2B, -g1B)
+    np.testing.assert_array_almost_equal(
+        kE_ks_rotated, kB_ks, decimal=exact_dp,
+        err_msg="KS inverted kappaE from B-mode only PowerSpectrum fails rotation test.")
+    np.testing.assert_array_almost_equal(
+        kB_ks_rotated, np.zeros_like(kB_ks), decimal=exact_dp,
+        err_msg="KS inverted kappaB from B-mode only PowerSpectrum fails rotation test.")
+
+    # Finally, do E- and B-mode power
+    psB = galsim.PowerSpectrum(tab_ps, tab_ps, units=galsim.radians)
+    g1EB, g2EB, k_test = psB.buildGrid(
+        grid_spacing=dx_grid_arcmin, ngrid=ngrid, units=galsim.arcmin,
+        rng=galsim.BaseDeviate(rseed), get_convergence=True)
+    kE_ks, kB_ks = galsim.lensing.kappaKaiserSquires(g1EB, g2EB)
+    # Test that E-mode kappa matches to some sensible accuracy
+    np.testing.assert_array_almost_equal(
+        k_test, kE_ks, decimal=exact_dp,
+        err_msg="E/B PowerSpectrum output kappa does not match KS inversion to 16 d.p.")
+    # Test rotating the shears by 45 degrees
+    kE_ks_rotated, kB_ks_rotated = galsim.lensing.kappaKaiserSquires(g2EB, -g1EB)
+    np.testing.assert_array_almost_equal(
+        kE_ks_rotated, kB_ks, decimal=exact_dp,
+        err_msg="KS inverted kappaE from E/B PowerSpectrum fails rotation test.")
+    np.testing.assert_array_almost_equal(
+        kB_ks_rotated, -kE_ks, decimal=exact_dp,
+        err_msg="KS inverted kappaB from E/B PowerSpectrum fails rotation test.")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_nfwhalo()
     test_shear_variance()
     test_shear_seeds()
     test_shear_reference()
     test_shear_units()
+    test_shear_get()
     test_tabulated()
+    test_kappa_gauss()
+    test_power_spectrum_with_kappa()
