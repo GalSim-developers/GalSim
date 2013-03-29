@@ -64,7 +64,11 @@ def test_gaussian():
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees, 
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
-                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } }
+                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } },
+        'gal5' : { 'type' : 'Gaussian' , 'sigma' : 1.5, 'flux' : 72.5,
+                   'rotate' : -34. * galsim.degrees,
+                   'magnify' : 0.93,
+                   'shear' : galsim.Shear(g1=-0.15, g2=0.2) }
     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
@@ -90,6 +94,11 @@ def test_gaussian():
     gal4b.applyShift(dx = 0.7, dy = -1.2) 
     gsobject_compare(gal4a, gal4b)
 
+    gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
+    gal5b = galsim.Gaussian(sigma = 1.5, flux = 72.5)
+    gal5b.applyRotation(-34 * galsim.degrees)
+    gal5b.applyLensing(-0.15, 0.2, 0.93)
+    gsobject_compare(gal5a, gal5b)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -220,8 +229,7 @@ def test_kolmogorov():
     gal4b.applyDilation(3)
     gal4b.applyShear(e1 = 0.3)
     gal4b.applyRotation(12 * galsim.degrees)
-    gal4b.applyMagnification(1.03)
-    gal4b.applyShear(g1 = 0.03, g2 = -0.05)
+    gal4b.applyLensing(0.03, -0.05, 1.03)
     gal4b.applyShift(dx = 0.7, dy = -1.2) 
     gsobject_compare(gal4a, gal4b)
 
@@ -375,8 +383,7 @@ def test_sersic():
     gal4b.applyDilation(3)
     gal4b.applyShear(e1 = 0.3)
     gal4b.applyRotation(12 * galsim.degrees)
-    gal4b.applyMagnification(1.03)
-    gal4b.applyShear(g1 = 0.03, g2 = -0.05)
+    gal4b.applyLensing(0.03, -0.05, 1.03)
     gal4b.applyShift(dx = 0.7, dy = -1.2) 
     gsobject_compare(gal4a, gal4b)
 

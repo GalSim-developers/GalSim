@@ -1652,12 +1652,21 @@ def test_mag():
  
     # Use applyMagnification
     gal = galsim.Exponential(flux=1, scale_radius=r0)
-    gal.applyMagnification(1.5)
+    gal.applyMagnification(1.5**2) # area rescaling factor
     gal.draw(myImg,dx=0.2, normalization="surface brightness")
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyMagnification disagrees with expected result")
+
+    # Use applyLensing
+    gal = galsim.Exponential(flux=1, scale_radius=r0)
+    gal.applyLensing(0., 0., 1.5**2) # area rescaling factor
+    gal.draw(myImg,dx=0.2, normalization="surface brightness")
+    printval(myImg, savedImg)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject applyLensing disagrees with expected result")
 
     # Use createDilated
     gal = galsim.Exponential(flux=1, scale_radius=r0)
@@ -1671,20 +1680,56 @@ def test_mag():
  
     # Use createMagnified
     gal = galsim.Exponential(flux=1, scale_radius=r0)
-    gal2 = gal.createMagnified(1.5)
+    gal2 = gal.createMagnified(1.5**2) # area rescaling factor
     gal2.draw(myImg,dx=0.2, normalization="surface brightness")
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject createMagnified disagrees with expected result")
  
+    # Use createLensed
+    gal = galsim.Exponential(flux=1, scale_radius=r0)
+    gal2 = gal.createLensed(0., 0., 1.5**2) # area rescaling factor
+    gal2.draw(myImg,dx=0.2, normalization="surface brightness")
+    printval(myImg, savedImg)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject createLensed disagrees with expected result")
+ 
     # Test photon shooting.
     gal = galsim.Exponential(flux=1, scale_radius=r0)
-    gal.applyMagnification(1.5)
+    gal.applyMagnification(1.5**2) # area rescaling factor
     do_shoot(gal,myImg,"dilated Exponential")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_lens():
+    """Test the lensing (shear, magnification) of a Sersic profile carried out 2 ways.
+    """
+    import time
+    t1 = time.time()
+    re = 1.0
+    n = 3.
+    g1 = 0.12
+    g2 = -0.4
+    mu = 1.2
+    pix_scale = 0.1
+    imsize = 100
+    ser = galsim.Sersic(n, half_light_radius = re)
+    ser2 = ser.createLensed(g1, g2, mu)
+    ser.applyShear(g1=g1, g2=g2)
+    ser.applyMagnification(mu)
+    im = galsim.ImageF(imsize, imsize)
+    im.setScale(pix_scale)
+    im = ser.draw(im.view())
+    im2 = galsim.ImageF(imsize, imsize)
+    im2.setScale(pix_scale)
+    im2 = ser2.draw(im2.view())
+    np.testing.assert_array_almost_equal(im.array, im2.array, 5,
+        err_msg="Lensing of Sersic profile done in two different ways gives different answer")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_add():
     """Test the addition of two rescaled Gaussian profiles against a known double Gaussian result.
@@ -2228,6 +2273,7 @@ if __name__ == "__main__":
     test_realspace_shearconvolve()
     test_rotate()
     test_mag()
+    test_lens()
     test_add()
     test_shift()
     test_rescale()
