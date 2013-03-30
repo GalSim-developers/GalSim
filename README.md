@@ -240,6 +240,4 @@ GalSim:
 
 * PSFs from stochastic atmosphere models.
 
-* Self-consistent shears AND magnifications from a power spectrum.
-
 * Simulating simple detector defects or image artifacts.
