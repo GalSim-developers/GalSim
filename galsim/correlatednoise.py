@@ -624,14 +624,14 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     set the units of the internal lookup table.
 
         >>> cn = galsim.CorrelatedNoise(rng, image,
-        ...     interpolant=galsim.InterpolantXY(galsim.Lanczos(5, tol=1.e-4))
+        ...     x_interpolant=galsim.InterpolantXY(galsim.Lanczos(5, tol=1.e-4))
 
     The example above instantiates a CorrelatedNoise, but forces use of a non-default interpolant
-    for interpolation of the internal lookup table.  Must be an InterpolantXY instance or an
-    Interpolant instance (if the latter one-dimensional case is supplied an InterpolantXY will be
-    automatically generated from it).
+    for interpolation of the internal lookup table in real space.  Must be an InterpolantXY instance
+    or an Interpolant instance (if the latter one-dimensional case is supplied an InterpolantXY will
+    be automatically generated from it).
 
-    The default interpolant if `None` is set is a galsim.InterpolantXY(galsim.Linear(tol=1.e-4)),
+    The default x_interpolant if `None` is set is a galsim.InterpolantXY(galsim.Linear(tol=1.e-4)),
     which uses bilinear interpolation.  Initial tests indicate the favourable performance of this
     interpolant in applications involving correlated pixel noise.
 
@@ -716,7 +716,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     scale the overall correlation function by a scalar operand using the .scaleVariance() method
     described above.  The random number generators are not affected by these scaling operations.
     """
-    def __init__(self, rng, image, dx=0., interpolant=None):
+    def __init__(self, rng, image, dx=0., x_interpolant=None):
 
         # Check that the input image is in fact a galsim.ImageSIFD class instance
         if not isinstance(image, (
@@ -771,25 +771,25 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
               # pixel scale
             original_cf_image.setScale(1.)
 
-        # If interpolant not specified on input, use bilinear
-        if interpolant == None:
+        # If x_interpolant not specified on input, use bilinear
+        if x_interpolant == None:
             linear = galsim.Linear(tol=1.e-4)
-            interpolant = galsim.InterpolantXY(linear)
+            x_interpolant = galsim.InterpolantXY(linear)
         else:
-            if isinstance(interpolant, galsim.Interpolant):
-                interpolant = galsim.InterpolantXY(interpolant)
-            elif isinstance(interpolant, galsim.InterpolantXY):
-                interpolant = interpolant
+            if isinstance(x_interpolant, galsim.Interpolant):
+                x_interpolant = galsim.InterpolantXY(x_interpolant)
+            elif isinstance(x_interpolant, galsim.InterpolantXY):
+                pass
             else:
                 raise RuntimeError(
-                    'Specified interpolant is not an Interpolant or InterpolantXY instance!')
+                    'Specified x_interpolant is not an Interpolant or InterpolantXY instance!')
 
         # Then initialize...
         _BaseCorrelatedNoise.__init__(self, rng, base.InterpolatedImage(
-            original_cf_image, interpolant, dx=original_cf_image.getScale(), normalization="sb",
-            calculate_stepk=False, calculate_maxk=False)) # these internal calculations do not seem
-                                                          # to do very well with often sharp-peaked
-                                                          # correlation function images...
+            original_cf_image, x_interpolant=x_interpolant, dx=original_cf_image.getScale(), 
+            normalization="sb", calculate_stepk=False,  # these internal calculations do not seem
+            calculate_maxk=False))                      # to do very well with often sharp-peaked
+                                                        # correlation function images...
 
         # Finally store useful data as a (rootps, dx) tuple for efficient later use:
         self._profile_for_stored = self._profile
@@ -813,7 +813,7 @@ for Class in galsim.ConstImageView.itervalues():
     Class.getCorrelatedNoise = _Image_getCorrelatedNoise
 
 # Free function for returning a COSMOS noise field correlation function
-def getCOSMOSNoise(rng, file_name, dx_cosmos=0.03, variance=0.):
+def getCOSMOSNoise(rng, file_name, dx_cosmos=0.03, variance=0., x_interpolant=None):
     """Returns a representation of correlated noise in the HST COSMOS F814W unrotated science coadd
     images.
 
@@ -829,16 +829,25 @@ def getCOSMOSNoise(rng, file_name, dx_cosmos=0.03, variance=0.):
 
         /YOUR/REPO/PATH/GalSim/examples/data/acs_I_unrot_sci_20_cf.fits
 
-    @param rng        Must be a galsim.BaseDeviate or derived class instance, provides the random
-                      number generator for the noise field.
-    @param file_name  String containing the path and filename above but modified to match the
-                      location of the GalSim repoistory on your system.
-    @param dx_cosmos  COSMOS ACS F814W coadd image pixel scale in the units you are using to
-                      describe GSObjects and image scales in GalSim: defaults to 0.03 arcsec, see
-                      below for more information.
-    @param variance   Scales the correlation function so that its point variance, equivalent to its
-                      value at zero separation distance, matches this value.  The default
-                      `variance = 0.` uses the variance in the original COSMOS noise fields.
+    @param rng            Must be a galsim.BaseDeviate or derived class instance, provides the
+                          random number generator for the noise field.
+    @param file_name      String containing the path and filename above but modified to match the
+                          location of the GalSim repoistory on your system.
+    @param dx_cosmos      COSMOS ACS F814W coadd image pixel scale in the units you are using to
+                          describe GSObjects and image scales in GalSim: defaults to 0.03 arcsec,
+                          see below for more information.
+    @param variance       Scales the correlation function so that its point variance, equivalent to
+                          its value at zero separation distance, matches this value.  The default
+                          `variance = 0.` uses the variance in the original COSMOS noise fields.
+    @param x_interpolant  Forces use of a non-default interpolant for interpolation of the internal
+                          lookup table in real space.  Supplied kwarg must be an InterpolantXY
+                          instance or an Interpolant instance (from which an InterpolantXY will be
+                          automatically generated).
+
+    The interpolation used if `x_interpolant=None` (default) is a
+    galsim.InterpolantXY(galsim.Linear(tol=1.e-4)), which uses bilinear interpolation.  Initial
+    tests indicate the favourable performance of this interpolant in applications involving
+    correlated noise.
 
     Important note regarding units
     ------------------------------
@@ -883,12 +892,26 @@ def getCOSMOSNoise(rng, file_name, dx_cosmos=0.03, variance=0.):
     # Then check for negative variance before doing anything time consuming
     if variance < 0:
         raise ValueError("Input keyword variance must be zero or positive.")
-    
+
+    # If x_interpolant not specified on input, use bilinear
+    if x_interpolant == None:
+        linear = galsim.Linear(tol=1.e-4)
+        x_interpolant = galsim.InterpolantXY(linear)
+    else:
+        if isinstance(x_interpolant, galsim.Interpolant):
+            x_interpolant = galsim.InterpolantXY(x_interpolant)
+        elif isinstance(x_interpolant, galsim.InterpolantXY):
+            pass
+        else:
+            raise RuntimeError(
+                'Specified x_interpolant is not an Interpolant or InterpolantXY instance!')
+
     # Use this info to then generate a correlated noise model DIRECTLY: note this is non-standard
     # usage, but tolerated since we can be sure that the input cfimage is appropriately symmetric
     # and peaked at the origin
     ret = _BaseCorrelatedNoise(rng, base.InterpolatedImage(
-        cfimage, dx=dx_cosmos, normalization="sb", calculate_stepk=False, calculate_maxk=False))
+        cfimage, dx=dx_cosmos, normalization="sb", calculate_stepk=False, calculate_maxk=False,
+        x_interpolant=x_interpolant))
     # If the input keyword variance is non-zero, scale the correlation function to have this
     # variance
     if variance > 0.:
