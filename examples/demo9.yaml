@@ -31,7 +31,7 @@
 # New features introduced in this demo:
 #
 # - shear_value : NFWHaloShear (redshift)
-# - float_value : NFWHaloMag (redshift)
+# - float_value : NFWHaloMagnification (redshift)
 # - input : nfw_halo (mass, conc, redshift)
 # - shear_value : Eta1Eta2 (eta1, eta2)
 # - image type : Scattered (size, nobjects)
@@ -76,7 +76,7 @@ gal :
         # We put the redshift at the gal level, rather than here, since we want to use the 
         # same value for both mag and shear.
         # They also require an input.nfw_halo field.  See below.
-        type : NFWHaloMag
+        type : NFWHaloMagnification
 
     shear:
         type : NFWHaloShear
