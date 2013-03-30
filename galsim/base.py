@@ -42,7 +42,7 @@ import numpy as np
 import galsim
 import utilities
 
-version = '0.4'
+version = '0.4.1'
 
 class GSObject(object):
     """Base class for defining the interface with which all GalSim Objects access their shared 
@@ -330,25 +330,26 @@ class GSObject(object):
         self.applyTransformation(galsim.Ellipse(np.log(scale)))
         self.setFlux(old_flux) # conserve flux
 
-    def applyMagnification(self, scale):
-        """Apply a magnification by the given scale, scaling the linear size by scale and the flux 
-        by scale^2.  
+    def applyMagnification(self, mu):
+        """Apply a lensing magnification, scaling the area and flux by mu at fixed surface
+        brightness.
         
-        Scales the linear dimensions of the image by the factor scale.
-        e.g. `half_light_radius` <-- `half_light_radius * scale`
+        This process applies a lensing magnification mu, which scales the linear dimensions of the
+        image by the factor sqrt(mu), i.e., `half_light_radius` <-- `half_light_radius * sqrt(mu)`
+        while increasing the flux by a factor of mu.  Thus, applyMagnification preserves surface
+        brightness.
 
-        This operation preserves surface brightness, which means that the flux scales 
-        with the change in area.  
-        See applyDilation for a version that preserves flux.
+        See applyDilation for a version that applies a linear scale factor in the size while
+        preserving flux.
 
         After this call, the caller's type will be a GSObject.
         This means that if the caller was a derived type that had extra methods beyond
         those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
         are no longer available.
 
-        @param scale The linear rescaling factor to apply.
+        @param scale The lensing magnification to apply.
         """
-        self.applyTransformation(galsim.Ellipse(np.log(scale)))
+        self.applyTransformation(galsim.Ellipse(np.log(np.sqrt(mu))))
        
     def applyShear(self, *args, **kwargs):
         """Apply a shear to this object, where arguments are either a galsim.Shear, or arguments
@@ -374,6 +375,30 @@ class GSObject(object):
             shear = galsim.Shear(**kwargs)
         self.SBProfile.applyShear(shear._shear)
         self.__class__ = GSObject
+
+    def applyLensing(self, g1, g2, mu):
+        """Apply a lensing shear and magnification to this object.
+
+        This GSObject method applies a lensing (reduced) shear and magnification.  The shear must be
+        specified using the g1, g2 definition of shear (see galsim.Shear documentation for more
+        details).  This is the same definition as the outputs of the galsim.PowerSpectrum and
+        galsim.NFWHalo classes, which compute shears according to some lensing power spectrum or
+        lensing by an NFW dark matter halo.  The magnification determines the rescaling factor for
+        the object area and flux, preserving surface brightness.
+
+        After this call, the caller's type will be a GSObject.
+        This means that if the caller was a derived type that had extra methods beyond
+        those defined in GSObject (e.g. getSigma() for a Gaussian), then these methods
+        are no longer available.
+
+        @param g1      First component of lensing (reduced) shear to apply to the object.
+        @param g2      Second component of lensing (reduced) shear to apply to the object.
+        @param mu      Lensing magnification to apply to the object.  This is the factor by which
+                       the solid angle subtended by the object is magnified, preserving surface
+                       brightness.
+        """
+        self.applyShear(g1=g1, g2=g2)
+        self.applyMagnification(mu)
 
     def applyRotation(self, theta):
         """Apply a rotation theta to this object.
@@ -439,23 +464,22 @@ class GSObject(object):
         ret.applyDilation(scale)
         return ret
 
-    def createMagnified(self, scale):
-        """Returns a new GSObject by applying a magnification by the given scale,
-        scaling the linear size by scale and the flux by scale^2.  
+    def createMagnified(self, mu):
+        """Returns a new GSObject by applying a lensing magnification, scaling the area and flux by
+        mu at fixed surface brightness.
 
-        Scales the linear dimensions of the image by the factor scale.
-        e.g. `half_light_radius` <-- `half_light_radius * scale`
-
-        This operation preserves surface brightness, which means that the flux
-        is also scaled by a factor of scale^2.
+        This process returns a new object with a lensing magnification mu, which scales the linear
+        dimensions of the image by the factor sqrt(mu), i.e., `half_light_radius` <--
+        `half_light_radius * sqrt(mu)` while increasing the flux by a factor of mu.  Thus, the new
+        object has the same surface brightness as the original, but different size and flux.
 
         See createDilated() for a version that preserves flux.
 
-        @param scale The linear rescaling factor to apply.
+        @param mu The lensing magnification to apply.
         @returns The rescaled GSObject.
         """
         ret = self.copy()
-        ret.applyMagnification(scale)
+        ret.applyMagnification(mu)
         return ret
 
     def createSheared(self, *args, **kwargs):
@@ -464,9 +488,33 @@ class GSObject(object):
 
         For more details about the allowed keyword arguments, see the documentation of galsim.Shear
         (for doxygen documentation, see galsim.shear.Shear).
+
+        @returns The sheared GSObject.
         """
         ret = self.copy()
         ret.applyShear(*args, **kwargs)
+        return ret
+
+    def createLensed(self, g1, g2, mu):
+        """Returns a new GSObject by applying a lensing shear and magnification.
+
+        This method returns a new GSObject to which the supplied lensing (reduced) shear and
+        magnification has been applied.  The shear must be specified using the g1, g2 definition of
+        shear (see galsim.Shear documentation for more details).  This is the same definition as the
+        outputs of the galsim.PowerSpectrum and galsim.NFWHalo classes, which compute shears
+        according to some lensing power spectrum or lensing by an NFW dark matter halo. The
+        magnification determines the rescaling factor for the object area and flux, preserving
+        surface brightness.
+
+        @param g1      First component of lensing (reduced) shear to apply to the object.
+        @param g2      Second component of lensing (reduced) shear to apply to the object.
+        @param mu      Lensing magnification to apply to the object.  This is the factor by which
+                       the solid angle subtended by the object is magnified, preserving surface
+                       brightness.
+        @returns       The lensed GSObject.
+        """
+        ret = self.copy()
+        ret.applyLensing(g1, g2, mu)
         return ret
 
     def createRotated(self, theta):
@@ -2740,9 +2788,9 @@ class Shapelet(GSObject):
         bvec = self.SBProfile.getBVec()
         GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
 
-    def applyMagnification(self, scale):
-        sigma = self.SBProfile.getSigma() * scale
-        bvec = self.SBProfile.getBVec() * scale**2
+    def applyMagnification(self, mu):
+        sigma = self.SBProfile.getSigma() * np.sqrt(mu)
+        bvec = self.SBProfile.getBVec() * mu
         GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
 
     def fitImage(self, image, center=None, normalization='flux'):
