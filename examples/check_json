@@ -62,8 +62,8 @@ time $bin2/galsim_json json/demo9.json || exit
 time $bin1/demo10 || exit
 time $bin2/galsim_json json/demo10.json || exit
 
-time ../bin/demo11 || exit
-time ../bin/galsim_json json/demo11.json || exit
+time $bin1/demo11 || exit
+time $bin2/galsim_json json/demo11.json || exit
 
 echo 'Checking diffs: (No output means success)'
 
@@ -118,4 +118,3 @@ diff -q output/power_spectrum.fits output_json/power_spectrum.fits
 
 # demo11:
 diff -q output/tabulated_power_spectrum.fits.fz output_json/tabulated_power_spectrum.fits.fz 
-

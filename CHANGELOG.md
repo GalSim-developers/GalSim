@@ -1,6 +1,12 @@
 Changes from v0.4 to current version:
 ------------------------------------
 
+- Added the ability to draw lensing shears and convergences self-consistently
+  from the same input shear power spectrum.  (Issue #304)
+
+- Added a utility that can take an input set of shears on a grid, and
+  reconstruct the convergence.  (Issue #304)
+
 - The `ImageCorrFunc` has been superseded by the `CorrelatedNoise`, which like the `GaussianNoise`,
   `PoissonNoise` etc. classes inherits from the `BaseNoise`.  The class contains all the correlation
   information represented by the `ImageCorrFunc`, as well as the random number generator required
