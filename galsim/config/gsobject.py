@@ -492,8 +492,8 @@ def _MagnifyObject(gsobject, config, key, base):
 
     @returns transformed GSObject.
     """
-    scale, safe = galsim.config.ParseValue(config, key, base, float)
-    gsobject = gsobject.createMagnified(scale)
+    mu, safe = galsim.config.ParseValue(config, key, base, float)
+    gsobject = gsobject.createMagnified(mu)
     return gsobject, safe
 
 def _ShiftObject(gsobject, config, key, base):

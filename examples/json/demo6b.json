@@ -70,7 +70,7 @@
     },
 
     "#" : "Also apply a magnification mu = ( (1-kappa)^2 - |gamma|^2 )^-1",
-    "#" : "This conserves surface brightness, so it scales both the size and flux.",
+    "#" : "This conserves surface brightness, so it scales both the area and flux.",
     "magnify" : 1.082
 },
 

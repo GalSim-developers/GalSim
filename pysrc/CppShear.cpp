@@ -20,10 +20,7 @@
  */
 #include "boost/python.hpp"
 #include "CppShear.h"
-
-#define PY_ARRAY_UNIQUE_SYMBOL GALSIM_ARRAY_API
-#define NO_IMPORT_ARRAY
-#include "numpy/arrayobject.h"
+#include "NumpyHelper.h"
 
 namespace bp = boost::python;
 
@@ -32,22 +29,19 @@ namespace {
 
 struct PyCppShear {
 
-    static bp::handle<> getMatrix(CppShear const & self) {
+    static bp::handle<> getMatrix(const CppShear& self) {
         static npy_intp dim[2] = {2, 2};
         // Because the C++ version sets references that are passed in, and that's not possible in
         // Python, we wrap this instead, which returns a numpy array.
         double a=0., b=0., c=0.;
         self.getMatrix(a, b, c);
-        bp::handle<> r(PyArray_SimpleNew(2, dim, NPY_DOUBLE));
-        *reinterpret_cast<double*>(PyArray_GETPTR2(r.get(), 0, 0)) = a;
-        *reinterpret_cast<double*>(PyArray_GETPTR2(r.get(), 1, 1)) = b;
-        *reinterpret_cast<double*>(PyArray_GETPTR2(r.get(), 0, 1)) = c;
-        *reinterpret_cast<double*>(PyArray_GETPTR2(r.get(), 1, 0)) = c;
-        return r;
+        double ar[4] = { a, c, c, b };
+        PyObject* r = PyArray_SimpleNewFromData(2, dim, NPY_DOUBLE, ar);
+        return bp::handle<>(r);
     }
 
     static void wrap() {
-        static char const * doc = 
+        static const char* doc = 
             "CppShear is represented internally by e1 and e2, which are the second-moment\n"
             "definitions: ellipse with axes a & b has e=(a^2-b^2)/(a^2+b^2).\n"
             "But can get/set the ellipticity by other measures:\n"
@@ -114,21 +108,17 @@ struct PyCppShear {
 
 struct PyCppEllipse {
 
-    static bp::handle<> getMatrix(CppEllipse const & self) {
+    static bp::handle<> getMatrix(const CppEllipse& self) {
         static npy_intp dim[2] = {2, 2};
         // Because the C++ version sets references that are passed in, and that's not possible in
         // Python, we wrap this instead, which returns a numpy array.
         tmv::Matrix<double> m = self.getMatrix();
-        bp::handle<> r(PyArray_SimpleNew(2, dim, NPY_DOUBLE));
-        *reinterpret_cast<double*>(PyArray_GETPTR2(r.get(), 0, 0)) = m(0,0);
-        *reinterpret_cast<double*>(PyArray_GETPTR2(r.get(), 1, 1)) = m(1,1);
-        *reinterpret_cast<double*>(PyArray_GETPTR2(r.get(), 0, 1)) = m(0,1);
-        *reinterpret_cast<double*>(PyArray_GETPTR2(r.get(), 1, 0)) = m(1,0);
-        return r;
+        PyObject* r = PyArray_SimpleNewFromData(2, dim, NPY_DOUBLE, m.ptr());
+        return bp::handle<>(r);
     }
 
     static void wrap() {
-        static char const * doc = 
+        static const char* doc = 
             "Class to describe transformation from an ellipse\n"
             "with center x0, size exp(mu), and shape s to the unit circle.\n"
             "Map from source plane to image plane is defined as\n"
@@ -152,7 +142,7 @@ struct PyCppEllipse {
             .def(
                 "reset", (
                     void (CppEllipse::*)(
-                        const CppShear &, double, const Position<double>))&CppEllipse::reset,
+                        const CppShear&, double, const Position<double>))&CppEllipse::reset,
                  bp::args("s", "mu", "p"))
             .def("fwd", &CppEllipse::fwd, "FIXME: needs documentation!")
             .def("inv", &CppEllipse::inv, "FIXME: needs documentation!")

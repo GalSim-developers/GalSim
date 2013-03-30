@@ -43,7 +43,7 @@ New features introduced in this demo:
 - obj = galsim.Gaussian(fwhm, flux)
 - obj = galsim.RealGalaxy(real_cat, index)
 - obj.applyRotation(theta)
-- obj.applyMagnification(scale)
+- obj.applyMagnification(mu)
 - image += background
 - noise = galsim.PoissonNoise()  # with no sky_level given
 - galsim.fits.writeCube([list of images], file_name)
@@ -160,7 +160,7 @@ def main(argv):
         gal.applyShear(g1=gal_g1, g2=gal_g2)
 
         # Also apply a magnification mu = ( (1-kappa)^2 - |gamma|^2 )^-1
-        # This conserves surface brightness, so it scales both the size and flux.
+        # This conserves surface brightness, so it scales both the area and flux.
         gal.applyMagnification(gal_mu)
         
         # Make the combined profile

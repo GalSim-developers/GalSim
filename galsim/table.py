@@ -130,6 +130,8 @@ class LookupTable(object):
         import numpy as np
         # first, keep track of whether interpolation was done in x or log(x)
         if self.x_log:
+            if np.any(np.array(x) <= 0.):
+                raise ValueError("Cannot interpolate x<=0 when using log(x) interpolation.")
             x = np.log(x)
 
         # figure out what we received, and return the same thing

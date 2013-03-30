@@ -21,6 +21,7 @@ import galsim
 # If you want to extend this, you need to add your item to the list for whatever type
 # you have a new generator for.  The generator should be called _GenerateFromMyType
 # where MyType is the new type you are implementing.  See the des module for some examples.
+
 valid_value_types = {
     'List' : [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ],
     'Eval' : [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ],
@@ -47,8 +48,9 @@ valid_value_types = {
     'XY' : [ galsim.PositionD ],
     'RTheta' : [ galsim.PositionD ],
     'NFWHaloShear' : [ galsim.Shear ],
-    'NFWHaloMag' : [ float ],
+    'NFWHaloMagnification' : [ float ],
     'PowerSpectrumShear' : [ galsim.Shear ],
+    'PowerSpectrumMagnification' : [ float ],
 }
  
 def ParseValue(config, param_name, base, value_type):
@@ -752,42 +754,40 @@ def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
     return shear, False
 
 
-def _GenerateFromNFWHaloMag(param, param_name, base, value_type):
+def _GenerateFromNFWHaloMagnification(param, param_name, base, value_type):
     """@brief Return a magnification calculated from an NFWHalo object.
     """
     if 'pos' not in base:
-        raise ValueError("NFWHaloMag requested, but no position defined.")
+        raise ValueError("NFWHaloMagnification requested, but no position defined.")
     pos = base['pos']
 
     if 'gal' not in base or 'redshift' not in base['gal']:
-        raise ValueError("NFWHaloMag requested, but no gal.redshift defined.")
+        raise ValueError("NFWHaloMagnification requested, but no gal.redshift defined.")
     redshift = GetCurrentValue(base['gal'],'redshift')
 
     if 'nfw_halo' not in base:
-        raise ValueError("NFWHaloMag requested, but no input.nfw_halo defined.")
+        raise ValueError("NFWHaloMagnification requested, but no input.nfw_halo defined.")
     
-    opt = { 'max_scale' : float }
+    opt = { 'max_mu' : float }
     kwargs = GetAllParams(param, param_name, base, opt=opt)[0]
 
-    #print 'NFWHaloMag: pos = ',pos,' z = ',redshift
-    mu = base['nfw_halo'].getMag(pos,redshift)
+    #print 'NFWHaloMagnification: pos = ',pos,' z = ',redshift
+    mu = base['nfw_halo'].getMagnification(pos,redshift)
     #print 'mu = ',mu
 
-    max_scale = kwargs.get('max_scale', 5.)
-    if not max_scale > 0.: 
+    max_mu = kwargs.get('max_mu', 25.)
+    if not max_mu > 0.: 
         raise ValueError(
-            "Invalid max_scale=%f (must be > 0) for %s.type = NFWHaloMag"%(repeat,param_name))
+            "Invalid max_mu=%f (must be > 0) for %s.type = NFWHaloMagnification"%(
+                max_mu,param_name))
 
-    if mu < 0 or mu > max_scale**2:
+    if mu < 0 or mu > max_mu:
         #print 'mu = ',mu
         import warnings
-        warnings.warn("Warning: NFWHalo mu = %f means strong lensing!  Using scale=5."%mu)
-        scale = max_scale
-    else:
-        import math
-        scale = math.sqrt(mu)
-    #print 'scale = ',scale
-    return scale, False
+        warnings.warn("Warning: NFWHalo mu = %f means strong lensing!  Using mu=%f"%(mu,max_mu))
+        mu = max_mu
+
+    return mu, False
 
 
 def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
@@ -818,6 +818,35 @@ def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
     #print 'shear = ',shear
     return shear, False
 
+def _GenerateFromPowerSpectrumMagnification(param, param_name, base, value_type):
+    """@brief Return a magnification calculated from a PowerSpectrum object.
+    """
+    if 'pos' not in base:
+        raise ValueError("PowerSpectrumMagnification requested, but no position defined.")
+    pos = base['pos']
+
+    if 'power_spectrum' not in base:
+        raise ValueError("PowerSpectrumMagnification requested, but no input.power_spectrum "
+                         "defined.")
+    
+    opt = { 'max_mu' : float }
+    kwargs = GetAllParams(param, param_name, base, opt=opt)[0]
+
+    mu = base['power_spectrum'].getMagnification(pos)
+
+    max_mu = kwargs.get('max_mu', 25.)
+    if not max_mu > 0.: 
+        raise ValueError(
+            "Invalid max_mu=%f (must be > 0) for %s.type = PowerSpectrumMagnification"%(
+                max_mu,param_name))
+
+    if mu < 0 or mu > max_mu:
+        #print 'mu = ',mu
+        import warnings
+        warnings.warn("Warning: PowerSpectrum mu = %f means strong lensing!  Using mu=%f"%(
+            mu,max_mu))
+        mu = max_mu
+    return mu, False
 
 def _GenerateFromList(param, param_name, base, value_type):
     """@brief Return next item from a provided list
