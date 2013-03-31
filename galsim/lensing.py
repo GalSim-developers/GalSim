@@ -161,7 +161,7 @@ class PowerSpectrum(object):
     Specifically, since the power spectrum is realized on only a finite grid it has been been
     effectively bandpass filtered between a minimum and maximum k value in each of the k1, k2
     directions.  This filter is hard: beyond the minimum and maximum k range the P(k) is set to
-    zero.  See the buildGriddedShears method for more information.
+    zero.  See the buildGrid method for more information.
 
     Therefore, the shear generation currently does not include sample variance due to coverage of a
     finite patch.  We explicitly enforce `P(k=0)=0`, which is true for the full sky in a reasonable
