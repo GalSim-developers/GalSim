@@ -179,7 +179,7 @@ def test_shear_variance():
     var1 = np.var(g1)
     var2 = np.var(g2)
     comparison_val = (var1+var2)/(0.985*2.*predicted_variance)-1.0
-    np.testing.assert_almost_equal(comparison_val/3., 0., decimal=2,
+    np.testing.assert_almost_equal(comparison_val/2., 0., decimal=2,
                                    err_msg="Incorrect shear variance from flat power spectrum!")
     # check: are g1, g2 uncorrelated with each other?
     top= np.sum((g1-np.mean(g1))*(g2-np.mean(g2)))
@@ -198,7 +198,7 @@ def test_shear_variance():
     var1 = np.var(g1)
     var2 = np.var(g2)
     comparison_val = (var1+var2)/(0.985*predicted_variance)-1.0
-    np.testing.assert_almost_equal(comparison_val/3., 0., decimal=2,
+    np.testing.assert_almost_equal(comparison_val/2., 0., decimal=2,
                                    err_msg="Incorrect shear variance from flat power spectrum!")
     # check: are g1, g2 uncorrelated with each other?
     top= np.sum((g1-np.mean(g1))*(g2-np.mean(g2)))
@@ -221,7 +221,7 @@ def test_shear_variance():
     var1 = np.var(g1)
     var2 = np.var(g2)
     comparison_val = (var1+var2)/(0.985*2.*predicted_variance)-1.0
-    np.testing.assert_almost_equal(comparison_val/3., 0., decimal=2,
+    np.testing.assert_almost_equal(comparison_val/2., 0., decimal=2,
                                    err_msg="Incorrect shear variance from flat power spectrum!")
 
     # check for proper scaling with number of grid points, for fixed grid spacing
@@ -249,10 +249,10 @@ def test_shear_variance():
     # For explanation of these two variables, see below, the comment starting "Note: the next..."
     # These numbers are, however, hard-coded up here with the grid parameters because if the grid is
     # changed, the erfmax and erfmin must change.
-    erfmax = 0.999999426697
-    erfmin = 0.0159566274338
-    # Now choose s such that s*kmax=5, i.e., almost no power at kmax.
-    s = 5./kmax
+    erfmax = 0.9875806693484477
+    erfmin = 0.007978712629263206
+    # Now choose s such that s*kmax=2.5, i.e., very little power at kmax.
+    s = 2.5/kmax
     test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((s*k)**2)))
     g1, g2 = test_ps.buildGrid(grid_spacing = grid_size/ngrid, ngrid=ngrid, rng=rng,
                                units=galsim.degrees)
@@ -269,7 +269,7 @@ def test_shear_variance():
     # here we know that the results are typically 2.5% too low, and we again allow wiggle room of 3.5%
     # due to noise.
     comparison_val = (np.var(g1)+np.var(g2))/(0.975*predicted_variance)-1.0
-    np.testing.assert_almost_equal(comparison_val/3.5, 0., decimal=2,
+    np.testing.assert_almost_equal(comparison_val/4.5, 0., decimal=2,
                                    err_msg="Incorrect variance from Gaussian PS")
 
     # check for proper scaling with grid spacing, for fixed number of grid points
@@ -277,7 +277,7 @@ def test_shear_variance():
     ngrid = 500 # grid points
     kmin = 2.*np.pi/grid_size/3600.
     kmax = np.pi/(grid_size/ngrid)/3600.
-    s = 5./kmax
+    s = 2.5/kmax
     # Note that because of how s, kmin, and kmax change, the Erf[...] quantities do not change.  So
     # we don't have to reset the values here.
     test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((s*k)**2)))
@@ -294,14 +294,14 @@ def test_shear_variance():
     kmin = 2.*np.pi/grid_size/3600.
     kmax = np.pi/(grid_size/ngrid)/3600.
     # Here one of the Erf[...] values does change.
-    erfmin = 0.0319068737057
-    s = 5./kmax
+    erfmin = 0.01595662743380396
+    s = 2.5/kmax
     test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((s*k)**2)))
     g1, g2 = test_ps.buildGrid(grid_spacing = grid_size/ngrid, ngrid=ngrid,
                                rng=rng, units=galsim.degrees)
     predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
     comparison_val = (np.var(g1)+np.var(g2))/(0.975*predicted_variance)-1.0
-    np.testing.assert_almost_equal(comparison_val/3.5, 0., decimal=2,
+    np.testing.assert_almost_equal(comparison_val/4.5, 0., decimal=2,
                                    err_msg="Incorrect variance from Gaussian PS")
 
     t2 = time.time()
