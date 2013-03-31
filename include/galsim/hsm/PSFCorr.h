@@ -39,6 +39,7 @@
 #include "../Bounds.h"
 
 namespace galsim {
+namespace hsm {
 
     struct HSMParams {
     /**
@@ -428,4 +429,5 @@ namespace galsim {
         double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter,
         boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
   
+}
 }

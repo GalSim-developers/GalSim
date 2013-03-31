@@ -49,6 +49,7 @@ int verbose_level = 2;
 
 
 namespace galsim {
+namespace hsm {
 
     template <typename T, typename U>
     unsigned int general_shear_estimator(
@@ -1699,4 +1700,5 @@ namespace galsim {
         double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter,
         boost::shared_ptr<HSMParams> hsmparams);
 
+}
 }

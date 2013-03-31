@@ -27,28 +27,61 @@ namespace galsim {
 namespace hsm {
 namespace {
 
+struct PyHSMParams {
+
+    static void wrap() {
+
+        static const char* doc = 
+            ""
+            "";
+
+        bp::class_<HSMParams> pyHSMParams("HSMParams", doc, bp::no_init);
+        pyHSMParams
+            .def(bp::init<
+                 double, double, double, int, int, long, long, double, double, double, int, double>(
+                     (bp::arg("nsig_rg")=3.0,
+                      bp::arg("nsig_rg2")=3.6,
+                      bp::arg("max_moment_nsig2")=25.0,
+                      bp::arg("regauss_too_small")=1,
+                      bp::arg("adapt_order")=2,
+                      bp::arg("max_mom2_iter")=400,
+                      bp::arg("num_iter_default")=-1,
+                      bp::arg("bound_correct_wt")=0.25,
+                      bp::arg("max_amoment")=8000.,
+                      bp::arg("max_ashift")=15.,
+                      bp::arg("ksb_moments_max")=4,
+                      bp::arg("failed_moments")=-1000.))
+            )
+            ;
+    }
+};
+
 struct PyCppHSMShapeData {
 
     template <typename U, typename V>
     static void wrapTemplates() {
         typedef CppHSMShapeData (* FAM_func)(const ImageView<U> &, const ImageView<int> &, 
-                                             double, double, double, double);
+                                             double, double, double, double,
+                                             boost::shared_ptr<HSMParams>);
         bp::def("_FindAdaptiveMomView",
                 FAM_func(&FindAdaptiveMomView),
                 (bp::arg("object_image"), bp::arg("object_mask_image"), bp::arg("guess_sig")=5.0, 
                  bp::arg("precision")=1.0e-6, bp::arg("guess_x_centroid")=-1000.0, 
-                 bp::arg("guess_y_centroid")=-1000.0),
+                 bp::arg("guess_y_centroid")=-1000.0,
+                 bp::arg("hsmparams")=bp::object()),
                 "Find adaptive moments of an image (with some optional args).");
 
         typedef CppHSMShapeData (* ESH_func)(const ImageView<U> &, const ImageView<V> &, 
                                              const ImageView<int> &, float, const char *,
-                                             unsigned long, double, double, double, double, double);
+                                             unsigned long, double, double, double, double, double,
+                                             boost::shared_ptr<HSMParams>);
         bp::def("_EstimateShearHSMView",
                 ESH_func(&EstimateShearHSMView),
                 (bp::arg("gal_image"), bp::arg("PSF_image"), bp::arg("gal_mask_image"), bp::arg("sky_var")=0.0,
                  bp::arg("shear_est")="REGAUSS", bp::arg("flags")=0xe, bp::arg("guess_sig_gal")=5.0,
                  bp::arg("guess_sig_PSF")=3.0, bp::arg("precision")=1.0e-6, bp::arg("guess_x_centroid")=-1000.0,
-                 bp::arg("guess_y_centroid")=-1000.0),
+                 bp::arg("guess_y_centroid")=-1000.0,
+                 bp::arg("hsmparams")=bp::object()),
                 "Estimate PSF-corrected shear for a galaxy, given a PSF (and some optional args).");
     };
 
@@ -91,6 +124,7 @@ struct PyCppHSMShapeData {
 
 void pyExportPSFCorr() {
     PyCppHSMShapeData::wrap();
+    PyHSMParams::wrap();
 }
 
 } // namespace hsm
