@@ -510,12 +510,12 @@ namespace hsm {
             double dsigma = 0.7071067811865
                 * (iter_moments(2,0)+iter_moments(0,2)) / iter_moments(0,0);
 
-            if (dx     >  hsm::bound_correct_weight) dx     =  hsm::bound_correct_weight;
-            if (dx     < -hsm::bound_correct_weight) dx     = -hsm::bound_correct_weight;
-            if (dy     >  hsm::bound_correct_weight) dy     =  hsm::bound_correct_weight;
-            if (dy     < -hsm::bound_correct_weight) dy     = -hsm::bound_correct_weight;
-            if (dsigma >  hsm::bound_correct_weight) dsigma =  hsm::bound_correct_weight;
-            if (dsigma < -hsm::bound_correct_weight) dsigma = -hsm::bound_correct_weight;
+            if (dx     >  hsm::bound_correct_wt) dx     =  hsm::bound_correct_wt;
+            if (dx     < -hsm::bound_correct_wt) dx     = -hsm::bound_correct_wt;
+            if (dy     >  hsm::bound_correct_wt) dy     =  hsm::bound_correct_wt;
+            if (dy     < -hsm::bound_correct_wt) dy     = -hsm::bound_correct_wt;
+            if (dsigma >  hsm::bound_correct_wt) dsigma =  hsm::bound_correct_wt;
+            if (dsigma < -hsm::bound_correct_wt) dsigma = -hsm::bound_correct_wt;
 
             /* Convergence */
             convergence_factor = std::abs(dx)>std::abs(dy)? std::abs(dx): std::abs(dy);
@@ -729,16 +729,16 @@ namespace hsm {
             dxy = 4. * (Cxy/Amp - 0.5*Mxy) / semi_b2;
             dyy = 4. * (Cyy/Amp - 0.5*Myy) / semi_b2;
 
-            if (dx     >  hsm::bound_correct_weight) dx     =  hsm::bound_correct_weight;
-            if (dx     < -hsm::bound_correct_weight) dx     = -hsm::bound_correct_weight;
-            if (dy     >  hsm::bound_correct_weight) dy     =  hsm::bound_correct_weight;
-            if (dy     < -hsm::bound_correct_weight) dy     = -hsm::bound_correct_weight;
-            if (dxx    >  hsm::bound_correct_weight) dxx    =  hsm::bound_correct_weight;
-            if (dxx    < -hsm::bound_correct_weight) dxx    = -hsm::bound_correct_weight;
-            if (dxy    >  hsm::bound_correct_weight) dxy    =  hsm::bound_correct_weight;
-            if (dxy    < -hsm::bound_correct_weight) dxy    = -hsm::bound_correct_weight;
-            if (dyy    >  hsm::bound_correct_weight) dyy    =  hsm::bound_correct_weight;
-            if (dyy    < -hsm::bound_correct_weight) dyy    = -hsm::bound_correct_weight;
+            if (dx     >  hsm::bound_correct_wt) dx     =  hsm::bound_correct_wt;
+            if (dx     < -hsm::bound_correct_wt) dx     = -hsm::bound_correct_wt;
+            if (dy     >  hsm::bound_correct_wt) dy     =  hsm::bound_correct_wt;
+            if (dy     < -hsm::bound_correct_wt) dy     = -hsm::bound_correct_wt;
+            if (dxx    >  hsm::bound_correct_wt) dxx    =  hsm::bound_correct_wt;
+            if (dxx    < -hsm::bound_correct_wt) dxx    = -hsm::bound_correct_wt;
+            if (dxy    >  hsm::bound_correct_wt) dxy    =  hsm::bound_correct_wt;
+            if (dxy    < -hsm::bound_correct_wt) dxy    = -hsm::bound_correct_wt;
+            if (dyy    >  hsm::bound_correct_wt) dyy    =  hsm::bound_correct_wt;
+            if (dyy    < -hsm::bound_correct_wt) dyy    = -hsm::bound_correct_wt;
 
             /* Convergence tests */
             convergence_factor = std::abs(dx)>std::abs(dy)? std::abs(dx): std::abs(dy);

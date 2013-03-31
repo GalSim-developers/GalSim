@@ -39,92 +39,139 @@
 #include "../Bounds.h"
 
 namespace galsim {
-namespace hsm {
 
+    struct HSMParams {
     /**
-     * @brief A parameter used to optimize convolutions by cutting off galaxy profile.
+     * @brief Parameters that determine how the moments/shape estimation routines make
+     *        speed/accuracy tradeoff decisions.
      *
-     * In the first step of the re-Gaussianization method of PSF correction, a Gaussian
-     * approximation to the pre-seeing galaxy is calculated.  If re-Gaussianization is called with
-     * the flag 0x4 (as is the default), then this approximation is cut off at nsig_rg sigma to save
-     * computation time in convolutions.
+     * @param nsig_rg            A parameter used to optimize convolutions by cutting off galaxy
+     *                           profile.  In the first step of the re-Gaussianization method of PSF
+     *                           correction, a Gaussian approximation to the pre-seeing galaxy is
+     *                           calculated. If re-Gaussianization is called with the flag 0x4 (as
+     *                           is the default), then this approximation is cut off at nsig_rg
+     *                           sigma to save computation time in convolutions.
+     * @param nsig_rg2           A parameter used to optimize convolutions by cutting off PSF
+     *                           residual profile.  In the re-Gaussianization method of PSF
+     *                           correction, a "PSF residual" (the difference between the true PSF
+     *                           and its best-fit Gaussian approximation) is constructed. If
+     *                           re-Gaussianization is called with the flag 0x8 (as is the default),
+     *                           then this PSF residual is cut off at nsig_rg2 sigma to save
+     *                           computation time in convolutions.
+     * @param max_moment_nsig2   A parameter for optimizing calculations of adaptive moments by
+     *                           cutting off profiles. This parameter is used to decide how many
+     *                           sigma^2 into the Gaussian adaptive moment to extend the moment
+     *                           calculation, with the weight being defined as 0 beyond this point.
+     *                           i.e., if max_moment_nsig2 is set to 25, then the Gaussian is
+     *                           extended to (r^2/sigma^2)=25, with proper accounting for elliptical
+     *                           geometry.  If this parameter is set to some very large number, then
+     *                           the weight is never set to zero and the exponential function is
+     *                           always called. Note: GalSim script devel/modules/test_mom_timing.py
+     *                           was used to choose a value of 25 as being optimal, in that for the
+     *                           cases that were tested, the speedups were typically factors of
+     *                           several, but the results of moments and shear estimation were
+     *                           changed by <10^-5.  Not all possible cases were checked, and so for
+     *                           use of this code for unusual cases, we recommend that users check
+     *                           that this value does not affect accuracy, and/or set it to some
+     *                           large value to completely disable this optimization.
+     * @param regauss_too_small  A parameter for how strictly the re-Gaussianization code treats
+     *                           small galaxies. If this parameter is 1, then the re-Gaussianization
+     *                           code does not impose a cut on the apparent resolution before trying
+     *                           to measure the PSF-corrected shape of the galaxy; if 0, then it is
+     *                           stricter.  Using the default value of 1 prevents the
+     *                           re-Gaussianization PSF correction from completely failing at the
+     *                           beginning, before trying to do PSF correction, due to the crudest
+     *                           possible PSF correction (Gaussian approximation) suggesting that
+     *                           the galaxy is very small.  This could happen for some usable
+     *                           galaxies particularly when they have very non-Gaussian surface
+     *                           brightness profiles -- for example, if there's a prominent bulge
+     *                           that the adaptive moments attempt to fit, ignoring a more
+     *                           extended disk.  Setting a value of 1 is useful for keeping galaxies
+     *                           that would have failed for that reason.  If they later turn out to
+     *                           be too small to really use, this will be reflected in the final
+     *                           estimate of the resolution factor, and they can be rejected after
+     *                           the fact.
+     * @param adapt_order        The order to which circular adaptive moments should be calculated
+     *                           for KSB method. This parameter only affects calculations using the
+     *                           KSB method of PSF correction.  Warning: deviating from default
+     *                           value of 2 results in code running more slowly, and results have
+     *                           not been significantly tested.
+     * @param max_mom2_iter      Maximum number of iterations to use when calculating adaptive
+     *                           moments.  This should be sufficient in nearly all situations, with
+     *                           the possible exception being very flattened profiles.
+     * @param num_iter_default   Number of iterations to report when code fails to converge within
+     *                           max_mom2_iter iterations.
+     * @param bound_correct_wt   Maximum shift in centroids and sigma between iterations for
+     *                           adaptive moments.
+     * @param max_amoment        Maximum value for adaptive second moments before throwing
+     *                           exception.  Very large objects might require this value to be
+     *                           increased.
+     * @param max_ashift         Maximum allowed x / y centroid shift (units: pixels) between
+     *                           successive iterations for adaptive moments before throwing
+     *                           exception.
+     * @param ksb_moments_max    Use moments up to ksb_moments_max order for KSB method of PSF
+     *                           correction.
+     * @param failed_moments     Value to report for ellipticities and resolution factor if shape
+     *                           measurement fails.
      */
-    const double nsig_rg = 3.0;
+        HSMParams(double _nsig_rg,
+                  double _nsig_rg2,
+                  double _max_moment_nsig2,
+                  int _regauss_too_small,
+                  int _adapt_order,
+                  long _max_mom2_iter,
+                  long _num_iter_default,
+                  double _bound_correct_wt,
+                  double _max_amoment,
+                  double _max_ashift,
+                  int _ksb_moments_max,
+                  double _failed_moments) :
+            nsig_rg(_nsig_rg),
+            nsig_rg2(_nsig_rg2),
+            max_moment_nsig2(_max_moment_nsig2),
+            regauss_too_small(_regauss_too_small),
+            adapt_order(_adapt_order),
+            max_mom2_iter(_max_mom2_iter),
+            num_iter_default(_num_iter_default),
+            bound_correct_wt(_bound_correct_wt),
+            max_amoment(_max_amoment),
+            max_ashift(_max_ashift),
+            ksb_moments_max(_ksb_moments_max),
+            failed_moments(_failed_moments)
+        {}
 
-    /**
-     * @brief A parameter used to optimize convolutions by cutting off PSF residual profile.
-     *
-     * In the re-Gaussianization method of PSF correction, a "PSF residual" (the difference between
-     * the true PSF and its best-fit Gaussian approximation) is constructed. If re-Gaussianization
-     * is called with the flag 0x8 (as is the default), then this PSF residual is cut off at
-     * nsig_rg2 sigma to save computation time in convolutions.
-     */
-    const double nsig_rg2 = 3.6;
+        /**
+         * A reasonable set of default values
+         */
+        HSMParams() :
+            nsig_rg(3.0),
+            nsig_rg2(3.6),
+            max_moment_nsig2(25.0),
+            regauss_too_small(1),
+            adapt_order(2),
+            max_mom2_iter(400),
+            num_iter_default(-1),
+            bound_correct_wt(0.25),
+            max_amoment(8000.),
+            max_ashift(15.),
+            ksb_moments_max(4),
+            failed_moments(-1000.)
+            {}
 
-    /**
-     * @brief A parameter for optimizing calculations of adaptive moments by cutting off profiles.
-     *
-     * This parameter is used to decide how many sigma^2 into the
-     * Gaussian adaptive moment to extend the moment calculation, with the weight being defined as 0
-     * beyond this point.  i.e., if max_moment_nsig2 is set to 25, then the Gaussian is extended to
-     * (r^2/sigma^2)=25, with proper accounting for elliptical geometry.  If this parameter is set
-     * to some very large number, then the weight is never set to zero and the exponential function is always
-     * called. Note: GalSim script devel/modules/test_mom_timing.py was used to choose a value of 25
-     * as being optimal, in that for the cases that were tested, the speedups were typically factors
-     * of several, but the results of moments and shear estimation were changed by <10^-5.  Not all
-     * possible cases were checked, and so for use of this code for unusual cases, we recommend that
-     * users check that this value does not affect accuracy, and/or set it to some large value to
-     * completely disable this optimization.
-     */
-    const double max_moment_nsig2 = 25.0;
-
-    /**
-     * @brief A parameter for how strictly the re-Gaussianization code treats small galaxies.
-     *
-     * If this parameter is 1, then the re-Gaussianization code does not impose a cut on the
-     * apparent resolution before trying to measure the PSF-corrected shape of the galaxy; if 0,
-     * then it is stricter.  Using the default value of 1 prevents the re-Gaussianization PSF
-     * correction from completely failing at the beginning, before trying to do PSF correction, due
-     * to the crudest possible PSF correction (Gaussian approximation) suggesting that the galaxy is
-     * very small.  This could happen for some usable galaxies particularly when they have very
-     * non-Gaussian surface brightness profiles -- for example, if there's a prominent bulge that
-     * the adaptive moments attempt to fit, ignoring the more extended disk.  Setting a value of 1
-     * is useful for keeping galaxies that would have failed for that reason.  If they later turn
-     * out to be too small to really use, this will be reflected in the final estimate of the
-     * resolution factor, and they can be rejected after the fact.
-     */
-    const int regauss_too_small = 1;
-
-    /**
-     * @brief The order to which circular adaptive moments should be calculated for KSB method.
-     *
-     * This parameter only affects calculations using the KSB method of PSF correction.  Warning:
-     * deviating from default value of 2 results in code running more slowly, and results have not
-     * been significantly tested.
-     */
-    const int adapt_order = 2;
-
-    /// @brief The maximum number of iterations to use when calculating adaptive moments.
-    const long max_mom2_iter = 400;
-
-    /// @brief Number of iterations to report when code fails to converge within max_mom2_iter
-    /// iterations.
-    const long num_iter_default = -1;
-
-    /// @brief Maximum shift in centroids and sigma between iterations for adaptive moments.
-    const double bound_correct_weight = 0.25;
-
-    /// @brief Maximum value for adaptive second moments before throwing exception.
-    const double max_amoment = 8000.;
-
-    /// @brief Maximum allowed x / y centroid shift for adaptive moments before throwing exception.
-    const double max_ashift = 15.;
-
-    /// @brief Use moments up to ksb_moments_max order for KSB method of PSF correction.
-    const int ksb_moments_max = 4;
-
-    /// @brief Value to report for ellipticities and resolution factor if shape measurement fails.
-    const double failed_moments = -1000.;
+        // These are all public.  So you access them just as member values.
+        const double _nsig_rg;
+        const double _nsig_rg2;
+        const double _max_moment_nsig2;
+        const int _regauss_too_small;
+        const int _adapt_order;
+        const long _max_mom2_iter;
+        const long _num_iter_default;
+        const double _bound_correct_wt;
+        const double _max_amoment;
+        const double _max_ashift;
+        const int _ksb_moments_max;
+        const double _failed_moments;
+    };
 
     // All code between the @cond and @endcond is excluded from Doxygen documentation
     //! @cond
