@@ -2,7 +2,7 @@ import galsim
 import numpy as np
 import g10_powerspec
 
-n_realization = 500
+n_realization = 400
 pkfile = 'ps.wmap7lcdm.2000.append0.dat'
 n_ell = 50
 grid_nx = 50
@@ -10,7 +10,7 @@ grid_spacing = 96. # pixels, but assume fixed grid of 10 deg- see below!
 theta = 10. # degrees
 dtheta = theta/grid_nx # degrees
 tmpfile = 'tmp.out'
-outfile = 'output/ps.results.input_pb.fine.dat'
+outfile = 'output/ps.results.input_pe.fine.dat'
 
 ellvals = np.zeros(n_ell)
 p_e = np.zeros((n_ell, n_realization))
@@ -33,8 +33,7 @@ for ireal in range(n_realization):
     print "Iteration ",ireal
 
     print "Getting shears on a grid"
-    g1, g2 = test_ps_b.buildGriddedShears(grid_spacing=dtheta, ngrid=grid_nx, units=galsim.degrees)
-    g2 = -1.*g2
+    g1, g2 = test_ps_e.buildGrid(grid_spacing=dtheta, ngrid=grid_nx, units=galsim.degrees)
 
     g1_1d = np.reshape(g1, grid_nx*grid_nx)
     g2_1d = np.reshape(g2, grid_nx*grid_nx)
