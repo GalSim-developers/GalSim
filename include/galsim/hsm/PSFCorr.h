@@ -159,18 +159,18 @@ namespace galsim {
             {}
 
         // These are all public.  So you access them just as member values.
-        const double _nsig_rg;
-        const double _nsig_rg2;
-        const double _max_moment_nsig2;
-        const int _regauss_too_small;
-        const int _adapt_order;
-        const long _max_mom2_iter;
-        const long _num_iter_default;
-        const double _bound_correct_wt;
-        const double _max_amoment;
-        const double _max_ashift;
-        const int _ksb_moments_max;
-        const double _failed_moments;
+        const double nsig_rg;
+        const double nsig_rg2;
+        const double max_moment_nsig2;
+        const int regauss_too_small;
+        const int adapt_order;
+        const long max_mom2_iter;
+        const long num_iter_default;
+        const double bound_correct_wt;
+        const double max_amoment;
+        const double max_ashift;
+        const int ksb_moments_max;
+        const double failed_moments;
     };
 
     // All code between the @cond and @endcond is excluded from Doxygen documentation
@@ -336,13 +336,12 @@ namespace galsim {
      * @return A CppHSMShapeData object containing the results of shape measurement.
      */
     template <typename T, typename U>
-        CppHSMShapeData EstimateShearHSMView(const ImageView<T> &gal_image, const ImageView<U> &PSF_image,
-                                             const ImageView<int> &gal_mask_image,
-                                             float sky_var = 0.0, const char *shear_est = "REGAUSS",
-                                             unsigned long flags = 0xe, double guess_sig_gal = 5.0,
-                                             double guess_sig_PSF = 3.0, double precision = 1.0e-6,
-                                             double guess_x_centroid = -1000.0,
-                                             double guess_y_centroid = -1000.0);
+        CppHSMShapeData EstimateShearHSMView(
+            const ImageView<T> &gal_image, const ImageView<U> &PSF_image, const ImageView<int> &gal_mask_image,
+            float sky_var = 0.0, const char *shear_est = "REGAUSS", unsigned long flags = 0xe,
+            double guess_sig_gal = 5.0, double guess_sig_PSF = 3.0, double precision = 1.0e-6,
+            double guess_x_centroid = -1000.0, double guess_y_centroid = -1000.0,
+            boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
 
     /**
      * @brief Measure the adaptive moments of an object directly using ImageViews.
@@ -367,11 +366,11 @@ namespace galsim {
      * @return A CppHSMShapeData object containing the results of moment measurement.
      */
     template <typename T>
-        CppHSMShapeData FindAdaptiveMomView(const ImageView<T> &object_image,
-                                            const ImageView<int> &object_mask_image,
-                                            double guess_sig = 5.0, double precision = 1.0e-6, 
-                                            double guess_x_centroid = -1000.0,
-                                            double guess_y_centroid = -1000.0);
+        CppHSMShapeData FindAdaptiveMomView(
+            const ImageView<T> &object_image, const ImageView<int> &object_mask_image,
+            double guess_sig = 5.0, double precision = 1.0e-6, double guess_x_centroid = -1000.0,
+            double guess_y_centroid = -1000.0,
+            boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
 
     /**
      * @brief Carry out PSF correction.
@@ -397,7 +396,8 @@ namespace galsim {
     unsigned int general_shear_estimator(
         ConstImageView<T> gal_image, ConstImageView<int> gal_mask, ConstImageView<U> PSF_image, 
         ConstImageView<int> PSF_mask, ObjectData& gal_data, ObjectData& PSF_data, 
-        const std::string& shear_est, unsigned long flags);
+        const std::string& shear_est, unsigned long flags,
+        boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
 
     /**
      * @brief Measure the adaptive moments of an object.
@@ -425,6 +425,7 @@ namespace galsim {
     template <typename T>
     void find_ellipmom_2(
         ConstImageView<T> data, ConstImageView<int> mask, double& A, double& x0, double& y0,
-        double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter);
+        double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter,
+        boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
   
-}}
+}
