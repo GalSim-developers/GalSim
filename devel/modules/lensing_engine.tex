@@ -513,7 +513,7 @@ different grids:
 
 Our first test case is a Gaussian $P(k)$, i.e., $P(k) =
 P_0 e^{-\sigma^2 k^2 / 2}$.  Here both $P_0$ and $\sigma^2$ both
-have dimensions of angle$^2$.  By Eq.~\ref{E:alt-shearvar-limit}, this
+have dimensions of angle$^2$.  By Eq.~\eqref{E:alt-shearvar-limit}, this
 means that we expect
 \begin{align}
 \mathrm{Var}(\gamma) &= \frac{4P_0}{(2\pi)^2} \left[\left(\int_{0}^{\kmax} 
@@ -570,7 +570,7 @@ $\gamma_1$ and $\gamma_2$ vanishes.
 A flat $P(k)$ has a worrisome amount of power at large $k$, so we use
 a modified version of it: We use $P(k)=P_0$ for $k\le$\klim, where
 $\klim<\kmax$ for all the grids; and we set $P(k>\klim)=0$. Using
-Eq.~\ref{E:alt-shearvar-limit}, we expect
+Eq.~\eqref{E:alt-shearvar-limit}, we expect
 \begin{align}
 \mathrm{Var}(\gamma) &= \frac{4P_0}{(2\pi)^2}
 \left[\frac{1}{4}\int_{0}^{\klim} 2\pi k\,\rmd k - \kmin^2\right] \\
@@ -651,7 +651,7 @@ The python script test\_pk\_sht.py in that directory does the following:
 Finally, plot\_pk\_test.py in that directory plots the original and
 simulated $P(k)$ based on these files.  The results for the three
 cases (input $P_E$, input $P_B$, and input $P_E=P_B$) are in
-Figures~\ref{F:pe}, \ref{F:pb}, \ref{F:peb}.
+Figures~\ref{F:pe}, \ref{F:pb}, and \ref{F:peb}.
 
 \begin{figure}
 \begin{center}
@@ -688,7 +688,7 @@ We can conclude several things from these figures:
 \begin{itemize}
 \item The SHT code gives roughly a consistent shear power spectrum compared
   to our GalSim outputs.
-\item We don't see $E$ vs. $B$ leakage at any significant
+\item We don't see $E$ vs\@. $B$ leakage at any significant
   level.  The amplitudes and scaling of our output power spectra with
   $\ell$ are approximately correct.
 \item While the big-picture results seem good, there are some finer
