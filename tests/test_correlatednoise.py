@@ -448,66 +448,30 @@ def test_output_generation_basic():
     ud = galsim.UniformDeviate(rseed)
     # Get the correlated noise from an image of some x-correlated noise
     xnoise_large = make_xcorr_from_uncorr(setup_uncorrelated_noise(ud, largeim_size))
-    cn1 = galsim.correlatednoise.getCOSMOSNoise(
-        ud, '../examples/data/acs_I_unrot_sci_20_cf.fits', dx_cosmos=0.03)#,
-        #x_interpolant=galsim.Lanczos(5, tol=1.e-4, conserve_flux=True)) #galsim.CorrelatedNoise(ud, xnoise_large, dx=1.)
-    psf = galsim.Convolve([
-        galsim.Moffat(beta=2.85, fwhm=.8), galsim.Pixel(0.18)])
-    cn1.convolveWith(psf)
-    cn2 = galsim.correlatednoise._BaseCorrelatedNoise(ud, galsim.AutoCorrelate(psf))
-    cn1.setVariance(1.)
-    cn2.setVariance(1.)
-    refim1 = galsim.ImageD(smallim_size, smallim_size)
-    refim2 = galsim.ImageD(smallim_size, smallim_size)
+    cn = galsim.CorrelatedNoise(ud, xnoise_large, dx=.18)
+    refim = galsim.ImageD(smallim_size, smallim_size)
     # Draw this for reference
-    cn1.draw(refim1, dx=.18)
-    cn2.draw(refim2, dx=.18)
+    cn.draw(refim, dx=.18)
     # Generate a large image containing noise according to this function
-    outimage1 = galsim.ImageD(xnoise_large.bounds)
-    outimage2 = galsim.ImageD(xnoise_large.bounds)
-    outimage1.setScale(.18)
-    outimage2.setScale(.18)
-    outimage1.addNoise(cn1)
-    outimage2.addNoise(cn2)
-    refim1.write('junk1.fits')
-    refim2.write('junk2.fits')
+    outimage = galsim.ImageD(xnoise_large.bounds)
+    outimage.setScale(.18)
+    outimage.addNoise(cn)
     # Summed (average) CorrelatedNoises should be approximately equal to the input, so average
     # multiple CFs
-    cn1_2ndlevel = galsim.CorrelatedNoise(ud, outimage1, dx=.18)
-    cn2_2ndlevel = galsim.CorrelatedNoise(ud, outimage2, dx=.18)
+    cn_2ndlevel = galsim.CorrelatedNoise(ud, outimage, dx=.18)
     # Draw the summed CF to an image for comparison 
-    testim1 = galsim.ImageD(smallim_size, smallim_size)
-    testim2 = galsim.ImageD(smallim_size, smallim_size)
-    cn1_2ndlevel.draw(testim1, dx=.18, add_to_image=True)
-    cn2_2ndlevel.draw(testim2, dx=.18, add_to_image=True)
-    mnsq1 = np.mean(outimage1.array**2)
-    mnsq2 = np.mean(outimage2.array**2)
-    # Make nsum_test large to check convergence
-    nsum_test = 10000
+    testim = galsim.ImageD(smallim_size, smallim_size)
+    cn_2ndlevel.draw(testim, dx=.18, add_to_image=True)
     for i in range(nsum_test - 1):
         # Then repeat
-        outimage1.setZero()
-        outimage2.setZero()
-        outimage1.addNoise(cn1)
-        outimage2.addNoise(cn2)
-        cn1_2ndlevel = galsim.CorrelatedNoise(ud, outimage1, dx=.18)
-        cn2_2ndlevel = galsim.CorrelatedNoise(ud, outimage2, dx=.18)
-        cn1_2ndlevel.draw(testim1, dx=.18, add_to_image=True)
-        cn2_2ndlevel.draw(testim2, dx=.18, add_to_image=True)
-        mnsq1 += np.mean(outimage1.array**2)
-        mnsq2 += np.mean(outimage2.array**2)
+        outimage.setZero()
+        outimage.addNoise(cn)
+        cn_2ndlevel = galsim.CorrelatedNoise(ud, outimage, dx=.18)
+        cn_2ndlevel.draw(testim, dx=.18, add_to_image=True)
     # Then take average
-    testim1 /= float(nsum_test)
-    testim2 /= float(nsum_test)
-    mnsq1 /= float(nsum_test)
-    mnsq2 /= float(nsum_test)
-    print mnsq1, cn1.getVariance(), testim1.array[8, 8], mnsq1 / cn1.getVariance()
-    print mnsq2, cn2.getVariance(), testim2.array[8, 8], mnsq2 / cn2.getVariance()
+    testim /= float(nsum_test)
     np.testing.assert_array_almost_equal(
-        testim1.array, refim1.array, decimal=3,
-        err_msg="Generated noise field (basic) does not match input correlation properties.")
-    np.testing.assert_array_almost_equal(
-        testim2.array, refim2.array, decimal=3,
+        testim.array, refim.array, decimal=decimal_approx,
         err_msg="Generated noise field (basic) does not match input correlation properties.")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(), t2 - t1)
