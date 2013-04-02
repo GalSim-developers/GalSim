@@ -146,7 +146,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # Check that the input has defined bounds
         if not hasattr(image, "bounds"):
             raise ValueError(
-                "Input image argument does not have a bounds attribute, it must be a galsim.Image"+
+                "Input image argument does not have a bounds attribute, it must be a galsim.Image "+
                 "or galsim.ImageView-type object with defined bounds.")
 
         # If the profile has changed since last time (or if we have never been here before),
@@ -228,7 +228,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # Check that the input has defined bounds
         if not hasattr(image, "bounds"):
             raise ValueError(
-                "Input image argument does not have a bounds attribute, it must be a galsim.Image"+
+                "Input image argument does not have a bounds attribute, it must be a galsim.Image "+
                 "or galsim.ImageView-type object with defined bounds.")
 
         # If the profile has changed since last time (or if we have never been here before),
