@@ -407,6 +407,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
                               profile.
         """
         self._profile.SBProfile.scaleFlux(variance_ratio)
+        self._profile_for_stored = None  # Reset the stored profile as it is no longer up-to-date
 
     def setVariance(self, variance):
         """Set the point variance of the noise field, equal to its correlation function value at
