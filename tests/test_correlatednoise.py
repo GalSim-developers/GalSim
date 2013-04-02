@@ -767,32 +767,41 @@ def test_convolve_cosmos():
     # Generate a COSMOS noise field, read it into an InterpolatedImage and then convolve it with psf
     # Note that the normalization here must be flux to avoid the SBProfile internals from taking
     # the pixel scale into account...
-    size_factor = 2
+    size_factor = 1
     print "Calculating results for size_factor = "+str(size_factor)
     cosimage = galsim.ImageD(
         int(size_factor * largeim_size * 6), # Note 6 here since 0.18 = 6 * 0.03
         int(size_factor * largeim_size * 6)) # large image to beat down noise
     cosimage.setScale(dx_cosmos) # Use COSMOS pixel scale
     cosimage.addNoise(cn)
-    interp=galsim.Linear()
+    interp=galsim.Linear(tol=1.e-4)
     imobj = galsim.InterpolatedImage(
         cosimage, calculate_stepk=False, calculate_maxk=False, normalization='sb', dx=dx_cosmos,
         x_interpolant=interp)
     cimobj = galsim.Convolve(imobj, psf_shera)
-    convimage = galsim.ImageD(int(largeim_size * size_factor), int(largeim_size * size_factor))
-    # Then draw, calculate a correlation function for the resulting field, and repeat to get an
+    # Draw two convimages: the first will be the image created by convolving 'by hand', the second
+    # will have directly applied noise from the conv_cn
+    convimage1 = galsim.ImageD(int(largeim_size * size_factor), int(largeim_size * size_factor))
+    convimage2 = galsim.ImageD(int(largeim_size * size_factor), int(largeim_size * size_factor))
+    # We draw, calculate a correlation function for the resulting field, and repeat to get an
     # average over nsum_test trials
-    cimobj.draw(convimage, dx=0.18, normalization='sb')
-    #cosimage.write('junk_cos.fits')
-    #convimage.write('junk_conv.fits')
-    cn_test = galsim.CorrelatedNoise(gd, convimage, dx=0.18)
-    testim = galsim.ImageD(smallim_size, smallim_size)
-    cn_test.draw(testim, dx=0.18)
-    nsum_test = 300
-    conv_list = [convimage.array.copy()] # Don't forget Python reference/assignment semantics, we
-                                         # zero convimage and write over it later!
-    mnsq_list = [np.mean(convimage.array**2)]
-    var_list = [convimage.array.var()]
+    cimobj.draw(convimage1, dx=0.18, normalization='sb')
+    cn_test1 = galsim.CorrelatedNoise(gd, convimage1, dx=0.18)
+    testim1 = galsim.ImageD(smallim_size, smallim_size)
+    cn_test1.draw(testim1, dx=0.18)
+    convimage2.addNoise(conv_cn)  # Now we make a comparison by simply adding noise from conv_cn
+    cn_test2 = galsim.CorrelatedNoise(gd, convimage2, dx=0.18)
+    testim2 = galsim.ImageD(smallim_size, smallim_size)
+    cn_test2.draw(testim2, dx=0.18)
+    nsum_test = 100
+    conv1_list = [convimage1.array.copy()] # Don't forget Python reference/assignment semantics, we
+                                           # zero convimage and write over it later!
+    mnsq1_list = [np.mean(convimage1.array**2)]
+    var1_list = [convimage1.array.var()]
+    conv2_list = [convimage2.array.copy()] # Don't forget Python reference/assignment semantics, we
+                                           # zero convimage and write over it later!
+    mnsq2_list = [np.mean(convimage2.array**2)]
+    var2_list = [convimage2.array.var()]
     for i in range(nsum_test - 1):
         cosimage.setZero()
         cosimage.addNoise(cn)
@@ -800,48 +809,77 @@ def test_convolve_cosmos():
             cosimage, calculate_stepk=False, calculate_maxk=False, normalization='sb', dx=dx_cosmos,
             x_interpolant=interp)
         cimobj = galsim.Convolve(imobj, psf_shera)
-        convimage.setZero() # See above 
-        cimobj.draw(convimage, dx=0.18, normalization='sb')
-        conv_list.append(convimage.array.copy()) # See above
-        mnsq_list.append(np.mean(convimage.array**2))
-        var_list.append(convimage.array.var())
-        cn_test = galsim.CorrelatedNoise(gd, convimage, dx=0.18) 
-        cn_test.draw(testim, dx=0.18, add_to_image=True)
-        #print convimage.array.var(), cn_test.getVariance()
+        convimage1.setZero() # See above 
+        convimage2.setZero() # See above 
+        cimobj.draw(convimage1, dx=0.18, normalization='sb')
+        conv1_list.append(convimage1.array.copy()) # See above
+        mnsq1_list.append(np.mean(convimage1.array**2))
+        var1_list.append(convimage1.array.var())
+        cn_test1 = galsim.CorrelatedNoise(gd, convimage1, dx=0.18) 
+        cn_test1.draw(testim1, dx=0.18, add_to_image=True)
+        convimage2.addNoise(conv_cn)  # Simply adding noise from conv_cn for a comparison
+        conv2_list.append(convimage1.array.copy()) # See above
+        mnsq2_list.append(np.mean(convimage1.array**2))
+        var2_list.append(convimage1.array.var())
+        cn_test2 = galsim.CorrelatedNoise(gd, convimage2, dx=0.18)
+        cn_test2.draw(testim2, dx=0.18, add_to_image=True)
         if ((i + 2) % 100 == 0): print "Completed "+str(i + 2)+"/"+str(nsum_test)+" trials"
         del imobj
         del cimobj
-        del cn_test
-    mnsq_individual = sum(mnsq_list) / float(nsum_test)
-    var_individual = sum(var_list) / float(nsum_test)
-    testim /= float(nsum_test) # Take average CF of trials
-    print "Mean square estimate from avg. of individual field mean squares = "+str(mnsq_individual)
-    print "Variance estimate from avg. of individual field variances = "+str(var_individual)
-    print "Zero lag CF from avg. of individual field CFs = "+str(testim.array[8, 8])
-    conv_array = np.asarray(conv_list)
-    mnsq_all = np.mean(conv_array**2)
-    var_all = conv_array.var()
-    print "Mean square estimate from all fields = "+str(mnsq_all)
-    print "Variance estimate from all fields = "+str(var_all)
+        del cn_test1
+        del cn_test2
+
+    mnsq1_individual = sum(mnsq1_list) / float(nsum_test)
+    var1_individual = sum(var1_list) / float(nsum_test)
+    mnsq2_individual = sum(mnsq2_list) / float(nsum_test)
+    var2_individual = sum(var2_list) / float(nsum_test)
+    testim1 /= float(nsum_test) # Take average CF of trials
+    testim2 /= float(nsum_test) # Take average CF of trials
+    conv1_array = np.asarray(conv1_list)
+    mnsq1_all = np.mean(conv1_array**2)
+    var1_all = conv1_array.var()
+    conv2_array = np.asarray(conv2_list)
+    mnsq2_all = np.mean(conv2_array**2)
+    var2_all = conv2_array.var()
+
+    print "Case 1 ('hand convolved'):"
+    print "Mean square estimate from avg. of individual field mean squares = "+str(mnsq1_individual)
+    print "Mean square estimate from all fields = "+str(mnsq1_all)
+    print "Ratio of mean squares = %e" % (mnsq1_individual / mnsq1_all)
+    print "Variance estimate from avg. of individual field variances = "+str(var1_individual)
+    print "Variance estimate from all fields = "+str(var1_all)
+    print "Ratio of variances = %e" % (var1_individual / var1_all)
+    print "Zero lag CF from avg. of individual field CFs = "+str(testim1.array[8, 8])
     print "Zero lag CF in reference case = "+str(refim.array[8, 8])
-    print "Ratio of mean squares = %e" % (mnsq_individual / mnsq_all)
-    print "Ratio of variances = %e" % (var_individual / var_all)
-    print "Ratio of zero lag CFs = %e" % (testim.array[8, 8] / refim.array[8, 8])
-    print "Printing analysis of central 4x4 of CF:"
+    print "Ratio of zero lag CFs = %e" % (testim1.array[8, 8] / refim.array[8, 8])
+    print ""
+    print "Case 2 (generated directly from the convolved CN):"
+    print "Mean square estimate from avg. of individual field mean squares = "+str(mnsq2_individual)
+    print "Mean square estimate from all fields = "+str(mnsq2_all)
+    print "Ratio of mean squares = %e" % (mnsq2_individual / mnsq2_all)
+    print "Variance estimate from avg. of individual field variances = "+str(var2_individual)
+    print "Variance estimate from all fields = "+str(var2_all)
+    print "Ratio of variances = %e" % (var2_individual / var2_all)
+    print "Zero lag CF from avg. of individual field CFs = "+str(testim2.array[8, 8])
+    print "Zero lag CF in reference case = "+str(refim.array[8, 8])
+    print "Ratio of zero lag CFs = %e" % (testim2.array[8, 8] / refim.array[8, 8])
+    print ""
+    print "Printing analysis of central 4x4 of CF from case 1:"
+
     # Show ratios etc in central 4x4 where CF is definitely non-zero
-    print 'mean diff = ',np.mean(testim.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'var diff = ',np.var(testim.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'min diff = ',np.min(testim.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'max diff = ',np.max(testim.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'mean ratio = %e' % np.mean(testim.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'var ratio = ',np.var(testim.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'min ratio = %e' % np.min(testim.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'max ratio = %e' % np.max(testim.array[4:12, 4:12] / refim.array[4:12, 4:12])
+    print 'mean diff = ',np.mean(testim1.array[4:12, 4:12] - refim.array[4:12, 4:12])
+    print 'var diff = ',np.var(testim1.array[4:12, 4:12] - refim.array[4:12, 4:12])
+    print 'min diff = ',np.min(testim1.array[4:12, 4:12] - refim.array[4:12, 4:12])
+    print 'max diff = ',np.max(testim1.array[4:12, 4:12] - refim.array[4:12, 4:12])
+    print 'mean ratio = %e' % np.mean(testim1.array[4:12, 4:12] / refim.array[4:12, 4:12])
+    print 'var ratio = ',np.var(testim1.array[4:12, 4:12] / refim.array[4:12, 4:12])
+    print 'min ratio = %e' % np.min(testim1.array[4:12, 4:12] / refim.array[4:12, 4:12])
+    print 'max ratio = %e' % np.max(testim1.array[4:12, 4:12] / refim.array[4:12, 4:12])
+
     #import matplotlib.pyplot as plt
     #plt.pcolor(testim.array); plt.colorbar()
     #plt.figure(); plt.pcolor(refim.array); plt.colorbar(); plt.show()
-    #testim.write("junk_test.fits")
-    #refim.write("junk_ref.fits")
+
     # Test (ditto only look at central 4x4)
     #np.testing.assert_array_almost_equal(
     #    testim.array[4:12, 4:12], refim.array[4:12, 4:12], decimal=decimal_approx,
@@ -851,8 +889,7 @@ def test_convolve_cosmos():
 
 
 if __name__ == "__main__":
-    #test_convolve_cosmos()
-    test_output_generation_basic()
+    test_convolve_cosmos()
     import sys
     sys.exit()
 
