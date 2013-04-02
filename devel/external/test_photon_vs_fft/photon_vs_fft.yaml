@@ -1,15 +1,13 @@
-filename_output : photon_vs_fft_results_n300_nphot_2e7.txt
+filename_output : gsp.cat
 
 # how to draw the PSF for HSM moments correction? 'fft' or 'shoot'
 psf_draw_method: 'fft'  
 
 image: 
  # number of pixels in the postage stamp
- n_pix: 64
+ n_pix: 96
  # pixel scale
- scale: 0.28   # arcsec
- # use a lot of photons          
- n_photons: 200000
+ n_photons: 20000000
  # 'space' or 'ground'
  observe_from: ground         
 
@@ -21,9 +19,17 @@ use_galaxies_from: 'sersics_sample' # 'list_gals' or 'sersics_sample'
 
 # details for the sersics sample
 sersics_sample:
-   catalog_filename: cosmos_sersics_sample_N300.asc
+   # catalog_filename: cosmos_sersics_gal110.asc # 
+   catalog_filename: cosmos_sersics_sample_N300.asc #
    max_random_dx: 0.5      # will be drawn from uniform (arcsec)
    max_random_psf_g: 0.2   # will be drawn from uniform
+
+gsparams:
+   # We'd go for the two "threshold" values first, alias_threshold and maxk_threshold
+   vary_param: alias_threshold
+   grid: [0.05, 0.005, 0.0005]
+   # vary_param: maxk_threshold
+   # grid: [0.01, 0.001, 0.0001]
 
 # gsparams:
 #  minimum_fft_size: 128      
