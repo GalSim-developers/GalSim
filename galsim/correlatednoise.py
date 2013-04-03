@@ -269,7 +269,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         ellipse_noshift = galsim.Ellipse(shear=ellipse.getS(), mu=ellipse.getMu())
         self._profile.applyTransformation(ellipse_noshift)
 
-    def applyMagnification(self, scale):
+    def applyExpansion(self, scale):
         """Scale the linear scale of correlations in this noise model by scale.  
         
         Scales the linear dimensions of the image by the factor scale, e.g.
@@ -277,7 +277,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         @param scale The linear rescaling factor to apply.
         """
-        self._profile.applyMagnification(scale)
+        self._profile.applyMagnification(scale**2)
 
     def applyRotation(self, theta):
         """Apply a rotation theta to this correlated noise model.
@@ -322,9 +322,9 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         ret.applyTransformation(ellipse)
         return ret
 
-    def createMagnified(self, scale):
-        """Returns a new correlated noise model by applying a magnification by the given scale,
-        scaling the linear size by scale.  
+    def createExpanded(self, scale):
+        """Returns a new correlated noise model by applying an Expansion by the given scale,
+        scaling the linear size by scale.
 
         The new instance will share the galsim.BaseDeviate random number generator with the parent.
         Use the .setRNG() method after this operation if you wish to use a different random number
@@ -337,7 +337,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         @returns The rescaled object.
         """
         ret = self.copy()
-        ret.applyMagnification(scale)
+        ret.applyExpansion(scale)
         return ret
 
     def createRotated(self, theta):
@@ -661,7 +661,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     which can be used to generate a covariance matrix based on a user input image geometry.  See
     the .calculateCovarianceMatrix() method docstring for more information.
 
-    A number of methods familiar from GSObject instance have also been implemented directly as 
+    A number of methods familiar from GSObject instances have also been implemented directly as 
     `cn` methods, so that the following commands are all legal:
 
         >>> cn.draw(im, dx, wmult=4)
@@ -670,7 +670,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
         >>> cn.createRotated(theta * galsim.degrees)
         >>> cn.createTransformed(ellipse)
         >>> cn.applyShear(s)
-        >>> cn.applyMagnification(m)
+        >>> cn.applyExpansion(scale)  # Behaves similarly to applyMagnification
         >>> cn.applyRotation(theta * galsim.degrees)
         >>> cn.applyTransformation(ellipse)
 
