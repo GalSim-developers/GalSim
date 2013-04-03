@@ -424,6 +424,28 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
     `(e1, e2) = (a^2 - b^2)/(a^2 + b^2)`, e.g. `my_moments.observed_shape.getE1()`, or to get the
     shear `g`, the conformal shear `eta`, and so on.
 
+    As an example of how to use the optional `hsmparams` argument, consider cases where the input
+    images have unusual properties, such as being very large.  This could occur when measuring the
+    properties of a very over-sampled image such as that generated using
+
+        >>> my_gaussian = galsim.Gaussian(sigma = 5.0)
+        >>> my_gaussian_image = my_gaussian.draw(dx = 0.01)
+
+    If the user attempts to measure the moments of this 4000 x 4000 pixel image using the standard
+    syntax,
+
+        >>> my_moments = my_gaussian_image.FindAdaptiveMom()
+
+    then the result will be a RuntimeError due to moment measurement failing because the object is
+    so large.  While the list of all possible settings that can be changed is accessible in the
+    docstring of the galsim.HSMParams class, in this case we need to modify `max_amoment` which
+    is the maximum value of the moments in units of pixel^2.  The following measurement, using the
+    default values for every parameter except for `max_amoment`, will be
+    successful:
+
+        >>> new_params = galsim.HSMParams(max_amoment=5.0e5)
+        >>> my_moments = my_gaussian_image.FindAdaptiveMom(hsmparams = new_params)
+
     @param object_image      The Image or ImageView for the object being measured.
     @param weight            The optional weight image for the object being measured.  Can be an int
                              or a float array.  Currently, GalSim does not account for the variation
