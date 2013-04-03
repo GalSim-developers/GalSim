@@ -52,6 +52,18 @@ struct PyHSMParams {
                       bp::arg("ksb_moments_max")=4,
                       bp::arg("failed_moments")=-1000.))
             )
+            .def_readonly("nsig_rg",&HSMParams::nsig_rg)
+            .def_readonly("nsig_rg2",&HSMParams::nsig_rg2)
+            .def_readonly("max_moment_nsig2",&HSMParams::max_moment_nsig2)
+            .def_readonly("regauss_too_small",&HSMParams::regauss_too_small)
+            .def_readonly("adapt_order",&HSMParams::adapt_order)
+            .def_readonly("max_mom2_iter",&HSMParams::max_mom2_iter)
+            .def_readonly("num_iter_default",&HSMParams::num_iter_default)
+            .def_readonly("bound_correct_wt",&HSMParams::bound_correct_wt)
+            .def_readonly("max_amoment",&HSMParams::max_amoment)
+            .def_readonly("max_ashift",&HSMParams::max_ashift)
+            .def_readonly("ksb_moments_max",&HSMParams::ksb_moments_max)
+            .def_readonly("failed_moments",&HSMParams::failed_moments)
             ;
     }
 };
