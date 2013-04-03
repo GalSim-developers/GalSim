@@ -80,6 +80,8 @@ namespace hsm {
         ObjectData gal_data, PSF_data;
         double amp, m_xx, m_xy, m_yy;
 
+        if (!hsmparams.get()) hsmparams = hsm::default_hsmparams;
+
         dbg<<"Start EstimateShearHSMView"<<std::endl;
         dbg<<"Setting defaults and so on before calling general_shear_estimator"<<std::endl;
         // Set defaults etc. and pass to general_shear_estimator
@@ -180,6 +182,8 @@ namespace hsm {
         // define variables, create output CppHSMShapeData struct, etc.
         CppHSMShapeData results;
         double amp, m_xx, m_xy, m_yy;
+
+        if (!hsmparams.get()) hsmparams = hsm::default_hsmparams;
 
         // set some values for initial guesses
         if (guess_x_centroid != -1000.0) {

@@ -174,6 +174,8 @@ namespace hsm {
         const double failed_moments;
     };
 
+    const boost::shared_ptr<HSMParams> default_hsmparams(new HSMParams());
+
     // All code between the @cond and @endcond is excluded from Doxygen documentation
     //! @cond
 
