@@ -142,11 +142,11 @@ namespace hsm {
                 results.corrected_g1 = gal_data.e1;
                 results.corrected_g2 = gal_data.e2;
             } else {
-                throw "Unknown shape measurement type!\n";
+                throw HSMError("Unknown shape measurement type!\n");
             }
 
             if (results.correction_status != 0) {
-                throw "PSF correction status indicates failure!\n";
+                throw HSMError("PSF correction status indicates failure!\n");
             }
 
             results.corrected_shape_err = std::sqrt(4. * M_PI * sky_var) * gal_data.sigma /
@@ -156,7 +156,7 @@ namespace hsm {
             results.resolution_factor = gal_data.resolution;
 
             if (results.resolution_factor <= 0.) {
-                throw "Unphysical situation: galaxy convolved with PSF is smaller than PSF!\n";
+                throw HSMError("Unphysical situation: galaxy convolved with PSF is smaller than PSF!\n");
             }
         }
         catch (char *err_msg) {
@@ -371,10 +371,10 @@ namespace hsm {
 
 #ifdef N_CHECKVAL
         if (nx<=0) {
-            throw "Error: nx<=0 in qho1d_wf_1\n";
+            throw HSMError("Error: nx<=0 in qho1d_wf_1\n");
         }
         if (Nmax<0) {
-            throw "Error: Nmax<0 in qho1d_wf_1\n";
+            throw HSMError("Error: Nmax<0 in qho1d_wf_1\n");
         }
 #endif
 
@@ -501,7 +501,7 @@ namespace hsm {
 
 #ifdef N_CHECKVAL
         if (epsilon <= 0) {
-            throw "Error: epsilon out of range in find_mom_2.\n";
+            throw HSMError("Error: epsilon out of range in find_mom_2.\n");
         }
 #endif
 
@@ -537,7 +537,7 @@ namespace hsm {
             if (++num_iter > hsmparams->max_mom2_iter) {
                 convergence_factor = 0.;
                 num_iter = hsmparams->num_iter_default;
-                throw "Warning: too many iterations in find_mom_2.\n";
+                throw HSMError("Warning: too many iterations in find_mom_2.\n");
             }
         }
 
@@ -592,7 +592,7 @@ namespace hsm {
         /* Compute M^{-1} for use in computing weights */
         double detM = Mxx * Myy - Mxy * Mxy;
         if (detM<=0 || Mxx<=0 || Myy<=0) {
-            throw "Error: non positive definite adaptive moments!\n";
+            throw HSMError("Error: non positive definite adaptive moments!\n");
         }
         double Minv_xx    =  Myy/detM;
         double TwoMinv_xy = -Mxy/detM * 2.0;
@@ -701,7 +701,7 @@ namespace hsm {
 
 #ifdef N_CHECKVAL
         if (epsilon <= 0 || epsilon >= convergence_factor) {
-            throw "Error: epsilon out of range in find_ellipmom_2.\n";
+            throw HSMError("Error: epsilon out of range in find_ellipmom_2.\n");
         }
 #endif
 
@@ -724,7 +724,7 @@ namespace hsm {
             semi_b2 = Mxx + Myy - semi_a2;
 
             if (semi_b2 <= 0) {
-                throw "Error: non positive-definite weight in find_ellipmom_2.\n";
+                throw HSMError("Error: non positive-definite weight in find_ellipmom_2.\n");
             }
 
             shiftscale = std::sqrt(semi_b2);
@@ -769,16 +769,16 @@ namespace hsm {
             if (std::abs(Mxx)>hsmparams->max_amoment || std::abs(Mxy)>hsmparams->max_amoment
                 || std::abs(Myy)>hsmparams->max_amoment
                 || std::abs(x0-x00)>hsmparams->max_ashift || std::abs(y0-y00)>hsmparams->max_ashift) {
-                throw "Error: adaptive moment failed\n";
+                throw HSMError("Error: adaptive moment failed\n");
             }
 
             if (++num_iter > hsmparams->max_mom2_iter) {
-                throw "Error: too many iterations in adaptive moments\n";
+                throw HSMError("Error: too many iterations in adaptive moments\n");
             }
 
             if (std::isnan(convergence_factor) || std::isnan(Mxx) || std::isnan(Myy)
                 || std::isnan(Mxy) || std::isnan(x0) || std::isnan(y0)) {
-                throw "Error: NaN in calculation of adaptive moments\n";
+                throw HSMError("Error: NaN in calculation of adaptive moments\n");
             }
         }
 
@@ -1493,7 +1493,7 @@ namespace hsm {
             status |= 0x0008;
         }
         if (Mxxgal<=0 || Myygal<=0 || Mxxgal*Myygal<=Mxygal*Mxygal ) {
-            throw "Error: non positive definite adaptive moments.\n";
+            throw HSMError("Error: non positive definite adaptive moments.\n");
         }
         sig_gal = std::pow( Mxxgal*Myygal - Mxygal*Mxygal, 0.25);
 
