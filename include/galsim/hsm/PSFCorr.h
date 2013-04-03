@@ -42,7 +42,7 @@ namespace galsim {
 namespace hsm {
 
     struct HSMParams {
-    /**
+    /*
      * @brief Parameters that determine how the moments/shape estimation routines make
      *        speed/accuracy tradeoff decisions.
      *
@@ -340,7 +340,8 @@ namespace hsm {
      */
     template <typename T, typename U>
         CppHSMShapeData EstimateShearHSMView(
-            const ImageView<T> &gal_image, const ImageView<U> &PSF_image, const ImageView<int> &gal_mask_image,
+            const ImageView<T> &gal_image, const ImageView<U> &PSF_image,
+            const ImageView<int> &gal_mask_image,
             float sky_var = 0.0, const char *shear_est = "REGAUSS", unsigned long flags = 0xe,
             double guess_sig_gal = 5.0, double guess_sig_PSF = 3.0, double precision = 1.0e-6,
             double guess_x_centroid = -1000.0, double guess_y_centroid = -1000.0,
@@ -349,12 +350,12 @@ namespace hsm {
     /**
      * @brief Measure the adaptive moments of an object directly using ImageViews.
      *
-     * This function repackages the input ImageView in a format that find_ellipmom_2 accepts, in order
-     * to iteratively compute the adaptive moments of an object.  The key result is the best-fit
-     * elliptical Gaussian to the object, which is computed by initially guessing a circular
-     * Gaussian that is used as a weight function, computing the weighted moments, recomputing the
-     * moments using the result of the previous step as the weight function, and so on until the
-     * moments that are measured are the same as those used for the weight function.  
+     * This function repackages the input ImageView in a format that find_ellipmom_2 accepts, in
+     * order to iteratively compute the adaptive moments of an object.  The key result is the
+     * best-fit elliptical Gaussian to the object, which is computed by initially guessing a
+     * circular Gaussian that is used as a weight function, computing the weighted moments,
+     * recomputing the moments using the result of the previous step as the weight function, and so
+     * on until the moments that are measured are the same as those used for the weight function.
      *
      * @param[in] object_image The ImageView for the object being measured.
      * @param[in] object_mask_image The ImageView for the mask image to be applied to the object

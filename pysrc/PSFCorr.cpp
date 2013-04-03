@@ -160,11 +160,11 @@ struct PyCppHSMShapeData {
                                              boost::shared_ptr<HSMParams>);
         bp::def("_EstimateShearHSMView",
                 ESH_func(&EstimateShearHSMView),
-                (bp::arg("gal_image"), bp::arg("PSF_image"), bp::arg("gal_mask_image"), bp::arg("sky_var")=0.0,
-                 bp::arg("shear_est")="REGAUSS", bp::arg("flags")=0xe, bp::arg("guess_sig_gal")=5.0,
-                 bp::arg("guess_sig_PSF")=3.0, bp::arg("precision")=1.0e-6, bp::arg("guess_x_centroid")=-1000.0,
-                 bp::arg("guess_y_centroid")=-1000.0,
-                 bp::arg("hsmparams")=bp::object()),
+                (bp::arg("gal_image"), bp::arg("PSF_image"), bp::arg("gal_mask_image"),
+                 bp::arg("sky_var")=0.0, bp::arg("shear_est")="REGAUSS", bp::arg("flags")=0xe,
+                 bp::arg("guess_sig_gal")=5.0, bp::arg("guess_sig_PSF")=3.0,
+                 bp::arg("precision")=1.0e-6, bp::arg("guess_x_centroid")=-1000.0,
+                 bp::arg("guess_y_centroid")=-1000.0, bp::arg("hsmparams")=bp::object()),
                 "Estimate PSF-corrected shear for a galaxy, given a PSF (and some optional args).");
     };
 
