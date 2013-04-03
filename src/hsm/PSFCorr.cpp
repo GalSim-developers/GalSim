@@ -118,7 +118,7 @@ namespace hsm {
             dbg<<"About to get moments using find_ellipmom_2"<<std::endl;
             find_ellipmom_2(gal_image_cview, gal_mask_view, amp, gal_data.x0,
                             gal_data.y0, m_xx, m_xy, m_yy, results.moments_rho4,
-                            precision, results.moments_n_iter);
+                            precision, results.moments_n_iter, hsmparams);
             // repackage outputs to the output CppHSMShapeData struct
             dbg<<"Repackaging find_ellipmom_2 results"<<std::endl;
             results.moments_amp = 2.0*amp;
@@ -131,7 +131,7 @@ namespace hsm {
             dbg<<"About to get shear using general_shear_estimator"<<std::endl;
             results.correction_status = general_shear_estimator(
                 gal_image_cview, gal_mask_view, PSF_image_cview, PSF_mask_view,
-                gal_data, PSF_data, shear_est, flags);
+                gal_data, PSF_data, shear_est, flags, hsmparams);
             dbg<<"Repackaging general_shear_estimator results"<<std::endl;
 
             results.meas_type = gal_data.meas_type;
