@@ -18,6 +18,8 @@
 #
 import numpy as np
 from numpy import pi
+import os
+import sys
 
 # Note: the code below was developed largely by Joe Zuntz and tweaked by assorted GalSim
 # developers.  This development and testing took place in a separate (private) repository before the
@@ -44,12 +46,12 @@ class PowerSpectrumEstimator(object):
     1) Power spectrum estimation requires a weight function which decides how the averaging
     is done across ell within each bin.  By default, that weighting is flat in ell, but
     this is easy to change (in the _bin_power function).  A keyword allows for weighting by the
-    power itself, but requires the GalSim software package.
+    power itself, but use of this functionality requires the GalSim software package.
 
     2) This is the power spectrum of the gridded *data*, not the underlying field - we do not
     account for the effects of the finite grid (basically, ignoring all the reasons why power
-    spectrum estimation is hard).  Users must account for the contribution of noise in g1, g2
-    and the masking.
+    spectrum estimation is hard - see devel/modules/lensing_engine.tex in the GalSim repository).
+    Users must account for the contribution of noise in g1, g2 and any masking.
 
     3) The binning is currently fixed as uniform in log(ell).
 
@@ -57,7 +59,7 @@ class PowerSpectrumEstimator(object):
     http://dx.doi.org/10.1214/11-AOAS484), equations 17-21.
     """
     def __init__(self, N=100, sky_size_deg=10., nbin=15):
-        """Create a PSE object given some grid parameters.
+        """Create a PowerSpectrumEstimator object given some grid parameters.
 
         The grid parameters are:
         N: the number of pixels along each side;
@@ -66,7 +68,7 @@ class PowerSpectrumEstimator(object):
 
         N and sky_size_deg have default values equivalent to the ones in the GREAT10 and GREAT3
         challenges.  The default value for nbin is intended to make a reasonable number of bins
-        given the default grid size.
+        given the default grid configuration.
         """
         # Set up the scales of the sky and pixels
         self.N = N
@@ -86,7 +88,7 @@ class PowerSpectrumEstimator(object):
 
         # Precompute and store two useful factors, both in the form of 2D grids in Fourier space.
         # These are the lengths of the wavevector |ell| for each point in the space, and the complex
-        # valued spin-weighting that takes g_r, g_i -> E,B
+        # valued spin-weighting that takes the complex shear fields -> E,B
         self.l_abs, self.eb_rot = self._generate_eb_rotation()
 
     def _generate_eb_rotation(self):
@@ -129,7 +131,7 @@ class PowerSpectrumEstimator(object):
         return P/count
 
     def estimate(self, g1, g2, weight_EE=False, weight_BB=False, theory_func=None):
-        """ Compute the EE, BB, and EB power spectra of two 2D arrays g1 and g2.
+        """Compute the EE, BB, and EB power spectra of two 2D arrays g1 and g2.
 
         In addition to the obvious arguments (the shear components as 2D NumPy arrays), this method
         can take three optional arguments:
