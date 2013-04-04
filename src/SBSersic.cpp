@@ -61,8 +61,9 @@ namespace galsim {
     SBSersic::SBSersicImpl::SBSersicImpl(double n,  double re, double flux,
                                          boost::shared_ptr<GSParams> gsparams) :
         SBProfileImpl(gsparams),
-        _n(n), _flux(flux), _re(re), _re_sq(_re*_re), _inv_re(1./_re), 
-        _inv_re_sq(_inv_re*_inv_re), _norm(_flux*_inv_re_sq),
+        _n(n), _flux(flux), _re(re), _re_sq(_re*_re),
+        _inv_re(1./_re), _inv_re_sq(_inv_re*_inv_re),
+        _norm(_flux*_inv_re_sq), 
         _info(cache.get(std::make_pair(_n,this->gsparams.get())))
     {
         _ksq_max = _info->getKsqMax();

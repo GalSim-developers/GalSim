@@ -43,7 +43,7 @@ namespace galsim {
     SBConvolve::SBConvolveImpl::SBConvolveImpl(const std::list<SBProfile>& slist, bool real_space,
                                                boost::shared_ptr<GSParams> gsparams) :
         SBProfileImpl(gsparams.get() ? gsparams :
-                      SBProfile::GetImpl(slist.front())->gsparams),
+                      GetImpl(slist.front())->gsparams),
         _real_space(real_space)
     {
         for (ConstIter sptr = slist.begin(); sptr!=slist.end(); ++sptr)

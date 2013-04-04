@@ -265,8 +265,6 @@ namespace galsim {
         /// One static map of all `AiryInfo` structures for whole program.
         static LRUCache<std::pair<double,const GSParams*>, AiryInfo> cache;
     };
-
-
 }
 
 #endif // SBAIRY_IMPL_H
