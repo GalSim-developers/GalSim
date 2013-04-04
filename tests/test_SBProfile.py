@@ -57,7 +57,7 @@ test_flux = 1.8
 glob_ud = galsim.UniformDeviate(12345)
 
 # These are the default GSParams used when unspecified.  We'll check that specifying 
-# these explcitly produces the same results.
+# these explicitly produces the same results.
 default_params = galsim.GSParams(
         minimum_fft_size = 128,
         maximum_fft_size = 4096,
