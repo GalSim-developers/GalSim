@@ -142,7 +142,7 @@ def plotEllipticityBiasesHistogram():
 
     logger.info('saved figure %s' % filename_fig)
 
-def plotStatsVsGSParams():
+def plotStatsGSParams():
 
 
     fiducial_value = eval('galsim.GSParams().%s' % config['gsparams']['vary_param'])
@@ -150,72 +150,78 @@ def plotStatsVsGSParams():
 
 
     # config['gsparams']['vary_param']
+    vary_params = config['gsparams']
 
-    moments_E1_diff_mean = []
-    moments_E1_diff_stdm = []
-    moments_E1_diff_medn = []
-    moments_E2_diff_mean = []
-    moments_E2_diff_stdm = []
-    moments_E2_diff_medn = []
+    nrows_subplot = len(vary_params)
+    ncols_subplot = len(config['image']['observe_from'])
 
-    hsmcorr_E1_diff_mean = []
-    hsmcorr_E1_diff_stdm = []
-    hsmcorr_E1_diff_medn = []
-    hsmcorr_E2_diff_mean = []
-    hsmcorr_E2_diff_stdm = []
-    hsmcorr_E2_diff_medn = []
+    for no,observe_from in enumerate(config['image']['observe_from']):
 
-    moments_sigma_diff_mean = []
-    moments_sigma_diff_stdm = []
-    moments_sigma_diff_medn = []
-    hsmcorr_sigma_diff_mean = []
-    hsmcorr_sigma_diff_stdm = []
-    hsmcorr_sigma_diff_medn = []
+        for np,param in enumerate(vary_params):
 
-    vary_params = config['gsparams']['grid']
+            moments_E1_diff_mean = []
+            moments_E1_diff_stdm = []
+            moments_E1_diff_medn = []
+            moments_E2_diff_mean = []
+            moments_E2_diff_stdm = []
+            moments_E2_diff_medn = []
 
-    for p,param in enumerate(vary_params):
+            hsmcorr_E1_diff_mean = []
+            hsmcorr_E1_diff_stdm = []
+            hsmcorr_E1_diff_medn = []
+            hsmcorr_E2_diff_mean = []
+            hsmcorr_E2_diff_stdm = []
+            hsmcorr_E2_diff_medn = []
 
-        filename_out = '%s.%s.%d.cat' % (config['filename_output'],config['gsparams']['vary_param'],p)
-        results = numpy.loadtxt(filename_out)
-        n_res = results.shape[0]
+            moments_sigma_diff_mean = []
+            moments_sigma_diff_stdm = []
+            moments_sigma_diff_medn = []
+            hsmcorr_sigma_diff_mean = []
+            hsmcorr_sigma_diff_stdm = []
+            hsmcorr_sigma_diff_medn = []
 
-        logging.info('opened file %s with %d measurements for %s=%e',filename_out,n_res,config['gsparams']['vary_param'],p)
+            for nn,new_value in enumerate(param['grid']):
 
-        moments_E1_diff_mean.append( numpy.mean(results[:,2] - results[:,4])  )
-        moments_E1_diff_stdm.append( numpy.std(results[:,2] - results[:,4],ddof=1)/numpy.sqrt(n_res)  )
-        moments_E1_diff_medn.append( numpy.median(results[:,2] - results[:,4])  )
-        moments_E2_diff_mean.append( numpy.mean(results[:,3] - results[:,5])  )
-        moments_E2_diff_stdm.append( numpy.std(results[:,3] - results[:,5],ddof=1)/numpy.sqrt(n_res)  )
-        moments_E2_diff_medn.append( numpy.median(results[:,3] - results[:,5])  )
+                filename_out = '%s.%s.%s.%d.cat' % (config['filename_output'],observe_from,param['name'],nn)
+                results = numpy.loadtxt(filename_out)
+                n_res = results.shape[0]
 
-        hsmcorr_E1_diff_mean.append( numpy.mean(results[:,6] - results[:,8])  )
-        hsmcorr_E1_diff_stdm.append( numpy.std(results[:,6] - results[:,8],ddof=1)/numpy.sqrt(n_res)  )
-        hsmcorr_E1_diff_medn.append( numpy.median(results[:,6] - results[:,8])  )
-        hsmcorr_E2_diff_mean.append( numpy.mean(results[:,7] - results[:,9])  )
-        hsmcorr_E2_diff_stdm.append( numpy.std(results[:,7] - results[:,9],ddof=1)/numpy.sqrt(n_res)  )
-        hsmcorr_E2_diff_medn.append( numpy.median(results[:,7] - results[:,9])  )
+                logging.info('opened file %s with %d measurements for %s=%e',filename_out,n_res,config['gsparams']['vary_param'],nn)
 
-        moments_sigma_diff_mean.append( numpy.mean(results[:,10] - results[:,11])  )
-        moments_sigma_diff_stdm.append( numpy.std(results[:,10] - results[:,11],ddof=1)/numpy.sqrt(n_res)  )
-        moments_sigma_diff_medn.append( numpy.median(results[:,10] - results[:,11])  )
-        hsmcorr_sigma_diff_mean.append( numpy.mean(results[:,12] - results[:,13])  )
-        hsmcorr_sigma_diff_stdm.append( numpy.std(results[:,12] - results[:,13],ddof=1)/numpy.sqrt(n_res)  )
-        hsmcorr_sigma_diff_medn.append( numpy.median(results[:,12] - results[:,13])  )
+                moments_E1_diff_mean.append( numpy.mean(results[:,2] - results[:,4])  )
+                moments_E1_diff_stdm.append( numpy.std(results[:,2] - results[:,4],ddof=1)/numpy.sqrt(n_res)  )
+                moments_E1_diff_medn.append( numpy.median(results[:,2] - results[:,4])  )
+                moments_E2_diff_mean.append( numpy.mean(results[:,3] - results[:,5])  )
+                moments_E2_diff_stdm.append( numpy.std(results[:,3] - results[:,5],ddof=1)/numpy.sqrt(n_res)  )
+                moments_E2_diff_medn.append( numpy.median(results[:,3] - results[:,5])  )
 
+                hsmcorr_E1_diff_mean.append( numpy.mean(results[:,6] - results[:,8])  )
+                hsmcorr_E1_diff_stdm.append( numpy.std(results[:,6] - results[:,8],ddof=1)/numpy.sqrt(n_res)  )
+                hsmcorr_E1_diff_medn.append( numpy.median(results[:,6] - results[:,8])  )
+                hsmcorr_E2_diff_mean.append( numpy.mean(results[:,7] - results[:,9])  )
+                hsmcorr_E2_diff_stdm.append( numpy.std(results[:,7] - results[:,9],ddof=1)/numpy.sqrt(n_res)  )
+                hsmcorr_E2_diff_medn.append( numpy.median(results[:,7] - results[:,9])  )
 
-    pylab.subplot(121)
-    pylab.xscale('log')
-    pylab.errorbar(vary_params,moments_E1_diff_mean,yerr=moments_E1_diff_stdm,fmt='b+-')
-    pylab.errorbar(vary_params,moments_E2_diff_mean,yerr=moments_E2_diff_stdm,fmt='rx-')
-    pylab.plot(vary_params,moments_E1_diff_medn,'b+--')
-    pylab.plot(vary_params,moments_E2_diff_medn,'rx--')
-    # pylab.savefig(os.path.join(dirname_figs,'gsparams_test.pdf'))
-    # pylab.title('moments')
-    pylab.ylabel('sigma_fft - sigma_photon')
-    pylab.xlabel(config['gsparams']['vary_param'])
-    pylab.xlim([min(vary_params)*0.5, max(vary_params)*1.5])
-    pylab.show()
+                moments_sigma_diff_mean.append( numpy.mean(results[:,10] - results[:,11])  )
+                moments_sigma_diff_stdm.append( numpy.std(results[:,10] - results[:,11],ddof=1)/numpy.sqrt(n_res)  )
+                moments_sigma_diff_medn.append( numpy.median(results[:,10] - results[:,11])  )
+                hsmcorr_sigma_diff_mean.append( numpy.mean(results[:,12] - results[:,13])  )
+                hsmcorr_sigma_diff_stdm.append( numpy.std(results[:,12] - results[:,13],ddof=1)/numpy.sqrt(n_res)  )
+                hsmcorr_sigma_diff_medn.append( numpy.median(results[:,12] - results[:,13])  )
+
+            index_subplot += 1
+            pylab.subplot(nrows_subplot,ncols_subplot,index_subplot)
+            pylab.xscale('log')
+            pylab.errorbar(vary_params,moments_E1_diff_mean,yerr=moments_E1_diff_stdm,fmt='b+-')
+            pylab.errorbar(vary_params,moments_E2_diff_mean,yerr=moments_E2_diff_stdm,fmt='rx-')
+            pylab.plot(vary_params,moments_E1_diff_medn,'b+--')
+            pylab.plot(vary_params,moments_E2_diff_medn,'rx--')
+            # pylab.savefig(os.path.join(dirname_figs,'gsparams_test.pdf'))
+            # pylab.title('moments')
+            pylab.ylabel('Ei_fft - Ei_photon')
+            pylab.xlabel(config['gsparams']['vary_param'])
+            pylab.xlim([min(vary_params)*0.5, max(vary_params)*1.5])
+            pylab.show()
 
 
 
@@ -243,6 +249,6 @@ if __name__ == "__main__":
     # save a figure showing scatter on ellipticity fractional difference between shoot and fft
     # plotEllipticityBiases()
     # plotEllipticityBiasesHistogram()
-    plotStatsVsGSParams()
+    plotStatsGSParams()
 
 
