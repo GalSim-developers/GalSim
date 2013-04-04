@@ -160,18 +160,18 @@ namespace hsm {
             {}
 
         // These are all public.  So you access them just as member values.
-        const double nsig_rg;
-        const double nsig_rg2;
-        const double max_moment_nsig2;
-        const int regauss_too_small;
-        const int adapt_order;
-        const long max_mom2_iter;
-        const long num_iter_default;
-        const double bound_correct_wt;
-        const double max_amoment;
-        const double max_ashift;
-        const int ksb_moments_max;
-        const double failed_moments;
+        double nsig_rg;
+        double nsig_rg2;
+        double max_moment_nsig2;
+        int regauss_too_small;
+        int adapt_order;
+        long max_mom2_iter;
+        long num_iter_default;
+        double bound_correct_wt;
+        double max_amoment;
+        double max_ashift;
+        int ksb_moments_max;
+        double failed_moments;
     };
 
     const boost::shared_ptr<HSMParams> default_hsmparams(new HSMParams());
