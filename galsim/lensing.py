@@ -33,15 +33,15 @@ def _convertPositions(pos, units, func):
     try:
         # Check for PositionD or PositionI:
         if isinstance(pos,galsim.PositionD) or isinstance(pos,galsim.PositionI):
-            pos = ( np.array([pos.x], dtype='float'),
-                    np.array([pos.y], dtype='float') )
+            pos = [ np.array([pos.x], dtype='float'),
+                    np.array([pos.y], dtype='float') ]
 
         # Check for list of PositionD or PositionI:
         # The only other options allow pos[0], so if this is invalid, an exception 
         # will be raised and appropriately dealt with:
         elif isinstance(pos[0],galsim.PositionD) or isinstance(pos[0],galsim.PositionI):
-            pos = ( np.array([p.x for p in pos], dtype='float'),
-                    np.array([p.y for p in pos], dtype='float') )
+            pos = [ np.array([p.x for p in pos], dtype='float'),
+                    np.array([p.y for p in pos], dtype='float') ]
 
         # Now pos must be a tuple of length 2
         elif len(pos) != 2:
@@ -50,12 +50,12 @@ def _convertPositions(pos, units, func):
         else:
             # Check for (x,y):
             try:
-                pos = ( np.array([float(pos[0])], dtype='float'),
-                        np.array([float(pos[1])], dtype='float') )
+                pos = [ np.array([float(pos[0])], dtype='float'),
+                        np.array([float(pos[1])], dtype='float') ]
             except:
                 # Only other valid option is ( xlist , ylist )
-                pos = ( np.array(pos[0], dtype='float'),
-                        np.array(pos[1], dtype='float') )
+                pos = [ np.array(pos[0], dtype='float'),
+                        np.array(pos[1], dtype='float') ]
 
         # Check validity of units
         if isinstance(units, basestring):
@@ -67,6 +67,8 @@ def _convertPositions(pos, units, func):
         # Convert pos to arcsec
         if units != galsim.arcsec:
             scale = 1. * units / galsim.arcsec
+            # Note that for the next two lines, pos *must* be a list, not a tuple.  Assignments to
+            # elements of tuples is not allowed.
             pos[0] *= scale
             pos[1] *= scale
 
@@ -129,9 +131,10 @@ class PowerSpectrum(object):
 
     A PowerSpectrum represents some (flat-sky) shear power spectrum, either for gridded points or at
     arbitary positions.  This class is originally initialized with a power spectrum from which we
-    would like to generate g1 and g2 (and, optionally, convergence kappa) values.  It generates shears
-    on a grid, and if necessary, when getShear is called, it will interpolate to the requested
-    positions.
+    would like to generate g1 and g2 (and, optionally, convergence kappa) values.  It generates
+    shears on a grid, and if necessary, when getShear is called, it will interpolate to the
+    requested positions.  For detail on how these processes are carried out, please see the document
+    in the GalSim repository, devel/modules/lensing_engine.pdf.
 
     When creating a PowerSpectrum instance, you need to specify at least one of the E or B mode 
     power spectra, which is normally given as a function P(k).  The typical thing is to just 
@@ -153,15 +156,24 @@ class PowerSpectrum(object):
     approach, which means that we implicitly assume our discrete representation of P(k) on a grid is
     one complete cell in an infinite periodic series.  We are making assumptions about what P(k) is
     doing outside of our minimum and maximum k range, and those must be kept in mind when comparing
-    with theoretical expectations.  Furthermore, the shear generation currently does not include
-    sample variance due to coverage of a finite patch.  In other words, we explicitly enforce
-    `P(k=0)=0`, which is true for the full sky in any reasonable cosmological model, but it ignores
-    the fact that our little patch of sky might reasonably live in some special region with respect
-    to shear correlations.  Our `P(k=0)=0` is essentially setting the integrated power below our
-    minimum k value to zero (i.e., it's implicitly a statement about power in a k range, not just at
-    `k=0` itself).  Future versions of the lensing engine may change this behavior.  Moreover, a
-    full comparison of the GalSim power spectrum normalization conventions and behavior in various
-    regimes is in the works and will be available with a future version of GalSim.
+    with theoretical expectations.
+
+    Specifically, since the power spectrum is realized on only a finite grid it has been been
+    effectively bandpass filtered between a minimum and maximum k value in each of the k1, k2
+    directions.  This filter is hard: beyond the minimum and maximum k range the P(k) is set to
+    zero.  See the buildGrid method for more information.
+
+    Therefore, the shear generation currently does not include sample variance due to coverage of a
+    finite patch.  We explicitly enforce `P(k=0)=0`, which is true for the full sky in a reasonable
+    cosmological model, but it ignores the fact that our little patch of sky might reasonably live
+    in some special region with respect to shear correlations.  Our `P(k=0)=0` is essentially 
+    setting the integrated power below our minimum k value to zero (i.e., it's implicitly a
+    statement about power in a k range, not just at `k=0` itself).  The implications of the discrete
+    representation, and the `P(k=0)=0` choice, are discussed in more detail in 
+    devel/modules/lensing_engine.pdf.
+
+    Therefore, since the power spectrum is realized on a finite grid, it has been been effectively
+    bandpass filtered between a minimum and maximum k value in each of the k1, k2 directions.
 
     The power functions must return a list/array that is the same size as what it was given, e.g.,
     in the case of no power or constant power, a function that just returns a float would not be
@@ -264,9 +276,35 @@ class PowerSpectrum(object):
         after buildGrid, or can use a convenience function that is part of galsim.lensing to convert
         from theoretical to observed quantities.
 
-        Note that the convention for axis orientation differs from that for the GREAT10 challenge,
-        so when using codes that deal with GREAT10 challenge outputs, the sign of our g2 shear
-        component must be flipped.
+        Note that the shears generated using this method correspond to the PowerSpectrum multiplied
+        by a sharp bandpass filter, set by the dimensions of the grid.
+
+        The filter sets `P(k)` = 0 for
+
+            |k1|, |k2| < kmin / 2
+
+        and
+            |k1|, |k2| > kmax + kmin / 2
+
+        where
+            kmin = 2. * pi / (ngrid * grid_spacing)
+            kmax = pi / grid_spacing
+
+        and where we have adopted the convention that grid points at a given `k` represent the
+        interval between `k - Delta k` and `k + Delta k` (noting that the grid spacing `Delta k` in
+        k space is equivalent to `kmin`).
+
+        It is worth remembering that this bandpass filter will *not* look like a circular annulus
+        in 2D k space, but is rather more like a thick-sided picture frame, having a small square
+        central cutout of dimensions `kmin` by `kmin`.  These properties are visible in the shears
+        generated by this method. 
+
+        For more information on the effects of finite grid representation of the power spectrum 
+        see `devel/modules/lensing_engine.pdf`.
+
+        Note also that the convention for axis orientation differs from that for the GREAT10
+        challenge, so when using codes that deal with GREAT10 challenge outputs, the sign of our g2
+        shear component must be flipped.
 
         Some examples:
 
@@ -486,7 +524,7 @@ class PowerSpectrum(object):
         #        same length as the input.)
         if not isinstance(pf, galsim.LookupTable):
             try:
-                f1 = pf(1.)
+                f1 = pf(np.array((0.1,1.)))
             except:
                 raise AttributeError("%s is not a valid function"%pf_str)
             fake_arr = np.zeros(2)
@@ -509,7 +547,8 @@ class PowerSpectrum(object):
         Note that the interpolation (carried out using the interpolant that was specified when
         building the gridded shears) modifies the effective power spectrum somewhat.  The user is
         responsible for choosing a grid size that is small enough not to significantly modify the
-        power spectrum on the scales of interest.
+        power spectrum on the scales of interest.  Detailed tests of this functionality have not
+        been carried out.
 
         Some examples of how to use getShear:
 
