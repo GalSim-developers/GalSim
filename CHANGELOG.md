@@ -27,4 +27,5 @@ Changes from v0.4 to current version:
   be used. (Issue #350)
 
 - Added the ability to change the parameter settings for the moments and shape measurement routines
-  using the new HSMParams class.  (Issue #365)
+  using the new HSMParams class (Issue #365), and for the GSObjects using the new GSParams class
+  (Issue #343).
