@@ -1,3 +1,6 @@
+# filename of the output catalog with moments measurements for photon and FFT images
+# this filename may be appended if settings are being changed, for example if we are exploring
+# the impact of GSParams, one file will be created for each settings value
 filename_output : gsp.cat
 
 # how to draw the PSF for HSM moments correction? 'fft' or 'shoot'
@@ -8,10 +11,10 @@ image:
  n_pix: 96
  # pixel scale
  n_photons: 20000000
- # 'space' or 'ground'
- observe_from: ground         
+ # 'space' or 'ground' - there is a specific PSF and pixel size for each observation type
+ observe_from: ['space','ground']         
 
-# decide whether you want to use the galaxies in the 'objects' key (see below)
+# decide whether you want to use the galaxies in the 'list_gals' key (see below)
 # or the provided sersics catalog with random ellipticity angles
 # with two hardcoded PSFs (space and ground)
 # with random PSF ellipticities and random centers
@@ -19,17 +22,14 @@ use_galaxies_from: 'sersics_sample' # 'list_gals' or 'sersics_sample'
 
 # details for the sersics sample
 sersics_sample:
-   # catalog_filename: cosmos_sersics_gal110.asc # 
    catalog_filename: cosmos_sersics_sample_N300.asc #
    max_random_dx: 0.5      # will be drawn from uniform (arcsec)
    max_random_psf_g: 0.2   # will be drawn from uniform
 
 gsparams:
    # We'd go for the two "threshold" values first, alias_threshold and maxk_threshold
-   vary_param: alias_threshold
-   grid: [0.05, 0.005, 0.0005]
-   # vary_param: maxk_threshold
-   # grid: [0.01, 0.001, 0.0001]
+   - {name: alias_threshold, grid: [0.05, 0.005, 0.0005]}
+   - {name: maxk_threshold, grid: [0.01, 0.001, 0.0001]}
 
 # gsparams:
 #  minimum_fft_size: 128      

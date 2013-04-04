@@ -64,11 +64,11 @@ def getGSObjectSersicsSample(i):
     psf_g = rng() * config['sersics_sample']['max_random_psf_g']
     psf_beta = 2.*math.pi * rng() * galsim.radians
 
-    if config['image']['observe_from'] == 'space':
+    if observe_from == 'space':
         lam=700.
         diam=1.3
         psf = galsim.Airy(lam_over_diam=lam/diam/1.e9*206265.) 
-    elif config['image']['observe_from'] == 'ground':
+    elif observe_from == 'ground':
         fwhm = 0.65 
         atmos = galsim.Moffat(beta=3,fwhm=fwhm)
         optics = galsim.Airy(lam_over_diam = (700e-9/4)*(180/numpy.pi)*3600)
@@ -107,7 +107,7 @@ def getGSObjectListGals(i):
     obj = config['list_gals'][i]
 
     # get the galaxy if it is a sersics bulge + disc model          
-    logger.info('creating galaxy with PSF type %s' % (obj['psf']['type']))
+    logger.debug('creating galaxy with PSF type %s' % (obj['psf']['type']))
 
     bulge = galsim.Sersic(n=obj['bulge']['sersic_index'], half_light_radius=obj['bulge']['half_light_radius'])
     disc  = galsim.Sersic(n=obj['disc' ]['sersic_index'], half_light_radius=obj['disc']['half_light_radius'])
@@ -155,19 +155,36 @@ def getGSObjectListGals(i):
 
     return gso
 
-def getMeasurements(gso,ig='test'):
+def getMeasurements(gso,gso_name='test'):
+    """
+    Return the measured moments of the galaxies provied in the gso dict. Create the images using Photon and FFT, 
+    measure HSM observerd and corrected moments and other statistics.
+    
+    Arguments
+    ---------
+        gso                - a dictionary with fields 'gal', 'psf', 'pix'. These are GSObjects which are ready to be drawing
+        gso_name = test    - string or number. If plots are being created, then this name will be added to the plot filename.
 
+    Returns a dictionary with the results measured from the Photon and FFT images, or in case of failure, returns None.
+    Fields in the output dictionary: 
+    max_diff_over_max_image, moments_fft_e1, moments_fft_e2, moments_phot_e1, moments_phot_e2, 
+    hsm_corr_fft_e1, hsm_corr_fft_e2, hsm_corr_phot_e1, hsm_corr_phot_e2, 
+    moments_fft_sigma, moments_phot_sigma, hsm_fft_sigma, hsm_phot_sigma, 
+    image_fft, image_phot, image_psf
+    """
+
+    # in case there is no PSF supplied:
     if gso['psf'] != None:
         
         # create the PSF
 
         if config['psf_draw_method'] == 'fft':
-            logger.info('drawing PSF using draw()')
+            logger.debug('drawing PSF using draw()')
             image_psf = galsim.ImageF(config['image']['n_pix'],config['image']['n_pix'])
             final_psf = galsim.Convolve([gso['psf'],gso['pix']],gsparams=gsp)
             final_psf.draw(image_psf,dx=pixel_scale)
         elif config['psf_draw_method'] == 'shoot':
-            logger.info('drawing PSF using drawShoot and %2.0e photons' % config['image']['n_photons'])
+            logger.debug('drawing PSF using drawShoot and %2.0e photons' % config['image']['n_photons'])
             image_psf = galsim.ImageF(config['image']['n_pix'],config['image']['n_pix'])
             gso['psf'].drawShoot(image_psf,dx=pixel_scale,n_photons=config['image']['n_photons'])
         else:
@@ -175,26 +192,26 @@ def getMeasurements(gso,ig='test'):
             sys.exit() 
 
     # create shoot image
-    logger.info('drawing galaxy using drawShoot and %2.0e photons' % config['image']['n_photons'])
+    logger.debug('drawing galaxy using drawShoot and %2.0e photons' % config['image']['n_photons'])
     image_gal_phot = galsim.ImageF(config['image']['n_pix'],config['image']['n_pix'])
     final = gso['galpsf']
     final.setFlux(1.)
     im = final.drawShoot(image_gal_phot,dx=pixel_scale,n_photons=config['image']['n_photons'])
     added_flux = im.added_flux
-    logger.info('drawShoot is ready for galaxy %s, added_flux=%f, scale=%f' % (ig,added_flux,pixel_scale) )
+    logger.debug('drawShoot is ready for galaxy %s, added_flux=%f, scale=%f' % (gso_name,added_flux,pixel_scale) )
 
     # create fft image
-    logger.info('drawing galaxy using draw (FFT)')
+    logger.debug('drawing galaxy using draw (FFT)')
     image_gal_fft = galsim.ImageF(config['image']['n_pix'],config['image']['n_pix'])
     final = galsim.Convolve([gso['galpsf'],gso['pix']],gsparams=gsp)
     final.setFlux(1.)
     final.draw(image_gal_fft,dx=pixel_scale)
-    logger.info('draw using FFT is ready for galaxy %s' % ig)
+    logger.debug('draw using FFT is ready for galaxy %s' % gso_name)
     
     # create a residual image
     diff_image = image_gal_phot.array - image_gal_fft.array
     max_diff_over_max_image = abs(diff_image.flatten()).max()/image_gal_fft.array.flatten().max()
-    logger.info('max(residual) / max(image_fft) = %2.4e ' % ( max_diff_over_max_image )  )
+    logger.debug('max(residual) / max(image_fft) = %2.4e ' % ( max_diff_over_max_image )  )
 
     # save plots if requested
     if args.save_plots:
@@ -218,7 +235,7 @@ def getMeasurements(gso,ig='test'):
         pylab.colorbar()
         pylab.title('image_phot - image_fft')
 
-        filename_fig = os.path.join(dirname_figs,'photon_vs_fft_gal%s.png' % str(ig))
+        filename_fig = os.path.join(dirname_figs,'photon_vs_fft_gal%s.png' % str(gso_name))
         pylab.gcf().set_size_inches(20,10)
         pylab.savefig(filename_fig)
         pylab.close()
@@ -226,14 +243,23 @@ def getMeasurements(gso,ig='test'):
 
 
     # find adaptive moments
-    moments_phot = galsim.FindAdaptiveMom(image_gal_phot)
+    try:
+        moments_phot = galsim.FindAdaptiveMom(image_gal_phot)
+    except:
+        logging.error('hsm error')
+        return None
+
+    try:
+        moments_fft   = galsim.FindAdaptiveMom(image_gal_fft)
+    except:
+        logging.error('hsm error')
+        return None
+
     moments_phot_e1 = moments_phot.observed_shape.getE1()
     moments_phot_e2 = moments_phot.observed_shape.getE2()
     moments_phot_sigma = moments_phot.moments_sigma        
     logger.debug('adaptive moments phot   E1=% 2.6f\t2=% 2.6f\tsigma=%2.6f' % (moments_phot_e1, moments_phot_e2, moments_phot_sigma))
    
-
-    moments_fft   = galsim.FindAdaptiveMom(image_gal_fft)
     moments_fft_e1   = moments_fft.observed_shape.getE1()
     moments_fft_e2   = moments_fft.observed_shape.getE2()
     moments_fft_sigma = moments_fft.moments_sigma
@@ -249,36 +275,37 @@ def getMeasurements(gso,ig='test'):
     
     else:
 
-        hsm_phot = galsim.EstimateShearHSM(image_gal_phot,image_psf,strict=True)
-        hsm_fft   = galsim.EstimateShearHSM(image_gal_fft,image_psf,strict=True)
+        try:
+            hsm_phot = galsim.EstimateShearHSM(image_gal_phot,image_psf,strict=True)
+        except:
+            logger.info('hsm error')
+            return None
+
+        try:
+            hsm_fft   = galsim.EstimateShearHSM(image_gal_fft,image_psf,strict=True)
+        except:
+            logger.info('hsm error')
+            return None
+
 
         # for photon
 
         # check if HSM has failed
-        if hsm_phot.error_message != "":
-            logger.debug('hsm_phot failed with message %s' % hsm_phot.error_message)
-            hsm_corr_phot_e1 =  hsm_corr_phot_e2  = hsm_phot_sigma = \
-            hsm_error_value
-        else:
-            hsm_corr_phot_e1 = hsm_phot.corrected_e1
-            hsm_corr_phot_e2 = hsm_phot.corrected_e2
-            hsm_phot_sigma = hsm_phot.moments_sigma
+        hsm_corr_phot_e1 = hsm_phot.corrected_e1
+        hsm_corr_phot_e2 = hsm_phot.corrected_e2
+        hsm_phot_sigma = hsm_phot.moments_sigma
 
         # for fft
 
-        # check if HSM has failed       
-        if hsm_fft.error_message != "":
-            logger.debug('hsm_fft failed with message %s' % hsm_fft.error_message)
-            hsm_corr_fft_e1 = hsm_corr_fft_e2  = hsm_fft_sigma = \
-            hsm_error_value  
-        else:
-            hsm_corr_fft_e1 = hsm_fft.corrected_e1
-            hsm_corr_fft_e2 = hsm_fft.corrected_e2
-            hsm_fft_sigma = hsm_fft.moments_sigma
+        # check if HSM has failed         
+        hsm_corr_fft_e1 = hsm_fft.corrected_e1
+        hsm_corr_fft_e2 = hsm_fft.corrected_e2
+        hsm_fft_sigma = hsm_fft.moments_sigma
 
         logger.debug('hsm corrected moments fft     E1=% 2.6f\tE2=% 2.6f\tsigma=% 2.6f' % (hsm_corr_fft_e1, hsm_corr_fft_e2, hsm_fft_sigma))
         logger.debug('hsm corrected moments phot    E1=% 2.6f\tE2=% 2.6f\tsigma=% 2.6f' % (hsm_corr_phot_e1, hsm_corr_phot_e2, hsm_phot_sigma))
           
+    # create the output dictionary
     result={}
     result['max_diff_over_max_image'] = max_diff_over_max_image
     result['moments_fft_e1'] = moments_fft_e1
@@ -299,12 +326,12 @@ def getMeasurements(gso,ig='test'):
 
     return result
 
-def testShootVsFft():
+def testPhotonVsFft():
     """
     For all galaxies specified, produces the images using FFT and photon shooting.
-    Saves plots of image residuals and shows differences in the moments measurements.
+    Saves plots of image residuals and shows differences in the moments measurements, if requested.
     Saves the adaptive moments and HSM results resutls to file if needed.
-    If HSM fails or no PSF is used, then all the HSM measurements are set to -1.
+    If HSM fails, then the results for this case are not reported at all.
     The galaxies can be suplied either from:
     1) list_gals in the config file (see example photon_vs_fft.yaml)
     2) a catalog of single Sersic profiles (see cosmos_sersics_sample_N300.asc) and additional configuration in the config file
@@ -332,17 +359,12 @@ def testShootVsFft():
     else:
         raise ValueError('%s in unknown galaxies input form - use list_gals or sersics_sample' % use_galaxies_from )
 
-    global pixel_scale
-    if config['image']['observe_from'] == 'space':     pixel_scale = 0.03
-    elif config['image']['observe_from'] == 'ground':   pixel_scale = 0.2
-    else: raise ValueError('%s is an invalid name for config[image][observe_from] - use \'space\' or \'ground\'')
-
     results_all = []   
 
     # loop through the galaxies
     for ig in range(n_gals):
 
-        logger.info('------------------ galaxy %g ------------------' % ig)
+        logger.debug('------------------ galaxy %g ------------------' % ig)
 
         # get the next galaxy
         gso = gso_next(ig)
@@ -350,15 +372,20 @@ def testShootVsFft():
         # get results from moments measurements
         results_gso = getMeasurements(gso)
 
-        del_gso(gso)
+        delGSO(gso)
+
+        if results_gso == None:
+            continue     
 
         results_all.append(results_gso)
 
     return results_all
 
 
-# delete all GSObjects in the gso dict, and the dict itself
-def del_gso(gso):
+def delGSO(gso):
+    """
+    Delete all GSObjects in the gso dict, and the dict itself.
+    """
 
     for key in gso.keys():
         del gso[key]
@@ -366,6 +393,14 @@ def del_gso(gso):
     del gso
 
 def saveResults(filename_output,results_all_gals):
+    """
+    Save results to file.
+    Arguments
+    ---------
+    filename_output     - file to which results will be written
+    results_all_gals    - list of dictionaries with Photon vs FFT resutls. 
+                            See functon testPhotonVsFft for details of the dict.
+    """
 
 
     # initialise the output file
@@ -391,31 +426,69 @@ def saveResults(filename_output,results_all_gals):
 
 
 def testGSParams():
+    """
+    Perform the Photon vs FFT test for different values of GSParams, as specified in the config file.
+    Save results to the output files with the prefix specified in the config file.
+    """
 
-    for nw,new_value in enumerate(config['gsparams']['grid']):
+    # use global variables to change the GSParams and the observation mode 
+    # set up defaults
+    global observe_from
+    observe_from = 'ground'
+    global pixel_scale
+    pixel_scale = 0.2
+    global gsp
+    gsp = galsim.GSParams()
 
-        fiducial_value = eval('galsim.GSParams().%s' % config['gsparams']['vary_param'])
+    # loop through the observation modes (ground and space)
+    for of,obs in enumerate(config['image']['observe_from']):
 
-        logging.info('changing gsparam %s from fiducial %f to %f',config['gsparams']['vary_param'],fiducial_value,new_value)
+        # set the global variable
+        observe_from = obs
 
-        if eval('type(gsp.%s)' % config['gsparams']['vary_param']) == int:
-            cmd = 'galsim.GSParams(%s=%d)' % (config['gsparams']['vary_param'],new_value)
-        else:
-            cmd = 'galsim.GSParams(%s=%e)' % (config['gsparams']['vary_param'],new_value)
-        gsp = eval(cmd)
+        # set the global pixel scale for ground and space
+        if observe_from == 'ground':
+            pixel_scale = 0.2
+        elif observe_from == 'space':
+            pixel_scale = 0.03
+        else: raise ValueError('%s is an invalid name for config[image][observe_from] - use \'space\' or \'ground\'')
 
-        results_all_gals = testShootVsFft()
+        logging.info('using %s based observations' % observe_from)
 
-        filename_out = '%s.%s.%d.cat' % (config['filename_output'],config['gsparams']['vary_param'],nw)
+        # loop through different GSParams
+        for vary_gsp in config['gsparams']:
 
-        saveResults(filename_out,results_all_gals)
+            # get the GSParam name that we want to change
+            param_name = vary_gsp['name']
 
+            # loop through different GSParams values
+            for nw,new_value in enumerate(vary_gsp['grid']):
+
+                # get the fiducial value for the parameters (just for user information)
+                fiducial_value = eval('galsim.GSParams().%s' % param_name)
+                logging.info('changing gsparam %s from fiducial %f to %f',param_name,fiducial_value,new_value)
+
+                # set the parameter to new value
+                if eval('type(gsp.%s)' % param_name) == int:
+                    cmd = 'galsim.GSParams(%s=%d)' % (param_name,new_value)
+                else:
+                    cmd = 'galsim.GSParams(%s=%e)' % (param_name,new_value)
+                gsp = eval(cmd)
+
+                # perform the PhotonVsFFT test
+                results_all_gals = testPhotonVsFft()
+
+                # get the filename for the results file
+                filename_out = '%s.%s.%s.%d.cat' % (config['filename_output'],observe_from,param_name,nw)
+
+                # save the results
+                saveResults(filename_out,results_all_gals)
 
 
 if __name__ == "__main__":
 
 
-    description = 'Compare FFT vs photon shooting. Use the galaxies specified in the corresponding yaml file (see photon_vs_fft.yaml for an example)'
+    description = 'Compare FFT vs Photon shooting. Use the galaxies specified in the corresponding yaml file (see photon_vs_fft.yaml for an example)'
 
     # parse arguments
     parser = argparse.ArgumentParser(description=description, add_help=True)
@@ -425,7 +498,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # set up logger
-    logging.basicConfig(format="%(message)s", level=logging.DEBUG, stream=sys.stdout)
+    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger("photon_vs_fft") 
 
     # load the configuration file
@@ -433,15 +506,14 @@ if __name__ == "__main__":
     global config
     config = yaml.load(open(filename_config,'r'))
 
-    global gsp
-    gsp = galsim.GSParams()
 
     # run the test
-    # results_all_gals = testShootVsFft()
+    # results_all_gals = testPhotonVsFft()
     # save the result
     # saveResults(config['filename_output'],results_all_gals)
-    # testShootVsFft()
+    # testPhotonVsFft()
 
+    # run the test
     testGSParams()
 
 
