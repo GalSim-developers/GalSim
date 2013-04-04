@@ -72,6 +72,7 @@ namespace galsim {
         // This is acceptable when the next term is less than kvalue_accuracy.
         // 1/48 (k^2 r0^2)^3 = kvalue_accuracy
         _ksq_min = std::pow(this->gsparams->kvalue_accuracy * 48., 1./3.);
+
         _norm = _flux * _inv_sigma_sq / (2. * M_PI);
 
         dbg<<"Gaussian:\n";

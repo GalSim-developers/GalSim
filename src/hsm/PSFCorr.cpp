@@ -56,12 +56,13 @@ namespace hsm {
         ConstImageView<T> gal_image, ConstImageView<int> gal_mask,
         ConstImageView<U> PSF_image, ConstImageView<int> PSF_mask,
         ObjectData& gal_data, ObjectData& PSF_data, const std::string& shear_est,
-        unsigned long flags);
+        unsigned long flags, boost::shared_ptr<HSMParams> hsmparams);
 
     template <typename T>
     void find_ellipmom_2(
         ConstImageView<T> data, ConstImageView<int> mask, double& A, double& x0, double& y0,
-        double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter);
+        double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter,
+        boost::shared_ptr<HSMParams> hsmparams);
 
     // Carry out PSF correction directly using ImageViews, repackaging for general_shear_estimator.
     template <typename T, typename U>
@@ -71,12 +72,15 @@ namespace hsm {
         float sky_var, const char* shear_est,
         unsigned long flags, double guess_sig_gal,
         double guess_sig_PSF, double precision,
-        double guess_x_centroid, double guess_y_centroid) 
+        double guess_x_centroid, double guess_y_centroid,
+        boost::shared_ptr<HSMParams> hsmparams) 
     {
         // define variables, create output CppHSMShapeData struct, etc.
         CppHSMShapeData results;
         ObjectData gal_data, PSF_data;
         double amp, m_xx, m_xy, m_yy;
+
+        if (!hsmparams.get()) hsmparams = hsm::default_hsmparams;
 
         dbg<<"Start EstimateShearHSMView"<<std::endl;
         dbg<<"Setting defaults and so on before calling general_shear_estimator"<<std::endl;
@@ -114,7 +118,7 @@ namespace hsm {
             dbg<<"About to get moments using find_ellipmom_2"<<std::endl;
             find_ellipmom_2(gal_image_cview, gal_mask_view, amp, gal_data.x0,
                             gal_data.y0, m_xx, m_xy, m_yy, results.moments_rho4,
-                            precision, results.moments_n_iter);
+                            precision, results.moments_n_iter, hsmparams);
             // repackage outputs to the output CppHSMShapeData struct
             dbg<<"Repackaging find_ellipmom_2 results"<<std::endl;
             results.moments_amp = 2.0*amp;
@@ -127,7 +131,7 @@ namespace hsm {
             dbg<<"About to get shear using general_shear_estimator"<<std::endl;
             results.correction_status = general_shear_estimator(
                 gal_image_cview, gal_mask_view, PSF_image_cview, PSF_mask_view,
-                gal_data, PSF_data, shear_est, flags);
+                gal_data, PSF_data, shear_est, flags, hsmparams);
             dbg<<"Repackaging general_shear_estimator results"<<std::endl;
 
             results.meas_type = gal_data.meas_type;
@@ -171,13 +175,15 @@ namespace hsm {
     CppHSMShapeData FindAdaptiveMomView(
         const ImageView<T>& object_image, const ImageView<int> &object_mask_image, 
         double guess_sig, double precision, double guess_x_centroid,
-        double guess_y_centroid) 
+        double guess_y_centroid, boost::shared_ptr<HSMParams> hsmparams) 
     {
         dbg<<"Start FindAdaptiveMomView"<<std::endl;
         dbg<<"Setting defaults and so on before calling find_ellipmom_2"<<std::endl;
         // define variables, create output CppHSMShapeData struct, etc.
         CppHSMShapeData results;
         double amp, m_xx, m_xy, m_yy;
+
+        if (!hsmparams.get()) hsmparams = hsm::default_hsmparams;
 
         // set some values for initial guesses
         if (guess_x_centroid != -1000.0) {
@@ -202,7 +208,7 @@ namespace hsm {
             dbg<<"About to get moments using find_ellipmom_2"<<std::endl;
             find_ellipmom_2(object_image_cview, object_mask_view, amp, results.moments_centroid.x,
                             results.moments_centroid.y, m_xx, m_xy, m_yy, results.moments_rho4,
-                            precision, results.moments_n_iter);
+                            precision, results.moments_n_iter, hsmparams);
             dbg<<"Repackaging find_ellipmom_2 results"<<std::endl;
 
             // repackage outputs from find_ellipmom_2 to the output CppHSMShapeData struct
@@ -483,14 +489,15 @@ namespace hsm {
     void find_mom_2(
         ConstImageView<T> data, ConstImageView<int> mask,
         tmv::Matrix<double>& moments, int max_order,
-        double& x0, double& y0, double& sigma, double epsilon, int& num_iter) 
+        double& x0, double& y0, double& sigma, double epsilon, int& num_iter,
+        boost::shared_ptr<HSMParams> hsmparams) 
     {
 
         double sigma0 = sigma;
         double convergence_factor = 1; /* Ensure at least one iteration. */
 
         num_iter = 0;
-        tmv::Matrix<double> iter_moments(hsm::adapt_order+1,hsm::adapt_order+1);
+        tmv::Matrix<double> iter_moments(hsmparams->adapt_order+1,hsmparams->adapt_order+1);
 
 #ifdef N_CHECKVAL
         if (epsilon <= 0) {
@@ -502,7 +509,7 @@ namespace hsm {
         while(convergence_factor > epsilon) {
 
             /* Get moments */
-            find_mom_1(data,mask,iter_moments,hsm::adapt_order,x0,y0,sigma);
+            find_mom_1(data,mask,iter_moments,hsmparams->adapt_order,x0,y0,sigma);
 
             /* Get updates to weight function */
             double dx     = 1.414213562373 * iter_moments(1,0) / iter_moments(0,0);
@@ -510,12 +517,12 @@ namespace hsm {
             double dsigma = 0.7071067811865
                 * (iter_moments(2,0)+iter_moments(0,2)) / iter_moments(0,0);
 
-            if (dx     >  hsm::bound_correct_weight) dx     =  hsm::bound_correct_weight;
-            if (dx     < -hsm::bound_correct_weight) dx     = -hsm::bound_correct_weight;
-            if (dy     >  hsm::bound_correct_weight) dy     =  hsm::bound_correct_weight;
-            if (dy     < -hsm::bound_correct_weight) dy     = -hsm::bound_correct_weight;
-            if (dsigma >  hsm::bound_correct_weight) dsigma =  hsm::bound_correct_weight;
-            if (dsigma < -hsm::bound_correct_weight) dsigma = -hsm::bound_correct_weight;
+            if (dx     >  hsmparams->bound_correct_wt) dx     =  hsmparams->bound_correct_wt;
+            if (dx     < -hsmparams->bound_correct_wt) dx     = -hsmparams->bound_correct_wt;
+            if (dy     >  hsmparams->bound_correct_wt) dy     =  hsmparams->bound_correct_wt;
+            if (dy     < -hsmparams->bound_correct_wt) dy     = -hsmparams->bound_correct_wt;
+            if (dsigma >  hsmparams->bound_correct_wt) dsigma =  hsmparams->bound_correct_wt;
+            if (dsigma < -hsmparams->bound_correct_wt) dsigma = -hsmparams->bound_correct_wt;
 
             /* Convergence */
             convergence_factor = std::abs(dx)>std::abs(dy)? std::abs(dx): std::abs(dy);
@@ -527,9 +534,9 @@ namespace hsm {
             y0    += dy     * sigma;
             sigma += dsigma * sigma;
 
-            if (++num_iter > hsm::max_mom2_iter) {
+            if (++num_iter > hsmparams->max_mom2_iter) {
                 convergence_factor = 0.;
-                num_iter = hsm::num_iter_default;
+                num_iter = hsmparams->num_iter_default;
                 throw HSMError("Warning: too many iterations in find_mom_2.\n");
             }
         }
@@ -549,7 +556,7 @@ namespace hsm {
      *
      * where w(r) = exp(-rho^2/2), rho^2 = (x-x0) * M^{-1} * (y-y0),
      * M = adaptive covariance matrix, and note that the weight may be set to zero for rho^2 >
-     * hsm::max_moment_nsig2 if that parameter is defined.
+     * hsmparams->max_moment_nsig2 if that parameter is defined.
      *
      * Arguments:
      *   data: the input image (ImageView format)
@@ -571,7 +578,7 @@ namespace hsm {
     void find_ellipmom_1(
         ConstImageView<T> data, ConstImageView<int> mask, double x0, double y0, double Mxx,
         double Mxy, double Myy, double& A, double& Bx, double& By, double& Cxx,
-        double& Cxy, double& Cyy, double& rho4w) 
+        double& Cxy, double& Cyy, double& rho4w, boost::shared_ptr<HSMParams> hsmparams) 
     {
         //long npix=0;
         long xmin = data.getXMin();
@@ -621,7 +628,7 @@ namespace hsm {
                      */
                     double rho2 = Minv_yy__y_y0__y_y0 + TwoMinv_xy__y_y0*x_x0 + *(mxxptr++);
                     dbg<<"Using pixel: "<<x<<" "<<y<<" with value "<<*(imageptr)<<" rho2 "<<rho2<<" x_x0 "<<x_x0<<" y_y0 "<<y_y0<<std::endl;
-                    if (rho2 < hsm::max_moment_nsig2) {
+                    if (rho2 < hsmparams->max_moment_nsig2) {
                         double intensity = std::exp(-0.5 * rho2) * *(imageptr++);
 
                         /* Now do the addition */
@@ -678,7 +685,8 @@ namespace hsm {
     template <typename T>
     void find_ellipmom_2(
         ConstImageView<T> data, ConstImageView<int> mask, double& A, double& x0, double& y0,
-        double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter) 
+        double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter,
+        boost::shared_ptr<HSMParams> hsmparams) 
     {
 
         double convergence_factor = 1.0;
@@ -708,7 +716,7 @@ namespace hsm {
         while(convergence_factor > epsilon) {
 
             /* Get moments */
-            find_ellipmom_1(data, mask, x0, y0, Mxx, Mxy, Myy, Amp, Bx, By, Cxx, Cxy, Cyy, rho4);
+            find_ellipmom_1(data, mask, x0, y0, Mxx, Mxy, Myy, Amp, Bx, By, Cxx, Cxy, Cyy, rho4, hsmparams);
 
             /* Compute configuration of the weight function */
             two_psi = std::atan2( 2* Mxy, Mxx-Myy );
@@ -729,16 +737,16 @@ namespace hsm {
             dxy = 4. * (Cxy/Amp - 0.5*Mxy) / semi_b2;
             dyy = 4. * (Cyy/Amp - 0.5*Myy) / semi_b2;
 
-            if (dx     >  hsm::bound_correct_weight) dx     =  hsm::bound_correct_weight;
-            if (dx     < -hsm::bound_correct_weight) dx     = -hsm::bound_correct_weight;
-            if (dy     >  hsm::bound_correct_weight) dy     =  hsm::bound_correct_weight;
-            if (dy     < -hsm::bound_correct_weight) dy     = -hsm::bound_correct_weight;
-            if (dxx    >  hsm::bound_correct_weight) dxx    =  hsm::bound_correct_weight;
-            if (dxx    < -hsm::bound_correct_weight) dxx    = -hsm::bound_correct_weight;
-            if (dxy    >  hsm::bound_correct_weight) dxy    =  hsm::bound_correct_weight;
-            if (dxy    < -hsm::bound_correct_weight) dxy    = -hsm::bound_correct_weight;
-            if (dyy    >  hsm::bound_correct_weight) dyy    =  hsm::bound_correct_weight;
-            if (dyy    < -hsm::bound_correct_weight) dyy    = -hsm::bound_correct_weight;
+            if (dx     >  hsmparams->bound_correct_wt) dx     =  hsmparams->bound_correct_wt;
+            if (dx     < -hsmparams->bound_correct_wt) dx     = -hsmparams->bound_correct_wt;
+            if (dy     >  hsmparams->bound_correct_wt) dy     =  hsmparams->bound_correct_wt;
+            if (dy     < -hsmparams->bound_correct_wt) dy     = -hsmparams->bound_correct_wt;
+            if (dxx    >  hsmparams->bound_correct_wt) dxx    =  hsmparams->bound_correct_wt;
+            if (dxx    < -hsmparams->bound_correct_wt) dxx    = -hsmparams->bound_correct_wt;
+            if (dxy    >  hsmparams->bound_correct_wt) dxy    =  hsmparams->bound_correct_wt;
+            if (dxy    < -hsmparams->bound_correct_wt) dxy    = -hsmparams->bound_correct_wt;
+            if (dyy    >  hsmparams->bound_correct_wt) dyy    =  hsmparams->bound_correct_wt;
+            if (dyy    < -hsmparams->bound_correct_wt) dyy    = -hsmparams->bound_correct_wt;
 
             /* Convergence tests */
             convergence_factor = std::abs(dx)>std::abs(dy)? std::abs(dx): std::abs(dy);
@@ -758,13 +766,14 @@ namespace hsm {
 
             /* If the moments have gotten too large, or the centroid is out of range,
              * report a failure */
-            if (std::abs(Mxx)>hsm::max_amoment || std::abs(Mxy)>hsm::max_amoment
-                || std::abs(Myy)>hsm::max_amoment
-                || std::abs(x0-x00)>hsm::max_ashift || std::abs(y0-y00)>hsm::max_ashift) {
+            if (std::abs(Mxx)>hsmparams->max_amoment || std::abs(Mxy)>hsmparams->max_amoment
+                || std::abs(Myy)>hsmparams->max_amoment
+                || std::abs(x0-x00)>hsmparams->max_ashift 
+                || std::abs(y0-y00)>hsmparams->max_ashift) {
                 throw HSMError("Error: adaptive moment failed\n");
             }
 
-            if (++num_iter > hsm::max_mom2_iter) {
+            if (++num_iter > hsmparams->max_mom2_iter) {
                 throw HSMError("Error: too many iterations in adaptive moments\n");
             }
 
@@ -1075,7 +1084,8 @@ namespace hsm {
         ConstImageView<U> PSF_image, ConstImageView<int> PSF_mask,
         double& e1, double& e2,
         double& responsivity, double& R, unsigned long flags, double& x0_gal, double& y0_gal,
-        double& sig_gal, double& flux_gal, double& x0_psf, double& y0_psf, double& sig_psf) 
+        double& sig_gal, double& flux_gal, double& x0_psf, double& y0_psf, double& sig_psf,
+        boost::shared_ptr<HSMParams> hsmparams) 
     {
 
         unsigned int status = 0;
@@ -1092,23 +1102,23 @@ namespace hsm {
         /* Initialize -- if we don't set the outputs, they will be reported
          * as failures.
          */
-        e1 = e2 = R = hsm::failed_moments;
+        e1 = e2 = R = hsmparams->failed_moments;
 
-        tmv::Matrix<double> moments(hsm::ksb_moments_max+1,hsm::ksb_moments_max+1);
-        tmv::Matrix<double> psfmoms(hsm::ksb_moments_max+1,hsm::ksb_moments_max+1);
+        tmv::Matrix<double> moments(hsmparams->ksb_moments_max+1,hsmparams->ksb_moments_max+1);
+        tmv::Matrix<double> psfmoms(hsmparams->ksb_moments_max+1,hsmparams->ksb_moments_max+1);
 
         /* Determine the adaptive variance of the measured galaxy */
         x0 = x0_gal;
         y0 = y0_gal;
         sigma0 = sig_gal;
-        find_mom_2(gal_image, gal_mask, moments, hsm::ksb_moments_max, x0_gal, y0_gal, sig_gal,
-                   1.0e-6, num_iter);
-        if (num_iter == hsm::num_iter_default) {
+        find_mom_2(gal_image, gal_mask, moments, hsmparams->ksb_moments_max, x0_gal, y0_gal, sig_gal,
+                   1.0e-6, num_iter, hsmparams);
+        if (num_iter == hsmparams->num_iter_default) {
             status |= 0x0002; /* Report convergence failure */
             x0_gal = x0;
             y0_gal = y0;
             sig_gal = sigma0;
-            find_mom_1(gal_image, gal_mask, moments, hsm::ksb_moments_max, x0, y0, sigma0);
+            find_mom_1(gal_image, gal_mask, moments, hsmparams->ksb_moments_max, x0, y0, sigma0);
         }
         flux_gal = 3.544907701811 * sig_gal * moments(0,0);
 
@@ -1116,9 +1126,9 @@ namespace hsm {
         x0 = x0_psf;
         y0 = y0_psf;
         sigma0 = sig_psf;
-        find_mom_2(PSF_image, PSF_mask, psfmoms, hsm::ksb_moments_max, x0_psf, y0_psf, sig_psf,
-                   1.0e-6, num_iter);
-        if (num_iter == hsm::num_iter_default) {
+        find_mom_2(PSF_image, PSF_mask, psfmoms, hsmparams->ksb_moments_max, x0_psf, y0_psf, sig_psf,
+                   1.0e-6, num_iter, hsmparams);
+        if (num_iter == hsmparams->num_iter_default) {
             status |= 0x0001; /* Report convergence failure */
             x0_psf = x0;
             y0_psf = y0;
@@ -1126,7 +1136,7 @@ namespace hsm {
         }
 
         /* ... but we want the moments with the galaxy weight fcn */
-        find_mom_1(PSF_image, PSF_mask, psfmoms, hsm::ksb_moments_max, x0_psf, y0_psf, sig_gal);
+        find_mom_1(PSF_image, PSF_mask, psfmoms, hsmparams->ksb_moments_max, x0_psf, y0_psf, sig_gal);
 
         /* Get resolution factor */
         R = 1. - (sig_psf*sig_psf)/(sig_gal*sig_gal);
@@ -1253,9 +1263,9 @@ namespace hsm {
      * flags:
      *   0x00000001: recompute galaxy flux by summing unmasked pixels
      *   0x00000002: recompute galaxy flux from Gaussian-quartic fit (overrides 0x00000001)
-     *   0x00000004: cut off Gaussian approximator at hsm::nsig_rg sigma (saves computation time in
+     *   0x00000004: cut off Gaussian approximator at hsmparams->nsig_rg sigma (saves computation time in
      *               the convolution step)
-     *   0x00000008: cut off PSF residual at hsm::nsig_rg2 sigma (saves computation time in
+     *   0x00000008: cut off PSF residual at hsmparams->nsig_rg2 sigma (saves computation time in
      *               the convolution step)
      *
      * Arguments:
@@ -1287,7 +1297,7 @@ namespace hsm {
         ConstImageView<U> PSF_image, ConstImageView<int> PSF_mask,
         double& e1, double& e2, double& R, unsigned long flags, double& x0_gal,
         double& y0_gal, double& sig_gal, double& x0_psf, double& y0_psf,
-        double& sig_psf, double& flux_gal) 
+        double& sig_psf, double& flux_gal, boost::shared_ptr<HSMParams> hsmparams) 
     {
         int num_iter;
         unsigned int status = 0;
@@ -1305,7 +1315,7 @@ namespace hsm {
         /* Initialize -- if we don't set the outputs, they will be reported
          * as failures.
          */
-        e1 = e2 = R = hsm::failed_moments;
+        e1 = e2 = R = hsmparams->failed_moments;
 
         /* Get the PSF flux */
         flux_psf = 0;
@@ -1327,9 +1337,9 @@ namespace hsm {
         Mxxpsf = Myypsf = sig_psf * sig_psf;
         Mxypsf = 0.;
         find_ellipmom_2(PSF_image, PSF_mask, A_g, x0_psf, y0_psf, Mxxpsf, Mxypsf, Myypsf, rho4psf,
-                        1.0e-6, num_iter);
+                        1.0e-6, num_iter, hsmparams);
 
-        if (num_iter == hsm::num_iter_default) {
+        if (num_iter == hsmparams->num_iter_default) {
             x0_psf = x0_old;
             y0_psf = y0_old;
             status |= 0x0001;
@@ -1339,9 +1349,9 @@ namespace hsm {
         Mxxgal = Myygal = sig_gal * sig_gal;
         Mxygal = 0.;
         find_ellipmom_2(gal_image, gal_mask, A_I, x0_gal, y0_gal, Mxxgal, Mxygal, Myygal, rho4gal,
-                        1.0e-6, num_iter);
+                        1.0e-6, num_iter, hsmparams);
 
-        if (num_iter == hsm::num_iter_default) {
+        if (num_iter == hsmparams->num_iter_default) {
             x0_gal = x0_old;
             y0_gal = y0_old;
             status |= 0x0002;
@@ -1359,7 +1369,7 @@ namespace hsm {
         Mfxy = Mxygal - Mxypsf;
         Mfyy = Myygal - Myypsf;
         detMf = Mfxx * Mfyy - Mfxy * Mfxy;
-        if (hsm::regauss_too_small == 0) {
+        if (hsmparams->regauss_too_small == 0) {
             if (Mfxx<=0 || Mfyy<=0 || detMf<=0) status |= 0x0004;
         } else {
 
@@ -1392,16 +1402,16 @@ namespace hsm {
         fgauss_xsig = std::sqrt(Mfxx>1? Mfxx: 1);
         fgauss_ysig = std::sqrt(Mfyy>1? Mfyy: 1);
 
-        /* Shrink if the box extends beyond hsm::nsig_rg sigma range */
+        /* Shrink if the box extends beyond hsmparams->nsig_rg sigma range */
         if (flags & 0x00000004) {
-            if (fgauss_xmin < fgauss_xctr - hsm::nsig_rg*fgauss_xsig)
-                fgauss_xmin = (long) std::floor(fgauss_xctr - hsm::nsig_rg*fgauss_xsig);
-            if (fgauss_xmax > fgauss_xctr + hsm::nsig_rg*fgauss_xsig)
-                fgauss_xmax = (long) std::ceil (fgauss_xctr + hsm::nsig_rg*fgauss_xsig);
-            if (fgauss_ymin < fgauss_yctr - hsm::nsig_rg*fgauss_ysig)
-                fgauss_ymin = (long) std::floor(fgauss_yctr - hsm::nsig_rg*fgauss_ysig);
-            if (fgauss_ymax > fgauss_yctr + hsm::nsig_rg*fgauss_ysig)
-                fgauss_ymax = (long) std::ceil (fgauss_yctr + hsm::nsig_rg*fgauss_ysig);
+            if (fgauss_xmin < fgauss_xctr - hsmparams->nsig_rg*fgauss_xsig)
+                fgauss_xmin = (long) std::floor(fgauss_xctr - hsmparams->nsig_rg*fgauss_xsig);
+            if (fgauss_xmax > fgauss_xctr + hsmparams->nsig_rg*fgauss_xsig)
+                fgauss_xmax = (long) std::ceil (fgauss_xctr + hsmparams->nsig_rg*fgauss_xsig);
+            if (fgauss_ymin < fgauss_yctr - hsmparams->nsig_rg*fgauss_ysig)
+                fgauss_ymin = (long) std::floor(fgauss_yctr - hsmparams->nsig_rg*fgauss_ysig);
+            if (fgauss_ymax > fgauss_yctr + hsmparams->nsig_rg*fgauss_ysig)
+                fgauss_ymax = (long) std::ceil (fgauss_yctr + hsmparams->nsig_rg*fgauss_ysig);
         }
         Minvf_xx =  Mfyy/detMf;
         Minvf_xy = -Mfxy/detMf;
@@ -1426,19 +1436,19 @@ namespace hsm {
 
         /* Figure out the size of the bounding box for the PSF residual.
          * We don't necessarily need the whole PSF,
-         * just the part that will affect regions inside the hsm::nsig_rg2 sigma ellipse 
+         * just the part that will affect regions inside the hsmparams->nsig_rg2 sigma ellipse 
          * of the Intensity.
          */
         Bounds<int> pbounds = PSF_image.getBounds();
         if (flags & 0x00000008) {
             int pxmin = (int) std::floor(
-                x0_psf - hsm::nsig_rg2*std::sqrt(Mxxgal) - hsm::nsig_rg*fgauss_xsig );
+                x0_psf - hsmparams->nsig_rg2*std::sqrt(Mxxgal) - hsmparams->nsig_rg*fgauss_xsig );
             int pxmax = (int) std::ceil (
-                x0_psf + hsm::nsig_rg2*std::sqrt(Mxxgal) + hsm::nsig_rg*fgauss_xsig );
+                x0_psf + hsmparams->nsig_rg2*std::sqrt(Mxxgal) + hsmparams->nsig_rg*fgauss_xsig );
             int pymin = (int) std::floor(
-                y0_psf - hsm::nsig_rg2*std::sqrt(Myygal) - hsm::nsig_rg*fgauss_ysig );
+                y0_psf - hsmparams->nsig_rg2*std::sqrt(Myygal) - hsmparams->nsig_rg*fgauss_ysig );
             int pymax = (int) std::ceil (
-                y0_psf + hsm::nsig_rg2*std::sqrt(Myygal) + hsm::nsig_rg*fgauss_ysig );
+                y0_psf + hsmparams->nsig_rg2*std::sqrt(Myygal) + hsmparams->nsig_rg*fgauss_ysig );
             if (PSF_image.getXMin() >= pxmin) pxmin = PSF_image.getXMin();
             if (PSF_image.getXMax() <= pxmax) pxmax = PSF_image.getXMax();
             if (PSF_image.getYMin() >= pymin) pymin = PSF_image.getYMin();
@@ -1477,8 +1487,8 @@ namespace hsm {
 
         /* Now that Iprime is constructed, we measure it */
         find_ellipmom_2(Iprime_cview, gal_mask, A_I, x0_gal, y0_gal, Mxxgal, Mxygal, Myygal,
-                        rho4gal, 1.0e-6, num_iter);
-        if (num_iter == hsm::num_iter_default) {
+                        rho4gal, 1.0e-6, num_iter, hsmparams);
+        if (num_iter == hsmparams->num_iter_default) {
             x0_gal = x0_old;
             y0_gal = y0_old;
             status |= 0x0008;
@@ -1527,7 +1537,7 @@ namespace hsm {
         ConstImageView<T> gal_image, ConstImageView<int> gal_mask,
         ConstImageView<U> PSF_image, ConstImageView<int> PSF_mask,
         ObjectData& gal_data, ObjectData& PSF_data, const std::string& shear_est,
-        unsigned long flags) 
+        unsigned long flags, boost::shared_ptr<HSMParams> hsmparams) 
     {
         unsigned int status = 0;
         int num_iter;
@@ -1543,8 +1553,8 @@ namespace hsm {
             y0 = PSF_data.y0;
             Mxx_psf = Myy_psf = PSF_data.sigma * PSF_data.sigma; Mxy_psf = 0.;
             find_ellipmom_2(PSF_image, PSF_mask, A_psf, x0, y0, Mxx_psf, Mxy_psf, Myy_psf,
-                            rho4_psf, 1.0e-6, num_iter);
-            if (num_iter == hsm::num_iter_default) {
+                            rho4_psf, 1.0e-6, num_iter, hsmparams);
+            if (num_iter == hsmparams->num_iter_default) {
                 return 1;
             } else {
                 PSF_data.x0 = x0;
@@ -1557,8 +1567,8 @@ namespace hsm {
             y0 = gal_data.y0;
             Mxx_gal = Myy_gal = gal_data.sigma * gal_data.sigma; Mxy_gal = 0.;
             find_ellipmom_2(gal_image, gal_mask, A_gal, x0, y0, Mxx_gal, Mxy_gal,
-                            Myy_gal, rho4_gal, 1.0e-6, num_iter);
-            if (num_iter == hsm::num_iter_default) {
+                            Myy_gal, rho4_gal, 1.0e-6, num_iter, hsmparams);
+            if (num_iter == hsmparams->num_iter_default) {
                 return 1;
             } else {
                 gal_data.x0 = x0;
@@ -1590,7 +1600,7 @@ namespace hsm {
                 gal_image, gal_mask, PSF_image, PSF_mask, gal_data.e1, gal_data.e2,
                 gal_data.responsivity, R, flags, gal_data.x0, gal_data.y0,
                 gal_data.sigma, gal_data.flux, PSF_data.x0, PSF_data.y0,
-                PSF_data.sigma );
+                PSF_data.sigma, hsmparams );
             gal_data.meas_type = 'g';
 
         } else if (shear_est == "REGAUSS") {
@@ -1598,7 +1608,7 @@ namespace hsm {
             status = psf_corr_regauss(
                 gal_image, gal_mask, PSF_image, PSF_mask, gal_data.e1, gal_data.e2, R,
                 flags, gal_data.x0, gal_data.y0, gal_data.sigma, PSF_data.x0,
-                PSF_data.y0, PSF_data.sigma, gal_data.flux);
+                PSF_data.y0, PSF_data.sigma, gal_data.flux, hsmparams );
             gal_data.meas_type = 'e';
             gal_data.responsivity = 1.;
 
@@ -1616,73 +1626,84 @@ namespace hsm {
         const ImageView<float>& gal_image, const ImageView<float>& PSF_image,
         const ImageView<int>& gal_mask_image,
         float sky_var, const char* shear_est, unsigned long flags, double guess_sig_gal,
-        double guess_sig_PSF, double precision, double guess_x_centroid, double guess_y_centroid);
+        double guess_sig_PSF, double precision, double guess_x_centroid, double guess_y_centroid,
+        boost::shared_ptr<HSMParams> hsmparams);
     template CppHSMShapeData EstimateShearHSMView(
         const ImageView<double>& gal_image, const ImageView<double>& PSF_image,
         const ImageView<int>& gal_mask_image,
         float sky_var, const char* shear_est, unsigned long flags, double guess_sig_gal,
-        double guess_sig_PSF, double precision, double guess_x_centroid, double guess_y_centroid);
+        double guess_sig_PSF, double precision, double guess_x_centroid, double guess_y_centroid,
+        boost::shared_ptr<HSMParams> hsmparams);
     template CppHSMShapeData EstimateShearHSMView(
         const ImageView<float>& gal_image, const ImageView<double>& PSF_image,
         const ImageView<int>& gal_mask_image,
         float sky_var, const char* shear_est, unsigned long flags, double guess_sig_gal,
-        double guess_sig_PSF, double precision, double guess_x_centroid, double guess_y_centroid);
+        double guess_sig_PSF, double precision, double guess_x_centroid, double guess_y_centroid,
+        boost::shared_ptr<HSMParams> hsmparams);
     template CppHSMShapeData EstimateShearHSMView(
         const ImageView<double>& gal_image, const ImageView<float>& PSF_image,
         const ImageView<int>& gal_mask_image,
         float sky_var, const char* shear_est, unsigned long flags, double guess_sig_gal,
-        double guess_sig_PSF, double precision, double guess_x_centroid, double guess_y_centroid);
+        double guess_sig_PSF, double precision, double guess_x_centroid, double guess_y_centroid,
+        boost::shared_ptr<HSMParams> hsmparams);
     template CppHSMShapeData EstimateShearHSMView(
         const ImageView<int>& gal_image, const ImageView<int>& PSF_image,
         const ImageView<int>& gal_mask_image,
         float sky_var, const char* shear_est, unsigned long flags, double guess_sig_gal,
-        double guess_sig_PSF, double precision, double guess_x_centroid, double guess_y_centroid);
+        double guess_sig_PSF, double precision, double guess_x_centroid, double guess_y_centroid,
+        boost::shared_ptr<HSMParams> hsmparams);
 
     template CppHSMShapeData FindAdaptiveMomView(
         const ImageView<float>& object_image, const ImageView<int> &object_mask_image,
-        double guess_sig, double precision, double guess_x_centroid, double guess_y_centroid);
+        double guess_sig, double precision, double guess_x_centroid, double guess_y_centroid,
+        boost::shared_ptr<HSMParams> hsmparams);
     template CppHSMShapeData FindAdaptiveMomView(
         const ImageView<double>& object_image, const ImageView<int> &object_mask_image,
-        double guess_sig, double precision, double guess_x_centroid, double guess_y_centroid);
+        double guess_sig, double precision, double guess_x_centroid, double guess_y_centroid,
+        boost::shared_ptr<HSMParams> hsmparams);
     template CppHSMShapeData FindAdaptiveMomView(
         const ImageView<int>& object_image, const ImageView<int> &object_mask_image,
-        double guess_sig, double precision, double guess_x_centroid, double guess_y_centroid);
+        double guess_sig, double precision, double guess_x_centroid, double guess_y_centroid,
+        boost::shared_ptr<HSMParams> hsmparams);
 
     template unsigned int general_shear_estimator(
         ConstImageView<float> gal_image, ConstImageView<int> gal_mask, 
         ConstImageView<float> PSF_image, ConstImageView<int> PSF_mask, 
         ObjectData& gal_data, ObjectData& PSF_data, const std::string& shear_est, 
-        unsigned long flags);
+        unsigned long flags, boost::shared_ptr<HSMParams> hsmparams);
     template unsigned int general_shear_estimator(
         ConstImageView<float> gal_image, ConstImageView<int> gal_mask, 
         ConstImageView<double> PSF_image, ConstImageView<int> PSF_mask, 
         ObjectData& gal_data, ObjectData& PSF_data, const std::string& shear_est, 
-        unsigned long flags);
+        unsigned long flags, boost::shared_ptr<HSMParams> hsmparams);
     template unsigned int general_shear_estimator(
         ConstImageView<double> gal_image, ConstImageView<int> gal_mask, 
         ConstImageView<float> PSF_image, ConstImageView<int> PSF_mask, 
         ObjectData& gal_data, ObjectData& PSF_data, const std::string& shear_est, 
-        unsigned long flags);
+        unsigned long flags, boost::shared_ptr<HSMParams> hsmparams);
     template unsigned int general_shear_estimator(
         ConstImageView<double> gal_image, ConstImageView<int> gal_mask, 
         ConstImageView<double> PSF_image, ConstImageView<int> PSF_mask, 
         ObjectData& gal_data, ObjectData& PSF_data, const std::string& shear_est, 
-        unsigned long flags);
+        unsigned long flags, boost::shared_ptr<HSMParams> hsmparams);
     template unsigned int general_shear_estimator(
         ConstImageView<int> gal_image, ConstImageView<int> gal_mask, 
         ConstImageView<int> PSF_image, ConstImageView<int> PSF_mask, 
         ObjectData& gal_data, ObjectData& PSF_data, const std::string& shear_est, 
-        unsigned long flags);
+        unsigned long flags, boost::shared_ptr<HSMParams> hsmparams);
 
     template void find_ellipmom_2(
         ConstImageView<double> data, ConstImageView<int> mask, double& A, double& x0, double& y0,
-        double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter);
+        double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter,
+        boost::shared_ptr<HSMParams> hsmparams);
     template void find_ellipmom_2(
         ConstImageView<float> data, ConstImageView<int> mask, double& A, double& x0, double& y0,
-        double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter);
+        double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter,
+        boost::shared_ptr<HSMParams> hsmparams);
     template void find_ellipmom_2(
         ConstImageView<int> data, ConstImageView<int> mask, double& A, double& x0, double& y0,
-        double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter);
+        double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter,
+        boost::shared_ptr<HSMParams> hsmparams);
 
 }
 }

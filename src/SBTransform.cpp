@@ -54,7 +54,7 @@ namespace galsim {
         const Position<double>& cen, double fluxScaling,
         boost::shared_ptr<GSParams> gsparams) :
         SBProfileImpl(gsparams.get() ? gsparams :
-                      SBProfile::GetImpl(adaptee)->gsparams),
+                      GetImpl(adaptee)->gsparams),
         _adaptee(adaptee), _mA(mA), _mB(mB), _mC(mC), _mD(mD), _cen(cen), _fluxScaling(fluxScaling)
     {
         dbg<<"Start TransformImpl (1)\n";
@@ -70,7 +70,7 @@ namespace galsim {
         const SBProfile& adaptee, const CppEllipse& e, double fluxScaling,
         boost::shared_ptr<GSParams> gsparams) :
         SBProfileImpl(gsparams.get() ? gsparams :
-                      SBProfile::GetImpl(adaptee)->gsparams),
+                      GetImpl(adaptee)->gsparams),
         _adaptee(adaptee), _cen(e.getX0()), _fluxScaling(fluxScaling)
     {
         dbg<<"Start TransformImpl (2)\n";

@@ -41,8 +41,6 @@ namespace galsim {
 
     SBShapelet::SBShapeletImpl::SBShapeletImpl(double sigma, const LVector& bvec,
                                                boost::shared_ptr<GSParams> gsparams) :
-        // Make a fresh copy of bvec, so we don't need to worry about the source changing
-        // behind our backs.
         SBProfileImpl(gsparams), _sigma(sigma), _bvec(bvec.copy()) {}
 
     const LVector& SBShapelet::getBVec() const
