@@ -615,6 +615,18 @@ class GSObject(object):
         # Make sure image is setup correctly
         image, dx = self._draw_setup_image(image,dx,wmult,add_to_image)
 
+        # For even-sized images, the SBProfile draw function centers the result in the 
+        # pixel just up and right of the real center.  So shift it back to make sure it really
+        # draws in the center.
+        even_x = (image.xmax-image.xmin+1) % 2 == 0
+        even_y = (image.ymax-image.ymin+1) % 2 == 0
+        if even_x:
+            if even_y: prof = self.createShifted(-0.5,-0.5)
+            else: prof = self.createShifted(-0.5,0.)
+        else:
+            if even_y: prof = self.createShifted(0.,-0.5)
+            else: prof = self
+
         # SBProfile draw command uses surface brightness normalization.  So if we
         # want flux normalization, we need to scale the flux by dx^2
         if normalization.lower() == "flux" or normalization.lower() == "f":
@@ -623,7 +635,7 @@ class GSObject(object):
             # multiply the ADU by dx^2.  i.e. divide gain by dx^2.
             gain /= dx**2
 
-        image.added_flux = self.SBProfile.draw(image.view(), gain, wmult)
+        image.added_flux = prof.SBProfile.draw(image.view(), gain, wmult)
 
         return image
 
@@ -780,6 +792,18 @@ class GSObject(object):
         # Make sure image is setup correctly
         image, dx = self._draw_setup_image(image,dx,wmult,add_to_image)
 
+        # For even-sized images, the SBProfile draw function centers the result in the 
+        # pixel just up and right of the real center.  So shift it back to make sure it really
+        # draws in the center.
+        even_x = (image.xmax-image.xmin+1) % 2 == 0
+        even_y = (image.ymax-image.ymin+1) % 2 == 0
+        if even_x:
+            if even_y: prof = self.createShifted(-0.5,-0.5)
+            else: prof = self.createShifted(-0.5,0.)
+        else:
+            if even_y: prof = self.createShifted(0.,-0.5)
+            else: prof = self
+
         # SBProfile drawShoot command uses surface brightness normalization.  So if we
         # want flux normalization, we need to scale the flux by dx^2
         if normalization.lower() == "flux" or normalization.lower() == "f":
@@ -789,7 +813,7 @@ class GSObject(object):
             gain /= dx**2
 
         try:
-            image.added_flux = self.SBProfile.drawShoot(
+            image.added_flux = prof.SBProfile.drawShoot(
                 image.view(), n_photons, uniform_deviate, gain, max_extra_noise, poisson_flux)
         except RuntimeError:
             raise RuntimeError(
