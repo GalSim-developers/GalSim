@@ -28,3 +28,7 @@ Changes from v0.4 to current version:
 
 * Added the ability to read/write to a specific HDU rather than assuming the first hdu should 
   be used. (Issue #350)
+
+* Added a new script, examples/PowerSpectrumEstimator.py, that can estimate the shear power spectrum
+  from a set of shears defined on a grid.  The main functionality of this script actually does not
+  require an installed version of GalSim, just Python 2.6 or 2.7 and NumPy.  (Issue #382)
