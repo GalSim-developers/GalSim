@@ -85,6 +85,9 @@ def getGSObjectSersicsSample(i):
     gso['psf'] = psf
     gso['galpsf'] = galsim.Convolve([gso['gal'],gso['psf']],gsparams=gsp)
 
+    # add the identifier field from the COSMOS catalog
+    gso['ident'] = sersic_sample_catalog[i,0]
+
     return gso
 
 
@@ -152,6 +155,10 @@ def getGSObjectListGals(i):
         gso['psf'].applyShear(g1=obj['psf']['g1'],g2=obj['psf']['g2'])
         gso['psf'].setFlux(1.)
         gso['galpsf'] = galsim.Convolve([gso['gal'],gso['psf']],gsparams=gsp)
+
+        # add the identifier field - set it equal to the index in the list
+        gso['ident'] = i
+
 
     return gso
 
@@ -372,11 +379,17 @@ def testPhotonVsFft():
         # get results from moments measurements
         results_gso = getMeasurements(gso)
 
-        delGSO(gso)
 
         if results_gso == None:
+            delGSO(gso)
             continue     
 
+        # add the identifier 
+        results_gso['ident'] = gso['ident']
+
+        # remove gso for memory - if we keep more than 100 then I am getting strange memory errors
+        delGSO(gso)
+       
         results_all.append(results_gso)
 
     return results_all
@@ -418,7 +431,7 @@ def saveResults(filename_output,results_all_gals):
     # save the output in the file
 
     for ig,res in enumerate(results_all_gals):
-        file_output.write(output_row_fmt % (ig, res['max_diff_over_max_image'], 
+        file_output.write(output_row_fmt % (res['ident'], res['max_diff_over_max_image'], 
                 res['moments_fft_e1'], res['moments_fft_e2'], res['moments_phot_e1'],  res['moments_phot_e2'],
                 res['hsm_corr_fft_e1'], res['hsm_corr_fft_e2'], res['hsm_corr_phot_e1'], res['hsm_corr_phot_e2'],
                 res['moments_fft_sigma'], res['moments_phot_sigma'], res['hsm_fft_sigma'], res['hsm_phot_sigma']
