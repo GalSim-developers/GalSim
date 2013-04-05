@@ -59,15 +59,18 @@ if not os.path.isfile(CFIMFILE): # If the CFIMFILE already exists skip straight 
     noiseims = cPickle.load(open(NOISEIMFILE, 'rb'))
     # Loop through the images and sum the correlation functions
     hst_ncf = None
+    bd = galsim.BaseDeviate(12345) # Seed is basically unimportant here
     for noiseim in noiseims:
         noiseim = noiseim.astype(np.float64)
         # Subtract off the mean for each field (bg subtraction never perfect)
         noiseim -= noiseim.mean()
         if hst_ncf is None:
             # Initialize the HST noise correlation function using the first image
-            hst_ncf = galsim.ImageCorrFunc(galsim.ImageViewD(noiseim))
+            hst_ncf = galsim.CorrelatedNoise(
+                bd, galsim.ImageViewD(noiseim), correct_periodicity=True)
         else:
-            hst_ncf += galsim.ImageCorrFunc(galsim.ImageViewD(noiseim))
+            hst_ncf += galsim.CorrelatedNoise(
+                bd, galsim.ImageViewD(noiseim), correct_periodicity=True)
     hst_ncf /= float(len(noiseims))
     # Draw and plot an output image of the resulting correlation function
     cfimage = galsim.ImageD(NPIX, NPIX)
