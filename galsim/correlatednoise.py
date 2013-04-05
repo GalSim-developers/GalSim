@@ -636,6 +636,19 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     which uses bilinear interpolation.  Initial tests indicate the favourable performance of this
     interpolant in applications involving correlated pixel noise.
 
+    There is also an option to switch off an internal correction for assumptions made about the
+    periodicity in the input noise image.  If you wish to turn this off you may, e.g.
+
+        >>> cn = galsim.CorrelatedNoise(rng, image, correct_periodicity=False)
+    
+    The default and generally recommended setting is `correct_periodicity=True`.
+
+    Users should note that the internal calculation of the discrete correlation function in `image`
+    will assume that `image` is periodic across its boundaries, introducing a dilution bias in the
+    estimate of inter-pixel correlations that increases with separation.  Unless you know that the
+    noise in `image` is indeed periodic (perhaps because you generated it to be so), you will not
+    generally wish to use the `correct_periodicity=False` option.
+
     Methods
     -------
     The main way that a CorrelatedNoise is used is to add or assign correlated noise to an image.
@@ -717,7 +730,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     scale the overall correlation function by a scalar operand using the .scaleVariance() method
     described above.  The random number generators are not affected by these scaling operations.
     """
-    def __init__(self, rng, image, dx=0., x_interpolant=None):
+    def __init__(self, rng, image, dx=0., x_interpolant=None, correct_periodicity=True):
 
         # Check that the input image is in fact a galsim.ImageSIFD class instance
         if not isinstance(image, (
@@ -731,6 +744,10 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
         ps_array = (ft_array * ft_array.conj()).real
         # Note need to normalize due to one-directional 1/N^2 in FFT conventions
         cf_array_prelim = (np.fft.ifft2(ps_array)).real / np.product(image.array.shape)
+
+        # Apply a correction for the DFT assumption of periodicity unless user requests otherwise
+        if correct_periodicity:
+            cf_array_prelim *= _cf_periodicity_dilution_correction(cf_array_prelim.shape)
 
         # Roll CF array to put the centre in image centre.  Remember that numpy stores data [y,x]
         cf_array_prelim = utilities.roll2d(
