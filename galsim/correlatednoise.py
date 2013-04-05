@@ -798,16 +798,16 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
             (np.sqrt(original_ps_image.array), original_cf_image.getScale()))
 
 # Helper function for returning the amount by which
-def _cf_periodicity_dilution_correction(shape):
-    """Return an array containing the dilution factor calculated by Mike on GalSim Pull Request
-    #366 for correcting bias due to CorrelatedNoise wrongly assuming periodicity around the edges.
+def _cf_periodicity_dilution_correction(cf_shape):
+    """Return an array containing the correction factor required for wrongly assuming periodicity
+    around noise field edges in an DFT estimate of the discrete correlation function.
 
-    See (GALSIM LINK).
+    Uses the result calculated by MJ on GalSim Pull Request #366.  See (GALSIM LINK).
 
-    Returns a 2D NumPy array with the same shape as the input parameter tuple `shape`.  This array
-    contains the correction factor by which elements in the naive CorrelatedNoise estimate of the
-    discrete correlation function should be multiplied to correct for the erroneous assumption of
-    periodic boundaries in an input noise field.
+    Returns a 2D NumPy array with the same shape as the input parameter tuple `cf_shape`.  This
+    array contains the correction factor by which elements in the naive CorrelatedNoise estimate of
+    the discrete correlation function should be multiplied to correct for the erroneous assumption
+    of periodic boundaries in an input noise field.
 
     Note this should be applied only to correlation functions that have *not* been rolled to place
     the origin at the array centre.  The convention used here is that the lower left corner is the
