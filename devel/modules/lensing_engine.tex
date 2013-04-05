@@ -125,22 +125,30 @@ the allowed area in $k$ space.
 
 We will have to modify the above formalism to account for the fact
 that all of our calculations use a discrete representation on a finite
-grid.  This 
+grid.  The real-space  
 grid is defined by
 \begin{align}
 L &= \mbox{length of grid along one dimension (angular units)}\\
 d &= \mbox{spacing between grid points (angular units)}\\
 N &= \mbox{number of grid points along one dimension} = L/d.
 \end{align}
-Given this grid, the \kmin\ along one dimension is $2\pi/L$, so we can
-think of this quantity as the grid spacing in Fourier space, i.e.,
-$\kmin=\Delta k$.  This value of \kmin\ corresponds to a Fourier mode
-that exactly fits inside of our square grid (in one dimension).  The
-$k$ range, again in one dimension, is from $k_1=-\pi/d$ to $\pi/d$,
-i.e., $|k_1|<\kmax=\pi/d$.  This corresponds to a mode that is sampled
-exactly twice (the minimum possible) given our choice of grid
-spacing.  For the two-dimensional grid, the maximum value of $|k|$ is
-then $\sqrt{2}\pi/d$.
+There is a comparable grid in Fourier-space (i.e., same $N$).  Given
+the parameters of the real-space grid, the \kmin\ along one dimension
+is $2\pi/L$, so we can think of this quantity as the grid spacing in
+Fourier space, i.e., $\kmin=\Delta k$.  This value of \kmin\
+corresponds to a Fourier mode that exactly fits inside of our square
+grid (in one dimension).  The $k$ range, again in one dimension, is
+from $k_1=-\pi/d$ to $\pi/d$, i.e., $|k_1|<\kmax=\pi/d$.  This
+corresponds to a mode that is sampled exactly twice (the minimum
+possible) given our choice of grid spacing.  For the two-dimensional
+grid, the maximum value of $|k|$ is then $\sqrt{2}\pi/d$.
+
+Given the Fourier-space grid, the lensing engine works in the simplest
+possible way: it samples the power $P(k)$ at the values of $(k_1,
+k_2)$ on the grid by obtaining $P((k_1^2+k_2^2)^{1/2})$; draws
+random amplitudes from a Gaussian based on the square root of $P(k)$;
+and Fourier transforms this back to our square real-space grid with
+periodic boundary conditions to obtain the real-space shear field.
 
 For a given grid point in
 Fourier space, it is
@@ -349,7 +357,7 @@ Using the expression of the Poisson summation formula in equation
   k (\theta_1 q + \theta_2 p)} \label{eq:dtft} 
 \end{equation}
 (which, like the Poisson summation formula, can also be shown using
-equation \ref{eq:xisum} and substituting the Fourier series expression
+equation \eqref{eq:xisum} and substituting the Fourier series expression
 for $\Sha^2_{\Delta k}$).  This is the expression for the inverse of
 what is known as the Discrete Time Fourier Transform (DTFT), although
 this result is normally derived using unitary conventions for the
@@ -470,7 +478,7 @@ the Fourier transforms of equations \eqref{eq:fwdft} and
 \section{Comparison software}\label{S:comparison}
 
 We will compare the outputs from GalSim against those from a completely independent piece of software,
-Chris Hirata's spherical harmonic transform code which is described in
+Chris Hirata's spherical harmonic transform (SHT) code which is described in
 multiple papers (for example,
 \href{http://adsabs.harvard.edu/abs/2004PhRvD..70j3501H}{Hirata
   et~al. 2004}).  This does not use the flat-sky
@@ -513,7 +521,7 @@ different grids:
 
 Our first test case is a Gaussian $P(k)$, i.e., $P(k) =
 P_0 e^{-\sigma^2 k^2 / 2}$.  Here both $P_0$ and $\sigma^2$ both
-have dimensions of angle$^2$.  By Eq.~\ref{E:alt-shearvar-limit}, this
+have dimensions of angle$^2$.  By Eq.~\eqref{E:alt-shearvar-limit}, this
 means that we expect
 \begin{align}
 \mathrm{Var}(\gamma) &= \frac{4P_0}{(2\pi)^2} \left[\left(\int_{0}^{\kmax} 
@@ -570,7 +578,7 @@ $\gamma_1$ and $\gamma_2$ vanishes.
 A flat $P(k)$ has a worrisome amount of power at large $k$, so we use
 a modified version of it: We use $P(k)=P_0$ for $k\le$\klim, where
 $\klim<\kmax$ for all the grids; and we set $P(k>\klim)=0$. Using
-Eq.~\ref{E:alt-shearvar-limit}, we expect
+Eq.~\eqref{E:alt-shearvar-limit}, we expect
 \begin{align}
 \mathrm{Var}(\gamma) &= \frac{4P_0}{(2\pi)^2}
 \left[\frac{1}{4}\int_{0}^{\klim} 2\pi k\,\rmd k - \kmin^2\right] \\
@@ -651,7 +659,7 @@ The python script test\_pk\_sht.py in that directory does the following:
 Finally, plot\_pk\_test.py in that directory plots the original and
 simulated $P(k)$ based on these files.  The results for the three
 cases (input $P_E$, input $P_B$, and input $P_E=P_B$) are in
-Figures~\ref{F:pe}, \ref{F:pb}, \ref{F:peb}.
+Figures~\ref{F:pe}, \ref{F:pb}, and \ref{F:peb}.
 
 \begin{figure}
 \begin{center}
@@ -688,7 +696,7 @@ We can conclude several things from these figures:
 \begin{itemize}
 \item The SHT code gives roughly a consistent shear power spectrum compared
   to our GalSim outputs.
-\item We don't see $E$ vs. $B$ leakage at any significant
+\item We don't see $E$ vs\@. $B$ leakage at any significant
   level.  The amplitudes and scaling of our output power spectra with
   $\ell$ are approximately correct.
 \item While the big-picture results seem good, there are some finer
@@ -781,7 +789,15 @@ limit theorem to apply.  As a result, using the RMS $a_{\ell m}$ as
 the inputs to the shear generation code (which is what we are
 effectively doing) starts to be wrong.  The simplest solution to this
 problem is to use simulations to predict the magnitude of the effect,
-and then compare results with that prediction.
+and then compare results with that prediction.  THe same statement
+applies to other limitations such as finite-gridding effects.  In
+particular, it would not be reasonable to compare the recovered PS
+with the theoretical one as a precise test of shear estimation, since
+all the aforementioned effects are much larger than the level at which
+we wish to test shear estimation.  Instead, the fair comparison would
+be to compare the observed curves above (that come from running the
+idealized shear values on the grid through our PS estimator) with the
+ones that challenge participants reconstruct from the galaxy images.
 
 \section{Shear power on larger scales than our grid}\label{S:pk0}
 
@@ -789,10 +805,10 @@ It is not clear that we should really be enforcing $P(k=0)=0$, i.e., no
 power below our \kmin.  This is a valid condition for the full-sky
 power spectrum, but will not in general be valid for a small patch of
 the sky, due to cosmic variance.  In order to include this sampling
-variance, it would be preferable to assign $P(k=0)$ to be some kind of
-integral over $P(k<\kmin)$ (perhaps an average power in that $k$
-range; details to be worked out later), {\em if} the power function is
-defined for those value of $k$.  However, this limitation is only a
+variance, it would be preferable to first define a much larger
+real-space grid than we actually need, so that the Fourier-space grid has much smaller
+\kmin\ and therefore has information about larger-wavelength modes
+than are included by our limited real-space grid.  However, this limitation is only a
 problem if we are checking quantities like the shear correlation
 function or its value at $\theta=0$, i.e., the shear variance.  If we
 are testing the ability to recover a power spectrum $P(k)$ defined at
