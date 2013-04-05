@@ -825,7 +825,8 @@ def _cf_periodicity_dilution_correction(cf_shape):
     """Return an array containing the correction factor required for wrongly assuming periodicity
     around noise field edges in an DFT estimate of the discrete correlation function.
 
-    Uses the result calculated by MJ on GalSim Pull Request #366.  See (GALSIM LINK).
+    Uses the result calculated by MJ on GalSim Pull Request #366.
+    See https://github.com/GalSim-developers/GalSim/pull/366.
 
     Returns a 2D NumPy array with the same shape as the input parameter tuple `cf_shape`.  This
     array contains the correction factor by which elements in the naive CorrelatedNoise estimate of
