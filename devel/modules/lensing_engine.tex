@@ -125,22 +125,30 @@ the allowed area in $k$ space.
 
 We will have to modify the above formalism to account for the fact
 that all of our calculations use a discrete representation on a finite
-grid.  This 
+grid.  The real-space  
 grid is defined by
 \begin{align}
 L &= \mbox{length of grid along one dimension (angular units)}\\
 d &= \mbox{spacing between grid points (angular units)}\\
 N &= \mbox{number of grid points along one dimension} = L/d.
 \end{align}
-Given this grid, the \kmin\ along one dimension is $2\pi/L$, so we can
-think of this quantity as the grid spacing in Fourier space, i.e.,
-$\kmin=\Delta k$.  This value of \kmin\ corresponds to a Fourier mode
-that exactly fits inside of our square grid (in one dimension).  The
-$k$ range, again in one dimension, is from $k_1=-\pi/d$ to $\pi/d$,
-i.e., $|k_1|<\kmax=\pi/d$.  This corresponds to a mode that is sampled
-exactly twice (the minimum possible) given our choice of grid
-spacing.  For the two-dimensional grid, the maximum value of $|k|$ is
-then $\sqrt{2}\pi/d$.
+There is a comparable grid in Fourier-space (i.e., same $N$).  Given
+the parameters of the real-space grid, the \kmin\ along one dimension
+is $2\pi/L$, so we can think of this quantity as the grid spacing in
+Fourier space, i.e., $\kmin=\Delta k$.  This value of \kmin\
+corresponds to a Fourier mode that exactly fits inside of our square
+grid (in one dimension).  The $k$ range, again in one dimension, is
+from $k_1=-\pi/d$ to $\pi/d$, i.e., $|k_1|<\kmax=\pi/d$.  This
+corresponds to a mode that is sampled exactly twice (the minimum
+possible) given our choice of grid spacing.  For the two-dimensional
+grid, the maximum value of $|k|$ is then $\sqrt{2}\pi/d$.
+
+Given the Fourier-space grid, the lensing engine works in the simplest
+possible way: it samples the power $P(k)$ at the values of $(k_1,
+k_2)$ on the grid by obtaining $P((k_1^2+k_2^2)^{1/2})$; draws
+random amplitudes from a Gaussian based on the square root of $P(k)$;
+and Fourier transforms this back to our square real-space grid with
+periodic boundary conditions to obtain the real-space shear field.
 
 For a given grid point in
 Fourier space, it is
@@ -781,7 +789,15 @@ limit theorem to apply.  As a result, using the RMS $a_{\ell m}$ as
 the inputs to the shear generation code (which is what we are
 effectively doing) starts to be wrong.  The simplest solution to this
 problem is to use simulations to predict the magnitude of the effect,
-and then compare results with that prediction.
+and then compare results with that prediction.  THe same statement
+applies to other limitations such as finite-gridding effects.  In
+particular, it would not be reasonable to compare the recovered PS
+with the theoretical one as a precise test of shear estimation, since
+all the aforementioned effects are much larger than the level at which
+we wish to test shear estimation.  Instead, the fair comparison would
+be to compare the observed curves above (that come from running the
+idealized shear values on the grid through our PS estimator) with the
+ones that challenge participants reconstruct from the galaxy images.
 
 \section{Shear power on larger scales than our grid}\label{S:pk0}
 
@@ -789,10 +805,10 @@ It is not clear that we should really be enforcing $P(k=0)=0$, i.e., no
 power below our \kmin.  This is a valid condition for the full-sky
 power spectrum, but will not in general be valid for a small patch of
 the sky, due to cosmic variance.  In order to include this sampling
-variance, it would be preferable to assign $P(k=0)$ to be some kind of
-integral over $P(k<\kmin)$ (perhaps an average power in that $k$
-range; details to be worked out later), {\em if} the power function is
-defined for those value of $k$.  However, this limitation is only a
+variance, it would be preferable to first define a much larger
+real-space grid than we actually need, so that the Fourier-space grid has much smaller
+\kmin\ and therefore has information about larger-wavelength modes
+than are included by our limited real-space grid.  However, this limitation is only a
 problem if we are checking quantities like the shear correlation
 function or its value at $\theta=0$, i.e., the shear variance.  If we
 are testing the ability to recover a power spectrum $P(k)$ defined at
