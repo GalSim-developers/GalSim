@@ -797,6 +797,31 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
         self._rootps_store.append(
             (np.sqrt(original_ps_image.array), original_cf_image.getScale()))
 
+# Helper function for returning the amount by which
+def _cf_periodicity_dilution_correction(shape):
+    """Return an array containing the dilution factor calculated by Mike on GalSim Pull Request
+    #366 for correcting bias due to CorrelatedNoise wrongly assuming periodicity around the edges.
+
+    See (GALSIM LINK).
+
+    Returns a 2D NumPy array with the same shape as the input parameter tuple `shape`.  This array
+    contains the correction factor by which elements in the naive CorrelatedNoise estimate of the
+    discrete correlation function should be multiplied to correct for the erroneous assumption of
+    periodic boundaries in an input noise field.
+
+    Note this should be applied only to correlation functions that have *not* been rolled to place
+    the origin at the array centre.  The convention used here is that the lower left corner is the
+    [0, 0] origin, following standard FFT conventions (see e.g numpy.fft.fftfreq).  You should
+    therefore only apply this correction before using galsim.utilities.roll2d to recentre the image
+    of the correlation function.
+    """
+    # First calculate the Delta_x, Delta_y
+    deltax, deltay = np.meshgrid( # Remember NumPy array shapes are [y, x]
+        np.fft.fftfreq(shape[1]) * float(shape[1]), np.fft.fftfreq(shape[0]) * float(shape[0]))
+    # Then get the dilution correction
+    correction = shape[0] * shape[1] / (shape[1] - np.abs(deltax)) / (shape[0] - np.abs(deltay))
+    return correction
+
 # Make a function for returning Noise correlations
 def _Image_getCorrelatedNoise(image):
     """Returns a CorrelatedNoise instance by calculating the correlation function of image pixels.
