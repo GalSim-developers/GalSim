@@ -135,6 +135,12 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         is preferred.
 
+        Note that the correlated noise field in `image` will be periodic across its boundaries: this
+        is due to the fact that the internals of the CorrelatedNoise currently use a relatively
+        simple implementation of noise generation using the Fast Fourier Transform.  If you wish to
+        avoid this property being present in your final `image` you should .applyTo() an `image` of
+        greater extent than you need, and take a subset.
+
         @param image The input Image object.
         """
         # Note that this uses the (fast) method of going via the power spectrum and FFTs to generate
