@@ -808,38 +808,44 @@ def test_convolve_cosmos():
     convimage1 = galsim.ImageD(int(largeim_size * size_factor), int(largeim_size * size_factor))
     convimage2 = galsim.ImageD(int(largeim_size * size_factor), int(largeim_size * size_factor))
     convimage4 = galsim.ImageD(int(largeim_size * size_factor), int(largeim_size * size_factor))
+
     print "Unpadded convolved image bounds = "+str(convimage1.bounds)
     convimage3_padded = galsim.ImageD(
         int(largeim_size * size_factor) + 32, int(largeim_size * size_factor) + 32)
     # Set the scales of convimage2 & 3 to be 0.18 so that addNoise() works correctly
     convimage2.setScale(0.18)
     convimage3_padded.setScale(0.18)
-
     print "Padded convolved image bounds = "+str(convimage3_padded.bounds)
     print ""
+
     # We draw, calculate a correlation function for the resulting field, and repeat to get an
     # average over nsum_test trials
     cimobj.draw(convimage1, dx=0.18, normalization='sb')
-    cn_test1 = galsim.CorrelatedNoise(gd, convimage1, dx=0.18)
+    cn_test1 = galsim.CorrelatedNoise(gd, convimage1, dx=0.18, correct_periodicity=False)
     testim1 = galsim.ImageD(smallim_size, smallim_size)
     cn_test1.draw(testim1, dx=0.18)
  
     convimage2.addNoise(conv_cn)  # Now we make a comparison by simply adding noise from conv_cn
-    cn_test2 = galsim.CorrelatedNoise(gd, convimage2, dx=0.18)
+    cn_test2 = galsim.CorrelatedNoise(gd, convimage2, dx=0.18, correct_periodicity=False)
     testim2 = galsim.ImageD(smallim_size, smallim_size)
     cn_test2.draw(testim2, dx=0.18)
 
     convimage3_padded.addNoise(conv_cn)  # Now we make a comparison by adding noise from conv_cn
     # Now only look at the subimage from convimage3, avoids edge regions which will be wrapped round
     convimage3 = convimage3_padded[convimage1.bounds]
-    cn_test3 = galsim.CorrelatedNoise(gd, convimage3, dx=0.18)
+    cn_test3 = galsim.CorrelatedNoise(gd, convimage3, dx=0.18, correct_periodicity=False)
     testim3 = galsim.ImageD(smallim_size, smallim_size)
     cn_test3.draw(testim3, dx=0.18)
 
     cimobj_padded.draw(convimage4, dx=0.18, normalization='sb')
-    cn_test4 = galsim.CorrelatedNoise(gd, convimage4, dx=0.18)
+    cn_test4 = galsim.CorrelatedNoise(gd, convimage4, dx=0.18, correct_periodicity=False)
     testim4 = galsim.ImageD(smallim_size, smallim_size)
-    cn_test4.draw(testim1, dx=0.18)
+    cn_test4.draw(testim4, dx=0.18)
+
+    # Then make a testim5 which uses the noise from Case 4 but uses the periodicity correction
+    cn_test5 = galsim.CorrelatedNoise(gd, convimage4, dx=0.18, correct_periodicity=True)
+    testim5 = galsim.ImageD(smallim_size, smallim_size)
+    cn_test5.draw(testim5, dx=0.18)
 
     conv1_list = [convimage1.array.copy()] # Don't forget Python reference/assignment semantics, we
                                            # zero convimage and write over it later!
@@ -886,14 +892,14 @@ def test_convolve_cosmos():
         conv1_list.append(convimage1.array.copy()) # See above
         mnsq1_list.append(np.mean(convimage1.array**2))
         var1_list.append(convimage1.array.var())
-        cn_test1 = galsim.CorrelatedNoise(gd, convimage1, dx=0.18) 
+        cn_test1 = galsim.CorrelatedNoise(gd, convimage1, dx=0.18, correct_periodicity=False) 
         cn_test1.draw(testim1, dx=0.18, add_to_image=True)
 
         convimage2.addNoise(conv_cn)  # Simply adding noise from conv_cn for a comparison
         conv2_list.append(convimage2.array.copy()) # See above
         mnsq2_list.append(np.mean(convimage2.array**2))
         var2_list.append(convimage2.array.var())
-        cn_test2 = galsim.CorrelatedNoise(gd, convimage2, dx=0.18)
+        cn_test2 = galsim.CorrelatedNoise(gd, convimage2, dx=0.18, correct_periodicity=False)
         cn_test2.draw(testim2, dx=0.18, add_to_image=True)
 
         convimage3_padded.addNoise(conv_cn)  # Adding noise from conv_cn for a comparison
@@ -901,15 +907,19 @@ def test_convolve_cosmos():
         conv3_list.append(convimage3.array.copy()) # See above
         mnsq3_list.append(np.mean(convimage3.array**2))
         var3_list.append(convimage3.array.var())
-        cn_test3 = galsim.CorrelatedNoise(gd, convimage3, dx=0.18)
+        cn_test3 = galsim.CorrelatedNoise(gd, convimage3, dx=0.18, correct_periodicity=False)
         cn_test3.draw(testim3, dx=0.18, add_to_image=True)
 
         cimobj_padded.draw(convimage4, dx=0.18, normalization='sb')
         conv4_list.append(convimage4.array.copy()) # See above
         mnsq4_list.append(np.mean(convimage4.array**2))
         var4_list.append(convimage4.array.var())
-        cn_test4 = galsim.CorrelatedNoise(gd, convimage4, dx=0.18) 
+        cn_test4 = galsim.CorrelatedNoise(gd, convimage4, dx=0.18, correct_periodicity=False) 
         cn_test4.draw(testim4, dx=0.18, add_to_image=True)
+
+        # Then do testim5 simply using convimage4 but applying the dilution correction
+        cn_test5 = galsim.CorrelatedNoise(gd, convimage4, dx=0.18, correct_periodicity=True)
+        cn_test5.draw(testim5, dx=0.18, add_to_image=True)
  
         if ((i + 2) % 100 == 0): print "Completed "+str(i + 2)+"/"+str(nsum_test)+" trials"
         del imobj
@@ -918,6 +928,7 @@ def test_convolve_cosmos():
         del cn_test2
         del cn_test3
         del cn_test4
+        del cn_test5
 
     mnsq1_individual = sum(mnsq1_list) / float(nsum_test)
     var1_individual = sum(var1_list) / float(nsum_test)
@@ -932,11 +943,13 @@ def test_convolve_cosmos():
     testim2 /= float(nsum_test) # Take average CF of trials
     testim3 /= float(nsum_test) # Take average CF of trials
     testim4 /= float(nsum_test) # Take average CF of trials
+    testim5 /= float(nsum_test) # Take average CF of trials
    
     testim1.write('junk1.fits')
     testim2.write('junk2.fits')
     testim3.write('junk3.fits')
     testim4.write('junk4.fits')
+    testim5.write('junk5.fits')
 
     conv1_array = np.asarray(conv1_list)
     mnsq1_all = np.mean(conv1_array**2)
@@ -974,7 +987,8 @@ def test_convolve_cosmos():
     print "Zero lag CF in reference case = "+str(refim.array[8, 8])
     print "Ratio of zero lag CFs = %e" % (testim2.array[8, 8] / refim.array[8, 8])
     print ""
-    print "Case 3 (noise generated directly from convolved CN, with padding to avoid adding edge effects):"
+    print "Case 3 (noise generated directly from convolved CN, with padding to avoid adding edge "+\
+        "effects):"
     print "Mean square estimate from avg. of individual field mean squares = "+str(mnsq3_individual)
     print "Mean square estimate from all fields = "+str(mnsq3_all)
     print "Ratio of mean squares = %e" % (mnsq3_individual / mnsq3_all)
@@ -1051,10 +1065,17 @@ def test_convolve_cosmos():
     print 'min ratio = %e' % np.min(testim4.array[4:12, 4:12] / testim3.array[4:12, 4:12])
     print 'max ratio = %e' % np.max(testim4.array[4:12, 4:12] / testim3.array[4:12, 4:12])
     print ''
-
-    #import matplotlib.pyplot as plt
-    #plt.pcolor(testim.array); plt.colorbar()
-    #plt.figure(); plt.pcolor(refim.array); plt.colorbar(); plt.show()
+    print "Printing analysis of central 4x4 of CF from case 4 using periodicity correction:"
+    # Show ratios etc in central 4x4 where CF is definitely non-zero
+    print 'mean diff = ',np.mean(testim5.array[4:12, 4:12] - refim.array[4:12, 4:12])
+    print 'var diff = ',np.var(testim5.array[4:12, 4:12] - refim.array[4:12, 4:12])
+    print 'min diff = ',np.min(testim5.array[4:12, 4:12] - refim.array[4:12, 4:12])
+    print 'max diff = ',np.max(testim5.array[4:12, 4:12] - refim.array[4:12, 4:12])
+    print 'mean ratio = %e' % np.mean(testim5.array[4:12, 4:12] / refim.array[4:12, 4:12])
+    print 'var ratio = ',np.var(testim5.array[4:12, 4:12] / refim.array[4:12, 4:12])
+    print 'min ratio = %e' % np.min(testim5.array[4:12, 4:12] / refim.array[4:12, 4:12])
+    print 'max ratio = %e' % np.max(testim5.array[4:12, 4:12] / refim.array[4:12, 4:12])
+    print ''
 
     # Test (ditto only look at central 4x4)
     #np.testing.assert_array_almost_equal(
