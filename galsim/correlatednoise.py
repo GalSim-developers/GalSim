@@ -834,9 +834,11 @@ def _cf_periodicity_dilution_correction(cf_shape):
     """
     # First calculate the Delta_x, Delta_y
     deltax, deltay = np.meshgrid( # Remember NumPy array shapes are [y, x]
-        np.fft.fftfreq(shape[1]) * float(shape[1]), np.fft.fftfreq(shape[0]) * float(shape[0]))
+        np.fft.fftfreq(cf_shape[1]) * float(cf_shape[1]),
+        np.fft.fftfreq(cf_shape[0]) * float(cf_shape[0]))
     # Then get the dilution correction
-    correction = shape[0] * shape[1] / (shape[1] - np.abs(deltax)) / (shape[0] - np.abs(deltay))
+    correction = (
+        cf_shape[1] * cf_shape[0] / (cf_shape[1] - np.abs(deltax)) / (cf_shape[0] - np.abs(deltay)))
     return correction
 
 # Make a function for returning Noise correlations
