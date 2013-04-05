@@ -645,7 +645,7 @@ spurious power in $E$ and $B$ modes due to aliasing.
 The python script test\_pk.py in devel/external/test\_gridshear/ does the following:
 \begin{enumerate}
 \item Generates shears according to this PS using GalSim.
-\item Runs the GREAT10 power spectrum code on both, and averages it over several
+\item Runs the GREAT10 power spectrum code on both, and averages it over  many 
   noise realizations.
 \end{enumerate}
 
@@ -798,6 +798,44 @@ we wish to test shear estimation.  Instead, the fair comparison would
 be to compare the observed curves above (that come from running the
 idealized shear values on the grid through our PS estimator) with the
 ones that challenge participants reconstruct from the galaxy images.
+
+As an example of how this could work in practice, Figs.~\ref{pse}
+and~\ref{pse-ratio} show the results of using the power spectrum
+estimation software that is in GalSim on the outputs of the GalSim
+lensing engine.  In Fig.~\ref{pse}, we show the results of simulating
+shears with $P_B=0$ and $P_E$ that comes from a cosmological shear
+power spectrum.  The GalSim power spectrum estimation software is able
+to account for the effects of the finite size of the logarithmic
+$\ell$ bins used for power spectrum estimation and their relation to
+our discrete grid of $\ell$ values, producing a ``theory''
+curve that includes those effects directly.  It is clear that the
+estimated power spectrum is closer to that binned theory estimate than
+it is to the ideal theory curve, which makes sense.
+Fig.~\ref{pse-ratio} shows the ratio of the estimated power to the
+ideal and binned theory curves.  Use of the binned theory curve has
+reduced the residuals to a maximum of 3\% (more typically 1\%), but
+since the shear systematics we are trying to detect are comparable in
+size to those residuals, we should compare with the red curve in
+Fig.~\ref{pse} rather than the idealized or binned theory when
+evaluating shear estimation methods.
+\begin{figure}
+\begin{center}
+\includegraphics[width=3in]{../external/test_gridshear/output/compare_input_pe.pse.eps}
+\caption{Output shear power spectra (plotted as the dimensionless
+  $\Delta^2$) for the grids described in Sec.~\ref{S:testpk}, where
+  the input $P_E$ is a realistic cosmological one (shown as the `theory' line on
+  the plot) and the input $P_B=0$. Results are shown using the GalSim
+  power spectrum estimation software, and include a ``rebinned
+  theory'' curve that accounts for the effect of our finite-sized
+  $\ell$ bins on the theory prediction\label{pse}}
+\end{center}
+\end{figure}
+\begin{figure}
+\begin{center}
+\includegraphics[width=3in]{../external/test_gridshear/output/compare_input_pe.pse.ratio.eps}
+\caption{Ratio of GalSim EE PS vs. theory from Fig.~\ref{pse}.\label{pse-ratio}}
+\end{center}
+\end{figure}
 
 \section{Shear power on larger scales than our grid}\label{S:pk0}
 
