@@ -348,7 +348,7 @@ class MEDS(object):
     def size(self):
         return self._cat.size
 
-def write(filename,objlist):
+def write(filename,objlist,clobber=False):
     """
     Writes the galaxy, weights, segmaps images to the meds file.
 
@@ -497,7 +497,7 @@ def write(filename,objlist):
 
     # write all
     hdu_list = pyfits.HDUList([primary,object_data,image_info,metadata,image_cutouts, weight_cutouts, seg_cutouts])
-    hdu_list.writeto(filename)
+    hdu_list.writeto(filename,clobber=clobber)
 
 
 def check_image_sizes(obj):
@@ -526,7 +526,7 @@ def check_image_sizes(obj):
         # loop through the images and check if they are of the same size
         for extname in ('image','weight','seg'):
 
-            for cutout in obj[extname]:
+            for icutout,cutout in enumerate(obj[extname]):
 
                 nx=cutout.shape[0]
                 ny=cutout.shape[1]
@@ -535,7 +535,7 @@ def check_image_sizes(obj):
                     raise ValueError('%s should be square and is %d x %d',(extname,nx,ny))
 
                 if nx != box_size:
-                    raise ValueError('%s object %d has size %d and should be %d' % (extname,i,nx,box_size))
+                    raise ValueError('%s object %d has size %d and should be %d' % (extname,icutout,nx,box_size))
 
         # return true if no errors
         return True
