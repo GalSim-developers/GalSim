@@ -20,8 +20,12 @@
 
 Part of the DES module.  This file implements one way that DES measures the PSF.
 
-The DES_PSFEx class handles interpolated PCA images, which are generally stored in 
-*_psfcat.psf files.
+The DES_PSFEx class handles interpolated PCA images, which are generally stored in *_psfcat.psf 
+files.
+
+See documentation here:
+
+    https://www.astromatic.net/pubsvn/software/psfex/trunk/doc/psfex.pdf
 """
 
 import galsim
@@ -65,34 +69,89 @@ class DES_PSFEx(object):
     def read(self):
         import pyfits
         hdu = pyfits.open(self.file_name)[1]
+        # Number of parameters used for the interpolation.  We require this to be 2.
         pol_naxis = hdu.header['POLNAXIS']
         if pol_naxis != 2:
-            raise IOError("PSFEx: Expected POLNAXIS == 2, got %d"%polnaxis)
+            raise IOError("PSFEx: Expected POLNAXIS == 2, got %d"%pol_naxis)
+
+        # These are the names of the two axes.  Should be X_IMAGE, Y_IMAGE.
+        # If they aren't, then the way we use the interpolation will be wrong.
+        pol_name1 = hdu.header['POLNAME1']
+        if pol_name1 != 'X_IMAGE':
+            raise IOError("PSFEx: Expected POLNAME1 == X_IMAGE, got %s"%pol_name1)
+        pol_name2 = hdu.header['POLNAME2']
+        if pol_name2 != 'Y_IMAGE':
+            raise IOError("PSFEx: Expected POLNAME2 == Y_IMAGE, got %s"%pol_name2)
+
+        # Zero points and scale.  Interpolation is in terms of (x-x0)/xscale, (y-y0)/yscale
         pol_zero1 = hdu.header['POLZERO1']
         pol_zero2 = hdu.header['POLZERO2']
         pol_scal1 = hdu.header['POLSCAL1']
         pol_scal2 = hdu.header['POLSCAL2']
-        pol_name1 = hdu.header['POLNAME1']
-        pol_name2 = hdu.header['POLNAME2']
-        psf_naxis = hdu.header['PSFNAXIS']
-        if psf_naxis != 3:
-            raise IOError("PSFEx: Expected PSFNAXIS == 3, got %d"%psfnaxis)
-        psf_axis1 = hdu.header['PSFAXIS1']
-        psf_axis2 = hdu.header['PSFAXIS2']
-        psf_axis3 = hdu.header['PSFAXIS3']
-        pol_deg = hdu.header['POLDEG1']
-        if psf_axis3 != ((pol_deg+1)*(pol_deg+2))/2:
-            raise IOError("PSFEx: POLDEG and PSFAXIS3 disagree")
-        psf_samp = hdu.header['PSF_SAMP']
+
+        # This defines the number of "context groups".
+        # Here is Emmanuel's explanation:
+        #
+        #     POLNGRP is the number of "context groups". A group represents a set of variables 
+        #     (SExtractor measurements or FITS header parameters if preceded with ":") which share 
+        #     the same maximum polynomial degree. For instance if x and y are in group 1, and the 
+        #     degree of that group is 2, and z is in group 2 with degree 1, the polynomial will 
+        #     consist of:
+        #         1, x, x^2, y, y.x, y^2, z, z.x^2, z.y, z.y.x, z.y^2
+        #     (see eq 14 in https://www.astromatic.net/pubsvn/software/psfex/trunk/doc/psfex.pdf )
+        #     By default, POLNGRP is 1 and the group contains X_IMAGE and Y_IMAGE measurements 
+        #     from SExtractor.
+        #
+        # For now, we require this to be 1, since I didn't have any files with POLNGRP != 1 to 
+        # test on.
         pol_ngrp = hdu.header['POLNGRP']
-        # I'm not sure what this POLNGRP is really about, but Peter's code (from which I
-        # am adapting this) says that it only works when POLNGRP == 1.
         if pol_ngrp != 1:
             raise IOError("PSFEx: Current implementation requires POLNGRP == 1, got %d"%pol_ngrp)
 
+        # Which group each item is in.  We require group 1.
+        pol_group1 = hdu.header['POLGRP1']
+        if pol_group1 != 1:
+            raise IOError("PSFEx: Expected POLGRP1 == 1, got %s"%pol_group1)
+        pol_group2 = hdu.header['POLGRP2']
+        if pol_group2 != 1:
+            raise IOError("PSFEx: Expected POLGRP2 == 1, got %s"%pol_group2)
+
+        # The degree of the polynomial.  E.g. POLDEG1 = 2 means the values will be:
+        #     1, x, x^2, y, xy, y^2
+        # If we start allowing POLNGRP > 1, there is a separate degree for each group.
+        pol_deg = hdu.header['POLDEG1']
+
+        # The number of axes in the basis object.  We require this to be 3.
+        psf_naxis = hdu.header['PSFNAXIS']
+        if psf_naxis != 3:
+            raise IOError("PSFEx: Expected PSFNAXIS == 3, got %d"%psfnaxis)
+
+        # The first two axes are the image size of the PSF postage stamp.
+        psf_axis1 = hdu.header['PSFAXIS1']
+        psf_axis2 = hdu.header['PSFAXIS2']
+
+        # The third axis is the direction of the polynomial interpolation.  So it should
+        # be equal to (d+1)(d+2)/2.
+        psf_axis3 = hdu.header['PSFAXIS3']
+        if psf_axis3 != ((pol_deg+1)*(pol_deg+2))/2:
+            raise IOError("PSFEx: POLDEG and PSFAXIS3 disagree")
+
+        # This is the PSF "sample size".  Again, from Emmanuel:
+        #
+        #     PSF_SAMP is the sampling step of the PSF. PSF_SAMP=0.5 means that the PSF model has 
+        #     two samples per original image pixel (superresolution, so in automatic mode it is a 
+        #     sign that the original images were undersampled)
+        #
+        # In other words, it can be thought of as a unit conversion:
+        #     "image pixels" / "psfex pixels"
+        # So 1 image pixel = (1/psf_samp) psfex pixels.
+        psf_samp = hdu.header['PSF_SAMP']
+
+        # The basis object is a data cube (assuming PSFNAXIS==3)
         # Note: older pyfits versions don't get the shape right.
         # For newer pyfits versions the reshape command should be a no op.
         basis = hdu.data.field('PSF_MASK')[0].reshape(psf_axis3,psf_axis2,psf_axis1)
+        # Make sure this turned out right.
         if basis.shape[0] != psf_axis3:
             raise IOError("PSFEx: PSFAXIS3 disagrees with actual basis size")
         if basis.shape[1] != psf_axis2:
@@ -144,6 +203,9 @@ class DES_PSFEx(object):
 
         ar = numpy.tensordot(P,self.basis,(0,0)).astype(numpy.float32)
         im = galsim.ImageViewF(array=ar)
+        # We need the scale in arcsec/psfex_pixel, which is 
+        #    (arcsec / image_pixel) * (image_pixel / psfex_pixel)
+        #    = pixel_scale * sample_scale
         im.scale = pixel_scale * self.sample_scale
         return galsim.InterpolatedImage(im, flux=1, x_interpolant=galsim.Lanczos(3))
 
