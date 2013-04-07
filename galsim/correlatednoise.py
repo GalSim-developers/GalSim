@@ -655,6 +655,11 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     noise in `image` is indeed periodic (perhaps because you generated it to be so), you will not
     generally wish to use the `correct_periodicity=False` option.
 
+    By default, the image is mean subtracted before the correlation function is estimated.  To
+    prevent this, you can set the `subtract_mean` keyword to `False`, e.g.
+
+        >>> cn galsim.CorrelatedNoise(rng, image, subtract_mean=False)
+
     Methods
     -------
     The main way that a CorrelatedNoise is used is to add or assign correlated noise to an image.
@@ -736,7 +741,8 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     scale the overall correlation function by a scalar operand using the .scaleVariance() method
     described above.  The random number generators are not affected by these scaling operations.
     """
-    def __init__(self, rng, image, dx=0., x_interpolant=None, correct_periodicity=True):
+    def __init__(self, rng, image, dx=0., x_interpolant=None, correct_periodicity=True,
+                 subtract_mean=True):
 
         # Check that the input image is in fact a galsim.ImageSIFD class instance
         if not isinstance(image, (
@@ -744,9 +750,11 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
             raise TypeError(
                 "Input image not a galsim.Image class object (e.g. ImageD, ImageViewS etc.)")
         # Build a noise correlation function (CF) from the input image, using DFTs
-
         # Calculate the power spectrum then a (preliminary) CF 
-        ft_array = np.fft.fft2(image.array)
+        if subtract_mean: # Subtract mean from image first unless otherwise instructed
+            ft_array = np.fft.fft2(image.array - image.array.mean())
+        else:
+            ft_array = np.fft.fft2(image.array)
         ps_array = (ft_array * ft_array.conj()).real
         # Note need to normalize due to one-directional 1/N^2 in FFT conventions
         cf_array_prelim = (np.fft.ifft2(ps_array)).real / np.product(image.array.shape)
