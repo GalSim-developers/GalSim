@@ -861,10 +861,41 @@ def _cf_periodicity_dilution_correction(cf_shape):
     return correction
 
 def _cf_sample_variance_bias_correction(ps_array):
+    """Attempt to correct for the fact that the sample covariance is a biased estimator of the
+    population covariance.
+
+    This uses the power spectrum to estimate the "effective number of independent random variables"
+    represented in a field of correlated noise.  The more correlated the noise, the fewer
+    independent random variables.  This effective number is estimated as
+
+        neff = ps_array.sum() / ps_array.max()
+
+    In the limit of flat white noise you would therefore have `neff = numpy.product(ps_array.shape)`
+    as it ought to be.  In the limit of a single noise mode you would likewise have `neff = 1`.
+    However, while this relationship seems to scale correctly between these extremes it is not
+    any better motivated than being a piece of gut/guesswork by BR.
+
+    This `neff` is then used to correct the estimated noise correlations using the familiar
+    `neff / (neff - 1.)` correction factor found in sample variances.  There is one further step
+    in the correction, however.  Drawing on the insight from the 
+    `_cf_periodicity_dilution_correction`, we realise that when estimating points at non-zero
+    separation the entire area of the input image is not available, and the number of pairs of such
+    points is only a fraction of `numpy.product(ps_array.shape)`.  This fraction is used to correct
+    `neff` for correlations at non-zero separations.
     """
-    """
-    neff = ps_array.sum() / ps_array.max()
+    # Get neffective an my intuitive impression that the N we want in N / (N-1) is related to the
+    # number of independent random variables that are really 'used' in making the image.  The power
+    # spectrum gives us this (think about how we realize such fields).  It makes sense (to me) for
+    # the largest mode to be the 'unit' independent variable, all other terms contributing less in
+    # proportion to the size of their power spectrum at that k.
+    neff = ps_array.sum() / ps_array.max() # ... this may be all rubbish though
+
+    # Then we correct for the fact that, since we can't assume periodicity, there are actually fewer
+    # possible pairs of points for wide separations of correlation function than for close
+    # separations
     area_fraction = 1. / _cf_periodicity_dilution_correction(ps_array.shape)
+
+    # Do a standard N/(N-1) sample variance correction, but using neff and scaling by available area
     correction = neff * area_fraction / (neff * area_fraction - 1.)
     return correction
 
