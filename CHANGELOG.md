@@ -28,3 +28,5 @@ Changes from v0.4 to current version:
 
 * Added the ability to read/write to a specific HDU rather than assuming the first hdu should 
   be used. (Issue #350)
+
+* Added Sersic truncation. (Issue #388)

@@ -1830,7 +1830,8 @@ class Sersic(GSObject):
     Initialization
     --------------
     A Sersic is initialized with `n`, the Sersic index of the profile, and the half light radius 
-    size parameter `half_light_radius`.  A `flux` parameter is optional [default `flux = 1.`].
+    size parameter `half_light_radius`.  Optional parameters are truncation radius `trunc` [default
+    `trunc = 0.`, indicating no truncation] and a `flux` parameter [default `flux = 1`].
 
     Example:
 
@@ -1848,14 +1849,14 @@ class Sersic(GSObject):
 
     # Initialization parameters of the object, with type information
     _req_params = { "n" : float , "half_light_radius" : float }
-    _opt_params = { "flux" : float }
+    _opt_params = { "trunc": float, "flux" : float }
     _single_params = []
     _takes_rng = False
 
     # --- Public Class methods ---
-    def __init__(self, n, half_light_radius, flux=1.):
+    def __init__(self, n, half_light_radius, trunc=0., flux=1.):
         GSObject.__init__(
-            self, galsim.SBSersic(n, half_light_radius=half_light_radius, flux=flux))
+            self, galsim.SBSersic(n, half_light_radius=half_light_radius, trunc=trunc, flux=flux))
 
     def getN(self):
         """Return the Sersic index `n` for this profile.
