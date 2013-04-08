@@ -206,7 +206,7 @@ namespace galsim {
             // (1+R^2)^-beta = kvalue_accuracy
             // And ignore the 1+ part of (1+R^2), so
             _maxRrD = std::pow(sbp::kvalue_accuracy,-1./(2.*_beta));
-            xdbg<<"Not truncate.  Calculated maxRrD = "<<_maxRrD<<"\n";
+            xdbg<<"Not truncated.  Calculated maxRrD = "<<_maxRrD<<"\n";
         }
 
         _FWHM = FWHMrD * _rD;
