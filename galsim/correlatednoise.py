@@ -660,14 +660,20 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
         >>> cn = galsim.CorrelatedNoise(rng, image, subtract_mean=False)
 
-    Finally, if `subtract_mean=True` then the default behaviour is to attempt to correct the
-    estimate of the correlation function for biases that are analagous to the N / (N - 1) factor
-    required to correct estimates of the sample variance.  This correction in fact uses an estimate
-    of the power spectrum of the input image, and so is itself slightly noisy.  For more details see
-    the funtion _cf_sample_variance_bias_correction() in this module.  To turn off this correcion
-    call with
+    *** Prototype sample bias correction ***
 
-        >>> cn = galsim.CorrelatedNoise(rng, image, subtract_mean=True, correct_sample_bias=False)
+    Finally, if `subtract_mean=True` then a prototype feature is to attempt to correct the
+    estimate of the correlation function for biases that are analagous to the N / (N - 1) factor
+    required to correct estimates of the sample variance.  The correction estimates an effective
+    number of independent degrees of freedom in an image of correlated noise from an estimate
+    of the power spectrum of the input image, and so is itself noisy.  (It is also not clearly
+    justified theoretically!!)  For more details see the funtion 
+    _cf_sample_variance_bias_correction() in this module.  To turn on this correcion (default is
+    off) call with
+
+        >>> cn = galsim.CorrelatedNoise(rng, image, subtract_mean=True, correct_sample_bias=True)
+
+    Results are not guaranteed!
 
     If `subtract_mean=False` then the value of `correct_sample_bias` is ignored.
 
@@ -753,7 +759,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     described above.  The random number generators are not affected by these scaling operations.
     """
     def __init__(self, rng, image, dx=0., x_interpolant=None, correct_periodicity=True,
-                 subtract_mean=True, correct_sample_bias=True):
+                 subtract_mean=True, correct_sample_bias=False):
 
         # Check that the input image is in fact a galsim.ImageSIFD class instance
         if not isinstance(image, (
@@ -884,7 +890,7 @@ def _cf_sample_variance_bias_correction(ps_array, correct_periodicity=True):
     In the limit of flat white noise you would therefore have `neff = numpy.product(ps_array.shape)`
     as it ought to be.  In the limit of a single noise mode you would likewise have `neff = 1`.
     However, while this relationship seems to scale correctly between these extremes it is not
-    any better motivated than being a piece of gut/guesswork by BR.
+    any better motivated than being a piece of gut/guesswork by BR!!!
 
     This `neff` is then used to correct the estimated noise correlations using the familiar
     `neff / (neff - 1.)` correction factor found in sample variances.  There is one further step
