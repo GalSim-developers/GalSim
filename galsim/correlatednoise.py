@@ -895,9 +895,10 @@ def _cf_sample_variance_bias_correction(ps_array):
     """
     # Get neffective an my intuitive impression that the N we want in N / (N-1) is related to the
     # number of independent random variables that are really 'used' in making the image.  The power
-    # spectrum gives us this (think about how we realize such fields).  It makes sense (to me) for
-    # the largest mode to be the 'unit' independent variable, all other terms contributing less in
-    # proportion to the size of their power spectrum at that k.
+    # spectrum gives us something about this if we think about how we realize such fields.  One
+    # recipe for a correction would be to make the largest mode to be the 'unit' independent
+    # variable, all other terms contributing less in proportion to the size of their power spectrum
+    # at that k so that...
     neff = ps_array.sum() / ps_array.max() # ... this may be all rubbish though
 
     # Test for a value that will break the calculation below
@@ -914,8 +915,8 @@ def _cf_sample_variance_bias_correction(ps_array):
     # Do a standard N/(N-1) sample variance correction, but using neff and scaling by available area
     correction = neff * area_fraction / (neff * area_fraction - 1.)
 
-    if correction.max() > 4. # Give a warning if the correction due to this effect is ever larger
-                             # than the periodicity correction, this means neff is small ~ 5.3
+    if correction.max() > 4.: # Give a warning if the correction due to this effect is ever larger
+                              # than the periodicity correction, this means neff is small ~ 5.3
         import warnings
         warnings.warn(
             "Sample variance bias correction in CorrelatedNoise is large (>4) at some places in "+
