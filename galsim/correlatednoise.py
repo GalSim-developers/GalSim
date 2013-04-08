@@ -764,8 +764,8 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
             cf_array_prelim *= _cf_periodicity_dilution_correction(cf_array_prelim.shape)
         
         if subtract_mean:
-            pass
-#            cf_array_prelim *= _cf_sample_variance_bias_correction(ps_array)
+            #pass
+            cf_array_prelim *= _cf_sample_variance_bias_correction(ps_array)
 
         # Roll CF array to put the centre in image centre.  Remember that numpy stores data [y,x]
         cf_array_prelim = utilities.roll2d(
