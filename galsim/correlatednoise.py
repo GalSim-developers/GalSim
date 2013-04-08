@@ -658,7 +658,18 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     By default, the image is mean subtracted before the correlation function is estimated.  To
     prevent this, you can set the `subtract_mean` keyword to `False`, e.g.
 
-        >>> cn galsim.CorrelatedNoise(rng, image, subtract_mean=False)
+        >>> cn = galsim.CorrelatedNoise(rng, image, subtract_mean=False)
+
+    Finally, if `subtract_mean=True` then the default behaviour is to attempt to correct the
+    estimate of the correlation function for biases that are analagous to the N / (N - 1) factor
+    required to correct estimates of the sample variance.  This correction in fact uses an estimate
+    of the power spectrum of the input image, and so is itself slightly noisy.  For more details see
+    the funtion _cf_sample_variance_bias_correction() in this module.  To turn off this correcion
+    call with
+
+        >>> cn = galsim.CorrelatedNoise(rng, image, subtract_mean=True, correct_sample_bias=False)
+
+    If `subtract_mean=False` then the value of `correct_sample_bias` is ignored.
 
     Methods
     -------
@@ -742,7 +753,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     described above.  The random number generators are not affected by these scaling operations.
     """
     def __init__(self, rng, image, dx=0., x_interpolant=None, correct_periodicity=True,
-                 subtract_mean=True):
+                 subtract_mean=True, correct_sample_bias=True):
 
         # Check that the input image is in fact a galsim.ImageSIFD class instance
         if not isinstance(image, (
@@ -763,8 +774,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
         if correct_periodicity:
             cf_array_prelim *= _cf_periodicity_dilution_correction(cf_array_prelim.shape)
         
-        if subtract_mean:
-            #pass
+        if subtract_mean and correct_sample_bias:
             cf_array_prelim *= _cf_sample_variance_bias_correction(ps_array)
 
         # Roll CF array to put the centre in image centre.  Remember that numpy stores data [y,x]
@@ -890,6 +900,12 @@ def _cf_sample_variance_bias_correction(ps_array):
     # proportion to the size of their power spectrum at that k.
     neff = ps_array.sum() / ps_array.max() # ... this may be all rubbish though
 
+    # Test for a value that will break the calculation below
+    if neff <= 4.: 
+        raise ValueError(
+            "Effective N for this strongly correlated input noise is too low to use the sample "+
+            "variance bias correction.")
+
     # Then we correct for the fact that, since we can't assume periodicity, there are actually fewer
     # possible pairs of points for wide separations of correlation function than for close
     # separations
@@ -897,6 +913,13 @@ def _cf_sample_variance_bias_correction(ps_array):
 
     # Do a standard N/(N-1) sample variance correction, but using neff and scaling by available area
     correction = neff * area_fraction / (neff * area_fraction - 1.)
+
+    if correction.max() > 4. # Give a warning if the correction due to this effect is ever larger
+                             # than the periodicity correction, this means neff is small ~ 5.3
+        import warnings
+        warnings.warn(
+            "Sample variance bias correction in CorrelatedNoise is large (>4) at some places in "+
+            "the correlation function due to strongly correlated noise in the input image.")
     return correction
 
 
