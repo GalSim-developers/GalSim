@@ -200,12 +200,11 @@ namespace galsim {
         } else {
             _fluxFactor = 1.;
 
-            // Set maxRrD to the radius where surface brightness is kvalue_accuracy
-            // of center value.  (I know this isn't  a kvalue, but the same level 
-            // is probably appropriate here.)
-            // (1+R^2)^-beta = kvalue_accuracy
+            // Set maxRrD to the radius where surface brightness is xvalue_accuracy
+            // of center value.
+            // (1+R^2)^-beta = xvalue_accuracy
             // And ignore the 1+ part of (1+R^2), so
-            _maxRrD = std::pow(sbp::kvalue_accuracy,-1./(2.*_beta));
+            _maxRrD = std::pow(sbp::xvalue_accuracy,-1./(2.*_beta));
             xdbg<<"Not truncated.  Calculated maxRrD = "<<_maxRrD<<"\n";
         }
 
