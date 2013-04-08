@@ -22,7 +22,7 @@ use_galaxies_from: 'sersics_sample' # 'list_gals' or 'sersics_sample'
 sersics_sample:
    catalog_filename: cosmos_sersics_sample_N3.asc #
    max_random_dx: 0.5      # will be drawn from uniform (arcsec)
-   max_random_psf_g: 0.2   # will be drawn from uniform
+   max_random_psf_g: 0.05   # will be drawn from uniform
 
 hsmparams:
    - {name: bound_correct_wt, grid: [0.25, 1.0, 3.0, 10.]}

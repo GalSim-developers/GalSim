@@ -206,7 +206,7 @@ def getMeasurements(gso, gso_name='test'):
         moments_fft_e2   = moments_fft.observed_shape.getE2()
         moments_fft_sigma = moments_fft.moments_sigma
     except:
-        logging.error('hsm error')
+        logger.error('hsm error')
         moments_fft_e1 = hsm_error_value
         moments_fft_e2 = hsm_error_value
         moments_fft_sigma = hsm_error_value
@@ -230,7 +230,7 @@ def getMeasurements(gso, gso_name='test'):
             hsm_corr_fft_e1 = hsm_fft.corrected_e1
             hsm_corr_fft_e2 = hsm_fft.corrected_e2
         except:
-            logger.info('hsm error')
+            logger.error('hsm error')
             hsm_time = hsm_error_value
             hsm_corr_fft_e1 = hsm_error_value
             hsm_corr_fft_e2 = hsm_error_value
@@ -387,7 +387,7 @@ def saveResults(filename_output,results_all_gals):
     # initialise the output file
     file_output = open(filename_output,'w')
        
-    output_row_fmt = '%d\t%2.6f\t%2.6f\t%2.6f\t%2.6f\t%2.6f\t%2.6f\t%2.6f\n'
+    output_row_fmt = '%d\t%10.6f\t%10.6f\t%10.6f\t%10.6f\t%10.6f\t%10.6f\t%10.6f\n'
     output_header = '# id ' +  \
                                 'E1_moments_fft E2_moments_fft moments_fft_sigma moments_time ' + \
                                 'E1_hsm_corr_fft E2_hsm_corr_fft hsm_time\n'
