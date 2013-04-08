@@ -352,8 +352,8 @@ the GalSim Installation FAQ page on the Wiki:
 https://github.com/GalSim-developers/GalSim/wiki/Installation%20FAQ
 
 If you are still having trouble, please consider opening a new Issue on the
-GalSim Github page at https://github.com/GalSim-developers/GalSim to help find
-a solution for the problem.
+GalSim Github page at https://github.com/GalSim-developers/GalSim/issues to help
+find a solution for the problem.
 
 
 3. Running tests and installing example executables
