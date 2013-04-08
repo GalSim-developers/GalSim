@@ -200,7 +200,7 @@ def getMeasurements(gso, gso_name='test'):
     # find adaptive moments
     try:
         t1 = time.time()
-        moments_fft   = galsim.FindAdaptiveMom(image_gal_fft)
+        moments_fft   = galsim.FindAdaptiveMom(image_gal_fft, hsmparams=hsmp, strict=True)
         moments_time = time.time()-t1
         moments_fft_e1   = moments_fft.observed_shape.getE1()
         moments_fft_e2   = moments_fft.observed_shape.getE2()
@@ -225,7 +225,7 @@ def getMeasurements(gso, gso_name='test'):
 
         try:
             t1 = time.time()
-            hsm_fft   = galsim.EstimateShearHSM(image_gal_fft,image_psf,strict=True)
+            hsm_fft   = galsim.EstimateShearHSM(image_gal_fft, image_psf, strict=True, hsmparams=hsmp)
             hsm_time = time.time()-t1
             hsm_corr_fft_e1 = hsm_fft.corrected_e1
             hsm_corr_fft_e2 = hsm_fft.corrected_e2
