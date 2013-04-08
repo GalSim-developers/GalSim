@@ -775,7 +775,8 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
             cf_array_prelim *= _cf_periodicity_dilution_correction(cf_array_prelim.shape)
         
         if subtract_mean and correct_sample_bias:
-            cf_array_prelim *= _cf_sample_variance_bias_correction(ps_array)
+            cf_array_prelim *= _cf_sample_variance_bias_correction(
+                ps_array, correct_periodicity=correct_periodicity)
 
         # Roll CF array to put the centre in image centre.  Remember that numpy stores data [y,x]
         cf_array_prelim = utilities.roll2d(
@@ -870,7 +871,7 @@ def _cf_periodicity_dilution_correction(cf_shape):
         cf_shape[1] * cf_shape[0] / (cf_shape[1] - np.abs(deltax)) / (cf_shape[0] - np.abs(deltay)))
     return correction
 
-def _cf_sample_variance_bias_correction(ps_array):
+def _cf_sample_variance_bias_correction(ps_array, correct_periodicity=True):
     """Attempt to correct for the fact that the sample covariance is a biased estimator of the
     population covariance.
 
@@ -907,13 +908,16 @@ def _cf_sample_variance_bias_correction(ps_array):
             "Effective N for this strongly correlated input noise is too low to use the sample "+
             "variance bias correction.")
 
-    # Then we correct for the fact that, since we can't assume periodicity, there are actually fewer
-    # possible pairs of points for wide separations of correlation function than for close
-    # separations
-    area_fraction = 1. / _cf_periodicity_dilution_correction(ps_array.shape)
-
-    # Do a standard N/(N-1) sample variance correction, but using neff and scaling by available area
-    correction = neff * area_fraction / (neff * area_fraction - 1.)
+    if correct_periodicity:
+        # Then we correct for the fact that, since we can't assume periodicity, there are actually
+        # fewer possible pairs of points for wide separations of correlation function than for close
+        # separations
+        area_fraction = 1. / _cf_periodicity_dilution_correction(ps_array.shape)
+        # Do a standard N/(N-1) sample variance correction, but using neff and scaling by available
+        # area
+        correction = neff * area_fraction / (neff * area_fraction - 1.)
+    else:
+        correction = (neff / (neff - 1.)) * np.ones_like(ps_array)
 
     if correction.max() > 4.: # Give a warning if the correction due to this effect is ever larger
                               # than the periodicity correction, this means neff is small ~ 5.3
