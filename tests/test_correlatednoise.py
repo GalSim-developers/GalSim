@@ -778,7 +778,7 @@ def test_convolve_cosmos():
     size_factor = .25  # scale the sizes, need size_factor * largeim_size to be an integer
     interp=galsim.Quintic(tol=1.e-4) # interpolation kernel to use in making convimages
     # Number of tests
-    nsum_test = 300
+    nsum_test = 1000
 
     print "Calculating results for size_factor = "+str(size_factor)
     cosimage = galsim.ImageD(

@@ -762,6 +762,10 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
         # Apply a correction for the DFT assumption of periodicity unless user requests otherwise
         if correct_periodicity:
             cf_array_prelim *= _cf_periodicity_dilution_correction(cf_array_prelim.shape)
+        
+        if subtract_mean:
+            pass
+#            cf_array_prelim *= _cf_sample_variance_bias_correction(ps_array)
 
         # Roll CF array to put the centre in image centre.  Remember that numpy stores data [y,x]
         cf_array_prelim = utilities.roll2d(
@@ -855,6 +859,15 @@ def _cf_periodicity_dilution_correction(cf_shape):
     correction = (
         cf_shape[1] * cf_shape[0] / (cf_shape[1] - np.abs(deltax)) / (cf_shape[0] - np.abs(deltay)))
     return correction
+
+def _cf_sample_variance_bias_correction(ps_array):
+    """
+    """
+    neff = ps_array.sum() / ps_array.max()
+    area_fraction = 1. / _cf_periodicity_dilution_correction(ps_array.shape)
+    correction = neff * area_fraction / (neff * area_fraction - 1.)
+    return correction
+
 
 # Make a function for returning Noise correlations
 def _Image_getCorrelatedNoise(image):
