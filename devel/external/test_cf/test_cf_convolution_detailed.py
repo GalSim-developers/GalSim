@@ -17,9 +17,54 @@
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
 
+"""
+We'll draw four test images to explore in detail the accurate generation of convolved noise fields.
+This test script grew out of the Discussion on the Pull Request #366 on
+
+https://github.com/GalSim-developers/GalSim/pull/366
+
+We compare 'hand generated' conolved noise fields (using a COSMOS correlation function for the
+underlying noise) to what GalSim thinks the theoretical correlation function should be (stored in a
+correlated noise instance called `conv_cn`).
+
+Comparing to this theoretical reference, there are four tests that generate different types of
+convolved noise field (`convimage`) for comparison:
+
+i)   the first will be direct comparison the image created by convolving 'by hand', the original
+     test on #366
+ii)  the second will simply check directly-generated noise from the `conv_cn` to sanity check
+     consistency
+iii) the third will be like ii), but with the convimage being made slightly larger and
+     then an image subset used to determine the correlation function (to test edge effects)
+iv)  the fourth will be like i), but with the original COSMOS image (cosimage) being made slightly
+     larger and then an image subset used to build the subsequent convimages (to test edge effects)
+
+...for all of the above we mean subtract noise images before estimating their CF using the
+subtract_mean=True keyword.
+
+Then we look at iv) in a few extra ways:
+
+v)   We look at iv) data using a periodicity correction with subtract_mean 'off'
+vi)  We look at iv) data using a periodicity correction with subtract_mean 'on'
+vii) We look at iv) data using a periodicity correction with subtract mean 'on' and a prototype
+     sample variance bias correction
+
+Finally as a controlled investigation of the sample variance bias correction, we add
+
+viii) We look at ii) data using no periodicity correction (the data is periodic).
+
+"""
+
 import time
 import numpy as np
 import galsim
+
+# Use a deterministic random number generator so we don't fail tests because of rare flukes
+# in the random numbers.
+rseed=12345
+
+smallim_size = 16 # size of image when we test correlated noise properties using small inputs
+largeim_size = 12 * smallim_size # ditto, but when we need a larger image
 
 if __name__ == "__main__":
 
@@ -27,7 +72,7 @@ if __name__ == "__main__":
     gd = galsim.GaussianDeviate(rseed)
     dx_cosmos=0.03 # Non-unity, non-default value to be used below
     cn = galsim.getCOSMOSNoise(
-        gd, '../examples/data/acs_I_unrot_sci_20_cf.fits', dx_cosmos=dx_cosmos)
+        gd, '../../../examples/data/acs_I_unrot_sci_20_cf.fits', dx_cosmos=dx_cosmos)
     cn.setVariance(1000.) # Again chosen to be non-unity
     # Define a PSF with which to convolve the noise field, one WITHOUT 2-fold rotational symmetry
     # (see test_autocorrelate in test_SBProfile.py for more info as to why this is relevant)
@@ -48,25 +93,12 @@ if __name__ == "__main__":
     refim = galsim.ImageD(smallim_size, smallim_size)
     conv_cn.draw(refim, dx=0.18)
     # Now start the tests...
-    # We'll draw four convimages:
-    #     i)  the first will be the image created by convolving 'by hand', the original test;
-    #     ii) the second will have directly-applied noise from the conv_cn;
-    #     iii) the third will be like ii), but with the convimage being made slightly larger and
-    #     then an image subset used to determine the correlation function (to test edge effects)
-    #     iv) the fourth will be like i), but with the *cosimage* being made slightly larger and
-    #     then an image subset used to build the subsequent convimages (to test edge effects)
-    #
-    # Finally we look at iv) in a few extra ways:
-    #     v) We look at iv) data using a periodicity correction with subtract_mean off
-    #     vi) We look at iv) data using a periodicity correction with subtract_mean on
-    #     vii) We look at iv) data using a periodicity corection with subtract mean on and a sample
-    #          variance bias correction.
     # 
     # First we generate a COSMOS noise field (cosimage), read it into an InterpolatedImage and
     # then convolve it with psf
 
     size_factor = .25  # scale the sizes, need size_factor * largeim_size to be an integer
-    interp=galsim.Quintic(tol=1.e-4) # interpolation kernel to use in making convimages
+    interp=galsim.Linear(tol=1.e-4) # interpolation kernel to use in making convimages
     # Number of tests
     nsum_test = 1000
 
@@ -111,31 +143,64 @@ if __name__ == "__main__":
     # We draw, calculate a correlation function for the resulting field, and repeat to get an
     # average over nsum_test trials
     cimobj.draw(convimage1, dx=0.18, normalization='sb')
-    cn_test1 = galsim.CorrelatedNoise(gd, convimage1, dx=0.18, correct_periodicity=False)
+    cn_test1 = galsim.CorrelatedNoise(
+        gd, convimage1, dx=0.18, correct_periodicity=False, subtract_mean=True,
+        correct_sample_bias=False)
     testim1 = galsim.ImageD(smallim_size, smallim_size)
     cn_test1.draw(testim1, dx=0.18)
  
     convimage2.addNoise(conv_cn)  # Now we make a comparison by simply adding noise from conv_cn
-    cn_test2 = galsim.CorrelatedNoise(gd, convimage2, dx=0.18, correct_periodicity=False)
+    cn_test2 = galsim.CorrelatedNoise(
+        gd, convimage2, dx=0.18, correct_periodicity=False, subtract_mean=True,
+        correct_sample_bias=False)
     testim2 = galsim.ImageD(smallim_size, smallim_size)
     cn_test2.draw(testim2, dx=0.18)
 
     convimage3_padded.addNoise(conv_cn)  # Now we make a comparison by adding noise from conv_cn
     # Now only look at the subimage from convimage3, avoids edge regions which will be wrapped round
     convimage3 = convimage3_padded[convimage1.bounds]
-    cn_test3 = galsim.CorrelatedNoise(gd, convimage3, dx=0.18, correct_periodicity=False)
+    cn_test3 = galsim.CorrelatedNoise(
+        gd, convimage3, dx=0.18, correct_periodicity=False, subtract_mean=True,
+        correct_sample_bias=False)
     testim3 = galsim.ImageD(smallim_size, smallim_size)
     cn_test3.draw(testim3, dx=0.18)
 
     cimobj_padded.draw(convimage4, dx=0.18, normalization='sb')
-    cn_test4 = galsim.CorrelatedNoise(gd, convimage4, dx=0.18, correct_periodicity=False)
+    cn_test4 = galsim.CorrelatedNoise(
+        gd, convimage4, dx=0.18, correct_periodicity=False, subtract_mean=True,
+        correct_sample_bias=False)
     testim4 = galsim.ImageD(smallim_size, smallim_size)
     cn_test4.draw(testim4, dx=0.18)
 
     # Then make a testim5 which uses the noise from Case 4 but uses the periodicity correction
-    cn_test5 = galsim.CorrelatedNoise(gd, convimage4, dx=0.18, correct_periodicity=True)
+    cn_test5 = galsim.CorrelatedNoise(
+        gd, convimage4, dx=0.18, correct_periodicity=True, subtract_mean=False)
     testim5 = galsim.ImageD(smallim_size, smallim_size)
     cn_test5.draw(testim5, dx=0.18)
+
+    # Then make a testim6 which uses the noise from Case 4 but uses the periodicity correction and
+    # turns ON the mean subtraction but doesn't use a sample bias correction
+    cn_test6 = galsim.CorrelatedNoise(
+        gd, convimage4, dx=0.18, correct_periodicity=True, subtract_mean=True,
+        correct_sample_bias=False)
+    testim6 = galsim.ImageD(smallim_size, smallim_size)
+    cn_test6.draw(testim6, dx=0.18)
+
+    # Then make a testim7 which uses the noise from Case 4 but uses the periodicity correction and
+    # turns ON the mean subtraction AND uses a sample bias correction
+    cn_test7 = galsim.CorrelatedNoise(
+        gd, convimage4, dx=0.18, correct_periodicity=True, subtract_mean=True,
+        correct_sample_bias=True)
+    testim7 = galsim.ImageD(smallim_size, smallim_size)
+    cn_test7.draw(testim7, dx=0.18)
+
+    # Then make a testim8 which uses the noise from Case 2 but uses no periodicity correction and
+    # turns ON the mean subtraction AND uses a sample bias correction
+    cn_test8 = galsim.CorrelatedNoise(
+        gd, convimage2, dx=0.18, correct_periodicity=False, subtract_mean=True,
+        correct_sample_bias=True)
+    testim8 = galsim.ImageD(smallim_size, smallim_size)
+    cn_test8.draw(testim8, dx=0.18)
 
     conv1_list = [convimage1.array.copy()] # Don't forget Python reference/assignment semantics, we
                                            # zero convimage and write over it later!
@@ -182,14 +247,18 @@ if __name__ == "__main__":
         conv1_list.append(convimage1.array.copy()) # See above
         mnsq1_list.append(np.mean(convimage1.array**2))
         var1_list.append(convimage1.array.var())
-        cn_test1 = galsim.CorrelatedNoise(gd, convimage1, dx=0.18, correct_periodicity=False) 
+        cn_test1 = galsim.CorrelatedNoise(
+            gd, convimage1, dx=0.18, correct_periodicity=False, subtract_mean=True,
+            correct_sample_bias=False) 
         cn_test1.draw(testim1, dx=0.18, add_to_image=True)
 
         convimage2.addNoise(conv_cn)  # Simply adding noise from conv_cn for a comparison
         conv2_list.append(convimage2.array.copy()) # See above
         mnsq2_list.append(np.mean(convimage2.array**2))
         var2_list.append(convimage2.array.var())
-        cn_test2 = galsim.CorrelatedNoise(gd, convimage2, dx=0.18, correct_periodicity=False)
+        cn_test2 = galsim.CorrelatedNoise(
+            gd, convimage2, dx=0.18, correct_periodicity=False, subtract_mean=True,
+            correct_sample_bias=False)
         cn_test2.draw(testim2, dx=0.18, add_to_image=True)
 
         convimage3_padded.addNoise(conv_cn)  # Adding noise from conv_cn for a comparison
@@ -197,19 +266,45 @@ if __name__ == "__main__":
         conv3_list.append(convimage3.array.copy()) # See above
         mnsq3_list.append(np.mean(convimage3.array**2))
         var3_list.append(convimage3.array.var())
-        cn_test3 = galsim.CorrelatedNoise(gd, convimage3, dx=0.18, correct_periodicity=False)
+        cn_test3 = galsim.CorrelatedNoise(
+            gd, convimage3, dx=0.18, correct_periodicity=False, subtract_mean=True,
+            correct_sample_bias=False)
         cn_test3.draw(testim3, dx=0.18, add_to_image=True)
 
         cimobj_padded.draw(convimage4, dx=0.18, normalization='sb')
         conv4_list.append(convimage4.array.copy()) # See above
         mnsq4_list.append(np.mean(convimage4.array**2))
         var4_list.append(convimage4.array.var())
-        cn_test4 = galsim.CorrelatedNoise(gd, convimage4, dx=0.18, correct_periodicity=False) 
+        cn_test4 = galsim.CorrelatedNoise(
+            gd, convimage4, dx=0.18, correct_periodicity=False, subtract_mean=True,
+            correct_sample_bias=False) 
         cn_test4.draw(testim4, dx=0.18, add_to_image=True)
 
-        # Then do testim5 simply using convimage4 but applying the dilution correction
-        cn_test5 = galsim.CorrelatedNoise(gd, convimage4, dx=0.18, correct_periodicity=True)
+        # Then make a testim5 which uses the noise from Case 4 but uses the periodicity correction
+        cn_test5 = galsim.CorrelatedNoise(
+            gd, convimage4, dx=0.18, correct_periodicity=True, subtract_mean=False)
         cn_test5.draw(testim5, dx=0.18, add_to_image=True)
+
+        # Then make a testim6 which uses the noise from Case 4 but uses the periodicity correction
+        # and turns ON the mean subtraction but doesn't use a sample bias correction
+        cn_test6 = galsim.CorrelatedNoise(
+            gd, convimage4, dx=0.18, correct_periodicity=True, subtract_mean=True,
+            correct_sample_bias=False)
+        cn_test6.draw(testim6, dx=0.18, add_to_image=True)
+
+        # Then make a testim7 which uses the noise from Case 4 but uses the periodicity correction
+        # and turns ON the mean subtraction AND uses a sample bias correction
+        cn_test7 = galsim.CorrelatedNoise(
+            gd, convimage4, dx=0.18, correct_periodicity=True, subtract_mean=True,
+            correct_sample_bias=True)
+        cn_test7.draw(testim7, dx=0.18, add_to_image=True)
+
+        # Then make a testim8 which uses the noise from Case 2 but uses no periodicity correction
+        # and turns ON the mean subtraction AND uses a sample bias correction
+        cn_test8 = galsim.CorrelatedNoise(
+            gd, convimage2, dx=0.18, correct_periodicity=False, subtract_mean=True,
+            correct_sample_bias=True)
+        cn_test8.draw(testim8, dx=0.18, add_to_image=True)
  
         if ((i + 2) % 100 == 0): print "Completed "+str(i + 2)+"/"+str(nsum_test)+" trials"
         del imobj
@@ -219,6 +314,9 @@ if __name__ == "__main__":
         del cn_test3
         del cn_test4
         del cn_test5
+        del cn_test6
+        del cn_test7
+        del cn_test8
 
     mnsq1_individual = sum(mnsq1_list) / float(nsum_test)
     var1_individual = sum(var1_list) / float(nsum_test)
@@ -234,12 +332,19 @@ if __name__ == "__main__":
     testim3 /= float(nsum_test) # Take average CF of trials
     testim4 /= float(nsum_test) # Take average CF of trials
     testim5 /= float(nsum_test) # Take average CF of trials
-   
+    testim6 /= float(nsum_test) # Take average CF of trials
+    testim7 /= float(nsum_test) # Take average CF of trials
+    testim8 /= float(nsum_test) # Take average CF of trials
+
+    refim.write('junkref.fits')
     testim1.write('junk1.fits')
     testim2.write('junk2.fits')
     testim3.write('junk3.fits')
     testim4.write('junk4.fits')
     testim5.write('junk5.fits')
+    testim6.write('junk6.fits')
+    testim7.write('junk7.fits')
+    testim7.write('junk8.fits')
 
     conv1_array = np.asarray(conv1_list)
     mnsq1_all = np.mean(conv1_array**2)
@@ -300,7 +405,7 @@ if __name__ == "__main__":
     print "Zero lag CF in reference case = "+str(refim.array[8, 8])
     print "Ratio of zero lag CFs = %e" % (testim4.array[8, 8] / refim.array[8, 8])
     print ""
-    print "Printing analysis of central 4x4 of CF from case 1:"
+    print "Printing analysis of central 4x4 of CF from case 1, no corrections:"
     # Show ratios etc in central 4x4 where CF is definitely non-zero
     print 'mean diff = ',np.mean(testim1.array[4:12, 4:12] - refim.array[4:12, 4:12])
     print 'var diff = ',np.var(testim1.array[4:12, 4:12] - refim.array[4:12, 4:12])
@@ -311,7 +416,7 @@ if __name__ == "__main__":
     print 'min ratio = %e' % np.min(testim1.array[4:12, 4:12] / refim.array[4:12, 4:12])
     print 'max ratio = %e' % np.max(testim1.array[4:12, 4:12] / refim.array[4:12, 4:12])
     print ''
-    print "Printing analysis of central 4x4 of CF from case 2:"
+    print "Printing analysis of central 4x4 of CF from case 2, no corrections:"
     # Show ratios etc in central 4x4 where CF is definitely non-zero
     print 'mean diff = ',np.mean(testim2.array[4:12, 4:12] - refim.array[4:12, 4:12])
     print 'var diff = ',np.var(testim2.array[4:12, 4:12] - refim.array[4:12, 4:12])
@@ -322,7 +427,7 @@ if __name__ == "__main__":
     print 'min ratio = %e' % np.min(testim2.array[4:12, 4:12] / refim.array[4:12, 4:12])
     print 'max ratio = %e' % np.max(testim2.array[4:12, 4:12] / refim.array[4:12, 4:12])
     print ''
-    print "Printing analysis of central 4x4 of CF from case 3:"
+    print "Printing analysis of central 4x4 of CF from case 3, no corrections:"
     # Show ratios etc in central 4x4 where CF is definitely non-zero
     print 'mean diff = ',np.mean(testim3.array[4:12, 4:12] - refim.array[4:12, 4:12])
     print 'var diff = ',np.var(testim3.array[4:12, 4:12] - refim.array[4:12, 4:12])
@@ -333,7 +438,7 @@ if __name__ == "__main__":
     print 'min ratio = %e' % np.min(testim3.array[4:12, 4:12] / refim.array[4:12, 4:12])
     print 'max ratio = %e' % np.max(testim3.array[4:12, 4:12] / refim.array[4:12, 4:12])
     print ''
-    print "Printing analysis of central 4x4 of CF from case 4:"
+    print "Printing analysis of central 4x4 of CF from case 4, no corrections:"
     # Show ratios etc in central 4x4 where CF is definitely non-zero
     print 'mean diff = ',np.mean(testim4.array[4:12, 4:12] - refim.array[4:12, 4:12])
     print 'var diff = ',np.var(testim4.array[4:12, 4:12] - refim.array[4:12, 4:12])
@@ -355,7 +460,8 @@ if __name__ == "__main__":
     print 'min ratio = %e' % np.min(testim4.array[4:12, 4:12] / testim3.array[4:12, 4:12])
     print 'max ratio = %e' % np.max(testim4.array[4:12, 4:12] / testim3.array[4:12, 4:12])
     print ''
-    print "Printing analysis of central 4x4 of CF from case 4 using periodicity correction:"
+    print 'Printing analysis of central 4x4 of CF from case 4 using periodicity correction '+\
+        'with subtract_mean=False (Case 5):'
     # Show ratios etc in central 4x4 where CF is definitely non-zero
     print 'mean diff = ',np.mean(testim5.array[4:12, 4:12] - refim.array[4:12, 4:12])
     print 'var diff = ',np.var(testim5.array[4:12, 4:12] - refim.array[4:12, 4:12])
@@ -366,10 +472,39 @@ if __name__ == "__main__":
     print 'min ratio = %e' % np.min(testim5.array[4:12, 4:12] / refim.array[4:12, 4:12])
     print 'max ratio = %e' % np.max(testim5.array[4:12, 4:12] / refim.array[4:12, 4:12])
     print ''
-
-    # Test (ditto only look at central 4x4)
-    #np.testing.assert_array_almost_equal(
-    #    testim.array[4:12, 4:12], refim.array[4:12, 4:12], decimal=decimal_approx,
-    #    err_msg="Convolved COSMOS noise fields do not match the convolved correlated noise model.")
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(), t2 - t1)
+    print 'Printing analysis of central 4x4 of CF from case 4 using periodicity correction '+\
+        'with subtract_mean=True but no sample bias correction (Case 6):'
+    # Show ratios etc in central 4x4 where CF is definitely non-zero
+    print 'mean diff = ',np.mean(testim6.array[4:12, 4:12] - refim.array[4:12, 4:12])
+    print 'var diff = ',np.var(testim6.array[4:12, 4:12] - refim.array[4:12, 4:12])
+    print 'min diff = ',np.min(testim6.array[4:12, 4:12] - refim.array[4:12, 4:12])
+    print 'max diff = ',np.max(testim6.array[4:12, 4:12] - refim.array[4:12, 4:12])
+    print 'mean ratio = %e' % np.mean(testim6.array[4:12, 4:12] / refim.array[4:12, 4:12])
+    print 'var ratio = ',np.var(testim6.array[4:12, 4:12] / refim.array[4:12, 4:12])
+    print 'min ratio = %e' % np.min(testim6.array[4:12, 4:12] / refim.array[4:12, 4:12])
+    print 'max ratio = %e' % np.max(testim6.array[4:12, 4:12] / refim.array[4:12, 4:12])
+    print ''
+    print 'Printing analysis of central 4x4 of CF from case 4 using periodicity correction '+\
+        'with subtract_mean=True but with a sample bias correction (Case 7):'
+    # Show ratios etc in central 4x4 where CF is definitely non-zero
+    print 'mean diff = ',np.mean(testim7.array[4:12, 4:12] - refim.array[4:12, 4:12])
+    print 'var diff = ',np.var(testim7.array[4:12, 4:12] - refim.array[4:12, 4:12])
+    print 'min diff = ',np.min(testim7.array[4:12, 4:12] - refim.array[4:12, 4:12])
+    print 'max diff = ',np.max(testim7.array[4:12, 4:12] - refim.array[4:12, 4:12])
+    print 'mean ratio = %e' % np.mean(testim7.array[4:12, 4:12] / refim.array[4:12, 4:12])
+    print 'var ratio = ',np.var(testim7.array[4:12, 4:12] / refim.array[4:12, 4:12])
+    print 'min ratio = %e' % np.min(testim7.array[4:12, 4:12] / refim.array[4:12, 4:12])
+    print 'max ratio = %e' % np.max(testim7.array[4:12, 4:12] / refim.array[4:12, 4:12])
+    print ''
+    print 'Printing analysis of central 4x4 of CF from case 2 using no periodicity correction '+\
+        'with subtract_mean=True but with a sample bias correction (Case 8):'
+    # Show ratios etc in central 4x4 where CF is definitely non-zero
+    print 'mean diff = ',np.mean(testim8.array[4:12, 4:12] - refim.array[4:12, 4:12])
+    print 'var diff = ',np.var(testim8.array[4:12, 4:12] - refim.array[4:12, 4:12])
+    print 'min diff = ',np.min(testim8.array[4:12, 4:12] - refim.array[4:12, 4:12])
+    print 'max diff = ',np.max(testim8.array[4:12, 4:12] - refim.array[4:12, 4:12])
+    print 'mean ratio = %e' % np.mean(testim8.array[4:12, 4:12] / refim.array[4:12, 4:12])
+    print 'var ratio = ',np.var(testim8.array[4:12, 4:12] / refim.array[4:12, 4:12])
+    print 'min ratio = %e' % np.min(testim8.array[4:12, 4:12] / refim.array[4:12, 4:12])
+    print 'max ratio = %e' % np.max(testim8.array[4:12, 4:12] / refim.array[4:12, 4:12])
+    print ''
