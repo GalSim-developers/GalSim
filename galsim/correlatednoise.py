@@ -660,6 +660,12 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
         >>> cn = galsim.CorrelatedNoise(rng, image, subtract_mean=False)
 
+    Note that when subtracting a mean from the images before estimating noise statistics the power
+    in the image is subject to a bias, much as the uncorrected sample variance is biased compared
+    to the population variance.  Unfortunately, when the noise is correlated and image pixels are
+    not wholly independent the correction factor is not a straightforward N / (N - 1) for an image
+    of n x n = N pixels in total.  The bias will, however, reduce with the square of the image size.
+
     *** Prototype sample bias correction ***
 
     Finally, if `subtract_mean=True` then there is a prototype feature that can attempt to correct 
@@ -667,7 +673,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     required to correct estimates of the sample variance.  The correction estimates an effective
     number of independent degrees of freedom in an image of correlated noise from an estimate
     of the power spectrum of the input image, and so is itself noisy.  (It is also not clearly
-    justified theoretically!)  For more details see the function 
+    justified theoretically and may need work!)  For more details see the function 
     _cf_sample_variance_bias_correction() in this module.  To turn on this correcion (default is
     off) call with
 
