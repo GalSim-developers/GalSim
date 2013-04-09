@@ -768,21 +768,25 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
                 "Input image not a galsim.Image class object (e.g. ImageD, ImageViewS etc.)")
         # Build a noise correlation function (CF) from the input image, using DFTs
         # Calculate the power spectrum then a (preliminary) CF 
-        if subtract_mean: # Subtract mean from image first unless otherwise instructed
-            ft_array = np.fft.fft2(image.array - image.array.mean())
-        else:
-            ft_array = np.fft.fft2(image.array)
+        ft_array = np.fft.fft2(image.array)
         ps_array = (ft_array * ft_array.conj()).real
+        if subtract_mean: # Quickest non-destructive way to make the PS correspond to the
+                          # mean-subtracted case
+            ps_array[0, 0] = 0.
         # Note need to normalize due to one-directional 1/N^2 in FFT conventions
         cf_array_prelim = (np.fft.ifft2(ps_array)).real / np.product(image.array.shape)
+
+        store_rootps = True # Currently the ps_array above corresponds to cf, but this may change...
 
         # Apply a correction for the DFT assumption of periodicity unless user requests otherwise
         if correct_periodicity:
             cf_array_prelim *= _cf_periodicity_dilution_correction(cf_array_prelim.shape)
+            store_rootps = False
         
         if subtract_mean and correct_sample_bias:
             cf_array_prelim *= _cf_sample_variance_bias_correction(
                 ps_array, correct_periodicity=correct_periodicity)
+            store_rootps = False
 
         # Roll CF array to put the centre in image centre.  Remember that numpy stores data [y,x]
         cf_array_prelim = utilities.roll2d(
@@ -811,18 +815,17 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
             bottom_row = cf_array[0, :]
             cf_array[cf_array_prelim.shape[0], :] = bottom_row[::-1] # inverts order as required
   
-        # Store power spectrum and correlation function in an image 
-        original_ps_image = galsim.ImageViewD(np.ascontiguousarray(ps_array.real))
-        original_cf_image = galsim.ImageViewD(np.ascontiguousarray(cf_array))
+        # Wrap correlation function in an image 
+        cf_image = galsim.ImageViewD(np.ascontiguousarray(cf_array))
 
         # Correctly record the original image scale if set
         if dx > 0.:
-            original_cf_image.setScale(dx)
+            cf_image.setScale(dx)
         elif image.getScale() > 0.:
-            original_cf_image.setScale(image.getScale())
+            cf_image.setScale(image.getScale())
         else: # sometimes Images are instantiated with scale=0, in which case we will assume unit
               # pixel scale
-            original_cf_image.setScale(1.)
+            cf_image.setScale(1.)
 
         # If x_interpolant not specified on input, use bilinear
         if x_interpolant == None:
@@ -839,15 +842,16 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
         # Then initialize...
         _BaseCorrelatedNoise.__init__(self, rng, base.InterpolatedImage(
-            original_cf_image, x_interpolant=x_interpolant, dx=original_cf_image.getScale(), 
-            normalization="sb", calculate_stepk=False,  # these internal calculations do not seem
-            calculate_maxk=False))                      # to do very well with often sharp-peaked
-                                                        # correlation function images...
+            cf_image, x_interpolant=x_interpolant, dx=cf_image.getScale(), normalization="sb",
+            calculate_stepk=False,  # these internal calculations do not seem
+            calculate_maxk=False))  # to do very well with often sharp-peaked
+                                    # correlation function images...
 
-        # Finally store useful data as a (rootps, dx) tuple for efficient later use:
-        self._profile_for_stored = self._profile
-        self._rootps_store.append(
-            (np.sqrt(original_ps_image.array), original_cf_image.getScale()))
+        if store_rootps:
+            # If it corresponds to the CF above, store useful data as a (rootps, dx) tuple for
+            # efficient later use:
+            self._profile_for_stored = self._profile
+            self._rootps_store.append((np.sqrt(ps_array), cf_image.getScale()))
 
 # Helper function for returning the amount by which
 def _cf_periodicity_dilution_correction(cf_shape):
