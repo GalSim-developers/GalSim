@@ -662,20 +662,21 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
     *** Prototype sample bias correction ***
 
-    Finally, if `subtract_mean=True` then a prototype feature is to attempt to correct the
-    estimate of the correlation function for biases that are analagous to the N / (N - 1) factor
+    Finally, if `subtract_mean=True` then there is a prototype feature that can attempt to correct 
+    the estimate of the correlation function for biases that are analagous to the N / (N - 1) factor
     required to correct estimates of the sample variance.  The correction estimates an effective
     number of independent degrees of freedom in an image of correlated noise from an estimate
     of the power spectrum of the input image, and so is itself noisy.  (It is also not clearly
-    justified theoretically!!)  For more details see the funtion 
+    justified theoretically!)  For more details see the function 
     _cf_sample_variance_bias_correction() in this module.  To turn on this correcion (default is
     off) call with
 
-        >>> cn = galsim.CorrelatedNoise(rng, image, subtract_mean=True, correct_sample_bias=True)
+        >>> cn = galsim.CorrelatedNoise(rng, image, subtract_mean=True,
+        ...     correct_sample_bias_prototype=True)
 
-    Results are not guaranteed!
+    Results are not guaranteed, use at own risk!
 
-    If `subtract_mean=False` then the value of `correct_sample_bias` is ignored.
+    If `subtract_mean=False` then the value of `correct_sample_bias_prototype` is ignored.
 
     Methods
     -------
@@ -759,7 +760,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     described above.  The random number generators are not affected by these scaling operations.
     """
     def __init__(self, rng, image, dx=0., x_interpolant=None, correct_periodicity=True,
-                 subtract_mean=True, correct_sample_bias=False):
+                 subtract_mean=True, correct_sample_bias_prototype=False):
 
         # Check that the input image is in fact a galsim.ImageSIFD class instance
         if not isinstance(image, (
@@ -783,7 +784,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
             cf_array_prelim *= _cf_periodicity_dilution_correction(cf_array_prelim.shape)
             store_rootps = False
         
-        if subtract_mean and correct_sample_bias:
+        if subtract_mean and correct_sample_bias_prototype:
             cf_array_prelim *= _cf_sample_variance_bias_correction(
                 ps_array, correct_periodicity=correct_periodicity)
             store_rootps = False
@@ -883,7 +884,7 @@ def _cf_periodicity_dilution_correction(cf_shape):
 
 def _cf_sample_variance_bias_correction(ps_array, correct_periodicity=True):
     """Attempt to correct for the fact that the sample covariance is a biased estimator of the
-    population covariance.
+    population covariance.  Warning: this is a guess at a correction and is not guaranteed!
 
     This uses the power spectrum to estimate the "effective number of independent random variables"
     represented in a field of correlated noise.  The more correlated the noise, the fewer
@@ -933,8 +934,9 @@ def _cf_sample_variance_bias_correction(ps_array, correct_periodicity=True):
                               # than the periodicity correction, this means neff is small ~ 5.3
         import warnings
         warnings.warn(
-            "Sample variance bias correction in CorrelatedNoise is large (>4) at some places in "+
-            "the correlation function due to strongly correlated noise in the input image.")
+            "Warning: Sample variance bias correction in CorrelatedNoise is large (>4) at some "+
+            "places in the correlation function due to strongly correlated noise in the input "+
+            "image.")
     return correction
 
 
