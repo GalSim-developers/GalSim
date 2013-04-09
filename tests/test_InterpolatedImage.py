@@ -555,10 +555,10 @@ def test_corr_padding():
     decimal_precise=4
     decimal_coarse=2
     imgfile = 'blankimg.fits'
-    orig_nx = 147
-    orig_ny = 124
-    big_nx = 258
-    big_ny = 281
+    orig_nx = 187
+    orig_ny = 164
+    big_nx = 318
+    big_ny = 321
     orig_seed = 151241
 
     # Read in some small image of a noise field from HST.

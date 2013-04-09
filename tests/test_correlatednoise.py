@@ -805,7 +805,7 @@ def test_convolve_cosmos():
     cimobj_padded.draw(convimage, dx=0.18, normalization='sb')
     cn_test = galsim.CorrelatedNoise(
         gd, convimage, dx=0.18, correct_periodicity=True, subtract_mean=False,
-        correct_sample_bias=False)
+        correct_sample_bias_prototype=False)
     testim = galsim.ImageD(smallim_size, smallim_size)
     cn_test.draw(testim, dx=0.18)
     # Start some lists to store image info
