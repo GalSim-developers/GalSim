@@ -145,14 +145,14 @@ if __name__ == "__main__":
     cimobj.draw(convimage1, dx=0.18, normalization='sb')
     cn_test1 = galsim.CorrelatedNoise(
         gd, convimage1, dx=0.18, correct_periodicity=False, subtract_mean=True,
-        correct_sample_bias=False)
+        correct_sample_bias_prototype=False)
     testim1 = galsim.ImageD(smallim_size, smallim_size)
     cn_test1.draw(testim1, dx=0.18)
  
     convimage2.addNoise(conv_cn)  # Now we make a comparison by simply adding noise from conv_cn
     cn_test2 = galsim.CorrelatedNoise(
         gd, convimage2, dx=0.18, correct_periodicity=False, subtract_mean=True,
-        correct_sample_bias=False)
+        correct_sample_bias_prototype=False)
     testim2 = galsim.ImageD(smallim_size, smallim_size)
     cn_test2.draw(testim2, dx=0.18)
 
@@ -161,14 +161,14 @@ if __name__ == "__main__":
     convimage3 = convimage3_padded[convimage1.bounds]
     cn_test3 = galsim.CorrelatedNoise(
         gd, convimage3, dx=0.18, correct_periodicity=False, subtract_mean=True,
-        correct_sample_bias=False)
+        correct_sample_bias_prototype=False)
     testim3 = galsim.ImageD(smallim_size, smallim_size)
     cn_test3.draw(testim3, dx=0.18)
 
     cimobj_padded.draw(convimage4, dx=0.18, normalization='sb')
     cn_test4 = galsim.CorrelatedNoise(
         gd, convimage4, dx=0.18, correct_periodicity=False, subtract_mean=True,
-        correct_sample_bias=False)
+        correct_sample_bias_prototype=False)
     testim4 = galsim.ImageD(smallim_size, smallim_size)
     cn_test4.draw(testim4, dx=0.18)
 
@@ -182,7 +182,7 @@ if __name__ == "__main__":
     # turns ON the mean subtraction but doesn't use a sample bias correction
     cn_test6 = galsim.CorrelatedNoise(
         gd, convimage4, dx=0.18, correct_periodicity=True, subtract_mean=True,
-        correct_sample_bias=False)
+        correct_sample_bias_prototype=False)
     testim6 = galsim.ImageD(smallim_size, smallim_size)
     cn_test6.draw(testim6, dx=0.18)
 
@@ -190,7 +190,7 @@ if __name__ == "__main__":
     # turns ON the mean subtraction AND uses a sample bias correction
     cn_test7 = galsim.CorrelatedNoise(
         gd, convimage4, dx=0.18, correct_periodicity=True, subtract_mean=True,
-        correct_sample_bias=True)
+        correct_sample_bias_prototype=True)
     testim7 = galsim.ImageD(smallim_size, smallim_size)
     cn_test7.draw(testim7, dx=0.18)
 
@@ -198,7 +198,7 @@ if __name__ == "__main__":
     # turns ON the mean subtraction AND uses a sample bias correction
     cn_test8 = galsim.CorrelatedNoise(
         gd, convimage2, dx=0.18, correct_periodicity=False, subtract_mean=True,
-        correct_sample_bias=True)
+        correct_sample_bias_prototype=True)
     testim8 = galsim.ImageD(smallim_size, smallim_size)
     cn_test8.draw(testim8, dx=0.18)
 
@@ -249,7 +249,7 @@ if __name__ == "__main__":
         var1_list.append(convimage1.array.var())
         cn_test1 = galsim.CorrelatedNoise(
             gd, convimage1, dx=0.18, correct_periodicity=False, subtract_mean=True,
-            correct_sample_bias=False) 
+            correct_sample_bias_prototype=False) 
         cn_test1.draw(testim1, dx=0.18, add_to_image=True)
 
         convimage2.addNoise(conv_cn)  # Simply adding noise from conv_cn for a comparison
@@ -258,7 +258,7 @@ if __name__ == "__main__":
         var2_list.append(convimage2.array.var())
         cn_test2 = galsim.CorrelatedNoise(
             gd, convimage2, dx=0.18, correct_periodicity=False, subtract_mean=True,
-            correct_sample_bias=False)
+            correct_sample_bias_prototype=False)
         cn_test2.draw(testim2, dx=0.18, add_to_image=True)
 
         convimage3_padded.addNoise(conv_cn)  # Adding noise from conv_cn for a comparison
@@ -268,7 +268,7 @@ if __name__ == "__main__":
         var3_list.append(convimage3.array.var())
         cn_test3 = galsim.CorrelatedNoise(
             gd, convimage3, dx=0.18, correct_periodicity=False, subtract_mean=True,
-            correct_sample_bias=False)
+            correct_sample_bias_prototype=False)
         cn_test3.draw(testim3, dx=0.18, add_to_image=True)
 
         cimobj_padded.draw(convimage4, dx=0.18, normalization='sb')
@@ -277,7 +277,7 @@ if __name__ == "__main__":
         var4_list.append(convimage4.array.var())
         cn_test4 = galsim.CorrelatedNoise(
             gd, convimage4, dx=0.18, correct_periodicity=False, subtract_mean=True,
-            correct_sample_bias=False) 
+            correct_sample_bias_prototype=False) 
         cn_test4.draw(testim4, dx=0.18, add_to_image=True)
 
         # Then make a testim5 which uses the noise from Case 4 but uses the periodicity correction
@@ -289,21 +289,21 @@ if __name__ == "__main__":
         # and turns ON the mean subtraction but doesn't use a sample bias correction
         cn_test6 = galsim.CorrelatedNoise(
             gd, convimage4, dx=0.18, correct_periodicity=True, subtract_mean=True,
-            correct_sample_bias=False)
+            correct_sample_bias_prototype=False)
         cn_test6.draw(testim6, dx=0.18, add_to_image=True)
 
         # Then make a testim7 which uses the noise from Case 4 but uses the periodicity correction
         # and turns ON the mean subtraction AND uses a sample bias correction
         cn_test7 = galsim.CorrelatedNoise(
             gd, convimage4, dx=0.18, correct_periodicity=True, subtract_mean=True,
-            correct_sample_bias=True)
+            correct_sample_bias_prototype=True)
         cn_test7.draw(testim7, dx=0.18, add_to_image=True)
 
         # Then make a testim8 which uses the noise from Case 2 but uses no periodicity correction
         # and turns ON the mean subtraction AND uses a sample bias correction
         cn_test8 = galsim.CorrelatedNoise(
             gd, convimage2, dx=0.18, correct_periodicity=False, subtract_mean=True,
-            correct_sample_bias=True)
+            correct_sample_bias_prototype=True)
         cn_test8.draw(testim8, dx=0.18, add_to_image=True)
  
         if ((i + 2) % 100 == 0): print "Completed "+str(i + 2)+"/"+str(nsum_test)+" trials"
