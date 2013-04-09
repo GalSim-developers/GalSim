@@ -35,7 +35,8 @@ namespace galsim {
      * The Sersic Surface Brightness Profile is characterized by three properties: its Sersic index
      * `n`, its `flux` and the half-light radius `re`.  Given these properties, the surface
      * brightness profile scales as I(r) propto exp[-(r/r_0)^{1/n}].  Currently the code is limited
-     * to 0.5<=n<=4.2, with an exception thrown for values outside that range.
+     * to 0.5<=n<=4.2, with an exception thrown for values outside that range.  The SBProfile
+     * representation of a Sersic profile also includes an optional truncation beyond a given radius.
      *
      * There are several special cases of the Sersic profile that have their own SBProfiles: n=4
      * (SBDeVaucouleurs), n=1 (SBExponential), n=0.5 (SBGaussian).  These special cases use several
@@ -48,11 +49,13 @@ namespace galsim {
         /**
          * @brief Constructor.
          *
-         * @param[in] n     Sersic index.
-         * @param[in] re    half-light radius.
-         * @param[in] flux  flux (default `flux = 1.`).
+         * @param[in] n        Sersic index.
+         * @param[in] re       Half-light radius.
+         * @param[in] trunc    Outer truncation radius in same physical units as size, trunc = 0.
+         *                     for no truncation (default `trunc = 0.`).
+         * @param[in] flux     Flux (default `flux = 1.`).
          */
-        SBSersic(double n, double re, double flux=1.);
+        SBSersic(double n, double re, double trunc=0., double flux=1.);
 
         /// @brief Copy constructor.
         SBSersic(const SBSersic& rhs);
@@ -90,10 +93,13 @@ namespace galsim {
         /** 
          * @brief Constructor.
          *
-         * @param[in] re    Half-light radius.
-         * @param[in] flux  flux (default `flux = 1.`).
+         * @param[in] re       Half-light radius.
+         * @param[in] trunc    Outer truncation radius in same physical units as size, trunc = 0.
+         *                     for no truncation (default `trunc = 0.`).
+         * @param[in] flux     Flux (default `flux = 1.`).
          */
-        SBDeVaucouleurs(double re, double flux=1.) : SBSersic(4., re, flux) {}
+        SBDeVaucouleurs(double re, double trunc=0., double flux=1.) :
+	  SBSersic(4., re, trunc, flux) {}
     };
 
 }
