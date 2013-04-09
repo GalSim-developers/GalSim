@@ -33,8 +33,8 @@
 
 namespace galsim {
 
-    SBSersic::SBSersic(double n, double re, double flux) : 
-        SBProfile(new SBSersicImpl(n, re, flux)) {}
+    SBSersic::SBSersic(double n, double re, double trunc, double flux) :
+        SBProfile(new SBSersicImpl(n, re, trunc, flux)) {}
 
     SBSersic::SBSersic(const SBSersic& rhs) : SBProfile(rhs) {}
 
@@ -54,7 +54,7 @@ namespace galsim {
 
     SBSersic::InfoBarn SBSersic::nmap;
 
-    SBSersic::SBSersicImpl::SBSersicImpl(double n,  double re, double flux) :
+    SBSersic::SBSersicImpl::SBSersicImpl(double n,  double re, double trunc, double flux) :
         _n(n), _flux(flux), _re(re), _re_sq(_re*_re), _inv_re(1./_re), _inv_re_sq(_inv_re*_inv_re),
         _norm(_flux*_inv_re_sq), _info(nmap.get(_n))
     {

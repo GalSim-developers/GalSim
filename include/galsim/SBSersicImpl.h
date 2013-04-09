@@ -170,7 +170,7 @@ namespace galsim {
     class SBSersic::SBSersicImpl : public SBProfileImpl
     {
     public:
-        SBSersicImpl(double n, double re, double flux);
+        SBSersicImpl(double n, double re, double trunc, double flux);
 
         ~SBSersicImpl() {}
 
