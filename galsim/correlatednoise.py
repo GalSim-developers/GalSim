@@ -670,17 +670,15 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
     Finally, if `subtract_mean=True` then there is a prototype feature that can attempt to correct 
     the estimate of the correlation function for biases that are analagous to the N / (N - 1) factor
-    required to correct estimates of the sample variance.  The correction estimates an effective
-    number of independent degrees of freedom in an image of correlated noise from an estimate
-    of the power spectrum of the input image, and so is itself noisy.  (It is also not clearly
-    justified theoretically and may need work!)  For more details see the function 
+    required to correct estimates of the sample variance. For more details see the function 
     _cf_sample_variance_bias_correction() in this module.  To turn on this correcion (default is
     off) call with
 
         >>> cn = galsim.CorrelatedNoise(rng, image, subtract_mean=True,
         ...     correct_sample_bias_prototype=True)
 
-    Results are not guaranteed, use at own risk!
+    Results are not guaranteed, use at own risk! (Speed is also not guaranteed: currently this code
+    is slower than it could be.)
 
     If `subtract_mean=False` then the value of `correct_sample_bias_prototype` is ignored.
 
@@ -787,13 +785,11 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
         # Apply a correction for the DFT assumption of periodicity unless user requests otherwise
         if correct_periodicity:
+            cf_array_prelim_precorrection = cf_array_prelim.copy()
             cf_array_prelim *= _cf_periodicity_dilution_correction(cf_array_prelim.shape)
             store_rootps = False
-        
-        if subtract_mean and correct_sample_bias_prototype:
-            cf_array_prelim *= _cf_sample_variance_bias_correction(
-                ps_array, correct_periodicity=correct_periodicity)
-            store_rootps = False
+        else:
+            cf_array_prelim_precorrection = cf_array_prelim.copy()
 
         # Roll CF array to put the centre in image centre.  Remember that numpy stores data [y,x]
         cf_array_prelim = utilities.roll2d(
@@ -834,6 +830,27 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
               # pixel scale
             cf_image.setScale(1.)
 
+        # If requested, attempt a correction for bias on covariances due to finite sampling
+        if subtract_mean and correct_sample_bias_prototype:
+            # We use the cf_array *before* any correction for periodicity, as this correction seems
+            # to be a lot more noisy if you preapply the correction.  (This maybe as it interferes
+            # with the drawing of the covariance matrix, which goes outside the support of the CF,
+            # as well as.
+            # TODO: Upgrade the correction so that we don't need to go via the covariance matrix,
+            # it's unnecessary as an intermediate, and costly.
+            # So, roll the CF array to put the centre in image centre
+            cf_array_prelim_precorrection = utilities.roll2d(
+                cf_array_prelim_precorrection,
+                (cf_array_prelim_precorrection.shape[0] / 2,
+                cf_array_prelim_precorrection.shape[1] / 2))
+            cf_precorrection_image = galsim.ImageViewD(
+                np.ascontiguousarray(cf_array_prelim_precorrection))
+            cf_precorrection_image.setScale(cf_image.getScale())
+            # Calculate and apply the correction
+            correction = _cf_sample_variance_bias_correction(cf_precorrection_image)
+            cf_image += correction
+            store_rootps = False
+
         # If x_interpolant not specified on input, use bilinear
         if x_interpolant == None:
             linear = galsim.Linear(tol=1.e-4)
@@ -848,11 +865,12 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
                     'Specified x_interpolant is not an Interpolant or InterpolantXY instance!')
 
         # Then initialize...
-        _BaseCorrelatedNoise.__init__(self, rng, base.InterpolatedImage(
+        cf_object = base.InterpolatedImage(
             cf_image, x_interpolant=x_interpolant, dx=cf_image.getScale(), normalization="sb",
-            calculate_stepk=False,  # these internal calculations do not seem
-            calculate_maxk=False))  # to do very well with often sharp-peaked
-                                    # correlation function images...
+            calculate_stepk=False, calculate_maxk=False) # these internal calculations do not seem
+                                                         # to do very well with often sharp-peaked
+                                                         # correlation function images...
+        _BaseCorrelatedNoise.__init__(self, rng, cf_object)
 
         if store_rootps:
             # If it corresponds to the CF above, store useful data as a (rootps, dx) tuple for
@@ -860,19 +878,20 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
             self._profile_for_stored = self._profile
             self._rootps_store.append((np.sqrt(ps_array), cf_image.getScale()))
 
+
 # Helper function for returning the amount by which
 def _cf_periodicity_dilution_correction(cf_shape):
     """Return an array containing the correction factor required for wrongly assuming periodicity
     around noise field edges in an DFT estimate of the discrete correlation function.
-
+    
     Uses the result calculated by MJ on GalSim Pull Request #366.
     See https://github.com/GalSim-developers/GalSim/pull/366.
-
+    
     Returns a 2D NumPy array with the same shape as the input parameter tuple `cf_shape`.  This
     array contains the correction factor by which elements in the naive CorrelatedNoise estimate of
     the discrete correlation function should be multiplied to correct for the erroneous assumption
     of periodic boundaries in an input noise field.
-
+    
     Note this should be applied only to correlation functions that have *not* been rolled to place
     the origin at the array centre.  The convention used here is that the lower left corner is the
     [0, 0] origin, following standard FFT conventions (see e.g numpy.fft.fftfreq).  You should
@@ -888,61 +907,35 @@ def _cf_periodicity_dilution_correction(cf_shape):
         cf_shape[1] * cf_shape[0] / (cf_shape[1] - np.abs(deltax)) / (cf_shape[0] - np.abs(deltay)))
     return correction
 
-def _cf_sample_variance_bias_correction(ps_array, correct_periodicity=True):
+def _cf_sample_variance_bias_correction(cf_image):
     """Attempt to correct for the fact that the sample covariance is a biased estimator of the
     population covariance.  Warning: this is a guess at a correction and is not guaranteed!
 
-    This uses the power spectrum to estimate the "effective number of independent random variables"
-    represented in a field of correlated noise.  The more correlated the noise, the fewer
-    independent random variables.  This effective number is estimated as
+    Here we use the result E(<x_i>^2) = E(X)^2 + \Sum_{i,j} <x_i, x_i> / N^2 , derived using the
+    following generalization of the Bienayme formula:
+    http://en.wikipedia.org/wiki/Variance#Weighted_sum_of_variables
+    
+    This gives the additive correction required to attempt to correct for the consistent 
+    underestimation of <(x_i - <x_i>)(x_j - <x_j>)> relative to the population value.
 
-        neff = ps_array.sum() / ps_array.max()
+    TODO: Make this NOT do the calculation via the covariance matrix, this is too slow!
 
-    In the limit of flat white noise you would therefore have `neff = numpy.product(ps_array.shape)`
-    as it ought to be.  In the limit of a single noise mode you would likewise have `neff = 1`.
-    However, while this relationship seems to scale correctly between these extremes it is not
-    any better motivated than being a piece of gut/guesswork by BR!!!
-
-    This `neff` is then used to correct the estimated noise correlations using the familiar
-    `neff / (neff - 1.)` correction factor found in sample variances.  There is one further step
-    in the correction, however.  Drawing on the insight from the 
-    `_cf_periodicity_dilution_correction`, we realise that when estimating points at non-zero
-    separation the entire area of the input image is not available, and the number of pairs of such
-    points is only a fraction of `numpy.product(ps_array.shape)`.  This fraction is used to correct
-    `neff` for correlations at non-zero separations.
+    See results of detailed tests in devel/external/test_cf/test_cf_convolution_detailed.py
     """
-    # Get neffective an my intuitive impression that the N we want in N / (N-1) is related to the
-    # number of independent random variables that are really 'used' in making the image.  The power
-    # spectrum gives us something about this if we think about how we realize such fields.  One
-    # recipe for a correction would be to make the largest mode to be the 'unit' independent
-    # variable, all other terms contributing less in proportion to the size of their power spectrum
-    # at that k so that...
-    neff = ps_array.sum() / ps_array.max() # ... this may be all rubbish though
-
-    # Test for a value that will break the calculation below
-    if neff <= 4.: 
-        raise ValueError(
-            "Effective N for this strongly correlated input noise is too low to use the sample "+
-            "variance bias correction.")
-
-    if correct_periodicity:
-        # Then we correct for the fact that, since we can't assume periodicity, there are actually
-        # fewer possible pairs of points for wide separations of correlation function than for close
-        # separations
-        area_fraction = 1. / _cf_periodicity_dilution_correction(ps_array.shape)
-        # Do a standard N/(N-1) sample variance correction, but using neff and scaling by available
-        # area
-        correction = neff * area_fraction / (neff * area_fraction - 1.)
-    else:
-        correction = (neff / (neff - 1.)) * np.ones_like(ps_array)
-
-    if correction.max() > 4.: # Give a warning if the correction due to this effect is ever larger
-                              # than the periodicity correction, this means neff is small ~ 5.3
-        import warnings
-        warnings.warn(
-            "Warning: Sample variance bias correction in CorrelatedNoise is large (>4) at some "+
-            "places in the correlation function due to strongly correlated noise in the input "+
-            "image.")
+    # Set up a temporary profile from the centred cf_image to get the covariance matrix from the C++
+    # SBProfile layer
+    cf_object_tmp = base.InterpolatedImage(
+        cf_image, x_interpolant=galsim.Linear(tol=1.e-4), dx=cf_image.getScale(),
+        normalization="sb", calculate_stepk=False, calculate_maxk=False)
+    # The steps below are unnecessarily slow, but could be easily optimized with a little thought
+    covariance = galsim._galsim._calculateCovarianceMatrix(
+        cf_object_tmp.SBProfile, cf_image.bounds, cf_image.getScale())
+    # Then get the mean of the full covariance matrix, not just upper Triangle output above: this is
+    # the correction term (slightly convoluted expression below but slightly faster than the purely
+    # naive).
+    correction = ( # Should check this very carefully when making more efficient
+        2. * np.sum(covariance.array) - covariance.array[0, 0] * covariance.array.shape[0]
+    ) / np.product(covariance.array.shape)
     return correction
 
 
