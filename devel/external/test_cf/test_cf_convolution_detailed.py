@@ -100,7 +100,7 @@ if __name__ == "__main__":
     size_factor = .25  # scale the sizes, need size_factor * largeim_size to be an integer
     interp=galsim.Linear(tol=1.e-4) # interpolation kernel to use in making convimages
     # Number of tests
-    nsum_test = 1000
+    nsum_test = 3000
 
     print "Calculating results for size_factor = "+str(size_factor)
     cosimage = galsim.ImageD(
@@ -405,7 +405,7 @@ if __name__ == "__main__":
     print "Zero lag CF in reference case = "+str(refim.array[8, 8])
     print "Ratio of zero lag CFs = %e" % (testim4.array[8, 8] / refim.array[8, 8])
     print ""
-    print "Printing analysis of central 4x4 of CF from case 1, no corrections:"
+    print "Printing analysis of central 4x4 of CF from case 1, with subtract_mean=True and no corrections:"
     # Show ratios etc in central 4x4 where CF is definitely non-zero
     print 'mean diff = ',np.mean(testim1.array[4:12, 4:12] - refim.array[4:12, 4:12])
     print 'var diff = ',np.var(testim1.array[4:12, 4:12] - refim.array[4:12, 4:12])
@@ -416,7 +416,7 @@ if __name__ == "__main__":
     print 'min ratio = %e' % np.min(testim1.array[4:12, 4:12] / refim.array[4:12, 4:12])
     print 'max ratio = %e' % np.max(testim1.array[4:12, 4:12] / refim.array[4:12, 4:12])
     print ''
-    print "Printing analysis of central 4x4 of CF from case 2, no corrections:"
+    print "Printing analysis of central 4x4 of CF from case 2, with subtract_mean=True and no corrections:"
     # Show ratios etc in central 4x4 where CF is definitely non-zero
     print 'mean diff = ',np.mean(testim2.array[4:12, 4:12] - refim.array[4:12, 4:12])
     print 'var diff = ',np.var(testim2.array[4:12, 4:12] - refim.array[4:12, 4:12])
@@ -427,7 +427,7 @@ if __name__ == "__main__":
     print 'min ratio = %e' % np.min(testim2.array[4:12, 4:12] / refim.array[4:12, 4:12])
     print 'max ratio = %e' % np.max(testim2.array[4:12, 4:12] / refim.array[4:12, 4:12])
     print ''
-    print "Printing analysis of central 4x4 of CF from case 3, no corrections:"
+    print "Printing analysis of central 4x4 of CF from case 3, with subtract_mean=True and no corrections:"
     # Show ratios etc in central 4x4 where CF is definitely non-zero
     print 'mean diff = ',np.mean(testim3.array[4:12, 4:12] - refim.array[4:12, 4:12])
     print 'var diff = ',np.var(testim3.array[4:12, 4:12] - refim.array[4:12, 4:12])
@@ -438,7 +438,7 @@ if __name__ == "__main__":
     print 'min ratio = %e' % np.min(testim3.array[4:12, 4:12] / refim.array[4:12, 4:12])
     print 'max ratio = %e' % np.max(testim3.array[4:12, 4:12] / refim.array[4:12, 4:12])
     print ''
-    print "Printing analysis of central 4x4 of CF from case 4, no corrections:"
+    print "Printing analysis of central 4x4 of CF from case 4, with subtract_mean=True and no corrections:"
     # Show ratios etc in central 4x4 where CF is definitely non-zero
     print 'mean diff = ',np.mean(testim4.array[4:12, 4:12] - refim.array[4:12, 4:12])
     print 'var diff = ',np.var(testim4.array[4:12, 4:12] - refim.array[4:12, 4:12])
