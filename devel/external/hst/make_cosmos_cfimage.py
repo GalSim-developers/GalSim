@@ -62,7 +62,14 @@ if not os.path.isfile(CFIMFILE): # If the CFIMFILE already exists skip straight 
     bd = galsim.BaseDeviate(12345) # Seed is basically unimportant here
     for noiseim in noiseims:
         noiseim = noiseim.astype(np.float64)
-        # Subtract off the mean for each field (bg subtraction never perfect)
+        # Subtract off the mean for each field explicitly (bg subtraction never perfect)
+        # There does seem to be a consistent positive bg around giving a constant CF of 2.4e-7
+        # (~2% of peak) that we do want to remove.  
+        # Since the images are typically *large* and the noise is correlated only with a relatively
+        # short correlation length, the underestimation of the variances this causes will be a 
+        # smaller error than the ~2% constant term above.  See the Pull Request #366 on GalSim's
+        # Github site.
+        # Note this could also have been done using `subtract_mean=True`.
         noiseim -= noiseim.mean()
         if hst_ncf is None:
             # Initialize the HST noise correlation function using the first image
