@@ -125,9 +125,10 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
             >>> correlated_noise.applyTo(image)
 
-        On output the Image instance image will have been given additional noise according to 
-        the given CorrelatedNoise instance.  image.getScale() is used to determine the input image
-        pixel separation, and if image.getScale() <= 0 a pixel scale of 1 is assumed.
+        On output the Image instance `image` will have been given additional noise according to the
+        given CorrelatedNoise instance `correlated_noise`.  image.getScale() is used to determine
+        the input image pixel separation, and if image.getScale() <= 0 a pixel scale of 1 is
+        assumed.
 
         To add deviates to every element of an image, the syntax 
 
