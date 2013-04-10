@@ -743,7 +743,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     of the operator that is retained. 
 
     In the example above therefore, it is the random number generator from `cn2` that will be stored
-    and used by `cn3`, and `cn4` will retain it's random number generator after inplace addition of
+    and used by `cn3`, and `cn4` will retain its random number generator after in-place addition of
     `cn5`.  The random number generator of `cn5` is not affected by the operation.
 
     The multiplication and division operators, e.g.
@@ -911,7 +911,7 @@ def getCOSMOSNoise(rng, file_name, dx_cosmos=0.03, variance=0., x_interpolant=No
     @param rng            Must be a galsim.BaseDeviate or derived class instance, provides the
                           random number generator for the noise field.
     @param file_name      String containing the path and filename above but modified to match the
-                          location of the GalSim repoistory on your system.
+                          location of the GalSim repository on your system.
     @param dx_cosmos      COSMOS ACS F814W coadd image pixel scale in the units you are using to
                           describe GSObjects and image scales in GalSim: defaults to 0.03 arcsec,
                           see below for more information.
