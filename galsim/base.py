@@ -2188,7 +2188,7 @@ class RealGalaxy(GSObject):
 
         # Set up the GaussianDeviate if not provided one, or check that the user-provided one
         # is of a valid type.  Note if random was selected, we can use that uniform_deviate safely.
-        if random == True:
+        if random is True:
             gaussian_deviate = galsim.GaussianDeviate(uniform_deviate)
         else:
             if rng is None:
