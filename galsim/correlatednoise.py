@@ -177,9 +177,9 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
     def applyWhiteningTo(self, image):
         """Apply noise designed to whiten correlated Gaussian random noise in an input Image.
 
-        On output the Image instance image will have been given additional noise according to 
+        On output the Image instance `image` will have been given additional noise according to 
         a specified CorrelatedNoise instance, designed to whiten any correlated noise that may have
-        existed in `image`.
+        originally existed in `image`.
 
         Calling
         -------
@@ -545,7 +545,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
                     break
 
         # If not, calculate the whitening power spectrum as (almost) the smallest power spectrum 
-        # that  when added to rootps**2 gives a flat resultant power that is nowhere negative.
+        # that when added to rootps**2 gives a flat resultant power that is nowhere negative.
         # Note that rootps = sqrt(power spectrum), and this procedure therefore works since power
         # spectra add (rather like variances).  The resulting power spectrum will be all positive
         # (and thus physical).
@@ -636,7 +636,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
     The example above instantiates a CorrelatedNoise, but forces use of a non-default interpolant
     for interpolation of the internal lookup table in real space.  Must be an InterpolantXY instance
-    or an Interpolant instance (if the latter one-dimensional case is supplied an InterpolantXY will
+    or an Interpolant instance (if the latter one-dimensional case is supplied, an InterpolantXY will
     be automatically generated from it).
 
     The default x_interpolant if `None` is set is a galsim.InterpolantXY(galsim.Linear(tol=1.e-4)),
@@ -703,7 +703,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
         >>> cn.draw(im, dx, wmult=4)
         >>> cn.createSheared(s)
-        >>> cn.createMagnified(m)
+        >>> cn.createExpanded(m)
         >>> cn.createRotated(theta * galsim.degrees)
         >>> cn.createTransformed(ellipse)
         >>> cn.applyShear(s)
