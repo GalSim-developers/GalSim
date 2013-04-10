@@ -27,6 +27,9 @@ We compare 'hand generated' conolved noise fields (using a COSMOS correlation fu
 underlying noise) to what GalSim thinks the theoretical correlation function should be (stored in a
 correlated noise instance called `conv_cn`).
 
+This should work for the commit up to and one beyond d85d19c5a7220496566effd466ecfdac44f7d326, but
+no guarantees offered after that.
+
 Comparing to this theoretical reference, there are four tests that generate different types of
 convolved noise field (`convimage`) for comparison:
 
