@@ -2109,15 +2109,15 @@ class RealGalaxy(GSObject):
 
         # Code block below will be for galaxy selection; not all are currently implemented.  Each
         # option must return an index within the real_galaxy_catalog.        
-        if index != None:
-            if (id != None or random == True):
+        if index is not None:
+            if id is not None or random is True:
                 raise AttributeError('Too many methods for selecting a galaxy!')
             use_index = index
-        elif id != None:
-            if (random == True):
+        elif id is not None:
+            if random is True:
                 raise AttributeError('Too many methods for selecting a galaxy!')
             use_index = real_galaxy_catalog._get_index_for_id(id)
-        elif random == True:
+        elif random is True:
             if rng is None:
                 uniform_deviate = galsim.UniformDeviate()
             elif isinstance(rng, galsim.BaseDeviate):
