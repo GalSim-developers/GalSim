@@ -68,7 +68,7 @@ if not os.path.isfile(CFIMFILE): # If the CFIMFILE already exists skip straight 
         # Since the images are typically *large* and the noise is correlated only with a relatively
         # short correlation length, the underestimation of the variances this causes will be a 
         # smaller error than the ~2% constant term above.  See the Pull Request #366 on GalSim's
-        # Github site.
+        # Github site: https://github.com/GalSim-developers/GalSim/pull/366
         # Note this could also have been done using `subtract_mean=True`.
         noiseim -= noiseim.mean()
         if hst_ncf is None:
