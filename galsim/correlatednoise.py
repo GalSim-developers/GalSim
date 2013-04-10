@@ -655,32 +655,22 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     noise in `image` is indeed periodic (perhaps because you generated it to be so), you will not
     generally wish to use the `correct_periodicity=False` option.
 
-    By default, the image is mean subtracted before the correlation function is estimated.  To
-    prevent this, you can set the `subtract_mean` keyword to `False`, e.g.
+    By default, the image is not mean subtracted before the correlation function is estimated.  To
+    do an internal mean subtraction, you can set the `subtract_mean` keyword to `True`, e.g.
 
-        >>> cn = galsim.CorrelatedNoise(rng, image, subtract_mean=False)
+        >>> cn = galsim.CorrelatedNoise(rng, image, subtract_mean=True)
 
-    Note that when subtracting a mean from the images before estimating noise statistics the power
-    in the image is subject to a bias, much as the uncorrected sample variance is biased compared
-    to the population variance.  Unfortunately, when the noise is correlated and image pixels are
-    not wholly independent the correction factor is not a straightforward N / (N - 1) for an image
-    of n x n = N pixels in total.  The bias will, however, reduce with the square of the image size.
+    Using the `subtract_mean` option will introduce a small underestimation of variance and other
+    correlation function values due to a bias on the square of the sample mean.  This bias reduces
+    as the input image becomes larger, and in the limit of uncorrelated noise tends to the constant
+    term `variance/N**2` for an `N`x`N` sized `image`.
 
-    *** Prototype sample bias correction ***
-
-    Finally, if `subtract_mean=True` then there is a prototype feature that can attempt to correct 
-    the estimate of the correlation function for biases that are analagous to the N / (N - 1) factor
-    required to correct estimates of the sample variance. For more details see the function 
-    _cf_sample_variance_bias_correction() in this module.  To turn on this correcion (default is
-    off) call with
-
-        >>> cn = galsim.CorrelatedNoise(rng, image, subtract_mean=True,
-        ...     correct_sample_bias_prototype=True)
-
-    Results are not guaranteed, use at own risk! (Speed is also not guaranteed: currently this code
-    is slower than it could be.)
-
-    If `subtract_mean=False` then the value of `correct_sample_bias_prototype` is ignored.
+    It is therefore recommended that a background/sky subtraction is applied to the `image` before
+    it is given as an input to the `CorrelatedNoise`, allowing the default `subtract_mean=False`.
+    If such a background model is global or based on large regions on sky then assuming that the
+    image has a zero population mean will be reasonable, and won't introduce a bias in covariances
+    from an imperfectly-estimated sample mean subtraction.  If this is not possible, just be aware 
+    that `subtract_mean=True` will bias the correlation function low to some level.
 
     Methods
     -------
@@ -764,7 +754,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     described above.  The random number generators are not affected by these scaling operations.
     """
     def __init__(self, rng, image, dx=0., x_interpolant=None, correct_periodicity=True,
-                 subtract_mean=True, correct_sample_bias_prototype=False):
+        subtract_mean=False):
 
         # Check that the input image is in fact a galsim.ImageSIFD class instance
         if not isinstance(image, (
@@ -785,11 +775,8 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
         # Apply a correction for the DFT assumption of periodicity unless user requests otherwise
         if correct_periodicity:
-            cf_array_prelim_precorrection = cf_array_prelim.copy()
             cf_array_prelim *= _cf_periodicity_dilution_correction(cf_array_prelim.shape)
             store_rootps = False
-        else:
-            cf_array_prelim_precorrection = cf_array_prelim.copy()
 
         # Roll CF array to put the centre in image centre.  Remember that numpy stores data [y,x]
         cf_array_prelim = utilities.roll2d(
@@ -829,27 +816,6 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
         else: # sometimes Images are instantiated with scale=0, in which case we will assume unit
               # pixel scale
             cf_image.setScale(1.)
-
-        # If requested, attempt a correction for bias on covariances due to finite sampling
-        if subtract_mean and correct_sample_bias_prototype:
-            # We use the cf_array *before* any correction for periodicity, as this correction seems
-            # to be a lot more noisy if you preapply the correction.  (This maybe as it interferes
-            # with the drawing of the covariance matrix, which goes outside the support of the CF,
-            # as well as.
-            # TODO: Upgrade the correction so that we don't need to go via the covariance matrix,
-            # it's unnecessary as an intermediate, and costly.
-            # So, roll the CF array to put the centre in image centre
-            cf_array_prelim_precorrection = utilities.roll2d(
-                cf_array_prelim_precorrection,
-                (cf_array_prelim_precorrection.shape[0] / 2,
-                cf_array_prelim_precorrection.shape[1] / 2))
-            cf_precorrection_image = galsim.ImageViewD(
-                np.ascontiguousarray(cf_array_prelim_precorrection))
-            cf_precorrection_image.setScale(cf_image.getScale())
-            # Calculate and apply the correction
-            correction = _cf_sample_variance_bias_correction(cf_precorrection_image)
-            cf_image += correction
-            store_rootps = False
 
         # If x_interpolant not specified on input, use bilinear
         if x_interpolant == None:
@@ -905,37 +871,6 @@ def _cf_periodicity_dilution_correction(cf_shape):
     # Then get the dilution correction
     correction = (
         cf_shape[1] * cf_shape[0] / (cf_shape[1] - np.abs(deltax)) / (cf_shape[0] - np.abs(deltay)))
-    return correction
-
-def _cf_sample_variance_bias_correction(cf_image):
-    """Attempt to correct for the fact that the sample covariance is a biased estimator of the
-    population covariance.  Warning: this is a guess at a correction and is not guaranteed!
-
-    Here we use the result E(<x_i>^2) = E(X)^2 + \Sum_{i,j} <x_i, x_i> / N^2 , derived using the
-    following generalization of the Bienayme formula:
-    http://en.wikipedia.org/wiki/Variance#Weighted_sum_of_variables
-    
-    This gives the additive correction required to attempt to correct for the consistent 
-    underestimation of <(x_i - <x_i>)(x_j - <x_j>)> relative to the population value.
-
-    TODO: Make this NOT do the calculation via the covariance matrix, this is too slow!
-
-    See results of detailed tests in devel/external/test_cf/test_cf_convolution_detailed.py
-    """
-    # Set up a temporary profile from the centred cf_image to get the covariance matrix from the C++
-    # SBProfile layer
-    cf_object_tmp = base.InterpolatedImage(
-        cf_image, x_interpolant=galsim.Linear(tol=1.e-4), dx=cf_image.getScale(),
-        normalization="sb", calculate_stepk=False, calculate_maxk=False)
-    # The steps below are unnecessarily slow, but could be easily optimized with a little thought
-    covariance = galsim._galsim._calculateCovarianceMatrix(
-        cf_object_tmp.SBProfile, cf_image.bounds, cf_image.getScale())
-    # Then get the mean of the full covariance matrix, not just upper Triangle output above: this is
-    # the correction term (slightly convoluted expression below but slightly faster than the purely
-    # naive).
-    correction = ( # Should check this very carefully when making more efficient
-        2. * np.sum(covariance.array) - covariance.array[0, 0] * covariance.array.shape[0]
-    ) / np.product(covariance.array.shape)
     return correction
 
 
