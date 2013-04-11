@@ -640,8 +640,8 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
     The example above instantiates a CorrelatedNoise, but forces use of a non-default interpolant
     for interpolation of the internal lookup table in real space.  Must be an InterpolantXY instance
-    or an Interpolant instance (if the latter one-dimensional case is supplied, an InterpolantXY will
-    be automatically generated from it).
+    or an Interpolant instance (if the latter one-dimensional case is supplied, an InterpolantXY
+    will be automatically generated from it).
 
     The default x_interpolant if `None` is set is a galsim.InterpolantXY(galsim.Linear(tol=1.e-4)),
     which uses bilinear interpolation.  Initial tests indicate the favourable performance of this
@@ -825,13 +825,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
             linear = galsim.Linear(tol=1.e-4)
             x_interpolant = galsim.InterpolantXY(linear)
         else:
-            if isinstance(x_interpolant, galsim.Interpolant):
-                x_interpolant = galsim.InterpolantXY(x_interpolant)
-            elif isinstance(x_interpolant, galsim.InterpolantXY):
-                pass
-            else:
-                raise RuntimeError(
-                    'Specified x_interpolant is not an Interpolant or InterpolantXY instance!')
+            x_interpolant = utilities.convert_interpolant_to_2d(x_interpolant)
 
         # Then initialize...
         cf_object = base.InterpolatedImage(
@@ -981,13 +975,7 @@ def getCOSMOSNoise(rng, file_name, dx_cosmos=0.03, variance=0., x_interpolant=No
         linear = galsim.Linear(tol=1.e-4)
         x_interpolant = galsim.InterpolantXY(linear)
     else:
-        if isinstance(x_interpolant, galsim.Interpolant):
-            x_interpolant = galsim.InterpolantXY(x_interpolant)
-        elif isinstance(x_interpolant, galsim.InterpolantXY):
-            pass
-        else:
-            raise RuntimeError(
-                'Specified x_interpolant is not an Interpolant or InterpolantXY instance!')
+        x_interpolant = utilities.convert_interpolant_to_2d(x_interpolant)
 
     # Use this info to then generate a correlated noise model DIRECTLY: note this is non-standard
     # usage, but tolerated since we can be sure that the input cfimage is appropriately symmetric
