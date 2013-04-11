@@ -922,7 +922,10 @@ def getCOSMOSNoise(rng, file_name, dx_cosmos=0.03, variance=0., x_interpolant=No
     @param x_interpolant  Forces use of a non-default interpolant for interpolation of the internal
                           lookup table in real space.  Supplied kwarg must be an InterpolantXY
                           instance or an Interpolant instance (from which an InterpolantXY will be
-                          automatically generated).
+                          automatically generated).  Defaults to use of the bilinear interpolant
+                          `galsim.InterpolantXY(galsim.Linear(tol=1.e-4))`, see below.
+
+    @return A _BaseCorrelatedNoise instance representing correlated noise in F814W COSMOS images.
 
     The interpolation used if `x_interpolant=None` (default) is a
     galsim.InterpolantXY(galsim.Linear(tol=1.e-4)), which uses bilinear interpolation.  Initial
