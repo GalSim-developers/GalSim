@@ -848,7 +848,6 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
             self._rootps_store.append((np.sqrt(ps_array), cf_image.getScale()))
 
 
-# Helper function for returning the amount by which
 def _cf_periodicity_dilution_correction(cf_shape):
     """Return an array containing the correction factor required for wrongly assuming periodicity
     around noise field edges in an DFT estimate of the discrete correlation function.
