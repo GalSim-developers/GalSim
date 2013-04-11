@@ -367,7 +367,7 @@ def test_arbitrary_rotation():
 
 def test_scaling():
     """Test the scaling of correlation functions, specifically that the applyExpansion and
-    createExpandedied methods work correctly when querying the profile with xValue().
+    createExpanded methods work correctly when querying the profile with xValue().
     """
     # Again, only use the x direction correlated noise, will be sufficient given tests above
     t1 = time.time()

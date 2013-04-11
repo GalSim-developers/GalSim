@@ -125,9 +125,10 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
             >>> correlated_noise.applyTo(image)
 
-        On output the Image instance image will have been given additional noise according to 
-        the given CorrelatedNoise instance.  image.getScale() is used to determine the input image
-        pixel separation, and if image.getScale() <= 0 a pixel scale of 1 is assumed.
+        On output the Image instance `image` will have been given additional noise according to the
+        given CorrelatedNoise instance `correlated_noise`.  image.getScale() is used to determine
+        the input image pixel separation, and if image.getScale() <= 0 a pixel scale of 1 is
+        assumed.
 
         To add deviates to every element of an image, the syntax 
 
@@ -176,9 +177,9 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
     def applyWhiteningTo(self, image):
         """Apply noise designed to whiten correlated Gaussian random noise in an input Image.
 
-        On output the Image instance image will have been given additional noise according to 
+        On output the Image instance `image` will have been given additional noise according to 
         a specified CorrelatedNoise instance, designed to whiten any correlated noise that may have
-        existed in `image`.
+        originally existed in `image`.
 
         Calling
         -------
@@ -544,7 +545,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
                     break
 
         # If not, calculate the whitening power spectrum as (almost) the smallest power spectrum 
-        # that  when added to rootps**2 gives a flat resultant power that is nowhere negative.
+        # that when added to rootps**2 gives a flat resultant power that is nowhere negative.
         # Note that rootps = sqrt(power spectrum), and this procedure therefore works since power
         # spectra add (rather like variances).  The resulting power spectrum will be all positive
         # (and thus physical).
@@ -635,7 +636,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
     The example above instantiates a CorrelatedNoise, but forces use of a non-default interpolant
     for interpolation of the internal lookup table in real space.  Must be an InterpolantXY instance
-    or an Interpolant instance (if the latter one-dimensional case is supplied an InterpolantXY will
+    or an Interpolant instance (if the latter one-dimensional case is supplied, an InterpolantXY will
     be automatically generated from it).
 
     The default x_interpolant if `None` is set is a galsim.InterpolantXY(galsim.Linear(tol=1.e-4)),
@@ -702,7 +703,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
         >>> cn.draw(im, dx, wmult=4)
         >>> cn.createSheared(s)
-        >>> cn.createMagnified(m)
+        >>> cn.createExpanded(m)
         >>> cn.createRotated(theta * galsim.degrees)
         >>> cn.createTransformed(ellipse)
         >>> cn.applyShear(s)
@@ -742,7 +743,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     of the operator that is retained. 
 
     In the example above therefore, it is the random number generator from `cn2` that will be stored
-    and used by `cn3`, and `cn4` will retain it's random number generator after inplace addition of
+    and used by `cn3`, and `cn4` will retain its random number generator after in-place addition of
     `cn5`.  The random number generator of `cn5` is not affected by the operation.
 
     The multiplication and division operators, e.g.
@@ -910,7 +911,7 @@ def getCOSMOSNoise(rng, file_name, dx_cosmos=0.03, variance=0., x_interpolant=No
     @param rng            Must be a galsim.BaseDeviate or derived class instance, provides the
                           random number generator for the noise field.
     @param file_name      String containing the path and filename above but modified to match the
-                          location of the GalSim repoistory on your system.
+                          location of the GalSim repository on your system.
     @param dx_cosmos      COSMOS ACS F814W coadd image pixel scale in the units you are using to
                           describe GSObjects and image scales in GalSim: defaults to 0.03 arcsec,
                           see below for more information.

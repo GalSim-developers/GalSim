@@ -23,7 +23,7 @@ This test script grew out of the Discussion on the Pull Request #366 on
 
 https://github.com/GalSim-developers/GalSim/pull/366
 
-We compare 'hand generated' conolved noise fields (using a COSMOS correlation function for the
+We compare 'hand generated' convolved noise fields (using a COSMOS correlation function for the
 underlying noise) to what GalSim thinks the theoretical correlation function should be (stored in a
 correlated noise instance called `conv_cn`).
 
@@ -33,8 +33,8 @@ no guarantees offered after that.
 Comparing to this theoretical reference, there are four tests that generate different types of
 convolved noise field (`convimage`) for comparison:
 
-i)   the first will be direct comparison the image created by convolving 'by hand', the original
-     test on #366
+i)   the first will be direct comparison with the image created by convolving 'by hand', the
+     original test on #366
 ii)  the second will simply check directly-generated noise from the `conv_cn` to sanity check
      consistency
 iii) the third will be like ii), but with the convimage being made slightly larger and
