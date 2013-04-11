@@ -33,13 +33,14 @@ namespace galsim {
         static SBSersic * construct(
             double n, 
             const bp::object & half_light_radius,
+            double trunc,
             double flux
         ) {
             if (half_light_radius.ptr() == Py_None) {
                 PyErr_SetString(PyExc_TypeError, "No radius parameter given");
                 bp::throw_error_already_set();
             }
-            return new SBSersic(n, bp::extract<double>(half_light_radius), flux);
+            return new SBSersic(n, bp::extract<double>(half_light_radius), trunc, flux);
         }
         static void wrap() {
             bp::class_<SBSersic,bp::bases<SBProfile> >("SBSersic", bp::no_init)
@@ -47,7 +48,7 @@ namespace galsim {
                      bp::make_constructor(
                          &construct, bp::default_call_policies(),
                          (bp::arg("n"), bp::arg("half_light_radius")=bp::object(),
-                          bp::arg("flux")=1.)
+                          bp::arg("trunc")=0., bp::arg("flux")=1.)
                      )
                 )
                 .def(bp::init<const SBSersic &>())
@@ -61,13 +62,14 @@ namespace galsim {
     {
         static SBDeVaucouleurs * construct(
             const bp::object & half_light_radius,
+            double trunc,
             double flux 
         ) {
             if (half_light_radius.ptr() == Py_None) {
                 PyErr_SetString(PyExc_TypeError, "No radius parameter given");
                 bp::throw_error_already_set();
             }
-            return new SBDeVaucouleurs(bp::extract<double>(half_light_radius), flux);
+            return new SBDeVaucouleurs(bp::extract<double>(half_light_radius), trunc, flux);
         }
 
         static void wrap() {
@@ -76,7 +78,8 @@ namespace galsim {
                 .def("__init__",
                      bp::make_constructor(
                          &construct, bp::default_call_policies(),
-                         (bp::arg("half_light_radius")=bp::object(), bp::arg("flux")=1.)
+                         (bp::arg("half_light_radius")=bp::object(),
+                          bp::arg("trunc")=0., bp::arg("flux")=1.)
                      )
                 )
                 .def(bp::init<const SBDeVaucouleurs &>())
