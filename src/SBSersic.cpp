@@ -289,8 +289,8 @@ namespace galsim {
         double operator()(double b) const
         {
             double z = b * _rinvn;
-            double fre = boost::math::gamma_p(_2n, b);
-            double frm = boost::math::gamma_p(_2n, z);
+            double fre = boost::math::tgamma_lower(_2n, b);
+            double frm = boost::math::tgamma_lower(_2n, z);
             xdbg<<"func("<<b<<") = 2*"<<fre<<" - "<<frm<<" = "<<2.*fre-frm<<std::endl;
             return 2.*fre - frm;
         }
@@ -322,16 +322,16 @@ namespace galsim {
                 throw SBError("Sersic truncation radius must be > half_light_radius.");
             // Solution to gamma(2n,b) = Gamma(2n,b*(trunc/re)^(1/n)) / 2
             SersicScaleRadiusFunc func(n, maxRre);
-            // For the lower bound of b, we can use the untruncated value:
-            double b1 = b;
-            xdbg<<"b1 = "<<b1<<std::endl;
-            // For the upper bound, we don't really have a good choice, so start with 2*b1
+            // For the lower bound, we don't really have a good choice, so start with b / 2.
             // and we'll expand it if necessary.
-            double b2 = 2. * b1;
+            double b1 = b / 2.;
+            xdbg<<"b1 = "<<b1<<std::endl;
+            // For the upper bound of b, we can use the untruncated value:
+            double b2 = b;
             xdbg<<"b2 = "<<b2<<std::endl;
             Solve<SersicScaleRadiusFunc> solver(func,b1,b2);
             solver.setMethod(Brent);
-            solver.bracketUpper();
+            solver.bracketLower();    // expand lower bracket if necessary
             xdbg<<"After bracket, range is "<<solver.getLowerBound()<<" .. "<<
                 solver.getUpperBound()<<std::endl;
             b = solver.root();
