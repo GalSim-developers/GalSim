@@ -1313,6 +1313,8 @@ class OpticalPSF(GSObject):
     @param coma1           Coma along x in units of incident light wavelength.
     @param coma2           Coma along y in units of incident light wavelength.
     @param spher           Spherical aberration in units of incident light wavelength.
+    @param trefiol1        trefoil (one of the arrows along x) in units of incident light wavelength.
+    @param trefiol2        trefoil (one of the arrows along y) in units of incident light wavelength.
     @param circular_pupil  Adopt a circular pupil? Alternative is square.
     @param obscuration     Linear dimension of central obscuration as fraction of pupil linear 
                            dimension, [0., 1.) [default `obscuration = 0.`].
@@ -1344,6 +1346,8 @@ class OpticalPSF(GSObject):
         "coma1" : float ,
         "coma2" : float ,
         "spher" : float ,
+        "trefoil1" : float ,
+        "trefoil2" : float ,
         "circular_pupil" : bool ,
         "obscuration" : float ,
         "oversampling" : float ,
@@ -1355,7 +1359,7 @@ class OpticalPSF(GSObject):
 
     # --- Public Class methods ---
     def __init__(self, lam_over_diam, defocus=0.,
-                 astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
+                 astig1=0., astig2=0., coma1=0., coma2=0., spher=0., trefoil1=0., trefoil2=0.,
                  circular_pupil=True, obscuration=0., interpolant=None, oversampling=1.5,
                  pad_factor=1.5, flux=1.):
 
@@ -1379,7 +1383,7 @@ class OpticalPSF(GSObject):
         # Make the psf image using this dx and array shape
         optimage = galsim.optics.psf_image(
             lam_over_diam=lam_over_diam, dx=dx_lookup, array_shape=(npix, npix), defocus=defocus,
-            astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
+            astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher, trefoil1=trefoil1, trefoil2=trefoil2,
             circular_pupil=circular_pupil, obscuration=obscuration, flux=flux)
         
         # If interpolant not specified on input, use a Quintic interpolant
