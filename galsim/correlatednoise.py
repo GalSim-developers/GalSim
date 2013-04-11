@@ -432,6 +432,10 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         field that would result from convolving noise generated according to the initial correlated
         noise with a kernel represented by `gsobject` (e.g. a PSF).
 
+        The practical purpose of this method is that it allows us to model what is happening to
+        noise in the images from Hubble Space Telescope that we use for simulating PSF convolved 
+        galaxies with the galsim.RealGalaxy class.
+
         This modifies the representation of the correlation function, but leaves the random number
         generator unchanged.
 
