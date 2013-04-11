@@ -19,16 +19,18 @@
  * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
  */
 
-//#define DEBUGLOGGING
+#define DEBUGLOGGING
 
 #include "SBSersic.h"
 #include "SBSersicImpl.h"
 #include "integ/Int.h"
+#include <boost/math/special_functions/gamma.hpp>
+#include "Solve.h"
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-//std::ostream* dbgout = &std::cout;
-//int verbose_level = 2;
+std::ostream* dbgout = &std::cout;
+int verbose_level = 2;
 #endif
 
 namespace galsim {
@@ -56,7 +58,7 @@ namespace galsim {
 
     SBSersic::SBSersicImpl::SBSersicImpl(double n,  double re, double trunc, double flux) :
         _n(n), _flux(flux), _re(re), _re_sq(_re*_re), _inv_re(1./_re), _inv_re_sq(_inv_re*_inv_re),
-        _norm(_flux*_inv_re_sq), _info(nmap.get(_n))
+        _trunc(trunc), _norm(_flux*_inv_re_sq), _info(nmap.get(_n, trunc/re))
     {
         _ksq_max = _info->getKsqMax();
         dbg<<"_ksq_max for n = "<<n<<" = "<<_ksq_max<<std::endl;
@@ -237,11 +239,12 @@ namespace galsim {
         double _k;
     };
 
-    // Find what radius encloses (1-missing_flux_frac) of the total flux in a Sersic profile
+    // Find what radius encloses (1-missing_flux_frac) of the total flux in a Sersic profile,
+    // in units of half-light radius re.
     double SBSersic::SersicInfo::findMaxR(double missing_flux_frac, double gamma2n)
     { 
         // int(exp(-b r^1/n) r, r=R..inf) = x * int(exp(-b r^1/n) r, r=0..inf)
-        //                                = x n b^-2n Gamma(2n)
+        //                                = x n b^-2n Gamma(2n)    [x == missing_flux_frac]
         // Change variables: u = b r^1/n,
         // du = b/n r^(1-n)/n dr
         //    = b/n r^1/n dr/r
@@ -278,18 +281,73 @@ namespace galsim {
         return R;
     }
 
+    class SersicScaleRadiusFunc
+    {
+    public:
+        SersicScaleRadiusFunc(double n, double maxRre) :
+            _2n(2.*n), _rinvn(std::pow(maxRre, 1./n)) {}
+        double operator()(double b) const
+        {
+            double z = b * _rinvn;
+            double fre = boost::math::gamma_p(_2n, b);
+            double frm = boost::math::gamma_p(_2n, z);
+            xdbg<<"func("<<b<<") = 2*"<<fre<<" - "<<frm<<" = "<<2.*fre-frm<<std::endl;
+            return 2.*fre - frm;
+        }
+    private:
+        double _2n;
+        double _rinvn;
+    };
+
+    // Calculate Sersic scale b, given half-light radius re and truncation radius trunc
+    // Sersic scale in Sersic profile is defined from exp(-b*r^(1/n))
+    double SersicCalculateScaleBFromHLR(double n, double maxRre)
+    {
+        // Find Sersic scale b, for the case of no truncation.
+        // Total flux in a Sersic profile is:  F = I0*re^2 (2pi*n) b^(-2n) Gamma(2n)
+        // Flux within radius R is:  F(<R) = I0*re^2 (2pi*n) b^(-2n) gamma(2n, b*(R/re)^(1/n))
+        // where Gamma(a) == int_0^inf exp(-t) t^(a-1) dt
+        //       gamma(a,x) == int_0^x exp(-t) t^(a-1) dt
+        // Solution to gamma(2n,b) = Gamma(2n)/2 is given by an approximation formula for b from
+        // Ciotti & Bertin (1999):
+        double b = 2.*n - (1./3.)
+                   + (4./405.)/n
+                   + (46./25515.)/(n*n)
+                   + (131./1148175.)/(n*n*n)
+                   - (2194697./30690717750.)/(n*n*n*n);
+
+        // find scale b with truncated radius
+        if (maxRre > 0.) {
+            if (maxRre <= 1.)   // there is a better minimum truncation check criteria, for sure
+                throw SBError("Sersic truncation radius must be > half_light_radius.");
+            // Solution to gamma(2n,b) = Gamma(2n,b*(trunc/re)^(1/n)) / 2
+            SersicScaleRadiusFunc func(n, maxRre);
+            // For the lower bound of b, we can use the untruncated value:
+            double b1 = b;
+            xdbg<<"b1 = "<<b1<<std::endl;
+            // For the upper bound, we don't really have a good choice, so start with 2*b1
+            // and we'll expand it if necessary.
+            double b2 = 2. * b1;
+            xdbg<<"b2 = "<<b2<<std::endl;
+            Solve<SersicScaleRadiusFunc> solver(func,b1,b2);
+            solver.setMethod(Brent);
+            solver.bracketUpper();
+            xdbg<<"After bracket, range is "<<solver.getLowerBound()<<" .. "<<
+                solver.getUpperBound()<<std::endl;
+            b = solver.root();
+            xdbg<<"Root is "<<b<<std::endl;
+        }
+        return b;
+    }
+
     // Constructor to initialize Sersic constants and k lookup table
-    SBSersic::SersicInfo::SersicInfo(double n) : _n(n), _inv2n(1./(2.*n)) 
+    SBSersic::SersicInfo::SersicInfo(double n, double maxRre) :
+        _n(n), _maxRre(maxRre), _inv2n(1./(2.*n))
     {
         // Going to constrain range of allowed n to those for which testing was done
         if (_n<0.5 || _n>4.2) throw SBError("Requested Sersic index out of range");
 
-        // Formula for b from Ciotti & Bertin (1999)
-        _b = 2.*_n - (1./3.)
-            + (4./405.)/_n
-            + (46./25515.)/(_n*_n)
-            + (131./1148175.)/(_n*_n*_n)
-            - (2194697./30690717750.)/(_n*_n*_n*_n);
+        _b = SersicCalculateScaleBFromHLR(n, maxRre);
 
         double b2n = std::pow(_b,2.*_n);  // used frequently here
         double b4n = b2n*b2n;

@@ -60,9 +60,10 @@ namespace galsim {
     public:
         /** 
          * @brief Constructor
-         * @param[in] n Sersic index
+         * @param[in] n       Sersic index
+         * @param[in] maxRre  Maximum radius in units of half-light radius
          */
-        SersicInfo(double n); 
+        SersicInfo(double n, double maxRre);
 
         /// @brief Destructor: deletes photon-shooting classes if necessary
         ~SersicInfo() {}
@@ -100,10 +101,11 @@ namespace galsim {
         void operator=(const SersicInfo& rhs); ///<Hide assignment operator.
 
         double _n; ///< Sersic index.
+        double _maxRre; ///< Truncation radius `trunc` in units of half-light radius `re`.
 
         /** 
          * @brief Scaling in Sersic profile `exp(-b*pow(xsq,inv2n))`,
-         * calculated from Sersic index `n` and half-light radius `re`.
+         * calculated from Sersic index `n`, half-light radius `re`, and truncation radius `trunc`.
          */
         double _b; 
 
@@ -142,7 +144,7 @@ namespace galsim {
          *
          * @param[in] n Sersic index for which the information table is required.
          */
-        const SersicInfo* get(double n) 
+        const SersicInfo* get(double n, double maxRre)
         {
             /** 
              * @brief The currently hardwired max number of Sersic `n` info tables that can be 
@@ -152,7 +154,7 @@ namespace galsim {
 
             MapIter it = _map.find(n);
             if (it == _map.end()) {
-                boost::shared_ptr<SersicInfo> info(new SersicInfo(n));
+                boost::shared_ptr<SersicInfo> info(new SersicInfo(n, maxRre));
                 _map[n] = info;
                 if (int(_map.size()) > MAX_SERSIC_TABLES)
                     throw SBError("Storing Sersic info for too many n values");
@@ -193,7 +195,7 @@ namespace galsim {
         }
 
         bool isAxisymmetric() const { return true; }
-        bool hasHardEdges() const { return false; }
+        bool hasHardEdges() const { return (1.-_fluxFactor) > sbp::maxk_threshold; }
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }  // 1d lookup table
 
@@ -229,7 +231,11 @@ namespace galsim {
         double _re_sq;
         double _inv_re;
         double _inv_re_sq;
+        double _trunc; ///< Truncation radius in same physical units as `_re`.
         double _norm; ///< Calculated value: _flux/_re_sq
+        double _maxR; ///< Maximum `r`.
+        double _maxRre; ///< Maximum `r` in units of `_re`.
+        double _fluxFactor; ///< Integral of total flux (in terms of `_re` units).
         double _ksq_max; ///< The ksq_max value from info rescaled with this re value.
 
         const SersicInfo* _info; ///< Points to info structure for this n.
