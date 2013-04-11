@@ -732,7 +732,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     Addition, multiplication and division operators are defined to work in an intuitive way for
     correlation functions.
 
-    Addition works simply to add the internally-stored correlated noise fields, so that
+    Addition works simply to add the internally-stored correlation functions, so that
 
         >>> cn3 = cn2 + cn1
         >>> cn4 += cn5
