@@ -50,7 +50,7 @@ import galsim
 # Subtract off the mean for each field explicitly (bg subtraction never perfect)?
 # There does seem to be a consistent positive bg around giving a constant CF of 2.4e-7 (~2% of peak)
 # that we might want to remove.  See the Pull Request #366 on GalSim's Github site.
-SUBTRACT_MEAN=True
+SUBTRACT_MEAN=False
 
 NOISEIMFILE = "acs_I_unrot_sci_20_noisearrays.pkl"  # Input pickled list filename
 if SUBTRACT_MEAN:
