@@ -122,6 +122,12 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         Calling
         -------
+        To add deviates to every element of an image, the syntax 
+
+            >>> image.addNoise(correlated_noise)
+
+        is preferred.  However, this is equivalent to calling this instance's .applyTo() method as
+        follows
 
             >>> correlated_noise.applyTo(image)
 
@@ -129,12 +135,6 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         given CorrelatedNoise instance `correlated_noise`.  image.getScale() is used to determine
         the input image pixel separation, and if image.getScale() <= 0 a pixel scale of 1 is
         assumed.
-
-        To add deviates to every element of an image, the syntax 
-
-            >>> image.addNoise(correlated_noise)
-
-        is preferred.
 
         Note that the correlated noise field in `image` will be periodic across its boundaries: this
         is due to the fact that the internals of the CorrelatedNoise currently use a relatively
@@ -673,23 +673,21 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     from an imperfectly-estimated sample mean subtraction.  If this is not possible, just be aware 
     that `subtract_mean=True` will bias the correlation function low to some level.
 
-    Methods
-    -------
+    Methods and Use
+    ---------------
     The main way that a CorrelatedNoise is used is to add or assign correlated noise to an image.
-    This is common to all the classes that inherit from BaseNoise, e.g.:
-
-        >>> cn.applyTo(im)
-
-    However, to add deviates to every element of an image, the syntax
+    This is common to all the classes that inherit from BaseNoise: to add deviates to every element
+    of an image, the syntax
 
         >>> im.addNoise(cn)
 
-    is preferred.
+    is preferred, although
 
-    The correlation function is calculated from its pixel values using the NumPy FFT functions.
-    See the .addNoise() method docstring for more information.  The image.getScale() is used to
-    get the pixel scale of the input image unless this is <= 0, in which case a scale of 1 is
-    assumed.
+        >>> cn.applyTo(im)
+
+    is equivalent.  See the .addNoise() method docstring for more information.  The
+    image.getScale() method is used to get the pixel scale of the input image unless this is <= 0,
+    in which case a scale of 1 is assumed.
 
     Another method that may be of use is
 
