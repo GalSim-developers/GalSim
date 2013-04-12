@@ -188,7 +188,10 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         If the `image` originally contained noise with a correlation function described by the 
         `correlated_noise` instance, the combined noise after using the applyWhiteningTo() method
-        will be uncorrelated to a good approximation.
+        will be approximately uncorrelated.  Tests using COSMOS noise fields suggest ~0.3% residual
+        off-diagonal covariances after whitening, relative to the variance, although results may
+        vary depending on the precise correlation function of the noise field.
+        (See `devel/external/hst/compare_whitening_subtraction.py` for the COSMOS tests.)
 
         Note that the code doesn't check that the "if" above is true: the user MUST make sure this 
         is the case for the final noise to be uncorrelated.
@@ -904,7 +907,8 @@ def getCOSMOSNoise(rng, file_name, dx_cosmos=0.03, variance=0., x_interpolant=No
         /YOUR/REPO/PATH/GalSim/examples/data/acs_I_unrot_sci_20_cf.fits
 
     @param rng            Must be a galsim.BaseDeviate or derived class instance, provides the
-                          random number generator for the noise field.
+                          random number generator used by the returned _BaseCorrelatedNoise
+                          instance.
     @param file_name      String containing the path and filename above but modified to match the
                           location of the GalSim repository on your system.
     @param dx_cosmos      COSMOS ACS F814W coadd image pixel scale in the units you are using to
