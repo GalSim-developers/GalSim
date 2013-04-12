@@ -3,6 +3,8 @@ import numpy as np
 import galsim
 import matplotlib.pyplot as plt
 
+# For information on where to download the .pkl file below, see the python script
+# `devel/external/hst/make_cosmos_cfimage.py`
 NOISEIMFILE = "acs_I_unrot_sci_20_noisearrays.pkl"  # Input pickled list filename
 CFIMFILE_SUB = "acs_I_unrot_sci_20_cf_subtracted.fits" # Output image of correlation function (sub)
 CFIMFILE_UNS = "acs_I_unrot_sci_20_cf_unsubtracted.fits" # Output image of correlation function
