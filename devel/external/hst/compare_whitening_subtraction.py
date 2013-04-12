@@ -67,11 +67,11 @@ plt.legend()
 plt.title('Non-mean subtracted, av. output variance = '+str(var2))
 plt.savefig('non_mean_subtracted_xy_covariances.png')
 
-# The variance in the final whitened noise for the non-mean subtracted CF estimate case is a factor of 25
-# larger!  I think that the non-mean subtracted case's reduction in the normalized off-diagonal correlations
-# is pretty much consistent with this large excess in the central variance, boosting the ratio of
-# variance/covariances.
+# The variance in the final whitened noise for the non-mean subtracted CF estimate case is a factor
+# of 25 larger!  I think that the non-mean subtracted case's reduction in the normalized off-
+# diagonal correlations is pretty much consistent with this large excess in the central variance,
+# boosting the ratio of variance/covariances.
 #
-# To me (Barney) this motivates using the mean subtracted COSMOS CF: it produces close-to-white (~0.3% off-
-# diagonal covariances) noise fields with an output variance that is x25 smaller than when using the non-
-# mean subtracted COSMOS CF.
+# To me (Barney) this motivates using the mean subtracted COSMOS CF: it produces close-to-white
+# (~0.3% off-diagonal covariances) noise fields with an output variance that is x25 smaller than
+# when using the non-mean subtracted COSMOS CF.
