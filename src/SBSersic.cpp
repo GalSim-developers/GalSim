@@ -258,9 +258,9 @@ namespace galsim {
         //
         // The lhs is an incomplete gamma function: Gamma(2n,z), which according to
         // Abramowitz & Stegun (6.5.32) has a high-z asymptotic form of:
-        // Gamma(2n,z) ~= z^(2n-1) exp(-z) (1 + (2n-2)/z + (2n-2)(2n-3)/z^2 + ... )
-        // ln(x Gamma(2n)) = (2n-1) ln(z) - z + 2(n-1)/z + 2(n-1)(n-2)/z^2
-        // z = -ln(x Gamma(2n) + (2n-1) ln(z) + 2(n-1)/z + 2(n-1)(n-2)/z^2
+        // Gamma(2n,z) ~= z^(2n-1) exp(-z) (1 + (2n-1)/z + (2n-1)(2n-2)/z^2 + ... )
+        // ln(x Gamma(2n)) = (2n-1) ln(z) - z + (2n-1)/z + (2n-1)(2n-3)/(2*z^2) + O(z^3)
+        // z = -ln(x Gamma(2n) + (2n-1) ln(z) + (2n-1)/z + (2n-1)(2n-3)/(2*z^2) + O(z^3)
         // Iterate this until it converges.  Should be quick.
         dbg<<"Find maxR for missing_flux_frac = "<<missing_flux_frac<<std::endl;
         double z0 = -std::log(missing_flux_frac * gamma2n);
@@ -271,7 +271,7 @@ namespace galsim {
         dbg<<"Start with z = "<<z<<std::endl;
         for(int niter=0; niter < MAXIT; ++niter) {
             oldz = z;
-            z = z0 + (2.*_n-1.) * std::log(z) + 2.*(_n-1.)/z + 2.*(_n-1.)*(_n-2.)/(z*z);
+            z = z0 + (2.*_n-1.) * std::log(z) + (2.*_n-1.)/z + (2.*_n-1.)*(2.*_n-3.)/(2.*z*z);
             dbg<<"z = "<<z<<", dz = "<<z-oldz<<std::endl;
             if (std::abs(z-oldz) < 0.01) break;
         }
