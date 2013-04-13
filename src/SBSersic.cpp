@@ -376,7 +376,7 @@ namespace galsim {
         if (!truncated)
             gamma2nz = gamma2n;
         else {
-            double z = _b * std::pow(_maxRre, 1./_n)
+            double z = _b * std::pow(_maxRre, 1./_n);
             gamma2nz = boost::math::tgamma_lower(2.*_n, z);
         }
         _norm = b2n / (2.*M_PI*_n*gamma2nz);
