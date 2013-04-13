@@ -85,6 +85,9 @@ namespace galsim {
 
         double getKsqMax() const { return _ksq_max; }
 
+        /// @brief Returns the maximum relevant R, in units of half-light radius `re`.
+        double getMaxRRe() const { return _maxRre; }
+
         /**
          * @brief Shoot photons through unit-size, unnormalized profile
          * Sersic profiles are sampled with a numerical method, using class
@@ -231,10 +234,10 @@ namespace galsim {
         double _re_sq;
         double _inv_re;
         double _inv_re_sq;
-        double _trunc; ///< Truncation radius in same physical units as `_re`.
+        double _trunc; ///< Truncation radius in same physical units as `_re` (0 if no truncation).
         double _norm; ///< Calculated value: _flux/_re_sq
-        double _maxR; ///< Maximum `r`.
-        double _maxRre; ///< Maximum `r` in units of `_re`.
+        double _maxRre; ///< Maximum [truncation] `r` in units of `_re`.
+        double _maxRre_sq;
         double _fluxFactor; ///< Integral of total flux (in terms of `_re` units).
         double _ksq_max; ///< The ksq_max value from info rescaled with this re value.
 

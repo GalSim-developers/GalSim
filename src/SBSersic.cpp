@@ -60,12 +60,18 @@ namespace galsim {
         _n(n), _flux(flux), _re(re), _re_sq(_re*_re), _inv_re(1./_re), _inv_re_sq(_inv_re*_inv_re),
         _trunc(trunc), _norm(_flux*_inv_re_sq), _info(nmap.get(_n, trunc/re))
     {
+        _maxRre = _info->getMaxRRe();
+        _maxRre_sq = _maxRre*_maxRre;
         _ksq_max = _info->getKsqMax();
         dbg<<"_ksq_max for n = "<<n<<" = "<<_ksq_max<<std::endl;
     }
 
     double SBSersic::SBSersicImpl::xValue(const Position<double>& p) const
-    {  return _norm * _info->xValue((p.x*p.x+p.y*p.y)*_inv_re_sq); }
+    {
+      double rsq = (p.x*p.x+p.y*p.y)*_inv_re_sq;
+      if (rsq > _maxRre_sq) return 0.;
+      else return _norm * _info->xValue(rsq);
+    }
 
     std::complex<double> SBSersic::SBSersicImpl::kValue(const Position<double>& k) const
     {
@@ -100,7 +106,11 @@ namespace galsim {
                 double x = x0;
                 double ysq = y0*y0;
                 It valit = val.col(j).begin();
-                for (int i=0;i<m;++i,x+=dx) *valit++ = _norm * _info->xValue(x*x + ysq);
+                for (int i=0;i<m;++i,x+=dx) {
+                    double rsq = x*x + ysq;
+                    if (rsq > _maxRre_sq) *valit++ = 0.;
+                    else *valit++ = _norm * _info->xValue(rsq);
+                }
             }
         }
     }
@@ -165,7 +175,11 @@ namespace galsim {
             double x = x0;
             double y = y0;
             It valit = val.col(j).begin();
-            for (int i=0;i<m;++i,x+=dx,y+=dyx) *valit++ = _norm * _info->xValue(x*x + y*y);
+            for (int i=0;i<m;++i,x+=dx,y+=dyx) {
+                double rsq = x*x + y*y;
+                if (rsq > _maxRre_sq) *valit++ = 0.;
+                else *valit++ = _norm * _info->xValue(rsq);
+            }
         }
     }
 
@@ -206,7 +220,10 @@ namespace galsim {
     double SBSersic::SBSersicImpl::stepK() const { return _info->stepK() / _re; }
 
     double SBSersic::SersicInfo::xValue(double xsq) const 
-    { return _norm * std::exp(-_b*std::pow(xsq,_inv2n)); }
+    {
+        if (xsq > _maxRre) return 0.;
+        else return _norm * std::exp(-_b*std::pow(xsq,_inv2n));
+    }
 
     double SBSersic::SersicInfo::kValue(double ksq) const 
     {
@@ -347,13 +364,22 @@ namespace galsim {
         // Going to constrain range of allowed n to those for which testing was done
         if (_n<0.5 || _n>4.2) throw SBError("Requested Sersic index out of range");
 
+        bool truncated = (_maxRre > 0.);
+
         _b = SersicCalculateScaleBFromHLR(n, maxRre);
 
         double b2n = std::pow(_b,2.*_n);  // used frequently here
         double b4n = b2n*b2n;
         // The normalization factor to give unity flux integral:
         double gamma2n = tgamma(2.*_n);
-        _norm = b2n / (2.*M_PI*_n*gamma2n);
+        double gamma2nz;
+        if (!truncated)
+            gamma2nz = gamma2n;
+        else {
+            double z = _b * std::pow(_maxRre, 1./_n)
+            gamma2nz = boost::math::tgamma_lower(2.*_n, z);
+        }
+        _norm = b2n / (2.*M_PI*_n*gamma2nz);
 
         // The small-k expansion of the Hankel transform is (normalized to have flux=1):
         // 1 - Gamma(4n) / 4 b^2n Gamma(2n) + Gamma(6n) / 64 b^4n Gamma(2n)
@@ -374,26 +400,30 @@ namespace galsim {
         dbg<<"kmin = "<<kmin<<std::endl;
         _ksq_min = kmin * kmin;
 
-        // How far should nominal profile extend?
+        // How far should the untruncated profile extend?
         // Estimate number of effective radii needed to enclose (1-alias_threshold) of flux
-        double R = findMaxR(sbp::alias_threshold,gamma2n);
-        // Go to at least 5 re
-        if (R < 5.) R = 5.;
-        dbg<<"R => "<<R<<std::endl;
-        _stepK = M_PI / R;
+        if (!truncated)  _maxRre = findMaxR(sbp::alias_threshold,gamma2n);
+        // Go to at least 5*re
+        double Rre = _maxRre;
+        if (Rre < 5.) Rre = 5.;
+        dbg<<"maxR/re => "<<_maxRre<<std::endl;
+        _stepK = M_PI / _maxRre;
         dbg<<"stepK = "<<_stepK<<std::endl;
 
         // Now start building the lookup table for FT of the profile.
 
         // Normalization for integral at k=0:
-        double hankel_norm = _n*gamma2n/b2n;
+        double hankel_norm = _n*gamma2nz/b2n;
         dbg<<"hankel_norm = "<<hankel_norm<<std::endl;
 
         // Keep going until at least 5 in a row have kvalues below kvalue_accuracy.
         int n_below_thresh = 0;
 
-        double integ_maxR = findMaxR(sbp::kvalue_accuracy * hankel_norm,gamma2n);
-        //double integ_maxR = integ::MOCK_INF;
+        double integ_maxRre;
+        if (!truncated)
+            integ_maxRre = findMaxR(sbp::kvalue_accuracy * hankel_norm,gamma2n);
+        else
+            integ_maxRre = _maxRre;
 
         // There are two "max k" values that we care about.
         // 1) _maxK is where |f| <= maxk_threshold
@@ -408,7 +438,7 @@ namespace galsim {
         for (double logk = std::log(kmin)-0.001; logk < std::log(500.); logk += dlogk) {
             SersicIntegrand I(_n, _b, std::exp(logk));
             double val = integ::int1d(
-                I, 0., integ_maxR, sbp::integration_relerr, sbp::integration_abserr*hankel_norm);
+                I, 0., integ_maxRre, sbp::integration_relerr, sbp::integration_abserr*hankel_norm);
             val /= hankel_norm;
             xdbg<<"logk = "<<logk<<", ft("<<exp(logk)<<") = "<<val<<std::endl;
             _ft.addEntry(logk,val);
@@ -435,7 +465,10 @@ namespace galsim {
         // Next, set up the classes for photon shooting
         _radial.reset(new SersicRadialFunction(_n, _b));
         std::vector<double> range(2,0.);
-        range[1] = findMaxR(sbp::shoot_flux_accuracy,gamma2n);
+        if (!truncated)
+            range[1] = findMaxR(sbp::shoot_flux_accuracy,gamma2n);
+        else
+            range[1] = _maxRre;
         _sampler.reset(new OneDimensionalDeviate( *_radial, range, true));
     }
 
