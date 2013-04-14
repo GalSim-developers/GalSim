@@ -64,6 +64,8 @@ namespace galsim {
         _info = nmap.get(_n, maxRre);
         _maxRre = _info->getMaxRRe();
         _maxRre_sq = _maxRre*_maxRre;
+        _maxR = _maxRre * _re;
+        _maxR_sq = _maxR*_maxR;
         _ksq_max = _info->getKsqMax();
         _truncated = (_trunc > 0.);
         dbg<<"_ksq_max for n = "<<n<<" = "<<_ksq_max<<std::endl;

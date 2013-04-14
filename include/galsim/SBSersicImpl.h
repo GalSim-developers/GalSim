@@ -193,19 +193,28 @@ namespace galsim {
         double stepK() const;
 
         void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const 
-        { xmin = -integ::MOCK_INF; xmax = integ::MOCK_INF; splits.push_back(0.); }
+        {
+            splits.push_back(0.);
+            if (!_truncated) { xmin = -integ::MOCK_INF; xmax = integ::MOCK_INF; }
+            else { xmin = -_maxR; xmax = _maxR; }
+        }
 
         void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const 
-        { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; splits.push_back(0.); }
+        {
+            splits.push_back(0.);
+            if (!_truncated) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
+            else { ymin = -_maxR; ymax = _maxR; }
+        }
 
         void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
         {
-            ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; 
+            if (!_truncated) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
+            else { ymax = sqrt(_maxR_sq - x*x);  ymin=-ymax; }
             if (std::abs(x/_re) < 1.e-2) splits.push_back(0.); 
         }
 
         bool isAxisymmetric() const { return true; }
-        bool hasHardEdges() const { return (1.-_fluxFactor) > sbp::maxk_threshold; }
+        bool hasHardEdges() const { return _truncated; }
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }  // 1d lookup table
 
@@ -243,9 +252,10 @@ namespace galsim {
         double _inv_re_sq;
         double _trunc; ///< Truncation radius in same physical units as `_re` (0 if no truncation).
         double _norm; ///< Calculated value: _flux/_re_sq
-        double _maxRre; ///< Maximum [truncation] `r` in units of `_re`.
+        double _maxRre; ///< Maximum (truncation) `r` in units of `_re`.
         double _maxRre_sq;
-        double _fluxFactor; ///< Integral of total flux (in terms of `_re` units).
+        double _maxR; ///< Maximum (truncation) radius `r`.
+        double _maxR_sq;
         double _ksq_max; ///< The ksq_max value from info rescaled with this re value.
         bool _truncated; ///< Set true if `_trunc > 0`.
 
