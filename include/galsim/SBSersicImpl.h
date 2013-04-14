@@ -123,6 +123,7 @@ namespace galsim {
         Table<double,double> _ft;  ///< Lookup table for Fourier transform of Sersic.
         double _ksq_min; ///< Minimum ksq to use lookup table.
         double _ksq_max; ///< Maximum ksq to use lookup table.
+        bool _truncated; ///< Set true if `_trunc > 0`.
 
         /// Function class used for photon shooting
         boost::shared_ptr<SersicRadialFunction> _radial;  
@@ -246,6 +247,7 @@ namespace galsim {
         double _maxRre_sq;
         double _fluxFactor; ///< Integral of total flux (in terms of `_re` units).
         double _ksq_max; ///< The ksq_max value from info rescaled with this re value.
+        bool _truncated; ///< Set true if `_trunc > 0`.
 
         const SersicInfo* _info; ///< Points to info structure for this n.
 

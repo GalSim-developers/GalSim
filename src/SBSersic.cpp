@@ -65,13 +65,14 @@ namespace galsim {
         _maxRre = _info->getMaxRRe();
         _maxRre_sq = _maxRre*_maxRre;
         _ksq_max = _info->getKsqMax();
+        _truncated = (_trunc > 0.);
         dbg<<"_ksq_max for n = "<<n<<" = "<<_ksq_max<<std::endl;
     }
 
     double SBSersic::SBSersicImpl::xValue(const Position<double>& p) const
     {
       double rsq = (p.x*p.x+p.y*p.y)*_inv_re_sq;
-      if (rsq > _maxRre_sq) return 0.;
+      if (_truncated && rsq > _maxRre_sq) return 0.;
       else return _norm * _info->xValue(rsq);
     }
 
@@ -110,7 +111,7 @@ namespace galsim {
                 It valit = val.col(j).begin();
                 for (int i=0;i<m;++i,x+=dx) {
                     double rsq = x*x + ysq;
-                    if (rsq > _maxRre_sq) *valit++ = 0.;
+                    if (_truncated && rsq > _maxRre_sq) *valit++ = 0.;
                     else *valit++ = _norm * _info->xValue(rsq);
                 }
             }
@@ -179,7 +180,7 @@ namespace galsim {
             It valit = val.col(j).begin();
             for (int i=0;i<m;++i,x+=dx,y+=dyx) {
                 double rsq = x*x + y*y;
-                if (rsq > _maxRre_sq) *valit++ = 0.;
+                if (_truncated && rsq > _maxRre_sq) *valit++ = 0.;
                 else *valit++ = _norm * _info->xValue(rsq);
             }
         }
@@ -223,7 +224,7 @@ namespace galsim {
 
     double SBSersic::SersicInfo::xValue(double xsq) const 
     {
-        if (xsq > _maxRre_sq) return 0.;
+        if (_truncated && xsq > _maxRre_sq) return 0.;
         else return _norm * std::exp(-_b*std::pow(xsq,_inv2n));
     }
 
@@ -366,7 +367,7 @@ namespace galsim {
         // Going to constrain range of allowed n to those for which testing was done
         if (_n<0.5 || _n>4.2) throw SBError("Requested Sersic index out of range");
 
-        bool truncated = (_maxRre > 0.);
+        _truncated = (_maxRre > 0.);
 
         _b = SersicCalculateScaleBFromHLR(n, maxRre);
 
@@ -377,7 +378,7 @@ namespace galsim {
         double gamma4n;
         double gamma6n;
         double gamma8n;
-        if (!truncated) {
+        if (!_truncated) {
             gamma2n = tgamma(2.*_n);
             gamma4n = tgamma(4.*_n);
             gamma6n = tgamma(6.*_n);
@@ -414,7 +415,7 @@ namespace galsim {
 
         // How far should the profile extend, if not truncated?
         // Estimate number of effective radii needed to enclose (1-alias_threshold) of flux
-        if (!truncated)  _maxRre = findMaxR(sbp::alias_threshold,gamma2n);
+        if (!_truncated)  _maxRre = findMaxR(sbp::alias_threshold,gamma2n);
         // Go to at least 5*re
         double Rre = _maxRre;
         if (Rre < 5.) Rre = 5.;
@@ -432,7 +433,7 @@ namespace galsim {
         int n_below_thresh = 0;
 
         double integ_maxRre;
-        if (!truncated)
+        if (!_truncated)
             integ_maxRre = findMaxR(sbp::kvalue_accuracy * hankel_norm,gamma2n);
         else
             integ_maxRre = _maxRre;
@@ -477,7 +478,7 @@ namespace galsim {
         // Next, set up the classes for photon shooting
         _radial.reset(new SersicRadialFunction(_n, _b));
         std::vector<double> range(2,0.);
-        if (!truncated)
+        if (!_truncated)
             range[1] = findMaxR(sbp::shoot_flux_accuracy,gamma2n);
         else
             range[1] = _maxRre;
