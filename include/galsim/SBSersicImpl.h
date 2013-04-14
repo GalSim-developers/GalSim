@@ -133,6 +133,7 @@ namespace galsim {
     };
 
     typedef std::pair<double,double> PairKey;
+
     /** 
      * @brief A map to hold one copy of the SersicInfo for each `n` ever used during the 
      * program run.  Make one static copy of this map.  

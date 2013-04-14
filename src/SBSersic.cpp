@@ -58,8 +58,10 @@ namespace galsim {
 
     SBSersic::SBSersicImpl::SBSersicImpl(double n,  double re, double trunc, double flux) :
         _n(n), _flux(flux), _re(re), _re_sq(_re*_re), _inv_re(1./_re), _inv_re_sq(_inv_re*_inv_re),
-        _trunc(trunc), _norm(_flux*_inv_re_sq), _info(nmap.get(_n, trunc/re))
+        _trunc(trunc), _norm(_flux*_inv_re_sq)
     {
+        double maxRre = ((int)(trunc/re * 100 + 0.5) / 100.0);  // round to two decimal places
+        _info = nmap.get(_n, maxRre);
         _maxRre = _info->getMaxRRe();
         _maxRre_sq = _maxRre*_maxRre;
         _ksq_max = _info->getKsqMax();
