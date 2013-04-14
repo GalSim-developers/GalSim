@@ -110,7 +110,7 @@ namespace galsim {
          * @brief Scaling in Sersic profile `exp(-b*pow(xsq,inv2n))`,
          * calculated from Sersic index `n`, half-light radius `re`, and truncation radius `trunc`.
          */
-        double _b; 
+        double _b;
 
         double _inv2n;   ///< `1 / (2 * n)`
         double _maxK;    ///< Value of k beyond which aliasing can be neglected.
@@ -132,35 +132,39 @@ namespace galsim {
         double findMaxR(double missing_flux_fraction, double gamma2n);
     };
 
+    typedef std::pair<double,double> PairKey;
     /** 
      * @brief A map to hold one copy of the SersicInfo for each `n` ever used during the 
      * program run.  Make one static copy of this map.  
      * *Be careful of this when multithreading:*
-     * Should build one `SBSersic` with each `n` value before dispatching multiple threads.
+     * Should build one `SBSersic` with each `(n, maxRre)` pair before dispatching multiple threads.
      */
-    class SBSersic::InfoBarn : public std::map<double, boost::shared_ptr<SersicInfo> > 
+    class SBSersic::InfoBarn : public std::map<PairKey, boost::shared_ptr<SersicInfo> >
     {
     public:
 
         /**
-         * @brief Get the SersicInfo table for a specified `n`.
+         * @brief Get the SersicInfo table for a specified pair `(n, maxRre)`.
          *
-         * @param[in] n Sersic index for which the information table is required.
+         * @param[in] n      Sersic index for which the information table is required.
+         * @param[in] maxRre Truncation radius in units of half light radius 're', for which the
+         *                   information table is required (0 if no truncation).
          */
         const SersicInfo* get(double n, double maxRre)
         {
             /** 
-             * @brief The currently hardwired max number of Sersic `n` info tables that can be 
-             * stored.  Should be plenty.
+             * @brief The currently hardwired max number of Sersic `(n, maxRre)` info tables that
+             * can be stored.  Should be plenty.
              */
             const int MAX_SERSIC_TABLES = 100; 
 
-            MapIter it = _map.find(n);
+            PairKey pair_index(n, maxRre);
+            MapIter it = _map.find(pair_index);
             if (it == _map.end()) {
                 boost::shared_ptr<SersicInfo> info(new SersicInfo(n, maxRre));
-                _map[n] = info;
+                _map[pair_index] = info;
                 if (int(_map.size()) > MAX_SERSIC_TABLES)
-                    throw SBError("Storing Sersic info for too many n values");
+                    throw SBError("Storing Sersic info for too many (n, maxRre) pairs");
                 return info.get();
             } else {
                 return it->second.get();
@@ -168,8 +172,8 @@ namespace galsim {
         }
 
     private:
-        typedef std::map<double, boost::shared_ptr<SersicInfo> >::iterator MapIter;
-        std::map<double, boost::shared_ptr<SersicInfo> > _map;
+        typedef std::map<PairKey, boost::shared_ptr<SersicInfo> >::iterator MapIter;
+        std::map<PairKey, boost::shared_ptr<SersicInfo> > _map;
     };
 
     class SBSersic::SBSersicImpl : public SBProfileImpl
