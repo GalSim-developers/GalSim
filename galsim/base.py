@@ -1938,8 +1938,9 @@ class DeVaucouleurs(GSObject):
 
     Initialization
     --------------
-    A DeVaucouleurs is initialized with the half light radius size parameter `half_light_radius` and
-    an optional `flux` parameter [default `flux = 1.`].
+    A DeVaucouleurs is initialized with the half light radius size parameter `half_light_radius`.
+    Optional parameters are truncation radius `trunc` [default `trunc = 0.`, indicating no 
+    truncation] and a `flux` parameter [default `flux = 1.`].
 
     Example:
 
@@ -1957,14 +1958,15 @@ class DeVaucouleurs(GSObject):
 
     # Initialization parameters of the object, with type information
     _req_params = { "half_light_radius" : float }
-    _opt_params = { "flux" : float }
+    _opt_params = { "trunc": float, "flux" : float }
     _single_params = []
     _takes_rng = False
 
     # --- Public Class methods ---
-    def __init__(self, half_light_radius=None, flux=1.):
+    def __init__(self, half_light_radius=None, trunc=0., flux=1.):
         GSObject.__init__(
-            self, galsim.SBDeVaucouleurs(half_light_radius=half_light_radius, flux=flux))
+            self, galsim.SBDeVaucouleurs(half_light_radius=half_light_radius, 
+                                         trunc=trunc, flux=flux))
 
     def getHalfLightRadius(self):
         """Return the half light radius for this DeVaucouleurs profile.
