@@ -223,7 +223,7 @@ namespace galsim {
 
     double SBSersic::SersicInfo::xValue(double xsq) const 
     {
-        if (xsq > _maxRre) return 0.;
+        if (xsq > _maxRre_sq) return 0.;
         else return _norm * std::exp(-_b*std::pow(xsq,_inv2n));
     }
 
@@ -361,7 +361,7 @@ namespace galsim {
 
     // Constructor to initialize Sersic constants and k lookup table
     SBSersic::SersicInfo::SersicInfo(double n, double maxRre) :
-        _n(n), _maxRre(maxRre), _inv2n(1./(2.*n))
+        _n(n), _maxRre(maxRre), _maxRre_sq(maxRre*maxRre), _inv2n(1./(2.*n))
     {
         // Going to constrain range of allowed n to those for which testing was done
         if (_n<0.5 || _n>4.2) throw SBError("Requested Sersic index out of range");

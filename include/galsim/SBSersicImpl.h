@@ -105,6 +105,7 @@ namespace galsim {
 
         double _n; ///< Sersic index.
         double _maxRre; ///< Truncation radius `trunc` in units of half-light radius `re`.
+        double _maxRre_sq;
 
         /** 
          * @brief Scaling in Sersic profile `exp(-b*pow(xsq,inv2n))`,
