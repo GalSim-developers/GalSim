@@ -595,8 +595,48 @@ def test_sersic_radii():
         except ImportError:
             pass
 
+        # Now repeat everything using a trunctation.  (Above had no truncation.)
+
+        # Test constructor using half-light-radius:
+        test_gal = galsim.Sersic(n=n, half_light_radius=test_hlr, flux=1., trunc=10.)
+        hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
+        print 'hlr_sum = ',hlr_sum
+        np.testing.assert_almost_equal(
+                hlr_sum, 0.5, decimal=4,
+                err_msg="Error in Sersic constructor with half-light radius, n = %d"%n)
+
+        # Check that the getters don't work after modifying the original.
+        test_gal_shear = test_gal.copy()
+        print 'n = ',test_gal_shear.getN()
+        print 'hlr = ',test_gal_shear.getHalfLightRadius()
+        test_gal_shear.applyShear(g1=0.3, g2=0.1)
+        try:
+            np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getN");
+            np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
+        except ImportError:
+            pass
+
     # Repeat the above for an explicit DeVaucouleurs.  (Same as n=4, but special name.)
     test_gal = galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=1.)
+    hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
+    print 'hlr_sum = ',hlr_sum
+    np.testing.assert_almost_equal(
+            hlr_sum, 0.5, decimal=4,
+            err_msg="Error in Sersic constructor with half-light radius, n = %d"%n)
+
+    # Check that the getters don't work after modifying the original.
+    test_gal_shear = test_gal.copy()
+    print 'hlr = ',test_gal_shear.getHalfLightRadius()
+    test_gal_shear.applyShear(g1=0.3, g2=0.1)
+    try:
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
+    except ImportError:
+        pass
+
+    # Now repeat everything using a trunctation.  (Above had no truncation.)
+
+    # Repeat the above for an explicit, truncated DeVaucouleurs.
+    test_gal = galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=1., trunc=10.)
     hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
     print 'hlr_sum = ',hlr_sum
     np.testing.assert_almost_equal(
