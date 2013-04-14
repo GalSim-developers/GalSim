@@ -362,7 +362,7 @@ namespace galsim {
 
     // Constructor to initialize Sersic constants and k lookup table
     SBSersic::SersicInfo::SersicInfo(double n, double maxRre) :
-        _n(n), _maxRre(maxRre), _maxRre_sq(maxRre*maxRre), _inv2n(1./(2.*n))
+        _n(n), _maxRre(maxRre), _inv2n(1./(2.*n))
     {
         // Going to constrain range of allowed n to those for which testing was done
         if (_n<0.5 || _n>4.2) throw SBError("Requested Sersic index out of range");
@@ -416,6 +416,7 @@ namespace galsim {
         // How far should the profile extend, if not truncated?
         // Estimate number of effective radii needed to enclose (1-alias_threshold) of flux
         if (!_truncated)  _maxRre = findMaxR(sbp::alias_threshold,gamma2n);
+        _maxRre_sq = _maxRre*_maxRre;
         // Go to at least 5*re
         double Rre = _maxRre;
         if (Rre < 5.) Rre = 5.;
