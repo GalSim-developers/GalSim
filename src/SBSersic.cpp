@@ -368,52 +368,62 @@ namespace galsim {
 
         _b = SersicCalculateScaleBFromHLR(n, maxRre);
 
-        double b2n = std::pow(_b,2.*_n);  // used frequently here
+        // set-up frequently used numbers
+        double b2n = std::pow(_b,2.*_n);
         double b4n = b2n*b2n;
-        // The normalization factor to give unity flux integral:
-        double gamma2n = tgamma(2.*_n);
-        double gamma2nz;
-        if (!truncated)
-            gamma2nz = gamma2n;
-        else {
+        double gamma2n;
+        double gamma4n;
+        double gamma6n;
+        double gamma8n;
+        if (!truncated) {
+            gamma2n = tgamma(2.*_n);
+            gamma4n = tgamma(4.*_n);
+            gamma6n = tgamma(6.*_n);
+            gamma8n = tgamma(8.*_n);
+        } else {
             double z = _b * std::pow(_maxRre, 1./_n);
-            gamma2nz = boost::math::tgamma_lower(2.*_n, z);
+            gamma2n = boost::math::tgamma_lower(2.*_n, z);  // integrate r/re from 0. to _maxRre
+            gamma4n = boost::math::tgamma_lower(4.*_n, z);
+            gamma6n = boost::math::tgamma_lower(6.*_n, z);
+            gamma8n = boost::math::tgamma_lower(8.*_n, z);
         }
-        _norm = b2n / (2.*M_PI*_n*gamma2nz);
+        // The normalization factor to give unity flux integral:
+        _norm = b2n / (2.*M_PI*_n*gamma2n);
 
         // The small-k expansion of the Hankel transform is (normalized to have flux=1):
         // 1 - Gamma(4n) / 4 b^2n Gamma(2n) + Gamma(6n) / 64 b^4n Gamma(2n)
         //   - Gamma(8n) / 2304 b^6n Gamma(2n)
+        // from the series summation J_0(x) = Sum^inf_{m=0} (-1)^m (m!)^-2 (x/2)^2m
         // The quadratic term of small-k expansion:
-        _kderiv2 = -tgamma(4.*_n) / (4.*b2n*gamma2n); 
+        _kderiv2 = -gamma4n / (4.*b2n*gamma2n);
         // And a quartic term:
-        _kderiv4 = tgamma(6.*_n) / (64.*b4n*gamma2n);
+        _kderiv4 = gamma6n / (64.*b4n*gamma2n);
 
         dbg << "Building for n=" << _n << " b= " << _b << " norm= " << _norm << std::endl;
         dbg << "Deriv terms: " << _kderiv2 << " " << _kderiv4 << std::endl;
 
         // When is it safe to use low-k approximation?  
         // See when next term past quartic is at accuracy threshold
-        double kderiv6 = tgamma(8*_n) / (2304.*b4n*b2n*gamma2n);
+        double kderiv6 = gamma8n / (2304.*b4n*b2n*gamma2n);
         dbg<<"kderiv6 = "<<kderiv6<<std::endl;
         double kmin = std::pow(sbp::kvalue_accuracy / kderiv6, 1./6.);
         dbg<<"kmin = "<<kmin<<std::endl;
         _ksq_min = kmin * kmin;
 
-        // How far should the untruncated profile extend?
+        // How far should the profile extend, if not truncated?
         // Estimate number of effective radii needed to enclose (1-alias_threshold) of flux
         if (!truncated)  _maxRre = findMaxR(sbp::alias_threshold,gamma2n);
         // Go to at least 5*re
         double Rre = _maxRre;
         if (Rre < 5.) Rre = 5.;
         dbg<<"maxR/re => "<<_maxRre<<std::endl;
-        _stepK = M_PI / _maxRre;
+        _stepK = M_PI / Rre;
         dbg<<"stepK = "<<_stepK<<std::endl;
 
         // Now start building the lookup table for FT of the profile.
 
         // Normalization for integral at k=0:
-        double hankel_norm = _n*gamma2nz/b2n;
+        double hankel_norm = _n*gamma2n/b2n;
         dbg<<"hankel_norm = "<<hankel_norm<<std::endl;
 
         // Keep going until at least 5 in a row have kvalues below kvalue_accuracy.
