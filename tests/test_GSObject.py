@@ -37,7 +37,7 @@ test_fwhm = 1.9
 test_sigma = 1.9
 test_scale = 1.9
 test_sersic_n = [1.4, 2.6]
-test_sersic_trunc = [0, 11]
+test_sersic_trunc = [0., 11.]
 
 # for flux normalization tests
 test_flux = 1.9
