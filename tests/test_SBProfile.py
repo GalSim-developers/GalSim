@@ -516,6 +516,8 @@ def test_sersic():
     """
     import time
     t1 = time.time()
+
+    # Test SBSersic
     mySBP = galsim.SBSersic(n=3, flux=1, half_light_radius=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_3_1.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
@@ -537,6 +539,32 @@ def test_sersic():
     # Convolve with a small gaussian to smooth out the central peak.
     sersic2 = galsim.Convolve(sersic, galsim.Gaussian(sigma=0.3))
     do_shoot(sersic2,myImg,"Sersic")
+
+    # Now repeat everything using a trunctation.  (Above had no truncation.)
+
+    # Test Truncated SBSersic
+    mySBP = galsim.SBSersic(n=3, flux=1, half_light_radius=1, trunc=10)
+    savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_3_1_10.fits"))
+    myImg = galsim.ImageF(savedImg.bounds)
+    myImg.setScale(0.2)
+    mySBP.draw(myImg.view())
+    printval(myImg, savedImg)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Truncated Sersic profile disagrees with expected result")
+
+    # Repeat with the GSObject version of this:
+    sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1, trunc=10)
+    sersic.draw(myImg,dx=0.2, normalization="surface brightness")
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using Truncated GSObject Sersic disagrees with expected result")
+
+    # Test photon shooting.
+    # Convolve with a small gaussian to smooth out the central peak.
+    sersic2 = galsim.Convolve(sersic, galsim.Gaussian(sigma=0.3))
+    do_shoot(sersic2,myImg,"Truncated Sersic")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
