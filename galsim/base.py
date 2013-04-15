@@ -2349,10 +2349,10 @@ class Convolve(GSObject):
     you try to use it for more than 2 profiles, an exception will be raised.
     
     The real-space convolution is normally slower than the DFT convolution.  The exception is if
-    both component profiles have hard edges, e.g. a truncated Moffat with a Pixel.  In that case,
-    the highest frequency `maxK` for each component is quite large since the ringing dies off fairly
-    slowly.  So it can be quicker to use real-space convolution instead.  Also, real-space 
-    convolution tends to be more accurate in this case as well.
+    both component profiles have hard edges, e.g. a truncated Moffat or Sersic with a Pixel.  In
+    that case, the highest frequency `maxK` for each component is quite large since the ringing dies
+    off fairly slowly.  So it can be quicker to use real-space convolution instead.  Also,
+    real-space convolution tends to be more accurate in this case as well.
 
     If you do not specify either `real_space = True` or `False` explicitly, then we check if there 
     are 2 profiles, both of which have hard edges.  In this case, we automatically use real-space 
