@@ -1831,7 +1831,9 @@ class Sersic(GSObject):
     --------------
     A Sersic is initialized with `n`, the Sersic index of the profile, and the half light radius 
     size parameter `half_light_radius`.  Optional parameters are truncation radius `trunc` [default
-    `trunc = 0.`, indicating no truncation] and a `flux` parameter [default `flux = 1`].
+    `trunc = 0.`, indicating no truncation] and a `flux` parameter [default `flux = 1`].  If `trunc`
+    is set to a non-zero value, then it is assumed to be in the same system of units as
+    `half_light_radius`.
 
     Example:
 
@@ -1939,8 +1941,9 @@ class DeVaucouleurs(GSObject):
     Initialization
     --------------
     A DeVaucouleurs is initialized with the half light radius size parameter `half_light_radius`.
-    Optional parameters are truncation radius `trunc` [default `trunc = 0.`, indicating no 
-    truncation] and a `flux` parameter [default `flux = 1.`].
+    Optional parameters are truncation radius `trunc` [default `trunc = 0.`, indicating no
+    truncation] and a `flux` parameter [default `flux = 1.`].  If `trunc` is set to a non-zero
+    value, then it is assumed to be in the same system of units as `half_light_radius`.
 
     Example:
 
