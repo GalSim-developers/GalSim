@@ -428,7 +428,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         variance_ratio = variance / self.getVariance()
         self.scaleVariance(variance_ratio)
 
-    def convolveWith(self, gsobject):
+    def convolveWith(self, gsobject, gsparams=None):
         """Convolve the correlated noise model with an input GSObject.
 
         The resulting correlated noise model will then give a statistical description of the noise
@@ -470,8 +470,11 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         @param gsobject  A galsim.GSObject or derived class instance representing the function with
                          which the user wants to convolve the correlated noise model.
+        @param gsparams  You may also specify a gsparams argument.  See the docstring for 
+                         GSObject for more information about this option.
         """
-        self._profile = galsim.Convolve([self._profile, galsim.AutoCorrelate(gsobject)])
+        self._profile = galsim.Convolve([self._profile, galsim.AutoCorrelate(gsobject)],
+                                        gsparams=gsparams)
 
     def draw(self, image=None, dx=None, wmult=1., add_to_image=False):
         """The draw method for profiles storing correlation functions.
