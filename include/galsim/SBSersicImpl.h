@@ -120,6 +120,7 @@ namespace galsim {
         double _stepK;   ///< Sampling in k space necessary to avoid folding 
 
         double _norm; ///< Amplitude scaling in Sersic profile `exp(-b*pow(xsq,inv2n))`.
+        bool _flux_untruncated; ///< If true, flux is set to the untruncated Sersic with index `_n`.
         double _kderiv2; ///< Quadratic dependence near k=0.
         double _kderiv4; ///< Quartic dependence near k=0.
         Table<double,double> _ft;  ///< Lookup table for Fourier transform of Sersic.
