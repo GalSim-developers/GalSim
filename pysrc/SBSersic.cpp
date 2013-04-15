@@ -50,7 +50,7 @@ namespace galsim {
                      bp::make_constructor(
                          &construct, bp::default_call_policies(),
                          (bp::arg("n"), bp::arg("half_light_radius")=bp::object(),
-                          bp::arg("trunc")=0., bp::arg("flux")=1., bp::arg("flux_untruncated")=1.)
+                          bp::arg("trunc")=0., bp::arg("flux")=1., bp::arg("flux_untruncated")=true)
                      )
                 )
                 .def(bp::init<const SBSersic &>())
@@ -83,7 +83,7 @@ namespace galsim {
                      bp::make_constructor(
                          &construct, bp::default_call_policies(),
                          (bp::arg("half_light_radius")=bp::object(),
-                          bp::arg("trunc")=0., bp::arg("flux")=1., bp::arg("flux_untruncated")=1.)
+                          bp::arg("trunc")=0., bp::arg("flux")=1., bp::arg("flux_untruncated")=true)
                      )
                 )
                 .def(bp::init<const SBDeVaucouleurs &>())

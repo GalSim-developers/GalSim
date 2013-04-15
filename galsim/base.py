@@ -1843,6 +1843,17 @@ class Sersic(GSObject):
         >>> sersic_obj.getN()
         3.5
 
+    Another optional parameter, `flux_untruncated`, allows the setting of the flux to the
+    untruncated Sersic, while generating a truncated Sersic.  This facilitates the comparison
+    of truncated and untruncated Sersic, as both the amplitude and the scale parameter
+    `b=r_0^{-1/n}` change when a truncated Sersic is specified to the same flux as the
+    untruncated version with the same Sersic index `n`.
+
+    Note that when `trunc > 0.` and `flux_untruncated == true`, the specified half-light radius,
+    also returned by getHalfLightRadius(), will be different from the actual half-light radius.
+    Similarly, the specified flux will not be the actual flux.  However, the true flux is returned
+    by the getFlux() method.
+
     Methods
     -------
     The Sersic is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
@@ -1856,10 +1867,10 @@ class Sersic(GSObject):
     _takes_rng = False
 
     # --- Public Class methods ---
-    def __init__(self, n, half_light_radius, trunc=0., flux=1., flux_untruncated=false):
+    def __init__(self, n, half_light_radius, trunc=0., flux=1., flux_untruncated=False):
         GSObject.__init__(
             self, galsim.SBSersic(n, half_light_radius=half_light_radius, trunc=trunc, flux=flux,
-                                  flux_untruncated=false))
+                                  flux_untruncated=False))
 
     def getN(self):
         """Return the Sersic index `n` for this profile.
@@ -1868,7 +1879,7 @@ class Sersic(GSObject):
 
     def getHalfLightRadius(self):
         """Return the half light radius for this Sersic profile.
-        (Note that when `trunc > 0` and `flux_untruncated = true`, the return value is the
+        (Note that when `trunc > 0` and `flux_untruncated = True`, the return value is the
         user-specified HLR, not the true HLR.)
         """
         return self.SBProfile.getHalfLightRadius()
@@ -1956,6 +1967,17 @@ class DeVaucouleurs(GSObject):
         >>> dvc_obj.getFlux()
         40.0
 
+    Another optional parameter, `flux_untruncated`, allows the setting of the flux to the
+    untruncated DeVaucouleurs, while generating a truncated DeVaucouleurs.  This facilitates the
+    comparison of truncated and untruncated DeVaucouleurs, as both the amplitude and the scale
+    parameter `b=r_0^{-1/n}` change when a truncated DeVaucouleurs is specified to the same flux
+    as the untruncated version with the same DeVaucouleurs index `n`.
+
+    Note that when `trunc > 0.` and `flux_untruncated == True`, the specified half-light radius,
+    also returned by getHalfLightRadius(), will be different from the actual half-light radius.
+    Similarly, the specified flux will not be the actual flux.  However, the true flux is returned
+    by the getFlux() method.
+
     Methods
     -------
     The DeVaucouleurs is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
@@ -1969,10 +1991,10 @@ class DeVaucouleurs(GSObject):
     _takes_rng = False
 
     # --- Public Class methods ---
-    def __init__(self, half_light_radius=None, trunc=0., flux=1., flux_untruncated=false):
+    def __init__(self, half_light_radius=None, trunc=0., flux=1., flux_untruncated=False):
         GSObject.__init__(
             self, galsim.SBDeVaucouleurs(half_light_radius=half_light_radius, 
-                                         trunc=trunc, flux=flux, flux_untruncated=false))
+                                         trunc=trunc, flux=flux, flux_untruncated=False))
 
     def getHalfLightRadius(self):
         """Return the half light radius for this DeVaucouleurs profile.
