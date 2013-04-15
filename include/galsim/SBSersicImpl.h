@@ -51,7 +51,7 @@ namespace galsim {
         double operator()(double r) const { return std::exp(-_b*std::pow(r,_invn)); } 
     private:
         double _invn; ///> 1/n
-        double _b;  /// radial normalization constant
+        double _b;  ///> radial normalization constant
     };
 
     /// @brief A private class that caches the needed parameters for each Sersic index `n`.
@@ -134,7 +134,25 @@ namespace galsim {
         double findMaxR(double missing_flux_fraction, double gamma2n);
     };
 
-    typedef std::pair<double,double> PairKey;
+    class SersicKey {
+    public:
+        SersicKey(double n, double maxRre, bool flux_untruncated) :
+            _n(n), _maxRre(maxRre), _fu(flux_untruncated) {}
+        bool operator<(const SersicKey& rhs) const
+        {
+            if (this->_n == rhs._n)
+                if (this->_maxRre == rhs._maxRre)  return _fu;
+                else  return this->_maxRre < rhs._maxRre;
+            else
+                return this->_n < rhs._n;
+        }
+        bool operator==(const SersicKey& rhs) const
+        { return (this->_n == rhs._n && this->_maxRre == rhs._maxRre && this->_fu == rhs._fu); }
+    private:
+        double _n;
+        double _maxRre;
+        bool _fu;
+    };
 
     /** 
      * @brief A map to hold one copy of the SersicInfo for each `n` ever used during the 
@@ -142,18 +160,20 @@ namespace galsim {
      * *Be careful of this when multithreading:*
      * Should build one `SBSersic` with each `(n, maxRre)` pair before dispatching multiple threads.
      */
-    class SBSersic::InfoBarn : public std::map<PairKey, boost::shared_ptr<SersicInfo> >
+    class SBSersic::InfoBarn : public std::map<SersicKey, boost::shared_ptr<SersicInfo> >
     {
     public:
 
         /**
          * @brief Get the SersicInfo table for a specified pair `(n, maxRre)`.
          *
-         * @param[in] n      Sersic index for which the information table is required.
-         * @param[in] maxRre Truncation radius in units of half light radius 're', for which the
-         *                   information table is required (0 if no truncation).
+         * @param[in] n                 Sersic index for which the information table is required.
+         * @param[in] maxRre            Truncation radius in units of half light radius 're', for
+         *                              which the information table is required (0 if no truncation).
+         * @param[in] flux_untruncated  If true, flux is set to the untruncated Sersic with
+         *                              index `n`.
          */
-        const SersicInfo* get(double n, double maxRre)
+        const SersicInfo* get(double n, double maxRre, bool flux_untruncated)
         {
             /** 
              * @brief The currently hardwired max number of Sersic `(n, maxRre)` info tables that
@@ -161,7 +181,7 @@ namespace galsim {
              */
             const int MAX_SERSIC_TABLES = 100; 
 
-            PairKey pair_index(n, maxRre);
+            SersicKey pair_index(n, maxRre, flux_untruncated);
             MapIter it = _map.find(pair_index);
             if (it == _map.end()) {
                 boost::shared_ptr<SersicInfo> info(new SersicInfo(n, maxRre));
@@ -175,14 +195,14 @@ namespace galsim {
         }
 
     private:
-        typedef std::map<PairKey, boost::shared_ptr<SersicInfo> >::iterator MapIter;
-        std::map<PairKey, boost::shared_ptr<SersicInfo> > _map;
+        typedef std::map<SersicKey, boost::shared_ptr<SersicInfo> >::iterator MapIter;
+        std::map<SersicKey, boost::shared_ptr<SersicInfo> > _map;
     };
 
     class SBSersic::SBSersicImpl : public SBProfileImpl
     {
     public:
-        SBSersicImpl(double n, double re, double trunc, double flux);
+        SBSersicImpl(double n, double re, double trunc, double flux, bool flux_untruncated);
 
         ~SBSersicImpl() {}
 
@@ -252,6 +272,7 @@ namespace galsim {
         double _inv_re_sq;
         double _trunc; ///< Truncation radius in same physical units as `_re` (0 if no truncation).
         double _norm; ///< Calculated value: _flux/_re_sq
+        bool _flux_untruncated; ///< If true, flux is set to the untruncated Sersic with index `_n`.
         double _maxRre; ///< Maximum (truncation) `r` in units of `_re`.
         double _maxRre_sq;
         double _maxR; ///< Maximum (truncation) radius `r`.

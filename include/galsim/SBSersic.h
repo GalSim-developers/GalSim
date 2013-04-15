@@ -41,6 +41,12 @@ namespace galsim {
      * a given radius.  The resolution of the truncation radius in units of half light radius 're'
      * is limited to 2 decimal places, in order not to overload the Sersic information caching.
      *
+     * Another optional parameter, `flux_untruncated`, allows the setting of the flux to the
+     * untruncated Sersic, while generating a truncated Sersic.  This facilitates the comparison
+     * of truncated and untruncated Sersic, as both the amplitude and the scale parameter
+     * `b=r_0^{-1/n}` change when a truncated Sersic is specified to the same flux as the
+     * untruncated version with the same Sersic index `n`.
+     *
      * There are several special cases of the Sersic profile that have their own SBProfiles: n=4
      * (SBDeVaucouleurs), n=1 (SBExponential), n=0.5 (SBGaussian).  These special cases use several
      * simplifications in all calculations, whereas for general n, the Fourier transform must be
@@ -52,13 +58,16 @@ namespace galsim {
         /**
          * @brief Constructor.
          *
-         * @param[in] n        Sersic index.
-         * @param[in] re       Half-light radius.
-         * @param[in] trunc    Outer truncation radius in same physical units as size; `trunc = 0.`
-         *                     for no truncation (default `trunc = 0.`).
-         * @param[in] flux     Flux (default `flux = 1.`).
+         * @param[in] n                 Sersic index.
+         * @param[in] re                Half-light radius.
+         * @param[in] trunc             Outer truncation radius in same physical units as size;
+         *                              `trunc = 0.` for no truncation (default `trunc = 0.`).
+         * @param[in] flux              Flux (default `flux = 1.`).
+         * @param[in] flux_untruncated  If `true`, sets the flux to the untruncated version of the
+         *                              Sersic profile with the same index `n` (default
+         *                              flux_untruncated = true`).
          */
-        SBSersic(double n, double re, double trunc=0., double flux=1.);
+        SBSersic(double n, double re, double trunc=0., double flux=1., bool flux_untruncated=true);
 
         /// @brief Copy constructor.
         SBSersic(const SBSersic& rhs);
@@ -96,13 +105,16 @@ namespace galsim {
         /** 
          * @brief Constructor.
          *
-         * @param[in] re       Half-light radius.
-         * @param[in] trunc    Outer truncation radius in same physical units as size; `trunc = 0.`
-         *                     for no truncation (default `trunc = 0.`).
-         * @param[in] flux     Flux (default `flux = 1.`).
+         * @param[in] re                Half-light radius.
+         * @param[in] trunc             Outer truncation radius in same physical units as size;
+         *                               `trunc = 0.` for no truncation (default `trunc = 0.`).
+         * @param[in] flux              Flux (default `flux = 1.`).
+         * @param[in] flux_untruncated  If `true`, sets the flux to the untruncated version of the
+         *                              Sersic profile with the same index `n` (default
+         *                              flux_untruncated = true`).
          */
-        SBDeVaucouleurs(double re, double trunc=0., double flux=1.) :
-	  SBSersic(4., re, trunc, flux) {}
+        SBDeVaucouleurs(double re, double trunc=0., double flux=1., bool flux_untruncated=true) :
+            SBSersic(4., re, trunc, flux, flux_untruncated) {}
     };
 
 }
