@@ -249,12 +249,14 @@ namespace galsim {
         Position<double> centroid() const 
         { return Position<double>(0., 0.); }
 
+        /// @brief Returns the true flux, which may be different from the specified flux
         double getFlux() const { return _actual_flux; }
 
         /// @brief Sersic photon shooting done by rescaling photons from appropriate `SersicInfo`
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
         double getN() const { return _n; }
+        /// @brief Returns the specified HLR, which may be different from the true HLR
         double getHalfLightRadius() const { return _re; }
 
         // Overrides for better efficiency
