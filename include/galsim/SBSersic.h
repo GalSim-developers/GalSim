@@ -84,7 +84,7 @@ namespace galsim {
         double getN() const;
 
         /// @brief Returns the half light radius of the Sersic profile.
-        /// (Note that when `trunc > 0` and `flux_untuncated = true`, the return value is the
+        /// (Note that when `trunc > 0` and `flux_untruncated = true`, the return value is the
         /// user-specified HLR, not the true HLR.)
         double getHalfLightRadius() const;
 

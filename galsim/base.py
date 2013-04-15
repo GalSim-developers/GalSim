@@ -1851,14 +1851,15 @@ class Sersic(GSObject):
 
     # Initialization parameters of the object, with type information
     _req_params = { "n" : float , "half_light_radius" : float }
-    _opt_params = { "trunc": float, "flux" : float }
+    _opt_params = { "trunc": float, "flux" : float, "flux_untruncated" : bool }
     _single_params = []
     _takes_rng = False
 
     # --- Public Class methods ---
-    def __init__(self, n, half_light_radius, trunc=0., flux=1.):
+    def __init__(self, n, half_light_radius, trunc=0., flux=1., flux_untruncated=false):
         GSObject.__init__(
-            self, galsim.SBSersic(n, half_light_radius=half_light_radius, trunc=trunc, flux=flux))
+            self, galsim.SBSersic(n, half_light_radius=half_light_radius, trunc=trunc, flux=flux,
+                                  flux_untruncated=false))
 
     def getN(self):
         """Return the Sersic index `n` for this profile.
@@ -1867,6 +1868,8 @@ class Sersic(GSObject):
 
     def getHalfLightRadius(self):
         """Return the half light radius for this Sersic profile.
+        (Note that when `trunc > 0` and `flux_untruncated = true`, the return value is the
+        user-specified HLR, not the true HLR.)
         """
         return self.SBProfile.getHalfLightRadius()
 
@@ -1961,15 +1964,15 @@ class DeVaucouleurs(GSObject):
 
     # Initialization parameters of the object, with type information
     _req_params = { "half_light_radius" : float }
-    _opt_params = { "trunc": float, "flux" : float }
+    _opt_params = { "trunc": float, "flux" : float, "flux_untruncated" : float }
     _single_params = []
     _takes_rng = False
 
     # --- Public Class methods ---
-    def __init__(self, half_light_radius=None, trunc=0., flux=1.):
+    def __init__(self, half_light_radius=None, trunc=0., flux=1., flux_untruncated=false):
         GSObject.__init__(
             self, galsim.SBDeVaucouleurs(half_light_radius=half_light_radius, 
-                                         trunc=trunc, flux=flux))
+                                         trunc=trunc, flux=flux, flux_untruncated=false))
 
     def getHalfLightRadius(self):
         """Return the half light radius for this DeVaucouleurs profile.
