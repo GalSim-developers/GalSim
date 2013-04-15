@@ -31,16 +31,18 @@ namespace galsim {
     {
 
         static SBSersic * construct(
-            double n, 
+            double n,
             const bp::object & half_light_radius,
             double trunc,
-            double flux
+            double flux,
+            bool flux_untruncated
         ) {
             if (half_light_radius.ptr() == Py_None) {
                 PyErr_SetString(PyExc_TypeError, "No radius parameter given");
                 bp::throw_error_already_set();
             }
-            return new SBSersic(n, bp::extract<double>(half_light_radius), trunc, flux);
+            return new SBSersic(n, bp::extract<double>(half_light_radius), trunc, flux,
+                                flux_untruncated);
         }
         static void wrap() {
             bp::class_<SBSersic,bp::bases<SBProfile> >("SBSersic", bp::no_init)
@@ -48,7 +50,7 @@ namespace galsim {
                      bp::make_constructor(
                          &construct, bp::default_call_policies(),
                          (bp::arg("n"), bp::arg("half_light_radius")=bp::object(),
-                          bp::arg("trunc")=0., bp::arg("flux")=1.)
+                          bp::arg("trunc")=0., bp::arg("flux")=1., bp::arg("flux_untruncated")=1.)
                      )
                 )
                 .def(bp::init<const SBSersic &>())
@@ -63,13 +65,15 @@ namespace galsim {
         static SBDeVaucouleurs * construct(
             const bp::object & half_light_radius,
             double trunc,
-            double flux 
+            double flux,
+            double flux_untruncated
         ) {
             if (half_light_radius.ptr() == Py_None) {
                 PyErr_SetString(PyExc_TypeError, "No radius parameter given");
                 bp::throw_error_already_set();
             }
-            return new SBDeVaucouleurs(bp::extract<double>(half_light_radius), trunc, flux);
+            return new SBDeVaucouleurs(bp::extract<double>(half_light_radius), trunc, flux,
+                                       flux_untruncated);
         }
 
         static void wrap() {
@@ -79,7 +83,7 @@ namespace galsim {
                      bp::make_constructor(
                          &construct, bp::default_call_policies(),
                          (bp::arg("half_light_radius")=bp::object(),
-                          bp::arg("trunc")=0., bp::arg("flux")=1.)
+                          bp::arg("trunc")=0., bp::arg("flux")=1., bp::arg("flux_untruncated")=1.)
                      )
                 )
                 .def(bp::init<const SBDeVaucouleurs &>())
