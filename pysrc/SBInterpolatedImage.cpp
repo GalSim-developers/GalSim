@@ -72,8 +72,8 @@ namespace galsim {
             );
             wrapTemplates_Multi<float>(pyMultipleImageHelper);
             wrapTemplates_Multi<double>(pyMultipleImageHelper);
-            wrapTemplates_Multi<short>(pyMultipleImageHelper);
-            wrapTemplates_Multi<int>(pyMultipleImageHelper);
+            wrapTemplates_Multi<int32_t>(pyMultipleImageHelper);
+            wrapTemplates_Multi<int16_t>(pyMultipleImageHelper);
 
             bp::class_< SBInterpolatedImage, bp::bases<SBProfile> > pySBInterpolatedImage(
                 "SBInterpolatedImage", bp::init<const SBInterpolatedImage &>()
@@ -94,8 +94,8 @@ namespace galsim {
                 ;
             wrapTemplates<float>(pySBInterpolatedImage);
             wrapTemplates<double>(pySBInterpolatedImage);
-            wrapTemplates<short>(pySBInterpolatedImage);
-            wrapTemplates<int>(pySBInterpolatedImage);
+            wrapTemplates<int32_t>(pySBInterpolatedImage);
+            wrapTemplates<int16_t>(pySBInterpolatedImage);
         }
 
     };
