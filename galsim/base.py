@@ -282,7 +282,7 @@ class GSObject(object):
         those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
         are no longer available.
 
-        @param scale The lensing magnification to apply.
+        @param mu The lensing magnification to apply.
         """
         self.applyTransformation(galsim.Ellipse(np.log(np.sqrt(mu))))
        
