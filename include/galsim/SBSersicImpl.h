@@ -90,6 +90,10 @@ namespace galsim {
         /// @brief Returns the maximum relevant R, in units of half-light radius `re`.
         double getMaxRRe() const { return _maxRre; }
 
+        /// @brief Returns the ratio of the actual flux to the specified flux the object, which is
+        /// not unity when `_truncated` and `_flux_untruncated` are true.
+        double getTrueFluxFraction() const { return _flux_fraction; }
+
         /**
          * @brief Shoot photons through unit-size, unnormalized profile
          * Sersic profiles are sampled with a numerical method, using class
@@ -121,6 +125,7 @@ namespace galsim {
 
         double _norm; ///< Amplitude scaling in Sersic profile `exp(-b*pow(xsq,inv2n))`.
         bool _flux_untruncated; ///< If true, flux is set to the untruncated Sersic with index `_n`.
+        double _flux_fraction; ///< Fraction of true (truncated) flux, to the specified flux.
         double _kderiv2; ///< Quadratic dependence near k=0.
         double _kderiv4; ///< Quartic dependence near k=0.
         Table<double,double> _ft;  ///< Lookup table for Fourier transform of Sersic.
@@ -244,7 +249,7 @@ namespace galsim {
         Position<double> centroid() const 
         { return Position<double>(0., 0.); }
 
-        double getFlux() const { return _flux; }
+        double getFlux() const { return _actual_flux; }
 
         /// @brief Sersic photon shooting done by rescaling photons from appropriate `SersicInfo`
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
@@ -276,6 +281,7 @@ namespace galsim {
         double _trunc; ///< Truncation radius in same physical units as `_re` (0 if no truncation).
         double _norm; ///< Calculated value: _flux/_re_sq
         bool _flux_untruncated; ///< If true, flux is set to the untruncated Sersic with index `_n`.
+        double _actual_flux; ///< True flux of object.
         double _maxRre; ///< Maximum (truncation) `r` in units of `_re`.
         double _maxRre_sq;
         double _maxR; ///< Maximum (truncation) radius `r`.

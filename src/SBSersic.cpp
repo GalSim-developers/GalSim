@@ -63,7 +63,8 @@ namespace galsim {
     {
         double maxRre = ((int)(trunc/re * 100 + 0.5) / 100.0);  // round to two decimal places
         _info = nmap.get(_n, maxRre, _flux_untruncated);
-        _maxRre = _info->getMaxRRe();  // actual maximum R in units of re
+        _maxRre = _info->getMaxRRe();  // maximum R in units of re (irrelevant if trunc = 0.)
+        _actual_flux = _info->getTrueFluxFraction() * _flux;
         _maxRre_sq = _maxRre*_maxRre;
         _maxR = _maxRre * _re;
         _maxR_sq = _maxR*_maxR;
@@ -74,9 +75,9 @@ namespace galsim {
 
     double SBSersic::SBSersicImpl::xValue(const Position<double>& p) const
     {
-      double rsq = (p.x*p.x+p.y*p.y)*_inv_re_sq;
-      if (_truncated && rsq > _maxRre_sq) return 0.;
-      else return _norm * _info->xValue(rsq);
+        double rsq = (p.x*p.x+p.y*p.y)*_inv_re_sq;
+        if (_truncated && rsq > _maxRre_sq) return 0.;
+        else return _norm * _info->xValue(rsq);
     }
 
     std::complex<double> SBSersic::SBSersicImpl::kValue(const Position<double>& k) const
@@ -365,16 +366,20 @@ namespace galsim {
 
     // Constructor to initialize Sersic constants and k lookup table
     SBSersic::SersicInfo::SersicInfo(double n, double maxRre, bool flux_untruncated) :
-        _n(n), _maxRre(maxRre), _inv2n(1./(2.*n)), _flux_untruncated(flux_untruncated)
+        _n(n), _maxRre(maxRre), _inv2n(1./(2.*n)), _flux_untruncated(flux_untruncated),
+        _flux_fraction(1.)
     {
         // Going to constrain range of allowed n to those for which testing was done
         if (_n<0.5 || _n>4.2) throw SBError("Requested Sersic index out of range");
 
         _truncated = (_maxRre > 0.);
 
-        _b = SersicCalculateScaleBFromHLR(n, maxRre);
+        if (_flux_untruncated)
+            _b = SersicCalculateScaleBFromHLR(n, 0.);
+        else
+            _b = SersicCalculateScaleBFromHLR(n, maxRre);
 
-        // set-up frequently used numbers
+        // set-up frequently used numbers (for flux normalization and FT small-k approximations)
         double b2n = std::pow(_b,2.*_n);
         double b4n = b2n*b2n;
         double gamma2n;
@@ -393,8 +398,13 @@ namespace galsim {
             gamma6n = boost::math::tgamma_lower(6.*_n, z);
             gamma8n = boost::math::tgamma_lower(8.*_n, z);
         }
+
+        // Find the ratio of actual (truncated) flux to specified flux
+        if (_truncated && _flux_untruncated)
+            _flux_fraction = gamma2n / tgamma(2.*_n);
+
         // The normalization factor to give unity flux integral:
-        _norm = b2n / (2.*M_PI*_n*gamma2n);
+        _norm = b2n / (2.*M_PI*_n*gamma2n) * _flux_fraction;
 
         // The small-k expansion of the Hankel transform is (normalized to have flux=1):
         // 1 - Gamma(4n) / 4 b^2n Gamma(2n) + Gamma(6n) / 64 b^4n Gamma(2n)
@@ -430,7 +440,7 @@ namespace galsim {
         // Now start building the lookup table for FT of the profile.
 
         // Normalization for integral at k=0:
-        double hankel_norm = _n*gamma2n/b2n;
+        double hankel_norm = _n*gamma2n/b2n / _flux_fraction;
         dbg<<"hankel_norm = "<<hankel_norm<<std::endl;
 
         // Keep going until at least 5 in a row have kvalues below kvalue_accuracy.
