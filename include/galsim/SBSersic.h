@@ -54,7 +54,7 @@ namespace galsim {
          *
          * @param[in] n        Sersic index.
          * @param[in] re       Half-light radius.
-         * @param[in] trunc    Outer truncation radius in same physical units as size; `trunc = 0`
+         * @param[in] trunc    Outer truncation radius in same physical units as size; `trunc = 0.`
          *                     for no truncation (default `trunc = 0.`).
          * @param[in] flux     Flux (default `flux = 1.`).
          */
