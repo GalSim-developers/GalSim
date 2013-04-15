@@ -541,7 +541,7 @@ def test_sersic():
     sersic2 = galsim.Convolve(sersic, galsim.Gaussian(sigma=0.3))
     do_shoot(sersic2,myImg,"Sersic")
 
-    # Now repeat everything using a trunctation.  (Above had no truncation.)
+    # Now repeat everything using a truncation.  (Above had no truncation.)
 
     # Test Truncated SBSersic
     mySBP = galsim.SBSersic(n=3, flux=1, half_light_radius=1, trunc=10)
@@ -890,7 +890,7 @@ def test_moffat_radii():
             test_scale_ratio, 2.**(-test_beta), decimal=4,
             err_msg="Error in scale radius for Moffat initialized with scale radius")
 
-    # Now repeat everything using a severe trunctation.  (Above had no truncation.)
+    # Now repeat everything using a severe truncation.  (Above had no truncation.)
 
     # Test constructor using half-light-radius:
     test_gal = galsim.Moffat(flux = 1., beta=test_beta, half_light_radius = test_hlr,
