@@ -2548,6 +2548,18 @@ def test_autoconvolve():
             myImg1.array, myImg2.array, 4,
             err_msg="Moffat convolved with self disagrees with AutoConvolve result")
 
+    # Check with default_params
+    conv = galsim.AutoConvolve(psf, gsparams=default_params)
+    conv.draw(myImg1)
+    np.testing.assert_array_almost_equal(
+            myImg1.array, myImg2.array, 4,
+            err_msg="Using AutoConvolve with default_params disagrees with expected result")
+    conv = galsim.AutoConvolve(psf, gsparams=galsim.GSParams())
+    conv.draw(myImg1)
+    np.testing.assert_array_almost_equal(
+            myImg1.array, myImg2.array, 4,
+            err_msg="Using AutoConvolve with GSParams() disagrees with expected result")
+
     # For a symmetric profile, AutoCorrelate is the same thing:
     conv2 = galsim.AutoCorrelate(psf)
     conv2.draw(myImg2)
@@ -2556,10 +2568,22 @@ def test_autoconvolve():
             myImg1.array, myImg2.array, 4,
             err_msg="Moffat convolved with self disagrees with AutoCorrelate result")
 
+    # And check AutoCorrelate with gsparams:
+    conv2 = galsim.AutoCorrelate(psf, gsparams=default_params)
+    conv2.draw(myImg1)
+    np.testing.assert_array_almost_equal(
+            myImg1.array, myImg2.array, 4,
+            err_msg="Using AutoCorrelate with default_params disagrees with expected result")
+    conv2 = galsim.AutoCorrelate(psf, gsparams=galsim.GSParams())
+    conv2.draw(myImg1)
+    np.testing.assert_array_almost_equal(
+            myImg1.array, myImg2.array, 4,
+            err_msg="Using AutoCorrelate with GSParams() disagrees with expected result")
+
     # Test photon shooting.
     do_shoot(conv2,myImg2,"AutoConvolve(Moffat)")
 
-    # Also check AutoConvolve with an assymetric profile.
+    # Also check AutoConvolve with an asymmetric profile.
     # (AutoCorrelate with this profile is done below...)
     obj1 = galsim.Gaussian(sigma=3., flux=4)
     obj1.applyShift(-0.2, -0.4)
