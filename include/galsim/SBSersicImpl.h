@@ -60,10 +60,12 @@ namespace galsim {
     public:
         /** 
          * @brief Constructor
-         * @param[in] n       Sersic index
-         * @param[in] maxRre  Maximum radius in units of half-light radius
+         * @param[in] n                 Sersic index
+         * @param[in] maxRre            Maximum radius in units of half-light radius
+         * @param[in] flux_untruncated  If true, flux is set to the untruncated Sersic with
+         *                              index `n`.
          */
-        SersicInfo(double n, double maxRre);
+        SersicInfo(double n, double maxRre, bool flux_untruncated);
 
         /// @brief Destructor: deletes photon-shooting classes if necessary
         ~SersicInfo() {}
@@ -181,11 +183,11 @@ namespace galsim {
              */
             const int MAX_SERSIC_TABLES = 100; 
 
-            SersicKey pair_index(n, maxRre, flux_untruncated);
-            MapIter it = _map.find(pair_index);
+            SersicKey key(n, maxRre, flux_untruncated);
+            MapIter it = _map.find(key);
             if (it == _map.end()) {
-                boost::shared_ptr<SersicInfo> info(new SersicInfo(n, maxRre));
-                _map[pair_index] = info;
+	      boost::shared_ptr<SersicInfo> info(new SersicInfo(n, maxRre, flux_untruncated));
+                _map[key] = info;
                 if (int(_map.size()) > MAX_SERSIC_TABLES)
                     throw SBError("Storing Sersic info for too many (n, maxRre) pairs");
                 return info.get();
