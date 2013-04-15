@@ -233,6 +233,11 @@ namespace galsim {
     SBAutoConvolve::SBAutoConvolve(const SBAutoConvolve& rhs) : SBProfile(rhs) {}
     SBAutoConvolve::~SBAutoConvolve() {}
 
+    SBAutoConvolve::SBAutoConvolveImpl::SBAutoConvolveImpl(const SBProfile& s,
+                                                           boost::shared_ptr<GSParams> gsparams) :
+        SBProfileImpl(gsparams.get() ? gsparams : GetImpl(s)->gsparams),
+        _adaptee(s) {}
+
     double SBAutoConvolve::SBAutoConvolveImpl::xValue(const Position<double>& pos) const
     { return RealSpaceConvolve(_adaptee,_adaptee,pos,getFlux(),this->gsparams.get()); }
 
@@ -295,6 +300,11 @@ namespace galsim {
         SBProfile(new SBAutoCorrelateImpl(s, gsparams)) {}
     SBAutoCorrelate::SBAutoCorrelate(const SBAutoCorrelate& rhs) : SBProfile(rhs) {}
     SBAutoCorrelate::~SBAutoCorrelate() {}
+
+    SBAutoCorrelate::SBAutoCorrelateImpl::SBAutoCorrelateImpl(const SBProfile& s,
+                                                              boost::shared_ptr<GSParams> gsparams) :
+        SBProfileImpl(gsparams.get() ? gsparams : GetImpl(s)->gsparams),
+        _adaptee(s) {}
 
     double SBAutoCorrelate::SBAutoCorrelateImpl::xValue(const Position<double>& pos) const
     { 
