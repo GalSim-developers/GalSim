@@ -1437,11 +1437,11 @@ class InterpolatedImage(GSObject):
     GalSim repository.
 
     The user can choose to have the image padding use zero (default), Gaussian random noise of some
-    variance, or a Gaussian but correlated noise field that is specified either as an ImageCorrFunc,
-    an Image (from which a noise correlation function is derived), or a string (interpreted as a
-    filename containing an image to use for deriving the noise correlation function).  The user can
-    also pass in a random number generator to be used for noise generation.  Finally, the user can
-    pass in a `pad_image` for deterministic image padding.
+    variance, or a Gaussian but correlated noise field that is specified either as a 
+    CorrelatedNoise instance, an Image (from which a correlated noise model is derived), or a string
+    (interpreted as a filename containing an image to use for deriving a CorrelatedNoise).  The user
+    can also pass in a random number generator to be used for noise generation.  Finally, the user
+    can pass in a `pad_image` for deterministic image padding.
 
     By default, the InterpolatedImage recalculates the Fourier-space step and number of points to
     use for further manipulations, rather than using the most conservative possibility.  For typical
@@ -1516,22 +1516,27 @@ class InterpolatedImage(GSObject):
                            noise.  This can be specified in several ways:
                                (a) as a float, which is interpreted as being a variance to use when
                                    padding with uncorrelated Gaussian noise; 
-                               (b) as a galsim.ImageCorrFunc, which contains information about the
-                                   desired noise power spectrum; 
+                               (b) as a galsim.CorrelatedNoise, which contains information about the
+                                   desired noise power spectrum - any random number generator passed
+                                   to the `rng` keyword will take precedence over that carried in an
+                                   input galsim.CorrelatedNoise;
                                (c) as a galsim.Image of a noise field, which is used to calculate
                                    the desired noise power spectrum; or
                                (d) as a string which is interpreted as a filename containing an
                                    example noise field with the proper noise power spectrum.
-                           It is important to keep in mind that the calculation of a
-                           galsim.ImageCorrFunc is a non-negligible amount of overhead, so the
-                           recommended ways are (b) or (d). In the case of (d), if the same file is
-                           used repeatedly, then use of the `use_cache` keyword (see below) can be
-                           used to prevent the need for repeated galsim.ImageCorrFunc
-                           initializations.
+                           It is important to keep in mind that the calculation of the correlation
+                           function that is internally stored within a galsim.CorrelatedNoise is a 
+                           non-negligible amount of overhead, so the recommended means of specifying
+                           a correlated noise field for padding are (b) or (d). In the case of (d),
+                           if the same file is used repeatedly, then the `use_cache` keyword (see 
+                           below) can be used to prevent the need for repeated 
+                           galsim.CorrelatedNoise initializations.
                            (Default `noise_pad = 0.`, i.e., pad with zeros.)
     @param rng             If padding by noise, the user can optionally supply the random noise
                            generator to use for drawing random numbers as `rng` (may be any kind of
-                           `galsim.BaseDeviate` object).
+                           `galsim.BaseDeviate` object).  Such a user-input random number generator
+                           takes precedence over any stored within a user-input CorrelatedNoise 
+                           instance (see the `noise_pad` param).
                            If `rng=None`, one will be automatically created, using the time as a
                            seed. (Default `rng = None`)
     @param pad_image       Image to be used for deterministically padding the original image.  This
@@ -1559,7 +1564,7 @@ class InterpolatedImage(GSObject):
                            an optimal value for the extent of the Fourier space lookup table.
                            (Default `calculate_maxk = True`)
     @param use_cache       Specify whether to cache noise_pad read in from a file to save having
-                           to build an ImageCorrFunc repeatedly from the same image.
+                           to build a CorrelatedNoise object repeatedly from the same image.
                            (Default `use_cache = True`)
 
     Methods
@@ -1640,9 +1645,9 @@ class InterpolatedImage(GSObject):
 
         # Set up the GaussianDeviate if not provided one, or check that the user-provided one is
         # of a valid type.
-        if rng == None:
+        if rng is None:
             gaussian_deviate = galsim.GaussianDeviate()
-        elif isinstance(rng,galsim.BaseDeviate):
+        elif isinstance(rng, galsim.BaseDeviate):
             # Even if it's already a GaussianDeviate, we still want to make a new Gaussian deviate
             # that would generate the same sequence, because later we change the sigma and we don't
             # want to change it for the original one that was passed in.  So don't distinguish
@@ -1698,25 +1703,32 @@ class InterpolatedImage(GSObject):
                 gaussian_deviate.setSigma(np.sqrt(noise_pad))
                 pad_image.addNoise(galsim.DeviateNoise(gaussian_deviate))
         else:
-            if isinstance(noise_pad, galsim.ImageCorrFunc):
-                cf = noise_pad
+            if isinstance(noise_pad, galsim.correlatednoise._BaseCorrelatedNoise):
+                cn = noise_pad.copy()
+                if rng: # Let a user supplied RNG take precedence over that in user CN
+                    cn.setRNG(gaussian_deviate)
             elif isinstance(noise_pad,galsim.BaseImageF) or isinstance(noise_pad,galsim.BaseImageD):
-                cf = galsim.ImageCorrFunc(noise_pad)
+                cn = galsim.CorrelatedNoise(gaussian_deviate, noise_pad)
             elif use_cache and noise_pad in InterpolatedImage._cache_noise_pad:
-                cf = InterpolatedImage._cache_noise_pad[noise_pad]
+                cn = InterpolatedImage._cache_noise_pad[noise_pad]
+                if rng:
+                    # Make sure that we are using a specified RNG by resetting that in this cached
+                    # CorrelatedNoise instance, otherwise preserve the cached RNG
+                    cn.setRNG(gaussian_deviate)
             elif isinstance(noise_pad, str):
                 try:
-                    cf = galsim.ImageCorrFunc(galsim.fits.read(noise_pad))
+                    cn = galsim.CorrelatedNoise(gaussian_deviate, galsim.fits.read(noise_pad))
                 except:
-                    raise RuntimeError("Can't read in Image to define correlated noise " +
-                                       "field for noise padding from specified file!")
+                    raise RuntimeError(
+                        "Can't read in Image to define correlated noise field for noise padding "+
+                        "from specified file!")
                 if use_cache: 
-                    InterpolatedImage._cache_noise_pad[noise_pad] = cf
+                    InterpolatedImage._cache_noise_pad[noise_pad] = cn
             else:
-                raise ValueError("Input noise_pad must be a float/int, an ImageCorrFunc, " +
-                                 "Image, or filename containing an image to use to make an " +
-                                 "ImageCorrFunc!")
-            cf.applyNoiseTo(pad_image, dev=gaussian_deviate)
+                raise ValueError(
+                    "Input noise_pad must be a float/int, a CorrelatedNoise, Image, or filename "+
+                    "containing an image to use to make a CorrelatedNoise!")
+            pad_image.addNoise(cn)
 
         # Now we have to check: was the padding determined using pad_factor?  Or by passing in an
         # image for padding?  Treat these cases differently:
@@ -2015,7 +2027,10 @@ class RealGalaxy(GSObject):
     @param random               If true, then just select a completely random galaxy from the
                                 catalog.
     @param rng                  A random number generator to use for selecting a random galaxy 
-                                (may be any kind of BaseDeviate or None)
+                                (may be any kind of BaseDeviate or None) and to use in generating
+                                any noise field when padding.  This user-input random number
+                                generator takes precedence over any stored within a user-input
+                                CorrelatedNoise instance (see `noise_pad` param below).
     @param x_interpolant        Either an Interpolant2d (or Interpolant) instance or a string 
                                 indicating which real-space interpolant should be used.  Options are 
                                 'nearest', 'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' 
@@ -2040,13 +2055,15 @@ class RealGalaxy(GSObject):
                                     Use `noise_pad = False` if you wish to pad with zeros.
                                     Use `noise_pad = True` if you wish to pad with uncorrelated
                                         noise of the proper variance.
-                                    Set `noise_pad` equal to a galsim.ImageCorrFunc, an Image, or a
-                                        filename for a file containing an Image of an example noise
-                                        field that will be used to calculate the noise power
-                                        spectrum and generate noise in the padding region.
+                                    Set `noise_pad` equal to a galsim.CorrelatedNoise, an Image, or
+                                        a filename containing an Image of an example noise field
+                                        that will be used to calculate the noise power spectrum and
+                                        generate noise in the padding region.  Any random number
+                                        generator passed to the `rng` keyword will take precedence
+                                        over that carried in an input galsim.CorrelatedNoise.
                                 In the last case, if the same file is used repeatedly, then use of
                                 the `use_cache` keyword (see below) can be used to prevent the need
-                                for repeated galsim.ImageCorrFunc initializations.
+                                for repeated galsim.CorrelatedNoise initializations.
                                 [default `noise_pad = False`]
     @param pad_image            Image to be used for deterministically padding the original image.
                                 This can be specified in two ways:
@@ -2065,7 +2082,7 @@ class RealGalaxy(GSObject):
                                 that when they have drawn the final image instead.  (Default
                                 `pad_image = None`.)
     @param use_cache            Specify whether to cache noise_pad read in from a file to save
-                                having to build an ImageCorrFunc repeatedly from the same image.
+                                having to build an CorrelatedNoise repeatedly from the same image.
                                 (Default `use_cache = True`)
 
     Methods
@@ -2096,15 +2113,15 @@ class RealGalaxy(GSObject):
 
         # Code block below will be for galaxy selection; not all are currently implemented.  Each
         # option must return an index within the real_galaxy_catalog.        
-        if index != None:
-            if (id != None or random == True):
+        if index is not None:
+            if id is not None or random is True:
                 raise AttributeError('Too many methods for selecting a galaxy!')
             use_index = index
-        elif id != None:
-            if (random == True):
+        elif id is not None:
+            if random is True:
                 raise AttributeError('Too many methods for selecting a galaxy!')
             use_index = real_galaxy_catalog._get_index_for_id(id)
-        elif random == True:
+        elif random is True:
             if rng is None:
                 uniform_deviate = galsim.UniformDeviate()
             elif isinstance(rng, galsim.BaseDeviate):
@@ -2156,8 +2173,10 @@ class RealGalaxy(GSObject):
             # If an image was supplied directly or from a file, check its size:
             #    Cannot use if too small.
             #    Use to define the final image size otherwise.
-            deltax = (1+pad_image.getXMax()-pad_image.getXMin())-(1+gal_image.getXMax()-gal_image.getXMin())
-            deltay = (1+pad_image.getYMax()-pad_image.getYMin())-(1+gal_image.getYMax()-gal_image.getYMin())
+            deltax = ((1 + pad_image.getXMax() - pad_image.getXMin()) - 
+                      (1 + gal_image.getXMax() - gal_image.getXMin()))
+            deltay = ((1 + pad_image.getYMax() - pad_image.getYMin()) - 
+                      (1 + gal_image.getYMax() - gal_image.getYMin()))
             if deltax < 0 or deltay < 0:
                 raise RuntimeError("Image supplied for padding is too small!")
             if pad_factor != 1. and pad_factor != 0.:
@@ -2171,48 +2190,12 @@ class RealGalaxy(GSObject):
             if isinstance(gal_image, galsim.BaseImageD):
                 pad_image = galsim.ImageD(padded_size, padded_size)
 
-        # handle noise-padding options
-        try:
-            noise_pad = galsim.config.value._GetBoolValue(noise_pad,'')
-        except:
-            pass
-        if noise_pad:
-            self.pad_variance= float(real_galaxy_catalog.variance[use_index])
-
-            # Check, is it "True" or something else?  If True, we use Gaussian uncorrelated noise
-            # using the stored variance in the catalog.  Otherwise, if it's an ImageCorrFunc we use
-            # it directly; if it's an Image of some sort we use it to make an ImageCorrFunc; if it's
-            # a string, we read in the image from file and make an ImageCorrFunc.
-            if type(noise_pad) is not bool:
-                if isinstance(noise_pad, galsim.ImageCorrFunc):
-                    cf = noise_pad
-                elif isinstance(noise_pad,galsim.BaseImageF) or isinstance(noise_pad,galsim.BaseImageD):
-                    cf = galsim.ImageCorrFunc(noise_pad)
-                elif use_cache and noise_pad in RealGalaxy._cache_noise_pad:
-                    cf = RealGalaxy._cache_noise_pad[noise_pad]
-                    cf.scaleVariance(real_galaxy_catalog.variance[use_index] /
-                                     RealGalaxy._cache_variance[noise_pad])
-                elif isinstance(noise_pad, str):
-                    try:
-                        tmp_img = galsim.fits.read(noise_pad)
-                        tmp_var = np.var(tmp_img.array)
-                        cf = galsim.ImageCorrFunc(tmp_img)
-                    except:
-                        raise RuntimeError("Can't read in Image to define correlated noise " +
-                                           "field for noise padding from specified file!")
-                    if use_cache:
-                        RealGalaxy._cache_noise_pad[noise_pad] = cf
-                        RealGalaxy._cache_variance[noise_pad] = tmp_var
-                    # this small patch may have different overall variance, so rescale while
-                    # preserving the correlation structure
-                    cf.scaleVariance(self.pad_variance/tmp_var)
-                else:
-                    raise RuntimeError("noise_pad must be either a bool, ImageCorrFunc, Image, "+
-                                       "or a filename for reading in an Image")
-                     
-            # Set up the GaussianDeviate if not provided one, or check that the user-provided one
-            # is of a valid type.
-            if rng == None:
+        # Set up the GaussianDeviate if not provided one, or check that the user-provided one
+        # is of a valid type.  Note if random was selected, we can use that uniform_deviate safely.
+        if random is True:
+            gaussian_deviate = galsim.GaussianDeviate(uniform_deviate)
+        else:
+            if rng is None:
                 gaussian_deviate = galsim.GaussianDeviate()
             elif isinstance(rng,galsim.BaseDeviate):
                 # Even if it's already a GaussianDeviate, we still want to make a new Gaussian
@@ -2221,14 +2204,64 @@ class RealGalaxy(GSObject):
                 # distinguish between GaussianDeviate and the other BaseDeviates here.
                 gaussian_deviate = galsim.GaussianDeviate(rng)
             else:
-                raise TypeError("rng provided to InterpolatedImage constructor is not a BaseDeviate")
+                raise TypeError("rng provided to RealGalaxy constructor is not a BaseDeviate")
+
+        # handle noise-padding options
+        try:
+            noise_pad = galsim.config.value._GetBoolValue(noise_pad,'')
+        except:
+            pass
+        if noise_pad:
+            self.pad_variance = float(real_galaxy_catalog.variance[use_index])
+
+            # Check, is it "True" or something else?  If True, we use Gaussian uncorrelated noise
+            # using the stored variance in the catalog.  Otherwise, if it's a CorrelatedNoise we use
+            # it directly; if it's an Image of some sort we use it to make a CorrelatedNoise; if
+            # it's a string, we read in the image from file and make a CorrelatedNoise.
+            if type(noise_pad) is not bool:
+                if isinstance(noise_pad, galsim.correlatednoise._BaseCorrelatedNoise):
+                    cn = noise_pad.copy()
+                    if rng: # Let user supplied RNG take precedence over that in user CN
+                        cn.setRNG(gaussian_deviate)
+                    # This small patch may have different overall variance, so rescale while
+                    # preserving the correlation structure by default                  
+                    cn.setVariance(self.pad_variance)
+                elif (isinstance(noise_pad,galsim.BaseImageF) or 
+                      isinstance(noise_pad,galsim.BaseImageD)):
+                    cn = galsim.CorrelatedNoise(gaussian_deviate, noise_pad)
+                elif use_cache and noise_pad in RealGalaxy._cache_noise_pad:
+                    cn = RealGalaxy._cache_noise_pad[noise_pad]
+                    # Make sure that we are using the desired RNG by resetting that in this cached
+                    # CorrelatedNoise instance
+                    if rng:
+                        cn.setRNG(gaussian_deviate)
+                    # This small patch may have different overall variance, so rescale while
+                    # preserving the correlation structure
+                    cn.setVariance(self.pad_variance)
+                elif isinstance(noise_pad, str):
+                    try:
+                        tmp_img = galsim.fits.read(noise_pad)
+                        cn = galsim.CorrelatedNoise(gaussian_deviate, tmp_img)
+                    except:
+                        raise RuntimeError("Can't read in Image to define correlated noise " +
+                                           "field for noise padding from specified file!")
+                    if use_cache:
+                        RealGalaxy._cache_noise_pad[noise_pad] = cn
+                    # This small patch may have different overall variance, so rescale while
+                    # preserving the correlation structure
+                    cn.setVariance(self.pad_variance)
+                else:
+                    raise RuntimeError("noise_pad must be either a bool, CorrelatedNoise, Image, "+
+                                       "or a filename for reading in an Image")
+
+            # Set the GaussianDeviate sigma          
             gaussian_deviate.setSigma(np.sqrt(self.pad_variance))
 
             # populate padding image with noise field
             if type(noise_pad) is bool:
                 pad_image.addNoise(galsim.DeviateNoise(gaussian_deviate))
             else:
-                cf.applyNoiseTo(pad_image, dev=gaussian_deviate)
+                pad_image.addNoise(cn)
         else:
             self.pad_variance=0.
 
@@ -2459,6 +2492,36 @@ class Convolve(GSObject):
         GSObject.__init__(self, galsim.SBConvolve(SBList, real_space=real_space))
 
 
+class AutoConvolve(GSObject):
+    """A special class for convolving a GSObject with itself.
+
+    It is equivalent in functionality to galsim.Convolve([obj,obj]), but takes advantage of
+    the fact that the two profiles are the same for some efficiency gains.
+    """
+    # --- Public Class methods ---
+    def __init__(self, obj):
+        if not isinstance(obj, GSObject):
+            raise TypeError("Argument to AutoConvolve must be a GSObject.")
+        GSObject.__init__(self, galsim.SBAutoConvolve(obj.SBProfile))
+
+
+class AutoCorrelate(GSObject):
+    """A special class for correlating a GSObject with itself.
+
+    It is equivalent in functionality to 
+        galsim.Convolve([obj,obj.createRotated(180.*galsim.degrees)])
+    but takes advantage of the fact that the two profiles are the same for some efficiency gains.
+
+    This class is primarily targeted for use by the galsim.CorrelatedNoise models when convolving 
+    with a GSObject.
+    """
+    # --- Public Class methods ---
+    def __init__(self, obj):
+        if not isinstance(obj, GSObject):
+            raise TypeError("Argument to AutoCorrelate must be a GSObject.")
+        GSObject.__init__(self, galsim.SBAutoCorrelate(obj.SBProfile))
+
+
 class Deconvolve(GSObject):
     """Base class for defining the python interface to the SBDeconvolve C++ class.
 
@@ -2467,12 +2530,10 @@ class Deconvolve(GSObject):
     photon-shot using the drawShoot method.
     """
     # --- Public Class methods ---
-    def __init__(self, farg):
-        if isinstance(farg, GSObject):
-            self.farg = farg
-            GSObject.__init__(self, galsim.SBDeconvolve(self.farg.SBProfile))
-        else:
-            raise TypeError("Argument farg must be a GSObject.")
+    def __init__(self, obj):
+        if not isinstance(obj, GSObject):
+            raise TypeError("Argument to Deconvolve must be a GSObject.")
+        GSObject.__init__(self, galsim.SBDeconvolve(obj.SBProfile))
 
 class Shapelet(GSObject):
     """A class describing polar shapelet surface brightness profiles.
