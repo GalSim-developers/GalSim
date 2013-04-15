@@ -555,22 +555,22 @@ def test_corr_padding():
     decimal_precise=4
     decimal_coarse=2
     imgfile = 'blankimg.fits'
-    orig_nx = 147
-    orig_ny = 124
-    big_nx = 258
-    big_ny = 281
+    orig_nx = 187
+    orig_ny = 164
+    big_nx = 318
+    big_ny = 321
     orig_seed = 151241
 
     # Read in some small image of a noise field from HST.
     # Rescale it to have a decently large amplitude for the purpose of doing these tests.
     im = 1.e2*galsim.fits.read(imgfile)
-    # Make an ImageCorrFunc out of it.
-    cf = galsim.ImageCorrFunc(im)
+    # Make a CorrrlatedNoise out of it.
+    cn = galsim.CorrelatedNoise(galsim.BaseDeviate(orig_seed), im)
 
     # first, make a noise image
     orig_img = galsim.ImageF(orig_nx, orig_ny)
     orig_img.setScale(1.)
-    cf.applyNoiseTo(orig_img, dev=galsim.BaseDeviate(orig_seed))
+    orig_img.addNoise(cn)
 
     # make it into an InterpolatedImage with some zero-padding
     # (note that default is zero-padding, by factors of several)
@@ -599,8 +599,8 @@ def test_corr_padding():
     # check that if we pass in a RNG, it is actually used to pad with the same noise field
     # basically, redo all of the above steps and draw into a new image, make sure it's the same as
     # previous.
-    int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed),
-                                      noise_pad = cf)
+    int_im = galsim.InterpolatedImage(
+        orig_img, rng=galsim.GaussianDeviate(orig_seed), noise_pad=cn)
     big_img_2 = galsim.ImageF(big_nx, big_ny)
     int_im.draw(big_img_2, dx=1.)
     np.testing.assert_array_almost_equal(big_img_2.array, big_img.array, decimal=decimal_precise,
@@ -612,11 +612,11 @@ def test_corr_padding():
         np.testing.assert_raises(ValueError,galsim.InterpolatedImage,orig_img,noise_pad=-1.)
     except ImportError:
         print 'The assert_raises tests require nose'
-    # also, check that whether we give it a string, image, or cf, it gives the same noise field
+    # also, check that whether we give it a string, image, or cn, it gives the same noise field
     # (given the same random seed)
     infile = 'blankimg.fits'
     inimg = galsim.fits.read(infile)
-    incf = galsim.ImageCorrFunc(inimg)
+    incf = galsim.CorrelatedNoise(galsim.GaussianDeviate(), inimg) # input RNG will be ignored below
     int_im2 = galsim.InterpolatedImage(orig_img, rng=galsim.GaussianDeviate(orig_seed),
                                        noise_pad=inimg)
     int_im3 = galsim.InterpolatedImage(orig_img, rng=galsim.GaussianDeviate(orig_seed),
