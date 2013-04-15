@@ -54,6 +54,14 @@ namespace galsim {
                 throw std::runtime_error("Cannot call setVariance from a pure BaseNoise instance");
         }
 
+        void scaleVariance(double variance_ratio)
+        {
+            if (bp::override py_func = this->get_override("scaleVariance"))
+                py_func(variance_ratio);
+            else
+                throw std::runtime_error("Cannot call scaleVariance from a pure BaseNoise instance");
+        }
+
         template <typename T>
         void applyTo(ImageView<T> data)
         {
@@ -93,6 +101,7 @@ namespace galsim {
                 .def("setRNG", &BaseNoise::setRNG, "")
                 .def("getVariance", &BaseNoise::getVariance, "")
                 .def("setVariance", &BaseNoise::setVariance, "")
+                .def("scaleVariance", &BaseNoise::scaleVariance, "")
                 ;
             wrapTemplates<double>(pyBaseNoise);
             wrapTemplates<float>(pyBaseNoise);
@@ -150,7 +159,7 @@ namespace galsim {
                 .def("getSkyLevel", &CCDNoise::getSkyLevel, "")
                 .def("getGain", &CCDNoise::getGain, "")
                 .def("getReadNoise", &CCDNoise::getReadNoise, "")
-                .def("setSkyLevel", &CCDNoise::getSkyLevel, "")
+                .def("setSkyLevel", &CCDNoise::setSkyLevel, "")
                 .def("setGain", &CCDNoise::setGain, "")
                 .def("setReadNoise", &CCDNoise::setReadNoise, "")
                 ;

@@ -861,5 +861,5 @@ namespace galsim {
         const BaseImage<int16_t>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor,
         boost::shared_ptr<Image<int16_t> > pad_image);
-}
 
+} // namespace galsim

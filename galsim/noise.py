@@ -106,7 +106,34 @@ Set the galsim.BaseDeviate used to generate random numbers for the current noise
 """
 _galsim.BaseNoise.getVariance.__func__.__doc__ = "Get variance in current noise model."
 _galsim.BaseNoise.setVariance.__func__.__doc__ = "Set variance in current noise model."
+_galsim.BaseNoise.scaleVariance.__func__.__doc__ = "Scale variance in current noise model."
 
+# Make op* and op*= work to adjust the overall variance of a BaseNoise object
+def Noise_imul(self, other):
+    self.scaleVariance(other)
+    return self
+
+def Noise_mul(self, other):
+    ret = self.copy()
+    Noise_imul(ret, other)
+    return ret
+
+# Likewise for op/ and op/=
+def Noise_idiv(self, other):
+    self.scaleVariance(1. / other)
+    return self
+
+def Noise_div(self, other):
+    ret = self.copy()
+    Noise_idiv(ret, other)
+    return ret
+
+_galsim.BaseNoise.__imul__ = Noise_imul
+_galsim.BaseNoise.__mul__ = Noise_mul
+_galsim.BaseNoise.__rmul__ = Noise_mul
+_galsim.BaseNoise.__div__ = Noise_div
+_galsim.BaseNoise.__truediv__ = Noise_div
+ 
 # GaussianNoise docstrings
 _galsim.GaussianNoise.__doc__ = """
 Class implementing simple Gaussian noise.
@@ -144,6 +171,10 @@ Note: The syntax image.addNoise(gaussian_noise) is preferred.
 """
 _galsim.GaussianNoise.getSigma.__func__.__doc__ = "Get sigma in current noise model."
 _galsim.GaussianNoise.setSigma.__func__.__doc__ = "Set sigma in current noise model."
+
+def GaussianNoise_copy(self):
+    return _galsim.GaussianNoise(self.getRNG(),self.getSigma())
+_galsim.GaussianNoise.copy = GaussianNoise_copy
 
 
 # PoissonNoise docstrings
@@ -190,6 +221,10 @@ Note: the syntax image.addNoise(poisson_noise) is preferred.
 """
 _galsim.PoissonNoise.getSkyLevel.__func__.__doc__ = "Get sky level in current noise model."
 _galsim.PoissonNoise.setSkyLevel.__func__.__doc__ = "Set sky level in current noise model."
+
+def PoissonNoise_copy(self):
+    return _galsim.PoissonNoise(self.getRNG(),self.getSkyLevel())
+_galsim.PoissonNoise.copy = PoissonNoise_copy
 
 
 # CCDNoise docstrings
@@ -246,6 +281,10 @@ _galsim.CCDNoise.setSkyLevel.__func__.__doc__ = "Set sky level in current noise 
 _galsim.CCDNoise.setGain.__func__.__doc__ = "Set gain in current noise model."
 _galsim.CCDNoise.setReadNoise.__func__.__doc__ = "Set read noise in current noise model."
 
+def CCDNoise_copy(self):
+    return _galsim.CCDNoise(self.getRNG(),self.getSkyLevel(),self.getGain(),self.getReadNoise())
+_galsim.CCDNoise.copy = CCDNoise_copy
+
 
 # DeviateNoise docstrings
 _galsim.DeviateNoise.__doc__ = """
@@ -281,3 +320,8 @@ the given DeviateNoise instance.
 
 To add deviates to every element of an image, the syntax image.addNoise() is preferred.
 """
+
+def DeviateNoise_copy(self):
+    return _galsim.DeviateNoise(self.getRNG())
+_galsim.DeviateNoise.copy = DeviateNoise_copy
+

@@ -282,7 +282,7 @@ class GSObject(object):
         those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
         are no longer available.
 
-        @param scale The lensing magnification to apply.
+        @param mu The lensing magnification to apply.
         """
         self.applyTransformation(galsim.Ellipse(np.log(np.sqrt(mu))))
        
@@ -2109,15 +2109,15 @@ class RealGalaxy(GSObject):
 
         # Code block below will be for galaxy selection; not all are currently implemented.  Each
         # option must return an index within the real_galaxy_catalog.        
-        if index != None:
-            if (id != None or random == True):
+        if index is not None:
+            if id is not None or random is True:
                 raise AttributeError('Too many methods for selecting a galaxy!')
             use_index = index
-        elif id != None:
-            if (random == True):
+        elif id is not None:
+            if random is True:
                 raise AttributeError('Too many methods for selecting a galaxy!')
             use_index = real_galaxy_catalog._get_index_for_id(id)
-        elif random == True:
+        elif random is True:
             if rng is None:
                 uniform_deviate = galsim.UniformDeviate()
             elif isinstance(rng, galsim.BaseDeviate):
@@ -2188,7 +2188,7 @@ class RealGalaxy(GSObject):
 
         # Set up the GaussianDeviate if not provided one, or check that the user-provided one
         # is of a valid type.  Note if random was selected, we can use that uniform_deviate safely.
-        if random == True:
+        if random is True:
             gaussian_deviate = galsim.GaussianDeviate(uniform_deviate)
         else:
             if rng is None:
@@ -2208,7 +2208,7 @@ class RealGalaxy(GSObject):
         except:
             pass
         if noise_pad:
-            self.pad_variance= float(real_galaxy_catalog.variance[use_index])
+            self.pad_variance = float(real_galaxy_catalog.variance[use_index])
 
             # Check, is it "True" or something else?  If True, we use Gaussian uncorrelated noise
             # using the stored variance in the catalog.  Otherwise, if it's a CorrelatedNoise we use
@@ -2219,7 +2219,9 @@ class RealGalaxy(GSObject):
                     cn = noise_pad.copy()
                     if rng: # Let user supplied RNG take precedence over that in user CN
                         cn.setRNG(gaussian_deviate)
-                    # TODO: Should we set the variance as we do below?  Ought to decide...
+                    # This small patch may have different overall variance, so rescale while
+                    # preserving the correlation structure by default                  
+                    cn.setVariance(self.pad_variance)
                 elif (isinstance(noise_pad,galsim.BaseImageF) or 
                       isinstance(noise_pad,galsim.BaseImageD)):
                     cn = galsim.CorrelatedNoise(gaussian_deviate, noise_pad)
@@ -2497,6 +2499,23 @@ class AutoConvolve(GSObject):
         if not isinstance(obj, GSObject):
             raise TypeError("Argument to AutoConvolve must be a GSObject.")
         GSObject.__init__(self, galsim.SBAutoConvolve(obj.SBProfile))
+
+
+class AutoCorrelate(GSObject):
+    """A special class for correlating a GSObject with itself.
+
+    It is equivalent in functionality to 
+        galsim.Convolve([obj,obj.createRotated(180.*galsim.degrees)])
+    but takes advantage of the fact that the two profiles are the same for some efficiency gains.
+
+    This class is primarily targeted for use by the galsim.CorrelatedNoise models when convolving 
+    with a GSObject.
+    """
+    # --- Public Class methods ---
+    def __init__(self, obj):
+        if not isinstance(obj, GSObject):
+            raise TypeError("Argument to AutoCorrelate must be a GSObject.")
+        GSObject.__init__(self, galsim.SBAutoCorrelate(obj.SBProfile))
 
 
 class Deconvolve(GSObject):

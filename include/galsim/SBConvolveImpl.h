@@ -167,8 +167,7 @@ namespace galsim {
 
         ~SBAutoConvolveImpl() {}
 
-        double xValue(const Position<double>& p) const
-        { throw SBError("SBAutoConvolve::xValue() not implemented"); }
+        double xValue(const Position<double>& p) const;
 
         std::complex<double> kValue(const Position<double>& k) const
         { return SQR(_adaptee.kValue(k)); }
@@ -180,7 +179,7 @@ namespace galsim {
         double maxK() const { return _adaptee.maxK(); }
         double stepK() const { return _adaptee.stepK() / sqrt(2.); }
 
-        Position<double> centroid() const { return _adaptee.centroid()*2.; }
+        Position<double> centroid() const { return _adaptee.centroid() * 2.; }
 
         double getFlux() const { return SQR(_adaptee.getFlux()); }
 
@@ -189,7 +188,14 @@ namespace galsim {
 
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
-        void fillKGrid(KTable& kt) const;
+        // Overrides for better efficiency
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double x0, double dx, int ix_zero,
+                        double y0, double dy, int iy_zero) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
+
 
     private:
         SBProfile _adaptee;
@@ -201,7 +207,57 @@ namespace galsim {
         SBAutoConvolveImpl(const SBAutoConvolveImpl& rhs);
         void operator=(const SBAutoConvolveImpl& rhs);
     };
+
+    class SBAutoCorrelate::SBAutoCorrelateImpl: public SBProfileImpl
+    {
+    public:
+
+        SBAutoCorrelateImpl(const SBProfile& s) : _adaptee(s) {}
+
+        ~SBAutoCorrelateImpl() {}
+
+        double xValue(const Position<double>& p) const;
+
+        std::complex<double> kValue(const Position<double>& k) const
+        { return NORM(_adaptee.kValue(k)); }
+
+        bool isAxisymmetric() const { return _adaptee.isAxisymmetric(); }
+        bool hasHardEdges() const { return false; }
+        bool isAnalyticX() const { return false; }
+        bool isAnalyticK() const { return true; }    // convolvees must all meet this
+        double maxK() const { return _adaptee.maxK(); }
+        double stepK() const { return _adaptee.stepK() / sqrt(2.); }
+
+        Position<double> centroid() const { return Position<double>(0., 0.); }
+
+        double getFlux() const { return SQR(_adaptee.getFlux()); }
+
+        double getPositiveFlux() const;
+        double getNegativeFlux() const;
+
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+
+        // Overrides for better efficiency
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double x0, double dx, int ix_zero,
+                        double y0, double dy, int iy_zero) const;
+        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
+
+    private:
+        SBProfile _adaptee;
+
+        template <typename T>
+        static T SQR(T x) { return x*x; }
+        template <typename T>
+        static T NORM(std::complex<T> x) { return std::norm(x); }
+
+        // Copy constructor and op= are undefined.
+        SBAutoCorrelateImpl(const SBAutoCorrelateImpl& rhs);
+        void operator=(const SBAutoCorrelateImpl& rhs);
+    };
+
 }
 
 #endif // SBCONVOLVE_IMPL_H
-
