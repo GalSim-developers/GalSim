@@ -146,11 +146,13 @@ class PowerSpectrumEstimator(object):
         # histogram is a little hack, but is quite convenient since it means everything is done in C
         # so it is very fast. The first call to `histogram` just returns an array over the
         # logarithmic ell bins of
-        # sum_{|ell| in bin} C_{ell_x,ell_y}
+        # sum_{|ell| in bin} weight(|ell|)*C_{ell_x,ell_y}
         # and the second call returns
-        # sum_{|ell| in bin} 1.
-        # Thus, the ratio is just the mean power in the bin.  If `ell_weight` is not None, then some
-        # non-flat weighting scheme is used for averaging over the ell values within a bin.
+        # sum_{|ell| in bin} weight(|ell|).
+        # Thus, the ratio is just the mean power in the bin.  If `ell_weight` is None, then weight=1
+        # for all ell, corresponding to a simple averaging process.  If `ell_weight` is not None,
+        # then some non-flat weighting scheme is used for averaging over the ell values within a
+        # bin.
         if ell_weight is not None:
             P,_ = np.histogram(self.l_abs, self.bin_edges, weights=C*ell_weight)
             count,_ = np.histogram(self.l_abs, self.bin_edges, weights=ell_weight)
