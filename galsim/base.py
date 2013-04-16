@@ -114,6 +114,12 @@ class GSObject(object):
         >>> conv.draw(im,normalization='sb')               # Now it works (but is slow!)
         <galsim._galsim.ImageD object at 0x1037823c0>
         >>> im.write('high_res_sersic.fits')
+
+    Note that for compound objects like Convolve or Add, not all gsparams can be changed when the
+    compound object is created.  In the example given here, it is possible to change parameters
+    related to the drawing, but not the Fourier space parameters for the components that go into the
+    Convolve.  To get better sampling in Fourier space, for example, the `gal`, `psf`, and/or `pix`
+    should be created with `gsparams` that have a non-default value of `alias_threshold`.
     """
     def __init__(self, rhs):
         # This guarantees that all GSObjects have an SBProfile
@@ -2424,7 +2430,7 @@ class RealGalaxy(GSObject):
                                    +"objects.")
 
 #
-# --- Compound GSObject classes: Add and Convolve ---
+# --- Compound GSObject classes: Add, Convolve, AutoConvolve, and AutoCorrelate ---
 
 class Add(GSObject):
     """A class for adding 2 or more GSObjects.  Has an SBAdd in the SBProfile attribute.
@@ -2433,9 +2439,11 @@ class Add(GSObject):
     to represent a multiple-component galaxy as the sum of an Exponential and a DeVaucouleurs, or to
     represent a PSF as the sum of multiple Gaussians.
 
-    You may also specify a gsparams argument.  See the docstring for GSObject for more 
-    information about this option.  Note: if gsparams is unspecified (or None), then the
-    Add instance inherits the same GSParams as the first item in the list.
+    You may also specify a gsparams argument.  See the docstring for GSObject for more information
+    about this option.  Note: if gsparams is unspecified (or None), then the Add instance inherits
+    the same GSParams as the first item in the list.  Also, note that parameters related to the
+    Fourier-space calculations must be set when initializing the individual GSObjects that go into
+    the Add, NOT when creating the Add (at which point they will simply be ignored).
 
     Methods
     -------
@@ -2503,9 +2511,11 @@ class Convolve(GSObject):
     are 2 profiles, both of which have hard edges.  In this case, we automatically use real-space 
     convolution.  In all other cases, the default is not to use real-space convolution.
 
-    You may also specify a gsparams argument.  See the docstring for GSObject for more 
-    information about this option.  Note: if gsparams is unspecified (or None), then the
-    Convolve instance inherits the same GSParams as the first item in the list.
+    You may also specify a gsparams argument.  See the docstring for GSObject for more information
+    about this option.  Note: if gsparams is unspecified (or None), then the Convolve instance
+    inherits the same GSParams as the first item in the list.  Also, note that parameters related to
+    the Fourier-space calculations must be set when initializing the individual GSObjects that go
+    into the Convolve, NOT when creating the Convolve (at which point they will simply be ignored).
     """
                     
     # --- Public Class methods ---
@@ -2622,8 +2632,11 @@ class AutoConvolve(GSObject):
     the fact that the two profiles are the same for some efficiency gains.
 
     @param obj       The object to be convolved with itself.
-    @param gsparams  You may also specify a gsparams argument.  See the docstring for 
-                     GSObject for more information about this option.
+    @param gsparams  You may also specify a gsparams argument.  See the docstring for GSObject for
+                     more information about this option.  Note that parameters related to the
+                     Fourier-space calculations must be set when initializing the GSObject that goes
+                     into the AutoConvolve, NOT when creating the AutoConvolve (at which point they
+                     will simply be ignored).
     """
     # --- Public Class methods ---
     def __init__(self, obj, gsparams=None):
@@ -2644,7 +2657,10 @@ class AutoCorrelate(GSObject):
 
     @param obj       The object to be correlated with itself.
     @param gsparams  You may also specify a gsparams argument.  See the docstring for 
-                     GSObject for more information about this option.
+                     GSObject for more information about this option.  Note that parameters related to
+                     the Fourier-space calculations must be set when initializing the GSObject that
+                     goes into the AutoCorrelate, NOT when creating the AutoCorrelate (at which point
+                     they will simply be ignored).
     """
     # --- Public Class methods ---
     def __init__(self, obj, gsparams=None):
