@@ -19,7 +19,7 @@
  * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
  */
 
-//#define DEBUGLOGGING
+#define DEBUGLOGGING
 
 #include "SBSersic.h"
 #include "SBSersicImpl.h"
@@ -30,7 +30,7 @@
 #ifdef DEBUGLOGGING
 #include <fstream>
 std::ostream* dbgout = &std::cout;
-int verbose_level = 2;
+int verbose_level = 1;
 #endif
 
 namespace galsim {
@@ -402,6 +402,7 @@ namespace galsim {
         // Find the ratio of actual (truncated) flux to specified flux
         if (_truncated && _flux_untruncated)
             _flux_fraction = gamma2n / tgamma(2.*_n);
+        dbg << "Flux fraction: " << _flux_fraction << std::endl;
 
         // The normalization factor to give unity flux integral:
         _norm = b2n / (2.*M_PI*_n*gamma2n) * _flux_fraction;
