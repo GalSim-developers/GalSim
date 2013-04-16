@@ -2267,10 +2267,10 @@ class RealGalaxy(GSObject):
         # (2) If the latter, then we have to do the padding ourselves, and pass the resulting image
         # to the C++ with pad_factor explicitly set to 1.
         if specify_size is False:
-            # Make the SBInterpolatedImage out of the image.
-            self.original_image = galsim.SBInterpolatedImage(gal_image,
-                                                             xInterp=self.x_interpolant,
-                                                             kInterp=self.k_interpolant,
+            # Make the InterpolatedImage out of the image.
+            self.original_image = galsim.InterpolatedImage(gal_image,
+                                                             x_interpolant=self.x_interpolant,
+                                                             k_interpolant=self.k_interpolant,
                                                              dx=self.pixel_scale,
                                                              pad_factor=pad_factor,
                                                              pad_image=pad_image)
@@ -2285,16 +2285,16 @@ class RealGalaxy(GSObject):
             pad_image.setOrigin(gal_image.getXMin()-x_marg, gal_image.getYMin()-y_marg)
             # Set the central values of pad_image to be equal to the input image
             pad_image[gal_image.bounds] = gal_image
-            self.original_image = galsim.SBInterpolatedImage(pad_image,
-                                                             xInterp=self.x_interpolant,
-                                                             kInterp=self.k_interpolant,
+            self.original_image = galsim.InterpolatedImage(pad_image,
+                                                             x_interpolant=self.x_interpolant,
+                                                             k_interpolant=self.k_interpolant,
                                                              dx=self.pixel_scale,
                                                              pad_factor=1.)
 
         # also make the original PSF image, with far less fanfare: we don't need to pad with
         # anything interesting.
-        self.original_PSF = galsim.SBInterpolatedImage(
-            PSF_image, xInterp=self.x_interpolant, kInterp=self.k_interpolant, dx=self.pixel_scale)
+        self.original_PSF = galsim.InterpolatedImage(
+            PSF_image, x_interpoland=self.x_interpolant, k_interpoland=self.k_interpolant, dx=self.pixel_scale)
 
         # recalculate Fourier-space attributes rather than using overly-conservative defaults
         self.original_image.calculateStepK()
