@@ -34,7 +34,7 @@ class PowerSpectrumEstimator(object):
     Class for estimating the shear power spectrum from gridded shears.
 
     The PowerSpectrumEstimator class can be used even on systems where GalSim is not installed.  It
-    just requires Python v2.6 or 2.7 and Numpy.
+    just requires Python v2.6 or 2.7 and NumPy.
 
     This class stores all the data used in power spectrum estimation that is fixed with the geometry
     of the problem - the binning and spin weighting factors.
@@ -71,7 +71,7 @@ class PowerSpectrumEstimator(object):
         # same grid geometry, we can reuse the same PowerSpectrumEstimator object.
         ell, P_e, P_b, P_eb = my_pse.estimate(g1, g2)
 
-    The output Numpy arrays ell, P_e, P_b, and P_eb contain the effective ell value, the E-mode
+    The output NumPy arrays ell, P_e, P_b, and P_eb contain the effective ell value, the E-mode
     auto-power spectrum, the B-mode auto-power spectrum, and the EB cross-power spectrum.  The units
     are inverse radians for ell, and radians^2 for the output power spectra.
 
@@ -174,19 +174,19 @@ class PowerSpectrumEstimator(object):
 
         For example usage, see the docstring for the PowerSpectrumEstimator class.
 
-        @params g1              The shear component g1 as a square 2D Numpy array.
-        @params g2              The shear component g2 as a square 2D Numpy array.
-        @params weight_EE       If True, then the E auto-power spectrum is re-computed weighting by
+        @param g1              The shear component g1 as a square 2D NumPy array.
+        @param g2              The shear component g2 as a square 2D NumPy array.
+        @param weight_EE       If True, then the E auto-power spectrum is re-computed weighting by
                                 the power within each logarithmically-spaced ell bin. Note that use
                                 of this option requires a usable GalSim installation, unlike the
                                 rest of the PowerSpectrumEstimator functionality.  [Default
                                 `weight_EE=False`]
-        @params weight_BB       If True, then the B auto-power spectrum is re-computed weighting by
+        @param weight_BB       If True, then the B auto-power spectrum is re-computed weighting by
                                 the power within each logarithmically-spaced ell bin. Note that use
                                 of this option requires a usable GalSim installation, unlike the
                                 rest of the PowerSpectrumEstimator functionality.  [Default
                                 `weight_BB=False`]
-        @params theory_func     An optional callable function that can be used to get an idealized
+        @param theory_func     An optional callable function that can be used to get an idealized
                                 value of power at each point on the grid, and then see what results
                                 it gives for our chosen ell binning.  Unlike the main
                                 PowerSpectrumEstimator, this option requires a usable GalSim
