@@ -19,7 +19,7 @@
  * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#define DEBUGLOGGING
+//#define DEBUGLOGGING
 
 #include "SBSersic.h"
 #include "SBSersicImpl.h"
@@ -57,11 +57,13 @@ namespace galsim {
     SBSersic::InfoBarn SBSersic::nmap;
 
     SBSersic::SBSersicImpl::SBSersicImpl(double n,  double re, double trunc, double flux,
-					 bool flux_untruncated) :
+                                         bool flux_untruncated) :
         _n(n), _flux(flux), _re(re), _re_sq(_re*_re), _inv_re(1./_re), _inv_re_sq(_inv_re*_inv_re),
         _trunc(trunc), _norm(_flux*_inv_re_sq), _flux_untruncated(flux_untruncated)
     {
         double maxRre = ((int)(trunc/re * 100 + 0.5) / 100.0);  // round to two decimal places
+        _truncated = (_trunc > 0.);
+        if (_truncated) _flux_untruncated = true;
         _info = nmap.get(_n, maxRre, _flux_untruncated);
         _maxRre = _info->getMaxRRe();  // maximum R in units of re (irrelevant if trunc = 0.)
         _actual_flux = _info->getTrueFluxFraction() * _flux;
@@ -69,7 +71,6 @@ namespace galsim {
         _maxR = _maxRre * _re;
         _maxR_sq = _maxR*_maxR;
         _ksq_max = _info->getKsqMax();
-        _truncated = (_trunc > 0.);
         dbg<<"_ksq_max for n = "<<n<<" = "<<_ksq_max<<std::endl;
     }
 

@@ -149,7 +149,7 @@ namespace galsim {
         bool operator<(const SersicKey& rhs) const
         {
             if (this->_n == rhs._n)
-                if (this->_maxRre == rhs._maxRre)  return _fu;
+                if (this->_maxRre == rhs._maxRre)  return this->_fu < rhs._fu;
                 else  return this->_maxRre < rhs._maxRre;
             else
                 return this->_n < rhs._n;
@@ -192,10 +192,10 @@ namespace galsim {
             SersicKey key(n, maxRre, flux_untruncated);
             MapIter it = _map.find(key);
             if (it == _map.end()) {
-	      boost::shared_ptr<SersicInfo> info(new SersicInfo(n, maxRre, flux_untruncated));
+            boost::shared_ptr<SersicInfo> info(new SersicInfo(n, maxRre, flux_untruncated));
                 _map[key] = info;
                 if (int(_map.size()) > MAX_SERSIC_TABLES)
-                    throw SBError("Storing Sersic info for too many (n, maxRre) pairs");
+                    throw SBError("Storing Sersic info for too many (n, maxRre, flux_untruncated) indices");
                 return info.get();
             } else {
                 return it->second.get();

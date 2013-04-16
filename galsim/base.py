@@ -1856,10 +1856,10 @@ class Sersic(GSObject):
         3.5
 
     Another optional parameter, `flux_untruncated`, allows the setting of the flux to the
-    untruncated Sersic, while generating a truncated Sersic.  This facilitates the comparison
-    of truncated and untruncated Sersic, as both the amplitude and the scale parameter
-    `b=r_0^{-1/n}` change when a truncated Sersic is specified to the same flux as the
-    untruncated version with the same Sersic index `n`.
+    untruncated Sersic, while generating a truncated Sersic [default `flux_untruncated = False`].
+    This facilitates the comparison of truncated and untruncated Sersic, as both the amplitude and
+    the scale parameter `b=r_0^{-1/n}` change when a truncated Sersic is specified to the same flux
+    as the untruncated version with the same Sersic index `n`.
 
     Note that when `trunc > 0.` and `flux_untruncated == true`, the specified half-light radius,
     also returned by getHalfLightRadius(), will be different from the actual half-light radius.
@@ -1882,7 +1882,7 @@ class Sersic(GSObject):
     def __init__(self, n, half_light_radius, trunc=0., flux=1., flux_untruncated=False):
         GSObject.__init__(
             self, galsim.SBSersic(n, half_light_radius=half_light_radius, trunc=trunc, flux=flux,
-                                  flux_untruncated=False))
+                                  flux_untruncated=flux_untruncated))
 
     def getN(self):
         """Return the Sersic index `n` for this profile.
@@ -2006,7 +2006,7 @@ class DeVaucouleurs(GSObject):
     def __init__(self, half_light_radius=None, trunc=0., flux=1., flux_untruncated=False):
         GSObject.__init__(
             self, galsim.SBDeVaucouleurs(half_light_radius=half_light_radius, 
-                                         trunc=trunc, flux=flux, flux_untruncated=False))
+                                         trunc=trunc, flux=flux, flux_untruncated=flux_untruncated))
 
     def getHalfLightRadius(self):
         """Return the half light radius for this DeVaucouleurs profile.
