@@ -78,9 +78,13 @@ class PowerSpectrumEstimator(object):
     Some important notes:
 
     1) Power spectrum estimation requires a weight function which decides how the averaging
-    is done across ell within each bin.  By default, that weighting is flat in ell, but
-    this is easy to change (in the _bin_power function).  A keyword allows for weighting by the
-    power itself, but use of this functionality requires the GalSim software package.
+    is done across ell within each bin.  By default that weighting is flat in ell using an
+    analytic calculation of the area in ell space, but this is easy to change with the `_bin_power`
+    function.  (Note this area averaged bin weighting is only approximate for the higher frequency
+    bins in which the lower ell edge is greater than pi * ngrid / grid_size, due to the annular
+    ell region being cut off by the square grid edges beyond this value.)  A keyword allows for
+    weighting by the power itself, but use of this functionality requires the GalSim software
+    package.
 
     2) This is the power spectrum of the gridded *data*, not the underlying field - we do not
     account for the effects of the finite grid (basically, ignoring all the reasons why power
@@ -119,7 +123,10 @@ class PowerSpectrumEstimator(object):
         self.bin_edges = np.logspace(np.log10(lmin), np.log10(lmax), nbin+1)
         # By default, report an area-averaged value of ell, which should be fine if there is
         # no weighting (in which case it's recomputed) and if there are many ell modes in
-        # each bin.  The latter assumption is most likely to break down at low ell.
+        # each bin.  The latter assumption is most likely to break down at low ell.  Note also that
+        # at high ell when the lower ell edge is greater than pi * ngrid / grid_size, due to the
+        # annular ell region being cut off by the square grid edges beyond this value, this annular
+        # average is only approximate.
         self.ell = (2./3.)*(self.bin_edges[1:]**3-self.bin_edges[:-1]**3) \
                                    / (self.bin_edges[1:]**2-self.bin_edges[:-1]**2)
 
