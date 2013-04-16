@@ -2294,7 +2294,7 @@ class RealGalaxy(GSObject):
         # also make the original PSF image, with far less fanfare: we don't need to pad with
         # anything interesting.
         self.original_PSF = galsim.InterpolatedImage(
-            PSF_image, x_interpoland=self.x_interpolant, k_interpoland=self.k_interpolant, dx=self.pixel_scale)
+            PSF_image, x_interpoland=self.x_interpolant, k_interpolant=self.k_interpolant, dx=self.pixel_scale)
 
         # recalculate Fourier-space attributes rather than using overly-conservative defaults
         self.original_image.calculateStepK()
