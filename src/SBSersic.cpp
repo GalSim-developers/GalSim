@@ -374,7 +374,7 @@ namespace galsim {
 
         _truncated = (_maxRre > 0.);
 
-        if (_flux_untruncated)
+        if ( !_truncated || _flux_untruncated )
             _b = SersicCalculateScaleBFromHLR(n, 0.);
         else
             _b = SersicCalculateScaleBFromHLR(n, maxRre);
