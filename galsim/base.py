@@ -85,7 +85,7 @@ class GSObject(object):
                               profile out to some value.  We choose the outer radius such that the 
                               integral encloses at least (1-shoot_accuracy) of the flux.
     realspace_relerr=1.e-3    The relative accuracy for realspace convolution.
-    realspace_relerr=1.e-6    The absolute accuracy for realspace convolution.
+    realspace_abserr=1.e-6    The absolute accuracy for realspace convolution.
     integration_relerr=1.e-5  The relative accuracy for integrals (other than real-space 
                               convolution).
     integration_abserr=1.e-7  The absolute accuracy for integrals (other than real-space 
