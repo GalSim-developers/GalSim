@@ -195,7 +195,7 @@ namespace galsim {
         double _norm; ///< Calculated value: _flux/_re_sq
         double _ksq_max; ///< The ksq_max value from info rescaled with this re value.
 
-        const SersicInfo* _info; ///< Points to info structure for this n.
+        const boost::shared_ptr<SersicInfo> _info; ///< Points to info structure for this n.
 
         // Copy constructor and op= are undefined.
         SBSersicImpl(const SBSersicImpl& rhs);

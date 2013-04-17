@@ -150,7 +150,7 @@ namespace galsim {
         double _flux; ///< Flux.
         double _xnorm; ///< Calculated value for normalizing xValues returned from Info class.
 
-        const KolmogorovInfo* _info;
+        const boost::shared_ptr<KolmogorovInfo> _info;
 
         // Copy constructor and op= are undefined.
         SBKolmogorovImpl(const SBKolmogorovImpl& rhs);
