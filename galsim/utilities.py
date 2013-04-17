@@ -154,3 +154,91 @@ def convert_interpolant_to_2d(interpolant):
             return galsim.Interpolant2d(interpolant)
         except:
             raise RuntimeError('Specified interpolant is not valid!')
+
+def compare_object_dft_vs_photon(gsobject, psf_object=None, moments=True, hsm=False, dx=1.,
+    imsize=512, wmult=4., abs_tol_ellip=1.e-5, abs_tol_size=1.e-5, rng=None, n_trials_per_iter=30,
+    n_photons_per_trial=1e6, ncores=1):
+    """Take an input object and render it in two ways comparing results at high precision.
+
+    Using both photon shooting (via drawShoot) and Discrete Fourier Transform (via shoot) to render
+    images, we compare  the numerical values of adaptive moments and optionally HSM shear estimates,
+    or both, to check consistency.
+
+    We generate successive photon-shot images using `ntry` photons, until the standard error on the
+    mean absolute and fractional uncertainty drop below `abs_err` and `frac_err`.
+    """
+    import logging
+        
+    # Some sanity checks on inputs
+    if hsm is True:
+        if psf_object is None:
+            raise ValueError('An input psf_object is required for HSM shear estimate testing')
+        else:
+            # Raise an apologetic exception about the HSM not yet being implemented!
+            raise NotImplementedError('Sorry, HSM tests not yet implemented!')
+
+    # Then define a couple of convenience functions for handling lists and list operations
+    def _mean(array_like):
+        return np.mean(np.asarray(array_like))
+
+    def _stderr(array_like):
+        return np.std(np.asarray(array_like)) / np.sqrt(len(array_like))
+
+    def _shoot_trials(gsobject, rho4_list, g1obs_list, g2obs_list, ntrials, dx, imsize, rng, 
+        n_photons):
+        """Convenience function to run ntrials and collect the results
+        """
+        im = galsim.ImageF(imsize, imsize)
+        for i in xrange(ntrials):
+            gsobject.drawShoot(im, dx=dx, n_photons=n_photons, rng=rng)
+            res = im.FindAdaptiveMom()
+            rho4_list.append(res.moments_rho4)
+            g1obs_list.append(res.observed_shape.g1)
+            g2obs_list.append(res.observed_shape.g2)
+        return rho4_list, g1obs_list, g2obs_list
+
+    # If a PSF is supplied, do the convolution, otherwise just use the gal_object
+    if psf_object is None:
+        logging.info('No psf_object supplied, running tests using input gsobject only')
+        test_object = gsobject
+    else:
+        logging.info('Generating test_object by convolving gsobject with input psf_object')
+        test_object = galsim.Convolve([gsbject, psf_object])
+
+    # Draw the shoot image, only needs to be done once
+    im_draw = galsim.ImageF(imsize, imsize)
+    test_object.draw(im_draw, dx=dx, wmult=wmult)
+    res_draw = im_draw.FindAdaptiveMom()
+    rho4_draw = res_draw.moments_rho4
+    g1obs_draw = res_draw.observed_shape.g1
+    g2obs_draw = res_draw.observed_shape.g2
+
+    # Do the trials
+    rho4_shoot_list = []
+    g1obs_shoot_list = []
+    g2obs_shoot_list = [] 
+    rho4err = 666.
+    g1obserr = 666.
+    g2obserr = 666.
+    itercount = 0
+    while (rho4err > abs_tol_size) or (g1obserr > abs_tol_ellip) or (g2obserr > abs_tol_ellip):
+        rho4_shoot_list, g1obs_shoot_list, g2_shoot_list = _shoot_trials(
+            test_object, rho4_shoot_list, g1obs_shoot_list, g2obs_shoot_list, n_trials_per_iter, dx,
+            imsize, rng, n_photons_per_trial)
+        rho4err = _stderr(rho4_shoot_list)
+        g1obserr = _stderr(g1obs_shoot_list)
+        g2obserr = _stderr(g2obs_shoot_list)
+        itercount += 1
+        logging.debug('Completed '+str(itercount)+' iterations')
+        print 'Completed '+str(itercount)+' iterations'
+        print '(rho4err, g1obserr, g2obserr) = '+str(rho4err)+', '+str(g1obserr)+', '+str(g2obserr)
+
+
+    rho4_shoot = _mean(rho4_shoot_list)
+    g1obs_shoot = _mean(g1obs_shoot_list)
+    g2obs_shoot = _mean(g2obs_shoot_list)
+
+    return rho4_draw, g1obs_draw, g2obs_draw, \
+           rho4_draw - rho4_shoot, g1obs_draw - g1obs_shoot, g2obs_draw - g2obs_shoot, \
+           rho4err, g1obserr, g2obserr 
+
