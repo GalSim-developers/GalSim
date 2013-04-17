@@ -63,7 +63,7 @@ namespace galsim {
          * @param[in] n                 Sersic index
          * @param[in] maxRre            Maximum radius in units of half-light radius
          * @param[in] flux_untruncated  If true, flux is set to the untruncated Sersic with
-         *                              index `n`.
+         *                              index `n`.  Ignored if `maxRre = 0.`.
          */
         SersicInfo(double n, double maxRre, bool flux_untruncated);
 
@@ -179,7 +179,7 @@ namespace galsim {
          * @param[in] maxRre            Truncation radius in units of half light radius 're', for
          *                              which the information table is required (0 if no truncation).
          * @param[in] flux_untruncated  If true, flux is set to the untruncated Sersic with
-         *                              index `n`.
+         *                              index `n`.  Ignored if `maxRre = 0.`.
          */
         const SersicInfo* get(double n, double maxRre, bool flux_untruncated)
         {

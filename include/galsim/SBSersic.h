@@ -70,7 +70,7 @@ namespace galsim {
          * @param[in] flux              Flux (default `flux = 1.`).
          * @param[in] flux_untruncated  If `true`, sets the flux to the untruncated version of the
          *                              Sersic profile with the same index `n` (default
-         *                              flux_untruncated = false`).
+         *                              flux_untruncated = false`).  Ignored if `trunc = 0.`.
          */
         SBSersic(double n, double re, double trunc=0., double flux=1., bool flux_untruncated=false);
 
@@ -118,7 +118,7 @@ namespace galsim {
          * @param[in] flux              Flux (default `flux = 1.`).
          * @param[in] flux_untruncated  If `true`, sets the flux to the untruncated version of the
          *                              Sersic profile with the same index `n` (default
-         *                              flux_untruncated = false`).
+         *                              flux_untruncated = false`).  Ignored if `trunc = 0.`.
          */
         SBDeVaucouleurs(double re, double trunc=0., double flux=1., bool flux_untruncated=false) :
             SBSersic(4., re, trunc, flux, flux_untruncated) {}

@@ -63,7 +63,7 @@ namespace galsim {
     {
         double maxRre = ((int)(trunc/re * 100 + 0.5) / 100.0);  // round to two decimal places
         _truncated = (_trunc > 0.);
-        if (_truncated) _flux_untruncated = false;  // set unused parameter to default value
+        if (!_truncated) _flux_untruncated = true;  // set unused parameter to a single value
         _info = nmap.get(_n, maxRre, _flux_untruncated);
         _maxRre = _info->getMaxRRe();  // maximum R in units of re (irrelevant if trunc = 0.)
         _actual_flux = _info->getTrueFluxFraction() * _flux;
