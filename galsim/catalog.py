@@ -99,7 +99,9 @@ class InputCatalog(object):
         # we have any str fields, they don't give an error here.  They'll only give an 
         # error if one tries to convert them to float at some point.
         self.data = numpy.loadtxt(self.file_name, comments=comments, dtype=str)
-        self.nobjects = self.data.shape[0]  
+        if len(self.data.shape) == 1:
+            self.data = self.data.reshape(1, -1)
+        self.nobjects = self.data.shape[0]
         self.ncols = self.data.shape[1]
         self.isfits = False
 
