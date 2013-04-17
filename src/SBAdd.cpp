@@ -77,7 +77,7 @@ namespace galsim {
                 it->maxK()<<" , "<<it->stepK()<<std::endl;
             _sumflux += it->getFlux();
             _sumfx += it->getFlux() * it->centroid().x;
-            _sumfy += it->getFlux() * it->centroid().x;
+            _sumfy += it->getFlux() * it->centroid().y;
             if ( it->maxK() > _maxMaxK) 
                 _maxMaxK = it->maxK();
             if ( _minStepK<=0. || (it->stepK() < _minStepK) ) 
