@@ -114,55 +114,49 @@ namespace hsm {
         ConstImageView<U> PSF_image_cview = PSF_image;
         ConstImageView<int> gal_mask_view = gal_mask_image;
         ConstImageView<int> PSF_mask_view = PSF_mask.view();
-        try {
-            dbg<<"About to get moments using find_ellipmom_2"<<std::endl;
-            find_ellipmom_2(gal_image_cview, gal_mask_view, amp, gal_data.x0,
-                            gal_data.y0, m_xx, m_xy, m_yy, results.moments_rho4,
-                            precision, results.moments_n_iter, hsmparams);
-            // repackage outputs to the output CppHSMShapeData struct
-            dbg<<"Repackaging find_ellipmom_2 results"<<std::endl;
-            results.moments_amp = 2.0*amp;
-            results.moments_sigma = std::pow(m_xx*m_yy-m_xy*m_xy, 0.25);
-            results.observed_shape.setE1E2((m_xx-m_yy)/(m_xx+m_yy), 2.*m_xy/(m_xx+m_yy));
-            results.moments_status = 0;
 
-            // and if that worked, try doing PSF correction
-            gal_data.sigma = results.moments_sigma;
-            dbg<<"About to get shear using general_shear_estimator"<<std::endl;
-            results.correction_status = general_shear_estimator(
-                gal_image_cview, gal_mask_view, PSF_image_cview, PSF_mask_view,
-                gal_data, PSF_data, shear_est, flags, hsmparams);
-            dbg<<"Repackaging general_shear_estimator results"<<std::endl;
+        dbg<<"About to get moments using find_ellipmom_2"<<std::endl;
+        find_ellipmom_2(gal_image_cview, gal_mask_view, amp, gal_data.x0,
+                        gal_data.y0, m_xx, m_xy, m_yy, results.moments_rho4,
+                        precision, results.moments_n_iter, hsmparams);
+        // repackage outputs to the output CppHSMShapeData struct
+        dbg<<"Repackaging find_ellipmom_2 results"<<std::endl;
+        results.moments_amp = 2.0*amp;
+        results.moments_sigma = std::pow(m_xx*m_yy-m_xy*m_xy, 0.25);
+        results.observed_shape.setE1E2((m_xx-m_yy)/(m_xx+m_yy), 2.*m_xy/(m_xx+m_yy));
+        results.moments_status = 0;
 
-            results.meas_type = gal_data.meas_type;
-            if (gal_data.meas_type == 'e') {
-                results.corrected_e1 = gal_data.e1;
-                results.corrected_e2 = gal_data.e2;
-            } else if (gal_data.meas_type == 'g') {
-                results.corrected_g1 = gal_data.e1;
-                results.corrected_g2 = gal_data.e2;
-            } else {
-                throw HSMError("Unknown shape measurement type!\n");
-            }
+        // and if that worked, try doing PSF correction
+        gal_data.sigma = results.moments_sigma;
+        dbg<<"About to get shear using general_shear_estimator"<<std::endl;
+        results.correction_status = general_shear_estimator(
+            gal_image_cview, gal_mask_view, PSF_image_cview, PSF_mask_view,
+            gal_data, PSF_data, shear_est, flags, hsmparams);
+        dbg<<"Repackaging general_shear_estimator results"<<std::endl;
 
-            if (results.correction_status != 0) {
-                throw HSMError("PSF correction status indicates failure!\n");
-            }
-
-            results.corrected_shape_err = std::sqrt(4. * M_PI * sky_var) * gal_data.sigma /
-                (gal_data.resolution * gal_data.flux);
-            results.moments_sigma = gal_data.sigma;
-            results.moments_amp = gal_data.flux;
-            results.resolution_factor = gal_data.resolution;
-
-            if (results.resolution_factor <= 0.) {
-                throw HSMError("Unphysical situation: galaxy convolved with PSF is smaller than PSF!\n");
-            }
+        results.meas_type = gal_data.meas_type;
+        if (gal_data.meas_type == 'e') {
+            results.corrected_e1 = gal_data.e1;
+            results.corrected_e2 = gal_data.e2;
+        } else if (gal_data.meas_type == 'g') {
+            results.corrected_g1 = gal_data.e1;
+            results.corrected_g2 = gal_data.e2;
+        } else {
+            throw HSMError("Unknown shape measurement type!\n");
         }
-        catch (char *err_msg) {
-            results.error_message = err_msg;
-            dbg<<"Caught an error: "<<err_msg<<std::endl;
-            throw HSMError(err_msg);
+
+        if (results.correction_status != 0) {
+            throw HSMError("PSF correction status indicates failure!\n");
+        }
+
+        results.corrected_shape_err = std::sqrt(4. * M_PI * sky_var) * gal_data.sigma /
+            (gal_data.resolution * gal_data.flux);
+        results.moments_sigma = gal_data.sigma;
+        results.moments_amp = gal_data.flux;
+        results.resolution_factor = gal_data.resolution;
+
+        if (results.resolution_factor <= 0.) {
+            throw HSMError("Unphysical situation: galaxy convolved with PSF is smaller than PSF!\n");
         }
 
         dbg<<"Exiting EstimateShearHSMView"<<std::endl;

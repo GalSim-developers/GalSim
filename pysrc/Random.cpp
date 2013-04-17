@@ -28,6 +28,9 @@ namespace bp = boost::python;
 
 namespace galsim {
 
+    // Need this special CallBack version that inherits from bp::wrapper whenever
+    // you are wrapping something that has virtual functions you want to call from
+    // python and have them resolve correctly.
     class BaseDeviateCallBack : public BaseDeviate,
                                 public bp::wrapper<BaseDeviate>
     {
@@ -41,14 +44,10 @@ namespace galsim {
         // function defined in the python layer.
         double val()
         {
-            if (bp::override py_val = this->get_override("val")) {
-#if BOOST_WORKAROUND(BOOST_MSVC, <= 1300) // Workaround for vc6/vc7
-                return bp::call<double>(py_val.ptr());
-#else 
-                return py_val();
-#endif 
-            }
-            return BaseDeviate::val();
+            if (bp::override py_func = this->get_override("val")) 
+                return py_func();
+            else 
+                return BaseDeviate::val();
         }
     };
 
