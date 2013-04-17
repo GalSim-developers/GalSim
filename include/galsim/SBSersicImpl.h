@@ -146,6 +146,7 @@ namespace galsim {
     public:
         SersicKey(double n, double maxRre, bool flux_untruncated) :
             _n(n), _maxRre(maxRre), _fu(flux_untruncated) {}
+        // less operator needed for map::find()
         bool operator<(const SersicKey& rhs) const
         {
             if (this->_n == rhs._n)
@@ -154,8 +155,6 @@ namespace galsim {
             else
                 return this->_n < rhs._n;
         }
-        bool operator==(const SersicKey& rhs) const
-        { return (this->_n == rhs._n && this->_maxRre == rhs._maxRre && this->_fu == rhs._fu); }
     private:
         double _n;
         double _maxRre;

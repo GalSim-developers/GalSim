@@ -19,7 +19,7 @@
  * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
  */
 
-//#define DEBUGLOGGING
+#define DEBUGLOGGING
 
 #include "SBSersic.h"
 #include "SBSersicImpl.h"
@@ -293,14 +293,14 @@ namespace galsim {
         double z = 4.*(_n+1.);  // A decent starting guess for a range of n.
         double oldz = 0.;
         const int MAXIT = 15;
-        dbg<<"Start with z = "<<z<<std::endl;
+        xdbg<<"Start with z = "<<z<<std::endl;
         for(int niter=0; niter < MAXIT; ++niter) {
             oldz = z;
             z = z0 + (2.*_n-1.) * std::log(z) + (2.*_n-1.)/z + (2.*_n-1.)*(2.*_n-3.)/(2.*z*z);
-            dbg<<"z = "<<z<<", dz = "<<z-oldz<<std::endl;
+            xdbg<<"z = "<<z<<", dz = "<<z-oldz<<std::endl;
             if (std::abs(z-oldz) < 0.01) break;
         }
-        dbg<<"Converged at z = "<<z<<std::endl;
+        xdbg<<"Converged at z = "<<z<<std::endl;
         double R=std::pow(z/_b, _n);
         dbg<<"R = (z/b)^n = "<<R<<std::endl;
         return R;
@@ -373,12 +373,16 @@ namespace galsim {
         // Going to constrain range of allowed n to those for which testing was done
         if (_n<0.5 || _n>4.2) throw SBError("Requested Sersic index out of range");
 
-        _truncated = (_maxRre > 0.);
+        _truncated = (_maxRre > 0.);   // _maxRre == 0. indicates untruncated Sersic here
 
-        if ( !_truncated || (_truncated && _flux_untruncated) )
+        if ( _truncated && _flux_untruncated ) {
+            dbg << "Calculating b with maxR/re => inf (0)" << std::endl;
             _b = SersicCalculateScaleBFromHLR(n, 0.);
-        else
+        }
+        else {
+            dbg << "Calculating b with maxR/re => " << maxRre << std::endl;
             _b = SersicCalculateScaleBFromHLR(n, maxRre);
+        }
 
         // set-up frequently used numbers (for flux normalization and FT small-k approximations)
         double b2n = std::pow(_b,2.*_n);
@@ -402,7 +406,7 @@ namespace galsim {
 
         // Find the ratio of actual (truncated) flux to specified flux
         if (_truncated && _flux_untruncated)
-            _flux_fraction = gamma2n / tgamma(2.*_n);
+            _flux_fraction = gamma2n / tgamma(2.*_n);       // _flux_fraction < 1
         dbg << "Flux fraction: " << _flux_fraction << std::endl;
 
         // The normalization factor to give unity flux integral:
@@ -417,7 +421,8 @@ namespace galsim {
         // And a quartic term:
         _kderiv4 = gamma6n / (64.*b4n*gamma2n);
 
-        dbg << "Building for n=" << _n << " b= " << _b << " norm= " << _norm << std::endl;
+        dbg << "Building for n=" << _n << " b=" << _b << " norm=" << _norm
+            << " maxRre=" << _maxRre << std::endl;
         dbg << "Deriv terms: " << _kderiv2 << " " << _kderiv4 << std::endl;
 
         // When is it safe to use low-k approximation?  
@@ -430,7 +435,8 @@ namespace galsim {
 
         // How far should the profile extend, if not truncated?
         // Estimate number of effective radii needed to enclose (1-alias_threshold) of flux
-        if (!_truncated)  _maxRre = findMaxR(sbp::alias_threshold,gamma2n);
+        if (!_truncated)
+	  _maxRre = findMaxR(sbp::alias_threshold,gamma2n);  // _maxRre becomes the actual extent
         _maxRre_sq = _maxRre*_maxRre;
         // Go to at least 5*re
         double Rre = _maxRre;
