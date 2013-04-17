@@ -1866,6 +1866,12 @@ class Sersic(GSObject):
     Similarly, the specified flux will not be the actual flux.  However, the true flux is returned
     by the getFlux() method.
 
+    Example:  [TODO: add proper example for truncated flux, when all debugging is over]
+
+        >>> sersic_obj = Sersic(n=3.5, half_light_radius=2.5, flux=40.)
+        >>> sersic_obj.getHalfLightRadius()
+        2.5
+
     Methods
     -------
     The Sersic is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),

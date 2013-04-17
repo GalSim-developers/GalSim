@@ -155,17 +155,26 @@ namespace galsim {
             else
                 return this->_n < rhs._n;
         }
+        void write(std::ostream& fout) const
+        { fout << "(" << n << "," << maxRre << "," << flux_untruncated << ")" ; }
+        friend std::ostream& operator<<(std::ostream& os, const SersicKey& s);
+
     private:
         double _n;
         double _maxRre;
         bool _fu;
     };
 
+    std::ostream& operator<<(std::ostream& os, const SersicKey& s)
+    { s.write(os); return os; }
+
+
     /** 
      * @brief A map to hold one copy of the SersicInfo for each `n` ever used during the 
      * program run.  Make one static copy of this map.  
      * *Be careful of this when multithreading:*
-     * Should build one `SBSersic` with each `(n, maxRre)` pair before dispatching multiple threads.
+     * Should build one `SBSersic` with each `(n, maxRre, flux_untruncated)` key before
+     * dispatching multiple threads.
      */
     class SBSersic::InfoBarn : public std::map<SersicKey, boost::shared_ptr<SersicInfo> >
     {
@@ -183,8 +192,8 @@ namespace galsim {
         const SersicInfo* get(double n, double maxRre, bool flux_untruncated)
         {
             /** 
-             * @brief The currently hardwired max number of Sersic `(n, maxRre)` info tables that
-             * can be stored.  Should be plenty.
+             * @brief The currently hardwired max number of Sersic `(n, maxRre, flux_untruncated)`
+             * info tables that can be stored.  Should be plenty.
              */
             const int MAX_SERSIC_TABLES = 100; 
 
@@ -194,7 +203,8 @@ namespace galsim {
             boost::shared_ptr<SersicInfo> info(new SersicInfo(n, maxRre, flux_untruncated));
                 _map[key] = info;
                 if (int(_map.size()) > MAX_SERSIC_TABLES)
-                    throw SBError("Storing Sersic info for too many (n, maxRre, flux_untruncated) indices");
+                    throw SBError(
+                        "Storing Sersic info for too many (n, maxRre, flux_untruncated) indices");
                 return info.get();
             } else {
                 return it->second.get();
