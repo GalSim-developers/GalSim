@@ -222,4 +222,150 @@ namespace galsim {
         dbg<<"Convolve Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }
+
+    //
+    // AutoConvolve 
+    // 
+    
+    SBAutoConvolve::SBAutoConvolve(const SBProfile& s,
+                                   boost::shared_ptr<GSParams> gsparams) :
+        SBProfile(new SBAutoConvolveImpl(s, gsparams)) {}
+    SBAutoConvolve::SBAutoConvolve(const SBAutoConvolve& rhs) : SBProfile(rhs) {}
+    SBAutoConvolve::~SBAutoConvolve() {}
+
+    SBAutoConvolve::SBAutoConvolveImpl::SBAutoConvolveImpl(const SBProfile& s,
+                                                           boost::shared_ptr<GSParams> gsparams) :
+        SBProfileImpl(gsparams.get() ? gsparams : GetImpl(s)->gsparams),
+        _adaptee(s) {}
+
+    double SBAutoConvolve::SBAutoConvolveImpl::xValue(const Position<double>& pos) const
+    { return RealSpaceConvolve(_adaptee,_adaptee,pos,getFlux(),this->gsparams.get()); }
+
+    void SBAutoConvolve::SBAutoConvolveImpl::fillKValue(
+        tmv::MatrixView<std::complex<double> > val,
+        double x0, double dx, int ix_zero,
+        double y0, double dy, int iy_zero) const
+    {
+        dbg<<"SBAutoConvolve fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
+        GetImpl(_adaptee)->fillKValue(val,x0,dx,ix_zero,y0,dy,iy_zero);
+        val = ElemProd(val,val);
+    }
+
+    void SBAutoConvolve::SBAutoConvolveImpl::fillKValue(
+        tmv::MatrixView<std::complex<double> > val,
+        double x0, double dx, double dxy,
+        double y0, double dy, double dyx) const
+    {
+        dbg<<"SBConvolve fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        GetImpl(_adaptee)->fillKValue(val,x0,dx,dxy,y0,dy,dyx);
+        val = ElemProd(val,val);
+    }
+ 
+    double SBAutoConvolve::SBAutoConvolveImpl::getPositiveFlux() const 
+    {
+        double p = _adaptee.getPositiveFlux();
+        double n = _adaptee.getNegativeFlux();
+        return p*p + n*n;
+    }
+
+    double SBAutoConvolve::SBAutoConvolveImpl::getNegativeFlux() const 
+    {
+        double p = _adaptee.getPositiveFlux();
+        double n = _adaptee.getNegativeFlux();
+        return 2.*p*n;
+    }
+
+    boost::shared_ptr<PhotonArray> SBAutoConvolve::SBAutoConvolveImpl::shoot(
+        int N, UniformDeviate u) const 
+    {
+        dbg<<"AutoConvolve shoot: N = "<<N<<std::endl;
+        dbg<<"Target flux = "<<getFlux()<<std::endl;
+        boost::shared_ptr<PhotonArray> result = _adaptee.shoot(N, u);
+        result->convolve(*_adaptee.shoot(N, u), u);
+        dbg<<"AutoConvolve Realized flux = "<<result->getTotalFlux()<<std::endl;
+        return result;
+    }
+
+
+    //
+    // AutoCorrelate
+    // 
+    
+    SBAutoCorrelate::SBAutoCorrelate(const SBProfile& s,
+                                     boost::shared_ptr<GSParams> gsparams) :
+        SBProfile(new SBAutoCorrelateImpl(s, gsparams)) {}
+    SBAutoCorrelate::SBAutoCorrelate(const SBAutoCorrelate& rhs) : SBProfile(rhs) {}
+    SBAutoCorrelate::~SBAutoCorrelate() {}
+
+    SBAutoCorrelate::SBAutoCorrelateImpl::SBAutoCorrelateImpl(const SBProfile& s,
+                                                              boost::shared_ptr<GSParams> gsparams) :
+        SBProfileImpl(gsparams.get() ? gsparams : GetImpl(s)->gsparams),
+        _adaptee(s) {}
+
+    double SBAutoCorrelate::SBAutoCorrelateImpl::xValue(const Position<double>& pos) const
+    { 
+        SBProfile temp = _adaptee;
+        temp.applyRotation(180. * degrees);
+        return RealSpaceConvolve(_adaptee,temp,pos,getFlux(),this->gsparams.get());
+    }
+
+    void SBAutoCorrelate::SBAutoCorrelateImpl::fillKValue(
+        tmv::MatrixView<std::complex<double> > val,
+        double x0, double dx, int ix_zero,
+        double y0, double dy, int iy_zero) const
+    {
+        dbg<<"SBAutoCorrelate fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
+        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
+        GetImpl(_adaptee)->fillKValue(val,x0,dx,ix_zero,y0,dy,iy_zero);
+        val = ElemProd(val,val.conjugate());
+    }
+
+    void SBAutoCorrelate::SBAutoCorrelateImpl::fillKValue(
+        tmv::MatrixView<std::complex<double> > val,
+        double x0, double dx, double dxy,
+        double y0, double dy, double dyx) const
+    {
+        dbg<<"SBCorrelate fillKValue\n";
+        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        GetImpl(_adaptee)->fillKValue(val,x0,dx,dxy,y0,dy,dyx);
+        val = ElemProd(val,val.conjugate());
+    }
+ 
+    double SBAutoCorrelate::SBAutoCorrelateImpl::getPositiveFlux() const 
+    {
+        double p = _adaptee.getPositiveFlux();
+        double n = _adaptee.getNegativeFlux();
+        return p*p + n*n;
+    }
+
+    double SBAutoCorrelate::SBAutoCorrelateImpl::getNegativeFlux() const 
+    {
+        double p = _adaptee.getPositiveFlux();
+        double n = _adaptee.getNegativeFlux();
+        return 2.*p*n;
+    }
+
+    boost::shared_ptr<PhotonArray> SBAutoCorrelate::SBAutoCorrelateImpl::shoot(
+        int N, UniformDeviate u) const 
+    {
+        dbg<<"AutoCorrelate shoot: N = "<<N<<std::endl;
+        dbg<<"Target flux = "<<getFlux()<<std::endl;
+        boost::shared_ptr<PhotonArray> result = _adaptee.shoot(N, u);
+        boost::shared_ptr<PhotonArray> result2 = _adaptee.shoot(N, u);
+        // Flip sign of (x,y) in one of the results
+        for (int i=0; i<result2->size(); i++) {
+            Position<double> negxy = -Position<double>(result2->getX(i), result2->getY(i));
+            result2->setPhoton(i, negxy.x, negxy.y, result2->getFlux(i));
+        }
+        result->convolve(*result2, u);
+        dbg<<"AutoCorrelate Realized flux = "<<result->getTotalFlux()<<std::endl;
+        return result;
+    }
+
 }

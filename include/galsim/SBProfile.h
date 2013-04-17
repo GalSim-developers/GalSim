@@ -135,20 +135,20 @@ namespace galsim {
             {}
 
         // These are all public.  So you access them just as member values.
-        const int minimum_fft_size;
-        const int maximum_fft_size;
+        int minimum_fft_size;
+        int maximum_fft_size;
 
-        const double alias_threshold;
-        const double maxk_threshold;
+        double alias_threshold;
+        double maxk_threshold;
 
-        const double kvalue_accuracy;
-        const double xvalue_accuracy;
-        const double shoot_accuracy;
+        double kvalue_accuracy;
+        double xvalue_accuracy;
+        double shoot_accuracy;
 
-        const double realspace_relerr;
-        const double realspace_abserr;
-        const double integration_relerr;
-        const double integration_abserr;
+        double realspace_relerr;
+        double realspace_abserr;
+        double integration_relerr;
+        double integration_abserr;
     };
 
     // All code between the @cond and @endcond is excluded from Doxygen documentation

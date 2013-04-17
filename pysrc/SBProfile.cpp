@@ -69,7 +69,7 @@ namespace galsim {
                 "                          choose the outer radius such that the integral\n"
                 "                          encloses at least (1-shoot_accuracy) of the flux.\n"
                 "realspace_relerr=1.e-3    The relative accuracy for realspace convolution.\n"
-                "realspace_relerr=1.e-6    The absolute accuracy for realspace convolution.\n"
+                "realspace_abserr=1.e-6    The absolute accuracy for realspace convolution.\n"
                 "integration_relerr=1.e-5  The relative accuracy for integrals (other than\n"
                 "                          real-space convolution).\n"
                 "integration_abserr=1.e-7  The absolute accuracy for integrals (other than\n"
@@ -92,17 +92,17 @@ namespace galsim {
                           bp::arg("integration_relerr")=1.e-5,
                           bp::arg("integration_abserr")=1.e-7))
                 )
-                .def_readonly("minimum_fft_size", &GSParams::minimum_fft_size)
-                .def_readonly("maximum_fft_size", &GSParams::maximum_fft_size)
-                .def_readonly("alias_threshold", &GSParams::alias_threshold)
-                .def_readonly("maxk_threshold", &GSParams::maxk_threshold)
-                .def_readonly("kvalue_accuracy", &GSParams::kvalue_accuracy)
-                .def_readonly("xvalue_accuracy", &GSParams::xvalue_accuracy)
-                .def_readonly("shoot_accuracy", &GSParams::shoot_accuracy)
-                .def_readonly("realspace_relerr", &GSParams::realspace_relerr)
-                .def_readonly("realspace_abserr", &GSParams::realspace_abserr)
-                .def_readonly("integration_relerr", &GSParams::integration_relerr)
-                .def_readonly("integration_abserr", &GSParams::integration_abserr)
+                .def_readwrite("minimum_fft_size", &GSParams::minimum_fft_size)
+                .def_readwrite("maximum_fft_size", &GSParams::maximum_fft_size)
+                .def_readwrite("alias_threshold", &GSParams::alias_threshold)
+                .def_readwrite("maxk_threshold", &GSParams::maxk_threshold)
+                .def_readwrite("kvalue_accuracy", &GSParams::kvalue_accuracy)
+                .def_readwrite("xvalue_accuracy", &GSParams::xvalue_accuracy)
+                .def_readwrite("shoot_accuracy", &GSParams::shoot_accuracy)
+                .def_readwrite("realspace_relerr", &GSParams::realspace_relerr)
+                .def_readwrite("realspace_abserr", &GSParams::realspace_abserr)
+                .def_readwrite("integration_relerr", &GSParams::integration_relerr)
+                .def_readwrite("integration_abserr", &GSParams::integration_abserr)
                 ;
         }
     };
