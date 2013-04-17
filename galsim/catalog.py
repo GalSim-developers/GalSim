@@ -99,8 +99,12 @@ class InputCatalog(object):
         # we have any str fields, they don't give an error here.  They'll only give an 
         # error if one tries to convert them to float at some point.
         self.data = numpy.loadtxt(self.file_name, comments=comments, dtype=str)
+        # If only one row, then the shape comes in as one-d.
         if len(self.data.shape) == 1:
             self.data = self.data.reshape(1, -1)
+        if len(self.data.shape) != 2:
+            raise IOError('Unable to parse the input catalog as a 2-d array')
+
         self.nobjects = self.data.shape[0]
         self.ncols = self.data.shape[1]
         self.isfits = False
@@ -143,10 +147,7 @@ class InputCatalog(object):
                 raise IndexError("Object %d is invalid for column %s"%(index,col))
             return self.data[col][index]
         else:
-            try:
-                icol = int(col)
-            except:
-                raise ValueError("For ASCII catalogs, col must be an integer")
+            icol = int(col)
             if icol < 0 or icol >= self.ncols:
                 raise IndexError("Column %d is invalid for catalog %s"%(icol,self.file_name))
             if index < 0 or index >= self.nobjects:
@@ -156,20 +157,10 @@ class InputCatalog(object):
     def getFloat(self, index, col):
         """Return the data for the given index and col as a float if possible
         """
-        try:
-            return float(self.get(index,col))
-        except Exception,e:
-            print e
-            raise TypeError("The data at (%d,%s) in catalog %s could not be converted to float"%(
-                    index,col,self.file_name))
+        return float(self.get(index,col))
 
     def getInt(self, index, col):
         """Return the data for the given index and col as an int if possible
         """
-        try:
-            return int(self.get(index,col))
-        except Exception,e:
-            print e
-            raise TypeError("The data at (%d,%s) in catalog %s could not be converted to int"%(
-                    index,col,self.file_name))
+        return int(self.get(index,col))
 
