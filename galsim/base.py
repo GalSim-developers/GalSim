@@ -2686,8 +2686,7 @@ class Deconvolve(GSObject):
     def __init__(self, farg, gsparams=None):
         if isinstance(farg, GSObject):
             self.farg = farg
-            GSObject.__init__(self, galsim.SBDeconvolve(self.farg.SBProfile,
-                                                        gsparams=gsparams))
+            GSObject.__init__(self, galsim.SBDeconvolve(self.farg.SBProfile, gsparams=gsparams))
         else:
             raise TypeError("Argument to Deconvolve must be a GSObject.")
 

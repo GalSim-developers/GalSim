@@ -473,8 +473,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         @param gsparams  You may also specify a gsparams argument.  See the docstring for 
                          GSObject for more information about this option.
         """
-        self._profile = galsim.Convolve([self._profile, galsim.AutoCorrelate(gsobject)],
-                                        gsparams=gsparams)
+        self._profile = galsim.Convolve(
+            [self._profile, galsim.AutoCorrelate(gsobject)], gsparams=gsparams)
 
     def draw(self, image=None, dx=None, wmult=1., add_to_image=False):
         """The draw method for profiles storing correlation functions.
