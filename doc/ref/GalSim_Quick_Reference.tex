@@ -768,7 +768,7 @@ classes for users are:
     \texttt{E\_power\_function} and \texttt{B\_power\_function}.  The
     \texttt{getShear(\dots)} method is used to generate a random realization of
     a shear field from a given \texttt{PowerSpectrum} object,
-    optionally with convergences as well.}
+    and there are methods to get convergence or magnification as well.}
 
 \item[$\circ$]
   \texttt{galsim.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1lensing_1_1_n_f_w_halo.html}{\texttt{NFWHalo}}\texttt{(\dots)}
@@ -782,6 +782,11 @@ classes for users are:
 
 These classes have additional requirements on the units used to specify
 positions; see the documentation for these classes for more details.
+
+The GalSim repository also contains a module with a
+PowerSpectrumEstimator class that can be used to estimate shear power
+spectra from gridded shear values even if GalSim is not installed:
+galsim/pse.py (see documentation in that file for more information).
 
 \subsection{Additional FITS input/output tools}\label{sect:multifits}
 
