@@ -48,7 +48,7 @@ test_fwhm = 1.8
 test_sigma = 1.8
 test_scale = 1.8
 test_sersic_n = [1.5, 2.5]
-test_sersic_trunc = [0., 13.]
+test_sersic_trunc = [0., 8.5]
 
 # for flux normalization tests
 test_flux = 1.8
@@ -585,6 +585,16 @@ def test_sersic_radii():
             np.testing.assert_almost_equal(
                     hlr_sum, 0.5, decimal=4,
                     err_msg="Error in Sersic constructor with half-light radius, n = %d"%n)
+
+            # Test flux_untruncated scale and normalization  ****
+            test_gal2 = galsim.Sersic(n=n, half_light_radius=test_hlr, trunc=trunc, flux=1.,
+                                      flux_untruncated=True)
+            center = test_gal.xValue(galsim.PositionD(0,0))
+            center2 = test_gal2.xValue(galsim.PositionD(0,0))
+            ratio = center / center2
+            print 'peak value = ', center, center2
+            print 'hlr = ', test_gal.getHalfLightRadius(), test_gal2.getHalfLightRadius()
+            np.testing.assert_equal(ratio, 1.)
 
             # Check that the getters don't work after modifying the original.
             test_gal_shear = test_gal.copy()
