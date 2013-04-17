@@ -72,15 +72,10 @@ class InputCatalog(object):
             raise ValueError("file_type must be either FITS or ASCII if specified.")
         self.file_type = file_type
 
-        try:
-            if file_type == 'FITS':
-                self.read_fits(hdu, nobjects_only)
-            else:
-                self.read_ascii(comments, nobjects_only)
-        except Exception, e:
-            print e
-            raise RuntimeError("Unable to read %s catalog file %s."%(
-                    self.file_type, self.file_name))
+        if file_type == 'FITS':
+            self.read_fits(hdu, nobjects_only)
+        else:
+            self.read_ascii(comments, nobjects_only)
             
     def read_ascii(self, comments, nobjects_only):
         """Read in an input catalog from an ASCII file.

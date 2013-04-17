@@ -406,11 +406,7 @@ def _BuildSimple(config, key, base, ignore):
         safe = False
 
     # Finally, after pulling together all the params, try making the GSObject.
-    try:
-        return init_func(**kwargs), safe
-    except Exception, err_msg:
-        raise RuntimeError("Unable to construct %s object with kwargs=%s.\n"%(type,str(kwargs)) +
-                           "Original error message: %s"%err_msg)
+    return init_func(**kwargs), safe
 
 
 def _TransformObject(gsobject, config, base):
