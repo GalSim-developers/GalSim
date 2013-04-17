@@ -38,7 +38,7 @@ struct PyCppShear {
         double ar[4] = { a, c, c, b };
         PyObject* r = PyArray_SimpleNewFromData(2, dim, NPY_DOUBLE, ar);
         if (!r) throw bp::error_already_set();
-        PyObject* r2 = PyArray_FROM_OF(r, NPY_ENSURECOPY);
+        PyObject* r2 = PyArray_FROM_OF(r, NPY_ARRAY_ENSURECOPY);
         Py_DECREF(r);
         return bp::handle<>(r2);
     }
@@ -118,7 +118,7 @@ struct PyCppEllipse {
         tmv::Matrix<double> m = self.getMatrix();
         PyObject* r = PyArray_SimpleNewFromData(2, dim, NPY_DOUBLE, m.ptr());
         if (!r) throw bp::error_already_set();
-        PyObject* r2 = PyArray_FROM_OF(r, NPY_ENSURECOPY);
+        PyObject* r2 = PyArray_FROM_OF(r, NPY_ARRAY_ENSURECOPY);
         Py_DECREF(r);
         return bp::handle<>(r2);
     }
