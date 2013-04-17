@@ -155,9 +155,110 @@ def convert_interpolant_to_2d(interpolant):
         except:
             raise RuntimeError('Specified interpolant is not valid!')
 
+class ComparisonShapeData(object):
+    """A class to contain the outputs of a comparison between photon shooting and DFT rendering of
+    GSObjects, as measured by the HSM module's FindAdaptiveMom or (in future) EstimateShearHSM.
+
+    Currently this class contains the following attributes (see also the HSMShapeData
+    documentation for a more detailed description of, e.g., observed_shape, moments_sigma)
+    describing the results of the comparison:
+
+    - g1obs_draw: observed_shape.g1 from adaptive moments on a GSObject image rendered using .draw()
+
+    - g2obs_draw: observed_shape.g2 from adaptive moments on a GSObject image rendered using .draw()
+
+    - sigma_draw: moments_sigma from adaptive moments on a GSObject image rendered using .draw()
+
+    - delta_g1obs: estimated mean difference between i) observed_shape.g1 from images of the same
+      GSObject rendered with .drawShoot(), and ii) `g1obs_draw`.
+
+    - delta_g2obs: estimated mean difference between i) observed_shape.g2 from images of the same
+      GSObject rendered with .drawShoot(), and ii) `g1obs_draw`.
+
+    - delta_sigma: estimated mean difference between i) moments_sigma from images of the same
+      GSObject rendered with .drawShoot(), and ii) `sigma_draw`.
+
+    - err_g1obs: standard error in `delta_g1obs` estimated from the test sample.
+
+    - err_g2obs: standard error in `delta_g2obs` estimated from the test sample.
+
+    - err_sigma: standard error in `delta_sigma` estimated from the test sample.
+
+    The ComparisonShapeData instance also stores much of the meta-information about the tests:
+
+    - gsobject: the galsim.GSObject for which this test was performed (prior to PSF convolution if
+      a PSF was also supplied).
+
+    - psf_object: the optional additional PSF supplied by the user for tests of convolved objects,
+      will be `None` if not used.
+
+    - imsize: the size of the  images tested - all test images are currently square.
+
+    - dx: the pixel scale in the images tested.
+
+    - wmult: the `wmult` parameter used in .draw() (see the GSObject .draw() method docs for more
+      details).
+
+    - n_iterations: number of iterations of `n_trials` trials required to get delta quantities to
+      the above accuracy.
+
+    - n_trials_per_iter: number of trial images of used to estimate or successively re-estimate the
+      standard error on the delta quantities above for each iteration.
+
+    - n_photons_per_trial: number of photons shot in drawShoot() for each trial.
+
+    - time: the time taken to perform the test.
+
+    Note this is really only a simple storage container for the results above.  All of the
+    non trivial calculation is completed before a ComparisonShapeData instance is initialized,
+    typically in the function compare_object_dft_vs_photon.
+    """
+    def __init__(self, g1obs_draw, g2obs_draw, sigma_draw, g1obs_shoot, g2obs_shoot, sigma_shoot,
+                 err_g1obs, err_g2obs, err_sigma, gsobject, psf_object, imsize, dx, wmult,
+                 n_iterations, n_trials_per_iter, n_photons_per_trial, time):
+
+        self.g1obs_draw = g1obs_draw
+        self.g2obs_draw = g2obs_draw
+        self.sigma_draw = sigma_draw
+        
+        self.delta_g1obs = g1obs_draw - g1obs_shoot
+        self.delta_g2obs = g2obs_draw - g2obs_shoot
+        self.delta_sigma = sigma_draw - sigma_shoot
+
+        self.err_g1obs = err_g1obs
+        self.err_g2obs = err_g2obs
+        self.err_sigma = err_sigma
+
+        self.gsobject = gsobject
+        self.psf_object = psf_object
+        self.imsize = imsize
+        self.dx = dx
+        self.wmult = wmult
+        self.n_iterations = n_iterations
+        self.n_trials_per_iter = n_trials_per_iter
+        self.n_photons_per_trial = n_photons_per_trial
+        self.time = time
+
+    def __str__(self):
+        retval = "g1obs_draw  = "+str(self.g1obs_draw)+"\n"+\
+                 "delta_g1obs = "+str(self.delta_g1obs)+" +/- "+str(self.err_g1obs)+"\n"+\
+                 "\n"+\
+                 "g2obs_draw  = "+str(self.g2obs_draw)+"\n"+\
+                 "delta_g2obs = "+str(self.delta_g2obs)+" +/- "+str(self.err_g2obs)+"\n"+\
+                 "\n"+\
+                 "sigma_draw  = "+str(self.sigma_draw)+"\n"+\
+                 "delta_sigma = "+str(self.delta_sigma)+" +/- "+str(self.err_sigma)+"\n"+\
+                 "\n"+\
+                 "time taken = "+str(self.time)+" s" 
+        return retval
+
+    # Reuse the __str__ method for __repr__
+    __repr__ = __str__
+
+
 def compare_object_dft_vs_photon(gsobject, psf_object=None, moments=True, hsm=False, dx=1.,
-    imsize=512, wmult=4., abs_tol_ellip=1.e-5, abs_tol_size=1.e-5, rng=None, n_trials_per_iter=30,
-    n_photons_per_trial=1e6, ncores=1):
+                                 imsize=512, wmult=4., abs_tol_ellip=1.e-5, abs_tol_size=1.e-5,
+                                 rng=None, n_trials_per_iter=32, n_photons_per_trial=1e7, ncores=1):
     """Take an input object and render it in two ways comparing results at high precision.
 
     Using both photon shooting (via drawShoot) and Discrete Fourier Transform (via shoot) to render
@@ -168,7 +269,7 @@ def compare_object_dft_vs_photon(gsobject, psf_object=None, moments=True, hsm=Fa
     mean absolute and fractional uncertainty drop below `abs_err` and `frac_err`.
     """
     import logging
-        
+    import time     
     # Some sanity checks on inputs
     if hsm is True:
         if psf_object is None:
@@ -184,18 +285,26 @@ def compare_object_dft_vs_photon(gsobject, psf_object=None, moments=True, hsm=Fa
     def _stderr(array_like):
         return np.std(np.asarray(array_like)) / np.sqrt(len(array_like))
 
-    def _shoot_trials(gsobject, rho4_list, g1obs_list, g2obs_list, ntrials, dx, imsize, rng, 
-        n_photons):
-        """Convenience function to run ntrials and collect the results
+    def _shoot_trials(gsobject, ntrials, dx, imsize, rng, n_photons):
+        """Convenience function to run ntrials and collect the results.
+
+        Uses a Python for loop but this is very unlikely to be a rate determining factor provided
+        n_photons is suitably large (>1e6).
         """
+        g1obslist = []
+        g2obslist = []
+        sigmalist = []
         im = galsim.ImageF(imsize, imsize)
         for i in xrange(ntrials):
             gsobject.drawShoot(im, dx=dx, n_photons=n_photons, rng=rng)
             res = im.FindAdaptiveMom()
-            rho4_list.append(res.moments_rho4)
-            g1obs_list.append(res.observed_shape.g1)
-            g2obs_list.append(res.observed_shape.g2)
-        return rho4_list, g1obs_list, g2obs_list
+            g1obslist.append(res.observed_shape.g1)
+            g2obslist.append(res.observed_shape.g2)
+            sigmalist.append(res.moments_sigma)
+        return g1obslist, g2obslist, sigmalist
+
+    # Start the timer
+    t1 = time.time()
 
     # If a PSF is supplied, do the convolution, otherwise just use the gal_object
     if psf_object is None:
@@ -209,36 +318,43 @@ def compare_object_dft_vs_photon(gsobject, psf_object=None, moments=True, hsm=Fa
     im_draw = galsim.ImageF(imsize, imsize)
     test_object.draw(im_draw, dx=dx, wmult=wmult)
     res_draw = im_draw.FindAdaptiveMom()
-    rho4_draw = res_draw.moments_rho4
+    sigma_draw = res_draw.moments_sigma
     g1obs_draw = res_draw.observed_shape.g1
     g2obs_draw = res_draw.observed_shape.g2
 
     # Do the trials
-    rho4_shoot_list = []
+    sigma_shoot_list = []
     g1obs_shoot_list = []
     g2obs_shoot_list = [] 
-    rho4err = 666.
+    sigmaerr = 666. # Slightly kludgy
     g1obserr = 666.
     g2obserr = 666.
     itercount = 0
-    while (rho4err > abs_tol_size) or (g1obserr > abs_tol_ellip) or (g2obserr > abs_tol_ellip):
-        rho4_shoot_list, g1obs_shoot_list, g2_shoot_list = _shoot_trials(
-            test_object, rho4_shoot_list, g1obs_shoot_list, g2obs_shoot_list, n_trials_per_iter, dx,
-            imsize, rng, n_photons_per_trial)
-        rho4err = _stderr(rho4_shoot_list)
+    while (g1obserr > abs_tol_ellip) or (g2obserr > abs_tol_ellip) or (sigmaerr > abs_tol_size):
+
+        # Run the trials using helper function
+        g1obs_list_tmp, g2obs_list_tmp, sigma_list_tmp = _shoot_trials(
+            test_object, n_trials_per_iter, dx, imsize, rng, n_photons_per_trial)
+
+        # Collect results and calculate new standard error
+        g1obs_shoot_list.extend(g1obs_list_tmp)
+        g2obs_shoot_list.extend(g2obs_list_tmp)
+        sigma_shoot_list.extend(sigma_list_tmp)
         g1obserr = _stderr(g1obs_shoot_list)
         g2obserr = _stderr(g2obs_shoot_list)
+        sigmaerr = _stderr(sigma_shoot_list)
         itercount += 1
         logging.debug('Completed '+str(itercount)+' iterations')
-        print 'Completed '+str(itercount)+' iterations'
-        print '(rho4err, g1obserr, g2obserr) = '+str(rho4err)+', '+str(g1obserr)+', '+str(g2obserr)
+        logging.debug(
+            '(g1obserr, g2obserr, sigmaerr) = '+str(g1obserr)+', '+str(g2obserr)+', '+str(sigmaerr))
 
+    # Take the runtime and collate results into a ComparisonShapeData
+    runtime = time.time() - t1
+    results = ComparisonShapeData(
+        g1obs_draw, g2obs_draw, sigma_draw,
+        _mean(g1obs_shoot_list), _mean(g2obs_shoot_list), _mean(sigma_shoot_list),
+        g1obserr, g2obserr, sigmaerr, gsobject, psf_object, imsize, dx, wmult,
+        itercount, n_trials_per_iter, n_photons_per_trial, runtime)
 
-    rho4_shoot = _mean(rho4_shoot_list)
-    g1obs_shoot = _mean(g1obs_shoot_list)
-    g2obs_shoot = _mean(g2obs_shoot_list)
-
-    return rho4_draw, g1obs_draw, g2obs_draw, \
-           rho4_draw - rho4_shoot, g1obs_draw - g1obs_shoot, g2obs_draw - g2obs_shoot, \
-           rho4err, g1obserr, g2obserr 
-
+    logging.info(str(results))
+    return results
