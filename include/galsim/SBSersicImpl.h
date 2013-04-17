@@ -156,7 +156,7 @@ namespace galsim {
                 return this->_n < rhs._n;
         }
         void write(std::ostream& fout) const
-        { fout << "(" << n << "," << maxRre << "," << flux_untruncated << ")" ; }
+        { fout << "(" << _n << "," << _maxRre << "," << _fu << ")" ; }
         friend std::ostream& operator<<(std::ostream& os, const SersicKey& s);
 
     private:
