@@ -2384,9 +2384,8 @@ class RealGalaxy(GSObject):
         if specify_size is False:
             # Make the SBInterpolatedImage out of the image.
             self.original_image = galsim.SBInterpolatedImage(
-                    gal_image, xInterp=self.x_interpolant, kInterp=self.k_interpolant,
-                    dx=self.pixel_scale, pad_factor=pad_factor, pad_image=pad_image, 
-                    gsparams=gsparams)
+                gal_image, xInterp=self.x_interpolant, kInterp=self.k_interpolant,
+                dx=self.pixel_scale, pad_factor=pad_factor, pad_image=pad_image, gsparams=gsparams)
         else:
             # Leave the original image as-is.  Instead, we shift around the image to be used for
             # padding.  Find out how much x and y margin there should be on lower end:
@@ -2399,14 +2398,14 @@ class RealGalaxy(GSObject):
             # Set the central values of pad_image to be equal to the input image
             pad_image[gal_image.bounds] = gal_image
             self.original_image = galsim.SBInterpolatedImage(
-                    pad_image, xInterp=self.x_interpolant, kInterp=self.k_interpolant,
-                    dx=self.pixel_scale, pad_factor=1., gsparams=gsparams)
+                pad_image, xInterp=self.x_interpolant, kInterp=self.k_interpolant,
+                dx=self.pixel_scale, pad_factor=1., gsparams=gsparams)
 
         # also make the original PSF image, with far less fanfare: we don't need to pad with
         # anything interesting.
         self.original_PSF = galsim.SBInterpolatedImage(
-                PSF_image, xInterp=self.x_interpolant, kInterp=self.k_interpolant,
-                dx=self.pixel_scale, gsparams=gsparams)
+            PSF_image, xInterp=self.x_interpolant, kInterp=self.k_interpolant, dx=self.pixel_scale,
+            gsparams=gsparams)
 
         # recalculate Fourier-space attributes rather than using overly-conservative defaults
         self.original_image.calculateStepK()
@@ -2423,8 +2422,8 @@ class RealGalaxy(GSObject):
         # Calculate the PSF "deconvolution" kernel
         psf_inv = galsim.SBDeconvolve(self.original_PSF, gsparams=gsparams)
         # Initialize the SBProfile attribute
-        GSObject.__init__(self, galsim.SBConvolve([self.original_image, psf_inv],
-                                                  gsparams=gsparams))
+        GSObject.__init__(
+            self, galsim.SBConvolve([self.original_image, psf_inv], gsparams=gsparams))
 
     def getHalfLightRadius(self):
         raise NotImplementedError("Half light radius calculation not implemented for RealGalaxy "
