@@ -203,7 +203,7 @@ def compare_object_dft_vs_photon(gsobject, psf_object=None, moments=True, hsm=Fa
         test_object = gsobject
     else:
         logging.info('Generating test_object by convolving gsobject with input psf_object')
-        test_object = galsim.Convolve([gsbject, psf_object])
+        test_object = galsim.Convolve([gsobject, psf_object])
 
     # Draw the shoot image, only needs to be done once
     im_draw = galsim.ImageF(imsize, imsize)
