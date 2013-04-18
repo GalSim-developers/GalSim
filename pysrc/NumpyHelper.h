@@ -42,6 +42,7 @@
     #define NPY_OLD_API
     #define NPY_ARRAY_ALIGNED NPY_ALIGNED
     #define NPY_ARRAY_WRITEABLE NPY_WRITEABLE
+    #define NPY_ARRAY_ENSURECOPY NPY_ENSURECOPY
 #endif
 
 namespace bp = boost::python;
