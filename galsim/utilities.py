@@ -387,6 +387,8 @@ def compare_object_dft_vs_photon(gsobject, psf_object=None, moments=True, hsm=Fa
             return res.observed_shape.g1, res.observed_shape.g2, res.moments_sigma
 
         # Then make the single input worker function using functools.partial
+        # HMMMM this is giving gripes, potentially due to non-picklability of the gsobject,
+        # will test...
         _shoot_worker = partial(_shoot_profile, gsobject=gsobject, dx=dx, nphotons=nphotons)
 
         # Set up a seed bank that will provide a unique starting seed to every individual trial;
