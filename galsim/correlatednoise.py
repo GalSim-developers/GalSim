@@ -962,13 +962,13 @@ def getCOSMOSNoise(rng, file_name, dx_cosmos=0.03, variance=0., x_interpolant=No
         raise IOError("The input file_name '"+str(file_name)+"' does not exist.")
     try:
         cfimage = galsim.fits.read(file_name)
-    except Exception as original_exception:
+    except Exception:
         # Give a vaguely helpful warning, then raise the original exception for extra diagnostics
         import warnings
         warnings.warn(
             "Function getCOSMOSNoise() unable to read FITS image from "+str(file_name)+", "+
             "more information on the error in the following Exception...")
-        raise original_exception
+        raise
 
     # Then check for negative variance before doing anything time consuming
     if variance < 0:
