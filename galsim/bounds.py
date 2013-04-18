@@ -86,6 +86,17 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
 
     Then the bounds will end up as the bounding box of all the positions that were added to it.
 
+    You can also find the interesection of two bounds with the & operator:
+
+        >>> overlap = bounds1 & bounds2
+
+    This is useful for adding one image to another when part of the first image might fall off
+    the edge of the other image:
+
+        >>> overlap = stamp.bounds & image.bounds
+        >>> image[overlap] += stamp[overlap]
+
+
     Methods
     -------
     Bounds instances have a number of methods; please see the individual method docstrings for more
