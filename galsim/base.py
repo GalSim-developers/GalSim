@@ -792,10 +792,14 @@ class GSObject(object):
             image.added_flux = self.SBProfile.drawShoot(
                 image.view(), n_photons, uniform_deviate, gain, max_extra_noise, poisson_flux)
         except RuntimeError:
-            raise RuntimeError(
+            # Give some extra explanation as a warning, then raise the original exception
+            # so the traceback shows as much detail as possible.
+            import warnings
+            warnings.warn(
                 "Unable to drawShoot from this GSObject, perhaps it contains an SBDeconvolve "+
                 "in the SBProfile attribute or is a compound including one or more Deconvolve "+
                 "objects.")
+            raise
 
         return image
 
@@ -1658,12 +1662,9 @@ class InterpolatedImage(GSObject):
         if pad_image:
             specify_size = True
             if isinstance(pad_image, str):
-                try:
-                    pad_image = galsim.fits.read(pad_image)
-                except:
-                    raise RuntimeError("Can't read in Image for padding from specified file!")
-            if not isinstance(pad_image, galsim.BaseImageF) and not isinstance(pad_image,
-                                                                               galsim.BaseImageD):
+                pad_image = galsim.fits.read(pad_image)
+            if ( not isinstance(pad_image, galsim.BaseImageF) and 
+                 not isinstance(pad_image, galsim.BaseImageD) ):
                 raise ValueError("Supplied pad_image is not one of the allowed types!")
 
             # If an image was supplied directly or from a file, check its size:
@@ -1712,12 +1713,7 @@ class InterpolatedImage(GSObject):
                     # CorrelatedNoise instance, otherwise preserve the cached RNG
                     cn.setRNG(gaussian_deviate)
             elif isinstance(noise_pad, str):
-                try:
-                    cn = galsim.CorrelatedNoise(gaussian_deviate, galsim.fits.read(noise_pad))
-                except:
-                    raise RuntimeError(
-                        "Can't read in Image to define correlated noise field for noise padding "+
-                        "from specified file!")
+                cn = galsim.CorrelatedNoise(gaussian_deviate, galsim.fits.read(noise_pad))
                 if use_cache: 
                     InterpolatedImage._cache_noise_pad[noise_pad] = cn
             else:
@@ -2159,12 +2155,9 @@ class RealGalaxy(GSObject):
         if pad_image is not None:
             specify_size = True
             if isinstance(pad_image,str):
-                try:
-                    pad_image = galsim.fits.read(pad_image)
-                except:
-                    raise RuntimeError("Can't read in Image for padding from specified file!")
-            if not isinstance(pad_image, galsim.BaseImageF) and not isinstance(pad_image,
-                                                                               galsim.BaseImageD):
+                pad_image = galsim.fits.read(pad_image)
+            if ( not isinstance(pad_image, galsim.BaseImageF) and 
+                 not isinstance(pad_image, galsim.BaseImageD) ):
                 raise ValueError("Supplied pad_image is not one of the allowed types!")
             # If an image was supplied directly or from a file, check its size:
             #    Cannot use if too small.
@@ -2235,12 +2228,8 @@ class RealGalaxy(GSObject):
                     # preserving the correlation structure
                     cn.setVariance(self.pad_variance)
                 elif isinstance(noise_pad, str):
-                    try:
-                        tmp_img = galsim.fits.read(noise_pad)
-                        cn = galsim.CorrelatedNoise(gaussian_deviate, tmp_img)
-                    except:
-                        raise RuntimeError("Can't read in Image to define correlated noise " +
-                                           "field for noise padding from specified file!")
+                    tmp_img = galsim.fits.read(noise_pad)
+                    cn = galsim.CorrelatedNoise(gaussian_deviate, tmp_img)
                     if use_cache:
                         RealGalaxy._cache_noise_pad[noise_pad] = cn
                     # This small patch may have different overall variance, so rescale while
@@ -2621,14 +2610,8 @@ class Shapelet(GSObject):
     # --- Public Class methods ---
     def __init__(self, sigma, order, bvec=None):
         # Make sure order and sigma are the right type:
-        try:
-            order = int(order)
-        except:
-            raise TypeError("The provided order is not an int")
-        try:
-            sigma = float(sigma)
-        except:
-            raise TypeError("The provided sigma is not a float")
+        order = int(order)
+        sigma = float(sigma)
 
         # Make bvec if necessary
         if bvec is None:
@@ -2749,11 +2732,8 @@ class Shapelet(GSObject):
         """
         if not center:
             center = image.bounds.center()
-        try:
-            # convert from PositionI if necessary
-            center = galsim.PositionD(center.x,center.y)
-        except:
-            raise ValueError("Invalid center provided to fitImage: "+str(center))
+        # convert from PositionI if necessary
+        center = galsim.PositionD(center.x,center.y)
 
         if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
             raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+

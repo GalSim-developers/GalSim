@@ -315,7 +315,7 @@ def EstimateShearHSM(gal_image, PSF_image, weight = None, badpix = None, sky_var
                                                guess_y_centroid)
     except RuntimeError as err:
         if (strict == True):
-            raise err
+            raise
         else:
             result = _galsim._CppHSMShapeData()
             result.error_message = err.message
@@ -392,7 +392,7 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
                                               guess_y_centroid = guess_y_centroid)
     except RuntimeError as err:
         if (strict == True):
-            raise err
+            raise
         else:
             result = _galsim._CppHSMShapeData()
             result.error_message = err.message

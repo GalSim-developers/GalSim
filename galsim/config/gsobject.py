@@ -338,11 +338,7 @@ def _BuildPixel(config, key, base, ignore):
             "This is supported for the pixel, but not the draw routines. " +
             "There might be weirdness....")
 
-    try:
-        return galsim.Pixel(**kwargs), safe
-    except Exception, err_msg:
-        raise RuntimeError("Unable to construct Pixel object with kwargs=%s.\n"%str(kwargs) +
-                           "Original error message: %s"%err_msg)
+    return galsim.Pixel(**kwargs), safe
 
 
 def _BuildRealGalaxy(config, key, base, ignore):
@@ -372,11 +368,7 @@ def _BuildRealGalaxy(config, key, base, ignore):
             raise IndexError(
                 "%s index has gone past the number of entries in the catalog"%param_name)
 
-    try:
-        return galsim.RealGalaxy(real_cat, **kwargs), safe
-    except Exception, err_msg:
-        raise RuntimeError("Unable to construct RealGalaxy object with kwargs=%s.\n"%str(kwargs) +
-                           "Original error message: %s"%err_msg)
+    return galsim.RealGalaxy(real_cat, **kwargs), safe
 
 
 def _BuildSimple(config, key, base, ignore):
@@ -385,13 +377,10 @@ def _BuildSimple(config, key, base, ignore):
     """
     # Build the kwargs according to the various params objects in the class definition.
     type = config['type']
-    try:
-        if type in galsim.__dict__:
-            init_func = eval("galsim."+type)
-        else:
-            init_func = eval(type)
-    except:
-        raise TypeError('Invalid type = %s passed to BuildSimple'%type)
+    if type in galsim.__dict__:
+        init_func = eval("galsim."+type)
+    else:
+        init_func = eval(type)
 
     kwargs, safe = galsim.config.GetAllParams(config, key, base, 
                                               req = init_func._req_params,
@@ -406,11 +395,7 @@ def _BuildSimple(config, key, base, ignore):
         safe = False
 
     # Finally, after pulling together all the params, try making the GSObject.
-    try:
-        return init_func(**kwargs), safe
-    except Exception, err_msg:
-        raise RuntimeError("Unable to construct %s object with kwargs=%s.\n"%(type,str(kwargs)) +
-                           "Original error message: %s"%err_msg)
+    return init_func(**kwargs), safe
 
 
 def _TransformObject(gsobject, config, base):
