@@ -20,13 +20,13 @@ def test_comparison_basic():
 
     # Try a single core run
     res1 = galsim.utilities.compare_object_dft_vs_photon(
-        gal, psf_object=psf, imsize=imsize, dx=dx, abs_tol_ellip=1.e-4, abs_tol_size=3.e-4,
-        n_photons_per_trial=1e6, random_seed=12345, ncores=1)
+        gal, psf_object=psf, imsize=imsize, dx=dx, abs_tol_ellip=3.e-5, abs_tol_size=1.e-4,
+        n_photons_per_trial=1e7, random_seed=12345, ncores=1)
 
     # Then a multi core run
-    res4 = galsim.utilities.compare_object_dft_vs_photon(
-        gal, psf_object=psf, imsize=imsize, dx=dx, abs_tol_ellip=1.e-4, abs_tol_size=3.e-4,
-        n_photons_per_trial=1e6, random_seed=12345, ncores=4)
+    #res4 = galsim.utilities.compare_object_dft_vs_photon(
+    #    gal, psf_object=psf, imsize=imsize, dx=dx, abs_tol_ellip=1.e-4, abs_tol_size=3.e-4,
+    #    n_photons_per_trial=1e7, random_seed=12345, ncores=4)
 
     return
 

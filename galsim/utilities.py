@@ -255,6 +255,15 @@ class ComparisonShapeData(object):
     # Reuse the __str__ method for __repr__
     __repr__ = __str__
 
+# Define a module scope worker function for our multi-threading (must be defined at top-level scope,
+# see Python picklability rules:
+# http://docs.python.org/2/library/pickle.html#what-can-be-pickled-and-unpickled )
+def _shoot_profile(iseed, gsobject, dx, nphotons):
+    im = galsim.ImageF(imsize, imsize) 
+    gsobject.drawShoot(im, dx=dx, n_photons=nphotons, rng=galsim.BaseDeviate(iseed))
+    res = im.FindAdaptiveMom()
+    # Output as a tuple
+    return res.observed_shape.g1, res.observed_shape.g2, res.moments_sigma
 
 def compare_object_dft_vs_photon(gsobject, psf_object=None, moments=True, hsm=False, dx=1.,
                                  imsize=512, wmult=4., abs_tol_ellip=1.e-5, abs_tol_size=1.e-5,
@@ -376,19 +385,8 @@ def compare_object_dft_vs_photon(gsobject, psf_object=None, moments=True, hsm=Fa
         seed is set differently for each trial, and I STILL don't like this!
         """
         from functools import partial
-
-        # Then define a worker function that we will `partial`ize to fix all the non changing
-        # args leaving only the iseed
-        def _shoot_profile(iseed, gsobject, dx, nphotons):
-            im = galsim.ImageF(imsize, imsize) 
-            gsobject.drawShoot(im, dx=dx, n_photons=nphotons, rng=galsim.BaseDeviate(iseed))
-            res = im.FindAdaptiveMom()
-            # Output as a tuple
-            return res.observed_shape.g1, res.observed_shape.g2, res.moments_sigma
-
-        # Then make the single input worker function using functools.partial
-        # HMMMM this is giving gripes, potentially due to non-picklability of the gsobject,
-        # will test...
+        # Then make the single input worker function from the _shoot_profile (defined in the module
+        # scope) function using functools.partial
         _shoot_worker = partial(_shoot_profile, gsobject=gsobject, dx=dx, nphotons=nphotons)
 
         # Set up a seed bank that will provide a unique starting seed to every individual trial;
