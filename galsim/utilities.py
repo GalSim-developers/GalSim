@@ -420,7 +420,7 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, dx=1., ims
         g1obserr, g2obserr, sigmaerr, gsobject, psf_object, imsize, dx, wmult,
         itercount, n_trials_per_iter, n_photons_per_trial, runtime)
 
-    logging.info(str(results))
+    logging.info('\n'+str(results))
     return results
 
 
