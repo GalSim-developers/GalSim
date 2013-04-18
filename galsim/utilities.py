@@ -258,7 +258,7 @@ class ComparisonShapeData(object):
 
 def compare_object_dft_vs_photon(gsobject, psf_object=None, moments=True, hsm=False, dx=1.,
                                  imsize=512, wmult=4., abs_tol_ellip=1.e-5, abs_tol_size=1.e-5,
-                                 random_seed=None, n_trials_per_iter=32, n_photons_per_trial=1e7,
+                                 n_trials_per_iter=32, n_photons_per_trial=1e7, random_seed=None,
                                  ncores=1):
     """Take an input object and render it in two ways comparing results at high precision.
 
@@ -266,11 +266,74 @@ def compare_object_dft_vs_photon(gsobject, psf_object=None, moments=True, hsm=Fa
     images, we compare  the numerical values of adaptive moments and optionally HSM shear estimates,
     or both, to check consistency.
 
-    We generate successive photon-shot images using `ntry` photons, until the standard error on the
-    mean absolute and fractional uncertainty drop below `abs_err` and `frac_err`.
+    We generate successive sets of `n_trials_per_iter` photon-shot images, using 
+    `n_photons_per_trial` photons in each image, until the standard error on the mean absolute size
+    and ellipticty drop below `abs_tol_size` and `abs_tol_ellip`.  We then output a
+    ComparisonShapeData object.
+
+    @param gsobject               the galsim.GSObject for which this test is to be performed (prior
+                                  to PSF convolution if a PSF is also supplied via `psf_object`).
+
+    @param psf_object             optional additional PSF for tests of convolved objects, also a
+                                  galsim.GSObject.
+
+    @param moments                set True to compare rendered images using AdaptiveMoments
+                                  estimates of simple observed estimates (default=`True`).
+
+    @param hsm                    set True to compare rendered images using HSM shear estimates
+                                  (i.e. including a PSF correction for shears; default=`False`, not
+                                  yet implemented).
+
+    @param dx                     the pixel scale to use in the test images.
+
+    @param imsize                 the size of the images in the rendering tests - all test images
+                                  are currently square.
+
+    @param wmult                  the `wmult` parameter used in .draw() (see the GSObject .draw()
+                                  method docs via `help(galsim.GSObject.draw)` for more details).
+
+    @abs_tol_ellip                the test will keep iterating, adding ever greater numbers of
+                                  trials, until estimates of the 1-sigma standard error on mean 
+                                  ellipticity moments from photon-shot images are smaller than this
+                                  param value.
+
+    @abs_tol_size                 the test will keep iterating, adding ever greater numbers of
+                                  trials, until estimates of the 1-sigma standard error on mean 
+                                  size moments from photon-shot images are smaller than this param
+                                  value.
+
+    @n_trials_per_iter            number of trial images used to estimate (or successively
+                                  re-estimate) the standard error on the delta quantities above for
+                                  each iteration of the tests. Default = 32.
+
+    @n_photons_per_trial          number of photons shot in drawShoot() for each trial.  This should
+                                  be large enough that any noise bias (a.k.a. noise rectification
+                                  bias) on moments estimates is small. Default ~1e7 should be
+                                  sufficient. 
+
+    @random_seed                  If set, an integer to be used as the basis for the random number
+                                  generator; if `ncores` > 1 (see below) then `random_seed` *must*
+                                  be set and will be used to generated multiple seeds (TODO: TRY TO
+                                  DO THIS BETTER!??).  If `None`, an internally determined seed will
+                                  be used.
+
+    @ncores                       Number of cores to use, switches the parallel processing behaviour
+                                      `ncores`=1 (default) - Use only single core, serial processing
+                                      `ncores`>1           - Use ncores independent processes for
+                                                             shooting photons through each set of
+                                                             `ntrials_per_iter` processes: works
+                                                             best if `ntrials_per_iter % ncores`= 0.
+                                      `ncores`=`None`      - Let the Python multiprocessing module
+                                                             determine the number of cores to use,
+                                                             processing in parallel.
+
+    In principle, using ncores=1 and ncores!=1 should give the same results, but this relies on
+    how comfortable we are with our seeding scheme.  There is concern that our random deviates
+    created in this way are NOT IID, and I'm not sure we have demonstrated this is not an issue.
     """
     import logging
     import time     
+
     # Some sanity checks on inputs
     if hsm is True:
         if psf_object is None:
@@ -279,7 +342,8 @@ def compare_object_dft_vs_photon(gsobject, psf_object=None, moments=True, hsm=Fa
             # Raise an apologetic exception about the HSM not yet being implemented!
             raise NotImplementedError('Sorry, HSM tests not yet implemented!')
 
-    # Then define a couple of convenience functions for handling lists and list operations
+    # Then define some convenience functions for handling lists and list operations, including
+    # multiprocessing
     def _mean(array_like):
         return np.mean(np.asarray(array_like))
 
@@ -304,31 +368,50 @@ def compare_object_dft_vs_photon(gsobject, psf_object=None, moments=True, hsm=Fa
             sigmalist.append(res.moments_sigma)
         return g1obslist, g2obslist, sigmalist
 
-    def _shoot_trials_multi(random_seed, gsobject, ntrials, dx, imsize, n_photons):
+    def _shoot_trials_multi(random_seed, itercounter, gsobject, ntrials, dx, imsize, nphotons,
+                            ncores):
         """Convenience function to run ntrials and collect the results, using multiple cores.
 
-        Uses a Python for loop but this is very unlikely to be a rate determining factor provided
-        n_photons is suitably large (>1e6).
+        Uses a multiprocessing.Pool() to farm out image trials.  HOWEVER (see comments below) the
+        seed is set differently for each trial, and I STILL don't like this!
         """
         from itertools import partial
-        # Then define a little worker function that we will `partial`ize to fix all the non changing
-        # args leaving only the iseed
-        def _shoot_profile(iseed, gsobject, dx, n_photons):
-            im = galsim.ImageF(imsize, imsize) 
-            gsobject.drawShoot(im, dx=dx, n_photons=n_photons, rng=galsim.BaseDeviate(iseed))
-            res = im.FindAdaptiveMom()
-            return res.observed_shape.g1, res.observed_shape.g2, res.moments_sigma
-        _shoot_worker = partial(_shoot_profile(gsobject=gsobject, dx=dx, n_photons=n_photons))
 
-        sigmalist = []
-        g1obslist = []
-        g2obslist = []
-        for i in xrange(ntrials):
-            g1obslist.append(res.observed_shape.g1)
-            g2obslist.append(res.observed_shape.g2)
-            sigmalist.append(res.moments_sigma)
+        # Then define a worker function that we will `partial`ize to fix all the non changing
+        # args leaving only the iseed
+        def _shoot_profile(iseed, gsobject, dx, nphotons):
+            im = galsim.ImageF(imsize, imsize) 
+            gsobject.drawShoot(im, dx=dx, n_photons=nphotons, rng=galsim.BaseDeviate(iseed))
+            res = im.FindAdaptiveMom()
+            # Output as a tuple
+            return res.observed_shape.g1, res.observed_shape.g2, res.moments_sigma
+
+        # Then make the single input worker function using itertools.partial
+        _shoot_worker = partial(_shoot_profile(gsobject=gsobject, dx=dx, nphotons=nphotons))
+
+        # Set up a seed bank that will provide a unique starting seed to every individual trial;
+        # HOWEVER, these seeds are sequential integers, and this STILL makes me very queasy.
+        # I have chatted with a colleage about this, Sree Balan at UCL, and he has some thoughts
+        # about this overall approach (which is essentially used in the config multiprocessing too),
+        # will raise it on the pull request.  
+        istart = random_seed + itercounter * ntrials
+        iseed_bank = range(istart, istart + ntrials)
+
+        # Then setup the worker pool
+        from multiprocessing import Pool
+        if ncores is not None:
+            pool = Pool(ncores) 
+        else:
+            pool = Pool()
+
+        # Then do the calculation using the pool's .map method
+        zipped_results = pool.map(_shoot_worker, iseed_bank)
+
+        # Unzip [using the black magic zip(*zipped_thing) interface] and return
+        g1obslist, g2obslist, sigmalist = zip(*zipped_results)
         return g1obslist, g2obslist, sigmalist
 
+    # OK, that's the end of the helper functions-within-helper functions, back to the main unit
 
     # Start the timer
     t1 = time.time()
@@ -349,19 +432,45 @@ def compare_object_dft_vs_photon(gsobject, psf_object=None, moments=True, hsm=Fa
     g1obs_draw = res_draw.observed_shape.g1
     g2obs_draw = res_draw.observed_shape.g2
 
-    # Do the trials
+    # Setup storage lists for the trial shooting results
     sigma_shoot_list = []
     g1obs_shoot_list = []
     g2obs_shoot_list = [] 
-    sigmaerr = 666. # Slightly kludgy
+    sigmaerr = 666. # Slightly kludgy but will not accidentally fail the first `while` condition
     g1obserr = 666.
     g2obserr = 666.
+
+    # Initialize iteration counter
     itercount = 0
+
+    # If ncores = 1, initialize the rng here
+    if ncores == 1:
+        if random_seed is None:
+            rng = galsim.BaseDeviate()
+        else:
+            rng = galsim.BaseDeviate(random_seed)
+    # Else if ncores > 1, we use multiple seeds to set up RNGs
+    elif ncores > 1:
+        if random_seed is None:
+            raise ValueError(
+                "Input random_seed kwarg must be set to a positive integer if ncores > 1.")
+        else:
+            pass
+    else:
+        raise ValueError("Input kwarg ncores must be a positive integer")
+
+    # Then begin while loop, farming out sets of n_trials_per_iter trials until we get the
+    # statistical accuracy we require 
     while (g1obserr > abs_tol_ellip) or (g2obserr > abs_tol_ellip) or (sigmaerr > abs_tol_size):
 
         # Run the trials using helper function
-        g1obs_list_tmp, g2obs_list_tmp, sigma_list_tmp = _shoot_trials(
-            test_object, n_trials_per_iter, dx, imsize, rng, n_photons_per_trial)
+        if ncores == 1:
+            g1obs_list_tmp, g2obs_list_tmp, sigma_list_tmp = _shoot_trials_single(
+                test_object, n_trials_per_iter, dx, imsize, rng, n_photons_per_trial)
+        else:
+            g1obs_list_tmp, g2obs_list_tmp, sigma_list_tmp = _shoot_trials_multi(
+                random_seed, itercount, test_object, n_trials_per_iter, dx, imsize,
+                n_photons_per_trial, ncores)
 
         # Collect results and calculate new standard error
         g1obs_shoot_list.extend(g1obs_list_tmp)
