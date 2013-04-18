@@ -94,7 +94,8 @@ namespace galsim {
 
         static void wrap() {
             // Note that class docstrings are now added in galsim/random.py
-            bp::class_<BaseNoiseCallBack> pyBaseNoise("BaseNoise", "", bp::no_init);
+            bp::class_<BaseNoiseCallBack,boost::noncopyable> pyBaseNoise(
+                "BaseNoise", "", bp::no_init);
             pyBaseNoise
                 .def(bp::init<boost::shared_ptr<BaseDeviate> >(bp::arg("rng")=bp::object()))
                 .def("getRNG", &BaseNoise::getRNG, "")
