@@ -100,8 +100,8 @@ namespace hsm {
      * @param max_mom2_iter      Maximum number of iterations to use when calculating adaptive
      *                           moments.  This should be sufficient in nearly all situations, with
      *                           the possible exception being very flattened profiles.
-     * @param num_iter_default   Number of iterations to report when code fails to converge within
-     *                           max_mom2_iter iterations.
+     * @param num_iter_default   Number of iterations to report in the output HSMShapeData structure
+     *                           when code fails to converge within max_mom2_iter iterations.
      * @param bound_correct_wt   Maximum shift in centroids and sigma between iterations for
      *                           adaptive moments.
      * @param max_amoment        Maximum value for adaptive second moments before throwing

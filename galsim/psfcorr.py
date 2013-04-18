@@ -103,8 +103,8 @@ adapt_order=2           The order to which circular adaptive moments should be c
 max_mom2_iter=400       Maximum number of iterations to use when calculating adaptive moments.  This
                         should be sufficient in nearly all situations, with the possible exception
                         being very flattened profiles.
-num_iter_default=-1     Number of iterations to report when code fails to converge within
-                        max_mom2_iter iterations.
+num_iter_default=-1     Number of iterations to report in the output HSMShapeData structure when
+                        code fails to converge within max_mom2_iter iterations.
 bound_correct_wt=0.25   Maximum shift in centroids and sigma between iterations for adaptive moments.
 max_amoment=8000.       Maximum value for adaptive second moments before throwing exception.  Very
                         large objects might require this value to be increased.
