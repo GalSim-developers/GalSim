@@ -375,7 +375,7 @@ def compare_object_dft_vs_photon(gsobject, psf_object=None, moments=True, hsm=Fa
         Uses a multiprocessing.Pool() to farm out image trials.  HOWEVER (see comments below) the
         seed is set differently for each trial, and I STILL don't like this!
         """
-        from itertools import partial
+        from functools import partial
 
         # Then define a worker function that we will `partial`ize to fix all the non changing
         # args leaving only the iseed
@@ -386,8 +386,8 @@ def compare_object_dft_vs_photon(gsobject, psf_object=None, moments=True, hsm=Fa
             # Output as a tuple
             return res.observed_shape.g1, res.observed_shape.g2, res.moments_sigma
 
-        # Then make the single input worker function using itertools.partial
-        _shoot_worker = partial(_shoot_profile(gsobject=gsobject, dx=dx, nphotons=nphotons))
+        # Then make the single input worker function using functools.partial
+        _shoot_worker = partial(_shoot_profile, gsobject=gsobject, dx=dx, nphotons=nphotons)
 
         # Set up a seed bank that will provide a unique starting seed to every individual trial;
         # HOWEVER, these seeds are sequential integers, and this STILL makes me very queasy.
@@ -481,8 +481,10 @@ def compare_object_dft_vs_photon(gsobject, psf_object=None, moments=True, hsm=Fa
         sigmaerr = _stderr(sigma_shoot_list)
         itercount += 1
         logging.debug('Completed '+str(itercount)+' iterations')
+        #print 'Completed '+str(itercount)+' iterations'
         logging.debug(
             '(g1obserr, g2obserr, sigmaerr) = '+str(g1obserr)+', '+str(g2obserr)+', '+str(sigmaerr))
+        #print '(g1obserr, g2obserr, sigmaerr) = '+str(g1obserr)+', '+str(g2obserr)+', '+str(sigmaerr)
 
     # Take the runtime and collate results into a ComparisonShapeData
     runtime = time.time() - t1
