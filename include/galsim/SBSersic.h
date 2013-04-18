@@ -38,8 +38,9 @@ namespace galsim {
      * to 0.5<=n<=4.2, with an exception thrown for values outside that range.
      *
      * The SBProfile representation of a Sersic profile also includes an optional truncation beyond
-     * a given radius.  The resolution of the truncation radius in units of half light radius 're'
-     * is limited to 2 decimal places, in order not to overload the Sersic information caching.
+     * a given radius, by the parameter `trunc`.  The resolution of the truncation radius in units
+     * of half light radius `re` is limited to 2 decimal places, in order not to overload the Sersic
+     * information caching.
      *
      * Another optional parameter, `flux_untruncated`, allows the setting of the flux to the
      * untruncated Sersic, while generating a truncated Sersic.  This facilitates the comparison

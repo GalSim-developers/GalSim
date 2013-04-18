@@ -1864,7 +1864,7 @@ class Sersic(GSObject):
     Note that when `trunc > 0.` and `flux_untruncated == true`, the specified half-light radius,
     also returned by getHalfLightRadius(), will be different from the actual half-light radius.
     Similarly, the specified flux will not be the actual flux.  However, the true flux is returned
-    by the getFlux() method.
+    by the getFlux() method.  `flux_untruncated` is ignored when `trunc = 0`.
 
     Example:
 
@@ -2002,7 +2002,7 @@ class DeVaucouleurs(GSObject):
     Note that when `trunc > 0.` and `flux_untruncated == True`, the specified half-light radius,
     also returned by getHalfLightRadius(), will be different from the actual half-light radius.
     Similarly, the specified flux will not be the actual flux.  However, the true flux is returned
-    by the getFlux() method.
+    by the getFlux() method.  `flux_untruncated` is ignored when `trunc = 0`.
 
     Example:
 

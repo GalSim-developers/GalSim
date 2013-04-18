@@ -266,7 +266,7 @@ namespace galsim {
 
     // Find what radius encloses (1-missing_flux_frac) of the total flux in a Sersic profile,
     // in units of half-light radius re.
-    double SBSersic::SersicInfo::findMaxR(double missing_flux_frac, double gamma2n)
+    double SBSersic::SersicInfo::findMaxRre(double missing_flux_frac, double gamma2n)
     { 
         // int(exp(-b r^1/n) r, r=R..inf) = x * int(exp(-b r^1/n) r, r=0..inf)
         //                                = x n b^-2n Gamma(2n)    [x == missing_flux_frac]
@@ -343,7 +343,7 @@ namespace galsim {
 
         // find scale b with truncated radius
         if (maxRre > 0.) {
-            if (maxRre <= 1.)   // there is a better minimum truncation check criteria, for sure
+            if (maxRre <= 1.)   // TODO: find a better minimum truncation check criteria.
                 throw SBError("Sersic truncation radius must be > half_light_radius.");
             // Solution to gamma(2n,b) = Gamma(2n,b*(trunc/re)^(1/n)) / 2
             SersicScaleRadiusFunc func(n, maxRre);
@@ -367,16 +367,16 @@ namespace galsim {
 
     // Constructor to initialize Sersic constants and k lookup table
     SBSersic::SersicInfo::SersicInfo(double n, double maxRre, bool flux_untruncated) :
-        _n(n), _maxRre(maxRre), _inv2n(1./(2.*n)), _flux_untruncated(flux_untruncated),
-        _flux_fraction(1.)
+        _n(n), _maxRre(maxRre), _maxRre_sq(_maxRre*_maxRre), _inv2n(1./(2.*n)),
+        _flux_untruncated(flux_untruncated), _flux_fraction(1.)
     {
         // Going to constrain range of allowed n to those for which testing was done
         if (_n<0.5 || _n>4.2) throw SBError("Requested Sersic index out of range");
 
-        _truncated = (_maxRre > 0.);   // _maxRre == 0. indicates untruncated Sersic here
+        _truncated = (_maxRre > 0.);
 
         if ( _truncated && _flux_untruncated ) {
-            dbg << "Calculating b with maxR/re => inf (0)" << std::endl;
+            dbg << "Calculating b with maxR/re => 0 (inf)" << std::endl;
             _b = SersicCalculateScaleBFromHLR(n, 0.);
         }
         else {
@@ -392,7 +392,7 @@ namespace galsim {
         double gamma6n;
         double gamma8n;
         if (!_truncated) {
-            gamma2n = tgamma(2.*_n);
+            gamma2n = tgamma(2.*_n);  // integrate r/re from 0. to inf
             gamma4n = tgamma(4.*_n);
             gamma6n = tgamma(6.*_n);
             gamma8n = tgamma(8.*_n);
@@ -435,11 +435,10 @@ namespace galsim {
 
         // How far should the profile extend, if not truncated?
         // Estimate number of effective radii needed to enclose (1-alias_threshold) of flux
+        double Rre;
         if (!_truncated)
-	  _maxRre = findMaxR(sbp::alias_threshold,gamma2n);  // _maxRre becomes the actual extent
-        _maxRre_sq = _maxRre*_maxRre;
+            Rre = findMaxRre(sbp::alias_threshold,gamma2n);
         // Go to at least 5*re
-        double Rre = _maxRre;
         if (Rre < 5.) Rre = 5.;
         dbg<<"maxR/re => "<<_maxRre<<std::endl;
         _stepK = M_PI / Rre;
@@ -456,7 +455,7 @@ namespace galsim {
 
         double integ_maxRre;
         if (!_truncated)
-            integ_maxRre = findMaxR(sbp::kvalue_accuracy * hankel_norm,gamma2n);
+            integ_maxRre = findMaxRre(sbp::kvalue_accuracy * hankel_norm,gamma2n);
         else
             integ_maxRre = _maxRre;
 
@@ -501,7 +500,7 @@ namespace galsim {
         _radial.reset(new SersicRadialFunction(_n, _b));
         std::vector<double> range(2,0.);
         if (!_truncated)
-            range[1] = findMaxR(sbp::shoot_flux_accuracy,gamma2n);
+            range[1] = findMaxRre(sbp::shoot_flux_accuracy,gamma2n);
         else
             range[1] = _maxRre;
         _sampler.reset(new OneDimensionalDeviate( *_radial, range, true));

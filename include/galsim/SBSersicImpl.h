@@ -91,7 +91,7 @@ namespace galsim {
         double getMaxRRe() const { return _maxRre; }
 
         /// @brief Returns the ratio of the actual flux to the specified flux the object, which is
-        /// not unity when `_truncated` and `_flux_untruncated` are true.
+        /// not unity when `_truncated` and `_flux_untruncated` are both true.
         double getTrueFluxFraction() const { return _flux_fraction; }
 
         /**
@@ -139,7 +139,7 @@ namespace galsim {
         /// Class that does numerical photon shooting
         boost::shared_ptr<OneDimensionalDeviate> _sampler;   
 
-        double findMaxR(double missing_flux_fraction, double gamma2n);
+        double findMaxRre(double missing_flux_fraction, double gamma2n);
     };
 
     class SersicKey {
@@ -155,19 +155,12 @@ namespace galsim {
             else
                 return this->_n < rhs._n;
         }
-        void write(std::ostream& fout) const
-        { fout << "(" << _n << "," << _maxRre << "," << _fu << ")" ; }
-        friend std::ostream& operator<<(std::ostream& os, const SersicKey& s);
 
     private:
         double _n;
         double _maxRre;
         bool _fu;
     };
-
-    std::ostream& operator<<(std::ostream& os, const SersicKey& s)
-    { s.write(os); return os; }
-
 
     /** 
      * @brief A map to hold one copy of the SersicInfo for each `n` ever used during the 
@@ -181,7 +174,7 @@ namespace galsim {
     public:
 
         /**
-         * @brief Get the SersicInfo table for a specified pair `(n, maxRre)`.
+         * @brief Get the SersicInfo table for a specified key `(n, maxRre, flux_untruncated)`.
          *
          * @param[in] n                 Sersic index for which the information table is required.
          * @param[in] maxRre            Truncation radius in units of half light radius 're', for
