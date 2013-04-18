@@ -899,10 +899,10 @@ class Gaussian(GSObject):
 
     Example:
         
-        >>> gauss_obj = Gaussian(flux=3., sigma=1.)
+        >>> gauss_obj = galsim.Gaussian(flux=3., sigma=1.)
         >>> gauss_obj.getHalfLightRadius()
         1.1774100225154747
-        >>> gauss_obj = Gaussian(flux=3, half_light_radius=1.)
+        >>> gauss_obj = galsim.Gaussian(flux=3, half_light_radius=1.)
         >>> gauss_obj.getSigma()
         0.8493218002880191
 
@@ -970,10 +970,10 @@ class Moffat(GSObject):
 
     Example:
     
-        >>> moffat_obj = Moffat(beta=3., scale_radius=3., flux=0.5)
+        >>> moffat_obj = galsim.Moffat(beta=3., scale_radius=3., flux=0.5)
         >>> moffat_obj.getHalfLightRadius()
         1.9307827587167474
-        >>> moffat_obj = Moffat(beta=3., half_light_radius=1., flux=0.5)
+        >>> moffat_obj = galsim.Moffat(beta=3., half_light_radius=1., flux=0.5)
         >>> moffat_obj.getScaleRadius()
         1.5537739740300376
 
@@ -1131,7 +1131,7 @@ class Airy(GSObject):
 
     Example:
     
-        >>> airy_obj = Airy(flux=3., lam_over_diam=2.)
+        >>> airy_obj = galsim.Airy(flux=3., lam_over_diam=2.)
         >>> airy_obj.getHalfLightRadius()
         1.0696642954485294
 
@@ -1849,7 +1849,7 @@ class Sersic(GSObject):
 
     Example:
 
-        >>> sersic_obj = Sersic(n=3.5, half_light_radius=2.5, flux=40.)
+        >>> sersic_obj = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40.)
         >>> sersic_obj.getHalfLightRadius()
         2.5
         >>> sersic_obj.getN()
@@ -1866,11 +1866,19 @@ class Sersic(GSObject):
     Similarly, the specified flux will not be the actual flux.  However, the true flux is returned
     by the getFlux() method.
 
-    Example:  [TODO: add proper example for truncated flux, when all debugging is over]
+    Example:
 
-        >>> sersic_obj = Sersic(n=3.5, half_light_radius=2.5, flux=40.)
-        >>> sersic_obj.getHalfLightRadius()
+        >>> sersic_obj2 = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40., trunc=10.,)
+        >>> sersic_obj2.getHalfLightRadius()
         2.5
+        >>> sersic_obj2.getFlux()
+        40.0
+        >>> sersic_obj3 = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40., trunc=10., \
+                                 flux_untruncated=True)
+        >>> sersic_obj3.getHalfLightRadius()
+        2.5                   # This is half-light radius for a Sersic with no truncation
+        >>> sersic_obj3.getFlux()
+        34.565955038155124    # The flux from the truncation is missing
 
     Methods
     -------
@@ -1921,10 +1929,10 @@ class Exponential(GSObject):
 
     Example:
 
-        >>> exp_obj = Exponential(flux=3., scale_radius=5.)
+        >>> exp_obj = galsim.Exponential(flux=3., scale_radius=5.)
         >>> exp_obj.getHalfLightRadius()
         8.391734950083302
-        >>> exp_obj = Exponential(flux=3., half_light_radius=1.)
+        >>> exp_obj = galsim.Exponential(flux=3., half_light_radius=1.)
         >>> exp_obj.getScaleRadius()
         0.5958243473776976
 
@@ -1979,7 +1987,7 @@ class DeVaucouleurs(GSObject):
 
     Example:
 
-        >>> dvc_obj = DeVaucouleurs(half_light_radius=2.5, flux=40.)
+        >>> dvc_obj = galsim.DeVaucouleurs(half_light_radius=2.5, flux=40.)
         >>> dvc_obj.getHalfLightRadius()
         2.5
         >>> dvc_obj.getFlux()
@@ -1995,6 +2003,20 @@ class DeVaucouleurs(GSObject):
     also returned by getHalfLightRadius(), will be different from the actual half-light radius.
     Similarly, the specified flux will not be the actual flux.  However, the true flux is returned
     by the getFlux() method.
+
+    Example:
+
+        >>> dvc_obj2 = galsim.DeVaucouleurs(half_light_radius=2.5, flux=40., trunc=10.,)
+        >>> dvc_obj2.getHalfLightRadius()
+        2.5
+        >>> dvc_obj2.getFlux()
+        40.0
+        >>> dvc_obj3 = galsim.DeVaucouleurs(half_light_radius=2.5, flux=40., trunc=10., \
+                                            flux_untruncated=True)
+        >>> dvc_obj3.getHalfLightRadius()
+        2.5                   # This is half-light radius for a DeVaucouleurs with no truncation
+        >>> dvc_obj3.getFlux()
+        33.863173229717155    # The flux from the truncation is missing
 
     Methods
     -------
