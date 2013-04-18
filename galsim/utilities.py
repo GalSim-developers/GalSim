@@ -357,6 +357,7 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, dx=1., ims
             g1obslist.append(res.observed_shape.g1)
             g2obslist.append(res.observed_shape.g2)
             sigmalist.append(res.moments_sigma)
+            logging.debug('Completed '+str(i + 1)+'/'+str(ntrials)+' trials in this iteration')
         return g1obslist, g2obslist, sigmalist
 
     # OK, that's the end of the helper functions-within-helper functions, back to the main unit
