@@ -155,6 +155,7 @@ def convert_interpolant_to_2d(interpolant):
         except:
             raise RuntimeError('Specified interpolant is not valid!')
 
+
 class ComparisonShapeData(object):
     """A class to contain the outputs of a comparison between photon shooting and DFT rendering of
     GSObjects, as measured by the HSM module's FindAdaptiveMom or (in future) EstimateShearHSM.
@@ -282,7 +283,8 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, dx=1., ims
                                   galsim.GSObject.
 
     @param rng                    galsim.BaseDeviate or derived deviate class instance to provide
-                                  the pseudo random numbers for the photon shooting.
+                                  the pseudo random numbers for the photon shooting.  If `None` on 
+                                  input (default) a galsim.BaseDeviate is internally initialized.
 
     @param dx                     the pixel scale to use in the test images.
 
@@ -328,6 +330,9 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, dx=1., ims
         else:
             # Raise an apologetic exception about the HSM not yet being implemented!
             raise NotImplementedError('Sorry, HSM tests not yet implemented!')
+
+    if rng is None:
+        rng = galsim.BaseDeviate()
 
     # Then define some convenience functions for handling lists and multiple trial operations
     def _mean(array_like):
@@ -416,6 +421,7 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, dx=1., ims
 
     logging.info(str(results))
     return results
+
 
 #@random_seed                  If set, an integer to be used as the basis for the random number
 #                              generator; if `ncores` > 1 (see below) then `random_seed` *must*
