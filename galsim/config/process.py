@@ -95,24 +95,17 @@ def ProcessInputNObjects(config):
                 #print 'field = ',field
                 type, ignore = valid_input_types[key][0:2]
                 #print 'type, ignore = ',type,ignore
-                try:
-                    if type in galsim.__dict__:
-                        init_func = eval("galsim."+type)
-                    else:
-                        init_func = eval(type)
-                except:
-                    raise TypeError('Invalid input type = %s in valid_input_types'%type)
+                if type in galsim.__dict__:
+                    init_func = eval("galsim."+type)
+                else:
+                    init_func = eval(type)
                 kwargs = galsim.config.GetAllParams(field, key, config,
                                                     req = init_func._req_params,
                                                     opt = init_func._opt_params,
                                                     single = init_func._single_params,
                                                     ignore = ignore)[0]
                 kwargs['nobjects_only'] = True
-                try:
-                    input_obj = init_func(**kwargs)
-                except Exception, err:
-                    raise RuntimeError("Unable to build %s with nobjects_only=True.\n"%type +
-                                    "Original error message: %s"%err)
+                input_obj = init_func(**kwargs)
                 #print 'Found nobjects = %d for %s'%(input_obj.nobjects,key)
                 return input_obj.nobjects
     # If didn't find anything, return None.
@@ -187,6 +180,7 @@ def Process(config, logger=None):
                     "Trying to use more processes than files: output.nproc=%d, "%nproc +
                     "output.nfiles=%d.  Reducing nproc to %d."%(nfiles,nfiles))
             nproc = nfiles
+
     if nproc <= 0:
         # Try to figure out a good number of processes to use
         try:

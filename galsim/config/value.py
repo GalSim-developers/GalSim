@@ -78,11 +78,7 @@ def ParseValue(config, param_name, base, value_type):
             # Make sure strings are converted to float (or other type) if necessary.
             # In particular things like 1.e6 aren't converted to float automatically
             # by the yaml reader. (Although I think this is a bug.)
-            try: 
-                val = value_type(param)
-            except:
-                raise AttributeError(
-                    "Could not convert %s param = %s to type %s."%(param_name,param,value_type))
+            val = value_type(param)
         # Save the converted type for next time.
         config[param_name] = val
         #print param_name,' = ',val
@@ -114,12 +110,8 @@ def ParseValue(config, param_name, base, value_type):
         #print 'returned val, safe = ',val,safe
 
         # Make sure we really got the right type back.  (Just in case...)
-        try : 
-            if not isinstance(val,value_type):
-                val = value_type(val)
-        except :
-            raise AttributeError(
-                "Could not convert %s param = %s to type %s."%(param_name,val,value_type))
+        if not isinstance(val,value_type):
+            val = value_type(val)
         param['current_val'] = val
         #print param_name,' = ',val
         return val, safe
