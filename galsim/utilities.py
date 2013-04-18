@@ -258,7 +258,8 @@ class ComparisonShapeData(object):
 
 def compare_object_dft_vs_photon(gsobject, psf_object=None, moments=True, hsm=False, dx=1.,
                                  imsize=512, wmult=4., abs_tol_ellip=1.e-5, abs_tol_size=1.e-5,
-                                 rng=None, n_trials_per_iter=32, n_photons_per_trial=1e7, ncores=1):
+                                 random_seed=None, n_trials_per_iter=32, n_photons_per_trial=1e7,
+                                 ncores=1):
     """Take an input object and render it in two ways comparing results at high precision.
 
     Using both photon shooting (via drawShoot) and Discrete Fourier Transform (via shoot) to render
@@ -285,8 +286,8 @@ def compare_object_dft_vs_photon(gsobject, psf_object=None, moments=True, hsm=Fa
     def _stderr(array_like):
         return np.std(np.asarray(array_like)) / np.sqrt(len(array_like))
 
-    def _shoot_trials(gsobject, ntrials, dx, imsize, rng, n_photons):
-        """Convenience function to run ntrials and collect the results.
+    def _shoot_trials_single(gsobject, ntrials, dx, imsize, rng, n_photons):
+        """Convenience function to run ntrials and collect the results, using a single core.
 
         Uses a Python for loop but this is very unlikely to be a rate determining factor provided
         n_photons is suitably large (>1e6).
@@ -302,6 +303,32 @@ def compare_object_dft_vs_photon(gsobject, psf_object=None, moments=True, hsm=Fa
             g2obslist.append(res.observed_shape.g2)
             sigmalist.append(res.moments_sigma)
         return g1obslist, g2obslist, sigmalist
+
+    def _shoot_trials_multi(random_seed, gsobject, ntrials, dx, imsize, n_photons):
+        """Convenience function to run ntrials and collect the results, using multiple cores.
+
+        Uses a Python for loop but this is very unlikely to be a rate determining factor provided
+        n_photons is suitably large (>1e6).
+        """
+        from itertools import partial
+        # Then define a little worker function that we will `partial`ize to fix all the non changing
+        # args leaving only the iseed
+        def _shoot_profile(iseed, gsobject, dx, n_photons):
+            im = galsim.ImageF(imsize, imsize) 
+            gsobject.drawShoot(im, dx=dx, n_photons=n_photons, rng=galsim.BaseDeviate(iseed))
+            res = im.FindAdaptiveMom()
+            return res.observed_shape.g1, res.observed_shape.g2, res.moments_sigma
+        _shoot_worker = partial(_shoot_profile(gsobject=gsobject, dx=dx, n_photons=n_photons))
+
+        sigmalist = []
+        g1obslist = []
+        g2obslist = []
+        for i in xrange(ntrials):
+            g1obslist.append(res.observed_shape.g1)
+            g2obslist.append(res.observed_shape.g2)
+            sigmalist.append(res.moments_sigma)
+        return g1obslist, g2obslist, sigmalist
+
 
     # Start the timer
     t1 = time.time()
