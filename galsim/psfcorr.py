@@ -55,13 +55,13 @@ more detailed discussion on all of these algorithms, see the relevant papers abo
 The parameters that can be adjusted using the `hsmparams` keyword, along with default values, are as
 follows:
 
-nsig_rg=3.0             A parameter used to optimize convolutions by cutting off galaxy profile.  In
-                        the first step of the re-Gaussianization method of PSF correction, a
+nsig_rg=3.0             A parameter used to optimize convolutions by cutting off the galaxy profile.
+                        In the first step of the re-Gaussianization method of PSF correction, a
                         Gaussian approximation to the pre-seeing galaxy is calculated. If
                         re-Gaussianization is called with the flag 0x4 (as is the default), then
                         this approximation is cut off at nsig_rg sigma to save computation time in
                         convolutions.
-nsig_rg2=3.6            A parameter used to optimize convolutions by cutting off PSF residual
+nsig_rg2=3.6            A parameter used to optimize convolutions by cutting off the PSF residual
                         profile.  In the re-Gaussianization method of PSF correction, a "PSF
                         residual" (the difference between the true PSF and its best-fit Gaussian
                         approximation) is constructed. If re-Gaussianization is called with the flag

@@ -46,13 +46,13 @@ namespace hsm {
      * @brief Parameters that determine how the moments/shape estimation routines make
      *        speed/accuracy tradeoff decisions.
      *
-     * @param nsig_rg            A parameter used to optimize convolutions by cutting off galaxy
+     * @param nsig_rg            A parameter used to optimize convolutions by cutting off the galaxy
      *                           profile.  In the first step of the re-Gaussianization method of PSF
      *                           correction, a Gaussian approximation to the pre-seeing galaxy is
      *                           calculated. If re-Gaussianization is called with the flag 0x4 (as
      *                           is the default), then this approximation is cut off at nsig_rg
      *                           sigma to save computation time in convolutions.
-     * @param nsig_rg2           A parameter used to optimize convolutions by cutting off PSF
+     * @param nsig_rg2           A parameter used to optimize convolutions by cutting off the PSF
      *                           residual profile.  In the re-Gaussianization method of PSF
      *                           correction, a "PSF residual" (the difference between the true PSF
      *                           and its best-fit Gaussian approximation) is constructed. If
