@@ -223,7 +223,7 @@ class Shear(object):
     def __ne__(self, other): return self._shear != other._shear
     def fwd(self, p): return self._shear.fwd(p)
     def inv(self, p): return self._shear.inv(p)
-    def getMatrix(self, a, b, c): self._shear.getMatrix(a, b, c)
+    def getMatrix(self): return self._shear.getMatrix()
 
     def __repr__(self):
         return (self.__class__.__name__+"(g1="+str(self.getG1())+", g2="+str(self.getG2())+")")
