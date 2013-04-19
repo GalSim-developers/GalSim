@@ -193,9 +193,9 @@ class ComparisonShapeData(object):
     - psf_object: the optional additional PSF supplied by the user for tests of convolved objects,
       will be `None` if not used.
 
-    - imsize: the size of the  images tested - all test images are currently square.
+    - size: the size of the images tested - all test images are currently square.
 
-    - dx: the pixel scale in the images tested.
+    - pixel_scale: the pixel scale in the images tested.
 
     - wmult: the `wmult` parameter used in .draw() (see the GSObject .draw() method docs for more
       details).
@@ -215,7 +215,7 @@ class ComparisonShapeData(object):
     typically in the function compare_object_dft_vs_photon.
     """
     def __init__(self, g1obs_draw, g2obs_draw, sigma_draw, g1obs_shoot, g2obs_shoot, sigma_shoot,
-                 err_g1obs, err_g2obs, err_sigma, gsobject, psf_object, imsize, dx, wmult,
+                 err_g1obs, err_g2obs, err_sigma, gsobject, psf_object, size, pixel_scale, wmult,
                  n_iterations, n_trials_per_iter, n_photons_per_trial, time):
 
         self.g1obs_draw = g1obs_draw
@@ -232,8 +232,8 @@ class ComparisonShapeData(object):
 
         self.gsobject = gsobject
         self.psf_object = psf_object
-        self.imsize = imsize
-        self.dx = dx
+        self.size = size
+        self.pixel_scale = pixel_scale
         self.wmult = wmult
         self.n_iterations = n_iterations
         self.n_trials_per_iter = n_trials_per_iter
@@ -257,9 +257,10 @@ class ComparisonShapeData(object):
     __repr__ = __str__
 
 
-def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, dx=1., imsize=512, wmult=4.,
-                                 abs_tol_ellip=1.e-5, abs_tol_size=1.e-5, n_trials_per_iter=32,
-                                 n_photons_per_trial=1e7, moments=True, hsm=False):
+def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, pixel_scale=1., size=512,
+                                 wmult=4., abs_tol_ellip=1.e-5, abs_tol_size=1.e-5,
+                                 n_trials_per_iter=32, n_photons_per_trial=1e7, moments=True,
+                                 hsm=False):
     """Take an input object and render it in two ways comparing results at high precision.
 
     Using both photon shooting (via drawShoot) and Discrete Fourier Transform (via shoot) to render
@@ -286,9 +287,9 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, dx=1., ims
                                   the pseudo random numbers for the photon shooting.  If `None` on 
                                   input (default) a galsim.BaseDeviate is internally initialized.
 
-    @param dx                     the pixel scale to use in the test images.
+    @param pixel_scale            the pixel scale to use in the test images.
 
-    @param imsize                 the size of the images in the rendering tests - all test images
+    @param size                   the size of the images in the rendering tests - all test images
                                   are currently square.
 
     @param wmult                  the `wmult` parameter used in .draw() (see the GSObject .draw()
@@ -374,8 +375,8 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, dx=1., ims
         test_object = galsim.Convolve([gsobject, psf_object])
 
     # Draw the shoot image, only needs to be done once
-    im_draw = galsim.ImageF(imsize, imsize)
-    test_object.draw(im_draw, dx=dx, wmult=wmult)
+    im_draw = galsim.ImageF(size, size)
+    test_object.draw(im_draw, dx=pixel_scale, wmult=wmult)
     res_draw = im_draw.FindAdaptiveMom()
     sigma_draw = res_draw.moments_sigma
     g1obs_draw = res_draw.observed_shape.g1
@@ -398,7 +399,7 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, dx=1., ims
 
         # Run the trials using helper function
         g1obs_list_tmp, g2obs_list_tmp, sigma_list_tmp = _shoot_trials_single(
-            test_object, n_trials_per_iter, dx, imsize, rng, n_photons_per_trial)
+            test_object, n_trials_per_iter, pixel_scale, size, rng, n_photons_per_trial)
 
         # Collect results and calculate new standard error
         g1obs_shoot_list.extend(g1obs_list_tmp)
@@ -417,7 +418,7 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, dx=1., ims
     results = ComparisonShapeData(
         g1obs_draw, g2obs_draw, sigma_draw,
         _mean(g1obs_shoot_list), _mean(g2obs_shoot_list), _mean(sigma_shoot_list),
-        g1obserr, g2obserr, sigmaerr, gsobject, psf_object, imsize, dx, wmult,
+        g1obserr, g2obserr, sigmaerr, gsobject, psf_object, size, pixel_scale, wmult,
         itercount, n_trials_per_iter, n_photons_per_trial, runtime)
 
     logging.info('\n'+str(results))
@@ -444,10 +445,10 @@ def compare_dft_vs_photon_config(config, random_seed=None, ncpu=None, pixel_scal
     and ellipticty drop below `abs_tol_size` and `abs_tol_ellip`.  We then output a
     ComparisonShapeData object.
 
-    @param config                 A galsim config dictionary describing the GSObject we wish to
-                                  test (see e.g. examples/demo8.py)
+    @param config                 GalSim config dictionary describing the GSObject we wish to test
+                                  (see e.g. examples/demo8.py).
 
-    @random_seed                  An integer to be used as the basis for the random number
+    @random_seed                  integer to be used as the basis of all seeds for the random number
                                   generator, overrides any value in config['image'].
 
     @param pixel_scale            the pixel scale to use in the test images, overrides any value in
