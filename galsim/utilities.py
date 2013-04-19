@@ -509,6 +509,9 @@ def compare_dft_vs_photon_config(config, random_seed=None, nproc=None, pixel_sca
     @param hsm                    set True to compare rendered images using HSM shear estimates
                                   (i.e. including a PSF correction for shears; default=`False`, not
                                   yet implemented).
+
+    @param logger                 logging Logger instance to record output and pass down to the
+                                  config layer for debuging / verbose output if desired.
     """
     import logging
     import time     
