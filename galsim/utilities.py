@@ -263,7 +263,7 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, dx=1., ims
     """Take an input object and render it in two ways comparing results at high precision.
 
     Using both photon shooting (via drawShoot) and Discrete Fourier Transform (via shoot) to render
-    images, we compare  the numerical values of adaptive moments and optionally HSM shear estimates,
+    images, we compare the numerical values of adaptive moments and optionally HSM shear estimates,
     or both, to check consistency.
 
     This function takes actual GSObjects as its input, but because these are not yet picklable this
@@ -423,19 +423,206 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, dx=1., ims
     logging.info('\n'+str(results))
     return results
 
+def compare_dft_vs_photon_config(config, random_seed=None, ncpu=None, pixel_scale=None, size=None,
+                                 wmult=None, abs_tol_ellip=1.e-5, abs_tol_size=1.e-5,
+                                 n_trials_per_iter=32, n_photons_per_trial=1e7, moments=True,
+                                 hsm=False):
+    """Take an input config dictionary and render the image it describes in two ways, comparing
+    results at high precision.
 
-#@random_seed                  If set, an integer to be used as the basis for the random number
-#                              generator; if `ncores` > 1 (see below) then `random_seed` *must*
-#                              be set and will be used to generated multiple seeds (TODO: TRY TO
-#                              DO THIS BETTER!??).  If `None`, an internally determined seed will
-#                              be used.
-#
-#@ncores                       Number of cores to use, switches the parallel processing behaviour
-#                                  `ncores`=1 (default) - Use only single core, serial processing
-#                                  `ncores`>1           - Use ncores independent processes for
-#                                                         shooting photons through each set of
-#                                                         `ntrials_per_iter` processes: works
-#                                                         best if `ntrials_per_iter % ncores`= 0.
-#                                  `ncores`=`None`      - Let the Python multiprocessing module
-#                                                         determine the number of cores to use,
-#                                                         processing in parallel.
+    Using both photon shooting (via drawShoot) and Discrete Fourier Transform (via shoot) to render
+    images, we compare the numerical values of adaptive moments and optionally HSM shear estimates,
+    or both, to check consistency.
+
+    This function takes actual GSObjects as its input, but because these are not yet picklable this
+    means that the internals cannot be parallelized using the Python multiprocessing module.  For
+    a parallelized function, that instead uses a config dictionary to specify the test objects, see
+    the function compare_dft_vs_photon_config() in this module.
+
+    We generate successive sets of `n_trials_per_iter` photon-shot images, using 
+    `n_photons_per_trial` photons in each image, until the standard error on the mean absolute size
+    and ellipticty drop below `abs_tol_size` and `abs_tol_ellip`.  We then output a
+    ComparisonShapeData object.
+
+    @param config                 A galsim config dictionary describing the GSObject we wish to
+                                  test (see e.g. examples/demo8.py)
+
+    @random_seed                  An integer to be used as the basis for the random number
+                                  generator, overrides any value in config['image'].
+
+    @param pixel_scale            the pixel scale to use in the test images, overrides any value in
+                                  config['image'].
+
+    @param size                   the size of the images in the rendering tests - all test images
+                                  are currently square, overrides any value in config['image'].
+
+    @param wmult                  the `wmult` parameter used in .draw() (see the GSObject .draw()
+                                  method docs via `help(galsim.GSObject.draw)` for more details),
+                                  overrides any value in config['image'].
+
+    @abs_tol_ellip                the test will keep iterating, adding ever greater numbers of
+                                  trials, until estimates of the 1-sigma standard error on mean 
+                                  ellipticity moments from photon-shot images are smaller than this
+                                  param value.
+
+    @abs_tol_size                 the test will keep iterating, adding ever greater numbers of
+                                  trials, until estimates of the 1-sigma standard error on mean 
+                                  size moments from photon-shot images are smaller than this param
+                                  value.
+
+    @n_trials_per_iter            number of trial images used to estimate (or successively
+                                  re-estimate) the standard error on the delta quantities above for
+                                  each iteration of the tests. Default = 32.
+
+    @n_photons_per_trial          number of photons shot in drawShoot() for each trial.  This should
+                                  be large enough that any noise bias (a.k.a. noise rectification
+                                  bias) on moments estimates is small. Default ~1e7 should be
+                                  sufficient.
+
+    @param moments                set True to compare rendered images using AdaptiveMoments
+                                  estimates of simple observed estimates (default=`True`).
+
+    @param hsm                    set True to compare rendered images using HSM shear estimates
+                                  (i.e. including a PSF correction for shears; default=`False`, not
+                                  yet implemented).
+    """
+    import logging
+    import time     
+
+    # Some sanity checks on inputs
+    if hsm is True:
+        # Raise an apologetic exception about the HSM not yet being implemented!
+        raise NotImplementedError('Sorry, HSM tests not yet implemented!')
+
+    # Then check the config inputs, overriding and warning where necessary
+    if random_seed is None:
+        if 'random_seed' in config['image']:
+            pass
+        else:
+            raise ValueError('Required input random_seed not set via kwarg or in config')
+    else:
+        if 'random_seed' in config['image']:
+            import warnings
+            warnings.warn(
+                'Overriding random_seed in config with input kwarg value '+str(random_seed))
+        config['image']['random_seed'] = random_seed
+
+    if ncpu is None:
+        if 'ncpu' in config['image']:
+            pass
+        else:
+            from multiprocessing import cpu_count
+            config['image']['ncpu'] = cpu_count
+    else:
+        if 'ncpu' in config['image']:
+            import warnings
+            warnings.warn(
+                'Overriding ncpu in config with input kwarg value '+str(ncpu))
+        config['image']['ncpu'] = ncpu
+
+    if pixel_scale is None:
+        if 'pixel_scale' in config['image']:
+            pass
+        else:
+            raise ValueError('Required input pixel_scale not set via kwarg or in image config')
+    else:
+        if 'pixel_scale' in config['image']:
+            import warnings
+            warnings.warn(
+                'Overriding pixel_scale in config with input kwarg value '+str(pixel_scale))
+        config['image']['pixel_scale'] = pixel_scale
+
+    if size is None:
+        if 'size' in config['image']:
+            pass
+        else:
+            raise ValueError('Required input size not set via kwarg or in image config')
+    else:
+        if 'size' in config['image']:
+            import warnings
+            warnings.warn(
+                'Overriding size in config with input kwarg value '+str(size))
+        config['image']['size'] = size
+
+    if wmult is None:
+        if 'wmult' in config['image']:
+            pass
+        else:
+            raise ValueError('Required input wmult not set via kwarg or in image config')
+    else:
+        if 'wmult' in config['image']:
+            import warnings
+            warnings.warn(
+                'Overriding wmult in config with input kwarg value '+str(wmult))
+        config['image']['wmult'] = wmult
+
+    # Then define some convenience functions for handling lists and multiple trial operations
+    def _mean(array_like):
+        return np.mean(np.asarray(array_like))
+
+    def _stderr(array_like):
+        return np.std(np.asarray(array_like)) / np.sqrt(len(array_like))
+
+    # OK, that's the end of the helper functions-within-helper functions, back to the main unit
+
+    # Start the timer
+    t1 = time.time()
+
+    # Draw the shoot image, only needs to be done once
+    im_draw = galsim.config.BuildImage(config, logger=True)
+    res_draw = im_draw.FindAdaptiveMom()
+    sigma_draw = res_draw.moments_sigma
+    g1obs_draw = res_draw.observed_shape.g1
+    g2obs_draw = res_draw.observed_shape.g2
+
+    # Setup storage lists for the trial shooting results
+    sigma_shoot_list = []
+    g1obs_shoot_list = []
+    g2obs_shoot_list = [] 
+    sigmaerr = 666. # Slightly kludgy but will not accidentally fail the first `while` condition
+    g1obserr = 666.
+    g2obserr = 666.
+
+    # Initialize iteration counter
+    itercount = 0
+
+    # Then begin while loop, farming out sets of n_trials_per_iter trials until we get the
+    # statistical accuracy we require 
+    while (g1obserr > abs_tol_ellip) or (g2obserr > abs_tol_ellip) or (sigmaerr > abs_tol_size):
+
+        # Change the random_seed depending on the iteration number so that these never overlap
+        config['image']['random_seed'] += int(itercount * (n_trials_per_iter + 1))
+
+        # Run the trials using galsim.config.BuildImages function
+        trial_images = galsim.config.BuildImages(n_trials_per_iter, config, logger=True) 
+
+        # Collect results using multiprocessing 
+        from multiprocessing import Pool
+        pool = Pool(config['image']['ncpu'])
+        trial_results = pool.map(galsim.Image.FindAdaptiveMom, trial_images)
+
+        # Get lists of g1,g2,sigma estimate (this might be quicker using a single list comprehension
+        # to get a list of (g1,g2,sigma) tuples, and then unzip with zip(*), but this is clearer)
+        g1obs_shoot_list.extend([res.observed_shape.g1 for res in trial_results]) 
+        g2obs_shoot_list.extend([res.observed_shape.g2 for res in trial_results]) 
+        sigma_shoot_list.extend([res.moments_sigma for res in trial_results])
+
+        #Then calculate new standard error
+        g1obserr = _stderr(g1obs_shoot_list)
+        g2obserr = _stderr(g2obs_shoot_list)
+        sigmaerr = _stderr(sigma_shoot_list)
+        itercount += 1
+        logging.debug('Completed '+str(itercount)+' iterations')
+        logging.debug(
+            '(g1obserr, g2obserr, sigmaerr) = '+str(g1obserr)+', '+str(g2obserr)+', '+str(sigmaerr))
+
+    # Take the runtime and collate results into a ComparisonShapeData
+    runtime = time.time() - t1
+    results = ComparisonShapeData(
+        g1obs_draw, g2obs_draw, sigma_draw,
+        _mean(g1obs_shoot_list), _mean(g2obs_shoot_list), _mean(sigma_shoot_list),
+        g1obserr, g2obserr, sigmaerr, gsobject, psf_object, imsize, dx, wmult,
+        itercount, n_trials_per_iter, n_photons_per_trial, runtime)
+
+    logging.info('\n'+str(results))
+    return results
