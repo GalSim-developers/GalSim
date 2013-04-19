@@ -87,9 +87,9 @@ def test_comparison_config():
     }
 
     # Try a single core run not setting many kwargs
-    res1 = galsim.utilities.compare_dft_vs_photon_config(
-        config, abs_tol_ellip=3.e-4, abs_tol_size=1.e-3, nproc=1,
-        n_photons_per_trial=1e5, wmult=wmult, logger=logger)
+    #res1 = galsim.utilities.compare_dft_vs_photon_config(
+        #config, abs_tol_ellip=3.e-4, abs_tol_size=1.e-3, nproc=1,
+        #n_photons_per_trial=1e5, wmult=wmult, logger=logger)
 
     # Try a dual core run setting a few kwargs by hand to check correct overriding
     res2 = galsim.utilities.compare_dft_vs_photon_config(

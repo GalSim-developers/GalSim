@@ -515,6 +515,8 @@ def compare_dft_vs_photon_config(config, random_seed=None, nproc=None, pixel_sca
     """
     import logging
     import time     
+    print 'Start compare_dft' 
+    print 'config = ',config
 
     # Some sanity checks on inputs
     if hsm is True:
@@ -539,7 +541,7 @@ def compare_dft_vs_photon_config(config, random_seed=None, nproc=None, pixel_sca
             pass
         else:
             from multiprocessing import cpu_count
-            config['image']['nproc'] = cpu_count
+            config['image']['nproc'] = cpu_count()
     else:
         if 'nproc' in config['image']:
             import warnings
@@ -582,6 +584,8 @@ def compare_dft_vs_photon_config(config, random_seed=None, nproc=None, pixel_sca
             warnings.warn(
                 'Overriding wmult in config with input kwarg value '+str(wmult))
         #config['image']['wmult'] = wmult # CURRENTLY WE MUST IGNORE THIS
+    print 'After updates'
+    print 'config = ',config
 
     # Then define some convenience functions for handling lists and multiple trial operations
     def _mean(array_like):
@@ -596,7 +600,13 @@ def compare_dft_vs_photon_config(config, random_seed=None, nproc=None, pixel_sca
     t1 = time.time()
 
     # Draw the shoot image, only needs to be done once
-    im_draw = galsim.config.BuildImage(config, logger=logger)[0]
+    # The BuidImage function stores things in the config that aren't picklable.
+    # If you want to use config later for multiprocessing, you have to deepcopy it here.
+    import copy
+    config2 = copy.deepcopy(config)
+    im_draw = galsim.config.BuildImage(config2, logger=logger)[0]
+    print 'After draw shoot image.  Note the unpicklable current_val items that show up now.'
+    print 'config2 = ',config2
     res_draw = im_draw.FindAdaptiveMom()
     sigma_draw = res_draw.moments_sigma
     g1obs_draw = res_draw.observed_shape.g1
@@ -621,9 +631,11 @@ def compare_dft_vs_photon_config(config, random_seed=None, nproc=None, pixel_sca
     # statistical accuracy we require 
     while (g1obserr > abs_tol_ellip) or (g2obserr > abs_tol_ellip) or (sigmaerr > abs_tol_size):
 
+        print 'Start loop'
+        print 'config = ',config
+
         # Reset the random_seed depending on the iteration number so that these never overlap
-        config['image']['random_seed'] = config['image']['random_seed']['first'] + int(
-            itercount * (n_trials_per_iter + 1))
+        config['image']['random_seed'] = itercount * (n_trials_per_iter + 1)
 
         # Run the trials using galsim.config.BuildImages function
         trial_images = galsim.config.BuildImages(
