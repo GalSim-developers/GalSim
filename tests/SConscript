@@ -48,7 +48,7 @@ def run_tests(target, source, env):
         print 'Using nosetests from: ',env['NOSETESTS']
         cmd = env['NOSETESTS']
         if env['NOSETESTSVERSION'] >= '1.1' and env.GetOption('num_jobs') > 1:
-            cmd += ' --processes=%d --process-timeout=30'%(env.GetOption('num_jobs'))
+            cmd += ' --processes=%d --process-timeout=60'%(env.GetOption('num_jobs'))
             print 'nosetests is version %s... running tests in parallel with %d jobs'%(
                     env['NOSETESTSVERSION'],env.GetOption('num_jobs'))
             print 'If you have trouble with the parallel test run, you may disable it'
