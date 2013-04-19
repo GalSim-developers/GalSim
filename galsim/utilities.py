@@ -213,10 +213,22 @@ class ComparisonShapeData(object):
     Note this is really only a simple storage container for the results above.  All of the
     non trivial calculation is completed before a ComparisonShapeData instance is initialized,
     typically in the function compare_object_dft_vs_photon.
+
+    - gsobject: optional galsim.GSObject for which this test was performed (prior to PSF convolution
+      if a PSF was also supplied).
+
+    - psf_object: the optional additional PSF supplied by the user for tests of convolved objects,
+      will be `None` if not used.
+
+    - config: optional config object describing the gsobject and PSF if the config comparison script
+      was used rather than the (single core only) direct object script.
+
+    Either config, or gsobject, or gsobject and psf_object, must be set or an Exception is raised.
     """
     def __init__(self, g1obs_draw, g2obs_draw, sigma_draw, g1obs_shoot, g2obs_shoot, sigma_shoot,
-                 err_g1obs, err_g2obs, err_sigma, gsobject, psf_object, size, pixel_scale, wmult,
-                 n_iterations, n_trials_per_iter, n_photons_per_trial, time):
+                 err_g1obs, err_g2obs, err_sigma, size, pixel_scale, wmult, n_iterations,
+                 n_trials_per_iter, n_photons_per_trial, time, gsobject=None, psf_object=None,
+                 config=None):
 
         self.g1obs_draw = g1obs_draw
         self.g2obs_draw = g2obs_draw
@@ -230,8 +242,16 @@ class ComparisonShapeData(object):
         self.err_g2obs = err_g2obs
         self.err_sigma = err_sigma
 
+        if gsobject is not None:
+            if config is not None:
+                raise ValueError("Specifying both a config and gsobject input kwarg is ambiguous")
+        elif config is None:
+            raise ValueError(
+                "Either config, or gsobject (with an optional psf_object) must be given as input.")
+        self.config = config
         self.gsobject = gsobject
         self.psf_object = psf_object
+ 
         self.size = size
         self.pixel_scale = pixel_scale
         self.wmult = wmult
@@ -418,16 +438,16 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, pixel_scal
     results = ComparisonShapeData(
         g1obs_draw, g2obs_draw, sigma_draw,
         _mean(g1obs_shoot_list), _mean(g2obs_shoot_list), _mean(sigma_shoot_list),
-        g1obserr, g2obserr, sigmaerr, gsobject, psf_object, size, pixel_scale, wmult,
-        itercount, n_trials_per_iter, n_photons_per_trial, runtime)
+        g1obserr, g2obserr, sigmaerr, size, pixel_scale, wmult, itercount, n_trials_per_iter,
+        n_photons_per_trial, runtime, gsobject=gsobject, psf_object=psf_object)
 
     logging.info('\n'+str(results))
     return results
 
-def compare_dft_vs_photon_config(config, random_seed=None, ncpu=None, pixel_scale=None, size=None,
+def compare_dft_vs_photon_config(config, random_seed=None, nproc=None, pixel_scale=None, size=None,
                                  wmult=None, abs_tol_ellip=1.e-5, abs_tol_size=1.e-5,
                                  n_trials_per_iter=32, n_photons_per_trial=1e7, moments=True,
-                                 hsm=False):
+                                 hsm=False, logger=None):
     """Take an input config dictionary and render the image it describes in two ways, comparing
     results at high precision.
 
@@ -450,6 +470,9 @@ def compare_dft_vs_photon_config(config, random_seed=None, ncpu=None, pixel_scal
 
     @random_seed                  integer to be used as the basis of all seeds for the random number
                                   generator, overrides any value in config['image'].
+
+    @nproc                        number of cpu processes to run in parallel, overrides any value
+                                  in config['image'].
 
     @param pixel_scale            the pixel scale to use in the test images, overrides any value in
                                   config['image'].
@@ -508,18 +531,18 @@ def compare_dft_vs_photon_config(config, random_seed=None, ncpu=None, pixel_scal
                 'Overriding random_seed in config with input kwarg value '+str(random_seed))
         config['image']['random_seed'] = random_seed
 
-    if ncpu is None:
-        if 'ncpu' in config['image']:
+    if nproc is None:
+        if 'nproc' in config['image']:
             pass
         else:
             from multiprocessing import cpu_count
-            config['image']['ncpu'] = cpu_count
+            config['image']['nproc'] = cpu_count
     else:
-        if 'ncpu' in config['image']:
+        if 'nproc' in config['image']:
             import warnings
             warnings.warn(
-                'Overriding ncpu in config with input kwarg value '+str(ncpu))
-        config['image']['ncpu'] = ncpu
+                'Overriding nproc in config with input kwarg value '+str(nproc))
+        config['image']['nproc'] = nproc
 
     if pixel_scale is None:
         if 'pixel_scale' in config['image']:
@@ -555,7 +578,7 @@ def compare_dft_vs_photon_config(config, random_seed=None, ncpu=None, pixel_scal
             import warnings
             warnings.warn(
                 'Overriding wmult in config with input kwarg value '+str(wmult))
-        config['image']['wmult'] = wmult
+        #config['image']['wmult'] = wmult # CURRENTLY WE MUST IGNORE THIS
 
     # Then define some convenience functions for handling lists and multiple trial operations
     def _mean(array_like):
@@ -570,7 +593,7 @@ def compare_dft_vs_photon_config(config, random_seed=None, ncpu=None, pixel_scal
     t1 = time.time()
 
     # Draw the shoot image, only needs to be done once
-    im_draw = galsim.config.BuildImage(config, logger=True)
+    im_draw = galsim.config.BuildImage(config, logger=logger)[0]
     res_draw = im_draw.FindAdaptiveMom()
     sigma_draw = res_draw.moments_sigma
     g1obs_draw = res_draw.observed_shape.g1
@@ -587,20 +610,24 @@ def compare_dft_vs_photon_config(config, random_seed=None, ncpu=None, pixel_scal
     # Initialize iteration counter
     itercount = 0
 
+    # Change the draw_method to photon shooting
+    config['image']['draw_method'] = 'phot'
+    config['image']['n_photons'] = n_photons_per_trial
+
     # Then begin while loop, farming out sets of n_trials_per_iter trials until we get the
     # statistical accuracy we require 
     while (g1obserr > abs_tol_ellip) or (g2obserr > abs_tol_ellip) or (sigmaerr > abs_tol_size):
 
-        # Change the random_seed depending on the iteration number so that these never overlap
-        config['image']['random_seed'] += int(itercount * (n_trials_per_iter + 1))
+        # Reset the random_seed depending on the iteration number so that these never overlap
+        config['image']['random_seed'] = config['image']['random_seed']['first'] + int(
+            itercount * (n_trials_per_iter + 1))
 
         # Run the trials using galsim.config.BuildImages function
-        trial_images = galsim.config.BuildImages(n_trials_per_iter, config, logger=True) 
-
-        # Collect results using multiprocessing 
-        from multiprocessing import Pool
-        pool = Pool(config['image']['ncpu'])
-        trial_results = pool.map(galsim.Image.FindAdaptiveMom, trial_images)
+        trial_images = galsim.config.BuildImages(
+            n_trials_per_iter, config, logger=logger, nproc=config['image']['nproc'])[0] 
+ 
+        # Collect results 
+        trial_results = [image.FindAdaptiveMom() for image in trial_images]
 
         # Get lists of g1,g2,sigma estimate (this might be quicker using a single list comprehension
         # to get a list of (g1,g2,sigma) tuples, and then unzip with zip(*), but this is clearer)
@@ -622,8 +649,8 @@ def compare_dft_vs_photon_config(config, random_seed=None, ncpu=None, pixel_scal
     results = ComparisonShapeData(
         g1obs_draw, g2obs_draw, sigma_draw,
         _mean(g1obs_shoot_list), _mean(g2obs_shoot_list), _mean(sigma_shoot_list),
-        g1obserr, g2obserr, sigmaerr, gsobject, psf_object, imsize, dx, wmult,
-        itercount, n_trials_per_iter, n_photons_per_trial, runtime)
+        g1obserr, g2obserr, sigmaerr, config['image']['size'], config['image']['pixel_scale'],
+        wmult, itercount, n_trials_per_iter, n_photons_per_trial, runtime, config=config)
 
     logging.info('\n'+str(results))
     return results
