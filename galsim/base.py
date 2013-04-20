@@ -525,22 +525,18 @@ class GSObject(object):
 
         return image, dx
 
-    def _fix_center(self, image, use_true_center):
-        if use_true_center:
-            # For even-sized images, the SBProfile draw function centers the result in the 
-            # pixel just up and right of the real center.  So shift it back to make sure it really
-            # draws in the center.
-            even_x = (image.xmax-image.xmin+1) % 2 == 0
-            even_y = (image.ymax-image.ymin+1) % 2 == 0
-            scale = image.scale
-            if even_x:
-                if even_y: prof = self.createShifted(-0.5*scale,-0.5*scale)
-                else: prof = self.createShifted(-0.5*scale,0.)
-            else:
-                if even_y: prof = self.createShifted(0.,-0.5*scale)
-                else: prof = self
+    def _fix_center(self, image, scale):
+        # For even-sized images, the SBProfile draw function centers the result in the 
+        # pixel just up and right of the real center.  So shift it back to make sure it really
+        # draws in the center.
+        even_x = (image.xmax-image.xmin+1) % 2 == 0
+        even_y = (image.ymax-image.ymin+1) % 2 == 0
+        if even_x:
+            if even_y: prof = self.createShifted(-0.5*scale,-0.5*scale)
+            else: prof = self.createShifted(-0.5*scale,0.)
         else:
-            prof = self
+            if even_y: prof = self.createShifted(0.,-0.5*scale)
+            else: prof = self
         return prof
 
 
@@ -648,7 +644,10 @@ class GSObject(object):
         image, dx = self._draw_setup_image(image,dx,wmult,add_to_image)
 
         # Fix the centering for even-sized images
-        prof = self._fix_center(image, use_true_center)
+        if use_true_center:
+            prof = self._fix_center(image, image.scale)
+        else:
+            prof = self
 
         # SBProfile draw command uses surface brightness normalization.  So if we
         # want flux normalization, we need to scale the flux by dx^2
@@ -826,7 +825,10 @@ class GSObject(object):
         image, dx = self._draw_setup_image(image,dx,wmult,add_to_image)
 
         # Fix the centering for even-sized images
-        prof = self._fix_center(image, use_true_center)
+        if use_true_center:
+            prof = self._fix_center(image, image.scale)
+        else:
+            prof = self
 
         # SBProfile drawShoot command uses surface brightness normalization.  So if we
         # want flux normalization, we need to scale the flux by dx^2
@@ -1617,6 +1619,11 @@ class InterpolatedImage(GSObject):
     @param use_cache       Specify whether to cache noise_pad read in from a file to save having
                            to build a CorrelatedNoise object repeatedly from the same image.
                            (Default `use_cache = True`)
+    @param use_true_center  Similar to the same parameter in the GSObject.draw function, this
+                            sets whether to use the true center of the provided image as the 
+                            center of the profile (if `use_true_center=True`) or the nominal
+                            center returned by `image.bounds.center()` (if `use_true_center=False`)
+                            [default `use_true_center = True`]
 
     Methods
     -------
@@ -1636,7 +1643,8 @@ class InterpolatedImage(GSObject):
         'noise_pad' : str ,
         'pad_image' : str ,
         'calculate_stepk' : bool ,
-        'calculate_maxk' : bool
+        'calculate_maxk' : bool,
+        'use_true_center' : bool
     }
     _single_params = []
     _takes_rng = True
@@ -1645,7 +1653,8 @@ class InterpolatedImage(GSObject):
     # --- Public Class methods ---
     def __init__(self, image, x_interpolant = None, k_interpolant = None, normalization = 'flux',
                  dx = None, flux = None, pad_factor = 0., noise_pad = 0., rng = None,
-                 pad_image = None, calculate_stepk=True, calculate_maxk=True, use_cache=True):
+                 pad_image = None, calculate_stepk=True, calculate_maxk=True,
+                 use_cache=True, use_true_center=True):
         # first try to read the image as a file.  If it's not either a string or a valid
         # pyfits hdu or hdulist, then an exception will be raised, which we ignore and move on.
         try:
@@ -1829,6 +1838,14 @@ class InterpolatedImage(GSObject):
 
         # Initialize the SBProfile
         GSObject.__init__(self, sbinterpolatedimage)
+
+        # Fix the center to be in the right place.
+        # Note the minus sign in front of image.scale, since we want to fix the center in the 
+        # opposite sense of what the draw function does.
+        if use_true_center:
+            prof = self._fix_center(image, -image.scale)
+            GSObject.__init__(self, prof.SBProfile)
+            
 
 
 class Pixel(GSObject):
