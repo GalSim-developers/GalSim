@@ -76,6 +76,7 @@ struct PyBounds {
             .def(bp::init< const Position<T> &, const Position<T> & >(bp::args("pos1", "pos2")))
             .def("isDefined", &Bounds<T>::isDefined)
             .def("center", &Bounds<T>::center)
+            .def("trueCenter", &Bounds<T>::trueCenter)
             .def(bp::self += bp::self)
             .def(bp::self += bp::other< Position<T> >())
             .def(bp::self += bp::other<T>())
