@@ -431,7 +431,7 @@ namespace galsim {
         int Nnofold = getGoodImageSize(dx,wmult);
         dbg<<"Nnofold = "<<Nnofold<<std::endl;
 
-        // W must make something big enough to cover the target image size:
+        // We must make something big enough to cover the target image size:
         int xSize, ySize;
         xSize = I.getXMax()-I.getXMin()+1;
         ySize = I.getYMax()-I.getYMin()+1;
@@ -641,23 +641,20 @@ namespace galsim {
         double dk = kt.getDk();
         kt.clearCache();
 
-        tmv::Vector<double> kx(N/2+1);
-        for (int i=0;i<=N/2;++i) kx.ref(i) = i*dk;
-
-        tmv::Vector<double> ky(N);
-        for (int i=0;i<=N/2;++i) ky.ref(i) = i*dk;
-        for (int i=-N/2+1;i<0;++i) ky.ref(i+N) = i*dk;
-
-        tmv::Matrix<std::complex<double> > val(N/2+1,N);
+        tmv::Matrix<std::complex<double> > val(N/2+1,N+1);
 #ifdef DEBUGLOGGING
         val.setAllTo(999.);
 #endif
-        fillKValue(val.view(),0.,dk,0,(-N/2+1)*dk,dk,N/2-1);
+        fillKValue(val.view(),0.,dk,0,-N/2*dk,dk,N/2);
 
         tmv::MatrixView<std::complex<double> > mkt(kt.getArray(),N/2+1,N,1,N/2+1,tmv::NonConj);
         // The KTable wants the locations of the + and - ky values swapped.
-        mkt.colRange(0,N/2+1) = val.colRange(N/2-1,N);
-        mkt.colRange(N/2+1,N) = val.colRange(0,N/2-1);
+        mkt.colRange(0,N/2) = val.colRange(N/2,N);
+        mkt.colRange(N/2+1,N) = val.colRange(1,N/2);
+        // For the N/2 column, we use the average of the ky = +N/2 and -N/2 values
+        // Otherwise you can get strage effects when the profile isn't radially symmetric.
+        // e.g. A shift will induce a spurious shear. (BAD!!)
+        mkt.col(N/2) = 0.5*val.col(0) + 0.5*val.col(N);
     }
 
     // The type of T (real or complex) determines whether the call-back is to 

@@ -2033,8 +2033,8 @@ def test_draw():
         mxx = (((x-mx)**2) * im.array).sum() / flux
         myy = (((y-my)**2) * im.array).sum() / flux
         mxy = ((x-mx) * (y-my) * im.array).sum() / flux
-        np.testing.assert_almost_equal(mxy, 0, 2, "Found mxy != 0 for Exponential draw")
-        np.testing.assert_almost_equal(mxx-myy, 0, 2, "Found mxx != myy for Exponential draw")
+        np.testing.assert_almost_equal(mxy, 0, 3, "Found mxy != 0 for Exponential draw")
+        np.testing.assert_almost_equal((mxx-myy), 0, 3, "Found mxx != myy for Exponential draw")
         s2 = (mxx+myy) / 6
         return np.sqrt(s2) * im.scale
  
@@ -2368,9 +2368,6 @@ def test_autocorrelate():
 
 
 if __name__ == "__main__":
-    test_draw()
-    exit()
-
     test_gaussian()
     test_gaussian_properties()
     test_gaussian_radii()
