@@ -313,9 +313,13 @@ namespace galsim {
             _2n(2.*n), _rinvn(std::pow(maxRre, 1./n)) {}
         double operator()(double b) const
         {
-            double z = b * _rinvn;
             double fre = boost::math::tgamma_lower(_2n, b);
-            double frm = boost::math::tgamma_lower(_2n, z);
+            double frm;
+            if (_rinvn == 0.)  frm = boost::math::tgamma(_2n);
+            else {
+                double z = b * _rinvn;
+                frm = boost::math::tgamma_lower(_2n, z);
+            }
             xdbg<<"func("<<b<<") = 2*"<<fre<<" - "<<frm<<" = "<<2.*fre-frm<<std::endl;
             return 2.*fre - frm;
         }
@@ -328,40 +332,31 @@ namespace galsim {
     // Sersic scale in Sersic profile is defined from exp(-b*r^(1/n))
     double SersicCalculateScaleBFromHLR(double n, double maxRre)
     {
-        // Find Sersic scale b, for the case of no truncation.
+        // Find Sersic scale b.
         // Total flux in a Sersic profile is:  F = I0*re^2 (2pi*n) b^(-2n) Gamma(2n)
         // Flux within radius R is:  F(<R) = I0*re^2 (2pi*n) b^(-2n) gamma(2n, b*(R/re)^(1/n))
         // where Gamma(a) == int_0^inf exp(-t) t^(a-1) dt
         //       gamma(a,x) == int_0^x exp(-t) t^(a-1) dt
-        // Solution to gamma(2n,b) = Gamma(2n)/2 is given by an approximation formula for b from
-        // Ciotti & Bertin (1999):
-        double b = 2.*n - (1./3.)
-                   + (4./405.)/n
-                   + (46./25515.)/(n*n)
-                   + (131./1148175.)/(n*n*n)
-                   - (2194697./30690717750.)/(n*n*n*n);
+        // Find solution to gamma(2n,b) = Gamma(2n)/2 for the untruncated case;
+        //                  gamma(2n,b) = Gamma(2n,b*(trunc/re)^(1/n)) / 2, for the truncated case.
+        if (maxRre!=0. && maxRre <= 1.)   // TODO: find a better minimum truncation check criteria.
+            throw SBError("Sersic truncation radius must be > half_light_radius.");
+        SersicScaleRadiusFunc func(n, maxRre);
+        // For the upper bound of b, use 2*n, based on the Ciotti & Bertin (1999) approximate 
+        // solution for untruncated Sersic; for the lower bound, we don't really have a good choice,
+        // so start with half the upper bound, and we'll expand it if necessary.
+        double b1 = n;
+        xdbg<<"b1 = "<<b1<<std::endl;
+        double b2 = 2*n;
+        xdbg<<"b2 = "<<b2<<std::endl;
+        Solve<SersicScaleRadiusFunc> solver(func,b1,b2);
+        solver.setMethod(Brent);
+        solver.bracketLower();    // expand lower bracket if necessary
+        xdbg<<"After bracket, range is "<<solver.getLowerBound()<<" .. "<<
+            solver.getUpperBound()<<std::endl;
+        double b = solver.root();
+        xdbg<<"Root is "<<b<<std::endl;
 
-        // find scale b with truncated radius
-        if (maxRre > 0.) {
-            if (maxRre <= 1.)   // TODO: find a better minimum truncation check criteria.
-                throw SBError("Sersic truncation radius must be > half_light_radius.");
-            // Solution to gamma(2n,b) = Gamma(2n,b*(trunc/re)^(1/n)) / 2
-            SersicScaleRadiusFunc func(n, maxRre);
-            // For the lower bound, we don't really have a good choice, so start with b / 2.
-            // and we'll expand it if necessary.
-            double b1 = b / 2.;
-            xdbg<<"b1 = "<<b1<<std::endl;
-            // For the upper bound of b, we can use the untruncated value:
-            double b2 = b;
-            xdbg<<"b2 = "<<b2<<std::endl;
-            Solve<SersicScaleRadiusFunc> solver(func,b1,b2);
-            solver.setMethod(Brent);
-            solver.bracketLower();    // expand lower bracket if necessary
-            xdbg<<"After bracket, range is "<<solver.getLowerBound()<<" .. "<<
-                solver.getUpperBound()<<std::endl;
-            b = solver.root();
-            xdbg<<"Root is "<<b<<std::endl;
-        }
         return b;
     }
 
@@ -436,7 +431,7 @@ namespace galsim {
         // How far should the profile extend, if not truncated?
         // Estimate number of effective radii needed to enclose (1-alias_threshold) of flux
         double Rre = findMaxRre(sbp::alias_threshold,gamma2n);
-        if (Rre > _maxRre)  Rre = _maxRre;
+        if (_truncated && Rre > _maxRre)  Rre = _maxRre;
         // Go to at least 5*re
         if (Rre < 5.) Rre = 5.;
         dbg<<"maxR/re => "<<_maxRre<<std::endl;
