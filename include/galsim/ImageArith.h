@@ -324,17 +324,17 @@ namespace galsim {
     template <>
     struct ResultType<float,double> { typedef double type; };
     template <>
-    struct ResultType<int,double> { typedef double type; };
+    struct ResultType<int32_t,double> { typedef double type; };
     template <>
-    struct ResultType<short,double> { typedef double type; };
+    struct ResultType<int16_t,double> { typedef double type; };
 
     template <>
-    struct ResultType<int,float> { typedef float type; };
+    struct ResultType<int32_t,float> { typedef float type; };
     template <>
-    struct ResultType<short,float> { typedef float type; };
+    struct ResultType<int16_t,float> { typedef float type; };
 
     template <>
-    struct ResultType<short,int> { typedef int type; };
+    struct ResultType<int16_t,int32_t> { typedef int32_t type; };
 
     //
     // Image + Scalar
@@ -356,7 +356,7 @@ namespace galsim {
     // Currently, the only valid type for x is the value type of im.
     // The reason is that making the type of x a template opens the door
     // to any class, not just POD.  I don't know of an easy way to make 
-    // this only valid for T2 = POD types like short, int, float, double.
+    // this only valid for T2 = POD types like int16_t, int32_t, float, double.
     // So if we do want to allow mixed types for these, we'd probably have to 
     // specifically overload each one by hand.
     template <typename T>

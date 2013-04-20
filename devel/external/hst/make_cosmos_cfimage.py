@@ -47,8 +47,16 @@ import cPickle
 import numpy as np
 import galsim
 
+# Subtract off the mean for each field explicitly (bg subtraction never perfect)?
+# There does seem to be a consistent positive bg around giving a constant CF of 2.4e-7 (~2% of peak)
+# that we might want to remove.  See the Pull Request #366 on GalSim's Github site.
+SUBTRACT_MEAN=True
+
 NOISEIMFILE = "acs_I_unrot_sci_20_noisearrays.pkl"  # Input pickled list filename
-CFIMFILE = "acs_I_unrot_sci_20_cf.fits"             # Output image of the noise correlation function
+if SUBTRACT_MEAN:
+    CFIMFILE = "acs_I_unrot_sci_20_cf_subtracted.fits" # Output image of the correlation function
+else:
+    CFIMFILE = "acs_I_unrot_sci_20_cf_unsubtracted.fits" # Output image of the correlation function
 CFPLOTFILE = "acs_I_unrot_sci_20_cf.png"            # Plot (linear) of the output CF 
 CFLOGPLOTFILE = "acs_I_unrot_sci_20_log10cf.png"    # Plot (log) of the output CF
 NPIX = 81                                           # Make an image of the final correlation
@@ -59,15 +67,18 @@ if not os.path.isfile(CFIMFILE): # If the CFIMFILE already exists skip straight 
     noiseims = cPickle.load(open(NOISEIMFILE, 'rb'))
     # Loop through the images and sum the correlation functions
     hst_ncf = None
+    bd = galsim.BaseDeviate(12345) # Seed is basically unimportant here
     for noiseim in noiseims:
         noiseim = noiseim.astype(np.float64)
-        # Subtract off the mean for each field (bg subtraction never perfect)
-        noiseim -= noiseim.mean()
         if hst_ncf is None:
             # Initialize the HST noise correlation function using the first image
-            hst_ncf = galsim.ImageCorrFunc(galsim.ImageViewD(noiseim))
+            hst_ncf = galsim.CorrelatedNoise(
+                bd, galsim.ImageViewD(noiseim), correct_periodicity=True,
+                subtract_mean=SUBTRACT_MEAN)
         else:
-            hst_ncf += galsim.ImageCorrFunc(galsim.ImageViewD(noiseim))
+            hst_ncf += galsim.CorrelatedNoise(
+                bd, galsim.ImageViewD(noiseim), correct_periodicity=True,
+                subtract_mean=SUBTRACT_MEAN)
     hst_ncf /= float(len(noiseims))
     # Draw and plot an output image of the resulting correlation function
     cfimage = galsim.ImageD(NPIX, NPIX)

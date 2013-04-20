@@ -141,30 +141,26 @@ class RealGalaxyCatalog(object):
             raise RuntimeError(self.image_dir+' directory does not exist!')
 
         import pyfits
-        try:
-            cat = pyfits.getdata(self.file_name)
-            self.nobjects = len(cat) # number of objects in the catalog
-            if nobjects_only: return  # Exit early if that's all we needed.
-            ident = cat.field('ident') # ID for object in the training sample
-            # We want to make sure that the ident array contains all strings.
-            # Strangely, ident.astype(str) produces a string with each element == '1'.
-            # Hence this way of doing the conversion:
-            self.ident = [ "%s"%val for val in ident ]
-            self.gal_file_name = cat.field('gal_filename') # file containing the galaxy image
-            self.PSF_file_name = cat.field('PSF_filename') # file containing the PSF image
-            self.gal_hdu = cat.field('gal_hdu') # HDU containing the galaxy image
-            self.PSF_hdu = cat.field('PSF_hdu') # HDU containing the PSF image
-            self.pixel_scale = cat.field('pixel_scale') # pixel scale for image (could be different
-            # if we have training data from other datasets... let's be general here and make it a 
-            # vector in case of mixed training set)
-            self.variance = cat.field('noise_variance') # noise variance for image
-            self.mag = cat.field('mag')   # apparent magnitude
-            self.band = cat.field('band') # bandpass in which apparent mag is measured, e.g., F814W
-            self.weight = cat.field('weight') # weight factor to account for size-dependent
-                                              # probability
-        except Exception, e:
-            print e
-            raise RuntimeError("Unable to read real galaxy catalog %s."%self.file_name)
+        cat = pyfits.getdata(self.file_name)
+        self.nobjects = len(cat) # number of objects in the catalog
+        if nobjects_only: return  # Exit early if that's all we needed.
+        ident = cat.field('ident') # ID for object in the training sample
+        # We want to make sure that the ident array contains all strings.
+        # Strangely, ident.astype(str) produces a string with each element == '1'.
+        # Hence this way of doing the conversion:
+        self.ident = [ "%s"%val for val in ident ]
+        self.gal_file_name = cat.field('gal_filename') # file containing the galaxy image
+        self.PSF_file_name = cat.field('PSF_filename') # file containing the PSF image
+        self.gal_hdu = cat.field('gal_hdu') # HDU containing the galaxy image
+        self.PSF_hdu = cat.field('PSF_hdu') # HDU containing the PSF image
+        self.pixel_scale = cat.field('pixel_scale') # pixel scale for image (could be different
+        # if we have training data from other datasets... let's be general here and make it a 
+        # vector in case of mixed training set)
+        self.variance = cat.field('noise_variance') # noise variance for image
+        self.mag = cat.field('mag')   # apparent magnitude
+        self.band = cat.field('band') # bandpass in which apparent mag is measured, e.g., F814W
+        self.weight = cat.field('weight') # weight factor to account for size-dependent
+                                          # probability
 
         self.preloaded = False
         self.do_preload = preload

@@ -113,6 +113,61 @@ namespace galsim {
         void operator=(const SBConvolve& rhs);
     };
 
+    // A special case of a convolution of a profile with itself, which allows for some 
+    // efficiency gains over SBConvolve(s,s)
+    class SBAutoConvolve : public SBProfile
+    {
+    public:
+        /**
+         * @brief Constructor
+         *
+         * @param[in] s SBProfile to be convolved with itself.
+         */
+        SBAutoConvolve(const SBProfile& s);
+
+        /// @brief Copy constructor.
+        SBAutoConvolve(const SBAutoConvolve& rhs);
+
+        /// @brief Destructor.
+        ~SBAutoConvolve();
+
+    protected:
+
+        class SBAutoConvolveImpl;
+
+    private:
+        // op= is undefined
+        void operator=(const SBAutoConvolve& rhs);
+    };
+
+    // A special case of the autocorrelation of profile (i.e. with itself), primarily used by the
+    // correlated noise models
+    class SBAutoCorrelate : public SBProfile
+    {
+    public:
+        /**
+         * @brief Constructor
+         *
+         * @param[in] s SBProfile to be correlated with itself.
+         */
+        SBAutoCorrelate(const SBProfile& s);
+
+        /// @brief Copy constructor.
+        SBAutoCorrelate(const SBAutoCorrelate& rhs);
+
+        /// @brief Destructor.
+        ~SBAutoCorrelate();
+
+    protected:
+
+        class SBAutoCorrelateImpl;
+
+    private:
+        // op= is undefined
+        void operator=(const SBAutoCorrelate& rhs);
+    };
+
+
 }
 
 #endif // SBCONVOLVE_H

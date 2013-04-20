@@ -1,6 +1,9 @@
 test*fits
 test*out
-*aux
-*dvi
-*log
-*ps
+*.aux
+*.log
+*.dvi
+*.ps
+*.out
+*.toc
+*.sh

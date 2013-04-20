@@ -60,7 +60,18 @@ namespace galsim {
          * @brief Destructor is virtual
          */
         virtual ~BaseNoise() {}
- 
+
+        /**
+         * @brief Get the BaseDeviate being used to generate random numbers for the noise model
+         */
+        boost::shared_ptr<BaseDeviate> getRNG() { return _rng; }
+
+        /**
+         * @brief Set the BaseDeviate that will be used to generate random numbers for the noise
+         * model
+         */
+        void setRNG(boost::shared_ptr<BaseDeviate> rng) { _rng = rng; }
+
         /**
          * @brief Get the variance of the noise model
          */
@@ -70,6 +81,11 @@ namespace galsim {
          * @brief Set the variance of the noise model
          */
         virtual void setVariance(double variance) = 0;
+
+        /**
+         * @brief Set the variance of the noise model
+         */
+        virtual void scaleVariance(double variance_ratio) = 0;
 
         /**
          * @brief Add noise to an Image.
@@ -94,8 +110,8 @@ namespace galsim {
         // application of the noise.
         virtual void doApplyTo(ImageView<double>& data) = 0;
         virtual void doApplyTo(ImageView<float>& data) = 0;
-        virtual void doApplyTo(ImageView<int>& data) = 0;
-        virtual void doApplyTo(ImageView<short>& data) = 0;
+        virtual void doApplyTo(ImageView<int32_t>& data) = 0;
+        virtual void doApplyTo(ImageView<int16_t>& data) = 0;
     };
 
 
@@ -153,6 +169,16 @@ namespace galsim {
         }
 
         /**
+         * @brief Scale the variance of the noise model
+         */
+        void scaleVariance(double variance_ratio) 
+        {
+            if (!(variance_ratio >= 0.)) 
+                throw std::runtime_error("Cannot scaleVariance to < 0");
+            _sigma *= sqrt(variance_ratio); 
+        }
+
+        /**
          * @brief Add noise to an Image.
          */
         template <typename T>
@@ -174,8 +200,8 @@ namespace galsim {
         using BaseNoise::_rng;
         void doApplyTo(ImageView<double>& data) { applyTo(data); }
         void doApplyTo(ImageView<float>& data) { applyTo(data); }
-        void doApplyTo(ImageView<int>& data) { applyTo(data); }
-        void doApplyTo(ImageView<short>& data) { applyTo(data); }
+        void doApplyTo(ImageView<int32_t>& data) { applyTo(data); }
+        void doApplyTo(ImageView<int16_t>& data) { applyTo(data); }
 
     private: 
         double _sigma;
@@ -228,16 +254,26 @@ namespace galsim {
         /**
          * @brief Get the variance of the noise model
          */
-        virtual double getVariance() const { return _sky_level; }
+        double getVariance() const { return _sky_level; }
 
         /**
          * @brief Set the variance of the noise model
          */
-        virtual void setVariance(double variance) 
+        void setVariance(double variance) 
         { 
             if (!(variance >= 0.)) 
                 throw std::runtime_error("Cannot setVariance to < 0");
             _sky_level = variance; 
+        }
+
+        /**
+         * @brief Scale the variance of the noise model
+         */
+        void scaleVariance(double variance_ratio) 
+        { 
+            if (!(variance_ratio >= 0.)) 
+                throw std::runtime_error("Cannot scaleVariance to < 0");
+            _sky_level *= variance_ratio; 
         }
 
         /**
@@ -279,8 +315,8 @@ namespace galsim {
         using BaseNoise::_rng;
         void doApplyTo(ImageView<double>& data) { applyTo(data); }
         void doApplyTo(ImageView<float>& data) { applyTo(data); }
-        void doApplyTo(ImageView<int>& data) { applyTo(data); }
-        void doApplyTo(ImageView<short>& data) { applyTo(data); }
+        void doApplyTo(ImageView<int32_t>& data) { applyTo(data); }
+        void doApplyTo(ImageView<int16_t>& data) { applyTo(data); }
 
     private: 
         double _sky_level;
@@ -366,7 +402,7 @@ namespace galsim {
         /**
          * @brief Get the variance of the noise model
          */
-        virtual double getVariance() const 
+        double getVariance() const 
         {
             if (_gain > 0) return (_sky_level + _read_noise*_read_noise) / _gain;
             else return _read_noise * _read_noise;
@@ -375,23 +411,26 @@ namespace galsim {
         /**
          * @brief Set the variance of the noise model
          *
-         * If gain > 0, then update sky_level to reach the correct variance.
-         * Otherwise update read_noise.
+         * This keeps the same relative contribution of sky noise and read noise.
          */
-        virtual void setVariance(double variance)
+        void setVariance(double variance)
         {
             if (!(variance >= 0.)) 
                 throw std::runtime_error("Cannot setVariance to < 0");
-            if (_gain > 0) {
-                if (variance > _read_noise*_read_noise) {
-                    _sky_level = (variance - _read_noise*_read_noise) * _gain;
-                } else {
-                    _sky_level = 0.;
-                    _read_noise = sqrt(variance);
-                }
-            } else {
-                _read_noise = sqrt(variance);
-            }
+            scaleVariance(variance / getVariance());
+        }
+
+        /**
+         * @brief Scale the variance of the noise model
+         *
+         * This keeps the same relative contribution of sky noise and read noise.
+         */
+        void scaleVariance(double variance_ratio)
+        {
+            if (!(variance_ratio >= 0.)) 
+                throw std::runtime_error("Cannot scaleVariance to < 0");
+            _sky_level *= variance_ratio;
+            _read_noise *= sqrt(variance_ratio);
         }
 
         /**
@@ -486,8 +525,8 @@ namespace galsim {
         using BaseNoise::_rng;
         void doApplyTo(ImageView<double>& data) { applyTo(data); }
         void doApplyTo(ImageView<float>& data) { applyTo(data); }
-        void doApplyTo(ImageView<int>& data) { applyTo(data); }
-        void doApplyTo(ImageView<short>& data) { applyTo(data); }
+        void doApplyTo(ImageView<int32_t>& data) { applyTo(data); }
+        void doApplyTo(ImageView<int16_t>& data) { applyTo(data); }
 
     private: 
         double _sky_level;
@@ -537,6 +576,16 @@ namespace galsim {
             throw std::runtime_error("setVariance not implemented for DeviateNoise");
         }
 
+        /**
+         * @brief Set the variance of the noise model
+         */
+        void scaleVariance(double variance_ratio) 
+        {
+            if (!(variance_ratio >= 0.)) 
+                throw std::runtime_error("Cannot scaleVariance to < 0");
+            throw std::runtime_error("scaleVariance not implemented for DeviateNoise");
+        }
+
 
         /**
          * @brief Add noise to an Image.
@@ -559,8 +608,8 @@ namespace galsim {
         using BaseNoise::_rng;
         void doApplyTo(ImageView<double>& data) { applyTo(data); }
         void doApplyTo(ImageView<float>& data) { applyTo(data); }
-        void doApplyTo(ImageView<int>& data) { applyTo(data); }
-        void doApplyTo(ImageView<short>& data) { applyTo(data); }
+        void doApplyTo(ImageView<int32_t>& data) { applyTo(data); }
+        void doApplyTo(ImageView<int16_t>& data) { applyTo(data); }
     };
 
 };  // namespace galsim

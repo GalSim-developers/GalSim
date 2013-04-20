@@ -25,8 +25,8 @@ New features introduced in this demo:
 - ps = galsim.PowerSpectrum(..., units)
 - distdev = galsim.DistDeviate(rng, function, x_min, x_max)
 - gal.applyLensing(g1, g2, mu)
-- cf = galsim.correlatednoise.get_COSMOS_CorrFunc(file_name, ...)
-- cf.applyNoiseTo(image, ...)
+- cn = galsim.correlatednoise.getCOSMOSNoise(rng, file_name, ...)
+- image.addNoise(cn)
 
 - Power spectrum shears and magnifications for non-gridded positions.
 - Reading a compressed FITS image (using BZip2 compression).
@@ -237,7 +237,7 @@ def main(argv):
         logger.info('Galaxy %d: position relative to corner = %s, t=%f s', k, str(pos), tot_time)
 
     # Add correlated noise to the image -- the correlation function comes from the HST COSMOS images
-    # and is described in more detail in the galsim.correlatednoise.get_COSMOS_CorrFunc() docstring.
+    # and is described in more detail in the galsim.correlatednoise.getCOSMOSNoise() docstring.
     # This function requires a FITS file, stored in the GalSim repository, that represents this
     # correlation information: the path to this file is a required argument. 
     cf_file_name = os.path.join('..', 'examples', 'data', 'acs_I_unrot_sci_20_cf.fits')
@@ -248,13 +248,13 @@ def main(argv):
     # COSMOS.  Using the original pixel scale, dx_cosmos=0.03 [arcsec], would leave very little
     # correlation among our larger 0.2 arcsec pixels. We also set the point (zero-distance) variance
     # to our desired value.
-    cf = galsim.correlatednoise.get_COSMOS_CorrFunc(
-        cf_file_name, dx_cosmos=pixel_scale, variance=noise_variance)
+    cn = galsim.correlatednoise.getCOSMOSNoise(
+        rng, cf_file_name, dx_cosmos=pixel_scale, variance=noise_variance)
 
     # Now add noise according to this correlation function to the full_image.  We have to do this
     # step at the end, rather than adding to individual postage stamps, in order to get the noise
     # level right in the overlap regions between postage stamps.
-    cf.applyNoiseTo(full_image, dx=pixel_scale, dev=rng)
+    full_image.addNoise(cn) # Note image must have the right scale [set by setScale()], as here
     logger.info('Added noise to final large image')
 
     # Now write the image to disk.  It is automatically compressed with Rice compression,
