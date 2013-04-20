@@ -61,7 +61,7 @@ dx = 0.4
 # The reference images expect the old behavior where this profile was centered on the pixel
 # just above and to the right of the center.  For simplicity, just apply the shift to 
 # keep that behavior here.
-final.applyShift(0.5,0.5)
+final.applyShift(0.5*dx,0.5*dx)
 final.draw(image=image, dx=dx, normalization='sb')
 
 def funcname():
