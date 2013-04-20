@@ -193,7 +193,7 @@ namespace galsim {
             SersicKey key(n, maxRre, flux_untruncated);
             MapIter it = _map.find(key);
             if (it == _map.end()) {
-            boost::shared_ptr<SersicInfo> info(new SersicInfo(n, maxRre, flux_untruncated));
+                boost::shared_ptr<SersicInfo> info(new SersicInfo(n, maxRre, flux_untruncated));
                 _map[key] = info;
                 if (int(_map.size()) > MAX_SERSIC_TABLES)
                     throw SBError(
