@@ -525,6 +525,21 @@ class GSObject(object):
 
         return image, dx
 
+    def _fix_center(self, image):
+        # For even-sized images, the SBProfile draw function centers the result in the 
+        # pixel just up and right of the real center.  So shift it back to make sure it really
+        # draws in the center.
+        even_x = (image.xmax-image.xmin+1) % 2 == 0
+        even_y = (image.ymax-image.ymin+1) % 2 == 0
+        if even_x:
+            if even_y: prof = self.createShifted(-0.5,-0.5)
+            else: prof = self.createShifted(-0.5,0.)
+        else:
+            if even_y: prof = self.createShifted(0.,-0.5)
+            else: prof = self
+        return prof
+
+
 
     def draw(self, image=None, dx=None, gain=1., wmult=1., normalization="flux",
              add_to_image=False):
@@ -538,6 +553,14 @@ class GSObject(object):
         that set the pixel scale for the image (`dx`), that choose the normalization convention for
         the flux (`normalization`), and that decide whether the clear the input Image before drawing
         into it (`add_to_image`).
+
+        The object will always be drawn with its nominal center at the center location of the 
+        image.  There is thus a distinction in the behavior at the center for even- and odd-sized
+        images.  For a profile with a maximum at (0,0), this maximum will fall at the central 
+        pixel of an odd-sized image, but in the corner of the 4 central pixels of an odd-sized
+        image.  If you care about how the sub-pixel offsets are drawn, you should either make
+        sure you provide an image with the right kind of size, or shift the profile by half
+        a pixel as desired to get the profile's (0,0) location where you want it.
 
         Note that when drawing a GSObject that was defined with a particular value of flux, it is
         not necessarily the case that a drawn image with 'normalization=flux' will have the sum of
@@ -615,17 +638,8 @@ class GSObject(object):
         # Make sure image is setup correctly
         image, dx = self._draw_setup_image(image,dx,wmult,add_to_image)
 
-        # For even-sized images, the SBProfile draw function centers the result in the 
-        # pixel just up and right of the real center.  So shift it back to make sure it really
-        # draws in the center.
-        even_x = (image.xmax-image.xmin+1) % 2 == 0
-        even_y = (image.ymax-image.ymin+1) % 2 == 0
-        if even_x:
-            if even_y: prof = self.createShifted(-0.5,-0.5)
-            else: prof = self.createShifted(-0.5,0.)
-        else:
-            if even_y: prof = self.createShifted(0.,-0.5)
-            else: prof = self
+        # Fix the centering for even-sized images
+        prof = self._fix_center(image)
 
         # SBProfile draw command uses surface brightness normalization.  So if we
         # want flux normalization, we need to scale the flux by dx^2
@@ -652,6 +666,10 @@ class GSObject(object):
         of particular relevance for users are those that set the pixel scale for the image (`dx`),
         that choose the normalization convention for the flux (`normalization`), and that decide
         whether the clear the input Image before shooting photons into it (`add_to_image`).
+
+        As for the draw command, the object will always be drawn with its nominal center at the 
+        center location of the image.  See the documentation for draw for more discussion about
+        the implications of this for even- and odd-sized images.
 
         It is important to remember that the image produced by drawShoot() represents the object as
         convolved with the square image pixel.  So when using drawShoot() instead of draw(), you
@@ -792,17 +810,8 @@ class GSObject(object):
         # Make sure image is setup correctly
         image, dx = self._draw_setup_image(image,dx,wmult,add_to_image)
 
-        # For even-sized images, the SBProfile draw function centers the result in the 
-        # pixel just up and right of the real center.  So shift it back to make sure it really
-        # draws in the center.
-        even_x = (image.xmax-image.xmin+1) % 2 == 0
-        even_y = (image.ymax-image.ymin+1) % 2 == 0
-        if even_x:
-            if even_y: prof = self.createShifted(-0.5,-0.5)
-            else: prof = self.createShifted(-0.5,0.)
-        else:
-            if even_y: prof = self.createShifted(0.,-0.5)
-            else: prof = self
+        # Fix the centering for even-sized images
+        prof = self._fix_center(image)
 
         # SBProfile drawShoot command uses surface brightness normalization.  So if we
         # want flux normalization, we need to scale the flux by dx^2
@@ -831,7 +840,10 @@ class GSObject(object):
         """Draws the k-space Images (real and imaginary parts) of the object, with bounds
         optionally set by input Images.
 
-        Normalization is always such that re(0,0) = flux.
+        Normalization is always such that re(0,0) = flux.  Unlike the real-space draw and
+        drawShoot functions, the (0,0) point will always be one of the actual pixel values.
+        For even-sized images, it will be 1/2 pixel above and to the right of the true 
+        center of the image.
 
         @param re     If provided, this will be the real part of the k-space image.
                       If `re = None`, then an automatically-sized image will be created.
