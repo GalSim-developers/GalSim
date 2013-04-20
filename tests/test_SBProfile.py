@@ -2067,8 +2067,6 @@ def test_draw():
     np.testing.assert_almost_equal(CalculateScale(im2), 2, 1,
                                    "Measured wrong scale after obj2.draw()")
 
-    # TODO: Add odd sized tests here.
-
     # Test if we provide an image argument.  It should:
     #   - write to the existing image
     #   - also return that image
@@ -2172,8 +2170,6 @@ def test_draw():
                                    "Measured wrong scale after obj2.draw(dx,wmult)")
     assert im8.bounds == galsim.BoundsI(1,234,1,234),(
             "obj2.draw(dx,wmult) produced image with wrong bounds")
-
-    # TODO: Also odd sized tests here.
 
     # Test if we provide an image with a defined scale.  It should:
     #   - write to the existing image
