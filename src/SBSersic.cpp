@@ -435,9 +435,8 @@ namespace galsim {
 
         // How far should the profile extend, if not truncated?
         // Estimate number of effective radii needed to enclose (1-alias_threshold) of flux
-        double Rre = _maxRre;
-        if (!_truncated)
-            Rre = findMaxRre(sbp::alias_threshold,gamma2n);
+        double Rre = findMaxRre(sbp::alias_threshold,gamma2n);
+        if (Rre > _maxRre)  Rre = _maxRre
         // Go to at least 5*re
         if (Rre < 5.) Rre = 5.;
         dbg<<"maxR/re => "<<_maxRre<<std::endl;
