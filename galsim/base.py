@@ -531,11 +531,12 @@ class GSObject(object):
         # draws in the center.
         even_x = (image.xmax-image.xmin+1) % 2 == 0
         even_y = (image.ymax-image.ymin+1) % 2 == 0
+        scale = image.scale
         if even_x:
-            if even_y: prof = self.createShifted(-0.5,-0.5)
-            else: prof = self.createShifted(-0.5,0.)
+            if even_y: prof = self.createShifted(-0.5*scale,-0.5*scale)
+            else: prof = self.createShifted(-0.5*scale,0.)
         else:
-            if even_y: prof = self.createShifted(0.,-0.5)
+            if even_y: prof = self.createShifted(0.,-0.5*scale)
             else: prof = self
         return prof
 
@@ -2761,13 +2762,13 @@ class Shapelet(GSObject):
         are not well fit by a shapelet for any (reasonable) order.
 
         @param image          The Image for which to fit the shapelet decomposition
-        @param center         The position to use for the center of the decomposition.
+        @param center         The position in pixels to use for the center of the decomposition.
                               [Default: use the image center]
         @param normalization  The normalization to assume for the image. 
                               (Default `normalization = "flux"`)
         """
         if not center:
-            center = image.bounds.center()
+            center = image.bounds.trueCenter()
         # convert from PositionI if necessary
         center = galsim.PositionD(center.x,center.y)
 
