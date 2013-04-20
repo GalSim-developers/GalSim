@@ -73,7 +73,7 @@ namespace galsim {
         static void wrap() {
             bp::class_< SBAutoCorrelate, bp::bases<SBProfile> >("SBAutoCorrelate", bp::no_init)
                 .def(bp::init<const SBProfile &>((bp::args("adaptee"))))
-                .def(bp::init<const SBAutoConvolve &>())
+                .def(bp::init<const SBAutoCorrelate &>())
                 ;
         }
 
