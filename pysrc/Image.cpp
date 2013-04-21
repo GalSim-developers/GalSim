@@ -106,6 +106,13 @@ struct PyImage {
         return new ConstImageView<T>(data, owner, stride, bounds, scale);
     }
 
+    static const T& at_pos(const Image<T>& im, const Position<int>& pos) 
+    { return im.at(pos.x,pos.y); }
+    static const T& at_pos(const ImageView<T>& im, const Position<int>& pos) 
+    { return im.at(pos.x,pos.y); }
+    static const T& at_pos(const ConstImageView<T>& im, const Position<int>& pos) 
+    { return im.at(pos.x,pos.y); }
+
     static bp::object wrapImage(const std::string& suffix) {
         bp::object getScale = bp::make_function(&BaseImage<T>::getScale);
         bp::object setScale = bp::make_function(&BaseImage<T>::setScale);
@@ -113,6 +120,7 @@ struct PyImage {
         // Need some typedefs and explicit casts here to resolve overloads of methods
         // that have both const and non-const versions:
         typedef const T& (Image<T>::* at_func_type)(const int, const int) const;
+        typedef const T& (*at_pos_func_type)(const Image<T>&, const Position<int>&);
         typedef ImageView<T> (Image<T>::* subImage_func_type)(const Bounds<int>&);
         typedef ImageView<T> (Image<T>::* view_func_type)();
 
@@ -120,6 +128,11 @@ struct PyImage {
             at_func_type(&Image<T>::at),
             bp::return_value_policy<bp::copy_const_reference>(),
             bp::args("x", "y")
+        );
+        bp::object at_pos = bp::make_function(
+            at_pos_func_type(&PyImage<T>::at_pos),
+            bp::return_value_policy<bp::copy_const_reference>(),
+            bp::args("pos")
         );
         bp::object getBounds = bp::make_function(
             &BaseImage<T>::getBounds, 
@@ -164,6 +177,8 @@ struct PyImage {
             // funtion (which is the im(x,y) syntax) is just the const version.
             .def("__call__", at) // always used checked accessors in Python
             .def("at", at)
+            .def("__call__", at_pos)
+            .def("at", at_pos)
             .def("setValue", &Image<T>::setValue, bp::args("x","y","value"))
             .def("fill", &Image<T>::fill)
             .def("setZero", &Image<T>::setZero)
@@ -181,10 +196,17 @@ struct PyImage {
 
     static bp::object wrapImageView(const std::string& suffix) {
 
+        typedef const T& (*at_pos_func_type)(const ImageView<T>&, const Position<int>&);
+
         bp::object at = bp::make_function(
             &ImageView<T>::at,
             bp::return_value_policy<bp::copy_non_const_reference>(),
             bp::args("x", "y")
+        );
+        bp::object at_pos = bp::make_function(
+            at_pos_func_type(&PyImage<T>::at_pos),
+            bp::return_value_policy<bp::copy_const_reference>(),
+            bp::args("pos")
         );
         bp::class_< ImageView<T>, bp::bases< BaseImage<T> > >
             pyImageView(("ImageView" + suffix).c_str(), "", bp::no_init);
@@ -203,6 +225,8 @@ struct PyImage {
             .add_property("array", &GetArray)
             .def("__call__", at) // always used checked accessors in Python
             .def("at", at)
+            .def("__call__", at_pos)
+            .def("at", at_pos)
             .def("setValue", &ImageView<T>::setValue, bp::args("x","y","value"))
             .def("fill", &ImageView<T>::fill)
             .def("setZero", &ImageView<T>::setZero)
@@ -218,10 +242,17 @@ struct PyImage {
     }
 
     static bp::object wrapConstImageView(const std::string& suffix) {
+        typedef const T& (*at_pos_func_type)(const ImageView<T>&, const Position<int>&);
+
         bp::object at = bp::make_function(
             &BaseImage<T>::at,
             bp::return_value_policy<bp::copy_const_reference>(),
             bp::args("x", "y")
+        );
+        bp::object at_pos = bp::make_function(
+            at_pos_func_type(&PyImage<T>::at_pos),
+            bp::return_value_policy<bp::copy_const_reference>(),
+            bp::args("pos")
         );
         bp::class_< ConstImageView<T>, bp::bases< BaseImage<T> > >
             pyConstImageView(("ConstImageView" + suffix).c_str(), "", bp::no_init);
@@ -238,6 +269,8 @@ struct PyImage {
             .def("view", &ConstImageView<T>::view)
             .def("__call__", at) // always used checked accessors in Python
             .def("at", at)
+            .def("__call__", at_pos)
+            .def("at", at_pos)
             .enable_pickling()
             ;
 
