@@ -28,7 +28,7 @@ wmult = 4.
 
 def test_comparison_object():
 
-    logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
+    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger("test_comparison_object")
 
     logger.info("Running basic tests of comparison scripts using objects")
@@ -43,14 +43,14 @@ def test_comparison_object():
     # Try a single core run
     res1 = galsim.utilities.compare_dft_vs_photon_object(
         gal, psf_object=psf, rng=galsim.BaseDeviate(rseed), size=imsize, pixel_scale=dx,
-        abs_tol_ellip=3.e-4, abs_tol_size=1.e-3, n_photons_per_trial=1e5)
+        abs_tol_ellip=3.e-5, abs_tol_size=1.e-4, n_photons_per_trial=1e7)
 
     return
 
 def test_comparison_config():
 
     logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
-    logger = logging.getLogger("test_comparison_object")
+    logger = logging.getLogger("test_comparison_config")
 
     logger.info("Running basic tests of comparison scripts using config")
 
@@ -93,12 +93,13 @@ def test_comparison_config():
 
     # Try a dual core run setting a few kwargs by hand to check correct overriding
     res2 = galsim.utilities.compare_dft_vs_photon_config(
-        config, random_seed=rseed, size=imsize, pixel_scale=dx, abs_tol_ellip=3.e-4,
-        abs_tol_size=1.e-3, n_photons_per_trial=1e5, wmult=wmult, nproc=2, logger=logger)
+        config, random_seed=rseed, size=imsize, pixel_scale=dx, abs_tol_ellip=3.e-5,
+        abs_tol_size=1.e-4, n_photons_per_trial=1e7, wmult=wmult, nproc=4, logger=logger)
 
     return
 
 
 if __name__ == "__main__":
-    #test_comparison_object()
     test_comparison_config()
+    test_comparison_object()
+
