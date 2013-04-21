@@ -591,10 +591,20 @@ def test_sersic_radii():
             test_gal = galsim.Sersic(n=n, half_light_radius=test_hlr, trunc=trunc, flux=1.,
                                      flux_untruncated=True)
             hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
-            print 'hlr = ',hlr_sum
+            print 'hlr_sum (truncated and flux_untruncated) = ',hlr_sum
             np.testing.assert_almost_equal(
                     hlr_sum, 0.5, decimal=4,
                     err_msg="Error in Sersic constructor with flux_untruncated, n=%d, trunc=%d"\
+                             %(n,trunc))
+
+            # Test true HLR with flux_untruncated=True
+            true_hlr = test_gal.getHalfLightRadius()
+            hlr_sum = radial_integrate(test_gal, 0., true_hlr, 1.e-4)
+            true_flux = test_gal.getFlux()
+            print 'true hlr_sum = ',hlr_sum
+            np.testing.assert_almost_equal(
+                    hlr_sum, 0.5*true_flux, decimal=4,
+                    err_msg="Error in true half-light radius with flux_untruncated, n=%d, trunc=%d"\
                              %(n,trunc))
 
             # Check that the getters don't work after modifying the original.
