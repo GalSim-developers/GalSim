@@ -269,6 +269,10 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
         config['chip_pos'] = center
         #print 'chip_pos = ',center
 
+        # Calculate and save the position relative to the image center
+        config['pos'] = (center - config['image_cen']) * config['pixel_scale']
+        #print 'pos = ',config['pos']
+
         # The center refers to the location of the true center of the image, which is not 
         # necessarily the nominal center we need for adding to the final image.  In particular,
         # even-sized images have their nominal center offset by 1/2 pixel up and to the right.
@@ -276,7 +280,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
         # even sized images.
         if xsize % 2 == 0: center.x += 0.5
         if ysize % 2 == 0: center.y += 0.5
-        #print 'center = ',center
+        #print 'nominal center = ',center
 
         icenter = galsim.PositionI(
             int(math.floor(center.x+0.5)),
@@ -284,9 +288,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
         #print 'icenter = ',icenter
         final_shift = galsim.PositionD(center.x-icenter.x , center.y-icenter.y)
         #print 'final_shift = ',final_shift
-        # Calculate and save the position relative to the image center
-        config['pos'] = (center - config['image_cen']) * config['pixel_scale']
-        #print 'pos = ',config['pos']
+
     else:
         center = None
         icenter = None
@@ -468,7 +470,7 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level_pixel, final_shi
         pixel_scale = 1.0
 
     if final_shift:
-        #print 'shift = ',final_shift.x*pixel_scale, final_shift.y*pixel_scale
+        #print 'shift = ',final_shift*pixel_scale
         final.applyShift(final_shift.x*pixel_scale, final_shift.y*pixel_scale)
 
     if xsize:

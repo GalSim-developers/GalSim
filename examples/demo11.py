@@ -145,7 +145,7 @@ def main(argv):
     # Setup the image:
     full_image = galsim.ImageF(image_size, image_size)
     full_image.setScale(pixel_scale)
-    cenx = ceny = image_size/2 + 1
+    cenx = ceny = (image_size+1)/2.
     center = galsim.PositionD(cenx,ceny) * pixel_scale
 
     # As for demo10, we use random_seed+nobj for the random numbers required for the 
@@ -160,8 +160,7 @@ def main(argv):
     # represented exactly).  Lensing engine wants positions in arcsec, so calculate that:
     ps.buildGrid(grid_spacing = grid_spacing,
                  ngrid = int(image_size_arcsec / grid_spacing)+1,
-                 center = center,
-                 rng = rng)
+                 center = center, rng = rng)
     logger.info('Made gridded shears')
 
     # Now we need to loop over our objects:
@@ -209,9 +208,11 @@ def main(argv):
         final = galsim.Convolve(psf, gal)
 
         # Account for the fractional part of the position:
-        ix = int(math.floor(x+0.5))
-        iy = int(math.floor(y+0.5))
-        final.applyShift((x-ix)*pixel_scale,(y-iy)*pixel_scale)
+        x_nom = x+0.5 # Because stamp size is even!  See discussion in demo9.py
+        y_nom = y+0.5
+        ix_nom = int(math.floor(x_nom+0.5))
+        iy_nom = int(math.floor(y_nom+0.5))
+        final.applyShift((x_nom-ix_nom)*pixel_scale,(y_nom-iy_nom)*pixel_scale)
 
         # Draw it with our desired stamp size
         stamp = galsim.ImageF(stamp_size,stamp_size)
@@ -226,7 +227,7 @@ def main(argv):
         stamp *= flux_scaling
 
         # Recenter the stamp at the desired position:
-        stamp.setCenter(ix,iy)
+        stamp.setCenter(ix_nom,iy_nom)
 
         # Find the overlapping bounds:
         bounds = stamp.bounds & full_image.bounds

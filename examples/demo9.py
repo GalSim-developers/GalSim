@@ -35,6 +35,7 @@ New features introduced in this demo:
 - nfw = galsim.NFWHalo(mass, conc, z, pos, omega_m, omega_lam)
 - g1,g2 = nfw.getShear(pos, z)
 - mag = nfw.getMagnification(pos, z)
+- pos = bounds.trueCenter()
 
 - Make multiple output files.
 - Place galaxies at random positions on a larger image.
@@ -119,8 +120,10 @@ def main(argv):
 
         # Setup the NFWHalo stuff:
 
-        im_center = full_image.bounds.center()
-        im_center = galsim.PositionD(im_center.x, im_center.y)
+        # The "true" center is allowed to be halfway between two pixels, as is the case
+        # for even-sized images.  full_image.bounds.center() is an integer position,
+        # which would be 1/2 pixel up and to the right of the true center in this case.
+        im_center = full_image.bounds.trueCenter()
         nfw = galsim.NFWHalo(mass=mass, conc=nfw_conc, redshift=nfw_z_halo,
                              halo_pos=im_center*pixel_scale,
                              omega_m=omega_m, omega_lam=omega_lam)
@@ -138,17 +141,26 @@ def main(argv):
             rng = galsim.UniformDeviate(seed+k)
 
             # Determine where this object is going to go:
+            # We select each uniformly between 1 and image_size.
             x = rng() * (image_size-1) + 1
             y = rng() * (image_size-1) + 1
 
-            # Get the integer values of these which will be the center of the 
+            # For even-sized postage stamps, the nominal center (returned by stamp.bounds.center())
+            # cannot be at the true center (returned by stamp.bounds.trueCenter()) of the postage 
+            # stamp, since the nominal center values have to be integers.  Thus, the nominal center
+            # is 1/2 pixel up and to the right of the true center.
+            # If we used odd-sized postage stamps, we wouldn't need to do this.
+            x_nominal = x + 0.5
+            y_nominal = y + 0.5
+
+            # Get the integer values of these which will be the actual nominal center of the 
             # postage stamp image.
-            ix = int(math.floor(x+0.5))
-            iy = int(math.floor(y+0.5))
+            ix_nominal = int(math.floor(x_nominal+0.5))
+            iy_nominal = int(math.floor(y_nominal+0.5))
 
             # The remainder will be accounted for in a shift
-            dx = x - ix
-            dy = y - iy
+            dx = x_nominal - ix_nominal
+            dy = y_nominal - iy_nominal
 
             # Make the pixel:
             pix = galsim.Pixel(pixel_scale)
@@ -202,7 +214,7 @@ def main(argv):
             stamp = final.draw(dx=pixel_scale)
 
             # Recenter the stamp at the desired position:
-            stamp.setCenter(ix,iy)
+            stamp.setCenter(ix_nominal,iy_nominal)
 
             # Find overlapping bounds
             bounds = stamp.bounds & full_image.bounds

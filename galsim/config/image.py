@@ -465,10 +465,10 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     config['image']['center'] = { 
         'type' : 'XY' ,
         'x' : { 'type' : 'List',
-                'items' : [ ix * (stamp_xsize+xborder) + stamp_xsize/2 + 1 for ix in ix_list ]
+                'items' : [ ix * (stamp_xsize+xborder) + (stamp_xsize+1)/2. for ix in ix_list ]
               },
         'y' : { 'type' : 'List',
-                'items' : [ iy * (stamp_ysize+yborder) + stamp_ysize/2 + 1 for iy in iy_list ]
+                'items' : [ iy * (stamp_ysize+yborder) + (stamp_ysize+1)/2. for iy in iy_list ]
               }
     }
 
@@ -481,6 +481,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     # Also define the overall image center, since we need that to calculate the position 
     # of each stamp relative to the center.
     config['image_cen'] = full_image.bounds.trueCenter()
+    #print 'image_cen = ',full_image.bounds.trueCenter()
 
     if make_psf_image:
         full_psf_image = galsim.ImageF(full_xsize,full_ysize)
@@ -524,6 +525,9 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         ymin = iy * (stamp_ysize + yborder) + 1
         ymax = ymin + stamp_ysize-1
         b = galsim.BoundsI(xmin,xmax,ymin,ymax)
+        #print 'full bounds = ',full_image.bounds
+        #print 'stamp bounds = ',b
+        #print 'original stamp bounds = ',images[k].bounds
         full_image[b] += images[k]
         if make_psf_image:
             full_psf_image[b] += psf_images[k]
@@ -672,6 +676,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     # Also define the overall image center, since we need that to calculate the position 
     # of each stamp relative to the center.
     config['image_cen'] = full_image.bounds.trueCenter()
+    #print 'image_cen = ',full_image.bounds.trueCenter()
 
     if make_psf_image:
         full_psf_image = galsim.ImageF(full_xsize,full_ysize)
