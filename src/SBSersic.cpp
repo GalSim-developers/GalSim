@@ -403,7 +403,7 @@ namespace galsim {
     {
         // Going to constrain range of allowed n to those for which testing was done
         // (Lower bounds has hard limit at 0.29)
-        if (_n<0.3 || _n>7.2) throw SBError("Requested Sersic index out of range");
+        if (_n<0.3 || _n>4.2) throw SBError("Requested Sersic index out of range");
 
         _truncated = (_maxRre > 0.);
 
