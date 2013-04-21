@@ -19,7 +19,7 @@
  * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
  */
 
-//#define DEBUGLOGGING
+#define DEBUGLOGGING
 
 #include "SBSersic.h"
 #include "SBSersicImpl.h"
@@ -264,12 +264,33 @@ namespace galsim {
         double _k;
     };
 
+    class SersicMissingFluxFunc
+    {
+    public:
+        SersicMissingFluxFunc(double n, double b, double missing_flux) :
+            _2n(2*n), _invn(1./n), _b(b), _missing_flux(missing_flux) {}
+        double operator()(double Rre) const
+        {
+            double z = _b * std::pow(Rre, _invn);
+            double fre = boost::math::tgamma(_2n, z);  // integrates from z to inf
+            xdbg<<"func("<<_b<<") = "<<fre<<" - "<<_missing_flux<<" = "<<fre-_missing_flux
+                <<std::endl;
+            return fre - _missing_flux;
+        }
+    private:
+        double _2n;
+        double _invn;
+        double _b;
+        double _missing_flux;
+    };
+
     // Find what radius encloses (1-missing_flux_frac) of the total flux in a Sersic profile,
     // in units of half-light radius re.
     double SBSersic::SersicInfo::findMaxRre(double missing_flux_frac, double gamma2n)
     { 
         // int(exp(-b r^1/n) r, r=R..inf) = x * int(exp(-b r^1/n) r, r=0..inf)
         //                                = x n b^-2n Gamma(2n)    [x == missing_flux_frac]
+        // (1) First, find approximate solution to x * Gamma(2n) = Gamma(2n, b*(R/re)^(1/n))
         // Change variables: u = b r^1/n,
         // du = b/n r^(1-n)/n dr
         //    = b/n r^1/n dr/r
@@ -288,7 +309,8 @@ namespace galsim {
         // z = -ln(x Gamma(2n) + (2n-1) ln(z) + (2n-1)/z + (2n-1)(2n-3)/(2*z^2) + O(z^3)
         // Iterate this until it converges.  Should be quick.
         dbg<<"Find maxR for missing_flux_frac = "<<missing_flux_frac<<std::endl;
-        double z0 = -std::log(missing_flux_frac * gamma2n);
+        double missing_flux = missing_flux_frac * gamma2n;
+        double z0 = -std::log(missing_flux);
         // Successive approximation method:
         double z = 4.*(_n+1.);  // A decent starting guess for a range of n.
         double oldz = 0.;
@@ -297,13 +319,26 @@ namespace galsim {
         for(int niter=0; niter < MAXIT; ++niter) {
             oldz = z;
             z = z0 + (2.*_n-1.) * std::log(z) + (2.*_n-1.)/z + (2.*_n-1.)*(2.*_n-3.)/(2.*z*z);
-            xdbg<<"z = "<<z<<", dz = "<<z-oldz<<std::endl;
+            xxdbg<<"z = "<<z<<", dz = "<<z-oldz<<std::endl;
             if (std::abs(z-oldz) < 0.01) break;
         }
         xdbg<<"Converged at z = "<<z<<std::endl;
-        double R=std::pow(z/_b, _n);
-        dbg<<"R = (z/b)^n = "<<R<<std::endl;
-        return R;
+        double Rre_estimate = std::pow(z/_b, _n);
+        dbg<<"Rre_estimate = (z/b)^n = "<<Rre_estimate<<std::endl;
+
+        // (2) Now find a more exact solution using an iterative solver
+        SersicMissingFluxFunc func(_n, _b, missing_flux);
+        // Start with the approximate solution Rre_estimate, and create bounds at its vicinities
+        double b1 = Rre_estimate * 1.1;
+        dbg<<"b1 = "<<b1<<" ..";
+        double b2 = Rre_estimate * 0.9;
+        dbg<<".. b2 = "<<b2<<std::endl;
+        Solve<SersicMissingFluxFunc> solver(func,b1,b2);
+        solver.setMethod(Brent);
+        double Rre = solver.root();
+        dbg<<"maxRre is "<<Rre<<std::endl;
+
+        return Rre;
     }
 
     class SersicScaleRadiusFunc
@@ -341,6 +376,7 @@ namespace galsim {
         //                  gamma(2n,b) = Gamma(2n,b*(trunc/re)^(1/n)) / 2, for the truncated case.
         if (maxRre!=0. && maxRre <= 1.)   // TODO: find a better minimum truncation check criteria.
             throw SBError("Sersic truncation radius must be > half_light_radius.");
+        xdbg<<"Find Sersic scale b for maxR/HLR = "<<maxRre<<std::endl;
         SersicScaleRadiusFunc func(n, maxRre);
         // For the upper bound of b, use 2*n, based on the Ciotti & Bertin (1999) approximate 
         // solution for untruncated Sersic; for the lower bound, we don't really have a good choice,
@@ -366,7 +402,8 @@ namespace galsim {
         _flux_untruncated(flux_untruncated), _flux_fraction(1.)
     {
         // Going to constrain range of allowed n to those for which testing was done
-        if (_n<0.5 || _n>4.2) throw SBError("Requested Sersic index out of range");
+        // (Lower bounds has hard limit at 0.29)
+        if (_n<0.3 || _n>7.2) throw SBError("Requested Sersic index out of range");
 
         _truncated = (_maxRre > 0.);
 
@@ -403,6 +440,7 @@ namespace galsim {
         if (_truncated && _flux_untruncated)
             _flux_fraction = gamma2n / tgamma(2.*_n);       // _flux_fraction < 1
         dbg << "Flux fraction: " << _flux_fraction << std::endl;
+        dbg << "gamma2n: " << gamma2n << std::endl;
 
         // The normalization factor to give unity flux integral:
         _norm = b2n / (2.*M_PI*_n*gamma2n) * _flux_fraction;
