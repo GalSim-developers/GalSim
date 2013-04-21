@@ -29,8 +29,8 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-std::ostream* dbgout = &std::cout;
-int verbose_level = 1;
+//std::ostream* dbgout = &std::cout;
+//int verbose_level = 1;
 #endif
 
 namespace galsim {
@@ -61,11 +61,10 @@ namespace galsim {
         _n(n), _flux(flux), _re(re), _re_sq(_re*_re), _inv_re(1./_re), _inv_re_sq(_inv_re*_inv_re),
         _trunc(trunc), _norm(_flux*_inv_re_sq), _flux_untruncated(flux_untruncated)
     {
-        double maxRre = ((int)(trunc/re * 100 + 0.5) / 100.0);  // round to two decimal places
+        _maxRre = ((int)(_trunc/_re * 100 + 0.5) / 100.0);  // round to two decimal places
         _truncated = (_trunc > 0.);
         if (!_truncated) _flux_untruncated = true;  // set unused parameter to a single value
-        _info = nmap.get(_n, maxRre, _flux_untruncated);
-        _maxRre = _info->getMaxRRe();  // maximum R in units of re (irrelevant if trunc = 0.)
+        _info = nmap.get(_n, _maxRre, _flux_untruncated);
         _actual_flux = _info->getTrueFluxFraction() * _flux;
         _actual_re = _info->getTrueReFraction() * _re;
         _maxRre_sq = _maxRre*_maxRre;
@@ -273,7 +272,7 @@ namespace galsim {
         double operator()(double Rre) const
         {
             double z = _b * std::pow(Rre, _invn);
-            double fre = boost::math::tgamma(_2n, z);  // integrates from z to inf
+            double fre = boost::math::tgamma(_2n, z);  // integrates the tail from z to inf
             xdbg<<"func("<<_b<<") = "<<fre<<" - "<<_missing_flux<<" = "<<fre-_missing_flux
                 <<std::endl;
             return fre - _missing_flux;
@@ -330,7 +329,7 @@ namespace galsim {
         // (2) Now find a more exact solution using an iterative solver
         SersicMissingFluxFunc func(_n, _b, missing_flux);
         // Start with the approximate solution Rre_estimate, and create bounds at its vicinities
-        double b1 = Rre_estimate * 1.1;
+        double b1 = Rre_estimate * 1.1;  // solution usually within 1% for small n
         xdbg<<"b1 = "<<b1<<" ..";
         double b2 = Rre_estimate * 0.9;
         xdbg<<".. b2 = "<<b2<<std::endl;
@@ -384,7 +383,7 @@ namespace galsim {
         // so start with half the upper bound, and we'll expand it if necessary.
         double b1 = n;
         xdbg<<"b1 = "<<b1<<std::endl;
-        double b2 = 2*n;
+        double b2 = 2*n;    // approximate soluton is ~2n-1/3, so 2n is a fair upper limit
         xdbg<<"b2 = "<<b2<<std::endl;
         Solve<SersicScaleRadiusFunc> solver(func,b1,b2);
         solver.setMethod(Brent);
@@ -448,7 +447,7 @@ namespace galsim {
         _flux_untruncated(flux_untruncated), _flux_fraction(1.), _re_fraction(1.)
     {
         // Going to constrain range of allowed n to those for which testing was done
-        // (Lower bounds has hard limit at 0.29)
+        // (Lower bounds has hard limit at ~0.29)
         if (_n<0.3 || _n>4.2) throw SBError("Requested Sersic index out of range");
 
         _truncated = (_maxRre > 0.);
@@ -518,7 +517,7 @@ namespace galsim {
         // How far should the profile extend, if not truncated?
         // Estimate number of effective radii needed to enclose (1-alias_threshold) of flux
         double Rre = findMaxRre(sbp::alias_threshold,gamma2n);
-        if (_truncated && Rre > _maxRre)  Rre = _maxRre;
+        if (_truncated && _maxRre < Rre)  Rre = _maxRre;
         // Go to at least 5*re
         if (Rre < 5.) Rre = 5.;
         dbg<<"maxR/re => "<<_maxRre<<std::endl;

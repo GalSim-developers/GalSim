@@ -597,16 +597,6 @@ def test_sersic_radii():
                     err_msg="Error in Sersic constructor with flux_untruncated, n=%d, trunc=%d"\
                              %(n,trunc))
 
-            # Test true HLR with flux_untruncated=True
-            true_hlr = test_gal.getHalfLightRadius()
-            hlr_sum = radial_integrate(test_gal, 0., true_hlr, 1.e-4)
-            true_flux = test_gal.getFlux()
-            print 'true hlr_sum = ',hlr_sum
-            np.testing.assert_almost_equal(
-                    hlr_sum, 0.5*true_flux, decimal=4,
-                    err_msg="Error in true half-light radius with flux_untruncated, n=%d, trunc=%d"\
-                             %(n,trunc))
-
             # Check that the getters don't work after modifying the original.
             test_gal_shear = test_gal.copy()
             print 'n = ',test_gal_shear.getN()
@@ -633,6 +623,16 @@ def test_sersic_radii():
             print 'hlr = ', test_gal.getHalfLightRadius(), test_gal2.getHalfLightRadius()
             np.testing.assert_almost_equal(ratio, 1., 9,
                                            "Error in Sersic flux_untruncated=True normalization")
+
+            # Test true HLR with flux_untruncated=True
+            true_hlr = test_gal2.getHalfLightRadius()
+            hlr_sum = radial_integrate(test_gal, 0., true_hlr, 1.e-4)
+            true_flux = test_gal2.getFlux()
+            print 'true hlr_sum = ',hlr_sum
+            np.testing.assert_almost_equal(
+                    hlr_sum, 0.5*true_flux, decimal=4,
+                    err_msg="Error in true half-light radius with flux_untruncated, n=%d, trunc=%d"\
+                             %(n,trunc))
 
     # Repeat the above for an explicit DeVaucouleurs.  (Same as n=4, but special name.)
     for trunc in test_sersic_trunc:
@@ -665,6 +665,17 @@ def test_sersic_radii():
     print 'hlr = ', test_gal.getHalfLightRadius(), test_gal2.getHalfLightRadius()
     np.testing.assert_almost_equal(ratio, 1., 9,
                                    "Error in DeVaucouleurs flux_untruncated=True normalization")
+
+    # Test true HLR with flux_untruncated=True
+    true_hlr = test_gal2.getHalfLightRadius()
+    hlr_sum = radial_integrate(test_gal, 0., true_hlr, 1.e-4)
+    true_flux = test_gal2.getFlux()
+    print 'true hlr_sum = ',hlr_sum
+    np.testing.assert_almost_equal(
+            hlr_sum, 0.5*true_flux, decimal=4,
+            err_msg="Error in DeVaucouleurs true half-light radius with flux_untruncated, trunc=%d"\
+                     %(trunc))
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 

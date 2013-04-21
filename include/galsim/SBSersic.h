@@ -46,12 +46,13 @@ namespace galsim {
      * untruncated Sersic, while generating a truncated Sersic.  This facilitates the comparison
      * of truncated and untruncated Sersic, as both the amplitude and the scale parameter
      * `b=r_0^{-1/n}` change when a truncated Sersic is specified to the same flux as the
-     * untruncated version with the same Sersic index `n`.
+     * untruncated version with the same Sersic index `n`.  The `flux_untruncated` variable is
+     * ignored if `trunc = 0`.
      *
-     * Note that when `trunc > 0.` and `flux_untruncated == true`, the specified half-light radius,
-     * also returned by getHalfLightRadius(), will be different from the actual half-light radius.
-     * Similarly, the specified flux will not be the actual flux.  However, the true flux is returned
-     * by the getFlux() method.
+     * Note that when `trunc > 0.` and `flux_untruncated == true`, the actual half-light radius will
+     * be different from the specified half-light radius.  The getHalfLightRadius() method will
+     * return the true half-light radius.  Similarly, the actual flux will not be the the same as
+     * the specified value; the true flux is returned by the getFlux() method.
      *
      * There are several special cases of the Sersic profile that have their own SBProfiles: n=4
      * (SBDeVaucouleurs), n=1 (SBExponential), n=0.5 (SBGaussian).  These special cases use several
@@ -85,8 +86,6 @@ namespace galsim {
         double getN() const;
 
         /// @brief Returns the half light radius of the Sersic profile.
-        /// (Note that when `trunc > 0` and `flux_untruncated = true`, the return value is the
-        /// user-specified HLR, not the true HLR.)
         double getHalfLightRadius() const;
 
     protected:

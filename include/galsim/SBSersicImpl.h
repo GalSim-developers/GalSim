@@ -40,7 +40,7 @@ namespace galsim {
          * @brief Constructor
          *
          * @param[in] n  Sersic index
-         * @param[in] b  Factor which makes radius argument enclose half the flux.
+         * @param[in] b  Scale factor which makes radius argument enclose half the flux.
          */
         SersicRadialFunction(double n, double b): _invn(1./n), _b(b) {}
         /**
@@ -102,7 +102,7 @@ namespace galsim {
          * Sersic profiles are sampled with a numerical method, using class
          * `OneDimensionalDeviate`.
          *
-         * @param[in] N Total number of photons to produce.
+         * @param[in] N  Total number of photons to produce.
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
          * @returns PhotonArray containing all the photons' info.
          */
@@ -135,7 +135,7 @@ namespace galsim {
         Table<double,double> _ft;  ///< Lookup table for Fourier transform of Sersic.
         double _ksq_min; ///< Minimum ksq to use lookup table.
         double _ksq_max; ///< Maximum ksq to use lookup table.
-        bool _truncated; ///< Set true if `_trunc > 0`.
+        bool _truncated; ///< True if this Sersic profile is truncated.
 
         /// Function class used for photon shooting
         boost::shared_ptr<SersicRadialFunction> _radial;  
@@ -146,11 +146,15 @@ namespace galsim {
         double findMaxRre(double missing_flux_fraction, double gamma2n);
     };
 
+    /**
+     * @brief A key for mapping Sersic cache, consisting of a triplet of values
+     * `(n, maxRre, flux_untruncated)`.
+     */
     class SersicKey {
     public:
         SersicKey(double n, double maxRre, bool flux_untruncated) :
             _n(n), _maxRre(maxRre), _fu(flux_untruncated) {}
-        // less operator needed for map::find()
+        // less operator required for map::find()
         bool operator<(const SersicKey& rhs) const
         {
             if (this->_n == rhs._n)
@@ -255,14 +259,14 @@ namespace galsim {
         Position<double> centroid() const 
         { return Position<double>(0., 0.); }
 
-        /// @brief Returns the true flux, which may be different from the specified flux
+        /// @brief Returns the true flux (may be different from the specified flux)
         double getFlux() const { return _actual_flux; }
 
         /// @brief Sersic photon shooting done by rescaling photons from appropriate `SersicInfo`
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
         double getN() const { return _n; }
-        /// @brief Returns the ratio of actual half-light radius to the specified half-light radius
+        /// @brief Returns the true half-light radius (may be different from the specified value)
         double getHalfLightRadius() const { return _actual_re; }
 
         // Overrides for better efficiency
@@ -290,7 +294,7 @@ namespace galsim {
         double _norm; ///< Calculated value: _flux/_re_sq
         bool _flux_untruncated; ///< If true, flux is set to the untruncated Sersic with index `_n`.
         double _actual_flux; ///< True flux of object.
-        double _actual_re; ///< True half-light-radius.
+        double _actual_re; ///< True half-light radius of object.
         double _maxRre; ///< Maximum (truncation) `r` in units of `_re`.
         double _maxRre_sq;
         double _maxR; ///< Maximum (truncation) radius `r`.

@@ -1845,9 +1845,11 @@ class Sersic(GSObject):
     size parameter `half_light_radius`.  Optional parameters are truncation radius `trunc` [default
     `trunc = 0.`, indicating no truncation] and a `flux` parameter [default `flux = 1`].  If `trunc`
     is set to a non-zero value, then it is assumed to be in the same system of units as
-    `half_light_radius`.  (The code will be more efficient if the truncation is always the same
-     multiple of `half_light_radius`, since it caches many calculations that depend on the ratio
-    `trunc/half_light_radius`.)
+    `half_light_radius`.
+
+    Note that the code will be more efficient if the truncation is always the same multiple of
+    `half_light_radius`, since it caches many calculations that depend on the ratio
+    `trunc/half_light_radius`.
 
     Example:
 
@@ -1861,26 +1863,27 @@ class Sersic(GSObject):
     untruncated Sersic, while generating a truncated Sersic [default `flux_untruncated = False`].
     This facilitates the comparison of truncated and untruncated Sersic, as both the amplitude and
     the scale parameter `b=r_0^{-1/n}` change when a truncated Sersic is specified to the same flux
-    as the untruncated version with the same Sersic index `n`.
+    as the untruncated version with the same Sersic index `n`.  The `flux_untruncated` variable is
+    ignored when `trunc = 0`.
 
-    Note that when `trunc > 0.` and `flux_untruncated == true`, the specified half-light radius,
-    also returned by getHalfLightRadius(), will be different from the actual half-light radius.
-    Similarly, the specified flux will not be the actual flux.  However, the true flux is returned
-    by the getFlux() method.  `flux_untruncated` is ignored when `trunc = 0`.
+    When `trunc > 0.` and `flux_untruncated == true`, the actual half-light radius will be different
+    from the specified half-light radius.  The getHalfLightRadius() method will return the true
+    half-light radius.  Similarly, the actual flux will not be the same as the specified value; the
+    true flux is also returned by the getFlux() method.
 
     Example:
 
-        >>> sersic_obj2 = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40., trunc=10.,)
-        >>> sersic_obj2.getHalfLightRadius()
-        2.5
-        >>> sersic_obj2.getFlux()
-        40.0
-        >>> sersic_obj3 = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40., trunc=10., \
+        >>> sersic_obj = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40., trunc=10.,)
+        >>> sersic_obj2 = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40., trunc=10., \
                                         flux_untruncated=True)
-        >>> sersic_obj3.getHalfLightRadius()
-        2.5                   # This is half-light radius for a Sersic with no truncation
-        >>> sersic_obj3.getFlux()
-        34.565955038155124    # The flux from the truncation is missing
+        >>> sersic_obj.getHalfLightRadius()
+        2.5
+        >>> sersic_obj2.getHalfLightRadius()
+        1.9795101421751533    # The true half-light radius is smaller than the specified value
+        >>> sersic_obj.getFlux()
+        40.0
+        >>> sersic_obj2.getFlux()
+        34.56595186009358     # Flux is missing due to truncation
 
     Methods
     -------
@@ -1907,8 +1910,6 @@ class Sersic(GSObject):
 
     def getHalfLightRadius(self):
         """Return the half light radius for this Sersic profile.
-        (Note that when `trunc > 0` and `flux_untruncated = True`, the return value is the
-        user-specified HLR, not the true HLR.)
         """
         return self.SBProfile.getHalfLightRadius()
 
@@ -1987,6 +1988,10 @@ class DeVaucouleurs(GSObject):
     truncation] and a `flux` parameter [default `flux = 1.`].  If `trunc` is set to a non-zero
     value, then it is assumed to be in the same system of units as `half_light_radius`.
 
+    Note that the code will be more efficient if the truncation is always the same multiple of
+    `half_light_radius`, since it caches many calculations that depend on the ratio
+    `trunc/half_light_radius`.
+
     Example:
 
         >>> dvc_obj = galsim.DeVaucouleurs(half_light_radius=2.5, flux=40.)
@@ -1999,26 +2004,27 @@ class DeVaucouleurs(GSObject):
     untruncated DeVaucouleurs, while generating a truncated DeVaucouleurs.  This facilitates the
     comparison of truncated and untruncated DeVaucouleurs, as both the amplitude and the scale
     parameter `b=r_0^{-1/n}` change when a truncated DeVaucouleurs is specified to the same flux
-    as the untruncated version with the same DeVaucouleurs index `n`.
+    as the untruncated version with the same DeVaucouleurs index `n`.  The `flux_untruncated`
+    variable is ignored when `trunc = 0`.
 
-    Note that when `trunc > 0.` and `flux_untruncated == True`, the specified half-light radius,
-    also returned by getHalfLightRadius(), will be different from the actual half-light radius.
-    Similarly, the specified flux will not be the actual flux.  However, the true flux is returned
-    by the getFlux() method.  `flux_untruncated` is ignored when `trunc = 0`.
+    When `trunc > 0.` and `flux_untruncated == true`, the actual half-light radius will be different
+    from the specified half-light radius.  The getHalfLightRadius() method will return the true
+    half-light radius.  Similarly, the actual flux will not be the same as the specified value; the
+    true flux is also returned by the getFlux() method.
 
     Example:
 
-        >>> dvc_obj2 = galsim.DeVaucouleurs(half_light_radius=2.5, flux=40., trunc=10.,)
-        >>> dvc_obj2.getHalfLightRadius()
-        2.5
-        >>> dvc_obj2.getFlux()
-        40.0
-        >>> dvc_obj3 = galsim.DeVaucouleurs(half_light_radius=2.5, flux=40., trunc=10., \
+        >>> dvc_obj = galsim.DeVaucouleurs(half_light_radius=2.5, flux=40., trunc=10.,)
+        >>> dvc_obj2 = galsim.DeVaucouleurs(half_light_radius=2.5, flux=40., trunc=10., \
                                             flux_untruncated=True)
-        >>> dvc_obj3.getHalfLightRadius()
-        2.5                   # This is half-light radius for a DeVaucouleurs with no truncation
-        >>> dvc_obj3.getFlux()
-        33.863173229717155    # The flux from the truncation is missing
+        >>> dvc_obj.getHalfLightRadius()
+        2.5
+        >>> dvc_obj2.getHalfLightRadius()
+        1.886276579179012     # The true half-light radius is smaller than the specified value
+        >>> dvc_obj.getFlux()
+        40.0
+        >>> dvc_obj2.getFlux()
+        33.863171136492156    # The flux from the truncation is missing
 
     Methods
     -------
