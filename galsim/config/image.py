@@ -480,8 +480,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
     # Also define the overall image center, since we need that to calculate the position 
     # of each stamp relative to the center.
-    image_cen = full_image.bounds.center()
-    config['image_cen'] = galsim.PositionD(image_cen.x,image_cen.y)
+    config['image_cen'] = full_image.bounds.trueCenter()
 
     if make_psf_image:
         full_psf_image = galsim.ImageF(full_xsize,full_ysize)
@@ -574,10 +573,10 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     """
     config['seq_index'] = image_num
 
-    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' , 'center' ]
+    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
+               'center', 'stamp_size', 'stamp_xsize', 'stamp_ysize' ]
     req = { 'nobjects' : int }
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 
-            'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
             'pixel_scale' : float , 'nproc' : int ,
             'sky_level' : float , 'sky_level_pixel' : float }
     params = galsim.config.GetAllParams(
@@ -601,10 +600,6 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
                 "Attributes ysize is invalid if size is set for image.type=Scattered")
         full_xsize = params['size']
         full_ysize = params['size']
-
-    stamp_size = params.get('stamp_size',0)
-    stamp_xsize = params.get('stamp_xsize',stamp_size)
-    stamp_ysize = params.get('stamp_ysize',stamp_size)
 
     pixel_scale = params.get('pixel_scale',1.0)
     config['pixel_scale'] = pixel_scale
@@ -676,8 +671,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     # Also define the overall image center, since we need that to calculate the position 
     # of each stamp relative to the center.
-    image_cen = full_image.bounds.center()
-    config['image_cen'] = galsim.PositionD(image_cen.x,image_cen.y)
+    config['image_cen'] = full_image.bounds.trueCenter()
 
     if make_psf_image:
         full_psf_image = galsim.ImageF(full_xsize,full_ysize)
@@ -701,8 +695,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         full_badpix_image = None
 
     stamp_images = galsim.config.BuildStamps(
-            nobjects=nobjects, config=config,
-            xsize=stamp_xsize, ysize=stamp_ysize, obj_num=obj_num,
+            nobjects=nobjects, config=config, obj_num=obj_num,
             nproc=nproc, sky_level_pixel=sky_level_pixel, do_noise=False, logger=logger,
             make_psf_image=make_psf_image,
             make_weight_image=make_weight_image,

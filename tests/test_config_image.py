@@ -42,76 +42,99 @@ def test_scattered():
     import time
     t1 = time.time()
 
-    # Check that the stamps are centered at the correct locations:
+    # Name some variables to make it easier to be sure they are the same value in the config dict
+    # as when we build the image manually.
+    size = 48
+    stamp_size = 20
+    scale = 0.45
+    flux = 17
+    sigma = 0.7
+    x1 = 23.1
+    y1 = 27.3
+    x2 = 13.4
+    y2 = 31.9
+    x3 = 39.8
+    y3 = 19.7
+
+    # This part of the config will be the same for all tests
     config = {
         'gal' : { 'type' : 'Gaussian', 
-                  'half_light_radius' : 2 },
-        'image' : { 'type' : 'Scattered',
-                    'size' : 8,
-                    'stamp_size' : 7,
-                    'pixel_scale' : 1,
-                    'center' : { 'type' : 'XY', 'x' : 4, 'y' : 1 },
-                    'nobjects' : 1 },
+                  'sigma' : sigma,
+                  'flux' : flux 
+                }
     }
 
-    image, _, _, _  = galsim.config.BuildImage(config)
-    image.write('junk.fits')
+    # Check that the stamps are centered at the correct location for both odd and even stamp size.
+    config['image'] = {
+        'type' : 'Scattered',
+        'size' : size,
+        'pixel_scale' : scale,
+        'stamp_size' : stamp_size,
+        'center' : { 'type' : 'XY', 'x' : x1, 'y' : y1 },
+        'nobjects' : 1
+    }
+    for test_stamp_size in [ stamp_size, stamp_size + 1 ]:
+        config['image']['stamp_size'] = test_stamp_size
+
+        image, _, _, _  = galsim.config.BuildImage(config)
+
+        xgrid, ygrid = np.meshgrid(np.arange(size) + image.getXMin(),
+                                   np.arange(size) + image.getYMin())
+        obs_flux = np.sum(image.array)
+        cenx = np.sum(xgrid * image.array) / flux
+        ceny = np.sum(ygrid * image.array) / flux
+        ixx = np.sum((xgrid-cenx)**2 * image.array) / flux
+        ixy = np.sum((xgrid-cenx)*(ygrid-ceny) * image.array) / flux
+        iyy = np.sum((ygrid-ceny)**2 * image.array) / flux
+        np.testing.assert_almost_equal(obs_flux/flux, 1, decimal=3)
+        np.testing.assert_almost_equal(cenx, x1, decimal=3)
+        np.testing.assert_almost_equal(ceny, y1, decimal=3)
+        np.testing.assert_almost_equal(ixx / (sigma/scale)**2, 1, decimal=1)
+        np.testing.assert_almost_equal(ixy, 0., decimal=3)
+        np.testing.assert_almost_equal(iyy / (sigma/scale)**2, 1, decimal=1)
+
 
     # Check that stamp_xsize, stamp_ysize, center use the object count, rather than the 
     # image count.
-    dx = 1
-    hlr = 4
-    flux = 10
-    size = 40
-
-    config = {
-        'gal' : { 'type' : 'Gaussian', 
-                  'half_light_radius' : hlr,
-                  'flux' : flux 
-                },
-        'image' : { 'type' : 'Scattered',
-                    'size' : size,
-                    'stamp_xsize' : { 'type': 'Sequence', 'first' : 20 },
-                    'stamp_ysize' : { 'type': 'Sequence', 'first' : 20 },
-                    'pixel_scale' : dx,
-                    'center' : { 'type' : 'List',
-                                 'items' : [ galsim.PositionD(14,14),
-                                             galsim.PositionD(33,18),
-                                             galsim.PositionD(11,29) ] 
-                               },
-                    'nobjects' : 3 
-                  }
+    config['image'] = {
+        'type' : 'Scattered',
+        'size' : size,
+        'pixel_scale' : scale,
+        'stamp_xsize' : { 'type': 'Sequence', 'first' : stamp_size },
+        'stamp_ysize' : { 'type': 'Sequence', 'first' : stamp_size },
+        'center' : { 'type' : 'List',
+                     'items' : [ galsim.PositionD(x1,y1),
+                                 galsim.PositionD(x2,y2),
+                                 galsim.PositionD(x3,y3) ] 
+                   },
+        'nobjects' : 3 
     }
 
     image, _, _, _  = galsim.config.BuildImage(config)
+
     image2 = galsim.ImageF(size,size)
     image2.setZero()
-    image2.scale = dx
-    gal = galsim.Gaussian(half_light_radius=hlr, flux=flux)
+    image2.scale = scale
+    gal = galsim.Gaussian(sigma=sigma, flux=flux)
+    pix = galsim.Pixel(scale)
+    conv = galsim.Convolve([pix,gal])
 
-    stamp = galsim.ImageF(20,20)
-    stamp.scale = dx
-    gal.draw(stamp)
-    stamp.setCenter(14,14)
-    b = image2.bounds & stamp.bounds
-    image2[b] += stamp[b]
+    for (i,x,y) in [ (0,x1,y1), (1,x2,y2), (2,x3,y3) ]:
+        stamp = galsim.ImageF(stamp_size+i,stamp_size+i)
+        stamp.scale = scale
+        if (stamp_size+i) % 2 == 0: 
+            x += 0.5
+            y += 0.5
+        ix = int(np.floor(x+0.5))
+        iy = int(np.floor(y+0.5))
+        stamp.setCenter(ix,iy)
+        dx = x-ix
+        dy = y-iy
+        conv2 = conv.createShifted(dx*scale,dy*scale)
+        conv2.draw(stamp)
+        b = image2.bounds & stamp.bounds
+        image2[b] += stamp[b]
 
-    stamp = galsim.ImageF(21,21)
-    stamp.scale = dx
-    gal.draw(stamp)
-    stamp.setCenter(33,18)
-    b = image2.bounds & stamp.bounds
-    image2[b] += stamp[b]
-
-    stamp = galsim.ImageF(22,22)
-    stamp.scale = dx
-    gal.draw(stamp)
-    stamp.setCenter(11,29)
-    b = image2.bounds & stamp.bounds
-    image2[b] += stamp[b]
-
-    image.write('junk.fits')
-    image2.write('junk2.fits')
     np.testing.assert_almost_equal(image.array, image2.array)
 
 
