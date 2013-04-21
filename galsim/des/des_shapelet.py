@@ -84,14 +84,10 @@ class DES_Shapelet(object):
         if file_type not in ['FITS', 'ASCII']:
             raise ValueError("file_type must be either FITS or ASCII if specified.")
 
-        try:
-            if file_type == 'FITS':
-                self.read_fits()
-            else:
-                self.read_ascii()
-        except Exception, e:
-            raise IOError("Unable to read %s DES_Shapelet file %s.  Error = %s"%(
-                    file_type,self.file_name,str(e)))
+        if file_type == 'FITS':
+            self.read_fits()
+        else:
+            self.read_ascii()
 
     def read_ascii(self):
         """Read in a DES_Shapelet stored using the the ASCII-file version.
