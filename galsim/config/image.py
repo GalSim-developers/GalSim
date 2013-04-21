@@ -297,10 +297,19 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
     config['seq_index'] = image_num
 
     ignore = [ 'draw_method', 'noise', 'wcs', 'nproc' , 'random_seed' ]
-    opt = { 'size' : int , 'xsize' : int , 'ysize' : int ,
+    opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 'index_convention' : str,
             'pixel_scale' : float , 'sky_level' : float, 'sky_level_pixel' : float }
     params = galsim.config.GetAllParams(
         config['image'], 'image', config, opt=opt, ignore=ignore)[0]
+
+    convention = params.get('index_convention','1')
+    if convention.lower() in [ '0', 'c', 'python' ]:
+        origin = 0
+    elif convention.lower() in [ '1', 'fortran', 'fits' ]:
+        origin = 1
+    else:
+        raise AttributeError("Unknown index_convention: %s"%convention)
+    config['image_origin'] = galsim.PositionI(origin,origin)
 
     # If image_xsize and image_ysize were set in config, this overrides the read-in params.
     if 'image_xsize' in config and 'image_ysize' in config:
@@ -359,9 +368,8 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     req = { 'nx_tiles' : int , 'ny_tiles' : int }
     opt = { 'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
             'border' : int , 'xborder' : int , 'yborder' : int ,
-            'pixel_scale' : float , 'nproc' : int ,
-            'sky_level' : float, 'sky_level_pixel' : float,
-            'order' : str }
+            'pixel_scale' : float , 'nproc' : int , 'index_convention' : str,
+            'sky_level' : float, 'sky_level_pixel' : float, 'order' : str }
     params = galsim.config.GetAllParams(
         config['image'], 'image', config, req=req, opt=opt, ignore=ignore)[0]
 
@@ -372,6 +380,15 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     stamp_size = params.get('stamp_size',0)
     stamp_xsize = params.get('stamp_xsize',stamp_size)
     stamp_ysize = params.get('stamp_ysize',stamp_size)
+
+    convention = params.get('index_convention','1')
+    if convention.lower() in [ '0', 'c', 'python' ]:
+        origin = 0
+    elif convention.lower() in [ '1', 'fortran', 'fits' ]:
+        origin = 1
+    else:
+        raise AttributeError("Unknown index_convention: %s"%convention)
+    config['image_origin'] = galsim.PositionI(origin,origin)
 
     if (stamp_xsize == 0) or (stamp_ysize == 0):
         raise AttributeError(
@@ -475,6 +492,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     nproc = params.get('nproc',1)
 
     full_image = galsim.ImageF(full_xsize,full_ysize)
+    full_image.setOrigin(config['image_origin'])
     full_image.setZero()
     full_image.setScale(pixel_scale)
 
@@ -485,6 +503,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
     if make_psf_image:
         full_psf_image = galsim.ImageF(full_xsize,full_ysize)
+        full_psf_image.setOrigin(config['image_origin'])
         full_psf_image.setZero()
         full_psf_image.setScale(pixel_scale)
     else:
@@ -492,6 +511,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
     if make_weight_image:
         full_weight_image = galsim.ImageF(full_xsize,full_ysize)
+        full_weight_image.setOrigin(config['image_origin'])
         full_weight_image.setZero()
         full_weight_image.setScale(pixel_scale)
     else:
@@ -499,6 +519,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
     if make_badpix_image:
         full_badpix_image = galsim.ImageS(full_xsize,full_ysize)
+        full_badpix_image.setOrigin(config['image_origin'])
         full_badpix_image.setZero()
         full_badpix_image.setScale(pixel_scale)
     else:
@@ -581,7 +602,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
                'center', 'stamp_size', 'stamp_xsize', 'stamp_ysize' ]
     req = { 'nobjects' : int }
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 
-            'pixel_scale' : float , 'nproc' : int ,
+            'pixel_scale' : float , 'nproc' : int , 'index_convention' : str,
             'sky_level' : float , 'sky_level_pixel' : float }
     params = galsim.config.GetAllParams(
         config['image'], 'image', config, req=req, opt=opt, ignore=ignore)[0]
@@ -607,6 +628,15 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     pixel_scale = params.get('pixel_scale',1.0)
     config['pixel_scale'] = pixel_scale
+
+    convention = params.get('index_convention','1')
+    if convention.lower() in [ '0', 'c', 'python' ]:
+        origin = 0
+    elif convention.lower() in [ '1', 'fortran', 'fits' ]:
+        origin = 1
+    else:
+        raise AttributeError("Unknown index_convention: %s"%convention)
+    config['image_origin'] = galsim.PositionI(origin,origin)
 
     if 'sky_level' in params and 'sky_level_pixel' in params:
         raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
@@ -670,6 +700,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     nproc = params.get('nproc',1)
 
     full_image = galsim.ImageF(full_xsize,full_ysize)
+    full_image.setOrigin(config['image_origin'])
     full_image.setZero()
     full_image.setScale(pixel_scale)
 
@@ -680,6 +711,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     if make_psf_image:
         full_psf_image = galsim.ImageF(full_xsize,full_ysize)
+        full_psf_badpix_image.setOrigin(config['image_origin'])
         full_psf_image.setZero()
         full_psf_image.setScale(pixel_scale)
     else:
@@ -687,6 +719,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     if make_weight_image:
         full_weight_image = galsim.ImageF(full_xsize,full_ysize)
+        full_weight_image.setOrigin(config['image_origin'])
         full_weight_image.setZero()
         full_weight_image.setScale(pixel_scale)
     else:
@@ -694,6 +727,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     if make_badpix_image:
         full_badpix_image = galsim.ImageS(full_xsize,full_ysize)
+        full_badpix_image.setOrigin(config['image_origin'])
         full_badpix_image.setZero()
         full_badpix_image.setScale(pixel_scale)
     else:

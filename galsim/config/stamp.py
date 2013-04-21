@@ -327,12 +327,14 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             im = galsim.ImageF(xsize, ysize)
         else:
             im = galsim.ImageF(1,1)
+        im.setOrigin(config['image_origin'])
         im.setScale(im.scale)
         im.setZero()
         if do_noise and sky_level_pixel:
             im += sky_level_pixel
         if make_weight_image:
             weight_im = galsim.ImageF(im.bounds)
+            weight_im.setOrigin(config['image_origin'])
             weight_im.setScale(im.scale)
             weight_im.setZero()
         else:
@@ -343,6 +345,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             im.setCenter(icenter.x, icenter.y)
         if make_weight_image:
             weight_im = galsim.ImageF(im.bounds)
+            weight_im.setOrigin(config['image_origin'])
             weight_im.setScale(im.scale)
             weight_im.setZero()
         else:
@@ -360,6 +363,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             im.setCenter(icenter.x, icenter.y)
         if make_weight_image:
             weight_im = galsim.ImageF(im.bounds)
+            weight_im.setOrigin(config['image_origin'])
             weight_im.setScale(im.scale)
             weight_im.setZero()
         else:
@@ -479,6 +483,7 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level_pixel, final_shi
         im = None
 
     im = final.draw(image=im, dx=pixel_scale)
+    im.setOrigin(config['image_origin'])
 
     if 'gal' in config and 'signal_to_noise' in config['gal']:
         import math
@@ -715,6 +720,7 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, final_sh
         im = None
 
     im = final.drawShoot(image=im, dx=pixel_scale, max_extra_noise=max_extra_noise, rng=rng)
+    im.setOrigin(config['image_origin'])
 
     return im
     
@@ -897,6 +903,7 @@ def DrawPSFStamp(psf, pix, config, bounds, final_shift):
         final_psf.applyShift(final_shift.x, final_shift.y)
 
     psf_im = galsim.ImageF(bounds)
+    psf_im.setOrigin(config['image_origin'])
     psf_im.setScale(pixel_scale)
     final_psf.draw(psf_im, dx=pixel_scale)
 
