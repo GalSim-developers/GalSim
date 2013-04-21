@@ -73,25 +73,29 @@ def test_scattered():
         'center' : { 'type' : 'XY', 'x' : x1, 'y' : y1 },
         'nobjects' : 1
     }
-    for test_stamp_size in [ stamp_size, stamp_size + 1 ]:
-        config['image']['stamp_size'] = test_stamp_size
+    for convention in [ 0, 1 ]:
+        for test_stamp_size in [ stamp_size, stamp_size + 1 ]:
+            config['image']['stamp_size'] = test_stamp_size
+            config['image']['index_convention'] = convention
+    
+            image, _, _, _  = galsim.config.BuildImage(config)
+            np.testing.assert_equal(image.getXMin(), convention)
+            np.testing.assert_equal(image.getYMin(), convention)
 
-        image, _, _, _  = galsim.config.BuildImage(config)
-
-        xgrid, ygrid = np.meshgrid(np.arange(size) + image.getXMin(),
-                                   np.arange(size) + image.getYMin())
-        obs_flux = np.sum(image.array)
-        cenx = np.sum(xgrid * image.array) / flux
-        ceny = np.sum(ygrid * image.array) / flux
-        ixx = np.sum((xgrid-cenx)**2 * image.array) / flux
-        ixy = np.sum((xgrid-cenx)*(ygrid-ceny) * image.array) / flux
-        iyy = np.sum((ygrid-ceny)**2 * image.array) / flux
-        np.testing.assert_almost_equal(obs_flux/flux, 1, decimal=3)
-        np.testing.assert_almost_equal(cenx, x1, decimal=3)
-        np.testing.assert_almost_equal(ceny, y1, decimal=3)
-        np.testing.assert_almost_equal(ixx / (sigma/scale)**2, 1, decimal=1)
-        np.testing.assert_almost_equal(ixy, 0., decimal=3)
-        np.testing.assert_almost_equal(iyy / (sigma/scale)**2, 1, decimal=1)
+            xgrid, ygrid = np.meshgrid(np.arange(size) + image.getXMin(),
+                                       np.arange(size) + image.getYMin())
+            obs_flux = np.sum(image.array)
+            cenx = np.sum(xgrid * image.array) / flux
+            ceny = np.sum(ygrid * image.array) / flux
+            ixx = np.sum((xgrid-cenx)**2 * image.array) / flux
+            ixy = np.sum((xgrid-cenx)*(ygrid-ceny) * image.array) / flux
+            iyy = np.sum((ygrid-ceny)**2 * image.array) / flux
+            np.testing.assert_almost_equal(obs_flux/flux, 1, decimal=3)
+            np.testing.assert_almost_equal(cenx, x1, decimal=3)
+            np.testing.assert_almost_equal(ceny, y1, decimal=3)
+            np.testing.assert_almost_equal(ixx / (sigma/scale)**2, 1, decimal=1)
+            np.testing.assert_almost_equal(ixy, 0., decimal=3)
+            np.testing.assert_almost_equal(iyy / (sigma/scale)**2, 1, decimal=1)
 
 
     # Check that stamp_xsize, stamp_ysize, center use the object count, rather than the 
