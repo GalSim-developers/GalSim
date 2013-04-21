@@ -93,6 +93,9 @@ namespace galsim {
         /// @brief Returns the ratio of the actual flux to the specified flux the object, which is
         /// not unity when `_truncated` and `_flux_untruncated` are both true.
         double getTrueFluxFraction() const { return _flux_fraction; }
+        /// @brief Returns the ratio of the actual half-light radius `re` to the specified one,
+        /// which is not unity when `_truncated` and `_flux_untruncated` are both true.
+        double getTrueReFraction() const { return _re_fraction; }
 
         /**
          * @brief Shoot photons through unit-size, unnormalized profile
@@ -125,7 +128,8 @@ namespace galsim {
 
         double _norm; ///< Amplitude scaling in Sersic profile `exp(-b*pow(xsq,inv2n))`.
         bool _flux_untruncated; ///< If true, flux is set to the untruncated Sersic with index `_n`.
-        double _flux_fraction; ///< Fraction of true (truncated) flux, to the specified flux.
+        double _flux_fraction; ///< Ratio of true (truncated) flux to the specified flux.
+        double _re_fraction; ///< Ratio of true `re` to the specified `re`.
         double _kderiv2; ///< Quadratic dependence near k=0.
         double _kderiv4; ///< Quartic dependence near k=0.
         Table<double,double> _ft;  ///< Lookup table for Fourier transform of Sersic.
@@ -258,8 +262,8 @@ namespace galsim {
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
         double getN() const { return _n; }
-        /// @brief Returns the specified HLR, which may be different from the true HLR
-        double getHalfLightRadius() const { return _re; }
+        /// @brief Returns the ratio of actual half-light radius to the specified half-light radius
+        double getHalfLightRadius() const { return _actual_re; }
 
         // Overrides for better efficiency
         void fillXValue(tmv::MatrixView<double> val,
@@ -277,8 +281,8 @@ namespace galsim {
 
     private:
         double _n; ///< Sersic index.
-        double _flux; ///< Flux.
-        double _re;   ///< Half-light radius.
+        double _flux; ///< Flux specified at the constructor.
+        double _re;   ///< Half-light radius specified at the constructor.
         double _re_sq;
         double _inv_re;
         double _inv_re_sq;
@@ -286,6 +290,7 @@ namespace galsim {
         double _norm; ///< Calculated value: _flux/_re_sq
         bool _flux_untruncated; ///< If true, flux is set to the untruncated Sersic with index `_n`.
         double _actual_flux; ///< True flux of object.
+        double _actual_re; ///< True half-light-radius.
         double _maxRre; ///< Maximum (truncation) `r` in units of `_re`.
         double _maxRre_sq;
         double _maxR; ///< Maximum (truncation) radius `r`.

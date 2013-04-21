@@ -19,7 +19,7 @@
  * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
  */
 
-//#define DEBUGLOGGING
+#define DEBUGLOGGING
 
 #include "SBSersic.h"
 #include "SBSersicImpl.h"
@@ -67,6 +67,7 @@ namespace galsim {
         _info = nmap.get(_n, maxRre, _flux_untruncated);
         _maxRre = _info->getMaxRRe();  // maximum R in units of re (irrelevant if trunc = 0.)
         _actual_flux = _info->getTrueFluxFraction() * _flux;
+        _actual_re = _info->getTrueReFraction() * _re;
         _maxRre_sq = _maxRre*_maxRre;
         _maxR = _maxRre * _re;
         _maxR_sq = _maxR*_maxR;
@@ -324,7 +325,7 @@ namespace galsim {
         }
         xdbg<<"Converged at z = "<<z<<std::endl;
         double Rre_estimate = std::pow(z/_b, _n);
-        dbg<<"Rre_estimate = (z/b)^n = "<<Rre_estimate<<std::endl;
+        xdbg<<"Rre_estimate = (z/b)^n = "<<Rre_estimate<<std::endl;
 
         // (2) Now find a more exact solution using an iterative solver
         SersicMissingFluxFunc func(_n, _b, missing_flux);
@@ -355,7 +356,7 @@ namespace galsim {
                 double z = b * _rinvn;
                 frm = boost::math::tgamma_lower(_2n, z);
             }
-            xdbg<<"func("<<b<<") = 2*"<<fre<<" - "<<frm<<" = "<<2.*fre-frm<<std::endl;
+            xxdbg<<"func("<<b<<") = 2*"<<fre<<" - "<<frm<<" = "<<2.*fre-frm<<std::endl;
             return 2.*fre - frm;
         }
     private:
@@ -376,7 +377,7 @@ namespace galsim {
         //                  gamma(2n,b) = Gamma(2n,b*(trunc/re)^(1/n)) / 2, for the truncated case.
         if (maxRre!=0. && maxRre <= 1.)   // TODO: find a better minimum truncation check criteria.
             throw SBError("Sersic truncation radius must be > half_light_radius.");
-        xdbg<<"Find Sersic scale b for maxR/HLR = "<<maxRre<<std::endl;
+        dbg<<"Find Sersic scale b for maxR/HLR = "<<maxRre<<std::endl;
         SersicScaleRadiusFunc func(n, maxRre);
         // For the upper bound of b, use 2*n, based on the Ciotti & Bertin (1999) approximate 
         // solution for untruncated Sersic; for the lower bound, we don't really have a good choice,
@@ -391,15 +392,60 @@ namespace galsim {
         xdbg<<"After bracket, range is "<<solver.getLowerBound()<<" .. "<<
             solver.getUpperBound()<<std::endl;
         double b = solver.root();
-        xdbg<<"Root is "<<b<<std::endl;
+        dbg<<"Root is "<<b<<std::endl;
 
         return b;
+    }
+
+    class SersicHalfLightRadiusFunc
+    {
+    public:
+        SersicHalfLightRadiusFunc(double n, double b, double gamma2n) :
+            _2n(2.*n), _invn(1./n), _b(b), _half_gamma2n(gamma2n/2.) {}
+        double operator()(double hlr) const
+        {
+            double fre = boost::math::tgamma_lower(_2n, _b*std::pow(hlr,_invn));
+            dbg<<"func("<<hlr<<") = "<<fre<<"-"<<_half_gamma2n<<" = "<<fre-_half_gamma2n<<std::endl;
+            return fre - _half_gamma2n;
+        }
+    private:
+        double _2n;
+        double _invn;
+        double _b;
+        double _half_gamma2n;
+    };
+
+    // Calculate half-light radius scale, given Sersic `n`, `b` and total flux equivalent `gamma2n`
+    double SersicCalculateHLRScale(double n, double b, double gamma2n)
+    {
+        // Find solution to gamma(2n,b*hlr^(1/n)) = gamma2n / 2
+        // where gamma2n is the truncated gamma function Gamma(2n,b*(maxRre)^(1/n))
+        //
+        dbg<<"Find HLR scale for (n,b,gamma2n) = ("<<n<<","<<b<<","<<gamma2n<<")"<<std::endl;
+        SersicHalfLightRadiusFunc func(n, b, gamma2n);
+        // For the upper bound of b, use 1 (i.e., the specified half-light radius); the true half-
+        // light radius will always be smaller for a truncated Sersic.  For the lower bound, we
+        // don't really have a good choice, so start with half the upper bound, and we'll expand it
+        // if necessary.
+        double b1 = 1.;
+        dbg<<"b1 = "<<b1<<std::endl;
+        double b2 = 0.5;
+        dbg<<"b2 = "<<b2<<std::endl;
+        Solve<SersicHalfLightRadiusFunc> solver(func,b1,b2);
+        solver.setMethod(Brent);
+        solver.bracketLower();    // expand lower bracket if necessary
+        dbg<<"After bracket, range is "<<solver.getLowerBound()<<" .. "<<
+            solver.getUpperBound()<<std::endl;
+        double hlr = solver.root();
+        dbg<<"Root is "<<hlr<<std::endl;
+
+        return hlr;
     }
 
     // Constructor to initialize Sersic constants and k lookup table
     SBSersic::SersicInfo::SersicInfo(double n, double maxRre, bool flux_untruncated) :
         _n(n), _maxRre(maxRre), _maxRre_sq(_maxRre*_maxRre), _inv2n(1./(2.*n)),
-        _flux_untruncated(flux_untruncated), _flux_fraction(1.)
+        _flux_untruncated(flux_untruncated), _flux_fraction(1.), _re_fraction(1.)
     {
         // Going to constrain range of allowed n to those for which testing was done
         // (Lower bounds has hard limit at 0.29)
@@ -409,11 +455,11 @@ namespace galsim {
 
         if ( _truncated && _flux_untruncated ) {
             dbg << "Calculating b with maxR/re => 0 (inf)" << std::endl;
-            _b = SersicCalculateScaleBFromHLR(n, 0.);
+            _b = SersicCalculateScaleBFromHLR(_n, 0.);
         }
         else {
             dbg << "Calculating b with maxR/re => " << maxRre << std::endl;
-            _b = SersicCalculateScaleBFromHLR(n, maxRre);
+            _b = SersicCalculateScaleBFromHLR(_n, maxRre);
         }
 
         // set-up frequently used numbers (for flux normalization and FT small-k approximations)
@@ -437,9 +483,12 @@ namespace galsim {
         }
 
         // Find the ratio of actual (truncated) flux to specified flux
-        if (_truncated && _flux_untruncated)
+        if (_truncated && _flux_untruncated) {
             _flux_fraction = gamma2n / tgamma(2.*_n);       // _flux_fraction < 1
+            _re_fraction = SersicCalculateHLRScale(_n,_b,gamma2n);
+        }
         dbg << "Flux fraction: " << _flux_fraction << std::endl;
+        dbg << "HLR fraction: " << _re_fraction << std::endl;
         dbg << "gamma2n: " << gamma2n << std::endl;
 
         // The normalization factor to give unity flux integral:
