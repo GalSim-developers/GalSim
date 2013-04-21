@@ -1845,7 +1845,9 @@ class Sersic(GSObject):
     size parameter `half_light_radius`.  Optional parameters are truncation radius `trunc` [default
     `trunc = 0.`, indicating no truncation] and a `flux` parameter [default `flux = 1`].  If `trunc`
     is set to a non-zero value, then it is assumed to be in the same system of units as
-    `half_light_radius`.
+    `half_light_radius`.  (The code will be more efficient if the truncation is always the same
+     multiple of `half_light_radius`, since it caches many calculations that depend on the ratio
+    `trunc/half_light_radius`.)
 
     Example:
 
@@ -1874,7 +1876,7 @@ class Sersic(GSObject):
         >>> sersic_obj2.getFlux()
         40.0
         >>> sersic_obj3 = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40., trunc=10., \
-                                 flux_untruncated=True)
+                                        flux_untruncated=True)
         >>> sersic_obj3.getHalfLightRadius()
         2.5                   # This is half-light radius for a Sersic with no truncation
         >>> sersic_obj3.getFlux()
