@@ -317,32 +317,38 @@ namespace hsm {
      * CppHSMShapeData.  There are two arguments that have default values, namely shear_est (the
      * type of shear estimator) and flags (for the REGAUSS method only).
      *
-     * @param[in] gal_image The ImageView for the galaxy being measured
-     * @param[in] PSF_image The ImageView for the PSF
-     * @param[in] gal_mask_image The ImageView for the mask image to be applied to the galaxy being
-     *            measured (integer array, 1=use pixel and 0=do not use pixel).
-     * @param[in] sky_var The variance of the sky level, used for estimating uncertainty on the
-     *            measured shape; default 0.
-     * @param[in] *shear_est A string indicating the desired method of PSF correction: REGAUSS,
-     *            LINEAR, BJ, or KSB; default REGAUSS.
-     * @param[in] flags A flag determining various aspects of the shape measurement process (only
-     *            necessary for REGAUSS); default 0xe.
-     * @param[in] guess_sig_gal Optional argument with an initial guess for the Gaussian sigma of
-     *            the galaxy, default 5.0 (pixels).
-     * @param[in] guess_sig_PSF Optional argument with an initial guess for the Gaussian sigma of
-     *            the PSF, default 3.0 (pixels).
-     * @param[in] precision The convergence criterion for the moments; default 1e-6.
+     * @param[in] gal_image        The ImageView for the galaxy being measured
+     * @param[in] PSF_image        The ImageView for the PSF
+     * @param[in] gal_mask_image   The ImageView for the mask image to be applied to the galaxy
+     *                             being measured (integer array, 1=use pixel and 0=do not use
+     *                             pixel).
+     * @param[in] sky_var          The variance of the sky level, used for estimating uncertainty on
+     *                             the measured shape; default 0.
+     * @param[in] *shear_est       A string indicating the desired method of PSF correction:
+     *                             REGAUSS, LINEAR, BJ, or KSB; default REGAUSS.
+     * @param[in] *recompute_flux  A string indicating whether to recompute the object flux, which
+     *                             should be NONE (for no recomputation), SUM (for recomputation via
+     *                             an unweighted sum over unmasked pixels), or FIT (for
+     *                             recomputation using the Gaussian + quartic fit).
+     * @param[in] guess_sig_gal    Optional argument with an initial guess for the Gaussian sigma of
+     *                             the galaxy, default 5.0 (pixels).
+     * @param[in] guess_sig_PSF    Optional argument with an initial guess for the Gaussian sigma of
+     *                             the PSF, default 3.0 (pixels).
+     * @param[in] precision        The convergence criterion for the moments; default 1e-6.
      * @param[in] guess_x_centroid Optional argument with an initial guess for the x centroid of the
-     *            galaxy; if not set, then the code will try the center of the image.
+     *                             galaxy; if not set, then the code will try the center of the
+     *                             image.
      * @param[in] guess_y_centroid Optional argument with an initial guess for the y centroid of the
-     *            galaxy; if not set, then the code will try the center of the image.
+     *                             galaxy; if not set, then the code will try the center of the
+     *                             image.
      * @return A CppHSMShapeData object containing the results of shape measurement.
      */
     template <typename T, typename U>
         CppHSMShapeData EstimateShearHSMView(
             const ImageView<T> &gal_image, const ImageView<U> &PSF_image,
             const ImageView<int> &gal_mask_image,
-            float sky_var = 0.0, const char *shear_est = "REGAUSS", unsigned long flags = 0xe,
+            float sky_var = 0.0, const char *shear_est = "REGAUSS",
+            const std::string& recompute_flux = "FIT",
             double guess_sig_gal = 5.0, double guess_sig_PSF = 3.0, double precision = 1.0e-6,
             double guess_x_centroid = -1000.0, double guess_y_centroid = -1000.0,
             boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());

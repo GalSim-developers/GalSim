@@ -156,12 +156,13 @@ struct PyCppHSMShapeData {
 
         typedef CppHSMShapeData (* ESH_func)(const ImageView<U> &, const ImageView<V> &, 
                                              const ImageView<int> &, float, const char *,
-                                             unsigned long, double, double, double, double, double,
+                                             const std::string&, double, double, double, double, double,
                                              boost::shared_ptr<HSMParams>);
         bp::def("_EstimateShearHSMView",
                 ESH_func(&EstimateShearHSMView),
                 (bp::arg("gal_image"), bp::arg("PSF_image"), bp::arg("gal_mask_image"),
-                 bp::arg("sky_var")=0.0, bp::arg("shear_est")="REGAUSS", bp::arg("flags")=0xe,
+                 bp::arg("sky_var")=0.0, bp::arg("shear_est")="REGAUSS",
+                 bp::arg("recompute_flux")="FIT",
                  bp::arg("guess_sig_gal")=5.0, bp::arg("guess_sig_PSF")=3.0,
                  bp::arg("precision")=1.0e-6, bp::arg("guess_x_centroid")=-1000.0,
                  bp::arg("guess_y_centroid")=-1000.0, bp::arg("hsmparams")=bp::object()),
