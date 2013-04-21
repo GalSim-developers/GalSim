@@ -19,7 +19,7 @@
  * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#define DEBUGLOGGING
+//#define DEBUGLOGGING
 
 #include "SBSersic.h"
 #include "SBSersicImpl.h"
@@ -330,9 +330,9 @@ namespace galsim {
         SersicMissingFluxFunc func(_n, _b, missing_flux);
         // Start with the approximate solution Rre_estimate, and create bounds at its vicinities
         double b1 = Rre_estimate * 1.1;
-        dbg<<"b1 = "<<b1<<" ..";
+        xdbg<<"b1 = "<<b1<<" ..";
         double b2 = Rre_estimate * 0.9;
-        dbg<<".. b2 = "<<b2<<std::endl;
+        xdbg<<".. b2 = "<<b2<<std::endl;
         Solve<SersicMissingFluxFunc> solver(func,b1,b2);
         solver.setMethod(Brent);
         double Rre = solver.root();
