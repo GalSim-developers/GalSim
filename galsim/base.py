@@ -55,44 +55,10 @@ class GSObject(object):
     The gsparams argument can be used to specify various numbers that govern the tradeoff between
     accuracy and speed for the calculations made in drawing a GSObject.  The numbers are
     encapsulated in a class called GSParams, and the user should make careful choices whenever they
-    opt to deviate from the defaults.  The parameters, along with their default values, are the
-    following:
+    opt to deviate from the defaults.  For more details about the parameters and their default
+    values, use `help(galsim.GSParams)`.
 
-    minimum_fft_size=128      The minimum FFT size we're willing to do.
-    maximum_fft_size=4096     The maximum FFT size we're willing to do.
-    alias_threshold=5.e-3     A threshold parameter used for setting the stepK value for FFTs.
-                              The FFT's stepK is set so that at most a fraction alias_threshold 
-                              of the flux of any profile is aliased.
-    maxk_threshold=1.e-3      A threshold parameter used for setting the maxK value for FFTs.
-                              The FFT's maxK is set so that the k-values that are excluded off the 
-                              edge of the image are less than maxk_threshold.
-    kvalue_accuracy=1.e-5     Accuracy of values in k-space.
-                              If a k-value is less than kvalue_accuracy, then it may be set to 
-                              zero. Similarly, if an alternate calculation has errors less than 
-                              kvalue_accuracy, then it may be used instead of an exact calculation.
-                              Note: This does not necessarily imply that all kvalues are this 
-                              accurate.  There may be cases where other choices we have made lead
-                              to errors greater than this.  But whenever we do an explicit 
-                              calculation about this, this is the value we use.
-                              This should typically be set to a lower, more stringent value than
-                              maxk_threshold.
-    xvalue_accuracy=1.e-5     Accuracy of values in real space.
-                              If a value in real space is less than xvalue_accuracy, then it may be
-                              set to zero. Similarly, if an alternate calculation has errors less 
-                              than xvalue_accuracy, then it may be used instead of an exact 
-                              calculation.
-    shoot_accuracy=1.e-5      Accuracy of total flux for photon shooting
-                              The photon shooting algorithm sometimes needs to sample the radial 
-                              profile out to some value.  We choose the outer radius such that the 
-                              integral encloses at least (1-shoot_accuracy) of the flux.
-    realspace_relerr=1.e-3    The relative accuracy for realspace convolution.
-    realspace_abserr=1.e-6    The absolute accuracy for realspace convolution.
-    integration_relerr=1.e-5  The relative accuracy for integrals (other than real-space 
-                              convolution).
-    integration_abserr=1.e-7  The absolute accuracy for integrals (other than real-space 
-                              convolution).
-
-    Example:
+    Example usage:
     
     Let's say you want to do something that requires an FFT larger than 4096 x 4096 (and you have 
     enough memory to handle it!).  Then you can create a new GSParams object with a larger 
