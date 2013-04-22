@@ -176,7 +176,7 @@ struct PyImage {
             .add_property("array", &GetArray)
             // In python, there is no way to have a function return a mutable reference
             // so you can't make im(x,y) = val work correctly.  Thus, the __call__
-            // funtion (which is the im(x,y) syntax) is just the const version.
+            // function (which is the im(x,y) syntax) is just the const version.
             .def("__call__", at) // always used checked accessors in Python
             .def("at", at)
             .def("__call__", at_pos)

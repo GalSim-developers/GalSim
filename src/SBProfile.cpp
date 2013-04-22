@@ -652,7 +652,7 @@ namespace galsim {
         mkt.colRange(0,N/2) = val.colRange(N/2,N);
         mkt.colRange(N/2+1,N) = val.colRange(1,N/2);
         // For the N/2 column, we use the average of the ky = +N/2 and -N/2 values
-        // Otherwise you can get strage effects when the profile isn't radially symmetric.
+        // Otherwise you can get strange effects when the profile isn't radially symmetric.
         // e.g. A shift will induce a spurious shear. (BAD!!)
         mkt.col(N/2) = 0.5*val.col(0) + 0.5*val.col(N);
     }
