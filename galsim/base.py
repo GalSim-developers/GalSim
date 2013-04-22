@@ -556,7 +556,7 @@ class GSObject(object):
         The object will always be drawn with its nominal center at the center location of the 
         image.  There is thus a distinction in the behavior at the center for even- and odd-sized
         images.  For a profile with a maximum at (0,0), this maximum will fall at the central 
-        pixel of an odd-sized image, but in the corner of the 4 central pixels of an odd-sized
+        pixel of an odd-sized image, but in the corner of the 4 central pixels of an even-sized
         image.  If you care about how the sub-pixel offsets are drawn, you should either make
         sure you provide an image with the right kind of size, or shift the profile by half
         a pixel as desired to get the profile's (0,0) location where you want it.
