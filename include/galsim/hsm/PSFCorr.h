@@ -315,7 +315,7 @@ namespace hsm {
      * the HSM package, directly accessing the input ImageViews.  The input arguments get repackaged
      * before calling general_shear_estimator, and results for the shape measurement are returned as
      * CppHSMShapeData.  There are two arguments that have default values, namely shear_est (the
-     * type of shear estimator) and flags (for the REGAUSS method only).
+     * type of shear estimator) and recompute_flux (for the REGAUSS method only).
      *
      * @param[in] gal_image        The ImageView for the galaxy being measured
      * @param[in] PSF_image        The ImageView for the PSF
@@ -363,16 +363,19 @@ namespace hsm {
      * recomputing the moments using the result of the previous step as the weight function, and so
      * on until the moments that are measured are the same as those used for the weight function.
      *
-     * @param[in] object_image The ImageView for the object being measured.
+     * @param[in] object_image      The ImageView for the object being measured.
      * @param[in] object_mask_image The ImageView for the mask image to be applied to the object
-     *            being measured (integer array, 1=use pixel and 0=do not use pixel).
-     * @param[in] guess_sig Optional argument with an initial guess for the Gaussian sigma of
-     *            the object, default 5.0 (pixels).
-     * @param[in] precision The convergence criterion for the moments; default 1e-6.
-     * @param[in] guess_x_centroid Optional argument with an initial guess for the x centroid of the
-     *            galaxy; if not set, then the code will try the center of the image.
-     * @param[in] guess_y_centroid Optional argument with an initial guess for the y centroid of the
-     *            galaxy; if not set, then the code will try the center of the image.
+     *                              being measured (integer array, 1=use pixel and 0=do not use
+     *                              pixel).
+     * @param[in] guess_sig         Optional argument with an initial guess for the Gaussian sigma
+     *                              of the object, default 5.0 (pixels).
+     * @param[in] precision         The convergence criterion for the moments; default 1e-6.
+     * @param[in] guess_x_centroid  Optional argument with an initial guess for the x centroid of
+     *                              the galaxy; if not set, then the code will try the center of the
+     *                              image.
+     * @param[in] guess_y_centroid  Optional argument with an initial guess for the y centroid of
+     *                              the galaxy; if not set, then the code will try the center of the
+     *                              image.
      * @return A CppHSMShapeData object containing the results of moment measurement.
      */
     template <typename T>
@@ -391,15 +394,15 @@ namespace hsm {
      * follows: 0x1=recompute galaxy flux by summing unmasked pixels, 0x2=recompute galaxy flux from
      * Gaussian-quartic fit, 0x4=cut off Gaussian approximator at NSIG_RG sigma to save time,
      * 0x8=cut off PSF residual at NSIG_RG2 to save time.    
-     * @param[in] gal_image The galaxy Image.
-     * @param[in] gal_mask The galaxy mask Image (integers: 1=use pixel, 0=do not use pixel).
-     * @param[in] PSF_image The PSF Image.
-     * @param[in] PSF_mask The PSF mask Image (integers: 1=use pixel, 0=do not use pixel).
-     * @param[in] gal_data The ObjectData object for the galaxy
-     * @param[in] PSF_data The ObjectData object for the PSF
-     * @param[in] shear_est A string indicating the desired method of PSF correction: REGAUSS,
-     *            LINEAR, BJ, or KSB
-     * @param[in] flags A parameter for REGAUSS (typical usage is 0xe).
+     * @param[in] gal_image    The galaxy Image.
+     * @param[in] gal_mask     The galaxy mask Image (integers: 1=use pixel, 0=do not use pixel).
+     * @param[in] PSF_image    The PSF Image.
+     * @param[in] PSF_mask     The PSF mask Image (integers: 1=use pixel, 0=do not use pixel).
+     * @param[in] gal_data     The ObjectData object for the galaxy
+     * @param[in] PSF_data     The ObjectData object for the PSF
+     * @param[in] shear_est    A string indicating the desired method of PSF correction: REGAUSS,
+     *                         LINEAR, BJ, or KSB.
+     * @param[in] flags        A parameter for REGAUSS (typical usage is 0xe).
      * @return A status flag that should be zero if the measurement was successful.
      */
     template <typename T, typename U>
@@ -418,18 +421,18 @@ namespace hsm {
      * used as a weight function, computing the weighted moments, recomputing the moments using the
      * result of the previous step as the weight function, and so on until the moments that are
      * measured are the same as those used for the weight function.
-     * @param[in] data The Image for the object being measured.
-     * @param[in] mask The mask Image for the object being measured  (integers: 1=use pixel, 0=do
-     *                 not use pixel).
-     * @param[out] A The amplitude of the best-fit elliptical Gaussian (total image intensity for
-     *             the Gaussian is 2A). 
-     * @param[out] x0 The x centroid of the best-fit elliptical Gaussian.
-     * @param[out] y0 The y centroid of the best-fit elliptical Gaussian.
-     * @param[out] Mxx The xx component of the moment matrix.
-     * @param[out] Mxy The xy component of the moment matrix.
-     * @param[out] Myy The yy component of the moment matrix.
-     * @param[out] rho4 The weighted radial fourth moment.
-     * @param[in] epsilon The required level of accuracy.
+     * @param[in] data      The Image for the object being measured.
+     * @param[in] mask      The mask Image for the object being measured  (integers: 1=use pixel,
+     *                      0=do not use pixel).
+     * @param[out] A        The amplitude of the best-fit elliptical Gaussian (total image intensity
+     *                      for the Gaussian is 2A).
+     * @param[out] x0       The x centroid of the best-fit elliptical Gaussian.
+     * @param[out] y0       The y centroid of the best-fit elliptical Gaussian.
+     * @param[out] Mxx      The xx component of the moment matrix.
+     * @param[out] Mxy      The xy component of the moment matrix.
+     * @param[out] Myy      The yy component of the moment matrix.
+     * @param[out] rho4     The weighted radial fourth moment.
+     * @param[in] epsilon   The required level of accuracy.
      * @param[out] num_iter The number of iterations needed to converge.
      */
     template <typename T>
