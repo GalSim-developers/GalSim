@@ -268,7 +268,14 @@ class ComparisonShapeData(object):
                  "sigma_draw  = "+str(self.sigma_draw)+"\n"+\
                  "delta_sigma = "+str(self.delta_sigma)+" +/- "+str(self.err_sigma)+"\n"+\
                  "\n"+\
-                 "time taken = "+str(self.time)+" s" 
+                 "image size = "+str(self.size)+"\n"+\
+                 "pixel scale = "+str(self.pixel_scale)+"\n"+\
+                 "wmult = "+str(self.wmult)+"\n"+\
+                 "\n"+\
+                 "total time taken = "+str(self.time)+" s\n"+\
+                 "total number of iterations = "+str(self.n_iterations)+"\n"+\
+                 "number of trials per iteration = "+str(self.n_trials_per_iter)+"\n"+\
+                 "number of photons per trial = "+str(self.n_photons_per_trial)+"\n"
         return retval
 
     # Reuse the __str__ method for __repr__
@@ -646,8 +653,8 @@ def compare_dft_vs_photon_config(config, random_seed=None, nproc=None, pixel_sca
         sigmaerr = _stderr(sigma_shoot_list)
         itercount += 1
         if logger:
-            logger.info('Completed '+str(itercount)+' iterations')
-            logger.info(
+            logger.debug('Completed '+str(itercount)+' iterations')
+            logger.debug(
                 '(g1obserr, g2obserr, sigmaerr) = '+str(g1obserr)+', '+str(g2obserr)+', '+
             str(sigmaerr))
 
