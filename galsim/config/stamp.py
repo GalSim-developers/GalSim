@@ -88,8 +88,11 @@ def BuildStamps(nobjects, config, xsize, ysize,
             if logger:
                 logger.info("ncpu = %d.  Using %d processes",ncpu,nproc)
         except:
-            raise AttributeError(
-                "config.image.nproc <= 0, but unable to determine number of cpus.")
+            if logger:
+                logger.warn("config.image.nproc <= 0, but unable to determine number of cpus.")
+            nproc = 1
+            if logger:
+                logger.info("Unable to determine ncpu.  Using %d processes",nproc)
     
     if nproc > 1:
         from multiprocessing import Process, Queue, current_process
