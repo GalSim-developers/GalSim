@@ -51,6 +51,12 @@ def run_tests(target, source, env):
             cmd += ' --processes=%d --process-timeout=60'%(env.GetOption('num_jobs'))
             print 'nosetests is version %s... running tests in parallel with %d jobs'%(
                     env['NOSETESTSVERSION'],env.GetOption('num_jobs'))
+            if 'BAD_BLAS' in env:
+                print
+                print 'WARNING: There is a good chance this will not work given that you seem'
+                print '         to be using a TMV installation that calls the Apple BLAS'
+                print '         library with OSX >= 10.7.  See the above warning about this.'
+                print
             print 'If you have trouble with the parallel test run, you may disable it'
             print 'by typing "scons tests -j1"'
         else:
@@ -94,23 +100,25 @@ def run_tests(target, source, env):
             if timed_out:
                 print
                 print 'WARNING: Some of these errors are TimedOutExceptions.'
-                print 'This usually indicates that you are running too many jobs in parallel.'
-                print 'For example, you may have other jobs running on some of the CPUs,'
-                print 'which are slowing down the tests, or SCons may be incorrectly detecting'
-                print 'the number of CPUs to be more than you actually have.'
+                print '         This usually indicates that you are running too many jobs in '
+                print '         parallel.  For example, you may have other jobs running on some of'
+                print '         the CPUs, which are slowing down the tests, or SCons may be '
+                print '         incorrectly detecting the number of CPUs to be more than you'
+                print '         actually have.'
                 print
-                print 'The solution is usually to run the tests with fewer jobs.'
-                print 'e.g. To use 4 jobs, write "scons -j4 tests".'
+                print '         The solution is usually to run the tests with fewer jobs.'
+                print '         e.g. To use 4 jobs, write "scons -j4 tests".'
         else:
             print 'Nosetests finished successfully.'
     else:
-        print '\nWARNING: Could not find nosetests in path.'
-        print 'The cpp test programs will be compiled and run,',
-        print 'but you will have to run the python tests manually.'
-        print 'To do so, type: '
-        print '   cd tests '
-        print '   run_all_tests '
-        print 'If this doesn\'t end with an error, then the tests all passed.'
+        print
+        print 'WARNING: Could not find nosetests in path.'
+        print '         The cpp test programs will be compiled and run,',
+        print '         but you will have to run the python tests manually.'
+        print '         To do so, type: '
+        print '             cd tests '
+        print '             run_all_tests '
+        print '         If this doesn\'t end with an error, then the tests all passed.'
         
     # Always run cpp tests
     if True:
