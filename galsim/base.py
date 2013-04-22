@@ -1317,8 +1317,8 @@ class OpticalPSF(GSObject):
     @param coma1           Coma along x in units of incident light wavelength.
     @param coma2           Coma along y in units of incident light wavelength.
     @param spher           Spherical aberration in units of incident light wavelength.
-    @param trefiol1        trefoil (one of the arrows along x) in units of incident light wavelength.
-    @param trefiol2        trefoil (one of the arrows along y) in units of incident light wavelength.
+    @param trefoil1        trefoil (one of the arrows along x) in units of incident light wavelength.
+    @param trefoil2        trefoil (one of the arrows along y) in units of incident light wavelength.
     @param circular_pupil  Adopt a circular pupil? Alternative is square.
     @param obscuration     Linear dimension of central obscuration as fraction of pupil linear 
                            dimension, [0., 1.) [default `obscuration = 0.`].
@@ -1387,8 +1387,8 @@ class OpticalPSF(GSObject):
         # Make the psf image using this dx and array shape
         optimage = galsim.optics.psf_image(
             lam_over_diam=lam_over_diam, dx=dx_lookup, array_shape=(npix, npix), defocus=defocus,
-            astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher, trefoil1=trefoil1, trefoil2=trefoil2,
-            circular_pupil=circular_pupil, obscuration=obscuration, flux=flux)
+            astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher, trefoil1=trefoil1,
+            trefoil2=trefoil2, circular_pupil=circular_pupil, obscuration=obscuration, flux=flux)
         
         # If interpolant not specified on input, use a Quintic interpolant
         if interpolant is None:
