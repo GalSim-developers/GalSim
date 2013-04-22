@@ -620,11 +620,12 @@ def compare_dft_vs_photon_config(config, random_seed=None, nproc=None, pixel_sca
     config['image']['n_photons'] = n_photons_per_trial
 
     # Then begin while loop, farming out sets of n_trials_per_iter trials until we get the
-    # statistical accuracy we require 
+    # statistical accuracy we require
+    start_random_seed = config['image']['random_seed'] 
     while (g1obserr > abs_tol_ellip) or (g2obserr > abs_tol_ellip) or (sigmaerr > abs_tol_size):
 
         # Reset the random_seed depending on the iteration number so that these never overlap
-        config['image']['random_seed'] += itercount * (n_trials_per_iter + 1)
+        config['image']['random_seed'] = start_random_seed + itercount * (n_trials_per_iter + 1)
 
         # Run the trials using galsim.config.BuildImages function
         trial_images = galsim.config.BuildImages(
