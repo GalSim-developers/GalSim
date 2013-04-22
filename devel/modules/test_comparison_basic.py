@@ -33,7 +33,7 @@ n_photons_test= (int(1e6), int(3.e6), int(1.e7))
 
 def test_comparison_object(np):
 
-    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+    logging.basicConfig(level=logging.WARNING, stream=sys.stdout)
     logger = logging.getLogger("test_comparison_object")
 
     logger.info("Running basic tests of comparison scripts using objects")
@@ -49,12 +49,14 @@ def test_comparison_object(np):
     res1 = galsim.utilities.compare_dft_vs_photon_object(
         gal, psf_object=psf, rng=galsim.BaseDeviate(rseed), size=imsize, pixel_scale=dx,
         abs_tol_ellip=tol_ellip, abs_tol_size=tol_size, n_photons_per_trial=np)
+    print "Object results with N_PHOTONS = "+str(np)
+    print res1
 
     return
 
 def test_comparison_config(np):
 
-    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+    logging.basicConfig(level=logging.WARNING, stream=sys.stdout)
     logger = logging.getLogger("test_comparison_config")
 
     logger.info("Running basic tests of comparison scripts using config")
@@ -92,23 +94,28 @@ def test_comparison_config(np):
     }
 
     import copy
+
+    print "Config results with N_PHOTONS = "+str(np)
     # Try a single core run not setting many kwargs
     res1 = galsim.utilities.compare_dft_vs_photon_config(
         copy.deepcopy(config), random_seed=rseed, size=imsize, pixel_scale=dx,
         abs_tol_ellip=tol_ellip, abs_tol_size=tol_size, n_photons_per_trial=np, wmult=wmult,
         nproc=1, logger=logger)
+    print res1
 
     # Try a dual core run setting
     res2 = galsim.utilities.compare_dft_vs_photon_config(
         copy.deepcopy(config), random_seed=rseed, size=imsize, pixel_scale=dx,
         abs_tol_ellip=tol_ellip, abs_tol_size=tol_size, n_photons_per_trial=np, wmult=wmult,
         nproc=2, logger=logger)
+    print res2
 
     # Try a four core run setting
     res4 = galsim.utilities.compare_dft_vs_photon_config(
         copy.deepcopy(config), random_seed=rseed, size=imsize, pixel_scale=dx,
         abs_tol_ellip=tol_ellip, abs_tol_size=tol_size, n_photons_per_trial=np,
         wmult=wmult, nproc=4, logger=logger)
+    print res4
 
     # Try an eight core run setting
     res8 = galsim.utilities.compare_dft_vs_photon_config(
@@ -116,14 +123,12 @@ def test_comparison_config(np):
         abs_tol_ellip=tol_ellip, abs_tol_size=tol_size, n_photons_per_trial=np,
         wmult=wmult, nproc=8, logger=logger)
 
+    print res8
     return
 
 
 if __name__ == "__main__":
 
     for n_photons in n_photons_test:
-
-        test_comparison_object(n_photons)
         test_comparison_config(n_photons)
         test_comparison_object(n_photons)
-
