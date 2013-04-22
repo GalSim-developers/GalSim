@@ -150,10 +150,8 @@ def convert_interpolant_to_2d(interpolant):
     elif isinstance(interpolant, galsim.Interpolant):
         return galsim.InterpolantXY(interpolant)
     else:
-        try:
-            return galsim.Interpolant2d(interpolant)
-        except:
-            raise RuntimeError('Specified interpolant is not valid!')
+        # Will raise an appropriate exception if this is invalid.
+        return galsim.Interpolant2d(interpolant)
 
 
 class ComparisonShapeData(object):

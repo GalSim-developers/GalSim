@@ -259,7 +259,7 @@ def test_exceptions():
         im.setScale(1.)
         np.testing.assert_raises(ValueError, galsim.InterpolatedImage, im, normalization = 'foo')
         # Weird interpolant - give it something random like a GSObject
-        np.testing.assert_raises(RuntimeError, galsim.InterpolatedImage, im, x_interpolant = g)
+        np.testing.assert_raises(Exception, galsim.InterpolatedImage, im, x_interpolant = g)
     except ImportError:
         print 'The assert_raises tests require nose'
 
