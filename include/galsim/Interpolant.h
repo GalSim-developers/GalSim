@@ -528,7 +528,7 @@ namespace galsim {
      *
      * The filter has accuracy parameters `xvalue_accuracy` and `kvalue_accuracy` that relate to the
      * accuracy of building the initial lookup table.  For now, these are fixed in
-     * src/Interpolant.cpp to be 0.01 times the input `tol` value, where `tol` is typically very
+     * src/Interpolant.cpp to be 0.1 times the input `tol` value, where `tol` is typically very
      * small already (default 1e-4).
      *
      * Note that pure Lanczos, when interpolating a set of constant-valued samples, does not return

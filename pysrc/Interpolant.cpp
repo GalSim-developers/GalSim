@@ -136,7 +136,7 @@ namespace galsim {
             "between kernel size and accuracy.\n\n"
             "The filter has accuracy parameters `xvalue_accuracy` and `kvalue_accuracy` that\n"
             "relate to the accuracy of building the initial lookup table.  For now, these are\n"
-            "fixed in src/Interpolant.cpp to be 0.01 times the input `tol` value, where `tol` is\n"
+            "fixed in src/Interpolant.cpp to be 0.1 times the input `tol` value, where `tol` is\n"
             "typically very small already (default `tol=1e-4`).\n\n"
             "Note that pure Lanczos, when interpolating a set of constant-valued samples, does\n"
             "not return this constant.  Setting `flux_conserve` in the constructor tweaks the\n"
