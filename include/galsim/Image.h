@@ -551,9 +551,11 @@ namespace galsim {
          *  we need something else to set a single pixel.  
          *  This function is unnecessary at the C++ level, but in the interest of 
          *  trying to keep the two layers as close as possible, we might as well include it.
+         *
+         *  Note: This uses the checked element access.
          */
         void setValue(int x, int y, T value)
-        { (*this)(x,y) = value; }
+        { at(x,y) = value; }
 
         /**
          *  @brief iterator type for pixels within a row (unchecked).
@@ -783,9 +785,11 @@ namespace galsim {
          *  we need something else to set a single pixel.  
          *  This function is unnecessary at the C++ level, but in the interest of 
          *  trying to keep the two layers as close as possible, we might as well include it.
+         *
+         *  Note: This uses the checked element access.
          */
         void setValue(int x, int y, T value)
-        { (*this)(x,y) = value; }
+        { at(x,y) = value; }
 
         //@{
         /**
