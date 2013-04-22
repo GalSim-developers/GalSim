@@ -57,7 +57,7 @@ std::string MakeErrorMessage(const int x, const int y, const Bounds<int> b)
     }
     if (y<b.getYMin() || y>b.getYMax()) {
         if (found) oss << " and ";
-        oss << "Attempt to access row number "<<x
+        oss << "Attempt to access row number "<<y
             << ", range is "<<b.getYMin()<<" to "<<b.getYMax();
         found = true;
     } 
