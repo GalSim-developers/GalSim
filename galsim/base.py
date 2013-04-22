@@ -2614,8 +2614,8 @@ class AutoCorrelate(GSObject):
     with a GSObject.
 
     @param obj       The object to be correlated with itself.
-    @param gsparams  You may also specify a gsparams argument.  See the docstring for 
-                     GSObject for more information about this option.  Note that parameters related to
+    @param gsparams  You may also specify a gsparams argument.  See the docstring for GSObject
+                     for more information about this option.  Note that parameters related to
                      the Fourier-space calculations must be set when initializing the GSObject that
                      goes into the AutoCorrelate, NOT when creating the AutoCorrelate (at which point
                      the accuracy and threshold parameters will simply be ignored).
