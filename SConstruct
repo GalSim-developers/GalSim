@@ -1387,8 +1387,11 @@ def DoCppChecks(config):
             print 'WARNING: The Apple BLAS library has been found not to be thread safe on'
             print '         Mac OS version 10.7 (and possibly higher), even across multiple'
             print '         processes (i.e. not just multiple threads in the same process).'
-            print '         We recommend compiling TMV either with a different BLAS library'
-            print '         (e.g. ATLAS) or with no BLAS library at all (using WITH_BLAS=false).'
+            print '         The symptom is that `scons tests` will hang when running nosetests'
+            print '         using multiple processes.'
+            print '         If this occurrs, the solution is to compile TMV either with a '
+            print '         different BLAS library (e.g. ATLAS) or with no BLAS library at '
+            print '         all (using WITH_BLAS=false).'
             env['BAD_BLAS'] = True
 
     # ParseFlags doesn't know about -fopenmp being a LINKFLAG, so it
