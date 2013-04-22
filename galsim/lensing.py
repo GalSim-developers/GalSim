@@ -620,6 +620,7 @@ class PowerSpectrum(object):
             else:
                 g1.append(sbii_g1.xValue(iter_pos+self.offset))
                 g2.append(sbii_g2.xValue(iter_pos+self.offset))
+
         if isinstance(pos, galsim.PositionD):
             return g1[0], g2[0]
         elif isinstance(pos[0], np.ndarray):
@@ -690,6 +691,7 @@ class PowerSpectrum(object):
                 kappa.append(0.)
             else:
                 kappa.append(sbii_kappa.xValue(iter_pos+self.offset))
+
         if isinstance(pos, galsim.PositionD):
             return kappa[0]
         elif isinstance(pos[0], np.ndarray):
@@ -767,6 +769,7 @@ class PowerSpectrum(object):
                 mu.append(0.)
             else:
                 mu.append(sbii_mu.xValue(iter_pos+self.offset))
+
         if isinstance(pos, galsim.PositionD):
             return mu[0]
         elif isinstance(pos[0], np.ndarray):
@@ -856,6 +859,7 @@ class PowerSpectrum(object):
                 g1.append(sbii_g1.xValue(iter_pos+self.offset))
                 g2.append(sbii_g2.xValue(iter_pos+self.offset))
                 mu.append(sbii_mu.xValue(iter_pos+self.offset))
+
         if isinstance(pos, galsim.PositionD):
             return g1[0], g2[0], mu[0]
         elif isinstance(pos[0], np.ndarray):
@@ -1356,7 +1360,7 @@ class NFWHalo(object):
         # until you know that it can be indexed, i.e., that it's not just a single PositionD,
         # because then bad things will happen (TypeError).
         if isinstance(pos, galsim.PositionD):
-            return g1, g2
+            return g1[0], g2[0]
         if isinstance(pos[0], np.ndarray):
             return g1, g2
         elif len(g) == 1 and not isinstance(pos[0],list):
@@ -1405,7 +1409,7 @@ class NFWHalo(object):
         elif len(kappa) == 1 and not isinstance(pos[0], list):
             return kappa[0]
         else:
-            return [ k for k in kappa ]
+            return kappa.tolist()
 
     def getMagnification(self, pos, z_s, units=galsim.arcsec):
         """Calculate magnification of halo at specified positions.
@@ -1448,7 +1452,7 @@ class NFWHalo(object):
         elif len(mu) == 1 and not isinstance(pos[0],list):
             return mu[0]
         else:
-            return [ m for m in mu ]
+            return mu.tolist()
 
     def getLensing(self, pos, z_s, units=galsim.arcsec):
         """Calculate lensing shear and magnification of halo at specified positions.
