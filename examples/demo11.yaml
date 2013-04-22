@@ -26,6 +26,7 @@
 # - pix type : None
 # - input.power_spectrum : (e_power_file, delta2, units)
 # - noise type : COSMOS
+# - image.index_convention : (0 or 'C' or 'python') vs (1 or 'Fortran' or 'FITS')
 #
 # - Power spectrum shears and magnifications for non-gridded positions.
 # - Reading a compressed FITS image (using BZip2 compression).
@@ -120,6 +121,15 @@ image :
         x : { type : Random , min : 50 , max : 3550 }
         y : { type : Random , min : 50 , max : 3550 }
 
+    # The default convention on positions is to follow the FITS standard where the lower left
+    # pixel is called (1,1).  However, this can be counter-intuitive to people more used
+    # to C or python indexing, where indices start at 0.  So we offer the option of switching
+    # the indexing convention.
+    # 
+    # If index_convention is 0 or 'C' or 'python', then the lower-left pixel is (0,0).
+    # If index_convention is 1 or 'Fortran' or 'FITS', then the lower-left pixel is (1,1).
+    # The default is 1.
+    index_convention : 0
 
     pixel_scale : 0.20  # arcsec / pixel
 

@@ -27,6 +27,7 @@ New features introduced in this demo:
 - gal.applyLensing(g1, g2, mu)
 - cn = galsim.correlatednoise.getCOSMOSNoise(rng, file_name, ...)
 - image.addNoise(cn)
+- image.setOrigin(x,y)
 
 - Power spectrum shears and magnifications for non-gridded positions.
 - Reading a compressed FITS image (using BZip2 compression).
@@ -145,8 +146,16 @@ def main(argv):
     # Setup the image:
     full_image = galsim.ImageF(image_size, image_size)
     full_image.setScale(pixel_scale)
-    cenx = ceny = (image_size+1)/2.
-    center = galsim.PositionD(cenx,ceny) * pixel_scale
+
+    # The default convention for indexing an image is to follow the FITS standard where the 
+    # lower-left pixel is called (1,1).  However, this can be counter-intuitive to people more 
+    # used to C or python indexing, where indices start at 0.  It is possible to change the 
+    # coordinates of the lower-left pixel with the methods `setOrigin`.  For this demo, we
+    # switch to 0-based indexing, so the lower-left pixel will be called (0,0).
+    full_image.setOrigin(0,0)
+
+    # Get the center of the image in arcsec
+    center = full_image.bounds.trueCenter() * pixel_scale
 
     # As for demo10, we use random_seed+nobj for the random numbers required for the 
     # whole image.  In this case, both the power spectrum realization and the noise on the 
