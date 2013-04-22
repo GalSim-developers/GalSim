@@ -254,9 +254,10 @@ def EstimateShearHSM(gal_image, PSF_image, weight = None, badpix = None, sky_var
         >>> result = galsim.EstimateShearHSM(final_image, final_epsf_image)
     
     After running the above code, `result.observed_shape` ["shape" = distortion, the 
-    (a^2 - b^2)/(a^2 + b^2) definition of ellipticity] is `(0.0876162,1.23478e-17)` and
-    `result.corrected_e1`, `result_corrected_e2` are `(0.0993412,-1.86255e-09)`, compared with the
-    expected `(0.09975, 0)` for a perfect PSF correction method.
+    (a^2 - b^2)/(a^2 + b^2) definition of ellipticity] is
+    `(0.0438925351523, -1.12519277137e-18)` and `result.corrected_e1`, `result_corrected_e2` are
+    `(0.0993412658572,-1.84832327221e-09)`, compared with the  expected `(0.09975, 0)` for a perfect
+    PSF correction method.
 
     The code below gives an example of how one could run this routine on a large batch of galaxies,
     explicitly catching and tracking any failures:
@@ -285,8 +286,11 @@ def EstimateShearHSM(gal_image, PSF_image, weight = None, badpix = None, sky_var
                              measured shape; default `sky_var = 0.`.
     @param shear_est         A string indicating the desired method of PSF correction: REGAUSS,
                              LINEAR, BJ, or KSB; default `shear_est = "REGAUSS"`.
-    @param flags             A flag determining various aspects of the shape measurement process
-                             (only necessary for REGAUSS); default `flags=0`.
+    @param recompute_flux    A string indicating whether to recompute the object flux, which
+                             should be NONE (for no recomputation), SUM (for recomputation via
+                             an unweighted sum over unmasked pixels), or FIT (for
+                             recomputation using the Gaussian + quartic fit); default
+                             `recompute_flux = FIT`.
     @param guess_sig_gal     Optional argument with an initial guess for the Gaussian sigma of the
                              galaxy, default `guess_sig_gal = 5.` (pixels).
     @param guess_sig_PSF     Optional argument with an initial guess for the Gaussian sigma of the
