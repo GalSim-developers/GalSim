@@ -751,9 +751,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         #print 'full bounds = ',full_image.bounds
         #print 'Overlap = ',bounds
         if bounds.isDefined():
-            #print 'stamp = ',images[k][bounds].array
             full_image[bounds] += images[k][bounds]
-            #print 'on image = ',full_image[bounds].array
             if make_psf_image:
                 full_psf_image[bounds] += psf_images[k][bounds]
             if make_weight_image:

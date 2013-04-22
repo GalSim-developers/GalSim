@@ -334,7 +334,6 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             im += sky_level_pixel
         if make_weight_image:
             weight_im = galsim.ImageF(im.bounds)
-            weight_im.setOrigin(config['image_origin'])
             weight_im.setScale(im.scale)
             weight_im.setZero()
         else:
@@ -345,7 +344,6 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             im.setCenter(icenter.x, icenter.y)
         if make_weight_image:
             weight_im = galsim.ImageF(im.bounds)
-            weight_im.setOrigin(config['image_origin'])
             weight_im.setScale(im.scale)
             weight_im.setZero()
         else:
@@ -363,7 +361,6 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             im.setCenter(icenter.x, icenter.y)
         if make_weight_image:
             weight_im = galsim.ImageF(im.bounds)
-            weight_im.setOrigin(config['image_origin'])
             weight_im.setScale(im.scale)
             weight_im.setZero()
         else:
@@ -903,7 +900,6 @@ def DrawPSFStamp(psf, pix, config, bounds, final_shift):
         final_psf.applyShift(final_shift.x, final_shift.y)
 
     psf_im = galsim.ImageF(bounds)
-    psf_im.setOrigin(config['image_origin'])
     psf_im.setScale(pixel_scale)
     final_psf.draw(psf_im, dx=pixel_scale)
 
