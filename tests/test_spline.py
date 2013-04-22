@@ -58,11 +58,8 @@ g3.applyShift(0.7,-0.2)
 final = g1 + g2 + g3
 image = galsim.ImageD(128,128)
 dx = 0.4
-# The reference images expect the old behavior where this profile was centered on the pixel
-# just above and to the right of the center.  For simplicity, just apply the shift to 
-# keep that behavior here.
-final.applyShift(0.5*dx,0.5*dx)
-final.draw(image=image, dx=dx, normalization='sb')
+# The reference image was drawn with the old convention, which is not use_true_center=False
+final.draw(image=image, dx=dx, normalization='sb', use_true_center=False)
 
 def funcname():
     import inspect
