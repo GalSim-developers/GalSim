@@ -21,10 +21,15 @@ dx = 0.27
 imsize = 48
 
 # Random seed
-rseed = 1234567
+rseed = 12345678
 
 # Value of wmult parameter
 wmult = 4.
+
+# Value of test tolerance parameters
+tol_ellip = 3.e-5
+tol_size = 1.e-4
+n_photons = int(1e7)
 
 def test_comparison_object():
 
@@ -43,7 +48,7 @@ def test_comparison_object():
     # Try a single core run
     res1 = galsim.utilities.compare_dft_vs_photon_object(
         gal, psf_object=psf, rng=galsim.BaseDeviate(rseed), size=imsize, pixel_scale=dx,
-        abs_tol_ellip=3.e-5, abs_tol_size=1.e-4, n_photons_per_trial=1e7)
+        abs_tol_ellip=tol_ellip, abs_tol_size=tol_size, n_photons_per_trial=n_photons)
 
     return
 
@@ -87,14 +92,24 @@ def test_comparison_config():
     }
 
     # Try a single core run not setting many kwargs
-    #res1 = galsim.utilities.compare_dft_vs_photon_config(
-        #config, abs_tol_ellip=3.e-4, abs_tol_size=1.e-3, nproc=1,
-        #n_photons_per_trial=1e5, wmult=wmult, logger=logger)
+    res1 = galsim.utilities.compare_dft_vs_photon_config(
+        config, random_seed=rseed, size=imsize, pixel_scale=dx, abs_tol_ellip=tol_ellip,
+        abs_tol_size=tol_size, n_photons_per_trial=n_photons, wmult=wmult, nproc=1, logger=logger)
 
-    # Try a dual core run setting a few kwargs by hand to check correct overriding
+    # Try a dual core run setting
     res2 = galsim.utilities.compare_dft_vs_photon_config(
-        config, random_seed=rseed, size=imsize, pixel_scale=dx, abs_tol_ellip=3.e-5,
-        abs_tol_size=1.e-4, n_photons_per_trial=1e7, wmult=wmult, nproc=4, logger=logger)
+        config, random_seed=rseed, size=imsize, pixel_scale=dx, abs_tol_ellip=tol_ellip,
+        abs_tol_size=tol_size, n_photons_per_trial=n_photons, wmult=wmult, nproc=2, logger=logger)
+
+    # Try a four core run setting
+    res4 = galsim.utilities.compare_dft_vs_photon_config(
+        config, random_seed=rseed, size=imsize, pixel_scale=dx, abs_tol_ellip=tol_ellip,
+        abs_tol_size=tol_size, n_photons_per_trial=n_photons, wmult=wmult, nproc=4, logger=logger)
+
+    # Try an eight core run setting
+    res8 = galsim.utilities.compare_dft_vs_photon_config(
+        config, random_seed=rseed, size=imsize, pixel_scale=dx, abs_tol_ellip=tol_ellip,
+        abs_tol_size=tol_size, n_photons_per_trial=n_photons, wmult=wmult, nproc=8, logger=logger)
 
     return
 
