@@ -145,7 +145,7 @@ def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     # Coma along x2
     wf[in_pupil] *= np.exp(2j * pi * coma2 * (3. * rho[in_pupil]**2 - 2.) * rho[in_pupil]
                            * np.sin(theta[in_pupil]))
-    # Spherical abberation
+    # Spherical aberration
     wf[in_pupil] *= np.exp(2j * pi * spher * (6. * rho[in_pupil]**4 - 6. * rho[in_pupil]**2 + 1.))
     # Trefoil
     wf[in_pupil] *= np.exp(2j * pi * trefoil1 * rho[in_pupil]**3 * np.cos(3. * theta[in_pupil]))
