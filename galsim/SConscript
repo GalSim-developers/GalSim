@@ -47,15 +47,15 @@ def CheckPyPrefix(target, source, env):
         
     if real_pyprefix not in sys_path:
         env['final_messages'].append("""
-    WARNING: The python installation prefix: %s
-             is not in the search path for %s.
-    
-             You should add this directory to your PYTHONPATH environment
-             variable so python will find the installed galsim modules.
+WARNING: The python installation prefix: %s
+         is not in the search path for %s.
 
-             For example, if you use bash, you should add the line:
-                 export PYTHONPATH=$PYTHONPATH:%s
-             to your .bashrc or .bash_profile file.
+         You should add this directory to your PYTHONPATH environment
+         variable so python will find the installed galsim modules.
+
+         For example, if you use bash, you should add the line:
+             export PYTHONPATH=$PYTHONPATH:%s
+         to your .bashrc or .bash_profile file.
 """%(pyprefix,python,pyprefix))
 
 
