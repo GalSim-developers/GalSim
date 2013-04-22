@@ -110,8 +110,8 @@ namespace hsm {
         // Need to set flag values for general_shear_estimator
         if (hsmparams->nsig_rg > 0) flags |= 0x4;
         if (hsmparams->nsig_rg2 > 0) flags |= 0x8;
-        if (recompute_flux == "SUM") flags |= 0x2;
-        else if (recompute_flux == "FLUX") flags |= 0x1;
+        if (recompute_flux == "FIT") flags |= 0x2;
+        else if (recompute_flux == "SUM") flags |= 0x1;
         else if (recompute_flux != "NONE") {
             throw HSMError("Unknown value for recompute_flux parameter!");
         }
