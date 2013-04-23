@@ -170,12 +170,15 @@ class ComparisonShapeData(object):
 
     - delta_g1obs: estimated mean difference between i) observed_shape.g1 from images of the same
       GSObject rendered with .drawShoot(), and ii) `g1obs_draw`.
+      Defined `delta_g1obs = g1obs_draw - g1obs_shoot`.
 
     - delta_g2obs: estimated mean difference between i) observed_shape.g2 from images of the same
       GSObject rendered with .drawShoot(), and ii) `g1obs_draw`.
+      Defined `delta_g2obs = g2obs_draw - g2obs_shoot`.
 
     - delta_sigma: estimated mean difference between i) moments_sigma from images of the same
       GSObject rendered with .drawShoot(), and ii) `sigma_draw`.
+      Defined `delta_sigma = sigma_draw - sigma_shoot`.
 
     - err_g1obs: standard error in `delta_g1obs` estimated from the test sample.
 
@@ -221,12 +224,16 @@ class ComparisonShapeData(object):
     - config: optional config object describing the gsobject and PSF if the config comparison script
       was used rather than the (single core only) direct object script.
 
-    Either config, or gsobject, or gsobject and psf_object, must be set or an Exception is raised.
+    Either config, or gsobject, or gsobject and psf_object, must be set when a ComparisonShapeData
+    instance is created or an Exception is raised.
     """
     def __init__(self, g1obs_draw, g2obs_draw, sigma_draw, g1obs_shoot, g2obs_shoot, sigma_shoot,
                  err_g1obs, err_g2obs, err_sigma, size, pixel_scale, wmult, n_iterations,
                  n_trials_per_iter, n_photons_per_trial, time, gsobject=None, psf_object=None,
                  config=None):
+        """In general use you should not need to instantiate a ComparisonShapeData instance,
+        as this is done within the `compare_dft_vs_photon_config`/`object` functions. 
+        """
 
         self.g1obs_draw = g1obs_draw
         self.g2obs_draw = g2obs_draw
