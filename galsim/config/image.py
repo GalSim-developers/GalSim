@@ -298,8 +298,8 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
 
     ignore = [ 'draw_method', 'noise', 'wcs', 'nproc' , 'random_seed' ]
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int ,
-            'pixel_scale' : float , 'sky_level' : float, 'sky_level_pixel' : float,
-            'n_photons' : int }
+            'pixel_scale' : float , 'sky_level' : float , 'sky_level_pixel' : float ,
+            'n_photons' : int ,  'wmult' : float }
     params = galsim.config.GetAllParams(
         config['image'], 'image', config, opt=opt, ignore=ignore)[0]
 
@@ -361,8 +361,8 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     opt = { 'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
             'border' : int , 'xborder' : int , 'yborder' : int ,
             'pixel_scale' : float , 'nproc' : int ,
-            'sky_level' : float, 'sky_level_pixel' : float,
-            'order' : str }
+            'sky_level' : float , 'sky_level_pixel' : float ,
+            'order' : str , 'n_photons' : int ,  'wmult' : float }
     params = galsim.config.GetAllParams(
         config['image'], 'image', config, req=req, opt=opt, ignore=ignore)[0]
 
@@ -580,7 +580,8 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 
             'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
             'pixel_scale' : float , 'nproc' : int ,
-            'sky_level' : float , 'sky_level_pixel' : float }
+            'sky_level' : float , 'sky_level_pixel' : float ,
+            'n_photons' : int ,  'wmult' : float }
     params = galsim.config.GetAllParams(
         config['image'], 'image', config, req=req, opt=opt, ignore=ignore)[0]
 

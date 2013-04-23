@@ -440,6 +440,11 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level_pixel, final_shi
     else:
         pixel_scale = 1.0
 
+    if 'image' in config and 'wmult' in config['image']:
+        wmult = galsim.config.ParseValue(config['image'], 'wmult', config, float)[0]
+    else:
+        wmult = 1.0
+
     if final_shift:
         #print 'shift = ',final_shift.x*pixel_scale, final_shift.y*pixel_scale
         final.applyShift(final_shift.x*pixel_scale, final_shift.y*pixel_scale)
@@ -449,7 +454,7 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level_pixel, final_shi
     else:
         im = None
 
-    im = final.draw(image=im, dx=pixel_scale)
+    im = final.draw(image=im, dx=pixel_scale, wmult=wmult)
 
     if 'gal' in config and 'signal_to_noise' in config['gal']:
         import math
