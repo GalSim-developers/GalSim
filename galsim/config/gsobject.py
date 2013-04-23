@@ -70,6 +70,7 @@ def BuildGSObject(config, key, base=None, gsparams={}):
         base = config
  
     #print 'Start BuildGSObject: config = ',config
+    #print 'gsparams = ',gsparams
     if isinstance(config,dict):
         if not key in config:
             raise AttributeError("key %s not found in config"%key)
