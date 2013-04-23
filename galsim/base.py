@@ -1855,14 +1855,15 @@ class Sersic(GSObject):
         >>> sersic_obj.getN()
         3.5
 
-    Another optional parameter, `flux_untruncated`, allows the setting of the flux to the
-    untruncated Sersic, while generating a truncated Sersic [default `flux_untruncated = False`].
-    This facilitates the comparison of truncated and untruncated Sersic, as both the amplitude and
-    the scale parameter `b=r_0^{-1/n}` change when a truncated Sersic is specified to the same flux
-    as the untruncated version with the same Sersic index `n`.  The `flux_untruncated` variable is
-    ignored when `trunc = 0`.
+    Another optional parameter, `flux_untruncated`, specifies whether the `flux` and
+    `half_light_radius` correspond to the untruncated profile or the truncated profile. If
+    `flux_untruncated` is True (and `trunc > 0` of course), then the profile will be identical
+    to the version without truncation up to the truncation radius, at which point it drops to 0.
+    If `flux_untruncated` is False (the default), then the scale radius will be larger and the
+    central peak will be higher than the untruncated profile, in order to maintain the correct
+    provided `flux` and `half_light_radius`.
 
-    When `trunc > 0.` and `flux_untruncated == true`, the actual half-light radius will be different
+    When `trunc > 0.` and `flux_untruncated == True`, the actual half-light radius will be different
     from the specified half-light radius.  The getHalfLightRadius() method will return the true
     half-light radius.  Similarly, the actual flux will not be the same as the specified value; the
     true flux is also returned by the getFlux() method.
@@ -1996,14 +1997,15 @@ class DeVaucouleurs(GSObject):
         >>> dvc_obj.getFlux()
         40.0
 
-    Another optional parameter, `flux_untruncated`, allows the setting of the flux to the
-    untruncated DeVaucouleurs, while generating a truncated DeVaucouleurs.  This facilitates the
-    comparison of truncated and untruncated DeVaucouleurs, as both the amplitude and the scale
-    parameter `b=r_0^{-1/n}` change when a truncated DeVaucouleurs is specified to the same flux
-    as the untruncated version with the same DeVaucouleurs index `n`.  The `flux_untruncated`
-    variable is ignored when `trunc = 0`.
+    Another optional parameter, `flux_untruncated`, specifies whether the `flux` and
+    `half_light_radius` correspond to the untruncated profile or the truncated profile. If
+    `flux_untruncated` is True (and `trunc > 0` of course), then the profile will be identical
+    to the version without truncation up to the truncation radius, at which point it drops to 0.
+    If `flux_untruncated` is False (the default), then the scale radius will be larger and the
+    central peak will be higher than the untruncated profile, in order to maintain the correct
+    provided `flux` and `half_light_radius`.
 
-    When `trunc > 0.` and `flux_untruncated == true`, the actual half-light radius will be different
+    When `trunc > 0.` and `flux_untruncated == True`, the actual half-light radius will be different
     from the specified half-light radius.  The getHalfLightRadius() method will return the true
     half-light radius.  Similarly, the actual flux will not be the same as the specified value; the
     true flux is also returned by the getFlux() method.
