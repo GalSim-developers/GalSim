@@ -44,10 +44,11 @@ def test_comparison_object(np):
     # And an example PSF
     psf = galsim.Moffat(beta=psfbeta, fwhm=psffwhm)
     psf.applyShear(g1=g1psf, g2=g2psf)
+    psf_final = galsim.Convolve([psf, galsim.Pixel(pixel_scale)])
 
     # Try a single core run
     res1 = galsim.utilities.compare_dft_vs_photon_object(
-        gal, psf_object=psf, rng=galsim.BaseDeviate(rseed), size=imsize, pixel_scale=dx,
+        gal, psf_object=psf_final, rng=galsim.BaseDeviate(rseed), size=imsize, pixel_scale=dx,
         abs_tol_ellip=tol_ellip, abs_tol_size=tol_size, n_photons_per_trial=np)
     print "Object results with N_PHOTONS = "+str(np)
     print res1
@@ -85,6 +86,11 @@ def test_comparison_config(np):
             "g2" : g2psf
         }
     }
+
+    config['pix'] = {
+        "type" : "Pixel" ,
+        "xw" : dx ,
+    } 
 
     config['image'] = {
         'size' : imsize,
