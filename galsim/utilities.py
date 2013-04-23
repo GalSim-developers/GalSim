@@ -286,11 +286,12 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, pixel_scal
                                  wmult=4., abs_tol_ellip=1.e-5, abs_tol_size=1.e-5,
                                  n_trials_per_iter=32, n_photons_per_trial=1e7, moments=True,
                                  hsm=False):
-    """Take an input object and render it in two ways comparing results at high precision.
+    """Take an input object (with optional PSF) and render it in two ways comparing results at high
+    precision.
 
     Using both photon shooting (via drawShoot) and Discrete Fourier Transform (via shoot) to render
-    images, we compare the numerical values of adaptive moments and optionally HSM shear estimates,
-    or both, to check consistency.
+    images, we compare the numerical values of adaptive moments estimates of size and ellipticity to
+    check consistency.
 
     This function takes actual GSObjects as its input, but because these are not yet picklable this
     means that the internals cannot be parallelized using the Python multiprocessing module.  For
@@ -300,7 +301,7 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, pixel_scal
     We generate successive sets of `n_trials_per_iter` photon-shot images, using 
     `n_photons_per_trial` photons in each image, until the standard error on the mean absolute size
     and ellipticty drop below `abs_tol_size` and `abs_tol_ellip`.  We then output a
-    ComparisonShapeData object.
+    ComparisonShapeData object which stores the results.
 
     @param gsobject               the galsim.GSObject for which this test is to be performed (prior
                                   to PSF convolution if a PSF is also supplied via `psf_object`).
@@ -349,8 +350,8 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, pixel_scal
                                   estimates of simple observed estimates (default=`True`).
 
     @param hsm                    set True to compare rendered images using HSM shear estimates
-                                  (i.e. including a PSF correction for shears; default=`False`, not
-                                  yet implemented).
+                                  (i.e. including a PSF correction for shears; default=`False` as
+                                  this feature is not yet implemented!)
     """
     import logging
     import time     
@@ -461,17 +462,20 @@ def compare_dft_vs_photon_config(config, random_seed=None, nproc=None, pixel_sca
                                  wmult=None, abs_tol_ellip=1.e-5, abs_tol_size=1.e-5,
                                  n_trials_per_iter=32, n_photons_per_trial=1e7, moments=True,
                                  hsm=False, logger=None):
-    """Take an input config dictionary and render the image it describes in two ways, comparing
+    """Take an input config dictionary and render the object it describes in two ways, comparing
     results at high precision.
 
+    For an example of defining a config dictionary of the sort suitable for input to this function,
+    see examples/demo8.py in the GalSim repository.
+
     Using both photon shooting (via drawShoot) and Discrete Fourier Transform (via shoot) to render
-    images, we compare the numerical values of adaptive moments and optionally HSM shear estimates,
-    or both, to check consistency.
+    images, we compare the numerical values of adaptive moments estimates of ellipticity and size 
+    to check consistency.
 
     We generate successive sets of `n_trials_per_iter` photon-shot images, using 
     `n_photons_per_trial` photons in each image, until the standard error on the mean absolute size
     and ellipticty drop below `abs_tol_size` and `abs_tol_ellip`.  We then output a
-    ComparisonShapeData object.
+    ComparisonShapeData object which stores the results.
 
     @param config                 GalSim config dictionary describing the GSObject we wish to test
                                   (see e.g. examples/demo8.py).
@@ -515,8 +519,8 @@ def compare_dft_vs_photon_config(config, random_seed=None, nproc=None, pixel_sca
                                   estimates of simple observed estimates (default=`True`).
 
     @param hsm                    set True to compare rendered images using HSM shear estimates
-                                  (i.e. including a PSF correction for shears; default=`False`, not
-                                  yet implemented).
+                                  (i.e. including a PSF correction for shears; default=`False` as
+                                  this feature is not yet implemented!)
 
     @param logger                 logging Logger instance to record output and pass down to the
                                   config layer for debuging / verbose output if desired.
