@@ -307,8 +307,8 @@ def EstimateShearHSM(gal_image, PSF_image, weight = None, badpix = None, sky_var
                              information about failures will be silently stored in the output 
                              HSMShapeData object.
     @param hsmparams         The hsmparams keyword can be used to change the settings used by
-                             EstimateShearHSM when estimating shears; see docstring for psfcorr.py
-                             for more information.
+                             EstimateShearHSM when estimating shears; see HSMParams documentation
+                             using help(galsim.HSMParams) for more information.
     @return                  A HSMShapeData object containing the results of shape measurement.
     """
     # prepare inputs to C++ routines: ImageView for galaxy, PSF, and weight map
@@ -417,8 +417,8 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
                              information about failures will be silently stored in the output 
                              HSMShapeData object.
     @param hsmparams         The hsmparams keyword can be used to change the settings used by
-                             FindAdaptiveMom when estimating moments; see docstring for psfcorr.py
-                             for more information.
+                             FindAdaptiveMom when estimating moments; see HSMParams documentation
+                             using help(galsim.HSMParams) for more information.
     @return                  A HSMShapeData object containing the results of moment measurement.
     """
     # prepare inputs to C++ routines: ImageView for the object being measured and the weight map.

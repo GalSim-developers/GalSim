@@ -965,8 +965,8 @@ class Gaussian(GSObject):
     Attempting to initialize with more than one size parameter is ambiguous, and will raise a
     TypeError exception.
 
-    You may also specify a gsparams argument.  See the docstring for GSObject for more 
-    information about this option.
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.
 
     Methods
     -------
@@ -1040,8 +1040,8 @@ class Moffat(GSObject):
     Attempting to initialize with more than one size parameter is ambiguous, and will raise a
     TypeError exception.
 
-    You may also specify a gsparams argument.  See the docstring for GSObject for more 
-    information about this option.
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.
 
     Methods
     -------
@@ -1115,8 +1115,9 @@ class AtmosphericPSF(GSObject):
                            [default `oversampling = 1.5`], setting `oversampling < 1` will produce 
                            aliasing in the PSF (not good).
     @param flux            Total flux of the profile [default `flux=1.`]
-    @param gsparams        You may also specify a gsparams argument.  See the docstring for 
-                           GSObject for more information about this option.
+    @param gsparams        You may also specify a gsparams argument.  See the docstring for
+                           galsim.GSParams using help(galsim.GSParams) for more information about
+                           this option.
 
     Methods
     -------
@@ -1205,8 +1206,8 @@ class Airy(GSObject):
     Attempting to initialize with more than one size parameter is ambiguous, and will raise a
     TypeError exception.
 
-    You may also specify a gsparams argument.  See the docstring for GSObject for more 
-    information about this option.
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.
 
     Methods
     -------
@@ -1296,8 +1297,9 @@ class Kolmogorov(GSObject):
                               One of `lam_over_r0`, `fwhm` and `half_light_radius` (and only one) 
                               must be specified.
     @param flux               Optional flux value [default `flux = 1.`].
-    @param gsparams           You may also specify a gsparams argument.  See the docstring for 
-                              GSObject for more information about this option.
+    @param gsparams           You may also specify a gsparams argument.  See the docstring for
+                              galsim.GSParams using help(galsim.GSParams) for more information about
+                              this option.
     
     Methods
     -------
@@ -1403,8 +1405,9 @@ class OpticalPSF(GSObject):
                            [default `pad_factor = 1.5`].  Note that `pad_factor` may need to be 
                            increased for stronger aberrations, i.e. those larger than order unity.
     @param flux            Total flux of the profile [default `flux=1.`].
-    @param gsparams        You may also specify a gsparams argument.  See the docstring for 
-                           GSObject for more information about this option.
+    @param gsparams        You may also specify a gsparams argument.  See the docstring for
+                           galsim.GSParams using help(galsim.GSParams) for more information about
+                           this option.
      
     Methods
     -------
@@ -1645,8 +1648,9 @@ class InterpolatedImage(GSObject):
     @param use_cache       Specify whether to cache noise_pad read in from a file to save having
                            to build a CorrelatedNoise object repeatedly from the same image.
                            (Default `use_cache = True`)
-    @param gsparams        You may also specify a gsparams argument.  See the docstring for 
-                           GSObject for more information about this option.
+    @param gsparams        You may also specify a gsparams argument.  See the docstring for
+                           galsim.GSParams using help(galsim.GSParams) for more information about
+                           this option.
 
     Methods
     -------
@@ -1869,8 +1873,8 @@ class Pixel(GSObject):
     A Pixel is initialized with an x dimension width `xw`, an optional y dimension width (if
     unspecifed `yw=xw` is assumed) and an optional flux parameter [default `flux = 1.`].
 
-    You may also specify a gsparams argument.  See the docstring for GSObject for more 
-    information about this option.
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.
 
     Methods
     -------
@@ -1928,8 +1932,8 @@ class Sersic(GSObject):
         >>> sersic_obj.getN()
         3.5
 
-    You may also specify a gsparams argument.  See the docstring for GSObject for more 
-    information about this option.
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.
 
     Methods
     -------
@@ -1988,8 +1992,8 @@ class Exponential(GSObject):
     Attempting to initialize with more than one size parameter is ambiguous, and will raise a
     TypeError exception.
 
-    You may also specify a gsparams argument.  See the docstring for GSObject for more 
-    information about this option.
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.
 
     Methods
     -------
@@ -2044,8 +2048,8 @@ class DeVaucouleurs(GSObject):
         >>> dvc_obj.getFlux()
         40.0
 
-    You may also specify a gsparams argument.  See the docstring for GSObject for more 
-    information about this option.
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.
 
     Methods
     -------
@@ -2168,8 +2172,9 @@ class RealGalaxy(GSObject):
     @param use_cache            Specify whether to cache noise_pad read in from a file to save
                                 having to build an CorrelatedNoise repeatedly from the same image.
                                 (Default `use_cache = True`)
-    @param gsparams             You may also specify a gsparams argument.  See the docstring for 
-                                GSObject for more information about this option.
+    @param gsparams             You may also specify a gsparams argument.  See the docstring for
+                                galsim.GSParams using help(galsim.GSParams) for more information
+                                about this option.
 
     Methods
     -------
@@ -2407,12 +2412,12 @@ class Add(GSObject):
     to represent a multiple-component galaxy as the sum of an Exponential and a DeVaucouleurs, or to
     represent a PSF as the sum of multiple Gaussians.
 
-    You may also specify a gsparams argument.  See the docstring for GSObject for more information
-    about this option.  Note: if gsparams is unspecified (or None), then the Add instance inherits
-    the same GSParams as the first item in the list.  Also, note that parameters related to the
-    Fourier-space calculations must be set when initializing the individual GSObjects that go into
-    the Add, NOT when creating the Add (at which point the accuracy and threshold parameters will
-    simply be ignored).
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.  Note: if gsparams is unspecified
+    (or None), then the Add instance inherits the same GSParams as the first item in the list.
+    Also, note that parameters related to the Fourier-space calculations must be set when
+    initializing the individual GSObjects that go into the Add, NOT when creating the Add (at which
+    point the accuracy and threshold parameters will simply be ignored).
 
     Methods
     -------
@@ -2480,12 +2485,12 @@ class Convolve(GSObject):
     are 2 profiles, both of which have hard edges.  In this case, we automatically use real-space 
     convolution.  In all other cases, the default is not to use real-space convolution.
 
-    You may also specify a gsparams argument.  See the docstring for GSObject for more information
-    about this option.  Note: if gsparams is unspecified (or None), then the Convolve instance
-    inherits the same GSParams as the first item in the list.  Also, note that parameters related to
-    the Fourier-space calculations must be set when initializing the individual GSObjects that go
-    into the Convolve, NOT when creating the Convolve (at which point the accuracy and threshold
-    parameters will simply be ignored).
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.  Note: if gsparams is unspecified
+    (or None), then the Convolve instance inherits the same GSParams as the first item in the list.
+    Also, note that parameters related to the Fourier-space calculations must be set when
+    initializing the individual GSObjects that go into the Convolve, NOT when creating the Convolve
+    (at which point the accuracy and threshold parameters will simply be ignored).
     """
                     
     # --- Public Class methods ---
@@ -2602,11 +2607,12 @@ class AutoConvolve(GSObject):
     the fact that the two profiles are the same for some efficiency gains.
 
     @param obj       The object to be convolved with itself.
-    @param gsparams  You may also specify a gsparams argument.  See the docstring for GSObject for
-                     more information about this option.  Note that parameters related to the
-                     Fourier-space calculations must be set when initializing the GSObject that goes
-                     into the AutoConvolve, NOT when creating the AutoConvolve (at which point the
-                     accuracy and threshold parameters will simply be ignored).
+    @param gsparams  You may also specify a gsparams argument.  See the docstring for
+                     galsim.GSParams using help(galsim.GSParams) for more information about this
+                     option.  Note that parameters related to the Fourier-space calculations must be
+                     set when initializing the GSObject that goes into the AutoConvolve, NOT when
+                     creating the AutoConvolve (at which point the accuracy and threshold parameters
+                     will simply be ignored).
     """
     # --- Public Class methods ---
     def __init__(self, obj, gsparams=None):
@@ -2626,11 +2632,13 @@ class AutoCorrelate(GSObject):
     with a GSObject.
 
     @param obj       The object to be correlated with itself.
-    @param gsparams  You may also specify a gsparams argument.  See the docstring for GSObject
-                     for more information about this option.  Note that parameters related to
-                     the Fourier-space calculations must be set when initializing the GSObject that
-                     goes into the AutoCorrelate, NOT when creating the AutoCorrelate (at which point
-                     the accuracy and threshold parameters will simply be ignored).
+
+    @param gsparams  You may also specify a gsparams argument.  See the docstring for
+                     galsim.GSParams using help(galsim.GSParams) for more information about this
+                     option.  Note that parameters related to the Fourier-space calculations must be
+                     set when initializing the GSObject that goes into the AutoCorrelate, NOT when
+                     creating the AutoCorrelate (at which point the accuracy and threshold
+                     parameters will simply be ignored).
     """
     # --- Public Class methods ---
     def __init__(self, obj, gsparams=None):
@@ -2646,9 +2654,10 @@ class Deconvolve(GSObject):
     compound objects (Add, Convolve) that include a Deconvolve as one of the components, cannot be
     photon-shot using the drawShoot method.
 
-    You may also specify a gsparams argument.  See the docstring for GSObject for more 
-    information about this option.  Note: if gsparams is unspecified (or None), then the
-    Deconvolve instance inherits the same GSParams as the object being deconvolved.
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.  Note: if gsparams is unspecified
+    (or None), then the Deconvolve instance inherits the same GSParams as the object being
+    deconvolved.
     """
     # --- Public Class methods ---
     def __init__(self, farg, gsparams=None):
