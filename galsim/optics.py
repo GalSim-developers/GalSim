@@ -107,10 +107,8 @@ def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
     @param defocus         defocus in units of incident light wavelength.
-    @param astig1          second component of astigmatism (like e2) in units of incident light
-                           wavelength.
-    @param astig2          first component of astigmatism (like e1) in units of incident light
-                           wavelength.
+    @param astig1          astigmatism (like e2) in units of incident light wavelength.
+    @param astig2          astigmatism (like e1) in units of incident light wavelength.
     @param coma1           coma along y in units of incident light wavelength.
     @param coma2           coma along x in units of incident light wavelength.
     @param trefoil1        trefoil (one of the arrows along y) in units of incident light
@@ -185,10 +183,8 @@ def wavefront_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0.,
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
     @param defocus         defocus in units of incident light wavelength.
-    @param astig1          second component of astigmatism (like e2) in units of incident light
-                           wavelength.
-    @param astig2          first component of astigmatism (like e1) in units of incident light
-                           wavelength.
+    @param astig1          astigmatism (like e2) in units of incident light wavelength.
+    @param astig2          astigmatism (like e1) in units of incident light wavelength.
     @param coma1           coma along y in units of incident light wavelength.
     @param coma2           coma along x in units of incident light wavelength.
     @param trefoil1        trefoil (one of the arrows along y) in units of incident light
@@ -232,10 +228,8 @@ def psf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
     @param defocus         defocus in units of incident light wavelength.
-    @param astig1          second component of astigmatism (like e2) in units of incident light
-                           wavelength.
-    @param astig2          first component of astigmatism (like e1) in units of incident light
-                           wavelength.
+    @param astig1          astigmatism (like e2) in units of incident light wavelength.
+    @param astig2          astigmatism (like e1) in units of incident light wavelength.
     @param coma1           coma along y in units of incident light wavelength.
     @param coma2           coma along x in units of incident light wavelength.
     @param trefoil1        trefoil (one of the arrows along y) in units of incident light
@@ -276,10 +270,8 @@ def psf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
     @param defocus         defocus in units of incident light wavelength.
-    @param astig1          second component of astigmatism (like e2) in units of incident light
-                           wavelength.
-    @param astig2          first component of astigmatism (like e1) in units of incident light
-                           wavelength.
+    @param astig1          astigmatism (like e2) in units of incident light wavelength.
+    @param astig2          astigmatism (like e1) in units of incident light wavelength.
     @param coma1           coma along y in units of incident light wavelength.
     @param coma2           coma along x in units of incident light wavelength.
     @param trefoil1        trefoil (one of the arrows along y) in units of incident light
@@ -317,10 +309,8 @@ def otf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
     @param defocus         defocus in units of incident light wavelength.
-    @param astig1          second component of astigmatism (like e2) in units of incident light
-                           wavelength.
-    @param astig2          first component of astigmatism (like e1) in units of incident light
-                           wavelength.
+    @param astig1          astigmatism (like e2) in units of incident light wavelength.
+    @param astig2          astigmatism (like e1) in units of incident light wavelength.
     @param coma1           coma along y in units of incident light wavelength.
     @param coma2           coma along x in units of incident light wavelength.
     @param trefoil1        trefoil (one of the arrows along y) in units of incident light
@@ -361,10 +351,8 @@ def otf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
     @param defocus         defocus in units of incident light wavelength.
-    @param astig1          second component of astigmatism (like e2) in units of incident light
-                           wavelength.
-    @param astig2          first component of astigmatism (like e1) in units of incident light
-                           wavelength.
+    @param astig1          astigmatism (like e2) in units of incident light wavelength.
+    @param astig2          astigmatism (like e1) in units of incident light wavelength.
     @param coma1           coma along y in units of incident light wavelength.
     @param coma2           coma along x in units of incident light wavelength.
     @param trefoil1        trefoil (one of the arrows along y) in units of incident light
@@ -408,10 +396,8 @@ def mtf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
     @param defocus         defocus in units of incident light wavelength.
-    @param astig1          second component of astigmatism (like e2) in units of incident light
-                           wavelength.
-    @param astig2          first component of astigmatism (like e1) in units of incident light
-                           wavelength.
+    @param astig1          astigmatism (like e2) in units of incident light wavelength.
+    @param astig2          astigmatism (like e1) in units of incident light wavelength.
     @param coma1           coma along y in units of incident light wavelength.
     @param coma2           coma along x in units of incident light wavelength.
     @param trefoil1        trefoil (one of the arrows along y) in units of incident light
@@ -448,10 +434,8 @@ def mtf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
     @param defocus         defocus in units of incident light wavelength.
-    @param astig1          second component of astigmatism (like e2) in units of incident light
-                           wavelength.
-    @param astig2          first component of astigmatism (like e1) in units of incident light
-                           wavelength.
+    @param astig1          astigmatism (like e2) in units of incident light wavelength.
+    @param astig2          astigmatism (like e1) in units of incident light wavelength.
     @param coma1           coma along y in units of incident light wavelength.
     @param coma2           coma along x in units of incident light wavelength.
     @param trefoil1        trefoil (one of the arrows along y) in units of incident light
@@ -493,10 +477,8 @@ def ptf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
     @param defocus         defocus in units of incident light wavelength.
-    @param astig1          second component of astigmatism (like e2) in units of incident light
-                           wavelength.
-    @param astig2          first component of astigmatism (like e1) in units of incident light
-                           wavelength.
+    @param astig1          astigmatism (like e2) in units of incident light wavelength.
+    @param astig2          astigmatism (like e1) in units of incident light wavelength.
     @param coma1           coma along y in units of incident light wavelength.
     @param coma2           coma along x in units of incident light wavelength.
     @param trefoil1        trefoil (one of the arrows along y) in units of incident light
@@ -539,10 +521,8 @@ def ptf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
     @param defocus         defocus in units of incident light wavelength.
-    @param astig1          second component of astigmatism (like e2) in units of incident light
-                           wavelength.
-    @param astig2          first component of astigmatism (like e1) in units of incident light
-                           wavelength.
+    @param astig1          astigmatism (like e2) in units of incident light wavelength.
+    @param astig2          astigmatism (like e1) in units of incident light wavelength.
     @param coma1           coma along y in units of incident light wavelength.
     @param coma2           coma along x in units of incident light wavelength.
     @param trefoil1        trefoil (one of the arrows along y) in units of incident light
