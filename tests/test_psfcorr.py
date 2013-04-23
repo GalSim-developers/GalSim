@@ -44,6 +44,10 @@ pixel_scale = 0.2
 decimal = 2 # decimal place at which to require equality in sizes
 decimal_shape = 3 # decimal place at which to require equality in shapes
 
+# The timing tests can be unreliable in environments with other processes running at the 
+# same time.  So we disable them by default.  However, on a clean system, they should all pass.
+test_timing = False
+
 # define inputs and expected results for tests that use real SDSS galaxies
 img_dir = os.path.join(".","HSM_precomputed")
 gal_file_prefix = "image."
@@ -557,7 +561,8 @@ def test_hsmparams_nodefault():
     g_res2 = galsim.EstimateShearHSM(im, psf_im, hsmparams=galsim.HSMParams(nsig_rg=0.))
     dt2 = time.time()-test_t2
     dt1 = test_t2-test_t1
-    assert(dt2 > dt1),'Should take longer to estimate shear without truncation of galaxy'
+    if test_timing:
+        assert(dt2 > dt1),'Should take longer to estimate shear without truncation of galaxy'
     assert(not equal_hsmshapedata(g_res, g_res2)),'Results should differ with diff nsig_rg'
 
     # Check that results, timing change as expected with max_moment_nsig2
@@ -565,7 +570,8 @@ def test_hsmparams_nodefault():
     res2 = galsim.EstimateShearHSM(tot_gal_image, tot_psf_image,
                                    hsmparams=galsim.HSMParams(max_moment_nsig2 = 9.))
     dt2 = time.time() - test_t2
-    assert(dt2 < dt),'Should be faster to estimate shear with lower max_moment_nsig2'
+    if test_timing:
+        assert(dt2 < dt),'Should be faster to estimate shear with lower max_moment_nsig2'
     assert(not equal_hsmshapedata(res, res2)),'Outputs same despite change in max_moment_nsig2'
     assert(res.moments_sigma > res2.moments_sigma),'Sizes do not change as expected'
     assert(res.moments_amp > res2.moments_amp),'Amplitudes do not change as expected'
