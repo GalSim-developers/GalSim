@@ -460,11 +460,6 @@ def compare_dft_vs_photon_config(config, random_seed=None, nproc=None, pixel_sca
     images, we compare the numerical values of adaptive moments and optionally HSM shear estimates,
     or both, to check consistency.
 
-    This function takes actual GSObjects as its input, but because these are not yet picklable this
-    means that the internals cannot be parallelized using the Python multiprocessing module.  For
-    a parallelized function, that instead uses a config dictionary to specify the test objects, see
-    the function compare_dft_vs_photon_config() in this module.
-
     We generate successive sets of `n_trials_per_iter` photon-shot images, using 
     `n_photons_per_trial` photons in each image, until the standard error on the mean absolute size
     and ellipticty drop below `abs_tol_size` and `abs_tol_ellip`.  We then output a
