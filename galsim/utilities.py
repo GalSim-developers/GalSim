@@ -604,8 +604,8 @@ def compare_dft_vs_photon_config(config, random_seed=None, nproc=None, pixel_sca
     # The BuidImage function stores things in the config that aren't picklable.
     # If you want to use config later for multiprocessing, you have to deepcopy it here.
     import copy
-    config2 = copy.deepcopy(config)
-    im_draw = galsim.config.BuildImage(config2, logger=logger)[0]
+    config1 = copy.deepcopy(config)
+    im_draw = galsim.config.BuildImage(config1, logger=logger)[0]
     res_draw = im_draw.FindAdaptiveMom()
     sigma_draw = res_draw.moments_sigma
     g1obs_draw = res_draw.observed_shape.g1
@@ -623,20 +623,22 @@ def compare_dft_vs_photon_config(config, random_seed=None, nproc=None, pixel_sca
     itercount = 0
 
     # Change the draw_method to photon shooting
-    config['image']['draw_method'] = 'phot'
-    config['image']['n_photons'] = n_photons_per_trial
+    # We'll also use a new copy here so that this function is non-destructive of any input
+    config2 = copy.deepcopy(config)
+    config2['image']['draw_method'] = 'phot'
+    config2['image']['n_photons'] = n_photons_per_trial
 
     # Then begin while loop, farming out sets of n_trials_per_iter trials until we get the
     # statistical accuracy we require
-    start_random_seed = config['image']['random_seed'] 
+    start_random_seed = config2['image']['random_seed'] 
     while (g1obserr > abs_tol_ellip) or (g2obserr > abs_tol_ellip) or (sigmaerr > abs_tol_size):
 
         # Reset the random_seed depending on the iteration number so that these never overlap
-        config['image']['random_seed'] = start_random_seed + itercount * (n_trials_per_iter + 1)
+        config2['image']['random_seed'] = start_random_seed + itercount * (n_trials_per_iter + 1)
 
         # Run the trials using galsim.config.BuildImages function
         trial_images = galsim.config.BuildImages(
-            n_trials_per_iter, config, logger=logger, nproc=config['image']['nproc'])[0] 
+            n_trials_per_iter, config2, logger=logger, nproc=config2['image']['nproc'])[0] 
  
         # Collect results 
         trial_results = [image.FindAdaptiveMom() for image in trial_images]
@@ -663,8 +665,8 @@ def compare_dft_vs_photon_config(config, random_seed=None, nproc=None, pixel_sca
     results = ComparisonShapeData(
         g1obs_draw, g2obs_draw, sigma_draw,
         _mean(g1obs_shoot_list), _mean(g2obs_shoot_list), _mean(sigma_shoot_list),
-        g1obserr, g2obserr, sigmaerr, config['image']['size'], config['image']['pixel_scale'],
-        wmult, itercount, n_trials_per_iter, n_photons_per_trial, runtime, config=config)
+        g1obserr, g2obserr, sigmaerr, config2['image']['size'], config2['image']['pixel_scale'],
+        wmult, itercount, n_trials_per_iter, n_photons_per_trial, runtime, config=config2)
 
     if logger: logging.info('\n'+str(results))
     return results

@@ -111,15 +111,15 @@ def test_comparison_config(np):
     #print res2
 
     # Try a four core run setting
-    res4 = galsim.utilities.compare_dft_vs_photon_config(
-        copy.deepcopy(config), random_seed=rseed, size=imsize, pixel_scale=dx,
-        abs_tol_ellip=tol_ellip, abs_tol_size=tol_size, n_photons_per_trial=np,
-        wmult=wmult, nproc=4, logger=logger)
-    print res4
+    #res4 = galsim.utilities.compare_dft_vs_photon_config(
+    #    copy.deepcopy(config), random_seed=rseed, size=imsize, pixel_scale=dx,
+    #    abs_tol_ellip=tol_ellip, abs_tol_size=tol_size, n_photons_per_trial=np,
+    #    wmult=wmult, nproc=4, logger=logger)
+    #print res4
 
     # Try an eight core run setting
     res8 = galsim.utilities.compare_dft_vs_photon_config(
-        copy.deepcopy(config), random_seed=rseed, size=imsize, pixel_scale=dx,
+        config, random_seed=rseed, size=imsize, pixel_scale=dx,
         abs_tol_ellip=tol_ellip, abs_tol_size=tol_size, n_photons_per_trial=np,
         wmult=wmult, nproc=8, logger=logger)
 
