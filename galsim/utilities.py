@@ -304,9 +304,15 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, pixel_scal
 
     @param gsobject               the galsim.GSObject for which this test is to be performed (prior
                                   to PSF convolution if a PSF is also supplied via `psf_object`).
+                                  Note that this function will automatically handle integration
+                                  over a galsim.Pixel() of width `pixel_scale`, so this should NOT
+                                  generally be included in the supplied `gsobject`.
+
 
     @param psf_object             optional additional PSF for tests of convolved objects, also a
-                                  galsim.GSObject.
+                                  galsim.GSObject.  Note that this function will automatically 
+                                  handle integration over a galsim.Pixel() of width `pixel_scale`,
+                                  so this should NOT be included in the supplied `psf_object`.
 
     @param rng                    galsim.BaseDeviate or derived deviate class instance to provide
                                   the pseudo random numbers for the photon shooting.  If `None` on 
@@ -399,9 +405,11 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, pixel_scal
         logging.info('Generating test_object by convolving gsobject with input psf_object')
         test_object = galsim.Convolve([gsobject, psf_object])
 
-    # Draw the shoot image, only needs to be done once
+    # Draw the FFT image, only needs to be done once
+    # For the FFT drawn image we need to include the galsim.Pixel, for the photon shooting we don't!
+    test_object_pixelized = galsim.Convolve([test_object, galsim.Pixel(pixel_scale)])
     im_draw = galsim.ImageF(size, size)
-    test_object.draw(im_draw, dx=pixel_scale, wmult=wmult)
+    test_object_pixelized.draw(im_draw, dx=pixel_scale, wmult=wmult)
     res_draw = im_draw.FindAdaptiveMom()
     sigma_draw = res_draw.moments_sigma
     g1obs_draw = res_draw.observed_shape.g1
@@ -595,7 +603,7 @@ def compare_dft_vs_photon_config(config, random_seed=None, nproc=None, pixel_sca
     # Start the timer
     t1 = time.time()
 
-    # Draw the shoot image, only needs to be done once
+    # Draw the FFT image, only needs to be done once
     # The BuidImage function stores things in the config that aren't picklable.
     # If you want to use config later for multiprocessing, you have to deepcopy it here.
     import copy
