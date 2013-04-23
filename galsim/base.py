@@ -1870,9 +1870,17 @@ class Sersic(GSObject):
 
     Example:
 
-        >>> sersic_obj = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40., trunc=10.,)
-        >>> sersic_obj2 = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40., trunc=10., \
+        >>> sersic_obj = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40.)
+        >>> sersic_obj2 = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40., trunc=10., \\
                                         flux_untruncated=True)
+        >>> sersic_obj.xValue(galsim.PositionD(0.,0.))
+        237.3094228614579
+        >>> sersic_obj2.xValue(galsim.PositionD(0.,0.))
+        237.3094228614579     # The xValues are the same inside the truncation radius ...
+        >>> sersic_obj.xValue(galsim.PositionD(10.,0.))
+        0.011776164687306839
+        >>> sersic_obj2.xValue(galsim.PositionD(10.,0.))
+        0.0                   # ... but different outside the truncation radius
         >>> sersic_obj.getHalfLightRadius()
         2.5
         >>> sersic_obj2.getHalfLightRadius()
@@ -2012,9 +2020,17 @@ class DeVaucouleurs(GSObject):
 
     Example:
 
-        >>> dvc_obj = galsim.DeVaucouleurs(half_light_radius=2.5, flux=40., trunc=10.,)
-        >>> dvc_obj2 = galsim.DeVaucouleurs(half_light_radius=2.5, flux=40., trunc=10., \
+        >>> dvc_obj = galsim.DeVaucouleurs(half_light_radius=2.5, flux=40.)
+        >>> dvc_obj2 = galsim.DeVaucouleurs(half_light_radius=2.5, flux=40., trunc=10., \\
                                             flux_untruncated=True)
+        >>> dvc_obj.xValue(galsim.PositionD(0.,0.))
+        604.6895805968326
+        >>> dvc_obj2.xValue(galsim.PositionD(0.,0.))
+        604.6895805968326     # The xValues are the same inside the truncation radius ...
+        >>> dvc_obj.xValue(galsim.PositionD(10.0,0.))
+        0.011781304853174116
+        >>> dvc_obj2.xValue(galsim.PositionD(10.0,0.))
+        0.0                   # ... but different outside the truncation radius
         >>> dvc_obj.getHalfLightRadius()
         2.5
         >>> dvc_obj2.getHalfLightRadius()
