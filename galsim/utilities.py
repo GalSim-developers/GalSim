@@ -586,7 +586,7 @@ def compare_dft_vs_photon_config(config, random_seed=None, nproc=None, pixel_sca
             import warnings
             warnings.warn(
                 'Overriding wmult in config with input kwarg value '+str(wmult))
-        #config['image']['wmult'] = wmult # CURRENTLY WE MUST IGNORE THIS
+        config['image']['wmult'] = wmult
 
     # Then define some convenience functions for handling lists and multiple trial operations
     def _mean(array_like):
