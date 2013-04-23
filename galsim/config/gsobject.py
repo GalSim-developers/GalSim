@@ -68,7 +68,7 @@ def BuildGSObject(config, key, base=None, gsparams={}):
     # allow that.  So None is the default, and if it's None, we set it to config.
     if not base:
         base = config
-
+ 
     #print 'Start BuildGSObject: config = ',config
     if isinstance(config,dict):
         if not key in config:
@@ -196,13 +196,13 @@ def UpdateGSParams(gsparams, config, key, base):
     return ret
 
 
-def _BuildNone(config, key, base, ignore, gsparams={}):
+def _BuildNone(config, key, base, ignore, gsparams):
     """@brief Special type=None returns None
     """
     return None, True
 
 
-def _BuildAdd(config, key, base, ignore, gsparams={}):
+def _BuildAdd(config, key, base, ignore, gsparams):
     """@brief  Build an Add object
     """
     req = { 'items' : list }
@@ -216,7 +216,7 @@ def _BuildAdd(config, key, base, ignore, gsparams={}):
         raise AttributeError("items entry for config.%s entry is not a list."%type)
     safe = True
     for i in range(len(items)):
-        gsobject, safe1 = BuildGSObject(items, i, base)
+        gsobject, safe1 = BuildGSObject(items, i, base, gsparams)
         safe = safe and safe1
         gsobjects.append(gsobject)
     #print 'After built component items for ',type,' safe = ',safe
@@ -248,7 +248,7 @@ def _BuildAdd(config, key, base, ignore, gsparams={}):
 
     return gsobject, safe
 
-def _BuildConvolve(config, key, base, ignore, gsparams={}):
+def _BuildConvolve(config, key, base, ignore, gsparams):
     """@brief  Build a Convolve object
     """
     req = { 'items' : list }
@@ -262,7 +262,7 @@ def _BuildConvolve(config, key, base, ignore, gsparams={}):
         raise AttributeError("items entry for config.%s entry is not a list."%type)
     safe = True
     for i in range(len(items)):
-        gsobject, safe1 = BuildGSObject(items, i, base)
+        gsobject, safe1 = BuildGSObject(items, i, base, gsparams)
         safe = safe and safe1
         gsobjects.append(gsobject)
     #print 'After built component items for ',type,' safe = ',safe
@@ -279,7 +279,7 @@ def _BuildConvolve(config, key, base, ignore, gsparams={}):
 
     return gsobject, safe
 
-def _BuildList(config, key, base, ignore, gsparams={}):
+def _BuildList(config, key, base, ignore, gsparams):
     """@brief  Build a GSObject selected from a List
     """
     req = { 'items' : list }
@@ -310,7 +310,7 @@ def _BuildList(config, key, base, ignore, gsparams={}):
 
     return gsobject, safe
 
-def _BuildRing(config, key, base, ignore, gsparams={}):
+def _BuildRing(config, key, base, ignore, gsparams):
     """@brief  Build a GSObject in a Ring
     """
     req = { 'num' : int, 'first' : dict }
@@ -346,7 +346,7 @@ def _BuildRing(config, key, base, ignore, gsparams={}):
     return gsobject, False
 
 
-def _BuildPixel(config, key, base, ignore, gsparams={}):
+def _BuildPixel(config, key, base, ignore, gsparams):
     """@brief Build a Pixel type GSObject from user input.
     """
     kwargs, safe = galsim.config.GetAllParams(config, key, base, 
@@ -366,7 +366,7 @@ def _BuildPixel(config, key, base, ignore, gsparams={}):
     return galsim.Pixel(**kwargs), safe
 
 
-def _BuildRealGalaxy(config, key, base, ignore, gsparams={}):
+def _BuildRealGalaxy(config, key, base, ignore, gsparams):
     """@brief Build a RealGalaxy type GSObject from user input.
     """
     if 'real_catalog' not in base:
