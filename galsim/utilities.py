@@ -310,6 +310,11 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, pixel_scal
     and ellipticty drop below `abs_tol_size` and `abs_tol_ellip`.  We then output a
     ComparisonShapeData object which stores the results.
 
+    Note that `n_photons_per_trial` should be large (>~ 1e6) to ensure that any biases detected
+    between the photon shooting and DFT-drawn images are due to numerical differences rather than
+    biases on adaptive moments due to noise itself, a generic feature in this work.  This can be
+    verified with a convergence test.
+
     @param gsobject               the galsim.GSObject for which this test is to be performed (prior
                                   to PSF convolution if a PSF is also supplied via `psf_object`).
                                   Note that this function will automatically handle integration
@@ -483,6 +488,11 @@ def compare_dft_vs_photon_config(config, random_seed=None, nproc=None, pixel_sca
     `n_photons_per_trial` photons in each image, until the standard error on the mean absolute size
     and ellipticty drop below `abs_tol_size` and `abs_tol_ellip`.  We then output a
     ComparisonShapeData object which stores the results.
+
+    Note that `n_photons_per_trial` should be large (>~ 1e6) to ensure that any biases detected
+    between the photon shooting and DFT-drawn images are due to numerical differences rather than
+    biases on adaptive moments due to noise itself, a generic feature in this work.  This can be
+    verified with a convergence test.
 
     @param config                 GalSim config dictionary describing the GSObject we wish to test
                                   (see e.g. examples/demo8.py).
