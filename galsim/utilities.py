@@ -402,6 +402,7 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, pixel_scal
     # Draw the shoot image, only needs to be done once
     im_draw = galsim.ImageF(size, size)
     test_object.draw(im_draw, dx=pixel_scale, wmult=wmult)
+    im_draw.write('tmp_draw_object.fits')
     res_draw = im_draw.FindAdaptiveMom()
     sigma_draw = res_draw.moments_sigma
     g1obs_draw = res_draw.observed_shape.g1
@@ -601,6 +602,7 @@ def compare_dft_vs_photon_config(config, random_seed=None, nproc=None, pixel_sca
     import copy
     config1 = copy.deepcopy(config)
     im_draw = galsim.config.BuildImage(config1, logger=logger)[0]
+    im_draw.write('tmp_draw_config.fits')
     res_draw = im_draw.FindAdaptiveMom()
     sigma_draw = res_draw.moments_sigma
     g1obs_draw = res_draw.observed_shape.g1
