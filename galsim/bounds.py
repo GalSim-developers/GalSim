@@ -41,7 +41,7 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
     BoundsD describes bounds with floating point values in x and y.
     BoundsI described bounds with integer values in x and y.
 
-    The bounds are stored as four numbers in each instance, (xmin, ymin, xmax, ymax), with an
+    The bounds are stored as four numbers in each instance, (xmin, xmax, ymin, ymax), with an
     additional boolean switch to say whether or not the Bounds rectangle has been defined.  The
     rectangle is undefined if min>max in either direction.
 
@@ -50,10 +50,10 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
     A BoundsI or BoundsD instance can be initialized in a variety of ways.  The most direct is via
     four scalars:
 
-        >>> bounds = galsim.BoundsD(xmin, ymin, xmax, ymax)
-        >>> bounds = galsim.BoundsI(imin, jmin, imax, jmax)
+        >>> bounds = galsim.BoundsD(xmin, xmax, ymin, ymax)
+        >>> bounds = galsim.BoundsI(imin, imax, jmin, jmax)
 
-    In the BoundsI example above, `imin`, `jmin`, `imax` & `jmax` must all be integers to avoid an
+    In the BoundsI example above, `imin`, `imax`, `jmin` & `jmax` must all be integers to avoid an
     ArgumentError exception.
 
     Another way to initialize a Bounds instance is using two galsim.PositionI/D instances, the first
@@ -85,6 +85,17 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
         >>> [etc.]
 
     Then the bounds will end up as the bounding box of all the positions that were added to it.
+
+    You can also find the interesection of two bounds with the & operator:
+
+        >>> overlap = bounds1 & bounds2
+
+    This is useful for adding one image to another when part of the first image might fall off
+    the edge of the other image:
+
+        >>> overlap = stamp.bounds & image.bounds
+        >>> image[overlap] += stamp[overlap]
+
 
     Methods
     -------

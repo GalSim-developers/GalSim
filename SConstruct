@@ -151,7 +151,7 @@ def ErrorExit(*args, **kwargs):
     """
     Whenever we get an error in the initial setup checking for the various
     libraries, compiler, etc., we don't want to cache the result.
-    On the other hand, if we delete the .scon* files now, then the aren't 
+    On the other hand, if we delete the .scon* files now, then they aren't 
     available to diagnose any problems.
     So we write a file called gs.error that
     a) includes some relevant information to diagnose the problem.
@@ -1606,7 +1606,7 @@ if not GetOption('help'):
     if env['WITH_UPS']:
        subdirs += ['ups']
 
-    # subdirectores to process.  We process src and pysrc by default
+    # subdirectories to process.  We process src and pysrc by default
     script_files = []
     for d in subdirs:
         script_files.append(os.path.join(d,'SConscript'))
