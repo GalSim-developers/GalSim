@@ -204,7 +204,7 @@ class ComparisonShapeData(object):
     - n_iterations: number of iterations of `n_trials` trials required to get delta quantities to
       the above accuracy.
 
-    - n_trials_per_iter: number of trial images of used to estimate or successively re-estimate the
+    - n_trials_per_iter: number of trial images used to estimate or successively re-estimate the
       standard error on the delta quantities above for each iteration.
 
     - n_photons_per_trial: number of photons shot in drawShoot() for each trial.
