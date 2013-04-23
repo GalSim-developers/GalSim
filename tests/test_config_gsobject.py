@@ -32,21 +32,18 @@ def funcname():
     import inspect
     return inspect.stack()[1][3]
 
-def gsobject_compare(obj1, obj2, conv=False):
+def gsobject_compare(obj1, obj2, conv=None):
     """Helper function to check that two GSObjects are equivalent
     """
-    # For difficult profiles, convolve by a gaussian to smooth out the profile.
-    # This makes the comparison much faster without changing the validity of the test.
     if conv:
-        gauss = galsim.Gaussian(sigma=2)
-        obj1 = galsim.Convolve([obj1,gauss])
-        obj2 = galsim.Convolve([obj2,gauss])
+        obj1 = galsim.Convolve([obj1,conv])
+        obj2 = galsim.Convolve([obj2,conv])
 
     im1 = galsim.ImageD(16,16)
     im2 = galsim.ImageD(16,16)
     obj1.draw(dx=0.2, image=im1)
     obj2.draw(dx=0.2, image=im2)
-    np.testing.assert_array_almost_equal(im1.array, im2.array, 9)
+    np.testing.assert_array_almost_equal(im1.array, im2.array, 14)
 
 
 def test_gaussian():
@@ -59,16 +56,23 @@ def test_gaussian():
         'gal1' : { 'type' : 'Gaussian' , 'sigma' : 2 },
         'gal2' : { 'type' : 'Gaussian' , 'fwhm' : 2, 'flux' : 100 },
         'gal3' : { 'type' : 'Gaussian' , 'half_light_radius' : 2, 'flux' : 1.e6,
-                   'ellip' : { 'type' : 'QBeta' , 'q' : 0.6, 'beta' : 0.39 * galsim.radians } },
+                   'ellip' : { 'type' : 'QBeta' , 'q' : 0.6, 'beta' : 0.39 * galsim.radians } 
+                 },
         'gal4' : { 'type' : 'Gaussian' , 'sigma' : 1, 'flux' : 50,
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees, 
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
-                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } },
+                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 }  
+                 },
         'gal5' : { 'type' : 'Gaussian' , 'sigma' : 1.5, 'flux' : 72.5,
                    'rotate' : -34. * galsim.degrees,
                    'magnify' : 0.93,
-                   'shear' : galsim.Shear(g1=-0.15, g2=0.2) }
+                   'shear' : galsim.Shear(g1=-0.15, g2=0.2) 
+                 },
+        'gal6' : { 'type' : 'Gaussian' , 'sigma' : 8.5, 'flux' : 72.5,
+                   'shear' : galsim.Shear(g1=-0.15, g2=0.2),
+                   'gsparams' : { 'alias_threshold' : 1.e-5 }
+                 }
     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
@@ -100,6 +104,21 @@ def test_gaussian():
     gal5b.applyLensing(-0.15, 0.2, 0.93)
     gsobject_compare(gal5a, gal5b)
 
+    gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
+    gsparams = galsim.GSParams(alias_threshold=1.e-5)
+    gal6b = galsim.Gaussian(sigma=8.5, flux=72.5, gsparams=gsparams)
+    gal6b.applyShear(g1=-0.15, g2=0.2)
+    gsobject_compare(gal6a, gal6b, conv=galsim.Gaussian(sigma=1))
+
+    try:
+        # Make sure they don't match when using the default GSParams
+        gal6c = galsim.Gaussian(sigma=8.5, flux=72.5)
+        gal6c.applyShear(g1=-0.15, g2=0.2)
+        np.testing.assert_raises(AssertionError,gsobject_compare, gal6a, gal6c,
+                                 conv=galsim.Gaussian(sigma=1))
+    except ImportError:
+        print 'The assert_raises tests require nose'
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -113,12 +132,22 @@ def test_moffat():
         'gal1' : { 'type' : 'Moffat' , 'beta' : 1.4, 'scale_radius' : 2 },
         'gal2' : { 'type' : 'Moffat' , 'beta' : 3.5, 'fwhm' : 2, 'trunc' : 5, 'flux' : 100 },
         'gal3' : { 'type' : 'Moffat' , 'beta' : 2.2, 'half_light_radius' : 2, 'flux' : 1.e6,
-                   'ellip' : { 'type' : 'QBeta' , 'q' : 0.6, 'beta' : 0.39 * galsim.radians } },
+                   'ellip' : { 'type' : 'QBeta' , 'q' : 0.6, 'beta' : 0.39 * galsim.radians } 
+                 },
         'gal4' : { 'type' : 'Moffat' , 'beta' : 1.7, 'fwhm' : 1, 'flux' : 50,
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees, 
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
-                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } }
+                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } 
+                 },
+        'gal5' : { 'type' : 'Moffat' , 'beta' : 2.8, 'flux' : 22, 'fwhm' : 0.3, 'trunc' : 0.7,
+                   'shear' : galsim.Shear(g1=-0.15, g2=0.2),
+                   'gsparams' : { 'maxk_threshold' : 1.e-4 }
+                 },
+        'gal6' : { 'type' : 'Moffat' , 'beta' : 2.8, 'flux' : 22, 'fwhm' : 0.3, 'trunc' : 0.7,
+                   'shear' : galsim.Shear(g1=-0.15, g2=0.2),
+                   'gsparams' : { 'realspace_relerr' : 1.e-4 , 'realspace_abserr' : 1.e-8 } 
+                 }
     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
@@ -144,6 +173,33 @@ def test_moffat():
     gal4b.applyShift(dx = 0.7, dy = -1.2) 
     gsobject_compare(gal4a, gal4b)
 
+    gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
+    # Note: this needs to be rather small otherwise maxk_threshold is obviated by other 
+    # adjustments we make to the parameters in SBProfile.cpp
+    gsparams = galsim.GSParams(maxk_threshold=1.e-4)
+    gal5b = galsim.Moffat(beta=2.8, fwhm=0.3, flux=22, trunc=0.7, gsparams=gsparams)
+    gal5b.applyShear(g1=-0.15, g2=0.2)
+    # convolve to test the k-space gsparams (with an even smaller profile)
+    gsobject_compare(gal5a, gal5b, conv=galsim.Gaussian(sigma=0.01))
+
+    gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
+    gsparams = galsim.GSParams(realspace_relerr=1.e-4, realspace_abserr=1.e-8)
+    #gsparams = galsim.GSParams()
+    gal6b = galsim.Moffat(beta=2.8, fwhm=0.3, flux=22, trunc=0.7, gsparams=gsparams)
+    gal6b.applyShear(g1=-0.15, g2=0.2)
+    # This time convolve with a pixel to get realspace convolution
+    gsobject_compare(gal6a, gal6b, conv=galsim.Pixel(0.3))
+
+    try:
+        # Make sure they don't match when using the default GSParams
+        gal5c = galsim.Moffat(beta=2.8, fwhm=0.3, flux=22, trunc=0.7)
+        gal5c.applyShear(g1=-0.15, g2=0.2)
+        np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c,
+                                 conv=galsim.Gaussian(sigma=0.01))
+        np.testing.assert_raises(AssertionError,gsobject_compare, gal6a, gal5c,
+                                 conv=galsim.Pixel(0.3))
+    except ImportError:
+        print 'The assert_raises tests require nose'
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -163,7 +219,11 @@ def test_airy():
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees, 
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
-                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } }
+                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } 
+                 },
+        'gal5' : { 'type' : 'Airy' , 'lam_over_diam' : 450, 
+                   'gsparams' : { 'xvalue_accuracy' : 1.e-3 }
+                 }
     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
@@ -189,6 +249,21 @@ def test_airy():
     gal4b.applyShift(dx = 0.7, dy = -1.2) 
     gsobject_compare(gal4a, gal4b)
 
+    # The approximation from xvalue_accuracy here happens at the core, so you need a very
+    # large size to notice.  (Which tells me this isn't that useful an approximation, but 
+    # so be it.)
+    gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
+    gsparams = galsim.GSParams(xvalue_accuracy=1.e-3)
+    gal5b = galsim.Airy(lam_over_diam=450, gsparams=gsparams)
+    gsobject_compare(gal5a, gal5b)
+
+    try:
+        # Make sure they don't match when using the default GSParams
+        gal5c = galsim.Airy(lam_over_diam=450)
+        np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c)
+    except ImportError:
+        print 'The assert_raises tests require nose'
+
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -208,7 +283,11 @@ def test_kolmogorov():
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees, 
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
-                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } }
+                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } 
+                 },
+        'gal5' : { 'type' : 'Kolmogorov' , 'lam_over_r0' : 1, 'flux' : 50,
+                   'gsparams' : { 'integration_relerr' : 1.e-6, 'integration_abserr' : 1.e-10 }
+                 }
     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
@@ -232,6 +311,18 @@ def test_kolmogorov():
     gal4b.applyLensing(0.03, -0.05, 1.03)
     gal4b.applyShift(dx = 0.7, dy = -1.2) 
     gsobject_compare(gal4a, gal4b)
+
+    gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
+    gsparams = galsim.GSParams(integration_relerr=1.e-6, integration_abserr=1.e-10)
+    gal5b = galsim.Kolmogorov(lam_over_r0=1, flux=50, gsparams=gsparams)
+    gsobject_compare(gal5a, gal5b)
+
+    try:
+        # Make sure they don't match when using the default GSParams
+        gal5c = galsim.Kolmogorov(lam_over_r0=1, flux=50)
+        np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c)
+    except ImportError:
+        print 'The assert_raises tests require nose'
 
 
     t2 = time.time()
@@ -317,7 +408,11 @@ def test_exponential():
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees, 
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
-                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } }
+                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } 
+                 },
+        'gal5' : { 'type' : 'Exponential' , 'scale_radius' : 1, 'flux' : 50,
+                   'gsparams' : { 'kvalue_accuracy' : 1.e-6 }
+                 }
     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
@@ -343,6 +438,21 @@ def test_exponential():
     gal4b.applyShift(dx = 0.7, dy = -1.2) 
     gsobject_compare(gal4a, gal4b)
 
+    # Here, the kvalue_accuracy comes into play either at very large or very small k values.
+    # We convolve by a large Gaussian to make the small k values matter.
+    gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
+    gsparams = galsim.GSParams(kvalue_accuracy=1.e-6)
+    gal5b = galsim.Exponential(scale_radius=1, flux=50, gsparams=gsparams)
+    gsobject_compare(gal5a, gal5b, conv=galsim.Gaussian(sigma=30))
+
+    try:
+        # Make sure they don't match when using the default GSParams
+        gal5c = galsim.Exponential(scale_radius=1, flux=50)
+        np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c, 
+                                 conv=galsim.Gaussian(sigma=30))
+    except ImportError:
+        print 'The assert_raises tests require nose'
+
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -362,7 +472,15 @@ def test_sersic():
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees, 
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
-                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } }
+                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } 
+                 },
+        'gal5' : { 'type' : 'Sersic' , 'n' : 0.7,  'half_light_radius' : 1, 'flux' : 50,
+                   'gsparams' : { 'minimum_fft_size' : 256 }
+                 },
+        'gal6' : { 'type' : 'Sersic' , 'n' : 0.7,  'half_light_radius' : 1, 'flux' : 50,
+                   'gsparams' : { 'maximum_fft_size' : 64 }
+                 }
+
     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
@@ -386,6 +504,33 @@ def test_sersic():
     gal4b.applyLensing(0.03, -0.05, 1.03)
     gal4b.applyShift(dx = 0.7, dy = -1.2) 
     gsobject_compare(gal4a, gal4b)
+
+    # Here, the kvalue_accuracy comes into play either at very large or very small k values.
+    # We convolve by a large Gaussian to make the small k values matter.
+    gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
+    gsparams = galsim.GSParams(minimum_fft_size=256)
+    gal5b = galsim.Sersic(n=0.7, half_light_radius=1, flux=50, gsparams=gsparams)
+    gsobject_compare(gal5a, gal5b, conv=galsim.Gaussian(sigma=1))
+
+    try:
+        # Make sure they don't match when using the default GSParams
+        gal5c = galsim.Sersic(n=0.7, half_light_radius=1, flux=50)
+        np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c, 
+                                 conv=galsim.Gaussian(sigma=1))
+
+        # For the maximum_fft_size test, we need to do things a little differently
+        # We lower maximum_fft_size below the size that SBProfile wants this to be, 
+        # and we check to make sure an exception is thrown.  Of course, this isn't how you
+        # would normally use maximum_fft_size.  Normally, you would raise it when the default
+        # is too small.  But to construct the test that way would require a lot of memory
+        # and would be rather slow.
+        gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
+        gal6b = galsim.Sersic(n=0.7, half_light_radius=1, flux=50)
+        np.testing.assert_raises(RuntimeError,gsobject_compare, gal6a, gal6b, 
+                                 conv=galsim.Gaussian(sigma=1))
+
+    except ImportError:
+        print 'The assert_raises tests require nose'
 
 
     t2 = time.time()
@@ -472,8 +617,8 @@ def test_pixel():
         gal3b = galsim.Pixel(xw = 2, yw = 2.1, flux = 1.e6)
         gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
         # Drawing sheared Pixel without convolution doesn't work, so we need to 
-        # do the extra convolution by a Gaussian here (hence the final True arg.).
-        gsobject_compare(gal3a, gal3b, True)
+        # do the extra convolution by a Gaussian here 
+        gsobject_compare(gal3a, gal3b, conv=galsim.Gaussian(0.1))
 
         gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
         gal4b = galsim.Pixel(xw = 1, yw = 1.2, flux = 50)
@@ -483,7 +628,7 @@ def test_pixel():
         gal4b.applyMagnification(1.03)
         gal4b.applyShear(g1 = 0.03, g2 = -0.05)
         gal4b.applyShift(dx = 0.7, dy = -1.2) 
-        gsobject_compare(gal4a, gal4b, True)
+        gsobject_compare(gal4a, gal4b, conv=galsim.Gaussian(0.1))
 
 
     t2 = time.time()
@@ -528,23 +673,28 @@ def test_realgalaxy():
     real_cat = galsim.RealGalaxyCatalog(
         image_dir=real_gal_dir, file_name=real_gal_cat, preload=True)
 
+    # For these profiles, we convolve by a gaussian to smooth out the profile.
+    # This makes the comparison much faster without changing the validity of the test.
+    conv = galsim.Gaussian(sigma = 1)
+
     config['seq_index'] = 0
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
     gal1b = galsim.RealGalaxy(real_cat, index=0)
-    gsobject_compare(gal1a, gal1b, True)
+    # The convolution here 
+    gsobject_compare(gal1a, gal1b, conv=conv)
 
     config['seq_index'] = 1
     gal2a = galsim.config.BuildGSObject(config, 'gal2')[0]
     gal2b = galsim.RealGalaxy(real_cat, index = 23)
     gal2b.setFlux(100)
-    gsobject_compare(gal2a, gal2b, True)
+    gsobject_compare(gal2a, gal2b, conv=conv)
 
     config['seq_index'] = 2
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
     gal3b = galsim.RealGalaxy(real_cat, index = 17)
     gal3b.setFlux(1.e6)
     gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
-    gsobject_compare(gal3a, gal3b, True)
+    gsobject_compare(gal3a, gal3b, conv=conv)
 
     config['seq_index'] = 3
     gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
@@ -556,28 +706,28 @@ def test_realgalaxy():
     gal4b.applyMagnification(1.03)
     gal4b.applyShear(g1 = 0.03, g2 = -0.05)
     gal4b.applyShift(dx = 0.7, dy = -1.2) 
-    gsobject_compare(gal4a, gal4b, True)
+    gsobject_compare(gal4a, gal4b, conv=conv)
 
     config['seq_index'] = 4
     gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
     gal5b = galsim.RealGalaxy(real_cat, index = 41, rng = rng, noise_pad = True)
-    gsobject_compare(gal5a, gal5b, True)
+    gsobject_compare(gal5a, gal5b, conv=conv)
 
     config['seq_index'] = 5
     gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
     gal6b = galsim.RealGalaxy(real_cat, index = 41, rng = rng, noise_pad = 'blankimg.fits')
-    gsobject_compare(gal6a, gal6b, True)
+    gsobject_compare(gal6a, gal6b, conv=conv)
 
     config['seq_index'] = 6
     gal7a = galsim.config.BuildGSObject(config, 'gal7')[0]
     gal7b = galsim.RealGalaxy(real_cat, index = 32, pad_image = 'blankimg.fits')
-    gsobject_compare(gal7a, gal7b, True)
+    gsobject_compare(gal7a, gal7b, conv=conv)
     
     config['seq_index'] = 7
     gal8a = galsim.config.BuildGSObject(config, 'gal8')[0]
     gal8b = galsim.RealGalaxy(real_cat, index = 87, rng = rng, noise_pad = 'blankimg.fits',
                               pad_image = 'blankimg.fits')
-    gsobject_compare(gal8a, gal8b, True)
+    gsobject_compare(gal8a, gal8b, conv=conv)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

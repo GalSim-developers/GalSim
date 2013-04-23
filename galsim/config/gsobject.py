@@ -45,7 +45,7 @@ class SkipThisObject(Exception):
         self.msg = message
 
 
-def BuildGSObject(config, key, base=None):
+def BuildGSObject(config, key, base=None, gsparams={}):
     """Build a GSObject using config dict for key=key.
 
     @param config     A dict with the configuration information.
@@ -56,6 +56,9 @@ def BuildGSObject(config, key, base=None):
                       base['real_catalog'] = real galaxy catalog for RealGalaxy objects
                       Typically on the initial call to BuildGSObject, this will be 
                       the same as config, hence the name base.
+    @param gsparams   Optionally, provide non-default gsparams items.  Any gsparams specified
+                      at this level will be added to the list.  This should be a dict with
+                      whatever kwargs should be used in constructing the GSParams object.
 
     @returns gsobject, safe 
         gsobject is the built object 
@@ -104,7 +107,7 @@ def BuildGSObject(config, key, base=None):
     ignore = [ 
         'dilate', 'dilation', 'ellip', 'rotate', 'rotation',
         'magnify', 'magnification', 'shear', 'shift', 
-        'skip', 'current_val', 'safe' 
+        'gsparams', 'skip', 'current_val', 'safe' 
     ]
     # There are a few more that are specific to which key we have.
     if key == 'gal':
@@ -145,14 +148,17 @@ def BuildGSObject(config, key, base=None):
     if key == 'psf' and 'flux' not in ck:
         ck['flux'] = 1
 
+    if 'gsparams' in ck:
+        gsparams = UpdateGSParams(gsparams, ck['gsparams'], 'gsparams', config)
+
     # See if this type has a specialized build function:
     if type in valid_gsobject_types:
         build_func = eval(valid_gsobject_types[type])
-        gsobject, safe = build_func(ck, key, base, ignore)
+        gsobject, safe = build_func(ck, key, base, ignore, gsparams)
     # Next, we check if this name is in the galsim dictionary.
     elif type in galsim.__dict__:
         if issubclass(galsim.__dict__[type], galsim.GSObject):
-            gsobject, safe = _BuildSimple(ck, key, base, ignore)
+            gsobject, safe = _BuildSimple(ck, key, base, ignore, gsparams)
         else:
             TypeError("Input config type = %s is not a GSObject."%type)
     # Otherwise, it's not a valid type.
@@ -176,13 +182,27 @@ def BuildGSObject(config, key, base=None):
 
     return gsobject, safe
 
-def _BuildNone(config, key, base, ignore):
+
+def UpdateGSParams(gsparams, config, key, base):
+    """@brief Add additional items to the gsparams dict based on config['gsparams']
+    """
+    opt = galsim.GSObject._gsparams
+    kwargs, safe = galsim.config.GetAllParams(config, key, base, opt=opt)
+    # When we update gsparams, we don't want to corrupt the original, so we need to
+    # make a copy first, then update with kwargs.
+    ret = {}
+    ret.update(gsparams)
+    ret.update(kwargs)
+    return ret
+
+
+def _BuildNone(config, key, base, ignore, gsparams={}):
     """@brief Special type=None returns None
     """
     return None, True
 
 
-def _BuildAdd(config, key, base, ignore):
+def _BuildAdd(config, key, base, ignore, gsparams={}):
     """@brief  Build an Add object
     """
     req = { 'items' : list }
@@ -216,7 +236,9 @@ def _BuildAdd(config, key, base, ignore):
                 "Automatically scaling the last item in Sum to make the total flux\n" +
                 "equal 1 requires the last item to have negative flux = %f"%f)
         gsobjects[-1].setFlux(f)
-    gsobject = galsim.Add(gsobjects)
+    if gsparams: gsparams = galsim.GSParams(**gsparams)
+    else: gsparams = None
+    gsobject = galsim.Add(gsobjects,gsparams=gsparams)
 
     if 'flux' in config:
         flux, safe1 = galsim.config.ParseValue(config, 'flux', base, float)
@@ -226,7 +248,7 @@ def _BuildAdd(config, key, base, ignore):
 
     return gsobject, safe
 
-def _BuildConvolve(config, key, base, ignore):
+def _BuildConvolve(config, key, base, ignore, gsparams={}):
     """@brief  Build a Convolve object
     """
     req = { 'items' : list }
@@ -245,7 +267,9 @@ def _BuildConvolve(config, key, base, ignore):
         gsobjects.append(gsobject)
     #print 'After built component items for ',type,' safe = ',safe
 
-    gsobject = galsim.Convolve(gsobjects)
+    if gsparams: gsparams = galsim.GSParams(**gsparams)
+    else: gsparams = None
+    gsobject = galsim.Convolve(gsobjects,gsparams=gsparams)
 
     if 'flux' in config:
         flux, safe1 = galsim.config.ParseValue(config, 'flux', base, float)
@@ -255,7 +279,7 @@ def _BuildConvolve(config, key, base, ignore):
 
     return gsobject, safe
 
-def _BuildList(config, key, base, ignore):
+def _BuildList(config, key, base, ignore, gsparams={}):
     """@brief  Build a GSObject selected from a List
     """
     req = { 'items' : list }
@@ -275,7 +299,7 @@ def _BuildList(config, key, base, ignore):
     #print items[index]['type']
     #print 'index = ',index,' From ',key,' List: ',items[index]
 
-    gsobject, safe1 = BuildGSObject(items, index, base)
+    gsobject, safe1 = BuildGSObject(items, index, base, gsparams)
     safe = safe and safe1
 
     if 'flux' in config:
@@ -286,7 +310,7 @@ def _BuildList(config, key, base, ignore):
 
     return gsobject, safe
 
-def _BuildRing(config, key, base, ignore):
+def _BuildRing(config, key, base, ignore, gsparams={}):
     """@brief  Build a GSObject in a Ring
     """
     req = { 'num' : int, 'first' : dict }
@@ -312,7 +336,7 @@ def _BuildRing(config, key, base, ignore):
     if k % num == 0:
         #print 'first pass -- rebuilding'
         # Then this is the first in the Ring.  
-        gsobject = BuildGSObject(config, 'first', base)[0]
+        gsobject = BuildGSObject(config, 'first', base, gsparams)[0]
     else:
         #print 'not first pass rotate by ',dtheta
         if not isinstance(config['first'],dict) or 'current_val' not in config['first']:
@@ -322,7 +346,7 @@ def _BuildRing(config, key, base, ignore):
     return gsobject, False
 
 
-def _BuildPixel(config, key, base, ignore):
+def _BuildPixel(config, key, base, ignore, gsparams={}):
     """@brief Build a Pixel type GSObject from user input.
     """
     kwargs, safe = galsim.config.GetAllParams(config, key, base, 
@@ -330,6 +354,7 @@ def _BuildPixel(config, key, base, ignore):
         opt = galsim.__dict__['Pixel']._opt_params,
         single = galsim.__dict__['Pixel']._single_params,
         ignore = ignore)
+    if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
 
     if 'yw' in kwargs.keys() and (kwargs['xw'] != kwargs['yw']):
         import warnings
@@ -341,7 +366,7 @@ def _BuildPixel(config, key, base, ignore):
     return galsim.Pixel(**kwargs), safe
 
 
-def _BuildRealGalaxy(config, key, base, ignore):
+def _BuildRealGalaxy(config, key, base, ignore, gsparams={}):
     """@brief Build a RealGalaxy type GSObject from user input.
     """
     if 'real_catalog' not in base:
@@ -357,6 +382,7 @@ def _BuildRealGalaxy(config, key, base, ignore):
         opt = galsim.__dict__['RealGalaxy']._opt_params,
         single = galsim.__dict__['RealGalaxy']._single_params,
         ignore = ignore)
+    if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
 
     if 'rng' not in base:
         raise ValueError("No base['rng'] available for %s.type = RealGalaxy"%(key))
@@ -371,7 +397,7 @@ def _BuildRealGalaxy(config, key, base, ignore):
     return galsim.RealGalaxy(real_cat, **kwargs), safe
 
 
-def _BuildSimple(config, key, base, ignore):
+def _BuildSimple(config, key, base, ignore, gsparams={}):
     """@brief Build a simple GSObject (i.e. one without a specialized _Build function) or
     any other galsim object that defines _req_params, _opt_params and _single_params.
     """
@@ -387,6 +413,7 @@ def _BuildSimple(config, key, base, ignore):
                                               opt = init_func._opt_params,
                                               single = init_func._single_params,
                                               ignore = ignore)
+    if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
 
     if init_func._takes_rng:
         if 'rng' not in base:

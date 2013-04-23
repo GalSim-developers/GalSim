@@ -89,6 +89,18 @@ class GSObject(object):
     should be created with `gsparams` that have a non-default value of `alias_threshold`.  This
     statement applies to the threshold and accuracy parameters.
     """
+    _gsparams = { 'minimum_fft_size' : int,
+                  'maximum_fft_size' : int,
+                  'alias_threshold' : float,
+                  'maxk_threshold' : float,
+                  'kvalue_accuracy' : float,
+                  'xvalue_accuracy' : float,
+                  'shoot_accuracy' : float,
+                  'realspace_relerr' : float,
+                  'realspace_abserr' : float,
+                  'integration_relerr' : float,
+                  'integration_abserr' : float
+                }
     def __init__(self, rhs):
         # This guarantees that all GSObjects have an SBProfile
         if isinstance(rhs, galsim.GSObject):
