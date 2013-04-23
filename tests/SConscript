@@ -57,8 +57,9 @@ def run_tests(target, source, env):
                 print '         to be using a TMV installation that calls the Apple BLAS'
                 print '         library with OSX >= 10.7.  See the above warning about this.'
                 print
-            print 'If you have trouble with the parallel test run, you may disable it'
-            print 'by typing "scons tests -j1"'
+            print 'If you have trouble with the parallel test run, you may disable it '\
+                  'by typing:'
+            print '    scons tests -j1'
         else:
             print 'nosetests is version %s'%env['NOSETESTSVERSION']
         print '\nStarting python tests...'
