@@ -97,18 +97,18 @@ def test_comparison_config(np):
 
     print "Config results with N_PHOTONS = "+str(np)
     # Try a single core run not setting many kwargs
-    res1 = galsim.utilities.compare_dft_vs_photon_config(
-        copy.deepcopy(config), random_seed=rseed, size=imsize, pixel_scale=dx,
-        abs_tol_ellip=tol_ellip, abs_tol_size=tol_size, n_photons_per_trial=np, wmult=wmult,
-        nproc=1, logger=logger)
-    print res1
+    #res1 = galsim.utilities.compare_dft_vs_photon_config(
+    #    copy.deepcopy(config), random_seed=rseed, size=imsize, pixel_scale=dx,
+    #    abs_tol_ellip=tol_ellip, abs_tol_size=tol_size, n_photons_per_trial=np, wmult=wmult,
+    #    nproc=1, logger=logger)
+    #print res1
 
     # Try a dual core run setting
-    res2 = galsim.utilities.compare_dft_vs_photon_config(
-        copy.deepcopy(config), random_seed=rseed, size=imsize, pixel_scale=dx,
-        abs_tol_ellip=tol_ellip, abs_tol_size=tol_size, n_photons_per_trial=np, wmult=wmult,
-        nproc=2, logger=logger)
-    print res2
+    #res2 = galsim.utilities.compare_dft_vs_photon_config(
+    #    copy.deepcopy(config), random_seed=rseed, size=imsize, pixel_scale=dx,
+    #    abs_tol_ellip=tol_ellip, abs_tol_size=tol_size, n_photons_per_trial=np, wmult=wmult,
+    #    nproc=2, logger=logger)
+    #print res2
 
     # Try a four core run setting
     res4 = galsim.utilities.compare_dft_vs_photon_config(
