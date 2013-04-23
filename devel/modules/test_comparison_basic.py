@@ -44,7 +44,7 @@ def test_comparison_object(np):
     # And an example PSF
     psf = galsim.Moffat(beta=psfbeta, fwhm=psffwhm)
     psf.applyShear(g1=g1psf, g2=g2psf)
-    psf_final = galsim.Convolve([psf, galsim.Pixel(pixel_scale)])
+    psf_final = galsim.Convolve([psf, galsim.Pixel(dx)])
 
     # Try a single core run
     res1 = galsim.utilities.compare_dft_vs_photon_object(
