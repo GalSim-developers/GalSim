@@ -909,12 +909,15 @@ def TryModule(config,text,name,pyscript=""):
     return ok
 
 
-def CheckModuleLibs(config,try_libs,source_file,name):
+def CheckModuleLibs(config,try_libs,source_file,name,prepend=True):
     init_libs = []
     if 'LIBS' in config.env._dict.keys():
         init_libs = config.env['LIBS']
 
-    config.env.PrependUnique(LIBS=try_libs)
+    if prepend:
+        config.env.PrependUnique(LIBS=try_libs)
+    else:
+        config.env.AppendUnique(LIBS=try_libs)
     result = TryModule(config,source_file,name)
 
     # Sometimes we need to add a directory to RPATH, so try each one.
@@ -924,7 +927,10 @@ def CheckModuleLibs(config,try_libs,source_file,name):
             init_rpath = config.env['RPATH']
 
         for rpath in config.env['LIBPATH']:
-            config.env.PrependUnique(RPATH=rpath)
+            if prepend:
+                config.env.PrependUnique(RPATH=rpath)
+            else:
+                config.env.AppendUnique(RPATH=rpath)
             result = TryModule(config,source_file,name)
             if result: 
                 break
@@ -933,7 +939,10 @@ def CheckModuleLibs(config,try_libs,source_file,name):
 
         # If that doesn't work, also try adding all of them, just in case we need more than one.
         if not result :
-            config.env.PrependUnique(RPATH=config.env['LIBPATH'])
+            if prepend:
+                config.env.PrependUnique(RPATH=config.env['LIBPATH'])
+            else:
+                config.env.AppendUnique(RPATH=config.env['LIBPATH'])
             result = TryModule(config,source_file,name)
             if not result:
                 config.env.Replace(RPATH=init_rpath)
@@ -1103,12 +1112,12 @@ PyMODINIT_FUNC initcheck_tmv(void)
     # So if the first line fails, try adding a few mkl libraries that might make it work.
     result = (
         CheckModuleLibs(config,[],tmv_source_file,'check_tmv') or
-        CheckModuleLibs(config,['mkl_rt'],tmv_source_file,'check_tmv') or
-        CheckModuleLibs(config,['mkl_base'],tmv_source_file,'check_tmv') or
-        CheckModuleLibs(config,['mkl_mc3'],tmv_source_file,'check_tmv') or
-        CheckModuleLibs(config,['mkl_mc3','mkl_def'],tmv_source_file,'check_tmv') or
-        CheckModuleLibs(config,['mkl_mc'],tmv_source_file,'check_tmv') or
-        CheckModuleLibs(config,['mkl_mc','mkl_def'],tmv_source_file,'check_tmv') )
+        CheckModuleLibs(config,['mkl_rt'],tmv_source_file,'check_tmv',False) or
+        CheckModuleLibs(config,['mkl_base'],tmv_source_file,'check_tmv',False) or
+        CheckModuleLibs(config,['mkl_mc3'],tmv_source_file,'check_tmv',False) or
+        CheckModuleLibs(config,['mkl_mc3','mkl_def'],tmv_source_file,'check_tmv',False) or
+        CheckModuleLibs(config,['mkl_mc'],tmv_source_file,'check_tmv',False) or
+        CheckModuleLibs(config,['mkl_mc','mkl_def'],tmv_source_file,'check_tmv'),False)
     if not result:
         ErrorExit('Unable to build a python loadable module that uses tmv')
    

@@ -2244,7 +2244,8 @@ def test_rescale():
     # Can also get a flux of 2 by drawing flux=1 twice with add_to_image=True
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
     sersic.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
-    sersic.draw(myImg,dx=0.2, normalization="surface brightness",add_to_image=True, use_true_center=False)
+    sersic.draw(myImg,dx=0.2, normalization="surface brightness",add_to_image=True,
+                use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Drawing with add_to_image=True disagrees with expected result")
@@ -2396,10 +2397,11 @@ def test_draw():
         mxx = (((x-mx)**2) * im.array).sum() / flux
         myy = (((y-my)**2) * im.array).sum() / flux
         mxy = ((x-mx) * (y-my) * im.array).sum() / flux
-        np.testing.assert_almost_equal(mxy, 0, 3, "Found mxy != 0 for Exponential draw")
-        np.testing.assert_almost_equal((mxx-myy), 0, 3, "Found mxx != myy for Exponential draw")
-        s2 = (mxx+myy) / 6
-        return np.sqrt(s2) * im.scale
+        print flux,mx,my,mxx,myy,mxy
+        s2 = mxx+myy
+        np.testing.assert_almost_equal((mxx-myy)/s2, 0, 5, "Found e1 != 0 for Exponential draw")
+        np.testing.assert_almost_equal(2*mxy/s2, 0, 5, "Found e2 != 0 for Exponential draw")
+        return np.sqrt(s2/6) * im.scale
  
 
     # First test draw() with no kwargs.  It should:

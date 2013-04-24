@@ -21,6 +21,8 @@
 
 //#define DEBUGLOGGING
 
+//#define OUTPUT_FFT // Output the fft grids to files.  (Requires DEBUGLOGGING to be on as well.)
+
 #include "SBProfile.h"
 #include "SBTransform.h"
 #include "SBProfileImpl.h"
@@ -459,7 +461,7 @@ namespace galsim {
             " After adjustments: dx " << dx << " dk " << dk << 
             " maxK " << dk*NFT/2 << std::endl;
         assert(dk <= stepK());
-        boost::shared_ptr<XTable> xtmp;
+        boost::shared_ptr<XTable> xt;
         if (NFT*dk/2 > maxK()) {
             dbg<<"NFT*dk/2 = "<<NFT*dk/2<<" > maxK() = "<<maxK()<<std::endl;
             dbg<<"Use NFT = "<<NFT<<std::endl;
@@ -467,7 +469,7 @@ namespace galsim {
             KTable kt(NFT,dk);
             assert(_pimpl.get());
             _pimpl->fillKGrid(kt); 
-            xtmp = kt.transform();
+            xt = kt.transform();
         } else {
             dbg<<"NFT*dk/2 = "<<NFT*dk/2<<" <= maxK() = "<<maxK()<<std::endl;
             // There will be aliasing.  Construct a KTable out to maxK() and
@@ -477,10 +479,18 @@ namespace galsim {
             KTable kt(Nk, dk);
             assert(_pimpl.get());
             _pimpl->fillKGrid(kt);
-            xtmp = kt.wrap(NFT)->transform();
+            xt = kt.wrap(NFT)->transform();
         }
-        int Nxt = xtmp->getN();
+        int Nxt = xt->getN();
         dbg<<"Nxt = "<<Nxt<<std::endl;
+
+#ifdef OUTPUT_FFT
+        std::ofstream fout("xt.dat");
+        tmv::MatrixView<double> mxt(xt->getArray(),Nxt,Nxt,1,Nxt,tmv::NonConj);
+        fout << tmv::EigenIO() << (mxt*dx*dx) << std::endl;
+        fout.close();
+#endif
+
         Bounds<int> xb(-Nxt/2, Nxt/2-1, -Nxt/2, Nxt/2-1);
         if (I.getYMin() < xb.getYMin()
             || I.getYMax() > xb.getYMax()
@@ -493,7 +503,7 @@ namespace galsim {
         double sum=0.;
         for (int y = I.getYMin(); y <= I.getYMax(); y++) {
             for (int x = I.getXMin(); x <= I.getXMax(); x++) {
-                double temp = xtmp->xval(x,y) / gain;
+                double temp = xt->xval(x,y) / gain;
                 I(x,y) += T(temp);
                 sum += temp;
             }
@@ -660,6 +670,19 @@ namespace galsim {
         // Otherwise you can get strange effects when the profile isn't radially symmetric.
         // e.g. A shift will induce a spurious shear. (BAD!!)
         mkt.col(N/2) = 0.5*val.col(0) + 0.5*val.col(N);
+
+#ifdef OUTPUT_FFT
+        xdbg<<"val.col(0) = "<<val.col(0)<<std::endl;
+        xdbg<<"val.col(N) = "<<val.col(N)<<std::endl;
+        xdbg<<"val.col(N/2) = "<<val.col(N/2)<<std::endl;
+        xdbg<<"mkt.col(N/2) = "<<mkt.col(N/2)<<std::endl;
+        std::ofstream fout_re("ktr.dat");
+        std::ofstream fout_im("kti.dat");
+        fout_re << tmv::EigenIO() << mkt.realPart() << std::endl;
+        fout_im << tmv::EigenIO() << mkt.imagPart() << std::endl;
+        fout_re.close();
+        fout_im.close();
+#endif
     }
 
     // The type of T (real or complex) determines whether the call-back is to 
