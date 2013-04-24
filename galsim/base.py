@@ -55,43 +55,10 @@ class GSObject(object):
     The gsparams argument can be used to specify various numbers that govern the tradeoff between
     accuracy and speed for the calculations made in drawing a GSObject.  The numbers are
     encapsulated in a class called GSParams, and the user should make careful choices whenever they
-    opt to deviate from the defaults.  The parameters, along with their default values, are the
-    following:
+    opt to deviate from the defaults.  For more details about the parameters and their default
+    values, use `help(galsim.GSParams)`.
 
-    minimum_fft_size=128      The minimum FFT size we're willing to do.
-    maximum_fft_size=4096     The maximum FFT size we're willing to do.
-    alias_threshold=5.e-3     A threshold parameter used for setting the stepK value for FFTs.
-                              The FFT's stepK is set so that at most a fraction alias_threshold 
-                              of the flux of any profile is aliased.
-    maxk_threshold=1.e-3      A threshold parameter used for setting the maxK value for FFTs.
-                              The FFT's maxK is set so that the k-values that are excluded off the 
-                              edge of the image are less than maxk_threshold.
-    kvalue_accuracy=1.e-5     Accuracy of values in k-space.
-                              If a k-value is less than kvalue_accuracy, then it may be set to 
-                              zero. Similarly, if an alternate calculation has errors less than 
-                              kvalue_accuracy, then it may be used instead of an exact calculation.
-                              Note: This does not necessarily imply that all kvalues are this 
-                              accurate.  There may be cases where other choices we have made lead
-                              to errors greater than this.  But whenever we do an explicit 
-                              calculation about this, this is the value we use.
-                              This would typically be smaller than maxk_threshold.
-    xvalue_accuracy=1.e-5     Accuracy of values in real space.
-                              If a value in real space is less than xvalue_accuracy, then it may be
-                              set to zero. Similarly, if an alternate calculation has errors less 
-                              than xvalue_accuracy, then it may be used instead of an exact 
-                              calculation.
-    shoot_accuracy=1.e-5      Accuracy of total flux for photon shooting
-                              The photon shooting algorithm sometimes needs to sample the radial 
-                              profile out to some value.  We choose the outer radius such that the 
-                              integral encloses at least (1-shoot_accuracy) of the flux.
-    realspace_relerr=1.e-3    The relative accuracy for realspace convolution.
-    realspace_abserr=1.e-6    The absolute accuracy for realspace convolution.
-    integration_relerr=1.e-5  The relative accuracy for integrals (other than real-space 
-                              convolution).
-    integration_abserr=1.e-7  The absolute accuracy for integrals (other than real-space 
-                              convolution).
-
-    Example:
+    Example usage:
     
     Let's say you want to do something that requires an FFT larger than 4096 x 4096 (and you have 
     enough memory to handle it!).  Then you can create a new GSParams object with a larger 
@@ -122,6 +89,18 @@ class GSObject(object):
     should be created with `gsparams` that have a non-default value of `alias_threshold`.  This
     statement applies to the threshold and accuracy parameters.
     """
+    _gsparams = { 'minimum_fft_size' : int,
+                  'maximum_fft_size' : int,
+                  'alias_threshold' : float,
+                  'maxk_threshold' : float,
+                  'kvalue_accuracy' : float,
+                  'xvalue_accuracy' : float,
+                  'shoot_accuracy' : float,
+                  'realspace_relerr' : float,
+                  'realspace_abserr' : float,
+                  'integration_relerr' : float,
+                  'integration_abserr' : float
+                }
     def __init__(self, rhs):
         # This guarantees that all GSObjects have an SBProfile
         if isinstance(rhs, galsim.GSObject):
@@ -865,10 +844,14 @@ class GSObject(object):
                 image.view(), n_photons, uniform_deviate, gain, max_extra_noise,
                 poisson_flux, add_to_image)
         except RuntimeError:
-            raise RuntimeError(
+            # Give some extra explanation as a warning, then raise the original exception
+            # so the traceback shows as much detail as possible.
+            import warnings
+            warnings.warn(
                 "Unable to drawShoot from this GSObject, perhaps it contains an SBDeconvolve "+
                 "in the SBProfile attribute or is a compound including one or more Deconvolve "+
                 "objects.")
+            raise
 
         return image
 
@@ -972,18 +955,18 @@ class Gaussian(GSObject):
 
     Example:
         
-        >>> gauss_obj = Gaussian(flux=3., sigma=1.)
+        >>> gauss_obj = galsim.Gaussian(flux=3., sigma=1.)
         >>> gauss_obj.getHalfLightRadius()
         1.1774100225154747
-        >>> gauss_obj = Gaussian(flux=3, half_light_radius=1.)
+        >>> gauss_obj = galsim.Gaussian(flux=3, half_light_radius=1.)
         >>> gauss_obj.getSigma()
         0.8493218002880191
 
     Attempting to initialize with more than one size parameter is ambiguous, and will raise a
     TypeError exception.
 
-    You may also specify a gsparams argument.  See the docstring for GSObject for more 
-    information about this option.
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.
 
     Methods
     -------
@@ -1047,18 +1030,18 @@ class Moffat(GSObject):
 
     Example:
     
-        >>> moffat_obj = Moffat(beta=3., scale_radius=3., flux=0.5)
+        >>> moffat_obj = galsim.Moffat(beta=3., scale_radius=3., flux=0.5)
         >>> moffat_obj.getHalfLightRadius()
         1.9307827587167474
-        >>> moffat_obj = Moffat(beta=3., half_light_radius=1., flux=0.5)
+        >>> moffat_obj = galsim.Moffat(beta=3., half_light_radius=1., flux=0.5)
         >>> moffat_obj.getScaleRadius()
         1.5537739740300376
 
     Attempting to initialize with more than one size parameter is ambiguous, and will raise a
     TypeError exception.
 
-    You may also specify a gsparams argument.  See the docstring for GSObject for more 
-    information about this option.
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.
 
     Methods
     -------
@@ -1132,8 +1115,9 @@ class AtmosphericPSF(GSObject):
                            [default `oversampling = 1.5`], setting `oversampling < 1` will produce 
                            aliasing in the PSF (not good).
     @param flux            Total flux of the profile [default `flux=1.`]
-    @param gsparams        You may also specify a gsparams argument.  See the docstring for 
-                           GSObject for more information about this option.
+    @param gsparams        You may also specify a gsparams argument.  See the docstring for
+                           galsim.GSParams using help(galsim.GSParams) for more information about
+                           this option.
 
     Methods
     -------
@@ -1215,15 +1199,15 @@ class Airy(GSObject):
 
     Example:
     
-        >>> airy_obj = Airy(flux=3., lam_over_diam=2.)
+        >>> airy_obj = galsim.Airy(flux=3., lam_over_diam=2.)
         >>> airy_obj.getHalfLightRadius()
         1.0696642954485294
 
     Attempting to initialize with more than one size parameter is ambiguous, and will raise a
     TypeError exception.
 
-    You may also specify a gsparams argument.  See the docstring for GSObject for more 
-    information about this option.
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.
 
     Methods
     -------
@@ -1313,8 +1297,9 @@ class Kolmogorov(GSObject):
                               One of `lam_over_r0`, `fwhm` and `half_light_radius` (and only one) 
                               must be specified.
     @param flux               Optional flux value [default `flux = 1.`].
-    @param gsparams           You may also specify a gsparams argument.  See the docstring for 
-                              GSObject for more information about this option.
+    @param gsparams           You may also specify a gsparams argument.  See the docstring for
+                              galsim.GSParams using help(galsim.GSParams) for more information about
+                              this option.
     
     Methods
     -------
@@ -1420,8 +1405,9 @@ class OpticalPSF(GSObject):
                            [default `pad_factor = 1.5`].  Note that `pad_factor` may need to be 
                            increased for stronger aberrations, i.e. those larger than order unity.
     @param flux            Total flux of the profile [default `flux=1.`].
-    @param gsparams        You may also specify a gsparams argument.  See the docstring for 
-                           GSObject for more information about this option.
+    @param gsparams        You may also specify a gsparams argument.  See the docstring for
+                           galsim.GSParams using help(galsim.GSParams) for more information about
+                           this option.
      
     Methods
     -------
@@ -1662,8 +1648,9 @@ class InterpolatedImage(GSObject):
     @param use_cache       Specify whether to cache noise_pad read in from a file to save having
                            to build a CorrelatedNoise object repeatedly from the same image.
                            (Default `use_cache = True`)
-    @param gsparams        You may also specify a gsparams argument.  See the docstring for 
-                           GSObject for more information about this option.
+    @param gsparams        You may also specify a gsparams argument.  See the docstring for
+                           galsim.GSParams using help(galsim.GSParams) for more information about
+                           this option.
 
     Methods
     -------
@@ -1761,12 +1748,9 @@ class InterpolatedImage(GSObject):
         if pad_image:
             specify_size = True
             if isinstance(pad_image, str):
-                try:
-                    pad_image = galsim.fits.read(pad_image)
-                except:
-                    raise RuntimeError("Can't read in Image for padding from specified file!")
-            if not isinstance(pad_image, galsim.BaseImageF) and not isinstance(pad_image,
-                                                                               galsim.BaseImageD):
+                pad_image = galsim.fits.read(pad_image)
+            if ( not isinstance(pad_image, galsim.BaseImageF) and 
+                 not isinstance(pad_image, galsim.BaseImageD) ):
                 raise ValueError("Supplied pad_image is not one of the allowed types!")
 
             # If an image was supplied directly or from a file, check its size:
@@ -1815,12 +1799,7 @@ class InterpolatedImage(GSObject):
                     # CorrelatedNoise instance, otherwise preserve the cached RNG
                     cn.setRNG(gaussian_deviate)
             elif isinstance(noise_pad, str):
-                try:
-                    cn = galsim.CorrelatedNoise(gaussian_deviate, galsim.fits.read(noise_pad))
-                except:
-                    raise RuntimeError(
-                        "Can't read in Image to define correlated noise field for noise padding "+
-                        "from specified file!")
+                cn = galsim.CorrelatedNoise(gaussian_deviate, galsim.fits.read(noise_pad))
                 if use_cache: 
                     InterpolatedImage._cache_noise_pad[noise_pad] = cn
             else:
@@ -1894,8 +1873,8 @@ class Pixel(GSObject):
     A Pixel is initialized with an x dimension width `xw`, an optional y dimension width (if
     unspecifed `yw=xw` is assumed) and an optional flux parameter [default `flux = 1.`].
 
-    You may also specify a gsparams argument.  See the docstring for GSObject for more 
-    information about this option.
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.
 
     Methods
     -------
@@ -1943,18 +1922,60 @@ class Sersic(GSObject):
     Initialization
     --------------
     A Sersic is initialized with `n`, the Sersic index of the profile, and the half light radius 
-    size parameter `half_light_radius`.  A `flux` parameter is optional [default `flux = 1.`].
+    size parameter `half_light_radius`.  Optional parameters are truncation radius `trunc` [default
+    `trunc = 0.`, indicating no truncation] and a `flux` parameter [default `flux = 1`].  If `trunc`
+    is set to a non-zero value, then it is assumed to be in the same system of units as
+    `half_light_radius`.
+
+    Note that the code will be more efficient if the truncation is always the same multiple of
+    `half_light_radius`, since it caches many calculations that depend on the ratio
+    `trunc/half_light_radius`.
 
     Example:
 
-        >>> sersic_obj = Sersic(n=3.5, half_light_radius=2.5, flux=40.)
+        >>> sersic_obj = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40.)
         >>> sersic_obj.getHalfLightRadius()
         2.5
         >>> sersic_obj.getN()
         3.5
 
-    You may also specify a gsparams argument.  See the docstring for GSObject for more 
-    information about this option.
+    Another optional parameter, `flux_untruncated`, specifies whether the `flux` and
+    `half_light_radius` correspond to the untruncated profile or the truncated profile. If
+    `flux_untruncated` is True (and `trunc > 0` of course), then the profile will be identical
+    to the version without truncation up to the truncation radius, at which point it drops to 0.
+    If `flux_untruncated` is False (the default), then the scale radius will be larger and the
+    central peak will be higher than the untruncated profile, in order to maintain the correct
+    provided `flux` and `half_light_radius`.
+
+    When `trunc > 0.` and `flux_untruncated == True`, the actual half-light radius will be different
+    from the specified half-light radius.  The getHalfLightRadius() method will return the true
+    half-light radius.  Similarly, the actual flux will not be the same as the specified value; the
+    true flux is also returned by the getFlux() method.
+
+    Example:
+
+        >>> sersic_obj = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40.)
+        >>> sersic_obj2 = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40., trunc=10., \\
+                                        flux_untruncated=True)
+        >>> sersic_obj.xValue(galsim.PositionD(0.,0.))
+        237.3094228614579
+        >>> sersic_obj2.xValue(galsim.PositionD(0.,0.))
+        237.3094228614579     # The xValues are the same inside the truncation radius ...
+        >>> sersic_obj.xValue(galsim.PositionD(10.,0.))
+        0.011776164687306839
+        >>> sersic_obj2.xValue(galsim.PositionD(10.,0.))
+        0.0                   # ... but different outside the truncation radius
+        >>> sersic_obj.getHalfLightRadius()
+        2.5
+        >>> sersic_obj2.getHalfLightRadius()
+        1.9795101421751533    # The true half-light radius is smaller than the specified value
+        >>> sersic_obj.getFlux()
+        40.0
+        >>> sersic_obj2.getFlux()
+        34.56595186009358     # Flux is missing due to truncation
+
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.
 
     Methods
     -------
@@ -1964,14 +1985,16 @@ class Sersic(GSObject):
 
     # Initialization parameters of the object, with type information
     _req_params = { "n" : float , "half_light_radius" : float }
-    _opt_params = { "flux" : float }
+    _opt_params = { "flux" : float, "trunc": float, "flux_untruncated" : bool }
     _single_params = []
     _takes_rng = False
 
     # --- Public Class methods ---
-    def __init__(self, n, half_light_radius, flux=1., gsparams=None):
+    def __init__(self, n, half_light_radius, flux=1., trunc=0., flux_untruncated=False,
+                 gsparams=None):
         GSObject.__init__(
             self, galsim.SBSersic(n, half_light_radius=half_light_radius, flux=flux,
+                                  trunc=trunc, flux_untruncated=flux_untruncated,
                                   gsparams=gsparams))
 
     def getN(self):
@@ -2003,18 +2026,18 @@ class Exponential(GSObject):
 
     Example:
 
-        >>> exp_obj = Exponential(flux=3., scale_radius=5.)
+        >>> exp_obj = galsim.Exponential(flux=3., scale_radius=5.)
         >>> exp_obj.getHalfLightRadius()
         8.391734950083302
-        >>> exp_obj = Exponential(flux=3., half_light_radius=1.)
+        >>> exp_obj = galsim.Exponential(flux=3., half_light_radius=1.)
         >>> exp_obj.getScaleRadius()
         0.5958243473776976
 
     Attempting to initialize with more than one size parameter is ambiguous, and will raise a
     TypeError exception.
 
-    You may also specify a gsparams argument.  See the docstring for GSObject for more 
-    information about this option.
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.
 
     Methods
     -------
@@ -2058,19 +2081,60 @@ class DeVaucouleurs(GSObject):
 
     Initialization
     --------------
-    A DeVaucouleurs is initialized with the half light radius size parameter `half_light_radius` and
-    an optional `flux` parameter [default `flux = 1.`].
+    A DeVaucouleurs is initialized with the half light radius size parameter `half_light_radius`.
+    Optional parameters are truncation radius `trunc` [default `trunc = 0.`, indicating no
+    truncation] and a `flux` parameter [default `flux = 1.`].  If `trunc` is set to a non-zero
+    value, then it is assumed to be in the same system of units as `half_light_radius`.
+
+    Note that the code will be more efficient if the truncation is always the same multiple of
+    `half_light_radius`, since it caches many calculations that depend on the ratio
+    `trunc/half_light_radius`.
 
     Example:
 
-        >>> dvc_obj = DeVaucouleurs(half_light_radius=2.5, flux=40.)
+        >>> dvc_obj = galsim.DeVaucouleurs(half_light_radius=2.5, flux=40.)
         >>> dvc_obj.getHalfLightRadius()
         2.5
         >>> dvc_obj.getFlux()
         40.0
 
-    You may also specify a gsparams argument.  See the docstring for GSObject for more 
-    information about this option.
+    Another optional parameter, `flux_untruncated`, specifies whether the `flux` and
+    `half_light_radius` correspond to the untruncated profile or the truncated profile. If
+    `flux_untruncated` is True (and `trunc > 0` of course), then the profile will be identical
+    to the version without truncation up to the truncation radius, at which point it drops to 0.
+    If `flux_untruncated` is False (the default), then the scale radius will be larger and the
+    central peak will be higher than the untruncated profile, in order to maintain the correct
+    provided `flux` and `half_light_radius`.
+
+    When `trunc > 0.` and `flux_untruncated == True`, the actual half-light radius will be different
+    from the specified half-light radius.  The getHalfLightRadius() method will return the true
+    half-light radius.  Similarly, the actual flux will not be the same as the specified value; the
+    true flux is also returned by the getFlux() method.
+
+    Example:
+
+        >>> dvc_obj = galsim.DeVaucouleurs(half_light_radius=2.5, flux=40.)
+        >>> dvc_obj2 = galsim.DeVaucouleurs(half_light_radius=2.5, flux=40., trunc=10., \\
+                                            flux_untruncated=True)
+        >>> dvc_obj.xValue(galsim.PositionD(0.,0.))
+        604.6895805968326
+        >>> dvc_obj2.xValue(galsim.PositionD(0.,0.))
+        604.6895805968326     # The xValues are the same inside the truncation radius ...
+        >>> dvc_obj.xValue(galsim.PositionD(10.0,0.))
+        0.011781304853174116
+        >>> dvc_obj2.xValue(galsim.PositionD(10.0,0.))
+        0.0                   # ... but different outside the truncation radius
+        >>> dvc_obj.getHalfLightRadius()
+        2.5
+        >>> dvc_obj2.getHalfLightRadius()
+        1.886276579179012     # The true half-light radius is smaller than the specified value
+        >>> dvc_obj.getFlux()
+        40.0
+        >>> dvc_obj2.getFlux()
+        33.863171136492156    # The flux from the truncation is missing
+
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.
 
     Methods
     -------
@@ -2080,14 +2144,16 @@ class DeVaucouleurs(GSObject):
 
     # Initialization parameters of the object, with type information
     _req_params = { "half_light_radius" : float }
-    _opt_params = { "flux" : float }
+    _opt_params = { "flux" : float, "trunc" : float, "flux_untruncated" : float }
     _single_params = []
     _takes_rng = False
 
     # --- Public Class methods ---
-    def __init__(self, half_light_radius=None, flux=1., gsparams=None):
+    def __init__(self, half_light_radius=None, flux=1., trunc=0., flux_untruncated=False,
+                 gsparams=None):
         GSObject.__init__(
             self, galsim.SBDeVaucouleurs(half_light_radius=half_light_radius, flux=flux,
+                                         trunc=trunc, flux_untruncated=flux_untruncated,
                                          gsparams=gsparams))
 
     def getHalfLightRadius(self):
@@ -2193,8 +2259,9 @@ class RealGalaxy(GSObject):
     @param use_cache            Specify whether to cache noise_pad read in from a file to save
                                 having to build an CorrelatedNoise repeatedly from the same image.
                                 (Default `use_cache = True`)
-    @param gsparams             You may also specify a gsparams argument.  See the docstring for 
-                                GSObject for more information about this option.
+    @param gsparams             You may also specify a gsparams argument.  See the docstring for
+                                galsim.GSParams using help(galsim.GSParams) for more information
+                                about this option.
 
     Methods
     -------
@@ -2274,12 +2341,9 @@ class RealGalaxy(GSObject):
         if pad_image is not None:
             specify_size = True
             if isinstance(pad_image,str):
-                try:
-                    pad_image = galsim.fits.read(pad_image)
-                except:
-                    raise RuntimeError("Can't read in Image for padding from specified file!")
-            if not isinstance(pad_image, galsim.BaseImageF) and not isinstance(pad_image,
-                                                                               galsim.BaseImageD):
+                pad_image = galsim.fits.read(pad_image)
+            if ( not isinstance(pad_image, galsim.BaseImageF) and 
+                 not isinstance(pad_image, galsim.BaseImageD) ):
                 raise ValueError("Supplied pad_image is not one of the allowed types!")
             # If an image was supplied directly or from a file, check its size:
             #    Cannot use if too small.
@@ -2350,12 +2414,8 @@ class RealGalaxy(GSObject):
                     # preserving the correlation structure
                     cn.setVariance(self.pad_variance)
                 elif isinstance(noise_pad, str):
-                    try:
-                        tmp_img = galsim.fits.read(noise_pad)
-                        cn = galsim.CorrelatedNoise(gaussian_deviate, tmp_img)
-                    except:
-                        raise RuntimeError("Can't read in Image to define correlated noise " +
-                                           "field for noise padding from specified file!")
+                    tmp_img = galsim.fits.read(noise_pad)
+                    cn = galsim.CorrelatedNoise(gaussian_deviate, tmp_img)
                     if use_cache:
                         RealGalaxy._cache_noise_pad[noise_pad] = cn
                     # This small patch may have different overall variance, so rescale while
@@ -2384,9 +2444,8 @@ class RealGalaxy(GSObject):
         if specify_size is False:
             # Make the SBInterpolatedImage out of the image.
             self.original_image = galsim.SBInterpolatedImage(
-                    gal_image, xInterp=self.x_interpolant, kInterp=self.k_interpolant,
-                    dx=self.pixel_scale, pad_factor=pad_factor, pad_image=pad_image, 
-                    gsparams=gsparams)
+                gal_image, xInterp=self.x_interpolant, kInterp=self.k_interpolant,
+                dx=self.pixel_scale, pad_factor=pad_factor, pad_image=pad_image, gsparams=gsparams)
         else:
             # Leave the original image as-is.  Instead, we shift around the image to be used for
             # padding.  Find out how much x and y margin there should be on lower end:
@@ -2399,14 +2458,14 @@ class RealGalaxy(GSObject):
             # Set the central values of pad_image to be equal to the input image
             pad_image[gal_image.bounds] = gal_image
             self.original_image = galsim.SBInterpolatedImage(
-                    pad_image, xInterp=self.x_interpolant, kInterp=self.k_interpolant,
-                    dx=self.pixel_scale, pad_factor=1., gsparams=gsparams)
+                pad_image, xInterp=self.x_interpolant, kInterp=self.k_interpolant,
+                dx=self.pixel_scale, pad_factor=1., gsparams=gsparams)
 
         # also make the original PSF image, with far less fanfare: we don't need to pad with
         # anything interesting.
         self.original_PSF = galsim.SBInterpolatedImage(
-                PSF_image, xInterp=self.x_interpolant, kInterp=self.k_interpolant,
-                dx=self.pixel_scale, gsparams=gsparams)
+            PSF_image, xInterp=self.x_interpolant, kInterp=self.k_interpolant, dx=self.pixel_scale,
+            gsparams=gsparams)
 
         # recalculate Fourier-space attributes rather than using overly-conservative defaults
         self.original_image.calculateStepK()
@@ -2423,8 +2482,8 @@ class RealGalaxy(GSObject):
         # Calculate the PSF "deconvolution" kernel
         psf_inv = galsim.SBDeconvolve(self.original_PSF, gsparams=gsparams)
         # Initialize the SBProfile attribute
-        GSObject.__init__(self, galsim.SBConvolve([self.original_image, psf_inv],
-                                                  gsparams=gsparams))
+        GSObject.__init__(
+            self, galsim.SBConvolve([self.original_image, psf_inv], gsparams=gsparams))
 
     def getHalfLightRadius(self):
         raise NotImplementedError("Half light radius calculation not implemented for RealGalaxy "
@@ -2440,12 +2499,12 @@ class Add(GSObject):
     to represent a multiple-component galaxy as the sum of an Exponential and a DeVaucouleurs, or to
     represent a PSF as the sum of multiple Gaussians.
 
-    You may also specify a gsparams argument.  See the docstring for GSObject for more information
-    about this option.  Note: if gsparams is unspecified (or None), then the Add instance inherits
-    the same GSParams as the first item in the list.  Also, note that parameters related to the
-    Fourier-space calculations must be set when initializing the individual GSObjects that go into
-    the Add, NOT when creating the Add (at which point the accuracy and threshold parameters will
-    simply be ignored).
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.  Note: if gsparams is unspecified
+    (or None), then the Add instance inherits the same GSParams as the first item in the list.
+    Also, note that parameters related to the Fourier-space calculations must be set when
+    initializing the individual GSObjects that go into the Add, NOT when creating the Add (at which
+    point the accuracy and threshold parameters will simply be ignored).
 
     Methods
     -------
@@ -2504,21 +2563,21 @@ class Convolve(GSObject):
     you try to use it for more than 2 profiles, an exception will be raised.
     
     The real-space convolution is normally slower than the DFT convolution.  The exception is if
-    both component profiles have hard edges, e.g. a truncated Moffat with a Pixel.  In that case,
-    the highest frequency `maxK` for each component is quite large since the ringing dies off fairly
-    slowly.  So it can be quicker to use real-space convolution instead.  Also, real-space 
-    convolution tends to be more accurate in this case as well.
+    both component profiles have hard edges, e.g. a truncated Moffat or Sersic with a Pixel.  In
+    that case, the highest frequency `maxK` for each component is quite large since the ringing dies
+    off fairly slowly.  So it can be quicker to use real-space convolution instead.  Also,
+    real-space convolution tends to be more accurate in this case as well.
 
     If you do not specify either `real_space = True` or `False` explicitly, then we check if there 
     are 2 profiles, both of which have hard edges.  In this case, we automatically use real-space 
     convolution.  In all other cases, the default is not to use real-space convolution.
 
-    You may also specify a gsparams argument.  See the docstring for GSObject for more information
-    about this option.  Note: if gsparams is unspecified (or None), then the Convolve instance
-    inherits the same GSParams as the first item in the list.  Also, note that parameters related to
-    the Fourier-space calculations must be set when initializing the individual GSObjects that go
-    into the Convolve, NOT when creating the Convolve (at which point the accuracy and threshold
-    parameters will simply be ignored).
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.  Note: if gsparams is unspecified
+    (or None), then the Convolve instance inherits the same GSParams as the first item in the list.
+    Also, note that parameters related to the Fourier-space calculations must be set when
+    initializing the individual GSObjects that go into the Convolve, NOT when creating the Convolve
+    (at which point the accuracy and threshold parameters will simply be ignored).
     """
                     
     # --- Public Class methods ---
@@ -2635,11 +2694,12 @@ class AutoConvolve(GSObject):
     the fact that the two profiles are the same for some efficiency gains.
 
     @param obj       The object to be convolved with itself.
-    @param gsparams  You may also specify a gsparams argument.  See the docstring for GSObject for
-                     more information about this option.  Note that parameters related to the
-                     Fourier-space calculations must be set when initializing the GSObject that goes
-                     into the AutoConvolve, NOT when creating the AutoConvolve (at which point the
-                     accuracy and threshold parameters will simply be ignored).
+    @param gsparams  You may also specify a gsparams argument.  See the docstring for
+                     galsim.GSParams using help(galsim.GSParams) for more information about this
+                     option.  Note that parameters related to the Fourier-space calculations must be
+                     set when initializing the GSObject that goes into the AutoConvolve, NOT when
+                     creating the AutoConvolve (at which point the accuracy and threshold parameters
+                     will simply be ignored).
     """
     # --- Public Class methods ---
     def __init__(self, obj, gsparams=None):
@@ -2659,11 +2719,13 @@ class AutoCorrelate(GSObject):
     with a GSObject.
 
     @param obj       The object to be correlated with itself.
-    @param gsparams  You may also specify a gsparams argument.  See the docstring for 
-                     GSObject for more information about this option.  Note that parameters related to
-                     the Fourier-space calculations must be set when initializing the GSObject that
-                     goes into the AutoCorrelate, NOT when creating the AutoCorrelate (at which point
-                     the accuracy and threshold parameters will simply be ignored).
+
+    @param gsparams  You may also specify a gsparams argument.  See the docstring for
+                     galsim.GSParams using help(galsim.GSParams) for more information about this
+                     option.  Note that parameters related to the Fourier-space calculations must be
+                     set when initializing the GSObject that goes into the AutoCorrelate, NOT when
+                     creating the AutoCorrelate (at which point the accuracy and threshold
+                     parameters will simply be ignored).
     """
     # --- Public Class methods ---
     def __init__(self, obj, gsparams=None):
@@ -2679,16 +2741,16 @@ class Deconvolve(GSObject):
     compound objects (Add, Convolve) that include a Deconvolve as one of the components, cannot be
     photon-shot using the drawShoot method.
 
-    You may also specify a gsparams argument.  See the docstring for GSObject for more 
-    information about this option.  Note: if gsparams is unspecified (or None), then the
-    Deconvolve instance inherits the same GSParams as the object being deconvolved.
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.  Note: if gsparams is unspecified
+    (or None), then the Deconvolve instance inherits the same GSParams as the object being
+    deconvolved.
     """
     # --- Public Class methods ---
     def __init__(self, farg, gsparams=None):
         if isinstance(farg, GSObject):
             self.farg = farg
-            GSObject.__init__(self, galsim.SBDeconvolve(self.farg.SBProfile,
-                                                        gsparams=gsparams))
+            GSObject.__init__(self, galsim.SBDeconvolve(self.farg.SBProfile, gsparams=gsparams))
         else:
             raise TypeError("Argument to Deconvolve must be a GSObject.")
 
@@ -2782,14 +2844,8 @@ class Shapelet(GSObject):
     # --- Public Class methods ---
     def __init__(self, sigma, order, bvec=None):
         # Make sure order and sigma are the right type:
-        try:
-            order = int(order)
-        except:
-            raise TypeError("The provided order is not an int")
-        try:
-            sigma = float(sigma)
-        except:
-            raise TypeError("The provided sigma is not a float")
+        order = int(order)
+        sigma = float(sigma)
 
         # Make bvec if necessary
         if bvec is None:
@@ -2910,11 +2966,8 @@ class Shapelet(GSObject):
         """
         if not center:
             center = image.bounds.center()
-        try:
-            # convert from PositionI if necessary
-            center = galsim.PositionD(center.x,center.y)
-        except:
-            raise ValueError("Invalid center provided to fitImage: "+str(center))
+        # convert from PositionI if necessary
+        center = galsim.PositionD(center.x,center.y)
 
         if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
             raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+

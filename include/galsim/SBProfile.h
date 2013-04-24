@@ -72,7 +72,8 @@ namespace galsim {
          *                            have made lead to errors greater than this.  But whenever we 
          *                            do an explicit calculation about this, this is the value we 
          *                            use.  
-         *                            This would typically be more stringent than maxk_threshold.
+         *                            This should typically be set to a lower, more stringent value
+         *                            than maxk_threshold.
          * @param xvalue_accuracy     Accuracy of values in real space.
          *                            If a value in real space is less than xvalue_accuracy, then 
          *                            it may be set to zero.  Similarly, if an alternate 
@@ -95,8 +96,8 @@ namespace galsim {
                  int _maximum_fft_size,
                  double _alias_threshold,
                  double _maxk_threshold,
-                 double _xvalue_accuracy,
                  double _kvalue_accuracy,
+                 double _xvalue_accuracy,
                  double _shoot_accuracy,
                  double _realspace_relerr,
                  double _realspace_abserr,

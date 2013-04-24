@@ -37,13 +37,13 @@ struct PyHSMParams {
             "\n"
             "The parameters, along with their default values, are as follows:\n"
             "\n"
-            "nsig_rg           A parameter used to optimize convolutions by cutting off galaxy\n"
+            "nsig_rg           A parameter used to optimize convolutions by cutting off the galaxy\n"
             "                  profile.  In the first step of the re-Gaussianization method of PSF\n"
             "                  correction, a Gaussian approximation to the pre-seeing galaxy is\n"
             "                  calculated. If re-Gaussianization is called with the flag 0x4 (as\n"
             "                  is the default), then this approximation is cut off at nsig_rg\n"
             "                  sigma to save computation time in convolutions.\n"
-            "nsig_rg2          A parameter used to optimize convolutions by cutting off PSF\n"
+            "nsig_rg2          A parameter used to optimize convolutions by cutting off the PSF\n"
             "                  residual profile.  In the re-Gaussianization method of PSF\n"
             "                  correction, a `PSF residual' (the difference between the true PSF\n"
             "                  and its best-fit Gaussian approximation) is constructed. If\n"
@@ -91,8 +91,8 @@ struct PyHSMParams {
             "max_mom2_iter     Maximum number of iterations to use when calculating adaptive\n"
             "                  moments.  This should be sufficient in nearly all situations, with\n"
             "                  the possible exception being very flattened profiles.\n"
-            "num_iter_default   Number of iterations to report when code fails to converge within\n"
-            "                   max_mom2_iter iterations.\n"
+            "num_iter_default   Number of iterations to report in the output HSMShapeData structure\n"
+            "                   when code fails to converge within max_mom2_iter iterations.\n"
             "bound_correct_wt   Maximum shift in centroids and sigma between iterations for\n"
             "                   adaptive moments.\n"
             "max_amoment        Maximum value for adaptive second moments before throwing\n"
@@ -156,12 +156,13 @@ struct PyCppHSMShapeData {
 
         typedef CppHSMShapeData (* ESH_func)(const ImageView<U> &, const ImageView<V> &, 
                                              const ImageView<int> &, float, const char *,
-                                             unsigned long, double, double, double, double, double,
+                                             const std::string&, double, double, double, double, double,
                                              boost::shared_ptr<HSMParams>);
         bp::def("_EstimateShearHSMView",
                 ESH_func(&EstimateShearHSMView),
                 (bp::arg("gal_image"), bp::arg("PSF_image"), bp::arg("gal_mask_image"),
-                 bp::arg("sky_var")=0.0, bp::arg("shear_est")="REGAUSS", bp::arg("flags")=0xe,
+                 bp::arg("sky_var")=0.0, bp::arg("shear_est")="REGAUSS",
+                 bp::arg("recompute_flux")="FIT",
                  bp::arg("guess_sig_gal")=5.0, bp::arg("guess_sig_PSF")=3.0,
                  bp::arg("precision")=1.0e-6, bp::arg("guess_x_centroid")=-1000.0,
                  bp::arg("guess_y_centroid")=-1000.0, bp::arg("hsmparams")=bp::object()),

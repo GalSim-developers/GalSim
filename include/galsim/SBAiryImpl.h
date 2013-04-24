@@ -260,7 +260,7 @@ namespace galsim {
 
         /// Info object that stores things that are common to all Airy functions with this 
         /// obscuration value.
-        const AiryInfo* _info; 
+        const boost::shared_ptr<AiryInfo> _info; 
 
         /// One static map of all `AiryInfo` structures for whole program.
         static LRUCache<std::pair<double,const GSParams*>, AiryInfo> cache;
