@@ -416,7 +416,7 @@ def which(program):
     return None
 
 def GetCompilerVersion(env):
-    """
+    """Determine the version of the compiler
     """
     if env['CXX'] is None:
         env['CXX'] = default_cxx
@@ -509,6 +509,18 @@ def GetCompilerVersion(env):
     env['CXXVERSION'] = version
     env['CXXVERSION_NUMERICAL'] = float(vnum)
 
+def GetNosetestsVersion(env):
+    """Determine the version of nosetests
+    """
+    import subprocess
+    cmd = env['NOSETESTS'] + ' --version 2>&1'
+    p = subprocess.Popen([cmd],stdout=subprocess.PIPE,shell=True)
+    line = p.stdout.readlines()[0]
+    version = line.split()[2]
+    print 'nosetests version:',version
+    env['NOSETESTSVERSION'] = version
+
+
 def ExpandPath(path):
     p=os.path.expanduser(path)
     p=os.path.expandvars(p)
@@ -552,7 +564,7 @@ def AddDepPaths(bin_paths,cpp_paths,lib_paths):
         tdir = FindPathInEnv(env, dirtag)
         if tdir is None:
             if env[dirtag] != '':
-                print 'Warning, could not find specified %s = %s'%(dirtag,env[dirtag])
+                print 'WARNING: could not find specified %s = %s'%(dirtag,env[dirtag])
             continue
 
         AddPath(bin_paths, os.path.join(tdir, 'bin'))
@@ -1364,6 +1376,24 @@ def DoCppChecks(config):
         ErrorExit('Could not open TMV link file: ',tmv_link_file)
     print '    ',tmv_link
 
+    if sys.platform.find('darwin') != -1:
+        # The Mac BLAS library is notoriously sketchy.  In particular, we have discovered that it
+        # is thread-unsafe for Mac OS 10.7.  Try to give an appropriate warning if we can tell that 
+        # this is what the TMV library is using.
+        import platform
+        print 'Mac version is ',platform.mac_ver()[0]
+        if (platform.mac_ver()[0] >= '10.7' and '-latlas' not in tmv_link and
+            ('-lblas' in tmv_link or '-lcblas' in tmv_link)):
+            print 'WARNING: The Apple BLAS library has been found not to be thread safe on'
+            print '         Mac OS version 10.7 (and possibly higher), even across multiple'
+            print '         processes (i.e. not just multiple threads in the same process).'
+            print '         The symptom is that `scons tests` will hang when running nosetests'
+            print '         using multiple processes.'
+            print '         If this occurrs, the solution is to compile TMV either with a '
+            print '         different BLAS library (e.g. ATLAS) or with no BLAS library at '
+            print '         all (using WITH_BLAS=false).'
+            env['BAD_BLAS'] = True
+
     # ParseFlags doesn't know about -fopenmp being a LINKFLAG, so it
     # puts it into CCFLAGS instead.  Move it over to LINKFLAGS before
     # merging everything.
@@ -1601,6 +1631,8 @@ if not GetOption('help'):
                 env['NOSETESTS'] = None
             else:
                 env['NOSETESTS'] = nosetests
+        if env['NOSETESTS']:
+            GetNosetestsVersion(env)
         subdirs += ['tests']
 
     if env['WITH_UPS']:

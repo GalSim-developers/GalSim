@@ -48,6 +48,7 @@ test_fwhm = 1.8
 test_sigma = 1.8
 test_scale = 1.8
 test_sersic_n = [1.5, 2.5]
+test_sersic_trunc = [0., 8.5]
 
 # for flux normalization tests
 test_flux = 1.8
@@ -517,6 +518,8 @@ def test_sersic():
     """
     import time
     t1 = time.time()
+
+    # Test SBSersic
     mySBP = galsim.SBSersic(n=3, flux=1, half_light_radius=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_3_1.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
@@ -538,6 +541,32 @@ def test_sersic():
     # Convolve with a small gaussian to smooth out the central peak.
     sersic2 = galsim.Convolve(sersic, galsim.Gaussian(sigma=0.3))
     do_shoot(sersic2,myImg,"Sersic")
+
+    # Now repeat everything using a truncation.  (Above had no truncation.)
+
+    # Test Truncated SBSersic
+    mySBP = galsim.SBSersic(n=3, flux=1, half_light_radius=1, trunc=10)
+    savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_3_1_10.fits"))
+    myImg = galsim.ImageF(savedImg.bounds)
+    myImg.setScale(0.2)
+    mySBP.draw(myImg.view())
+    printval(myImg, savedImg)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Truncated Sersic profile disagrees with expected result")
+
+    # Repeat with the GSObject version of this:
+    sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1, trunc=10)
+    sersic.draw(myImg,dx=0.2, normalization="surface brightness")
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using truncated GSObject Sersic disagrees with expected result")
+
+    # Test photon shooting.
+    # Convolve with a small gaussian to smooth out the central peak.
+    sersic2 = galsim.Convolve(sersic, galsim.Gaussian(sigma=0.3))
+    do_shoot(sersic2,myImg,"Truncated Sersic")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -549,41 +578,104 @@ def test_sersic_radii():
     t1 = time.time()
     import math
     for n in test_sersic_n:
-        # Test constructor using half-light-radius: (only option for sersic)
-        test_gal = galsim.Sersic(n=n, half_light_radius=test_hlr, flux=1.)
+        for trunc in test_sersic_trunc:
+            # Test constructor using half-light-radius: (only option for sersic)
+            test_gal = galsim.Sersic(n=n, half_light_radius=test_hlr, trunc=trunc, flux=1.)
+            hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
+            print 'hlr_sum = ',hlr_sum
+            np.testing.assert_almost_equal(
+                    hlr_sum, 0.5, decimal=4,
+                    err_msg="Error in Sersic constructor with half-light radius, n=%d, trunc=%d"\
+                             %(n,trunc))
+
+            # Test with flux_untruncated=True (above unit tests for flux_untruncated=False)
+            test_gal = galsim.Sersic(n=n, half_light_radius=test_hlr, trunc=trunc, flux=1.,
+                                     flux_untruncated=True)
+            hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
+            print 'hlr_sum (truncated and flux_untruncated) = ',hlr_sum
+            np.testing.assert_almost_equal(
+                    hlr_sum, 0.5, decimal=4,
+                    err_msg="Error in Sersic constructor with flux_untruncated, n=%d, trunc=%d"\
+                             %(n,trunc))
+
+            # Check that the getters don't work after modifying the original.
+            test_gal_shear = test_gal.copy()
+            print 'n = ',test_gal_shear.getN()
+            print 'hlr = ',test_gal_shear.getHalfLightRadius()
+            test_gal_shear.applyShear(g1=0.3, g2=0.1)
+            try:
+                np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getN");
+                np.testing.assert_raises(AttributeError, getattr, test_gal_shear, 
+                                         "getHalfLightRadius")
+            except ImportError:
+                pass
+
+    for n in test_sersic_n:
+        for trunc in test_sersic_trunc:
+            # Test flux_untruncated scale and normalization
+            test_gal = galsim.Sersic(n=n, half_light_radius=test_hlr, flux=1.)
+
+            test_gal2 = galsim.Sersic(n=n, half_light_radius=test_hlr, trunc=trunc, flux=1.,
+                                      flux_untruncated=True)
+            center = test_gal.xValue(galsim.PositionD(0,0))
+            center2 = test_gal2.xValue(galsim.PositionD(0,0))
+            ratio = center / center2
+            print 'peak value = ', center, center2
+            print 'hlr = ', test_gal.getHalfLightRadius(), test_gal2.getHalfLightRadius()
+            np.testing.assert_almost_equal(ratio, 1., 9,
+                                           "Error in Sersic flux_untruncated=True normalization")
+
+            # Test true HLR with flux_untruncated=True
+            true_hlr = test_gal2.getHalfLightRadius()
+            hlr_sum = radial_integrate(test_gal, 0., true_hlr, 1.e-4)
+            true_flux = test_gal2.getFlux()
+            print 'true hlr_sum = ',hlr_sum
+            np.testing.assert_almost_equal(
+                    hlr_sum, 0.5*true_flux, decimal=4,
+                    err_msg="Error in true half-light radius with flux_untruncated, n=%d, trunc=%d"\
+                             %(n,trunc))
+
+    # Repeat the above for an explicit DeVaucouleurs.  (Same as n=4, but special name.)
+    for trunc in test_sersic_trunc:
+        # Test constuctor
+        test_gal = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=trunc, flux=1.)
         hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
         print 'hlr_sum = ',hlr_sum
         np.testing.assert_almost_equal(
                 hlr_sum, 0.5, decimal=4,
-                err_msg="Error in Sersic constructor with half-light radius, n = %d"%n)
+                err_msg="Error in DeVaucouleurs constructor with half-light radius, trunc=%d"\
+                         %trunc)
 
         # Check that the getters don't work after modifying the original.
         test_gal_shear = test_gal.copy()
-        print 'n = ',test_gal_shear.getN()
         print 'hlr = ',test_gal_shear.getHalfLightRadius()
         test_gal_shear.applyShear(g1=0.3, g2=0.1)
         try:
-            np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getN");
             np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
         except ImportError:
             pass
 
-    # Repeat the above for an explicit DeVaucouleurs.  (Same as n=4, but special name.)
-    test_gal = galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=1.)
-    hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
-    print 'hlr_sum = ',hlr_sum
-    np.testing.assert_almost_equal(
-            hlr_sum, 0.5, decimal=4,
-            err_msg="Error in Sersic constructor with half-light radius, n = %d"%n)
+    # Test flux_untruncated scale and normalization
+    test_gal = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=0., flux=1.)
+    test_gal2 = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=trunc, flux=1.,
+                                     flux_untruncated=True)
+    center = test_gal.xValue(galsim.PositionD(0,0))
+    center2 = test_gal2.xValue(galsim.PositionD(0,0))
+    ratio = center / center2
+    print 'peak value = ', center, center2
+    print 'hlr = ', test_gal.getHalfLightRadius(), test_gal2.getHalfLightRadius()
+    np.testing.assert_almost_equal(ratio, 1., 9,
+                                   "Error in DeVaucouleurs flux_untruncated=True normalization")
 
-    # Check that the getters don't work after modifying the original.
-    test_gal_shear = test_gal.copy()
-    print 'hlr = ',test_gal_shear.getHalfLightRadius()
-    test_gal_shear.applyShear(g1=0.3, g2=0.1)
-    try:
-        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
-    except ImportError:
-        pass
+    # Test true HLR with flux_untruncated=True
+    true_hlr = test_gal2.getHalfLightRadius()
+    hlr_sum = radial_integrate(test_gal, 0., true_hlr, 1.e-4)
+    true_flux = test_gal2.getFlux()
+    print 'true hlr_sum = ',hlr_sum
+    np.testing.assert_almost_equal(
+            hlr_sum, 0.5*true_flux, decimal=4,
+            err_msg="Error in DeVaucouleurs true half-light radius with flux_untruncated, trunc=%d"\
+                     %(trunc))
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -859,7 +951,7 @@ def test_moffat_radii():
             test_scale_ratio, 2.**(-test_beta), decimal=4,
             err_msg="Error in scale radius for Moffat initialized with scale radius")
 
-    # Now repeat everything using a severe trunctation.  (Above had no truncation.)
+    # Now repeat everything using a severe truncation.  (Above had no truncation.)
 
     # Test constructor using half-light-radius:
     test_gal = galsim.Moffat(flux = 1., beta=test_beta, half_light_radius = test_hlr,
