@@ -33,50 +33,54 @@ except ImportError:
 if __name__ == "__main__":
     lod = 0.04
     obscuration = 0.3
+    imsize = 128
+
+    # predefine image of fixed size for drawing into
+    im = galsim.ImageD(imsize, imsize)
 
     # defocus
-    optics = galsim.OpticalPSF(lod, defocus = 1., obscuration = obscuration)
-    im = optics.draw(dx=0.2*lod)
+    optics = galsim.OpticalPSF(lod, defocus = .5, obscuration = obscuration)
+    im = optics.draw(im, dx=0.2*lod)
     im.write(os.path.join(os.path.abspath(os.path.dirname(__file__)), "optics_defocus.fits"))
 
     # astig1
-    optics = galsim.OpticalPSF(lod, defocus = 1., astig1 = 1., obscuration = obscuration)
-    im = optics.draw(dx=0.2*lod)
+    optics = galsim.OpticalPSF(lod, defocus = .5, astig1 = 1., obscuration = obscuration)
+    im = optics.draw(im, dx=0.2*lod)
     im.write(os.path.join(os.path.abspath(os.path.dirname(__file__)), "optics_astig1.fits"))
 
     # astig2
-    optics = galsim.OpticalPSF(lod, defocus = 1., astig2 = 1., obscuration = obscuration)
-    im = optics.draw(dx=0.2*lod)
+    optics = galsim.OpticalPSF(lod, defocus = .5, astig2 = 1., obscuration = obscuration)
+    im = optics.draw(im, dx=0.2*lod)
     im.write(os.path.join(os.path.abspath(os.path.dirname(__file__)), "optics_astig2.fits"))
 
     # coma1
-    optics = galsim.OpticalPSF(lod, coma1 = 1., obscuration = obscuration)
-    im = optics.draw(dx=0.2*lod)
+    optics = galsim.OpticalPSF(lod, coma1 = .5, obscuration = obscuration)
+    im = optics.draw(im, dx=0.2*lod)
     im.write(os.path.join(os.path.abspath(os.path.dirname(__file__)), "optics_coma1.fits"))
 
     # coma2
-    optics = galsim.OpticalPSF(lod, coma2 = 1., obscuration = obscuration)
-    im = optics.draw(dx=0.2*lod)
+    optics = galsim.OpticalPSF(lod, coma2 = .5, obscuration = obscuration)
+    im = optics.draw(im, dx=0.2*lod)
     im.write(os.path.join(os.path.abspath(os.path.dirname(__file__)), "optics_coma2.fits"))
 
     # trefoil1
-    optics = galsim.OpticalPSF(lod, trefoil1 = 1., obscuration = obscuration)
-    im = optics.draw(dx=0.2*lod)
+    optics = galsim.OpticalPSF(lod, trefoil1 = .5, obscuration = obscuration)
+    im = optics.draw(im, dx=0.2*lod)
     im.write(os.path.join(os.path.abspath(os.path.dirname(__file__)), "optics_trefoil1.fits"))
 
     # trefoil2
-    optics = galsim.OpticalPSF(lod, trefoil2 = 1., obscuration = obscuration)
-    im = optics.draw(dx=0.2*lod)
+    optics = galsim.OpticalPSF(lod, trefoil2 = .5, obscuration = obscuration)
+    im = optics.draw(im, dx=0.2*lod)
     im.write(os.path.join(os.path.abspath(os.path.dirname(__file__)), "optics_trefoil2.fits"))
 
     # spherical
-    optics = galsim.OpticalPSF(lod, spher = 1., obscuration = obscuration)
-    im = optics.draw(dx=0.2*lod)
+    optics = galsim.OpticalPSF(lod, spher = .5, obscuration = obscuration)
+    im = optics.draw(im, dx=0.2*lod)
     im.write(os.path.join(os.path.abspath(os.path.dirname(__file__)), "optics_spher.fits"))
 
     # all aberrations
-    optics = galsim.OpticalPSF(lod, defocus = 1., astig1 = 0.5, astig2 = 0.3, coma1 = 0.4,
+    optics = galsim.OpticalPSF(lod, defocus = .5, astig1 = 0.5, astig2 = 0.3, coma1 = 0.4,
                                coma2 = -0.3, trefoil1 = -0.2, trefoil2 = 0.1, spher = -0.8,
                                obscuration = obscuration)
-    im = optics.draw(dx=0.2*lod)
+    im = optics.draw(im, dx=0.2*lod)
     im.write(os.path.join(os.path.abspath(os.path.dirname(__file__)), "optics_all.fits"))
