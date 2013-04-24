@@ -60,11 +60,7 @@ class DES_PSFEx(object):
             import os
             file_name = os.path.join(dir,file_name)
         self.file_name = file_name
-
-        try:
-            self.read()
-        except Exception, e:
-            raise IOError("Unable to read DES_PSFEx file %s.  Error = %s"%(self.file_name,str(e)))
+        self.read()
 
     def read(self):
         import pyfits

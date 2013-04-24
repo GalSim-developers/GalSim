@@ -792,10 +792,14 @@ class GSObject(object):
             image.added_flux = self.SBProfile.drawShoot(
                 image.view(), n_photons, uniform_deviate, gain, max_extra_noise, poisson_flux)
         except RuntimeError:
-            raise RuntimeError(
+            # Give some extra explanation as a warning, then raise the original exception
+            # so the traceback shows as much detail as possible.
+            import warnings
+            warnings.warn(
                 "Unable to drawShoot from this GSObject, perhaps it contains an SBDeconvolve "+
                 "in the SBProfile attribute or is a compound including one or more Deconvolve "+
                 "objects.")
+            raise
 
         return image
 
@@ -899,10 +903,10 @@ class Gaussian(GSObject):
 
     Example:
         
-        >>> gauss_obj = Gaussian(flux=3., sigma=1.)
+        >>> gauss_obj = galsim.Gaussian(flux=3., sigma=1.)
         >>> gauss_obj.getHalfLightRadius()
         1.1774100225154747
-        >>> gauss_obj = Gaussian(flux=3, half_light_radius=1.)
+        >>> gauss_obj = galsim.Gaussian(flux=3, half_light_radius=1.)
         >>> gauss_obj.getSigma()
         0.8493218002880191
 
@@ -970,10 +974,10 @@ class Moffat(GSObject):
 
     Example:
     
-        >>> moffat_obj = Moffat(beta=3., scale_radius=3., flux=0.5)
+        >>> moffat_obj = galsim.Moffat(beta=3., scale_radius=3., flux=0.5)
         >>> moffat_obj.getHalfLightRadius()
         1.9307827587167474
-        >>> moffat_obj = Moffat(beta=3., half_light_radius=1., flux=0.5)
+        >>> moffat_obj = galsim.Moffat(beta=3., half_light_radius=1., flux=0.5)
         >>> moffat_obj.getScaleRadius()
         1.5537739740300376
 
@@ -1131,7 +1135,7 @@ class Airy(GSObject):
 
     Example:
     
-        >>> airy_obj = Airy(flux=3., lam_over_diam=2.)
+        >>> airy_obj = galsim.Airy(flux=3., lam_over_diam=2.)
         >>> airy_obj.getHalfLightRadius()
         1.0696642954485294
 
@@ -1658,12 +1662,9 @@ class InterpolatedImage(GSObject):
         if pad_image:
             specify_size = True
             if isinstance(pad_image, str):
-                try:
-                    pad_image = galsim.fits.read(pad_image)
-                except:
-                    raise RuntimeError("Can't read in Image for padding from specified file!")
-            if not isinstance(pad_image, galsim.BaseImageF) and not isinstance(pad_image,
-                                                                               galsim.BaseImageD):
+                pad_image = galsim.fits.read(pad_image)
+            if ( not isinstance(pad_image, galsim.BaseImageF) and 
+                 not isinstance(pad_image, galsim.BaseImageD) ):
                 raise ValueError("Supplied pad_image is not one of the allowed types!")
 
             # If an image was supplied directly or from a file, check its size:
@@ -1712,12 +1713,7 @@ class InterpolatedImage(GSObject):
                     # CorrelatedNoise instance, otherwise preserve the cached RNG
                     cn.setRNG(gaussian_deviate)
             elif isinstance(noise_pad, str):
-                try:
-                    cn = galsim.CorrelatedNoise(gaussian_deviate, galsim.fits.read(noise_pad))
-                except:
-                    raise RuntimeError(
-                        "Can't read in Image to define correlated noise field for noise padding "+
-                        "from specified file!")
+                cn = galsim.CorrelatedNoise(gaussian_deviate, galsim.fits.read(noise_pad))
                 if use_cache: 
                     InterpolatedImage._cache_noise_pad[noise_pad] = cn
             else:
@@ -1848,15 +1844,57 @@ class Sersic(GSObject):
     Initialization
     --------------
     A Sersic is initialized with `n`, the Sersic index of the profile, and the half light radius 
-    size parameter `half_light_radius`.  A `flux` parameter is optional [default `flux = 1.`].
+    size parameter `half_light_radius`.  Optional parameters are truncation radius `trunc` [default
+    `trunc = 0.`, indicating no truncation] and a `flux` parameter [default `flux = 1`].  If `trunc`
+    is set to a non-zero value, then it is assumed to be in the same system of units as
+    `half_light_radius`.
+
+    Note that the code will be more efficient if the truncation is always the same multiple of
+    `half_light_radius`, since it caches many calculations that depend on the ratio
+    `trunc/half_light_radius`.
 
     Example:
 
-        >>> sersic_obj = Sersic(n=3.5, half_light_radius=2.5, flux=40.)
+        >>> sersic_obj = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40.)
         >>> sersic_obj.getHalfLightRadius()
         2.5
         >>> sersic_obj.getN()
         3.5
+
+    Another optional parameter, `flux_untruncated`, specifies whether the `flux` and
+    `half_light_radius` correspond to the untruncated profile or the truncated profile. If
+    `flux_untruncated` is True (and `trunc > 0` of course), then the profile will be identical
+    to the version without truncation up to the truncation radius, at which point it drops to 0.
+    If `flux_untruncated` is False (the default), then the scale radius will be larger and the
+    central peak will be higher than the untruncated profile, in order to maintain the correct
+    provided `flux` and `half_light_radius`.
+
+    When `trunc > 0.` and `flux_untruncated == True`, the actual half-light radius will be different
+    from the specified half-light radius.  The getHalfLightRadius() method will return the true
+    half-light radius.  Similarly, the actual flux will not be the same as the specified value; the
+    true flux is also returned by the getFlux() method.
+
+    Example:
+
+        >>> sersic_obj = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40.)
+        >>> sersic_obj2 = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40., trunc=10., \\
+                                        flux_untruncated=True)
+        >>> sersic_obj.xValue(galsim.PositionD(0.,0.))
+        237.3094228614579
+        >>> sersic_obj2.xValue(galsim.PositionD(0.,0.))
+        237.3094228614579     # The xValues are the same inside the truncation radius ...
+        >>> sersic_obj.xValue(galsim.PositionD(10.,0.))
+        0.011776164687306839
+        >>> sersic_obj2.xValue(galsim.PositionD(10.,0.))
+        0.0                   # ... but different outside the truncation radius
+        >>> sersic_obj.getHalfLightRadius()
+        2.5
+        >>> sersic_obj2.getHalfLightRadius()
+        1.9795101421751533    # The true half-light radius is smaller than the specified value
+        >>> sersic_obj.getFlux()
+        40.0
+        >>> sersic_obj2.getFlux()
+        34.56595186009358     # Flux is missing due to truncation
 
     Methods
     -------
@@ -1866,14 +1904,15 @@ class Sersic(GSObject):
 
     # Initialization parameters of the object, with type information
     _req_params = { "n" : float , "half_light_radius" : float }
-    _opt_params = { "flux" : float }
+    _opt_params = { "trunc": float, "flux" : float, "flux_untruncated" : bool }
     _single_params = []
     _takes_rng = False
 
     # --- Public Class methods ---
-    def __init__(self, n, half_light_radius, flux=1.):
+    def __init__(self, n, half_light_radius, trunc=0., flux=1., flux_untruncated=False):
         GSObject.__init__(
-            self, galsim.SBSersic(n, half_light_radius=half_light_radius, flux=flux))
+            self, galsim.SBSersic(n, half_light_radius=half_light_radius, trunc=trunc, flux=flux,
+                                  flux_untruncated=flux_untruncated))
 
     def getN(self):
         """Return the Sersic index `n` for this profile.
@@ -1904,10 +1943,10 @@ class Exponential(GSObject):
 
     Example:
 
-        >>> exp_obj = Exponential(flux=3., scale_radius=5.)
+        >>> exp_obj = galsim.Exponential(flux=3., scale_radius=5.)
         >>> exp_obj.getHalfLightRadius()
         8.391734950083302
-        >>> exp_obj = Exponential(flux=3., half_light_radius=1.)
+        >>> exp_obj = galsim.Exponential(flux=3., half_light_radius=1.)
         >>> exp_obj.getScaleRadius()
         0.5958243473776976
 
@@ -1955,16 +1994,57 @@ class DeVaucouleurs(GSObject):
 
     Initialization
     --------------
-    A DeVaucouleurs is initialized with the half light radius size parameter `half_light_radius` and
-    an optional `flux` parameter [default `flux = 1.`].
+    A DeVaucouleurs is initialized with the half light radius size parameter `half_light_radius`.
+    Optional parameters are truncation radius `trunc` [default `trunc = 0.`, indicating no
+    truncation] and a `flux` parameter [default `flux = 1.`].  If `trunc` is set to a non-zero
+    value, then it is assumed to be in the same system of units as `half_light_radius`.
+
+    Note that the code will be more efficient if the truncation is always the same multiple of
+    `half_light_radius`, since it caches many calculations that depend on the ratio
+    `trunc/half_light_radius`.
 
     Example:
 
-        >>> dvc_obj = DeVaucouleurs(half_light_radius=2.5, flux=40.)
+        >>> dvc_obj = galsim.DeVaucouleurs(half_light_radius=2.5, flux=40.)
         >>> dvc_obj.getHalfLightRadius()
         2.5
         >>> dvc_obj.getFlux()
         40.0
+
+    Another optional parameter, `flux_untruncated`, specifies whether the `flux` and
+    `half_light_radius` correspond to the untruncated profile or the truncated profile. If
+    `flux_untruncated` is True (and `trunc > 0` of course), then the profile will be identical
+    to the version without truncation up to the truncation radius, at which point it drops to 0.
+    If `flux_untruncated` is False (the default), then the scale radius will be larger and the
+    central peak will be higher than the untruncated profile, in order to maintain the correct
+    provided `flux` and `half_light_radius`.
+
+    When `trunc > 0.` and `flux_untruncated == True`, the actual half-light radius will be different
+    from the specified half-light radius.  The getHalfLightRadius() method will return the true
+    half-light radius.  Similarly, the actual flux will not be the same as the specified value; the
+    true flux is also returned by the getFlux() method.
+
+    Example:
+
+        >>> dvc_obj = galsim.DeVaucouleurs(half_light_radius=2.5, flux=40.)
+        >>> dvc_obj2 = galsim.DeVaucouleurs(half_light_radius=2.5, flux=40., trunc=10., \\
+                                            flux_untruncated=True)
+        >>> dvc_obj.xValue(galsim.PositionD(0.,0.))
+        604.6895805968326
+        >>> dvc_obj2.xValue(galsim.PositionD(0.,0.))
+        604.6895805968326     # The xValues are the same inside the truncation radius ...
+        >>> dvc_obj.xValue(galsim.PositionD(10.0,0.))
+        0.011781304853174116
+        >>> dvc_obj2.xValue(galsim.PositionD(10.0,0.))
+        0.0                   # ... but different outside the truncation radius
+        >>> dvc_obj.getHalfLightRadius()
+        2.5
+        >>> dvc_obj2.getHalfLightRadius()
+        1.886276579179012     # The true half-light radius is smaller than the specified value
+        >>> dvc_obj.getFlux()
+        40.0
+        >>> dvc_obj2.getFlux()
+        33.863171136492156    # The flux from the truncation is missing
 
     Methods
     -------
@@ -1974,14 +2054,15 @@ class DeVaucouleurs(GSObject):
 
     # Initialization parameters of the object, with type information
     _req_params = { "half_light_radius" : float }
-    _opt_params = { "flux" : float }
+    _opt_params = { "trunc": float, "flux" : float, "flux_untruncated" : float }
     _single_params = []
     _takes_rng = False
 
     # --- Public Class methods ---
-    def __init__(self, half_light_radius=None, flux=1.):
+    def __init__(self, half_light_radius=None, trunc=0., flux=1., flux_untruncated=False):
         GSObject.__init__(
-            self, galsim.SBDeVaucouleurs(half_light_radius=half_light_radius, flux=flux))
+            self, galsim.SBDeVaucouleurs(half_light_radius=half_light_radius, 
+                                         trunc=trunc, flux=flux, flux_untruncated=flux_untruncated))
 
     def getHalfLightRadius(self):
         """Return the half light radius for this DeVaucouleurs profile.
@@ -2165,12 +2246,9 @@ class RealGalaxy(GSObject):
         if pad_image is not None:
             specify_size = True
             if isinstance(pad_image,str):
-                try:
-                    pad_image = galsim.fits.read(pad_image)
-                except:
-                    raise RuntimeError("Can't read in Image for padding from specified file!")
-            if not isinstance(pad_image, galsim.BaseImageF) and not isinstance(pad_image,
-                                                                               galsim.BaseImageD):
+                pad_image = galsim.fits.read(pad_image)
+            if ( not isinstance(pad_image, galsim.BaseImageF) and 
+                 not isinstance(pad_image, galsim.BaseImageD) ):
                 raise ValueError("Supplied pad_image is not one of the allowed types!")
             # If an image was supplied directly or from a file, check its size:
             #    Cannot use if too small.
@@ -2241,12 +2319,8 @@ class RealGalaxy(GSObject):
                     # preserving the correlation structure
                     cn.setVariance(self.pad_variance)
                 elif isinstance(noise_pad, str):
-                    try:
-                        tmp_img = galsim.fits.read(noise_pad)
-                        cn = galsim.CorrelatedNoise(gaussian_deviate, tmp_img)
-                    except:
-                        raise RuntimeError("Can't read in Image to define correlated noise " +
-                                           "field for noise padding from specified file!")
+                    tmp_img = galsim.fits.read(noise_pad)
+                    cn = galsim.CorrelatedNoise(gaussian_deviate, tmp_img)
                     if use_cache:
                         RealGalaxy._cache_noise_pad[noise_pad] = cn
                     # This small patch may have different overall variance, so rescale while
@@ -2382,10 +2456,10 @@ class Convolve(GSObject):
     you try to use it for more than 2 profiles, an exception will be raised.
     
     The real-space convolution is normally slower than the DFT convolution.  The exception is if
-    both component profiles have hard edges, e.g. a truncated Moffat with a Pixel.  In that case,
-    the highest frequency `maxK` for each component is quite large since the ringing dies off fairly
-    slowly.  So it can be quicker to use real-space convolution instead.  Also, real-space 
-    convolution tends to be more accurate in this case as well.
+    both component profiles have hard edges, e.g. a truncated Moffat or Sersic with a Pixel.  In
+    that case, the highest frequency `maxK` for each component is quite large since the ringing dies
+    off fairly slowly.  So it can be quicker to use real-space convolution instead.  Also,
+    real-space convolution tends to be more accurate in this case as well.
 
     If you do not specify either `real_space = True` or `False` explicitly, then we check if there 
     are 2 profiles, both of which have hard edges.  In this case, we automatically use real-space 
@@ -2627,14 +2701,8 @@ class Shapelet(GSObject):
     # --- Public Class methods ---
     def __init__(self, sigma, order, bvec=None):
         # Make sure order and sigma are the right type:
-        try:
-            order = int(order)
-        except:
-            raise TypeError("The provided order is not an int")
-        try:
-            sigma = float(sigma)
-        except:
-            raise TypeError("The provided sigma is not a float")
+        order = int(order)
+        sigma = float(sigma)
 
         # Make bvec if necessary
         if bvec is None:
@@ -2755,11 +2823,8 @@ class Shapelet(GSObject):
         """
         if not center:
             center = image.bounds.center()
-        try:
-            # convert from PositionI if necessary
-            center = galsim.PositionD(center.x,center.y)
-        except:
-            raise ValueError("Invalid center provided to fitImage: "+str(center))
+        # convert from PositionI if necessary
+        center = galsim.PositionD(center.x,center.y)
 
         if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
             raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
