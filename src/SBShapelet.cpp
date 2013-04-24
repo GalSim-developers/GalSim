@@ -32,8 +32,8 @@
 
 namespace galsim {
 
-    SBShapelet::SBShapelet(double sigma, LVector bvec) :
-        SBProfile(new SBShapeletImpl(sigma, bvec)) {}
+    SBShapelet::SBShapelet(double sigma, LVector bvec, boost::shared_ptr<GSParams> gsparams) :
+        SBProfile(new SBShapeletImpl(sigma, bvec, gsparams)) {}
 
     SBShapelet::SBShapelet(const SBShapelet& rhs) : SBProfile(rhs) {}
 
@@ -51,10 +51,15 @@ namespace galsim {
         return static_cast<const SBShapeletImpl&>(*_pimpl).getSigma();
     }
 
+    SBShapelet::SBShapeletImpl::SBShapeletImpl(double sigma, const LVector& bvec,
+                                               boost::shared_ptr<GSParams> gsparams) :
+        SBProfileImpl(gsparams),
+        _sigma(sigma), _bvec(bvec.copy()) {}
+
     double SBShapelet::SBShapeletImpl::maxK() const 
     {
         // Start with value for plain old Gaussian:
-        double maxk = sqrt(-2.*std::log(sbp::maxk_threshold))/_sigma; 
+        double maxk = sqrt(-2.*std::log(this->gsparams->maxk_threshold))/_sigma; 
         // Grow as sqrt of (order+1)
         // Note: this is an approximation.  The right value would require looking at
         // the actual coefficients and doing something smart with them.
@@ -65,7 +70,7 @@ namespace galsim {
     double SBShapelet::SBShapeletImpl::stepK() const 
     {
         // Start with value for plain old Gaussian:
-        double R = std::max(4., sqrt(-2.*std::log(sbp::alias_threshold)));
+        double R = std::max(4., sqrt(-2.*std::log(this->gsparams->alias_threshold)));
         // Grow as sqrt of (order+1)
         R *= sqrt(double(_bvec.getOrder()+1));
         return M_PI / (R*_sigma);

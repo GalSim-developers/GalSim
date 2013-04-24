@@ -52,7 +52,8 @@ namespace galsim {
          *                         dimension (default `obscuration = 0.`).
          * @param[in] flux         flux (default `flux = 1.`).
          */
-        SBAiry(double lam_over_D, double obscuration=0., double flux=1.);
+        SBAiry(double lam_over_D, double obscuration=0., double flux=1.,
+               boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
 
         /// @brief Copy constructor
         SBAiry(const SBAiry& rhs);
@@ -67,6 +68,7 @@ namespace galsim {
         double getObscuration() const;
 
     protected:
+
         class SBAiryImpl;
 
     private:
