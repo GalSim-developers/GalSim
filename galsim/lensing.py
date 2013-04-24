@@ -30,52 +30,49 @@ def _convertPositions(pos, units, func):
        This is used by the functions getShear, getConvergence, getMagnification, and getLensing for
        both PowerSpectrum and NFWHalo.
     """
-    try:
-        # Check for PositionD or PositionI:
-        if isinstance(pos,galsim.PositionD) or isinstance(pos,galsim.PositionI):
-            pos = [ np.array([pos.x], dtype='float'),
-                    np.array([pos.y], dtype='float') ]
+    # Check for PositionD or PositionI:
+    if isinstance(pos,galsim.PositionD) or isinstance(pos,galsim.PositionI):
+        pos = [ np.array([pos.x], dtype='float'),
+                np.array([pos.y], dtype='float') ]
 
-        # Check for list of PositionD or PositionI:
-        # The only other options allow pos[0], so if this is invalid, an exception 
-        # will be raised and appropriately dealt with:
-        elif isinstance(pos[0],galsim.PositionD) or isinstance(pos[0],galsim.PositionI):
-            pos = [ np.array([p.x for p in pos], dtype='float'),
-                    np.array([p.y for p in pos], dtype='float') ]
+    # Check for list of PositionD or PositionI:
+    # The only other options allow pos[0], so if this is invalid, an exception 
+    # will be raised:
+    elif isinstance(pos[0],galsim.PositionD) or isinstance(pos[0],galsim.PositionI):
+        pos = [ np.array([p.x for p in pos], dtype='float'),
+                np.array([p.y for p in pos], dtype='float') ]
 
-        # Now pos must be a tuple of length 2
-        elif len(pos) != 2:
-            raise TypeError() # This will be caught below and raised with a better error msg.
-
-        else:
-            # Check for (x,y):
-            try:
-                pos = [ np.array([float(pos[0])], dtype='float'),
-                        np.array([float(pos[1])], dtype='float') ]
-            except:
-                # Only other valid option is ( xlist , ylist )
-                pos = [ np.array(pos[0], dtype='float'),
-                        np.array(pos[1], dtype='float') ]
-
-        # Check validity of units
-        if isinstance(units, basestring):
-            # if the string is invalid, this raises a reasonable error message.
-            units = galsim.angle.get_angle_unit(units)
-        if not isinstance(units, galsim.AngleUnit):
-            raise ValueError("units must be either an AngleUnit or a string")
-
-        # Convert pos to arcsec
-        if units != galsim.arcsec:
-            scale = 1. * units / galsim.arcsec
-            # Note that for the next two lines, pos *must* be a list, not a tuple.  Assignments to
-            # elements of tuples is not allowed.
-            pos[0] *= scale
-            pos[1] *= scale
-
-        return pos
-
-    except:
+    # Now pos must be a tuple of length 2
+    elif len(pos) != 2:
         raise TypeError("Unable to parse the input pos argument for %s."%func)
+
+    else:
+        # Check for (x,y):
+        try:
+            pos = [ np.array([float(pos[0])], dtype='float'),
+                    np.array([float(pos[1])], dtype='float') ]
+        except:
+            # Only other valid option is ( xlist , ylist )
+            pos = [ np.array(pos[0], dtype='float'),
+                    np.array(pos[1], dtype='float') ]
+
+    # Check validity of units
+    if isinstance(units, basestring):
+        # if the string is invalid, this raises a reasonable error message.
+        units = galsim.angle.get_angle_unit(units)
+    if not isinstance(units, galsim.AngleUnit):
+        raise ValueError("units must be either an AngleUnit or a string")
+
+    # Convert pos to arcsec
+    if units != galsim.arcsec:
+        scale = 1. * units / galsim.arcsec
+        # Note that for the next two lines, pos *must* be a list, not a tuple.  Assignments to
+        # elements of tuples is not allowed.
+        pos[0] *= scale
+        pos[1] *= scale
+
+    return pos
+
 
 def theoryToObserved(gamma1, gamma2, kappa):
     """Helper function to convert theoretical lensing quantities to observed ones.
@@ -375,10 +372,7 @@ class PowerSpectrum(object):
             raise ValueError("Both a spacing and a size are required for buildGrid.")
         # Check for non-integer ngrid
         if not isinstance(ngrid, int):
-            try:
-                ngrid = int(ngrid)
-            except:
-                raise ValueError("ngrid must be an int, or easily convertable to int!")
+            ngrid = int(ngrid)
 
         # Check if center is a Position
         if isinstance(center,galsim.PositionD):
@@ -505,17 +499,9 @@ class PowerSpectrum(object):
         if isinstance(pf,str):
             import os
             if os.path.isfile(pf):
-                try:
-                    pf = galsim.LookupTable(file=pf)
-                except :
-                    raise AttributeError(
-                        "Unable to read %s = %s as a LookupTable"%(pf_str,pf))
+                pf = galsim.LookupTable(file=pf)
             else:
-                try : 
-                    pf = eval('lambda k : ' + pf)
-                except :
-                    raise AttributeError(
-                        "Unable to turn %s = %s into a valid function"%(pf_str,pf))
+                pf = eval('lambda k : ' + pf)
 
         # Check that the function is sane.
         # Note: Only try tests below if it's not a LookupTable.
@@ -523,10 +509,7 @@ class PowerSpectrum(object):
         #        defined at k=1, and by definition it must return something that is the 
         #        same length as the input.)
         if not isinstance(pf, galsim.LookupTable):
-            try:
-                f1 = pf(np.array((0.1,1.)))
-            except:
-                raise AttributeError("%s is not a valid function"%pf_str)
+            f1 = pf(np.array((0.1,1.)))
             fake_arr = np.zeros(2)
             fake_p = pf(fake_arr)
             if isinstance(fake_p, float):

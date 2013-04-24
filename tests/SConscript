@@ -38,17 +38,6 @@ obj_list = env1.StaticObject(cpp_list)
 cpp_test_name = os.path.join('#bin','test_main')
 cpp_test = env1.Program( cpp_test_name , ['test_main.cpp' , obj_list] )
 
-if env1['NOSETESTS']:
-    print 'Using nosetests from: ',env1['NOSETESTS']
-else:
-    print '\nWARNING: Could not find nosetests in path.'
-    print 'The cpp test programs will be compiled and run,',
-    print 'but you will have to run the python tests manually.'
-    print 'To do so, type: '
-    print '   cd tests '
-    print '   run_all_tests '
-    print 'If this doesn\'t end with an error, then the tests all passed.'
-
 # Define an action for running nosetests, storing the output in a log file
 def run_tests(target, source, env):
 
@@ -56,13 +45,35 @@ def run_tests(target, source, env):
 
     # We only run nosetests if we found nosetests in the path.
     if env['NOSETESTS']:
+        print 'Using nosetests from: ',env['NOSETESTS']
+        cmd = env['NOSETESTS']
+        if env['NOSETESTSVERSION'] >= '1.1' and env.GetOption('num_jobs') > 1:
+            cmd += ' --processes=%d --process-timeout=60'%(env.GetOption('num_jobs'))
+            print 'nosetests is version %s... running tests in parallel with %d jobs'%(
+                    env['NOSETESTSVERSION'],env.GetOption('num_jobs'))
+            if 'BAD_BLAS' in env:
+                print
+                print 'WARNING: There is a good chance this will not work given that you seem'
+                print '         to be using a TMV installation that calls the Apple BLAS'
+                print '         library with OSX >= 10.7.  See the above warning about this.'
+                print
+            print 'If you have trouble with the parallel test run, you may disable it '\
+                  'by typing:'
+            print '    scons tests -j1'
+        else:
+            print 'nosetests is version %s'%env['NOSETESTSVERSION']
         print '\nStarting python tests...'
+        log.write('Nosetests version is: ' + env['NOSETESTSVERSION'] + '\n')
+        log.write('Nosetests command is:\n' + cmd + '\n')
         py_proc = subprocess.Popen(
-            env['NOSETESTS'],
+            cmd.split(),
             cwd='tests',
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             shell=False)
+
+        # Keep track of the complete output so we can search it for TimedOutException.
+        total_buf = ''
     
         # This bit mimics the actions of the Unix tee command.
         # It writes to both stdout and the log file.
@@ -70,9 +81,11 @@ def run_tests(target, source, env):
             buf = os.read(py_proc.stdout.fileno(),1)
             sys.stdout.write(buf)
             sys.stdout.flush()
+            total_buf += buf
             log.write(buf)
         # Read anything that is still in the buffer:
         buf = os.read(py_proc.stdout.fileno(),10000)
+        total_buf += buf
         sys.stdout.write(buf)
         sys.stdout.flush()
         log.write(buf)
@@ -82,8 +95,31 @@ def run_tests(target, source, env):
             print 'Nosetests terminated by signal ',-ret
         elif ret > 0:
             print 'Nosetests returned error code ',ret
+            # Check if we are timing out from parallel jobs
+            import re
+            timed_out = re.search("TimedOutException", total_buf)
+            if timed_out:
+                print
+                print 'WARNING: Some of these errors are TimedOutExceptions.'
+                print '         This usually indicates that you are running too many jobs in '
+                print '         parallel.  For example, you may have other jobs running on some of'
+                print '         the CPUs, which are slowing down the tests, or SCons may be '
+                print '         incorrectly detecting the number of CPUs to be more than you'
+                print '         actually have.'
+                print
+                print '         The solution is usually to run the tests with fewer jobs.'
+                print '         e.g. To use 4 jobs, write "scons -j4 tests".'
         else:
             print 'Nosetests finished successfully.'
+    else:
+        print
+        print 'WARNING: Could not find nosetests in path.'
+        print '         The cpp test programs will be compiled and run,',
+        print '         but you will have to run the python tests manually.'
+        print '         To do so, type: '
+        print '             cd tests '
+        print '             run_all_tests '
+        print '         If this doesn\'t end with an error, then the tests all passed.'
         
     # Always run cpp tests
     if True:
