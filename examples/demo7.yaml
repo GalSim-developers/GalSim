@@ -41,6 +41,7 @@
 # - image type : Tiled (..., stamp_size, xborder, yborder)
 # - image : draw_method (fft or phot)
 # - output : file_name with .gz, .bz2 or .fz extension automatically uses compression.
+# - image : gsparams
 
 
 # Define the PSF profiles
@@ -155,6 +156,26 @@ image :
     # two times, so the fft and phot images get the same values for the random parameters.
     random_seed : { type : Sequence , first : 553728 , repeat : 2 }
 
+    # This script is set up as a comparison between using FFTs for doing the convolutions and
+    # shooting photons.  The two methods have trade-offs in speed and accuracy which vary
+    # with the kind of profile being drawn and the S/N of the object, among other factors.
+    # In addition, for each method, there are a number of parameters GalSim uses that control 
+    # aspects of the calculation that further affect the speed and accuracy.  
+    #
+    # These parametsrs can be adjusted from the defaults with a gsparams item, either in
+    # image (in which case the values apply to all objects) or in the gal or psf layer 
+    # in which case the values apply to just that object.  For this script, we just apply a 
+    # global change to some of the values, just to demonstrate how it works.
+    # 
+    # See the config documentation for the complete list of parameters and more detailed 
+    # documentation, including the default values for each parameter.
+    gsparams :
+        alias_threshold : 1.0e-2   # maximum fractional flux that may be aliased around edge of FFT
+        maxk_threshold : 2.0e-3    # k-values less than this may be excluded off edge of FFT
+        xvalue_accuracy : 1.0e-4   # approximations in real space aim to be this accurate
+        kvalue_accuracy : 1.0e-4   # approximations in fourier space aim to be this accurate
+        shoot_accuracy : 1.0e-4    # approximations in photon shooting aim to be this accurate
+        minimum_fft_size : 64      # minimum size of ffts
 
 # Define the name and format of the output file
 output :

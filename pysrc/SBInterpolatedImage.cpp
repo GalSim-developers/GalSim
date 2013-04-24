@@ -29,14 +29,15 @@ namespace galsim {
     {
 
         template <typename U, typename W>
-        static void wrapTemplates_Multi(W & wrapper) {
+        static void wrapTemplates_Multi(W& wrapper) 
+        {
             wrapper
                 .def(bp::init<const std::vector<boost::shared_ptr<BaseImage<U> > >&, 
                      double, double>(
                         (bp::arg("images"),
                          bp::arg("dx")=0., bp::arg("pad_factor")=0.)
                 ))
-                .def(bp::init<const BaseImage<U> &, double, double, boost::shared_ptr<Image<U> > >(
+                .def(bp::init<const BaseImage<U>&, double, double, boost::shared_ptr<Image<U> > >(
                         (bp::arg("image"),
                          bp::arg("dx")=0., bp::arg("pad_factor")=0.,
                          bp::arg("pad_image")=bp::object())
@@ -45,22 +46,27 @@ namespace galsim {
         }
 
         template <typename U, typename W>
-        static void wrapTemplates(W & wrapper) {
+        static void wrapTemplates(W& wrapper) 
+        {
             wrapper
                 .def(bp::init<const BaseImage<U> &,
                      boost::shared_ptr<InterpolantXY>,
                      boost::shared_ptr<InterpolantXY>,
-                     double, double, boost::shared_ptr<Image<U> > >(
+                     double, double, boost::shared_ptr<Image<U> >,
+                     boost::shared_ptr<GSParams> >(
                          (bp::arg("image"),
                           bp::arg("xInterp")=bp::object(),
                           bp::arg("kInterp")=bp::object(),
                           bp::arg("dx")=0., bp::arg("pad_factor")=0.,
-                          bp::arg("pad_image")=bp::object())
-                     ))
+                          bp::arg("pad_image")=bp::object(),
+                          bp::arg("gsparams")=bp::object())
+                     )
+                )
                 ;
         }
 
-        static void wrap() {
+        static void wrap() 
+        {
             bp::class_< MultipleImageHelper > pyMultipleImageHelper(
                 "MultipleImageHelper", bp::init<const MultipleImageHelper &>()
             );
@@ -75,11 +81,14 @@ namespace galsim {
             pySBInterpolatedImage
                 .def(bp::init<const MultipleImageHelper&, const std::vector<double>&,
                      boost::shared_ptr<InterpolantXY>,
-                     boost::shared_ptr<InterpolantXY> >(
+                     boost::shared_ptr<InterpolantXY>,
+                     boost::shared_ptr<GSParams> >(
                          (bp::args("multi","weights"),
                           bp::arg("xInterp")=bp::object(),
-                          bp::arg("kInterp")=bp::object())
-                     ))
+                          bp::arg("kInterp")=bp::object(),
+                          bp::arg("gsparams")=bp::object())
+                     )
+                )
                 .def("calculateStepK", &SBInterpolatedImage::calculateStepK)
                 .def("calculateMaxK", &SBInterpolatedImage::calculateMaxK)
                 ;
