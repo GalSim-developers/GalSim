@@ -557,7 +557,7 @@ def test_sersic():
 
     # Repeat with the GSObject version of this:
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1, trunc=10)
-    sersic.draw(myImg,dx=0.2, normalization="surface brightness")
+    sersic.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using truncated GSObject Sersic disagrees with expected result")
