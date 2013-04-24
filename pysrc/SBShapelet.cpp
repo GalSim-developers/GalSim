@@ -116,8 +116,9 @@ namespace galsim {
 
         static void wrap() {
             bp::class_<SBShapelet,bp::bases<SBProfile> >("SBShapelet", bp::no_init)
-                .def(bp::init<double,LVector>(
-                        (bp::arg("sigma"), bp::arg("bvec")))
+                .def(bp::init<double,LVector,boost::shared_ptr<GSParams> >(
+                        (bp::arg("sigma"), bp::arg("bvec"),
+                         bp::arg("gsparams")=bp::object()))
                 )
                 .def(bp::init<const SBShapelet &>())
                 .def("getSigma", &SBShapelet::getSigma)

@@ -35,8 +35,10 @@
 
 namespace galsim {
 
-    SBSersic::SBSersic(double n, double re, double trunc, double flux, bool flux_untruncated) :
-        SBProfile(new SBSersicImpl(n, re, trunc, flux, flux_untruncated)) {}
+    SBSersic::SBSersic(double n, double re, double flux,
+                       double trunc, bool flux_untruncated,
+                       boost::shared_ptr<GSParams> gsparams) :
+        SBProfile(new SBSersicImpl(n, re, flux, trunc, flux_untruncated, gsparams)) {}
 
     SBSersic::SBSersic(const SBSersic& rhs) : SBProfile(rhs) {}
 
@@ -54,17 +56,25 @@ namespace galsim {
         return static_cast<const SBSersicImpl&>(*_pimpl).getHalfLightRadius(); 
     }
 
-    SBSersic::InfoBarn SBSersic::nmap;
+    const int MAX_SERSIC_INFO = 100;
 
-    SBSersic::SBSersicImpl::SBSersicImpl(double n,  double re, double trunc, double flux,
-                                         bool flux_untruncated) :
-        _n(n), _flux(flux), _re(re), _re_sq(_re*_re), _inv_re(1./_re), _inv_re_sq(_inv_re*_inv_re),
-        _trunc(trunc), _norm(_flux*_inv_re_sq), _flux_untruncated(flux_untruncated)
+    LRUCache<std::pair<SersicKey, const GSParams*>, SersicInfo> 
+        SBSersic::SBSersicImpl::cache(MAX_SERSIC_INFO);
+
+    SBSersic::SBSersicImpl::SBSersicImpl(double n,  double re, double flux,
+                                         double trunc, bool flux_untruncated,
+                                         boost::shared_ptr<GSParams> gsparams) :
+        SBProfileImpl(gsparams),
+        _n(n), _flux(flux), _re(re), _re_sq(_re*_re),
+        _inv_re(1./_re), _inv_re_sq(_inv_re*_inv_re),
+        _norm(_flux*_inv_re_sq), 
+        _trunc(trunc), _flux_untruncated(flux_untruncated),
+        _maxRre((int)(_trunc/_re * 100 + 0.5) / 100.0),  // round to two decimal places
+        _info(cache.get(std::make_pair(SersicKey(_n,_maxRre,_flux_untruncated),
+                                       this->gsparams.get())))
     {
-        _maxRre = ((int)(_trunc/_re * 100 + 0.5) / 100.0);  // round to two decimal places
         _truncated = (_trunc > 0.);
         if (!_truncated) _flux_untruncated = true;  // set unused parameter to a single value
-        _info = nmap.get(_n, _maxRre, _flux_untruncated);
         _actual_flux = _info->getTrueFluxFraction() * _flux;
         _actual_re = _info->getTrueReFraction() * _re;
         _maxRre_sq = _maxRre*_maxRre;
@@ -227,13 +237,13 @@ namespace galsim {
     double SBSersic::SBSersicImpl::maxK() const { return _info->maxK() / _re; }
     double SBSersic::SBSersicImpl::stepK() const { return _info->stepK() / _re; }
 
-    double SBSersic::SersicInfo::xValue(double xsq) const 
+    double SersicInfo::xValue(double xsq) const 
     {
         if (_truncated && xsq > _maxRre_sq) return 0.;
         else return _norm * std::exp(-_b*std::pow(xsq,_inv2n));
     }
 
-    double SBSersic::SersicInfo::kValue(double ksq) const 
+    double SersicInfo::kValue(double ksq) const 
     {
         // TODO: Use asymptotic formula for high-k?
 
@@ -286,7 +296,7 @@ namespace galsim {
 
     // Find what radius encloses (1-missing_flux_frac) of the total flux in a Sersic profile,
     // in units of half-light radius re.
-    double SBSersic::SersicInfo::findMaxRre(double missing_flux_frac, double gamma2n)
+    double SersicInfo::findMaxRre(double missing_flux_frac, double gamma2n)
     { 
         // int(exp(-b r^1/n) r, r=R..inf) = x * int(exp(-b r^1/n) r, r=0..inf)
         //                                = x n b^-2n Gamma(2n)    [x == missing_flux_frac]
@@ -442,9 +452,9 @@ namespace galsim {
     }
 
     // Constructor to initialize Sersic constants and k lookup table
-    SBSersic::SersicInfo::SersicInfo(double n, double maxRre, bool flux_untruncated) :
-        _n(n), _maxRre(maxRre), _maxRre_sq(_maxRre*_maxRre), _inv2n(1./(2.*n)),
-        _flux_untruncated(flux_untruncated), _flux_fraction(1.), _re_fraction(1.)
+    SersicInfo::SersicInfo(const SersicKey& key, const GSParams* gsparams) :
+        _n(key.n), _maxRre(key.maxRre), _maxRre_sq(_maxRre*_maxRre), _inv2n(1./(2.*_n)),
+        _flux_untruncated(key.flux_untruncated), _flux_fraction(1.), _re_fraction(1.)
     {
         // Going to constrain range of allowed n to those for which testing was done
         // (Lower bounds has hard limit at ~0.29)
@@ -457,8 +467,8 @@ namespace galsim {
             _b = SersicCalculateScaleBFromHLR(_n, 0.);
         }
         else {
-            dbg << "Calculating b with maxR/re => " << maxRre << std::endl;
-            _b = SersicCalculateScaleBFromHLR(_n, maxRre);
+            dbg << "Calculating b with maxR/re => " << _maxRre << std::endl;
+            _b = SersicCalculateScaleBFromHLR(_n, _maxRre);
         }
 
         // set-up frequently used numbers (for flux normalization and FT small-k approximations)
@@ -510,13 +520,13 @@ namespace galsim {
         // See when next term past quartic is at accuracy threshold
         double kderiv6 = gamma8n / (2304.*b4n*b2n*gamma2n);
         dbg<<"kderiv6 = "<<kderiv6<<std::endl;
-        double kmin = std::pow(sbp::kvalue_accuracy / kderiv6, 1./6.);
+        double kmin = std::pow(gsparams->kvalue_accuracy / kderiv6, 1./6.);
         dbg<<"kmin = "<<kmin<<std::endl;
         _ksq_min = kmin * kmin;
 
         // How far should the profile extend, if not truncated?
         // Estimate number of effective radii needed to enclose (1-alias_threshold) of flux
-        double Rre = findMaxRre(sbp::alias_threshold,gamma2n);
+        double Rre = findMaxRre(gsparams->alias_threshold,gamma2n);
         if (_truncated && _maxRre < Rre)  Rre = _maxRre;
         // Go to at least 5*re
         if (Rre < 5.) Rre = 5.;
@@ -535,7 +545,7 @@ namespace galsim {
 
         double integ_maxRre;
         if (!_truncated)
-            integ_maxRre = findMaxRre(sbp::kvalue_accuracy * hankel_norm,gamma2n);
+            integ_maxRre = findMaxRre(gsparams->kvalue_accuracy * hankel_norm,gamma2n);
         else
             integ_maxRre = _maxRre;
 
@@ -552,15 +562,16 @@ namespace galsim {
         for (double logk = std::log(kmin)-0.001; logk < std::log(500.); logk += dlogk) {
             SersicIntegrand I(_n, _b, std::exp(logk));
             double val = integ::int1d(
-                I, 0., integ_maxRre, sbp::integration_relerr, sbp::integration_abserr*hankel_norm);
+                I, 0., integ_maxRre, 
+                gsparams->integration_relerr, gsparams->integration_abserr*hankel_norm);
             val /= hankel_norm;
             xdbg<<"logk = "<<logk<<", ft("<<exp(logk)<<") = "<<val<<std::endl;
             _ft.addEntry(logk,val);
 
-            if (std::abs(val) > sbp::maxk_threshold) maxlogk_1 = logk;
-            if (std::abs(val) > sbp::kvalue_accuracy) maxlogk_2 = logk;
+            if (std::abs(val) > gsparams->maxk_threshold) maxlogk_1 = logk;
+            if (std::abs(val) > gsparams->kvalue_accuracy) maxlogk_2 = logk;
 
-            if (std::abs(val) > sbp::kvalue_accuracy) n_below_thresh = 0;
+            if (std::abs(val) > gsparams->kvalue_accuracy) n_below_thresh = 0;
             else ++n_below_thresh;
             if (n_below_thresh == 5) break;
         }
@@ -570,7 +581,7 @@ namespace galsim {
         maxlogk_2 += dlogk;
         _maxK = exp(maxlogk_1);
         xdbg<<"maxlogk_1 = "<<maxlogk_1<<std::endl;
-        xdbg<<"maxK with val >= "<<sbp::maxk_threshold<<" = "<<_maxK<<std::endl;
+        xdbg<<"maxK with val >= "<<gsparams->maxk_threshold<<" = "<<_maxK<<std::endl;
         _ksq_max = exp(2.*maxlogk_2);
         xdbg<<"ft.argMax = "<<_ft.argMax()<<std::endl;
         xdbg<<"maxlogk_2 = "<<maxlogk_2<<std::endl;
@@ -580,13 +591,13 @@ namespace galsim {
         _radial.reset(new SersicRadialFunction(_n, _b));
         std::vector<double> range(2,0.);
         if (!_truncated)
-            range[1] = findMaxRre(sbp::shoot_flux_accuracy,gamma2n);
+            range[1] = findMaxRre(gsparams->shoot_accuracy,gamma2n);
         else
             range[1] = _maxRre;
         _sampler.reset(new OneDimensionalDeviate( *_radial, range, true));
     }
 
-    boost::shared_ptr<PhotonArray> SBSersic::SersicInfo::shoot(int N, UniformDeviate ud) const
+    boost::shared_ptr<PhotonArray> SersicInfo::shoot(int N, UniformDeviate ud) const
     {
         dbg<<"SersicInfo shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.0\n";
