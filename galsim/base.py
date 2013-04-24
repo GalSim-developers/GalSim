@@ -2449,7 +2449,7 @@ class RealGalaxy(GSObject):
                                                              dx=self.pixel_scale,
                                                              pad_factor=pad_factor,
                                                              pad_image=pad_image,
-                                                             gsparams[gsparams])
+                                                             gsparams=gsparams)
         else:
             # Leave the original image as-is.  Instead, we shift around the image to be used for
             # padding.  Find out how much x and y margin there should be on lower end:
@@ -2473,17 +2473,10 @@ class RealGalaxy(GSObject):
             PSF_image, x_interpolant=self.x_interpolant, k_interpolant=self.k_interpolant, 
             dx=self.pixel_scale, gsparams=gsparams)
 
-        # recalculate Fourier-space attributes rather than using overly-conservative defaults
-#        self.original_image.calculateStepK()
-#        self.original_image.calculateMaxK()
-#        self.original_PSF.calculateStepK()
-#        self.original_PSF.calculateMaxK()
         
         if flux != None:
             self.original_image.setFlux(flux)
-#            self.original_image.__class__ = galsim.SBTransform # correctly reflect SBProfile change
         self.original_PSF.setFlux(1.0)
-#        self.original_PSF.__class__ = galsim.SBTransform # correctly reflect SBProfile change
 
         # Calculate the PSF "deconvolution" kernel
         psf_inv = galsim.Deconvolve(self.original_PSF)
