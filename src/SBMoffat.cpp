@@ -19,7 +19,7 @@
  * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
  */
 
-//#define DEBUGLOGGING
+#define DEBUGLOGGING
 
 #include "SBMoffat.h"
 #include "SBMoffatImpl.h"
@@ -443,9 +443,11 @@ namespace galsim {
         int n_below_thresh = 0;
         // Don't go past k = 50
         for(double k=0.; k < 50; k += dk) {
+            // 
             MoffatIntegrand I(_beta, k, pow_beta);
             double val = integ::int1d(
-                I, 0., _maxRrD, sbp::integration_relerr, sbp::integration_abserr);
+                //I, 0., _maxRrD, sbp::integration_relerr, sbp::integration_abserr);
+                I, 0., 1.e100, sbp::integration_relerr, sbp::integration_abserr);
             val *= nn;
 
             double kreal = k * _inv_rD;
