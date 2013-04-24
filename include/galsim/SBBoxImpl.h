@@ -30,13 +30,7 @@ namespace galsim {
     class SBBox::SBBoxImpl : public SBProfileImpl 
     {
     public:
-        SBBoxImpl(double xw, double yw, double flux) :
-            _xw(xw), _yw(yw), _flux(flux)
-        {
-            if (_yw==0.) _yw=_xw; 
-            _norm = _flux / (_xw * _yw);
-        }
-
+        SBBoxImpl(double xw, double yw, double flux, boost::shared_ptr<GSParams> gsparams);
         ~SBBoxImpl() {}
 
         double xValue(const Position<double>& p) const;

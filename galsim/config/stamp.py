@@ -265,17 +265,22 @@ def BuildSingleStamp(config, xsize, ysize,
         icenter = None
         final_shift = None
 
+    gsparams = {}
+    if 'gsparams' in config['image']:
+        gsparams = galsim.config.UpdateGSParams(
+            gsparams, config['image']['gsparams'], 'gsparams', config)
+
     skip = False
     try :
         t4=t3=t2=t1  # in case we throw.
 
-        psf = BuildPSF(config,logger)
+        psf = BuildPSF(config,logger,gsparams)
         t2 = time.time()
 
-        pix = BuildPix(config,logger)
+        pix = BuildPix(config,logger,gsparams)
         t3 = time.time()
 
-        gal = BuildGal(config,logger)
+        gal = BuildGal(config,logger,gsparams)
         t4 = time.time()
 
         # Check that we have at least gal or psf.
@@ -366,7 +371,7 @@ def BuildSingleStamp(config, xsize, ysize,
     return im, psf_im, weight_im, badpix_im, t6-t1
 
 
-def BuildPSF(config, logger=None):
+def BuildPSF(config, logger=None, gsparams={}):
     """
     Parse the field config['psf'] returning the built psf object.
     """
@@ -374,13 +379,13 @@ def BuildPSF(config, logger=None):
     if 'psf' in config:
         if not isinstance(config['psf'], dict):
             raise AttributeError("config.psf is not a dict.")
-        psf = galsim.config.BuildGSObject(config, 'psf')[0]
+        psf = galsim.config.BuildGSObject(config, 'psf', config, gsparams)[0]
     else:
         psf = None
 
     return psf
 
-def BuildPix(config, logger=None):
+def BuildPix(config, logger=None, gsparams={}):
     """
     Parse the field config['pix'] returning the built pix object.
     """
@@ -388,14 +393,14 @@ def BuildPix(config, logger=None):
     if 'pix' in config: 
         if not isinstance(config['pix'], dict):
             raise AttributeError("config.pix is not a dict.")
-        pix = galsim.config.BuildGSObject(config, 'pix')[0]
+        pix = galsim.config.BuildGSObject(config, 'pix', config, gsparams)[0]
     else:
         pix = None
 
     return pix
 
 
-def BuildGal(config, logger=None):
+def BuildGal(config, logger=None, gsparams={}):
     """
     Parse the field config['gal'] returning the built gal object.
     """
@@ -403,7 +408,7 @@ def BuildGal(config, logger=None):
     if 'gal' in config:
         if not isinstance(config['gal'], dict):
             raise AttributeError("config.gal is not a dict.")
-        gal = galsim.config.BuildGSObject(config, 'gal')[0]
+        gal = galsim.config.BuildGSObject(config, 'gal', config, gsparams)[0]
     else:
         gal = None
     return gal
