@@ -45,9 +45,17 @@ Changes from v0.4 to current version:
 * Added the ability to read/write to a specific HDU rather than assuming the first hdu should 
   be used. (Issue #350)
 
+* Added the ability to modify algorithmic parameter settings for the moments and shape measurement
+  routines using the new HSMParams class (Issue #365).
+
+* Added the ability to modify parameters that control the precise rendering of GSObjects using the
+  new GSParams class (Issue #343).
+
 * Added a new script, galsim/pse.py, that contains a PowerSpectrumEstimator class that can be used
   to estimate the shear power spectrum from a set of shears defined on a grid.  The main
   functionality of PowerSpectrumEstimator actually does not require an installed version of GalSim,
   just Python 2.6 or 2.7 and NumPy.  (Issue #382)
+
+* Added Sersic truncation. (Issue #388)
 
 * Added trefoil to optical aberration. (Issue #390)

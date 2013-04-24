@@ -86,7 +86,7 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
 
     Then the bounds will end up as the bounding box of all the positions that were added to it.
 
-    You can also find the interesection of two bounds with the & operator:
+    You can also find the intersection of two bounds with the & operator:
 
         >>> overlap = bounds1 & bounds2
 
