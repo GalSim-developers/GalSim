@@ -31,6 +31,7 @@ namespace galsim {
     {
     public:
         SBGaussianImpl(double sigma, double flux, boost::shared_ptr<GSParams> gsparams);
+
         ~SBGaussianImpl() {}
 
         double xValue(const Position<double>& p) const;

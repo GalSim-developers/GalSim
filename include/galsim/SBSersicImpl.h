@@ -177,6 +177,7 @@ namespace galsim {
         SBSersicImpl(double n, double re, double flux,
                      double trunc, bool flux_untruncated,
                      boost::shared_ptr<GSParams> gsparams);
+
         ~SBSersicImpl() {}
 
         double xValue(const Position<double>& p) const;

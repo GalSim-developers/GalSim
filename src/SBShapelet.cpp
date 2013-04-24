@@ -39,10 +39,6 @@ namespace galsim {
 
     SBShapelet::~SBShapelet() {}
 
-    SBShapelet::SBShapeletImpl::SBShapeletImpl(double sigma, const LVector& bvec,
-                                               boost::shared_ptr<GSParams> gsparams) :
-        SBProfileImpl(gsparams), _sigma(sigma), _bvec(bvec.copy()) {}
-
     const LVector& SBShapelet::getBVec() const
     { 
         assert(dynamic_cast<const SBShapeletImpl*>(_pimpl.get()));
@@ -54,6 +50,10 @@ namespace galsim {
         assert(dynamic_cast<const SBShapeletImpl*>(_pimpl.get()));
         return static_cast<const SBShapeletImpl&>(*_pimpl).getSigma();
     }
+
+    SBShapelet::SBShapeletImpl::SBShapeletImpl(double sigma, const LVector& bvec,
+                                               boost::shared_ptr<GSParams> gsparams) :
+        SBProfileImpl(gsparams), _sigma(sigma), _bvec(bvec.copy()) {}
 
     double SBShapelet::SBShapeletImpl::maxK() const 
     {

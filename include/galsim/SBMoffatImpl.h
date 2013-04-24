@@ -32,6 +32,7 @@ namespace galsim {
     public:
         SBMoffatImpl(double beta, double size, RadiusType rType, double trunc, double flux,
                      boost::shared_ptr<GSParams> gsparams);
+
         ~SBMoffatImpl() {}
 
         double xValue(const Position<double>& p) const;

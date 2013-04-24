@@ -95,6 +95,7 @@ namespace galsim {
     public:
 
         SBExponentialImpl(double r0, double flux, boost::shared_ptr<GSParams> gsparams);
+
         ~SBExponentialImpl() {}
 
         double xValue(const Position<double>& p) const;

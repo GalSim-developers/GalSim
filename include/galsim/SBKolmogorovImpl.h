@@ -96,6 +96,7 @@ namespace galsim {
     public:
         SBKolmogorovImpl(double lam_over_r0, double flux,
                          boost::shared_ptr<GSParams> gsparams);
+
         ~SBKolmogorovImpl() {}
 
         double xValue(const Position<double>& p) const;

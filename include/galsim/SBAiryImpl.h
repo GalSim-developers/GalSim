@@ -193,6 +193,7 @@ namespace galsim {
     public:
         SBAiryImpl(double lam_over_D, double obs, double flux,
                    boost::shared_ptr<GSParams> gsparams);
+
         ~SBAiryImpl() {}
 
         double xValue(const Position<double>& p) const;
