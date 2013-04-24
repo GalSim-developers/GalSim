@@ -245,7 +245,7 @@ def test_OpticalPSF_vs_Airy_with_obs():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_OpticalPSF_aberration():
-    """Test the generation of optical aberation against a known result.
+    """Test the generation of optical aberration against a known result.
     """
     import time
     t1 = time.time()
