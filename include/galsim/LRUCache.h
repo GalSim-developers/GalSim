@@ -97,7 +97,7 @@ namespace galsim {
         void clear() 
         { _cache.clear(); _entries.clear(); }
 
-        const Value* get(const Key& key)
+        boost::shared_ptr<Value> get(const Key& key)
         {
             //std::cout<<"LRUCache "<<this<<": get Key "<<&key<<std::endl;
             //std::cout<<"cache has "<<_cache.size()<<" items\n";
@@ -114,7 +114,7 @@ namespace galsim {
                 //std::cout<<"Moved key to front\n";
                 // Return the item's value
                 assert(_entries.size() == _cache.size());
-                return iter->second->second.get();
+                return iter->second->second;
             } else {
                 //std::cout<<"key not in cache yet"<<std::endl;
                 // Item is not cached.
@@ -138,7 +138,7 @@ namespace galsim {
                 //std::cout<<"Added new entry to cache"<<std::endl;
                 // Return the new value
                 assert(_entries.size() == _cache.size());
-                return value.get();
+                return value;
             }
         }
 

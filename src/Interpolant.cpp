@@ -141,9 +141,11 @@ namespace galsim {
         _n(n), _fluxConserve(fluxConserve), _tolerance(tol)
     {
         // TODO: These can't be retrieved from any GSParams object.
-        //       Should they be tol?  0.01*tol?
-        const double xvalue_accuracy = 1.e-5;
-        const double kvalue_accuracy = 1.e-5;
+        //       Should they be tol?  0.1*tol?  For now, using 0.1*tol since tol is already a
+        //       small number and 10% inaccuracies in building the lookup table should be completely
+        //       negligible.
+        const double xvalue_accuracy = 0.1*tol;
+        const double kvalue_accuracy = 0.1*tol;
 
         // Reduce range slightly from n so we're not including points with zero weight in
         // interpolations:

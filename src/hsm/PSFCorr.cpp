@@ -21,6 +21,7 @@
   along with meas_shape.  If not, see <http://www.gnu.org/licenses/>.
  *******************************************************************/
 
+#include <cstring>
 #include <string>
 #define TMV_DEBUG
 #include "TMV.h"
@@ -69,8 +70,8 @@ namespace hsm {
     CppHSMShapeData EstimateShearHSMView(
         const ImageView<T>& gal_image, const ImageView<U>& PSF_image,
         const ImageView<int> &gal_mask_image,
-        float sky_var, const char* shear_est,
-        unsigned long flags, double guess_sig_gal,
+        float sky_var, const char* shear_est, const std::string& recompute_flux,
+        double guess_sig_gal,
         double guess_sig_PSF, double precision,
         double guess_x_centroid, double guess_y_centroid,
         boost::shared_ptr<HSMParams> hsmparams) 
@@ -79,6 +80,7 @@ namespace hsm {
         CppHSMShapeData results;
         ObjectData gal_data, PSF_data;
         double amp, m_xx, m_xy, m_yy;
+        unsigned long flags=0;
 
         if (!hsmparams.get()) hsmparams = hsm::default_hsmparams;
 
@@ -104,6 +106,15 @@ namespace hsm {
         m_xx = guess_sig_gal*guess_sig_gal;
         m_yy = m_xx;
         m_xy = 0.0;
+
+        // Need to set flag values for general_shear_estimator
+        if (hsmparams->nsig_rg > 0) flags |= 0x4;
+        if (hsmparams->nsig_rg2 > 0) flags |= 0x8;
+        if (recompute_flux == "FIT") flags |= 0x2;
+        else if (recompute_flux == "SUM") flags |= 0x1;
+        else if (recompute_flux != "NONE") {
+            throw HSMError("Unknown value for recompute_flux parameter!");
+        }
 
         // call general_shear_estimator
         results.image_bounds = gal_image.getBounds();
@@ -1629,31 +1640,31 @@ namespace hsm {
     template CppHSMShapeData EstimateShearHSMView(
         const ImageView<float>& gal_image, const ImageView<float>& PSF_image,
         const ImageView<int>& gal_mask_image,
-        float sky_var, const char* shear_est, unsigned long flags, double guess_sig_gal,
+        float sky_var, const char* shear_est, const std::string& recompute_flux, double guess_sig_gal,
         double guess_sig_PSF, double precision, double guess_x_centroid, double guess_y_centroid,
         boost::shared_ptr<HSMParams> hsmparams);
     template CppHSMShapeData EstimateShearHSMView(
         const ImageView<double>& gal_image, const ImageView<double>& PSF_image,
         const ImageView<int>& gal_mask_image,
-        float sky_var, const char* shear_est, unsigned long flags, double guess_sig_gal,
+        float sky_var, const char* shear_est, const std::string& recompute_flux, double guess_sig_gal,
         double guess_sig_PSF, double precision, double guess_x_centroid, double guess_y_centroid,
         boost::shared_ptr<HSMParams> hsmparams);
     template CppHSMShapeData EstimateShearHSMView(
         const ImageView<float>& gal_image, const ImageView<double>& PSF_image,
         const ImageView<int>& gal_mask_image,
-        float sky_var, const char* shear_est, unsigned long flags, double guess_sig_gal,
+        float sky_var, const char* shear_est, const std::string& recompute_flux, double guess_sig_gal,
         double guess_sig_PSF, double precision, double guess_x_centroid, double guess_y_centroid,
         boost::shared_ptr<HSMParams> hsmparams);
     template CppHSMShapeData EstimateShearHSMView(
         const ImageView<double>& gal_image, const ImageView<float>& PSF_image,
         const ImageView<int>& gal_mask_image,
-        float sky_var, const char* shear_est, unsigned long flags, double guess_sig_gal,
+        float sky_var, const char* shear_est, const std::string& recompute_flux, double guess_sig_gal,
         double guess_sig_PSF, double precision, double guess_x_centroid, double guess_y_centroid,
         boost::shared_ptr<HSMParams> hsmparams);
     template CppHSMShapeData EstimateShearHSMView(
         const ImageView<int>& gal_image, const ImageView<int>& PSF_image,
         const ImageView<int>& gal_mask_image,
-        float sky_var, const char* shear_est, unsigned long flags, double guess_sig_gal,
+        float sky_var, const char* shear_est, const std::string& recompute_flux, double guess_sig_gal,
         double guess_sig_PSF, double precision, double guess_x_centroid, double guess_y_centroid,
         boost::shared_ptr<HSMParams> hsmparams);
 

@@ -153,7 +153,7 @@ namespace galsim {
         double _norm; ///< flux / r0^2 / 2pi
         double _flux_over_2pi; ///< Flux / 2pi
 
-        const ExponentialInfo* _info;
+        const boost::shared_ptr<ExponentialInfo> _info;
 
         // Copy constructor and op= are undefined.
         SBExponentialImpl(const SBExponentialImpl& rhs);

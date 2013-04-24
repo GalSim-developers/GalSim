@@ -37,6 +37,7 @@ test_fwhm = 1.9
 test_sigma = 1.9
 test_scale = 1.9
 test_sersic_n = [1.4, 2.6]
+test_sersic_trunc = [0., 11.]
 
 # for flux normalization tests
 test_flux = 1.9
@@ -426,47 +427,49 @@ def test_sersic_flux_scaling():
     t1 = time.time()
     # loop through sersic n
     for test_n in test_sersic_n:
-        # init with hlr and flux only (should be ok given last tests)
-        obj = galsim.Sersic(test_n, half_light_radius=test_hlr, flux=test_flux)
-        obj *= 2.
-        np.testing.assert_almost_equal(
-            obj.getFlux(), test_flux * 2., decimal=param_decimal,
-            err_msg="Flux param inconsistent after __imul__.")
-        obj = galsim.Sersic(test_n, half_light_radius=test_hlr, flux=test_flux)
-        obj /= 2.
-        np.testing.assert_almost_equal(
-            obj.getFlux(), test_flux / 2., decimal=param_decimal,
-            err_msg="Flux param inconsistent after __idiv__.")
-        obj = galsim.Sersic(test_n, half_light_radius=test_hlr, flux=test_flux)
-        obj2 = obj * 2.
-        # First test that original obj is unharmed... (also tests that .copy() is working)
-        np.testing.assert_almost_equal(
-            obj.getFlux(), test_flux, decimal=param_decimal,
-            err_msg="Flux param inconsistent after __rmul__ (original).")
-        # Then test new obj2 flux
-        np.testing.assert_almost_equal(
-            obj2.getFlux(), test_flux * 2., decimal=param_decimal,
-            err_msg="Flux param inconsistent after __rmul__ (result).")
-        obj = galsim.Sersic(test_n, half_light_radius=test_hlr, flux=test_flux)
-        obj2 = 2. * obj
-        # First test that original obj is unharmed... (also tests that .copy() is working)
-        np.testing.assert_almost_equal(
-            obj.getFlux(), test_flux, decimal=param_decimal,
-            err_msg="Flux param inconsistent after __mul__ (original).")
-        # Then test new obj2 flux
-        np.testing.assert_almost_equal(
-            obj2.getFlux(), test_flux * 2., decimal=param_decimal,
-            err_msg="Flux param inconsistent after __mul__ (result).")
-        obj = galsim.Sersic(test_n, half_light_radius=test_hlr, flux=test_flux)
-        obj2 = obj / 2.
-        # First test that original obj is unharmed... (also tests that .copy() is working)
-        np.testing.assert_almost_equal(
-             obj.getFlux(), test_flux, decimal=param_decimal,
-             err_msg="Flux param inconsistent after __div__ (original).")
-        # Then test new obj2 flux
-        np.testing.assert_almost_equal(
-            obj2.getFlux(), test_flux / 2., decimal=param_decimal,
-            err_msg="Flux param inconsistent after __div__ (result).")
+        # loop through sersic truncation
+        for test_trunc in test_sersic_trunc:
+            # init with hlr and flux only (should be ok given last tests)
+            obj = galsim.Sersic(test_n, half_light_radius=test_hlr, flux=test_flux, trunc=test_trunc)
+            obj *= 2.
+            np.testing.assert_almost_equal(
+                obj.getFlux(), test_flux * 2., decimal=param_decimal,
+                err_msg="Flux param inconsistent after __imul__.")
+            obj = galsim.Sersic(test_n, half_light_radius=test_hlr, flux=test_flux, trunc=test_trunc)
+            obj /= 2.
+            np.testing.assert_almost_equal(
+                obj.getFlux(), test_flux / 2., decimal=param_decimal,
+                err_msg="Flux param inconsistent after __idiv__.")
+            obj = galsim.Sersic(test_n, half_light_radius=test_hlr, flux=test_flux, trunc=test_trunc)
+            obj2 = obj * 2.
+            # First test that original obj is unharmed... (also tests that .copy() is working)
+            np.testing.assert_almost_equal(
+                obj.getFlux(), test_flux, decimal=param_decimal,
+                err_msg="Flux param inconsistent after __rmul__ (original).")
+            # Then test new obj2 flux
+            np.testing.assert_almost_equal(
+                obj2.getFlux(), test_flux * 2., decimal=param_decimal,
+                err_msg="Flux param inconsistent after __rmul__ (result).")
+            obj = galsim.Sersic(test_n, half_light_radius=test_hlr, flux=test_flux, trunc=test_trunc)
+            obj2 = 2. * obj
+            # First test that original obj is unharmed... (also tests that .copy() is working)
+            np.testing.assert_almost_equal(
+                obj.getFlux(), test_flux, decimal=param_decimal,
+                err_msg="Flux param inconsistent after __mul__ (original).")
+            # Then test new obj2 flux
+            np.testing.assert_almost_equal(
+                obj2.getFlux(), test_flux * 2., decimal=param_decimal,
+                err_msg="Flux param inconsistent after __mul__ (result).")
+            obj = galsim.Sersic(test_n, half_light_radius=test_hlr, flux=test_flux, trunc=test_trunc)
+            obj2 = obj / 2.
+            # First test that original obj is unharmed... (also tests that .copy() is working)
+            np.testing.assert_almost_equal(
+                 obj.getFlux(), test_flux, decimal=param_decimal,
+                 err_msg="Flux param inconsistent after __div__ (original).")
+            # Then test new obj2 flux
+            np.testing.assert_almost_equal(
+                obj2.getFlux(), test_flux / 2., decimal=param_decimal,
+                err_msg="Flux param inconsistent after __div__ (result).")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
