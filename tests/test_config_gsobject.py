@@ -1200,7 +1200,7 @@ def test_ring():
 
     disk = galsim.Exponential(half_light_radius=2)
     disk.applyShear(e2=0.3)
-    bulge = galsim.Sersic(n=3,half_light_radius=1.3)
+    bulge = galsim.Sersic(n=3, half_light_radius=1.3)
     bulge.applyShear(e1=0.12,e2=-0.08)
     sum = disk + bulge
 

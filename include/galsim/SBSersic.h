@@ -37,6 +37,23 @@ namespace galsim {
      * brightness profile scales as I(r) propto exp[-(r/r_0)^{1/n}].  Currently the code is limited
      * to 0.5<=n<=4.2, with an exception thrown for values outside that range.
      *
+     * The SBProfile representation of a Sersic profile also includes an optional truncation beyond
+     * a given radius, by the parameter `trunc`.  The resolution of the truncation radius in units
+     * of half light radius `re` is limited to 2 decimal places, in order not to overload the Sersic
+     * information caching.
+     *
+     * Another optional parameter, `flux_untruncated`, allows the setting of the flux to the
+     * untruncated Sersic, while generating a truncated Sersic.  This facilitates the comparison
+     * of truncated and untruncated Sersic, as both the amplitude and the scale parameter
+     * `b=r_0^{-1/n}` change when a truncated Sersic is specified to the same flux as the
+     * untruncated version with the same Sersic index `n`.  The `flux_untruncated` variable is
+     * ignored if `trunc = 0`.
+     *
+     * Note that when `trunc > 0.` and `flux_untruncated == true`, the actual half-light radius will
+     * be different from the specified half-light radius.  The getHalfLightRadius() method will
+     * return the true half-light radius.  Similarly, the actual flux will not be the the same as
+     * the specified value; the true flux is returned by the getFlux() method.
+     *
      * There are several special cases of the Sersic profile that have their own SBProfiles: n=4
      * (SBDeVaucouleurs), n=1 (SBExponential), n=0.5 (SBGaussian).  These special cases use several
      * simplifications in all calculations, whereas for general n, the Fourier transform must be
@@ -48,11 +65,17 @@ namespace galsim {
         /**
          * @brief Constructor.
          *
-         * @param[in] n     Sersic index.
-         * @param[in] re    half-light radius.
-         * @param[in] flux  flux (default `flux = 1.`).
+         * @param[in] n                 Sersic index.
+         * @param[in] re                Half-light radius.
+         * @param[in] trunc             Outer truncation radius in same physical units as size;
+         *                              `trunc = 0.` for no truncation (default `trunc = 0.`).
+         * @param[in] flux              Flux (default `flux = 1.`).
+         * @param[in] flux_untruncated  If `true`, sets the flux to the untruncated version of the
+         *                              Sersic profile with the same index `n` (default
+         *                              flux_untruncated = false`).  Ignored if `trunc = 0.`.
          */
         SBSersic(double n, double re, double flux=1.,
+                 double trunc=0., bool flux_untruncated=false,
                  boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
 
         /// @brief Copy constructor.
@@ -87,12 +110,18 @@ namespace galsim {
         /** 
          * @brief Constructor.
          *
-         * @param[in] re    Half-light radius.
-         * @param[in] flux  flux (default `flux = 1.`).
+         * @param[in] re                Half-light radius.
+         * @param[in] flux              Flux (default `flux = 1.`).
+         * @param[in] trunc             Outer truncation radius in same physical units as size;
+         *                               `trunc = 0.` for no truncation (default `trunc = 0.`).
+         * @param[in] flux_untruncated  If `true`, sets the flux to the untruncated version of the
+         *                              Sersic profile with the same index `n` (default
+         *                              flux_untruncated = false`).  Ignored if `trunc = 0.`.
          */
         SBDeVaucouleurs(double re, double flux=1.,
+                        double trunc=0., bool flux_untruncated=false,
                         boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>()) :
-            SBSersic(4., re, flux, gsparams) {}
+            SBSersic(4., re, flux, trunc, flux_untruncated, gsparams) {}
     };
 
 }
