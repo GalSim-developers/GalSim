@@ -773,7 +773,8 @@ namespace hsm {
              * report a failure */
             if (std::abs(Mxx)>hsmparams->max_amoment || std::abs(Mxy)>hsmparams->max_amoment
                 || std::abs(Myy)>hsmparams->max_amoment
-                || std::abs(x0-x00)>hsmparams->max_ashift || std::abs(y0-y00)>hsmparams->max_ashift) {
+                || std::abs(x0-x00)>hsmparams->max_ashift 
+                || std::abs(y0-y00)>hsmparams->max_ashift) {
                 throw HSMError("Error: adaptive moment failed\n");
             }
 
