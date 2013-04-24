@@ -477,35 +477,45 @@ class GSObject(object):
 
     # Make sure the image is defined with the right size and scale for the draw and
     # drawShoot commands.
-    def _draw_setup_image(self, image, dx, wmult, add_to_image):
+    def _draw_setup_image(self, image, dx, wmult, add_to_image, dx_is_dk=False):
 
-        # Make sure the type of wmult is correct and has a valid value:
+        # Make sure the type of wmult is correct and has a valid value
         if type(wmult) != float:
             wmult = float(wmult)
         if wmult <= 0:
             raise ValueError("Invalid wmult <= 0 in draw command")
 
-        # Check dx value and adjust if necessary:
+        # Save the input value, since we'll need to make a new dx
+        if dx_is_dk: dk = dx
+
+        # Check dx value and adjust if necessary
         if dx is None:
-            if image is not None and image.getScale() > 0.:
-                dx = image.getScale()
+            if image is not None and image.scale > 0.:
+                if dx_is_dk:
+                    # dx = 2pi / (N*dk)
+                    dx = 2.*np.pi/( np.sqrt(image.area()) * image.scale)
+                else:
+                    dx = image.scale
             else:
                 dx = self.SBProfile.nyquistDx()
         elif dx <= 0:
             dx = self.SBProfile.nyquistDx()
         elif type(dx) != float:
-            dx = float(dx)
+            if dx_is_dk:
+                dx = self.SBProfile.nyquistDx()
+            else:
+                dx = float(dx)
+        # At this point dx is really dx, not dk.
 
-        # Make image if necessary:
+        # Make image if necessary
         if image is None:
             # Can't add to image if none is provided.
             if add_to_image:
                 raise ValueError("Cannot add_to_image if image is None")
             N = self.SBProfile.getGoodImageSize(dx,wmult)
             image = galsim.ImageF(N,N)
-            image.setScale(dx)
 
-        # Resize the given image if necessary:
+        # Resize the given image if necessary
         elif not image.getBounds().isDefined():
             # Can't add to image if need to resize
             if add_to_image:
@@ -513,17 +523,25 @@ class GSObject(object):
             N = self.SBProfile.getGoodImageSize(dx,wmult)
             bounds = galsim.BoundsI(1,N,1,N)
             image.resize(bounds)
-            image.setScale(dx)
             image.setZero()
 
-        # Else just make sure the scale is set correctly:
+        # Else use the given image as is
         else:
             # Clear the image if we are not adding to it.
             if not add_to_image:
                 image.setZero()
+            if dx_is_dk:
+                N = np.sqrt(image.area())
+
+        # Set the image scale
+        if dx_is_dk:
+            if dk is None or dk <= 0:
+                dk = 2.*np.pi/( N * dx )
+            image.setScale(dk)
+        else:
             image.setScale(dx)
 
-        return image, dx
+        return image
 
     def _fix_center(self, image, scale):
         # For even-sized images, the SBProfile draw function centers the result in the 
@@ -641,7 +659,7 @@ class GSObject(object):
             raise ValueError("Invalid gain <= 0. in draw command")
 
         # Make sure image is setup correctly
-        image, dx = self._draw_setup_image(image,dx,wmult,add_to_image)
+        image = self._draw_setup_image(image,dx,wmult,add_to_image)
 
         # Fix the centering for even-sized images
         if use_true_center:
@@ -655,7 +673,7 @@ class GSObject(object):
             # Rather than change the flux of the GSObject though, we change the gain.
             # gain is photons / ADU.  The photons are the given flux, and we want to 
             # multiply the ADU by dx^2.  i.e. divide gain by dx^2.
-            gain /= dx**2
+            gain /= image.scale**2
 
         image.added_flux = prof.SBProfile.draw(image.view(), gain, wmult)
 
@@ -822,7 +840,7 @@ class GSObject(object):
             warnings.warn(msg)
 
         # Make sure image is setup correctly
-        image, dx = self._draw_setup_image(image,dx,wmult,add_to_image)
+        image = self._draw_setup_image(image,dx,wmult,add_to_image)
 
         # Fix the centering for even-sized images
         if use_true_center:
@@ -836,7 +854,7 @@ class GSObject(object):
             # Rather than change the flux of the GSObject though, we change the gain.
             # gain is photons / ADU.  The photons are the given flux, and we want to 
             # multiply the ADU by dx^2.  i.e. divide gain by dx^2.
-            gain /= dx**2
+            gain /= image.scale**2
 
         try:
             image.added_flux = prof.SBProfile.drawShoot(
@@ -915,15 +933,15 @@ class GSObject(object):
             if im is None:
                 raise ValueError("im is None, but re is not None")
             if dk is None:
-                if re.getScale() != im.getScale():
+                if re.scale != im.scale:
                     raise ValueError("re and im do not have the same input scale")
             if re.getBounds().isDefined() or im.getBounds().isDefined():
                 if re.getBounds() != im.getBounds():
                     raise ValueError("re and im do not have the same defined bounds")
 
         # Make sure images are setup correctly
-        re, dk = self._draw_setup_image(re,dk,wmult,add_to_image)
-        im, dk = self._draw_setup_image(im,dk,wmult,add_to_image)
+        re = self._draw_setup_image(re,dk,wmult,add_to_image,dx_is_dk=True)
+        im = self._draw_setup_image(im,dk,wmult,add_to_image,dx_is_dk=True)
 
         self.SBProfile.drawK(re.view(), im.view(), gain, wmult)
 
@@ -1691,7 +1709,7 @@ class InterpolatedImage(GSObject):
         # code block, either an exception will have been raised, or the input image will have a
         # valid scale set.
         if dx is None:
-            dx = image.getScale()
+            dx = image.scale
             if dx == 0:
                 raise ValueError("No information given with Image or keywords about pixel scale!")
         else:
@@ -2773,8 +2791,7 @@ class Shapelet(GSObject):
             bvec_size = galsim.LVectorSize(order)
             if len(bvec) != bvec_size:
                 raise ValueError("bvec is the wrong size for the provided order")
-            import numpy
-            bvec = galsim.LVector(order,numpy.array(bvec))
+            bvec = galsim.LVector(order,np.array(bvec))
 
         GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
 
@@ -2806,8 +2823,7 @@ class Shapelet(GSObject):
         if curr_order > order:
             bvec = galsim.LVector(order, curr_bvec.array[0:galsim.LVectorSize(order)])
         else:
-            import numpy
-            a = numpy.zeros(galsim.LVectorSize(order))
+            a = np.zeros(galsim.LVectorSize(order))
             a[0:len(curr_bvec.array)] = curr_bvec.array
             bvec = galsim.LVector(order,a)
         GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
@@ -2817,8 +2833,7 @@ class Shapelet(GSObject):
         bvec_size = galsim.LVectorSize(order)
         if len(bvec) != bvec_size:
             raise ValueError("bvec is the wrong size for the Shapelet order")
-        import numpy
-        bvec = galsim.LVector(order,numpy.array(bvec))
+        bvec = galsim.LVector(order,np.array(bvec))
         GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
     def setPQ(self,p,q,re,im=0.):
         sigma = self.SBProfile.getSigma()
