@@ -19,7 +19,7 @@
  * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
  */
 
-//#define DEBUGLOGGING
+#define DEBUGLOGGING
 
 #include "SBProfile.h"
 #include "SBTransform.h"
@@ -28,7 +28,8 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-std::ostream* dbgout = new std::ofstream("debug.out");
+//std::ostream* dbgout = new std::ofstream("debug.out");
+std::ostream* dbgout = &std::cout;
 int verbose_level = 2;
 // There are three levels of verbosity which can be helpful when debugging,
 // which are written as dbg, xdbg, xxdbg (all defined in Std.h).
@@ -516,6 +517,7 @@ namespace galsim {
         assert(Re.getBounds() == Im.getBounds());
 
         double dk = Re.getScale();
+        dbg<<"Start plainDrawK: dk = "<<dk<<std::endl;
 
         // recenter an existing image, to be consistent with fourierDrawK:
         Re.setCenter(0,0);
@@ -523,8 +525,10 @@ namespace galsim {
 
         const int m = (Re.getXMax()-Re.getXMin()+1);
         const int n = (Re.getYMax()-Re.getYMin()+1);
-        const double xmin = Re.getXMin();
-        const double ymin = Re.getYMin();
+        const int xmin = Re.getXMin();
+        const int ymin = Re.getYMin();
+        dbg<<"m,n = "<<m<<','<<n<<std::endl;
+        dbg<<"xmin,ymin = "<<xmin<<','<<ymin<<std::endl;
 
         tmv::Matrix<std::complex<double> > val(m,n);
 #ifdef DEBUGLOGGING
@@ -533,19 +537,23 @@ namespace galsim {
         // Calculate all the kValues at once, since this is often faster than many calls to kValue.
         assert(xmin <= 0 && ymin <= 0 && -xmin < m && -ymin < n);
         _pimpl->fillKValue(val.view(),xmin*dk,dk,-xmin,ymin*dk,dk,-ymin);
+        dbg<<"F(k=0) = "<<val(-xmin,-ymin)<<std::endl;
 
         if (gain != 1.) val /= gain;
 
         tmv::MatrixView<T> mRe(Re.getData(),m,n,1,Re.getStride(),tmv::NonConj);
         tmv::MatrixView<T> mIm(Im.getData(),m,n,1,Im.getStride(),tmv::NonConj);
         addMatrix(mRe,val.realPart());
-        addMatrix(mIm,val.realPart());
+        addMatrix(mIm,val.imagPart());
     }
 
     // Build K domain by transform from X domain.  This is likely
     // to be a rare event but what the heck.  Enforce no "aliasing"
     // by oversampling and extending x domain if needed.  Force
     // power of 2 for transform
+    //
+    // Note: There are no unit tests of this, since all profiles have isAnalyticK() == true.
+    //       So drawK never sends anything this way.
     template <typename T>
     void SBProfile::fourierDrawK(ImageView<T> Re, ImageView<T> Im, double gain, double wmult) const 
     {
