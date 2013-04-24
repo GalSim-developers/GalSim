@@ -34,8 +34,8 @@
 namespace galsim {
 
 
-    SBBox::SBBox(double xw, double yw, double flux) :
-        SBProfile(new SBBoxImpl(xw,yw,flux)) {}
+    SBBox::SBBox(double xw, double yw, double flux, boost::shared_ptr<GSParams> gsparams) :
+        SBProfile(new SBBoxImpl(xw,yw,flux,gsparams)) {}
 
     SBBox::SBBox(const SBBox& rhs) : SBProfile(rhs) {}
 
@@ -52,6 +52,15 @@ namespace galsim {
         assert(dynamic_cast<const SBBoxImpl*>(_pimpl.get()));
         return static_cast<const SBBoxImpl&>(*_pimpl).getYWidth(); 
     }
+
+    SBBox::SBBoxImpl::SBBoxImpl(double xw, double yw, double flux,
+                                boost::shared_ptr<GSParams> gsparams) :
+        SBProfileImpl(gsparams), _xw(xw), _yw(yw), _flux(flux)
+    {
+        if (_yw==0.) _yw=_xw;
+        _norm = _flux / (_xw * _yw);
+    }
+
 
     double SBBox::SBBoxImpl::xValue(const Position<double>& p) const 
     {
@@ -260,7 +269,7 @@ namespace galsim {
     // Set maxK to the value where the FT is down to maxk_threshold
     double SBBox::SBBoxImpl::maxK() const 
     { 
-        return 2. / (sbp::maxk_threshold * std::min(_xw,_yw));
+        return 2. / (this->gsparams->maxk_threshold * std::min(_xw,_yw));
     }
 
     // The amount of flux missed in a circle of radius pi/stepk should be at 

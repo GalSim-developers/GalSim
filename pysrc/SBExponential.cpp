@@ -44,11 +44,10 @@ namespace galsim {
     struct PySBExponential 
     {
 
-        static SBExponential * construct(
-            const bp::object & half_light_radius,
-            const bp::object & scale_radius,
-            double flux
-        ) {
+        static SBExponential* construct(
+            const bp::object& half_light_radius, const bp::object& scale_radius, double flux,
+            boost::shared_ptr<GSParams> gsparams) 
+        {
             double s = 1.0;
             checkRadii(half_light_radius, scale_radius, bp::object());
             if (half_light_radius.ptr() != Py_None) {
@@ -57,21 +56,22 @@ namespace galsim {
             if (scale_radius.ptr() != Py_None) {
                 s = bp::extract<double>(scale_radius);
             }
-            return new SBExponential(s, flux);
+            return new SBExponential(s, flux, gsparams);
         }
 
-        static void wrap() {
+        static void wrap() 
+        {
             bp::class_<SBExponential,bp::bases<SBProfile> >(
                 "SBExponential",
                 "SBExponential(flux=1., half_light_radius=None, scale=None)\n\n"
-                "Construct an exponential profile with the given flux and either half-light radius\n"
-                "or scale length.  Exactly one radius must be provided.\n",
+                "Construct an exponential profile with the given flux and either half-light\n"
+                "radius or scale length.  Exactly one radius must be provided.\n",
                 bp::no_init)
-                .def(
-                    "__init__", bp::make_constructor(
+                .def("__init__", bp::make_constructor(
                         &construct, bp::default_call_policies(),
                         (bp::arg("half_light_radius")=bp::object(), 
-                         bp::arg("scale_radius")=bp::object(), (bp::arg("flux")=1.)))
+                         bp::arg("scale_radius")=bp::object(), (bp::arg("flux")=1.),
+                         bp::arg("gsparams")=bp::object()))
                 )
                 .def(bp::init<const SBExponential &>())
                 .def("getScaleRadius", &SBExponential::getScaleRadius)
