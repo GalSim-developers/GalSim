@@ -114,7 +114,7 @@ def main(argv):
 
     # Type help(galsim.GSParams) for the complete list of parameters and more detailed docs.
     gsparams = galsim.GSParams(
-        alias_threshold=1.e-2,   # maximum fractionalr flux that may be aliased around edge of FFT
+        alias_threshold=1.e-2,   # maximum fractional flux that may be aliased around edge of FFT
         maxk_threshold=2.e-3,    # k-values less than this may be excluded off edge of FFT
         xvalue_accuracy=1.e-4,   # approximations in real space aim to be this accurate
         kvalue_accuracy=1.e-4,   # approximations in fourier space aim to be this accurate
@@ -142,7 +142,7 @@ def main(argv):
             spher = -0.3, gsparams=gsparams) 
     psf4 = galsim.Convolve([atmos,optics])  # Convolve inherits the gsparams from the first 
                                             # item in the list.  (Or you can supply a gsparams
-                                            # argument explicitly if you want to override this.
+                                            # argument explicitly if you want to override this.)
     #atmos = galsim.AtmosphericPSF(fwhm = psf_fwhm)
     atmos = galsim.Kolmogorov(fwhm = psf_fwhm, gsparams=gsparams)
     optics = galsim.Airy(lam_over_diam = 0.3 * psf_fwhm, gsparams=gsparams) 

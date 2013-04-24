@@ -170,7 +170,7 @@ image :
     # See the config documentation for the complete list of parameters and more detailed 
     # documentation.
     gsparams :
-        alias_threshold : 1.0e-2   # maximum fractionalr flux that may be aliased around edge of FFT
+        alias_threshold : 1.0e-2   # maximum fractional flux that may be aliased around edge of FFT
         maxk_threshold : 2.0e-3    # k-values less than this may be excluded off edge of FFT
         xvalue_accuracy : 1.0e-4   # approximations in real space aim to be this accurate
         kvalue_accuracy : 1.0e-4   # approximations in fourier space aim to be this accurate
