@@ -74,7 +74,9 @@ namespace galsim {
          *                              Sersic profile with the same index `n` (default
          *                              flux_untruncated = false`).  Ignored if `trunc = 0.`.
          */
-        SBSersic(double n, double re, double trunc=0., double flux=1., bool flux_untruncated=false);
+        SBSersic(double n, double re, double flux=1.,
+                 double trunc=0., bool flux_untruncated=false,
+                 boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
 
         /// @brief Copy constructor.
         SBSersic(const SBSersic& rhs);
@@ -89,15 +91,11 @@ namespace galsim {
         double getHalfLightRadius() const;
 
     protected:
-        class SersicInfo;
-        class SersicRadialFunction;
-        class SBSersicImpl;
-        class InfoBarn;
 
-        /// One static map of all `SersicInfo` structures for whole program.
-        static InfoBarn nmap; 
+        class SBSersicImpl;
 
     private:
+
         // op= is undefined
         void operator=(const SBSersic& rhs);
     };
@@ -113,15 +111,17 @@ namespace galsim {
          * @brief Constructor.
          *
          * @param[in] re                Half-light radius.
+         * @param[in] flux              Flux (default `flux = 1.`).
          * @param[in] trunc             Outer truncation radius in same physical units as size;
          *                               `trunc = 0.` for no truncation (default `trunc = 0.`).
-         * @param[in] flux              Flux (default `flux = 1.`).
          * @param[in] flux_untruncated  If `true`, sets the flux to the untruncated version of the
          *                              Sersic profile with the same index `n` (default
          *                              flux_untruncated = false`).  Ignored if `trunc = 0.`.
          */
-        SBDeVaucouleurs(double re, double trunc=0., double flux=1., bool flux_untruncated=false) :
-            SBSersic(4., re, trunc, flux, flux_untruncated) {}
+        SBDeVaucouleurs(double re, double flux=1.,
+                        double trunc=0., bool flux_untruncated=false,
+                        boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>()) :
+            SBSersic(4., re, flux, trunc, flux_untruncated, gsparams) {}
     };
 
 }

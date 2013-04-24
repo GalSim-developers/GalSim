@@ -44,6 +44,10 @@ pixel_scale = 0.2
 decimal = 2 # decimal place at which to require equality in sizes
 decimal_shape = 3 # decimal place at which to require equality in shapes
 
+# The timing tests can be unreliable in environments with other processes running at the 
+# same time.  So we disable them by default.  However, on a clean system, they should all pass.
+test_timing = False
+
 # define inputs and expected results for tests that use real SDSS galaxies
 img_dir = os.path.join(".","HSM_precomputed")
 gal_file_prefix = "image."
@@ -84,6 +88,32 @@ sigma_e_expected = np.array([
 def funcname():
     import inspect
     return inspect.stack()[1][3]
+
+def equal_hsmshapedata(res1, res2):
+    """Utility to check that all entries in two HSMShapeData objects are equal."""
+    if not isinstance(res1, galsim.HSMShapeData) or not isinstance(res2, galsim.HSMShapeData):
+        raise TypeError("Objects that were passed in are not HSMShapeData objects")
+
+    if res1.corrected_e1 != res2.corrected_e1: return False
+    if res1.corrected_e2 != res2.corrected_e2: return False
+    if res1.corrected_g1 != res2.corrected_g1: return False
+    if res1.corrected_g2 != res2.corrected_g2: return False
+    if res1.corrected_shape_err != res2.corrected_shape_err: return False
+    if res1.error_message != res2.error_message: return False
+    if res1.image_bounds.xmin != res2.image_bounds.xmin: return False
+    if res1.image_bounds.xmax != res2.image_bounds.xmax: return False
+    if res1.image_bounds.ymin != res2.image_bounds.ymin: return False
+    if res1.image_bounds.ymax != res2.image_bounds.ymax: return False
+    if res1.meas_type != res2.meas_type: return False
+    if res1.moments_amp != res2.moments_amp: return False
+    if res1.moments_centroid != res2.moments_centroid: return False
+    if res1.moments_n_iter != res2.moments_n_iter: return False
+    if res1.moments_rho4 != res2.moments_rho4: return False
+    if res1.moments_sigma != res2.moments_sigma: return False
+    if res1.moments_status != res2.moments_status: return False
+    if res1.observed_shape != res2.observed_shape: return False
+    if res1.resolution_factor != res2.resolution_factor: return False
+    return True
 
 def test_moments_basic():
     """Test that we can properly recover adaptive moments for Gaussians."""
@@ -439,9 +469,132 @@ def test_shearest_shape():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_hsmparams():
+    """Test the ability to set/change parameters that define how moments/shape estimation are done."""
+    import time
+    t1 = time.time()
+
+    # First make some profile, and make sure that we get the same answers when we specify default
+    # hsmparams or don't specify hsmparams at all.
+    default_hsmparams = galsim.HSMParams(nsig_rg=3.0,
+                                         nsig_rg2=3.6,
+                                         max_moment_nsig2=25.0,
+                                         regauss_too_small=1,
+                                         adapt_order=2,
+                                         max_mom2_iter=400,
+                                         num_iter_default=-1,
+                                         bound_correct_wt=0.25,
+                                         max_amoment=8000.,
+                                         max_ashift=15.,
+                                         ksb_moments_max=4,
+                                         failed_moments=-1000.)
+    bulge = galsim.DeVaucouleurs(half_light_radius = 0.3)
+    disk = galsim.Exponential(half_light_radius = 0.5)
+    disk.applyShear(e1=0.2, e2=-0.3)
+    psf = galsim.Kolmogorov(fwhm = 0.6)
+    pix = galsim.Pixel(0.18)
+    gal = bulge + disk   # equal weighting, i.e., B/T=0.5
+    tot_gal = galsim.Convolve(gal, psf, pix)
+    tot_psf = galsim.Convolve(psf, pix)
+    tot_gal_image = tot_gal.draw(dx=0.18)
+    tot_psf_image = tot_psf.draw(dx=0.18)
+
+    res = tot_gal_image.FindAdaptiveMom()
+    res_def = tot_gal_image.FindAdaptiveMom(hsmparams = default_hsmparams)
+    assert(equal_hsmshapedata(res, res_def)), 'Moment outputs differ when using default HSMParams'
+
+    res2 = galsim.EstimateShearHSM(tot_gal_image, tot_psf_image)
+    res2_def = galsim.EstimateShearHSM(tot_gal_image, tot_psf_image, hsmparams = default_hsmparams)
+    assert(equal_hsmshapedata(res, res_def)), 'Shear outputs differ when using default HSMParams'
+
+    try:
+        # Then check failure modes: force it to fail by changing HSMParams.
+        new_params_niter = galsim.HSMParams(max_mom2_iter = res.moments_n_iter-1)
+        new_params_size = galsim.HSMParams(max_amoment = 0.3*res.moments_sigma**2)
+        np.testing.assert_raises(RuntimeError, galsim.FindAdaptiveMom, tot_gal_image,
+                                 hsmparams=new_params_niter)
+        np.testing.assert_raises(RuntimeError, galsim.EstimateShearHSM, tot_gal_image,
+                                 tot_psf_image, hsmparams=new_params_size)
+    except ImportError:
+        print 'The assert_raises tests require nose'
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_hsmparams_nodefault():
+    """Test that when non-default hsmparams are used, the results change."""
+    import time
+    t1 = time.time()
+
+    # First make some profile
+    bulge = galsim.DeVaucouleurs(half_light_radius = 0.3)
+    disk = galsim.Exponential(half_light_radius = 0.5)
+    disk.applyShear(e1=0.2, e2=-0.3)
+    psf = galsim.Kolmogorov(fwhm = 0.6)
+    pix = galsim.Pixel(0.18)
+    gal = bulge + disk   # equal weighting, i.e., B/T=0.5
+    tot_gal = galsim.Convolve(gal, psf, pix)
+    tot_psf = galsim.Convolve(psf, pix)
+    tot_gal_image = tot_gal.draw(dx=0.18)
+    tot_psf_image = tot_psf.draw(dx=0.18)
+
+    # Check that recompute_flux changes give results that are as expected
+    test_t = time.time()
+    res = galsim.EstimateShearHSM(tot_gal_image, tot_psf_image)
+    dt = time.time() - test_t
+    res2 = galsim.EstimateShearHSM(tot_gal_image, tot_psf_image, recompute_flux = 'sum')
+    assert(res.moments_amp < res2.moments_amp),'Incorrect behavior with recompute_flux=sum'
+    res3 = galsim.EstimateShearHSM(tot_gal_image, tot_psf_image, recompute_flux = 'none')
+    assert(res3.moments_amp == 0),'Incorrect behavior with recompute_flux=none'
+
+    # Check that results, timing change as expected with nsig_rg
+    # For this, use Gaussian as galaxy and for ePSF, i.e., no extra pixel response
+    p = galsim.Gaussian(fwhm=10.)
+    g = galsim.Gaussian(fwhm=20.)
+    g.applyShear(g1=0.5)
+    obj = galsim.Convolve(g, p)
+    im = obj.draw(dx=1.)
+    psf_im = p.draw(dx=1.)
+    test_t1 = time.time()
+    g_res = galsim.EstimateShearHSM(im, psf_im)
+    test_t2 = time.time()
+    g_res2 = galsim.EstimateShearHSM(im, psf_im, hsmparams=galsim.HSMParams(nsig_rg=0.))
+    dt2 = time.time()-test_t2
+    dt1 = test_t2-test_t1
+    if test_timing:
+        assert(dt2 > dt1),'Should take longer to estimate shear without truncation of galaxy'
+    assert(not equal_hsmshapedata(g_res, g_res2)),'Results should differ with diff nsig_rg'
+
+    # Check that results, timing change as expected with max_moment_nsig2
+    test_t2 = time.time()
+    res2 = galsim.EstimateShearHSM(tot_gal_image, tot_psf_image,
+                                   hsmparams=galsim.HSMParams(max_moment_nsig2 = 9.))
+    dt2 = time.time() - test_t2
+    if test_timing:
+        assert(dt2 < dt),'Should be faster to estimate shear with lower max_moment_nsig2'
+    assert(not equal_hsmshapedata(res, res2)),'Outputs same despite change in max_moment_nsig2'
+    assert(res.moments_sigma > res2.moments_sigma),'Sizes do not change as expected'
+    assert(res.moments_amp > res2.moments_amp),'Amplitudes do not change as expected'
+
+    # Check that max_amoment, max_ashift work as expected
+    try:
+        np.testing.assert_raises(RuntimeError, galsim.EstimateShearHSM, tot_gal_image,
+                                 tot_psf_image, hsmparams=galsim.HSMParams(max_amoment = 10.))
+        np.testing.assert_raises(RuntimeError, galsim.EstimateShearHSM, tot_gal_image,
+                                 tot_psf_image, guess_x_centroid=47.,
+                                 hsmparams=galsim.HSMParams(max_ashift=0.1))
+    except ImportError:
+        print 'The assert_raises tests require nose'
+
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_moments_basic()
     test_shearest_basic()
     test_shearest_precomputed()
     test_masks()
     test_shearest_shape()
+    test_hsmparams()
+    test_hsmparams_nodefault()
