@@ -175,6 +175,15 @@ installation directory if you are comfortable installing it into /usr/local.
 However, if you are trying to install it into a system directory then you need
 to use sudo scons install [PREFIX=<installdir>].
 
+Note: On Mac OS 10.7, the Apple BLAS library has problems when run using
+multiple processes.  So if you have such a system, we recommend getting a 
+different BLAS library, such as ATLAS (and making sure TMV finds it instead
+of the system BLAS) or compiling TMV with no BLAS library at all (using 
+the SCons option WITH_BLAS=false).  Otherwise, Galsim programs may hang
+when run with multiple processes.  e.g. `scons tests` by default uses 
+multiple processes, and multiple people reported problems using the Apple
+system BLAS on OS 10.7.
+
 
 v) Boost C++ (http://www.boost.org)
 -----------------------------------

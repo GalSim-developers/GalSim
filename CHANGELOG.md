@@ -50,4 +50,6 @@ Changes from v0.4 to current version:
   functionality of PowerSpectrumEstimator actually does not require an installed version of GalSim,
   just Python 2.6 or 2.7 and NumPy.  (Issue #382)
 
+* Added Sersic truncation. (Issue #388)
+
 * Added trefoil to optical aberration. (Issue #390)
