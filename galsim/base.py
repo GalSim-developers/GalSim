@@ -44,12 +44,63 @@ import utilities
 
 version = '0.4.1'
 
-ALIAS_THRESHOLD = 0.005 # Matches hard coded value in src/SBProfile.cpp. TODO: bring these together
-
 class GSObject(object):
     """Base class for defining the interface with which all GalSim Objects access their shared 
     methods and attributes, particularly those from the C++ SBProfile classes.
+
+    All GSObject classes take an optional `gsparams` argument so we document that feature here.
+    For all documentation about the specific derived classes, please see the docstring for each 
+    one individually.  
+    
+    The gsparams argument can be used to specify various numbers that govern the tradeoff between
+    accuracy and speed for the calculations made in drawing a GSObject.  The numbers are
+    encapsulated in a class called GSParams, and the user should make careful choices whenever they
+    opt to deviate from the defaults.  For more details about the parameters and their default
+    values, use `help(galsim.GSParams)`.
+
+    Example usage:
+    
+    Let's say you want to do something that requires an FFT larger than 4096 x 4096 (and you have 
+    enough memory to handle it!).  Then you can create a new GSParams object with a larger 
+    maximum_fft_size and pass that to your GSObject on construction:
+
+        >>> gal = galsim.Sersic(n=4, half_light_radius=4.3)
+        >>> psf = galsim.Moffat(beta=3, fwhm=2.85)
+        >>> pix = galsim.Pixel(0.05)                       # Note the very small pixel scale!
+        >>> conv = galsim.Convolve([gal,psf,pix])
+        >>> im = galsim.ImageD(1000,1000)
+        >>> im.scale = 0.05                                # Use the same pixel scale on the image.
+        >>> conv.draw(im,normalization='sb')               # This uses the default GSParams.
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+          File "/Library/Python/2.6/site-packages/galsim/base.py", line 579, in draw
+            self.SBProfile.draw(image.view(), gain, wmult)
+        RuntimeError: SB Error: fourierDraw() requires an FFT that is too large, 6144
+        >>> big_fft_params = galsim.GSParams(maximum_fft_size = 10240)
+        >>> conv = galsim.Convolve([gal,psf,pix],gsparams=big_fft_params)
+        >>> conv.draw(im,normalization='sb')               # Now it works (but is slow!)
+        <galsim._galsim.ImageD object at 0x1037823c0>
+        >>> im.write('high_res_sersic.fits')
+
+    Note that for compound objects like Convolve or Add, not all gsparams can be changed when the
+    compound object is created.  In the example given here, it is possible to change parameters
+    related to the drawing, but not the Fourier space parameters for the components that go into the
+    Convolve.  To get better sampling in Fourier space, for example, the `gal`, `psf`, and/or `pix`
+    should be created with `gsparams` that have a non-default value of `alias_threshold`.  This
+    statement applies to the threshold and accuracy parameters.
     """
+    _gsparams = { 'minimum_fft_size' : int,
+                  'maximum_fft_size' : int,
+                  'alias_threshold' : float,
+                  'maxk_threshold' : float,
+                  'kvalue_accuracy' : float,
+                  'xvalue_accuracy' : float,
+                  'shoot_accuracy' : float,
+                  'realspace_relerr' : float,
+                  'realspace_abserr' : float,
+                  'integration_relerr' : float,
+                  'integration_abserr' : float
+                }
     def __init__(self, rhs):
         # This guarantees that all GSObjects have an SBProfile
         if isinstance(rhs, galsim.GSObject):
@@ -65,7 +116,7 @@ class GSObject(object):
 
     # op+= converts this into the equivalent of an Add object
     def __iadd__(self, other):
-        GSObject.__init__(self, galsim.SBAdd(self.SBProfile, other.SBProfile))
+        GSObject.__init__(self, galsim.SBAdd([self.SBProfile, other.SBProfile]))
         self.__class__ = Add
         return self
 
@@ -790,7 +841,8 @@ class GSObject(object):
 
         try:
             image.added_flux = self.SBProfile.drawShoot(
-                image.view(), n_photons, uniform_deviate, gain, max_extra_noise, poisson_flux)
+                image.view(), n_photons, uniform_deviate, gain, max_extra_noise,
+                poisson_flux, add_to_image)
         except RuntimeError:
             # Give some extra explanation as a warning, then raise the original exception
             # so the traceback shows as much detail as possible.
@@ -913,6 +965,9 @@ class Gaussian(GSObject):
     Attempting to initialize with more than one size parameter is ambiguous, and will raise a
     TypeError exception.
 
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.
+
     Methods
     -------
     The Gaussian is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
@@ -931,11 +986,12 @@ class Gaussian(GSObject):
     _takes_rng = False
     
     # --- Public Class methods ---
-    def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1.):
+    def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1., gsparams=None):
         # Initialize the SBProfile
         GSObject.__init__(
             self, galsim.SBGaussian(
-                sigma=sigma, half_light_radius=half_light_radius, fwhm=fwhm, flux=flux))
+                sigma=sigma, half_light_radius=half_light_radius, fwhm=fwhm, flux=flux, 
+                gsparams=gsparams))
  
     def getSigma(self):
         """Return the sigma scale length for this Gaussian profile.
@@ -984,6 +1040,9 @@ class Moffat(GSObject):
     Attempting to initialize with more than one size parameter is ambiguous, and will raise a
     TypeError exception.
 
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.
+
     Methods
     -------
     The Moffat is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
@@ -998,11 +1057,11 @@ class Moffat(GSObject):
 
     # --- Public Class methods ---
     def __init__(self, beta, scale_radius=None, half_light_radius=None,  fwhm=None, trunc=0.,
-                 flux=1.):
+                 flux=1., gsparams=None):
         GSObject.__init__(
             self, galsim.SBMoffat(
                 beta, scale_radius=scale_radius, half_light_radius=half_light_radius, fwhm=fwhm,
-                trunc=trunc, flux=flux))
+                trunc=trunc, flux=flux, gsparams=gsparams))
 
     def getBeta(self):
         """Return the beta parameter for this Moffat profile.
@@ -1056,7 +1115,10 @@ class AtmosphericPSF(GSObject):
                            [default `oversampling = 1.5`], setting `oversampling < 1` will produce 
                            aliasing in the PSF (not good).
     @param flux            Total flux of the profile [default `flux=1.`]
-    
+    @param gsparams        You may also specify a gsparams argument.  See the docstring for
+                           galsim.GSParams using help(galsim.GSParams) for more information about
+                           this option.
+
     Methods
     -------
     The AtmosphericPSF is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
@@ -1071,7 +1133,8 @@ class AtmosphericPSF(GSObject):
     _takes_rng = False
 
     # --- Public Class methods ---
-    def __init__(self, lam_over_r0=None, fwhm=None, interpolant=None, oversampling=1.5, flux=1.):
+    def __init__(self, lam_over_r0=None, fwhm=None, interpolant=None, oversampling=1.5, flux=1.,
+                 gsparams=None):
 
         # The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
         if lam_over_r0 is None :
@@ -1106,7 +1169,8 @@ class AtmosphericPSF(GSObject):
 
         # Then initialize the SBProfile
         GSObject.__init__(
-            self, galsim.SBInterpolatedImage(atmoimage, xInterp=self.interpolant, dx=dx_lookup))
+            self, galsim.SBInterpolatedImage(atmoimage, xInterp=self.interpolant, dx=dx_lookup,
+                                             gsparams=gsparams))
 
         # The above procedure ends up with a larger image than we really need, which
         # means that the default stepK value will be smaller than we need.  
@@ -1142,6 +1206,9 @@ class Airy(GSObject):
     Attempting to initialize with more than one size parameter is ambiguous, and will raise a
     TypeError exception.
 
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.
+
     Methods
     -------
     The Airy is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(), 
@@ -1155,9 +1222,10 @@ class Airy(GSObject):
     _takes_rng = False
 
     # --- Public Class methods ---
-    def __init__(self, lam_over_diam, obscuration=0., flux=1.):
+    def __init__(self, lam_over_diam, obscuration=0., flux=1., gsparams=None):
         GSObject.__init__(
-            self, galsim.SBAiry(lam_over_diam=lam_over_diam, obscuration=obscuration, flux=flux))
+            self, galsim.SBAiry(lam_over_diam=lam_over_diam, obscuration=obscuration, flux=flux,
+                                gsparams=gsparams))
 
     def getHalfLightRadius(self):
         """Return the half light radius of this Airy profile (only supported for 
@@ -1229,6 +1297,9 @@ class Kolmogorov(GSObject):
                               One of `lam_over_r0`, `fwhm` and `half_light_radius` (and only one) 
                               must be specified.
     @param flux               Optional flux value [default `flux = 1.`].
+    @param gsparams           You may also specify a gsparams argument.  See the docstring for
+                              galsim.GSParams using help(galsim.GSParams) for more information about
+                              this option.
     
     Methods
     -------
@@ -1250,7 +1321,8 @@ class Kolmogorov(GSObject):
     _takes_rng = False
 
     # --- Public Class methods ---
-    def __init__(self, lam_over_r0=None, fwhm=None, half_light_radius=None, flux=1.):
+    def __init__(self, lam_over_r0=None, fwhm=None, half_light_radius=None, flux=1.,
+                 gsparams=None):
 
         if fwhm is not None :
             if lam_over_r0 is not None or half_light_radius is not None:
@@ -1271,7 +1343,8 @@ class Kolmogorov(GSObject):
                         "One of lam_over_r0, fwhm, or half_light_radius must be " +
                         "specified for Kolmogorov")
 
-        GSObject.__init__(self, galsim.SBKolmogorov(lam_over_r0=lam_over_r0, flux=flux))
+        GSObject.__init__(self, galsim.SBKolmogorov(lam_over_r0=lam_over_r0, flux=flux,
+                                                    gsparams=gsparams))
 
     def getLamOverR0(self):
         """Return the `lam_over_r0` parameter of this Kolmogorov profile.
@@ -1333,6 +1406,9 @@ class OpticalPSF(GSObject):
                            [default `pad_factor = 1.5`].  Note that `pad_factor` may need to be 
                            increased for stronger aberrations, i.e. those larger than order unity.
     @param flux            Total flux of the profile [default `flux=1.`].
+    @param gsparams        You may also specify a gsparams argument.  See the docstring for
+                           galsim.GSParams using help(galsim.GSParams) for more information about
+                           this option.
      
     Methods
     -------
@@ -1364,7 +1440,7 @@ class OpticalPSF(GSObject):
     def __init__(self, lam_over_diam, defocus=0.,
                  astig1=0., astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0., 
                  circular_pupil=True, obscuration=0., interpolant=None, oversampling=1.5,
-                 pad_factor=1.5, flux=1.):
+                 pad_factor=1.5, flux=1., gsparams=None):
 
         # Currently we load optics, noise etc in galsim/__init__.py, but this might change (???)
         import galsim.optics
@@ -1373,10 +1449,15 @@ class OpticalPSF(GSObject):
         # oversampling factor
         dx_lookup = .5 * lam_over_diam / oversampling
         
+        # We need alias_threshold here, so don't wait to make this a default GSParams instance
+        # if the user didn't specify anything else.
+        if not gsparams:
+            gsparams = galsim.GSParams()
+
         # Use a similar prescription as SBAiry to set Airy stepK and thus reference unpadded image
         # size in physical units
         stepk_airy = min(
-            ALIAS_THRESHOLD * .5 * np.pi**3 * (1. - obscuration) / lam_over_diam,
+            gsparams.alias_threshold * .5 * np.pi**3 * (1. - obscuration) / lam_over_diam,
             np.pi / 5. / lam_over_diam)
         
         # Boost Airy image size by a user-specifed pad_factor to allow for larger, aberrated PSFs,
@@ -1399,7 +1480,8 @@ class OpticalPSF(GSObject):
 
         # Initialize the SBProfile
         GSObject.__init__(
-            self, galsim.SBInterpolatedImage(optimage, xInterp=self.interpolant, dx=dx_lookup))
+            self, galsim.SBInterpolatedImage(optimage, xInterp=self.interpolant, dx=dx_lookup,
+                                             gsparams=gsparams))
 
         # The above procedure ends up with a larger image than we really need, which
         # means that the default stepK value will be smaller than we need.  
@@ -1570,6 +1652,9 @@ class InterpolatedImage(GSObject):
     @param use_cache       Specify whether to cache noise_pad read in from a file to save having
                            to build a CorrelatedNoise object repeatedly from the same image.
                            (Default `use_cache = True`)
+    @param gsparams        You may also specify a gsparams argument.  See the docstring for
+                           galsim.GSParams using help(galsim.GSParams) for more information about
+                           this option.
 
     Methods
     -------
@@ -1598,7 +1683,8 @@ class InterpolatedImage(GSObject):
     # --- Public Class methods ---
     def __init__(self, image, x_interpolant = None, k_interpolant = None, normalization = 'flux',
                  dx = None, flux = None, pad_factor = 0., noise_pad = 0., rng = None,
-                 pad_image = None, calculate_stepk=True, calculate_maxk=True, use_cache=True):
+                 pad_image = None, calculate_stepk=True, calculate_maxk=True, use_cache=True,
+                 gsparams=None):
         # first try to read the image as a file.  If it's not either a string or a valid
         # pyfits hdu or hdulist, then an exception will be raised, which we ignore and move on.
         try:
@@ -1733,12 +1819,9 @@ class InterpolatedImage(GSObject):
         # to the C++ with pad_factor explicitly set to 1.
         if specify_size is False:
             # Make the SBInterpolatedImage out of the image.
-            sbinterpolatedimage = galsim.SBInterpolatedImage(image,
-                                                             xInterp=self.x_interpolant,
-                                                             kInterp=self.k_interpolant,
-                                                             dx=dx,
-                                                             pad_factor=pad_factor,
-                                                             pad_image=pad_image)
+            sbinterpolatedimage = galsim.SBInterpolatedImage(
+                    image, xInterp=self.x_interpolant, kInterp=self.k_interpolant,
+                    dx=dx, pad_factor=pad_factor, pad_image=pad_image, gsparams=gsparams)
             self.x_size = padded_size
             self.y_size = padded_size
         else:
@@ -1752,11 +1835,9 @@ class InterpolatedImage(GSObject):
             pad_image.setOrigin(image.getXMin()-x_marg, image.getYMin()-y_marg)
             # Set the central values of pad_image to be equal to the input image
             pad_image[image.bounds] = image
-            sbinterpolatedimage = galsim.SBInterpolatedImage(pad_image,
-                                                             xInterp=self.x_interpolant,
-                                                             kInterp=self.k_interpolant,
-                                                             dx=dx,
-                                                             pad_factor=1.)
+            sbinterpolatedimage = galsim.SBInterpolatedImage(
+                    pad_image, xInterp=self.x_interpolant, kInterp=self.k_interpolant,
+                    dx=dx, pad_factor=1., gsparams=gsparams)
             self.x_size = 1+pad_image.getXMax()-pad_image.getXMin()
             self.y_size = 1+pad_image.getYMax()-pad_image.getYMin()
 
@@ -1796,6 +1877,9 @@ class Pixel(GSObject):
     A Pixel is initialized with an x dimension width `xw`, an optional y dimension width (if
     unspecifed `yw=xw` is assumed) and an optional flux parameter [default `flux = 1.`].
 
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.
+
     Methods
     -------
     The Pixel is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(), 
@@ -1817,10 +1901,10 @@ class Pixel(GSObject):
     _takes_rng = False
 
     # --- Public Class methods ---
-    def __init__(self, xw, yw=None, flux=1.):
+    def __init__(self, xw, yw=None, flux=1., gsparams=None):
         if yw is None:
             yw = xw
-        GSObject.__init__(self, galsim.SBBox(xw=xw, yw=yw, flux=flux))
+        GSObject.__init__(self, galsim.SBBox(xw=xw, yw=yw, flux=flux, gsparams=gsparams))
 
     def getXWidth(self):
         """Return the width of the pixel in the x dimension.
@@ -1894,6 +1978,9 @@ class Sersic(GSObject):
         >>> sersic_obj2.getFlux()
         34.56595186009358     # Flux is missing due to truncation
 
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.
+
     Methods
     -------
     The Sersic is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
@@ -1902,15 +1989,17 @@ class Sersic(GSObject):
 
     # Initialization parameters of the object, with type information
     _req_params = { "n" : float , "half_light_radius" : float }
-    _opt_params = { "trunc": float, "flux" : float, "flux_untruncated" : bool }
+    _opt_params = { "flux" : float, "trunc": float, "flux_untruncated" : bool }
     _single_params = []
     _takes_rng = False
 
     # --- Public Class methods ---
-    def __init__(self, n, half_light_radius, trunc=0., flux=1., flux_untruncated=False):
+    def __init__(self, n, half_light_radius, flux=1., trunc=0., flux_untruncated=False,
+                 gsparams=None):
         GSObject.__init__(
-            self, galsim.SBSersic(n, half_light_radius=half_light_radius, trunc=trunc, flux=flux,
-                                  flux_untruncated=flux_untruncated))
+            self, galsim.SBSersic(n, half_light_radius=half_light_radius, flux=flux,
+                                  trunc=trunc, flux_untruncated=flux_untruncated,
+                                  gsparams=gsparams))
 
     def getN(self):
         """Return the Sersic index `n` for this profile.
@@ -1951,6 +2040,9 @@ class Exponential(GSObject):
     Attempting to initialize with more than one size parameter is ambiguous, and will raise a
     TypeError exception.
 
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.
+
     Methods
     -------
     The Exponential is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
@@ -1964,10 +2056,11 @@ class Exponential(GSObject):
     _takes_rng = False
 
     # --- Public Class methods ---
-    def __init__(self, half_light_radius=None, scale_radius=None, flux=1.):
+    def __init__(self, half_light_radius=None, scale_radius=None, flux=1., gsparams=None):
         GSObject.__init__(
             self, galsim.SBExponential(
-                half_light_radius=half_light_radius, scale_radius=scale_radius, flux=flux))
+                half_light_radius=half_light_radius, scale_radius=scale_radius, flux=flux,
+                gsparams=gsparams))
 
     def getScaleRadius(self):
         """Return the scale radius for this Exponential profile.
@@ -2044,6 +2137,9 @@ class DeVaucouleurs(GSObject):
         >>> dvc_obj2.getFlux()
         33.863171136492156    # The flux from the truncation is missing
 
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.
+
     Methods
     -------
     The DeVaucouleurs is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
@@ -2052,15 +2148,17 @@ class DeVaucouleurs(GSObject):
 
     # Initialization parameters of the object, with type information
     _req_params = { "half_light_radius" : float }
-    _opt_params = { "trunc": float, "flux" : float, "flux_untruncated" : float }
+    _opt_params = { "flux" : float, "trunc" : float, "flux_untruncated" : float }
     _single_params = []
     _takes_rng = False
 
     # --- Public Class methods ---
-    def __init__(self, half_light_radius=None, trunc=0., flux=1., flux_untruncated=False):
+    def __init__(self, half_light_radius=None, flux=1., trunc=0., flux_untruncated=False,
+                 gsparams=None):
         GSObject.__init__(
-            self, galsim.SBDeVaucouleurs(half_light_radius=half_light_radius, 
-                                         trunc=trunc, flux=flux, flux_untruncated=flux_untruncated))
+            self, galsim.SBDeVaucouleurs(half_light_radius=half_light_radius, flux=flux,
+                                         trunc=trunc, flux_untruncated=flux_untruncated,
+                                         gsparams=gsparams))
 
     def getHalfLightRadius(self):
         """Return the half light radius for this DeVaucouleurs profile.
@@ -2165,6 +2263,9 @@ class RealGalaxy(GSObject):
     @param use_cache            Specify whether to cache noise_pad read in from a file to save
                                 having to build an CorrelatedNoise repeatedly from the same image.
                                 (Default `use_cache = True`)
+    @param gsparams             You may also specify a gsparams argument.  See the docstring for
+                                galsim.GSParams using help(galsim.GSParams) for more information
+                                about this option.
 
     Methods
     -------
@@ -2188,7 +2289,7 @@ class RealGalaxy(GSObject):
     # --- Public Class methods ---
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
                  rng=None, x_interpolant=None, k_interpolant=None, flux=None, pad_factor = 0,
-                 noise_pad=False, pad_image=None, use_cache=True):
+                 noise_pad=False, pad_image=None, use_cache=True, gsparams=None):
 
         import pyfits
 
@@ -2346,12 +2447,9 @@ class RealGalaxy(GSObject):
         # to the C++ with pad_factor explicitly set to 1.
         if specify_size is False:
             # Make the SBInterpolatedImage out of the image.
-            self.original_image = galsim.SBInterpolatedImage(gal_image,
-                                                             xInterp=self.x_interpolant,
-                                                             kInterp=self.k_interpolant,
-                                                             dx=self.pixel_scale,
-                                                             pad_factor=pad_factor,
-                                                             pad_image=pad_image)
+            self.original_image = galsim.SBInterpolatedImage(
+                gal_image, xInterp=self.x_interpolant, kInterp=self.k_interpolant,
+                dx=self.pixel_scale, pad_factor=pad_factor, pad_image=pad_image, gsparams=gsparams)
         else:
             # Leave the original image as-is.  Instead, we shift around the image to be used for
             # padding.  Find out how much x and y margin there should be on lower end:
@@ -2363,16 +2461,15 @@ class RealGalaxy(GSObject):
             pad_image.setOrigin(gal_image.getXMin()-x_marg, gal_image.getYMin()-y_marg)
             # Set the central values of pad_image to be equal to the input image
             pad_image[gal_image.bounds] = gal_image
-            self.original_image = galsim.SBInterpolatedImage(pad_image,
-                                                             xInterp=self.x_interpolant,
-                                                             kInterp=self.k_interpolant,
-                                                             dx=self.pixel_scale,
-                                                             pad_factor=1.)
+            self.original_image = galsim.SBInterpolatedImage(
+                pad_image, xInterp=self.x_interpolant, kInterp=self.k_interpolant,
+                dx=self.pixel_scale, pad_factor=1., gsparams=gsparams)
 
         # also make the original PSF image, with far less fanfare: we don't need to pad with
         # anything interesting.
         self.original_PSF = galsim.SBInterpolatedImage(
-            PSF_image, xInterp=self.x_interpolant, kInterp=self.k_interpolant, dx=self.pixel_scale)
+            PSF_image, xInterp=self.x_interpolant, kInterp=self.k_interpolant, dx=self.pixel_scale,
+            gsparams=gsparams)
 
         # recalculate Fourier-space attributes rather than using overly-conservative defaults
         self.original_image.calculateStepK()
@@ -2387,16 +2484,17 @@ class RealGalaxy(GSObject):
         self.original_PSF.__class__ = galsim.SBTransform # correctly reflect SBProfile change
 
         # Calculate the PSF "deconvolution" kernel
-        psf_inv = galsim.SBDeconvolve(self.original_PSF)
+        psf_inv = galsim.SBDeconvolve(self.original_PSF, gsparams=gsparams)
         # Initialize the SBProfile attribute
-        GSObject.__init__(self, galsim.SBConvolve([self.original_image, psf_inv]))
+        GSObject.__init__(
+            self, galsim.SBConvolve([self.original_image, psf_inv], gsparams=gsparams))
 
     def getHalfLightRadius(self):
         raise NotImplementedError("Half light radius calculation not implemented for RealGalaxy "
                                    +"objects.")
 
 #
-# --- Compound GSObject classes: Add and Convolve ---
+# --- Compound GSObject classes: Add, Convolve, AutoConvolve, and AutoCorrelate ---
 
 class Add(GSObject):
     """A class for adding 2 or more GSObjects.  Has an SBAdd in the SBProfile attribute.
@@ -2405,6 +2503,13 @@ class Add(GSObject):
     to represent a multiple-component galaxy as the sum of an Exponential and a DeVaucouleurs, or to
     represent a PSF as the sum of multiple Gaussians.
 
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.  Note: if gsparams is unspecified
+    (or None), then the Add instance inherits the same GSParams as the first item in the list.
+    Also, note that parameters related to the Fourier-space calculations must be set when
+    initializing the individual GSObjects that go into the Add, NOT when creating the Add (at which
+    point the accuracy and threshold parameters will simply be ignored).
+
     Methods
     -------
     The Add is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
@@ -2412,7 +2517,15 @@ class Add(GSObject):
     """
     
     # --- Public Class methods ---
-    def __init__(self, *args):
+    def __init__(self, *args, **kwargs):
+
+        # Check kwargs first:
+        gsparams = kwargs.pop("gsparams", None)
+
+        # Make sure there is nothing left in the dict.
+        if kwargs:
+            raise TypeError(
+                "Add constructor got unexpected keyword argument(s): %s"%kwargs.keys())
 
         if len(args) == 0:
             # No arguments. Could initialize with an empty list but draw then segfaults. Raise an
@@ -2431,11 +2544,11 @@ class Add(GSObject):
                         raise TypeError("Input list must contain only GSObjects.")
             else:
                 raise TypeError("Single input argument must be a GSObject or list of them.")
-            GSObject.__init__(self, galsim.SBAdd(SBList))
+            GSObject.__init__(self, galsim.SBAdd(SBList, gsparams=gsparams))
         elif len(args) >= 2:
             # >= 2 arguments.  Convert to a list of SBProfiles
             SBList = [obj.SBProfile for obj in args]
-            GSObject.__init__(self, galsim.SBAdd(SBList))
+            GSObject.__init__(self, galsim.SBAdd(SBList, gsparams=gsparams))
 
 class Convolve(GSObject):
     """A class for convolving 2 or more GSObjects.  Has an SBConvolve in the SBProfile attribute.
@@ -2462,6 +2575,13 @@ class Convolve(GSObject):
     If you do not specify either `real_space = True` or `False` explicitly, then we check if there 
     are 2 profiles, both of which have hard edges.  In this case, we automatically use real-space 
     convolution.  In all other cases, the default is not to use real-space convolution.
+
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.  Note: if gsparams is unspecified
+    (or None), then the Convolve instance inherits the same GSParams as the first item in the list.
+    Also, note that parameters related to the Fourier-space calculations must be set when
+    initializing the individual GSObjects that go into the Convolve, NOT when creating the Convolve
+    (at which point the accuracy and threshold parameters will simply be ignored).
     """
                     
     # --- Public Class methods ---
@@ -2497,16 +2617,20 @@ class Convolve(GSObject):
         # to perform real space convolution...
 
         # Check kwargs
-        # The only kwarg we're looking for is real_space, which can be True or False
-        # (default if omitted is None), which specifies whether to do the convolution
-        # as an integral in real space rather than as a product in fourier space.
-        # If the parameter is omitted (or explicitly given as None I guess), then
-        # we will usually do the fourier method.  However, if there are 2 components
-        # _and_ both of them have hard edges, then we use real-space convolution.
+        # real_space can be True or False (default if omitted is None), which specifies whether to 
+        # do the convolution as an integral in real space rather than as a product in fourier 
+        # space.  If the parameter is omitted (or explicitly given as None I guess), then
+        # we will usually do the fourier method.  However, if there are 2 components _and_ both of 
+        # them have hard edges, then we use real-space convolution.
         real_space = kwargs.pop("real_space", None)
+
+        gsparams = kwargs.pop("gsparams", None)
+
+        # Make sure there is nothing left in the dict.
         if kwargs:
             raise TypeError(
                 "Convolve constructor got unexpected keyword argument(s): %s"%kwargs.keys())
+
 
         # If 1 argument, check if it is a list:
         if len(args) == 1 and isinstance(args[0], list):
@@ -2563,7 +2687,8 @@ class Convolve(GSObject):
                         break
 
         # Then finally initialize the SBProfile using the objects' SBProfiles in SBList
-        GSObject.__init__(self, galsim.SBConvolve(SBList, real_space=real_space))
+        GSObject.__init__(self, galsim.SBConvolve(SBList, real_space=real_space,
+                                                  gsparams=gsparams))
 
 
 class AutoConvolve(GSObject):
@@ -2571,12 +2696,20 @@ class AutoConvolve(GSObject):
 
     It is equivalent in functionality to galsim.Convolve([obj,obj]), but takes advantage of
     the fact that the two profiles are the same for some efficiency gains.
+
+    @param obj       The object to be convolved with itself.
+    @param gsparams  You may also specify a gsparams argument.  See the docstring for
+                     galsim.GSParams using help(galsim.GSParams) for more information about this
+                     option.  Note that parameters related to the Fourier-space calculations must be
+                     set when initializing the GSObject that goes into the AutoConvolve, NOT when
+                     creating the AutoConvolve (at which point the accuracy and threshold parameters
+                     will simply be ignored).
     """
     # --- Public Class methods ---
-    def __init__(self, obj):
+    def __init__(self, obj, gsparams=None):
         if not isinstance(obj, GSObject):
             raise TypeError("Argument to AutoConvolve must be a GSObject.")
-        GSObject.__init__(self, galsim.SBAutoConvolve(obj.SBProfile))
+        GSObject.__init__(self, galsim.SBAutoConvolve(obj.SBProfile, gsparams=gsparams))
 
 
 class AutoCorrelate(GSObject):
@@ -2588,12 +2721,21 @@ class AutoCorrelate(GSObject):
 
     This class is primarily targeted for use by the galsim.CorrelatedNoise models when convolving 
     with a GSObject.
+
+    @param obj       The object to be correlated with itself.
+
+    @param gsparams  You may also specify a gsparams argument.  See the docstring for
+                     galsim.GSParams using help(galsim.GSParams) for more information about this
+                     option.  Note that parameters related to the Fourier-space calculations must be
+                     set when initializing the GSObject that goes into the AutoCorrelate, NOT when
+                     creating the AutoCorrelate (at which point the accuracy and threshold
+                     parameters will simply be ignored).
     """
     # --- Public Class methods ---
-    def __init__(self, obj):
+    def __init__(self, obj, gsparams=None):
         if not isinstance(obj, GSObject):
             raise TypeError("Argument to AutoCorrelate must be a GSObject.")
-        GSObject.__init__(self, galsim.SBAutoCorrelate(obj.SBProfile))
+        GSObject.__init__(self, galsim.SBAutoCorrelate(obj.SBProfile, gsparams=gsparams))
 
 
 class Deconvolve(GSObject):
@@ -2602,12 +2744,19 @@ class Deconvolve(GSObject):
     The Deconvolve class represents a deconvolution kernel.  Note that the Deconvolve class, or
     compound objects (Add, Convolve) that include a Deconvolve as one of the components, cannot be
     photon-shot using the drawShoot method.
+
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.  Note: if gsparams is unspecified
+    (or None), then the Deconvolve instance inherits the same GSParams as the object being
+    deconvolved.
     """
     # --- Public Class methods ---
-    def __init__(self, obj):
-        if not isinstance(obj, GSObject):
+    def __init__(self, farg, gsparams=None):
+        if isinstance(farg, GSObject):
+            self.farg = farg
+            GSObject.__init__(self, galsim.SBDeconvolve(self.farg.SBProfile, gsparams=gsparams))
+        else:
             raise TypeError("Argument to Deconvolve must be a GSObject.")
-        GSObject.__init__(self, galsim.SBDeconvolve(obj.SBProfile))
 
 class Shapelet(GSObject):
     """A class describing polar shapelet surface brightness profiles.
