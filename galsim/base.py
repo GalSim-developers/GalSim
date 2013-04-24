@@ -1318,7 +1318,7 @@ class OpticalPSF(GSObject):
     @param trefoil2        trefoil (one of the arrows along x) in units of incident light
                            wavelength.
     @param spher           spherical aberration in units of incident light wavelength.
-    @param circular_pupil  adopt a circular pupil?
+    @param circular_pupil  adopt a circular pupil?  [default `circular_pupil = True`]
     @param obscuration     linear dimension of central obscuration as fraction of pupil linear
                            dimension, [0., 1.)
     @param interpolant     Either an Interpolant2d (or Interpolant) instance or a string indicating
