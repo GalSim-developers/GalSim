@@ -112,7 +112,8 @@ def main(argv):
     # notice the difference by eye.  But subtle effects that may impact the shapes of galaxies
     # can happen well before then.
 
-    # Type help(galsim.GSParams) for the complete list of parameters and more detailed docs.
+    # Type help(galsim.GSParams) for the complete list of parameters and more detailed
+    # documentation, including the default values for each parameter.
     gsparams = galsim.GSParams(
         alias_threshold=1.e-2,   # maximum fractionalr flux that may be aliased around edge of FFT
         maxk_threshold=2.e-3,    # k-values less than this may be excluded off edge of FFT

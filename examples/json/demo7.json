@@ -164,7 +164,7 @@
     "#" : "global change to some of the values, just to demonstrate how it works.",
 
     "#" : "See the config documentation for the complete list of parameters and more detailed",
-    "#" : "documentation.",
+    "#" : "documentation, including the default values for each parameter.",
     "gsparams" : {
         "#" : "maximum fractionalr flux that may be aliased around edge of FFT",
         "alias_threshold" : 1.0e-2,
