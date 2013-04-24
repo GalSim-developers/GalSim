@@ -58,6 +58,9 @@ Changes from v0.4 to current version:
 * Fixed bug in draw routine that led to spurious shears when an object is shifted.  Probably also
   whenever the profile is not radially symmetric in fact. (Issue #380)
 
+* Added index_convention option in config to allow for images with (0,0) as the origin rather
+  than the usual (1,1). (Issue #380)
+
 * Added a new script, galsim/pse.py, that contains a PowerSpectrumEstimator class that can be used
   to estimate the shear power spectrum from a set of shears defined on a grid.  The main
   functionality of PowerSpectrumEstimator actually does not require an installed version of GalSim,
