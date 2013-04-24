@@ -316,6 +316,16 @@ def test_OpticalPSF_aberration():
         myImg.array, savedImg.array, 6,
         err_msg="Optical aberration (spher) disagrees with expected result")
 
+    # test all aberrations
+    savedImg = galsim.fits.read(os.path.join(imgdir, "optics_all.fits"))
+    optics = galsim.OpticalPSF(lod, defocus = 1., astig1 = 0.5, astig2 = 0.3, coma1 = 0.4,
+                               coma2 = -0.3, trefoil1 = -0.2, trefoil2 = 0.1, spher = -0.8,
+                               obscuration = obscuration)
+    myImg = optics.draw(dx=0.2*lod)
+    np.testing.assert_array_almost_equal(
+        myImg.array, savedImg.array, 6,
+        err_msg="Optical aberration (all aberrations) disagrees with expected result")
+
     t2 = time.time()
     print 'time for %s = %.2f' % (funcname(), t2 - t1)
 
