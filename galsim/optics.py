@@ -101,7 +101,7 @@ def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
 
     Input aberration coefficients are assumed to be supplied in units of wavelength, and correspond
     to the Zernike polynomials in the Noll convention definined in
-    Noll, J. Opt. Soc. Am. 66, 207-211(1976). For a brief summary of of the polynomials, refer to
+    Noll, J. Opt. Soc. Am. 66, 207-211(1976). For a brief summary of the polynomials, refer to
     http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials.
 
     @param array_shape     the NumPy array shape desired for the output array.
@@ -179,7 +179,7 @@ def wavefront_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0.,
 
     Input aberration coefficients are assumed to be supplied in units of wavelength, and correspond
     to the Zernike polynomials in the Noll convention definined in
-    Noll, J. Opt. Soc. Am. 66, 207-211(1976). For a brief summary of of the polynomials, refer to
+    Noll, J. Opt. Soc. Am. 66, 207-211(1976). For a brief summary of the polynomials, refer to
     http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials.
 
     @param array_shape     the NumPy array shape desired for the output array.
