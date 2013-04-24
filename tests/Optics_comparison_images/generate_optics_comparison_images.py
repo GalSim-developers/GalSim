@@ -44,12 +44,12 @@ if __name__ == "__main__":
     im.write(os.path.join(os.path.abspath(os.path.dirname(__file__)), "optics_defocus.fits"))
 
     # astig1
-    optics = galsim.OpticalPSF(lod, defocus = .5, astig1 = 1., obscuration = obscuration)
+    optics = galsim.OpticalPSF(lod, defocus = .5, astig1 = .5, obscuration = obscuration)
     im = optics.draw(im, dx=0.2*lod)
     im.write(os.path.join(os.path.abspath(os.path.dirname(__file__)), "optics_astig1.fits"))
 
     # astig2
-    optics = galsim.OpticalPSF(lod, defocus = .5, astig2 = 1., obscuration = obscuration)
+    optics = galsim.OpticalPSF(lod, defocus = .5, astig2 = .5, obscuration = obscuration)
     im = optics.draw(im, dx=0.2*lod)
     im.write(os.path.join(os.path.abspath(os.path.dirname(__file__)), "optics_astig2.fits"))
 
