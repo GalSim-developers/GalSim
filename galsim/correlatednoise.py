@@ -428,7 +428,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         variance_ratio = variance / self.getVariance()
         self.scaleVariance(variance_ratio)
 
-    def convolveWith(self, gsobject):
+    def convolveWith(self, gsobject, gsparams=None):
         """Convolve the correlated noise model with an input GSObject.
 
         The resulting correlated noise model will then give a statistical description of the noise
@@ -470,8 +470,11 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         @param gsobject  A galsim.GSObject or derived class instance representing the function with
                          which the user wants to convolve the correlated noise model.
+        @param gsparams  You may also specify a gsparams argument.  See the docstring for 
+                         GSObject for more information about this option.
         """
-        self._profile = galsim.Convolve([self._profile, galsim.AutoCorrelate(gsobject)])
+        self._profile = galsim.Convolve(
+            [self._profile, galsim.AutoCorrelate(gsobject)], gsparams=gsparams)
 
     def draw(self, image=None, dx=None, wmult=1., add_to_image=False):
         """The draw method for profiles storing correlation functions.
@@ -962,13 +965,13 @@ def getCOSMOSNoise(rng, file_name, dx_cosmos=0.03, variance=0., x_interpolant=No
         raise IOError("The input file_name '"+str(file_name)+"' does not exist.")
     try:
         cfimage = galsim.fits.read(file_name)
-    except Exception as original_exception:
+    except Exception:
         # Give a vaguely helpful warning, then raise the original exception for extra diagnostics
         import warnings
         warnings.warn(
             "Function getCOSMOSNoise() unable to read FITS image from "+str(file_name)+", "+
             "more information on the error in the following Exception...")
-        raise original_exception
+        raise
 
     # Then check for negative variance before doing anything time consuming
     if variance < 0:

@@ -24,7 +24,9 @@ and for carrying out PSF correction using a variety of algorithms.  The algorith
 Hirata & Seljak (2003; MNRAS, 343, 459), and were tested/characterized using real data in Mandelbaum
 et al. (2005; MNRAS, 361, 1287).  We also define a python-level container for the outputs of these
 codes, HSMShapeData, analogous to the C++-level CppHSMShapeData.  Note that these routines for
-moment measurement and shear estimation are not accessible via config, only via python.
+moment measurement and shear estimation are not accessible via config, only via python.  There are a
+number of default settings for the code (often governing the tradeoff between accuracy and speed)
+that can be adjusting using an optional `hsmparams` argument as described below.
 
 The moments that are estimated are "adaptive moments" (see the first paper cited above for details);
 that is, they use an elliptical Gaussian weight that is matched to the image of the object being
@@ -49,6 +51,9 @@ using a Shear object, which IS required to satisfy |e|<=1.
 
 These methods are all based on correction of moments, but with different sets of assumptions.  For
 more detailed discussion on all of these algorithms, see the relevant papers above.
+
+Users can find a listing of the parameters that can be adjusted using the `hsmparams` keyword, along
+with default values, using help(galsim.HSMParams).
 """
 
 
@@ -210,9 +215,9 @@ def _convertMask(image, weight = None, badpix = None):
     return mask.view()
 
 def EstimateShearHSM(gal_image, PSF_image, weight = None, badpix = None, sky_var = 0.0,
-                     shear_est = "REGAUSS", flags = 0xe, guess_sig_gal = 5.0, guess_sig_PSF = 3.0,
-                     precision = 1.0e-6, guess_x_centroid = -1000.0, guess_y_centroid = -1000.0,
-                     strict = True):
+                     shear_est = "REGAUSS", recompute_flux = "FIT", guess_sig_gal = 5.0,
+                     guess_sig_PSF = 3.0, precision = 1.0e-6, guess_x_centroid = -1000.0,
+                     guess_y_centroid = -1000.0, strict = True, hsmparams = None):
     """Carry out moments-based PSF correction routines.
 
     Carry out PSF correction using one of the methods of the HSM package (see references in
@@ -249,9 +254,10 @@ def EstimateShearHSM(gal_image, PSF_image, weight = None, badpix = None, sky_var
         >>> result = galsim.EstimateShearHSM(final_image, final_epsf_image)
     
     After running the above code, `result.observed_shape` ["shape" = distortion, the 
-    (a^2 - b^2)/(a^2 + b^2) definition of ellipticity] is `(0.0876162,1.23478e-17)` and
-    `result.corrected_e1`, `result_corrected_e2` are `(0.0993412,-1.86255e-09)`, compared with the
-    expected `(0.09975, 0)` for a perfect PSF correction method.
+    (a^2 - b^2)/(a^2 + b^2) definition of ellipticity] is
+    `(0.0438925351523, -1.12519277137e-18)` and `result.corrected_e1`, `result_corrected_e2` are
+    `(0.0993412658572,-1.84832327221e-09)`, compared with the  expected `(0.09975, 0)` for a perfect
+    PSF correction method.
 
     The code below gives an example of how one could run this routine on a large batch of galaxies,
     explicitly catching and tracking any failures:
@@ -280,8 +286,11 @@ def EstimateShearHSM(gal_image, PSF_image, weight = None, badpix = None, sky_var
                              measured shape; default `sky_var = 0.`.
     @param shear_est         A string indicating the desired method of PSF correction: REGAUSS,
                              LINEAR, BJ, or KSB; default `shear_est = "REGAUSS"`.
-    @param flags             A flag determining various aspects of the shape measurement process
-                             (only necessary for REGAUSS); default `flags=0`.
+    @param recompute_flux    A string indicating whether to recompute the object flux, which
+                             should be NONE (for no recomputation), SUM (for recomputation via
+                             an unweighted sum over unmasked pixels), or FIT (for
+                             recomputation using the Gaussian + quartic fit); default
+                             `recompute_flux = FIT`.
     @param guess_sig_gal     Optional argument with an initial guess for the Gaussian sigma of the
                              galaxy, default `guess_sig_gal = 5.` (pixels).
     @param guess_sig_PSF     Optional argument with an initial guess for the Gaussian sigma of the
@@ -297,6 +306,9 @@ def EstimateShearHSM(gal_image, PSF_image, weight = None, badpix = None, sky_var
                              exception if shear estimation fails.  If set to `False`, then 
                              information about failures will be silently stored in the output 
                              HSMShapeData object.
+    @param hsmparams         The hsmparams keyword can be used to change the settings used by
+                             EstimateShearHSM when estimating shears; see HSMParams documentation
+                             using help(galsim.HSMParams) for more information.
     @return                  A HSMShapeData object containing the results of shape measurement.
     """
     # prepare inputs to C++ routines: ImageView for galaxy, PSF, and weight map
@@ -307,22 +319,25 @@ def EstimateShearHSM(gal_image, PSF_image, weight = None, badpix = None, sky_var
     try:
         result = _galsim._EstimateShearHSMView(gal_image_view, PSF_image_view, weight_view,
                                                sky_var = sky_var,
-                                               shear_est = shear_est, flags = flags,
+                                               shear_est = shear_est.upper(),
+                                               recompute_flux = recompute_flux.upper(),
                                                guess_sig_gal = guess_sig_gal,
                                                guess_sig_PSF = guess_sig_PSF,
-                                               precision = precision, guess_x_centroid =
-                                               guess_x_centroid, guess_y_centroid =
-                                               guess_y_centroid)
+                                               precision = precision,
+                                               guess_x_centroid = guess_x_centroid,
+                                               guess_y_centroid = guess_y_centroid,
+                                               hsmparams = hsmparams)
     except RuntimeError as err:
         if (strict == True):
-            raise err
+            raise
         else:
             result = _galsim._CppHSMShapeData()
             result.error_message = err.message
     return HSMShapeData(result)
 
 def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0, precision = 1.0e-6,
-                    guess_x_centroid = -1000.0, guess_y_centroid = -1000.0, strict = True):
+                    guess_x_centroid = -1000.0, guess_y_centroid = -1000.0, strict = True,
+                    hsmparams = None):
     """Measure adaptive moments of an object.
 
     This method estimates the best-fit elliptical Gaussian to the object (see Hirata & Seljak 2003
@@ -356,6 +371,28 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
     `(e1, e2) = (a^2 - b^2)/(a^2 + b^2)`, e.g. `my_moments.observed_shape.getE1()`, or to get the
     shear `g`, the conformal shear `eta`, and so on.
 
+    As an example of how to use the optional `hsmparams` argument, consider cases where the input
+    images have unusual properties, such as being very large.  This could occur when measuring the
+    properties of a very over-sampled image such as that generated using
+
+        >>> my_gaussian = galsim.Gaussian(sigma = 5.0)
+        >>> my_gaussian_image = my_gaussian.draw(dx = 0.01)
+
+    If the user attempts to measure the moments of this 4000 x 4000 pixel image using the standard
+    syntax,
+
+        >>> my_moments = my_gaussian_image.FindAdaptiveMom()
+
+    then the result will be a RuntimeError due to moment measurement failing because the object is
+    so large.  While the list of all possible settings that can be changed is accessible in the
+    docstring of the galsim.HSMParams class, in this case we need to modify `max_amoment` which
+    is the maximum value of the moments in units of pixel^2.  The following measurement, using the
+    default values for every parameter except for `max_amoment`, will be
+    successful:
+
+        >>> new_params = galsim.HSMParams(max_amoment=5.0e5)
+        >>> my_moments = my_gaussian_image.FindAdaptiveMom(hsmparams = new_params)
+
     @param object_image      The Image or ImageView for the object being measured.
     @param weight            The optional weight image for the object being measured.  Can be an int
                              or a float array.  Currently, GalSim does not account for the variation
@@ -379,6 +416,9 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
                              exception when moment measurement fails.  If set to `False`, then 
                              information about failures will be silently stored in the output 
                              HSMShapeData object.
+    @param hsmparams         The hsmparams keyword can be used to change the settings used by
+                             FindAdaptiveMom when estimating moments; see HSMParams documentation
+                             using help(galsim.HSMParams) for more information.
     @return                  A HSMShapeData object containing the results of moment measurement.
     """
     # prepare inputs to C++ routines: ImageView for the object being measured and the weight map.
@@ -389,10 +429,11 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
         result = _galsim._FindAdaptiveMomView(object_image_view, weight_view,
                                               guess_sig = guess_sig, precision =  precision,
                                               guess_x_centroid = guess_x_centroid,
-                                              guess_y_centroid = guess_y_centroid)
+                                              guess_y_centroid = guess_y_centroid,
+                                              hsmparams = hsmparams)
     except RuntimeError as err:
         if (strict == True):
-            raise err
+            raise
         else:
             result = _galsim._CppHSMShapeData()
             result.error_message = err.message

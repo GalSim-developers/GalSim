@@ -83,9 +83,12 @@ def BuildImages(nimages, config, logger=None, image_num=0, obj_num=0, nproc=1,
             if logger:
                 logger.info("ncpu = %d.  Using %d processes",ncpu,nproc)
         except:
-            raise AttributeError(
-                "config.image.nproc <= 0, but unable to determine number of cpus.")
-    
+            if logger:
+                logger.warn("config.output.nproc <= 0, but unable to determine number of cpus.")
+            nproc = 1
+            if logger:
+                logger.info("Unable to determine ncpu.  Using %d processes",nproc)
+ 
     if nproc > 1:
         from multiprocessing import Process, Queue, current_process
 
@@ -293,7 +296,7 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
     """
     config['seq_index'] = image_num
 
-    ignore = [ 'draw_method', 'noise', 'wcs', 'nproc' , 'random_seed' ]
+    ignore = [ 'draw_method', 'noise', 'wcs', 'nproc' , 'random_seed' , 'gsparams' ]
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int ,
             'pixel_scale' : float , 'sky_level' : float, 'sky_level_pixel' : float }
     params = galsim.config.GetAllParams(
@@ -352,7 +355,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     """
     config['seq_index'] = image_num
 
-    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc', 'center' ]
+    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc', 'center' , 'gsparams' ]
     req = { 'nx_tiles' : int , 'ny_tiles' : int }
     opt = { 'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
             'border' : int , 'xborder' : int , 'yborder' : int ,
@@ -571,7 +574,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     """
     config['seq_index'] = image_num
 
-    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' , 'center' ]
+    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' , 'center' , 'gsparams' ]
     req = { 'nobjects' : int }
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 
             'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,

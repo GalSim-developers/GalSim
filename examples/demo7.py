@@ -43,6 +43,7 @@ New features introduced in this demo:
 - dev = galsim.PoissonDeviate(rng, mean)
 = noise = galsim.DeviateNoise(dev)
 - writeCube(..., compress='gzip')
+- gsparams = galsim.GSParams(...)
 """
 
 import sys
@@ -91,29 +92,61 @@ def main(argv):
 
     psf_fwhm = 0.65         # arcsec
 
+    # This script is set up as a comparison between using FFTs for doing the convolutions and
+    # shooting photons.  The two methods have trade-offs in speed and accuracy which vary
+    # with the kind of profile being drawn and the S/N of the object, among other factors.
+    # In addition, for each method, there are a number of parameters GalSim uses that control 
+    # aspects of the calculation that further affect the speed and accuracy.  
+    #
+    # We encapsulate these parameters with an object called GSParams.  The default values
+    # are intended to be accurate enough for normal precision shear tests, without sacrificing
+    # too much speed.  
+    #
+    # Any PSF or galaxy object can be given a gsparams argument on construction that can 
+    # have different values to make the calculation more or less accurate (typically trading
+    # off for speed or memory).  
+    #
+    # In this script, we adjust some of the values slightly, just to show you how it works.
+    # You could play around with these values and see what effect they have on the drawn images.
+    # Usually, it requires a pretty drastic change in these parameters for you to be able to 
+    # notice the difference by eye.  But subtle effects that may impact the shapes of galaxies
+    # can happen well before then.
+
+    # Type help(galsim.GSParams) for the complete list of parameters and more detailed
+    # documentation, including the default values for each parameter.
+    gsparams = galsim.GSParams(
+        alias_threshold=1.e-2,   # maximum fractional flux that may be aliased around edge of FFT
+        maxk_threshold=2.e-3,    # k-values less than this may be excluded off edge of FFT
+        xvalue_accuracy=1.e-4,   # approximations in real space aim to be this accurate
+        kvalue_accuracy=1.e-4,   # approximations in fourier space aim to be this accurate
+        shoot_accuracy=1.e-4,    # approximations in photon shooting aim to be this accurate
+        minimum_fft_size=64)     # minimum size of ffts
+
     logger.info('Starting demo script 7')
 
     # Make the pixel:
     pix = galsim.Pixel(xw = pixel_scale)
 
     # Make the PSF profiles:
-    psf1 = galsim.Gaussian(fwhm = psf_fwhm)
-    psf2 = galsim.Moffat(fwhm = psf_fwhm, beta = 2.4)
-    psf3_inner = galsim.Gaussian(fwhm = psf_fwhm, flux = 0.8)
-    psf3_outer = galsim.Gaussian(fwhm = 2*psf_fwhm, flux = 0.2)
+    psf1 = galsim.Gaussian(fwhm = psf_fwhm, gsparams=gsparams)
+    psf2 = galsim.Moffat(fwhm = psf_fwhm, beta = 2.4, gsparams=gsparams)
+    psf3_inner = galsim.Gaussian(fwhm = psf_fwhm, flux = 0.8, gsparams=gsparams)
+    psf3_outer = galsim.Gaussian(fwhm = 2*psf_fwhm, flux = 0.2, gsparams=gsparams)
     psf3 = psf3_inner + psf3_outer
-    atmos = galsim.Gaussian(fwhm = psf_fwhm)
+    atmos = galsim.Gaussian(fwhm = psf_fwhm, gsparams=gsparams)
     optics = galsim.OpticalPSF(
             lam_over_diam = 0.6 * psf_fwhm,
             obscuration = 0.4,
             defocus = 0.1,
             astig1 = 0.3, astig2 = -0.2,
             coma1 = 0.2, coma2 = 0.1,
-            spher = -0.3) 
-    psf4 = galsim.Convolve([atmos,optics])
+            spher = -0.3, gsparams=gsparams) 
+    psf4 = galsim.Convolve([atmos,optics])  # Convolve inherits the gsparams from the first 
+                                            # item in the list.  (Or you can supply a gsparams
+                                            # argument explicitly if you want to override this.)
     #atmos = galsim.AtmosphericPSF(fwhm = psf_fwhm)
-    atmos = galsim.Kolmogorov(fwhm = psf_fwhm)
-    optics = galsim.Airy(lam_over_diam = 0.3 * psf_fwhm) 
+    atmos = galsim.Kolmogorov(fwhm = psf_fwhm, gsparams=gsparams)
+    optics = galsim.Airy(lam_over_diam = 0.3 * psf_fwhm, gsparams=gsparams) 
     psf5 = galsim.Convolve([atmos,optics])
     psfs = [psf1, psf2, psf3, psf4, psf5]
     psf_names = ["Gaussian", "Moffat", "Double Gaussian", "OpticalPSF", "Kolmogorov * Airy"]
@@ -122,12 +155,12 @@ def main(argv):
     psf_phot_times = [0,0,0,0,0]
 
     # Make the galaxy profiles:
-    gal1 = galsim.Gaussian(half_light_radius = 1)
-    gal2 = galsim.Exponential(half_light_radius = 1)
-    gal3 = galsim.DeVaucouleurs(half_light_radius = 1)
-    gal4 = galsim.Sersic(half_light_radius = 1, n = 2.5)
-    bulge = galsim.Sersic(half_light_radius = 0.7, n = 3.2)
-    disk = galsim.Sersic(half_light_radius = 1.2, n = 1.5)
+    gal1 = galsim.Gaussian(half_light_radius = 1, gsparams=gsparams)
+    gal2 = galsim.Exponential(half_light_radius = 1, gsparams=gsparams)
+    gal3 = galsim.DeVaucouleurs(half_light_radius = 1, gsparams=gsparams)
+    gal4 = galsim.Sersic(half_light_radius = 1, n = 2.5, gsparams=gsparams)
+    bulge = galsim.Sersic(half_light_radius = 0.7, n = 3.2, gsparams=gsparams)
+    disk = galsim.Sersic(half_light_radius = 1.2, n = 1.5, gsparams=gsparams)
     gal5 = 0.4*bulge + 0.6*disk  # Net half-light radius is only approximate for this one.
     gals = [gal1, gal2, gal3, gal4, gal5]
     gal_names = ["Gaussian", "Exponential", "Devaucouleurs", "n=2.5 Sersic", "Bulge + Disk"]
