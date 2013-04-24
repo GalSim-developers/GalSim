@@ -166,7 +166,7 @@
     "#" : "See the config documentation for the complete list of parameters and more detailed",
     "#" : "documentation, including the default values for each parameter.",
     "gsparams" : {
-        "#" : "maximum fractionalr flux that may be aliased around edge of FFT",
+        "#" : "maximum fractional flux that may be aliased around edge of FFT",
         "alias_threshold" : 1.0e-2,
         "#" : "k-values less than this may be excluded off edge of FFT",
         "maxk_threshold" : 2.0e-3,
