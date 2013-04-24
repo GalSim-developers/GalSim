@@ -20,6 +20,8 @@ import numpy as np
 import os
 import sys
 
+imgdir = os.path.join(".", "Optics_comparison_images") # Directory containing the reference images. 
+
 try:
     import galsim
 except ImportError:
@@ -242,6 +244,80 @@ def test_OpticalPSF_vs_Airy_with_obs():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_OpticalPSF_aberration():
+    """Test the generation of optical aberation against a known result.
+    """
+    import time
+    t1 = time.time()
+    lod = 0.04
+    obscuration = 0.3
+
+    # test defocus
+    savedImg = galsim.fits.read(os.path.join(imgdir, "optics_defocus.fits"))
+    optics = galsim.OpticalPSF(lod, defocus = 1., obscuration = obscuration)
+    myImg = optics.draw(dx=0.2*lod)
+    np.testing.assert_array_almost_equal(
+        myImg.array, savedImg.array, 6,
+        err_msg="Optical aberration (defocus) disagrees with expected result")
+
+    # test astig1
+    savedImg = galsim.fits.read(os.path.join(imgdir, "optics_astig1.fits"))
+    optics = galsim.OpticalPSF(lod, defocus = 1., astig1 = 1., obscuration = obscuration)
+    myImg = optics.draw(dx=0.2*lod)
+    np.testing.assert_array_almost_equal(
+        myImg.array, savedImg.array, 6,
+        err_msg="Optical aberration (astig1) disagrees with expected result")
+
+    # test astig2
+    savedImg = galsim.fits.read(os.path.join(imgdir, "optics_astig2.fits"))
+    optics = galsim.OpticalPSF(lod, defocus = 1., astig2 = 1., obscuration = obscuration)
+    myImg = optics.draw(dx=0.2*lod)
+    np.testing.assert_array_almost_equal(
+        myImg.array, savedImg.array, 6,
+        err_msg="Optical aberration (astig2) disagrees with expected result")
+
+    # test coma1
+    savedImg = galsim.fits.read(os.path.join(imgdir, "optics_coma1.fits"))
+    optics = galsim.OpticalPSF(lod, coma1 = 1., obscuration = obscuration)
+    myImg = optics.draw(dx=0.2*lod)
+    np.testing.assert_array_almost_equal(
+        myImg.array, savedImg.array, 6,
+        err_msg="Optical aberration (coma1) disagrees with expected result")
+
+    # test coma2
+    savedImg = galsim.fits.read(os.path.join(imgdir, "optics_coma2.fits"))
+    optics = galsim.OpticalPSF(lod, coma2 = 1., obscuration = obscuration)
+    myImg = optics.draw(dx=0.2*lod)
+    np.testing.assert_array_almost_equal(
+        myImg.array, savedImg.array, 6,
+        err_msg="Optical aberration (coma2) disagrees with expected result")
+
+    # test trefoil1
+    savedImg = galsim.fits.read(os.path.join(imgdir, "optics_trefoil1.fits"))
+    optics = galsim.OpticalPSF(lod, trefoil1 = 1., obscuration = obscuration)
+    myImg = optics.draw(dx=0.2*lod)
+    np.testing.assert_array_almost_equal(
+        myImg.array, savedImg.array, 6,
+        err_msg="Optical aberration (trefoil1) disagrees with expected result")
+
+    # test trefoil2
+    savedImg = galsim.fits.read(os.path.join(imgdir, "optics_trefoil2.fits"))
+    optics = galsim.OpticalPSF(lod, trefoil2 = 1., obscuration = obscuration)
+    myImg = optics.draw(dx=0.2*lod)
+    np.testing.assert_array_almost_equal(
+        myImg.array, savedImg.array, 6,
+        err_msg="Optical aberration (trefoil2) disagrees with expected result")
+
+    # test spherical
+    savedImg = galsim.fits.read(os.path.join(imgdir, "optics_spher.fits"))
+    optics = galsim.OpticalPSF(lod, spher = 1., obscuration = obscuration)
+    myImg = optics.draw(dx=0.2*lod)
+    np.testing.assert_array_almost_equal(
+        myImg.array, savedImg.array, 6,
+        err_msg="Optical aberration (spher) disagrees with expected result")
+
+    t2 = time.time()
+    print 'time for %s = %.2f' % (funcname(), t2 - t1)
 
 if __name__ == "__main__":
     test_check_all_contiguous()
@@ -257,3 +333,4 @@ if __name__ == "__main__":
     test_OpticalPSF_flux()
     test_OpticalPSF_vs_Airy()
     test_OpticalPSF_vs_Airy_with_obs()
+    test_OpticalPSF_aberration()
