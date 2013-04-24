@@ -454,7 +454,7 @@ namespace galsim {
     // Constructor to initialize Sersic constants and k lookup table
     SersicInfo::SersicInfo(const SersicKey& key, const GSParams* gsparams) :
         _n(key.n), _maxRre(key.maxRre), _maxRre_sq(_maxRre*_maxRre), _inv2n(1./(2.*_n)),
-        _flux_untruncated(key.flux_untruncated), _flux_fraction(1.), _re_fraction(1.)
+        _flux_untruncated(key.flux_untruncated), _flux_fraction(1.), _re_fraction(1.),
         _truncated(_maxRre > 0.)
     {
         // Going to constrain range of allowed n to those for which testing was done
