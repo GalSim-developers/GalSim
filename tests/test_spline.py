@@ -58,7 +58,7 @@ g3.applyShift(0.7,-0.2)
 final = g1 + g2 + g3
 image = galsim.ImageD(128,128)
 dx = 0.4
-# The reference image was drawn with the old convention, which is not use_true_center=False
+# The reference image was drawn with the old convention, which is now use_true_center=False
 final.draw(image=image, dx=dx, normalization='sb', use_true_center=False)
 
 def funcname():
