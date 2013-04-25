@@ -67,3 +67,5 @@ Changes from v0.4 to current version:
   just Python 2.6 or 2.7 and NumPy. (Issue #382)
 
 * Added ability to truncate Sersic profiles with optional trunc parameter. (Issue #388)
+
+* Added trefoil to optical aberration. (Issue #390)

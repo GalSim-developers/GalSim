@@ -1419,33 +1419,36 @@ class OpticalPSF(GSObject):
     """A class describing aberrated PSFs due to telescope optics.  Has an SBInterpolatedImage in the
     SBProfile attribute.
 
-    Input aberration coefficients are assumed to be supplied in units of incident light wavelength,
-    and correspond to the conventions adopted here:
-    http://en.wikipedia.org/wiki/Optical_aberration#Zernike_model_of_aberrations
+    Input aberration coefficients are assumed to be supplied in units of wavelength, and correspond
+    to the Zernike polynomials in the Noll convention definined in
+    Noll, J. Opt. Soc. Am. 66, 207-211(1976).  For a brief summary of the polynomials, refer to
+    http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials.
 
     Initialization
     --------------
     
         >>> optical_psf = galsim.OpticalPSF(lam_over_diam, defocus=0., astig1=0., astig2=0.,
-                                            coma1=0., coma2=0., spher=0., circular_pupil=True,
-                                            obscuration=0., interpolant=None, oversampling=1.5,
-                                            pad_factor=1.5)
+                                            coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0.,
+                                            circular_pupil=True, obscuration=0., interpolant=None,
+                                            oversampling=1.5, pad_factor=1.5)
 
     Initializes optical_psf as a galsim.OpticalPSF() instance.
 
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
-    @param defocus         Defocus in units of incident light wavelength.
-    @param astig1          First component of astigmatism (like e1) in units of incident light
+    @param defocus         defocus in units of incident light wavelength.
+    @param astig1          astigmatism (like e2) in units of incident light wavelength.
+    @param astig2          astigmatism (like e1) in units of incident light wavelength.
+    @param coma1           coma along y in units of incident light wavelength.
+    @param coma2           coma along x in units of incident light wavelength.
+    @param trefoil1        trefoil (one of the arrows along y) in units of incident light
                            wavelength.
-    @param astig2          Second component of astigmatism (like e2) in units of incident light
+    @param trefoil2        trefoil (one of the arrows along x) in units of incident light
                            wavelength.
-    @param coma1           Coma along x in units of incident light wavelength.
-    @param coma2           Coma along y in units of incident light wavelength.
-    @param spher           Spherical aberration in units of incident light wavelength.
-    @param circular_pupil  Adopt a circular pupil? Alternative is square.
-    @param obscuration     Linear dimension of central obscuration as fraction of pupil linear 
-                           dimension, [0., 1.) [default `obscuration = 0.`].
+    @param spher           spherical aberration in units of incident light wavelength.
+    @param circular_pupil  adopt a circular pupil?  [default `circular_pupil = True`]
+    @param obscuration     linear dimension of central obscuration as fraction of pupil linear
+                           dimension, [0., 1.)
     @param interpolant     Either an Interpolant2d (or Interpolant) instance or a string indicating
                            which interpolant should be used.  Options are 'nearest', 'sinc', 
                            'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the 
@@ -1476,6 +1479,8 @@ class OpticalPSF(GSObject):
         "astig2" : float ,
         "coma1" : float ,
         "coma2" : float ,
+        "trefoil1" : float ,
+        "trefoil2" : float ,
         "spher" : float ,
         "circular_pupil" : bool ,
         "obscuration" : float ,
@@ -1488,7 +1493,7 @@ class OpticalPSF(GSObject):
 
     # --- Public Class methods ---
     def __init__(self, lam_over_diam, defocus=0.,
-                 astig1=0., astig2=0., coma1=0., coma2=0., spher=0.,
+                 astig1=0., astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0., 
                  circular_pupil=True, obscuration=0., interpolant=None, oversampling=1.5,
                  pad_factor=1.5, flux=1., gsparams=None):
 
@@ -1517,8 +1522,9 @@ class OpticalPSF(GSObject):
         # Make the psf image using this dx and array shape
         optimage = galsim.optics.psf_image(
             lam_over_diam=lam_over_diam, dx=dx_lookup, array_shape=(npix, npix), defocus=defocus,
-            astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, spher=spher,
-            circular_pupil=circular_pupil, obscuration=obscuration, flux=flux)
+            astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, trefoil1=trefoil1,
+            trefoil2=trefoil2, spher=spher, circular_pupil=circular_pupil, obscuration=obscuration,
+            flux=flux)
         
         # If interpolant not specified on input, use a Quintic interpolant
         if interpolant is None:
