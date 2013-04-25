@@ -296,10 +296,10 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
     """
     config['seq_index'] = image_num
 
-    ignore = [ 'draw_method', 'noise', 'wcs', 'nproc' , 'random_seed' , 'gsparams' ]
+    ignore = [
+        'draw_method', 'noise', 'wcs', 'nproc' , 'random_seed' , 'gsparams', 'n_photons', 'wmult' ]
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int ,
-            'pixel_scale' : float , 'sky_level' : float , 'sky_level_pixel' : float ,
-            'n_photons' : int ,  'wmult' : float }
+            'pixel_scale' : float , 'sky_level' : float , 'sky_level_pixel' : float }
     params = galsim.config.GetAllParams(
         config['image'], 'image', config, opt=opt, ignore=ignore)[0]
 
@@ -356,13 +356,15 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     """
     config['seq_index'] = image_num
 
-    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc', 'center' , 'gsparams' ]
+    ignore = [
+        'random_seed', 'draw_method', 'noise', 'wcs', 'nproc', 'center' , 'gsparams', 'n_photons',
+        'wmult' ]
     req = { 'nx_tiles' : int , 'ny_tiles' : int }
     opt = { 'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
             'border' : int , 'xborder' : int , 'yborder' : int ,
             'pixel_scale' : float , 'nproc' : int ,
             'sky_level' : float , 'sky_level_pixel' : float ,
-            'order' : str , 'n_photons' : int ,  'wmult' : float }
+            'order' : str }
     params = galsim.config.GetAllParams(
         config['image'], 'image', config, req=req, opt=opt, ignore=ignore)[0]
 
@@ -575,13 +577,14 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     """
     config['seq_index'] = image_num
 
-    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' , 'center' , 'gsparams' ]
+    ignore = [
+        'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' , 'center' , 'gsparams', 'n_photons',
+        'wmult' ]
     req = { 'nobjects' : int }
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 
             'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
             'pixel_scale' : float , 'nproc' : int ,
-            'sky_level' : float , 'sky_level_pixel' : float ,
-            'n_photons' : int ,  'wmult' : float }
+            'sky_level' : float , 'sky_level_pixel' : float }
     params = galsim.config.GetAllParams(
         config['image'], 'image', config, req=req, opt=opt, ignore=ignore)[0]
 
