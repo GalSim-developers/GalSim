@@ -90,39 +90,15 @@ def test_comparison_config(np):
         'size' : imsize,
         'pixel_scale' : dx,
         'random_seed' : rseed,
-        #'wmult' : wmult # Note wmult not currently settable via config, but it ought to be I think
+        'wmult' : wmult
     }
 
-    import copy
+    # Use an automatically-determined N core run setting
+    res8 = galsim.utilities.compare_dft_vs_photon_config(
+        config, n_photons_per_trial=np, nproc=-1, logger=logger, abs_tol_ellip=tol_ellip,
+        abs_tol_size=tol_size)
 
     print "Config results with N_PHOTONS = "+str(np)
-    # Try a single core run not setting many kwargs
-    #res1 = galsim.utilities.compare_dft_vs_photon_config(
-    #    copy.deepcopy(config), random_seed=rseed, size=imsize, pixel_scale=dx,
-    #    abs_tol_ellip=tol_ellip, abs_tol_size=tol_size, n_photons_per_trial=np, wmult=wmult,
-    #    nproc=1, logger=logger)
-    #print res1
-
-    # Try a dual core run setting
-    #res2 = galsim.utilities.compare_dft_vs_photon_config(
-    #    copy.deepcopy(config), random_seed=rseed, size=imsize, pixel_scale=dx,
-    #    abs_tol_ellip=tol_ellip, abs_tol_size=tol_size, n_photons_per_trial=np, wmult=wmult,
-    #    nproc=2, logger=logger)
-    #print res2
-
-    # Try a four core run setting
-    #res4 = galsim.utilities.compare_dft_vs_photon_config(
-    #    copy.deepcopy(config), random_seed=rseed, size=imsize, pixel_scale=dx,
-    #    abs_tol_ellip=tol_ellip, abs_tol_size=tol_size, n_photons_per_trial=np,
-    #    wmult=wmult, nproc=4, logger=logger)
-    #print res4
-
-    # Try an eight core run setting
-    res8 = galsim.utilities.compare_dft_vs_photon_config(
-        config, random_seed=rseed, size=imsize, pixel_scale=dx,
-        abs_tol_ellip=tol_ellip, abs_tol_size=tol_size, n_photons_per_trial=np,
-        wmult=wmult, nproc=8, logger=logger)
-
     print res8
     return
 
