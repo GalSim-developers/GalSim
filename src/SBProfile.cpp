@@ -663,6 +663,9 @@ namespace galsim {
         fillKValue(val.view(),0.,dk,0,-N/2*dk,dk,N/2);
 
         tmv::MatrixView<std::complex<double> > mkt(kt.getArray(),N/2+1,N,1,N/2+1,tmv::NonConj);
+#ifdef DEBUGLOGGING
+        mkt.setAllTo(1.e100);
+#endif
         // The KTable wants the locations of the + and - ky values swapped.
         mkt.colRange(0,N/2) = val.colRange(N/2,N);
         mkt.colRange(N/2+1,N) = val.colRange(1,N/2);
@@ -670,12 +673,21 @@ namespace galsim {
         // Otherwise you can get strange effects when the profile isn't radially symmetric.
         // e.g. A shift will induce a spurious shear. (BAD!!)
         mkt.col(N/2) = 0.5*val.col(0) + 0.5*val.col(N);
+        // Similarly, the N/2 row should really be the average of the kx = +N/2 and -N/2 values,
+        // which again is exactly 0.  We didn't calculate the kx = -N/2 values, but we know that
+        // f(-kx,-ky) = conj(f(kx,ky)), so the calculation becomes:
+        mkt.row(N/2).subVector(1,N/2) += mkt.row(N/2).subVector(N-1,N/2,-1).conjugate();
+        mkt.row(N/2).subVector(1,N/2) *= 0.5;
+        mkt.row(N/2).subVector(N-1,N/2,-1) = mkt.row(N/2).subVector(1,N/2).conjugate();
 
 #ifdef OUTPUT_FFT
+        xdbg<<"val.row(0) = "<<val.row(0)<<std::endl;
+        xdbg<<"val.row(N/2) = "<<val.row(N/2)<<std::endl;
         xdbg<<"val.col(0) = "<<val.col(0)<<std::endl;
         xdbg<<"val.col(N) = "<<val.col(N)<<std::endl;
         xdbg<<"val.col(N/2) = "<<val.col(N/2)<<std::endl;
         xdbg<<"mkt.col(N/2) = "<<mkt.col(N/2)<<std::endl;
+        xdbg<<"mkt.row(N/2) = "<<mkt.row(N/2)<<std::endl;
         std::ofstream fout_re("ktr.dat");
         std::ofstream fout_im("kti.dat");
         fout_re << tmv::EigenIO() << mkt.realPart() << std::endl;
