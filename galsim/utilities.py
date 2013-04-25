@@ -339,21 +339,21 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, pixel_scal
     @param wmult                  the `wmult` parameter used in .draw() (see the GSObject .draw()
                                   method docs via `help(galsim.GSObject.draw)` for more details).
 
-    @abs_tol_ellip                the test will keep iterating, adding ever greater numbers of
+    @param abs_tol_ellip          the test will keep iterating, adding ever greater numbers of
                                   trials, until estimates of the 1-sigma standard error on mean 
                                   ellipticity moments from photon-shot images are smaller than this
                                   param value.
 
-    @abs_tol_size                 the test will keep iterating, adding ever greater numbers of
+    @param abs_tol_size           the test will keep iterating, adding ever greater numbers of
                                   trials, until estimates of the 1-sigma standard error on mean 
                                   size moments from photon-shot images are smaller than this param
                                   value.
 
-    @n_trials_per_iter            number of trial images used to estimate (or successively
+    @param n_trials_per_iter      number of trial images used to estimate (or successively
                                   re-estimate) the standard error on the delta quantities above for
                                   each iteration of the tests. Default = 32.
 
-    @n_photons_per_trial          number of photons shot in drawShoot() for each trial.  This should
+    @param n_photons_per_trial    number of photons shot in drawShoot() for each trial.  This should
                                   be large enough that any noise bias (a.k.a. noise rectification
                                   bias) on moments estimates is small. Default ~1e7 should be
                                   sufficient.
@@ -500,7 +500,7 @@ def compare_dft_vs_photon_config(config, random_seed=None, nproc=None, pixel_sca
     @random_seed                  integer to be used as the basis of all seeds for the random number
                                   generator, overrides any value in config['image'].
 
-    @nproc                        number of cpu processes to run in parallel, overrides any value
+    @param nproc                  number of cpu processes to run in parallel, overrides any value
                                   in config['image'].
 
     @param pixel_scale            the pixel scale to use in the test images, overrides any value in
@@ -513,21 +513,21 @@ def compare_dft_vs_photon_config(config, random_seed=None, nproc=None, pixel_sca
                                   method docs via `help(galsim.GSObject.draw)` for more details),
                                   overrides any value in config['image'].
 
-    @abs_tol_ellip                the test will keep iterating, adding ever greater numbers of
+    @param abs_tol_ellip          the test will keep iterating, adding ever greater numbers of
                                   trials, until estimates of the 1-sigma standard error on mean 
                                   ellipticity moments from photon-shot images are smaller than this
                                   param value.
 
-    @abs_tol_size                 the test will keep iterating, adding ever greater numbers of
+    @param abs_tol_size           the test will keep iterating, adding ever greater numbers of
                                   trials, until estimates of the 1-sigma standard error on mean 
                                   size moments from photon-shot images are smaller than this param
                                   value.
 
-    @n_trials_per_iter            number of trial images used to estimate (or successively
+    @param n_trials_per_iter      number of trial images used to estimate (or successively
                                   re-estimate) the standard error on the delta quantities above for
                                   each iteration of the tests. Default = 32.
 
-    @n_photons_per_trial          number of photons shot in drawShoot() for each trial.  This should
+    @param n_photons_per_trial    number of photons shot in drawShoot() for each trial.  This should
                                   be large enough that any noise bias (a.k.a. noise rectification
                                   bias) on moments estimates is small. Default ~1e7 should be
                                   sufficient.
