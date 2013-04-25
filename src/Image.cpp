@@ -239,7 +239,7 @@ int BaseImage<T>::getPaddedSize(float pad_factor) const
     assert(Ninitial%2==0);
     assert(Ninitial>=2);
 
-    if (pad_factor <= 0.) pad_factor = sbp::oversample_x;
+    if (pad_factor <= 0.) pad_factor = sbp::default_pad_factor;
     return goodFFTSize(int(pad_factor*Ninitial));
 }
 

@@ -39,19 +39,12 @@ namespace galsim {
     public:
 
         /** 
-         * @brief Constructor, 2 inputs.
-         *
-         * @param[in] s1 first SBProfile.
-         * @param[in] s2 second SBProfile.
-         */
-        SBAdd(const SBProfile& s1, const SBProfile& s2);
-
-        /** 
          * @brief Constructor, list of inputs.
          *
          * @param[in] slist list of SBProfiles.
          */
-        SBAdd(const std::list<SBProfile>& slist);
+        SBAdd(const std::list<SBProfile>& slist,
+              boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
 
         /// @brief Copy constructor.
         SBAdd(const SBAdd& rhs);

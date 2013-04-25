@@ -58,7 +58,7 @@ namespace galsim {
 
     namespace integ {
         void pyExportInteg();
-    } // namespace hsm
+    } // namespace integ
 
 } // namespace galsim
 
