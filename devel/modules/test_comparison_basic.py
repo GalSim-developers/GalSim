@@ -46,12 +46,11 @@ def test_comparison_object(np):
     psf.applyShear(g1=g1psf, g2=g2psf)
 
     # Try a single core run
+    print "Starting tests using config file with N_PHOTONS = "+str(np)
     res1 = galsim.utilities.compare_dft_vs_photon_object(
         gal, psf_object=psf, rng=galsim.BaseDeviate(rseed), size=imsize, pixel_scale=dx,
         abs_tol_ellip=tol_ellip, abs_tol_size=tol_size, n_photons_per_trial=np)
-    print "Object results with N_PHOTONS = "+str(np)
     print res1
-
     return
 
 def test_comparison_config(np):
@@ -94,11 +93,10 @@ def test_comparison_config(np):
     }
 
     # Use an automatically-determined N core run setting
+    print "Starting tests using config file with N_PHOTONS = "+str(np)
     res8 = galsim.utilities.compare_dft_vs_photon_config(
         config, n_photons_per_trial=np, nproc=-1, logger=logger, abs_tol_ellip=tol_ellip,
         abs_tol_size=tol_size)
-
-    print "Config results with N_PHOTONS = "+str(np)
     print res8
     return
 
