@@ -365,6 +365,7 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, pixel_scal
                                   (i.e. including a PSF correction for shears; default=`False` as
                                   this feature is not yet implemented!)
     """
+    import sys
     import logging
     import time     
 
@@ -455,9 +456,12 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, pixel_scal
         g2obserr = _stderr(g2obs_shoot_list)
         sigmaerr = _stderr(sigma_shoot_list)
         itercount += 1
+        sys.stdout.write(".") # This doesn't add a carriage return at the end of the line, nice!
         logging.debug('Completed '+str(itercount)+' iterations')
         logging.debug(
             '(g1obserr, g2obserr, sigmaerr) = '+str(g1obserr)+', '+str(g2obserr)+', '+str(sigmaerr))
+
+    sys.stdout.write("\n")
 
     # Take the runtime and collate results into a ComparisonShapeData
     runtime = time.time() - t1
@@ -542,6 +546,7 @@ def compare_dft_vs_photon_config(config, random_seed=None, nproc=None, pixel_sca
     @param logger                 logging Logger instance to record output and pass down to the
                                   config layer for debuging / verbose output if desired.
     """
+    import sys
     import logging
     import time     
 
@@ -678,11 +683,14 @@ def compare_dft_vs_photon_config(config, random_seed=None, nproc=None, pixel_sca
         g2obserr = _stderr(g2obs_shoot_list)
         sigmaerr = _stderr(sigma_shoot_list)
         itercount += 1
+        sys.stdout.write(".") # This doesn't add a carriage return at the end of the line, nice!
         if logger:
             logger.debug('Completed '+str(itercount)+' iterations')
             logger.debug(
                 '(g1obserr, g2obserr, sigmaerr) = '+str(g1obserr)+', '+str(g2obserr)+', '+
             str(sigmaerr))
+
+    sys.stdout.write("\n")
 
     # Take the runtime and collate results into a ComparisonShapeData
     runtime = time.time() - t1
