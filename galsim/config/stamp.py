@@ -677,6 +677,12 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, final_sh
 
     if 'image' in config and 'n_photons' in config['image']:
 
+        if 'max_extra_noise' in config['image']:
+            import warnings
+            warnings.warn(
+                "Both 'max_extra_noise' and 'n_photons' are set in config['image'], "+
+                "ignoring 'max_extra_noise'.")
+
         n_photons = galsim.config.ParseValue(
             config['image'], 'n_photons', config, int)[0]
         im = final.drawShoot(image=im, dx=pixel_scale, n_photons=n_photons, rng=rng)
