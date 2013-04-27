@@ -2478,14 +2478,14 @@ def CalculateScale(im):
     # int r^2 exp(-r/s) 2pir dr = 12 s^4 pi
     # int exp(-r/s) 2pir dr = 2 s^2 pi
     x, y = np.meshgrid(np.arange(np.shape(im.array)[0]), np.arange(np.shape(im.array)[1]))
-    flux = im.array.sum()
-    mx = (x * im.array).sum() / flux
-    my = (y * im.array).sum() / flux
-    mxx = (((x-mx)**2) * im.array).sum() / flux
-    myy = (((y-my)**2) * im.array).sum() / flux
-    mxy = ((x-mx) * (y-my) * im.array).sum() / flux
-    print flux,mx,my,mxx,myy,mxy
+    flux = im.array.astype(float).sum()
+    mx = (x * im.array.astype(float)).sum() / flux
+    my = (y * im.array.astype(float)).sum() / flux
+    mxx = (((x-mx)**2) * im.array.astype(float)).sum() / flux
+    myy = (((y-my)**2) * im.array.astype(float)).sum() / flux
+    mxy = ((x-mx) * (y-my) * im.array.astype(float)).sum() / flux
     s2 = mxx+myy
+    print flux,mx,my,mxx,myy,mxy
     np.testing.assert_almost_equal((mxx-myy)/s2, 0, 5, "Found e1 != 0 for Exponential draw")
     np.testing.assert_almost_equal(2*mxy/s2, 0, 5, "Found e2 != 0 for Exponential draw")
     return np.sqrt(s2/6) * im.scale
@@ -2708,7 +2708,7 @@ def test_draw():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def dont_drawK():
+def test_drawK():
     """Test the various optional parameters to the drawK function.
        In particular test the parameters image, dk, and wmult in various combinations.
     """
@@ -2727,33 +2727,34 @@ def dont_drawK():
     #   - return the new images
     #   - set the scale to 2pi/(N*obj.nyquistDx())
     re1, im1 = obj.drawK()
-    print 're1.bounds = ',re1.bounds
-    print 'im1.bounds = ',im1.bounds
-    assert re1.bounds == galsim.BoundsI(1,880,1,880),(
+    assert re1.bounds == galsim.BoundsI(1,1162,1,1162),(
             "obj.drawK() produced image with wrong bounds")
-    assert im1.bounds == galsim.BoundsI(1,880,1,880),(
+    assert im1.bounds == galsim.BoundsI(1,1162,1,1162),(
             "obj.drawK() produced image with wrong bounds")
     dx_nyq = obj.nyquistDx()
-    N = 880
-    dk_nyq = 2*np.pi/(dx_nyq*N)
+    N = 1162
+    stepk = obj.stepK()
     print 'dx_nyq = ',dx_nyq
-    print 'dk_nyq = ',dk_nyq
+    print '2pi/(dx_nyq N) = ',2*np.pi/(dx_nyq*N)
+    print 'stepK = ',obj.stepK()
+    print 'maxK = ',obj.maxK()
     print 'im1.scale = ',im1.scale
-    np.testing.assert_almost_equal(re1.scale, dk_nyq, 9,
+    print 'im1.center = ',im1.bounds.center
+    np.testing.assert_almost_equal(re1.scale, stepk, 9,
                                    "obj.drawK() produced real image with wrong scale")
-    np.testing.assert_almost_equal(im1.scale, dk_nyq, 9,
+    np.testing.assert_almost_equal(im1.scale, stepk, 9,
                                    "obj.drawK() produced imag image with wrong scale")
-    re1.write('re.fits')
-    im1.write('im.fits')
-    np.testing.assert_almost_equal(CalculateScale(re1), 2, 1,
-                                   "Measured wrong scale after obj.drawK()")
 
     # The flux in Fourier space is just the value at k=0
-    np.testing.assert_almost_equal(re1(re1.center()), test_flux, 2,
+    np.testing.assert_almost_equal(re1(re1.bounds.center()), test_flux, 2,
                                    "obj2.drawK() produced real image with wrong flux")
+
     # Imaginary component should all be 0.
     np.testing.assert_almost_equal(im1.array.sum(), 0., 3,
                                    "obj2.drawK() produced non-zero imaginary component")
+
+    np.testing.assert_almost_equal(CalculateScale(re1), 2, 1,
+                                   "Measured wrong scale after obj.drawK()")
 
     return
 
@@ -3081,8 +3082,8 @@ def test_autocorrelate():
 
 
 if __name__ == "__main__":
-    #dont_drawK()
-    #exit()
+    test_drawK()
+    exit()
 
     test_gaussian()
     test_gaussian_properties()

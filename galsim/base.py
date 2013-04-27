@@ -536,7 +536,7 @@ class GSObject(object):
         if wmult <= 0:
             raise ValueError("Invalid wmult <= 0 in draw command")
 
-        # Save the input value, since we'll need to make a new dx
+        # Save the input value, since we'll need to make a new dx (in case image is None)
         if dx_is_dk: dk = dx
 
         # Check dx value and adjust if necessary
@@ -544,16 +544,25 @@ class GSObject(object):
             if image is not None and image.scale > 0.:
                 if dx_is_dk:
                     # dx = 2pi / (N*dk)
-                    dx = 2.*np.pi/( np.sqrt(image.area()) * image.scale)
+                    dk = image.scale
+                    dx = 2.*np.pi/( np.sqrt(image.area()) * image.scale )
                 else:
                     dx = image.scale
             else:
                 dx = self.SBProfile.nyquistDx()
+                if dx_is_dk:
+                    dk = self.stepK()
         elif dx <= 0:
             dx = self.SBProfile.nyquistDx()
+            if dx_is_dk:
+                dk = self.stepK()
         elif type(dx) != float:
             if dx_is_dk:
-                dx = self.SBProfile.nyquistDx()
+                dk = float(dx)
+                if image is not None:
+                    dx = 2.*np.pi/( np.sqrt(image.area()) * dk )
+                else:
+                    dx = self.SBProfile.nyquistDx()
             else:
                 dx = float(dx)
         # At this point dx is really dx, not dk.
@@ -581,13 +590,9 @@ class GSObject(object):
             # Clear the image if we are not adding to it.
             if not add_to_image:
                 image.setZero()
-            if dx_is_dk:
-                N = np.sqrt(image.area())
 
         # Set the image scale
         if dx_is_dk:
-            if dk is None or dk <= 0:
-                dk = 2.*np.pi/( N * dx )
             image.setScale(dk)
         else:
             image.setScale(dx)
