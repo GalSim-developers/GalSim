@@ -70,5 +70,5 @@ input :
 # 'results.yaml_filename.param_name.param_index.cat'
 # later other scripts can be used to produce plots
 vary_params:
-    - { path : ['gal','flux'], values : [ 1e5 3e5 1e6 3e6 1e7 3e7 ] } 
-  
+    - { path : ['image','gsparams','alias_threshold'], values : [ 1.0e-1 , 5.0e-2 , 1.0e-2 , 5.0e-3 , 1.0e-3 ] } 
+    - { path : ['image','gsparams','maxk_threshold'],  values : [ 2.0e-2 , 6.0e-3 , 2.0e-3 , 6.0e-4 , 2.0e-4 ] }

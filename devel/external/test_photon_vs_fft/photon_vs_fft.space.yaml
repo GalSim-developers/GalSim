@@ -1,12 +1,10 @@
 some_variables :
-    - &ngals_in_cat 10
+    - &ngals_in_cat 276
         
 psf : 
-    # ground PSF
-    type : Convolution
-    items :  
-        - { type : Moffat, fwhm : 0.65, beta : 3 }
-        - { type : Airy, lam_over_diam : {type: Eval, str: '(700.e-9)/4*180/math.pi*3600'} }
+    # space PSF
+    type : Airy
+    lam_over_diam : {type: Eval, str: '700.e-9 / 1.3 * 180. / math.pi * 3600.'}
     ellip : 
         type : EBeta
         e : { type : Random , min : 0.0 , max : 0.2 }
@@ -26,12 +24,12 @@ gal :
     flux : 1e6
     
 image :
-    # pixel scale for the ground observation
-    pixel_scale : 0.2  # arcsec / pixel
+    # pixel scale for space observations
+    pixel_scale : 0.03  # arcsec / pixel
     type : Tiled
     # number of x tiles is 2, one for fft image, one for photon
     nx_tiles : 2
-    ny_tiles : *ngals_in_cat
+    ny_tiles : *ngals_in_cat    
     # this has to be big in order for the space images to contain the galaxies fully
     stamp_size : 256
     # this field is required for the photon image, 
@@ -59,6 +57,7 @@ image :
          integration_relerr : 1.e-5  
          integration_abserr : 1.e-7  
 
+
 input :
     catalog :
         dir : .
@@ -70,5 +69,5 @@ input :
 # 'results.yaml_filename.param_name.param_index.cat'
 # later other scripts can be used to produce plots
 vary_params:
-    - { path : ['gal','flux'], values : [ 1e5 3e5 1e6 3e6 1e7 3e7 ] } 
-  
+    - { path : ['image','gsparams','alias_threshold'], values : [ 1.0e-1 , 5.0e-2 , 1.0e-2 , 5.0e-3 , 1.0e-3 ] } 
+    - { path : ['image','gsparams','maxk_threshold'],  values : [ 2.0e-2 , 6.0e-3 , 2.0e-3 , 6.0e-4 , 2.0e-4 ] }
