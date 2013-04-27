@@ -948,6 +948,14 @@ def test_moffat():
     # Test kvalues
     do_kvalue(moffat, "Moffat")
 
+    # The code for untruncated Moffat profiles is specialized for particular beta values, so 
+    # test each of these:
+    for beta in [ 1.5, 2, 2.5, 3, 3.5, 4, 2.3 ]:  # The one last is for the generic case.
+        moffat = galsim.Moffat(beta=beta, half_light_radius=0.7, flux=1.7)
+        do_kvalue(moffat,"Untruncated Moffat with beta=%f"%beta)
+        # Don't bother repeating the do_shoot tests, since they are rather slow, and the code
+        # isn't different for the different beta values.
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
