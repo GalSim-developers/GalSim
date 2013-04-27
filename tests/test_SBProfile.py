@@ -196,6 +196,28 @@ def do_shoot(prof, img, name):
             err_msg="Photon shooting flux normalization for %s disagrees with expected result"%name)
 
 
+def do_kvalue(prof, name):
+    """Test that the k-space values are consistent with the real-space values by drawing the 
+    profile directly (without any convolution, so using fillXValues) and convolved by a tiny
+    Gaussian (effectively a delta function).
+    """
+
+    im1 = galsim.ImageF(16,16)
+    im1.scale = 0.2
+    prof.draw(im1)
+
+    delta = galsim.Gaussian(sigma = 1.e-8)
+    conv = galsim.Convolve([prof,delta])
+    im2 = galsim.ImageF(16,16)
+    im2.scale = 0.2
+    conv.draw(im2)
+    printval(im1,im2)
+    np.testing.assert_array_almost_equal(
+            im2.array, im1.array, 3,
+            err_msg = name + 
+            " convolved with a delta function is inconsistent with real-space image.")
+
+
 def radial_integrate(prof, minr, maxr, dr):
     """A simple helper that calculates int 2pi r f(r) dr, from rmin to rmax
        for an axially symmetric profile.
@@ -274,6 +296,10 @@ def test_gaussian():
 
     # Test photon shooting.
     do_shoot(gauss,myImg,"Gaussian")
+
+    # Test kvalues
+    do_kvalue(gauss,"Gaussian")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -496,6 +522,10 @@ def test_exponential():
 
     # Test photon shooting.
     do_shoot(expon,myImg,"Exponential")
+
+    # Test kvalues
+    do_kvalue(expon,"Exponential")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -594,6 +624,10 @@ def test_sersic():
     sersic2 = galsim.Convolve(sersic, galsim.Gaussian(sigma=0.3))
     do_shoot(sersic2,myImg,"Sersic")
 
+    # Test kvalues
+    do_kvalue(sersic,"Sersic")
+
+
     # Now repeat everything using a truncation.  (Above had no truncation.)
 
     # Test Truncated SBSersic
@@ -618,6 +652,10 @@ def test_sersic():
     # Convolve with a small gaussian to smooth out the central peak.
     sersic2 = galsim.Convolve(sersic, galsim.Gaussian(sigma=0.3))
     do_shoot(sersic2,myImg,"Truncated Sersic")
+
+    # Test kvalues
+    do_kvalue(sersic, "Truncated Sersic")
+
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -769,8 +807,13 @@ def test_airy():
     # Test photon shooting.
     airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.0, flux=1)
     do_shoot(airy,myImg,"Airy obscuration=0.0")
-    airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=1)
-    do_shoot(airy,myImg,"Airy obscuration=0.1")
+    airy2 = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=1)
+    do_shoot(airy2,myImg,"Airy obscuration=0.1")
+
+    # Test kvalues
+    do_kvalue(airy, "Airy obscuration=0.0")
+    do_kvalue(airy2, "Airy obscuration=0.1")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -850,6 +893,7 @@ def test_box():
 
     # Test photon shooting.
     do_shoot(pixel,myImg,"Pixel")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -900,6 +944,10 @@ def test_moffat():
 
     # Test photon shooting.
     do_shoot(moffat,myImg,"Moffat")
+
+    # Test kvalues
+    do_kvalue(moffat, "Moffat")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -1178,17 +1226,12 @@ def test_kolmogorov():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Kolmogorov with GSParams() disagrees with expected result")
 
-    # Test equivalence when convolved by an effective delta function
-    # This tests the equivalence between xValue and kValue calculations.
-    delta = galsim.Gaussian(sigma=1.e-8)
-    conv = galsim.Convolve([kolm,delta])
-    conv.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 3,
-            err_msg="Kolmogorov * delta disagrees with expected result")
-
     # Test photon shooting.
     do_shoot(kolm,myImg,"Kolmogorov")
+
+    # Test kvalues
+    do_kvalue(kolm, "Kolmogorov")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -1394,6 +1437,10 @@ def test_smallshear():
  
     # Test photon shooting.
     do_shoot(gauss,myImg,"sheared Gaussian")
+
+    # Test kvalues
+    do_kvalue(gauss,"sheared Gaussian")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -1472,6 +1519,14 @@ def test_largeshear():
     # Convolve with a small gaussian to smooth out the central peak.
     devauc2 = galsim.Convolve(devauc, galsim.Gaussian(sigma=0.3))
     do_shoot(devauc2,myImg,"sheared DeVauc")
+
+    # Test kvalues.
+    # Testing a sheared devauc requires a rather large fft.  What we really care about 
+    # testing though is the accuracy of the applyShear function.  So just shear a Gaussian here.
+    gauss = galsim.Gaussian(sigma=2.3)
+    gauss.applyShear(myShear)
+    do_kvalue(gauss, "sheared Gaussian")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -1544,6 +1599,7 @@ def test_convolve():
  
     # Test photon shooting.
     do_shoot(conv,myImg,"Moffat * Pixel")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -1636,6 +1692,7 @@ def test_shearconvolve():
  
     # Test photon shooting.
     do_shoot(conv,myImg,"sheared Gaussian * Pixel")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -1710,6 +1767,9 @@ def test_realspace_convolve():
     np.testing.assert_array_almost_equal(
             img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve([pixel,psf]) disagrees with expected result")
+
+    # Test kvalues
+    do_kvalue(conv,"Truncated Moffat convolved with Box")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1910,6 +1970,10 @@ def test_rotate():
     # Convolve with a small gaussian to smooth out the central peak.
     gal2 = galsim.Convolve(gal, galsim.Gaussian(sigma=0.3))
     do_shoot(gal2,myImg,"rotated sheared Sersic")
+
+    # Test kvalues
+    do_kvalue(gal,"rotated sheared Sersic")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -2022,6 +2086,10 @@ def test_mag():
     gal = galsim.Exponential(flux=1, scale_radius=r0)
     gal.applyMagnification(1.5**2) # area rescaling factor
     do_shoot(gal,myImg,"dilated Exponential")
+
+    # Test kvalues
+    do_kvalue(gal,"dilated Exponential")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -2132,6 +2200,10 @@ def test_add():
  
     # Test photon shooting.
     do_shoot(sum,myImg,"sum of 2 Gaussians")
+
+    # Test kvalues
+    do_kvalue(sum,"sum of 2 Gaussians")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -2182,6 +2254,14 @@ def test_shift():
  
     # Test photon shooting.
     do_shoot(pixel,myImg,"shifted Box")
+
+    # Test kvalues.
+    # Testing a shifted box requires a ridiculously large fft.  What we really care about 
+    # testing though is the accuracy of the applyShift function.  So just shift a Gaussian here.
+    gauss = galsim.Gaussian(sigma=2.3)
+    gauss.applyShift(0.2,-0.2)
+    do_kvalue(gauss, "shifted Gaussian")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -2322,6 +2402,10 @@ def test_rescale():
     # Convolve with a small gaussian to smooth out the central peak.
     sersic3 = galsim.Convolve(sersic2, galsim.Gaussian(sigma=0.3))
     do_shoot(sersic3,myImg,"scaled Sersic")
+
+    # Test kvalues
+    do_kvalue(sersic2, "scaled Sersic")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -2369,6 +2453,10 @@ def test_sbinterpolatedimage():
         sbinterp = galsim.SBInterpolatedImage(image_in, quint_2d, dx=1.0)
         sbinterp.setFlux(1.)
         do_shoot(galsim.GSObject(sbinterp),image_out,"InterpolatedImage")
+
+        # Test kvalues
+        do_kvalue(galsim.GSObject(sbinterp),"InterpolatedImage")
+
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -2612,7 +2700,7 @@ def test_draw():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_drawK():
+def dont_drawK():
     """Test the various optional parameters to the drawK function.
        In particular test the parameters image, dk, and wmult in various combinations.
     """
@@ -2979,13 +3067,14 @@ def test_autocorrelate():
 
     # Test photon shooting.
     do_shoot(corr,myImg2,"AutoCorrelate")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 if __name__ == "__main__":
-    test_drawK()
-    exit()
+    #dont_drawK()
+    #exit()
 
     test_gaussian()
     test_gaussian_properties()
