@@ -450,9 +450,6 @@ namespace galsim {
         int NFT = goodFFTSize(Nnofold);
         NFT = std::max(NFT,_pimpl->gsparams->minimum_fft_size);
         dbg << " After adjustments: Nnofold " << Nnofold << " NFT " << NFT << std::endl;
-        if (NFT > _pimpl->gsparams->maximum_fft_size)
-            FormatAndThrow<SBError>() << 
-                "fourierDraw() requires an FFT that is too large, " << NFT;
 
         // Move the output image to be centered near zero
         I.setCenter(0,0);
@@ -465,6 +462,10 @@ namespace galsim {
         if (NFT*dk/2 > maxK()) {
             dbg<<"NFT*dk/2 = "<<NFT*dk/2<<" > maxK() = "<<maxK()<<std::endl;
             dbg<<"Use NFT = "<<NFT<<std::endl;
+            if (NFT > _pimpl->gsparams->maximum_fft_size)
+                FormatAndThrow<SBError>() << 
+                    "fourierDraw() requires an FFT that is too large, " << NFT <<
+                    "\nIf you can handle the large FFT, you may update gsparams.maximum_fft_size.";
             // No aliasing: build KTable and transform
             KTable kt(NFT,dk);
             assert(_pimpl.get());
@@ -476,6 +477,10 @@ namespace galsim {
             // then wrap it
             int Nk = int(std::ceil(maxK()/dk)) * 2;
             dbg<<"Use Nk = "<<Nk<<std::endl;
+            if (Nk > _pimpl->gsparams->maximum_fft_size)
+                FormatAndThrow<SBError>() << 
+                    "fourierDraw() requires an FFT that is too large, " << Nk <<
+                    "\nIf you can handle the large FFT, you may update gsparams.maximum_fft_size.";
             KTable kt(Nk, dk);
             assert(_pimpl.get());
             _pimpl->fillKGrid(kt);
