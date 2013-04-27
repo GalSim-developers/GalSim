@@ -16,7 +16,7 @@ import pylab
 import math
 
 HSM_ERROR_VALUE = -99
-NO_PSF_VALUE    = -99
+NO_PSF_VALUE    = -98
 
 def saveResults(filename_output,results_all_gals):
     """
@@ -240,7 +240,8 @@ def ChangeConfigValue(config,path,value):
         exec(eval_str + '=' + str(value))
         logging.debug('changed %s to %f' % (eval_str,eval(eval_str)))
     except:
-        raise ValueError('wrong path in config %s' % eval_str)
+        print config
+        raise ValueError('wrong path in config : %s' % eval_str)
 
 def RunComparisonForVariedParams(config,filename_config):
     """
@@ -255,24 +256,22 @@ def RunComparisonForVariedParams(config,filename_config):
     """
 
     # loop over parameters to vary
-    for param in config['vary_params']:
-        # get the path in config to the parameter
-        path = param['path']
-        # get the name of the parameter, which should be last in path
-        param_name = path[-1]
+    for param_name in config['vary_params'].keys():
+        # get more info for the parmaeter
+        param = config['vary_params'][param_name]
         # loop over all values of the parameter, which will be changed
         for iv,value in enumerate(param['values']):
             # copy the config to the original
             changed_config = config.copy()
             # perform the change
-            ChangeConfigValue(changed_config,path,value)
+            ChangeConfigValue(changed_config,param['path'],value)
             # run the photon vs fft test on the changed configs
             results = RunComparison(changed_config)
             # get the results filename
             filename_results = 'results.%s.%s.%03d.cat' % (filename_config,param_name,iv)
             # save the results
             saveResults(filename_results,results)
-            logging.info('saved results for varied parameter %s with value %f, filename %s' % (param_name,value,filename_results))
+            logging.info('saved results for varied parameter %s with value %s, filename %s' % (param_name,str(value),filename_results))
 
 if __name__ == "__main__":
 

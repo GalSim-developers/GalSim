@@ -70,5 +70,5 @@ input :
 # 'results.yaml_filename.param_name.param_index.cat'
 # later other scripts can be used to produce plots
 vary_params:
-    - { path : ['gal','flux'], values : [ 1e5 3e5 1e6 3e6 1e7 3e7 ] } 
-  
+    nphoton : { path : ['gal','flux'], values : [ 1e5, 3e5, 1e6, 3e6, 1e7, 3e7 ] } 
+ 
