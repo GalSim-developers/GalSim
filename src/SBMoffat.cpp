@@ -19,7 +19,7 @@
  * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#define DEBUGLOGGING
+//#define DEBUGLOGGING
 
 #include <boost/math/special_functions/bessel.hpp>
 #include <boost/math/special_functions/gamma.hpp>
@@ -244,7 +244,6 @@ namespace galsim {
         else _pow_beta = &SBMoffatImpl::pow_gen;
 
         if (_trunc > 0.) _kV = &SBMoffatImpl::kV_trunc;
-        else if (true) _kV = &SBMoffatImpl::kV_trunc;
         else if (std::abs(_beta-1.5) < this->gsparams->kvalue_accuracy) 
             _kV = &SBMoffatImpl::kV_15;
         else if (std::abs(_beta-2) < this->gsparams->kvalue_accuracy) 
@@ -298,7 +297,7 @@ namespace galsim {
         if (ksq == 0.) return 1.;
         else {
             double k = sqrt(ksq);
-            return boost::math::cyl_bessel_k(1,k) * ksq;
+            return boost::math::cyl_bessel_k(1,k) * k;
         }
     }
 
@@ -313,7 +312,7 @@ namespace galsim {
         if (ksq == 0.) return 2.;
         else {
             double k = sqrt(ksq);
-            return boost::math::cyl_bessel_k(2,k) * k*ksq;
+            return boost::math::cyl_bessel_k(2,k) * ksq;
         }
     }
 
@@ -328,7 +327,7 @@ namespace galsim {
         if (ksq == 0.) return 8.;
         else {
             double k = sqrt(ksq);
-            return boost::math::cyl_bessel_k(3,k) * ksq*ksq;
+            return boost::math::cyl_bessel_k(3,k) * k*ksq;
         }
     }
 
@@ -337,7 +336,7 @@ namespace galsim {
         if (ksq == 0.) return _flux/_knorm;
         else {
             double k = sqrt(ksq);
-            return boost::math::cyl_bessel_k(_beta-1,k) * std::pow(k,_beta);
+            return boost::math::cyl_bessel_k(_beta-1,k) * std::pow(k,_beta-1);
         }
     }
 
