@@ -22,6 +22,9 @@ NPHOTONS = 1.e7
 # Output filename
 OUTFILE = "sersic_highn_basic_output.pkl"
 
+# Params for a very simple, Airy PSF
+PSF_LAM_OVER_DIAM = 0.09 # ~ COSMOS width, oversampled at 0.03 arcsec
+
 # If using config, settings
 USE_CONFIG = True
 if USE_CONFIG:
@@ -76,13 +79,15 @@ if __name__ == "__main__":
                         "type" : "G1G2" , "g1" : g1 , "g2" : g2
                     }
                 }
+                config['psf'] = {"type" : "Airy" , "lam_over_diam" : PSF_LAM_OVER_DIAM }
                 results = galsim.utilities.compare_dft_vs_photon_config(
                     config, abs_tol_ellip=TOL_ELLIP, abs_tol_size=TOL_SIZE, logger=logger)
             else:
                 galaxy = galsim.Sersic(sersic_n, half_light_radius=hlr)
                 galaxy.applyShear(g1=g1, g2=g2)
+                psf = galsim.Airy(lam_over_diam=PSF_LAM_OVER_DIAM)
                 results = galsim.utilities.compare_dft_vs_photon_object(
-                    galaxy, rng=ud, pixel_scale=PIXEL_SCALE, size=IMAGE_SIZE,
+                    galaxy, psf_object=psf, rng=ud, pixel_scale=PIXEL_SCALE, size=IMAGE_SIZE,
                     abs_tol_ellip=TOL_ELLIP, abs_tol_size=TOL_SIZE, n_photons_per_trial=NPHOTONS,
                     wmult=WMULT)
             g1obs_draw[i, j] = results.g1obs_draw
