@@ -227,24 +227,37 @@ namespace galsim {
         dbg << "Moffat rD " << _rD << " fluxFactor " << _fluxFactor
             << " norm " << _norm << " maxR " << _maxR << std::endl;
 
-        if (_beta == 1) _pow_beta = &SBMoffatImpl::pow_1;
-        else if (_beta == 1.5) _pow_beta = &SBMoffatImpl::pow_15;
-        else if (_beta == 2) _pow_beta = &SBMoffatImpl::pow_2;
-        else if (_beta == 2.5) _pow_beta = &SBMoffatImpl::pow_25;
-        else if (_beta == 3) _pow_beta = &SBMoffatImpl::pow_3;
-        else if (_beta == 3.5) _pow_beta = &SBMoffatImpl::pow_35;
-        else if (_beta == 4) _pow_beta = &SBMoffatImpl::pow_4;
+        if (std::abs(_beta-1) < this->gsparams->xvalue_accuracy) 
+            _pow_beta = &SBMoffatImpl::pow_1;
+        else if (std::abs(_beta-1.5) < this->gsparams->xvalue_accuracy) 
+            _pow_beta = &SBMoffatImpl::pow_15;
+        else if (std::abs(_beta-2) < this->gsparams->xvalue_accuracy) 
+            _pow_beta = &SBMoffatImpl::pow_2;
+        else if (std::abs(_beta-2.5) < this->gsparams->xvalue_accuracy) 
+            _pow_beta = &SBMoffatImpl::pow_25;
+        else if (std::abs(_beta-3) < this->gsparams->xvalue_accuracy) 
+            _pow_beta = &SBMoffatImpl::pow_3;
+        else if (std::abs(_beta-3.5) < this->gsparams->xvalue_accuracy) 
+            _pow_beta = &SBMoffatImpl::pow_35;
+        else if (std::abs(_beta-4) < this->gsparams->xvalue_accuracy) 
+            _pow_beta = &SBMoffatImpl::pow_4;
         else _pow_beta = &SBMoffatImpl::pow_gen;
 
         if (_trunc > 0.) _kV = &SBMoffatImpl::kV_trunc;
         else if (true) _kV = &SBMoffatImpl::kV_trunc;
-        else if (_beta == 1.5) _kV = &SBMoffatImpl::kV_15;
-        else if (_beta == 2) _kV = &SBMoffatImpl::kV_2; 
-        else if (_beta == 2.5) _kV = &SBMoffatImpl::kV_25;
-        else if (_beta == 3) { _kV = &SBMoffatImpl::kV_3; _knorm /= 2.; }
-        else if (_beta == 3.5) { _kV = &SBMoffatImpl::kV_35; _knorm /= 3.; }
-        else if (_beta == 4) { _kV = &SBMoffatImpl::kV_4; _knorm /= 8.; }
-        else {
+        else if (std::abs(_beta-1.5) < this->gsparams->kvalue_accuracy) 
+            _kV = &SBMoffatImpl::kV_15;
+        else if (std::abs(_beta-2) < this->gsparams->kvalue_accuracy) 
+            _kV = &SBMoffatImpl::kV_2; 
+        else if (std::abs(_beta-2.5) < this->gsparams->kvalue_accuracy) 
+            _kV = &SBMoffatImpl::kV_25;
+        else if (std::abs(_beta-3) < this->gsparams->kvalue_accuracy) { 
+            _kV = &SBMoffatImpl::kV_3; _knorm /= 2.; 
+        } else if (std::abs(_beta-3.5) < this->gsparams->kvalue_accuracy) {
+            _kV = &SBMoffatImpl::kV_35; _knorm /= 3.; 
+        } else if (std::abs(_beta-4) < this->gsparams->kvalue_accuracy) {
+            _kV = &SBMoffatImpl::kV_4; _knorm /= 8.; 
+        } else {
             _kV = &SBMoffatImpl::kV_gen;
             _knorm *= 4. / (boost::math::tgamma(beta-1.) * std::pow(2.,beta));
         }
@@ -473,8 +486,7 @@ namespace galsim {
     double SBMoffat::SBMoffatImpl::maxK() const 
     {
         if (_maxK == 0.) {
-            //if (_trunc == 0.) 
-            if (false) {
+            if (_trunc == 0.) {
                 // f(k) = 4 K(beta-1,k) (k/2)^beta / Gamma(beta-1)
                 //
                 // The asymptotic formula for K(beta-1,k) is 
