@@ -10,7 +10,7 @@ IMAGE_SIZE = 96
 RANDOM_SEED = 912424534
 
 # Number of objects from the COSMOS subsample of 300 to test
-NOBS = 100
+NOBS = 30#0
 
 # Absolute tolerances on ellipticity and size estimates
 TOL_ELLIP = 3.e-5
@@ -37,7 +37,7 @@ if USE_CONFIG:
     config = {}
     config['image'] = {
         "size" : IMAGE_SIZE , "pixel_scale" : PIXEL_SCALE , # Note RANDOM_SEED generated later 
-        "wmult" : WMULT, "n_photons" : NPHOTONS, "maximum_fft_size" : MAX_FFT_SIZE }
+        "wmult" : WMULT, "n_photons" : NPHOTONS, "gsparams" : {"maximum_fft_size" : MAX_FFT_SIZE} }
 
 # Logging level
 LOGLEVEL = logging.WARN
