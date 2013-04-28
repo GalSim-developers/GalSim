@@ -296,7 +296,7 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, pixel_scal
     """Take an input object (with optional PSF) and render it in two ways comparing results at high
     precision.
 
-    Using both photon shooting (via drawShoot) and Discrete Fourier Transform (via shoot) to render
+    Using both photon shooting (via drawShoot) and Discrete Fourier Transform (via draw) to render
     images, we compare the numerical values of adaptive moments estimates of size and ellipticity to
     check consistency.
 
@@ -307,7 +307,7 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, pixel_scal
 
     We generate successive sets of `n_trials_per_iter` photon-shot images, using 
     `n_photons_per_trial` photons in each image, until the standard error on the mean absolute size
-    and ellipticty drop below `abs_tol_size` and `abs_tol_ellip`.  We then output a
+    and ellipticity drop below `abs_tol_size` and `abs_tol_ellip`.  We then output a
     ComparisonShapeData object which stores the results.
 
     Note that `n_photons_per_trial` should be large (>~ 1e6) to ensure that any biases detected
