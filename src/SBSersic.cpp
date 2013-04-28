@@ -459,7 +459,7 @@ namespace galsim {
     {
         // Going to constrain range of allowed n to those for which testing was done
         // (Lower bounds has hard limit at ~0.29)
-        if (_n<0.3 || _n>8.0) throw SBError("Requested Sersic index out of range");
+        if (_n<0.3 || _n>8.1) throw SBError("Requested Sersic index out of range");
 
         if ( _truncated && _flux_untruncated ) {
             dbg << "Calculating b with maxR/re => 0 (inf)" << std::endl;
