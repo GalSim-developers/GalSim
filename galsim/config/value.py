@@ -716,9 +716,9 @@ def _GenerateFromFormattedStr(param, param_name, base, value_type):
 def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
     """@brief Return a shear calculated from an NFWHalo object.
     """
-    if 'pos' not in base:
+    if 'sky_pos' not in base:
         raise ValueError("NFWHaloShear requested, but no position defined.")
-    pos = base['pos']
+    pos = base['sky_pos']
 
     if 'gal' not in base or 'redshift' not in base['gal']:
         raise ValueError("NFWHaloShear requested, but no gal.redshift defined.")
@@ -749,9 +749,9 @@ def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
 def _GenerateFromNFWHaloMagnification(param, param_name, base, value_type):
     """@brief Return a magnification calculated from an NFWHalo object.
     """
-    if 'pos' not in base:
+    if 'sky_pos' not in base:
         raise ValueError("NFWHaloMagnification requested, but no position defined.")
-    pos = base['pos']
+    pos = base['sky_pos']
 
     if 'gal' not in base or 'redshift' not in base['gal']:
         raise ValueError("NFWHaloMagnification requested, but no gal.redshift defined.")
@@ -785,9 +785,9 @@ def _GenerateFromNFWHaloMagnification(param, param_name, base, value_type):
 def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
     """@brief Return a shear calculated from a PowerSpectrum object.
     """
-    if 'pos' not in base:
+    if 'sky_pos' not in base:
         raise ValueError("PowerSpectrumShear requested, but no position defined.")
-    pos = base['pos']
+    pos = base['sky_pos']
 
     if 'power_spectrum' not in base:
         raise ValueError("PowerSpectrumShear requested, but no input.power_spectrum defined.")
@@ -813,9 +813,9 @@ def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
 def _GenerateFromPowerSpectrumMagnification(param, param_name, base, value_type):
     """@brief Return a magnification calculated from a PowerSpectrum object.
     """
-    if 'pos' not in base:
+    if 'sky_pos' not in base:
         raise ValueError("PowerSpectrumMagnification requested, but no position defined.")
-    pos = base['pos']
+    pos = base['sky_pos']
 
     if 'power_spectrum' not in base:
         raise ValueError("PowerSpectrumMagnification requested, but no input.power_spectrum "

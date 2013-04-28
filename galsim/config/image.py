@@ -600,7 +600,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     config['seq_index'] = image_num
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
-               'stamp_image_pos', 'sky_pos', 
+               'stamp_image_pos', 'stamp_sky_pos', 
                'stamp_size', 'stamp_xsize', 'stamp_ysize', 'gsparams' ]
     req = { 'nobjects' : int }
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 
