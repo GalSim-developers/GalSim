@@ -9,6 +9,9 @@ IMAGE_SIZE = 96
 
 RANDOM_SEED = 912424534
 
+# Number of objects from the COSMOS subsample of 300 to test
+NOBS = 100
+
 # Absolute tolerances on ellipticity and size estimates
 TOL_ELLIP = 3.e-5
 TOL_SIZE = 3.e-4 # Note this is in pixels by default, so for 0.03 arcsec/pixel this is still small
@@ -20,7 +23,7 @@ WMULT = 1. # This might have an impact
 NPHOTONS = 1.e7
 
 # Output filename
-OUTFILE = "sersic_highn_basic_output.pkl"
+OUTFILE = "sersic_highn_basic_output_N"+str(NOBS)+".pkl"
 
 # Params for a very simple, Airy PSF
 PSF_LAM_OVER_DIAM = 0.09 # ~ COSMOS width, oversampled at 0.03 arcsec
@@ -48,22 +51,25 @@ if __name__ == "__main__":
     logger = logging.getLogger("sersic_highn_basic")
     # Get galaxy sample
     n_cosmos, hlr_cosmos, gabs_cosmos = galaxy_sample.get_galaxy_sample()
-    nobs = len(hlr_cosmos[0:3]) # Number of objects
+    # Only take the first NOBS objects
+    n_cosmos = n_cosmos[0: NOBS]
+    hlr_cosmos = hlr_cosmos[0: NOBS]
+    gabs_cosmos = gabs_cosmos[0: NOBS]
     ntest = len(SERSIC_N_TEST)
-    g1obs_draw = np.empty((nobs, ntest)) # Arrays for storing results
-    g2obs_draw = np.empty((nobs, ntest))
-    sigma_draw = np.empty((nobs, ntest))
-    delta_g1obs = np.empty((nobs, ntest))
-    delta_g2obs = np.empty((nobs, ntest))
-    delta_sigma = np.empty((nobs, ntest))
-    err_g1obs = np.empty((nobs, ntest))
-    err_g2obs = np.empty((nobs, ntest))
-    err_sigma = np.empty((nobs, ntest))
+    g1obs_draw = np.empty((NOBS, ntest)) # Arrays for storing results
+    g2obs_draw = np.empty((NOBS, ntest))
+    sigma_draw = np.empty((NOBS, ntest))
+    delta_g1obs = np.empty((NOBS, ntest))
+    delta_g2obs = np.empty((NOBS, ntest))
+    delta_sigma = np.empty((NOBS, ntest))
+    err_g1obs = np.empty((NOBS, ntest))
+    err_g2obs = np.empty((NOBS, ntest))
+    err_sigma = np.empty((NOBS, ntest))
     # Setup a UniformDeviate
     ud = galsim.UniformDeviate(RANDOM_SEED)
     # Start looping through the sample objects and collect the results
-    for i, hlr, gabs in zip(range(nobs), hlr_cosmos[0:3], gabs_cosmos[0:3]):
-        print "Testing galaxy #"+str(i+1)+"/"+str(nobs)+\
+    for i, hlr, gabs in zip(range(NOBS), hlr_cosmos, gabs_cosmos):
+        print "Testing galaxy #"+str(i+1)+"/"+str(NOBS)+\
               " with (hlr, |g|) = "+str(hlr)+", "+str(gabs)
         random_theta = 2. * np.pi * ud()
         g1 = gabs * np.cos(2. * random_theta)
@@ -72,7 +78,7 @@ if __name__ == "__main__":
             print "Exploring Sersic n = "+str(sersic_n)
             if USE_CONFIG:
                 # Increment the random seed so that each test gets a unique one
-                config['image']['random_seed'] = RANDOM_SEED + i * nobs * ntest + j * ntest + 1
+                config['image']['random_seed'] = RANDOM_SEED + i * NOBS * ntest + j * ntest + 1
                 config['gal'] = {
                     "type" : "Sersic" , "n" : sersic_n , "half_light_radius" : hlr ,
                     "ellip" : {
