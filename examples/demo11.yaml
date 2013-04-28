@@ -112,14 +112,15 @@ image :
     # That's usually fine, but here we just want to demonstrate the stamp_size functionality.
     stamp_size : 100 # pixels
     
-    # The default center of each stamp is to be random within the full bounds of the image.
-    # Here, we limit the range to avoid locations within 1/2 stamp_size of the edge.
-    # Note: It's not a problem to let stamps overlap the edge -- Galsim will clip them 
-    # appropriately.  We just do this to demonstrate the functionality.
-    center : 
-        type : XY 
-        x : { type : Random , min : 50 , max : 3550 }
-        y : { type : Random , min : 50 , max : 3550 }
+    # In demo9, we said that you can specify either stamp_image_pos or stamp_sky_pos to place
+    # each postage stamp on the full image.  If you don't specify either one, then the default is
+    # random x from 1..xsize and random y from 1..ysize.   i.e.
+    #
+    # stamp_image_pos : 
+    #     type : XY 
+    #     x : { type : Random , min : 1 , max : xsize }
+    #     y : { type : Random , min : 1 , max : ysize }
+    
 
     # The default convention on positions is to follow the FITS standard where the lower left
     # pixel is called (1,1).  However, this can be counter-intuitive to people more used
