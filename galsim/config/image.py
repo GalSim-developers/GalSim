@@ -364,7 +364,8 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     """
     config['seq_index'] = image_num
 
-    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc', 'center' , 'gsparams' ]
+    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc', 
+               'stamp_image_pos' , 'gsparams' ]
     req = { 'nx_tiles' : int , 'ny_tiles' : int }
     opt = { 'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
             'border' : int , 'xborder' : int , 'yborder' : int ,
@@ -477,9 +478,9 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         iy_list = [ iy for ix in range(nx_tiles) for iy in range(ny_tiles) ]
         galsim.random.permute(rng, ix_list, iy_list)
         
-    # Define a 'center' field so the stamps can set their position appropriately in case
+    # Define a 'stamp_image_pos' field so the stamps can set their position appropriately in case
     # we need it for PowerSpectum or NFWHalo.
-    config['image']['center'] = { 
+    config['image']['stamp_image_pos'] = { 
         'type' : 'XY' ,
         'x' : { 'type' : 'List',
                 'items' : [ ix * (stamp_xsize+xborder) + (stamp_xsize+1)/2. for ix in ix_list ]
@@ -599,7 +600,8 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     config['seq_index'] = image_num
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
-               'center', 'stamp_size', 'stamp_xsize', 'stamp_ysize', 'gsparams' ]
+               'stamp_image_pos', 'sky_pos', 
+               'stamp_size', 'stamp_xsize', 'stamp_ysize', 'gsparams' ]
     req = { 'nobjects' : int }
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 
             'pixel_scale' : float , 'nproc' : int , 'index_convention' : str,
@@ -690,8 +692,8 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         # We don't care about the output here.  This just builds the grid, which we'll
         # access for each object using its position.
 
-    if 'center' not in config['image']:
-        config['image']['center'] = { 
+    if 'stamp_image_pos' not in config['image'] and 'stamp_sky_pos' not in config['image']:
+        config['image']['stamp_image_pos'] = { 
             'type' : 'XY' ,
             'x' : { 'type' : 'Random' , 'min' : 1 , 'max' : full_xsize },
             'y' : { 'type' : 'Random' , 'min' : 1 , 'max' : full_ysize }

@@ -936,9 +936,10 @@ def _GenerateFromEval(param, param_name, base, value_type):
         pass
 
     # Then try bringing in the allowed variables to see if that works:
-    if 'pos' in base:
-        pos = base['pos']
-        #print 'pos = ',pos
+    if 'image_pos' in base:
+        image_pos = base['image_pos']
+    if 'sky_pos' in base:
+        sky_pos = base['sky_pos']
     if 'rng' in base:
         rng = base['rng']
     if 'catalog' in base:

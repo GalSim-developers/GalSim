@@ -262,35 +262,53 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             ysize = galsim.config.ParseValue(config['image'],'stamp_size',config,int)[0]
 
     # Determine where this object is going to go:
-    if 'center' in config['image']:
+    if 'stamp_image_pos' in config['image']:
         import math
-        center = galsim.config.ParseValue(config['image'],'center',config,galsim.PositionD)[0]
+        image_pos = galsim.config.ParseValue(config['image'],'stamp_image_pos',config,
+                                             galsim.PositionD)[0]
         # Save this value for possible use in Eval's.
-        config['chip_pos'] = center
-        #print 'chip_pos = ',center
+        config['image_pos'] = image_pos
+        #print 'image_pos = ',image_pos
 
         # Calculate and save the position relative to the image center
-        config['pos'] = (center - config['image_cen']) * config['pixel_scale']
-        #print 'pos = ',config['pos']
+        config['sky_pos'] = (image_pos - config['image_cen']) * config['pixel_scale']
+        #print 'sky_pos = ',config['sky_pos']
 
-        # The center refers to the location of the true center of the image, which is not 
+    elif 'stamp_sky_pos' in config['image']:
+        import math
+        sky_pos = galsim.config.ParseValue(config['image'],'stamp_sky_pos',config,
+                                           galsim.PositionD)[0]
+        # Save this value for possible use in Eval's.
+        config['sky_pos'] = sky_pos
+        #print 'sky_pos = ',sky_pos
+
+        # Calculate and save the position relative to the image center
+        image_pos = (sky_pos / config['pixel_scale']) + config['image_cen']
+        config['image_pos'] = image_pos
+        #print 'image_pos = ',config['image_pos']
+
+    else:
+        image_pos = None
+
+
+    if image_pos is not None:
+        # The image_pos refers to the location of the true center of the image, which is not 
         # necessarily the nominal center we need for adding to the final image.  In particular,
         # even-sized images have their nominal center offset by 1/2 pixel up and to the right.
         # N.B. This works even if xsize,ysize == 0, since the auto-sizing always produces
         # even sized images.
-        if xsize % 2 == 0: center.x += 0.5
-        if ysize % 2 == 0: center.y += 0.5
-        #print 'nominal center = ',center
+        if xsize % 2 == 0: image_pos.x += 0.5
+        if ysize % 2 == 0: image_pos.y += 0.5
+        #print 'nominal image_pos = ',image_pos
 
         icenter = galsim.PositionI(
-            int(math.floor(center.x+0.5)),
-            int(math.floor(center.y+0.5)) )
+            int(math.floor(image_pos.x+0.5)),
+            int(math.floor(image_pos.y+0.5)) )
         #print 'icenter = ',icenter
-        final_shift = galsim.PositionD(center.x-icenter.x , center.y-icenter.y)
+        final_shift = galsim.PositionD(image_pos.x-icenter.x , image_pos.y-icenter.y)
         #print 'final_shift = ',final_shift
 
     else:
-        center = None
         icenter = None
         final_shift = None
 
