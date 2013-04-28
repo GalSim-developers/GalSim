@@ -53,10 +53,6 @@ test_sersic_trunc = [0., 8.5]
 # for flux normalization tests
 test_flux = 1.8
 
-# Use a deterministic random number generator so we don't fail tests because of rare flukes
-# in the random numbers.
-glob_ud = galsim.UniformDeviate(12345)
-
 # These are the default GSParams used when unspecified.  We'll check that specifying 
 # these explicitly produces the same results.
 default_params = galsim.GSParams(
@@ -150,7 +146,12 @@ def do_shoot(prof, img, name):
     print 'img.max => ',img.array.max()
     print 'nphot = ',nphot
     img2 = img.copy()
-    prof.drawShoot(img2, n_photons=nphot, poisson_flux=False, rng=glob_ud)
+
+    # Use a deterministic random number generator so we don't fail tests because of rare flukes
+    # in the random numbers.
+    rng = galsim.UniformDeviate(12345)
+
+    prof.drawShoot(img2, n_photons=nphot, poisson_flux=False, rng=rng)
     print 'img2.sum => ',img2.array.sum()
     np.testing.assert_array_almost_equal(
             img2.array, img.array, photon_decimal_test,
@@ -185,12 +186,11 @@ def do_shoot(prof, img, name):
         nphot *= 10
         print 'nphot -> ',nphot
     prof.drawShoot(img, n_photons=nphot, normalization="surface brightness", poisson_flux=False,
-                   rng=glob_ud)
+                   rng=rng)
     print 'img.sum = ',img.array.sum(),'  cf. ',test_flux/(dx*dx)
     np.testing.assert_almost_equal(img.array.sum() * dx*dx, test_flux, photon_decimal_test,
             err_msg="Photon shooting SB normalization for %s disagrees with expected result"%name)
-    prof.drawShoot(img, n_photons=nphot, normalization="flux", poisson_flux=False,
-                   rng=glob_ud)
+    prof.drawShoot(img, n_photons=nphot, normalization="flux", poisson_flux=False, rng=rng)
     print 'img.sum = ',img.array.sum(),'  cf. ',test_flux
     np.testing.assert_almost_equal(img.array.sum(), test_flux, photon_decimal_test,
             err_msg="Photon shooting flux normalization for %s disagrees with expected result"%name)
@@ -2369,8 +2369,8 @@ def test_rescale():
             err_msg="Drawing Gaussian with add_to_image=True results in wrong flux")
     np.testing.assert_almost_equal(myImg2.added_flux/1.e5, 1., 4,
             err_msg="Drawing Gaussian with add_to_image=True returns wrong added_flux")
-    myImg2 = gauss.drawShoot(myImg2, add_to_image=True, poisson_flux=False,
-                                  rng=glob_ud)
+    rng = galsim.BaseDeviate(12345)
+    myImg2 = gauss.drawShoot(myImg2, add_to_image=True, poisson_flux=False, rng=rng)
     print myImg2.array.sum(), myImg2.added_flux
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 3., 4,
             err_msg="Drawing Gaussian with drawShoot, add_to_image=True, poisson_flux=False "+
@@ -2378,7 +2378,7 @@ def test_rescale():
     np.testing.assert_almost_equal(myImg2.added_flux/1.e5, 1., 4,
             err_msg="Drawing Gaussian with drawShoot, add_to_image=True, poisson_flux=False "+
                     "returned wrong added_flux")
-    myImg2 = gauss.drawShoot(myImg2, add_to_image=True, rng=glob_ud)
+    myImg2 = gauss.drawShoot(myImg2, add_to_image=True, rng=rng)
     print myImg2.array.sum(), myImg2.added_flux
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 4., 1,
             err_msg="Drawing Gaussian with drawShoot, add_to_image=True, poisson_flux=True "+
