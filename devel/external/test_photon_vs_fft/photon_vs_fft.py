@@ -51,9 +51,6 @@ def saveResults(filename_output,results_all_gals):
             res['moments_fft_sigma'], res['moments_phot_sigma'], res['hsm_fft_sigma'], res['hsm_phot_sigma']
             ))
 
-    logging.info('saved file %s with %d result lines' % (filename_output,len(results_all_gals)))
-
-
 def GetShapeMeasurements(image_gal_phot, image_gal_fft , image_psf, ident):
     """
     For a galaxy images created using photon and fft, and PSF image, measure HSM weighted moments 
@@ -120,7 +117,7 @@ def GetShapeMeasurements(image_gal_phot, image_gal_fft , image_psf, ident):
             hsm_corr_phot_e2 = hsm_phot.corrected_e2
             hsm_phot_sigma   = hsm_phot.moments_sigma
         except:
-            logger.info('hsm error')
+            logger.error('hsm error')
             hsm_corr_phot_e1 = HSM_ERROR_VALUE
             hsm_corr_phot_e2 = HSM_ERROR_VALUE
             hsm_phot_sigma   = HSM_ERROR_VALUE
@@ -131,7 +128,7 @@ def GetShapeMeasurements(image_gal_phot, image_gal_fft , image_psf, ident):
             hsm_corr_fft_e2 = hsm_fft.corrected_e2
             hsm_fft_sigma   = hsm_fft.moments_sigma
         except:
-            logger.info('hsm error')
+            logger.error('hsm error')
             hsm_corr_fft_e1 = HSM_ERROR_VALUE
             hsm_corr_fft_e2 = HSM_ERROR_VALUE
             hsm_fft_sigma   = HSM_ERROR_VALUE
@@ -162,7 +159,7 @@ def GetShapeMeasurements(image_gal_phot, image_gal_fft , image_psf, ident):
     return result
 
 
-def RunComparison(config): 
+def RunComparison(config,rebuild_pht,rebuild_fft): 
     """
     Runs the photon vs FFT comparison. Returns a list of dicts, containing the results of moments 
     (and other parameters) measured from the FFT and photon images, for each galaxy.
@@ -179,7 +176,23 @@ def RunComparison(config):
 
     # Build the image which has dimensions of
     # x: number of galaxies in the config, y: 2 - one for phot and one for fft
-    img_gals,img_psfs,_,_ = galsim.config.BuildImage(config=config,make_psf_image=True)
+
+    global img_gals_fft, img_gals_pht, img_psfs_fft
+    
+    try:
+
+        if rebuild_fft or img_gals_fft==None:
+            logger.info('building fft image')
+            config['image']['draw_method'] = 'fft'
+            img_gals_fft,img_psfs_fft,_,_ = galsim.config.BuildImage(config=config,make_psf_image=True,logger=logger)
+        if rebuild_pht or img_gals_pht==None:
+            logger.info('building phot image')
+            config['image']['draw_method'] = 'phot'
+            img_gals_pht,img_psfs_pht,_,_ = galsim.config.BuildImage(config=config,make_psf_image=True,logger=logger)
+    except:
+        logging.error('building image failed')
+        return None
+
     nobjects = galsim.config.GetNObjForImage(config,0)
     npix = config['image']['stamp_size']
 
@@ -189,9 +202,9 @@ def RunComparison(config):
     # measure the photon and fft images
     for i in range(nobjects/2):
 
-        img_fft =  img_gals[galsim.BoundsI(   1 ,   npix, i*npix+1, (i+1)*npix )]
-        img_pht =  img_gals[galsim.BoundsI( npix+1, npix*2, i*npix+1, (i+1)*npix )]
-        img_psf =  img_psfs[galsim.BoundsI(   1 ,   npix, i*npix+1, (i+1)*npix )]
+        img_fft =  img_gals_fft[galsim.BoundsI(  1 ,   npix, i*npix+1, (i+1)*npix )]
+        img_pht =  img_gals_pht[galsim.BoundsI(  1 ,   npix, i*npix+1, (i+1)*npix )]
+        img_psf =  img_psfs_fft[galsim.BoundsI(  1 ,   npix, i*npix+1, (i+1)*npix )]
 
         # import pylab
         # pylab.subplot(1,3,1)
@@ -204,7 +217,6 @@ def RunComparison(config):
 
         # measure and get the resutls
         results = GetShapeMeasurements(img_fft,img_pht,img_psf,i)
-        # add the result to the list
         results_all.append(results)
 
     return results_all
@@ -257,6 +269,11 @@ def RunComparisonForVariedParams(config,filename_config):
 
     # loop over parameters to vary
     for param_name in config['vary_params'].keys():
+
+        # reset the images
+        global img_gals_fft, img_gals_pht, img_psfs_fft
+        (img_gals_fft, img_gals_pht, img_psfs_fft) = (None,None,None)
+
         # get more info for the parmaeter
         param = config['vary_params'][param_name]
         # loop over all values of the parameter, which will be changed
@@ -265,8 +282,11 @@ def RunComparisonForVariedParams(config,filename_config):
             changed_config = config.copy()
             # perform the change
             ChangeConfigValue(changed_config,param['path'],value)
+            logging.info('changed parameter %s to %s' % (param_name,str(value)))
             # run the photon vs fft test on the changed configs
-            results = RunComparison(changed_config)
+            results = RunComparison(changed_config,param['rebuild_pht'],param['rebuild_fft'])
+            if results == None:
+                continue
             # get the results filename
             filename_results = 'results.%s.%s.%03d.cat' % (filename_config,param_name,iv)
             # save the results
@@ -285,7 +305,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # set up logger
-    logging.basicConfig(format="%(message)s", level=logging.DEBUG, stream=sys.stdout)
+    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger("photon_vs_fft") 
 
     # load the configuration file
