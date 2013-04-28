@@ -28,13 +28,16 @@ OUTFILE = "sersic_highn_basic_output_N"+str(NOBS)+".pkl"
 # Params for a very simple, Airy PSF
 PSF_LAM_OVER_DIAM = 0.09 # ~ COSMOS width, oversampled at 0.03 arcsec
 
+# MAX_FFT_SIZE (needed for high-n objects)
+MAX_FFT_SIZE=65536
+
 # If using config, settings
 USE_CONFIG = True
 if USE_CONFIG:
     config = {}
     config['image'] = {
         "size" : IMAGE_SIZE , "pixel_scale" : PIXEL_SCALE , # Note RANDOM_SEED generated later 
-        "wmult" : WMULT, "n_photons" : NPHOTONS}
+        "wmult" : WMULT, "n_photons" : NPHOTONS, "maximum_fft_size" : MAX_FFT_SIZE }
 
 # Logging level
 LOGLEVEL = logging.WARN
@@ -89,9 +92,10 @@ if __name__ == "__main__":
                 results = galsim.utilities.compare_dft_vs_photon_config(
                     config, abs_tol_ellip=TOL_ELLIP, abs_tol_size=TOL_SIZE, logger=logger)
             else:
-                galaxy = galsim.Sersic(sersic_n, half_light_radius=hlr)
+                test_gsparams = galsim.GSParams(maximum_fft_size=MAX_FFT_SIZE)
+                galaxy = galsim.Sersic(sersic_n, half_light_radius=hlr, gsparams=test_gsparams)
                 galaxy.applyShear(g1=g1, g2=g2)
-                psf = galsim.Airy(lam_over_diam=PSF_LAM_OVER_DIAM)
+                psf = galsim.Airy(lam_over_diam=PSF_LAM_OVER_DIAM, gsparams=test_gsparams)
                 results = galsim.utilities.compare_dft_vs_photon_object(
                     galaxy, psf_object=psf, rng=ud, pixel_scale=PIXEL_SCALE, size=IMAGE_SIZE,
                     abs_tol_ellip=TOL_ELLIP, abs_tol_size=TOL_SIZE, n_photons_per_trial=NPHOTONS,
