@@ -276,6 +276,18 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0,
     return all_images
 
 
+def _set_image_origin(config, convention):
+    """Set config['image_origin'] appropriately based on the provided convention.
+    """
+    if convention.lower() in [ '0', 'c', 'python' ]:
+        origin = 0
+    elif convention.lower() in [ '1', 'fortran', 'fits' ]:
+        origin = 1
+    else:
+        raise AttributeError("Unknown index_convention: %s"%convention)
+    config['image_origin'] = galsim.PositionI(origin,origin)
+
+
 def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
                      make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
@@ -303,13 +315,7 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
         config['image'], 'image', config, opt=opt, ignore=ignore)[0]
 
     convention = params.get('index_convention','1')
-    if convention.lower() in [ '0', 'c', 'python' ]:
-        origin = 0
-    elif convention.lower() in [ '1', 'fortran', 'fits' ]:
-        origin = 1
-    else:
-        raise AttributeError("Unknown index_convention: %s"%convention)
-    config['image_origin'] = galsim.PositionI(origin,origin)
+    _set_image_origin(config,convention)
 
     # If image_xsize and image_ysize were set in config, this overrides the read-in params.
     if 'image_xsize' in config and 'image_ysize' in config:
@@ -383,13 +389,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     stamp_ysize = params.get('stamp_ysize',stamp_size)
 
     convention = params.get('index_convention','1')
-    if convention.lower() in [ '0', 'c', 'python' ]:
-        origin = 0
-    elif convention.lower() in [ '1', 'fortran', 'fits' ]:
-        origin = 1
-    else:
-        raise AttributeError("Unknown index_convention: %s"%convention)
-    config['image_origin'] = galsim.PositionI(origin,origin)
+    _set_image_origin(config,convention)
 
     if (stamp_xsize == 0) or (stamp_ysize == 0):
         raise AttributeError(
@@ -636,13 +636,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     config['pixel_scale'] = pixel_scale
 
     convention = params.get('index_convention','1')
-    if convention.lower() in [ '0', 'c', 'python' ]:
-        origin = 0
-    elif convention.lower() in [ '1', 'fortran', 'fits' ]:
-        origin = 1
-    else:
-        raise AttributeError("Unknown index_convention: %s"%convention)
-    config['image_origin'] = galsim.PositionI(origin,origin)
+    _set_image_origin(config,convention)
 
     if 'sky_level' in params and 'sky_level_pixel' in params:
         raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
