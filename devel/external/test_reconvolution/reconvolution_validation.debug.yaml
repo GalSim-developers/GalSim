@@ -78,7 +78,7 @@ reconvolved_images :
               
     image :
         random_seed : 2222211
-        nproc : 5
+        nproc : 1
         pixel_scale : 0.2   # pixel scale for the ground observation
         type : Tiled
         nx_tiles : 1        # we are generating galaxies in one long tiled stripe

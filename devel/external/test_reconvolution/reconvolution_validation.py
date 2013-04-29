@@ -10,63 +10,62 @@ import pylab
 import argparse
 import yaml
 import galsim
-import pdb
-
-galsim_rootpath = os.path.abspath(os.path.join("..","..",".."))
-filename_example_rgc  = os.path.join(galsim_rootpath,'examples','data','real_galaxy_catalog_example.fits')
+import copy
 
 HSM_ERROR_VALUE = -99
 NO_PSF_VALUE    = -98
 
-
 def CreateRGC(config):
 
-    cosmos_config = config['cosmos_images'].copy();
-    cosmos_config['image']['gsparams'] = config['gsparams'].copy()
+    cosmos_config = copy.deepcopy(config['cosmos_images']);
+    cosmos_config['image']['gsparams'] = copy.deepcopy(config['gsparams'])
     galsim.config.Process(cosmos_config,logger=None)
     # this is a hack - there should be a better way to get this number
     n_gals = len(galsim.config.GetNObjForMultiFits(cosmos_config,0,0))
+    logger.info('building real galaxy catalog with %d galaxies' % n_gals)
 
-    filename_gals = os.path.join(config['cosmos_images']['output']['dir'],config['cosmos_images']['output']['file_name'])
-    filename_psfs = os.path.join(config['cosmos_images']['output']['dir'],config['cosmos_images']['output']['psf']['file_name'])
+    filename_gals = os.path.join(config['cosmos_images']['output']['dir'],
+        config['cosmos_images']['output']['file_name'])
+    filename_psfs = os.path.join(config['cosmos_images']['output']['dir'],
+        config['cosmos_images']['output']['psf']['file_name'])
     pixel_scale = config['cosmos_images']['image']['pixel_scale']
     noise_var = config['cosmos_images']['image']['noise']['variance']
-    filename_rgc = os.path.join(config['reconvolved_images']['input']['real_catalog']['dir'],config['reconvolved_images']['input']['real_catalog']['file_name'])
+    filename_rgc = os.path.join(
+        config['reconvolved_images']['input']['real_catalog']['dir'],
+        config['reconvolved_images']['input']['real_catalog']['file_name'])
 
-    # use the existing example catalog binary table
-    # this way I don't have to declare any fits binary table structure
-    hdu_table = pyfits.open(filename_example_rgc)
-    hdu_table[1].data = hdu_table[1].data[0:n_gals]
+    BAND = 'F814W'
+    MAG  = 20
+    WEIGHT = 1
 
-    for i in range(n_gals) :
+    columns = []
+    columns.append( pyfits.Column( name='IDENT'         ,format='J'  ,array=range(0,n_gals)       ))    
+    columns.append( pyfits.Column( name='MAG'           ,format='D'  ,array=[MAG] * n_gals        ))
+    columns.append( pyfits.Column( name='BAND'          ,format='5A' ,array=[BAND] * n_gals       ))    
+    columns.append( pyfits.Column( name='WEIGHT'        ,format='D'  ,array=[WEIGHT] * n_gals     ))    
+    columns.append( pyfits.Column( name='GAL_FILENAME'  ,format='23A',array=[filename_gals]*n_gals))            
+    columns.append( pyfits.Column( name='PSF_FILENAME'  ,format='27A',array=[filename_psfs]*n_gals))            
+    columns.append( pyfits.Column( name='GAL_HDU'       ,format='J'  ,array=range(0,n_gals)       ))    
+    columns.append( pyfits.Column( name='PSF_HDU'       ,format='J'  ,array=range(0,n_gals)       ))    
+    columns.append( pyfits.Column( name='PIXEL_SCALE'   ,format='D'  ,array=[pixel_scale] * n_gals))        
+    columns.append( pyfits.Column( name='NOISE_MEAN'    ,format='D'  ,array=[0] * n_gals          ))
+    columns.append( pyfits.Column( name='NOISE_VARIANCE',format='D'  ,array=[noise_var] * n_gals  ))        
 
-        # calculate mag and weight, as I don't know how to do it I set it to one for now
-        MAG=20.
-        WEIGHT=1.
-        # fill in the table data
-        hdu_table[1].data[i]['IDENT'] = i
-        hdu_table[1].data[i]['MAG'] = MAG                               # I am not sure what tg use for this number
-        hdu_table[1].data[i]['WEIGHT'] = WEIGHT                         # I am not sure what tg use for this number
-        hdu_table[1].data[i]['GAL_FILENAME'] = filename_gals         
-        hdu_table[1].data[i]['PSF_FILENAME'] = filename_psfs
-        hdu_table[1].data[i]['GAL_HDU'] = i
-        hdu_table[1].data[i]['PSF_HDU'] = i
-        hdu_table[1].data[i]['PIXEL_SCALE'] = pixel_scale
-        hdu_table[1].data[i]['NOISE_MEAN'] =  0.                      # noise mean is 0 as we subtract the background
-        hdu_table[1].data[i]['NOISE_VARIANCE'] = noise_var            # variance is equal tg sky level
-
-
+    # create table
+    hdu_table = pyfits.new_table(columns)
+    
     # save all catalogs
     hdu_table.writeto(filename_rgc,clobber=True)
     logger.info('saved real galaxy catalog %s' % filename_rgc)
 
-    # PreviewRGC(filename_rgc)
+    if config['debug'] : PreviewRGC(config,filename_rgc)
 
-def PreviewRGC(filename_rgc):
+def PreviewRGC(config,filename_rgc):
     """
     Function for eyeballing the contents of the created mock RGC catalogs.
     Arguments
     ---------
+    config              config dict 
     filename_rgc        filename of the newly created real galaxy catalog fits 
     """
 
@@ -87,13 +86,18 @@ def PreviewRGC(filename_rgc):
         
         pylab.subplot(1,2,2)
         pylab.imshow(img_psf,interpolation='nearest')
+        
+        filename_fig = 'fig.previewRGC.%s.%d.png' % (config['filename_config'],n)
+
+        pylab.savefig(filename_fig)
+
 
 def GetReconvImage(config):
 
-    reconv_config = config['reconvolved_images'].copy()
-    reconv_config['image']['gsparams'] = config['gsparams'].copy()
-    reconv_config['input']['catalog'] = config['cosmos_images']['input']['catalog'].copy()
-    reconv_config['gal']['shift'] = config['cosmos_images']['gal']['shift'].copy()
+    reconv_config = copy.deepcopy(config['reconvolved_images'])
+    reconv_config['image']['gsparams'] = copy.deepcopy(config['gsparams'])
+    reconv_config['input']['catalog'] = copy.deepcopy(config['cosmos_images']['input']['catalog'])
+    reconv_config['gal']['shift'] = copy.deepcopy(config['cosmos_images']['gal']['shift'])
     
     galsim.config.ProcessInput(reconv_config)
     # this outputs 4 objects, whereas direct outputs 5, not clear why
@@ -103,12 +107,12 @@ def GetReconvImage(config):
 
 def GetDirectImage(config):
 
-    direct_config = config['reconvolved_images'].copy()
-    direct_config['image']['gsparams'] = config['gsparams'].copy()
+    direct_config = copy.deepcopy(config['reconvolved_images'])
+    direct_config['image']['gsparams'] = copy.deepcopy(config['gsparams'])
     # switch gals to the original cosmos gals
-    direct_config['gal'] = config['cosmos_images']['gal'].copy()  
-    direct_config['gal']['shear'] = config['reconvolved_images']['gal']['shear'].copy()  
-    direct_config['input'] = config['cosmos_images']['input'].copy()
+    direct_config['gal'] = copy.deepcopy(config['cosmos_images']['gal'])  
+    direct_config['gal']['shear'] = copy.deepcopy(config['reconvolved_images']['gal']['shear'])  
+    direct_config['input'] = copy.deepcopy(config['cosmos_images']['input'])
     
     galsim.config.ProcessInput(direct_config)
     # this outputs 5 objects, whereas reconv outputs 4, not clear why
@@ -181,7 +185,24 @@ def GetShapeMeasurements(image_gal, image_psf, ident):
 
     return result
 
-def SaveResults(filename_output,results_direct,results_reconv):
+def GetPixelDifference(image1,image2,id):
+    """
+    Returns ratio of maximum pixel difference of two images 
+    to the value of the maximum of pixels in the first image.
+    Arguments
+    ---------
+    image1
+    image2      images to compare
+    """
+    # create a residual image
+    diff_image = image1.array - image2.array
+    # calculate the ratio
+    max_diff_over_max_image = abs(diff_image.flatten()).max()/image1.array.flatten().max()
+    logger.debug('max(residual) / max(image1) = %2.4e ' % ( max_diff_over_max_image )  )
+    return { 'diff' : max_diff_over_max_image, 'ident' :id }
+
+
+def SaveResults(filename_output,results_direct,results_reconv,results_imdiff):
     """
     Save results to file.
     Arguments
@@ -196,8 +217,8 @@ def SaveResults(filename_output,results_direct,results_reconv):
     file_output = open(filename_output,'w')
        
     # write the header
-    output_row_fmt = '%d\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t' + \
-                        '%2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\n'
+    output_row_fmt = '%d\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t' + \
+                        '% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\n'
     output_header = '# id max_diff_over_max_image ' +  \
                                 'E1_moments_direct E2_moments_direct E1_moments_reconv E2_moments_reconv ' + \
                                 'E1_corr_direct E2_hsm_corr_direct E1_corr_reconv E2_corr_reconv ' + \
@@ -210,6 +231,7 @@ def SaveResults(filename_output,results_direct,results_reconv):
         # write the result item
         file_output.write(output_row_fmt % (
             results_direct[i]['ident'], 
+            results_imdiff[i]['diff'],
             results_direct[i]['moments_e1'], 
             results_direct[i]['moments_e2'], 
             results_reconv[i]['moments_e1'],  
@@ -229,10 +251,11 @@ def SaveResults(filename_output,results_direct,results_reconv):
 
 def RunComparison(config,rebuild_reconv,rebuild_direct):
 
-    try:
-        CreateRGC(config)
-    except:
-        raise ValueError('creating RGC failed')
+    # try:
+    CreateRGC(config)
+
+    # except:
+        # raise ValueError('creating RGC failed')
 
     try:
         if rebuild_reconv or img_gals_reconv==None:
@@ -255,8 +278,9 @@ def RunComparison(config,rebuild_reconv,rebuild_direct):
     nobjects = galsim.config.GetNObjForImage(config['reconvolved_images'],0)
 
     # initalise results lists
-    results_list_reconv = []
-    results_list_direct = []
+    results_shape_reconv = []
+    results_shape_direct = []
+    results_pixel_imdiff = []
 
     for i in range(nobjects):
 
@@ -270,17 +294,21 @@ def RunComparison(config,rebuild_reconv,rebuild_direct):
         # get shapes
         result_reconv = GetShapeMeasurements(img_gal_reconv, img_psf_direct, i)
         result_direct = GetShapeMeasurements(img_gal_direct, img_psf_direct, i)
+        result_imdiff = GetPixelDifference(img_gal_reconv,img_gal_direct, i)
 
         # append the shape results to list
-        results_list_reconv.append(result_reconv)
-        results_list_direct.append(result_direct)
+        results_shape_reconv.append(result_reconv)
+        results_shape_direct.append(result_direct)
+        results_pixel_imdiff.append(result_imdiff)
 
-    return results_list_direct,results_list_reconv
+    return results_shape_direct,results_shape_reconv,results_pixel_imdiff
 
 def SaveImagesPlots(config,id,img_reconv,img_direct,img_psf):
 
+    fig_xsize,fig_ysize = 30,15
+
     import pylab
-    pylab.figure()
+    pylab.figure(figsize=(fig_xsize,fig_ysize))
     pylab.subplot(1,4,1)
     pylab.imshow(img_reconv.array)
     # pylab.colorbar()
@@ -364,18 +392,19 @@ def RunComparisonForVariedParams(config):
         # loop over all values of the parameter, which will be changed
         for iv,value in enumerate(param['values']):
             # copy the config to the original
-            changed_config = config.copy()
+            changed_config = copy.deepcopy(config)
             # perform the change
             ChangeConfigValue(changed_config,param['path'],value)
             logging.info('changed parameter %s to %s' % (param_name,str(value)))
             # run the photon vs fft test on the changed configs
-            results_direct,results_reconv = RunComparison(changed_config,param['rebuild_reconv'],param['rebuild_direct'])
+            results_direct,results_reconv,results_pixel_imdiff = RunComparison(
+                    changed_config,param['rebuild_reconv'],param['rebuild_direct'])
             # if getting images failed, continue with the loop
             if results_direct == None:  continue
             # get the results filename
             filename_results = 'results.%s.%s.%03d.cat' % (config['filename_config'],param_name,iv)
             # save the results
-            SaveResults(filename_results,results_direct,results_reconv)
+            SaveResults(filename_results,results_direct,results_reconv,results_pixel_imdiff)
             logging.info('saved results for varied parameter %s with value %s, filename %s' % (param_name,str(value),filename_results))
 
 
@@ -402,8 +431,8 @@ if __name__ == "__main__":
     config['debug'] = args.debug
 
     # run comparison for default parameter set and save results
-    results_list_reconv,results_list_direct = RunComparison(config,True,True)
-    SaveResults('results.test.cat',results_list_reconv,results_list_direct)
+    # results_shape_reconv,results_shape_direct,results_pixel_imdiff = RunComparison(config,True,True)
+    # SaveResults('results.test.cat',results_shape_reconv,results_shape_direct,results_pixel_imdiff)
 
     # run the parameter comparison
     RunComparisonForVariedParams(config)

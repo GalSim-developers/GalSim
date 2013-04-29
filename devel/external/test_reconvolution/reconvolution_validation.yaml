@@ -1,8 +1,6 @@
-# declare some variables used internally in config
 some_variables:
     - &ngals_in_cat 276
 
-# this are the parameters of the deep images, a mock catalog of the COSMOS sample
 cosmos_images:
         
     gal :
@@ -31,9 +29,12 @@ cosmos_images:
     image :
         random_seed : 121212
         draw_method : fft
-        nproc : 5
+        nproc : 1
         pixel_scale : 0.03          # pixel scale for space observations
         type : Single
+        # nimages : *ngals_in_cat 
+        # nx_tiles : 1                # we are generating galaxies in one long tiled stripe
+        # ny_tiles : *ngals_in_cat    
         # this has to be big in order for the space images to contain the galaxies fully
         size : 128
         # this field is required for the photon image, 
@@ -45,7 +46,6 @@ cosmos_images:
             dir : .
             file_name : cosmos_sersics_sample_N300_cleaned.asc
    
-    # the image created will create a real_galaxy_images for real_galaxy_images_psf
     output :
         type : MultiFits
         nimages : *ngals_in_cat
@@ -54,7 +54,6 @@ cosmos_images:
         psf :
             file_name : rgc_val_psf.fits    
 
-# this is 
 reconvolved_images :
     # this is the reconvolving PSF
     psf : 
@@ -95,7 +94,8 @@ reconvolved_images :
             file_name : rgc_val.fits     # will be created by the script
             preload : True   
 
-gsparams :  # although outside here, the script will take care of it
+# although outside of the main config here, the script will take care of it
+gsparams :  
     minimum_fft_size : 128      
     maximum_fft_size : 50000     
     alias_threshold : 5.e-3     
@@ -108,19 +108,22 @@ gsparams :  # although outside here, the script will take care of it
     integration_relerr : 1.e-5  
     integration_abserr : 1.e-7  
 
+# the test will be run one time for all the values of all the varied parameters listed here
+# the default configuration will not be ran
+
 vary_params:
     alias_threshold : 
-        path : ['image','gsparams','alias_threshold']
+        path : ['gsparams','alias_threshold']
         values : [ 1.0e-1 , 5.0e-2 , 1.0e-2 , 5.0e-3 , 1.0e-3 , 5.0e-4 ]
         rebuild_direct : False 
         rebuild_reconv : True  
     maxk_threshold :   
-        path : ['image','gsparams','maxk_threshold' ] 
+        path : ['gsparams','maxk_threshold' ] 
         values : [ 1.0e-1 , 1.0e-2 , 5.0e-3 , 1.0e-3 , 5.0e-4 , 1.0e-4 , 5.0e-5 , 1.0e-5 ]  
         rebuild_direct : False
         rebuild_reconv : True 
     kvalue_accuracy : 
-        path : ['image','gsparams','kvalue_accuracy']
+        path : ['gsparams','kvalue_accuracy']
         values : [ 1.0e-3 , 1.0e-4 , 1.0e-5 , 1.0e-6 , 1.0e-7 , 1.0e-8 ] 
         rebuild_direct : False 
         rebuild_reconv : True 
