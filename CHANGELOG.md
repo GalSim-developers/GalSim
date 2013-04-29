@@ -65,6 +65,8 @@ Changes from v0.4 to current version:
   new sky_pos which can instead specify the location of the object in sky coordinates (typically 
   arcsec) relative to the image center. (Issue #380)
 
+* Added LINKFLAGS to the list of SCons options to pass flags to the linker. (Issue #380)
+
 * Added a new script, galsim/pse.py, that contains a PowerSpectrumEstimator class that can be used
   to estimate the shear power spectrum from a set of shears defined on a grid.  The main
   functionality of PowerSpectrumEstimator actually does not require an installed version of GalSim,
