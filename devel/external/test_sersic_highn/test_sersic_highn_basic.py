@@ -1,8 +1,6 @@
-import cPickle
-import logging
-import numpy as np
-import galsim
-import galaxy_sample
+"""Script for testing the generation of high-n Sersic profiles by both DFT and photon shooting, for
+comparison of the size and ellipticity in the resulting images.
+"""
 
 PIXEL_SCALE = 0.03
 IMAGE_SIZE = 96
