@@ -70,7 +70,7 @@ def test_scattered():
         'size' : size,
         'pixel_scale' : scale,
         'stamp_size' : stamp_size,
-        'stamp_image_pos' : { 'type' : 'XY', 'x' : x1, 'y' : y1 },
+        'image_pos' : { 'type' : 'XY', 'x' : x1, 'y' : y1 },
         'nobjects' : 1
     }
     for convention in [ 0, 1 ]:
@@ -98,7 +98,7 @@ def test_scattered():
             np.testing.assert_almost_equal(iyy / (sigma/scale)**2, 1, decimal=1)
 
 
-    # Check that stamp_xsize, stamp_ysize, stamp_image_pos use the object count, rather than the 
+    # Check that stamp_xsize, stamp_ysize, image_pos use the object count, rather than the 
     # image count.
     config['image'] = {
         'type' : 'Scattered',
@@ -106,11 +106,11 @@ def test_scattered():
         'pixel_scale' : scale,
         'stamp_xsize' : { 'type': 'Sequence', 'first' : stamp_size },
         'stamp_ysize' : { 'type': 'Sequence', 'first' : stamp_size },
-        'stamp_image_pos' : { 'type' : 'List',
-                              'items' : [ galsim.PositionD(x1,y1),
-                                          galsim.PositionD(x2,y2),
-                                          galsim.PositionD(x3,y3) ] 
-                            },
+        'image_pos' : { 'type' : 'List',
+                        'items' : [ galsim.PositionD(x1,y1),
+                                    galsim.PositionD(x2,y2),
+                                    galsim.PositionD(x3,y3) ] 
+                      },
         'nobjects' : 3 
     }
 

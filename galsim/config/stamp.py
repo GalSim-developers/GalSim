@@ -262,9 +262,9 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             ysize = galsim.config.ParseValue(config['image'],'stamp_size',config,int)[0]
 
     # Determine where this object is going to go:
-    if 'stamp_image_pos' in config['image']:
+    if 'image_pos' in config['image']:
         import math
-        image_pos = galsim.config.ParseValue(config['image'],'stamp_image_pos',config,
+        image_pos = galsim.config.ParseValue(config['image'],'image_pos',config,
                                              galsim.PositionD)[0]
         # Save this value for possible use in Eval's.
         config['image_pos'] = image_pos
@@ -274,9 +274,9 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
         config['sky_pos'] = (image_pos - config['image_cen']) * config['pixel_scale']
         #print 'sky_pos = ',config['sky_pos']
 
-    elif 'stamp_sky_pos' in config['image']:
+    elif 'sky_pos' in config['image']:
         import math
-        sky_pos = galsim.config.ParseValue(config['image'],'stamp_sky_pos',config,
+        sky_pos = galsim.config.ParseValue(config['image'],'sky_pos',config,
                                            galsim.PositionD)[0]
         # Save this value for possible use in Eval's.
         config['sky_pos'] = sky_pos

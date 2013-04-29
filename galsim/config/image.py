@@ -365,7 +365,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     config['seq_index'] = image_num
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc', 
-               'stamp_image_pos' , 'gsparams' ]
+               'image_pos' , 'gsparams' ]
     req = { 'nx_tiles' : int , 'ny_tiles' : int }
     opt = { 'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
             'border' : int , 'xborder' : int , 'yborder' : int ,
@@ -478,13 +478,13 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         iy_list = [ iy for ix in range(nx_tiles) for iy in range(ny_tiles) ]
         galsim.random.permute(rng, ix_list, iy_list)
         
-    # Define a 'stamp_image_pos' field so the stamps can set their position appropriately in case
+    # Define a 'image_pos' field so the stamps can set their position appropriately in case
     # we need it for PowerSpectum or NFWHalo.
     x0 = (stamp_xsize-1)/2. + config['image_origin'].x
     y0 = (stamp_ysize-1)/2. + config['image_origin'].y
     dx = stamp_xsize + xborder
     dy = stamp_ysize + yborder
-    config['image']['stamp_image_pos'] = { 
+    config['image']['image_pos'] = { 
         'type' : 'XY' ,
         'x' : { 'type' : 'List',
                 'items' : [ x0 + ix*dx for ix in ix_list ]
@@ -604,7 +604,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     config['seq_index'] = image_num
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
-               'stamp_image_pos', 'stamp_sky_pos', 
+               'image_pos', 'sky_pos', 
                'stamp_size', 'stamp_xsize', 'stamp_ysize', 'gsparams' ]
     req = { 'nobjects' : int }
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 
@@ -696,12 +696,12 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         # We don't care about the output here.  This just builds the grid, which we'll
         # access for each object using its position.
 
-    if 'stamp_image_pos' not in config['image'] and 'stamp_sky_pos' not in config['image']:
+    if 'image_pos' not in config['image'] and 'sky_pos' not in config['image']:
         xmin = config['image_origin'].x
         xmax = xmin + full_xsize-1
         ymin = config['image_origin'].y
         ymax = ymin + full_ysize-1
-        config['image']['stamp_image_pos'] = { 
+        config['image']['image_pos'] = { 
             'type' : 'XY' ,
             'x' : { 'type' : 'Random' , 'min' : xmin , 'max' : xmax },
             'y' : { 'type' : 'Random' , 'min' : ymin , 'max' : ymax }
