@@ -1,7 +1,6 @@
 some_variables:
     - &ngals_in_cat 10
 
-
 cosmos_images:
         
     gal :

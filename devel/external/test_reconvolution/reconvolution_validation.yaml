@@ -1,6 +1,6 @@
 # declare some variables used internally in config
 some_variables:
-    - &ngals_in_cat 10
+    - &ngals_in_cat 276
 
 # this are the parameters of the deep images, a mock catalog of the COSMOS sample
 cosmos_images:
@@ -75,7 +75,7 @@ reconvolved_images :
             type : List
             items: 
                 - { type : G1G2 , g1 : -0.027 , g2 :  0.031 }
-                # - { type : G1G2 , g1 : +0.015 , g2 : -0.015 }
+                - { type : G1G2 , g1 : +0.015 , g2 : -0.015 }
               
     image :
         random_seed : 2222211
