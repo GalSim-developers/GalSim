@@ -553,6 +553,7 @@ def _GenerateFromRandomCircle(param, param_name, base, value_type):
     while True:
         x = (2*ud()-1) * radius
         y = (2*ud()-1) * radius
+        #print 'x,y = ',x,y
         rsq = x**2 + y**2
         if rsq >= min_rsq and rsq <= max_rsq: break
 
@@ -716,9 +717,10 @@ def _GenerateFromFormattedStr(param, param_name, base, value_type):
 def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
     """@brief Return a shear calculated from an NFWHalo object.
     """
-    if 'pos' not in base:
+    if 'sky_pos' not in base:
         raise ValueError("NFWHaloShear requested, but no position defined.")
-    pos = base['pos']
+    pos = base['sky_pos']
+    #print 'nfw pos = ',pos
 
     if 'gal' not in base or 'redshift' not in base['gal']:
         raise ValueError("NFWHaloShear requested, but no gal.redshift defined.")
@@ -749,9 +751,10 @@ def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
 def _GenerateFromNFWHaloMagnification(param, param_name, base, value_type):
     """@brief Return a magnification calculated from an NFWHalo object.
     """
-    if 'pos' not in base:
+    if 'sky_pos' not in base:
         raise ValueError("NFWHaloMagnification requested, but no position defined.")
-    pos = base['pos']
+    pos = base['sky_pos']
+    #print 'nfw pos = ',pos
 
     if 'gal' not in base or 'redshift' not in base['gal']:
         raise ValueError("NFWHaloMagnification requested, but no gal.redshift defined.")
@@ -765,7 +768,6 @@ def _GenerateFromNFWHaloMagnification(param, param_name, base, value_type):
 
     #print 'NFWHaloMagnification: pos = ',pos,' z = ',redshift
     mu = base['nfw_halo'].getMagnification(pos,redshift)
-    #print 'mu = ',mu
 
     max_mu = kwargs.get('max_mu', 25.)
     if not max_mu > 0.: 
@@ -779,15 +781,16 @@ def _GenerateFromNFWHaloMagnification(param, param_name, base, value_type):
         warnings.warn("Warning: NFWHalo mu = %f means strong lensing!  Using mu=%f"%(mu,max_mu))
         mu = max_mu
 
+    #print 'mu = ',mu
     return mu, False
 
 
 def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
     """@brief Return a shear calculated from a PowerSpectrum object.
     """
-    if 'pos' not in base:
+    if 'sky_pos' not in base:
         raise ValueError("PowerSpectrumShear requested, but no position defined.")
-    pos = base['pos']
+    pos = base['sky_pos']
 
     if 'power_spectrum' not in base:
         raise ValueError("PowerSpectrumShear requested, but no input.power_spectrum defined.")
@@ -813,9 +816,9 @@ def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
 def _GenerateFromPowerSpectrumMagnification(param, param_name, base, value_type):
     """@brief Return a magnification calculated from a PowerSpectrum object.
     """
-    if 'pos' not in base:
+    if 'sky_pos' not in base:
         raise ValueError("PowerSpectrumMagnification requested, but no position defined.")
-    pos = base['pos']
+    pos = base['sky_pos']
 
     if 'power_spectrum' not in base:
         raise ValueError("PowerSpectrumMagnification requested, but no input.power_spectrum "
@@ -936,9 +939,10 @@ def _GenerateFromEval(param, param_name, base, value_type):
         pass
 
     # Then try bringing in the allowed variables to see if that works:
-    if 'pos' in base:
-        pos = base['pos']
-        #print 'pos = ',pos
+    if 'image_pos' in base:
+        image_pos = base['image_pos']
+    if 'sky_pos' in base:
+        sky_pos = base['sky_pos']
     if 'rng' in base:
         rng = base['rng']
     if 'catalog' in base:

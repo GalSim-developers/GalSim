@@ -19,6 +19,7 @@
 "#" : "- image type : Scattered (size, nobjects)",
 "#" : "- str_value type : NumberedFile (root, num, ext, digits)",
 "#" : "- str_value type : FormattedStr (format, items)",
+"#" : "- pos_value type : RandomCircle (..., inner_radius)",
 "#" : "- value type : Sequence (..., nitems)",
 "#" : "- output : nproc",
 "#" : "- output : weight",
@@ -128,18 +129,24 @@
     "#" : "then GalSim will automatically determine a good size to draw each object -- larger",
     "#" : "for larger objects, and smaller for smaller ones.  So this is usually the way to go.",
     
+    "#" : "There are two ways to specify the location of each postage stamp on the full image.",
+    "#" : "You may specify:",
+    "#" : "  image_pos = the position in pixels on the full image",
+    "#" : "  sky_pos   = the position in arcsec (or whatever sky units you are using) relative",
+    "#" : "              to the center of the image",
 
-    "#" : "Another optional parameter is center (which expects a pos_value) to specify the ",
-    "#" : "location of the center of each postage stamp.  The difference between this and ",
-    "#" : "gal.shift is that gal.shift moves the object with respect to the center of the postage",
-    "#" : "stamp, while center sets the position of the postage stamp on the larger full image.",
+    "#" : "The difference between these and gal.shift is that gal.shift moves the object with ",
+    "#" : "respect to the center of the postage stamp, while these set the position of the ",
+    "#" : "postage stamp on the larger full image.",
 
-    "#" : "The default if this is omitted is random x from 1..xsize and random y from 1..ysize:",
-    "#" : "center : { ",
-    "#" : "    type : XY, ",
-    "#" : "    x : { type : Random , min : 1 , max : xsize },",
-    "#" : "    y : { type : Random , min : 1 , max : ysize }",
-    "#" : "}",
+    "#" : "In this case we use stamp_sky_pos to place each object in sky coordinates relative to",
+    "#" : "the center of the image.  We use RandomCircle with an inner radius to avoid placing",
+    "#" : "galaxies too close to the halo center where the lensing is not weak.",
+    "sky_pos" : {
+        "type" : "RandomCircle",
+        "radius" : 50,
+        "inner_radius" : 10
+    },
 
     "pixel_scale" : 0.20,
 

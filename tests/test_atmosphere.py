@@ -89,7 +89,9 @@ def test_AtmosphericPSF_fwhm():
         # have the test pass.
         dx_scale = 10
         dx = float(lor / dx_scale)
-        psf_array = apsf.draw(dx=dx).array
+        # Need use_true_center=False, since we want the maximum to actually be drawn in one 
+        # of the pixels, rather than between the central 4 pixels.
+        psf_array = apsf.draw(dx=dx, use_true_center=False).array
         nx, ny = psf_array.shape
         profile = psf_array[nx / 2, ny / 2:]
         # Now get the last array index where the profile value exceeds half the peak value as a 
