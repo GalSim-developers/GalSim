@@ -16,29 +16,40 @@ HSM_ERROR_VALUE = -99
 NO_PSF_VALUE    = -98
 
 def CreateRGC(config):
+    """
+    Creates a mock real galaxy catalog and saves it to file.
+    Arguments
+    ---------
+    config              main config dict
+    """
 
+    # set up the config accordingly
     cosmos_config = copy.deepcopy(config['cosmos_images']);
     cosmos_config['image']['gsparams'] = copy.deepcopy(config['gsparams'])
+
+    # process the config and create fits file
     galsim.config.Process(cosmos_config,logger=None)
     # this is a hack - there should be a better way to get this number
     n_gals = len(galsim.config.GetNObjForMultiFits(cosmos_config,0,0))
     logger.info('building real galaxy catalog with %d galaxies' % n_gals)
 
+    # get the file names for the catalog, image and PSF RGC
     filename_gals = os.path.join(config['cosmos_images']['output']['dir'],
         config['cosmos_images']['output']['file_name'])
     filename_psfs = os.path.join(config['cosmos_images']['output']['dir'],
         config['cosmos_images']['output']['psf']['file_name'])
-    pixel_scale = config['cosmos_images']['image']['pixel_scale']
-    noise_var = config['cosmos_images']['image']['noise']['variance']
-    # noise_var = 0.
     filename_rgc = os.path.join(
         config['reconvolved_images']['input']['real_catalog']['dir'],
         config['reconvolved_images']['input']['real_catalog']['file_name'])
 
-    BAND = 'F814W'
-    MAG  = 20
-    WEIGHT = 1
+    # get some additional parameters to put in the catalog
+    pixel_scale = config['cosmos_images']['image']['pixel_scale']
+    noise_var = config['cosmos_images']['image']['noise']['variance']
+    BAND = 'F814W'     # copied from example RGC
+    MAG  = 20          # no idea if this is right
+    WEIGHT = 10        # ditto
 
+    # get the columns of the catalog
     columns = []
     columns.append( pyfits.Column( name='IDENT'         ,format='J'  ,array=range(0,n_gals)       ))    
     columns.append( pyfits.Column( name='MAG'           ,format='D'  ,array=[MAG] * n_gals        ))
@@ -59,6 +70,7 @@ def CreateRGC(config):
     hdu_table.writeto(filename_rgc,clobber=True)
     logger.info('saved real galaxy catalog %s' % filename_rgc)
 
+    # if in debug mode, save some plots
     if config['debug'] : SavePreviewRGC(config,filename_rgc)
 
 def SavePreviewRGC(config,filename_rgc):
@@ -70,12 +82,15 @@ def SavePreviewRGC(config,filename_rgc):
     filename_rgc        filename of the newly created real galaxy catalog fits 
     """
 
+    # open the RGC
     table = pyfits.open(filename_rgc)[1].data
 
+    # get the image and PSF filenames
     fits_gal = table[0]['GAL_FILENAME']
     fits_psf = table[0]['PSF_FILENAME']
     import pylab
 
+    # loop over galaxies and save plots
     for n in range(10):
 
         img_gal = pyfits.getdata(fits_gal,ext=n)
@@ -88,7 +103,6 @@ def SavePreviewRGC(config,filename_rgc):
         pylab.subplot(1,2,2)
         pylab.imshow(img_psf,interpolation='nearest')
         pylab.title('PSF')
-
         
         filename_fig = 'fig.previewRGC.%s.%d.png' % (config['filename_config'],n)
 
@@ -96,31 +110,53 @@ def SavePreviewRGC(config,filename_rgc):
 
 
 def GetReconvImage(config):
+    """
+    Gets an image of the mock ground observation using a reconvolved method, using 
+    an existing real galaxy catalog. Function CreateRGC(config) must be called earlier.
+    Arguments
+    ---------
+    config          main config dict read by yaml
 
+    Returns a tuple img_gals,img_psfs, which are stripes of postage stamps.
+    """
+
+    # adjust the config for the reconvolved galaxies
     reconv_config = copy.deepcopy(config['reconvolved_images'])
     reconv_config['image']['gsparams'] = copy.deepcopy(config['gsparams'])
     reconv_config['input']['catalog'] = copy.deepcopy(config['cosmos_images']['input']['catalog'])
     reconv_config['gal']['shift'] = copy.deepcopy(config['cosmos_images']['gal']['shift'])
-    
+
+    # process the input before BuildImage    
     galsim.config.ProcessInput(reconv_config)
-    # this outputs 4 objects, whereas direct outputs 5, not clear why
+    # get the reconvolved galaxies
     img_gals,img_psfs,_,_ = galsim.config.BuildImage(config=reconv_config,make_psf_image=True)
 
     return (img_gals,img_psfs)
 
 def GetDirectImage(config):
+    """
+    Gets an image of the mock ground observation using a direct method, without reconvolution.
+    Arguments
+    ---------
+    config          main config dict read by yaml
 
+    Returns a tuple img_gals,img_psfs, which are stripes of postage stamps
+    """
+
+    # adjust the config
     direct_config = copy.deepcopy(config['reconvolved_images'])
     direct_config['image']['gsparams'] = copy.deepcopy(config['gsparams'])
     # switch gals to the original cosmos gals
     direct_config['gal'] = copy.deepcopy(config['cosmos_images']['gal'])  
     direct_config['gal']['flux'] = 1.
+    # delete signal to noise - we want the direct images to be of best possible quality
     del direct_config['gal']['signal_to_noise'] 
     direct_config['gal']['shear'] = copy.deepcopy(config['reconvolved_images']['gal']['shear'])  
     direct_config['input'] = copy.deepcopy(config['cosmos_images']['input'])
     
+    # process the input before BuildImage     
     galsim.config.ProcessInput(direct_config)
-    # this outputs 5 objects, whereas reconv outputs 4, not clear why
+    # get the direct galaxies
     img_gals,img_psfs,_,_ = galsim.config.BuildImage(config=direct_config,make_psf_image=True)
 
     return (img_gals,img_psfs)
@@ -136,7 +172,7 @@ def GetShapeMeasurements(image_gal, image_psf, ident):
     ident               id of the galaxy, to be saved in the output file
     
     Outputs dictionary containing the results of comparison.
-    The dict contains fields:
+    The dict contains fields:, moments_e1, moments_e2, hsmcorr_e1, hsmcorr_e2, moments_sigma, hsmcorr_sigma, ident
     If an error occured in HSM measurement, then a error value is written in the fields of this
     dict.
     """
@@ -199,6 +235,10 @@ def GetPixelDifference(image1,image2,id):
     ---------
     image1
     image2      images to compare
+    
+    Return a dict with fields: 
+    diff        the difference of interest
+    ident       id provided earlier
     """
 
     # get the normalised images
@@ -260,24 +300,43 @@ def SaveResults(filename_output,results_direct,results_reconv,results_imdiff):
     logging.info('saved results file %s' % (filename_output))
 
 def RunComparison(config,rebuild_reconv,rebuild_direct):
+    """
+    Run the comparison of reconvolved and direct imageing.
+    Arguments
+    ---------
+    config              main config dict read by yaml
+    rebuild_reconv      wheather to rebuild the reconvolved image
+                        if no, then use the one computer earlier
+                        if the previous one is not available, then compute it anyway
+    rebuild_direct      ditto for direct image
+    Return dictionaries with measurements of images
+    results_shape_direct,results_shape_reconv,results_pixel_imdiff
+    For specifications of those dicts see functions GetPixelDifference, GetShapeMeasurements.
+    """
 
-    # try:
-    CreateRGC(config)
+    # first create the RGC
+    try:
+        CreateRGC(config)
+    except:
+        raise ValueError('creating RGC failed')
 
-    # except:
-        # raise ValueError('creating RGC failed')
+    global img_gals_reconv,img_gals_direct
 
+    # build the reconvolved image if requested or not present in the global variable img_gals_reconv
     try:
         if rebuild_reconv or img_gals_reconv==None:
             logger.info('building reconv image')
+            # get the reconvolved image
             (img_reconv,psf_reconv) = GetReconvImage(config)
     except:
         logging.error('building reconv image failed')
         return (None,None,None)
 
+    # build the direct image if requested or not present in the global variable img_gals_direct
     try:
         if rebuild_direct or img_gals_direct==None:
             logger.info('building direct image')
+            # get the direct image
             (img_direct,psf_direct) = GetDirectImage(config)
     except:
         logging.error('building direct image failed')
@@ -292,6 +351,7 @@ def RunComparison(config,rebuild_reconv,rebuild_direct):
     results_shape_direct = []
     results_pixel_imdiff = []
 
+    # loop over objects
     for i in range(nobjects):
 
         # cut out stamps
@@ -299,9 +359,10 @@ def RunComparison(config,rebuild_reconv,rebuild_direct):
         img_gal_direct =  img_direct[ galsim.BoundsI(  1 ,   npix, i*npix+1, (i+1)*npix ) ]
         img_psf_direct =  psf_direct[ galsim.BoundsI(  1 ,   npix, i*npix+1, (i+1)*npix ) ]
 
+        # if in debug mode save some plots
         if config['debug']: SaveImagesPlots(config, i, img_gal_reconv, img_gal_direct, img_psf_direct)
 
-        # get shapes
+        # get shapes and pixel differences
         result_reconv = GetShapeMeasurements(img_gal_reconv, img_psf_direct, i)
         result_direct = GetShapeMeasurements(img_gal_direct, img_psf_direct, i)
         result_imdiff = GetPixelDifference(img_gal_reconv,img_gal_direct, i)
@@ -314,13 +375,25 @@ def RunComparison(config,rebuild_reconv,rebuild_direct):
     return results_shape_direct,results_shape_reconv,results_pixel_imdiff
 
 def SaveImagesPlots(config,id,img_reconv,img_direct,img_psf):
+    """
+    Save the images of direct and reconvolved galaxies to a png file.
+    File will have name fig.images.filename_config.id.png.
+    Arguments
+    ---------
+    config          main config dict read by yaml
+    id              id of the galaxy, int
+    img_reconv      reconvolved image
+    img_direct      direct image
+    img_psf         image of the reconvolving PSF
+    """
 
+    # set up figure size
     fig_xsize,fig_ysize = 30,15
 
+    # normalise the images
     img_direct_norm = img_direct.array / sum(img_direct.array.flatten())
     img_reconv_norm = img_reconv.array / sum(img_reconv.array.flatten())
     img_psf_norm = img_psf.array / sum(img_psf.array.flatten())
-
 
     import pylab
     pylab.figure(figsize=(fig_xsize,fig_ysize))
@@ -344,10 +417,12 @@ def SaveImagesPlots(config,id,img_reconv,img_direct,img_psf):
     # pylab.colorbar()
     pylab.title('PSF image')
 
+    # save figure
     filename_fig = 'fig.images.%s.%03d.png' % (config['filename_config'],id)
     pylab.savefig(filename_fig)
     logger.debug('saved figure %s' % filename_fig)
     pylab.close()
+
 
 def ChangeConfigValue(config,path,value):
     """
@@ -364,6 +439,7 @@ def ChangeConfigValue(config,path,value):
         Value       new value for this field
     """
 
+    # build a string with the dictionary path
     eval_str = 'config'
     for key in path: 
         # check if path element is a string addressing a dict
@@ -375,7 +451,7 @@ def ChangeConfigValue(config,path,value):
         else: 
             raise ValueError('element in the config path should be either string or int, is %s' 
                 % str(type(key)))
-    # perform assgnment of the new value
+    # assign the new value
     try:
         exec(eval_str + '=' + str(value))
         logging.debug('changed %s to %f' % (eval_str,eval(eval_str)))
@@ -392,7 +468,6 @@ def RunComparisonForVariedParams(config):
     Arguments
     ---------
     config              the config object, as read by yaml
-    filename_config     name of the config file used
     """
 
     # loop over parameters to vary
