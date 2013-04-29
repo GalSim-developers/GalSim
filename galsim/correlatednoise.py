@@ -487,7 +487,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         """
         return self._profile.draw(
             image=image, dx=dx, gain=1., wmult=wmult, normalization="surface brightness",
-            add_to_image=add_to_image)
+            add_to_image=add_to_image, use_true_center=False)
 
     def calculateCovarianceMatrix(self, bounds, dx):
         """Calculate the covariance matrix for an image with specified properties.
