@@ -26,6 +26,7 @@ gal :
     flux : 2e7
     
 image :
+    random_seed : 1929391
     nproc : 5
     # pixel scale for the ground observation
     pixel_scale : 0.2  # arcsec / pixel

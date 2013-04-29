@@ -18,7 +18,7 @@ import math
 HSM_ERROR_VALUE = -99
 NO_PSF_VALUE    = -98
 
-def saveResults(filename_output,results_all_gals):
+def SaveResults(filename_output,results_all_gals):
     """
     Save results to file.
     Arguments
@@ -34,7 +34,7 @@ def saveResults(filename_output,results_all_gals):
        
     # write the header
     output_row_fmt = '%d\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t' + \
-                        '%2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\n'
+                        '% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\n'
     output_header = '# id max_diff_over_max_image ' +  \
                                 'E1_moments_fft E2_moments_fft E1_moments_photon E2_moments_photon ' + \
                                 'E1_corr_fft E2_hsm_corr_fft E1_corr_photon E2_corr_photon ' + \
@@ -46,10 +46,13 @@ def saveResults(filename_output,results_all_gals):
 
         # write the result item
         file_output.write(output_row_fmt % (res['ident'], res['max_diff_over_max_image'], 
-            res['moments_fft_e1'], res['moments_fft_e2'], res['moments_phot_e1'],  res['moments_phot_e2'],
-            res['hsm_corr_fft_e1'], res['hsm_corr_fft_e2'], res['hsm_corr_phot_e1'], res['hsm_corr_phot_e2'],
-            res['moments_fft_sigma'], res['moments_phot_sigma'], res['hsm_fft_sigma'], res['hsm_phot_sigma']
+            res['moments_fft_e1'], res['moments_fft_e2'], res['moments_phot_e1'], res['moments_phot_e2'],
+            res['hsmcorr_fft_e1'], res['hsmcorr_fft_e2'], res['hsmcorr_phot_e1'], res['hsmcorr_phot_e2'],
+            res['moments_fft_sigma'], res['moments_phot_sigma'], res['hsmcorr_fft_sigma'], res['hsmcorr_phot_sigma']
             ))
+    
+    logging.info('saved results file %s' % (filename_output))
+
 
 def GetShapeMeasurements(image_gal_phot, image_gal_fft , image_psf, ident):
     """
@@ -84,7 +87,7 @@ def GetShapeMeasurements(image_gal_phot, image_gal_fft , image_psf, ident):
         moments_phot_e2 = moments_phot.observed_shape.getE2()
         moments_phot_sigma = moments_phot.moments_sigma 
     except:
-        logging.error('hsm error')
+        logging.error('hsm error in moments measurement for phot image of galaxy %s' % str(ident))
         moments_phot_e1 = HSM_ERROR_VALUE
         moments_phot_e2 = HSM_ERROR_VALUE
         moments_phot_sigma = HSM_ERROR_VALUE
@@ -94,7 +97,7 @@ def GetShapeMeasurements(image_gal_phot, image_gal_fft , image_psf, ident):
         moments_fft_e2 = moments_fft.observed_shape.getE2()
         moments_fft_sigma = moments_fft.moments_sigma 
     except:
-        logging.error('hsm error')
+        logging.error('hsm error in moments measurement for fft image of galaxy %s' % str(ident))
         moments_fft_e1 = HSM_ERROR_VALUE
         moments_fft_e2 = HSM_ERROR_VALUE
         moments_fft_sigma = HSM_ERROR_VALUE
@@ -112,29 +115,29 @@ def GetShapeMeasurements(image_gal_phot, image_gal_fft , image_psf, ident):
     else:
 
         try:
-            hsm_phot = galsim.EstimateShearHSM(image_gal_phot,image_psf,strict=True)
-            hsm_corr_phot_e1 = hsm_phot.corrected_e1
-            hsm_corr_phot_e2 = hsm_phot.corrected_e2
-            hsm_phot_sigma   = hsm_phot.moments_sigma
+            hsmcorr_phot = galsim.EstimateShearHSM(image_gal_phot,image_psf,strict=True)
+            hsmcorr_phot_e1 = hsmcorr_phot.corrected_e1
+            hsmcorr_phot_e2 = hsmcorr_phot.corrected_e2
+            hsmcorr_phot_sigma   = hsmcorr_phot.moments_sigma
         except:
-            logger.error('hsm error')
-            hsm_corr_phot_e1 = HSM_ERROR_VALUE
-            hsm_corr_phot_e2 = HSM_ERROR_VALUE
-            hsm_phot_sigma   = HSM_ERROR_VALUE
+            logger.error('hsm error in hsmcorr measurement of phot image of galaxy %s' % str(ident))
+            hsmcorr_phot_e1 = HSM_ERROR_VALUE
+            hsmcorr_phot_e2 = HSM_ERROR_VALUE
+            hsmcorr_phot_sigma   = HSM_ERROR_VALUE
 
         try:
-            hsm_fft   = galsim.EstimateShearHSM(image_gal_fft,image_psf,strict=True)
-            hsm_corr_fft_e1 = hsm_fft.corrected_e1
-            hsm_corr_fft_e2 = hsm_fft.corrected_e2
-            hsm_fft_sigma   = hsm_fft.moments_sigma
+            hsmcorr_fft   = galsim.EstimateShearHSM(image_gal_fft,image_psf,strict=True)
+            hsmcorr_fft_e1 = hsmcorr_fft.corrected_e1
+            hsmcorr_fft_e2 = hsmcorr_fft.corrected_e2
+            hsmcorr_fft_sigma   = hsmcorr_fft.moments_sigma
         except:
-            logger.error('hsm error')
-            hsm_corr_fft_e1 = HSM_ERROR_VALUE
-            hsm_corr_fft_e2 = HSM_ERROR_VALUE
-            hsm_fft_sigma   = HSM_ERROR_VALUE
+            logger.error('hsm error in hsmcorr measurement of fft image of galaxy %s' % str(ident))
+            hsmcorr_fft_e1 = HSM_ERROR_VALUE
+            hsmcorr_fft_e2 = HSM_ERROR_VALUE
+            hsmcorr_fft_sigma   = HSM_ERROR_VALUE
         
-        logger.debug('hsm corrected moments fft     E1=% 2.6f\tE2=% 2.6f\tsigma=% 2.6f' % (hsm_corr_fft_e1, hsm_corr_fft_e2, hsm_fft_sigma))
-        logger.debug('hsm corrected moments phot    E1=% 2.6f\tE2=% 2.6f\tsigma=% 2.6f' % (hsm_corr_phot_e1, hsm_corr_phot_e2, hsm_phot_sigma))
+        logger.debug('hsm corrected moments fft     E1=% 2.6f\tE2=% 2.6f\tsigma=% 2.6f' % (hsmcorr_fft_e1, hsmcorr_fft_e2, hsmcorr_fft_sigma))
+        logger.debug('hsm corrected moments phot    E1=% 2.6f\tE2=% 2.6f\tsigma=% 2.6f' % (hsmcorr_phot_e1, hsmcorr_phot_e2, hsmcorr_phot_sigma))
           
     # create the output dictionary
     result={}
@@ -143,17 +146,14 @@ def GetShapeMeasurements(image_gal_phot, image_gal_fft , image_psf, ident):
     result['moments_fft_e2'] = moments_fft_e2
     result['moments_phot_e1'] = moments_phot_e1
     result['moments_phot_e2'] = moments_phot_e2
-    result['hsm_corr_fft_e1'] = hsm_corr_fft_e1
-    result['hsm_corr_fft_e2'] = hsm_corr_fft_e1
-    result['hsm_corr_phot_e1'] = hsm_corr_phot_e1
-    result['hsm_corr_phot_e2'] = hsm_corr_phot_e1
+    result['hsmcorr_fft_e1'] = hsmcorr_fft_e1
+    result['hsmcorr_fft_e2'] = hsmcorr_fft_e2
+    result['hsmcorr_phot_e1'] = hsmcorr_phot_e1
+    result['hsmcorr_phot_e2'] = hsmcorr_phot_e2
     result['moments_fft_sigma'] = moments_fft_sigma
     result['moments_phot_sigma'] = moments_phot_sigma
-    result['hsm_fft_sigma'] = hsm_fft_sigma
-    result['hsm_phot_sigma'] = hsm_phot_sigma
-    result['image_fft'] = image_gal_fft
-    result['image_phot'] = image_gal_phot
-    result['image_psf'] = image_psf
+    result['hsmcorr_fft_sigma'] = hsmcorr_fft_sigma
+    result['hsmcorr_phot_sigma'] = hsmcorr_phot_sigma
     result['ident'] = ident
 
     return result
@@ -184,11 +184,11 @@ def RunComparison(config,rebuild_pht,rebuild_fft):
         if rebuild_fft or img_gals_fft==None:
             logger.info('building fft image')
             config['image']['draw_method'] = 'fft'
-            img_gals_fft,img_psfs_fft,_,_ = galsim.config.BuildImage(config=config,make_psf_image=True,logger=logger)
+            img_gals_fft,img_psfs_fft,_,_ = galsim.config.BuildImage(config=config,make_psf_image=True)
         if rebuild_pht or img_gals_pht==None:
             logger.info('building phot image')
             config['image']['draw_method'] = 'phot'
-            img_gals_pht,img_psfs_pht,_,_ = galsim.config.BuildImage(config=config,make_psf_image=True,logger=logger)
+            img_gals_pht,img_psfs_pht,_,_ = galsim.config.BuildImage(config=config,make_psf_image=True)
     except:
         logging.error('building image failed')
         return None
@@ -200,26 +200,49 @@ def RunComparison(config,rebuild_pht,rebuild_fft):
     results_all = []
 
     # measure the photon and fft images
-    for i in range(nobjects/2):
+    for i in range(nobjects):
 
         img_fft =  img_gals_fft[galsim.BoundsI(  1 ,   npix, i*npix+1, (i+1)*npix )]
         img_pht =  img_gals_pht[galsim.BoundsI(  1 ,   npix, i*npix+1, (i+1)*npix )]
         img_psf =  img_psfs_fft[galsim.BoundsI(  1 ,   npix, i*npix+1, (i+1)*npix )]
 
-        # import pylab
-        # pylab.subplot(1,3,1)
-        # pylab.imshow(img_fft.array,interpolation='nearest')
-        # pylab.subplot(1,3,2)
-        # pylab.imshow(img_pht.array,interpolation='nearest')
-        # pylab.subplot(1,3,3)
-        # pylab.imshow(img_psf.array,interpolation='nearest')
-        # pylab.show()
+        if config['debug'] == True: SaveImagePlots(config,i,img_fft,img_pht,img_psf)
 
         # measure and get the resutls
         results = GetShapeMeasurements(img_fft,img_pht,img_psf,i)
         results_all.append(results)
 
     return results_all
+
+def SaveImagePlots(config,id,img_fft,img_pht,img_psf):
+
+    import pylab
+    pylab.figure()
+
+    pylab.subplot(1,4,1)
+    pylab.imshow(img_fft.array,interpolation='nearest')
+    pylab.colorbar()
+    pylab.title('fft image')
+    
+    pylab.subplot(1,4,2)
+    pylab.imshow(img_pht.array,interpolation='nearest')
+    pylab.colorbar()
+    pylab.title('photon image')
+    
+    pylab.subplot(1,4,3)
+    pylab.imshow(img_fft.array-img_pht.array,interpolation='nearest')
+    pylab.colorbar()
+    
+    pylab.subplot(1,4,4)
+    pylab.imshow(img_psf.array,interpolation='nearest')
+    pylab.colorbar()
+    pylab.title('PSF image')
+    
+    filename_fig = 'fig.images.%s.%03d.png' % (config['filename_config'],id)
+    pylab.savefig(filename_fig)
+    logger.debug('saved figure %s' % filename_fig)
+
+    pylab.close()
 
 def ChangeConfigValue(config,path,value):
     """
@@ -255,7 +278,7 @@ def ChangeConfigValue(config,path,value):
         print config
         raise ValueError('wrong path in config : %s' % eval_str)
 
-def RunComparisonForVariedParams(config,filename_config):
+def RunComparisonForVariedParams(config):
     """
     Runs the comparison of photon and fft drawing methods, producing results file for each of the 
     varied parameters in the config file, under key 'vary_params'.
@@ -286,11 +309,12 @@ def RunComparisonForVariedParams(config,filename_config):
             # run the photon vs fft test on the changed configs
             results = RunComparison(changed_config,param['rebuild_pht'],param['rebuild_fft'])
             if results == None:
+                logging.error('failed to get results for these settings')
                 continue
             # get the results filename
-            filename_results = 'results.%s.%s.%03d.cat' % (filename_config,param_name,iv)
+            filename_results = 'results.%s.%s.%03d.cat' % (config['filename_config'],param_name,iv)
             # save the results
-            saveResults(filename_results,results)
+            SaveResults(filename_results,results)
             logging.info('saved results for varied parameter %s with value %s, filename %s' % (param_name,str(value),filename_results))
 
 if __name__ == "__main__":
@@ -301,24 +325,30 @@ if __name__ == "__main__":
     # parse arguments
     parser = argparse.ArgumentParser(description=description, add_help=True)
     parser.add_argument('filename_config', type=str, help='yaml config file, see photon_vs_fft.yaml for example.')
-    parser.add_argument('--save_plots', action="store_true", help='if to generate_images of galaxies and store them in ./images/', default=False)
+    parser.add_argument('--debug', action="store_true", help='run with debug verbosity', default=False)
     args = parser.parse_args()
 
     # set up logger
-    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
+    if args.debug: logger_level = 'logging.DEBUG'
+    else:  logger_level = 'logging.INFO'
+    logging.basicConfig(format="%(message)s", level=eval(logger_level), stream=sys.stdout)
     logger = logging.getLogger("photon_vs_fft") 
 
     # load the configuration file
-    filename_config = args.filename_config
-    config = yaml.load(open(filename_config,'r'))
+    config = yaml.load(open(args.filename_config,'r'))
+    config['debug'] = args.debug
+    config['filename_config'] = args.filename_config
+
+
+    logger.info('running photon_vs_fft for varied parameters')
 
     # run the config including changing of the parameters
-    RunComparisonForVariedParams(config,args.filename_config)
+    RunComparisonForVariedParams(config)
 
     # run test
     # results = runComparison(config)
     # save the results
     # filename_output = 'results.test.cat'
-    # saveResults(filename_output,results)
+    # SaveResults(filename_output,results)
 
 

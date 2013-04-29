@@ -24,6 +24,7 @@ gal :
     flux : 2e7
     
 image :
+    random_seed : 1929391
     nproc : 5
     # pixel scale for space observations
     pixel_scale : 0.03  # arcsec / pixel
@@ -65,9 +66,21 @@ input :
 # 'results.yaml_filename.param_name.param_index.cat'
 # later other scripts can be used to produce plots
 vary_params:
-    alias_threshold : { path : ['image','gsparams','alias_threshold'], values : [ 1.0e-2 , 1.0e-3 , 5.0e-3 , 2.5e-5 , 1.0e-4 , 7.5e-4 ] , rebuild_pht : False , rebuild_fft : True } 
-    maxk_threshold :  { path : ['image','gsparams','maxk_threshold'],  values : [ 1.0e-1 , 1.0e-2 , 1.0e-3 , 5.0e-4 , 1.0e-4 , 5.0e-5 ] , rebuild_pht : False , rebuild_fft : True }
-    kvalue_accuracy : { path : ['image','gsparams','kvalue_accuracy'], values : [ 1.0e-3 , 1.0e-4 , 1.0e-5 , 1.0e-6 , 1.0e-7 , 1.0e-8 ] , rebuild_pht : False , rebuild_fft : True }
+    alias_threshold : 
+        path : ['image','gsparams','alias_threshold']
+        values : [ 1.0e-1 , 5.0e-2 , 1.0e-2 , 5.0e-3 , 1.0e-3 , 5.0e-4 ]
+        rebuild_pht : False 
+        rebuild_fft : True  
+    maxk_threshold :   
+        path : ['image','gsparams','maxk_threshold' ] 
+        values : [ 1.0e-1 , 5.0e-2 , 1.0e-2 , 5.0e-3 , 1.0e-3 , 5.0e-4 , 1.0e-4 , 5.0e-5 , 1.0e-5  ]  
+        rebuild_pht : False
+        rebuild_fft : True 
+    kvalue_accuracy : 
+        path : ['image','gsparams','kvalue_accuracy']
+        values : [ 1.0e-3 , 1.0e-4 , 1.0e-5 , 1.0e-6 , 1.0e-7 , 1.0e-8 ] 
+        rebuild_pht : False 
+        rebuild_fft : True 
     # test if there is no failures
     # alias_threshold : { path : ['image','gsparams','alias_threshold'], values : [ 1e-2 , 7e-4 ] , rebuild_pht : False , rebuild_fft : True } 
     # kvalue_accuracy : { path : ['image','gsparams','kvalue_accuracy'], values : [ 1e-3 , 1e-8 ] , rebuild_pht : False , rebuild_fft : True }
