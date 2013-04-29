@@ -124,7 +124,8 @@
     "#" : "The default convention on positions is to follow the FITS standard where the lower left",
     "#" : "pixel is called (1,1).  However, this can be counter-intuitive to people more used",
     "#" : "to C or python indexing, where indices start at 0.  So we offer the option of switching",
-    "#" : "the indexing convention.",
+    "#" : "the indexing convention.  This is probably only useful if you are going to do something",
+    "#" : "non-trivial with the image_pos values.",
 
     "#" : "If index_convention is 0 or 'C' or 'python', then the lower-left pixel is (0,0).",
     "#" : "If index_convention is 1 or 'Fortran' or 'FITS', then the lower-left pixel is (1,1).",
@@ -139,6 +140,8 @@
     "#" : "    type : XY ",
     "#" : "    x : { type : Random , min : 0 , max : xsize-1 }",
     "#" : "    y : { type : Random , min : 0 , max : ysize-1 }",
+    "#" : "Note: if the image_convention were 1 as is the default, then these would instead be ",
+    "#" : "    min : 1 , max : {x,y}size",
 
     "#" : "Add correlated noise to the image -- the correlation function comes from the HST COSMOS",
     "#" : "images and is described in more detail in the ",

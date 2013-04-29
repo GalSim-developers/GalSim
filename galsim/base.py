@@ -698,7 +698,7 @@ class GSObject(object):
         @param use_true_center  Normally, the profile is drawn to be centered at the true center
                                 of the image (using the function `image.bounds.trueCenter()`).
                                 If you would rather use the integer center (given by
-                                `image.bounds.center()`), set this to False.  
+                                `image.bounds.center()`), set this to `False`.  
                                 (default `use_true_center = True`)
 
         @returns      The drawn image.
@@ -811,7 +811,7 @@ class GSObject(object):
         @param use_true_center  Normally, the profile is drawn to be centered at the true center
                                 of the image (using the function `image.bounds.trueCenter()`).
                                 If you would rather use the integer center (given by
-                                `image.bounds.center()`), set this to False.  
+                                `image.bounds.center()`), set this to `False`.  
                                 (default `use_true_center = True`)
 
         @param n_photons        If provided, the number of photons to use.

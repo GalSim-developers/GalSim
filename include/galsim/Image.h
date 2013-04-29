@@ -165,7 +165,7 @@ namespace galsim {
          *
          *  The returned image will have the same bounding box and pixel values as this,
          *  but will they will not share data.
-        */
+         */
         Image<T> copy() const
         { return Image<T>(*this); }
 

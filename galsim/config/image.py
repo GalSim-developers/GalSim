@@ -690,6 +690,9 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         # We don't care about the output here.  This just builds the grid, which we'll
         # access for each object using its position.
 
+    if 'image_pos' in config['image'] and 'sky_pos' in config['image']:
+        raise AttributeError("Both image_pos and sky_pos specified for Scattered image.")
+
     if 'image_pos' not in config['image'] and 'sky_pos' not in config['image']:
         xmin = config['image_origin'].x
         xmax = xmin + full_xsize-1
