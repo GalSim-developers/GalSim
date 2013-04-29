@@ -155,7 +155,6 @@ def PlotStatsForParam(config,param_name):
     Arguments
     ---------
     config               galsim yaml config, which was used to produce the results, read by yaml
-    filename_config      a config file name used to produce the results
     param_name           varied parameter name, listed under config['vary_params'], for which
                             to create the plots
     """
@@ -293,7 +292,7 @@ if __name__ == "__main__":
     parser.add_argument('--debug', action="store_true", help='run with debug verbosity', default=False)
     args = parser.parse_args()
 
-        # set up logger
+    # set up logger
     if args.debug: logger_level = 'logging.DEBUG'
     else:  logger_level = 'logging.INFO'
     logging.basicConfig(format="%(message)s", level=eval(logger_level), stream=sys.stdout)
