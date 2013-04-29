@@ -480,13 +480,17 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         
     # Define a 'stamp_image_pos' field so the stamps can set their position appropriately in case
     # we need it for PowerSpectum or NFWHalo.
+    x0 = (stamp_xsize-1)/2. + config['image_origin'].x
+    y0 = (stamp_ysize-1)/2. + config['image_origin'].y
+    dx = stamp_xsize + xborder
+    dy = stamp_ysize + yborder
     config['image']['stamp_image_pos'] = { 
         'type' : 'XY' ,
         'x' : { 'type' : 'List',
-                'items' : [ ix * (stamp_xsize+xborder) + (stamp_xsize+1)/2. for ix in ix_list ]
+                'items' : [ x0 + ix*dx for ix in ix_list ]
               },
         'y' : { 'type' : 'List',
-                'items' : [ iy * (stamp_ysize+yborder) + (stamp_ysize+1)/2. for iy in iy_list ]
+                'items' : [ y0 + iy*dy for iy in iy_list ]
               }
     }
 
@@ -693,10 +697,14 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         # access for each object using its position.
 
     if 'stamp_image_pos' not in config['image'] and 'stamp_sky_pos' not in config['image']:
+        xmin = config['image_origin'].x
+        xmax = xmin + full_xsize-1
+        ymin = config['image_origin'].y
+        ymax = ymin + full_ysize-1
         config['image']['stamp_image_pos'] = { 
             'type' : 'XY' ,
-            'x' : { 'type' : 'Random' , 'min' : 1 , 'max' : full_xsize },
-            'y' : { 'type' : 'Random' , 'min' : 1 , 'max' : full_ysize }
+            'x' : { 'type' : 'Random' , 'min' : xmin , 'max' : xmax },
+            'y' : { 'type' : 'Random' , 'min' : ymin , 'max' : ymax }
         }
 
     nproc = params.get('nproc',1)

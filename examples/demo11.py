@@ -178,9 +178,9 @@ def main(argv):
         # The usual random number generator using a different seed for each galaxy.
         ud = galsim.UniformDeviate(random_seed+k)
 
-        # Choose a random position within a range that is not too close to the edge.
-        x = 0.5*stamp_size + ud()*(image_size - stamp_size)
-        y = 0.5*stamp_size + ud()*(image_size - stamp_size)
+        # Choose a random position in the image
+        x = ud()*(image_size-1)
+        y = ud()*(image_size-1)
 
         # Turn this into a position in arcsec
         pos = galsim.PositionD(x,y) * pixel_scale
