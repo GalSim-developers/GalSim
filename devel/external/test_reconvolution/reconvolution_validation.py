@@ -62,7 +62,6 @@ def CreateRGC(config):
 
     # PreviewRGC(filename_rgc)
 
-
 def PreviewRGC(filename_rgc):
     """
     Function for eyeballing the contents of the created mock RGC catalogs.
@@ -85,14 +84,16 @@ def PreviewRGC(filename_rgc):
 
         pylab.subplot(1,2,1)
         pylab.imshow(img_gal,interpolation='nearest')
+        
         pylab.subplot(1,2,2)
         pylab.imshow(img_psf,interpolation='nearest')
-        pylab.show()
 
 def GetReconvImage(config):
 
     reconv_config = config['reconvolved_images'].copy()
     reconv_config['image']['gsparams'] = config['gsparams'].copy()
+    reconv_config['input']['catalog'] = config['cosmos_images']['input']['catalog'].copy()
+    reconv_config['gal']['shift'] = config['cosmos_images']['gal']['shift'].copy()
     
     galsim.config.ProcessInput(reconv_config)
     # this outputs 4 objects, whereas direct outputs 5, not clear why
@@ -100,13 +101,13 @@ def GetReconvImage(config):
 
     return (img_gals,img_psfs)
 
-
 def GetDirectImage(config):
 
     direct_config = config['reconvolved_images'].copy()
     direct_config['image']['gsparams'] = config['gsparams'].copy()
     # switch gals to the original cosmos gals
     direct_config['gal'] = config['cosmos_images']['gal'].copy()  
+    direct_config['gal']['shear'] = config['reconvolved_images']['gal']['shear'].copy()  
     direct_config['input'] = config['cosmos_images']['input'].copy()
     
     galsim.config.ProcessInput(direct_config)
@@ -114,7 +115,6 @@ def GetDirectImage(config):
     img_gals,img_psfs,_,_ = galsim.config.BuildImage(config=direct_config,make_psf_image=True)
 
     return (img_gals,img_psfs)
-
 
 def GetShapeMeasurements(image_gal, image_psf, ident):
     """
@@ -173,10 +173,10 @@ def GetShapeMeasurements(image_gal, image_psf, ident):
     result={}
     result['moments_e1'] = moments_e1
     result['moments_e2'] = moments_e2
-    result['hsm_corr_e1'] = hsm_corr_e1
-    result['hsm_corr_e2'] = hsm_corr_e1
+    result['hsmcorr_e1'] = hsm_corr_e1
+    result['hsmcorr_e2'] = hsm_corr_e2
     result['moments_sigma'] = moments_sigma
-    result['hsm_sigma'] = hsm_sigma
+    result['hsmcorr_sigma'] = hsm_sigma
     result['ident'] = ident
 
     return result
@@ -214,20 +214,18 @@ def SaveResults(filename_output,results_direct,results_reconv):
             results_direct[i]['moments_e2'], 
             results_reconv[i]['moments_e1'],  
             results_reconv[i]['moments_e2'],
-            results_direct[i]['hsm_corr_e1'], 
-            results_direct[i]['hsm_corr_e2'], 
-            results_reconv[i]['hsm_corr_e1'], 
-            results_reconv[i]['hsm_corr_e2'],
+            results_direct[i]['hsmcorr_e1'], 
+            results_direct[i]['hsmcorr_e2'], 
+            results_reconv[i]['hsmcorr_e1'], 
+            results_reconv[i]['hsmcorr_e2'],
             results_direct[i]['moments_sigma'], 
             results_reconv[i]['moments_sigma'], 
-            results_direct[i]['hsm_sigma'], 
-            results_reconv[i]['hsm_sigma']
+            results_direct[i]['hsmcorr_sigma'], 
+            results_reconv[i]['hsmcorr_sigma']
             ))
 
     file_output.close()
     logging.info('saved results file %s' % (filename_output))
-
-
 
 def RunComparison(config,rebuild_reconv,rebuild_direct):
 
@@ -256,15 +254,6 @@ def RunComparison(config,rebuild_reconv,rebuild_direct):
     results_list_reconv = []
     results_list_direct = []
 
-    # print img_reconv
-    # print img_direct
-
-    # import pylab
-    # pylab.imshow(img_reconv.array)
-    # pylab.show()
-    # pylab.imshow(img_direct.array)
-    # pylab.show()
-
     for i in range(nobjects):
 
         # cut out stamps
@@ -272,9 +261,11 @@ def RunComparison(config,rebuild_reconv,rebuild_direct):
         img_gal_direct =  img_direct[ galsim.BoundsI(  1 ,   npix, i*npix+1, (i+1)*npix ) ]
         img_psf_direct =  psf_direct[ galsim.BoundsI(  1 ,   npix, i*npix+1, (i+1)*npix ) ]
 
+        if config['debug']: SaveImagesPlots(config, i, img_gal_reconv, img_gal_direct, img_psf_direct)
+
         # get shapes
-        result_reconv = GetShapeMeasurements(img_gal_reconv,img_psf_direct,i)
-        result_direct = GetShapeMeasurements(img_psf_direct,img_psf_direct,i)
+        result_reconv = GetShapeMeasurements(img_gal_reconv, img_psf_direct, i)
+        result_direct = GetShapeMeasurements(img_gal_direct, img_psf_direct, i)
 
         # append the shape results to list
         results_list_reconv.append(result_reconv)
@@ -282,6 +273,34 @@ def RunComparison(config,rebuild_reconv,rebuild_direct):
 
     return results_list_direct,results_list_reconv
 
+def SaveImagesPlots(config,id,img_reconv,img_direct,img_psf):
+
+    import pylab
+    pylab.figure()
+    pylab.subplot(1,4,1)
+    pylab.imshow(img_reconv.array)
+    # pylab.colorbar()
+    pylab.title('reconvolved image')
+
+    pylab.subplot(1,4,2)
+    pylab.imshow(img_direct.array)
+    # pylab.colorbar()
+    pylab.title('direct image')
+    
+    pylab.subplot(1,4,3)
+    pylab.imshow(img_direct.array - img_reconv.array)
+    # pylab.colorbar()
+    pylab.title('direct - reconv')
+
+    pylab.subplot(1,4,4)
+    pylab.imshow(img_psf.array)
+    # pylab.colorbar()
+    pylab.title('PSF image')
+
+    filename_fig = 'fig.images.%s.%03d.png' % (config['filename_config'],id)
+    pylab.savefig(filename_fig)
+    logger.debug('saved figure %s' % filename_fig)
+    pylab.close()
 
 def ChangeConfigValue(config,path,value):
     """
@@ -317,7 +336,7 @@ def ChangeConfigValue(config,path,value):
         print config
         raise ValueError('wrong path in config : %s' % eval_str)
 
-def RunComparisonForVariedParams(config,filename_config):
+def RunComparisonForVariedParams(config):
     """
     Runs the comparison of direct and reconv convolution methods, producing results file for each of the 
     varied parameters in the config file, under key 'vary_params'.
@@ -347,10 +366,10 @@ def RunComparisonForVariedParams(config,filename_config):
             logging.info('changed parameter %s to %s' % (param_name,str(value)))
             # run the photon vs fft test on the changed configs
             results_direct,results_reconv = RunComparison(changed_config,param['rebuild_reconv'],param['rebuild_direct'])
-            if results == None:
-                continue
+            # if getting images failed, continue with the loop
+            if results == None:  continue
             # get the results filename
-            filename_results = 'results.%s.%s.%03d.cat' % (filename_config,param_name,iv)
+            filename_results = 'results.%s.%s.%03d.cat' % (config['filename_config'],param_name,iv)
             # save the results
             SaveResults(filename_results,results_direct,results_reconv)
             logging.info('saved results for varied parameter %s with value %s, filename %s' % (param_name,str(value),filename_results))
@@ -364,15 +383,21 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=description, add_help=True)
     parser.add_argument('filename_config', type=str,
                  help='yaml config file, see reconvolution_validation.yaml for example.')
+    parser.add_argument('--debug', action="store_true", help='run in debug mode', default=False)
     args = parser.parse_args()
 
-    logging.basicConfig(format="%(message)s", level=logging.DEBUG, stream=sys.stdout)
+    # set up logger
+    if args.debug:  logger_level = 'logging.DEBUG'
+    else: logger_level = 'logging.INFO'
+    logging.basicConfig(format="%(message)s", level=eval(logger_level), stream=sys.stdout)
     logger = logging.getLogger("reconvolution_validation") 
 
     # load the configuration file
-    filename_config = args.filename_config
-    config = yaml.load(open(filename_config,'r'))
+    config = yaml.load(open(args.filename_config,'r'))
+    config['filename_config'] = args.filename_config
+    config['debug'] = args.debug
 
+    # run comparison for default parameter set
     results_list_reconv,results_list_direct = RunComparison(config,True,True)
 
     # save the results to file

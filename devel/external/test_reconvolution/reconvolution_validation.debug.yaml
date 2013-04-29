@@ -1,23 +1,25 @@
 some_variables:
-    - &ngals_in_cat 276
+    - &ngals_in_cat 10
 
 
 cosmos_images:
         
     gal :
         type : Sersic
-        half_light_radius : { type : InputCatalog , col : 2,  index : { type: Sequence, repeat: 2} }
-        n : { type : InputCatalog , col : 1,  index : { type: Sequence, repeat: 2} }
+        half_light_radius : { type : InputCatalog , col : 2 }
+        n : { type : InputCatalog , col : 1 }
         ellip : 
             type : GBeta 
-            g : { type : InputCatalog , col : 3,  index : { type: Sequence, repeat: 2} }  
-            beta : { type : Random }
-        shift : { type : RandomCircle , radius : 0.1 }
+            g : { type : InputCatalog , col : 3 }  
+            beta : { type: Rad , theta : {type : InputCatalog , col : 4 }}  
+        shift : 
+            type : XY  
+            x : { type : InputCatalog , col : 5 }
+            y : { type : InputCatalog , col : 6 }
         flux : 1e5
 
     # this is the PSF of the deep imaging
     psf : 
-        # space PSF
         type : Airy
         lam_over_diam : {type: Eval, str: '700.e-9 / 1.3 * 180. / math.pi * 3600.'}
         ellip : 
@@ -54,8 +56,8 @@ cosmos_images:
             file_name : rgc_val_psf.fits    
 
 reconvolved_images :
+    # this is the reconvolving PSF
     psf : 
-        # ground PSF
         type : Convolution
         items :  
             - { type : Moffat, fwhm : 0.65, beta : 3 }
@@ -74,9 +76,9 @@ reconvolved_images :
             items: 
                 - { type : G1G2 , g1 : -0.027 , g2 :  0.031 }
                 # - { type : G1G2 , g1 : +0.015 , g2 : -0.015 }
-        
+              
     image :
-        random_seed : 121212
+        random_seed : 2222211
         nproc : 5
         pixel_scale : 0.2   # pixel scale for the ground observation
         type : Tiled
