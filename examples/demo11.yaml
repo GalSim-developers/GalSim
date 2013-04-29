@@ -112,15 +112,6 @@ image :
     # That's usually fine, but here we just want to demonstrate the stamp_size functionality.
     stamp_size : 100 # pixels
     
-    # The default center of each stamp is to be random within the full bounds of the image.
-    # Here, we limit the range to avoid locations within 1/2 stamp_size of the edge.
-    # Note: It's not a problem to let stamps overlap the edge -- Galsim will clip them 
-    # appropriately.  We just do this to demonstrate the functionality.
-    center : 
-        type : XY 
-        x : { type : Random , min : 50 , max : 3550 }
-        y : { type : Random , min : 50 , max : 3550 }
-
     # The default convention on positions is to follow the FITS standard where the lower left
     # pixel is called (1,1).  However, this can be counter-intuitive to people more used
     # to C or python indexing, where indices start at 0.  So we offer the option of switching
@@ -131,7 +122,14 @@ image :
     # The default is 1.
     index_convention : 0
 
-    pixel_scale : 0.20  # arcsec / pixel
+    # In demo9, we said that you can specify either image_pos or sky_pos to 
+    # place each postage stamp on the full image.  If you don't specify either one, then the 
+    # default is random x and y within the full image.
+    #
+    # image_pos : 
+    #     type : XY 
+    #     x : { type : Random , min : 0 , max : xsize-1 }
+    #     y : { type : Random , min : 0 , max : ysize-1 }
 
     # Add correlated noise to the image -- the correlation function comes from the HST COSMOS images
     # and is described in more detail in the galsim.correlatednoise.getCOSMOSNoise() docstring.
@@ -141,7 +139,9 @@ image :
         type : "COSMOS"
         file_name : "../examples/data/acs_I_unrot_sci_20_cf.fits"
         dx_cosmos : 0.20  # use the same pixel scale as image, reproducing COSMOS correlated noise
-        variance : 1.e4   # variance sets value of zero distance correlation function
+        variance : 1.0e4   # variance sets value of zero distance correlation function
+
+    pixel_scale : 0.20  # arcsec / pixel
 
     random_seed : 24783923
 

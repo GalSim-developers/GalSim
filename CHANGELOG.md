@@ -61,9 +61,15 @@ Changes from v0.4 to current version:
 * Added index_convention option in config to allow for images with (0,0) as the origin rather
   than the usual (1,1). (Issue #380)
 
+* Changed the name of the center item for the Scattered image type to image_pos, and added a
+  new sky_pos which can instead specify the location of the object in sky coordinates (typically 
+  arcsec) relative to the image center. (Issue #380)
+
 * Added a new script, galsim/pse.py, that contains a PowerSpectrumEstimator class that can be used
   to estimate the shear power spectrum from a set of shears defined on a grid.  The main
   functionality of PowerSpectrumEstimator actually does not require an installed version of GalSim,
   just Python 2.6 or 2.7 and NumPy. (Issue #382)
 
 * Added ability to truncate Sersic profiles with optional trunc parameter. (Issue #388)
+
+* Added trefoil to optical aberration. (Issue #390)

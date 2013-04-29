@@ -276,6 +276,18 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0,
     return all_images
 
 
+def _set_image_origin(config, convention):
+    """Set config['image_origin'] appropriately based on the provided convention.
+    """
+    if convention.lower() in [ '0', 'c', 'python' ]:
+        origin = 0
+    elif convention.lower() in [ '1', 'fortran', 'fits' ]:
+        origin = 1
+    else:
+        raise AttributeError("Unknown index_convention: %s"%convention)
+    config['image_origin'] = galsim.PositionI(origin,origin)
+
+
 def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
                      make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
@@ -303,13 +315,7 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
         config['image'], 'image', config, opt=opt, ignore=ignore)[0]
 
     convention = params.get('index_convention','1')
-    if convention.lower() in [ '0', 'c', 'python' ]:
-        origin = 0
-    elif convention.lower() in [ '1', 'fortran', 'fits' ]:
-        origin = 1
-    else:
-        raise AttributeError("Unknown index_convention: %s"%convention)
-    config['image_origin'] = galsim.PositionI(origin,origin)
+    _set_image_origin(config,convention)
 
     # If image_xsize and image_ysize were set in config, this overrides the read-in params.
     if 'image_xsize' in config and 'image_ysize' in config:
@@ -364,7 +370,8 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     """
     config['seq_index'] = image_num
 
-    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc', 'center' , 'gsparams' ]
+    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc', 
+               'image_pos' , 'gsparams' ]
     req = { 'nx_tiles' : int , 'ny_tiles' : int }
     opt = { 'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
             'border' : int , 'xborder' : int , 'yborder' : int ,
@@ -382,13 +389,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     stamp_ysize = params.get('stamp_ysize',stamp_size)
 
     convention = params.get('index_convention','1')
-    if convention.lower() in [ '0', 'c', 'python' ]:
-        origin = 0
-    elif convention.lower() in [ '1', 'fortran', 'fits' ]:
-        origin = 1
-    else:
-        raise AttributeError("Unknown index_convention: %s"%convention)
-    config['image_origin'] = galsim.PositionI(origin,origin)
+    _set_image_origin(config,convention)
 
     if (stamp_xsize == 0) or (stamp_ysize == 0):
         raise AttributeError(
@@ -477,15 +478,19 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         iy_list = [ iy for ix in range(nx_tiles) for iy in range(ny_tiles) ]
         galsim.random.permute(rng, ix_list, iy_list)
         
-    # Define a 'center' field so the stamps can set their position appropriately in case
+    # Define a 'image_pos' field so the stamps can set their position appropriately in case
     # we need it for PowerSpectum or NFWHalo.
-    config['image']['center'] = { 
+    x0 = (stamp_xsize-1)/2. + config['image_origin'].x
+    y0 = (stamp_ysize-1)/2. + config['image_origin'].y
+    dx = stamp_xsize + xborder
+    dy = stamp_ysize + yborder
+    config['image']['image_pos'] = { 
         'type' : 'XY' ,
         'x' : { 'type' : 'List',
-                'items' : [ ix * (stamp_xsize+xborder) + (stamp_xsize+1)/2. for ix in ix_list ]
+                'items' : [ x0 + ix*dx for ix in ix_list ]
               },
         'y' : { 'type' : 'List',
-                'items' : [ iy * (stamp_ysize+yborder) + (stamp_ysize+1)/2. for iy in iy_list ]
+                'items' : [ y0 + iy*dy for iy in iy_list ]
               }
     }
 
@@ -599,7 +604,8 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     config['seq_index'] = image_num
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
-               'center', 'stamp_size', 'stamp_xsize', 'stamp_ysize', 'gsparams' ]
+               'image_pos', 'sky_pos', 
+               'stamp_size', 'stamp_xsize', 'stamp_ysize', 'gsparams' ]
     req = { 'nobjects' : int }
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 
             'pixel_scale' : float , 'nproc' : int , 'index_convention' : str,
@@ -630,13 +636,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     config['pixel_scale'] = pixel_scale
 
     convention = params.get('index_convention','1')
-    if convention.lower() in [ '0', 'c', 'python' ]:
-        origin = 0
-    elif convention.lower() in [ '1', 'fortran', 'fits' ]:
-        origin = 1
-    else:
-        raise AttributeError("Unknown index_convention: %s"%convention)
-    config['image_origin'] = galsim.PositionI(origin,origin)
+    _set_image_origin(config,convention)
 
     if 'sky_level' in params and 'sky_level_pixel' in params:
         raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
@@ -690,11 +690,15 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         # We don't care about the output here.  This just builds the grid, which we'll
         # access for each object using its position.
 
-    if 'center' not in config['image']:
-        config['image']['center'] = { 
+    if 'image_pos' not in config['image'] and 'sky_pos' not in config['image']:
+        xmin = config['image_origin'].x
+        xmax = xmin + full_xsize-1
+        ymin = config['image_origin'].y
+        ymax = ymin + full_ysize-1
+        config['image']['image_pos'] = { 
             'type' : 'XY' ,
-            'x' : { 'type' : 'Random' , 'min' : 1 , 'max' : full_xsize },
-            'y' : { 'type' : 'Random' , 'min' : 1 , 'max' : full_ysize }
+            'x' : { 'type' : 'Random' , 'min' : xmin , 'max' : xmax },
+            'y' : { 'type' : 'Random' , 'min' : ymin , 'max' : ymax }
         }
 
     nproc = params.get('nproc',1)
