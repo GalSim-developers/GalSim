@@ -1,5 +1,5 @@
 some_variables:
-    - &ngals_in_cat 10
+    - &ngals_in_cat 20
 
 cosmos_images:
         
@@ -15,7 +15,7 @@ cosmos_images:
             type : XY  
             x : { type : InputCatalog , col : 5 }
             y : { type : InputCatalog , col : 6 }
-        flux : 1e5
+        signal_to_noise : 2e10
 
     # this is the PSF of the deep imaging
     psf : 
@@ -32,14 +32,10 @@ cosmos_images:
         nproc : 1
         pixel_scale : 0.03          # pixel scale for space observations
         type : Single
-        # nimages : *ngals_in_cat 
-        # nx_tiles : 1                # we are generating galaxies in one long tiled stripe
-        # ny_tiles : *ngals_in_cat    
-        # this has to be big in order for the space images to contain the galaxies fully
         size : 256
-        # this field is required for the photon image, 
-        # but we don't want to add any noise, so we set the variance to 0
-        noise : { type : Gaussian, variance : 0. }
+        # this field is required for the image, 
+        # and is arbitrary because we are using gal['signal_to_noise']
+        noise : { type : Gaussian, variance : 1 }
         
     input :
         catalog :
@@ -68,7 +64,7 @@ reconvolved_images :
             
     gal :
         type : RealGalaxy
-        flux : 1.e5
+        flux : 1.
         index : { type : Sequence }
         shear : 
             type : List
@@ -83,7 +79,7 @@ reconvolved_images :
         type : Tiled
         nx_tiles : 1        # we are generating galaxies in one long tiled stripe
         ny_tiles : *ngals_in_cat    
-        stamp_size : 128    #  big in order for the space images to contain the galaxies fully
+        stamp_size : 64    #  big in order for the space images to contain the galaxies fully
         # this field is required for the photon image, 
         # but we don't want to add any noise, so we set the variance to 0
         noise : { type : Gaussian, sigma : 0. }
@@ -114,16 +110,21 @@ vary_params:
     alias_threshold : 
         path : ['gsparams','alias_threshold']
         values : [ 1.0e-1 , 5.0e-4 ]
-        rebuild_direct : False 
+        rebuild_direct : True 
         rebuild_reconv : True  
     maxk_threshold :   
         path : ['gsparams','maxk_threshold' ] 
         values : [ 1.0e-1 , 1.0e-5 ]  
-        rebuild_direct : False
+        rebuild_direct : True
         rebuild_reconv : True 
     kvalue_accuracy : 
         path : ['gsparams','kvalue_accuracy']
         values : [ 1.0e-3 , 1.0e-8 ] 
+        rebuild_direct : True 
+        rebuild_reconv : True 
+    snr :
+        path : ['cosmos_images','gal','signal_to_noise']
+        values : [ 2e20, 2000, 200, 100, 50, 25 ] 
         rebuild_direct : False 
         rebuild_reconv : True 
 

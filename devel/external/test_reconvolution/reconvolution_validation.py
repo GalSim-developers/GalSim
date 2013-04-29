@@ -30,6 +30,7 @@ def CreateRGC(config):
         config['cosmos_images']['output']['psf']['file_name'])
     pixel_scale = config['cosmos_images']['image']['pixel_scale']
     noise_var = config['cosmos_images']['image']['noise']['variance']
+    # noise_var = 0.
     filename_rgc = os.path.join(
         config['reconvolved_images']['input']['real_catalog']['dir'],
         config['reconvolved_images']['input']['real_catalog']['file_name'])
@@ -58,9 +59,9 @@ def CreateRGC(config):
     hdu_table.writeto(filename_rgc,clobber=True)
     logger.info('saved real galaxy catalog %s' % filename_rgc)
 
-    if config['debug'] : PreviewRGC(config,filename_rgc)
+    if config['debug'] : SavePreviewRGC(config,filename_rgc)
 
-def PreviewRGC(config,filename_rgc):
+def SavePreviewRGC(config,filename_rgc):
     """
     Function for eyeballing the contents of the created mock RGC catalogs.
     Arguments
@@ -70,7 +71,6 @@ def PreviewRGC(config,filename_rgc):
     """
 
     table = pyfits.open(filename_rgc)[1].data
-    print table
 
     fits_gal = table[0]['GAL_FILENAME']
     fits_psf = table[0]['PSF_FILENAME']
@@ -83,9 +83,12 @@ def PreviewRGC(config,filename_rgc):
 
         pylab.subplot(1,2,1)
         pylab.imshow(img_gal,interpolation='nearest')
+        pylab.title('galaxy')
         
         pylab.subplot(1,2,2)
         pylab.imshow(img_psf,interpolation='nearest')
+        pylab.title('PSF')
+
         
         filename_fig = 'fig.previewRGC.%s.%d.png' % (config['filename_config'],n)
 
@@ -111,6 +114,8 @@ def GetDirectImage(config):
     direct_config['image']['gsparams'] = copy.deepcopy(config['gsparams'])
     # switch gals to the original cosmos gals
     direct_config['gal'] = copy.deepcopy(config['cosmos_images']['gal'])  
+    direct_config['gal']['flux'] = 1.
+    del direct_config['gal']['signal_to_noise'] 
     direct_config['gal']['shear'] = copy.deepcopy(config['reconvolved_images']['gal']['shear'])  
     direct_config['input'] = copy.deepcopy(config['cosmos_images']['input'])
     
@@ -189,15 +194,20 @@ def GetPixelDifference(image1,image2,id):
     """
     Returns ratio of maximum pixel difference of two images 
     to the value of the maximum of pixels in the first image.
+    Normalises the fluxes to one before comparing.
     Arguments
     ---------
     image1
     image2      images to compare
     """
+
+    # get the normalised images
+    img1_norm = image1.array/sum(image1.array.flatten())
+    img2_norm = image2.array/sum(image2.array.flatten())
     # create a residual image
-    diff_image = image1.array - image2.array
+    diff_image = img1_norm - img2_norm
     # calculate the ratio
-    max_diff_over_max_image = abs(diff_image.flatten()).max()/image1.array.flatten().max()
+    max_diff_over_max_image = abs(diff_image.flatten()).max()/img1_norm.flatten().max()
     logger.debug('max(residual) / max(image1) = %2.4e ' % ( max_diff_over_max_image )  )
     return { 'diff' : max_diff_over_max_image, 'ident' :id }
 
@@ -262,8 +272,8 @@ def RunComparison(config,rebuild_reconv,rebuild_direct):
             logger.info('building reconv image')
             (img_reconv,psf_reconv) = GetReconvImage(config)
     except:
-        logging.error('building recov image failed')
-        return None
+        logging.error('building reconv image failed')
+        return (None,None,None)
 
     try:
         if rebuild_direct or img_gals_direct==None:
@@ -271,7 +281,7 @@ def RunComparison(config,rebuild_reconv,rebuild_direct):
             (img_direct,psf_direct) = GetDirectImage(config)
     except:
         logging.error('building direct image failed')
-        return None
+        return (None,None,None)
   
     # get image size
     npix = config['reconvolved_images']['image']['stamp_size']
@@ -307,25 +317,30 @@ def SaveImagesPlots(config,id,img_reconv,img_direct,img_psf):
 
     fig_xsize,fig_ysize = 30,15
 
+    img_direct_norm = img_direct.array / sum(img_direct.array.flatten())
+    img_reconv_norm = img_reconv.array / sum(img_reconv.array.flatten())
+    img_psf_norm = img_psf.array / sum(img_psf.array.flatten())
+
+
     import pylab
     pylab.figure(figsize=(fig_xsize,fig_ysize))
     pylab.subplot(1,4,1)
-    pylab.imshow(img_reconv.array)
+    pylab.imshow(img_reconv_norm)
     # pylab.colorbar()
     pylab.title('reconvolved image')
 
     pylab.subplot(1,4,2)
-    pylab.imshow(img_direct.array)
+    pylab.imshow(img_direct_norm)
     # pylab.colorbar()
     pylab.title('direct image')
     
     pylab.subplot(1,4,3)
-    pylab.imshow(img_direct.array - img_reconv.array)
+    pylab.imshow(img_direct_norm - img_reconv_norm)
     # pylab.colorbar()
     pylab.title('direct - reconv')
 
     pylab.subplot(1,4,4)
-    pylab.imshow(img_psf.array)
+    pylab.imshow(img_psf_norm)
     # pylab.colorbar()
     pylab.title('PSF image')
 
@@ -400,7 +415,7 @@ def RunComparisonForVariedParams(config):
             results_direct,results_reconv,results_pixel_imdiff = RunComparison(
                     changed_config,param['rebuild_reconv'],param['rebuild_direct'])
             # if getting images failed, continue with the loop
-            if results_direct == None:  continue
+            if results_direct == None or results_reconv == None or results_pixel_imdiff == None :  continue
             # get the results filename
             filename_results = 'results.%s.%s.%03d.cat' % (config['filename_config'],param_name,iv)
             # save the results
