@@ -234,17 +234,21 @@ def RunComparison(config,rebuild_reconv,rebuild_direct):
     except:
         raise ValueError('creating RGC failed')
 
-    # try:
+    try:
+        if rebuild_reconv or img_gals_reconv==None:
+            logger.info('building reconv image')
+            (img_reconv,psf_reconv) = GetReconvImage(config)
+    except:
+        logging.error('building recov image failed')
+        return None
 
-    if rebuild_reconv or img_gals_reconv==None:
-        logger.info('building reconv image')
-        (img_reconv,psf_reconv) = GetReconvImage(config)
-    if rebuild_direct or img_gals_direct==None:
-        logger.info('building direct image')
-        (img_direct,psf_direct) = GetDirectImage(config)
-    # except:
-     # logging.error('building image failed')
-        # return None
+    try:
+        if rebuild_direct or img_gals_direct==None:
+            logger.info('building direct image')
+            (img_direct,psf_direct) = GetDirectImage(config)
+    except:
+        logging.error('building direct image failed')
+        return None
   
     # get image size
     npix = config['reconvolved_images']['image']['stamp_size']
@@ -367,7 +371,7 @@ def RunComparisonForVariedParams(config):
             # run the photon vs fft test on the changed configs
             results_direct,results_reconv = RunComparison(changed_config,param['rebuild_reconv'],param['rebuild_direct'])
             # if getting images failed, continue with the loop
-            if results == None:  continue
+            if results_direct == None:  continue
             # get the results filename
             filename_results = 'results.%s.%s.%03d.cat' % (config['filename_config'],param_name,iv)
             # save the results
@@ -397,11 +401,12 @@ if __name__ == "__main__":
     config['filename_config'] = args.filename_config
     config['debug'] = args.debug
 
-    # run comparison for default parameter set
+    # run comparison for default parameter set and save results
     results_list_reconv,results_list_direct = RunComparison(config,True,True)
-
-    # save the results to file
     SaveResults('results.test.cat',results_list_reconv,results_list_direct)
+
+    # run the parameter comparison
+    RunComparisonForVariedParams(config)
 
 
 

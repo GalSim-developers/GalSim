@@ -1,23 +1,26 @@
+# declare some variables used internally in config
 some_variables:
-    - &ngals_in_cat 276
+    - &ngals_in_cat 10
 
-
+# this are the parameters of the deep images, a mock catalog of the COSMOS sample
 cosmos_images:
         
     gal :
         type : Sersic
-        half_light_radius : { type : InputCatalog , col : 2,  index : { type: Sequence, repeat: 2} }
-        n : { type : InputCatalog , col : 1,  index : { type: Sequence, repeat: 2} }
+        half_light_radius : { type : InputCatalog , col : 2 }
+        n : { type : InputCatalog , col : 1 }
         ellip : 
             type : GBeta 
-            g : { type : InputCatalog , col : 3,  index : { type: Sequence, repeat: 2} }  
-            beta : { type : Random }
-        shift : { type : RandomCircle , radius : 0.1 }
+            g : { type : InputCatalog , col : 3 }  
+            beta : { type: Rad , theta : {type : InputCatalog , col : 4 }}  
+        shift : 
+            type : XY  
+            x : { type : InputCatalog , col : 5 }
+            y : { type : InputCatalog , col : 6 }
         flux : 1e5
 
     # this is the PSF of the deep imaging
     psf : 
-        # space PSF
         type : Airy
         lam_over_diam : {type: Eval, str: '700.e-9 / 1.3 * 180. / math.pi * 3600.'}
         ellip : 
@@ -28,14 +31,11 @@ cosmos_images:
     image :
         random_seed : 121212
         draw_method : fft
-        nproc : 1
+        nproc : 5
         pixel_scale : 0.03          # pixel scale for space observations
         type : Single
-        # nimages : *ngals_in_cat 
-        # nx_tiles : 1                # we are generating galaxies in one long tiled stripe
-        # ny_tiles : *ngals_in_cat    
         # this has to be big in order for the space images to contain the galaxies fully
-        size : 256
+        size : 128
         # this field is required for the photon image, 
         # but we don't want to add any noise, so we set the variance to 0
         noise : { type : Gaussian, variance : 0. }
@@ -45,6 +45,7 @@ cosmos_images:
             dir : .
             file_name : cosmos_sersics_sample_N300_cleaned.asc
    
+    # the image created will create a real_galaxy_images for real_galaxy_images_psf
     output :
         type : MultiFits
         nimages : *ngals_in_cat
@@ -53,9 +54,10 @@ cosmos_images:
         psf :
             file_name : rgc_val_psf.fits    
 
+# this is 
 reconvolved_images :
+    # this is the reconvolving PSF
     psf : 
-        # ground PSF
         type : Convolution
         items :  
             - { type : Moffat, fwhm : 0.65, beta : 3 }
@@ -74,9 +76,9 @@ reconvolved_images :
             items: 
                 - { type : G1G2 , g1 : -0.027 , g2 :  0.031 }
                 # - { type : G1G2 , g1 : +0.015 , g2 : -0.015 }
-        
+              
     image :
-        random_seed : 121212
+        random_seed : 2222211
         nproc : 5
         pixel_scale : 0.2   # pixel scale for the ground observation
         type : Tiled
