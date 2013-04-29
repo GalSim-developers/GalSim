@@ -276,6 +276,18 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0,
     return all_images
 
 
+def _set_image_origin(config, convention):
+    """Set config['image_origin'] appropriately based on the provided convention.
+    """
+    if convention.lower() in [ '0', 'c', 'python' ]:
+        origin = 0
+    elif convention.lower() in [ '1', 'fortran', 'fits' ]:
+        origin = 1
+    else:
+        raise AttributeError("Unknown index_convention: %s"%convention)
+    config['image_origin'] = galsim.PositionI(origin,origin)
+
+
 def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
                      make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
@@ -296,12 +308,15 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
     """
     config['seq_index'] = image_num
 
-    ignore = [
-        'draw_method', 'noise', 'wcs', 'nproc' , 'random_seed' , 'gsparams', 'n_photons', 'wmult' ]
-    opt = { 'size' : int , 'xsize' : int , 'ysize' : int ,
+    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
+               'n_photons', 'wmult', 'gsparams' ]
+    opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 'index_convention' : str,
             'pixel_scale' : float , 'sky_level' : float , 'sky_level_pixel' : float }
     params = galsim.config.GetAllParams(
         config['image'], 'image', config, opt=opt, ignore=ignore)[0]
+
+    convention = params.get('index_convention','1')
+    _set_image_origin(config,convention)
 
     # If image_xsize and image_ysize were set in config, this overrides the read-in params.
     if 'image_xsize' in config and 'image_ysize' in config:
@@ -356,15 +371,13 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     """
     config['seq_index'] = image_num
 
-    ignore = [
-        'random_seed', 'draw_method', 'noise', 'wcs', 'nproc', 'center' , 'gsparams', 'n_photons',
-        'wmult' ]
+    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
+               'image_pos', 'n_photons', 'wmult', 'gsparams' ]
     req = { 'nx_tiles' : int , 'ny_tiles' : int }
     opt = { 'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
             'border' : int , 'xborder' : int , 'yborder' : int ,
-            'pixel_scale' : float , 'nproc' : int ,
-            'sky_level' : float , 'sky_level_pixel' : float ,
-            'order' : str }
+            'pixel_scale' : float , 'nproc' : int , 'index_convention' : str,
+            'sky_level' : float , 'sky_level_pixel' : float , 'order' : str }
     params = galsim.config.GetAllParams(
         config['image'], 'image', config, req=req, opt=opt, ignore=ignore)[0]
 
@@ -375,6 +388,9 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     stamp_size = params.get('stamp_size',0)
     stamp_xsize = params.get('stamp_xsize',stamp_size)
     stamp_ysize = params.get('stamp_ysize',stamp_size)
+
+    convention = params.get('index_convention','1')
+    _set_image_origin(config,convention)
 
     if (stamp_xsize == 0) or (stamp_ysize == 0):
         raise AttributeError(
@@ -463,31 +479,37 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         iy_list = [ iy for ix in range(nx_tiles) for iy in range(ny_tiles) ]
         galsim.random.permute(rng, ix_list, iy_list)
         
-    # Define a 'center' field so the stamps can set their position appropriately in case
+    # Define a 'image_pos' field so the stamps can set their position appropriately in case
     # we need it for PowerSpectum or NFWHalo.
-    config['image']['center'] = { 
+    x0 = (stamp_xsize-1)/2. + config['image_origin'].x
+    y0 = (stamp_ysize-1)/2. + config['image_origin'].y
+    dx = stamp_xsize + xborder
+    dy = stamp_ysize + yborder
+    config['image']['image_pos'] = { 
         'type' : 'XY' ,
         'x' : { 'type' : 'List',
-                'items' : [ ix * (stamp_xsize+xborder) + stamp_xsize/2 + 1 for ix in ix_list ]
+                'items' : [ x0 + ix*dx for ix in ix_list ]
               },
         'y' : { 'type' : 'List',
-                'items' : [ iy * (stamp_ysize+yborder) + stamp_ysize/2 + 1 for iy in iy_list ]
+                'items' : [ y0 + iy*dy for iy in iy_list ]
               }
     }
 
     nproc = params.get('nproc',1)
 
     full_image = galsim.ImageF(full_xsize,full_ysize)
+    full_image.setOrigin(config['image_origin'])
     full_image.setZero()
     full_image.setScale(pixel_scale)
 
     # Also define the overall image center, since we need that to calculate the position 
     # of each stamp relative to the center.
-    image_cen = full_image.bounds.center()
-    config['image_cen'] = galsim.PositionD(image_cen.x,image_cen.y)
+    config['image_cen'] = full_image.bounds.trueCenter()
+    #print 'image_cen = ',full_image.bounds.trueCenter()
 
     if make_psf_image:
         full_psf_image = galsim.ImageF(full_xsize,full_ysize)
+        full_psf_image.setOrigin(config['image_origin'])
         full_psf_image.setZero()
         full_psf_image.setScale(pixel_scale)
     else:
@@ -495,6 +517,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
     if make_weight_image:
         full_weight_image = galsim.ImageF(full_xsize,full_ysize)
+        full_weight_image.setOrigin(config['image_origin'])
         full_weight_image.setZero()
         full_weight_image.setScale(pixel_scale)
     else:
@@ -502,6 +525,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
     if make_badpix_image:
         full_badpix_image = galsim.ImageS(full_xsize,full_ysize)
+        full_badpix_image.setOrigin(config['image_origin'])
         full_badpix_image.setZero()
         full_badpix_image.setScale(pixel_scale)
     else:
@@ -528,6 +552,9 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         ymin = iy * (stamp_ysize + yborder) + 1
         ymax = ymin + stamp_ysize-1
         b = galsim.BoundsI(xmin,xmax,ymin,ymax)
+        #print 'full bounds = ',full_image.bounds
+        #print 'stamp bounds = ',b
+        #print 'original stamp bounds = ',images[k].bounds
         full_image[b] += images[k]
         if make_psf_image:
             full_psf_image[b] += psf_images[k]
@@ -577,13 +604,12 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     """
     config['seq_index'] = image_num
 
-    ignore = [
-        'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' , 'center' , 'gsparams', 'n_photons',
-        'wmult' ]
+    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
+               'image_pos', 'sky_pos', 'n_photons', 'wmult',
+               'stamp_size', 'stamp_xsize', 'stamp_ysize', 'gsparams' ]
     req = { 'nobjects' : int }
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 
-            'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
-            'pixel_scale' : float , 'nproc' : int ,
+            'pixel_scale' : float , 'nproc' : int , 'index_convention' : str,
             'sky_level' : float , 'sky_level_pixel' : float }
     params = galsim.config.GetAllParams(
         config['image'], 'image', config, req=req, opt=opt, ignore=ignore)[0]
@@ -607,12 +633,11 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         full_xsize = params['size']
         full_ysize = params['size']
 
-    stamp_size = params.get('stamp_size',0)
-    stamp_xsize = params.get('stamp_xsize',stamp_size)
-    stamp_ysize = params.get('stamp_ysize',stamp_size)
-
     pixel_scale = params.get('pixel_scale',1.0)
     config['pixel_scale'] = pixel_scale
+
+    convention = params.get('index_convention','1')
+    _set_image_origin(config,convention)
 
     if 'sky_level' in params and 'sky_level_pixel' in params:
         raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
@@ -666,26 +691,35 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         # We don't care about the output here.  This just builds the grid, which we'll
         # access for each object using its position.
 
-    if 'center' not in config['image']:
-        config['image']['center'] = { 
+    if 'image_pos' in config['image'] and 'sky_pos' in config['image']:
+        raise AttributeError("Both image_pos and sky_pos specified for Scattered image.")
+
+    if 'image_pos' not in config['image'] and 'sky_pos' not in config['image']:
+        xmin = config['image_origin'].x
+        xmax = xmin + full_xsize-1
+        ymin = config['image_origin'].y
+        ymax = ymin + full_ysize-1
+        config['image']['image_pos'] = { 
             'type' : 'XY' ,
-            'x' : { 'type' : 'Random' , 'min' : 1 , 'max' : full_xsize },
-            'y' : { 'type' : 'Random' , 'min' : 1 , 'max' : full_ysize }
+            'x' : { 'type' : 'Random' , 'min' : xmin , 'max' : xmax },
+            'y' : { 'type' : 'Random' , 'min' : ymin , 'max' : ymax }
         }
 
     nproc = params.get('nproc',1)
 
     full_image = galsim.ImageF(full_xsize,full_ysize)
+    full_image.setOrigin(config['image_origin'])
     full_image.setZero()
     full_image.setScale(pixel_scale)
 
     # Also define the overall image center, since we need that to calculate the position 
     # of each stamp relative to the center.
-    image_cen = full_image.bounds.center()
-    config['image_cen'] = galsim.PositionD(image_cen.x,image_cen.y)
+    config['image_cen'] = full_image.bounds.trueCenter()
+    #print 'image_cen = ',full_image.bounds.trueCenter()
 
     if make_psf_image:
         full_psf_image = galsim.ImageF(full_xsize,full_ysize)
+        full_psf_badpix_image.setOrigin(config['image_origin'])
         full_psf_image.setZero()
         full_psf_image.setScale(pixel_scale)
     else:
@@ -693,6 +727,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     if make_weight_image:
         full_weight_image = galsim.ImageF(full_xsize,full_ysize)
+        full_weight_image.setOrigin(config['image_origin'])
         full_weight_image.setZero()
         full_weight_image.setScale(pixel_scale)
     else:
@@ -700,14 +735,14 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     if make_badpix_image:
         full_badpix_image = galsim.ImageS(full_xsize,full_ysize)
+        full_badpix_image.setOrigin(config['image_origin'])
         full_badpix_image.setZero()
         full_badpix_image.setScale(pixel_scale)
     else:
         full_badpix_image = None
 
     stamp_images = galsim.config.BuildStamps(
-            nobjects=nobjects, config=config,
-            xsize=stamp_xsize, ysize=stamp_ysize, obj_num=obj_num,
+            nobjects=nobjects, config=config, obj_num=obj_num,
             nproc=nproc, sky_level_pixel=sky_level_pixel, do_noise=False, logger=logger,
             make_psf_image=make_psf_image,
             make_weight_image=make_weight_image,
@@ -724,9 +759,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         #print 'full bounds = ',full_image.bounds
         #print 'Overlap = ',bounds
         if bounds.isDefined():
-            #print 'stamp = ',images[k][bounds].array
             full_image[bounds] += images[k][bounds]
-            #print 'on image = ',full_image[bounds].array
             if make_psf_image:
                 full_psf_image[bounds] += psf_images[k][bounds]
             if make_weight_image:

@@ -61,8 +61,9 @@ opts = Variables(config_file)
 
 # Now set up options for the command line
 opts.Add('CXX','Name of c++ compiler')
-opts.Add('FLAGS','Compile flags to send to the compiler','')
-opts.Add('EXTRA_FLAGS','Extra flags to send to the compiler','')
+opts.Add('FLAGS','Compiler flags to send to use instead of the automatic ones','')
+opts.Add('EXTRA_FLAGS','Extra compiler flags to use in addition to automatic ones','')
+opts.Add('LINKFLAGS','Additional flags to use when linking','')
 opts.Add(BoolVariable('DEBUG','Turn on debugging statements',True))
 opts.Add(BoolVariable('EXTRA_DEBUG','Turn on extra debugging info',False))
 opts.Add(BoolVariable('WARN','Add warning compiler flags, like -Wall', True))
@@ -311,6 +312,10 @@ def BasicCCFlags(env):
         # If flags are specified as an option use them:
         cxx_flags = env['FLAGS'].split(' ')
         env.Replace(CCFLAGS=cxx_flags)
+        for flag in cxx_flags:
+            if flag.startswith('-Wl') or flag.startswith('-m'):
+                # Then this also needs to be in LINKFLAGS
+                env.AppendUnique(LINKFLAGS=flag)
 
     extra_flags = env['EXTRA_FLAGS'].split(' ')
     env.AppendUnique(CCFLAGS=extra_flags)
@@ -691,12 +696,15 @@ def TryRunResult(config,text,name):
     return ok
 
 
-def CheckLibsSimple(config,try_libs,source_file):
+def CheckLibsSimple(config,try_libs,source_file,prepend=True):
     init_libs = []
     if 'LIBS' in config.env._dict.keys():
         init_libs = config.env['LIBS']
 
-    config.env.PrependUnique(LIBS=try_libs)
+    if prepend:
+        config.env.PrependUnique(LIBS=try_libs)
+    else:
+        config.env.AppendUnique(LIBS=try_libs)
     result = TryRunResult(config,source_file,'.cpp')
 
     # If that didn't work, go back to the original LIBS
@@ -705,12 +713,15 @@ def CheckLibsSimple(config,try_libs,source_file):
     return result
  
 
-def CheckLibsFull(config,try_libs,source_file):
+def CheckLibsFull(config,try_libs,source_file,prepend=True):
     init_libs = []
     if 'LIBS' in config.env._dict.keys():
         init_libs = config.env['LIBS']
 
-    config.env.PrependUnique(LIBS=try_libs)
+    if prepend:
+        config.env.PrependUnique(LIBS=try_libs)
+    else:
+        config.env.AppendUnique(LIBS=try_libs)
     result = TryRunResult(config,source_file,'.cpp')
 
     # Sometimes we need to add a directory to RPATH, so try each one.
@@ -720,7 +731,10 @@ def CheckLibsFull(config,try_libs,source_file):
             init_rpath = config.env['RPATH']
 
         for rpath in config.env['LIBPATH']:
-            config.env.PrependUnique(RPATH=rpath)
+            if prepend:
+                config.env.PrependUnique(RPATH=rpath)
+            else:
+                config.env.AppendUnique(RPATH=rpath)
             result = TryRunResult(config,source_file,'.cpp')
             if result: 
                 break
@@ -729,7 +743,10 @@ def CheckLibsFull(config,try_libs,source_file):
 
         # If that doesn't work, also try adding all of them, just in case we need more than one.
         if not result :
-            config.env.PrependUnique(RPATH=config.env['LIBPATH'])
+            if prepend:
+                config.env.PrependUnique(RPATH=config.env['LIBPATH'])
+            else:
+                config.env.AppendUnique(RPATH=config.env['LIBPATH'])
             result = TryRunResult(config,source_file,'.cpp')
             if not result:
                 config.env.Replace(RPATH=init_rpath)
@@ -743,7 +760,10 @@ def CheckLibsFull(config,try_libs,source_file):
         library_path=os.environ['LIBRARY_PATH']
         library_path=library_path.split(os.pathsep)
         for rpath in library_path:
-            config.env.PrependUnique(RPATH=rpath)
+            if prepend:
+                config.env.PrependUnique(RPATH=rpath)
+            else:
+                config.env.AppendUnique(RPATH=rpath)
             result = TryRunResult(config,source_file,'.cpp')
             if result: 
                 break
@@ -752,7 +772,10 @@ def CheckLibsFull(config,try_libs,source_file):
 
         # If that doesn't work, also try adding all of them, just in case we need more than one.
         if not result :
-            config.env.PrependUnique(RPATH=library_path)
+            if prepend:
+                config.env.PrependUnique(RPATH=library_path)
+            else:
+                config.env.AppendUnique(RPATH=library_path)
             result = TryRunResult(config,source_file,'.cpp')
             if not result:
                 config.env.Replace(RPATH=init_rpath)
@@ -785,7 +808,10 @@ int main()
             'Error: fftw file failed to compile.',
             'Check that the correct location is specified for FFTW_DIR')
 
-    if not CheckLibsFull(config,['fftw3'],fftw_source_file):
+    result = (
+        CheckLibsFull(config,[''],fftw_source_file) or
+        CheckLibsFull(config,['fftw3'],fftw_source_file) )
+    if not result:
         ErrorExit(
             'Error: fftw file failed to link correctly',
             'Check that the correct location is specified for FFTW_DIR') 
@@ -819,6 +845,7 @@ int main()
             'Check that the correct location is specified for TMV_DIR')
 
     result = (
+        CheckLibsSimple(config,[''],tmv_source_file) or
         CheckLibsSimple(config,['tmv_symband','tmv'],tmv_source_file) or
         CheckLibsSimple(config,['tmv_symband','tmv','irc','imf'],tmv_source_file) or
         CheckLibsFull(config,['tmv_symband','tmv'],tmv_source_file) or
@@ -909,12 +936,15 @@ def TryModule(config,text,name,pyscript=""):
     return ok
 
 
-def CheckModuleLibs(config,try_libs,source_file,name):
+def CheckModuleLibs(config,try_libs,source_file,name,prepend=True):
     init_libs = []
     if 'LIBS' in config.env._dict.keys():
         init_libs = config.env['LIBS']
 
-    config.env.PrependUnique(LIBS=try_libs)
+    if prepend:
+        config.env.PrependUnique(LIBS=try_libs)
+    else:
+        config.env.AppendUnique(LIBS=try_libs)
     result = TryModule(config,source_file,name)
 
     # Sometimes we need to add a directory to RPATH, so try each one.
@@ -924,7 +954,10 @@ def CheckModuleLibs(config,try_libs,source_file,name):
             init_rpath = config.env['RPATH']
 
         for rpath in config.env['LIBPATH']:
-            config.env.PrependUnique(RPATH=rpath)
+            if prepend:
+                config.env.PrependUnique(RPATH=rpath)
+            else:
+                config.env.AppendUnique(RPATH=rpath)
             result = TryModule(config,source_file,name)
             if result: 
                 break
@@ -933,7 +966,10 @@ def CheckModuleLibs(config,try_libs,source_file,name):
 
         # If that doesn't work, also try adding all of them, just in case we need more than one.
         if not result :
-            config.env.PrependUnique(RPATH=config.env['LIBPATH'])
+            if prepend:
+                config.env.PrependUnique(RPATH=config.env['LIBPATH'])
+            else:
+                config.env.AppendUnique(RPATH=config.env['LIBPATH'])
             result = TryModule(config,source_file,name)
             if not result:
                 config.env.Replace(RPATH=init_rpath)
@@ -1103,12 +1139,12 @@ PyMODINIT_FUNC initcheck_tmv(void)
     # So if the first line fails, try adding a few mkl libraries that might make it work.
     result = (
         CheckModuleLibs(config,[],tmv_source_file,'check_tmv') or
-        CheckModuleLibs(config,['mkl_rt'],tmv_source_file,'check_tmv') or
-        CheckModuleLibs(config,['mkl_base'],tmv_source_file,'check_tmv') or
-        CheckModuleLibs(config,['mkl_mc3'],tmv_source_file,'check_tmv') or
-        CheckModuleLibs(config,['mkl_mc3','mkl_def'],tmv_source_file,'check_tmv') or
-        CheckModuleLibs(config,['mkl_mc'],tmv_source_file,'check_tmv') or
-        CheckModuleLibs(config,['mkl_mc','mkl_def'],tmv_source_file,'check_tmv') )
+        CheckModuleLibs(config,['mkl_rt'],tmv_source_file,'check_tmv',False) or
+        CheckModuleLibs(config,['mkl_base'],tmv_source_file,'check_tmv',False) or
+        CheckModuleLibs(config,['mkl_mc3'],tmv_source_file,'check_tmv',False) or
+        CheckModuleLibs(config,['mkl_mc3','mkl_def'],tmv_source_file,'check_tmv',False) or
+        CheckModuleLibs(config,['mkl_mc'],tmv_source_file,'check_tmv',False) or
+        CheckModuleLibs(config,['mkl_mc','mkl_def'],tmv_source_file,'check_tmv'),False)
     if not result:
         ErrorExit('Unable to build a python loadable module that uses tmv')
    
