@@ -3,7 +3,7 @@ comparison of the size and ellipticity in the resulting images.
 """
 
 PIXEL_SCALE = 0.03
-IMAGE_SIZE = 96
+IMAGE_SIZE = 256
 
 RANDOM_SEED = 912424534
 
