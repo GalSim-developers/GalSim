@@ -27,7 +27,8 @@
 #ifdef DEBUGLOGGING
 #include <fstream>
 //std::ostream* dbgout = new std::ofstream("debug.out");
-//int verbose_level = 2;
+std::ostream* dbgout = &std::cout;
+int verbose_level = 2;
 #endif
 
 namespace galsim {
@@ -248,6 +249,7 @@ namespace galsim {
         const tmv::Matrix<double>& x, const tmv::Matrix<double>& y) const
     {
         dbg<<"order = "<<_bvec.getOrder()<<", sigma = "<<_sigma<<std::endl;
+        xdbg<<"fillXValue with bvec = "<<_bvec<<std::endl;
         assert(val.stepi() == 1);
         assert(val.canLinearize());
         const int m = val.colsize();
@@ -263,6 +265,7 @@ namespace galsim {
         const tmv::Matrix<double>& x, const tmv::Matrix<double>& y) const
     {
         dbg<<"order = "<<_bvec.getOrder()<<", sigma = "<<_sigma<<std::endl;
+        xdbg<<"fillKValue with bvec = "<<_bvec<<std::endl;
         assert(val.stepi() == 1);
         assert(val.canLinearize());
         const int m = val.colsize();
@@ -280,23 +283,31 @@ namespace galsim {
     void ShapeletFitImage(double sigma, LVector& bvec, const BaseImage<T>& image,
                           const Position<double>& center)
     {
+        dbg<<"Start ShapeletFitImage:\n";
+        xdbg<<"sigma = "<<sigma<<std::endl;
+        xdbg<<"bvec = "<<bvec<<std::endl;
+        xdbg<<"center = "<<center<<std::endl;
         double scale = image.getScale() / sigma;
-        double cenx = center.x / sigma;
-        double ceny = center.y / sigma;
+        xdbg<<"scale = "<<scale<<std::endl;
         const int nx = image.getXMax() - image.getXMin() + 1;
         const int ny = image.getYMax() - image.getYMin() + 1;
+        xdbg<<"nx,ny = "<<nx<<','<<ny<<std::endl;
         const int npts = nx * ny;
+        xdbg<<"npts = "<<npts<<std::endl;
         tmv::Vector<double> x(npts);
         tmv::Vector<double> y(npts);
         tmv::Vector<double> I(npts);
         int i=0;
         for (int ix = image.getXMin(); ix <= image.getXMax(); ++ix) {
             for (int iy = image.getYMin(); iy <= image.getYMax(); ++iy,++i) {
-                x[i] = ix * scale - cenx;
-                y[i] = iy * scale - ceny;
+                x[i] = (ix - center.x) * scale;
+                y[i] = (iy - center.y) * scale;
                 I[i] = image(ix,iy);
             }
         }
+        xxdbg<<"x = "<<x<<std::endl;
+        xxdbg<<"y = "<<y<<std::endl;
+        xxdbg<<"I = "<<I<<std::endl;
 
         tmv::Matrix<double> psi(npts,bvec.size());
         LVector::basis(x.view(),y.view(),psi.view(),bvec.getOrder(),sigma);
@@ -305,6 +316,7 @@ namespace galsim {
         // We use QRP in case the psi matrix is close to singular (although it shouldn't be).
         psi.divideUsing(tmv::QRP);
         bvec.rVector() = I/psi;
+        xdbg<<"Done FitImage: bvec = "<<bvec<<std::endl;
     }
 
     template void ShapeletFitImage(

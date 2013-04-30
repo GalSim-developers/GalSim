@@ -128,6 +128,30 @@ def test_Image_basic():
                 assert im2(x,y) == 10*x+y
                 assert im2_view(x,y) == 10*x+y
 
+        # Setting or getting the value outside the bounds should throw an exception.
+        try:
+            np.testing.assert_raises(RuntimeError,im1.setValue,0,0,1)
+            np.testing.assert_raises(RuntimeError,im1.at,0,0)
+            np.testing.assert_raises(RuntimeError,im1.view().setValue,0,0,1)
+            np.testing.assert_raises(RuntimeError,im1.view().at,0,0)
+
+            np.testing.assert_raises(RuntimeError,im1.setValue,ncol+1,0,1)
+            np.testing.assert_raises(RuntimeError,im1.at,ncol+1,0)
+            np.testing.assert_raises(RuntimeError,im1.view().setValue,ncol+1,0,1)
+            np.testing.assert_raises(RuntimeError,im1.view().at,ncol+1,0)
+
+            np.testing.assert_raises(RuntimeError,im1.setValue,0,nrow+1,1)
+            np.testing.assert_raises(RuntimeError,im1.at,0,nrow+1)
+            np.testing.assert_raises(RuntimeError,im1.view().setValue,0,nrow+1,1)
+            np.testing.assert_raises(RuntimeError,im1.view().at,0,nrow+1)
+
+            np.testing.assert_raises(RuntimeError,im1.setValue,ncol+1,nrow+1,1)
+            np.testing.assert_raises(RuntimeError,im1.at,ncol+1,nrow+1)
+            np.testing.assert_raises(RuntimeError,im1.view().setValue,ncol+1,nrow+1,1)
+            np.testing.assert_raises(RuntimeError,im1.view().at,ncol+1,nrow+1)
+        except ImportError:
+            print 'The assert_raises tests require nose'
+
         # Check view of given data
         im3_view = galsim.ImageView[array_type](ref_array.astype(array_type))
         for y in range(1,nrow):

@@ -154,7 +154,7 @@ def main(argv):
     gal_image.setScale(pixel_scale)
     psf_image.setScale(pixel_scale)
 
-    im_center = gal_image.bounds.center()
+    im_center = gal_image.bounds.trueCenter()
 
     # We will place the tiles in a random order.  To do this, we make two lists for the 
     # ix and iy values.  Then we apply a random permutation to the lists (in tandem).
@@ -182,7 +182,7 @@ def main(argv):
         sub_gal_image = gal_image[b]
         sub_psf_image = psf_image[b]
 
-        pos = b.center() - im_center
+        pos = b.trueCenter() - im_center
         pos = galsim.PositionD(pos.x * pixel_scale , pos.y * pixel_scale)
         # The image comes out as about 211 arcsec across, so we define our variable
         # parameters in terms of (r/100 arcsec), so roughly the scale size of the image.

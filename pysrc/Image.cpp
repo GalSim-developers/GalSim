@@ -111,8 +111,15 @@ struct PyImage {
         bp::object setScale = bp::make_function(&BaseImage<T>::setScale);
 
         // Need some typedefs and explicit casts here to resolve overloads of methods
-        // that have both const and non-const versions:
+        // that have both const and non-const versions or (x,y) and pos version
         typedef const T& (Image<T>::* at_func_type)(const int, const int) const;
+        typedef const T& (Image<T>::* at_pos_func_type)(const Position<int>&) const;
+        typedef void (BaseImage<T>::* shift_func_type)(const int, const int);
+        typedef void (BaseImage<T>::* shift_pos_func_type)(const Position<int>&);
+        typedef void (BaseImage<T>::* setOrigin_func_type)(const int, const int);
+        typedef void (BaseImage<T>::* setOrigin_pos_func_type)(const Position<int>&);
+        typedef void (BaseImage<T>::* setCenter_func_type)(const int, const int);
+        typedef void (BaseImage<T>::* setCenter_pos_func_type)(const Position<int>&);
         typedef ImageView<T> (Image<T>::* subImage_func_type)(const Bounds<int>&);
         typedef ImageView<T> (Image<T>::* view_func_type)();
 
@@ -120,6 +127,11 @@ struct PyImage {
             at_func_type(&Image<T>::at),
             bp::return_value_policy<bp::copy_const_reference>(),
             bp::args("x", "y")
+        );
+        bp::object at_pos = bp::make_function(
+            at_pos_func_type(&Image<T>::at),
+            bp::return_value_policy<bp::copy_const_reference>(),
+            bp::args("pos")
         );
         bp::object getBounds = bp::make_function(
             &BaseImage<T>::getBounds, 
@@ -134,9 +146,12 @@ struct PyImage {
             .add_property("scale", getScale, setScale)
             .def("subImage", &BaseImage<T>::subImage, bp::args("bounds"))
             .add_property("array", &GetConstArray)
-            .def("shift", &BaseImage<T>::shift, bp::args("dx", "dy"))
-            .def("setOrigin", &BaseImage<T>::setOrigin, bp::args("x0", "y0"))
-            .def("setCenter", &BaseImage<T>::setCenter, bp::args("x0", "y0"))
+            .def("shift", shift_func_type(&Image<T>::shift), bp::args("x", "y"))
+            .def("shift", shift_pos_func_type(&Image<T>::shift), bp::args("pos"))
+            .def("setCenter", setCenter_func_type(&Image<T>::setCenter), bp::args("x", "y"))
+            .def("setCenter", setCenter_pos_func_type(&Image<T>::setCenter), bp::args("pos"))
+            .def("setOrigin", setOrigin_func_type(&Image<T>::setOrigin), bp::args("x", "y"))
+            .def("setOrigin", setOrigin_pos_func_type(&Image<T>::setOrigin), bp::args("pos"))
             .def("getBounds", getBounds)
             .def("getPaddedSize", &BaseImage<T>::getPaddedSize, bp::args("pad_factor"))
             .add_property("bounds", getBounds)
@@ -161,9 +176,11 @@ struct PyImage {
             .add_property("array", &GetArray)
             // In python, there is no way to have a function return a mutable reference
             // so you can't make im(x,y) = val work correctly.  Thus, the __call__
-            // funtion (which is the im(x,y) syntax) is just the const version.
+            // function (which is the im(x,y) syntax) is just the const version.
             .def("__call__", at) // always used checked accessors in Python
             .def("at", at)
+            .def("__call__", at_pos)
+            .def("at", at_pos)
             .def("setValue", &Image<T>::setValue, bp::args("x","y","value"))
             .def("fill", &Image<T>::fill)
             .def("setZero", &Image<T>::setZero)
@@ -181,10 +198,18 @@ struct PyImage {
 
     static bp::object wrapImageView(const std::string& suffix) {
 
+        typedef T& (ImageView<T>::*at_func_type)(int, int) const;
+        typedef T& (ImageView<T>::*at_pos_func_type)(const Position<int>&) const;
+
         bp::object at = bp::make_function(
-            &ImageView<T>::at,
+            at_func_type(&ImageView<T>::at),
             bp::return_value_policy<bp::copy_non_const_reference>(),
             bp::args("x", "y")
+        );
+        bp::object at_pos = bp::make_function(
+            at_pos_func_type(&ImageView<T>::at),
+            bp::return_value_policy<bp::copy_non_const_reference>(),
+            bp::args("pos")
         );
         bp::class_< ImageView<T>, bp::bases< BaseImage<T> > >
             pyImageView(("ImageView" + suffix).c_str(), "", bp::no_init);
@@ -203,6 +228,8 @@ struct PyImage {
             .add_property("array", &GetArray)
             .def("__call__", at) // always used checked accessors in Python
             .def("at", at)
+            .def("__call__", at_pos)
+            .def("at", at_pos)
             .def("setValue", &ImageView<T>::setValue, bp::args("x","y","value"))
             .def("fill", &ImageView<T>::fill)
             .def("setZero", &ImageView<T>::setZero)
@@ -218,10 +245,18 @@ struct PyImage {
     }
 
     static bp::object wrapConstImageView(const std::string& suffix) {
+        typedef const T& (BaseImage<T>::*at_func_type)(int, int) const;
+        typedef const T& (BaseImage<T>::*at_pos_func_type)(const Position<int>&) const;
+
         bp::object at = bp::make_function(
-            &BaseImage<T>::at,
+            at_func_type(&BaseImage<T>::at),
             bp::return_value_policy<bp::copy_const_reference>(),
             bp::args("x", "y")
+        );
+        bp::object at_pos = bp::make_function(
+            at_pos_func_type(&BaseImage<T>::at),
+            bp::return_value_policy<bp::copy_const_reference>(),
+            bp::args("pos")
         );
         bp::class_< ConstImageView<T>, bp::bases< BaseImage<T> > >
             pyConstImageView(("ConstImageView" + suffix).c_str(), "", bp::no_init);
@@ -238,6 +273,8 @@ struct PyImage {
             .def("view", &ConstImageView<T>::view)
             .def("__call__", at) // always used checked accessors in Python
             .def("at", at)
+            .def("__call__", at_pos)
+            .def("at", at_pos)
             .enable_pickling()
             ;
 
