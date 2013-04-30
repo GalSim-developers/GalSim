@@ -38,12 +38,12 @@ if USE_CONFIG:
         "wmult" : WMULT, "n_photons" : NPHOTONS, "gsparams" : {"maximum_fft_size" : MAX_FFT_SIZE} }
 
 # Logging level
+import logging
 LOGLEVEL = logging.WARN
 
 if __name__ == "__main__":
 
     import cPickle
-    import logging
     import numpy as np
     import galsim
     import galaxy_sample
