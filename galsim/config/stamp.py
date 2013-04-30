@@ -724,7 +724,20 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, final_sh
     else:
         im = None
 
-    if 'image' in config and not 'n_photons' in config['image']:
+    if 'image' in config and 'n_photons' in config['image']:
+
+        if 'max_extra_noise' in config['image']:
+            import warnings
+            warnings.warn(
+                "Both 'max_extra_noise' and 'n_photons' are set in config['image'], "+
+                "ignoring 'max_extra_noise'.")
+
+        n_photons = galsim.config.ParseValue(
+            config['image'], 'n_photons', config, int)[0]
+        im = final.drawShoot(image=im, dx=pixel_scale, n_photons=n_photons, rng=rng)
+        im.setOrigin(config['image_origin'])
+
+    else:
 
         if 'image' in config and 'max_extra_noise' in config['image']:
             max_extra_noise = galsim.config.ParseValue(
@@ -747,14 +760,8 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, final_sh
             max_extra_noise *= noise_var
 
         im = final.drawShoot(image=im, dx=pixel_scale, max_extra_noise=max_extra_noise, rng=rng)
+        im.setOrigin(config['image_origin'])
 
-    else:
-
-        n_photons = galsim.config.ParseValue(
-            config['image'], 'n_photons', config, int)[0]
-        im = final.drawShoot(image=im, dx=pixel_scale, n_photons=n_photons, rng=rng)
-
-    im.setOrigin(config['image_origin'])
     return im
     
 def AddNoisePhot(im, weight_im, noise, base, rng, sky_level_pixel, logger=None):

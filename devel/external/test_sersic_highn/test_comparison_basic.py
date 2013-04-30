@@ -2,6 +2,33 @@ import sys
 import logging
 import galsim
 
+"""A simple Python test script to demonstrate use of the galsim.utilities.compare_dft_vs_photon_*
+functions.
+
+This script generates a model galaxy and PSF, and then compares the rendering of this object by both
+photon shooting and DFT methods, by calling the GSObject `drawShoot()` and `draw()` methods
+respectively.
+
+There are two functions that do this in galsim.utilities:
+
+    i)  galsim.utilities.compare_dft_vs_photon_object
+
+    ii) galsim.utilities.compare_dft_vs_photon_config
+
+i) allows the object and optional convolving PSF to be specified directly as GSObject instances.
+However, as these are not picklable, these tests can only run in single core mode.
+
+ii) provides multi-core processing functionality, but requires that the object and optional
+convolving PSF are specified via a `config` dictionary (see, e.g., examples/demo8.py).
+
+The two methods don't provide identical results, because the `object` version uses only one random
+generator sequence to generate all the photons, whereas the `config` version uses a number of
+differently seeded random number generators, one for each image.  One purpose of this script was
+a quick sanity check of their overall consistency, as well as being a demonstration of these testing
+utility functions.
+"""
+
+
 # Make the galaxy and PSF objects elliptical Sersic and Moffat, storing all param vals here
 # in top level scope
 
@@ -46,12 +73,11 @@ def test_comparison_object(np):
     psf.applyShear(g1=g1psf, g2=g2psf)
 
     # Try a single core run
+    print "Starting tests using config file with N_PHOTONS = "+str(np)
     res1 = galsim.utilities.compare_dft_vs_photon_object(
         gal, psf_object=psf, rng=galsim.BaseDeviate(rseed), size=imsize, pixel_scale=dx,
         abs_tol_ellip=tol_ellip, abs_tol_size=tol_size, n_photons_per_trial=np)
-    print "Object results with N_PHOTONS = "+str(np)
     print res1
-
     return
 
 def test_comparison_config(np):
@@ -90,39 +116,14 @@ def test_comparison_config(np):
         'size' : imsize,
         'pixel_scale' : dx,
         'random_seed' : rseed,
-        #'wmult' : wmult # Note wmult not currently settable via config, but it ought to be I think
+        'wmult' : wmult
     }
 
-    import copy
-
-    print "Config results with N_PHOTONS = "+str(np)
-    # Try a single core run not setting many kwargs
-    #res1 = galsim.utilities.compare_dft_vs_photon_config(
-    #    copy.deepcopy(config), random_seed=rseed, size=imsize, pixel_scale=dx,
-    #    abs_tol_ellip=tol_ellip, abs_tol_size=tol_size, n_photons_per_trial=np, wmult=wmult,
-    #    nproc=1, logger=logger)
-    #print res1
-
-    # Try a dual core run setting
-    #res2 = galsim.utilities.compare_dft_vs_photon_config(
-    #    copy.deepcopy(config), random_seed=rseed, size=imsize, pixel_scale=dx,
-    #    abs_tol_ellip=tol_ellip, abs_tol_size=tol_size, n_photons_per_trial=np, wmult=wmult,
-    #    nproc=2, logger=logger)
-    #print res2
-
-    # Try a four core run setting
-    #res4 = galsim.utilities.compare_dft_vs_photon_config(
-    #    copy.deepcopy(config), random_seed=rseed, size=imsize, pixel_scale=dx,
-    #    abs_tol_ellip=tol_ellip, abs_tol_size=tol_size, n_photons_per_trial=np,
-    #    wmult=wmult, nproc=4, logger=logger)
-    #print res4
-
-    # Try an eight core run setting
+    # Use an automatically-determined N core run setting
+    print "Starting tests using config file with N_PHOTONS = "+str(np)
     res8 = galsim.utilities.compare_dft_vs_photon_config(
-        config, random_seed=rseed, size=imsize, pixel_scale=dx,
-        abs_tol_ellip=tol_ellip, abs_tol_size=tol_size, n_photons_per_trial=np,
-        wmult=wmult, nproc=8, logger=logger)
-
+        config, n_photons_per_trial=np, nproc=-1, logger=logger, abs_tol_ellip=tol_ellip,
+        abs_tol_size=tol_size)
     print res8
     return
 
@@ -130,5 +131,7 @@ def test_comparison_config(np):
 if __name__ == "__main__":
 
     for n_photons in n_photons_test:
+        # First run the config version, then the (slower, single core) object version: see docstring
+        # in module header for more info.
         test_comparison_config(n_photons)
         test_comparison_object(n_photons)
