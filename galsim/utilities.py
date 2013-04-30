@@ -317,15 +317,15 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, pixel_scal
 
     @param gsobject               the galsim.GSObject for which this test is to be performed (prior
                                   to PSF convolution if a PSF is also supplied via `psf_object`).
-                                  Note that this function will automatically handle integration
-                                  over a galsim.Pixel() of width `pixel_scale`, so this should NOT
-                                  generally be included in the supplied `gsobject`.
-
+                                  Note that this function will automatically handle integration over
+                                  a galsim.Pixel of width `pixel_scale`, so a galsim.Pixel should 
+                                  not be included in the supplied `gsobject` (unless you really mean
+                                  to include it, which will be very rare in normal usage).
 
     @param psf_object             optional additional PSF for tests of convolved objects, also a
                                   galsim.GSObject.  Note that this function will automatically 
-                                  handle integration over a galsim.Pixel() of width `pixel_scale`,
-                                  so this should NOT be included in the supplied `psf_object`.
+                                  handle integration over a galsim.Pixel of width `pixel_scale`,
+                                  so this should not be included in the supplied `psf_object`.
 
     @param rng                    galsim.BaseDeviate or derived deviate class instance to provide
                                   the pseudo random numbers for the photon shooting.  If `None` on 
@@ -526,7 +526,7 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
                                   system by obj_num = gal_num * n_trials_per_iter (assuming the
                                   config is created correctly as explained in the example above)
 
-    @random_seed                  integer to be used as the basis of all seeds for the random number
+    @param random_seed            integer to be used as the basis of all seeds for the random number
                                   generator, overrides any value in config['image'].
 
     @param nproc                  number of cpu processes to run in parallel, overrides any value
