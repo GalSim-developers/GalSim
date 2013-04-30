@@ -191,7 +191,10 @@ def test_fluxnorm():
     t1 = time.time()
 
     # define values
-    im_lin_scale = 5 # make an image with this linear scale
+    # Note that im_lin_scale should be even, since the auto-sized draw() command always produces
+    # an even-sized image.  If the even/odd-ness doesn't match then the interpolant will come 
+    # into play, and the exact checks will fail.
+    im_lin_scale = 6 # make an image with this linear scale
     im_fill_value = 3. # fill it with this number
     im_scale = 1.3
 
@@ -205,12 +208,12 @@ def test_fluxnorm():
 
     # Check that if we make an InterpolatedImage with flux normalization, it keeps that flux
     interp = galsim.InterpolatedImage(im) # note, flux normalization is the default
-    np.testing.assert_equal(total_flux, interp.getFlux(),
+    np.testing.assert_almost_equal(total_flux, interp.getFlux(), decimal=9,
                             err_msg='Did not keep flux normalization')
     # Check that this is preserved when drawing
     im2 = interp.draw(dx = im_scale)
-    np.testing.assert_equal(total_flux, im2.array.sum(),
-                            err_msg='Drawn image does not have expected flux normalization')
+    np.testing.assert_almost_equal(total_flux, im2.array.sum(), decimal=9,
+                                   err_msg='Drawn image does not have expected flux normalization')
 
     # Now make an InterpolatedImage but tell it sb normalization
     interp_sb = galsim.InterpolatedImage(im, normalization = 'sb')
@@ -495,8 +498,8 @@ def test_uncorr_padding():
     orig_nx = 147
     orig_ny = 174
     noise_var = 1.73
-    big_nx = 258
-    big_ny = 281
+    big_nx = 259
+    big_ny = 282
     orig_seed = 151241
 
     # first, make a noise image
@@ -512,8 +515,12 @@ def test_uncorr_padding():
     big_img = galsim.ImageF(big_nx, big_ny)
     int_im.draw(big_img, dx=1.)
     # check that variance is diluted by expected amount - should be exact, so check precisely!
+    # Note that this only works if the big image has the same even/odd-ness in the two sizes.
+    # Otherwise the center of the original image will fall between pixels in the big image.
+    # Then the variance will be smoothed somewhat by the interpolant.
     big_var_expected = np.var(orig_img.array)*float(orig_nx*orig_ny)/(big_nx*big_ny)
-    np.testing.assert_almost_equal(np.var(big_img.array), big_var_expected, decimal=decimal_precise,
+    np.testing.assert_almost_equal(
+        np.var(big_img.array), big_var_expected, decimal=decimal_precise,
         err_msg='Variance not diluted by expected amount when zero-padding')
 
     # make it into an InterpolatedImage with noise-padding
@@ -524,7 +531,8 @@ def test_uncorr_padding():
     int_im.draw(big_img, dx=1.)
     # check that variance is same as original - here, we cannot be too precise because the padded
     # region is not huge and the comparison will be, well, noisy.
-    np.testing.assert_almost_equal(np.var(big_img.array), noise_var, decimal=decimal_coarse,
+    np.testing.assert_almost_equal(
+        np.var(big_img.array), noise_var, decimal=decimal_coarse,
         err_msg='Variance not correct after padding image with noise')
 
     # check that if we pass in a RNG, it is actually used to pad with the same noise field
@@ -534,7 +542,8 @@ def test_uncorr_padding():
                                       rng = galsim.GaussianDeviate(orig_seed))
     big_img_2 = galsim.ImageF(big_nx, big_ny)
     int_im.draw(big_img_2, dx=1.)
-    np.testing.assert_array_almost_equal(big_img_2.array, big_img.array, decimal=decimal_precise,
+    np.testing.assert_array_almost_equal(
+        big_img_2.array, big_img.array, decimal=decimal_precise,
         err_msg='Cannot reproduce noise-padded image with same choice of seed')
 
     # Finally check inputs: what if we give it an input variance that is neg?  A list?
@@ -557,8 +566,8 @@ def test_corr_padding():
     imgfile = 'blankimg.fits'
     orig_nx = 187
     orig_ny = 164
-    big_nx = 318
-    big_ny = 321
+    big_nx = 319
+    big_ny = 322
     orig_seed = 151241
 
     # Read in some small image of a noise field from HST.

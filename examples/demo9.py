@@ -32,9 +32,10 @@ New features introduced in this demo:
 
 - im = galsim.ImageS(xsize, ysize)
 - pos = galsim.PositionD(x, y)
-- nfw = galsim.NFWHalo(mass, conc, z, pos, omega_m, omega_lam)
+- nfw = galsim.NFWHalo(mass, conc, z, omega_m, omega_lam)
 - g1,g2 = nfw.getShear(pos, z)
 - mag = nfw.getMagnification(pos, z)
+- pos = bounds.trueCenter()
 
 - Make multiple output files.
 - Place galaxies at random positions on a larger image.
@@ -118,11 +119,7 @@ def main(argv):
         badpix_image.setScale(pixel_scale)
 
         # Setup the NFWHalo stuff:
-
-        im_center = full_image.bounds.center()
-        im_center = galsim.PositionD(im_center.x, im_center.y)
         nfw = galsim.NFWHalo(mass=mass, conc=nfw_conc, redshift=nfw_z_halo,
-                             halo_pos=im_center*pixel_scale,
                              omega_m=omega_m, omega_lam=omega_lam)
         # Note: the last two are optional.  If they are omitted, then (omega_m=0.3, omega_lam=0.7) 
         # are actually the defaults.  If you only specify one of them, the other is set so that 
@@ -132,23 +129,52 @@ def main(argv):
         # you can define your own cosmology class that defines the functions a(z), E(a), and 
         # Da(z_source, z_lens).  Then you can pass this to NFWHalo as a `cosmo` parameter.
 
+        # The "true" center of the image is allowed to be halfway between two pixels, as is the 
+        # case for even-sized images.  full_image.bounds.center() is an integer position,
+        # which would be 1/2 pixel up and to the right of the true center in this case.
+        im_center = full_image.bounds.trueCenter()
+
         for k in range(nobj):
 
             # Initialize the random number generator we will be using for this object:
             rng = galsim.UniformDeviate(seed+k)
 
-            # Determine where this object is going to go:
-            x = rng() * (image_size-1) + 1
-            y = rng() * (image_size-1) + 1
+            # Determine where this object is going to go.
+            # We choose points randomly within a donut centered at the center of the main image
+            # in order to avoid placing galaxies too close to the halo center where the lensing 
+            # is not weak.  We use an inner radius of 10 arcsec and an outer radius of 50 arcsec,
+            # which takes us essentially to the edge of the image.
+            radius = 50
+            inner_radius = 10
+            max_rsq = radius**2
+            min_rsq = inner_radius**2
+            while True:  # (This is essentially a do..while loop.)
+                x = (2.*rng()-1) * radius
+                y = (2.*rng()-1) * radius
+                rsq = x**2 + y**2
+                if rsq >= min_rsq and rsq <= max_rsq: break
+            pos = galsim.PositionD(x,y)
 
-            # Get the integer values of these which will be the center of the 
+            # We also need the position in pixels to determine where to place the postage
+            # stamp on the full image.
+            image_pos = pos / pixel_scale + im_center
+
+            # For even-sized postage stamps, the nominal center (returned by stamp.bounds.center())
+            # cannot be at the true center (returned by stamp.bounds.trueCenter()) of the postage 
+            # stamp, since the nominal center values have to be integers.  Thus, the nominal center
+            # is 1/2 pixel up and to the right of the true center.
+            # If we used odd-sized postage stamps, we wouldn't need to do this.
+            x_nominal = image_pos.x + 0.5
+            y_nominal = image_pos.y + 0.5
+
+            # Get the integer values of these which will be the actual nominal center of the 
             # postage stamp image.
-            ix = int(math.floor(x+0.5))
-            iy = int(math.floor(y+0.5))
+            ix_nominal = int(math.floor(x_nominal+0.5))
+            iy_nominal = int(math.floor(y_nominal+0.5))
 
             # The remainder will be accounted for in a shift
-            dx = x - ix
-            dy = y - iy
+            dx = x_nominal - ix_nominal
+            dy = y_nominal - iy_nominal
 
             # Make the pixel:
             pix = galsim.Pixel(pixel_scale)
@@ -169,11 +195,12 @@ def main(argv):
 
             # Now apply the appropriate lensing effects for this position from 
             # the NFW halo mass.
-            pos = galsim.PositionD(x,y) * pixel_scale
             try:
                 g1,g2 = nfw.getShear( pos , nfw_z_source )
                 shear = galsim.Shear(g1=g1,g2=g2)
             except:
+                # This shouldn't happen, since we exclude the inner 10 arcsec, but it's a 
+                # good idea to use the try/except block here anyway.
                 import warnings        
                 warnings.warn("Warning: NFWHalo shear is invalid -- probably strong lensing!  " +
                               "Using shear = 0.")
@@ -202,7 +229,7 @@ def main(argv):
             stamp = final.draw(dx=pixel_scale)
 
             # Recenter the stamp at the desired position:
-            stamp.setCenter(ix,iy)
+            stamp.setCenter(ix_nominal,iy_nominal)
 
             # Find overlapping bounds
             bounds = stamp.bounds & full_image.bounds

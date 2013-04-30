@@ -54,9 +54,7 @@ namespace galsim {
 
     KTable::KTable(int N, double dk, std::complex<double> value) : _dk(dk)
     {
-#ifdef FFT_DEBUG
         if (N<=0) throw FFTError("KTable size <=0");
-#endif
         _N = 2*((N+1)/2); //Round size up to even.
         _array.resize(_N);
         _array.fill(value);
@@ -92,10 +90,8 @@ namespace galsim {
     {
         clearCache(); // invalidate any stored interpolations
         check_array();
-#ifdef FFT_DEBUG
         if (_N != rhs._N) throw FFTError("KTable::accumulate() with mismatched sizes");
         if (_dk != rhs._dk) throw FFTError("KTable::accumulate() with mismatched dk");
-#endif
         for (int i=0; i<_N*(_N/2+1); i++)
             _array[i] += scalar * rhs._array[i];
     }
@@ -104,10 +100,8 @@ namespace galsim {
     {
         clearCache(); // invalidate any stored interpolations
         check_array();
-#ifdef FFT_DEBUG
         if (_N != rhs._N) throw FFTError("KTable::operator*=() with mismatched sizes");
         if (_dk != rhs._dk) throw FFTError("KTable::operator*=() with mismatched dk");
-#endif
         for (int i=0; i<_N*(_N/2+1); i++)
             _array[i] *= rhs._array[i];
     }
@@ -122,9 +116,7 @@ namespace galsim {
 
     boost::shared_ptr<KTable> KTable::wrap(int Nout) const 
     {
-#ifdef FFT_DEBUG
         if (Nout < 0) FormatAndThrow<FFTError>() << "KTable::wrap invalid Nout= " << Nout;
-#endif
         // Make it even:
         Nout = 2*((Nout+1)/2);
         boost::shared_ptr<KTable> out(new KTable(Nout, _dk, std::complex<double>(0.,0.)));
@@ -164,9 +156,7 @@ namespace galsim {
 
     boost::shared_ptr<XTable> XTable::wrap(int Nout) const 
     {
-#ifdef FFT_DEBUG
         if (Nout < 0) FormatAndThrow<FFTError>() << "XTable::wrap invalid Nout= " << Nout;
-#endif
         // Make it even:
         Nout = 2*((Nout+1)/2);
         boost::shared_ptr<XTable> out(new XTable(Nout, _dx, 0.));
@@ -640,9 +630,7 @@ namespace galsim {
         // convert to phases:
         x0*=_dk; y0*=_dk;
         // too big will just be wrapping around:
-#ifdef FFT_DEBUG
         if (x0 > M_PI || y0 > M_PI) throw FFTOutofRange("(x0,y0) too big in translate()");
-#endif
         std::complex<double> dxphase=std::polar(1.,-x0);
         std::complex<double> dyphase=std::polar(1.,-y0);
         std::complex<double> yphase=1.;
@@ -676,9 +664,7 @@ namespace galsim {
 
     XTable::XTable(int N, double dx, double value) : _dx(dx)
     {
-#ifdef FFT_DEBUG
         if (N<=0) throw FFTError("XTable size <=0");
-#endif
         _N = 2*((N+1)/2); //Round size up to even.
         _array.resize(_N);
         _array.fill(value);
@@ -707,9 +693,7 @@ namespace galsim {
     {
         check_array();
         clearCache(); // invalidate any stored interpolations
-#ifdef FFT_DEBUG
         if (_N != rhs._N) throw FFTError("XTable::accumulate() with mismatched sizes");
-#endif
         for (int i=0; i<_N*_N; i++)
             _array[i] += scalar * rhs._array[i];
     }
@@ -928,9 +912,7 @@ namespace galsim {
         // will need to be placed in critical blocks or the equivalent (mutex locks, etc.).
         fftw_plan plan = fftw_plan_dft_c2r_2d(
             _N, _N, t_array.get_fftw(), xt._array.get_fftw(), FFTW_MEASURE);
-#ifdef FFT_DEBUG
         if (plan==NULL) throw FFTInvalid();
-#endif
         fftw_destroy_plan(plan);
     }
 
@@ -965,9 +947,7 @@ namespace galsim {
         fftw_plan plan = fftw_plan_dft_c2r_2d(
             _N, _N, t_array.get_fftw(), xt._array.get_fftw(), FFTW_ESTIMATE);
         dbg<<"After make plan"<<std::endl;
-#ifdef FFT_DEBUG
         if (plan==NULL) throw FFTInvalid();
-#endif
 
         // Run the transform:
         fftw_execute(plan);
@@ -998,9 +978,7 @@ namespace galsim {
 
         fftw_plan plan = fftw_plan_dft_r2c_2d(
             _N,_N, t_array.get_fftw(), kt._array.get_fftw(), FFTW_MEASURE);
-#ifdef FFT_DEBUG
         if (plan==NULL) throw FFTInvalid();
-#endif
 
         fftw_destroy_plan(plan);
     }
@@ -1015,9 +993,7 @@ namespace galsim {
 
         fftw_plan plan = fftw_plan_dft_r2c_2d(
             _N,_N, t_array.get_fftw(), kt._array.get_fftw(), FFTW_ESTIMATE);
-#ifdef FFT_DEBUG
         if (plan==NULL) throw FFTInvalid();
-#endif
         fftw_execute(plan);
         fftw_destroy_plan(plan);
 

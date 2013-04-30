@@ -121,7 +121,6 @@ namespace galsim {
     class Bounds 
     {
     public:
-    //TODO: Write more dox here, needed to start from scratch!
         /// @brief Constructor using four scalar positions (xmin, xmax, ymin, ymax).
         Bounds(const T x1, const T x2, const T y1, const T y2) :
             defined(x1<=x2 && y1<=y2),xmin(x1),xmax(x2),ymin(y1),ymax(y2) {}
@@ -168,26 +167,58 @@ namespace galsim {
         /// @brief Query whether the Bounds rectangle is defined.
         bool isDefined() const { return defined; }
 
-        // TODO: Understand what these do and document...
+        /// @brief Return the nominal center of the image. 
+        ///
+        /// This is the position of the pixel that is considered to be (0,0)
         Position<T> center() const;
-        void operator+=(const Position<T>& pos); //expand to include point
-        void operator+=(const Bounds<T>& rec); //bounds of union
+
+        /// @brief Return the true center of the image.
+        ///
+        /// For even-sized, integer bounds, this will not be an integer, since the center in 
+        /// that case falls between two pixels.
+        Position<double> trueCenter() const;
+
+        /// @brief expand bounds to include this point
+        void operator+=(const Position<T>& pos);
+
+        /// @brief expand bounds to include these bounds
+        void operator+=(const Bounds<T>& rec);
+
+        //@{
+        /// @brief add a border of size d around existing bounds
         void addBorder(const T d);
         void operator+=(const T d) { addBorder(d); }
-        void expand(const double m); // expand by a multiple m, about bounds center
-        const Bounds<T> operator&(const Bounds<T>& rhs) const; // Finds intersection
+        //@}
+
+        /// @brief expand bounds by a factor m around the current center.
+        void expand(const double m); 
+
+        /// @brief find the intersection of two bounds
+        const Bounds<T> operator&(const Bounds<T>& rhs) const; 
+
+        //@{
+        /// @brief shift the bounding box by some amount.
         void shift(const T dx, const T dy) { xmin+=dx; xmax+=dx; ymin+=dy; ymax+=dy; }
         void shift(Position<T> dx) { shift(dx.x,dx.y); }
+        //@}
+
+        //@{
+        /// @brief return whether the bounded region includes a given point
         bool includes(const Position<T>& pos) const
         { return (defined && pos.x<=xmax && pos.x>=xmin && pos.y<=ymax && pos.y>=ymin); }
         bool includes(const T x, const T y) const
         { return (defined && x<=xmax && x>=xmin && y<=ymax && y>=ymin); }
+        //@}
+
+        /// @brief return whether the bounded region includes all of the given bounds
         bool includes(const Bounds<T>& rhs) const
         { 
             return (defined && rhs.defined && 
                     rhs.xmin>=xmin && rhs.xmax<=xmax &&
                     rhs.ymin>=ymin && rhs.ymax<=ymax);
         }
+
+        /// @brief check equality of two bounds
         bool operator==(const Bounds<T>& rhs) const 
         {
             return defined && rhs.defined && (xmin==rhs.xmin) &&
@@ -198,9 +229,8 @@ namespace galsim {
             return !defined || !rhs.defined || (xmin!=rhs.xmin) ||
                 (ymin!=rhs.ymin) || (xmax!=rhs.xmax) || (ymax!=rhs.ymax);
         }
-        /**
-         *  @brief Check if two bounds have same shape, but maybe different origin.
-         */
+
+        ///  @brief Check if two bounds have same shape, but maybe different origin.
         bool isSameShapeAs(const Bounds<T>& rhs) const
         {
             return defined && rhs.defined && 
@@ -225,12 +255,17 @@ namespace galsim {
                 T(0); 
         }
 
+        /// @brief divide the current bounds into (nx x ny) sub-regions
         typename std::vector<Bounds<T> > divide(int nx, int ny) const;
+
+        /// @brief write out to a file
         void write(std::ostream& fout) const
         { 
             if (defined) fout << xmin << ' ' << xmax << ' ' << ymin << ' ' << ymax << ' ';
             else fout << "Undefined ";
         }
+
+        /// @brief read in from a file
         void read(std::istream& fin)
         { fin >> xmin >> xmax >> ymin >> ymax; defined = xmin<=xmax && ymin<=ymax; }
 
@@ -283,23 +318,27 @@ namespace galsim {
     }
 
     // First the generic version:
-    template <class T, bool is_int>
+    template <class T, class U, bool is_int>
     struct CalculateCenter 
     {
-        static Position<T> call(const Bounds<T>& b)
-        { return Position<T>((b.getXMin() + b.getXMax())/T(2),(b.getYMin() + b.getYMax())/T(2)); }
+        static Position<U> call(const Bounds<T>& b)
+        { return Position<U>((b.getXMin() + b.getXMax())/U(2),(b.getYMin() + b.getYMax())/U(2)); }
     };
     // Slightly different for integer types:
-    template <class T>
-    struct CalculateCenter<T, true>
+    template <class T, class U>
+    struct CalculateCenter<T, U, true>
     {
-        static Position<T> call(const Bounds<T>& b)
-        { return Position<T>((b.getXMin()+b.getXMax()+1)/T(2),(b.getYMin()+b.getYMax()+1)/T(2)); }
+        static Position<U> call(const Bounds<T>& b)
+        { return Position<U>((b.getXMin()+b.getXMax()+1)/U(2),(b.getYMin()+b.getYMax()+1)/U(2)); }
     };
 
     template <class T>
     Position<T> Bounds<T>::center() const
-    { return CalculateCenter<T,std::numeric_limits<T>::is_integer>::call(*this); }
+    { return CalculateCenter<T,T,std::numeric_limits<T>::is_integer>::call(*this); }
+
+    template <class T>
+    Position<double> Bounds<T>::trueCenter() const
+    { return CalculateCenter<T,double,false>::call(*this); }
 
     // & operator finds intersection, if any
     template <class T>

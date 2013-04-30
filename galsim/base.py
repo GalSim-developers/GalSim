@@ -576,9 +576,23 @@ class GSObject(object):
 
         return image, dx
 
+    def _fix_center(self, image, scale):
+        # For even-sized images, the SBProfile draw function centers the result in the 
+        # pixel just up and right of the real center.  So shift it back to make sure it really
+        # draws in the center.
+        even_x = (image.xmax-image.xmin+1) % 2 == 0
+        even_y = (image.ymax-image.ymin+1) % 2 == 0
+        if even_x:
+            if even_y: prof = self.createShifted(-0.5*scale,-0.5*scale)
+            else: prof = self.createShifted(-0.5*scale,0.)
+        else:
+            if even_y: prof = self.createShifted(0.,-0.5*scale)
+            else: prof = self
+        return prof
+
 
     def draw(self, image=None, dx=None, gain=1., wmult=1., normalization="flux",
-             add_to_image=False):
+             add_to_image=False, use_true_center=True):
         """Draws an Image of the object, with bounds optionally set by an input Image.
 
         The draw method is used to draw an Image of the GSObject, typically using Fourier space
@@ -589,6 +603,14 @@ class GSObject(object):
         that set the pixel scale for the image (`dx`), that choose the normalization convention for
         the flux (`normalization`), and that decide whether the clear the input Image before drawing
         into it (`add_to_image`).
+
+        The object will always be drawn with its nominal center at the center location of the 
+        image.  There is thus a distinction in the behavior at the center for even- and odd-sized
+        images.  For a profile with a maximum at (0,0), this maximum will fall at the central 
+        pixel of an odd-sized image, but in the corner of the 4 central pixels of an even-sized
+        image.  If you care about how the sub-pixel offsets are drawn, you should either make
+        sure you provide an image with the right kind of size, or shift the profile by half
+        a pixel as desired to get the profile's (0,0) location where you want it.
 
         Note that when drawing a GSObject that was defined with a particular value of flux, it is
         not necessarily the case that a drawn image with 'normalization=flux' will have the sum of
@@ -650,6 +672,12 @@ class GSObject(object):
                              Note: This requires that image be provided (i.e. `image` is not `None`)
                              and that it have defined bounds (default `add_to_image = False`).
 
+        @param use_true_center  Normally, the profile is drawn to be centered at the true center
+                                of the image (using the function `image.bounds.trueCenter()`).
+                                If you would rather use the integer center (given by
+                                `image.bounds.center()`), set this to `False`.  
+                                (default `use_true_center = True`)
+
         @returns      The drawn image.
         """
         # Raise an exception immediately if the normalization type is not recognized
@@ -666,6 +694,12 @@ class GSObject(object):
         # Make sure image is setup correctly
         image, dx = self._draw_setup_image(image,dx,wmult,add_to_image)
 
+        # Fix the centering for even-sized images
+        if use_true_center:
+            prof = self._fix_center(image, image.scale)
+        else:
+            prof = self
+
         # SBProfile draw command uses surface brightness normalization.  So if we
         # want flux normalization, we need to scale the flux by dx^2
         if normalization.lower() == "flux" or normalization.lower() == "f":
@@ -674,13 +708,13 @@ class GSObject(object):
             # multiply the ADU by dx^2.  i.e. divide gain by dx^2.
             gain /= dx**2
 
-        image.added_flux = self.SBProfile.draw(image.view(), gain, wmult)
+        image.added_flux = prof.SBProfile.draw(image.view(), gain, wmult)
 
         return image
 
     def drawShoot(self, image=None, dx=None, gain=1., wmult=1., normalization="flux",
-                  add_to_image=False, n_photons=0., rng=None,
-                  max_extra_noise=0., poisson_flux=None):
+                  add_to_image=False, use_true_center=True,
+                  n_photons=0., rng=None, max_extra_noise=0., poisson_flux=None):
         """Draw an image of the object by shooting individual photons drawn from the surface 
         brightness profile of the object.
 
@@ -691,6 +725,10 @@ class GSObject(object):
         of particular relevance for users are those that set the pixel scale for the image (`dx`),
         that choose the normalization convention for the flux (`normalization`), and that decide
         whether the clear the input Image before shooting photons into it (`add_to_image`).
+
+        As for the draw command, the object will always be drawn with its nominal center at the 
+        center location of the image.  See the documentation for draw for more discussion about
+        the implications of this for even- and odd-sized images.
 
         It is important to remember that the image produced by drawShoot() represents the object as
         convolved with the square image pixel.  So when using drawShoot() instead of draw(), you
@@ -747,6 +785,12 @@ class GSObject(object):
                                 Note: This requires that image be provided (i.e. `image != None`)
                                 and that it have defined bounds (default `add_to_image = False`).
                               
+        @param use_true_center  Normally, the profile is drawn to be centered at the true center
+                                of the image (using the function `image.bounds.trueCenter()`).
+                                If you would rather use the integer center (given by
+                                `image.bounds.center()`), set this to `False`.  
+                                (default `use_true_center = True`)
+
         @param n_photons        If provided, the number of photons to use.
                                 If not provided (i.e. `n_photons = 0`), use as many photons as
                                   necessary to result in an image with the correct Poisson shot 
@@ -831,6 +875,12 @@ class GSObject(object):
         # Make sure image is setup correctly
         image, dx = self._draw_setup_image(image,dx,wmult,add_to_image)
 
+        # Fix the centering for even-sized images
+        if use_true_center:
+            prof = self._fix_center(image, image.scale)
+        else:
+            prof = self
+
         # SBProfile drawShoot command uses surface brightness normalization.  So if we
         # want flux normalization, we need to scale the flux by dx^2
         if normalization.lower() == "flux" or normalization.lower() == "f":
@@ -840,7 +890,7 @@ class GSObject(object):
             gain /= dx**2
 
         try:
-            image.added_flux = self.SBProfile.drawShoot(
+            image.added_flux = prof.SBProfile.drawShoot(
                 image.view(), n_photons, uniform_deviate, gain, max_extra_noise,
                 poisson_flux, add_to_image)
         except RuntimeError:
@@ -859,7 +909,10 @@ class GSObject(object):
         """Draws the k-space Images (real and imaginary parts) of the object, with bounds
         optionally set by input Images.
 
-        Normalization is always such that re(0,0) = flux.
+        Normalization is always such that re(0,0) = flux.  Unlike the real-space draw and
+        drawShoot functions, the (0,0) point will always be one of the actual pixel values.
+        For even-sized images, it will be 1/2 pixel above and to the right of the true 
+        center of the image.
 
         @param re     If provided, this will be the real part of the k-space image.
                       If `re = None`, then an automatically-sized image will be created.
@@ -1654,6 +1707,11 @@ class InterpolatedImage(GSObject):
     @param use_cache       Specify whether to cache noise_pad read in from a file to save having
                            to build a CorrelatedNoise object repeatedly from the same image.
                            (Default `use_cache = True`)
+    @param use_true_center Similar to the same parameter in the GSObject.draw function, this
+                           sets whether to use the true center of the provided image as the 
+                           center of the profile (if `use_true_center=True`) or the nominal
+                           center returned by `image.bounds.center()` (if `use_true_center=False`)
+                           [default `use_true_center = True`]
     @param gsparams        You may also specify a gsparams argument.  See the docstring for
                            galsim.GSParams using help(galsim.GSParams) for more information about
                            this option.
@@ -1676,7 +1734,8 @@ class InterpolatedImage(GSObject):
         'noise_pad' : str ,
         'pad_image' : str ,
         'calculate_stepk' : bool ,
-        'calculate_maxk' : bool
+        'calculate_maxk' : bool,
+        'use_true_center' : bool
     }
     _single_params = []
     _takes_rng = True
@@ -1685,8 +1744,8 @@ class InterpolatedImage(GSObject):
     # --- Public Class methods ---
     def __init__(self, image, x_interpolant = None, k_interpolant = None, normalization = 'flux',
                  dx = None, flux = None, pad_factor = 0., noise_pad = 0., rng = None,
-                 pad_image = None, calculate_stepk=True, calculate_maxk=True, use_cache=True,
-                 gsparams=None):
+                 pad_image = None, calculate_stepk=True, calculate_maxk=True,
+                 use_cache=True, use_true_center=True, gsparams=None):
         # first try to read the image as a file.  If it's not either a string or a valid
         # pyfits hdu or hdulist, then an exception will be raised, which we ignore and move on.
         try:
@@ -1865,6 +1924,14 @@ class InterpolatedImage(GSObject):
 
         # Initialize the SBProfile
         GSObject.__init__(self, sbinterpolatedimage)
+
+        # Fix the center to be in the right place.
+        # Note the minus sign in front of image.scale, since we want to fix the center in the 
+        # opposite sense of what the draw function does.
+        if use_true_center:
+            prof = self._fix_center(image, -image.scale)
+            GSObject.__init__(self, prof.SBProfile)
+            
 
 
 class Pixel(GSObject):
@@ -2971,13 +3038,13 @@ class Shapelet(GSObject):
         are not well fit by a shapelet for any (reasonable) order.
 
         @param image          The Image for which to fit the shapelet decomposition
-        @param center         The position to use for the center of the decomposition.
-                              [Default: use the image center]
+        @param center         The position in pixels to use for the center of the decomposition.
+                              [Default: use the image center (`image.bounds.trueCenter()`)]
         @param normalization  The normalization to assume for the image. 
                               (Default `normalization = "flux"`)
         """
         if not center:
-            center = image.bounds.center()
+            center = image.bounds.trueCenter()
         # convert from PositionI if necessary
         center = galsim.PositionD(center.x,center.y)
 
