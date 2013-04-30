@@ -474,12 +474,32 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, pixel_scal
     logging.info('\n'+str(results))
     return results
 
-def compare_dft_vs_photon_config(config, random_seed=None, nproc=None, pixel_scale=None, size=None,
+def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None, pixel_scale=None, size=None,
                                  wmult=None, abs_tol_ellip=1.e-5, abs_tol_size=1.e-5,
                                  n_trials_per_iter=32, n_photons_per_trial=1e7, moments=True,
                                  hsm=False, logger=None):
     """Take an input config dictionary and render the object it describes in two ways, comparing
-    results at high precision.
+    results at high precision. 
+
+    The config dictionary can contain either: (i) one single object, (ii) a collection of objects, 
+    each one of them repeated in a Sequence n_trials_per_iter times. The image type should be 
+    'Single'. Example config fragment:
+
+        &n_trials_per_iter 32 
+        gal :
+          type : Sersic    
+          half_light_radius : 
+            type : InputCatalog , 
+            col : 2,  index : { type: Sequence, repeat: *n_trials_per_iter} }
+          n : 
+            type : InputCatalog , 
+            col : 1,  
+            index : { type: Sequence, repeat: *n_trials_per_iter} 
+        ...
+        image: { type : Single  ... }
+
+    For both cases there should be no randomly selected parameters in the galaxy and PSF config 
+    specification. 
 
     For an example of defining a config dictionary of the sort suitable for input to this function,
     see examples/demo8.py in the GalSim repository.
@@ -500,6 +520,11 @@ def compare_dft_vs_photon_config(config, random_seed=None, nproc=None, pixel_sca
 
     @param config                 GalSim config dictionary describing the GSObject we wish to test
                                   (see e.g. examples/demo8.py).
+
+    @param gal_num                number for the galaxy in the config dictionary, which will be 
+                                  passed to the config system. It related to obj_num in the config
+                                  system by obj_num = gal_num * n_trials_per_iter (assuming the
+                                  config is created correctly as explained in the example above)
 
     @random_seed                  integer to be used as the basis of all seeds for the random number
                                   generator, overrides any value in config['image'].
@@ -629,12 +654,15 @@ def compare_dft_vs_photon_config(config, random_seed=None, nproc=None, pixel_sca
     # Start the timer
     t1 = time.time()
 
+    # calculate the obj_num in the config system
+    obj_num = n_trials_per_iter*gal_num
+    
     # Draw the FFT image, only needs to be done once
     # The BuidImage function stores things in the config that aren't picklable.
     # If you want to use config later for multiprocessing, you have to deepcopy it here.
     import copy
     config1 = copy.deepcopy(config)
-    im_draw = galsim.config.BuildImage(config1, logger=logger)[0]
+    im_draw = galsim.config.BuildImage(config1, obj_num = obj_num, logger=logger)[0]
     res_draw = im_draw.FindAdaptiveMom()
     sigma_draw = res_draw.moments_sigma
     g1obs_draw = res_draw.observed_shape.g1
@@ -660,15 +688,16 @@ def compare_dft_vs_photon_config(config, random_seed=None, nproc=None, pixel_sca
     # Then begin while loop, farming out sets of n_trials_per_iter trials until we get the
     # statistical accuracy we require
     start_random_seed = config2['image']['random_seed'] 
+    start_random_seed = config2['image']['random_seed'] 
     while (g1obserr > abs_tol_ellip) or (g2obserr > abs_tol_ellip) or (sigmaerr > abs_tol_size):
 
         # Reset the random_seed depending on the iteration number so that these never overlap
         config2['image']['random_seed'] = start_random_seed + itercount * (n_trials_per_iter + 1)
 
         # Run the trials using galsim.config.BuildImages function
-        trial_images = galsim.config.BuildImages(
-            n_trials_per_iter, config2, logger=logger, nproc=config2['image']['nproc'])[0] 
- 
+        trial_images = galsim.config.BuildImages( nimages = n_trials_per_iter, obj_num = obj_num , 
+          config = config2, logger=logger, nproc=config2['image']['nproc'])[0] 
+
         # Collect results 
         trial_results = [image.FindAdaptiveMom() for image in trial_images]
 
@@ -691,6 +720,7 @@ def compare_dft_vs_photon_config(config, random_seed=None, nproc=None, pixel_sca
             str(sigmaerr))
 
     sys.stdout.write("\n")
+
 
     # Take the runtime and collate results into a ComparisonShapeData
     runtime = time.time() - t1
