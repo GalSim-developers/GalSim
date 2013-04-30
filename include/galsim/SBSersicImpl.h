@@ -68,6 +68,7 @@ namespace galsim {
          */
         SersicKey(double _n, double _maxRre, bool _flux_untruncated) :
             n(_n), maxRre(_maxRre), flux_untruncated(_flux_untruncated) {}
+
         // less operator required for map::find()
         bool operator<(const SersicKey& rhs) const
         {

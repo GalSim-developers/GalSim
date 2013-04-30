@@ -105,7 +105,7 @@ def test_shapelet_draw():
     test_flux = 23.
 
     pix = galsim.Pixel(dx)
-    im = galsim.ImageF(128,128)
+    im = galsim.ImageF(129,129)
     im.scale = dx
     for sigma in [1., 0.3, 2.4]:
         for order in [0, 2, 8]:
@@ -143,6 +143,9 @@ def test_shapelet_draw():
                     err_msg="Flux normalization for Shapelet disagrees with expected result")
 
             # Test centroid
+            # Note: this only works if the image has odd sizes.  If they are even, then
+            # setCenter doesn't actually set the center to the true center of the image 
+            # (since it falls between pixels).
             im.setCenter(0,0)
             x,y = np.meshgrid(np.arange(im.array.shape[0]).astype(float) + im.getXMin(), 
                               np.arange(im.array.shape[1]).astype(float) + im.getYMin())
@@ -213,7 +216,6 @@ def test_shapelet_fit():
         pixel = galsim.Pixel(dx)
         conv = galsim.Convolve([psf,pixel])
         im1 = conv.draw(dx=dx, normalization=norm)
-        im1.setCenter(0,0)
 
         sigma = 1.2  # Match half-light-radius as a decent first approximation.
         shapelet = galsim.Shapelet(sigma=sigma, order=10)

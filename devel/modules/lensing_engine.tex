@@ -98,15 +98,23 @@ system defined along the vector connecting them ($\gamma_+$) and at 45
 degrees with respect to it ($\gamma_\times$), then we can estimate 
 correlation functions of the $\gamma_+$ and $\gamma_\times$ values,
 which we will call $\xi_{++}$ and $\xi_{\times\times}$.  Then the
-standard cosmological correlation functions $\xi_{\pm}$ are defined as
+standard cosmological correlation functions $\xi_{\pm}$ are defined
+as\footnote{If we work in detector coordinates, it is the
+  case that $\xi_+ = \xi_{11}+\xi_{22}$, but it is not the case that
+  $\xi_- = \xi_{11}-\xi_{22}$.}
 \begin{align}
 \xi_{\pm}(\theta) &=  \xi_{++}(\theta)\pm \xi_{\times \times}(\theta) \\
- &= \frac{1}{2\pi}\int_0^{\infty} k\,\rmd k P(k) J_{0/4}(k\theta)  \label{eq:xi}
+ &= \frac{1}{2\pi}\int_0^{\infty} k\,\rmd k [P_E(k)\pm P_B(k)] J_{0/4}(k\theta)  \label{eq:xi}
 \end{align}
 where $J_{0/4}$ denotes the 0th and 4th Bessel function of the first
-kind, as is appropriate for $\xi_+$ and $\xi_-$, respectively. 
+kind, as is appropriate for $\xi_+$ and $\xi_-$, respectively.
+For cosmological shear correlations, $P_B=0$; however, we find
+it useful to include $P_B$ when generating shears for other purposes,
+such as when drawing atmospheric PSF anisotropies according to some
+power spectrum (which typically requires 
+similar amounts of $E$ and $B$ power in order to mimic realistic observations).
 Since correlation functions are dimensionless, we immediately see that
-$P(k)$ has dimensions of angle$^2$.
+$P_E(k)$ and $P_B(k)$ have dimensions of angle$^2$.
 
 The variance of the shear values for all of our galaxies is the zero-lag value of $\xi_+$, 
 \beq\label{E:shearvar-basic}

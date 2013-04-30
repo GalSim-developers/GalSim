@@ -21,7 +21,7 @@ import time
 import galsim
 
 
-def BuildStamps(nobjects, config, xsize, ysize, 
+def BuildStamps(nobjects, config, xsize=0, ysize=0, 
                 obj_num=0, nproc=1, sky_level_pixel=None, do_noise=True, logger=None,
                 make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
@@ -30,7 +30,11 @@ def BuildStamps(nobjects, config, xsize, ysize,
     @param nobjects            How many postage stamps to build.
     @param config              A configuration dict.
     @param xsize               The size of a single stamp in the x direction.
+                               (If 0, look for config.image.stamp_xsize, and if that's
+                                not there, use automatic sizing.)
     @param ysize               The size of a single stamp in the y direction.
+                               (If 0, look for config.image.stamp_ysize, and if that's
+                                not there, use automatic sizing.)
     @param obj_num             If given, the current obj_num (default = 0)
     @param nproc               How many processes to use.
     @param sky_level_pixel     The background sky level to add to the image (in ADU/pixel).
@@ -211,15 +215,15 @@ def BuildStamps(nobjects, config, xsize, ysize,
     return images, psf_images, weight_images, badpix_images
  
 
-def BuildSingleStamp(config, xsize, ysize,
+def BuildSingleStamp(config, xsize=0, ysize=0,
                      obj_num=0, sky_level_pixel=None, do_noise=True, logger=None,
                      make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
     Build a single image using the given config file
 
     @param config              A configuration dict.
-    @param xsize               The xsize of the image to build.
-    @param ysize               The ysize of the image to build.
+    @param xsize               The xsize of the image to build (if known).
+    @param ysize               The ysize of the image to build (if known).
     @param obj_num             If given, the current obj_num (default = 0)
     @param sky_level_pixel     The background sky level to add to the image (in ADU/pixel).
     @param do_noise            Whether to add noise to the image (according to config['noise']).
@@ -245,23 +249,66 @@ def BuildSingleStamp(config, xsize, ysize,
     if 'gd' in config:
         del config['gd']  # In case it was set.
 
+    # Determine the size of this stamp
+    if not xsize:
+        if 'stamp_xsize' in config['image']:
+            xsize = galsim.config.ParseValue(config['image'],'stamp_xsize',config,int)[0]
+        elif 'stamp_size' in config['image']:
+            xsize = galsim.config.ParseValue(config['image'],'stamp_size',config,int)[0]
+    if not ysize:
+        if 'stamp_ysize' in config['image']:
+            ysize = galsim.config.ParseValue(config['image'],'stamp_ysize',config,int)[0]
+        elif 'stamp_size' in config['image']:
+            ysize = galsim.config.ParseValue(config['image'],'stamp_size',config,int)[0]
+
     # Determine where this object is going to go:
-    if 'center' in config['image']:
+    if 'image_pos' in config['image']:
         import math
-        center = galsim.config.ParseValue(config['image'],'center',config,galsim.PositionD)[0]
-        #print 'center = ',center
-        icenter = galsim.PositionI(
-            int(math.floor(center.x+0.5)),
-            int(math.floor(center.y+0.5)) )
-        #print 'icenter = ',icenter
-        final_shift = galsim.PositionD(center.x-icenter.x , center.y-icenter.y)
-        #print 'final_shift = ',final_shift
+        image_pos = galsim.config.ParseValue(config['image'],'image_pos',config,
+                                             galsim.PositionD)[0]
+        # Save this value for possible use in Eval's.
+        config['image_pos'] = image_pos
+        #print 'image_pos = ',image_pos
+
         # Calculate and save the position relative to the image center
-        config['chip_pos'] = center
-        config['pos'] = (center - config['image_cen']) * config['pixel_scale']
-        #print 'pos = ',config['pos']
+        config['sky_pos'] = (image_pos - config['image_cen']) * config['pixel_scale']
+        #print 'sky_pos = ',config['sky_pos']
+
+    elif 'sky_pos' in config['image']:
+        import math
+        sky_pos = galsim.config.ParseValue(config['image'],'sky_pos',config,
+                                           galsim.PositionD)[0]
+        # Save this value for possible use in Eval's.
+        config['sky_pos'] = sky_pos
+        #print 'sky_pos = ',sky_pos
+
+        # Calculate and save the position relative to the image center
+        image_pos = (sky_pos / config['pixel_scale']) + config['image_cen']
+        config['image_pos'] = image_pos
+        #print 'image_pos = ',config['image_pos']
+
     else:
-        center = None
+        image_pos = None
+
+
+    if image_pos is not None:
+        # The image_pos refers to the location of the true center of the image, which is not 
+        # necessarily the nominal center we need for adding to the final image.  In particular,
+        # even-sized images have their nominal center offset by 1/2 pixel up and to the right.
+        # N.B. This works even if xsize,ysize == 0, since the auto-sizing always produces
+        # even sized images.
+        if xsize % 2 == 0: image_pos.x += 0.5
+        if ysize % 2 == 0: image_pos.y += 0.5
+        #print 'nominal image_pos = ',image_pos
+
+        icenter = galsim.PositionI(
+            int(math.floor(image_pos.x+0.5)),
+            int(math.floor(image_pos.y+0.5)) )
+        #print 'icenter = ',icenter
+        final_shift = galsim.PositionD(image_pos.x-icenter.x , image_pos.y-icenter.y)
+        #print 'final_shift = ',final_shift
+
+    else:
         icenter = None
         final_shift = None
 
@@ -299,10 +346,11 @@ def BuildSingleStamp(config, xsize, ysize,
 
     draw_method = galsim.config.ParseValue(config['image'],'draw_method',config,str)[0]
     if skip: 
-        if xsize:
+        if xsize and ysize:
             im = galsim.ImageF(xsize, ysize)
         else:
             im = galsim.ImageF(1,1)
+        im.setOrigin(config['image_origin'])
         im.setScale(im.scale)
         im.setZero()
         if do_noise and sky_level_pixel:
@@ -446,7 +494,7 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level_pixel, final_shi
         pixel_scale = 1.0
 
     if final_shift:
-        #print 'shift = ',final_shift.x*pixel_scale, final_shift.y*pixel_scale
+        #print 'shift = ',final_shift*pixel_scale
         final.applyShift(final_shift.x*pixel_scale, final_shift.y*pixel_scale)
 
     if xsize:
@@ -455,6 +503,7 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level_pixel, final_shi
         im = None
 
     im = final.draw(image=im, dx=pixel_scale)
+    im.setOrigin(config['image_origin'])
 
     if 'gal' in config and 'signal_to_noise' in config['gal']:
         import math
@@ -691,6 +740,7 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, final_sh
         im = None
 
     im = final.drawShoot(image=im, dx=pixel_scale, max_extra_noise=max_extra_noise, rng=rng)
+    im.setOrigin(config['image_origin'])
 
     return im
     
