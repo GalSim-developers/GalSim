@@ -23,7 +23,7 @@
 # (This file is designed to be viewed in a window 100 characters wide.)
 #
 # In this script, we show how to run the GalSim config processing using a python dict rather
-# than using a config file.  The parallel tutorial examples/demo*.py have shown how to
+# than using a config file.  The parallel tutorial examples/demo*.py files have shown how to
 # do the same thing as these demo*.yaml files directly in python.  Now we turn the tables
 # and show how to use some of the machinery in the GalSim configuration processing 
 # from within python itself.  As such, this config file doesn't add much in the way
