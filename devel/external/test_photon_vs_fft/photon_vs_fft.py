@@ -287,7 +287,6 @@ def RunComparisonForVariedParams(config):
     Arguments
     ---------
     config              the config object, as read by yaml
-    filename_config     name of the config file used
     """
 
     # loop over parameters to vary
