@@ -620,6 +620,7 @@ class PowerSpectrum(object):
             else:
                 g1.append(sbii_g1.xValue(iter_pos+self.offset))
                 g2.append(sbii_g2.xValue(iter_pos+self.offset))
+
         if isinstance(pos, galsim.PositionD):
             return g1[0], g2[0]
         elif isinstance(pos[0], np.ndarray):
@@ -690,6 +691,7 @@ class PowerSpectrum(object):
                 kappa.append(0.)
             else:
                 kappa.append(sbii_kappa.xValue(iter_pos+self.offset))
+
         if isinstance(pos, galsim.PositionD):
             return kappa[0]
         elif isinstance(pos[0], np.ndarray):
@@ -767,6 +769,7 @@ class PowerSpectrum(object):
                 mu.append(0.)
             else:
                 mu.append(sbii_mu.xValue(iter_pos+self.offset))
+
         if isinstance(pos, galsim.PositionD):
             return mu[0]
         elif isinstance(pos[0], np.ndarray):
@@ -856,6 +859,7 @@ class PowerSpectrum(object):
                 g1.append(sbii_g1.xValue(iter_pos+self.offset))
                 g2.append(sbii_g2.xValue(iter_pos+self.offset))
                 mu.append(sbii_mu.xValue(iter_pos+self.offset))
+
         if isinstance(pos, galsim.PositionD):
             return g1[0], g2[0], mu[0]
         elif isinstance(pos[0], np.ndarray):
@@ -1073,22 +1077,22 @@ class Cosmology(object):
         self.omega_r = 0
     
     def a(self, z):
-        """Compute scale factor
+        """Compute scale factor.
 
         @param z Redshift
         """
         return 1./(1+z)
 
     def E(self, a):
-        """Evaluates expansion function
+        """Evaluates expansion function.
 
-        @param a Scale factor
+        @param a Scale factor.
         """
         return (self.omega_r*a**(-4) + self.omega_m*a**(-3) + self.omega_c*a**(-2) + \
                 self.omega_lam)**0.5
 
     def __angKernel(self, x):
-        """Integration kernel for angular diameter distance computation
+        """Integration kernel for angular diameter distance computation.
         """
         return self.E(x**-1)**-1
 
@@ -1097,7 +1101,7 @@ class Cosmology(object):
 
         In order to get the distance in Mpc/h, multiply by ~3000.
 
-        @param z Redshift
+        @param z     Redshift.
         @param z_ref Reference redshift, with z_ref <= z.
         """
         if isinstance(z, np.ndarray):
@@ -1140,9 +1144,9 @@ class NFWHalo(object):
     @param conc       Concentration parameter, i.e., ratio of virial radius to NFW scale radius.
     @param redshift   Redshift of the halo.
     @param halo_pos   Position of halo center (in arcsec). [default=PositionD(0,0)]
-    @param omega_m    Omega_matter to pass to Cosmology constructor [default=None]
-    @param omega_lam  Omega_lambda to pass to Cosmology constructor [default=None]
-    @param cosmo      A Cosmology instance [default=None]
+    @param omega_m    Omega_matter to pass to Cosmology constructor. [default=None]
+    @param omega_lam  Omega_lambda to pass to Cosmology constructor. [default=None]
+    @param cosmo      A Cosmology instance. [default=None]
     """
     _req_params = { 'mass' : float , 'conc' : float , 'redshift' : float }
     _opt_params = { 'halo_pos' : galsim.PositionD , 'omega_m' : float , 'omega_lam' : float }
@@ -1198,7 +1202,7 @@ class NFWHalo(object):
         self.rs_arcsec = scale/arcsec2rad;
 
     def __omega(self, a):
-        """Matter density at scale factor a
+        """Matter density at scale factor a.
         """
         return self.cosmo.omega_m/(self.cosmo.E(a)**2 * a**3)
 
@@ -1321,7 +1325,7 @@ class NFWHalo(object):
                            - Multidimensional NumPy array, as long as array[0] contains
                              x-positions and array[1] contains y-positions
         @param z_s       Source redshift(s).
-        @param units     Angular units of coordinates [default = arcsec]
+        @param units     Angular units of coordinates. [default = arcsec]
         @param reduced   Whether returned shear(s) should be reduced shears. [default=True]
 
         @return (g1,g2)   [g1 and g2 are each a list if input was a list]
@@ -1356,7 +1360,7 @@ class NFWHalo(object):
         # until you know that it can be indexed, i.e., that it's not just a single PositionD,
         # because then bad things will happen (TypeError).
         if isinstance(pos, galsim.PositionD):
-            return g1, g2
+            return g1[0], g2[0]
         if isinstance(pos[0], np.ndarray):
             return g1, g2
         elif len(g) == 1 and not isinstance(pos[0],list):
@@ -1378,10 +1382,10 @@ class NFWHalo(object):
                          - tuple of NumPy arrays: ( xarray, yarray )
                          - Multidimensional NumPy array, as long as array[0] contains
                            x-positions and array[1] contains y-positions
-        @param z_s     Source redshift(s)
-        @param units   Angular units of coordinates [default = arcsec]
+        @param z_s     Source redshift(s).
+        @param units   Angular units of coordinates. [default = arcsec]
 
-        @return kappa or list of kappa values
+        @return kappa or list of kappa values.
         """
 
         # Convert to numpy arrays for internal usage:
@@ -1405,7 +1409,7 @@ class NFWHalo(object):
         elif len(kappa) == 1 and not isinstance(pos[0], list):
             return kappa[0]
         else:
-            return [ k for k in kappa ]
+            return kappa.tolist()
 
     def getMagnification(self, pos, z_s, units=galsim.arcsec):
         """Calculate magnification of halo at specified positions.
@@ -1420,9 +1424,9 @@ class NFWHalo(object):
                          - tuple of NumPy arrays: ( xarray, yarray )
                          - Multidimensional NumPy array, as long as array[0] contains
                            x-positions and array[1] contains y-positions
-        @param z_s     Source redshift(s)
+        @param z_s     Source redshift(s).
         @param units   Angular units of coordinates (only arcsec implemented so far).
-        @return mu     Numpy array containing the magnification at the specified position(s)
+        @return mu     Numpy array containing the magnification at the specified position(s).
         """
         # Convert to numpy arrays for internal usage:
         pos_x, pos_y = _convertPositions(pos, units, 'getMagnification')
@@ -1448,7 +1452,7 @@ class NFWHalo(object):
         elif len(mu) == 1 and not isinstance(pos[0],list):
             return mu[0]
         else:
-            return [ m for m in mu ]
+            return mu.tolist()
 
     def getLensing(self, pos, z_s, units=galsim.arcsec):
         """Calculate lensing shear and magnification of halo at specified positions.
@@ -1463,7 +1467,7 @@ class NFWHalo(object):
                              - tuple of NumPy arrays: ( xarray, yarray )
                              - Multidimensional NumPy array, as long as array[0] contains
                                x-positions and array[1] contains y-positions
-        @param z_s         Source redshift(s)
+        @param z_s         Source redshift(s).
         @param units       Angular units of coordinates (only arcsec implemented so far).
         @return g1,g2,mu   Reduced shears and magnifications.
         """

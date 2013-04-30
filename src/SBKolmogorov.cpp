@@ -92,12 +92,6 @@ namespace galsim {
     double SBKolmogorov::SBKolmogorovImpl::xValue(const Position<double>& p) const 
     {
         double r = sqrt(p.x*p.x+p.y*p.y) * _k0;
-#ifdef DEBUGLOGGING
-        xdbg<<"xValue: p = "<<p<<std::endl;
-        xdbg<<"r = "<<sqrt(p.x*p.x+p.y*p.y)<<" * "<<_k0<<" = "<<r<<std::endl;
-        xdbg<<"return "<<_flux<<" * "<<_k0sq<<" * "<<_info->xValue(r)<<" = "<<
-            (_xnorm * _info->xValue(r))<<std::endl;
-#endif
         return _xnorm * _info->xValue(r);
     }
 
@@ -107,16 +101,6 @@ namespace galsim {
     std::complex<double> SBKolmogorov::SBKolmogorovImpl::kValue(const Position<double>& k) const
     {
         double ksq = (k.x*k.x+k.y*k.y) * _inv_k0sq;
-#ifdef DEBUGLOGGING
-        xdbg<<"Kolmogorov kValue: ksq = "<<(k.x*k.x + k.y*k.y)<<" * "<<_inv_k0sq<<" = "<<ksq<<std::endl;
-        xdbg<<"flux = "<<_flux<<std::endl;
-        xdbg<<"info->kval = "<<_info->kValue(ksq)<<std::endl;
-        xdbg<<"return "<<_flux * _info->kValue(ksq)<<std::endl;
-        double k1 = sqrt(k.x*k.x+k.y*k.y);
-        double dk = 6.8839 * std::pow(_lam_over_r0 * k1 / (2.*M_PI),5./3.);
-        double tk = exp(-0.5*dk);
-        xdbg<<"k = "<<k1<<", D(k) = "<<dk<<", T(k) = "<<tk<<std::endl;
-#endif
         return _flux * _info->kValue(ksq);
     }
 

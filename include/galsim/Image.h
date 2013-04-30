@@ -187,6 +187,7 @@ namespace galsim {
         ConstImageView<T> operator[](const Bounds<int>& bounds) const
         { return subImage(bounds); }
 
+        //@{
         /**
          *  @brief Shift the bounding box of the image, changing the logical location of the pixels.
          *
@@ -196,7 +197,10 @@ namespace galsim {
          *  ymax_new = ymax + dy
          */
         void shift(int dx, int dy) { this->_bounds.shift(dx, dy); }
+        void shift(const Position<int>& dpos) { shift(dpos.x, dpos.y); }
+        //@}
 
+        //@{
         /**
          *  @brief Move the origin of the image, changing the logical location of the pixels.
          *
@@ -208,12 +212,15 @@ namespace galsim {
          *  ymax_new = y0 + ymax - ymin
          */
         void setOrigin(int x0, int y0) { shift(x0 - this->getXMin(), y0 - this->getYMin()); }
+        void setOrigin(const Position<int>& pos) { setOrigin(pos.x,pos.y); }
+        //@}
 
         /**
          *  @brief Set the pixel scale 
          */
         void setScale(double scale) { _scale = scale; }
 
+        //@{
         /**
          *  @brief Move the center of the image, changing the logical location of the pixels.
          *
@@ -231,6 +238,8 @@ namespace galsim {
             shift(x0 - (this->getXMax()+this->getXMin()+1)/2 ,
                   y0 - (this->getYMax()+this->getYMin()+1)/2 ); 
         }
+        void setCenter(const Position<int>& pos) { setCenter(pos.x,pos.y); }
+        //@}
 
         /**
          *  @brief Return the bounding box of the image.
@@ -252,24 +261,21 @@ namespace galsim {
          */
         int getPaddedSize(float pad_factor) const;
 
-#ifdef IMAGE_BOUNDS_CHECK
-        /**
-         *  @brief Element access is checked always
-         */
-        const T& operator()(int xpos, int ypos) const 
-        { return at(xpos,ypos); }
-#else
+        //@{
         /**
          *  @brief Unchecked element access
          */
-        const T& operator()(int xpos, int ypos) const 
-        { return _data[addressPixel(xpos, ypos)]; }
-#endif
+        const T& operator()(int xpos, int ypos) const { return _data[addressPixel(xpos, ypos)]; }
+        const T& operator()(const Position<int>& pos) const { return operator()(pos.x,pos.y); }
+        //@}
 
+        //@{
         /**
          *  @brief Element access - checked
          */
         const T& at(int xpos, int ypos) const;
+        const T& at(const Position<int>& pos) const { return at(pos.x,pos.y); }
+        //@}
 
         /**
          *  @brief const_iterator type for pixels within a row (unchecked).
@@ -279,26 +285,25 @@ namespace galsim {
         /** 
          *  @brief Return an iterator to the beginning of a row.
          */
-        const_iterator rowBegin(int y) const 
-        { return _data + addressPixel(y); }
+        const_iterator rowBegin(int y) const { return _data + addressPixel(y); }
 
         /**
          *  @brief Return an iterator to one-past-the-end of a row.
          */
-        const_iterator rowEnd(int y) const 
-        { return _data + addressPixel(this->getXMax() + 1, y); }
+        const_iterator rowEnd(int y) const { return _data + addressPixel(this->getXMax() + 1, y); }
 
+        //@{
         /**
          *  @brief Return an iterator to an arbitrary pixel.
          */
-        const_iterator getIter(int x, int y) const 
-        { return _data + addressPixel(x, y); }
+        const_iterator getIter(int x, int y) const { return _data + addressPixel(x, y); }
+        const_iterator getIter(const Position<int>& pos) const { return getIter(pos.x,pos.y); }
+        //@}
 
         /**
          *  @brief BaseImage's assignTo just uses the normal copyFrom method.
          */
-        void assignTo(const ImageView<T>& rhs) const
-        { rhs.copyFrom(*this); }
+        void assignTo(const ImageView<T>& rhs) const { rhs.copyFrom(*this); }
 
     protected:
 
@@ -522,24 +527,22 @@ namespace galsim {
         { return subImage(bounds); }
 
 
-#ifdef IMAGE_BOUNDS_CHECK
-        /** 
-         *  @brief Element access is checked always
-         */
-        T& operator()(int xpos, int ypos) const 
-        { return at(xpos,ypos); }
-#else
+        //@{
         /**
          *  @brief Unchecked access
          */
         T& operator()(int xpos, int ypos) const 
         { return this->_data[this->addressPixel(xpos, ypos)]; }
-#endif
+        T& operator()(const Position<int>& pos) const { return operator()(pos.x,pos.y); }
+        //@}
 
+        //@{
         /**
          *  @brief Element access - checked
          */
         T& at(int xpos, int ypos) const;
+        T& at(const Position<int>& pos) const { return at(pos.x,pos.y); }
+        //@}
 
         /**
          *  @brief Another way to set a value.  Equivalent to im(x,y) = value.
@@ -548,9 +551,11 @@ namespace galsim {
          *  we need something else to set a single pixel.  
          *  This function is unnecessary at the C++ level, but in the interest of 
          *  trying to keep the two layers as close as possible, we might as well include it.
+         *
+         *  Note: This uses the checked element access.
          */
         void setValue(int x, int y, T value)
-        { (*this)(x,y) = value; }
+        { at(x,y) = value; }
 
         /**
          *  @brief iterator type for pixels within a row (unchecked).
@@ -751,17 +756,6 @@ namespace galsim {
         { return subImage(bounds); }
         //@}
 
-#ifdef IMAGE_BOUNDS_CHECK
-        //@{
-        /**
-         *  @brief Element access is checked always
-         */
-        T& operator()(int xpos, int ypos)
-        { return at(xpos,ypos); }
-        const T& operator()(int xpos, int ypos) const 
-        { return at(xpos,ypos); }
-        //@}
-#else
         //@{
         /**
          *  @brief Unchecked access
@@ -770,8 +764,9 @@ namespace galsim {
         { return this->_data[this->addressPixel(xpos, ypos)]; }
         const T& operator()(int xpos, int ypos) const 
         { return this->_data[this->addressPixel(xpos, ypos)]; }
+        T& operator()(const Position<int>& pos) { return operator()(pos.x,pos.y); }
+        const T& operator()(const Position<int>& pos) const { return operator()(pos.x,pos.y); }
         //@}
-#endif
 
         //@{
         /**
@@ -779,6 +774,8 @@ namespace galsim {
          */
         T& at(int xpos, int ypos);
         const T& at(int xpos, int ypos) const;
+        T& at(const Position<int>& pos) { return at(pos.x,pos.y); }
+        const T& at(const Position<int>& pos) const { return at(pos.x,pos.y); }
         //@}
 
         /**
@@ -788,9 +785,11 @@ namespace galsim {
          *  we need something else to set a single pixel.  
          *  This function is unnecessary at the C++ level, but in the interest of 
          *  trying to keep the two layers as close as possible, we might as well include it.
+         *
+         *  Note: This uses the checked element access.
          */
         void setValue(int x, int y, T value)
-        { (*this)(x,y) = value; }
+        { at(x,y) = value; }
 
         //@{
         /**

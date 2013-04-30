@@ -32,13 +32,10 @@ namespace galsim {
 
         static bp::object GetArrayImpl(bp::object self, bool isConst) 
         {
-            // --- Try to get cached array ---
-            if (PyObject_HasAttrString(self.ptr(), "_array")) return self.attr("_array");
             const LVector& lvector = bp::extract<const LVector&>(self);
             bp::object numpy_array = MakeNumpyArray(
                 lvector.rVector().cptr(), lvector.size(), lvector.rVector().step(), isConst,
                 lvector.getOwner());
-            self.attr("_array") = numpy_array;
             return numpy_array;
         }
 
