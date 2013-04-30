@@ -1,3 +1,4 @@
+import os
 import cPickle
 import numpy as np
 import matplotlib.pyplot as plt
@@ -39,11 +40,11 @@ plt.ylabel(r'$\Delta$g$_1$ (DFT - Photon)')
 plt.ylim(-YMAX_ZOOMIN, YMAX_ZOOMIN)
 plt.legend()
 plt.subplots_adjust(left=0.15)
-plt.savefig('sersic_highn_basic_zoomin_g1.png')
+plt.savefig(os.path.join('plots', 'sersic_highn_basic_zoomin_g1.png'))
 
 plt.ylim(-YMAX_ZOOMOUT, YMAX_ZOOMOUT)
 plt.subplots_adjust(left=None)
-plt.savefig('sersic_highn_basic_zoomout_g1.png')
+plt.savefig(os.path.join('plots', 'sersic_highn_basic_zoomout_g1.png'))
 
 # Then do the plots of g2
 plt.clf()
@@ -63,8 +64,8 @@ plt.xlabel(r'g$_2$ (DFT)')
 plt.ylabel(r'$\Delta$g$_2$ (DFT - Photon)')
 plt.ylim(-YMAX_ZOOMIN, YMAX_ZOOMIN)
 plt.legend()
-plt.savefig('sersic_highn_basic_zoomin_g2.png')
+plt.savefig(os.path.join('plots', 'sersic_highn_basic_zoomin_g2.png'))
 
 plt.ylim(-YMAX_ZOOMOUT, YMAX_ZOOMOUT)
-plt.savefig('sersic_highn_basic_zoomout_g2.png')
+plt.savefig(os.path.join('plots', 'sersic_highn_basic_zoomout_g2.png'))
 plt.clf()

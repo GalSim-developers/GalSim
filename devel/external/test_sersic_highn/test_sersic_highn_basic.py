@@ -21,7 +21,8 @@ WMULT = 1. # This might have an impact
 NPHOTONS = 1.e7
 
 # Output filename
-OUTFILE = "sersic_highn_basic_output_N"+str(NOBS)+".pkl"
+import os
+OUTFILE = os.path.join("outputs", "sersic_highn_basic_output_N"+str(NOBS)+".pkl")
 
 # Params for a very simple, Airy PSF
 PSF_LAM_OVER_DIAM = 0.09 # ~ COSMOS width, oversampled at 0.03 arcsec
