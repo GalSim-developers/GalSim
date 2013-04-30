@@ -35,7 +35,7 @@
 #
 # - obj type : Ring (..., full_rotation)
 # - obj type : RealGalaxy (..., id)
-# - type : Eval using pos variable, user-defined variables and math functions
+# - type : Eval using sky_pos variable, user-defined variables and math functions
 # - top level field eval_variables
 # - shear_value : PowerSpectrumShear 
 # - pos_value : RTheta (r, theta)
@@ -51,13 +51,13 @@ psf :
     fwhm : 
         # We saw the Eval type before (in demo3.yaml) as a way to do simple arithmetic.
         # It becomes much more powerful when you include variables in your equation.
-        # One variable that is usable is `pos`, which is the position of the current 
-        # object relative to the center of the image in arcsec.  This lets you define
-        # any arbitrary function for a particular variable in terms of (x,y).
+        # One variable that is usable is `sky_pos`, which is the position of the current 
+        # object "on the sky" relative to the center of the image in arcsec. 
+        # This lets you define any arbitrary function for a particular variable in terms of (x,y).
         # For a list of the other GalSim-privided variables, see 
         # https://github.com/GalSim-developers/GalSim/wiki/Config-Documentation
         type : Eval
-        str : '0.9 + 0.5 * (pos.x**2 + pos.y**2) / 100**2'  # 0.9 + 0.5 * (r/100 arcsec)^2
+        str : '0.9 + 0.5 * (sky_pos.x**2 + sky_pos.y**2) / 100**2'  # 0.9 + 0.5 * (r/100 arcsec)^2
 
     ellip:
         type : EBeta
@@ -72,13 +72,14 @@ psf :
             #     a = Angle
             #     p = Position
             #     g = Shear
-            fr : { type : Eval , str : '(pos.x**2 + pos.y**2)**0.5' } # float variable: r
+            fr : { type : Eval , str : '(sky_pos.x**2 + sky_pos.y**2)**0.5' } # float variable: r
             # Now we can use this variable (without the first letter) in our string:
             str : '0.4 * (r/100)**1.5'   # large value at the edge, so visible by eye.
         beta:
             type : Eval
             # And you can also use anything in the Python math module:
-            str : '(math.atan2(pos.y,pos.x) + math.pi/2.) * galsim.radians' # tangential pattern
+            # This makes the PSF shapes have a tangential pattern
+            str : '(math.atan2(sky_pos.y,sky_pos.x) + math.pi/2.) * galsim.radians' 
 
 
 # Define the galaxy profile
