@@ -3,7 +3,7 @@ comparison of the size and ellipticity in the resulting images.
 """
 
 PIXEL_SCALE = 0.03
-IMAGE_SIZE = 256
+IMAGE_SIZE = 512
 
 RANDOM_SEED = 912424534
 
@@ -15,7 +15,7 @@ TOL_ELLIP = 3.e-5
 TOL_SIZE = 3.e-4 # Note this is in pixels by default, so for 0.03 arcsec/pixel this is still small
 
 # Range of sersic n indices to check
-SERSIC_N_TEST = [3.5, 4., 4.5, 5., 5.5, 6., 6.5, 7., 7.5, 8.]
+SERSIC_N_TEST = [.5, 1., 1.5, 2., 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6., 6.5]
 
 WMULT = 1. # This might have an impact
 NPHOTONS = 1.e7
