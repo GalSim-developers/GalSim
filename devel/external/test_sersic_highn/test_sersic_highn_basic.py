@@ -90,7 +90,9 @@ if __name__ == "__main__":
                 config['psf'] = {"type" : "Airy" , "lam_over_diam" : PSF_LAM_OVER_DIAM }
                 results = galsim.utilities.compare_dft_vs_photon_config(
                     config, abs_tol_ellip=TOL_ELLIP, abs_tol_size=TOL_SIZE, logger=logger)
-                checkimage = galsim.config.BuildImage(config)
+                # Uncomment lines below to output a check image
+                import copy
+                checkimage = galsim.config.BuildImage(copy.deepcopy(config))[0] # im = first element
                 checkimage.write('junk_'+str(i + 1)+'_'+str(j + 1)+'.fits')
             else:
                 test_gsparams = galsim.GSParams(maximum_fft_size=MAX_FFT_SIZE)
