@@ -675,7 +675,7 @@ def test_sersic_radii():
             print 'hlr_sum = ',hlr_sum
             np.testing.assert_almost_equal(
                     hlr_sum, 0.5, decimal=4,
-                    err_msg="Error in Sersic constructor with half-light radius, n=%d, trunc=%d"\
+                    err_msg="Error in Sersic constructor with half-light radius, n=%.1f, trunc=%.1f"\
                              %(n,trunc))
 
             # Test with flux_untruncated=True (above unit tests for flux_untruncated=False)
@@ -685,7 +685,7 @@ def test_sersic_radii():
             print 'hlr_sum (truncated and flux_untruncated) = ',hlr_sum
             np.testing.assert_almost_equal(
                     hlr_sum, 0.5, decimal=4,
-                    err_msg="Error in Sersic constructor with flux_untruncated, n=%d, trunc=%d"\
+                    err_msg="Error in Sersic constructor with flux_untruncated, n=%.1f, trunc=%.1f"\
                              %(n,trunc))
 
             # Check that the getters don't work after modifying the original.
@@ -721,9 +721,9 @@ def test_sersic_radii():
             true_flux = test_gal2.getFlux()
             print 'true hlr_sum = ',hlr_sum
             np.testing.assert_almost_equal(
-                    hlr_sum, 0.5*true_flux, decimal=4,
-                    err_msg="Error in true half-light radius with flux_untruncated, n=%d, trunc=%d"\
-                             %(n,trunc))
+                 hlr_sum, 0.5*true_flux, decimal=4,
+                 err_msg="Error in true half-light radius with flux_untruncated, n=%.1f, trunc=%.1f"\
+                          %(n,trunc))
 
     # Repeat the above for an explicit DeVaucouleurs.  (Same as n=4, but special name.)
     for trunc in test_sersic_trunc:
@@ -733,7 +733,7 @@ def test_sersic_radii():
         print 'hlr_sum = ',hlr_sum
         np.testing.assert_almost_equal(
                 hlr_sum, 0.5, decimal=4,
-                err_msg="Error in DeVaucouleurs constructor with half-light radius, trunc=%d"\
+                err_msg="Error in DeVaucouleurs constructor with half-light radius, trunc=%.1f"\
                          %trunc)
 
         # Check that the getters don't work after modifying the original.
@@ -763,9 +763,9 @@ def test_sersic_radii():
     true_flux = test_gal2.getFlux()
     print 'true hlr_sum = ',hlr_sum
     np.testing.assert_almost_equal(
-            hlr_sum, 0.5*true_flux, decimal=4,
-            err_msg="Error in DeVaucouleurs true half-light radius with flux_untruncated, trunc=%d"\
-                     %(trunc))
+          hlr_sum, 0.5*true_flux, decimal=4,
+          err_msg="Error in DeVaucouleurs true half-light radius with flux_untruncated, trunc=%.1f"\
+                   %(trunc))
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
