@@ -308,9 +308,10 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
     """
     config['seq_index'] = image_num
 
-    ignore = [ 'draw_method', 'noise', 'wcs', 'nproc' , 'random_seed' , 'gsparams' ]
+    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
+               'n_photons', 'wmult', 'gsparams' ]
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 'index_convention' : str,
-            'pixel_scale' : float , 'sky_level' : float, 'sky_level_pixel' : float }
+            'pixel_scale' : float , 'sky_level' : float , 'sky_level_pixel' : float }
     params = galsim.config.GetAllParams(
         config['image'], 'image', config, opt=opt, ignore=ignore)[0]
 
@@ -370,13 +371,13 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     """
     config['seq_index'] = image_num
 
-    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc', 
-               'image_pos' , 'gsparams' ]
+    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
+               'image_pos', 'n_photons', 'wmult', 'gsparams' ]
     req = { 'nx_tiles' : int , 'ny_tiles' : int }
     opt = { 'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
             'border' : int , 'xborder' : int , 'yborder' : int ,
             'pixel_scale' : float , 'nproc' : int , 'index_convention' : str,
-            'sky_level' : float, 'sky_level_pixel' : float, 'order' : str }
+            'sky_level' : float , 'sky_level_pixel' : float , 'order' : str }
     params = galsim.config.GetAllParams(
         config['image'], 'image', config, req=req, opt=opt, ignore=ignore)[0]
 
@@ -604,7 +605,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     config['seq_index'] = image_num
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
-               'image_pos', 'sky_pos', 
+               'image_pos', 'sky_pos', 'n_photons', 'wmult',
                'stamp_size', 'stamp_xsize', 'stamp_ysize', 'gsparams' ]
     req = { 'nobjects' : int }
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 
