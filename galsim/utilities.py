@@ -588,12 +588,14 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     @param abs_tol_ellip          the test will keep iterating, adding ever greater numbers of
                                   trials, until estimates of the 1-sigma standard error on mean 
                                   ellipticity moments from photon-shot images are smaller than this
-                                  param value.
+                                  param value. If only moments=False, then using the measurements 
+                                  from HSM.
 
     @param abs_tol_size           the test will keep iterating, adding ever greater numbers of
                                   trials, until estimates of the 1-sigma standard error on mean 
                                   size moments from photon-shot images are smaller than this param
-                                  value.
+                                  value.If only moments=False, then using the measurements 
+                                  from HSM.
 
     @param n_trials_per_iter      number of trial images used to estimate (or successively
                                   re-estimate) the standard error on the delta quantities above for
@@ -711,7 +713,7 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     hsm_shear_est = 'KSB'
 
     # get the fft image
-    try: im_draw,im_psf,_,_,_= galsim.config.BuildImage(config1, logger=logger, make_psf_image=True)
+    try: im_draw,im_psf,_,_,_= galsim.config.BuildImage(config1,make_psf_image=True,logger=logger)
     except: raise RuntimeError('building image using FFT failed')
 
     # get the moments for FFT image
@@ -758,7 +760,15 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     # statistical accuracy we require
     start_random_seed = config2['image']['random_seed'] 
 
-    while (g1obserr > abs_tol_ellip) or (g2obserr > abs_tol_ellip) or (sigmaerr > abs_tol_size):
+    # if using moments, then the criteria will be on observed g1,g2,sigma, else on hsm corrected
+    # ideally we would use some sort of pointer here, but I am going to update these at the end 
+    # of the loop
+    if moments:     err_g1_use,err_g2_use,err_sig_use = (g1obserr,g2obserr,sigmaerr)
+    else:           err_g1_use,err_g2_use,err_sig_use = (g1hsmerr,g2hsmerr,sighserr)
+
+    # logger.debug('running while loop with criteria abs_tol_ellip=%.2e abs_tol_size=%.2e' % (abs_tol_ellip,abs_tol_size))
+
+    while (err_g1_use>abs_tol_ellip) or (err_g2_use>abs_tol_ellip) or (err_sig_use>abs_tol_size) :
 
         # Reset the random_seed depending on the iteration number so that these never overlap
         config2['image']['random_seed'] = start_random_seed + itercount * (n_trials_per_iter + 1)
@@ -766,9 +776,8 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
         # Run the trials using galsim.config.BuildImages function
         try:
           trial_images = galsim.config.BuildImages( nimages = n_trials_per_iter, obj_num = obj_num,
-            config = config2, logger=logger, nproc=config2['image']['nproc'])[0] 
+            config = config2, logger = logger , nproc=config2['image']['nproc'])[0] 
         except: raise RuntimeError('building image using photon shooting failed')
-
 
         # Collect results 
         trial_results = []
@@ -815,6 +824,10 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
                 +str(g1obserr)+', '+str(g2obserr)+', '+str(g1hsmerr)+', '+str(g2hsmerr)+', '
                 +str(sigmaerr) + ', ' + str(sighserr) )
 
+        # assing the variables governing the termination
+        if moments:     err_g1_use,err_g2_use,err_sig_use = (g1obserr,g2obserr,sigmaerr)
+        else:           err_g1_use,err_g2_use,err_sig_use = (g1hsmerr,g2hsmerr,sighserr)
+
     sys.stdout.write("\n")
          
     # prepare results for the ComparisonShapeData
@@ -822,10 +835,12 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     NO_OBS_OUTPUT_VALUE = 88
 
     if moments:
+      # get statistics
       mean_g1obs = _mean(g1obs_shoot_list) 
       mean_g2obs = _mean(g2obs_shoot_list) 
       mean_sigma = _mean(sigma_shoot_list)
     else:
+      # assign the values to a NO_OBS_OUTPUT_VALUE flag
       mean_g1obs = mean_g2obs = NO_OBS_OUTPUT_VALUE
       g1obserr = g2obserr = NO_OBS_OUTPUT_VALUE
       g1obs_draw = g2obs_draw = NO_OBS_OUTPUT_VALUE
