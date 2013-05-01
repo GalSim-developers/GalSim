@@ -928,7 +928,7 @@ class GSObject(object):
 
         return image
 
-    def drawK(self, re=None, im=None, dk=None, gain=1., wmult=1., add_to_image=False):
+    def drawK(self, re=None, im=None, dk=None, gain=1., add_to_image=False):
         """Draws the k-space Images (real and imaginary parts) of the object, with bounds
         optionally set by input Images.
 
@@ -961,15 +961,6 @@ class GSObject(object):
         @param gain   The number of photons per ADU ("analog to digital units", the units of the 
                       numbers output from a CCD).  (Default `gain =  1.`)
 
-        @param wmult  A factor by which to make an automatically-sized image larger than it would 
-                      normally be made.  This factor also applies to any intermediate images during
-                      Fourier calculations.  The size of the intermediate images are normally 
-                      automatically chosen to reach some preset accuracy targets (see 
-                      include/galsim/SBProfile.h); however, if you see strange artifacts in the 
-                      image, you might try using `wmult > 1`.  This will take longer of 
-                      course, but it will produce more accurate images, since they will have 
-                      less "folding" in Fourier space. (Default `wmult = 1.`)
-
         @param add_to_image  Whether to add to the existing images rather than clear out
                              anything in the image before drawing.
                              Note: This requires that images be provided (i.e. `re`, `im` are
@@ -997,9 +988,11 @@ class GSObject(object):
                     raise ValueError("re and im do not have the same defined bounds")
 
         # Make sure images are setup correctly
-        re = self._draw_setup_image(re,dk,wmult,add_to_image,dx_is_dk=True)
-        im = self._draw_setup_image(im,dk,wmult,add_to_image,dx_is_dk=True)
+        re = self._draw_setup_image(re,dk,1.0,add_to_image,dx_is_dk=True)
+        im = self._draw_setup_image(im,dk,1.0,add_to_image,dx_is_dk=True)
 
+        # wmult isn't really used by drawK, but we need to provide it.
+        wmult = 1.0
         self.SBProfile.drawK(re.view(), im.view(), gain, wmult)
 
         return re,im
