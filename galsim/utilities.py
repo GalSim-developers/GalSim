@@ -172,6 +172,8 @@ class ComparisonShapeData(object):
 
     - sigma_draw: moments_sigma from adaptive moments on a GSObject image rendered using .draw()
 
+    - sighs_draw: moments_sigma from HSM PSF corr. on a GSObject image rendered using .draw()
+
     - delta_g1obs: estimated mean difference between i) observed_shape.g1 from images of the same
     GSObject rendered with .drawShoot(), and ii) `g1obs_draw`.
     Defined `delta_g1obs = g1obs_draw - g1obs_shoot`.
@@ -192,6 +194,10 @@ class ComparisonShapeData(object):
     GSObject rendered with .drawShoot(), and ii) `sigma_draw`.
     Defined `delta_sigma = sigma_draw - sigma_shoot`.
 
+    - delta_sighs: estimated mean difference between i) moments_sigma from images of the same
+    GSObject rendered with .drawShoot(), and ii) `sigma_draw`. 
+    Defined `delta_sigma = sigma_draw - sigma_shoot`. Moments calculated using HSM PSF corr.
+
     - err_g1obs: standard error in `delta_g1obs` estimated from the test sample.
 
     - err_g2obs: standard error in `delta_g2obs` estimated from the test sample.
@@ -201,6 +207,8 @@ class ComparisonShapeData(object):
     - err_g2hsm: standard error in `delta_g2hsm` estimated from the test sample.
 
     - err_sigma: standard error in `delta_sigma` estimated from the test sample.
+
+    - err_sighs: standard error in `delta_sigma` estimated from the test sample using HSM PSF corr.
 
     The ComparisonShapeData instance also stores much of the meta-information about the tests:
 
@@ -243,9 +251,9 @@ class ComparisonShapeData(object):
     Either config, or gsobject, or gsobject and psf_object, must be set when a ComparisonShapeData
     instance is created or an Exception is raised.
     """
-    def __init__(self, g1obs_draw, g2obs_draw, g1hsm_draw, g2hsm_draw,  sigma_draw, 
-                g1obs_shoot, g2obs_shoot, g1hsm_shoot, g2hsm_shoot, sigma_shoot,
-                err_g1obs, err_g2obs, err_g1hsm, err_g2hsm, err_sigma, size, pixel_scale, 
+    def __init__(self, g1obs_draw, g2obs_draw, g1hsm_draw, g2hsm_draw, sigma_draw, sighs_draw , 
+                g1obs_shoot, g2obs_shoot, g1hsm_shoot, g2hsm_shoot, sigma_shoot, sighs_shoot ,
+                err_g1obs, err_g2obs, err_g1hsm, err_g2hsm, err_sigma, err_sighs ,size, pixel_scale, 
                 wmult, n_iterations, n_trials_per_iter, n_photons_per_trial, time, 
                 gsobject=None, psf_object=None, config=None):
        """In general use you should not need to instantiate a ComparisonShapeData instance,
@@ -257,18 +265,21 @@ class ComparisonShapeData(object):
        self.g1obs_draw = g1obs_draw
        self.g2obs_draw = g2obs_draw
        self.sigma_draw = sigma_draw
+       self.sighs_draw = sighs_draw
        
        self.delta_g1hsm = g1hsm_draw - g1hsm_shoot
        self.delta_g2hsm = g2hsm_draw - g2hsm_shoot
        self.delta_g1obs = g1obs_draw - g1obs_shoot
        self.delta_g2obs = g2obs_draw - g2obs_shoot
        self.delta_sigma = sigma_draw - sigma_shoot
+       self.delta_sighs = sighs_draw - sighs_shoot
 
        self.err_g1hsm = err_g1hsm
        self.err_g2hsm = err_g2hsm
        self.err_g1obs = err_g1obs
        self.err_g2obs = err_g2obs
        self.err_sigma = err_sigma
+       self.err_sighs = err_sighs
 
        if gsobject is not None:
            if config is not None:
@@ -303,6 +314,9 @@ class ComparisonShapeData(object):
                 "\n"+\
                 "sigma_draw  = "+str(self.sigma_draw)+"\n"+\
                 "delta_sigma = "+str(self.delta_sigma)+" +/- "+str(self.err_sigma)+"\n"+\
+                "\n"+\
+                "sigma_draw_hsm  = "+str(self.sighs_draw)+"\n"+\
+                "delta_sigma_hsm = "+str(self.delta_sighs)+" +/- "+str(self.err_sighs)+"\n"+\
                 "\n"+\
                 "image size = "+str(self.size)+"\n"+\
                 "pixel scale = "+str(self.pixel_scale)+"\n"+\
@@ -607,6 +621,8 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     # if hsm is True:
         # Raise an apologetic exception about the HSM not yet being implemented!
         # raise NotImplementedError('Sorry, HSM tests not yet implemented!')
+    if moments is False and hsm is False:
+        raise ValueError("At least one of 'moments','hsm' is required to be True")
 
     # Then check the config inputs, overriding and warning where necessary
     if random_seed is None:
@@ -699,11 +715,12 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     except: raise RuntimeError('building image using FFT failed')
 
     # get the moments for FFT image
-    try: res_draw = im_draw.FindAdaptiveMom()
-    except: raise RuntimeError('FindAdaptiveMom failed for FFT image') 
-    sigma_draw = res_draw.moments_sigma
-    g1obs_draw = res_draw.observed_shape.g1
-    g2obs_draw = res_draw.observed_shape.g2
+    if moments:
+      try: res_draw = im_draw.FindAdaptiveMom()
+      except: raise RuntimeError('FindAdaptiveMom failed for FFT image') 
+      sigma_draw = res_draw.moments_sigma
+      g1obs_draw = res_draw.observed_shape.g1
+      g2obs_draw = res_draw.observed_shape.g2
 
     # get the HSM for FFT image
     if hsm:
@@ -711,14 +728,18 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
       except: raise RuntimeError('EstimateShearHSM failed for FFT image')
       g1hsm_draw = res_draw_hsm.corrected_g1
       g2hsm_draw = res_draw_hsm.corrected_g2
+      sighs_draw = res_draw_hsm.moments_sigma
+
     
     # Setup storage lists for the trial shooting results
+    sighs_shoot_list = []
     sigma_shoot_list = []
     g1obs_shoot_list = []
     g2obs_shoot_list = [] 
     g1hsm_shoot_list = []
     g2hsm_shoot_list = [] 
     sigmaerr = 666. # Slightly kludgy but will not accidentally fail the first `while` condition
+    sighserr = 666.
     g1obserr = 666.
     g2obserr = 666.
     g1hsmerr = 666.
@@ -736,7 +757,7 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     # Then begin while loop, farming out sets of n_trials_per_iter trials until we get the
     # statistical accuracy we require
     start_random_seed = config2['image']['random_seed'] 
-    start_random_seed = config2['image']['random_seed'] 
+
     while (g1obserr > abs_tol_ellip) or (g2obserr > abs_tol_ellip) or (sigmaerr > abs_tol_size):
 
         # Reset the random_seed depending on the iteration number so that these never overlap
@@ -748,12 +769,15 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
             config = config2, logger=logger, nproc=config2['image']['nproc'])[0] 
         except: raise RuntimeError('building image using photon shooting failed')
 
+
         # Collect results 
         trial_results = []
         trial_results_hsm = []
         for image in trial_images:
-          try: trial_results += [image.FindAdaptiveMom()]
-          except: raise RuntimeError('getting FindAdaptiveMom failed')
+
+          if moments:
+            try: trial_results += [image.FindAdaptiveMom()]
+            except: raise RuntimeError('getting FindAdaptiveMom failed')
 
           if hsm:
             try: trial_results_hsm += [galsim.EstimateShearHSM(image,im_psf,strict=True,
@@ -762,50 +786,67 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
 
         # Get lists of g1,g2,sigma estimate (this might be quicker using a single list comprehension
         # to get a list of (g1,g2,sigma) tuples, and then unzip with zip(*), but this is clearer)
-        g1obs_shoot_list.extend([res.observed_shape.g1 for res in trial_results]) 
-        g2obs_shoot_list.extend([res.observed_shape.g2 for res in trial_results]) 
-        sigma_shoot_list.extend([res.moments_sigma for res in trial_results])
+        if moments:
+          g1obs_shoot_list.extend([res.observed_shape.g1 for res in trial_results]) 
+          g2obs_shoot_list.extend([res.observed_shape.g2 for res in trial_results]) 
+          sigma_shoot_list.extend([res.moments_sigma for res in trial_results])
         if hsm:
           g1hsm_shoot_list.extend([res.corrected_g1 for res in trial_results_hsm]) 
           g2hsm_shoot_list.extend([res.corrected_g2 for res in trial_results_hsm])   
+          sighs_shoot_list.extend([res.moments_sigma for res in trial_results_hsm])   
+
 
         #Then calculate new standard error
-        g1obserr = _stderr(g1obs_shoot_list)
-        g2obserr = _stderr(g2obs_shoot_list)
-        sigmaerr = _stderr(sigma_shoot_list)  
+        if moments:
+          g1obserr = _stderr(g1obs_shoot_list)
+          g2obserr = _stderr(g2obs_shoot_list)
+          sigmaerr = _stderr(sigma_shoot_list)  
         if hsm:
           g1hsmerr = _stderr(g1hsm_shoot_list)
           g2hsmerr = _stderr(g2hsm_shoot_list)
+          sighserr = _stderr(sighs_shoot_list)
 
         itercount += 1
         sys.stdout.write(".") # This doesn't add a carriage return at the end of the line, nice!
         if logger:
             logger.debug('Completed '+str(itercount)+' iterations')
             logger.debug(
-                '(g1obserr, g2obserr, g1hsmerr, g2hsmerr, sigmaerr) = '
-                +str(g1obserr)+', '+str(g2obserr)+', '+str(g1hsmerr)+', '+str(g2hsmerr)+', '+
-                str(sigmaerr))
+                '(g1obserr, g2obserr, g1hsmerr, g2hsmerr, sigmaerr, sigmaerr_hsm) = '
+                +str(g1obserr)+', '+str(g2obserr)+', '+str(g1hsmerr)+', '+str(g2hsmerr)+', '
+                +str(sigmaerr) + ', ' + str(sighserr) )
 
     sys.stdout.write("\n")
          
     # prepare results for the ComparisonShapeData
-    NOHSM_OUTPUT_VALUE = 0
-    mean_g1obs = _mean(g1obs_shoot_list) 
-    mean_g2obs = _mean(g2obs_shoot_list) 
-    mean_sigma = _mean(sigma_shoot_list)
+    NO_HSM_OUTPUT_VALUE = 77
+    NO_OBS_OUTPUT_VALUE = 88
+
+    if moments:
+      mean_g1obs = _mean(g1obs_shoot_list) 
+      mean_g2obs = _mean(g2obs_shoot_list) 
+      mean_sigma = _mean(sigma_shoot_list)
+    else:
+      mean_g1obs = mean_g2obs = NO_OBS_OUTPUT_VALUE
+      g1obserr = g2obserr = NO_OBS_OUTPUT_VALUE
+      g1obs_draw = g2obs_draw = NO_OBS_OUTPUT_VALUE
+      sigma_draw = mean_sigma = sigmaerr = NO_OBS_OUTPUT_VALUE
     if hsm:
       mean_g1hsm = _mean(g1hsm_shoot_list)
       mean_g2hsm = _mean(g2hsm_shoot_list)
+      mean_sighs = _mean(sighs_shoot_list)
     else:
-      mean_g1obs = mean_g2obs = mean_g1hsm = mean_g2hsm = NOHSM_OUTPUT_VALUE
-      g1hsmerr = g2hsmerr = g1hsm_draw = g2hsm_draw = NOHSM_OUTPUT_VALUE
+      mean_g1hsm = mean_g2hsm = NO_HSM_OUTPUT_VALUE
+      g1hsmerr = g2hsmerr = NO_HSM_OUTPUT_VALUE
+      g1hsm_draw = g2hsm_draw = NO_HSM_OUTPUT_VALUE
+      sighs_draw = mean_sighs = sighserr = NO_HSM_OUTPUT_VALUE
+
 
     # Take the runtime and collate results into a ComparisonShapeData
     runtime = time.time() - t1
     results = ComparisonShapeData(
-        g1obs_draw, g2obs_draw, g1hsm_draw, g2hsm_draw, sigma_draw,
-        mean_g1obs, mean_g2obs, mean_g1hsm , mean_g2hsm , mean_sigma ,
-        g1obserr, g2obserr, g1hsmerr, g2hsmerr, sigmaerr, 
+        g1obs_draw, g2obs_draw, g1hsm_draw, g2hsm_draw, sigma_draw, sighs_draw ,
+        mean_g1obs, mean_g2obs, mean_g1hsm , mean_g2hsm , mean_sigma , mean_sighs ,
+        g1obserr, g2obserr, g1hsmerr, g2hsmerr, sigmaerr, sighserr ,
         config2['image']['size'], config2['image']['pixel_scale'],
         wmult, itercount, n_trials_per_iter, n_photons_per_trial, runtime, config=config2)
 
