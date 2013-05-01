@@ -178,9 +178,8 @@ def GetResultsPhoton(config):
 
     # measure the photon and fft images
     for i in range(nobjects):
-
        
-        try:
+        # try:
             res = galsim.utilities.compare_dft_vs_photon_config(config, gal_num=i, hsm=False, moments = True,
                 logger=None,
                 abs_tol_ellip = float(config['compare_dft_vs_photon_config']['abs_tol_ellip']),
@@ -188,36 +187,36 @@ def GetResultsPhoton(config):
                 n_trials_per_iter = int(float(config['compare_dft_vs_photon_config']['n_trials_per_iter'])),
                 n_photons_per_trial = int(float(config['compare_dft_vs_photon_config']['n_photons_per_trial']))
                 )
-            result = {  'moments_g1' : res.g1obs_draw - res.delta_g1obs,
-                        'moments_g2' : res.g2obs_draw - res.delta_g2obs,
-                        'hsmcorr_g1' : res.g1hsm_draw - res.delta_g1hsm,
-                        'hsmcorr_g2' : res.g2hsm_draw - res.delta_g2hsm,
-                        'moments_sigma' : res.sigma_draw - res.delta_sigma,
-                        'hsmcorr_sigma' : res.sighs_draw - res.delta_sighs,
-                        'hsmcorr_g1err' : res.err_g1hsm ,
-                        'hsmcorr_g2err' : res.err_g2hsm ,
-                        'moments_g1err' : res.err_g1obs ,
-                        'moments_g2err' : res.err_g2obs ,
-                        'moments_sigmaerr' : res.err_sigma,
-                        'hsmcorr_sigmaerr' : res.err_sighs,
-                        'ident' : i }
-        except:
-            logger.error('failed to get compare_dft_vs_photon_config for galaxy %d' % i)
-            result = {  'moments_g1' : HSM_ERROR_VALUE,
-                        'moments_g2' : HSM_ERROR_VALUE,
-                        'hsmcorr_g1' : HSM_ERROR_VALUE,
-                        'hsmcorr_g2' : HSM_ERROR_VALUE,
-                        'moments_sigma' : HSM_ERROR_VALUE,
-                        'hsmcorr_sigma' : HSM_ERROR_VALUE,
-                        'hsmcorr_g1err' : HSM_ERROR_VALUE,
-                        'hsmcorr_g2err' : HSM_ERROR_VALUE,
-                        'moments_g1err' : HSM_ERROR_VALUE,
-                        'moments_g2err' : HSM_ERROR_VALUE,
-                        'moments_sigmaerr' : HSM_ERROR_VALUE,
-                        'hsmcorr_sigmaerr' : HSM_ERROR_VALUE,
-                        'ident' : i }
+        #     result = {  'moments_g1' : res.g1obs_draw - res.delta_g1obs,
+        #                 'moments_g2' : res.g2obs_draw - res.delta_g2obs,
+        #                 'hsmcorr_g1' : res.g1hsm_draw - res.delta_g1hsm,
+        #                 'hsmcorr_g2' : res.g2hsm_draw - res.delta_g2hsm,
+        #                 'moments_sigma' : res.sigma_draw - res.delta_sigma,
+        #                 'hsmcorr_sigma' : res.sighs_draw - res.delta_sighs,
+        #                 'hsmcorr_g1err' : res.err_g1hsm ,
+        #                 'hsmcorr_g2err' : res.err_g2hsm ,
+        #                 'moments_g1err' : res.err_g1obs ,
+        #                 'moments_g2err' : res.err_g2obs ,
+        #                 'moments_sigmaerr' : res.err_sigma,
+        #                 'hsmcorr_sigmaerr' : res.err_sighs,
+        #                 'ident' : i }
+        # except:
+        #     logger.error('failed to get compare_dft_vs_photon_config for galaxy %d' % i)
+        #     result = {  'moments_g1' : HSM_ERROR_VALUE,
+        #                 'moments_g2' : HSM_ERROR_VALUE,
+        #                 'hsmcorr_g1' : HSM_ERROR_VALUE,
+        #                 'hsmcorr_g2' : HSM_ERROR_VALUE,
+        #                 'moments_sigma' : HSM_ERROR_VALUE,
+        #                 'hsmcorr_sigma' : HSM_ERROR_VALUE,
+        #                 'hsmcorr_g1err' : HSM_ERROR_VALUE,
+        #                 'hsmcorr_g2err' : HSM_ERROR_VALUE,
+        #                 'moments_g1err' : HSM_ERROR_VALUE,
+        #                 'moments_g2err' : HSM_ERROR_VALUE,
+        #                 'moments_sigmaerr' : HSM_ERROR_VALUE,
+        #                 'hsmcorr_sigmaerr' : HSM_ERROR_VALUE,
+        #                 'ident' : i }
         
-        results_all.append(result)
+        # results_all.append(result)
 
     return results_all
 
