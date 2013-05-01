@@ -134,9 +134,12 @@ def GetResultsFFT(config):
     # modify all 'repeat' keys in config to 1, so that we get single images of galaxies without 
     # repeating them. Config for this test requires to repeat all galaxies with n_trials_per_iter.
     ChangeAllConfigKeys(config,'repeat',1)
+    # use logger in galsim.config only in debug mode
+    if config['debug']: use_logger = logger
+    else: use_logger = None
     # get the images
     img_gals,img_psfs,_,_ = galsim.config.BuildImages( nimages = nobjects , config=config , 
-        make_psf_image=True , logger=logger , nproc=config['image']['nproc'])
+        make_psf_image=True , logger=use_logger , nproc=config['image']['nproc'])
 
     # measure the photon and fft images
     for i in range(nobjects):
@@ -184,9 +187,12 @@ def GetResultsPhoton(config):
     for i in range(nobjects):
        
         try:
+            # check if we want to log ouptput from compare_dft_vs_photon_config, only in debug mode
+            if config['debug']: use_logger = logger
+            else: use_logger = None
             # run compare_dft_vs_photon_config and get the results object
             res = galsim.utilities.compare_dft_vs_photon_config(config, gal_num=i, hsm=True, moments = True,
-                logger=logger,
+                logger=use_logger,
                 abs_tol_ellip = float(config['compare_dft_vs_photon_config']['abs_tol_ellip']),
                 abs_tol_size = float(config['compare_dft_vs_photon_config']['abs_tol_size']),
                 n_trials_per_iter = int(float(config['compare_dft_vs_photon_config']['n_trials_per_iter'])),
