@@ -819,7 +819,7 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
                 +str(g1obserr)+', '+str(g2obserr)+', '+str(g1hsmerr)+', '+str(g2hsmerr)+', '
                 +str(sigmaerr) + ', ' + str(sighserr) )
 
-        # assing the variables governing the termination
+        # assign the variables governing the termination
         if moments:     err_g1_use,err_g2_use,err_sig_use = (g1obserr,g2obserr,sigmaerr)
         else:           err_g1_use,err_g2_use,err_sig_use = (g1hsmerr,g2hsmerr,sighserr)
 
