@@ -3,8 +3,8 @@ some_variables :
     n_trials_per_iter : &n_trials_per_iter 32
     
 compare_dft_vs_photon_config :
-    abs_tol_ellip : 1e-5
-    abs_tol_size : 1e-5
+    abs_tol_ellip : 5e-5
+    abs_tol_size :  5e-4
     n_trials_per_iter : 32 
     n_photons_per_trial : 1e7 
 
@@ -35,7 +35,7 @@ image :
     random_seed : 1929392
     nproc : 5
     # pixel scale for the ground observation
-    pixel_scale : 0.2  # arcsec / pixel
+    pixel_scale : 0.03  # arcsec / pixel
     type : Single
     # nx_tiles : 1
     # ny_tiles : *n_gals_in_cat

@@ -3,8 +3,8 @@ some_variables :
     n_trials_per_iter : &n_trials_per_iter 32
     
 compare_dft_vs_photon_config :
-    abs_tol_ellip : 1e-5
-    abs_tol_size : 1e-5
+    abs_tol_ellip : 5e-5
+    abs_tol_size :  5e-4
     n_trials_per_iter : 32 
     n_photons_per_trial : 1e7 
 
