@@ -31,6 +31,7 @@ valid_gsobject_types = {
     'Ring' : '_BuildRing',
     'Pixel' : '_BuildPixel',
     'RealGalaxy' : '_BuildRealGalaxy',
+    'RealGalaxyOriginal' : '_BuildRealGalaxyOriginal'
 }
 
 class SkipThisObject(Exception):
@@ -396,6 +397,13 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams):
                 "%s index has gone past the number of entries in the catalog"%param_name)
 
     return galsim.RealGalaxy(real_cat, **kwargs), safe
+
+
+def _BuildRealGalaxyOriginal(config, key, base, ignore, gsparams):
+    """@brief Return the original image from a RealGalaxy instance defined by user input.
+    """
+    image, safe = _BuildRealGalaxy(config, key, base, ignore, gsparams)
+    return image.original_image, safe    
 
 
 def _BuildSimple(config, key, base, ignore, gsparams={}):
