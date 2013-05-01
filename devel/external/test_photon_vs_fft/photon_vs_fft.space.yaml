@@ -1,39 +1,47 @@
 some_variables :
-    - &ngals_in_cat 276
-        
+    n_gals_in_cat : &n_gals_in_cat 276
+    n_trials_per_iter : &n_trials_per_iter 32
+    
+compare_dft_vs_photon_config :
+    abs_tol_ellip : 1e-5
+    abs_tol_size : 1e-5
+    n_trials_per_iter : 32 
+    n_photons_per_trial : 1e7 
+
 psf : 
-    # space PSF
+    # ground PSF
     type : Airy
     lam_over_diam : {type: Eval, str: '700.e-9 / 1.3 * 180. / math.pi * 3600.'}
     ellip : 
         type : EBeta
-        e : { type : Random , min : 0.0 , max : 0.2 }
-        beta : { type : Random }
+        e : { type : InputCatalog , col : 7,  index : { type: Sequence, repeat: *n_trials_per_iter} }  
+        beta : { type: Deg , theta : {type : InputCatalog , col : 8 , index : { type: Sequence, repeat: *n_trials_per_iter} } }
         
 gal :
     type : Sersic
-    half_light_radius : { type : InputCatalog , col : 2,  index : { type: Sequence, repeat: 2} }
-    n : { type : InputCatalog , col : 1,  index : { type: Sequence, repeat: 2} }
+    half_light_radius : { type : InputCatalog , col : 2,  index : { type: Sequence, repeat: *n_trials_per_iter} }
+    n : { type : InputCatalog , col : 1,  index : { type: Sequence, repeat: *n_trials_per_iter} }
     ellip : 
         type : GBeta 
-        g : { type : InputCatalog , col : 3,  index : { type: Sequence, repeat: 2} }  
-        beta : { type : Random }
+        g : { type : InputCatalog , col : 3,  index : { type: Sequence, repeat: *n_trials_per_iter} }  
+        beta : { type: Rad , theta : { type : InputCatalog , col : 3,  index : { type: Sequence, repeat: *n_trials_per_iter} } }
     shift : 
-        type : RandomCircle
-        radius : 0.1
-    flux : 2e7
+            type : XY  
+            x : { type : InputCatalog , col : 5 , index : { type: Sequence, repeat: *n_trials_per_iter} }
+            y : { type : InputCatalog , col : 6 , index : { type: Sequence, repeat: *n_trials_per_iter} }
     
 image :
-    random_seed : 1929391
+    wmult : 4.0
+    random_seed : 1929392
     nproc : 5
-    # pixel scale for space observations
-    pixel_scale : 0.03  # arcsec / pixel
-    type : Tiled
-    # we are generating galaxies in one long tiled stripe
-    nx_tiles : 1
-    ny_tiles : *ngals_in_cat    
-    # this has to be big in order for the space images to contain the galaxies fully
-    stamp_size : 256
+    # pixel scale for the ground observation
+    pixel_scale : 0.2  # arcsec / pixel
+    type : Single
+    # nx_tiles : 1
+    # ny_tiles : *n_gals_in_cat
+    # # this has to be big in order for the space images to contain the galaxies fully
+    size : 256
+    # stamp_size : 128
     # this field is required for the photon image, 
     # but we don't want to add any noise, so we set the variance to 0
     noise :
@@ -54,11 +62,14 @@ image :
          integration_relerr : 1.e-5  
          integration_abserr : 1.e-7  
 
-
 input :
     catalog :
         dir : .
         file_name : cosmos_sersics_sample_N300_cleaned.asc
+
+output:
+    type: MultiFits
+    nimages: *n_gals_in_cat
 
 # added for the purpose of the photon_vs_fft
 # photon_vs_fft will run once for each value of each listed parameter
@@ -81,7 +92,4 @@ vary_params:
         values : [ 1.0e-3 , 1.0e-4 , 1.0e-5 , 1.0e-6 , 1.0e-7 , 1.0e-8 ] 
         rebuild_pht : False 
         rebuild_fft : True 
-    # test if there is no failures
-    # alias_threshold : { path : ['image','gsparams','alias_threshold'], values : [ 1e-2 , 7e-4 ] , rebuild_pht : False , rebuild_fft : True } 
-    # kvalue_accuracy : { path : ['image','gsparams','kvalue_accuracy'], values : [ 1e-3 , 1e-8 ] , rebuild_pht : False , rebuild_fft : True }
-    # maxk_threshold :  { path : ['image','gsparams','maxk_threshold'],  values : [ 1e-1 , 1e-8 ] , rebuild_pht : False , rebuild_fft : True }
+  
