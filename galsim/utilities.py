@@ -829,7 +829,7 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
       mean_g1obs = mean_g2obs = NO_OBS_OUTPUT_VALUE
       g1obserr = g2obserr = NO_OBS_OUTPUT_VALUE
       g1obs_draw = g2obs_draw = NO_OBS_OUTPUT_VALUE
-      mean_sigma = sigmaerr = NO_OBS_OUTPUT_VALUE
+      sigma_draw = mean_sigma = sigmaerr = NO_OBS_OUTPUT_VALUE
     if hsm:
       mean_g1hsm = _mean(g1hsm_shoot_list)
       mean_g2hsm = _mean(g2hsm_shoot_list)
@@ -838,7 +838,7 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
       mean_g1hsm = mean_g2hsm = NO_HSM_OUTPUT_VALUE
       g1hsmerr = g2hsmerr = NO_HSM_OUTPUT_VALUE
       g1hsm_draw = g2hsm_draw = NO_HSM_OUTPUT_VALUE
-      mean_sighs = sighserr = NO_HSM_OUTPUT_VALUE
+      sighs_draw = mean_sighs = sighserr = NO_HSM_OUTPUT_VALUE
 
 
     # Take the runtime and collate results into a ComparisonShapeData

@@ -35,11 +35,12 @@ def SaveResults(filename_output,results_pht,results_fft):
        
     # write the header
     output_row_fmt = '%d\t% 2.6e\t% 2.6e\t% 2.6e\t% 2.6e\t% 2.6e\t' + \
-                        '% 2.6e\t% 2.6e\t% 2.6e\t% 2.6e\t% 2.6e\t% 2.6e\t% 2.6e\t% 2.6e\t% 2.6e\t% 2.6e\n'
+                        '% 2.6e\t% 2.6e\t% 2.6e\t% 2.6e\t% 2.6e\t% 2.6e\t% 2.6e\t% 2.6e\t% 2.6e\t' + \
+                        '\t% 2.6e\t% 2.6e\t% 2.6e\t% 2.6e\n'
     output_header = '# id ' +   'G1_moments_fft G2_moments_fft G1_moments_photon G2_moments_photon ' + \
                                 'G1_hsmcorr_fft G2_hsmcorr_fft G1_hsmcorr_photon G2_hsmcorr_photon ' + \
-                                'moments_fft_sigma moments_photon_sigma ' + \
-                                'err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma ' + \
+                                'moments_fft_sigma moments_photon_sigma hsmcorr_fft_sigma hsmcorr_photon_sigma ' + \
+                                'err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm' + \
                                 '\n'
     file_output.write(output_header) 
 
@@ -58,11 +59,14 @@ def SaveResults(filename_output,results_pht,results_fft):
             results_pht[i]['hsmcorr_g2'] ,
             results_fft[i]['moments_sigma'] ,
             results_pht[i]['moments_sigma'] ,
+            results_fft[i]['hsmcorr_sigma'] ,
+            results_pht[i]['hsmcorr_sigma'] ,
             results_pht[i]['moments_g1err'] ,
             results_pht[i]['moments_g2err'] ,
             results_pht[i]['hsmcorr_g1err'] ,
             results_pht[i]['hsmcorr_g2err'] ,
-            results_pht[i]['moments_sigmaerr'] 
+            results_pht[i]['moments_sigmaerr'] ,
+            results_pht[i]['hsmcorr_sigmaerr'] 
             ))
 
     
@@ -101,6 +105,7 @@ def GetShapeMeasurements(image_gal, image_psf, ident):
                 'hsmcorr_g1' : hsmcorr.corrected_g1,
                 'hsmcorr_g2' : hsmcorr.corrected_g2,
                 'moments_sigma' :  moments.moments_sigma, 
+                'hsmcorr_sigma' :  hsmcorr.moments_sigma, 
                 'ident' : ident}
     
     return result
@@ -176,7 +181,7 @@ def GetResultsPhoton(config):
 
        
         try:
-            res = galsim.utilities.compare_dft_vs_photon_config(config, gal_num=i, hsm=True,
+            res = galsim.utilities.compare_dft_vs_photon_config(config, gal_num=i, hsm=False, moments = True,
                 logger=None,
                 abs_tol_ellip = float(config['compare_dft_vs_photon_config']['abs_tol_ellip']),
                 abs_tol_size = float(config['compare_dft_vs_photon_config']['abs_tol_size']),
@@ -188,11 +193,13 @@ def GetResultsPhoton(config):
                         'hsmcorr_g1' : res.g1hsm_draw - res.delta_g1hsm,
                         'hsmcorr_g2' : res.g2hsm_draw - res.delta_g2hsm,
                         'moments_sigma' : res.sigma_draw - res.delta_sigma,
+                        'hsmcorr_sigma' : res.sighs_draw - res.delta_sighs,
                         'hsmcorr_g1err' : res.err_g1hsm ,
                         'hsmcorr_g2err' : res.err_g2hsm ,
                         'moments_g1err' : res.err_g1obs ,
                         'moments_g2err' : res.err_g2obs ,
                         'moments_sigmaerr' : res.err_sigma,
+                        'hsmcorr_sigmaerr' : res.err_sighs,
                         'ident' : i }
         except:
             logger.error('failed to get compare_dft_vs_photon_config for galaxy %d' % i)
@@ -201,11 +208,13 @@ def GetResultsPhoton(config):
                         'hsmcorr_g1' : HSM_ERROR_VALUE,
                         'hsmcorr_g2' : HSM_ERROR_VALUE,
                         'moments_sigma' : HSM_ERROR_VALUE,
+                        'hsmcorr_sigma' : HSM_ERROR_VALUE,
                         'hsmcorr_g1err' : HSM_ERROR_VALUE,
                         'hsmcorr_g2err' : HSM_ERROR_VALUE,
                         'moments_g1err' : HSM_ERROR_VALUE,
                         'moments_g2err' : HSM_ERROR_VALUE,
                         'moments_sigmaerr' : HSM_ERROR_VALUE,
+                        'hsmcorr_sigmaerr' : HSM_ERROR_VALUE,
                         'ident' : i }
         
         results_all.append(result)
