@@ -86,28 +86,27 @@ def GetShapeMeasurements(image_gal, image_psf, ident):
     try: moments = galsim.FindAdaptiveMom(image_gal)
     except: raise RuntimeError('FindAdaptiveMom error')
         
-    logger.debug('adaptive moments G1=% 2.6f\tG2=% 2.6f\tsigma=%2.6f' % (
-        moments.observed_shape.g1 , moments.observed_shape.g2 , moments.moments_sigma ) )
-    
+
     # find HSM moments
     if image_psf == None: hsmcorr_phot_e1 =  hsmcorr_phot_e2  = NO_PSF_VALUE 
     else:
-        try: hsmcorr   = galsim.EstimateShearHSM(image_gal,image_psf,strict=True,
+        try: 
+            hsmcorr   = galsim.EstimateShearHSM(image_gal,image_psf,strict=True,  
                                                                        shear_est=HSM_SHEAR_EST)
         except: raise RuntimeError('EstimateShearHSM error')
+                
+        logger.debug('galaxy %d : adaptive moments G1=% 2.6f\tG2=% 2.6f\tsigma=%2.6f\thsm corrected moments G1=% 2.6f\tG2=% 2.6f' 
+            % ( ident , moments.observed_shape.g1 , moments.observed_shape.g2 , moments.moments_sigma , hsmcorr.corrected_g1,hsmcorr.corrected_g2) )
+
+        # create the output dictionary
+        result = {  'moments_g1' : moments.observed_shape.g1,
+                    'moments_g2' : moments.observed_shape.g2,
+                    'hsmcorr_g1' : hsmcorr.corrected_g1,
+                    'hsmcorr_g2' : hsmcorr.corrected_g2,
+                    'moments_sigma' :  moments.moments_sigma, 
+                    'hsmcorr_sigma' :  hsmcorr.moments_sigma, 
+                    'ident' : ident}
         
-    logger.debug('hsm corrected moments     G1=% 2.6f\tG2=% 2.6f' % (
-        hsmcorr.corrected_g1,hsmcorr.corrected_g2) )
-        
-    # create the output dictionary
-    result = {  'moments_g1' : moments.observed_shape.g1,
-                'moments_g2' : moments.observed_shape.g2,
-                'hsmcorr_g1' : hsmcorr.corrected_g1,
-                'hsmcorr_g2' : hsmcorr.corrected_g2,
-                'moments_sigma' :  moments.moments_sigma, 
-                'hsmcorr_sigma' :  hsmcorr.moments_sigma, 
-                'ident' : ident}
-    
     return result
 
 def GetResultsFFT(config): 
@@ -125,7 +124,6 @@ def GetResultsFFT(config):
 
     # dirty way of getting this number
     # nobjects = len(galsim.config.GetNObjForMultiFits(config,0,0))
-    # print nobjects
     nobjects = config['some_variables']['n_gals_in_cat']
 
     config['image']['draw_method'] = 'fft'
@@ -133,15 +131,19 @@ def GetResultsFFT(config):
     # initialise the results dict
     results_all = []
 
+    # modify all 'repeat' keys in config to 1, so that we get single images of galaxies without 
+    # repeating them. Config for this test requires to repeat all galaxies with n_trials_per_iter.
+    ChangeAllConfigKeys(config,'repeat',1)
+    # get the images
+    img_gals,img_psfs,_,_ = galsim.config.BuildImages( nimages = nobjects , config=config , 
+        make_psf_image=True , logger=logger , nproc=config['image']['nproc'])
+
     # measure the photon and fft images
     for i in range(nobjects):
 
-        obj_num = i * config['some_variables']['n_trials_per_iter']
-        img_gals,img_psfs,_,_,_ = galsim.config.BuildSingleImage( obj_num = obj_num , 
-            config=config , make_psf_image=True )
-
+        # this bit is still serial, not too good...
         try: 
-            result = GetShapeMeasurements(img_gals,img_psfs,i)
+            result = GetShapeMeasurements(img_gals[i],img_psfs[i],i)
         except: 
             logger.error('failed to get GetShapeMeasurements for galaxy %d' % i)
             result = {  'moments_g1' : HSM_ERROR_VALUE,
@@ -149,8 +151,10 @@ def GetResultsFFT(config):
                         'hsmcorr_g1' : HSM_ERROR_VALUE,
                         'hsmcorr_g2' : HSM_ERROR_VALUE,
                         'moments_sigma' : HSM_ERROR_VALUE,
+                        'hsmcorr_sigma' : HSM_ERROR_VALUE,
                         'ident' : i }
 
+        # append results to list
         results_all.append(result)
 
     return results_all
@@ -180,8 +184,9 @@ def GetResultsPhoton(config):
     for i in range(nobjects):
        
         try:
-            res = galsim.utilities.compare_dft_vs_photon_config(config, gal_num=i, hsm=False, moments = True,
-                logger=None,
+            # run compare_dft_vs_photon_config and get the results object
+            res = galsim.utilities.compare_dft_vs_photon_config(config, gal_num=i, hsm=True, moments = True,
+                logger=logger,
                 abs_tol_ellip = float(config['compare_dft_vs_photon_config']['abs_tol_ellip']),
                 abs_tol_size = float(config['compare_dft_vs_photon_config']['abs_tol_size']),
                 n_trials_per_iter = int(float(config['compare_dft_vs_photon_config']['n_trials_per_iter'])),
@@ -200,8 +205,10 @@ def GetResultsPhoton(config):
                         'moments_sigmaerr' : res.err_sigma,
                         'hsmcorr_sigmaerr' : res.err_sighs,
                         'ident' : i }
+            logger.info('finised getting photon measurements from gal %d : time : %2.2f min' % (i,res.time/60.))
         except:
             logger.error('failed to get compare_dft_vs_photon_config for galaxy %d' % i)
+            # if failure, create results with failure flags
             result = {  'moments_g1' : HSM_ERROR_VALUE,
                         'moments_g2' : HSM_ERROR_VALUE,
                         'hsmcorr_g1' : HSM_ERROR_VALUE,
@@ -216,9 +223,33 @@ def GetResultsPhoton(config):
                         'hsmcorr_sigmaerr' : HSM_ERROR_VALUE,
                         'ident' : i }
         
+        # add the result to the list
         results_all.append(result)
 
     return results_all
+
+def ChangeAllConfigKeys(config,key,value):
+    """
+    @brief recursive function to modify all keys with name 'key' in a dict to value 'value'
+    @param key      name of all keys to be modified
+    @param value    new value for all keys with name 'key'
+    """
+
+    def _stepin(level,key,value):
+
+        if isinstance(level,dict):
+            if key in level:
+                level[key] = value
+            for k in level.keys():
+                if isinstance(level[k],dict) or isinstance(level[k],list):
+                    _stepin(level[k],key,value)
+        elif isinstance(level,list):
+            for l in level:
+                _stepin(l,key,value)
+
+    _stepin(config,key,value)
+
+
 
 def ChangeConfigValue(config,path,value):
     """
@@ -229,10 +260,10 @@ def ChangeConfigValue(config,path,value):
     use the follwing path=['lvl1',0,'lvl2']
     Arguments
     ---------
-        config      an object with dicts and lists
-        path        a list of strings and integers, pointing to the field in config that should
-                    be changed, see Example above
-        Value       new value for this field
+    @param config       an object with dicts and lists
+    @param path         a list of strings and integers, pointing to the field in config that should
+                        be changed, see Example above
+    @param value        new value for this field
     """
 
     eval_str = 'config'
@@ -262,7 +293,7 @@ def RunComparisonForVariedParams(config):
     The filename of the results file is: 'results.yaml_filename.param_name.param_value_index.cat'
     Arguments
     ---------
-    config              the config object, as read by yaml
+    @param config              the config object, as read by yaml
     """
 
     # loop over parameters to vary
@@ -320,16 +351,21 @@ if __name__ == "__main__":
     config['debug'] = args.debug
     config['filename_config'] = args.filename_config
 
-
     logger.info('running photon_vs_fft for varied parameters')
 
     # run the config including changing of the parameters
     RunComparisonForVariedParams(config)
 
-    # run test
-    # results = runComparison(config)
-    # save the results
-    # filename_output = 'results.test.cat'
-    # SaveResults(filename_output,results)
+    # logger.info('getting FFT results for galaxy %d' % iv)
+    # config1 = copy.deepcopy(config)
+    # results_fft = GetResultsFFT(config1)
+    # logger.info('getting photon results for galaxy %d' % iv)
+    # config2 = copy.deepcopy(config)
+    # results_pht = GetResultsPhoton(config2)             
+    # # get the results filename
+    # filename_results = 'results.%s.%s.%03d.cat' % (config['filename_config'],param_name,iv)
+    # # save the results
+    # SaveResults(filename_results,results_fft=results_fft,results_pht=results_pht)
+
 
 
