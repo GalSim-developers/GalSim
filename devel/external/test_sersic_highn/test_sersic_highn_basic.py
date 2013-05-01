@@ -8,7 +8,7 @@ IMAGE_SIZE = 512
 RANDOM_SEED = 912424534
 
 # Number of objects from the COSMOS subsample of 300 to test
-NOBS = 1#0
+NOBS = 30#0
 
 # Absolute tolerances on ellipticity and size estimates
 TOL_ELLIP = 3.e-5
