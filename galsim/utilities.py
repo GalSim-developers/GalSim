@@ -588,13 +588,13 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     @param abs_tol_ellip          the test will keep iterating, adding ever greater numbers of
                                   trials, until estimates of the 1-sigma standard error on mean 
                                   ellipticity moments from photon-shot images are smaller than this
-                                  param value. If only moments=False, then using the measurements 
+                                  param value. If moments=False, then using the measurements 
                                   from HSM.
 
     @param abs_tol_size           the test will keep iterating, adding ever greater numbers of
                                   trials, until estimates of the 1-sigma standard error on mean 
                                   size moments from photon-shot images are smaller than this param
-                                  value.If only moments=False, then using the measurements 
+                                  value. If moments=False, then using the measurements 
                                   from HSM.
 
     @param n_trials_per_iter      number of trial images used to estimate (or successively
@@ -620,9 +620,6 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     import time     
 
     # Some sanity checks on inputs
-    # if hsm is True:
-        # Raise an apologetic exception about the HSM not yet being implemented!
-        # raise NotImplementedError('Sorry, HSM tests not yet implemented!')
     if moments is False and hsm is False:
         raise ValueError("At least one of 'moments','hsm' is required to be True")
 
@@ -724,13 +721,13 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
       g1obs_draw = res_draw.observed_shape.g1
       g2obs_draw = res_draw.observed_shape.g2
 
-    # get the HSM for FFT image
+    # Get the HSM for FFT image
     if hsm:
       try: res_draw_hsm= galsim.EstimateShearHSM(im_draw,im_psf,strict=True,shear_est=hsm_shear_est)
       except: raise RuntimeError('EstimateShearHSM failed for FFT image')
       g1hsm_draw = res_draw_hsm.corrected_g1
       g2hsm_draw = res_draw_hsm.corrected_g2
-      sighs_draw = res_draw_hsm.moments_sigma
+      sighs_draw = res_draw_hsm.moments_sigma   # Shorthand for sigma_hsm, to fit it in 5 characters
 
     
     # Setup storage lists for the trial shooting results
@@ -741,7 +738,7 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     g1hsm_shoot_list = []
     g2hsm_shoot_list = [] 
     sigmaerr = 666. # Slightly kludgy but will not accidentally fail the first `while` condition
-    sighserr = 666.
+    sighserr = 666. # Shorthand for sigma_hsm, to fit it in 5 characters
     g1obserr = 666.
     g2obserr = 666.
     g1hsmerr = 666.
@@ -760,13 +757,11 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     # statistical accuracy we require
     start_random_seed = config2['image']['random_seed'] 
 
-    # if using moments, then the criteria will be on observed g1,g2,sigma, else on hsm corrected
-    # ideally we would use some sort of pointer here, but I am going to update these at the end 
+    # If using moments, then the criteria will be on observed g1,g2,sigma, else on hsm corrected.
+    # Ideally we would use some sort of pointer here, but I am going to update these at the end 
     # of the loop
     if moments:     err_g1_use,err_g2_use,err_sig_use = (g1obserr,g2obserr,sigmaerr)
     else:           err_g1_use,err_g2_use,err_sig_use = (g1hsmerr,g2hsmerr,sighserr)
-
-    # logger.debug('running while loop with criteria abs_tol_ellip=%.2e abs_tol_size=%.2e' % (abs_tol_ellip,abs_tol_size))
 
     while (err_g1_use>abs_tol_ellip) or (err_g2_use>abs_tol_ellip) or (err_sig_use>abs_tol_size) :
 
