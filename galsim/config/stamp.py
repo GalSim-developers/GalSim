@@ -493,6 +493,11 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level_pixel, final_shi
     else:
         pixel_scale = 1.0
 
+    if 'image' in config and 'wmult' in config['image']:
+        wmult = galsim.config.ParseValue(config['image'], 'wmult', config, float)[0]
+    else:
+        wmult = 1.0
+
     if final_shift:
         #print 'shift = ',final_shift*pixel_scale
         final.applyShift(final_shift.x*pixel_scale, final_shift.y*pixel_scale)
@@ -502,7 +507,7 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level_pixel, final_shi
     else:
         im = None
 
-    im = final.draw(image=im, dx=pixel_scale)
+    im = final.draw(image=im, dx=pixel_scale, wmult=wmult)
     im.setOrigin(config['image_origin'])
 
     if 'gal' in config and 'signal_to_noise' in config['gal']:
@@ -714,33 +719,48 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, final_sh
     else:
         pixel_scale = 1.0
 
-    if 'image' in config and 'max_extra_noise' in config['image']:
-        max_extra_noise = galsim.config.ParseValue(
-                config['image'], 'max_extra_noise', config, float)[0]
-    else:
-        max_extra_noise = 0.01
-
-    if max_extra_noise < 0.:
-        raise ValueError("image.max_extra_noise cannot be negative")
-
-    if max_extra_noise > 0.:
-        if 'image' in config and 'noise' in config['image']:
-            noise_var = CalculateNoiseVar(config['image']['noise'], config, pixel_scale, 
-                                          sky_level_pixel)
-        else:
-            raise AttributeError(
-                "Need to specify noise level when using draw_method = phot")
-        if noise_var < 0.:
-            raise ValueError("noise_var calculated to be < 0.")
-        max_extra_noise *= noise_var
-
     if xsize:
         im = galsim.ImageF(xsize, ysize)
     else:
         im = None
 
-    im = final.drawShoot(image=im, dx=pixel_scale, max_extra_noise=max_extra_noise, rng=rng)
-    im.setOrigin(config['image_origin'])
+    if 'image' in config and 'n_photons' in config['image']:
+
+        if 'max_extra_noise' in config['image']:
+            import warnings
+            warnings.warn(
+                "Both 'max_extra_noise' and 'n_photons' are set in config['image'], "+
+                "ignoring 'max_extra_noise'.")
+
+        n_photons = galsim.config.ParseValue(
+            config['image'], 'n_photons', config, int)[0]
+        im = final.drawShoot(image=im, dx=pixel_scale, n_photons=n_photons, rng=rng)
+        im.setOrigin(config['image_origin'])
+
+    else:
+
+        if 'image' in config and 'max_extra_noise' in config['image']:
+            max_extra_noise = galsim.config.ParseValue(
+                config['image'], 'max_extra_noise', config, float)[0]
+        else:
+            max_extra_noise = 0.01
+
+        if max_extra_noise < 0.:
+            raise ValueError("image.max_extra_noise cannot be negative")
+
+        if max_extra_noise > 0.:
+            if 'image' in config and 'noise' in config['image']:
+                noise_var = CalculateNoiseVar(config['image']['noise'], config, pixel_scale, 
+                                              sky_level_pixel)
+            else:
+                raise AttributeError(
+                    "Need to specify noise level when using draw_method = phot")
+            if noise_var < 0.:
+                raise ValueError("noise_var calculated to be < 0.")
+            max_extra_noise *= noise_var
+
+        im = final.drawShoot(image=im, dx=pixel_scale, max_extra_noise=max_extra_noise, rng=rng)
+        im.setOrigin(config['image_origin'])
 
     return im
     
