@@ -15,68 +15,74 @@ import pdb
 import pylab
 import math
 import copy
+import time
 
 HSM_ERROR_VALUE = -99
 NO_PSF_VALUE    = -98
 
-def SaveResults(filename_output,results_pht,results_fft):
+def _ErrorResults(ERROR_VALUE,ident):
+
+    result = {  'moments_g1' : ERROR_VALUE,
+                        'moments_g2' : ERROR_VALUE,
+                        'hsmcorr_g1' : ERROR_VALUE,
+                        'hsmcorr_g2' : ERROR_VALUE,
+                        'moments_sigma' : ERROR_VALUE,
+                        'hsmcorr_sigma' : ERROR_VALUE,
+                        'moments_g1err' : ERROR_VALUE,
+                        'moments_g2err' : ERROR_VALUE,
+                        'hsmcorr_g1err' : ERROR_VALUE,
+                        'hsmcorr_g2err' : ERROR_VALUE,
+                        'moments_sigmaerr' : ERROR_VALUE,
+                        'hsmcorr_sigmaerr' : ERROR_VALUE,
+                        'ident' : ident }
+
+    return result
+
+def WriteResultsHeader(file_output):
+    """
+    @brief Writes a header file for results.
+    @param file_output  file pointer to be written into
+    """
+    
+    output_header = '# id ' + 'G1_moments G2_moments G1_hsmcorr G2_hsmcorr ' + \
+                              'moments_sigma hsmcorr_sigma ' + \
+                              'err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm' + \
+                              '\n'
+    file_output.write(output_header) 
+
+def WriteResults(file_output,results):
     """
     #brief Save results to file.
     
-    @filename_output        file to which results will be written
-    @results_pht            dict - result of GetResultsPhoton
-    @results_fft            dict - result of GetResultsFFT
+    @file_output            file pointer to which results will be written
+    @results                dict - result of GetResultsPhoton or GetResultsFFT
+    """ 
 
-    """
-
-
-    # initialise the output file
-    file_output = open(filename_output,'w')
-       
-    # write the header
-    output_row_fmt = '%d\t% 2.6e\t% 2.6e\t% 2.6e\t% 2.6e\t% 2.6e\t' + \
-                        '% 2.6e\t% 2.6e\t% 2.6e\t% 2.6e\t% 2.6e\t% 2.6e\t% 2.6e\t% 2.6e\t% 2.6e\t' + \
-                        '\t% 2.6e\t% 2.6e\t% 2.6e\t% 2.6e\n'
-    output_header = '# id ' +   'G1_moments_fft G2_moments_fft G1_moments_photon G2_moments_photon ' + \
-                                'G1_hsmcorr_fft G2_hsmcorr_fft G1_hsmcorr_photon G2_hsmcorr_photon ' + \
-                                'moments_fft_sigma moments_photon_sigma hsmcorr_fft_sigma hsmcorr_photon_sigma ' + \
-                                'err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm' + \
-                                '\n'
-    file_output.write(output_header) 
+    output_row_fmt = '%d\t' + '% 2.8e\t'*12 + '\n'
 
     # loop over the results items
-    for (i,v) in enumerate(results_pht):     
-        
-        file_output.write(output_row_fmt % (
-            results_fft[i]['ident'] ,
-            results_fft[i]['moments_g1'] ,
-            results_fft[i]['moments_g2'] ,
-            results_pht[i]['moments_g1'] ,
-            results_pht[i]['moments_g2'] ,
-            results_fft[i]['hsmcorr_g1'] ,
-            results_fft[i]['hsmcorr_g2'] ,
-            results_pht[i]['hsmcorr_g1'] ,
-            results_pht[i]['hsmcorr_g2'] ,
-            results_fft[i]['moments_sigma'] ,
-            results_pht[i]['moments_sigma'] ,
-            results_fft[i]['hsmcorr_sigma'] ,
-            results_pht[i]['hsmcorr_sigma'] ,
-            results_pht[i]['moments_g1err'] ,
-            results_pht[i]['moments_g2err'] ,
-            results_pht[i]['hsmcorr_g1err'] ,
-            results_pht[i]['hsmcorr_g2err'] ,
-            results_pht[i]['moments_sigmaerr'] ,
-            results_pht[i]['hsmcorr_sigmaerr'] 
-            ))
-
-    
-    logging.info('saved results file %s' % (filename_output))
+       
+    file_output.write(output_row_fmt % (
+            results['ident'] ,
+            results['moments_g1'] ,
+            results['moments_g2'] ,
+            results['hsmcorr_g1'] ,
+            results['hsmcorr_g2'] ,
+            results['moments_sigma'] ,
+            results['hsmcorr_sigma'] ,
+            results['moments_g1err'] ,
+            results['moments_g2err'] ,
+            results['hsmcorr_g1err'] ,
+            results['hsmcorr_g2err'] ,
+            results['moments_sigmaerr'] ,
+            results['hsmcorr_sigmaerr'] 
+            )) 
 
 def GetShapeMeasurements(image_gal, image_psf, ident):
     """
-    @image_gal - 
-    @image_psf - 
-    @ident - 
+    @param image_gal - 
+    @param image_psf - 
+    @param ident - 
     """
 
     HSM_SHEAR_EST = "KSB"
@@ -105,31 +111,41 @@ def GetShapeMeasurements(image_gal, image_psf, ident):
                     'hsmcorr_g2' : hsmcorr.corrected_g2,
                     'moments_sigma' :  moments.moments_sigma, 
                     'hsmcorr_sigma' :  hsmcorr.moments_sigma, 
+                    'moments_g1err' : 0. ,
+                    'moments_g2err' : 0. ,
+                    'hsmcorr_g1err' : 0. ,
+                    'hsmcorr_g2err' : 0. ,
+                    'moments_sigmaerr' : 0. ,
+                    'hsmcorr_sigmaerr' : 0. ,
                     'ident' : ident}
         
     return result
 
-def GetResultsFFT(config): 
+def RunMeasurementsFFT(config,filename_results): 
     """
-    @brief get results for all galaxies using photon shooting.
+    @brief get results for all galaxies using just FFT.
 
     Arguments
     ---------
-    @config          the yaml config used to create images
-    @return          Outputs a list of dictionaries containing the results of comparison.
+    @config                 the yaml config used to create images
+    @param file_output      opened file to which the results will be written
     """
+
+    # start the timer
+    t1 = time.time()
+
+    # open the file
+    file_results = open(filename_results,'w')
+
+    # write header 
+    WriteResultsHeader(file_results)
 
     # First process the input field:
     galsim.config.ProcessInput(config)
 
     # dirty way of getting this number
-    # nobjects = len(galsim.config.GetNObjForMultiFits(config,0,0))
     nobjects = config['some_variables']['n_gals_in_cat']
-
     config['image']['draw_method'] = 'fft'
-
-    # initialise the results dict
-    results_all = []
 
     # modify all 'repeat' keys in config to 1, so that we get single images of galaxies without 
     # repeating them. Config for this test requires to repeat all galaxies with n_trials_per_iter.
@@ -138,8 +154,11 @@ def GetResultsFFT(config):
     if config['debug']: use_logger = logger
     else: use_logger = None
     # get the images
-    img_gals,img_psfs,_,_ = galsim.config.BuildImages( nimages = nobjects , config=config , 
+    try: img_gals,img_psfs,_,_ = galsim.config.BuildImages( nimages = nobjects , config=config , 
         make_psf_image=True , logger=use_logger , nproc=config['image']['nproc'])
+    except Exception, e:
+        raise RuntimeError('Failed to build FFT image. Message: %s',e)
+
 
     # measure the photon and fft images
     for i in range(nobjects):
@@ -147,31 +166,34 @@ def GetResultsFFT(config):
         # this bit is still serial, not too good...
         try: 
             result = GetShapeMeasurements(img_gals[i],img_psfs[i],i)
-        except: 
-            logger.error('failed to get GetShapeMeasurements for galaxy %d' % i)
-            result = {  'moments_g1' : HSM_ERROR_VALUE,
-                        'moments_g2' : HSM_ERROR_VALUE,
-                        'hsmcorr_g1' : HSM_ERROR_VALUE,
-                        'hsmcorr_g2' : HSM_ERROR_VALUE,
-                        'moments_sigma' : HSM_ERROR_VALUE,
-                        'hsmcorr_sigma' : HSM_ERROR_VALUE,
-                        'ident' : i }
+        except Exception,e: 
+            logger.error('failed to get GetShapeMeasurements for galaxy %d. Message %s' % (i,e))
+            result = _ErrorResults(HSM_ERROR_VALUE,i)
 
-        # append results to list
-        results_all.append(result)
+        WriteResults(file_results,result)
 
-    return results_all
+    logger.info('finished getting FFT results for %d galaxies' % nobjects)
 
 
-def GetResultsPhoton(config): 
+def RunMeasurementsPhotAndFFT(config,filename_results_pht,filename_results_fft): 
     """
-    @brief get results for all galaxies using photon shooting.
+    @brief get results for all galaxies using photon shooting adn FFT.
 
     Arguments
     ---------
-    @config          the yaml config used to create images
-    @return          Outputs a list of dictionaries containing the results of comparison.
+    @parm   config              the yaml config used to create images
+    @parm   file_output_pht     opened file to save the photon results
+    @parm   file_output_fft     opened file to save the FFT results
     """
+
+    # start the timer
+    t1 = time.time()
+
+    # Open files
+    file_results_fft = open(filename_results_fft,'w')
+    file_results_pht = open(filename_results_pht,'w')
+    WriteResultsHeader(file_results_fft)
+    WriteResultsHeader(file_results_pht)
 
     # First process the input field:
     galsim.config.ProcessInput(config)
@@ -180,10 +202,7 @@ def GetResultsPhoton(config):
     # nobjects = len(galsim.config.GetNObjForMultiFits(config,0,0))
     nobjects = config['some_variables']['n_gals_in_cat']
 
-    # initialise the results dict
-    results_all = []
-
-    # measure the photon and fft images
+    #Mmeasure the photon and FFT images
     for i in range(nobjects):
        
         try:
@@ -191,48 +210,57 @@ def GetResultsPhoton(config):
             if config['debug']: use_logger = logger
             else: use_logger = None
             # run compare_dft_vs_photon_config and get the results object
-            res = galsim.utilities.compare_dft_vs_photon_config(config, gal_num=i, hsm=True, moments = True,
-                logger=use_logger,
+            res = galsim.utilities.compare_dft_vs_photon_config(config, gal_num=i, 
+                hsm=True, moments = True, logger=use_logger,
                 abs_tol_ellip = float(config['compare_dft_vs_photon_config']['abs_tol_ellip']),
                 abs_tol_size = float(config['compare_dft_vs_photon_config']['abs_tol_size']),
-                n_trials_per_iter = int(float(config['compare_dft_vs_photon_config']['n_trials_per_iter'])),
-                n_photons_per_trial = int(float(config['compare_dft_vs_photon_config']['n_photons_per_trial']))
+                n_trials_per_iter = 
+                    int(float(config['compare_dft_vs_photon_config']['n_trials_per_iter'])),
+                n_photons_per_trial =  
+                    int(float(config['compare_dft_vs_photon_config']['n_photons_per_trial'])),
+                wmult = 4.0
                 )
-            result = {  'moments_g1' : res.g1obs_draw - res.delta_g1obs,
-                        'moments_g2' : res.g2obs_draw - res.delta_g2obs,
-                        'hsmcorr_g1' : res.g1hsm_draw - res.delta_g1hsm,
-                        'hsmcorr_g2' : res.g2hsm_draw - res.delta_g2hsm,
-                        'moments_sigma' : res.sigma_draw - res.delta_sigma,
-                        'hsmcorr_sigma' : res.sighs_draw - res.delta_sighs,
-                        'hsmcorr_g1err' : res.err_g1hsm ,
-                        'hsmcorr_g2err' : res.err_g2hsm ,
-                        'moments_g1err' : res.err_g1obs ,
-                        'moments_g2err' : res.err_g2obs ,
-                        'moments_sigmaerr' : res.err_sigma,
-                        'hsmcorr_sigmaerr' : res.err_sighs,
-                        'ident' : i }
-            logger.info('finised getting photon measurements from gal %d : time : %2.2f min' % (i,res.time/60.))
-        except:
-            logger.error('failed to get compare_dft_vs_photon_config for galaxy %d' % i)
-            # if failure, create results with failure flags
-            result = {  'moments_g1' : HSM_ERROR_VALUE,
-                        'moments_g2' : HSM_ERROR_VALUE,
-                        'hsmcorr_g1' : HSM_ERROR_VALUE,
-                        'hsmcorr_g2' : HSM_ERROR_VALUE,
-                        'moments_sigma' : HSM_ERROR_VALUE,
-                        'hsmcorr_sigma' : HSM_ERROR_VALUE,
-                        'hsmcorr_g1err' : HSM_ERROR_VALUE,
-                        'hsmcorr_g2err' : HSM_ERROR_VALUE,
-                        'moments_g1err' : HSM_ERROR_VALUE,
-                        'moments_g2err' : HSM_ERROR_VALUE,
-                        'moments_sigmaerr' : HSM_ERROR_VALUE,
-                        'hsmcorr_sigmaerr' : HSM_ERROR_VALUE,
-                        'ident' : i }
-        
-        # add the result to the list
-        results_all.append(result)
+            
+            results_pht = {  'moments_g1' : res.g1obs_draw - res.delta_g1obs,
+                             'moments_g2' : res.g2obs_draw - res.delta_g2obs,
+                             'hsmcorr_g1' : res.g1hsm_draw - res.delta_g1hsm,
+                             'hsmcorr_g2' : res.g2hsm_draw - res.delta_g2hsm,
+                             'moments_sigma' : res.sigma_draw - res.delta_sigma,
+                             'hsmcorr_sigma' : res.sighs_draw - res.delta_sighs,
+                             'hsmcorr_g1err' : res.err_g1hsm ,
+                             'hsmcorr_g2err' : res.err_g2hsm ,
+                             'moments_g1err' : res.err_g1obs ,
+                             'moments_g2err' : res.err_g2obs ,
+                             'moments_sigmaerr' : res.err_sigma,
+                             'hsmcorr_sigmaerr' : res.err_sighs,
+                             'ident' : i }
+            
+            results_fft = {  'moments_g1' : res.g1obs_draw ,
+                             'moments_g2' : res.g2obs_draw ,
+                             'hsmcorr_g1' : res.g1hsm_draw ,
+                             'hsmcorr_g2' : res.g2hsm_draw ,
+                             'moments_sigma' : res.sigma_draw,
+                             'hsmcorr_sigma' : res.sighs_draw,
+                             'hsmcorr_g1err' : 0 ,
+                             'hsmcorr_g2err' : 0 ,
+                             'moments_g1err' : 0 ,
+                             'moments_g2err' : 0 ,
+                             'moments_sigmaerr' : 0,
+                             'hsmcorr_sigmaerr' : 0,
+                             'ident' : i }
 
-    return results_all
+            logger.info('finished getting photon and FFT measurements from gal %d : time :\
+                %s min' % (i,str(res.time/60.)))
+        except Exception,e:
+            logger.error('failed to get compare_dft_vs_photon_config for galaxy %d. Message:\n %s' % (i,e))
+            # if failure, create results with failure flags
+            results_fft = _ErrorResults(HSM_ERROR_VALUE,i)
+            results_pht = _ErrorResults(HSM_ERROR_VALUE,i)
+  
+        WriteResults(file_results_pht,results_pht)
+        WriteResults(file_results_fft,results_fft)
+
+    logger.info('finished getting FFT and phot results for %d galaxies' % nobjects)
 
 def ChangeAllConfigKeys(config,key,value):
     """
@@ -254,8 +282,6 @@ def ChangeAllConfigKeys(config,key,value):
                 _stepin(l,key,value)
 
     _stepin(config,key,value)
-
-
 
 def ChangeConfigValue(config,path,value):
     """
@@ -302,48 +328,79 @@ def RunComparisonForVariedParams(config):
     @param config              the config object, as read by yaml
     """
 
-    # loop over parameters to vary
-    for param_name in config['vary_params'].keys():
+    # Run the default config
+    default_config = config.copy()
+    param_name = 'default'
+    filename_results_pht = 'results.%s.%s.pht.cat' % (config['filename_config'],
+                                                                        param_name)
+    filename_results_fft = 'results.%s.%s.fft.cat' % (config['filename_config'],
+                                                                        param_name)
 
-        # reset the images
-        results_pht, results_fft = ( None , None )
+    # Run and save the measurements
+    logger.info('running default settings for photon and FFT')
+    RunMeasurementsPhotAndFFT(default_config, 
+        filename_results_pht, filename_results_fft)             
+    logging.info(('saved FFT and photon results for default parameters\n'
+         + 'filenames: %s\t%s') % (filename_results_pht,filename_results_fft))
+
+    # Loop over parameters to vary
+    for param_name in config['vary_params'].keys():
         
-        # get more info for the parmaeter
+        # Get more info for the parmaeter
         param = config['vary_params'][param_name]
-        # loop over all values of the parameter, which will be changed
+        # Loop over all values of the parameter, which will be changed
         for iv,value in enumerate(param['values']):
-            # copy the config to the original
+            # Copy the config to the original
             changed_config = config.copy()
-            # perform the change
+            # Perform the change
             ChangeConfigValue(changed_config,param['path'],value)
             logging.info('changed parameter %s to %s' % (param_name,str(value)))
-            # run the photon vs fft test on the changed configs
-
-            if param['rebuild_fft'] or results_fft == None:
-                logger.info('getting FFT results for galaxy %d' % iv)
-                changed_config1 = copy.deepcopy(changed_config)
-                results_fft = GetResultsFFT(changed_config1)
-                
-            if param['rebuild_pht'] or results_pht == None:
-                logger.info('getting photon results for galaxy %d' % iv)
+            # Run the photon vs fft test on the changed configs
+            
+            # If the setting change affected photon image, then rebuild it
+            if param['rebuild_photon'] :
+                logger.info('getting photon and FFT results')
                 changed_config2 = copy.deepcopy(changed_config)
-                results_pht = GetResultsPhoton(changed_config2)             
+                # Get the results filenames
+                filename_results_pht = 'results.%s.%s.%03d.pht.cat' % (config['filename_config'],
+                                                                        param_name,iv)
+                filename_results_fft = 'results.%s.%s.%03d.fft.cat' % (config['filename_config'],
+                                                                        param_name,iv)
 
-            # get the results filename
-            filename_results = 'results.%s.%s.%03d.cat' % (config['filename_config'],param_name,iv)
-            # save the results
-            SaveResults(filename_results,results_fft=results_fft,results_pht=results_pht)
-            logging.info('saved results for varied parameter %s with value %s, filename %s' % (param_name,str(value),filename_results))
+                # Run and save the measurements
+                RunMeasurementsPhotAndFFT(changed_config2, 
+                    filename_results_pht, filename_results_fft)             
+                logging.info(('saved FFT and photon results for varied parameter %s with value %s\n'
+                     + 'filenames: %s\t%s') % (param_name,str(value),
+                    filename_results_pht,filename_results_fft))
 
+            # just get the FFT results
+            else:
+                logger.info('getting FFT results only')
+                changed_config1 = copy.deepcopy(changed_config)
+                # Get the results filename
+                filename_results_fft = 'results.%s.%s.%03d.fft.cat' % (
+                    config['filename_config'],param_name,iv)
+
+                # Run the measurement
+                RunMeasurementsFFT(changed_config1,filename_results_fft)
+                logging.info(('saved FFT results for varied parameter %s with value %s\n'  
+                    + 'filename %s') % ( param_name,str(value),filename_results_fft) )
+              
 if __name__ == "__main__":
 
 
-    description = 'Compare FFT vs Photon shooting. Use the galaxies specified in the corresponding yaml file (see photon_vs_fft.yaml for an example)'
+    description = \
+    'Compare FFT vs Photon shooting. \
+    Use the galaxies specified in the corresponding yaml file \
+    (see photon_vs_fft.yaml for an example)' 
 
     # parse arguments
     parser = argparse.ArgumentParser(description=description, add_help=True)
-    parser.add_argument('filename_config', type=str, help='yaml config file, see photon_vs_fft.yaml for example.')
-    parser.add_argument('--debug', action="store_true", help='run with debug verbosity', default=False)
+    parser.add_argument('filename_config', type=str, 
+        help='yaml config file, see photon_vs_fft.yaml for example.')
+    parser.add_argument('--debug', action="store_true", 
+        help='run with debug verbosity', default=False)
     args = parser.parse_args()
 
     # set up logger

@@ -166,9 +166,9 @@ class ComparisonShapeData(object):
 
     - g2obs_draw: observed_shape.g2 from adaptive moments on a GSObject image rendered using .draw()
 
-    - g1hsm_draw: corrected_shape.g1 from adaptive moments on a GSObject image rendered using .draw()
+    - g1hsm_draw: corrected_shape.g1 from adaptive moments on an image rendered using .draw()
 
-    - g2hsm_draw: corrected_shape.g2 from adaptive moments on a GSObject image rendered using .draw()
+    - g2hsm_draw: corrected_shape.g2 from adaptive moments on an image rendered using .draw()
 
     - sigma_draw: moments_sigma from adaptive moments on a GSObject image rendered using .draw()
 
@@ -517,8 +517,8 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, pixel_scal
     logging.info('\n'+str(results))
     return results
 
-def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None, pixel_scale=None, size=None,
-                                 wmult=None, abs_tol_ellip=1.e-5, abs_tol_size=1.e-5,
+def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None, pixel_scale=None,
+                                 size=None, wmult=None, abs_tol_ellip=1.e-5, abs_tol_size=1.e-5,
                                  n_trials_per_iter=32, n_photons_per_trial=1e7, moments=True,
                                  hsm=False, logger=None):
     """Take an input config dictionary and render the object it describes in two ways, comparing
@@ -685,6 +685,12 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
                 'Overriding wmult in config with input kwarg value '+str(wmult))
         config['image']['wmult'] = wmult
 
+    # this results from the fact that config throws exceptions:
+    #   File "/usr/lib/python2.7/dist-packages/galsim/config/value.py", line 214, in CheckAllParams
+    #    AttributeError: Unexpected attribute n_photons found for parameter image
+    del(config['image']['wmult'])
+
+
     # Then define some convenience functions for handling lists and multiple trial operations
     def _mean(array_like):
         return np.mean(np.asarray(array_like))
@@ -711,12 +717,12 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
 
     # get the fft image
     try: im_draw,im_psf,_,_,_= galsim.config.BuildImage(config1,make_psf_image=True,logger=logger)
-    except: raise RuntimeError('building image using FFT failed')
+    except Exception, e: raise RuntimeError('Building image using FFT failed: \n %s' % e )
 
     # get the moments for FFT image
     if moments:
       try: res_draw = im_draw.FindAdaptiveMom()
-      except: raise RuntimeError('FindAdaptiveMom failed for FFT image') 
+      except Exception, e: raise RuntimeError('FindAdaptiveMom failed for FFT image: \n %s' % e) 
       sigma_draw = res_draw.moments_sigma
       g1obs_draw = res_draw.observed_shape.g1
       g2obs_draw = res_draw.observed_shape.g2
@@ -724,7 +730,7 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     # Get the HSM for FFT image
     if hsm:
       try: res_draw_hsm= galsim.EstimateShearHSM(im_draw,im_psf,strict=True,shear_est=hsm_shear_est)
-      except: raise RuntimeError('EstimateShearHSM failed for FFT image')
+      except Exception, e: raise RuntimeError('EstimateShearHSM failed for FFT image: \n %s' % e)
       g1hsm_draw = res_draw_hsm.corrected_g1
       g2hsm_draw = res_draw_hsm.corrected_g2
       sighs_draw = res_draw_hsm.moments_sigma   # Shorthand for sigma_hsm, to fit it in 5 characters
@@ -751,7 +757,12 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     # We'll also use a new copy here so that this function is non-destructive of any input
     config2 = copy.deepcopy(config)
     config2['image']['draw_method'] = 'phot'
-    config2['image']['n_photons'] = n_photons_per_trial
+
+    # This is due to this recent exception:
+    #   File "/usr/lib/python2.7/dist-packages/galsim/config/value.py", line 214, in CheckAllParams
+    #    AttributeError: Unexpected attribute n_photons found for parameter image
+    # config2['image']['n_photons'] = n_photons_per_trial
+    config2['gal']['flux'] = n_photons_per_trial
 
     # Then begin while loop, farming out sets of n_trials_per_iter trials until we get the
     # statistical accuracy we require
@@ -772,7 +783,8 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
         try:
           trial_images = galsim.config.BuildImages( nimages = n_trials_per_iter, obj_num = obj_num,
             config = config2, logger = logger , nproc=config2['image']['nproc'])[0] 
-        except: raise RuntimeError('building image using photon shooting failed')
+        except Exception,e: 
+            raise RuntimeError('building image using photon shooting failed: \n %s' % e)
 
         # Collect results 
         trial_results = []
@@ -781,12 +793,12 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
 
           if moments:
             try: trial_results += [image.FindAdaptiveMom()]
-            except: raise RuntimeError('getting FindAdaptiveMom failed')
+            except Exception,e: raise RuntimeError('getting FindAdaptiveMom failed: \n %s' % e)
 
           if hsm:
             try: trial_results_hsm += [galsim.EstimateShearHSM(image,im_psf,strict=True,
                                                                       shear_est=hsm_shear_est)]
-            except: raise RuntimeError('getting EstimateShearHSM failed')
+            except Exception,e: raise RuntimeError('getting EstimateShearHSM failed: \n %s' % e)
 
         # Get lists of g1,g2,sigma estimate (this might be quicker using a single list comprehension
         # to get a list of (g1,g2,sigma) tuples, and then unzip with zip(*), but this is clearer)

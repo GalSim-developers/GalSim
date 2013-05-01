@@ -3,10 +3,10 @@ some_variables :
     n_trials_per_iter : &n_trials_per_iter 32
 
 compare_dft_vs_photon_config :
-    abs_tol_ellip : 5e-5
-    abs_tol_size :  5e-4
+    abs_tol_ellip : 1e-3
+    abs_tol_size :  1e-3
     n_trials_per_iter : 32 
-    n_photons_per_trial : 1e7 
+    n_photons_per_trial : 1e6
 
 psf : 
     # ground PSF
@@ -33,9 +33,9 @@ gal :
             y : { type : InputCatalog , col : 6 , index : { type: Sequence, repeat: *n_trials_per_iter} }
     
 image :
-    wmult : 4.0
+    # wmult : 4.0
     random_seed : 1929392
-    nproc : 5
+    nproc : 2
     # pixel scale for the ground observation
     pixel_scale : 0.2  # arcsec / pixel
     type : Single
@@ -67,7 +67,7 @@ image :
 input :
     catalog :
         dir : .
-        file_name : cosmos_sersics_sample_N300_cleaned2.asc
+        file_name : cosmos_sersics_sample_N300_cleaned.asc
 
 output:
     type: MultiFits
@@ -82,15 +82,12 @@ vary_params:
     alias_threshold : 
         path : ['image','gsparams','alias_threshold']
         values : [ 1.0e-1 , 5.0e-4 ]
-        rebuild_pht : False 
-        rebuild_fft : True  
+        rebuild_photon : False 
     maxk_threshold :   
         path : ['image','gsparams','maxk_threshold' ] 
         values : [ 1.0e-1 , 1.0e-5 ]  
-        rebuild_pht : False
-        rebuild_fft : True 
+        rebuild_photon : False
     kvalue_accuracy : 
         path : ['image','gsparams','kvalue_accuracy']
         values : [ 1.0e-3 , 1.0e-8 ] 
-        rebuild_pht : False 
-        rebuild_fft : True 
+        rebuild_photon : False 
