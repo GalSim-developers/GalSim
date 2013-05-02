@@ -6,7 +6,7 @@ import test_sersic_highn_basic
 
 # Start off with the basic config
 config = test_sersic_highn_basic.config_basic
-config['image']['gsparams']['wmult'] = 2.
+config['image']['wmult'] = 2.
 
 # Output filename
 outfile = os.path.join(

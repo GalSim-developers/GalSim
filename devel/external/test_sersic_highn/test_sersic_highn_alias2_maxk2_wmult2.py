@@ -8,7 +8,7 @@ import test_sersic_highn_basic
 config = test_sersic_highn_basic.config_basic
 config['image']['gsparams']['alias_threshold'] = 2.5e-3
 config['image']['gsparams']['maxk_threshold'] = 5.e-4
-config['image']['gsparams']['wmult'] = 2.
+config['image']['wmult'] = 2.
 
 # Output filename
 outfile = os.path.join(
