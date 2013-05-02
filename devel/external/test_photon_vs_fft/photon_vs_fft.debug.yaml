@@ -78,6 +78,7 @@ output:
 # the results for the input galaxies will be saved to a file with a name
 # 'results.yaml_filename.param_name.param_index.cat'
 # later other scripts can be used to produce plots
+run_default: False
 vary_params:
     alias_threshold : 
         path : ['image','gsparams','alias_threshold']

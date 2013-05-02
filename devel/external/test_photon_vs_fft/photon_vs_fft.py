@@ -329,19 +329,19 @@ def RunComparisonForVariedParams(config):
     """
 
     # Run the default config
-    default_config = config.copy()
-    param_name = 'default'
-    filename_results_pht = 'results.%s.%s.pht.cat' % (config['filename_config'],
-                                                                        param_name)
-    filename_results_fft = 'results.%s.%s.fft.cat' % (config['filename_config'],
-                                                                        param_name)
-
-    # Run and save the measurements
-    logger.info('running default settings for photon and FFT')
-    RunMeasurementsPhotAndFFT(default_config, 
-        filename_results_pht, filename_results_fft)             
-    logging.info(('saved FFT and photon results for default parameters\n'
-         + 'filenames: %s\t%s') % (filename_results_pht,filename_results_fft))
+    if config['run_default']:
+        default_config = config.copy()
+        param_name = 'default'
+        filename_results_pht = 'results.%s.%s.pht.cat' % (config['filename_config'],
+                                                                            param_name)
+        filename_results_fft = 'results.%s.%s.fft.cat' % (config['filename_config'],
+                                                                            param_name)
+        # Run and save the measurements
+        logger.info('running default settings for photon and FFT')
+        RunMeasurementsPhotAndFFT(default_config, 
+            filename_results_pht, filename_results_fft)             
+        logging.info(('saved FFT and photon results for default parameters\n'
+             + 'filenames: %s\t%s') % (filename_results_pht,filename_results_fft))
 
     # Loop over parameters to vary
     for param_name in config['vary_params'].keys():
