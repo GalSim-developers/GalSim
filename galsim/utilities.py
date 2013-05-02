@@ -703,8 +703,8 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
         trial_results = [image.FindAdaptiveMom() for image in trial_images]
 
         # Output some difference check images (uncomment if desired)
-        for image, ino in zip(trial_images, range(n_trials_per_iter)):
-            (image - im_draw).write('check_diff_trial'+str(ino + 1)+'_iter'+str(itercount)+'.fits')
+        #for image, ino in zip(trial_images, range(n_trials_per_iter)):
+        #    (image - im_draw).write('check_diff_trial'+str(ino + 1)+'_iter'+str(itercount)+'.fits')
 
         # Get lists of g1,g2,sigma estimate (this might be quicker using a single list comprehension
         # to get a list of (g1,g2,sigma) tuples, and then unzip with zip(*), but this is clearer)
