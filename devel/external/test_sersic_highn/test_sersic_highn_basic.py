@@ -30,7 +30,7 @@ LOGLEVEL = logging.WARN
 config_basic = {}
 config_basic['image'] = {
     "size" : IMAGE_SIZE , "pixel_scale" : PIXEL_SCALE , # Note RANDOM_SEED generated later 
-    "wmult" : WMULT, "n_photons" : NPHOTONS, "gsparams" : {"maximum_fft_size" : MAX_FFT_SIZE} }
+    "wmult" : 1., "n_photons" : NPHOTONS, "gsparams" : {"maximum_fft_size" : MAX_FFT_SIZE} }
 
 
 # Then define a function that runs tests but adds extra gsparams if required, supplied as kwargs
@@ -43,14 +43,14 @@ def run_tests(random_seed, outfile, config=None, gsparams=None, wmult=None, logg
     import galaxy_sample
     
     if config is None:
-        use_config == False
+        use_config = False
         if gsparams is None:
             import warnings
             warnings.warn("No gsparams provided to run_tests?")
         if wmult is None:
             raise ValueError("wmult must be set if config=None.")
     else:
-        use_config == True
+        use_config = True
         if gsparams is not None:
             import warnings
             warnings.warn(
@@ -115,7 +115,7 @@ def run_tests(random_seed, outfile, config=None, gsparams=None, wmult=None, logg
                     wmult=wmult)
             g1obs_draw[i, j] = results.g1obs_draw
             g2obs_draw[i, j] = results.g2obs_draw
-            sigma_draw[i, j] = results.sigma_ç∂draw
+            sigma_draw[i, j] = results.sigma_draw
             delta_g1obs[i, j] = results.delta_g1obs
             delta_g2obs[i, j] = results.delta_g2obs
             delta_sigma[i, j] = results.delta_sigma
@@ -136,9 +136,6 @@ if __name__ == "__main__":
 
     # Use the basic config
     config = config_basic
-
-    wmult = 1. # This might have an impact
-    config['image']['wmult'] = wmult
 
     # Output filename
     outfile = os.path.join("outputs", "sersic_highn_basic_output_N"+str(NOBS)+".pkl")
