@@ -10,10 +10,19 @@ interpolant_list = ['nearest', 'sinc', 'linear', 'cubic', 'quintic',
                     'lanczos3', 'lanczos4', 'lanczos5', 'lanczos7']
 
 # Noise_pad options to test
-noise_pad_options = ['False']
+noise_padding_list = ['False']
 
 # Padding options to test
-padding = range(2,6,2)
+padding_list = range(2,6,2)
+
+# Range of rotation angles to test
+angle_list = galsim.degrees*range(0,180,15)
+
+# Range of shears to test (must be same length as magnification list)
+shear_list = []
+
+# Range of magnifications to test (must be same length as shear list)
+magnification_list = []
 
 # Ground-image parameters
 atmos_fwhm = 2.1
@@ -90,6 +99,18 @@ def run_tests(config, shear, dilation, rotation, shift):
 
 def main():
     for interpolant in interpolant_list:
+        for padding_type in noise_padding_list:
+            for padding in padding_list:
+                run_dft_tests(plain_galaxy)
+                run_dftshoot_tests(plain_original_galaxy)
+                for angle in angle_list:
+                    run_dft_tests(rotated_galaxy)
+                    run_dft_shoot_tests(rotated_original_galaxy)
+                for (shear, mag) in zip(shear_list, magnification_list):
+                    run_dft_tests(sheared_and_magnified_galaxy)
+                    run_dft_shoot_tests(sheared_and_magnified_original_galaxy)
+                
+        
         
 
     config = {}    
