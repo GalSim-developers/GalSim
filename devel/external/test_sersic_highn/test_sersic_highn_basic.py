@@ -155,6 +155,8 @@ if __name__ == "__main__":
     config = config_basic
 
     # Output filename
+    if not os.path.isdir("outputs"):
+        os.mkdir("outputs")
     outfile = os.path.join("outputs", "sersic_highn_basic_output_N"+str(NOBS)+".asc")
 
     # Setup the logging
@@ -163,5 +165,5 @@ if __name__ == "__main__":
 
     random_seed = 912424534
 
-    run_tests(random_seed, outfile, config=config, logger=logger)
+    run_tests(random_seed, outfile, config=config, logger=logger, fail_value=FAIL_VALUE)
 
