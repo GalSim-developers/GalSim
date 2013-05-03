@@ -115,7 +115,7 @@ namespace galsim {
         mutable double _re; ///< Stores the half light radius if set or calculated post-setting.
 
         double (*_pow_beta)(double x, double beta);
-        double (SBMoffatImpl::*_kV)(double k) const;
+        double (SBMoffatImpl::*_kV)(double ksq) const;
 
         /// Setup the FT Table.
         void setupFT() const;
