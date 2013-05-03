@@ -834,7 +834,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
             x_interpolant = utilities.convert_interpolant_to_2d(x_interpolant)
 
         # Then initialize...
-        cf_object = base.InterpolatedImage(
+        cf_object = galsim.InterpolatedImage(
             cf_image, x_interpolant=x_interpolant, dx=cf_image.getScale(), normalization="sb",
             calculate_stepk=False, calculate_maxk=False) # these internal calculations do not seem
                                                          # to do very well with often sharp-peaked
@@ -987,7 +987,7 @@ def getCOSMOSNoise(rng, file_name, dx_cosmos=0.03, variance=0., x_interpolant=No
     # Use this info to then generate a correlated noise model DIRECTLY: note this is non-standard
     # usage, but tolerated since we can be sure that the input cfimage is appropriately symmetric
     # and peaked at the origin
-    ret = _BaseCorrelatedNoise(rng, base.InterpolatedImage(
+    ret = _BaseCorrelatedNoise(rng, galsim.InterpolatedImage(
         cfimage, dx=dx_cosmos, normalization="sb", calculate_stepk=False, calculate_maxk=False,
         x_interpolant=x_interpolant))
     # If the input keyword variance is non-zero, scale the correlation function to have this

@@ -17,27 +17,36 @@
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
 from ._galsim import *
+
+# Import things from other files we want to be in the galsim namespace
+from base import *
+from shear import Shear
+from ellipse import Ellipse
+from real import RealGalaxy, RealGalaxyCatalog, simReal
+from atmosphere import AtmosphericPSF
+from optics import OpticalPSF
+from table import LookupTable
+from random import DistDeviate
+from shapelet import Shapelet
+from catalog import InputCatalog
+from lensing import *  # Propose splitting this 
+from correlatednoise import CorrelatedNoise, getCOSMOSNoise
+from compound import Add, Convolve, Deconvolve, AutoConvolve, AutoCorrelate
+from interpolatedimage import InterpolatedImage
+from fits import FitsHeader
+
+# packages with docs and such, so nothing really to import by name.
 from . import position
 from . import bounds
 from . import angle
-from shear import *
-from ellipse import *
-from . import fits
-from fits import FitsHeader
-from real import *
-from base import *
 from . import noise
-from . import atmosphere
-from . import optics
 from . import image
-from table import *
 from . import random
-from random import DistDeviate
+
+# packages we intentionally keep separate.  E.g. requires galsim.fits.read(...)
+from . import fits
 from . import config
-from psfcorr import *
-from catalog import *
-from lensing import *
 from . import integ
-from correlatednoise import *
 from . import des
 from . import pse
+from psfcorr import *  # Propose renaming this hsm module, like in C++
