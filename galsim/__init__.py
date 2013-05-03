@@ -29,7 +29,8 @@ from table import LookupTable
 from random import DistDeviate
 from shapelet import Shapelet
 from catalog import InputCatalog
-from lensing import *  # Propose splitting this 
+from lensing_ps import PowerSpectrum
+from nfw_halo import NFWHalo, Cosmology
 from correlatednoise import CorrelatedNoise, getCOSMOSNoise
 from compound import Add, Convolve, Deconvolve, AutoConvolve, AutoCorrelate
 from interpolatedimage import InterpolatedImage
