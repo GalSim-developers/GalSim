@@ -156,9 +156,9 @@ def convert_interpolant_to_2d(interpolant):
 
 class ComparisonShapeData(object):
     """A class to contain the outputs of a comparison between photon shooting and DFT rendering of
-    GSObjects, as measured by the HSM module's FindAdaptiveMom or (in future) EstimateShearHSM.
+    GSObjects, as measured by the HSM module's FindAdaptiveMom or (in future) EstimateShear.
 
-    Currently this class contains the following attributes (see also the HSMShapeData
+    Currently this class contains the following attributes (see also the galsim.hsm.ShapeData
     documentation for a more detailed description of, e.g., observed_shape, moments_sigma)
     describing the results of the comparison:
 
