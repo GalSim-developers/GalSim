@@ -22,6 +22,8 @@ PSF_LAM_OVER_DIAM = 0.09 # ~ COSMOS width, oversampled at 0.03 arcsec
 # MAX_FFT_SIZE (needed for high-n objects)
 MAX_FFT_SIZE=65536
 
+FAIL_VALUE=-666.
+
 # Logging level
 import logging
 LOGLEVEL = logging.WARN
@@ -126,14 +128,22 @@ def run_tests(random_seed, outfile, config=None, gsparams=None, wmult=None, logg
                 warnings.warn(
                         'RuntimeError encountered for galaxy '+str(i + 1)+'/'+str(NOBS)+' with '+
                         'Sersic n = '+str(sersic_n)+': '+str(err))
+                fout.write(
+                    '%e %e %e %e %e %e %e %e %e %e %e %e %e\n' % (
+                    fail_value, fail_value, fail_value, fail_value, fail_value, fail_value,
+                    fail_value, fail_value, fail_value, fail_value, fail_value, fail_value,
+                    fail_value)
+                )
+                fout.flush()
             else:
                 fout.write(
-                    '%e %e %e %e %e %e %e %e %e %e %e %e %e' % (
+                    '%e %e %e %e %e %e %e %e %e %e %e %e %e\n' % (
                     results.g1obs_draw, results.g2obs_draw, results.sigma_draw,
                     results.delta_g1obs, results.delta_g2obs, results.delta_sigma,
                     results.err_g1obs, results.err_g2obs, results.err_sigma, sersic_n, hlr, g1, g2
                     )
                 )
+                fout.flush()
     fout.close()
     return
 
@@ -145,7 +155,7 @@ if __name__ == "__main__":
     config = config_basic
 
     # Output filename
-    outfile = os.path.join("outputs", "sersic_highn_basic_output_N"+str(NOBS)+".pkl")
+    outfile = os.path.join("outputs", "sersic_highn_basic_output_N"+str(NOBS)+".asc")
 
     # Setup the logging
     logging.basicConfig(level=LOGLEVEL) 
