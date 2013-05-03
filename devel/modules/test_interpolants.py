@@ -5,24 +5,24 @@ import galsim
 """
 A test of the behavior of shear, magnification, shift, rotation, etc for different interpolants and gsparams when applied to RealGalaxy objects.
 """
-# Interpolants to test
+# --- THINGS WE ARE TESTING  ---
+# Interpolants
 interpolant_list = ['nearest', 'sinc', 'linear', 'cubic', 'quintic', 
                     'lanczos3', 'lanczos4', 'lanczos5', 'lanczos7']
-
-# Noise_pad options to test
+# Noise_pad options
 noise_padding_list = ['False']
-
-# Padding options to test
+# Padding options
 padding_list = range(2,6,2)
-
-# Range of rotation angles to test
+# Range of rotation angles
 angle_list = galsim.degrees*range(0,180,15)
-
-# Range of shears to test (must be same length as magnification list)
+# Range of shears (must be same length as magnification list)
 shear_list = []
-
-# Range of magnifications to test (must be same length as shear list)
+# Range of magnifications (must be same length as shear list)
 magnification_list = []
+
+# --- IMPORTANT BUT NOT TESTED PARAMETERS ---
+# Galaxy indices
+galaxy_indices = []
 
 # Ground-image parameters
 atmos_fwhm = 2.1
@@ -38,50 +38,20 @@ lam = 800              # nm    NB: don't use lambda - that's a reserved word.
 tel_diam = 4.          # meters 
 pixel_scale = 0.23     # arcsec / pixel
 
-atmos = galsim.Kolmogorov(fwhm=atmos_fwhm)
-atmos.applyShear(e=atmos_e, beta=atmos_beta*galsim.radians)
-    lam_over_diam = 
-optics = galsim.OpticalPSF(lam * 1.e-9 / tel_diam * 206265,  #lambda/diameter in arcsec 
-                           defocus = opt_defocus,
-                           coma1 = opt_c1, coma2 = opt_c2,
-                           astig1 = opt_a1, astig2 = opt_a2,
-                           obscuration = opt_obscuration)
-psf = galsim.Convolve([atmos, optics])
-
 # Space-image parameters
 dx_space = 
 imsize_space =
 psf_space = 
 
+def get_config():
+# A function to return two config dictionaries with the basic PSF info that we will reuse for all
+# tests.
+    space_config = {}
+    ground_config = {}
 
-
-def run_tests(config, shear, dilation, rotation, shift):
-
-    # Set up a config dict to replicate the GSObject spec above
-    config = {}
-
-    config['gal'] = {
-        "type" : "Sersic",
-        "n" : galn,
-        "half_light_radius" : galhlr,
-        "ellip" : {
-            "type" : "G1G2",
-            "g1" : g1gal,
-            "g2" : g2gal
-        }
-    }
-
-    config['psf'] = {
-        "type" : "Moffat",
-        "beta" : psfbeta,
-        "fwhm" : psffwhm, 
-        "ellip" : {
-            "type" : "G1G2",
-            "g1" : g1psf,
-            "g2" : g2psf
-        }
-    }
-
+    space_config['psf'] = { "type" : "Moffat", "beta" : psfbeta, "fwhm" : psffwhm, 
+        "ellip" : { "type" : "G1G2", "g1" : g1psf, "g2" : g2psf } }
+        
     config['image'] = {
         'size' : imsize,
         'pixel_scale' : dx,
@@ -89,6 +59,28 @@ def run_tests(config, shear, dilation, rotation, shift):
         'wmult' : wmult
     }
 
+    ground_config['psf'] = { 
+        'type' : 'Convolution', 
+        'items' : [ {'type' : 'Kolmogorov', 'fwhm' : atmos_fwhm, 
+                     'ellip' : { 'type' : 'EBeta', 'e' : atmos_e, 'beta' : atmos_beta} },
+                    {'type' : 'OpticalPSF', 'lam_over_diam' : lam*1.E-9/tel_diam*206265,
+                     'defocus' : opt_defocus, 'astig1' : opt_a1, 'astig2' : opt_a2,
+                     'coma1' : opt_c1, 'coma2' : opt_c2, 'obscuration' : opt_obscuration } ] 
+    }
+                
+    return [space_config, ground_config]
+
+class InterpolationData:
+# Quick container class for passing around data from these tests.  
+    def __init__(config, g1_obs, g2_obs, sigma_obs, err_g1_obs, err_g2_obs, err_sigma_obs):
+        self.g1_obs = g1_obs
+        self.g2_obs = g2_obs
+        self.sigma_obs = sigma_obs
+        self.err_g1_obs = err_g1_obs
+        self.err_g2_obs = err_g2_obs
+        self.err_sigma_obs = err_sigma_obs
+
+def test_realgalaxy(config, shear, dilation, rotation, shift):
     # Use an automatically-determined N core run setting
     print "Starting tests using config file with N_PHOTONS = "+str(np)
     res8 = galsim.utilities.compare_dft_vs_photon_config(
@@ -97,24 +89,45 @@ def run_tests(config, shear, dilation, rotation, shift):
     print res8
     return
 
+def test_realgalaxyoriginal(config, shear, dilation, rotation, shift):
+# Test values for 
+    # Use an automatically-determined N core run setting
+    print "Starting tests using config file with N_PHOTONS = "+str(np)
+    result = galsim.utilities.compare_dft_vs_photon_config(
+        config, n_photons_per_trial=np, nproc=-1, logger=logger, abs_tol_ellip=tol_ellip,
+        abs_tol_size=tol_size)
+    return InterpolationData(config, g1_obs, g2_obs, sigma_obs, err_g1_obs, err_g2_obs, err_sigma_obs)
+
+
+
 def main():
-    for interpolant in interpolant_list:
-        for padding_type in noise_padding_list:
-            for padding in padding_list:
-                run_dft_tests(plain_galaxy)
-                run_dftshoot_tests(plain_original_galaxy)
-                for angle in angle_list:
-                    run_dft_tests(rotated_galaxy)
-                    run_dft_shoot_tests(rotated_original_galaxy)
-                for (shear, mag) in zip(shear_list, magnification_list):
-                    run_dft_tests(sheared_and_magnified_galaxy)
-                    run_dft_shoot_tests(sheared_and_magnified_original_galaxy)
+    # Define the config dictionaries we will use for all the following tests
+    config_list = get_config()
+    
+    # Now, run through the various things we need to test in loops.
+    # Right now, test rotation angles separately from shear and magnification
+    # (but we can do that nested later if need be - probably with fewer tested angles).
+    for base_config in config_list:                     # Ground and space
+        base_answer = test_realgalaxy(base_galaxy)
+        base_answer_dft, base_answer_shoot = test_realgalaxyoriginal(base_galaxy_original)
+        for angle in angle_list:                        # Possible rotation angles
+            for interpolant in interpolant_list:        # Possible interpolants
+                for padding_type in noise_padding_list: # Noise pad or not
+                    for padding in padding_list:        # Amount of padding
+                        print_results(base_answer, test_realgalaxy(rotated_galaxy))
+                        print_results_original(base_answer_dft, base_answer_shoot, 
+                                               test_realgalaxyoriginal(rotated_original_galaxy))
+        for (shear, mag) in zip(shear_list, magnification_list): # Shear and magnification
+            for interpolant in interpolant_list:                 # Possible interpolants
+                for padding_type in noise_padding_list:          # Noise pad or not
+                    for padding in padding_list:                 # Amount of padding
+                        print_results(base_answer, test_realgalaxy(rotated_galaxy))
+                        print_results_original(base_answer_dft, base_answer_shoot, 
+                                               test_realgalaxyoriginal(rotated_original_galaxy))
                 
         
         
 
-    config = {}    
-    config['gal'] = 
     
 gal :
     type : RealGalaxy
@@ -151,5 +164,4 @@ gal :
 
 if __name__ == "__main__":
     main()
-
 
