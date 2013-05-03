@@ -100,7 +100,7 @@ namespace hsm {
      * @param max_mom2_iter      Maximum number of iterations to use when calculating adaptive
      *                           moments.  This should be sufficient in nearly all situations, with
      *                           the possible exception being very flattened profiles.
-     * @param num_iter_default   Number of iterations to report in the output HSMShapeData structure
+     * @param num_iter_default   Number of iterations to report in the output ShapeData structure
      *                           when code fails to converge within max_mom2_iter iterations.
      * @param bound_correct_wt   Maximum shift in centroids and sigma between iterations for
      *                           adaptive moments.
@@ -227,7 +227,7 @@ namespace hsm {
      * are not represented using CppShear objects, since it may not be possible to make a meaningful
      * per-object conversion from distortion to shear (e.g., if |e|>1).
      */
-    struct CppHSMShapeData
+    struct CppShapeData
     {
         /// @brief galsim::Bounds object describing the image of the object
         Bounds<int> image_bounds;
@@ -297,7 +297,7 @@ namespace hsm {
         std::string error_message;
 
         /// @brief Constructor, setting defaults
-        CppHSMShapeData() : image_bounds(galsim::Bounds<int>()), moments_status(-1),
+        CppShapeData() : image_bounds(galsim::Bounds<int>()), moments_status(-1),
             observed_shape(galsim::CppShear()), moments_sigma(-1.), moments_amp(-1.),
             moments_centroid(galsim::Position<double>(0.,0.)), moments_rho4(-1.), moments_n_iter(0),
             correction_status(-1), corrected_e1(-10.), corrected_e2(-10.), corrected_g1(-10.), 
@@ -314,7 +314,7 @@ namespace hsm {
      * A template function to carry out one of the multiple possible methods of PSF correction using
      * the HSM package, directly accessing the input ImageViews.  The input arguments get repackaged
      * before calling general_shear_estimator, and results for the shape measurement are returned as
-     * CppHSMShapeData.  There are two arguments that have default values, namely shear_est (the
+     * CppShapeData.  There are two arguments that have default values, namely shear_est (the
      * type of shear estimator) and recompute_flux (for the REGAUSS method only).
      *
      * @param[in] gal_image        The ImageView for the galaxy being measured
@@ -341,10 +341,10 @@ namespace hsm {
      * @param[in] guess_y_centroid Optional argument with an initial guess for the y centroid of the
      *                             galaxy; if not set, then the code will try the center of the
      *                             image.
-     * @return A CppHSMShapeData object containing the results of shape measurement.
+     * @return A CppShapeData object containing the results of shape measurement.
      */
     template <typename T, typename U>
-        CppHSMShapeData EstimateShearHSMView(
+        CppShapeData EstimateShearView(
             const ImageView<T> &gal_image, const ImageView<U> &PSF_image,
             const ImageView<int> &gal_mask_image,
             float sky_var = 0.0, const char *shear_est = "REGAUSS",
@@ -376,10 +376,10 @@ namespace hsm {
      * @param[in] guess_y_centroid  Optional argument with an initial guess for the y centroid of
      *                              the galaxy; if not set, then the code will try the center of the
      *                              image.
-     * @return A CppHSMShapeData object containing the results of moment measurement.
+     * @return A CppShapeData object containing the results of moment measurement.
      */
     template <typename T>
-        CppHSMShapeData FindAdaptiveMomView(
+        CppShapeData FindAdaptiveMomView(
             const ImageView<T> &object_image, const ImageView<int> &object_mask_image,
             double guess_sig = 5.0, double precision = 1.0e-6, double guess_x_centroid = -1000.0,
             double guess_y_centroid = -1000.0,

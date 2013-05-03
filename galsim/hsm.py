@@ -23,7 +23,7 @@ This file contains the python interface to C++ routines for estimation of second
 and for carrying out PSF correction using a variety of algorithms.  The algorithms are described in
 Hirata & Seljak (2003; MNRAS, 343, 459), and were tested/characterized using real data in Mandelbaum
 et al. (2005; MNRAS, 361, 1287).  We also define a python-level container for the outputs of these
-codes, HSMShapeData, analogous to the C++-level CppHSMShapeData.  Note that these routines for
+codes, ShapeData, analogous to the C++-level CppShapeData.  Note that these routines for
 moment measurement and shear estimation are not accessible via config, only via python.  There are a
 number of default settings for the code (often governing the tradeoff between accuracy and speed)
 that can be adjusting using an optional `hsmparams` argument as described below.
@@ -53,20 +53,21 @@ These methods are all based on correction of moments, but with different sets of
 more detailed discussion on all of these algorithms, see the relevant papers above.
 
 Users can find a listing of the parameters that can be adjusted using the `hsmparams` keyword, along
-with default values, using help(galsim.HSMParams).
+with default values, using help(galsim.hsm.HSMParams).
 """
 
 
 from . import _galsim
 import galsim
+from _galsim import _HSMParams as HSMParams
 
 
-class HSMShapeData(object):
+class ShapeData(object):
     """A class to contain the outputs of using the HSM shape and moments measurement routines.
 
     At the C++ level, we have a container for the outputs of the HSM shape measurement routines.
-    The HSMShapeData class is the analogous object at the python level.  It contains the following
-    information about moment measurement (from either EstimateShearHSM or FindAdaptiveMom):
+    The ShapeData class is the analogous object at the python level.  It contains the following
+    information about moment measurement (from either EstimateShear or FindAdaptiveMom):
 
     - image_bounds: a galsim.Bounds object describing the image.
 
@@ -92,7 +93,7 @@ class HSMShapeData(object):
 
     - moments_n_iter: number of iterations needed to get adaptive moments, or 0 if not measured.
 
-    If EstimateShearHSM was used, then the following fields related to PSF-corrected shape will also
+    If EstimateShear was used, then the following fields related to PSF-corrected shape will also
     be populated:
 
     - correction_status: the status flag resulting from PSF correction; -1 indicates no attempt to
@@ -115,17 +116,17 @@ class HSMShapeData(object):
     - error_message: a string containing any error messages from the attempt to carry out
       PSF-correction.
 
-    The HSMShapeData object can be initialized completely empty, or can be returned from the
+    The ShapeData object can be initialized completely empty, or can be returned from the
     routines that measure object moments (FindAdaptiveMom) and carry out PSF correction
-    (EstimateShearHSM).
+    (EstimateShear).
     """
     def __init__(self, *args):
-        # arg checking: require either a CppHSMShapeData, or nothing
+        # arg checking: require either a CppShapeData, or nothing
         if len(args) > 1:
-            raise TypeError("Too many arguments to initialize HSMShapeData!")
+            raise TypeError("Too many arguments to initialize ShapeData!")
         elif len(args) == 1:
-            if not isinstance(args[0], _galsim._CppHSMShapeData):
-                raise TypeError("Argument to initialize HSMShapeData must be a _CppHSMShapeData!")
+            if not isinstance(args[0], _galsim._CppShapeData):
+                raise TypeError("Argument to initialize ShapeData must be a _CppShapeData!")
             self.image_bounds = args[0].image_bounds
             self.moments_status = args[0].moments_status
             self.observed_shape = galsim.Shear(args[0].observed_shape)
@@ -169,7 +170,7 @@ class HSMShapeData(object):
 def _convertMask(image, weight = None, badpix = None):
     """Convert from input weight and badpix images to a single mask image needed by C++ functions.
 
-       This is used by EstimateShearHSM and FindAdaptiveMom.
+       This is used by EstimateShear and FindAdaptiveMom.
     """
     # if no weight image was supplied, make an int array (same size as gal image) filled with 1's
     if weight == None:
@@ -214,10 +215,10 @@ def _convertMask(image, weight = None, badpix = None):
     # finally, return the ImageView for the weight map
     return mask.view()
 
-def EstimateShearHSM(gal_image, PSF_image, weight = None, badpix = None, sky_var = 0.0,
-                     shear_est = "REGAUSS", recompute_flux = "FIT", guess_sig_gal = 5.0,
-                     guess_sig_PSF = 3.0, precision = 1.0e-6, guess_x_centroid = -1000.0,
-                     guess_y_centroid = -1000.0, strict = True, hsmparams = None):
+def EstimateShear(gal_image, PSF_image, weight = None, badpix = None, sky_var = 0.0,
+                  shear_est = "REGAUSS", recompute_flux = "FIT", guess_sig_gal = 5.0,
+                  guess_sig_PSF = 3.0, precision = 1.0e-6, guess_x_centroid = -1000.0,
+                  guess_y_centroid = -1000.0, strict = True, hsmparams = None):
     """Carry out moments-based PSF correction routines.
 
     Carry out PSF correction using one of the methods of the HSM package (see references in
@@ -251,7 +252,7 @@ def EstimateShearHSM(gal_image, PSF_image, weight = None, badpix = None, sky_var
         >>> final_epsf = galsim.Convolve([psf, pixel])
         >>> final_image = final.draw(dx = 0.2)
         >>> final_epsf_image = final_epsf.draw(dx = 0.2)
-        >>> result = galsim.EstimateShearHSM(final_image, final_epsf_image)
+        >>> result = galsim.hsm.EstimateShear(final_image, final_epsf_image)
     
     After running the above code, `result.observed_shape` ["shape" = distortion, the 
     (a^2 - b^2)/(a^2 + b^2) definition of ellipticity] is
@@ -266,7 +267,7 @@ def EstimateShearHSM(gal_image, PSF_image, weight = None, badpix = None, sky_var
         n_fail = 0
         for i=0, range(n_image):
             #...some code defining this_image, this_final_epsf_image...
-            result = galsim.EstimateShearHSM(this_image, this_final_epsf_image, strict = False)
+            result = galsim.hsm.EstimateShear(this_image, this_final_epsf_image, strict = False)
             if result.error_message != "":
                 n_fail += 1
         print "Number of failures: ", n_fail
@@ -305,11 +306,11 @@ def EstimateShearHSM(gal_image, PSF_image, weight = None, badpix = None, sky_var
     @param strict            If `strict = True` (default), then there will be a `RuntimeError` 
                              exception if shear estimation fails.  If set to `False`, then 
                              information about failures will be silently stored in the output 
-                             HSMShapeData object.
+                             ShapeData object.
     @param hsmparams         The hsmparams keyword can be used to change the settings used by
-                             EstimateShearHSM when estimating shears; see HSMParams documentation
-                             using help(galsim.HSMParams) for more information.
-    @return                  A HSMShapeData object containing the results of shape measurement.
+                             EstimateShear when estimating shears; see HSMParams documentation
+                             using help(galsim.hsm.HSMParams) for more information.
+    @return                  A ShapeData object containing the results of shape measurement.
     """
     # prepare inputs to C++ routines: ImageView for galaxy, PSF, and weight map
     gal_image_view = gal_image.view()
@@ -317,23 +318,23 @@ def EstimateShearHSM(gal_image, PSF_image, weight = None, badpix = None, sky_var
     weight_view = _convertMask(gal_image, weight=weight, badpix=badpix)
 
     try:
-        result = _galsim._EstimateShearHSMView(gal_image_view, PSF_image_view, weight_view,
-                                               sky_var = sky_var,
-                                               shear_est = shear_est.upper(),
-                                               recompute_flux = recompute_flux.upper(),
-                                               guess_sig_gal = guess_sig_gal,
-                                               guess_sig_PSF = guess_sig_PSF,
-                                               precision = precision,
-                                               guess_x_centroid = guess_x_centroid,
-                                               guess_y_centroid = guess_y_centroid,
-                                               hsmparams = hsmparams)
+        result = _galsim._EstimateShearView(gal_image_view, PSF_image_view, weight_view,
+                                            sky_var = sky_var,
+                                            shear_est = shear_est.upper(),
+                                            recompute_flux = recompute_flux.upper(),
+                                            guess_sig_gal = guess_sig_gal,
+                                            guess_sig_PSF = guess_sig_PSF,
+                                            precision = precision,
+                                            guess_x_centroid = guess_x_centroid,
+                                            guess_y_centroid = guess_y_centroid,
+                                            hsmparams = hsmparams)
     except RuntimeError as err:
         if (strict == True):
             raise
         else:
-            result = _galsim._CppHSMShapeData()
+            result = _galsim._CppShapeData()
             result.error_message = err.message
-    return HSMShapeData(result)
+    return ShapeData(result)
 
 def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0, precision = 1.0e-6,
                     guess_x_centroid = -1000.0, guess_y_centroid = -1000.0, strict = True,
@@ -348,9 +349,9 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
     weight function.  FindAdaptiveMom can be used either as a free function, or as a method of the
     ImageViewI(), ImageViewD() etc. classes.
 
-    Like EstimateShearHSM, FindAdaptiveMom works on Image inputs, and fails if the object is small
-    compared to the pixel scale.  For more details, see galsim.EstimateShearHSM (for doxygen
-    documentation, see galsim.psfcorr.EstimateShearHSM).
+    Like EstimateShear, FindAdaptiveMom works on Image inputs, and fails if the object is small
+    compared to the pixel scale.  For more details, see galsim.EstimateShear (for doxygen
+    documentation, see galsim.psfcorr.EstimateShear).
 
     Example usage
     -------------
@@ -385,12 +386,12 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
 
     then the result will be a RuntimeError due to moment measurement failing because the object is
     so large.  While the list of all possible settings that can be changed is accessible in the
-    docstring of the galsim.HSMParams class, in this case we need to modify `max_amoment` which
+    docstring of the galsim.hsm.HSMParams class, in this case we need to modify `max_amoment` which
     is the maximum value of the moments in units of pixel^2.  The following measurement, using the
     default values for every parameter except for `max_amoment`, will be
     successful:
 
-        >>> new_params = galsim.HSMParams(max_amoment=5.0e5)
+        >>> new_params = galsim.hsm.HSMParams(max_amoment=5.0e5)
         >>> my_moments = my_gaussian_image.FindAdaptiveMom(hsmparams = new_params)
 
     @param object_image      The Image or ImageView for the object being measured.
@@ -415,11 +416,11 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
     @param strict            If `strict = True` (default), then there will be a `RuntimeError`
                              exception when moment measurement fails.  If set to `False`, then 
                              information about failures will be silently stored in the output 
-                             HSMShapeData object.
+                             ShapeData object.
     @param hsmparams         The hsmparams keyword can be used to change the settings used by
                              FindAdaptiveMom when estimating moments; see HSMParams documentation
-                             using help(galsim.HSMParams) for more information.
-    @return                  A HSMShapeData object containing the results of moment measurement.
+                             using help(galsim.hsm.HSMParams) for more information.
+    @return                  A ShapeData object containing the results of moment measurement.
     """
     # prepare inputs to C++ routines: ImageView for the object being measured and the weight map.
     object_image_view = object_image.view()
@@ -435,9 +436,9 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
         if (strict == True):
             raise
         else:
-            result = _galsim._CppHSMShapeData()
+            result = _galsim._CppShapeData()
             result.error_message = err.message
-    return HSMShapeData(result)
+    return ShapeData(result)
 
 # make FindAdaptiveMom a method of Image and ImageView classes
 for Class in _galsim.ImageView.itervalues():

@@ -21,7 +21,6 @@
 
 import galsim
 import numpy as np
-from angle import arcsec, AngleUnit
 
 def theoryToObserved(gamma1, gamma2, kappa):
     """Helper function to convert theoretical lensing quantities to observed ones.

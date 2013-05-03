@@ -16,24 +16,26 @@
 # You should have received a copy of the GNU General Public License
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
-from ._galsim import *
+
 
 # Import things from other files we want to be in the galsim namespace
+from ._galsim import *
 from base import *
+from real import RealGalaxy, RealGalaxyCatalog, simReal
+from optics import OpticalPSF
+from shapelet import Shapelet
+from interpolatedimage import InterpolatedImage
+from atmosphere import AtmosphericPSF
+from compound import Add, Convolve, Deconvolve, AutoConvolve, AutoCorrelate
+
 from shear import Shear
 from ellipse import Ellipse
-from real import RealGalaxy, RealGalaxyCatalog, simReal
-from atmosphere import AtmosphericPSF
-from optics import OpticalPSF
-from table import LookupTable
-from random import DistDeviate
-from shapelet import Shapelet
-from catalog import InputCatalog
 from lensing_ps import PowerSpectrum
 from nfw_halo import NFWHalo, Cosmology
+from catalog import InputCatalog
+from table import LookupTable
+from random import DistDeviate
 from correlatednoise import CorrelatedNoise, getCOSMOSNoise
-from compound import Add, Convolve, Deconvolve, AutoConvolve, AutoCorrelate
-from interpolatedimage import InterpolatedImage
 from fits import FitsHeader
 
 # packages with docs and such, so nothing really to import by name.
@@ -50,4 +52,4 @@ from . import config
 from . import integ
 from . import des
 from . import pse
-from psfcorr import *  # Propose renaming this hsm module, like in C++
+from . import hsm

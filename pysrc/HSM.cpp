@@ -91,7 +91,7 @@ struct PyHSMParams {
             "max_mom2_iter     Maximum number of iterations to use when calculating adaptive\n"
             "                  moments.  This should be sufficient in nearly all situations, with\n"
             "                  the possible exception being very flattened profiles.\n"
-            "num_iter_default   Number of iterations to report in the output HSMShapeData structure\n"
+            "num_iter_default   Number of iterations to report in the output ShapeData structure\n"
             "                   when code fails to converge within max_mom2_iter iterations.\n"
             "bound_correct_wt   Maximum shift in centroids and sigma between iterations for\n"
             "                   adaptive moments.\n"
@@ -106,7 +106,7 @@ struct PyHSMParams {
             "failed_moments     Value to report for ellipticities and resolution factor if shape\n"
             "                   measurement fails.\n";
 
-        bp::class_<HSMParams> pyHSMParams("HSMParams", doc, bp::no_init);
+        bp::class_<HSMParams> pyHSMParams("_HSMParams", doc, bp::no_init);
         pyHSMParams
             .def(bp::init<
                  double, double, double, int, int, long, long, double, double, double, int, double>(
@@ -139,13 +139,13 @@ struct PyHSMParams {
     }
 };
 
-struct PyCppHSMShapeData {
+struct PyCppShapeData {
 
     template <typename U, typename V>
     static void wrapTemplates() {
-        typedef CppHSMShapeData (* FAM_func)(const ImageView<U> &, const ImageView<int> &, 
-                                             double, double, double, double,
-                                             boost::shared_ptr<HSMParams>);
+        typedef CppShapeData (*FAM_func)(const ImageView<U> &, const ImageView<int> &, 
+                                         double, double, double, double,
+                                         boost::shared_ptr<HSMParams>);
         bp::def("_FindAdaptiveMomView",
                 FAM_func(&FindAdaptiveMomView),
                 (bp::arg("object_image"), bp::arg("object_mask_image"), bp::arg("guess_sig")=5.0, 
@@ -154,12 +154,12 @@ struct PyCppHSMShapeData {
                  bp::arg("hsmparams")=bp::object()),
                 "Find adaptive moments of an image (with some optional args).");
 
-        typedef CppHSMShapeData (* ESH_func)(const ImageView<U> &, const ImageView<V> &, 
-                                             const ImageView<int> &, float, const char *,
-                                             const std::string&, double, double, double, double, double,
-                                             boost::shared_ptr<HSMParams>);
-        bp::def("_EstimateShearHSMView",
-                ESH_func(&EstimateShearHSMView),
+        typedef CppShapeData (*ESH_func)(const ImageView<U> &, const ImageView<V> &, 
+                                         const ImageView<int> &, float, const char *,
+                                         const std::string&, double, double, double, double, double,
+                                         boost::shared_ptr<HSMParams>);
+        bp::def("_EstimateShearView",
+                ESH_func(&EstimateShearView),
                 (bp::arg("gal_image"), bp::arg("PSF_image"), bp::arg("gal_mask_image"),
                  bp::arg("sky_var")=0.0, bp::arg("shear_est")="REGAUSS",
                  bp::arg("recompute_flux")="FIT",
@@ -171,29 +171,29 @@ struct PyCppHSMShapeData {
 
     static void wrap() {
         static char const * doc = 
-            "CppHSMShapeData object represents information from the HSM moments and PSF-correction\n"
+            "CppShapeData object represents information from the HSM moments and PSF-correction\n"
             "functions.  See C++ docs for more detail.\n"
             ;
 
-        bp::class_<CppHSMShapeData>("_CppHSMShapeData", doc, bp::init<>())
-            .def_readwrite("image_bounds", &CppHSMShapeData::image_bounds)
-            .def_readwrite("moments_status", &CppHSMShapeData::moments_status)
-            .def_readwrite("observed_shape", &CppHSMShapeData::observed_shape)
-            .def_readwrite("moments_sigma", &CppHSMShapeData::moments_sigma)
-            .def_readwrite("moments_amp", &CppHSMShapeData::moments_amp)
-            .def_readwrite("moments_rho4", &CppHSMShapeData::moments_rho4)
-            .def_readwrite("moments_centroid", &CppHSMShapeData::moments_centroid)
-            .def_readwrite("moments_n_iter", &CppHSMShapeData::moments_n_iter)
-            .def_readwrite("correction_status", &CppHSMShapeData::correction_status)
-            .def_readwrite("corrected_e1", &CppHSMShapeData::corrected_e1)
-            .def_readwrite("corrected_e2", &CppHSMShapeData::corrected_e2)
-            .def_readwrite("corrected_g1", &CppHSMShapeData::corrected_g1)
-            .def_readwrite("corrected_g2", &CppHSMShapeData::corrected_g2)
-            .def_readwrite("meas_type", &CppHSMShapeData::meas_type)
-            .def_readwrite("corrected_shape_err", &CppHSMShapeData::corrected_shape_err)
-            .def_readwrite("correction_method", &CppHSMShapeData::correction_method)
-            .def_readwrite("resolution_factor", &CppHSMShapeData::resolution_factor)
-            .def_readwrite("error_message", &CppHSMShapeData::error_message)
+        bp::class_<CppShapeData>("_CppShapeData", doc, bp::init<>())
+            .def_readwrite("image_bounds", &CppShapeData::image_bounds)
+            .def_readwrite("moments_status", &CppShapeData::moments_status)
+            .def_readwrite("observed_shape", &CppShapeData::observed_shape)
+            .def_readwrite("moments_sigma", &CppShapeData::moments_sigma)
+            .def_readwrite("moments_amp", &CppShapeData::moments_amp)
+            .def_readwrite("moments_rho4", &CppShapeData::moments_rho4)
+            .def_readwrite("moments_centroid", &CppShapeData::moments_centroid)
+            .def_readwrite("moments_n_iter", &CppShapeData::moments_n_iter)
+            .def_readwrite("correction_status", &CppShapeData::correction_status)
+            .def_readwrite("corrected_e1", &CppShapeData::corrected_e1)
+            .def_readwrite("corrected_e2", &CppShapeData::corrected_e2)
+            .def_readwrite("corrected_g1", &CppShapeData::corrected_g1)
+            .def_readwrite("corrected_g2", &CppShapeData::corrected_g2)
+            .def_readwrite("meas_type", &CppShapeData::meas_type)
+            .def_readwrite("corrected_shape_err", &CppShapeData::corrected_shape_err)
+            .def_readwrite("correction_method", &CppShapeData::correction_method)
+            .def_readwrite("resolution_factor", &CppShapeData::resolution_factor)
+            .def_readwrite("error_message", &CppShapeData::error_message)
             ;
 
         wrapTemplates<float, float>();
@@ -206,8 +206,8 @@ struct PyCppHSMShapeData {
 
 } // anonymous
 
-void pyExportPSFCorr() {
-    PyCppHSMShapeData::wrap();
+void pyExportHSM() {
+    PyCppShapeData::wrap();
     PyHSMParams::wrap();
 }
 
