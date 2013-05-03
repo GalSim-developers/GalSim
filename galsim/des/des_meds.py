@@ -105,6 +105,8 @@ class MEDS(object):
     # or you can just get the catalog to work with
     cat=m.get_cat()
     info=m.get_image_info()
+    meta=m.get_meta()
+
 
 
     Fields in main catalog
