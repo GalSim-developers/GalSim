@@ -11,8 +11,10 @@ config['image']['gsparams']['maxk_threshold'] = 5.e-4
 config['image']['wmult'] = 2.
 
 # Output filename
+if not os.path.isdir("outputs"):
+    os.mkdir("outputs")
 outfile = os.path.join(
-    "outputs", "sersic_highn_alias2_maxk2_wmult2_output_N"+str(test_sersic_highn_basic.NOBS)+".pkl")
+    "outputs", "sersic_highn_alias2_maxk2_wmult2_output_N"+str(test_sersic_highn_basic.NOBS)+".asc")
 
 # Setup the logging
 logging.basicConfig(level=test_sersic_highn_basic.LOGLEVEL) 
@@ -20,4 +22,6 @@ logger = logging.getLogger("sersic_highn_alias2_maxk2_wmult2")
 
 random_seed = 912424534
 
-test_sersic_highn_basic.run_tests(random_seed, outfile, config=config, logger=logger)
+test_sersic_highn_basic.run_tests(
+    random_seed, outfile, config=config, logger=logger,
+    fail_value=test_sersic_highn_basic.FAIL_VALUE)

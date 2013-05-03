@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """Script for testing the generation of high-n Sersic profiles by both DFT and photon shooting, for
 comparison of the size and ellipticity in the resulting images.
 """
