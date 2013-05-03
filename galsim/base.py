@@ -545,7 +545,7 @@ class GSObject(object):
                 if dx_is_dk:
                     # dx = 2pi / (N*dk)
                     dk = image.scale
-                    dx = 2.*np.pi/( np.sqrt(image.bounds.area()) * image.scale )
+                    dx = 2.*np.pi/( np.max(image.array.shape) * image.scale )
                 else:
                     dx = image.scale
             else:
@@ -560,7 +560,7 @@ class GSObject(object):
             if dx_is_dk:
                 dk = float(dx)
                 if image is not None:
-                    dx = 2.*np.pi/( np.sqrt(image.bounds.area()) * dk )
+                    dx = 2.*np.pi/( np.max(image.array.shape) * dk )
                 else:
                     dx = self.SBProfile.nyquistDx()
             else:
