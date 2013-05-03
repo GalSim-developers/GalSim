@@ -354,14 +354,15 @@ def write(filename,objlist,clobber=False):
 
     Arguments:
     ----------
-    filename:   Name of meds file to be written
-    objlist:    A list of objects. Each object contains a dictionary with fields:
-                     'image'  - contains the list of images of exposures 
-                     'weight' - contains the list of weights for exposures
-                     'seg'    - contains the list of segmaps for exposures
-                All images, weights, segmaps are numpy arrays of size in [32,48,64,96,128,196,256].
-                All images, weights, segmaps for an object have to be of same size.
-                Maximum number of exposures is set by MAX_NCUTOUTS (=11 by default)
+    @param filename:    Name of meds file to be written
+    @param objlist:     A list of objects. Each object contains a dictionary with fields:
+                        'image'  - contains the list of images of exposures 
+                        'weight' - contains the list of weights for exposures
+                        'seg'    - contains the list of segmaps for exposures
+                        All images, weights, segmaps are numpy arrays of size in 
+                        [32,48,64,96,128,196,256].
+                        All images, weights, segmaps for an object have to be of same size.
+                        Maximum number of exposures is set by MAX_NCUTOUTS (=11 by default)
     """
 
     import numpy
@@ -432,7 +433,9 @@ def write(filename,objlist,clobber=False):
 
             # check if we are running out of memory
             if sys.getsizeof(vec) > MAX_MEMORY:
-                raise MemoryError('Running out of memory > %1.0fGB - you can increase the limit by changing' % MAX_MEMORY/1e9)
+                raise MemoryError(
+                    'Running out of memory > %1.0fGB - you can increase the limit by changing' % 
+                    MAX_MEMORY/1e9)
 
         # update the start rows fields in the catalog
         cat['start_row'].append(start_rows)
@@ -446,7 +449,8 @@ def write(filename,objlist,clobber=False):
     cols.append( pyfits.Column(name='ncutout', format='i4', array=cat['ncutout'] ) )
     cols.append( pyfits.Column(name='box_size', format='i4', array=cat['box_size'] ) )
     cols.append( pyfits.Column(name='file_id', format='i4', array=[1]*n_obj) ) 
-    cols.append( pyfits.Column(name='start_row', format='%di4' % MAX_NCUTOUTS, array=numpy.array(cat['start_row'])) )
+    cols.append( pyfits.Column(name='start_row', format='%di4' % MAX_NCUTOUTS, 
+                                                        array=numpy.array(cat['start_row'])) )
     cols.append( pyfits.Column(name='orig_row', format='f8', array=[1]*n_obj) )
     cols.append( pyfits.Column(name='orig_col', format='f8', array=[1]*n_obj) )
     cols.append( pyfits.Column(name='orig_start_row', format='i4', array=[1]*n_obj) ) 
@@ -470,23 +474,23 @@ def write(filename,objlist,clobber=False):
 
     # fourth hdu is metadata
     cols = []
-    cols.append( pyfits.Column(name='cat_file',       format='A113', array=['generated_by_galsim']   ))  
-    cols.append( pyfits.Column(name='coadd_file',     format='A109', array=['generated_by_galsim']   ))  
-    cols.append( pyfits.Column(name='coadd_hdu',      format='A1',   array=['x']                     ))  
-    cols.append( pyfits.Column(name='coadd_seg_hdu',  format='A1',   array=['x']                     ))  
-    cols.append( pyfits.Column(name='coadd_srclist',  format='A115', array=['generated_by_galsim']   ))  
-    cols.append( pyfits.Column(name='coadd_wt_hdu',   format='A1',   array=['x']                     ))  
-    cols.append( pyfits.Column(name='coaddcat_file',  format='A110', array=['generated_by_galsim']   ))  
-    cols.append( pyfits.Column(name='coaddseg_file',  format='A113', array=['generated_by_galsim']   ))  
-    cols.append( pyfits.Column(name='cutout_file',    format='A108', array=['generated_by_galsim']   ))  
-    cols.append( pyfits.Column(name='max_boxsize',    format='A3',   array=['x']                     ))  
-    cols.append( pyfits.Column(name='medsconf',       format='A3',   array=['x']                     ))  
-    cols.append( pyfits.Column(name='min_boxsize',    format='A2',   array=['x']                     ))  
-    cols.append( pyfits.Column(name='se_badpix_hdu',  format='A1',   array=['x']                     ))  
-    cols.append( pyfits.Column(name='se_hdu',         format='A1',   array=['x']                     ))  
-    cols.append( pyfits.Column(name='se_wt_hdu',      format='A1',   array=['x']                     ))  
-    cols.append( pyfits.Column(name='seg_hdu',        format='A1',   array=['x']                     ))  
-    cols.append( pyfits.Column(name='sky_hdu',        format='A1',   array=['x']                     )) 
+    cols.append( pyfits.Column(name='cat_file',      format='A113', array=['generated_by_galsim'] ))  
+    cols.append( pyfits.Column(name='coadd_file',    format='A109', array=['generated_by_galsim'] ))  
+    cols.append( pyfits.Column(name='coadd_hdu',     format='A1',   array=['x']                   ))  
+    cols.append( pyfits.Column(name='coadd_seg_hdu', format='A1',   array=['x']                   ))  
+    cols.append( pyfits.Column(name='coadd_srclist', format='A115', array=['generated_by_galsim'] ))  
+    cols.append( pyfits.Column(name='coadd_wt_hdu',  format='A1',   array=['x']                   ))  
+    cols.append( pyfits.Column(name='coaddcat_file', format='A110', array=['generated_by_galsim'] ))  
+    cols.append( pyfits.Column(name='coaddseg_file', format='A113', array=['generated_by_galsim'] ))  
+    cols.append( pyfits.Column(name='cutout_file',   format='A108', array=['generated_by_galsim'] ))  
+    cols.append( pyfits.Column(name='max_boxsize',   format='A3',   array=['x']                   ))  
+    cols.append( pyfits.Column(name='medsconf',      format='A3',   array=['x']                   ))  
+    cols.append( pyfits.Column(name='min_boxsize',   format='A2',   array=['x']                   ))  
+    cols.append( pyfits.Column(name='se_badpix_hdu', format='A1',   array=['x']                   ))  
+    cols.append( pyfits.Column(name='se_hdu',        format='A1',   array=['x']                   ))  
+    cols.append( pyfits.Column(name='se_wt_hdu',     format='A1',   array=['x']                   ))  
+    cols.append( pyfits.Column(name='seg_hdu',       format='A1',   array=['x']                   ))  
+    cols.append( pyfits.Column(name='sky_hdu',       format='A1',   array=['x']                   )) 
     metadata = pyfits.new_table(pyfits.ColDefs(cols))
     metadata.update_ext_name('metadata')
 
@@ -496,19 +500,22 @@ def write(filename,objlist,clobber=False):
     seg_cutouts     = pyfits.ImageHDU( vec['seg']   , name='seg_cutouts'    )
 
     # write all
-    hdu_list = pyfits.HDUList([primary,object_data,image_info,metadata,image_cutouts, weight_cutouts, seg_cutouts])
+    hdu_list = pyfits.HDUList([primary,object_data,image_info,metadata,image_cutouts, 
+                                                                weight_cutouts, seg_cutouts])
     hdu_list.writeto(filename,clobber=clobber)
 
 
 def check_image_sizes(obj):
         """
-        Return 1 if all images, weights and segmasks are of same size and in BOX_SIZES.
+        Check if all image sizes argree and in BOX_SIZES.
 
         Arguments:
         ----------
-        obj:
-            object dict consisting of at least obj['cutouts'] obj['weights'] obj['segmasks'], 
-            each of those holding a list of images
+        @param obj          object dict consisting of at least 
+                            obj['cutouts'] obj['weights'] obj['segmasks'], 
+                            each of those holding a list of images
+        @return             Return True if all images, weights and segmasks are of same size 
+                            and in BOX_SIZES.
         """
 
         # check if there are any cutouts in the dicts
@@ -535,7 +542,8 @@ def check_image_sizes(obj):
                     raise ValueError('%s should be square and is %d x %d',(extname,nx,ny))
 
                 if nx != box_size:
-                    raise ValueError('%s object %d has size %d and should be %d' % (extname,icutout,nx,box_size))
+                    raise ValueError('%s object %d has size %d and should be %d' % (extname,
+                                                                            icutout,nx,box_size))
 
         # return true if no errors
         return True

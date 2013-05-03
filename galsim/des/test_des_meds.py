@@ -49,7 +49,7 @@ obj['dvdcol'] = 222
 objlist.append(obj)
 
 filename_meds='test_meds.fits'
-des_meds.write(filename_meds,objlist)
+des_meds.write(filename_meds,objlist,clobber=True)
 print 'wrote meds file %s ' % filename_meds
 
 # test functions in meds.py
