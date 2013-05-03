@@ -34,7 +34,8 @@ config_basic['image'] = {
 
 
 # Then define a function that runs tests but adds extra gsparams if required, supplied as kwargs
-def run_tests(random_seed, outfile, config=None, gsparams=None, wmult=None, logger=None):
+def run_tests(random_seed, outfile, config=None, gsparams=None, wmult=None, logger=None,
+              fail_value=-666.):
     """Run a full set of tests, writing pickled tuple output to outfile.
     """
     import cPickle
@@ -68,17 +69,13 @@ def run_tests(random_seed, outfile, config=None, gsparams=None, wmult=None, logg
     hlr_cosmos = hlr_cosmos[0: NOBS]
     gabs_cosmos = gabs_cosmos[0: NOBS]
     ntest = len(SERSIC_N_TEST)
-    g1obs_draw = np.empty((NOBS, ntest)) # Arrays for storing results
-    g2obs_draw = np.empty((NOBS, ntest))
-    sigma_draw = np.empty((NOBS, ntest))
-    delta_g1obs = np.empty((NOBS, ntest))
-    delta_g2obs = np.empty((NOBS, ntest))
-    delta_sigma = np.empty((NOBS, ntest))
-    err_g1obs = np.empty((NOBS, ntest))
-    err_g2obs = np.empty((NOBS, ntest))
-    err_sigma = np.empty((NOBS, ntest))
     # Setup a UniformDeviate
     ud = galsim.UniformDeviate(random_seed)
+    # Open the output file and write a header:
+    fout = open(outfile, 'wb')
+    fout.write(
+        '#  g1obs_draw g2obs_draw sigma_draw delta_g1obs delta_g2obs delta_sigma '+
+        'err_g1obs err_g2obs err_sigma\n')
     # Start looping through the sample objects and collect the results
     for i, hlr, gabs in zip(range(NOBS), hlr_cosmos, gabs_cosmos):
         print "Testing galaxy #"+str(i+1)+"/"+str(NOBS)+\
@@ -98,8 +95,13 @@ def run_tests(random_seed, outfile, config=None, gsparams=None, wmult=None, logg
                     }
                 }
                 config['psf'] = {"type" : "Airy" , "lam_over_diam" : PSF_LAM_OVER_DIAM }
-                results = galsim.utilities.compare_dft_vs_photon_config(
-                    config, abs_tol_ellip=TOL_ELLIP, abs_tol_size=TOL_SIZE, logger=logger)
+                try:
+                    results = galsim.utilities.compare_dft_vs_photon_config(
+                        config, abs_tol_ellip=TOL_ELLIP, abs_tol_size=TOL_SIZE, logger=logger)
+                    test_ran = True
+                except RuntimeError, err:
+                    test_ran = False
+                    pass
                 # Uncomment lines below to ouput a check image
                 #import copy
                 #checkimage = galsim.config.BuildImage(copy.deepcopy(config))[0] #im = first element
@@ -109,24 +111,29 @@ def run_tests(random_seed, outfile, config=None, gsparams=None, wmult=None, logg
                 galaxy = galsim.Sersic(sersic_n, half_light_radius=hlr, gsparams=test_gsparams)
                 galaxy.applyShear(g1=g1, g2=g2)
                 psf = galsim.Airy(lam_over_diam=PSF_LAM_OVER_DIAM, gsparams=test_gsparams)
-                results = galsim.utilities.compare_dft_vs_photon_object(
-                    galaxy, psf_object=psf, rng=ud, pixel_scale=PIXEL_SCALE, size=IMAGE_SIZE,
-                    abs_tol_ellip=TOL_ELLIP, abs_tol_size=TOL_SIZE, n_photons_per_trial=NPHOTONS,
-                    wmult=wmult)
-            g1obs_draw[i, j] = results.g1obs_draw
-            g2obs_draw[i, j] = results.g2obs_draw
-            sigma_draw[i, j] = results.sigma_draw
-            delta_g1obs[i, j] = results.delta_g1obs
-            delta_g2obs[i, j] = results.delta_g2obs
-            delta_sigma[i, j] = results.delta_sigma
-            err_g1obs[i, j] = results.err_g1obs
-            err_g2obs[i, j] = results.err_g2obs
-            err_sigma[i, j] = results.err_sigma
-    for_saving = (
-        g1obs_draw, g2obs_draw, sigma_draw, delta_g1obs, delta_g2obs, delta_sigma, err_g1obs,
-        err_g2obs, err_sigma)
-    fout = open(outfile, 'wb')
-    cPickle.dump(for_saving, fout)
+                try:
+                    results = galsim.utilities.compare_dft_vs_photon_object(
+                        galaxy, psf_object=psf, rng=ud, pixel_scale=PIXEL_SCALE, size=IMAGE_SIZE,
+                        abs_tol_ellip=TOL_ELLIP, abs_tol_size=TOL_SIZE,
+                        n_photons_per_trial=NPHOTONS, wmult=wmult)
+                    test_ran = True
+                except RuntimeError, err:
+                    test_ran = False
+                    pass
+
+            if not test_ran:
+                import warnings
+                warnings.warn(
+                        'RuntimeError encountered for galaxy '+str(i + 1)+'/'+str(NOBS)+' with '+
+                        'Sersic n = '+str(sersic_n)+': '+str(err))
+            else:
+                fout.write(
+                    '%e %e %e %e %e %e %e %e %e %e %e %e %e' % (
+                    results.g1obs_draw, results.g2obs_draw, results.sigma_draw,
+                    results.delta_g1obs, results.delta_g2obs, results.delta_sigma,
+                    results.err_g1obs, results.err_g2obs, results.err_sigma, sersic_n, hlr, g1, g2
+                    )
+                )
     fout.close()
     return
 
