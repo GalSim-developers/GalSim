@@ -156,9 +156,9 @@ def convert_interpolant_to_2d(interpolant):
 
 class ComparisonShapeData(object):
     """A class to contain the outputs of a comparison between photon shooting and DFT rendering of
-    GSObjects, as measured by the HSM module's FindAdaptiveMom or (in future) EstimateShearHSM.
+    GSObjects, as measured by the HSM module's FindAdaptiveMom or (in future) EstimateShear.
 
-    Currently this class contains the following attributes (see also the HSMShapeData
+    Currently this class contains the following attributes (see also the galsim.hsm.ShapeData
     documentation for a more detailed description of, e.g., observed_shape, moments_sigma)
     describing the results of the comparison:
 
@@ -732,3 +732,55 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
 
     if logger: logging.info('\n'+str(results))
     return results
+
+# A helper function for parsing the input position arguments for PowerSpectrum and NFWHalo:
+def _convertPositions(pos, units, func):
+    """Convert pos from the valid ways to input positions to two numpy arrays
+
+       This is used by the functions getShear, getConvergence, getMagnification, and getLensing for
+       both PowerSpectrum and NFWHalo.
+    """
+    # Check for PositionD or PositionI:
+    if isinstance(pos,galsim.PositionD) or isinstance(pos,galsim.PositionI):
+        pos = [ np.array([pos.x], dtype='float'),
+                np.array([pos.y], dtype='float') ]
+
+    # Check for list of PositionD or PositionI:
+    # The only other options allow pos[0], so if this is invalid, an exception 
+    # will be raised:
+    elif isinstance(pos[0],galsim.PositionD) or isinstance(pos[0],galsim.PositionI):
+        pos = [ np.array([p.x for p in pos], dtype='float'),
+                np.array([p.y for p in pos], dtype='float') ]
+
+    # Now pos must be a tuple of length 2
+    elif len(pos) != 2:
+        raise TypeError("Unable to parse the input pos argument for %s."%func)
+
+    else:
+        # Check for (x,y):
+        try:
+            pos = [ np.array([float(pos[0])], dtype='float'),
+                    np.array([float(pos[1])], dtype='float') ]
+        except:
+            # Only other valid option is ( xlist , ylist )
+            pos = [ np.array(pos[0], dtype='float'),
+                    np.array(pos[1], dtype='float') ]
+
+    # Check validity of units
+    if isinstance(units, basestring):
+        # if the string is invalid, this raises a reasonable error message.
+        units = galsim.angle.get_angle_unit(units)
+    if not isinstance(units, galsim.AngleUnit):
+        raise ValueError("units must be either an AngleUnit or a string")
+
+    # Convert pos to arcsec
+    if units != galsim.arcsec:
+        scale = 1. * units / galsim.arcsec
+        # Note that for the next two lines, pos *must* be a list, not a tuple.  Assignments to
+        # elements of tuples is not allowed.
+        pos[0] *= scale
+        pos[1] *= scale
+
+    return pos
+
+

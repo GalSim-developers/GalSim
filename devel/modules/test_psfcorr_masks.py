@@ -113,7 +113,7 @@ gal_im = galsim.ImageF(imsize, imsize)
 psf_im = galsim.ImageF(imsize, imsize)
 gal_im = obj.draw(image=gal_im, dx=0.2)
 psf_im = epsf.draw(image=psf_im, dx=0.2)
-res = galsim.EstimateShearHSM(gal_im, psf_im)
+res = galsim.hsm.EstimateShear(gal_im, psf_im)
 print "\nResults for shear estimation using regauss without masking: ",res.corrected_e1, res.corrected_e2
 
 mask_im = galsim.ImageI(imsize, imsize)+1
@@ -121,11 +121,11 @@ mask_im.setValue(cent_pix-10, cent_pix, 0)
 mask_im.setValue(cent_pix+10, cent_pix, 0)
 mask_im.setValue(cent_pix, cent_pix-10, 0)
 mask_im.setValue(cent_pix, cent_pix+10, 0)
-res = galsim.EstimateShearHSM(gal_im, psf_im, mask_im)
+res = galsim.hsm.EstimateShear(gal_im, psf_im, mask_im)
 print "\nResults for shear estimation using regauss with a few masked pixels: ",res.corrected_e1, res.corrected_e2
 
 # try with masks that are invalid in various ways, make sure exceptions get raised
 #mask_im = galsim.ImageI(imsize+3, imsize)
 #mask_im = galsim.ImageF(imsize, imsize)+1.0
 #mask_im = galsim.ImageI(imsize, imsize)-1
-#res = galsim.EstimateShearHSM(gal_im, psf_im, mask_im)
+#res = galsim.hsm.EstimateShear(gal_im, psf_im, mask_im)

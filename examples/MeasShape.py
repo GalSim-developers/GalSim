@@ -80,8 +80,8 @@ if sky_level_psf != 0.:
     PSF_image -= sky_level_psf
 
 # measure shape, output results
-result = galsim.EstimateShearHSM(gal_image, PSF_image, sky_var = sky_var,
-                                 shear_est = shear_estimator)
+result = galsim.hsm.EstimateShear(gal_image, PSF_image, sky_var = sky_var,
+                                  shear_est = shear_estimator)
 if result.meas_type == 'e':
     shape_1 = result.corrected_e1
     shape_2 = result.corrected_e2
