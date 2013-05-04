@@ -18,3 +18,4 @@
 #
 from des_shapelet import *
 from des_psfex import *
+from des_meds import *
