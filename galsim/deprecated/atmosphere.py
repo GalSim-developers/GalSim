@@ -37,7 +37,7 @@ MTF = modulation transfer function = |FT{PSF}|
 
 import numpy as np
 import galsim
-import utilities
+import galsim.utilities
 from galsim import GSObject
 
 
@@ -114,7 +114,7 @@ class AtmosphericPSF(GSObject):
         # Odd array to center the interpolant on the centroid. Might want to pad this later to
         # make a nice size array for FFT, but for typical seeing, arrays will be very small.
         npix = 1 + 2 * (np.ceil(np.pi / stepk_kolmogorov)).astype(int)
-        atmoimage = galsim.atmosphere.kolmogorov_psf_image(
+        atmoimage = kolmogorov_psf_image(
             array_shape=(npix, npix), dx=dx_lookup, lam_over_r0=lam_over_r0, flux=flux)
         
         # Run checks on the interpolant and build default if None
