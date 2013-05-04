@@ -19,11 +19,14 @@ See docs for the MEDS class for more info
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import numpy
+
 
 BOX_SIZES = [32,48,64,96,128,196,256]
 MAX_MEMORY = 1e9
 MAX_NCUTOUTS = 11
 EMPTY_START_INDEX = 9999
+EMPTY_JAC = 999
 
 class MEDS(object):
     """
@@ -350,6 +353,90 @@ class MEDS(object):
     def size(self):
         return self._cat.size
 
+class MultiExposureObject(object):
+    """
+    A class containing exposures for single object, along with other information.
+
+    Available fields:
+        self.images             list of images of the object (numpy arrays)
+        self.weights            list of weight maps (numpy arrays)
+        self.segs               list of segmentation masks (numpy arrays)
+        self.jacs               list of Jacobians of transformation 
+                                 row,col->ra,dec tangent plane (u,v)
+        self.n_cutouts          number of exposures
+        self.box_size           size of each exposure image
+
+    Constructor parameters:
+    @param images               list of images of the object (numpy arrays)
+    @param weights              list of weight maps (numpy arrays)
+    @param segs                 list of segmentation masks (numpy arrays)
+    @param jacs                 list of Jacobians of transformation 
+                                 row,col->ra,dec tangent plane (u,v) (2x2 numpy arrays)
+
+    Images, weights and segs have to be square numpy arrays with size in 
+    BOX_SIZES = [32,48,64,96,128,196,256].
+    Number of exposures for all lists (images,weights,segs,jacs) have to be the same and smaller 
+    than MAX_NCUTOUTS (default 11).
+    """
+
+    def __init__(self,images,weights,segs,jacs):
+
+        if not isinstance(images,list):
+            raise TypeError('images should be a list')
+        if not isinstance(weights,list):
+            raise TypeError('weights should be a list')
+        if not isinstance(segs,list):
+            raise TypeError('segs should be a list')
+        if not isinstance(jacs,list):
+            raise TypeError('jacs should be a list')
+
+        # get number of cutouts from image list
+        self.images = images
+        self.weights = weights
+        self.segs = segs
+        self.jacs = jacs
+        # get box size from the first image
+        self.box_size = self.images[0].shape[0]
+        self.n_cutouts = len(self.images)
+
+        if self.n_cutouts < 1:
+                raise ValueError('no cutouts in this object') 
+
+        # check if the box size is correct
+        if self.box_size not in BOX_SIZES:
+            raise ValueError('box size should be in  [32,48,64,96,128,196,256], is %d' % box_size)
+
+        # loop through the images and check if they are of the same size
+        for extname in ('images','weights','segs'):
+
+            ext = eval('self.' + extname )
+
+            for icutout,cutout in enumerate(ext):
+
+                if not isinstance(cutout,numpy.ndarray):
+                    raise TypeError('cutout %d in %s is not an array' % (icutout,extname))
+
+                nx=cutout.shape[0]
+                ny=cutout.shape[1]
+
+                if nx != ny:
+                    raise ValueError('%s should be square and is %d x %d',(extname,nx,ny))
+
+                if nx != self.box_size:
+                    raise ValueError('%s object %d has size %d and should be %d' % (extname,
+                                                                    icutout,nx,self.box_size))
+
+        if len(self.jacs) != self.n_cutouts:
+            raise ValueError('number of Jacobians is %d is not equal to number of cutouts %d' 
+                                        % (len(self.jacs),self.n_cutouts ) )
+
+        for jac in self.jacs:
+            if not isinstance(jac,numpy.ndarray):
+                raise TypeError('Jacobians should be numpy arrays')
+            if jac.shape != (2,2):
+                raise ValueError('Jacobians should be 2x2')
+
+
 def write(filename,objlist,clobber=False):
     """
     Writes the galaxy, weights, segmaps images to the meds file.
@@ -357,14 +444,7 @@ def write(filename,objlist,clobber=False):
     Arguments:
     ----------
     @param filename:    Name of meds file to be written
-    @param objlist:     A list of objects. Each object contains a dictionary with fields:
-                        'image'  - contains the list of images of exposures 
-                        'weight' - contains the list of weights for exposures
-                        'seg'    - contains the list of segmaps for exposures
-                        All images, weights, segmaps are numpy arrays of size in 
-                        [32,48,64,96,128,196,256].
-                        All images, weights, segmaps for an object have to be of same size.
-                        Maximum number of exposures is set by MAX_NCUTOUTS (=11 by default)
+    @param objlist:     List of MultiExposureObjects
     """
 
     import numpy
@@ -395,43 +475,43 @@ def write(filename,objlist,clobber=False):
     # loop over objects
     for obj in objlist:
 
-        # check if sizes are ok
-        check_image_sizes(obj)
-
         # initialise the start indices for each image
         start_rows = numpy.ones(MAX_NCUTOUTS)*EMPTY_START_INDEX
+        dudrow = numpy.ones(MAX_NCUTOUTS)*EMPTY_JAC 
+        dudcol = numpy.ones(MAX_NCUTOUTS)*EMPTY_JAC
+        dvdrow = numpy.ones(MAX_NCUTOUTS)*EMPTY_JAC
+        dvdcol = numpy.ones(MAX_NCUTOUTS)*EMPTY_JAC
 
         # get the number of cutouts (exposures)
-        n_cutout = len(obj['image'])
+        n_cutout = obj.n_cutouts
         
         # append the catalog for this object
         cat['ncutout'].append(n_cutout)
-        cat['box_size'].append(obj['image'][0].shape[0])
-        cat['dudrow'].append(obj['dudrow'])  
-        cat['dudcol'].append(obj['dudcol']) 
-        cat['dvdrow'].append(obj['dvdrow']) 
-        cat['dvdcol'].append(obj['dvdcol']) 
-
+        cat['box_size'].append(obj.box_size)
+        
         # loop over cutouts
         for i in range(n_cutout):
 
             # assign the start row to the end of image vector
             start_rows[i] = n_vec
 
-            # update n_vec to point to the end of image vector
-            n_vec = len(vec['image'])
-
             # append the image vectors
             # if vector not is already initialised
             if vec['image'] == []:
-                vec['image'] = obj['image'][i].flatten()
-                vec['seg'] = obj['seg'][i].flatten()
-                vec['weight'] = obj['weight'][i].flatten()
+                vec['image'] = obj.images[i].flatten()
+                vec['seg'] = obj.segs[i].flatten()
+                vec['weight'] = obj.weights[i].flatten()
             # if vector already exists
             else:
-                vec['image'] = numpy.concatenate([vec['image'],obj['image'][i].flatten()])
-                vec['seg'] = numpy.concatenate([vec['seg'],obj['seg'][i].flatten()])
-                vec['weight'] = numpy.concatenate([vec['weight'],obj['weight'][i].flatten()])          
+                vec['image'] = numpy.concatenate([vec['image'],obj.images[i].flatten()])
+                vec['seg'] = numpy.concatenate([vec['seg'],obj.segs[i].flatten()])
+                vec['weight'] = numpy.concatenate([vec['weight'],obj.weights[i].flatten()])          
+
+            # append the Jacobian
+            dudrow[i] = obj.jacs[i][0][0]  
+            dudcol[i] = obj.jacs[i][0][1] 
+            dvdrow[i] = obj.jacs[i][1][0] 
+            dvdcol[i] = obj.jacs[i][1][1] 
 
             # check if we are running out of memory
             if sys.getsizeof(vec) > MAX_MEMORY:
@@ -439,9 +519,18 @@ def write(filename,objlist,clobber=False):
                     'Running out of memory > %1.0fGB - you can increase the limit by changing' % 
                     MAX_MEMORY/1e9)
 
+            # update n_vec to point to the end of image vector
+            n_vec = len(vec['image'])
+
+
         # update the start rows fields in the catalog
         cat['start_row'].append(start_rows)
 
+        # add lists of Jacobians
+        cat['dudrow'].append(dudrow)  
+        cat['dudcol'].append(dudcol) 
+        cat['dvdrow'].append(dvdrow) 
+        cat['dvdcol'].append(dvdcol) 
 
     # get the primary HDU
     primary = pyfits.PrimaryHDU()
@@ -459,10 +548,10 @@ def write(filename,objlist,clobber=False):
     cols.append( pyfits.Column(name='orig_start_col', format='i4', array=[1]*n_obj) ) 
     cols.append( pyfits.Column(name='cutout_row', format='f8' , array=[1]*n_obj) )
     cols.append( pyfits.Column(name='cutout_col', format='f8' , array=[1]*n_obj) )
-    cols.append( pyfits.Column(name='dudrow', format='f8', array=cat['dudrow'] ) )
-    cols.append( pyfits.Column(name='dudcol', format='f8', array=cat['dudcol'] ) )
-    cols.append( pyfits.Column(name='dvdrow', format='f8', array=cat['dvdrow'] ) )
-    cols.append( pyfits.Column(name='dvdcol', format='f8', array=cat['dvdcol'] ) )  
+    cols.append( pyfits.Column(name='dudrow', format='%df8'% MAX_NCUTOUTS, array=cat['dudrow'] ) )
+    cols.append( pyfits.Column(name='dudcol', format='%df8'% MAX_NCUTOUTS, array=cat['dudcol'] ) )
+    cols.append( pyfits.Column(name='dvdrow', format='%df8'% MAX_NCUTOUTS, array=cat['dvdrow'] ) )
+    cols.append( pyfits.Column(name='dvdcol', format='%df8'% MAX_NCUTOUTS, array=cat['dvdcol'] ) )  
     object_data = pyfits.new_table(pyfits.ColDefs(cols))
     object_data.update_ext_name('object_data')
 
@@ -507,46 +596,6 @@ def write(filename,objlist,clobber=False):
     hdu_list.writeto(filename,clobber=clobber)
 
 
-def check_image_sizes(obj):
-        """
-        Check if all image sizes argree and in BOX_SIZES.
 
-        Arguments:
-        ----------
-        @param obj          object dict consisting of at least 
-                            obj['cutouts'] obj['weights'] obj['segmasks'], 
-                            each of those holding a list of images
-        @return             Return True if all images, weights and segmasks are of same size 
-                            and in BOX_SIZES.
-        """
 
-        # check if there are any cutouts in the dicts
-        n_cutouts = len(obj['image'])
-        if n_cutouts < 1:
-            raise ValueError('no cutouts in this object') 
-
-        # get the size of the first one, all other should be the same
-        box_size = obj['image'][0].shape[0]
-
-        # check if the box size is correct
-        if box_size not in BOX_SIZES:
-            raise ValueError('box size should be in  [32,48,64,96,128,196,256], is %d' % box_size)
-
-        # loop through the images and check if they are of the same size
-        for extname in ('image','weight','seg'):
-
-            for icutout,cutout in enumerate(obj[extname]):
-
-                nx=cutout.shape[0]
-                ny=cutout.shape[1]
-
-                if nx != ny:
-                    raise ValueError('%s should be square and is %d x %d',(extname,nx,ny))
-
-                if nx != box_size:
-                    raise ValueError('%s object %d has size %d and should be %d' % (extname,
-                                                                            icutout,nx,box_size))
-
-        # return true if no errors
-        return True
 
