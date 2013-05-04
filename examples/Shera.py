@@ -54,9 +54,10 @@ def main(argv):
     xshift = float(argv[2]) if len(argv) > 2 else 0.
     yshift = float(argv[3]) if len(argv) > 3 else 0.
     s = galsim.Shear(g1=g1, g2=g2)
+
     # Rachel is probably using the (1+g, 1-g) form of shear matrix,
     # which means there is some (de)magnification, by my definition:
-    e = galsim.Ellipse(s, -(g1*g1+g2*g2), galsim.PositionD(xshift,yshift));
+    #e = galsim.Ellipse(s, -(g1*g1+g2*g2), galsim.PositionD(xshift,yshift));
 
     galaxyImg = galsim.fits.read(rootname + "_masknoise.fits")
     galaxy = galsim.InterpolatedImage(galaxyImg, x_interpolant=l32d, dx=dxHST, flux=0.804*1000.*dxSDSS*dxSDSS)

@@ -272,28 +272,6 @@ class GSObject(object):
         self.SBProfile.setFlux(flux)
         self.__class__ = GSObject
 
-    def applyTransformation(self, ellipse):
-        """Apply a galsim.Ellipse distortion to this object.
-           
-        galsim.Ellipse objects can be initialized in a variety of ways (see documentation of this
-        class, galsim.ellipse.Ellipse in the doxygen documentation, for details).
-
-        Note: if the ellipse includes a dilation, then this transformation will not be
-        flux-conserving.  It conserves surface brightness instead.  Thus, the flux will increase by
-        the increase in area = dilation^2.
-
-        After this call, the caller's type will be a GSObject.
-        This means that if the caller was a derived type that had extra methods beyond
-        those defined in GSObject (e.g. getSigma() for a Gaussian), then these methods
-        are no longer available.
-
-        @param ellipse The galsim.Ellipse transformation to apply
-        """
-        if not isinstance(ellipse, galsim.Ellipse):
-            raise TypeError("Argument to applyTransformation must be a galsim.Ellipse!")
-        self.SBProfile.applyTransformation(ellipse._ellipse)
-        self.__class__ = GSObject
- 
     def applyDilation(self, scale):
         """Apply a dilation of the linear size by the given scale.
 
@@ -313,7 +291,7 @@ class GSObject(object):
         """
         old_flux = self.getFlux()
         import numpy as np
-        self.applyTransformation(galsim.Ellipse(np.log(scale)))
+        self.SBProfile.applyScale(scale)
         self.setFlux(old_flux) # conserve flux
 
     def applyMagnification(self, mu):
@@ -336,7 +314,7 @@ class GSObject(object):
         @param mu The lensing magnification to apply.
         """
         import numpy as np
-        self.applyTransformation(galsim.Ellipse(np.log(np.sqrt(mu))))
+        self.SBProfile.applyScale(np.sqrt(mu))
        
     def applyShear(self, *args, **kwargs):
         """Apply a shear to this object, where arguments are either a galsim.Shear, or arguments
@@ -418,22 +396,6 @@ class GSObject(object):
 
     # Also add methods which create a new GSObject with the transformations applied...
     #
-    def createTransformed(self, ellipse):
-        """Returns a new GSObject by applying a galsim.Ellipse transformation 
-        (shear, dilate, and/or shift).
-
-        Note that galsim.Ellipse objects can be initialized in a variety of ways (see documentation
-        of this class, galsim.ellipse.Ellipse in the doxygen documentation, for details).
-
-        @param ellipse The galsim.Ellipse transformation to apply
-        @returns The transformed GSObject.
-        """
-        if not isinstance(ellipse, galsim.Ellipse):
-            raise TypeError("Argument to createTransformed must be a galsim.Ellipse!")
-        ret = self.copy()
-        ret.applyTransformation(ellipse)
-        return ret
-
     def createDilated(self, scale):
         """Returns a new GSObject by applying a dilation of the linear size by the given scale.
         
