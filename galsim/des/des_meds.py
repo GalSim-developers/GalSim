@@ -399,6 +399,7 @@ class MultiExposureObject(object):
         self.box_size = self.images[0].shape[0]
         self.n_cutouts = len(self.images)
 
+        # see if there are cutouts
         if self.n_cutouts < 1:
                 raise ValueError('no cutouts in this object') 
 
@@ -409,37 +410,46 @@ class MultiExposureObject(object):
         # loop through the images and check if they are of the same size
         for extname in ('images','weights','segs'):
 
+            # get the class field
             ext = eval('self.' + extname )
 
+            # loop through exposures
             for icutout,cutout in enumerate(ext):
 
+                # all cutouts should be numpy arrays
                 if not isinstance(cutout,numpy.ndarray):
                     raise TypeError('cutout %d in %s is not an array' % (icutout,extname))
 
+                # get the sizes of array
                 nx=cutout.shape[0]
                 ny=cutout.shape[1]
 
+                # x and y size should be the same
                 if nx != ny:
                     raise ValueError('%s should be square and is %d x %d',(extname,nx,ny))
 
+                # check if box size is correct
                 if nx != self.box_size:
                     raise ValueError('%s object %d has size %d and should be %d' % (extname,
                                                                     icutout,nx,self.box_size))
 
+        # see if the number of Jacobians is right
         if len(self.jacs) != self.n_cutouts:
             raise ValueError('number of Jacobians is %d is not equal to number of cutouts %d' 
                                         % (len(self.jacs),self.n_cutouts ) )
 
+        # check each Jacobian
         for jac in self.jacs:
+            # should ba a numpy array
             if not isinstance(jac,numpy.ndarray):
                 raise TypeError('Jacobians should be numpy arrays')
+            # should have 2x2 shape
             if jac.shape != (2,2):
                 raise ValueError('Jacobians should be 2x2')
 
-
-def write(filename,objlist,clobber=False):
+def write_meds(filename,objlist,clobber=False):
     """
-    Writes the galaxy, weights, segmaps images to the meds file.
+    Writes the galaxy, weights, segmaps images to a MEDS file.
 
     Arguments:
     ----------
@@ -469,6 +479,7 @@ def write(filename,objlist,clobber=False):
 
     # initialise the image vector index
     n_vec = 0
+    
     # get number of objects
     n_obj = len(objlist)
 
