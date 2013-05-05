@@ -344,14 +344,14 @@ namespace hsm {
      * @return A CppShapeData object containing the results of shape measurement.
      */
     template <typename T, typename U>
-        CppShapeData EstimateShearView(
-            const ImageView<T> &gal_image, const ImageView<U> &PSF_image,
-            const ImageView<int> &gal_mask_image,
-            float sky_var = 0.0, const char *shear_est = "REGAUSS",
-            const std::string& recompute_flux = "FIT",
-            double guess_sig_gal = 5.0, double guess_sig_PSF = 3.0, double precision = 1.0e-6,
-            double guess_x_centroid = -1000.0, double guess_y_centroid = -1000.0,
-            boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
+    CppShapeData EstimateShearView(
+        const ImageView<T> &gal_image, const ImageView<U> &PSF_image,
+        const ImageView<int> &gal_mask_image,
+        float sky_var = 0.0, const char *shear_est = "REGAUSS",
+        const std::string& recompute_flux = "FIT",
+        double guess_sig_gal = 5.0, double guess_sig_PSF = 3.0, double precision = 1.0e-6,
+        double guess_x_centroid = -1000.0, double guess_y_centroid = -1000.0,
+        boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
 
     /**
      * @brief Measure the adaptive moments of an object directly using ImageViews.
@@ -379,11 +379,11 @@ namespace hsm {
      * @return A CppShapeData object containing the results of moment measurement.
      */
     template <typename T>
-        CppShapeData FindAdaptiveMomView(
-            const ImageView<T> &object_image, const ImageView<int> &object_mask_image,
-            double guess_sig = 5.0, double precision = 1.0e-6, double guess_x_centroid = -1000.0,
-            double guess_y_centroid = -1000.0,
-            boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
+    CppShapeData FindAdaptiveMomView(
+        const ImageView<T> &object_image, const ImageView<int> &object_mask_image,
+        double guess_sig = 5.0, double precision = 1.0e-6, double guess_x_centroid = -1000.0,
+        double guess_y_centroid = -1000.0,
+        boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
 
     /**
      * @brief Carry out PSF correction.
@@ -395,9 +395,7 @@ namespace hsm {
      * Gaussian-quartic fit, 0x4=cut off Gaussian approximator at NSIG_RG sigma to save time,
      * 0x8=cut off PSF residual at NSIG_RG2 to save time.    
      * @param[in] gal_image    The galaxy Image.
-     * @param[in] gal_mask     The galaxy mask Image (integers: 1=use pixel, 0=do not use pixel).
      * @param[in] PSF_image    The PSF Image.
-     * @param[in] PSF_mask     The PSF mask Image (integers: 1=use pixel, 0=do not use pixel).
      * @param[in] gal_data     The ObjectData object for the galaxy
      * @param[in] PSF_data     The ObjectData object for the PSF
      * @param[in] shear_est    A string indicating the desired method of PSF correction: REGAUSS,
@@ -405,10 +403,9 @@ namespace hsm {
      * @param[in] flags        A parameter for REGAUSS (typical usage is 0xe).
      * @return A status flag that should be zero if the measurement was successful.
      */
-    template <typename T, typename U>
     unsigned int general_shear_estimator(
-        ConstImageView<T> gal_image, ConstImageView<int> gal_mask, ConstImageView<U> PSF_image, 
-        ConstImageView<int> PSF_mask, ObjectData& gal_data, ObjectData& PSF_data, 
+        ConstImageView<double> gal_image, ConstImageView<double> PSF_image, 
+        ObjectData& gal_data, ObjectData& PSF_data, 
         const std::string& shear_est, unsigned long flags,
         boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
 
@@ -422,8 +419,6 @@ namespace hsm {
      * result of the previous step as the weight function, and so on until the moments that are
      * measured are the same as those used for the weight function.
      * @param[in] data      The Image for the object being measured.
-     * @param[in] mask      The mask Image for the object being measured  (integers: 1=use pixel,
-     *                      0=do not use pixel).
      * @param[out] A        The amplitude of the best-fit elliptical Gaussian (total image intensity
      *                      for the Gaussian is 2A).
      * @param[out] x0       The x centroid of the best-fit elliptical Gaussian.
@@ -435,9 +430,8 @@ namespace hsm {
      * @param[in] epsilon   The required level of accuracy.
      * @param[out] num_iter The number of iterations needed to converge.
      */
-    template <typename T>
     void find_ellipmom_2(
-        ConstImageView<T> data, ConstImageView<int> mask, double& A, double& x0, double& y0,
+        ConstImageView<double> data, double& A, double& x0, double& y0,
         double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter,
         boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
   
