@@ -27,6 +27,8 @@
 #include "TMV.h"
 #include "hsm/PSFCorr.h"
 
+#include "FFT.h"
+
 //#define DEBUGLOGGING
 #ifdef DEBUGLOGGING
 #include <fstream>
@@ -254,6 +256,37 @@ namespace hsm {
 
     void fourier_trans_1(double *data, long nn, int isign) 
     {
+#if 1
+        // Allocate memory
+        FFTW_Array<std::complex<double> > b1(nn);
+        FFTW_Array<std::complex<double> > b2(nn);
+
+        // Copy data to b1
+        // Note: insert - sign for imag part because 
+        //       Num Rec FFT  uses exp(+i*2*pi*m*n/N) whereas
+        //               FFTW uses exp(-i*2*pi*m*n/N)
+        for (int i=0; i<nn; ++i){
+            b1[i] =  std::complex<double>(data[2*i] , -data[2*i+1]);
+        }
+
+        // Make the fftw plan
+        fftw_plan plan=fftw_plan_dft_1d(nn, b1.get_fftw(), b2.get_fftw(),
+                                        isign == 1 ? FFTW_FORWARD : FFTW_BACKWARD, 
+                                        FFTW_ESTIMATE);
+        if (plan == NULL) throw FFTInvalid();
+
+        // Execute the plan.
+        fftw_execute(plan);
+
+        // Copy the data back to the data array.
+        for (int i=0; i<nn; i++){
+            data[2*i] =  real(b2[i]);
+            data[2*i+1] = -imag(b2[i]);
+        }
+
+        // Destroy the plan.
+        fftw_destroy_plan(plan);
+#else
 
         double *data_i, *data_i1;
         double *data_j, *data_j1;
@@ -343,6 +376,7 @@ namespace hsm {
                 wi += wtemp*sintheta - wi*oneminuscostheta;
             }
         }
+#endif
     }
 
     /* qho1d_wf_1
