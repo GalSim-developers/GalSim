@@ -33,8 +33,8 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-//std::ostream* dbgout = new std::ofstream("debug.out");
-std::ostream* dbgout = &std::cerr;
+std::ostream* dbgout = new std::ofstream("debug.out");
+//std::ostream* dbgout = &std::cerr;
 int verbose_level = 2;
 // There are three levels of verbosity which can be helpful when debugging,
 // which are written as dbg, xdbg, xxdbg (all defined in Std.h).
@@ -659,53 +659,87 @@ namespace hsm {
         double Minv_xx    =  Myy/detM;
         double TwoMinv_xy = -Mxy/detM * 2.0;
         double Minv_yy    =  Mxx/detM;
+        double Inv2Minv_xx = 0.5/Minv_xx; // Will be useful later...
 
         /* Generate Minv_xx__x_x0__x_x0 array */
         tmv::Vector<double> Minv_xx__x_x0__x_x0(xmax-xmin+1);
-        for(long x=xmin;x<=xmax;x++) Minv_xx__x_x0__x_x0[x-xmin] = Minv_xx*(x-x0)*(x-x0);
+        for(int x=xmin;x<=xmax;x++) Minv_xx__x_x0__x_x0[x-xmin] = Minv_xx*(x-x0)*(x-x0);
 
         /* Now let's initialize the outputs and then sum
          * over all the pixels
          */
         A = Bx = By = Cxx = Cxy = Cyy = rho4w = 0.;
+
+        // rho2 = Minv_xx(x-x0)^2 + 2Minv_xy(x-x0)(y-y0) + Minv_yy(y-y0)^2
+        // The minimum/maximum y that have a solution rho2 = max_moment_nsig2 is at:
+        //   2*Minv_xx*(x-x0) + 2Minv_xy(y-y0) = 0
+        // rho2 = Minv_xx (Minv_xy(y-y0)/Minv_xx)^2 - 2Minv_xy(Minv_xy(y-y0)/Minv_xx)(y-y0)
+        //           + Minv_yy(y-y0)^2
+        //      = (Minv_xy^2/Minv_xx - 2Minv_xy^2/Minv_xx + Minv_yy) (y-y0)^2
+        //      = (Minv_xx Minv_yy - Minv_xy^2)/Minv_xx (y-y0)^2
+        //      = (1/detM) / Minv_xx (y-y0)^2
+        //      = (1/Myy) (y-y0)^2
+        double y2 = sqrt(hsmparams->max_moment_nsig2 * Myy);  // This still needs the +y0 bit.
+        double y1 = -y2 + y0;
+        y2 += y0;  // ok, now it's right.
+        int iy1 = int(ceil(y1));
+        int iy2 = int(floor(y2));
+        if (iy1 < ymin) iy1 = ymin;
+        if (iy2 > ymax) iy2 = ymax;
+        dbg<<"y1,y2 = "<<y1<<','<<y2<<std::endl;
+        dbg<<"iy1,iy2 = "<<iy1<<','<<iy2<<std::endl;
+        assert(iy1 <= iy2);
+
+        // 
         /* Use these pointers to speed up referencing arrays */
-        const double* imageptr = data.getData();
-        const int datastride = data.getStride() - (xmax - xmin + 1);
-        for(long y=ymin;y<=ymax;y++, imageptr+=datastride) {
+        for(int y=iy1;y<=iy2;y++) {
             double y_y0 = y-y0;
-            double x_x0 = xmin - 1 - x0;
             double TwoMinv_xy__y_y0 = TwoMinv_xy * y_y0;
             double Minv_yy__y_y0__y_y0 = Minv_yy * y_y0 * y_y0;
-            const double* mxxptr = Minv_xx__x_x0__x_x0.cptr();
-            for(long x=xmin;x<=xmax;x++) {
-                x_x0 += 1.; // do this increment to x_x0 out here, before the following if
-                            // statement, because it has to happen whether we actually use the pixel
-                            // or not if we want to properly track where we are in the image
-                            //
+
+            // Now for a particular value of y, we want to find the min/max x that satisfy
+            // rho2 < max_moment_nsig2.
+            //
+            // 0 = Minv_xx(x-x0)^2 + 2Minv_xy(x-x0)(y-y0) + Minv_yy(y-y0)^2 - max_moment_nsig2
+            // Simple quadratic formula:
+            double a = Minv_xx;
+            double b = TwoMinv_xy__y_y0;
+            double c = Minv_yy__y_y0__y_y0 - hsmparams->max_moment_nsig2;
+            double d = b*b-4.*a*c;
+            assert(d >= 0.);
+            double sqrtd = sqrt(d);
+            double inv2a = Inv2Minv_xx;
+            double x1 = inv2a*(-b - sqrtd) + x0;
+            double x2 = inv2a*(-b + sqrtd) + x0;
+            int ix1 = int(ceil(x1));
+            int ix2 = int(floor(x2));
+            if (ix1 < xmin) ix1 = xmin;
+            if (ix2 > xmax) ix2 = xmax;
+            if (ix1 > ix2) continue;  // rare, but it can happen after the ceil and floor.
+
+            const double* imageptr = data.getIter(ix1,y);
+            double x_x0 = ix1 - x0;
+            const double* mxxptr = Minv_xx__x_x0__x_x0.cptr() + ix1-xmin;
+            for(int x=ix1;x<=ix2;++x,x_x0+=1.) {
                 /* Compute displacement from weight centroid, then
                  * get elliptical radius and weight.
                  */
-                double rho2 = Minv_yy__y_y0__y_y0 + TwoMinv_xy__y_y0*x_x0 + *(mxxptr++);
-                dbg<<"Using pixel: "<<x<<" "<<y<<" with value "<<*(imageptr)<<" rho2 "<<rho2<<" x_x0 "<<x_x0<<" y_y0 "<<y_y0<<std::endl;
-                if (rho2 < hsmparams->max_moment_nsig2) {
-                    double intensity = std::exp(-0.5 * rho2) * *(imageptr++);
+                double rho2 = Minv_yy__y_y0__y_y0 + TwoMinv_xy__y_y0*x_x0 + *mxxptr++;
+                xdbg<<"Using pixel: "<<x<<" "<<y<<" with value "<<*(imageptr)<<" rho2 "<<rho2<<" x_x0 "<<x_x0<<" y_y0 "<<y_y0<<std::endl;
+                xassert(rho2 < hsmparams->max_moment_nsig2 + 1.e-8); // allow some numerical error.
 
-                    /* Now do the addition */
-                    double intensity__x_x0 = intensity * x_x0;
-                    double intensity__y_y0 = intensity * y_y0;
-                    A    += intensity;
-                    Bx   += intensity__x_x0;
-                    By   += intensity__y_y0;
-                    Cxx  += intensity__x_x0 * x_x0;
-                    Cxy  += intensity__x_x0 * y_y0;
-                    Cyy  += intensity__y_y0 * y_y0;
-                    rho4w+= intensity * rho2 * rho2;
-                } else {
-                    // if we are skipping this pixel because it's too far from center of
-                    // Gaussian, then just increment the pointer to the next pixel in the image,
-                    // don't waste time doing any math for this pixel
-                    ++imageptr;
-                }
+                double intensity = std::exp(-0.5 * rho2) * (*imageptr++);
+
+                /* Now do the addition */
+                double intensity__x_x0 = intensity * x_x0;
+                double intensity__y_y0 = intensity * y_y0;
+                A    += intensity;
+                Bx   += intensity__x_x0;
+                By   += intensity__y_y0;
+                Cxx  += intensity__x_x0 * x_x0;
+                Cxy  += intensity__x_x0 * y_y0;
+                Cyy  += intensity__y_y0 * y_y0;
+                rho4w+= intensity * rho2 * rho2;
             }
         }
         dbg<<"Exiting find_ellipmom_1 with results: "<<A<<" "<<Bx<<" "<<By<<" "<<Cxx<<" "<<Cyy<<" "<<Cxy<<" "<<rho4w<<std::endl;
