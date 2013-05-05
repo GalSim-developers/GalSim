@@ -23,7 +23,7 @@
 
 #include <cstring>
 #include <string>
-#define TMV_DEBUG
+#define TMV_NDEBUG
 #include "TMV.h"
 #include "hsm/PSFCorr.h"
 
