@@ -462,8 +462,8 @@ namespace hsm {
         norm0 = 0.75112554446494248285870300477623 * std::sqrt(beta);
         x=xmin;
         for(j=0;j<nx;j++) {
-            psi[0][j] = norm0 * std::exp( -beta2__2 * x*x );
-            if (Nmax>=1) psi[1][j] = std::sqrt(2.) * psi[0][j] * beta * x;
+            psi(j,0) = norm0 * std::exp( -beta2__2 * x*x );
+            if (Nmax>=1) psi(j,1) = std::sqrt(2.) * psi(j,0) * beta * x;
             x += xstep;
         }
 
@@ -483,7 +483,7 @@ namespace hsm {
             for(j=0;j<nx;j++) {
 
                 /* The recurrance */
-                psi[n+1][j] = coef1 * x * psi[n][j] + coef2 * psi[n-1][j];         
+                psi(j,n+1) = coef1 * x * psi(j,n) + coef2 * psi(j,n-1);         
 
                 x += xstep; /* Increment x */
             } /* End j loop */
@@ -518,25 +518,16 @@ namespace hsm {
         int ymax = data.getYMax();
         int nx = xmax-xmin+1;
         int ny = ymax-ymin+1;
-        tmv::Matrix<double> psi_x(max_order+1,nx);
-        tmv::Matrix<double> psi_y(max_order+1,ny);
+        tmv::Matrix<double> psi_x(nx, max_order+1);
+        tmv::Matrix<double> psi_y(ny, max_order+1);
 
         /* Compute wavefunctions */
         qho1d_wf_1(nx, (double)xmin - x0, 1., max_order, sigma, psi_x);
         qho1d_wf_1(ny, (double)ymin - y0, 1., max_order, sigma, psi_y);
 
-        /* Now let's compute moments -- outer loop is over (m,n) */
-        for(int m=0;m<=max_order;m++) for(int n=0;n<=max_order-m;n++) {
-
-            /* Initialize moments(m,n), then loop over map */
-            moments(m,n) = 0;
-            for(int y=ymin;y<=ymax;y++) for(int x=xmin;x<=xmax;x++) {
-
-                    /* Moment "integral" (here simply a finite sum) */
-                    moments(m,n) += data(x,y) * psi_x(m,x-xmin) * psi_y(n,y-ymin);
-
-            } /* End (x,y) loop */
-        } /* End (m,n) loop */
+        tmv::ConstMatrixView<double> mdata(data.getData(),nx,ny,1,data.getStride(),tmv::NonConj);
+        
+        moments = psi_x.transpose() * mdata * psi_y;
     }
 
     /* find_mom_2
