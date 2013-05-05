@@ -888,6 +888,68 @@ namespace hsm {
     void fast_convolve_image_1(
         ConstImageView<double> image1, ConstImageView<double> image2, ImageView<double> image_out)
     {
+        dbg<<"Start fast_convolve_image_1:\n";
+        int nx1 = image1.getXMax() - image1.getXMin() + 1;
+        int ny1 = image1.getYMax() - image1.getYMin() + 1;
+        int s1 = image1.getStride();
+        int nx2 = image2.getXMax() - image2.getXMin() + 1;
+        int ny2 = image2.getYMax() - image2.getYMin() + 1;
+        int s2 = image2.getStride();
+        int nx3 = image_out.getXMax() - image_out.getXMin() + 1;
+        int ny3 = image_out.getYMax() - image_out.getYMin() + 1;
+        int s3 = image_out.getStride();
+        dbg<<"image1: "<<nx1<<','<<ny1<<','<<s1<<std::endl;
+        dbg<<"image2: "<<nx2<<','<<ny2<<','<<s2<<std::endl;
+        dbg<<"image3: "<<nx3<<','<<ny3<<','<<s3<<std::endl;
+
+        // Convenient matrix views into the images:
+        tmv::ConstMatrixView<double> mIm1(image1.getData(),nx1,ny1,1,s1,tmv::NonConj);
+        tmv::ConstMatrixView<double> mIm2(image2.getData(),nx2,ny2,1,s2,tmv::NonConj);
+        tmv::MatrixView<double> mIm3(image_out.getData(),nx3,ny3,1,s3,tmv::NonConj);
+        dbg<<"mIm1 = "<<mIm1<<std::endl;
+        dbg<<"mIm2 = "<<mIm2<<std::endl;
+        dbg<<"mIm3 = "<<mIm3<<std::endl;
+#if 1
+        // Get a good size to use for the FFTs
+        int N1 = std::max(nx1,ny1);
+        int N2 = std::max(nx2,ny2);
+        int N3 = std::max(nx3,ny3);
+        int N = std::max(std::max(N1,N2),N3); // N3 isn't always the largest!
+        assert(nx1 <= N);
+        assert(ny1 <= N);
+        assert(nx2 <= N);
+        assert(ny2 <= N);
+        N = goodFFTSize(N);
+        dbg<<"N => "<<N<<std::endl;
+
+        // Make an XTable for image1:
+        XTable xtab(N,1.);
+        tmv::MatrixView<double> mxt(xtab.getArray(),N,N,1,N,tmv::NonConj);
+        int offset_x1 = (N - nx1)/2;
+        int offset_y1 = (N - ny1)/2;
+        mxt.subMatrix(offset_x1,offset_x1+nx1, offset_y1,offset_y1+ny1) = mIm1;
+
+        // Do the FFT:
+        boost::shared_ptr<KTable> ktab1 = xtab.transform();
+
+        // Fill image2 into the XTable
+        mxt.setZero();
+        int offset_x2 = (N - nx2)/2;
+        int offset_y2 = (N - ny2)/2;
+        mxt.subMatrix(offset_x2,offset_x2+nx2, offset_y2,offset_y2+ny2) = mIm2;
+
+        // Do the second FFT and multiply:
+        boost::shared_ptr<KTable> ktab2 = xtab.transform();
+        (*ktab2) *= (*ktab1);
+
+        // Inverse FFT to get back to real space
+        ktab2->transform(xtab);
+
+        // Copy back to the output image
+        int offset_x3 = (N - nx3)/2;
+        int offset_y3 = (N - ny3)/2;
+        mIm3 += mxt.subMatrix(offset_x3,offset_x3+nx3, offset_y3,offset_y3+ny3);
+#else
         long dim1x, dim1y, dim1o, dim1, dim2, dim3, dim4;
         double xr,xi,yr,yi;
         long i,i_conj,j,k,ii,ii_conj;
@@ -969,6 +1031,10 @@ namespace hsm {
             for(j=out_ymin;j<=out_ymax;j++)
                 image_out(i,j) += mout(i-out_xref,j-out_yref);
 
+#endif
+        dbg<<"Done: mIm3 => "<<mIm3<<std::endl;
+        dbg<<"maximum is "<<mIm3.maxAbsElement()<<std::endl;
+        dbg<<"Center is "<<mIm3.subMatrix(nx3/2-2,nx3/2+2,ny3/2-2,ny3/2+2)<<std::endl;
     }
 
     void matrix22_invert(double& a, double& b, double& c, double& d) 

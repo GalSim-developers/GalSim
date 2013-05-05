@@ -594,34 +594,12 @@ def test_hsmparams_nodefault():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
-    if False:
-        test_masks()
-        test_masks()
-        test_masks()
-        test_masks()
-        test_masks()
-        test_masks()
-        test_masks()
-        test_masks()
-        test_masks()
-        test_masks()
-
-    if False:
-        test_shearest_shape()
-        test_shearest_shape()
-        test_shearest_shape()
-        test_shearest_shape()
-        test_shearest_shape()
-        test_shearest_shape()
-        test_shearest_shape()
-        test_shearest_shape()
-        test_shearest_shape()
-        test_shearest_shape()
-
     test_moments_basic()
     test_shearest_basic()
-    test_shearest_precomputed()
+    #test_shearest_precomputed()
     test_masks()
     test_shearest_shape()
     test_hsmparams()
     test_hsmparams_nodefault()
+
+    test_shearest_precomputed()
