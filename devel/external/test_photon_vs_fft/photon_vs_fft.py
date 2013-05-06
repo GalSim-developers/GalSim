@@ -181,9 +181,9 @@ def RunMeasurementsPhotAndFFT(config,filename_results_pht,filename_results_fft):
 
     Arguments
     ---------
-    @parm   config              the yaml config used to create images
-    @parm   file_output_pht     opened file to save the photon results
-    @parm   file_output_fft     opened file to save the FFT results
+    @param   config              the yaml config used to create images
+    @param   file_output_pht     opened file to save the photon results
+    @param   file_output_fft     opened file to save the FFT results
     """
 
     # start the timer
@@ -218,7 +218,6 @@ def RunMeasurementsPhotAndFFT(config,filename_results_pht,filename_results_fft):
                     int(float(config['compare_dft_vs_photon_config']['n_trials_per_iter'])),
                 n_photons_per_trial =  
                     int(float(config['compare_dft_vs_photon_config']['n_photons_per_trial'])),
-                wmult = 4.0
                 )
             
             results_pht = {  'moments_g1' : res.g1obs_draw - res.delta_g1obs,
@@ -398,9 +397,12 @@ if __name__ == "__main__":
     # parse arguments
     parser = argparse.ArgumentParser(description=description, add_help=True)
     parser.add_argument('filename_config', type=str, 
-        help='yaml config file, see photon_vs_fft.yaml for example.')
+        help='Yaml config file, see photon_vs_fft.yaml for example.')
+    parser.add_argument('--default_only', action="store_true", 
+        help='Run only for default settings for photons and FFT, ignore vary_params in config file.'
+        , default=False)
     parser.add_argument('--debug', action="store_true", 
-        help='run with debug verbosity', default=False)
+        help='Run with debug verbosity.', default=False)
     args = parser.parse_args()
 
     # set up logger
@@ -414,21 +416,23 @@ if __name__ == "__main__":
     config['debug'] = args.debug
     config['filename_config'] = args.filename_config
 
-    logger.info('running photon_vs_fft for varied parameters')
 
     # run the config including changing of the parameters
-    RunComparisonForVariedParams(config)
-
-    # logger.info('getting FFT results for galaxy %d' % iv)
-    # config1 = copy.deepcopy(config)
-    # results_fft = GetResultsFFT(config1)
-    # logger.info('getting photon results for galaxy %d' % iv)
-    # config2 = copy.deepcopy(config)
-    # results_pht = GetResultsPhoton(config2)             
-    # # get the results filename
-    # filename_results = 'results.%s.%s.%03d.cat' % (config['filename_config'],param_name,iv)
-    # # save the results
-    # SaveResults(filename_results,results_fft=results_fft,results_pht=results_pht)
-
+    if not args.default_only:
+        logger.info('running photon_vs_fft for varied parameters')
+        RunComparisonForVariedParams(config)
+    # run only the default settings
+    else:
+        logger.info('running photon_vs_fft for default settings')
+        logger.info('getting photon and FFT results')
+        config2 = copy.deepcopy(config)
+        # Get the results filenames
+        filename_results_pht = 'results.%s.default.pht.cat' % (config['filename_config'])
+        filename_results_fft = 'results.%s.default.fft.cat' % (config['filename_config'])
+        # Run and save the measurements
+        RunMeasurementsPhotAndFFT(config2, 
+            filename_results_pht, filename_results_fft)             
+        logging.info(('saved FFT and photon results for default parameter set\n'
+             + 'filenames: %s\t%s') % (filename_results_pht,filename_results_fft))
 
 
