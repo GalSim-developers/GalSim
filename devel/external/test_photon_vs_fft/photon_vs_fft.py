@@ -12,7 +12,6 @@ import numpy
 import argparse
 import yaml
 import pdb
-import pylab
 import math
 import copy
 import time
