@@ -1,5 +1,5 @@
 some_variables :
-    n_gals_in_cat : &n_gals_in_cat 2
+    n_gals_in_cat : &n_gals_in_cat 10
     n_trials_per_iter : &n_trials_per_iter 32
 
 compare_dft_vs_photon_config :
@@ -26,16 +26,16 @@ gal :
     ellip : 
         type : GBeta 
         g : { type : InputCatalog , col : 3,  index : { type: Sequence, repeat: *n_trials_per_iter} }  
-        beta : { type: Rad , theta : { type : InputCatalog , col : 3,  index : { type: Sequence, repeat: *n_trials_per_iter} } }
+        beta : { type: Rad , theta : { type : InputCatalog , col : 4,  index : { type: Sequence, repeat: *n_trials_per_iter} } }
     shift : 
             type : XY  
             x : { type : InputCatalog , col : 5 , index : { type: Sequence, repeat: *n_trials_per_iter} }
             y : { type : InputCatalog , col : 6 , index : { type: Sequence, repeat: *n_trials_per_iter} }
     
 image :
-    # wmult : 4.0
+    wmult : 4.0
     random_seed : 1929392
-    nproc : 2
+    nproc : 5
     # pixel scale for the ground observation
     pixel_scale : 0.2  # arcsec / pixel
     type : Single
@@ -78,7 +78,6 @@ output:
 # the results for the input galaxies will be saved to a file with a name
 # 'results.yaml_filename.param_name.param_index.cat'
 # later other scripts can be used to produce plots
-run_default: False
 vary_params:
     alias_threshold : 
         path : ['image','gsparams','alias_threshold']

@@ -24,7 +24,7 @@ gal :
     ellip : 
         type : GBeta 
         g : { type : InputCatalog , col : 3,  index : { type: Sequence, repeat: *n_trials_per_iter} }  
-        beta : { type: Rad , theta : { type : InputCatalog , col : 3,  index : { type: Sequence, repeat: *n_trials_per_iter} } }
+        beta : { type: Rad , theta : { type : InputCatalog , col : 4,  index : { type: Sequence, repeat: *n_trials_per_iter} } }
     shift : 
             type : XY  
             x : { type : InputCatalog , col : 5 , index : { type: Sequence, repeat: *n_trials_per_iter} }
@@ -33,7 +33,7 @@ gal :
 image :
     wmult : 4.0
     random_seed : 1929392
-    nproc : 5
+    nproc : -1
     # pixel scale for the ground observation
     pixel_scale : 0.03  # arcsec / pixel
     type : Single
