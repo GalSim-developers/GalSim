@@ -329,6 +329,7 @@ def RunComparisonForVariedParams(config):
 
     # Run the default config
     if config['run_default']:
+        logging.info('running photon and FFT measurements for default parameter set')
         default_config = config.copy()
         param_name = 'default'
         filename_results_pht = 'results.%s.%s.pht.cat' % (config['filename_config'],
@@ -336,7 +337,6 @@ def RunComparisonForVariedParams(config):
         filename_results_fft = 'results.%s.%s.fft.cat' % (config['filename_config'],
                                                                             param_name)
         # Run and save the measurements
-        logger.info('running default settings for photon and FFT')
         RunMeasurementsPhotAndFFT(default_config, 
             filename_results_pht, filename_results_fft)             
         logging.info(('saved FFT and photon results for default parameters\n'
@@ -416,13 +416,8 @@ if __name__ == "__main__":
     config['debug'] = args.debug
     config['filename_config'] = args.filename_config
 
-
-    # run the config including changing of the parameters
-    if not args.default_only:
-        logger.info('running photon_vs_fft for varied parameters')
-        RunComparisonForVariedParams(config)
     # run only the default settings
-    else:
+    if args.default_only:
         logger.info('running photon_vs_fft for default settings')
         logger.info('getting photon and FFT results')
         config2 = copy.deepcopy(config)
@@ -434,5 +429,8 @@ if __name__ == "__main__":
             filename_results_pht, filename_results_fft)             
         logging.info(('saved FFT and photon results for default parameter set\n'
              + 'filenames: %s\t%s') % (filename_results_pht,filename_results_fft))
-
+    # run the config including changing of the parameters
+    else:
+        logger.info('running photon_vs_fft for varied parameters')
+        RunComparisonForVariedParams(config)
 

@@ -39,11 +39,8 @@ image :
     # pixel scale for the ground observation
     pixel_scale : 0.2  # arcsec / pixel
     type : Single
-    # nx_tiles : 1
-    # ny_tiles : *n_gals_in_cat
-    # # this has to be big in order for the space images to contain the galaxies fully
+    # this has to be big in order for the space images to contain the galaxies fully
     size : 128
-    # stamp_size : 128
     # this field is required for the photon image, 
     # but we don't want to add any noise, so we set the variance to 0
     noise :
@@ -78,6 +75,7 @@ output:
 # the results for the input galaxies will be saved to a file with a name
 # 'results.yaml_filename.param_name.param_index.cat'
 # later other scripts can be used to produce plots
+run_default: True
 vary_params:
     alias_threshold : 
         path : ['image','gsparams','alias_threshold']
