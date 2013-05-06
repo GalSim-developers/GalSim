@@ -685,12 +685,6 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
                 'Overriding wmult in config with input kwarg value '+str(wmult))
         config['image']['wmult'] = wmult
 
-    # this results from the fact that config throws exceptions:
-    #   File "/usr/lib/python2.7/dist-packages/galsim/config/value.py", line 214, in CheckAllParams
-    #    AttributeError: Unexpected attribute n_photons found for parameter image
-    del(config['image']['wmult'])
-
-
     # Then define some convenience functions for handling lists and multiple trial operations
     def _mean(array_like):
         return np.mean(np.asarray(array_like))
@@ -716,7 +710,13 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     hsm_shear_est = 'KSB'
 
     # get the fft image
-    try: im_draw,im_psf,_,_,_= galsim.config.BuildImage(config1,make_psf_image=True,logger=logger)
+    try: 
+        # create only one image for FFT image, that is all we need
+        im_draw,im_psf,_,_ = galsim.config.BuildImages( nimages = 1, obj_num = obj_num,
+            config = config1, logger = logger , nproc=config1['image']['nproc'] , make_psf_image = True) 
+        # BuildImages above outputs list of size 1, and we need the element
+        im_draw = im_draw[0]
+        im_psf  = im_psf[0]
     except Exception, e: raise RuntimeError('Building image using FFT failed: \n %s' % e )
 
     # get the moments for FFT image
@@ -757,12 +757,7 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     # We'll also use a new copy here so that this function is non-destructive of any input
     config2 = copy.deepcopy(config)
     config2['image']['draw_method'] = 'phot'
-
-    # This is due to this recent exception:
-    #   File "/usr/lib/python2.7/dist-packages/galsim/config/value.py", line 214, in CheckAllParams
-    #    AttributeError: Unexpected attribute n_photons found for parameter image
-    # config2['image']['n_photons'] = n_photons_per_trial
-    config2['gal']['flux'] = n_photons_per_trial
+    config2['image']['n_photons'] = n_photons_per_trial
 
     # Then begin while loop, farming out sets of n_trials_per_iter trials until we get the
     # statistical accuracy we require
