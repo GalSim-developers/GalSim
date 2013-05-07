@@ -77,11 +77,11 @@ def WriteResults(file_output,results):
             results['hsmcorr_sigmaerr'] 
             )) 
 
-def GetShapeMeasurements(image_gal, image_psf, ident):
+def GetShapeMeasurements(image_gal, image_psf, ident=-1):
     """
-    @param image_gal - 
-    @param image_psf - 
-    @param ident - 
+    @param image_gal    galsim image of the galaxy
+    @param image_psf    galsim image of the PSF
+    @param ident        id of the galaxy (default -1)
     """
 
     HSM_SHEAR_EST = "KSB"
@@ -126,12 +126,10 @@ def RunMeasurementsFFT(config,filename_results):
 
     Arguments
     ---------
-    @config                 the yaml config used to create images
+    @param config           the yaml config used to create images
+
     @param file_output      opened file to which the results will be written
     """
-
-    # start the timer
-    t1 = time.time()
 
     # open the file
     file_results = open(filename_results,'w')
@@ -142,8 +140,16 @@ def RunMeasurementsFFT(config,filename_results):
     # First process the input field:
     galsim.config.ProcessInput(config)
 
-    # dirty way of getting this number
-    nobjects = config['some_variables']['n_gals_in_cat']
+    # get number of objects
+    if config['ident'] < 0:
+        # slightly hacky way to get this number
+        nobjects = len(galsim.config.GetNObjForMultiFits(config,0,0))
+        obj_num = 0
+    else:
+        nobjects = 1
+        obj_num = config['ident']
+
+    # set the draw method to FFT
     config['image']['draw_method'] = 'fft'
 
     # modify all 'repeat' keys in config to 1, so that we get single images of galaxies without 
@@ -153,11 +159,10 @@ def RunMeasurementsFFT(config,filename_results):
     if config['debug']: use_logger = logger
     else: use_logger = None
     # get the images
-    try: img_gals,img_psfs,_,_ = galsim.config.BuildImages( nimages = nobjects , config=config , 
+    try: img_gals,img_psfs,_,_ = galsim.config.BuildImages( nimages = nobjects , obj_num = obj_num, config=config , 
         make_psf_image=True , logger=use_logger , nproc=config['image']['nproc'])
     except Exception, e:
         raise RuntimeError('Failed to build FFT image. Message: %s',e)
-
 
     # measure the photon and fft images
     for i in range(nobjects):
@@ -171,6 +176,9 @@ def RunMeasurementsFFT(config,filename_results):
 
         WriteResults(file_results,result)
 
+    # close the file
+    file_results.close()
+
     logger.info('finished getting FFT results for %d galaxies' % nobjects)
 
 
@@ -181,12 +189,11 @@ def RunMeasurementsPhotAndFFT(config,filename_results_pht,filename_results_fft):
     Arguments
     ---------
     @param   config              the yaml config used to create images
+
     @param   file_output_pht     opened file to save the photon results
+
     @param   file_output_fft     opened file to save the FFT results
     """
-
-    # start the timer
-    t1 = time.time()
 
     # Open files
     file_results_fft = open(filename_results_fft,'w')
@@ -197,12 +204,18 @@ def RunMeasurementsPhotAndFFT(config,filename_results_pht,filename_results_fft):
     # First process the input field:
     galsim.config.ProcessInput(config)
 
-    # dirty way of getting this number
-    # nobjects = len(galsim.config.GetNObjForMultiFits(config,0,0))
-    nobjects = config['some_variables']['n_gals_in_cat']
+    # get number of objects
+    if config['ident'] < 0:
+        # slightly hacky way to get this number
+        nobjects = len(galsim.config.GetNObjForMultiFits(config,0,0))
+        logger.info('found %d galaxies in the config file' % nobjects)
+        objects_ids = range(nobjects)
+    else:
+        nobjects = 1
+        objects_ids = [config['ident']]
 
-    #Mmeasure the photon and FFT images
-    for i in range(nobjects):
+    #Measure the photon and FFT images
+    for i in objects_ids:
        
         try:
             # check if we want to log ouptput from compare_dft_vs_photon_config, only in debug mode
@@ -211,12 +224,13 @@ def RunMeasurementsPhotAndFFT(config,filename_results_pht,filename_results_fft):
             # run compare_dft_vs_photon_config and get the results object
             res = galsim.utilities.compare_dft_vs_photon_config(config, gal_num=i, 
                 hsm=True, moments = True, logger=use_logger,
-                abs_tol_ellip = float(config['compare_dft_vs_photon_config']['abs_tol_ellip']),
-                abs_tol_size = float(config['compare_dft_vs_photon_config']['abs_tol_size']),
+                abs_tol_ellip = float(config['photon_vs_fft_settings']['abs_tol_ellip']),
+                abs_tol_size = float(config['photon_vs_fft_settings']['abs_tol_size']),
                 n_trials_per_iter = 
-                    int(float(config['compare_dft_vs_photon_config']['n_trials_per_iter'])),
+                    int(float(config['photon_vs_fft_settings']['n_trials_per_iter'])),
+                n_max_iter = int(float(config['photon_vs_fft_settings']['n_max_iter'])),
                 n_photons_per_trial =  
-                    int(float(config['compare_dft_vs_photon_config']['n_photons_per_trial'])),
+                    int(float(config['photon_vs_fft_settings']['n_photons_per_trial']))
                 )
             
             results_pht = {  'moments_g1' : res.g1obs_draw - res.delta_g1obs,
@@ -257,6 +271,10 @@ def RunMeasurementsPhotAndFFT(config,filename_results_pht,filename_results_fft):
   
         WriteResults(file_results_pht,results_pht)
         WriteResults(file_results_fft,results_fft)
+
+    # close the files
+    file_results_fft.close()
+    file_results_pht.close()
 
     logger.info('finished getting FFT and phot results for %d galaxies' % nobjects)
 
@@ -360,10 +378,16 @@ def RunComparisonForVariedParams(config):
                 logger.info('getting photon and FFT results')
                 changed_config2 = copy.deepcopy(changed_config)
                 # Get the results filenames
-                filename_results_pht = 'results.%s.%s.%03d.pht.cat' % (config['filename_config'],
-                                                                        param_name,iv)
-                filename_results_fft = 'results.%s.%s.%03d.fft.cat' % (config['filename_config'],
-                                                                        param_name,iv)
+                if config['ident'] < 0:
+                    filename_results_pht = 'results.%s.%s.%03d.pht.cat' % (
+                                        config['filename_config'], param_name,iv)
+                    filename_results_fft = 'results.%s.%s.%03d.fft.cat' % (
+                                        config['filename_config'], param_name,iv)
+                else:
+                    filename_results_pht = 'results.%s.%s.%03d.pht.cat.%03d' % (
+                                        config['filename_config'], param_name, iv, config['ident'])
+                    filename_results_fft = 'results.%s.%s.%03d.fft.cat.%03d' % (
+                                        config['filename_config'], param_name, iv, config['ident'])
 
                 # Run and save the measurements
                 RunMeasurementsPhotAndFFT(changed_config2, 
@@ -402,6 +426,10 @@ if __name__ == "__main__":
         , default=False)
     parser.add_argument('--debug', action="store_true", 
         help='Run with debug verbosity.', default=False)
+    parser.add_argument(
+            '-i', '--ident', type=int, action='store', default=-1, 
+            help='id of the galaxy in the catalog to process. If this option is supplied, then \
+            only one galaxy will be processed, otherwise all it the config file')
     args = parser.parse_args()
 
     # set up logger
@@ -414,6 +442,12 @@ if __name__ == "__main__":
     config = yaml.load(open(args.filename_config,'r'))
     config['debug'] = args.debug
     config['filename_config'] = args.filename_config
+    config['ident'] = args.ident
+
+    if config['ident'] < 0:
+        logger.info('running for all galaxies in the config file')
+    else:
+        logger.info('running for galaxy %d only' % config['ident'])
 
     # run only the default settings
     if args.default_only:
@@ -421,8 +455,15 @@ if __name__ == "__main__":
         logger.info('getting photon and FFT results')
         config2 = copy.deepcopy(config)
         # Get the results filenames
-        filename_results_pht = 'results.%s.default.pht.cat' % (config['filename_config'])
-        filename_results_fft = 'results.%s.default.fft.cat' % (config['filename_config'])
+        if config['ident'] < 0:
+            filename_results_fft = 'results.%s.default.fft.cat' % (config['filename_config'])
+            filename_results_pht = 'results.%s.default.pht.cat' % (config['filename_config'])
+        else:
+            filename_results_fft = 'results.%s.default.fft.cat.%03d' % (
+                                                config['filename_config'],config['ident'])
+            filename_results_pht = 'results.%s.default.pht.cat.%03d' % (
+                                                config['filename_config'],config['ident'])
+
         # Run and save the measurements
         RunMeasurementsPhotAndFFT(config2, 
             filename_results_pht, filename_results_fft)             

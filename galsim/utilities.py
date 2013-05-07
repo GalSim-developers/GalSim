@@ -519,7 +519,7 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, pixel_scal
 
 def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None, pixel_scale=None,
                                  size=None, wmult=None, abs_tol_ellip=1.e-5, abs_tol_size=1.e-5,
-                                 n_trials_per_iter=32, n_photons_per_trial=1e7, moments=True,
+                                 n_trials_per_iter=32, n_max_iter=-1, n_photons_per_trial=1e7, moments=True,
                                  hsm=False, logger=None):
     """Take an input config dictionary and render the object it describes in two ways, comparing
     results at high precision. 
@@ -600,6 +600,12 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     @param n_trials_per_iter      number of trial images used to estimate (or successively
                                   re-estimate) the standard error on the delta quantities above for
                                   each iteration of the tests. Default = 32.
+
+    @param n_max_iter             maximum number of iterations. After reaching it, the current
+                                  uncertainty on shape measurement is reported, even if
+                                  abs_tol_ellip and abs_tol_size was not reported. If a negative
+                                  number is supplied, then there is no limit of number of 
+                                  iterations. Default=-1.
 
     @param n_photons_per_trial    number of photons shot in drawShoot() for each trial.  This should
                                   be large enough that any noise bias (a.k.a. noise rectification
@@ -769,7 +775,8 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     if moments:     err_g1_use,err_g2_use,err_sig_use = (g1obserr,g2obserr,sigmaerr)
     else:           err_g1_use,err_g2_use,err_sig_use = (g1hsmerr,g2hsmerr,sighserr)
 
-    while (err_g1_use>abs_tol_ellip) or (err_g2_use>abs_tol_ellip) or (err_sig_use>abs_tol_size) :
+    while ((err_g1_use>abs_tol_ellip) or (err_g2_use>abs_tol_ellip) or (err_sig_use>abs_tol_size) 
+                ) and (itercount < n_max_iter):
 
         # Reset the random_seed depending on the iteration number so that these never overlap
         config2['image']['random_seed'] = start_random_seed + itercount * (n_trials_per_iter + 1)
