@@ -35,7 +35,7 @@
 #include <fstream>
 std::ostream* dbgout = new std::ofstream("debug.out");
 //std::ostream* dbgout = &std::cerr;
-int verbose_level = 2;
+int verbose_level = 1;
 // There are three levels of verbosity which can be helpful when debugging,
 // which are written as dbg, xdbg, xxdbg (all defined in Std.h).
 // It's Mike's way to have debug statements in the code that are really easy to turn 
@@ -889,6 +889,9 @@ namespace hsm {
         ConstImageView<double> image1, ConstImageView<double> image2, ImageView<double> image_out)
     {
         dbg<<"Start fast_convolve_image_1:\n";
+        dbg<<"image1.bounds = "<<image1.getBounds()<<std::endl;
+        dbg<<"image2.bounds = "<<image2.getBounds()<<std::endl;
+        dbg<<"image_out.bounds = "<<image_out.getBounds()<<std::endl;
         int nx1 = image1.getXMax() - image1.getXMin() + 1;
         int ny1 = image1.getYMax() - image1.getYMin() + 1;
         int s1 = image1.getStride();
@@ -909,10 +912,11 @@ namespace hsm {
         dbg<<"mIm1 = "<<mIm1<<std::endl;
         dbg<<"mIm2 = "<<mIm2<<std::endl;
         dbg<<"mIm3 = "<<mIm3<<std::endl;
+
 #if 1
         // Get a good size to use for the FFTs
-        int N1 = std::max(nx1,ny1);
-        int N2 = std::max(nx2,ny2);
+        int N1 = std::max(nx1,ny1) * 4/3;
+        int N2 = std::max(nx2,ny2) * 4/3;
         int N3 = std::max(nx3,ny3);
         int N = std::max(std::max(N1,N2),N3); // N3 isn't always the largest!
         assert(nx1 <= N);
@@ -925,18 +929,20 @@ namespace hsm {
         // Make an XTable for image1:
         XTable xtab(N,1.);
         tmv::MatrixView<double> mxt(xtab.getArray(),N,N,1,N,tmv::NonConj);
-        int offset_x1 = (N - nx1)/2;
-        int offset_y1 = (N - ny1)/2;
+        int offset_x1 = N/4;
+        int offset_y1 = N/4;
         mxt.subMatrix(offset_x1,offset_x1+nx1, offset_y1,offset_y1+ny1) = mIm1;
+        dbg<<"mxt = "<<mxt<<std::endl;
 
         // Do the FFT:
         boost::shared_ptr<KTable> ktab1 = xtab.transform();
 
         // Fill image2 into the XTable
         mxt.setZero();
-        int offset_x2 = (N - nx2)/2;
-        int offset_y2 = (N - ny2)/2;
+        int offset_x2 = N/4;
+        int offset_y2 = N/4;
         mxt.subMatrix(offset_x2,offset_x2+nx2, offset_y2,offset_y2+ny2) = mIm2;
+        dbg<<"mxt = "<<mxt<<std::endl;
 
         // Do the second FFT and multiply:
         boost::shared_ptr<KTable> ktab2 = xtab.transform();
@@ -945,10 +951,35 @@ namespace hsm {
         // Inverse FFT to get back to real space
         ktab2->transform(xtab);
 
+        dbg<<"mout = "<<mxt<<std::endl;
+
         // Copy back to the output image
-        int offset_x3 = (N - nx3)/2;
-        int offset_y3 = (N - ny3)/2;
-        mIm3 += mxt.subMatrix(offset_x3,offset_x3+nx3, offset_y3,offset_y3+ny3);
+        // Note: (MJ) I don't really understand the offsets here.  Nor the N/4 offsets for
+        // the initial assignments.  The choices were made to match the original algorithm
+        // below.  This now matches the original behavior (below), but it seems like someone
+        // might want to change these somewhat to get im1 and im2 centered in the center of the 
+        // XTable rather than kind of offcenter as they are now.  Another time perhaps....
+        int offset_x3 = image_out.getXMin() - image1.getXMin() - image2.getXMin();
+        int offset_y3 = image_out.getYMin() - image1.getYMin() - image2.getYMin();
+        int i1 = 0;
+        int i2 = nx3;
+        int j1 = 0;
+        int j2 = ny3;
+        int mi1 = i1 + offset_x3;
+        int mi2 = i2 + offset_x3;
+        int mj1 = j1 + offset_y3;
+        int mj2 = j2 + offset_y3;
+        if (mi1 < 0) { i1 -= mi1; mi1 = 0; }
+        if (mi2 > N) { i2 -= (mi2-N); mi2 = N; }
+        if (mj1 < 0) { j1 -= mj1; mj1 = 0; }
+        if (mj2 > N) { j2 -= (mj2-N); mj2 = N; }
+        dbg<<"offset_x3 , offset_y3 = "<<offset_x3<<','<<offset_y3<<std::endl;
+        dbg<<"i1,i2,j1,j2 = "<<i1<<','<<i2<<','<<j1<<','<<j2<<std::endl;
+        dbg<<"mi1,mi2,mj1,mj2 = "<<mi1<<','<<mi2<<','<<mj1<<','<<mj2<<std::endl;
+
+        dbg<<"Add portion: "<<mxt.subMatrix(mi1,mi2,mj1,mj2)<<std::endl;;
+        dbg<<"Add to: "<<mIm3.subMatrix(i1,i2,j1,j2)<<std::endl;
+        mIm3.subMatrix(i1,i2,j1,j2) += mxt.subMatrix(mi1,mi2,mj1,mj2);
 #else
         long dim1x, dim1y, dim1o, dim1, dim2, dim3, dim4;
         double xr,xi,yr,yi;
@@ -1026,11 +1057,12 @@ namespace hsm {
         if (out_ymin<image_out.getYMin()) out_ymin = image_out.getYMin();
         if (out_ymax>image_out.getYMax()) out_ymax = image_out.getYMax();
 
+        dbg<<"mout = "<<mout<<std::endl;
+
         /* And now do the writing */
         for(i=out_xmin;i<=out_xmax;i++)
             for(j=out_ymin;j<=out_ymax;j++)
                 image_out(i,j) += mout(i-out_xref,j-out_yref);
-
 #endif
         dbg<<"Done: mIm3 => "<<mIm3<<std::endl;
         dbg<<"maximum is "<<mIm3.maxAbsElement()<<std::endl;

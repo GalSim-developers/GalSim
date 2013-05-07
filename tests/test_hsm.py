@@ -596,10 +596,9 @@ def test_hsmparams_nodefault():
 if __name__ == "__main__":
     test_moments_basic()
     test_shearest_basic()
-    #test_shearest_precomputed()
+    test_shearest_precomputed()
     test_masks()
     test_shearest_shape()
     test_hsmparams()
     test_hsmparams_nodefault()
 
-    test_shearest_precomputed()
