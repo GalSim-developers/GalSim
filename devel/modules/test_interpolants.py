@@ -34,27 +34,18 @@ first_index = 10000
 nitems = 1
 
 # Ground-image parameters
-atmos_fwhm = 2.1
-atmos_e = 0.13             
-atmos_beta = 0.81         # radians
-opt_defocus=0.53          # wavelengths
-opt_a1=-0.29              # wavelengths
-opt_a2=0.12               # wavelengths
-opt_c1=0.64               # wavelengths
-opt_c2=-0.33              # wavelengths
-opt_obscuration=0.3       # linear scale size of secondary mirror obscuration
-lam = 800                 # nm    NB: don't use lambda - that's a reserved word.
-tel_diam = 4.             # meters 
-pixel_scale_ground = 0.23 # arcsec / pixel
-imsize_ground =
+ground_fwhm = 0.65        # arcsec
+ground_pixel_scale = 0.2  # arcsec
+ground_lam_over_diam = 700./4.*1.E-9*206265
+ground_imsize = 64
 
 # Space-image parameters
-pixel_scale_space = 
-imsize_space =
-beta_space = 
-fwhm_space = 
-g1psf_space =
-g2psf_space =
+space_lam_over_diam = 700./1.3*1.E-9*206265
+space_pixel_scale = 0.05
+space_imsize = 64
+
+# Random seed
+rseed = 999888444
 
 # --- Machine-specific parameters ---
 nproc = 4
@@ -66,29 +57,25 @@ def get_config():
     space_config = {}
     ground_config = {}
 
-    space_config['psf'] = { "type" : "Moffat", "beta" : beta_space, "fwhm" : fwhm_space, 
-        "ellip" : { "type" : "G1G2", "g1" : g1psf_space, "g2" : g2psf_space } }
+    space_config['psf'] = { "type" : "Airy", 'lam_over_diam' : space_lam_over_diam}
         
     ground_config['psf'] = { 
         'type' : 'Convolution', 
-        'items' : [ {'type' : 'Kolmogorov', 'fwhm' : atmos_fwhm, 
-                     'ellip' : { 'type' : 'EBeta', 'e' : atmos_e, 'beta' : atmos_beta} },
-                    {'type' : 'OpticalPSF', 'lam_over_diam' : lam*1.E-9/tel_diam*206265,
-                     'defocus' : opt_defocus, 'astig1' : opt_a1, 'astig2' : opt_a2,
-                     'coma1' : opt_c1, 'coma2' : opt_c2, 'obscuration' : opt_obscuration } ] 
+        'items' : [ {'type' : 'Kolmogorov', 'fwhm' : ground_fwhm },
+                    {'type' : 'Airy', 'lam_over_diam' : ground_lam_over_diam } ]
     }
                 
     space_config['image'] = {
         'type' : 'Single',
-        'size' : imsize_space,
-        'pixel_scale' : pixel_scale_space,
+        'size' : space_imsize,
+        'pixel_scale' : space_pixel_scale,
         'nproc' : nproc
     }
 
     ground_config['image'] = {
         'type' : 'Single',
-        'size' : imsize_ground,
-        'pixel_scale' : pixel_scale_ground,
+        'size' : ground_imsize,
+        'pixel_scale' : ground_pixel_scale,
         'nproc' : nproc
     }
     
@@ -128,16 +115,16 @@ class InterpolationData:
             self.angle = 0
         self.interpolant = config['x_interpolant']
         self.padding = config['gal']['pad_factor']
-        if config['psf']['type'] == 'Moffat':
-            self.image_type = 'Space'
-        else:
+        if config['psf']['type'] == 'Convolution':
             self.image_type = 'Ground'
+        else:
+            self.image_type = 'Space'
 
 def test_realgalaxy(base_config, shear=None, magnification=None, angle=None, shift=None,
-                    interpolant=None, padding=None, seed=None):
+                    interpolant=None, padding=None, seed=None, logger=None):
 # Do something like Barney's compare_dft_vs_photon_config test, only do it for DFT only
 # since the RealGalaxies have a Deconvolve in them.
-    config = copy.deepcopy(base_config
+    config = copy.deepcopy(base_config)
     
     if shear:
         config['gal']['shear'] = shear
@@ -158,7 +145,7 @@ def test_realgalaxy(base_config, shear=None, magnification=None, angle=None, shi
 #        config['gal']['k_interpolant'] = interpolant
     
     trial_images = galsim.config.BuildImages( nimages = config['gal']['index']['nitems'], 
-        obj_num = obj_num, config = config, logger=logger, nproc=config['image']['nproc'])[0] 
+        config = config, logger=logger, nproc=config['image']['nproc'])[0] 
     trial_results = [image.FindAdaptiveMom() for image in trial_images]
     # Get lists of g1,g2,sigma estimate (this might be quicker using a single list comprehension
     # to get a list of (g1,g2,sigma) tuples, and then unzip with zip(*), but this is clearer)
@@ -168,10 +155,11 @@ def test_realgalaxy(base_config, shear=None, magnification=None, angle=None, shi
 
     return InterpolationData(config, g1obs=g1obs_list, g2obs=g2obs_list, sigmaobs = sigmaobs_list)
 
-def test_realgalaxyoriginal(config, shear, dilation, rotation, shift):
+def test_realgalaxyoriginal(base_config, shear=None, magnification=None, angle=None, shift=None,
+                            interpolant=None, padding=None, seed=None, logger=None):
 # Do Barney's compare_dft_vs_photon_config test for a bunch of galaxies: want to know this behavior
 # for both, if we can.
-    config = copy.deepcopy(base_config
+    config = copy.deepcopy(base_config)
     config['gal']['type'] = 'RealGalaxyOriginal'
         
     if shear:
@@ -221,28 +209,35 @@ def test_realgalaxyoriginal(config, shear, dilation, rotation, shift):
         g2obs = g2obs_list_draw, sigmaobs = sigmaobs_list_draw))
         
 def print_results(base_answer, test_answers):
-    
+    pass
         
+def print_results_original(base_answer, test_answers):
+    pass
 
 def main():
     # Define the config dictionaries we will use for all the following tests
     config_list = get_config()
     
+    # Logging...
+    logging.basicConfig(level=logging.WARNING, stream=sys.stdout)
+    logger = logging.getLogger("test_interpolants")
+    
     # Now, run through the various things we need to test in loops.
     # Right now, test rotation angles separately from shear and magnification
     # (but we can do that nested later if need be - probably with fewer tested angles).
     for base_config in config_list:                     # Ground and space
-        base_answer = test_realgalaxy(base_config)
-        base_answer_dft, base_answer_shoot = test_realgalaxyoriginal(base_config)
+        base_answer = test_realgalaxy(base_config, seed=rseed, logger=logger)
+        base_answer_dft, base_answer_shoot = test_realgalaxyoriginal(base_config, seed=rseed,
+                                                                     logger=logger)
         for angle in angle_list:                        # Possible rotation angles
             for interpolant in interpolant_list:        # Possible interpolants
                 for padding_type in noise_padding_list: # Noise pad or not
                     for padding in padding_list:        # Amount of padding
                         print_results(base_answer, test_realgalaxy(base_config, angle=angle, 
-                                      interpolant=interpolant, seed=rseed))
+                                      interpolant=interpolant, seed=rseed, logger=logger))
                         print_results_original((base_answer_dft, base_answer_shoot), 
                                                test_realgalaxyoriginal(base_config, angle=angle, 
-                                               interpolant=interpolant, seed=rseed))
+                                               interpolant=interpolant, seed=rseed, logger=logger))
 
         for (shear, mag) in zip(shear_list, magnification_list): # Shear and magnification
             for interpolant in interpolant_list:                 # Possible interpolants
@@ -251,11 +246,11 @@ def main():
                         config = copy.deepcopy(base_config) # Copy our base config and add params
                         print_results(base_answer, test_realgalaxy(base_config, shear=shear,
                                       magnification=magnification, interpolant=interpolant,
-                                      seed=rseed))
+                                      seed=rseed, logger=logger))
                         print_results_original((base_answer_dft, base_answer_shoot), 
-                                               test_realgalaxyoriginal(base_config, shear=shear,))
+                                               test_realgalaxyoriginal(base_config, shear=shear,
                                                magnification=magnification, interpolant=interpolant,
-                                               seed=rseed))
+                                               seed=rseed, logger=logger))
                 
         
 if __name__ == "__main__":
