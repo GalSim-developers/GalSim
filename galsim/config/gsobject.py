@@ -394,7 +394,7 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams):
         index = kwargs['index']
         if index >= real_cat.nobjects:
             raise IndexError(
-                "%s index has gone past the number of entries in the catalog"%param_name)
+                "%s index has gone past the number of entries in the catalog"%index)
 
     return galsim.RealGalaxy(real_cat, **kwargs), safe
 
