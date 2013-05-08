@@ -185,20 +185,17 @@ class DES_PSFEx(object):
         order = self.fit_order
         P = numpy.array([ xto[nx] * yto[ny] for ny in range(order+1) for nx in range(order+1-ny) ])
         assert len(P) == self.fit_size
+        ar = numpy.tensordot(P,self.basis,(0,0)).astype(numpy.float32)
 
         # Note: This is equivalent to:
-        #
-        #     P = numpy.empty(self.fit_size)
-        #     k = 1
-        #     for ny in range(self.fit_order+1):
-        #         for nx in range(self.fit_order+1-ny):
-        #             assert k == nx+ny(self.fit_order+1)-(ny*ny-1))/2
-        #             P[k] = xto[nx] * yto[ny]
-        #             k == k+1
-        #
+        #   ar = self.basis[0].astype(numpy.float32)
+        #   for n in range(1,self.fit_order+1):
+        #       for ny in range(n+1):
+        #           nx = n-ny
+        #           k = nx+ny*(self.fit_order+1)-ny*(ny-1)/2
+        #           ar += xto[nx] * yto[ny] * self.basis[k]
         # which is pretty much Peter's version of this code.
 
-        ar = numpy.tensordot(P,self.basis,(0,0)).astype(numpy.float32)
         im = galsim.ImageViewF(array=ar)
         # We need the scale in arcsec/psfex_pixel, which is 
         #    (arcsec / image_pixel) * (image_pixel / psfex_pixel)
