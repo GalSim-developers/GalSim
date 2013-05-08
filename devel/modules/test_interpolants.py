@@ -30,8 +30,13 @@ shear_and_magnification_list = [(0.0003, 0.0003, 1.01), (0.0005, 0.0001, 0.96),
 # --- IMPORTANT BUT NOT TESTED PARAMETERS ---
 
 # Galaxy indices
-first_index = 10000
+first_index = 1
 nitems = 1
+
+# Photon-shoot trial parameters, shamelessly stolen from Barney
+np = int(1E6)
+tol_ellip = 3.e-5
+tol_size = 1.e-4
 
 # Ground-image parameters
 ground_fwhm = 0.65        # arcsec
@@ -81,7 +86,7 @@ def get_config():
     
     galaxy_config = { 'type': 'RealGalaxy', 
                       'index': { 'type': 'Sequence', 'first': first_index, 'nitems': nitems } }
-    catalog_config = {'real_catalog' : { 'dir' : '../examples/data', 
+    catalog_config = {'real_catalog' : { 'dir' : '../../examples/data', 
         'file_name' :  'real_galaxy_catalog_example.fits', 'preload' : True} }
                       
     ground_config['gal'] = galaxy_config
@@ -89,18 +94,25 @@ def get_config():
     space_config['gal'] = galaxy_config
     space_config['input'] = catalog_config
 
+    field = catalog_config['real_catalog'] # Redo the 'input' processing from config
+    field['type'], ignore = galsim.config.process.valid_input_types['real_catalog'][0:2]
+    input_obj = galsim.config.gsobject._BuildSimple(field, 'real_catalog', catalog_config,
+                                                    ignore)[0]
+    space_config['real_catalog'] = input_obj
+    ground_config['real_catalog'] = input_obj
+
     return [space_config, ground_config]
 
 class InterpolationData:
 # Quick container class for passing around data from these tests.  
-    def __init__(config, g1_obs, g2_obs, sigma_obs, 
-                 err_g1_obs=None, err_g2_obs=None, err_sigma_obs=None):
-        self.g1_obs = g1_obs
-        self.g2_obs = g2_obs
-        self.sigma_obs = sigma_obs
-        self.err_g1_obs = err_g1_obs
-        self.err_g2_obs = err_g2_obs
-        self.err_sigma_obs = err_sigma_obs
+    def __init__(self, config, g1obs=None, g2obs=None, sigmaobs=None, 
+                 err_g1obs=None, err_g2obs=None, err_sigmaobs=None):
+        self.g1obs = g1obs
+        self.g2obs = g2obs
+        self.sigmaobs = sigmaobs
+        self.err_g1obs = err_g1obs
+        self.err_g2obs = err_g2obs
+        self.err_sigmaobs = err_sigmaobs
         if 'shear' in config['gal']:
             self.shear = config['gal']['shear']
         else:
@@ -113,7 +125,7 @@ class InterpolationData:
             self.angle = config['gal']['rotation']['theta']
         else:
             self.angle = 0
-        self.interpolant = config['x_interpolant']
+        self.interpolant = config['gal']['x_interpolant']
         self.padding = config['gal']['pad_factor']
         if config['psf']['type'] == 'Convolution':
             self.image_type = 'Ground'
@@ -125,7 +137,7 @@ def test_realgalaxy(base_config, shear=None, magnification=None, angle=None, shi
 # Do something like Barney's compare_dft_vs_photon_config test, only do it for DFT only
 # since the RealGalaxies have a Deconvolve in them.
     config = copy.deepcopy(base_config)
-    
+    sys.stdout.write('.')
     if shear:
         config['gal']['shear'] = shear
     if magnification:
@@ -143,22 +155,24 @@ def test_realgalaxy(base_config, shear=None, magnification=None, angle=None, shi
 # Things to try later:
 #        config['gal']['shift'] = shift
 #        config['gal']['k_interpolant'] = interpolant
-    
+    pass_config = copy.deepcopy(config)
     trial_images = galsim.config.BuildImages( nimages = config['gal']['index']['nitems'], 
         config = config, logger=logger, nproc=config['image']['nproc'])[0] 
     trial_results = [image.FindAdaptiveMom() for image in trial_images]
     # Get lists of g1,g2,sigma estimate (this might be quicker using a single list comprehension
     # to get a list of (g1,g2,sigma) tuples, and then unzip with zip(*), but this is clearer)
-    g1obs_list.extend([res.observed_shape.g1 for res in trial_results]) 
-    g2obs_list.extend([res.observed_shape.g2 for res in trial_results]) 
-    sigmaobs_list.extend([res.moments_sigma for res in trial_results])
+    g1obs_list = [res.observed_shape.g1 for res in trial_results] 
+    g2obs_list = [res.observed_shape.g2 for res in trial_results]
+    sigmaobs_list = [res.moments_sigma for res in trial_results]
 
-    return InterpolationData(config, g1obs=g1obs_list, g2obs=g2obs_list, sigmaobs = sigmaobs_list)
+    return InterpolationData(config=pass_config, g1obs=g1obs_list, g2obs=g2obs_list, 
+                              sigmaobs = sigmaobs_list)
 
 def test_realgalaxyoriginal(base_config, shear=None, magnification=None, angle=None, shift=None,
                             interpolant=None, padding=None, seed=None, logger=None):
 # Do Barney's compare_dft_vs_photon_config test for a bunch of galaxies: want to know this behavior
 # for both, if we can.
+    sys.stdout.write('.')
     config = copy.deepcopy(base_config)
     config['gal']['type'] = 'RealGalaxyOriginal'
         
@@ -170,11 +184,13 @@ def test_realgalaxyoriginal(base_config, shear=None, magnification=None, angle=N
         config['gal']['rotation'] = {'type': 'Degrees', 'theta': 1.0*angle}
     if interpolant:    
         config['gal']['x_interpolant'] = interpolant
+    if padding:
+        config['gal']['pad_factor'] = padding
     if seed:
         config['image']['random_seed'] = rseed
     else:
         raise ValueError("Must pass random seed to test_realgalaxy with 'seed'")
-    
+    pass_config = copy.deepcopy(config)
     start_index = config['gal']['index']['first']
     n_objects = config['gal']['index']['nitems']
     g1obs_list = []
@@ -189,7 +205,7 @@ def test_realgalaxyoriginal(base_config, shear=None, magnification=None, angle=N
     
     del[config['gal']['index']]
     for index_offset in range(n_objects):
-        config['gal']['id'] = start_index + index_offset
+        config['gal']['index'] = start_index + index_offset
         result = galsim.utilities.compare_dft_vs_photon_config(
             config, n_photons_per_trial=np, nproc=config['image']['nproc'], logger=logger,
             abs_tol_ellip=tol_ellip, abs_tol_size=tol_size, wmult = 1)
@@ -203,10 +219,10 @@ def test_realgalaxyoriginal(base_config, shear=None, magnification=None, angle=N
         err_g2obs_list.append(err_g2obs)
         err_sigma_list.append(err_sigma)
         
-    return (InterpolationData(config, g1obs = g1obs_list, g2obs = g2obs_list, 
+    return (InterpolationData(config=pass_config, g1obs = g1obs_list, g2obs = g2obs_list, 
         sigmaobs = sigmaobs_list, err_g1obs = err_g1obs_list, err_g2obs = err_g2obs_list, 
-        err_sigmaobs = err_sigmaobs_list), InterpolationData(config, g1obs = g1obs_list_draw, 
-        g2obs = g2obs_list_draw, sigmaobs = sigmaobs_list_draw))
+        err_sigmaobs = err_sigmaobs_list), InterpolationData(config=pass_config, 
+        g1obs = g1obs_list_draw, g2obs = g2obs_list_draw, sigmaobs = sigmaobs_list_draw))
         
 def print_results(base_answer, test_answers):
     pass
@@ -217,41 +233,37 @@ def print_results_original(base_answer, test_answers):
 def main():
     # Define the config dictionaries we will use for all the following tests
     config_list = get_config()
-    
-    # Logging...
-    logging.basicConfig(level=logging.WARNING, stream=sys.stdout)
-    logger = logging.getLogger("test_interpolants")
-    
+    i=1
     # Now, run through the various things we need to test in loops.
     # Right now, test rotation angles separately from shear and magnification
     # (but we can do that nested later if need be - probably with fewer tested angles).
     for base_config in config_list:                     # Ground and space
-        base_answer = test_realgalaxy(base_config, seed=rseed, logger=logger)
-        base_answer_dft, base_answer_shoot = test_realgalaxyoriginal(base_config, seed=rseed,
-                                                                     logger=logger)
-        for angle in angle_list:                        # Possible rotation angles
+        for padding in padding_list:        # Amount of padding
             for interpolant in interpolant_list:        # Possible interpolants
-                for padding_type in noise_padding_list: # Noise pad or not
-                    for padding in padding_list:        # Amount of padding
-                        print_results(base_answer, test_realgalaxy(base_config, angle=angle, 
-                                      interpolant=interpolant, seed=rseed, logger=logger))
-                        print_results_original((base_answer_dft, base_answer_shoot), 
-                                               test_realgalaxyoriginal(base_config, angle=angle, 
-                                               interpolant=interpolant, seed=rseed, logger=logger))
-
-        for (shear, mag) in zip(shear_list, magnification_list): # Shear and magnification
-            for interpolant in interpolant_list:                 # Possible interpolants
-                for padding_type in noise_padding_list:          # Noise pad or not
-                    for padding in padding_list:                 # Amount of padding
-                        config = copy.deepcopy(base_config) # Copy our base config and add params
-                        print_results(base_answer, test_realgalaxy(base_config, shear=shear,
-                                      magnification=magnification, interpolant=interpolant,
-                                      seed=rseed, logger=logger))
-                        print_results_original((base_answer_dft, base_answer_shoot), 
-                                               test_realgalaxyoriginal(base_config, shear=shear,
-                                               magnification=magnification, interpolant=interpolant,
-                                               seed=rseed, logger=logger))
-                
+                base_answer = test_realgalaxy(base_config, seed=rseed, interpolant=interpolant,
+                                            padding=padding)
+                base_answer_dft, base_answer_shoot = test_realgalaxyoriginal(base_config, 
+                                            interpolant=interpolant, padding=padding, seed=rseed)
+                for angle in angle_list:                        # Possible rotation angles
+                    print 'Angle test ', i,
+                    i+=1
+                    print_results(base_answer, test_realgalaxy(base_config, angle=angle, 
+                                  interpolant=interpolant, padding=padding, seed=rseed))
+                    print_results_original((base_answer_dft, base_answer_shoot), 
+                                           test_realgalaxyoriginal(base_config, angle=angle, 
+                                           interpolant=interpolant, padding=padding, seed=rseed))
+                    print ''
+                i=1
+                for (shear, mag) in zip(shear_list, magnification_list): # Shear and magnification
+                    print 'Shear/magnification test', i,
+                    print_results(base_answer, test_realgalaxy(base_config, shear=shear,
+                                  magnification=magnification, interpolant=interpolant,
+                                  padding=padding, seed=rseed))
+                    print_results_original((base_answer_dft, base_answer_shoot), 
+                                           test_realgalaxyoriginal(base_config, shear=shear,
+                                           magnification=magnification, interpolant=interpolant,
+                                           padding=padding, seed=rseed))
+               
         
 if __name__ == "__main__":
     main()
