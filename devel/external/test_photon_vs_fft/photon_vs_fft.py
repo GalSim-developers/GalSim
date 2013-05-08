@@ -441,7 +441,9 @@ if __name__ == "__main__":
     # load the configuration file
     config = yaml.load(open(args.filename_config,'r'))
     config['debug'] = args.debug
-    config['filename_config'] = args.filename_config
+    config['filepath_config'] = args.filename_config
+    config['filename_config'] = os.path.basename(config['filepath_config'])
+
     config['ident'] = args.ident
 
     if config['ident'] < 0:
