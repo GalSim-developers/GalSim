@@ -15,7 +15,7 @@ TOL_ELLIP = 3.e-5
 TOL_SIZE = 3.e-4 # Note this is in pixels by default, so for 0.03 arcsec/pixel this is still small
 
 # Range of sersic n indices to check
-SERSIC_N_TEST = [.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.0, 6.25, 6.5]
+SERSIC_N_TEST = [5.5, 6.0, 6.25, 6.5] #[.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.0, 6.25, 6.5]
 NPHOTONS = 1.e7
 
 # Params for a very simple, Airy PSF
