@@ -103,7 +103,7 @@ def run_tests(random_seed, outfile, config=None, gsparams=None, wmult=None, logg
                     results = galsim.utilities.compare_dft_vs_photon_config(
                         config, abs_tol_ellip=TOL_ELLIP, abs_tol_size=TOL_SIZE, logger=logger)
                     test_ran = True
-                except RuntimeError, err:
+                except RuntimeError as err:
                     test_ran = False
                     pass
                 # Uncomment lines below to ouput a check image
