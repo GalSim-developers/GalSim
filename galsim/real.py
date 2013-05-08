@@ -326,7 +326,7 @@ class RealGalaxy(GSObject):
             # Make the InterpolatedImage out of the image.
             self.original_image = galsim.InterpolatedImage(
                 gal_image, x_interpolant=self.x_interpolant, k_interpolant=self.k_interpolant,
-                dx=self.pixel_scale, pad_factor=pad_factor, pad_image=pad_image, gsparams=gsparams)
+                dx=self.pixel_scale, pad_factor=1., pad_image=pad_image, gsparams=gsparams)
         else:
             # Leave the original image as-is.  Instead, we shift around the image to be used for
             # padding.  Find out how much x and y margin there should be on lower end:
