@@ -2926,7 +2926,6 @@ def test_drawK():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
 def test_drawK_Gaussian():
     """Test the drawK function using known symmetries of the Gaussian Hankel transform.
     """
@@ -2943,8 +2942,8 @@ def test_drawK_Gaussian():
     gal_hankel = galsim.Gaussian(sigma=1./test_sigma, flux=test_flux*2.*np.pi/test_sigma**2)
 
     # Do a basic flux test
-    np.testing.assert_equal(
-        gal.getFlux(), gal_hankel.xValue(galsim.PositionD(0., 0.)),
+    np.testing.assert_almost_equal(
+        gal.getFlux(), gal_hankel.xValue(galsim.PositionD(0., 0.)), decimal=15,
         err_msg="Test object flux does not equal k=(0, 0) mode of its Hankel transform conjugate.")
 
     image_test = galsim.ImageD(test_imsize, test_imsize)
@@ -2952,21 +2951,20 @@ def test_drawK_Gaussian():
     imkimage_test = galsim.ImageD(test_imsize, test_imsize)
 
     # Then compare these two objects at a couple of different dk (reasonably matched for size)
-    for dk_test in (0.03 / sigma, 0.4 / sigma):
+    for dk_test in (0.03 / test_sigma, 0.4 / test_sigma):
         gal.drawK(re=rekimage_test, im=imkimage_test, dk=dk_test) 
-        gal_hankel.draw(image_test, dx=dk_test, use_true_center=False)
-        np.testing.assert_array_equal(
-            rekimage_test.array, image_test.array,
+        gal_hankel.draw(image_test, dx=dk_test, use_true_center=False, normalization="sb")
+        np.testing.assert_array_almost_equal(
+            rekimage_test.array, image_test.array, decimal=15,
             err_msg="Test object drawK() and draw() from Hankel conjugate do not match for grid "+
             "spacing dk = "+str(dk_test))
-        np.testing.assert_array_equal(
-            imkimage_test.array, np.zeros_like(imkimage_test.array),
+        np.testing.assert_array_almost_equal(
+            imkimage_test.array, np.zeros_like(imkimage_test.array), decimal=15,
             err_msg="Non-zero imaginary part for drawK from test image that is purely centred on "+
             "the origin.")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
-
 
 def test_autoconvolve():
     """Test that auto-convolution works the same as convolution with itself.
