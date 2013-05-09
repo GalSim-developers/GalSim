@@ -27,7 +27,6 @@ EMPTY_START_INDEX = 9999
 EMPTY_JAC = 999
 DUMMY_WEIGHT_VALUE = 1.
 DUMMY_SEG_VALUE = 1.
-DUMMY_JAC_VALUE = numpy.array([[1,0],[0,1]])
 
 galsim_image_types = [galsim.ImageD,galsim.ImageF,galsim.ImageI,galsim.ImageS,
                     galsim.ImageViewD,galsim.ImageViewF,galsim.ImageViewI,
@@ -72,7 +71,7 @@ class MultiExposureObject(object):
 
         # see if there are cutouts
         if self.n_cutouts < 1:
-                raise ValueError('no cutouts in this object') 
+            raise ValueError('no cutouts in this object') 
 
         # check if the box size is correct
         if self.box_size not in BOX_SIZES:
@@ -84,20 +83,21 @@ class MultiExposureObject(object):
             self.weights = weights
         else:
             self.weights = [galsim.ImageD(self.box_size,self.box_size,
-                                    init_value=DUMMY_WEIGHT_VALUE)]*self.n_cutouts
+                                          init_value=DUMMY_WEIGHT_VALUE)]*self.n_cutouts
 
         # check segmaps
         if segs != None:
             self.segs = segs
         else:
             self.segs = [galsim.ImageD(self.box_size,self.box_size,
-                                   init_value=DUMMY_SEG_VALUE)]*self.n_cutouts
+                                       init_value=DUMMY_SEG_VALUE)]*self.n_cutouts
 
         # check jacs
         if jacs != None:
             self.jacs = jacs
         else:
-            self.jacs = [DUMMY_JAC_VALUE]*self.n_cutouts
+            # buld jacobians that are just based on the pixel scale.
+            self.jacs = [ numpy.array([[ im.scale, 0. ], [0., im.scale]]) for im in self.images ]
 
          # check if weights,segs,jacks are lists
         if not isinstance(self.weights,list):
@@ -128,17 +128,17 @@ class MultiExposureObject(object):
 
                 # x and y size should be the same
                 if nx != ny:
-                    raise ValueError('%s should be square and is %d x %d',(extname,nx,ny))
+                    raise ValueError('%s should be square and is %d x %d' % (extname,nx,ny))
 
                 # check if box size is correct
                 if nx != self.box_size:
-                    raise ValueError('%s object %d has size %d and should be %d' % (extname,
-                                                                    icutout,nx,self.box_size))
+                    raise ValueError('%s object %d has size %d and should be %d' % 
+                            ( extname, icutout,nx,self.box_size ) )
 
         # see if the number of Jacobians is right
         if len(self.jacs) != self.n_cutouts:
-            raise ValueError('number of Jacobians is %d is not equal to number of cutouts %d' 
-                                        % (len(self.jacs),self.n_cutouts ) )
+            raise ValueError('number of Jacobians is %d is not equal to number of cutouts %d'%
+                    ( len(self.jacs),self.n_cutouts ) )
 
         # check each Jacobian
         for jac in self.jacs:
