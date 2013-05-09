@@ -16,28 +16,39 @@
 # You should have received a copy of the GNU General Public License
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
+
+
+# Import things from other files we want to be in the galsim namespace
 from ._galsim import *
+from base import *
+from real import RealGalaxy, RealGalaxyCatalog, simReal
+from optics import OpticalPSF
+from shapelet import Shapelet
+from interpolatedimage import InterpolatedImage
+from compound import Add, Convolve, Deconvolve, AutoConvolve, AutoCorrelate
+
+from shear import Shear
+from lensing_ps import PowerSpectrum
+from nfw_halo import NFWHalo, Cosmology
+from catalog import InputCatalog
+from table import LookupTable
+from random import DistDeviate
+from correlatednoise import CorrelatedNoise, getCOSMOSNoise
+from fits import FitsHeader
+
+# packages with docs and such, so nothing really to import by name.
 from . import position
 from . import bounds
 from . import angle
-from shear import *
-from ellipse import *
-from . import fits
-from fits import FitsHeader
-from real import *
-from base import *
 from . import noise
-from . import atmosphere
-from . import optics
 from . import image
-from table import *
 from . import random
-from random import DistDeviate
+
+# packages we intentionally keep separate.  E.g. requires galsim.fits.read(...)
+from . import fits
 from . import config
-from psfcorr import *
-from catalog import *
-from lensing import *
 from . import integ
-from correlatednoise import *
 from . import des
 from . import pse
+from . import hsm
+from . import deprecated
