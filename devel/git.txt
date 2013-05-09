@@ -37,28 +37,50 @@ Some other lines you might want to add:
 
 --- Basic workflow ---
 
+When working on GalSim collaboratively via Github, we broadly employ "Github-flow":
+see http://scottchacon.com/2011/08/31/github-flow.html
+
+In particular, paraphrasing from the article above:
+
+* Anything in the master branch is deployable.
+
+* To work on something new, create a descriptively named branch off of master (ie: #ISSUE_NUMBER).
+
+* Commit to that branch locally and regularly push your work to the same named branch on the server.
+
+* When you need feedback or help, or you think the branch is ready for merging, open a pull request.
+
+* After someone else has reviewed and signed off on the feature, you can merge it into master.
+
+* Once it is merged and pushed to master, you can and should deploy immediately.
+
+So far, this system has proved to be very convenient for in depth code review, with hundreds of
+successful Pull Requests to date.
+
+Here are some step-by-step examples of using this flow with the command line git tools:
+
 # 0. clone the repo (only need to do this once, of course)
-git clone git@github.com:GalSim-developers/GalSim.git
+    git clone git@github.com:GalSim-developers/GalSim.git
 
 # 1. check which branch you are on, mostly like you want to be on the master branch
-git branch
+    git branch
 
 # 2. create new branch for issue X, both locally and remotely
-git checkout -b #X
-git push -u origin #X
+    git checkout -b #X
+    git push -u origin #X
 
 # 3. do work, commit often, push periodically
 ... do work ...
-git commit -a
-git push
+    git commit -a
+    git push
 
-# 4. when the issue work is complete, merge it master note that merge will commit automatically if
-# there are no conflicts
-git checkout master
-git merge #X      
-... fix any merge conflicts ...
-... run unit tests, make sure things still work ...
-git push
+# 4. when the issue work is complete, you are ready to consider a Pull Request
+
+You can do this via the Github web interface, which in the absence of conflicts will also be able
+to handle the eventual merge.  When opening a Pull Request, write a description of the changes on
+your branch and why you would like to merge it into master.  Then just wait for people to review
+your work!
+
 
 --- Initial configuration ---
 
