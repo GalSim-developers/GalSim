@@ -38,6 +38,15 @@ valid_input_types = {
     'fits_header' : ('FitsHeader', [], False), 
 }
 
+valid_output_types = { 
+    # The values are tuples with:
+    # - the build function to call
+    # - a function that merely counts the number of objects that will be built by the function
+    # - whether it does multiple images (if True, it must have an nimages parameter)
+    'Fits' : ('BuildFits', 'GetNObjForFits', False),
+    'MultiFits' : ('BuildMultiFits', 'GetNObjForMultiFits', True),
+    'DataCube' : ('BuildDataCube', 'GetNObjForDataCube', True)
+}
 
 def ProcessInput(config, file_num=0, logger=None):
     """
@@ -141,14 +150,17 @@ def Process(config, logger=None):
     type = output['type']
 
     # Check that the type is valid
-    valid_types = [ 'Fits' , 'MultiFits', 'DataCube' ]
-    if type not in valid_types:
+    if type not in valid_output_types:
         raise AttributeError("Invalid output.type=%s."%type)
 
     # build_func is the function we'll call to build each file.
-    build_func = eval('Build'+type)
+    build_func = eval(valid_output_types[type][0])
+
     # nobj_func is the function that builds the nobj_per_file list
-    nobj_func = eval('GetNObjFor'+type)
+    nobj_func = eval(valid_output_types[type][1])
+
+    # can_do_multiple says whether the function can in principal do multiple files
+    can_do_multiple = valid_output_types[type][2]
 
     # We need to know how many objects we'll need for each file (and each image within each file)
     # to get the indexing correct for any sequence items.  (e.g. random_seed)
@@ -171,7 +183,7 @@ def Process(config, logger=None):
     # If set, nproc2 will be passed to the build function to be acted on at that level.
     nproc2 = None
     if nproc > nfiles:
-        if nfiles == 1 and (type == 'MultiFits' or type == 'DataCube'):
+        if nfiles == 1 and can_do_multiple:
             nproc2 = nproc 
             nproc = 1
         else:
@@ -186,7 +198,7 @@ def Process(config, logger=None):
         try:
             from multiprocessing import cpu_count
             ncpu = cpu_count()
-            if nfiles == 1 and (type == 'MultiFits' or type == 'DataCube'):
+            if nfiles == 1 and can_do_multiple:
                 nproc2 = ncpu # Use this value in BuildImage rather than here.
                 nproc = 1
                 if logger:
@@ -277,7 +289,7 @@ def Process(config, logger=None):
         # set from an input catalog.
         nobj = nobj_func(kwargs['config'],file_num,image_num)
 
-        if type in [ 'MultiFits', 'DataCube' ]:
+        if can_do_multiple:
             if 'nimages' not in output:
                 raise AttributeError("Attribute nimages is required for output.type = %s"%type)
             kwargs['nimages'] = galsim.config.ParseValue(output,'nimages',kwargs['config'],int)[0]
