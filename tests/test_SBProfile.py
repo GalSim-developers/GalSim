@@ -2939,9 +2939,11 @@ def test_drawK_Gaussian():
     # Define a Gaussian GSObject
     gal = galsim.Gaussian(sigma=test_sigma, flux=test_flux)
     # Then define a related object which is in fact the opposite number in the Hankel transform pair
+    # For the Gaussian this is straightforward in our definition of the Fourier transform notation,
+    # and has sigma -> 1/sigma and flux -> flux * 2 pi / sigma**2
     gal_hankel = galsim.Gaussian(sigma=1./test_sigma, flux=test_flux*2.*np.pi/test_sigma**2)
 
-    # Do a basic flux test
+    # Do a basic flux test: the total flux of the gal should equal gal_Hankel(k=(0, 0))
     np.testing.assert_almost_equal(
         gal.getFlux(), gal_hankel.xValue(galsim.PositionD(0., 0.)), decimal=15,
         err_msg="Test object flux does not equal k=(0, 0) mode of its Hankel transform conjugate.")
