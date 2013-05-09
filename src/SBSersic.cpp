@@ -21,10 +21,11 @@
 
 //#define DEBUGLOGGING
 
+#include <boost/math/special_functions/gamma.hpp>
+
 #include "SBSersic.h"
 #include "SBSersicImpl.h"
 #include "integ/Int.h"
-#include <boost/math/special_functions/gamma.hpp>
 #include "Solve.h"
 
 #ifdef DEBUGLOGGING
@@ -479,10 +480,10 @@ namespace galsim {
         double gamma6n;
         double gamma8n;
         if (!_truncated) {
-            gamma2n = tgamma(2.*_n);  // integrate r/re from 0. to inf
-            gamma4n = tgamma(4.*_n);
-            gamma6n = tgamma(6.*_n);
-            gamma8n = tgamma(8.*_n);
+            gamma2n = boost::math::tgamma(2.*_n);  // integrate r/re from 0. to inf
+            gamma4n = boost::math::tgamma(4.*_n);
+            gamma6n = boost::math::tgamma(6.*_n);
+            gamma8n = boost::math::tgamma(8.*_n);
         } else {
             double z = _b * std::pow(_maxRre, 1./_n);
             gamma2n = boost::math::tgamma_lower(2.*_n, z);  // integrate r/re from 0. to _maxRre
@@ -493,7 +494,7 @@ namespace galsim {
 
         // Find the ratio of actual (truncated) flux to specified flux
         if (_truncated && _flux_untruncated) {
-            _flux_fraction = gamma2n / tgamma(2.*_n);       // _flux_fraction < 1
+            _flux_fraction = gamma2n / boost::math::tgamma(2.*_n);       // _flux_fraction < 1
             _re_fraction = SersicCalculateHLRScale(_n,_b,gamma2n);
         }
         dbg << "Flux fraction: " << _flux_fraction << std::endl;

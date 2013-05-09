@@ -44,6 +44,136 @@ complex number. The OTF is the autocorrelation function of the wavefront.
 import numpy as np
 import galsim
 import utilities
+from galsim import GSObject
+
+class OpticalPSF(GSObject):
+    """A class describing aberrated PSFs due to telescope optics.  Has an SBInterpolatedImage in the
+    SBProfile attribute.
+
+    Input aberration coefficients are assumed to be supplied in units of wavelength, and correspond
+    to the Zernike polynomials in the Noll convention definined in
+    Noll, J. Opt. Soc. Am. 66, 207-211(1976).  For a brief summary of the polynomials, refer to
+    http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials.
+
+    Initialization
+    --------------
+    
+        >>> optical_psf = galsim.OpticalPSF(lam_over_diam, defocus=0., astig1=0., astig2=0.,
+                                            coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0.,
+                                            circular_pupil=True, obscuration=0., interpolant=None,
+                                            oversampling=1.5, pad_factor=1.5)
+
+    Initializes optical_psf as a galsim.OpticalPSF() instance.
+
+    @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
+                           (user responsible for consistency).
+    @param defocus         defocus in units of incident light wavelength.
+    @param astig1          astigmatism (like e2) in units of incident light wavelength.
+    @param astig2          astigmatism (like e1) in units of incident light wavelength.
+    @param coma1           coma along y in units of incident light wavelength.
+    @param coma2           coma along x in units of incident light wavelength.
+    @param trefoil1        trefoil (one of the arrows along y) in units of incident light
+                           wavelength.
+    @param trefoil2        trefoil (one of the arrows along x) in units of incident light
+                           wavelength.
+    @param spher           spherical aberration in units of incident light wavelength.
+    @param circular_pupil  adopt a circular pupil?  [default `circular_pupil = True`]
+    @param obscuration     linear dimension of central obscuration as fraction of pupil linear
+                           dimension, [0., 1.)
+    @param interpolant     Either an Interpolant2d (or Interpolant) instance or a string indicating
+                           which interpolant should be used.  Options are 'nearest', 'sinc', 
+                           'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the 
+                           integer order to use. [default `interpolant = galsim.Quintic()`]
+    @param oversampling    Optional oversampling factor for the SBInterpolatedImage table 
+                           [default `oversampling = 1.5`], setting oversampling < 1 will produce 
+                           aliasing in the PSF (not good).
+    @param pad_factor      Additional multiple by which to zero-pad the PSF image to avoid folding
+                           compared to what would be employed for a simple galsim.Airy 
+                           [default `pad_factor = 1.5`].  Note that `pad_factor` may need to be 
+                           increased for stronger aberrations, i.e. those larger than order unity.
+    @param flux            Total flux of the profile [default `flux=1.`].
+    @param gsparams        You may also specify a gsparams argument.  See the docstring for
+                           galsim.GSParams using help(galsim.GSParams) for more information about
+                           this option.
+     
+    Methods
+    -------
+    The OpticalPSF is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(), 
+    applyShear() etc.) and operator bindings.
+    """
+
+    # Initialization parameters of the object, with type information
+    _req_params = { "lam_over_diam" : float }
+    _opt_params = {
+        "defocus" : float ,
+        "astig1" : float ,
+        "astig2" : float ,
+        "coma1" : float ,
+        "coma2" : float ,
+        "trefoil1" : float ,
+        "trefoil2" : float ,
+        "spher" : float ,
+        "circular_pupil" : bool ,
+        "obscuration" : float ,
+        "oversampling" : float ,
+        "pad_factor" : float ,
+        "interpolant" : str ,
+        "flux" : float }
+    _single_params = []
+    _takes_rng = False
+
+    # --- Public Class methods ---
+    def __init__(self, lam_over_diam, defocus=0.,
+                 astig1=0., astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0., 
+                 circular_pupil=True, obscuration=0., interpolant=None, oversampling=1.5,
+                 pad_factor=1.5, flux=1., gsparams=None):
+
+        # Currently we load optics, noise etc in galsim/__init__.py, but this might change (???)
+        import galsim.optics
+        
+        # Choose dx for lookup table using Nyquist for optical aperture and the specified
+        # oversampling factor
+        dx_lookup = .5 * lam_over_diam / oversampling
+        
+        # We need alias_threshold here, so don't wait to make this a default GSParams instance
+        # if the user didn't specify anything else.
+        if not gsparams:
+            gsparams = galsim.GSParams()
+
+        # Use a similar prescription as SBAiry to set Airy stepK and thus reference unpadded image
+        # size in physical units
+        stepk_airy = min(
+            gsparams.alias_threshold * .5 * np.pi**3 * (1. - obscuration) / lam_over_diam,
+            np.pi / 5. / lam_over_diam)
+        
+        # Boost Airy image size by a user-specifed pad_factor to allow for larger, aberrated PSFs,
+        # also make npix always *odd* so that opticalPSF lookup table array is correctly centred:
+        npix = 1 + 2 * (np.ceil(pad_factor * (np.pi / stepk_airy) / dx_lookup)).astype(int)
+        
+        # Make the psf image using this dx and array shape
+        optimage = galsim.optics.psf_image(
+            lam_over_diam=lam_over_diam, dx=dx_lookup, array_shape=(npix, npix), defocus=defocus,
+            astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, trefoil1=trefoil1,
+            trefoil2=trefoil2, spher=spher, circular_pupil=circular_pupil, obscuration=obscuration,
+            flux=flux)
+        
+        # If interpolant not specified on input, use a Quintic interpolant
+        if interpolant is None:
+            quintic = galsim.Quintic(tol=1e-4)
+            self.interpolant = galsim.InterpolantXY(quintic)
+        else:
+            self.interpolant = galsim.utilities.convert_interpolant_to_2d(interpolant)
+
+        # Initialize the SBProfile
+        GSObject.__init__(
+            self, galsim.SBInterpolatedImage(optimage, xInterp=self.interpolant, dx=dx_lookup,
+                                             gsparams=gsparams))
+
+        # The above procedure ends up with a larger image than we really need, which
+        # means that the default stepK value will be smaller than we need.  
+        # Thus, we call the function calculateStepK() to refine the value.
+        self.SBProfile.calculateStepK()
+        self.SBProfile.calculateMaxK()
 
 
 def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_diam=2., circular_pupil=True,

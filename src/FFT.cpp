@@ -56,7 +56,7 @@ namespace galsim {
     {
         if (N<=0) throw FFTError("KTable size <=0");
         _N = 2*((N+1)/2); //Round size up to even.
-        _array.resize(_N);
+        _array.resize(_N*(_N/2+1));
         _array.fill(value);
     }
 
@@ -666,7 +666,7 @@ namespace galsim {
     {
         if (N<=0) throw FFTError("XTable size <=0");
         _N = 2*((N+1)/2); //Round size up to even.
-        _array.resize(_N);
+        _array.resize(_N*_N);
         _array.fill(value);
     }
 
@@ -929,7 +929,7 @@ namespace galsim {
         // operation.  Also, to put x=0 in center of array, we need to flop
         // every other sign of k array, and need to scale.
         dbg<<"Before make t_array"<<std::endl;
-        FFTW_Array<std::complex<double> > t_array(_N);
+        FFTW_Array<std::complex<double> > t_array(_N*(_N/2+1));
         dbg<<"After make t_array"<<std::endl;
         double fac = _dk * _dk / (4*M_PI*M_PI);
         long int ind=0;
