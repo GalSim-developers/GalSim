@@ -95,6 +95,7 @@ namespace galsim {
         double _beta; ///< Moffat beta parameter for profile `[1 + (r / rD)^2]^beta`.
         double _flux; ///< Flux.
         double _norm; ///< Normalization. (Including the flux)
+        double _knorm; ///< Normalization for kValue. (Including the flux)
         double _rD;   ///< Scale radius for profile `[1 + (r / rD)^2]^beta`.
         double _maxR; ///< Maximum `r`
         double _maxRrD; ///< maxR/rD
@@ -112,10 +113,33 @@ namespace galsim {
 
         mutable double _re; ///< Stores the half light radius if set or calculated post-setting.
 
-        double (*pow_beta)(double x, double beta);
+        double (*_pow_beta)(double x, double beta);
+        double (SBMoffatImpl::*_kV)(double ksq) const;
 
         /// Setup the FT Table.
         void setupFT() const;
+
+        // These are the (unnormalized) kValue functions for untruncated Moffats
+        double kV_15(double ksq) const;
+        double kV_2(double ksq) const;
+        double kV_25(double ksq) const;
+        double kV_3(double ksq) const;
+        double kV_35(double ksq) const;
+        double kV_4(double ksq) const;
+        double kV_gen(double ksq) const;
+
+        // This does the truncated case.
+        double kV_trunc(double ksq) const;
+
+        // pow(x,beta) for special (probably not uncommon) cases.
+        static double pow_1(double x, double ) { return x; }
+        static double pow_15(double x, double ) { return x * sqrt(x); }
+        static double pow_2(double x, double ) { return x*x; }
+        static double pow_25(double x, double ) { return x*x * sqrt(x); }
+        static double pow_3(double x, double ) { return x*x*x; }
+        static double pow_35(double x, double ) { return x*x*x * sqrt(x); }
+        static double pow_4(double x, double ) { double xsq=x*x; return xsq*xsq; }
+        static double pow_gen(double x, double beta) { return std::pow(x,beta); }
 
         // Copy constructor and op= are undefined.
         SBMoffatImpl(const SBMoffatImpl& rhs);

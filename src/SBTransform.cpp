@@ -40,11 +40,6 @@ namespace galsim {
                              boost::shared_ptr<GSParams> gsparams) :
         SBProfile(new SBTransformImpl(adaptee,mA,mB,mC,mD,cen,fluxScaling,gsparams)) {}
 
-    SBTransform::SBTransform(const SBProfile& adaptee,
-                             const CppEllipse& e, double fluxScaling,
-                             boost::shared_ptr<GSParams> gsparams) :
-        SBProfile(new SBTransformImpl(adaptee,e,fluxScaling,gsparams)) {}
-
     SBTransform::SBTransform(const SBTransform& rhs) : SBProfile(rhs) {}
 
     SBTransform::~SBTransform() {}
@@ -63,26 +58,6 @@ namespace galsim {
 
         // All the actual initialization is in a separate function so we can share code
         // with the other constructor.
-        initialize();
-    }
-
-    SBTransform::SBTransformImpl::SBTransformImpl(
-        const SBProfile& adaptee, const CppEllipse& e, double fluxScaling,
-        boost::shared_ptr<GSParams> gsparams) :
-        SBProfileImpl(gsparams.get() ? gsparams :
-                      GetImpl(adaptee)->gsparams),
-        _adaptee(adaptee), _cen(e.getX0()), _fluxScaling(fluxScaling)
-    {
-        dbg<<"Start TransformImpl (2)\n";
-        dbg<<"e = "<<e<<", fluxScaling = "<<_fluxScaling<<std::endl;
-        // First get what we need from the CppEllipse:
-        tmv::Matrix<double> m = e.getMatrix();
-        _mA = m(0,0);
-        _mB = m(0,1);
-        _mC = m(1,0);
-        _mD = m(1,1);
-
-        // Then move on to the rest of the initialization process.
         initialize();
     }
 

@@ -144,7 +144,6 @@ def main(argv):
     psf4 = galsim.Convolve([atmos,optics])  # Convolve inherits the gsparams from the first 
                                             # item in the list.  (Or you can supply a gsparams
                                             # argument explicitly if you want to override this.)
-    #atmos = galsim.AtmosphericPSF(fwhm = psf_fwhm)
     atmos = galsim.Kolmogorov(fwhm = psf_fwhm, gsparams=gsparams)
     optics = galsim.Airy(lam_over_diam = 0.3 * psf_fwhm, gsparams=gsparams) 
     psf5 = galsim.Convolve([atmos,optics])

@@ -166,7 +166,7 @@ class DES_PSFEx(object):
         self.sample_scale = psf_samp
 
 
-    def getPSF(self, pos, pixel_scale):
+    def getPSF(self, pos, pixel_scale, gsparams=None):
         """Returns the PSF at position pos
 
         The PSFEx class does everything in pixel units, so it has no concept of the pixel_scale.
@@ -175,6 +175,7 @@ class DES_PSFEx(object):
 
         @param pos          The position in pixel units for which to build the PSF.
         @param pixel_scale  The pixel scale in arcsec/pixel.
+        @param gsparams     (Optional) A GSParams instance to pass to the constructed GSObject.
 
         @returns an InterpolatedImage instance.
         """
@@ -184,26 +185,24 @@ class DES_PSFEx(object):
         order = self.fit_order
         P = numpy.array([ xto[nx] * yto[ny] for ny in range(order+1) for nx in range(order+1-ny) ])
         assert len(P) == self.fit_size
+        ar = numpy.tensordot(P,self.basis,(0,0)).astype(numpy.float32)
 
         # Note: This is equivalent to:
-        #
-        #     P = numpy.empty(self.fit_size)
-        #     k = 1
-        #     for ny in range(self.fit_order+1):
-        #         for nx in range(self.fit_order+1-ny):
-        #             assert k == nx+ny(self.fit_order+1)-(ny*ny-1))/2
-        #             P[k] = xto[nx] * yto[ny]
-        #             k == k+1
-        #
+        #   ar = self.basis[0].astype(numpy.float32)
+        #   for n in range(1,self.fit_order+1):
+        #       for ny in range(n+1):
+        #           nx = n-ny
+        #           k = nx+ny*(self.fit_order+1)-ny*(ny-1)/2
+        #           ar += xto[nx] * yto[ny] * self.basis[k]
         # which is pretty much Peter's version of this code.
 
-        ar = numpy.tensordot(P,self.basis,(0,0)).astype(numpy.float32)
         im = galsim.ImageViewF(array=ar)
         # We need the scale in arcsec/psfex_pixel, which is 
         #    (arcsec / image_pixel) * (image_pixel / psfex_pixel)
         #    = pixel_scale * sample_scale
         im.scale = pixel_scale * self.sample_scale
-        return galsim.InterpolatedImage(im, flux=1, x_interpolant=galsim.Lanczos(3))
+        return galsim.InterpolatedImage(im, flux=1, x_interpolant=galsim.Lanczos(3),
+                                        gsparams=gsparams)
 
     def _define_xto(self, x):
         import numpy
@@ -225,7 +224,7 @@ galsim.config.process.valid_input_types['des_psfex'] = ('galsim.des.DES_PSFEx', 
 # key is the key name one level up in the config structure.  Probably 'psf' in this case.
 # base is the top level config dictionary where some global variables are stored.
 # ignore is a list of key words that might be in the config dictionary that you should ignore.
-def BuildDES_PSFEx(config, key, base, ignore):
+def BuildDES_PSFEx(config, key, base, ignore, gsparams):
     """@brief Build a RealGalaxy type GSObject from user input.
     """
     opt = { 'flux' : float }
@@ -235,15 +234,19 @@ def BuildDES_PSFEx(config, key, base, ignore):
         raise ValueError("No DES_PSFEx instance available for building type = DES_PSFEx")
     des_psfex = base['des_psfex']
 
-    if 'chip_pos' not in base:
-        raise ValueError("DES_PSFEx requested, but no chip_pos defined in base.")
-    chip_pos = base['chip_pos']
+    if 'image_pos' not in base:
+        raise ValueError("DES_PSFEx requested, but no image_pos defined in base.")
+    image_pos = base['image_pos']
 
     if 'pixel_scale' not in base:
         raise ValueError("DES_PSFEx requested, but no pixel_scale defined in base.")
     pixel_scale = base['pixel_scale']
 
-    psf = des_psfex.getPSF(chip_pos, pixel_scale)
+    # Convert gsparams from a dict to an actual GSParams object
+    if gsparams: gsparams = galsim.GSParams(**gsparams)
+    else: gsparams = None
+
+    psf = des_psfex.getPSF(image_pos, pixel_scale, gsparams=gsparams)
 
     if 'flux' in kwargs:
         psf.setFlux(kwargs['flux'])

@@ -157,10 +157,11 @@ class DES_Shapelet(object):
         self.interp_matrix = cat.field('interp_matrix')[0].reshape((self.npca,self.fit_size)).T
         assert self.interp_matrix.shape == (self.fit_size, self.npca)
 
-    def getPSF(self, pos):
+    def getPSF(self, pos, gsparams=None):
         """Returns the PSF at position pos
 
-        @param pos   The position in pixel units for which to build the PSF.
+        @param pos       The position in pixel units for which to build the PSF.
+        @param gsparams  (Optional) A GSParams instance to pass to the constructed GSObject.
 
         @returns a Shapelet instance.
         """
@@ -187,7 +188,7 @@ class DES_Shapelet(object):
         b = numpy.dot(b1,self.rot_matrix)
         assert len(b) == self.psf_size
         b += self.ave_psf
-        ret = galsim.Shapelet(self.sigma, self.psf_order, b)
+        ret = galsim.Shapelet(self.sigma, self.psf_order, b, gsparams=gsparams)
         return ret
 
     def _definePxy(self, x, min, max):
@@ -213,7 +214,7 @@ galsim.config.process.valid_input_types['des_shapelet'] = ('galsim.des.DES_Shape
 # key is the key name one level up in the config structure.  Probably 'psf' in this case.
 # base is the top level config dictionary where some global variables are stored.
 # ignore is a list of key words that might be in the config dictionary that you should ignore.
-def BuildDES_Shapelet(config, key, base, ignore):
+def BuildDES_Shapelet(config, key, base, ignore, gsparams):
     """@brief Build a RealGalaxy type GSObject from user input.
     """
     opt = { 'flux' : float }
@@ -223,14 +224,18 @@ def BuildDES_Shapelet(config, key, base, ignore):
         raise ValueError("No DES_Shapelet instance available for building type = DES_Shapelet")
     des_shapelet = base['des_shapelet']
 
-    if 'chip_pos' not in base:
-        raise ValueError("DES_Shapelet requested, but no chip_pos defined in base.")
-    chip_pos = base['chip_pos']
+    if 'image_pos' not in base:
+        raise ValueError("DES_Shapelet requested, but no image_pos defined in base.")
+    image_pos = base['image_pos']
 
-    if des_shapelet.bounds.includes(chip_pos):
-        psf = des_shapelet.getPSF(chip_pos)
+    # Convert gsparams from a dict to an actual GSParams object
+    if gsparams: gsparams = galsim.GSParams(**gsparams)
+    else: gsparams = None
+
+    if des_shapelet.bounds.includes(image_pos):
+        psf = des_shapelet.getPSF(image_pos, gsparams)
     else:
-        message = 'Position '+str(chip_pos)+' not in interpolation bounds: '
+        message = 'Position '+str(image_pos)+' not in interpolation bounds: '
         message += str(des_shapelet.bounds)
         raise galsim.config.gsobject.SkipThisObject(message)
 
