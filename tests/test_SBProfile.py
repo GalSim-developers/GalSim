@@ -2959,11 +2959,11 @@ def test_drawK_Gaussian():
         gal.drawK(re=rekimage_test, im=imkimage_test, dk=dk_test) 
         gal_hankel.draw(image_test, dx=dk_test, use_true_center=False, normalization="sb")
         np.testing.assert_array_almost_equal(
-            rekimage_test.array, image_test.array, decimal=15,
+            rekimage_test.array, image_test.array, decimal=14,
             err_msg="Test object drawK() and draw() from Hankel conjugate do not match for grid "+
             "spacing dk = "+str(dk_test))
         np.testing.assert_array_almost_equal(
-            imkimage_test.array, np.zeros_like(imkimage_test.array), decimal=15,
+            imkimage_test.array, np.zeros_like(imkimage_test.array), decimal=14,
             err_msg="Non-zero imaginary part for drawK from test object that is purely centred on "+
             "the origin.")
 
@@ -3007,11 +3007,11 @@ def test_drawK_Exponential_Moffat():
         gal.drawK(re=rekimage_test, im=imkimage_test, dk=dk_test) 
         gal_hankel.draw(image_test, dx=dk_test, use_true_center=False, normalization="sb")
         np.testing.assert_array_almost_equal(
-            rekimage_test.array, image_test.array, decimal=15,
+            rekimage_test.array, image_test.array, decimal=14,
             err_msg="Test object drawK() and draw() from Hankel conjugate do not match for grid "+
             "spacing dk = "+str(dk_test))
         np.testing.assert_array_almost_equal(
-            imkimage_test.array, np.zeros_like(imkimage_test.array), decimal=15,
+            imkimage_test.array, np.zeros_like(imkimage_test.array), decimal=14,
             err_msg="Non-zero imaginary part for drawK from test object that is purely centred on "+
             "the origin.")
 
