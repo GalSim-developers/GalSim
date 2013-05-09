@@ -18,6 +18,7 @@
 
 
 import numpy
+import galsim
 
 BOX_SIZES = [32,48,64,96,128,196,256]
 MAX_MEMORY = 1e9
@@ -25,14 +26,18 @@ MAX_NCUTOUTS = 11
 EMPTY_START_INDEX = 9999
 EMPTY_JAC = 999
 
+galsim_image_types = [galsim.ImageD,galsim.ImageF,galsim.ImageI,galsim.ImageS,
+                    galsim.ImageViewD,galsim.ImageViewF,galsim.ImageViewI,
+                    galsim.ImageViewS]
+
 class MultiExposureObject(object):
     """
     A class containing exposures for single object, along with other information.
 
     Available fields:
-        self.images             list of images of the object (numpy arrays)
-        self.weights            list of weight maps (numpy arrays)
-        self.segs               list of segmentation masks (numpy arrays)
+        self.images             list of images of the object (GalSim images)
+        self.weights            list of weight maps (GalSim images)
+        self.segs               list of segmentation masks (GalSim images)
         self.jacs               list of Jacobians of transformation 
                                  row,col->ra,dec tangent plane (u,v)
         self.n_cutouts          number of exposures
@@ -68,7 +73,7 @@ class MultiExposureObject(object):
         self.segs = segs
         self.jacs = jacs
         # get box size from the first image
-        self.box_size = self.images[0].shape[0]
+        self.box_size = self.images[0].array.shape[0]
         self.n_cutouts = len(self.images)
 
         # see if there are cutouts
@@ -89,12 +94,13 @@ class MultiExposureObject(object):
             for icutout,cutout in enumerate(ext):
 
                 # all cutouts should be numpy arrays
-                if not isinstance(cutout,numpy.ndarray):
-                    raise TypeError('cutout %d in %s is not an array' % (icutout,extname))
+                
+                if not any([isinstance(cutout,x) for x in galsim_image_types]):
+                    raise TypeError('cutout %d in %s is not a GalSim Image' % (icutout,extname))
 
                 # get the sizes of array
-                nx=cutout.shape[0]
-                ny=cutout.shape[1]
+                nx=cutout.array.shape[0]
+                ny=cutout.array.shape[1]
 
                 # x and y size should be the same
                 if nx != ny:
@@ -181,14 +187,14 @@ def write_meds(filename,objlist,clobber=False):
             # append the image vectors
             # if vector not is already initialised
             if vec['image'] == []:
-                vec['image'] = obj.images[i].flatten()
-                vec['seg'] = obj.segs[i].flatten()
-                vec['weight'] = obj.weights[i].flatten()
+                vec['image'] = obj.images[i].array.flatten()
+                vec['seg'] = obj.segs[i].array.flatten()
+                vec['weight'] = obj.weights[i].array.flatten()
             # if vector already exists
             else:
-                vec['image'] = numpy.concatenate([vec['image'],obj.images[i].flatten()])
-                vec['seg'] = numpy.concatenate([vec['seg'],obj.segs[i].flatten()])
-                vec['weight'] = numpy.concatenate([vec['weight'],obj.weights[i].flatten()])          
+                vec['image'] = numpy.concatenate([vec['image'],obj.images[i].array.flatten()])
+                vec['seg'] = numpy.concatenate([vec['seg'],obj.segs[i].array.flatten()])
+                vec['weight'] = numpy.concatenate([vec['weight'],obj.weights[i].array.flatten()])          
 
             # append the Jacobian
             dudrow[i] = obj.jacs[i][0][0]  

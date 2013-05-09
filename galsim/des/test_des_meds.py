@@ -43,13 +43,16 @@ def test_meds():
     # initialise empty MultiExposureObject list
     objlist = []
 
+    # set the image size
+    box_size = 32
+
     # first obj
-    img11 = numpy.ones([32,32])*111
-    img12 = numpy.ones([32,32])*112
-    seg11 = numpy.ones([32,32])*121
-    seg12 = numpy.ones([32,32])*122
-    wth11 = numpy.ones([32,32])*131
-    wth12 = numpy.ones([32,32])*132
+    img11 = galsim.ImageD(box_size,box_size,init_value=111)
+    img12 = galsim.ImageD(box_size,box_size,init_value=112)
+    seg11 = galsim.ImageD(box_size,box_size,init_value=121)
+    seg12 = galsim.ImageD(box_size,box_size,init_value=122)
+    wth11 = galsim.ImageD(box_size,box_size,init_value=131)
+    wth12 = galsim.ImageD(box_size,box_size,init_value=132)
     jac11 = numpy.array([[11.1 , 11.2],[12.3 , 11.4]])
     jac12 = numpy.array([[12.1 , 12.2],[12.3 , 12.4]])
 
@@ -63,12 +66,12 @@ def test_meds():
     obj1 = galsim.des.MultiExposureObject(images,weights,segs,jacs)
 
     # second obj
-    img21 = numpy.ones([32,32])*211
-    img22 = numpy.ones([32,32])*212
-    seg21 = numpy.ones([32,32])*221
-    seg22 = numpy.ones([32,32])*222
-    wth21 = numpy.ones([32,32])*231
-    wth22 = numpy.ones([32,32])*232
+    img21 = galsim.ImageD(box_size,box_size,init_value=211)
+    img22 = galsim.ImageD(box_size,box_size,init_value=212)
+    seg21 = galsim.ImageD(box_size,box_size,init_value=221)
+    seg22 = galsim.ImageD(box_size,box_size,init_value=222)
+    wth21 = galsim.ImageD(box_size,box_size,init_value=231)
+    wth22 = galsim.ImageD(box_size,box_size,init_value=332)
     jac21 = numpy.array([[21.1 , 21.2],[22.3 , 21.4]])
     jac22 = numpy.array([[22.1 , 22.2],[22.3 , 22.4]])
 
@@ -116,9 +119,9 @@ def test_meds():
             jac[1,1]=cat['dvdcol'][iobj,icut]
 
             # compare
-            numpy.testing.assert_array_equal(img,objlist[iobj].images[icut])    
-            numpy.testing.assert_array_equal(wth,objlist[iobj].weights[icut])    
-            numpy.testing.assert_array_equal(seg,objlist[iobj].segs[icut])    
+            numpy.testing.assert_array_equal(img,objlist[iobj].images[icut].array)    
+            numpy.testing.assert_array_equal(wth,objlist[iobj].weights[icut].array)    
+            numpy.testing.assert_array_equal(seg,objlist[iobj].segs[icut].array)    
             numpy.testing.assert_array_equal(jac,objlist[iobj].jacs[icut])    
 
             print 'test passed get_cutout obj=%d icut=%d' % (iobj,icut)
@@ -133,9 +136,9 @@ def test_meds():
         seg=m.get_mosaic( iobj, type='seg')
 
         # get the concatenated images - create the true mosaic
-        true_mosaic_img = numpy.concatenate(objlist[iobj].images,axis=0)
-        true_mosaic_wth = numpy.concatenate(objlist[iobj].weights,axis=0)
-        true_mosaic_seg = numpy.concatenate(objlist[iobj].segs,axis=0)
+        true_mosaic_img = numpy.concatenate([x.array for x in objlist[iobj].images],  axis=0)
+        true_mosaic_wth = numpy.concatenate([x.array for x in objlist[iobj].weights], axis=0)
+        true_mosaic_seg = numpy.concatenate([x.array for x in objlist[iobj].segs],    axis=0)
 
         # compare
         numpy.testing.assert_array_equal(true_mosaic_img,img)    
