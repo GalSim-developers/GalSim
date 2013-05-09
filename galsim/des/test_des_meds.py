@@ -99,7 +99,7 @@ def test_meds():
     # get the catalog
     cat=m.get_cat()
 
-    # loop over objects and exposures
+    # loop over objects and exposures - test get_cutout
     n_obj=2
     n_cut=2
     for iobj in range(n_obj):
@@ -121,7 +121,28 @@ def test_meds():
             numpy.testing.assert_array_equal(seg,objlist[iobj].segs[icut])    
             numpy.testing.assert_array_equal(jac,objlist[iobj].jacs[icut])    
 
-            print 'passed obj=%d icut=%d' % (iobj,icut)
+            print 'test passed get_cutout obj=%d icut=%d' % (iobj,icut)
+
+    # loop over objects - test get_mosaic
+    n_obj=2
+    for iobj in range(n_obj):
+
+        # get the mosaic to compare with originals
+        img=m.get_mosaic( iobj, type='image')
+        wth=m.get_mosaic( iobj, type='weight')
+        seg=m.get_mosaic( iobj, type='seg')
+
+        # get the concatenated images - create the true mosaic
+        true_mosaic_img = numpy.concatenate(objlist[iobj].images,axis=0)
+        true_mosaic_wth = numpy.concatenate(objlist[iobj].weights,axis=0)
+        true_mosaic_seg = numpy.concatenate(objlist[iobj].segs,axis=0)
+
+        # compare
+        numpy.testing.assert_array_equal(true_mosaic_img,img)    
+        numpy.testing.assert_array_equal(true_mosaic_wth,wth)    
+        numpy.testing.assert_array_equal(true_mosaic_seg,seg)    
+
+        print 'test passed get_mosaic for obj=%d' % (iobj)
 
     print 'all asserts succeeded'
 
