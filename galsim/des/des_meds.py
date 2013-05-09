@@ -137,17 +137,15 @@ class MEDS(object):
     requirements
     ------------
     numpy
-    fitsio https://github.com/esheldon/fitsio
+    pyfits
     """
     def __init__(self, filename):
-        import fitsio
+        import pyfits
         self._filename=filename
-        
-        self._fits=fitsio.FITS(filename)
-
-        self._cat=self._fits["object_data"][:]
-        self._image_info=self._fits["image_info"][:]
-        self._meta=self._fits["metadata"][:]
+        self._fits=pyfits.open(filename)
+        self._cat=self._fits["object_data"].data
+        self._image_info=self._fits["image_info"].data
+        self._meta=self._fits["metadata"].data
 
             
     def get_cutout(self, iobj, icutout, type='image'):
@@ -176,7 +174,7 @@ class MEDS(object):
 
         extname=self._get_extension_name(type)
 
-        imflat = self._fits[extname][start_row:row_end]
+        imflat = self._fits[extname].data[start_row:row_end]
         im = imflat.reshape(box_size,box_size)
         return im
 
@@ -207,7 +205,7 @@ class MEDS(object):
 
         extname=self._get_extension_name(type)
 
-        mflat=self._fits[extname][start_row:row_end]
+        mflat=self._fits[extname].data[start_row:row_end]
         mosaic=mflat.reshape(ncutout*box_size, box_size)
 
         return mosaic
