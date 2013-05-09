@@ -358,7 +358,7 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
 
         >>> my_gaussian = galsim.Gaussian(flux = 1.0, sigma = 1.0)
         >>> my_gaussian_image = my_gaussian.draw(dx = 0.2)
-        >>> my_moments = galsim.FindAdaptiveMom(my_gaussian_image)
+        >>> my_moments = galsim.hsm.FindAdaptiveMom(my_gaussian_image)
 
     OR
     
