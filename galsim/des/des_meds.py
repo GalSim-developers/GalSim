@@ -25,6 +25,9 @@ MAX_MEMORY = 1e9
 MAX_NCUTOUTS = 11
 EMPTY_START_INDEX = 9999
 EMPTY_JAC = 999
+DUMMY_WEIGHT_VALUE = 1.
+DUMMY_SEG_VALUE = 1.
+DUMMY_JAC_VALUE = numpy.array([[1,0],[0,1]])
 
 galsim_image_types = [galsim.ImageD,galsim.ImageF,galsim.ImageI,galsim.ImageS,
                     galsim.ImageViewD,galsim.ImageViewF,galsim.ImageViewI,
@@ -44,9 +47,9 @@ class MultiExposureObject(object):
         self.box_size           size of each exposure image
 
     Constructor parameters:
-    @param images               list of images of the object (numpy arrays)
-    @param weights              list of weight maps (numpy arrays)
-    @param segs                 list of segmentation masks (numpy arrays)
+    @param images               list of images of the object (GalSim images)
+    @param weights              list of weight maps (GalSim images)
+    @param segs                 list of segmentation masks (GalSim images)
     @param jacs                 list of Jacobians of transformation 
                                  row,col->ra,dec tangent plane (u,v) (2x2 numpy arrays)
 
@@ -56,22 +59,13 @@ class MultiExposureObject(object):
     than MAX_NCUTOUTS (default 11).
     """
 
-    def __init__(self,images,weights,segs,jacs):
+    def __init__(self,images,weights=None,segs=None,jacs=None):
 
         if not isinstance(images,list):
             raise TypeError('images should be a list')
-        if not isinstance(weights,list):
-            raise TypeError('weights should be a list')
-        if not isinstance(segs,list):
-            raise TypeError('segs should be a list')
-        if not isinstance(jacs,list):
-            raise TypeError('jacs should be a list')
 
         # get number of cutouts from image list
         self.images = images
-        self.weights = weights
-        self.segs = segs
-        self.jacs = jacs
         # get box size from the first image
         self.box_size = self.images[0].array.shape[0]
         self.n_cutouts = len(self.images)
@@ -83,6 +77,36 @@ class MultiExposureObject(object):
         # check if the box size is correct
         if self.box_size not in BOX_SIZES:
             raise ValueError('box size should be in  [32,48,64,96,128,196,256], is %d' % box_size)
+
+
+        # check if weights, segs and jacs were supplied, if not- create dummy ones
+        if weights != None:
+            self.weights = weights
+        else:
+            self.weights = [galsim.ImageD(self.box_size,self.box_size,
+                                    init_value=DUMMY_WEIGHT_VALUE)]*self.n_cutouts
+
+        # check segmaps
+        if segs != None:
+            self.segs = segs
+        else:
+            self.segs = [galsim.ImageD(self.box_size,self.box_size,
+                                   init_value=DUMMY_SEG_VALUE)]*self.n_cutouts
+
+        # check jacs
+        if jacs != None:
+            self.jacs = jacs
+        else:
+            self.jacs = [DUMMY_JAC_VALUE]*self.n_cutouts
+
+         # check if weights,segs,jacks are lists
+        if not isinstance(self.weights,list):
+            raise TypeError('weights should be a list')
+        if not isinstance(self.segs,list):
+            raise TypeError('segs should be a list')
+        if not isinstance(self.jacs,list):
+            raise TypeError('jacs should be a list')
+
 
         # loop through the images and check if they are of the same size
         for extname in ('images','weights','segs'):
@@ -125,9 +149,10 @@ class MultiExposureObject(object):
             if jac.shape != (2,2):
                 raise ValueError('Jacobians should be 2x2')
 
+
 def write_meds(filename,objlist,clobber=False):
     """
-    Writes the galaxy, weights, segmaps images to a MEDS file.
+    @brief Writes the galaxy, weights, segmaps images to a MEDS file.
 
     Arguments:
     ----------
