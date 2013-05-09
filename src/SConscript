@@ -19,7 +19,7 @@ header_dir = 'include'
 lib_install_dir = os.path.join(env1['INSTALL_PREFIX'], lib_dir)
 header_install_dir = os.path.join(env1['INSTALL_PREFIX'], header_dir)
 
-subdirs = ['.','hsm']
+subdirs = ['.','hsm','deprecated']
 
 lib_files = []
 for d in subdirs:

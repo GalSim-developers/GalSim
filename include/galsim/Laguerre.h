@@ -599,12 +599,6 @@ namespace galsim {
     LTransform RotationLTransform(
         double theta, int orderOut, int orderIn, bool coordShift=false);
 
-    // Combination of above 3 (specify intermediate precision if 
-    //     the default of max(out,in) is not wanted):
-    LTransform MakeLTransform(
-        const CppEllipse& e, int orderOut, int orderIn,
-        bool coordShift=false, int orderIntermediate=-1);
-
     // Convolution with PSF:
     LTransform MakeLTransform(
         const LVector psf, const double D,

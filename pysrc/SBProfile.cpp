@@ -205,12 +205,12 @@ namespace galsim {
                 .def("getFlux", &SBProfile::getFlux)
                 .def("scaleFlux", &SBProfile::scaleFlux, bp::args("fluxRatio"))
                 .def("setFlux", &SBProfile::setFlux, bp::args("flux"))
-                .def("applyTransformation", &SBProfile::applyTransformation, bp::args("e"))
                 .def("applyShear",
                      (void (SBProfile::*)(CppShear))&SBProfile::applyShear,
                      (bp::arg("s")))
                 .def("applyRotation", &SBProfile::applyRotation, bp::args("theta"))
                 .def("applyShift", &SBProfile::applyShift, bp::args("dx", "dy"))
+                .def("applyScale", &SBProfile::applyScale, bp::args("scale"))
                 .def("shoot", &SBProfile::shoot, bp::args("n", "u"))
                 ;
             wrapTemplates<float>(pySBProfile);

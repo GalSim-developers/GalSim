@@ -25,11 +25,9 @@ from real import RealGalaxy, RealGalaxyCatalog, simReal
 from optics import OpticalPSF
 from shapelet import Shapelet
 from interpolatedimage import InterpolatedImage
-from atmosphere import AtmosphericPSF
 from compound import Add, Convolve, Deconvolve, AutoConvolve, AutoCorrelate
 
 from shear import Shear
-from ellipse import Ellipse
 from lensing_ps import PowerSpectrum
 from nfw_halo import NFWHalo, Cosmology
 from catalog import InputCatalog
@@ -53,3 +51,4 @@ from . import integ
 from . import des
 from . import pse
 from . import hsm
+from . import deprecated

@@ -262,23 +262,6 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # Return the variance to the interested user
         return variance
 
-    def applyTransformation(self, ellipse):
-        """Apply a galsim.Ellipse distortion to the correlated noise model.
-           
-        galsim.Ellipse objects can be initialized in a variety of ways (see documentation of this
-        class, galsim.ellipse.Ellipse in the doxygen documentation, for details).
-
-        Note that the correlation function must be peaked at the origin, and is translationally
-        invariant: any X0 shift in the input ellipse is therefore ignored.
-
-        @param ellipse The galsim.Ellipse transformation to apply.
-        """
-        if not isinstance(ellipse, galsim.Ellipse):
-            raise TypeError("Argument to applyTransformation must be a galsim.Ellipse!")
-        # Create a new ellipse without a shift
-        ellipse_noshift = galsim.Ellipse(shear=ellipse.getS(), mu=ellipse.getMu())
-        self._profile.applyTransformation(ellipse_noshift)
-
     def applyExpansion(self, scale):
         """Scale the linear scale of correlations in this noise model by scale.  
         
@@ -309,29 +292,6 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
     # Also add methods which create a new _BaseCorrelatedNoise with the transformations applied...
     #
-    def createTransformed(self, ellipse):
-        """Returns a new correlated noise model by applying a galsim.Ellipse transformation (shear,
-        dilate).
-
-        The new instance will share the galsim.BaseDeviate random number generator with the parent.
-        Use the .setRNG() method after this operation if you wish to use a different random number
-        sequence.
-
-        Note that galsim.Ellipse objects can be initialized in a variety of ways (see documentation
-        of this class, galsim.ellipse.Ellipse in the doxygen documentation, for details).
-
-        Note also that the correlation function must be peaked at the origin, and is translationally
-        invariant: any X0 shift in the input ellipse is therefore ignored.
-
-        @param ellipse The galsim.Ellipse transformation to apply
-        @returns The transformed object.
-        """
-        if not isinstance(ellipse, galsim.Ellipse):
-            raise TypeError("Argument to createTransformed must be a galsim.Ellipse!")
-        ret = self.copy()
-        ret.applyTransformation(ellipse)
-        return ret
-
     def createExpanded(self, scale):
         """Returns a new correlated noise model by applying an Expansion by the given scale,
         scaling the linear size by scale.

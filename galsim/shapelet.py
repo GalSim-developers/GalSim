@@ -112,7 +112,7 @@ class Shapelet(GSObject):
     _takes_rng = False
 
     # --- Public Class methods ---
-    def __init__(self, sigma, order, bvec=None):
+    def __init__(self, sigma, order, bvec=None, gsparams=None):
         # Make sure order and sigma are the right type:
         order = int(order)
         sigma = float(sigma)
@@ -127,7 +127,7 @@ class Shapelet(GSObject):
             import numpy
             bvec = galsim.LVector(order,numpy.array(bvec))
 
-        GSObject.__init__(self, galsim.SBShapelet(sigma, bvec))
+        GSObject.__init__(self, galsim.SBShapelet(sigma, bvec, gsparams))
 
     def getSigma(self):
         return self.SBProfile.getSigma()
