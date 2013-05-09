@@ -3003,9 +3003,14 @@ def test_drawK_Exponential_Moffat():
     imkimage_test = galsim.ImageD(test_imsize, test_imsize)
 
     # Then compare these two objects at a couple of different dk (reasonably matched for size)
-    for dk_test in (0.03 / test_sigma, 0.4 / test_sigma):
+    for dk_test in (0.15 / test_scale_radius, 0.6 / test_scale_radius):
         gal.drawK(re=rekimage_test, im=imkimage_test, dk=dk_test) 
         gal_hankel.draw(image_test, dx=dk_test, use_true_center=False, normalization="sb")
+        #import matplotlib.pyplot as plt
+        #plt.pcolor(rekimage_test.array); plt.colorbar()
+        #plt.figure()
+        #plt.pcolor(image_test.array); plt.colorbar()
+        #plt.show()
         np.testing.assert_array_almost_equal(
             rekimage_test.array, image_test.array, decimal=15,
             err_msg="Test object drawK() and draw() from Hankel conjugate do not match for grid "+
