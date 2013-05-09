@@ -202,20 +202,18 @@ def PlotStatsForParam(config,param_name):
         logging.info('opened file %s with %d valid measurements (out of %d) for %s=%e',filename_out,n_res,n_res_all,param_name,iv)
 
         # get all the stats
-        moments_E1_diff_mean.append( numpy.mean(results[:,2] - results[:,4])  )
-        moments_E1_diff_stdm.append( numpy.std(results[:,2] - results[:,4],ddof=1)/numpy.sqrt(n_res)  )
-        moments_E1_diff_medn.append( numpy.median(results[:,2] - results[:,4])  )
-        moments_E2_diff_mean.append( numpy.mean(results[:,3] - results[:,5])  )
-        moments_E2_diff_stdm.append( numpy.std(results[:,3] - results[:,5],ddof=1)/numpy.sqrt(n_res)  )
-        moments_E2_diff_medn.append( numpy.median(results[:,3] - results[:,5])  )
-
-        hsmcorr_E1_diff_mean.append( numpy.mean(results[:,6] - results[:,8])  )
-        hsmcorr_E1_diff_stdm.append( numpy.std(results[:,6] - results[:,8],ddof=1)/numpy.sqrt(n_res)  )
-        hsmcorr_E1_diff_medn.append( numpy.median(results[:,6] - results[:,8])  )
-        hsmcorr_E2_diff_mean.append( numpy.mean(results[:,7] - results[:,9])  )
-        hsmcorr_E2_diff_stdm.append( numpy.std(results[:,7] - results[:,9],ddof=1)/numpy.sqrt(n_res)  )
-        hsmcorr_E2_diff_medn.append( numpy.median(results[:,7] - results[:,9])  )
-
+        moments_E1_diff_mean.append(    numpy.mean(results[:,2] - results[:,4])  )
+        moments_E1_diff_stdm.append(    numpy.std(results[:,2] - results[:,4],ddof=1)/numpy.sqrt(n_res)  )
+        moments_E1_diff_medn.append(    numpy.median(results[:,2] - results[:,4])  )
+        moments_E2_diff_mean.append(    numpy.mean(results[:,3] - results[:,5])  )
+        moments_E2_diff_stdm.append(    numpy.std(results[:,3] - results[:,5],ddof=1)/numpy.sqrt(n_res)  )
+        moments_E2_diff_medn.append(    numpy.median(results[:,3] - results[:,5])  )
+        hsmcorr_E1_diff_mean.append(    numpy.mean(results[:,6] - results[:,8])  )
+        hsmcorr_E1_diff_stdm.append(    numpy.std(results[:,6] - results[:,8],ddof=1)/numpy.sqrt(n_res)  )
+        hsmcorr_E1_diff_medn.append(    numpy.median(results[:,6] - results[:,8])  )
+        hsmcorr_E2_diff_mean.append(    numpy.mean(results[:,7] - results[:,9])  )
+        hsmcorr_E2_diff_stdm.append(    numpy.std(results[:,7] - results[:,9],ddof=1)/numpy.sqrt(n_res)  )
+        hsmcorr_E2_diff_medn.append(    numpy.median(results[:,7] - results[:,9])  )
         moments_sigma_diff_mean.append( numpy.mean(results[:,10] - results[:,11])  )
         moments_sigma_diff_stdm.append( numpy.std(results[:,10] - results[:,11],ddof=1)/numpy.sqrt(n_res)  )
         moments_sigma_diff_medn.append( numpy.median(results[:,10] - results[:,11])  )
@@ -281,6 +279,101 @@ def PlotStatsForParam(config,param_name):
     pylab.close()
     logger.info('saved figure %s' % filename_fig)
 
+def _getLineFit(X,y,sig):
+        """
+        @brief get linear least squares fit with uncertainity estimates
+        y(X) = b*X + a
+        see numerical recipies 15.2.9
+        @param X    function arguments 
+        @param y    function values
+        @param sig  function values standard deviations   
+        @return a - additive 
+        @return b - multiplicative
+        @return C - covariance matrix
+        """
+        
+        import numpy
+
+        invsig2 = sig**-2;
+        
+        S  = numpy.sum(invsig2)
+        Sx = numpy.dot(X,invsig2)
+        Sy = numpy.dot(y,invsig2)
+        Sxx = numpy.dot(invsig2*X,X)
+        Sxy = numpy.dot(invsig2*X,y)
+        
+        D = S*Sxx - Sx**2
+        a = (Sxx*Sy - Sx*Sxy)/D
+        b = (S*Sxy  - Sx*Sy)/D
+        
+        Cab = numpy.zeros((2,2))
+        Cab[0,0] = Sxx/D
+        Cab[1,1] = S/D
+        Cab[1,0] = -Sx/D
+        Cab[0,1] = Cab[1,0]
+        
+        return a,b,Cab
+
+def GetBias(config,filename_results_pht,filename_results_fft):
+
+    results_pht = numpy.loadtxt(filename_results_pht)
+    results_fft = numpy.loadtxt(filename_results_fft)
+
+    #id,G1_moments,G2_moments,G1_hsmcorr,G2_hsmcorr,moments_sigma,hsmcorr_sigma,err_g1obs,err_g2obs,err_g1hsm,err_g2hsm,err_sigma,err_sigma_hsm
+
+    moments_fft_G1         = results_fft[:,1]
+    moments_fft_G2         = results_fft[:,2]
+    hsmcorr_fft_G1         = results_fft[:,3]
+    hsmcorr_fft_G2         = results_fft[:,4]
+    moments_fft_sigma      = results_fft[:,5]
+    hsmcorr_fft_sigma      = results_fft[:,6]
+    moments_pht_G1         = results_pht[:,1]
+    moments_pht_G2         = results_pht[:,2]
+    hsmcorr_pht_G1         = results_pht[:,3]
+    hsmcorr_pht_G2         = results_pht[:,4] 
+    moments_pht_sigma      = results_pht[:,5]
+    hsmcorr_pht_sigma      = results_pht[:,6]
+    moments_pht_G1_std     = results_pht[:,7]
+    moments_pht_G2_std     = results_pht[:,8]
+    hsmcorr_pht_G1_std     = results_pht[:,9]
+    hsmcorr_pht_G2_std     = results_pht[:,10]
+    moments_pht_sigma_std  = results_pht[:,11]
+    hsmcorr_pht_sigma_std  = results_pht[:,12]
+
+    # set some plot parameters
+    # fig_xsize,fig_ysize,legend_ncol,legend_loc = 12,10,2,3
+
+    if config['debug']:
+        
+        pylab.subplot(1,3,1)
+        pylab.errorbar(moments_fft_G1, moments_pht_G1-moments_fft_G1, yerr=moments_pht_G1_std, fmt='b.')
+        pylab.xlabel('g1_fft')
+        pylab.ylabel('g1_pht - g1_fft')
+
+        pylab.subplot(1,3,1)
+        pylab.errorbar(moments_fft_G2, moments_pht_G2-moments_fft_G2, yerr=moments_pht_G2_std, fmt='b.')
+        pylab.xlabel('g1_fft')
+        pylab.ylabel('g2_pht - g2_fft')
+
+        pylab.subplot(1,3,1)
+        pylab.errorbar(moments_fft_sigma, moments_pht_sigma-moments_fft_sigma, yerr=moments_pht_sigma_std, fmt='b.')
+        pylab.xlabel('sigma_fft')
+        pylab.ylabel('sigma_pht - sigma_fft')
+
+        pylab.show()
+
+    c1,m1,cov1 = _getLineFit(moments_fft_G1,moments_pht_G1-moments_fft_G1,moments_pht_G1_std)
+    c2,m2,cov2 = _getLineFit(moments_fft_G2,moments_pht_G2-moments_fft_G2,moments_pht_G2_std)
+    cs,ms,covs = _getLineFit(moments_fft_sigma,moments_pht_sigma-moments_fft_sigma,moments_pht_sigma_std)
+    bias_moments = {'c1' : c1, 'm1': m1, 'c2' : c2, 'm2': m2, 'cs' : cs, 'ms' : ms }
+    
+    c,m,cov = _getLineFit(hsmcorr_fft_G1,hsmcorr_pht_G1-hsmcorr_fft_G1,hsmcorr_pht_G1_std)
+    c,m,cov = _getLineFit(hsmcorr_fft_G1,hsmcorr_pht_G1-hsmcorr_fft_G1,hsmcorr_pht_G1_std)
+    c,m,cov = _getLineFit(hsmcorr_fft_G1,hsmcorr_pht_G1-hsmcorr_fft_G1,hsmcorr_pht_G1_std)
+    bias_hsmcorr = {'c1' : c1, 'm1': m1, 'c2' : c2, 'm2': m2, 'cs' : cs, 'ms' : ms }
+
+    return bias_moments,bias_hsmcorr
+    
 if __name__ == "__main__":
 
 
@@ -288,8 +381,12 @@ if __name__ == "__main__":
 
     # parse arguments
     parser = argparse.ArgumentParser(description=description, add_help=True)
-    parser.add_argument('filename_config', type=str, help='yaml config file, see photon_vs_fft.yaml for example.')
-    parser.add_argument('--debug', action="store_true", help='run with debug verbosity', default=False)
+    parser.add_argument('filename_config', type=str, 
+        help='yaml config file, see photon_vs_fft.yaml for example.')
+    parser.add_argument('--debug', action="store_true", 
+        help='run with debug verbosity', default=False)
+    parser.add_argument('-rd','--results_dir',type=str, action='store', default='.', 
+        help="dir where the results files are, default '.'")    
     args = parser.parse_args()
 
     # set up logger
@@ -301,10 +398,20 @@ if __name__ == "__main__":
     # load the configuration file
     config = yaml.load(open(args.filename_config,'r'))
     config['debug'] = args.debug
-    config['filename_config'] = args.filename_config
+    config['filepath_config'] = args.filename_config
+    config['filename_config'] = os.path.basename(config['filepath_config'])
+
+    filename_results_fft = 'results.%s.default.fft.cat' % (config['filename_config'])
+    filename_results_pht = 'results.%s.default.pht.cat' % (config['filename_config'])
+    filepath_results_fft = os.path.join(args.results_dir,filename_results_fft)
+    filepath_results_pht = os.path.join(args.results_dir,filename_results_pht)
+
+    Plots(config,filepath_results_pht,filepath_results_fft)
+
+
 
     # save a plot for each of the varied parameters
-    for param_name in config['vary_params'].keys():
-        PlotStatsForParam(config,param_name)
+    # for param_name in config['vary_params'].keys():
+    #     PlotStatsForParam(config,param_name)
 
 
