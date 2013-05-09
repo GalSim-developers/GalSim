@@ -519,8 +519,8 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, pixel_scal
 
 def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None, pixel_scale=None,
                                  size=None, wmult=None, abs_tol_ellip=1.e-5, abs_tol_size=1.e-5,
-                                 n_trials_per_iter=32, n_max_iter=-1, n_photons_per_trial=1e7, moments=True,
-                                 hsm=False, logger=None):
+                                 n_trials_per_iter=32, n_max_iter=-1, n_photons_per_trial=1e7,
+                                 moments=True, hsm=False, logger=None):
     """Take an input config dictionary and render the object it describes in two ways, comparing
     results at high precision. 
 
@@ -772,7 +772,7 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
         err_g1_use,err_g2_use,err_sig_use = (g1hsmerr,g2hsmerr,sighserr)
 
     while (err_g1_use>abs_tol_ellip) or (err_g2_use>abs_tol_ellip) or (err_sig_use>abs_tol_size) :
-        if itercount >= n_max_iter: break
+        if n_max_iter > 0 and itercount >= n_max_iter: break
 
         # Reset the random_seed depending on the iteration number so that these never overlap
         config2['image']['random_seed'] = start_random_seed + itercount * (n_trials_per_iter + 1)
