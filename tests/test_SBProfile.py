@@ -2934,7 +2934,7 @@ def test_drawK_Gaussian():
     import time
     t1 = time.time()
 
-    test_flux = 2.33e-7 # Choose a non-unity flux
+    test_flux = 2.3     # Choose a non-unity flux
     test_sigma = 17.    # ...likewise for sigma
     test_imsize = 45    # Dimensions of comparison image, doesn't need to be large
 
@@ -2947,7 +2947,7 @@ def test_drawK_Gaussian():
 
     # Do a basic flux test: the total flux of the gal should equal gal_Hankel(k=(0, 0))
     np.testing.assert_almost_equal(
-        gal.getFlux(), gal_hankel.xValue(galsim.PositionD(0., 0.)), decimal=15,
+        gal.getFlux(), gal_hankel.xValue(galsim.PositionD(0., 0.)), decimal=12,
         err_msg="Test object flux does not equal k=(0, 0) mode of its Hankel transform conjugate.")
 
     image_test = galsim.ImageD(test_imsize, test_imsize)
@@ -2959,11 +2959,11 @@ def test_drawK_Gaussian():
         gal.drawK(re=rekimage_test, im=imkimage_test, dk=dk_test) 
         gal_hankel.draw(image_test, dx=dk_test, use_true_center=False, normalization="sb")
         np.testing.assert_array_almost_equal(
-            rekimage_test.array, image_test.array, decimal=14,
+            rekimage_test.array, image_test.array, decimal=12,
             err_msg="Test object drawK() and draw() from Hankel conjugate do not match for grid "+
             "spacing dk = "+str(dk_test))
         np.testing.assert_array_almost_equal(
-            imkimage_test.array, np.zeros_like(imkimage_test.array), decimal=14,
+            imkimage_test.array, np.zeros_like(imkimage_test.array), decimal=12,
             err_msg="Non-zero imaginary part for drawK from test object that is purely centred on "+
             "the origin.")
 
@@ -2979,7 +2979,7 @@ def test_drawK_Exponential_Moffat():
     import time
     t1 = time.time()
 
-    test_flux = 4.19e-4     # Choose a non-unity flux
+    test_flux = 4.1         # Choose a non-unity flux
     test_scale_radius = 13. # ...likewise for scale_radius
     test_imsize = 45        # Dimensions of comparison image, doesn't need to be large
 
@@ -2989,13 +2989,12 @@ def test_drawK_Exponential_Moffat():
     # For the Exponential we need a Moffat, with scale_radius=1/scale_radius.  The total flux under
     # this Moffat with unit amplitude at r=0 is is pi * scale_radius**(-2) / (beta - 1) 
     #  = 2. * pi * scale_radius**(-2) in this case, so it works analagously to the Gaussian above.
-    gal_hankel = galsim.Moffat(
-        beta=1.5, scale_radius=1. / test_scale_radius,
-        flux=test_flux * 2. * np.pi / test_scale_radius**2)
+    gal_hankel = galsim.Moffat(beta=1.5, scale_radius=1. / test_scale_radius,
+                               flux=test_flux * 2. * np.pi / test_scale_radius**2)
 
     # Do a basic flux test: the total flux of the gal should equal gal_Hankel(k=(0, 0))
     np.testing.assert_almost_equal(
-        gal.getFlux(), gal_hankel.xValue(galsim.PositionD(0., 0.)), decimal=15,
+        gal.getFlux(), gal_hankel.xValue(galsim.PositionD(0., 0.)), decimal=12,
         err_msg="Test object flux does not equal k=(0, 0) mode of its Hankel transform conjugate.")
 
     image_test = galsim.ImageD(test_imsize, test_imsize)
@@ -3007,11 +3006,11 @@ def test_drawK_Exponential_Moffat():
         gal.drawK(re=rekimage_test, im=imkimage_test, dk=dk_test) 
         gal_hankel.draw(image_test, dx=dk_test, use_true_center=False, normalization="sb")
         np.testing.assert_array_almost_equal(
-            rekimage_test.array, image_test.array, decimal=14,
+            rekimage_test.array, image_test.array, decimal=12,
             err_msg="Test object drawK() and draw() from Hankel conjugate do not match for grid "+
             "spacing dk = "+str(dk_test))
         np.testing.assert_array_almost_equal(
-            imkimage_test.array, np.zeros_like(imkimage_test.array), decimal=14,
+            imkimage_test.array, np.zeros_like(imkimage_test.array), decimal=12,
             err_msg="Non-zero imaginary part for drawK from test object that is purely centred on "+
             "the origin.")
 
