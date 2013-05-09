@@ -15,7 +15,12 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
-#
+
+# Requirements:
+# meds  - https://github.com/esheldon/meds
+# fitso - https://github.com/esheldon/fitsio
+
+
 import numpy as np
 import os
 import sys
@@ -86,7 +91,8 @@ def test_meds():
 
     # test functions in des_meds.py
     print 'reading %s' % filename_meds
-    m=galsim.des.MEDS(filename_meds)
+    import meds
+    m=meds.MEDS(filename_meds)
     print 'number of objects is %d' % len(m._cat)
     print 'testing if loaded images are the same as original images'
 
