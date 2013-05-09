@@ -52,8 +52,21 @@ space_imsize = 64
 # Random seed
 rseed = 999888444
 
-# --- Machine-specific parameters ---
+# --- COMPUTATIONAL DETAILS AND FILENAMES ---
 nproc = 4
+ground_filename = 'interpolant_test_output_ground.dat'
+space_filename = 'interpolant_test_output_space.dat'
+ground_original_filename = 'interpolant_test_output_ground_original.dat'
+space_original_filename = 'interpolant_test_output_space_original.dat'
+ground_base_comparison_filename = 'interpolant_test_output_ground_base.dat'
+space_base_comparison_filename = 'interpolant_test_output_space_base.dat'
+
+ground_file = open(ground_filename)
+space_file = open(space_filename)
+ground_original_file = open(ground_original_filename) 
+space_original_file = open(space_original_filename)
+ground_base_comparison_file = open(ground_base_comparison_file)
+space_base_comparison_file = open(space_base_comparison_filename)
 
 # --- Helper functions to run the main part of the code ---
 def get_config():
@@ -63,7 +76,6 @@ def get_config():
     ground_config = {}
 
     space_config['psf'] = { "type" : "Airy", 'lam_over_diam' : space_lam_over_diam}
-        
     ground_config['psf'] = { 
         'type' : 'Convolution', 
         'items' : [ {'type' : 'Kolmogorov', 'fwhm' : ground_fwhm },
@@ -76,19 +88,16 @@ def get_config():
         'pixel_scale' : space_pixel_scale,
         'nproc' : nproc
     }
-
     ground_config['image'] = {
         'type' : 'Single',
         'size' : ground_imsize,
         'pixel_scale' : ground_pixel_scale,
         'nproc' : nproc
     }
-    
     galaxy_config = { 'type': 'RealGalaxy', 
                       'index': { 'type': 'Sequence', 'first': first_index, 'nitems': nitems } }
     catalog_config = {'real_catalog' : { 'dir' : '../../examples/data', 
         'file_name' :  'real_galaxy_catalog_example.fits', 'preload' : True} }
-                      
     ground_config['gal'] = galaxy_config
     ground_config['input'] = catalog_config
     space_config['gal'] = galaxy_config
@@ -156,7 +165,7 @@ def test_realgalaxy(base_config, shear=None, magnification=None, angle=None, shi
 #        config['gal']['shift'] = shift
 #        config['gal']['k_interpolant'] = interpolant
     pass_config = copy.deepcopy(config)
-    trial_images = galsim.config.BuildImages( nimages = config['gal']['index']['nitems'], 
+    trial_images = galsim.config.BuildImages(nimages = config['gal']['index']['nitems'], 
         config = config, logger=logger, nproc=config['image']['nproc'])[0] 
     trial_results = [image.FindAdaptiveMom() for image in trial_images]
     # Get lists of g1,g2,sigma estimate (this might be quicker using a single list comprehension
@@ -224,8 +233,42 @@ def test_realgalaxyoriginal(base_config, shear=None, magnification=None, angle=N
         err_sigmaobs = err_sigmaobs_list), InterpolationData(config=pass_config, 
         g1obs = g1obs_list_draw, g2obs = g2obs_list_draw, sigmaobs = sigmaobs_list_draw))
         
-def print_results(base_answer, test_answers):
-    pass
+def print_results(base_answer, test_answer, outfile=None):
+    if test_answer.image_type == 'Ground' and base_answer.image_type == 'Ground':
+        image_type = 1
+    elif test_answer.image_type == 'Space' and base_answer.image_type == 'Space':
+        image_type = 0
+    else:
+        raise RuntimeError('Trying to compare ground-based to space-based images')
+    
+    if ((base_answer.interpolant!=test_answer.interpolant) or 
+        (base_answer.padding!=test_answer.padding)) and outfile!='base' and outfile!='Base':
+            raise RuntimeError('Trying to compare different interpolants or paddings')
+            
+    if not outfile:
+        if image_type==1:
+            outfile = ground_file
+        else:
+            outfile = space_file
+    elif outfile=='original' or outfile=='Original':
+        if image_type==1:
+            outfile = ground_original_file
+        else:
+            outfile = space_original_file
+    elif outfile=='base' or outfile=='Base':
+        if image_type==1:
+            outfile = ground_base_file
+        else:
+            outfile = space_original_file
+            
+    for i in range(len(g1obs)):
+        outfile.write(str(i)+' '+str(interpolant_list.index(test_answer.interpolant))+' '+    
+            str(test_answer.padding)+' '+str(test_answer.shear)+' '+
+            str(test_answer.magnification)+' '+str(test_answer.angle)+' '+
+            str(base_answer.g1obs[i])+' '+str(test_answer.g1obs[i]-base_answer.g1obs[i])+' '+
+            str(base_answer.g2obs[i])+' '+str(test_answer.g2obs[i]-base_answer.g2obs[i])+' '+
+            str(base_answer.sigmaobs[i])+' '+str(test_answer.sigmaobs[i]-base_answer.sigmaobs[i])+
+            '\n')
         
 def print_results_original(base_answer, test_answers):
     pass
@@ -233,7 +276,11 @@ def print_results_original(base_answer, test_answers):
 def main():
     # Define the config dictionaries we will use for all the following tests
     config_list = get_config()
-    i=1
+    
+    i=1 # For printing status statements
+    base_list = [] # For comparing the "base" (eg unsheared, unmagnified, unrotated) cases
+    base_list_original = []
+    
     # Now, run through the various things we need to test in loops.
     # Right now, test rotation angles separately from shear and magnification
     # (but we can do that nested later if need be - probably with fewer tested angles).
@@ -244,6 +291,8 @@ def main():
                                             padding=padding)
                 base_answer_dft, base_answer_shoot = test_realgalaxyoriginal(base_config, 
                                             interpolant=interpolant, padding=padding, seed=rseed)
+                base_list.append(base_answer)
+                base_list_original.append((base_answer_dft,base_answer_shoot))
                 for angle in angle_list:                        # Possible rotation angles
                     print 'Angle test ', i,
                     i+=1
@@ -264,6 +313,7 @@ def main():
                                            magnification=magnification, interpolant=interpolant,
                                            padding=padding, seed=rseed))
                
+        
         
 if __name__ == "__main__":
     main()
