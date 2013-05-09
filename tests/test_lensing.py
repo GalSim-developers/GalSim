@@ -390,7 +390,7 @@ def test_shear_get():
                        np.arange(min,max+grid_spacing,grid_spacing))
 
     # convert theoretical to observed quantities for grid
-    g1_r, g2_r, mu = galsim.lensing.theoryToObserved(g1, g2, kappa)
+    g1_r, g2_r, mu = galsim.lensing_ps.theoryToObserved(g1, g2, kappa)
 
     # use getShear, getConvergence, getMagnification, getLensing do appropriate consistency checks
     test_g1_r, test_g2_r = my_ps.getShear((x.flatten(), y.flatten()))
@@ -612,7 +612,7 @@ def test_kappa_gauss():
     # Get the reference kappa
     k_ref = k_big + k_sml
     # Invert to get the test kappa
-    k_testE, k_testB = galsim.lensing.kappaKaiserSquires(g1, g2)
+    k_testE, k_testB = galsim.lensing_ps.kappaKaiserSquires(g1, g2)
     # Then run tests based on the central region to avoid edge effects (known issue with KS
     # inversion)
     icent = np.arange(ngrid / 2) + ngrid / 4
@@ -631,7 +631,7 @@ def test_kappa_gauss():
         x, y, sigma=4., pos=galsim.PositionD(6., 6.), amp=.2, rotate45=True)
     g1r = g1r_big + g1r_sml
     g2r = g2r_big + g2r_sml
-    kr_testE, kr_testB = galsim.lensing.kappaKaiserSquires(g1r, g2r)
+    kr_testE, kr_testB = galsim.lensing_ps.kappaKaiserSquires(g1r, g2r)
     # Test that B-mode kappa for rotated shear field matches E mode
     np.testing.assert_array_almost_equal(
         kr_testB[np.ix_(icent, icent)], k_ref[np.ix_(icent, icent)], decimal=2,
@@ -668,7 +668,7 @@ def test_power_spectrum_with_kappa():
     g1E, g2E, k_test = psE.buildGrid(
         grid_spacing=dx_grid_arcmin, ngrid=ngrid, units=galsim.arcmin,
         rng=galsim.BaseDeviate(rseed), get_convergence=True)
-    kE_ks, kB_ks = galsim.lensing.kappaKaiserSquires(g1E, g2E)
+    kE_ks, kB_ks = galsim.lensing_ps.kappaKaiserSquires(g1E, g2E)
     # Test that E-mode kappa matches to some sensible accuracy
     exact_dp = 15
     np.testing.assert_array_almost_equal(
@@ -684,7 +684,7 @@ def test_power_spectrum_with_kappa():
     g1B, g2B, k_test = psB.buildGrid(
         grid_spacing=dx_grid_arcmin, ngrid=ngrid, units=galsim.arcmin,
         rng=galsim.BaseDeviate(rseed), get_convergence=True)
-    kE_ks, kB_ks = galsim.lensing.kappaKaiserSquires(g1B, g2B)
+    kE_ks, kB_ks = galsim.lensing_ps.kappaKaiserSquires(g1B, g2B)
     # Test that kappa output by PS code matches zero to some sensible accuracy
     np.testing.assert_array_almost_equal(
         k_test, np.zeros_like(k_test), decimal=exact_dp,
@@ -696,7 +696,7 @@ def test_power_spectrum_with_kappa():
 
     # Then for luck take B-mode only shears but rotate by 45 degrees before KS, and check
     # consistency 
-    kE_ks_rotated, kB_ks_rotated = galsim.lensing.kappaKaiserSquires(g2B, -g1B)
+    kE_ks_rotated, kB_ks_rotated = galsim.lensing_ps.kappaKaiserSquires(g2B, -g1B)
     np.testing.assert_array_almost_equal(
         kE_ks_rotated, kB_ks, decimal=exact_dp,
         err_msg="KS inverted kappaE from B-mode only PowerSpectrum fails rotation test.")
@@ -709,13 +709,13 @@ def test_power_spectrum_with_kappa():
     g1EB, g2EB, k_test = psB.buildGrid(
         grid_spacing=dx_grid_arcmin, ngrid=ngrid, units=galsim.arcmin,
         rng=galsim.BaseDeviate(rseed), get_convergence=True)
-    kE_ks, kB_ks = galsim.lensing.kappaKaiserSquires(g1EB, g2EB)
+    kE_ks, kB_ks = galsim.lensing_ps.kappaKaiserSquires(g1EB, g2EB)
     # Test that E-mode kappa matches to some sensible accuracy
     np.testing.assert_array_almost_equal(
         k_test, kE_ks, decimal=exact_dp,
         err_msg="E/B PowerSpectrum output kappa does not match KS inversion to 16 d.p.")
     # Test rotating the shears by 45 degrees
-    kE_ks_rotated, kB_ks_rotated = galsim.lensing.kappaKaiserSquires(g2EB, -g1EB)
+    kE_ks_rotated, kB_ks_rotated = galsim.lensing_ps.kappaKaiserSquires(g2EB, -g1EB)
     np.testing.assert_array_almost_equal(
         kE_ks_rotated, kB_ks, decimal=exact_dp,
         err_msg="KS inverted kappaE from E/B PowerSpectrum fails rotation test.")

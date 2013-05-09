@@ -107,7 +107,7 @@ print "Final results for e1, e2, sigma: ",mean_e1, mean_e2, mean_sigma
 # do shear estimation in the noiseless case
 t1 = time.time()
 for i in range(ntest):
-    res = galsim.EstimateShearHSM(im_obj, im_epsf)
+    res = galsim.hsm.EstimateShear(im_obj, im_epsf)
 t2 = time.time()
 time_per_call = (t2-t1)/ntest
 # check results
@@ -128,7 +128,7 @@ for i in range(ntest):
     if save_im==1 and i==ntest-1:
         tmp_im.write('tmp_im_last.fits')
     t1 = time.time()
-    res = galsim.EstimateShearHSM(tmp_im, im_epsf)
+    res = galsim.hsm.EstimateShear(tmp_im, im_epsf)
     t2 = time.time()
     tot_time_meas += (t2-t1)
     mean_e1 += res.corrected_e1
@@ -161,7 +161,7 @@ for i in range(ntest):
     t1 = time.time()
     res1 = im_obj.FindAdaptiveMom(strict=False)
     t2 = time.time()
-    res2 = galsim.EstimateShearHSM(im_obj, im_epsf, strict=False)
+    res2 = galsim.hsm.EstimateShear(im_obj, im_epsf, strict=False)
     t3 = time.time()
     time_mom += (t2-t1)
     time_shear += (t3-t2)
@@ -192,7 +192,7 @@ for i in range(ntest):
     t1 = time.time()
     res1 = im_obj.FindAdaptiveMom(strict=False)
     t2 = time.time()
-    res2 = galsim.EstimateShearHSM(im_obj, im_epsf, strict=False)
+    res2 = galsim.hsm.EstimateShear(im_obj, im_epsf, strict=False)
     t3 = time.time()
     time_mom += (t2-t1)
     time_shear += (t3-t2)
