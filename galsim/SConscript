@@ -12,7 +12,7 @@ python_install_dir = os.path.join(env['PYPREFIX'], python_dir)
 
 py_files = glob.glob("*.py")
 
-subdir_list = [ 'config', 'des' ]
+subdir_list = [ 'config', 'des', 'deprecated' ]
 
 py_files_sub = []
 python_install_subdir = []

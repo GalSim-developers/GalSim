@@ -46,11 +46,6 @@ namespace galsim {
                           bp::arg("gsparams")=bp::object())
                      )
                 )
-                .def(bp::init<const SBProfile &, const CppEllipse &,
-                     double,boost::shared_ptr<GSParams> >(
-                         (bp::arg("sbin"), bp::arg("e")=CppEllipse(), bp::arg("fluxScaling")=1.,
-                          bp::arg("gsparams")=bp::object())
-                ))
                 .def(bp::init<const SBTransform &>())
                 ;
         }

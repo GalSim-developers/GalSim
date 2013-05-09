@@ -1381,22 +1381,12 @@ def test_smallshear():
     e1 = 0.02
     e2 = 0.02
     myShear = galsim.Shear(e1=e1, e2=e2)
-    myEllipse = galsim.Ellipse(e1=e1, e2=e2)
     # test the SBProfile version using applyShear
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
     mySBP = galsim.SBGaussian(flux=1, sigma=1)
     mySBP.applyShear(myShear._shear)
     myImg.setScale(0.2)
-    mySBP.draw(myImg.view())
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Small-shear Gaussian profile disagrees with expected result")
-    # test the SBProfile version using applyTransformation
-    mySBP = galsim.SBGaussian(flux=1, sigma=1)
-    mySBP.applyTransformation(myEllipse._ellipse)
-    myImg.setZero()
     mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
@@ -1416,18 +1406,6 @@ def test_smallshear():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject createSheared disagrees with expected result")
-    gauss = galsim.Gaussian(flux=1, sigma=1)
-    gauss.applyTransformation(myEllipse)
-    gauss.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyTransformation disagrees with expected result")
-    gauss = galsim.Gaussian(flux=1, sigma=1)
-    gauss2 = gauss.createTransformed(myEllipse)
-    gauss2.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject createTransformed disagrees with expected result")
  
     # Check with default_params
     gauss = galsim.Gaussian(flux=1, sigma=1, gsparams=default_params)
@@ -1462,7 +1440,6 @@ def test_largeshear():
     e2 = 0.5
 
     myShear = galsim.Shear(e1=e1, e2=e2)
-    myEllipse = galsim.Ellipse(e1=e1, e2=e2)
     # test the SBProfile version using applyShear
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_largeshear.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
@@ -1473,15 +1450,6 @@ def test_largeshear():
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
         err_msg="Large-shear DeVaucouleurs profile disagrees with expected result")
-    # test the SBProfile version using applyTransformation
-    mySBP = galsim.SBDeVaucouleurs(flux=1, half_light_radius=1)
-    mySBP.applyTransformation(myEllipse._ellipse)
-    myImg.setZero()
-    mySBP.draw(myImg.view())
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Large-shear DeVaucouleurs profile disagrees with expected result")
 
     # Repeat with the GSObject version of this:
     devauc = galsim.DeVaucouleurs(flux=1, half_light_radius=1)
@@ -1496,18 +1464,6 @@ def test_largeshear():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject createSheared disagrees with expected result")
-    devauc = galsim.DeVaucouleurs(flux=1, half_light_radius=1)
-    devauc.applyTransformation(myEllipse)
-    devauc.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyTransformation disagrees with expected result")
-    devauc = galsim.DeVaucouleurs(flux=1, half_light_radius=1)
-    devauc2 = devauc.createTransformed(myEllipse)
-    devauc2.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject createTransformed disagrees with expected result")
 
     # Check with default_params
     devauc = galsim.DeVaucouleurs(flux=1, half_light_radius=1, gsparams=default_params)
@@ -1620,7 +1576,6 @@ def test_shearconvolve():
     e1 = 0.04
     e2 = 0.0
     myShear = galsim.Shear(e1=e1, e2=e2)
-    myEllipse = galsim.Ellipse(e1=e1, e2=e2)
     # test at SBProfile level using applyShear
     mySBP = galsim.SBGaussian(flux=1, sigma=1)
     mySBP.applyShear(myShear._shear)
@@ -1629,18 +1584,6 @@ def test_shearconvolve():
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear_convolve_box.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
     myImg.setScale(0.2)
-    myConv.draw(myImg.view())
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Sheared Gaussian convolved with Box SBProfile disagrees with expected result")
-
-    # test at SBProfile level using applyTransformation
-    mySBP = galsim.SBGaussian(flux=1, sigma=1)
-    mySBP.applyTransformation(myEllipse._ellipse)
-    mySBP2 = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
-    myConv = galsim.SBConvolve([mySBP,mySBP2])
-    myImg.setZero()
     myConv.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
@@ -1658,20 +1601,6 @@ def test_shearconvolve():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
     conv2 = galsim.Convolve([psf2,pixel])
-    conv2.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
-    psf = galsim.Gaussian(flux=1, sigma=1)
-    psf2 = psf.createTransformed(myEllipse)
-    psf.applyTransformation(myEllipse)
-    pixel = galsim.Pixel(xw=0.2, yw=0.2, flux=1.)
-    conv = galsim.Convolve([psf,pixel])
-    conv2 = galsim.Convolve([psf2,pixel])
-    conv.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject Convolve([psf,pixel]) disagrees with expected result")
     conv2.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -1874,8 +1803,7 @@ def test_realspace_shearconvolve():
     e1 = 0.04
     e2 = 0.0
     myShear = galsim.Shear(e1=e1, e2=e2)
-    myEllipse = galsim.Ellipse(e1=e1, e2=e2)
-    psf.applyTransformation(myEllipse._ellipse)
+    psf.applyShear(myShear._shear)
     pix = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
     conv = galsim.SBConvolve([psf,pix],real_space=True)
     saved_img = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear_convolve_box.fits"))
@@ -1936,8 +1864,7 @@ def test_rotate():
     t1 = time.time()
     mySBP = galsim.SBSersic(n=2.5, flux=1, half_light_radius=1)
     myShear = galsim.Shear(e1=0.2, e2=0.0)
-    myEllipse = galsim.Ellipse(e1=0.2, e2=0.0)
-    mySBP.applyTransformation(myEllipse._ellipse)
+    mySBP.applyShear(myShear._shear)
     mySBP.applyRotation(45.0 * galsim.degrees)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_ellip_rotated.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
@@ -1950,7 +1877,7 @@ def test_rotate():
 
     # Repeat with the GSObject version of this:
     gal = galsim.Sersic(n=2.5, flux=1, half_light_radius=1)
-    gal.applyTransformation(myEllipse);
+    gal.applyShear(myShear)
     gal.applyRotation(45.0 * galsim.degrees)
     gal.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
@@ -1959,7 +1886,7 @@ def test_rotate():
 
     # Check with default_params
     gal = galsim.Sersic(n=2.5, flux=1, half_light_radius=1, gsparams=default_params)
-    gal.applyTransformation(myEllipse);
+    gal.applyShear(myShear)
     gal.applyRotation(45.0 * galsim.degrees)
     gal.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
@@ -1967,7 +1894,7 @@ def test_rotate():
             err_msg="Using GSObject applyRotation with default_params disagrees with expected "
             "result")
     gal = galsim.Sersic(n=2.5, flux=1, half_light_radius=1, gsparams=galsim.GSParams())
-    gal.applyTransformation(myEllipse);
+    gal.applyShear(myShear)
     gal.applyRotation(45.0 * galsim.degrees)
     gal.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
@@ -1994,8 +1921,7 @@ def test_mag():
     re = 1.0
     r0 = re/1.67839
     mySBP = galsim.SBExponential(flux=1, scale_radius=r0)
-    myEll = galsim.Ellipse(np.log(1.5))
-    mySBP.applyTransformation(myEll._ellipse)
+    mySBP.applyScale(1.5)
     savedImg = galsim.fits.read(os.path.join(imgdir, "exp_mag.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
     myImg.setScale(0.2)
@@ -2005,38 +1931,9 @@ def test_mag():
             myImg.array, savedImg.array, 5,
             err_msg="Magnification (x1.5) of exponential SBProfile disagrees with expected result")
 
-    # Repeat with the GSObject version of this:
-    gal = galsim.Exponential(flux=1, scale_radius=r0)
-    gal.applyTransformation(myEll)
-    gal.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyTransformation disagrees with expected result")
-
-    # Check with default_params
-    gal = galsim.Exponential(flux=1, scale_radius=r0, gsparams=default_params)
-    gal.applyTransformation(myEll)
-    gal.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyTransformation with default_params disagrees with "
-            "expected result")
-    gal = galsim.Exponential(flux=1, scale_radius=r0, gsparams=galsim.GSParams())
-    gal.applyTransformation(myEll)
-    gal.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyTransformation with GSParams() disagrees with "
-            "expected result")
-
     # Use applyDilation
     gal = galsim.Exponential(flux=1, scale_radius=r0)
     gal.applyDilation(1.5)
-    gal.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
-    printval(myImg, savedImg)
     gal.scaleFlux(1.5**2) # Apply the flux magnification.
     gal.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
     printval(myImg, savedImg)
@@ -2044,6 +1941,26 @@ def test_mag():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyDilation disagrees with expected result")
  
+    # Check with default_params
+    gal = galsim.Exponential(flux=1, scale_radius=r0, gsparams=default_params)
+    gal.applyDilation(1.5)
+    gal.scaleFlux(1.5**2)
+    gal.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+    printval(myImg, savedImg)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject applyTransformation with default_params disagrees with "
+            "expected result")
+    gal = galsim.Exponential(flux=1, scale_radius=r0, gsparams=galsim.GSParams())
+    gal.applyDilation(1.5)
+    gal.scaleFlux(1.5**2)
+    gal.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+    printval(myImg, savedImg)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using GSObject applyTransformation with GSParams() disagrees with "
+            "expected result")
+
     # Use applyMagnification
     gal = galsim.Exponential(flux=1, scale_radius=r0)
     gal.applyMagnification(1.5**2) # area rescaling factor
@@ -2239,12 +2156,6 @@ def test_shift():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject applyShift disagrees with expected result")
-    pixel = galsim.Pixel(xw=0.2, yw=0.2)
-    pixel.applyTransformation(galsim.Ellipse(galsim.PositionD(0.2, -0.2)))
-    pixel.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyTransformation disagrees with expected result")
  
     # Check with default_params
     pixel = galsim.Pixel(xw=0.2, yw=0.2, gsparams=default_params)
@@ -2926,6 +2837,96 @@ def test_drawK():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_drawK_Gaussian():
+    """Test the drawK function using known symmetries of the Gaussian Hankel transform.
+
+    See http://en.wikipedia.org/wiki/Hankel_transform.
+    """
+    import time
+    t1 = time.time()
+
+    test_flux = 2.3     # Choose a non-unity flux
+    test_sigma = 17.    # ...likewise for sigma
+    test_imsize = 45    # Dimensions of comparison image, doesn't need to be large
+
+    # Define a Gaussian GSObject
+    gal = galsim.Gaussian(sigma=test_sigma, flux=test_flux)
+    # Then define a related object which is in fact the opposite number in the Hankel transform pair
+    # For the Gaussian this is straightforward in our definition of the Fourier transform notation,
+    # and has sigma -> 1/sigma and flux -> flux * 2 pi / sigma**2
+    gal_hankel = galsim.Gaussian(sigma=1./test_sigma, flux=test_flux*2.*np.pi/test_sigma**2)
+
+    # Do a basic flux test: the total flux of the gal should equal gal_Hankel(k=(0, 0))
+    np.testing.assert_almost_equal(
+        gal.getFlux(), gal_hankel.xValue(galsim.PositionD(0., 0.)), decimal=12,
+        err_msg="Test object flux does not equal k=(0, 0) mode of its Hankel transform conjugate.")
+
+    image_test = galsim.ImageD(test_imsize, test_imsize)
+    rekimage_test = galsim.ImageD(test_imsize, test_imsize)
+    imkimage_test = galsim.ImageD(test_imsize, test_imsize)
+
+    # Then compare these two objects at a couple of different dk (reasonably matched for size)
+    for dk_test in (0.03 / test_sigma, 0.4 / test_sigma):
+        gal.drawK(re=rekimage_test, im=imkimage_test, dk=dk_test) 
+        gal_hankel.draw(image_test, dx=dk_test, use_true_center=False, normalization="sb")
+        np.testing.assert_array_almost_equal(
+            rekimage_test.array, image_test.array, decimal=12,
+            err_msg="Test object drawK() and draw() from Hankel conjugate do not match for grid "+
+            "spacing dk = "+str(dk_test))
+        np.testing.assert_array_almost_equal(
+            imkimage_test.array, np.zeros_like(imkimage_test.array), decimal=12,
+            err_msg="Non-zero imaginary part for drawK from test object that is purely centred on "+
+            "the origin.")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_drawK_Exponential_Moffat():
+    """Test the drawK function using known symmetries of the Exponential Hankel transform (which is
+    a Moffat with beta=1.5).
+
+    See http://mathworld.wolfram.com/HankelTransform.html.
+    """
+    import time
+    t1 = time.time()
+
+    test_flux = 4.1         # Choose a non-unity flux
+    test_scale_radius = 13. # ...likewise for scale_radius
+    test_imsize = 45        # Dimensions of comparison image, doesn't need to be large
+
+    # Define an Exponential GSObject
+    gal = galsim.Exponential(scale_radius=test_scale_radius, flux=test_flux)
+    # Then define a related object which is in fact the opposite number in the Hankel transform pair
+    # For the Exponential we need a Moffat, with scale_radius=1/scale_radius.  The total flux under
+    # this Moffat with unit amplitude at r=0 is is pi * scale_radius**(-2) / (beta - 1) 
+    #  = 2. * pi * scale_radius**(-2) in this case, so it works analagously to the Gaussian above.
+    gal_hankel = galsim.Moffat(beta=1.5, scale_radius=1. / test_scale_radius,
+                               flux=test_flux * 2. * np.pi / test_scale_radius**2)
+
+    # Do a basic flux test: the total flux of the gal should equal gal_Hankel(k=(0, 0))
+    np.testing.assert_almost_equal(
+        gal.getFlux(), gal_hankel.xValue(galsim.PositionD(0., 0.)), decimal=12,
+        err_msg="Test object flux does not equal k=(0, 0) mode of its Hankel transform conjugate.")
+
+    image_test = galsim.ImageD(test_imsize, test_imsize)
+    rekimage_test = galsim.ImageD(test_imsize, test_imsize)
+    imkimage_test = galsim.ImageD(test_imsize, test_imsize)
+
+    # Then compare these two objects at a couple of different dk (reasonably matched for size)
+    for dk_test in (0.15 / test_scale_radius, 0.6 / test_scale_radius):
+        gal.drawK(re=rekimage_test, im=imkimage_test, dk=dk_test) 
+        gal_hankel.draw(image_test, dx=dk_test, use_true_center=False, normalization="sb")
+        np.testing.assert_array_almost_equal(
+            rekimage_test.array, image_test.array, decimal=12,
+            err_msg="Test object drawK() and draw() from Hankel conjugate do not match for grid "+
+            "spacing dk = "+str(dk_test))
+        np.testing.assert_array_almost_equal(
+            imkimage_test.array, np.zeros_like(imkimage_test.array), decimal=12,
+            err_msg="Non-zero imaginary part for drawK from test object that is purely centred on "+
+            "the origin.")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_autoconvolve():
@@ -3101,5 +3102,8 @@ if __name__ == "__main__":
     test_rescale()
     test_sbinterpolatedimage()
     test_draw()
+    test_drawK()
+    test_drawK_Gaussian()
+    test_drawK_Exponential_Moffat()
     test_autoconvolve()
     test_autocorrelate()

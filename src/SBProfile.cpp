@@ -185,24 +185,17 @@ namespace galsim {
         _pimpl = d._pimpl;
     }
 
-    void SBProfile::applyTransformation(const CppEllipse& e)
+    void SBProfile::applyScale(double scale)
     {
-        SBTransform d(*this,e);
-        _pimpl = d._pimpl;
-    }
-
-    void SBProfile::applyShear(double g1, double g2)
-    {
-        CppShear s(g1, g2);
-        CppEllipse e(s);
-        SBTransform d(*this,e);
+        SBTransform d(*this,scale,0.,0.,scale);
         _pimpl = d._pimpl;
     }
 
     void SBProfile::applyShear(CppShear s)
     {
-        CppEllipse e(s);
-        SBTransform d(*this,e);
+        double a, b, c;
+        s.getMatrix(a,b,c);
+        SBTransform d(*this,a,c,c,b);
         _pimpl = d._pimpl;
     }
 
