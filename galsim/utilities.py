@@ -710,28 +710,21 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     hsm_shear_est = 'KSB'
 
     # get the fft image
-    try:
-        im_draw,im_psf,_,_,_= galsim.config.BuildImage(config1,make_psf_image=True,logger=logger)
-    except:
-        raise RuntimeError('building image using FFT failed')
+    im_draw,im_psf,_,_ = galsim.config.BuildImage(config1,obj_num=obj_num,
+                                                  nproc=config['image']['nproc'],
+                                                  make_psf_image=True, logger=logger)
 
     # get the moments for FFT image
     if moments:
-        try:
-            res_draw = im_draw.FindAdaptiveMom()
-        except:
-            raise RuntimeError('FindAdaptiveMom failed for FFT image') 
+        res_draw = im_draw.FindAdaptiveMom()
         sigma_draw = res_draw.moments_sigma
         g1obs_draw = res_draw.observed_shape.g1
         g2obs_draw = res_draw.observed_shape.g2
 
     # Get the HSM for FFT image
     if hsm:
-        try: 
-            res_draw_hsm= galsim.hsm.EstimateShear(im_draw,im_psf,strict=True,
-                                                   shear_est=hsm_shear_est)
-        except: 
-            raise RuntimeError('EstimateShearHSM failed for FFT image')
+        res_draw_hsm= galsim.hsm.EstimateShear(im_draw,im_psf,strict=True,
+                                               shear_est=hsm_shear_est)
         g1hsm_draw = res_draw_hsm.corrected_g1
         g2hsm_draw = res_draw_hsm.corrected_g2
         sighs_draw = res_draw_hsm.moments_sigma   # Short for sigma_hsm, to fit it in 5 characters
@@ -778,12 +771,9 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
         config2['image']['random_seed'] = start_random_seed + itercount * (n_trials_per_iter + 1)
 
         # Run the trials using galsim.config.BuildImages function
-        try:
-            trial_images = galsim.config.BuildImages( 
-                nimages = n_trials_per_iter, obj_num = obj_num,
-                config = config2, logger = logger , nproc=config2['image']['nproc'])[0] 
-        except: 
-            raise RuntimeError('building image using photon shooting failed')
+        trial_images = galsim.config.BuildImages( 
+            nimages = n_trials_per_iter, obj_num = obj_num,
+            config = config2, logger = logger , nproc=config2['image']['nproc'])[0] 
 
         # Collect results 
         trial_results = []
@@ -791,17 +781,11 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
         for image in trial_images:
 
             if moments:
-                try: 
-                    trial_results += [image.FindAdaptiveMom()]
-                except:
-                    raise RuntimeError('getting FindAdaptiveMom failed')
+                trial_results += [image.FindAdaptiveMom()]
 
             if hsm:
-                try:
-                    trial_results_hsm += [galsim.hsm.EstimateShear(image,im_psf,strict=True,
-                                                                   shear_est=hsm_shear_est)]
-                except:
-                    raise RuntimeError('getting EstimateShear failed')
+                trial_results_hsm += [galsim.hsm.EstimateShear(image,im_psf,strict=True,
+                                                               shear_est=hsm_shear_est)]
 
         # Get lists of g1,g2,sigma estimate (this might be quicker using a single list comprehension
         # to get a list of (g1,g2,sigma) tuples, and then unzip with zip(*), but this is clearer)
