@@ -20,9 +20,7 @@
 A few adjustments to the Ellipse class at the Python layer.
 """
 
-from . import _galsim
 import galsim
-
 
 
 class Ellipse(object):
@@ -64,7 +62,7 @@ class Ellipse(object):
         # check unnamed args: can have a Shear, float, and/or Position
         if len(args) > 0:
             # very special case: if it is given a wrapped C++ Ellipse
-            if len(args) == 1 and isinstance(args[0], _galsim._CppEllipse):
+            if len(args) == 1 and isinstance(args[0], galsim._galsim._CppEllipse):
                 self._ellipse = args[0]
             # there are args that are not a C++ Ellipse, so we have to process them by checking for
             # one of the allowed types
@@ -78,7 +76,7 @@ class Ellipse(object):
                         if use_mu is not None:
                             raise TypeError("Ellipse received >1 unnamed float/double arguments!")
                         use_mu = this_arg
-                    elif isinstance(this_arg, _galsim.PositionD):
+                    elif isinstance(this_arg, galsim._galsim.PositionD):
                         if use_shift is not None:
                             raise TypeError("Ellipse received >1 unnamed Position arguments!")
                         use_shift = this_arg
@@ -94,7 +92,7 @@ class Ellipse(object):
         if use_shift is None:
             x_shift = kwargs.pop('x_shift', 0.0)
             y_shift = kwargs.pop('y_shift', 0.0)
-            use_shift = _galsim.PositionD(x_shift, y_shift)
+            use_shift = galsim._galsim.PositionD(x_shift, y_shift)
         if use_shear is None:
             use_shear = kwargs.pop('shear', None)
             if use_shear is None:
@@ -114,7 +112,7 @@ class Ellipse(object):
             if kwargs:
                 raise TypeError("Keyword arguments to Ellipse not permitted: %s"%kwargs.keys())     
 
-        self._ellipse = _galsim._CppEllipse(s = use_shear._shear, mu = use_mu, p = use_shift)
+        self._ellipse = galsim._galsim._CppEllipse(s = use_shear._shear, mu = use_mu, p = use_shift)
 
     # below, we propagate through all the methods from C++ #
 

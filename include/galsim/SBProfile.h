@@ -353,22 +353,12 @@ namespace galsim {
         void setFlux(double flux);
 
         /**
-         * @brief Apply a given ellipse distortion (affine without rotation).
+         * @brief Apply an overall scale change to the profile, preserving surface brightness.
          *
          * This transforms the object by the given transformation.  As with scaleFlux,
          * it does not invalidate any previous uses of this object.
          */
-        void applyTransformation(const CppEllipse& e);
-
-        /** 
-         * @brief Apply a given shear.
-         *
-         * @param[in] g1 Reduced shear g1 by which to shear the SBProfile.
-         * @param[in] g2 Reduced shear g2 by which to shear the SBProfile.
-         * This shears the object by the given shear.  As with scaleFlux, it does not
-         * invalidate any previous uses of this object.
-         */
-        void applyShear(double g1, double g2);
+        void applyScale(double scale);
 
         /**
          * @brief Apply a given shear.

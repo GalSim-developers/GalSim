@@ -156,9 +156,9 @@ def convert_interpolant_to_2d(interpolant):
 
 class ComparisonShapeData(object):
     """A class to contain the outputs of a comparison between photon shooting and DFT rendering of
-    GSObjects, as measured by the HSM module's FindAdaptiveMom or (in future) EstimateShearHSM.
+    GSObjects, as measured by the HSM module's FindAdaptiveMom or (in future) EstimateShear.
 
-    Currently this class contains the following attributes (see also the HSMShapeData
+    Currently this class contains the following attributes (see also the galsim.hsm.ShapeData
     documentation for a more detailed description of, e.g., observed_shape, moments_sigma)
     describing the results of the comparison:
 
@@ -716,30 +716,24 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     hsm_shear_est = 'KSB'
 
     # get the fft image
-    try: 
-        # create only one image for FFT image, that is all we need
-        im_draw,im_psf,_,_ = galsim.config.BuildImages( nimages = 1, obj_num = obj_num,
-            config = config1, logger = logger , nproc=config1['image']['nproc'] , make_psf_image = True) 
-        # BuildImages above outputs list of size 1, and we need the element
-        im_draw = im_draw[0]
-        im_psf  = im_psf[0]
-    except Exception, e: raise RuntimeError('Building image using FFT failed: \n %s' % e )
+    im_draw,im_psf,_,_ = galsim.config.BuildImage(config1,obj_num=obj_num,
+                                                  nproc=config['image']['nproc'],
+                                                  make_psf_image=True, logger=logger)
 
     # get the moments for FFT image
     if moments:
-      try: res_draw = im_draw.FindAdaptiveMom()
-      except Exception, e: raise RuntimeError('FindAdaptiveMom failed for FFT image: \n %s' % e) 
-      sigma_draw = res_draw.moments_sigma
-      g1obs_draw = res_draw.observed_shape.g1
-      g2obs_draw = res_draw.observed_shape.g2
+        res_draw = im_draw.FindAdaptiveMom()
+        sigma_draw = res_draw.moments_sigma
+        g1obs_draw = res_draw.observed_shape.g1
+        g2obs_draw = res_draw.observed_shape.g2
 
     # Get the HSM for FFT image
     if hsm:
-      try: res_draw_hsm= galsim.EstimateShearHSM(im_draw,im_psf,strict=True,shear_est=hsm_shear_est)
-      except Exception, e: raise RuntimeError('EstimateShearHSM failed for FFT image: \n %s' % e)
-      g1hsm_draw = res_draw_hsm.corrected_g1
-      g2hsm_draw = res_draw_hsm.corrected_g2
-      sighs_draw = res_draw_hsm.moments_sigma   # Shorthand for sigma_hsm, to fit it in 5 characters
+        res_draw_hsm= galsim.hsm.EstimateShear(im_draw,im_psf,strict=True,
+                                               shear_est=hsm_shear_est)
+        g1hsm_draw = res_draw_hsm.corrected_g1
+        g2hsm_draw = res_draw_hsm.corrected_g2
+        sighs_draw = res_draw_hsm.moments_sigma   # Short for sigma_hsm, to fit it in 5 characters
 
     
     # Setup storage lists for the trial shooting results
@@ -772,57 +766,55 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     # If using moments, then the criteria will be on observed g1,g2,sigma, else on hsm corrected.
     # Ideally we would use some sort of pointer here, but I am going to update these at the end 
     # of the loop
-    if moments:     err_g1_use,err_g2_use,err_sig_use = (g1obserr,g2obserr,sigmaerr)
-    else:           err_g1_use,err_g2_use,err_sig_use = (g1hsmerr,g2hsmerr,sighserr)
+    if moments:     
+        err_g1_use,err_g2_use,err_sig_use = (g1obserr,g2obserr,sigmaerr)
+    else:           
+        err_g1_use,err_g2_use,err_sig_use = (g1hsmerr,g2hsmerr,sighserr)
 
-    while ((err_g1_use>abs_tol_ellip) or (err_g2_use>abs_tol_ellip) or (err_sig_use>abs_tol_size) 
-                ) and (itercount < n_max_iter):
+    while (err_g1_use>abs_tol_ellip) or (err_g2_use>abs_tol_ellip) or (err_sig_use>abs_tol_size) :
+        if itercount >= n_max_iter: break
 
         # Reset the random_seed depending on the iteration number so that these never overlap
         config2['image']['random_seed'] = start_random_seed + itercount * (n_trials_per_iter + 1)
 
         # Run the trials using galsim.config.BuildImages function
-        try:
-          trial_images = galsim.config.BuildImages( nimages = n_trials_per_iter, obj_num = obj_num,
+        trial_images = galsim.config.BuildImages( 
+            nimages = n_trials_per_iter, obj_num = obj_num,
             config = config2, logger = logger , nproc=config2['image']['nproc'])[0] 
-        except Exception,e: 
-            raise RuntimeError('building image using photon shooting failed: \n %s' % e)
 
         # Collect results 
         trial_results = []
         trial_results_hsm = []
         for image in trial_images:
 
-          if moments:
-            try: trial_results += [image.FindAdaptiveMom()]
-            except Exception,e: raise RuntimeError('getting FindAdaptiveMom failed: \n %s' % e)
+            if moments:
+                trial_results += [image.FindAdaptiveMom()]
 
-          if hsm:
-            try: trial_results_hsm += [galsim.EstimateShearHSM(image,im_psf,strict=True,
-                                                                      shear_est=hsm_shear_est)]
-            except Exception,e: raise RuntimeError('getting EstimateShearHSM failed: \n %s' % e)
+            if hsm:
+                trial_results_hsm += [galsim.hsm.EstimateShear(image,im_psf,strict=True,
+                                                               shear_est=hsm_shear_est)]
 
         # Get lists of g1,g2,sigma estimate (this might be quicker using a single list comprehension
         # to get a list of (g1,g2,sigma) tuples, and then unzip with zip(*), but this is clearer)
         if moments:
-          g1obs_shoot_list.extend([res.observed_shape.g1 for res in trial_results]) 
-          g2obs_shoot_list.extend([res.observed_shape.g2 for res in trial_results]) 
-          sigma_shoot_list.extend([res.moments_sigma for res in trial_results])
+            g1obs_shoot_list.extend([res.observed_shape.g1 for res in trial_results]) 
+            g2obs_shoot_list.extend([res.observed_shape.g2 for res in trial_results]) 
+            sigma_shoot_list.extend([res.moments_sigma for res in trial_results])
         if hsm:
-          g1hsm_shoot_list.extend([res.corrected_g1 for res in trial_results_hsm]) 
-          g2hsm_shoot_list.extend([res.corrected_g2 for res in trial_results_hsm])   
-          sighs_shoot_list.extend([res.moments_sigma for res in trial_results_hsm])   
+            g1hsm_shoot_list.extend([res.corrected_g1 for res in trial_results_hsm]) 
+            g2hsm_shoot_list.extend([res.corrected_g2 for res in trial_results_hsm])   
+            sighs_shoot_list.extend([res.moments_sigma for res in trial_results_hsm])   
 
 
         #Then calculate new standard error
         if moments:
-          g1obserr = _stderr(g1obs_shoot_list)
-          g2obserr = _stderr(g2obs_shoot_list)
-          sigmaerr = _stderr(sigma_shoot_list)  
+            g1obserr = _stderr(g1obs_shoot_list)
+            g2obserr = _stderr(g2obs_shoot_list)
+            sigmaerr = _stderr(sigma_shoot_list)  
         if hsm:
-          g1hsmerr = _stderr(g1hsm_shoot_list)
-          g2hsmerr = _stderr(g2hsm_shoot_list)
-          sighserr = _stderr(sighs_shoot_list)
+            g1hsmerr = _stderr(g1hsm_shoot_list)
+            g2hsmerr = _stderr(g2hsm_shoot_list)
+            sighserr = _stderr(sighs_shoot_list)
 
         itercount += 1
         sys.stdout.write(".") # This doesn't add a carriage return at the end of the line, nice!
@@ -833,9 +825,11 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
                 +str(g1obserr)+', '+str(g2obserr)+', '+str(g1hsmerr)+', '+str(g2hsmerr)+', '
                 +str(sigmaerr) + ', ' + str(sighserr) )
 
-        # assign the variables governing the termination
-        if moments:     err_g1_use,err_g2_use,err_sig_use = (g1obserr,g2obserr,sigmaerr)
-        else:           err_g1_use,err_g2_use,err_sig_use = (g1hsmerr,g2hsmerr,sighserr)
+        # assing the variables governing the termination
+        if moments:     
+            err_g1_use,err_g2_use,err_sig_use = (g1obserr,g2obserr,sigmaerr)
+        else:           
+            err_g1_use,err_g2_use,err_sig_use = (g1hsmerr,g2hsmerr,sighserr)
 
     sys.stdout.write("\n")
          
@@ -844,25 +838,25 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     NO_OBS_OUTPUT_VALUE = 88
 
     if moments:
-      # get statistics
-      mean_g1obs = _mean(g1obs_shoot_list) 
-      mean_g2obs = _mean(g2obs_shoot_list) 
-      mean_sigma = _mean(sigma_shoot_list)
+        # get statistics
+        mean_g1obs = _mean(g1obs_shoot_list) 
+        mean_g2obs = _mean(g2obs_shoot_list) 
+        mean_sigma = _mean(sigma_shoot_list)
     else:
-      # assign the values to a NO_OBS_OUTPUT_VALUE flag
-      mean_g1obs = mean_g2obs = NO_OBS_OUTPUT_VALUE
-      g1obserr = g2obserr = NO_OBS_OUTPUT_VALUE
-      g1obs_draw = g2obs_draw = NO_OBS_OUTPUT_VALUE
-      sigma_draw = mean_sigma = sigmaerr = NO_OBS_OUTPUT_VALUE
+        # assign the values to a NO_OBS_OUTPUT_VALUE flag
+        mean_g1obs = mean_g2obs = NO_OBS_OUTPUT_VALUE
+        g1obserr = g2obserr = NO_OBS_OUTPUT_VALUE
+        g1obs_draw = g2obs_draw = NO_OBS_OUTPUT_VALUE
+        sigma_draw = mean_sigma = sigmaerr = NO_OBS_OUTPUT_VALUE
     if hsm:
-      mean_g1hsm = _mean(g1hsm_shoot_list)
-      mean_g2hsm = _mean(g2hsm_shoot_list)
-      mean_sighs = _mean(sighs_shoot_list)
+        mean_g1hsm = _mean(g1hsm_shoot_list)
+        mean_g2hsm = _mean(g2hsm_shoot_list)
+        mean_sighs = _mean(sighs_shoot_list)
     else:
-      mean_g1hsm = mean_g2hsm = NO_HSM_OUTPUT_VALUE
-      g1hsmerr = g2hsmerr = NO_HSM_OUTPUT_VALUE
-      g1hsm_draw = g2hsm_draw = NO_HSM_OUTPUT_VALUE
-      sighs_draw = mean_sighs = sighserr = NO_HSM_OUTPUT_VALUE
+        mean_g1hsm = mean_g2hsm = NO_HSM_OUTPUT_VALUE
+        g1hsmerr = g2hsmerr = NO_HSM_OUTPUT_VALUE
+        g1hsm_draw = g2hsm_draw = NO_HSM_OUTPUT_VALUE
+        sighs_draw = mean_sighs = sighserr = NO_HSM_OUTPUT_VALUE
 
 
     # Take the runtime and collate results into a ComparisonShapeData
@@ -876,3 +870,55 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
 
     if logger: logging.info('\n'+str(results))
     return results
+
+# A helper function for parsing the input position arguments for PowerSpectrum and NFWHalo:
+def _convertPositions(pos, units, func):
+    """Convert pos from the valid ways to input positions to two numpy arrays
+
+       This is used by the functions getShear, getConvergence, getMagnification, and getLensing for
+       both PowerSpectrum and NFWHalo.
+    """
+    # Check for PositionD or PositionI:
+    if isinstance(pos,galsim.PositionD) or isinstance(pos,galsim.PositionI):
+        pos = [ np.array([pos.x], dtype='float'),
+                np.array([pos.y], dtype='float') ]
+
+    # Check for list of PositionD or PositionI:
+    # The only other options allow pos[0], so if this is invalid, an exception 
+    # will be raised:
+    elif isinstance(pos[0],galsim.PositionD) or isinstance(pos[0],galsim.PositionI):
+        pos = [ np.array([p.x for p in pos], dtype='float'),
+                np.array([p.y for p in pos], dtype='float') ]
+
+    # Now pos must be a tuple of length 2
+    elif len(pos) != 2:
+        raise TypeError("Unable to parse the input pos argument for %s."%func)
+
+    else:
+        # Check for (x,y):
+        try:
+            pos = [ np.array([float(pos[0])], dtype='float'),
+                    np.array([float(pos[1])], dtype='float') ]
+        except:
+            # Only other valid option is ( xlist , ylist )
+            pos = [ np.array(pos[0], dtype='float'),
+                    np.array(pos[1], dtype='float') ]
+
+    # Check validity of units
+    if isinstance(units, basestring):
+        # if the string is invalid, this raises a reasonable error message.
+        units = galsim.angle.get_angle_unit(units)
+    if not isinstance(units, galsim.AngleUnit):
+        raise ValueError("units must be either an AngleUnit or a string")
+
+    # Convert pos to arcsec
+    if units != galsim.arcsec:
+        scale = 1. * units / galsim.arcsec
+        # Note that for the next two lines, pos *must* be a list, not a tuple.  Assignments to
+        # elements of tuples is not allowed.
+        pos[0] *= scale
+        pos[1] *= scale
+
+    return pos
+
+

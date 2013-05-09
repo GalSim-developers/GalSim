@@ -55,12 +55,9 @@ moffat_ref_hlr_from_fwhm = 1.285657994217926   # calculated from SBProfile (regr
 moffat_ref_scale_from_hlr = 2.494044174293422  # calculated from SBProfile (regression test only)
 moffat_ref_fwhm_from_hlr = 2.8195184757176097 # calculated from SBProfile (regression test only)
 
-# AtmosphericPSF / Kolmogorov params and reference values
+# Kolmogorov params and reference values
 test_lor0 = 1.9
 test_oversampling = 1.7
-
-atmos_ref_fwhm_from_lor0 = test_lor0 * 0.976
-atmos_ref_lor0_from_fwhm = test_fwhm / 0.976
 
 kolmo_ref_fwhm_from_lor0 = test_lor0 * 0.975865
 kolmo_ref_lor0_from_fwhm = test_fwhm / 0.975865
@@ -202,55 +199,6 @@ def test_moffat_flux_scaling():
         obj2.getFlux(), test_flux * 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __mul__ (result).")
     obj = galsim.Moffat(scale_radius=test_scale, beta=test_beta, trunc=test_trunc, flux=test_flux)
-    obj2 = obj / 2.
-    # First test that original obj is unharmed... (also tests that .copy() is working)
-    np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux, decimal=param_decimal,
-        err_msg="Flux param inconsistent after __div__ (original).")
-    # Then test new obj2 flux
-    np.testing.assert_almost_equal(
-        obj2.getFlux(), test_flux / 2., decimal=param_decimal,
-        err_msg="Flux param inconsistent after __div__ (result).")
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
-def test_atmos_flux_scaling():
-    """Test flux scaling for AtmosphericPSF.
-    """
-    import time
-    t1 = time.time()
-    # init with lam_over_r0 and flux only (should be ok given last tests)
-    obj = galsim.AtmosphericPSF(lam_over_r0=test_lor0, flux=test_flux)
-    obj *= 2.
-    np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux * 2., decimal=param_decimal,
-        err_msg="Flux param inconsistent after __imul__.")
-    obj = galsim.AtmosphericPSF(lam_over_r0=test_lor0, flux=test_flux)
-    obj /= 2.
-    np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux / 2., decimal=param_decimal,
-        err_msg="Flux param inconsistent after __idiv__.")
-    obj = galsim.AtmosphericPSF(lam_over_r0=test_lor0, flux=test_flux)
-    obj2 = obj * 2.
-    # First test that original obj is unharmed... (also tests that .copy() is working)
-    np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux, decimal=param_decimal,
-        err_msg="Flux param inconsistent after __rmul__ (original).")
-    # Then test new obj2 flux
-    np.testing.assert_almost_equal(
-        obj2.getFlux(), test_flux * 2., decimal=param_decimal,
-        err_msg="Flux param inconsistent after __rmul__ (result).")
-    obj = galsim.AtmosphericPSF(lam_over_r0=test_lor0, flux=test_flux)
-    obj2 = 2. * obj
-    # First test that original obj is unharmed... (also tests that .copy() is working)
-    np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux, decimal=param_decimal,
-        err_msg="Flux param inconsistent after __mul__ (original).")
-    # Then test new obj2 flux
-    np.testing.assert_almost_equal(
-        obj2.getFlux(), test_flux * 2., decimal=param_decimal,
-        err_msg="Flux param inconsistent after __mul__ (result).")
-    obj = galsim.AtmosphericPSF(lam_over_r0=test_lor0, flux=test_flux)
     obj2 = obj / 2.
     # First test that original obj is unharmed... (also tests that .copy() is working)
     np.testing.assert_almost_equal(
@@ -800,7 +748,6 @@ def test_integer_shift_photon():
 if __name__ == "__main__":
     test_gaussian_flux_scaling()
     test_moffat_flux_scaling()
-    test_atmos_flux_scaling()
     test_kolmo_flux_scaling()
     test_airy_flux_scaling()
     test_opticalpsf_flux_scaling()

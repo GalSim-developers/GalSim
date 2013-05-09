@@ -34,7 +34,7 @@ New features introduced in this demo:
 - obj.applyShear(g1, g2)  -- with explanation of other ways to specify shear
 - rng = galsim.BaseDeviate(seed)
 - noise = galsim.PoissonNoise(rng, sky_level)
-- galsim.EstimateShearHSM(image, image_epsf)
+- galsim.hsm.EstimateShear(image, image_epsf)
 """
 
 import sys
@@ -134,7 +134,7 @@ def main(argv):
     logger.info('Wrote image to %r',file_name)
     logger.info('Wrote effective PSF image to %r',file_name_epsf)
 
-    results = galsim.EstimateShearHSM(image, image_epsf)
+    results = galsim.hsm.EstimateShear(image, image_epsf)
 
     logger.info('HSM reports that the image has observed shape and size:')
     logger.info('    e1 = %.3f, e2 = %.3f, sigma = %.3f (pixels)', results.observed_shape.e1,

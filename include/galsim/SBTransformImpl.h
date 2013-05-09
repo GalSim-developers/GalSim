@@ -35,9 +35,6 @@ namespace galsim {
                         const Position<double>& cen, double fluxScaling,
                         boost::shared_ptr<GSParams> gsparams);
 
-        SBTransformImpl(const SBProfile& sbin, const CppEllipse& e, double fluxScaling,
-                        boost::shared_ptr<GSParams> gsparams);
-
         ~SBTransformImpl() {}
 
         double xValue(const Position<double>& p) const 

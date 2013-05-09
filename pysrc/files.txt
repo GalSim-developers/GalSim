@@ -20,8 +20,10 @@ SBKolmogorov.cpp
 PhotonArray.cpp
 Random.cpp
 Noise.cpp
-PSFCorr.cpp
+HSM.cpp
 Integ.cpp
 Table.cpp
 Interpolant.cpp
 CorrelatedNoise.cpp
+
+CppEllipse.cpp
