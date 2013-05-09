@@ -2928,6 +2928,8 @@ def test_drawK():
 
 def test_drawK_Gaussian():
     """Test the drawK function using known symmetries of the Gaussian Hankel transform.
+
+    See http://en.wikipedia.org/wiki/Hankel_transform.
     """
     import time
     t1 = time.time()
@@ -2962,11 +2964,60 @@ def test_drawK_Gaussian():
             "spacing dk = "+str(dk_test))
         np.testing.assert_array_almost_equal(
             imkimage_test.array, np.zeros_like(imkimage_test.array), decimal=15,
-            err_msg="Non-zero imaginary part for drawK from test image that is purely centred on "+
+            err_msg="Non-zero imaginary part for drawK from test object that is purely centred on "+
             "the origin.")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_drawK_Exponential_Moffat():
+    """Test the drawK function using known symmetries of the Exponential Hankel transform (which is
+    a Moffat with beta=1.5).
+
+    See http://mathworld.wolfram.com/HankelTransform.html.
+    """
+    import time
+    t1 = time.time()
+
+    test_flux = 4.19e-4     # Choose a non-unity flux
+    test_scale_radius = 13. # ...likewise for scale_radius
+    test_imsize = 45        # Dimensions of comparison image, doesn't need to be large
+
+    # Define an Exponential GSObject
+    gal = galsim.Exponential(scale_radius=test_scale_radius, flux=test_flux)
+    # Then define a related object which is in fact the opposite number in the Hankel transform pair
+    # For the Exponential we need a Moffat, with scale_radius=1/scale_radius.  The total flux under
+    # this Moffat with unit amplitude at r=0 is is pi * scale_radius**(-2) / (beta - 1) 
+    #  = 2. * pi * scale_radius**(-2) in this case, so it works analagously to the Gaussian above.
+    gal_hankel = galsim.Moffat(
+        beta=1.5, scale_radius=1. / test_scale_radius,
+        flux=test_flux * 2. * np.pi / test_scale_radius**2)
+
+    # Do a basic flux test: the total flux of the gal should equal gal_Hankel(k=(0, 0))
+    np.testing.assert_almost_equal(
+        gal.getFlux(), gal_hankel.xValue(galsim.PositionD(0., 0.)), decimal=15,
+        err_msg="Test object flux does not equal k=(0, 0) mode of its Hankel transform conjugate.")
+
+    image_test = galsim.ImageD(test_imsize, test_imsize)
+    rekimage_test = galsim.ImageD(test_imsize, test_imsize)
+    imkimage_test = galsim.ImageD(test_imsize, test_imsize)
+
+    # Then compare these two objects at a couple of different dk (reasonably matched for size)
+    for dk_test in (0.03 / test_sigma, 0.4 / test_sigma):
+        gal.drawK(re=rekimage_test, im=imkimage_test, dk=dk_test) 
+        gal_hankel.draw(image_test, dx=dk_test, use_true_center=False, normalization="sb")
+        np.testing.assert_array_almost_equal(
+            rekimage_test.array, image_test.array, decimal=15,
+            err_msg="Test object drawK() and draw() from Hankel conjugate do not match for grid "+
+            "spacing dk = "+str(dk_test))
+        np.testing.assert_array_almost_equal(
+            imkimage_test.array, np.zeros_like(imkimage_test.array), decimal=15,
+            err_msg="Non-zero imaginary part for drawK from test object that is purely centred on "+
+            "the origin.")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_autoconvolve():
     """Test that auto-convolution works the same as convolution with itself.
@@ -3110,38 +3161,39 @@ def test_autocorrelate():
 
 
 if __name__ == "__main__":
-    test_gaussian()
-    test_gaussian_properties()
-    test_gaussian_radii()
-    test_exponential()
-    test_exponential_radii()
-    test_sersic()
-    test_sersic_radii()
-    test_airy()
-    test_airy_radii()
-    test_box()
-    test_moffat()
-    test_moffat_properties()
-    test_moffat_radii()
-    test_kolmogorov()
-    test_kolmogorov_properties()
-    test_kolmogorov_radii()
-    test_smallshear()
-    test_largeshear()
-    test_convolve()
-    test_shearconvolve()
-    test_realspace_convolve()
-    test_realspace_distorted_convolve()
-    test_realspace_shearconvolve()
-    test_rotate()
-    test_mag()
-    test_lens()
-    test_add()
-    test_shift()
-    test_rescale()
-    test_sbinterpolatedimage()
-    test_draw()
-    test_drawK()
+#    test_gaussian()
+#    test_gaussian_properties()
+#    test_gaussian_radii()
+#    test_exponential()
+#    test_exponential_radii()
+#    test_sersic()
+#    test_sersic_radii()
+#    test_airy()
+#    test_airy_radii()
+#    test_box()
+#    test_moffat()
+#    test_moffat_properties()
+#    test_moffat_radii()
+#    test_kolmogorov()
+#    test_kolmogorov_properties()
+#    test_kolmogorov_radii()
+#    test_smallshear()
+#    test_largeshear()
+#    test_convolve()
+#    test_shearconvolve()
+#    test_realspace_convolve()
+#    test_realspace_distorted_convolve()
+#    test_realspace_shearconvolve()
+#    test_rotate()
+#    test_mag()
+#    test_lens()
+#    test_add()
+#    test_shift()
+#    test_rescale()
+#    test_sbinterpolatedimage()
+#    test_draw()
+#    test_drawK()
     test_drawK_Gaussian()
-    test_autoconvolve()
-    test_autocorrelate()
+    test_drawK_Exponential_Moffat()
+#    test_autoconvolve()
+#    test_autocorrelate()
