@@ -301,8 +301,8 @@ Multiple Calling Options
 
     >>> galsim.BaseDeviate.seed()       # Re-seed the PRNG using current time
 
-    >>> galsim.BaseDeviate.seed(lseed)  # Re-seed the PRNG using specified seed, where lseed is a
-                                        # long int
+    >>> galsim.BaseDeviate.seed(lseed)  # Re-seed the PRNG using specified seed, where lseed
+                                        # is a long int
 
 """
 

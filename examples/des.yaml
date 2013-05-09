@@ -115,7 +115,7 @@ image :
             fsky : { type : FitsHeader , key : 'SKYBRITE' }
             fsig : { type : FitsHeader , key : 'SKYSIGMA' }
 
-    center : 
+    image_pos : 
         type : XY 
         x : { type : InputCatalog , col : 'X_IMAGE' }
         y : { type : InputCatalog , col : 'Y_IMAGE' }
