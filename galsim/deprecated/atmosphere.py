@@ -37,7 +37,109 @@ MTF = modulation transfer function = |FT{PSF}|
 
 import numpy as np
 import galsim
-import utilities
+import galsim.utilities
+from galsim import GSObject
+
+
+class AtmosphericPSF(GSObject):
+    """Base class for long exposure Kolmogorov PSF.  Currently deprecated: use Kolmogorov.
+
+    Initialization
+    --------------
+    Example:    
+
+        >>> atmospheric_psf = galsim.AtmosphericPSF(lam_over_r0, interpolant=None, oversampling=1.5)
+    
+    Initializes atmospheric_psf as a galsim.AtmosphericPSF() instance.  This class is currently
+    deprecated in favour of the newer Kolmogorov class which does not require grid FFTs.  However,
+    it is retained as a placeholder for a future AtmosphericPSF which will model the turbulent
+    atmosphere stochastically.
+
+    @param lam_over_r0     lambda / r0 in the physical units adopted for apparent sizes (user 
+                           responsible for consistency), where r0 is the Fried parameter.  The FWHM
+                           of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 
+                           108). Typical  values for the Fried parameter are on the order of 10cm 
+                           for most observatories and up to 20cm for excellent sites.  The values 
+                           are usually quoted at lambda = 500nm and r0 depends on wavelength as
+                           [r0 ~ lambda^(-6/5)].
+    @param fwhm            FWHM of the Kolmogorov PSF.
+                           Either `fwhm` or `lam_over_r0` (and only one) must be specified.
+    @param interpolant     Either an Interpolant2d (or Interpolant) instance or a string indicating
+                           which interpolant should be used.  Options are 'nearest', 'sinc', 
+                           'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the 
+                           integer order to use. [default `interpolant = galsim.Quintic()`]
+    @param oversampling    Optional oversampling factor for the SBInterpolatedImage table 
+                           [default `oversampling = 1.5`], setting `oversampling < 1` will produce 
+                           aliasing in the PSF (not good).
+    @param flux            Total flux of the profile [default `flux=1.`]
+    @param gsparams        You may also specify a gsparams argument.  See the docstring for
+                           galsim.GSParams using help(galsim.GSParams) for more information about
+                           this option.
+
+    Methods
+    -------
+    The AtmosphericPSF is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(),
+    applyShear() etc.) and operator bindings.
+
+    """
+
+    # Initialization parameters of the object, with type information
+    _req_params = {}
+    _opt_params = { "oversampling" : float , "interpolant" : str , "flux" : float }
+    _single_params = [ { "lam_over_r0" : float , "fwhm" : float } ]
+    _takes_rng = False
+
+    # --- Public Class methods ---
+    def __init__(self, lam_over_r0=None, fwhm=None, interpolant=None, oversampling=1.5, flux=1.,
+                 gsparams=None):
+
+        # The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
+        if lam_over_r0 is None :
+            if fwhm is not None :
+                lam_over_r0 = fwhm / 0.976
+            else:
+                raise TypeError("Either lam_over_r0 or fwhm must be specified for AtmosphericPSF")
+        else :
+            if fwhm is None:
+                fwhm = 0.976 * lam_over_r0
+            else:
+                raise TypeError(
+                        "Only one of lam_over_r0 and fwhm may be specified for AtmosphericPSF")
+        # Set the lookup table sample rate via FWHM / 2 / oversampling (BARNEY: is this enough??)
+        dx_lookup = .5 * fwhm / oversampling
+
+        # Fold at 10 times the FWHM
+        stepk_kolmogorov = np.pi / (10. * fwhm)
+
+        # Odd array to center the interpolant on the centroid. Might want to pad this later to
+        # make a nice size array for FFT, but for typical seeing, arrays will be very small.
+        npix = 1 + 2 * (np.ceil(np.pi / stepk_kolmogorov)).astype(int)
+        atmoimage = kolmogorov_psf_image(
+            array_shape=(npix, npix), dx=dx_lookup, lam_over_r0=lam_over_r0, flux=flux)
+        
+        # Run checks on the interpolant and build default if None
+        if interpolant is None:
+            quintic = galsim.Quintic(tol=1e-4)
+            self.interpolant = galsim.InterpolantXY(quintic)
+        else:
+            self.interpolant = galsim.utilities.convert_interpolant_to_2d(interpolant)
+
+        # Then initialize the SBProfile
+        GSObject.__init__(
+            self, galsim.SBInterpolatedImage(atmoimage, xInterp=self.interpolant, dx=dx_lookup,
+                                             gsparams=gsparams))
+
+        # The above procedure ends up with a larger image than we really need, which
+        # means that the default stepK value will be smaller than we need.  
+        # Thus, we call the function calculateStepK() to refine the value.
+        self.SBProfile.calculateStepK()
+        self.SBProfile.calculateMaxK()
+
+    def getHalfLightRadius(self):
+        # TODO: This seems like it would not be impossible to calculate
+        raise NotImplementedError("Half light radius calculation not yet implemented for "+
+                                  "Atmospheric PSF objects (could be though).")
+
 
 
 def kolmogorov_mtf(array_shape=(256, 256), dx=1., lam_over_r0=1.):

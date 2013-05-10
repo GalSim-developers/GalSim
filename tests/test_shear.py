@@ -31,13 +31,13 @@ import galsim.utilities
 
 # Below are a set of tests to make sure that we have achieved consistency in defining shears and
 # ellipses using different conventions.  The underlying idea is that in test_SBProfile.py we already
-# have plenty of tests to ensure that a given Shear or Ellipse can be properly applied and gives the
-# expected result.  So here, we just work at the level of Shears and Ellipses that we've defined,
+# have plenty of tests to ensure that a given Shear can be properly applied and gives the
+# expected result.  So here, we just work at the level of Shears that we've defined,
 # and make sure that they have the properties we expect given the values that were used to
 # initialize them.  For that, we have some sets of fiducial shears/dilations/shifts for which
 # calculations were done independently (e.g., to get what is eta given the value of g).  We go over
 # the various way to initialize the shears, and make sure that their different values are properly
-# set.  We also test the methods of the python Shear and Ellipse classes to make sure that they give
+# set.  We also test the methods of the python Shear classes to make sure that they give
 # the expected results.
 
 ##### set up necessary info for tests
@@ -93,17 +93,6 @@ def all_shear_vals(test_shear, index, mult_val = 1.0):
                 np.abs(mult_val)*eta[index], mult_val*mult_val*e[index]*e[index], test_beta % np.pi]
     np.testing.assert_array_almost_equal(vec, test_vec, decimal=decimal,
                                          err_msg = "Incorrectly initialized Shear")
-
-def all_ellipse_vals(test_ellipse, ind_shear, ind_mu, ind_shift, check_shear=1.0, check_mu=1.0,
-                     check_shift = 1.0):
-    # this function tests that the various numbers stored in some Ellipse object are consistent with
-    # the tabulated values that we expect, given indices against which to test
-    vec = [test_ellipse.getS().g1, test_ellipse.getS().g2, test_ellipse.getMu(),
-           test_ellipse.getX0().x, test_ellipse.getX0().y]
-    test_vec = [check_shear*g1[ind_shear], check_shear*g2[ind_shear], check_mu*mu[ind_mu],
-                check_shift*x_shift[ind_shift], check_shift*y_shift[ind_shift]]
-    np.testing.assert_array_almost_equal(vec, test_vec, decimal=decimal,
-                                         err_msg = "Incorrectly initialized Ellipse")
 
 def add_distortions(d1, d2, d1app, d2app):
     # add the distortions
@@ -191,98 +180,6 @@ def test_shear_initialization():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
-def test_ellipse_initialization():
-    """Test that Ellipses can be initialized in a variety of ways and get the expected results."""
-    import time
-    t1 = time.time()
-    # make an empty Ellipse and make sure everything is zero
-    e = galsim.Ellipse()
-    vec = [e.getS().g1, e.getS().g2, e.getMu(), e.getX0().x, e.getX0().y]
-    vec_ideal = [0.0, 0.0, 0.0, 0.0, 0.0]
-    np.testing.assert_array_almost_equal(vec, vec_ideal, decimal = decimal,
-                                         err_msg = "Incorrectly initialized empty ellipse")
-
-    # then loop over the ways we can initialize, with all things initialized and with only those
-    # that are non-zero initialized, using args, kwargs in various ways
-    for ind_shear in range(n_shear):
-        for ind_mu in range(n_mu):
-            for ind_shift in range(n_shift):
-                # initialize with all of shear, mu, shift
-                ## using a Shear, either as arg or kwarg
-                ## using a mu, either as arg or kwarg
-                ## using a shift, either as Position arg or kwargs
-                ## using the various ways of making a Shear passed through as kwargs
-                s = galsim.Shear(g1 = g1[ind_shear], g2 = g2[ind_shear])
-                p = galsim.PositionD(x_shift[ind_shift], y_shift[ind_shift])
-                e = galsim.Ellipse(s, mu[ind_mu], p)
-                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift)
-                e = galsim.Ellipse(p, shear=s, mu=mu[ind_mu])
-                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift)
-                e = galsim.Ellipse(s, mu[ind_mu], x_shift=p.x, y_shift=p.y)
-                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift)
-                e = galsim.Ellipse(shear=s, mu=mu[ind_mu], x_shift=p.x, y_shift=p.y)
-                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift)
-                e = galsim.Ellipse(q = q[ind_shear], beta = beta[ind_shear]*galsim.radians,
-                                   mu=mu[ind_mu], x_shift = p.x, y_shift = p.y)
-                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift)
-
-                # now initialize with only 2 of the 3 and make sure the other is zero
-                e = galsim.Ellipse(mu[ind_mu], p)
-                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_shear=0.0)
-                e = galsim.Ellipse(p, mu=mu[ind_mu])
-                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_shear=0.0)
-                e = galsim.Ellipse(mu[ind_mu], x_shift = p.x, y_shift = p.y)
-                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_shear=0.0)
-                e = galsim.Ellipse(mu = mu[ind_mu], x_shift = p.x, y_shift = p.y)
-                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_shear=0.0)
-                e = galsim.Ellipse(s, p)
-                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_mu=0.0)
-                e = galsim.Ellipse(p, shear=s)
-                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_mu=0.0)
-                e = galsim.Ellipse(s, x_shift = p.x, y_shift = p.y)
-                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_mu=0.0)
-                e = galsim.Ellipse(shear=s, x_shift = p.x, y_shift = p.y)
-                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_mu=0.0)
-                e = galsim.Ellipse(s, mu[ind_mu])
-                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_shift=0.0)
-                e = galsim.Ellipse(s, mu=mu[ind_mu])
-                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_shift=0.0)
-                e = galsim.Ellipse(mu[ind_mu], shear=s)
-                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_shift=0.0)
-                e = galsim.Ellipse(shear=s, mu=mu[ind_mu])
-                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_shift=0.0)
-
-                # now initialize with only 1 of the 3 and make sure the other is zero
-                e = galsim.Ellipse(s)
-                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_mu=0.0, check_shift=0.0)
-                e = galsim.Ellipse(shear=s)
-                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_mu=0.0, check_shift=0.0)
-                e = galsim.Ellipse(eta1=eta1[ind_shear], eta2=eta2[ind_shear])
-                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_mu=0.0, check_shift=0.0)
-                e = galsim.Ellipse(mu[ind_mu])
-                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_shear=0.0, check_shift=0.0)
-                e = galsim.Ellipse(mu=mu[ind_mu])
-                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_shear=0.0, check_shift=0.0)
-                e = galsim.Ellipse(p)
-                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_mu=0.0, check_shear=0.0)
-                e = galsim.Ellipse(x_shift = p.x, y_shift = p.y)
-                all_ellipse_vals(e, ind_shear, ind_mu, ind_shift, check_mu=0.0, check_shear=0.0)
-    # check for some cases that should fail
-    s = galsim.Shear()
-    try:
-        np.testing.assert_raises(TypeError, galsim.Ellipse, s, g2=0.3)
-        np.testing.assert_raises(TypeError, galsim.Ellipse, shear=s, x_shift=1, g1=0.2)
-        np.testing.assert_raises(TypeError, galsim.Ellipse, s,
-                                 shift=galsim.PositionD(), x_shift=0.1)
-        np.testing.assert_raises(TypeError, galsim.Ellipse, s, s)
-        np.testing.assert_raises(TypeError, galsim.Ellipse, g1=0.1, randomkwarg=0.7)
-        np.testing.assert_raises(TypeError, galsim.Ellipse, shear=0.1)
-    except ImportError:
-        print 'The assert_raises tests require nose'
-
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_shear_methods():
     """Test that the most commonly-used methods of the Shear class give the expected results."""
