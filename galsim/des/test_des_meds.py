@@ -63,7 +63,7 @@ def test_meds():
     jacs =    [jac11,jac12]
 
     # create object
-    obj1 = galsim.des.MultiExposureObject(images,weights,segs,jacs)
+    obj1 = galsim.des.MultiExposureObject(images=images,weights=weights,segs=segs,jacs=jacs)
 
     # second obj
     img21 = galsim.ImageD(box_size,box_size,init_value=211)
@@ -82,7 +82,7 @@ def test_meds():
     jacs =    [jac22,jac22]
 
     # create object
-    obj2 = galsim.des.MultiExposureObject(images,weights,segs,jacs)
+    obj2 = galsim.des.MultiExposureObject(images=images,weights=weights,segs=segs,jacs=jacs)
 
     # create an object list
     objlist = [obj1,obj2]
@@ -149,7 +149,89 @@ def test_meds():
 
     print 'all asserts succeeded'
 
+def test_meds_config():
+    """
+    Creat a meds file from a config and compare with a manual creation.
+    """
+
+    # Some parameters:
+    nobj = 5
+    n_per_obj = 8
+    file_name = 'test_meds.fits'
+    stamp_size = 32
+    pixel_scale = 0.26
+    seed = 5757231
+    g1 = -0.17
+    g2 = 0.23
+
+    # The config dict to write some images to a MEDS file
+    config = {
+        'gal' : { 'type' : 'Sersic',
+                  'n' : 3,
+                  'half_light_radius' : { 'type' : 'Sequence', 'first' : 1.7, 'step' : 0.2, 
+                                          'repeat' : n_per_obj },
+                  'shear' : { 'type' : 'G1G2', 'g1' : g1, 'g2' : g2 }
+                },
+        'psf' : { 'type' : 'Moffat', 'beta' : 2.9, 'fwhm' : 0.7 },
+        'image' : { 'pixel_scale' : pixel_scale,
+                    'random_seed' : seed,
+                    'size' : stamp_size },
+        'output' : { 'type' : 'des_meds',
+                     'nobjects' : nobj,
+                     'nstamps_per_object' : n_per_obj,
+                     'file_name' : file_name
+                   }
+    }
+
+    import logging
+    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
+    logger = logging.getLogger('test_meds_config')
+    galsim.config.Process(config, logger=logger)
+
+    # Now repeat, making a separate file for each 
+    config['output'] = { 'type' : 'Fits',
+                         'nfiles' : nobj,
+                         'file_name' : { 'type' : 'NumberedFile', 'root' : 'test_meds' }
+                       }
+    config['image'] = { 'type' : 'Tiled',
+                        'nx_tiles' : 1,
+                        'ny_tiles' : n_per_obj,
+                        'pixel_scale' : pixel_scale,
+                        'random_seed' : seed,
+                        'stamp_size' : stamp_size }
+    galsim.config.Process(config, logger=logger)
+
+    # test functions in des_meds.py
+    print 'reading %s' % file_name
+    import meds
+    m=meds.MEDS(file_name)
+    print 'number of objects is %d' % m.size
+    assert m.size == nobj
+
+    # get the catalog
+    cat=m.get_cat()
+
+    # loop over objects and exposures - test get_cutout
+    for iobj in range(nobj):
+        print 'iobj = ',iobj
+        ref_file = 'test_meds%d.fits'%iobj
+        ref_im = galsim.fits.read(ref_file)
+
+        meds_im_array = m.get_mosaic(iobj)
+
+        alt_meds_file = 'test_alt_meds%d.fits'%iobj
+        alt_meds_im = galsim.ImageViewF(meds_im_array)
+        alt_meds_im.write(alt_meds_file)
+
+        numpy.testing.assert_array_equal(ref_im.array, meds_im_array)
+        
+        meds_wt_array = m.get_mosaic(iobj, type='weight')
+        meds_seg_array = m.get_mosaic(iobj, type='seg')
+
+    print 'all asserts succeeded'
+
 if __name__ == "__main__":
 
-    test_meds()
+    #test_meds()
+    test_meds_config()
 
