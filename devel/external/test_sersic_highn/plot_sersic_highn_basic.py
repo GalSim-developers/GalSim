@@ -4,94 +4,115 @@ import numpy as np
 import matplotlib.pyplot as plt
 import test_sersic_highn_basic
 
-YMAX_ZOOMOUT = 0.25
-YMAX_ZOOMIN = 2.5e-4
-XMIN = -.5
-XMAX = .8
-
-results_tuple = cPickle.load(open(test_sersic_highn_basic.OUTFILE, 'rb'))
-g1obs_draw = results_tuple[0]
-g2obs_draw = results_tuple[1]
-sigma_draw = results_tuple[2]
-delta_g1obs = results_tuple[3]
-delta_g2obs = results_tuple[4]
-delta_sigma = results_tuple[5]
-err_g1obs = results_tuple[6]
-err_g2obs = results_tuple[7]
-err_sigma = results_tuple[8]
-
-# Urgh changed the sersic n values in the last commit, so this is TEMPORARY!
-test_sersic_highn_basic.SERSIC_N_TEST = [3.5, 4., 4.5, 5., 5.5, 6., 6.5, 7., 7.5, 8.]
-
+nobs = test_sersic_highn_basic.NOBS
 ntest = len(test_sersic_highn_basic.SERSIC_N_TEST)
 
-# First do the plots of g1
-plt.axhline(ls='--', color='k')
-plt.axvline(ls='--', color='k')
-plt.xlim(XMIN, XMAX)
-for i in range(ntest):
-    if i < 7:
-        fmt='x'
-    else:
-        fmt='o'
-    plt.errorbar(
-        g1obs_draw[:, i], delta_g1obs[:, i], yerr=err_g1obs[:, i], fmt=fmt,
-        label="n = "+str(test_sersic_highn_basic.SERSIC_N_TEST[i]))
+for test_case in ("basic", "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2"):
 
-plt.xlabel(r'g$_1$ (DFT)')
-plt.ylabel(r'$\Delta$g$_1$ (DFT - Photon)')
-plt.ylim(-YMAX_ZOOMIN, YMAX_ZOOMIN)
-plt.legend()
-plt.subplots_adjust(left=0.15)
-plt.savefig(os.path.join('plots', 'sersic_highn_basic_zoomin_g1.png'))
+    outfile = os.path.join("outputs", "sersic_highn_"+test_case+"_output_N"+str(nobs)+".asc")
+    print "Generating plots for "+outfile
+    # Ready some empty arrays for storing the output
+    g1obs_draw = np.empty((nobs, ntest))
+    g2obs_draw = np.empty((nobs, ntest))
+    sigma_draw = np.empty((nobs, ntest))
+    delta_g1obs = np.empty((nobs, ntest))
+    delta_g2obs = np.empty((nobs, ntest))
+    delta_sigma = np.empty((nobs, ntest))
+    err_g1obs = np.empty((nobs, ntest))
+    err_g2obs = np.empty((nobs, ntest))
+    err_sigma = np.empty((nobs, ntest))
+    ntest_output = np.empty((nobs, ntest))
+    hlr_output = np.empty((nobs, ntest))
+    g1_output = np.empty((nobs, ntest))
+    g2_output = np.empty((nobs, ntest))
+    # Load the data into these arrays
+    data = np.loadtxt(outfile)
+    for j in range(ntest):
 
-plt.ylim(-YMAX_ZOOMOUT, YMAX_ZOOMOUT)
-plt.subplots_adjust(left=None)
-plt.savefig(os.path.join('plots', 'sersic_highn_basic_zoomout_g1.png'))
+        g1obs_draw[:, j] = data[range(j, ntest * nobs, ntest), 0]
+        g2obs_draw[:, j] = data[range(j, ntest * nobs, ntest), 1]
+        sigma_draw[:, j] = data[range(j, ntest * nobs, ntest), 2]
+        delta_g1obs[:, j] = data[range(j, ntest * nobs, ntest), 3]
+        delta_g2obs[:, j] = data[range(j, ntest * nobs, ntest), 4]
+        delta_sigma[:, j] = data[range(j, ntest * nobs, ntest), 5]
+        err_g1obs[:, j] = data[range(j, ntest * nobs, ntest), 6]
+        err_g2obs[:, j] = data[range(j, ntest * nobs, ntest), 7]
+        err_sigma[:, j] = data[range(j, ntest * nobs, ntest), 8]
+        ntest_output[:, j] = data[range(j, ntest * nobs, ntest), 9]
+        hlr_output[:, j] = data[range(j, ntest * nobs, ntest), 10]
+        g1_output[:, j] = data[range(j, ntest * nobs, ntest), 11]
+        g2_output[:, j] = data[range(j, ntest * nobs, ntest), 12]
 
-# Then do the plots of g2
-plt.clf()
-plt.axhline(ls='--', color='k')
-plt.axvline(ls='--', color='k')
-plt.xlim(XMIN, XMAX)
-for i in range(ntest):
-    if i < 7:
-        fmt='x'
-    else:
-        fmt='o'
-    plt.errorbar(
-        g2obs_draw[:, i], delta_g2obs[:, i], yerr=err_g2obs[:, i], fmt=fmt,
-        label="n = "+str(test_sersic_highn_basic.SERSIC_N_TEST[i]))
+    # First do the plots of g1
+    YMAX_ZOOMOUT = 0.25
+    YMAX_ZOOMIN = 2.5e-4
+    XMIN = -.6
+    XMAX = .8
 
-plt.xlabel(r'g$_2$ (DFT)')
-plt.ylabel(r'$\Delta$g$_2$ (DFT - Photon)')
-plt.ylim(-YMAX_ZOOMIN, YMAX_ZOOMIN)
-plt.legend()
-plt.savefig(os.path.join('plots', 'sersic_highn_basic_zoomin_g2.png'))
+    plt.axhline(ls='--', color='k')
+    plt.axvline(ls='--', color='k')
+    plt.xlim(XMIN, XMAX)
+    for i in range(ntest):
+        if i < 7:
+            fmt='x'
+        else:
+            fmt='o'
+        plt.errorbar(
+            g1obs_draw[:, i], delta_g1obs[:, i], yerr=err_g1obs[:, i], fmt=fmt,
+            label="n = "+str(test_sersic_highn_basic.SERSIC_N_TEST[i]))
+    plt.xlabel(r'g$_1$ (DFT)')
+    plt.ylabel(r'$\Delta$g$_1$ (DFT - Photon)')
+    plt.ylim(-YMAX_ZOOMIN, YMAX_ZOOMIN)
+    plt.legend()
+    plt.title(test_case)
+    plt.subplots_adjust(left=0.15)
+    plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomin_g1.png'))
+    plt.ylim(-YMAX_ZOOMOUT, YMAX_ZOOMOUT)
+    plt.subplots_adjust(left=None)
+    plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomout_g1.png'))
 
-plt.ylim(-YMAX_ZOOMOUT, YMAX_ZOOMOUT)
-plt.savefig(os.path.join('plots', 'sersic_highn_basic_zoomout_g2.png'))
+    # Then do the plots of g2
+    plt.clf()
+    plt.axhline(ls='--', color='k')
+    plt.axvline(ls='--', color='k')
+    plt.xlim(XMIN, XMAX)
+    for i in range(ntest):
+        if i < 7:
+            fmt='x'
+        else:
+            fmt='o'
+        plt.errorbar(
+             g2obs_draw[:, i], delta_g2obs[:, i], yerr=err_g2obs[:, i], fmt=fmt,
+             label="n = "+str(test_sersic_highn_basic.SERSIC_N_TEST[i]))
+    plt.xlabel(r'g$_2$ (DFT)')
+    plt.ylabel(r'$\Delta$g$_2$ (DFT - Photon)')
+    plt.ylim(-YMAX_ZOOMIN, YMAX_ZOOMIN)
+    plt.legend()
+    plt.title(test_case)
+    plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomin_g2.png'))
+    plt.ylim(-YMAX_ZOOMOUT, YMAX_ZOOMOUT)
+    plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomout_g2.png'))
 
-# Then do the plots of sigma
-YMAX_ZOOMOUT = .3   # in arcsec
-YMAX_ZOOMIN = 4.e-4 # in arcsec
-XMIN = 0.
-XMAX = .3 # in arcsec
-plt.clf()
-plt.xlim(XMIN, XMAX)
-for i in range(ntest):
-    if i < 7:
-        fmt='x'
-    else:
-        fmt='o'
-    plt.errorbar(
-        sigma_draw[:, i] * test_sersic_highn_basic.PIXEL_SCALE,
-        delta_sigma[:, i] * test_sersic_highn_basic.PIXEL_SCALE,
-        yerr=err_sigma[:, i] * test_sersic_highn_basic.PIXEL_SCALE, fmt=fmt,
-        label="n = "+str(test_sersic_highn_basic.SERSIC_N_TEST[i]))
-
-plt.ylim(-YMAX_ZOOMIN, YMAX_ZOOMIN)
-plt.xlabel(r'$\sigma$ (DFT) [arcsec]')
-plt.ylabel(r'$\Delta \sigma$ (DFT - Photon) [arcsec]')
-plt.legend()
-plt.show()
+    # Then do the plots of sigma
+    YMAX_ZOOMOUT = .3   # in arcsec
+    YMAX_ZOOMIN = 2.5e-3 # in arcsec
+    XMIN = 0.
+    XMAX = 1.25 # in arcsec
+    plt.clf()
+    plt.xlim(XMIN, XMAX)
+    for i in range(ntest):
+        if i < 7:
+            fmt='x'
+        else:
+            fmt='o'
+        plt.errorbar(
+            sigma_draw[:, i] * test_sersic_highn_basic.PIXEL_SCALE,
+            delta_sigma[:, i] * test_sersic_highn_basic.PIXEL_SCALE,
+            yerr=err_sigma[:, i] * test_sersic_highn_basic.PIXEL_SCALE, fmt=fmt,
+            label="n = "+str(test_sersic_highn_basic.SERSIC_N_TEST[i]))
+    plt.ylim(-YMAX_ZOOMIN, YMAX_ZOOMIN)
+    plt.xlabel(r'$\sigma$ (DFT) [arcsec]')
+    plt.ylabel(r'$\Delta \sigma$ (DFT - Photon) [arcsec]')
+    plt.legend()
+    plt.title(test_case)
+    plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomin_sigma.png'))
