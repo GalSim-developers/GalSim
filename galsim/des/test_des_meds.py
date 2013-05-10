@@ -232,6 +232,6 @@ def test_meds_config():
 
 if __name__ == "__main__":
 
-    #test_meds()
+    test_meds()
     test_meds_config()
 
