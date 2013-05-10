@@ -48,7 +48,7 @@ for test_case in ("basic", "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2"):
     YMAX_ZOOMIN = 2.5e-4
     XMIN = -.6
     XMAX = .8
-
+    plt.clf()
     plt.axhline(ls='--', color='k')
     plt.axvline(ls='--', color='k')
     plt.xlim(XMIN, XMAX)
@@ -116,3 +116,5 @@ for test_case in ("basic", "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2"):
     plt.legend()
     plt.title(test_case)
     plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomin_sigma.png'))
+    plt.ylim(-YMAX_ZOOMOUT, YMAX_ZOOMOUT)
+    plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomout_sigma.png'))
