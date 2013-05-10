@@ -13,141 +13,10 @@ import pylab
 import math
 import matplotlib.pyplot as plt
 import galsim
+import copy
 
 HSM_ERROR_VALUE = -99
 NO_PSF_VALUE    = -98
-
-def PlotEllipticityBiases(filename_output):
-    """
-    This function is a prototype for a plotting function. 
-    I am not sure what is the best plots/subplots combination to show what we want to see, so for now 
-    let's use this form.
-    Arguments
-    ---------
-    filename_output     file containing results from photon_vs_fft
-    """
-
-    data = numpy.loadtxt(filename_output,ndmin=2)
-
-    n_test_gals = data.shape[0]
-
-    g1_photon=data[:,4]
-    g2_photon=data[:,5]
-    g1_fft=data[:,2]
-    g2_fft=data[:,3]
-
-    de1 = g1_fft-g1_photon
-    de2 = g2_fft-g2_photon 
-    
-    pylab.plot(de1/g1_photon,'x',label='E1')
-    pylab.plot(de2/g2_photon,'+',label='E2')
-                
-    pylab.xlabel('test galaxy #')
-    pylab.ylabel('de/e')
-    pylab.xlim([-1,n_test_gals])
-
-    pylab.gcf().set_size_inches(10,5)
-    pylab.legend()
-
-    filename_fig = os.path.join(dirname_figs,'photon_vs_fft_differences.png');
-    pylab.savefig(filename_fig)
-    pylab.close()
-
-    logger.info('saved figure %s' % filename_fig)
-
-def PlotEllipticityBiasesHistogram(filename_output):
-    """
-    Plot histogram for differences between photon and FFT images.
-    Arguments
-    ---------
-    filename_output     file containing results from photon_vs_fft
-    """
-
-    # id
-    # max_diff_over_max_image
-    # E1_moments_fft
-    # E2_moments_fft
-    # E1_moments_photon
-    # E2_moments_photon
-    # E1_hsm_corr_fft
-    # E2_hsm_corr_fft
-    # E1_hsm_corr_photon
-    # E2_hsm_corr_photon
-    # moments_fft_sigma
-    # moments_shoot_sigma
-    # hsm_fft_sigma
-    # hsm_shoot_sigma
-
-    data = numpy.loadtxt(filename_output)
-    n_test_gals = data.shape[0]
-    n_bins = 25
-    n_ticks= 3
-
-    E1_fft=data[:,2]
-    E2_fft=data[:,3]
-    E1_photon=data[:,4]
-    E2_photon=data[:,5]
-    
-    pylab.subplot(231)
-    pylab.hist((E1_fft-E1_photon),label='E1',bins=n_bins)
-    pylab.title('adaptive moments')
-    pylab.xlabel('E1_fft - E1_photon')
-    pylab.ylabel('count')
-    pylab.xticks(numpy.linspace(min(pylab.xticks()[0]),max(pylab.xticks()[0]),n_ticks))
-    
-    pylab.subplot(234)
-    pylab.hist((E2_fft-E2_photon),label='E2',bins=n_bins)
-    pylab.xlabel('E2_fft - E2_photon')
-    pylab.ylabel('count')
-    pylab.xticks(numpy.linspace(min(pylab.xticks()[0]),max(pylab.xticks()[0]),n_ticks))
-
-
-    E1_fft=data[:,6]
-    E2_fft=data[:,7]
-    E1_photon=data[:,8]
-    E2_photon=data[:,9]
-
-    pylab.subplot(232)
-    pylab.hist((E1_fft-E1_photon),label='E1',bins=n_bins)
-    pylab.title('HSM corrected')
-    pylab.xlabel('E1_fft - E1_photon')
-    pylab.ylabel('count')
-    pylab.xticks(numpy.linspace(min(pylab.xticks()[0]),max(pylab.xticks()[0]),n_ticks))
-    
-    pylab.subplot(235)
-    pylab.hist((E2_fft-E2_photon),label='E2',bins=n_bins)
-    pylab.xlabel('E2_fft - E2_photon')
-    pylab.ylabel('count')
-    pylab.xticks(numpy.linspace(min(pylab.xticks()[0]),max(pylab.xticks()[0]),n_ticks))
-
-    # plot moments differnces
-
-    sigma_moments_fft=data[:,10]
-    sigma_moments_photon=data[:,11]
-    sigma_hsm_fft=data[:,12]
-    sigma_hsm_photon=data[:,13]
-
-    pylab.subplot(233)
-    pylab.hist((sigma_moments_fft-sigma_moments_photon),label='sigma',bins=n_bins)
-    pylab.title('moments')
-    pylab.xlabel('sigma_fft - sigma_photon')
-    pylab.ylabel('count')
-    pylab.xticks(numpy.linspace(min(pylab.xticks()[0]),max(pylab.xticks()[0]),n_ticks))
-
-    pylab.subplot(236)
-    pylab.hist((sigma_hsm_fft-sigma_hsm_photon),label='sigma',bins=n_bins)           
-    pylab.title('HSM')
-    pylab.xlabel('sigma_fft - sigma_photon')
-    pylab.ylabel('count')
-    pylab.xticks(numpy.linspace(min(pylab.xticks()[0]),max(pylab.xticks()[0]),n_ticks))
-      
-    pylab.gcf().set_size_inches(20,10)
-
-    filename_fig = os.path.join(dirname_figs,'photon_vs_fft_histogram.png');
-    pylab.savefig(filename_fig)
-    pylab.close()
-
-    logger.info('saved figure %s' % filename_fig)
 
 def PlotStatsForParam(config,param_name):
     """
@@ -162,64 +31,72 @@ def PlotStatsForParam(config,param_name):
     # get the shortcut to the dict corresponding to current varied parameter
     param = config['vary_params'][param_name]
 
-    # initialise the arrays for results
-    moments_E1_diff_mean = []
-    moments_E1_diff_stdm = []
-    moments_E1_diff_medn = []
-    moments_E2_diff_mean = []
-    moments_E2_diff_stdm = []
-    moments_E2_diff_medn = []
-
-    hsmcorr_E1_diff_mean = []
-    hsmcorr_E1_diff_stdm = []
-    hsmcorr_E1_diff_medn = []
-    hsmcorr_E2_diff_mean = []
-    hsmcorr_E2_diff_stdm = []
-    hsmcorr_E2_diff_medn = []
-
-    moments_sigma_diff_mean = []
-    moments_sigma_diff_stdm = []
-    moments_sigma_diff_medn = []
-    hsmcorr_sigma_diff_mean = []
-    hsmcorr_sigma_diff_stdm = []
-    hsmcorr_sigma_diff_medn = []
+    # prepare the output dict and initialise lists
+    bias_list = {'m1' : [], 'm2' : [], 'c1' : [], 'c2' : [], 
+                        'm1_std' : [], 'm2_std' : [], 'c1_std' : [], 'c2_std' : [],
+                        'cs' : [], 'ms' : [], 'cs_std' : [], 'ms_std' : []}
+    bias_moments_list = copy.deepcopy(bias_list)
+    bias_hsmcorr_list = copy.deepcopy(bias_list)
 
     # loop over values changed for the varied parameter
     for iv,value in enumerate(param['values']):
 
         # get the filename for the results file
-        filename_out = 'results.%s.%s.%03d.cat' % (config['filename_config'],param_name,iv)
-        # load the results file
-        results = numpy.loadtxt(filename_out)
-        # get the number of galaxies in the results file
-        n_res_all = results.shape[0]
-        # clean the HSM errors
-        for col in range(2,14):
-            select = results[:,col] != HSM_ERROR_VALUE
-            results = results[select,:]
-        n_res = results.shape[0]
+        filename_results_pht = 'results.%s.%s.%03d.pht.cat' % (
+            config['filename_config'],param_name,iv)
+        filename_results_fft = 'results.%s.%s.%03d.fft.cat' % (
+            config['filename_config'],param_name,iv)
 
-        logging.info('opened file %s with %d valid measurements (out of %d) for %s=%e',filename_out,n_res,n_res_all,param_name,iv)
+        # get the path for the results files
+        filepath_results_fft = os.path.join(config['results_dir'],filename_results_fft)
+        filepath_results_pht = os.path.join(config['results_dir'],filename_results_pht)
 
-        # get all the stats
-        moments_E1_diff_mean.append(    numpy.mean(results[:,2] - results[:,4])  )
-        moments_E1_diff_stdm.append(    numpy.std(results[:,2] - results[:,4],ddof=1)/numpy.sqrt(n_res)  )
-        moments_E1_diff_medn.append(    numpy.median(results[:,2] - results[:,4])  )
-        moments_E2_diff_mean.append(    numpy.mean(results[:,3] - results[:,5])  )
-        moments_E2_diff_stdm.append(    numpy.std(results[:,3] - results[:,5],ddof=1)/numpy.sqrt(n_res)  )
-        moments_E2_diff_medn.append(    numpy.median(results[:,3] - results[:,5])  )
-        hsmcorr_E1_diff_mean.append(    numpy.mean(results[:,6] - results[:,8])  )
-        hsmcorr_E1_diff_stdm.append(    numpy.std(results[:,6] - results[:,8],ddof=1)/numpy.sqrt(n_res)  )
-        hsmcorr_E1_diff_medn.append(    numpy.median(results[:,6] - results[:,8])  )
-        hsmcorr_E2_diff_mean.append(    numpy.mean(results[:,7] - results[:,9])  )
-        hsmcorr_E2_diff_stdm.append(    numpy.std(results[:,7] - results[:,9],ddof=1)/numpy.sqrt(n_res)  )
-        hsmcorr_E2_diff_medn.append(    numpy.median(results[:,7] - results[:,9])  )
-        moments_sigma_diff_mean.append( numpy.mean(results[:,10] - results[:,11])  )
-        moments_sigma_diff_stdm.append( numpy.std(results[:,10] - results[:,11],ddof=1)/numpy.sqrt(n_res)  )
-        moments_sigma_diff_medn.append( numpy.median(results[:,10] - results[:,11])  )
-        hsmcorr_sigma_diff_mean.append( numpy.mean(results[:,12] - results[:,13])  )
-        hsmcorr_sigma_diff_stdm.append( numpy.std(results[:,12] - results[:,13],ddof=1)/numpy.sqrt(n_res)  )
-        hsmcorr_sigma_diff_medn.append( numpy.median(results[:,12] - results[:,13])  )
+        logger.debug('parameter %s, index %03d, value %2.4e' % (param_name,iv,value))
+
+        # if there is no .fft or .pht file, look for the default to compare it against
+        if not os.path.isfile(filepath_results_pht):
+            logger.info('file %s not found, looking for defaults' % filepath_results_pht)
+            filename_results_pht = 'results.%s.default.pht.cat' % (config['filepath_config'])
+            filepath_results_pht = os.path.join(config['results_dir'],filename_results_pht)     
+            if not os.path.isfile(filepath_results_pht):
+                raise NameError('file %s not found' % filepath_results_pht)
+
+        if not os.path.isfile(filepath_results_fft):
+            logger.info('file %s not found, looking for defaults' % filepath_results_fft)
+            filename_results_fft = 'results.%s.default.fft.cat' % (config['filepath_config'])
+            filepath_results_fft = os.path.join(config['results_dir'],filename_results_fft)
+            if not os.path.isfile(filepath_results_fft):
+                raise NameError('file %s not found' % filepath_results_fft)
+
+        # measure m and c biases
+        bias_moments,bias_hsmcorr = GetBias(config,filepath_results_pht,filepath_results_fft)
+
+        # append results lists  - slightly clunky way
+        bias_moments_list['m1'].append(bias_moments['m1'])
+        bias_moments_list['m2'].append(bias_moments['m2'])
+        bias_moments_list['m1_std'].append(bias_moments['m1_std'])
+        bias_moments_list['m2_std'].append(bias_moments['m2_std'])
+        bias_moments_list['c1'].append(bias_moments['c1'])
+        bias_moments_list['c2'].append(bias_moments['c2'])
+        bias_moments_list['c1_std'].append(bias_moments['c1_std'])
+        bias_moments_list['c2_std'].append(bias_moments['c2_std'])
+        bias_moments_list['cs'].append(bias_moments['cs'])
+        bias_moments_list['ms'].append(bias_moments['ms'])
+        bias_moments_list['cs_std'].append(bias_moments['cs_std'])
+        bias_moments_list['ms_std'].append(bias_moments['ms_std'])
+
+        bias_hsmcorr_list['m1'].append(bias_hsmcorr['m1'])
+        bias_hsmcorr_list['m2'].append(bias_hsmcorr['m2'])
+        bias_hsmcorr_list['m1_std'].append(bias_hsmcorr['m1_std'])
+        bias_hsmcorr_list['m2_std'].append(bias_hsmcorr['m2_std'])
+        bias_hsmcorr_list['c1'].append(bias_hsmcorr['c1'])
+        bias_hsmcorr_list['c2'].append(bias_hsmcorr['c2'])
+        bias_hsmcorr_list['c1_std'].append(bias_hsmcorr['c1_std'])
+        bias_hsmcorr_list['c2_std'].append(bias_hsmcorr['c2_std'])
+        bias_hsmcorr_list['cs'].append(bias_hsmcorr['cs'])
+        bias_hsmcorr_list['ms'].append(bias_hsmcorr['ms'])
+        bias_hsmcorr_list['cs_std'].append(bias_hsmcorr['cs_std'])
+        bias_hsmcorr_list['ms_std'].append(bias_hsmcorr['ms_std'])
 
     # yaml is bad at converting lists of floats in scientific notation to floats
     values_float = map(float,param['values'])
@@ -231,51 +108,53 @@ def PlotStatsForParam(config,param_name):
     pylab.figure(1,figsize=(fig_xsize,fig_ysize))
     pylab.title('Weighted moments - uncorrected')
     pylab.xscale('log')
-    pylab.errorbar(param['values'],moments_E1_diff_mean,yerr=moments_E1_diff_stdm,fmt='b+-',label='mean (fft-phot) e1')
-    pylab.errorbar(param['values'],moments_E2_diff_mean,yerr=moments_E2_diff_stdm,fmt='rx-',label='mean (fft-phot) e2')
-    pylab.plot(param['values'],moments_E1_diff_medn,'b+--',label='median (fft-phot) e1')
-    pylab.plot(param['values'],moments_E2_diff_medn,'rx--',label='median (fft-phot) e2')
-    pylab.ylabel('Ei_fft - Ei_photon')
+    pylab.errorbar(param['values'],bias_moments_list['m1'],yerr=bias_moments_list['m1_std'],
+        fmt='b+-',label='G1')
+    pylab.errorbar(param['values'],bias_moments_list['m2'],yerr=bias_moments_list['m2_std'],
+        fmt='rx-',label='G2')
+    pylab.ylabel('slope of (Gi_phot-Gi_fft) vs Gi_fft')
     pylab.xlabel(param_name)
     pylab.xlim([min(values_float)*0.5, max(values_float)*1.5])
     pylab.legend(ncol=legend_ncol,loc=legend_loc,mode="expand")
     filename_fig = 'fig.moments.%s.%s.png' % (config['filename_config'],param_name)
     pylab.savefig(filename_fig)
-    if config['debug']: pylab.show()
+    # if config['debug']: pylab.show()
     pylab.close()
     logger.info('saved figure %s' % filename_fig)
 
+    # plot figures for moments, hsmcorr, and sigma
     pylab.figure(2,figsize=(fig_xsize,fig_ysize))
     pylab.title('Weighted moments - corrected')
     pylab.xscale('log')
-    pylab.errorbar(param['values'],hsmcorr_E1_diff_mean,yerr=hsmcorr_E1_diff_stdm,fmt='b+-',label='mean (fft-phot) e1')
-    pylab.errorbar(param['values'],hsmcorr_E2_diff_mean,yerr=hsmcorr_E2_diff_stdm,fmt='rx-',label='mean (fft-phot) e2')
-    pylab.plot(param['values'],hsmcorr_E1_diff_medn,'b+--',label='median (fft-phot) e1')
-    pylab.plot(param['values'],hsmcorr_E2_diff_medn,'rx--',label='median (fft-phot) e2')
-    pylab.ylabel('Ei_fft - Ei_photon')
+    pylab.errorbar(param['values'],bias_hsmcorr_list['m1'],yerr=bias_hsmcorr_list['m1_std'],
+        fmt='b+-',label='G1')
+    pylab.errorbar(param['values'],bias_hsmcorr_list['m2'],yerr=bias_hsmcorr_list['m2_std'],
+        fmt='rx-',label='G2')
+    pylab.ylabel('slope of (Gi_phot-Gi_fft) vs Gi_fft')
     pylab.xlabel(param_name)
     pylab.xlim([min(values_float)*0.5, max(values_float)*1.5])
     pylab.legend(ncol=legend_ncol,loc=legend_loc,mode="expand")
     filename_fig = 'fig.hsmcorr.%s.%s.png' % (config['filename_config'],param_name)
     pylab.savefig(filename_fig)
-    if config['debug']: pylab.show()
+    # if config['debug']: pylab.show()
     pylab.close()
     logger.info('saved figure %s' % filename_fig)
 
+    # plot figures for moments, hsmcorr, and sigma
     pylab.figure(3,figsize=(fig_xsize,fig_ysize))
-    pylab.title('Measured size')
+    pylab.title('measured size')
     pylab.xscale('log')
-    pylab.errorbar(param['values'],moments_sigma_diff_mean,yerr=moments_sigma_diff_stdm,fmt='b+-',label='mean (fft-phot) moments')
-    pylab.errorbar(param['values'],hsmcorr_sigma_diff_mean,yerr=hsmcorr_sigma_diff_stdm,fmt='rx-',label='mean (fft-phot) hsmcorr')
-    pylab.plot(param['values'],moments_sigma_diff_medn,'b+--',label='median (fft-phot) moments')
-    pylab.plot(param['values'],hsmcorr_sigma_diff_medn,'rx--',label='median (fft-phot) hsmcorr')
-    pylab.ylabel('sigma_fft - sigma_photon')
+    pylab.errorbar(param['values'],bias_moments_list['ms'],yerr=bias_moments_list['ms_std'],
+        fmt='b+-',label='G1')
+    pylab.errorbar(param['values'],bias_hsmcorr_list['ms'],yerr=bias_hsmcorr_list['ms_std'],
+        fmt='rx-',label='G2')
+    pylab.ylabel('slope of (size_phot-size_fft) vs size_fft')
     pylab.xlabel(param_name)
     pylab.xlim([min(values_float)*0.5, max(values_float)*1.5])
     pylab.legend(ncol=legend_ncol,loc=legend_loc,mode="expand")
     filename_fig = 'fig.sigma.%s.%s.png' % (config['filename_config'],param_name)
     pylab.savefig(filename_fig)
-    if config['debug']: pylab.show()
+    # if config['debug']: pylab.show()
     pylab.close()
     logger.info('saved figure %s' % filename_fig)
 
@@ -315,12 +194,43 @@ def _getLineFit(X,y,sig):
         return a,b,Cab
 
 def GetBias(config,filename_results_pht,filename_results_fft):
+    """
+    @brief load results, calculate the slope and offset for bias (g1_pht-g1_fft) vs g1_fft
+    @param config dict used to create the simulations
+    @param filename_results_pht results file for the fft 
+    @param filename_results_fft results file for the pht
+    @return dict with fields c1,m1,c2,m2,cs,ms,c1_std,c2_std,m1_std,m2_std,cs_std,ms_std
+            ms and cs - line fit parameters for size
+    """
 
+    # load results
     results_pht = numpy.loadtxt(filename_results_pht)
     results_fft = numpy.loadtxt(filename_results_fft)
 
-    #id,G1_moments,G2_moments,G1_hsmcorr,G2_hsmcorr,moments_sigma,hsmcorr_sigma,err_g1obs,err_g2obs,err_g1hsm,err_g2hsm,err_sigma,err_sigma_hsm
+    # intersection of results in case some data is missing
+    common_ids = list(set(results_pht[:,0]).intersection( set(results_fft[:,0] )))  
+    indices_pht = [list(results_pht[:,0]).index(cid) for cid in common_ids]
+    indices_fft = [list(results_fft[:,0]).index(cid) for cid in common_ids]
+    results_pht = results_pht[indices_pht,:]
+    results_fft = results_fft[indices_fft,:]
 
+    # get the number of points
+    n_res_all = results_pht.shape[0]
+    # clean the HSM errors
+    for col in range(1,12):
+        select1 = results_fft[:,col] != HSM_ERROR_VALUE 
+        select2 = results_pht[:,col] != HSM_ERROR_VALUE
+        select = numpy.logical_and(select1,select2)
+        results_pht = results_pht[select,:]
+        results_fft = results_fft[select,:]
+    n_res = results_pht.shape[0]
+
+    logging.info('opened files %s, %s with %d valid measurements (out of %d)',filename_results_pht,
+        filename_results_fft,n_res,n_res_all)
+
+    # unpack the table
+    #id,G1_moments,G2_moments,G1_hsmcorr,G2_hsmcorr,moments_sigma,hsmcorr_sigma,err_g1obs,err_g2obs,
+    #err_g1hsm,err_g2hsm,err_sigma,err_sigma_hsm
     moments_fft_G1         = results_fft[:,1]
     moments_fft_G2         = results_fft[:,2]
     hsmcorr_fft_G1         = results_fft[:,3]
@@ -340,37 +250,66 @@ def GetBias(config,filename_results_pht,filename_results_fft):
     moments_pht_sigma_std  = results_pht[:,11]
     hsmcorr_pht_sigma_std  = results_pht[:,12]
 
-    # set some plot parameters
-    # fig_xsize,fig_ysize,legend_ncol,legend_loc = 12,10,2,3
-
+    # if in debug mode save the plots of (g1_pht - g1_fft) vs g1_fft, etc
     if config['debug']:
+
+        pylab.figure(figsize=(20,10))
         
         pylab.subplot(1,3,1)
-        pylab.errorbar(moments_fft_G1, moments_pht_G1-moments_fft_G1, yerr=moments_pht_G1_std, fmt='b.')
+        pylab.errorbar(moments_fft_G1, moments_pht_G1-moments_fft_G1, yerr=moments_pht_G1_std, 
+            fmt='b.')
         pylab.xlabel('g1_fft')
         pylab.ylabel('g1_pht - g1_fft')
 
-        pylab.subplot(1,3,1)
-        pylab.errorbar(moments_fft_G2, moments_pht_G2-moments_fft_G2, yerr=moments_pht_G2_std, fmt='b.')
+        pylab.subplot(1,3,2)
+        pylab.errorbar(moments_fft_G2, moments_pht_G2-moments_fft_G2, yerr=moments_pht_G2_std, 
+            fmt='b.')
         pylab.xlabel('g1_fft')
         pylab.ylabel('g2_pht - g2_fft')
 
-        pylab.subplot(1,3,1)
-        pylab.errorbar(moments_fft_sigma, moments_pht_sigma-moments_fft_sigma, yerr=moments_pht_sigma_std, fmt='b.')
+        pylab.subplot(1,3,3)
+        pylab.errorbar(moments_fft_sigma, moments_pht_sigma-moments_fft_sigma,
+             yerr=moments_pht_sigma_std, fmt='b.')
         pylab.xlabel('sigma_fft')
         pylab.ylabel('sigma_pht - sigma_fft')
 
-        pylab.show()
+        # save the files
+        name1 = os.path.basename(filename_results_pht).replace('photon_vs_fft.','').replace('yaml.',
+            '').replace('results.','')
+        name2 = os.path.basename(filename_results_fft).replace('photon_vs_fft.','').replace('yaml.',
+            '').replace('results.','')
+        filename_fig = 'fig.bias.%s.%s.png' % (name1,name2)
+        pylab.savefig(filename_fig)
+        pylab.close()
+        logging.debug('saved figure %s' % filename_fig) 
 
+    # get line fits for moments
     c1,m1,cov1 = _getLineFit(moments_fft_G1,moments_pht_G1-moments_fft_G1,moments_pht_G1_std)
     c2,m2,cov2 = _getLineFit(moments_fft_G2,moments_pht_G2-moments_fft_G2,moments_pht_G2_std)
-    cs,ms,covs = _getLineFit(moments_fft_sigma,moments_pht_sigma-moments_fft_sigma,moments_pht_sigma_std)
-    bias_moments = {'c1' : c1, 'm1': m1, 'c2' : c2, 'm2': m2, 'cs' : cs, 'ms' : ms }
+    cs,ms,covs = _getLineFit(moments_fft_sigma,moments_pht_sigma-moments_fft_sigma,
+        moments_pht_sigma_std)
+    # create result dict
+    bias_moments = {'c1' : c1, 'm1': m1,  'c2' : c2, 'm2': m2, 'cs' : cs, 'ms' : ms , 
+                    'c1_std' : numpy.sqrt(cov1[0,0]),
+                    'c2_std' : numpy.sqrt(cov2[0,0]),
+                    'm1_std' : numpy.sqrt(cov1[1,1]),
+                    'm2_std' : numpy.sqrt(cov2[1,1]),
+                    'cs_std' : numpy.sqrt(covs[0,0]),
+                    'ms_std' : numpy.sqrt(covs[1,1]) }
     
-    c,m,cov = _getLineFit(hsmcorr_fft_G1,hsmcorr_pht_G1-hsmcorr_fft_G1,hsmcorr_pht_G1_std)
-    c,m,cov = _getLineFit(hsmcorr_fft_G1,hsmcorr_pht_G1-hsmcorr_fft_G1,hsmcorr_pht_G1_std)
-    c,m,cov = _getLineFit(hsmcorr_fft_G1,hsmcorr_pht_G1-hsmcorr_fft_G1,hsmcorr_pht_G1_std)
-    bias_hsmcorr = {'c1' : c1, 'm1': m1, 'c2' : c2, 'm2': m2, 'cs' : cs, 'ms' : ms }
+    # get line fits for hsmcorr
+    c1,m1,cov1 = _getLineFit(hsmcorr_fft_G1,hsmcorr_pht_G1-hsmcorr_fft_G1,hsmcorr_pht_G1_std)
+    c2,m2,cov2 = _getLineFit(hsmcorr_fft_G2,hsmcorr_pht_G2-hsmcorr_fft_G2,hsmcorr_pht_G2_std)
+    cs,ms,covs = _getLineFit(hsmcorr_fft_sigma,hsmcorr_pht_sigma-hsmcorr_fft_sigma,
+        hsmcorr_pht_sigma_std)
+    # create result dict
+    bias_hsmcorr = {'c1' : c1, 'm1': m1,  'c2' : c2, 'm2': m2, 'cs' : cs, 'ms' : ms , 
+                    'c1_std' : numpy.sqrt(cov1[0,0]),
+                    'c2_std' : numpy.sqrt(cov2[0,0]),
+                    'm1_std' : numpy.sqrt(cov1[1,1]),
+                    'm2_std' : numpy.sqrt(cov2[1,1]),
+                    'cs_std' : numpy.sqrt(covs[0,0]),
+                    'ms_std' : numpy.sqrt(covs[1,1]) }
 
     return bias_moments,bias_hsmcorr
     
@@ -400,18 +339,17 @@ if __name__ == "__main__":
     config['debug'] = args.debug
     config['filepath_config'] = args.filename_config
     config['filename_config'] = os.path.basename(config['filepath_config'])
+    config['results_dir'] = args.results_dir
 
+    # analyse the defaults, useful only to make the debug plot of g1_pht-g1_fft vs g1_fft
     filename_results_fft = 'results.%s.default.fft.cat' % (config['filename_config'])
     filename_results_pht = 'results.%s.default.pht.cat' % (config['filename_config'])
     filepath_results_fft = os.path.join(args.results_dir,filename_results_fft)
     filepath_results_pht = os.path.join(args.results_dir,filename_results_pht)
-
-    Plots(config,filepath_results_pht,filepath_results_fft)
-
-
-
+    GetBias(config,filepath_results_pht,filepath_results_fft)
+    
     # save a plot for each of the varied parameters
-    # for param_name in config['vary_params'].keys():
-    #     PlotStatsForParam(config,param_name)
+    for param_name in config['vary_params'].keys():
+        PlotStatsForParam(config,param_name)
 
 

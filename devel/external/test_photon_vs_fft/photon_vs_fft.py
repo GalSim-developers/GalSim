@@ -100,8 +100,10 @@ def GetShapeMeasurements(image_gal, image_psf, ident=-1):
                                                                        shear_est=HSM_SHEAR_EST)
         except: raise RuntimeError('EstimateShearHSM error')
                 
-        logger.debug('galaxy %d : adaptive moments G1=% 2.6f\tG2=% 2.6f\tsigma=%2.6f\thsm corrected moments G1=% 2.6f\tG2=% 2.6f' 
-            % ( ident , moments.observed_shape.g1 , moments.observed_shape.g2 , moments.moments_sigma , hsmcorr.corrected_g1,hsmcorr.corrected_g2) )
+        logger.debug('galaxy %d : adaptive moments G1=% 2.6f\tG2=% 2.6f\tsigma=%2.6f\t hsm \
+            corrected moments G1=% 2.6f\tG2=% 2.6f' 
+            % ( ident , moments.observed_shape.g1 , moments.observed_shape.g2 , 
+                moments.moments_sigma , hsmcorr.corrected_g1,hsmcorr.corrected_g2) )
 
         # create the output dictionary
         result = {  'moments_g1' : moments.observed_shape.g1,
@@ -159,8 +161,8 @@ def RunMeasurementsFFT(config,filename_results):
     if config['debug']: use_logger = logger
     else: use_logger = None
     # get the images
-    try: img_gals,img_psfs,_,_ = galsim.config.BuildImages( nimages = nobjects , obj_num = obj_num, config=config , 
-        make_psf_image=True , logger=use_logger , nproc=config['image']['nproc'])
+    try: img_gals,img_psfs,_,_ = galsim.config.BuildImages( nimages = nobjects , obj_num = obj_num, 
+        config=config , make_psf_image=True , logger=use_logger , nproc=config['image']['nproc'])
     except Exception, e:
         raise RuntimeError('Failed to build FFT image. Message: %s',e)
 
@@ -264,7 +266,8 @@ def RunMeasurementsPhotAndFFT(config,filename_results_pht,filename_results_fft):
             logger.info('finished getting photon and FFT measurements from gal %d : time :\
                 %s min' % (i,str(res.time/60.)))
         except Exception,e:
-            logger.error('failed to get compare_dft_vs_photon_config for galaxy %d. Message:\n %s' % (i,e))
+            logger.error('failed to get compare_dft_vs_photon_config for galaxy %d. Message:\n %s' 
+                % (i,e))
             # if failure, create results with failure flags
             results_fft = _ErrorResults(HSM_ERROR_VALUE,i)
             results_pht = _ErrorResults(HSM_ERROR_VALUE,i)
@@ -344,21 +347,6 @@ def RunComparisonForVariedParams(config):
     @param config              the config object, as read by yaml
     """
 
-    # Run the default config
-    if config['run_default']:
-        logging.info('running photon and FFT measurements for default parameter set')
-        default_config = config.copy()
-        param_name = 'default'
-        filename_results_pht = 'results.%s.%s.pht.cat' % (config['filename_config'],
-                                                                            param_name)
-        filename_results_fft = 'results.%s.%s.fft.cat' % (config['filename_config'],
-                                                                            param_name)
-        # Run and save the measurements
-        RunMeasurementsPhotAndFFT(default_config, 
-            filename_results_pht, filename_results_fft)             
-        logging.info(('saved FFT and photon results for default parameters\n'
-             + 'filenames: %s\t%s') % (filename_results_pht,filename_results_fft))
-
     # Loop over parameters to vary
     for param_name in config['vary_params'].keys():
         
@@ -367,14 +355,16 @@ def RunComparisonForVariedParams(config):
         # Loop over all values of the parameter, which will be changed
         for iv,value in enumerate(param['values']):
             # Copy the config to the original
-            changed_config = config.copy()
+            changed_config = copy.deepcopy(config)
             # Perform the change
             ChangeConfigValue(changed_config,param['path'],value)
             logging.info('changed parameter %s to %s' % (param_name,str(value)))
             # Run the photon vs fft test on the changed configs
+
+            # import pdb;pdb.set_trace()
             
             # If the setting change affected photon image, then rebuild it
-            if param['rebuild_photon'] :
+            if param['rebuild_pht'] :
                 logger.info('getting photon and FFT results')
                 changed_config2 = copy.deepcopy(changed_config)
                 # Get the results filenames
@@ -422,7 +412,12 @@ if __name__ == "__main__":
     parser.add_argument('filename_config', type=str, 
         help='Yaml config file, see photon_vs_fft.yaml for example.')
     parser.add_argument('--default_only', action="store_true", 
-        help='Run only for default settings for photons and FFT, ignore vary_params in config file.'
+        help='Run only for default settings for photons and FFT, ignore vary_params in config file.\
+              --vary_params_only must not be used alongside this option.'
+        , default=False)
+    parser.add_argument('--vary_params_only', action="store_true", 
+        help='Run only for varied settings for photons and FFT, do not run the defaults.\
+               --default_only must not be used alongside this option.'
         , default=False)
     parser.add_argument('--debug', action="store_true", 
         help='Run with debug verbosity.', default=False)
@@ -438,21 +433,36 @@ if __name__ == "__main__":
     logging.basicConfig(format="%(message)s", level=eval(logger_level), stream=sys.stdout)
     logger = logging.getLogger("photon_vs_fft") 
 
+    # sanity check the inputs
+    if args.default_only and args.vary_params_only:
+        raise('Use either default_only or vary_params_only, or neither.')
+
     # load the configuration file
     config = yaml.load(open(args.filename_config,'r'))
     config['debug'] = args.debug
     config['filepath_config'] = args.filename_config
     config['filename_config'] = os.path.basename(config['filepath_config'])
-
     config['ident'] = args.ident
 
+    # set flags what to do
+    if args.vary_params_only:
+        config['run_default'] = False
+        config['run_vary_params'] = True
+    elif args.default_only:
+        config['run_default'] = True
+        config['run_vary_params'] = False
+    else:
+        config['run_default'] = True
+        config['run_vary_params'] = True
+
+    # decide if run all galaxy or just one specified by command line
     if config['ident'] < 0:
         logger.info('running for all galaxies in the config file')
     else:
         logger.info('running for galaxy %d only' % config['ident'])
 
     # run only the default settings
-    if args.default_only:
+    if config['run_default']:
         logger.info('running photon_vs_fft for default settings')
         logger.info('getting photon and FFT results')
         config2 = copy.deepcopy(config)
@@ -471,8 +481,9 @@ if __name__ == "__main__":
             filename_results_pht, filename_results_fft)             
         logging.info(('saved FFT and photon results for default parameter set\n'
              + 'filenames: %s\t%s') % (filename_results_pht,filename_results_fft))
+    
     # run the config including changing of the parameters
-    else:
+    if config['run_vary_params']:
         logger.info('running photon_vs_fft for varied parameters')
         RunComparisonForVariedParams(config)
 
