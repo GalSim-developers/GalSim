@@ -20,6 +20,7 @@ import os
 import sys
 
 import numpy as np
+import galsim.deprecated.atmosphere
 
 try:
     import galsim
@@ -31,16 +32,31 @@ except ImportError:
 imgdir = os.path.join(".", "SBProfile_comparison_images") # Directory containing the reference
                                                           # images. 
 
+# AtmosphericPSF / Kolmogorov params and reference values
+test_fwhm = 1.9
+test_lor0 = 1.9
+test_oversampling = 1.7
+
+atmos_ref_fwhm_from_lor0 = test_lor0 * 0.976
+atmos_ref_lor0_from_fwhm = test_fwhm / 0.976
+
+# for flux normalization tests
+test_flux = 1.9
+
+# decimal point to go to for parameter value comparisons
+param_decimal = 12
+
 def funcname():
     import inspect
     return inspect.stack()[1][3]
+
 
 def test_AtmosphericPSF_properties():
     """Test some basic properties of a known Atmospheric PSF.
     """
     import time
     t1 = time.time()
-    apsf = galsim.AtmosphericPSF(lam_over_r0=1.5)
+    apsf = galsim.deprecated.AtmosphericPSF(lam_over_r0=1.5)
     # Check that we are centered on (0, 0)
     cen = galsim._galsim.PositionD(0, 0)
     np.testing.assert_array_almost_equal(
@@ -63,7 +79,7 @@ def test_AtmosphericPSF_flux():
     t1 = time.time()
     lors = np.linspace(0.5, 2., 5) # Different lambda_over_r0 values
     for lor in lors:
-        apsf = galsim.AtmosphericPSF(lam_over_r0=lor)
+        apsf = galsim.deprecated.AtmosphericPSF(lam_over_r0=lor)
         print 'apsf.getFlux = ',apsf.getFlux()
         np.testing.assert_almost_equal(apsf.getFlux(), 1., 6, 
                                        err_msg="Flux of atmospheric PSF (ImageViewD) is not 1.")
@@ -84,7 +100,7 @@ def test_AtmosphericPSF_fwhm():
     t1 = time.time()
     lors = np.linspace(0.5, 2., 5) # Different lambda_over_r0 values
     for lor in lors:
-        apsf = galsim.AtmosphericPSF(lam_over_r0=lor)
+        apsf = galsim.deprecated.AtmosphericPSF(lam_over_r0=lor)
         # .draw() throws a warning if it doesn't get a float. This includes np.float64. Convert to
         # have the test pass.
         dx_scale = 10
@@ -101,8 +117,59 @@ def test_AtmosphericPSF_fwhm():
                                 err_msg="Kolmogorov PSF does not have the expected FWHM.")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
-        
+ 
+def test_atmos_flux_scaling():
+    """Test flux scaling for AtmosphericPSF.
+    """
+    import time
+    t1 = time.time()
+    # init with lam_over_r0 and flux only (should be ok given last tests)
+    obj = galsim.deprecated.AtmosphericPSF(lam_over_r0=test_lor0, flux=test_flux)
+    obj *= 2.
+    np.testing.assert_almost_equal(
+        obj.getFlux(), test_flux * 2., decimal=param_decimal,
+        err_msg="Flux param inconsistent after __imul__.")
+    obj = galsim.deprecated.AtmosphericPSF(lam_over_r0=test_lor0, flux=test_flux)
+    obj /= 2.
+    np.testing.assert_almost_equal(
+        obj.getFlux(), test_flux / 2., decimal=param_decimal,
+        err_msg="Flux param inconsistent after __idiv__.")
+    obj = galsim.deprecated.AtmosphericPSF(lam_over_r0=test_lor0, flux=test_flux)
+    obj2 = obj * 2.
+    # First test that original obj is unharmed... (also tests that .copy() is working)
+    np.testing.assert_almost_equal(
+        obj.getFlux(), test_flux, decimal=param_decimal,
+        err_msg="Flux param inconsistent after __rmul__ (original).")
+    # Then test new obj2 flux
+    np.testing.assert_almost_equal(
+        obj2.getFlux(), test_flux * 2., decimal=param_decimal,
+        err_msg="Flux param inconsistent after __rmul__ (result).")
+    obj = galsim.deprecated.AtmosphericPSF(lam_over_r0=test_lor0, flux=test_flux)
+    obj2 = 2. * obj
+    # First test that original obj is unharmed... (also tests that .copy() is working)
+    np.testing.assert_almost_equal(
+        obj.getFlux(), test_flux, decimal=param_decimal,
+        err_msg="Flux param inconsistent after __mul__ (original).")
+    # Then test new obj2 flux
+    np.testing.assert_almost_equal(
+        obj2.getFlux(), test_flux * 2., decimal=param_decimal,
+        err_msg="Flux param inconsistent after __mul__ (result).")
+    obj = galsim.deprecated.AtmosphericPSF(lam_over_r0=test_lor0, flux=test_flux)
+    obj2 = obj / 2.
+    # First test that original obj is unharmed... (also tests that .copy() is working)
+    np.testing.assert_almost_equal(
+        obj.getFlux(), test_flux, decimal=param_decimal,
+        err_msg="Flux param inconsistent after __div__ (original).")
+    # Then test new obj2 flux
+    np.testing.assert_almost_equal(
+        obj2.getFlux(), test_flux / 2., decimal=param_decimal,
+        err_msg="Flux param inconsistent after __div__ (result).")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+       
 if __name__ == "__main__":
     test_AtmosphericPSF_flux()
     test_AtmosphericPSF_properties()
     test_AtmosphericPSF_fwhm()
+    test_atmos_flux_scaling()
