@@ -255,7 +255,7 @@ def main(argv):
     logger.info('Wrote effective PSF image to %r', file_name_epsf)
     logger.info('Wrote optics-only PSF image (Nyquist sampled) to %r', file_name_opticalpsf)
 
-    results = galsim.EstimateShearHSM(image, image_epsf)
+    results = galsim.hsm.EstimateShear(image, image_epsf)
 
     logger.info('HSM reports that the image has observed shape and size:')
     logger.info('    e1 = %.3f, e2 = %.3f, sigma = %.3f (pixels)', results.observed_shape.e1,

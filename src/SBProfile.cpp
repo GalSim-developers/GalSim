@@ -185,24 +185,17 @@ namespace galsim {
         _pimpl = d._pimpl;
     }
 
-    void SBProfile::applyTransformation(const CppEllipse& e)
+    void SBProfile::applyScale(double scale)
     {
-        SBTransform d(*this,e);
-        _pimpl = d._pimpl;
-    }
-
-    void SBProfile::applyShear(double g1, double g2)
-    {
-        CppShear s(g1, g2);
-        CppEllipse e(s);
-        SBTransform d(*this,e);
+        SBTransform d(*this,scale,0.,0.,scale);
         _pimpl = d._pimpl;
     }
 
     void SBProfile::applyShear(CppShear s)
     {
-        CppEllipse e(s);
-        SBTransform d(*this,e);
+        double a, b, c;
+        s.getMatrix(a,b,c);
+        SBTransform d(*this,a,c,c,b);
         _pimpl = d._pimpl;
     }
 
@@ -450,9 +443,6 @@ namespace galsim {
         int NFT = goodFFTSize(Nnofold);
         NFT = std::max(NFT,_pimpl->gsparams->minimum_fft_size);
         dbg << " After adjustments: Nnofold " << Nnofold << " NFT " << NFT << std::endl;
-        if (NFT > _pimpl->gsparams->maximum_fft_size)
-            FormatAndThrow<SBError>() << 
-                "fourierDraw() requires an FFT that is too large, " << NFT;
 
         // Move the output image to be centered near zero
         I.setCenter(0,0);
@@ -465,6 +455,10 @@ namespace galsim {
         if (NFT*dk/2 > maxK()) {
             dbg<<"NFT*dk/2 = "<<NFT*dk/2<<" > maxK() = "<<maxK()<<std::endl;
             dbg<<"Use NFT = "<<NFT<<std::endl;
+            if (NFT > _pimpl->gsparams->maximum_fft_size)
+                FormatAndThrow<SBError>() << 
+                    "fourierDraw() requires an FFT that is too large, " << NFT <<
+                    "\nIf you can handle the large FFT, you may update gsparams.maximum_fft_size.";
             // No aliasing: build KTable and transform
             KTable kt(NFT,dk);
             assert(_pimpl.get());
@@ -476,6 +470,10 @@ namespace galsim {
             // then wrap it
             int Nk = int(std::ceil(maxK()/dk)) * 2;
             dbg<<"Use Nk = "<<Nk<<std::endl;
+            if (Nk > _pimpl->gsparams->maximum_fft_size)
+                FormatAndThrow<SBError>() << 
+                    "fourierDraw() requires an FFT that is too large, " << Nk <<
+                    "\nIf you can handle the large FFT, you may update gsparams.maximum_fft_size.";
             KTable kt(Nk, dk);
             assert(_pimpl.get());
             _pimpl->fillKGrid(kt);
@@ -531,6 +529,7 @@ namespace galsim {
         assert(Re.getBounds() == Im.getBounds());
 
         double dk = Re.getScale();
+        dbg<<"Start plainDrawK: dk = "<<dk<<std::endl;
 
         // recenter an existing image, to be consistent with fourierDrawK:
         Re.setCenter(0,0);
@@ -538,8 +537,10 @@ namespace galsim {
 
         const int m = (Re.getXMax()-Re.getXMin()+1);
         const int n = (Re.getYMax()-Re.getYMin()+1);
-        const double xmin = Re.getXMin();
-        const double ymin = Re.getYMin();
+        const int xmin = Re.getXMin();
+        const int ymin = Re.getYMin();
+        dbg<<"m,n = "<<m<<','<<n<<std::endl;
+        dbg<<"xmin,ymin = "<<xmin<<','<<ymin<<std::endl;
 
         tmv::Matrix<std::complex<double> > val(m,n);
 #ifdef DEBUGLOGGING
@@ -548,19 +549,23 @@ namespace galsim {
         // Calculate all the kValues at once, since this is often faster than many calls to kValue.
         assert(xmin <= 0 && ymin <= 0 && -xmin < m && -ymin < n);
         _pimpl->fillKValue(val.view(),xmin*dk,dk,-xmin,ymin*dk,dk,-ymin);
+        dbg<<"F(k=0) = "<<val(-xmin,-ymin)<<std::endl;
 
         if (gain != 1.) val /= gain;
 
         tmv::MatrixView<T> mRe(Re.getData(),m,n,1,Re.getStride(),tmv::NonConj);
         tmv::MatrixView<T> mIm(Im.getData(),m,n,1,Im.getStride(),tmv::NonConj);
         addMatrix(mRe,val.realPart());
-        addMatrix(mIm,val.realPart());
+        addMatrix(mIm,val.imagPart());
     }
 
     // Build K domain by transform from X domain.  This is likely
     // to be a rare event but what the heck.  Enforce no "aliasing"
     // by oversampling and extending x domain if needed.  Force
     // power of 2 for transform
+    //
+    // Note: There are no unit tests of this, since all profiles have isAnalyticK() == true.
+    //       So drawK never sends anything this way.
     template <typename T>
     void SBProfile::fourierDrawK(ImageView<T> Re, ImageView<T> Im, double gain, double wmult) const 
     {

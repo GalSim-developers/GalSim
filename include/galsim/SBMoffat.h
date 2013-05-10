@@ -83,13 +83,6 @@ namespace galsim {
 
         class SBMoffatImpl;
 
-        static double pow_1(double x, double ) { return x; }
-        static double pow_2(double x, double ) { return x*x; }
-        static double pow_3(double x, double ) { return x*x*x; }
-        static double pow_4(double x, double ) { return x*x*x*x; }
-        static double pow_int(double x, double beta) { return std::pow(x,int(beta)); }
-        static double pow_gen(double x, double beta) { return std::pow(x,beta); }
-
     private:
         // op= is undefined
         void operator=(const SBMoffat& rhs);
