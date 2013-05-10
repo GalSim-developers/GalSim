@@ -28,6 +28,7 @@ valid_input_types = {
     #   used later).
     # - whether the class has a nobjects field, in which case it also must have a constructor
     #   kwarg nobjects_only to efficiently do only enough to calculate nobjects.
+    # See the des module for examples of how to extend this from a module.
     'catalog' : ('InputCatalog', [], True), 
     'real_catalog' : ('RealGalaxyCatalog', [], True),
     'nfw_halo' : ('NFWHalo', [], False),
@@ -45,6 +46,7 @@ valid_output_types = {
     # - whether the Builder takes nproc.
     # - whether the Builder takes psf_file_name, weight_file_name, and badpix_file_name.
     # - whether the Builder takes psf_hdu, weight_hdu, and badpix_hdu.
+    # See the des module for examples of how to extend this from a module.
     'Fits' : ('BuildFits', 'GetNObjForFits', False, True, True),
     'MultiFits' : ('BuildMultiFits', 'GetNObjForMultiFits', True, True, False),
     'DataCube' : ('BuildDataCube', 'GetNObjForDataCube', True, True, False),
@@ -540,8 +542,8 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
     nimages = galsim.config.ParseValue(config['output'],'nimages',config,int)[0]
 
     all_images = galsim.config.BuildImages(
-        nimages, config=config, logger=logger,
-        image_num=image_num, obj_num=obj_num, nproc=nproc,
+        nimages, config=config, nproc=nproc, logger=logger,
+        image_num=image_num, obj_num=obj_num,
         make_psf_image=make_psf_image, 
         make_weight_image=make_weight_image,
         make_badpix_image=make_badpix_image)
@@ -643,8 +645,8 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     badpix_images = [ all_images[3] ]
 
     all_images = galsim.config.BuildImages(
-        nimages-1, config=config, logger=logger,
-        image_num=image_num+1, obj_num=obj_num, nproc=nproc, 
+        nimages-1, config=config, nproc=nproc, logger=logger,
+        image_num=image_num+1, obj_num=obj_num,
         make_psf_image=make_psf_image, 
         make_weight_image=make_weight_image,
         make_badpix_image=make_badpix_image)

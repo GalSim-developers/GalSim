@@ -19,17 +19,23 @@
 
 import galsim
 
-def BuildImages(nimages, config, logger=None, image_num=0, obj_num=0, nproc=1,
+valid_image_types = { 
+    'Single' : 'BuildSingleImage',
+    'Tiled' : 'BuildTiledImage',
+    'Scattered' : 'BuildScatteredImage',
+}
+
+def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
                 make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
     Build a number of postage stamp images as specified by the config dict.
 
     @param nimages             How many images to build.
     @param config              A configuration dict.
+    @param nproc               How many processes to use.
     @param logger              If given, a logger object to log progress.
     @param image_num           If given, the current image_num (default = 0)
     @param obj_num             If given, the current obj_num (default = 0)
-    @param nproc               How many processes to use.
     @param make_psf_image      Whether to make psf_image.
     @param make_weight_image   Whether to make weight_image.
     @param make_badpix_image   Whether to make badpix_image.
@@ -214,12 +220,6 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0,
     """
     Build an image according to the information in config.
 
-    This function acts as a wrapper for:
-        BuildSingleImage 
-        BuildTiledImage 
-        BuildScatteredImage 
-    choosing between these three using the contents of config if specified (default = Single)
-
     @param config              A configuration dict.
     @param logger              If given, a logger object to log progress.
     @param image_num           If given, the current image_num (default = 0)
@@ -255,11 +255,10 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0,
         image['type'] = 'Single'  # Default is Single
     type = image['type']
 
-    valid_types = [ 'Single', 'Tiled', 'Scattered' ]
-    if type not in valid_types:
+    if type not in valid_image_types:
         raise AttributeError("Invalid image.type=%s."%type)
 
-    build_func = eval('Build' + type + 'Image')
+    build_func = eval(valid_image_types[type])
     all_images = build_func(
             config=config, logger=logger,
             image_num=image_num, obj_num=obj_num,
@@ -533,8 +532,9 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
     stamp_images = galsim.config.BuildStamps(
             nobjects=nobjects, config=config,
-            xsize=stamp_xsize, ysize=stamp_ysize, obj_num=obj_num, 
-            nproc=nproc, sky_level_pixel=sky_level_pixel, do_noise=do_noise, logger=logger,
+            nproc=nproc, logger=logger, obj_num=obj_num,
+            xsize=stamp_xsize, ysize=stamp_ysize,
+            sky_level_pixel=sky_level_pixel, do_noise=do_noise,
             make_psf_image=make_psf_image,
             make_weight_image=make_weight_image,
             make_badpix_image=make_badpix_image)
@@ -742,8 +742,9 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         full_badpix_image = None
 
     stamp_images = galsim.config.BuildStamps(
-            nobjects=nobjects, config=config, obj_num=obj_num,
-            nproc=nproc, sky_level_pixel=sky_level_pixel, do_noise=False, logger=logger,
+            nobjects=nobjects, config=config, 
+            nproc=nproc, logger=logger,obj_num=obj_num,
+            sky_level_pixel=sky_level_pixel, do_noise=False,
             make_psf_image=make_psf_image,
             make_weight_image=make_weight_image,
             make_badpix_image=make_badpix_image)

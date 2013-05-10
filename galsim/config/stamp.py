@@ -21,25 +21,25 @@ import time
 import galsim
 
 
-def BuildStamps(nobjects, config, xsize=0, ysize=0, 
-                obj_num=0, nproc=1, sky_level_pixel=None, do_noise=True, logger=None,
+def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
+                xsize=0, ysize=0, sky_level_pixel=None, do_noise=True,
                 make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
     Build a number of postage stamp images as specified by the config dict.
 
     @param nobjects            How many postage stamps to build.
     @param config              A configuration dict.
+    @param nproc               How many processes to use.
+    @param logger              If given, a logger object to log progress.
+    @param obj_num             If given, the current obj_num (default = 0)
     @param xsize               The size of a single stamp in the x direction.
                                (If 0, look for config.image.stamp_xsize, and if that's
                                 not there, use automatic sizing.)
     @param ysize               The size of a single stamp in the y direction.
                                (If 0, look for config.image.stamp_ysize, and if that's
                                 not there, use automatic sizing.)
-    @param obj_num             If given, the current obj_num (default = 0)
-    @param nproc               How many processes to use.
     @param sky_level_pixel     The background sky level to add to the image (in ADU/pixel).
     @param do_noise            Whether to add noise to the image (according to config['noise']).
-    @param logger              If given, a logger object to log progress.
     @param make_psf_image      Whether to make psf_image.
     @param make_weight_image   Whether to make weight_image.
     @param make_badpix_image   Whether to make badpix_image.
