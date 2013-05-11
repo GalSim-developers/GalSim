@@ -340,8 +340,8 @@ def test_shear_variance():
             "Incorrect shear variance from Gaussian power spectrum with smaller ngrid"
 
     # change grid spacing implicitly via kmax_factor
-    # This and the next test can be made at higher precision, since the grid actually
-    # used to make the shears has more points, so it is more accurate.
+    # This and the next test can be made at higher precision (0.5% rather than 1.5%), since the
+    # grids actually used to make the shears have more points, so they are more accurate.
     grid_size = 50. # degrees
     ngrid = 500 # grid points
     kmax_factor = 2
@@ -371,6 +371,8 @@ def test_shear_variance():
     kmin = 2.*np.pi/grid_size/3600./kmin_factor
     kmax = np.pi/(grid_size/ngrid)/3600.
     s = 2.5/kmax
+    # This time, erfmin is smaller.
+    erfmin = 0.003989406181481644
     test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((s*k)**2)))
     g1, g2 = test_ps.buildGrid(grid_spacing = grid_size/ngrid, ngrid=ngrid,
                                rng=rng, units=galsim.degrees, kmin_factor=kmin_factor)
