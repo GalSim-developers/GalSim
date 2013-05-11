@@ -70,7 +70,6 @@ def run_tests(random_seed, outfile, config=None, gsparams=None, wmult=None, logg
     n_cosmos = n_cosmos[0: NOBS]
     hlr_cosmos = hlr_cosmos[0: NOBS]
     gabs_cosmos = gabs_cosmos[0: NOBS]
-    ntest = len(SERSIC_N_TEST)
     # Setup a UniformDeviate
     ud = galsim.UniformDeviate(random_seed)
     # Open the output file and write a header:
@@ -87,7 +86,7 @@ def run_tests(random_seed, outfile, config=None, gsparams=None, wmult=None, logg
         g2 = gabs * np.sin(2. * random_theta)
         if use_config:
             # Increment the random seed so that each test gets a unique one
-            config['image']['random_seed'] = random_seed + i * NOBS * ntest + j * ntest + 1
+            config['image']['random_seed'] = random_seed + i * NOBS + 1
             config['gal'] = {
                 "type" : "Gaussian" , "half_light_radius" : hlr ,
                 "ellip" : {
