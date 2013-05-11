@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Script for testing the generation of high-n Sersic profiles by both DFT and photon shooting, for
+"""Script for testing the generation of Gaussian profiles by both DFT and photon shooting, for
 comparison of the size and ellipticity in the resulting images.
 """
 
@@ -14,8 +14,6 @@ NOBS = 30#0
 TOL_ELLIP = 3.e-5
 TOL_SIZE = 3.e-4 # Note this is in pixels by default, so for 0.03 arcsec/pixel this is still small
 
-# Range of sersic n indices to check
-SERSIC_N_TEST = [.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.0, 6.25, 6.5]
 NPHOTONS = 3.e7
 
 # Params for a very simple, Airy PSF
@@ -87,65 +85,62 @@ def run_tests(random_seed, outfile, config=None, gsparams=None, wmult=None, logg
         random_theta = 2. * np.pi * ud()
         g1 = gabs * np.cos(2. * random_theta)
         g2 = gabs * np.sin(2. * random_theta)
-        for j, sersic_n in zip(range(ntest), SERSIC_N_TEST):
-            print "Exploring Sersic n = "+str(sersic_n)
-            if use_config:
-                # Increment the random seed so that each test gets a unique one
-                config['image']['random_seed'] = random_seed + i * NOBS * ntest + j * ntest + 1
-                config['gal'] = {
-                    "type" : "Sersic" , "n" : sersic_n , "half_light_radius" : hlr ,
-                    "ellip" : {
-                        "type" : "G1G2" , "g1" : g1 , "g2" : g2
-                    }
+        if use_config:
+            # Increment the random seed so that each test gets a unique one
+            config['image']['random_seed'] = random_seed + i * NOBS * ntest + j * ntest + 1
+            config['gal'] = {
+                "type" : "Gaussian" , "half_light_radius" : hlr ,
+                "ellip" : {
+                    "type" : "G1G2" , "g1" : g1 , "g2" : g2
                 }
-                config['psf'] = {"type" : "Airy" , "lam_over_diam" : PSF_LAM_OVER_DIAM }
-                try:
-                    results = galsim.utilities.compare_dft_vs_photon_config(
-                        config, abs_tol_ellip=TOL_ELLIP, abs_tol_size=TOL_SIZE, logger=logger)
-                    test_ran = True
-                except RuntimeError as err:
-                    test_ran = False
-                    pass
-                # Uncomment lines below to ouput a check image
-                #import copy
-                #checkimage = galsim.config.BuildImage(copy.deepcopy(config))[0] #im = first element
-                #checkimage.write('junk_'+str(i + 1)+'_'+str(j + 1)+'.fits')
-            else:
-                test_gsparams = galsim.GSParams(maximum_fft_size=MAX_FFT_SIZE)
-                galaxy = galsim.Sersic(sersic_n, half_light_radius=hlr, gsparams=test_gsparams)
-                galaxy.applyShear(g1=g1, g2=g2)
-                psf = galsim.Airy(lam_over_diam=PSF_LAM_OVER_DIAM, gsparams=test_gsparams)
-                try:
-                    results = galsim.utilities.compare_dft_vs_photon_object(
-                        galaxy, psf_object=psf, rng=ud, pixel_scale=PIXEL_SCALE, size=IMAGE_SIZE,
-                        abs_tol_ellip=TOL_ELLIP, abs_tol_size=TOL_SIZE,
-                        n_photons_per_trial=NPHOTONS, wmult=wmult)
-                    test_ran = True
-                except RuntimeError, err:
-                    test_ran = False
-                    pass
+            }
+            config['psf'] = {"type" : "Airy" , "lam_over_diam" : PSF_LAM_OVER_DIAM }
+            try:
+                results = galsim.utilities.compare_dft_vs_photon_config(
+                    config, abs_tol_ellip=TOL_ELLIP, abs_tol_size=TOL_SIZE, logger=logger)
+                test_ran = True
+            except RuntimeError as err:
+                test_ran = False
+                pass
+            # Uncomment lines below to ouput a check image
+            #import copy
+            #checkimage = galsim.config.BuildImage(copy.deepcopy(config))[0] #im = first element
+            #checkimage.write('junk_'+str(i + 1)+'_'+str(j + 1)+'.fits')
+        else:
+            test_gsparams = galsim.GSParams(maximum_fft_size=MAX_FFT_SIZE)
+            galaxy = galsim.Gaussian(half_light_radius=hlr, gsparams=test_gsparams)
+            galaxy.applyShear(g1=g1, g2=g2)
+            psf = galsim.Airy(lam_over_diam=PSF_LAM_OVER_DIAM, gsparams=test_gsparams)
+            try:
+                results = galsim.utilities.compare_dft_vs_photon_object(
+                    galaxy, psf_object=psf, rng=ud, pixel_scale=PIXEL_SCALE, size=IMAGE_SIZE,
+                    abs_tol_ellip=TOL_ELLIP, abs_tol_size=TOL_SIZE,
+                    n_photons_per_trial=NPHOTONS, wmult=wmult)
+                test_ran = True
+            except RuntimeError, err:
+                test_ran = False
+                pass
 
-            if not test_ran:
-                import warnings
-                warnings.warn(
-                        'RuntimeError encountered for galaxy '+str(i + 1)+'/'+str(NOBS)+' with '+
-                        'Sersic n = '+str(sersic_n)+': '+str(err))
-                fout.write(
-                    '%e %e %e %e %e %e %e %e %e %e %e %e %e\n' % (
+        if not test_ran:
+            import warnings
+            warnings.warn(
+                'RuntimeError encountered for galaxy '+str(i + 1)+'/'+str(NOBS)+': '+str(err))
+            fout.write(
+                '%e %e %e %e %e %e %e %e %e %e %e %e\n' % (
                     fail_value, fail_value, fail_value, fail_value, fail_value, fail_value,
                     fail_value, fail_value, fail_value, fail_value, fail_value, fail_value,
-                    fail_value)
                 )
-                fout.flush()
-            else:
-                fout.write(
-                    '%e %e %e %e %e %e %e %e %e %e %e %e %e\n' % (
+            )
+            fout.flush()
+        else:
+            fout.write(
+                '%e %e %e %e %e %e %e %e %e %e %e %e\n' % (
                     results.g1obs_draw, results.g2obs_draw, results.sigma_draw,
                     results.delta_g1obs, results.delta_g2obs, results.delta_sigma,
-                    results.err_g1obs, results.err_g2obs, results.err_sigma, sersic_n, hlr, g1, g2
-                    )
+                    results.err_g1obs, results.err_g2obs, results.err_sigma, hlr, g1, g2
                 )
-                fout.flush()
+            )
+            fout.flush()
     fout.close()
     return
 
@@ -159,13 +154,12 @@ if __name__ == "__main__":
     # Output filename
     if not os.path.isdir("outputs"):
         os.mkdir("outputs")
-    outfile = os.path.join("outputs", "sersic_highn_basic_output_N"+str(NOBS)+".asc")
+    outfile = os.path.join("outputs", "gaussian_basic_output_N"+str(NOBS)+".asc")
 
     # Setup the logging
     logging.basicConfig(level=LOGLEVEL) 
-    logger = logging.getLogger("sersic_highn_basic")
+    logger = logging.getLogger("gaussian_basic")
 
     random_seed = 912424534
 
     run_tests(random_seed, outfile, config=config, logger=logger, fail_value=FAIL_VALUE)
-
