@@ -419,10 +419,6 @@ class PowerSpectrum(object):
             p_B = b_power_function
 
         # Build the grid 
-        print 'kmin_factor = ',kmin_factor
-        print 'kmax_factor = ',kmax_factor
-        print 'ngrid = ',ngrid*kmin_factor*kmax_factor
-        print 'grid_spacing = ',grid_spacing/kmax_factor
         psr = PowerSpectrumRealizer(ngrid*kmin_factor*kmax_factor, grid_spacing/kmax_factor,
                                     p_E, p_B)
         self.grid_g1, self.grid_g2, self.grid_kappa = psr(gd)
@@ -430,7 +426,6 @@ class PowerSpectrum(object):
             # Need to make sure the rows are continguous so we can use it in the constructor 
             # of the ImageViewD objects below.  This requires a copy.
             s = slice(0,ngrid*kmax_factor,kmax_factor)
-            print 's = ',s
             self.grid_g1 = np.array(self.grid_g1[s,s], copy=True, order='C')
             self.grid_g2 = np.array(self.grid_g2[s,s], copy=True, order='C')
             self.grid_kappa = np.array(self.grid_kappa[s,s], copy=True, order='C')
