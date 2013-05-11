@@ -192,7 +192,7 @@ def test_shear_variance():
     corr = top / np.sqrt(bottom1*bottom2)
     np.testing.assert_almost_equal(
         corr, 0., decimal=1,
-        err_msg="Shear components should be uncorrelated with each other!")
+        err_msg="Shear components should be uncorrelated with each other! (flat power spectrum)")
 
     # Now do the same test as previously, but with E-mode power only.
     test_ps = galsim.PowerSpectrum(e_power_function=pk_flat_lim)
@@ -216,7 +216,7 @@ def test_shear_variance():
     corr = top / np.sqrt(bottom1*bottom2)
     np.testing.assert_almost_equal(
         corr, 0., decimal=1,
-        err_msg="Shear components should be uncorrelated with each other!")
+        err_msg="Shear components should be uncorrelated with each other! (flat E-mode power spec.)")
 
     # check for proper scaling with grid spacing, for fixed number of grid points
     grid_size = 25. # degrees
