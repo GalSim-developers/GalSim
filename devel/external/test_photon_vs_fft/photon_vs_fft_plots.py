@@ -264,7 +264,7 @@ def GetBias(config,filename_results_pht,filename_results_fft):
         pylab.subplot(1,3,2)
         pylab.errorbar(moments_fft_G2, moments_pht_G2-moments_fft_G2, yerr=moments_pht_G2_std, 
             fmt='b.')
-        pylab.xlabel('g1_fft')
+        pylab.xlabel('g2_fft')
         pylab.ylabel('g2_pht - g2_fft')
 
         pylab.subplot(1,3,3)
