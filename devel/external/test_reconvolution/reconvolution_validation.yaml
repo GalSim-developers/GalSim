@@ -4,18 +4,20 @@ some_variables:
 cosmos_images:
         
     gal :
-        type : Sersic
-        half_light_radius : { type : InputCatalog , col : 2 }
-        n : { type : InputCatalog , col : 1 }
-        ellip : 
-            type : GBeta 
-            g : { type : InputCatalog , col : 3 }  
-            beta : { type: Rad , theta : {type : InputCatalog , col : 4 }}  
-        shift : 
-            type : XY  
-            x : { type : InputCatalog , col : 5 }
-            y : { type : InputCatalog , col : 6 }
-        signal_to_noise : 2e10
+        type : Ring
+        first:
+            type: Sersic
+            half_light_radius : { type : InputCatalog , col : 2 }
+            n : { type : InputCatalog , col : 1 }
+            ellip : 
+                type : GBeta 
+                g : { type : InputCatalog , col : 3 }  
+                beta : { type: Rad , theta : {type : InputCatalog , col : 4 }}  
+            shift : 
+                type : XY  
+                x : { type : InputCatalog , col : 5 }
+                y : { type : InputCatalog , col : 6 }
+            signal_to_noise : 2e10
 
 
     # this is the PSF of the deep imaging
@@ -70,8 +72,16 @@ reconvolved_images :
         shear : 
             type : List
             items: 
-                - { type : G1G2 , g1 : -0.027 , g2 :  0.031 }
-                - { type : G1G2 , g1 : +0.015 , g2 : -0.015 }
+                - { type : G1G2 , g1 :  0.00 , g2 :  0.00 }
+                - { type : G1G2 , g1 : +0.05 , g2 :  0.00 }
+                - { type : G1G2 , g1 : -0.05 , g2 :  0.00 }
+                - { type : G1G2 , g1 :  0.00 , g2 : -0.05 }
+                - { type : G1G2 , g1 :  0.00 , g2 : +0.05 }
+                - { type : G1G2 , g1 : +0.05 , g2 : +0.05 }
+                - { type : G1G2 , g1 : -0.05 , g2 : -0.05 }
+                - { type : G1G2 , g1 : +0.05 , g2 : -0.05 }
+                - { type : G1G2 , g1 : -0.05 , g2 : +0.05 }
+                - { type : G1G2 , g1 :  0.00 , g2 :  0.00 }
               
     image :
         random_seed : 2222211

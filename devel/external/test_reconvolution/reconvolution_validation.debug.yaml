@@ -1,20 +1,58 @@
-some_variables:
-    - &ngals_in_cat 20
+reconvolution_validation_settings:
+    n_gals : &n_gals 3
+    n_shears : &n_shears 8
+    n_angles : &n_angles 8
+
+    # n_repeat_gal  = n_shears * n_angles
+    n_repeat_gal : &n_repeat_gal 64
+    # n_repeat_shear = n_angles 
+    n_repeat_shear : &n_repeat_shear 8
+    # n_images = n_shears * n_angles *n_gals
+    n_images : &n_images 192
+
+# the test will be run one time for all the values of all the varied parameters listed here
+# the default configuration will not be ran
+vary_params:
+    alias_threshold : 
+        path : ['gsparams','alias_threshold']
+        values : [ 1.0e-1 , 5.0e-4 ]
+        rebuild_direct : True 
+        rebuild_reconv : True  
+    maxk_threshold :   
+        path : ['gsparams','maxk_threshold' ] 
+        values : [ 1.0e-1 , 1.0e-5 ]  
+        rebuild_direct : True
+        rebuild_reconv : True 
+    kvalue_accuracy : 
+        path : ['gsparams','kvalue_accuracy']
+        values : [ 1.0e-3 , 1.0e-8 ] 
+        rebuild_direct : True 
+        rebuild_reconv : True 
+    # snr :
+    #     path : ['cosmos_images','gal','signal_to_noise']
+    #     values : [ 2e20, 2000, 200, 100, 50, 25 ] 
+    #     rebuild_direct : False 
+    #     rebuild_reconv : True 
+
 
 cosmos_images:
         
     gal :
         type : Sersic
-        half_light_radius : { type : InputCatalog , col : 2 }
-        n : { type : InputCatalog , col : 1 }
+        half_light_radius : { type : InputCatalog , col : 2, index : { type: Sequence, repeat: *n_repeat_gal} }
+        n : { type : InputCatalog , col : 1 , index : { type: Sequence, repeat: *n_repeat_gal}}
         ellip : 
             type : GBeta 
-            g : { type : InputCatalog , col : 3 }  
-            beta : { type: Rad , theta : {type : InputCatalog , col : 4 }}  
+            g : { type : InputCatalog , col : 3, index : { type: Sequence, repeat: *n_repeat_gal} }  
+            beta : 
+                type: Deg
+                theta : 
+                    type : List
+                    items : [   0. ,   22.5,   45. ,   67.5,   90. ,  112.5,  135. ,  157.5]
         shift : 
             type : XY  
-            x : { type : InputCatalog , col : 5 }
-            y : { type : InputCatalog , col : 6 }
+            x : { type : InputCatalog , col : 5 , index : { type: Sequence, repeat: *n_repeat_gal}}
+            y : { type : InputCatalog , col : 6 , index : { type: Sequence, repeat: *n_repeat_gal}}
         signal_to_noise : 2e10
 
     # this is the PSF of the deep imaging
@@ -23,8 +61,8 @@ cosmos_images:
         lam_over_diam : {type: Eval, str: '700.e-9 / 1.3 * 180. / math.pi * 3600.'}
         ellip : 
             type : EBeta
-            e : { type : Random , min : 0.0 , max : 0.2 }
-            beta : { type : Random }
+            e : { type : InputCatalog , col : 7,  index : { type: Sequence, repeat: *n_repeat_gal} }  
+            beta : { type: Deg , theta : {type : InputCatalog , col : 8 , index : { type: Sequence, repeat: *n_repeat_gal} } }
       
     image :
         random_seed : 121212
@@ -44,7 +82,8 @@ cosmos_images:
    
     output :
         type : MultiFits
-        nimages : *ngals_in_cat
+        nimages : *n_images
+
         dir : .
         file_name : rgc_val_gal.fits          
         psf :
@@ -59,8 +98,8 @@ reconvolved_images :
             - { type : Airy, lam_over_diam : {type: Eval, str: '(700.e-9)/4*180/math.pi*3600'} }
         ellip : 
             type : EBeta
-            e : { type : Random , min : 0.0 , max : 0.2 }
-            beta : { type : Random }
+            e : { type : InputCatalog , col : 7,  index : { type: Sequence, repeat: *n_shears} }  
+            beta : { type: Deg , theta : {type : InputCatalog , col : 8 , index : { type: Sequence, repeat: *n_shears} } }
             
     gal :
         type : RealGalaxy
@@ -68,17 +107,24 @@ reconvolved_images :
         index : { type : Sequence }
         shear : 
             type : List
+            index : {type: Sequence, repeat : *n_repeat_shear}
             items: 
-                - { type : G1G2 , g1 : -0.027 , g2 :  0.031 }
-                - { type : G1G2 , g1 : +0.015 , g2 : -0.015 }
-              
+                - { type : G1G2 , g1 : +0.20 , g2 :  0.00 }
+                - { type : G1G2 , g1 : -0.20 , g2 :  0.00 }
+                - { type : G1G2 , g1 : +0.00 , g2 :  0.20 }
+                - { type : G1G2 , g1 : -0.00 , g2 : -0.20 }
+                - { type : G1G2 , g1 : +0.20 , g2 :  0.00 }
+                - { type : G1G2 , g1 : -0.20 , g2 :  0.20 }
+                - { type : G1G2 , g1 : +0.20 , g2 :  0.20 }
+                - { type : G1G2 , g1 : -0.20 , g2 : -0.20 }
+
     image :
         random_seed : 2222211
         nproc : 1
         pixel_scale : 0.2   # pixel scale for the ground observation
         type : Tiled
         nx_tiles : 1        # we are generating galaxies in one long tiled stripe
-        ny_tiles : *ngals_in_cat    
+        ny_tiles :  *n_images
         stamp_size : 64    #  big in order for the space images to contain the galaxies fully
         # this field is required for the photon image, 
         # but we don't want to add any noise, so we set the variance to 0
@@ -103,30 +149,4 @@ gsparams :
     realspace_abserr : 1.e-6    
     integration_relerr : 1.e-5  
     integration_abserr : 1.e-7  
-
-# the test will be run one time for all the values of all the varied parameters listed here
-# the default configuration will not be ran
-vary_params:
-    alias_threshold : 
-        path : ['gsparams','alias_threshold']
-        values : [ 1.0e-1 , 5.0e-4 ]
-        rebuild_direct : True 
-        rebuild_reconv : True  
-    maxk_threshold :   
-        path : ['gsparams','maxk_threshold' ] 
-        values : [ 1.0e-1 , 1.0e-5 ]  
-        rebuild_direct : True
-        rebuild_reconv : True 
-    kvalue_accuracy : 
-        path : ['gsparams','kvalue_accuracy']
-        values : [ 1.0e-3 , 1.0e-8 ] 
-        rebuild_direct : True 
-        rebuild_reconv : True 
-    snr :
-        path : ['cosmos_images','gal','signal_to_noise']
-        values : [ 2e20, 2000, 200, 100, 50, 25 ] 
-        rebuild_direct : False 
-        rebuild_reconv : True 
-
-
 

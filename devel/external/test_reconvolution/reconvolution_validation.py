@@ -15,6 +15,58 @@ import copy
 HSM_ERROR_VALUE = -99
 NO_PSF_VALUE    = -98
 
+def _ErrorResults(ERROR_VALUE,ident):
+
+    result = {  'moments_g1' : ERROR_VALUE,
+                        'moments_g2' : ERROR_VALUE,
+                        'hsmcorr_g1' : ERROR_VALUE,
+                        'hsmcorr_g2' : ERROR_VALUE,
+                        'moments_sigma' : ERROR_VALUE,
+                        'hsmcorr_sigma' : ERROR_VALUE,
+                        'moments_g1err' : ERROR_VALUE,
+                        'moments_g2err' : ERROR_VALUE,
+                        'hsmcorr_g1err' : ERROR_VALUE,
+                        'hsmcorr_g2err' : ERROR_VALUE,
+                        'moments_sigmaerr' : ERROR_VALUE,
+                        'hsmcorr_sigmaerr' : ERROR_VALUE,
+                        'ident' : ident }
+
+    return result
+
+def WriteResultsHeader(file_output):
+    """
+    @brief Writes a header file for results.
+    @param file_output  file pointer to be written into
+    """
+    
+    output_header = '# id ' + 'G1_moments G2_moments G1_hsmcorr G2_hsmcorr ' + \
+                              'moments_sigma hsmcorr_sigma ' + \
+                              'err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm' + \
+                              '\n'
+    file_output.write(output_header) 
+
+def WriteResults(file_output,results):
+    """
+    #brief Save results to file.
+    
+    @file_output            file pointer to which results will be written
+    @results                dict - result of GetResultsPhoton or GetResultsFFT
+    """ 
+
+    output_row_fmt = '%d\t' + '% 2.8e\t'*6 + '\n'
+
+    # loop over the results items
+       
+    file_output.write(output_row_fmt % (
+            results['ident'] ,
+            results['moments_g1'] ,
+            results['moments_g2'] ,
+            results['hsmcorr_g1'] ,
+            results['hsmcorr_g2'] ,
+            results['moments_sigma'] ,
+            results['hsmcorr_sigma'] 
+        )) 
+
 def CreateRGC(config):
     """
     Creates a mock real galaxy catalog and saves it to file.
@@ -28,7 +80,11 @@ def CreateRGC(config):
     cosmos_config['image']['gsparams'] = copy.deepcopy(config['gsparams'])
 
     # process the config and create fits file
-    galsim.config.Process(cosmos_config,logger=None)
+    try:
+        galsim.config.Process(cosmos_config,logger=None)
+        logger.debug('created RGC images')
+    except Exception,e:
+        logger.error('failed to build RGC images, message %s' % e)
     # this is a hack - there should be a better way to get this number
     n_gals = len(galsim.config.GetNObjForMultiFits(cosmos_config,0,0))
     logger.info('building real galaxy catalog with %d galaxies' % n_gals)
@@ -71,9 +127,9 @@ def CreateRGC(config):
     logger.info('saved real galaxy catalog %s' % filename_rgc)
 
     # if in debug mode, save some plots
-    if config['debug'] : SavePreviewRGC(config,filename_rgc)
+    if config['args'].debug : SavePreviewRGC(config,filename_rgc)
 
-def SavePreviewRGC(config,filename_rgc):
+def SavePreviewRGC(config,filename_rgc,n_gals_preview=10):
     """
     Function for eyeballing the contents of the created mock RGC catalogs.
     Arguments
@@ -91,7 +147,7 @@ def SavePreviewRGC(config,filename_rgc):
     import pylab
 
     # loop over galaxies and save plots
-    for n in range(10):
+    for n in range(n_gals_preview):
 
         img_gal = pyfits.getdata(fits_gal,ext=n)
         img_psf = pyfits.getdata(fits_psf,ext=n)
@@ -104,7 +160,7 @@ def SavePreviewRGC(config,filename_rgc):
         pylab.imshow(img_psf,interpolation='nearest')
         pylab.title('PSF')
         
-        filename_fig = 'fig.previewRGC.%s.%d.png' % (config['filename_config'],n)
+        filename_fig = 'fig.previewRGC.%s.%d.png' % (config['args'].filename_config,n)
 
         pylab.savefig(filename_fig)
 
@@ -161,69 +217,43 @@ def GetDirectImage(config):
 
     return (img_gals,img_psfs)
 
-def GetShapeMeasurements(image_gal, image_psf, ident):
+def GetShapeMeasurements(image_gal, image_psf, ident=-1):
     """
-    For a galaxy images created using photon and fft, and PSF image, measure HSM weighted moments 
-    with and without PSF correction. Also measure sizes and maximum pixel differences.
-    Arguments
-    ---------
-    image_gal           image of the galaxy
-    image_psf           image of the PSF
-    ident               id of the galaxy, to be saved in the output file
-    
-    Outputs dictionary containing the results of comparison.
-    The dict contains fields:, moments_e1, moments_e2, hsmcorr_e1, hsmcorr_e2, moments_sigma, hsmcorr_sigma, ident
-    If an error occured in HSM measurement, then a error value is written in the fields of this
-    dict.
+    @param image_gal    galsim image of the galaxy
+    @param image_psf    galsim image of the PSF
+    @param ident        id of the galaxy (default -1)
     """
 
-    # find adaptive moments
-    try:
-        moments = galsim.FindAdaptiveMom(image_gal)
-        moments_e1 = moments.observed_shape.getE1()
-        moments_e2 = moments.observed_shape.getE2()
-        moments_sigma = moments.moments_sigma 
-    except:
-        logging.error('hsm error in moments measurement for phot image of galaxy %s' % str(ident))
-        moments_e1 = HSM_ERROR_VALUE
-        moments_e2 = HSM_ERROR_VALUE
-        moments_sigma = HSM_ERROR_VALUE
-    
-    logger.debug('adaptive moments   E1=% 2.6f\t2=% 2.6f\tsigma=%2.6f' % (moments_e1, moments_e2, moments_sigma)) 
-    
-    # find HSM moments
-    if image_psf == None:
+    HSM_SHEAR_EST = "KSB"
+    NO_PSF_VALUE = -10
 
-        hsm_corr_e1 =  hsm_corr_e2  = hsm_corr_fft_e1 = hsm_corr_fft_e2 =\
-        hsm_fft_sigma = hsm_sigma = \
-        NO_PSF_VALUE 
-    
-    else:
-
-        try:
-            hsm = galsim.EstimateShearHSM(image_gal,image_psf,strict=True)
-            hsm_corr_e1 = hsm.corrected_e1
-            hsm_corr_e2 = hsm.corrected_e2
-            hsm_sigma   = hsm.moments_sigma
-        except:
-            logger.error('hsm error in hsmcorr measurement of phot image of galaxy %s' % str(ident))
-            hsm_corr_e1 = HSM_ERROR_VALUE
-            hsm_corr_e2 = HSM_ERROR_VALUE
-            hsm_sigma   = HSM_ERROR_VALUE
-
+    # find adaptive moments  
+    try: moments = galsim.FindAdaptiveMom(image_gal)
+    except: raise RuntimeError('FindAdaptiveMom error')
         
-        logger.debug('hsm corrected moments    E1=% 2.6f\tE2=% 2.6f\tsigma=% 2.6f' % (hsm_corr_e1, hsm_corr_e2, hsm_sigma))
-          
-    # create the output dictionary
-    result={}
-    result['moments_e1'] = moments_e1
-    result['moments_e2'] = moments_e2
-    result['hsmcorr_e1'] = hsm_corr_e1
-    result['hsmcorr_e2'] = hsm_corr_e2
-    result['moments_sigma'] = moments_sigma
-    result['hsmcorr_sigma'] = hsm_sigma
-    result['ident'] = ident
 
+    # find HSM moments
+    if image_psf == None: hsmcorr_phot_e1 =  hsmcorr_phot_e2  = NO_PSF_VALUE 
+    else:
+        try: 
+            hsmcorr   = galsim.EstimateShearHSM(image_gal,image_psf,strict=True,  
+                                                                       shear_est=HSM_SHEAR_EST)
+        except: raise RuntimeError('EstimateShearHSM error')
+                
+        logger.debug('galaxy %d : adaptive moments G1=% 2.6f\tG2=% 2.6f\tsigma=%2.6f\t hsm \
+            corrected moments G1=% 2.6f\tG2=% 2.6f' 
+            % ( ident , moments.observed_shape.g1 , moments.observed_shape.g2 , 
+                moments.moments_sigma , hsmcorr.corrected_g1,hsmcorr.corrected_g2) )
+
+        # create the output dictionary
+        result = {  'moments_g1' : moments.observed_shape.g1,
+                    'moments_g2' : moments.observed_shape.g2,
+                    'hsmcorr_g1' : hsmcorr.corrected_g1,
+                    'hsmcorr_g2' : hsmcorr.corrected_g2,
+                    'moments_sigma' :  moments.moments_sigma, 
+                    'hsmcorr_sigma' :  hsmcorr.moments_sigma, 
+                    'ident' : ident}
+        
     return result
 
 def GetPixelDifference(image1,image2,id):
@@ -252,177 +282,55 @@ def GetPixelDifference(image1,image2,id):
     return { 'diff' : max_diff_over_max_image, 'ident' :id }
 
 
-def SaveResults(filename_output,results_direct,results_reconv,results_imdiff):
+def RunMeasurement(config,filename_results,mode):
     """
-    Save results to file.
-    Arguments
-    ---------
-    filename_output     - file to which results will be written
-    results_all_gals    - list of dictionaries with Photon vs FFT resutls. 
-                            See functon testPhotonVsFft for details of the dict.
+    @brief              Run the comparison of reconvolved and direct imageing.
+    @param config       main config dict read by yaml
+    @param mode         direct or reconv
     """
 
-
-    # initialise the output file
-    file_output = open(filename_output,'w')
-       
-    # write the header
-    output_row_fmt = '%d\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t' + \
-                        '% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\t% 2.6f\n'
-    output_header = '# id max_diff_over_max_image ' +  \
-                                'E1_moments_direct E2_moments_direct E1_moments_reconv E2_moments_reconv ' + \
-                                'E1_corr_direct E2_hsm_corr_direct E1_corr_reconv E2_corr_reconv ' + \
-                                'moments_direct_sigma moments_reconv_sigma corr_direct_sigma corr_reconv_sigma\n'
-    file_output.write(output_header)
-
-    # loop over the results items
-    for i,r in enumerate(results_direct):
-
-        # write the result item
-        file_output.write(output_row_fmt % (
-            results_direct[i]['ident'], 
-            results_imdiff[i]['diff'],
-            results_direct[i]['moments_e1'], 
-            results_direct[i]['moments_e2'], 
-            results_reconv[i]['moments_e1'],  
-            results_reconv[i]['moments_e2'],
-            results_direct[i]['hsmcorr_e1'], 
-            results_direct[i]['hsmcorr_e2'], 
-            results_reconv[i]['hsmcorr_e1'], 
-            results_reconv[i]['hsmcorr_e2'],
-            results_direct[i]['moments_sigma'], 
-            results_reconv[i]['moments_sigma'], 
-            results_direct[i]['hsmcorr_sigma'], 
-            results_reconv[i]['hsmcorr_sigma']
-            ))
-
-    file_output.close()
-    logging.info('saved results file %s' % (filename_output))
-
-def RunComparison(config,rebuild_reconv,rebuild_direct):
-    """
-    Run the comparison of reconvolved and direct imageing.
-    Arguments
-    ---------
-    config              main config dict read by yaml
-    rebuild_reconv      wheather to rebuild the reconvolved image
-                        if no, then use the one computer earlier
-                        if the previous one is not available, then compute it anyway
-    rebuild_direct      ditto for direct image
-    Return dictionaries with measurements of images
-    results_shape_direct,results_shape_reconv,results_pixel_imdiff
-    For specifications of those dicts see functions GetPixelDifference, GetShapeMeasurements.
-    """
+    file_results = open(filename_results,'w')
+    WriteResultsHeader(file_results)
 
     # first create the RGC
-    try:
-        CreateRGC(config)
-    except:
-        raise ValueError('creating RGC failed')
+    if mode == 'reconv':
+        try:
+            CreateRGC(config)
+        except Exception,e:
+            raise ValueError('creating RGC failed, message: %s ' % e)
+        image_fun = GetReconvImage
+    elif mode == 'direct':
+        image_fun = GetDirectImage
+    else: raise ValueError('unknown mode %s - should be either reconv or direct' % mode)
 
-    global img_gals_reconv,img_gals_direct
 
-    # build the reconvolved image if requested or not present in the global variable img_gals_reconv
-    try:
-        if rebuild_reconv or img_gals_reconv==None:
-            logger.info('building reconv image')
-            # get the reconvolved image
-            (img_reconv,psf_reconv) = GetReconvImage(config)
-    except:
-        logging.error('building reconv image failed')
-        return (None,None,None)
+    # try:
+    logger.info('building %s image' , mode)
+    (img_gals,img_psfs) = image_fun(config)
+    # except Exception,e:
+    # logging.error('building image failed, message: %s' % e)
 
-    # build the direct image if requested or not present in the global variable img_gals_direct
-    try:
-        if rebuild_direct or img_gals_direct==None:
-            logger.info('building direct image')
-            # get the direct image
-            (img_direct,psf_direct) = GetDirectImage(config)
-    except:
-        logging.error('building direct image failed')
-        return (None,None,None)
-  
     # get image size
     npix = config['reconvolved_images']['image']['stamp_size']
     nobjects = galsim.config.GetNObjForImage(config['reconvolved_images'],0)
-
-    # initalise results lists
-    results_shape_reconv = []
-    results_shape_direct = []
-    results_pixel_imdiff = []
 
     # loop over objects
     for i in range(nobjects):
 
         # cut out stamps
-        img_gal_reconv =  img_reconv[ galsim.BoundsI(  1 ,   npix, i*npix+1, (i+1)*npix ) ]
-        img_gal_direct =  img_direct[ galsim.BoundsI(  1 ,   npix, i*npix+1, (i+1)*npix ) ]
-        img_psf_direct =  psf_direct[ galsim.BoundsI(  1 ,   npix, i*npix+1, (i+1)*npix ) ]
-
-        # if in debug mode save some plots
-        if config['debug']: SaveImagesPlots(config, i, img_gal_reconv, img_gal_direct, img_psf_direct)
-
+        img_gal =  img_gals[ galsim.BoundsI(  1 ,   npix, i*npix+1, (i+1)*npix ) ]
+        img_psf =  img_psfs[ galsim.BoundsI(  1 ,   npix, i*npix+1, (i+1)*npix ) ]
+ 
         # get shapes and pixel differences
-        result_reconv = GetShapeMeasurements(img_gal_reconv, img_psf_direct, i)
-        result_direct = GetShapeMeasurements(img_gal_direct, img_psf_direct, i)
-        result_imdiff = GetPixelDifference(img_gal_reconv,img_gal_direct, i)
+        try:
+            result = GetShapeMeasurements(img_gal, img_psf, i)
+        except Exception,e:
+            logger.error('failed to get shapes for for galaxy %d. Message:\n %s' % (i,e))
+            result = _ErrorResults(HSM_ERROR_VALUE,i)
+  
+        WriteResults(file_results,result)
 
-        # append the shape results to list
-        results_shape_reconv.append(result_reconv)
-        results_shape_direct.append(result_direct)
-        results_pixel_imdiff.append(result_imdiff)
-
-    return results_shape_direct,results_shape_reconv,results_pixel_imdiff
-
-def SaveImagesPlots(config,id,img_reconv,img_direct,img_psf):
-    """
-    Save the images of direct and reconvolved galaxies to a png file.
-    File will have name fig.images.filename_config.id.png.
-    Arguments
-    ---------
-    config          main config dict read by yaml
-    id              id of the galaxy, int
-    img_reconv      reconvolved image
-    img_direct      direct image
-    img_psf         image of the reconvolving PSF
-    """
-
-    # set up figure size
-    fig_xsize,fig_ysize = 30,15
-
-    # normalise the images
-    img_direct_norm = img_direct.array / sum(img_direct.array.flatten())
-    img_reconv_norm = img_reconv.array / sum(img_reconv.array.flatten())
-    img_psf_norm = img_psf.array / sum(img_psf.array.flatten())
-
-    import pylab
-    pylab.figure(figsize=(fig_xsize,fig_ysize))
-    pylab.subplot(1,4,1)
-    pylab.imshow(img_reconv_norm)
-    # pylab.colorbar()
-    pylab.title('reconvolved image')
-
-    pylab.subplot(1,4,2)
-    pylab.imshow(img_direct_norm)
-    # pylab.colorbar()
-    pylab.title('direct image')
-    
-    pylab.subplot(1,4,3)
-    pylab.imshow(img_direct_norm - img_reconv_norm)
-    # pylab.colorbar()
-    pylab.title('direct - reconv')
-
-    pylab.subplot(1,4,4)
-    pylab.imshow(img_psf_norm)
-    # pylab.colorbar()
-    pylab.title('PSF image')
-
-    # save figure
-    filename_fig = 'fig.images.%s.%03d.png' % (config['filename_config'],id)
-    pylab.savefig(filename_fig)
-    logger.debug('saved figure %s' % filename_fig)
-    pylab.close()
-
+    file_results.close()
 
 def ChangeConfigValue(config,path,value):
     """
@@ -473,29 +381,46 @@ def RunComparisonForVariedParams(config):
     # loop over parameters to vary
     for param_name in config['vary_params'].keys():
 
-        # reset the images
-        global img_gals_direct, img_gals_reconv, img_psfs_direct
-        (img_gals_direct, img_gals_reconv, img_psfs_direct) = (None,None,None)
-
         # get more info for the parmaeter
         param = config['vary_params'][param_name]
+        
         # loop over all values of the parameter, which will be changed
         for iv,value in enumerate(param['values']):
+            
             # copy the config to the original
             changed_config = copy.deepcopy(config)
+            
             # perform the change
             ChangeConfigValue(changed_config,param['path'],value)
             logging.info('changed parameter %s to %s' % (param_name,str(value)))
-            # run the photon vs fft test on the changed configs
-            results_direct,results_reconv,results_pixel_imdiff = RunComparison(
-                    changed_config,param['rebuild_reconv'],param['rebuild_direct'])
-            # if getting images failed, continue with the loop
-            if results_direct == None or results_reconv == None or results_pixel_imdiff == None :  continue
-            # get the results filename
-            filename_results = 'results.%s.%s.%03d.cat' % (config['filename_config'],param_name,iv)
-            # save the results
-            SaveResults(filename_results,results_direct,results_reconv,results_pixel_imdiff)
-            logging.info('saved results for varied parameter %s with value %s, filename %s' % (param_name,str(value),filename_results))
+
+            # If the setting change affected reconv image, then rebuild it
+            if param['rebuild_reconv'] :
+                logger.info('getting reconv results')
+                changed_config_reconv = copy.deepcopy(changed_config)
+                # Get the results filenames
+                filename_results_reconv = 'results.%s.%s.%03d.reconv.cat' % (
+                                        config['args'].filename_config, param_name,iv)
+                
+                # Run and save the measurements
+                RunMeasurement(changed_config_reconv,filename_results_reconv,'reconv')             
+                logging.info(('saved reconv results for varied parameter %s with value %s\n'
+                     + 'filename: %s') % (param_name,str(value),filename_results_reconv) )
+
+            # If the setting change affected direct image, then rebuild it           
+            if param['rebuild_direct'] :
+                logger.info('getting direct results')
+                changed_config_direct = copy.deepcopy(changed_config)
+                # Get the results filename
+                filename_results_direct = 'results.%s.%s.%03d.direct.cat' % (
+                    config['args'].filename_config,param_name,iv)
+
+                # Run the measurement
+                RunMeasurement(changed_config_direct,filename_results_direct,'direct')
+                logging.info(('saved direct results for varied parameter %s with value %s\n'  
+                    + 'filename %s') % ( param_name,str(value),filename_results_direct) )
+
+
 
 
 if __name__ == "__main__":
@@ -504,30 +429,65 @@ if __name__ == "__main__":
 
     # parse arguments
     parser = argparse.ArgumentParser(description=description, add_help=True)
-    parser.add_argument('filename_config', type=str,
+    parser.add_argument('filepath_config', type=str,
                  help='yaml config file, see reconvolution_validation.yaml for example.')
     parser.add_argument('--debug', action="store_true", help='run in debug mode', default=False)
+    parser.add_argument('--default_only', action="store_true", 
+        help='Run only for default settings, ignore vary_params in config file.\
+              --vary_params_only must not be used alongside this option.'
+        , default=False)
+    parser.add_argument('--vary_params_only', action="store_true", 
+        help='Run only for varied settings, do not run the defaults.\
+               --default_only must not be used alongside this option.'
+        , default=False)
+    
     args = parser.parse_args()
+    args.filename_config = os.path.basename(args.filepath_config)
 
     # set up logger
-    if args.debug:  logger_level = 'logging.DEBUG'
-    else: logger_level = 'logging.INFO'
+    if args.debug: logger_level = 'logging.DEBUG'
+    else:  logger_level = 'logging.INFO'
     logging.basicConfig(format="%(message)s", level=eval(logger_level), stream=sys.stdout)
-    logger = logging.getLogger("reconvolution_validation") 
+    logger = logging.getLogger("photon_vs_fft") 
+
+    # sanity check the inputs
+    if args.default_only and args.vary_params_only:
+        raise('Use either default_only or vary_params_only, or neither.')
 
     # load the configuration file
     config = yaml.load(open(args.filename_config,'r'))
-    config['filename_config'] = args.filename_config
-    config['debug'] = args.debug
+    config['args'] = args
+   
+    # set flags what to do
+    if args.vary_params_only:
+        config['run_default'] = False
+        config['run_vary_params'] = True
+    elif args.default_only:
+        config['run_default'] = True
+        config['run_vary_params'] = False
+    else:
+        config['run_default'] = True
+        config['run_vary_params'] = True
 
-    # run comparison for default parameter set and save results
-    # results_shape_reconv,results_shape_direct,results_pixel_imdiff = RunComparison(config,True,True)
-    # SaveResults('results.test.cat',results_shape_reconv,results_shape_direct,results_pixel_imdiff)
-
-    # run the parameter comparison
-    RunComparisonForVariedParams(config)
-
-
-
+    # run only the default settings
+    if config['run_default']:
+        logger.info('running reconv and direct for default settings')
+        # Get the results filenames
+        
+        filename_results_direct = 'results.%s.default.direct.cat' % (config['args'].filename_config)
+        filename_results_reconv = 'results.%s.default.reconv.cat' % (config['args'].filename_config)
+        
+        config_direct = copy.deepcopy(config)
+        RunMeasurement(config_direct,filename_results_direct,'direct')
+        config_reconv = copy.deepcopy(config)
+        RunMeasurement(config_reconv,filename_results_reconv,'reconv')
+        
+        logging.info(('saved direct and reconv results for default parameter set\n'
+             + 'filenames: %s\t%s') % (filename_results_direct,filename_results_reconv))
+    
+    # run the config including changing of the parameters
+    if config['run_vary_params']:
+        logger.info('running reconvolution validation for varied parameters')
+        RunComparisonForVariedParams(config)
 
 
