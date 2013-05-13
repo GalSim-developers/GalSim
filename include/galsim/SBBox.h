@@ -43,9 +43,11 @@ namespace galsim {
         /** 
          * @brief Constructor.
          *
-         * @param[in] xw    width of Boxcar function along x.
-         * @param[in] yw    width of Boxcar function along y.
-         * @param[in] flux  flux (default `flux = 1.`).
+         * @param[in] xw       width of Boxcar function along x.
+         * @param[in] yw       width of Boxcar function along y.
+         * @param[in] flux     flux (default `flux = 1.`).
+         * @param[in] gsparams GSParams object storing constants that control the accuracy of image
+         *                     operations and rendering, if different from the default.
          */
         SBBox(double xw, double yw=0., double flux=1.,
               boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());

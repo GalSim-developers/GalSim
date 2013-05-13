@@ -43,9 +43,11 @@ namespace galsim {
          * @brief Constructor - note that `r0` is scale length, NOT half-light radius `re` as in 
          * SBSersic.
          *
-         * @param[in] r0    scale length for the profile that scales as `exp[-(r / r0)]`, NOT the 
-         *                  half-light radius `re`.
-         * @param[in] flux  flux (default `flux = 1.`).
+         * @param[in] r0       scale length for the profile that scales as `exp[-(r / r0)]`, NOT the
+         *                     half-light radius `re`.
+         * @param[in] flux     flux (default `flux = 1.`).
+         * @param[in] gsparams GSParams object storing constants that control the accuracy of image
+         *                     operations and rendering, if different from the default.
          */
         SBExponential(double r0, double flux=1.,
                       boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());

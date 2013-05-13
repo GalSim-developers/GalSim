@@ -34,7 +34,9 @@ namespace galsim {
     /**
      * @brief SBProfile adapter which inverts its subject in k space to effect a deconvolvution.
      *
-     * (TODO: Add more docs here!)
+     * @param[in] adaptee   SBProfile for which to effect a deconvolution by k space inversion.
+     * @param[in] gsparams  GSParams object storing constants that control the accuracy of
+     *                      image operations and rendering, if different from the default.
      */
     class SBDeconvolve : public SBProfile 
     {
