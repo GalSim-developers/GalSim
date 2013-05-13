@@ -51,6 +51,8 @@ namespace galsim {
          * @param[in] obscuration  linear dimension of central obscuration as fraction of pupil
          *                         dimension (default `obscuration = 0.`).
          * @param[in] flux         flux (default `flux = 1.`).
+         * @param[in] gsparams     GSParams object storing constants that control the accuracy of
+         *                         image operations and rendering, if different from the default.
          */
         SBAiry(double lam_over_D, double obscuration=0., double flux=1.,
                boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());

@@ -213,17 +213,18 @@ namespace galsim {
          * @brief Initialize internal quantities and allocate data tables based on a supplied 2D 
          * image.
          *
-         * @param[in] image     Input Image (any of ImageF, ImageD, ImageS, ImageI).
-         * @param[in] xInterp   Interpolation scheme to adopt between pixels 
-         * @param[in] kInterp   Interpolation scheme to adopt in k-space
-         * @param[in] dx        Stepsize between pixels in image data table (default value of 
-         *                      `dx = 0.` checks the Image header for a suitable stepsize, sets 
-         *                      to `1.` if none is found). 
+         * @param[in] image      Input Image (any of ImageF, ImageD, ImageS, ImageI).
+         * @param[in] xInterp    Interpolation scheme to adopt between pixels 
+         * @param[in] kInterp    Interpolation scheme to adopt in k-space
+         * @param[in] dx         Stepsize between pixels in image data table (default value of 
+         *                       `dx = 0.` checks the Image header for a suitable stepsize, sets 
+         *                       to `1.` if none is found). 
          * @param[in] pad_factor Multiple by which to increase the image size when zero-padding for 
-         *                      the Fourier transform (default `pad_factor = 4`)
-         * @param[in] pad_image Image to use for padding the SBInterpolatedImage, if `pad_factor` is
-         *                      not equal to 1.
-         *
+         *                       the Fourier transform (default `pad_factor = 4`)
+         * @param[in] pad_image  Image to use for padding the SBInterpolatedImage, if `pad_factor`
+         *                       is not equal to 1.
+         * @param[in] gsparams   GSParams object storing constants that control the accuracy of
+         *                       image operations and rendering, if different from the default.
          */
         template <typename T> 
         SBInterpolatedImage(

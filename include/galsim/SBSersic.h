@@ -73,6 +73,9 @@ namespace galsim {
          * @param[in] flux_untruncated  If `true`, sets the flux to the untruncated version of the
          *                              Sersic profile with the same index `n` (default
          *                              flux_untruncated = false`).  Ignored if `trunc = 0.`.
+         * @param[in] gsparams          GSParams object storing constants that control the accuracy
+         *                              of image operations and rendering, if different from the
+         *                              default.
          */
         SBSersic(double n, double re, double flux=1.,
                  double trunc=0., bool flux_untruncated=false,

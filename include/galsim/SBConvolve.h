@@ -76,7 +76,8 @@ namespace galsim {
          *
          * @param[in] slist       Input: list of SBProfiles.
          * @param[in] real_space  Do convolution in real space? (default `real_space = false`).
-         * @param[in] gsparams    GSParams to use, if different from the default.
+         * @param[in] gsparams    GSParams object storing constants that control the accuracy of
+         *                        image operations and rendering, if different from the default.
          */
         SBConvolve(const std::list<SBProfile>& slist, bool real_space=false,
                    boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
