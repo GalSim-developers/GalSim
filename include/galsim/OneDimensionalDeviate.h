@@ -122,11 +122,13 @@ namespace galsim {
         Interval(const FluxDensity& fluxDensity,
                  double xLower,
                  double xUpper,
-                 bool isRadial=false) :
+                 bool isRadial=false,
+                 boost::shared_ptr<GSParams> gsparams) :
             _fluxDensityPtr(&fluxDensity),
             _xLower(xLower),
             _xUpper(xUpper),
             _isRadial(isRadial),
+            _gsparams(gsparams.get() ? gsparams : _default_gsparams),
             _fluxIsReady(false) {}
 
         /**
@@ -180,6 +182,13 @@ namespace galsim {
         mutable bool _fluxIsReady; ///< True if flux has been integrated
         void checkFlux() const; ///< Calculate flux if it has not already been done.
         mutable double _flux; ///< Integrated flux in this interval (can be negative)
+
+        /// @brief GSParams struct for storing values of GalSim rendering and image operation
+        /// parameters if different from defaults.
+        boost::shared_ptr<GSParams> _gsparams;
+
+        // Default GSParams to use when input is None
+        static boost::shared_ptr<GSParams> _default_gsparams;
 
         /// @brief Finds the x or radius coord that would enclose fraction of this intervals flux 
         /// if flux were constant.
@@ -242,7 +251,7 @@ namespace galsim {
          *            for linear domain.
          */
         OneDimensionalDeviate(const FluxDensity& fluxDensity, std::vector<double>& range,
-                              bool isRadial=false);
+                              bool isRadial=false, boost::shared_ptr<GSParams> gsparams);
 
         /// @brief Return total flux in positive regions of FluxDensity
         double getPositiveFlux() const {return _positiveFlux;}
@@ -267,6 +276,14 @@ namespace galsim {
         double _positiveFlux; ///< Stored total positive flux
         double _negativeFlux; ///< Stored total negative flux
         const bool _isRadial; ///< True for 2d axisymmetric function, false for 1d function
+
+        /// @brief GSParams struct for storing values of GalSim rendering and image operation
+        /// parameters if different from defaults.
+        boost::shared_ptr<GSParams> _gsparams;
+
+        // Default GSParams to use when input is None
+        static boost::shared_ptr<GSParams> _default_gsparams;
+
     };
 
 } // namespace galsim
