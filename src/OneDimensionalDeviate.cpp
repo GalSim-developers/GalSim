@@ -254,8 +254,8 @@ namespace galsim {
 
     OneDimensionalDeviate::OneDimensionalDeviate(const FluxDensity& fluxDensity, 
                                                  std::vector<double>& range,
-                                                 bool isRadial,
-                                                 boost::shared_ptr<GSParams> gsparams):
+                                                 boost::shared_ptr<GSParams> gsparams,
+                                                 bool isRadial):
         _fluxDensity(fluxDensity),
         _positiveFlux(0.),
         _negativeFlux(0.),
