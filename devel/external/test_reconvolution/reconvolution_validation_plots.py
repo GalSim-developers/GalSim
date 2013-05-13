@@ -100,9 +100,7 @@ def PlotStatsForParam(config,param_name):
     pylab.legend(ncol=legend_ncol,loc=legend_loc,mode="expand")
     filename_fig = 'fig.moments.%s.%s.png' % (config['filename_config'],param_name)
     pylab.savefig(filename_fig)
-    if config['debug']: pylab.show()
     pylab.close()
-    pylab.show()
     logger.info('saved figure %s' % filename_fig)
 
     # plot for HSM
@@ -124,9 +122,7 @@ def PlotStatsForParam(config,param_name):
     pylab.legend(ncol=legend_ncol,loc=legend_loc,mode="expand")
     filename_fig = 'fig.hsmcorr.%s.%s.png' % (config['filename_config'],param_name)
     pylab.savefig(filename_fig)
-    if config['debug']: pylab.show()
     pylab.close()
-    pylab.show()
     logger.info('saved figure %s' % filename_fig)
     
 def _getLineFit(X,y,sig):
@@ -272,6 +268,7 @@ def GetBias(config,filename_results_direct,filename_results_reconv):
             numpy.ones(moments_direct_G1.shape))
         c2,m2,cov2 = _getLineFit(true_G2,moments_direct_G2-moments_reconv_G2,
             numpy.ones(moments_direct_G2.shape))
+
                 
         # create result dict
         bias_moments = {'c1' : c1, 'm1': m1,  'c2' : c2, 'm2': m2, 
@@ -281,9 +278,9 @@ def GetBias(config,filename_results_direct,filename_results_reconv):
                         'm2_std' : 0. }
         
         # get the shear bias for hsmcorr
-        c1,m1,cov1 = _getLineFit(hsmcorr_reconv_G1,hsmcorr_direct_G1-hsmcorr_reconv_G1,
+        c1,m1,cov1 = _getLineFit(true_G1,hsmcorr_direct_G1-hsmcorr_reconv_G1,
             numpy.ones(hsmcorr_direct_G1.shape))
-        c2,m2,cov2 = _getLineFit(hsmcorr_reconv_G2,hsmcorr_direct_G2-hsmcorr_reconv_G2,
+        c2,m2,cov2 = _getLineFit(true_G2,hsmcorr_direct_G2-hsmcorr_reconv_G2,
             numpy.ones(hsmcorr_direct_G2.shape))
         
         # create result dict
@@ -292,8 +289,35 @@ def GetBias(config,filename_results_direct,filename_results_reconv):
                         'c2_std' : 0. ,
                         'm1_std' : 0. ,
                         'm2_std' : 0. }
-                        
-        logging.debug( 'gal %d used %d, m1 = %2.3e, m2=%2.3e ' % (gi,n_used_shears,bias_moments['m1'],bias_moments['m2']))
+        
+
+
+        if config['debug']:
+            name1 = os.path.basename(filename_results_reconv).replace('results','').replace('yaml',
+                '').replace('cat','').replace('reconvolution_validation','')
+            name1= name1.strip('.')
+            name2 = os.path.basename(filename_results_direct).replace('results','').replace('yaml',
+                '').replace('cat','').replace('reconvolution_validation','').replace('..','.')
+            name2= name2.strip('.')
+
+            filename_fig = 'fig.linefit.%s.%s.%03d.png' % (name1,name2,gi)
+            import pylab
+            pylab.figure(figsize=(10,5))           
+            pylab.plot(true_G1,moments_direct_G1-moments_reconv_G1,'bx');
+            pylab.plot(true_G2,moments_direct_G2-moments_reconv_G2,'rx');
+            pylab.plot(true_G1,true_G1*bias_moments['m1'] + bias_moments['c1'],'b-')
+            pylab.plot(true_G2,true_G2*bias_moments['m2'] + bias_moments['c2'],'r-')
+            x1,x2,y1,y2 = pylab.axis()
+            pylab.axis((min(true_G1)*1.1,max(true_G1)*1.1,y1,y2))
+            pylab.xlabel('true_Gi')
+            pylab.ylabel('moments_direct_G1-moments_reconv_G1')
+            pylab.legend(['G1','G2'])
+            pylab.savefig(filename_fig)
+            pylab.close()
+            logger.info('saved figure %s' % filename_fig)
+
+
+        logging.debug( 'gal %d used %d shears, m1 = %2.3e, m2=%2.3e ' % (gi,n_used_shears,bias_moments['m1'],bias_moments['m2']))
 
         # append the results list
         bias_moments_list.append(bias_moments)
@@ -301,10 +325,12 @@ def GetBias(config,filename_results_direct,filename_results_reconv):
 
     # may want to scatter plot the m1,m2 of all galaxies in the results file
     if config['debug']:
-        name1=os.path.basename(filename_results_direct)
-        name2=os.path.basename(filename_results_reconv)
-        name1 = name1.replace('yaml','').replace('results','').replace('cat','')
-        name2 = name2.replace('yaml','').replace('results','').replace('cat','')
+        name1 = os.path.basename(filename_results_reconv).replace('results','').replace('yaml',
+            '').replace('cat','').replace('reconvolution_validation','')
+        name1= name1.strip('.')
+        name2 = os.path.basename(filename_results_direct).replace('results','').replace('yaml',
+            '').replace('cat','').replace('reconvolution_validation','').replace('..','.')
+        name2= name2.strip('.')
         filename_fig = 'fig.mscatter.%s.%s.png' % (name1,name2)
         m1_list = numpy.asarray([b['m1'] for b in bias_moments_list])
         m2_list = numpy.asarray([b['m2'] for b in bias_moments_list])
