@@ -16,20 +16,17 @@ HSM_ERROR_VALUE = -99
 NO_PSF_VALUE    = -98
 
 def _ErrorResults(ERROR_VALUE,ident):
+    """
+    @brief Return a results structure with all fields set to ERROR_VALUE, and with id ident
+    """
 
     result = {  'moments_g1' : ERROR_VALUE,
-                        'moments_g2' : ERROR_VALUE,
-                        'hsmcorr_g1' : ERROR_VALUE,
-                        'hsmcorr_g2' : ERROR_VALUE,
-                        'moments_sigma' : ERROR_VALUE,
-                        'hsmcorr_sigma' : ERROR_VALUE,
-                        'moments_g1err' : ERROR_VALUE,
-                        'moments_g2err' : ERROR_VALUE,
-                        'hsmcorr_g1err' : ERROR_VALUE,
-                        'hsmcorr_g2err' : ERROR_VALUE,
-                        'moments_sigmaerr' : ERROR_VALUE,
-                        'hsmcorr_sigmaerr' : ERROR_VALUE,
-                        'ident' : ident }
+                'moments_g2' : ERROR_VALUE,
+                'hsmcorr_g1' : ERROR_VALUE,
+                'hsmcorr_g2' : ERROR_VALUE,
+                'moments_sigma' : ERROR_VALUE,
+                'hsmcorr_sigma' : ERROR_VALUE,
+                'ident' : ident }
 
     return result
 
@@ -41,7 +38,6 @@ def WriteResultsHeader(file_output):
     
     output_header = '# id ' + 'G1_moments G2_moments G1_hsmcorr G2_hsmcorr ' + \
                               'moments_sigma hsmcorr_sigma ' + \
-                              'err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm' + \
                               '\n'
     file_output.write(output_header) 
 
@@ -69,20 +65,22 @@ def WriteResults(file_output,results):
 
 def CreateRGC(config):
     """
-    Creates a mock real galaxy catalog and saves it to file.
-    Arguments
-    ---------
-    config              main config dict
+    @brief Creates a mock real galaxy catalog and saves it to file.
+    @param config              main config dict
     """
 
     # set up the config accordingly
     cosmos_config = copy.deepcopy(config['cosmos_images']);
     cosmos_config['image']['gsparams'] = copy.deepcopy(config['gsparams'])
 
+    if config['args'].debug:      use_logger = logger
+    else:                         use_logger = None
+
     # process the config and create fits file
     try:
-        galsim.config.Process(cosmos_config,logger=None)
-        logger.debug('created RGC images')
+        logger.info('creating RGC - running galsim.Process')
+        galsim.config.Process(cosmos_config,logger=use_logger)
+        logger.info('created RGC images')
     except Exception,e:
         logger.error('failed to build RGC images, message %s' % e)
     # this is a hack - there should be a better way to get this number
@@ -136,6 +134,7 @@ def SavePreviewRGC(config,filename_rgc,n_gals_preview=10):
     ---------
     config              config dict 
     filename_rgc        filename of the newly created real galaxy catalog fits 
+    n_gals_preview      how many plots to produce (default=10)
     """
 
     # open the RGC
@@ -167,14 +166,16 @@ def SavePreviewRGC(config,filename_rgc,n_gals_preview=10):
 
 def GetReconvImage(config):
     """
-    Gets an image of the mock ground observation using a reconvolved method, using 
+    @brief Gets an image of the mock ground observation using a reconvolved method, using 
     an existing real galaxy catalog. Function CreateRGC(config) must be called earlier.
-    Arguments
-    ---------
-    config          main config dict read by yaml
+    
+    @param config          main config dict read by yaml
 
-    Returns a tuple img_gals,img_psfs, which are stripes of postage stamps.
+    @return Returns a tuple img_gals,img_psfs, which are stripes of postage stamps.
     """
+
+    if config['args'].debug: use_logger = logger
+    else: use_logger = None
 
     # adjust the config for the reconvolved galaxies
     reconv_config = copy.deepcopy(config['reconvolved_images'])
@@ -182,21 +183,22 @@ def GetReconvImage(config):
     reconv_config['input']['catalog'] = copy.deepcopy(config['cosmos_images']['input']['catalog'])
     reconv_config['gal']['shift'] = copy.deepcopy(config['cosmos_images']['gal']['shift'])
 
+    if config['args'].debug: use_logger = logger
+    else: use_logger = None
+
     # process the input before BuildImage    
     galsim.config.ProcessInput(reconv_config)
     # get the reconvolved galaxies
-    img_gals,img_psfs,_,_ = galsim.config.BuildImage(config=reconv_config,make_psf_image=True)
+    img_gals,img_psfs,_,_ = galsim.config.BuildImage(config=reconv_config,make_psf_image=True,
+        logger=use_logger)
 
     return (img_gals,img_psfs)
 
 def GetDirectImage(config):
     """
-    Gets an image of the mock ground observation using a direct method, without reconvolution.
-    Arguments
-    ---------
-    config          main config dict read by yaml
-
-    Returns a tuple img_gals,img_psfs, which are stripes of postage stamps
+    @brief Gets an image of the mock ground observation using a direct method, without reconvolution.
+    @param  config          main config dict read by yaml
+    @return Returns a tuple img_gals,img_psfs, which are stripes of postage stamps
     """
 
     # adjust the config
@@ -210,27 +212,32 @@ def GetDirectImage(config):
     direct_config['gal']['shear'] = copy.deepcopy(config['reconvolved_images']['gal']['shear'])  
     direct_config['input'] = copy.deepcopy(config['cosmos_images']['input'])
     
+    if config['args'].debug: use_logger = logger
+    else: use_logger = None
     # process the input before BuildImage     
     galsim.config.ProcessInput(direct_config)
     # get the direct galaxies
-    img_gals,img_psfs,_,_ = galsim.config.BuildImage(config=direct_config,make_psf_image=True)
+    img_gals,img_psfs,_,_ = galsim.config.BuildImage(config=direct_config,make_psf_image=True,
+        logger=use_logger)
 
     return (img_gals,img_psfs)
 
 def GetShapeMeasurements(image_gal, image_psf, ident=-1):
     """
+    @brief measure the image with FindAdaptiveMom and EstimateShearHSM.
     @param image_gal    galsim image of the galaxy
     @param image_psf    galsim image of the PSF
     @param ident        id of the galaxy (default -1)
-    """
+    @return a dict with fields   moments_g1 ,moments_g2 ,hsmcorr_g1 ,hsmcorr_g2 ,
+        moments_sigma ,hsmcorr_sigma ,ident
+    """ 
 
+    # which shear estimator to use?
     HSM_SHEAR_EST = "KSB"
-    NO_PSF_VALUE = -10
 
     # find adaptive moments  
     try: moments = galsim.FindAdaptiveMom(image_gal)
-    except: raise RuntimeError('FindAdaptiveMom error')
-        
+    except Exception,e: raise RuntimeError('FindAdaptiveMom error, message: %s' % e)
 
     # find HSM moments
     if image_psf == None: hsmcorr_phot_e1 =  hsmcorr_phot_e2  = NO_PSF_VALUE 
@@ -238,7 +245,7 @@ def GetShapeMeasurements(image_gal, image_psf, ident=-1):
         try: 
             hsmcorr   = galsim.EstimateShearHSM(image_gal,image_psf,strict=True,  
                                                                        shear_est=HSM_SHEAR_EST)
-        except: raise RuntimeError('EstimateShearHSM error')
+        except Exception,e: raise RuntimeError('EstimateShearHSM error, message: %s' % e)
                 
         logger.debug('galaxy %d : adaptive moments G1=% 2.6f\tG2=% 2.6f\tsigma=%2.6f\t hsm \
             corrected moments G1=% 2.6f\tG2=% 2.6f' 
@@ -258,17 +265,18 @@ def GetShapeMeasurements(image_gal, image_psf, ident=-1):
 
 def GetPixelDifference(image1,image2,id):
     """
-    Returns ratio of maximum pixel difference of two images 
+    @brief Returns ratio of maximum pixel difference of two images 
     to the value of the maximum of pixels in the first image.
     Normalises the fluxes to one before comparing.
-    Arguments
-    ---------
-    image1
-    image2      images to compare
     
-    Return a dict with fields: 
+    @param image1      images to compare
+    @param image2      images to compare
+    
+    @return Return a dict with fields: 
     diff        the difference of interest
     ident       id provided earlier
+
+    Not used anymore.
     """
 
     # get the normalised images
@@ -295,6 +303,7 @@ def RunMeasurement(config,filename_results,mode):
     # first create the RGC
     if mode == 'reconv':
         try:
+            logger.info('creating RGC')
             CreateRGC(config)
         except Exception,e:
             raise ValueError('creating RGC failed, message: %s ' % e)
@@ -304,16 +313,18 @@ def RunMeasurement(config,filename_results,mode):
     else: raise ValueError('unknown mode %s - should be either reconv or direct' % mode)
 
 
-    # try:
     logger.info('building %s image' , mode)
-    (img_gals,img_psfs) = image_fun(config)
-    # except Exception,e:
-    # logging.error('building image failed, message: %s' % e)
+    try:
+        (img_gals,img_psfs) = image_fun(config)
+        logger.info('finished getting %s image' % mode)
+    except Exception,e:
+        logger.error('building image failed, message: %s' % e)
 
     # get image size
     npix = config['reconvolved_images']['image']['stamp_size']
     nobjects = galsim.config.GetNObjForImage(config['reconvolved_images'],0)
 
+    logger.info('getting shape measurements, saving to file %s' % filename_results)
     # loop over objects
     for i in range(nobjects):
 
@@ -330,21 +341,24 @@ def RunMeasurement(config,filename_results,mode):
   
         WriteResults(file_results,result)
 
+    logger.info('done shape measurements, saved to file %s' % filename_results)
+
+    del(img_gal)
+    del(img_psf)
+
     file_results.close()
 
 def ChangeConfigValue(config,path,value):
     """
-    Changes the value of a variable in nested dict config to value.
+    @brief Changes the value of a variable in nested dict config to value.
     The field in the dict-list structure is identified by a list path.
     Example: to change the following field in config dict to value:
     conf['lvl1'][0]['lvl3']
     use the follwing path=['lvl1',0,'lvl2']
-    Arguments
-    ---------
-        config      an object with dicts and lists
-        path        a list of strings and integers, pointing to the field in config that should
-                    be changed, see Example above
-        Value       new value for this field
+    @param    config      an object with dicts and lists
+    @param    path        a list of strings and integers, pointing to the field in config that should
+                          be changed, see Example above
+    @param     Value      new value for this field
     """
 
     # build a string with the dictionary path
@@ -369,13 +383,11 @@ def ChangeConfigValue(config,path,value):
 
 def RunComparisonForVariedParams(config):
     """
-    Runs the comparison of direct and reconv convolution methods, producing results file for each of the 
+    @brief Runs the comparison of direct and reconv convolution methods, producing results file for each of the 
     varied parameters in the config file, under key 'vary_params'.
     Produces a results file for each parameter and it's distinct value.
     The filename of the results file is: 'results.yaml_filename.param_name.param_value_index.cat'
-    Arguments
-    ---------
-    config              the config object, as read by yaml
+    @param config              the config object, as read by yaml
     """
 
     # loop over parameters to vary

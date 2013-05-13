@@ -1,5 +1,5 @@
 reconvolution_validation_settings:
-    n_gals : &n_gals 3
+    n_gals : &n_gals 10
     n_shears : &n_shears 8
     n_angles : &n_angles 8
 
@@ -8,7 +8,7 @@ reconvolution_validation_settings:
     # n_repeat_shear = n_angles 
     n_repeat_shear : &n_repeat_shear 8
     # n_images = n_shears * n_angles *n_gals
-    n_images : &n_images 192
+    n_images : &n_images 640
 
 # the test will be run one time for all the values of all the varied parameters listed here
 # the default configuration will not be ran
@@ -28,11 +28,11 @@ vary_params:
         values : [ 1.0e-3 , 1.0e-8 ] 
         rebuild_direct : True 
         rebuild_reconv : True 
-    # snr :
-    #     path : ['cosmos_images','gal','signal_to_noise']
-    #     values : [ 2e20, 2000, 200, 100, 50, 25 ] 
-    #     rebuild_direct : False 
-    #     rebuild_reconv : True 
+    snr :
+        path : ['cosmos_images','gal','signal_to_noise']
+        values : [ 2e20, 2000, 200, 100, 50, 25 ] 
+        rebuild_direct : False 
+        rebuild_reconv : True 
 
 
 cosmos_images:
@@ -67,7 +67,7 @@ cosmos_images:
     image :
         random_seed : 121212
         draw_method : fft
-        nproc : 1
+        nproc : 5
         pixel_scale : 0.03          # pixel scale for space observations
         type : Single
         size : 256
@@ -120,12 +120,12 @@ reconvolved_images :
 
     image :
         random_seed : 2222211
-        nproc : 1
+        nproc : 5
         pixel_scale : 0.2   # pixel scale for the ground observation
         type : Tiled
         nx_tiles : 1        # we are generating galaxies in one long tiled stripe
         ny_tiles :  *n_images
-        stamp_size : 64    #  big in order for the space images to contain the galaxies fully
+        stamp_size : 128    #  big in order for the space images to contain the galaxies fully
         # this field is required for the photon image, 
         # but we don't want to add any noise, so we set the variance to 0
         noise : { type : Gaussian, sigma : 0. }
