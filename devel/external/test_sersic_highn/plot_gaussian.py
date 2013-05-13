@@ -68,3 +68,34 @@ plt.errorbar(
 plt.legend()
 plt.subplots_adjust(left=0.15)
 plt.savefig(os.path.join('plots', 'gaussian_zoomin_g2.png'))
+
+# Then plot comparisons of the Gaussian DFT versus n=0.5 DFT and photons shooting results
+YMAX_ZOOMIN = 2.5e-4
+XMIN = -.8
+XMAX = .8
+plt.clf()
+plt.axhline(ls='--', color='k')
+plt.axvline(ls='--', color='k')
+plt.xlim(XMIN, XMAX)
+plt.plot(g1obs_draw, plot_sersic_highn.g1obs_draw[:, 0] - g1obs_draw, '+',
+         label=r"Sersic n=0.5 via DFT g$_1$")
+plt.plot(g2obs_draw, plot_sersic_highn.g2obs_draw[:, 0] - g2obs_draw, 'x',
+         label=r"Sersic n=0.5 via DFT g$_2$")
+plt.errorbar(
+    g1obs_draw,
+    plot_sersic_highn.g1obs_draw[:, 0] - plot_sersic_highn.delta_g1obs[:, 0] - g1obs_draw,
+    yerr=err_g1obs, fmt='+', label=r"Sersic n=0.5 via Photon Shooting g$_1$")
+plt.errorbar(
+    g2obs_draw,
+    plot_sersic_highn.g2obs_draw[:, 0] - plot_sersic_highn.delta_g2obs[:, 0] - g2obs_draw,
+    yerr=err_g2obs, fmt='x', label=r"Sersic n=0.5 via Photon Shooting g$_2$")
+plt.xlabel(r'g$_i$ (Gaussian via DFT)')
+plt.ylabel(r'g$_i$ (Sersic n=0.5) - g$_i$ (Gaussian)')
+plt.ylim(-YMAX_ZOOMIN, YMAX_ZOOMIN)
+plt.title("Gaussian vs Sersic n=0.5 comparison")
+plt.legend()
+plt.subplots_adjust(left=0.15)
+plt.savefig(os.path.join('plots', 'gaussian_vs_Sersic.png'))
+
+
+
