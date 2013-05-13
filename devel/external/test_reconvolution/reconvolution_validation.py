@@ -11,6 +11,7 @@ import argparse
 import yaml
 import galsim
 import copy
+import datetime  
 
 HSM_ERROR_VALUE = -99
 NO_PSF_VALUE    = -98
@@ -376,7 +377,7 @@ def ChangeConfigValue(config,path,value):
     # assign the new value
     try:
         exec(eval_str + '=' + str(value))
-        logging.debug('changed %s to %f' % (eval_str,eval(eval_str)))
+        logger.debug('changed %s to %f' % (eval_str,eval(eval_str)))
     except:
         print config
         raise ValueError('wrong path in config : %s' % eval_str)
@@ -398,13 +399,15 @@ def RunComparisonForVariedParams(config):
         
         # loop over all values of the parameter, which will be changed
         for iv,value in enumerate(param['values']):
-            
+
+            timestamp  = datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S")
+
             # copy the config to the original
             changed_config = copy.deepcopy(config)
             
             # perform the change
             ChangeConfigValue(changed_config,param['path'],value)
-            logging.info('changed parameter %s to %s' % (param_name,str(value)))
+            logger.info('%s changed parameter %s to %s' % (timestamp,param_name,str(value)))
 
             # If the setting change affected reconv image, then rebuild it
             if param['rebuild_reconv'] :
@@ -416,7 +419,7 @@ def RunComparisonForVariedParams(config):
                 
                 # Run and save the measurements
                 RunMeasurement(changed_config_reconv,filename_results_reconv,'reconv')             
-                logging.info(('saved reconv results for varied parameter %s with value %s\n'
+                logger.info(('saved reconv results for varied parameter %s with value %s\n'
                      + 'filename: %s') % (param_name,str(value),filename_results_reconv) )
 
             # If the setting change affected direct image, then rebuild it           
@@ -429,7 +432,7 @@ def RunComparisonForVariedParams(config):
 
                 # Run the measurement
                 RunMeasurement(changed_config_direct,filename_results_direct,'direct')
-                logging.info(('saved direct results for varied parameter %s with value %s\n'  
+                logger.info(('saved direct results for varied parameter %s with value %s\n'  
                     + 'filename %s') % ( param_name,str(value),filename_results_direct) )
 
 
@@ -481,9 +484,13 @@ if __name__ == "__main__":
         config['run_default'] = True
         config['run_vary_params'] = True
 
+
     # run only the default settings
     if config['run_default']:
-        logger.info('running reconv and direct for default settings')
+ 
+        timestamp  = datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S")
+
+        logger.info('%s running reconv and direct for default settings' % timestamp)
         # Get the results filenames
         
         filename_results_direct = 'results.%s.default.direct.cat' % (config['args'].filename_config)
@@ -494,12 +501,16 @@ if __name__ == "__main__":
         config_reconv = copy.deepcopy(config)
         RunMeasurement(config_reconv,filename_results_reconv,'reconv')
         
-        logging.info(('saved direct and reconv results for default parameter set\n'
+        logger.info(('saved direct and reconv results for default parameter set\n'
              + 'filenames: %s\t%s') % (filename_results_direct,filename_results_reconv))
     
     # run the config including changing of the parameters
     if config['run_vary_params']:
-        logger.info('running reconvolution validation for varied parameters')
+        timestamp  = datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S")
+        logger.info('%s running reconvolution validation for varied parameters' % timestamp)
         RunComparisonForVariedParams(config)
+
+    timestamp  = datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S")
+    logger.info('%s finished' % timestamp)
 
 
