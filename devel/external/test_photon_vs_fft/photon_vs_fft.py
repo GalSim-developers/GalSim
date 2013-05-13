@@ -88,17 +88,13 @@ def GetShapeMeasurements(image_gal, image_psf, ident=-1):
     NO_PSF_VALUE = -10
 
     # find adaptive moments  
-    try: moments = galsim.FindAdaptiveMom(image_gal)
-    except: raise RuntimeError('FindAdaptiveMom error')
-        
+    moments = galsim.hsm.FindAdaptiveMom(image_gal)
 
     # find HSM moments
     if image_psf == None: hsmcorr_phot_e1 =  hsmcorr_phot_e2  = NO_PSF_VALUE 
     else:
-        try: 
-            hsmcorr   = galsim.EstimateShearHSM(image_gal,image_psf,strict=True,  
-                                                                       shear_est=HSM_SHEAR_EST)
-        except: raise RuntimeError('EstimateShearHSM error')
+        hsmcorr   = galsim.hsm.EstimateShear(image_gal,image_psf,strict=True,  
+                                             shear_est=HSM_SHEAR_EST)
                 
         logger.debug('galaxy %d : adaptive moments G1=% 2.6f\tG2=% 2.6f\tsigma=%2.6f\t hsm \
             corrected moments G1=% 2.6f\tG2=% 2.6f' 
@@ -161,10 +157,9 @@ def RunMeasurementsFFT(config,filename_results):
     if config['debug']: use_logger = logger
     else: use_logger = None
     # get the images
-    try: img_gals,img_psfs,_,_ = galsim.config.BuildImages( nimages = nobjects , obj_num = obj_num, 
+    img_gals,img_psfs,_,_ = galsim.config.BuildImages( 
+        nimages = nobjects , obj_num = obj_num, 
         config=config , make_psf_image=True , logger=use_logger , nproc=config['image']['nproc'])
-    except Exception, e:
-        raise RuntimeError('Failed to build FFT image. Message: %s',e)
 
     if config['save_images']:
         filename_fits_gal = 'img.gal.%s.fits' % filename_results
@@ -340,7 +335,8 @@ def ChangeConfigValue(config,path,value):
         logging.debug('changed %s to %f' % (eval_str,eval(eval_str)))
     except:
         print config
-        raise ValueError('wrong path in config : %s' % eval_str)
+        print 'wrong path in config : %s' % eval_str
+        raise
 
 def RunComparisonForVariedParams(config):
     """
