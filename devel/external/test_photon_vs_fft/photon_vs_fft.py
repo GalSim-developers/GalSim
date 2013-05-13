@@ -166,12 +166,18 @@ def RunMeasurementsFFT(config,filename_results):
     except Exception, e:
         raise RuntimeError('Failed to build FFT image. Message: %s',e)
 
+    if config['save_images']:
+        filename_fits_gal = 'img.gal.%s.fits' % filename_results
+        filename_fits_psf = 'img.psf.%s.fits' % filename_results
+        galsim.fits.writeMulti(img_gals,filename_fits_gal,clobber=True)
+        galsim.fits.writeMulti(img_psfs,filename_fits_psf,clobber=True)
+
     # measure the photon and fft images
     for i in range(nobjects):
 
         # this bit is still serial, not too good...
         try: 
-            result = GetShapeMeasurements(img_gals[i],img_psfs[i],i)
+            result = GetShapeMeasurements(img_gals[i],img_psfs[i],obj_num)
         except Exception,e: 
             logger.error('failed to get GetShapeMeasurements for galaxy %d. Message %s' % (i,e))
             result = _ErrorResults(HSM_ERROR_VALUE,i)
@@ -361,23 +367,23 @@ def RunComparisonForVariedParams(config):
             logging.info('changed parameter %s to %s' % (param_name,str(value)))
             # Run the photon vs fft test on the changed configs
 
-            # import pdb;pdb.set_trace()
+            # Get the results filenames
+            if config['ident'] < 0:
+                filename_results_pht = 'results.%s.%s.%03d.pht.cat' % (
+                                    config['filename_config'], param_name,iv)
+                filename_results_fft = 'results.%s.%s.%03d.fft.cat' % (
+                                    config['filename_config'], param_name,iv)
+            else:
+                filename_results_pht = 'results.%s.%s.%03d.pht.cat.%03d' % (
+                                    config['filename_config'], param_name, iv, config['ident'])
+                filename_results_fft = 'results.%s.%s.%03d.fft.cat.%03d' % (
+                                    config['filename_config'], param_name, iv, config['ident'])
             
+
             # If the setting change affected photon image, then rebuild it
             if param['rebuild_pht'] :
                 logger.info('getting photon and FFT results')
                 changed_config2 = copy.deepcopy(changed_config)
-                # Get the results filenames
-                if config['ident'] < 0:
-                    filename_results_pht = 'results.%s.%s.%03d.pht.cat' % (
-                                        config['filename_config'], param_name,iv)
-                    filename_results_fft = 'results.%s.%s.%03d.fft.cat' % (
-                                        config['filename_config'], param_name,iv)
-                else:
-                    filename_results_pht = 'results.%s.%s.%03d.pht.cat.%03d' % (
-                                        config['filename_config'], param_name, iv, config['ident'])
-                    filename_results_fft = 'results.%s.%s.%03d.fft.cat.%03d' % (
-                                        config['filename_config'], param_name, iv, config['ident'])
 
                 # Run and save the measurements
                 RunMeasurementsPhotAndFFT(changed_config2, 
@@ -390,9 +396,6 @@ def RunComparisonForVariedParams(config):
             else:
                 logger.info('getting FFT results only')
                 changed_config1 = copy.deepcopy(changed_config)
-                # Get the results filename
-                filename_results_fft = 'results.%s.%s.%03d.fft.cat' % (
-                    config['filename_config'],param_name,iv)
 
                 # Run the measurement
                 RunMeasurementsFFT(changed_config1,filename_results_fft)
@@ -421,6 +424,8 @@ if __name__ == "__main__":
         , default=False)
     parser.add_argument('--debug', action="store_true", 
         help='Run with debug verbosity.', default=False)
+    parser.add_argument('--save_images', action="store_true", 
+        help='save galaxy and PSF images', default=False)
     parser.add_argument(
             '-i', '--ident', type=int, action='store', default=-1, 
             help='id of the galaxy in the catalog to process. If this option is supplied, then \
@@ -443,6 +448,8 @@ if __name__ == "__main__":
     config['filepath_config'] = args.filename_config
     config['filename_config'] = os.path.basename(config['filepath_config'])
     config['ident'] = args.ident
+    config['save_images'] = args.save_images
+
 
     # set flags what to do
     if args.vary_params_only:
