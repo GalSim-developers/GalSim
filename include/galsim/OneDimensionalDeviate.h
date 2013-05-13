@@ -114,10 +114,13 @@ namespace galsim {
          *
          * Note that no copy of the function is saved.  The function whose reference is passed must 
          * remain in existence through useful lifetime of the `Interval`
-         * @param[in] fluxDensity The function giving flux (= unnormalized probability) density.
-         * @param[in] xLower Lower bound in x (or radius) of this interval.
-         * @param[in] xUpper Upper bound in x (or radius) of this interval.
-         * @param[in] isRadial Set true if this is an annulus on a plane, false for linear interval.
+         * @param[in] fluxDensity  The function giving flux (= unnormalized probability) density.
+         * @param[in] xLower       Lower bound in x (or radius) of this interval.
+         * @param[in] xUpper       Upper bound in x (or radius) of this interval.
+         * @param[in] gsparams     GSParams object storing constants that control the accuracy of
+         *                         operations, if different from the default.
+         * @param[in] isRadial     Set true if this is an annulus on a plane, false for linear
+         *                         interval.
          */
         Interval(const FluxDensity& fluxDensity,
                  double xLower,
@@ -242,15 +245,17 @@ namespace galsim {
     public:
         /**
          * @brief constructor
-         * @param[in] fluxDensity The FluxDensity being sampled.  No copy is made, original must 
-         *            stay in existence.
-         * @param[in] range Ordered argument vector specifying the domain for sampling as 
-         *            described in class docstring.
-         * @param[in] isRadial Set true for an axisymmetric function on the plane; false (default) 
-         *            for linear domain.
+         * @param[in] fluxDensity  The FluxDensity being sampled.  No copy is made, original must 
+         *                         stay in existence.
+         * @param[in] range        Ordered argument vector specifying the domain for sampling as 
+         *                         described in class docstring.
+         * @param[in] gsparams     GSParams object storing constants that control the accuracy of
+         *                         operations, if different from the default.
+         * @param[in] isRadial     Set true for an axisymmetric function on the plane; false 
+         *                         (default) for linear domain.
          */
         OneDimensionalDeviate(const FluxDensity& fluxDensity, std::vector<double>& range,
-                              bool isRadial=false, boost::shared_ptr<GSParams> gsparams);
+                              boost::shared_ptr<GSParams> gsparams, bool isRadial=false);
 
         /// @brief Return total flux in positive regions of FluxDensity
         double getPositiveFlux() const {return _positiveFlux;}
