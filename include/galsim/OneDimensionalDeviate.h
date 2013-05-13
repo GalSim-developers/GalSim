@@ -78,7 +78,7 @@ namespace galsim {
      * @brief Class used to represent a linear interval or an annulus of probability function
      *
      * An `Interval` is a contiguous domain over which a `FluxDensity` function is well-behaved,
-     * having no sign changes or extrema, which will makes it easier to sample the FluxDensity
+     * having no sign changes or extrema, which will make it easier to sample the FluxDensity
      * function over its domain using either rejection sampling or by weighting uniformly 
      * distributed photons.
      *
