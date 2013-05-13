@@ -30,7 +30,7 @@ vary_params:
         rebuild_reconv : True 
     snr :
         path : ['cosmos_images','gal','signal_to_noise']
-        values : [ 2e20, 2000, 200, 100, 50, 25 ] 
+        values : [ 2e20, 25 ] 
         rebuild_direct : False 
         rebuild_reconv : True 
 
