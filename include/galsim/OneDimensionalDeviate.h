@@ -28,30 +28,31 @@
 #include "Random.h"
 #include "PhotonArray.h"
 #include "ProbabilityTree.h"
+#include "SBProfile.h"
 
 namespace galsim {
 
-    namespace odd {
+    //namespace odd {
 
         ///////////   Magic Numbers ///////////
         
         /** Fractional error allowed on any flux integral **/
-        const double RELATIVE_ERROR = 1e-6;
+        //const double RELATIVE_ERROR = 1e-6;
         /** Absolute error allowed [assumes the total flux is O(1)] **/
-        const double ABSOLUTE_ERROR = 1e-8;
+        //const double ABSOLUTE_ERROR = 1e-8;
 
         /** Max range of allowed (abs value of) photon fluxes within an Interval before rejection
             sampling is invoked **/
-        const double ALLOWED_FLUX_VARIATION = 0.81;
+        //const double ALLOWED_FLUX_VARIATION = 0.81;
 
         /** Range will be split into this many parts to bracket extrema **/
-        const int RANGE_DIVISION_FOR_EXTREMA = 32;
+        //const int RANGE_DIVISION_FOR_EXTREMA = 32;
 
         /** Intervals with less than this fraction of probability are ok to use dominant-sampling
             method. **/
-        const double SMALL_FRACTION_OF_FLUX = 1.e-4;
+        //const double SMALL_FRACTION_OF_FLUX = 1.e-4;
 
-    }
+    //}
 
 
     /**

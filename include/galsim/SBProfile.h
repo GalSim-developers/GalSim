@@ -51,7 +51,14 @@ namespace galsim {
 
         /**
          * @brief A set of numbers that govern how SBProfiles make various speed/accuracy
-         *        tradeoff decisions.
+         * tradeoff decisions.
+         *
+         * These parameters can be broadly split into two groups: i) parameters that affect the
+         * rendering of objects by Discrete Fourier Transform (DFT) and by real space convolution; 
+         * and ii) parameters that affect rendering by Photon Shooting, invoked using the SBProfile
+         * .draw() and .drawShoot() member functions, respectively.
+         *
+         * The DFT and real space convolution relevant params are:
          *
          * @param minimum_fft_size    Constant giving minimum FFT size we're willing to do.
          * @param maximum_fft_size    Constant giving maximum FFT size we're willing to do.
@@ -79,18 +86,31 @@ namespace galsim {
          *                            it may be set to zero.  Similarly, if an alternate 
          *                            calculation has errors less than xvalue_accuracy, then it may 
          *                            be used instead of an exact calculation.
-         * @param shoot_accuracy      Accuracy of total flux for photon shooting
-         *                            The photon shooting algorithm sometimes needs to sample the 
-         *                            radial profile out to some value.  We choose the outer radius
-         *                            such that the integral encloses at least (1-shoot_accuracy) 
-         *                            of the flux.
-         * @param realspace_relerr    The target relative accuracy for realspace convolution.
-         * @param realspace_abserr    The target absolute accuracy for realspace convolution.
+         * @param realspace_relerr    The target relative accuracy for real-space convolution.
+         * @param realspace_abserr    The target absolute accuracy for real-space convolution.
          * @param integration_relerr  Target relative accuracy for integrals (other than real-space
          *                            convolution).
          * @param integration_abserr  Target absolute accuracy for integrals (other than real-space
          *                            convolution).
          *
+         * The Photon Shooting relevant params are:
+         *
+         * @param shoot_accuracy              Accuracy of total flux for photon shooting.
+         *                                    The photon shooting algorithm sometimes needs to
+         *                                    sample the radial profile out to some value.  We
+         *                                    choose the outer radius such that the integral
+         *                                    encloses at least (1-shoot_accuracy) of the flux.
+         * @param shoot_relerr                The target relative error allowed on any flux integral
+         *                                    for photon shooting.
+         * @param shoot_abserr                The target absolute error allowed on any flux integral
+         *                                    for photon shooting.
+         * @param allowed_flux_variation      Max range of allowed (abs value of) photon fluxes
+         *                                    within an Interval before rejection sampling is
+         *                                    invoked.
+         * @param range_division_for_extrema  Range will be split into this many parts to bracket
+         *                                    extrema.
+         * @param small_fraction_of_flux      Intervals with less than this fraction of probability
+         *                                    are ok to use dominant-sampling method.
          */
         GSParams(int _minimum_fft_size,
                  int _maximum_fft_size,
@@ -98,22 +118,32 @@ namespace galsim {
                  double _maxk_threshold,
                  double _kvalue_accuracy,
                  double _xvalue_accuracy,
-                 double _shoot_accuracy,
                  double _realspace_relerr,
                  double _realspace_abserr,
                  double _integration_relerr,
-                 double _integration_abserr) : 
+                 double _integration_abserr,
+                 double _shoot_accuracy,
+                 double _shoot_relerr,
+                 double _shoot_abserr,
+                 double _allowed_flux_variation,
+                 int _range_division_for_extrema,
+                 double _small_fraction_of_flux) :
             minimum_fft_size(_minimum_fft_size),
             maximum_fft_size(_maximum_fft_size),
             alias_threshold(_alias_threshold),
             maxk_threshold(_maxk_threshold),
             kvalue_accuracy(_kvalue_accuracy),
             xvalue_accuracy(_xvalue_accuracy),
-            shoot_accuracy(_shoot_accuracy),
             realspace_relerr(_realspace_relerr),
             realspace_abserr(_realspace_abserr),
             integration_relerr(_integration_relerr),
-            integration_abserr(_integration_abserr) 
+            integration_abserr(_integration_abserr),
+            shoot_accuracy(_shoot_accuracy),
+            shoot_relerr(_shoot_relerr),
+            shoot_abserr(_shoot_abserr),
+            allowed_flux_variation(_allowed_flux_variation),
+            range_division_for_extrema(_range_division_for_extrema),
+            small_fraction_of_flux(_small_fraction_of_flux)
         {}
 
         /**
@@ -127,12 +157,18 @@ namespace galsim {
 
             kvalue_accuracy(1.e-5),
             xvalue_accuracy(1.e-5),
-            shoot_accuracy(1.e-5),
 
             realspace_relerr(1.e-3),
             realspace_abserr(1.e-6),
             integration_relerr(1.e-5),
-            integration_abserr(1.e-7)
+            integration_abserr(1.e-7),
+
+            shoot_accuracy(1.e-5),
+            shoot_relerr(1.e-6),
+            shoot_abserr(1.e-8),
+            allowed_flux_variation(0.81),
+            range_division_for_extrema(32),
+            small_fraction_of_flux(1.e-4)
             {}
 
         // These are all public.  So you access them just as member values.
@@ -144,12 +180,19 @@ namespace galsim {
 
         double kvalue_accuracy;
         double xvalue_accuracy;
-        double shoot_accuracy;
 
         double realspace_relerr;
         double realspace_abserr;
         double integration_relerr;
         double integration_abserr;
+
+        double shoot_accuracy;
+        double shoot_relerr;
+        double shoot_abserr;
+        double allowed_flux_variation;
+        int range_division_for_extrema;
+        double small_fraction_of_flux;
+
     };
 
     // All code between the @cond and @endcond is excluded from Doxygen documentation
