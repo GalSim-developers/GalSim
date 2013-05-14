@@ -31,6 +31,7 @@
 #include "Random.h"
 #include "PhotonArray.h"
 #include "OneDimensionalDeviate.h"
+#include "SBProfile.h"
 
 namespace galsim {
 
@@ -65,8 +66,13 @@ namespace galsim {
     class Interpolant 
     {
     public:
-        /// @brief Constructor
-        Interpolant(): _interp(*this) {}
+        /**
+         * @brief Constructor
+         * @param[in] gsparams  GSParams object storing constants that control the accuracy of
+         *                      operations, if different from the default.
+         */
+        Interpolant(boost::shared_ptr<GSParams> gsparams) :
+            _interp(*this), _gsparams(gsparams.get() ? gsparams : _default_gsparams) {}
 
         /// @brief Copy constructor: does not copy photon sampler, will need to rebuild.
         Interpolant(const Interpolant& rhs): _interp(*this) {}
@@ -167,6 +173,9 @@ namespace galsim {
         { checkSampler(); return _sampler->shoot(N, ud); }
 
     protected:
+
+        /// @brief GSParams struct for storing values of GalSim numerical parameters
+        boost::shared_ptr<GSParams> _gsparams;
         InterpolantFunction _interp; ///< The function to interface the Interpolant to sampler
 
         /// Class that draws photons from this Interpolant
@@ -185,8 +194,12 @@ namespace galsim {
                 ranges[nKnots-i] = -knot;
                 ranges[nKnots+i-1] = knot;
             }
-            _sampler.reset(new OneDimensionalDeviate(_interp, ranges));
+            _sampler.reset(new OneDimensionalDeviate(_interp, ranges, _gsparams));
         }
+
+        // Default GSParams to use when input is None
+        static boost::shared_ptr<GSParams> _default_gsparams;
+
     };
 
     /**
