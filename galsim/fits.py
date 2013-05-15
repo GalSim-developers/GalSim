@@ -49,7 +49,7 @@ def _parse_compression(compression, file_name):
             elif file_name.lower().endswith('.bz2'): file_compress = 'bzip2'
             else: pass
     else:
-        raise TypeError("Invalid compression")
+        raise ValueError("Invalid compression %s"%compression)
     if pyfits_compress:
         import pyfits
         if 'CompImageHDU' not in pyfits.__dict__:
@@ -506,12 +506,25 @@ def writeFile(file_name, hdu_list, dir=None, clobber=True, compression='auto'):
                         already include it.
     @param clobber      Setting `clobber=True` will silently overwrite existing files. 
                         (Default `clobber = True`.)
-    @param compression  See documentation for this parameter on the galsim.fits.write method.
+    @param compression  Which compression scheme to use (if any).  Options are:
+                        - None or 'none' = no compression
+                        - 'gzip' = use gzip to compress the full file
+                        - 'bzip2' = use bzip2 to compress the full file
+                        - 'auto' = determine the compression from the extension of the file name
+                                   (requires file_name to be given):
+                                   '*.gz' => 'gzip'
+                                   '*.bz2' => 'bzip2'
+                                   otherwise None
+                        Note that the other options, such as 'rice', that operate on the image
+                        directly are not available at this point.  If you want to use one of them,
+                        it must be applied when writing each hdu.
     """
     if dir:
         import os
         file_name = os.path.join(dir,file_name)
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
+    if pyfits_compress:
+        raise ValueError("Compression %s is invalid for writeFile"%compression)
     _write_file(file_name, hdu_list, clobber, file_compress, pyfits_compress)
  
 
