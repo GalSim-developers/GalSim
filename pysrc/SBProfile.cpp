@@ -74,24 +74,47 @@ namespace galsim {
                 "integration_relerr=1.e-5  The relative accuracy for integrals (other than\n"
                 "                          real-space convolution).\n"
                 "integration_abserr=1.e-7  The absolute accuracy for integrals (other than\n"
-                "                          real-space convolution).\n";
+                "                          real-space convolution).\n"
+                "shoot_accuracy=1.e-5      Accuracy of total flux for photon shooting\n"
+                "                          The photon shooting algorithm sometimes needs to\n"
+                "                          sample the radial profile out to some value.  We\n"
+                "                          choose the outer radius such that the integral\n"
+                "                          encloses at least (1-shoot_accuracy) of the flux.\n"
+                "shoot_relerr=1.e-6        The target relative error allowed on any flux integral\n"
+                "                          for photon shooting.\n"
+                "shoot_abserr=1.e-8        The target absolute error allowed on any flux integral\n"
+                "                          for photon shooting.\n"
+                "allowed_flux_variation=0.81    Max range of allowed (abs value of) photon fluxes\n"
+                "                               within an Interval before rejection sampling is\n"
+                "                               invoked.\n"
+                "range_division_for_extrema=32  Range will be split into this many parts to\n"
+                "                               bracket extrema.\n"
+                "small_fraction_of_flux=1.e-4   Intervals with less than this fraction of\n"
+                "                               probability are ok to use dominant-sampling\n"
+                "                               method.\n";
 
             bp::class_<GSParams> pyGSParams("GSParams", doc, bp::no_init);
             pyGSParams
                 .def(bp::init<
-                     int, int, double, double, double, double, double, double, double,
-                     double, double>(
-                         (bp::arg("minimum_fft_size")=128, 
-                          bp::arg("maximum_fft_size")=4096,
-                          bp::arg("alias_threshold")=5.e-3,
-                          bp::arg("maxk_threshold")=1.e-3,
-                          bp::arg("kvalue_accuracy")=1.e-5,
-                          bp::arg("xvalue_accuracy")=1.e-5,
-                          bp::arg("shoot_accuracy")=1.e-5,
-                          bp::arg("realspace_relerr")=1.e-3,
-                          bp::arg("realspace_abserr")=1.e-6,
-                          bp::arg("integration_relerr")=1.e-5,
-                          bp::arg("integration_abserr")=1.e-7))
+                    int, int, double, double, double, double, double, double, double, double,
+                    double>((
+                        bp::arg("minimum_fft_size")=128, 
+                        bp::arg("maximum_fft_size")=4096,
+                        bp::arg("alias_threshold")=5.e-3,
+                        bp::arg("maxk_threshold")=1.e-3,
+                        bp::arg("kvalue_accuracy")=1.e-5,
+                        bp::arg("xvalue_accuracy")=1.e-5,
+                        bp::arg("realspace_relerr")=1.e-3,
+                        bp::arg("realspace_abserr")=1.e-6,
+                        bp::arg("integration_relerr")=1.e-5,
+                        bp::arg("integration_abserr")=1.e-7,
+                        bp::arg("shoot_accuracy")=1.e-5,
+                        bp::arg("shoot_relerr")=1.e-6,
+                        bp::arg("shoot_abserr")=1.e-8,
+                        bp::arg("allowed_flux_variation")=0.81,
+                        bp::arg("range_division_for_extrema")=32,
+                        bp::arg("small_fraction_of_flux")=1.e-4)
+                    )
                 )
                 .def_readwrite("minimum_fft_size", &GSParams::minimum_fft_size)
                 .def_readwrite("maximum_fft_size", &GSParams::maximum_fft_size)
@@ -99,11 +122,16 @@ namespace galsim {
                 .def_readwrite("maxk_threshold", &GSParams::maxk_threshold)
                 .def_readwrite("kvalue_accuracy", &GSParams::kvalue_accuracy)
                 .def_readwrite("xvalue_accuracy", &GSParams::xvalue_accuracy)
-                .def_readwrite("shoot_accuracy", &GSParams::shoot_accuracy)
                 .def_readwrite("realspace_relerr", &GSParams::realspace_relerr)
                 .def_readwrite("realspace_abserr", &GSParams::realspace_abserr)
                 .def_readwrite("integration_relerr", &GSParams::integration_relerr)
                 .def_readwrite("integration_abserr", &GSParams::integration_abserr)
+                .def_readwrite("shoot_accuracy", &GSParams::shoot_accuracy)
+                .def_readwrite("shoot_relerr", &GSParams::shoot_relerr)
+                .def_readwrite("shoot_abserr", &GSParams::shoot_abserr)
+                .def_readwrite("allowed_flux_variation", &GSParams::allowed_flux_variation)
+                .def_readwrite("range_division_for_extrema", &GSParams::range_division_for_extrema)
+                .def_readwrite("small_fraction_of_flux", &GSParams::small_fraction_of_flux)
                 ;
         }
     };
