@@ -22,16 +22,19 @@
 //#define DEBUGLOGGING
 
 #include <boost/math/special_functions/gamma.hpp>
+#include <boost/math/special_functions/bessel.hpp>
 
 #include "SBSersic.h"
 #include "SBSersicImpl.h"
 #include "integ/Int.h"
 #include "Solve.h"
+#include "bessel/Roots.h"
 
 #ifdef DEBUGLOGGING
 #include <fstream>
+std::ostream* dbgout = new std::ofstream("debug.out");
 //std::ostream* dbgout = &std::cout;
-//int verbose_level = 1;
+int verbose_level = 1;
 #endif
 
 namespace galsim {
@@ -267,7 +270,7 @@ namespace galsim {
         SersicIntegrand(double n, double b, double k):
             _invn(1./n), _b(b), _k(k) {}
         double operator()(double r) const 
-        { return r*std::exp(-_b*std::pow(r, _invn))*j0(_k*r); }
+        { return r*std::exp(-_b*std::pow(r, _invn))*boost::math::cyl_bessel_j(0,_k*r); }
 
     private:
         double _invn;
@@ -546,7 +549,8 @@ namespace galsim {
 
         double integ_maxRre;
         if (!_truncated)
-            integ_maxRre = findMaxRre(gsparams->kvalue_accuracy * hankel_norm,gamma2n);
+            //integ_maxRre = findMaxRre(gsparams->kvalue_accuracy * hankel_norm,gamma2n);
+            integ_maxRre = integ::MOCK_INF;
         else
             integ_maxRre = _maxRre;
 
@@ -561,9 +565,24 @@ namespace galsim {
         double dlogk = 0.1;
         // Don't go past k = 500
         for (double logk = std::log(kmin)-0.001; logk < std::log(500.); logk += dlogk) {
-            SersicIntegrand I(_n, _b, std::exp(logk));
+            double k = std::exp(logk);
+            SersicIntegrand I(_n, _b, k);
+#ifdef DEBUGLOGGING
+            integ::IntRegion<double> reg(0, integ_maxRre, dbgout);
+#else
+            integ::IntRegion<double> reg(0, integ_maxRre);
+#endif
+
+            // Add explicit splits at first several roots of J0.
+            // This tends to make the integral more accurate.
+            for (int s=1; s<=10; ++s) {
+                double root = bessel::getBesselRoot0(s);
+                if (root > k * integ_maxRre) break;
+                reg.addSplit(root/k);
+            }
+
             double val = integ::int1d(
-                I, 0., integ_maxRre, 
+                I, reg,
                 gsparams->integration_relerr, gsparams->integration_abserr*hankel_norm);
             val /= hankel_norm;
             xdbg<<"logk = "<<logk<<", ft("<<exp(logk)<<") = "<<val<<std::endl;
