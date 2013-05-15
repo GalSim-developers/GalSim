@@ -345,12 +345,12 @@ def write(image, file_name=None, dir=None, hdu_list=None, add_wcs=True, clobber=
   
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
-    if file_name and hdu_list:
+    if file_name and hdu_list is not None:
         raise TypeError("Cannot provide both file_name and hdu_list to write()")
-    if not (file_name or hdu_list):
+    if not (file_name or hdu_list is not None):
         raise TypeError("Must provide either file_name or hdu_list to write()")
 
-    if not hdu_list:
+    if hdu_list is None:
         hdu_list = pyfits.HDUList()
 
     hdu = _add_hdu(hdu_list, image.array, pyfits_compress)
@@ -387,12 +387,12 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, add_wcs=True
 
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
-    if file_name and hdu_list:
+    if file_name and hdu_list is not None:
         raise TypeError("Cannot provide both file_name and hdu_list to write()")
-    if not (file_name or hdu_list):
+    if not (file_name or hdu_list is not None):
         raise TypeError("Must provide either file_name or hdu_list to write()")
 
-    if not hdu_list:
+    if hdu_list is None:
         hdu_list = pyfits.HDUList()
 
     for image in image_list:
@@ -426,7 +426,7 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, add_wcs=True,
     @param dir          Optionally a directory name can be provided if the file_name does not 
                         already include it.
     @param hdu_list     A pyfits HDUList.  If this is provided instead of file_name, then the 
-                        image is appended to the end of the HDUList as a new HDU. In that case, 
+                        cube is appended to the end of the HDUList as a new HDU. In that case, 
                         the user is responsible for calling either hdu_list.writeto(...) or 
                         galsim.fits.writeFile(...) afterwards.  Either `file_name` or `hdu_list` 
                         is required.
@@ -439,12 +439,12 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, add_wcs=True,
 
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
-    if file_name and hdu_list:
+    if file_name and hdu_list is not None:
         raise TypeError("Cannot provide both file_name and hdu_list to write()")
-    if not (file_name or hdu_list):
+    if not (file_name or hdu_list is not None):
         raise TypeError("Must provide either file_name or hdu_list to write()")
 
-    if not hdu_list:
+    if hdu_list is None:
         hdu_list = pyfits.HDUList()
 
     is_all_numpy = (isinstance(image_list, numpy.ndarray) or
@@ -561,9 +561,9 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto'):
     
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
-    if file_name and hdu_list:
+    if file_name and hdu_list is not None:
         raise TypeError("Cannot provide both file_name and hdu_list to read()")
-    if not (file_name or hdu_list):
+    if not (file_name or hdu_list is not None):
         raise TypeError("Must provide either file_name or hdu_list to read()")
 
     fin = None
@@ -673,9 +673,9 @@ def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto'):
      
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
-    if file_name and hdu_list:
+    if file_name and hdu_list is not None:
         raise TypeError("Cannot provide both file_name and hdu_list to readMulti()")
-    if not (file_name or hdu_list):
+    if not (file_name or hdu_list is not None):
         raise TypeError("Must provide either file_name or hdu_list to readMulti()")
 
     fin = None
@@ -751,9 +751,9 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto')
   
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
-    if file_name and hdu_list:
+    if file_name and hdu_list is not None:
         raise TypeError("Cannot provide both file_name and hdu_list to read()")
-    if not (file_name or hdu_list):
+    if not (file_name or hdu_list is not None):
         raise TypeError("Must provide either file_name or hdu_list to read()")
 
     fin = None
@@ -882,9 +882,9 @@ class FitsHeader(object):
     
         file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
-        if file_name and hdu_list:
+        if file_name and hdu_list is not None:
             raise TypeError("Cannot provide both file_name and hdu_list to read()")
-        if not (file_name or hdu_list):
+        if not (file_name or hdu_list is not None):
             raise TypeError("Must provide either file_name or hdu_list to read()")
 
         fin = None
