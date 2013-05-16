@@ -72,10 +72,10 @@ namespace galsim {
          *                      operations, if different from the default.
          */
         Interpolant(boost::shared_ptr<GSParams> gsparams) :
-            _interp(*this), _gsparams(gsparams.get() ? gsparams : _default_gsparams) {}
+            _gsparams(gsparams.get() ? gsparams : _default_gsparams), _interp(*this) {}
 
         /// @brief Copy constructor: does not copy photon sampler, will need to rebuild.
-        Interpolant(const Interpolant& rhs): _interp(*this) {}
+        Interpolant(const Interpolant& rhs): _gsparams(_gsparams), _interp(*this) {}
 
         /// @brief Destructor 
         virtual ~Interpolant() {}
@@ -373,9 +373,12 @@ namespace galsim {
     public:
         /**
          * @brief Constructor
-         * @param[in] width Width of tiny boxcar used to approximate delta function in real space.
+         * @param[in] gsparams
+         * @param[in] width    Width of tiny boxcar used to approximate delta function in real 
+         *                     space (default=1.e-3).
          */
-        Delta(double width=1.e-3) : _width(width) {}
+        Delta(boost::shared_ptr<GSParams> gsparams, double width=1.e-3) : 
+            Interpolant(gsparams), _width(width) {}
         ~Delta() {}
         double xrange() const { return 0.; }
         double urange() const { return 1./_width; }
@@ -414,7 +417,8 @@ namespace galsim {
          * @param[in] tol Tolerance determines how far onto sinc wiggles the uval will go.
          * Very far, by default!
          */
-        Nearest(double tol=1.e-3) : _tolerance(tol) {}
+        Nearest(boost::shared_ptr<GSParams> gsparams, double tol=1.e-3) :
+            Interpolant(gsparams), _tolerance(tol) {}
         ~Nearest() {}
         double getTolerance() const { return _tolerance; }
         double xrange() const { return 0.5; }
@@ -454,7 +458,8 @@ namespace galsim {
          * @param[in] tol Tolerance determines how far onto sinc wiggles the xval will go. 
          * Very far, by default!
          */
-        SincInterpolant(double tol=1.e-3) : _tolerance(tol) {}
+        SincInterpolant(boost::shared_ptr<GSParams> gsparams, double tol=1.e-3) :
+            Interpolant(gsparams), _tolerance(tol) {}
         ~SincInterpolant() {}
         double getTolerance() const { return _tolerance; }
         double xrange() const { return 1./(M_PI*_tolerance); }
@@ -508,7 +513,8 @@ namespace galsim {
          * @param[in] tol Tolerance determines how far onto sinc^2 wiggles the kval will go.
          * Very far, by default!
          */
-        Linear(double tol=1.e-3) : _tolerance(tol) {}
+        Linear(boost::shared_ptr<GSParams> gsparams, double tol=1.e-3) : 
+            Interpolant(gsparams), _tolerance(tol) {}
         ~Linear() {}
         double getTolerance() const { return _tolerance; }
         double xrange() const { return 1.-0.5*_tolerance; }  // Snip off endpoints near zero
@@ -560,7 +566,8 @@ namespace galsim {
          *                          constant inputs.
          * @param[in] tol  Sets accuracy and extent of Fourier transform.
          */
-        Lanczos(int n, bool fluxConserve=true, double tol=1.e-4);
+        Lanczos(int n, boost::shared_ptr<GSParams> gsparams, bool fluxConserve=true, 
+                double tol=1.e-4);
         ~Lanczos() {}
 
         double getTolerance() const { return _tolerance; }
@@ -605,7 +612,7 @@ namespace galsim {
          *
          * @param[in] tol Sets accuracy and extent of Fourier transform.
          */
-        Cubic(double tol=1.e-4);
+        Cubic(boost::shared_ptr<GSParams> gsparams, double tol=1.e-4);
         ~Cubic() {}
 
         double getTolerance() const { return _tolerance; }
@@ -656,7 +663,7 @@ namespace galsim {
          * @brief Constructor
          * @param[in] tol Sets accuracy and extent of Fourier transform.
          */
-        Quintic(double tol=1.e-4);
+        Quintic(boost::shared_ptr<GSParams> gsparams, double tol=1.e-4);
         ~Quintic() {}
 
         double getTolerance() const { return _tolerance; }
@@ -696,7 +703,7 @@ namespace galsim {
             ranges[3] = -1.;
             for (int i=0; i<4; i++)
                 ranges[7-i] = -ranges[i];
-            _sampler.reset(new OneDimensionalDeviate(_interp, ranges));
+            _sampler.reset(new OneDimensionalDeviate(_interp, ranges, _gsparams));
         }
 
     private:
