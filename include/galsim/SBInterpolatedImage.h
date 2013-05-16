@@ -39,12 +39,13 @@ namespace galsim {
         const double default_pad_factor = 4.;
 
         /// @brief The default k-space interpolator
-        const boost::shared_ptr<Quintic> defaultKInterpolant1d(new Quintic(1.e-5));
+        const boost::shared_ptr<Quintic> defaultKInterpolant1d(new Quintic(new GSParams(), 1.e-5));
         const boost::shared_ptr<InterpolantXY> defaultKInterpolant2d(
             new InterpolantXY(defaultKInterpolant1d));
 
         /// @brief The default real-space interpolator
-        const boost::shared_ptr<Lanczos> defaultXInterpolant1d(new Lanczos(5,true,1.e-5));
+        const boost::shared_ptr<Lanczos> defaultXInterpolant1d(
+            new Lanczos(5, new GSParams(), true, 1.e-5));
         const boost::shared_ptr<InterpolantXY> defaultXInterpolant2d(
             new InterpolantXY(defaultXInterpolant1d));
     }
