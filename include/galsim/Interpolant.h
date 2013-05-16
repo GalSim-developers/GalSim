@@ -373,7 +373,8 @@ namespace galsim {
     public:
         /**
          * @brief Constructor
-         * @param[in] gsparams
+         * @param[in] gsparams GSParams object storing constants that control the accuracy of
+         *                     operations, if different from the default.
          * @param[in] width    Width of tiny boxcar used to approximate delta function in real 
          *                     space (default=1.e-3).
          */
@@ -414,8 +415,10 @@ namespace galsim {
     public:
         /**
          * @brief Constructor
-         * @param[in] tol Tolerance determines how far onto sinc wiggles the uval will go.
-         * Very far, by default!
+         * @param[in] gsparams GSParams object storing constants that control the accuracy of
+         *                     operations, if different from the default.
+         * @param[in] tol      Tolerance determines how far onto sinc wiggles the uval will go.
+         *                     Very far, by default!
          */
         Nearest(boost::shared_ptr<GSParams> gsparams, double tol=1.e-3) :
             Interpolant(gsparams), _tolerance(tol) {}
@@ -455,8 +458,10 @@ namespace galsim {
     public:
         /**
          * @brief Constructor
-         * @param[in] tol Tolerance determines how far onto sinc wiggles the xval will go. 
-         * Very far, by default!
+         * @param[in] gsparams GSParams object storing constants that control the accuracy of
+         *                     operations, if different from the default.
+         * @param[in] tol      Tolerance determines how far onto sinc wiggles the xval will go. 
+         *                     Very far, by default!
          */
         SincInterpolant(boost::shared_ptr<GSParams> gsparams, double tol=1.e-3) :
             Interpolant(gsparams), _tolerance(tol) {}
@@ -510,8 +515,10 @@ namespace galsim {
     public:
         /**
          * @brief Constructor
-         * @param[in] tol Tolerance determines how far onto sinc^2 wiggles the kval will go.
-         * Very far, by default!
+         * @param[in] gsparams GSParams object storing constants that control the accuracy of
+         *                     operations, if different from the default.
+         * @param[in] tol      Tolerance determines how far onto sinc^2 wiggles the kval will go.
+         *                     Very far, by default!
          */
         Linear(boost::shared_ptr<GSParams> gsparams, double tol=1.e-3) : 
             Interpolant(gsparams), _tolerance(tol) {}
