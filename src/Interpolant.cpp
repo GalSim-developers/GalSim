@@ -137,8 +137,8 @@ namespace galsim {
         return retval/(2.*M_PI);
     }
 
-    Lanczos::Lanczos(int n, bool fluxConserve, double tol) :  
-        _n(n), _fluxConserve(fluxConserve), _tolerance(tol)
+    Lanczos::Lanczos(int n, boost::shared_ptr<GSParams> gsparams, bool fluxConserve, double tol) :  
+        _n(n), Interpolant(gsparams), _fluxConserve(fluxConserve), _tolerance(tol)
     {
         // TODO: These can't be retrieved from any GSParams object.
         //       Should they be tol?  0.1*tol?  For now, using 0.1*tol since tol is already a
@@ -240,7 +240,8 @@ namespace galsim {
                     + integ::int1d(ci, 1., 2., 0.1*_tolerance, 0.1*_tolerance));
     }
 
-    Cubic::Cubic(double tol) : _tolerance(tol)
+    Cubic::Cubic(boost::shared_ptr<GSParams> gsparams, double tol) : 
+        Interpolant(gsparams), _tolerance(tol)
     {
         // Reduce range slightly from n so we're not including points with zero weight in
         // interpolations:
@@ -293,7 +294,8 @@ namespace galsim {
                     + integ::int1d(qi, 2., 3., 0.1*_tolerance, 0.1*_tolerance));
     }
 
-    Quintic::Quintic(double tol) : _tolerance(tol)
+    Quintic::Quintic(boost::shared_ptr<GSParams> gsparams, double tol) :
+        Interpolant(gsparams), _tolerance(tol)
     {
         // Reduce range slightly from n so we're not including points with zero weight in
         // interpolations:
