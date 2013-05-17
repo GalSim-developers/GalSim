@@ -138,7 +138,7 @@ namespace galsim {
     }
 
     Lanczos::Lanczos(int n, boost::shared_ptr<GSParams> gsparams, bool fluxConserve, double tol) :  
-        _n(n), Interpolant(gsparams), _fluxConserve(fluxConserve), _tolerance(tol)
+        Interpolant(gsparams), _n(n), _fluxConserve(fluxConserve), _tolerance(tol)
     {
         // TODO: These can't be retrieved from any GSParams object.
         //       Should they be tol?  0.1*tol?  For now, using 0.1*tol since tol is already a
