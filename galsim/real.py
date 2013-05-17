@@ -202,12 +202,12 @@ class RealGalaxy(GSObject):
         if x_interpolant is None:
             lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4)
             self.x_interpolant = galsim.InterpolantXY(lan5)
-        else:
-            self.x_interpolant = galsim.utilities.convert_interpolant_to_2d(x_interpolant)
+#        else:
+#            self.x_interpolant = galsim.utilities.convert_interpolant_to_2d(x_interpolant)
         if k_interpolant is None:
             self.k_interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))
-        else:
-            self.k_interpolant = galsim.utilities.convert_interpolant_to_2d(k_interpolant)
+#        else:
+#            self.k_interpolant = galsim.utilities.convert_interpolant_to_2d(k_interpolant)
 
         # read in data about galaxy from FITS binary table; store as normal attributes of RealGalaxy
 
@@ -274,73 +274,80 @@ class RealGalaxy(GSObject):
             # using the stored variance in the catalog.  Otherwise, if it's a CorrelatedNoise we use
             # it directly; if it's an Image of some sort we use it to make a CorrelatedNoise; if
             # it's a string, we read in the image from file and make a CorrelatedNoise.
-            if type(noise_pad) is not bool:
-                if isinstance(noise_pad, galsim.correlatednoise._BaseCorrelatedNoise):
-                    cn = noise_pad.copy()
-                    if rng: # Let user supplied RNG take precedence over that in user CN
-                        cn.setRNG(gaussian_deviate)
-                    # This small patch may have different overall variance, so rescale while
-                    # preserving the correlation structure by default                  
-                    cn.setVariance(self.pad_variance)
-                elif (isinstance(noise_pad,galsim.BaseImageF) or 
-                      isinstance(noise_pad,galsim.BaseImageD)):
-                    cn = galsim.CorrelatedNoise(gaussian_deviate, noise_pad)
-                elif use_cache and noise_pad in RealGalaxy._cache_noise_pad:
-                    cn = RealGalaxy._cache_noise_pad[noise_pad]
-                    # Make sure that we are using the desired RNG by resetting that in this cached
-                    # CorrelatedNoise instance
-                    if rng:
-                        cn.setRNG(gaussian_deviate)
-                    # This small patch may have different overall variance, so rescale while
-                    # preserving the correlation structure
-                    cn.setVariance(self.pad_variance)
-                elif isinstance(noise_pad, str):
-                    tmp_img = galsim.fits.read(noise_pad)
-                    cn = galsim.CorrelatedNoise(gaussian_deviate, tmp_img)
-                    if use_cache:
-                        RealGalaxy._cache_noise_pad[noise_pad] = cn
-                    # This small patch may have different overall variance, so rescale while
-                    # preserving the correlation structure
-                    cn.setVariance(self.pad_variance)
-                else:
-                    raise RuntimeError("noise_pad must be either a bool, CorrelatedNoise, Image, "+
-                                       "or a filename for reading in an Image")
+#            if type(noise_pad) is not bool:
+#                if isinstance(noise_pad, galsim.correlatednoise._BaseCorrelatedNoise):
+#                    cn = noise_pad.copy()
+#                    if rng: # Let user supplied RNG take precedence over that in user CN
+#                        cn.setRNG(gaussian_deviate)
+#                    # This small patch may have different overall variance, so rescale while
+#                    # preserving the correlation structure by default                  
+#                    cn.setVariance(self.pad_variance)
+#                elif (isinstance(noise_pad,galsim.BaseImageF) or 
+#                      isinstance(noise_pad,galsim.BaseImageD)):
+#                    cn = galsim.CorrelatedNoise(gaussian_deviate, noise_pad)
+#                if use_cache and noise_pad in RealGalaxy._cache_noise_pad:
+#                    cn = RealGalaxy._cache_noise_pad[noise_pad]
+#                    # Make sure that we are using the desired RNG by resetting that in this cached
+#                    # CorrelatedNoise instance
+#                    if rng:
+#                        cn.setRNG(gaussian_deviate)
+#                    # This small patch may have different overall variance, so rescale while
+#                    # preserving the correlation structure
+#                    cn.setVariance(self.pad_variance)
+#                elif isinstance(noise_pad, str):
+#                    tmp_img = galsim.fits.read(noise_pad)
+#                    cn = galsim.CorrelatedNoise(gaussian_deviate, tmp_img)
+#                    if use_cache:
+#                        RealGalaxy._cache_noise_pad[noise_pad] = cn
+#                    # This small patch may have different overall variance, so rescale while
+#                    # preserving the correlation structure
+#                    cn.setVariance(self.pad_variance)
+#                else:
+#                    raise RuntimeError("noise_pad must be either a bool, CorrelatedNoise, Image, "+
+#                                       "or a filename for reading in an Image")
 
             # Set the GaussianDeviate sigma          
             gaussian_deviate.setSigma(np.sqrt(self.pad_variance))
 
-            # populate padding image with noise field
+#            # populate padding image with noise field
+#            if type(noise_pad) is bool:
+#                pad_image.addNoise(galsim.DeviateNoise(gaussian_deviate))
+#            else:
+#                pad_image.addNoise(cn)
             if type(noise_pad) is bool:
-                pad_image.addNoise(galsim.DeviateNoise(gaussian_deviate))
-            else:
-                pad_image.addNoise(cn)
+                noise_pad=self.pad_variance
         else:
             self.pad_variance=0.
 
-        # Now we have to check: was the padding determined using pad_factor?  Or by passing in an
-        # image for padding?  Treat these cases differently:
-        # (1) If the former, then we can simply have the C++ handle the padding process.
-        # (2) If the latter, then we have to do the padding ourselves, and pass the resulting image
-        # to the C++ with pad_factor explicitly set to 1.
-        if specify_size is False:
-            # Make the InterpolatedImage out of the image.
-            self.original_image = galsim.InterpolatedImage(
+        self.original_image = galsim.InterpolatedImage(
                 gal_image, x_interpolant=self.x_interpolant, k_interpolant=self.k_interpolant,
-                dx=self.pixel_scale, pad_factor=1., pad_image=pad_image, gsparams=gsparams)
-        else:
-            # Leave the original image as-is.  Instead, we shift around the image to be used for
-            # padding.  Find out how much x and y margin there should be on lower end:
-            x_marg = int(np.round(0.5*deltax))
-            y_marg = int(np.round(0.5*deltay))
-            # Now reset the pad_image to contain the original image in an even way
-            pad_image = pad_image.view()
-            pad_image.setScale(self.pixel_scale)
-            pad_image.setOrigin(gal_image.getXMin()-x_marg, gal_image.getYMin()-y_marg)
-            # Set the central values of pad_image to be equal to the input image
-            pad_image[gal_image.bounds] = gal_image
-            self.original_image = galsim.InterpolatedImage(
-                pad_image, x_interpolant=self.x_interpolant, k_interpolant=self.k_interpolant,
-                dx=self.pixel_scale, pad_factor=1., gsparams=gsparams)
+                dx=self.pixel_scale, pad_factor=pad_factor, noise_pad=noise_pad, rng=gaussian_deviate,
+                pad_image=pad_image, gsparams=gsparams)
+
+#        # Now we have to check: was the padding determined using pad_factor?  Or by passing in an
+#        # image for padding?  Treat these cases differently:
+#        # (1) If the former, then we can simply have the C++ handle the padding process.
+#        # (2) If the latter, then we have to do the padding ourselves, and pass the resulting image
+#        # to the C++ with pad_factor explicitly set to 1.
+#        if specify_size is False:
+#            # Make the InterpolatedImage out of the image.
+#            self.original_image = galsim.InterpolatedImage(
+#                gal_image, x_interpolant=self.x_interpolant, k_interpolant=self.k_interpolant,
+#                dx=self.pixel_scale, pad_factor=1., pad_image=pad_image, gsparams=gsparams)
+#        else:
+#            # Leave the original image as-is.  Instead, we shift around the image to be used for
+#            # padding.  Find out how much x and y margin there should be on lower end:
+#            x_marg = int(np.round(0.5*deltax))
+#            y_marg = int(np.round(0.5*deltay))
+#            # Now reset the pad_image to contain the original image in an even way
+#            pad_image = pad_image.view()
+#            pad_image.setScale(self.pixel_scale)
+#            pad_image.setOrigin(gal_image.getXMin()-x_marg, gal_image.getYMin()-y_marg)
+#            # Set the central values of pad_image to be equal to the input image
+#            pad_image[gal_image.bounds] = gal_image
+#            self.original_image = galsim.InterpolatedImage(
+#                pad_image, x_interpolant=self.x_interpolant, k_interpolant=self.k_interpolant,
+#                dx=self.pixel_scale, pad_factor=1., gsparams=gsparams)
 
         # also make the original PSF image, with far less fanfare: we don't need to pad with
         # anything interesting.
