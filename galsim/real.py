@@ -217,35 +217,35 @@ class RealGalaxy(GSObject):
         self.pixel_scale = float(real_galaxy_catalog.pixel_scale[use_index])
 
         # handle padding by an image
-        specify_size = False
-        padded_size = gal_image.getPaddedSize(pad_factor)
-        if pad_image is not None:
-            specify_size = True
-            if isinstance(pad_image,str):
-                pad_image = galsim.fits.read(pad_image)
-            if ( not isinstance(pad_image, galsim.BaseImageF) and 
-                 not isinstance(pad_image, galsim.BaseImageD) ):
-                raise ValueError("Supplied pad_image is not one of the allowed types!")
-            # If an image was supplied directly or from a file, check its size:
-            #    Cannot use if too small.
-            #    Use to define the final image size otherwise.
-            deltax = ((1 + pad_image.getXMax() - pad_image.getXMin()) - 
-                      (1 + gal_image.getXMax() - gal_image.getXMin()))
-            deltay = ((1 + pad_image.getYMax() - pad_image.getYMin()) - 
-                      (1 + gal_image.getYMax() - gal_image.getYMin()))
-            if deltax < 0 or deltay < 0:
-                raise RuntimeError("Image supplied for padding is too small!")
-            if pad_factor != 1. and pad_factor != 0.:
-                import warnings
-                msg =  "Warning: ignoring specified pad_factor because user also specified\n"
-                msg += "         an image to use directly for the padding."
-                warnings.warn(msg)
-        else:
-            if isinstance(gal_image, galsim.BaseImageF):
-                pad_image = galsim.ImageF(padded_size, padded_size)
-            if isinstance(gal_image, galsim.BaseImageD):
-                pad_image = galsim.ImageD(padded_size, padded_size)
-
+#        specify_size = False
+#        padded_size = gal_image.getPaddedSize(pad_factor)
+#        if pad_image is not None:
+#            specify_size = True
+#            if isinstance(pad_image,str):
+#                pad_image = galsim.fits.read(pad_image)
+#            if ( not isinstance(pad_image, galsim.BaseImageF) and 
+#                 not isinstance(pad_image, galsim.BaseImageD) ):
+#                raise ValueError("Supplied pad_image is not one of the allowed types!")
+#            # If an image was supplied directly or from a file, check its size:
+#            #    Cannot use if too small.
+#            #    Use to define the final image size otherwise.
+#            deltax = ((1 + pad_image.getXMax() - pad_image.getXMin()) - 
+#                      (1 + gal_image.getXMax() - gal_image.getXMin()))
+#            deltay = ((1 + pad_image.getYMax() - pad_image.getYMin()) - 
+#                      (1 + gal_image.getYMax() - gal_image.getYMin()))
+#            if deltax < 0 or deltay < 0:
+#                raise RuntimeError("Image supplied for padding is too small!")
+#            if pad_factor != 1. and pad_factor != 0.:
+#                import warnings
+#                msg =  "Warning: ignoring specified pad_factor because user also specified\n"
+#                msg += "         an image to use directly for the padding."
+#                warnings.warn(msg)
+#        else:
+#            if isinstance(gal_image, galsim.BaseImageF):
+#                pad_image = galsim.ImageF(padded_size, padded_size)
+#            if isinstance(gal_image, galsim.BaseImageD):
+#                pad_image = galsim.ImageD(padded_size, padded_size)
+#
         # Set up the GaussianDeviate if not provided one, or check that the user-provided one
         # is of a valid type.  Note if random was selected, we can use that uniform_deviate safely.
         if random is True:
@@ -314,15 +314,16 @@ class RealGalaxy(GSObject):
 #                pad_image.addNoise(galsim.DeviateNoise(gaussian_deviate))
 #            else:
 #                pad_image.addNoise(cn)
-            if type(noise_pad) is bool:
-                noise_pad=self.pad_variance
         else:
             self.pad_variance=0.
+
+        if type(noise_pad) is bool:
+            noise_pad=self.pad_variance
 
         self.original_image = galsim.InterpolatedImage(
                 gal_image, x_interpolant=self.x_interpolant, k_interpolant=self.k_interpolant,
                 dx=self.pixel_scale, pad_factor=pad_factor, noise_pad=noise_pad, rng=gaussian_deviate,
-                pad_image=pad_image, gsparams=gsparams)
+                pad_image=pad_image, use_cache=use_cache, gsparams=gsparams)
 
 #        # Now we have to check: was the padding determined using pad_factor?  Or by passing in an
 #        # image for padding?  Treat these cases differently:
