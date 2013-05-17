@@ -33,21 +33,26 @@ namespace galsim {
 
     namespace sbp {
 
+        // Default GSParams to use when input is None
+        boost::shared_ptr<GSParams> _default_gsparams(new GSParams());
+
         // Magic numbers:
 
         /// @brief FT must be at least this much larger than input
         const double default_pad_factor = 4.;
 
         /// @brief The default k-space interpolator
-        const boost::shared_ptr<Quintic> defaultKInterpolant1d(new Quintic(new GSParams(), 1.e-5));
+        const boost::shared_ptr<Quintic> defaultKInterpolant1d(
+            new Quintic(_default_gsparams, 1.e-5));
         const boost::shared_ptr<InterpolantXY> defaultKInterpolant2d(
             new InterpolantXY(defaultKInterpolant1d));
 
         /// @brief The default real-space interpolator
         const boost::shared_ptr<Lanczos> defaultXInterpolant1d(
-            new Lanczos(5, new GSParams(), true, 1.e-5));
+            new Lanczos(5, _default_gsparams, true, 1.e-5));
         const boost::shared_ptr<InterpolantXY> defaultXInterpolant2d(
             new InterpolantXY(defaultXInterpolant1d));
+
     }
 
     /**
