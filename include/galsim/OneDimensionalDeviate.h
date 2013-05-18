@@ -119,21 +119,21 @@ namespace galsim {
          * @param[in] fluxDensity  The function giving flux (= unnormalized probability) density.
          * @param[in] xLower       Lower bound in x (or radius) of this interval.
          * @param[in] xUpper       Upper bound in x (or radius) of this interval.
-         * @param[in] gsparams     GSParams object storing constants that control the accuracy of
-         *                         operations, if different from the default.
          * @param[in] isRadial     Set true if this is an annulus on a plane, false for linear
          *                         interval.
+         * @param[in] gsparams     GSParams object storing constants that control the accuracy of
+         *                         operations, if different from the default.
          */
         Interval(const FluxDensity& fluxDensity,
                  double xLower,
                  double xUpper,
-                 boost::shared_ptr<const GSParams> gsparams,
-                 bool isRadial=false) :
+                 bool isRadial=false,
+                 boost::shared_ptr<const GSParams> gsparams=boost::shared_ptr<GSParams>()) :
             _fluxDensityPtr(&fluxDensity),
             _xLower(xLower),
             _xUpper(xUpper),
-            _gsparams(gsparams),
             _isRadial(isRadial),
+            _gsparams(gsparams.get() ? gsparams : _default_gsparams),
             _fluxIsReady(false) {}
 
         /**
@@ -183,10 +183,11 @@ namespace galsim {
         const FluxDensity* _fluxDensityPtr;  ///< Pointer to the parent FluxDensity function.
         double _xLower; ///< Interval lower bound
         double _xUpper; ///< Interval upper bound
+        bool _isRadial; ///< True if domain is an annulus, otherwise domain is a linear interval.
         /// @brief GSParams struct for storing values of GalSim rendering and image operation
         /// parameters if different from defaults.
         boost::shared_ptr<const GSParams> _gsparams;
-        bool _isRadial; ///< True if domain is an annulus, otherwise domain is a linear interval.
+
         mutable bool _fluxIsReady; ///< True if flux has been integrated
         void checkFlux() const; ///< Calculate flux if it has not already been done.
         mutable double _flux; ///< Integrated flux in this interval (can be negative)
@@ -251,13 +252,14 @@ namespace galsim {
          *                         stay in existence.
          * @param[in] range        Ordered argument vector specifying the domain for sampling as 
          *                         described in class docstring.
-         * @param[in] gsparams     GSParams object storing constants that control the accuracy of
-         *                         operations, if different from the default.
          * @param[in] isRadial     Set true for an axisymmetric function on the plane; false 
          *                         (default) for linear domain.
+         * @param[in] gsparams     GSParams object storing constants that control the accuracy of
+         *                         operations, if different from the default.
          */
-        OneDimensionalDeviate(const FluxDensity& fluxDensity, std::vector<double>& range,
-                              boost::shared_ptr<const GSParams> gsparams, bool isRadial=false);
+        OneDimensionalDeviate(
+            const FluxDensity& fluxDensity, std::vector<double>& range, bool isRadial=false,
+            boost::shared_ptr<const GSParams> gsparams=boost::shared_ptr<GSParams>());
 
         /// @brief Return total flux in positive regions of FluxDensity
         double getPositiveFlux() const {return _positiveFlux;}
