@@ -37,16 +37,16 @@ namespace galsim {
 
     // Specialize the NewValue function used by LRUCache:
     template <>
-    struct LRUCacheHelper<AiryInfo,std::pair<double,const GSParams*> >
+    struct LRUCacheHelper< AiryInfo, std::pair< double, boost::shared_ptr<const GSParams> > >
     {
-        static AiryInfo* NewValue(const std::pair<double, const GSParams*>& key)
+        static AiryInfo* NewValue(const std::pair<double, boost::shared_ptr<const GSParams> >& key)
         {
             const double obscuration = key.first;
-            const GSParams* gsparams = key.second;
+            boost::shared_ptr<const GSParams> gsparams = key.second;
             if (obscuration == 0.0)
                 return new AiryInfoNoObs(gsparams);
             else
-                return new AiryInfoObs(obscuration,gsparams);
+                return new AiryInfoObs(obscuration, gsparams);
         }
     };
 
@@ -82,12 +82,12 @@ namespace galsim {
         _inv_Dsq_pisq(_inv_D_pi * _inv_D_pi),
         _xnorm(flux * _Dsq),
         _knorm(flux / (M_PI * (1.-_obssq))),
-        _info(cache.get(std::make_pair(_obscuration,this->gsparams.get())))
+        _info(cache.get(std::make_pair(_obscuration, gsparams)))
     {}
 
     const int MAX_AIRY_INFO = 100;
 
-    LRUCache<std::pair<double, const GSParams*>, AiryInfo>
+    LRUCache< std::pair< double, boost::shared_ptr<const GSParams> >, AiryInfo >
         SBAiry::SBAiryImpl::cache(MAX_AIRY_INFO);
 
     // This is a scale-free version of the Airy radial function.
@@ -335,10 +335,10 @@ namespace galsim {
     { return annuli_intersect(1.,_obscuration,1.,_obssq,ksq_over_pisq); }
 
     // Constructor to initialize Airy constants and k lookup table
-    AiryInfoObs::AiryInfoObs(double obscuration, const GSParams* gsparams) : 
+    AiryInfoObs::AiryInfoObs(double obscuration, boost::shared_ptr<const GSParams> gsparams) : 
         _obscuration(obscuration), 
         _obssq(obscuration * obscuration),
-        _radial(_obscuration,_obssq,gsparams),
+        _radial(_obscuration, _obssq, gsparams),
         _gsparams(gsparams)
     {
         dbg<<"Initializing AiryInfo for obs = "<<obscuration<<std::endl;
@@ -388,7 +388,9 @@ namespace galsim {
         // NB: don't need floor, since rhs is positive, so floor is superfluous.
         ranges.reserve(int((rmax-rmin+2)/0.5+0.5));
         for(double r=rmin; r<=rmax; r+=0.5) ranges.push_back(r);
-        this->_sampler.reset(new OneDimensionalDeviate(_radial, ranges, true));
+        // TODO: Barney is making the ODD gsparams NON-optional temporarily, to make sure that all
+        // of the GSObjects correctly supply their own while developing... Change this before PR!
+        this->_sampler.reset(new OneDimensionalDeviate(_radial, ranges, _gsparams, true));
     }
 
     // Now the specializations for when obs = 0
@@ -432,7 +434,7 @@ namespace galsim {
     }
 
     // Constructor to initialize Airy constants and k lookup table
-    AiryInfoNoObs::AiryInfoNoObs(const GSParams* gsparams) :
+    AiryInfoNoObs::AiryInfoNoObs(boost::shared_ptr<const GSParams> gsparams) :
         _radial(gsparams),
         _gsparams(gsparams)
     {
@@ -456,6 +458,8 @@ namespace galsim {
         // NB: don't need floor, since rhs is positive, so floor is superfluous.
         ranges.reserve(int((rmax-rmin+2)/0.5+0.5));
         for(double r=rmin; r<=rmax; r+=0.5) ranges.push_back(r);
-        this->_sampler.reset(new OneDimensionalDeviate(_radial, ranges, true));
+        // TODO: Barney is making the ODD gsparams NON-optional temporarily, to make sure that all
+        // of the GSObjects correctly supply their own while developing... Change this before PR!
+        this->_sampler.reset(new OneDimensionalDeviate(_radial, ranges, _gsparams, true));
     }
 }

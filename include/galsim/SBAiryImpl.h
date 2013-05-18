@@ -97,7 +97,7 @@ namespace galsim {
     class AiryInfoObs : public AiryInfo
     {
     public:
-        AiryInfoObs(double obscuration, const GSParams* _gsparams); 
+        AiryInfoObs(double obscuration, boost::shared_ptr<const GSParams> _gsparams); 
         ~AiryInfoObs() {}
 
         double xValue(double r) const;
@@ -120,7 +120,8 @@ namespace galsim {
              * @param[in] obscuration Fractional linear size of central obscuration of pupil.
              * @param[in] obssq       Pre-computed obscuration^2 supplied as input for speed.
              */
-            RadialFunction(double obscuration, double obssq, const GSParams* gsparams) : 
+            RadialFunction(double obscuration, double obssq,
+                           boost::shared_ptr<const GSParams> gsparams) : 
                 _obscuration(obscuration), _obssq(obssq),
                 _norm(M_PI / (1.-_obssq)), _gsparams(gsparams) {}
 
@@ -135,14 +136,14 @@ namespace galsim {
             double _obscuration; ///< Central obstruction size
             double _obssq; ///< _obscuration*_obscuration
             double _norm; ///< Calculated value M_PI / (1-obs^2)
-            const GSParams* _gsparams;
+            boost::shared_ptr<const GSParams> _gsparams;
         };
 
         double _obscuration; ///< Radius ratio of central obscuration.
         double _obssq; ///< _obscuration*_obscuration
 
         RadialFunction _radial;  ///< Class that embodies the radial Airy function.
-        const GSParams* _gsparams;
+        boost::shared_ptr<const GSParams> _gsparams;
 
         /// Circle chord length at `h < r`.
         double chord(double r, double h, double rsq, double hsq) const; 
@@ -163,7 +164,7 @@ namespace galsim {
     class AiryInfoNoObs : public AiryInfo
     {
     public:
-        AiryInfoNoObs(const GSParams* gsparams);
+        AiryInfoNoObs(boost::shared_ptr<const GSParams> gsparams);
         ~AiryInfoNoObs() {}
 
         double xValue(double r) const;
@@ -173,17 +174,17 @@ namespace galsim {
         class RadialFunction : public FluxDensity 
         {
         public:
-            RadialFunction(const GSParams* gsparams) : _gsparams(gsparams) {}
+            RadialFunction(boost::shared_ptr<const GSParams> gsparams) : _gsparams(gsparams) {}
 
             double operator()(double radius) const;
 
         private:
-            const GSParams* _gsparams;
+            boost::shared_ptr<const GSParams> _gsparams;
         };
 
 
         RadialFunction _radial;  ///< Class that embodies the radial Airy function.
-        const GSParams* _gsparams;
+        boost::shared_ptr<const GSParams> _gsparams;
 
         void checkSampler() const; ///< Check if `OneDimensionalDeviate` is configured.
     };
@@ -264,7 +265,7 @@ namespace galsim {
         const boost::shared_ptr<AiryInfo> _info; 
 
         /// One static map of all `AiryInfo` structures for whole program.
-        static LRUCache<std::pair<double,const GSParams*>, AiryInfo> cache;
+        static LRUCache< std::pair< double, boost::shared_ptr<const GSParams> >, AiryInfo > cache;
     };
 }
 
