@@ -71,7 +71,7 @@ namespace galsim {
          * @param[in] gsparams  GSParams object storing constants that control the accuracy of
          *                      operations, if different from the default.
          */
-        Interpolant(boost::shared_ptr<GSParams> gsparams) :
+        Interpolant(boost::shared_ptr<const GSParams> gsparams) :
             _gsparams(gsparams.get() ? gsparams : _default_gsparams), _interp(*this) {}
 
         /// @brief Copy constructor: does not copy photon sampler, will need to rebuild.
@@ -175,7 +175,7 @@ namespace galsim {
     protected:
 
         /// @brief GSParams struct for storing values of GalSim numerical parameters
-        boost::shared_ptr<GSParams> _gsparams;
+        boost::shared_ptr<const GSParams> _gsparams;
         InterpolantFunction _interp; ///< The function to interface the Interpolant to sampler
 
         /// Class that draws photons from this Interpolant
@@ -198,7 +198,7 @@ namespace galsim {
         }
 
         // Default GSParams to use when input is None
-        static boost::shared_ptr<GSParams> _default_gsparams;
+        static boost::shared_ptr<const GSParams> _default_gsparams;
 
     };
 
@@ -373,12 +373,13 @@ namespace galsim {
     public:
         /**
          * @brief Constructor
-         * @param[in] gsparams GSParams object storing constants that control the accuracy of
-         *                     operations, if different from the default.
          * @param[in] width    Width of tiny boxcar used to approximate delta function in real 
          *                     space (default=1.e-3).
+         * @param[in] gsparams GSParams object storing constants that control the accuracy of
+         *                     operations, if different from the default.
          */
-        Delta(boost::shared_ptr<GSParams> gsparams, double width=1.e-3) : 
+        Delta(double width=1.e-3,
+              boost::shared_ptr<GSParams> gsparams=boost::shared_ptr<GSParams>()) : 
             Interpolant(gsparams), _width(width) {}
         ~Delta() {}
         double xrange() const { return 0.; }
@@ -415,12 +416,13 @@ namespace galsim {
     public:
         /**
          * @brief Constructor
-         * @param[in] gsparams GSParams object storing constants that control the accuracy of
-         *                     operations, if different from the default.
          * @param[in] tol      Tolerance determines how far onto sinc wiggles the uval will go.
          *                     Very far, by default!
+         * @param[in] gsparams GSParams object storing constants that control the accuracy of
+         *                     operations, if different from the default.
          */
-        Nearest(boost::shared_ptr<GSParams> gsparams, double tol=1.e-3) :
+        Nearest(double tol=1.e-3,
+                boost::shared_ptr<GSParams> gsparams=boost_shared_ptr<GSParams>()) :
             Interpolant(gsparams), _tolerance(tol) {}
         ~Nearest() {}
         double getTolerance() const { return _tolerance; }
@@ -458,12 +460,13 @@ namespace galsim {
     public:
         /**
          * @brief Constructor
-         * @param[in] gsparams GSParams object storing constants that control the accuracy of
-         *                     operations, if different from the default.
          * @param[in] tol      Tolerance determines how far onto sinc wiggles the xval will go. 
          *                     Very far, by default!
+         * @param[in] gsparams GSParams object storing constants that control the accuracy of
+         *                     operations, if different from the default.
          */
-        SincInterpolant(boost::shared_ptr<GSParams> gsparams, double tol=1.e-3) :
+        SincInterpolant(double tol=1.e-3,
+                        boost::shared_ptr<GSParams> gsparams=boost::shared_ptr<GSParams>()) :
             Interpolant(gsparams), _tolerance(tol) {}
         ~SincInterpolant() {}
         double getTolerance() const { return _tolerance; }
@@ -515,12 +518,13 @@ namespace galsim {
     public:
         /**
          * @brief Constructor
-         * @param[in] gsparams GSParams object storing constants that control the accuracy of
-         *                     operations, if different from the default.
          * @param[in] tol      Tolerance determines how far onto sinc^2 wiggles the kval will go.
          *                     Very far, by default!
+         * @param[in] gsparams GSParams object storing constants that control the accuracy of
+         *                     operations, if different from the default.
          */
-        Linear(boost::shared_ptr<GSParams> gsparams, double tol=1.e-3) : 
+        Linear(double tol=1.e-3,
+               boost::shared_ptr<GSParams> gsparams=boost::shared_ptr<GSParams>()) :
             Interpolant(gsparams), _tolerance(tol) {}
         ~Linear() {}
         double getTolerance() const { return _tolerance; }
@@ -568,13 +572,15 @@ namespace galsim {
         /**
          * @brief Constructor
          *
-         * @param[in] n  Filter order; must be given on input and cannot be changed.  
+         * @param[in] n             Filter order; must be given on input and cannot be changed.  
          * @param[in] fluxConserve  Set true to adjust filter to be more nearly correct for 
          *                          constant inputs.
-         * @param[in] tol  Sets accuracy and extent of Fourier transform.
+         * @param[in] tol           Sets accuracy and extent of Fourier transform.
+         * @param[in] gsparams      GSParams object storing constants that control the accuracy of
+         *                          operations, if different from the default.
          */
-        Lanczos(int n, boost::shared_ptr<GSParams> gsparams, bool fluxConserve=true, 
-                double tol=1.e-4);
+        Lanczos(int n, bool fluxConserve=true, double tol=1.e-4,
+                boost::shared_ptr<GSParams> gsparams=boost::shared_ptr<GSParams>());
         ~Lanczos() {}
 
         double getTolerance() const { return _tolerance; }
@@ -617,9 +623,11 @@ namespace galsim {
         /**
          * @brief Constructor
          *
-         * @param[in] tol Sets accuracy and extent of Fourier transform.
+         * @param[in] tol      Sets accuracy and extent of Fourier transform.
+         * @param[in] gsparams GSParams object storing constants that control the accuracy of
+         *                     operations, if different from the default.
          */
-        Cubic(boost::shared_ptr<GSParams> gsparams, double tol=1.e-4);
+        Cubic(double tol=1.e-4, boost::shared_ptr<GSParams> gsparams=boost::shared_ptr<GSParams>());
         ~Cubic() {}
 
         double getTolerance() const { return _tolerance; }
@@ -668,9 +676,12 @@ namespace galsim {
     public:
         /**
          * @brief Constructor
-         * @param[in] tol Sets accuracy and extent of Fourier transform.
+         * @param[in] tol      Sets accuracy and extent of Fourier transform.
+         * @param[in] gsparams GSParams object storing constants that control the accuracy of
+         *                     operations, if different from the default. 
          */
-        Quintic(boost::shared_ptr<GSParams> gsparams, double tol=1.e-4);
+        Quintic(double tol=1.e-4,
+                boost::shared_ptr<GSParams> gsparams=boost::shared_ptr<GSParams>());
         ~Quintic() {}
 
         double getTolerance() const { return _tolerance; }
