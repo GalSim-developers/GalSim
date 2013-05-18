@@ -59,7 +59,7 @@ namespace galsim {
 
     const int MAX_SERSIC_INFO = 100;
 
-    LRUCache<std::pair<SersicKey, const GSParams*>, SersicInfo> 
+    LRUCache< std::pair< SersicKey, boost::shared_ptr<const GSParams> >, SersicInfo > 
         SBSersic::SBSersicImpl::cache(MAX_SERSIC_INFO);
 
     SBSersic::SBSersicImpl::SBSersicImpl(double n,  double re, double flux,
@@ -71,8 +71,7 @@ namespace galsim {
         _norm(_flux*_inv_re_sq), 
         _trunc(trunc), _flux_untruncated(flux_untruncated),
         _maxRre((int)(_trunc/_re * 100 + 0.5) / 100.0),  // round to two decimal places
-        _info(cache.get(std::make_pair(SersicKey(_n,_maxRre,_flux_untruncated),
-                                       this->gsparams.get())))
+        _info(cache.get(std::make_pair(SersicKey(_n, _maxRre, _flux_untruncated), gsparams)))
     {
         _truncated = (_trunc > 0.);
         if (!_truncated) _flux_untruncated = true;  // set unused parameter to a single value
@@ -453,13 +452,14 @@ namespace galsim {
     }
 
     // Constructor to initialize Sersic constants and k lookup table
-    SersicInfo::SersicInfo(const SersicKey& key, const GSParams* gsparams) :
+    SersicInfo::SersicInfo(const SersicKey& key, boost::shared_ptr<const GSParams> gsparams) :
         _n(key.n), _maxRre(key.maxRre), _maxRre_sq(_maxRre*_maxRre), _inv2n(1./(2.*_n)),
         _flux_untruncated(key.flux_untruncated), _flux_fraction(1.), _re_fraction(1.),
         _truncated(_maxRre > 0.)
     {
         // Going to constrain range of allowed n to those for which testing was done
         // (Lower bounds has hard limit at ~0.29)
+        // TODO: Make this max n = 6.2 based on early results...!
         if (_n<0.3 || _n>8.1) throw SBError("Requested Sersic index out of range");
 
         if ( _truncated && _flux_untruncated ) {
@@ -594,7 +594,9 @@ namespace galsim {
             range[1] = findMaxRre(gsparams->shoot_accuracy,gamma2n);
         else
             range[1] = _maxRre;
-        _sampler.reset(new OneDimensionalDeviate( *_radial, range, true));
+        // TODO: Barney is making the ODD gsparams NON-optional temporarily, to make sure that all
+        // of the GSObjects correctly supply their own while developing... Change this before PR!
+        _sampler.reset(new OneDimensionalDeviate( *_radial, range, gsparams, true));
     }
 
     boost::shared_ptr<PhotonArray> SersicInfo::shoot(int N, UniformDeviate ud) const
