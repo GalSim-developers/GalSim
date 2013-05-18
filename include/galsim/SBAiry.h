@@ -55,7 +55,7 @@ namespace galsim {
          *                         image operations and rendering, if different from the default.
          */
         SBAiry(double lam_over_D, double obscuration=0., double flux=1.,
-               boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
+               boost::shared_ptr<GSParams> gsparams=boost::shared_ptr<GSParams>());
 
         /// @brief Copy constructor
         SBAiry(const SBAiry& rhs);
