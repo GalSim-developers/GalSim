@@ -379,7 +379,7 @@ namespace galsim {
          *                     operations, if different from the default.
          */
         Delta(double width=1.e-3,
-              boost::shared_ptr<GSParams> gsparams=boost::shared_ptr<GSParams>()) : 
+              boost::shared_ptr<const GSParams> gsparams=boost::shared_ptr<GSParams>()) : 
             Interpolant(gsparams), _width(width) {}
         ~Delta() {}
         double xrange() const { return 0.; }
@@ -422,7 +422,7 @@ namespace galsim {
          *                     operations, if different from the default.
          */
         Nearest(double tol=1.e-3,
-                boost::shared_ptr<GSParams> gsparams=boost::shared_ptr<GSParams>()) :
+                boost::shared_ptr<const GSParams> gsparams=boost::shared_ptr<GSParams>()) :
             Interpolant(gsparams), _tolerance(tol) {}
         ~Nearest() {}
         double getTolerance() const { return _tolerance; }
@@ -466,7 +466,7 @@ namespace galsim {
          *                     operations, if different from the default.
          */
         SincInterpolant(double tol=1.e-3,
-                        boost::shared_ptr<GSParams> gsparams=boost::shared_ptr<GSParams>()) :
+                        boost::shared_ptr<const GSParams> gsparams=boost::shared_ptr<GSParams>()) :
             Interpolant(gsparams), _tolerance(tol) {}
         ~SincInterpolant() {}
         double getTolerance() const { return _tolerance; }
@@ -524,7 +524,7 @@ namespace galsim {
          *                     operations, if different from the default.
          */
         Linear(double tol=1.e-3,
-               boost::shared_ptr<GSParams> gsparams=boost::shared_ptr<GSParams>()) :
+               boost::shared_ptr<const GSParams> gsparams=boost::shared_ptr<GSParams>()) :
             Interpolant(gsparams), _tolerance(tol) {}
         ~Linear() {}
         double getTolerance() const { return _tolerance; }
@@ -580,7 +580,7 @@ namespace galsim {
          *                          operations, if different from the default.
          */
         Lanczos(int n, bool fluxConserve=true, double tol=1.e-4,
-                boost::shared_ptr<GSParams> gsparams=boost::shared_ptr<GSParams>());
+                boost::shared_ptr<const GSParams> gsparams=boost::shared_ptr<GSParams>());
         ~Lanczos() {}
 
         double getTolerance() const { return _tolerance; }
@@ -627,7 +627,8 @@ namespace galsim {
          * @param[in] gsparams GSParams object storing constants that control the accuracy of
          *                     operations, if different from the default.
          */
-        Cubic(double tol=1.e-4, boost::shared_ptr<GSParams> gsparams=boost::shared_ptr<GSParams>());
+        Cubic(double tol=1.e-4,
+              boost::shared_ptr<const GSParams> gsparams=boost::shared_ptr<GSParams>());
         ~Cubic() {}
 
         double getTolerance() const { return _tolerance; }
@@ -681,7 +682,7 @@ namespace galsim {
          *                     operations, if different from the default. 
          */
         Quintic(double tol=1.e-4,
-                boost::shared_ptr<GSParams> gsparams=boost::shared_ptr<GSParams>());
+                boost::shared_ptr<const GSParams> gsparams=boost::shared_ptr<GSParams>());
         ~Quintic() {}
 
         double getTolerance() const { return _tolerance; }
