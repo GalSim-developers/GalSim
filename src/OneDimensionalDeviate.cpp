@@ -252,10 +252,13 @@ namespace galsim {
         return result;
     }
 
+        // TODO: Barney is making the ODD gsparams NON-optional temporarily, to make sure that all
+        // of the GSObjects correctly supply their own while developing... Change this before PR!
     OneDimensionalDeviate::OneDimensionalDeviate(const FluxDensity& fluxDensity, 
                                                  std::vector<double>& range,
-                                                 bool isRadial,
-                                                 boost::shared_ptr<const GSParams> gsparams):
+                                                 //bool isRadial,
+                                                 boost::shared_ptr<const GSParams> gsparams,
+                                                 bool isRadial):
         _fluxDensity(fluxDensity),
         _positiveFlux(0.),
         _negativeFlux(0.),
