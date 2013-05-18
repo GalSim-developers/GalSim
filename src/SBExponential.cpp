@@ -274,7 +274,10 @@ namespace galsim {
         dbg<<"Made radial"<<std::endl;
         std::vector<double> range(2,0.);
         range[1] = -std::log(gsparams->shoot_accuracy);
-        _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, gsparams));
+        // TODO: Barney is making the ODD gsparams NON-optional temporarily, to make sure that all
+        // of the GSObjects correctly supply their own while developing... Change this before PR!
+        _sampler.reset(new OneDimensionalDeviate( *_radial, range, //true, gsparams));
+                       gsparams, true));
         dbg<<"Made sampler"<<std::endl;
 #endif
 
