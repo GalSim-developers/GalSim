@@ -34,6 +34,8 @@ namespace galsim {
 
     //namespace odd {
 
+        // TODO: These are temporarily commented out, delete them before making a pull resquest!
+
         ///////////   Magic Numbers ///////////
         
         /** Fractional error allowed on any flux integral **/
@@ -125,12 +127,12 @@ namespace galsim {
         Interval(const FluxDensity& fluxDensity,
                  double xLower,
                  double xUpper,
-                 boost::shared_ptr<GSParams> gsparams,
+                 boost::shared_ptr<const GSParams> gsparams,
                  bool isRadial=false) :
             _fluxDensityPtr(&fluxDensity),
             _xLower(xLower),
             _xUpper(xUpper),
-            _gsparams(gsparams.get() ? gsparams : _default_gsparams),
+            _gsparams(gsparams),
             _isRadial(isRadial),
             _fluxIsReady(false) {}
 
@@ -183,14 +185,14 @@ namespace galsim {
         double _xUpper; ///< Interval upper bound
         /// @brief GSParams struct for storing values of GalSim rendering and image operation
         /// parameters if different from defaults.
-        boost::shared_ptr<GSParams> _gsparams;
+        boost::shared_ptr<const GSParams> _gsparams;
         bool _isRadial; ///< True if domain is an annulus, otherwise domain is a linear interval.
         mutable bool _fluxIsReady; ///< True if flux has been integrated
         void checkFlux() const; ///< Calculate flux if it has not already been done.
         mutable double _flux; ///< Integrated flux in this interval (can be negative)
 
         // Default GSParams to use when input is None
-        static boost::shared_ptr<GSParams> _default_gsparams;
+        static boost::shared_ptr<const GSParams> _default_gsparams;
 
         /// @brief Finds the x or radius coord that would enclose fraction of this intervals flux 
         /// if flux were constant.
@@ -255,7 +257,7 @@ namespace galsim {
          *                         (default) for linear domain.
          */
         OneDimensionalDeviate(const FluxDensity& fluxDensity, std::vector<double>& range,
-                              boost::shared_ptr<GSParams> gsparams, bool isRadial=false);
+                              boost::shared_ptr<const GSParams> gsparams, bool isRadial=false);
 
         /// @brief Return total flux in positive regions of FluxDensity
         double getPositiveFlux() const {return _positiveFlux;}
@@ -283,10 +285,10 @@ namespace galsim {
 
         /// @brief GSParams struct for storing values of GalSim rendering and image operation
         /// parameters if different from defaults.
-        boost::shared_ptr<GSParams> _gsparams;
+        boost::shared_ptr<const GSParams> _gsparams;
 
         // Default GSParams to use when input is None
-        static boost::shared_ptr<GSParams> _default_gsparams;
+        static boost::shared_ptr<const GSParams> _default_gsparams;
 
     };
 

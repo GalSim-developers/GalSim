@@ -142,7 +142,7 @@ namespace galsim {
     }
 
     // Define default GSParams for use if None is given
-    boost::shared_ptr<GSParams> Interval::_default_gsparams(new GSParams());
+    boost::shared_ptr<const GSParams> Interval::_default_gsparams(new GSParams());
 
     double Interval::interpolateFlux(double fraction) const 
     {
@@ -254,7 +254,7 @@ namespace galsim {
 
     OneDimensionalDeviate::OneDimensionalDeviate(const FluxDensity& fluxDensity, 
                                                  std::vector<double>& range,
-                                                 boost::shared_ptr<GSParams> gsparams,
+                                                 boost::shared_ptr<const GSParams> gsparams,
                                                  bool isRadial):
         _fluxDensity(fluxDensity),
         _positiveFlux(0.),
@@ -329,7 +329,7 @@ namespace galsim {
     }
 
     // Define default GSParams for use if None is given
-    boost::shared_ptr<GSParams> OneDimensionalDeviate::_default_gsparams(new GSParams());
+    boost::shared_ptr<const GSParams> OneDimensionalDeviate::_default_gsparams(new GSParams());
 
     boost::shared_ptr<PhotonArray> OneDimensionalDeviate::shoot(int N, UniformDeviate ud) const 
     {

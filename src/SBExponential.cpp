@@ -67,14 +67,14 @@ namespace galsim {
 
     const int MAX_EXPONENTIAL_INFO = 100;
 
-    LRUCache<const GSParams*, ExponentialInfo>
+    LRUCache<boost::shared_ptr<const GSParams>, ExponentialInfo>
         SBExponential::SBExponentialImpl::cache(MAX_EXPONENTIAL_INFO);
 
     SBExponential::SBExponentialImpl::SBExponentialImpl(
         double r0, double flux, boost::shared_ptr<GSParams> gsparams) :
         SBProfileImpl(gsparams),
         _flux(flux), _r0(r0), _r0_sq(_r0*_r0), _inv_r0(1./r0), _inv_r0_sq(_inv_r0*_inv_r0),
-        _info(cache.get(this->gsparams.get()))
+        _info(cache.get(gsparams))
     {
         // For large k, we clip the result of kValue to 0.
         // We do this when the correct answer is less than kvalue_accuracy.
@@ -106,21 +106,21 @@ namespace galsim {
 
     double SBExponential::SBExponentialImpl::xValue(const Position<double>& p) const
     {
-        double r = sqrt(p.x*p.x + p.y*p.y);
-        return _norm * std::exp(-r*_inv_r0);
+        double r = sqrt(p.x * p.x + p.y * p.y);
+        return _norm * std::exp(-r * _inv_r0);
     }
 
     std::complex<double> SBExponential::SBExponentialImpl::kValue(const Position<double>& k) const 
     {
-        double ksq = (k.x*k.x+k.y*k.y)*_r0_sq;
+        double ksq = (k.x * k.x + k.y * k.y) * _r0_sq;
 
         if (ksq > _ksq_max) {
             return 0.;
         } else if (ksq < _ksq_min) {
-            return _flux*(1. - 1.5*ksq*(1. - 1.25*ksq));
+            return _flux * (1. - 1.5 * ksq * (1. - 1.25 * ksq));
         } else {
             double temp = 1. + ksq;
-            return _flux/(temp*sqrt(temp));
+            return _flux / (temp * sqrt(temp));
             // NB: flux*std::pow(temp,-1.5) is slower.
         }
     }
@@ -265,16 +265,16 @@ namespace galsim {
     }
 
     // Constructor to initialize Exponential functions for 1D deviate photon shooting
-    ExponentialInfo::ExponentialInfo(const GSParams* gsparams)
+    ExponentialInfo::ExponentialInfo(boost::shared_ptr<const GSParams> gsparams)
     {
-        dbg<<"Start ExponentialInfo with gsparams = "<<gsparams<<std::endl;
+        dbg<<"Start ExponentialInfo with gsparams = "<<gsparams.get()<<std::endl;
 #ifndef USE_NEWTON_RAPHSON
         // Next, set up the classes for photon shooting
         _radial.reset(new ExponentialRadialFunction());
         dbg<<"Made radial"<<std::endl;
         std::vector<double> range(2,0.);
         range[1] = -std::log(gsparams->shoot_accuracy);
-        _sampler.reset(new OneDimensionalDeviate( *_radial, range, true));
+        _sampler.reset(new OneDimensionalDeviate( *_radial, range, gsparams, true));
         dbg<<"Made sampler"<<std::endl;
 #endif
 
