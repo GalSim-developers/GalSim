@@ -422,7 +422,7 @@ namespace galsim {
          *                     operations, if different from the default.
          */
         Nearest(double tol=1.e-3,
-                boost::shared_ptr<GSParams> gsparams=boost_shared_ptr<GSParams>()) :
+                boost::shared_ptr<GSParams> gsparams=boost::shared_ptr<GSParams>()) :
             Interpolant(gsparams), _tolerance(tol) {}
         ~Nearest() {}
         double getTolerance() const { return _tolerance; }
