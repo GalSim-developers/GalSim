@@ -50,7 +50,7 @@ namespace galsim {
          *                     operations and rendering, if different from the default.
          */
         SBExponential(double r0, double flux=1.,
-                      boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
+                      boost::shared_ptr<GSParams> gsparams=boost::shared_ptr<GSParams>());
 
         /// @brief Copy constructor.
         SBExponential(const SBExponential& rhs);
