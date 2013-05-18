@@ -257,9 +257,11 @@ namespace galsim {
          * @param[in] gsparams     GSParams object storing constants that control the accuracy of
          *                         operations, if different from the default.
          */
+        // TODO: Barney is making the ODD gsparams NON-optional temporarily, to make sure that all
+        // of the GSObjects correctly supply their own while developing... Change this before PR!
         OneDimensionalDeviate(
-            const FluxDensity& fluxDensity, std::vector<double>& range, bool isRadial=false,
-            boost::shared_ptr<const GSParams> gsparams=boost::shared_ptr<GSParams>());
+            const FluxDensity& fluxDensity, std::vector<double>& range, //bool isRadial=false,
+            boost::shared_ptr<const GSParams> gsparams, bool isRadial=false);
 
         /// @brief Return total flux in positive regions of FluxDensity
         double getPositiveFlux() const {return _positiveFlux;}
