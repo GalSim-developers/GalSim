@@ -594,9 +594,7 @@ namespace galsim {
             range[1] = findMaxRre(gsparams->shoot_accuracy,gamma2n);
         else
             range[1] = _maxRre;
-        // TODO: Barney is making the ODD gsparams NON-optional temporarily, to make sure that all
-        // of the GSObjects correctly supply their own while developing... Change this before PR!
-        _sampler.reset(new OneDimensionalDeviate( *_radial, range, gsparams, true));
+        _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, gsparams));
     }
 
     boost::shared_ptr<PhotonArray> SersicInfo::shoot(int N, UniformDeviate ud) const

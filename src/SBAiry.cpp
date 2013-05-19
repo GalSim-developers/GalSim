@@ -388,9 +388,7 @@ namespace galsim {
         // NB: don't need floor, since rhs is positive, so floor is superfluous.
         ranges.reserve(int((rmax-rmin+2)/0.5+0.5));
         for(double r=rmin; r<=rmax; r+=0.5) ranges.push_back(r);
-        // TODO: Barney is making the ODD gsparams NON-optional temporarily, to make sure that all
-        // of the GSObjects correctly supply their own while developing... Change this before PR!
-        this->_sampler.reset(new OneDimensionalDeviate(_radial, ranges, _gsparams, true));
+        this->_sampler.reset(new OneDimensionalDeviate(_radial, ranges, true, _gsparams));
     }
 
     // Now the specializations for when obs = 0
@@ -458,8 +456,6 @@ namespace galsim {
         // NB: don't need floor, since rhs is positive, so floor is superfluous.
         ranges.reserve(int((rmax-rmin+2)/0.5+0.5));
         for(double r=rmin; r<=rmax; r+=0.5) ranges.push_back(r);
-        // TODO: Barney is making the ODD gsparams NON-optional temporarily, to make sure that all
-        // of the GSObjects correctly supply their own while developing... Change this before PR!
-        this->_sampler.reset(new OneDimensionalDeviate(_radial, ranges, _gsparams, true));
+        this->_sampler.reset(new OneDimensionalDeviate(_radial, ranges, true, _gsparams));
     }
 }

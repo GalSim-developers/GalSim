@@ -234,8 +234,8 @@ namespace galsim {
          *                         operations, if different from the default.
          */
         OneDimensionalDeviate(
-            const FluxDensity& fluxDensity, std::vector<double>& range, isRadial=false,
-            boost::shared_ptr<const GSParams> gsparams);
+            const FluxDensity& fluxDensity, std::vector<double>& range, bool isRadial=false,
+            boost::shared_ptr<const GSParams> gsparams=boost::shared_ptr<GSParams>());
 
         /// @brief Return total flux in positive regions of FluxDensity
         double getPositiveFlux() const {return _positiveFlux;}
@@ -259,11 +259,10 @@ namespace galsim {
         ProbabilityTree<Interval> _pt; ///< Binary tree of intervals for photon shooting
         double _positiveFlux; ///< Stored total positive flux
         double _negativeFlux; ///< Stored total negative flux
-        const bool _isRadial; ///< True for 2d axisymmetric function, false for 1d function
-
         /// @brief GSParams struct for storing values of GalSim rendering and image operation
         /// parameters if different from defaults.
         boost::shared_ptr<const GSParams> _gsparams;
+        const bool _isRadial; ///< True for 2d axisymmetric function, false for 1d function
 
         // Default GSParams to use when input is None
         static boost::shared_ptr<const GSParams> _default_gsparams;
