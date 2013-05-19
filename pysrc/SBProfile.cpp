@@ -93,11 +93,23 @@ namespace galsim {
                 "                               probability are ok to use dominant-sampling\n"
                 "                               method.\n";
 
+            // Note that the class below takes 16 input arguments.  The default maximum number
+            // allowed by Boost.Python is currently (May 2013) only 15, as described at
+            // www.boost.org/libs/python/doc/v2/configuration.html
+            //
+            // The simplest way to handle this seems to be by sending a command line option
+            // -DBOOST_PYTHON_MAX_ARITY=XX to the compiler at scons time, as described at
+            // http://mail.python.org/pipermail/cplusplus-sig/2002-June/001224.html
+            //
+            // If this is not done, then attempting to compile this source will generate an error.
+            // This is therefore now done in the pysrc/SConscript, although see the note there
+            // about the need to set -DBOOST_PYTHON_MAX_ARITY=17, which might be due to a slight
+            // internal inconsistency within Boost.Python arity definitions.
             bp::class_<GSParams> pyGSParams("GSParams", doc, bp::no_init);
             pyGSParams
                 .def(bp::init<
                     int, int, double, double, double, double, double, double, double, double,
-                    double>((
+                    double, double, double, double, int, double>((
                         bp::arg("minimum_fft_size")=128, 
                         bp::arg("maximum_fft_size")=4096,
                         bp::arg("alias_threshold")=5.e-3,
