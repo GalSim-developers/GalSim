@@ -194,7 +194,7 @@ namespace galsim {
                 ranges[nKnots-i] = -knot;
                 ranges[nKnots+i-1] = knot;
             }
-            _sampler.reset(new OneDimensionalDeviate(_interp, ranges, _gsparams));
+            _sampler.reset(new OneDimensionalDeviate(_interp, ranges, false, _gsparams));
         }
 
         // Default GSParams to use when input is None

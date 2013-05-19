@@ -32,31 +32,6 @@
 
 namespace galsim {
 
-    //namespace odd {
-
-        // TODO: These are temporarily commented out, delete them before making a pull resquest!
-
-        ///////////   Magic Numbers ///////////
-        
-        /** Fractional error allowed on any flux integral **/
-        //const double RELATIVE_ERROR = 1e-6;
-        /** Absolute error allowed [assumes the total flux is O(1)] **/
-        //const double ABSOLUTE_ERROR = 1e-8;
-
-        /** Max range of allowed (abs value of) photon fluxes within an Interval before rejection
-            sampling is invoked **/
-        //const double ALLOWED_FLUX_VARIATION = 0.81;
-
-        /** Range will be split into this many parts to bracket extrema **/
-        //const int RANGE_DIVISION_FOR_EXTREMA = 32;
-
-        /** Intervals with less than this fraction of probability are ok to use dominant-sampling
-            method. **/
-        //const double SMALL_FRACTION_OF_FLUX = 1.e-4;
-
-    //}
-
-
     /**
      * @brief An interface class for functions giving differential flux vs x or r.
      *
@@ -209,6 +184,7 @@ namespace galsim {
         double _invMaxAbsDensity; 
 
         double _invMeanAbsDensity; ///< 1. / (Mean absolute flux density in the interval)
+
     };
 
     /**
@@ -257,11 +233,9 @@ namespace galsim {
          * @param[in] gsparams     GSParams object storing constants that control the accuracy of
          *                         operations, if different from the default.
          */
-        // TODO: Barney is making the ODD gsparams NON-optional temporarily, to make sure that all
-        // of the GSObjects correctly supply their own while developing... Change this before PR!
         OneDimensionalDeviate(
-            const FluxDensity& fluxDensity, std::vector<double>& range, //bool isRadial=false,
-            boost::shared_ptr<const GSParams> gsparams, bool isRadial=false);
+            const FluxDensity& fluxDensity, std::vector<double>& range, isRadial=false,
+            boost::shared_ptr<const GSParams> gsparams);
 
         /// @brief Return total flux in positive regions of FluxDensity
         double getPositiveFlux() const {return _positiveFlux;}
