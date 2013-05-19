@@ -34,6 +34,8 @@ int verbose_level = 2;
 
 namespace galsim {
 
+    boost::shared_ptr<const GSParams> sbp::_default_gsparams(new GSParams());
+
     template <typename T> 
     SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<T>& image,

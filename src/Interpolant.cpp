@@ -119,6 +119,8 @@ namespace galsim {
         }
     }
 
+    boost::shared_ptr<const GSParams> Interpolant::_default_gsparams(new GSParams());
+
     double Lanczos::xCalc(double x) const
     {
         double retval = sinc(x)*sinc(x/_n);

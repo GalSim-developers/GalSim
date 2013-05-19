@@ -33,8 +33,8 @@ namespace galsim {
 
     namespace sbp {
 
-        // Default GSParams to use when input is None
-        boost::shared_ptr<const GSParams> _default_gsparams(new GSParams());
+        // Default GSParams to use when input is None (defined in src/SBInterpolatedImage.cpp)
+        extern boost::shared_ptr<const GSParams> _default_gsparams;
 
         // Magic numbers:
 
