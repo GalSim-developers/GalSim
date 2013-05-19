@@ -57,7 +57,7 @@ namespace galsim {
 
     const int MAX_KOLMOGOROV_INFO = 100;
 
-    LRUCache<const GSParams*, KolmogorovInfo>
+    LRUCache<boost::shared_ptr<const GSParams>, KolmogorovInfo>
         SBKolmogorov::SBKolmogorovImpl::cache(MAX_KOLMOGOROV_INFO);
 
     // The "magic" number 2.992934 below comes from the standard form of the Kolmogorov spectrum
@@ -80,7 +80,7 @@ namespace galsim {
         _inv_k0sq(1./_k0sq),
         _flux(flux), 
         _xnorm(_flux * _k0sq),
-        _info(cache.get(this->gsparams.get()))
+        _info(cache.get(gsparams))
     {
         dbg<<"SBKolmogorov:\n";
         dbg<<"lam_over_r0 = "<<_lam_over_r0<<std::endl;
@@ -260,7 +260,7 @@ namespace galsim {
     class KolmXValue : public std::unary_function<double,double>
     {
     public:
-        KolmXValue(const GSParams* gsparams) : 
+        KolmXValue(boost::shared_ptr<const GSParams> gsparams) : 
             _gsparams(gsparams) {}
 
         double operator()(double r) const
@@ -272,7 +272,7 @@ namespace galsim {
                                 _gsparams->integration_abserr);
         }
     private:
-        const GSParams* _gsparams;
+        boost::shared_ptr<const GSParams> _gsparams;
     };
 
 #ifdef SOLVE_FWHM_HLR
@@ -280,7 +280,10 @@ namespace galsim {
     class KolmTargetValue : public std::unary_function<double,double>
     {
     public:
-        KolmTargetValue(double target, const GSParams* gsparams) : _target(target,gsparams) {}
+    // BARNEY: I don't understand how _target initialization works here... Either before or after
+    // making the GSParams a boost::shared_ptr.  I've tried to fix with what I think makes sense.
+        KolmTargetValue(double target, boost::shared_ptr<const GSParams> gsparams) :
+            f(gsparams), _target(target) {}
         double operator()(double r) const { return f(r) - _target; }
     private:
         KolmXValue f;
@@ -290,7 +293,7 @@ namespace galsim {
     class KolmXValueTimes2piR : public std::unary_function<double,double>
     {
     public:
-        KolmXValueTimes2piR(const GSParams* gsparams) : f(gsparams) {}
+        KolmXValueTimes2piR(boost::shared_ptr<const GSParams> gsparams) : f(gsparams) {}
 
         double operator()(double r) const
         { return f(r) * r; }
@@ -301,7 +304,8 @@ namespace galsim {
     class KolmEnclosedFlux : public std::unary_function<double,double>
     {
     public:
-        KolmEnclosedFlux(const GSParams* gsparams) : f(gsparams), _gsparams(gsparams) {}
+        KolmEnclosedFlux(boost::shared_ptr<const GSParams> gsparams) :
+            f(gsparams), _gsparams(gsparams) {}
         double operator()(double r) const 
         {
             return integ::int1d(f, 0., r,
@@ -310,13 +314,14 @@ namespace galsim {
         }
     private:
         KolmXValueTimes2piR f;
-        const GSParams* _gsparams;
+        boost::shared_ptr<const GSParams> _gsparams;
     };
 
     class KolmTargetFlux : public std::unary_function<double,double>
     {
     public:
-        KolmTargetFlux(double target, const GSParams* gsparams) : f(gsparams), _target(target) {}
+        KolmTargetFlux(double target, boost::shared_ptr<const GSParams> gsparams) :
+            f(gsparams), _target(target) {}
         double operator()(double r) const { return f(r) - _target; }
     private:
         KolmEnclosedFlux f;
@@ -325,7 +330,8 @@ namespace galsim {
 #endif
 
     // Constructor to initialize Kolmogorov constants and xvalue lookup table
-    KolmogorovInfo::KolmogorovInfo(const GSParams* gsparams) : _radial(TableDD::spline)
+    KolmogorovInfo::KolmogorovInfo(boost::shared_ptr<const GSParams> gsparams) :
+        _radial(TableDD::spline)
     {
         dbg<<"Initializing KolmogorovInfo\n";
 
@@ -371,7 +377,9 @@ namespace galsim {
         // Next, set up the sampler for photon shooting
         std::vector<double> range(2,0.);
         range[1] = _radial.argMax();
-        _sampler.reset(new OneDimensionalDeviate(_radial, range, true));
+        // TODO: Barney is making the ODD gsparams NON-optional temporarily, to make sure that all
+        // of the GSObjects correctly supply their own while developing... Change this before PR!
+        _sampler.reset(new OneDimensionalDeviate(_radial, range, gsparams, true));
 
 #ifdef SOLVE_FWHM_HLR
         // Improve upon the conversion between lam_over_r0 and fwhm:

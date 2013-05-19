@@ -38,7 +38,7 @@ namespace galsim {
         /** 
          * @brief Constructor
          */
-        KolmogorovInfo(const GSParams* gsparams);
+        KolmogorovInfo(boost::shared_ptr<const GSParams> gsparams);
 
         /// @brief Destructor: deletes photon-shooting classes if necessary
         ~KolmogorovInfo() {}
@@ -156,7 +156,7 @@ namespace galsim {
         SBKolmogorovImpl(const SBKolmogorovImpl& rhs);
         void operator=(const SBKolmogorovImpl& rhs);
 
-        static LRUCache<const GSParams*, KolmogorovInfo> cache;
+        static LRUCache< boost::shared_ptr<const GSParams>, KolmogorovInfo> cache;
     };
 
 }
