@@ -722,7 +722,7 @@ namespace galsim {
             ranges[3] = -1.;
             for (int i=0; i<4; i++)
                 ranges[7-i] = -ranges[i];
-            _sampler.reset(new OneDimensionalDeviate(_interp, ranges, _gsparams));
+            _sampler.reset(new OneDimensionalDeviate(_interp, ranges, false, _gsparams));
         }
 
     private:
