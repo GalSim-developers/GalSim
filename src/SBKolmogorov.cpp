@@ -377,9 +377,7 @@ namespace galsim {
         // Next, set up the sampler for photon shooting
         std::vector<double> range(2,0.);
         range[1] = _radial.argMax();
-        // TODO: Barney is making the ODD gsparams NON-optional temporarily, to make sure that all
-        // of the GSObjects correctly supply their own while developing... Change this before PR!
-        _sampler.reset(new OneDimensionalDeviate(_radial, range, gsparams, true));
+        _sampler.reset(new OneDimensionalDeviate(_radial, range, true, gsparams));
 
 #ifdef SOLVE_FWHM_HLR
         // Improve upon the conversion between lam_over_r0 and fwhm:
