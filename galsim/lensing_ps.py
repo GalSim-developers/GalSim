@@ -308,9 +308,7 @@ class PowerSpectrum(object):
                                 for consistency with the natural length scale of images created
                                 using the draw or drawShoot methods.  Other units can be specified
                                 using the `units` keyword.
-        @param ngrid            Number of grid points in each dimension.  If a number that is not
-                                an int (e.g., a float) is supplied, then it gets converted to an int
-                                automatically.
+        @param ngrid            Number of grid points in each dimension.  [Must be an integer]
         @param rng              (Optional) A galsim.GaussianDeviate object for drawing the random
                                 numbers.  (Alternatively, any BaseDeviate can be used.)
                                 [default `rng = None`]
@@ -339,12 +337,18 @@ class PowerSpectrum(object):
         # Check problem cases for regular grid of points
         if grid_spacing is None or ngrid is None:
             raise ValueError("Both a spacing and a size are required for buildGrid.")
-        # Check for non-integer ngrid
+        # Check for validity of integer values
         if not isinstance(ngrid, int):
+            if ngrid != int(ngrid):
+                raise ValueError("ngrid must be an integer")
             ngrid = int(ngrid)
         if not isinstance(kmin_factor, int):
+            if kmin_factor != int(kmin_factor):
+                raise ValueError("kmin_factor must be an integer")
             kmin_factor = int(kmin_factor)
         if not isinstance(kmax_factor, int):
+            if kmax_factor != int(kmax_factor):
+                raise ValueError("kmax_factor must be an integer")
             kmax_factor = int(kmax_factor)
 
         # Check if center is a Position
