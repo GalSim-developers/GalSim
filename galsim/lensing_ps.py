@@ -253,6 +253,10 @@ class PowerSpectrum(object):
         `grid_spacing` parameters.  But the intermediate grid in fourier space will be larger
         by the specified factors.
 
+        Note: These are really just for convenience, since you could easily get the same effect
+        by providing different values of ngrid and grid_spacing and then take a subset of them.
+        The `kmin_factor` and `kmax_factor` just handle the scalings appropriately for you.
+
         For more information on the effects of finite grid representation of the power spectrum 
         see `devel/modules/lensing_engine.pdf`.
 
