@@ -66,10 +66,14 @@ namespace hsm {
         double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter,
         boost::shared_ptr<HSMParams> hsmparams);
 
+    // Make a masked_image based on the input image and mask.  The returned ImageView is a
+    // sub-image of the given masked_image.  It is the smallest sub-image that contains all the 
+    // non-zero elements in the masked_image, so subsequent operations can safely use this
+    // instead of the full masked_image.
     template <typename T>
-    void MakeMaskedImage(Image<double>& masked_image,
-                         const ImageView<T>& image,
-                         const ImageView<int>& mask)
+    ImageView<double> MakeMaskedImage(Image<double>& masked_image,
+                                      const ImageView<T>& image,
+                                      const ImageView<int>& mask)
     {
         Bounds<int> b = image.getBounds();
         dbg<<"b = "<<b<<std::endl;
@@ -83,16 +87,28 @@ namespace hsm {
         double* pF = masked_image.getData();
         const int sF = masked_image.getStride() - rowlen;
 
+        Bounds<int> b2;
         for(int y=b.getYMin();y<=b.getYMax();y++) {
             for(int x=b.getXMin();x<=b.getXMax();x++) {
-                if (*pM++) *pF++ = *pI++;
-                else { *pF++ = 0.; ++pI; }
+                if (*pM++) {
+                    *pF = *pI++;
+                    if (*pF != 0.) b2 += Position<int>(x,y);
+                    ++pF;
+                } else { 
+                    *pF++ = 0.;
+                    ++pI; 
+                }
             }
             pM += sM;
             pI += sI;
             pF += sF;
         }
         dbg<<"Done MakeMaskedImage"<<std::endl;
+        dbg<<"Final b2 bounds = "<<b2<<std::endl;
+        // Make sure we have at least 1 pixel in the final mask.  Throw an exception if not.
+        if (!b2.isDefined()) 
+            throw HSMError("Masked image is all 0's.");
+        return masked_image[b2];
     }
 
     // Carry out PSF correction directly using ImageViews, repackaging for general_shear_estimator.
@@ -147,8 +163,9 @@ namespace hsm {
         }
 
         // Apply the mask
-        Image<double> masked_gal_image;
-        MakeMaskedImage(masked_gal_image,gal_image,gal_mask_image);
+        Image<double> full_masked_gal_image;
+        ImageView<double> masked_gal_image = 
+            MakeMaskedImage(full_masked_gal_image,gal_image,gal_mask_image);
         Image<double> masked_PSF_image(PSF_image);
         ConstImageView<double> masked_gal_image_cview = masked_gal_image.view();
         ConstImageView<double> masked_PSF_image_cview = masked_PSF_image.view();
@@ -239,12 +256,12 @@ namespace hsm {
         // Apply the mask
         dbg<<"obj bounds = "<<object_image.getBounds()<<std::endl;
         dbg<<"mask bounds = "<<object_mask_image.getBounds()<<std::endl;
-        Image<double> masked_object_image;
-        dbg<<"initial masked obj bounds = "<<masked_object_image.getBounds()<<std::endl;
-        MakeMaskedImage(masked_object_image,object_image,object_mask_image);
+        Image<double> full_masked_object_image;
+        ImageView<double> masked_object_image = 
+            MakeMaskedImage(full_masked_object_image,object_image,object_mask_image);
         ConstImageView<double> masked_object_image_cview = masked_object_image.view();
+        dbg<<"full masked obj bounds = "<<full_masked_object_image.getBounds()<<std::endl;
         dbg<<"masked obj bounds = "<<masked_object_image.getBounds()<<std::endl;
-        dbg<<"masked obj cview bounds = "<<masked_object_image_cview.getBounds()<<std::endl;
 
         // call find_ellipmom_2
         results.image_bounds = object_image.getBounds();
