@@ -126,7 +126,7 @@ def CreateRGC(config):
     logger.info('saved real galaxy catalog %s' % filename_rgc)
 
     # if in debug mode, save some plots
-    if config['args'].debug : SavePreviewRGC(config,filename_rgc)
+    # if config['args'].debug : SavePreviewRGC(config,filename_rgc)
 
 def SavePreviewRGC(config,filename_rgc,n_gals_preview=10):
     """
@@ -187,11 +187,16 @@ def GetReconvImage(config):
     if config['args'].debug: use_logger = logger
     else: use_logger = None
 
+
     # process the input before BuildImage    
     galsim.config.ProcessInput(reconv_config)
+
+    # get number of images
+    n_gals = len(galsim.config.GetNObjForMultiFits(reconv_config,0,0))
+
     # get the reconvolved galaxies
-    img_gals,img_psfs,_,_ = galsim.config.BuildImage(config=reconv_config,make_psf_image=True,
-        logger=use_logger)
+    img_gals,img_psfs,_,_ = galsim.config.BuildImages(config=reconv_config,make_psf_image=True,
+            logger=use_logger,nimages=n_gals,nproc=reconv_config['image']['nproc'])
 
     return (img_gals,img_psfs)
 
@@ -217,9 +222,13 @@ def GetDirectImage(config):
     else: use_logger = None
     # process the input before BuildImage     
     galsim.config.ProcessInput(direct_config)
+
+    # get number of images
+    n_gals = len(galsim.config.GetNObjForMultiFits(direct_config,0,0))
+
     # get the direct galaxies
-    img_gals,img_psfs,_,_ = galsim.config.BuildImage(config=direct_config,make_psf_image=True,
-        logger=use_logger)
+    img_gals,img_psfs,_,_ = galsim.config.BuildImages(config=direct_config,make_psf_image=True,
+        logger=use_logger,nimages=n_gals,nproc=direct_config['image']['nproc'])
 
     return (img_gals,img_psfs)
 
@@ -321,17 +330,15 @@ def RunMeasurement(config,filename_results,mode):
     except Exception,e:
         logger.error('building image failed, message: %s' % e)
 
-    # get image size
-    npix = config['reconvolved_images']['image']['stamp_size']
-    nobjects = galsim.config.GetNObjForImage(config['reconvolved_images'],0)
+    # get number of objects
+    nobjects = len(img_gals)
 
     logger.info('getting shape measurements, saving to file %s' % filename_results)
     # loop over objects
     for i in range(nobjects):
 
-        # cut out stamps
-        img_gal =  img_gals[ galsim.BoundsI(  1 ,   npix, i*npix+1, (i+1)*npix ) ]
-        img_psf =  img_psfs[ galsim.BoundsI(  1 ,   npix, i*npix+1, (i+1)*npix ) ]
+        img_gal = img_gals[i] 
+        img_psf = img_psfs[i] 
  
         # get shapes and pixel differences
         try:
@@ -344,8 +351,8 @@ def RunMeasurement(config,filename_results,mode):
 
     logger.info('done shape measurements, saved to file %s' % filename_results)
 
-    del(img_gal)
-    del(img_psf)
+    del(img_gals)
+    del(img_psfs)
 
     file_results.close()
 
@@ -463,7 +470,7 @@ if __name__ == "__main__":
     if args.debug: logger_level = 'logging.DEBUG'
     else:  logger_level = 'logging.INFO'
     logging.basicConfig(format="%(message)s", level=eval(logger_level), stream=sys.stdout)
-    logger = logging.getLogger("photon_vs_fft") 
+    logger = logging.getLogger("reconvolution_validation") 
 
     # sanity check the inputs
     if args.default_only and args.vary_params_only:
@@ -496,10 +503,10 @@ if __name__ == "__main__":
         filename_results_direct = 'results.%s.default.direct.cat' % (config['args'].filename_config)
         filename_results_reconv = 'results.%s.default.reconv.cat' % (config['args'].filename_config)
         
-        config_direct = copy.deepcopy(config)
-        RunMeasurement(config_direct,filename_results_direct,'direct')
         config_reconv = copy.deepcopy(config)
         RunMeasurement(config_reconv,filename_results_reconv,'reconv')
+        config_direct = copy.deepcopy(config)
+        RunMeasurement(config_direct,filename_results_direct,'direct')
         
         logger.info(('saved direct and reconv results for default parameter set\n'
              + 'filenames: %s\t%s') % (filename_results_direct,filename_results_reconv))

@@ -83,6 +83,7 @@ cosmos_images:
     output :
         type : MultiFits
         nimages : *n_images
+        nproc : -1
 
         dir : .
         file_name : rgc_val_gal.fits          
@@ -122,10 +123,12 @@ reconvolved_images :
         random_seed : 2222211
         nproc : 5
         pixel_scale : 0.2   # pixel scale for the ground observation
-        type : Tiled
-        nx_tiles : 1        # we are generating galaxies in one long tiled stripe
-        ny_tiles :  *n_images
-        stamp_size : 128    #  big in order for the space images to contain the galaxies fully
+        # type : Tiled
+        # nx_tiles : 1        # we are generating galaxies in one long tiled stripe
+        # ny_tiles :  *n_images
+        # stamp_size : 128    #  big in order for the space images to contain the galaxies fully
+        type : Single
+        size : 128
         # this field is required for the photon image, 
         # but we don't want to add any noise, so we set the variance to 0
         noise : { type : Gaussian, sigma : 0. }

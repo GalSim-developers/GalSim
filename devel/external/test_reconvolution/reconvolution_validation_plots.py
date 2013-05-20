@@ -48,18 +48,18 @@ def PlotStatsForParam(config,param_name):
         filepath_results_reconv = os.path.join(config['results_dir'],filename_results_reconv)
         filepath_results_direct = os.path.join(config['results_dir'],filename_results_direct)
 
-        logger.debug('parameter %s, index %03d, value %2.4e' % (param_name,iv,float(value)))
+        logging.info('parameter %s, index %03d, value %2.4e' % (param_name,iv,float(value)))
 
         # if there is no .reconv or .direct file, look for the default to compare it against
         if not os.path.isfile(filepath_results_direct):
-            logger.info('file %s not found, looking for defaults' % filepath_results_direct)
+            logging.info('file %s not found, looking for defaults' % filepath_results_direct)
             filename_results_direct = 'results.%s.default.direct.cat' % (config['filepath_config'])
             filepath_results_direct = os.path.join(config['results_dir'],filename_results_direct)     
             if not os.path.isfile(filepath_results_direct):
                 raise NameError('file %s not found' % filepath_results_direct)
 
         if not os.path.isfile(filepath_results_reconv):
-            logger.info('file %s not found, looking for defaults' % filepath_results_reconv)
+            logging.info('file %s not found, looking for defaults' % filepath_results_reconv)
             filename_results_reconv = 'results.%s.default.reconv.cat' % (config['filepath_config'])
             filepath_results_reconv = os.path.join(config['results_dir'],filename_results_reconv)
             if not os.path.isfile(filepath_results_reconv):
@@ -68,7 +68,7 @@ def PlotStatsForParam(config,param_name):
         # measure m and c biases
         bias_moments,bias_hsmcorr = GetBias(config,filepath_results_direct,filepath_results_reconv)
 
-        logger.debug('bias_moments has %d points ' % len(bias_moments))
+        logging.info('bias_moments has %d points ' % len(bias_moments))
 
         # append results lists  - slightly clunky way
         bias_moments_list[iv] = bias_moments
@@ -91,7 +91,8 @@ def PlotStatsForParam(config,param_name):
         m1 = [b['m1'] for b in bias_moments_list[iv]]
         # m2 = [b['m2'] for b in bias_moments_list[iv]]
 
-        pylab.plot(numpy.ones([len(m1)])*values_float[iv],m1,'o')
+        pylab.plot(numpy.ones([len(m1)])*values_float[iv],m1,'x')
+        pylab.errorbar(values_float[iv],numpy.mean(m1),yerr=numpy.std(m1,ddof=1),fmt='o',capsize=30)
         # pylab.plot(numpy.ones([len(m2)])*values_float[iv],m2,'o')
 
     pylab.ylabel('m1')
@@ -101,7 +102,7 @@ def PlotStatsForParam(config,param_name):
     filename_fig = 'fig.moments.%s.%s.png' % (config['filename_config'],param_name)
     pylab.savefig(filename_fig)
     pylab.close()
-    logger.info('saved figure %s' % filename_fig)
+    logging.info('saved figure %s' % filename_fig)
 
     # plot for HSM
     pylab.figure(2,figsize=(fig_xsize,fig_ysize))
@@ -113,7 +114,8 @@ def PlotStatsForParam(config,param_name):
         m1 = [b['m1'] for b in bias_hsmcorr_list[iv]]
         # m2 = [b['m2'] for b in bias_moments_list[iv]]
 
-        pylab.plot(numpy.ones([len(m1)])*values_float[iv],m1,'o')
+        pylab.plot(numpy.ones([len(m1)])*values_float[iv],m1,'x')
+        pylab.errorbar(values_float[iv],numpy.mean(m1),yerr=numpy.std(m1,ddof=1),fmt='o',capsize=30)
         # pylab.plot(numpy.ones([len(m2)])*values_float[iv],m2,'o')
 
     pylab.ylabel('m1')
@@ -123,7 +125,7 @@ def PlotStatsForParam(config,param_name):
     filename_fig = 'fig.hsmcorr.%s.%s.png' % (config['filename_config'],param_name)
     pylab.savefig(filename_fig)
     pylab.close()
-    logger.info('saved figure %s' % filename_fig)
+    logging.info('saved figure %s' % filename_fig)
     
 def _getLineFit(X,y,sig):
         """
@@ -233,7 +235,7 @@ def GetBias(config,filename_results_direct,filename_results_reconv):
             
             # continue with loop if bad ring
             if skip_shear:
-                logger.warning('gal %d shear %d has HSM errors or missing data- skipping' % (gi,si))
+                logging.warning('gal %d shear %d has HSM errors or missing data- skipping' % (gi,si))
                 continue
 
             # increment the number of used shears
@@ -314,10 +316,10 @@ def GetBias(config,filename_results_direct,filename_results_reconv):
             pylab.legend(['G1','G2'])
             pylab.savefig(filename_fig)
             pylab.close()
-            logger.info('saved figure %s' % filename_fig)
+            logging.info('saved figure %s' % filename_fig)
 
 
-        logging.debug( 'gal %d used %d shears, m1 = %2.3e, m2=%2.3e ' % (gi,n_used_shears,bias_moments['m1'],bias_moments['m2']))
+        logging.info( 'gal %3d used %3d shears, m1 = % 2.3e, m2=% 2.3e ' % (gi,n_used_shears,bias_moments['m1'],bias_moments['m2']))
 
         # append the results list
         bias_moments_list.append(bias_moments)
@@ -345,12 +347,12 @@ def GetBias(config,filename_results_direct,filename_results_reconv):
 if __name__ == "__main__":
 
 
-    description = 'Use data produced by photon_vs_reconv.py to produce various plots.'
+    description = 'Use data produced by reconvolution_validation.py to produce various plots.'
 
     # parse arguments
     parser = argparse.ArgumentParser(description=description, add_help=True)
     parser.add_argument('filename_config', type=str, 
-        help='yaml config file, see photon_vs_reconv.yaml for example.')
+        help='yaml config file, see reconvolution_validation.yaml for example.')
     parser.add_argument('--debug', action="store_true", 
         help='run with debug verbosity', default=False)
     parser.add_argument('-rd','--results_dir',type=str, action='store', default='.', 
@@ -361,7 +363,6 @@ if __name__ == "__main__":
     if args.debug: logger_level = 'logging.DEBUG'
     else:  logger_level = 'logging.INFO'
     logging.basicConfig(format="%(message)s", level=eval(logger_level), stream=sys.stdout)
-    logger = logging.getLogger("photon_vs_reconv") 
 
     # load the configuration file
     config = yaml.load(open(args.filename_config,'r'))
@@ -375,6 +376,7 @@ if __name__ == "__main__":
     filename_results_direct = 'results.%s.default.direct.cat' % (config['filename_config'])
     filepath_results_reconv = os.path.join(args.results_dir,filename_results_reconv)
     filepath_results_direct = os.path.join(args.results_dir,filename_results_direct)
+    logging.info('getting stats for default parameters')
     GetBias(config,filepath_results_direct,filepath_results_reconv)
     
     # save a plot for each of the varied parameters
