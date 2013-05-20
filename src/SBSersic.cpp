@@ -19,7 +19,7 @@
  * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
  */
 
-//#define DEBUGLOGGING
+#define DEBUGLOGGING
 
 #include <boost/math/special_functions/gamma.hpp>
 
@@ -30,8 +30,8 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-//std::ostream* dbgout = &std::cout;
-//int verbose_level = 1;
+std::ostream* dbgout = &std::cout;
+int verbose_level = 1;
 #endif
 
 namespace galsim {
