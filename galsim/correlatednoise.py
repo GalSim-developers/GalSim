@@ -726,7 +726,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     described above.  The random number generators are not affected by these scaling operations.
     """
     def __init__(self, rng, image, dx=0., x_interpolant=None, correct_periodicity=True,
-        subtract_mean=False gsparams=None):
+        subtract_mean=False, gsparams=None):
 
         # Check that the input image is in fact a galsim.ImageSIFD class instance
         if not isinstance(image, (
