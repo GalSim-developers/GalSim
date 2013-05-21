@@ -12,14 +12,20 @@ import copy
 interpolant_list = ['nearest', 'sinc', 'linear', 'cubic', 'quintic', 
                     'lanczos3', 'lanczos4', 'lanczos5', 'lanczos7']
 # Padding options
-padding_list = range(2,6,2)
+padding_list = range(2,7,2)
 # Range of rotation angles
 angle_list = range(0,180,15)
 # Range of shears and magnifications to use
 # This is currently the 4 largest and 4 smallest |g|s generated from a run of examples/demo11.py,
 # rounded to 1-3 sig figs, plus the 4 largest blown up by a factor of 30 to really strain the 
 # algorithm.
-shear_and_magnification_list = [(0.0003, 0.0003, 1.01), (0.0005, 0.0001, 0.96), 
+shear_and_magnification_list = [(0.001, 0., 0.),(0.01, 0., 0.), (0.1, 0., 0.),
+                                (-0.001, 0., 0.), (-0.01, 0., 0.), (-0.1, 0., 0.),
+                                (0., 0.001, 0.,),(0., 0.01, 0.), (0., 0.1, 0.),
+                                (0., -0.001, 0.), (0., -0.01, 0.), (0., -0.1, 0.),
+                                (0., 0., 1.01),(0., 0., 1.1), (0., 0., 1.5),
+                                (0., 0., 0.99),(0., 0., 0.9), (0., 0., 0.5),
+                                (0.0003, 0.0003, 1.01), (0.0005, 0.0001, 0.96), 
                                 (-0.0004, 0.0009, 1.03), (0.001, -0.0003, 0.996), 
                                 (0.015, -0.010, 1.02), (-0.016, -0.009, 1.01), 
                                 (0.016, -0.011, 1.02), (0.020, 0.003, 0.97), 
@@ -30,15 +36,15 @@ shear_and_magnification_list = [(0.0003, 0.0003, 1.01), (0.0005, 0.0001, 0.96),
 # --- IMPORTANT BUT NOT TESTED PARAMETERS ---
 
 # Galaxy indices
-first_index = 1
-nitems = 1
+first_index = 0
+nitems = 100
 
 # Photon-shoot trial parameters, shamelessly stolen from Barney
-np = int(1E5)
-tol_ellip = 3.e-1
-tol_size = 1.0
-#tol_ellip = 3.e-5
-#tol_size = 1.e-4
+np = int(1E6)
+#tol_ellip = 3.e-1
+#tol_size = 1.0
+tol_ellip = 3.e-5
+tol_size = 1.e-4
 
 # Ground-image parameters
 ground_fwhm = 0.65        # arcsec
@@ -55,22 +61,26 @@ space_imsize = 64
 rseed = 999888444
 
 # --- COMPUTATIONAL DETAILS AND FILENAMES ---
-nproc = 4
+nproc = 8
 ground_filename = 'interpolant_test_output_ground.dat'
 space_filename = 'interpolant_test_output_space.dat'
+nopsf_filename = 'interpolant_test_output_original.dat'
 ground_original_filename = 'interpolant_test_output_ground_original.dat'
 space_original_filename = 'interpolant_test_output_space_original.dat'
 ground_base_filename = 'interpolant_test_output_ground_base.dat'
 space_base_filename = 'interpolant_test_output_space_base.dat'
+nopsf_base_filename = 'interpolant_test_output_original_base.dat'
 ground_original_base_filename = 'interpolant_test_output_ground_original_base.dat'
 space_original_base_filename = 'interpolant_test_output_space_original_base.dat'
 
 ground_file = open(ground_filename,'w')
 space_file = open(space_filename,'w')
+nopsf_file = open(nopsf_filename,'w')
 ground_original_file = open(ground_original_filename,'w') 
 space_original_file = open(space_original_filename,'w')
 ground_base_file = open(ground_base_filename,'w')
 space_base_file = open(space_base_filename,'w')
+nopsf_base_file = open(nopsf_base_filename,'w')
 ground_original_base_file = open(ground_original_base_filename,'w')
 space_original_base_file = open(space_original_base_filename,'w')
 
@@ -80,6 +90,7 @@ def get_config():
 # tests.
     space_config = {}
     ground_config = {}
+    nopsf_config = {}
 
     space_config['psf'] = { "type" : "Airy", 'lam_over_diam' : space_lam_over_diam}
     ground_config['psf'] = { 
@@ -87,6 +98,8 @@ def get_config():
         'items' : [ {'type' : 'Kolmogorov', 'fwhm' : ground_fwhm },
                     {'type' : 'Airy', 'lam_over_diam' : ground_lam_over_diam } ]
     }
+    # no psf for nopsf_config
+    nopsf_config['pix'] = {'type': 'None'}
                 
     space_config['image'] = {
         'type' : 'Single',
@@ -100,6 +113,12 @@ def get_config():
         'pixel_scale' : ground_pixel_scale,
         'nproc' : nproc
     }
+    nopsf_config['image'] = {
+        'type' : 'Single',
+        'size' : space_imsize,
+        'pixel_scale' : space_pixel_scale,
+        'nproc' : nproc
+    }
     galaxy_config = { 'type': 'RealGalaxy', 
                       'index': { 'type': 'Sequence', 'first': first_index, 'nitems': nitems } }
     catalog_config = {'real_catalog' : { 'dir' : '../../examples/data', 
@@ -108,6 +127,9 @@ def get_config():
     ground_config['input'] = catalog_config
     space_config['gal'] = galaxy_config
     space_config['input'] = catalog_config
+    galaxy_config['type'] = 'RealGalaxyOriginal'
+    nopsf_config['gal'] = galaxy_config
+    nopsf_config['input'] = catalog_config
 
     field = catalog_config['real_catalog'] # Redo the 'input' processing from config
     field['type'], ignore = galsim.config.process.valid_input_types['real_catalog'][0:2]
@@ -115,8 +137,9 @@ def get_config():
                                                     ignore)[0]
     space_config['real_catalog'] = input_obj
     ground_config['real_catalog'] = input_obj
+    nopsf_config['real_catalog'] = input_obj
 
-    return [space_config, ground_config]
+    return [nopsf_config, space_config, ground_config]
 
 class InterpolationData:
 # Quick container class for passing around data from these tests.  
@@ -140,9 +163,18 @@ class InterpolationData:
             self.angle = config['gal']['rotation']['theta']
         else:
             self.angle = 0
-        self.interpolant = config['gal']['x_interpolant']
+        if 'x_interpolant' in config['gal']:
+            self.x_interpolant = config['gal']['x_interpolant']
+        else:  
+            self.x_interpolant = 'default'
+        if 'k_interpolant' in config['gal']:
+            self.k_interpolant = config['gal']['k_interpolant']
+        else:  
+            self.k_interpolant = 'default'
         self.padding = config['gal']['pad_factor']
-        if config['psf']['type'] == 'Convolution':
+        if 'psf' not in config:
+            self.image_type = 'NoPSF'
+        elif config['psf']['type'] == 'Convolution':
             self.image_type = 'Ground'
         else:
             self.image_type = 'Space'
@@ -155,7 +187,7 @@ def CatchAdaptiveMomErrors(obj):
     return x
 
 def test_realgalaxy(base_config, shear=None, magnification=None, angle=None, shift=None,
-                    interpolant=None, padding=None, seed=None, logger=None):
+                    x_interpolant=None, k_interpolant=None, padding=None, seed=None, logger=None):
 # Do something like Barney's compare_dft_vs_photon_config test, only do it for DFT only
 # since the RealGalaxies have a Deconvolve in them.
     config = copy.deepcopy(base_config)
@@ -166,21 +198,26 @@ def test_realgalaxy(base_config, shear=None, magnification=None, angle=None, shi
         config['gal']['magnification'] = magnification
     if angle:
         config['gal']['rotation'] = {'type': 'Degrees', 'theta': 1.0*angle}
-    if interpolant:    
-        config['gal']['x_interpolant'] = interpolant
+    if x_interpolant:    
+        config['gal']['x_interpolant'] = x_interpolant
+    if k_interpolant:    
+        config['gal']['k_interpolant'] = k_interpolant
     if padding:
         config['gal']['pad_factor'] = padding
     if seed:
         config['image']['random_seed'] = rseed
     else:
         raise ValueError("Must pass random seed to test_realgalaxy with 'seed'")
-# Things to try later:
-#        config['gal']['shift'] = shift
-#        config['gal']['k_interpolant'] = interpolant
     pass_config = copy.deepcopy(config)
     trial_images = galsim.config.BuildImages(nimages = config['gal']['index']['nitems'], 
-        config = config, logger=logger, nproc=config['image']['nproc'])[0] 
-    trial_results = [CatchAdaptiveMomErrors(image) for image in trial_images]
+        config = config, logger=logger, nproc=config['image']['nproc'])[0]
+    if 'psf' in config: 
+        config = copy.deepcopy(base_config)
+        del config['gal']
+        psf_image = galsim.config.BuildImage(config = config)[0]
+        trial_results = [galsim.hsm.EstimateShear(trial_image,psf_image) for trial_image in trial_images] 
+    else:
+        trial_results = [CatchAdaptiveMomErrors(image) for image in trial_images]
     # Get lists of g1,g2,sigma estimate (this might be quicker using a single list comprehension
     # to get a list of (g1,g2,sigma) tuples, and then unzip with zip(*), but this is clearer)
     g1obs_list = [-10 if isinstance(res,float) else res.observed_shape.g1 for res in trial_results] 
@@ -191,7 +228,7 @@ def test_realgalaxy(base_config, shear=None, magnification=None, angle=None, shi
                               sigmaobs = sigmaobs_list)
 
 def test_realgalaxyoriginal(base_config, shear=None, magnification=None, angle=None, shift=None,
-                            interpolant=None, padding=None, seed=None, logger=None):
+                            x_interpolant=None, k_interpolant=None, padding=None, seed=None, logger=None):
 # Do Barney's compare_dft_vs_photon_config test for a bunch of galaxies: want to know this behavior
 # for both, if we can.
     sys.stdout.write('.')
@@ -204,8 +241,10 @@ def test_realgalaxyoriginal(base_config, shear=None, magnification=None, angle=N
         config['gal']['magnification'] = magnification
     if angle:
         config['gal']['rotation'] = {'type': 'Degrees', 'theta': 1.0*angle}
-    if interpolant:    
-        config['gal']['x_interpolant'] = interpolant
+    if x_interpolant:    
+        config['gal']['x_interpolant'] = x_interpolant
+    if k_interpolant:    
+        config['gal']['k_interpolant'] = k_interpolant
     if padding:
         config['gal']['pad_factor'] = padding
     if seed:
@@ -251,18 +290,23 @@ def print_results(base_answer, test_answer, outfile=None):
         image_type = 1
     elif test_answer.image_type == 'Space' and base_answer.image_type == 'Space':
         image_type = 0
+    elif test_answer.image_type == 'NoPSF' and base_answer.image_type == 'NoPSF':
+        image_type = 2
     else:
         raise RuntimeError('Trying to compare ground-based to space-based images')
     
-    if ((base_answer.interpolant!=test_answer.interpolant) or 
+    if ((base_answer.x_interpolant!=test_answer.x_interpolant) or 
+        (base_answer.k_interpolant!=test_answer.k_interpolant) or
         (base_answer.padding!=test_answer.padding)) and outfile!='base' and outfile!='Base':
             raise RuntimeError('Trying to compare different interpolants or paddings')
             
     if not outfile:
         if image_type==1:
             outfile = ground_file
-        else:
+        elif image_type==0:
             outfile = space_file
+        else:
+            outfile = nopsf_file
     elif outfile=='original' or outfile=='Original':
         if image_type==1:
             outfile = ground_original_file
@@ -271,14 +315,19 @@ def print_results(base_answer, test_answer, outfile=None):
     elif outfile=='base' or outfile=='Base':
         if image_type==1:
             outfile = ground_base_file
-        else:
+        elif image_type==0:
             outfile = space_base_file
+        else:
+            outfile = nopsf_file
     else:
         raise ValueError('Outfile type %s not understood'%outfile)
-            
+    
+    tinterpolant_list = interpolant_list+['default']        
     for i in range(len(test_answer.g1obs)):
-        outfile.write(str(i)+' '+str(interpolant_list.index(base_answer.interpolant))+' '+    
-            str(base_answer.padding)+' '+str(interpolant_list.index(test_answer.interpolant))+' '+    
+        outfile.write(str(i)+' '+str(tinterpolant_list.index(base_answer.x_interpolant))+' '+ 
+            str(tinterpolant_list.index(base_answer.k_interpolant))+' '+    
+            str(base_answer.padding)+' '+str(tinterpolant_list.index(test_answer.x_interpolant))+' '+
+            str(tinterpolant_list.index(test_answer.k_interpolant))+' '+     
             str(test_answer.padding)+' '+str(test_answer.shear[0])+' '+str(test_answer.shear[1])+
             ' '+str(test_answer.magnification)+' '+str(test_answer.angle)+' '+
             str(base_answer.g1obs[i])+' '+str(test_answer.g1obs[i]-base_answer.g1obs[i])+' '+
@@ -297,12 +346,15 @@ def print_results_original(base_answer, test_answer, outfile=None):
     else:
         raise RuntimeError('Trying to compare ground-based to space-based images')
     
-    if ((base_answer[0].interpolant!=test_answer[0].interpolant) or 
+    if ((base_answer[0].x_interpolant!=test_answer[0].x_interpolant) or 
+        (base_answer[0].k_interpolant!=test_answer[0].k_interpolant) or 
         (base_answer[0].padding!=test_answer[0].padding)) and outfile!='base' and outfile!='Base':
             raise RuntimeError('Trying to compare different interpolants or paddings')
-    if not (base_answer[0].interpolant==base_answer[1].interpolant and
+    if not (base_answer[0].x_interpolant==base_answer[1].x_interpolant and
              base_answer[0].padding==base_answer[1].padding and
+             base_answer[0].k_interpolant==base_answer[1].k_interpolant and
              test_answer[0].interpolant==test_answer[1].interpolant and
+             test_answer[0].k_interpolant==test_answer[1].k_interpolant and
              test_answer[0].padding==test_answer[1].padding):
                 raise RuntimeError('Not all input tuples have same config type')
     
@@ -319,10 +371,13 @@ def print_results_original(base_answer, test_answer, outfile=None):
     else:
         raise ValueError('Outfile type %s not understood'%outfile)
             
+    tinterpolant_list = interpolant_list + ['default']
     for i in range(len(test_answer[0].g1obs)):
-        outfile.write(str(i)+' '+str(interpolant_list.index(base_answer[0].interpolant))+' '+    
-            str(base_answer[0].padding)+' '+str(interpolant_list.index(test_answer[0].interpolant))+
-            ' '+str(test_answer[0].padding)+' '+str(test_answer[0].shear[0])+' '+
+        outfile.write(str(i)+' '+str(tinterpolant_list.index(base_answer[0].x_interpolant))+' '+    
+            str(tinterpolant_list.index(base_answer[0].k_interpolant))+' '+    
+            str(base_answer[0].padding)+' '+str(tinterpolant_list.index(test_answer[0].x_interpolant))+
+            ' '+str(tinterpolant_list.index(base_answer[0].k_interpolant))+' '+    
+            str(test_answer[0].padding)+' '+str(test_answer[0].shear[0])+' '+
             str(test_answer[0].shear[1])+' '+str(test_answer[0].magnification)+' '+
             str(test_answer[0].angle)+' '+
             str(base_answer[0].g1obs[i])+' '+
@@ -354,37 +409,44 @@ def main():
             for interpolant in interpolant_list:        # Possible interpolants
                 print 'Base test ', i,
                 i+=1
-#                base_answer = test_realgalaxy(base_config, seed=rseed, interpolant=interpolant,
-#                                            padding=padding)
-#                base_list.append(base_answer)
-                base_answer_dft, base_answer_shoot = test_realgalaxyoriginal(base_config, 
-                                            interpolant=interpolant, padding=padding, seed=rseed)
-                base_list_original.append((base_answer_dft,base_answer_shoot))
+                base_answer_x = test_realgalaxy(base_config, seed=rseed, x_interpolant=interpolant,
+                                            padding=padding)
+                base_list.append(base_answer_x)
+                base_answer_k = test_realgalaxy(base_config, seed=rseed, k_interpolant=interpolant,
+                                            padding=padding)
+                base_list.append(base_answer_k)
+#                base_answer_dft, base_answer_shoot = test_realgalaxyoriginal(base_config, 
+#                                            interpolant=interpolant, padding=padding, seed=rseed)
+#                base_list_original.append((base_answer_dft,base_answer_shoot))
                 print ''
                 for angle in angle_list:                        # Possible rotation angles
                     print 'Angle test ', i,
                     i+=1
-#                    print_results(base_answer, test_realgalaxy(base_config, angle=angle, 
-#                                  interpolant=interpolant, padding=padding, seed=rseed))
-                    print_results_original((base_answer_dft, base_answer_shoot), 
-                                           test_realgalaxyoriginal(base_config, angle=angle, 
-                                           interpolant=interpolant, padding=padding, seed=rseed))
+                    print_results(base_answer_x, test_realgalaxy(base_config, angle=angle, 
+                                  x_interpolant=interpolant, padding=padding, seed=rseed))
+                    print_results(base_answer_k, test_realgalaxy(base_config, angle=angle, 
+                                  k_interpolant=interpolant, padding=padding, seed=rseed))
+#                    print_results_original((base_answer_dft, base_answer_shoot), 
+#                                           test_realgalaxyoriginal(base_config, angle=angle, 
+#                                           interpolant=interpolant, padding=padding, seed=rseed))
                     print ''
                 for (g1, g2, mag) in shear_and_magnification_list: # Shear and magnification
                     print 'Shear/magnification test', i, g1, g2,
                     i+=1
-#                    print_results(base_answer, test_realgalaxy(base_config, shear=(g1,g2),
-#                                  magnification=mag, interpolant=interpolant,
-#                                  padding=padding, seed=rseed))
-                    print_results_original((base_answer_dft, base_answer_shoot), 
-                                           test_realgalaxyoriginal(base_config, shear=(g1,g2),
-                                           magnification=mag, interpolant=interpolant,
-                                           padding=padding, seed=rseed))
+                    print_results(base_answer_x, test_realgalaxy(base_config, shear=(g1,g2),
+                                  magnification=mag, x_interpolant=interpolant,
+                                  padding=padding, seed=rseed))
+                    print_results(base_answer_k, test_realgalaxy(base_config, shear=(g1,g2),
+                                  magnification=mag, k_interpolant=interpolant,
+                                  padding=padding, seed=rseed))
+#                    print_results_original((base_answer_dft, base_answer_shoot), 
+#                                           test_realgalaxyoriginal(base_config, shear=(g1,g2),
+#                                           magnification=mag, interpolant=interpolant,
+#                                           padding=padding, seed=rseed))
                     print ''
         for k in range(len(base_list)):
-            for j in range(k+1,len(base_list)):
-#                print_results(base_list[k],base_list[j],outfile='base')
-                print_results_original(base_list_original[k],base_list_original[j],outfile='base')
+            print_results(base_list[k],base_list[k],outfile='base')
+#                print_results_original(base_list_original[k],base_list_original[j],outfile='base')
 
     ground_file.close()
     space_file.close()
