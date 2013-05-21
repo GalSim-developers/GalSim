@@ -202,8 +202,12 @@ class RealGalaxy(GSObject):
         if x_interpolant is None:
             lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4)
             self.x_interpolant = galsim.InterpolantXY(lan5)
+	else:
+            self.x_interpolant = x_interpolant
         if k_interpolant is None:
             self.k_interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))
+        else:
+            self.k_interpolant = k_interpolant
 
         # read in data about galaxy from FITS binary table; store as normal attributes of RealGalaxy
 
