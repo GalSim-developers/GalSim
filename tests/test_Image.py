@@ -410,7 +410,7 @@ def test_Image_MultiFITS_IO():
 
 
         #
-        # Test writing to hdu_list directly and the writing to file.
+        # Test writing to hdu_list directly and then writing to file.
         #
 
         # Start with empty hdu_list
