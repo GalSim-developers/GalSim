@@ -21,19 +21,22 @@
   along with meas_shape.  If not, see <http://www.gnu.org/licenses/>.
  *******************************************************************/
 
+//#define DEBUGLOGGING
+
 #include <cstring>
 #include <string>
-#define TMV_DEBUG
+#define TMV_NDEBUG
 #include "TMV.h"
 #include "hsm/PSFCorr.h"
 
+#include "FFT.h"
 #include <boost/math/special_functions/fpclassify.hpp> // for isnan()
 
-//#define DEBUGLOGGING
 #ifdef DEBUGLOGGING
 #include <fstream>
 std::ostream* dbgout = new std::ofstream("debug.out");
-int verbose_level = 2;
+//std::ostream* dbgout = &std::cerr;
+int verbose_level = 1;
 // There are three levels of verbosity which can be helpful when debugging,
 // which are written as dbg, xdbg, xxdbg (all defined in Std.h).
 // It's Mike's way to have debug statements in the code that are really easy to turn 
@@ -54,24 +57,66 @@ int verbose_level = 2;
 namespace galsim {
 namespace hsm {
 
-    template <typename T, typename U>
     unsigned int general_shear_estimator(
-        ConstImageView<T> gal_image, ConstImageView<int> gal_mask,
-        ConstImageView<U> PSF_image, ConstImageView<int> PSF_mask,
+        ConstImageView<double> gal_image, ConstImageView<double> PSF_image,
         ObjectData& gal_data, ObjectData& PSF_data, const std::string& shear_est,
         unsigned long flags, boost::shared_ptr<HSMParams> hsmparams);
 
-    template <typename T>
     void find_ellipmom_2(
-        ConstImageView<T> data, ConstImageView<int> mask, double& A, double& x0, double& y0,
+        ConstImageView<double> data, double& A, double& x0, double& y0,
         double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter,
         boost::shared_ptr<HSMParams> hsmparams);
+
+    // Make a masked_image based on the input image and mask.  The returned ImageView is a
+    // sub-image of the given masked_image.  It is the smallest sub-image that contains all the 
+    // non-zero elements in the masked_image, so subsequent operations can safely use this
+    // instead of the full masked_image.
+    template <typename T>
+    ImageView<double> MakeMaskedImage(Image<double>& masked_image,
+                                      const ImageView<T>& image,
+                                      const ImageView<int>& mask)
+    {
+        Bounds<int> b = image.getBounds();
+        dbg<<"b = "<<b<<std::endl;
+        masked_image.resize(b);
+        dbg<<"resized masked_image: b -> "<<masked_image.getBounds()<<std::endl;
+        const int rowlen = b.getXMax() - b.getXMin() + 1;
+        const T* pI = image.getData();
+        const int sI = image.getStride() - rowlen;
+        const int* pM = mask.getData();
+        const int sM = mask.getStride() - rowlen;
+        double* pF = masked_image.getData();
+        const int sF = masked_image.getStride() - rowlen;
+
+        Bounds<int> b2;
+        for(int y=b.getYMin();y<=b.getYMax();y++) {
+            for(int x=b.getXMin();x<=b.getXMax();x++) {
+                if (*pM++) {
+                    *pF = *pI++;
+                    if (*pF != 0.) b2 += Position<int>(x,y);
+                    ++pF;
+                } else { 
+                    *pF++ = 0.;
+                    ++pI; 
+                }
+            }
+            pM += sM;
+            pI += sI;
+            pF += sF;
+        }
+        dbg<<"Done MakeMaskedImage"<<std::endl;
+        dbg<<"Final b2 bounds = "<<b2<<std::endl;
+        // Make sure we have at least 1 pixel in the final mask.  Throw an exception if not.
+        if (!b2.isDefined()) 
+            throw HSMError("Masked image is all 0's.");
+        return masked_image[b2];
+    }
 
     // Carry out PSF correction directly using ImageViews, repackaging for general_shear_estimator.
     template <typename T, typename U>
     CppShapeData EstimateShearView(
         const ImageView<T>& gal_image, const ImageView<U>& PSF_image,
-        const ImageView<int> &gal_mask_image,
+        const ImageView<int>& gal_mask_image,
         float sky_var, const char* shear_est, const std::string& recompute_flux,
         double guess_sig_gal,
         double guess_sig_PSF, double precision,
@@ -118,18 +163,20 @@ namespace hsm {
             throw HSMError("Unknown value for recompute_flux parameter!");
         }
 
+        // Apply the mask
+        Image<double> full_masked_gal_image;
+        ImageView<double> masked_gal_image = 
+            MakeMaskedImage(full_masked_gal_image,gal_image,gal_mask_image);
+        Image<double> masked_PSF_image(PSF_image);
+        ConstImageView<double> masked_gal_image_cview = masked_gal_image.view();
+        ConstImageView<double> masked_PSF_image_cview = masked_PSF_image.view();
+
         // call general_shear_estimator
         results.image_bounds = gal_image.getBounds();
         results.correction_method = shear_est;
-        Image<int> PSF_mask(PSF_image.getBounds());
-        PSF_mask.fill(1);
-        ConstImageView<T> gal_image_cview = gal_image;
-        ConstImageView<U> PSF_image_cview = PSF_image;
-        ConstImageView<int> gal_mask_view = gal_mask_image;
-        ConstImageView<int> PSF_mask_view = PSF_mask.view();
 
         dbg<<"About to get moments using find_ellipmom_2"<<std::endl;
-        find_ellipmom_2(gal_image_cview, gal_mask_view, amp, gal_data.x0,
+        find_ellipmom_2(masked_gal_image_cview, amp, gal_data.x0,
                         gal_data.y0, m_xx, m_xy, m_yy, results.moments_rho4,
                         precision, results.moments_n_iter, hsmparams);
         // repackage outputs to the output CppShapeData struct
@@ -143,7 +190,7 @@ namespace hsm {
         gal_data.sigma = results.moments_sigma;
         dbg<<"About to get shear using general_shear_estimator"<<std::endl;
         results.correction_status = general_shear_estimator(
-            gal_image_cview, gal_mask_view, PSF_image_cview, PSF_mask_view,
+            masked_gal_image_cview, masked_PSF_image_cview,
             gal_data, PSF_data, shear_est, flags, hsmparams);
         dbg<<"Repackaging general_shear_estimator results"<<std::endl;
 
@@ -180,7 +227,7 @@ namespace hsm {
     // find_ellipmom_2.
     template <typename T>
     CppShapeData FindAdaptiveMomView(
-        const ImageView<T>& object_image, const ImageView<int> &object_mask_image, 
+        const ImageView<T>& object_image, const ImageView<int>& object_mask_image, 
         double guess_sig, double precision, double guess_x_centroid,
         double guess_y_centroid, boost::shared_ptr<HSMParams> hsmparams) 
     {
@@ -207,13 +254,21 @@ namespace hsm {
         m_yy = m_xx;
         m_xy = 0.0;
 
+        // Apply the mask
+        dbg<<"obj bounds = "<<object_image.getBounds()<<std::endl;
+        dbg<<"mask bounds = "<<object_mask_image.getBounds()<<std::endl;
+        Image<double> full_masked_object_image;
+        ImageView<double> masked_object_image = 
+            MakeMaskedImage(full_masked_object_image,object_image,object_mask_image);
+        ConstImageView<double> masked_object_image_cview = masked_object_image.view();
+        dbg<<"full masked obj bounds = "<<full_masked_object_image.getBounds()<<std::endl;
+        dbg<<"masked obj bounds = "<<masked_object_image.getBounds()<<std::endl;
+
         // call find_ellipmom_2
         results.image_bounds = object_image.getBounds();
-        ConstImageView<T> object_image_cview = object_image;
-        ConstImageView<int> object_mask_view = object_mask_image;
         try {
             dbg<<"About to get moments using find_ellipmom_2"<<std::endl;
-            find_ellipmom_2(object_image_cview, object_mask_view, amp, results.moments_centroid.x,
+            find_ellipmom_2(masked_object_image_cview, amp, results.moments_centroid.x,
                             results.moments_centroid.y, m_xx, m_xy, m_yy, results.moments_rho4,
                             precision, results.moments_n_iter, hsmparams);
             dbg<<"Repackaging find_ellipmom_2 results"<<std::endl;
@@ -256,6 +311,37 @@ namespace hsm {
 
     void fourier_trans_1(double *data, long nn, int isign) 
     {
+#if 1
+        // Allocate memory
+        FFTW_Array<std::complex<double> > b1(nn);
+        FFTW_Array<std::complex<double> > b2(nn);
+
+        // Copy data to b1
+        // Note: insert - sign for imag part because 
+        //       Num Rec FFT  uses exp(+i*2*pi*m*n/N) whereas
+        //               FFTW uses exp(-i*2*pi*m*n/N)
+        for (int i=0; i<nn; ++i){
+            b1[i] =  std::complex<double>(data[2*i] , -data[2*i+1]);
+        }
+
+        // Make the fftw plan
+        fftw_plan plan=fftw_plan_dft_1d(nn, b1.get_fftw(), b2.get_fftw(),
+                                        isign == 1 ? FFTW_FORWARD : FFTW_BACKWARD, 
+                                        FFTW_ESTIMATE);
+        if (plan == NULL) throw FFTInvalid();
+
+        // Execute the plan.
+        fftw_execute(plan);
+
+        // Copy the data back to the data array.
+        for (int i=0; i<nn; i++){
+            data[2*i] =  real(b2[i]);
+            data[2*i+1] = -imag(b2[i]);
+        }
+
+        // Destroy the plan.
+        fftw_destroy_plan(plan);
+#else
 
         double *data_i, *data_i1;
         double *data_j, *data_j1;
@@ -345,6 +431,7 @@ namespace hsm {
                 wi += wtemp*sintheta - wi*oneminuscostheta;
             }
         }
+#endif
     }
 
     /* qho1d_wf_1
@@ -393,8 +480,8 @@ namespace hsm {
         norm0 = 0.75112554446494248285870300477623 * std::sqrt(beta);
         x=xmin;
         for(j=0;j<nx;j++) {
-            psi[0][j] = norm0 * std::exp( -beta2__2 * x*x );
-            if (Nmax>=1) psi[1][j] = std::sqrt(2.) * psi[0][j] * beta * x;
+            psi(j,0) = norm0 * std::exp( -beta2__2 * x*x );
+            if (Nmax>=1) psi(j,1) = std::sqrt(2.) * psi(j,0) * beta * x;
             x += xstep;
         }
 
@@ -414,7 +501,7 @@ namespace hsm {
             for(j=0;j<nx;j++) {
 
                 /* The recurrance */
-                psi[n+1][j] = coef1 * x * psi[n][j] + coef2 * psi[n-1][j];         
+                psi(j,n+1) = coef1 * x * psi(j,n) + coef2 * psi(j,n-1);         
 
                 x += xstep; /* Increment x */
             } /* End j loop */
@@ -436,9 +523,8 @@ namespace hsm {
      *   y0: " (y-coordinate)
      *   sigma: width of Gaussian to measure image
      */
-    template <typename T>
     void find_mom_1(
-        ConstImageView<T> data, ConstImageView<int> mask,
+        ConstImageView<double> data,
         tmv::Matrix<double>& moments, int max_order, 
         double x0, double y0, double sigma)
     {
@@ -450,27 +536,16 @@ namespace hsm {
         int ymax = data.getYMax();
         int nx = xmax-xmin+1;
         int ny = ymax-ymin+1;
-        tmv::Matrix<double> psi_x(max_order+1,nx);
-        tmv::Matrix<double> psi_y(max_order+1,ny);
+        tmv::Matrix<double> psi_x(nx, max_order+1);
+        tmv::Matrix<double> psi_y(ny, max_order+1);
 
         /* Compute wavefunctions */
         qho1d_wf_1(nx, (double)xmin - x0, 1., max_order, sigma, psi_x);
         qho1d_wf_1(ny, (double)ymin - y0, 1., max_order, sigma, psi_y);
 
-        /* Now let's compute moments -- outer loop is over (m,n) */
-        for(int m=0;m<=max_order;m++) for(int n=0;n<=max_order-m;n++) {
-
-            /* Initialize moments(m,n), then loop over map */
-            moments(m,n) = 0;
-            for(int y=ymin;y<=ymax;y++) for(int x=xmin;x<=xmax;x++) {
-                if (mask(x,y)) {
-
-                    /* Moment "integral" (here simply a finite sum) */
-                    moments(m,n) += data(x,y) * psi_x(m,x-xmin) * psi_y(n,y-ymin);
-
-                } /* End mask condition */
-            } /* End (x,y) loop */
-        } /* End (m,n) loop */
+        tmv::ConstMatrixView<double> mdata(data.getData(),nx,ny,1,data.getStride(),tmv::NonConj);
+        
+        moments = psi_x.transpose() * mdata * psi_y;
     }
 
     /* find_mom_2
@@ -492,9 +567,8 @@ namespace hsm {
      * > num_iter: number of iterations required for convergence
      */
 
-    template <typename T>
     void find_mom_2(
-        ConstImageView<T> data, ConstImageView<int> mask,
+        ConstImageView<double> data,
         tmv::Matrix<double>& moments, int max_order,
         double& x0, double& y0, double& sigma, double epsilon, int& num_iter,
         boost::shared_ptr<HSMParams> hsmparams) 
@@ -516,7 +590,7 @@ namespace hsm {
         while(convergence_factor > epsilon) {
 
             /* Get moments */
-            find_mom_1(data,mask,iter_moments,hsmparams->adapt_order,x0,y0,sigma);
+            find_mom_1(data,iter_moments,hsmparams->adapt_order,x0,y0,sigma);
 
             /* Get updates to weight function */
             double dx     = 1.414213562373 * iter_moments(1,0) / iter_moments(0,0);
@@ -549,7 +623,7 @@ namespace hsm {
         }
 
         /* Now compute all of the moments that we want to return */
-        find_mom_1(data,mask,moments,max_order,x0,y0,sigma);
+        find_mom_1(data,moments,max_order,x0,y0,sigma);
     }
 
     /* find_ellipmom_1
@@ -581,9 +655,8 @@ namespace hsm {
      * > rho4w: weighted radial fourth moment
      */
 
-    template <typename T>
     void find_ellipmom_1(
-        ConstImageView<T> data, ConstImageView<int> mask, double x0, double y0, double Mxx,
+        ConstImageView<double> data, double x0, double y0, double Mxx,
         double Mxy, double Myy, double& A, double& Bx, double& By, double& Cxx,
         double& Cxy, double& Cyy, double& rho4w, boost::shared_ptr<HSMParams> hsmparams) 
     {
@@ -604,65 +677,89 @@ namespace hsm {
         double Minv_xx    =  Myy/detM;
         double TwoMinv_xy = -Mxy/detM * 2.0;
         double Minv_yy    =  Mxx/detM;
+        double Inv2Minv_xx = 0.5/Minv_xx; // Will be useful later...
 
         /* Generate Minv_xx__x_x0__x_x0 array */
         tmv::Vector<double> Minv_xx__x_x0__x_x0(xmax-xmin+1);
-        for(long x=xmin;x<=xmax;x++) Minv_xx__x_x0__x_x0[x-xmin] = Minv_xx*(x-x0)*(x-x0);
+        for(int x=xmin;x<=xmax;x++) Minv_xx__x_x0__x_x0[x-xmin] = Minv_xx*(x-x0)*(x-x0);
 
         /* Now let's initialize the outputs and then sum
-         * over all the unmasked pixels
+         * over all the pixels
          */
         A = Bx = By = Cxx = Cxy = Cyy = rho4w = 0.;
+
+        // rho2 = Minv_xx(x-x0)^2 + 2Minv_xy(x-x0)(y-y0) + Minv_yy(y-y0)^2
+        // The minimum/maximum y that have a solution rho2 = max_moment_nsig2 is at:
+        //   2*Minv_xx*(x-x0) + 2Minv_xy(y-y0) = 0
+        // rho2 = Minv_xx (Minv_xy(y-y0)/Minv_xx)^2 - 2Minv_xy(Minv_xy(y-y0)/Minv_xx)(y-y0)
+        //           + Minv_yy(y-y0)^2
+        //      = (Minv_xy^2/Minv_xx - 2Minv_xy^2/Minv_xx + Minv_yy) (y-y0)^2
+        //      = (Minv_xx Minv_yy - Minv_xy^2)/Minv_xx (y-y0)^2
+        //      = (1/detM) / Minv_xx (y-y0)^2
+        //      = (1/Myy) (y-y0)^2
+        double y2 = sqrt(hsmparams->max_moment_nsig2 * Myy);  // This still needs the +y0 bit.
+        double y1 = -y2 + y0;
+        y2 += y0;  // ok, now it's right.
+        int iy1 = int(ceil(y1));
+        int iy2 = int(floor(y2));
+        if (iy1 < ymin) iy1 = ymin;
+        if (iy2 > ymax) iy2 = ymax;
+        dbg<<"y1,y2 = "<<y1<<','<<y2<<std::endl;
+        dbg<<"iy1,iy2 = "<<iy1<<','<<iy2<<std::endl;
+        assert(iy1 <= iy2);
+
+        // 
         /* Use these pointers to speed up referencing arrays */
-        const int* maskptr = mask.getData();
-        const T* imageptr = data.getData();
-        const int maskstride = mask.getStride() - (xmax - xmin + 1);
-        const int datastride = data.getStride() - (xmax - xmin + 1);
-        for(long y=ymin;y<=ymax;y++, maskptr+=maskstride, imageptr+=datastride) {
+        for(int y=iy1;y<=iy2;y++) {
             double y_y0 = y-y0;
-            double x_x0 = xmin - 1 - x0;
             double TwoMinv_xy__y_y0 = TwoMinv_xy * y_y0;
             double Minv_yy__y_y0__y_y0 = Minv_yy * y_y0 * y_y0;
-            const double* mxxptr = Minv_xx__x_x0__x_x0.cptr();
-            for(long x=xmin;x<=xmax;x++) {
-                x_x0 += 1.; // do this increment to x_x0 out here, before the following if
-                            // statement, because it has to happen whether we actually use the pixel
-                            // or not if we want to properly track where we are in the image
-                if (*(maskptr++)) {
-                    //npix++;
-                    /* Compute displacement from weight centroid, then
-                     * get elliptical radius and weight.
-                     */
-                    double rho2 = Minv_yy__y_y0__y_y0 + TwoMinv_xy__y_y0*x_x0 + *(mxxptr++);
-                    dbg<<"Using pixel: "<<x<<" "<<y<<" with value "<<*(imageptr)<<" rho2 "<<rho2<<" x_x0 "<<x_x0<<" y_y0 "<<y_y0<<std::endl;
-                    if (rho2 < hsmparams->max_moment_nsig2) {
-                        double intensity = std::exp(-0.5 * rho2) * *(imageptr++);
 
-                        /* Now do the addition */
-                        double intensity__x_x0 = intensity * x_x0;
-                        double intensity__y_y0 = intensity * y_y0;
-                        A    += intensity;
-                        Bx   += intensity__x_x0;
-                        By   += intensity__y_y0;
-                        Cxx  += intensity__x_x0 * x_x0;
-                        Cxy  += intensity__x_x0 * y_y0;
-                        Cyy  += intensity__y_y0 * y_y0;
-                        rho4w+= intensity * rho2 * rho2;
-                    } else {
-                        // if we are skipping this pixel because it's too far from center of
-                        // Gaussian, then just increment the pointer to the next pixel in the image,
-                        // don't waste time doing any math for this pixel
-                        ++imageptr;
-                    }
-                } else {
-                    // we still have to increment pointers when jumping over masked pixels,
-                    // otherwise serious badness will happen.
-                    ++imageptr;
-                    ++mxxptr;
-                }
+            // Now for a particular value of y, we want to find the min/max x that satisfy
+            // rho2 < max_moment_nsig2.
+            //
+            // 0 = Minv_xx(x-x0)^2 + 2Minv_xy(x-x0)(y-y0) + Minv_yy(y-y0)^2 - max_moment_nsig2
+            // Simple quadratic formula:
+            double a = Minv_xx;
+            double b = TwoMinv_xy__y_y0;
+            double c = Minv_yy__y_y0__y_y0 - hsmparams->max_moment_nsig2;
+            double d = b*b-4.*a*c;
+            assert(d >= 0.);
+            double sqrtd = sqrt(d);
+            double inv2a = Inv2Minv_xx;
+            double x1 = inv2a*(-b - sqrtd) + x0;
+            double x2 = inv2a*(-b + sqrtd) + x0;
+            int ix1 = int(ceil(x1));
+            int ix2 = int(floor(x2));
+            if (ix1 < xmin) ix1 = xmin;
+            if (ix2 > xmax) ix2 = xmax;
+            if (ix1 > ix2) continue;  // rare, but it can happen after the ceil and floor.
+
+            const double* imageptr = data.getIter(ix1,y);
+            double x_x0 = ix1 - x0;
+            const double* mxxptr = Minv_xx__x_x0__x_x0.cptr() + ix1-xmin;
+            for(int x=ix1;x<=ix2;++x,x_x0+=1.) {
+                /* Compute displacement from weight centroid, then
+                 * get elliptical radius and weight.
+                 */
+                double rho2 = Minv_yy__y_y0__y_y0 + TwoMinv_xy__y_y0*x_x0 + *mxxptr++;
+                xdbg<<"Using pixel: "<<x<<" "<<y<<" with value "<<*(imageptr)<<" rho2 "<<rho2<<" x_x0 "<<x_x0<<" y_y0 "<<y_y0<<std::endl;
+                xassert(rho2 < hsmparams->max_moment_nsig2 + 1.e-8); // allow some numerical error.
+
+                double intensity = std::exp(-0.5 * rho2) * (*imageptr++);
+
+                /* Now do the addition */
+                double intensity__x_x0 = intensity * x_x0;
+                double intensity__y_y0 = intensity * y_y0;
+                A    += intensity;
+                Bx   += intensity__x_x0;
+                By   += intensity__y_y0;
+                Cxx  += intensity__x_x0 * x_x0;
+                Cxy  += intensity__x_x0 * y_y0;
+                Cyy  += intensity__y_y0 * y_y0;
+                rho4w+= intensity * rho2 * rho2;
             }
         }
-        //dbg<<"Number of pixels used: "<<npix<<std::endl;
         dbg<<"Exiting find_ellipmom_1 with results: "<<A<<" "<<Bx<<" "<<By<<" "<<Cxx<<" "<<Cyy<<" "<<Cxy<<" "<<rho4w<<std::endl;
     }
 
@@ -689,9 +786,8 @@ namespace hsm {
      * > num_iter: number of iterations required to converge
      */
 
-    template <typename T>
     void find_ellipmom_2(
-        ConstImageView<T> data, ConstImageView<int> mask, double& A, double& x0, double& y0,
+        ConstImageView<double> data, double& A, double& x0, double& y0,
         double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter,
         boost::shared_ptr<HSMParams> hsmparams) 
     {
@@ -723,7 +819,7 @@ namespace hsm {
         while(convergence_factor > epsilon) {
 
             /* Get moments */
-            find_ellipmom_1(data, mask, x0, y0, Mxx, Mxy, Myy, Amp, Bx, By, Cxx, Cxy, Cyy, rho4, hsmparams);
+            find_ellipmom_1(data, x0, y0, Mxx, Mxy, Myy, Amp, Bx, By, Cxx, Cxy, Cyy, rho4, hsmparams);
 
             /* Compute configuration of the weight function */
             two_psi = std::atan2( 2* Mxy, Mxx-Myy );
@@ -802,9 +898,7 @@ namespace hsm {
      *
      * *** CONVOLVES TWO IMAGES *** 
      *
-     * The bounding boxes and masks from image1 and image2 are taken
-     * into account; only unmasked pixels are set in the output.  Note
-     * that this routine ADDS the convolution to the pre-existing image.
+     * Note that this routine ADDS the convolution to the pre-existing image.
      *
      * Arguments:
      *   image1: 1st image to be convolved, ImageView format
@@ -812,12 +906,102 @@ namespace hsm {
      * > image_out: output (convolved) image, ImageView format
      */
 
-    template <typename T, typename U>
     void fast_convolve_image_1(
-        ConstImageView<T> image1, ConstImageView<int> mask1, 
-        ConstImageView<U> image2, ConstImageView<int> mask2, 
-        ImageView<T> image_out, ConstImageView<int> mask_out)
+        ConstImageView<double> image1, ConstImageView<double> image2, ImageView<double> image_out)
     {
+        dbg<<"Start fast_convolve_image_1:\n";
+        dbg<<"image1.bounds = "<<image1.getBounds()<<std::endl;
+        dbg<<"image2.bounds = "<<image2.getBounds()<<std::endl;
+        dbg<<"image_out.bounds = "<<image_out.getBounds()<<std::endl;
+        int nx1 = image1.getXMax() - image1.getXMin() + 1;
+        int ny1 = image1.getYMax() - image1.getYMin() + 1;
+        int s1 = image1.getStride();
+        int nx2 = image2.getXMax() - image2.getXMin() + 1;
+        int ny2 = image2.getYMax() - image2.getYMin() + 1;
+        int s2 = image2.getStride();
+        int nx3 = image_out.getXMax() - image_out.getXMin() + 1;
+        int ny3 = image_out.getYMax() - image_out.getYMin() + 1;
+        int s3 = image_out.getStride();
+        dbg<<"image1: "<<nx1<<','<<ny1<<','<<s1<<std::endl;
+        dbg<<"image2: "<<nx2<<','<<ny2<<','<<s2<<std::endl;
+        dbg<<"image3: "<<nx3<<','<<ny3<<','<<s3<<std::endl;
+
+        // Convenient matrix views into the images:
+        tmv::ConstMatrixView<double> mIm1(image1.getData(),nx1,ny1,1,s1,tmv::NonConj);
+        tmv::ConstMatrixView<double> mIm2(image2.getData(),nx2,ny2,1,s2,tmv::NonConj);
+        tmv::MatrixView<double> mIm3(image_out.getData(),nx3,ny3,1,s3,tmv::NonConj);
+        dbg<<"mIm1 = "<<mIm1<<std::endl;
+        dbg<<"mIm2 = "<<mIm2<<std::endl;
+        dbg<<"mIm3 = "<<mIm3<<std::endl;
+
+#if 1
+        // Get a good size to use for the FFTs
+        int N1 = std::max(nx1,ny1) * 4/3;
+        int N2 = std::max(nx2,ny2) * 4/3;
+        int N3 = std::max(nx3,ny3);
+        int N = std::max(std::max(N1,N2),N3); // N3 isn't always the largest!
+        assert(nx1 <= N);
+        assert(ny1 <= N);
+        assert(nx2 <= N);
+        assert(ny2 <= N);
+        N = goodFFTSize(N);
+        dbg<<"N => "<<N<<std::endl;
+
+        // Make an XTable for image1:
+        XTable xtab(N,1.);
+        tmv::MatrixView<double> mxt(xtab.getArray(),N,N,1,N,tmv::NonConj);
+        int offset_x1 = N/4;
+        int offset_y1 = N/4;
+        mxt.subMatrix(offset_x1,offset_x1+nx1, offset_y1,offset_y1+ny1) = mIm1;
+        dbg<<"mxt = "<<mxt<<std::endl;
+
+        // Do the FFT:
+        boost::shared_ptr<KTable> ktab1 = xtab.transform();
+
+        // Fill image2 into the XTable
+        mxt.setZero();
+        int offset_x2 = N/4;
+        int offset_y2 = N/4;
+        mxt.subMatrix(offset_x2,offset_x2+nx2, offset_y2,offset_y2+ny2) = mIm2;
+        dbg<<"mxt = "<<mxt<<std::endl;
+
+        // Do the second FFT and multiply:
+        boost::shared_ptr<KTable> ktab2 = xtab.transform();
+        (*ktab2) *= (*ktab1);
+
+        // Inverse FFT to get back to real space
+        ktab2->transform(xtab);
+
+        dbg<<"mout = "<<mxt<<std::endl;
+
+        // Copy back to the output image
+        // Note: (MJ) I don't really understand the offsets here.  Nor the N/4 offsets for
+        // the initial assignments.  The choices were made to match the original algorithm
+        // below.  This now matches the original behavior (below), but it seems like someone
+        // might want to change these somewhat to get im1 and im2 centered in the center of the 
+        // XTable rather than kind of offcenter as they are now.  Another time perhaps....
+        int offset_x3 = image_out.getXMin() - image1.getXMin() - image2.getXMin();
+        int offset_y3 = image_out.getYMin() - image1.getYMin() - image2.getYMin();
+        int i1 = 0;
+        int i2 = nx3;
+        int j1 = 0;
+        int j2 = ny3;
+        int mi1 = i1 + offset_x3;
+        int mi2 = i2 + offset_x3;
+        int mj1 = j1 + offset_y3;
+        int mj2 = j2 + offset_y3;
+        if (mi1 < 0) { i1 -= mi1; mi1 = 0; }
+        if (mi2 > N) { i2 -= (mi2-N); mi2 = N; }
+        if (mj1 < 0) { j1 -= mj1; mj1 = 0; }
+        if (mj2 > N) { j2 -= (mj2-N); mj2 = N; }
+        dbg<<"offset_x3 , offset_y3 = "<<offset_x3<<','<<offset_y3<<std::endl;
+        dbg<<"i1,i2,j1,j2 = "<<i1<<','<<i2<<','<<j1<<','<<j2<<std::endl;
+        dbg<<"mi1,mi2,mj1,mj2 = "<<mi1<<','<<mi2<<','<<mj1<<','<<mj2<<std::endl;
+
+        dbg<<"Add portion: "<<mxt.subMatrix(mi1,mi2,mj1,mj2)<<std::endl;;
+        dbg<<"Add to: "<<mIm3.subMatrix(i1,i2,j1,j2)<<std::endl;
+        mIm3.subMatrix(i1,i2,j1,j2) += mxt.subMatrix(mi1,mi2,mj1,mj2);
+#else
         long dim1x, dim1y, dim1o, dim1, dim2, dim3, dim4;
         double xr,xi,yr,yi;
         long i,i_conj,j,k,ii,ii_conj;
@@ -847,12 +1031,10 @@ namespace hsm {
         /* Build input maps */
         for(int x=image1.getXMin();x<=image1.getXMax();x++)
             for(int y=image1.getYMin();y<=image1.getYMax();y++) 
-                if (mask1(x,y)) 
-                    m1(x-image1.getXMin(),y-image1.getYMin()) = image1(x,y);
+                m1(x-image1.getXMin(),y-image1.getYMin()) = image1(x,y);
         for(i=image2.getXMin();i<=image2.getXMax();i++)
             for(j=image2.getYMin();j<=image2.getYMax();j++)
-                if (mask2(i,j)) 
-                    m2(i-image2.getXMin(),j-image2.getYMin()) = image2(i,j);
+                m2(i-image2.getXMin(),j-image2.getYMin()) = image2(i,j);
 
         /* Build the arrays for FFT -
          * - put m1 and m2 into the real and imaginary parts of Bx, respectively. */
@@ -896,12 +1078,16 @@ namespace hsm {
         if (out_ymin<image_out.getYMin()) out_ymin = image_out.getYMin();
         if (out_ymax>image_out.getYMax()) out_ymax = image_out.getYMax();
 
+        dbg<<"mout = "<<mout<<std::endl;
+
         /* And now do the writing */
         for(i=out_xmin;i<=out_xmax;i++)
             for(j=out_ymin;j<=out_ymax;j++)
-                if(mask_out(i,j))
-                    image_out(i,j) += mout(i-out_xref,j-out_yref);
-
+                image_out(i,j) += mout(i-out_xref,j-out_yref);
+#endif
+        dbg<<"Done: mIm3 => "<<mIm3<<std::endl;
+        dbg<<"maximum is "<<mIm3.maxAbsElement()<<std::endl;
+        dbg<<"Center is "<<mIm3.subMatrix(nx3/2-2,nx3/2+2,ny3/2-2,ny3/2+2)<<std::endl;
     }
 
     void matrix22_invert(double& a, double& b, double& c, double& d) 
@@ -1088,10 +1274,8 @@ namespace hsm {
      * > sig_psf: PSF radius (pixels) -- input initial guess
      */
 
-    template <typename T, typename U>
     unsigned int psf_corr_ksb_1(
-        ConstImageView<T> gal_image, ConstImageView<int> gal_mask,
-        ConstImageView<U> PSF_image, ConstImageView<int> PSF_mask,
+        ConstImageView<double> gal_image, ConstImageView<double> PSF_image,
         double& e1, double& e2,
         double& responsivity, double& R, unsigned long flags, double& x0_gal, double& y0_gal,
         double& sig_gal, double& flux_gal, double& x0_psf, double& y0_psf, double& sig_psf,
@@ -1121,14 +1305,14 @@ namespace hsm {
         x0 = x0_gal;
         y0 = y0_gal;
         sigma0 = sig_gal;
-        find_mom_2(gal_image, gal_mask, moments, hsmparams->ksb_moments_max, x0_gal, y0_gal, sig_gal,
+        find_mom_2(gal_image, moments, hsmparams->ksb_moments_max, x0_gal, y0_gal, sig_gal,
                    1.0e-6, num_iter, hsmparams);
         if (num_iter == hsmparams->num_iter_default) {
             status |= 0x0002; /* Report convergence failure */
             x0_gal = x0;
             y0_gal = y0;
             sig_gal = sigma0;
-            find_mom_1(gal_image, gal_mask, moments, hsmparams->ksb_moments_max, x0, y0, sigma0);
+            find_mom_1(gal_image, moments, hsmparams->ksb_moments_max, x0, y0, sigma0);
         }
         flux_gal = 3.544907701811 * sig_gal * moments(0,0);
 
@@ -1136,7 +1320,7 @@ namespace hsm {
         x0 = x0_psf;
         y0 = y0_psf;
         sigma0 = sig_psf;
-        find_mom_2(PSF_image, PSF_mask, psfmoms, hsmparams->ksb_moments_max, x0_psf, y0_psf, sig_psf,
+        find_mom_2(PSF_image, psfmoms, hsmparams->ksb_moments_max, x0_psf, y0_psf, sig_psf,
                    1.0e-6, num_iter, hsmparams);
         if (num_iter == hsmparams->num_iter_default) {
             status |= 0x0001; /* Report convergence failure */
@@ -1146,7 +1330,7 @@ namespace hsm {
         }
 
         /* ... but we want the moments with the galaxy weight fcn */
-        find_mom_1(PSF_image, PSF_mask, psfmoms, hsmparams->ksb_moments_max, x0_psf, y0_psf, sig_gal);
+        find_mom_1(PSF_image, psfmoms, hsmparams->ksb_moments_max, x0_psf, y0_psf, sig_gal);
 
         /* Get resolution factor */
         R = 1. - (sig_psf*sig_psf)/(sig_gal*sig_gal);
@@ -1301,10 +1485,8 @@ namespace hsm {
      *   0x0008 = adaptive measurement of re-Gaussianized image failed to converge
      */
 
-    template <typename T, typename U>
     unsigned int psf_corr_regauss(
-        ConstImageView<T> gal_image, ConstImageView<int> gal_mask,
-        ConstImageView<U> PSF_image, ConstImageView<int> PSF_mask,
+        ConstImageView<double> gal_image, ConstImageView<double> PSF_image,
         double& e1, double& e2, double& R, unsigned long flags, double& x0_gal,
         double& y0_gal, double& sig_gal, double& x0_psf, double& y0_psf,
         double& sig_psf, double& flux_gal, boost::shared_ptr<HSMParams> hsmparams) 
@@ -1331,22 +1513,20 @@ namespace hsm {
         flux_psf = 0;
         for(int y=PSF_image.getYMin();y<=PSF_image.getYMax();y++)
             for(int x=PSF_image.getXMin();x<=PSF_image.getXMax();x++)
-                if (PSF_mask(x,y))
-                    flux_psf += PSF_image(x,y);
+                flux_psf += PSF_image(x,y);
 
         /* Recompute the galaxy flux only if the relevant flag is set */
         if (flags & 0x00000001) {
             flux_gal = 0;
             for(int y=gal_image.getYMin();y<=gal_image.getYMax();y++)
                 for(int x=gal_image.getXMin();x<=gal_image.getXMax();x++)
-                    if (gal_mask(x,y)) 
-                        flux_gal += gal_image(x,y);
+                    flux_gal += gal_image(x,y);
         }
 
         /* Get the elliptical adaptive moments of PSF */
         Mxxpsf = Myypsf = sig_psf * sig_psf;
         Mxypsf = 0.;
-        find_ellipmom_2(PSF_image, PSF_mask, A_g, x0_psf, y0_psf, Mxxpsf, Mxypsf, Myypsf, rho4psf,
+        find_ellipmom_2(PSF_image, A_g, x0_psf, y0_psf, Mxxpsf, Mxypsf, Myypsf, rho4psf,
                         1.0e-6, num_iter, hsmparams);
 
         if (num_iter == hsmparams->num_iter_default) {
@@ -1358,7 +1538,7 @@ namespace hsm {
         /* Get the elliptical adaptive moments of galaxy */
         Mxxgal = Myygal = sig_gal * sig_gal;
         Mxygal = 0.;
-        find_ellipmom_2(gal_image, gal_mask, A_I, x0_gal, y0_gal, Mxxgal, Mxygal, Myygal, rho4gal,
+        find_ellipmom_2(gal_image, A_I, x0_gal, y0_gal, Mxxgal, Mxygal, Myygal, rho4gal,
                         1.0e-6, num_iter, hsmparams);
 
         if (num_iter == hsmparams->num_iter_default) {
@@ -1440,9 +1620,6 @@ namespace hsm {
 
         /* Properly normalize fgauss */
         fgauss *= flux_gal/(sum*flux_psf);
-        Image<int> fgauss_mask(fgauss_bounds);
-        fgauss_mask.fill(1);
-        ConstImageView<int> fgauss_mask_view = fgauss_mask.view();
 
         /* Figure out the size of the bounding box for the PSF residual.
          * We don't necessarily need the whole PSF,
@@ -1480,9 +1657,8 @@ namespace hsm {
                 dx = x - x0_psf;
                 dy = y - y0_psf;
 
-                if (PSF_mask(x,y))
-                    PSF_resid(x,y) = -PSF_image(x,y) + center_amp_psf * 
-                        std::exp (-0.5 * ( Minvpsf_xx*dx*dx + Minvpsf_yy*dy*dy ) - Minvpsf_xy*dx*dy);
+                PSF_resid(x,y) = -PSF_image(x,y) + center_amp_psf * 
+                    std::exp (-0.5 * ( Minvpsf_xx*dx*dx + Minvpsf_yy*dy*dy ) - Minvpsf_xy*dx*dy);
             }
         }
 
@@ -1492,11 +1668,10 @@ namespace hsm {
         ConstImageView<double> PSF_resid_view = PSF_resid.view();
         ImageView<double> Iprime_view = Iprime.view();
         ConstImageView<double> Iprime_cview = Iprime_view;
-        fast_convolve_image_1(fgauss_view, fgauss_mask_view, PSF_resid_view, PSF_mask,
-                              Iprime_view, gal_mask);
+        fast_convolve_image_1(fgauss_view, PSF_resid_view, Iprime_view);
 
         /* Now that Iprime is constructed, we measure it */
-        find_ellipmom_2(Iprime_cview, gal_mask, A_I, x0_gal, y0_gal, Mxxgal, Mxygal, Myygal,
+        find_ellipmom_2(Iprime_cview, A_I, x0_gal, y0_gal, Mxxgal, Mxygal, Myygal,
                         rho4gal, 1.0e-6, num_iter, hsmparams);
         if (num_iter == hsmparams->num_iter_default) {
             x0_gal = x0_old;
@@ -1542,10 +1717,8 @@ namespace hsm {
      * For BJ and LINEAR methods, returns 1 if measurement fails.
      */
 
-    template <typename T, typename U>
     unsigned int general_shear_estimator(
-        ConstImageView<T> gal_image, ConstImageView<int> gal_mask,
-        ConstImageView<U> PSF_image, ConstImageView<int> PSF_mask,
+        ConstImageView<double> gal_image, ConstImageView<double> PSF_image,
         ObjectData& gal_data, ObjectData& PSF_data, const std::string& shear_est,
         unsigned long flags, boost::shared_ptr<HSMParams> hsmparams) 
     {
@@ -1562,7 +1735,7 @@ namespace hsm {
             x0 = PSF_data.x0;
             y0 = PSF_data.y0;
             Mxx_psf = Myy_psf = PSF_data.sigma * PSF_data.sigma; Mxy_psf = 0.;
-            find_ellipmom_2(PSF_image, PSF_mask, A_psf, x0, y0, Mxx_psf, Mxy_psf, Myy_psf,
+            find_ellipmom_2(PSF_image, A_psf, x0, y0, Mxx_psf, Mxy_psf, Myy_psf,
                             rho4_psf, 1.0e-6, num_iter, hsmparams);
             if (num_iter == hsmparams->num_iter_default) {
                 return 1;
@@ -1576,7 +1749,7 @@ namespace hsm {
             x0 = gal_data.x0;
             y0 = gal_data.y0;
             Mxx_gal = Myy_gal = gal_data.sigma * gal_data.sigma; Mxy_gal = 0.;
-            find_ellipmom_2(gal_image, gal_mask, A_gal, x0, y0, Mxx_gal, Mxy_gal,
+            find_ellipmom_2(gal_image, A_gal, x0, y0, Mxx_gal, Mxy_gal,
                             Myy_gal, rho4_gal, 1.0e-6, num_iter, hsmparams);
             if (num_iter == hsmparams->num_iter_default) {
                 return 1;
@@ -1607,7 +1780,7 @@ namespace hsm {
         } else if (shear_est == "KSB") {
 
             status = psf_corr_ksb_1(
-                gal_image, gal_mask, PSF_image, PSF_mask, gal_data.e1, gal_data.e2,
+                gal_image, PSF_image, gal_data.e1, gal_data.e2,
                 gal_data.responsivity, R, flags, gal_data.x0, gal_data.y0,
                 gal_data.sigma, gal_data.flux, PSF_data.x0, PSF_data.y0,
                 PSF_data.sigma, hsmparams );
@@ -1616,7 +1789,7 @@ namespace hsm {
         } else if (shear_est == "REGAUSS") {
 
             status = psf_corr_regauss(
-                gal_image, gal_mask, PSF_image, PSF_mask, gal_data.e1, gal_data.e2, R,
+                gal_image, PSF_image, gal_data.e1, gal_data.e2, R,
                 flags, gal_data.x0, gal_data.y0, gal_data.sigma, PSF_data.x0,
                 PSF_data.y0, PSF_data.sigma, gal_data.flux, hsmparams );
             gal_data.meas_type = 'e';
@@ -1674,45 +1847,6 @@ namespace hsm {
     template CppShapeData FindAdaptiveMomView(
         const ImageView<int>& object_image, const ImageView<int> &object_mask_image,
         double guess_sig, double precision, double guess_x_centroid, double guess_y_centroid,
-        boost::shared_ptr<HSMParams> hsmparams);
-
-    template unsigned int general_shear_estimator(
-        ConstImageView<float> gal_image, ConstImageView<int> gal_mask, 
-        ConstImageView<float> PSF_image, ConstImageView<int> PSF_mask, 
-        ObjectData& gal_data, ObjectData& PSF_data, const std::string& shear_est, 
-        unsigned long flags, boost::shared_ptr<HSMParams> hsmparams);
-    template unsigned int general_shear_estimator(
-        ConstImageView<float> gal_image, ConstImageView<int> gal_mask, 
-        ConstImageView<double> PSF_image, ConstImageView<int> PSF_mask, 
-        ObjectData& gal_data, ObjectData& PSF_data, const std::string& shear_est, 
-        unsigned long flags, boost::shared_ptr<HSMParams> hsmparams);
-    template unsigned int general_shear_estimator(
-        ConstImageView<double> gal_image, ConstImageView<int> gal_mask, 
-        ConstImageView<float> PSF_image, ConstImageView<int> PSF_mask, 
-        ObjectData& gal_data, ObjectData& PSF_data, const std::string& shear_est, 
-        unsigned long flags, boost::shared_ptr<HSMParams> hsmparams);
-    template unsigned int general_shear_estimator(
-        ConstImageView<double> gal_image, ConstImageView<int> gal_mask, 
-        ConstImageView<double> PSF_image, ConstImageView<int> PSF_mask, 
-        ObjectData& gal_data, ObjectData& PSF_data, const std::string& shear_est, 
-        unsigned long flags, boost::shared_ptr<HSMParams> hsmparams);
-    template unsigned int general_shear_estimator(
-        ConstImageView<int> gal_image, ConstImageView<int> gal_mask, 
-        ConstImageView<int> PSF_image, ConstImageView<int> PSF_mask, 
-        ObjectData& gal_data, ObjectData& PSF_data, const std::string& shear_est, 
-        unsigned long flags, boost::shared_ptr<HSMParams> hsmparams);
-
-    template void find_ellipmom_2(
-        ConstImageView<double> data, ConstImageView<int> mask, double& A, double& x0, double& y0,
-        double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter,
-        boost::shared_ptr<HSMParams> hsmparams);
-    template void find_ellipmom_2(
-        ConstImageView<float> data, ConstImageView<int> mask, double& A, double& x0, double& y0,
-        double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter,
-        boost::shared_ptr<HSMParams> hsmparams);
-    template void find_ellipmom_2(
-        ConstImageView<int> data, ConstImageView<int> mask, double& A, double& x0, double& y0,
-        double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter,
         boost::shared_ptr<HSMParams> hsmparams);
 
 }
