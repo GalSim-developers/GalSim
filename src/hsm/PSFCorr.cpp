@@ -30,6 +30,7 @@
 #include "hsm/PSFCorr.h"
 
 #include "FFT.h"
+#include <boost/math/special_functions/fpclassify.hpp> // for isnan()
 
 #ifdef DEBUGLOGGING
 #include <fstream>
@@ -879,8 +880,11 @@ namespace hsm {
                 throw HSMError("Error: too many iterations in adaptive moments\n");
             }
 
-            if (std::isnan(convergence_factor) || std::isnan(Mxx) || std::isnan(Myy)
-                || std::isnan(Mxy) || std::isnan(x0) || std::isnan(y0)) {
+            // See http://www.boost.org/doc/libs/1_41_0/libs/math/doc/sf_and_dist/html/math_toolkit/utils/fpclass.html
+            // for why we seem to have extra parentheses here.
+            if ((boost::math::isnan)(convergence_factor) || (boost::math::isnan)(Mxx) || 
+                (boost::math::isnan)(Myy) || (boost::math::isnan)(Mxy) || 
+                (boost::math::isnan)(x0) || (boost::math::isnan)(y0)) {
                 throw HSMError("Error: NaN in calculation of adaptive moments\n");
             }
         }

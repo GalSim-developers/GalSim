@@ -1137,9 +1137,6 @@ class Airy(GSObject):
         >>> airy_obj.getHalfLightRadius()
         1.0696642954485294
 
-    Attempting to initialize with more than one size parameter is ambiguous, and will raise a
-    TypeError exception.
-
     You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
     help(galsim.GSParams) for more information about this option.
 
