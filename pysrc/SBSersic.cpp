@@ -107,7 +107,7 @@ namespace galsim {
 
         static void wrap() 
         {
-            bp::class_<SBDeVaucouleurs,bp::bases<SBDeVaucouleurs> >("SBDeVaucouleurs",bp::no_init)
+            bp::class_<SBDeVaucouleurs,bp::bases<SBSersic> >("SBDeVaucouleurs",bp::no_init)
                 .def("__init__",
                      bp::make_constructor(
                          &construct, bp::default_call_policies(),
