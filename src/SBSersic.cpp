@@ -19,7 +19,7 @@
  * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
  */
 
-//#define DEBUGLOGGING
+#define DEBUGLOGGING
 
 #include <boost/math/special_functions/gamma.hpp>
 
@@ -30,8 +30,8 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-//std::ostream* dbgout = &std::cout;
-//int verbose_level = 1;
+std::ostream* dbgout = &std::cout;
+int verbose_level = 3;
 #endif
 
 namespace galsim {
@@ -100,6 +100,9 @@ namespace galsim {
           default:
                throw SBError("Unknown SBSersic::RadiusType");
         }
+
+        xdbg<<"hlr = "<<_re<<"\n";
+        xdbg<<"_r0 = "<<_r0<<"\n";
 
         _maxRre = (int)(_trunc/_re * 100 + 0.5) / 100.0;  // round to two decimal places
         _re_sq = _re*_re;

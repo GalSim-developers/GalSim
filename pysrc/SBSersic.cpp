@@ -59,7 +59,7 @@ namespace galsim {
                 s = bp::extract<double>(scale_radius);
                 rType = SBSersic::SCALE_RADIUS;
             }
-            return new SBSersic(n, s, rType, trunc, flux, flux_untruncated, gsparams);
+            return new SBSersic(n, s, rType, flux, trunc, flux_untruncated, gsparams);
         }
 
         static void wrap() 
@@ -102,7 +102,7 @@ namespace galsim {
                 s = bp::extract<double>(scale_radius);
                 rType = SBSersic::SCALE_RADIUS;
             }
-            return new SBDeVaucouleurs(s, rType, trunc, flux, flux_untruncated, gsparams);
+            return new SBDeVaucouleurs(s, rType, flux, trunc, flux_untruncated, gsparams);
         }
 
         static void wrap() 
