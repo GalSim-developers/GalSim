@@ -1354,15 +1354,22 @@ class Sersic(GSObject):
 
     Initialization
     --------------
-    A Sersic is initialized with `n`, the Sersic index of the profile, and the half light radius 
-    size parameter `half_light_radius`.  Optional parameters are truncation radius `trunc` [default
-    `trunc = 0.`, indicating no truncation] and a `flux` parameter [default `flux = 1`].  If `trunc`
-    is set to a non-zero value, then it is assumed to be in the same system of units as
-    `half_light_radius`.
+
+    A Sersic is initialized with `n`, the Sersic index of the profile, and using one (and only
+    one) of two possible size parameters
+
+        half_ligh_radius
+        scale_radius
+
+    with several optional parameters.  They are: truncation radius `trunc` [default `trunc = 0.`,
+    indicating no truncation] and a `flux` parameter [default `flux = 1`].  If `trunc` is set to
+    a non-zero value, then it is assumed to be in the same system of units as `half_light_radius`
+    or `scale_radius`.
 
     Note that the code will be more efficient if the truncation is always the same multiple of
     `half_light_radius`, since it caches many calculations that depend on the ratio
-    `trunc/half_light_radius`.
+    `trunc/half_light_radius`.  The `half_light_radius` is always calculated internally for a
+    `scale_radius` input, and vice versa.
 
     Example:
 
@@ -1417,9 +1424,9 @@ class Sersic(GSObject):
     """
 
     # Initialization parameters of the object, with type information
-    _req_params = { "n" : float , "half_light_radius" : float }
+    _req_params = { "n" : float }
     _opt_params = { "flux" : float, "trunc": float, "flux_untruncated" : bool }
-    _single_params = []
+    _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
 
     # --- Public Class methods ---
