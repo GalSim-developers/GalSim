@@ -122,6 +122,8 @@ namespace galsim {
         /// which is not unity when `_truncated` and `_flux_untruncated` are both true.
         double getTrueReFraction() const { return _re_fraction; }
 
+        double getScaleB() const { return _b; }
+
         /**
          * @brief Shoot photons through unit-size, unnormalized profile
          * Sersic profiles are sampled with a numerical method, using class
@@ -175,7 +177,7 @@ namespace galsim {
     class SBSersic::SBSersicImpl : public SBProfileImpl
     {
     public:
-        SBSersicImpl(double n, double re, double flux,
+        SBSersicImpl(double n, double size, RadiusType rType, double flux,
                      double trunc, bool flux_untruncated,
                      boost::shared_ptr<GSParams> gsparams);
 
@@ -225,6 +227,8 @@ namespace galsim {
         double getN() const { return _n; }
         /// @brief Returns the true half-light radius (may be different from the specified value)
         double getHalfLightRadius() const { return _actual_re; }
+        /// @brief Returns the true scale radius (may be different from the specified value)
+        double getScaleRadius() const;
 
         // Overrides for better efficiency
         void fillXValue(tmv::MatrixView<double> val,
@@ -244,6 +248,7 @@ namespace galsim {
         double _n; ///< Sersic index.
         double _flux; ///< Flux specified at the constructor.
         double _re;   ///< Half-light radius specified at the constructor.
+        double _r0;   ///< Scale radius specified at the constructor.
         double _re_sq;
         double _inv_re;
         double _inv_re_sq;
@@ -252,6 +257,7 @@ namespace galsim {
         bool _flux_untruncated; ///< If true, flux is set to the untruncated Sersic with index `_n`.
         double _actual_flux; ///< True flux of object.
         double _actual_re; ///< True half-light radius of object.
+        mutable double _actual_r0; ///< True scale radius of object.
         double _maxRre; ///< Maximum (truncation) `r` in units of `_re`.
         double _maxRre_sq;
         double _maxR; ///< Maximum (truncation) radius `r`.
@@ -259,7 +265,7 @@ namespace galsim {
         double _ksq_max; ///< The ksq_max value from info rescaled with this re value.
         bool _truncated; ///< Set true if `_trunc > 0`.
 
-        const boost::shared_ptr<SersicInfo> _info; ///< Points to info structure for this n.
+        boost::shared_ptr<SersicInfo> _info; ///< Points to info structure for this SersicKey.
 
         // Copy constructor and op= are undefined.
         SBSersicImpl(const SBSersicImpl& rhs);

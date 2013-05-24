@@ -36,10 +36,10 @@
 
 namespace galsim {
 
-    SBSersic::SBSersic(double n, double re, double flux,
+    SBSersic::SBSersic(double n, double size, RadiusType rType, double flux,
                        double trunc, bool flux_untruncated,
                        boost::shared_ptr<GSParams> gsparams) :
-        SBProfile(new SBSersicImpl(n, re, flux, trunc, flux_untruncated, gsparams)) {}
+        SBProfile(new SBSersicImpl(n, size, rType, flux, trunc, flux_untruncated, gsparams)) {}
 
     SBSersic::SBSersic(const SBSersic& rhs) : SBProfile(rhs) {}
 
@@ -57,25 +57,61 @@ namespace galsim {
         return static_cast<const SBSersicImpl&>(*_pimpl).getHalfLightRadius(); 
     }
 
+    double SBSersic::getScaleRadius() const
+    {
+        assert(dynamic_cast<const SBSersicImpl*>(_pimpl.get()));
+        return static_cast<const SBSersicImpl&>(*_pimpl).getScaleRadius();
+    }
+
     const int MAX_SERSIC_INFO = 100;
 
     LRUCache<std::pair<SersicKey, const GSParams*>, SersicInfo> 
         SBSersic::SBSersicImpl::cache(MAX_SERSIC_INFO);
 
-    SBSersic::SBSersicImpl::SBSersicImpl(double n,  double re, double flux,
+    double SersicCalculateHLRScale(double n, double b, double gamma2n);
+
+    SBSersic::SBSersicImpl::SBSersicImpl(double n,  double size, RadiusType rType, double flux,
                                          double trunc, bool flux_untruncated,
                                          boost::shared_ptr<GSParams> gsparams) :
         SBProfileImpl(gsparams),
-        _n(n), _flux(flux), _re(re), _re_sq(_re*_re),
-        _inv_re(1./_re), _inv_re_sq(_inv_re*_inv_re),
-        _norm(_flux*_inv_re_sq), 
-        _trunc(trunc), _flux_untruncated(flux_untruncated),
-        _maxRre((int)(_trunc/_re * 100 + 0.5) / 100.0),  // round to two decimal places
-        _info(cache.get(std::make_pair(SersicKey(_n,_maxRre,_flux_untruncated),
-                                       this->gsparams.get())))
+        _n(n), _flux(flux), _re(0.), _r0(0.),
+        _trunc(trunc), _flux_untruncated(flux_untruncated), _actual_r0(0.)
     {
+        xdbg<<"Start SBSersic constructor:\n";
+        xdbg<<"n = "<<_n<<"\n";
+        xdbg<<"flux = "<<_flux<<"\n";
+        xdbg<<"trunc = "<<_trunc<<"\n";
+
+        // Set size of this instance according to type of size given in constructor
+        // (all internal calculations based on half-light radius _re, so specify this first):
+        switch (rType) {
+          case HALF_LIGHT_RADIUS:
+               _re = size;
+               break;
+          case SCALE_RADIUS:
+               {
+                   _r0 = size;
+                   double b = std::pow(_r0, -1./_n);
+                   double gamma2n = boost::math::tgamma(2.*_n);  // integrate r/r0 from 0. to inf
+                   // find solution to gamma(2n, (hlr/r0)^{1/n}) = Gamma(2n) / 2
+                   _re = _r0 * SersicCalculateHLRScale(_n, b, gamma2n);
+               }
+               break;
+          default:
+               throw SBError("Unknown SBSersic::RadiusType");
+        }
+
+        _maxRre = (int)(_trunc/_re * 100 + 0.5) / 100.0;  // round to two decimal places
+        _re_sq = _re*_re;
+        _inv_re = 1./_re;
+        _inv_re_sq = _inv_re*_inv_re;
+        _norm = _flux*_inv_re_sq;
+
         _truncated = (_trunc > 0.);
         if (!_truncated) _flux_untruncated = true;  // set unused parameter to a single value
+        _info = cache.get(std::make_pair(SersicKey(_n,_maxRre,_flux_untruncated),
+                                         this->gsparams.get()));
+
         _actual_flux = _info->getTrueFluxFraction() * _flux;
         _actual_re = _info->getTrueReFraction() * _re;
         _maxRre_sq = _maxRre*_maxRre;
@@ -83,6 +119,14 @@ namespace galsim {
         _maxR_sq = _maxR*_maxR;
         _ksq_max = _info->getKsqMax();
         dbg<<"_ksq_max for n = "<<n<<" = "<<_ksq_max<<std::endl;
+    }
+
+    double SBSersic::SBSersicImpl::getScaleRadius() const
+    {
+        if (_actual_r0 == 0.) {
+            _actual_r0 = _actual_re * std::pow(_info->getScaleB(), _n);
+        }
+        return _actual_r0;
     }
 
     double SBSersic::SBSersicImpl::xValue(const Position<double>& p) const
@@ -389,7 +433,7 @@ namespace galsim {
             throw SBError("Sersic truncation radius must be > half_light_radius.");
         dbg<<"Find Sersic scale b for maxR/HLR = "<<maxRre<<std::endl;
         SersicScaleRadiusFunc func(n, maxRre);
-        // For the upper bound of b, use 2*n, based on the Ciotti & Bertin (1999) approximate 
+        // For the upper bound of b, use 2*n, based on the Ciotti & Bertin (1999) approximate
         // solution for untruncated Sersic; for the lower bound, we don't really have a good choice,
         // so start with half the upper bound, and we'll expand it if necessary.
         double b1 = n;
@@ -433,11 +477,15 @@ namespace galsim {
         //
         dbg<<"Find HLR scale for (n,b,gamma2n) = ("<<n<<","<<b<<","<<gamma2n<<")"<<std::endl;
         SersicHalfLightRadiusFunc func(n, b, gamma2n);
-        // For the upper bound of b, use 1 (i.e., the specified half-light radius); the true half-
-        // light radius will always be smaller for a truncated Sersic.  For the lower bound, we
-        // don't really have a good choice, so start with half the upper bound, and we'll expand it
-        // if necessary.
-        double b1 = 1.;
+        // There are two uses of this function.  The first case is to calculate the half-light
+        // radius (hlr) given the scale radius r0.  In this case, the reference scale is r0, and the
+        // upper limit on hlr/r0 (the return value) is (2n-1/3)^n.  The second case calculates the
+        // true hlr for a truncated Sersic, when the hlr has been specified with `flux_untruncated`.
+        // In this case, the reference scale is re (the hlr).  For the upper limit, use 1 (i.e.,
+        // the specified half-light radius); the true half-light radius will always be smaller
+        // for a truncated Sersic.  For the lower bound, we don't really have a good choice, so
+        // start with half the upper bound, and we'll expand it if necessary.
+        double b1 = std::max((2.*n-1./3.), 1.);
         dbg<<"b1 = "<<b1<<std::endl;
         double b2 = 0.5;
         dbg<<"b2 = "<<b2<<std::endl;

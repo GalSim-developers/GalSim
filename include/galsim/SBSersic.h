@@ -33,9 +33,10 @@ namespace galsim {
      * @brief Sersic Surface Brightness Profile.
      *
      * The Sersic Surface Brightness Profile is characterized by three properties: its Sersic index
-     * `n`, its `flux` and the half-light radius `re`.  Given these properties, the surface
-     * brightness profile scales as I(r) propto exp[-(r/r_0)^{1/n}].  Currently the code is limited
-     * to 0.5<=n<=4.2, with an exception thrown for values outside that range.
+     * `n`, its `flux`, and the scale radius `r0` (or half-light radius `re`).  Given these
+     * properties, the surface brightness profile scales as `I(r) propto exp[-(r/r0)^{1/n}]`, or
+     * `I(r) propto exp[-b*(r/re)^{1/n}]`.  Currently the code is limited to 0.5<=n<=4.2, with
+     * an exception thrown for values outside that range.
      *
      * The SBProfile representation of a Sersic profile also includes an optional truncation beyond
      * a given radius, by the parameter `trunc`.  The resolution of the truncation radius in units
@@ -49,9 +50,10 @@ namespace galsim {
      * untruncated version with the same Sersic index `n`.  The `flux_untruncated` variable is
      * ignored if `trunc = 0`.
      *
-     * Note that when `trunc > 0.` and `flux_untruncated == true`, the actual half-light radius will
-     * be different from the specified half-light radius.  The getHalfLightRadius() method will
-     * return the true half-light radius.  Similarly, the actual flux will not be the the same as
+     * Note that when `trunc > 0.` and `flux_untruncated == true`, the actual half-light radius
+     * will be different from the specified half-light radius (similarly for the scale radius).
+     * The getHalfLightRadius() method will return the true half-light radius (as will the
+     * getScaleRadius() method).  Similarly, the actual flux will not be the the same as
      * the specified value; the true flux is returned by the getFlux() method.
      *
      * There are several special cases of the Sersic profile that have their own SBProfiles: n=4
@@ -134,7 +136,7 @@ namespace galsim {
         SBDeVaucouleurs(double size, RadiusType rType, double flux=1.,
                         double trunc=0., bool flux_untruncated=false,
                         boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>()) :
-            SBSersic(4., size, flux, trunc, flux_untruncated, gsparams) {}
+            SBSersic(4., size, rType, flux, trunc, flux_untruncated, gsparams) {}
     };
 
 }
