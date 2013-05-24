@@ -221,6 +221,17 @@ def Image_idiv(self, other):
         self.array[:,:] /= other
     return self
 
+def Image_pow(self, other):
+    result = self.copy()
+    result **= other
+    return result
+
+def Image_ipow(self, other):
+    if not isinstance(other, int) and not isinstance(other, float):
+        raise TypeError("Can only raise an image to a float or int power!")
+    self.array[:,:] **= other
+    return self
+
 # Define &, ^ and | only for integer-type images
 def Image_and(self, other):
     result = self.copy()
@@ -300,6 +311,8 @@ for Class in _galsim.Image.itervalues():
     Class.__truediv__ = Image_div
     Class.__idiv__ = Image_idiv
     Class.__itruediv__ = Image_idiv
+    Class.__pow__ = Image_pow
+    Class.__ipow__ = Image_ipow
     Class.copy = Image_copy
     Class.__getstate_manages_dict__ = 1
     Class.__getstate__ = Image_getstate
@@ -320,6 +333,8 @@ for Class in _galsim.ImageView.itervalues():
     Class.__truediv__ = Image_div
     Class.__idiv__ = Image_idiv
     Class.__itruediv__ = Image_idiv
+    Class.__pow__ = Image_pow
+    Class.__ipow__ = Image_ipow
     Class.copy = Image_copy
     Class.__getinitargs__ = ImageView_getinitargs
 
@@ -332,6 +347,7 @@ for Class in _galsim.ConstImageView.itervalues():
     Class.__rmul__ = Image_mul
     Class.__div__ = Image_div
     Class.__truediv__ = Image_div
+    Class.__pow__ = Image_pow
     Class.copy = Image_copy
     Class.__getinitargs__ = ImageView_getinitargs
 
