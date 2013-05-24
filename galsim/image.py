@@ -223,14 +223,13 @@ def Image_idiv(self, other):
 
 # Define &, ^ and | only for integer-type images
 def Image_and(self, other):
-    try:
-        result = self.array[:,:] & other.array
-    except AttributeError:
-        result = self.array[:,:] & other
-    res_type = result.dtype.type
-    return _galsim.ImageView[res_type](result)
+    result = self.copy()
+    result &= other
+    return result
 
 def Image_iand(self, other):
+    if other in _galsim.Image.itervalues():
+        check_image_consistency(self, other)
     try:
         self.array[:,:] &= other.array
     except AttributeError:
@@ -238,14 +237,13 @@ def Image_iand(self, other):
     return self
 
 def Image_xor(self, other):
-    try:
-        result = self.array[:,:] ^ other.array
-    except AttributeError:
-        result = self.array[:,:] ^ other
-    res_type = result.dtype.type
-    return _galsim.ImageView[res_type](result)
+    result = self.copy()
+    result ^= other
+    return result
 
 def Image_ixor(self, other):
+    if other in _galsim.Image.itervalues():
+        check_image_consistency(self, other)
     try:
         self.array[:,:] ^= other.array
     except AttributeError:
@@ -253,14 +251,13 @@ def Image_ixor(self, other):
     return self
 
 def Image_or(self, other):
-    try:
-        result = self.array[:,:] | other.array
-    except AttributeError:
-        result = self.array[:,:] | other
-    res_type = result.dtype.type
-    return _galsim.ImageView[res_type](result)
+    result = self.copy()
+    result |= other
+    return result
 
 def Image_ior(self, other):
+    if other in _galsim.Image.itervalues():
+        check_image_consistency(self, other)
     try:
         self.array[:,:] |= other.array
     except AttributeError:
