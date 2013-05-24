@@ -62,11 +62,19 @@ namespace galsim {
     class SBSersic : public SBProfile 
     {
     public:
+        enum  RadiusType
+        {
+            HALF_LIGHT_RADIUS,
+            SCALE_RADIUS
+        };
+
         /**
          * @brief Constructor.
          *
          * @param[in] n                 Sersic index.
-         * @param[in] re                Half-light radius.
+         * @param[in] size              Size specification.
+         * @param[in] rType             Kind of size being specified (HALF_LIGHT_RADIUS or
+         *                              SCALE_RADIUS).
          * @param[in] trunc             Outer truncation radius in same physical units as size;
          *                              `trunc = 0.` for no truncation (default `trunc = 0.`).
          * @param[in] flux              Flux (default `flux = 1.`).
@@ -74,7 +82,7 @@ namespace galsim {
          *                              Sersic profile with the same index `n` (default
          *                              flux_untruncated = false`).  Ignored if `trunc = 0.`.
          */
-        SBSersic(double n, double re, double flux=1.,
+        SBSersic(double n, double size, RadiusType rType, double flux=1.,
                  double trunc=0., bool flux_untruncated=false,
                  boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
 
@@ -86,6 +94,9 @@ namespace galsim {
 
         /// @brief Returns the Sersic index `n` of the profile.
         double getN() const;
+
+        /// @brief Returns the scale radius r0 of the Sersic profile `exp[-(r/r_0)^(1/n)]`.
+        double getScaleRadius() const;
 
         /// @brief Returns the half light radius of the Sersic profile.
         double getHalfLightRadius() const;
@@ -110,7 +121,9 @@ namespace galsim {
         /** 
          * @brief Constructor.
          *
-         * @param[in] re                Half-light radius.
+         * @param[in] size              Size specification.
+         * @param[in] rType             Kind of size being specified (HALF_LIGHT_RADIUS or
+         *                              SCALE_RADIUS).
          * @param[in] flux              Flux (default `flux = 1.`).
          * @param[in] trunc             Outer truncation radius in same physical units as size;
          *                               `trunc = 0.` for no truncation (default `trunc = 0.`).
@@ -118,10 +131,10 @@ namespace galsim {
          *                              Sersic profile with the same index `n` (default
          *                              flux_untruncated = false`).  Ignored if `trunc = 0.`.
          */
-        SBDeVaucouleurs(double re, double flux=1.,
+        SBDeVaucouleurs(double size, RadiusType rType, double flux=1.,
                         double trunc=0., bool flux_untruncated=false,
                         boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>()) :
-            SBSersic(4., re, flux, trunc, flux_untruncated, gsparams) {}
+            SBSersic(4., size, flux, trunc, flux_untruncated, gsparams) {}
     };
 
 }

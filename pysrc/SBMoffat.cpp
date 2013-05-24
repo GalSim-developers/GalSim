@@ -43,6 +43,7 @@ namespace galsim {
 
     struct PySBMoffat 
     {
+
         static SBMoffat* construct(
             double beta, const bp::object & fwhm, const bp::object & scale_radius,
             const bp::object & half_light_radius, double trunc, double flux,
