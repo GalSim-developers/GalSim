@@ -97,3 +97,6 @@ Changes from v0.4 to current version:
   (Issue #417)
 
 * Add new function `galsim.fits.writeFile`. (Issue #417)
+
+* Fixed some issues with image arithmetic (failure to check/respect bounds and scale), added the
+  ability to raise all elements in an image to a float/int power. (Issue #419)
