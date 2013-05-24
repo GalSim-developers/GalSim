@@ -19,7 +19,7 @@
  * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#define DEBUGLOGGING
+//#define DEBUGLOGGING
 
 #include <boost/math/special_functions/gamma.hpp>
 

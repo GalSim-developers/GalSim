@@ -1456,6 +1456,11 @@ class Sersic(GSObject):
         """
         return self.SBProfile.getHalfLightRadius()
 
+    def getScaleRadius(self):
+        """Return the half light radius for this Sersic profile.
+        """
+        return self.SBProfile.getScaleRadius()
+
 
 class Exponential(GSObject):
     """A class describing exponential profile objects.  Has an SBExponential in the SBProfile 
