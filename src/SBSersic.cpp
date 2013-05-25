@@ -489,7 +489,7 @@ namespace galsim {
         // start with half the upper bound, and we'll expand it if necessary.
         double b1 = std::max((2.*n-1./3.), 1.);
         xdbg<<"b1 = "<<b1<<std::endl;
-        double b2 = b1 * 0.5;
+        double b2 = 0.5;          // 0.5 is a safe lower limit for both cases
         xdbg<<"b2 = "<<b2<<std::endl;
         Solve<SersicHalfLightRadiusFunc> solver(func,b1,b2);
         solver.setMethod(Brent);
