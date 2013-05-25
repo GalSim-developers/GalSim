@@ -77,10 +77,10 @@ namespace galsim {
         _n(n), _flux(flux), _re(0.), _r0(0.),
         _trunc(trunc), _flux_untruncated(flux_untruncated), _actual_r0(0.)
     {
-        xdbg<<"Start SBSersic constructor:\n";
-        xdbg<<"n = "<<_n<<"\n";
-        xdbg<<"flux = "<<_flux<<"\n";
-        xdbg<<"trunc = "<<_trunc<<"\n";
+        dbg<<"Start SBSersic constructor:\n";
+        dbg<<"n = "<<_n<<"\n";
+        dbg<<"flux = "<<_flux<<"\n";
+        dbg<<"trunc = "<<_trunc<<"\n";
 
         // Set size of this instance according to type of size given in constructor
         // (all internal calculations based on half-light radius _re, so specify this first):
@@ -91,18 +91,17 @@ namespace galsim {
           case SCALE_RADIUS:
                {
                    _r0 = size;
-                   double b = std::pow(_r0, -1./_n);
                    double gamma2n = boost::math::tgamma(2.*_n);  // integrate r/r0 from 0. to inf
                    // find solution to gamma(2n, (hlr/r0)^{1/n}) = Gamma(2n) / 2
-                   _re = _r0 * SersicCalculateHLRScale(_n, b, gamma2n);
+                   _re = _r0 * SersicCalculateHLRScale(_n, 1., gamma2n);
                }
                break;
           default:
                throw SBError("Unknown SBSersic::RadiusType");
         }
 
-        xdbg<<"hlr = "<<_re<<"\n";
-        xdbg<<"_r0 = "<<_r0<<"\n";
+        dbg<<"hlr = "<<_re<<"\n";
+        dbg<<"_r0 = "<<_r0<<"\n";
 
         _maxRre = (int)(_trunc/_re * 100 + 0.5) / 100.0;  // round to two decimal places
         _re_sq = _re*_re;
@@ -121,7 +120,7 @@ namespace galsim {
         _maxR = _maxRre * _re;
         _maxR_sq = _maxR*_maxR;
         _ksq_max = _info->getKsqMax();
-        dbg<<"_ksq_max for n = "<<n<<" = "<<_ksq_max<<std::endl;
+        xdbg<<"_ksq_max for n = "<<n<<" = "<<_ksq_max<<std::endl;
     }
 
     double SBSersic::SBSersicImpl::getScaleRadius() const
@@ -489,13 +488,13 @@ namespace galsim {
         // for a truncated Sersic.  For the lower bound, we don't really have a good choice, so
         // start with half the upper bound, and we'll expand it if necessary.
         double b1 = std::max((2.*n-1./3.), 1.);
-        dbg<<"b1 = "<<b1<<std::endl;
-        double b2 = 0.5;
-        dbg<<"b2 = "<<b2<<std::endl;
+        xdbg<<"b1 = "<<b1<<std::endl;
+        double b2 = b1 * 0.5;
+        xdbg<<"b2 = "<<b2<<std::endl;
         Solve<SersicHalfLightRadiusFunc> solver(func,b1,b2);
         solver.setMethod(Brent);
         solver.bracketLower();    // expand lower bracket if necessary
-        dbg<<"After bracket, range is "<<solver.getLowerBound()<<" .. "<<
+        xdbg<<"After bracket, range is "<<solver.getLowerBound()<<" .. "<<
             solver.getUpperBound()<<std::endl;
         double hlr = solver.root();
         dbg<<"Root is "<<hlr<<std::endl;
