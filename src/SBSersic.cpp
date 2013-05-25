@@ -127,7 +127,7 @@ namespace galsim {
     double SBSersic::SBSersicImpl::getScaleRadius() const
     {
         if (_actual_r0 == 0.) {
-            _actual_r0 = _actual_re * std::pow(_info->getScaleB(), _n);
+            _actual_r0 = _actual_re * std::pow(_info->getScaleB(), -_n);
         }
         return _actual_r0;
     }

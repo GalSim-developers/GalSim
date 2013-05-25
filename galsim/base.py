@@ -1090,7 +1090,7 @@ class Moffat(GSObject):
     _takes_rng = False
 
     # --- Public Class methods ---
-    def __init__(self, beta, scale_radius=None, half_light_radius=None,  fwhm=None, trunc=0.,
+    def __init__(self, beta, scale_radius=None, half_light_radius=None, fwhm=None, trunc=0.,
                  flux=1., gsparams=None):
         GSObject.__init__(
             self, galsim.SBMoffat(
@@ -1439,11 +1439,11 @@ class Sersic(GSObject):
     _takes_rng = False
 
     # --- Public Class methods ---
-    def __init__(self, n, half_light_radius, flux=1., trunc=0., flux_untruncated=False,
-                 gsparams=None):
+    def __init__(self, n, half_light_radius=None, scale_radius=None,
+                 flux=1., trunc=0., flux_untruncated=False, gsparams=None):
         GSObject.__init__(
-            self, galsim.SBSersic(n, half_light_radius=half_light_radius, flux=flux,
-                                  trunc=trunc, flux_untruncated=flux_untruncated,
+            self, galsim.SBSersic(n, half_light_radius=half_light_radius, scale_radius=scale_radius,
+                                  flux=flux, trunc=trunc, flux_untruncated=flux_untruncated,
                                   gsparams=gsparams))
 
     def getN(self):
