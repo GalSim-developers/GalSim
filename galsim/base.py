@@ -1394,34 +1394,42 @@ class Sersic(GSObject):
         >>> sersic_obj1 = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40., trunc=10.)
         >>> sersic_obj2 = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40., trunc=10., \\
                                         flux_untruncated=True)
-        >>>
+
         >>> sersic_obj.xValue(galsim.PositionD(0.,0.))
         237.3094228614579
         >>> sersic_obj1.xValue(galsim.PositionD(0.,0.))
         142.54505376523912
         >>> sersic_obj2.xValue(galsim.PositionD(0.,0.))
         237.3094228614579
-        >>>
+
         >>> sersic_obj.xValue(galsim.PositionD(10.,0.))
         0.011776164687306839
         >>> sersic_obj1.xValue(galsim.PositionD(10.,0.))
         0.0
         >>> sersic_obj2.xValue(galsim.PositionD(10.,0.))
         0.0
-        >>>
+
         >>> sersic_obj.getHalfLightRadius()
         2.5
         >>> sersic_obj1.getHalfLightRadius()
         2.5
         >>> sersic_obj2.getHalfLightRadius()
         1.9795101421751533    # The true half-light radius is smaller than the specified value
-        >>>
+
         >>> sersic_obj.getFlux()
         40.0
         >>> sersic_obj1.getFlux()
         40.0
         >>> sersic_obj2.getFlux()
         34.56595186009358     # Flux is missing due to truncation
+
+        >>> sersic_obj.getScaleRadius()
+        0.003262738739835313
+        >>> sersic_obj1.getScaleRadius()
+        0.004754602453643055  # the scale radius needed adjustment to accomodate half light radius
+        >>> sersic_obj2.getScaleRadius()
+        0.003262738739835313  # the scale radius is still identical to the untruncated case
+
 
     You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
     help(galsim.GSParams) for more information about this option.

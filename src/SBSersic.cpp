@@ -110,7 +110,7 @@ namespace galsim {
         _norm = _flux*_inv_re_sq;
 
         _truncated = (_trunc > 0.);
-        if (!_truncated) _flux_untruncated = true;  // set unused parameter to a single value
+        if (!_truncated) _flux_untruncated = false;  // set unused parameter to a single value
         _info = cache.get(std::make_pair(SersicKey(_n,_maxRre,_flux_untruncated),
                                          this->gsparams.get()));
 
@@ -126,7 +126,10 @@ namespace galsim {
     double SBSersic::SBSersicImpl::getScaleRadius() const
     {
         if (_actual_r0 == 0.) {
-            _actual_r0 = _actual_re * std::pow(_info->getScaleB(), -_n);
+            if ( _truncated && _flux_untruncated )
+                _actual_r0 = _re * std::pow(_info->getScaleB(), -_n);
+            else
+                _actual_r0 = _actual_re * std::pow(_info->getScaleB(), -_n);
         }
         return _actual_r0;
     }
