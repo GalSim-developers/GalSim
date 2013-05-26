@@ -164,12 +164,10 @@ def check_image_consistency(im1, im2):
         raise ValueError("Image shapes are inconsistent!")
 
 def type_criterion(obj):
-    if type(obj) is int or type(obj) is float:
-        return False
-    elif obj.array.dtype.type in _galsim.Image.keys():
+    if type(obj) in _galsim.Image.values() or type(obj) in _galsim.ImageView.values() or type(obj) in _galsim.ConstImageView.values():
         return True
     else:
-        raise ValueError("Unknown type, cannot check for consistency!")
+        return False
 
 def Image_add(self, other):
     result = self.copy()
