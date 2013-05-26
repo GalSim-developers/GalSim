@@ -802,6 +802,24 @@ def test_Image_binary_add():
             np.testing.assert_array_equal((3 * ref_array).astype(type3), image3.array,
                     err_msg="Inplace add in Image class does not match reference for dtypes = "
                     +str(types[i])+" and "+str(types[j]))
+
+        # check for exceptions if we try to do this operation for images without matching
+        # scale/shape
+        try:
+            # first, try two images with different scales
+            image1 = galsim.ImageView[types[i]](ref_array.astype(types[i]))
+            image2 = image1.copy()
+            image2.scale = image1.scale+1.
+            np.testing.assert_raises(ValueError, image1+image2)
+            # now, try two images with different shapes
+            image2 = image1.subImage(galsim.BoundsI(image1.xmin, image1.xmax-1,
+                                                    image1.ymin+1, image1.ymax))
+            np.testing.assert_raises(ValueError, image1+image2)
+        except ImportError:
+            # assert_raises requires nose, which we don't want to force people to install.
+            # So if they are running this without nose, we just skip these tests.
+            pass
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
