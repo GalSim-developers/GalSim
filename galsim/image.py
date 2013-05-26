@@ -158,8 +158,6 @@ def Image_getitem(self, key):
 
 # Define a utility function to be used by the arithmetic functions below
 def check_image_consistency(im1, im2):
-    if im1.bounds != im2.bounds:
-        raise ValueError("Image bounds are inconsistent!")
     if im1.scale != im2.scale:
         raise ValueError("Image scales are inconsistent!")
     if im1.array.shape != im2.array.shape:
