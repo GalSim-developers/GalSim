@@ -165,13 +165,21 @@ def check_image_consistency(im1, im2):
     if im1.array.shape != im2.array.shape:
         raise ValueError("Image shapes are inconsistent!")
 
+def type_criterion(obj):
+    if type(obj) is int or type(obj) is float:
+        return False
+    elif obj.array.dtype.type in _galsim.Image.keys():
+        return True
+    else:
+        raise ValueError("Unknown type, cannot check for consistency!")
+
 def Image_add(self, other):
     result = self.copy()
     result += other
     return result
 
 def Image_iadd(self, other):
-    if other in _galsim.Image.itervalues():
+    if type_criterion(other):
         check_image_consistency(self, other)
     try:
         self.array[:,:] += other.array
@@ -185,7 +193,7 @@ def Image_sub(self, other):
     return result
 
 def Image_isub(self, other):
-    if other in _galsim.Image.itervalues():
+    if type_criterion(other):
         check_image_consistency(self, other)
     try:
         self.array[:,:] -= other.array
@@ -199,7 +207,7 @@ def Image_mul(self, other):
     return result
 
 def Image_imul(self, other):
-    if other in _galsim.Image.itervalues():
+    if type_criterion(other):
         check_image_consistency(self, other)
     try:
         self.array[:,:] *= other.array
@@ -213,7 +221,7 @@ def Image_div(self, other):
     return result
 
 def Image_idiv(self, other):
-    if other in _galsim.Image.itervalues():
+    if type_criterion(other):
         check_image_consistency(self, other)
     try:
         self.array[:,:] /= other.array
@@ -239,7 +247,7 @@ def Image_and(self, other):
     return result
 
 def Image_iand(self, other):
-    if other in _galsim.Image.itervalues():
+    if type_criterion(other):
         check_image_consistency(self, other)
     try:
         self.array[:,:] &= other.array
@@ -253,7 +261,7 @@ def Image_xor(self, other):
     return result
 
 def Image_ixor(self, other):
-    if other in _galsim.Image.itervalues():
+    if type_criterion(other):
         check_image_consistency(self, other)
     try:
         self.array[:,:] ^= other.array
@@ -267,7 +275,7 @@ def Image_or(self, other):
     return result
 
 def Image_ior(self, other):
-    if other in _galsim.Image.itervalues():
+    if type_criterion(other):
         check_image_consistency(self, other)
     try:
         self.array[:,:] |= other.array
