@@ -60,6 +60,10 @@ ntypes = 4
 types = [np.int16, np.int32, np.float32, np.float64]
 tchar = ['S', 'I', 'F', 'D']
 
+nfloattypes = 2
+floattypes = [np.float32, np.float64]
+floattchar = ['F', 'D']
+
 ncol = 7
 nrow = 5
 test_shape = (ncol, nrow)  # shape of image arrays for all tests
@@ -803,8 +807,10 @@ def test_Image_binary_add():
                     err_msg="Inplace add in Image class does not match reference for dtypes = "
                     +str(types[i])+" and "+str(types[j]))
 
-        # check for exceptions if we try to do this operation for images without matching
-        # scale/shape
+        # Check for exceptions if we try to do this operation for images without matching
+        # scale/shape.  Note that this test is only included here (not in the unit tests for all
+        # other operations) because all operations have the same error-checking code, so it should
+        # only be necessary to check once.
         try:
             # first, try two images with different scales
             image1 = galsim.ImageView[types[i]](ref_array.astype(types[i]))
@@ -1027,6 +1033,31 @@ def test_Image_binary_scalar_divide():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
         
+def test_Image_binary_scalar_pow():
+    """Test that both float types of supported Images can be raised to a power (scalar) correctly.
+    """
+    import time
+    t1 = time.time()
+    for i in xrange(nfloattypes):
+        # First try using the dictionary-type Image init
+        image1 = galsim.ImageView[floattypes[i]]((ref_array**(1/1.3)).astype(floattypes[i]))
+        image2 = image1**1.3
+        # Note: unlike for the tests above, the test fails if I use assert_array_equal.  I have to
+        # use assert_array_almost_equal to avoid failure due to small numerical issues.
+        np.testing.assert_array_almost_equal(ref_array.astype(floattypes[i]), image2.array,
+                decimal=4,
+                err_msg="Binary pow scalar in Image class (dictionary call) does"
+                +" not match reference for dtype = "+str(floattypes[i]))
+        # Then try using the eval command to mimic use via ImageD, ImageF etc.
+        image_init_func = eval("galsim.ImageView"+floattchar[i])
+        image1 = image_init_func((ref_array**(1/1.3)).astype(floattypes[i]))
+        image2 = image1**1.3
+        np.testing.assert_array_almost_equal(ref_array.astype(floattypes[i]), image2.array,
+                decimal=4,
+                err_msg="Binary pow scalar in Image class does"
+                +" not match reference for dtype = "+str(floattypes[i]))
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_Image_inplace_add():
     """Test that all four types of supported Images inplace add correctly.
@@ -1249,6 +1280,30 @@ def test_Image_inplace_scalar_divide():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
         
+def test_Image_inplace_scalar_pow():
+    """Test that both float types of supported Images can be raised (in-place) to a scalar correctly.
+    """
+    import time
+    t1 = time.time()
+    for i in xrange(nfloattypes):
+        # First try using the dictionary-type Image init
+        image1 = galsim.ImageView[floattypes[i]](ref_array.astype(floattypes[i]))
+        image2 = galsim.ImageView[floattypes[i]]((ref_array**0.5).astype(floattypes[i]))
+        image2 **= 2.
+        np.testing.assert_array_almost_equal(image1.array, image2.array, decimal=4,
+                err_msg="Inplace scalar pow in Image class (dictionary "
+                +"call) does not match reference for dtype = "+str(floattypes[i]))
+        # Then try using the eval command to mimic use via ImageD, ImageF etc.
+        image_init_func = eval("galsim.ImageView"+floattchar[i])
+        image1 = image_init_func(ref_array.astype(floattypes[i]))
+        image2 = image_init_func((ref_array**0.5).astype(floattypes[i]))
+        image2 **= 2
+        np.testing.assert_array_almost_equal(image1.array, image2.array, decimal=4,
+                err_msg="Inplace scalar pow in Image class does"
+                +" not match reference for dtype = "+str(floattypes[i]))
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_Image_subImage():
     """Test that subImages are accessed and written correctly.
     """
@@ -1391,6 +1446,7 @@ if __name__ == "__main__":
     test_Image_binary_scalar_subtract()
     test_Image_binary_scalar_multiply()
     test_Image_binary_scalar_divide()
+    test_Image_binary_scalar_pow()
     test_Image_inplace_add()
     test_Image_inplace_subtract()
     test_Image_inplace_multiply()
@@ -1399,5 +1455,6 @@ if __name__ == "__main__":
     test_Image_inplace_scalar_subtract()
     test_Image_inplace_scalar_multiply()
     test_Image_inplace_scalar_divide()
+    test_Image_inplace_scalar_pow()
     test_Image_subImage()
     test_ConstImageView_array_constness()
