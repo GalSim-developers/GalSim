@@ -19,7 +19,7 @@
  * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
  */
 
-//#define DEBUGLOGGING
+#define DEBUGLOGGING
 
 #include <boost/math/special_functions/gamma.hpp>
 
@@ -503,13 +503,13 @@ namespace galsim {
         // lower bound, the hard limit is 0, so choose a very small number close to 0 as the
         // hard limit.
         double b1 = 0.01;
-        xdbg<<"b1 = "<<b1<<std::endl;
-        double b2 = 10*std::pow(n,n);
-        xdbg<<"b2 = "<<b2<<std::endl;
+        dbg<<"b1 = "<<b1<<std::endl;
+        double b2 = 10.*std::pow(n,n);
+        dbg<<"b2 = "<<b2<<std::endl;
         Solve<SersicHalfLightRadiusFunc> solver(func,b1,b2);
         solver.setMethod(Brent);
         solver.bracketUpper();    // expand upper bracket if necessary
-        xdbg<<"After bracket, range is "<<solver.getLowerBound()<<" .. "<<
+        dbg<<"After bracket, range is "<<solver.getLowerBound()<<" .. "<<
             solver.getUpperBound()<<std::endl;
         double hlr = solver.root();
         dbg<<"Root is "<<hlr<<std::endl;
