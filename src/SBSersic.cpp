@@ -82,19 +82,25 @@ namespace galsim {
         dbg<<"flux = "<<_flux<<"\n";
         dbg<<"trunc = "<<_trunc<<"\n";
 
+        _truncated = (_trunc > 0.);
+
         // Set size of this instance according to type of size given in constructor
         // (all internal calculations based on half-light radius _re, so specify this first):
         switch (rType) {
-          case HALF_LIGHT_RADIUS:
-               _re = size;
-               break;
+            case HALF_LIGHT_RADIUS:
+                {
+                    _re = size;
+                    if (!_truncated) _flux_untruncated = false; // set unused parameter to false
+                }
+                break;
           case SCALE_RADIUS:
                {
                    _r0 = size;
-                   double gamma2n = boost::math::tgamma(2.*_n);  // integrate r/r0 from 0. to inf
                    // find solution to gamma(2n, (hlr/r0)^{1/n}) = Gamma(2n) / 2
-                   // b=1 in SersicCalculateHLRScale() indicates reference scale is r0
-                   _re = _r0 * SersicCalculateHLRScale(_n, 1., gamma2n);
+                   double gamma2n = boost::math::tgamma(2.*_n);
+                   double b = std::pow(_r0, -1./_n);
+                   _re = SersicCalculateHLRScale(_n, b, gamma2n);
+                   if (_truncated) _flux_untruncated = true;   // truncate, but same r0 (re changes)
                }
                break;
           default:
@@ -105,17 +111,22 @@ namespace galsim {
         dbg<<"_r0 = "<<_r0<<"\n";
 
         _maxRre = (int)(_trunc/_re * 100 + 0.5) / 100.0;  // round to two decimal places
+
         _re_sq = _re*_re;
         _inv_re = 1./_re;
         _inv_re_sq = _inv_re*_inv_re;
         _norm = _flux*_inv_re_sq;
 
-        _truncated = (_trunc > 0.);
-        if (!_truncated) _flux_untruncated = false;  // set unused parameter to a single value
         _info = cache.get(std::make_pair(SersicKey(_n,_maxRre,_flux_untruncated),
                                          this->gsparams.get()));
 
-        _actual_flux = _info->getTrueFluxFraction() * _flux;
+        double true_flux_fraction = _info->getTrueFluxFraction();
+        if (rType == SCALE_RADIUS && _truncated) {
+            _norm /= _info->getTrueReFraction();
+            true_flux_fraction = 1.;
+        }
+
+        _actual_flux = true_flux_fraction * _flux;
         _actual_re = _info->getTrueReFraction() * _re;
         _maxRre_sq = _maxRre*_maxRre;
         _maxR = _maxRre * _re;
@@ -490,14 +501,13 @@ namespace galsim {
         // In this case, the reference scale is re (the hlr).  For the upper limit, use 1 (i.e.,
         // the specified half-light radius); the true half-light radius will always be smaller
         // for a truncated Sersic.  For the lower bound, we don't really have a good choice, so
-        // start with half the upper bound, and we'll expand it if necessary.
+        // choose a very small number close to 0.
         double b1 = std::max((2.*n-1./3.), 1.);
         xdbg<<"b1 = "<<b1<<std::endl;
-        double b2 = 0.5;          // 0.5 is a safe lower limit for both cases
+        double b2 = 0.01;
         xdbg<<"b2 = "<<b2<<std::endl;
         Solve<SersicHalfLightRadiusFunc> solver(func,b1,b2);
         solver.setMethod(Brent);
-        solver.bracketLower();    // expand lower bracket if necessary
         xdbg<<"After bracket, range is "<<solver.getLowerBound()<<" .. "<<
             solver.getUpperBound()<<std::endl;
         double hlr = solver.root();
