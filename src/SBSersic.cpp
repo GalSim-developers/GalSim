@@ -19,7 +19,7 @@
  * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#define DEBUGLOGGING
+//#define DEBUGLOGGING
 
 #include <boost/math/special_functions/gamma.hpp>
 
@@ -101,8 +101,8 @@ namespace galsim {
                    double b = std::pow(_r0, -1./_n);
                    _re = SersicCalculateHLRScale(_n, b, gamma2n);
                    if (_truncated) {
-		       _flux_untruncated = true;   // truncate, but same r0 (re changes)
-		       double z = b * std::pow(_maxRre, 1./_n);
+		       _flux_untruncated = true;   // use the same r0 when truncating (re changes)
+		       double z = b * std::pow(_trunc, 1./_n);
 		       gamma2n = boost::math::tgamma_lower(2.*_n, z);
 		       _re = SersicCalculateHLRScale(_n, b, gamma2n);
 		   }
@@ -124,6 +124,8 @@ namespace galsim {
 
         _info = cache.get(std::make_pair(SersicKey(_n,_maxRre,_flux_untruncated),
                                          this->gsparams.get()));
+
+	if (rType == SCALE_RADIUS && _truncated)  _norm /= _info->getTrueFluxFraction();
 
         _actual_flux = _info->getTrueFluxFraction() * _flux;
         _actual_re = _info->getTrueReFraction() * _re;
