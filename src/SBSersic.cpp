@@ -101,11 +101,8 @@ namespace galsim {
                    double b = std::pow(_r0, -1./_n);
                    _re = SersicCalculateHLRScale(_n, b, gamma2n);
                    if (_truncated) {
-		       _flux_untruncated = true;   // use the same r0 when truncating (re changes)
-		       double z = b * std::pow(_trunc, 1./_n);
-		       gamma2n = boost::math::tgamma_lower(2.*_n, z);
-		       _re = SersicCalculateHLRScale(_n, b, gamma2n);
-		   }
+                       _flux_untruncated = true;   // use the same r0 when truncating (re changes)
+                   }
                }
                break;
           default:
@@ -125,9 +122,14 @@ namespace galsim {
         _info = cache.get(std::make_pair(SersicKey(_n,_maxRre,_flux_untruncated),
                                          this->gsparams.get()));
 
-	if (rType == SCALE_RADIUS && _truncated)  _norm /= _info->getTrueFluxFraction();
+        // adjust normalization factor
+        double true_flux_fraction = _info->getTrueFluxFraction();
+        if (rType == SCALE_RADIUS && _truncated) {
+            _norm /= _info->getTrueFluxFraction();
+            true_flux_fraction = 1.0;
+        }
 
-        _actual_flux = _info->getTrueFluxFraction() * _flux;
+        _actual_flux = true_flux_fraction * _flux;
         _actual_re = _info->getTrueReFraction() * _re;
         _maxRre_sq = _maxRre*_maxRre;
         _maxR = _maxRre * _re;
