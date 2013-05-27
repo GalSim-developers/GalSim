@@ -31,7 +31,7 @@
 #ifdef DEBUGLOGGING
 #include <fstream>
 std::ostream* dbgout = &std::cout;
-int verbose_level = 3;
+int verbose_level = 1;
 #endif
 
 namespace galsim {
@@ -100,7 +100,12 @@ namespace galsim {
                    double gamma2n = boost::math::tgamma(2.*_n);
                    double b = std::pow(_r0, -1./_n);
                    _re = SersicCalculateHLRScale(_n, b, gamma2n);
-                   if (_truncated) _flux_untruncated = true;   // truncate, but same r0 (re changes)
+                   if (_truncated) {
+		       _flux_untruncated = true;   // truncate, but same r0 (re changes)
+		       double z = b * std::pow(_maxRre, 1./_n);
+		       gamma2n = boost::math::tgamma_lower(2.*_n, z);
+		       _re = SersicCalculateHLRScale(_n, b, gamma2n);
+		   }
                }
                break;
           default:
@@ -120,13 +125,7 @@ namespace galsim {
         _info = cache.get(std::make_pair(SersicKey(_n,_maxRre,_flux_untruncated),
                                          this->gsparams.get()));
 
-        double true_flux_fraction = _info->getTrueFluxFraction();
-        if (rType == SCALE_RADIUS && _truncated) {
-            _norm /= _info->getTrueReFraction();
-            true_flux_fraction = 1.;
-        }
-
-        _actual_flux = true_flux_fraction * _flux;
+        _actual_flux = _info->getTrueFluxFraction() * _flux;
         _actual_re = _info->getTrueReFraction() * _re;
         _maxRre_sq = _maxRre*_maxRre;
         _maxR = _maxRre * _re;
@@ -476,7 +475,7 @@ namespace galsim {
         double operator()(double hlr) const
         {
             double fre = boost::math::tgamma_lower(_2n, _b*std::pow(hlr,_invn));
-            dbg<<"func("<<hlr<<") = "<<fre<<"-"<<_half_gamma2n<<" = "<<fre-_half_gamma2n<<std::endl;
+            xdbg<<"func("<<hlr<<") = "<<fre<<"-"<<_half_gamma2n<<" = "<<fre-_half_gamma2n<<std::endl;
             return fre - _half_gamma2n;
         }
     private:
@@ -495,19 +494,21 @@ namespace galsim {
         dbg<<"Find HLR scale for (n,b,gamma2n) = ("<<n<<","<<b<<","<<gamma2n<<")"<<std::endl;
         SersicHalfLightRadiusFunc func(n, b, gamma2n);
         // There are two uses of this function.  The first case is to calculate the half-light
-        // radius (hlr) given the scale radius r0.  In this case, the reference scale is r0, and the
-        // upper limit on hlr/r0 (the return value) is (2n-1/3)^n.  The second case calculates the
-        // true hlr for a truncated Sersic, when the hlr has been specified with `flux_untruncated`.
-        // In this case, the reference scale is re (the hlr).  For the upper limit, use 1 (i.e.,
-        // the specified half-light radius); the true half-light radius will always be smaller
-        // for a truncated Sersic.  For the lower bound, we don't really have a good choice, so
-        // choose a very small number close to 0.
-        double b1 = std::max((2.*n-1./3.), 1.);
+        // radius (hlr) given the scale radius r0.  In this case, use b=r0^{-1/n}, and the
+        // upper limit is unknown, and will need to expand as necessary.  The second case
+        // calculates the true hlr for a truncated Sersic, when the hlr has been specified with
+        // `flux_untruncated`.  In this case, the reference scale is re (the hlr), and b has been
+        // pre-computed.  For the upper limit, use 1 (i.e., the specified half-light radius).
+        // The true half-light radius will always be smaller for a truncated Sersic.  For the
+        // lower bound, the hard limit is 0, so choose a very small number close to 0 as the
+        // hard limit.
+        double b1 = 0.01;
         xdbg<<"b1 = "<<b1<<std::endl;
-        double b2 = 0.01;
+        double b2 = 2*n;
         xdbg<<"b2 = "<<b2<<std::endl;
         Solve<SersicHalfLightRadiusFunc> solver(func,b1,b2);
         solver.setMethod(Brent);
+        solver.bracketUpper();    // expand upper bracket if necessary
         xdbg<<"After bracket, range is "<<solver.getLowerBound()<<" .. "<<
             solver.getUpperBound()<<std::endl;
         double hlr = solver.root();
