@@ -93,6 +93,7 @@ namespace galsim {
                    _r0 = size;
                    double gamma2n = boost::math::tgamma(2.*_n);  // integrate r/r0 from 0. to inf
                    // find solution to gamma(2n, (hlr/r0)^{1/n}) = Gamma(2n) / 2
+                   // b=1 in SersicCalculateHLRScale() indicates reference scale is r0
                    _re = _r0 * SersicCalculateHLRScale(_n, 1., gamma2n);
                }
                break;

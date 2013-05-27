@@ -669,7 +669,7 @@ def test_sersic_radii():
     import math
     for n in test_sersic_n:
         for trunc in test_sersic_trunc:
-            # Test constructor using half-light-radius: (only option for sersic)
+            # Test constructor using half-light-radius:
             test_gal = galsim.Sersic(n=n, half_light_radius=test_hlr, trunc=trunc, flux=1.)
             hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
             print 'hlr_sum = ',hlr_sum
@@ -678,10 +678,47 @@ def test_sersic_radii():
                     err_msg="Error in Sersic constructor with half-light radius, n=%.1f, trunc=%.1f"\
                              %(n,trunc))
 
+            # then test scale getter
+            center = test_gal.xValue(galsim.PositionD(0,0))
+            ratio = test_gal.xValue(galsim.PositionD(test_gal.getScaleRadius(),0)) / center
+            print 'scale ratio = ',ratio
+            np.testing.assert_almost_equal(
+                    ratio, np.exp(-1.0), decimal=4,
+                    err_msg="Error in getScaleRadius for Sersic constructed with half light radius")
+
             # Test with flux_untruncated=True (above unit tests for flux_untruncated=False)
             test_gal = galsim.Sersic(n=n, half_light_radius=test_hlr, trunc=trunc, flux=1.,
                                      flux_untruncated=True)
             hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
+            print 'hlr_sum (truncated and flux_untruncated) = ',hlr_sum
+            np.testing.assert_almost_equal(
+                    hlr_sum, 0.5, decimal=4,
+                    err_msg="Error in Sersic constructor with flux_untruncated, n=%.1f, trunc=%.1f"\
+                             %(n,trunc))
+
+            # Test constructor using scale radius:
+            test_gal = galsim.Sersic(n=n, scale_radius=test_scale, flux=1.)
+            center = test_gal.xValue(galsim.PositionD(0,0))
+            ratio = test_gal.xValue(galsim.PositionD(test_scale,0)) / center
+            print 'scale ratio = ',ratio
+            np.testing.assert_almost_equal(
+                    ratio, np.exp(-1.0), decimal=4,
+                    err_msg="Error in Sersic constructor with scale radius, n=%.1f, trunc=%.1f"\
+                             %(n,trunc))
+
+            # then test that image indeed has the correct HLR properties when radially integrated
+            got_hlr = test_gal.getHalfLightRadius()
+            hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+            print 'hlr_sum (profile initialized with scale_radius) = ',hlr_sum
+            np.testing.assert_almost_equal(
+                    hlr_sum, 0.5, decimal=4,
+                    err_msg="Error in half light radius for Sersic initialized with scale_radius.")
+
+            # Test with flux_untruncated=True (above unit tests for flux_untruncated=False)
+            test_gal = galsim.Sersic(n=n, scale_radius=test_scale, trunc=trunc, flux=1.,
+                                     flux_untruncated=True)
+            got_hlr = test_gal.getHalfLightRadius()
+            hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
             print 'hlr_sum (truncated and flux_untruncated) = ',hlr_sum
             np.testing.assert_almost_equal(
                     hlr_sum, 0.5, decimal=4,
