@@ -504,7 +504,7 @@ namespace galsim {
         // hard limit.
         double b1 = 0.01;
         xdbg<<"b1 = "<<b1<<std::endl;
-        double b2 = 2*n;
+        double b2 = 10*std::pow(n,n);
         xdbg<<"b2 = "<<b2<<std::endl;
         Solve<SersicHalfLightRadiusFunc> solver(func,b1,b2);
         solver.setMethod(Brent);
