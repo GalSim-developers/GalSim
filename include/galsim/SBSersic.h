@@ -33,28 +33,35 @@ namespace galsim {
      * @brief Sersic Surface Brightness Profile.
      *
      * The Sersic Surface Brightness Profile is characterized by three properties: its Sersic index
-     * `n`, its `flux`, and the scale radius `r0` (or half-light radius `re`).  Given these
+     * `n`, its `flux`, and the half-light radius `re` (or scale radius `r0`).  Given these
      * properties, the surface brightness profile scales as `I(r) propto exp[-(r/r0)^{1/n}]`, or
-     * `I(r) propto exp[-b*(r/re)^{1/n}]`.  Currently the code is limited to 0.5<=n<=4.2, with
+     * `I(r) propto exp[-b*(r/re)^{1/n}]`.  Currently the code is limited to 0.3<=n<=4.2, with
      * an exception thrown for values outside that range.
      *
      * The SBProfile representation of a Sersic profile also includes an optional truncation beyond
-     * a given radius, by the parameter `trunc`.  The resolution of the truncation radius in units
-     * of half light radius `re` is limited to 2 decimal places, in order not to overload the Sersic
+     * a given radius, by the parameter `trunc`.  The resolution of the truncation radius (in units
+     * of half light radius `re`) is limited to 2 decimal places, in order not to overload the Sersic
      * information caching.
      *
-     * Another optional parameter, `flux_untruncated`, allows the setting of the flux to the
-     * untruncated Sersic, while generating a truncated Sersic.  This facilitates the comparison
-     * of truncated and untruncated Sersic, as both the amplitude and the scale parameter
-     * `b=r_0^{-1/n}` change when a truncated Sersic is specified to the same flux as the
-     * untruncated version with the same Sersic index `n`.  The `flux_untruncated` variable is
-     * ignored if `trunc = 0`.
+     * When the Sersic profile is specfied by the scale radius with truncation, the normalization is
+     * adjusted such that the truncated profile has the specified flux (its half-light radius will
+     * differ from an equivalent Sersic without truncation).  Similarly, when the Sersic profile is
+     * specified by the half-light radius with trunction, SBSersic generates a profile whose flux
+     * and half-light radius is as specified, by adjusting its normalization and scale radius.
      *
-     * Note that when `trunc > 0.` and `flux_untruncated == true`, the actual half-light radius
-     * will be different from the specified half-light radius (similarly for the scale radius).
-     * The getHalfLightRadius() method will return the true half-light radius (as will the
-     * getScaleRadius() method).  Similarly, the actual flux will not be the the same as
-     * the specified value; the true flux is returned by the getFlux() method.
+     * Another optional parameter, `flux_untruncated`, allows the setting of the flux to the
+     * untruncated Sersic, while generating a truncated Sersic (i.e., the normalizaton is
+     * the same with respect to the untruncated case).  This facilitates the comparison of
+     * truncated and untruncated Sersic, as the amplitude (as well as the scale parameter
+     * `b=r_0^{-1/n}`, if half-light radius is specified) changes when a truncated Sersic is
+     * specified in the default setting.  The `flux_untruncated` variable is ignored if
+     * `trunc = 0`.
+     *
+     * Note that when `trunc > 0.` and `flux_untruncated == true`,  the actual flux will not be
+     * the the same as the specified value; its true flux is returned by the getFlux() method.
+     * Similarly for the half-light radius, when the Sersic profile is specified by the half-light
+     * radius; the getHalfLightRadius() method will return the true half-light radius.  The scale
+     * radius, if it was used to specify the Sersic profile, will remain the specified value.
      *
      * There are several special cases of the Sersic profile that have their own SBProfiles: n=4
      * (SBDeVaucouleurs), n=1 (SBExponential), n=0.5 (SBGaussian).  These special cases use several
