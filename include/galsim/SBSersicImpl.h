@@ -227,10 +227,14 @@ namespace galsim {
         /// @brief Sersic photon shooting done by rescaling photons from appropriate `SersicInfo`
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
+        /// @brief Returns the Sersic index n
         double getN() const { return _n; }
         /// @brief Returns the true half-light radius (may be different from the specified value)
         double getHalfLightRadius() const { return _actual_re; }
-        /// @brief Returns the true scale radius (may be different from the specified value)
+
+        /// @brief Returns the true scale radius (may be different from the specified value).
+        /// Because the internals base their calculation on `_re`, the accuracy of scale radius
+        /// are good only to the accuracy set by the solver in `Solve.h`.
         double getScaleRadius() const;
 
         // Overrides for better efficiency
