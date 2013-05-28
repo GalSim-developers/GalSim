@@ -75,7 +75,7 @@ namespace galsim {
                                          boost::shared_ptr<GSParams> gsparams) :
         SBProfileImpl(gsparams),
         _n(n), _flux(flux), _re(0.), _r0(0.),
-        _trunc(trunc), _flux_untruncated(flux_untruncated), _actual_r0(0.)
+        _trunc(trunc), _flux_untruncated(flux_untruncated)
     {
         dbg<<"Start SBSersic constructor:\n";
         dbg<<"n = "<<_n<<"\n";
@@ -83,6 +83,7 @@ namespace galsim {
         dbg<<"trunc = "<<_trunc<<"\n";
 
         _truncated = (_trunc > 0.);
+        bool flux_untrunc = _flux_untruncated;  // needed for SCALE_RADIUS specification
 
         // Set size of this instance according to type of size given in constructor
         // (all internal calculations based on half-light radius _re, so specify this first):
@@ -90,7 +91,8 @@ namespace galsim {
             case HALF_LIGHT_RADIUS:
                 {
                     _re = size;
-                    if (!_truncated) _flux_untruncated = false; // set unused parameter to false
+                    if (!_truncated)    // set unused parameter to false
+                        flux_untrunc = _flux_untruncated = false;
                 }
                 break;
           case SCALE_RADIUS:
@@ -100,9 +102,8 @@ namespace galsim {
                    double gamma2n = boost::math::tgamma(2.*_n);
                    double b = std::pow(_r0, -1./_n);
                    _re = SersicCalculateHLRScale(_n, b, gamma2n);
-                   if (_truncated) {
-                       _flux_untruncated = true;   // use the same r0 when truncating (re changes)
-                   }
+                   if (_truncated)                // a trick to make it work with SersicInfo
+                       flux_untrunc = true;       // for both _flux_untruncated cases
                }
                break;
           default:
@@ -119,12 +120,12 @@ namespace galsim {
         _inv_re_sq = _inv_re*_inv_re;
         _norm = _flux*_inv_re_sq;
 
-        _info = cache.get(std::make_pair(SersicKey(_n,_maxRre,_flux_untruncated),
+        _info = cache.get(std::make_pair(SersicKey(_n, _maxRre, flux_untrunc),
                                          this->gsparams.get()));
 
         // adjust normalization factor
         double true_flux_fraction = _info->getTrueFluxFraction();
-        if (rType == SCALE_RADIUS && _truncated) {
+        if (rType == SCALE_RADIUS && _truncated && !_flux_untruncated) {
             _norm /= _info->getTrueFluxFraction();
             true_flux_fraction = 1.0;
         }
@@ -140,13 +141,8 @@ namespace galsim {
 
     double SBSersic::SBSersicImpl::getScaleRadius() const
     {
-        if (_actual_r0 == 0.) {
-            if ( _truncated && _flux_untruncated )
-                _actual_r0 = _re * std::pow(_info->getScaleB(), -_n);
-            else
-                _actual_r0 = _actual_re * std::pow(_info->getScaleB(), -_n);
-        }
-        return _actual_r0;
+        if (_r0 == 0.) _r0 = _re * std::pow(_info->getScaleB(), -_n);
+        return _r0;
     }
 
     double SBSersic::SBSersicImpl::xValue(const Position<double>& p) const

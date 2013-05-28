@@ -248,7 +248,7 @@ namespace galsim {
         double _n; ///< Sersic index.
         double _flux; ///< Flux specified at the constructor.
         double _re;   ///< Half-light radius specified at the constructor.
-        double _r0;   ///< Scale radius specified at the constructor.
+        mutable double _r0;   ///< Scale radius specified at the constructor.
         double _re_sq;
         double _inv_re;
         double _inv_re_sq;
@@ -257,7 +257,6 @@ namespace galsim {
         bool _flux_untruncated; ///< If true, flux is set to the untruncated Sersic with index `_n`.
         double _actual_flux; ///< True flux of object.
         double _actual_re; ///< True half-light radius of object.
-        mutable double _actual_r0; ///< True scale radius of object.
         double _maxRre; ///< Maximum (truncation) `r` in units of `_re`.
         double _maxRre_sq;
         double _maxR; ///< Maximum (truncation) radius `r`.
