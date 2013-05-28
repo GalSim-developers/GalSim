@@ -644,17 +644,19 @@ class GSObject(object):
         @param gain   The number of photons per ADU ("analog to digital units", the units of the 
                       numbers output from a CCD).  (Default `gain =  1.`)
 
-        @param wmult  A factor by which to make an automatically-sized image larger than it would
-                      normally be made.  This factor also applies to any intermediate images during
-                      Fourier calculations.  The size of the intermediate images are normally
-                      automatically chosen to reach some preset accuracy targets [see
-                      help(galsim.GSParams())]; however, if you see strange artifacts in the
-                      image, you might try using `wmult > 1`.  This will take longer
-                      of course, but it will produce more accurate images, since they will have
-                      less "folding" in Fourier space. If the image size is specified by the user,
-                      rather than automatically-sized, use of `wmult>1` will still affect the size
-                      of the images used for the Fourier-space calculations and hence can reduce
-                      image artifacts. (Default `wmult = 1.`)
+        @param wmult  A factor by which to make an image larger than it would normally be made.
+                      This factor also applies to any intermediate images during Fourier
+                      calculations. The size of the intermediate images are normally automatically
+                      chosen to reach some preset accuracy targets [see help(galsim.GSParams())];
+                      however, if you see strange artifacts in the image, you might try using `wmult
+                      > 1`.  This will take longer of course, but it will produce more accurate
+                      images, since they will have less "folding" in Fourier space. If the image
+                      size is not specified, then the output real-space image will be enlarged by a
+                      factor of `wmult`.  If the image size is specified by the user, rather than
+                      automatically-sized, use of `wmult>1` will still affect the size of the images
+                      used for the Fourier-space calculations and hence can reduce image artifacts,
+                      even though the image that is returned will be the size that was
+                      requested. (Default `wmult = 1.`)
 
         @param normalization  Two options for the normalization:
                               "flux" or "f" means that the sum of the output pixels is normalized
