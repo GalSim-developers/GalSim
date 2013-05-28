@@ -1635,4 +1635,9 @@ class DeVaucouleurs(GSObject):
         """
         return self.SBProfile.getHalfLightRadius()
 
+    def getScaleRadius(self):
+        """Return the scale radius for this DeVaucouleurs profile.
+        """
+        return self.SBProfile.getScaleRadius()
+
 
