@@ -86,19 +86,19 @@ def GetShapeMeasurements(image_gal, image_psf, ident=-1):
 
     HSM_SHEAR_EST = "KSB"
     NO_PSF_VALUE = -10
-
+    
     # find adaptive moments  
-    try: moments = galsim.FindAdaptiveMom(image_gal)
-    except: raise RuntimeError('FindAdaptiveMom error')
+    try: moments = galsim.hsm.FindAdaptiveMom(image_gal)
+    except Exception, emsg : raise RuntimeError('FindAdaptiveMom error: %s' % emsg)
         
 
     # find HSM moments
     if image_psf == None: hsmcorr_phot_e1 =  hsmcorr_phot_e2  = NO_PSF_VALUE 
     else:
         try: 
-            hsmcorr   = galsim.EstimateShearHSM(image_gal,image_psf,strict=True,  
+            hsmcorr   = galsim.hsm.EstimateShear(image_gal,image_psf,strict=True,  
                                                                        shear_est=HSM_SHEAR_EST)
-        except: raise RuntimeError('EstimateShearHSM error')
+        except Exception, emsg: raise RuntimeError('EstimateShearHSM error: %s' % emsg)
                 
         logger.debug('galaxy %d : adaptive moments G1=% 2.6f\tG2=% 2.6f\tsigma=%2.6f\t hsm \
             corrected moments G1=% 2.6f\tG2=% 2.6f' 
@@ -128,9 +128,9 @@ def RunMeasurementsFFT(config,filename_results):
 
     Arguments
     ---------
-    @param config           the yaml config used to create images
+    @param config              the yaml config used to create images
 
-    @param file_output      opened file to which the results will be written
+    @param filename_results    file to which the results will be written
     """
 
     # open the file
@@ -166,6 +166,8 @@ def RunMeasurementsFFT(config,filename_results):
     except Exception, e:
         raise RuntimeError('Failed to build FFT image. Message: %s',e)
 
+    
+
     # measure the photon and fft images
     for i in range(nobjects):
 
@@ -190,11 +192,11 @@ def RunMeasurementsPhotAndFFT(config,filename_results_pht,filename_results_fft):
 
     Arguments
     ---------
-    @param   config              the yaml config used to create images
+    @param   config                   the yaml config used to create images
 
-    @param   file_output_pht     opened file to save the photon results
+    @param   filename_results_pht     file to save the photon results
 
-    @param   file_output_fft     opened file to save the FFT results
+    @param   filename_results_fft     file to save the FFT results
     """
 
     # Open files
