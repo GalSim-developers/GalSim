@@ -52,7 +52,7 @@
 namespace galsim {
 
     SBExponential::SBExponential(double r0, double flux,
-                                 boost::shared_ptr<GSParams> gsparams) :
+                                 const GSParamsPtr& gsparams) :
         SBProfile(new SBExponentialImpl(r0, flux, gsparams)) {}
 
     SBExponential::SBExponential(const SBExponential& rhs) : SBProfile(rhs) {}
@@ -67,14 +67,14 @@ namespace galsim {
 
     const int MAX_EXPONENTIAL_INFO = 100;
 
-    LRUCache<boost::shared_ptr<const GSParams>, ExponentialInfo>
-        SBExponential::SBExponentialImpl::cache(MAX_EXPONENTIAL_INFO);
+    LRUCache<GSParamsPtr, ExponentialInfo> SBExponential::SBExponentialImpl::cache(
+        MAX_EXPONENTIAL_INFO);
 
     SBExponential::SBExponentialImpl::SBExponentialImpl(
-        double r0, double flux, boost::shared_ptr<GSParams> gsparams) :
+        double r0, double flux, const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
         _flux(flux), _r0(r0), _r0_sq(_r0*_r0), _inv_r0(1./r0), _inv_r0_sq(_inv_r0*_inv_r0),
-        _info(cache.get(gsparams))
+        _info(cache.get(this->gsparams))
     {
         // For large k, we clip the result of kValue to 0.
         // We do this when the correct answer is less than kvalue_accuracy.
@@ -265,7 +265,7 @@ namespace galsim {
     }
 
     // Constructor to initialize Exponential functions for 1D deviate photon shooting
-    ExponentialInfo::ExponentialInfo(boost::shared_ptr<const GSParams> gsparams)
+    ExponentialInfo::ExponentialInfo(const GSParamsPtr& gsparams)
     {
         dbg<<"Start ExponentialInfo with gsparams = "<<gsparams.get()<<std::endl;
 #ifndef USE_NEWTON_RAPHSON

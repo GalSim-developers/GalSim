@@ -90,7 +90,7 @@ namespace galsim {
     {
     public:
         /// @brief Constructor takes SersicKey, which is really (n, maxRre, flux_untruncated)
-        SersicInfo(const SersicKey& key, boost::shared_ptr<const GSParams> gsparams);
+        SersicInfo(const SersicKey& key, const GSParamsPtr& gsparams);
 
         /// @brief Destructor: deletes photon-shooting classes if necessary
         ~SersicInfo() {}
@@ -175,9 +175,8 @@ namespace galsim {
     class SBSersic::SBSersicImpl : public SBProfileImpl
     {
     public:
-        SBSersicImpl(double n, double re, double flux,
-                     double trunc, bool flux_untruncated,
-                     boost::shared_ptr<GSParams> gsparams);
+        SBSersicImpl(double n, double re, double flux, double trunc, bool flux_untruncated,
+                     const GSParamsPtr& gsparams);
 
         ~SBSersicImpl() {}
 
@@ -265,8 +264,7 @@ namespace galsim {
         SBSersicImpl(const SBSersicImpl& rhs);
         void operator=(const SBSersicImpl& rhs);
 
-        static LRUCache<std::pair< SersicKey, boost::shared_ptr<const GSParams> >,
-                        SersicInfo> cache;
+        static LRUCache<std::pair< SersicKey, GSParamsPtr >, SersicInfo> cache;
 
     };
 }

@@ -77,9 +77,8 @@ namespace galsim {
          *                              of image operations and rendering, if different from the
          *                              default.
          */
-        SBSersic(double n, double re, double flux=1.,
-                 double trunc=0., bool flux_untruncated=false,
-                 boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
+        SBSersic(double n, double re, double flux, double trunc, bool flux_untruncated,
+                 const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor.
         SBSersic(const SBSersic& rhs);
@@ -121,9 +120,8 @@ namespace galsim {
          *                              Sersic profile with the same index `n` (default
          *                              flux_untruncated = false`).  Ignored if `trunc = 0.`.
          */
-        SBDeVaucouleurs(double re, double flux=1.,
-                        double trunc=0., bool flux_untruncated=false,
-                        boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>()) :
+        SBDeVaucouleurs(double re, double flux, double trunc, bool flux_untruncated,
+                        const GSParamsPtr& gsparams) :
             SBSersic(4., re, flux, trunc, flux_untruncated, gsparams) {}
     };
 

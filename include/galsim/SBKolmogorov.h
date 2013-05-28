@@ -51,8 +51,7 @@ namespace galsim {
          * @param[in] gsparams     GSParams object storing constants that control the accuracy of
          *                         image operations and rendering, if different from the default.
          */
-        SBKolmogorov(double lam_over_r0, double flux=1.,
-                     boost::shared_ptr<GSParams> gsparams=boost::shared_ptr<GSParams>());
+        SBKolmogorov(double lam_over_r0, double flux, const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor
         SBKolmogorov(const SBKolmogorov& rhs);

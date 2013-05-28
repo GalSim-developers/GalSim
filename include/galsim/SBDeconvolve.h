@@ -42,8 +42,7 @@ namespace galsim {
     {
     public:
         /// @brief Constructor.
-        SBDeconvolve(const SBProfile& adaptee,
-                     boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
+        SBDeconvolve(const SBProfile& adaptee, const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor.
         SBDeconvolve(const SBDeconvolve& rhs);

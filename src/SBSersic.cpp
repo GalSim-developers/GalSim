@@ -19,7 +19,7 @@
  * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#define DEBUGLOGGING
+//#define DEBUGLOGGING
 
 #include <boost/math/special_functions/gamma.hpp>
 
@@ -39,7 +39,7 @@ namespace galsim {
 
     SBSersic::SBSersic(double n, double re, double flux,
                        double trunc, bool flux_untruncated,
-                       boost::shared_ptr<GSParams> gsparams) :
+                       const GSParamsPtr& gsparams) :
         SBProfile(new SBSersicImpl(n, re, flux, trunc, flux_untruncated, gsparams)) {}
 
     SBSersic::SBSersic(const SBSersic& rhs) : SBProfile(rhs) {}
@@ -60,19 +60,19 @@ namespace galsim {
 
     const int MAX_SERSIC_INFO = 100;
 
-    LRUCache< std::pair< SersicKey, boost::shared_ptr<const GSParams> >, SersicInfo > 
+    LRUCache< std::pair< SersicKey, GSParamsPtr >, SersicInfo > 
         SBSersic::SBSersicImpl::cache(MAX_SERSIC_INFO);
 
     SBSersic::SBSersicImpl::SBSersicImpl(double n,  double re, double flux,
                                          double trunc, bool flux_untruncated,
-                                         boost::shared_ptr<GSParams> gsparams) :
+                                         const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
         _n(n), _flux(flux), _re(re), _re_sq(_re*_re),
         _inv_re(1./_re), _inv_re_sq(_inv_re*_inv_re),
         _norm(_flux*_inv_re_sq), 
         _trunc(trunc), _flux_untruncated(flux_untruncated),
         _maxRre((int)(_trunc/_re * 100 + 0.5) / 100.0),  // round to two decimal places
-        _info(cache.get(std::make_pair(SersicKey(_n, _maxRre, _flux_untruncated), gsparams)))
+        _info(cache.get(std::make_pair(SersicKey(_n, _maxRre, _flux_untruncated), this->gsparams)))
     {
         _truncated = (_trunc > 0.);
         if (!_truncated) _flux_untruncated = true;  // set unused parameter to a single value
@@ -453,7 +453,7 @@ namespace galsim {
     }
 
     // Constructor to initialize Sersic constants and k lookup table
-    SersicInfo::SersicInfo(const SersicKey& key, boost::shared_ptr<const GSParams> gsparams) :
+    SersicInfo::SersicInfo(const SersicKey& key, const GSParamsPtr& gsparams) :
         _n(key.n), _maxRre(key.maxRre), _maxRre_sq(_maxRre*_maxRre), _inv2n(1./(2.*_n)),
         _flux_untruncated(key.flux_untruncated), _flux_fraction(1.), _re_fraction(1.),
         _ft(Table<double,double>::spline)

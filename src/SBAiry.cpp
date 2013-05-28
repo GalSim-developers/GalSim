@@ -29,20 +29,20 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-//std::ostream* dbgout = new std::ofstream("debug.out");
-//int verbose_level = 2;
+std::ostream* dbgout = new std::ofstream("debug.out");
+int verbose_level = 2;
 #endif
 
 namespace galsim {
 
     // Specialize the NewValue function used by LRUCache:
     template <>
-    struct LRUCacheHelper< AiryInfo, std::pair< double, boost::shared_ptr<const GSParams> > >
+    struct LRUCacheHelper< AiryInfo, std::pair< double, GSParamsPtr > >
     {
-        static AiryInfo* NewValue(const std::pair<double, boost::shared_ptr<const GSParams> >& key)
+        static AiryInfo* NewValue(const std::pair<double, GSParamsPtr >& key)
         {
             const double obscuration = key.first;
-            boost::shared_ptr<const GSParams> gsparams = key.second;
+            const GSParamsPtr& gsparams = key.second;
             if (obscuration == 0.0)
                 return new AiryInfoNoObs(gsparams);
             else
@@ -51,7 +51,7 @@ namespace galsim {
     };
 
     SBAiry::SBAiry(double lam_over_D, double obscuration, double flux,
-                   boost::shared_ptr<GSParams> gsparams) :
+                   const GSParamsPtr& gsparams) :
         SBProfile(new SBAiryImpl(lam_over_D, obscuration, flux, gsparams)) {}
 
     SBAiry::SBAiry(const SBAiry& rhs) : SBProfile(rhs) {}
@@ -71,7 +71,7 @@ namespace galsim {
     }
 
     SBAiry::SBAiryImpl::SBAiryImpl(double lam_over_D, double obscuration, double flux,
-                                   boost::shared_ptr<GSParams> gsparams) :
+                                   const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
         _lam_over_D(lam_over_D), 
         _D(1. / lam_over_D), 
@@ -82,12 +82,16 @@ namespace galsim {
         _inv_Dsq_pisq(_inv_D_pi * _inv_D_pi),
         _xnorm(flux * _Dsq),
         _knorm(flux / (M_PI * (1.-_obssq))),
-        _info(cache.get(std::make_pair(_obscuration, gsparams)))
-    {}
+        _info(cache.get(std::make_pair(_obscuration, this->gsparams)))
+    {
+        xdbg<<"SBAiryImpl constructor: gsparams = "<<gsparams.get()<<std::endl;
+        xdbg<<"this->gsparams = "<<this->gsparams.get()<<std::endl;
+        xdbg<<*this->gsparams<<std::endl;
+    }
 
     const int MAX_AIRY_INFO = 100;
 
-    LRUCache< std::pair< double, boost::shared_ptr<const GSParams> >, AiryInfo >
+    LRUCache< std::pair< double, GSParamsPtr >, AiryInfo >
         SBAiry::SBAiryImpl::cache(MAX_AIRY_INFO);
 
     // This is a scale-free version of the Airy radial function.
@@ -335,13 +339,15 @@ namespace galsim {
     { return annuli_intersect(1.,_obscuration,1.,_obssq,ksq_over_pisq); }
 
     // Constructor to initialize Airy constants and k lookup table
-    AiryInfoObs::AiryInfoObs(double obscuration, boost::shared_ptr<const GSParams> gsparams) : 
+    AiryInfoObs::AiryInfoObs(double obscuration, const GSParamsPtr& gsparams) : 
         _obscuration(obscuration), 
         _obssq(obscuration * obscuration),
         _radial(_obscuration, _obssq, gsparams),
         _gsparams(gsparams)
     {
         dbg<<"Initializing AiryInfo for obs = "<<obscuration<<std::endl;
+        xdbg<<"gsparams = "<<_gsparams.get()<<std::endl;
+        xdbg<<*_gsparams<<std::endl;
         // Calculate stepK:
         // Schroeder (10.1.18) gives limit of EE at large radius.
         // This stepK could probably be relaxed, it makes overly accurate FFTs.
@@ -375,14 +381,14 @@ namespace galsim {
     void AiryInfoObs::checkSampler() const 
     {
         if (this->_sampler.get()) return;
+        dbg<<"Airy sampler\n";
+        dbg<<"obsc = "<<_obscuration<<std::endl;
         std::vector<double> ranges(1,0.);
         // Break Airy function into ranges that will not have >1 extremum:
         double rmin = 1.1 - 0.5*_obscuration;
         // Use Schroeder (10.1.18) limit of EE at large radius.
         // to stop sampler at radius with EE>(1-shoot_accuracy)
         double rmax = 2./(_gsparams->shoot_accuracy * M_PI*M_PI * (1.-_obscuration));
-        dbg<<"Airy sampler\n";
-        dbg<<"obsc = "<<_obscuration<<std::endl;
         dbg<<"rmin = "<<rmin<<std::endl;
         dbg<<"rmax = "<<rmax<<std::endl;
         // NB: don't need floor, since rhs is positive, so floor is superfluous.
@@ -432,11 +438,13 @@ namespace galsim {
     }
 
     // Constructor to initialize Airy constants and k lookup table
-    AiryInfoNoObs::AiryInfoNoObs(boost::shared_ptr<const GSParams> gsparams) :
+    AiryInfoNoObs::AiryInfoNoObs(const GSParamsPtr& gsparams) :
         _radial(gsparams),
         _gsparams(gsparams)
     {
         dbg<<"Initializing AiryInfoNoObs\n";
+        xdbg<<"gsparams = "<<_gsparams.get()<<std::endl;
+        xdbg<<*_gsparams<<std::endl;
         // Calculate stepK:
         double R = 1. / (_gsparams->alias_threshold * 0.5 * M_PI * M_PI);
         // Use at least 5 lam/D
@@ -447,10 +455,10 @@ namespace galsim {
     void AiryInfoNoObs::checkSampler() const 
     {
         if (this->_sampler.get()) return;
+        dbg<<"AiryNoObs sampler\n";
         std::vector<double> ranges(1,0.);
         double rmin = 1.1;
         double rmax = 2./(_gsparams->shoot_accuracy * M_PI*M_PI);
-        dbg<<"AiryNoObs sampler\n";
         dbg<<"rmin = "<<rmin<<std::endl;
         dbg<<"rmax = "<<rmax<<std::endl;
         // NB: don't need floor, since rhs is positive, so floor is superfluous.
