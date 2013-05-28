@@ -657,22 +657,22 @@ def test_sersic():
     do_kvalue(sersic, "Truncated Sersic, half-light radius specified")
 
 
-    # Test various kvalues
+    # Check for normalization consistencies with kValue checks. xValues tested in test_sersic_radii.
 
     # For half-light radius specified truncated Sersic, with flux_untruncated flag set
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1, trunc=10, flux_untruncated=True)
     do_kvalue(sersic, "Truncated Sersic, flux_untruncated, half-light radius specified")
 
     # For scale radius specified Sersic
-    sersic = galsim.Sersic(n=3, flux=1, scale_radius=1)
+    sersic = galsim.Sersic(n=3, flux=1, scale_radius=0.05)
     do_kvalue(sersic, "Sersic, scale radius specified")
 
     # For scale radius specified truncated Sersic
-    sersic = galsim.Sersic(n=3, flux=1, scale_radius=1, trunc=10)
+    sersic = galsim.Sersic(n=3, flux=1, scale_radius=0.05, trunc=10)
     do_kvalue(sersic, "Truncated Sersic, scale radius specified")
 
     # For scale radius specified truncated Sersic, with flux_untruncated flag set
-    sersic = galsim.Sersic(n=3, flux=1, scale_radius=1, trunc=10, flux_untruncated=True)
+    sersic = galsim.Sersic(n=3, flux=1, scale_radius=0.05, trunc=10, flux_untruncated=True)
     do_kvalue(sersic, "Truncated Sersic, flux_untruncated, scale radius specified")
 
 
