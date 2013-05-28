@@ -116,12 +116,15 @@ namespace galsim {
         double getMaxRRe() const { return _maxRre; }
 
         /// @brief Returns the ratio of the actual flux to the specified flux the object, which is
-        /// not unity when `_truncated` and `_flux_untruncated` are both true.
+        /// not unity when `_truncated` and `_flux_untruncated` are both true.  (Also relevant when
+        /// truncated profile is specified by scale radius `r0`, with `_flux_untruncated=false`.)
         double getTrueFluxFraction() const { return _flux_fraction; }
         /// @brief Returns the ratio of the actual half-light radius `re` to the specified one,
         /// which is not unity when `_truncated` and `_flux_untruncated` are both true.
+        /// Valid only when the Sersic profile is specified by half-light radius `re`.
         double getTrueReFraction() const { return _re_fraction; }
 
+        /// @brief Returns the scale factor `b=(re/r0)^{1/n}`.  Used in calculating `r0` from `re`.
         double getScaleB() const { return _b; }
 
         /**
@@ -137,7 +140,7 @@ namespace galsim {
 
     private:
 
-        SersicInfo(const SersicInfo& rhs); ///< Hides the copy constructor.
+        SersicInfo(const SersicInfo& rhs); ///< Hide the copy constructor.
         void operator=(const SersicInfo& rhs); ///<Hide assignment operator.
 
         double _n; ///< Sersic index.
@@ -148,11 +151,11 @@ namespace galsim {
          * @brief Scaling in Sersic profile `exp(-b*pow(xsq,inv2n))`,
          * calculated from Sersic index `n`, half-light radius `re`, and truncation radius `trunc`.
          */
-        double _b;
+        double _b; ///< scale factor `(re/r0)^{1/n}`
 
         double _inv2n;   ///< `1 / (2 * n)`
         double _maxK;    ///< Value of k beyond which aliasing can be neglected.
-        double _stepK;   ///< Sampling in k space necessary to avoid folding 
+        double _stepK;   ///< Sampling in k space necessary to avoid folding.
 
         double _norm; ///< Amplitude scaling in Sersic profile `exp(-b*pow(xsq,inv2n))`.
         bool _flux_untruncated; ///< If true, flux is set to the untruncated Sersic with index `_n`.

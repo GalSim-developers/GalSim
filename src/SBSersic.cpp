@@ -83,7 +83,8 @@ namespace galsim {
         dbg<<"trunc = "<<_trunc<<"\n";
 
         _truncated = (_trunc > 0.);
-        bool flux_untrunc = _flux_untruncated;  // needed for SCALE_RADIUS specification
+        // the following needed for SCALE_RADIUS specification, because SersicInfo works in re units
+        bool flux_untrunc = _flux_untruncated;
         if (!_truncated)  flux_untrunc = _flux_untruncated = false; // set unused parameter to false
 
         // Set size of this instance according to type of size given in constructor
@@ -140,7 +141,7 @@ namespace galsim {
 
     double SBSersic::SBSersicImpl::getScaleRadius() const
     {
-        if (_r0 == 0.) _r0 = _re * std::pow(_info->getScaleB(), -_n);
+        if (_r0 == 0.)  _r0 = _re * std::pow(_info->getScaleB(), -_n);
         return _r0;
     }
 
@@ -502,13 +503,13 @@ namespace galsim {
         // lower bound, the hard limit is 0, so choose a very small number close to 0 as the
         // hard limit.
         double b1 = 0.01;
-        dbg<<"b1 = "<<b1<<std::endl;
+        xdbg<<"b1 = "<<b1<<std::endl;
         double b2 = 10.*std::pow(n,n);
-        dbg<<"b2 = "<<b2<<std::endl;
+        xdbg<<"b2 = "<<b2<<std::endl;
         Solve<SersicHalfLightRadiusFunc> solver(func,b1,b2);
         solver.setMethod(Brent);
         solver.bracketUpper();    // expand upper bracket if necessary
-        dbg<<"After bracket, range is "<<solver.getLowerBound()<<" .. "<<
+        xdbg<<"After bracket, range is "<<solver.getLowerBound()<<" .. "<<
             solver.getUpperBound()<<std::endl;
         double hlr = solver.root();
         dbg<<"Root is "<<hlr<<std::endl;
