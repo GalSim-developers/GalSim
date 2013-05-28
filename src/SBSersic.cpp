@@ -522,9 +522,7 @@ namespace galsim {
         _n(key.n), _maxRre(key.maxRre), _maxRre_sq(_maxRre*_maxRre), _inv2n(1./(2.*_n)),
         _flux_untruncated(key.flux_untruncated), _flux_fraction(1.), _re_fraction(1.)
     {
-        // Going to constrain range of allowed n to those for which testing was done
-        // (Lower bounds has hard limit at ~0.29)
-        if (_n<0.3 || _n>4.2) throw SBError("Requested Sersic index out of range");
+        if (_n < MIN_N || _n > MAX_N) throw SBError("Requested Sersic index out of range");
 
         _truncated = (_maxRre > 0.);
 

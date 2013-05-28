@@ -35,8 +35,8 @@ namespace galsim {
      * The Sersic Surface Brightness Profile is characterized by three properties: its Sersic index
      * `n`, its `flux`, and the half-light radius `re` (or scale radius `r0`).  Given these
      * properties, the surface brightness profile scales as `I(r) propto exp[-(r/r0)^{1/n}]`, or
-     * `I(r) propto exp[-b*(r/re)^{1/n}]`.  Currently the code is limited to 0.3<=n<=4.2, with
-     * an exception thrown for values outside that range.
+     * `I(r) propto exp[-b*(r/re)^{1/n}]`.  Currently the code is limited to MIN_N <= n <= MAX_N,
+     * with an exception thrown for values outside that range.
      *
      * The SBProfile representation of a Sersic profile also includes an optional truncation beyond
      * a given radius, by the parameter `trunc`.  The resolution of the truncation radius (in units
@@ -76,6 +76,10 @@ namespace galsim {
             HALF_LIGHT_RADIUS,
             SCALE_RADIUS
         };
+
+        // Constrain range of allowed Sersic index n to those for which testing was done
+        const double MIN_N = 0.3;    // (Lower bounds has hard limit at ~0.29)
+        const double MAX_N = 4.2;
 
         /**
          * @brief Constructor.
