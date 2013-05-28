@@ -1617,17 +1617,18 @@ class DeVaucouleurs(GSObject):
     """
 
     # Initialization parameters of the object, with type information
-    _req_params = { "half_light_radius" : float }
-    _opt_params = { "flux" : float, "trunc" : float, "flux_untruncated" : float }
-    _single_params = []
+    _req_params = {}
+    _opt_params = { "flux" : float, "trunc" : float, "flux_untruncated" : bool }
+    _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
 
     # --- Public Class methods ---
-    def __init__(self, half_light_radius=None, flux=1., trunc=0., flux_untruncated=False,
-                 gsparams=None):
+    def __init__(self, half_light_radius=None, scale_radius=None, flux=1., trunc=0.,
+                 flux_untruncated=False, gsparams=None):
         GSObject.__init__(
-            self, galsim.SBDeVaucouleurs(half_light_radius=half_light_radius, flux=flux,
-                                         trunc=trunc, flux_untruncated=flux_untruncated,
+            self, galsim.SBDeVaucouleurs(half_light_radius=half_light_radius,
+                                         scale_radius=scale_radius, flux=flux, trunc=trunc,
+                                         flux_untruncated=flux_untruncated,
                                          gsparams=gsparams))
 
     def getHalfLightRadius(self):
