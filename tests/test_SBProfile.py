@@ -625,7 +625,7 @@ def test_sersic():
     do_shoot(sersic2,myImg,"Sersic")
 
     # Test kvalues
-    do_kvalue(sersic,"Sersic")
+    do_kvalue(sersic,"Sersic, half-light radius specified")
 
 
     # Now repeat everything using a truncation.  (Above had no truncation.)
@@ -654,7 +654,26 @@ def test_sersic():
     do_shoot(sersic2,myImg,"Truncated Sersic")
 
     # Test kvalues
-    do_kvalue(sersic, "Truncated Sersic")
+    do_kvalue(sersic, "Truncated Sersic, half-light radius specified")
+
+
+    # Test various kvalues
+
+    # For half-light radius specified truncated Sersic, with flux_untruncated flag set
+    sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1, trunc=10, flux_untruncated=True)
+    do_kvalue(sersic, "Truncated Sersic, flux_untruncated, half-light radius specified")
+
+    # For scale radius specified Sersic
+    sersic = galsim.Sersic(n=3, flux=1, scale_radius=1)
+    do_kvalue(sersic, "Sersic, scale radius specified")
+
+    # For scale radius specified truncated Sersic
+    sersic = galsim.Sersic(n=3, flux=1, scale_radius=1, trunc=10)
+    do_kvalue(sersic, "Truncated Sersic, scale radius specified")
+
+    # For scale radius specified truncated Sersic, with flux_untruncated flag set
+    sersic = galsim.Sersic(n=3, flux=1, scale_radius=1, trunc=10, flux_untruncated=True)
+    do_kvalue(sersic, "Truncated Sersic, flux_untruncated, scale radius specified")
 
 
     t2 = time.time()
