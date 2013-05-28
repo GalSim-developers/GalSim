@@ -28,6 +28,7 @@
 #include "SBMoffatImpl.h"
 #include "integ/Int.h"
 #include "Solve.h"
+#include "bessel/Roots.h"
 
 // Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by 
 // drawing a uniform deviate for theta, instead of drawing 2 deviates for a point on the unit 
@@ -553,7 +554,7 @@ namespace galsim {
         MoffatIntegrand(double beta, double k, double (*pb)(double, double)) : 
             _beta(beta), _k(k), _pow_beta(pb) {}
         double operator()(double r) const 
-        { return r/_pow_beta(1.+r*r, _beta)*j0(_k*r); }
+        { return r/_pow_beta(1.+r*r, _beta)*boost::math::cyl_bessel_j(0,_k*r); }
 
     private:
         double _beta;
@@ -563,7 +564,7 @@ namespace galsim {
 
     void SBMoffat::SBMoffatImpl::setupFT() const
     {
-        //assert(_trunc > 0.);
+        assert(_trunc > 0.);
         if (_ft.size() > 0) return;
 
         // Do a Hankel transform and store the results in a lookup table.
@@ -582,10 +583,25 @@ namespace galsim {
         int n_below_thresh = 0;
         // Don't go past k = 50
         for(double k=0.; k < 50; k += dk) {
-            // 
+
             MoffatIntegrand I(_beta, k, _pow_beta);
+
+#ifdef DEBUGLOGGING
+            integ::IntRegion<double> reg(0, _maxRrD, dbgout);
+#else
+            integ::IntRegion<double> reg(0, _maxRrD);
+#endif
+
+            // Add explicit splits at first several roots of J0.
+            // This tends to make the integral more accurate.
+            for (int s=1; s<=10; ++s) {
+                double root = bessel::getBesselRoot0(s);
+                if (root > k * _maxRrD) break;
+                reg.addSplit(root/k);
+            }
+
             double val = integ::int1d(
-                I, 0., _maxRrD,
+                I, reg,
                 this->gsparams->integration_relerr, 
                 this->gsparams->integration_abserr);
             val *= prefactor;
