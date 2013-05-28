@@ -48,7 +48,7 @@
 namespace galsim {
 
     SBMoffat::SBMoffat(double beta, double size, RadiusType rType, double trunc, double flux,
-                       boost::shared_ptr<GSParams> gsparams) :
+                       const GSParamsPtr& gsparams) :
         SBProfile(new SBMoffatImpl(beta, size, rType, trunc, flux, gsparams)) {}
 
     SBMoffat::SBMoffat(const SBMoffat& rhs) : SBProfile(rhs) {}
@@ -157,7 +157,7 @@ namespace galsim {
 
     SBMoffat::SBMoffatImpl::SBMoffatImpl(double beta, double size, RadiusType rType,
                                          double trunc, double flux,
-                                         boost::shared_ptr<GSParams> gsparams) :
+                                         const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
         _beta(beta), _flux(flux), _trunc(trunc),
         _maxK(0.), // calculated by maxK() and stored.

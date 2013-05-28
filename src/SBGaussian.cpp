@@ -44,7 +44,7 @@ namespace galsim {
 
 
     SBGaussian::SBGaussian(double sigma, double flux,
-                           boost::shared_ptr<GSParams> gsparams) : 
+                           const GSParamsPtr& gsparams) : 
         SBProfile(new SBGaussianImpl(sigma, flux, gsparams)) {}
 
     SBGaussian::SBGaussian(const SBGaussian& rhs) : SBProfile(rhs) {}
@@ -58,7 +58,7 @@ namespace galsim {
     }
 
     SBGaussian::SBGaussianImpl::SBGaussianImpl(double sigma, double flux,
-                                               boost::shared_ptr<GSParams> gsparams) :
+                                               const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
         _flux(flux), _sigma(sigma), _sigma_sq(_sigma*_sigma),
         _inv_sigma(1./_sigma), _inv_sigma_sq(_inv_sigma*_inv_sigma)

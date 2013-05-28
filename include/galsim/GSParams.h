@@ -23,10 +23,13 @@
 #define GSPARAMS_H
 
 #include <boost/shared_ptr.hpp>
+#include <cassert>
+#include <ostream>
 
 namespace galsim {
 
-    struct GSParams {
+    struct GSParams 
+    {
 
         /**
          * @brief A set of numbers that govern how SBProfiles make various speed/accuracy
@@ -172,7 +175,79 @@ namespace galsim {
         int range_division_for_extrema;
         double small_fraction_of_flux;
 
+        bool operator==(const GSParams& rhs) const
+        {
+            if (this == &rhs) return true;
+            else if (minimum_fft_size != rhs.minimum_fft_size) return false;
+            else if (maximum_fft_size != rhs.maximum_fft_size) return false;
+            else if (alias_threshold != rhs.alias_threshold) return false;
+            else if (maxk_threshold != rhs.maxk_threshold) return false;
+            else if (kvalue_accuracy != rhs.kvalue_accuracy) return false;
+            else if (xvalue_accuracy != rhs.xvalue_accuracy) return false;
+            else if (realspace_relerr != rhs.realspace_relerr) return false;
+            else if (realspace_abserr != rhs.realspace_abserr) return false;
+            else if (integration_relerr != rhs.integration_relerr) return false;
+            else if (integration_abserr != rhs.integration_abserr) return false;
+            else if (shoot_accuracy != rhs.shoot_accuracy) return false;
+            else if (shoot_relerr != rhs.shoot_relerr) return false;
+            else if (shoot_abserr != rhs.shoot_abserr) return false;
+            else if (allowed_flux_variation != rhs.allowed_flux_variation) return false;
+            else if (range_division_for_extrema != rhs.range_division_for_extrema) return false;
+            else if (small_fraction_of_flux != rhs.small_fraction_of_flux) return false;
+            else return true;
+        }
+
+        bool operator<(const GSParams& rhs) const
+        {
+            if (this == &rhs) return false;
+            else if (minimum_fft_size < rhs.minimum_fft_size) return true;
+            else if (minimum_fft_size > rhs.minimum_fft_size) return false;
+            else if (maximum_fft_size < rhs.maximum_fft_size) return true;
+            else if (maximum_fft_size > rhs.maximum_fft_size) return false;
+            else if (alias_threshold < rhs.alias_threshold) return true;
+            else if (alias_threshold > rhs.alias_threshold) return false;
+            else if (maxk_threshold < rhs.maxk_threshold) return true;
+            else if (maxk_threshold > rhs.maxk_threshold) return false;
+            else if (kvalue_accuracy < rhs.kvalue_accuracy) return true;
+            else if (kvalue_accuracy > rhs.kvalue_accuracy) return false;
+            else if (xvalue_accuracy < rhs.xvalue_accuracy) return true;
+            else if (xvalue_accuracy > rhs.xvalue_accuracy) return false;
+            else if (realspace_relerr < rhs.realspace_relerr) return true;
+            else if (realspace_relerr > rhs.realspace_relerr) return false;
+            else if (realspace_abserr < rhs.realspace_abserr) return true;
+            else if (realspace_abserr > rhs.realspace_abserr) return false;
+            else if (integration_relerr < rhs.integration_relerr) return true;
+            else if (integration_relerr > rhs.integration_relerr) return false;
+            else if (integration_abserr < rhs.integration_abserr) return true;
+            else if (integration_abserr > rhs.integration_abserr) return false;
+            else if (shoot_accuracy < rhs.shoot_accuracy) return true;
+            else if (shoot_accuracy > rhs.shoot_accuracy) return false;
+            else if (shoot_relerr < rhs.shoot_relerr) return true;
+            else if (shoot_relerr > rhs.shoot_relerr) return false;
+            else if (shoot_abserr < rhs.shoot_abserr) return true;
+            else if (shoot_abserr > rhs.shoot_abserr) return false;
+            else if (allowed_flux_variation < rhs.allowed_flux_variation) return true;
+            else if (allowed_flux_variation > rhs.allowed_flux_variation) return false;
+            else if (range_division_for_extrema < rhs.range_division_for_extrema) return true;
+            else if (range_division_for_extrema > rhs.range_division_for_extrema) return false;
+            else if (small_fraction_of_flux < rhs.small_fraction_of_flux) return true;
+            else if (small_fraction_of_flux > rhs.small_fraction_of_flux) return false;
+            else return false;
+        }
     };
+
+    inline std::ostream& operator<<(std::ostream& os, const GSParams& gsp)
+    {
+        os << gsp.minimum_fft_size << "," << gsp.maximum_fft_size << ",  "
+            << gsp.alias_threshold << "," << gsp.maxk_threshold << ",  "
+            << gsp.kvalue_accuracy << "," << gsp.xvalue_accuracy << ",  "
+            << gsp.realspace_relerr << "," << gsp.realspace_abserr << ",  "
+            << gsp.integration_relerr << "," << gsp.integration_abserr << ",  "
+            << gsp.shoot_accuracy << "," << gsp.shoot_relerr << "," << gsp.shoot_abserr << ",  "
+            << gsp.allowed_flux_variation << "," << gsp.range_division_for_extrema << ","
+            << gsp.small_fraction_of_flux;
+        return os;
+    }
 
     struct GSParamsPtr 
     {
@@ -181,16 +256,32 @@ namespace galsim {
          * we can use it in stl containers.
          */
         GSParamsPtr(GSParams* p) : _p(p) {}
+        GSParamsPtr(boost::shared_ptr<GSParams> p) : _p(p) {}
+        GSParamsPtr() {}
         GSParamsPtr(const GSParamsPtr& rhs) : _p(rhs._p) {}
+        GSParamsPtr& operator=(const GSParamsPtr& rhs) { _p = rhs._p; return *this; }
 
-        GSParams& operator*() { return *_p; }
-        const GSParams& operator*() const { return *_p; }
+        GSParams& operator*() { assert(_p); return *_p; }
+        const GSParams& operator*() const { assert(_p); return *_p; }
 
-        GSParams* operator->() { return _p.get(); }
-        const GSParams* operator->() const { return _p.get(); }
+        GSParams* operator->() { assert(_p); return _p.get(); }
+        const GSParams* operator->() const { assert(_p); return _p.get(); }
 
         boost::shared_ptr<GSParams> getSharedPtr() { return _p; }
         const boost::shared_ptr<GSParams> getSharedPtr() const { return _p; }
+
+        const GSParams* get() const { return _p.get(); }
+        GSParams* get() { return _p.get(); }
+        operator bool() const { return _p.get(); }
+
+        static const GSParamsPtr& getDefault() 
+        {
+            static GSParamsPtr def(new GSParams());
+            return def;
+        }
+
+        bool operator==(const GSParamsPtr& rhs) const { return *_p == *rhs; }
+        bool operator<(const GSParamsPtr& rhs) const { return *_p < *rhs; }
 
     private : 
         boost::shared_ptr<GSParams> _p;

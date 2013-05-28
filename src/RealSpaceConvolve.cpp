@@ -263,7 +263,7 @@ namespace galsim {
 
     double RealSpaceConvolve(
         const SBProfile& p1, const SBProfile& p2, const Position<double>& pos, double flux,
-        const GSParams* gsparams)
+        const GSParamsPtr& gsparams)
     {
         // Coming in, if only one of them is axisymmetric, it should be p1.
         // This cuts down on some of the logic below.

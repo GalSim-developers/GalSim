@@ -56,7 +56,7 @@ namespace galsim {
         /** 
          * @brief Constructor
          */
-        ExponentialInfo(boost::shared_ptr<const GSParams> gsparams); 
+        ExponentialInfo(const GSParamsPtr& gsparams); 
 
         /// @brief Destructor: deletes photon-shooting classes if necessary
         ~ExponentialInfo() {}
@@ -94,7 +94,7 @@ namespace galsim {
     {
     public:
 
-        SBExponentialImpl(double r0, double flux, boost::shared_ptr<GSParams> gsparams);
+        SBExponentialImpl(double r0, double flux, const GSParamsPtr& gsparams);
 
         ~SBExponentialImpl() {}
 
@@ -160,8 +160,7 @@ namespace galsim {
         SBExponentialImpl(const SBExponentialImpl& rhs);
         void operator=(const SBExponentialImpl& rhs);
 
-        static LRUCache<boost::shared_ptr<const GSParams>, ExponentialInfo> cache;
-
+        static LRUCache<GSParamsPtr, ExponentialInfo> cache;
     };
 
 }

@@ -119,8 +119,6 @@ namespace galsim {
         }
     }
 
-    boost::shared_ptr<const GSParams> Interpolant::_default_gsparams(new GSParams());
-
     double Lanczos::xCalc(double x) const
     {
         double retval = sinc(x)*sinc(x/_n);
@@ -140,16 +138,9 @@ namespace galsim {
     }
 
     Lanczos::Lanczos(int n, bool fluxConserve, double tol,
-                     boost::shared_ptr<const GSParams> gsparams) :  
+                     const GSParamsPtr& gsparams) :  
         Interpolant(gsparams), _n(n), _fluxConserve(fluxConserve), _tolerance(tol)
     {
-        // TODO: These can't be retrieved from any GSParams object.
-        //       Should they be tol?  0.1*tol?  For now, using 0.1*tol since tol is already a
-        //       small number and 10% inaccuracies in building the lookup table should be completely
-        //       negligible.
-        const double xvalue_accuracy = 0.1*tol;
-        const double kvalue_accuracy = 0.1*tol;
-
         // Reduce range slightly from n so we're not including points with zero weight in
         // interpolations:
         _range = _n*(1-0.1*std::sqrt(_tolerance));
@@ -178,13 +169,13 @@ namespace galsim {
 
             // Build xtab = table of x values
             // Spline is accurate to O(dx^3), so errors should be ~dx^4.
-            const double xStep1 = std::pow(xvalue_accuracy,0.25);
+            const double xStep1 = std::pow(gsparams->xvalue_accuracy,0.25);
             // Make sure steps hit the integer values exactly.
             const double xStep = 1. / std::ceil(1./xStep1);
             for(double x=0.; x<_n; x+=xStep) _xtab->addEntry(x, xCalc(x));
 
             // Build utab = table of u values
-            const double uStep = std::pow(kvalue_accuracy,0.25) / _n;
+            const double uStep = std::pow(gsparams->kvalue_accuracy,0.25) / _n;
             _uMax = 0.;
             if (_fluxConserve) {
                 for (double u=0.; u - _uMax < 1./_n || u<1.1; u+=uStep) {
@@ -243,7 +234,7 @@ namespace galsim {
                     + integ::int1d(ci, 1., 2., 0.1*_tolerance, 0.1*_tolerance));
     }
 
-    Cubic::Cubic(double tol, boost::shared_ptr<const GSParams> gsparams) : 
+    Cubic::Cubic(double tol, const GSParamsPtr& gsparams) : 
         Interpolant(gsparams), _tolerance(tol)
     {
         // Reduce range slightly from n so we're not including points with zero weight in
@@ -297,7 +288,7 @@ namespace galsim {
                     + integ::int1d(qi, 2., 3., 0.1*_tolerance, 0.1*_tolerance));
     }
 
-    Quintic::Quintic(double tol, boost::shared_ptr<const GSParams> gsparams) :
+    Quintic::Quintic(double tol, const GSParamsPtr& gsparams) :
         Interpolant(gsparams), _tolerance(tol)
     {
         // Reduce range slightly from n so we're not including points with zero weight in

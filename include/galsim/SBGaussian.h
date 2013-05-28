@@ -50,8 +50,7 @@ namespace galsim {
          * @param[in] gsparams GSParams object storing constants that control the accuracy of image
          *                     operations and rendering, if different from the default.
          */
-        SBGaussian(double sigma, double flux=1.,
-                   boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
+        SBGaussian(double sigma, double flux, const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor.
         SBGaussian(const SBGaussian& rhs);

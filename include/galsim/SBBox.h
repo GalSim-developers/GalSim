@@ -49,8 +49,7 @@ namespace galsim {
          * @param[in] gsparams GSParams object storing constants that control the accuracy of image
          *                     operations and rendering, if different from the default.
          */
-        SBBox(double xw, double yw=0., double flux=1.,
-              boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
+        SBBox(double xw, double yw, double flux, const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor.
         SBBox(const SBBox& rhs);

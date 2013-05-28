@@ -42,7 +42,7 @@
 namespace galsim {
 
     SBKolmogorov::SBKolmogorov(double lam_over_r0, double flux,
-                               boost::shared_ptr<GSParams> gsparams) :
+                               const GSParamsPtr& gsparams) :
         SBProfile(new SBKolmogorovImpl(lam_over_r0, flux, gsparams)) {}
 
     SBKolmogorov::SBKolmogorov(const SBKolmogorov& rhs) : SBProfile(rhs) {}
@@ -57,7 +57,7 @@ namespace galsim {
 
     const int MAX_KOLMOGOROV_INFO = 100;
 
-    LRUCache<boost::shared_ptr<const GSParams>, KolmogorovInfo>
+    LRUCache<GSParamsPtr, KolmogorovInfo>
         SBKolmogorov::SBKolmogorovImpl::cache(MAX_KOLMOGOROV_INFO);
 
     // The "magic" number 2.992934 below comes from the standard form of the Kolmogorov spectrum
@@ -70,8 +70,7 @@ namespace galsim {
     // k0 * lambda/r0 = 2Pi * (6.8839 / 2)^-3/5 = 2.992934
     //
     SBKolmogorov::SBKolmogorovImpl::SBKolmogorovImpl(
-        double lam_over_r0, double flux,
-        boost::shared_ptr<GSParams> gsparams) :
+        double lam_over_r0, double flux, const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
         _lam_over_r0(lam_over_r0), 
         _k0(2.992934 / lam_over_r0), 
@@ -80,7 +79,7 @@ namespace galsim {
         _inv_k0sq(1./_k0sq),
         _flux(flux), 
         _xnorm(_flux * _k0sq),
-        _info(cache.get(gsparams))
+        _info(cache.get(this->gsparams))
     {
         dbg<<"SBKolmogorov:\n";
         dbg<<"lam_over_r0 = "<<_lam_over_r0<<std::endl;
@@ -260,8 +259,7 @@ namespace galsim {
     class KolmXValue : public std::unary_function<double,double>
     {
     public:
-        KolmXValue(boost::shared_ptr<const GSParams> gsparams) : 
-            _gsparams(gsparams) {}
+        KolmXValue(const GSParamsPtr& gsparams) : _gsparams(gsparams) {}
 
         double operator()(double r) const
         { 
@@ -272,7 +270,7 @@ namespace galsim {
                                 _gsparams->integration_abserr);
         }
     private:
-        boost::shared_ptr<const GSParams> _gsparams;
+        const GSParamsPtr& _gsparams;
     };
 
 #ifdef SOLVE_FWHM_HLR
@@ -282,7 +280,7 @@ namespace galsim {
     public:
     // BARNEY: I don't understand how _target initialization works here... Either before or after
     // making the GSParams a boost::shared_ptr.  I've tried to fix with what I think makes sense.
-        KolmTargetValue(double target, boost::shared_ptr<const GSParams> gsparams) :
+        KolmTargetValue(double target, const GSParams& gsparams) :
             f(gsparams), _target(target) {}
         double operator()(double r) const { return f(r) - _target; }
     private:
@@ -293,7 +291,7 @@ namespace galsim {
     class KolmXValueTimes2piR : public std::unary_function<double,double>
     {
     public:
-        KolmXValueTimes2piR(boost::shared_ptr<const GSParams> gsparams) : f(gsparams) {}
+        KolmXValueTimes2piR(const GSParamsPtr& gsparams) : f(gsparams) {}
 
         double operator()(double r) const
         { return f(r) * r; }
@@ -304,7 +302,7 @@ namespace galsim {
     class KolmEnclosedFlux : public std::unary_function<double,double>
     {
     public:
-        KolmEnclosedFlux(boost::shared_ptr<const GSParams> gsparams) :
+        KolmEnclosedFlux(const GSParamsPtr& gsparams) :
             f(gsparams), _gsparams(gsparams) {}
         double operator()(double r) const 
         {
@@ -314,13 +312,13 @@ namespace galsim {
         }
     private:
         KolmXValueTimes2piR f;
-        boost::shared_ptr<const GSParams> _gsparams;
+        const GSParamsPtr& _gsparams;
     };
 
     class KolmTargetFlux : public std::unary_function<double,double>
     {
     public:
-        KolmTargetFlux(double target, boost::shared_ptr<const GSParams> gsparams) :
+        KolmTargetFlux(double target, const GSParamsPtr& gsparams) :
             f(gsparams), _target(target) {}
         double operator()(double r) const { return f(r) - _target; }
     private:
@@ -330,7 +328,7 @@ namespace galsim {
 #endif
 
     // Constructor to initialize Kolmogorov constants and xvalue lookup table
-    KolmogorovInfo::KolmogorovInfo(boost::shared_ptr<const GSParams> gsparams) :
+    KolmogorovInfo::KolmogorovInfo(const GSParamsPtr& gsparams) :
         _radial(TableDD::spline)
     {
         dbg<<"Initializing KolmogorovInfo\n";

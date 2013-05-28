@@ -33,7 +33,7 @@
 namespace galsim {
 
     SBConvolve::SBConvolve(const std::list<SBProfile>& slist, bool real_space,
-                           boost::shared_ptr<GSParams> gsparams) :
+                           const GSParamsPtr& gsparams) :
         SBProfile(new SBConvolveImpl(slist,real_space,gsparams)) {}
 
     SBConvolve::SBConvolve(const SBConvolve& rhs) : SBProfile(rhs) {}
@@ -41,9 +41,8 @@ namespace galsim {
     SBConvolve::~SBConvolve() {}
 
     SBConvolve::SBConvolveImpl::SBConvolveImpl(const std::list<SBProfile>& slist, bool real_space,
-                                               boost::shared_ptr<GSParams> gsparams) :
-        SBProfileImpl(gsparams.get() ? gsparams :
-                      GetImpl(slist.front())->gsparams),
+                                               const GSParamsPtr& gsparams) :
+        SBProfileImpl(gsparams ? gsparams : GetImpl(slist.front())->gsparams),
         _real_space(real_space)
     {
         for (ConstIter sptr = slist.begin(); sptr!=slist.end(); ++sptr)
@@ -113,9 +112,9 @@ namespace galsim {
             const SBProfile& p1 = _plist.front();
             const SBProfile& p2 = _plist.back();
             if (p2.isAxisymmetric())
-                return RealSpaceConvolve(p2,p1,pos,_fluxProduct,this->gsparams.get());
+                return RealSpaceConvolve(p2,p1,pos,_fluxProduct,this->gsparams);
             else 
-                return RealSpaceConvolve(p1,p2,pos,_fluxProduct,this->gsparams.get());
+                return RealSpaceConvolve(p1,p2,pos,_fluxProduct,this->gsparams);
         } else if (_plist.empty()) 
             return 0.;
         else if (_plist.size() == 1) 
@@ -228,18 +227,18 @@ namespace galsim {
     // 
     
     SBAutoConvolve::SBAutoConvolve(const SBProfile& s,
-                                   boost::shared_ptr<GSParams> gsparams) :
+                                   const GSParamsPtr& gsparams) :
         SBProfile(new SBAutoConvolveImpl(s, gsparams)) {}
     SBAutoConvolve::SBAutoConvolve(const SBAutoConvolve& rhs) : SBProfile(rhs) {}
     SBAutoConvolve::~SBAutoConvolve() {}
 
     SBAutoConvolve::SBAutoConvolveImpl::SBAutoConvolveImpl(const SBProfile& s,
-                                                           boost::shared_ptr<GSParams> gsparams) :
-        SBProfileImpl(gsparams.get() ? gsparams : GetImpl(s)->gsparams),
+                                                           const GSParamsPtr& gsparams) :
+        SBProfileImpl(gsparams ? gsparams : GetImpl(s)->gsparams),
         _adaptee(s) {}
 
     double SBAutoConvolve::SBAutoConvolveImpl::xValue(const Position<double>& pos) const
-    { return RealSpaceConvolve(_adaptee,_adaptee,pos,getFlux(),this->gsparams.get()); }
+    { return RealSpaceConvolve(_adaptee,_adaptee,pos,getFlux(),this->gsparams); }
 
     void SBAutoConvolve::SBAutoConvolveImpl::fillKValue(
         tmv::MatrixView<std::complex<double> > val,
@@ -295,22 +294,21 @@ namespace galsim {
     // AutoCorrelate
     // 
     
-    SBAutoCorrelate::SBAutoCorrelate(const SBProfile& s,
-                                     boost::shared_ptr<GSParams> gsparams) :
+    SBAutoCorrelate::SBAutoCorrelate(const SBProfile& s, const GSParamsPtr& gsparams) :
         SBProfile(new SBAutoCorrelateImpl(s, gsparams)) {}
     SBAutoCorrelate::SBAutoCorrelate(const SBAutoCorrelate& rhs) : SBProfile(rhs) {}
     SBAutoCorrelate::~SBAutoCorrelate() {}
 
     SBAutoCorrelate::SBAutoCorrelateImpl::SBAutoCorrelateImpl(const SBProfile& s,
-                                                              boost::shared_ptr<GSParams> gsparams) :
-        SBProfileImpl(gsparams.get() ? gsparams : GetImpl(s)->gsparams),
+                                                              const GSParamsPtr& gsparams) :
+        SBProfileImpl(gsparams ? gsparams : GetImpl(s)->gsparams),
         _adaptee(s) {}
 
     double SBAutoCorrelate::SBAutoCorrelateImpl::xValue(const Position<double>& pos) const
     { 
         SBProfile temp = _adaptee;
         temp.applyRotation(180. * degrees);
-        return RealSpaceConvolve(_adaptee,temp,pos,getFlux(),this->gsparams.get());
+        return RealSpaceConvolve(_adaptee,temp,pos,getFlux(),this->gsparams);
     }
 
     void SBAutoCorrelate::SBAutoCorrelateImpl::fillKValue(

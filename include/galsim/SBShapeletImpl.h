@@ -30,7 +30,7 @@ namespace galsim {
     class SBShapelet::SBShapeletImpl : public SBProfile::SBProfileImpl 
     {
     public:
-        SBShapeletImpl(double sigma, const LVector& bvec, boost::shared_ptr<GSParams> gsparams);
+        SBShapeletImpl(double sigma, const LVector& bvec, const GSParamsPtr& gsparams);
         ~SBShapeletImpl() {}
 
         double xValue(const Position<double>& p) const;

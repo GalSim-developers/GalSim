@@ -33,9 +33,6 @@ namespace galsim {
 
     namespace sbp {
 
-        // Default GSParams to use when input is None (defined in src/SBInterpolatedImage.cpp)
-        extern boost::shared_ptr<const GSParams> _default_gsparams;
-
         // Magic numbers:
 
         /// @brief FT must be at least this much larger than input
@@ -43,13 +40,13 @@ namespace galsim {
 
         /// @brief The default k-space interpolator
         const boost::shared_ptr<Quintic> defaultKInterpolant1d(
-            new Quintic(1.e-5, _default_gsparams));
+            new Quintic(1.e-5, GSParamsPtr::getDefault()));
         const boost::shared_ptr<InterpolantXY> defaultKInterpolant2d(
             new InterpolantXY(defaultKInterpolant1d));
 
         /// @brief The default real-space interpolator
         const boost::shared_ptr<Lanczos> defaultXInterpolant1d(
-            new Lanczos(5, true, 1.e-5, _default_gsparams));
+            new Lanczos(5, true, 1.e-5, GSParamsPtr::getDefault()));
         const boost::shared_ptr<InterpolantXY> defaultXInterpolant2d(
             new InterpolantXY(defaultXInterpolant1d));
 
@@ -235,11 +232,10 @@ namespace galsim {
         template <typename T> 
         SBInterpolatedImage(
             const BaseImage<T>& image,
-            boost::shared_ptr<Interpolant2d> xInterp = sbp::defaultXInterpolant2d,
-            boost::shared_ptr<Interpolant2d> kInterp = sbp::defaultKInterpolant2d,
-            double dx=0., double pad_factor=0.,
-            boost::shared_ptr<Image<T> > pad_image = Image<T>(),
-            boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
+            boost::shared_ptr<Interpolant2d> xInterp,
+            boost::shared_ptr<Interpolant2d> kInterp,
+            double dx, double pad_factor, boost::shared_ptr<Image<T> > pad_image,
+            const GSParamsPtr& gsparams);
 
         /** 
          * @brief Initialize internal quantities and allocate data tables based on a supplied 2D 
@@ -254,9 +250,9 @@ namespace galsim {
         SBInterpolatedImage(
             const MultipleImageHelper& multi,
             const std::vector<double>& weights,
-            boost::shared_ptr<Interpolant2d> xInterp = sbp::defaultXInterpolant2d,
-            boost::shared_ptr<Interpolant2d> kInterp = sbp::defaultKInterpolant2d,
-            boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
+            boost::shared_ptr<Interpolant2d> xInterp,
+            boost::shared_ptr<Interpolant2d> kInterp,
+            const GSParamsPtr& gsparams);
 
         /// @brief Copy Constructor.
         SBInterpolatedImage(const SBInterpolatedImage& rhs);
