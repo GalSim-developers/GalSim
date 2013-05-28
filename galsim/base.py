@@ -1376,15 +1376,24 @@ class Sersic(GSObject):
         >>> sersic_obj = galsim.Sersic(n=3.5, half_light_radius=2.5, flux=40.)
         >>> sersic_obj.getHalfLightRadius()
         2.5
+        >>> sersic_obj.getScaleRadius()
+        0.003262738739835313
         >>> sersic_obj.getN()
         3.5
+        >>> sersic_obj = galsim.Sersic(n=1.5, scale_radius=0.5, flux=40.)
+        >>> sersic_obj.getHalfLightRadius()
+        2.1863858209590648
+        >>> sersic_obj.getScaleRadius()
+        0.5
+        >>> sersic_obj.getN()
+        1.5
 
     Another optional parameter, `flux_untruncated`, specifies whether the `flux` and
     `half_light_radius` (or `scale_radius`) correspond to the untruncated profile or the
     truncated profile.  If `flux_untruncated` is True (and `trunc > 0`), then the profile
-    will be identical to the version without truncation up to the truncation radius,
-    at which point it drops to 0.  In this case, the actual half-light radius will be different
-    from the specified half-light radius.  The getHalfLightRadius() method will return the true
+    will be identical to the version without truncation up to the truncation radius, beyond
+    which it drops to 0.  In this case, the actual half-light radius will be different from
+    the specified half-light radius.  The getHalfLightRadius() method will return the true
     half-light radius.  Similarly, the actual flux will not be the same as the specified value; the
     true flux is also returned by the getFlux() method.
 
@@ -1430,6 +1439,9 @@ class Sersic(GSObject):
         >>> sersic_obj2.getScaleRadius()
         0.003262738739835313  # the scale radius is still identical to the untruncated case
 
+    When the truncated Sersic scale is specified with the scale radius, the true scale radius
+    does not change between `flux_untruncated=true` and `flux_untruncated=false`; however the
+    flux normalization and half-light radius will differ between the two.
 
     You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
     help(galsim.GSParams) for more information about this option.
@@ -1465,7 +1477,7 @@ class Sersic(GSObject):
         return self.SBProfile.getHalfLightRadius()
 
     def getScaleRadius(self):
-        """Return the half light radius for this Sersic profile.
+        """Return the scale radius for this Sersic profile.
         """
         return self.SBProfile.getScaleRadius()
 
