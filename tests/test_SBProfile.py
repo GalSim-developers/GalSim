@@ -909,7 +909,7 @@ def test_sersic_radii():
 
     # Test flux_untruncated scale and normalization
     test_gal = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=0., flux=1.)
-    test_gal2 = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=trunc, flux=1.,
+    test_gal2 = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=8.5, flux=1.,
                                      flux_untruncated=True)
     center = test_gal.xValue(galsim.PositionD(0,0))
     center2 = test_gal2.xValue(galsim.PositionD(0,0))
@@ -926,8 +926,7 @@ def test_sersic_radii():
     print 'true hlr_sum = ',hlr_sum
     np.testing.assert_almost_equal(
           hlr_sum, 0.5*true_flux, decimal=4,
-          err_msg="Error in DeVaucouleurs true half-light radius with flux_untruncated, trunc=%.1f"\
-                   %(trunc))
+          err_msg="Error in DeVaucouleurs true half-light radius with flux_untruncated, trunc=8.5")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
