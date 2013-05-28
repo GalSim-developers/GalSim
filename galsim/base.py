@@ -619,6 +619,14 @@ class GSObject(object):
         The appropriate threshold will depend on your particular application, including what kind
         of profile the object has, how big your image is relative to the size of your object, etc.
 
+        Given the periodicity implicitly assumed by use of FFTs, there can occasionally be artifacts
+        due to wrapping at the edges, particularly for objects that are quite extended (e.g., due to
+        the nature of the radial profile).  Use of the keyword parameter `wmult > 1` can be used to
+        reduce the size of these artifacts, at the expense of the calculations taking longer and
+        using more memory.  Alternatively, the objects that go into the image can be created with a
+        `gsparams` keyword that has a lower-than-default value for `alias_threshold`; see
+        help(galsim.GSParams) for more information.
+
         @param image  If provided, this will be the image on which to draw the profile.
                       If `image = None`, then an automatically-sized image will be created.
                       If `image != None`, but its bounds are undefined (e.g. if it was 
