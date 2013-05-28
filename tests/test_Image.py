@@ -807,11 +807,6 @@ def test_Image_binary_add():
                     err_msg="Inplace add in Image class does not match reference for dtypes = "
                     +str(types[i])+" and "+str(types[j]))
 
-        # Below is a test that I want to include, but for some reason, it's failing even though I
-        # think it should pass.  Suggestions for what I'm doing wrong - likely something stupid -
-        # are welcome!
-        #
-        #
         # Check for exceptions if we try to do this operation for images without matching
         # scale/shape.  Note that this test is only included here (not in the unit tests for all
         # other operations) because all operations have the same error-checking code, so it should
