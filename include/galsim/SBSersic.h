@@ -46,22 +46,22 @@ namespace galsim {
      * When the Sersic profile is specfied by the scale radius with truncation, the normalization is
      * adjusted such that the truncated profile has the specified flux (its half-light radius will
      * differ from an equivalent Sersic without truncation).  Similarly, when the Sersic profile is
-     * specified by the half-light radius with trunction, SBSersic generates a profile whose flux
+     * specified by the half-light radius with truncation, SBSersic generates a profile whose flux
      * and half-light radius is as specified, by adjusting its normalization and scale radius.
      *
-     * Another optional parameter, `flux_untruncated`, allows the setting of the flux to the
-     * untruncated Sersic, while generating a truncated Sersic (i.e., the normalizaton is
+     * Another optional parameter, `flux_untruncated = true`, allows the setting of the flux to
+     * the untruncated Sersic, while generating a truncated Sersic (i.e., the normalizaton is
      * the same with respect to the untruncated case).  This facilitates the comparison of
      * truncated and untruncated Sersic, as the amplitude (as well as the scale parameter
-     * `b=r_0^{-1/n}`, if half-light radius is specified) changes when a truncated Sersic is
-     * specified in the default setting.  The `flux_untruncated` variable is ignored if
-     * `trunc = 0`.
+     * `b=(re/r0)^{1/n}`, if half-light radius is specified) changes when a truncated Sersic is
+     * specified in the default setting [`flux_untruncated = false`].  The `flux_untruncated`
+     * variable is ignored if `trunc = 0`.
      *
      * Note that when `trunc > 0.` and `flux_untruncated == true`,  the actual flux will not be
      * the the same as the specified value; its true flux is returned by the getFlux() method.
      * Similarly for the half-light radius, when the Sersic profile is specified by the half-light
      * radius; the getHalfLightRadius() method will return the true half-light radius.  The scale
-     * radius, if it was used to specify the Sersic profile, will remain the specified value.
+     * radius will remain at the same value, if this quantity was used to specify the profile.
      *
      * There are several special cases of the Sersic profile that have their own SBProfiles: n=4
      * (SBDeVaucouleurs), n=1 (SBExponential), n=0.5 (SBGaussian).  These special cases use several
@@ -78,8 +78,8 @@ namespace galsim {
         };
 
         // Constrain range of allowed Sersic index n to those for which testing was done
-        const double MIN_N = 0.3;    // (Lower bounds has hard limit at ~0.29)
-        const double MAX_N = 4.2;
+        static const double MIN_N = 0.3;   // (Lower bounds has hard limit at ~0.29)
+        static const double MAX_N = 4.2;
 
         /**
          * @brief Constructor.

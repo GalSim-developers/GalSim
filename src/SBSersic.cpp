@@ -84,6 +84,7 @@ namespace galsim {
 
         _truncated = (_trunc > 0.);
         bool flux_untrunc = _flux_untruncated;  // needed for SCALE_RADIUS specification
+        if (!_truncated)  flux_untrunc = _flux_untruncated = false; // set unused parameter to false
 
         // Set size of this instance according to type of size given in constructor
         // (all internal calculations based on half-light radius _re, so specify this first):
@@ -91,8 +92,6 @@ namespace galsim {
             case HALF_LIGHT_RADIUS:
                 {
                     _re = size;
-                    if (!_truncated)    // set unused parameter to false
-                        flux_untrunc = _flux_untruncated = false;
                 }
                 break;
           case SCALE_RADIUS:
@@ -522,7 +521,8 @@ namespace galsim {
         _n(key.n), _maxRre(key.maxRre), _maxRre_sq(_maxRre*_maxRre), _inv2n(1./(2.*_n)),
         _flux_untruncated(key.flux_untruncated), _flux_fraction(1.), _re_fraction(1.)
     {
-        if (_n < MIN_N || _n > MAX_N) throw SBError("Requested Sersic index out of range");
+        if (_n < SBSersic::MIN_N || _n > SBSersic::MAX_N)
+            throw SBError("Requested Sersic index out of range");
 
         _truncated = (_maxRre > 0.);
 
