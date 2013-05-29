@@ -1367,6 +1367,8 @@ class Sersic(GSObject):
     Note that `b_n = (half_light_radius/scale_radius)^{1/n}` (when there is no truncation; see
     below).
 
+    The code is limited to 0.3 <= n <= 4.2, with an exception thrown for values outside that range.
+
     Several optional parameters are available:  Truncation radius `trunc` [default `trunc = 0.`,
     indicating no truncation] and a `flux` parameter [default `flux = 1`].  If `trunc` is set to
     a non-zero value, then it is assumed to be in the same system of units as `half_light_radius`

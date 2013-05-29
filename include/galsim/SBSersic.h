@@ -32,6 +32,8 @@ namespace galsim {
     namespace sbp {
 
         // Constrain range of allowed Sersic index n to those for which testing was done
+        // Note: If these change, update the comments about the allowed range both below and
+        // in galsim/base.py.
         const double minimum_sersic_n = 0.3;   // (Lower bounds has hard limit at ~0.29)
         const double maximum_sersic_n = 4.2;
 
