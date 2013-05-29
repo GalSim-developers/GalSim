@@ -1035,8 +1035,28 @@ def test_Image_binary_scalar_pow():
     import time
     t1 = time.time()
     for i in xrange(ntypes):
-        # One set of tests for floats, another for ints, because of the issues with raising ints to
-        # non-integer powers.
+        # First try using the dictionary-type Image init
+        image1 = galsim.ImageView[types[i]]((ref_array**2).astype(types[i]))
+        image2 = galsim.ImageView[types[i]](ref_array.astype(types[i]))
+        image3 = image2**2
+        # Note: unlike for the tests above with multiplication/division, the test fails if I use
+        # assert_array_equal.  I have to use assert_array_almost_equal to avoid failure due to
+        # small numerical issues.
+        np.testing.assert_array_almost_equal(image3.array, image1.array,
+            decimal=4,
+            err_msg="Binary pow scalar in Image class (dictionary call) does"
+            +" not match reference for dtype = "+str(types[i]))
+
+        # Then try using the eval command to mimic use via ImageD, ImageF etc.
+        image_init_func = eval("galsim.ImageView"+tchar[i])
+        image1 = image_init_func((ref_array.astype(types[i]))**2)
+        image2 = image_init_func(ref_array.astype(types[i]))
+        image3 = image2**2
+        np.testing.assert_array_equal(image3.array, image1.array,
+            err_msg="Binary pow scalar in Image class does"
+            +" not match reference for dtype = "+str(types[i]))
+
+        # float types can also be taken to a float power
         if types[i] in [np.float32, np.float64]:
             # First try using the dictionary-type Image init
             image1 = galsim.ImageView[types[i]]((ref_array**(1/1.3)).astype(types[i]))
@@ -1047,15 +1067,6 @@ def test_Image_binary_scalar_pow():
             np.testing.assert_array_almost_equal(ref_array.astype(types[i]), image2.array,
                 decimal=4,
                 err_msg="Binary pow scalar in Image class (dictionary call) does"
-                +" not match reference for dtype = "+str(types[i]))
-        else:
-            # Then try using the eval command to mimic use via ImageD, ImageF etc.
-            image_init_func = eval("galsim.ImageView"+tchar[i])
-            image1 = image_init_func((ref_array.astype(types[i]))**2)
-            image2 = image_init_func(ref_array.astype(types[i]))
-            image3 = image2**2
-            np.testing.assert_array_equal(image3.array, image1.array,
-                err_msg="Binary pow scalar in Image class does"
                 +" not match reference for dtype = "+str(types[i]))
 
     t2 = time.time()
@@ -1288,8 +1299,24 @@ def test_Image_inplace_scalar_pow():
     import time
     t1 = time.time()
     for i in xrange(ntypes):
-        # One set of tests for floats, another for ints, because of the issues with raising ints to
-        # non-integer powers.
+        # First try using the dictionary-type Image init
+        image1 = galsim.ImageView[types[i]]((ref_array**2).astype(types[i]))
+        image2 = galsim.ImageView[types[i]](ref_array.astype(types[i]))
+        image2 **= 2
+        np.testing.assert_array_almost_equal(image1.array, image2.array, decimal=4,
+            err_msg="Inplace scalar pow in Image class (dictionary "
+            +"call) does not match reference for dtype = "+str(types[i]))
+
+        # Then try using the eval command to mimic use via ImageD, ImageF etc.
+        image_init_func = eval("galsim.ImageView"+tchar[i])
+        image1 = image_init_func((ref_array.astype(types[i]))**2)
+        image2 = image_init_func(ref_array.astype(types[i]))
+        image2 **= 2
+        np.testing.assert_array_equal(image2.array, image1.array, 
+            err_msg="Inplace scalar pow in Image class does"
+            +" not match reference for dtype = "+str(types[i]))
+
+        # float types can also be taken to a float power
         if types[i] in [np.float32, np.float64]:
             # First try using the dictionary-type Image init
             image1 = galsim.ImageView[types[i]](ref_array.astype(types[i]))
@@ -1298,15 +1325,6 @@ def test_Image_inplace_scalar_pow():
             np.testing.assert_array_almost_equal(image1.array, image2.array, decimal=4,
                 err_msg="Inplace scalar pow in Image class (dictionary "
                 +"call) does not match reference for dtype = "+str(types[i]))
-        else:
-            # Then try using the eval command to mimic use via ImageD, ImageF etc.
-            image_init_func = eval("galsim.ImageView"+tchar[i])
-            image1 = image_init_func((ref_array.astype(types[i]))**3)
-            image2 = image_init_func(ref_array.astype(types[i]))
-            image2 **= 3
-            np.testing.assert_array_equal(image2.array, image1.array, 
-                err_msg="Inplace scalar pow in Image class does"
-                +" not match reference for dtype = "+str(types[i]))
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
