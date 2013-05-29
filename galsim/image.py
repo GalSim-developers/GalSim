@@ -304,6 +304,8 @@ for Class in _galsim.Image.itervalues():
     Class.__truediv__ = Image_div
     Class.__idiv__ = Image_idiv
     Class.__itruediv__ = Image_idiv
+    Class.__ipow__ = Image_ipow
+    Class.__pow__ = Image_pow
     Class.copy = Image_copy
     Class.__getstate_manages_dict__ = 1
     Class.__getstate__ = Image_getstate
@@ -324,6 +326,8 @@ for Class in _galsim.ImageView.itervalues():
     Class.__truediv__ = Image_div
     Class.__idiv__ = Image_idiv
     Class.__itruediv__ = Image_idiv
+    Class.__ipow__ = Image_ipow
+    Class.__pow__ = Image_pow
     Class.copy = Image_copy
     Class.__getinitargs__ = ImageView_getinitargs
 
@@ -335,6 +339,7 @@ for Class in _galsim.ConstImageView.itervalues():
     Class.__mul__ = Image_mul
     Class.__rmul__ = Image_mul
     Class.__div__ = Image_div
+    Class.__pow__ = Image_pow
     Class.__truediv__ = Image_div
     Class.copy = Image_copy
     Class.__getinitargs__ = ImageView_getinitargs
@@ -350,12 +355,5 @@ for int_type in [ np.int16, np.int32 ]:
         Class.__iand__ = Image_iand
         Class.__ixor__ = Image_ixor
         Class.__ior__ = Image_ior
-
-for float_type in [ np.float32, np.float64 ]:
-    for Class in [ _galsim.Image[float_type], _galsim.ImageView[float_type],
-                   _galsim.ConstImageView[float_type] ]:
-        Class.__pow__ = Image_pow
-    for Class in [ _galsim.Image[float_type], _galsim.ImageView[float_type] ]:
-        Class.__ipow__ = Image_ipow
 
 del Class    # cleanup public namespace
