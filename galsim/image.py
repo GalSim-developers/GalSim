@@ -158,16 +158,13 @@ def Image_getitem(self, key):
 
 # Define a utility function to be used by the arithmetic functions below
 def check_image_consistency(im1, im2):
-    if im1.scale != im2.scale:
-        raise ValueError("Image scales are inconsistent!")
-    if im1.array.shape != im2.array.shape:
-        raise ValueError("Image shapes are inconsistent!")
-
-def type_criterion(obj):
-    if type(obj) in _galsim.Image.values() or type(obj) in _galsim.ImageView.values() or type(obj) in _galsim.ConstImageView.values():
-        return True
-    else:
-        return False
+    if (type(im2) in _galsim.Image.values() or
+        type(im2) in _galsim.ImageView.values() or
+        type(im2) in _galsim.ConstImageView.values()):
+        if im1.scale != im2.scale:
+            raise ValueError("Image scales are inconsistent!")
+        if im1.array.shape != im2.array.shape:
+            raise ValueError("Image shapes are inconsistent!")
 
 def Image_add(self, other):
     result = self.copy()
@@ -175,8 +172,7 @@ def Image_add(self, other):
     return result
 
 def Image_iadd(self, other):
-    if type_criterion(other):
-        check_image_consistency(self, other)
+    check_image_consistency(self, other)
     try:
         self.array[:,:] += other.array
     except AttributeError:
@@ -189,8 +185,7 @@ def Image_sub(self, other):
     return result
 
 def Image_isub(self, other):
-    if type_criterion(other):
-        check_image_consistency(self, other)
+    check_image_consistency(self, other)
     try:
         self.array[:,:] -= other.array
     except AttributeError:
@@ -203,8 +198,7 @@ def Image_mul(self, other):
     return result
 
 def Image_imul(self, other):
-    if type_criterion(other):
-        check_image_consistency(self, other)
+    check_image_consistency(self, other)
     try:
         self.array[:,:] *= other.array
     except AttributeError:
@@ -217,8 +211,7 @@ def Image_div(self, other):
     return result
 
 def Image_idiv(self, other):
-    if type_criterion(other):
-        check_image_consistency(self, other)
+    check_image_consistency(self, other)
     try:
         self.array[:,:] /= other.array
     except AttributeError:
@@ -243,8 +236,7 @@ def Image_and(self, other):
     return result
 
 def Image_iand(self, other):
-    if type_criterion(other):
-        check_image_consistency(self, other)
+    check_image_consistency(self, other)
     try:
         self.array[:,:] &= other.array
     except AttributeError:
@@ -257,8 +249,7 @@ def Image_xor(self, other):
     return result
 
 def Image_ixor(self, other):
-    if type_criterion(other):
-        check_image_consistency(self, other)
+    check_image_consistency(self, other)
     try:
         self.array[:,:] ^= other.array
     except AttributeError:
@@ -271,14 +262,12 @@ def Image_or(self, other):
     return result
 
 def Image_ior(self, other):
-    if type_criterion(other):
-        check_image_consistency(self, other)
+    check_image_consistency(self, other)
     try:
         self.array[:,:] |= other.array
     except AttributeError:
         self.array[:,:] |= other
     return self
-
 
 def Image_copy(self):
     # self can be an Image or an ImageView, but the return type needs to be an Image.
