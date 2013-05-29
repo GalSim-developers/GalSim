@@ -70,10 +70,8 @@ namespace galsim {
         return static_cast<const SBSersicImpl&>(*_pimpl).getScaleRadius();
     }
 
-    const int MAX_SERSIC_INFO = 100;
-
     LRUCache<std::pair<SersicKey, const GSParams*>, SersicInfo> 
-        SBSersic::SBSersicImpl::cache(MAX_SERSIC_INFO);
+        SBSersic::SBSersicImpl::cache(sbp::max_sersic_cache);
 
     double SersicCalculateHLRScale(double n, double b, double gamma2n);
 

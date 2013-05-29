@@ -35,6 +35,9 @@ namespace galsim {
         const double minimum_sersic_n = 0.3;   // (Lower bounds has hard limit at ~0.29)
         const double maximum_sersic_n = 4.2;
 
+        // How many Sersic profiles to save in the cache
+        const int max_sersic_cache = 100;
+
     }
 
     /**
