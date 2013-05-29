@@ -1445,7 +1445,7 @@ class Sersic(GSObject):
         >>> sersic_obj3.getScaleRadius()
         0.003262738739835313  # the scale radius is still identical to the untruncated case
 
-    When the truncated Sersic scale is specified with `scale_radius`, the behavior between the 
+    When the truncated Sersic scale is specified with `scale_radius`, the behavior between the
     three cases (untruncated, `flux_untruncated=true` and `flux_untruncated=false`) will be
     somewhat different from above.  Since it is the scale radius that is being specified, and since
     truncation does not change the scale radius the way it can change the half-light radius, the
