@@ -468,7 +468,7 @@ namespace galsim {
 
 #ifdef FFT_DEBUG
         void check_array() const 
-        { if (!array.get()) throw FFTError("KTable operation on null array"); }
+        { if (!_array.get()) throw FFTError("KTable operation on null array"); }
 #else
         void check_array() const {}
 #endif
