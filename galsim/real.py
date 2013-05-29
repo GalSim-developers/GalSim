@@ -87,8 +87,8 @@ class RealGalaxy(GSObject):
                                 generator takes precedence over any stored within a user-input
                                 CorrelatedNoise instance (see `noise_pad` param below).
     @param x_interpolant        Either an Interpolant2d (or Interpolant) instance or a string 
-                                indicating which real-space interpolant should be used.  Options are 
-                                'nearest', 'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' 
+                                indicating which real-space interpolant should be used.  Options 
+                                are 'nearest', 'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' 
                                 where N should be the integer order to use. [default 
                                 `x_interpolant = galsim.Lanczos(5,...)'].
     @param k_interpolant        Either an Interpolant2d (or Interpolant) instance or a string 
@@ -125,7 +125,7 @@ class RealGalaxy(GSObject):
                                    (a) as a galsim.Image; or
                                    (b) as a string which is interpreted as a filename containing an
                                        image to use.
-                               The size of the image that is passed in is taken to specify the
+                                The size of the image that is passed in is taken to specify the
                                 amount of padding, and so the `pad_factor` keyword should be equal
                                 to 1, i.e., no padding.  The `pad_image` scale is ignored, and taken
                                 to be equal to that of the `image`. Note that `pad_image` can be
@@ -164,7 +164,7 @@ class RealGalaxy(GSObject):
 
     # --- Public Class methods ---
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
-                 rng=None, x_interpolant=None, k_interpolant=None, flux=None, pad_factor = 0,
+                 rng=None, x_interpolant=None, k_interpolant=None, flux=None, pad_factor=0,
                  noise_pad=False, pad_image=None, use_cache=True, gsparams=None):
 
         import pyfits
@@ -191,78 +191,46 @@ class RealGalaxy(GSObject):
         else:
             raise AttributeError('No method specified for selecting a galaxy!')
 
-        # read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors. Should
-        # consider exporting this code into fits.py in some function that takes a filename and HDU,
-        # and returns an ImageView
-
+        # read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors.
         gal_image = real_galaxy_catalog.getGal(use_index)
         PSF_image = real_galaxy_catalog.getPSF(use_index)
 
-        # choose proper interpolant
+        # RealGalaxy uses a different default interpolant than InterpolatedImage, so set it here.
         if x_interpolant is None:
             lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4)
-            self.x_interpolant = galsim.InterpolantXY(lan5)
-	else:
-            self.x_interpolant = x_interpolant
-        if k_interpolant is None:
-            self.k_interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))
-        else:
-            self.k_interpolant = k_interpolant
-
-        # read in data about galaxy from FITS binary table; store as normal attributes of RealGalaxy
+            x_interpolant = galsim.InterpolantXY(lan5)
 
         # save any other relevant information as instance attributes
         self.catalog_file = real_galaxy_catalog.file_name
         self.index = use_index
         self.pixel_scale = float(real_galaxy_catalog.pixel_scale[use_index])
 
-        # Set up the GaussianDeviate if not provided one, or check that the user-provided one
-        # is of a valid type.  Note if random was selected, we can use that uniform_deviate safely.
-        if random is True:
-            gaussian_deviate = galsim.GaussianDeviate(uniform_deviate)
-        else:
-            if rng is None:
-                gaussian_deviate = galsim.GaussianDeviate()
-            elif isinstance(rng,galsim.BaseDeviate):
-                # Even if it's already a GaussianDeviate, we still want to make a new Gaussian
-                # deviate that would generate the same sequence, because later we change the sigma
-                # and we don't want to change it for the original one that was passed in.  So don't
-                # distinguish between GaussianDeviate and the other BaseDeviates here.
-                gaussian_deviate = galsim.GaussianDeviate(rng)
-            else:
-                raise TypeError("rng provided to RealGalaxy constructor is not a BaseDeviate")
-
         # handle noise-padding options
         try:
             noise_pad = galsim.config.value._GetBoolValue(noise_pad,'')
+            # If it's a bool, set it to the correct noise level from the catalog.
+            if noise_pad:
+                noise_pad = float(real_galaxy_catalog.variance[use_index])
+            else:
+                noise_pad = 0.
         except:
+            # If it's not a bool, or convertible to a bool, leave it alone.
             pass
-        if noise_pad:
-            self.pad_variance = float(real_galaxy_catalog.variance[use_index])
-            # Set the GaussianDeviate sigma          
-            gaussian_deviate.setSigma(np.sqrt(self.pad_variance))
-
-        else:
-            self.pad_variance=0.
-
-        if type(noise_pad) is bool:
-            noise_pad=self.pad_variance
 
         self.original_image = galsim.InterpolatedImage(
-                gal_image, x_interpolant=self.x_interpolant, k_interpolant=self.k_interpolant,
-                dx=self.pixel_scale, pad_factor=pad_factor, noise_pad=noise_pad, rng=gaussian_deviate,
+                gal_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant,
+                dx=self.pixel_scale, pad_factor=pad_factor, noise_pad=noise_pad, rng=rng,
                 pad_image=pad_image, use_cache=use_cache, gsparams=gsparams)
-
+        # If flux is None, leave flux as given by original image
+        if flux != None:
+            self.original_image.setFlux(flux)
 
         # also make the original PSF image, with far less fanfare: we don't need to pad with
         # anything interesting.
         self.original_PSF = galsim.InterpolatedImage(
-            PSF_image, x_interpolant=self.x_interpolant, k_interpolant=self.k_interpolant, 
-            dx=self.pixel_scale, gsparams=gsparams)
-        
-        if flux != None:
-            self.original_image.setFlux(flux)
-        self.original_PSF.setFlux(1.0)
+            PSF_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant, 
+            flux=1.0, dx=self.pixel_scale, gsparams=gsparams)
+        #self.original_PSF.setFlux(1.0)
 
         # Calculate the PSF "deconvolution" kernel
         psf_inv = galsim.Deconvolve(self.original_PSF, gsparams=gsparams)
