@@ -21,6 +21,13 @@
 
 //#define DEBUGLOGGING
 
+// clang doesn't like some of the code in boost files included by gamma.hpp.
+#ifdef __clang__
+#if __has_warning("-Wlogical-op-parentheses")
+#pragma GCC diagnostic ignored "-Wlogical-op-parentheses"
+#endif
+#endif
+
 #include <boost/math/special_functions/gamma.hpp>
 
 #include "SBSersic.h"
@@ -522,7 +529,7 @@ namespace galsim {
         _n(key.n), _maxRre(key.maxRre), _maxRre_sq(_maxRre*_maxRre), _inv2n(1./(2.*_n)),
         _flux_untruncated(key.flux_untruncated), _flux_fraction(1.), _re_fraction(1.)
     {
-        if (_n < SBSersic::MIN_N || _n > SBSersic::MAX_N)
+        if (_n < sbp::minimum_sersic_n || _n > sbp::maximum_sersic_n) 
             throw SBError("Requested Sersic index out of range");
 
         _truncated = (_maxRre > 0.);
