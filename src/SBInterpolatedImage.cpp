@@ -181,13 +181,11 @@ namespace galsim {
             // make sure images are same size (but don't worry if bounds are not same)
             if ((1+pad_image->getXMax()-pad_image->getXMin() != _pimpl->Nk) ||
                 (1+pad_image->getYMax()-pad_image->getYMin() != _pimpl->Nk)) {
-                char err_buff[500];
-                sprintf(err_buff,"Supplied image of noise for padding is wrong size: "
-                        "received %d by %d, expected %d by %d\n",
-                        1+pad_image->getXMax()-pad_image->getXMin(),
-                        1+pad_image->getYMax()-pad_image->getYMin(),
-                        _pimpl->Nk,_pimpl->Nk);
-                throw std::runtime_error(err_buff);
+                FormatAndThrow<std::runtime_error>() <<
+                    "Supplied image of noise for padding is wrong size: " <<
+                    "received "<< (1+pad_image->getXMax()-pad_image->getXMin()) <<
+                    " by "<< (1+pad_image->getYMax()-pad_image->getYMin()) <<
+                    ", expected "<<_pimpl->Nk<<" by "<<_pimpl->Nk<<".";
             }
             dbg<<"Copying pad_image\n";
             int xStart = -((pad_image->getXMax()-pad_image->getXMin()+1)/2);
