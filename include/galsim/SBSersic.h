@@ -58,7 +58,7 @@ namespace galsim {
      * variable is ignored if `trunc = 0`.
      *
      * Note that when `trunc > 0.` and `flux_untruncated == true`,  the actual flux will not be
-     * the the same as the specified value; its true flux is returned by the getFlux() method.
+     * the same as the specified value; its true flux is returned by the getFlux() method.
      * Similarly for the half-light radius, when the Sersic profile is specified by the half-light
      * radius; the getHalfLightRadius() method will return the true half-light radius.  The scale
      * radius will remain at the same value, if this quantity was used to specify the profile.

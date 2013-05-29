@@ -1435,7 +1435,7 @@ class Sersic(GSObject):
         >>> sersic_obj.getScaleRadius()
         0.003262738739835313
         >>> sersic_obj1.getScaleRadius()
-        0.004754602453643055  # the scale radius needed adjustment to accomodate half light radius
+        0.004754602453643055  # the scale radius needed adjustment to accommodate half light radius
         >>> sersic_obj2.getScaleRadius()
         0.003262738739835313  # the scale radius is still identical to the untruncated case
 
