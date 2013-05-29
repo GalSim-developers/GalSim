@@ -94,11 +94,16 @@ class GSObject(object):
                   'maxk_threshold' : float,
                   'kvalue_accuracy' : float,
                   'xvalue_accuracy' : float,
-                  'shoot_accuracy' : float,
                   'realspace_relerr' : float,
                   'realspace_abserr' : float,
                   'integration_relerr' : float,
-                  'integration_abserr' : float
+                  'integration_abserr' : float,
+                  'shoot_accuracy' : float,
+                  'shoot_relerr' : float,
+                  'shoot_abserr' : float,
+                  'allowed_flux_variation' : float, 
+                  'range_division_for_extrema' : int,
+                  'small_fraction_of_flux' : float
                 }
     def __init__(self, rhs):
         # This guarantees that all GSObjects have an SBProfile
