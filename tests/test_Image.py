@@ -408,6 +408,30 @@ def test_Image_MultiFITS_IO():
                     test_image_list[k].array, 
                     err_msg="Image"+tchar[i]+" readMulti failed reading from filename input.")
 
+
+        #
+        # Test writing to hdu_list directly and then writing to file.
+        #
+
+        # Start with empty hdu_list
+        hdu_list = pyfits.HDUList()
+        
+        # Add each image one at a time
+        for k in range(nimages):
+            image = ref_image + k
+            galsim.fits.write(image, hdu_list=hdu_list)
+
+        # Write it out with writeFile
+        galsim.fits.writeFile(test_multi_file, hdu_list)
+
+        # Check that reading it back in gives the same values
+        test_image_list = galsim.fits.readMulti(test_multi_file)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]),
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+" readMulti failed after using writeFile")
+
+
         #
         # Test various compression schemes
         #
