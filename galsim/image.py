@@ -156,15 +156,23 @@ def Image_setitem(self, key, value):
 def Image_getitem(self, key):
     return self.subImage(key)
 
+# Define a utility function to be used by the arithmetic functions below
+def check_image_consistency(im1, im2):
+    if (type(im2) in _galsim.Image.values() or
+        type(im2) in _galsim.ImageView.values() or
+        type(im2) in _galsim.ConstImageView.values()):
+        if im1.scale != im2.scale:
+            raise ValueError("Image scales are inconsistent!")
+        if im1.array.shape != im2.array.shape:
+            raise ValueError("Image shapes are inconsistent!")
+
 def Image_add(self, other):
-    try:
-        result = self.array[:,:] + other.array
-    except AttributeError:
-        result = self.array[:,:] + other
-    res_type = result.dtype.type
-    return _galsim.ImageView[res_type](result)
+    result = self.copy()
+    result += other
+    return result
 
 def Image_iadd(self, other):
+    check_image_consistency(self, other)
     try:
         self.array[:,:] += other.array
     except AttributeError:
@@ -172,14 +180,12 @@ def Image_iadd(self, other):
     return self
 
 def Image_sub(self, other):
-    try:
-        result = self.array[:,:] - other.array
-    except AttributeError:
-        result = self.array[:,:] - other
-    res_type = result.dtype.type
-    return _galsim.ImageView[res_type](result)
+    result = self.copy()
+    result -= other
+    return result
 
 def Image_isub(self, other):
+    check_image_consistency(self, other)
     try:
         self.array[:,:] -= other.array
     except AttributeError:
@@ -187,14 +193,12 @@ def Image_isub(self, other):
     return self
 
 def Image_mul(self, other):
-    try:
-        result = self.array[:,:] * other.array
-    except AttributeError:
-        result = self.array[:,:] * other
-    res_type = result.dtype.type
-    return _galsim.ImageView[res_type](result)
+    result = self.copy()
+    result *= other
+    return result
 
 def Image_imul(self, other):
+    check_image_consistency(self, other)
     try:
         self.array[:,:] *= other.array
     except AttributeError:
@@ -202,30 +206,37 @@ def Image_imul(self, other):
     return self
 
 def Image_div(self, other):
-    try:
-        result = self.array[:,:] / other.array
-    except AttributeError:
-        result = self.array[:,:] / other
-    res_type = result.dtype.type
-    return _galsim.ImageView[res_type](result)
+    result = self.copy()
+    result /= other
+    return result
 
 def Image_idiv(self, other):
+    check_image_consistency(self, other)
     try:
         self.array[:,:] /= other.array
     except AttributeError:
         self.array[:,:] /= other
     return self
 
+def Image_pow(self, other):
+    result = self.copy()
+    result **= other
+    return result
+
+def Image_ipow(self, other):
+    if not isinstance(other, int) and not isinstance(other, float):
+        raise TypeError("Can only raise an image to a float or int power!")
+    self.array[:,:] **= other
+    return self
+
 # Define &, ^ and | only for integer-type images
 def Image_and(self, other):
-    try:
-        result = self.array[:,:] & other.array
-    except AttributeError:
-        result = self.array[:,:] & other
-    res_type = result.dtype.type
-    return _galsim.ImageView[res_type](result)
+    result = self.copy()
+    result &= other
+    return result
 
 def Image_iand(self, other):
+    check_image_consistency(self, other)
     try:
         self.array[:,:] &= other.array
     except AttributeError:
@@ -233,14 +244,12 @@ def Image_iand(self, other):
     return self
 
 def Image_xor(self, other):
-    try:
-        result = self.array[:,:] ^ other.array
-    except AttributeError:
-        result = self.array[:,:] ^ other
-    res_type = result.dtype.type
-    return _galsim.ImageView[res_type](result)
+    result = self.copy()
+    result ^= other
+    return result
 
 def Image_ixor(self, other):
+    check_image_consistency(self, other)
     try:
         self.array[:,:] ^= other.array
     except AttributeError:
@@ -248,20 +257,17 @@ def Image_ixor(self, other):
     return self
 
 def Image_or(self, other):
-    try:
-        result = self.array[:,:] | other.array
-    except AttributeError:
-        result = self.array[:,:] | other
-    res_type = result.dtype.type
-    return _galsim.ImageView[res_type](result)
+    result = self.copy()
+    result |= other
+    return result
 
 def Image_ior(self, other):
+    check_image_consistency(self, other)
     try:
         self.array[:,:] |= other.array
     except AttributeError:
         self.array[:,:] |= other
     return self
-
 
 def Image_copy(self):
     # self can be an Image or an ImageView, but the return type needs to be an Image.
@@ -298,6 +304,8 @@ for Class in _galsim.Image.itervalues():
     Class.__truediv__ = Image_div
     Class.__idiv__ = Image_idiv
     Class.__itruediv__ = Image_idiv
+    Class.__ipow__ = Image_ipow
+    Class.__pow__ = Image_pow
     Class.copy = Image_copy
     Class.__getstate_manages_dict__ = 1
     Class.__getstate__ = Image_getstate
@@ -318,6 +326,8 @@ for Class in _galsim.ImageView.itervalues():
     Class.__truediv__ = Image_div
     Class.__idiv__ = Image_idiv
     Class.__itruediv__ = Image_idiv
+    Class.__ipow__ = Image_ipow
+    Class.__pow__ = Image_pow
     Class.copy = Image_copy
     Class.__getinitargs__ = ImageView_getinitargs
 
@@ -329,6 +339,7 @@ for Class in _galsim.ConstImageView.itervalues():
     Class.__mul__ = Image_mul
     Class.__rmul__ = Image_mul
     Class.__div__ = Image_div
+    Class.__pow__ = Image_pow
     Class.__truediv__ = Image_div
     Class.copy = Image_copy
     Class.__getinitargs__ = ImageView_getinitargs

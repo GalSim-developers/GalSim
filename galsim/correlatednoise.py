@@ -171,7 +171,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # Finally generate a random field in Fourier space with the right PS
         noise_array = _generate_noise_from_rootps(self.getRNG(), rootps)
         # Add it to the image
-        image += galsim.ImageViewD(noise_array)
+        image += galsim.ImageViewD(noise_array, scale=image.scale)
         return image
 
     def applyWhiteningTo(self, image):
@@ -257,7 +257,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         # Finally generate a random field in Fourier space with the right PS and add to image
         noise_array = _generate_noise_from_rootps(self.getRNG(), rootps_whitening)
-        image += galsim.ImageViewD(noise_array)
+        image += galsim.ImageViewD(noise_array, scale=image.scale)
 
         # Return the variance to the interested user
         return variance
