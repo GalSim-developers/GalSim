@@ -555,6 +555,85 @@ def test_uncorr_padding():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
+def test_pad_image():
+    """Test padding an InterpolatedImage with a pad_image."""
+    import time
+    t1 = time.time()
+
+    decimal=2  # all are coarse, since there are slight changes from odd/even centering issues.
+    noise_sigma = 1.73
+    noise_var = noise_sigma**2
+    orig_seed = 151241
+    rng = galsim.BaseDeviate(orig_seed)
+    noise = galsim.GaussianNoise(rng, sigma=noise_sigma)
+
+    # make the original image 
+    orig_nx = 64
+    orig_ny = 64
+    orig_img = galsim.ImageF(orig_nx, orig_ny)
+    orig_img.setScale(1.)
+    galsim.Exponential(half_light_radius=1.7, flux=1700).draw(orig_img)
+    orig_img.addNoise(noise)
+
+    # We'll draw into a larger image for the tests
+    pad_factor = 4
+    big_nx = pad_factor*orig_nx
+    big_ny = pad_factor*orig_ny
+    big_img = galsim.ImageF(big_nx, big_ny)
+    big_img.setScale(1.)
+
+    # Use a few different kinds of shapes for that padding. 
+    # In particular, we used to have a problem with a pad_image that was already the shape of 
+    # "getPaddedSize(pad_factor)", so include that.
+    for (pad_nx, pad_ny) in [ (160,160), (279,291), (256,256) ]:
+        print pad_nx, pad_ny
+
+        # make the pad_image 
+        pad_img = galsim.ImageF(pad_nx, pad_ny)
+        pad_img.setScale(1.)
+        pad_img.addNoise(noise)
+
+        # make an interpolated image padded with the pad_image, and outside of that
+        pad_img.write('pad1.fits')
+        int_im = galsim.InterpolatedImage(orig_img, pad_image=pad_img)
+        pad_img.write('pad2.fits')
+
+        # draw into the larger image
+        int_im.draw(big_img)
+        big_img.write('junk.fits')
+
+        # check that variance is diluted by expected amount 
+        var1 = np.var(orig_img.array)*float(orig_nx*orig_ny)
+        var2 = noise_var * float(pad_nx*pad_ny - orig_nx*orig_ny)
+        var_expected = (var1 + var2) / (big_nx*big_ny)
+        print 'var1 = ',var1,var1/float(orig_nx*orig_ny)
+        print 'var2 = ',var2,var2/float(pad_nx*pad_ny - orig_nx*orig_ny)
+        print 'var_exp = ',var_expected
+        print 'var_act = ',np.var(big_img.array)
+        print 'var pad_image = ',np.var(pad_img.array)
+        pad_img.setCenter(0,0)
+        print 'var central pad_image = ',np.var(pad_img[galsim.BoundsI(-32,32,-32,32)].array)
+        pad_img.write('pad.fits')
+        np.testing.assert_almost_equal(
+            np.var(big_img.array), var_expected, decimal=decimal,
+            err_msg='Variance not correct when padding with image')
+
+        # now also pad with noise_pad outside of the pad_image
+        int_im = galsim.InterpolatedImage(orig_img, pad_image=pad_img, noise_pad=noise_var/2,
+                                          pad_factor=pad_factor, rng=rng)
+        int_im.draw(big_img)
+        big_img.write('junk.fits')
+
+        var3 = (noise_var/2) * float(big_nx*big_ny - pad_nx*pad_ny)
+        var_expected = (var1 + var2 + var3) / (big_nx*big_ny)
+        np.testing.assert_almost_equal(
+            np.var(big_img.array), noise_var, decimal=decimal,
+            err_msg='Variance not correct after padding with image and extra noise')
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_corr_padding():
     """Test for correlated noise padding of InterpolatedImage."""
     import time
@@ -647,4 +726,5 @@ if __name__ == "__main__":
     test_operations_simple()
     test_operations()
     test_uncorr_padding()
+    test_pad_image()
     test_corr_padding()
