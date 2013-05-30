@@ -22,7 +22,7 @@
 #include "boost/python/stl_iterator.hpp"
 
 #include "SBGaussian.h"
-#include "SBUtil.h"
+#include "RadiusHelper.h"
 
 namespace bp = boost::python;
 
