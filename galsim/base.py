@@ -1503,7 +1503,7 @@ class Sersic(GSObject):
     # Initialization parameters of the object, with type information
     _req_params = { "n" : float }
     _opt_params = { "flux" : float, "trunc": float, "flux_untruncated" : bool }
-    _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
+    _single_params = { "scale_radius" : float , "half_light_radius" : float }
     _takes_rng = False
 
     # --- Public Class methods ---
