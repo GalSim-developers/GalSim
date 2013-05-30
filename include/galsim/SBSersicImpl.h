@@ -115,13 +115,17 @@ namespace galsim {
         /// @brief Returns the maximum relevant R, in units of half-light radius `re`.
         double getMaxRRe() const { return _maxRre; }
 
-        /// @brief Returns the ratio of the actual flux to the specified flux the object, which is
-        /// not unity when `_truncated` and `_flux_untruncated` are both true.  (Also relevant when
-        /// truncated profile is specified by scale radius `r0`, with `_flux_untruncated=false`.)
+        /**
+         * @brief Returns the ratio of the actual flux to the specified flux of the object, which is
+         * not unity when `_truncated` and `_flux_untruncated` are both true.  (Also relevant when
+         * truncated profile is specified by scale radius `r0`, with `_flux_untruncated=false`.)
+         */
         double getTrueFluxFraction() const { return _flux_fraction; }
-        /// @brief Returns the ratio of the actual half-light radius `re` to the specified one,
-        /// which is not unity when `_truncated` and `_flux_untruncated` are both true.
-        /// Valid only when the Sersic profile is specified by half-light radius `re`.
+        /**
+         * @brief Returns the ratio of the actual half-light radius `re` to the specified one,
+         * which is not unity when `_truncated` and `_flux_untruncated` are both true.
+         * Valid only when the Sersic profile is specified by half-light radius `re`.
+         */
         double getTrueReFraction() const { return _re_fraction; }
 
         /// @brief Returns the scale factor `b=(re/r0)^{1/n}`.  Used in calculating `r0` from `re`.
