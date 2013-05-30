@@ -22,7 +22,7 @@
 #include "boost/python/stl_iterator.hpp"
 
 #include "SBSersic.h"
-#include "SBUtil.h"
+#include "RadiusHelper.h"
 
 namespace bp = boost::python;
 
@@ -33,7 +33,7 @@ namespace galsim {
 
         static SBSersic* construct(
             double n, const bp::object & scale_radius, const bp::object & half_light_radius,
-            double trunc, double flux, bool flux_untruncated,
+            double flux, double trunc, bool flux_untruncated,
             boost::shared_ptr<GSParams> gsparams)
         {
             double s = 1.0;
@@ -58,8 +58,8 @@ namespace galsim {
                          (bp::arg("n"),
                           bp::arg("scale_radius")=bp::object(),
                           bp::arg("half_light_radius")=bp::object(),
-                          bp::arg("trunc")=0.,
-                          bp::arg("flux")=1., bp::arg("flux_untruncated")=false,
+                          bp::arg("flux")=1.,
+                          bp::arg("trunc")=0., bp::arg("flux_untruncated")=false,
                           bp::arg("gsparams")=bp::object())
                      )
                 )
@@ -76,7 +76,7 @@ namespace galsim {
 
         static SBDeVaucouleurs* construct(
             const bp::object & scale_radius, const bp::object & half_light_radius,
-            double trunc, double flux, bool flux_untruncated,
+            double flux, double trunc, bool flux_untruncated,
             boost::shared_ptr<GSParams> gsparams)
         {
             double s = 1.0;
@@ -100,8 +100,8 @@ namespace galsim {
                          &construct, bp::default_call_policies(),
                          (bp::arg("scale_radius")=bp::object(),
                           bp::arg("half_light_radius")=bp::object(),
-                          bp::arg("trunc")=0.,
-                          bp::arg("flux")=1., bp::arg("flux_untruncated")=false,
+                          bp::arg("flux")=1.,
+                          bp::arg("trunc")=0., bp::arg("flux_untruncated")=false,
                           bp::arg("gsparams")=bp::object())
                      )
                 )
