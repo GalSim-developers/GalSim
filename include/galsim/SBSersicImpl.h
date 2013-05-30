@@ -236,9 +236,11 @@ namespace galsim {
         /// @brief Returns the true half-light radius (may be different from the specified value)
         double getHalfLightRadius() const { return _actual_re; }
 
-        /// @brief Returns the true scale radius (may be different from the specified value).
-        /// Because the internals base their calculation on `_re`, the accuracy of scale radius
-        /// are good only to the accuracy set by the solver in `Solve.h`.
+        /**
+         * @brief Returns the true scale radius (may be different from the specified value).
+         * Because the internals base their calculation on `_re`, the accuracy of scale radius
+         * are good only to the accuracy set by the solver in `Solve.h`.
+         */
         double getScaleRadius() const;
 
         // Overrides for better efficiency
