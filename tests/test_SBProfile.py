@@ -803,9 +803,10 @@ def test_sersic_radii():
         print 'hlr = ',test_gal_shear.getHalfLightRadius()
         test_gal_shear.applyShear(g1=0.3, g2=0.1)
         try:
-            np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getN");
+            np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getN")
             np.testing.assert_raises(AttributeError, getattr, test_gal_shear,
                                      "getHalfLightRadius")
+            np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getScaleRadius")
         except ImportError:
             pass
 
@@ -881,6 +882,7 @@ def test_sersic_radii():
     test_gal_shear.applyShear(g1=0.3, g2=0.1)
     try:
         np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
+        np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getScaleRadius")
     except ImportError:
         pass
 
