@@ -37,7 +37,7 @@ namespace galsim {
                         (bp::arg("images"),
                          bp::arg("dx")=0., bp::arg("pad_factor")=0.)
                 ))
-                .def(bp::init<const BaseImage<U>&, double, double, boost::shared_ptr<Image<U> > >(
+                .def(bp::init<const BaseImage<U>&, double, double, boost::shared_ptr<BaseImage<U> > >(
                         (bp::arg("image"),
                          bp::arg("dx")=0., bp::arg("pad_factor")=0.,
                          bp::arg("pad_image")=bp::object())
@@ -52,7 +52,7 @@ namespace galsim {
                 .def(bp::init<const BaseImage<U> &,
                      boost::shared_ptr<InterpolantXY>,
                      boost::shared_ptr<InterpolantXY>,
-                     double, double, boost::shared_ptr<Image<U> >,
+                     double, double, boost::shared_ptr<BaseImage<U> >,
                      boost::shared_ptr<GSParams> >(
                          (bp::arg("image"),
                           bp::arg("xInterp")=bp::object(),

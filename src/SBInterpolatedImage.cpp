@@ -38,7 +38,7 @@ namespace galsim {
     SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<T>& image,
         boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
-        double dx, double pad_factor, boost::shared_ptr<Image<T> > pad_image,
+        double dx, double pad_factor, boost::shared_ptr<BaseImage<T> > pad_image,
         boost::shared_ptr<GSParams> gsparams) :
         SBProfile(new SBInterpolatedImageImpl(image,xInterp,kInterp,dx,pad_factor,pad_image,
                                               gsparams)) {}
@@ -144,7 +144,7 @@ namespace galsim {
 
     template <class T>
     MultipleImageHelper::MultipleImageHelper(const BaseImage<T>& image, double dx, 
-        double pad_factor, boost::shared_ptr<Image<T> > pad_image) :
+        double pad_factor, boost::shared_ptr<BaseImage<T> > pad_image) :
         _pimpl(new MultipleImageHelperImpl)
     {
         dbg<<"Start MultipleImageHelper constructor for one image\n";
@@ -178,15 +178,6 @@ namespace galsim {
 
         if (pad_image.get()) {
             // Start by copying the pad_image
-            // make sure images are same size (but don't worry if bounds are not same)
-            if ((1+pad_image->getXMax()-pad_image->getXMin() != _pimpl->Nk) ||
-                (1+pad_image->getYMax()-pad_image->getYMin() != _pimpl->Nk)) {
-                FormatAndThrow<std::runtime_error>() <<
-                    "Supplied image of noise for padding is wrong size: " <<
-                    "received "<< (1+pad_image->getXMax()-pad_image->getXMin()) <<
-                    " by "<< (1+pad_image->getYMax()-pad_image->getYMin()) <<
-                    ", expected "<<_pimpl->Nk<<" by "<<_pimpl->Nk<<".";
-            }
             dbg<<"Copying pad_image\n";
             int xStart = -((pad_image->getXMax()-pad_image->getXMin()+1)/2);
             int y = -((pad_image->getYMax()-pad_image->getYMin()+1)/2);
@@ -244,7 +235,7 @@ namespace galsim {
     SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
         const BaseImage<T>& image, 
         boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
-        double dx, double pad_factor, boost::shared_ptr<Image<T> > pad_image,
+        double dx, double pad_factor, boost::shared_ptr<BaseImage<T> > pad_image,
         boost::shared_ptr<GSParams> gsparams) :
         SBProfileImpl(gsparams),
         _multi(image,dx,pad_factor,pad_image), _wts(1,1.), _xInterp(xInterp), _kInterp(kInterp),
@@ -810,22 +801,22 @@ namespace galsim {
     template SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<float>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor,
-        boost::shared_ptr<Image<float> > pad_image,
+        boost::shared_ptr<BaseImage<float> > pad_image,
         boost::shared_ptr<GSParams> gsparams);
     template SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<double>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor,
-        boost::shared_ptr<Image<double> > pad_image,
+        boost::shared_ptr<BaseImage<double> > pad_image,
         boost::shared_ptr<GSParams> gsparams);
     template SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<int32_t>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor,
-        boost::shared_ptr<Image<int32_t> > pad_image,
+        boost::shared_ptr<BaseImage<int32_t> > pad_image,
         boost::shared_ptr<GSParams> gsparams);
     template SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<int16_t>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor,
-        boost::shared_ptr<Image<int16_t> > pad_image,
+        boost::shared_ptr<BaseImage<int16_t> > pad_image,
         boost::shared_ptr<GSParams> gsparams);
 
     template MultipleImageHelper::MultipleImageHelper(
@@ -843,36 +834,36 @@ namespace galsim {
 
     template MultipleImageHelper::MultipleImageHelper(
         const BaseImage<float>& image, double dx, double pad_factor,
-        boost::shared_ptr<Image<float> > pad_image);
+        boost::shared_ptr<BaseImage<float> > pad_image);
     template MultipleImageHelper::MultipleImageHelper(
         const BaseImage<double>& image, double dx, double pad_factor,
-        boost::shared_ptr<Image<double> > pad_image);
+        boost::shared_ptr<BaseImage<double> > pad_image);
     template MultipleImageHelper::MultipleImageHelper(
         const BaseImage<int32_t>& image, double dx, double pad_factor,
-        boost::shared_ptr<Image<int32_t> > pad_image);
+        boost::shared_ptr<BaseImage<int32_t> > pad_image);
     template MultipleImageHelper::MultipleImageHelper(
         const BaseImage<int16_t>& image, double dx, double pad_factor,
-        boost::shared_ptr<Image<int16_t> > pad_image);
+        boost::shared_ptr<BaseImage<int16_t> > pad_image);
 
     template SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
         const BaseImage<float>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor,
-        boost::shared_ptr<Image<float> > pad_image,
+        boost::shared_ptr<BaseImage<float> > pad_image,
         boost::shared_ptr<GSParams> gsparams);
     template SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
         const BaseImage<double>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor,
-        boost::shared_ptr<Image<double> > pad_image,
+        boost::shared_ptr<BaseImage<double> > pad_image,
         boost::shared_ptr<GSParams> gsparams);
     template SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
         const BaseImage<int32_t>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor,
-        boost::shared_ptr<Image<int32_t> > pad_image,
+        boost::shared_ptr<BaseImage<int32_t> > pad_image,
         boost::shared_ptr<GSParams> gsparams);
     template SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
         const BaseImage<int16_t>& image, boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor,
-        boost::shared_ptr<Image<int16_t> > pad_image,
+        boost::shared_ptr<BaseImage<int16_t> > pad_image,
         boost::shared_ptr<GSParams> gsparams);
 
 } // namespace galsim
