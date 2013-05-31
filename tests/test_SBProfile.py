@@ -50,7 +50,8 @@ test_scale = 1.8
 test_sersic_n = [1.5, 2.5]
 
 # for flux normalization tests
-test_flux = 1.8
+test_flux = 1.7
+half_test_flux = 0.5 * test_flux
 
 # These are the default GSParams used when unspecified.  We'll check that specifying 
 # these explicitly produces the same results.
@@ -659,19 +660,19 @@ def test_sersic():
     # Check for normalization consistencies with kValue checks. xValues tested in test_sersic_radii.
 
     # For half-light radius specified truncated Sersic, with flux_untruncated flag set
-    sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1, trunc=10, flux_untruncated=True)
+    sersic = galsim.Sersic(n=3, flux=test_flux, half_light_radius=1, trunc=10, flux_untruncated=True)
     do_kvalue(sersic, "Truncated Sersic, flux_untruncated, half-light radius specified")
 
     # For scale radius specified Sersic
-    sersic = galsim.Sersic(n=3, flux=1, scale_radius=0.05)
+    sersic = galsim.Sersic(n=3, flux=test_flux, scale_radius=0.05)
     do_kvalue(sersic, "Sersic, scale radius specified")
 
     # For scale radius specified truncated Sersic
-    sersic = galsim.Sersic(n=3, flux=1, scale_radius=0.05, trunc=10)
+    sersic = galsim.Sersic(n=3, flux=test_flux, scale_radius=0.05, trunc=10)
     do_kvalue(sersic, "Truncated Sersic, scale radius specified")
 
     # For scale radius specified truncated Sersic, with flux_untruncated flag set
-    sersic = galsim.Sersic(n=3, flux=1, scale_radius=0.05, trunc=10, flux_untruncated=True)
+    sersic = galsim.Sersic(n=3, flux=test_flux, scale_radius=0.05, trunc=10, flux_untruncated=True)
     do_kvalue(sersic, "Truncated Sersic, flux_untruncated, scale radius specified")
 
 
@@ -688,28 +689,28 @@ def test_sersic_radii():
     for n in test_sersic_n:
 
         # Test constructor using half-light-radius
-        test_gal1 = galsim.Sersic(n=n, half_light_radius=test_hlr, flux=1.)
-        test_gal2 = galsim.Sersic(n=n, half_light_radius=test_hlr, trunc=8.5, flux=1.)
-        test_gal3 = galsim.Sersic(n=n, half_light_radius=test_hlr, trunc=8.5, flux=1.,
+        test_gal1 = galsim.Sersic(n=n, half_light_radius=test_hlr, flux=test_flux)
+        test_gal2 = galsim.Sersic(n=n, half_light_radius=test_hlr, trunc=8.5, flux=test_flux)
+        test_gal3 = galsim.Sersic(n=n, half_light_radius=test_hlr, trunc=8.5, flux=test_flux,
                                  flux_untruncated=True)
 
         # (test half-light radii)
         hlr_sum = radial_integrate(test_gal1, 0., test_hlr, 1.e-4)
         print 'hlr_sum = ',hlr_sum
         np.testing.assert_almost_equal(
-                hlr_sum, 0.5, decimal=4,
+                hlr_sum, half_test_flux, decimal=4,
                 err_msg="Error in Sersic half-light radius constructor, n=%.1f" % (n))
 
         hlr_sum = radial_integrate(test_gal2, 0., test_hlr, 1.e-4)
         print 'hlr_sum = ',hlr_sum
         np.testing.assert_almost_equal(
-                hlr_sum, 0.5, decimal=4,
+                hlr_sum, half_test_flux, decimal=4,
                 err_msg="Error in truncated Sersic half-light radius constructor, n=%.1f"%(n))
 
         hlr_sum = radial_integrate(test_gal3, 0., test_hlr, 1.e-4)
         print 'hlr_sum = ',hlr_sum
         np.testing.assert_almost_equal(
-                hlr_sum, 0.5, decimal=4,
+                hlr_sum, half_test_flux, decimal=4,
                 err_msg="Error in flux_untruncated Sersic half-light radius constructor, n=%.1f"%(n))
 
         hlr_sum = radial_integrate(test_gal3, 0., test_gal3.getHalfLightRadius(), 1.e-4)
@@ -753,9 +754,9 @@ def test_sersic_radii():
 
 
         # Test constructor using scale radius (test scale radius)
-        test_gal1 = galsim.Sersic(n=n, scale_radius=test_scale, flux=1.)
-        test_gal2 = galsim.Sersic(n=n, scale_radius=test_scale, trunc=8.5, flux=1.)
-        test_gal3 = galsim.Sersic(n=n, scale_radius=test_scale, trunc=8.5, flux=1.,
+        test_gal1 = galsim.Sersic(n=n, scale_radius=test_scale, flux=test_flux)
+        test_gal2 = galsim.Sersic(n=n, scale_radius=test_scale, trunc=8.5, flux=test_flux)
+        test_gal3 = galsim.Sersic(n=n, scale_radius=test_scale, trunc=8.5, flux=test_flux,
                                  flux_untruncated=True)
 
         # (test scale radii)
@@ -786,14 +787,14 @@ def test_sersic_radii():
         hlr_sum = radial_integrate(test_gal1, 0., got_hlr1, 1.e-4)
         print 'hlr_sum (profile initialized with scale_radius, untruncated) = ',hlr_sum
         np.testing.assert_almost_equal(
-                hlr_sum, 0.5, decimal=4,
+                hlr_sum, half_test_flux, decimal=4,
                 err_msg="Error in HLR for scale_radius constructed Sersic.")
 
         got_hlr2 = test_gal2.getHalfLightRadius()
         hlr_sum = radial_integrate(test_gal2, 0., got_hlr2, 1.e-4)
         print 'hlr_sum (profile initialized with scale_radius, truncated) = ',hlr_sum
         np.testing.assert_almost_equal(
-                hlr_sum, 0.5, decimal=4,
+                hlr_sum, half_test_flux, decimal=4,
                 err_msg="Error in HLR for scale_radius constructed truncated Sersic.")
 
         got_hlr3 = test_gal3.getHalfLightRadius()
@@ -835,28 +836,28 @@ def test_sersic_radii():
     # Repeat the above for an explicit DeVaucouleurs.  (Same as n=4, but special name.)
 
     # Test only the half-light radius constuctor
-    test_gal1 = galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=1.)
-    test_gal2 = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=8.5, flux=1.)
-    test_gal3 = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=8.5, flux=1.,
+    test_gal1 = galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=test_flux)
+    test_gal2 = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=8.5, flux=test_flux)
+    test_gal3 = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=8.5, flux=test_flux,
                                     flux_untruncated=True)
 
     # (test half-light radii)
     hlr_sum = radial_integrate(test_gal1, 0., test_hlr, 1.e-4)
     print 'hlr_sum = ',hlr_sum
     np.testing.assert_almost_equal(
-            hlr_sum, 0.5, decimal=4,
+            hlr_sum, half_test_flux, decimal=4,
             err_msg="Error in DeVaucouleurs half-light radius constructor, n=%.1f" % (n))
 
     hlr_sum = radial_integrate(test_gal2, 0., test_hlr, 1.e-4)
     print 'hlr_sum = ',hlr_sum
     np.testing.assert_almost_equal(
-            hlr_sum, 0.5, decimal=4,
+            hlr_sum, half_test_flux, decimal=4,
             err_msg="Error in truncated DeVaucouleurs half-light radius constructor, n=%.1f"%(n))
 
     hlr_sum = radial_integrate(test_gal3, 0., test_hlr, 1.e-4)
     print 'hlr_sum = ',hlr_sum
     np.testing.assert_almost_equal(
-            hlr_sum, 0.5, decimal=4,
+            hlr_sum, half_test_flux, decimal=4,
             err_msg="Error in flux_untruncated DeVauc half-light radius constructor, n=%.1f"%(n))
 
     hlr_sum = radial_integrate(test_gal3, 0., test_gal3.getHalfLightRadius(), 1.e-4)
@@ -908,8 +909,8 @@ def test_sersic_radii():
         pass
 
     # Test flux_untruncated scale and normalization
-    test_gal = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=0., flux=1.)
-    test_gal2 = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=8.5, flux=1.,
+    test_gal = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=0., flux=test_flux)
+    test_gal2 = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=8.5, flux=test_flux,
                                      flux_untruncated=True)
     center = test_gal.xValue(galsim.PositionD(0,0))
     center2 = test_gal2.xValue(galsim.PositionD(0,0))
