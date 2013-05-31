@@ -743,7 +743,7 @@ def test_sersic_radii():
         test_gal1 = galsim.Sersic(n=n, scale_radius=test_scale, flux=test_flux)
         test_gal2 = galsim.Sersic(n=n, scale_radius=test_scale, trunc=8.5, flux=test_flux)
         test_gal3 = galsim.Sersic(n=n, scale_radius=test_scale, trunc=8.5, flux=test_flux,
-                                 flux_untruncated=True)
+                                  flux_untruncated=True)
 
         # (test scale radii)
         err_msg_list = \
@@ -816,26 +816,20 @@ def test_sersic_radii():
     test_gal1 = galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=test_flux)
     test_gal2 = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=8.5, flux=test_flux)
     test_gal3 = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=8.5, flux=test_flux,
-                                    flux_untruncated=True)
+                                     flux_untruncated=True)
 
     # (test half-light radii)
-    hlr_sum = radial_integrate(test_gal1, 0., test_hlr, 1.e-4)
-    print 'hlr_sum = ',hlr_sum
-    np.testing.assert_almost_equal(
-            hlr_sum, half_test_flux, decimal=4,
-            err_msg="Error in DeVaucouleurs half-light radius constructor, n=%.1f" % (n))
+    err_msg_list = \
+            ["Error in DeVaucouleurs half-light radius constructor, n=%.1f"%(n),
+             "Error in truncated DeVaucouleurs half-light radius constructor, n=%.1f"%(n),
+             "Error in flux_untruncated DeVauc half-light radius constructor, n=%.1f"%(n),]
 
-    hlr_sum = radial_integrate(test_gal2, 0., test_hlr, 1.e-4)
-    print 'hlr_sum = ',hlr_sum
-    np.testing.assert_almost_equal(
-            hlr_sum, half_test_flux, decimal=4,
-            err_msg="Error in truncated DeVaucouleurs half-light radius constructor, n=%.1f"%(n))
-
-    hlr_sum = radial_integrate(test_gal3, 0., test_hlr, 1.e-4)
-    print 'hlr_sum = ',hlr_sum
-    np.testing.assert_almost_equal(
-            hlr_sum, half_test_flux, decimal=4,
-            err_msg="Error in flux_untruncated DeVauc half-light radius constructor, n=%.1f"%(n))
+    for test_gal, err_msg in zip([ test_gal1, test_gal2, test_gal3 ], err_msg_list):
+        hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
+        print 'hlr_sum = ',hlr_sum
+        np.testing.assert_almost_equal(
+                hlr_sum, half_test_flux, decimal=4,
+                err_msg=err_msg)
 
     hlr_sum = radial_integrate(test_gal3, 0., test_gal3.getHalfLightRadius(), 1.e-4)
     print 'hlr_sum = ',hlr_sum
@@ -845,26 +839,18 @@ def test_sersic_radii():
             err_msg="Error in HLR in flux_untruncated, HLR constructed DeVaucouleurs, n=%.1f"%(n))
 
     # (test scale radii)
-    center = test_gal1.xValue(galsim.PositionD(0,0))
-    ratio = test_gal1.xValue(galsim.PositionD(test_gal1.getScaleRadius(),0)) / center
-    print 'scale ratio = ',ratio
-    np.testing.assert_almost_equal(
-            ratio, np.exp(-1.0), decimal=4,
-            err_msg="Error in getScaleRadius for HLR constructed DeVaucouleurs")
+    err_msg_list = \
+            ["Error in getScaleRadius for HLR constructed DeVaucouleurs",
+             "Error in getScaleRadius for HLR constructed truncated DeVaucouleurs",
+             "Error in getScaleRadius for HLR constructed flux_untruncated DeVaucouleurs",]
 
-    center = test_gal2.xValue(galsim.PositionD(0,0))
-    ratio = test_gal2.xValue(galsim.PositionD(test_gal2.getScaleRadius(),0)) / center
-    print 'scale ratio = ',ratio
-    np.testing.assert_almost_equal(
-            ratio, np.exp(-1.0), decimal=4,
-            err_msg="Error in getScaleRadius for HLR constructed truncated DeVaucouleurs")
-
-    center = test_gal3.xValue(galsim.PositionD(0,0))
-    ratio = test_gal3.xValue(galsim.PositionD(test_gal3.getScaleRadius(),0)) / center
-    print 'scale ratio = ',ratio
-    np.testing.assert_almost_equal(
-            ratio, np.exp(-1.0), decimal=4,
-            err_msg="Error in getScaleRadius for HLR constructed flux_untruncated DeVaucouleurs")
+    for test_gal, err_msg in zip([ test_gal1, test_gal2, test_gal3 ], err_msg_list):
+        center = test_gal.xValue(galsim.PositionD(0,0))
+        ratio = test_gal.xValue(galsim.PositionD(test_gal.getScaleRadius(),0)) / center
+        print 'scale ratio = ',ratio
+        np.testing.assert_almost_equal(
+                ratio, np.exp(-1.0), decimal=4,
+                err_msg=err_msg)
 
     # (test flux_untruncated normalization)
     center1 = test_gal1.xValue(galsim.PositionD(0,0))
@@ -885,27 +871,6 @@ def test_sersic_radii():
         np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getScaleRadius")
     except ImportError:
         pass
-
-    # Test flux_untruncated scale and normalization
-    test_gal = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=0., flux=test_flux)
-    test_gal2 = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=8.5, flux=test_flux,
-                                     flux_untruncated=True)
-    center = test_gal.xValue(galsim.PositionD(0,0))
-    center2 = test_gal2.xValue(galsim.PositionD(0,0))
-    ratio = center / center2
-    print 'peak value = ', center, center2
-    print 'hlr = ', test_gal.getHalfLightRadius(), test_gal2.getHalfLightRadius()
-    np.testing.assert_almost_equal(ratio, 1., 9,
-                                   "Error in DeVaucouleurs flux_untruncated=True normalization")
-
-    # Test true HLR with flux_untruncated=True
-    true_hlr = test_gal2.getHalfLightRadius()
-    hlr_sum = radial_integrate(test_gal, 0., true_hlr, 1.e-4)
-    true_flux = test_gal2.getFlux()
-    print 'true hlr_sum = ',hlr_sum
-    np.testing.assert_almost_equal(
-          hlr_sum, 0.5*true_flux, decimal=4,
-          err_msg="Error in DeVaucouleurs true half-light radius with flux_untruncated, trunc=8.5")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
