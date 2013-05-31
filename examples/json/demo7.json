@@ -90,10 +90,11 @@
         {
             "type" : "Sum",
             "items" : [
-                "#" : "Sersics can be truncated if desired."
-                "#" : "The units for this are expected to be arcsec (or specifically -- whatever"
-                "#" : "units you are using for all the size values as defined by the pixel_scale)."
-                { "type" : "Sersic" , "n" : 3.2 , "half_light_radius" : 0.7 , "flux" : 0.4 ,
+                { "#" : "Sersics can be truncated if desired.",
+                  "#" : "The units for this are expected to be arcsec (or specifically -- whatever",
+                  "#" : "units you are using for all the size values as defined by the",
+                  "#" : "pixel_scale).",
+                  "type" : "Sersic" , "n" : 3.2 , "half_light_radius" : 0.7 , "flux" : 0.4 ,
                   "trunc" : 8.5 },
                 { "type" : "Sersic" , "n" : 1.5 , "half_light_radius" : 1.2 , "flux" : 0.6 }
             ]
