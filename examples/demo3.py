@@ -32,7 +32,7 @@ we include the effect of a slight telescope distortion.
 
 New features introduced in this demo:
 
-- obj = galsim.Sersic(n, flux, half_light_radius)
+- obj = galsim.Sersic(n, flux, scale_radius)
 - obj = galsim.Kolmogorov(fwhm)
 - obj = galsim.OpticalPSF(lam_over_diam, defocus, coma1, coma2, astig1, astig2, obscuration)
 - obj = galsim.Pixel(xw, yw)
@@ -77,9 +77,9 @@ def main(argv):
 
     gal_flux = 1.e6        # ADU  ("Analog-to-digital units", the units of the numbers on a CCD)
     bulge_n = 3.5          #
-    bulge_re = 2.3         # arcsec
+    bulge_r0 = 0.003       # arcsec (corresponds to half_light_radius of ~2.3 arcsec)
     disk_n = 1.5           #
-    disk_re = 3.7          # arcsec
+    disk_r0 = 0.846        # arcsec (corresponds to half_light_radius of ~3.7 arcsec)
     bulge_frac = 0.3       #
     gal_q = 0.73           # (axis ratio 0 < q < 1)
     gal_beta = 23          # degrees (position angle on the sky)
@@ -106,10 +106,10 @@ def main(argv):
 
     logger.info('Starting demo script 3 using:')
     logger.info('    - Galaxy is bulge plus disk, flux = %.1e',gal_flux)
-    logger.info('       - Bulge is Sersic (n = %.1f, re = %.2f), frac = %.1f',
-                bulge_n,bulge_re,bulge_frac)
-    logger.info('       - Disk is Sersic (n = %.1f, re = %.2f), frac = %.1f',
-                disk_n,disk_re,1-bulge_frac)
+    logger.info('       - Bulge is Sersic (n = %.1f, r0 = %.3f), frac = %.1f',
+                bulge_n,bulge_r0,bulge_frac)
+    logger.info('       - Disk is Sersic (n = %.1f, r0 = %.3f), frac = %.1f',
+                disk_n,disk_r0,1-bulge_frac)
     logger.info('       - Shape is q,beta (%.2f,%.2f deg)', gal_q, gal_beta)
     logger.info('    - Atmospheric PSF is Kolmogorov with fwhm = %.2f',atmos_fwhm)
     logger.info('       - Shape is e,beta (%.2f,%.2f rad)', atmos_e, atmos_beta)
@@ -127,8 +127,8 @@ def main(argv):
     rng = galsim.BaseDeviate(random_seed)
  
     # Define the galaxy profile.
-    bulge = galsim.Sersic(bulge_n, half_light_radius=bulge_re)
-    disk = galsim.Sersic(disk_n, half_light_radius=disk_re)
+    bulge = galsim.Sersic(bulge_n, scale_radius=bulge_r0)
+    disk = galsim.Sersic(disk_n, scale_radius=disk_r0)
 
     # Objects may be multiplied by a scalar (which means scaling the flux) and also
     # added to each other.
