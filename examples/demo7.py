@@ -35,13 +35,14 @@ through the images comparing the two drawing methods.
 New features introduced in this demo:
 
 - obj = galsim.Airy(lam_over_diam)
+- obj = galsim.Sersic(n, half_light_radius, trunc)
 - obj2 = obj.copy()
 - obj.applyDilation(scale)
 - image.setScale(pixel_scale)
 - obj.draw(image)  -- i.e. taking the scale from the image rather than a dx= argument
 - obj.drawShoot(image, max_extra_noise, rng)
 - dev = galsim.PoissonDeviate(rng, mean)
-= noise = galsim.DeviateNoise(dev)
+- noise = galsim.DeviateNoise(dev)
 - writeCube(..., compress='gzip')
 - gsparams = galsim.GSParams(...)
 """
@@ -158,7 +159,10 @@ def main(argv):
     gal2 = galsim.Exponential(half_light_radius = 1, gsparams=gsparams)
     gal3 = galsim.DeVaucouleurs(half_light_radius = 1, gsparams=gsparams)
     gal4 = galsim.Sersic(half_light_radius = 1, n = 2.5, gsparams=gsparams)
-    bulge = galsim.Sersic(half_light_radius = 0.7, n = 3.2, gsparams=gsparams)
+    # A Sersic profile may be truncated if desired.
+    # The units for this are expected to be arcsec (or specifically -- whatever units
+    # you are using for all the size values as defined by the pixel_scale).
+    bulge = galsim.Sersic(half_light_radius = 0.7, n = 3.2, trunc = 8.5, gsparams=gsparams)
     disk = galsim.Sersic(half_light_radius = 1.2, n = 1.5, gsparams=gsparams)
     gal5 = 0.4*bulge + 0.6*disk  # Net half-light radius is only approximate for this one.
     gals = [gal1, gal2, gal3, gal4, gal5]
