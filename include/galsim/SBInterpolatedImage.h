@@ -97,7 +97,7 @@ namespace galsim {
         template <typename T>
         MultipleImageHelper(const BaseImage<T>& image,
                             double dx=0., double pad_factor=0.,
-                            boost::shared_ptr<Image<T> > pad_image = Image<T>());
+                            boost::shared_ptr<BaseImage<T> > pad_image = Image<T>());
 
         /// @brief Copies are shallow, so can pass by value without any copying.
         MultipleImageHelper(const MultipleImageHelper& rhs) : _pimpl(rhs._pimpl) {}
