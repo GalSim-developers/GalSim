@@ -7,7 +7,8 @@ import test_sersic_highn_basic
 nobs = test_sersic_highn_basic.NOBS
 ntest = len(test_sersic_highn_basic.SERSIC_N_TEST)
 
-for test_case in ("basic", "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2"):
+for test_case in ("basic", "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2", "shoot_accuracy2",
+                  "shoot_relerr2", "shoot_abserr2"):
 
     outfile = os.path.join("outputs", "sersic_highn_"+test_case+"_output_N"+str(nobs)+".asc")
     print "Generating plots for "+outfile
@@ -67,9 +68,9 @@ for test_case in ("basic", "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2"):
     plt.title(test_case)
     plt.subplots_adjust(left=0.15)
     plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomin_g1.png'))
-    plt.ylim(-YMAX_ZOOMOUT, YMAX_ZOOMOUT)
-    plt.subplots_adjust(left=None)
-    plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomout_g1.png'))
+    #plt.ylim(-YMAX_ZOOMOUT, YMAX_ZOOMOUT)
+    #plt.subplots_adjust(left=None)
+    #plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomout_g1.png'))
 
     # Then do the plots of g2
     plt.clf()
@@ -90,8 +91,8 @@ for test_case in ("basic", "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2"):
     plt.legend()
     plt.title(test_case)
     plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomin_g2.png'))
-    plt.ylim(-YMAX_ZOOMOUT, YMAX_ZOOMOUT)
-    plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomout_g2.png'))
+    #plt.ylim(-YMAX_ZOOMOUT, YMAX_ZOOMOUT)
+    #plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomout_g2.png'))
 
     # Then do the plots of sigma
     YMAX_ZOOMOUT = .3   # in arcsec
@@ -116,5 +117,5 @@ for test_case in ("basic", "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2"):
     plt.legend()
     plt.title(test_case)
     plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomin_sigma.png'))
-    plt.ylim(-YMAX_ZOOMOUT, YMAX_ZOOMOUT)
-    plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomout_sigma.png'))
+    #plt.ylim(-YMAX_ZOOMOUT, YMAX_ZOOMOUT)
+    #plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomout_sigma.png'))
