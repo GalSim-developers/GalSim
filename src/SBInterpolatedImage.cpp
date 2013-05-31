@@ -19,7 +19,7 @@
  * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
  */
 
-//#define DEBUGLOGGING
+#define DEBUGLOGGING
 
 #include <algorithm>
 #include "SBInterpolatedImage.h"
@@ -27,8 +27,8 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-//std::ostream* dbgout = new std::ofstream("debug.out");
-std::ostream* dbgout = &std::cout;
+std::ostream* dbgout = new std::ofstream("debug.out");
+//std::ostream* dbgout = &std::cout;
 int verbose_level = 2;
 #endif
 
@@ -40,14 +40,16 @@ namespace galsim {
         boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
         double dx, double pad_factor, boost::shared_ptr<BaseImage<T> > pad_image,
         boost::shared_ptr<GSParams> gsparams) :
-        SBProfile(new SBInterpolatedImageImpl(image,xInterp,kInterp,dx,pad_factor,pad_image,
-                                              gsparams)) {}
+        SBProfile(new SBInterpolatedImageImpl(
+                image,xInterp,kInterp,dx,pad_factor,pad_image,gsparams)) 
+    {}
 
     SBInterpolatedImage::SBInterpolatedImage(
         const MultipleImageHelper& multi, const std::vector<double>& weights,
         boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
         boost::shared_ptr<GSParams> gsparams) :
-        SBProfile(new SBInterpolatedImageImpl(multi,weights,xInterp,kInterp,gsparams)) {}
+        SBProfile(new SBInterpolatedImageImpl(multi,weights,xInterp,kInterp,gsparams)) 
+    {}
 
     SBInterpolatedImage::SBInterpolatedImage(const SBInterpolatedImage& rhs) : SBProfile(rhs) {}
 
@@ -98,7 +100,6 @@ namespace galsim {
         }
 
         if (pad_factor <= 0.) pad_factor = sbp::default_pad_factor;
-        // NB: don't need floor, since rhs is positive, so floor is superfluous.
         _pimpl->Nk = goodFFTSize(int(pad_factor*_pimpl->Ninitial));
 
         double dx2 = _pimpl->dx*_pimpl->dx;
@@ -155,11 +156,28 @@ namespace galsim {
         dbg<<"image scale = "<<image.getScale()<<std::endl;
         dbg<<"dx = "<<_pimpl->dx<<std::endl;
 
-        dbg<<"pad_factor = "<<pad_factor<<std::endl;
+        // Store the size of the original image, blocked out into a square.
         _pimpl->Ninitial = std::max( image.getYMax()-image.getYMin()+1,
-                                    image.getXMax()-image.getXMin()+1 );
+                                     image.getXMax()-image.getXMin()+1 );
+        // Make it odd to make some of the later calculations easier.
         _pimpl->Ninitial = _pimpl->Ninitial + (_pimpl->Ninitial+1)%2;
+        assert(_pimpl->Ninitial%2==1);
+        assert(_pimpl->Ninitial>=3);
+
+        // Figure out what size we need based on pad_factor
+        dbg<<"pad_factor = "<<pad_factor<<std::endl;
+        if (pad_factor <= 0.) pad_factor = sbp::default_pad_factor;
+        _pimpl->Nk = goodFFTSize(int(pad_factor*_pimpl->Ninitial));
         _pimpl->Nk = image.getPaddedSize(pad_factor);
+
+        // Make sure we can fit the pad_image.
+        if (pad_image) {
+            int pad_size = std::max( pad_image->getYMax()-pad_image->getYMin()+1,
+                                     pad_image->getXMax()-pad_image->getXMin()+1 );
+            dbg<<"pad_size = "<<pad_size<<std::endl;
+            if (pad_size > _pimpl->Nk) _pimpl->Nk = pad_size;
+        }
+
         dbg<<"Ninitial = "<<_pimpl->Ninitial<<std::endl;
         assert(_pimpl->Ninitial%2==1);
         assert(_pimpl->Ninitial>=3);
