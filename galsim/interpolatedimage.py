@@ -384,7 +384,10 @@ class InterpolatedImage(GSObject):
     def buildNoisePadImage(self, pad_factor, noise_pad, rng):
         """A helper function that builds the pad_image from the given noise_pad specification.
         """
-        padded_size = self.orig_image.getPaddedSize(pad_factor)
+        import numpy as np
+        if pad_factor <= 0.:
+            pad_factor = galsim._galsim.getDefaultPadFactor()
+        padded_size = int(np.ceil(np.max(self.orig_image.array.shape) * pad_factor))
         if isinstance(self.orig_image, galsim.BaseImageF):
             pad_image = galsim.ImageF(padded_size, padded_size)
         if isinstance(self.orig_image, galsim.BaseImageD):
@@ -392,7 +395,6 @@ class InterpolatedImage(GSObject):
 
         # Figure out what kind of noise to apply to the image
         if isinstance(noise_pad, float):
-            import numpy as np
             noise = galsim.GaussianNoise(rng, sigma = np.sqrt(noise_pad))
         elif isinstance(noise_pad, galsim.correlatednoise._BaseCorrelatedNoise):
             noise = noise_pad.copy()

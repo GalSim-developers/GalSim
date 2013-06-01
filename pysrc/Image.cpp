@@ -153,7 +153,6 @@ struct PyImage {
             .def("setOrigin", setOrigin_func_type(&Image<T>::setOrigin), bp::args("x", "y"))
             .def("setOrigin", setOrigin_pos_func_type(&Image<T>::setOrigin), bp::args("pos"))
             .def("getBounds", getBounds)
-            .def("getPaddedSize", &BaseImage<T>::getPaddedSize, bp::args("pad_factor"))
             .add_property("bounds", getBounds)
             ;
         ADD_CORNER(pyBaseImage, getXMin, xmin);
