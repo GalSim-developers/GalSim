@@ -18,7 +18,7 @@ angle_list = range(0,180,15)
 # Range of shears and magnifications to use
 # This is currently the 4 largest and 4 smallest |g|s generated from a run of examples/demo11.py,
 # rounded to 1-3 sig figs, plus the 4 largest blown up by a factor of 30 to really strain the 
-# algorithm.
+# algorithm, and then a set of just g1/just g2/just magnification perturbations.
 shear_and_magnification_list = [(0.001, 0., 0.),(0.01, 0., 0.), (0.1, 0., 0.),
                                 (-0.001, 0., 0.), (-0.01, 0., 0.), (-0.1, 0., 0.),
                                 (0., 0.001, 0.,),(0., 0.01, 0.), (0., 0.1, 0.),
@@ -37,19 +37,13 @@ shear_and_magnification_list = [(0.001, 0., 0.),(0.01, 0., 0.), (0.1, 0., 0.),
 
 # Galaxy indices
 first_index = 0
-nitems = 100
-
-# Photon-shoot trial parameters, shamelessly stolen from Barney
-np = int(1E6)
-#tol_ellip = 3.e-1
-#tol_size = 1.0
-tol_ellip = 3.e-5
-tol_size = 1.e-4
+nitems = 100 # Currently, do all the files in the sample catalog
 
 # Ground-image parameters
 ground_fwhm = 0.65        # arcsec
 ground_pixel_scale = 0.2  # arcsec
-ground_lam_over_diam = 700./4.*1.E-9*206265
+# 700 nm wavelength, 4 m telescope, convert to radians then arcsec
+ground_lam_over_diam = 700./4.*1.E-9*206265 
 ground_imsize = 64
 
 # Space-image parameters
@@ -64,42 +58,39 @@ rseed = 999888444
 nproc = 8
 ground_filename = 'interpolant_test_output_ground.dat'
 space_filename = 'interpolant_test_output_space.dat'
-nopsf_filename = 'interpolant_test_output_original.dat'
-ground_original_filename = 'interpolant_test_output_ground_original.dat'
-space_original_filename = 'interpolant_test_output_space_original.dat'
+original_filename = 'interpolant_test_output_original.dat'
+nopsf_filename = 'interpolant_test_output_nopsf.dat'
 ground_base_filename = 'interpolant_test_output_ground_base.dat'
 space_base_filename = 'interpolant_test_output_space_base.dat'
-nopsf_base_filename = 'interpolant_test_output_original_base.dat'
-ground_original_base_filename = 'interpolant_test_output_ground_original_base.dat'
-space_original_base_filename = 'interpolant_test_output_space_original_base.dat'
+original_base_filename = 'interpolant_test_output_original_base.dat'
+nopsf_base_filename = 'interpolant_test_output_nopsf_base.dat'
 
 ground_file = open(ground_filename,'w')
 space_file = open(space_filename,'w')
+original_file = open(original_filename,'w')
 nopsf_file = open(nopsf_filename,'w')
-ground_original_file = open(ground_original_filename,'w') 
-space_original_file = open(space_original_filename,'w')
 ground_base_file = open(ground_base_filename,'w')
 space_base_file = open(space_base_filename,'w')
+original_base_file = open(original_base_filename,'w')
 nopsf_base_file = open(nopsf_base_filename,'w')
-ground_original_base_file = open(ground_original_base_filename,'w')
-space_original_base_file = open(space_original_base_filename,'w')
 
 # --- Helper functions to run the main part of the code ---
 def get_config():
-# A function to return two config dictionaries with the basic PSF info that we will reuse for all
+# A function to return four config dictionaries with the basic PSF info that we will reuse for all
 # tests.
-    space_config = {}
-    ground_config = {}
-    nopsf_config = {}
-
+    space_config = {}    # Space-like data
+    ground_config = {}   # Ground-like data
+    nopsf_config = {}    # RealGalaxy image, not convolved with another PSF
+    original_config = {} # Original RealGalaxy image (before deconvolution)
+    
     space_config['psf'] = { "type" : "Airy", 'lam_over_diam' : space_lam_over_diam}
     ground_config['psf'] = { 
         'type' : 'Convolution', 
         'items' : [ {'type' : 'Kolmogorov', 'fwhm' : ground_fwhm },
                     {'type' : 'Airy', 'lam_over_diam' : ground_lam_over_diam } ]
     }
-    # no psf for nopsf_config
-    nopsf_config['pix'] = {'type': 'None'}
+    # no psf for nopsf_config and original_config
+    original_config['pix'] = {'type': 'None'}
                 
     space_config['image'] = {
         'type' : 'Single',
@@ -113,12 +104,19 @@ def get_config():
         'pixel_scale' : ground_pixel_scale,
         'nproc' : nproc
     }
+    original_config['image'] = {
+        'type' : 'Single',
+        'size' : space_imsize,
+        'pixel_scale' : space_pixel_scale,
+        'nproc' : nproc
+    }
     nopsf_config['image'] = {
         'type' : 'Single',
         'size' : space_imsize,
         'pixel_scale' : space_pixel_scale,
         'nproc' : nproc
     }
+
     galaxy_config = { 'type': 'RealGalaxy', 
                       'index': { 'type': 'Sequence', 'first': first_index, 'nitems': nitems } }
     catalog_config = {'real_catalog' : { 'dir' : '../../examples/data', 
@@ -127,9 +125,11 @@ def get_config():
     ground_config['input'] = catalog_config
     space_config['gal'] = galaxy_config
     space_config['input'] = catalog_config
-    galaxy_config['type'] = 'RealGalaxyOriginal'
     nopsf_config['gal'] = galaxy_config
     nopsf_config['input'] = catalog_config
+    galaxy_config['type'] = 'RealGalaxyOriginal'
+    original_config['gal'] = galaxy_config
+    original_config['input'] = catalog_config
 
     field = catalog_config['real_catalog'] # Redo the 'input' processing from config
     field['type'], ignore = galsim.config.process.valid_input_types['real_catalog'][0:2]
@@ -138,8 +138,8 @@ def get_config():
     space_config['real_catalog'] = input_obj
     ground_config['real_catalog'] = input_obj
     nopsf_config['real_catalog'] = input_obj
-
-    return [nopsf_config, space_config, ground_config]
+    original_config['real_catalog'] = input_obj
+    return [nopsf_config, original_config]#, space_config, ground_config]
 
 class InterpolationData:
 # Quick container class for passing around data from these tests.  
@@ -173,16 +173,27 @@ class InterpolationData:
             self.k_interpolant = 'default'
         self.padding = config['gal']['pad_factor']
         if 'psf' not in config:
-            self.image_type = 'NoPSF'
+            if 'pix' not in config:
+                self.image_type = 'Original'
+            else:      
+                self.image_type = 'NoPSF'
         elif config['psf']['type'] == 'Convolution':
             self.image_type = 'Ground'
         else:
             self.image_type = 'Space'
 
+# Don't fail the entire program if a shape cannot be determined...
 def CatchAdaptiveMomErrors(obj):
     try:
         x = obj.FindAdaptiveMom()
     except RuntimeError:
+        x = -10.
+    return x
+    
+def CatchEstimateShearErrors(obj, psf):
+    try:
+        x = galsim.hsm.EstimateShear(obj,psf)
+    except:
         x = -10.
     return x
 
@@ -192,6 +203,7 @@ def test_realgalaxy(base_config, shear=None, magnification=None, angle=None, shi
 # since the RealGalaxies have a Deconvolve in them.
     config = copy.deepcopy(base_config)
     sys.stdout.write('.')
+    # Add to the config dictionary any requested parameters
     if shear:
         config['gal']['shear'] = {'type': 'G1G2', 'g1': shear[0], 'g2': shear[1]}
     if magnification:
@@ -208,126 +220,67 @@ def test_realgalaxy(base_config, shear=None, magnification=None, angle=None, shi
         config['image']['random_seed'] = rseed
     else:
         raise ValueError("Must pass random seed to test_realgalaxy with 'seed'")
-    pass_config = copy.deepcopy(config)
+    pass_config = copy.deepcopy(config) # To pass to the InterpolationData routine
     trial_images = galsim.config.BuildImages(nimages = config['gal']['index']['nitems'], 
         config = config, logger=logger, nproc=config['image']['nproc'])[0]
-    if 'psf' in config: 
+    if 'psf' in config: # use EstimateShearErrors
         config = copy.deepcopy(base_config)
         del config['gal']
         psf_image = galsim.config.BuildImage(config = config)[0]
-        trial_results = [galsim.hsm.EstimateShear(trial_image,psf_image) for trial_image in trial_images] 
-    else:
-        trial_results = [CatchAdaptiveMomErrors(image) for image in trial_images]
-    # Get lists of g1,g2,sigma estimate (this might be quicker using a single list comprehension
-    # to get a list of (g1,g2,sigma) tuples, and then unzip with zip(*), but this is clearer)
-    g1obs_list = [-10 if isinstance(res,float) else res.observed_shape.g1 for res in trial_results] 
+        trial_results = [CatchEstimateShearErrors(trial_image,psf_image) 
+                                                             for trial_image in trial_images] 
+    else:               # use AdaptiveMoments
+        trial_results = [CatchAdaptiveMomErrors(trial_image) for trial_image in trial_images]
+    g1obs_list = [-10 if isinstance(res,float) else res.observed_shape.g1 
+                                                                    for res in trial_results] 
     g2obs_list = [-10 if isinstance(res,float) else res.observed_shape.g2 for res in trial_results]
     sigmaobs_list = [-10 if isinstance(res,float) else res.moments_sigma for res in trial_results]
 
     return InterpolationData(config=pass_config, g1obs=g1obs_list, g2obs=g2obs_list, 
                               sigmaobs = sigmaobs_list)
 
-def test_realgalaxyoriginal(base_config, shear=None, magnification=None, angle=None, shift=None,
-                            x_interpolant=None, k_interpolant=None, padding=None, seed=None, logger=None):
-# Do Barney's compare_dft_vs_photon_config test for a bunch of galaxies: want to know this behavior
-# for both, if we can.
-    sys.stdout.write('.')
-    config = copy.deepcopy(base_config)
-    config['gal']['type'] = 'RealGalaxyOriginal'
-        
-    if shear:
-        config['gal']['shear'] = shear
-    if magnification:
-        config['gal']['magnification'] = magnification
-    if angle:
-        config['gal']['rotation'] = {'type': 'Degrees', 'theta': 1.0*angle}
-    if x_interpolant:    
-        config['gal']['x_interpolant'] = x_interpolant
-    if k_interpolant:    
-        config['gal']['k_interpolant'] = k_interpolant
-    if padding:
-        config['gal']['pad_factor'] = padding
-    if seed:
-        config['image']['random_seed'] = rseed
-    else:
-        raise ValueError("Must pass random seed to test_realgalaxy with 'seed'")
-    pass_config = copy.deepcopy(config)
-    start_index = config['gal']['index']['first']
-    n_objects = config['gal']['index']['nitems']
-    g1obs_list = []
-    g2obs_list = []
-    sigmaobs_list = []
-    err_g1obs_list = []
-    err_g2obs_list = []
-    err_sigma_list = []
-    g1obs_list_draw = []
-    g2obs_list_draw = []
-    sigmaobs_list_draw = []
-    
-    del[config['gal']['index']]
-    for index_offset in range(n_objects):
-        config['gal']['index'] = start_index + index_offset
-        result = galsim.utilities.compare_dft_vs_photon_config(
-            config, n_photons_per_trial=np, nproc=config['image']['nproc'], logger=logger,
-            abs_tol_ellip=tol_ellip, abs_tol_size=tol_size, wmult = 1)
-        g1obs_list_draw.append(result.g1obs_draw)
-        g2obs_list_draw.append(result.g2obs_draw)
-        sigmaobs_list_draw.append(result.sigma_draw)
-        g1obs_list.append(result.g1obs_draw-result.delta_g1obs)
-        g2obs_list.append(result.g2obs_draw-result.delta_g2obs)
-        sigmaobs_list.append(result.sigma_draw-result.delta_sigma)
-        err_g1obs_list.append(result.err_g1obs)
-        err_g2obs_list.append(result.err_g2obs)
-        err_sigma_list.append(result.err_sigma)
-        
-    return (InterpolationData(config=pass_config, g1obs = g1obs_list, g2obs = g2obs_list, 
-        sigmaobs = sigmaobs_list, err_g1obs = err_g1obs_list, err_g2obs = err_g2obs_list, 
-        err_sigmaobs = err_sigma_list), InterpolationData(config=pass_config, 
-        g1obs = g1obs_list_draw, g2obs = g2obs_list_draw, sigmaobs = sigmaobs_list_draw))
-        
 def print_results(base_answer, test_answer, outfile=None):
-    if test_answer.image_type == 'Ground' and base_answer.image_type == 'Ground':
-        image_type = 1
-    elif test_answer.image_type == 'Space' and base_answer.image_type == 'Space':
-        image_type = 0
-    elif test_answer.image_type == 'NoPSF' and base_answer.image_type == 'NoPSF':
-        image_type = 2
-    else:
-        raise RuntimeError('Trying to compare ground-based to space-based images')
-    
+    if outfile and outfile.lower()!='base':
+        raise ValueError('Outfile type %s not understood'%outfile)
+
     if ((base_answer.x_interpolant!=test_answer.x_interpolant) or 
         (base_answer.k_interpolant!=test_answer.k_interpolant) or
         (base_answer.padding!=test_answer.padding)) and outfile!='base' and outfile!='Base':
             raise RuntimeError('Trying to compare different interpolants or paddings')
             
-    if not outfile:
-        if image_type==1:
+    # Test that both images use the same PSF
+    if test_answer.image_type == 'Ground' and base_answer.image_type == 'Ground':
+        if not outfile:
             outfile = ground_file
-        elif image_type==0:
+        else:
+            outfile = ground_base_file
+    elif test_answer.image_type == 'Space' and base_answer.image_type == 'Space':
+        if not outfile:
             outfile = space_file
         else:
-            outfile = nopsf_file
-    elif outfile=='original' or outfile=='Original':
-        if image_type==1:
-            outfile = ground_original_file
-        else:
-            outfile = space_original_file
-    elif outfile=='base' or outfile=='Base':
-        if image_type==1:
-            outfile = ground_base_file
-        elif image_type==0:
             outfile = space_base_file
-        else:
+    elif test_answer.image_type == 'NoPSF' and base_answer.image_type == 'NoPSF':
+        if not outfile:
             outfile = nopsf_file
+        else:
+            outfile = nopsf_base_file
+    elif test_answer.image_type == 'Original' and base_answer.image_type == 'Original':
+        if not outfile:
+            outfile = original_file
+        else:
+            outfile = original_base_file
     else:
-        raise ValueError('Outfile type %s not understood'%outfile)
+        raise RuntimeError('Trying to compare images with different PSFs')
     
-    tinterpolant_list = interpolant_list+['default']        
+    # Since we didn't want to cycle through 'default', but it's a used option...
+    tinterpolant_list = interpolant_list+['default'] 
+    # Write everything out as a number, so it can be loaded into python with numpy.loadtxt
+    # (which yells at you if you use strings)
     for i in range(len(test_answer.g1obs)):
         outfile.write(str(i)+' '+str(tinterpolant_list.index(base_answer.x_interpolant))+' '+ 
             str(tinterpolant_list.index(base_answer.k_interpolant))+' '+    
-            str(base_answer.padding)+' '+str(tinterpolant_list.index(test_answer.x_interpolant))+' '+
-            str(tinterpolant_list.index(test_answer.k_interpolant))+' '+     
+            str(base_answer.padding)+' '+str(tinterpolant_list.index(test_answer.x_interpolant))
+            +' '+str(tinterpolant_list.index(test_answer.k_interpolant))+' '+     
             str(test_answer.padding)+' '+str(test_answer.shear[0])+' '+str(test_answer.shear[1])+
             ' '+str(test_answer.magnification)+' '+str(test_answer.angle)+' '+
             str(base_answer.g1obs[i])+' '+str(test_answer.g1obs[i]-base_answer.g1obs[i])+' '+
@@ -335,63 +288,6 @@ def print_results(base_answer, test_answer, outfile=None):
             str(base_answer.sigmaobs[i])+' '+str(test_answer.sigmaobs[i]-base_answer.sigmaobs[i])+
             '\n')
         
-def print_results_original(base_answer, test_answer, outfile=None):
-    if not ((test_answer[0].image_type == test_answer[1].image_type) and
-             (base_answer[0].image_type == base_answer[1].image_type)):
-        raise RuntimeError('Not all input tuples have same config type')
-    if test_answer[0].image_type == 'Ground' and base_answer[0].image_type == 'Ground':
-        image_type = 1
-    elif test_answer[0].image_type == 'Space' and base_answer[0].image_type == 'Space':
-        image_type = 0
-    else:
-        raise RuntimeError('Trying to compare ground-based to space-based images')
-    
-    if ((base_answer[0].x_interpolant!=test_answer[0].x_interpolant) or 
-        (base_answer[0].k_interpolant!=test_answer[0].k_interpolant) or 
-        (base_answer[0].padding!=test_answer[0].padding)) and outfile!='base' and outfile!='Base':
-            raise RuntimeError('Trying to compare different interpolants or paddings')
-    if not (base_answer[0].x_interpolant==base_answer[1].x_interpolant and
-             base_answer[0].padding==base_answer[1].padding and
-             base_answer[0].k_interpolant==base_answer[1].k_interpolant and
-             test_answer[0].interpolant==test_answer[1].interpolant and
-             test_answer[0].k_interpolant==test_answer[1].k_interpolant and
-             test_answer[0].padding==test_answer[1].padding):
-                raise RuntimeError('Not all input tuples have same config type')
-    
-    if (not outfile) or outfile=='original' or outfile=='Original':
-        if image_type==1:
-            outfile = ground_original_file
-        else:
-            outfile = space_original_file
-    elif outfile=='base' or outfile=='Base':
-        if image_type==1:
-            outfile = ground_original_base_file
-        else:
-            outfile = space_original_base_file
-    else:
-        raise ValueError('Outfile type %s not understood'%outfile)
-            
-    tinterpolant_list = interpolant_list + ['default']
-    for i in range(len(test_answer[0].g1obs)):
-        outfile.write(str(i)+' '+str(tinterpolant_list.index(base_answer[0].x_interpolant))+' '+    
-            str(tinterpolant_list.index(base_answer[0].k_interpolant))+' '+    
-            str(base_answer[0].padding)+' '+str(tinterpolant_list.index(test_answer[0].x_interpolant))+
-            ' '+str(tinterpolant_list.index(base_answer[0].k_interpolant))+' '+    
-            str(test_answer[0].padding)+' '+str(test_answer[0].shear[0])+' '+
-            str(test_answer[0].shear[1])+' '+str(test_answer[0].magnification)+' '+
-            str(test_answer[0].angle)+' '+
-            str(base_answer[0].g1obs[i])+' '+
-            str(base_answer[1].g1obs[i]-base_answer[0].g1obs[i])+' '+
-            str(test_answer[0].g1obs[i]-base_answer[0].g1obs[i])+' '+
-            str(test_answer[1].g1obs[i]-base_answer[0].g1obs[i])+' '+
-            str(base_answer[0].g2obs[i])+' '+
-            str(base_answer[1].g2obs[i]-base_answer[0].g2obs[i])+' '+
-            str(test_answer[0].g2obs[i]-base_answer[0].g2obs[i])+' '+
-            str(test_answer[1].g2obs[i]-base_answer[0].g2obs[i])+' '+
-            str(base_answer[0].sigmaobs[i])+' '+
-            str(base_answer[1].sigmaobs[i]-base_answer[0].sigmaobs[i])+
-            str(test_answer[0].sigmaobs[i]-base_answer[0].sigmaobs[i])+
-            str(test_answer[1].sigmaobs[i]-base_answer[0].sigmaobs[i])+'\n')
 
 def main():
     # Define the config dictionaries we will use for all the following tests
@@ -402,10 +298,9 @@ def main():
     # Now, run through the various things we need to test in loops.
     # Right now, test rotation angles separately from shear and magnification
     # (but we can do that nested later if need be - probably with fewer tested angles).
-    for base_config in config_list:                     # Ground and space
-        base_list = [] # For comparing the "base" (eg unsheared, unmagnified, unrotated) cases
-        base_list_original = []
-        for padding in padding_list:        # Amount of padding
+    for base_config in config_list:                     # Ground, space, no PSF, original galaxy
+        base_list = [] # For comparing the "base" (ie unsheared, unmagnified, unrotated) cases
+        for padding in padding_list:                    # Amount of padding
             for interpolant in interpolant_list:        # Possible interpolants
                 print 'Base test ', i,
                 i+=1
@@ -415,10 +310,7 @@ def main():
                 base_answer_k = test_realgalaxy(base_config, seed=rseed, k_interpolant=interpolant,
                                             padding=padding)
                 base_list.append(base_answer_k)
-#                base_answer_dft, base_answer_shoot = test_realgalaxyoriginal(base_config, 
-#                                            interpolant=interpolant, padding=padding, seed=rseed)
-#                base_list_original.append((base_answer_dft,base_answer_shoot))
-                print ''
+                print '' # Start a new line for each status printout
                 for angle in angle_list:                        # Possible rotation angles
                     print 'Angle test ', i,
                     i+=1
@@ -426,9 +318,6 @@ def main():
                                   x_interpolant=interpolant, padding=padding, seed=rseed))
                     print_results(base_answer_k, test_realgalaxy(base_config, angle=angle, 
                                   k_interpolant=interpolant, padding=padding, seed=rseed))
-#                    print_results_original((base_answer_dft, base_answer_shoot), 
-#                                           test_realgalaxyoriginal(base_config, angle=angle, 
-#                                           interpolant=interpolant, padding=padding, seed=rseed))
                     print ''
                 for (g1, g2, mag) in shear_and_magnification_list: # Shear and magnification
                     print 'Shear/magnification test', i, g1, g2,
@@ -439,27 +328,19 @@ def main():
                     print_results(base_answer_k, test_realgalaxy(base_config, shear=(g1,g2),
                                   magnification=mag, k_interpolant=interpolant,
                                   padding=padding, seed=rseed))
-#                    print_results_original((base_answer_dft, base_answer_shoot), 
-#                                           test_realgalaxyoriginal(base_config, shear=(g1,g2),
-#                                           magnification=mag, interpolant=interpolant,
-#                                           padding=padding, seed=rseed))
                     print ''
         for k in range(len(base_list)):
             print_results(base_list[k],base_list[k],outfile='base')
-#                print_results_original(base_list_original[k],base_list_original[j],outfile='base')
 
     ground_file.close()
     space_file.close()
-    ground_original_file.close()
-    space_original_file.close()
+    nopsf_file.close()
+    original_file.close()
     ground_base_file.close()
     space_base_file.close()
-    ground_original_base_file.close()
-    space_original_base_file.close()
+    nopsf_base_file.close()
+    original_file.close()
     
-    
-        
-        
 if __name__ == "__main__":
     main()
 
