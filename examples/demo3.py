@@ -128,7 +128,10 @@ def main(argv):
     rng = galsim.BaseDeviate(random_seed)
  
     # Define the galaxy profile.
-    # A Sersic's size may be either scale_radius or half_light_radius.
+    # Normally Sersic profiles are specified by half-light radius, the radius that 
+    # encloses half of the total flux.  However, for some purposes, it can be 
+    # preferable to instead specify the scale radius, where the surface brightness 
+    # drops to 1/e of the central peak value.
     bulge = galsim.Sersic(bulge_n, half_light_radius=bulge_re)
     disk = galsim.Sersic(disk_n, scale_radius=disk_r0)
 

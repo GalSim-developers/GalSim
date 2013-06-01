@@ -66,6 +66,10 @@ gal :
         -   # Now the disk:
             type : Sersic
             n : 1.5
+            # Normally Sersic profiles are specified by half-light radius, the radius that 
+            # encloses half of the total flux.  However, for some purposes, it can be 
+            # preferable to instead specify the scale radius, where the surface brightness 
+            # drops to 1/e of the central peak value.
             scale_radius : 0.85  # arcsec (corresponds to half_light_radius of ~3.7 arcsec)
             flux : 0.7
 
