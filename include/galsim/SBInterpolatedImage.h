@@ -52,6 +52,9 @@ namespace galsim {
 
     }
 
+    // We'll expose this to the python layer.
+    double getDefaultPadFactor();
+
     /**
      * @brief A Helper class that stores multiple images and their fourier transforms
      *
@@ -132,6 +135,9 @@ namespace galsim {
         /// @brief Get the initial (unpadded) size of the images.
         int getNin() const { return _pimpl->Ninitial; }
 
+        /// @brief Get the bounds of the original image. (Or union of them if multiple.)
+        const Bounds<int>& getInitBounds() const { return _pimpl->init_bounds; }
+
         /// @brief Get the size of the images in k-space.
         int getNft() const { return _pimpl->Nk; }
 
@@ -147,6 +153,8 @@ namespace galsim {
             int Ninitial; ///< maximum size of input images
             int Nk;  ///< Size of the padded grids and Discrete Fourier transform table.
             double dx;  ///< Input pixel scales.
+
+            Bounds<int> init_bounds;
 
             /// @brief input images converted into XTables.
             std::vector<boost::shared_ptr<XTable> > vx;

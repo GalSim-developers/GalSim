@@ -96,6 +96,10 @@ namespace galsim {
             wrapTemplates<double>(pySBInterpolatedImage);
             wrapTemplates<int32_t>(pySBInterpolatedImage);
             wrapTemplates<int16_t>(pySBInterpolatedImage);
+
+            // A global function used by InterpolatedImage
+            bp::def("getDefaultPadFactor", &getDefaultPadFactor);
+
         }
 
     };

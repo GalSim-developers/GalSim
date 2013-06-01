@@ -19,7 +19,7 @@
  * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
  */
 
-#define DEBUGLOGGING
+//#define DEBUGLOGGING
 
 #include <algorithm>
 #include "SBInterpolatedImage.h"
@@ -33,6 +33,8 @@ int verbose_level = 2;
 #endif
 
 namespace galsim {
+
+    double getDefaultPadFactor() { return sbp::default_pad_factor; }
 
     template <typename T> 
     SBInterpolatedImage::SBInterpolatedImage(
@@ -76,14 +78,13 @@ namespace galsim {
 
         _pimpl->Ninitial = std::max( images[0]->getYMax()-images[0]->getYMin()+1,
                                      images[0]->getXMax()-images[0]->getXMin()+1 );
+        _pimpl->init_bounds = images[0]->getBounds();
         for (size_t i=1; i<images.size(); ++i) {
             int Ni = std::max( images[i]->getYMax()-images[i]->getYMin()+1,
                                images[i]->getXMax()-images[i]->getXMin()+1 );
             if (Ni > _pimpl->Ninitial) _pimpl->Ninitial = Ni;
+            _pimpl->init_bounds += images[i]->getBounds();
         }
-        _pimpl->Ninitial = _pimpl->Ninitial + (_pimpl->Ninitial+1)%2;
-        assert(_pimpl->Ninitial%2==1);
-        assert(_pimpl->Ninitial>=3);
 
         if (dx<=0.) {
             _pimpl->dx = images[0]->getScale();
@@ -157,16 +158,12 @@ namespace galsim {
         // Store the size of the original image, blocked out into a square.
         _pimpl->Ninitial = std::max( image.getYMax()-image.getYMin()+1,
                                      image.getXMax()-image.getXMin()+1 );
-        // Make it odd to make some of the later calculations easier.
-        _pimpl->Ninitial = _pimpl->Ninitial + (_pimpl->Ninitial+1)%2;
-        assert(_pimpl->Ninitial%2==1);
-        assert(_pimpl->Ninitial>=3);
+        _pimpl->init_bounds = image.getBounds();
 
         // Figure out what size we need based on pad_factor
         dbg<<"pad_factor = "<<pad_factor<<std::endl;
         if (pad_factor <= 0.) pad_factor = sbp::default_pad_factor;
         _pimpl->Nk = goodFFTSize(int(pad_factor*_pimpl->Ninitial));
-        _pimpl->Nk = image.getPaddedSize(pad_factor);
 
         // Make sure we can fit the pad_image.
         if (pad_image) {
@@ -177,8 +174,6 @@ namespace galsim {
         }
 
         dbg<<"Ninitial = "<<_pimpl->Ninitial<<std::endl;
-        assert(_pimpl->Ninitial%2==1);
-        assert(_pimpl->Ninitial>=3);
         dbg<<"Nk = "<<_pimpl->Nk<<std::endl;
 
         double dx2 = _pimpl->dx*_pimpl->dx;
@@ -207,27 +202,18 @@ namespace galsim {
         }
 
         // Copy the given image to the center
+        // Also accumulate the flux and centroid of the original image
+        double sum = 0.;
+        double sumx = 0.;
+        double sumy = 0.;
         int xStart = -((image.getXMax()-image.getXMin()+1)/2);
         int y = -((image.getYMax()-image.getYMin()+1)/2);
         dbg<<"xStart = "<<xStart<<", yStart = "<<y<<std::endl;
         for (int iy = image.getYMin(); iy<= image.getYMax(); iy++, y++) {
             int x = xStart;
             for (int ix = image.getXMin(); ix<= image.getXMax(); ix++, x++) {
-                _pimpl->vx[0]->xSet(x, y, image(ix,iy));
-            }
-        }
-
-        // Accumulate the flux and centroid on a square region of size Ninitial x Ninitial
-        // (This isn't precisely the same as what was in the original image, since the
-        // padding can have some flux, so we do it this way to be consistent with how
-        // we use it later.)
-        double sum = 0.;
-        double sumx = 0.;
-        double sumy = 0.;
-        const int Nino2 = _pimpl->Ninitial/2;
-        for (int y = -Nino2; y<=Nino2; ++y) {
-            for (int x = -Nino2; x<=Nino2; ++x) {
-                double value = _pimpl->vx[0]->xval(x, y);
+                double value = image(ix,iy);
+                _pimpl->vx[0]->xSet(x, y, value);
                 sum += value;
                 sumx += value*x;
                 sumy += value*y;
@@ -238,7 +224,6 @@ namespace galsim {
         _pimpl->yflux[0] = sumy * dx3;
         dbg<<"flux = "<<_pimpl->flux[0]<<
             ", xflux = "<<_pimpl->xflux[0]<<", yflux = "<<_pimpl->yflux[0]<<std::endl;
-        dbg<<"vx[0].size = "<<_pimpl->vx[0]->getN()<<", scale = "<<_pimpl->vx[0]->getDx()<<std::endl;
     }
 
     boost::shared_ptr<KTable> MultipleImageHelper::getKTable(int i) const 
@@ -594,9 +579,9 @@ namespace galsim {
         dbg<<"Find box that encloses "<<1.-this->gsparams->alias_threshold<<" of the flux.\n";
         dbg<<"xtab size = "<<_xtab->getN()<<", scale = "<<_xtab->getDx()<<std::endl;
         //int N = _xtab->getN();
-        double dx = _xtab->getDx();
-        double dx2 = dx*dx;
-        double fluxTot = getFlux()/dx2;
+        double scale = _xtab->getDx();
+        double scalesq = scale*scale;
+        double fluxTot = getFlux()/scalesq;
         dbg<<"fluxTot = "<<fluxTot<<std::endl;
         double flux = (*_xtab).xval(0,0);
         double thresh = (1.-this->gsparams->alias_threshold) * fluxTot;
@@ -610,6 +595,11 @@ namespace galsim {
         // enclosed enough flux again.
         int d1 = 0; 
         const int Nino2 = _multi.getNin()/2;
+        const Bounds<int> b = _multi.getInitBounds();
+        int dx = b.getXMin() + ((b.getXMax()-b.getXMin()+1)/2);
+        int dy = b.getYMin() + ((b.getYMax()-b.getYMin()+1)/2);
+        dbg<<"b = "<<b<<std::endl;
+        dbg<<"dx,dy = "<<dx<<','<<dy<<std::endl;
         for (int d=1; d<=Nino2; ++d) {
             xdbg<<"d = "<<d<<std::endl;
             xdbg<<"d1 = "<<d1<<std::endl;
@@ -618,10 +608,10 @@ namespace galsim {
             for(int x = -d; x < d; ++x) {
                 // Note: All 4 corners are added exactly once by including x=-d but omitting 
                 // x=d from the loop.
-                flux += _xtab->xval(x,-d);  // bottom
-                flux += _xtab->xval(d,x);   // right
-                flux += _xtab->xval(-x,d);  // top
-                flux += _xtab->xval(-d,-x); // left
+                if (b.includes(Position<int>(x+dx,-d+dy))) flux += _xtab->xval(x,-d);  // bottom
+                if (b.includes(Position<int>(d+dx,x+dy))) flux += _xtab->xval(d,x);   // right
+                if (b.includes(Position<int>(-x+dx,d+dy))) flux += _xtab->xval(-x,d);  // top
+                if (b.includes(Position<int>(-d+dx,-x+dy))) flux += _xtab->xval(-d,-x); // left
             }
             if (flux < thresh) {
                 d1 = 0; // Mark that we haven't gotten to a good enclosing radius yet.
@@ -638,7 +628,7 @@ namespace galsim {
         }
         // (Note: Since this isn't a radial profile, R isn't really a radius, but rather 
         //        the size of the square box that is enclosing (1-alias_thresh) of the flux.)
-        double R = (d1+0.5) * dx;
+        double R = (d1+0.5) * scale;
         dbg<<"d = "<<d1<<" => R = "<<R<<std::endl;
         // Add xInterp range in quadrature just like convolution:
         double R2 = _xInterp->xrange() * _multi.getScale();
@@ -737,18 +727,33 @@ namespace galsim {
         _positiveFlux = 0.;
         _negativeFlux = 0.;
         _pt.clear();
-        for (int iy=-_multi.getNin()/2; iy<_multi.getNin()/2; ++iy) {
-            double y = iy*_multi.getScale();
-            for (int ix=-_multi.getNin()/2; ix<_multi.getNin()/2; ++ix) {
-                double flux = _xtab->xval(ix,iy) * _multi.getScale()*_multi.getScale();
+
+        Bounds<int> b = _multi.getInitBounds();
+        int xStart = -((b.getXMax()-b.getXMin()+1)/2);
+        int y = -((b.getYMax()-b.getYMin()+1)/2);
+        double scale = _multi.getScale();
+        double scalesq = scale*scale;
+
+        // We loop over the original bounds, since this is the region over which we 
+        // always calculate the flux.
+        //
+        // ix,iy are the indices in the original image
+        // x,y are the corresponding indices in _xtab
+        // xx,yy are the positions scaled by the pixel scale
+        for (int iy = b.getYMin(); iy<= b.getYMax(); ++iy, ++y) {
+            int x = xStart;
+            double yy = y * scale;
+            for (int ix = b.getXMin(); ix<= b.getXMax(); ++ix, ++x) {
+                double flux = _xtab->xval(x,y);
                 if (flux==0.) continue;
-                double x=ix*_multi.getScale();
+                flux *= scalesq;
+                double xx = x * scale;
                 if (flux > 0.) {
                     _positiveFlux += flux;
                 } else {
                     _negativeFlux += -flux;
                 }
-                _pt.push_back(Pixel(x,y,flux));
+                _pt.push_back(Pixel(xx,yy,flux));
             }
         }
         _pt.buildTree();
