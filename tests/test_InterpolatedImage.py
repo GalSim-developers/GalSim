@@ -32,23 +32,62 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-# For photon shooting, we calculate the number of photons to use based on the target
-# accuracy we are shooting for.  (Pun intended.)
-# For each pixel,
-# uncertainty = sqrt(N_pix) * flux_photon = sqrt(N_tot * flux_pix / flux_tot) * flux_tot / N_tot
-#             = sqrt(flux_pix) * sqrt(flux_tot) / sqrt(N_tot)
-# This is largest for the brightest pixel.  So we use:
-# N = flux_max * flux_tot / photon_shoot_accuracy^2
-photon_shoot_accuracy = 2.e-3
-# The number of decimal places at which to test the photon shooting
-photon_decimal_test = 2
 # for flux normalization tests
 test_flux = 0.7
 # for dx tests - avoid 1.0 because factors of dx^2 won't show up!
 test_dx = 2.0
-# Use a deterministic random number generator so we don't fail tests because of rare flukes
-# in the random numbers.
-glob_ud = galsim.UniformDeviate(12345)
+
+def test_sbinterpolatedimage():
+    """Test that we can make SBInterpolatedImages from Images of various types, and convert back.
+    """
+    import time
+    t1 = time.time()
+    # for each type, try to make an SBInterpolatedImage, and check that when we draw an image from
+    # that SBInterpolatedImage that it is the same as the original
+    lan3 = galsim.Lanczos(3, True, 1.E-4)
+    lan3_2d = galsim.InterpolantXY(lan3)
+
+    ftypes = [np.float32, np.float64]
+    ref_array = np.array([
+        [0.01, 0.08, 0.07, 0.02],
+        [0.13, 0.38, 0.52, 0.06],
+        [0.09, 0.41, 0.44, 0.09],
+        [0.04, 0.11, 0.10, 0.01] ]) 
+
+    for array_type in ftypes:
+        image_in = galsim.ImageView[array_type](ref_array.astype(array_type))
+        np.testing.assert_array_equal(
+                ref_array.astype(array_type),image_in.array,
+                err_msg="Array from input Image differs from reference array for type %s"%
+                        array_type)
+        sbinterp = galsim.SBInterpolatedImage(image_in, lan3_2d, dx=1.0)
+        test_array = np.zeros(ref_array.shape, dtype=array_type)
+        image_out = galsim.ImageView[array_type](test_array)
+        image_out.setScale(1.0)
+        sbinterp.draw(image_out.view())
+        np.testing.assert_array_equal(
+                ref_array.astype(array_type),image_out.array,
+                err_msg="Array from output Image differs from reference array for type %s"%
+                        array_type)
+ 
+        # Lanczos doesn't quite get the flux right.  Wrong at the 5th decimal place.
+        # Gary says that's expected -- Lanczos isn't technically flux conserving.  
+        # He applied the 1st order correction to the flux, but expect to be wrong at around
+        # the 10^-5 level.
+        # Anyway, Quintic seems to be accurate enough.
+        quint = galsim.Quintic(1.e-4)
+        quint_2d = galsim.InterpolantXY(quint)
+        sbinterp = galsim.SBInterpolatedImage(image_in, quint_2d, dx=1.0)
+        sbinterp.setFlux(1.)
+        do_shoot(galsim.GSObject(sbinterp),image_out,"InterpolatedImage")
+
+        # Test kvalues
+        do_kvalue(galsim.GSObject(sbinterp),"InterpolatedImage")
+
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_roundtrip():
     """Test round trip from Image to InterpolatedImage back to Image.
@@ -552,6 +591,7 @@ def test_corr_padding():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
+    test_sbinterpolatedimage()
     test_roundtrip()
     test_fluxnorm()
     test_exceptions()
