@@ -210,7 +210,6 @@ def test_shapelet_fit():
         # Test drawing image from shapelet
         im2 = im1.copy()
         shapelet.draw(im2, normalization=norm)
-        im2.write('junk2.fits')
         # Check that images are close to the same:
         print 'norm(diff) = ',np.sum((im1.array-im2.array)**2)
         print 'norm(im) = ',np.sum(im1.array**2)
