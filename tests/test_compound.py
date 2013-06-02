@@ -47,6 +47,12 @@ default_params = galsim.GSParams(
         integration_relerr = 1.e-5,
         integration_abserr = 1.e-7)
 
+# Some standard values for testing
+test_flux = 1.8
+test_hlr = 1.8
+test_sigma = 1.8
+test_scale = 1.8
+
 
 def test_convolve():
     """Test the convolution of a Moffat and a Box SBProfile against a known result.
@@ -119,6 +125,70 @@ def test_convolve():
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_convolve_flux_scaling():
+    """Test flux scaling for Convolve.
+    """
+    import time
+    t1 = time.time()
+
+    # decimal point to go to for parameter value comparisons
+    param_decimal = 12
+
+    # init with Gaussian and DeVauc only (should be ok given last tests)
+    obj = galsim.Convolve(
+        [galsim.Gaussian(sigma=test_sigma, flux=np.sqrt(test_flux)),
+         galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=np.sqrt(test_flux))])
+    obj *= 2.
+    np.testing.assert_almost_equal(
+        obj.getFlux(), test_flux * 2., decimal=param_decimal,
+        err_msg="Flux param inconsistent after __imul__.")
+    obj = galsim.Convolve(
+        [galsim.Gaussian(sigma=test_sigma, flux=np.sqrt(test_flux)),
+         galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=np.sqrt(test_flux))])
+    obj /= 2.
+    np.testing.assert_almost_equal(
+        obj.getFlux(), test_flux / 2., decimal=param_decimal,
+        err_msg="Flux param inconsistent after __idiv__.")
+    obj = galsim.Convolve(
+        [galsim.Gaussian(sigma=test_sigma, flux=np.sqrt(test_flux)),
+         galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=np.sqrt(test_flux))])
+    obj2 = obj * 2.
+    # First test that original obj is unharmed... (also tests that .copy() is working)
+    np.testing.assert_almost_equal(
+        obj.getFlux(), test_flux, decimal=param_decimal,
+        err_msg="Flux param inconsistent after __rmul__ (original).")
+    # Then test new obj2 flux
+    np.testing.assert_almost_equal(
+        obj2.getFlux(), test_flux * 2., decimal=param_decimal,
+        err_msg="Flux param inconsistent after __rmul__ (result).")
+    obj = galsim.Convolve(
+        [galsim.Gaussian(sigma=test_sigma, flux=np.sqrt(test_flux)),
+         galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=np.sqrt(test_flux))])
+    obj2 = 2. * obj
+    # First test that original obj is unharmed... (also tests that .copy() is working)
+    np.testing.assert_almost_equal(
+        obj.getFlux(), test_flux, decimal=param_decimal,
+        err_msg="Flux param inconsistent after __mul__ (original).")
+    # Then test new obj2 flux
+    np.testing.assert_almost_equal(
+        obj2.getFlux(), test_flux * 2., decimal=param_decimal,
+        err_msg="Flux param inconsistent after __mul__ (result).")
+    obj = galsim.Convolve(
+        [galsim.Gaussian(sigma=test_sigma, flux=np.sqrt(test_flux)),
+         galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=np.sqrt(test_flux))])
+    obj2 = obj / 2.
+    # First test that original obj is unharmed... (also tests that .copy() is working)
+    np.testing.assert_almost_equal(
+        obj.getFlux(), test_flux, decimal=param_decimal,
+        err_msg="Flux param inconsistent after __div__ (original).")
+    # Then test new obj2 flux
+    np.testing.assert_almost_equal(
+        obj2.getFlux(), test_flux / 2., decimal=param_decimal,
+        err_msg="Flux param inconsistent after __div__ (result).")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 
 def test_shearconvolve():
@@ -497,6 +567,64 @@ def test_add():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_add_flux_scaling():
+    """Test flux scaling for Add.
+    """
+    import time
+    t1 = time.time()
+
+    # decimal point to go to for parameter value comparisons
+    param_decimal = 12
+
+    # init with Gaussian and Exponential only (should be ok given last tests)
+    obj = galsim.Add([galsim.Gaussian(sigma=test_sigma, flux=test_flux * .5),
+                      galsim.Exponential(scale_radius=test_scale, flux=test_flux * .5)])
+    obj *= 2.
+    np.testing.assert_almost_equal(
+        obj.getFlux(), test_flux * 2., decimal=param_decimal,
+        err_msg="Flux param inconsistent after __imul__.")
+    obj = galsim.Add([galsim.Gaussian(sigma=test_sigma, flux=test_flux * .5),
+                      galsim.Exponential(scale_radius=test_scale, flux=test_flux * .5)])
+    obj /= 2.
+    np.testing.assert_almost_equal(
+        obj.getFlux(), test_flux / 2., decimal=param_decimal,
+        err_msg="Flux param inconsistent after __idiv__.")
+    obj = galsim.Add([galsim.Gaussian(sigma=test_sigma, flux=test_flux * .5),
+                      galsim.Exponential(scale_radius=test_scale, flux=test_flux * .5)])
+    obj2 = obj * 2.
+    # First test that original obj is unharmed... (also tests that .copy() is working)
+    np.testing.assert_almost_equal(
+        obj.getFlux(), test_flux, decimal=param_decimal,
+        err_msg="Flux param inconsistent after __rmul__ (original).")
+    # Then test new obj2 flux
+    np.testing.assert_almost_equal(
+        obj2.getFlux(), test_flux * 2., decimal=param_decimal,
+        err_msg="Flux param inconsistent after __rmul__ (result).")
+    obj = galsim.Add([galsim.Gaussian(sigma=test_sigma, flux=test_flux * .5),
+                      galsim.Exponential(scale_radius=test_scale, flux=test_flux * .5)])
+    obj2 = 2. * obj
+    # First test that original obj is unharmed... (also tests that .copy() is working)
+    np.testing.assert_almost_equal(
+        obj.getFlux(), test_flux, decimal=param_decimal,
+        err_msg="Flux param inconsistent after __mul__ (original).")
+    # Then test new obj2 flux
+    np.testing.assert_almost_equal(
+        obj2.getFlux(), test_flux * 2., decimal=param_decimal,
+        err_msg="Flux param inconsistent after __mul__ (result).")
+    obj = galsim.Add([galsim.Gaussian(sigma=test_sigma, flux=test_flux * .5),
+                      galsim.Exponential(scale_radius=test_scale, flux=test_flux * .5)])
+    obj2 = obj / 2.
+    # First test that original obj is unharmed... (also tests that .copy() is working)
+    np.testing.assert_almost_equal(
+        obj.getFlux(), test_flux, decimal=param_decimal,
+        err_msg="Flux param inconsistent after __div__ (original).")
+    # Then test new obj2 flux
+    np.testing.assert_almost_equal(
+        obj2.getFlux(), test_flux / 2., decimal=param_decimal,
+        err_msg="Flux param inconsistent after __div__ (result).")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_autoconvolve():
     """Test that auto-convolution works the same as convolution with itself.
@@ -639,12 +767,15 @@ def test_autocorrelate():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
+
 if __name__ == "__main__":
     test_convolve()
+    test_convolve_flux_scaling()
     test_shearconvolve()
     test_realspace_convolve()
     test_realspace_distorted_convolve()
     test_realspace_shearconvolve()
     test_add()
+    test_add_flux_scaling()
     test_autoconvolve()
     test_autocorrelate()
