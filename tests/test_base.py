@@ -32,16 +32,13 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-# for radius tests - specify half-light-radius, FHWM, sigma to be compared with high-res image (with
-# pixel scale chosen iteratively until convergence is achieved, beginning with test_dx)
+# Some values to use in multiple tests below:
 test_hlr = 1.8
 test_fwhm = 1.8
 test_sigma = 1.8
 test_scale = 1.8
-test_sersic_n = [1.5, 2.5]
+test_sersic_n = [1.5, 2.5, 4, -4] # -4 means use galsim.DeVaucouleurs, rather than Sersic(n=4)
 test_sersic_trunc = [0., 8.5]
-
-# for flux normalization tests
 test_flux = 1.8
 
 # These are the default GSParams used when unspecified.  We'll check that specifying 
@@ -131,22 +128,23 @@ def test_gaussian_properties():
     """
     import time
     t1 = time.time()
-    psf = galsim.SBGaussian(flux=1, sigma=1)
+    gauss = galsim.Gaussian(flux=test_flux, sigma=1)
     # Check that we are centered on (0, 0)
     cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(psf.centroid(), cen)
+    np.testing.assert_equal(gauss.centroid(), cen)
     # Check Fourier properties
-    np.testing.assert_equal(psf.maxK(), 3.7169221888498383)
-    np.testing.assert_almost_equal(psf.stepK(), 0.78539816339744828)
-    np.testing.assert_equal(psf.kValue(cen), 1+0j)
+    np.testing.assert_equal(gauss.maxK(), 3.7169221888498383)
+    np.testing.assert_almost_equal(gauss.stepK(), 0.78539816339744828)
+    np.testing.assert_equal(gauss.kValue(cen), test_flux+0j)
+    np.testing.assert_almost_equal(gauss.xValue(cen), test_flux * 0.15915494309189535)
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
-        psfFlux = galsim.SBGaussian(flux=inFlux, sigma=2.)
-        outFlux = psfFlux.getFlux()
+        gauss = galsim.Gaussian(flux=inFlux, sigma=2.)
+        outFlux = gauss.getFlux()
         np.testing.assert_almost_equal(outFlux, inFlux)
-    np.testing.assert_almost_equal(psf.xValue(cen), 0.15915494309189535)
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_gaussian_radii():
     """Test initialization of Gaussian with different types of radius specification.
@@ -301,6 +299,7 @@ def test_gaussian_radii():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
 def test_gaussian_flux_scaling():
     """Test flux scaling for Gaussian.
     """
@@ -406,6 +405,29 @@ def test_exponential():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
+def test_exponential_properties():
+    """Test some basic properties of the SBGaussian profile.
+    """
+    import time
+    t1 = time.time()
+    expon = galsim.Exponential(flux=test_flux, scale_radius=1.8)
+    # Check that we are centered on (0, 0)
+    cen = galsim.PositionD(0, 0)
+    np.testing.assert_equal(expon.centroid(), cen)
+    # Check Fourier properties
+    np.testing.assert_equal(expon.maxK(), 5.5555555555555545)
+    np.testing.assert_almost_equal(expon.stepK(), 0.23503123472449597)
+    np.testing.assert_equal(expon.kValue(cen), test_flux+0j)
+    np.testing.assert_almost_equal(expon.xValue(cen), test_flux * 0.049121896016017089)
+    # Check input flux vs output flux
+    for inFlux in np.logspace(-2, 2, 10):
+        expon = galsim.Exponential(flux=inFlux, scale_radius=1.8)
+        outFlux = expon.getFlux()
+        np.testing.assert_almost_equal(outFlux, inFlux)
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 def test_exponential_radii():
     """Test initialization of Exponential with different types of radius specification.
     """
@@ -458,6 +480,7 @@ def test_exponential_radii():
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_exponential_flux_scaling():
     """Test flux scaling for Exponential.
@@ -600,43 +623,54 @@ def test_sersic_radii():
     for n in test_sersic_n:
         for trunc in test_sersic_trunc:
             # Test constructor using half-light-radius: (only option for sersic)
-            test_gal = galsim.Sersic(n=n, half_light_radius=test_hlr, trunc=trunc, flux=1.)
-            hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
+            # n=-4 is code to use explicit DeVaucouleurs rather than Sersic(n=4).
+            # It should be identical.
+            if n == -4:
+                test_gal = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=trunc, flux=1)
+            else:
+                test_gal = galsim.Sersic(n=n, half_light_radius=test_hlr, trunc=trunc, flux=1)
+            hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4) 
             print 'hlr_sum = ',hlr_sum
             np.testing.assert_almost_equal(
-                    hlr_sum, 0.5, decimal=4,
-                    err_msg="Error in Sersic constructor with half-light radius, n=%.1f, trunc=%.1f"\
-                             %(n,trunc))
+                hlr_sum, 0.5, decimal=4,
+                err_msg="Error in Sersic constructor with half-light radius, n=%.1f, trunc=%.1f"\
+                        %(n,trunc))
 
             # Test with flux_untruncated=True (above unit tests for flux_untruncated=False)
-            test_gal = galsim.Sersic(n=n, half_light_radius=test_hlr, trunc=trunc, flux=1.,
-                                     flux_untruncated=True)
+            if n == -4:
+                test_gal = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=trunc, flux=1,
+                                                flux_untruncated=True)
+            else:
+                test_gal = galsim.Sersic(n=n, half_light_radius=test_hlr, trunc=trunc, flux=1,
+                                         flux_untruncated=True)
             hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
             print 'hlr_sum (truncated and flux_untruncated) = ',hlr_sum
             np.testing.assert_almost_equal(
-                    hlr_sum, 0.5, decimal=4,
-                    err_msg="Error in Sersic constructor with flux_untruncated, n=%.1f, trunc=%.1f"\
-                             %(n,trunc))
+                hlr_sum, 0.5, decimal=4,
+                err_msg="Error in Sersic constructor with flux_untruncated, n=%.1f, trunc=%.1f"\
+                        %(n,trunc))
 
             # Check that the getters don't work after modifying the original.
             test_gal_shear = test_gal.copy()
-            print 'n = ',test_gal_shear.getN()
+            if n > 0:
+                print 'n = ',test_gal_shear.getN()
             print 'hlr = ',test_gal_shear.getHalfLightRadius()
             test_gal_shear.applyShear(g1=0.3, g2=0.1)
             try:
-                np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getN");
+                if n > 0:
+                    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getN");
                 np.testing.assert_raises(AttributeError, getattr, test_gal_shear, 
                                          "getHalfLightRadius")
             except ImportError:
                 pass
 
-    for n in test_sersic_n:
-        for trunc in test_sersic_trunc:
             # Test flux_untruncated scale and normalization
-            test_gal = galsim.Sersic(n=n, half_light_radius=test_hlr, flux=1.)
-
-            test_gal2 = galsim.Sersic(n=n, half_light_radius=test_hlr, trunc=trunc, flux=1.,
-                                      flux_untruncated=True)
+            if n == -4:
+                test_gal2 = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=trunc, flux=1,
+                                                 flux_untruncated=True)
+            else:
+                test_gal2 = galsim.Sersic(n=n, half_light_radius=test_hlr, trunc=trunc, flux=1,
+                                          flux_untruncated=True)
             center = test_gal.xValue(galsim.PositionD(0,0))
             center2 = test_gal2.xValue(galsim.PositionD(0,0))
             ratio = center / center2
@@ -652,53 +686,11 @@ def test_sersic_radii():
             print 'true hlr_sum = ',hlr_sum
             np.testing.assert_almost_equal(
                  hlr_sum, 0.5*true_flux, decimal=4,
-                 err_msg="Error in true half-light radius with flux_untruncated, n=%.1f, trunc=%.1f"\
-                          %(n,trunc))
-
-    # Repeat the above for an explicit DeVaucouleurs.  (Same as n=4, but special name.)
-    for trunc in test_sersic_trunc:
-        # Test constuctor
-        test_gal = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=trunc, flux=1.)
-        hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
-        print 'hlr_sum = ',hlr_sum
-        np.testing.assert_almost_equal(
-                hlr_sum, 0.5, decimal=4,
-                err_msg="Error in DeVaucouleurs constructor with half-light radius, trunc=%.1f"\
-                         %trunc)
-
-        # Check that the getters don't work after modifying the original.
-        test_gal_shear = test_gal.copy()
-        print 'hlr = ',test_gal_shear.getHalfLightRadius()
-        test_gal_shear.applyShear(g1=0.3, g2=0.1)
-        try:
-            np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
-        except ImportError:
-            pass
-
-    # Test flux_untruncated scale and normalization
-    test_gal = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=0., flux=1.)
-    test_gal2 = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=trunc, flux=1.,
-                                     flux_untruncated=True)
-    center = test_gal.xValue(galsim.PositionD(0,0))
-    center2 = test_gal2.xValue(galsim.PositionD(0,0))
-    ratio = center / center2
-    print 'peak value = ', center, center2
-    print 'hlr = ', test_gal.getHalfLightRadius(), test_gal2.getHalfLightRadius()
-    np.testing.assert_almost_equal(ratio, 1., 9,
-                                   "Error in DeVaucouleurs flux_untruncated=True normalization")
-
-    # Test true HLR with flux_untruncated=True
-    true_hlr = test_gal2.getHalfLightRadius()
-    hlr_sum = radial_integrate(test_gal, 0., true_hlr, 1.e-4)
-    true_flux = test_gal2.getFlux()
-    print 'true hlr_sum = ',hlr_sum
-    np.testing.assert_almost_equal(
-          hlr_sum, 0.5*true_flux, decimal=4,
-          err_msg="Error in DeVaucouleurs true half-light radius with flux_untruncated, trunc=%.1f"\
-                   %(trunc))
+                 err_msg="Error in true hlr with flux_untruncated, n=%.1f, trunc=%.1f"%(n,trunc))
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_sersic_flux_scaling():
     """Test flux scaling for Sersic.
@@ -714,46 +706,50 @@ def test_sersic_flux_scaling():
         # loop through sersic truncation
         for test_trunc in test_sersic_trunc:
             # init with hlr and flux only (should be ok given last tests)
-            obj = galsim.Sersic(test_n, half_light_radius=test_hlr, flux=test_flux,
-                                trunc=test_trunc)
+            # n=-4 is code to use explicit DeVaucouleurs rather than Sersic(n=4).
+            # It should be identical.
+            if test_n == -4:
+                init_obj = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=test_trunc,
+                                           flux=test_flux)
+            else:
+                init_obj = galsim.Sersic(n=test_n, half_light_radius=test_hlr, trunc=test_trunc,
+                                    flux=test_flux)
+            obj = init_obj.copy()
             obj *= 2.
             np.testing.assert_almost_equal(
                 obj.getFlux(), test_flux * 2., decimal=param_decimal,
                 err_msg="Flux param inconsistent after __imul__.")
-            obj = galsim.Sersic(test_n, half_light_radius=test_hlr, flux=test_flux,
-                                trunc=test_trunc)
+
+            obj = init_obj.copy()
             obj /= 2.
             np.testing.assert_almost_equal(
                 obj.getFlux(), test_flux / 2., decimal=param_decimal,
                 err_msg="Flux param inconsistent after __idiv__.")
-            obj = galsim.Sersic(test_n, half_light_radius=test_hlr, flux=test_flux,
-                                trunc=test_trunc)
-            obj2 = obj * 2.
+
+            obj2 = init_obj * 2.
             # First test that original obj is unharmed... (also tests that .copy() is working)
             np.testing.assert_almost_equal(
-                obj.getFlux(), test_flux, decimal=param_decimal,
+                init_obj.getFlux(), test_flux, decimal=param_decimal,
                 err_msg="Flux param inconsistent after __rmul__ (original).")
             # Then test new obj2 flux
             np.testing.assert_almost_equal(
                 obj2.getFlux(), test_flux * 2., decimal=param_decimal,
                 err_msg="Flux param inconsistent after __rmul__ (result).")
-            obj = galsim.Sersic(test_n, half_light_radius=test_hlr, flux=test_flux,
-                                trunc=test_trunc)
-            obj2 = 2. * obj
+
+            obj2 = 2. * init_obj
             # First test that original obj is unharmed... (also tests that .copy() is working)
             np.testing.assert_almost_equal(
-                obj.getFlux(), test_flux, decimal=param_decimal,
+                init_obj.getFlux(), test_flux, decimal=param_decimal,
                 err_msg="Flux param inconsistent after __mul__ (original).")
             # Then test new obj2 flux
             np.testing.assert_almost_equal(
                 obj2.getFlux(), test_flux * 2., decimal=param_decimal,
                 err_msg="Flux param inconsistent after __mul__ (result).")
-            obj = galsim.Sersic(test_n, half_light_radius=test_hlr, flux=test_flux,
-                                trunc=test_trunc)
-            obj2 = obj / 2.
+
+            obj2 = init_obj / 2.
             # First test that original obj is unharmed... (also tests that .copy() is working)
             np.testing.assert_almost_equal(
-                 obj.getFlux(), test_flux, decimal=param_decimal,
+                 init_obj.getFlux(), test_flux, decimal=param_decimal,
                  err_msg="Flux param inconsistent after __div__ (original).")
             # Then test new obj2 flux
             np.testing.assert_almost_equal(
@@ -763,59 +759,61 @@ def test_sersic_flux_scaling():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_devaucouleurs_flux_scaling():
-    """Test flux scaling for DeVaucouleurs.
+
+def test_sersic_05():
+    """Test the equivalence of Sersic with n=0.5 and Gaussian
     """
-    import time
-    t1 = time.time()
+    # sigma = 1, corresponds to hlr = 1/0.84932180028801907
+    hlr_sig1 = 1./0.84932180028801907
 
-    # decimal point to go to for parameter value comparisons
-    param_decimal = 12
+    # cf test_gaussian()
+    savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_1.fits"))
+    savedImg.setCenter(0,0)
+    myImg = galsim.ImageF(savedImg.bounds)
+    myImg.setScale(0.2)
+    gauss = galsim.Sersic(n=0.5, flux=1, half_light_radius=hlr_sig1)
+    myImg = gauss.draw(myImg, normalization="surface brightness", use_true_center=False)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using Sersic with n=0.5 disagrees with expected result for Gaussian")
 
-    # init with half_light_radius and flux only (should be ok given last tests)
-    obj = galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=test_flux)
-    obj *= 2.
-    np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux * 2., decimal=param_decimal,
-        err_msg="Flux param inconsistent after __imul__.")
-    obj = galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=test_flux)
-    obj /= 2.
-    np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux / 2., decimal=param_decimal,
-        err_msg="Flux param inconsistent after __idiv__.")
-    obj = galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=test_flux)
-    obj2 = obj * 2.
-    # First test that original obj is unharmed... (also tests that .copy() is working)
-    np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux, decimal=param_decimal,
-        err_msg="Flux param inconsistent after __rmul__ (original).")
-    # Then test new obj2 flux
-    np.testing.assert_almost_equal(
-        obj2.getFlux(), test_flux * 2., decimal=param_decimal,
-        err_msg="Flux param inconsistent after __rmul__ (result).")
-    obj = galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=test_flux)
-    obj2 = 2. * obj
-    # First test that original obj is unharmed... (also tests that .copy() is working)
-    np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux, decimal=param_decimal,
-        err_msg="Flux param inconsistent after __mul__ (original).")
-    # Then test new obj2 flux
-    np.testing.assert_almost_equal(
-        obj2.getFlux(), test_flux * 2., decimal=param_decimal,
-        err_msg="Flux param inconsistent after __mul__ (result).")
-    obj = galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=test_flux)
-    obj2 = obj / 2.
-    # First test that original obj is unharmed... (also tests that .copy() is working)
-    np.testing.assert_almost_equal(
-        obj.getFlux(), test_flux, decimal=param_decimal,
-        err_msg="Flux param inconsistent after __div__ (original).")
-    # Then test new obj2 flux
-    np.testing.assert_almost_equal(
-        obj2.getFlux(), test_flux / 2., decimal=param_decimal,
-        err_msg="Flux param inconsistent after __div__ (result).")
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    # cf test_gaussian_properties()
+    gauss = galsim.Sersic(n=0.5, flux=test_flux, half_light_radius=hlr_sig1)
+    cen = galsim.PositionD(0, 0)
+    np.testing.assert_equal(gauss.centroid(), cen)
+    # These are slightly different from the Gaussian values, but they should match to about 4
+    # decimal places.
+    np.testing.assert_almost_equal(gauss.maxK(), 3.7169221888498383, decimal=4)
+    np.testing.assert_almost_equal(gauss.stepK(), 0.78539816339744828, decimal=4)
+    np.testing.assert_equal(gauss.kValue(cen), test_flux+0j)
+    np.testing.assert_almost_equal(gauss.xValue(cen), test_flux * 0.15915494309189535, decimal=4)
 
+
+def test_sersic_1():
+    """Test the equivalence of Sersic with n=1 and Exponential
+    """
+    # cf test_exponential()
+    re = 1.0
+    r0 = re/1.67839
+    savedImg = galsim.fits.read(os.path.join(imgdir, "exp_1.fits"))
+    myImg = galsim.ImageF(savedImg.bounds)
+    myImg.setScale(0.2)
+    expon = galsim.Sersic(n=1, flux=1., scale_radius=r0)
+    expon.draw(myImg, normalization="surface brightness", use_true_center=False)
+    np.testing.assert_array_almost_equal(
+            myImg.array, savedImg.array, 5,
+            err_msg="Using Sersic n=1 disagrees with expected result for Exponential")
+
+    # cf test_exponential_properties()
+    expon = galsim.Sersic(n=1, flux=test_flux, scale_radius=1.8)
+    cen = galsim.PositionD(0, 0)
+    np.testing.assert_equal(expon.centroid(), cen)
+    # These are slightly different from the Exponential values, but they should match to about 4
+    # decimal places.
+    np.testing.assert_almost_equal(expon.maxK(), 5.5555555555555545, decimal=4)
+    np.testing.assert_almost_equal(expon.stepK(), 0.23503123472449597, decimal=4)
+    np.testing.assert_equal(expon.kValue(cen), test_flux+0j)
+    np.testing.assert_almost_equal(expon.xValue(cen), test_flux * 0.049121896016017089, decimal=4)
 
 
 def test_airy():
@@ -835,19 +833,19 @@ def test_airy():
 
     # Repeat with the GSObject version of this:
     airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=1)
-    airy.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+    airy.draw(myImg, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Airy disagrees with expected result")
 
     # Check with default_params
     airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=1, gsparams=default_params)
-    airy.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+    airy.draw(myImg, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Airy with default_params disagrees with expected result")
     airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=1, gsparams=galsim.GSParams())
-    airy.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+    airy.draw(myImg, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Airy with GSParams() disagrees with expected result")
@@ -864,6 +862,7 @@ def test_airy():
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_airy_radii():
     """Test Airy half light radius and FWHM correctly set and match image.
@@ -904,6 +903,7 @@ def test_airy_radii():
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_airy_flux_scaling():
     """Test flux scaling for Airy.
@@ -978,19 +978,19 @@ def test_box():
 
     # Repeat with the GSObject version of this:
     pixel = galsim.Pixel(xw=1, yw=1, flux=1)
-    pixel.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+    pixel.draw(myImg, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Pixel disagrees with expected result")
 
     # Check with default_params
     pixel = galsim.Pixel(xw=1, yw=1, flux=1, gsparams=default_params)
-    pixel.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+    pixel.draw(myImg, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Pixel with default_params disagrees with expected result")
     pixel = galsim.Pixel(xw=1, yw=1, flux=1, gsparams=galsim.GSParams())
-    pixel.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+    pixel.draw(myImg, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Pixel with GSParams() disagrees with expected result")
@@ -1027,7 +1027,7 @@ def test_moffat():
 
     # Repeat with the GSObject version of this:
     moffat = galsim.Moffat(beta=2, half_light_radius=1, trunc=5*fwhm_backwards_compatible, flux=1)
-    moffat.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+    moffat.draw(myImg, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Moffat disagrees with expected result")
@@ -1035,13 +1035,13 @@ def test_moffat():
     # Check with default_params
     moffat = galsim.Moffat(beta=2, half_light_radius=1, trunc=5*fwhm_backwards_compatible, flux=1, 
                            gsparams=default_params)
-    moffat.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+    moffat.draw(myImg, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Moffat with default_params disagrees with expected result")
     moffat = galsim.Moffat(beta=2, half_light_radius=1, trunc=5*fwhm_backwards_compatible, flux=1, 
                            gsparams=galsim.GSParams())
-    moffat.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+    moffat.draw(myImg, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Moffat with GSParams() disagrees with expected result")
@@ -1055,7 +1055,7 @@ def test_moffat():
     # The code for untruncated Moffat profiles is specialized for particular beta values, so 
     # test each of these:
     for beta in [ 1.5, 2, 2.5, 3, 3.5, 4, 2.3 ]:  # The one last is for the generic case.
-        moffat = galsim.Moffat(beta=beta, half_light_radius=0.7, flux=1.7)
+        moffat = galsim.Moffat(beta=beta, half_light_radius=0.7, flux=test_flux)
         do_kvalue(moffat,"Untruncated Moffat with beta=%f"%beta)
         # Don't bother repeating the do_shoot tests, since they are rather slow, and the code
         # isn't different for the different beta values.
@@ -1070,46 +1070,47 @@ def test_moffat_properties():
     import time
     t1 = time.time()
     # Code was formerly:
-    # mySBP = galsim.SBMoffat(beta=2.0, truncationFWHM=2, flux=1.8, half_light_radius=1)
+    # mySBP = galsim.Moffat(beta=2.0, truncationFWHM=2, flux=test_flux, half_light_radius=1)
     #
     # ...but this is no longer quite so simple since we changed the handling of trunc to be in 
     # physical units.  However, the same profile can be constructed using 
     # fwhm=1.4686232496771867, 
     # as calculated by interval bisection in devutils/external/calculate_moffat_radii.py
     fwhm_backwards_compatible = 1.4686232496771867
-    psf = galsim.SBMoffat(beta=2.0, fwhm=fwhm_backwards_compatible,
-                          trunc=2*fwhm_backwards_compatible, flux=1.8)
+    psf = galsim.Moffat(beta=2.0, fwhm=fwhm_backwards_compatible,
+                        trunc=2*fwhm_backwards_compatible, flux=test_flux)
     # Check that we are centered on (0, 0)
     cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(psf.centroid(), cen)
     # Check Fourier properties
     np.testing.assert_almost_equal(psf.maxK(), 11.569262763913111)
     np.testing.assert_almost_equal(psf.stepK(), 1.0695706520648969)
-    np.testing.assert_almost_equal(psf.kValue(cen), 1.8+0j)
+    np.testing.assert_almost_equal(psf.kValue(cen), test_flux+0j)
     np.testing.assert_almost_equal(psf.getHalfLightRadius(), 1.0)
     np.testing.assert_almost_equal(psf.getFWHM(), fwhm_backwards_compatible)
     np.testing.assert_almost_equal(psf.xValue(cen), 0.50654651638242509)
 
     # Now create the same profile using the half_light_radius:
-    psf = galsim.SBMoffat(beta=2.0, half_light_radius=1.,
-            trunc=2*fwhm_backwards_compatible, flux=1.8)
+    psf = galsim.Moffat(beta=2.0, half_light_radius=1.,
+                        trunc=2*fwhm_backwards_compatible, flux=test_flux)
     np.testing.assert_equal(psf.centroid(), cen)
     np.testing.assert_almost_equal(psf.maxK(), 11.569262763913111)
     np.testing.assert_almost_equal(psf.stepK(), 1.0695706520648969)
-    np.testing.assert_almost_equal(psf.kValue(cen), 1.8+0j)
+    np.testing.assert_almost_equal(psf.kValue(cen), test_flux+0j)
     np.testing.assert_almost_equal(psf.getHalfLightRadius(), 1.0)
     np.testing.assert_almost_equal(psf.getFWHM(), fwhm_backwards_compatible)
     np.testing.assert_almost_equal(psf.xValue(cen), 0.50654651638242509)
 
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
-        psfFlux = galsim.SBMoffat(2.0, fwhm=fwhm_backwards_compatible,
-                                  trunc=2*fwhm_backwards_compatible, flux=inFlux)
+        psfFlux = galsim.Moffat(2.0, fwhm=fwhm_backwards_compatible,
+                                trunc=2*fwhm_backwards_compatible, flux=inFlux)
         outFlux = psfFlux.getFlux()
         np.testing.assert_almost_equal(outFlux, inFlux)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_moffat_radii():
     """Test initialization of Moffat with different types of radius specification.
@@ -1227,7 +1228,7 @@ def test_moffat_radii():
             err_msg="Error in scale radius for Moffat initialized with half-light radius")
 
     # Test constructor using scale radius:
-    test_gal = galsim.Moffat(flux=1., beta=test_beta, trunc=2*test_scale,
+    test_gal = galsim.Moffat(flux=1, beta=test_beta, trunc=2*test_scale,
                              scale_radius=test_scale)
     center = test_gal.xValue(galsim.PositionD(0,0))
     ratio = test_gal.xValue(galsim.PositionD(test_scale,0)) / center
@@ -1255,7 +1256,7 @@ def test_moffat_radii():
             err_msg="Error in FWHM for truncated Moffat initialized with scale radius")
 
     # Test constructor using FWHM:
-    test_gal = galsim.Moffat(flux=1., beta=test_beta, trunc=2.*test_fwhm,
+    test_gal = galsim.Moffat(flux=1, beta=test_beta, trunc=2.*test_fwhm,
                              fwhm = test_fwhm)
     center = test_gal.xValue(galsim.PositionD(0,0))
     ratio = test_gal.xValue(galsim.PositionD(test_fwhm/2.,0)) / center
@@ -1298,6 +1299,7 @@ def test_moffat_radii():
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_moffat_flux_scaling():
     """Test flux scaling for Moffat.
@@ -1367,7 +1369,7 @@ def test_kolmogorov():
     """
     import time
     t1 = time.time()
-    mySBP = galsim.SBKolmogorov(lam_over_r0=1.5, flux=1.8)
+    mySBP = galsim.SBKolmogorov(lam_over_r0=1.5, flux=test_flux)
     # This savedImg was created from the SBKolmogorov implementation in
     # commit c8efd74d1930157b1b1ffc0bfcfb5e1bf6fe3201
     # It would be nice to get an independent calculation here...
@@ -1384,20 +1386,20 @@ def test_kolmogorov():
             err_msg="Kolmogorov profile disagrees with expected result") 
 
     # Repeat with the GSObject version of this:
-    kolm = galsim.Kolmogorov(lam_over_r0=1.5, flux=1.8)
-    kolm.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+    kolm = galsim.Kolmogorov(lam_over_r0=1.5, flux=test_flux)
+    kolm.draw(myImg, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Kolmogorov disagrees with expected result")
 
     # Check with default_params
-    kolm = galsim.Kolmogorov(lam_over_r0=1.5, flux=1.8, gsparams=default_params)
-    kolm.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+    kolm = galsim.Kolmogorov(lam_over_r0=1.5, flux=test_flux, gsparams=default_params)
+    kolm.draw(myImg, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Kolmogorov with default_params disagrees with expected result")
-    kolm = galsim.Kolmogorov(lam_over_r0=1.5, flux=1.8, gsparams=galsim.GSParams())
-    kolm.draw(myImg,dx=0.2, normalization="surface brightness", use_true_center=False)
+    kolm = galsim.Kolmogorov(lam_over_r0=1.5, flux=test_flux, gsparams=galsim.GSParams())
+    kolm.draw(myImg, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Kolmogorov with GSParams() disagrees with expected result")
@@ -1411,6 +1413,7 @@ def test_kolmogorov():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
 def test_kolmogorov_properties():
     """Test some basic properties of the Kolmogorov profile.
     """
@@ -1418,15 +1421,14 @@ def test_kolmogorov_properties():
     t1 = time.time()
 
     lor = 1.5
-    flux = 1.8
-    psf = galsim.Kolmogorov(lam_over_r0=lor, flux=flux)
+    psf = galsim.Kolmogorov(lam_over_r0=lor, flux=test_flux)
     # Check that we are centered on (0, 0)
     cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(psf.centroid(), cen)
     # Check Fourier properties
     np.testing.assert_almost_equal(psf.maxK(), 8.6440505245909858, 9)
     np.testing.assert_almost_equal(psf.stepK(), 0.3437479193077736, 9)
-    np.testing.assert_almost_equal(psf.kValue(cen), flux+0j)
+    np.testing.assert_almost_equal(psf.kValue(cen), test_flux+0j)
     np.testing.assert_almost_equal(psf.getLamOverR0(), lor)
     np.testing.assert_almost_equal(psf.getHalfLightRadius(), lor * 0.554811)
     np.testing.assert_almost_equal(psf.getFWHM(), lor * 0.975865)
@@ -1435,9 +1437,9 @@ def test_kolmogorov_properties():
     # Check input flux vs output flux
     lors = [1, 0.5, 2, 5]
     for lor in lors:
-        psf = galsim.Kolmogorov(lam_over_r0=lor, flux=flux)
+        psf = galsim.Kolmogorov(lam_over_r0=lor, flux=test_flux)
         out_flux = psf.getFlux()
-        np.testing.assert_almost_equal(out_flux, flux,
+        np.testing.assert_almost_equal(out_flux, test_flux,
                                        err_msg="Flux of Kolmogorov (getFlux) is incorrect.")
 
         # Also check the realized flux in a drawn image
@@ -1447,7 +1449,7 @@ def test_kolmogorov_properties():
         conv = galsim.Convolve([psf,pix])
         conv.draw(image=img, dx=dx)
         out_flux = img.array.sum()
-        np.testing.assert_almost_equal(out_flux, flux, 3,
+        np.testing.assert_almost_equal(out_flux, test_flux, 3,
                                        err_msg="Flux of Kolmogorov (image array) is incorrect.")
 
     t2 = time.time()
@@ -1541,6 +1543,7 @@ def test_kolmogorov_radii():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
 def test_kolmogorov_flux_scaling():
     """Test flux scaling for Kolmogorov.
     """
@@ -1603,12 +1606,14 @@ if __name__ == "__main__":
     test_gaussian_radii()
     test_gaussian_flux_scaling()
     test_exponential()
+    test_exponential_properties()
     test_exponential_radii()
     test_exponential_flux_scaling()
     test_sersic()
     test_sersic_radii()
     test_sersic_flux_scaling()
-    test_devaucouleurs_flux_scaling()
+    test_sersic_05()
+    test_sersic_1()
     test_airy()
     test_airy_radii()
     test_airy_flux_scaling()
