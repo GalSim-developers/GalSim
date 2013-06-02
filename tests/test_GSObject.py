@@ -19,6 +19,9 @@
 import os
 import sys
 import numpy as np
+
+from galsim_test_helpers import *
+
 # import galsim even if path not yet added to PYTHONPATH env variable (e.g. by full install)
 try:
     import galsim
@@ -92,10 +95,6 @@ exponential_ref_scale_from_hlr = test_hlr / 1.6783469900166605
 
 # decimal point to go to for parameter value comparisons
 param_decimal = 12
-
-def funcname():
-    import inspect
-    return inspect.stack()[1][3]
 
 def test_gaussian_flux_scaling():
     """Test flux scaling for Gaussian.

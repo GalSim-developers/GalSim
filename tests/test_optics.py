@@ -20,6 +20,8 @@ import numpy as np
 import os
 import sys
 
+from galsim_test_helpers import *
+
 imgdir = os.path.join(".", "Optics_comparison_images") # Directory containing the reference images. 
 
 try:
@@ -47,10 +49,6 @@ decimal_dft = 3  # Last decimal place used for checking near equality of DFT pro
 # ~10s to the test run time on a fast-ish laptop and is thus disabled by default.
 RUN_ALL_SINGLE_ABERRATIONS = False
 
-
-def funcname():
-    import inspect
-    return inspect.stack()[1][3]
 
 def test_check_all_contiguous():
     """Test all galsim.optics outputs are C-contiguous as required by the galsim.Image class.

@@ -20,6 +20,8 @@ import numpy as np
 import os
 import sys
 
+from galsim_test_helpers import *
+
 imgdir = os.path.join(".", "SBProfile_comparison_images") # Directory containing the reference
                                                           # images. 
 
@@ -29,35 +31,6 @@ except ImportError:
     path, filename = os.path.split(__file__)
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
-
-def printval(image1, image2):
-    print "New, saved array sizes: ", np.shape(image1.array), np.shape(image2.array)
-    print "Sum of values: ", np.sum(image1.array), np.sum(image2.array)
-    print "Minimum image value: ", np.min(image1.array), np.min(image2.array)
-    print "Maximum image value: ", np.max(image1.array), np.max(image2.array)
-    print "Peak location: ", image1.array.argmax(), image2.array.argmax()
-    print "Moments Mx, My, Mxx, Myy, Mxy for new array: "
-    getmoments(image1)
-    print "Moments Mx, My, Mxx, Myy, Mxy for saved array: "
-    getmoments(image2)
-    xcen = image2.array.shape[0]/2
-    ycen = image2.array.shape[1]/2
-    print "new image.center = ",image1.array[xcen-3:xcen+4,ycen-3:ycen+4]
-    print "saved image.center = ",image2.array[xcen-3:xcen+4,ycen-3:ycen+4]
-
-def getmoments(image1):
-    xgrid, ygrid = np.meshgrid(np.arange(np.shape(image1.array)[0]) + image1.getXMin(), 
-                               np.arange(np.shape(image1.array)[1]) + image1.getYMin())
-    mx = np.mean(xgrid * image1.array) / np.mean(image1.array)
-    my = np.mean(ygrid * image1.array) / np.mean(image1.array)
-    mxx = np.mean(((xgrid-mx)**2) * image1.array) / np.mean(image1.array)
-    myy = np.mean(((ygrid-my)**2) * image1.array) / np.mean(image1.array)
-    mxy = np.mean((xgrid-mx) * (ygrid-my) * image1.array) / np.mean(image1.array)
-    print "    ", mx-image1.getXMin(), my-image1.getYMin(), mxx, myy, mxy
-
-def funcname():
-    import inspect
-    return inspect.stack()[1][3]
 
 # define a series of tests
 

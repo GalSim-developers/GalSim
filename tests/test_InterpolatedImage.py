@@ -20,6 +20,8 @@ import numpy as np
 import os
 import sys
 
+from galsim_test_helpers import *
+
 """Unit tests for the InterpolatedImage class.
 """
 
@@ -29,10 +31,6 @@ except ImportError:
     path, filename = os.path.split(__file__)
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
-
-def funcname():
-    import inspect
-    return inspect.stack()[1][3]
 
 # For photon shooting, we calculate the number of photons to use based on the target
 # accuracy we are shooting for.  (Pun intended.)
@@ -51,93 +49,6 @@ test_dx = 2.0
 # Use a deterministic random number generator so we don't fail tests because of rare flukes
 # in the random numbers.
 glob_ud = galsim.UniformDeviate(12345)
-
-# do_shoot utility taken from test_SBProfile.py
-def do_shoot(prof, img, name):
-    print 'Start do_shoot'
-    # Test photon shooting for a particular profile (given as prof). 
-    # Since shooting implicitly convolves with the pixel, we need to compare it to 
-    # the given profile convolved with a pixel.
-    pix = galsim.Pixel(xw=img.getScale())
-    compar = galsim.Convolve(prof,pix)
-    compar.draw(img)
-    flux_max = img.array.max()
-    print 'prof.getFlux = ',prof.getFlux()
-    print 'compar.getFlux = ',compar.getFlux()
-    print 'flux_max = ',flux_max
-    flux_tot = img.array.sum()
-    print 'flux_tot = ',flux_tot
-    if flux_max > 1.:
-        # Since the number of photons required for a given accuracy level (in terms of 
-        # number of decimal places), we rescale the comparison by the flux of the 
-        # brightest pixel.
-        compar /= flux_max
-        img /= flux_max
-        prof /= flux_max
-        # The formula for number of photons needed is:
-        # nphot = flux_max * flux_tot / photon_shoot_accuracy**2
-        # But since we rescaled the image by 1/flux_max, it becomes
-        nphot = flux_tot / flux_max / photon_shoot_accuracy**2
-    elif flux_max < 0.1:
-        # If the max is very small, at least bring it up to 0.1, so we are testing something.
-        scale = 0.1 / flux_max;
-        print 'scale = ',scale
-        compar *= scale
-        img *= scale
-        prof *= scale
-        nphot = flux_max * flux_tot * scale * scale / photon_shoot_accuracy**2
-    else:
-        nphot = flux_max * flux_tot / photon_shoot_accuracy**2
-    print 'prof.getFlux => ',prof.getFlux()
-    print 'compar.getFlux => ',compar.getFlux()
-    print 'img.sum => ',img.array.sum()
-    print 'img.max => ',img.array.max()
-    print 'nphot = ',nphot
-    img2 = img.copy()
-    prof.drawShoot(img2, n_photons=nphot, poisson_flux=False, rng=glob_ud)
-    print 'img2.sum => ',img2.array.sum()
-    np.testing.assert_array_almost_equal(
-            img2.array, img.array, photon_decimal_test,
-            err_msg="Photon shooting for %s disagrees with expected result"%name)
-
-    # Test normalization
-    dx = img.getScale()
-    # Test with a large image to make sure we capture enough of the flux
-    # even for slow convergers like Airy (which needs a _very_ large image) or Sersic.
-    if 'Airy' in name:
-        img = galsim.ImageD(2048,2048)
-    elif 'Sersic' in name or 'DeVauc' in name:
-        img = galsim.ImageD(512,512)
-    else:
-        img = galsim.ImageD(128,128)
-    img.setScale(dx)
-    compar.setFlux(test_flux)
-    compar.draw(img, normalization="surface brightness")
-    print 'img.sum = ',img.array.sum(),'  cf. ',test_flux/(dx*dx)
-    np.testing.assert_almost_equal(img.array.sum() * dx*dx, test_flux, 5,
-            err_msg="Surface brightness normalization for %s disagrees with expected result"%name)
-    compar.draw(img, normalization="flux")
-    print 'img.sum = ',img.array.sum(),'  cf. ',test_flux
-    np.testing.assert_almost_equal(img.array.sum(), test_flux, 5,
-            err_msg="Flux normalization for %s disagrees with expected result"%name)
-
-    prof.setFlux(test_flux)
-    scale = test_flux / flux_tot # from above
-    nphot *= scale * scale
-    print 'nphot -> ',nphot
-    if 'InterpolatedImage' in name:
-        nphot *= 10
-        print 'nphot -> ',nphot
-    prof.drawShoot(img, n_photons=nphot, normalization="surface brightness", poisson_flux=False,
-                   rng=glob_ud)
-    print 'img.sum = ',img.array.sum(),'  cf. ',test_flux/(dx*dx)
-    np.testing.assert_almost_equal(img.array.sum() * dx*dx, test_flux, photon_decimal_test,
-            err_msg="Photon shooting SB normalization for %s disagrees with expected result"%name)
-    prof.drawShoot(img, n_photons=nphot, normalization="flux", poisson_flux=False,
-                   rng=glob_ud)
-    print 'img.sum = ',img.array.sum(),'  cf. ',test_flux
-    np.testing.assert_almost_equal(img.array.sum(), test_flux, photon_decimal_test,
-            err_msg="Photon shooting flux normalization for %s disagrees with expected result"%name)
 
 def test_roundtrip():
     """Test round trip from Image to InterpolatedImage back to Image.

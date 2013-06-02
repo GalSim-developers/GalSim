@@ -21,16 +21,14 @@ import numpy as np
 import os
 import sys
 
+from galsim_test_helpers import *
+
 try:
     import galsim
 except ImportError:
     path, filename = os.path.split(__file__)
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
-
-def funcname():
-    import inspect
-    return inspect.stack()[1][3]
 
 # TODO: Add more tests of the higher level config items.
 # So far, I only added two tests related to bugs that David Kirkby found in issues

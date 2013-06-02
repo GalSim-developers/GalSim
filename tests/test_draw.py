@@ -20,6 +20,8 @@ import numpy as np
 import os
 import sys
 
+from galsim_test_helpers import *
+
 try:
     import galsim
 except ImportError:
@@ -29,10 +31,6 @@ except ImportError:
 
 # for flux normalization tests
 test_flux = 1.8
-
-def funcname():
-    import inspect
-    return inspect.stack()[1][3]
 
 # A helper function used by both test_draw and test_drawk to check that the drawn image
 # is a radially symmetric exponential with the right scale.
