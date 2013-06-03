@@ -141,10 +141,10 @@ def main(argv):
         # Note the divisors below are sqrt(3), sqrt(6), sqrt(8), sqrt(5), in that order.
         # They preserve the form of the OpticalPSF in this demo after the change to the Noll
         # convention for Zernike polynomials.
-        defocus = 0.1 / 1.7320508075688772, 
-        astig1 = 0.3 / 2.449489742783178, astig2 = -0.2 / 2.449489742783178, 
-        coma1 = 0.2 / 2.8284271247461903, coma2 = 0.1 / 2.8284271247461903,
-        spher = -0.3 / 2.23606797749979, gsparams=gsparams)
+        defocus = 0.1 / numpy.sqrt(3.), 
+        astig1 = 0.3 / numpy.sqrt(6.), astig2 = -0.2 / numpy.sqrt(6.), 
+        coma1 = 0.2 / numpy.sqrt(8.), coma2 = 0.1 / numpy.sqrt(8.),
+        spher = -0.3 / numpy.sqrt(5.), gsparams=gsparams)
     psf4 = galsim.Convolve([atmos,optics])  # Convolve inherits the gsparams from the first 
                                             # item in the list.  (Or you can supply a gsparams
                                             # argument explicitly if you want to override this.)
