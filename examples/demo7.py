@@ -137,7 +137,7 @@ def main(argv):
     atmos = galsim.Gaussian(fwhm = psf_fwhm, gsparams=gsparams)
     # The OpticalPSF and set of Zernike values chosen below correspond to a reasonably well aligned,
     # smallish ~0.3m / 12 inch diameter telescope with a central obscuration of ~0.12m or 5 inches
-    # diameter, being used in in optical wavebands.  The aberrations chosen correspond to operating
+    # diameter, being used in optical wavebands.  The aberrations chosen correspond to operating
     # close to a 1/4 wave RMS optical path difference:
     optics = galsim.OpticalPSF(
         lam_over_diam = 0.6 * psf_fwhm, obscuration = 0.4,
