@@ -20,6 +20,8 @@ import numpy as np
 import os
 import sys
 
+from galsim_test_helpers import *
+
 try:
     import galsim
 except ImportError:
@@ -120,10 +122,6 @@ dLookupTableResult = (0.23721845680847731, 0.42913599265739233, 0.86176396813243
 # File with the same values
 dLookupTableFile = os.path.join('random_data','dLookupTable.dat')
 
-
-def funcname():
-    import inspect
-    return inspect.stack()[1][3]
 
 def test_uniform():
     """Test uniform random number generator

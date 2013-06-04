@@ -22,6 +22,8 @@ import pyfits
 import numpy as np
 import math
 
+from galsim_test_helpers import *
+
 """Unit tests for the PSF correction and shear estimation routines.
 
 There are two types of tests: tests that use Gaussian profiles, for which the ideal results are
@@ -84,10 +86,6 @@ sigma_e_expected = np.array([
         [0.110253112, 0.106222900, 0.106222900, 0.099357106],
         [0.185276702, 0.184300955, 0.184300955, 0.173478300],
         [0.073020065, 0.070270966, 0.070270966, 0.061856263] ])
-
-def funcname():
-    import inspect
-    return inspect.stack()[1][3]
 
 def equal_hsmshapedata(res1, res2):
     """Utility to check that all entries in two ShapeData objects are equal."""
