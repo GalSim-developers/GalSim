@@ -66,9 +66,9 @@ psf :
                 - { type : Gaussian , fwhm : 0.65 }
                 - { type : OpticalPSF , 
                     lam_over_diam : 0.39 , obscuration : 0.4 ,
-                    defocus : 0.1 / 1.7320508075688772, spher : -0.3 / 2.23606797749979,
-                    astig1 : 0.3 / 2.449489742783178, astig2 : -0.2 / 2.449489742783178,
-                    coma1 : 0.2 / 2.8284271247461903, coma2 : 0.1 / 2.8284271247461903}
+                    defocus : 0.1 , spher : -0.3 ,
+                    astig1 : 0.3 , astig2 : -0.2 ,
+                    coma1 : 0.2 , coma2 : 0.1 }
         -
             type : Convolution
             items :
