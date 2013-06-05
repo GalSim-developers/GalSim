@@ -128,15 +128,16 @@ def test_gaussian_properties():
     """
     import time
     t1 = time.time()
-    gauss = galsim.Gaussian(flux=test_flux, sigma=1)
+    gauss = galsim.Gaussian(flux=test_flux, sigma=test_sigma)
     # Check that we are centered on (0, 0)
     cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(gauss.centroid(), cen)
     # Check Fourier properties
-    np.testing.assert_equal(gauss.maxK(), 3.7169221888498383)
-    np.testing.assert_almost_equal(gauss.stepK(), 0.78539816339744828)
-    np.testing.assert_equal(gauss.kValue(cen), test_flux+0j)
-    np.testing.assert_almost_equal(gauss.xValue(cen), test_flux * 0.15915494309189535)
+    np.testing.assert_almost_equal(gauss.maxK(), 3.7169221888498383 / test_sigma)
+    np.testing.assert_almost_equal(gauss.stepK(), 0.78539816339744828 / test_sigma)
+    np.testing.assert_equal(gauss.kValue(cen), (1+0j) * test_flux)
+    import math
+    np.testing.assert_almost_equal(gauss.xValue(cen), 1./(2.*math.pi) * test_flux / test_sigma**2)
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
         gauss = galsim.Gaussian(flux=inFlux, sigma=2.)
@@ -410,15 +411,16 @@ def test_exponential_properties():
     """
     import time
     t1 = time.time()
-    expon = galsim.Exponential(flux=test_flux, scale_radius=1.8)
+    expon = galsim.Exponential(flux=test_flux, scale_radius=test_scale)
     # Check that we are centered on (0, 0)
     cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(expon.centroid(), cen)
     # Check Fourier properties
-    np.testing.assert_equal(expon.maxK(), 5.5555555555555545)
-    np.testing.assert_almost_equal(expon.stepK(), 0.23503123472449597)
-    np.testing.assert_equal(expon.kValue(cen), test_flux+0j)
-    np.testing.assert_almost_equal(expon.xValue(cen), test_flux * 0.049121896016017089)
+    np.testing.assert_almost_equal(expon.maxK(), 10 / test_scale)
+    np.testing.assert_almost_equal(expon.stepK(), 0.423056222504093 / test_scale)
+    np.testing.assert_equal(expon.kValue(cen), (1+0j) * test_flux)
+    import math
+    np.testing.assert_almost_equal(expon.xValue(cen), 1./(2.*math.pi) * test_flux / test_scale**2)
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
         expon = galsim.Exponential(flux=inFlux, scale_radius=1.8)
@@ -763,30 +765,40 @@ def test_sersic_flux_scaling():
 def test_sersic_05():
     """Test the equivalence of Sersic with n=0.5 and Gaussian
     """
-    # sigma = 1, corresponds to hlr = 1/0.84932180028801907
-    hlr_sig1 = 1./0.84932180028801907
+    # hlr/sigma = sqrt(2 ln(2)) = 1.177410022515475
+    hlr_sigma = 1.177410022515475
 
     # cf test_gaussian()
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_1.fits"))
     savedImg.setCenter(0,0)
     myImg = galsim.ImageF(savedImg.bounds)
     myImg.setScale(0.2)
-    gauss = galsim.Sersic(n=0.5, flux=1, half_light_radius=hlr_sig1)
-    myImg = gauss.draw(myImg, normalization="surface brightness", use_true_center=False)
+    sersic = galsim.Sersic(n=0.5, flux=1, half_light_radius=1 * hlr_sigma)
+    myImg = sersic.draw(myImg, normalization="surface brightness", use_true_center=False)
+    print 'saved image center = ',savedImg(0,0)
+    print 'image center = ',myImg(0,0)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using Sersic with n=0.5 disagrees with expected result for Gaussian")
 
+    do_kvalue(sersic,"n=0.5 Sersic")
+
     # cf test_gaussian_properties()
-    gauss = galsim.Sersic(n=0.5, flux=test_flux, half_light_radius=hlr_sig1)
+    sersic = galsim.Sersic(n=0.5, flux=test_flux, half_light_radius=test_sigma * hlr_sigma)
     cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(gauss.centroid(), cen)
-    # These are slightly different from the Gaussian values, but they should match to about 4
-    # decimal places.
-    np.testing.assert_almost_equal(gauss.maxK(), 3.7169221888498383, decimal=4)
-    np.testing.assert_almost_equal(gauss.stepK(), 0.78539816339744828, decimal=4)
-    np.testing.assert_equal(gauss.kValue(cen), test_flux+0j)
-    np.testing.assert_almost_equal(gauss.xValue(cen), test_flux * 0.15915494309189535, decimal=4)
+    np.testing.assert_equal(sersic.centroid(), cen)
+    np.testing.assert_equal(sersic.kValue(cen), (1+0j) * test_flux)
+    import math
+    np.testing.assert_almost_equal(sersic.xValue(cen), 1./(2.*math.pi) * test_flux / test_sigma**2,
+                                   decimal=5)
+
+    # Also test some random values other than the center:
+    gauss = galsim.Gaussian(flux=test_flux, sigma=test_sigma)
+    for (x,y) in [ (0.1,0.2), (-0.5, 0.4), (0, 0.9), (1.2, 0.1), (2,2) ]:
+        pos = galsim.PositionD(x,y)
+        np.testing.assert_almost_equal(sersic.xValue(pos), gauss.xValue(pos), decimal=5)
+        np.testing.assert_almost_equal(sersic.kValue(pos), gauss.kValue(pos), decimal=5)
+
 
 
 def test_sersic_1():
@@ -795,25 +807,35 @@ def test_sersic_1():
     # cf test_exponential()
     re = 1.0
     r0 = re/1.67839
+    # The real value of re/r0 = 1.6783469900166605
+    hlr_r0 =  1.6783469900166605
     savedImg = galsim.fits.read(os.path.join(imgdir, "exp_1.fits"))
     myImg = galsim.ImageF(savedImg.bounds)
     myImg.setScale(0.2)
-    expon = galsim.Sersic(n=1, flux=1., scale_radius=r0)
-    expon.draw(myImg, normalization="surface brightness", use_true_center=False)
+    sersic = galsim.Sersic(n=1, flux=1., half_light_radius=r0 * hlr_r0)
+    sersic.draw(myImg, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using Sersic n=1 disagrees with expected result for Exponential")
 
+    do_kvalue(sersic,"n=1 Sersic")
+
     # cf test_exponential_properties()
-    expon = galsim.Sersic(n=1, flux=test_flux, scale_radius=1.8)
+    sersic = galsim.Sersic(n=1, flux=test_flux, half_light_radius=test_scale * hlr_r0)
     cen = galsim.PositionD(0, 0)
-    np.testing.assert_equal(expon.centroid(), cen)
-    # These are slightly different from the Exponential values, but they should match to about 4
-    # decimal places.
-    np.testing.assert_almost_equal(expon.maxK(), 5.5555555555555545, decimal=4)
-    np.testing.assert_almost_equal(expon.stepK(), 0.23503123472449597, decimal=4)
-    np.testing.assert_equal(expon.kValue(cen), test_flux+0j)
-    np.testing.assert_almost_equal(expon.xValue(cen), test_flux * 0.049121896016017089, decimal=4)
+    np.testing.assert_equal(sersic.centroid(), cen)
+    np.testing.assert_equal(sersic.kValue(cen), (1+0j) * test_flux)
+    import math
+    np.testing.assert_almost_equal(sersic.xValue(cen), 1./(2.*math.pi) * test_flux / test_scale**2,
+                                   decimal=5)
+
+    # Also test some random values other than the center:
+    expon = galsim.Exponential(flux=test_flux, scale_radius=test_scale)
+    for (x,y) in [ (0.1,0.2), (-0.5, 0.4), (0, 0.9), (1.2, 0.1), (2,2) ]:
+        pos = galsim.PositionD(x,y)
+        np.testing.assert_almost_equal(sersic.xValue(pos), expon.xValue(pos), decimal=5)
+        np.testing.assert_almost_equal(sersic.kValue(pos), expon.kValue(pos), decimal=5)
+
 
 
 def test_airy():
