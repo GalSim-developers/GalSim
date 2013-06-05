@@ -1425,7 +1425,7 @@ def DoCppChecks(config):
             print '         processes (i.e. not just multiple threads in the same process).'
             print '         The symptom is that `scons tests` will hang when running nosetests'
             print '         using multiple processes.'
-            print '         If this occurrs, the solution is to compile TMV either with a '
+            print '         If this occurs, the solution is to compile TMV either with a '
             print '         different BLAS library (e.g. ATLAS) or with no BLAS library at '
             print '         all (using WITH_BLAS=false).'
             env['BAD_BLAS'] = True

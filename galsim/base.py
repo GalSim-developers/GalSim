@@ -619,6 +619,14 @@ class GSObject(object):
         The appropriate threshold will depend on your particular application, including what kind
         of profile the object has, how big your image is relative to the size of your object, etc.
 
+        Given the periodicity implicitly assumed by use of FFTs, there can occasionally be artifacts
+        due to wrapping at the edges, particularly for objects that are quite extended (e.g., due to
+        the nature of the radial profile).  Use of the keyword parameter `wmult > 1` can be used to
+        reduce the size of these artifacts, at the expense of the calculations taking longer and
+        using more memory.  Alternatively, the objects that go into the image can be created with a
+        `gsparams` keyword that has a lower-than-default value for `alias_threshold`; see
+        help(galsim.GSParams) for more information.
+
         @param image  If provided, this will be the image on which to draw the profile.
                       If `image = None`, then an automatically-sized image will be created.
                       If `image != None`, but its bounds are undefined (e.g. if it was 
@@ -636,14 +644,19 @@ class GSObject(object):
         @param gain   The number of photons per ADU ("analog to digital units", the units of the 
                       numbers output from a CCD).  (Default `gain =  1.`)
 
-        @param wmult  A factor by which to make an automatically-sized image larger than it would 
-                      normally be made.  This factor also applies to any intermediate images during
-                      Fourier calculations.  The size of the intermediate images are normally 
-                      automatically chosen to reach some preset accuracy targets (see 
-                      include/galsim/SBProfile.h); however, if you see strange artifacts in the 
-                      image, you might try using `wmult > 1`.  This will take longer of 
-                      course, but it will produce more accurate images, since they will have 
-                      less "folding" in Fourier space. (Default `wmult = 1.`)
+        @param wmult  A multiplicative factor by which to enlarge (in each direction) the default
+                      automatically calculated FFT grid size used for any intermediate calculations
+                      in Fourier space.  The size of the intermediate images is normally
+                      automatically chosen to reach some preset accuracy targets [see
+                      help(galsim.GSParams())]; however, if you see strange artifacts in the image,
+                      you might try using `wmult > 1`.  This will take longer of course, but it will
+                      produce more accurate images, since they will have less "folding" in Fourier
+                      space. If the image size is not specified, then the output real-space image
+                      will be enlarged by a factor of `wmult`.  If the image size is specified by
+                      the user, rather than automatically-sized, use of `wmult>1` will still affect
+                      the size of the images used for the Fourier-space calculations and hence can
+                      reduce image artifacts, even though the image that is returned will be the
+                      size that was requested. (Default `wmult = 1.`)
 
         @param normalization  Two options for the normalization:
                               "flux" or "f" means that the sum of the output pixels is normalized
@@ -1136,9 +1149,6 @@ class Airy(GSObject):
         >>> airy_obj = galsim.Airy(flux=3., lam_over_diam=2.)
         >>> airy_obj.getHalfLightRadius()
         1.0696642954485294
-
-    Attempting to initialize with more than one size parameter is ambiguous, and will raise a
-    TypeError exception.
 
     You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
     help(galsim.GSParams) for more information about this option.

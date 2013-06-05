@@ -408,6 +408,30 @@ def test_Image_MultiFITS_IO():
                     test_image_list[k].array, 
                     err_msg="Image"+tchar[i]+" readMulti failed reading from filename input.")
 
+
+        #
+        # Test writing to hdu_list directly and then writing to file.
+        #
+
+        # Start with empty hdu_list
+        hdu_list = pyfits.HDUList()
+        
+        # Add each image one at a time
+        for k in range(nimages):
+            image = ref_image + k
+            galsim.fits.write(image, hdu_list=hdu_list)
+
+        # Write it out with writeFile
+        galsim.fits.writeFile(test_multi_file, hdu_list)
+
+        # Check that reading it back in gives the same values
+        test_image_list = galsim.fits.readMulti(test_multi_file)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]),
+                    test_image_list[k].array, 
+                    err_msg="Image"+tchar[i]+" readMulti failed after using writeFile")
+
+
         #
         # Test various compression schemes
         #
@@ -778,6 +802,26 @@ def test_Image_binary_add():
             np.testing.assert_array_equal((3 * ref_array).astype(type3), image3.array,
                     err_msg="Inplace add in Image class does not match reference for dtypes = "
                     +str(types[i])+" and "+str(types[j]))
+
+        # Check for exceptions if we try to do this operation for images without matching
+        # scale/shape.  Note that this test is only included here (not in the unit tests for all
+        # other operations) because all operations have the same error-checking code, so it should
+        # only be necessary to check once.
+        try:
+            # first, try two images with different scales
+            image1 = galsim.ImageView[types[i]](ref_array.astype(types[i]))
+            image2 = image1.copy()
+            image2.scale = image1.scale+1.
+            np.testing.assert_raises(ValueError, image1.__add__, image2)
+            # now, try two images with different shapes
+            image2 = image1.subImage(galsim.BoundsI(image1.xmin, image1.xmax-1,
+                                                    image1.ymin+1, image1.ymax))
+            np.testing.assert_raises(ValueError, image1.__add__, image2)
+        except ImportError:
+            # assert_raises requires nose, which we don't want to force people to install.
+            # So if they are running this without nose, we just skip these tests.
+            pass
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -985,6 +1029,48 @@ def test_Image_binary_scalar_divide():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
         
+def test_Image_binary_scalar_pow():
+    """Test that all four types of supported Images can be raised to a power (scalar) correctly.
+    """
+    import time
+    t1 = time.time()
+    for i in xrange(ntypes):
+        # First try using the dictionary-type Image init
+        image1 = galsim.ImageView[types[i]]((ref_array**2).astype(types[i]))
+        image2 = galsim.ImageView[types[i]](ref_array.astype(types[i]))
+        image3 = image2**2
+        # Note: unlike for the tests above with multiplication/division, the test fails if I use
+        # assert_array_equal.  I have to use assert_array_almost_equal to avoid failure due to
+        # small numerical issues.
+        np.testing.assert_array_almost_equal(image3.array, image1.array,
+            decimal=4,
+            err_msg="Binary pow scalar in Image class (dictionary call) does"
+            +" not match reference for dtype = "+str(types[i]))
+
+        # Then try using the eval command to mimic use via ImageD, ImageF etc.
+        image_init_func = eval("galsim.ImageView"+tchar[i])
+        image1 = image_init_func((ref_array.astype(types[i]))**2)
+        image2 = image_init_func(ref_array.astype(types[i]))
+        image3 = image2**2
+        np.testing.assert_array_equal(image3.array, image1.array,
+            err_msg="Binary pow scalar in Image class does"
+            +" not match reference for dtype = "+str(types[i]))
+
+        # float types can also be taken to a float power
+        if types[i] in [np.float32, np.float64]:
+            # First try using the dictionary-type Image init
+            image1 = galsim.ImageView[types[i]]((ref_array**(1/1.3)).astype(types[i]))
+            image2 = image1**1.3
+            # Note: unlike for the tests above with multiplication/division, the test fails if I use
+            # assert_array_equal.  I have to use assert_array_almost_equal to avoid failure due to
+            # small numerical issues.
+            np.testing.assert_array_almost_equal(ref_array.astype(types[i]), image2.array,
+                decimal=4,
+                err_msg="Binary pow scalar in Image class (dictionary call) does"
+                +" not match reference for dtype = "+str(types[i]))
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_Image_inplace_add():
     """Test that all four types of supported Images inplace add correctly.
@@ -1207,6 +1293,41 @@ def test_Image_inplace_scalar_divide():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
         
+def test_Image_inplace_scalar_pow():
+    """Test that all four types of supported Images can be raised (in-place) to a scalar correctly.
+    """
+    import time
+    t1 = time.time()
+    for i in xrange(ntypes):
+        # First try using the dictionary-type Image init
+        image1 = galsim.ImageView[types[i]]((ref_array**2).astype(types[i]))
+        image2 = galsim.ImageView[types[i]](ref_array.astype(types[i]))
+        image2 **= 2
+        np.testing.assert_array_almost_equal(image1.array, image2.array, decimal=4,
+            err_msg="Inplace scalar pow in Image class (dictionary "
+            +"call) does not match reference for dtype = "+str(types[i]))
+
+        # Then try using the eval command to mimic use via ImageD, ImageF etc.
+        image_init_func = eval("galsim.ImageView"+tchar[i])
+        image1 = image_init_func((ref_array.astype(types[i]))**2)
+        image2 = image_init_func(ref_array.astype(types[i]))
+        image2 **= 2
+        np.testing.assert_array_equal(image2.array, image1.array, 
+            err_msg="Inplace scalar pow in Image class does"
+            +" not match reference for dtype = "+str(types[i]))
+
+        # float types can also be taken to a float power
+        if types[i] in [np.float32, np.float64]:
+            # First try using the dictionary-type Image init
+            image1 = galsim.ImageView[types[i]](ref_array.astype(types[i]))
+            image2 = galsim.ImageView[types[i]]((ref_array**(1./1.3)).astype(types[i]))
+            image2 **= 1.3
+            np.testing.assert_array_almost_equal(image1.array, image2.array, decimal=4,
+                err_msg="Inplace scalar pow in Image class (dictionary "
+                +"call) does not match reference for dtype = "+str(types[i]))
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_Image_subImage():
     """Test that subImages are accessed and written correctly.
     """
@@ -1349,6 +1470,7 @@ if __name__ == "__main__":
     test_Image_binary_scalar_subtract()
     test_Image_binary_scalar_multiply()
     test_Image_binary_scalar_divide()
+    test_Image_binary_scalar_pow()
     test_Image_inplace_add()
     test_Image_inplace_subtract()
     test_Image_inplace_multiply()
@@ -1357,5 +1479,6 @@ if __name__ == "__main__":
     test_Image_inplace_scalar_subtract()
     test_Image_inplace_scalar_multiply()
     test_Image_inplace_scalar_divide()
+    test_Image_inplace_scalar_pow()
     test_Image_subImage()
     test_ConstImageView_array_constness()

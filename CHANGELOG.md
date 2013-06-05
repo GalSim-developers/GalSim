@@ -5,10 +5,12 @@ Changes from v0.4 to current version:
   shears according to a user-specified power spectrum. (Issue #248)
 
 * Added the ability to draw lensing shears and convergences self-consistently
-  from the same input shear power spectrum.  (Issue #304)
+  from the same input shear power spectrum. (Issue #304)
 
 * Added a utility that can take an input set of shears on a grid, and
-  reconstruct the convergence.  (Issue #304)
+  reconstruct the convergence. (Issue #304)
+
+* Sped up the HSM module. (Issue #340)
 
 * Added the ability to modify parameters that control the precise rendering of GSObjects using the
   new GSParams class. (Issue #343)
@@ -41,7 +43,7 @@ Changes from v0.4 to current version:
   initializes a Noise model with a stored random number generator. (Issue #352)
 
 * Bug fixed in the generation of correlated noise fields; formerly these erroneously had
-  two-fold rotational symmetry.  (Issue #352)
+  two-fold rotational symmetry. (Issue #352)
 
 * The correlated noise classes now have an applyWhiteningTo() method.  The purpose of this
   function is to add noise to images that contain correlated noise; the power spectrum of the added 
@@ -50,6 +52,15 @@ Changes from v0.4 to current version:
 
 * Added the ability to modify algorithmic parameter settings for the moments and shape measurement
   routines using the new HSMParams class. (Issue #365)
+
+* Deprecated `AtmosphericPSF` and `Ellipse` classes. (Issue #372)  (They will both eventually be
+  replaced by significantly different functionality, so they should not be used.)
+
+* Changed HSM routines to require an explicit `galsim.hsm.` prefix and edited some of the 
+  function names.  e.g. `galsim.EstimateShearHSM` -> `galsim.hsm.EstimateShear`. (Issue #372)
+
+* Added `kmin_factor` and `kmax_factor` parameters to PowerSpectrum `buildGrid` function. 
+  (Issue #377)
 
 * Changed the default centering convention for even-sized images to be in the actual center, 
   rather than 1/2 pixel up and to the right of the center.  This behavior can be turned off with
@@ -75,3 +86,17 @@ Changes from v0.4 to current version:
 * Added ability to truncate Sersic profiles with optional trunc parameter. (Issue #388)
 
 * Added trefoil to optical aberration. (Issue #390)
+
+* Added utilities `galsim.utilities.compare_dft_vs_photon*`. (Issue #401)
+
+* Fix bugs in `obj.drawK()` function. (Issue #407)
+
+* Improved speed and accuracy of non-truncated Moffat. (Issue #407)
+
+* Fix some errors in code and documentation of the fits module related to writing to an HDUList.
+  (Issue #417)
+
+* Add new function `galsim.fits.writeFile`. (Issue #417)
+
+* Fixed some issues with image arithmetic (failure to check/respect shape and scale), added the
+  ability to raise all elements in an image to a float/int power. (Issue #419)
