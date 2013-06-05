@@ -21,6 +21,8 @@ import math
 import os
 import sys
 
+from galsim_test_helpers import *
+
 try:
     import galsim
 except ImportError:
@@ -32,10 +34,6 @@ refdir = os.path.join(".", "lensing_reference_data") # Directory containing the 
 
 klim_test = 0.00175 # Value of klim for flat (up to klim, then zero beyond) power spectrum test
 
-
-def funcname():
-    import inspect
-    return inspect.stack()[1][3]
 
 # for simple demonstration purposes, a few very simple power-law power spectra that don't crash and
 # burn at k=0
