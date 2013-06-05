@@ -11,6 +11,7 @@ import copy
 # Interpolants
 interpolant_list = ['nearest', 'sinc', 'linear', 'cubic', 'quintic', 
                     'lanczos3', 'lanczos4', 'lanczos5', 'lanczos7']
+use_interpolants = interpolant_list
 # Padding options
 padding_list = range(2,7,2)
 # Range of rotation angles
@@ -44,12 +45,12 @@ ground_fwhm = 0.65        # arcsec
 ground_pixel_scale = 0.2  # arcsec
 # 700 nm wavelength, 4 m telescope, convert to radians then arcsec
 ground_lam_over_diam = 700./4.*1.E-9*206265 
-ground_imsize = 64
+ground_imsize = 32
 
 # Space-image parameters
 space_lam_over_diam = 700./1.3*1.E-9*206265
 space_pixel_scale = 0.05
-space_imsize = 64
+space_imsize = 32
 
 # Random seed
 rseed = 999888444
@@ -59,20 +60,16 @@ nproc = 8
 ground_filename = 'interpolant_test_output_ground.dat'
 space_filename = 'interpolant_test_output_space.dat'
 original_filename = 'interpolant_test_output_original.dat'
-nopsf_filename = 'interpolant_test_output_nopsf.dat'
 ground_base_filename = 'interpolant_test_output_ground_base.dat'
 space_base_filename = 'interpolant_test_output_space_base.dat'
 original_base_filename = 'interpolant_test_output_original_base.dat'
-nopsf_base_filename = 'interpolant_test_output_nopsf_base.dat'
 
 ground_file = open(ground_filename,'w')
 space_file = open(space_filename,'w')
 original_file = open(original_filename,'w')
-nopsf_file = open(nopsf_filename,'w')
 ground_base_file = open(ground_base_filename,'w')
 space_base_file = open(space_base_filename,'w')
 original_base_file = open(original_base_filename,'w')
-nopsf_base_file = open(nopsf_base_filename,'w')
 
 # --- Helper functions to run the main part of the code ---
 def get_config():
@@ -80,7 +77,6 @@ def get_config():
 # tests.
     space_config = {}    # Space-like data
     ground_config = {}   # Ground-like data
-    nopsf_config = {}    # RealGalaxy image, not convolved with another PSF
     original_config = {} # Original RealGalaxy image (before deconvolution)
     
     space_config['psf'] = { "type" : "Airy", 'lam_over_diam' : space_lam_over_diam}
@@ -110,12 +106,6 @@ def get_config():
         'pixel_scale' : space_pixel_scale,
         'nproc' : nproc
     }
-    nopsf_config['image'] = {
-        'type' : 'Single',
-        'size' : space_imsize,
-        'pixel_scale' : space_pixel_scale,
-        'nproc' : nproc
-    }
 
     galaxy_config = { 'type': 'RealGalaxy', 
                       'index': { 'type': 'Sequence', 'first': first_index, 'nitems': nitems } }
@@ -125,8 +115,6 @@ def get_config():
     ground_config['input'] = catalog_config
     space_config['gal'] = galaxy_config
     space_config['input'] = catalog_config
-    nopsf_config['gal'] = galaxy_config
-    nopsf_config['input'] = catalog_config
     galaxy_config['type'] = 'RealGalaxyOriginal'
     original_config['gal'] = galaxy_config
     original_config['input'] = catalog_config
@@ -137,9 +125,8 @@ def get_config():
                                                     ignore)[0]
     space_config['real_catalog'] = input_obj
     ground_config['real_catalog'] = input_obj
-    nopsf_config['real_catalog'] = input_obj
     original_config['real_catalog'] = input_obj
-    return [nopsf_config, original_config]#, space_config, ground_config]
+    return [original_config]#, space_config, ground_config]
 
 class InterpolationData:
 # Quick container class for passing around data from these tests.  
@@ -173,10 +160,7 @@ class InterpolationData:
             self.k_interpolant = 'default'
         self.padding = config['gal']['pad_factor']
         if 'psf' not in config:
-            if 'pix' not in config:
-                self.image_type = 'Original'
-            else:      
-                self.image_type = 'NoPSF'
+            self.image_type = 'Original'
         elif config['psf']['type'] == 'Convolution':
             self.image_type = 'Ground'
         else:
@@ -259,11 +243,6 @@ def print_results(base_answer, test_answer, outfile=None):
             outfile = space_file
         else:
             outfile = space_base_file
-    elif test_answer.image_type == 'NoPSF' and base_answer.image_type == 'NoPSF':
-        if not outfile:
-            outfile = nopsf_file
-        else:
-            outfile = nopsf_base_file
     elif test_answer.image_type == 'Original' and base_answer.image_type == 'Original':
         if not outfile:
             outfile = original_file
@@ -301,7 +280,7 @@ def main():
     for base_config in config_list:                     # Ground, space, no PSF, original galaxy
         base_list = [] # For comparing the "base" (ie unsheared, unmagnified, unrotated) cases
         for padding in padding_list:                    # Amount of padding
-            for interpolant in interpolant_list:        # Possible interpolants
+            for interpolant in use_interpolants:        # Possible interpolants
                 print 'Base test ', i,
                 i+=1
                 base_answer_x = test_realgalaxy(base_config, seed=rseed, x_interpolant=interpolant,
@@ -334,11 +313,9 @@ def main():
 
     ground_file.close()
     space_file.close()
-    nopsf_file.close()
     original_file.close()
     ground_base_file.close()
     space_base_file.close()
-    nopsf_base_file.close()
     original_file.close()
     
 if __name__ == "__main__":
