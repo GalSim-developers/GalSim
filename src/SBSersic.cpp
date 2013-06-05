@@ -31,6 +31,7 @@
 #ifdef DEBUGLOGGING
 #include <fstream>
 //std::ostream* dbgout = &std::cout;
+//std::ostream* dbgout = new std::ofstream("debug.out");
 //int verbose_level = 1;
 #endif
 
@@ -256,7 +257,7 @@ namespace galsim {
             return 1. + ksq*(_kderiv2 + ksq*_kderiv4); // Use quartic approx at low k
         else {
             double lk=0.5*std::log(ksq); // Lookup table is logarithmic
-            return _ft(lk);
+            return _ft(lk)/ksq;
         }
     }
 
@@ -455,8 +456,11 @@ namespace galsim {
     // Constructor to initialize Sersic constants and k lookup table
     SersicInfo::SersicInfo(const SersicKey& key, const GSParams* gsparams) :
         _n(key.n), _maxRre(key.maxRre), _maxRre_sq(_maxRre*_maxRre), _inv2n(1./(2.*_n)),
-        _flux_untruncated(key.flux_untruncated), _flux_fraction(1.), _re_fraction(1.)
+        _flux_untruncated(key.flux_untruncated), _flux_fraction(1.), _re_fraction(1.),
+        _ft(Table<double,double>::spline)
     {
+        dbg<<"Start SersicInfo constructor for n = "<<_n<<std::endl;
+        dbg<<"maxRre = "<<_maxRre<<", flux_untrunc = "<<_flux_untruncated<<std::endl;
         // Going to constrain range of allowed n to those for which testing was done
         // (Lower bounds has hard limit at ~0.29)
         if (_n<0.3 || _n>4.2) throw SBError("Requested Sersic index out of range");
@@ -558,16 +562,24 @@ namespace galsim {
         double maxlogk_1 = 0.;
         double maxlogk_2 = 0.;
 
-        double dlogk = 0.1;
+        // We use a cubic spline for the interpolation, which has an error of O(h^4) max(f'''').
+        // I have no idea what range the fourth derivative can take for the hankel transforms
+        // (with respect to logk), so let's take the completely arbitrary value of 10. (!?!)
+        // 10 h^4 <= kvalue_accuracy
+        // h = (kvalue_accuracy/10)^0.25
+        double dlogk = sqrt(sqrt(gsparams->kvalue_accuracy / 10.));
+        dbg<<"n = "<<_n<<std::endl;
+        dbg<<"Using dlogk = "<<dlogk<<std::endl;
         // Don't go past k = 500
         for (double logk = std::log(kmin)-0.001; logk < std::log(500.); logk += dlogk) {
-            SersicIntegrand I(_n, _b, std::exp(logk));
+            double k = std::exp(logk);
+            SersicIntegrand I(_n, _b, k);
             double val = integ::int1d(
                 I, 0., integ_maxRre, 
                 gsparams->integration_relerr, gsparams->integration_abserr*hankel_norm);
             val /= hankel_norm;
-            xdbg<<"logk = "<<logk<<", ft("<<exp(logk)<<") = "<<val<<std::endl;
-            _ft.addEntry(logk,val);
+            xdbg<<"logk = "<<logk<<", ft("<<exp(logk)<<") = "<<val<<"   "<<val*k*k<<std::endl;
+            _ft.addEntry(logk,val*k*k);
 
             if (std::abs(val) > gsparams->maxk_threshold) maxlogk_1 = logk;
             if (std::abs(val) > gsparams->kvalue_accuracy) maxlogk_2 = logk;
