@@ -582,8 +582,12 @@ namespace galsim {
         // Keep going until at least 5 in a row have kvalues below kvalue_accuracy.
         // (It's oscillatory, so want to make sure not to stop at a zero crossing.)
 
-        // These are dimensionless k values for doing the integral.
-        double dk = 0.1;
+        // We use a cubic spline for the interpolation, which has an error of O(h^4) max(f'''').
+        // I have no idea what range the fourth derivative can take for the hankel transform,
+        // so let's take the completely arbitrary value of 10.
+        // 10 h^4 <= kvalue_accuracy
+        // h = (kvalue_accuracy/10)^0.25
+        double dk = gsparams->table_spacing * sqrt(sqrt(gsparams->kvalue_accuracy / 10.));
         dbg<<"dk = "<<dk<<std::endl;
         int n_below_thresh = 0;
         // Don't go past k = 50

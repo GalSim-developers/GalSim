@@ -72,6 +72,15 @@ namespace galsim {
          *                            it may be set to zero.  Similarly, if an alternate 
          *                            calculation has errors less than xvalue_accuracy, then it may 
          *                            be used instead of an exact calculation.
+         * @param table_spacing       Several profiles use lookup tables for either the Hankel
+         *                            transform (Sersic, truncated Moffat) or the real space
+         *                            radial function (Kolmogorov).  We try to estimate a good
+         *                            spacing between values in the lookup tables based on
+         *                            either xvalue_accuracy or kvalue_accuracy as appropriate.
+         *                            However, you may change the spacing with table_spacing.
+         *                            Using table_spacing < 1 will use a spacing value that much 
+         *                            smaller than the default, which should produce more accurate
+         *                            interpolations.
          * @param realspace_relerr    The target relative accuracy for real-space convolution.
          * @param realspace_abserr    The target absolute accuracy for real-space convolution.
          * @param integration_relerr  Target relative accuracy for integrals (other than real-space
@@ -105,6 +114,7 @@ namespace galsim {
                  double _maxk_threshold,
                  double _kvalue_accuracy,
                  double _xvalue_accuracy,
+                 double _table_spacing,
                  double _realspace_relerr,
                  double _realspace_abserr,
                  double _integration_relerr,
@@ -122,6 +132,7 @@ namespace galsim {
             maxk_threshold(_maxk_threshold),
             kvalue_accuracy(_kvalue_accuracy),
             xvalue_accuracy(_xvalue_accuracy),
+            table_spacing(_table_spacing),
             realspace_relerr(_realspace_relerr),
             realspace_abserr(_realspace_abserr),
             integration_relerr(_integration_relerr),
@@ -146,6 +157,7 @@ namespace galsim {
 
             kvalue_accuracy(1.e-5),
             xvalue_accuracy(1.e-5),
+            table_spacing(1.),
 
             realspace_relerr(1.e-3),
             realspace_abserr(1.e-6),
@@ -170,6 +182,7 @@ namespace galsim {
 
         double kvalue_accuracy;
         double xvalue_accuracy;
+        double table_spacing;
 
         double realspace_relerr;
         double realspace_abserr;
@@ -193,6 +206,7 @@ namespace galsim {
             else if (maxk_threshold != rhs.maxk_threshold) return false;
             else if (kvalue_accuracy != rhs.kvalue_accuracy) return false;
             else if (xvalue_accuracy != rhs.xvalue_accuracy) return false;
+            else if (table_spacing != rhs.table_spacing) return false;
             else if (realspace_relerr != rhs.realspace_relerr) return false;
             else if (realspace_abserr != rhs.realspace_abserr) return false;
             else if (integration_relerr != rhs.integration_relerr) return false;
@@ -223,6 +237,8 @@ namespace galsim {
             else if (kvalue_accuracy > rhs.kvalue_accuracy) return false;
             else if (xvalue_accuracy < rhs.xvalue_accuracy) return true;
             else if (xvalue_accuracy > rhs.xvalue_accuracy) return false;
+            else if (table_spacing < rhs.table_spacing) return true;
+            else if (table_spacing > rhs.table_spacing) return false;
             else if (realspace_relerr < rhs.realspace_relerr) return true;
             else if (realspace_relerr > rhs.realspace_relerr) return false;
             else if (realspace_abserr < rhs.realspace_abserr) return true;
@@ -250,9 +266,10 @@ namespace galsim {
     inline std::ostream& operator<<(std::ostream& os, const GSParams& gsp)
     {
         os << gsp.minimum_fft_size << "," << gsp.maximum_fft_size << ",  "
-            << gsp.alias_threshold << "," << gsp.stepk_minimum_hlr << ", "
+            << gsp.alias_threshold << "," << gsp.stepk_minimum_hlr << ","
             << gsp.maxk_threshold << ",  "
-            << gsp.kvalue_accuracy << "," << gsp.xvalue_accuracy << ",  "
+            << gsp.kvalue_accuracy << "," << gsp.xvalue_accuracy << ","
+            << gsp.table_spacing << ", "
             << gsp.realspace_relerr << "," << gsp.realspace_abserr << ",  "
             << gsp.integration_relerr << "," << gsp.integration_abserr << ",  "
             << gsp.shoot_accuracy << "," << gsp.shoot_relerr << "," << gsp.shoot_abserr << ",  "

@@ -75,6 +75,16 @@ namespace galsim {
                 "                              Similarly, if an alternate calculation has errors\n"
                 "                              less than xvalue_accuracy, then it may be used\n"
                 "                              instead of an exact calculation.\n"
+                "table_spacing=1               Several profiles use lookup tables for either the\n"
+                "                              Hankel transform (Sersic, truncated Moffat) or the\n"
+                "                              real space radial function (Kolmogorov).  We try\n"
+                "                              to estimate a good spacing between values in the \n"
+                "                              lookup tables based on either xvalue_accuracy or \n"
+                "                              kvalue_accuracy as appropriate. However, you may \n"
+                "                              change the spacing with table_spacing. Using \n"
+                "                              table_spacing < 1 will use a spacing value that \n"
+                "                              much smaller than the default, which should \n"
+                "                              produce more accurate interpolations"
                 "realspace_relerr=1.e-3        The relative accuracy for realspace convolution.\n"
                 "realspace_abserr=1.e-6        The absolute accuracy for realspace convolution.\n"
                 "integration_relerr=1.e-5      The relative accuracy for integrals (other than\n"
@@ -103,7 +113,7 @@ namespace galsim {
             pyGSParams
                 .def(bp::init<
                     int, int, double, double, double, double, double, double, double, double,
-                    double, double, double, double, double, int, double>((
+                    double, double, double, double, double, double, int, double>((
                         bp::arg("minimum_fft_size")=128, 
                         bp::arg("maximum_fft_size")=4096,
                         bp::arg("alias_threshold")=5.e-3,
@@ -111,6 +121,7 @@ namespace galsim {
                         bp::arg("maxk_threshold")=1.e-3,
                         bp::arg("kvalue_accuracy")=1.e-5,
                         bp::arg("xvalue_accuracy")=1.e-5,
+                        bp::arg("table_spacing")=1.,
                         bp::arg("realspace_relerr")=1.e-3,
                         bp::arg("realspace_abserr")=1.e-6,
                         bp::arg("integration_relerr")=1.e-5,
@@ -130,6 +141,7 @@ namespace galsim {
                 .def_readwrite("maxk_threshold", &GSParams::maxk_threshold)
                 .def_readwrite("kvalue_accuracy", &GSParams::kvalue_accuracy)
                 .def_readwrite("xvalue_accuracy", &GSParams::xvalue_accuracy)
+                .def_readwrite("table_spacing", &GSParams::table_spacing)
                 .def_readwrite("realspace_relerr", &GSParams::realspace_relerr)
                 .def_readwrite("realspace_abserr", &GSParams::realspace_abserr)
                 .def_readwrite("integration_relerr", &GSParams::integration_relerr)

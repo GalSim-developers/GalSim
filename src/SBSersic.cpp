@@ -564,11 +564,11 @@ namespace galsim {
         double maxlogk_2 = 0.;
 
         // We use a cubic spline for the interpolation, which has an error of O(h^4) max(f'''').
-        // I have no idea what range the fourth derivative can take for the hankel transforms
+        // I have no idea what range the fourth derivative can take for the hankel transform
         // (with respect to logk), so let's take the completely arbitrary value of 10. (!?!)
         // 10 h^4 <= kvalue_accuracy
         // h = (kvalue_accuracy/10)^0.25
-        double dlogk = sqrt(sqrt(gsparams->kvalue_accuracy / 10.));
+        double dlogk = gsparams->table_spacing * sqrt(sqrt(gsparams->kvalue_accuracy / 10.));
         dbg<<"n = "<<_n<<std::endl;
         dbg<<"Using dlogk = "<<dlogk<<std::endl;
         // Don't go past k = 500
