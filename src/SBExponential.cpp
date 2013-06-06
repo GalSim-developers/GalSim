@@ -291,8 +291,10 @@ namespace galsim {
         double logx = std::log(gsparams->alias_threshold);
         double R = -logx;
         for (int i=0; i<3; i++) R = std::log(1.+R) - logx;
-        // Make sure it is at least 6 scale radii.
-        R = std::max(6., R);
+        // Make sure it is at least 5 hlr
+        // half-light radius = 1.6783469900166605 * r0
+        const double hlr = 1.6783469900166605;
+        R = std::max(R,gsparams->stepk_minimum_hlr*hlr);
         _stepk = M_PI / R;
         dbg<<"stepk = "<<_stepk<<std::endl;
     }

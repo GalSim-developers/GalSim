@@ -32,15 +32,6 @@ else:
 # Fixed in version 2.1, but leave this next line until scons 2.1 is the version in fink.
 pyenv.Append( LINKFLAGS = ["$__RPATH"] )
 
-# The Boost.Python default maximum "arity" (number of allowed input arguments) is too low for
-# the GSParams to be wrapped, so this preprocessor definition extends the default
-#
-# Note that naively one would think the MAX_ARITY ought to be 16, but there seems to be an
-# inconsistency within Boost.Python about whether or not to count the first (instance self)
-# argument.  The GSParams only has 16 non-self input args, but if MAX_ARITY is not >=17 there is
-# a verbose compilation error.
-pyenv.Append(CPPDEFINES={'BOOST_PYTHON_MAX_ARITY' : '17'})
-
 env1 = pyenv.Clone()
 
 env1.Prepend(CPPPATH=[os.path.join('#include','galsim')])

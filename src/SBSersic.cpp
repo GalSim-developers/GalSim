@@ -535,7 +535,7 @@ namespace galsim {
         double Rre = findMaxRre(gsparams->alias_threshold,gamma2n);
         if (_truncated && _maxRre < Rre)  Rre = _maxRre;
         // Go to at least 5*re
-        if (Rre < 5.) Rre = 5.;
+        Rre = std::max(Rre,gsparams->stepk_minimum_hlr);
         dbg<<"maxR/re => "<<Rre<<std::endl;
         _stepK = M_PI / Rre;
         dbg<<"stepK = "<<_stepK<<std::endl;

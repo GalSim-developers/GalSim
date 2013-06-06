@@ -352,8 +352,12 @@ namespace galsim {
         // Schroeder (10.1.18) gives limit of EE at large radius.
         // This stepK could probably be relaxed, it makes overly accurate FFTs.
         double R = 1. / (_gsparams->alias_threshold * 0.5 * M_PI * M_PI * (1.-_obscuration));
-        // Use at least 5 lam/D
-        R = std::max(R,5.);
+        // Make sure it is at least 5 hlr
+        // The half-light radius of an obscured Airy disk is not so easy to calculate.
+        // So we just use the value for the unobscured Airy disk.
+        // TODO: We could do this numerically if we decide that it's important to get this right.
+        const double hlr = 0.5348321477;
+        R = std::max(R,gsparams->stepk_minimum_hlr*hlr);
         this->_stepk = M_PI / R;
     }
 
@@ -447,8 +451,10 @@ namespace galsim {
         xdbg<<*_gsparams<<std::endl;
         // Calculate stepK:
         double R = 1. / (_gsparams->alias_threshold * 0.5 * M_PI * M_PI);
-        // Use at least 5 lam/D
-        R = std::max(R,5.);
+        // Make sure it is at least 5 hlr
+        // The half-light radius of an Airy disk is 0.5348321477 * lam/D
+        const double hlr = 0.5348321477;
+        R = std::max(R,gsparams->stepk_minimum_hlr*hlr);
         this->_stepk = M_PI / R;
     }
 

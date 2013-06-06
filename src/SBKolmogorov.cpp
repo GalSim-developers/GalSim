@@ -278,9 +278,7 @@ namespace galsim {
     class KolmTargetValue : public std::unary_function<double,double>
     {
     public:
-    // BARNEY: I don't understand how _target initialization works here... Either before or after
-    // making the GSParams a boost::shared_ptr.  I've tried to fix with what I think makes sense.
-        KolmTargetValue(double target, const GSParams& gsparams) :
+        KolmTargetValue(double target, const GSParamsPtr& gsparams) :
             f(gsparams), _target(target) {}
         double operator()(double r) const { return f(r) - _target; }
     private:
@@ -350,9 +348,10 @@ namespace galsim {
         // Along the way accumulate the flux integral to determine the radius
         // that encloses (1-alias_threshold) of the flux.
         double sum = 0.;
+        double thresh0 = 0.5 / (2.*M_PI*dr);
         double thresh1 = (1.-gsparams->alias_threshold) / (2.*M_PI*dr);
-        double thresh2 = 0.999 / (2.*M_PI*dr);
-        double R = 0.;
+        double thresh2 = (1.-gsparams->alias_threshold/5.) / (2.*M_PI*dr);
+        double R = 0., hlr = 0.;
         // Continue until accumulate 0.999 of the flux
         KolmXValue xval_func(gsparams);
         for (double r = dr; sum < thresh2; r += dr) {
@@ -365,10 +364,14 @@ namespace galsim {
             xdbg<<"sum = "<<sum<<"  thresh1 = "<<thresh1<<"  thesh2 = "<<thresh2<<std::endl;
             xdbg<<"sum*2*pi*dr "<<sum*2.*M_PI*dr<<std::endl;
             if (R == 0. && sum > thresh1) R = r;
+            if (hlr == 0. && sum > thresh0) hlr = r;
         }
         dbg<<"Done loop to build radial function.\n";
         dbg<<"R = "<<R<<std::endl;
-        _stepk = M_PI/R;
+        dbg<<"hlr = "<<hlr<<std::endl;
+        // Make sure it is at least 5 hlr
+        R = std::max(R,gsparams->stepk_minimum_hlr*hlr);
+        _stepk = M_PI / R;
         dbg<<"stepk = "<<_stepk<<std::endl;
         dbg<<"sum*2*pi*dr = "<<sum*2.*M_PI*dr<<"   (should ~= 0.999)\n";
 

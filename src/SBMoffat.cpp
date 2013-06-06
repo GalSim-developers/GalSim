@@ -160,9 +160,10 @@ namespace galsim {
                                          const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
         _beta(beta), _flux(flux), _trunc(trunc),
-        _maxK(0.), // calculated by maxK() and stored.
         _ft(Table<double,double>::spline),
-        _re(0.) // initially set to zero, may be updated by size or getHalfLightRadius().
+        _re(0.), // initially set to zero, may be updated by size or getHalfLightRadius().
+        _stepk(0.), // calculated by stepK() and stored.
+        _maxk(0.) // calculated by maxK() and stored.
     {
         xdbg<<"Start SBMoffat constructor: \n";
         xdbg<<"beta = "<<_beta<<"\n";
@@ -484,7 +485,7 @@ namespace galsim {
     // Set maxK to the value where the FT is down to maxk_threshold
     double SBMoffat::SBMoffatImpl::maxK() const 
     {
-        if (_maxK == 0.) {
+        if (_maxk == 0.) {
             if (_trunc == 0.) {
                 // f(k) = 4 K(beta-1,k) (k/2)^beta / Gamma(beta-1)
                 //
@@ -505,19 +506,19 @@ namespace galsim {
                 // (beta-1/2) log(k) - k = log(temp)
                 // k = (beta-1/2) log(k) - log(temp) 
                 temp = std::log(temp);
-                _maxK = -temp;
+                _maxk = -temp;
                 dbg<<"temp = "<<temp<<std::endl;
                 for (int i=0;i<5;++i) {
-                    _maxK = (_beta-0.5) * std::log(_maxK) - temp;
-                    dbg<<"_maxK = "<<_maxK<<std::endl;
+                    _maxk = (_beta-0.5) * std::log(_maxk) - temp;
+                    dbg<<"_maxk = "<<_maxk<<std::endl;
                 }
             } else {
-                // _maxK is determined during setupFT() as the last k value to have a  
+                // _maxk is determined during setupFT() as the last k value to have a  
                 // kValue > 1.e-3.
                 setupFT();
             }
         }
-        return _maxK*_inv_rD;
+        return _maxk*_inv_rD;
     }
 
     // The amount of flux missed in a circle of radius pi/stepk should be at 
@@ -527,23 +528,28 @@ namespace galsim {
         dbg<<"Find Moffat stepK\n";
         dbg<<"beta = "<<_beta<<std::endl;
 
-        // The fractional flux out to radius R is (if not truncated)
-        // 1 - (1+R^2)^(1-beta)
-        // So solve (1+R^2)^(1-beta) = alias_threshold
-        if (_beta <= 1.1) {
-            // Then flux never converges (or nearly so), so just use truncation radius
-            return M_PI / _maxR;
-        } else {
-            // Ignore the 1 in (1+R^2), so approximately:
-            double R = std::pow(this->gsparams->alias_threshold, 0.5/(1.-_beta)) * _rD;
-            dbg<<"R = "<<R<<std::endl;
-            // If it is truncated at less than this, drop to that value.
-            if (R > _maxR) R = _maxR;
-            dbg<<"_maxR = "<<_maxR<<std::endl;
-            dbg<<"R => "<<R<<std::endl;
-            dbg<<"stepk = "<<(M_PI/R)<<std::endl;
-            return M_PI / R;
+        if (_stepk == 0.) {
+            // The fractional flux out to radius R is (if not truncated)
+            // 1 - (1+R^2)^(1-beta)
+            // So solve (1+R^2)^(1-beta) = alias_threshold
+            if (_beta <= 1.1) {
+                // Then flux never converges (or nearly so), so just use truncation radius
+                _stepk = M_PI / _maxR;
+            } else {
+                // Ignore the 1 in (1+R^2), so approximately:
+                double R = std::pow(this->gsparams->alias_threshold, 0.5/(1.-_beta)) * _rD;
+                dbg<<"R = "<<R<<std::endl;
+                // If it is truncated at less than this, drop to that value.
+                if (R > _maxR) R = _maxR;
+                dbg<<"_maxR = "<<_maxR<<std::endl;
+                dbg<<"R => "<<R<<std::endl;
+                dbg<<"stepk = "<<(M_PI/R)<<std::endl;
+                // Make sure it is at least 5 hlr
+                R = std::max(R,gsparams->stepk_minimum_hlr*getHalfLightRadius());
+                _stepk = M_PI / R;
+            }
         }
+        return _stepk;
     }
 
     // Integrand class for the Hankel transform of Moffat
@@ -571,8 +577,8 @@ namespace galsim {
         double prefactor = 2. * (_beta-1.) / (_fluxFactor);
 
         // Along the way, find the last k that has a kValue > 1.e-3
-        double maxK_val = this->gsparams->maxk_threshold;
-        dbg<<"Looking for maxK_val = "<<maxK_val<<std::endl;
+        double maxk_val = this->gsparams->maxk_threshold;
+        dbg<<"Looking for maxk_val = "<<maxk_val<<std::endl;
         // Keep going until at least 5 in a row have kvalues below kvalue_accuracy.
         // (It's oscillatory, so want to make sure not to stop at a zero crossing.)
 
@@ -593,13 +599,13 @@ namespace galsim {
             xdbg<<"ft("<<k<<") = "<<val<<std::endl;
             _ft.addEntry(k*k, val);
 
-            if (std::abs(val) > maxK_val) _maxK = k;
+            if (std::abs(val) > maxk_val) _maxk = k;
 
             if (std::abs(val) > this->gsparams->kvalue_accuracy) n_below_thresh = 0;
             else ++n_below_thresh;
             if (n_below_thresh == 5) break;
         }
-        dbg<<"maxK = "<<_maxK<<std::endl;
+        dbg<<"maxk = "<<_maxk<<std::endl;
     }
 
     boost::shared_ptr<PhotonArray> SBMoffat::SBMoffatImpl::shoot(int N, UniformDeviate u) const
