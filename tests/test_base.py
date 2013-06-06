@@ -134,7 +134,7 @@ def test_gaussian_properties():
     np.testing.assert_equal(gauss.centroid(), cen)
     # Check Fourier properties
     np.testing.assert_almost_equal(gauss.maxK(), 3.7169221888498383 / test_sigma)
-    np.testing.assert_almost_equal(gauss.stepK(), 0.78539816339744828 / test_sigma)
+    np.testing.assert_almost_equal(gauss.stepK(), 0.533644625664 / test_sigma)
     np.testing.assert_equal(gauss.kValue(cen), (1+0j) * test_flux)
     import math
     np.testing.assert_almost_equal(gauss.xValue(cen), 1./(2.*math.pi) * test_flux / test_sigma**2)
@@ -417,7 +417,7 @@ def test_exponential_properties():
     np.testing.assert_equal(expon.centroid(), cen)
     # Check Fourier properties
     np.testing.assert_almost_equal(expon.maxK(), 10 / test_scale)
-    np.testing.assert_almost_equal(expon.stepK(), 0.423056222504093 / test_scale)
+    np.testing.assert_almost_equal(expon.stepK(), 0.37436747851 / test_scale)
     np.testing.assert_equal(expon.kValue(cen), (1+0j) * test_flux)
     import math
     np.testing.assert_almost_equal(expon.xValue(cen), 1./(2.*math.pi) * test_flux / test_scale**2)
@@ -1106,7 +1106,7 @@ def test_moffat_properties():
     np.testing.assert_equal(psf.centroid(), cen)
     # Check Fourier properties
     np.testing.assert_almost_equal(psf.maxK(), 11.569262763913111)
-    np.testing.assert_almost_equal(psf.stepK(), 1.0695706520648969)
+    np.testing.assert_almost_equal(psf.stepK(), 0.62831853071795873)
     np.testing.assert_almost_equal(psf.kValue(cen), test_flux+0j)
     np.testing.assert_almost_equal(psf.getHalfLightRadius(), 1.0)
     np.testing.assert_almost_equal(psf.getFWHM(), fwhm_backwards_compatible)
@@ -1117,7 +1117,7 @@ def test_moffat_properties():
                         trunc=2*fwhm_backwards_compatible, flux=test_flux)
     np.testing.assert_equal(psf.centroid(), cen)
     np.testing.assert_almost_equal(psf.maxK(), 11.569262763913111)
-    np.testing.assert_almost_equal(psf.stepK(), 1.0695706520648969)
+    np.testing.assert_almost_equal(psf.stepK(), 0.62831853071795862)
     np.testing.assert_almost_equal(psf.kValue(cen), test_flux+0j)
     np.testing.assert_almost_equal(psf.getHalfLightRadius(), 1.0)
     np.testing.assert_almost_equal(psf.getFWHM(), fwhm_backwards_compatible)
