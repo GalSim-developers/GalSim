@@ -21,6 +21,8 @@ import sys
 import pyfits
 import numpy as np
 
+from galsim_test_helpers import *
+
 """Unit tests for the Image and ImageView classes.
 
 These tests use four externally generated (IDL + astrolib FITS writing tools) reference images for
@@ -73,10 +75,6 @@ ref_array = np.array([
 nimages = 12  # Depth of FITS datacubes and multi-extension FITS files
 
 datadir = os.path.join(".", "Image_comparison_images")
-
-def funcname():
-    import inspect
-    return inspect.stack()[1][3]
 
 def test_Image_basic():
     """Test that all supported types perform basic Image operations correctly
