@@ -536,7 +536,7 @@ namespace galsim {
         if (_truncated && _maxRre < Rre)  Rre = _maxRre;
         // Go to at least 5*re
         if (Rre < 5.) Rre = 5.;
-        dbg<<"maxR/re => "<<_maxRre<<std::endl;
+        dbg<<"maxR/re => "<<Rre<<std::endl;
         _stepK = M_PI / Rre;
         dbg<<"stepK = "<<_stepK<<std::endl;
 

@@ -479,16 +479,21 @@ def test_rescale():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Drawing with add_to_image=True disagrees with expected result")
-    # With wmult = 3, the calculated flux should come out right so long as we also 
-    # convolve by a pixel:
-    sersic3 = galsim.Convolve([sersic, galsim.Pixel(xw=0.2)])
-    myImg2 = sersic3.draw(dx=0.2, wmult=3, use_true_center=False)
+
+    # With lower alias_threshold and maxk_threshold, the calculated flux should come out right 
+    # so long as we also convolve by a pixel:
+    gsp1 = galsim.GSParams(alias_threshold=1.e-3, maxk_threshold=5.e-4)
+    sersic_acc = galsim.Convolve([
+            galsim.Sersic(n=3, flux=1, half_light_radius=1, gsparams=gsp1),
+            galsim.Pixel(xw=0.2, gsparams=gsp1)  
+            ])
+    myImg2 = sersic_acc.draw(dx=0.2, use_true_center=False)
     print myImg2.array.sum(), myImg2.added_flux
     np.testing.assert_almost_equal(myImg2.array.sum(), 1., 3,
-            err_msg="Drawing with wmult=3 results in wrong flux")
+            err_msg="Drawing with gsp1 results in wrong flux")
     np.testing.assert_almost_equal(myImg2.added_flux, 1., 3,
-            err_msg="Drawing with wmult=3 returned wrong added_flux")
-    myImg2 = sersic3.draw(myImg2, add_to_image=True, use_true_center=False)
+            err_msg="Drawing with gsp1 returned wrong added_flux")
+    myImg2 = sersic_acc.draw(myImg2, add_to_image=True, use_true_center=False)
     print myImg2.array.sum(), myImg2.added_flux
     np.testing.assert_almost_equal(myImg2.array.sum(), 2., 3,
             err_msg="Drawing with add_to_image=True results in wrong flux")
@@ -496,9 +501,11 @@ def test_rescale():
             err_msg="Drawing with add_to_image=True returned wrong added_flux")
 
     # Check that the flux works out when adding multiple times.
-    gauss = galsim.Gaussian(flux=1.e5, sigma=2.)
-    gauss2 = galsim.Convolve([gauss, galsim.Pixel(xw=0.2)])
-    myImg2 = gauss2.draw(dx=0.2, wmult=3, use_true_center=False)
+    # With a Gaussian, we can take the thresholds even lower and get another digit of accuracy.
+    gsp2 = galsim.GSParams(alias_threshold=1.e-5, maxk_threshold=1.e-5)
+    gauss = galsim.Gaussian(flux=1.e5, sigma=2., gsparams=gsp2)
+    gauss2 = galsim.Convolve([gauss, galsim.Pixel(xw=0.2, gsparams=gsp2)])
+    myImg2 = gauss2.draw(dx=0.2, use_true_center=False)
     print 'image size = ',myImg2.array.shape
     print myImg2.array.sum(), myImg2.added_flux
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 1., 4,
@@ -537,21 +544,21 @@ def test_rescale():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Drawing with gain=0.5 disagrees with expected result")
-    myImg2 = sersic3.draw(dx=0.2, wmult=3, gain=0.5, use_true_center=False)
+    myImg2 = sersic_acc.draw(dx=0.2, gain=0.5, use_true_center=False)
     np.testing.assert_almost_equal(myImg2.array.sum(), 2., 3,
             err_msg="Drawing with gain=0.5 results in wrong flux")
-    myImg2 = sersic3.draw(dx=0.2, wmult=3, gain=4., use_true_center=False)
+    myImg2 = sersic_acc.draw(dx=0.2, gain=4., use_true_center=False)
     np.testing.assert_almost_equal(myImg2.array.sum(), 0.25, 3,
             err_msg="Drawing with gain=4. results in wrong flux")
     # Check add_to_image in conjunction with gain
-    sersic3.draw(myImg2, gain=4., add_to_image=True, use_true_center=False)
+    sersic_acc.draw(myImg2, gain=4., add_to_image=True, use_true_center=False)
     np.testing.assert_almost_equal(myImg2.array.sum(), 0.5, 3,
             err_msg="Drawing with gain=4. results in wrong flux")
  
     # Test photon shooting.
     # Convolve with a small gaussian to smooth out the central peak.
-    sersic3 = galsim.Convolve(sersic2, galsim.Gaussian(sigma=0.3))
-    do_shoot(sersic3,myImg,"scaled Sersic")
+    sersic_smooth = galsim.Convolve(sersic2, galsim.Gaussian(sigma=0.3))
+    do_shoot(sersic_smooth,myImg,"scaled Sersic")
 
     # Test kvalues
     do_kvalue(sersic2, "scaled Sersic")
