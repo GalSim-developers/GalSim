@@ -27,6 +27,8 @@ script devutils/external/test_spline/make_spline_arrays.py.
 import os
 import numpy as np
 
+from galsim_test_helpers import *
+
 path, filename = os.path.split(__file__) # Get the path to this file for use below...
 try:
     import galsim
@@ -60,10 +62,6 @@ image = galsim.ImageD(128,128)
 dx = 0.4
 # The reference image was drawn with the old convention, which is now use_true_center=False
 final.draw(image=image, dx=dx, normalization='sb', use_true_center=False)
-
-def funcname():
-    import inspect
-    return inspect.stack()[1][3]
 
 def test_Cubic_spline():
     """Test the spline tabulation of the k space Cubic interpolant.

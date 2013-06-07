@@ -57,39 +57,38 @@ namespace galsim {
 
     /**
      * @brief A key for mapping Sersic cache, consisting of a triplet of values
-     * `(n, maxRre, flux_untruncated)`.
+     * `(n, b, maxRre)`.
      */
     struct SersicKey {
         /**
-         * @param[in] n                 Sersic index
-         * @param[in] maxRre            Maximum radius in units of half-light radius
-         * @param[in] flux_untruncated  If true, flux is set to the untruncated Sersic with
-         *                              index `n`.  Ignored if `maxRre = 0.`.
+         * @param[in] n        Sersic index
+         * @param[in] b        The quantity `(re/r0)^{1/n}`, where r0 is the scale radius
+         * @param[in] maxRre   Maximum radius in units of re, the half-light radius
          */
-        SersicKey(double _n, double _maxRre, bool _flux_untruncated) :
-            n(_n), maxRre(_maxRre), flux_untruncated(_flux_untruncated) {}
+        SersicKey(double _n, double _b, double _maxRre) :
+            n(_n), b(_b), maxRre(_maxRre) {}
 
         // less operator required for map::find()
         bool operator<(const SersicKey& rhs) const
         {
-            return ( 
+            return (
                 n == rhs.n ? (
-                    maxRre == rhs.maxRre ? (
-                        flux_untruncated < rhs.flux_untruncated ) :
-                    maxRre < rhs.maxRre ) :
+                    b == rhs.b ? (
+                        maxRre < rhs.maxRre ) :
+                    b < rhs.b ) :
                 n < rhs.n );
         }
 
         double n;
+        double b;
         double maxRre;
-        bool flux_untruncated;
     };
 
     /// @brief A private class that caches the needed parameters for each Sersic index `n`.
     class SersicInfo 
     {
     public:
-        /// @brief Constructor takes SersicKey, which is really (n, maxRre, flux_untruncated)
+        /// @brief Constructor takes SersicKey, which consists of the triplet (n,b,maxRre)
         SersicInfo(const SersicKey& key, const GSParamsPtr& gsparams);
 
         /// @brief Destructor: deletes photon-shooting classes if necessary
@@ -115,11 +114,14 @@ namespace galsim {
         /// @brief Returns the maximum relevant R, in units of half-light radius `re`.
         double getMaxRRe() const { return _maxRre; }
 
-        /// @brief Returns the ratio of the actual flux to the specified flux the object, which is
-        /// not unity when `_truncated` and `_flux_untruncated` are both true.
+        /**
+         * @brief Returns the ratio of the actual flux to the specified flux of the object.
+         * Use only when `_truncated` and `_flux_untruncated` are both true.
+         */
         double getTrueFluxFraction() const { return _flux_fraction; }
-        /// @brief Returns the ratio of the actual half-light radius `re` to the specified one,
-        /// which is not unity when `_truncated` and `_flux_untruncated` are both true.
+        /**
+         * @brief Returns the ratio of the actual half-light radius `re` to the specified one.
+         */
         double getTrueReFraction() const { return _re_fraction; }
 
         /**
@@ -135,27 +137,21 @@ namespace galsim {
 
     private:
 
-        SersicInfo(const SersicInfo& rhs); ///< Hides the copy constructor.
+        SersicInfo(const SersicInfo& rhs); ///< Hide the copy constructor.
         void operator=(const SersicInfo& rhs); ///<Hide assignment operator.
 
         double _n; ///< Sersic index.
+        double _b; ///< scale factor `(re/r0)^{1/n}`, where Sersic is `exp(-b*pow(xsq,inv2n))`
         double _maxRre; ///< Truncation radius `trunc` in units of half-light radius `re`.
+
         double _maxRre_sq;
-
-        /** 
-         * @brief Scaling in Sersic profile `exp(-b*pow(xsq,inv2n))`,
-         * calculated from Sersic index `n`, half-light radius `re`, and truncation radius `trunc`.
-         */
-        double _b;
-
         double _inv2n;   ///< `1 / (2 * n)`
         double _maxK;    ///< Value of k beyond which aliasing can be neglected.
-        double _stepK;   ///< Sampling in k space necessary to avoid folding 
+        double _stepK;   ///< Sampling in k space necessary to avoid folding.
 
-        double _norm; ///< Amplitude scaling in Sersic profile `exp(-b*pow(xsq,inv2n))`.
-        bool _flux_untruncated; ///< If true, flux is set to the untruncated Sersic with index `_n`.
-        double _flux_fraction; ///< Ratio of true (truncated) flux to the specified flux.
-        double _re_fraction; ///< Ratio of true `re` to the specified `re`.
+        double _norm; ///< Amplitude normalization in Sersic profile `exp(-b*pow(xsq,inv2n))`.
+        double _flux_fraction; ///< Ratio of true flux to the specified flux (for flux_untruncated).
+        double _re_fraction; ///< Ratio of true `re` to the specified `re` (for flux_untruncated).
         double _kderiv2; ///< Quadratic dependence near k=0.
         double _kderiv4; ///< Quartic dependence near k=0.
         Table<double,double> _ft;  ///< Lookup table for Fourier transform of Sersic.
@@ -175,8 +171,8 @@ namespace galsim {
     class SBSersic::SBSersicImpl : public SBProfileImpl
     {
     public:
-        SBSersicImpl(double n, double re, double flux, double trunc, bool flux_untruncated,
-                     const GSParamsPtr& gsparams);
+        SBSersicImpl(double n, double size, RadiusType rType, double flux,
+                     double trunc, bool flux_untruncated, const GSParamsPtr& gsparams);
 
         ~SBSersicImpl() {}
 
@@ -216,14 +212,22 @@ namespace galsim {
         { return Position<double>(0., 0.); }
 
         /// @brief Returns the true flux (may be different from the specified flux)
-        double getFlux() const { return _actual_flux; }
+        double getFlux() const { return _flux; }
 
         /// @brief Sersic photon shooting done by rescaling photons from appropriate `SersicInfo`
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
+        /// @brief Returns the Sersic index n
         double getN() const { return _n; }
         /// @brief Returns the true half-light radius (may be different from the specified value)
         double getHalfLightRadius() const { return _actual_re; }
+
+        /**
+         * @brief Returns the true scale radius.
+         * Because the internals base their calculation on `_re`, the accuracy of scale radius
+         * are good only to the accuracy set by the solver in `Solve.h`.
+         */
+        double getScaleRadius() const { return _r0; }
 
         // Overrides for better efficiency
         void fillXValue(tmv::MatrixView<double> val,
@@ -241,15 +245,18 @@ namespace galsim {
 
     private:
         double _n; ///< Sersic index.
-        double _flux; ///< Flux specified at the constructor.
+        double _flux; ///< Actual flux (may differ from that specified at the constructor).
         double _re;   ///< Half-light radius specified at the constructor.
+        mutable double _r0;   ///< Scale radius specified at the constructor.
+        double _trunc; ///< Truncation radius in same physical units as `_re` (0 if no truncation).
+        bool _flux_untruncated; ///< If true, flux is set to the untruncated Sersic with index `_n`.
+
+        double _b; ///< The quantity `(_re/_r0)^{1/_n}`
+
         double _re_sq;
         double _inv_re;
         double _inv_re_sq;
         double _norm; ///< Calculated value: _flux/_re_sq
-        double _trunc; ///< Truncation radius in same physical units as `_re` (0 if no truncation).
-        bool _flux_untruncated; ///< If true, flux is set to the untruncated Sersic with index `_n`.
-        double _actual_flux; ///< True flux of object.
         double _actual_re; ///< True half-light radius of object.
         double _maxRre; ///< Maximum (truncation) `r` in units of `_re`.
         double _maxRre_sq;
@@ -258,7 +265,7 @@ namespace galsim {
         double _ksq_max; ///< The ksq_max value from info rescaled with this re value.
         bool _truncated; ///< Set true if `_trunc > 0`.
 
-        const boost::shared_ptr<SersicInfo> _info; ///< Points to info structure for this n.
+        boost::shared_ptr<SersicInfo> _info; ///< Points to info structure for this SersicKey.
 
         // Copy constructor and op= are undefined.
         SBSersicImpl(const SBSersicImpl& rhs);
