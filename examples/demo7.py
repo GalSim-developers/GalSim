@@ -137,8 +137,13 @@ def main(argv):
     atmos = galsim.Gaussian(fwhm = psf_fwhm, gsparams=gsparams)
     # The OpticalPSF and set of Zernike values chosen below correspond to a reasonably well aligned,
     # smallish ~0.3m / 12 inch diameter telescope with a central obscuration of ~0.12m or 5 inches
-    # diameter, being used in optical wavebands.  The aberrations chosen correspond to operating
-    # close to a 1/4 wave RMS optical path difference:
+    # diameter, being used in optical wavebands.  
+    # In the Noll convention, the value of the Zernike coefficient also gives the RMS optical path
+    # difference across a circular pupil.  An RMS difference of ~0.5 or larger indicates that parts
+    # of the wavefront are in fully destructive interference, and so we might expect aberrations to
+    # become strong when Zernike aberrations summed in quadrature approach 0.5 wave.
+    # The aberrations chosen in this case correspond to operating close to a 0.25 wave RMS optical
+    # path difference:
     optics = galsim.OpticalPSF(
         lam_over_diam = 0.6 * psf_fwhm, obscuration = 0.4,
         defocus = 0.06, astig1 = 0.12, astig2 = -0.08, coma1 = 0.07, coma2 = 0.04, spher = -0.13,
