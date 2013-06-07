@@ -21,6 +21,13 @@
 
 //#define DEBUGLOGGING
 
+// clang doesn't like some of the code in boost files included by gamma.hpp.
+#ifdef __clang__
+#if __has_warning("-Wlogical-op-parentheses")
+#pragma GCC diagnostic ignored "-Wlogical-op-parentheses"
+#endif
+#endif
+
 #include <boost/math/special_functions/bessel.hpp>
 #include <boost/math/special_functions/gamma.hpp>
 

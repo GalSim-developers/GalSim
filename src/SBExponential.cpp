@@ -65,10 +65,8 @@ namespace galsim {
         return static_cast<const SBExponentialImpl&>(*_pimpl).getScaleRadius(); 
     }
 
-    const int MAX_EXPONENTIAL_INFO = 100;
-
     LRUCache<GSParamsPtr, ExponentialInfo> SBExponential::SBExponentialImpl::cache(
-        MAX_EXPONENTIAL_INFO);
+        sbp::max_exponential_cache);
 
     SBExponential::SBExponentialImpl::SBExponentialImpl(
         double r0, double flux, const GSParamsPtr& gsparams) :

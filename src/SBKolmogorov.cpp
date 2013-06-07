@@ -55,10 +55,8 @@ namespace galsim {
         return static_cast<const SBKolmogorovImpl&>(*_pimpl).getLamOverR0(); 
     }
 
-    const int MAX_KOLMOGOROV_INFO = 100;
-
-    LRUCache<GSParamsPtr, KolmogorovInfo>
-        SBKolmogorov::SBKolmogorovImpl::cache(MAX_KOLMOGOROV_INFO);
+    LRUCache<GSParamsPtr, KolmogorovInfo> SBKolmogorov::SBKolmogorovImpl::cache(
+        sbp::max_kolmogorov_cache);
 
     // The "magic" number 2.992934 below comes from the standard form of the Kolmogorov spectrum
     // from Racine, 1996 PASP, 108, 699 (who in turn is quoting Fried, 1966, JOSA, 56, 1372):

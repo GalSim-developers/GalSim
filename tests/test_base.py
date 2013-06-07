@@ -36,8 +36,8 @@ except ImportError:
 test_hlr = 1.8
 test_fwhm = 1.8
 test_sigma = 1.8
-test_scale = 1.8
-test_sersic_n = [1.5, 2.5, 4, -4] # -4 means use galsim.DeVaucouleurs, rather than Sersic(n=4)
+test_sersic_n = [1.5, 2.5, 4, -4]  # -4 means use explicit DeVauc rather than n=4
+test_scale = [1.8, 0.05, 0.002, 0.002]
 test_sersic_trunc = [0., 8.5]
 test_flux = 1.8
 
@@ -453,9 +453,9 @@ def test_exponential_radii():
             err_msg="Error in getScaleRadius for Exponential constructed with half light radius")
 
     # Test constructor using scale radius:
-    test_gal = galsim.Exponential(flux = 1., scale_radius = test_scale)
+    test_gal = galsim.Exponential(flux = 1., scale_radius = test_scale[0])
     center = test_gal.xValue(galsim.PositionD(0,0))
-    ratio = test_gal.xValue(galsim.PositionD(test_scale,0)) / center
+    ratio = test_gal.xValue(galsim.PositionD(test_scale[0],0)) / center
     print 'scale ratio = ',ratio
     np.testing.assert_almost_equal(
             ratio, np.exp(-1.0), decimal=4,
@@ -494,17 +494,17 @@ def test_exponential_flux_scaling():
     param_decimal = 12
 
     # init with scale and flux only (should be ok given last tests)
-    obj = galsim.Exponential(scale_radius=test_scale, flux=test_flux)
+    obj = galsim.Exponential(scale_radius=test_scale[0], flux=test_flux)
     obj *= 2.
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux * 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __imul__.")
-    obj = galsim.Exponential(scale_radius=test_scale, flux=test_flux)
+    obj = galsim.Exponential(scale_radius=test_scale[0], flux=test_flux)
     obj /= 2.
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __idiv__.")
-    obj = galsim.Exponential(scale_radius=test_scale, flux=test_flux)
+    obj = galsim.Exponential(scale_radius=test_scale[0], flux=test_flux)
     obj2 = obj * 2.
     # First test that original obj is unharmed... (also tests that .copy() is working)
     np.testing.assert_almost_equal(
@@ -514,7 +514,7 @@ def test_exponential_flux_scaling():
     np.testing.assert_almost_equal(
         obj2.getFlux(), test_flux * 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __rmul__ (result).")
-    obj = galsim.Exponential(scale_radius=test_scale, flux=test_flux)
+    obj = galsim.Exponential(scale_radius=test_scale[0], flux=test_flux)
     obj2 = 2. * obj
     # First test that original obj is unharmed... (also tests that .copy() is working)
     np.testing.assert_almost_equal(
@@ -524,7 +524,7 @@ def test_exponential_flux_scaling():
     np.testing.assert_almost_equal(
         obj2.getFlux(), test_flux * 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __mul__ (result).")
-    obj = galsim.Exponential(scale_radius=test_scale, flux=test_flux)
+    obj = galsim.Exponential(scale_radius=test_scale[0], flux=test_flux)
     obj2 = obj / 2.
     # First test that original obj is unharmed... (also tests that .copy() is working)
     np.testing.assert_almost_equal(
@@ -611,6 +611,24 @@ def test_sersic():
     # Test kvalues
     do_kvalue(sersic, "Truncated Sersic")
 
+    # Check for normalization consistencies with kValue checks. xValues tested in test_sersic_radii.
+
+    # For half-light radius specified truncated Sersic, with flux_untruncated flag set
+    sersic = galsim.Sersic(n=3, flux=test_flux, half_light_radius=1, trunc=10,
+                           flux_untruncated=True)
+    do_kvalue(sersic, "Truncated Sersic w/ flux_untruncated, half-light radius specified")
+
+    # For scale radius specified Sersic
+    sersic = galsim.Sersic(n=3, flux=test_flux, scale_radius=0.05)
+    do_kvalue(sersic, "Sersic w/ scale radius specified")
+
+    # For scale radius specified truncated Sersic
+    sersic = galsim.Sersic(n=3, flux=test_flux, scale_radius=0.05, trunc=10)
+    do_kvalue(sersic, "Truncated Sersic w/ scale radius specified")
+
+    # For scale radius specified truncated Sersic, with flux_untruncated flag set
+    sersic = galsim.Sersic(n=3, flux=test_flux, scale_radius=0.05, trunc=10, flux_untruncated=True)
+    do_kvalue(sersic, "Truncated Sersic w/ flux_untruncated, scale radius specified")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -622,73 +640,167 @@ def test_sersic_radii():
     import time
     t1 = time.time()
     import math
-    for n in test_sersic_n:
-        for trunc in test_sersic_trunc:
-            # Test constructor using half-light-radius: (only option for sersic)
-            # n=-4 is code to use explicit DeVaucouleurs rather than Sersic(n=4).
-            # It should be identical.
-            if n == -4:
-                test_gal = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=trunc, flux=1)
-            else:
-                test_gal = galsim.Sersic(n=n, half_light_radius=test_hlr, trunc=trunc, flux=1)
-            hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4) 
+    for n, scale in zip(test_sersic_n, test_scale) :
+
+        # Test constructor using half-light-radius
+        if n == -4:
+            test_gal1 = galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=1.)
+            test_gal2 = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=8.5, flux=1.)
+            test_gal3 = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=8.5, flux=1.,
+                                             flux_untruncated=True)
+            gal_labels = ["DeVauc", "truncated DeVauc", "flux_untruncated DeVauc"]
+        else:
+            test_gal1 = galsim.Sersic(n=n, half_light_radius=test_hlr, flux=1.)
+            test_gal2 = galsim.Sersic(n=n, half_light_radius=test_hlr, trunc=8.5, flux=1.)
+            test_gal3 = galsim.Sersic(n=n, half_light_radius=test_hlr, trunc=8.5, flux=1.,
+                                      flux_untruncated=True)
+            gal_labels = ["Sersic", "truncated Sersic", "flux_untruncated Sersic"]
+        gal_list = [test_gal1, test_gal2, test_gal3]
+
+        # Check that the returned half-light radius is correct
+        print 'test_hlr = ',test_hlr
+        print 'test_gal1 hlr, sr = ',test_gal1.getHalfLightRadius(),test_gal1.getScaleRadius()
+        print 'test_gal2 hlr, sr = ',test_gal2.getHalfLightRadius(),test_gal2.getScaleRadius()
+        print 'test_gal3 hlr, sr = ',test_gal3.getHalfLightRadius(),test_gal3.getScaleRadius()
+        np.testing.assert_almost_equal(
+            test_gal1.getHalfLightRadius(), test_hlr, decimal=5,
+            err_msg = "Error in returned HLR for Sersic HLR constructor, n=%.1f"%n)
+        np.testing.assert_almost_equal(
+            test_gal2.getHalfLightRadius(), test_hlr, decimal=5,
+            err_msg = "Error in returned HLR for truncated Sersic HLR constructor, n=%.1f"%n)
+        np.testing.assert_almost_equal(
+            test_gal3.getScaleRadius(), test_gal1.getScaleRadius(), decimal=5,
+            err_msg = "Error in returned SR for flux_untruncated Sersic HLR constructor, n=%.1f"%n)
+
+        # Check that the returned flux is correct
+        print 'test_gal1.getFlux() = ',test_gal1.getFlux()
+        print 'test_gal2.getFlux() = ',test_gal2.getFlux()
+        print 'test_gal3.getFlux() = ',test_gal3.getFlux()
+        np.testing.assert_almost_equal(
+            test_gal1.getFlux(), 1., decimal=5,
+            err_msg = "Error in returned Flux for Sersic HLR constructor, n=%.1f"%n)
+        np.testing.assert_almost_equal(
+            test_gal2.getFlux(), 1., decimal=5,
+            err_msg = "Error in returned Flux for truncated Sersic HLR constructor, n=%.1f"%n)
+        # test_gal3 doesn't match getFlux(), but should have central value match test_gal1.
+        center1 = test_gal1.xValue(galsim.PositionD(0,0))
+        center3 = test_gal3.xValue(galsim.PositionD(0,0))
+        print 'peak value 1,3 = ', center1, center3
+        np.testing.assert_almost_equal(
+                center1, center3, 9,
+                "Error in flux_untruncated Sersic normalization HLR constructor, n=%.1f"%n)
+
+        # (test half-light radii)
+        for test_gal, label in zip(gal_list, gal_labels):
+            print 'flux = ',test_gal.getFlux()
+            print 'hlr = ',test_gal.getHalfLightRadius()
+            print 'scale = ',test_gal.getScaleRadius()
+            got_hlr = test_gal.getHalfLightRadius()
+            got_flux = test_gal.getFlux()
+            hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
             print 'hlr_sum = ',hlr_sum
             np.testing.assert_almost_equal(
-                hlr_sum, 0.5, decimal=4,
-                err_msg="Error in Sersic constructor with half-light radius, n=%.1f, trunc=%.1f"\
-                        %(n,trunc))
+                    hlr_sum, 0.5*got_flux, decimal=4,
+                    err_msg = "Error in %s half-light radius constructor, n=%.1f"%(label,n))
 
-            # Test with flux_untruncated=True (above unit tests for flux_untruncated=False)
-            if n == -4:
-                test_gal = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=trunc, flux=1,
-                                                flux_untruncated=True)
-            else:
-                test_gal = galsim.Sersic(n=n, half_light_radius=test_hlr, trunc=trunc, flux=1,
-                                         flux_untruncated=True)
-            hlr_sum = radial_integrate(test_gal, 0., test_hlr, 1.e-4)
-            print 'hlr_sum (truncated and flux_untruncated) = ',hlr_sum
-            np.testing.assert_almost_equal(
-                hlr_sum, 0.5, decimal=4,
-                err_msg="Error in Sersic constructor with flux_untruncated, n=%.1f, trunc=%.1f"\
-                        %(n,trunc))
-
-            # Check that the getters don't work after modifying the original.
-            test_gal_shear = test_gal.copy()
-            if n > 0:
-                print 'n = ',test_gal_shear.getN()
-            print 'hlr = ',test_gal_shear.getHalfLightRadius()
-            test_gal_shear.applyShear(g1=0.3, g2=0.1)
-            try:
-                if n > 0:
-                    np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getN");
-                np.testing.assert_raises(AttributeError, getattr, test_gal_shear, 
-                                         "getHalfLightRadius")
-            except ImportError:
-                pass
-
-            # Test flux_untruncated scale and normalization
-            if n == -4:
-                test_gal2 = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=trunc, flux=1,
-                                                 flux_untruncated=True)
-            else:
-                test_gal2 = galsim.Sersic(n=n, half_light_radius=test_hlr, trunc=trunc, flux=1,
-                                          flux_untruncated=True)
+        # (test scale radii)
+        for test_gal, label in zip(gal_list, gal_labels):
+            got_sr = test_gal.getScaleRadius()
             center = test_gal.xValue(galsim.PositionD(0,0))
-            center2 = test_gal2.xValue(galsim.PositionD(0,0))
-            ratio = center / center2
-            print 'peak value = ', center, center2
-            print 'hlr = ', test_gal.getHalfLightRadius(), test_gal2.getHalfLightRadius()
-            np.testing.assert_almost_equal(ratio, 1., 9,
-                                           "Error in Sersic flux_untruncated=True normalization")
-
-            # Test true HLR with flux_untruncated=True
-            true_hlr = test_gal2.getHalfLightRadius()
-            hlr_sum = radial_integrate(test_gal, 0., true_hlr, 1.e-4)
-            true_flux = test_gal2.getFlux()
-            print 'true hlr_sum = ',hlr_sum
+            ratio = test_gal.xValue(galsim.PositionD(got_sr,0)) / center
+            print 'scale ratio = ',ratio
             np.testing.assert_almost_equal(
-                 hlr_sum, 0.5*true_flux, decimal=4,
-                 err_msg="Error in true hlr with flux_untruncated, n=%.1f, trunc=%.1f"%(n,trunc))
+                    ratio, np.exp(-1.0), decimal=4,
+                    err_msg="Error in getScaleRadius for HLR constructed %s"%label)
+
+        # Test constructor using scale radius (test scale radius)
+        if n == -4:
+            test_gal1 = galsim.DeVaucouleurs(scale_radius=scale, flux=1.)
+            test_gal2 = galsim.DeVaucouleurs(scale_radius=scale, trunc=8.5, flux=1.)
+            test_gal3 = galsim.DeVaucouleurs(scale_radius=scale, trunc=8.5, flux=1.,
+                                             flux_untruncated=True)
+        else:
+            test_gal1 = galsim.Sersic(n=n, scale_radius=scale, flux=1.)
+            test_gal2 = galsim.Sersic(n=n, scale_radius=scale, trunc=8.5, flux=1.)
+            test_gal3 = galsim.Sersic(n=n, scale_radius=scale, trunc=8.5, flux=1.,
+                                      flux_untruncated=True)
+        gal_list = [test_gal1, test_gal2, test_gal3]
+
+        # Check that the returned scale radius is correct
+        print 'test_scale = ',scale
+        print 'test_gal1 hlr, sr = ',test_gal1.getHalfLightRadius(),test_gal1.getScaleRadius()
+        print 'test_gal2 hlr, sr = ',test_gal2.getHalfLightRadius(),test_gal2.getScaleRadius()
+        print 'test_gal3 hlr, sr = ',test_gal3.getHalfLightRadius(),test_gal3.getScaleRadius()
+        np.testing.assert_almost_equal(
+            test_gal1.getScaleRadius(), scale, decimal=5,
+            err_msg = "Error in returned SR for Sersic SR constructor, n=%.1f"%n)
+        np.testing.assert_almost_equal(
+            test_gal2.getScaleRadius(), scale, decimal=5,
+            err_msg = "Error in returned SR for truncated Sersic SR constructor, n=%.1f"%n)
+        np.testing.assert_almost_equal(
+            test_gal3.getScaleRadius(), scale, decimal=5,
+            err_msg = "Error in returned SR for truncated Sersic SR constructor, n=%.1f"%n)
+
+        # Returned HLR should match for gals 2,3
+        got_hlr2 = test_gal2.getHalfLightRadius()
+        got_hlr3 = test_gal3.getHalfLightRadius()
+        print 'half light radii of truncated, scale_radius constructed Sersic =',got_hlr2,got_hlr3
+        np.testing.assert_almost_equal(
+                got_hlr2, got_hlr3, decimal=4,
+                err_msg="Error in HLR for scale_radius constructed flux_untruncated Sersic (II).")
+
+        # Check that the returned flux is correct
+        print 'test_gal1.getFlux() = ',test_gal1.getFlux()
+        print 'test_gal2.getFlux() = ',test_gal2.getFlux()
+        print 'test_gal3.getFlux() = ',test_gal3.getFlux()
+        np.testing.assert_almost_equal(
+            test_gal1.getFlux(), 1., decimal=5,
+            err_msg = "Error in returned Flux for Sersic HLR constructor, n=%.1f"%n)
+        np.testing.assert_almost_equal(
+            test_gal2.getFlux(), 1., decimal=5,
+            err_msg = "Error in returned Flux for truncated Sersic HLR constructor, n=%.1f"%n)
+        center1 = test_gal1.xValue(galsim.PositionD(0,0))
+        center3 = test_gal3.xValue(galsim.PositionD(0,0))
+        print 'peak value 1,3 = ', center1, center3
+        np.testing.assert_almost_equal(
+                center1, center3, 9,
+                "Error in flux_untruncated Sersic normalization HLR constructor, n=%.1f"%n)
+
+        # (test scale radii)
+        for test_gal, label in zip(gal_list, gal_labels):
+            center = test_gal.xValue(galsim.PositionD(0,0))
+            ratio = test_gal.xValue(galsim.PositionD(scale,0)) / center
+            print 'scale ratio = ',ratio
+            np.testing.assert_almost_equal(
+                    ratio, np.exp(-1.0), decimal=4,
+                    err_msg="Error in %s scale radius constructor, n=%.1f"%(label,n))
+
+        # (test half-light radius)
+        for test_gal, label in zip(gal_list, gal_labels):
+            got_hlr = test_gal.getHalfLightRadius()
+            got_flux = test_gal.getFlux()
+            hlr_sum = radial_integrate(test_gal, 0., got_hlr, 1.e-4)
+            print 'hlr_sum = ',hlr_sum
+            np.testing.assert_almost_equal(
+                    hlr_sum, 0.5*got_flux, decimal=4,
+                    err_msg="Error in HLR for scale_radius constructed %s"%label)
+
+        # Check that the getters don't work after modifying the original.
+        test_gal_shear = test_gal1.copy()
+        # They still work after copy()
+        if n != -4:
+            print 'n = ',test_gal_shear.getN()
+        print 'hlr = ',test_gal_shear.getHalfLightRadius()
+        print 'sr = ',test_gal_shear.getScaleRadius()
+        test_gal_shear.applyShear(g1=0.3, g2=0.1)
+        # But not after applyShear() (or others, but this is a sufficient test here)
+        try:
+            if n != -4:
+                np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getN")
+            np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
+            np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getScaleRadius")
+        except ImportError:
+            pass
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -711,17 +823,21 @@ def test_sersic_flux_scaling():
             # n=-4 is code to use explicit DeVaucouleurs rather than Sersic(n=4).
             # It should be identical.
             if test_n == -4:
-                init_obj = galsim.DeVaucouleurs(half_light_radius=test_hlr, trunc=test_trunc,
-                                           flux=test_flux)
+                init_obj = galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=test_flux,
+                                           trunc=test_trunc)
             else:
-                init_obj = galsim.Sersic(n=test_n, half_light_radius=test_hlr, trunc=test_trunc,
-                                    flux=test_flux)
+                init_obj = galsim.Sersic(test_n, half_light_radius=test_hlr, flux=test_flux,
+                                    trunc=test_trunc)
+
+            # Test in place *= and /=
             obj = init_obj.copy()
             obj *= 2.
             np.testing.assert_almost_equal(
                 obj.getFlux(), test_flux * 2., decimal=param_decimal,
                 err_msg="Flux param inconsistent after __imul__.")
-
+            np.testing.assert_almost_equal(
+                init_obj.getFlux(), test_flux, decimal=param_decimal,
+                err_msg="obj.copy() didn't produce a separate copy.")
             obj = init_obj.copy()
             obj /= 2.
             np.testing.assert_almost_equal(
@@ -729,31 +845,25 @@ def test_sersic_flux_scaling():
                 err_msg="Flux param inconsistent after __idiv__.")
 
             obj2 = init_obj * 2.
-            # First test that original obj is unharmed... (also tests that .copy() is working)
             np.testing.assert_almost_equal(
                 init_obj.getFlux(), test_flux, decimal=param_decimal,
                 err_msg="Flux param inconsistent after __rmul__ (original).")
-            # Then test new obj2 flux
             np.testing.assert_almost_equal(
                 obj2.getFlux(), test_flux * 2., decimal=param_decimal,
                 err_msg="Flux param inconsistent after __rmul__ (result).")
 
             obj2 = 2. * init_obj
-            # First test that original obj is unharmed... (also tests that .copy() is working)
             np.testing.assert_almost_equal(
                 init_obj.getFlux(), test_flux, decimal=param_decimal,
                 err_msg="Flux param inconsistent after __mul__ (original).")
-            # Then test new obj2 flux
             np.testing.assert_almost_equal(
                 obj2.getFlux(), test_flux * 2., decimal=param_decimal,
                 err_msg="Flux param inconsistent after __mul__ (result).")
 
             obj2 = init_obj / 2.
-            # First test that original obj is unharmed... (also tests that .copy() is working)
             np.testing.assert_almost_equal(
                  init_obj.getFlux(), test_flux, decimal=param_decimal,
                  err_msg="Flux param inconsistent after __div__ (original).")
-            # Then test new obj2 flux
             np.testing.assert_almost_equal(
                 obj2.getFlux(), test_flux / 2., decimal=param_decimal,
                 err_msg="Flux param inconsistent after __div__ (result).")
@@ -800,7 +910,6 @@ def test_sersic_05():
         np.testing.assert_almost_equal(sersic.kValue(pos), gauss.kValue(pos), decimal=5)
 
 
-
 def test_sersic_1():
     """Test the equivalence of Sersic with n=1 and Exponential
     """
@@ -835,7 +944,6 @@ def test_sersic_1():
         pos = galsim.PositionD(x,y)
         np.testing.assert_almost_equal(sersic.xValue(pos), expon.xValue(pos), decimal=5)
         np.testing.assert_almost_equal(sersic.kValue(pos), expon.kValue(pos), decimal=5)
-
 
 
 def test_airy():
@@ -873,9 +981,9 @@ def test_airy():
             err_msg="Using GSObject Airy with GSParams() disagrees with expected result")
 
     # Test photon shooting.
-    airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.0, flux=1)
+    airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.0, flux=test_flux)
     do_shoot(airy,myImg,"Airy obscuration=0.0")
-    airy2 = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=1)
+    airy2 = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=test_flux)
     do_shoot(airy2,myImg,"Airy obscuration=0.1")
 
     # Test kvalues
@@ -1170,9 +1278,9 @@ def test_moffat_radii():
             err_msg="Error in scale radius for Moffat initialized with half-light radius")
 
     # Test constructor using scale radius:
-    test_gal = galsim.Moffat(flux = 1., beta=test_beta, scale_radius = test_scale)
+    test_gal = galsim.Moffat(flux = 1., beta=test_beta, scale_radius = test_scale[0])
     center = test_gal.xValue(galsim.PositionD(0,0))
-    ratio = test_gal.xValue(galsim.PositionD(test_scale,0)) / center
+    ratio = test_gal.xValue(galsim.PositionD(test_scale[0],0)) / center
     print 'scale ratio = ',ratio
     np.testing.assert_almost_equal(
             ratio, pow(2,-test_beta), decimal=4,
@@ -1250,10 +1358,10 @@ def test_moffat_radii():
             err_msg="Error in scale radius for Moffat initialized with half-light radius")
 
     # Test constructor using scale radius:
-    test_gal = galsim.Moffat(flux=1, beta=test_beta, trunc=2*test_scale,
-                             scale_radius=test_scale)
+    test_gal = galsim.Moffat(flux=1., beta=test_beta, trunc=2*test_scale[0],
+                             scale_radius=test_scale[0])
     center = test_gal.xValue(galsim.PositionD(0,0))
-    ratio = test_gal.xValue(galsim.PositionD(test_scale,0)) / center
+    ratio = test_gal.xValue(galsim.PositionD(test_scale[0],0)) / center
     print 'scale ratio = ', ratio
     np.testing.assert_almost_equal(
             ratio, pow(2,-test_beta), decimal=4,
@@ -1336,19 +1444,19 @@ def test_moffat_flux_scaling():
         for test_trunc in [ 0., 8.5 ]:
 
             # init with scale_radius only (should be ok given last tests)
-            obj = galsim.Moffat(scale_radius=test_scale, beta=test_beta, trunc=test_trunc,
+            obj = galsim.Moffat(scale_radius=test_scale[0], beta=test_beta, trunc=test_trunc,
                                 flux=test_flux)
             obj *= 2.
             np.testing.assert_almost_equal(
                 obj.getFlux(), test_flux * 2., decimal=param_decimal,
                 err_msg="Flux param inconsistent after __imul__.")
-            obj = galsim.Moffat(scale_radius=test_scale, beta=test_beta, trunc=test_trunc,
+            obj = galsim.Moffat(scale_radius=test_scale[0], beta=test_beta, trunc=test_trunc,
                                 flux=test_flux)
             obj /= 2.
             np.testing.assert_almost_equal(
                 obj.getFlux(), test_flux / 2., decimal=param_decimal,
                 err_msg="Flux param inconsistent after __idiv__.")
-            obj = galsim.Moffat(scale_radius=test_scale, beta=test_beta, trunc=test_trunc,
+            obj = galsim.Moffat(scale_radius=test_scale[0], beta=test_beta, trunc=test_trunc,
                                 flux=test_flux)
             obj2 = obj * 2.
             # First test that original obj is unharmed... (also tests that .copy() is working)
@@ -1359,7 +1467,7 @@ def test_moffat_flux_scaling():
             np.testing.assert_almost_equal(
                 obj2.getFlux(), test_flux * 2., decimal=param_decimal,
                 err_msg="Flux param inconsistent after __rmul__ (result).")
-            obj = galsim.Moffat(scale_radius=test_scale, beta=test_beta, trunc=test_trunc,
+            obj = galsim.Moffat(scale_radius=test_scale[0], beta=test_beta, trunc=test_trunc,
                                 flux=test_flux)
             obj2 = 2. * obj
             # First test that original obj is unharmed... (also tests that .copy() is working)
@@ -1370,7 +1478,7 @@ def test_moffat_flux_scaling():
             np.testing.assert_almost_equal(
                 obj2.getFlux(), test_flux * 2., decimal=param_decimal,
                 err_msg="Flux param inconsistent after __mul__ (result).")
-            obj = galsim.Moffat(scale_radius=test_scale, beta=test_beta, trunc=test_trunc,
+            obj = galsim.Moffat(scale_radius=test_scale[0], beta=test_beta, trunc=test_trunc,
                                 flux=test_flux)
             obj2 = obj / 2.
             # First test that original obj is unharmed... (also tests that .copy() is working)
