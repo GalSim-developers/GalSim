@@ -35,13 +35,14 @@ through the images comparing the two drawing methods.
 New features introduced in this demo:
 
 - obj = galsim.Airy(lam_over_diam)
+- obj = galsim.Sersic(n, half_light_radius, trunc)
 - obj2 = obj.copy()
 - obj.applyDilation(scale)
 - image.setScale(pixel_scale)
 - obj.draw(image)  -- i.e. taking the scale from the image rather than a dx= argument
 - obj.drawShoot(image, max_extra_noise, rng)
 - dev = galsim.PoissonDeviate(rng, mean)
-= noise = galsim.DeviateNoise(dev)
+- noise = galsim.DeviateNoise(dev)
 - writeCube(..., compress='gzip')
 - gsparams = galsim.GSParams(...)
 """
@@ -134,18 +135,24 @@ def main(argv):
     psf3_outer = galsim.Gaussian(fwhm = 2*psf_fwhm, flux = 0.2, gsparams=gsparams)
     psf3 = psf3_inner + psf3_outer
     atmos = galsim.Gaussian(fwhm = psf_fwhm, gsparams=gsparams)
+    # The OpticalPSF and set of Zernike values chosen below correspond to a reasonably well aligned,
+    # smallish ~0.3m / 12 inch diameter telescope with a central obscuration of ~0.12m or 5 inches
+    # diameter, being used in optical wavebands.  
+    # In the Noll convention, the value of the Zernike coefficient also gives the RMS optical path
+    # difference across a circular pupil.  An RMS difference of ~0.5 or larger indicates that parts
+    # of the wavefront are in fully destructive interference, and so we might expect aberrations to
+    # become strong when Zernike aberrations summed in quadrature approach 0.5 wave.
+    # The aberrations chosen in this case correspond to operating close to a 0.25 wave RMS optical
+    # path difference:
     optics = galsim.OpticalPSF(
-            lam_over_diam = 0.6 * psf_fwhm,
-            obscuration = 0.4,
-            defocus = 0.1,
-            astig1 = 0.3, astig2 = -0.2,
-            coma1 = 0.2, coma2 = 0.1,
-            spher = -0.3, gsparams=gsparams) 
-    psf4 = galsim.Convolve([atmos,optics])  # Convolve inherits the gsparams from the first 
+        lam_over_diam = 0.6 * psf_fwhm, obscuration = 0.4,
+        defocus = 0.06, astig1 = 0.12, astig2 = -0.08, coma1 = 0.07, coma2 = 0.04, spher = -0.13,
+        gsparams=gsparams)
+    psf4 = galsim.Convolve([atmos, optics]) # Convolve inherits the gsparams from the first 
                                             # item in the list.  (Or you can supply a gsparams
                                             # argument explicitly if you want to override this.)
     atmos = galsim.Kolmogorov(fwhm = psf_fwhm, gsparams=gsparams)
-    optics = galsim.Airy(lam_over_diam = 0.3 * psf_fwhm, gsparams=gsparams) 
+    optics = galsim.Airy(lam_over_diam = 0.3 * psf_fwhm, gsparams=gsparams)
     psf5 = galsim.Convolve([atmos,optics])
     psfs = [psf1, psf2, psf3, psf4, psf5]
     psf_names = ["Gaussian", "Moffat", "Double Gaussian", "OpticalPSF", "Kolmogorov * Airy"]
@@ -158,7 +165,10 @@ def main(argv):
     gal2 = galsim.Exponential(half_light_radius = 1, gsparams=gsparams)
     gal3 = galsim.DeVaucouleurs(half_light_radius = 1, gsparams=gsparams)
     gal4 = galsim.Sersic(half_light_radius = 1, n = 2.5, gsparams=gsparams)
-    bulge = galsim.Sersic(half_light_radius = 0.7, n = 3.2, gsparams=gsparams)
+    # A Sersic profile may be truncated if desired.
+    # The units for this are expected to be arcsec (or specifically -- whatever units
+    # you are using for all the size values as defined by the pixel_scale).
+    bulge = galsim.Sersic(half_light_radius = 0.7, n = 3.2, trunc = 8.5, gsparams=gsparams)
     disk = galsim.Sersic(half_light_radius = 1.2, n = 1.5, gsparams=gsparams)
     gal5 = 0.4*bulge + 0.6*disk  # Net half-light radius is only approximate for this one.
     gals = [gal1, gal2, gal3, gal4, gal5]

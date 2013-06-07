@@ -19,6 +19,8 @@
 import time
 import numpy as np
 
+from galsim_test_helpers import *
+
 try:
     import galsim
 except ImportError:
@@ -75,10 +77,6 @@ def make_ycorr_from_uncorr(uncorr_image):
         uncorr_image.array + np.roll(uncorr_image.array, 1, axis=0)) # note NumPy thus [y,x]
     ynoise_image *= (np.sqrt(2.) / 2.) # Preserve variance
     return ynoise_image
-
-def funcname():
-    import inspect
-    return inspect.stack()[1][3]
 
 def test_uncorrelated_noise_zero_lag():
     """Test that the zero lag correlation of an input uncorrelated noise field matches its variance.

@@ -21,6 +21,8 @@ import os
 import sys
 import pyfits
 
+from galsim_test_helpers import *
+
 try:
     import galsim
 except ImportError:
@@ -74,31 +76,6 @@ def moments_to_ellip(mxx, myy, mxy):
     e2 = 2*mxy / (mxx + myy)
     sig = (mxx*myy - mxy**2)**(0.25)
     return e1, e2, sig
-
-def printval(image1, image2):
-    print "New, saved array sizes: ", np.shape(image1.array), np.shape(image2.array)
-    print "Sum of values: ", np.sum(image1.array), np.sum(image2.array)
-    print "Minimum image value: ", np.min(image1.array), np.min(image2.array)
-    print "Maximum image value: ", np.max(image1.array), np.max(image2.array)
-    print "Peak location: ", image1.array.argmax(), image2.array.argmax()
-    print "Moments Mx, My, Mxx, Myy, Mxy for new array: "
-    getmoments(image1)
-    print "Moments Mx, My, Mxx, Myy, Mxy for saved array: "
-    getmoments(image2)
-
-def getmoments(image1):
-    xgrid, ygrid = np.meshgrid(np.arange(np.shape(image1.array)[0]) + image1.getXMin(), 
-                               np.arange(np.shape(image1.array)[1]) + image1.getYMin())
-    mx = np.mean(xgrid * image1.array) / np.mean(image1.array)
-    my = np.mean(ygrid * image1.array) / np.mean(image1.array)
-    mxx = np.mean(((xgrid-mx)**2) * image1.array) / np.mean(image1.array)
-    myy = np.mean(((ygrid-my)**2) * image1.array) / np.mean(image1.array)
-    mxy = np.mean((xgrid-mx) * (ygrid-my) * image1.array) / np.mean(image1.array)
-    print "    ", mx-image1.getXMin(), my-image1.getYMin(), mxx, myy, mxy
-
-def funcname():
-    import inspect
-    return inspect.stack()[1][3]
 
 def test_real_galaxy_ideal():
     """Test accuracy of various calculations with fake Gaussian RealGalaxy vs. ideal expectations"""

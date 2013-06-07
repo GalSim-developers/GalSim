@@ -20,6 +20,9 @@
 """
 
 import numpy as np
+
+from galsim_test_helpers import *
+
 try:
     import galsim
 except ImportError:
@@ -35,10 +38,6 @@ test_abs_err = 1.e-13             # the absolute accuracy at which to test
 test_mock_inf = 2.e10             # number large enough to get interpreted as infinity by 
                                   # integration routines
 test_decimal = 7
-
-def funcname():
-    import inspect
-    return inspect.stack()[1][3]
 
 def test_gaussian_finite_limits():
     """Test the integration of a 1D zero-mean Gaussian across intervals of [-1, 1], [0, 20]
