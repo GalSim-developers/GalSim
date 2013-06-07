@@ -154,10 +154,11 @@ namespace galsim {
         double _re_fraction; ///< Ratio of true `re` to the specified `re` (for flux_untruncated).
         double _kderiv2; ///< Quadratic dependence near k=0.
         double _kderiv4; ///< Quartic dependence near k=0.
-        Table<double,double> _ft;  ///< Lookup table for Fourier transform of Sersic.
         double _ksq_min; ///< Minimum ksq to use lookup table.
         double _ksq_max; ///< Maximum ksq to use lookup table.
         bool _truncated; ///< True if this Sersic profile is truncated.
+
+        Table<double,double> _ft;  ///< Lookup table for Fourier transform of Sersic.
 
         /// Function class used for photon shooting
         boost::shared_ptr<SersicRadialFunction> _radial;  

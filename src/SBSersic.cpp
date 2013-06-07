@@ -130,7 +130,7 @@ namespace galsim {
         dbg<<"hlr = "<<_re<<"\n";
         dbg<<"_r0 = "<<_r0<<"\n";
 
-        _info = cache.get(std::make_pair(SersicKey(_n, _b, _maxRre), this->gsparams.get()));
+        _info = cache.get(std::make_pair(SersicKey(_n, _b, _maxRre), this->gsparams));
 
         _re_sq = _re*_re;
         _inv_re = 1./_re;
@@ -526,7 +526,8 @@ namespace galsim {
     // Constructor to initialize Sersic constants and k lookup table
     SersicInfo::SersicInfo(const SersicKey& key, const GSParamsPtr& gsparams) :
         _n(key.n), _b(key.b), _maxRre(key.maxRre), _maxRre_sq(_maxRre*_maxRre),
-        _inv2n(1./(2.*_n)), _flux_fraction(1.), _re_fraction(1.)
+        _inv2n(1./(2.*_n)), _flux_fraction(1.), _re_fraction(1.),
+        _ft(Table<double,double>::spline)
     {
         dbg<<"Start SersicInfo constructor for n = "<<_n<<std::endl;
         dbg<<"b = "<<_b<<", maxRre = "<<_maxRre<<std::endl;

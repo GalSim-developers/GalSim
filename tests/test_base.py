@@ -411,16 +411,16 @@ def test_exponential_properties():
     """
     import time
     t1 = time.time()
-    expon = galsim.Exponential(flux=test_flux, scale_radius=test_scale)
+    expon = galsim.Exponential(flux=test_flux, scale_radius=test_scale[0])
     # Check that we are centered on (0, 0)
     cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(expon.centroid(), cen)
     # Check Fourier properties
-    np.testing.assert_almost_equal(expon.maxK(), 10 / test_scale)
-    np.testing.assert_almost_equal(expon.stepK(), 0.37436747851 / test_scale)
+    np.testing.assert_almost_equal(expon.maxK(), 10 / test_scale[0])
+    np.testing.assert_almost_equal(expon.stepK(), 0.37436747851 / test_scale[0])
     np.testing.assert_equal(expon.kValue(cen), (1+0j) * test_flux)
     import math
-    np.testing.assert_almost_equal(expon.xValue(cen), 1./(2.*math.pi) * test_flux / test_scale**2)
+    np.testing.assert_almost_equal(expon.xValue(cen), 1./(2.*math.pi)*test_flux/test_scale[0]**2)
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
         expon = galsim.Exponential(flux=inFlux, scale_radius=1.8)
@@ -930,16 +930,16 @@ def test_sersic_1():
     do_kvalue(sersic,"n=1 Sersic")
 
     # cf test_exponential_properties()
-    sersic = galsim.Sersic(n=1, flux=test_flux, half_light_radius=test_scale * hlr_r0)
+    sersic = galsim.Sersic(n=1, flux=test_flux, half_light_radius=test_scale[0] * hlr_r0)
     cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(sersic.centroid(), cen)
     np.testing.assert_equal(sersic.kValue(cen), (1+0j) * test_flux)
     import math
-    np.testing.assert_almost_equal(sersic.xValue(cen), 1./(2.*math.pi) * test_flux / test_scale**2,
+    np.testing.assert_almost_equal(sersic.xValue(cen), 1./(2.*math.pi)*test_flux/test_scale[0]**2,
                                    decimal=5)
 
     # Also test some random values other than the center:
-    expon = galsim.Exponential(flux=test_flux, scale_radius=test_scale)
+    expon = galsim.Exponential(flux=test_flux, scale_radius=test_scale[0])
     for (x,y) in [ (0.1,0.2), (-0.5, 0.4), (0, 0.9), (1.2, 0.1), (2,2) ]:
         pos = galsim.PositionD(x,y)
         np.testing.assert_almost_equal(sersic.xValue(pos), expon.xValue(pos), decimal=5)
