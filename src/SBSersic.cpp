@@ -139,7 +139,7 @@ namespace galsim {
         // adjust normalization factor
         if (_truncated && _flux_untruncated) {
             _norm *= _info->getTrueFluxFraction();
-	    _flux *= _info->getTrueFluxFraction();
+            _flux *= _info->getTrueFluxFraction();
         }
 
         _actual_re = _info->getTrueReFraction() * _re;
