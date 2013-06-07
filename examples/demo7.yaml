@@ -35,6 +35,7 @@
 #
 # - obj type : List (items)
 # - obj type : Airy (lam_over_diam)
+# - obj type : Sersic (..., trunc)
 # - obj : dilate
 # - value type : Sequence (..., repeat)
 # - value type : Random (min, max)
@@ -64,11 +65,21 @@ psf :
             type : Convolution
             items :
                 - { type : Gaussian , fwhm : 0.65 }
+                # The OpticalPSF and set of Zernike values chosen below correspond to a reasonably
+                # well aligned, smallish ~0.3m / 12 inch diameter telescope with a central
+                # obscuration of ~0.12m or 5 inches diameter, being used in optical wavebands.  
+                # In the Noll convention, the value of the Zernike coefficient also gives the RMS
+                # optical path difference across a circular pupil.  An RMS difference of ~0.5 or
+                # larger indicates that parts of the wavefront are in fully destructive
+                # interference, and so we might expect aberrations to become strong when Zernike
+                # aberrations summed in quadrature approach 0.5 wave.
+                # The aberrations chosen in this case correspond to operating close to a 0.25 wave 
+                # RMS optical path difference:
                 - { type : OpticalPSF , 
                     lam_over_diam : 0.39 , obscuration : 0.4 ,
-                    defocus : 0.1 , spher : -0.3 ,
-                    astig1 : 0.3 , astig2 : -0.2 ,
-                    coma1 : 0.2 , coma2 : 0.1 }
+                    defocus : 0.06, spher : -0.13,
+                    astig1 : 0.12, astig2 : -0.08,
+                    coma1 : 0.07, coma2 : 0.04 }
         -
             type : Convolution
             items :
@@ -94,7 +105,10 @@ gal :
         -  
             type : Sum 
             items :
-                - { type : Sersic , n : 3.2 , half_light_radius : 0.7 , flux : 0.4 }
+                # Sersics can be truncated if desired.
+                # The units for this are expected to be arcsec (or specifically -- whatever units
+                # you are using for all the size values as defined by the pixel_scale).
+                - { type : Sersic , n : 3.2 , half_light_radius : 0.7 , flux : 0.4 , trunc : 8.5 }
                 - { type : Sersic , n : 1.5 , half_light_radius : 1.2 , flux : 0.6 }
     index :
         type : Sequence
