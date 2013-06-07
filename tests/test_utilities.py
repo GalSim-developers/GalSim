@@ -20,6 +20,8 @@ import numpy as np
 import os
 import sys
 
+from galsim_test_helpers import *
+
 try:
     import galsim
 except ImportError:
@@ -32,10 +34,6 @@ import galsim.utilities
 testshape = (512, 512)  # shape of image arrays for all tests
 decimal = 6     # Last decimal place used for checking equality of float arrays, see
                 # np.testing.assert_array_almost_equal(), low since many are ImageF
-
-def funcname():
-    import inspect
-    return inspect.stack()[1][3]
 
 def test_roll2d_circularity():
     """Test both integer and float arrays are unchanged by full circular roll.

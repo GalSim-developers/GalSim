@@ -29,6 +29,13 @@
 
 namespace galsim {
 
+    namespace sbp {
+
+        // How many Kolmogorov profiles to save in the cache
+        const int max_kolmogorov_cache = 100;
+
+    }
+
     /** 
      * @brief Surface Brightness Profile for a Kolmogorov turbulent spectrum.
      *

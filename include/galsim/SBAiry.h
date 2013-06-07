@@ -29,6 +29,13 @@
 
 namespace galsim {
 
+    namespace sbp {
+
+        // How many Airy profiles to save in the cache
+        const int max_airy_cache = 100;
+
+    }
+
     /** 
      * @brief Surface Brightness Profile for the Airy disk (perfect diffraction-limited PSF for a 
      * circular aperture), with central obscuration.
