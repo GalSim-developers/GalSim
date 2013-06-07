@@ -22,24 +22,11 @@
 #include "boost/python/stl_iterator.hpp"
 
 #include "SBExponential.h"
+#include "RadiusHelper.h"
 
 namespace bp = boost::python;
 
 namespace galsim {
-
-    // Used by multiple profile classes to ensure at most one radius is given.
-    static void checkRadii(const bp::object & r1, const bp::object & r2, const bp::object & r3) 
-    {
-        int nRad = (r1.ptr() != Py_None) + (r2.ptr() != Py_None) + (r3.ptr() != Py_None);
-        if (nRad > 1) {
-            PyErr_SetString(PyExc_TypeError, "Multiple radius parameters given");
-            bp::throw_error_already_set();
-        }
-        if (nRad == 0) {
-            PyErr_SetString(PyExc_TypeError, "No radius parameter given");
-            bp::throw_error_already_set();
-        }
-    }
 
     struct PySBExponential 
     {

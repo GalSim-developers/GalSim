@@ -21,6 +21,8 @@ import os
 import sys
 import pyfits
 
+from galsim_test_helpers import *
+
 try:
     import galsim
 except ImportError:
@@ -64,10 +66,6 @@ n_mu = len(mu)
 x_shift = [0.0, 1.7, -3.0]
 y_shift = [-1.3, 0.0, 9.1]
 n_shift = len(x_shift)
-
-def funcname():
-    import inspect
-    return inspect.stack()[1][3]
 
 #### some helper functions
 def all_shear_vals(test_shear, index, mult_val = 1.0):
