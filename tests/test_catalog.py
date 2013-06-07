@@ -20,6 +20,8 @@ import numpy as np
 import os
 import sys
 
+from galsim_test_helpers import *
+
 try:
     import galsim
 except ImportError:
@@ -27,10 +29,6 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 import galsim.catalog
-
-def funcname():
-    import inspect
-    return inspect.stack()[1][3]
 
 def test_single_row():
     """Test that we can read catalogs with just one row (#394)
