@@ -22,16 +22,14 @@ import os
 import sys
 import math
 
+from galsim_test_helpers import *
+
 try:
     import galsim
 except ImportError:
     path, filename = os.path.split(__file__)
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
-
-def funcname():
-    import inspect
-    return inspect.stack()[1][3]
 
 
 def test_float_value():

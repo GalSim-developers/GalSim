@@ -22,6 +22,8 @@ import pyfits
 import numpy as np
 import math
 
+from galsim_test_helpers import *
+
 """Unit tests for the PSF correction and shear estimation routines.
 
 There are two types of tests: tests that use Gaussian profiles, for which the ideal results are
@@ -84,10 +86,6 @@ sigma_e_expected = np.array([
         [0.110253112, 0.106222900, 0.106222900, 0.099357106],
         [0.185276702, 0.184300955, 0.184300955, 0.173478300],
         [0.073020065, 0.070270966, 0.070270966, 0.061856263] ])
-
-def funcname():
-    import inspect
-    return inspect.stack()[1][3]
 
 def equal_hsmshapedata(res1, res2):
     """Utility to check that all entries in two ShapeData objects are equal."""
@@ -444,7 +442,7 @@ def test_shearest_shape():
             for gal_y_imsize in imsize:
                 for psf_x_imsize in imsize:
                     for psf_y_imsize in imsize:
-                        print gal_x_imsize, gal_y_imsize, psf_x_imsize, psf_y_imsize
+                        #print gal_x_imsize, gal_y_imsize, psf_x_imsize, psf_y_imsize
                         final_image = galsim.ImageF(gal_x_imsize, gal_y_imsize)
                         epsf_image = galsim.ImageF(psf_x_imsize, psf_y_imsize)
 
@@ -458,14 +456,14 @@ def test_shearest_shape():
 
                         tot_e = np.sqrt(save_e1**2 + save_e2**2)
                         if tot_e < 99.:
-                            print "Testing!"
+                            #print "Testing!"
                             np.testing.assert_almost_equal(e1, save_e1,
                                 err_msg = "- incorrect e1",
                                 decimal = decimal_shape)
                             np.testing.assert_almost_equal(e2, save_e2,
                                 err_msg = "- incorrect e2",
                                 decimal = decimal_shape)
-                        print save_e1, save_e2, e1, e2
+                        #print save_e1, save_e2, e1, e2
                         save_e1 = e1
                         save_e2 = e2
 
@@ -601,3 +599,4 @@ if __name__ == "__main__":
     test_shearest_shape()
     test_hsmparams()
     test_hsmparams_nodefault()
+

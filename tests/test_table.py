@@ -1,3 +1,21 @@
+# Copyright 2012, 2013 The GalSim developers:
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+#
+# GalSim is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# GalSim is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with GalSim.  If not, see <http://www.gnu.org/licenses/>
+#
 
 """@brief Tests of the LookupTable class.
 
@@ -9,6 +27,8 @@ import os
 import numpy as np
 import pickle
 
+from galsim_test_helpers import *
+
 path, filename = os.path.split(__file__) # Get the path to this file for use below...
 try:
     import galsim
@@ -16,11 +36,6 @@ except ImportError:
     import sys
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
-
-def funcname():
-    import inspect
-    return inspect.stack()[1][3]
-
 
 TESTDIR=os.path.join(path, "table_comparison_files")
 
