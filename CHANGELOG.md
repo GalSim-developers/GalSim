@@ -85,6 +85,8 @@ Changes from v0.4 to current version:
 
 * Added ability to truncate Sersic profiles with optional trunc parameter. (Issue #388)
 
+* Added ability to specify Sersic profiles by the scale radius. (Issue #420)
+
 * Added trefoil to optical aberration. (Issue #390)
 
 * Added utilities `galsim.utilities.compare_dft_vs_photon*`. (Issue #401)

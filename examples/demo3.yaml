@@ -35,6 +35,7 @@
 # - obj type : Sum (items)
 # - obj type : Convolve (items)
 # - obj type : Sersic (flux, n, half_light_radius)
+# - obj type : Sersic (flux, n, scale_radius)
 # - obj type : Kolmogorov (fwhm)
 # - obj type : OpticalPSF (lam_over_diam, defocus, coma1, coma2, astig1, astig2, obscuration)
 # - shear type : QBeta (q, beta) -- including how to specify an angle
@@ -65,7 +66,11 @@ gal :
         -   # Now the disk:
             type : Sersic
             n : 1.5
-            half_light_radius : 3.7  # arcsec
+            # Normally Sersic profiles are specified by half-light radius, the radius that 
+            # encloses half of the total flux.  However, for some purposes, it can be 
+            # preferable to instead specify the scale radius, where the surface brightness 
+            # drops to 1/e of the central peak value.
+            scale_radius : 0.85  # arcsec (corresponds to half_light_radius of ~3.7 arcsec)
             flux : 0.7
 
     # A shear at this level applies to the summed profile
