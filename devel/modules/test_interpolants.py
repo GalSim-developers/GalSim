@@ -239,8 +239,8 @@ def print_results(g1_list, g2_list, sigma_list, test_answer):
         expected_g2 = numpy.tanh(0.5*numpy.arctanh(expected_d2))
         expected_size = numpy.sqrt(test_answer.magnification)*numpy.array(sigma_list)
     elif test_answer.angle!=0:
-        sin2theta = numpy.sin(2.*numpy.pi*test_answer.angle)
-        cos2theta = numpy.cos(2.*numpy.pi*test_answer.angle)
+        sin2theta = numpy.sin(2.*numpy.pi/180.*test_answer.angle)
+        cos2theta = numpy.cos(2.*numpy.pi/180.*test_answer.angle)
         expected_g1 = g1_list*cos2theta-g2_list*sin2theta
         expected_g2 = g1_list*sin2theta+g2_list*cos2theta
         expected_size = sigma_list
