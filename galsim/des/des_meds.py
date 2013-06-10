@@ -26,6 +26,20 @@ MAX_NCUTOUTS = 11
 EMPTY_START_INDEX = 9999
 EMPTY_JAC = 999
 
+class WCSTransform(object):
+
+
+    def __init__(dudrow, dudcol, dvdrow, dvdcol, row0, col0)
+    
+        self.dudrow =      dudrow
+        self.dudcol =      dudcol
+        self.dvdrow =      dvdrow
+        self.dvdcol =      dvdcol
+        self.row0 =        row0
+        self.col0 =        col0
+
+
+
 class MultiExposureObject(object):
     """
     A class containing exposures for single object, along with other information.
@@ -34,8 +48,7 @@ class MultiExposureObject(object):
         self.images             list of images of the object (GalSim images)
         self.weights            list of weight maps (GalSim images)
         self.segs               list of segmentation masks (GalSim images)
-        self.jacs               list of Jacobians of transformation 
-                                 row,col->ra,dec tangent plane (u,v)
+        self.wcstrans           list of WCS transformation (WCSTransform objects)
         self.n_cutouts          number of exposures
         self.box_size           size of each exposure image
 
@@ -44,22 +57,16 @@ class MultiExposureObject(object):
     @param weights              list of weight maps (GalSim images)
     @param badpix               list of bad pixel masks (GalSim images)
     @param segs                 list of segmentation maps (GalSim images)
-    @param jacs                 list of Jacobians of transformation 
-                                 row,col->ra,dec tangent plane (u,v) (2x2 numpy arrays)
+    @param wcstrans             list of WCS transformation (WCSTransform objects)
 
     Images, weights and segs have to be square numpy arrays with size in 
     BOX_SIZES = [32,48,64,96,128,196,256].
-    Number of exposures for all lists (images,weights,segs,jacs) have to be the same and smaller 
+    Number of exposures for all lists (images,weights,segs,wcstrans) have to be the same and smaller 
     than MAX_NCUTOUTS (default 11).
     """
 
-    def __init__(self,images,weights=None,badpix=None,segs=None,jacs=None):
+    def __init__(self,images,weights=None,badpix=None,segs=None,wcstrans=None,id=0):
 
-        #print 'images = ',images
-        #print 'weights = ',weights
-        #print 'badpix = ',badpix
-        #print 'segs = ',segs
-        #print 'jacs = ',jacs
         if not isinstance(images,list):
             raise TypeError('images should be a list')
 
@@ -78,7 +85,7 @@ class MultiExposureObject(object):
             raise ValueError('box size should be in  [32,48,64,96,128,196,256], is %d' % box_size)
 
 
-        # check if weights, segs and jacs were supplied. If not, create sensible values.
+        # check if weights, segs and wcstrans were supplied. If not, create sensible values.
         if weights != None:
             self.weights = weights
         else:
@@ -108,20 +115,26 @@ class MultiExposureObject(object):
         else:
             self.segs = [galsim.ImageI(self.box_size,self.box_size,init_value=1)]*self.n_cutouts
 
-        # check jacs
-        if jacs != None:
-            self.jacs = jacs
+        # check wcstrans
+        if wcstrans != None:
+            self.wcstrans = wcstrans
         else:
             # buld jacobians that are just based on the pixel scale.
-            self.jacs = [ numpy.array([[ im.scale, 0. ], [0., im.scale]]) for im in self.images ]
+dudrow = 1
+dudcol = 0
+dvdrow = 0
+dvdcol = 1
+row0 = 
+col0 = 
+            self.wcstrans = [ numpy.array([[ im.scale, 0. ], [0., im.scale]]) for im in self.images ]
 
          # check if weights,segs,jacks are lists
         if not isinstance(self.weights,list):
             raise TypeError('weights should be a list')
         if not isinstance(self.segs,list):
             raise TypeError('segs should be a list')
-        if not isinstance(self.jacs,list):
-            raise TypeError('jacs should be a list')
+        if not isinstance(self.wcstrans,list):
+            raise TypeError('wcstrans should be a list')
 
 
         # loop through the images and check if they are of the same size
@@ -147,12 +160,12 @@ class MultiExposureObject(object):
                             ( extname, icutout,nx,self.box_size ) )
 
         # see if the number of Jacobians is right
-        if len(self.jacs) != self.n_cutouts:
+        if len(self.wcstrans) != self.n_cutouts:
             raise ValueError('number of Jacobians is %d is not equal to number of cutouts %d'%
-                    ( len(self.jacs),self.n_cutouts ) )
+                    ( len(self.wcstrans),self.n_cutouts ) )
 
         # check each Jacobian
-        for jac in self.jacs:
+        for jac in self.wcstrans:
             # should ba a numpy array
             if not isinstance(jac,numpy.ndarray):
                 raise TypeError('Jacobians should be numpy arrays')
@@ -233,10 +246,10 @@ def write_meds(file_name,obj_list,clobber=True):
                 vec['weight'] = numpy.concatenate([vec['weight'],obj.weights[i].array.flatten()])          
 
             # append the Jacobian
-            dudrow[i] = obj.jacs[i][0][0]  
-            dudcol[i] = obj.jacs[i][0][1] 
-            dvdrow[i] = obj.jacs[i][1][0] 
-            dvdcol[i] = obj.jacs[i][1][1] 
+            dudrow[i] = obj.wcstrans[i][0][0]  
+            dudcol[i] = obj.wcstrans[i][0][1] 
+            dvdrow[i] = obj.wcstrans[i][1][0] 
+            dvdcol[i] = obj.wcstrans[i][1][1] 
 
             # check if we are running out of memory
             if sys.getsizeof(vec) > MAX_MEMORY:
@@ -271,8 +284,8 @@ def write_meds(file_name,obj_list,clobber=True):
     cols.append( pyfits.Column(name='orig_col', format='f8', array=[1]*n_obj) )
     cols.append( pyfits.Column(name='orig_start_row', format='i4', array=[1]*n_obj) ) 
     cols.append( pyfits.Column(name='orig_start_col', format='i4', array=[1]*n_obj) ) 
-    cols.append( pyfits.Column(name='cutout_row', format='f8' , array=[1]*n_obj) )
-    cols.append( pyfits.Column(name='cutout_col', format='f8' , array=[1]*n_obj) )
+    cols.append( pyfits.Column(name='row0', format='f8' , array=[1]*n_obj) )
+    cols.append( pyfits.Column(name='col0', format='f8' , array=[1]*n_obj) )
     cols.append( pyfits.Column(name='dudrow', format='%df8'% MAX_NCUTOUTS, array=cat['dudrow'] ) )
     cols.append( pyfits.Column(name='dudcol', format='%df8'% MAX_NCUTOUTS, array=cat['dudcol'] ) )
     cols.append( pyfits.Column(name='dvdrow', format='%df8'% MAX_NCUTOUTS, array=cat['dvdrow'] ) )
