@@ -29,6 +29,13 @@
 
 namespace galsim {
 
+    namespace sbp {
+
+        // How many Exponential profiles to save in the cache
+        const int max_exponential_cache = 100;
+
+    }
+
     /** 
      * @brief Exponential Surface Brightness Profile.  
      *

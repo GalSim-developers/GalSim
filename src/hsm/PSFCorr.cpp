@@ -30,6 +30,7 @@
 #include "hsm/PSFCorr.h"
 
 #include "FFT.h"
+#include <boost/math/special_functions/fpclassify.hpp> // for isnan()
 
 #ifdef DEBUGLOGGING
 #include <fstream>
@@ -66,10 +67,14 @@ namespace hsm {
         double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter,
         boost::shared_ptr<HSMParams> hsmparams);
 
+    // Make a masked_image based on the input image and mask.  The returned ImageView is a
+    // sub-image of the given masked_image.  It is the smallest sub-image that contains all the 
+    // non-zero elements in the masked_image, so subsequent operations can safely use this
+    // instead of the full masked_image.
     template <typename T>
-    void MakeMaskedImage(Image<double>& masked_image,
-                         const ImageView<T>& image,
-                         const ImageView<int>& mask)
+    ImageView<double> MakeMaskedImage(Image<double>& masked_image,
+                                      const ImageView<T>& image,
+                                      const ImageView<int>& mask)
     {
         Bounds<int> b = image.getBounds();
         dbg<<"b = "<<b<<std::endl;
@@ -83,16 +88,28 @@ namespace hsm {
         double* pF = masked_image.getData();
         const int sF = masked_image.getStride() - rowlen;
 
+        Bounds<int> b2;
         for(int y=b.getYMin();y<=b.getYMax();y++) {
             for(int x=b.getXMin();x<=b.getXMax();x++) {
-                if (*pM++) *pF++ = *pI++;
-                else { *pF++ = 0.; ++pI; }
+                if (*pM++) {
+                    *pF = *pI++;
+                    if (*pF != 0.) b2 += Position<int>(x,y);
+                    ++pF;
+                } else { 
+                    *pF++ = 0.;
+                    ++pI; 
+                }
             }
             pM += sM;
             pI += sI;
             pF += sF;
         }
         dbg<<"Done MakeMaskedImage"<<std::endl;
+        dbg<<"Final b2 bounds = "<<b2<<std::endl;
+        // Make sure we have at least 1 pixel in the final mask.  Throw an exception if not.
+        if (!b2.isDefined()) 
+            throw HSMError("Masked image is all 0's.");
+        return masked_image[b2];
     }
 
     // Carry out PSF correction directly using ImageViews, repackaging for general_shear_estimator.
@@ -147,8 +164,9 @@ namespace hsm {
         }
 
         // Apply the mask
-        Image<double> masked_gal_image;
-        MakeMaskedImage(masked_gal_image,gal_image,gal_mask_image);
+        Image<double> full_masked_gal_image;
+        ImageView<double> masked_gal_image = 
+            MakeMaskedImage(full_masked_gal_image,gal_image,gal_mask_image);
         Image<double> masked_PSF_image(PSF_image);
         ConstImageView<double> masked_gal_image_cview = masked_gal_image.view();
         ConstImageView<double> masked_PSF_image_cview = masked_PSF_image.view();
@@ -239,12 +257,12 @@ namespace hsm {
         // Apply the mask
         dbg<<"obj bounds = "<<object_image.getBounds()<<std::endl;
         dbg<<"mask bounds = "<<object_mask_image.getBounds()<<std::endl;
-        Image<double> masked_object_image;
-        dbg<<"initial masked obj bounds = "<<masked_object_image.getBounds()<<std::endl;
-        MakeMaskedImage(masked_object_image,object_image,object_mask_image);
+        Image<double> full_masked_object_image;
+        ImageView<double> masked_object_image = 
+            MakeMaskedImage(full_masked_object_image,object_image,object_mask_image);
         ConstImageView<double> masked_object_image_cview = masked_object_image.view();
+        dbg<<"full masked obj bounds = "<<full_masked_object_image.getBounds()<<std::endl;
         dbg<<"masked obj bounds = "<<masked_object_image.getBounds()<<std::endl;
-        dbg<<"masked obj cview bounds = "<<masked_object_image_cview.getBounds()<<std::endl;
 
         // call find_ellipmom_2
         results.image_bounds = object_image.getBounds();
@@ -642,12 +660,11 @@ namespace hsm {
         double Mxy, double Myy, double& A, double& Bx, double& By, double& Cxx,
         double& Cxy, double& Cyy, double& rho4w, boost::shared_ptr<HSMParams> hsmparams) 
     {
-        //long npix=0;
         long xmin = data.getXMin();
         long xmax = data.getXMax();
         long ymin = data.getYMin();
         long ymax = data.getYMax();
-        dbg<<"Entering find_ellipmom_1 with Mxx, Myy, Mxy: "<<Mxx<<" "<<Myy<<" "<<Mxy<<std::endl;
+        dbg<<"Entering find_ellipmom_1: "<<x0<<" "<<y0<<" "<<Mxx<<" "<<Myy<<" "<<Mxy<<" "<<(Mxx-Myy)/(Mxx+Myy)<<" "<<2.*Mxy/(Mxx+Myy)<<std::endl;
         dbg<<"x0, y0: "<<x0<<" "<<y0<<std::endl;
         dbg<<"xmin, xmax: "<<xmin<<" "<<xmax<<std::endl;
 
@@ -776,9 +793,9 @@ namespace hsm {
 
         double convergence_factor = 1.0;
         double Amp,Bx,By,Cxx,Cxy,Cyy;
-        double semi_a2, semi_b2, two_psi;
+        double semi_a2, semi_b2, semi_geomean2, two_psi;
         double dx, dy, dxx, dxy, dyy;
-        double shiftscale, shiftscale0=0.;
+        double shiftscale, shiftscale0=0;
         double x00 = x0;
         double y00 = y0;
 
@@ -813,14 +830,18 @@ namespace hsm {
             }
 
             shiftscale = std::sqrt(semi_b2);
+            semi_geomean2 = std::sqrt(semi_a2*semi_b2);
             if (num_iter == 0) shiftscale0 = shiftscale;
 
             /* Now compute changes to x0, etc. */
             dx = 2. * Bx / (Amp * shiftscale);
             dy = 2. * By / (Amp * shiftscale);
-            dxx = 4. * (Cxx/Amp - 0.5*Mxx) / semi_b2;
-            dxy = 4. * (Cxy/Amp - 0.5*Mxy) / semi_b2;
-            dyy = 4. * (Cyy/Amp - 0.5*Myy) / semi_b2;
+            // Note: Before, the lines below had a devision by semi_b2 instead of semi_geomean2.
+            // This was causing issues with convergence for very flattened galaxies (i.e., that have
+            // a small semi-minor axis).
+            dxx = 4. * (Cxx/Amp - 0.5*Mxx) / semi_geomean2;
+            dxy = 4. * (Cxy/Amp - 0.5*Mxy) / semi_geomean2;
+            dyy = 4. * (Cyy/Amp - 0.5*Myy) / semi_geomean2;
 
             if (dx     >  hsmparams->bound_correct_wt) dx     =  hsmparams->bound_correct_wt;
             if (dx     < -hsmparams->bound_correct_wt) dx     = -hsmparams->bound_correct_wt;
@@ -840,7 +861,13 @@ namespace hsm {
             if (std::abs(dxy)>convergence_factor) convergence_factor = std::abs(dxy);
             if (std::abs(dyy)>convergence_factor) convergence_factor = std::abs(dyy);
             convergence_factor = std::sqrt(convergence_factor);
-            if (shiftscale<shiftscale0) convergence_factor *= shiftscale0/shiftscale;
+            // Note: the line below used to not be commented out.  However, it was causing this
+            // routine to fail to convergence in the case where the object is very flattened, because
+            // of the division by shiftscale which is the semi-minor axis.  Moreover, since
+            // shiftscale0 (on top) is the original guess for the object size, it led to an
+            // unnatural dependence on the initial guess.
+            //if (shiftscale<shiftscale0) convergence_factor *= shiftscale0/shiftscale;
+            dbg<<"In find_ellipmom_2: "<<std::abs(dx)<<" "<<std::abs(dy)<<" "<<std::abs(dxx)<<" "<<std::abs(dyy)<<" "<<std::abs(dxy)<<" "<<shiftscale<<" "<<shiftscale0<<" "<<semi_a2<<" "<<semi_b2<<" "<<convergence_factor<<std::endl;
 
             /* Now update moments */
             x0 += dx * shiftscale;
@@ -862,8 +889,11 @@ namespace hsm {
                 throw HSMError("Error: too many iterations in adaptive moments\n");
             }
 
-            if (std::isnan(convergence_factor) || std::isnan(Mxx) || std::isnan(Myy)
-                || std::isnan(Mxy) || std::isnan(x0) || std::isnan(y0)) {
+            // See http://www.boost.org/doc/libs/1_41_0/libs/math/doc/sf_and_dist/html/math_toolkit/utils/fpclass.html
+            // for why we seem to have extra parentheses here.
+            if ((boost::math::isnan)(convergence_factor) || (boost::math::isnan)(Mxx) || 
+                (boost::math::isnan)(Myy) || (boost::math::isnan)(Mxy) || 
+                (boost::math::isnan)(x0) || (boost::math::isnan)(y0)) {
                 throw HSMError("Error: NaN in calculation of adaptive moments\n");
             }
         }

@@ -180,7 +180,8 @@ struct PyImage {
             .def("__call__", at) // always used checked accessors in Python
             .def("at", at)
             .def("__call__", at_pos)
-            .def("at", at_pos)
+            // For some reason, this next line causes help(galsim.ImageD) to hang and/or crash.
+            //.def("at", at_pos)
             .def("setValue", &Image<T>::setValue, bp::args("x","y","value"))
             .def("fill", &Image<T>::fill)
             .def("setZero", &Image<T>::setZero)
@@ -229,7 +230,7 @@ struct PyImage {
             .def("__call__", at) // always used checked accessors in Python
             .def("at", at)
             .def("__call__", at_pos)
-            .def("at", at_pos)
+            //.def("at", at_pos)
             .def("setValue", &ImageView<T>::setValue, bp::args("x","y","value"))
             .def("fill", &ImageView<T>::fill)
             .def("setZero", &ImageView<T>::setZero)
@@ -274,7 +275,7 @@ struct PyImage {
             .def("__call__", at) // always used checked accessors in Python
             .def("at", at)
             .def("__call__", at_pos)
-            .def("at", at_pos)
+            //.def("at", at_pos)
             .enable_pickling()
             ;
 

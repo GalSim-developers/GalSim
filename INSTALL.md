@@ -361,8 +361,8 @@ the GalSim Installation FAQ page on the Wiki:
 https://github.com/GalSim-developers/GalSim/wiki/Installation%20FAQ
 
 If you are still having trouble, please consider opening a new Issue on the
-GalSim Github page at https://github.com/GalSim-developers/GalSim to help find
-a solution for the problem.
+GalSim Github page at https://github.com/GalSim-developers/GalSim/issues to help
+find a solution for the problem.
 
 
 3. Running tests and installing example executables
@@ -423,7 +423,7 @@ running `scons examples`) can be run from either `GalSim/bin` or
 i) Linux
 --------
 The vast majority of Linux distributions provide installable packages for most
-of our dependencies. In may cases, however, it is also necessary to install
+of our dependencies. In many cases, however, it is also necessary to install
 "-devel" or "-dev" packages (e.g. `python-dev` or `libboost-dev` on Debian-
 derivatives). However, as above we stress that you should make sure that the
 version of Python that Boost is built against must be the same as that you
