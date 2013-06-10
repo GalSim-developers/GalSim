@@ -177,11 +177,13 @@ def RunMeasurementsFFT(config,filename_results):
     # measure the photon and fft images
     for i in range(nobjects):
 
+        if config['ident'] < 0: obj_num = i
+
         # this bit is still serial, not too good...
         try: 
             result = GetShapeMeasurements(img_gals[i],img_psfs[i],obj_num)
         except Exception,e: 
-            logger.error('failed to get GetShapeMeasurements for galaxy %d. Message %s' % (i,e))
+            logger.error('failed to get GetShapeMeasurements for galaxy %d. Message %s' % (obj_num,e))
             result = _ErrorResults(HSM_ERROR_VALUE,i)
 
         WriteResults(file_results,result)
@@ -366,7 +368,7 @@ def RunComparisonForVariedParams(config):
             # Copy the config to the original
             changed_config = copy.deepcopy(config)
             # Perform the change
-            ChangeConfigValue(changed_config,param['path'],value)
+            ChangeConfigValue(changed_config,param['path'],float(value))
             logging.info('changed parameter %s to %s' % (param_name,str(value)))
             # Run the photon vs fft test on the changed configs
 

@@ -51,7 +51,7 @@ def PlotStatsForParam(config,param_name):
         filepath_results_fft = os.path.join(config['results_dir'],filename_results_fft)
         filepath_results_pht = os.path.join(config['results_dir'],filename_results_pht)
 
-        logger.debug('parameter %s, index %03d, value %2.4e' % (param_name,iv,value))
+        logger.debug('parameter %s, index %03d, value %2.4e' % (param_name,iv,float(value)))
 
         # if there is no .fft or .pht file, look for the default to compare it against
         if not os.path.isfile(filepath_results_pht):
@@ -206,13 +206,16 @@ def GetBias(config,filename_results_pht,filename_results_fft):
     # load results
     results_pht = numpy.loadtxt(filename_results_pht)
     results_fft = numpy.loadtxt(filename_results_fft)
+    logging.debug('opening files %s, %s ' % ( filename_results_pht, filename_results_fft ))
 
     # intersection of results in case some data is missing
-    common_ids = list(set(results_pht[:,0]).intersection( set(results_fft[:,0] )))  
-    indices_pht = [list(results_pht[:,0]).index(cid) for cid in common_ids]
-    indices_fft = [list(results_fft[:,0]).index(cid) for cid in common_ids]
+    common_ids = list(set(results_pht[:,0].astype(numpy.int64)).intersection( set(results_fft[:,0].astype(numpy.int64))))  
+    indices_pht = [list(results_pht[:,0].astype(numpy.int64)).index(cid) for cid in common_ids]
+    indices_fft = [list(results_fft[:,0].astype(numpy.int64)).index(cid) for cid in common_ids]
     results_pht = results_pht[indices_pht,:]
     results_fft = results_fft[indices_fft,:]
+
+
 
     # get the number of points
     n_res_all = results_pht.shape[0]
