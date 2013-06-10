@@ -29,7 +29,7 @@ EMPTY_JAC = 999
 class WCSTransform(object):
 
 
-    def __init__(dudrow, dudcol, dvdrow, dvdcol, row0, col0)
+    def __init__(self,dudrow, dudcol, dvdrow, dvdcol, row0, col0):
     
         self.dudrow =      dudrow
         self.dudcol =      dudcol
@@ -58,6 +58,7 @@ class MultiExposureObject(object):
     @param badpix               list of bad pixel masks (GalSim images)
     @param segs                 list of segmentation maps (GalSim images)
     @param wcstrans             list of WCS transformation (WCSTransform objects)
+    @param id                   galaxy id
 
     Images, weights and segs have to be square numpy arrays with size in 
     BOX_SIZES = [32,48,64,96,128,196,256].
@@ -66,6 +67,8 @@ class MultiExposureObject(object):
     """
 
     def __init__(self,images,weights=None,badpix=None,segs=None,wcstrans=None,id=0):
+
+        self.id = id
 
         if not isinstance(images,list):
             raise TypeError('images should be a list')
@@ -119,14 +122,15 @@ class MultiExposureObject(object):
         if wcstrans != None:
             self.wcstrans = wcstrans
         else:
-            # buld jacobians that are just based on the pixel scale.
-dudrow = 1
-dudcol = 0
-dvdrow = 0
-dvdcol = 1
-row0 = 
-col0 = 
-            self.wcstrans = [ numpy.array([[ im.scale, 0. ], [0., im.scale]]) for im in self.images ]
+            # buld jacobians that are just based on the pixel scale, set the centers
+            dudrow = 1 
+            dudcol = 0
+            dvdrow = 0
+            dvdcol = 1
+            row0 = float(self.box_size)/2.
+            col0 = float(self.box_size)/2.
+            self.wcstrans = [ WCSTransform(dudrow * im.scale , dudcol * im.scale , 
+                        dvdrow * im.scale , dvdcol * im.scale , row0, col0) for im in self.images ]
 
          # check if weights,segs,jacks are lists
         if not isinstance(self.weights,list):
@@ -167,12 +171,9 @@ col0 =
         # check each Jacobian
         for jac in self.wcstrans:
             # should ba a numpy array
-            if not isinstance(jac,numpy.ndarray):
-                raise TypeError('Jacobians should be numpy arrays')
-            # should have 2x2 shape
-            if jac.shape != (2,2):
-                raise ValueError('Jacobians should be 2x2')
-
+            if not isinstance(jac,WCSTransform):
+                raise TypeError('wcstrans list should contain WCSTransform objects')
+            
 
 def write_meds(file_name,obj_list,clobber=True):
     """
@@ -193,10 +194,13 @@ def write_meds(file_name,obj_list,clobber=True):
     cat['ncutout'] = []
     cat['box_size'] = []
     cat['start_row'] = []
+    cat['id'] = []
     cat['dudrow'] = [] 
     cat['dudcol'] = []
     cat['dvdrow'] = []
     cat['dvdcol'] = []
+    cat['row0'] = []
+    cat['col0'] = []
 
     # initialise the image vectors
     vec = {}
@@ -219,6 +223,8 @@ def write_meds(file_name,obj_list,clobber=True):
         dudcol = numpy.ones(MAX_NCUTOUTS)*EMPTY_JAC
         dvdrow = numpy.ones(MAX_NCUTOUTS)*EMPTY_JAC
         dvdcol = numpy.ones(MAX_NCUTOUTS)*EMPTY_JAC
+        row0   = numpy.ones(MAX_NCUTOUTS)*EMPTY_JAC
+        col0   = numpy.ones(MAX_NCUTOUTS)*EMPTY_JAC
 
         # get the number of cutouts (exposures)
         n_cutout = obj.n_cutouts
@@ -226,6 +232,8 @@ def write_meds(file_name,obj_list,clobber=True):
         # append the catalog for this object
         cat['ncutout'].append(n_cutout)
         cat['box_size'].append(obj.box_size)
+        cat['id'].append(obj.id)
+
         
         # loop over cutouts
         for i in range(n_cutout):
@@ -246,10 +254,12 @@ def write_meds(file_name,obj_list,clobber=True):
                 vec['weight'] = numpy.concatenate([vec['weight'],obj.weights[i].array.flatten()])          
 
             # append the Jacobian
-            dudrow[i] = obj.wcstrans[i][0][0]  
-            dudcol[i] = obj.wcstrans[i][0][1] 
-            dvdrow[i] = obj.wcstrans[i][1][0] 
-            dvdcol[i] = obj.wcstrans[i][1][1] 
+            dudrow[i] = obj.wcstrans[i].dudrow  
+            dudcol[i] = obj.wcstrans[i].dudcol 
+            dvdrow[i] = obj.wcstrans[i].dvdrow 
+            dvdcol[i] = obj.wcstrans[i].dvdcol
+            row0[i]   = obj.wcstrans[i].row0
+            col0[i]   = obj.wcstrans[i].col0
 
             # check if we are running out of memory
             if sys.getsizeof(vec) > MAX_MEMORY:
@@ -269,6 +279,8 @@ def write_meds(file_name,obj_list,clobber=True):
         cat['dudcol'].append(dudcol) 
         cat['dvdrow'].append(dvdrow) 
         cat['dvdcol'].append(dvdcol) 
+        cat['row0'].append(row0) 
+        cat['col0'].append(col0) 
 
     # get the primary HDU
     primary = pyfits.PrimaryHDU()
@@ -276,6 +288,7 @@ def write_meds(file_name,obj_list,clobber=True):
     # second hdu is the object_data
     cols = []
     cols.append( pyfits.Column(name='ncutout', format='i4', array=cat['ncutout'] ) )
+    cols.append( pyfits.Column(name='id', format='i4', array=cat['id'] ) )
     cols.append( pyfits.Column(name='box_size', format='i4', array=cat['box_size'] ) )
     cols.append( pyfits.Column(name='file_id', format='i4', array=[1]*n_obj) ) 
     cols.append( pyfits.Column(name='start_row', format='%di4' % MAX_NCUTOUTS, 
@@ -284,12 +297,14 @@ def write_meds(file_name,obj_list,clobber=True):
     cols.append( pyfits.Column(name='orig_col', format='f8', array=[1]*n_obj) )
     cols.append( pyfits.Column(name='orig_start_row', format='i4', array=[1]*n_obj) ) 
     cols.append( pyfits.Column(name='orig_start_col', format='i4', array=[1]*n_obj) ) 
-    cols.append( pyfits.Column(name='row0', format='f8' , array=[1]*n_obj) )
-    cols.append( pyfits.Column(name='col0', format='f8' , array=[1]*n_obj) )
     cols.append( pyfits.Column(name='dudrow', format='%df8'% MAX_NCUTOUTS, array=cat['dudrow'] ) )
     cols.append( pyfits.Column(name='dudcol', format='%df8'% MAX_NCUTOUTS, array=cat['dudcol'] ) )
     cols.append( pyfits.Column(name='dvdrow', format='%df8'% MAX_NCUTOUTS, array=cat['dvdrow'] ) )
     cols.append( pyfits.Column(name='dvdcol', format='%df8'% MAX_NCUTOUTS, array=cat['dvdcol'] ) )  
+    cols.append( pyfits.Column(name='cutout_row', format='%df8'% MAX_NCUTOUTS, array=cat['row0'] ) )
+    cols.append( pyfits.Column(name='cutout_col', format='%df8'% MAX_NCUTOUTS, array=cat['col0'] ) )  
+
+
     object_data = pyfits.new_table(pyfits.ColDefs(cols))
     object_data.update_ext_name('object_data')
 
