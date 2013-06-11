@@ -567,7 +567,7 @@ namespace galsim {
         MoffatIntegrand(double beta, double k, double (*pb)(double, double)) : 
             _beta(beta), _k(k), _pow_beta(pb) {}
         double operator()(double r) const 
-        { return r/_pow_beta(1.+r*r, _beta)*boost::math::cyl_bessel_j(0,_k*r); }
+        { return r/_pow_beta(1.+r*r, _beta)*j0(_k*r); }
 
     private:
         double _beta;
