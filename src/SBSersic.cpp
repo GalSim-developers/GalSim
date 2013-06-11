@@ -381,18 +381,11 @@ namespace galsim {
 
     double SersicInfo::kValue(double ksq) const 
     {
-        // Use asymptotic formula for high-k?
-        // c.f. discussion on Issue '#426'.  Summary:
-        // No analytic formula in general for arbitrary n, but David lists some values for 
-        // particular choices of n. In any case, the leading order is 1/k^2, which is why we 
-        // interpolate f(logk) * k^2 in the lookup table.
-        // It seems unlikely that there is a useful asymptotic formula that works for artibrary n.
-
         assert(ksq >= 0.);
         if (_ft.size() == 0) buildFT();
 
         if (ksq>=_ksq_max)
-            return 0.; // truncate the Fourier transform
+            return (_highk_a + _highk_b/sqrt(ksq))/ksq; // high-k asymptote
         else if (ksq<_ksq_min)
             return 1. + ksq*(_kderiv2 + ksq*_kderiv4); // Use quartic approx at low k
         else {
@@ -451,9 +444,6 @@ namespace galsim {
         double hankel_norm = getFluxFraction()*_n*_gamma2n;
         dbg<<"hankel_norm = "<<hankel_norm<<std::endl;
 
-        // Keep going until at least 5 in a row have kvalues below kvalue_accuracy.
-        int n_below_thresh = 0;
-
         double integ_maxr;
         if (!_truncated) {
             //integ_maxr = calculateMissingFluxRadius(_gsparams->kvalue_accuracy);
@@ -465,31 +455,30 @@ namespace galsim {
         }
         dbg<<"integ_maxr = "<<integ_maxr<<std::endl;
 
-        // There are two "max k" values that we care about.
-        // 1) _maxk is where |f| <= maxk_threshold
-        // 2) _ksq_max is where |f| <= kvalue_accuracy
-        // The two thresholds are typically different, since they are used in different ways.
-        // We keep track of maxlogk_1 and maxlogk_2 to keep track of each of these.
-        double maxlogk_1 = 0.;
-        double maxlogk_2 = 0.;
-
         // We use a cubic spline for the interpolation, which has an error of O(h^4) max(f'''').
-        // I have no idea what range the fourth derivative can take for the hankel transform
-        // (with respect to logk), so let's take the completely arbitrary value of 10. (!?!)
+        // The fourth derivative is a bit tough to estimate of course, but doing it numerically
+        // for a few different values of n, we find 10 to be a reasonably conservative estimate.
         // 10 h^4 <= kvalue_accuracy
         // h = (kvalue_accuracy/10)^0.25
         double dlogk = _gsparams->table_spacing * sqrt(sqrt(_gsparams->kvalue_accuracy / 10.));
         dbg<<"n = "<<_n<<std::endl;
         dbg<<"Using dlogk = "<<dlogk<<std::endl;
+
+        // As we go, build up the high k approximation f(k) = a/k^2 + b/k^3, based on the last 
+        // 10 items. Keep going until the predicted value is accurate enough for 5 items in a row.
+        // Once we're past the maxk value, we try to stop if the approximation is within 
+        // kvalue_accuracy of the correct value.
+        int n_correct = 0;
+        const int n_fit = 10;
+        std::deque<double> fit_vals;
+        double sf=0., skf=0., sk=0., sk2=0.;
+
         // Don't go past k = 500
         for (double logk = std::log(kmin)-0.001; logk < std::log(500.); logk += dlogk) {
             double k = std::exp(logk);
+            double ksq = k*k;
             SersicHankel I(_invn, k);
-#ifdef DEBUGLOGGING
-            integ::IntRegion<double> reg(0, integ_maxr, dbgout);
-#else
             integ::IntRegion<double> reg(0, integ_maxr);
-#endif
 
             // Add explicit splits at first several roots of J0.
             // This tends to make the integral more accurate.
@@ -499,31 +488,61 @@ namespace galsim {
                 reg.addSplit(root/k);
             }
 
-            double val = integ::int1d(
-                I, reg,
-                _gsparams->integration_relerr, _gsparams->integration_abserr*hankel_norm);
+            double val = integ::int1d(I, reg,
+                                      _gsparams->integration_relerr,
+                                      _gsparams->integration_abserr*hankel_norm);
             val /= hankel_norm;
-            xdbg<<"logk = "<<logk<<", ft("<<exp(logk)<<") = "<<val<<"   "<<val*k*k<<std::endl;
-            _ft.addEntry(logk,val*k*k);
+            xdbg<<"logk = "<<logk<<", ft("<<exp(logk)<<") = "<<val<<"   "<<val*ksq<<std::endl;
+            
+            double f0 = val * ksq;
+            _ft.addEntry(logk,f0);
 
-            if (std::abs(val) > _gsparams->maxk_threshold) maxlogk_1 = logk;
-            if (std::abs(val) > _gsparams->kvalue_accuracy) maxlogk_2 = logk;
+            // Keep track of whether we are below the maxk_threshold yet:
+            if (std::abs(val) > _gsparams->maxk_threshold) { _maxk = k; n_correct = 0; }
+            else {
+                // Once we are past the last maxk_threshold value,  figure out if the 
+                // high-k approximation is good enough.
+                _highk_a = (sf*sk2 - sk*skf) / (n_fit*sk2 - sk*sk);
+                _highk_b = (n_fit*skf - sk*sf) / (n_fit*sk2 - sk*sk);
+                double f0_pred = _highk_a + _highk_b/k;
+                xdbg<<"f0 = "<<f0<<", f0_pred = "<<f0_pred;
+                xdbg<<"   a,b = "<<_highk_a<<','<<_highk_b<<std::endl;
+                if (std::abs(f0-f0_pred)/ksq < _gsparams->kvalue_accuracy) ++n_correct;
+                else n_correct = 0;
+                if (n_correct >= 5) {
+                    _ksq_max = ksq;
+                    break;
+                }
+            }
 
-            if (std::abs(val) > _gsparams->kvalue_accuracy) n_below_thresh = 0;
-            else ++n_below_thresh;
-            if (n_below_thresh == 5) break;
+            // Update the terms needed for the high-k approximation
+            if (int(fit_vals.size()) == n_fit) {
+                double k_back = std::exp(logk - n_fit*dlogk);
+                double f_back = fit_vals.back();
+                fit_vals.pop_back();
+                double inv_k = 1./k;
+                double inv_k_back = 1./k_back;
+                sf += f0 - f_back;
+                skf += f0*inv_k - f_back*inv_k_back;
+                sk += inv_k - inv_k_back;
+                sk2 += inv_k*inv_k - inv_k_back*inv_k_back;
+            } else {
+                assert(int(fit_vals.size()) < n_fit);
+                double inv_k = 1./k;
+                sf += f0;
+                skf += f0*inv_k;
+                sk += inv_k;
+                sk2 += inv_k*inv_k;
+            }
+            fit_vals.push_front(f0);
         }
-        // These marked the last value that didn't satisfy our requirement, so just go to 
-        // the next value.
-        maxlogk_1 += dlogk;
-        maxlogk_2 += dlogk;
-        _maxk = exp(maxlogk_1);
-        xdbg<<"maxlogk_1 = "<<maxlogk_1<<std::endl;
-        xdbg<<"maxk with val >= "<<_gsparams->maxk_threshold<<" = "<<_maxk<<std::endl;
-        _ksq_max = exp(2.*maxlogk_2);
         xdbg<<"ft.argMax = "<<_ft.argMax()<<std::endl;
-        xdbg<<"maxlogk_2 = "<<maxlogk_2<<std::endl;
         xdbg<<"ksq_max = "<<_ksq_max<<std::endl;
+
+        // This is the last value that didn't satisfy the requirement, so just go to 
+        // the next value.
+        _maxk *= exp(dlogk);
+        xdbg<<"maxk with val >= "<<_gsparams->maxk_threshold<<" = "<<_maxk<<std::endl;
     }
 
     // Function object for finding the r that encloses all except a particular flux fraction.

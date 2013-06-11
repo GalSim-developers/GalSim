@@ -109,6 +109,8 @@ namespace galsim {
         mutable double _kderiv4; ///< Quartic dependence of F near k=0.
         mutable double _ksq_min; ///< Minimum ksq to use lookup table.
         mutable double _ksq_max; ///< Maximum ksq to use lookup table.
+        mutable double _highk_a; ///< Coefficient of 1/k^2 in high-k asymptote
+        mutable double _highk_b; ///< Coefficient of 1/k^3 in high-k asymptote
 
         /// Classes used for photon shooting
         mutable boost::shared_ptr<FluxDensity> _radial;  
