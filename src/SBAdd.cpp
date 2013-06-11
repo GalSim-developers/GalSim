@@ -41,7 +41,7 @@ namespace galsim {
 
     SBAdd::SBAddImpl::SBAddImpl(const std::list<SBProfile>& slist,
                                 const GSParamsPtr& gsparams) :
-        SBProfileImpl(gsparams)
+        SBProfileImpl(gsparams ? gsparams : GetImpl(slist.front())->gsparams)
     {
         for (ConstIter sptr = slist.begin(); sptr!=slist.end(); ++sptr)
             add(*sptr);
