@@ -118,9 +118,11 @@ namespace galsim {
                            _flux *= _info->getFluxFraction();
                            _re = _r0 * _info->getHLR();
                        } else {
+                           // The stored flux is right, but we need to normalize by a larger flux.
                            norm_flux /= _info->getFluxFraction();
                        }
                    } else {
+                       // Then given HLR and flux are the values for the untruncated profile.
                        _r0 = _re / _info->getHLR();
                    }
                }
@@ -136,6 +138,7 @@ namespace galsim {
                            // Update the stored _flux with the correct value
                            _flux *= _info->getFluxFraction();
                        } else {
+                           // The stored flux is right, but we need to normalize by a larger flux.
                            norm_flux /= _info->getFluxFraction();
                        }
                    }

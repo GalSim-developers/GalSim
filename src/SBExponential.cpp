@@ -110,15 +110,13 @@ namespace galsim {
 
     std::complex<double> SBExponential::SBExponentialImpl::kValue(const Position<double>& k) const 
     {
-        double ksq = (k.x * k.x + k.y * k.y) * _r0_sq;
+        double ksq = (k.x*k.x + k.y*k.y)*_r0_sq;
 
-        if (ksq > _ksq_max) {
-            return 0.;
-        } else if (ksq < _ksq_min) {
-            return _flux * (1. - 1.5 * ksq * (1. - 1.25 * ksq));
+        if (ksq < _ksq_min) {
+            return _flux*(1. - 1.5*ksq*(1. - 1.25*ksq));
         } else {
             double temp = 1. + ksq;
-            return _flux / (temp * sqrt(temp));
+            return _flux/(temp*sqrt(temp));
             // NB: flux*std::pow(temp,-1.5) is slower.
         }
     }
