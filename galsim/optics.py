@@ -242,7 +242,7 @@ def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_diam=2., circul
         in_pupil *= np.abs(kxs) >= .5 * strutthick * kmax_internal # This is first strut, then...
         for istrut in range(nstruts)[1:]: 
             kxs, kys = utilities.rotate_xy(kxs, kys, -rotang)
-            in_pupil *= np.abs(kxs) >= .5 * strutthick * kmax_internal
+            in_pupil *= ((np.abs(kxs) >= .5 * strutthick * kmax_internal) * (ksy < 0.))
     return rho, theta, in_pupil
 
 def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0.,
