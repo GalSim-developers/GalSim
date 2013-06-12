@@ -731,8 +731,8 @@ def ptf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
     ptf[k2 < kmax_internal**2] = np.angle(otf(
         array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus, astig1=astig1,
         astig2=astig2, coma1=coma1, coma2=coma2, trefoil1=trefoil1, trefoil2=trefoil2, spher=spher,
-        circular_pupil=circular_pupil, obscuration=obscuration)[k2 < kmax_internal**2], 
-        nstruts=nstruts, strutthick=strutthick, strutang=strutang)
+        circular_pupil=circular_pupil, obscuration=obscuration, nstruts=nstruts,
+        strutthick=strutthick, strutang=strutang)[k2 < kmax_internal**2]) 
     return ptf
 
 def ptf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0.,
