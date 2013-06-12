@@ -47,6 +47,10 @@ namespace galsim {
          * @param alias_threshold     A threshold parameter used for setting the stepK value for 
          *                            FFTs.  The FFT's stepK is set so that at most a fraction 
          *                            alias_threshold of the flux of any profile is aliased.
+         * @param stepk_minimum_hlr   In addition to the above constraint for aliasing, also set 
+         *                            stepk such that pi/stepk is at least stepk_minimum_hlr
+         *                            times the profile's half-light radius (for profiles that
+         *                            have a well-defined half-light radius).
          * @param maxk_threshold      A threshold parameter used for setting the maxK value for 
          *                            FFTs.  The FFT's maxK is set so that the k-values that are 
          *                            excluded off the edge of the image are less than 
@@ -68,6 +72,15 @@ namespace galsim {
          *                            it may be set to zero.  Similarly, if an alternate 
          *                            calculation has errors less than xvalue_accuracy, then it may 
          *                            be used instead of an exact calculation.
+         * @param table_spacing       Several profiles use lookup tables for either the Hankel
+         *                            transform (Sersic, truncated Moffat) or the real space
+         *                            radial function (Kolmogorov).  We try to estimate a good
+         *                            spacing between values in the lookup tables based on
+         *                            either xvalue_accuracy or kvalue_accuracy as appropriate.
+         *                            However, you may change the spacing with table_spacing.
+         *                            Using table_spacing < 1 will use a spacing value that much 
+         *                            smaller than the default, which should produce more accurate
+         *                            interpolations.
          * @param realspace_relerr    The target relative accuracy for real-space convolution.
          * @param realspace_abserr    The target absolute accuracy for real-space convolution.
          * @param integration_relerr  Target relative accuracy for integrals (other than real-space
@@ -97,9 +110,11 @@ namespace galsim {
         GSParams(int _minimum_fft_size,
                  int _maximum_fft_size,
                  double _alias_threshold,
+                 double _stepk_minimum_hlr,
                  double _maxk_threshold,
                  double _kvalue_accuracy,
                  double _xvalue_accuracy,
+                 double _table_spacing,
                  double _realspace_relerr,
                  double _realspace_abserr,
                  double _integration_relerr,
@@ -113,9 +128,11 @@ namespace galsim {
             minimum_fft_size(_minimum_fft_size),
             maximum_fft_size(_maximum_fft_size),
             alias_threshold(_alias_threshold),
+            stepk_minimum_hlr(_stepk_minimum_hlr),
             maxk_threshold(_maxk_threshold),
             kvalue_accuracy(_kvalue_accuracy),
             xvalue_accuracy(_xvalue_accuracy),
+            table_spacing(_table_spacing),
             realspace_relerr(_realspace_relerr),
             realspace_abserr(_realspace_abserr),
             integration_relerr(_integration_relerr),
@@ -135,10 +152,12 @@ namespace galsim {
             minimum_fft_size(128),
             maximum_fft_size(4096),
             alias_threshold(5.e-3),
+            stepk_minimum_hlr(5.),
             maxk_threshold(1.e-3),
 
             kvalue_accuracy(1.e-5),
             xvalue_accuracy(1.e-5),
+            table_spacing(1.),
 
             realspace_relerr(1.e-3),
             realspace_abserr(1.e-6),
@@ -158,10 +177,12 @@ namespace galsim {
         int maximum_fft_size;
 
         double alias_threshold;
+        double stepk_minimum_hlr;
         double maxk_threshold;
 
         double kvalue_accuracy;
         double xvalue_accuracy;
+        double table_spacing;
 
         double realspace_relerr;
         double realspace_abserr;
@@ -181,9 +202,11 @@ namespace galsim {
             else if (minimum_fft_size != rhs.minimum_fft_size) return false;
             else if (maximum_fft_size != rhs.maximum_fft_size) return false;
             else if (alias_threshold != rhs.alias_threshold) return false;
+            else if (stepk_minimum_hlr != rhs.stepk_minimum_hlr) return false;
             else if (maxk_threshold != rhs.maxk_threshold) return false;
             else if (kvalue_accuracy != rhs.kvalue_accuracy) return false;
             else if (xvalue_accuracy != rhs.xvalue_accuracy) return false;
+            else if (table_spacing != rhs.table_spacing) return false;
             else if (realspace_relerr != rhs.realspace_relerr) return false;
             else if (realspace_abserr != rhs.realspace_abserr) return false;
             else if (integration_relerr != rhs.integration_relerr) return false;
@@ -206,12 +229,16 @@ namespace galsim {
             else if (maximum_fft_size > rhs.maximum_fft_size) return false;
             else if (alias_threshold < rhs.alias_threshold) return true;
             else if (alias_threshold > rhs.alias_threshold) return false;
+            else if (stepk_minimum_hlr < rhs.stepk_minimum_hlr) return true;
+            else if (stepk_minimum_hlr > rhs.stepk_minimum_hlr) return false;
             else if (maxk_threshold < rhs.maxk_threshold) return true;
             else if (maxk_threshold > rhs.maxk_threshold) return false;
             else if (kvalue_accuracy < rhs.kvalue_accuracy) return true;
             else if (kvalue_accuracy > rhs.kvalue_accuracy) return false;
             else if (xvalue_accuracy < rhs.xvalue_accuracy) return true;
             else if (xvalue_accuracy > rhs.xvalue_accuracy) return false;
+            else if (table_spacing < rhs.table_spacing) return true;
+            else if (table_spacing > rhs.table_spacing) return false;
             else if (realspace_relerr < rhs.realspace_relerr) return true;
             else if (realspace_relerr > rhs.realspace_relerr) return false;
             else if (realspace_abserr < rhs.realspace_abserr) return true;
@@ -239,8 +266,10 @@ namespace galsim {
     inline std::ostream& operator<<(std::ostream& os, const GSParams& gsp)
     {
         os << gsp.minimum_fft_size << "," << gsp.maximum_fft_size << ",  "
-            << gsp.alias_threshold << "," << gsp.maxk_threshold << ",  "
-            << gsp.kvalue_accuracy << "," << gsp.xvalue_accuracy << ",  "
+            << gsp.alias_threshold << "," << gsp.stepk_minimum_hlr << ","
+            << gsp.maxk_threshold << ",  "
+            << gsp.kvalue_accuracy << "," << gsp.xvalue_accuracy << ","
+            << gsp.table_spacing << ", "
             << gsp.realspace_relerr << "," << gsp.realspace_abserr << ",  "
             << gsp.integration_relerr << "," << gsp.integration_abserr << ",  "
             << gsp.shoot_accuracy << "," << gsp.shoot_relerr << "," << gsp.shoot_abserr << ",  "

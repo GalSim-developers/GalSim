@@ -97,9 +97,9 @@ namespace galsim {
          * @param[in] size              Size specification.
          * @param[in] rType             Kind of size being specified (HALF_LIGHT_RADIUS or
          *                              SCALE_RADIUS).
+         * @param[in] flux              Flux (default `flux = 1.`).
          * @param[in] trunc             Outer truncation radius in same physical units as size;
          *                              `trunc = 0.` for no truncation (default `trunc = 0.`).
-         * @param[in] flux              Flux (default `flux = 1.`).
          * @param[in] flux_untruncated  If `true`, sets the flux to the untruncated version of the
          *                              Sersic profile with the same index `n` (default
          *                              flux_untruncated = false`).  Ignored if `trunc = 0.`.
@@ -154,6 +154,9 @@ namespace galsim {
          * @param[in] flux_untruncated  If `true`, sets the flux to the untruncated version of the
          *                              Sersic profile with the same index `n` (default
          *                              flux_untruncated = false`).  Ignored if `trunc = 0.`.
+         * @param[in] gsparams          GSParams object storing constants that control the accuracy
+         *                              of image operations and rendering, if different from the
+         *                              default.
          */
         SBDeVaucouleurs(double size, RadiusType rType, double flux,
                         double trunc, bool flux_untruncated, const GSParamsPtr& gsparams) :

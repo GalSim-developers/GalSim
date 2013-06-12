@@ -91,6 +91,7 @@ class GSObject(object):
     _gsparams = { 'minimum_fft_size' : int,
                   'maximum_fft_size' : int,
                   'alias_threshold' : float,
+                  'stepk_minimum_hlr' : float,
                   'maxk_threshold' : float,
                   'kvalue_accuracy' : float,
                   'xvalue_accuracy' : float,

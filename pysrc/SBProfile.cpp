@@ -18,6 +18,8 @@
  * You should have received a copy of the GNU General Public License
  * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
  */
+#define BOOST_PYTHON_MAX_ARITY 20  // We have a function with 17 params here...
+                                   // c.f. www.boost.org/libs/python/doc/v2/configuration.html
 #include "boost/python.hpp"
 #include "boost/python/stl_iterator.hpp"
 
@@ -45,6 +47,11 @@ namespace galsim {
                 "                              value for FFTs.  The FFT's stepK is set so that at\n"
                 "                              most a fraction alias_threshold of the flux of any\n"
                 "                              profile is aliased.\n"
+                "stepk_minimum_hlr=5           In addition to the above constraint for aliasing,\n"
+                "                              also set stepk such that pi/stepk is at least \n"
+                "                              stepk_minimum_hlr times the profile's half-light \n"
+                "                              radius (for profiles that have a well-defined \n"
+                "                              half-light radius).\n"
                 "maxk_threshold=1.e-3          A threshold parameter used for setting the maxK\n"
                 "                              value for FFTs.  The FFT's maxK is set so that the\n"
                 "                              k-values that are excluded off the edge of the\n"
@@ -68,6 +75,16 @@ namespace galsim {
                 "                              Similarly, if an alternate calculation has errors\n"
                 "                              less than xvalue_accuracy, then it may be used\n"
                 "                              instead of an exact calculation.\n"
+                "table_spacing=1               Several profiles use lookup tables for either the\n"
+                "                              Hankel transform (Sersic, truncated Moffat) or the\n"
+                "                              real space radial function (Kolmogorov).  We try\n"
+                "                              to estimate a good spacing between values in the \n"
+                "                              lookup tables based on either xvalue_accuracy or \n"
+                "                              kvalue_accuracy as appropriate. However, you may \n"
+                "                              change the spacing with table_spacing. Using \n"
+                "                              table_spacing < 1 will use a spacing value that \n"
+                "                              much smaller than the default, which should \n"
+                "                              produce more accurate interpolations"
                 "realspace_relerr=1.e-3        The relative accuracy for realspace convolution.\n"
                 "realspace_abserr=1.e-6        The absolute accuracy for realspace convolution.\n"
                 "integration_relerr=1.e-5      The relative accuracy for integrals (other than\n"
@@ -92,29 +109,19 @@ namespace galsim {
                 "                              probability are ok to use dominant-sampling\n"
                 "                              method.\n";
 
-            // Note that the class below takes 16 input arguments.  The default maximum number
-            // allowed by Boost.Python is currently (May 2013) only 15, as described at
-            // www.boost.org/libs/python/doc/v2/configuration.html
-            //
-            // The simplest way to handle this seems to be by sending a command line option
-            // -DBOOST_PYTHON_MAX_ARITY=XX to the compiler at scons time, as described at
-            // http://mail.python.org/pipermail/cplusplus-sig/2002-June/001224.html
-            //
-            // If this is not done, then attempting to compile this source will generate an error.
-            // This is therefore now done in the pysrc/SConscript, although see the note there
-            // about the need to set -DBOOST_PYTHON_MAX_ARITY=17, which might be due to a slight
-            // internal inconsistency within Boost.Python arity definitions.
             bp::class_<GSParams> pyGSParams("GSParams", doc, bp::no_init);
             pyGSParams
                 .def(bp::init<
                     int, int, double, double, double, double, double, double, double, double,
-                    double, double, double, double, int, double>((
+                    double, double, double, double, double, double, int, double>((
                         bp::arg("minimum_fft_size")=128, 
                         bp::arg("maximum_fft_size")=4096,
                         bp::arg("alias_threshold")=5.e-3,
+                        bp::arg("stepk_minimum_hlr")=5.,
                         bp::arg("maxk_threshold")=1.e-3,
                         bp::arg("kvalue_accuracy")=1.e-5,
                         bp::arg("xvalue_accuracy")=1.e-5,
+                        bp::arg("table_spacing")=1.,
                         bp::arg("realspace_relerr")=1.e-3,
                         bp::arg("realspace_abserr")=1.e-6,
                         bp::arg("integration_relerr")=1.e-5,
@@ -130,9 +137,11 @@ namespace galsim {
                 .def_readwrite("minimum_fft_size", &GSParams::minimum_fft_size)
                 .def_readwrite("maximum_fft_size", &GSParams::maximum_fft_size)
                 .def_readwrite("alias_threshold", &GSParams::alias_threshold)
+                .def_readwrite("stepk_minimum_hlr", &GSParams::stepk_minimum_hlr)
                 .def_readwrite("maxk_threshold", &GSParams::maxk_threshold)
                 .def_readwrite("kvalue_accuracy", &GSParams::kvalue_accuracy)
                 .def_readwrite("xvalue_accuracy", &GSParams::xvalue_accuracy)
+                .def_readwrite("table_spacing", &GSParams::table_spacing)
                 .def_readwrite("realspace_relerr", &GSParams::realspace_relerr)
                 .def_readwrite("realspace_abserr", &GSParams::realspace_abserr)
                 .def_readwrite("integration_relerr", &GSParams::integration_relerr)

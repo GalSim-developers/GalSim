@@ -96,8 +96,10 @@ namespace galsim {
         // int( exp(-r^2/2) r, r=0..R) = 1 - exp(-R^2/2)
         // exp(-R^2/2) = alias_threshold
         double R = sqrt(-2.*std::log(this->gsparams->alias_threshold));
-        // Make sure it is at least 4 sigma;
-        R = std::max(4., R);
+        // Make sure it is at least 5 hlr
+        // half-light radius = sqrt(2ln(2)) * sigma
+        const double hlr = 1.177410022515475;
+        R = std::max(R,gsparams->stepk_minimum_hlr*hlr);
         return M_PI / (R*_sigma);
     }
 

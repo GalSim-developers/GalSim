@@ -55,8 +55,8 @@ namespace galsim {
         return static_cast<const SBKolmogorovImpl&>(*_pimpl).getLamOverR0(); 
     }
 
-    LRUCache<GSParamsPtr, KolmogorovInfo>
-        SBKolmogorov::SBKolmogorovImpl::cache(sbp::max_kolmogorov_cache);
+    LRUCache<GSParamsPtr, KolmogorovInfo> SBKolmogorov::SBKolmogorovImpl::cache(
+        sbp::max_kolmogorov_cache);
 
     // The "magic" number 2.992934 below comes from the standard form of the Kolmogorov spectrum
     // from Racine, 1996 PASP, 108, 699 (who in turn is quoting Fried, 1966, JOSA, 56, 1372):
@@ -276,9 +276,7 @@ namespace galsim {
     class KolmTargetValue : public std::unary_function<double,double>
     {
     public:
-    // BARNEY: I don't understand how _target initialization works here... Either before or after
-    // making the GSParams a boost::shared_ptr.  I've tried to fix with what I think makes sense.
-        KolmTargetValue(double target, const GSParams& gsparams) :
+        KolmTargetValue(double target, const GSParamsPtr& gsparams) :
             f(gsparams), _target(target) {}
         double operator()(double r) const { return f(r) - _target; }
     private:
@@ -337,7 +335,7 @@ namespace galsim {
         dbg<<"maxK = "<<_maxk<<std::endl;
 
         // Build the table for the radial function.
-        double dr = 0.5/_maxk;
+        
         // Start with f(0), which is analytic:
         // According to Wolfram Alpha:
         // Integrate[k*exp(-k^5/3),{k,0,infinity}] = 3/5 Gamma(6/5)
@@ -345,14 +343,24 @@ namespace galsim {
         double val = 0.55090124543985636638457099311149824 / (2.*M_PI);
         _radial.addEntry(0.,val);
         xdbg<<"f(0) = "<<val<<std::endl;
+
+        // We use a cubic spline for the interpolation, which has an error of O(h^4) max(f'''').
+        // I have no idea what range the fourth derivative can take for the f(r),
+        // so let's take the completely arbitrary value of 10.
+        // 10 h^4 <= xvalue_accuracy
+        // h = (xvalue_accuracy/10)^0.25
+        double dr = gsparams->table_spacing * sqrt(sqrt(gsparams->xvalue_accuracy / 10.));
+
         // Along the way accumulate the flux integral to determine the radius
         // that encloses (1-alias_threshold) of the flux.
         double sum = 0.;
+        double thresh0 = 0.5 / (2.*M_PI*dr);
         double thresh1 = (1.-gsparams->alias_threshold) / (2.*M_PI*dr);
-        double thresh2 = 0.999 / (2.*M_PI*dr);
-        double R = 0.;
+        double thresh2 = (1.-gsparams->alias_threshold/5.) / (2.*M_PI*dr);
+        double R = 0., hlr = 0.;
         // Continue until accumulate 0.999 of the flux
         KolmXValue xval_func(gsparams);
+
         for (double r = dr; sum < thresh2; r += dr) {
             val = xval_func(r) / (2.*M_PI);
             xdbg<<"f("<<r<<") = "<<val<<std::endl;
@@ -363,10 +371,14 @@ namespace galsim {
             xdbg<<"sum = "<<sum<<"  thresh1 = "<<thresh1<<"  thesh2 = "<<thresh2<<std::endl;
             xdbg<<"sum*2*pi*dr "<<sum*2.*M_PI*dr<<std::endl;
             if (R == 0. && sum > thresh1) R = r;
+            if (hlr == 0. && sum > thresh0) hlr = r;
         }
         dbg<<"Done loop to build radial function.\n";
         dbg<<"R = "<<R<<std::endl;
-        _stepk = M_PI/R;
+        dbg<<"hlr = "<<hlr<<std::endl;
+        // Make sure it is at least 5 hlr
+        R = std::max(R,gsparams->stepk_minimum_hlr*hlr);
+        _stepk = M_PI / R;
         dbg<<"stepk = "<<_stepk<<std::endl;
         dbg<<"sum*2*pi*dr = "<<sum*2.*M_PI*dr<<"   (should ~= 0.999)\n";
 
