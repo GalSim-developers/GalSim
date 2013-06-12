@@ -85,10 +85,8 @@ namespace galsim {
         _info(cache.get(std::make_pair(_obscuration,this->gsparams.get())))
     {}
 
-    const int MAX_AIRY_INFO = 100;
-
     LRUCache<std::pair<double, const GSParams*>, AiryInfo>
-        SBAiry::SBAiryImpl::cache(MAX_AIRY_INFO);
+        SBAiry::SBAiryImpl::cache(sbp::max_airy_cache);
 
     // This is a scale-free version of the Airy radial function.
     // Input radius is in units of lambda/D.  Output normalized

@@ -21,6 +21,8 @@ import math
 import os
 import sys
 
+from galsim_test_helpers import *
+
 try:
     import galsim
 except ImportError:
@@ -32,10 +34,6 @@ refdir = os.path.join(".", "lensing_reference_data") # Directory containing the 
 
 klim_test = 0.00175 # Value of klim for flat (up to klim, then zero beyond) power spectrum test
 
-
-def funcname():
-    import inspect
-    return inspect.stack()[1][3]
 
 # for simple demonstration purposes, a few very simple power-law power spectra that don't crash and
 # burn at k=0
@@ -166,21 +164,25 @@ def test_shear_variance():
     # get shears on 500x500 grid with spacing 0.1 degree
     g1, g2 = test_ps.buildGrid(grid_spacing=grid_size/ngrid, ngrid=ngrid, rng=rng,
                                units=galsim.degrees)
+    assert g1.shape == (ngrid, ngrid)
+    assert g2.shape == (ngrid, ngrid)
     # Now we should compare the variance with the predictions.  We use
     # ../devel/modules/lensing_engine.pdf section 5.3 to get
     # Var(g1) + Var(g2) = (1/pi^2) [(pi klim^2 / 4) - kmin^2]
     # Here the 1 on top of the pi^2 is actually P0 which has units of arcsec^2.
     # A final point for this test is that the result should be twice as large than that prediction
     # since we have both E and B power.  And we know from before that due to various effects, the
-    # results should actually be ~1.5% too low.  So take the sum of the variances per component,
-    # compare with predictions*0.985, subtract 1.  The result should be 0, but we allow a tolerance
-    # of +/-2% due to noise, dividing it by 3 and requiring consistency with 0 at 2 decimal places.
+    # results should actually be ~1.5% too low.
     predicted_variance = (1./np.pi**2)*(0.25*np.pi*(klim**2) - kmin**2)
+    predicted_variance *= 2
     var1 = np.var(g1)
     var2 = np.var(g2)
-    comparison_val = (var1+var2)/(0.985*2.*predicted_variance)-1.0
-    np.testing.assert_almost_equal(comparison_val/2., 0., decimal=2,
-                                   err_msg="Incorrect shear variance from flat power spectrum!")
+    print 'predicted variance = ',predicted_variance
+    print 'actual variance = ',var1+var2
+    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    assert np.abs((var1+var2) - predicted_variance) < 0.015 * predicted_variance, \
+            "Incorrect shear variance from flat power spectrum!"
+        
     # check: are g1, g2 uncorrelated with each other?
     top= np.sum((g1-np.mean(g1))*(g2-np.mean(g2)))
     bottom1 = np.sum((g1-np.mean(g1))**2)
@@ -188,18 +190,23 @@ def test_shear_variance():
     corr = top / np.sqrt(bottom1*bottom2)
     np.testing.assert_almost_equal(
         corr, 0., decimal=1,
-        err_msg="Shear components should be uncorrelated with each other!")
+        err_msg="Shear components should be uncorrelated with each other! (flat power spectrum)")
 
     # Now do the same test as previously, but with E-mode power only.
     test_ps = galsim.PowerSpectrum(e_power_function=pk_flat_lim)
     g1, g2 = test_ps.buildGrid(grid_spacing=grid_size/ngrid, ngrid=ngrid, rng=rng,
                                units=galsim.degrees)
+    assert g1.shape == (ngrid, ngrid)
+    assert g2.shape == (ngrid, ngrid)
     predicted_variance = (1./np.pi**2)*(0.25*np.pi*(klim**2) - kmin**2)
     var1 = np.var(g1)
     var2 = np.var(g2)
-    comparison_val = (var1+var2)/(0.985*predicted_variance)-1.0
-    np.testing.assert_almost_equal(comparison_val/2., 0., decimal=2,
-                                   err_msg="Incorrect shear variance from flat power spectrum!")
+    print 'predicted variance = ',predicted_variance
+    print 'actual variance = ',var1+var2
+    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    assert np.abs((var1+var2) - predicted_variance) < 0.015 * predicted_variance, \
+            "Incorrect shear variance from flat E-mode power spectrum!"
+
     # check: are g1, g2 uncorrelated with each other?
     top= np.sum((g1-np.mean(g1))*(g2-np.mean(g2)))
     bottom1 = np.sum((g1-np.mean(g1))**2)
@@ -207,7 +214,7 @@ def test_shear_variance():
     corr = top / np.sqrt(bottom1*bottom2)
     np.testing.assert_almost_equal(
         corr, 0., decimal=1,
-        err_msg="Shear components should be uncorrelated with each other!")
+        err_msg="Shear components should be uncorrelated with each other! (flat E-mode power spec.)")
 
     # check for proper scaling with grid spacing, for fixed number of grid points
     grid_size = 25. # degrees
@@ -217,12 +224,17 @@ def test_shear_variance():
     test_ps = galsim.PowerSpectrum(e_power_function=pk_flat_lim, b_power_function=pk_flat_lim)
     g1, g2 = test_ps.buildGrid(grid_spacing=grid_size/ngrid, ngrid=ngrid, rng=rng,
                                units=galsim.degrees)
+    assert g1.shape == (ngrid, ngrid)
+    assert g2.shape == (ngrid, ngrid)
     predicted_variance = (1./np.pi**2)*(0.25*np.pi*(klim**2) - kmin**2)
+    predicted_variance *= 2
     var1 = np.var(g1)
     var2 = np.var(g2)
-    comparison_val = (var1+var2)/(0.985*2.*predicted_variance)-1.0
-    np.testing.assert_almost_equal(comparison_val/2., 0., decimal=2,
-                                   err_msg="Incorrect shear variance from flat power spectrum!")
+    print 'predicted variance = ',predicted_variance
+    print 'actual variance = ',var1+var2
+    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    assert np.abs((var1+var2) - predicted_variance) < 0.015 * predicted_variance, \
+            "Incorrect shear variance from flat power spectrum with smaller grid_size"
 
     # check for proper scaling with number of grid points, for fixed grid spacing
     grid_size = 25. # degrees
@@ -232,12 +244,17 @@ def test_shear_variance():
     test_ps = galsim.PowerSpectrum(e_power_function=pk_flat_lim, b_power_function=pk_flat_lim)
     g1, g2 = test_ps.buildGrid(grid_spacing=grid_size/ngrid, ngrid=ngrid, rng=rng,
                                units=galsim.degrees)
+    assert g1.shape == (ngrid, ngrid)
+    assert g2.shape == (ngrid, ngrid)
     predicted_variance = (1./np.pi**2)*(0.25*np.pi*(klim**2) - kmin**2)
+    predicted_variance *= 2
     var1 = np.var(g1)
     var2 = np.var(g2)
-    comparison_val = (var1+var2)/(0.985*2.*predicted_variance)-1.0
-    np.testing.assert_almost_equal(comparison_val/3., 0., decimal=2,
-                                   err_msg="Incorrect shear variance from flat power spectrum!")
+    print 'predicted variance = ',predicted_variance
+    print 'actual variance = ',var1+var2
+    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    assert np.abs((var1+var2) - predicted_variance) < 0.015 * predicted_variance, \
+            "Incorrect shear variance from flat power spectrum with smaller ngrid"
 
     # Test one other theoretical PS: the Gaussian P(k).
     # We define it as P(k) = exp(-s^2 k^2 / 2).
@@ -256,6 +273,8 @@ def test_shear_variance():
     test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((s*k)**2)))
     g1, g2 = test_ps.buildGrid(grid_spacing = grid_size/ngrid, ngrid=ngrid, rng=rng,
                                units=galsim.degrees)
+    assert g1.shape == (ngrid, ngrid)
+    assert g2.shape == (ngrid, ngrid)
     # For this case, the prediction for the variance is:
     # Var(g1) + Var(g2) = [1/(2 pi s^2)] * ( (Erf(s*kmax/sqrt(2)))^2 - (Erf(s*kmin/sqrt(2)))^2 )
     # Note: the next two lines of code are commented out because math.erf is not available in python
@@ -265,12 +284,14 @@ def test_shear_variance():
     # these Erf[...] calculations, then the hard-coded erfmax and erfmin must be changed.
     # erfmax = math.erf(s*kmax/math.sqrt(2.))
     # erfmin = math.erf(s*kmin/math.sqrt(2.))
+    var1 = np.var(g1)
+    var2 = np.var(g2)
     predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
-    # here we know that the results are typically 2.5% too low, and we again allow wiggle room of 3.5%
-    # due to noise.
-    comparison_val = (np.var(g1)+np.var(g2))/(0.975*predicted_variance)-1.0
-    np.testing.assert_almost_equal(comparison_val/4.5, 0., decimal=2,
-                                   err_msg="Incorrect variance from Gaussian PS")
+    print 'predicted variance = ',predicted_variance
+    print 'actual variance = ',var1+var2
+    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    assert np.abs((var1+var2) - predicted_variance) < 0.015 * predicted_variance, \
+            "Incorrect shear variance from Gaussian power spectrum"
 
     # check for proper scaling with grid spacing, for fixed number of grid points
     grid_size = 25. # degrees
@@ -283,10 +304,16 @@ def test_shear_variance():
     test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((s*k)**2)))
     g1, g2 = test_ps.buildGrid(grid_spacing = grid_size/ngrid, ngrid=ngrid,
                                rng=rng, units=galsim.degrees)
+    assert g1.shape == (ngrid, ngrid)
+    assert g2.shape == (ngrid, ngrid)
+    var1 = np.var(g1)
+    var2 = np.var(g2)
     predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
-    comparison_val = (np.var(g1)+np.var(g2))/(0.975*predicted_variance)-1.0
-    np.testing.assert_almost_equal(comparison_val/5., 0., decimal=2,
-                                   err_msg="Incorrect variance from Gaussian PS")
+    print 'predicted variance = ',predicted_variance
+    print 'actual variance = ',var1+var2
+    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    assert np.abs((var1+var2) - predicted_variance) < 0.015 * predicted_variance, \
+            "Incorrect shear variance from Gaussian power spectrum with smaller grid_size"
 
     # check for proper scaling with number of grid points, for fixed grid spacing
     grid_size = 25. # degrees
@@ -299,10 +326,64 @@ def test_shear_variance():
     test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((s*k)**2)))
     g1, g2 = test_ps.buildGrid(grid_spacing = grid_size/ngrid, ngrid=ngrid,
                                rng=rng, units=galsim.degrees)
+    assert g1.shape == (ngrid, ngrid)
+    assert g2.shape == (ngrid, ngrid)
+    var1 = np.var(g1)
+    var2 = np.var(g2)
     predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
-    comparison_val = (np.var(g1)+np.var(g2))/(0.975*predicted_variance)-1.0
-    np.testing.assert_almost_equal(comparison_val/4.5, 0., decimal=2,
-                                   err_msg="Incorrect variance from Gaussian PS")
+    print 'predicted variance = ',predicted_variance
+    print 'actual variance = ',var1+var2
+    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    assert np.abs((var1+var2) - predicted_variance) < 0.015 * predicted_variance, \
+            "Incorrect shear variance from Gaussian power spectrum with smaller ngrid"
+
+    # change grid spacing implicitly via kmax_factor
+    # This and the next test can be made at higher precision (0.5% rather than 1.5%), since the
+    # grids actually used to make the shears have more points, so they are more accurate.
+    grid_size = 50. # degrees
+    ngrid = 500 # grid points
+    kmax_factor = 2
+    kmin = 2.*np.pi/grid_size/3600.
+    kmax = np.pi/(grid_size/ngrid)/3600.*kmax_factor
+    # Back to the original erfmin value.
+    erfmin = 0.007978712629263206
+    s = 2.5/kmax
+    test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((s*k)**2)))
+    g1, g2 = test_ps.buildGrid(grid_spacing = grid_size/ngrid, ngrid=ngrid,
+                               rng=rng, units=galsim.degrees, kmax_factor=kmax_factor)
+    assert g1.shape == (ngrid, ngrid)
+    assert g2.shape == (ngrid, ngrid)
+    var1 = np.var(g1)
+    var2 = np.var(g2)
+    predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
+    print 'predicted variance = ',predicted_variance
+    print 'actual variance = ',var1+var2
+    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    assert np.abs((var1+var2) - predicted_variance) < 0.005 * predicted_variance, \
+            "Incorrect shear variance from Gaussian power spectrum with kmax_factor=2"
+
+    # change ngrid implicitly with kmin_factor
+    grid_size = 50. # degrees
+    ngrid = 500 # grid points
+    kmin_factor = 2
+    kmin = 2.*np.pi/grid_size/3600./kmin_factor
+    kmax = np.pi/(grid_size/ngrid)/3600.
+    s = 2.5/kmax
+    # This time, erfmin is smaller.
+    erfmin = 0.003989406181481644
+    test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((s*k)**2)))
+    g1, g2 = test_ps.buildGrid(grid_spacing = grid_size/ngrid, ngrid=ngrid,
+                               rng=rng, units=galsim.degrees, kmin_factor=kmin_factor)
+    assert g1.shape == (ngrid, ngrid)
+    assert g2.shape == (ngrid, ngrid)
+    var1 = np.var(g1)
+    var2 = np.var(g2)
+    predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
+    print 'predicted variance = ',predicted_variance
+    print 'actual variance = ',var1+var2
+    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    assert np.abs((var1+var2) - predicted_variance) < 0.005 * predicted_variance, \
+            "Incorrect shear variance from Gaussian power spectrum with kmin_factor=2"
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -390,7 +471,7 @@ def test_shear_get():
                        np.arange(min,max+grid_spacing,grid_spacing))
 
     # convert theoretical to observed quantities for grid
-    g1_r, g2_r, mu = galsim.lensing.theoryToObserved(g1, g2, kappa)
+    g1_r, g2_r, mu = galsim.lensing_ps.theoryToObserved(g1, g2, kappa)
 
     # use getShear, getConvergence, getMagnification, getLensing do appropriate consistency checks
     test_g1_r, test_g2_r = my_ps.getShear((x.flatten(), y.flatten()))
@@ -612,7 +693,7 @@ def test_kappa_gauss():
     # Get the reference kappa
     k_ref = k_big + k_sml
     # Invert to get the test kappa
-    k_testE, k_testB = galsim.lensing.kappaKaiserSquires(g1, g2)
+    k_testE, k_testB = galsim.lensing_ps.kappaKaiserSquires(g1, g2)
     # Then run tests based on the central region to avoid edge effects (known issue with KS
     # inversion)
     icent = np.arange(ngrid / 2) + ngrid / 4
@@ -631,7 +712,7 @@ def test_kappa_gauss():
         x, y, sigma=4., pos=galsim.PositionD(6., 6.), amp=.2, rotate45=True)
     g1r = g1r_big + g1r_sml
     g2r = g2r_big + g2r_sml
-    kr_testE, kr_testB = galsim.lensing.kappaKaiserSquires(g1r, g2r)
+    kr_testE, kr_testB = galsim.lensing_ps.kappaKaiserSquires(g1r, g2r)
     # Test that B-mode kappa for rotated shear field matches E mode
     np.testing.assert_array_almost_equal(
         kr_testB[np.ix_(icent, icent)], k_ref[np.ix_(icent, icent)], decimal=2,
@@ -668,7 +749,7 @@ def test_power_spectrum_with_kappa():
     g1E, g2E, k_test = psE.buildGrid(
         grid_spacing=dx_grid_arcmin, ngrid=ngrid, units=galsim.arcmin,
         rng=galsim.BaseDeviate(rseed), get_convergence=True)
-    kE_ks, kB_ks = galsim.lensing.kappaKaiserSquires(g1E, g2E)
+    kE_ks, kB_ks = galsim.lensing_ps.kappaKaiserSquires(g1E, g2E)
     # Test that E-mode kappa matches to some sensible accuracy
     exact_dp = 15
     np.testing.assert_array_almost_equal(
@@ -684,7 +765,7 @@ def test_power_spectrum_with_kappa():
     g1B, g2B, k_test = psB.buildGrid(
         grid_spacing=dx_grid_arcmin, ngrid=ngrid, units=galsim.arcmin,
         rng=galsim.BaseDeviate(rseed), get_convergence=True)
-    kE_ks, kB_ks = galsim.lensing.kappaKaiserSquires(g1B, g2B)
+    kE_ks, kB_ks = galsim.lensing_ps.kappaKaiserSquires(g1B, g2B)
     # Test that kappa output by PS code matches zero to some sensible accuracy
     np.testing.assert_array_almost_equal(
         k_test, np.zeros_like(k_test), decimal=exact_dp,
@@ -696,7 +777,7 @@ def test_power_spectrum_with_kappa():
 
     # Then for luck take B-mode only shears but rotate by 45 degrees before KS, and check
     # consistency 
-    kE_ks_rotated, kB_ks_rotated = galsim.lensing.kappaKaiserSquires(g2B, -g1B)
+    kE_ks_rotated, kB_ks_rotated = galsim.lensing_ps.kappaKaiserSquires(g2B, -g1B)
     np.testing.assert_array_almost_equal(
         kE_ks_rotated, kB_ks, decimal=exact_dp,
         err_msg="KS inverted kappaE from B-mode only PowerSpectrum fails rotation test.")
@@ -709,13 +790,13 @@ def test_power_spectrum_with_kappa():
     g1EB, g2EB, k_test = psB.buildGrid(
         grid_spacing=dx_grid_arcmin, ngrid=ngrid, units=galsim.arcmin,
         rng=galsim.BaseDeviate(rseed), get_convergence=True)
-    kE_ks, kB_ks = galsim.lensing.kappaKaiserSquires(g1EB, g2EB)
+    kE_ks, kB_ks = galsim.lensing_ps.kappaKaiserSquires(g1EB, g2EB)
     # Test that E-mode kappa matches to some sensible accuracy
     np.testing.assert_array_almost_equal(
         k_test, kE_ks, decimal=exact_dp,
         err_msg="E/B PowerSpectrum output kappa does not match KS inversion to 16 d.p.")
     # Test rotating the shears by 45 degrees
-    kE_ks_rotated, kB_ks_rotated = galsim.lensing.kappaKaiserSquires(g2EB, -g1EB)
+    kE_ks_rotated, kB_ks_rotated = galsim.lensing_ps.kappaKaiserSquires(g2EB, -g1EB)
     np.testing.assert_array_almost_equal(
         kE_ks_rotated, kB_ks, decimal=exact_dp,
         err_msg="KS inverted kappaE from E/B PowerSpectrum fails rotation test.")

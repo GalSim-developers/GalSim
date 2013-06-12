@@ -21,24 +21,32 @@
 
 //#define DEBUGLOGGING
 
+// clang doesn't like some of the code in boost files included by gamma.hpp.
+#ifdef __clang__
+#if __has_warning("-Wlogical-op-parentheses")
+#pragma GCC diagnostic ignored "-Wlogical-op-parentheses"
+#endif
+#endif
+
+#include <boost/math/special_functions/gamma.hpp>
+
 #include "SBSersic.h"
 #include "SBSersicImpl.h"
 #include "integ/Int.h"
-#include <boost/math/special_functions/gamma.hpp>
 #include "Solve.h"
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-//std::ostream* dbgout = &std::cout;
-//int verbose_level = 1;
+std::ostream* dbgout = &std::cout;
+int verbose_level = 1;
 #endif
 
 namespace galsim {
 
-    SBSersic::SBSersic(double n, double re, double flux,
+    SBSersic::SBSersic(double n, double size, RadiusType rType, double flux,
                        double trunc, bool flux_untruncated,
                        boost::shared_ptr<GSParams> gsparams) :
-        SBProfile(new SBSersicImpl(n, re, flux, trunc, flux_untruncated, gsparams)) {}
+        SBProfile(new SBSersicImpl(n, size, rType, flux, trunc, flux_untruncated, gsparams)) {}
 
     SBSersic::SBSersic(const SBSersic& rhs) : SBProfile(rhs) {}
 
@@ -56,32 +64,90 @@ namespace galsim {
         return static_cast<const SBSersicImpl&>(*_pimpl).getHalfLightRadius(); 
     }
 
-    const int MAX_SERSIC_INFO = 100;
+    double SBSersic::getScaleRadius() const
+    {
+        assert(dynamic_cast<const SBSersicImpl*>(_pimpl.get()));
+        return static_cast<const SBSersicImpl&>(*_pimpl).getScaleRadius();
+    }
 
     LRUCache<std::pair<SersicKey, const GSParams*>, SersicInfo> 
-        SBSersic::SBSersicImpl::cache(MAX_SERSIC_INFO);
+        SBSersic::SBSersicImpl::cache(sbp::max_sersic_cache);
 
-    SBSersic::SBSersicImpl::SBSersicImpl(double n,  double re, double flux,
+    double SersicCalculateScaleBFromHLR(double n, double maxRre);
+    double SersicCalculateHLRScale(double n, double b, double gamma2n);
+
+    SBSersic::SBSersicImpl::SBSersicImpl(double n,  double size, RadiusType rType, double flux,
                                          double trunc, bool flux_untruncated,
                                          boost::shared_ptr<GSParams> gsparams) :
         SBProfileImpl(gsparams),
-        _n(n), _flux(flux), _re(re), _re_sq(_re*_re),
-        _inv_re(1./_re), _inv_re_sq(_inv_re*_inv_re),
-        _norm(_flux*_inv_re_sq), 
-        _trunc(trunc), _flux_untruncated(flux_untruncated),
-        _maxRre((int)(_trunc/_re * 100 + 0.5) / 100.0),  // round to two decimal places
-        _info(cache.get(std::make_pair(SersicKey(_n,_maxRre,_flux_untruncated),
-                                       this->gsparams.get())))
+        _n(n), _flux(flux), _re(0.), _r0(0.),
+        _trunc(trunc), _flux_untruncated(flux_untruncated)
     {
+        dbg<<"Start SBSersic constructor:\n";
+        dbg<<"n = "<<_n<<"\n";
+        dbg<<"flux = "<<_flux<<"\n";
+        dbg<<"trunc = "<<_trunc<<"\n";
+
         _truncated = (_trunc > 0.);
-        if (!_truncated) _flux_untruncated = true;  // set unused parameter to a single value
-        _actual_flux = _info->getTrueFluxFraction() * _flux;
+
+        if (!_truncated)  _flux_untruncated = false; // set unused parameter to a single value
+
+        // Set size of this instance according to type of size given in constructor
+        // (all internal calculations based on half-light radius _re, so specify this first):
+        switch (rType) {
+            case HALF_LIGHT_RADIUS:
+                {
+                    _re = size;
+                    _maxRre = (int)(_trunc/_re * 100 + 0.5) / 100.0;  // round to two decimal places
+
+                    dbg << "Calculating b with maxR/re => " << _maxRre << std::endl;
+                    if ( _truncated && _flux_untruncated )
+                        _b = SersicCalculateScaleBFromHLR(_n, 0.);
+                    else       // includes the untruncated case
+                        _b = SersicCalculateScaleBFromHLR(_n, _maxRre);
+
+                    _r0 = _re * std::pow(_b, -_n);
+                }
+                break;
+          case SCALE_RADIUS:
+               {
+                   _r0 = size;
+
+                   double gamma2n = boost::math::tgamma(2.*_n);
+                   double b_scale = std::pow(_r0, -1./_n);
+                   // find solution to gamma(2n, (hlr/r0)^{1/n}) = Gamma(2n) / 2
+                   _re = SersicCalculateHLRScale(_n, b_scale, gamma2n);
+                   _maxRre = (int)(_trunc/_re * 100 + 0.5) / 100.0;  // round to two decimal places
+
+                   _b = b_scale * std::pow(_re, 1./_n);
+               }
+               break;
+          default:
+               throw SBError("Unknown SBSersic::RadiusType");
+        }
+
+        dbg<<"hlr = "<<_re<<"\n";
+        dbg<<"_r0 = "<<_r0<<"\n";
+
+        _info = cache.get(std::make_pair(SersicKey(_n, _b, _maxRre), this->gsparams.get()));
+
+        _re_sq = _re*_re;
+        _inv_re = 1./_re;
+        _inv_re_sq = _inv_re*_inv_re;
+        _norm = _flux*_inv_re_sq;
+
+        // adjust normalization factor
+        if (_truncated && _flux_untruncated) {
+            _norm *= _info->getTrueFluxFraction();
+            _flux *= _info->getTrueFluxFraction();
+        }
+
         _actual_re = _info->getTrueReFraction() * _re;
         _maxRre_sq = _maxRre*_maxRre;
         _maxR = _maxRre * _re;
         _maxR_sq = _maxR*_maxR;
         _ksq_max = _info->getKsqMax();
-        dbg<<"_ksq_max for n = "<<n<<" = "<<_ksq_max<<std::endl;
+        xdbg<<"_ksq_max for n = "<<n<<" = "<<_ksq_max<<std::endl;
     }
 
     double SBSersic::SBSersicImpl::xValue(const Position<double>& p) const
@@ -388,7 +454,7 @@ namespace galsim {
             throw SBError("Sersic truncation radius must be > half_light_radius.");
         dbg<<"Find Sersic scale b for maxR/HLR = "<<maxRre<<std::endl;
         SersicScaleRadiusFunc func(n, maxRre);
-        // For the upper bound of b, use 2*n, based on the Ciotti & Bertin (1999) approximate 
+        // For the upper bound of b, use 2*n, based on the Ciotti & Bertin (1999) approximate
         // solution for untruncated Sersic; for the lower bound, we don't really have a good choice,
         // so start with half the upper bound, and we'll expand it if necessary.
         double b1 = n;
@@ -414,7 +480,7 @@ namespace galsim {
         double operator()(double hlr) const
         {
             double fre = boost::math::tgamma_lower(_2n, _b*std::pow(hlr,_invn));
-            dbg<<"func("<<hlr<<") = "<<fre<<"-"<<_half_gamma2n<<" = "<<fre-_half_gamma2n<<std::endl;
+            xdbg<<"func("<<hlr<<") = "<<fre<<"-"<<_half_gamma2n<<" = "<<fre-_half_gamma2n<<std::endl;
             return fre - _half_gamma2n;
         }
     private:
@@ -432,18 +498,23 @@ namespace galsim {
         //
         dbg<<"Find HLR scale for (n,b,gamma2n) = ("<<n<<","<<b<<","<<gamma2n<<")"<<std::endl;
         SersicHalfLightRadiusFunc func(n, b, gamma2n);
-        // For the upper bound of b, use 1 (i.e., the specified half-light radius); the true half-
-        // light radius will always be smaller for a truncated Sersic.  For the lower bound, we
-        // don't really have a good choice, so start with half the upper bound, and we'll expand it
-        // if necessary.
-        double b1 = 1.;
-        dbg<<"b1 = "<<b1<<std::endl;
-        double b2 = 0.5;
-        dbg<<"b2 = "<<b2<<std::endl;
+        // There are two uses of this function.  The first case is to calculate the half-light
+        // radius (hlr) given the scale radius r0.  In this case, use b=r0^{-1/n}, and the
+        // upper limit is unknown, and will need to expand as necessary.  The second case
+        // calculates the true hlr for a truncated Sersic, when the hlr has been specified with
+        // `flux_untruncated`.  In this case, the reference scale is re (the hlr), and b has been
+        // pre-computed.  For the upper limit, use 1 (i.e., the specified half-light radius).
+        // The true half-light radius will always be smaller for a truncated Sersic.  For the
+        // lower bound, the hard limit is 0, so choose a very small number close to 0 as the
+        // hard limit.
+        double b1 = 0.01;
+        xdbg<<"b1 = "<<b1<<std::endl;
+        double b2 = 10.*std::pow(n,n);
+        xdbg<<"b2 = "<<b2<<std::endl;
         Solve<SersicHalfLightRadiusFunc> solver(func,b1,b2);
         solver.setMethod(Brent);
-        solver.bracketLower();    // expand lower bracket if necessary
-        dbg<<"After bracket, range is "<<solver.getLowerBound()<<" .. "<<
+        solver.bracketUpper();    // expand upper bracket if necessary
+        xdbg<<"After bracket, range is "<<solver.getLowerBound()<<" .. "<<
             solver.getUpperBound()<<std::endl;
         double hlr = solver.root();
         dbg<<"Root is "<<hlr<<std::endl;
@@ -453,23 +524,13 @@ namespace galsim {
 
     // Constructor to initialize Sersic constants and k lookup table
     SersicInfo::SersicInfo(const SersicKey& key, const GSParams* gsparams) :
-        _n(key.n), _maxRre(key.maxRre), _maxRre_sq(_maxRre*_maxRre), _inv2n(1./(2.*_n)),
-        _flux_untruncated(key.flux_untruncated), _flux_fraction(1.), _re_fraction(1.)
+        _n(key.n), _b(key.b), _maxRre(key.maxRre), _maxRre_sq(_maxRre*_maxRre),
+        _inv2n(1./(2.*_n)), _flux_fraction(1.), _re_fraction(1.)
     {
-        // Going to constrain range of allowed n to those for which testing was done
-        // (Lower bounds has hard limit at ~0.29)
-        if (_n<0.3 || _n>4.2) throw SBError("Requested Sersic index out of range");
+        if (_n < sbp::minimum_sersic_n || _n > sbp::maximum_sersic_n) 
+            throw SBError("Requested Sersic index out of range");
 
         _truncated = (_maxRre > 0.);
-
-        if ( _truncated && _flux_untruncated ) {
-            dbg << "Calculating b with maxR/re => 0 (inf)" << std::endl;
-            _b = SersicCalculateScaleBFromHLR(_n, 0.);
-        }
-        else {
-            dbg << "Calculating b with maxR/re => " << _maxRre << std::endl;
-            _b = SersicCalculateScaleBFromHLR(_n, _maxRre);
-        }
 
         // set-up frequently used numbers (for flux normalization and FT small-k approximations)
         double b2n = std::pow(_b,2.*_n);
@@ -479,29 +540,27 @@ namespace galsim {
         double gamma6n;
         double gamma8n;
         if (!_truncated) {
-            gamma2n = tgamma(2.*_n);  // integrate r/re from 0. to inf
-            gamma4n = tgamma(4.*_n);
-            gamma6n = tgamma(6.*_n);
-            gamma8n = tgamma(8.*_n);
+            gamma2n = boost::math::tgamma(2.*_n);  // integrate r/re from 0. to inf
+            gamma4n = boost::math::tgamma(4.*_n);
+            gamma6n = boost::math::tgamma(6.*_n);
+            gamma8n = boost::math::tgamma(8.*_n);
         } else {
             double z = _b * std::pow(_maxRre, 1./_n);
             gamma2n = boost::math::tgamma_lower(2.*_n, z);  // integrate r/re from 0. to _maxRre
             gamma4n = boost::math::tgamma_lower(4.*_n, z);
             gamma6n = boost::math::tgamma_lower(6.*_n, z);
             gamma8n = boost::math::tgamma_lower(8.*_n, z);
-        }
 
-        // Find the ratio of actual (truncated) flux to specified flux
-        if (_truncated && _flux_untruncated) {
-            _flux_fraction = gamma2n / tgamma(2.*_n);       // _flux_fraction < 1
+            // Find the ratio of actual (truncated) flux to specified flux, for flux_untruncated
+            _flux_fraction = gamma2n / boost::math::tgamma(2.*_n);       // _flux_fraction < 1
             _re_fraction = SersicCalculateHLRScale(_n,_b,gamma2n);
+            dbg << "Flux fraction (if flux_untruncated): " << _flux_fraction << std::endl;
+            dbg << "HLR fraction: " << _re_fraction << std::endl;
         }
-        dbg << "Flux fraction: " << _flux_fraction << std::endl;
-        dbg << "HLR fraction: " << _re_fraction << std::endl;
         dbg << "gamma2n: " << gamma2n << std::endl;
 
         // The normalization factor to give unity flux integral:
-        _norm = b2n / (2.*M_PI*_n*gamma2n) * _flux_fraction;
+        _norm = b2n / (2.*M_PI*_n*gamma2n);
 
         // The small-k expansion of the Hankel transform is (normalized to have flux=1):
         // 1 - Gamma(4n) / 4 b^2n Gamma(2n) + Gamma(6n) / 64 b^4n Gamma(2n)
@@ -537,7 +596,7 @@ namespace galsim {
         // Now start building the lookup table for FT of the profile.
 
         // Normalization for integral at k=0:
-        double hankel_norm = _n*gamma2n/b2n / _flux_fraction;
+        double hankel_norm = _n*gamma2n/b2n;
         dbg<<"hankel_norm = "<<hankel_norm<<std::endl;
 
         // Keep going until at least 5 in a row have kvalues below kvalue_accuracy.

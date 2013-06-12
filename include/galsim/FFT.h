@@ -106,12 +106,14 @@ namespace galsim {
     {
         enum { isreal = true }; 
         typedef T fftw_type;
+        size_t size_2d(size_t n) { return n*n; }
     };
     template <typename T>
     struct FFTW_Traits<std::complex<T> >
     { 
         enum { isreal = false }; 
         typedef fftw_complex fftw_type;
+        size_t size_2d(size_t n) { return n*(n/2+1); }
     };
 
     // Handle the FFTW3 memory allocation, which assured 16-bit alignment for SSE usage.
@@ -123,28 +125,28 @@ namespace galsim {
     {
         typedef typename FFTW_Traits<T>::fftw_type fftw_type;
     public:
-        FFTW_Array() : _n(0), _nn(0), _array(0) {}
+        FFTW_Array() : _n(0), _array(0) {}
 
-        FFTW_Array(size_t n) : _n(0), _nn(0), _array(0)
+        FFTW_Array(size_t n) : _n(0), _array(0)
         { resize(n); }
 
-        FFTW_Array(size_t n, T val) : _n(0), _nn(0), _array(0)
+        FFTW_Array(size_t n, T val) : _n(0), _array(0)
         {
             resize(n);
             fill(val);
         }
 
-        FFTW_Array(const FFTW_Array<T>& rhs) :  _n(0), _nn(0), _array(0)
+        FFTW_Array(const FFTW_Array<T>& rhs) : _n(0), _array(0)
         {
             resize(rhs._n);
-            for (size_t i=0; i<_nn; ++i) _array[i] = rhs._array[i];
+            for (size_t i=0; i<_n; ++i) _array[i] = rhs._array[i];
         }
 
         FFTW_Array<T>& operator=(const FFTW_Array<T>& rhs)
         {
             if (this != &rhs) {
                 resize(rhs._n);
-                for (size_t i=0; i<_nn; ++i) _array[i] = rhs._array[i];
+                for (size_t i=0; i<_n; ++i) _array[i] = rhs._array[i];
             }
             return *this;
         }
@@ -156,15 +158,14 @@ namespace galsim {
             if (_n != n) {
                 if (_array) fftw_free(_array);
                 _n = n;
-                _nn = FFTW_Traits<T>::isreal ? n*n : n*(n/2+1);
-                if (_n > 0) _array = (T*) fftw_malloc(sizeof(T)*_nn);
+                if (_n > 0) _array = (T*) fftw_malloc(sizeof(T)*_n);
                 else _array = 0;
             }
         }
 
-        void fill(T val) { for (size_t i=0; i<_nn; ++i) _array[i] = val; }
+        void fill(T val) { for (size_t i=0; i<_n; ++i) _array[i] = val; }
 
-        size_t size() { return _nn; }
+        size_t size() { return _n; }
 
         T* get() { return _array; }
         const T* get() const { return _array; }
@@ -178,7 +179,7 @@ namespace galsim {
         const T& operator[](size_t i) const { return _array[i]; }
 
     private:
-        size_t _n, _nn;
+        size_t _n;
         T* _array;
     };
 
@@ -448,7 +449,7 @@ namespace galsim {
         const double* getArray() const { return _array.get(); }
 
     private:
-        FFTW_Array<double>  _array; //hold the values.
+        FFTW_Array<double> _array; //hold the values.
         int _N; //Size in each dimension.
         double _dx; //k-space increment
 

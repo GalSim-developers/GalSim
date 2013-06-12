@@ -16,5 +16,5 @@
 # You should have received a copy of the GNU General Public License
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
-#import galsim.artifacts
-import numpy as np
+from atmosphere import *
+from ellipse import *

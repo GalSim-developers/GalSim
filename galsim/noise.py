@@ -44,7 +44,7 @@ def addNoiseSNR(image, noise, snr, preserve_flux=False):
     
     >>> Image.addNoiseSNR(noise, snr, preserve_flux)  
                                                    
-    Noise following the suppled model will be added to the image modifying either the flux of the
+    Noise following the supplied model will be added to the image modifying either the flux of the
     object (if `preserve_flux=True`) or the variance of the noise (if `preserve_flux=False`) such
     that the given signal-to-noise ratio, `snr`, is reached.
 
@@ -66,7 +66,7 @@ def addNoiseSNR(image, noise, snr, preserve_flux=False):
     and therefore, for a given I(x,y) and snr,
         noise_var = sum I(x,y)^2/snr^2.
 
-    Not that for noise models such as Poisson and CCDNoise, the constant Var(I(x,y)) assumption
+    Note that for noise models such as Poisson and CCDNoise, the constant Var(I(x,y)) assumption
     is only approximate, since the flux of the object adds to the Poisson noise in those pixels.
     Thus, the real S/N on the final image will be slightly lower than the target `snr` value, 
     and this effect will be larger for brighter objects.
