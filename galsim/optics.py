@@ -239,10 +239,14 @@ def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_diam=2., circul
         # Define the angle between struts for successive use below
         rotang = 2. * np.pi / float(nstruts)
         # Then loop through struts setting to zero in the pupil regions which lie under the strut
-        in_pupil *= np.abs(kxs) >= .5 * strutthick * kmax_internal # This is first strut, then...
-        for istrut in range(nstruts)[1:]: 
+        in_pupil *= (
+            (np.abs(kxs) >= .5 * strutthick * kmax_internal) +
+            ((kys < 0.) * (np.abs(kxs) < .5 * strutthick * kmax_internal)))
+        for istrut in range(nstruts)[1:]:
             kxs, kys = utilities.rotate_xy(kxs, kys, -rotang)
-            in_pupil *= ((np.abs(kxs) >= .5 * strutthick * kmax_internal) * (ksy < 0.))
+            in_pupil *= (
+                (np.abs(kxs) >= .5 * strutthick * kmax_internal) +
+                ((kys < 0.) * (np.abs(kxs) < .5 * strutthick * kmax_internal)))
     return rho, theta, in_pupil
 
 def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0.,
