@@ -16,23 +16,25 @@
 # You should have received a copy of the GNU General Public License
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 
-# Requirements:
+
+
+
+# This test script requires that you have installed Erin's meds module and his fitsio module.
+# You can get these from:
+#
 # meds  - https://github.com/esheldon/meds
-# fitso - https://github.com/esheldon/fitsio
+# fitsio - https://github.com/esheldon/fitsio
+#
+# In both cases, the installation is simply 
+#
+# python setup.py install [ --prefix PREFIX ]
 
-
-import numpy as np
-import os
-import sys
-
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
 
 import numpy
+import os
+import sys
+import galsim
+
 
 def test_meds():
     """
