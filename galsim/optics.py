@@ -61,7 +61,8 @@ class OpticalPSF(GSObject):
         >>> optical_psf = galsim.OpticalPSF(lam_over_diam, defocus=0., astig1=0., astig2=0.,
                                             coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0.,
                                             circular_pupil=True, obscuration=0., interpolant=None,
-                                            oversampling=1.5, pad_factor=1.5)
+                                            oversampling=1.5, pad_factor=1.5, nstruts=0,
+                                            strutthick=0.05, strutang=0.)
 
     Initializes optical_psf as a galsim.OpticalPSF() instance.
 
@@ -285,12 +286,8 @@ def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     @param strutthick      Thickness of support struts as a fraction of pupil diameter
                            [default `strutthick = 0.05`]
     @param strutang        Angle made between the vertical and the strut starting closest to it,
-                           a float in *degrees* counter-clockwise [default `strutang = 0.`]. 
+                           a float in *degrees* counter-clockwise [default `strutang = 0.`].
  
-
-    @param strutang        Angle made between the vertical and the strut closest to it, given as a
-                           float in *degrees* [default `strutang = 0.`].
-    
     Outputs the wavefront for kx, ky locations corresponding to kxky(array_shape).
     """
     # Define the pupil coordinates and non-zero regions based on input kwargs
@@ -374,12 +371,6 @@ def wavefront_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0.,
                            [default `strutthick = 0.05`]
     @param strutang        Angle made between the vertical and the strut starting closest to it,
                            a float in *degrees* counter-clockwise [default `strutang = 0.`]. 
- 
-
-
-
-    @param strutang        Angle made between the vertical and the strut closest to it, given as a
-                           float in *degrees* [default `strutang = 0.`].
     """
     array = wavefront(
         array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus, astig1=astig1,
@@ -433,11 +424,6 @@ def psf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
                            [default `strutthick = 0.05`].
     @param strutang        Angle made between the vertical and the strut starting closest to it,
                            a float in *degrees* counter-clockwise [default `strutang = 0.`]. 
- 
-
-
-    @param strutang        Angle made between the vertical and the strut closest to it, given as a
-                           float in *degrees* [default `strutang = 0.`].
     @param flux            total flux of the profile [default flux=1.].
     """
     wf = wavefront(
@@ -487,10 +473,6 @@ def psf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
                            [default `strutthick = 0.05`]
     @param strutang        Angle made between the vertical and the strut starting closest to it,
                            a float in *degrees* counter-clockwise [default `strutang = 0.`]. 
- 
-
-    @param strutang        Angle made between the vertical and the strut closest to it, given as a
-                           float in *degrees* [default `strutang = 0.`].
     @param flux            total flux of the profile [default flux=1.].
     """
     array = psf(
@@ -591,11 +573,6 @@ def otf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
                            [default `strutthick = 0.05`].
     @param strutang        Angle made between the vertical and the strut starting closest to it,
                            a float in *degrees* counter-clockwise [default `strutang = 0.`]. 
- 
-
-
-    @param strutang        Angle made between the vertical and the strut closest to it, given as a
-                           float in *degrees* [default `strutang = 0.`].
     """
     array = otf(
         array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus, astig1=astig1,
@@ -649,12 +626,6 @@ def mtf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
                            [default `strutthick = 0.05`].
     @param strutang        Angle made between the vertical and the strut starting closest to it,
                            a float in *degrees* counter-clockwise [default `strutang = 0.`]. 
- 
-
-
-
-    @param strutang        Angle made between the vertical and the strut closest to it, given as a
-                           float in *degrees* [default `strutang = 0.`]. 
     """
     return np.abs(otf(
         array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus, astig1=astig1,
