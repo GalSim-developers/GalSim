@@ -200,7 +200,7 @@ def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_diam=2., circul
     @param nstruts         Number of radial support struts to add to the central obscuration
                            [default `nstruts = 0`].
     @param strutthick      Thickness of support struts as a fraction of pupil diameter
-                           [default `strutthick = 0.05`]
+                           [default `strutthick = 0.05`].
     @param strutang        Angle made between the vertical and the strut starting closest to it,
                            a float in *degrees* counter-clockwise [default `strutang = 0.`].
  
@@ -284,7 +284,7 @@ def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     @param nstruts         Number of radial support struts to add to the central obscuration
                            [default `nstruts = 0`].
     @param strutthick      Thickness of support struts as a fraction of pupil diameter
-                           [default `strutthick = 0.05`]
+                           [default `strutthick = 0.05`].
     @param strutang        Angle made between the vertical and the strut starting closest to it,
                            a float in *degrees* counter-clockwise [default `strutang = 0.`].
  
@@ -368,7 +368,7 @@ def wavefront_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0.,
     @param nstruts         Number of radial support struts to add to the central obscuration
                            [default `nstruts = 0`].
     @param strutthick      Thickness of support struts as a fraction of pupil diameter
-                           [default `strutthick = 0.05`]
+                           [default `strutthick = 0.05`].
     @param strutang        Angle made between the vertical and the strut starting closest to it,
                            a float in *degrees* counter-clockwise [default `strutang = 0.`]. 
     """
@@ -470,7 +470,7 @@ def psf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     @param nstruts         Number of radial support struts to add to the central obscuration
                            [default `nstruts = 0`].
     @param strutthick      Thickness of support struts as a fraction of pupil diameter
-                           [default `strutthick = 0.05`]
+                           [default `strutthick = 0.05`].
     @param strutang        Angle made between the vertical and the strut starting closest to it,
                            a float in *degrees* counter-clockwise [default `strutang = 0.`]. 
     @param flux            total flux of the profile [default flux=1.].
@@ -519,11 +519,7 @@ def otf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
     @param strutthick      Thickness of support struts as a fraction of pupil diameter
                            [default `strutthick = 0.05`].
     @param strutang        Angle made between the vertical and the strut starting closest to it,
-                           a float in *degrees* counter-clockwise [default `strutang = 0.`]. 
- 
-
-    @param strutang        Angle made between the vertical and the strut closest to it, given as a
-                           float in *degrees* [default `strutang = 0.`]. 
+                           a float in *degrees* counter-clockwise [default `strutang = 0.`].
     """
     wf = wavefront(
         array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus, astig1=astig1,
