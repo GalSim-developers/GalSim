@@ -69,7 +69,7 @@ class OpticalPSF(GSObject):
                                             coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0.,
                                             circular_pupil=True, obscuration=0., interpolant=None,
                                             oversampling=1.5, pad_factor=1.5, nstruts=0,
-                                            strutthick=0.05, strutang=0.*galsim.degrees)
+                                            strut_thick=0.05, strut_angle=0.*galsim.degrees)
 
     Initializes optical_psf as a galsim.OpticalPSF() instance.
 
@@ -102,11 +102,11 @@ class OpticalPSF(GSObject):
     @param flux            Total flux of the profile [default `flux=1.`].
     @param nstruts         Number of radial support struts to add to the central obscuration
                            [default `nstruts = 0`].
-    @param strutthick      Thickness of support struts as a fraction of pupil diameter
-                           [default `strutthick = 0.05`]
-    @param strutang        Angle made between the vertical and the strut starting closest to it,
+    @param strut_thick     Thickness of support struts as a fraction of pupil diameter
+                           [default `strut_thick = 0.05`]
+    @param strut_angle     Angle made between the vertical and the strut starting closest to it,
                            defined to be positive in the counter-clockwise direction; must be a
-                           galsim.Angle instance [default `strutang = 0. * galsim.degrees`].
+                           galsim.Angle instance [default `strut_angle = 0. * galsim.degrees`].
     @param gsparams        You may also specify a gsparams argument.  See the docstring for
                            galsim.GSParams using help(galsim.GSParams) for more information about
                            this option.
@@ -135,8 +135,8 @@ class OpticalPSF(GSObject):
         "interpolant" : str ,
         "flux" : float,
         "nstruts" : int,
-        "strutthick" : float,
-        "strutang" : galsim.Angle }
+        "strut_thick" : float,
+        "strut_angle" : galsim.Angle }
     _single_params = []
     _takes_rng = False
 
@@ -144,7 +144,8 @@ class OpticalPSF(GSObject):
     def __init__(self, lam_over_diam, defocus=0.,
                  astig1=0., astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0., 
                  circular_pupil=True, obscuration=0., interpolant=None, oversampling=1.5,
-                 pad_factor=1.5, flux=1., nstruts=0, strutthick=0.05, strutang=0.*galsim.degrees,
+                 pad_factor=1.5, flux=1.,
+                 nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees,
                  gsparams=None):
 
         # Currently we load optics, noise etc in galsim/__init__.py, but this might change (???)
@@ -174,7 +175,7 @@ class OpticalPSF(GSObject):
             lam_over_diam=lam_over_diam, dx=dx_lookup, array_shape=(npix, npix), defocus=defocus,
             astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2, trefoil1=trefoil1,
             trefoil2=trefoil2, spher=spher, circular_pupil=circular_pupil, obscuration=obscuration,
-            flux=flux, nstruts=nstruts, strutthick=strutthick, strutang=strutang)
+            flux=flux, nstruts=nstruts, strut_thick=strut_thick, strut_angle=strut_angle)
         
         # If interpolant not specified on input, use a Quintic interpolant
         if interpolant is None:
@@ -196,7 +197,8 @@ class OpticalPSF(GSObject):
 
 
 def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_diam=2., circular_pupil=True,
-                         obscuration=0., nstruts=0, strutthick=0.05, strutang=0.*galsim.degrees):
+                         obscuration=0., nstruts=0, strut_thick=0.05, 
+                         strut_angle=0.*galsim.degrees):
     """Generate a pupil plane, including a central obscuration such as caused by a secondary mirror.
 
     @param array_shape     the NumPy array shape desired for the output array.
@@ -208,11 +210,11 @@ def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_diam=2., circul
                            dimension, [0., 1.).
     @param nstruts         Number of radial support struts to add to the central obscuration
                            [default `nstruts = 0`].
-    @param strutthick      Thickness of support struts as a fraction of pupil diameter
-                           [default `strutthick = 0.05`].
-    @param strutang        Angle made between the vertical and the strut starting closest to it,
+    @param strut_thick     Thickness of support struts as a fraction of pupil diameter
+                           [default `strut_thick = 0.05`].
+    @param strut_angle     Angle made between the vertical and the strut starting closest to it,
                            defined to be positive in the counter-clockwise direction; must be a
-                           galsim.Angle instance [default `strutang = 0. * galsim.degrees`].
+                           galsim.Angle instance [default `strut_angle = 0. * galsim.degrees`].
  
     Returns a tuple (rho, theta, in_pupil), the first two of which are the coordinates of the
     pupil in unit disc-scaled coordinates for use by Zernike polynomials for describing the
@@ -240,30 +242,30 @@ def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_diam=2., circul
                 (np.abs(kx) >= .5 * obscuration * kmax_internal) *
                 (np.abs(ky) >= .5 * obscuration * kmax_internal))
     if nstruts > 0:
-        if not isinstance(strutang, galsim.Angle):
-            raise TypeError("Input kwarg strutang must be a galsim.Angle instance.")
+        if not isinstance(strut_angle, galsim.Angle):
+            raise TypeError("Input kwarg strut_angle must be a galsim.Angle instance.")
         # Add the initial rotation if requested, converting to radians
-        if strutang.rad != 0.:
-            kxs, kys = utilities.rotate_xy(kx, ky, -strutang) # strut rotation +=ve, so coords
-                                                              # rotation -ve!
+        if strut_angle.rad != 0.:
+            kxs, kys = utilities.rotate_xy(kx, ky, -strut_angle) # strut rotation +=ve, so coords
+                                                                 # rotation -ve!
         else:
             kxs, kys = kx, ky
         # Define the angle between struts for successive use below
         rotang = 360. * galsim.degrees / float(nstruts)
         # Then loop through struts setting to zero in the pupil regions which lie under the strut
         in_pupil *= (
-            (np.abs(kxs) >= .5 * strutthick * kmax_internal) +
-            ((kys < 0.) * (np.abs(kxs) < .5 * strutthick * kmax_internal)))
+            (np.abs(kxs) >= .5 * strut_thick * kmax_internal) +
+            ((kys < 0.) * (np.abs(kxs) < .5 * strut_thick * kmax_internal)))
         for istrut in range(nstruts)[1:]:
             kxs, kys = utilities.rotate_xy(kxs, kys, -rotang)
             in_pupil *= (
-                (np.abs(kxs) >= .5 * strutthick * kmax_internal) +
-                ((kys < 0.) * (np.abs(kxs) < .5 * strutthick * kmax_internal)))
+                (np.abs(kxs) >= .5 * strut_thick * kmax_internal) +
+                ((kys < 0.) * (np.abs(kxs) < .5 * strut_thick * kmax_internal)))
     return rho, theta, in_pupil
 
 def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0.,
               coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0., circular_pupil=True,
-              obscuration=0., nstruts=0, strutthick=0.05, strutang=0.*galsim.degrees):
+              obscuration=0., nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees):
     """Return a complex, aberrated wavefront across a circular (default) or square pupil.
     
     Outputs a complex image (shape=array_shape) of a circular pupil wavefront of unit amplitude
@@ -299,18 +301,18 @@ def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
                            dimension, [0., 1.).
     @param nstruts         Number of radial support struts to add to the central obscuration
                            [default `nstruts = 0`].
-    @param strutthick      Thickness of support struts as a fraction of pupil diameter
-                           [default `strutthick = 0.05`].
-    @param strutang        Angle made between the vertical and the strut starting closest to it,
+    @param strut_thick     Thickness of support struts as a fraction of pupil diameter
+                           [default `strut_thick = 0.05`].
+    @param strut_angle     Angle made between the vertical and the strut starting closest to it,
                            defined to be positive in the counter-clockwise direction; must be a
-                           galsim.Angle instance [default `strutang = 0. * galsim.degrees`].
+                           galsim.Angle instance [default `strut_angle = 0. * galsim.degrees`].
 
     Outputs the wavefront for kx, ky locations corresponding to kxky(array_shape).
     """
     # Define the pupil coordinates and non-zero regions based on input kwargs
     rho, theta, in_pupil = generate_pupil_plane(
         array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, circular_pupil=circular_pupil,
-        obscuration=obscuration, nstruts=nstruts, strutthick=strutthick, strutang=strutang)
+        obscuration=obscuration, nstruts=nstruts, strut_thick=strut_thick, strut_angle=strut_angle)
     pi = np.pi # minor but saves Python checking the entire np. namespace every time I need pi    
     # Then make wavefront image
     wf = np.zeros(array_shape, dtype=complex)
@@ -343,8 +345,8 @@ def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
 
 def wavefront_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0.,
                     astig1=0., astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0.,
-                    circular_pupil=True, obscuration=0., nstruts=0, strutthick=0.05,
-                    strutang=0.*galsim.degrees):
+                    circular_pupil=True, obscuration=0., nstruts=0, strut_thick=0.05,
+                    strut_angle=0.*galsim.degrees):
     """Return wavefront as a (real, imag) tuple of ImageViewD objects rather than complex NumPy
     array.
 
@@ -385,17 +387,17 @@ def wavefront_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0.,
                            dimension, [0., 1.).
     @param nstruts         Number of radial support struts to add to the central obscuration
                            [default `nstruts = 0`].
-    @param strutthick      Thickness of support struts as a fraction of pupil diameter
-                           [default `strutthick = 0.05`].
-    @param strutang        Angle made between the vertical and the strut starting closest to it,
+    @param strut_thick     Thickness of support struts as a fraction of pupil diameter
+                           [default `strut_thick = 0.05`].
+    @param strut_angle     Angle made between the vertical and the strut starting closest to it,
                            defined to be positive in the counter-clockwise direction; must be a
-                           galsim.Angle instance [default `strutang = 0. * galsim.degrees`].
+                           galsim.Angle instance [default `strut_angle = 0. * galsim.degrees`].
     """
     array = wavefront(
         array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus, astig1=astig1,
         astig2=astig2, coma1=coma1, coma2=coma2, trefoil1=trefoil1, trefoil2=trefoil2, spher=spher,
         circular_pupil=circular_pupil, obscuration=obscuration, nstruts=nstruts,
-        strutthick=strutthick, strutang=strutang)
+        strut_thick=strut_thick, strut_angle=strut_angle)
     imreal = galsim.ImageViewD(np.ascontiguousarray(array.real.astype(np.float64)))
     imimag = galsim.ImageViewD(np.ascontiguousarray(array.imag.astype(np.float64)))
     if array_shape[0] != array_shape[1]:
@@ -409,7 +411,7 @@ def wavefront_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0.,
 
 def psf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0., coma1=0.,
         coma2=0., trefoil1=0., trefoil2=0., spher=0., circular_pupil=True, obscuration=0.,
-        nstruts=0, strutthick=0.05, strutang=0.*galsim.degrees, flux=1.):
+        nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees, flux=1.):
     """Return NumPy array containing circular (default) or square pupil PSF with low-order 
     aberrations.
 
@@ -439,18 +441,18 @@ def psf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
                            dimension, [0., 1.).
     @param nstruts         Number of radial support struts to add to the central obscuration
                            [default `nstruts = 0`].
-    @param strutthick      Thickness of support struts as a fraction of pupil diameter
-                           [default `strutthick = 0.05`].
-    @param strutang        Angle made between the vertical and the strut starting closest to it,
+    @param strut_thick     Thickness of support struts as a fraction of pupil diameter
+                           [default `strut_thick = 0.05`].
+    @param strut_angle     Angle made between the vertical and the strut starting closest to it,
                            defined to be positive in the counter-clockwise direction; must be a
-                           galsim.Angle instance [default `strutang = 0. * galsim.degrees`].
+                           galsim.Angle instance [default `strut_angle = 0. * galsim.degrees`].
     @param flux            total flux of the profile [default flux=1.].
     """
     wf = wavefront(
         array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus, astig1=astig1,
         astig2=astig2, coma1=coma1, coma2=coma2, trefoil1=trefoil1, trefoil2=trefoil2, spher=spher,
         circular_pupil=circular_pupil, obscuration=obscuration, nstruts=nstruts,
-        strutthick=strutthick, strutang=strutang)
+        strut_thick=strut_thick, strut_angle=strut_angle)
     ftwf = np.fft.fft2(wf)  # I think this (and the below) is quicker than np.abs(ftwf)**2
     # The roll operation below restores the c_contiguous flag, so no need for a direct action
     im = utilities.roll2d((ftwf * ftwf.conj()).real, (array_shape[0] / 2, array_shape[1] / 2)) 
@@ -458,7 +460,7 @@ def psf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
 
 def psf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0.,
               coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0., circular_pupil=True,
-              obscuration=0., nstruts=0, strutthick=0.05, strutang=0.*galsim.degrees, flux=1.):
+              obscuration=0., nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees, flux=1.):
     """Return circular (default) or square pupil PSF with low-order aberrations as an ImageViewD.
 
     The PSF is centred on the array[array_shape[0] / 2, array_shape[1] / 2] pixel by default, and
@@ -489,25 +491,25 @@ def psf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
                            dimension, [0., 1.).
     @param nstruts         Number of radial support struts to add to the central obscuration
                            [default `nstruts = 0`].
-    @param strutthick      Thickness of support struts as a fraction of pupil diameter
-                           [default `strutthick = 0.05`].
-    @param strutang        Angle made between the vertical and the strut starting closest to it,
+    @param strut_thick     Thickness of support struts as a fraction of pupil diameter
+                           [default `strut_thick = 0.05`].
+    @param strut_angle     Angle made between the vertical and the strut starting closest to it,
                            defined to be positive in the counter-clockwise direction; must be a
-                           galsim.Angle instance [default `strutang = 0. * galsim.degrees`].
+                           galsim.Angle instance [default `strut_angle = 0. * galsim.degrees`].
     @param flux            total flux of the profile [default flux=1.].
     """
     array = psf(
         array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus, astig1=astig1,
         astig2=astig2, coma1=coma1, coma2=coma2, trefoil1=trefoil1, trefoil2=trefoil2, spher=spher,
         circular_pupil=circular_pupil, obscuration=obscuration, flux=flux, nstruts=nstruts,
-        strutthick=strutthick, strutang=strutang)
+        strut_thick=strut_thick, strut_angle=strut_angle)
     im = galsim.ImageViewD(array.astype(np.float64))
     im.setScale(dx)
     return im
 
 def otf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0., coma1=0.,
         coma2=0., trefoil1=0., trefoil2=0., spher=0., circular_pupil=True, obscuration=0., 
-        nstruts=0, strutthick=0.05, strutang=0.*galsim.degrees):
+        nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees):
     """Return the complex OTF of a circular (default) or square pupil with low-order aberrations as
     a NumPy array.
 
@@ -537,17 +539,17 @@ def otf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
                            dimension, [0., 1.).
     @param nstruts         Number of radial support struts to add to the central obscuration
                            [default `nstruts = 0`].
-    @param strutthick      Thickness of support struts as a fraction of pupil diameter
-                           [default `strutthick = 0.05`].
-    @param strutang        Angle made between the vertical and the strut starting closest to it,
+    @param strut_thick     Thickness of support struts as a fraction of pupil diameter
+                           [default `strut_thick = 0.05`].
+    @param strut_angle     Angle made between the vertical and the strut starting closest to it,
                            defined to be positive in the counter-clockwise direction; must be a
-                           galsim.Angle instance [default `strutang = 0. * galsim.degrees`].
+                           galsim.Angle instance [default `strut_angle = 0. * galsim.degrees`].
     """
     wf = wavefront(
         array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus, astig1=astig1,
         astig2=astig2, coma1=coma1, coma2=coma2, trefoil1=trefoil1, trefoil2=trefoil2, spher=spher, 
         circular_pupil=circular_pupil, obscuration=obscuration, nstruts=nstruts,
-        strutthick=strutthick, strutang=strutang)
+        strut_thick=strut_thick, strut_angle=strut_angle)
     ftwf = np.fft.fft2(wf)  # I think this (and the below) is quicker than np.abs(ftwf)**2
     otf = np.fft.ifft2((ftwf * ftwf.conj()).real)
     # Make unit flux before returning
@@ -555,7 +557,7 @@ def otf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
 
 def otf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0.,
               coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0., circular_pupil=True,
-              obscuration=0., nstruts=0, strutthick=0.05, strutang=0.*galsim.degrees):
+              obscuration=0., nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees):
     """Return the complex OTF of a circular (default) or square pupil with low-order aberrations as 
     a (real, imag) tuple of ImageViewD objects, rather than a complex NumPy array.
 
@@ -587,17 +589,17 @@ def otf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
                            dimension, [0., 1.).
     @param nstruts         Number of radial support struts to add to the central obscuration
                            [default `nstruts = 0`].
-    @param strutthick      Thickness of support struts as a fraction of pupil diameter
-                           [default `strutthick = 0.05`].
-    @param strutang        Angle made between the vertical and the strut starting closest to it,
+    @param strut_thick     Thickness of support struts as a fraction of pupil diameter
+                           [default `strut_thick = 0.05`].
+    @param strut_angle     Angle made between the vertical and the strut starting closest to it,
                            defined to be positive in the counter-clockwise direction; must be a
-                           galsim.Angle instance [default `strutang = 0. * galsim.degrees`].
+                           galsim.Angle instance [default `strut_angle = 0. * galsim.degrees`].
     """
     array = otf(
         array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus, astig1=astig1,
         astig2=astig2, coma1=coma1, coma2=coma2, trefoil1=trefoil1, trefoil2=trefoil2, spher=spher,
         circular_pupil=circular_pupil, obscuration=obscuration, nstruts=nstruts,
-        strutthick=strutthick, strutang=strutang)
+        strut_thick=strut_thick, strut_angle=strut_angle)
     imreal = galsim.ImageViewD(np.ascontiguousarray(array.real.astype(np.float64)))
     imimag = galsim.ImageViewD(np.ascontiguousarray(array.imag.astype(np.float64)))
     if array_shape[0] != array_shape[1]:
@@ -611,7 +613,7 @@ def otf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
 
 def mtf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0., coma1=0.,
         coma2=0., trefoil1=0., trefoil2=0., spher=0., circular_pupil=True, obscuration=0.,
-        nstruts=0, strutthick=0.05, strutang=0.*galsim.degrees):
+        nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees):
     """Return NumPy array containing the MTF of a circular (default) or square pupil with low-order
     aberrations.
 
@@ -641,21 +643,21 @@ def mtf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
                            dimension, [0., 1.).
     @param nstruts         Number of radial support struts to add to the central obscuration
                            [default `nstruts = 0`].
-    @param strutthick      Thickness of support struts as a fraction of pupil diameter
-                           [default `strutthick = 0.05`].
-    @param strutang        Angle made between the vertical and the strut starting closest to it,
+    @param strut_thick     Thickness of support struts as a fraction of pupil diameter
+                           [default `strut_thick = 0.05`].
+    @param strut_angle     Angle made between the vertical and the strut starting closest to it,
                            defined to be positive in the counter-clockwise direction; must be a
-                           galsim.Angle instance [default `strutang = 0. * galsim.degrees`].
+                           galsim.Angle instance [default `strut_angle = 0. * galsim.degrees`].
     """
     return np.abs(otf(
         array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus, astig1=astig1,
         astig2=astig2, coma1=coma1, coma2=coma2, trefoil1=trefoil1, trefoil2=trefoil2, spher=spher,
         obscuration=obscuration, circular_pupil=circular_pupil, nstruts=nstruts,
-        strutthick=strutthick, strutang=strutang))
+        strut_thick=strut_thick, strut_angle=strut_angle))
 
 def mtf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0.,
               coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0., circular_pupil=True,
-              obscuration=0., nstruts=0, strutthick=0.05, strutang=0.*galsim.degrees):
+              obscuration=0., nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees):
     """Return the MTF of a circular (default) or square pupil with low-order aberrations as an 
     ImageViewD.
 
@@ -687,17 +689,17 @@ def mtf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
                            dimension, [0., 1.).
     @param nstruts         Number of radial support struts to add to the central obscuration
                            [default `nstruts = 0`].
-    @param strutthick      Thickness of support struts as a fraction of pupil diameter
-                           [default `strutthick = 0.05`].
-    @param strutang        Angle made between the vertical and the strut starting closest to it,
+    @param strut_thick     Thickness of support struts as a fraction of pupil diameter
+                           [default `strut_thick = 0.05`].
+    @param strut_angle     Angle made between the vertical and the strut starting closest to it,
                            defined to be positive in the counter-clockwise direction; must be a
-                           galsim.Angle instance [default `strutang = 0. * galsim.degrees`].
+                           galsim.Angle instance [default `strut_angle = 0. * galsim.degrees`].
     """
     array = mtf(
         array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus, astig1=astig1,
         astig2=astig2, coma1=coma1, coma2=coma2, trefoil1=trefoil1, trefoil2=trefoil2, spher=spher,
         circular_pupil=circular_pupil, obscuration=obscuration, nstruts=nstruts,
-        strutthick=strutthick, strutang=strutang)
+        strut_thick=strut_thick, strut_angle=strut_angle)
     im = galsim.ImageViewD(array.astype(np.float64))
     if array_shape[0] != array_shape[1]:
         import warnings
@@ -709,7 +711,7 @@ def mtf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
 
 def ptf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0., coma1=0.,
         coma2=0., trefoil1=0., trefoil2=0., spher=0., circular_pupil=True, obscuration=0.,
-        nstruts=0, strutthick=0.05, strutang=0.*galsim.degrees):
+        nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees):
     """Return NumPy array containing the PTF [radians] of a circular (default) or square pupil with
     low-order aberrations.
 
@@ -739,11 +741,11 @@ def ptf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
                            dimension, [0., 1.)
     @param nstruts         Number of radial support struts to add to the central obscuration
                            [default `nstruts = 0`].
-    @param strutthick      Thickness of support struts as a fraction of pupil diameter
-                           [default `strutthick = 0.05`].
-    @param strutang        Angle made between the vertical and the strut starting closest to it,
+    @param strut_thick     Thickness of support struts as a fraction of pupil diameter
+                           [default `strut_thick = 0.05`].
+    @param strut_angle     Angle made between the vertical and the strut starting closest to it,
                            defined to be positive in the counter-clockwise direction; must be a
-                           galsim.Angle instance [default `strutang = 0. * galsim.degrees`].
+                           galsim.Angle instance [default `strut_angle = 0. * galsim.degrees`].
     """
     kx, ky = utilities.kxky(array_shape)
     k2 = (kx**2 + ky**2)
@@ -754,12 +756,12 @@ def ptf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
         array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus, astig1=astig1,
         astig2=astig2, coma1=coma1, coma2=coma2, trefoil1=trefoil1, trefoil2=trefoil2, spher=spher,
         circular_pupil=circular_pupil, obscuration=obscuration, nstruts=nstruts,
-        strutthick=strutthick, strutang=strutang)[k2 < kmax_internal**2]) 
+        strut_thick=strut_thick, strut_angle=strut_angle)[k2 < kmax_internal**2]) 
     return ptf
 
 def ptf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0.,
               coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0., circular_pupil=True,
-              obscuration=0., nstruts=0, strutthick=0.05, strutang=0.*galsim.degrees):
+              obscuration=0., nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees):
     """Return the PTF [radians] of a circular (default) or square pupil with low-order aberrations
     as an ImageViewD.
 
@@ -791,17 +793,17 @@ def ptf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
                            dimension, [0., 1.)
     @param nstruts         Number of radial support struts to add to the central obscuration
                            [default `nstruts = 0`].
-    @param strutthick      Thickness of support struts as a fraction of pupil diameter
-                           [default `strutthick = 0.05`].
-    @param strutang        Angle made between the vertical and the strut starting closest to it,
+    @param strut_thick      Thickness of support struts as a fraction of pupil diameter
+                           [default `strut_thick = 0.05`].
+    @param strut_angle        Angle made between the vertical and the strut starting closest to it,
                            defined to be positive in the counter-clockwise direction; must be a
-                           galsim.Angle instance [default `strutang = 0. * galsim.degrees`].
+                           galsim.Angle instance [default `strut_angle = 0. * galsim.degrees`].
     """
     array = ptf(
         array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, defocus=defocus, astig1=astig1,
         astig2=astig2, coma1=coma1, coma2=coma2, trefoil1=trefoil1, trefoil2=trefoil2, spher=spher,
         circular_pupil=circular_pupil, obscuration=obscuration, nstruts=nstruts,
-        strutthick=strutthick, strutang=strutang)
+        strut_thick=strut_thick, strut_angle=strut_angle)
     im = galsim.ImageViewD(array.astype(np.float64))
     if array_shape[0] != array_shape[1]:
         import warnings
