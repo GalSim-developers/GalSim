@@ -289,6 +289,14 @@ output :
     badpix :
         hdu : 1
 
+    # We also draw a PSF image at the location of every galaxy.  This isn't normally done,
+    # and since some of the PSFs overlap, it's not necessarily so useful to have this kind 
+    # of image.  But in this case, it's fun to look at the psf image, especially with 
+    # something like log scaling in ds9 to see how crazy an aberrated OpticalPSF with 
+    # struts can look when there is no atmospheric component to blur it out.
+    psf :
+        hdu : 3
+
     # nproc in the output field indicates that multiple processes should be used to 
     # build the files.  This is a much more efficient way to parallelize than putting
     # nproc in the image field (as in demo8.yaml), since it requires less communication 

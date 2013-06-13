@@ -132,6 +132,14 @@ def main(argv):
         badpix_image = galsim.ImageS(image_size, image_size)
         badpix_image.setScale(pixel_scale)
 
+        # We also draw a PSF image at the location of every galaxy.  This isn't normally done,
+        # and since some of the PSFs overlap, it's not necessarily so useful to have this kind 
+        # of image.  But in this case, it's fun to look at the psf image, especially with 
+        # something like log scaling in ds9 to see how crazy an aberrated OpticalPSF with 
+        # struts can look when there is no atmospheric component to blur it out.
+        psf_image = galsim.ImageF(image_size, image_size)
+        psf_image.setScale(pixel_scale)
+
         # Setup the NFWHalo stuff:
         nfw = galsim.NFWHalo(mass=mass, conc=nfw_conc, redshift=nfw_z_halo,
                              omega_m=omega_m, omega_lam=omega_lam)
@@ -254,6 +262,13 @@ def main(argv):
             bounds = stamp.bounds & full_image.bounds
             full_image[bounds] += stamp[bounds]
 
+            # Also draw the PSF
+            psf_final = galsim.Convolve([psf, pix])
+            psf_final.applyShift(dx*pixel_scale, dy*pixel_scale)
+            psf_stamp = galsim.ImageF(stamp.bounds) # Use same bounds as galaxy stamp
+            psf_final.draw(psf_stamp, dx=pixel_scale)
+            psf_image[bounds] += psf_stamp[bounds]
+
 
         # Add Poisson noise to the full image
         sky_level_pixel = sky_level * pixel_scale**2
@@ -273,7 +288,7 @@ def main(argv):
         weight_image.fill(1./sky_level_pixel)
 
         # Write the file to disk:
-        galsim.fits.writeMulti([full_image, badpix_image, weight_image], file_name)
+        galsim.fits.writeMulti([full_image, badpix_image, weight_image, psf_image], file_name)
 
         t2 = time.time()
         return t2-t1
