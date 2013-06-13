@@ -592,7 +592,8 @@ namespace galsim {
 
         // We use a cubic spline for the interpolation, which has an error of O(h^4) max(f'''').
         // I have no idea what range the fourth derivative can take for the hankel transform,
-        // so let's take the completely arbitrary value of 10.
+        // so let's take the completely arbitrary value of 10.  (This value was found to be 
+        // conservative for Sersic, but I haven't investigated here.)
         // 10 h^4 <= kvalue_accuracy
         // h = (kvalue_accuracy/10)^0.25
         double dk = gsparams->table_spacing * sqrt(sqrt(gsparams->kvalue_accuracy / 10.));
