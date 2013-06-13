@@ -55,6 +55,13 @@ class OpticalPSF(GSObject):
     Noll, J. Opt. Soc. Am. 66, 207-211(1976).  For a brief summary of the polynomials, refer to
     http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials.
 
+    You can also optionally specify that the secondary mirror (or prime focus cage, etc.) are held
+    by some number of support struts.  These are taken to be rectangular obscurations extending from
+    the outer edge of the pupil to the outer edge of the obscuration disk (or the pupil center if
+    `obscuration = 0.`).  You can specify how many struts there are (evenly spaced in angle), how
+    thick they are as a fraction of the pupil diameter, and what angle they start at relative to
+    the positive y direction.
+
     Initialization
     --------------
     
