@@ -38,16 +38,20 @@ namespace galsim {
         /// @brief Destructor: deletes photon-shooting classes if necessary
         ~SersicInfo() {}
 
-        /** 
-         * @brief Returns the real space value of the Sersic function,
-         * normalized to unit flux (see private attributes).
-         * @param[in] xsq The *square* of the radius, in units of half-light radius.
-         * Avoids taking sqrt in most user code.
-         * @returns Value of Sersic function, normalized to unit flux.
+        /**
+         * @brief Returns the unnormalized real space value of the Sersic function.
+         *
+         * The input `rsq` should be (r_actual^2 / r0^2).
+         * The returned value should then be multiplied by flux * getXNorm() / r0^2.
          */
-        double xValue(double xsq) const;
+        double xValue(double rsq) const;
 
-        /// @brief Looks up the k value for the SBProfile from a lookup table.
+        /**
+         * @brief Returns the unnormalized value of the fourier transform.
+         *
+         * The input `ksq` should be (k_actual^2 * r0^2).
+         * The returned value should then be multiplied by flux.
+         */
         double kValue(double ksq) const;
 
         double maxK() const;
@@ -59,11 +63,13 @@ namespace galsim {
         /// @brief The fractional flux relateive to the untruncated profile.
         double getFluxFraction() const;
 
-        /// @brief The factor to multiple the returned value from xValue
+        /**
+         * @brief The factor by which to multiply the returned value from xValue.
+         *
+         * Since the returned value needs to be multiplied by flux/r0^2 anyway, we also let
+         * the caller of xValue multiply by the normalization, which we calculate for them here.
+         */
         double getXNorm() const;
-
-        /// @brief The factor to multiple the returned value from kValue
-        double getKNorm() const;
 
         /// @brief Calculate scale that has the given HLR and truncation radius in physical units.
         double calculateScaleForTruncatedHLR(double re, double trunc) const;

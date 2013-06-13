@@ -91,9 +91,6 @@ namespace galsim {
 
         _truncated = (_trunc > 0.);
 
-        // This will change for flux_untruncated=False option:
-        double norm_flux = _flux;
-
         // Set size of this instance according to type of size given in constructor
         switch (rType) {
           case HALF_LIGHT_RADIUS:
@@ -117,9 +114,6 @@ namespace galsim {
                            // Update the stored _flux and _re with the correct values
                            _flux *= _info->getFluxFraction();
                            _re = _r0 * _info->getHLR();
-                       } else {
-                           // The stored flux is right, but we need to normalize by a larger flux.
-                           norm_flux /= _info->getFluxFraction();
                        }
                    } else {
                        // Then given HLR and flux are the values for the untruncated profile.
@@ -137,9 +131,6 @@ namespace galsim {
                        if (flux_untruncated) {
                            // Update the stored _flux with the correct value
                            _flux *= _info->getFluxFraction();
-                       } else {
-                           // The stored flux is right, but we need to normalize by a larger flux.
-                           norm_flux /= _info->getFluxFraction();
                        }
                    }
                    // In all cases, _re is the real HLR
@@ -156,10 +147,9 @@ namespace galsim {
         _inv_r0 = 1./_r0;
         _inv_r0_sq = _inv_r0*_inv_r0;
 
-        _shootnorm = norm_flux * _info->getXNorm();
+        _shootnorm = _flux * _info->getXNorm(); // For shooting, we don't need the 1/r0^2 factor.
         _xnorm = _shootnorm * _inv_r0_sq;
-        _knorm = norm_flux * _info->getKNorm();
-        dbg<<"norms = "<<_xnorm<<", "<<_knorm<<", "<<_shootnorm<<std::endl;
+        dbg<<"norms = "<<_xnorm<<", "<<_shootnorm<<std::endl;
     }
 
     double SBSersic::SBSersicImpl::xValue(const Position<double>& p) const
@@ -171,7 +161,7 @@ namespace galsim {
     std::complex<double> SBSersic::SBSersicImpl::kValue(const Position<double>& k) const
     {
         double ksq = (k.x*k.x + k.y*k.y)*_r0_sq;
-        return _knorm * _info->kValue(ksq);
+        return _flux * _info->kValue(ksq);
     }
 
     void SBSersic::SBSersicImpl::fillXValue(tmv::MatrixView<double> val,
@@ -236,7 +226,7 @@ namespace galsim {
                 It valit(val.col(j).begin().getP(),1);
                 for (int i=0;i<m;++i,x+=dx) {
                     double ksq = x*x + ysq;
-                    *valit++ = _knorm * _info->kValue(ksq);
+                    *valit++ = _flux * _info->kValue(ksq);
                 }
             }
         }
@@ -301,7 +291,7 @@ namespace galsim {
             It valit(val.col(j).begin().getP(),1);
             for (int i=0;i<m;++i,x+=dx,y+=dyx) {
                 double ksq = x*x + y*y;
-                *valit++ = _knorm * _info->kValue(ksq);
+                *valit++ = _flux * _info->kValue(ksq);
             }
         }
     }
@@ -371,10 +361,7 @@ namespace galsim {
     }
 
     double SersicInfo::getXNorm() const
-    { return 1. / (2.*M_PI*_n*_gamma2n); }
-
-    double SersicInfo::getKNorm() const
-    { return getFluxFraction(); }
+    { return 1. / (2.*M_PI*_n*_gamma2n * getFluxFraction()); }
 
     double SersicInfo::xValue(double rsq) const 
     {
