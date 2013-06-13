@@ -310,13 +310,13 @@ namespace galsim {
         // Also, since we used kvalue_accuracy for the threshold of _xInterp
         // (at least for the default quintic interpolant) rather than maxk_threshold,
         // this will probably be larger than we really need.
-        // We could modify the urange method of Interpolant to take a threshold value
+        // We could modify the krange method of Interpolant to take a threshold value
         // at that point, rather than just use the constructor's value, but it's 
         // probably not worth it.  It will probably be very rare that the final maxK
         // value of the FFT will be due to an SBInterpolatedImage.  Usually, this will
         // be convolved by a PSF that will have a smaller maxK.
-        _uscale = _multi.getScale() / (2.*M_PI);
-        _maxk = _maxk1 = _xInterp->urange()/_uscale;
+        _kscale = _multi.getScale() / (2.*M_PI);
+        _maxk = _maxk1 = _xInterp->krange()/_kscale;
         dbg<<"maxk = "<<_maxk<<std::endl;
 
         _flux = calculateFlux();
@@ -370,7 +370,7 @@ namespace galsim {
         // Don't bother if the desired k value is cut off by the x interpolant:
         if (std::abs(k.x) > _maxk1 || std::abs(k.y) > _maxk1) return std::complex<double>(0.,0.);
         checkK();
-        double xKernelTransform = _xInterp->uval(k.x*_uscale, k.y*_uscale);
+        double xKernelTransform = _xInterp->kval(k.x*_kscale, k.y*_kscale);
         return xKernelTransform * _ktab->interpolate(k.x, k.y, *_kInterp);
     }
 
@@ -434,17 +434,17 @@ namespace galsim {
         xdbg<<"i1,i2 = "<<i1<<','<<i2<<std::endl;
         xdbg<<"j1,j2 = "<<j1<<','<<j2<<std::endl;
 
-        // For the rest of the range, calculate ux, uy values
-        tmv::Vector<double> ux(i2-i1);
+        // For the rest of the range, calculate kx, ky values
+        tmv::Vector<double> kx(i2-i1);
         typedef tmv::VIt<double,1,tmv::NonConj> It;
-        It uxit = ux.begin();
+        It kxit = kx.begin();
         double x = x0;
-        for (int i=i1;i<i2;++i,x+=dx) *uxit++ = x * _uscale;
+        for (int i=i1;i<i2;++i,x+=dx) *kxit++ = x * _kscale;
             
-        tmv::Vector<double> uy(j2-j1);
-        It uyit = uy.begin();
+        tmv::Vector<double> ky(j2-j1);
+        It kyit = ky.begin();
         double y = y0;
-        for (int j=j1;j<j2;++j,y+=dy) *uyit++ = y * _uscale;
+        for (int j=j1;j<j2;++j,y+=dy) *kyit++ = y * _kscale;
 
         const InterpolantXY* kInterpXY = dynamic_cast<const InterpolantXY*>(_kInterp.get());
         if (kInterpXY) {
@@ -454,29 +454,29 @@ namespace galsim {
 
             const InterpolantXY* xInterpXY = dynamic_cast<const InterpolantXY*>(_xInterp.get());
             if (xInterpXY) {
-                // Then the uval's are separable.  Go ahead and pre-calculate them.
-                It uxit = ux.begin();
-                for (int i=i1;i<i2;++i,++uxit) *uxit = xInterpXY->uval1d(*uxit);
-                It uyit = uy.begin();
-                for (int j=j1;j<j2;++j,++uyit) *uyit = xInterpXY->uval1d(*uyit);
+                // Then the kval's are separable.  Go ahead and pre-calculate them.
+                It kxit = kx.begin();
+                for (int i=i1;i<i2;++i,++kxit) *kxit = xInterpXY->kval1d(*kxit);
+                It kyit = ky.begin();
+                for (int j=j1;j<j2;++j,++kyit) *kyit = xInterpXY->kval1d(*kyit);
 
-                uxit = ux.begin();
-                for (int i=i1;i<i2;++i,x0+=dx,++uxit) {
+                kxit = kx.begin();
+                for (int i=i1;i<i2;++i,x0+=dx,++kxit) {
                     double y = y0;
-                    uyit = uy.begin();
+                    kyit = ky.begin();
                     RMIt valit(val.row(i).begin().getP(),val.stepj());
                     for (int j=j1;j<j2;++j,y+=dy) {
-                        *valit++ = *uxit * *uyit++ * _ktab->interpolate(x0, y, *kInterpXY);
+                        *valit++ = *kxit * *kyit++ * _ktab->interpolate(x0, y, *kInterpXY);
                     }
                 }
             } else {
-                It uxit = ux.begin();
-                for (int i=i1;i<i2;++i,x0+=dx,++uxit) {
+                It kxit = kx.begin();
+                for (int i=i1;i<i2;++i,x0+=dx,++kxit) {
                     double y = y0;
-                    It uyit = uy.begin();
+                    It kyit = ky.begin();
                     RMIt valit(val.row(i).begin().getP(),val.stepj());
                     for (int j=j1;j<j2;++j,y+=dy) {
-                        double xKernelTransform = _xInterp->uval(*uxit, *uyit++);
+                        double xKernelTransform = _xInterp->kval(*kxit, *kyit++);
                         *valit++ = xKernelTransform * _ktab->interpolate(x0, y, *kInterpXY);
                     }
                 }
@@ -484,30 +484,30 @@ namespace galsim {
         } else {
             const InterpolantXY* xInterpXY = dynamic_cast<const InterpolantXY*>(_xInterp.get());
             if (xInterpXY) {
-                It uxit = ux.begin();
-                for (int i=i1;i<i2;++i,++uxit) *uxit = xInterpXY->uval1d(*uxit);
-                It uyit = uy.begin();
-                for (int j=j1;j<j2;++j,++uyit) *uyit = xInterpXY->uval1d(*uyit);
+                It kxit = kx.begin();
+                for (int i=i1;i<i2;++i,++kxit) *kxit = xInterpXY->kval1d(*kxit);
+                It kyit = ky.begin();
+                for (int j=j1;j<j2;++j,++kyit) *kyit = xInterpXY->kval1d(*kyit);
 
                 typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
                 CIt valit(val.linearView().begin().getP(),1);
-                uyit = uy.begin();
-                for (int j=j1;j<j2;++j,y0+=dy,++uyit) {
+                kyit = ky.begin();
+                for (int j=j1;j<j2;++j,y0+=dy,++kyit) {
                     double x = x0;
-                    uxit = ux.begin();
+                    kxit = kx.begin();
                     for (int i=i1;i<i2;++i,x+=dx) {
-                        *valit++ = *uxit++ * *uyit * _ktab->interpolate(x, y0, *_kInterp);
+                        *valit++ = *kxit++ * *kyit * _ktab->interpolate(x, y0, *_kInterp);
                     }
                 }
             } else {
                 typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
                 CIt valit(val.linearView().begin().getP(),1);
-                It uyit = uy.begin();
-                for (int j=j1;j<j2;++j,y0+=dy,++uyit) {
+                It kyit = ky.begin();
+                for (int j=j1;j<j2;++j,y0+=dy,++kyit) {
                     double x = x0;
-                    It uxit = ux.begin();
+                    It kxit = kx.begin();
                     for (int i=i1;i<i2;++i,x+=dx) {
-                        double xKernelTransform = _xInterp->uval(*uxit++, *uyit);
+                        double xKernelTransform = _xInterp->kval(*kxit++, *kyit);
                         *valit++ = xKernelTransform * _ktab->interpolate(x, y0, *_kInterp);
                     }
                 }
@@ -554,24 +554,24 @@ namespace galsim {
         typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
         checkK();
 
-        double ux0 = x0 * _uscale;
-        double uy0 = y0 * _uscale;
-        double dux = dx * _uscale;
-        double duy = dy * _uscale;
-        double duxy = dxy * _uscale;
-        double duyx = dyx * _uscale;
+        double kx0 = x0 * _kscale;
+        double ky0 = y0 * _kscale;
+        double dkx = dx * _kscale;
+        double dky = dy * _kscale;
+        double dkxy = dxy * _kscale;
+        double dkyx = dyx * _kscale;
 
         It valit(val.linearView().begin().getP(),1);
-        for (int j=0;j<n;++j,x0+=dxy,y0+=dy,ux0+=duxy,uy0+=duy) {
+        for (int j=0;j<n;++j,x0+=dxy,y0+=dy,kx0+=dkxy,ky0+=dky) {
             double x = x0;
             double y = y0;
-            double ux = ux0;
-            double uy = uy0;
-            for (int i=0;i<m;++i,x+=dx,y+=dyx,ux+=dux,uy+=duyx) {
+            double kx = kx0;
+            double ky = ky0;
+            for (int i=0;i<m;++i,x+=dx,y+=dyx,kx+=dkx,ky+=dkyx) {
                 if (std::abs(x) > _maxk1 || std::abs(y) > _maxk1) {
                     *valit++ = 0.;
                 } else {
-                    double xKernelTransform = _xInterp->uval(ux, uy);
+                    double xKernelTransform = _xInterp->kval(kx, ky);
                     *valit++ = xKernelTransform * _ktab->interpolate(x, y, *_kInterp);
                 }
             }

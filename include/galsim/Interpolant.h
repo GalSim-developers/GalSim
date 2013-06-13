@@ -89,7 +89,7 @@ namespace galsim {
          * @brief Maximum extent of interpolant from origin in u space (cycles per pixel)
          * @returns Range of non-zero values of interpolant in u space
          */
-        virtual double urange() const =0;
+        virtual double krange() const =0;
 
         /**
          * @brief Value of interpolant in real space
@@ -111,10 +111,10 @@ namespace galsim {
         /**
          * @brief Value of interpolant in frequency space
          * @param[in] u Frequency for evaluation (cycles per pixel)
-         * @returns Value of interpolant, normalized so uval(0) = 1 for flux-conserving
+         * @returns Value of interpolant, normalized so kval(0) = 1 for flux-conserving
          * interpolation.
          */
-        virtual double uval(double u) const =0;
+        virtual double kval(double k) const =0;
 
         /**
          * @brief Report a generic indication of the accuracy to which Interpolant is calculated
@@ -210,10 +210,10 @@ namespace galsim {
 
         // Ranges are assumed to be same in x as in y.
         virtual double xrange() const=0;
-        virtual double urange() const=0;
+        virtual double krange() const=0;
         virtual double xval(double x, double y) const=0;
         virtual double xvalWrapped(double x, double y, int N) const=0;
-        virtual double uval(double u, double v) const=0;
+        virtual double kval(double kx, double ky) const=0;
         virtual double getTolerance() const=0;  // report target accuracy
         virtual bool isExactAtNodes() const { return true; }
 
@@ -258,11 +258,11 @@ namespace galsim {
         ~InterpolantXY() {}
         // All of the calls below implement base class methods.
         double xrange() const { return _i1d->xrange(); }
-        double urange() const { return _i1d->urange(); }
+        double krange() const { return _i1d->krange(); }
         double xval(double x, double y) const { return _i1d->xval(x)*_i1d->xval(y); }
         double xvalWrapped(double x, double y, int N) const 
         { return _i1d->xvalWrapped(x,N)*_i1d->xvalWrapped(y,N); }
-        double uval(double u, double v) const { return _i1d->uval(u)*_i1d->uval(v); }
+        double kval(double kx, double ky) const { return _i1d->kval(kx)*_i1d->kval(ky); }
         double getTolerance() const { return _i1d->getTolerance(); }
         virtual bool isExactAtNodes() const { return _i1d->isExactAtNodes(); }
 
@@ -291,7 +291,7 @@ namespace galsim {
          * @param[in] u 1d argument
          * @returns 1d result
          */
-        double uval1d(double u) const { return _i1d->uval(u); }
+        double kval1d(double k) const { return _i1d->kval(k); }
 
         /**
          * @brief Access the 1d interpolant 
@@ -360,7 +360,7 @@ namespace galsim {
      * location of samples, and it extends to infinity in the u domain.  But it could be useful for
      * photon-shooting, where it is trivially implemented as no displacements.  The argument in the
      * constructor is used to make a crude box approximation to the x-space delta function and to
-     * give a large but finite urange.
+     * give a large but finite krange.
      *
      */
     class Delta : public Interpolant 
@@ -377,13 +377,13 @@ namespace galsim {
             Interpolant(gsparams), _width(width) {}
         ~Delta() {}
         double xrange() const { return 0.; }
-        double urange() const { return 1./_width; }
+        double krange() const { return 1./_width; }
         double xval(double x) const 
         {
             if (std::abs(x)>0.5*_width) return 0.;
             else return 1./_width;
         }
-        double uval(double u) const { return 1.; }
+        double kval(double k) const { return 1.; }
         double getTolerance() const { return _width; }
 
         // Override the default numerical photon-shooting method
@@ -403,14 +403,14 @@ namespace galsim {
      * photons to generate an image; in that case, the nearest-neighbor interpolant is quite
      * efficient (but not necessarily the best choice in terms of accuracy).
      *
-     * Tolerance determines how far onto sinc wiggles the uval will go.  Very far, by default!
+     * Tolerance determines how far onto sinc wiggles the kval will go.  Very far, by default!
      */
     class Nearest : public Interpolant 
     {
     public:
         /**
          * @brief Constructor
-         * @param[in] tol      Tolerance determines how far onto sinc wiggles the uval will go.
+         * @param[in] tol      Tolerance determines how far onto sinc wiggles the kval will go.
          *                     Very far, by default!
          * @param[in] gsparams GSParams object storing constants that control the accuracy of
          *                     operations, if different from the default.
@@ -420,14 +420,14 @@ namespace galsim {
         ~Nearest() {}
         double getTolerance() const { return _tolerance; }
         double xrange() const { return 0.5; }
-        double urange() const { return 1./(M_PI*_tolerance); }
+        double krange() const { return 1./(M_PI*_tolerance); }
         double xval(double x) const 
         {
             if (std::abs(x)>0.5) return 0.;
             else if (std::abs(x)<0.5) return 1.;
             else return 0.5;
         }
-        double uval(double u) const { return sinc(u); }
+        double kval(double k) const { return sinc(k); }
 
         // Override the default numerical photon-shooting method
         double getPositiveFlux() const { return 1.; }
@@ -463,11 +463,11 @@ namespace galsim {
         ~SincInterpolant() {}
         double getTolerance() const { return _tolerance; }
         double xrange() const { return 1./(M_PI*_tolerance); }
-        double urange() const { return 0.5; }
-        double uval(double u) const 
+        double krange() const { return 0.5; }
+        double kval(double k) const 
         {
-            if (std::abs(u)>0.5) return 0.;
-            else if (std::abs(u)<0.5) return 1.;
+            if (std::abs(k)>0.5) return 0.;
+            else if (std::abs(k)<0.5) return 1.;
             else return 0.5;
         }
         double xval(double x) const { return sinc(x); }
@@ -520,14 +520,14 @@ namespace galsim {
         ~Linear() {}
         double getTolerance() const { return _tolerance; }
         double xrange() const { return 1.-0.5*_tolerance; }  // Snip off endpoints near zero
-        double urange() const { return std::sqrt(1./_tolerance)/M_PI; }
+        double krange() const { return std::sqrt(1./_tolerance)/M_PI; }
         double xval(double x) const 
         {
             x=std::abs(x);
             if (x>1.) return 0.;
             else return 1.-x;
         }
-        double uval(double u) const { return std::pow(sinc(u),2.); }
+        double kval(double k) const { return std::pow(sinc(k),2.); }
         // Override the default numerical photon-shooting method
         double getPositiveFlux() const { return 1.; }
         double getNegativeFlux() const { return 0.; }
@@ -576,27 +576,27 @@ namespace galsim {
 
         double getTolerance() const { return _tolerance; }
         double xrange() const { return _range; }
-        double urange() const { return _uMax; }
+        double krange() const { return _kMax; }
         double xval(double x) const;
-        double uval(double u) const;
+        double kval(double k) const;
 
     private:
         double _n; ///< Actually storing 2n, since it's used mostly this way.
         double _range; ///< Reduce range slightly from n so we're not using zero-valued endpoints.
         bool _fluxConserve; ///< Set to insure conservation of constant (sky) flux
         double _tolerance;  ///< k-space accuracy parameter
-        double _uMax;  ///< truncation point for Fourier transform
-        double _u1; ///< coefficient for flux correction
+        double _kMax;  ///< truncation point for Fourier transform
+        double _k1; ///< coefficient for flux correction
         boost::shared_ptr<Table<double,double> > _xtab; ///< Table for x values
-        boost::shared_ptr<Table<double,double> > _utab; ///< Table for Fourier transform
+        boost::shared_ptr<Table<double,double> > _ktab; ///< Table for Fourier transform
         double xCalc(double x) const;
-        double uCalc(double u) const;
+        double kCalc(double k) const;
 
         // Store the tables in a map, so repeat constructions are quick.
         typedef std::pair<int,std::pair<bool,double> > KeyType;
         static std::map<KeyType,boost::shared_ptr<Table<double,double> > > _cache_xtab; 
-        static std::map<KeyType,boost::shared_ptr<Table<double,double> > > _cache_utab; 
-        static std::map<KeyType,double> _cache_umax; 
+        static std::map<KeyType,boost::shared_ptr<Table<double,double> > > _cache_ktab; 
+        static std::map<KeyType,double> _cache_kmax; 
     };
 
     /**
@@ -623,7 +623,7 @@ namespace galsim {
 
         double getTolerance() const { return _tolerance; }
         double xrange() const { return _range; }
-        double urange() const { return _uMax; }
+        double krange() const { return _kMax; }
         double xval(double x) const 
         { 
             x = std::abs(x);
@@ -631,12 +631,12 @@ namespace galsim {
             if (x<1.) return 1. + x*x*(1.5*x-2.5);
             return 2. + x*(-4. + x*(2.5 - 0.5*x));
         }
-        double uval(double u) const 
+        double kval(double k) const 
         {
-            u = std::abs(u);
-            return u>_uMax ? 0. : (*_tab)(u);
+            k = std::abs(k);
+            return k>_kMax ? 0. : (*_tab)(k);
         }
-        double uCalc(double u) const;
+        double kCalc(double k) const;
 
         /// @brief Override numerical calculation with known analytic integral
         double getPositiveFlux() const { return 13./12.; }
@@ -649,11 +649,11 @@ namespace galsim {
 
         double _tolerance;    
         boost::shared_ptr<Table<double,double> > _tab; ///< Tabulated Fourier transform
-        double _uMax;  ///< Truncation point for Fourier transform
+        double _kMax;  ///< Truncation point for Fourier transform
 
         // Store the tables in a map, so repeat constructions are quick.
         static std::map<double,boost::shared_ptr<Table<double,double> > > _cache_tab; 
-        static std::map<double,double> _cache_umax; 
+        static std::map<double,double> _cache_kmax; 
     };
 
     /**
@@ -676,7 +676,7 @@ namespace galsim {
 
         double getTolerance() const { return _tolerance; }
         double xrange() const { return _range; }
-        double urange() const { return _uMax; }
+        double krange() const { return _kMax; }
         double xval(double x) const 
         { 
             x = std::abs(x);
@@ -689,12 +689,12 @@ namespace galsim {
             else 
                 return 0.;
         }
-        double uval(double u) const 
+        double kval(double k) const 
         {
-            u = std::abs(u);
-            return u>_uMax ? 0. : (*_tab)(u);
+            k = std::abs(k);
+            return k>_kMax ? 0. : (*_tab)(k);
         }
-        double uCalc(double u) const;
+        double kCalc(double k) const;
 
     protected:
         /**
@@ -718,11 +718,11 @@ namespace galsim {
         double _range; // Reduce range slightly from n so we're not using zero-valued endpoints.
         double _tolerance;    
         boost::shared_ptr<Table<double,double> > _tab; ///< Tabulated Fourier transform
-        double _uMax;  ///< Truncation point for Fourier transform
+        double _kMax;  ///< Truncation point for Fourier transform
 
         // Store the tables in a map, so repeat constructions are quick.
         static std::map<double,boost::shared_ptr<Table<double,double> > > _cache_tab; 
-        static std::map<double,double> _cache_umax; 
+        static std::map<double,double> _cache_kmax; 
     };
 
 }
