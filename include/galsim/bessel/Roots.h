@@ -35,7 +35,7 @@ namespace bessel {
 
     // These values are from:
     //   http://keisan.casio.com/exec/system/1180573472
-    // If we need zeros for other values of nu, it can calculated them too.
+    // If we need zeros for other values of nu, it can calculate them too.
     
     const double root_j0[n_roots_j0] = {
         2.404825557695772768622,
