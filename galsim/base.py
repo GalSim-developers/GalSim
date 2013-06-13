@@ -317,11 +317,15 @@ class GSObject(object):
         self.SBProfile.applyScale(np.sqrt(mu))
        
     def applyShear(self, *args, **kwargs):
-        """Apply a shear to this object, where arguments are either a galsim.Shear, or arguments
-        that will be used to initialize one.
+        """Apply an area-preserving shear to this object, where arguments are either a galsim.Shear,
+        or arguments that will be used to initialize one.
 
         For more details about the allowed keyword arguments, see the documentation for galsim.Shear
         (for doxygen documentation, see galsim.shear.Shear).
+
+        The applyShear() method precisely preserves the area.  To include a lensing distortion with
+        the appropriate change in area, either use applyShear() with applyMagnification(), or use
+        applyLensing() which combines both operations.
 
         After this call, the caller's type will be a GSObject.
         This means that if the caller was a derived type that had extra methods beyond
@@ -432,11 +436,15 @@ class GSObject(object):
         return ret
 
     def createSheared(self, *args, **kwargs):
-        """Returns a new GSObject by applying a shear, where arguments are either a galsim.Shear or
-        keyword arguments that can be used to create one.
+        """Returns a new GSObject by applying an area-preserving shear, where arguments are either a
+        galsim.Shear or keyword arguments that can be used to create one.
 
         For more details about the allowed keyword arguments, see the documentation of galsim.Shear
         (for doxygen documentation, see galsim.shear.Shear).
+
+        The createSheared() method precisely preserves the area.  To include a lensing distortion with
+        the appropriate change in area, either use createSheared() with createMagnified(), or use
+        createLensed() which combines both operations.
 
         @returns The sheared GSObject.
         """
