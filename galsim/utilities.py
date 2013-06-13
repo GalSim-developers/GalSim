@@ -88,16 +88,13 @@ def rotate_xy(x, y, theta):
 
     @param x     NumPy array of input x coordinates
     @param y     NumPy array of input y coordinates
-    @param theta Rotation angle (+ve counter clockwise) as a float in radians or as a galsim.Angle
-                 instance
+    @param theta Rotation angle (+ve counter clockwise) as a galsim.Angle instance
     @return x_rot, yrot  Coordinates rotated by `theta` around the origin
     """
-    if isinstance(theta, galsim.Angle):
-        trad = theta.rad
-    else:
-        trad = theta
-    cost = np.cos(trad)
-    sint = np.sin(trad)
+    if not isinstance(theta, galsim.Angle):
+        raise TypeError("Input rotation angle theta must be a galsim.Angle instance.")
+    cost = np.cos(theta.rad)
+    sint = np.sin(theta.rad)
     x_rot = x * cost - y * sint
     y_rot = x * sint + y * cost
     return x_rot, y_rot
