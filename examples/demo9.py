@@ -26,10 +26,12 @@ This script simulates cluster lensing or galaxy-galaxy lensing.  The gravitation
 applied to each galaxy is calculated for an NFW halo mass profile.  We simulate observations 
 of galaxies around 20 different clusters -- 5 each of 4 different masses.  Each cluster
 has its own file, organized into 4 directories (one for each mass).  For each cluster, we
-draw 20 lensed galaxies at random positions of the image.
+draw 20 lensed galaxies at random positions of the image.  The PSF is appropriate for a
+a space-like simulation.  (Some of the numbers used are the values for HST.)
 
 New features introduced in this demo:
 
+- psf = OpticalPSF(..., trefoil1, trefoil2, nstruts, strut_thick, strut_angle)
 - im = galsim.ImageS(xsize, ysize)
 - pos = galsim.PositionD(x, y)
 - nfw = galsim.NFWHalo(mass, conc, z, omega_m, omega_lam)
@@ -70,19 +72,31 @@ def main(argv):
 
     # Define some parameters we'll use below.
 
-    mass_list = [ 1.e15, 7.e14, 4.e14, 2.e14 ]  # mass in Msun/h
-    nfiles = 5 # number of files per item in mass list
-    nobj = 20  # number of objects to draw for each file
+    mass_list = [ 7.e14, 4.e14, 2.e14, 1.e14 ]  # mass in Msun/h
+    nfiles = 5             # number of files per item in mass list
+    nobj = 20              # number of objects to draw for each file
 
     image_size = 512       # pixels
-    pixel_scale = 0.20     # arcsec / pixel
-    sky_level = 1.e6       # ADU / arcsec^2
+    pixel_scale = 0.05     # arcsec / pixel
+    sky_level = 1.e2       # ADU / arcsec^2
 
-    psf_fwhm = 0.5         # arcsec
+    psf_lam_over_D = 0.077 # (900nm / 2.4m) * 206265 arcsec/rad = 0.077 arcsec
+    psf_obsc = 0.125       # (0.3m / 2.4m) = 0.125
+    psf_nstruts = 4
+    psf_strut_thick = 0.07
+    psf_strut_angle = 15 * galsim.degrees
 
-    gal_eta_rms = 0.4      # eta is defined as ln(a/b)
-    gal_hlr_min = 0.4      # arcsec
-    gal_hlr_max = 1.2      # arcsec
+    psf_defocus = 0.04     # The aberrations are all taken to be quite modest here.
+    psf_astig1 = 0.03      # (I don't actually know what are appropriate for HST...)
+    psf_astig2 = -0.01
+    psf_coma1 = 0.02
+    psf_coma2 = 0.04
+    psf_trefoil1 = -0.02
+    psf_trefoil2 = 0.04
+
+    gal_eta_rms = 0.3      # eta is defined as ln(a/b)
+    gal_hlr_min = 0.1      # arcsec
+    gal_hlr_max = 0.3      # arcsec
     gal_flux_min = 1.e4    # ADU
     gal_flux_max = 1.e6    # ADU
 
@@ -134,6 +148,14 @@ def main(argv):
         # which would be 1/2 pixel up and to the right of the true center in this case.
         im_center = full_image.bounds.trueCenter()
 
+        # Make the PSF profile outside the loop to minimize the (significant) OpticalPSF 
+        # construction overhead.
+        psf = galsim.OpticalPSF(
+            lam_over_diam=psf_lam_over_D, obscuration=psf_obsc,
+            nstruts=psf_nstruts, strut_thick=psf_strut_thick, strut_angle=psf_strut_angle,
+            defocus=psf_defocus, astig1=psf_astig1, astig2=psf_astig2,
+            coma1=psf_coma1, coma2=psf_coma2, trefoil1=psf_trefoil1, trefoil2=psf_trefoil2)
+
         for k in range(nobj):
 
             # Initialize the random number generator we will be using for this object:
@@ -142,10 +164,10 @@ def main(argv):
             # Determine where this object is going to go.
             # We choose points randomly within a donut centered at the center of the main image
             # in order to avoid placing galaxies too close to the halo center where the lensing 
-            # is not weak.  We use an inner radius of 10 arcsec and an outer radius of 50 arcsec,
+            # is not weak.  We use an inner radius of 3 arcsec and an outer radius of 12 arcsec,
             # which takes us essentially to the edge of the image.
-            radius = 50
-            inner_radius = 10
+            radius = 12
+            inner_radius = 3
             max_rsq = radius**2
             min_rsq = inner_radius**2
             while True:  # (This is essentially a do..while loop.)
@@ -178,9 +200,6 @@ def main(argv):
 
             # Make the pixel:
             pix = galsim.Pixel(pixel_scale)
-
-            # Make the PSF profile:
-            psf = galsim.Kolmogorov(fwhm = psf_fwhm)
 
             # Determine the random values for the galaxy:
             flux = rng() * (gal_flux_max-gal_flux_min) + gal_flux_min
