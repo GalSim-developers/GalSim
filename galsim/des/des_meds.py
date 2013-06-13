@@ -20,13 +20,29 @@
 import numpy
 import galsim
 
+# these image stamp sizes are available in MEDS format
 BOX_SIZES = [32,48,64,96,128,196,256]
+# while creating the meds file, all the data is stored in memory, and then written to disc once all
+# the necessary images have been created.
+# You can control the amound of memory used to prevent jamming your system.
 MAX_MEMORY = 1e9
+# Maximum number of exposures allowed per galaxy (incl. coadd)
 MAX_NCUTOUTS = 11
+# flags for unavailable data
 EMPTY_START_INDEX = 9999
 EMPTY_JAC = 999
 
 class WCSTransform(object):
+    """
+    Very simple class which holds a WCS transformation, including a Jacobian and a shifted centroid.
+    Available fields:
+    self.dudrow  -  element 1,1 of the Jacobian matrix  
+    self.dudcol  -  element 1,2 of the Jacobian matrix    
+    self.dvdrow  -  element 2,1 of the Jacobian matrix    
+    self.dvdcol  -  element 2,2 of the Jacobian matrix    
+    self.row0    -  horizontal position of the centroid as given by SExtractor, in pixel coordinates
+    self.col0    -  vertical position of the centroid as given by SExtractor, in pixel coordinates 
+    """
 
 
     def __init__(self,dudrow, dudcol, dvdrow, dvdcol, row0, col0):
@@ -68,8 +84,10 @@ class MultiExposureObject(object):
 
     def __init__(self,images,weights=None,badpix=None,segs=None,wcstrans=None,id=0):
 
+        # assign the ID
         self.id = id
 
+        # check if images is a list
         if not isinstance(images,list):
             raise TypeError('images should be a list')
 
@@ -127,6 +145,7 @@ class MultiExposureObject(object):
             dudcol = 0
             dvdrow = 0
             dvdcol = 1
+            # set to the center of the postage stamp
             row0 = float(self.box_size)/2.
             col0 = float(self.box_size)/2.
             self.wcstrans = [ WCSTransform(dudrow * im.scale , dudcol * im.scale , 
