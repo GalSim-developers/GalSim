@@ -7,8 +7,8 @@ import test_sersic_highn_basic
 nobs = test_sersic_highn_basic.NOBS
 ntest = len(test_sersic_highn_basic.SERSIC_N_TEST)
 
-for test_case in ("basic", "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2", "shoot_accuracy2",
-                  "shoot_relerr2", "shoot_abserr2"):
+for test_case in ("basic", "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2", "kvalue10"):
+    # "shoot_accuracy2", "shoot_relerr2", "shoot_abserr2"):
 
     outfile = os.path.join("outputs", "sersic_highn_"+test_case+"_output_N"+str(nobs)+".asc")
     print "Generating plots for "+outfile
@@ -30,19 +30,19 @@ for test_case in ("basic", "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2", "
     data = np.loadtxt(outfile)
     for j in range(ntest):
 
-        g1obs_draw[:, j] = data[range(j, ntest * nobs, ntest), 0]
-        g2obs_draw[:, j] = data[range(j, ntest * nobs, ntest), 1]
-        sigma_draw[:, j] = data[range(j, ntest * nobs, ntest), 2]
-        delta_g1obs[:, j] = data[range(j, ntest * nobs, ntest), 3]
-        delta_g2obs[:, j] = data[range(j, ntest * nobs, ntest), 4]
-        delta_sigma[:, j] = data[range(j, ntest * nobs, ntest), 5]
-        err_g1obs[:, j] = data[range(j, ntest * nobs, ntest), 6]
-        err_g2obs[:, j] = data[range(j, ntest * nobs, ntest), 7]
-        err_sigma[:, j] = data[range(j, ntest * nobs, ntest), 8]
-        ntest_output[:, j] = data[range(j, ntest * nobs, ntest), 9]
-        hlr_output[:, j] = data[range(j, ntest * nobs, ntest), 10]
-        g1_output[:, j] = data[range(j, ntest * nobs, ntest), 11]
-        g2_output[:, j] = data[range(j, ntest * nobs, ntest), 12]
+        g1obs_draw[0:data.shape[0]/ntest, j] = data[range(j, data.shape[0], ntest), 0]
+        g2obs_draw[0:data.shape[0]/ntest, j] = data[range(j, data.shape[0], ntest), 1]
+        sigma_draw[0:data.shape[0]/ntest, j] = data[range(j, data.shape[0], ntest), 2]
+        delta_g1obs[0:data.shape[0]/ntest, j] = data[range(j, data.shape[0], ntest), 3]
+        delta_g2obs[0:data.shape[0]/ntest, j] = data[range(j, data.shape[0], ntest), 4]
+        delta_sigma[0:data.shape[0]/ntest, j] = data[range(j, data.shape[0], ntest), 5]
+        err_g1obs[0:data.shape[0]/ntest, j] = data[range(j, data.shape[0], ntest), 6]
+        err_g2obs[0:data.shape[0]/ntest, j] = data[range(j, data.shape[0], ntest), 7]
+        err_sigma[0:data.shape[0]/ntest, j] = data[range(j, data.shape[0], ntest), 8]
+        ntest_output[0:data.shape[0]/ntest, j] = data[range(j, data.shape[0], ntest), 9]
+        hlr_output[0:data.shape[0]/ntest, j] = data[range(j, data.shape[0], ntest), 10]
+        g1_output[0:data.shape[0]/ntest, j] = data[range(j, data.shape[0], ntest), 11]
+        g2_output[0:data.shape[0]/ntest, j] = data[range(j, data.shape[0], ntest), 12]
 
     # First do the plots of g1
     YMAX_ZOOMOUT = 0.25
@@ -59,7 +59,7 @@ for test_case in ("basic", "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2", "
         else:
             fmt='o'
         plt.errorbar(
-            g1obs_draw[:, i], delta_g1obs[:, i], yerr=err_g1obs[:, i], fmt=fmt,
+            g1obs_draw[0:data.shape[0]/ntest, i], delta_g1obs[0:data.shape[0]/ntest, i], yerr=err_g1obs[0:data.shape[0]/ntest, i], fmt=fmt,
             label="n = "+str(test_sersic_highn_basic.SERSIC_N_TEST[i]))
     plt.xlabel(r'g$_1$ (DFT)')
     plt.ylabel(r'$\Delta$g$_1$ (DFT - Photon)')
@@ -83,7 +83,7 @@ for test_case in ("basic", "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2", "
         else:
             fmt='o'
         plt.errorbar(
-             g2obs_draw[:, i], delta_g2obs[:, i], yerr=err_g2obs[:, i], fmt=fmt,
+             g2obs_draw[0:data.shape[0]/ntest, i], delta_g2obs[0:data.shape[0]/ntest, i], yerr=err_g2obs[0:data.shape[0]/ntest, i], fmt=fmt,
              label="n = "+str(test_sersic_highn_basic.SERSIC_N_TEST[i]))
     plt.xlabel(r'g$_2$ (DFT)')
     plt.ylabel(r'$\Delta$g$_2$ (DFT - Photon)')
@@ -107,9 +107,9 @@ for test_case in ("basic", "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2", "
         else:
             fmt='o'
         plt.errorbar(
-            sigma_draw[:, i] * test_sersic_highn_basic.PIXEL_SCALE,
-            delta_sigma[:, i] * test_sersic_highn_basic.PIXEL_SCALE,
-            yerr=err_sigma[:, i] * test_sersic_highn_basic.PIXEL_SCALE, fmt=fmt,
+            sigma_draw[0:data.shape[0]/ntest, i] * test_sersic_highn_basic.PIXEL_SCALE,
+            delta_sigma[0:data.shape[0]/ntest, i] * test_sersic_highn_basic.PIXEL_SCALE,
+            yerr=err_sigma[0:data.shape[0]/ntest, i] * test_sersic_highn_basic.PIXEL_SCALE, fmt=fmt,
             label="n = "+str(test_sersic_highn_basic.SERSIC_N_TEST[i]))
     plt.ylim(-YMAX_ZOOMIN, YMAX_ZOOMIN)
     plt.xlabel(r'$\sigma$ (DFT) [arcsec]')
