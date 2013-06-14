@@ -511,7 +511,7 @@ namespace galsim {
     public:
         /**
          * @brief Constructor
-         * @param[in] tol      Tolerance determines how far onto sinc^2 wiggles the kval will go.
+         * @param[in] tol      Tolerance determines how far onto sinc^2 wiggles the uval will go.
          *                     Very far, by default!
          * @param[in] gsparams GSParams object storing constants that control the accuracy of
          *                     operations, if different from the default.
@@ -585,7 +585,7 @@ namespace galsim {
         double _n; ///< Actually storing 2n, since it's used mostly this way.
         double _range; ///< Reduce range slightly from n so we're not using zero-valued endpoints.
         bool _fluxConserve; ///< Set to insure conservation of constant (sky) flux
-        double _tolerance;  ///< k-space accuracy parameter
+        double _tolerance;  ///< u-space accuracy parameter
         double _uMax;  ///< truncation point for Fourier transform
         double _u1; ///< coefficient for flux correction
         boost::shared_ptr<Table<double,double> > _xtab; ///< Table for x values
@@ -658,7 +658,7 @@ namespace galsim {
     };
 
     /**
-     * @brief Piecewise-quintic polynomial interpolant, ideal for k-space interpolation
+     * @brief Piecewise-quintic polynomial interpolant, ideal for Fourier-space interpolation
      *
      * See Bernstein & Gruen, devel/modules/finterp.pdf in the GalSim repository.
      */
