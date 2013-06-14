@@ -59,7 +59,8 @@ namespace galsim {
      * @brief Base class representing one-dimensional interpolant functions
      *
      * One-dimensional interpolant function.  X units are in pixels and the frequency-domain u
-     * values are in cycles per pixel.
+     * values are in cycles per pixel.  This differs from the usual definition of k in radians 
+     * per arcsec, hence the different letter variable.
      *
      * All Interpolants are assumed symmetric so that frequency-domain values are real.
      */
