@@ -67,9 +67,8 @@ namespace galsim {
      * the untruncated Sersic, while generating a truncated Sersic (i.e., the normalizaton is
      * the same with respect to the untruncated case).  This facilitates the comparison of
      * truncated and untruncated Sersic, as the amplitude (as well as the scale radius `r0`,
-     * if half-light radius is specified) changes when a truncated Sersic is specified in the
-     * default setting [`flux_untruncated = false`].  The `flux_untruncated` variable is ignored
-     * if `trunc = 0`.
+     * if half-light radius is specified) changes when a truncated Sersic is specified with
+     * `flux_untruncated = false`.  The `flux_untruncated` variable is ignored if `trunc = 0`.
      *
      * Note that when `trunc > 0.` and `flux_untruncated == true`, the actual flux will not be
      * the same as the specified value; its true flux is returned by the getFlux() method.
@@ -98,12 +97,12 @@ namespace galsim {
          * @param[in] size              Size specification.
          * @param[in] rType             Kind of size being specified (HALF_LIGHT_RADIUS or
          *                              SCALE_RADIUS).
-         * @param[in] flux              Flux (default `flux = 1.`).
+         * @param[in] flux              Flux.
          * @param[in] trunc             Outer truncation radius in same physical units as size;
-         *                              `trunc = 0.` for no truncation (default `trunc = 0.`).
+         *                              `trunc = 0.` for no truncation.
          * @param[in] flux_untruncated  If `true`, sets the flux to the untruncated version of the
-         *                              Sersic profile with the same index `n` (default
-         *                              flux_untruncated = false`).  Ignored if `trunc = 0.`.
+         *                              Sersic profile with the same index `n`.  Ignored if
+         *                              `trunc = 0.`.
          * @param[in] gsparams          GSParams object storing constants that control the accuracy
          *                              of image operations and rendering, if different from the
          *                              default.
@@ -149,12 +148,12 @@ namespace galsim {
          * @param[in] size              Size specification.
          * @param[in] rType             Kind of size being specified (HALF_LIGHT_RADIUS or
          *                              SCALE_RADIUS).
-         * @param[in] flux              Flux (default `flux = 1.`).
+         * @param[in] flux              Flux.
          * @param[in] trunc             Outer truncation radius in same physical units as size;
-         *                              `trunc = 0.` for no truncation (default `trunc = 0.`).
+         *                              `trunc = 0.` for no truncation.
          * @param[in] flux_untruncated  If `true`, sets the flux to the untruncated version of the
-         *                              Sersic profile with the same index `n` (default
-         *                              flux_untruncated = false`).  Ignored if `trunc = 0.`.
+         *                              Sersic profile with the same index `n`.  Ignored if
+         *                              `trunc = 0.`.
          * @param[in] gsparams          GSParams object storing constants that control the accuracy
          *                              of image operations and rendering, if different from the
          *                              default.

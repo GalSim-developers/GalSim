@@ -75,7 +75,7 @@ namespace galsim {
          * @brief Constructor, list of inputs.
          *
          * @param[in] slist       Input: list of SBProfiles.
-         * @param[in] real_space  Do convolution in real space? (default `real_space = false`).
+         * @param[in] real_space  Do convolution in real space?
          * @param[in] gsparams    GSParams object storing constants that control the accuracy of
          *                        image operations and rendering, if different from the default.
          */
