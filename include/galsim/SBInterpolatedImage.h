@@ -242,7 +242,7 @@ namespace galsim {
             const BaseImage<T>& image,
             boost::shared_ptr<Interpolant2d> xInterp,
             boost::shared_ptr<Interpolant2d> kInterp,
-            double dx, double pad_factor, boost::shared_ptr<Image<T> > pad_image,
+            double dx, double pad_factor, boost::shared_ptr<BaseImage<T> > pad_image,
             const GSParamsPtr& gsparams);
 
         /** 
