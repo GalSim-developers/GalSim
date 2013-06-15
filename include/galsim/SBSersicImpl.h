@@ -60,7 +60,7 @@ namespace galsim {
         /// @brief The half-light radius in units of r0.
         double getHLR() const;
 
-        /// @brief The fractional flux relateive to the untruncated profile.
+        /// @brief The fractional flux relative to the untruncated profile.
         double getFluxFraction() const;
 
         /**
