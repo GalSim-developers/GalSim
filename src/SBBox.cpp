@@ -34,7 +34,7 @@
 namespace galsim {
 
 
-    SBBox::SBBox(double xw, double yw, double flux, boost::shared_ptr<GSParams> gsparams) :
+    SBBox::SBBox(double xw, double yw, double flux, const GSParamsPtr& gsparams) :
         SBProfile(new SBBoxImpl(xw,yw,flux,gsparams)) {}
 
     SBBox::SBBox(const SBBox& rhs) : SBProfile(rhs) {}
@@ -54,7 +54,7 @@ namespace galsim {
     }
 
     SBBox::SBBoxImpl::SBBoxImpl(double xw, double yw, double flux,
-                                boost::shared_ptr<GSParams> gsparams) :
+                                const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams), _xw(xw), _yw(yw), _flux(flux)
     {
         if (_yw==0.) _yw=_xw;

@@ -33,7 +33,7 @@ int verbose_level = 2;
 
 namespace galsim {
 
-    SBShapelet::SBShapelet(double sigma, LVector bvec, boost::shared_ptr<GSParams> gsparams) :
+    SBShapelet::SBShapelet(double sigma, LVector bvec, const GSParamsPtr& gsparams) :
         SBProfile(new SBShapeletImpl(sigma, bvec, gsparams)) {}
 
     SBShapelet::SBShapelet(const SBShapelet& rhs) : SBProfile(rhs) {}
@@ -53,8 +53,9 @@ namespace galsim {
     }
 
     SBShapelet::SBShapeletImpl::SBShapeletImpl(double sigma, const LVector& bvec,
-                                               boost::shared_ptr<GSParams> gsparams) :
-        SBProfileImpl(gsparams), _sigma(sigma), _bvec(bvec.copy()) {}
+                                               const GSParamsPtr& gsparams) :
+        SBProfileImpl(gsparams),
+        _sigma(sigma), _bvec(bvec.copy()) {}
 
     double SBShapelet::SBShapeletImpl::maxK() const 
     {

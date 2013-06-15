@@ -33,7 +33,7 @@
 namespace galsim {
 
     SBDeconvolve::SBDeconvolve(const SBProfile& adaptee,
-                               boost::shared_ptr<GSParams> gsparams) :
+                               const GSParamsPtr& gsparams) :
         SBProfile(new SBDeconvolveImpl(adaptee,gsparams)) {}
 
     SBDeconvolve::SBDeconvolve(const SBDeconvolve& rhs) : SBProfile(rhs) {}
@@ -41,9 +41,8 @@ namespace galsim {
     SBDeconvolve::~SBDeconvolve() {}
 
     SBDeconvolve::SBDeconvolveImpl::SBDeconvolveImpl(const SBProfile& adaptee,
-                                                     boost::shared_ptr<GSParams> gsparams) :
-        SBProfileImpl(gsparams.get() ? gsparams :
-                      GetImpl(adaptee)->gsparams),
+                                                     const GSParamsPtr& gsparams) :
+        SBProfileImpl(gsparams ? gsparams : GetImpl(adaptee)->gsparams),
         _adaptee(adaptee)
     {
         double maxk = maxK();

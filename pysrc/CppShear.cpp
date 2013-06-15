@@ -99,11 +99,7 @@ struct PyCppShear {
             )
             .def(bp::self == bp::self)
             .def(bp::self != bp::self)
-            .def("fwd", &CppShear::fwd<double>, "FIXME: needs documentation!")
-            .def("inv", &CppShear::inv<double>, "FIXME: needs documentation!")
-            .def("getMatrix", &getMatrix)
             .def(str(bp::self))
-            .def("assign", &CppShear::operator=, bp::return_self<>())
             ;
     }
 

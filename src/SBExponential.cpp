@@ -52,7 +52,7 @@
 namespace galsim {
 
     SBExponential::SBExponential(double r0, double flux,
-                                 boost::shared_ptr<GSParams> gsparams) :
+                                 const GSParamsPtr& gsparams) :
         SBProfile(new SBExponentialImpl(r0, flux, gsparams)) {}
 
     SBExponential::SBExponential(const SBExponential& rhs) : SBProfile(rhs) {}
@@ -65,14 +65,14 @@ namespace galsim {
         return static_cast<const SBExponentialImpl&>(*_pimpl).getScaleRadius(); 
     }
 
-    LRUCache<const GSParams*, ExponentialInfo>
-        SBExponential::SBExponentialImpl::cache(sbp::max_exponential_cache);
+    LRUCache<GSParamsPtr, ExponentialInfo> SBExponential::SBExponentialImpl::cache(
+        sbp::max_exponential_cache);
 
     SBExponential::SBExponentialImpl::SBExponentialImpl(
-        double r0, double flux, boost::shared_ptr<GSParams> gsparams) :
+        double r0, double flux, const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
         _flux(flux), _r0(r0), _r0_sq(_r0*_r0), _inv_r0(1./r0), _inv_r0_sq(_inv_r0*_inv_r0),
-        _info(cache.get(this->gsparams.get()))
+        _info(cache.get(this->gsparams))
     {
         // For large k, we clip the result of kValue to 0.
         // We do this when the correct answer is less than kvalue_accuracy.
@@ -104,17 +104,15 @@ namespace galsim {
 
     double SBExponential::SBExponentialImpl::xValue(const Position<double>& p) const
     {
-        double r = sqrt(p.x*p.x + p.y*p.y);
-        return _norm * std::exp(-r*_inv_r0);
+        double r = sqrt(p.x * p.x + p.y * p.y);
+        return _norm * std::exp(-r * _inv_r0);
     }
 
     std::complex<double> SBExponential::SBExponentialImpl::kValue(const Position<double>& k) const 
     {
-        double ksq = (k.x*k.x+k.y*k.y)*_r0_sq;
+        double ksq = (k.x*k.x + k.y*k.y)*_r0_sq;
 
-        if (ksq > _ksq_max) {
-            return 0.;
-        } else if (ksq < _ksq_min) {
+        if (ksq < _ksq_min) {
             return _flux*(1. - 1.5*ksq*(1. - 1.25*ksq));
         } else {
             double temp = 1. + ksq;
@@ -263,16 +261,16 @@ namespace galsim {
     }
 
     // Constructor to initialize Exponential functions for 1D deviate photon shooting
-    ExponentialInfo::ExponentialInfo(const GSParams* gsparams)
+    ExponentialInfo::ExponentialInfo(const GSParamsPtr& gsparams)
     {
-        dbg<<"Start ExponentialInfo with gsparams = "<<gsparams<<std::endl;
+        dbg<<"Start ExponentialInfo with gsparams = "<<gsparams.get()<<std::endl;
 #ifndef USE_NEWTON_RAPHSON
         // Next, set up the classes for photon shooting
         _radial.reset(new ExponentialRadialFunction());
         dbg<<"Made radial"<<std::endl;
         std::vector<double> range(2,0.);
         range[1] = -std::log(gsparams->shoot_accuracy);
-        _sampler.reset(new OneDimensionalDeviate( *_radial, range, true));
+        _sampler.reset(new OneDimensionalDeviate( *_radial, range, true, gsparams));
         dbg<<"Made sampler"<<std::endl;
 #endif
 
@@ -289,8 +287,10 @@ namespace galsim {
         double logx = std::log(gsparams->alias_threshold);
         double R = -logx;
         for (int i=0; i<3; i++) R = std::log(1.+R) - logx;
-        // Make sure it is at least 6 scale radii.
-        R = std::max(6., R);
+        // Make sure it is at least 5 hlr
+        // half-light radius = 1.6783469900166605 * r0
+        const double hlr = 1.6783469900166605;
+        R = std::max(R,gsparams->stepk_minimum_hlr*hlr);
         _stepk = M_PI / R;
         dbg<<"stepk = "<<_stepk<<std::endl;
     }

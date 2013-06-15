@@ -41,10 +41,11 @@ namespace galsim {
         /** 
          * @brief Constructor, list of inputs.
          *
-         * @param[in] slist list of SBProfiles.
+         * @param[in] slist    List of SBProfiles.
+         * @param[in] gsparams GSParams object storing constants that control the accuracy of image
+         *                     operations and rendering, if different from the default.
          */
-        SBAdd(const std::list<SBProfile>& slist,
-              boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
+        SBAdd(const std::list<SBProfile>& slist, const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor.
         SBAdd(const SBAdd& rhs);
