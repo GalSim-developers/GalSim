@@ -1449,12 +1449,12 @@ class Sersic(GSObject):
         >>> sersic_obj3.xValue(galsim.PositionD(0.,0.))
         237.30942286156187
 
-        >>> sersic_obj1.xValue(galsim.PositionD(10.,0.))
+        >>> sersic_obj1.xValue(galsim.PositionD(10.0001,0.))
         0.011776164687304694
-        >>> sersic_obj2.xValue(galsim.PositionD(10.,0.))
+        >>> sersic_obj2.xValue(galsim.PositionD(10.0001,0.))
         0.0
-        >>> sersic_obj3.xValue(galsim.PositionD(10.,0.))
-        0.011776164687304698
+        >>> sersic_obj3.xValue(galsim.PositionD(10.0001,0.))
+        0.0
 
         >>> sersic_obj1.getHalfLightRadius()
         2.5
@@ -1698,12 +1698,12 @@ class DeVaucouleurs(GSObject):
         >>> dvc_obj3.xValue(galsim.PositionD(0.,0.))
         604.6895805977036
 
-        >>> dvc_obj1.xValue(galsim.PositionD(10.,0.))
+        >>> dvc_obj1.xValue(galsim.PositionD(10.0001,0.))
         0.011781304853168086
-        >>> dvc_obj2.xValue(galsim.PositionD(10.,0.))
+        >>> dvc_obj2.xValue(galsim.PositionD(10.0001,0.))
         0.0
-        >>> dvc_obj3.xValue(galsim.PositionD(10.,0.))
-        0.011781304853168088
+        >>> dvc_obj3.xValue(galsim.PositionD(10.0001,0.))
+        0.0
 
         >>> dvc_obj1.getHalfLightRadius()
         2.5
