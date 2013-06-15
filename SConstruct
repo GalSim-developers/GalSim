@@ -1630,7 +1630,7 @@ if not GetOption('help'):
     # Set PYPREFIX if not given:
     if env['PYPREFIX'] == '':
         import subprocess
-        if sys.platform == 'linux2' and env['PREFIX'] != '':
+        if sys.platform.startswith('linux') and env['PREFIX'] != '':
             # On linux, we try to match the behavior of distutils
             cmd = "%s -c \"import distutils.sysconfig; "%(python)
             cmd += "print distutils.sysconfig.get_python_lib(prefix='%s')\""%(env['PREFIX'])
