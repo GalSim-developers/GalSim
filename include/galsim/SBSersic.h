@@ -52,9 +52,10 @@ namespace galsim {
      * exception thrown for values outside that range.
      *
      * The SBProfile representation of a Sersic profile also includes an optional truncation beyond
-     * a given radius, by the parameter `trunc`.  The resolution of the truncation radius (in units
-     * of half light radius `re`) is limited to 2 decimal places, in order not to overload the 
-     * Sersic information caching.
+     * a given radius, by the parameter `trunc`.  Internal Sersic information are cached according
+     * to the `(n, trunc/r0)` pair.  All internal calculations are based on the scale radius `r0`.
+     * If the profile is specified by the half-light radius `re`, the corresponding scale radius
+     * `r0` is calculated, and vice versa.
      *
      * When the Sersic profile is specfied by the scale radius with truncation, the normalization is
      * adjusted such that the truncated profile has the specified flux (its half-light radius will
@@ -65,12 +66,12 @@ namespace galsim {
      * Another optional parameter, `flux_untruncated = true`, allows the setting of the flux to
      * the untruncated Sersic, while generating a truncated Sersic (i.e., the normalizaton is
      * the same with respect to the untruncated case).  This facilitates the comparison of
-     * truncated and untruncated Sersic, as the amplitude (as well as the scale parameter
-     * `b=(re/r0)^{1/n}`, if half-light radius is specified) changes when a truncated Sersic is
-     * specified in the default setting [`flux_untruncated = false`].  The `flux_untruncated`
-     * variable is ignored if `trunc = 0`.
+     * truncated and untruncated Sersic, as the amplitude (as well as the scale radius `r0`,
+     * if half-light radius is specified) changes when a truncated Sersic is specified in the
+     * default setting [`flux_untruncated = false`].  The `flux_untruncated` variable is ignored
+     * if `trunc = 0`.
      *
-     * Note that when `trunc > 0.` and `flux_untruncated == true`,  the actual flux will not be
+     * Note that when `trunc > 0.` and `flux_untruncated == true`, the actual flux will not be
      * the same as the specified value; its true flux is returned by the getFlux() method.
      * Similarly for the half-light radius, when the Sersic profile is specified by the half-light
      * radius; the getHalfLightRadius() method will return the true half-light radius.  The scale
@@ -150,7 +151,7 @@ namespace galsim {
          *                              SCALE_RADIUS).
          * @param[in] flux              Flux (default `flux = 1.`).
          * @param[in] trunc             Outer truncation radius in same physical units as size;
-         *                               `trunc = 0.` for no truncation (default `trunc = 0.`).
+         *                              `trunc = 0.` for no truncation (default `trunc = 0.`).
          * @param[in] flux_untruncated  If `true`, sets the flux to the untruncated version of the
          *                              Sersic profile with the same index `n` (default
          *                              flux_untruncated = false`).  Ignored if `trunc = 0.`.
