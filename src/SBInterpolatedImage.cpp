@@ -27,9 +27,9 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-std::ostream* dbgout = new std::ofstream("debug.out");
+//std::ostream* dbgout = new std::ofstream("debug.out");
 //std::ostream* dbgout = &std::cout;
-int verbose_level = 2;
+//int verbose_level = 2;
 #endif
 
 namespace galsim {
@@ -321,6 +321,40 @@ namespace galsim {
         for (size_t i=0; i<_multi.size(); ++i) flux += _wts[i] * _multi.getFlux(i);
         dbg<<"flux = "<<flux<<std::endl;
         return flux;
+    }
+
+    void SBInterpolatedImage::SBInterpolatedImageImpl::getXRange(
+        double& xmin, double& xmax, std::vector<double>& splits) const 
+    {
+        Bounds<int> b = _multi.getInitBounds();
+        double scale = _multi.getScale();
+        double xrange = _xInterp->xrange();
+        int N = b.getXMax()-b.getXMin()+1;
+        xmin = -(N/2 + xrange) * scale;
+        xmax = ((N-1)/2 + xrange) * scale;
+        int ixrange = _xInterp->ixrange();
+        if (ixrange > 0) {
+            splits.resize(N+ixrange);
+            double x = xmin-0.5*scale*ixrange;
+            for(int i=0;i<N+ixrange;++i, x+=scale) splits[i] = x;
+        }
+    }
+
+    void SBInterpolatedImage::SBInterpolatedImageImpl::getYRange(
+        double& ymin, double& ymax, std::vector<double>& splits) const 
+    { 
+        Bounds<int> b = _multi.getInitBounds();
+        double scale = _multi.getScale();
+        double xrange = _xInterp->xrange();
+        int N = b.getXMax()-b.getXMin()+1;
+        ymin = -(N/2 + xrange) * scale;
+        ymax = ((N-1)/2 + xrange) * scale;
+        int ixrange = _xInterp->ixrange();
+        if (ixrange > 0) {
+            splits.resize(N+ixrange);
+            double y = ymin-0.5*scale*ixrange;
+            for(int i=0;i<N+ixrange;++i, y+=scale) splits[i] = y;
+        }
     }
 
     Position<double> SBInterpolatedImage::SBInterpolatedImageImpl::centroid() const 

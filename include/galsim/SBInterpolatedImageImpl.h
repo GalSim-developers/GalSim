@@ -55,11 +55,8 @@ namespace galsim {
         void calculateMaxK() const;
         void calculateStepK() const;
 
-        void getXRange(double& xmin, double& xmax, std::vector<double>& ) const 
-        { xmin = -_max_size; xmax = _max_size; }
-
-        void getYRange(double& ymin, double& ymax, std::vector<double>& ) const 
-        { ymin = -_max_size; ymax = _max_size; }
+        void getXRange(double& xmin, double& xmax, std::vector<double>& ) const;
+        void getYRange(double& ymin, double& ymax, std::vector<double>& ) const;
 
         bool isAxisymmetric() const { return false; }
 
@@ -133,7 +130,6 @@ namespace galsim {
         /// @brief Make ktab if necessary.
         void checkK() const;
 
-        double _max_size; ///< Calculated value: Ninitial+2*xInterp->xrange())*dx
         mutable double _stepk; ///< Stored value of stepK
         mutable double _maxk; ///< Stored value of maxK
         double _maxk1; ///< maxk based just on the xInterp urange
