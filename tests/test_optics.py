@@ -249,8 +249,8 @@ def test_OpticalPSF_vs_Airy_with_obs():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_OpticalPSF_aberration():
-    """Test the generation of optical aberration against a known result.
+def test_OpticalPSF_aberrations_struts():
+    """Test the generation of optical aberrations and struts against a known result.
     """
     import time
     t1 = time.time()
@@ -263,7 +263,7 @@ def test_OpticalPSF_aberration():
         # test defocus
         savedImg = galsim.fits.read(os.path.join(imgdir, "optics_defocus.fits"))
         optics = galsim.OpticalPSF(lod, defocus=.5, obscuration=obscuration)
-        myImg = optics.draw(myImg, dx=0.2*lod, use_true_center=False)
+        myImg = optics.draw(myImg, dx=0.2*lod, use_true_center=True)
         np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 6,
             err_msg="Optical aberration (defocus) disagrees with expected result")
@@ -271,7 +271,7 @@ def test_OpticalPSF_aberration():
         # test astig1
         savedImg = galsim.fits.read(os.path.join(imgdir, "optics_astig1.fits"))
         optics = galsim.OpticalPSF(lod, defocus=.5, astig1=.5, obscuration=obscuration)
-        myImg = optics.draw(myImg, dx=0.2*lod, use_true_center=False)
+        myImg = optics.draw(myImg, dx=0.2*lod, use_true_center=True)
         np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 6,
             err_msg="Optical aberration (astig1) disagrees with expected result")
@@ -279,7 +279,7 @@ def test_OpticalPSF_aberration():
         # test astig2
         savedImg = galsim.fits.read(os.path.join(imgdir, "optics_astig2.fits"))
         optics = galsim.OpticalPSF(lod, defocus=.5, astig2=.5, obscuration=obscuration)
-        myImg = optics.draw(myImg, dx=0.2*lod, use_true_center=False)
+        myImg = optics.draw(myImg, dx=0.2*lod, use_true_center=True)
         np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 6,
             err_msg="Optical aberration (astig2) disagrees with expected result")
@@ -287,7 +287,7 @@ def test_OpticalPSF_aberration():
         # test coma1
         savedImg = galsim.fits.read(os.path.join(imgdir, "optics_coma1.fits"))
         optics = galsim.OpticalPSF(lod, coma1=.5, obscuration=obscuration)
-        myImg = optics.draw(myImg, dx=0.2*lod, use_true_center=False)
+        myImg = optics.draw(myImg, dx=0.2*lod, use_true_center=True)
         np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 6,
             err_msg="Optical aberration (coma1) disagrees with expected result")
@@ -295,7 +295,7 @@ def test_OpticalPSF_aberration():
         # test coma2
         savedImg = galsim.fits.read(os.path.join(imgdir, "optics_coma2.fits"))
         optics = galsim.OpticalPSF(lod, coma2=.5, obscuration=obscuration)
-        myImg = optics.draw(myImg, dx=0.2*lod, use_true_center=False)
+        myImg = optics.draw(myImg, dx=0.2*lod, use_true_center=True)
         np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 6,
             err_msg="Optical aberration (coma2) disagrees with expected result")
@@ -303,7 +303,7 @@ def test_OpticalPSF_aberration():
         # test trefoil1
         savedImg = galsim.fits.read(os.path.join(imgdir, "optics_trefoil1.fits"))
         optics = galsim.OpticalPSF(lod, trefoil1=.5, obscuration=obscuration)
-        myImg = optics.draw(myImg, dx=0.2*lod, use_true_center=False)
+        myImg = optics.draw(myImg, dx=0.2*lod, use_true_center=True)
         np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 6,
             err_msg="Optical aberration (trefoil1) disagrees with expected result")
@@ -311,7 +311,7 @@ def test_OpticalPSF_aberration():
         # test trefoil2
         savedImg = galsim.fits.read(os.path.join(imgdir, "optics_trefoil2.fits"))
         optics = galsim.OpticalPSF(lod, trefoil2=.5, obscuration=obscuration)
-        myImg = optics.draw(myImg, dx=0.2*lod, use_true_center=False)
+        myImg = optics.draw(myImg, dx=0.2*lod, use_true_center=True)
         np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 6,
             err_msg="Optical aberration (trefoil2) disagrees with expected result")
@@ -319,7 +319,7 @@ def test_OpticalPSF_aberration():
         # test spherical
         savedImg = galsim.fits.read(os.path.join(imgdir, "optics_spher.fits"))
         optics = galsim.OpticalPSF(lod, spher=.5, obscuration=obscuration)
-        myImg = optics.draw(myImg, dx=0.2*lod, use_true_center=False)
+        myImg = optics.draw(myImg, dx=0.2*lod, use_true_center=True)
         np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 6,
             err_msg="Optical aberration (spher) disagrees with expected result")
@@ -328,10 +328,20 @@ def test_OpticalPSF_aberration():
     savedImg = galsim.fits.read(os.path.join(imgdir, "optics_all.fits"))
     optics = galsim.OpticalPSF(lod, defocus=.5, astig1=0.5, astig2=0.3, coma1=0.4, coma2=-0.3,
                                trefoil1=-0.2, trefoil2=0.1, spher=-0.8, obscuration=obscuration)
-    myImg = optics.draw(myImg, dx=0.2*lod, use_true_center=False)
+    myImg = optics.draw(myImg, dx=0.2*lod, use_true_center=True)
     np.testing.assert_array_almost_equal(
         myImg.array, savedImg.array, 6,
         err_msg="Optical aberration (all aberrations) disagrees with expected result")
+
+    # test struts
+    savedImg = galsim.fits.read(os.path.join(imgdir, "optics_struts.fits"))
+    optics = galsim.OpticalPSF(
+        lod, obscuration=obscuration, nstruts=5, strut_thick=0.04, strut_angle=8.*galsim.degrees,
+        astig2=0.04, coma1=-0.07, defocus=0.09)
+    myImg = optics.draw(myImg, dx=0.2*lod, use_true_center=True)
+    np.testing.assert_array_almost_equal(
+        myImg.array, savedImg.array, 6,
+        err_msg="Optical PSF (with struts) disagrees with expected result")
 
     t2 = time.time()
     print 'time for %s = %.2f' % (funcname(), t2 - t1)
@@ -423,5 +433,5 @@ if __name__ == "__main__":
     test_OpticalPSF_flux()
     test_OpticalPSF_vs_Airy()
     test_OpticalPSF_vs_Airy_with_obs()
-    test_OpticalPSF_aberration()
+    test_OpticalPSF_aberrations_struts()
     test_OpticalPSF_flux_scaling()
