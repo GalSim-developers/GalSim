@@ -32,7 +32,7 @@ namespace galsim {
     // Defined in RealSpaceConvolve.cpp
     double RealSpaceConvolve(
         const SBProfile& p1, const SBProfile& p2, const Position<double>& pos, double flux,
-        const GSParams* gsparams);
+        const GSParamsPtr& gsparams);
 
     /**
      * @brief Convolve SBProfiles.
@@ -75,11 +75,12 @@ namespace galsim {
          * @brief Constructor, list of inputs.
          *
          * @param[in] slist       Input: list of SBProfiles.
-         * @param[in] real_space  Do convolution in real space? (default `real_space = false`).
-         * @param[in] gsparams    GSParams to use, if different from the default.
+         * @param[in] real_space  Do convolution in real space?
+         * @param[in] gsparams    GSParams object storing constants that control the accuracy of
+         *                        image operations and rendering, if different from the default.
          */
-        SBConvolve(const std::list<SBProfile>& slist, bool real_space=false,
-                   boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
+        SBConvolve(const std::list<SBProfile>& slist, bool real_space,
+                   const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor.
         SBConvolve(const SBConvolve& rhs);
@@ -107,7 +108,7 @@ namespace galsim {
          * @param[in] s         SBProfile to be convolved with itself.
          * @param[in] gsparams  GSParams to use, if different from the default.
          */
-        SBAutoConvolve(const SBProfile& s, boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
+        SBAutoConvolve(const SBProfile& s, const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor.
         SBAutoConvolve(const SBAutoConvolve& rhs);
@@ -135,8 +136,7 @@ namespace galsim {
          * @param[in] s         SBProfile to be correlated with itself.
          * @param[in] gsparams  GSParams to use, if different from the default.
          */
-        SBAutoCorrelate(const SBProfile& s,
-                        boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
+        SBAutoCorrelate(const SBProfile& s, const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor.
         SBAutoCorrelate(const SBAutoCorrelate& rhs);

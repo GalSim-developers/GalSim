@@ -39,7 +39,7 @@ except ImportError:
 
 TESTDIR=os.path.join(path, "spline_comparison_files")
 
-DECIMAL = 14 # Make sure output agrees at 14 decimal places or better
+DECIMAL = 5 # Make sure output agrees at 5 decimal places or better (relative accuracy)
 
 # Some arbitrary kx, ky k space values to test
 KXVALS = np.array((1.30, 0.71, -4.30)) * np.pi / 2.
@@ -77,7 +77,7 @@ def test_Cubic_spline():
         testKvals[i] = np.abs(testobj.kValue(posk))
     # Compare with saved array
     refKvals = np.loadtxt(os.path.join(TESTDIR, "absfKCubic_test.txt"))
-    np.testing.assert_array_almost_equal(refKvals, testKvals, DECIMAL,
+    np.testing.assert_array_almost_equal(refKvals/testKvals, 1., DECIMAL,
                                          err_msg="Spline-interpolated kValues do not match saved "+
                                                  "data for k space Cubic interpolant.")
     t2 = time.time()
@@ -97,7 +97,7 @@ def test_Quintic_spline():
         testKvals[i] = np.abs(testobj.kValue(posk))
     # Compare with saved array
     refKvals = np.loadtxt(os.path.join(TESTDIR, "absfKQuintic_test.txt"))
-    np.testing.assert_array_almost_equal(refKvals, testKvals, DECIMAL,
+    np.testing.assert_array_almost_equal(refKvals/testKvals, 1., DECIMAL,
                                          err_msg="Spline-interpolated kValues do not match saved "+
                                                  "data for k space Quintic interpolant.")
     t2 = time.time()
@@ -117,7 +117,7 @@ def test_Lanczos5_spline():
         testKvals[i] = np.abs(testobj.kValue(posk))
     # Compare with saved array
     refKvals = np.loadtxt(os.path.join(TESTDIR, "absfKLanczos5_test.txt"))
-    np.testing.assert_array_almost_equal(refKvals, testKvals, DECIMAL,
+    np.testing.assert_array_almost_equal(refKvals/testKvals, 1., DECIMAL,
                                          err_msg="Spline-interpolated kValues do not match saved "+
                                                  "data for k space Lanczos-5 interpolant.")
     t2 = time.time()
@@ -137,7 +137,7 @@ def test_Lanczos7_spline():
         testKvals[i] = np.abs(testobj.kValue(posk))
     # Compare with saved array
     refKvals = np.loadtxt(os.path.join(TESTDIR, "absfKLanczos7_test.txt"))
-    np.testing.assert_array_almost_equal(refKvals, testKvals, DECIMAL,
+    np.testing.assert_array_almost_equal(refKvals/testKvals, 1., DECIMAL,
                                          err_msg="Spline-interpolated kValues do not match saved "+
                                                  "data for k space Lanczos-7 interpolant.")
     t2 = time.time()

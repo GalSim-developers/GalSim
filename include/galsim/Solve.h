@@ -89,6 +89,19 @@ namespace galsim {
      *
      *    (There is also a corresponding bracketLower() method.)
      *
+     *    d) Sometimes there is a fundamental limit past which you want to make sure that
+     *    the range doesn't go.  e.g. For values that must be positive, you might want to make
+     *    sure the range doesn't extend past 0.
+     *
+     *    For this case, there are the following two functions
+     *    @code
+     *    solver.bracketUpperWithLimit(upper_limit)
+     *    solver.bracketLowerWithLimit(lower_limit)
+     *    @endcode
+     *
+     *    Finally, note that there is nothing in the code that enforces x_min < x_max.
+     *    If the two limits bracket the code in reverse order, that's ok.
+     *
      * 2. The next step is to solve for the root within this range.
      *    There are currently two algorithms for doing that: Bisect and Brent.
      *    You can tell Solve which one to use with:
@@ -153,9 +166,20 @@ namespace galsim {
 
         //@{
         /// Get the current search bounds
-        double getLowerBound() const { return lBound; }
-        double getUpperBound() const { return uBound; }
+        T getLowerBound() const { return lBound; }
+        T getUpperBound() const { return uBound; }
         //@}
+
+        /// @brief Make sure the current bounds have corresponding flower, fupper
+        void evaluateBounds() const
+        {
+            if (!boundsAreEvaluated) {
+                flower = func(lBound);
+                fupper = func(uBound);
+                boundsAreEvaluated=true;
+            }
+        }
+
 
         /**
          * @brief Hunt for bracket, geometrically expanding range
@@ -165,16 +189,12 @@ namespace galsim {
          */
         void bracket() 
         {
-            const double factor=2.0;
+            const T factor=2.0;
             if (uBound == lBound) 
                 throw SolveError("uBound=lBound in bracket()");
-            if (!boundsAreEvaluated) {
-                flower = func(lBound);
-                fupper = func(uBound);
-                boundsAreEvaluated=true;
-            }
+            evaluateBounds();
 
-            double delta = uBound-lBound;
+            T delta = uBound-lBound;
             for (int j=1; j<maxSteps; j++) {
                 if (fupper*flower < 0.0) return;
                 if (std::abs(flower) < std::abs(fupper)) {
@@ -194,6 +214,23 @@ namespace galsim {
             throw SolveError("Too many iterations in bracket()");
         }
 
+        // General purpose one-sided bracket.  Used by bracketUpper and bracketLower.
+        // Expand in the direction of b.
+        bool bracket1(T& a, T& b, T& fa, T& fb)
+        {
+            const T factor=2.0;
+            T delta = b-a;
+            for (int j=1; j<maxSteps; j++) {
+                if (fa*fb < 0.0) return true;
+                a = b;
+                fa = fb;
+                delta *= factor;
+                b += delta;
+                fb = func(uBound);
+            }
+            return false;
+        }
+
         /**
          * @brief Hunt for bracket, geometrically expanding range
          *
@@ -202,25 +239,11 @@ namespace galsim {
          */
         void bracketUpper() 
         {
-            const double factor=2.0;
             if (uBound == lBound) 
                 throw SolveError("uBound=lBound in bracketUpper()");
-            if (!boundsAreEvaluated) {
-                flower = func(lBound);
-                fupper = func(uBound);
-                boundsAreEvaluated=true;
-            }
-
-            double delta = uBound-lBound;
-            for (int j=1; j<maxSteps; j++) {
-                if (fupper*flower < 0.0) return;
-                lBound = uBound;
-                flower = fupper;
-                delta *= factor;
-                uBound += delta;
-                fupper = func(uBound);
-            }
-            throw SolveError("Too many iterations in bracketUpper()");
+            evaluateBounds();
+            if (!bracket1(lBound,uBound,flower,fupper))
+                throw SolveError("Too many iterations in bracketUpper()");
         }
 
         /**
@@ -230,31 +253,114 @@ namespace galsim {
          */
         void bracketLower() 
         {
-            const double factor = 2.0;
             if (uBound == lBound) 
                 throw SolveError("uBound=lBound in bracketLower()");
-            if (!boundsAreEvaluated) {
-                flower = func(lBound);
-                fupper = func(uBound);
-                boundsAreEvaluated=true;
-            }
+            evaluateBounds();
+            if (!bracket1(uBound,lBound,fupper,flower))
+                throw SolveError("Too many iterations in bracketLower()");
+        }
 
-            double delta = uBound-lBound;
+        // General purpose one-sided bracket with limit.  
+        // Used by bracketUpperWithLimit and bracketLowerWithLimit.
+        // Expand in the direction of b.
+        bool bracket1WithLimit(T& a, T& b, T& fa, T& fb, T& c)
+        {
+            const T factor=2.0;
+            // The principal here is to use z = (b-a)/(b-c) as our variable to double each time
+            // where a is the initial lBound, c is the upper_limit, and b is the uBound we
+            // are trying to find.
+            //
+            // z = (b-a)/(b-c)
+            // b-a = zb-zc
+            // b = (zc-a)/(z-1)
+            //
+            // So if we take z' = f*z
+            // z' = f(b-a)/(b-c)
+            // Then
+            // b' = (z'c-a)/(z'-1)
+            // b' = (fcb-fca-ab+ac)/(b-c) / (fb-fa-b+c)/(b-c)
+            //    = ((fc-a)b-(f-1)ac) / ((f-1)b-fa+c)
+            //    = (fc(b-a) + a(c-b)) / (f(b-a) + (c-b))
+            // This is our fundamental iteration formula.
+            //
+            // To see the behavior of this iteration, take two limiting cases.
+            // 1) If b = a+d and d << c-a, and use f=2 for simplicity:
+            // b' = (2cd + ac - a^2 - ad)) / (2d+c-a-d)
+            //    = (a(c-a) + d(2c-a)) / (c-a+d)
+            //    = (a + d(2c-a)/(c-a)) / (1+d/(c-a))
+            //    = (a + d(2c-a)/(c-a)) * (1-d/(c-a))
+            //    = a + d(2c-a)/(c-a) - da/(c-a)
+            //    = a + d(2c-2a)/(c-a)
+            //    = a + 2d
+            //
+            // 2) If b = c-d and d << c-a, and use f=2 for simplicity:
+            // b' = (2c^2-2cd-2ca+ad) / (2c-2d-2a+d)
+            //    = (2c(c-a) - d(2c-a)) / (2(c-a)-d)
+            //    = (c - d(2c-a)/(2c-2a)) / (1-d/(2c-2a))
+            //    = (c - d(2c-a)/(2c-2a)) * (1+d/(2c-2a))
+            //    = c - d(2c-a)/2(c-a) + cd/2(c-a)
+            //    = c - d(c-a)/2(c-a)
+            //    = c - d/2
+            //
+            // So when far from the limit (1), the iteration is just like the version without 
+            // the limit.  But when the variable approaches the limit (2), it just goes half the 
+            // remaining distance each time.
+
+            xdbg<<"Bracket with limits:\n";
+            xdbg<<"a,b,c = "<<a<<','<<b<<','<<c<<std::endl;
+            xdbg<<"fa,fb = "<<fa<<','<<fb<<std::endl;
             for (int j=1; j<maxSteps; j++) {
-                if (fupper*flower < 0.0) return;
-                uBound = lBound;
-                fupper = flower;
-                delta *= factor;
-                lBound -= delta;
-                flower = func(lBound);
+                if (fa*fb < 0.0) return true;
+                T bma = b-a; // Do this before overwriting a!
+                T cmb = c-b;
+                a = b;
+                fa = fb;
+                // We divide the top and bottom by (b-a)(c-b) for stability in case one of these
+                // is especially larger than the other.
+                b = (factor*c/cmb + a/bma) / (factor/cmb + 1./bma);
+                xdbg<<"b -> "<<b<<std::endl;
+                fb = func(b);
+                xdbg<<"fb -> "<<fb<<std::endl;
             }
-            throw SolveError("Too many iterations in bracketLower()");
+            return false;
+        }
+
+        /**
+         * @brief Hunt for upper bracket, with an upper limit to how far it can go.
+         */
+        void bracketUpperWithLimit(T upper_limit) 
+        {
+            if (uBound == lBound) 
+                throw SolveError("uBound=lBound in bracketUpperWithLimit()");
+            if (uBound == upper_limit) 
+                throw SolveError("uBound=upper_limit in bracketUpperWithLimit()");
+            if ((uBound-lBound) * (upper_limit-uBound) <= 0)
+                throw SolveError("uBound not between lBound and upper_limit");
+            evaluateBounds();
+            if (!bracket1WithLimit(lBound,uBound,flower,fupper,upper_limit))
+                throw SolveError("Too many iterations in bracketUpperWithLimit()");
+        }
+
+        /**
+         * @brief Hunt for lower bracket, with a lower limit to how far it can go.
+         */
+        void bracketLowerWithLimit(T lower_limit) 
+        {
+            if (uBound == lBound) 
+                throw SolveError("uBound=lBound in bracketLowerWithLimit()");
+            if (lBound == lower_limit) 
+                throw SolveError("lBound=lower_limit in bracketLowerWithLimit()");
+            if ((uBound-lBound) * (lBound-lower_limit) <= 0)
+                throw SolveError("lBound not between uBound and lower_limit");
+            evaluateBounds();
+            if (!bracket1WithLimit(uBound,lBound,fupper,flower,lower_limit))
+                throw SolveError("Too many iterations in bracketLowerWithLimit()");
         }
 
         /**
          * @brief Find the root according the the method currently set.
          */
-        T root() const 
+        T root() const
         {
             switch (m) {
               case Bisect:
@@ -269,15 +375,11 @@ namespace galsim {
         /**
          * @brief A simple bisection root-finder
          */
-        T bisect() const 
+        T bisect() const
         {
             T dx,f,fmid,xmid,rtb;
 
-            if (!boundsAreEvaluated) {
-                flower=func(lBound);
-                fupper=func(uBound);
-                boundsAreEvaluated = true;
-            }
+            evaluateBounds();
             f=flower;
             fmid=fupper;
 
@@ -297,16 +399,12 @@ namespace galsim {
         /**
          * @brief A more sophisticated root-finder using Brent's algorithm 
          */
-        T zbrent() const 
+        T zbrent() const
         {
             T a=lBound, b=uBound, c=uBound;
             T d=b-a, e=b-a;
             T min1,min2;
-            if (!boundsAreEvaluated) {
-                flower=func(a);
-                fupper=func(b);
-                boundsAreEvaluated = true;
-            }
+            evaluateBounds();
             T fa = flower;
             T fb = fupper;
 
@@ -330,8 +428,7 @@ namespace galsim {
                     fb=fc;
                     fc=fa;
                 }
-                tol1=2.0*std::numeric_limits<T>::epsilon()*std::abs(b)
-                    +0.5*xTolerance;
+                tol1=2.0*std::numeric_limits<T>::epsilon()*std::abs(b) + 0.5*xTolerance;
                 xm=0.5*(c-b);
                 if (std::abs(xm) <= tol1 || fb == 0.0) return b;
                 if (std::abs(e) >= tol1 && std::abs(fa) > std::abs(fb)) {

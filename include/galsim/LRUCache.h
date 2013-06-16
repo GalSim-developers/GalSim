@@ -24,6 +24,8 @@
 
 #include <list>
 #include <map>
+#include <boost/tuple/tuple.hpp>
+#include <boost/tuple/tuple_comparison.hpp>  // Need this for t1 < t2
 
 namespace galsim {
 
@@ -45,6 +47,41 @@ namespace galsim {
         { return new Value(key.first, key.second); }
     };
 
+    // Special first few tuple cases
+    template <typename Value, typename Key1>
+    struct LRUCacheHelper<Value,boost::tuple<Key1> >
+    {
+        static Value* NewValue(const boost::tuple<Key1>& key)
+        { 
+            return new Value(boost::get<0>(key)); 
+        }
+    };
+
+    template <typename Value, typename Key1, typename Key2>
+    struct LRUCacheHelper<Value,boost::tuple<Key1,Key2> >
+    {
+        static Value* NewValue(const boost::tuple<Key1,Key2>& key)
+        { return new Value(boost::get<0>(key), boost::get<1>(key)); }
+    };
+
+    // Special first few tuple cases
+    template <typename Value, typename Key1, typename Key2, typename Key3>
+    struct LRUCacheHelper<Value,boost::tuple<Key1,Key2,Key3> >
+    {
+        static Value* NewValue(const boost::tuple<Key1,Key2,Key3>& key)
+        { return new Value(boost::get<0>(key), boost::get<1>(key), boost::get<2>(key)); }
+    };
+
+    // Special first few tuple cases
+    template <typename Value, typename Key1, typename Key2, typename Key3, typename Key4>
+    struct LRUCacheHelper<Value,boost::tuple<Key1,Key2,Key3,Key4> >
+    {
+        static Value* NewValue(const boost::tuple<Key1,Key2,Key3,Key4>& key)
+        { 
+            return new Value(boost::get<0>(key), boost::get<1>(key), boost::get<2>(key),
+                             boost::get<3>(key)); 
+        }
+    };
 
     /** 
      * @brief Least Recently Used Cache

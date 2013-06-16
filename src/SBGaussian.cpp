@@ -44,7 +44,7 @@ namespace galsim {
 
 
     SBGaussian::SBGaussian(double sigma, double flux,
-                           boost::shared_ptr<GSParams> gsparams) : 
+                           const GSParamsPtr& gsparams) : 
         SBProfile(new SBGaussianImpl(sigma, flux, gsparams)) {}
 
     SBGaussian::SBGaussian(const SBGaussian& rhs) : SBProfile(rhs) {}
@@ -58,7 +58,7 @@ namespace galsim {
     }
 
     SBGaussian::SBGaussianImpl::SBGaussianImpl(double sigma, double flux,
-                                               boost::shared_ptr<GSParams> gsparams) :
+                                               const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
         _flux(flux), _sigma(sigma), _sigma_sq(_sigma*_sigma),
         _inv_sigma(1./_sigma), _inv_sigma_sq(_inv_sigma*_inv_sigma)
@@ -96,8 +96,10 @@ namespace galsim {
         // int( exp(-r^2/2) r, r=0..R) = 1 - exp(-R^2/2)
         // exp(-R^2/2) = alias_threshold
         double R = sqrt(-2.*std::log(this->gsparams->alias_threshold));
-        // Make sure it is at least 4 sigma;
-        R = std::max(4., R);
+        // Make sure it is at least 5 hlr
+        // half-light radius = sqrt(2ln(2)) * sigma
+        const double hlr = 1.177410022515475;
+        R = std::max(R,gsparams->stepk_minimum_hlr*hlr);
         return M_PI / (R*_sigma);
     }
 
