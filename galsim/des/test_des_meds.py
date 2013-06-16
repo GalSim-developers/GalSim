@@ -98,23 +98,23 @@ def test_meds():
     objlist = [obj1, obj2]
 
     # save objects to MEDS file
-    filename_meds='test_meds.fits'
+    filename_meds = 'test_meds.fits'
     galsim.des.write_meds(filename_meds, objlist, clobber=True)
     print 'wrote MEDS file %s ' % filename_meds
 
     # test functions in des_meds.py
     print 'reading %s' % filename_meds
     import meds
-    m=meds.MEDS(filename_meds)
+    m = meds.MEDS(filename_meds)
     print 'number of objects is %d' % len(m._cat)
     print 'testing if loaded images are the same as original images'
 
     # get the catalog
-    cat=m.get_cat()
+    cat = m.get_cat()
 
     # loop over objects and exposures - test get_cutout
-    n_obj=2
-    n_cut=2
+    n_obj = 2
+    n_cut = 2
     for iobj in range(n_obj):
 
         numpy.testing.assert_equal(cat['id'][iobj], iobj+1)
@@ -122,9 +122,9 @@ def test_meds():
         for icut in range(n_cut):
 
             # get the images etc to compare with originals
-            img=m.get_cutout( iobj, icut, type='image')
-            wth=m.get_cutout( iobj, icut, type='weight')
-            seg=m.get_cutout( iobj, icut, type='seg')
+            img = m.get_cutout( iobj, icut, type='image')
+            wth = m.get_cutout( iobj, icut, type='weight')
+            seg = m.get_cutout( iobj, icut, type='seg')
             wcstrans_meds = m.get_jacobian(iobj, icut)
             wcs_array_meds= numpy.array( [ wcstrans_meds['dudrow'], wcstrans_meds['dudcol'],
                 wcstrans_meds['dvdrow'], wcstrans_meds['dvdcol'], wcstrans_meds['row0'],
@@ -144,13 +144,13 @@ def test_meds():
             print 'test passed get_cutout obj=%d icut=%d' % (iobj, icut)
 
     # loop over objects - test get_mosaic
-    n_obj=2
+    n_obj = 2
     for iobj in range(n_obj):
 
         # get the mosaic to compare with originals
-        img=m.get_mosaic( iobj, type='image')
-        wth=m.get_mosaic( iobj, type='weight')
-        seg=m.get_mosaic( iobj, type='seg')
+        img = m.get_mosaic( iobj, type='image')
+        wth = m.get_mosaic( iobj, type='weight')
+        seg = m.get_mosaic( iobj, type='seg')
 
         # get the concatenated images - create the true mosaic
         true_mosaic_img = numpy.concatenate([x.array for x in objlist[iobj].images],  axis=0)
@@ -221,12 +221,12 @@ def test_meds_config():
     # test functions in des_meds.py
     print 'reading %s' % file_name
     import meds
-    m=meds.MEDS(file_name)
+    m = meds.MEDS(file_name)
     print 'number of objects is %d' % m.size
     assert m.size == nobj
 
     # get the catalog
-    cat=m.get_cat()
+    cat = m.get_cat()
 
     # loop over objects and exposures - test get_cutout
     for iobj in range(nobj):

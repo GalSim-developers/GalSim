@@ -180,7 +180,7 @@ class MultiExposureObject(object):
                 # check if box size is correct
                 if nx != self.box_size:
                     raise ValueError('%s object %d has size %d and should be %d' % 
-                            ( extname, icutout,nx,self.box_size ) )
+                            ( extname,icutout,nx,self.box_size ) )
 
         # see if the number of Jacobians is right
         if len(self.wcstrans) != self.n_cutouts:
@@ -190,11 +190,11 @@ class MultiExposureObject(object):
         # check each Jacobian
         for jac in self.wcstrans:
             # should ba a numpy array
-            if not isinstance(jac,WCSTransform):
+            if not isinstance(jac, WCSTransform):
                 raise TypeError('wcstrans list should contain WCSTransform objects')
             
 
-def write_meds(file_name,obj_list,clobber=True):
+def write_meds(file_name, obj_list, clobber=True):
     """
     @brief Writes the galaxy, weights, segmaps images to a MEDS file.
 
@@ -268,9 +268,9 @@ def write_meds(file_name,obj_list,clobber=True):
                 vec['weight'] = obj.weights[i].array.flatten()
             # if vector already exists
             else:
-                vec['image'] = numpy.concatenate([vec['image'],obj.images[i].array.flatten()])
-                vec['seg'] = numpy.concatenate([vec['seg'],obj.segs[i].array.flatten()])
-                vec['weight'] = numpy.concatenate([vec['weight'],obj.weights[i].array.flatten()])
+                vec['image'] = numpy.concatenate([vec['image'], obj.images[i].array.flatten()])
+                vec['seg'] = numpy.concatenate([vec['seg'], obj.segs[i].array.flatten()])
+                vec['weight'] = numpy.concatenate([vec['weight'], obj.weights[i].array.flatten()])
 
             # append the Jacobian
             dudrow[i] = obj.wcstrans[i].dudrow
