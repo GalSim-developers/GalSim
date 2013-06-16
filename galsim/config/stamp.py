@@ -499,7 +499,7 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level_pixel, final_shi
         wmult = 1.0
 
     if final_shift:
-        #print 'shift = ',final_shift*pixel_scale
+        #print 'final.shift = ',final_shift*pixel_scale
         final.applyShift(final_shift.x*pixel_scale, final_shift.y*pixel_scale)
 
     if xsize:
@@ -711,13 +711,14 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, final_sh
         raise NotImplementedError(
             "gal.signal_to_noise not implemented for draw_method = phot")
 
-    if final_shift:
-        final.applyShift(final_shift.x, final_shift.y)
-
     if 'image' in config and 'pixel_scale' in config['image']:
         pixel_scale = galsim.config.ParseValue(config['image'], 'pixel_scale', config, float)[0]
     else:
         pixel_scale = 1.0
+
+    if final_shift:
+        #print 'final.shift = ',final_shift*pixel_scale
+        final.applyShift(final_shift.x*pixel_scale, final_shift.y*pixel_scale)
 
     if xsize:
         im = galsim.ImageF(xsize, ysize)
@@ -936,11 +937,13 @@ def DrawPSFStamp(psf, pix, config, bounds, final_shift):
     # Special: if the galaxy was shifted, then also shift the psf 
     if 'shift' in config['gal']:
         gal_shift = galsim.config.GetCurrentValue(config['gal'],'shift')
+        #print 'psf shift (1): ',gal_shift.x,gal_shift.y
         final_psf.applyShift(gal_shift.x, gal_shift.y)
 
     # Also apply any "final" shift to the psf.
     if final_shift:
-        final_psf.applyShift(final_shift.x, final_shift.y)
+        #print 'psf shift (2) = ',final_shift*pixel_scale
+        final_psf.applyShift(final_shift.x*pixel_scale, final_shift.y*pixel_scale)
 
     psf_im = galsim.ImageF(bounds)
     psf_im.setScale(pixel_scale)
