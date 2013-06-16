@@ -140,7 +140,7 @@ class MultiExposureObject(object):
         if wcstrans != None:
             self.wcstrans = wcstrans
         else:
-            # buld jacobians that are just based on the pixel scale, set the centers
+            # build jacobians that are just based on the pixel scale, set the centers
             dudrow = 1 
             dudcol = 0
             dvdrow = 0
