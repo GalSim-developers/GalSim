@@ -407,7 +407,7 @@ def test_exponential():
 
 
 def test_exponential_properties():
-    """Test some basic properties of the SBGaussian profile.
+    """Test some basic properties of the SBExponential profile.
     """
     import time
     t1 = time.time()

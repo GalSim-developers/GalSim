@@ -52,7 +52,7 @@ namespace galsim {
          *
          * @param[in] r0       scale length for the profile that scales as `exp[-(r / r0)]`, NOT the
          *                     half-light radius `re`.
-         * @param[in] flux     flux (default `flux = 1.`).
+         * @param[in] flux     flux.
          * @param[in] gsparams GSParams object storing constants that control the accuracy of image
          *                     operations and rendering, if different from the default.
          */

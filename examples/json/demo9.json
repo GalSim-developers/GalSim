@@ -8,10 +8,12 @@
 "#" : "applied to each galaxy is calculated for an NFW halo mass profile.  We simulate observations ",
 "#" : "of galaxies around 20 different clusters -- 5 each of 4 different masses.  Each cluster",
 "#" : "has its own file, organized into 4 directories (one for each mass).  For each cluster, we",
-"#" : "draw 20 lensed galaxies at random positions on the image.",
+"#" : "draw 20 lensed galaxies at random positions on the image.  The PSF is appropriate for",
+"#" : "a space-like simulation.  (Some of the numbers used are the values for HST.)",
 
 "#" : "New features introduced in this demo:",
 
+"#" : "- obj type : OpticalPSF (..., trefoil1, trefoil2, nstruts, strut_thick, strut_angle)",
 "#" : "- shear_value : NFWHaloShear (redshift)",
 "#" : "- float_value : NFWHaloMagnification (redshift)",
 "#" : "- input : nfw_halo (mass, conc, redshift)",
@@ -30,8 +32,25 @@
 
 "#" : "Define the PSF profile",
 "psf" : {
-    "type" : "Kolmogorov",
-    "fwhm" : 0.5 
+    "#" : "We use OpticalPSF with a few new features we haven't mentioned before:",
+    "#" : "1) We introduce the parameters trefoil1 and trefoil2, which are 3rd order Zernike",
+    "#" : "   terms.",
+    "#" : "2) We specify support struts that hold the secondary mirror.  You can specify how",
+    "#" : "   many struts to have, their thickness relative to the diameter, and the angle of the",
+    "#" : "   first one relative to the vertical axis.  Here, we use 4 supports.",
+    "type" : "OpticalPSF",
+    "lam_over_diam" : 0.077,
+    "obscuration" : 0.125,
+    "nstruts" : 4,
+    "strut_thick" : 0.07,
+    "strut_angle" : "15 degrees",
+    "defocus" : 0.04,
+    "astig1" : 0.03,
+    "astig2" : -0.01,
+    "coma1" : 0.02,
+    "coma2" : 0.04,
+    "trefoil1" : -0.02,
+    "trefoil2" : 0.04
 },
 
 "#" : "Define the galaxy profile",
@@ -42,7 +61,7 @@
     "#" : "object in a large image.",
 
     "type" : "Exponential",
-    "half_light_radius" : { "type" : "Random" , "min" : 0.4 , "max" : 1.2 },
+    "half_light_radius" : { "type" : "Random" , "min" : 0.1 , "max" : 0.3 },
     "flux" : { "type" : "Random" , "min" : 1.0e4 , "max" : 1.0e6 },
     "ellip" : {
         "#" : "The eta definition of shear is |eta| = ln(a/b) where a and b are (as usual)",
@@ -50,8 +69,8 @@
         "#" : "it is well defined for all values from 0 to infinity, so we don't need to",
         "#" : "cut it off to avoid |e| > 1.",
         "type" : "Eta1Eta2",
-        "eta1" : { "type" : "RandomGaussian" , "sigma" : 0.4 },
-        "eta2" : { "type" : "RandomGaussian" , "sigma" : 0.4 }
+        "eta1" : { "type" : "RandomGaussian" , "sigma" : 0.3 },
+        "eta2" : { "type" : "RandomGaussian" , "sigma" : 0.3 }
     },
 
     "magnification" : {
@@ -83,7 +102,7 @@
         "#" : "to the next mass in the list.",
         "mass" : {
             "type" : "List",
-            "items" : [ 1.0e15, 7.0e14, 4.0e14, 2.0e14 ],
+            "items" : [ 7.0e14, 4.0e14, 2.0e14, 1.0e14 ],
             "index" : {
                 "type" : "Sequence",
                 "repeat" : 5
@@ -144,14 +163,14 @@
     "#" : "galaxies too close to the halo center where the lensing is not weak.",
     "sky_pos" : {
         "type" : "RandomCircle",
-        "radius" : 50,
-        "inner_radius" : 10
+        "radius" : 12,
+        "inner_radius" : 3
     },
 
-    "pixel_scale" : 0.20,
+    "pixel_scale" : 0.05,
 
     "noise" : {
-        "sky_level" : 1.0e6
+        "sky_level" : 1.0e2
     },
 
     "random_seed" : 8383721
@@ -265,6 +284,15 @@
     "#" : "be able to mark those defects on a bad pixel mask.",
     "badpix" : {
         "hdu" : 1
+    },
+
+    "#" : "We also draw a PSF image at the location of every galaxy.  This isn't normally done,",
+    "#" : "and since some of the PSFs overlap, it's not necessarily so useful to have this kind ",
+    "#" : "of image.  But in this case, it's fun to look at the psf image, especially with ",
+    "#" : "something like log scaling in ds9 to see how crazy an aberrated OpticalPSF with ",
+    "#" : "struts can look when there is no atmospheric component to blur it out.",
+    "psf" : {
+        "hdu" : 3
     },
 
     "#" : "nproc in the output field indicates that multiple processes should be used to ",
