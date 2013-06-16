@@ -25,7 +25,7 @@
 # meds  - https://github.com/esheldon/meds
 # fitsio - https://github.com/esheldon/fitsio
 #
-# In both cases, the installation is simply 
+# In both cases, the installation is simply
 #
 # python setup.py install [ --prefix PREFIX ]
 
@@ -38,7 +38,7 @@ import galsim
 
 def test_meds():
     """
-    Create two objects, each with two exposures. Save them to a MEDS file. 
+    Create two objects, each with two exposures. Save them to a MEDS file.
     Load the MEDS file. Compare the created objects with the one read by MEDS.
     """
 
@@ -49,55 +49,57 @@ def test_meds():
     box_size = 32
 
     # first obj
-    img11 = galsim.ImageD(box_size,box_size,init_value=111)
-    img12 = galsim.ImageD(box_size,box_size,init_value=112)
-    seg11 = galsim.ImageD(box_size,box_size,init_value=121)
-    seg12 = galsim.ImageD(box_size,box_size,init_value=122)
-    wth11 = galsim.ImageD(box_size,box_size,init_value=131)
-    wth12 = galsim.ImageD(box_size,box_size,init_value=132)
-    dudrow = 11.1; dudcol =  11.2; dvdrow =  11.3; dvdcol =  11.4; row0 =    11.5; col0 =    11.6; 
-    wcs11  = galsim.des.WCSTransform(dudrow ,dudcol ,dvdrow ,dvdcol ,row0 ,col0)
-    dudrow = 12.1; dudcol =  12.2; dvdrow =  12.3; dvdcol =  12.4; row0 =    12.5; col0 =    12.6;    
-    wcs12  = galsim.des.WCSTransform(dudrow ,dudcol ,dvdrow ,dvdcol ,row0 ,col0)
+    img11 = galsim.ImageD(box_size, box_size, init_value=111)
+    img12 = galsim.ImageD(box_size, box_size, init_value=112)
+    seg11 = galsim.ImageD(box_size, box_size, init_value=121)
+    seg12 = galsim.ImageD(box_size, box_size, init_value=122)
+    wth11 = galsim.ImageD(box_size, box_size, init_value=131)
+    wth12 = galsim.ImageD(box_size, box_size, init_value=132)
+    dudrow = 11.1; dudcol =  11.2; dvdrow =  11.3; dvdcol =  11.4; row0 =    11.5; col0 =    11.6;
+    wcs11  = galsim.des.WCSTransform(dudrow, dudcol, dvdrow, dvdcol, row0, col0)
+    dudrow = 12.1; dudcol =  12.2; dvdrow =  12.3; dvdcol =  12.4; row0 =    12.5; col0 =    12.6;
+    wcs12  = galsim.des.WCSTransform(dudrow, dudcol, dvdrow, dvdcol, row0, col0)
 
 
     # create lists
-    images =   [img11,img12]
-    weights =  [wth11,wth12]
-    segs =     [seg11,seg12]
-    wcstrans = [wcs11,wcs12]
+    images =   [img11, img12]
+    weights =  [wth11, wth12]
+    segs =     [seg11, seg12]
+    wcstrans = [wcs11, wcs12]
 
     # create object
-    obj1 = galsim.des.MultiExposureObject(images=images,weights=weights,segs=segs,wcstrans=wcstrans,id=1)
+    obj1 = galsim.des.MultiExposureObject(images=images, weights=weights, segs=segs,
+                                          wcstrans=wcstrans, id=1)
 
     # second obj
-    img21 = galsim.ImageD(box_size,box_size,init_value=211)
-    img22 = galsim.ImageD(box_size,box_size,init_value=212)
-    seg21 = galsim.ImageD(box_size,box_size,init_value=221)
-    seg22 = galsim.ImageD(box_size,box_size,init_value=222)
-    wth21 = galsim.ImageD(box_size,box_size,init_value=231)
-    wth22 = galsim.ImageD(box_size,box_size,init_value=332) #,dudrow ,dudcol ,dvdrow ,dvdcol ,row0 ,col0
+    img21 = galsim.ImageD(box_size, box_size, init_value=211)
+    img22 = galsim.ImageD(box_size, box_size, init_value=212)
+    seg21 = galsim.ImageD(box_size, box_size, init_value=221)
+    seg22 = galsim.ImageD(box_size, box_size, init_value=222)
+    wth21 = galsim.ImageD(box_size, box_size, init_value=231)
+    wth22 = galsim.ImageD(box_size, box_size, init_value=332) #,dudrow, dudcol, dvdrow, dvdcol, row0, col0
 
-    dudrow = 21.1; dudcol =  21.2; dvdrow =  21.3; dvdcol =  21.4; row0 =    21.5; col0 =    21.6; 
-    wcs21  = galsim.des.WCSTransform(dudrow ,dudcol ,dvdrow ,dvdcol ,row0 ,col0)
-    dudrow = 22.1; dudcol =  22.2; dvdrow =  22.3; dvdcol =  22.4; row0 =    22.5; col0 =    22.6;    
-    wcs22  = galsim.des.WCSTransform(dudrow ,dudcol ,dvdrow ,dvdcol ,row0 ,col0)
+    dudrow = 21.1; dudcol =  21.2; dvdrow =  21.3; dvdcol =  21.4; row0 =    21.5; col0 =    21.6;
+    wcs21  = galsim.des.WCSTransform(dudrow, dudcol, dvdrow, dvdcol, row0, col0)
+    dudrow = 22.1; dudcol =  22.2; dvdrow =  22.3; dvdcol =  22.4; row0 =    22.5; col0 =    22.6;
+    wcs22  = galsim.des.WCSTransform(dudrow, dudcol, dvdrow, dvdcol, row0, col0)
 
     # create lists
-    images =   [img21,img22]
-    weights =  [wth21,wth22]
-    segs =     [seg21,seg22]
-    wcstrans = [wcs22,wcs22]
+    images =   [img21, img22]
+    weights =  [wth21, wth22]
+    segs =     [seg21, seg22]
+    wcstrans = [wcs22, wcs22]
 
     # create object
-    obj2 = galsim.des.MultiExposureObject(images=images,weights=weights,segs=segs,wcstrans=wcstrans,id=2)
+    obj2 = galsim.des.MultiExposureObject(images=images, weights=weights, segs=segs,
+                                          wcstrans=wcstrans, id=2)
 
     # create an object list
-    objlist = [obj1,obj2]
+    objlist = [obj1, obj2]
 
     # save objects to MEDS file
     filename_meds='test_meds.fits'
-    galsim.des.write_meds(filename_meds,objlist,clobber=True)
+    galsim.des.write_meds(filename_meds, objlist, clobber=True)
     print 'wrote MEDS file %s ' % filename_meds
 
     # test functions in des_meds.py
@@ -115,7 +117,7 @@ def test_meds():
     n_cut=2
     for iobj in range(n_obj):
 
-        numpy.testing.assert_equal(cat['id'][iobj],iobj+1)
+        numpy.testing.assert_equal(cat['id'][iobj], iobj+1)
 
         for icut in range(n_cut):
 
@@ -124,22 +126,22 @@ def test_meds():
             wth=m.get_cutout( iobj, icut, type='weight')
             seg=m.get_cutout( iobj, icut, type='seg')
             wcstrans_meds = m.get_jacobian(iobj, icut)
-            wcs_array_meds= numpy.array( [ wcstrans_meds['dudrow'] , wcstrans_meds['dudcol'] ,
-                wcstrans_meds['dvdrow'] , wcstrans_meds['dvdcol'] , wcstrans_meds['row0'] ,
-                wcstrans_meds['col0'] ] )       
+            wcs_array_meds= numpy.array( [ wcstrans_meds['dudrow'], wcstrans_meds['dudcol'],
+                wcstrans_meds['dvdrow'], wcstrans_meds['dvdcol'], wcstrans_meds['row0'],
+                wcstrans_meds['col0'] ] )
 
 
             # compare
-            numpy.testing.assert_array_equal(img,objlist[iobj].images[icut].array)    
-            numpy.testing.assert_array_equal(wth,objlist[iobj].weights[icut].array)    
-            numpy.testing.assert_array_equal(seg,objlist[iobj].segs[icut].array)    
+            numpy.testing.assert_array_equal(img, objlist[iobj].images[icut].array)
+            numpy.testing.assert_array_equal(wth, objlist[iobj].weights[icut].array)
+            numpy.testing.assert_array_equal(seg, objlist[iobj].segs[icut].array)
             wcstrans_orig = objlist[iobj].wcstrans[icut]
-            wcs_array_orig = numpy.array([wcstrans_orig.dudrow , wcstrans_orig.dudcol , 
-                wcstrans_orig.dvdrow , wcstrans_orig.dvdcol , wcstrans_orig.row0 , 
+            wcs_array_orig = numpy.array([wcstrans_orig.dudrow, wcstrans_orig.dudcol,
+                wcstrans_orig.dvdrow, wcstrans_orig.dvdcol, wcstrans_orig.row0,
                 wcstrans_orig.col0])
-            numpy.testing.assert_array_equal(wcs_array_meds , wcs_array_orig)    
+            numpy.testing.assert_array_equal(wcs_array_meds, wcs_array_orig)
 
-            print 'test passed get_cutout obj=%d icut=%d' % (iobj,icut)
+            print 'test passed get_cutout obj=%d icut=%d' % (iobj, icut)
 
     # loop over objects - test get_mosaic
     n_obj=2
@@ -156,9 +158,9 @@ def test_meds():
         true_mosaic_seg = numpy.concatenate([x.array for x in objlist[iobj].segs],    axis=0)
 
         # compare
-        numpy.testing.assert_array_equal(true_mosaic_img,img)    
-        numpy.testing.assert_array_equal(true_mosaic_wth,wth)    
-        numpy.testing.assert_array_equal(true_mosaic_seg,seg)    
+        numpy.testing.assert_array_equal(true_mosaic_img, img)
+        numpy.testing.assert_array_equal(true_mosaic_wth, wth)
+        numpy.testing.assert_array_equal(true_mosaic_seg, seg)
 
         print 'test passed get_mosaic for obj=%d' % (iobj)
 
@@ -183,7 +185,7 @@ def test_meds_config():
     config = {
         'gal' : { 'type' : 'Sersic',
                   'n' : 3,
-                  'half_light_radius' : { 'type' : 'Sequence', 'first' : 1.7, 'step' : 0.2, 
+                  'half_light_radius' : { 'type' : 'Sequence', 'first' : 1.7, 'step' : 0.2,
                                           'repeat' : n_per_obj },
                   'shear' : { 'type' : 'G1G2', 'g1' : g1, 'g2' : g2 }
                 },
@@ -203,7 +205,7 @@ def test_meds_config():
     logger = logging.getLogger('test_meds_config')
     galsim.config.Process(config, logger=logger)
 
-    # Now repeat, making a separate file for each 
+    # Now repeat, making a separate file for each
     config['output'] = { 'type' : 'Fits',
                          'nfiles' : nobj,
                          'file_name' : { 'type' : 'NumberedFile', 'root' : 'test_meds' }
@@ -228,18 +230,18 @@ def test_meds_config():
 
     # loop over objects and exposures - test get_cutout
     for iobj in range(nobj):
-        print 'iobj = ',iobj
-        ref_file = 'test_meds%d.fits'%iobj
+        print 'iobj = ', iobj
+        ref_file = 'test_meds%d.fits' % iobj
         ref_im = galsim.fits.read(ref_file)
 
         meds_im_array = m.get_mosaic(iobj)
 
-        alt_meds_file = 'test_alt_meds%d.fits'%iobj
+        alt_meds_file = 'test_alt_meds%d.fits' % iobj
         alt_meds_im = galsim.ImageViewF(meds_im_array)
         alt_meds_im.write(alt_meds_file)
 
         numpy.testing.assert_array_equal(ref_im.array, meds_im_array)
-        
+
         meds_wt_array = m.get_mosaic(iobj, type='weight')
         meds_seg_array = m.get_mosaic(iobj, type='seg')
 

@@ -36,16 +36,16 @@ class WCSTransform(object):
     """
     Very simple class which holds a WCS transformation, including a Jacobian and a shifted centroid.
     Available fields:
-    self.dudrow  -  element 1,1 of the Jacobian matrix  
-    self.dudcol  -  element 1,2 of the Jacobian matrix    
-    self.dvdrow  -  element 2,1 of the Jacobian matrix    
-    self.dvdcol  -  element 2,2 of the Jacobian matrix    
+    self.dudrow  -  element 1,1 of the Jacobian matrix
+    self.dudcol  -  element 1,2 of the Jacobian matrix
+    self.dvdrow  -  element 2,1 of the Jacobian matrix
+    self.dvdcol  -  element 2,2 of the Jacobian matrix
     self.row0    -  horizontal position of the centroid as given by SExtractor, in pixel coordinates
     self.col0    -  vertical position of the centroid as given by SExtractor, in pixel coordinates 
     """
 
 
-    def __init__(self,dudrow, dudcol, dvdrow, dvdcol, row0, col0):
+    def __init__(self, dudrow, dudcol, dvdrow, dvdcol, row0, col0):
     
         self.dudrow =      dudrow
         self.dudcol =      dudcol
@@ -76,13 +76,13 @@ class MultiExposureObject(object):
     @param wcstrans             list of WCS transformation (WCSTransform objects)
     @param id                   galaxy id
 
-    Images, weights and segs have to be square numpy arrays with size in 
+    Images, weights and segs have to be square numpy arrays with size in
     BOX_SIZES = [32,48,64,96,128,196,256].
     Number of exposures for all lists (images,weights,segs,wcstrans) have to be the same and smaller 
     than MAX_NCUTOUTS (default 11).
     """
 
-    def __init__(self,images,weights=None,badpix=None,segs=None,wcstrans=None,id=0):
+    def __init__(self, images, weights=None, badpix=None, segs=None, wcstrans=None, id=0):
 
         # assign the ID
         self.id = id
@@ -99,7 +99,7 @@ class MultiExposureObject(object):
 
         # see if there are cutouts
         if self.n_cutouts < 1:
-            raise ValueError('no cutouts in this object') 
+            raise ValueError('no cutouts in this object')
 
         # check if the box size is correct
         if self.box_size not in BOX_SIZES:
@@ -110,7 +110,7 @@ class MultiExposureObject(object):
         if weights != None:
             self.weights = weights
         else:
-            self.weights = [galsim.ImageF(self.box_size,self.box_size,init_value=1)]*self.n_cutouts
+            self.weights = [galsim.ImageF(self.box_size, self.box_size, init_value=1)]*self.n_cutouts
 
         # check segmaps
         if segs != None:
@@ -118,7 +118,7 @@ class MultiExposureObject(object):
             # I think eventually, the meds files will have some more sophisticated pixel map
             # where the segmentation info and bad pixel info are separately coded.
             # However, for now, we just set to 0 any bad pixels.
-            # (Not that GalSim has any mechanism yet for generating bad pixels, so this is 
+            # (Not that GalSim has any mechanism yet for generating bad pixels, so this is
             # usually a null op, but it's in place for when there is something to do.)
             if badpix != None:
                 if len(self.segs) != len(badpix):
@@ -134,22 +134,22 @@ class MultiExposureObject(object):
             for i in range(len(self.segs)):
                 self.segs[i].array[:,:] = (badpix[i].array == 0)
         else:
-            self.segs = [galsim.ImageI(self.box_size,self.box_size,init_value=1)]*self.n_cutouts
+            self.segs = [galsim.ImageI(self.box_size, self.box_size, init_value=1)]*self.n_cutouts
 
         # check wcstrans
         if wcstrans != None:
             self.wcstrans = wcstrans
         else:
             # build jacobians that are just based on the pixel scale, set the centers
-            dudrow = 1 
+            dudrow = 1
             dudcol = 0
             dvdrow = 0
             dvdcol = 1
             # set to the center of the postage stamp
             row0 = float(self.box_size)/2.
             col0 = float(self.box_size)/2.
-            self.wcstrans = [ WCSTransform(dudrow * im.scale , dudcol * im.scale , 
-                        dvdrow * im.scale , dvdcol * im.scale , row0, col0) for im in self.images ]
+            self.wcstrans = [ WCSTransform(dudrow * im.scale, dudcol * im.scale,
+                        dvdrow * im.scale, dvdcol * im.scale, row0, col0) for im in self.images ]
 
          # check if weights,segs,jacks are lists
         if not isinstance(self.weights,list):
@@ -214,7 +214,7 @@ def write_meds(file_name,obj_list,clobber=True):
     cat['box_size'] = []
     cat['start_row'] = []
     cat['id'] = []
-    cat['dudrow'] = [] 
+    cat['dudrow'] = []
     cat['dudcol'] = []
     cat['dvdrow'] = []
     cat['dvdcol'] = []
@@ -270,12 +270,12 @@ def write_meds(file_name,obj_list,clobber=True):
             else:
                 vec['image'] = numpy.concatenate([vec['image'],obj.images[i].array.flatten()])
                 vec['seg'] = numpy.concatenate([vec['seg'],obj.segs[i].array.flatten()])
-                vec['weight'] = numpy.concatenate([vec['weight'],obj.weights[i].array.flatten()])          
+                vec['weight'] = numpy.concatenate([vec['weight'],obj.weights[i].array.flatten()])
 
             # append the Jacobian
-            dudrow[i] = obj.wcstrans[i].dudrow  
-            dudcol[i] = obj.wcstrans[i].dudcol 
-            dvdrow[i] = obj.wcstrans[i].dvdrow 
+            dudrow[i] = obj.wcstrans[i].dudrow
+            dudcol[i] = obj.wcstrans[i].dudcol
+            dvdrow[i] = obj.wcstrans[i].dvdrow
             dvdcol[i] = obj.wcstrans[i].dvdcol
             row0[i]   = obj.wcstrans[i].row0
             col0[i]   = obj.wcstrans[i].col0
@@ -283,7 +283,7 @@ def write_meds(file_name,obj_list,clobber=True):
             # check if we are running out of memory
             if sys.getsizeof(vec) > MAX_MEMORY:
                 raise MemoryError(
-                    'Running out of memory > %1.0fGB - you can increase the limit by changing' % 
+                    'Running out of memory > %1.0fGB - you can increase the limit by changing' %
                     MAX_MEMORY/1e9)
 
             # update n_vec to point to the end of image vector
@@ -294,12 +294,12 @@ def write_meds(file_name,obj_list,clobber=True):
         cat['start_row'].append(start_rows)
 
         # add lists of Jacobians
-        cat['dudrow'].append(dudrow)  
-        cat['dudcol'].append(dudcol) 
-        cat['dvdrow'].append(dvdrow) 
-        cat['dvdcol'].append(dvdcol) 
-        cat['row0'].append(row0) 
-        cat['col0'].append(col0) 
+        cat['dudrow'].append(dudrow)
+        cat['dudcol'].append(dudcol)
+        cat['dvdrow'].append(dvdrow)
+        cat['dvdcol'].append(dvdcol)
+        cat['row0'].append(row0)
+        cat['col0'].append(col0)
 
     # get the primary HDU
     primary = pyfits.PrimaryHDU()
@@ -309,19 +309,19 @@ def write_meds(file_name,obj_list,clobber=True):
     cols.append( pyfits.Column(name='ncutout', format='i4', array=cat['ncutout'] ) )
     cols.append( pyfits.Column(name='id', format='i4', array=cat['id'] ) )
     cols.append( pyfits.Column(name='box_size', format='i4', array=cat['box_size'] ) )
-    cols.append( pyfits.Column(name='file_id', format='i4', array=[1]*n_obj) ) 
-    cols.append( pyfits.Column(name='start_row', format='%di4' % MAX_NCUTOUTS, 
+    cols.append( pyfits.Column(name='file_id', format='i4', array=[1]*n_obj) )
+    cols.append( pyfits.Column(name='start_row', format='%di4' % MAX_NCUTOUTS,
                                                         array=numpy.array(cat['start_row'])) )
     cols.append( pyfits.Column(name='orig_row', format='f8', array=[1]*n_obj) )
     cols.append( pyfits.Column(name='orig_col', format='f8', array=[1]*n_obj) )
-    cols.append( pyfits.Column(name='orig_start_row', format='i4', array=[1]*n_obj) ) 
-    cols.append( pyfits.Column(name='orig_start_col', format='i4', array=[1]*n_obj) ) 
+    cols.append( pyfits.Column(name='orig_start_row', format='i4', array=[1]*n_obj) )
+    cols.append( pyfits.Column(name='orig_start_col', format='i4', array=[1]*n_obj) )
     cols.append( pyfits.Column(name='dudrow', format='%df8'% MAX_NCUTOUTS, array=cat['dudrow'] ) )
     cols.append( pyfits.Column(name='dudcol', format='%df8'% MAX_NCUTOUTS, array=cat['dudcol'] ) )
     cols.append( pyfits.Column(name='dvdrow', format='%df8'% MAX_NCUTOUTS, array=cat['dvdrow'] ) )
-    cols.append( pyfits.Column(name='dvdcol', format='%df8'% MAX_NCUTOUTS, array=cat['dvdcol'] ) )  
+    cols.append( pyfits.Column(name='dvdcol', format='%df8'% MAX_NCUTOUTS, array=cat['dvdcol'] ) )
     cols.append( pyfits.Column(name='cutout_row', format='%df8'% MAX_NCUTOUTS, array=cat['row0'] ) )
-    cols.append( pyfits.Column(name='cutout_col', format='%df8'% MAX_NCUTOUTS, array=cat['col0'] ) )  
+    cols.append( pyfits.Column(name='cutout_col', format='%df8'% MAX_NCUTOUTS, array=cat['col0'] ) )
 
 
     object_data = pyfits.new_table(pyfits.ColDefs(cols))
@@ -331,29 +331,29 @@ def write_meds(file_name,obj_list,clobber=True):
     cols = []
     cols.append( pyfits.Column(name='image_path', format='A119',   array=['generated_by_galsim'] ) )
     cols.append( pyfits.Column(name='sky_path',   format='A124',   array=['generated_by_galsim'] ) )
-    cols.append( pyfits.Column(name='seg_path',   format='A123',   array=['generated_by_galsim'] ) ) 
+    cols.append( pyfits.Column(name='seg_path',   format='A123',   array=['generated_by_galsim'] ) )
     image_info = pyfits.new_table(pyfits.ColDefs(cols))
     image_info.update_ext_name('image_info')
 
     # fourth hdu is metadata
     cols = []
-    cols.append( pyfits.Column(name='cat_file',      format='A113', array=['generated_by_galsim'] ))  
-    cols.append( pyfits.Column(name='coadd_file',    format='A109', array=['generated_by_galsim'] ))  
-    cols.append( pyfits.Column(name='coadd_hdu',     format='A1',   array=['x']                   ))  
-    cols.append( pyfits.Column(name='coadd_seg_hdu', format='A1',   array=['x']                   ))  
-    cols.append( pyfits.Column(name='coadd_srclist', format='A115', array=['generated_by_galsim'] ))  
-    cols.append( pyfits.Column(name='coadd_wt_hdu',  format='A1',   array=['x']                   ))  
-    cols.append( pyfits.Column(name='coaddcat_file', format='A110', array=['generated_by_galsim'] ))  
-    cols.append( pyfits.Column(name='coaddseg_file', format='A113', array=['generated_by_galsim'] ))  
-    cols.append( pyfits.Column(name='cutout_file',   format='A108', array=['generated_by_galsim'] ))  
-    cols.append( pyfits.Column(name='max_boxsize',   format='A3',   array=['x']                   ))  
-    cols.append( pyfits.Column(name='medsconf',      format='A3',   array=['x']                   ))  
-    cols.append( pyfits.Column(name='min_boxsize',   format='A2',   array=['x']                   ))  
-    cols.append( pyfits.Column(name='se_badpix_hdu', format='A1',   array=['x']                   ))  
-    cols.append( pyfits.Column(name='se_hdu',        format='A1',   array=['x']                   ))  
-    cols.append( pyfits.Column(name='se_wt_hdu',     format='A1',   array=['x']                   ))  
-    cols.append( pyfits.Column(name='seg_hdu',       format='A1',   array=['x']                   ))  
-    cols.append( pyfits.Column(name='sky_hdu',       format='A1',   array=['x']                   )) 
+    cols.append( pyfits.Column(name='cat_file',      format='A113', array=['generated_by_galsim'] ))
+    cols.append( pyfits.Column(name='coadd_file',    format='A109', array=['generated_by_galsim'] ))
+    cols.append( pyfits.Column(name='coadd_hdu',     format='A1',   array=['x']                   ))
+    cols.append( pyfits.Column(name='coadd_seg_hdu', format='A1',   array=['x']                   ))
+    cols.append( pyfits.Column(name='coadd_srclist', format='A115', array=['generated_by_galsim'] ))
+    cols.append( pyfits.Column(name='coadd_wt_hdu',  format='A1',   array=['x']                   ))
+    cols.append( pyfits.Column(name='coaddcat_file', format='A110', array=['generated_by_galsim'] ))
+    cols.append( pyfits.Column(name='coaddseg_file', format='A113', array=['generated_by_galsim'] ))
+    cols.append( pyfits.Column(name='cutout_file',   format='A108', array=['generated_by_galsim'] ))
+    cols.append( pyfits.Column(name='max_boxsize',   format='A3',   array=['x']                   ))
+    cols.append( pyfits.Column(name='medsconf',      format='A3',   array=['x']                   ))
+    cols.append( pyfits.Column(name='min_boxsize',   format='A2',   array=['x']                   ))
+    cols.append( pyfits.Column(name='se_badpix_hdu', format='A1',   array=['x']                   ))
+    cols.append( pyfits.Column(name='se_hdu',        format='A1',   array=['x']                   ))
+    cols.append( pyfits.Column(name='se_wt_hdu',     format='A1',   array=['x']                   ))
+    cols.append( pyfits.Column(name='seg_hdu',       format='A1',   array=['x']                   ))
+    cols.append( pyfits.Column(name='sky_hdu',       format='A1',   array=['x']                   ))
     metadata = pyfits.new_table(pyfits.ColDefs(cols))
     metadata.update_ext_name('metadata')
 
@@ -389,7 +389,7 @@ galsim.config.process.valid_output_types['des_meds'] = (
 def BuildMEDS(file_name, config, nproc=1, logger=None, image_num=0, obj_num=0):
     """
     Build a meds file as specified in config.
-    
+
     @param file_name         The name of the output file.
     @param config            A configuration dict.
     @param nproc             How many processes to use.
@@ -439,7 +439,7 @@ def GetNObjForMEDS(config, file_num, image_num):
     config['seq_index'] = file_num
 
     if 'image' in config and 'type' in config['image']:
-        image_type = config['image']['type'] 
+        image_type = config['image']['type']
         if image_type != 'Single':
             raise AttibuteError("MEDS files are not compatible with image type %s."%image_type)
 
