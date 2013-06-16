@@ -56,8 +56,8 @@ namespace galsim {
          *                         arg is focal plane position, else `lam_over_D` = 
          *                         lambda / (telescope diam) if arg is in radians of field angle.
          * @param[in] obscuration  linear dimension of central obscuration as fraction of pupil
-         *                         dimension (default `obscuration = 0.`).
-         * @param[in] flux         flux (default `flux = 1.`).
+         *                         dimension.
+         * @param[in] flux         flux.
          * @param[in] gsparams     GSParams object storing constants that control the accuracy of
          *                         image operations and rendering, if different from the default.
          */

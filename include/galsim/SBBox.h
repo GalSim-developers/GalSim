@@ -45,7 +45,7 @@ namespace galsim {
          *
          * @param[in] xw       width of Boxcar function along x.
          * @param[in] yw       width of Boxcar function along y.
-         * @param[in] flux     flux (default `flux = 1.`).
+         * @param[in] flux     flux.
          * @param[in] gsparams GSParams object storing constants that control the accuracy of image
          *                     operations and rendering, if different from the default.
          */

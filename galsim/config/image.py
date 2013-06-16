@@ -719,7 +719,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     if make_psf_image:
         full_psf_image = galsim.ImageF(full_xsize,full_ysize)
-        full_psf_badpix_image.setOrigin(config['image_origin'])
+        full_psf_image.setOrigin(config['image_origin'])
         full_psf_image.setZero()
         full_psf_image.setScale(pixel_scale)
     else:

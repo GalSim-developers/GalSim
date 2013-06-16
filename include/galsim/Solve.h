@@ -283,8 +283,8 @@ namespace galsim {
             //    = (fc(b-a) + a(c-b)) / (f(b-a) + (c-b))
             // This is our fundamental iteration formula.
             //
-            // To see the cehavior of this iteration, take two limiting cases.
-            // 1) If b = a+d and d << c-a, and use f=2 for simplicity.
+            // To see the behavior of this iteration, take two limiting cases.
+            // 1) If b = a+d and d << c-a, and use f=2 for simplicity:
             // b' = (2cd + ac - a^2 - ad)) / (2d+c-a-d)
             //    = (a(c-a) + d(2c-a)) / (c-a+d)
             //    = (a + d(2c-a)/(c-a)) / (1+d/(c-a))
@@ -293,7 +293,7 @@ namespace galsim {
             //    = a + d(2c-2a)/(c-a)
             //    = a + 2d
             //
-            // 2) If b = c-d and d << c-a, and use f=2 for simplicity.
+            // 2) If b = c-d and d << c-a, and use f=2 for simplicity:
             // b' = (2c^2-2cd-2ca+ad) / (2c-2d-2a+d)
             //    = (2c(c-a) - d(2c-a)) / (2(c-a)-d)
             //    = (c - d(2c-a)/(2c-2a)) / (1-d/(2c-2a))
@@ -302,8 +302,8 @@ namespace galsim {
             //    = c - d(c-a)/2(c-a)
             //    = c - d/2
             //
-            // So when far from the limit, the iteration is just like the version without 
-            // the limit.  But when the variable approaches the limit, it just goes half the 
+            // So when far from the limit (1), the iteration is just like the version without 
+            // the limit.  But when the variable approaches the limit (2), it just goes half the 
             // remaining distance each time.
 
             xdbg<<"Bracket with limits:\n";
@@ -342,7 +342,7 @@ namespace galsim {
         }
 
         /**
-         * @brief Hunt for upper bracket, with an upper limit to how far it can go.
+         * @brief Hunt for lower bracket, with a lower limit to how far it can go.
          */
         void bracketLowerWithLimit(T lower_limit) 
         {

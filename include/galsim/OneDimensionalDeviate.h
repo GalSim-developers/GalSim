@@ -226,7 +226,7 @@ namespace galsim {
          * @param[in] range        Ordered argument vector specifying the domain for sampling as 
          *                         described in class docstring.
          * @param[in] isRadial     Set true for an axisymmetric function on the plane; false 
-         *                         (default) for linear domain.
+         *                         for linear domain.
          * @param[in] gsparams     GSParams object storing constants that control the accuracy of
          *                         operations, if different from the default.
          */
