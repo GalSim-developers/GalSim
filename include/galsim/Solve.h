@@ -283,7 +283,7 @@ namespace galsim {
             //    = (fc(b-a) + a(c-b)) / (f(b-a) + (c-b))
             // This is our fundamental iteration formula.
             //
-            // To see the cehavior of this iteration, take two limiting cases.
+            // To see the behavior of this iteration, take two limiting cases.
             // 1) If b = a+d and d << c-a, and use f=2 for simplicity.
             // b' = (2cd + ac - a^2 - ad)) / (2d+c-a-d)
             //    = (a(c-a) + d(2c-a)) / (c-a+d)
