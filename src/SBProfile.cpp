@@ -165,10 +165,8 @@ namespace galsim {
 
     SBProfile::SBProfile(SBProfileImpl* pimpl) : _pimpl(pimpl) {}
 
-    boost::shared_ptr<GSParams> SBProfile::SBProfileImpl::default_gsparams(new GSParams());
-
-    SBProfile::SBProfileImpl::SBProfileImpl(boost::shared_ptr<GSParams> gsparams) :
-        gsparams(gsparams.get() ? gsparams : default_gsparams) {}
+    SBProfile::SBProfileImpl::SBProfileImpl(const GSParamsPtr& gsparams) :
+        gsparams(gsparams ? gsparams : GSParamsPtr::getDefault()) {}
 
     SBProfile::SBProfileImpl* SBProfile::GetImpl(const SBProfile& rhs) 
     { return rhs._pimpl.get(); }
