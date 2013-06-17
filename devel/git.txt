@@ -130,7 +130,12 @@ git branch -a --no-merged  # List all branches that aren't merged into master ye
 git checkout -b mybranch   # make a new branch and check it out
 git checkout mybranch      # checkout an existing branch
 
-# checking out a branch that wasn't created locally
+# Try to remember to start a new branch from master, not from another existing branch unless you are
+# sure that the branch in question will be merged to master before you want to PR the new branch.
+# This is to avoid some of the third party branch contamination problems seen on the Pull Request
+# number #434.
+
+# Checking out a branch that wasn't created locally:
 git fetch                           # sync with remote repositories (pull does this too)
 git checkout -t origin/otherbranch  # make a "tracking branch" and check it out
 
@@ -244,6 +249,9 @@ git commit --amend is another neat trick that lets you modify the last commit, a
 history even further back with git rebase -i.
 
 Again, this should only be done if you haven't pushed the changes.
+
+If you have to do some kind of git surgery, please make sure to be vocal about it and tell everyone
+who might be working on this branch to do a hard reset!
 
 --- Putting git status info in your prompt ---
 
