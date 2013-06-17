@@ -283,7 +283,7 @@ def write_meds(file_name, obj_list, clobber=True):
             # check if we are running out of memory
             if sys.getsizeof(vec) > MAX_MEMORY:
                 raise MemoryError(
-                    'Running out of memory > %1.0fGB - you can increase the limit by changing' %
+                    'Running out of memory > %1.0fGB - you can increase the limit by changing MAX_MEMORY' %
                     MAX_MEMORY/1e9)
 
             # update n_vec to point to the end of image vector

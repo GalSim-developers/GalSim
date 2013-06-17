@@ -45,6 +45,10 @@ def test_meds():
     # initialise empty MultiExposureObject list
     objlist = []
 
+    # we will be using 2 objects for testing, each with 2 cutouts
+    n_obj_test = 2 
+    n_cut_test = 2
+
     # set the image size
     box_size = 32
 
@@ -106,19 +110,30 @@ def test_meds():
     print 'reading %s' % filename_meds
     import meds
     m = meds.MEDS(filename_meds)
-    print 'number of objects is %d' % len(m._cat)
-    print 'testing if loaded images are the same as original images'
 
     # get the catalog
     cat = m.get_cat()
 
+    # get number of objects
+    n_obj = len(cat)
+
+    # check if the number of objects is correct
+    numpy.testing.assert_equal(n_obj,n_obj_test)
+
+    print 'number of objects is %d' % n_obj
+    print 'testing if loaded images are the same as original images'
+    
     # loop over objects and exposures - test get_cutout
-    n_obj = 2
-    n_cut = 2
     for iobj in range(n_obj):
 
+        # check ID is correct
         numpy.testing.assert_equal(cat['id'][iobj], iobj+1)
 
+        # get number of cutouts and check if it's right
+        n_cut = cat['ncutout'][iobj]
+        numpy.testing.assert_equal(n_cut,n_cut_test)
+
+        # loop over cutouts
         for icut in range(n_cut):
 
             # get the images etc to compare with originals
@@ -144,7 +159,6 @@ def test_meds():
             print 'test passed get_cutout obj=%d icut=%d' % (iobj, icut)
 
     # loop over objects - test get_mosaic
-    n_obj = 2
     for iobj in range(n_obj):
 
         # get the mosaic to compare with originals
