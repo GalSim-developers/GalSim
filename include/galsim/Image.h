@@ -342,7 +342,7 @@ namespace galsim {
          *  Most often, this is used for default-constructing an Image which is then
          *  resized later.
          */
-        BaseImage(const Bounds<int>& b, double scale=0.);
+        BaseImage(const Bounds<int>& b, double scale);
 
         /**
          *  @brief Allocate new memory for the image
@@ -626,19 +626,25 @@ namespace galsim {
     public:
 
         /**
+         * @brief Default constructor leaves the image's data pointer as null.
+         */
+        Image() : BaseImage<T>(Bounds<int>(), 1.) {}
+
+        /**
          *  @brief Create a new image with origin at (1,1).
          *
          *  An exception is thrown if ncol or nrow <= 0
+         *
+         *  The scale is initially set to 1.0.
          */
         Image(int ncol, int nrow, T init_value = T(0));
 
         /**
          *  @brief Create a new image with the given bounding box and initial value.
          *
-         *  If !bounds.isDefined(), the image's data pointer will be null.
-         *  Note: This is also effectively the default constructor Image().
+         *  The scale is initially set to 1.0.
          */
-        explicit Image(const Bounds<int>& bounds = Bounds<int>(), T init_value = T(0));
+        Image(const Bounds<int>& bounds, T init_value = T(0));
 
         /**
          *  @brief Deep copy constructor.
@@ -648,8 +654,10 @@ namespace galsim {
 
         /**
          *  @brief Can construct from any AssignableToImage
+         *
+         *  The scale is initially set to 1.0.
          */
-        Image(const AssignableToImage<T>& rhs) : BaseImage<T>(rhs.getBounds()) 
+        Image(const AssignableToImage<T>& rhs) : BaseImage<T>(rhs.getBounds(),1.) 
         { rhs.assignTo(view()); }
 
         /**
