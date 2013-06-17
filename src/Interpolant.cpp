@@ -31,7 +31,7 @@
 //int verbose_level = 2;
 #endif
 
-// It turns out the Lanczos xval is faster to do directly wtih trig than with a lookup table.
+// It turns out the Lanczos xval is faster to do directly with trig than with a lookup table.
 // I left the original lookup-table code in here in case we find that this isn't true for
 // some situation.  But I think this next line should always be enabled. -MJ
 #define USE_DIRECT_LANCZOS_XVAL
