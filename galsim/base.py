@@ -578,23 +578,26 @@ class GSObject(object):
 
         return image
 
-    def _fix_center(self, image, scale):
-        # For even-sized images, the SBProfile draw function centers the result in the 
-        # pixel just up and right of the real center.  So shift it back to make sure it really
-        # draws in the center.
-        even_x = (image.xmax-image.xmin+1) % 2 == 0
-        even_y = (image.ymax-image.ymin+1) % 2 == 0
-        if even_x:
-            if even_y: prof = self.createShifted(-0.5*scale,-0.5*scale)
-            else: prof = self.createShifted(-0.5*scale,0.)
+    def _fix_center(self, image, scale, offset, use_true_center):
+        # Note: we don't just get the scale from image.scale here, since InterpolatedImage
+        # wants to do the reverse operation, which is implemented by providing 
+        # scale = -image.scale
+
+        if use_true_center:
+            # For even-sized images, the SBProfile draw function centers the result in the 
+            # pixel just up and right of the real center.  So shift it back to make sure it really
+            # draws in the center.
+            if (image.xmax-image.xmin+1) % 2 == 0: offset.x -= 0.5
+            if (image.ymax-image.ymin+1) % 2 == 0: offset.y -= 0.5
+
+        if offset == galsim.PositionD(0.,0.):
+            return self
         else:
-            if even_y: prof = self.createShifted(0.,-0.5*scale)
-            else: prof = self
-        return prof
+            return self.createShifted(offset.x * scale, offset.y * scale)
 
 
     def draw(self, image=None, dx=None, gain=1., wmult=1., normalization="flux",
-             add_to_image=False, use_true_center=True):
+             add_to_image=False, use_true_center=True, offset=galsim.PositionD(0.,0.)):
         """Draws an Image of the object, with bounds optionally set by an input Image.
 
         The draw method is used to draw an Image of the GSObject, typically using Fourier space
@@ -693,6 +696,11 @@ class GSObject(object):
                                 `image.bounds.center()`), set this to `False`.  
                                 (default `use_true_center = True`)
 
+        @param offset The location at which to center the profile being drawn relative to the
+                      center of the image (either the true center if use_true_center=True, 
+                      or the nominal center if use_true_center=False).  
+                      (Default `offset = galsim.Position(0.,0.)`)
+
         @returns      The drawn image.
         """
         # Raise an exception immediately if the normalization type is not recognized
@@ -709,11 +717,8 @@ class GSObject(object):
         # Make sure image is setup correctly
         image = self._draw_setup_image(image,dx,wmult,add_to_image)
 
-        # Fix the centering for even-sized images
-        if use_true_center:
-            prof = self._fix_center(image, image.scale)
-        else:
-            prof = self
+        # Apply the offset, and possibly fix the centering for even-sized images
+        prof = self._fix_center(image, image.scale, offset, use_true_center)
 
         # SBProfile draw command uses surface brightness normalization.  So if we
         # want flux normalization, we need to scale the flux by dx^2
@@ -806,6 +811,11 @@ class GSObject(object):
                                 `image.bounds.center()`), set this to `False`.  
                                 (default `use_true_center = True`)
 
+        @param offset The location at which to center the profile being drawn relative to the
+                      center of the image (either the true center if user_true_center=True, 
+                      or the nominal center if use_true_center=False).  
+                      (Default `offset = galsim.Position(0.,0.)`)
+
         @param n_photons        If provided, the number of photons to use.
                                 If not provided (i.e. `n_photons = 0`), use as many photons as
                                   necessary to result in an image with the correct Poisson shot 
@@ -890,11 +900,8 @@ class GSObject(object):
         # Make sure image is setup correctly
         image = self._draw_setup_image(image,dx,wmult,add_to_image)
 
-        # Fix the centering for even-sized images
-        if use_true_center:
-            prof = self._fix_center(image, image.scale)
-        else:
-            prof = self
+        # Apply the offset, and possibly fix the centering for even-sized images
+        prof = self._fix_center(image, image.scale, offset, use_true_center)
 
         # SBProfile drawShoot command uses surface brightness normalization.  So if we
         # want flux normalization, we need to scale the flux by dx^2
