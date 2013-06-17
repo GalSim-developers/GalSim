@@ -71,7 +71,7 @@ namespace galsim {
 
         int getP() const { return p; }
         int getQ() const { return q; }
-        PQIndex& setPQ(const int p_=0, const int q_=0) 
+        PQIndex& setPQ(const int p_, const int q_) 
         { 
             p=p_;
             q=q_;
@@ -226,7 +226,7 @@ namespace galsim {
     {
     public:
         // Construct/destruct:
-        LVector(int order=0) : _order(order) 
+        LVector(int order) : _order(order) 
         { 
             allocateMem(); 
             _v->setZero();
@@ -368,10 +368,11 @@ namespace galsim {
         // Inner product of the real values.
         double dot(const LVector& rhs) const { return (*_v)*(*rhs._v); }
 
-        // write and ??? read
+        // write to an ostream
         void write(std::ostream& os, int maxorder=-1) const;
         friend std::ostream& operator<<(std::ostream& os, const LVector& lv);
 
+        // read from an ostream
         void read(std::istream& is);
         friend std::istream& operator>>(std::istream& is, LVector& lv);
 
@@ -487,7 +488,7 @@ namespace galsim {
     class LTransform 
     {
     public:
-        LTransform(int orderOut=0, int orderIn=0) : 
+        LTransform(int orderOut, int orderIn) : 
             _orderIn(orderIn), _orderOut(orderOut), 
             _m(new tmv::Matrix<double>(PQIndex::size(orderOut),PQIndex::size(orderIn),0.))
         {}

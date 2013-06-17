@@ -32,8 +32,7 @@ namespace galsim {
      */
     class ImageError : public std::runtime_error {
     public: 
-        ImageError(const std::string& m="") : 
-            std::runtime_error("Image Error: " + m) {}
+        ImageError(const std::string& m) : std::runtime_error("Image Error: " + m) {}
 
     };
 
@@ -42,7 +41,7 @@ namespace galsim {
      */
     class ImageBoundsError : public ImageError {
     public: 
-        ImageBoundsError(const std::string& m="") : 
+        ImageBoundsError(const std::string& m) : 
             ImageError("Access to out-of-bounds pixel " + m) {}
 
         ImageBoundsError(const std::string& m, int min, int max, int tried);
