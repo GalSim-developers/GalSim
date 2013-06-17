@@ -43,16 +43,11 @@ namespace galsim {
      */
     class InterpolantFunction: public FluxDensity {
     public:
-        /**
-         * @brief Constructor
-         * @param[in] interp Interpolant (one-d) that we'll want to sample
-         */
         InterpolantFunction(const Interpolant& interp): _interp(interp) {}
-        /// @brief operator() will return the xval() of the `Interpolant`
-        double operator()(double x) const;
+        double operator()(double x) const; // returns the xval() of the `Interpolant`
         ~InterpolantFunction() {}
     private:
-        const Interpolant& _interp;  ///< Interpolant being wrapped
+        const Interpolant& _interp;
     };
 
     /** 
@@ -179,14 +174,13 @@ namespace galsim {
 
     protected:
 
-        /// @brief GSParams struct for storing values of GalSim numerical parameters
         const GSParamsPtr _gsparams;
-        InterpolantFunction _interp; ///< The function to interface the Interpolant to sampler
+        InterpolantFunction _interp;
 
-        /// Class that draws photons from this Interpolant
+        // Class that draws photons from this Interpolant
         mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;  
 
-        /// @brief Allocate photon sampler and do all of its pre-calculations
+        // Allocate photon sampler and do all of its pre-calculations
         virtual void checkSampler() const 
         {
             if (_sampler.get()) return;
@@ -222,29 +216,15 @@ namespace galsim {
         virtual double xvalWrapped(double x, double y, int N) const=0;
         virtual double uval(double u, double v) const=0;
         virtual double getTolerance() const=0;  // report target accuracy
-        virtual bool isExactAtNodes() const { return true; }
+        virtual bool isExactAtNodes() const=0;
 
         // Photon-shooting routines:
-        /// @brief Return the integral of the positive portions of the kernel (default=1.)
-        virtual double getPositiveFlux() const { return 1.; }
+        // Return the integral of the positive and negative portions of the kernel
+        virtual double getPositiveFlux() const=0;
+        virtual double getNegativeFlux() const=0;
 
-        /**
-         * @brief Return the (abs value of) integral of the negative portions of the kernel 
-         * 
-         * Default=0.
-         */
-        virtual double getNegativeFlux() const { return 0.; }
-
-        /**
-         * @brief Return array of displacements drawn from this kernel.
-         *
-         * Default is to throw an runtime_error
-         */
-        virtual boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const 
-        {
-            throw std::runtime_error("Interpolant2d::shoot() not implemented for this kernel");
-            return boost::shared_ptr<PhotonArray>();
-        }
+        // Return array of displacements drawn from this kernel.
+        virtual boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const =0;
 
     };
 
@@ -257,13 +237,9 @@ namespace galsim {
     class InterpolantXY : public Interpolant2d 
     {
     public:
-        /**
-         * @brief Constructor
-         * @param[in] i1d  One-dimensional `Interpolant` to be applied to x and y coordinates.
-         */
         InterpolantXY(boost::shared_ptr<Interpolant> i1d) : _i1d(i1d) {}
-        /// @brief Destructor
         ~InterpolantXY() {}
+
         // All of the calls below implement base class methods.
         double xrange() const { return _i1d->xrange(); }
         int ixrange() const { return _i1d->ixrange(); }
@@ -280,58 +256,25 @@ namespace galsim {
         double getNegativeFlux() const;
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
-        /**
-         * @brief Access the 1d interpolant functions for more efficient 2d interps:
-         * @param[in] x 1d argument
-         * @returns 1d result
-         */
+        // Access the 1d interpolant functions for more efficient 2d interps:
         double xval1d(double x) const { return _i1d->xval(x); }
-
-        /**
-         * @brief Access the 1d interpolant functions for more efficient 2d interps:
-         * @param[in] x 1d argument
-         * @param[in] N wrapping period
-         * @returns 1d result, wrapped at period N
-         */
         double xvalWrapped1d(double x, int N) const { return _i1d->xvalWrapped(x,N); }
-
-        /**
-         * @brief Access the 1d interpolant functions for more efficient 2d interps:
-         * @param[in] u 1d argument
-         * @returns 1d result
-         */
         double uval1d(double u) const { return _i1d->uval(u); }
-
-        /**
-         * @brief Access the 1d interpolant 
-         * @returns Pointer to the 1d `Interpolant` that this class uses.
-         */
         const Interpolant* get1d() const { return _i1d.get(); }
 
     private:
-        boost::shared_ptr<Interpolant> _i1d;  ///< The 1d function used in both axes here.
+        boost::shared_ptr<Interpolant> _i1d;
     };
 
-    // Some functions we will want: 
-    /**
-     * @brief sinc function, defined here as sin(Pi*x) / (Pi*x).
-     * @param[in] x sinc argument
-     * @returns sinc function
-     */
+    // sinc function, defined here as sin(Pi*x) / (Pi*x).
     inline double sinc(double x) 
     {
         if (std::abs(x)<0.001) return 1.- (M_PI*M_PI/6.)*x*x;
         else return std::sin(M_PI*x)/(M_PI*x);
     }
 
-    /**
-     * @brief Function returning integral of sinc function.
-     *
-     * Utility for calculating the integral of sin(t)/t from 0 to x.  Note the official definition
-     * does not have pi multiplying t.
-     * @param[in] x Upper limit of integral
-     * @returns Integral of sin(t)/t from 0 to x (no pi factors)
-     */
+    // Utility for calculating the integral of sin(t)/t from 0 to x.  Note the official definition
+    // does not have pi multiplying t.
     inline double Si(double x) 
     {
         double x2=x*x;
@@ -444,7 +387,6 @@ namespace galsim {
         // Override the default numerical photon-shooting method
         double getPositiveFlux() const { return 1.; }
         double getNegativeFlux() const { return 0.; }
-        /// @brief Nearest-neighbor interpolant photon shooting is a simple UniformDeviate call.
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
     private:
@@ -599,15 +541,15 @@ namespace galsim {
         double uval(double u) const;
 
     private:
-        int _in; ///< Store the filter order, n
-        double _n; ///< Store n as a double, since that's often how it is used.
-        double _range; ///< Reduce range slightly from n so we're not using zero-valued endpoints.
-        bool _fluxConserve; ///< Set to insure conservation of constant (sky) flux
-        double _tolerance;  ///< u-space accuracy parameter
-        double _uMax;  ///< truncation point for Fourier transform
-        double _u1; ///< coefficient for flux correction
-        boost::shared_ptr<Table<double,double> > _xtab; ///< Table for x values
-        boost::shared_ptr<Table<double,double> > _utab; ///< Table for Fourier transform
+        int _in; // Store the filter order, n
+        double _n; // Store n as a double, since that's often how it is used.
+        double _range; // Reduce range slightly from n so we're not using zero-valued endpoints.
+        bool _fluxConserve; // Set to insure conservation of constant (sky) flux
+        double _tolerance;  // u-space accuracy parameter
+        double _uMax;  // truncation point for Fourier transform
+        double _u1; // coefficient for flux correction
+        boost::shared_ptr<Table<double,double> > _xtab; // Table for x values
+        boost::shared_ptr<Table<double,double> > _utab; // Table for Fourier transform
         double xCalc(double x) const;
         double uCalc(double u) const;
 
@@ -658,18 +600,17 @@ namespace galsim {
         }
         double uCalc(double u) const;
 
-        /// @brief Override numerical calculation with known analytic integral
+        // Override numerical calculation with known analytic integral
         double getPositiveFlux() const { return 13./12.; }
-        /// @brief Override numerical calculation with known analytic integral
         double getNegativeFlux() const { return 1./12.; }
 
     private:
-        /// x range, reduced slightly from n=2 so we're not using zero-valued endpoints.
+        // x range, reduced slightly from n=2 so we're not using zero-valued endpoints.
         double _range; 
 
         double _tolerance;    
-        boost::shared_ptr<Table<double,double> > _tab; ///< Tabulated Fourier transform
-        double _uMax;  ///< Truncation point for Fourier transform
+        boost::shared_ptr<Table<double,double> > _tab; // Tabulated Fourier transform
+        double _uMax;  // Truncation point for Fourier transform
 
         // Store the tables in a map, so repeat constructions are quick.
         static std::map<double,boost::shared_ptr<Table<double,double> > > _cache_tab; 
@@ -738,8 +679,8 @@ namespace galsim {
     private:
         double _range; // Reduce range slightly from n so we're not using zero-valued endpoints.
         double _tolerance;    
-        boost::shared_ptr<Table<double,double> > _tab; ///< Tabulated Fourier transform
-        double _uMax;  ///< Truncation point for Fourier transform
+        boost::shared_ptr<Table<double,double> > _tab; // Tabulated Fourier transform
+        double _uMax;  // Truncation point for Fourier transform
 
         // Store the tables in a map, so repeat constructions are quick.
         static std::map<double,boost::shared_ptr<Table<double,double> > > _cache_tab; 
