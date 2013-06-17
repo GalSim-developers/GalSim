@@ -127,8 +127,7 @@ def test_roundtrip():
         # the 10^-5 level.
         # Anyway, Quintic seems to be accurate enough.
         quint = galsim.Quintic(1.e-4)
-        quint_2d = galsim.InterpolantXY(quint)
-        interp = galsim.InterpolatedImage(image_in, x_interpolant=quint_2d, dx=test_dx, flux=1.)
+        interp = galsim.InterpolatedImage(image_in, x_interpolant=quint, dx=test_dx, flux=1.)
         do_shoot(interp,image_out,"InterpolatedImage")
 
     t2 = time.time()
@@ -667,7 +666,87 @@ def test_corr_padding():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_realspace_conv():
+    """Test that real-space convolution of an InterpolatedImage matches the FFT result
+    """
+    import time
+    t1 = time.time()
+
+    # Note: It is not usually a good idea to use real-space convolution with an InterpolatedImage.
+    # It will almost always be much slower than the FFT convolution.  So it's probably only
+    # a good idea if the image is very small and/or you absolutely need to avoid the ringing
+    # that can show up in FFT convolutions.
+    # That said, we still need to make sure the code is correct.  Especially since it 
+    # didn't used to be, as reported in issue #432.  So, here goes.
+
+    # set up image scale and size
+    raw_scale = 0.23
+    raw_size = 15
+
+    # We draw onto a smaller image so the unit test doesn't take forever!
+    target_scale = 0.7
+    target_size = 3 
+
+    gal = galsim.Exponential(flux=1.7, half_light_radius=1.2)
+    gal_im = gal.draw(dx=raw_scale, image=galsim.ImageD(raw_size,raw_size))
+
+    psf1 = galsim.Gaussian(flux=1, half_light_radius=0.77)
+    psf_im = psf1.draw(dx=raw_scale, image=galsim.ImageD(raw_size,raw_size))
+
+    #for interp in ['nearest', 'linear', 'cubic', 'quintic', 'lanczos3', 'lanczos5', 'lanczos7']:
+    for interp in ['linear', 'cubic', 'quintic']:
+        # Note 1: The Lanczos interpolants pass these tests just fine.  They just take a long 
+        # time to run, even with the small images we are working with.  So skip them for regular 
+        # unit testing.  Developers working on this should re-enable those while testing.
+
+        # Note 2: I couldn't get 'nearest' to pass the tests.  Specifically the im3 == im4 test.
+        # I don't know whether there is a bug in the Nearest class functions (seems unlikely since
+        # they are so simple) or in the real-space convolver or if the nature of the Nearest
+        # interpolation (with its very large extent in k-space and hard edges in real space) is 
+        # such that we don't actually expect the test to pass.  Anyway, it also takes a very long 
+        # time to run (before failing), so it's probably not a good idea to use it for 
+        # real-space convolution anyway.
+
+        print 'interp = ',interp
+
+        gal = galsim.InterpolatedImage(gal_im, x_interpolant=interp)
+
+        # First convolve with a Gaussian:
+        psf = psf1
+        c1 = galsim.Convolve([gal,psf], real_space=True)
+        c2 = galsim.Convolve([gal,psf], real_space=False)
+
+        im1 = c1.draw(dx=target_scale, image=galsim.ImageD(target_size,target_size))
+        print 'im1 = ',im1.array[:,:]
+        im2 = c2.draw(dx=target_scale, image=galsim.ImageD(target_size,target_size))
+        print 'im2 = ',im2.array[:,:]
+        np.testing.assert_array_almost_equal(im1.array, im2.array, 5)
+        print 'im1 == im2'
+
+        # Now make the psf also an InterpolatedImage:
+        psf=galsim.InterpolatedImage(psf_im, x_interpolant=interp, flux=1)
+        c3 = galsim.Convolve([gal,psf], real_space=True)
+        c4 = galsim.Convolve([gal,psf], real_space=False)
+
+        im3 = c3.draw(dx=target_scale, image=galsim.ImageD(target_size,target_size))
+        print 'im3 = ',im3.array[:,:]
+        im4 = c4.draw(dx=target_scale, image=galsim.ImageD(target_size,target_size), wmult=5)
+        print 'im4 = ',im4.array[:,:]
+        np.testing.assert_array_almost_equal(im1.array, im3.array, 2)
+        # Note: only 2 d.p. since the interpolated image version of the psf is really a different
+        # profile from the original.  Especially for the lower order interpolants.  So we don't
+        # expect these images to be equal to many decimal places.
+        print 'im1 == im3'
+        np.testing.assert_array_almost_equal(im3.array, im4.array, 5)
+        print 'im3 == im4'
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
+    test_realspace_conv()
+    sys.exit()
+
     test_sbinterpolatedimage()
     test_pad_image()
     test_roundtrip()
@@ -677,3 +756,4 @@ if __name__ == "__main__":
     test_operations()
     test_uncorr_padding()
     test_corr_padding()
+    test_realspace_conv()
