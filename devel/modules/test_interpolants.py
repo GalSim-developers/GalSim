@@ -15,6 +15,11 @@ use_interpolants = interpolant_list
 padding_list = range(2,7,2)
 # Range of rotation angles
 angle_list = range(0,180,15)
+# Range of shifts (currently half-pixel shifts +/-x, +/-y, and the intermediate 45-degree angles)
+shift_list = [galsim.PositionD(0.0,0.5),galsim.PositionD(0.5,0.0),
+              galsim.PositionD(0.35,0.35),galsim.PositionD(-0.35,0.35),
+              galsim.PositionD(0.0,-0.5),galsim.PositionD(-0.5,0.0),
+              galsim.PositionD(-0.35,-0.35),galsim.PositionD(0.35,-0.35)]
 # Range of shears and magnifications to use
 # This is currently the 4 largest and 4 smallest |g|s generated from a run of examples/demo11.py,
 # rounded to 1-3 sig figs, plus the 4 largest blown up by a factor of 30 to really strain the 
@@ -28,16 +33,15 @@ shear_and_magnification_list = [(0.001, 0., 0.),(0.01, 0., 0.), (0.1, 0., 0.),
                                 (0.0003, 0.0003, 1.01), (0.0005, 0.0001, 0.96), 
                                 (-0.0004, 0.0009, 1.03), (0.001, -0.0003, 0.996), 
                                 (0.015, -0.010, 1.02), (-0.016, -0.009, 1.01), 
-                                (0.016, -0.011, 1.02), (0.020, 0.003, 0.97), 
-                                ( 0.46, -0.31,  1.6), ( -0.49, -0.26,  1.4), 
-                                ( 0.47, -0.33,  1.5), ( 0.61, 0.095,  0.16)]
-
+                                (0.016, -0.011, 1.02), (0.020, 0.003, 0.97)]#, 
+#                                ( 0.46, -0.31,  1.6), ( -0.49, -0.26,  1.4), 
+#                                ( 0.47, -0.33,  1.5), ( 0.61, 0.095,  0.16)]
 # --- IMPORTANT BUT NOT TESTED PARAMETERS ---
 # Catalog parameters
 catalog_dir = '../../examples/data'
-catalog_filename = 'real_galaxy_catalog_example.fits'
+catalog_filename = 'real_galaxy_catalog_examples.fits'
 first_index = 0
-nitems = 100 # Currently, do all the files in the sample catalog
+nitems = 100 # How many galaxies to test
 # Ground-image parameters
 ground_fwhm = 0.65        # arcsec
 ground_pixel_scale = 0.2  # arcsec
@@ -54,9 +58,11 @@ nproc = 8
 ground_filename = 'interpolant_test_output_ground.dat'
 space_filename = 'interpolant_test_output_space.dat'
 original_filename = 'interpolant_test_output_original.dat'
+delta_filename = 'interpolant_test_output_delta.dat'
 ground_file = open(ground_filename,'w')
 space_file = open(space_filename,'w')
 original_file = open(original_filename,'w')
+delta_file = open(delta_filename,'w')
 
 # --- Helper functions to run the main part of the code ---
 def get_config():
@@ -65,6 +71,7 @@ def get_config():
     space_config = {}    # Space-like data
     ground_config = {}   # Ground-like data
     original_config = {} # Original RealGalaxy image (before deconvolution)
+    delta_config = {}
     
     space_config['psf'] = { "type" : "Airy", 'lam_over_diam' : space_lam_over_diam}
     ground_config['psf'] = { 
@@ -72,8 +79,13 @@ def get_config():
         'items' : [ {'type' : 'Kolmogorov', 'fwhm' : ground_fwhm },
                     {'type' : 'Airy', 'lam_over_diam' : ground_lam_over_diam } ]
     }
-    # no psf for original_config (it's already in there)
+    delta_config['psf'] = {
+        'type' : 'Gaussian',
+        'sigma': 1.E-8
+    }
+    # no psf for original_config or delta_config (it's already in there)
     original_config['pix'] = {'type': 'None'}
+    delta_config['pix'] = {'type': 'None'}
                 
     space_config['image'] = {
         'type' : 'Single',
@@ -90,6 +102,11 @@ def get_config():
         'pixel_scale' : space_pixel_scale,
         'nproc' : nproc
     }
+    delta_config['image'] = {
+        'type' : 'Single',
+        'pixel_scale' : space_pixel_scale,
+        'nproc' : nproc
+    }
 
     galaxy_config = { 'type': 'RealGalaxy', 
                       'index': { 'type': 'Sequence', 'first': first_index, 'nitems': nitems } }
@@ -102,6 +119,8 @@ def get_config():
     galaxy_config['type'] = 'RealGalaxyOriginal'
     original_config['gal'] = galaxy_config
     original_config['input'] = catalog_config
+    delta_config['gal'] = galaxy_config
+    delta_config['input'] = catalog_config
 
     field = catalog_config['real_catalog'] # Redo the 'input' processing from config
     field['type'], ignore = galsim.config.process.valid_input_types['real_catalog'][0:2]
@@ -110,7 +129,8 @@ def get_config():
     space_config['real_catalog'] = input_obj
     ground_config['real_catalog'] = input_obj
     original_config['real_catalog'] = input_obj
-    return [original_config]#, space_config, ground_config]
+    delta_config['real_catalog'] = input_obj
+    return [delta_config] #, original_config, space_config, ground_config]
 
 class InterpolationData:
 # Quick container class for passing around data from these tests.  
@@ -134,6 +154,12 @@ class InterpolationData:
             self.angle = config['gal']['rotation']['theta']
         else:
             self.angle = 0
+        if 'shift' in config['gal']:
+            self.shiftx = config['gal']['shift'].x
+            self.shifty = config['gal']['shift'].y
+        else:
+            self.shiftx = 0
+            self.shifty = 0
         if 'x_interpolant' in config['gal']:
             self.x_interpolant = config['gal']['x_interpolant']
         else:  
@@ -145,6 +171,8 @@ class InterpolationData:
         self.padding = config['gal']['pad_factor']
         if 'psf' not in config:
             self.image_type = 'Original'
+        elif config['psf']['type'] == 'Gaussian':
+            self.image_type = 'Delta'
         elif config['psf']['type'] == 'Convolution':
             self.image_type = 'Ground'
         else:
@@ -177,6 +205,8 @@ def test_realgalaxy(base_config, shear=None, magnification=None, angle=None, shi
         config['gal']['magnification'] = magnification
     if angle:
         config['gal']['rotation'] = {'type': 'Degrees', 'theta': 1.0*angle}
+    if shift:
+        config['gal']['shift'] = config['image']['pixel_scale']*shift
     if x_interpolant:    
         config['gal']['x_interpolant'] = x_interpolant
     if k_interpolant:    
@@ -190,7 +220,7 @@ def test_realgalaxy(base_config, shear=None, magnification=None, angle=None, shi
     pass_config = copy.deepcopy(config) # To pass to the InterpolationData routine
     trial_images = galsim.config.BuildImages(nimages = config['gal']['index']['nitems'], 
         config = config, logger=logger, nproc=config['image']['nproc'])[0]
-    if 'psf' in config: # use EstimateShearErrors
+    if 'psf' in config and config['psf']['type'] is not 'Gaussian': # use EstimateShearErrors
         config = copy.deepcopy(base_config)
         del config['gal']
         psf_image = galsim.config.BuildImage(config = config)[0]
@@ -203,11 +233,13 @@ def test_realgalaxy(base_config, shear=None, magnification=None, angle=None, shi
     g2obs_list = [-10 if isinstance(res,float) else res.observed_shape.g2 for res in trial_results]
     sigmaobs_list = [-10 if isinstance(res,float) else res.moments_sigma for res in trial_results]
     return InterpolationData(config=pass_config, g1obs=g1obs_list, g2obs=g2obs_list, 
-                              sigmaobs = sigmaobs_list)
+                              sigmaobs=sigmaobs_list)
 
 def print_results(g1_list, g2_list, sigma_list, test_answer):
     if test_answer.image_type=='Original':
         outfile = original_file
+    elif test_answer.image_type=='Delta':
+        outfile = delta_file
     elif test_answer.image_type=='Space':
         outfile = space_file
     elif test_answer.image_type=='Ground':
@@ -258,6 +290,7 @@ def print_results(g1_list, g2_list, sigma_list, test_answer):
             str(test_answer.padding)+' '+str(test_answer.shear[0])+' '+
             str(test_answer.shear[1])+' '+
             str(test_answer.magnification)+' '+str(test_answer.angle)+' '+
+            str(test_answer.shiftx)+' '+str(test_answer.shifty)+' '+
             str(expected_g1[i])+' '+str(test_answer.g1obs[i]-expected_g1[i])+' '+
             str(expected_g2[i])+' '+str(test_answer.g2obs[i]-expected_g2[i])+' '+
             str(expected_size[i])+' '+
@@ -298,7 +331,7 @@ def main():
             for interpolant in use_interpolants:        # Possible interpolants
                 print 'Angle test ', 
                 for angle in angle_list:                        # Possible rotation angles
-                    print 'i',
+                    print i,
                     i+=1
                     print_results(g1_list, g2_list, sigma_list, 
                                   test_realgalaxy(base_config, angle=angle, 
@@ -320,10 +353,22 @@ def main():
                                   magnification=mag, k_interpolant=interpolant,
                                   padding=padding, seed=rseed))
                 print ''
+                for shift in shift_list:
+                    print i, shift,
+                    i+=1
+                    print_results(g1_list, g2_list, sigma_list, 
+                                  test_realgalaxy(base_config, shift=shift, 
+                                  x_interpolant=interpolant, padding=padding, seed=rseed))
+                    print_results(g1_list, g2_list, sigma_list, 
+                                  test_realgalaxy(base_config, shift=shift, 
+                                  k_interpolant=interpolant, padding=padding, seed=rseed))
+                print ''
+                    
 
     ground_file.close()
     space_file.close()
     original_file.close()
+    delta_file.close()
     
 if __name__ == "__main__":
     main()
