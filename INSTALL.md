@@ -215,9 +215,9 @@ libraries; this is automatic on some platforms, but not all.
 
 Note: if you do not want to install everything related to Boost (which takes a
 while), you can restrict to Boost Python and math by using `--with-python`
-`--with-math` on the `./b2` commands.  Currently we are only using Boost Python,
-but there may be parts of the math library we want to use so installing these
-two will likely be sufficient for the foreseeable future.
+`--with-math` on the `./b2` commands.  Currently we are only using Boost Python
+and parts of the math library so compiling and installing these two will likely
+be sufficient for the foreseeable future.
 
 Once you have installed Boost, you can check that it links to the version of
 Python that will be used for GalSim and on which you have installed NumPy and
