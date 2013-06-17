@@ -334,9 +334,9 @@ namespace galsim {
         xmax = ((N-1)/2 + xrange) * scale;
         int ixrange = _xInterp->ixrange();
         if (ixrange > 0) {
-            splits.resize(N+ixrange);
-            double x = xmin-0.5*scale*ixrange;
-            for(int i=0;i<N+ixrange;++i, x+=scale) splits[i] = x;
+            splits.resize(N-2+ixrange);
+            double x = xmin-0.5*scale*(ixrange-2);
+            for(int i=0;i<N-2+ixrange;++i, x+=scale) splits[i] = x;
         }
     }
 
@@ -351,9 +351,9 @@ namespace galsim {
         ymax = ((N-1)/2 + xrange) * scale;
         int ixrange = _xInterp->ixrange();
         if (ixrange > 0) {
-            splits.resize(N+ixrange);
-            double y = ymin-0.5*scale*ixrange;
-            for(int i=0;i<N+ixrange;++i, y+=scale) splits[i] = y;
+            splits.resize(N-2+ixrange);
+            double y = ymin-0.5*scale*(ixrange-2);
+            for(int i=0;i<N-2+ixrange;++i, y+=scale) splits[i] = y;
         }
     }
 
