@@ -593,13 +593,14 @@ namespace galsim {
 
         double getTolerance() const { return _tolerance; }
         double xrange() const { return _range; }
-        int ixrange() const { return 2*_n; }
+        int ixrange() const { return 2*_in; }
         double urange() const { return _uMax; }
         double xval(double x) const;
         double uval(double u) const;
 
     private:
-        double _n; ///< Store the filter order, n
+        int _in; ///< Store the filter order, n
+        double _n; ///< Store n as a double, since that's often how it is used.
         double _range; ///< Reduce range slightly from n so we're not using zero-valued endpoints.
         bool _fluxConserve; ///< Set to insure conservation of constant (sky) flux
         double _tolerance;  ///< u-space accuracy parameter

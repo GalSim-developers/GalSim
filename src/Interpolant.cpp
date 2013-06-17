@@ -31,6 +31,11 @@
 //int verbose_level = 2;
 #endif
 
+// It turns out the Lanczos xval is faster to do directly wtih trig than with a lookup table.
+// I left the original lookup-table code in here in case we find that this isn't true for
+// some situation.  But I think this next line should always be enabled. -MJ
+#define USE_DIRECT_LANCZOS_XVAL
+
 namespace galsim {
 
     double InterpolantFunction::operator()(double x) const  { return _interp.xval(x); }
@@ -128,8 +133,8 @@ namespace galsim {
 
     double Lanczos::uCalc(double u) const 
     {
-        double vp=_n*(2*u+1);
-        double vm=_n*(2*u-1);
+        double vp=_n*(2.*u+1.);
+        double vm=_n*(2.*u-1.);
         double retval = (vm-1.)*Si(M_PI*(vm-1.))
             -(vm+1.)*Si(M_PI*(vm+1.))
             -(vp-1.)*Si(M_PI*(vp-1.))
@@ -139,7 +144,7 @@ namespace galsim {
 
     Lanczos::Lanczos(int n, bool fluxConserve, double tol,
                      const GSParamsPtr& gsparams) :  
-        Interpolant(gsparams), _n(n), _fluxConserve(fluxConserve), _tolerance(tol)
+        Interpolant(gsparams), _in(n), _n(n), _fluxConserve(fluxConserve), _tolerance(tol)
     {
         // Reduce range slightly from n so we're not including points with zero weight in
         // interpolations:
@@ -152,7 +157,9 @@ namespace galsim {
         // Doing an explicit clear fixes the problem.
         if (_cache_umax.size() == 0) {
             _cache_umax.clear();
+#ifndef USE_DIRECT_LANCZOS_XVAL
             _cache_xtab.clear();
+#endif
             _cache_utab.clear();  
         }
 
@@ -160,22 +167,25 @@ namespace galsim {
 
         if (_cache_umax.count(key)) {
             // Then uMax and tab are already cached.
+#ifndef USE_DIRECT_LANCZOS_XVAL
             _xtab = _cache_xtab[key];
+#endif
             _utab = _cache_utab[key];
             _uMax = _cache_umax[key];
         } else {
-            _xtab.reset(new Table<double,double>(Table<double,double>::spline));
-            _utab.reset(new Table<double,double>(Table<double,double>::spline));
-
+#ifndef USE_DIRECT_LANCZOS_XVAL
             // Build xtab = table of x values
+            _xtab.reset(new Table<double,double>(Table<double,double>::spline));
             // Spline is accurate to O(dx^3), so errors should be ~dx^4.
             const double xStep1 = 
                 gsparams->table_spacing * std::pow(gsparams->xvalue_accuracy/10.,0.25);
             // Make sure steps hit the integer values exactly.
             const double xStep = 1. / std::ceil(1./xStep1);
             for(double x=0.; x<_n; x+=xStep) _xtab->addEntry(x, xCalc(x));
+#endif
 
             // Build utab = table of u values
+            _utab.reset(new Table<double,double>(Table<double,double>::spline));
             const double uStep = 
                 gsparams->table_spacing * std::pow(gsparams->kvalue_accuracy/10.,0.25) / _n;
             _uMax = 0.;
@@ -196,7 +206,9 @@ namespace galsim {
                 }
             }
             // Save these values in the cache.
+#ifndef USE_DIRECT_LANCZOS_XVAL
             _cache_xtab[key] = _xtab;
+#endif
             _cache_utab[key] = _utab;
             _cache_umax[key] = _uMax;
         }
@@ -209,7 +221,90 @@ namespace galsim {
     double Lanczos::xval(double x) const
     {
         x = std::abs(x);
-        return x>=_n ? 0. : (*_xtab)(x);
+        if (x >= _n) return 0.;
+        else {
+#ifdef USE_DIRECT_LANCZOS_XVAL
+            switch (_in) {
+                // TODO: We usually only use n=3,5,7.  If we start using any other values on a
+                // regular basis, it's worth it to specialize that case here.
+                // Also, at some point it might be worth doing the same trick we did with 
+                // SBMoffat's kValue and pow functions, making these different cases all different 
+                // functions and having the constructor just set the function once.  Then calls to 
+                // xval wouldn't have any jumps from the case or (if you wanted) even the
+                // _fluxConserve check.
+              case 3 : {
+                  if (x < 1.e-6) {
+                      double xsq = x*x;
+                      double res = 1. - 5./3. * xsq;
+                      if (_fluxConserve) res *= 1. + 4.*M_PI*M_PI*_u1*xsq;
+                      return res;
+                  } else {
+                      // Then xval = 3/pi^2 sin(pi x) sin(pi x /3) / x^2
+                      // Let s = sin(pi x /3)
+                      // Then sin(pi x) = s*(3-4s^2)
+                      // xval = 3/pi^2 s^2*(3-4s) / x^2
+                      double sn = sin((M_PI/3.)*x);
+                      double s = sn*(3.-4.*sn*sn);
+                      double res = (3./(M_PI*M_PI)) * s*sn/(x*x);
+                      if (_fluxConserve) res *= 1. + 4.*_u1*s*s;
+                      return res;
+                  }
+                  break;
+              }
+              case 5 : {
+                  if (x < 1.e-6) {
+                      double xsq = x*x;
+                      double res = 1. - 13./3. * xsq;
+                      if (_fluxConserve) res *= 1. + 4.*M_PI*M_PI*_u1*xsq;
+                      return res;
+                  } else {
+                      double sn = sin((M_PI/5.)*x);
+                      double snsq = sn*sn;
+                      double s = sn*(5.-snsq*(20.-16.*snsq));
+                      double res = (5./(M_PI*M_PI)) * s*sn/(x*x);
+                      if (_fluxConserve) res *= 1. + 4.*_u1*s*s;
+                      return res;
+                  }
+                  break;
+              }
+              case 7 : {
+                  if (x < 1.e-6) {
+                      double xsq = x*x;
+                      double res = 1. - 25./3. * xsq;
+                      if (_fluxConserve) res *= 1. + 4.*M_PI*M_PI*_u1*xsq;
+                      return res;
+                  } else {
+                      double sn = sin((M_PI/7.)*x);
+                      double snsq = sn*sn;
+                      double s = sn*(7.-snsq*(56.-snsq*(112.-64.*snsq)));
+                      double res = (7./(M_PI*M_PI)) * s*sn/(x*x);
+                      if (_fluxConserve) res *= 1. + 4.*_u1*s*s;
+                      return res;
+                  }
+                  break;
+              }
+              default : {
+                  if (x < 1.e-6) {
+                      double xsq = x*x;
+                      double res = 1. - (_n*_n+1.)/6. * xsq;
+                      if (_fluxConserve) res *= 1. + 4.*M_PI*M_PI*_u1*xsq;
+                      return res;
+                  } else {
+                      // xval = n/pi^2 sin(pi x) sin(pi x /n) / x^2
+                      double s = sin(M_PI*x);
+                      double sn = sin(M_PI*x/_n);
+                      double res = (_n/(M_PI*M_PI)) * s*sn/(x*x);
+                      // res *= 1. + 2.*_u1*(1.-cos(2.*M_PI*x));
+                      if (_fluxConserve) res *= 1. + 4.*_u1*s*s;
+                      return res;
+                  }
+                  break;
+              }
+            }
+#else
+            return (*_xtab)(x);
+#endif
+        }
     }
 
     double Lanczos::uval(double u) const
