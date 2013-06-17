@@ -68,21 +68,13 @@ struct PyCppEllipse {
                     void (CppEllipse::*)(
                         const CppShear&, double, const Position<double>))&CppEllipse::reset,
                  bp::args("s", "mu", "p"))
-            .def("fwd", &CppEllipse::fwd, "FIXME: needs documentation!")
-            .def("inv", &CppEllipse::inv, "FIXME: needs documentation!")
             .def("setS", &CppEllipse::setS, bp::return_self<>())
             .def("setMu", &CppEllipse::setMu, bp::return_self<>())
             .def("setX0", &CppEllipse::setX0, bp::return_self<>())
             .def("getS", &CppEllipse::getS)
             .def("getMu", &CppEllipse::getMu)
             .def("getX0", &CppEllipse::getX0)
-            .def("getMajor", &CppEllipse::getMajor, "FIXME: is this semi-major or full major axis?")
-            .def("getMinor", &CppEllipse::getMinor, "FIXME: is this semi-minor or full minor axis?")
-            .def("getBeta", &CppEllipse::getMinor, "position angle FIXME: which convention?")
-            .def("range", &CppEllipse::range, (bp::arg("nSigma")=1.))
-            .def("getMatrix", &getMatrix)
             .def(str(bp::self))
-            .def("assign", &CppEllipse::operator=, bp::return_self<>())
             ;
     }
 

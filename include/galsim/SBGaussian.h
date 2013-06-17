@@ -44,12 +44,13 @@ namespace galsim {
         /** 
          * @brief Constructor.
          *
-         * @param[in] sigma  characteristic size, surface brightness scales as 
-         *                   `exp[-r^2 / (2. * sigma^2)]`.
-         * @param[in] flux   flux of the Surface Brightness Profile (default `flux = 1.`).
+         * @param[in] sigma    characteristic size, surface brightness scales as 
+         *                     `exp[-r^2 / (2. * sigma^2)]`.
+         * @param[in] flux     flux of the Surface Brightness Profile.
+         * @param[in] gsparams GSParams object storing constants that control the accuracy of image
+         *                     operations and rendering, if different from the default.
          */
-        SBGaussian(double sigma, double flux=1.,
-                   boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
+        SBGaussian(double sigma, double flux, const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor.
         SBGaussian(const SBGaussian& rhs);

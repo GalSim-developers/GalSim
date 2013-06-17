@@ -34,7 +34,7 @@ namespace galsim {
     public:
 
         // Constructor 
-        SBProfileImpl(boost::shared_ptr<GSParams> _gsparams);
+        SBProfileImpl(const GSParamsPtr& _gsparams);
 
         // Virtual destructor
         virtual ~SBProfileImpl() {}
@@ -111,7 +111,7 @@ namespace galsim {
         void fillXGrid(XTable& xt) const;
 
         // Public so it can be directly used from SBProfile.
-        boost::shared_ptr<GSParams> gsparams;
+        const GSParamsPtr gsparams;
 
     protected:
 
@@ -131,9 +131,6 @@ namespace galsim {
         // Copy constructor and op= are undefined.
         SBProfileImpl(const SBProfileImpl& rhs);
         void operator=(const SBProfileImpl& rhs);
-
-        // Default GSParams to use when input is None
-        static boost::shared_ptr<GSParams> default_gsparams;
     };
 
 }
