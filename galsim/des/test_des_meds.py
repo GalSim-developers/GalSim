@@ -168,7 +168,7 @@ def test_meds():
 
 def test_meds_config():
     """
-    Creat a meds file from a config and compare with a manual creation.
+    Create a meds file from a config and compare with a manual creation.
     """
 
     # Some parameters:
