@@ -65,7 +65,7 @@ def run_tests(random_seed, outfile, config=None, gsparams=None, wmult=None, logg
                 "wmult is provided as a kwarg but the config['image']['wmult'] will take "+
                 "precedence.")
     # Get galaxy sample
-    n_cosmos, hlr_cosmos, gabs_cosmos = galaxy_sample.get_galaxy_sample()
+    n_cosmos, hlr_cosmos, gabs_cosmos = galaxy_sample.get()
     # Only take the first NOBS objects
     n_cosmos = n_cosmos[0: NOBS]
     hlr_cosmos = hlr_cosmos[0: NOBS]
