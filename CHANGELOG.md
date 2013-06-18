@@ -13,7 +13,7 @@ Changes from v0.4 to current version:
 * Sped up the HSM module. (Issue #340)
 
 * Added the ability to modify parameters that control the precise rendering of GSObjects using the
-  new GSParams class. (Issue #343)
+  new GSParams class. (Issue #343, #426)
 
 * Added Shapelet class (sub-class of GSObject) for describing shapelet profiles. (Issue #350)
 
@@ -102,3 +102,10 @@ Changes from v0.4 to current version:
 
 * Fixed some issues with image arithmetic (failure to check/respect shape and scale), added the
   ability to raise all elements in an image to a float/int power. (Issue #419)
+
+* Added a simple prescription for adding diffraction spikes, due to secondary mirror / instrument
+  support struts obscuring the pupil, to the OpticalPSF. (Issue #302)
+
+* Fixed some bugs in the Sersic class that were leading to low level ringing features in the
+  images when drawn with FFTs.  In addition, now Sersic with n=0.5 or 1 agree with Gaussian and
+  Exponential at the expected accuracy tolerance. (Issue #426)

@@ -27,8 +27,9 @@ class Shear(object):
 
     The python Shear class (galsim.Shear) can be initialized in a variety of ways to represent shape
     distortions.  A shear is an operation that transforms a circle into an ellipse with
-    minor-to-major axis ratio b/a, with position angle beta, while conserving the area.  Given the
-    multiple definitions of ellipticity, we have multiple definitions of shear:
+    minor-to-major axis ratio b/a, with position angle beta, while conserving the area (see below
+    for a discussion of the implications of this choice).  Given the multiple definitions of
+    ellipticity, we have multiple definitions of shear:
 
     reduced shear |g| = (a - b)/(a + b)
     distortion |e| = (a^2 - b^2)/(a^2 + b^2)
@@ -64,6 +65,18 @@ class Shear(object):
     to initialize a Shear with zero reduced shear by specifying no args or kwargs, i.e. 
     galsim.Shear().  The galsim.Shear contains a C++ CppShear object, and operations on Shear rely 
     on wrapped methods of the CppShear.
+
+    Since we have defined a galsim.Shear as a transformation that preserves area, this means that it
+    is not a precise description of what happens during the process of weak lensing.  The coordinate
+    transformation that occurs during the actual weak lensing process is such that if a galaxy is
+    sheared by some (gamma_1, gamma_2), and then sheared by (-gamma_1, -gamma_2), it will in the end
+    return to its original shape, but will have changed in area due to the magnification, mu =
+    1/((1.-kappa)**2 - (gamma_1**2 + gamma_2**2)), which is not equal to one for non-zero shear even
+    for convergence kappa=0.  Application of a galsim.Shear using the applyShear method does not
+    include this area change.  To properly incorporate the effective change in area due to shear, it
+    is necessary to either (a) define the galsim.Shear object, use the applyShear() method, and
+    separately use the applyMagnification method(), or (b) use the applyLensing() method that
+    simultaneously magnifies and shears.
     """
     def __init__(self, *args, **kwargs):
         import numpy as np

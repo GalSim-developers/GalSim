@@ -42,7 +42,7 @@
 namespace galsim {
 
     SBKolmogorov::SBKolmogorov(double lam_over_r0, double flux,
-                               boost::shared_ptr<GSParams> gsparams) :
+                               const GSParamsPtr& gsparams) :
         SBProfile(new SBKolmogorovImpl(lam_over_r0, flux, gsparams)) {}
 
     SBKolmogorov::SBKolmogorov(const SBKolmogorov& rhs) : SBProfile(rhs) {}
@@ -55,8 +55,8 @@ namespace galsim {
         return static_cast<const SBKolmogorovImpl&>(*_pimpl).getLamOverR0(); 
     }
 
-    LRUCache<const GSParams*, KolmogorovInfo>
-        SBKolmogorov::SBKolmogorovImpl::cache(sbp::max_kolmogorov_cache);
+    LRUCache<GSParamsPtr, KolmogorovInfo> SBKolmogorov::SBKolmogorovImpl::cache(
+        sbp::max_kolmogorov_cache);
 
     // The "magic" number 2.992934 below comes from the standard form of the Kolmogorov spectrum
     // from Racine, 1996 PASP, 108, 699 (who in turn is quoting Fried, 1966, JOSA, 56, 1372):
@@ -68,8 +68,7 @@ namespace galsim {
     // k0 * lambda/r0 = 2Pi * (6.8839 / 2)^-3/5 = 2.992934
     //
     SBKolmogorov::SBKolmogorovImpl::SBKolmogorovImpl(
-        double lam_over_r0, double flux,
-        boost::shared_ptr<GSParams> gsparams) :
+        double lam_over_r0, double flux, const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
         _lam_over_r0(lam_over_r0), 
         _k0(2.992934 / lam_over_r0), 
@@ -78,7 +77,7 @@ namespace galsim {
         _inv_k0sq(1./_k0sq),
         _flux(flux), 
         _xnorm(_flux * _k0sq),
-        _info(cache.get(this->gsparams.get()))
+        _info(cache.get(this->gsparams))
     {
         dbg<<"SBKolmogorov:\n";
         dbg<<"lam_over_r0 = "<<_lam_over_r0<<std::endl;
@@ -258,8 +257,7 @@ namespace galsim {
     class KolmXValue : public std::unary_function<double,double>
     {
     public:
-        KolmXValue(const GSParams* gsparams) : 
-            _gsparams(gsparams) {}
+        KolmXValue(const GSParamsPtr& gsparams) : _gsparams(gsparams) {}
 
         double operator()(double r) const
         { 
@@ -270,7 +268,7 @@ namespace galsim {
                                 _gsparams->integration_abserr);
         }
     private:
-        const GSParams* _gsparams;
+        const GSParamsPtr& _gsparams;
     };
 
 #ifdef SOLVE_FWHM_HLR
@@ -278,7 +276,8 @@ namespace galsim {
     class KolmTargetValue : public std::unary_function<double,double>
     {
     public:
-        KolmTargetValue(double target, const GSParams* gsparams) : _target(target,gsparams) {}
+        KolmTargetValue(double target, const GSParamsPtr& gsparams) :
+            f(gsparams), _target(target) {}
         double operator()(double r) const { return f(r) - _target; }
     private:
         KolmXValue f;
@@ -288,7 +287,7 @@ namespace galsim {
     class KolmXValueTimes2piR : public std::unary_function<double,double>
     {
     public:
-        KolmXValueTimes2piR(const GSParams* gsparams) : f(gsparams) {}
+        KolmXValueTimes2piR(const GSParamsPtr& gsparams) : f(gsparams) {}
 
         double operator()(double r) const
         { return f(r) * r; }
@@ -299,7 +298,8 @@ namespace galsim {
     class KolmEnclosedFlux : public std::unary_function<double,double>
     {
     public:
-        KolmEnclosedFlux(const GSParams* gsparams) : f(gsparams), _gsparams(gsparams) {}
+        KolmEnclosedFlux(const GSParamsPtr& gsparams) :
+            f(gsparams), _gsparams(gsparams) {}
         double operator()(double r) const 
         {
             return integ::int1d(f, 0., r,
@@ -308,13 +308,14 @@ namespace galsim {
         }
     private:
         KolmXValueTimes2piR f;
-        const GSParams* _gsparams;
+        const GSParamsPtr& _gsparams;
     };
 
     class KolmTargetFlux : public std::unary_function<double,double>
     {
     public:
-        KolmTargetFlux(double target, const GSParams* gsparams) : f(gsparams), _target(target) {}
+        KolmTargetFlux(double target, const GSParamsPtr& gsparams) :
+            f(gsparams), _target(target) {}
         double operator()(double r) const { return f(r) - _target; }
     private:
         KolmEnclosedFlux f;
@@ -323,7 +324,8 @@ namespace galsim {
 #endif
 
     // Constructor to initialize Kolmogorov constants and xvalue lookup table
-    KolmogorovInfo::KolmogorovInfo(const GSParams* gsparams) : _radial(TableDD::spline)
+    KolmogorovInfo::KolmogorovInfo(const GSParamsPtr& gsparams) :
+        _radial(TableDD::spline)
     {
         dbg<<"Initializing KolmogorovInfo\n";
 
@@ -333,7 +335,7 @@ namespace galsim {
         dbg<<"maxK = "<<_maxk<<std::endl;
 
         // Build the table for the radial function.
-        double dr = 0.5/_maxk;
+        
         // Start with f(0), which is analytic:
         // According to Wolfram Alpha:
         // Integrate[k*exp(-k^5/3),{k,0,infinity}] = 3/5 Gamma(6/5)
@@ -341,14 +343,25 @@ namespace galsim {
         double val = 0.55090124543985636638457099311149824 / (2.*M_PI);
         _radial.addEntry(0.,val);
         xdbg<<"f(0) = "<<val<<std::endl;
+
+        // We use a cubic spline for the interpolation, which has an error of O(h^4) max(f'''').
+        // I have no idea what range the fourth derivative can take for the f(r),
+        // so let's take the completely arbitrary value of 10.  (This value was found to be 
+        // conservative for Sersic, but I haven't investigated here.)
+        // 10 h^4 <= xvalue_accuracy
+        // h = (xvalue_accuracy/10)^0.25
+        double dr = gsparams->table_spacing * sqrt(sqrt(gsparams->xvalue_accuracy / 10.));
+
         // Along the way accumulate the flux integral to determine the radius
         // that encloses (1-alias_threshold) of the flux.
         double sum = 0.;
+        double thresh0 = 0.5 / (2.*M_PI*dr);
         double thresh1 = (1.-gsparams->alias_threshold) / (2.*M_PI*dr);
-        double thresh2 = 0.999 / (2.*M_PI*dr);
-        double R = 0.;
+        double thresh2 = (1.-gsparams->alias_threshold/5.) / (2.*M_PI*dr);
+        double R = 0., hlr = 0.;
         // Continue until accumulate 0.999 of the flux
         KolmXValue xval_func(gsparams);
+
         for (double r = dr; sum < thresh2; r += dr) {
             val = xval_func(r) / (2.*M_PI);
             xdbg<<"f("<<r<<") = "<<val<<std::endl;
@@ -359,17 +372,21 @@ namespace galsim {
             xdbg<<"sum = "<<sum<<"  thresh1 = "<<thresh1<<"  thesh2 = "<<thresh2<<std::endl;
             xdbg<<"sum*2*pi*dr "<<sum*2.*M_PI*dr<<std::endl;
             if (R == 0. && sum > thresh1) R = r;
+            if (hlr == 0. && sum > thresh0) hlr = r;
         }
         dbg<<"Done loop to build radial function.\n";
         dbg<<"R = "<<R<<std::endl;
-        _stepk = M_PI/R;
+        dbg<<"hlr = "<<hlr<<std::endl;
+        // Make sure it is at least 5 hlr
+        R = std::max(R,gsparams->stepk_minimum_hlr*hlr);
+        _stepk = M_PI / R;
         dbg<<"stepk = "<<_stepk<<std::endl;
         dbg<<"sum*2*pi*dr = "<<sum*2.*M_PI*dr<<"   (should ~= 0.999)\n";
 
         // Next, set up the sampler for photon shooting
         std::vector<double> range(2,0.);
         range[1] = _radial.argMax();
-        _sampler.reset(new OneDimensionalDeviate(_radial, range, true));
+        _sampler.reset(new OneDimensionalDeviate(_radial, range, true, gsparams));
 
 #ifdef SOLVE_FWHM_HLR
         // Improve upon the conversion between lam_over_r0 and fwhm:

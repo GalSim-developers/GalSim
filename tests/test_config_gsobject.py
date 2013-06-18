@@ -864,7 +864,9 @@ def test_add():
                 { 'type' : 'Exponential' , 'scale_radius' : 1.7, 'flux' : 100 },
                 { 'type' : 'Gaussian' , 'sigma' : 1, 'flux' : 50 }
             ],
-            'gsparams' : { 'maxk_threshold' : 1.e-2, 'alias_threshold' : 1.e-2 }
+            'gsparams' : { 'maxk_threshold' : 1.e-2,
+                           'alias_threshold' : 1.e-2,
+                           'stepk_minimum_hlr' : 3 }
         }
     }
 
@@ -906,7 +908,7 @@ def test_add():
 
     # Check that the Add items correctly inherit their gsparams from the top level
     gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
-    gsparams = galsim.GSParams(maxk_threshold=1.e-2, alias_threshold=1.e-2)
+    gsparams = galsim.GSParams(maxk_threshold=1.e-2, alias_threshold=1.e-2, stepk_minimum_hlr=3)
     gal5b_1 = galsim.Exponential(scale_radius=1.7, flux=100, gsparams=gsparams)
     gal5b_2 = galsim.Gaussian(sigma=1, flux=50, gsparams=gsparams)
     gal5b = galsim.Add([gal5b_1, gal5b_2])
@@ -981,7 +983,9 @@ def test_convolve():
                 { 'type' : 'Exponential' , 'scale_radius' : 1.7, 'flux' : 100 },
                 { 'type' : 'Gaussian' , 'sigma' : 1 }
             ],
-            'gsparams' : { 'maxk_threshold' : 1.e-2, 'alias_threshold' : 1.e-2 }
+            'gsparams' : { 'maxk_threshold' : 1.e-2,
+                           'alias_threshold' : 1.e-2,
+                           'stepk_minimum_hlr' : 3 }
         }
     }
 
@@ -1023,7 +1027,7 @@ def test_convolve():
 
     # Check that the Convolve items correctly inherit their gsparams from the top level
     gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
-    gsparams = galsim.GSParams(maxk_threshold=1.e-2, alias_threshold=1.e-2)
+    gsparams = galsim.GSParams(maxk_threshold=1.e-2, alias_threshold=1.e-2, stepk_minimum_hlr=3)
     gal5b_1 = galsim.Exponential(scale_radius=1.7, flux=100, gsparams=gsparams)
     gal5b_2 = galsim.Gaussian(sigma=1, gsparams=gsparams)
     gal5b = galsim.Convolve([gal5b_1, gal5b_2])
@@ -1103,13 +1107,15 @@ def test_list():
                 { 'type' : 'Exponential' , 'scale_radius' : 1.7, 'flux' : 100 },
                 { 'type' : 'Exponential' , 'scale_radius' : 3, 'flux' : 10 }
             ],
-            'gsparams' : { 'maxk_threshold' : 1.e-2, 'alias_threshold' : 1.e-2 }
+            'gsparams' : { 'maxk_threshold' : 1.e-2,
+                           'alias_threshold' : 1.e-2,
+                           'stepk_minimum_hlr' : 3 }
         }
     }
 
     config['seq_index'] = 0
     gal5a = galsim.config.BuildGSObject(config, 'gal')[0]
-    gsparams = galsim.GSParams(maxk_threshold=1.e-2, alias_threshold=1.e-2)
+    gsparams = galsim.GSParams(maxk_threshold=1.e-2, alias_threshold=1.e-2, stepk_minimum_hlr=3)
     gal5b = galsim.Exponential(scale_radius=1.7, flux=100, gsparams=gsparams)
     gsobject_compare(gal5a, gal5b, conv=galsim.Gaussian(sigma=1))
 
@@ -1226,13 +1232,15 @@ def test_ring():
                     } 
                 ]
             },
-            'gsparams' : { 'maxk_threshold' : 1.e-2, 'alias_threshold' : 1.e-2 }
+            'gsparams' : { 'maxk_threshold' : 1.e-2,
+                           'alias_threshold' : 1.e-2,
+                           'stepk_minimum_hlr' : 3 }
         }
     }
 
     config['seq_index'] = 0
     gal4a = galsim.config.BuildGSObject(config, 'gal')[0]
-    gsparams = galsim.GSParams(maxk_threshold=1.e-2, alias_threshold=1.e-2)
+    gsparams = galsim.GSParams(maxk_threshold=1.e-2, alias_threshold=1.e-2, stepk_minimum_hlr=3)
     disk = galsim.Exponential(half_light_radius=2, gsparams=gsparams)
     disk.applyShear(e2=0.3)
     bulge = galsim.Sersic(n=3,half_light_radius=1.3, gsparams=gsparams)

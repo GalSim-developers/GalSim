@@ -129,8 +129,12 @@ def __repr__(self):
     angle_rad = self.rad()
     return str(angle_rad)+" * galsim.radians"
 
+def __neg__(self):
+    return -1. * self
+
 galsim.Angle.__str__ = __str__
 galsim.Angle.__repr__ = __repr__
+galsim.Angle.__neg__ = __neg__
 
 def get_angle_unit(unit):
     """Convert a string into the corresponding AngleUnit
