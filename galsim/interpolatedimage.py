@@ -33,7 +33,9 @@ class InterpolatedImage(GSObject):
     InterpolatedImage class is useful if you have a non-parametric description of an object as an
     Image, that you wish to manipulate / transform using GSObject methods such as applyShear(),
     applyMagnification(), applyShift(), etc.  The input Image can be any BaseImage (i.e., Image,
-    ImageView, or ConstImageView).
+    ImageView, or ConstImageView).  Note that when convolving an InterpolatedImage, the use of
+    real-space convolution is not recommended, since it is a great deal slower than Fourier-space
+    convolution.
 
     The constructor needs to know how the Image was drawn: is it an Image of flux or of surface
     brightness?  Since our default for drawing Images using draw() and drawShoot() is that

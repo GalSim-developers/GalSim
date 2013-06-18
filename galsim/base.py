@@ -227,9 +227,12 @@ class GSObject(object):
         xValue() is available if obj.isAnalyticX() == True.
 
         As in SBProfile, this function assumes all are real-valued.  xValue() may not be implemented
-        for derived classes (e.g. SBConvolve) that require a Discrete Fourier Transform to 
-        determine real space values.  In this case, an SBError will be thrown at the C++ layer 
-        (raises a RuntimeError in Python).
+        for derived classes (e.g. SBConvolve) that require a Discrete Fourier Transform to determine
+        real space values.  In this case, an SBError will be thrown at the C++ layer (raises a
+        RuntimeError in Python).  Users who wish to use the xValue() method for an object that is
+        the convolution of other profiles can do so by drawing the convolved profile into an image,
+        using the image to initialize a new InterpolatedImage, and then using the xValue() method
+        for that new object.
         
         @param position  A 2D galsim.PositionD/galsim.PositionI instance giving the position in real
                          space.
