@@ -87,6 +87,11 @@ namespace galsim {
         virtual double xrange() const =0;
 
         /**
+         * @brief The total range as an integer.  Typically xrange() == 0.5 * ixrange.
+         */
+        virtual int ixrange() const =0;
+
+        /**
          * @brief Maximum extent of interpolant from origin in u space (cycles per pixel)
          * @returns Range of non-zero values of interpolant in u space
          */
@@ -211,6 +216,7 @@ namespace galsim {
 
         // Ranges are assumed to be same in x as in y.
         virtual double xrange() const=0;
+        virtual int ixrange() const=0;
         virtual double urange() const=0;
         virtual double xval(double x, double y) const=0;
         virtual double xvalWrapped(double x, double y, int N) const=0;
@@ -239,6 +245,7 @@ namespace galsim {
             throw std::runtime_error("Interpolant2d::shoot() not implemented for this kernel");
             return boost::shared_ptr<PhotonArray>();
         }
+
     };
 
     /**
@@ -259,6 +266,7 @@ namespace galsim {
         ~InterpolantXY() {}
         // All of the calls below implement base class methods.
         double xrange() const { return _i1d->xrange(); }
+        int ixrange() const { return _i1d->ixrange(); }
         double urange() const { return _i1d->urange(); }
         double xval(double x, double y) const { return _i1d->xval(x)*_i1d->xval(y); }
         double xvalWrapped(double x, double y, int N) const 
@@ -378,6 +386,7 @@ namespace galsim {
             Interpolant(gsparams), _width(width) {}
         ~Delta() {}
         double xrange() const { return 0.; }
+        int ixrange() const { return 0; }
         double urange() const { return 1./_width; }
         double xval(double x) const 
         {
@@ -391,6 +400,7 @@ namespace galsim {
         double getPositiveFlux() const { return 1.; }
         double getNegativeFlux() const { return 0.; }
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+
     private:
         double _width;
     };
@@ -421,6 +431,7 @@ namespace galsim {
         ~Nearest() {}
         double getTolerance() const { return _tolerance; }
         double xrange() const { return 0.5; }
+        int ixrange() const { return 1; }
         double urange() const { return 1./(M_PI*_tolerance); }
         double xval(double x) const 
         {
@@ -435,6 +446,7 @@ namespace galsim {
         double getNegativeFlux() const { return 0.; }
         /// @brief Nearest-neighbor interpolant photon shooting is a simple UniformDeviate call.
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+
     private:
         double _tolerance;
     };
@@ -464,6 +476,7 @@ namespace galsim {
         ~SincInterpolant() {}
         double getTolerance() const { return _tolerance; }
         double xrange() const { return 1./(M_PI*_tolerance); }
+        int ixrange() const { return 0; }
         double urange() const { return 0.5; }
         double uval(double u) const 
         {
@@ -493,6 +506,7 @@ namespace galsim {
             throw std::runtime_error("Photon shooting is not practical with sinc Interpolant");
             return boost::shared_ptr<PhotonArray>();
         }
+
     private:
         double _tolerance;
     };
@@ -521,6 +535,7 @@ namespace galsim {
         ~Linear() {}
         double getTolerance() const { return _tolerance; }
         double xrange() const { return 1.-0.5*_tolerance; }  // Snip off endpoints near zero
+        int ixrange() const { return 2; }
         double urange() const { return std::sqrt(1./_tolerance)/M_PI; }
         double xval(double x) const 
         {
@@ -537,6 +552,7 @@ namespace galsim {
          * axis.
          */
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+
     private:
         double _tolerance;
     };
@@ -577,12 +593,14 @@ namespace galsim {
 
         double getTolerance() const { return _tolerance; }
         double xrange() const { return _range; }
+        int ixrange() const { return 2*_in; }
         double urange() const { return _uMax; }
         double xval(double x) const;
         double uval(double u) const;
 
     private:
-        double _n; ///< Actually storing 2n, since it's used mostly this way.
+        int _in; ///< Store the filter order, n
+        double _n; ///< Store n as a double, since that's often how it is used.
         double _range; ///< Reduce range slightly from n so we're not using zero-valued endpoints.
         bool _fluxConserve; ///< Set to insure conservation of constant (sky) flux
         double _tolerance;  ///< u-space accuracy parameter
@@ -624,6 +642,7 @@ namespace galsim {
 
         double getTolerance() const { return _tolerance; }
         double xrange() const { return _range; }
+        int ixrange() const { return 4; }
         double urange() const { return _uMax; }
         double xval(double x) const 
         { 
@@ -677,6 +696,7 @@ namespace galsim {
 
         double getTolerance() const { return _tolerance; }
         double xrange() const { return _range; }
+        int ixrange() const { return 6; }
         double urange() const { return _uMax; }
         double xval(double x) const 
         { 

@@ -144,9 +144,6 @@ namespace galsim {
                 _dataPtr(0), _left(0), _right(0),
                 _leftAbsFlux(leftAbsFlux), _absFlux(absFlux), _invAbsFlux(1./absFlux)
             {
-                xdbg<<"Start Element constructor with "<<end-start<<" elements.\n";
-                xdbg<<"leftAbsFlux so far = "<<leftAbsFlux<<std::endl;
-                xdbg<<"absFlux = "<<absFlux<<std::endl;
                 xassert(start != end);
                 if (start + 1 == end) {
                     // Only one element.
@@ -154,7 +151,6 @@ namespace galsim {
                     // absFlux on input should equal the absolute flux in this dataPtr.
                     xassert(std::abs(std::abs(_dataPtr->getFlux()) - absFlux) < 
                             1.e-8 * (leftAbsFlux+absFlux));
-                    xdbg<<"Leaf with absFlux = "<<_absFlux<<std::endl;
                     // Update the running total of leftAbsFlux.
                     leftAbsFlux += _absFlux;
                 } else {
@@ -171,22 +167,13 @@ namespace galsim {
                         --mid;
                         leftSum -= std::abs(mid->getFlux());
                     }
-                    xdbg<<"half_tot = "<<half_tot<<" sum from start..mid = "<<leftSum<<std::endl;
-                    xdbg<<"mid-start = "<<mid-start<<std::endl;
-                    xdbg<<"flux(start) = "<<start->getFlux()<<std::endl;
-                    xdbg<<"flux(start+1) = "<<(start+1)->getFlux()<<std::endl;
                     xassert(mid != start);
                     xassert(mid != end);
-                    xdbg<<"flux(mid) = "<<mid->getFlux()<<std::endl;
                     _left = new Element(start, mid, leftAbsFlux, leftSum);
-                    xdbg<<"After made left absFlux = "<<absFlux<<std::endl;
                     _right = new Element(mid, end, leftAbsFlux, absFlux - leftSum);
-                    xdbg<<"After made right absFlux = "<<absFlux<<std::endl;
                     // absFlux on input should equal the sum of the two children's fluxes.
                     xassert(std::abs((_left->_absFlux + _right->_absFlux) - absFlux) < 
                             1.e-8 * (leftAbsFlux+absFlux));
-                    xdbg<<"Node with absFlux = "<<_left->_absFlux<<" + "<<_right->_absFlux
-                        <<" = "<<_absFlux<<std::endl;
                 }
             }
 
@@ -209,9 +196,6 @@ namespace galsim {
              */
             const FluxData* find(double& cumulativeFlux) const 
             {
-                xdbg<<"find cumulativeFlux = "<<cumulativeFlux<<std::endl;
-                xdbg<<"in Element with leftAbsFlux = "<<_leftAbsFlux
-                    <<", absFlux = "<<_absFlux<<std::endl;
                 xassert(cumulativeFlux >= _leftAbsFlux);
                 xassert(cumulativeFlux <= _leftAbsFlux + _absFlux);
                 if (!_left) {
@@ -223,7 +207,6 @@ namespace galsim {
                     return _dataPtr;
                 } else {
                     xassert(_right);
-                    xdbg<<"Not a leaf, so traverse down.\n";
                     if (cumulativeFlux < _right->_leftAbsFlux)
                         return _left->find(cumulativeFlux);
                     else
@@ -272,11 +255,6 @@ namespace galsim {
             // If i1 == i2, then we've already assigned everything, so stop recursing.
             if (i1 == i2) return;
 
-            xdbg<<"Start buildShortcut for i1,i2 = "<<i1<<','<<i2<<std::endl;
-            xdbg<<"Corresponds to flux "<<i1*_totalAbsFlux/_shortcut.size()<<" .. "<<
-                i2*_totalAbsFlux/_shortcut.size()<<std::endl;
-            xdbg<<"element's flux range is "<<element->getLeftAbsFlux()<<" .. "<<
-                element->getLeftAbsFlux() + element->getAbsFlux()<<std::endl;
             // Figure out which bins in the shortcut vector should point to this element.
             // On input, we are tasked with assigning indices i1 <= i < i2 to be either
             // this element or one of its decendents.
@@ -290,7 +268,6 @@ namespace galsim {
             if (element->isNode()) {
                 double f = element->getRight()->getLeftAbsFlux();
                 int imid = int(f * _shortcut.size() / _totalAbsFlux);
-                xdbg<<"Node element: f = "<<f<<", imid = "<<imid<<std::endl;
                 if (imid < i1) {
                     // Then the appropriate range is all in the right subtree
                     buildShortcut(element->getRight(), i1, i2);
@@ -308,7 +285,6 @@ namespace galsim {
                     buildShortcut(element->getRight(), imid+1, i2);
                 }
             } else {
-                xdbg<<"Leaf element\n";
                 // If we are at a leaf, then this leaf encompasses all the bins in the range.
                 // Assigne them all to this element.
                 for(int i=i1; i<i2; ++i) _shortcut[i] = element; 
