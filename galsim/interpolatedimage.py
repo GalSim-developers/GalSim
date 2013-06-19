@@ -381,9 +381,9 @@ class InterpolatedImage(GSObject):
         # Apply the offset, and possibly fix the centering for even-sized images
         # Note the minus sign in front of image.scale, since we want to fix the center in the 
         # opposite sense of what the draw function does.
-        prof = sbinterpolatedimage._fix_center(image, -image.scale, offset, use_true_center)
+        prof = self._fix_center(image, -image.scale, offset, use_true_center)
         GSObject.__init__(self, prof.SBProfile)
-            
+
 
     def buildNoisePadImage(self, pad_factor, noise_pad, rng):
         """A helper function that builds the pad_image from the given noise_pad specification.
