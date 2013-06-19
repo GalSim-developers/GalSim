@@ -30,7 +30,7 @@ namespace galsim {
     class SBAdd::SBAddImpl : public SBProfileImpl
     {
     public:
-        SBAddImpl(const std::list<SBProfile>& slist, boost::shared_ptr<GSParams> gsparams);
+        SBAddImpl(const std::list<SBProfile>& slist, const GSParamsPtr& gsparams);
         ~SBAddImpl() {}
 
         void add(const SBProfile& rhs);

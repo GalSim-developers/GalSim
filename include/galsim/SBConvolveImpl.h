@@ -32,7 +32,7 @@ namespace galsim {
     public:
 
         SBConvolveImpl(const std::list<SBProfile>& slist, bool real_space,
-                       boost::shared_ptr<GSParams> gsparams);
+                       const GSParamsPtr& gsparams);
         ~SBConvolveImpl() {}
 
         void add(const SBProfile& rhs); 
@@ -148,7 +148,7 @@ namespace galsim {
     {
     public:
 
-        SBAutoConvolveImpl(const SBProfile& s, boost::shared_ptr<GSParams> gsparams);
+        SBAutoConvolveImpl(const SBProfile& s, const GSParamsPtr& gsparams);
 
         ~SBAutoConvolveImpl() {}
 
@@ -197,7 +197,7 @@ namespace galsim {
     {
     public:
 
-        SBAutoCorrelateImpl(const SBProfile& s, boost::shared_ptr<GSParams> gsparams);
+        SBAutoCorrelateImpl(const SBProfile& s, const GSParamsPtr& gsparams);
 
         ~SBAutoCorrelateImpl() {}
 

@@ -54,10 +54,11 @@ namespace galsim {
          *                         10 cm for most observatories and up to 20 cm for excellent 
          *                         sites. The values are usually quoted at lambda = 500 nm and 
          *                         r0 depends on wavelength as [r0 ~ lambda^(-6/5)].
-         * @param[in] flux         flux (default `flux = 1.`).
+         * @param[in] flux         Flux.
+         * @param[in] gsparams     GSParams object storing constants that control the accuracy of
+         *                         image operations and rendering, if different from the default.
          */
-        SBKolmogorov(double lam_over_r0, double flux=1.,
-                     boost::shared_ptr<GSParams> gsparams = boost::shared_ptr<GSParams>());
+        SBKolmogorov(double lam_over_r0, double flux, const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor
         SBKolmogorov(const SBKolmogorov& rhs);

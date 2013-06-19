@@ -82,6 +82,23 @@ def g1g2_to_e1e2(g1, g2):
     else:
         raise ValueError("Input |g|^2 < 0, cannot convert.")
 
+def rotate_xy(x, y, theta):
+    """Rotates points in the xy-Cartesian plane counter-clockwise through an angle theta about the
+    origin of the Cartesian coordinate system.
+
+    @param x     NumPy array of input x coordinates
+    @param y     NumPy array of input y coordinates
+    @param theta Rotation angle (+ve counter clockwise) as a galsim.Angle instance
+    @return x_rot, yrot  Coordinates rotated by `theta` around the origin
+    """
+    if not isinstance(theta, galsim.Angle):
+        raise TypeError("Input rotation angle theta must be a galsim.Angle instance.")
+    cost = np.cos(theta.rad())
+    sint = np.sin(theta.rad())
+    x_rot = x * cost - y * sint
+    y_rot = x * sint + y * cost
+    return x_rot, y_rot
+
 class AttributeDict(object):
     """Dictionary class that allows for easy initialization and refs to key values via attributes.
 

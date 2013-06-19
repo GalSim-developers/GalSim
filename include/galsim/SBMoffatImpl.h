@@ -31,7 +31,7 @@ namespace galsim {
     {
     public:
         SBMoffatImpl(double beta, double size, RadiusType rType, double trunc, double flux,
-                     boost::shared_ptr<GSParams> gsparams);
+                     const GSParamsPtr& gsparams);
 
         ~SBMoffatImpl() {}
 
@@ -108,11 +108,12 @@ namespace galsim {
         double _inv_rD_sq;
         double _maxRrD_sq;
         double _maxR_sq;
-        mutable double _maxK; ///< Maximum k with kValue > 1.e-3
 
         mutable Table<double,double> _ft;  ///< Lookup table for Fourier transform of Moffat.
 
         mutable double _re; ///< Stores the half light radius if set or calculated post-setting.
+        mutable double _stepk; 
+        mutable double _maxk; ///< Maximum k with kValue > 1.e-3
 
         double (*_pow_beta)(double x, double beta);
         double (SBMoffatImpl::*_kV)(double ksq) const;

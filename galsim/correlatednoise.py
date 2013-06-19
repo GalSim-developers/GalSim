@@ -643,6 +643,9 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     from an imperfectly-estimated sample mean subtraction.  If this is not possible, just be aware 
     that `subtract_mean=True` will bias the correlation function low to some level.
 
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.
+
     Methods and Use
     ---------------
     The main way that a CorrelatedNoise is used is to add or assign correlated noise to an image.
@@ -723,7 +726,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     described above.  The random number generators are not affected by these scaling operations.
     """
     def __init__(self, rng, image, dx=0., x_interpolant=None, correct_periodicity=True,
-        subtract_mean=False):
+        subtract_mean=False, gsparams=None):
 
         # Check that the input image is in fact a galsim.ImageSIFD class instance
         if not isinstance(image, (
@@ -796,9 +799,9 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
         # Then initialize...
         cf_object = galsim.InterpolatedImage(
             cf_image, x_interpolant=x_interpolant, dx=cf_image.getScale(), normalization="sb",
-            calculate_stepk=False, calculate_maxk=False) # these internal calculations do not seem
-                                                         # to do very well with often sharp-peaked
-                                                         # correlation function images...
+            calculate_stepk=False, calculate_maxk=False, #<-these internal calculations do not seem
+            gsparams=gsparams)                           #  to do very well with often sharp-peaked
+                                                         #  correlation function images...
         _BaseCorrelatedNoise.__init__(self, rng, cf_object)
 
         if store_rootps:
@@ -853,7 +856,7 @@ for Class in galsim.ConstImageView.itervalues():
     Class.getCorrelatedNoise = _Image_getCorrelatedNoise
 
 # Free function for returning a COSMOS noise field correlation function
-def getCOSMOSNoise(rng, file_name, dx_cosmos=0.03, variance=0., x_interpolant=None):
+def getCOSMOSNoise(rng, file_name, dx_cosmos=0.03, variance=0., x_interpolant=None, gsparams=None):
     """Returns a representation of correlated noise in the HST COSMOS F814W unrotated science coadd
     images.
 
@@ -892,6 +895,9 @@ def getCOSMOSNoise(rng, file_name, dx_cosmos=0.03, variance=0., x_interpolant=No
     galsim.InterpolantXY(galsim.Linear(tol=1.e-4)), which uses bilinear interpolation.  Initial
     tests indicate the favourable performance of this interpolant in applications involving
     correlated noise.
+
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.
 
     Important note regarding units
     ------------------------------
@@ -947,9 +953,10 @@ def getCOSMOSNoise(rng, file_name, dx_cosmos=0.03, variance=0., x_interpolant=No
     # Use this info to then generate a correlated noise model DIRECTLY: note this is non-standard
     # usage, but tolerated since we can be sure that the input cfimage is appropriately symmetric
     # and peaked at the origin
-    ret = _BaseCorrelatedNoise(rng, galsim.InterpolatedImage(
-        cfimage, dx=dx_cosmos, normalization="sb", calculate_stepk=False, calculate_maxk=False,
-        x_interpolant=x_interpolant))
+    ret = _BaseCorrelatedNoise(
+        rng, galsim.InterpolatedImage(
+            cfimage, dx=dx_cosmos, normalization="sb", calculate_stepk=False, calculate_maxk=False,
+            x_interpolant=x_interpolant, gsparams=gsparams))
     # If the input keyword variance is non-zero, scale the correlation function to have this
     # variance
     if variance > 0.:
