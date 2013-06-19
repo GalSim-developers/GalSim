@@ -390,7 +390,7 @@ class GSObject(object):
         self.SBProfile.applyRotation(theta)
         self.__class__ = GSObject
 
-    def applyShift(self, *args):
+    def applyShift(self, *args, **kwargs):
         """Apply a (dx, dy) shift to this object.
            
         After this call, the caller's type will be a GSObject.
@@ -405,7 +405,10 @@ class GSObject(object):
         galsim.PositionD or galsim.PositionF object.
         """
         if len(args) == 0:
-            raise TypeError("No arguments supplied to applyShift ")
+            # Then dx,dy need to be kwargs
+            # If not, then python will raise an appropriate error.
+            dx = kwargs.pop('dx')
+            dy = kwargs.pop('dy')
         elif len(args) == 1:
             if isinstance(args[0], galsim.PositionD) or isinstance(args[0], galsim.PositionF):
                 dx = args[0].x
@@ -419,6 +422,8 @@ class GSObject(object):
             dy = args[1]
         else:
             raise TypeError("Too many arguments supplied to applyShift ")
+        if kwargs:
+            raise TypeError("applyShift() got unexpected keyword arguments: %s",kwargs.keys())
                 
         print 'calling SBProfile applyShift with ',dx,dy
         self.SBProfile.applyShift(dx,dy)
@@ -512,7 +517,7 @@ class GSObject(object):
         ret.applyRotation(theta)
         return ret
         
-    def createShifted(self, *args):
+    def createShifted(self, *args, **kwargs):
         """Returns a new GSObject by applying a shift.
 
         @param dx Horizontal shift to apply (float).
@@ -524,7 +529,7 @@ class GSObject(object):
         @returns The shifted GSObject.
         """
         ret = self.copy()
-        ret.applyShift(*args)
+        ret.applyShift(*args, **kwargs)
         return ret
 
     # Make sure the image is defined with the right size and scale for the draw and
@@ -760,7 +765,7 @@ class GSObject(object):
         return image
 
     def drawShoot(self, image=None, dx=None, gain=1., wmult=1., normalization="flux",
-                  add_to_image=False, use_true_center=True,
+                  add_to_image=False, use_true_center=True, offset=galsim.PositionD(0.,0.),
                   n_photons=0., rng=None, max_extra_noise=0., poisson_flux=None):
         """Draw an image of the object by shooting individual photons drawn from the surface 
         brightness profile of the object.
