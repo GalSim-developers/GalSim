@@ -91,14 +91,20 @@ class GSObject(object):
     _gsparams = { 'minimum_fft_size' : int,
                   'maximum_fft_size' : int,
                   'alias_threshold' : float,
+                  'stepk_minimum_hlr' : float,
                   'maxk_threshold' : float,
                   'kvalue_accuracy' : float,
                   'xvalue_accuracy' : float,
-                  'shoot_accuracy' : float,
                   'realspace_relerr' : float,
                   'realspace_abserr' : float,
                   'integration_relerr' : float,
-                  'integration_abserr' : float
+                  'integration_abserr' : float,
+                  'shoot_accuracy' : float,
+                  'shoot_relerr' : float,
+                  'shoot_abserr' : float,
+                  'allowed_flux_variation' : float, 
+                  'range_division_for_extrema' : int,
+                  'small_fraction_of_flux' : float
                 }
     def __init__(self, rhs):
         # This guarantees that all GSObjects have an SBProfile
@@ -317,11 +323,15 @@ class GSObject(object):
         self.SBProfile.applyScale(np.sqrt(mu))
        
     def applyShear(self, *args, **kwargs):
-        """Apply a shear to this object, where arguments are either a galsim.Shear, or arguments
-        that will be used to initialize one.
+        """Apply an area-preserving shear to this object, where arguments are either a galsim.Shear,
+        or arguments that will be used to initialize one.
 
         For more details about the allowed keyword arguments, see the documentation for galsim.Shear
         (for doxygen documentation, see galsim.shear.Shear).
+
+        The applyShear() method precisely preserves the area.  To include a lensing distortion with
+        the appropriate change in area, either use applyShear() with applyMagnification(), or use
+        applyLensing() which combines both operations.
 
         After this call, the caller's type will be a GSObject.
         This means that if the caller was a derived type that had extra methods beyond
@@ -432,11 +442,15 @@ class GSObject(object):
         return ret
 
     def createSheared(self, *args, **kwargs):
-        """Returns a new GSObject by applying a shear, where arguments are either a galsim.Shear or
-        keyword arguments that can be used to create one.
+        """Returns a new GSObject by applying an area-preserving shear, where arguments are either a
+        galsim.Shear or keyword arguments that can be used to create one.
 
         For more details about the allowed keyword arguments, see the documentation of galsim.Shear
         (for doxygen documentation, see galsim.shear.Shear).
+
+        The createSheared() method precisely preserves the area.  To include a lensing distortion with
+        the appropriate change in area, either use createSheared() with createMagnified(), or use
+        createLensed() which combines both operations.
 
         @returns The sheared GSObject.
         """
@@ -1388,9 +1402,9 @@ class Sersic(GSObject):
     or `scale_radius`.
 
     Note that the code will be more efficient if the truncation is always the same multiple of
-    `half_light_radius`, since it caches many calculations that depend on the ratio
-    `trunc/half_light_radius`.  The `half_light_radius` is always calculated internally for a
-    `scale_radius` input, and vice versa.
+    `scale_radius`, since it caches many calculations that depend on the ratio `trunc/scale_radius`.
+    The `scale_radius` is always calculated internally for a `half_light_radius` input, and vice
+    versa.  Internal calculations are based on the `scale_radius`.
 
     Example:
 
@@ -1398,25 +1412,28 @@ class Sersic(GSObject):
         >>> sersic_obj.getHalfLightRadius()
         2.5
         >>> sersic_obj.getScaleRadius()
-        0.003262738739835313
+        0.003262738739834598
         >>> sersic_obj.getN()
         3.5
+
         >>> sersic_obj = galsim.Sersic(n=1.5, scale_radius=0.5, flux=40.)
         >>> sersic_obj.getHalfLightRadius()
-        2.1863858209590648
+        2.1863858209414166
         >>> sersic_obj.getScaleRadius()
         0.5
         >>> sersic_obj.getN()
         1.5
 
     Another optional parameter, `flux_untruncated`, specifies whether the `flux` and
-    `half_light_radius` (or `scale_radius`) correspond to the untruncated profile or the
-    truncated profile.  If `flux_untruncated` is True (and `trunc > 0`), then the profile
-    will be identical to the version without truncation up to the truncation radius, beyond
-    which it drops to 0.  In this case, the actual half-light radius will be different from
-    the specified half-light radius.  The getHalfLightRadius() method will return the true
-    half-light radius.  Similarly, the actual flux will not be the same as the specified value; the
-    true flux is also returned by the getFlux() method.
+    `half_light_radius` specification correspond to the untruncated profile or the truncated
+    profile.  (The example here is specifically for the case where the truncated Sersic is
+    specified by the `half_light_radius`.  For the case when it is specified by the `scale_radius`,
+    see below.)  If `flux_untruncated` is True (and `trunc > 0`), then the profile will be identical
+    to the version without truncation up to the truncation radius, beyond which it drops to 0.
+    In this case, the actual half-light radius will be different from the specified half-light
+    radius.  The getHalfLightRadius() method will return the true half-light radius.  Similarly,
+    the actual flux will not be the same as the specified value; the true flux is also returned
+    by the getFlux() method.
 
     Example:
 
@@ -1426,17 +1443,17 @@ class Sersic(GSObject):
                                         flux_untruncated=True)
 
         >>> sersic_obj1.xValue(galsim.PositionD(0.,0.))
-        237.3094228614579
+        237.3094228615618
         >>> sersic_obj2.xValue(galsim.PositionD(0.,0.))
-        142.54505376523912    # Normalization and scale radius adjusted (same half-light radius)
+        142.54505376530574    # Normalization and scale radius adjusted (same half-light radius)
         >>> sersic_obj3.xValue(galsim.PositionD(0.,0.))
-        237.3094228614579
+        237.30942286156187
 
-        >>> sersic_obj1.xValue(galsim.PositionD(10.,0.))
-        0.011776164687306839
-        >>> sersic_obj2.xValue(galsim.PositionD(10.,0.))
+        >>> sersic_obj1.xValue(galsim.PositionD(10.0001,0.))
+        0.011776164687304694
+        >>> sersic_obj2.xValue(galsim.PositionD(10.0001,0.))
         0.0
-        >>> sersic_obj3.xValue(galsim.PositionD(10.,0.))
+        >>> sersic_obj3.xValue(galsim.PositionD(10.0001,0.))
         0.0
 
         >>> sersic_obj1.getHalfLightRadius()
@@ -1444,21 +1461,21 @@ class Sersic(GSObject):
         >>> sersic_obj2.getHalfLightRadius()
         2.5
         >>> sersic_obj3.getHalfLightRadius()
-        1.9795101421751533    # The true half-light radius is smaller than the specified value
+        1.9795101383056892    # The true half-light radius is smaller than the specified value
 
         >>> sersic_obj1.getFlux()
         40.0
         >>> sersic_obj2.getFlux()
         40.0
         >>> sersic_obj3.getFlux()
-        34.56595186009358     # Flux is missing due to truncation
+        34.56595186009519     # Flux is missing due to truncation
 
         >>> sersic_obj1.getScaleRadius()
-        0.003262738739835313
+        0.003262738739834598
         >>> sersic_obj2.getScaleRadius()
-        0.004754602453643055  # the scale radius needed adjustment to accommodate HLR
+        0.004754602453641744  # the scale radius needed adjustment to accommodate HLR
         >>> sersic_obj3.getScaleRadius()
-        0.003262738739835313  # the scale radius is still identical to the untruncated case
+        0.003262738739834598  # the scale radius is still identical to the untruncated case
 
     When the truncated Sersic scale is specified with `scale_radius`, the behavior between the
     three cases (untruncated, `flux_untruncated=true` and `flux_untruncated=false`) will be
@@ -1466,8 +1483,8 @@ class Sersic(GSObject):
     truncation does not change the scale radius the way it can change the half-light radius, the
     scale radius will remain unchanged in all cases.  This also results in the half-light radius
     being the same between the two truncated cases (although different from the untruncated case).
-    The flux normalization is the only difference between `flux_untruncated=true` and
-    `flux_untruncated=false`.
+    The flux normalization is the only difference between `flux_untruncated=True` and
+    `flux_untruncated=False` in this case.
 
     Example:
 
@@ -1477,25 +1494,25 @@ class Sersic(GSObject):
                                         flux_untruncated=True)
 
         >>> sersic_obj1.xValue(galsim.PositionD(0.,0.))
-        1.0105075749813057
+        1.010507575186637
         >>> sersic_obj2.xValue(galsim.PositionD(0.,0.))
-        5.808620231907939     # Normalization adjusted to accomodate the flux within trunc radius
+        5.786692612210923     # Normalization adjusted to accomodate the flux within trunc radius
         >>> sersic_obj3.xValue(galsim.PositionD(0.,0.))
-        1.010507574981306
+        1.010507575186637
 
         >>> sersic_obj1.getHalfLightRadius()
-        38.311372739273985
+        38.311372735390016
         >>> sersic_obj2.getHalfLightRadius()
-        5.142758708673917     # The half-light radius is smaller than the specified value
+        5.160062547614234
         >>> sersic_obj3.getHalfLightRadius()
-        5.142758708673917     # Since the trunc and scale radius are the same, the HLR is the same
+        5.160062547614234     # For the truncated cases, the half-light radii are the same
 
         >>> sersic_obj1.getFlux()
         40.0
         >>> sersic_obj2.getFlux()
         40.0
         >>> sersic_obj3.getFlux()
-        6.958675448812308     # Flux is missing due to truncation
+        6.985044085834393     # Flux is missing due to truncation
 
         >>> sersic_obj1.getScaleRadius()
         0.05
@@ -1616,57 +1633,142 @@ class DeVaucouleurs(GSObject):
 
     Initialization
     --------------
-    A DeVaucouleurs is initialized with the half light radius size parameter `half_light_radius`.
-    Optional parameters are truncation radius `trunc` [default `trunc = 0.`, indicating no
-    truncation] and a `flux` parameter [default `flux = 1.`].  If `trunc` is set to a non-zero
-    value, then it is assumed to be in the same system of units as `half_light_radius`.
+
+    A DeVaucouleurs is initialized with one (and only one) of two possible size parameters
+
+        half_light_radius
+        scale_radius
+
+    where `I_n(r) ~ exp[-(r/scale_radius)^{1/4}] = exp[-b (r/half_light_radius)^{1/4}]`, and
+    where `b` is implicitly defined by the condition
+    `\int_{0}^{half_light_radius} I_n(r) 2pi r dr} = 0.5 \int_{0}^{infinity} I_n(r) 2pi r dr`.
+    Note that `b = (half_light_radius/scale_radius)^{1/4}` (when there is no truncation; see
+    below).
+
+    Several optional parameters are available:  Truncation radius `trunc` [default `trunc = 0.`,
+    indicating no truncation] and a `flux` parameter [default `flux = 1`].  If `trunc` is set to
+    a non-zero value, then it is assumed to be in the same system of units as `half_light_radius`
+    or `scale_radius`.
 
     Note that the code will be more efficient if the truncation is always the same multiple of
-    `half_light_radius`, since it caches many calculations that depend on the ratio
-    `trunc/half_light_radius`.
+    `scale_radius`, since it caches many calculations that depend on the ratio `trunc/scale_radius`.
+    The `scale_radius` is always calculated internally for a `half_light_radius` input, and vice
+    versa.  Internal calculations are based on the `scale_radius`.
 
     Example:
 
         >>> dvc_obj = galsim.DeVaucouleurs(half_light_radius=2.5, flux=40.)
         >>> dvc_obj.getHalfLightRadius()
         2.5
+        >>> dvc_obj.getScaleRadius()
+        0.0007226509117045296
+        >>> dvc_obj.getFlux()
+        40.0
+
+        >>> dvc_obj = galsim.DeVaucouleurs(scale_radius=0.0005, flux=40.)
+        >>> dvc_obj.getHalfLightRadius()
+        1.7297425074184196
+        >>> dvc_obj.getScaleRadius()
+        0.0005
         >>> dvc_obj.getFlux()
         40.0
 
     Another optional parameter, `flux_untruncated`, specifies whether the `flux` and
-    `half_light_radius` correspond to the untruncated profile or the truncated profile. If
-    `flux_untruncated` is True (and `trunc > 0` of course), then the profile will be identical
-    to the version without truncation up to the truncation radius, at which point it drops to 0.
-    If `flux_untruncated` is False (the default), then the scale radius will be larger and the
-    central peak will be higher than the untruncated profile, in order to maintain the correct
-    provided `flux` and `half_light_radius`.
-
-    When `trunc > 0.` and `flux_untruncated == True`, the actual half-light radius will be different
-    from the specified half-light radius.  The getHalfLightRadius() method will return the true
-    half-light radius.  Similarly, the actual flux will not be the same as the specified value; the
-    true flux is also returned by the getFlux() method.
+    `half_light_radius` specification correspond to the untruncated profile or the truncated
+    profile.  (The example here is specifically for the case where the truncated DeVaucouleurs is
+    specified by the `half_light_radius`.  For the case when it is specified by the `scale_radius`,
+    see below.)  If `flux_untruncated` is True (and `trunc > 0`), then the profile will be identical
+    to the version without truncation up to the truncation radius, beyond which it drops to 0.
+    In this case, the actual half-light radius will be different from the specified half-light
+    radius.  The getHalfLightRadius() method will return the true half-light radius.  Similarly,
+    the actual flux will not be the same as the specified value; the true flux is also returned
+    by the getFlux() method.
 
     Example:
 
-        >>> dvc_obj = galsim.DeVaucouleurs(half_light_radius=2.5, flux=40.)
-        >>> dvc_obj2 = galsim.DeVaucouleurs(half_light_radius=2.5, flux=40., trunc=10., \\
+        >>> dvc_obj1 = galsim.DeVaucouleurs(half_light_radius=2.5, flux=40.)
+        >>> dvc_obj2 = galsim.DeVaucouleurs(half_light_radius=2.5, flux=40., trunc=10.)
+        >>> dvc_obj3 = galsim.DeVaucouleurs(half_light_radius=2.5, flux=40., trunc=10., \\
                                             flux_untruncated=True)
-        >>> dvc_obj.xValue(galsim.PositionD(0.,0.))
-        604.6895805968326
+
+        >>> dvc_obj1.xValue(galsim.PositionD(0.,0.))
+        604.6895805977035
         >>> dvc_obj2.xValue(galsim.PositionD(0.,0.))
-        604.6895805968326     # The xValues are the same inside the truncation radius ...
-        >>> dvc_obj.xValue(galsim.PositionD(10.0,0.))
-        0.011781304853174116
-        >>> dvc_obj2.xValue(galsim.PositionD(10.0,0.))
-        0.0                   # ... but different outside the truncation radius
-        >>> dvc_obj.getHalfLightRadius()
+        311.21124599256984     # Normalization and scale radius adjusted (same half-light radius)
+        >>> dvc_obj3.xValue(galsim.PositionD(0.,0.))
+        604.6895805977036
+
+        >>> dvc_obj1.xValue(galsim.PositionD(10.0001,0.))
+        0.011781304853168086
+        >>> dvc_obj2.xValue(galsim.PositionD(10.0001,0.))
+        0.0
+        >>> dvc_obj3.xValue(galsim.PositionD(10.0001,0.))
+        0.0
+
+        >>> dvc_obj1.getHalfLightRadius()
         2.5
         >>> dvc_obj2.getHalfLightRadius()
-        1.886276579179012     # The true half-light radius is smaller than the specified value
-        >>> dvc_obj.getFlux()
+        2.5
+        >>> dvc_obj3.getHalfLightRadius()
+        1.886276572775526      # The true half-light radius is smaller than the specified value
+
+        >>> dvc_obj1.getFlux()
         40.0
         >>> dvc_obj2.getFlux()
-        33.863171136492156    # The flux from the truncation is missing
+        40.0
+        >>> dvc_obj3.getFlux()
+        33.863171136497485     # Flux is missing due to truncation
+
+        >>> dvc_obj1.getScaleRadius()
+        0.0007226509117045296
+        >>> dvc_obj2.getScaleRadius()
+        0.0011682634210583717  # the scale radius needed adjustment to accommodate HLR
+        >>> dvc_obj3.getScaleRadius()
+        0.0007226509117045296  # the scale radius is still identical to the untruncated case
+
+    When the truncated DeVaucouleurs scale is specified with `scale_radius`, the behavior between
+    the three cases (untruncated, `flux_untruncated=true` and `flux_untruncated=false`) will be
+    somewhat different from above.  Since it is the scale radius that is being specified, and since
+    truncation does not change the scale radius the way it can change the half-light radius, the
+    scale radius will remain unchanged in all cases.  This also results in the half-light radius
+    being the same between the two truncated cases (although different from the untruncated case).
+    The flux normalization is the only difference between `flux_untruncated=True` and
+    `flux_untruncated=False` in this case.
+
+    Example:
+
+        >>> dvc_obj1 = galsim.DeVaucouleurs(scale_radius=0.005, flux=40.)
+        >>> dvc_obj2 = galsim.DeVaucouleurs(scale_radius=0.005, flux=40., trunc=10.)
+        >>> dvc_obj3 = galsim.DeVaucouleurs(scale_radius=0.005, flux=40., trunc=10., \\
+                                            flux_untruncated=True)
+
+        >>> dvc_obj1.xValue(galsim.PositionD(0.,0.))
+        12.63134468983296
+        >>> dvc_obj2.xValue(galsim.PositionD(0.,0.))
+        35.599406762789826    # Normalization adjusted to accomodate the flux within trunc radius
+        >>> dvc_obj3.xValue(galsim.PositionD(0.,0.))
+        12.631344689832964
+
+        >>> dvc_obj1.getHalfLightRadius()
+        17.297425074184197
+        >>> dvc_obj2.getHalfLightRadius()
+        4.227095063833963
+        >>> dvc_obj3.getHalfLightRadius()
+        4.227095063833963     # For the truncated cases, the half-light radii are the same
+
+        >>> dvc_obj1.getFlux()
+        40.0
+        >>> dvc_obj2.getFlux()
+        40.0
+        >>> dvc_obj3.getFlux()
+        14.192758631063299    # Flux is missing due to truncation
+
+        >>> dvc_obj1.getScaleRadius()
+        0.005
+        >>> dvc_obj2.getScaleRadius()
+        0.005
+        >>> dvc_obj3.getScaleRadius()
+        0.005
 
     You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
     help(galsim.GSParams) for more information about this option.

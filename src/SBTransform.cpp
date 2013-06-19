@@ -37,7 +37,7 @@ namespace galsim {
     SBTransform::SBTransform(const SBProfile& adaptee,
                              double mA, double mB, double mC, double mD,
                              const Position<double>& cen, double fluxScaling,
-                             boost::shared_ptr<GSParams> gsparams) :
+                             const GSParamsPtr& gsparams) :
         SBProfile(new SBTransformImpl(adaptee,mA,mB,mC,mD,cen,fluxScaling,gsparams)) {}
 
     SBTransform::SBTransform(const SBTransform& rhs) : SBProfile(rhs) {}
@@ -47,9 +47,8 @@ namespace galsim {
     SBTransform::SBTransformImpl::SBTransformImpl(
         const SBProfile& adaptee, double mA, double mB, double mC, double mD,
         const Position<double>& cen, double fluxScaling,
-        boost::shared_ptr<GSParams> gsparams) :
-        SBProfileImpl(gsparams.get() ? gsparams :
-                      GetImpl(adaptee)->gsparams),
+        const GSParamsPtr& gsparams) :
+        SBProfileImpl(gsparams ? gsparams : GetImpl(adaptee)->gsparams),
         _adaptee(adaptee), _mA(mA), _mB(mB), _mC(mC), _mD(mD), _cen(cen), _fluxScaling(fluxScaling)
     {
         dbg<<"Start TransformImpl (1)\n";
