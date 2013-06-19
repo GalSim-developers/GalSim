@@ -628,21 +628,21 @@ namespace galsim {
         /**
          * @brief Default constructor leaves the image's data pointer as null.
          */
-        Image() : BaseImage<T>(Bounds<int>(), 1.) {}
+        Image() : BaseImage<T>(Bounds<int>(), 0.) {}
 
         /**
          *  @brief Create a new image with origin at (1,1).
          *
          *  An exception is thrown if ncol or nrow <= 0
          *
-         *  The scale is initially set to 1.0.
+         *  The scale is initially set to 0.0.
          */
         Image(int ncol, int nrow, T init_value = T(0));
 
         /**
          *  @brief Create a new image with the given bounding box and initial value.
          *
-         *  The scale is initially set to 1.0.
+         *  The scale is initially set to 0.0.
          */
         Image(const Bounds<int>& bounds, T init_value = T(0));
 
@@ -655,7 +655,7 @@ namespace galsim {
         /**
          *  @brief Can construct from any AssignableToImage
          *
-         *  The scale is initially set to 1.0.
+         *  The scale is initially set to 0.0.
          */
         Image(const AssignableToImage<T>& rhs) : BaseImage<T>(rhs.getBounds(),1.) 
         { rhs.assignTo(view()); }
