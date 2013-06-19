@@ -390,7 +390,7 @@ class GSObject(object):
         self.SBProfile.applyRotation(theta)
         self.__class__ = GSObject
 
-    def applyShift(self, dx, dy):
+    def applyShift(self, *args):
         """Apply a (dx, dy) shift to this object.
            
         After this call, the caller's type will be a GSObject.
@@ -400,7 +400,27 @@ class GSObject(object):
 
         @param dx Horizontal shift to apply (float).
         @param dy Vertical shift to apply (float).
+
+        Note: you may supply dx,dy as either two arguments, as a tuple, or as a 
+        galsim.PositionD or galsim.PositionF object.
         """
+        if len(args) == 0:
+            raise TypeError("No arguments supplied to applyShift ")
+        elif len(args) == 1:
+            if isinstance(args[0], galsim.PositionD) or isinstance(args[0], galsim.PositionF):
+                dx = args[0].x
+                dy = args[0].y
+            else:
+                # Let python raise the appropriate exception if this isn't valid.
+                dx = args[0][0]
+                dy = args[0][1]
+        elif len(args) == 2:
+            dx = args[0]
+            dy = args[1]
+        else:
+            raise TypeError("Too many arguments supplied to applyShift ")
+                
+        print 'calling SBProfile applyShift with ',dx,dy
         self.SBProfile.applyShift(dx,dy)
         self.__class__ = GSObject
 
@@ -492,15 +512,19 @@ class GSObject(object):
         ret.applyRotation(theta)
         return ret
         
-    def createShifted(self, dx, dy):
+    def createShifted(self, *args):
         """Returns a new GSObject by applying a shift.
 
         @param dx Horizontal shift to apply (float).
         @param dy Vertical shift to apply (float).
+
+        Note: you may supply dx,dy as either two arguments, as a tuple, or as a 
+        galsim.PositionD or galsim.PositionF object.
+
         @returns The shifted GSObject.
         """
         ret = self.copy()
-        ret.applyShift(dx, dy)
+        ret.applyShift(*args)
         return ret
 
     # Make sure the image is defined with the right size and scale for the draw and
@@ -583,17 +607,20 @@ class GSObject(object):
         # wants to do the reverse operation, which is implemented by providing 
         # scale = -image.scale
 
+        dx = offset.x
+        dy = offset.y
         if use_true_center:
             # For even-sized images, the SBProfile draw function centers the result in the 
             # pixel just up and right of the real center.  So shift it back to make sure it really
             # draws in the center.
-            if (image.xmax-image.xmin+1) % 2 == 0: offset.x -= 0.5
-            if (image.ymax-image.ymin+1) % 2 == 0: offset.y -= 0.5
+            if (image.xmax-image.xmin+1) % 2 == 0: dx -= 0.5
+            if (image.ymax-image.ymin+1) % 2 == 0: dy -= 0.5
 
-        if offset == galsim.PositionD(0.,0.):
+        print 'In fix_center: offset = ',(dx,dy),', scale = ',scale
+        if dx == 0. and dy == 0.:
             return self
         else:
-            return self.createShifted(offset.x * scale, offset.y * scale)
+            return self.createShifted(dx*scale, dy*scale)
 
 
     def draw(self, image=None, dx=None, gain=1., wmult=1., normalization="flux",
