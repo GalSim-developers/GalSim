@@ -198,13 +198,18 @@ def test_realgalaxy(base_config, shear=None, magnification=None, angle=None, shi
     return InterpolationData(config=pass_config, g1obs=g1obs_list, g2obs=g2obs_list, 
                               sigmaobs=sigmaobs_list)
 
-def print_results(g1_list, g2_list, sigma_list, test_answer):
-    if test_answer.image_type=='Original':
-        outfile = original_file
-    elif test_answer.image_type=='Delta':
-        outfile = delta_file
+def print_results(g1_list, g2_list, sigma_list, test_answer, outfile=None):
+    """Print the results to a file specified either via outfile kwarg or chosen using
+    test_answer.image_type.
+    """
+    if outfile is None:
+        if test_answer.image_type=='Original':
+            outfile = original_file
+        elif test_answer.image_type=='Delta':
+            outfile = delta_file
+        else:
+            raise TypeError('Unknown image type in %s'%test_answer)
     else:
-        raise TypeError('Unknown image type in %s'%test_answer)
     if test_answer.shear[0]!=0 or test_answer.shear[1]!=0:
         # Determine expected g1 given intrinsic g1 and applied shear
         # (equations from Bernstein & Jarvis 01 (astro-ph/0107431) 
