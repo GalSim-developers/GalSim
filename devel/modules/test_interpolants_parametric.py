@@ -28,8 +28,8 @@ INTERPOLANT_DICT = {
     "lanczos7" : galsim.Lanczos(7)}
 
 # Output filenames
-SPACE_FILENAME = 'interpolant_test_parametric_output_space.dat'
-GROUND_FILENAME = 'interpolant_test_parametric_output_ground.dat'
+DELTA_FILENAME = 'interpolant_test_parametric_output_delta.dat'
+ORIGINAL_FILENAME = 'interpolant_test_parametric_output_original.dat'
 
 
 class InterpolationDataNoConfig:
@@ -121,7 +121,7 @@ def calculate_interpolated_image_g1g2sigma(images, psf=None, dx_input=None, dx_t
         if shift is not None:
             if not isinstance(shift, galsim.PositionD):
                 raise ValueError("Input kwarg shift must be a galsim.PositionD instance.")
-            test_gal.applyShift(shift) 
+            test_gal.applyShift(shift * dx_test) # Shifts are in pixel units so convert to arcsec
         # Apply a PSF if requested
         if psf is not None:
             test_final = galsim.Convolve([test_gal, psf])
@@ -183,9 +183,10 @@ def draw_sersic_images(narr, hlrarr, gobsarray, random_seed=None, nmin=0.3, nmax
     # Return this list of drawn images
     return sersic_images
 
+def run_tests(use_interpolants):
+    """Run the tests for the specified interpolants."""
 
-if __name__ == "__main__":
-
+    import sys
     # Import the Sersic galaxy sample module
     try:
         import galaxy_sample
@@ -229,30 +230,86 @@ if __name__ == "__main__":
 
     # Then start the interpolant tests...
     # Let's just do space and ground-based PSFs, and define a dict storing these to iterate over,
-    # along with the appropriate test pixel scale
+    # along with the appropriate test pixel scale and filename
     psf_dict = {
         "delta" : (
-            galsim.Gaussian(1.e-8), test_interpolants.space_pixel_scale),
+            galsim.Gaussian(1.e-8), test_interpolants.space_pixel_scale, DELTA_FILENAME),
         "original" : (
-            None, test_interpolants.space_pixel_scale),
+            None, test_interpolants.space_pixel_scale, ORIGINAL_FILENAME),
     }
  
     # Then we start the grand loop producing output in a similar fashion to test_interpolants.py
     for image_type in ("delta", "original"):
  
         # Get the correct PSF and test image pixel scale
-        psf = psf_dict[psf_label][0]
-        dx_test = psf_dict[psf_label][1]
+        psf = psf_dict[image_type][0]
+        dx_test = psf_dict[image_type][1]
+        outfile = open(psf_dict[image_type][2], 'wb')
+        print "Writing test results to "+outfile
         for padding in test_interpolants.padding_list:
 
-            for interpolant in test_interpolants.use_interpolants:
+            print "Using padding = "+str(padding)
+            for interpolant in use_interpolants:
 
-                dataXint = calculate_interpolated_image_g1g2sigma(
-                    sersic_images, psf=psf, dx_input=test_interpolants.space_pixel_scale,
-                    dx_test=dx_test, shear=None, magnification=None, angle=None, shift=None, 
-                    x_interpolant=interpolant, padding=None, image_type=image_type)
+                print 'Running Angle tests',
+                for angle in test_interpolants.angle_list: # Possible rotation angles
 
-                dataKint = calculate_interpolated_image_g1g2sigma(
-                    sersic_images, psf=psf, dx_input=test_interpolants.space_pixel_scale,
-                    dx_test=dx_test, shear=None, magnification=None, angle=None, shift=None, 
-                    x_interpolant=interpolant, padding=None, image_type=image_type)
+                    sys.stdout.write('.')
+                    dataXint = calculate_interpolated_image_g1g2sigma(
+                        sersic_images, psf=psf, dx_input=test_interpolants.space_pixel_scale,
+                        dx_test=dx_test, shear=None, magnification=None, angle=angle*galsim.degrees,
+                        shift=None, x_interpolant=interpolant, padding=None, image_type=image_type)
+                    test_interpolants.print_results(
+                        g1_list, g2_list, sigma_list, dataXint, outfile=outfile)
+                    dataKint = calculate_interpolated_image_g1g2sigma(
+                        sersic_images, psf=psf, dx_input=test_interpolants.space_pixel_scale,
+                        dx_test=dx_test, shear=None, magnification=None, angle=angle*galsim.degrees,
+                        shift=None, x_interpolant=interpolant, padding=None, image_type=image_type)
+                    test_interpolants.print_results(
+                        g1_list, g2_list, sigma_list, dataKint, outfile=outfile)
+ 
+                print ''
+                print 'Running Shear/Magnification tests',
+                for (g1, g2, mag) in test_interpolants.shear_and_magnification_list:
+
+                    sys.stdout.write('.')
+                    dataXint = calculate_interpolated_image_g1g2sigma(
+                        sersic_images, psf=psf, dx_input=test_interpolants.space_pixel_scale,
+                        dx_test=dx_test, shear=(g1, g2), magnification=mag, angle=None,
+                        shift=None, x_interpolant=interpolant, padding=None, image_type=image_type)
+                    test_interpolants.print_results(
+                        g1_list, g2_list, sigma_list, dataXint, outfile=outfile)
+                    dataKint = calculate_interpolated_image_g1g2sigma(
+                        sersic_images, psf=psf, dx_input=test_interpolants.space_pixel_scale,
+                        dx_test=dx_test, shear=(g1, g2), magnification=mag, angle=None,
+                        shift=None, x_interpolant=interpolant, padding=None, image_type=image_type)
+                    test_interpolants.print_results(
+                        g1_list, g2_list, sigma_list, dataKint, outfile=outfile)
+
+                print ''
+                print 'Running Shift tests'
+                for shift in test_interpolants.shift_list:
+
+                    sys.stdout.write('.')
+                    dataXint = calculate_interpolated_image_g1g2sigma(
+                        sersic_images, psf=psf, dx_input=test_interpolants.space_pixel_scale,
+                        dx_test=dx_test, shear=None, magnification=None, angle=None,
+                        shift=shift, x_interpolant=interpolant, padding=None, image_type=image_type)
+                    test_interpolants.print_results(
+                        g1_list, g2_list, sigma_list, dataXint, outfile=outfile)
+                    dataKint = calculate_interpolated_image_g1g2sigma(
+                        sersic_images, psf=psf, dx_input=test_interpolants.space_pixel_scale,
+                        dx_test=dx_test, shear=None, magnification=None, angle=None,
+                        shift=shift, x_interpolant=interpolant, padding=None, image_type=image_type)
+                    test_interpolants.print_results(
+                        g1_list, g2_list, sigma_list, dataKint, outfile=outfile)
+
+                print ''
+
+        print "Finished tests for image_type: "+str(image_type) 
+        outfile.close()
+
+
+if __name__ == "__main__":
+    use_interpolants = test_interpolants[2:]
+    run_test(use_interpolants)
