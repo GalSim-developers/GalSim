@@ -209,7 +209,7 @@ def print_results(g1_list, g2_list, sigma_list, test_answer, outfile=None):
             outfile = delta_file
         else:
             raise TypeError('Unknown image type in %s'%test_answer)
-    else:
+
     if test_answer.shear[0]!=0 or test_answer.shear[1]!=0:
         # Determine expected g1 given intrinsic g1 and applied shear
         # (equations from Bernstein & Jarvis 01 (astro-ph/0107431) 
