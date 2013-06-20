@@ -207,8 +207,9 @@ def run_tests(use_interpolants):
     ns_cosmos, hlrs_cosmos, gobss_cosmos = galaxy_sample.get()
     # Only use the first test_interpolants.nitems galaxies in these lists, starting at
     # test_interpolants.first_index
+    nitems = 10 # test_interpolants.nitems + 3 # Kludge: 3 in lists above have n outside range!
     istart = test_interpolants.first_index
-    iend = istart + test_interpolants.nitems + 3 # Kludge: 3 in lists above have n outside range!
+    iend = istart + nitems
     ns_cosmos = ns_cosmos[istart: iend]
     hlrs_cosmos = hlrs_cosmos[istart: iend]
     gobss_cosmos = gobss_cosmos[istart: iend]
