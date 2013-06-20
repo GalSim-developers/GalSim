@@ -41,26 +41,15 @@ shear_and_magnification_list = [(0.001, 0., 0.),(0.01, 0., 0.), (0.1, 0., 0.),
 catalog_dir = '../../examples/data'
 catalog_filename = 'real_galaxy_catalog_examples.fits'
 first_index = 0
+pixel_scale = 0.03
 nitems = 100 # How many galaxies to test
-# Ground-image parameters
-ground_fwhm = 0.65        # arcsec
-ground_pixel_scale = 0.2  # arcsec
-# 700 nm wavelength, 4 m telescope, convert to radians then arcsec
-ground_lam_over_diam = 700./4.*1.E-9*206265 
-# Space-image parameters
-space_lam_over_diam = 700./1.3*1.E-9*206265
-space_pixel_scale = 0.03
 # Random seed
 rseed = 999888444
 
 # --- COMPUTATIONAL DETAILS AND FILENAMES ---
 nproc = 8
-ground_filename = 'interpolant_test_output_ground.dat'
-space_filename = 'interpolant_test_output_space.dat'
 original_filename = 'interpolant_test_output_original.dat'
 delta_filename = 'interpolant_test_output_delta.dat'
-ground_file = open(ground_filename,'w')
-space_file = open(space_filename,'w')
 original_file = open(original_filename,'w')
 delta_file = open(delta_filename,'w')
 
@@ -68,55 +57,32 @@ delta_file = open(delta_filename,'w')
 def get_config():
 # A function to return three config dictionaries with the basic PSF info that we will reuse for all
 # tests.
-    space_config = {}    # Space-like data
-    ground_config = {}   # Ground-like data
     original_config = {} # Original RealGalaxy image (before deconvolution)
     delta_config = {}
     
-    space_config['psf'] = { "type" : "Airy", 'lam_over_diam' : space_lam_over_diam}
-    ground_config['psf'] = { 
-        'type' : 'Convolution', 
-        'items' : [ {'type' : 'Kolmogorov', 'fwhm' : ground_fwhm },
-                    {'type' : 'Airy', 'lam_over_diam' : ground_lam_over_diam } ]
-    }
     delta_config['psf'] = {
         'type' : 'Gaussian',
         'sigma': 1.E-8
     }
-    # no psf for original_config or delta_config (it's already in there)
+    # no pixel convolution for original_config or delta_config (it's already in there)
     original_config['pix'] = {'type': 'None'}
     delta_config['pix'] = {'type': 'None'}
                 
-    space_config['image'] = {
-        'type' : 'Single',
-        'pixel_scale' : space_pixel_scale,
-        'nproc' : nproc
-    }
-    ground_config['image'] = {
-        'type' : 'Single',
-        'pixel_scale' : ground_pixel_scale,
-        'nproc' : nproc
-    }
     original_config['image'] = {
         'type' : 'Single',
-        'pixel_scale' : space_pixel_scale,
+        'pixel_scale' : pixel_scale,
         'nproc' : nproc
     }
     delta_config['image'] = {
         'type' : 'Single',
-        'pixel_scale' : space_pixel_scale,
+        'pixel_scale' : pixel_scale,
         'nproc' : nproc
     }
 
-    galaxy_config = { 'type': 'RealGalaxy', 
+    galaxy_config = { 'type': 'RealGalaxyOriginal', 
                       'index': { 'type': 'Sequence', 'first': first_index, 'nitems': nitems } }
     catalog_config = {'real_catalog' : { 'dir' : catalog_dir, 
         'file_name' :  catalog_filename, 'preload' : True} }
-    ground_config['gal'] = galaxy_config
-    ground_config['input'] = catalog_config
-    space_config['gal'] = galaxy_config
-    space_config['input'] = catalog_config
-    galaxy_config['type'] = 'RealGalaxyOriginal'
     original_config['gal'] = galaxy_config
     original_config['input'] = catalog_config
     delta_config['gal'] = galaxy_config
@@ -126,11 +92,9 @@ def get_config():
     field['type'], ignore = galsim.config.process.valid_input_types['real_catalog'][0:2]
     input_obj = galsim.config.gsobject._BuildSimple(field, 'real_catalog', catalog_config,
                                                     ignore)[0]
-    space_config['real_catalog'] = input_obj
-    ground_config['real_catalog'] = input_obj
     original_config['real_catalog'] = input_obj
     delta_config['real_catalog'] = input_obj
-    return [delta_config] #, original_config, space_config, ground_config]
+    return [delta_config, original_config]
 
 class InterpolationData:
 # Quick container class for passing around data from these tests.  
@@ -173,10 +137,9 @@ class InterpolationData:
             self.image_type = 'Original'
         elif config['psf']['type'] == 'Gaussian':
             self.image_type = 'Delta'
-        elif config['psf']['type'] == 'Convolution':
-            self.image_type = 'Ground'
         else:
-            self.image_type = 'Space'
+            raise TypeError('Cannot detect image type from config dict in InterpolationData '
+                              'initialization.')
 
 # Don't fail the entire program if a shape cannot be determined...
 def CatchAdaptiveMomErrors(obj):
@@ -240,10 +203,6 @@ def print_results(g1_list, g2_list, sigma_list, test_answer):
         outfile = original_file
     elif test_answer.image_type=='Delta':
         outfile = delta_file
-    elif test_answer.image_type=='Space':
-        outfile = space_file
-    elif test_answer.image_type=='Ground':
-        outfile = ground_file
     else:
         raise TypeError('Unknown image type in %s'%test_answer)
     if test_answer.shear[0]!=0 or test_answer.shear[1]!=0:
@@ -326,7 +285,7 @@ def main():
     # Now, run through the various things we need to test in loops.
     # Right now, test rotation angles separately from shear and magnification
     # (but we can do that nested later if need be - probably with fewer tested angles).
-    for base_config in config_list:                     # Ground, space, no PSF, original galaxy
+    for base_config in config_list:                     # Original galaxy; same with Gaussian PSF
         for padding in padding_list:                    # Amount of padding
             for interpolant in use_interpolants:        # Possible interpolants
                 print 'Angle test ', 
@@ -365,11 +324,10 @@ def main():
                 print ''
                     
 
-    ground_file.close()
-    space_file.close()
     original_file.close()
     delta_file.close()
     
 if __name__ == "__main__":
     main()
+
 
