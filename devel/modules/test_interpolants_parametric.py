@@ -38,7 +38,7 @@ class InterpolationDataNoConfig:
     def __init__(self, g1obs=None, g2obs=None, sigmaobs=None, err_g1obs=None, err_g2obs=None, 
                  err_sigmaobs=None, dx_input=0.03, dx_test=None, shear=None, magnification=None,
                  angle=None, shift=None, x_interpolant=None, k_interpolant=None, pad_factor=None,
-                 image_type=None, psf_label='space'):
+                 image_type=None, image_type='delta'):
         self.g1obs = g1obs
         self.g2obs = g2obs
         self.sigmaobs = sigmaobs
@@ -81,13 +81,13 @@ class InterpolationDataNoConfig:
             self.padding = 0
         else:
             self.padding = pad_factor
-        self.image_type = "Parametric (space OR ground)"
-        self.psf_label = psf_label
+        self.image_type = image_type
 
 
 def calculate_interpolated_image_g1g2sigma(images, psf=None, dx_input=None, dx_test=None, 
                                            shear=None, magnification=None, angle=None, shift=None, 
-                                           x_interpolant=None, k_interpolant=None, padding=None):
+                                           x_interpolant=None, k_interpolant=None, padding=None,
+                                           image_type='delta'):
     """Takes a list of drawn images of Sersic galaxies, reads them into an InterpolatedImage object
     using the supplied parameters, and calculates the g1, g2 and sigma of the output.
     """
@@ -142,11 +142,12 @@ def calculate_interpolated_image_g1g2sigma(images, psf=None, dx_input=None, dx_t
             sigmaobs_list.append(trial_result.moments_sigma)
         else:
             raise TypeError("Unexpected output from test_interpolants.CatchAdaptiveMomErrors().")
-
+    # Return a container with the results
     ret = InterpolationDataNoConfig(
         g1obs=g1obs_list, g2obs=g2obs_list, sigmaobs=sigmaobs_list, dx_input=dx_input,
         dx_test=dx_test, shear=shear, magnification=magnification, angle=angle, shift=shift,  
-        x_interpolant=x_interpolant, k_interpolant=k_interpolant, padding=padding)
+        x_interpolant=x_interpolant, k_interpolant=k_interpolant, padding=padding,
+        image_type=image_type)
     return ret
 
 def draw_sersic_images(narr, hlrarr, gobsarray, random_seed=None, nmin=0.3, nmax=4.2,
@@ -208,39 +209,50 @@ if __name__ == "__main__":
         ns_cosmos, hlrs_cosmos, gobss_cosmos, random_seed=test_interpolants.rseed, nmin=0.3,
         nmax=4.2, image_size=SERSIC_IMAGE_SIZE, pixel_scale=test_interpolants.space_pixel_scale)
 
+    # Calculate the reference results for g1obs, g2obs and sigma for these reference images
+    g1_list = []
+    g2_list = []
+    sigma_list = []
+    print "Calculating reference g1, g2 & sigma for "+str(len(sersic_images))+" Sersic images"
+    for sersic_image in sersic_images:
+        shape = test_interpolants.CatchAdaptiveMomErrors(sersic_image)
+        if isinstance(shape, float):
+            g1_list.append(-10)
+            g2_list.append(-10)
+            sigma_list.append(-10)
+        elif isinstance(shape, galsim.hsm.ShapeData):
+            g1_list.append(shape.observed_shape.g1)
+            g2_list.append(shape.observed_shape.g2)
+            sigma_list.append(shape.moments_sigma)
+        else:
+            raise TypeError("Unexpected output from test_interpolants.CatchAdaptiveMomErrors().")
+
+    # Then start the interpolant tests...
     # Let's just do space and ground-based PSFs, and define a dict storing these to iterate over,
     # along with the appropriate test pixel scale
     psf_dict = {
-        "space" : (
-            galsim.Airy(lam_over_diam=test_interpolants.space_lam_over_diam),
-            test_interpolants.space_pixel_scale),
-        "ground" : (
-            galsim.Convolve(
-                galsim.Kolmogorov(fwhm=test_interpolants.ground_fwhm),
-                galsim.Airy(lam_over_diam=test_interpolants.ground_lam_over_diam)),
-            test_interpolants.ground_pixel_scale)
+        "delta" : (
+            galsim.Gaussian(1.e-8), test_interpolants.space_pixel_scale),
+        "original" : (
+            None, test_interpolants.space_pixel_scale),
     }
-
+ 
     # Then we start the grand loop producing output in a similar fashion to test_interpolants.py
-    ground_file = open(GROUND_FILENAME, 'wb')
-    space_file = open(SPACE_FILENAME, 'wb')
-    for psf_label in ("space", "ground"):
+    for image_type in ("delta", "original"):
  
         # Get the correct PSF and test image pixel scale
         psf = psf_dict[psf_label][0]
         dx_test = psf_dict[psf_label][1]
-
         for padding in test_interpolants.padding_list:
 
             for interpolant in test_interpolants.use_interpolants:
 
-                print 'Calculating unrotated, undistorted observed shears and sizes'
-                intdata0x = calculate_interpolated_image_g1g2sigma(
+                dataXint = calculate_interpolated_image_g1g2sigma(
                     sersic_images, psf=psf, dx_input=test_interpolants.space_pixel_scale,
                     dx_test=dx_test, shear=None, magnification=None, angle=None, shift=None, 
-                    x_interpolant=interpolant, padding=None)
-                intdata0k = calculate_interpolated_image_g1g2sigma(
+                    x_interpolant=interpolant, padding=None, image_type=image_type)
+
+                dataKint = calculate_interpolated_image_g1g2sigma(
                     sersic_images, psf=psf, dx_input=test_interpolants.space_pixel_scale,
                     dx_test=dx_test, shear=None, magnification=None, angle=None, shift=None, 
-                    x_interpolant=interpolant, padding=None)
-                
+                    x_interpolant=interpolant, padding=None, image_type=image_type)
