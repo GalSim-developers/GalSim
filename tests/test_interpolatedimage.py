@@ -383,7 +383,9 @@ def test_operations_simple():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_operations():
-    """Test of operations on complicated InterpolatedImage: shear, magnification, rotation, shifting."""
+    """Test of operations on complicated InterpolatedImage: shear, magnification, rotation,
+    shifting.
+    """
     import time
     t1 = time.time()
     test_decimal = 3
