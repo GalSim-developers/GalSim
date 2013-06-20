@@ -18,7 +18,7 @@ TEST_IMAGE_SIZE = SERSIC_IMAGE_SIZE  # For speed could make this smaller
 # Dictionary for parsing the test_interpolants.interpolant_list into galsim Interpolants 
 INTERPOLANT_DICT = {
     "nearest" : galsim.Nearest(),
-    "sinc" : galsim.Sinc(),
+    "sinc" : galsim.SincInterpolant(),
     "linear" : galsim.Linear(),
     "cubic" : galsim.Cubic(),
     "quintic" : galsim.Quintic(), 
@@ -38,7 +38,7 @@ class InterpolationDataNoConfig:
     def __init__(self, g1obs=None, g2obs=None, sigmaobs=None, err_g1obs=None, err_g2obs=None, 
                  err_sigmaobs=None, dx_input=0.03, dx_test=None, shear=None, magnification=None,
                  angle=None, shift=None, x_interpolant=None, k_interpolant=None, pad_factor=None,
-                 image_type=None, image_type='delta'):
+                 image_type='delta'):
         self.g1obs = g1obs
         self.g2obs = g2obs
         self.sigmaobs = sigmaobs
@@ -63,7 +63,7 @@ class InterpolationDataNoConfig:
             self.angle = angle.rad * 180. / np.pi
         if shift is None:
             self.shiftx = 0.
-            self.shifty = 0 .
+            self.shifty = 0.
         else:
             self.shiftx = shift.x
             self.shifty = shift.y
