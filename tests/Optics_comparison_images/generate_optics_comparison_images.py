@@ -79,8 +79,17 @@ if __name__ == "__main__":
     im.write(os.path.join(os.path.abspath(os.path.dirname(__file__)), "optics_spher.fits"))
 
     # all aberrations
-    optics = galsim.OpticalPSF(lod, defocus = .5, astig1 = 0.5, astig2 = 0.3, coma1 = 0.4,
-                               coma2 = -0.3, trefoil1 = -0.2, trefoil2 = 0.1, spher = -0.8,
-                               obscuration = obscuration)
+    optics = galsim.OpticalPSF(
+        lod, defocus=.5, astig1=0.5, astig2=0.3, coma1=0.4, coma2=-0.3, trefoil1=-0.2,
+        trefoil2=0.1, spher=-0.8, obscuration=obscuration)
     im = optics.draw(im, dx=0.2*lod)
     im.write(os.path.join(os.path.abspath(os.path.dirname(__file__)), "optics_all.fits"))
+
+    # 5 support struts in the pupil plane, of thickness 4% of the pupil diameter, with the
+    # uppermost strut angled at 8 degrees to the vertical, with a touch of astigmatism, coma and
+    # defocus
+    optics = galsim.OpticalPSF(
+        lod, obscuration=obscuration, nstruts=5, strut_thick=0.04, strut_angle=8.*galsim.degrees,
+        astig2=0.04, coma1=-0.07, defocus=0.09)
+    im = optics.draw(im, dx=0.2*lod)
+    im.write(os.path.join(os.path.abspath(os.path.dirname(__file__)), "optics_struts.fits"))

@@ -66,7 +66,7 @@ if sys.platform == 'darwin':
         '-Wl,-current_version,%s.%s'%version ] )
     env1.Replace(SHLIBSUFFIX = '.%s.dylib'%version[0])
 
-elif sys.platform == 'linux2':
+elif sys.platform.startswith('linux'):  # Should work for both linux2 and linux3
     # On linux, we don't need to include the other libraries here.  They need to be 
     # linked for compiling any executable, but not for building the library.
     # However, if any of the other libraries are static, it causes an error on some 

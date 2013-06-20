@@ -31,6 +31,7 @@
 #include "Random.h"
 #include "PhotonArray.h"
 #include "OneDimensionalDeviate.h"
+#include "SBProfile.h"
 
 namespace galsim {
 
@@ -58,18 +59,23 @@ namespace galsim {
      * @brief Base class representing one-dimensional interpolant functions
      *
      * One-dimensional interpolant function.  X units are in pixels and the frequency-domain u
-     * values are in cycles per pixel.
+     * values are in cycles per pixel.  This differs from the usual definition of k in radians 
+     * per arcsec, hence the different letter variable.
      *
      * All Interpolants are assumed symmetric so that frequency-domain values are real.
      */
     class Interpolant 
     {
     public:
-        /// @brief Constructor
-        Interpolant(): _interp(*this) {}
+        /**
+         * @brief Constructor
+         * @param[in] gsparams  GSParams object storing constants that control the accuracy of
+         *                      operations, if different from the default.
+         */
+        Interpolant(const GSParamsPtr& gsparams) : _gsparams(gsparams), _interp(*this) {}
 
         /// @brief Copy constructor: does not copy photon sampler, will need to rebuild.
-        Interpolant(const Interpolant& rhs): _interp(*this) {}
+        Interpolant(const Interpolant& rhs): _gsparams(rhs._gsparams), _interp(rhs._interp) {}
 
         /// @brief Destructor 
         virtual ~Interpolant() {}
@@ -167,6 +173,9 @@ namespace galsim {
         { checkSampler(); return _sampler->shoot(N, ud); }
 
     protected:
+
+        /// @brief GSParams struct for storing values of GalSim numerical parameters
+        const GSParamsPtr _gsparams;
         InterpolantFunction _interp; ///< The function to interface the Interpolant to sampler
 
         /// Class that draws photons from this Interpolant
@@ -185,7 +194,7 @@ namespace galsim {
                 ranges[nKnots-i] = -knot;
                 ranges[nKnots+i-1] = knot;
             }
-            _sampler.reset(new OneDimensionalDeviate(_interp, ranges));
+            _sampler.reset(new OneDimensionalDeviate(_interp, ranges, false, _gsparams));
         }
     };
 
@@ -360,9 +369,13 @@ namespace galsim {
     public:
         /**
          * @brief Constructor
-         * @param[in] width Width of tiny boxcar used to approximate delta function in real space.
+         * @param[in] width    Width of tiny boxcar used to approximate delta function in real 
+         *                     space (default=1.e-3).
+         * @param[in] gsparams GSParams object storing constants that control the accuracy of
+         *                     operations, if different from the default.
          */
-        Delta(double width=1.e-3) : _width(width) {}
+        Delta(double width=1.e-3, const GSParamsPtr& gsparams=GSParamsPtr::getDefault()) : 
+            Interpolant(gsparams), _width(width) {}
         ~Delta() {}
         double xrange() const { return 0.; }
         double urange() const { return 1./_width; }
@@ -398,10 +411,13 @@ namespace galsim {
     public:
         /**
          * @brief Constructor
-         * @param[in] tol Tolerance determines how far onto sinc wiggles the uval will go.
-         * Very far, by default!
+         * @param[in] tol      Tolerance determines how far onto sinc wiggles the uval will go.
+         *                     Very far, by default!
+         * @param[in] gsparams GSParams object storing constants that control the accuracy of
+         *                     operations, if different from the default.
          */
-        Nearest(double tol=1.e-3) : _tolerance(tol) {}
+        Nearest(double tol=1.e-3, const GSParamsPtr& gsparams=GSParamsPtr::getDefault()) :
+            Interpolant(gsparams), _tolerance(tol) {}
         ~Nearest() {}
         double getTolerance() const { return _tolerance; }
         double xrange() const { return 0.5; }
@@ -438,10 +454,13 @@ namespace galsim {
     public:
         /**
          * @brief Constructor
-         * @param[in] tol Tolerance determines how far onto sinc wiggles the xval will go. 
-         * Very far, by default!
+         * @param[in] tol      Tolerance determines how far onto sinc wiggles the xval will go. 
+         *                     Very far, by default!
+         * @param[in] gsparams GSParams object storing constants that control the accuracy of
+         *                     operations, if different from the default.
          */
-        SincInterpolant(double tol=1.e-3) : _tolerance(tol) {}
+        SincInterpolant(double tol=1.e-3, const GSParamsPtr& gsparams=GSParamsPtr::getDefault()) :
+            Interpolant(gsparams), _tolerance(tol) {}
         ~SincInterpolant() {}
         double getTolerance() const { return _tolerance; }
         double xrange() const { return 1./(M_PI*_tolerance); }
@@ -492,10 +511,13 @@ namespace galsim {
     public:
         /**
          * @brief Constructor
-         * @param[in] tol Tolerance determines how far onto sinc^2 wiggles the kval will go.
-         * Very far, by default!
+         * @param[in] tol      Tolerance determines how far onto sinc^2 wiggles the uval will go.
+         *                     Very far, by default!
+         * @param[in] gsparams GSParams object storing constants that control the accuracy of
+         *                     operations, if different from the default.
          */
-        Linear(double tol=1.e-3) : _tolerance(tol) {}
+        Linear(double tol=1.e-3, const GSParamsPtr& gsparams=GSParamsPtr::getDefault()) :
+            Interpolant(gsparams), _tolerance(tol) {}
         ~Linear() {}
         double getTolerance() const { return _tolerance; }
         double xrange() const { return 1.-0.5*_tolerance; }  // Snip off endpoints near zero
@@ -542,12 +564,15 @@ namespace galsim {
         /**
          * @brief Constructor
          *
-         * @param[in] n  Filter order; must be given on input and cannot be changed.  
+         * @param[in] n             Filter order; must be given on input and cannot be changed.  
          * @param[in] fluxConserve  Set true to adjust filter to be more nearly correct for 
          *                          constant inputs.
-         * @param[in] tol  Sets accuracy and extent of Fourier transform.
+         * @param[in] tol           Sets accuracy and extent of Fourier transform.
+         * @param[in] gsparams      GSParams object storing constants that control the accuracy of
+         *                          operations, if different from the default.
          */
-        Lanczos(int n, bool fluxConserve=true, double tol=1.e-4);
+        Lanczos(int n, bool fluxConserve=true, double tol=1.e-4, 
+                const GSParamsPtr& gsparams=GSParamsPtr::getDefault());
         ~Lanczos() {}
 
         double getTolerance() const { return _tolerance; }
@@ -560,7 +585,7 @@ namespace galsim {
         double _n; ///< Actually storing 2n, since it's used mostly this way.
         double _range; ///< Reduce range slightly from n so we're not using zero-valued endpoints.
         bool _fluxConserve; ///< Set to insure conservation of constant (sky) flux
-        double _tolerance;  ///< k-space accuracy parameter
+        double _tolerance;  ///< u-space accuracy parameter
         double _uMax;  ///< truncation point for Fourier transform
         double _u1; ///< coefficient for flux correction
         boost::shared_ptr<Table<double,double> > _xtab; ///< Table for x values
@@ -590,9 +615,11 @@ namespace galsim {
         /**
          * @brief Constructor
          *
-         * @param[in] tol Sets accuracy and extent of Fourier transform.
+         * @param[in] tol      Sets accuracy and extent of Fourier transform.
+         * @param[in] gsparams GSParams object storing constants that control the accuracy of
+         *                     operations, if different from the default.
          */
-        Cubic(double tol=1.e-4);
+        Cubic(double tol=1.e-4, const GSParamsPtr& gsparams=GSParamsPtr::getDefault());
         ~Cubic() {}
 
         double getTolerance() const { return _tolerance; }
@@ -631,7 +658,7 @@ namespace galsim {
     };
 
     /**
-     * @brief Piecewise-quintic polynomial interpolant, ideal for k-space interpolation
+     * @brief Piecewise-quintic polynomial interpolant, ideal for Fourier-space interpolation
      *
      * See Bernstein & Gruen, devel/modules/finterp.pdf in the GalSim repository.
      */
@@ -641,9 +668,11 @@ namespace galsim {
     public:
         /**
          * @brief Constructor
-         * @param[in] tol Sets accuracy and extent of Fourier transform.
+         * @param[in] tol      Sets accuracy and extent of Fourier transform.
+         * @param[in] gsparams GSParams object storing constants that control the accuracy of
+         *                     operations, if different from the default. 
          */
-        Quintic(double tol=1.e-4);
+        Quintic(double tol=1.e-4, const GSParamsPtr& gsparams=GSParamsPtr::getDefault());
         ~Quintic() {}
 
         double getTolerance() const { return _tolerance; }
@@ -683,7 +712,7 @@ namespace galsim {
             ranges[3] = -1.;
             for (int i=0; i<4; i++)
                 ranges[7-i] = -ranges[i];
-            _sampler.reset(new OneDimensionalDeviate(_interp, ranges));
+            _sampler.reset(new OneDimensionalDeviate(_interp, ranges, false, _gsparams));
         }
 
     private:

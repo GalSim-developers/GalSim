@@ -27,7 +27,7 @@ stored in *_fitpsf.fits files.
 import galsim
 
 class DES_Shapelet(object):
-    """Class that handles DES files describing interpolated shapelet decompositions.
+    """Class that handles DES files describing interpolated polar shapelet decompositions.
     These are usually stored as *_fitpsf.fits files, although there is also an ASCII
     version stored as *_fitpsf.dat.
 
@@ -163,7 +163,7 @@ class DES_Shapelet(object):
         @param pos       The position in pixel units for which to build the PSF.
         @param gsparams  (Optional) A GSParams instance to pass to the constructed GSObject.
 
-        @returns a Shapelet instance.
+        @returns a galsim.Shapelet instance.
         """
         if not self.bounds.includes(pos):
             raise IndexError("position in DES_Shapelet.getPSF is out of bounds")
