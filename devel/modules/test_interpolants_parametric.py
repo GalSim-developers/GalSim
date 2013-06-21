@@ -273,13 +273,15 @@ def run_tests(use_interpolants, nitems=test_interpolants.nitems):
                     dataXint = calculate_interpolated_image_g1g2sigma(
                         sersic_images, psf=psf, dx_input=test_interpolants.pixel_scale,
                         dx_test=dx_test, shear=None, magnification=None, angle=angle*galsim.degrees,
-                        shift=None, x_interpolant=interpolant, padding=None, image_type=image_type)
+                        shift=None, x_interpolant=interpolant, padding=padding,
+                        image_type=image_type)
                     test_interpolants.print_results(
                         g1_list, g2_list, sigma_list, dataXint, outfile=outfile)
                     dataKint = calculate_interpolated_image_g1g2sigma(
                         sersic_images, psf=psf, dx_input=test_interpolants.pixel_scale,
                         dx_test=dx_test, shear=None, magnification=None, angle=angle*galsim.degrees,
-                        shift=None, x_interpolant=interpolant, padding=None, image_type=image_type)
+                        shift=None, k_interpolant=interpolant, padding=padding,
+                        image_type=image_type)
                     test_interpolants.print_results(
                         g1_list, g2_list, sigma_list, dataKint, outfile=outfile)
                 sys.stdout.write('\n')
@@ -292,13 +294,15 @@ def run_tests(use_interpolants, nitems=test_interpolants.nitems):
                     dataXint = calculate_interpolated_image_g1g2sigma(
                         sersic_images, psf=psf, dx_input=test_interpolants.pixel_scale,
                         dx_test=dx_test, shear=(g1, g2), magnification=mag, angle=None,
-                        shift=None, x_interpolant=interpolant, padding=None, image_type=image_type)
+                        shift=None, x_interpolant=interpolant, padding=padding,
+                        image_type=image_type)
                     test_interpolants.print_results(
                         g1_list, g2_list, sigma_list, dataXint, outfile=outfile)
                     dataKint = calculate_interpolated_image_g1g2sigma(
                         sersic_images, psf=psf, dx_input=test_interpolants.pixel_scale,
                         dx_test=dx_test, shear=(g1, g2), magnification=mag, angle=None,
-                        shift=None, x_interpolant=interpolant, padding=None, image_type=image_type)
+                        shift=None, k_interpolant=interpolant, padding=padding,
+                        image_type=image_type)
                     test_interpolants.print_results(
                         g1_list, g2_list, sigma_list, dataKint, outfile=outfile)
                 sys.stdout.write('\n')
@@ -311,13 +315,15 @@ def run_tests(use_interpolants, nitems=test_interpolants.nitems):
                     dataXint = calculate_interpolated_image_g1g2sigma(
                         sersic_images, psf=psf, dx_input=test_interpolants.pixel_scale,
                         dx_test=dx_test, shear=None, magnification=None, angle=None,
-                        shift=shift, x_interpolant=interpolant, padding=None, image_type=image_type)
+                        shift=shift, x_interpolant=interpolant, padding=padding,
+                        image_type=image_type)
                     test_interpolants.print_results(
                         g1_list, g2_list, sigma_list, dataXint, outfile=outfile)
                     dataKint = calculate_interpolated_image_g1g2sigma(
                         sersic_images, psf=psf, dx_input=test_interpolants.pixel_scale,
                         dx_test=dx_test, shear=None, magnification=None, angle=None,
-                        shift=shift, x_interpolant=interpolant, padding=None, image_type=image_type)
+                        shift=shift, k_interpolant=interpolant, padding=padding,
+                        image_type=image_type)
                     test_interpolants.print_results(
                         g1_list, g2_list, sigma_list, dataKint, outfile=outfile)
                 sys.stdout.write('\n')
@@ -325,6 +331,7 @@ def run_tests(use_interpolants, nitems=test_interpolants.nitems):
                 print ''
 
         print "Finished tests for image_type: "+str(image_type) 
+        print ""
         outfile.close()
 
 
