@@ -50,8 +50,6 @@ rseed = 999888444
 nproc = 8
 original_filename = 'interpolant_test_output_original.dat'
 delta_filename = 'interpolant_test_output_delta.dat'
-original_file = open(original_filename,'w')
-delta_file = open(delta_filename,'w')
 
 # --- Helper functions to run the main part of the code ---
 def get_config():
@@ -261,6 +259,10 @@ def print_results(g1_list, g2_list, sigma_list, test_answer, outfile=None):
             str((test_answer.sigmaobs[i]-expected_size[i])/expected_size[i])+'\n')
         
 def main():
+    # Open the files here rather than at module scope, otherwise importing this module overwrites
+    # any previously saved output!
+    original_file = open(original_filename,'w')
+    delta_file = open(delta_filename,'w')
     # Draw the original galaxies and measure their shapes
     rgc = galsim.RealGalaxyCatalog(catalog_filename, dir=catalog_dir)
     g1_list = []
