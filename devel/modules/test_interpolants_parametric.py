@@ -280,6 +280,7 @@ def run_tests(use_interpolants):
                         shift=None, x_interpolant=interpolant, padding=None, image_type=image_type)
                     test_interpolants.print_results(
                         g1_list, g2_list, sigma_list, dataKint, outfile=outfile)
+                sys.stdout.write('\n')
  
                 print 'Running Shear/Magnification tests'
                 for (g1, g2, mag) in test_interpolants.shear_and_magnification_list:
@@ -298,6 +299,7 @@ def run_tests(use_interpolants):
                         shift=None, x_interpolant=interpolant, padding=None, image_type=image_type)
                     test_interpolants.print_results(
                         g1_list, g2_list, sigma_list, dataKint, outfile=outfile)
+                sys.stdout.write('\n')
 
                 print 'Running Shift tests'
                 for shift in test_interpolants.shift_list:
@@ -316,6 +318,7 @@ def run_tests(use_interpolants):
                         shift=shift, x_interpolant=interpolant, padding=None, image_type=image_type)
                     test_interpolants.print_results(
                         g1_list, g2_list, sigma_list, dataKint, outfile=outfile)
+                sys.stdout.write('\n')
 
                 print ''
 
