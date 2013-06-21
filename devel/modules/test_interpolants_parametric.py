@@ -83,7 +83,7 @@ class InterpolationDataNoConfig:
         if padding is None:
             self.padding = 0
         else:
-            self.padding = pad_factor
+            self.padding = padding
         self.image_type = image_type
 
 
