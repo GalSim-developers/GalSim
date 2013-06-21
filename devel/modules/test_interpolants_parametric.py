@@ -129,7 +129,8 @@ def calculate_interpolated_image_g1g2sigma(images, psf=None, dx_input=None, dx_t
         if shift is not None:
             if not isinstance(shift, galsim.PositionD):
                 raise ValueError("Input kwarg shift must be a galsim.PositionD instance.")
-            test_gal.applyShift(shift * dx_test) # Shifts are in pixel units so convert to arcsec
+            test_gal.applyShift( # Shifts are in pixel units so convert to arcsec
+                dx=shift.x*dx_test, dy=shift.y*dx_test) 
         # Apply a PSF if requested
         if psf is not None:
             test_final = galsim.Convolve([test_gal, psf])
@@ -249,7 +250,7 @@ def run_tests(use_interpolants):
         "original" : (
             None, test_interpolants.pixel_scale, ORIGINAL_FILENAME),
     }
-    print '' 
+    print''
     # Then we start the grand loop producing output in a similar fashion to test_interpolants.py
     for image_type in ("delta", "original"):
  
