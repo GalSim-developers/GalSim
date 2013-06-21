@@ -31,6 +31,8 @@ INTERPOLANT_DICT = {
 DELTA_FILENAME = 'interpolant_test_parametric_output_delta.dat'
 ORIGINAL_FILENAME = 'interpolant_test_parametric_output_original.dat'
 
+NITEMS = 30 # For now, look at 30 only - this takes long enough and (seemingly) plenty enough memory
+
 
 class InterpolationDataNoConfig:
     """Quick container class for passing around data from these tests, but not using config.
@@ -192,7 +194,7 @@ def draw_sersic_images(narr, hlrarr, gobsarr, random_seed=None, nmin=0.3, nmax=4
     # Return this list of drawn images
     return sersic_images
 
-def run_tests(use_interpolants):
+def run_tests(use_interpolants, nitems=test_interpolants.nitems):
     """Run the tests for the specified interpolants."""
 
     import sys
@@ -206,9 +208,7 @@ def run_tests(use_interpolants):
 
     # Get the COSMOS galaxy sample parameters
     ns_cosmos, hlrs_cosmos, gobss_cosmos = galaxy_sample.get()
-    # Only use the first test_interpolants.nitems galaxies in these lists, starting at
-    # test_interpolants.first_index
-    nitems = 10 # test_interpolants.nitems + 3 # Kludge: 3 in lists above have n outside range!
+    # Only use the first nitems galaxies in these lists, starting at test_interpolants.first_index
     istart = test_interpolants.first_index
     iend = istart + nitems
     ns_cosmos = ns_cosmos[istart: iend]
@@ -264,6 +264,7 @@ def run_tests(use_interpolants):
             print "Using padding = "+str(padding)
             for interpolant in use_interpolants:
 
+                print "Using interpolant: "+str(interpolant)
                 print 'Running Angle tests'
                 for angle in test_interpolants.angle_list: # Possible rotation angles
 
@@ -330,5 +331,5 @@ def run_tests(use_interpolants):
 if __name__ == "__main__":
 
     use_interpolants = test_interpolants.interpolant_list[2:]
-    run_tests(use_interpolants)
+    run_tests(use_interpolants, nitems=NITEMS)
 
