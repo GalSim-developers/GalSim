@@ -31,7 +31,7 @@ INTERPOLANT_DICT = {
 DELTA_FILENAME = 'interpolant_test_parametric_output_delta.dat'
 ORIGINAL_FILENAME = 'interpolant_test_parametric_output_original.dat'
 
-NITEMS = 30 # For now, look at 30 only - this takes long enough and (seemingly) plenty enough memory
+NITEMS = 12 # For now, look at a few only - this takes time  and (seemingly) plenty enough memory
 
 
 class InterpolationDataNoConfig:
