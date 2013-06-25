@@ -31,8 +31,12 @@ INTERPOLANT_DICT = {
 DELTA_FILENAME = 'interpolant_test_parametric_output_delta.dat'
 ORIGINAL_FILENAME = 'interpolant_test_parametric_output_original.dat'
 
-NITEMS = 12 # For now, look at a few only - this takes time  and (seemingly) plenty enough memory
+NITEMS = 3 # For now, look at a few only - this takes time  and (seemingly) plenty enough memory
 
+LAM_OVER_DIAM_COSMOS = 814.e-9 / 2.4 # All the original images in Melanie's tests were from COSMOS
+                                     # F814W, so this is a crude approximation to the PSF scale in
+                                     # radians, ~0.07 arcsec
+COSMOS_PSF = galsim.Airy(lam_over_diam=LAM_OVER_DIAM_COSMOS * 180. * 3600. / np.pi)
 
 class InterpolationDataNoConfig:
     """Quick container class for passing around data from these tests, but not using config.
@@ -162,7 +166,8 @@ def calculate_interpolated_image_g1g2sigma(images, psf=None, dx_input=None, dx_t
     return ret
 
 def draw_sersic_images(narr, hlrarr, gobsarr, random_seed=None, nmin=0.3, nmax=4.2,
-                       image_size=SERSIC_IMAGE_SIZE, pixel_scale=test_interpolants.pixel_scale):
+                       image_size=SERSIC_IMAGE_SIZE, pixel_scale=test_interpolants.pixel_scale,
+                       psf=COSMOS_PSF):
     """Given input NumPy arrays of Sersic n, half light radius, and |g|, draw a list of Sersic
     images with n values within range, at random orientations.
     """
@@ -188,7 +193,13 @@ def draw_sersic_images(narr, hlrarr, gobsarr, random_seed=None, nmin=0.3, nmax=4
         # Apply the ellipticity of the correct magnitude with a random rotation
         theta_rot = 2. * np.pi * u() # Random orientation
         galaxy.applyShear(g1=gobs*np.cos(2.*theta_rot), g2=gobs*np.sin(2.*theta_rot))
-        galaxy.draw(sersic_image, dx=pixel_scale)
+        if psf is None:
+            final = galaxy
+        elif isinstance(psf, galsim.GSObject):
+            final = galsim.Convolve([galaxy, psf])
+        else:
+            raise TypeError("Input psf kwarg must be a GSObject or NoneType.") 
+        final.draw(sersic_image, dx=pixel_scale)
         sersic_images.append(sersic_image)
 
     # Return this list of drawn images
