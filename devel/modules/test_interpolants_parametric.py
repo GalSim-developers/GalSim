@@ -31,7 +31,7 @@ INTERPOLANT_DICT = {
 DELTA_FILENAME = 'interpolant_test_parametric_output_delta.dat'
 ORIGINAL_FILENAME = 'interpolant_test_parametric_output_original.dat'
 
-NITEMS = 3 # For now, look at a few only - this takes time  and (seemingly) plenty enough memory
+NITEMS = 30 # For now, look at a few only
 
 LAM_OVER_DIAM_COSMOS = 814.e-9 / 2.4 # All the original images in Melanie's tests were from COSMOS
                                      # F814W, so this is a crude approximation to the PSF scale in
