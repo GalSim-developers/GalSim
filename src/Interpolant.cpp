@@ -38,6 +38,53 @@
 
 namespace galsim {
 
+
+    //
+    // Some auxilliary functions we will want: 
+    //
+
+    // sinc(x) is defined here as sin(Pi x) / (Pi x)
+    static double sinc(double x) 
+    {
+        if (std::abs(x) < 1.e-4) return 1.- (M_PI*M_PI/6.)*x*x; 
+        else return std::sin(M_PI*x)/(M_PI*x);
+    }
+
+    // Utility for calculating the integral of sin(t)/t from 0 to x.  Note the official definition
+    // does not have pi multiplying t.
+    static double Si(double x) 
+    {
+        double x2=x*x;
+        if(x2>=3.8) {
+            // Use rational approximation from Abramowitz & Stegun
+            // cf. Eqns. 5.2.38, 5.2.39, 5.2.8 - where it says it's good to <1e-6.
+            // ain't this pretty?
+            return (M_PI/2.)*((x>0.)?1.:-1.) 
+                - (38.102495+x2*(335.677320+x2*(265.187033+x2*(38.027264+x2))))
+                / (x* (157.105423+x2*(570.236280+x2*(322.624911+x2*(40.021433+x2)))) )*std::cos(x)
+                - (21.821899+x2*(352.018498+x2*(302.757865+x2*(42.242855+x2))))
+                / (x2*(449.690326+x2*(1114.978885+x2*(482.485984+x2*(48.196927+x2)))))*std::sin(x);
+
+        } else {
+            // x2<3.8: the series expansion is the better approximation, A&S 5.2.14
+            double n1=1.;
+            double n2=1.;
+            double tt=x;
+            double t=0;
+            for(int i=1; i<7; i++) {
+                t += tt/(n1*n2);
+                tt = -tt*x2;
+                n1 = 2.*double(i)+1.;
+                n2*= n1*2.*double(i);
+            }
+            return t;
+        }
+    }
+
+    //
+    // Generic InterpolantXY class methods
+    //
+    
     double InterpolantFunction::operator()(double x) const  { return _interp.xval(x); }
 
     double InterpolantXY::getPositiveFlux() const 
@@ -57,46 +104,6 @@ namespace galsim {
         boost::shared_ptr<PhotonArray> result = _i1d->shoot(N, ud);   // get X coordinates
         result->takeYFrom(*_i1d->shoot(N, ud));
         dbg<<"InterpolantXY Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
-    }
-
-    boost::shared_ptr<PhotonArray> Delta::shoot(int N, UniformDeviate ud) const 
-    {
-        dbg<<"InterpolantXY shoot: N = "<<N<<std::endl;
-        dbg<<"Target flux = 1.\n";
-        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
-        double fluxPerPhoton = 1./N;
-        for (int i=0; i<N; i++)  {
-            result->setPhoton(i, 0., 0., fluxPerPhoton);
-        }
-        dbg<<"Delta Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
-    }
-
-    boost::shared_ptr<PhotonArray> Nearest::shoot(int N, UniformDeviate ud) const 
-    {
-        dbg<<"InterpolantXY shoot: N = "<<N<<std::endl;
-        dbg<<"Target flux = 1.\n";
-        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
-        double fluxPerPhoton = 1./N;
-        for (int i=0; i<N; i++)  {
-            result->setPhoton(i, ud()-0.5, 0., fluxPerPhoton);
-        }
-        dbg<<"Nearest Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
-    }
-
-    boost::shared_ptr<PhotonArray> Linear::shoot(int N, UniformDeviate ud) const 
-    {
-        dbg<<"InterpolantXY shoot: N = "<<N<<std::endl;
-        dbg<<"Target flux = 1.\n";
-        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
-        double fluxPerPhoton = 1./N;
-        for (int i=0; i<N; i++) {
-            // *** Guessing here that 2 random draws is faster than a sqrt:
-            result->setPhoton(i, ud() + ud() - 1., 0., fluxPerPhoton);
-        }
-        dbg<<"Linear Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }
 
@@ -124,6 +131,286 @@ namespace galsim {
         }
     }
 
+
+    //
+    // Delta
+    //
+    
+    boost::shared_ptr<PhotonArray> Delta::shoot(int N, UniformDeviate ud) const 
+    {
+        dbg<<"InterpolantXY shoot: N = "<<N<<std::endl;
+        dbg<<"Target flux = 1.\n";
+        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
+        double fluxPerPhoton = 1./N;
+        for (int i=0; i<N; i++)  {
+            result->setPhoton(i, 0., 0., fluxPerPhoton);
+        }
+        dbg<<"Delta Realized flux = "<<result->getTotalFlux()<<std::endl;
+        return result;
+    }
+
+
+    //
+    // Nearest
+    //
+    
+    double Nearest::xval(double x) const 
+    {
+        if (std::abs(x)>0.5) return 0.;
+        else if (std::abs(x)<0.5) return 1.;
+        else return 0.5;
+    }
+
+    double Nearest::uval(double u) const { return sinc(u); }
+
+    boost::shared_ptr<PhotonArray> Nearest::shoot(int N, UniformDeviate ud) const 
+    {
+        dbg<<"InterpolantXY shoot: N = "<<N<<std::endl;
+        dbg<<"Target flux = 1.\n";
+        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
+        double fluxPerPhoton = 1./N;
+        for (int i=0; i<N; i++)  {
+            result->setPhoton(i, ud()-0.5, 0., fluxPerPhoton);
+        }
+        dbg<<"Nearest Realized flux = "<<result->getTotalFlux()<<std::endl;
+        return result;
+    }
+
+
+    //
+    // SincInterpolant
+    //
+
+    double SincInterpolant::uval(double u) const 
+    {
+        if (std::abs(u)>0.5) return 0.;
+        else if (std::abs(u)<0.5) return 1.;
+        else return 0.5;
+    }
+
+    double SincInterpolant::xval(double x) const { return sinc(x); }
+
+    double SincInterpolant::xvalWrapped(double x, int N) const 
+    {
+        // Magic formula:
+        x *= M_PI;
+        if (N%2==0) {
+            if (std::abs(x) < 1.e-4) return 1. - x*x*(1/6.+1/2.-1./(6.*N*N));
+            return std::sin(x) * std::cos(x/N) / (N*std::sin(x/N));
+        } else {
+            if (std::abs(x) < 1.e-4) return 1. - (1./6.)*x*x*(1-1./(N*N));
+            return std::sin(x) / (N*std::sin(x/N));
+        }
+    }
+
+    boost::shared_ptr<PhotonArray> SincInterpolant::shoot(int N, UniformDeviate ud) const 
+    {
+        throw std::runtime_error("Photon shooting is not practical with sinc Interpolant");
+        return boost::shared_ptr<PhotonArray>();
+    }
+
+
+    //
+    // Linear
+    //
+
+    double Linear::xval(double x) const 
+    {
+        x=std::abs(x);
+        if (x > 1.) return 0.;
+        else return 1.-x;
+    }
+    double Linear::uval(double u) const 
+    { 
+        double sincu = sinc(u);
+        return sincu*sincu;
+    }
+
+    boost::shared_ptr<PhotonArray> Linear::shoot(int N, UniformDeviate ud) const 
+    {
+        dbg<<"InterpolantXY shoot: N = "<<N<<std::endl;
+        dbg<<"Target flux = 1.\n";
+        boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
+        double fluxPerPhoton = 1./N;
+        for (int i=0; i<N; i++) {
+            // *** Guessing here that 2 random draws is faster than a sqrt:
+            result->setPhoton(i, ud() + ud() - 1., 0., fluxPerPhoton);
+        }
+        dbg<<"Linear Realized flux = "<<result->getTotalFlux()<<std::endl;
+        return result;
+    }
+
+
+    //
+    // Cubic
+    //
+
+    double Cubic::xval(double x) const 
+    { 
+        x = std::abs(x);
+        if (x < 1) return 1. + x*x*(1.5*x-2.5);
+        else if (x < 2) return -0.5*(x-1.)*(x-2.)*(x-2.);
+        else return 0.;
+    }
+
+    double Cubic::uval(double u) const 
+    {
+        u = std::abs(u);
+        return u>_uMax ? 0. : (*_tab)(u);
+    }
+    
+    class CubicIntegrand : public std::unary_function<double,double>
+    {
+    public:
+        CubicIntegrand(double u, const Cubic& c): _u(u), _c(c) {}
+        double operator()(double x) const { return _c.xval(x)*std::cos(2*M_PI*_u*x); }
+
+    private:
+        double _u;
+        const Cubic& _c;
+    };
+
+    double Cubic::uCalc(double u) const 
+    {
+        CubicIntegrand ci(u, *this);
+        return 2.*( integ::int1d(ci, 0., 1., 0.1*_tolerance, 0.1*_tolerance)
+                    + integ::int1d(ci, 1., 2., 0.1*_tolerance, 0.1*_tolerance));
+    }
+
+    Cubic::Cubic(double tol, const GSParamsPtr& gsparams) : 
+        Interpolant(gsparams), _tolerance(tol)
+    {
+        // Reduce range slightly from n so we're not including points with zero weight in
+        // interpolations:
+        _range = 2.-0.1*_tolerance;
+
+        // Strangely, not all compilers correctly setup an empty map when it is a 
+        // static variable, so you can get seg faults using it.
+        // Doing an explicit clear fixes the problem.
+        if (_cache_umax.size() == 0) { _cache_umax.clear(); _cache_tab.clear(); }
+
+        if (_cache_umax.count(tol)) {
+            // Then uMax and tab are already cached.
+            _tab = _cache_tab[tol];
+            _uMax = _cache_umax[tol];
+        } else {
+            // Then need to do the calculation and then cache it.
+            const double uStep = 
+                gsparams->table_spacing * std::pow(gsparams->kvalue_accuracy/10.,0.25);
+            _uMax = 0.;
+            _tab.reset(new Table<double,double>(Table<double,double>::spline));
+            for (double u=0.; u - _uMax < 1. || u<1.1; u+=uStep) {
+                double ft = uCalc(u);
+                _tab->addEntry(u, ft);
+                if (std::abs(ft) > _tolerance) _uMax = u;
+            }
+            // Save these values in the cache.
+            _cache_tab[tol] = _tab;
+            _cache_umax[tol] = _uMax;
+        }
+    }
+
+    std::map<double,boost::shared_ptr<Table<double,double> > > Cubic::_cache_tab;
+    std::map<double,double> Cubic::_cache_umax;
+
+
+    //
+    // Quintic
+    //
+ 
+    double Quintic::xval(double x) const 
+    {
+        x = std::abs(x);
+        if (x <= 1.)
+            return 1. + (1./12.)*x*x*x*(-95.+x*(138.-55.*x));
+        else if (x <= 2.)
+            return (1./24.)*(x-1.)*(x-2.)*(-138.+x*(348.+x*(-249.+55.*x)));
+        else if (x <= 3.)
+            return (1./24.)*(x-2.)*(x-3.)*(x-3.)*(-54.+x*(50.-11.*x));
+        else 
+            return 0.;
+    }
+
+    double Quintic::uval(double u) const 
+    {
+        u = std::abs(u);
+        return u>_uMax ? 0. : (*_tab)(u);
+    }
+
+    class QuinticIntegrand : public std::unary_function<double,double>
+    {
+    public:
+        QuinticIntegrand(double u, const Quintic& c): _u(u), _c(c) {}
+        double operator()(double x) const { return _c.xval(x)*std::cos(2*M_PI*_u*x); }
+    private:
+        double _u;
+        const Quintic& _c;
+    };
+
+    double Quintic::uCalc(double u) const 
+    {
+        QuinticIntegrand qi(u, *this);
+        return 2.*( integ::int1d(qi, 0., 1., 0.1*_tolerance, 0.1*_tolerance)
+                    + integ::int1d(qi, 1., 2., 0.1*_tolerance, 0.1*_tolerance)
+                    + integ::int1d(qi, 2., 3., 0.1*_tolerance, 0.1*_tolerance));
+    }
+
+    Quintic::Quintic(double tol, const GSParamsPtr& gsparams) :
+        Interpolant(gsparams), _tolerance(tol)
+    {
+        // Reduce range slightly from n so we're not including points with zero weight in
+        // interpolations:
+        _range = 3.-0.1*_tolerance;
+
+        // Strangely, not all compilers correctly setup an empty map when it is a 
+        // static variable, so you can get seg faults using it.
+        // Doing an explicit clear fixes the problem.
+        if (_cache_umax.size() == 0) { _cache_umax.clear(); _cache_tab.clear(); }
+
+        if (_cache_umax.count(tol)) {
+            // Then uMax and tab are already cached.
+            _tab = _cache_tab[tol];
+            _uMax = _cache_umax[tol];
+        } else {
+            // Then need to do the calculation and then cache it.
+            const double uStep = 
+                gsparams->table_spacing * std::pow(gsparams->kvalue_accuracy/10.,0.25);
+            _uMax = 0.;
+            _tab.reset(new Table<double,double>(Table<double,double>::spline));
+            for (double u=0.; u - _uMax < 1. || u<1.1; u+=uStep) {
+                double ft = uCalc(u);
+                _tab->addEntry(u, ft);
+                if (std::abs(ft) > _tolerance) _uMax = u;
+            }
+            // Save these values in the cache.
+            _cache_tab[tol] = _tab;
+            _cache_umax[tol] = _uMax;
+        }
+    }
+
+    // Override default sampler configuration because Quintic filter has sign change in
+    // outer interval
+    void Quintic::checkSampler() const
+    {
+        if (_sampler.get()) return;
+        std::vector<double> ranges(8);
+        ranges[0] = -3.;
+        ranges[1] = -(1./11.)*(25.+sqrt(31.));  // This is the extra zero-crossing
+        ranges[2] = -2.;
+        ranges[3] = -1.;
+        for (int i=0; i<4; i++)
+            ranges[7-i] = -ranges[i];
+        _sampler.reset(new OneDimensionalDeviate(_interp, ranges, false, _gsparams));
+    }
+
+    std::map<double,boost::shared_ptr<Table<double,double> > > Quintic::_cache_tab;
+    std::map<double,double> Quintic::_cache_umax;
+
+
+    //
+    // Lanczos
+    //
+    
     double Lanczos::xCalc(double x) const
     {
         double retval = sinc(x)*sinc(x/_n);
@@ -313,113 +600,4 @@ namespace galsim {
         return u>_uMax ? 0. : (*_utab)(u);
     }
 
-    class CubicIntegrand : public std::unary_function<double,double>
-    {
-    public:
-        CubicIntegrand(double u, const Cubic& c): _u(u), _c(c) {}
-        double operator()(double x) const { return _c.xval(x)*std::cos(2*M_PI*_u*x); }
-
-    private:
-        double _u;
-        const Cubic& _c;
-    };
-
-    double Cubic::uCalc(double u) const 
-    {
-        CubicIntegrand ci(u, *this);
-        return 2.*( integ::int1d(ci, 0., 1., 0.1*_tolerance, 0.1*_tolerance)
-                    + integ::int1d(ci, 1., 2., 0.1*_tolerance, 0.1*_tolerance));
-    }
-
-    Cubic::Cubic(double tol, const GSParamsPtr& gsparams) : 
-        Interpolant(gsparams), _tolerance(tol)
-    {
-        // Reduce range slightly from n so we're not including points with zero weight in
-        // interpolations:
-        _range = 2.-0.1*_tolerance;
-
-        // Strangely, not all compilers correctly setup an empty map when it is a 
-        // static variable, so you can get seg faults using it.
-        // Doing an explicit clear fixes the problem.
-        if (_cache_umax.size() == 0) { _cache_umax.clear(); _cache_tab.clear(); }
-
-        if (_cache_umax.count(tol)) {
-            // Then uMax and tab are already cached.
-            _tab = _cache_tab[tol];
-            _uMax = _cache_umax[tol];
-        } else {
-            // Then need to do the calculation and then cache it.
-            const double uStep = 
-                gsparams->table_spacing * std::pow(gsparams->kvalue_accuracy/10.,0.25);
-            _uMax = 0.;
-            _tab.reset(new Table<double,double>(Table<double,double>::spline));
-            for (double u=0.; u - _uMax < 1. || u<1.1; u+=uStep) {
-                double ft = uCalc(u);
-                _tab->addEntry(u, ft);
-                if (std::abs(ft) > _tolerance) _uMax = u;
-            }
-            // Save these values in the cache.
-            _cache_tab[tol] = _tab;
-            _cache_umax[tol] = _uMax;
-        }
-    }
-
-    std::map<double,boost::shared_ptr<Table<double,double> > > Cubic::_cache_tab;
-    std::map<double,double> Cubic::_cache_umax;
-
-
-    class QuinticIntegrand : public std::unary_function<double,double>
-    {
-    public:
-        QuinticIntegrand(double u, const Quintic& c): _u(u), _c(c) {}
-        double operator()(double x) const { return _c.xval(x)*std::cos(2*M_PI*_u*x); }
-    private:
-        double _u;
-        const Quintic& _c;
-    };
-
-    double Quintic::uCalc(double u) const 
-    {
-        QuinticIntegrand qi(u, *this);
-        return 2.*( integ::int1d(qi, 0., 1., 0.1*_tolerance, 0.1*_tolerance)
-                    + integ::int1d(qi, 1., 2., 0.1*_tolerance, 0.1*_tolerance)
-                    + integ::int1d(qi, 2., 3., 0.1*_tolerance, 0.1*_tolerance));
-    }
-
-    Quintic::Quintic(double tol, const GSParamsPtr& gsparams) :
-        Interpolant(gsparams), _tolerance(tol)
-    {
-        // Reduce range slightly from n so we're not including points with zero weight in
-        // interpolations:
-        _range = 3.-0.1*_tolerance;
-
-        // Strangely, not all compilers correctly setup an empty map when it is a 
-        // static variable, so you can get seg faults using it.
-        // Doing an explicit clear fixes the problem.
-        if (_cache_umax.size() == 0) { _cache_umax.clear(); _cache_tab.clear(); }
-
-        if (_cache_umax.count(tol)) {
-            // Then uMax and tab are already cached.
-            _tab = _cache_tab[tol];
-            _uMax = _cache_umax[tol];
-        } else {
-            // Then need to do the calculation and then cache it.
-            const double uStep = 
-                gsparams->table_spacing * std::pow(gsparams->kvalue_accuracy/10.,0.25);
-            _uMax = 0.;
-            _tab.reset(new Table<double,double>(Table<double,double>::spline));
-            for (double u=0.; u - _uMax < 1. || u<1.1; u+=uStep) {
-                double ft = uCalc(u);
-                _tab->addEntry(u, ft);
-                if (std::abs(ft) > _tolerance) _uMax = u;
-            }
-            // Save these values in the cache.
-            _cache_tab[tol] = _tab;
-            _cache_umax[tol] = _uMax;
-        }
-    }
-
-    std::map<double,boost::shared_ptr<Table<double,double> > > Quintic::_cache_tab;
-    std::map<double,double> Quintic::_cache_umax;
 }
-
