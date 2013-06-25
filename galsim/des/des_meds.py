@@ -16,12 +16,20 @@
 # You should have received a copy of the GNU General Public License
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 
+"""@file des_meds.py  Module for generating DES Multi-Epoch Data Structures (MEDS) in GalSim.
+
+This module defines the `MultiExposureObject` class for representing multiple exposure data for a single object, and the `WCSTransform` class used to store general, locally-linearized WCS information per exposure.  The `write_meds` function
+can be used to write a list of `MultiExposureObject` instances to a single MEDS file.
+
+Importing this module with `import des.des_meds` also adds these data structures to the config framework, so that MEDS
+file output can subsequently be simulated directly using a config file.
+"""
 
 import numpy
 import galsim
 
 # these image stamp sizes are available in MEDS format
-BOX_SIZES = [32,48,64,96,128,196,256]
+BOX_SIZES = [32,48,64,96,128,192,256]
 # while creating the meds file, all the data is stored in memory, and then written to disc once all
 # the necessary images have been created.
 # You can control the amound of memory used to prevent jamming your system.
@@ -103,8 +111,8 @@ class MultiExposureObject(object):
 
         # check if the box size is correct
         if self.box_size not in BOX_SIZES:
-            raise ValueError('box size should be in  [32,48,64,96,128,196,256], is %d' % box_size)
-
+            # raise ValueError('box size should be in  [32,48,64,96,128,196,256], is %d' % box_size)
+            raise ValueError( 'box size should be in '+str(BOX_SIZES)+', is '+str(self.box_size) )
 
         # check if weights, segs and wcstrans were supplied. If not, create sensible values.
         if weights != None:
@@ -189,7 +197,7 @@ class MultiExposureObject(object):
 
         # check each Jacobian
         for jac in self.wcstrans:
-            # should ba a numpy array
+            # should ba a WCSTransform instance
             if not isinstance(jac, WCSTransform):
                 raise TypeError('wcstrans list should contain WCSTransform objects')
             
@@ -329,23 +337,23 @@ def write_meds(file_name, obj_list, clobber=True):
 
     # third hdu is image_info
     cols = []
-    cols.append( pyfits.Column(name='image_path', format='A119',   array=['generated_by_galsim'] ) )
-    cols.append( pyfits.Column(name='sky_path',   format='A124',   array=['generated_by_galsim'] ) )
-    cols.append( pyfits.Column(name='seg_path',   format='A123',   array=['generated_by_galsim'] ) )
+    cols.append( pyfits.Column(name='image_path', format='A256',   array=['generated_by_galsim'] ) )
+    cols.append( pyfits.Column(name='sky_path',   format='A256',   array=['generated_by_galsim'] ) )
+    cols.append( pyfits.Column(name='seg_path',   format='A256',   array=['generated_by_galsim'] ) )
     image_info = pyfits.new_table(pyfits.ColDefs(cols))
     image_info.update_ext_name('image_info')
 
     # fourth hdu is metadata
     cols = []
-    cols.append( pyfits.Column(name='cat_file',      format='A113', array=['generated_by_galsim'] ))
-    cols.append( pyfits.Column(name='coadd_file',    format='A109', array=['generated_by_galsim'] ))
+    cols.append( pyfits.Column(name='cat_file',      format='A256', array=['generated_by_galsim'] ))
+    cols.append( pyfits.Column(name='coadd_file',    format='A256', array=['generated_by_galsim'] ))
     cols.append( pyfits.Column(name='coadd_hdu',     format='A1',   array=['x']                   ))
     cols.append( pyfits.Column(name='coadd_seg_hdu', format='A1',   array=['x']                   ))
-    cols.append( pyfits.Column(name='coadd_srclist', format='A115', array=['generated_by_galsim'] ))
+    cols.append( pyfits.Column(name='coadd_srclist', format='A256', array=['generated_by_galsim'] ))
     cols.append( pyfits.Column(name='coadd_wt_hdu',  format='A1',   array=['x']                   ))
-    cols.append( pyfits.Column(name='coaddcat_file', format='A110', array=['generated_by_galsim'] ))
-    cols.append( pyfits.Column(name='coaddseg_file', format='A113', array=['generated_by_galsim'] ))
-    cols.append( pyfits.Column(name='cutout_file',   format='A108', array=['generated_by_galsim'] ))
+    cols.append( pyfits.Column(name='coaddcat_file', format='A256', array=['generated_by_galsim'] ))
+    cols.append( pyfits.Column(name='coaddseg_file', format='A256', array=['generated_by_galsim'] ))
+    cols.append( pyfits.Column(name='cutout_file',   format='A256', array=['generated_by_galsim'] ))
     cols.append( pyfits.Column(name='max_boxsize',   format='A3',   array=['x']                   ))
     cols.append( pyfits.Column(name='medsconf',      format='A3',   array=['x']                   ))
     cols.append( pyfits.Column(name='min_boxsize',   format='A2',   array=['x']                   ))
