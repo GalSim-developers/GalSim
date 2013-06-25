@@ -746,9 +746,6 @@ def test_realspace_conv():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
-    test_realspace_conv()
-    sys.exit()
-
     test_sbinterpolatedimage()
     test_pad_image()
     test_roundtrip()
