@@ -106,6 +106,13 @@ namespace galsim {
     // does not have pi multiplying t.
     static double Si(double x) 
     {
+#if 0
+        // These are the version Gary had taken from Abramowitz & Stegun's formulae.
+        // Unfortunately, they don't seem to be quite accurate enough for our needs.
+        // They are accurate to better than 1.e-6, but since our calculation of the 
+        // fourier transform of Lanczon(n,x) involves subtracting multiples of these
+        // from each other, there is a lot of cancelling, and the resulting relative 
+        // accuracy for uval is much worse than 1.e-6.
         double x2=x*x;
         if(x2>=3.8) {
             // Use rational approximation from Abramowitz & Stegun
@@ -119,6 +126,7 @@ namespace galsim {
 
         } else {
             // x2<3.8: the series expansion is the better approximation, A&S 5.2.14
+            dbg<<"Calculate Si(x) for x = "<<x<<std::endl;
             double n1=1.;
             double n2=1.;
             double tt=x;
@@ -131,6 +139,90 @@ namespace galsim {
             }
             return t;
         }
+#else
+        double x2=x*x;
+        if (x2 > 16.) {
+            // For |x| > 4, we use the asymptotic formula:
+            //
+            // Si(x) = pi/2 - f(x) cos(x) - g(x) sin(x)
+            //
+            // where f(x) = int(sin(t)/(x+t),t=0..inf) 
+            //       g(x) = int(cos(t)/(x+t),t=0..inf)
+            //
+            // I used Maple to calculate a Chebyshev-Pade approximation of x f(1/sqrt(x)) 
+            // from 0..1/4^2, which leads to the following formula for f(x).  It is accurate to 
+            // better than 1.e-16 for x > 4.
+            double f = 
+                (2.9228757957538833314e-1 +
+                 x2*(1.7393895125560691844 +
+                     x2*(1.4843569641472129741 +
+                         x2*(4.1403338988005243212e-1 +
+                             x2*(4.9333315428536661539e-2 +
+                                 x2*(2.8429749161947546956e-3 +
+                                     x2*(8.4100015376621292675e-5 +
+                                         x2*(1.3000589538293421518e-6 +
+                                             x2*(1.0267966224598433436e-8 +
+                                                 x2*(3.8016278060118867942e-11 +
+                                                     x2*5.0738999858936402742e-14))))))))))
+                / (x*(1. +
+                      x2*(2.9148380188554292145 +
+                          x2*(1.9494777665153591426 +
+                              x2*(4.8275776941609546205e-1 +
+                                  x2*(5.3885122690917902419e-2 +
+                                      x2*(2.9904260275598761625e-3 +
+                                          x2*(8.6516916084330689535e-5 +
+                                              x2*(1.3198666277119026515e-6 +
+                                                  x2*(1.0342984000742052697e-8 +
+                                                      x2*(3.8117756059833395003e-11 +
+                                                          x2*5.0738999858936496265e-14)))))))))));
+
+            // Similarly, a Chebyshev-Pade approximation of x^2 g(1/sqrt(x)) from 0..1/4^2 
+            // leads to the following formula for g(x), which is also accurate to better than 
+            // 1.e-16 for x > 4.
+            double g = 
+                (8.4828843437259621661e-2 +
+                 x2*(6.2327273861766541484e-1 +
+                     x2*(4.3474062026050096164e-1 +
+                         x2*(9.1691399687059297877e-2 +
+                             x2*(7.8720742120482611215e-3 +
+                                 x2*(3.1255564808284666926e-4 +
+                                     x2*(6.0478037735341365671e-6 +
+                                         x2*(5.6892312377254620964e-8 +
+                                             x2*(2.4178501464859261578e-10 +
+                                                 x2*3.6002097105194320494e-13)))))))))
+                / (x2*(1. +
+                       x2*(1.7232606082363163365 +
+                           x2*(7.5213347582751063265e-1 +
+                               x2*(1.2514518374719181762e-1 +
+                                   x2*(9.3966368894558064447e-3 +
+                                       x2*(3.4487831019961461566e-4 +
+                                           x2*(6.3702215252541326054e-6 +
+                                               x2*(5.8312780713351624742e-8 +
+                                                   x2*(2.4394514047299639664e-10 +
+                                                       x2*3.6002097105200748110e-13))))))))));
+
+            return ((x>0.)?(M_PI/2.):(-M_PI/2.)) - f*cos(x) - g*sin(x);
+        } else {
+            // Here I used Maple to calculate the Pade apprximation for Si(x), which is accurate 
+            // to better than 1.e-16 for x < 4:
+            return
+                x*(1. +
+                   x2*(-4.5439340981632999087e-2 +
+                       x2*(1.1545722575101668180e-3 +
+                           x2*(-1.4101853682133025376e-5 +
+                               x2*(9.4328080943871302503e-8 +
+                                   x2*(-3.5320197899716835676e-10 +
+                                       x2*(7.0824028227487591119e-13 +
+                                           x2*(-6.0533821201042247740e-16))))))))
+                / (1. +
+                   x2*(1.0116214573922556468e-2 +
+                       x2*(4.9917511616975510645e-5 +
+                           x2*(1.5565498630874561372e-7 +
+                               x2*(3.2806757105578973403e-10 +
+                                   x2*(4.5049097575386581026e-13 +
+                                       x2*3.2110705119371216769e-16))))));
+        }
+#endif
     }
 
     //
