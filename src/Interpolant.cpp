@@ -414,7 +414,7 @@ namespace galsim {
     double Lanczos::xCalc(double x) const
     {
         double retval = sinc(x)*sinc(x/_n);
-        if (_fluxConserve) retval *= 1. + 2.*_u1*(1.-std::cos(2.*M_PI*x));
+        if (_conserve_flux) retval *= 1. + 2.*_u1*(1.-std::cos(2.*M_PI*x));
         return retval;
     }
 
@@ -429,9 +429,9 @@ namespace galsim {
         return retval/(2.*M_PI);
     }
 
-    Lanczos::Lanczos(int n, bool fluxConserve, double tol,
+    Lanczos::Lanczos(int n, bool conserve_flux, double tol,
                      const GSParamsPtr& gsparams) :  
-        Interpolant(gsparams), _in(n), _n(n), _fluxConserve(fluxConserve), _tolerance(tol)
+        Interpolant(gsparams), _in(n), _n(n), _conserve_flux(conserve_flux), _tolerance(tol)
     {
         // Reduce range slightly from n so we're not including points with zero weight in
         // interpolations:
@@ -450,7 +450,7 @@ namespace galsim {
             _cache_utab.clear();  
         }
 
-        KeyType key(n,std::pair<bool,double>(fluxConserve,tol));
+        KeyType key(n,std::pair<bool,double>(_conserve_flux,tol));
 
         if (_cache_umax.count(key)) {
             // Then uMax and tab are already cached.
@@ -476,7 +476,7 @@ namespace galsim {
             const double uStep = 
                 gsparams->table_spacing * std::pow(gsparams->kvalue_accuracy/10.,0.25) / _n;
             _uMax = 0.;
-            if (_fluxConserve) {
+            if (_conserve_flux) {
                 for (double u=0.; u - _uMax < 1./_n || u<1.1; u+=uStep) {
                     double uval = uCalc(u);
                     uval *= 1.+2.*_u1;
@@ -518,12 +518,12 @@ namespace galsim {
                 // SBMoffat's kValue and pow functions, making these different cases all different 
                 // functions and having the constructor just set the function once.  Then calls to 
                 // xval wouldn't have any jumps from the case or (if you wanted) even the
-                // _fluxConserve check.
+                // _conserve_flux check.
               case 3 : {
                   if (x < 1.e-6) {
                       double xsq = x*x;
                       double res = 1. - 5./3. * xsq;
-                      if (_fluxConserve) res *= 1. + 4.*M_PI*M_PI*_u1*xsq;
+                      if (_conserve_flux) res *= 1. + 4.*M_PI*M_PI*_u1*xsq;
                       return res;
                   } else {
                       // Then xval = 3/pi^2 sin(pi x) sin(pi x /3) / x^2
@@ -533,7 +533,7 @@ namespace galsim {
                       double sn = sin((M_PI/3.)*x);
                       double s = sn*(3.-4.*sn*sn);
                       double res = (3./(M_PI*M_PI)) * s*sn/(x*x);
-                      if (_fluxConserve) res *= 1. + 4.*_u1*s*s;
+                      if (_conserve_flux) res *= 1. + 4.*_u1*s*s;
                       return res;
                   }
                   break;
@@ -542,14 +542,14 @@ namespace galsim {
                   if (x < 1.e-6) {
                       double xsq = x*x;
                       double res = 1. - 13./3. * xsq;
-                      if (_fluxConserve) res *= 1. + 4.*M_PI*M_PI*_u1*xsq;
+                      if (_conserve_flux) res *= 1. + 4.*M_PI*M_PI*_u1*xsq;
                       return res;
                   } else {
                       double sn = sin((M_PI/5.)*x);
                       double snsq = sn*sn;
                       double s = sn*(5.-snsq*(20.-16.*snsq));
                       double res = (5./(M_PI*M_PI)) * s*sn/(x*x);
-                      if (_fluxConserve) res *= 1. + 4.*_u1*s*s;
+                      if (_conserve_flux) res *= 1. + 4.*_u1*s*s;
                       return res;
                   }
                   break;
@@ -558,14 +558,14 @@ namespace galsim {
                   if (x < 1.e-6) {
                       double xsq = x*x;
                       double res = 1. - 25./3. * xsq;
-                      if (_fluxConserve) res *= 1. + 4.*M_PI*M_PI*_u1*xsq;
+                      if (_conserve_flux) res *= 1. + 4.*M_PI*M_PI*_u1*xsq;
                       return res;
                   } else {
                       double sn = sin((M_PI/7.)*x);
                       double snsq = sn*sn;
                       double s = sn*(7.-snsq*(56.-snsq*(112.-64.*snsq)));
                       double res = (7./(M_PI*M_PI)) * s*sn/(x*x);
-                      if (_fluxConserve) res *= 1. + 4.*_u1*s*s;
+                      if (_conserve_flux) res *= 1. + 4.*_u1*s*s;
                       return res;
                   }
                   break;
@@ -574,7 +574,7 @@ namespace galsim {
                   if (x < 1.e-6) {
                       double xsq = x*x;
                       double res = 1. - (_n*_n+1.)/6. * xsq;
-                      if (_fluxConserve) res *= 1. + 4.*M_PI*M_PI*_u1*xsq;
+                      if (_conserve_flux) res *= 1. + 4.*M_PI*M_PI*_u1*xsq;
                       return res;
                   } else {
                       // xval = n/pi^2 sin(pi x) sin(pi x /n) / x^2
@@ -582,7 +582,7 @@ namespace galsim {
                       double sn = sin(M_PI*x/_n);
                       double res = (_n/(M_PI*M_PI)) * s*sn/(x*x);
                       // res *= 1. + 2.*_u1*(1.-cos(2.*M_PI*x));
-                      if (_fluxConserve) res *= 1. + 4.*_u1*s*s;
+                      if (_conserve_flux) res *= 1. + 4.*_u1*s*s;
                       return res;
                   }
                   break;
