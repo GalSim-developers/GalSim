@@ -31,10 +31,62 @@
 //int verbose_level = 2;
 #endif
 
-// It turns out the Lanczos xval is faster to do directly with trig than with a lookup table.
-// I left the original lookup-table code in here in case we find that this isn't true for
-// some situation.  But I think this next line should always be enabled. -MJ
-#define USE_DIRECT_LANCZOS_XVAL
+// Gary's original code used a lot of lookup tables, but most of these have analytic formulae
+// that seem to be generally faster than the lookup table.  Part of this is probably because
+// our lookup table isn't super fast, so I'm leaving the code in, but disabled.  If we manage
+// to massively speed up the lookup table, it might be worth re-enabling this code if the
+// following #define.
+//
+//#define USE_TABLES
+
+// Gary's Quintic interpolant was designed to exactly interpolate up to 4th order of a Taylor
+// series expansion.  This implies F'(j) = F''(j) = F'''(j) = F''''(j) = 0.  However, it
+// doesn't have a continuous second derivative.  I (MJ) derived an alternate version that does
+// have a continuous second derivative, but doesn't have F''''(j) = 0.  Gary thinks the 
+// F''''(j) = 0 constraint is more important than the continuous second derivatives, since: 
+//
+// "The most important characteristic for the k interpolation is to have F(k) as close to zero as 
+// possible in the vicinity of the aliasing frequency.  It's these components of F in the vicinity 
+// of 2 pi that cause the ghost images after interpolation. In this application I'm less worried 
+// about the continuous derivatives because the ringing at frequencies beyond the vicinity of 
+// k=2 pi does not affect the interpolated image if we know that we have zero-padded it before 
+// transforming."
+//
+// However, I have the alternate version coded up, so I figured I'd leave it in as an option.
+// The two functions are actually extremely similar though, so I doubt it really matters that 
+// much which one we use in practice.
+//
+//#define ALT_QUINTIC
+
+
+// For grins, I also figured out the Septimic formulae while I was at it: 
+//
+// The version that correctly interpolates up to 6th order in the Taylor series (but has 
+// discontinuous 2nd and 3rd derivatives) is:
+//
+// |x| < 1: 1 + |x|^4 (-3899/144 + 9233/144 |x| - 7669/144 |x|^2 + 2191/144 |x|^3)
+// |x| < 2: (|x|-1) (|x|-2) (481/10 - 7369/40 |x| + 1379/5 |x|^2 - 9517/48 |x|^3 + 2739/40 |x|^4
+//                           - 2191/240 |x|^5)
+// |x| < 3: (|x|-2) (|x|-3) (-1567/6 + 4401/8 |x| - 1373/3 |x|^2 + 27049/144 |x|^3 - 913/24 |x|^4
+//                           + 2191/720 |x|^5)
+// |x| < 4: (|x|-3) (|x|-4)^2 (-3211/60 + 781/12 |x| - 7067/240 |x|^2 + 2113/360 |x|^3 
+//                             - 313/720 |x|^4)
+//
+// F(u) = (1/45) s^7 (6780 c piu^2 + 98595 s - 98550 c - 39570 s piu^2 + 112 c piu^4)
+//
+// The version with continuous 1st, 2nd, and 3rd derivatives (but only accurately interpolates
+// up to 5th order in a Taylor series) is:
+//
+// |x| < 1: 1 + |x|^4 (-203/8 + 2849/48 |x| - 293/6 |x|^2 + 665/48 |x|^3)
+// |x| < 2: (|x|-1) (|x|-2) (913/20 - 10441/60 |x| + 5173/20 |x|^2 - 11051/60 |x|^3 + 5037/80 |x|^4
+//                           - 133/16 |x|^5)
+// |x| < 3: (|x|-2) (|x|-3) (-2987/12 + 31219/60 |x| - 5149/12 |x|^2 + 5233/30 |x|^3 
+//                           - 1679/48 |x|^4 + 133/48 |x|^5)
+// |x| < 4: (|x|-3) (|x|-4)^4 (-383/120 + 539/240 |x| - 19/48 |x|^2)
+//
+// F(u) = s^6 (1995 s^2 - 98 - 702 piu^2 s^2 + 104 c s piu^2 - 1896 c s)
+//
+// Just in case we ever decide we want to go to the next order of polynomial interpolation...
 
 namespace galsim {
 
@@ -256,7 +308,13 @@ namespace galsim {
     double Cubic::uval(double u) const 
     {
         u = std::abs(u);
+#ifdef USE_TABLES
         return u>_uMax ? 0. : (*_tab)(u);
+#else
+        double s = sinc(u);
+        double c = cos(M_PI*u);
+        return s*s*s*(3.*s-2.*c);
+#endif
     }
     
     class CubicIntegrand : public std::unary_function<double,double>
@@ -284,6 +342,7 @@ namespace galsim {
         // interpolations:
         _range = 2.-0.1*_tolerance;
 
+#ifdef USE_TABLES
         // Strangely, not all compilers correctly setup an empty map when it is a 
         // static variable, so you can get seg faults using it.
         // Doing an explicit clear fixes the problem.
@@ -301,13 +360,29 @@ namespace galsim {
             _tab.reset(new Table<double,double>(Table<double,double>::spline));
             for (double u=0.; u - _uMax < 1. || u<1.1; u+=uStep) {
                 double ft = uCalc(u);
+#ifdef DEBUGLOGGING
+                double s = sinc(u);
+                double c = cos(M_PI*u);
+                double ft2 = s*s*s*(3.*s-2.*c);
+                dbg<<"u = "<<u<<", ft = "<<ft<<"  "<<ft2<<std::endl;
+#endif
                 _tab->addEntry(u, ft);
                 if (std::abs(ft) > _tolerance) _uMax = u;
             }
             // Save these values in the cache.
             _cache_tab[tol] = _tab;
             _cache_umax[tol] = _uMax;
+            dbg<<"umax = "<<_uMax<<", alt umax = "<<
+                std::pow((3.*sqrt(3.)/8.)/_tolerance, 1./3.) / M_PI <<std::endl;
         }
+#else
+        // uMax is the value where |ft| <= tolerance
+        // ft = sin(pi u)^3/(pi u)^3 * (3*sin(pi u)/(pi u) - 2*cos(pi u))
+        // |ft| < 2 max[sin(x)^3 cos(x)] / (pi u)^3
+        //      = 2 (3sqrt(3)/16) / (pi u)^3
+        // umax = (3sqrt(3)/8 tol)^1/3 / pi
+        _uMax = std::pow((3.*sqrt(3.)/8.)/_tolerance, 1./3.) / M_PI;
+#endif
     }
 
     std::map<double,boost::shared_ptr<Table<double,double> > > Cubic::_cache_tab;
@@ -320,21 +395,67 @@ namespace galsim {
  
     double Quintic::xval(double x) const 
     {
-        x = std::abs(x);
+        x=std::abs(x);
+#ifdef ALT_QUINTIC
+        // Gary claims in finterp.pdf that his quintic function (below) has the following 
+        // properties:
+        //
+        // f(0) = 1
+        // f(1) = f(2) = f(3) = 0
+        // f'(0) = 0
+        // f'(1)_left = f'(1)_right
+        // f'(2)_left = f'(2)_right
+        // f'(3)_left = 0
+        // f''(0) = 0
+        // (*) f''(1)_left = f'(1)_right
+        // (*) f''(2)_left = f'(2)_right
+        // (*) f''(3)_left = 0
+        // f(x-3)+f(x-2) + f(x-1) + f(x) + f(x+1) + f(x+2) = 1 from 0..1
+        // F'(j) = F''(j) = F'''(j) = F''''(j) = 0
+        //
+        // However, it turns out that the second derivative continuity equations (marked * above)
+        // are not actually satisfied.  I (MJ) tried to derive a version that does satisfy all
+        // the constraints and discovered that the system is over-constrained.  If I keep the
+        // second derivative constraints and drop F''''(j) = 0, I get the following:
         if (x <= 1.)
-            return 1. + (1./12.)*x*x*x*(-95.+x*(138.-55.*x));
+            return 1. + x*x*x*(-15./2. + x*(32./3. + x*(-25./6.)));
         else if (x <= 2.)
-            return (1./24.)*(x-1.)*(x-2.)*(-138.+x*(348.+x*(-249.+55.*x)));
+            return (x-1.)*(x-2.)*(-23./4. + x*(169./12. + x*(-39./4. + x*(25./12.))));
         else if (x <= 3.)
-            return (1./24.)*(x-2.)*(x-3.)*(x-3.)*(-54.+x*(50.-11.*x));
+            return (x-2.)*(x-3.)*(x-3.)*(x-3.)*(3./4. + x*(-5./12.));
         else 
             return 0.;
+#else
+        // This is Gary's original version with F''''(j) = 0, but f''(x) is not continuous at
+        // x = 1,2,3.
+        if (x <= 1.)
+            return 1. + x*x*x*(-95./12. + x*(23./2. + x*(-55./12.)));
+        else if (x <= 2.)
+            return (x-1.)*(x-2.)*(-23./4. + x*(29./2. + x*(-83./8. + x*(55./24.))));
+        else if (x <= 3.)
+            return (x-2.)*(x-3.)*(x-3.)*(-9./4. + x*(25./12. + x*(-11./24.)));
+        else 
+            return 0.;
+#endif
     }
 
     double Quintic::uval(double u) const 
     {
         u = std::abs(u);
+#ifdef USE_TABLES
         return u>_uMax ? 0. : (*_tab)(u);
+#else
+        double s = sinc(u);
+        double piu = M_PI*u;
+        double c = cos(piu);
+        double ssq = s*s;
+        double piusq = piu*piu;
+#ifdef ALT_QUINTIC
+        return ssq*ssq*(ssq*(12.*piusq-50.) + 44.*s*c + 5.);
+#else
+        return s*ssq*ssq*(s*(55.-19.*piusq) + 2.*c*(piusq-27.));
+#endif
+#endif
     }
 
     class QuinticIntegrand : public std::unary_function<double,double>
@@ -362,6 +483,7 @@ namespace galsim {
         // interpolations:
         _range = 3.-0.1*_tolerance;
 
+#ifdef USE_TABLES
         // Strangely, not all compilers correctly setup an empty map when it is a 
         // static variable, so you can get seg faults using it.
         // Doing an explicit clear fixes the problem.
@@ -378,14 +500,39 @@ namespace galsim {
             _uMax = 0.;
             _tab.reset(new Table<double,double>(Table<double,double>::spline));
             for (double u=0.; u - _uMax < 1. || u<1.1; u+=uStep) {
+                dbg<<"u = "<<u<<std::endl;
                 double ft = uCalc(u);
                 _tab->addEntry(u, ft);
+#ifdef DEBUGLOGGING
+                double s = sinc(u);
+                double piu = M_PI*u;
+                double c = cos(piu);
+                double ssq = s*s;
+                double piusq = piu*piu;
+#ifdef ALT_QUINTIC
+                double ft2 = ssq*ssq*(ssq*(12.*piusq-50.) + 44.*s*c+5.);
+#else
+                double ft2 = s*ssq*ssq*(s*(55.-19.*piusq) + 2.*c*(piusq-27.));
+#endif
+                dbg<<"u = "<<u<<", ft = "<<ft<<"  "<<ft2<<std::endl;
+#endif
                 if (std::abs(ft) > _tolerance) _uMax = u;
             }
             // Save these values in the cache.
             _cache_tab[tol] = _tab;
             _cache_umax[tol] = _uMax;
+            dbg<<"umax = "<<_uMax<<", alt umax = "<<
+                std::pow((25.*sqrt(5.)/108.)/_tolerance, 1./3.) / M_PI <<std::endl;
         }
+#else
+        // uMax is the value where |ft| <= tolerance
+        // ft = sin(pi u)^5/(pi u)^5 * (sin(pi u)/(pi u)*(55.-19 pi^2 u^2) 
+        //                              + 2*cos(pi u)*(pi^2 u^2-27)))
+        // |ft| < 2 max[sin(x)^5 cos(x))] / (pi u)^3
+        //      = 2 (25sqrt(5)/216) / (pi u)^3
+        // umax = (25sqrt(5)/108 tol)^1/3 / pi
+        _uMax = std::pow((25.*sqrt(5.)/108.)/_tolerance, 1./3.) / M_PI;
+#endif
     }
 
     // Override default sampler configuration because Quintic filter has sign change in
@@ -444,7 +591,7 @@ namespace galsim {
         // Doing an explicit clear fixes the problem.
         if (_cache_umax.size() == 0) {
             _cache_umax.clear();
-#ifndef USE_DIRECT_LANCZOS_XVAL
+#ifdef USE_TABLES
             _cache_xtab.clear();
 #endif
             _cache_utab.clear();  
@@ -454,13 +601,13 @@ namespace galsim {
 
         if (_cache_umax.count(key)) {
             // Then uMax and tab are already cached.
-#ifndef USE_DIRECT_LANCZOS_XVAL
+#ifdef USE_TABLES
             _xtab = _cache_xtab[key];
 #endif
             _utab = _cache_utab[key];
             _uMax = _cache_umax[key];
         } else {
-#ifndef USE_DIRECT_LANCZOS_XVAL
+#ifdef USE_TABLES
             // Build xtab = table of x values
             _xtab.reset(new Table<double,double>(Table<double,double>::spline));
             // Spline is accurate to O(dx^3), so errors should be ~dx^4.
@@ -493,7 +640,7 @@ namespace galsim {
                 }
             }
             // Save these values in the cache.
-#ifndef USE_DIRECT_LANCZOS_XVAL
+#ifdef USE_TABLES
             _cache_xtab[key] = _xtab;
 #endif
             _cache_utab[key] = _utab;
@@ -510,7 +657,9 @@ namespace galsim {
         x = std::abs(x);
         if (x >= _n) return 0.;
         else {
-#ifdef USE_DIRECT_LANCZOS_XVAL
+#ifdef USE_TABLES
+            return (*_xtab)(x);
+#else
             switch (_in) {
                 // TODO: We usually only use n=3,5,7.  If we start using any other values on a
                 // regular basis, it's worth it to specialize that case here.
@@ -588,8 +737,6 @@ namespace galsim {
                   break;
               }
             }
-#else
-            return (*_xtab)(x);
 #endif
         }
     }
