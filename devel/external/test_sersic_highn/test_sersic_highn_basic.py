@@ -81,7 +81,7 @@ def run_tests(random_seed, outfile, config=None, gsparams=None, wmult=None, logg
         '#  g1obs_draw g2obs_draw sigma_draw delta_g1obs delta_g2obs delta_sigma '+
         'err_g1obs err_g2obs err_sigma\n')
     # Start looping through the sample objects and collect the results
-    for i, hlr, gabs in zip(range(NOBS)[-2:], hlr_cosmos[-2:], gabs_cosmos[-2:]):
+    for i, hlr, gabs in zip(range(NOBS), hlr_cosmos, gabs_cosmos):
         print "Testing galaxy #"+str(i+1)+"/"+str(NOBS)+\
               " with (hlr, |g|) = "+str(hlr)+", "+str(gabs)
         random_theta = 2. * np.pi * ud()
