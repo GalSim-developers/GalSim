@@ -142,11 +142,10 @@ namespace galsim {
     V Table<V,A>::operator() (const A a) const 
     {
         setup(); //do any necessary prep
-        try {
+        if (a<_argMin() || a>_argMax()) return V(0);
+        else {
             int i = upperIndex(a);
             return interpolate(a,i,v,y2);
-        } catch (TableOutOfRange) {
-            return V(0);
         }
     }
 

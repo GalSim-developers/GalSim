@@ -468,7 +468,13 @@ namespace galsim {
             double k = std::exp(logk);
             double ksq = k*k;
             SersicHankel I(_invn, k);
+
+#ifdef DEBUGLOGGING
+            std::ostream* integ_dbgout = verbose_level >= 3 ? dbgout : 0;
+            integ::IntRegion<double> reg(0, integ_maxr, integ_dbgout);
+#else
             integ::IntRegion<double> reg(0, integ_maxr);
+#endif
 
             // Add explicit splits at first several roots of J0.
             // This tends to make the integral more accurate.
