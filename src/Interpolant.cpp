@@ -34,7 +34,7 @@
 // Gary's original code used a lot of lookup tables, but most of these have analytic formulae
 // that seem to be generally faster than the lookup table.  Part of this is probably because
 // our lookup table isn't super fast, so I'm leaving the code in, but disabled.  If we manage
-// to massively speed up the lookup table, it might be worth re-enabling this code if the
+// to massively speed up the lookup table, it might be worth re-enabling this code with the
 // following #define.
 //
 //#define USE_TABLES
@@ -203,7 +203,7 @@ namespace galsim {
 
             return ((x>0.)?(M_PI/2.):(-M_PI/2.)) - f*cos(x) - g*sin(x);
         } else {
-            // Here I used Maple to calculate the Pade apprximation for Si(x), which is accurate 
+            // Here I used Maple to calculate the Pade approximation for Si(x), which is accurate
             // to better than 1.e-16 for x < 4:
             return
                 x*(1. +
