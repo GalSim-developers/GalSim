@@ -60,8 +60,8 @@ class InterpolatedImage(GSObject):
     error.  More details can be found in devel/modules/finterp.pdf, especially table 1, in the
     GalSim repository.
 
-    The user can choose to have the image padding use zero (default), Gaussian random noise of some
-    variance, or a Gaussian but correlated noise field that is specified either as a 
+    The user can choose to have the `noise_pad` image padding use zero (default), a Gaussian random
+    noise of some variance, or a Gaussian but correlated noise field that is specified either as a
     CorrelatedNoise instance, an Image (from which a correlated noise model is derived), or a string
     (interpreted as a filename containing an image to use for deriving a CorrelatedNoise).  The user
     can also pass in a random number generator to be used for noise generation.  Finally, the user
@@ -79,7 +79,7 @@ class InterpolatedImage(GSObject):
     
         >>> interpolated_image = galsim.InterpolatedImage(image, x_interpolant = None,
                                                           k_interpolant = None,
-                                                          normalization = 'f', dx = None,
+                                                          normalization = 'flux', dx = None,
                                                           flux = None, pad_factor = 0.,
                                                           noise_pad = 0., rng = None,
                                                           pad_image = None,
@@ -172,7 +172,7 @@ class InterpolatedImage(GSObject):
                            Normally, the padding is just taken to be the size of the pad_image.
                            However, if pad_factor is also given, and the resulting padded size is 
                            larger than the pad_image, then the image will be further padded with
-                           either noise (if noise_pad is give) or zeros.
+                           either noise (if noise_pad is given) or zeros.
                            The user should be careful to ensure that the image used for padding has 
                            roughly zero mean.  The purpose of this keyword is to allow for a more 
                            flexible representation of some noise field around an object; if the 

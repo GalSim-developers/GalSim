@@ -383,7 +383,9 @@ def test_operations_simple():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_operations():
-    """Test of operations on complicated InterpolatedImage: shear, magnification, rotation, shifting."""
+    """Test of operations on complicated InterpolatedImage: shear, magnification, rotation,
+    shifting.
+    """
     import time
     t1 = time.time()
     test_decimal = 3
@@ -395,12 +397,12 @@ def test_operations():
     orig_mom = im.FindAdaptiveMom()
 
     # Magnify by some amount and make sure change is as expected
-    mag_scale = 0.92
-    new_int_im = int_im.createMagnified(mag_scale)
+    mu = 0.92
+    new_int_im = int_im.createMagnified(mu)
     test_im = galsim.ImageF(im.bounds)
     new_int_im.draw(image = test_im, dx = im.getScale())
     new_mom = test_im.FindAdaptiveMom()
-    np.testing.assert_almost_equal(new_mom.moments_sigma/np.sqrt(mag_scale),
+    np.testing.assert_almost_equal(new_mom.moments_sigma/np.sqrt(mu),
         orig_mom.moments_sigma, test_decimal,
         err_msg = 'Size of magnified InterpolatedImage from HST disagrees with expectations')
     np.testing.assert_almost_equal(new_mom.observed_shape.e1, orig_mom.observed_shape.e1,
@@ -744,9 +746,6 @@ def test_realspace_conv():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
-    test_realspace_conv()
-    sys.exit()
-
     test_sbinterpolatedimage()
     test_pad_image()
     test_roundtrip()
