@@ -109,3 +109,6 @@ Changes from v0.4 to current version:
 * Fixed some bugs in the Sersic class that were leading to low level ringing features in the
   images when drawn with FFTs.  In addition, now Sersic with n=0.5 or 1 agree with Gaussian and
   Exponential at the expected accuracy tolerance. (Issue #426)
+
+* Fixed some bugs in the InterpolatedImage class, one related to padding of images with noise fields
+  and one related to real-space convolution.  (Issues #389, #432)
