@@ -39,14 +39,12 @@ namespace galsim {
     template <typename T> 
     SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<T>& image,
-        boost::shared_ptr<Interpolant2d> xInterp,
-        boost::shared_ptr<Interpolant2d> kInterp,
-        double dx,
-        double pad_factor,
-        boost::shared_ptr<BaseImage<T> > pad_image,
+        boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
+        double dx, double pad_factor, boost::shared_ptr<BaseImage<T> > pad_image,
         const GSParamsPtr& gsparams) :
         SBProfile(new SBInterpolatedImageImpl(
-            image, xInterp, kInterp, dx, pad_factor, pad_image, gsparams)) {}
+                image, xInterp, kInterp, dx, pad_factor, pad_image, gsparams)) 
+    {}
 
     SBInterpolatedImage::SBInterpolatedImage(
         const MultipleImageHelper& multi,
@@ -54,7 +52,8 @@ namespace galsim {
         boost::shared_ptr<Interpolant2d> xInterp,
         boost::shared_ptr<Interpolant2d> kInterp,
         const GSParamsPtr& gsparams) :
-        SBProfile(new SBInterpolatedImageImpl(multi, weights, xInterp, kInterp, gsparams)) {}
+        SBProfile(new SBInterpolatedImageImpl(multi, weights, xInterp, kInterp, gsparams)) 
+    {}
 
     SBInterpolatedImage::SBInterpolatedImage(const SBInterpolatedImage& rhs) : SBProfile(rhs) {}
 
@@ -240,11 +239,8 @@ namespace galsim {
     template <typename T>
     SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
         const BaseImage<T>& image, 
-        boost::shared_ptr<Interpolant2d> xInterp,
-        boost::shared_ptr<Interpolant2d> kInterp,
-        double dx,
-        double pad_factor,
-        boost::shared_ptr<BaseImage<T> > pad_image,
+        boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
+        double dx, double pad_factor, boost::shared_ptr<BaseImage<T> > pad_image,
         const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
         _multi(image, dx, pad_factor, pad_image),
@@ -338,6 +334,40 @@ namespace galsim {
         for (size_t i=0; i<_multi.size(); ++i) flux += _wts[i] * _multi.getFlux(i);
         dbg<<"flux = "<<flux<<std::endl;
         return flux;
+    }
+
+    void SBInterpolatedImage::SBInterpolatedImageImpl::getXRange(
+        double& xmin, double& xmax, std::vector<double>& splits) const 
+    {
+        Bounds<int> b = _multi.getInitBounds();
+        double scale = _multi.getScale();
+        double xrange = _xInterp->xrange();
+        int N = b.getXMax()-b.getXMin()+1;
+        xmin = -(N/2 + xrange) * scale;
+        xmax = ((N-1)/2 + xrange) * scale;
+        int ixrange = _xInterp->ixrange();
+        if (ixrange > 0) {
+            splits.resize(N-2+ixrange);
+            double x = xmin-0.5*scale*(ixrange-2);
+            for(int i=0;i<N-2+ixrange;++i, x+=scale) splits[i] = x;
+        }
+    }
+
+    void SBInterpolatedImage::SBInterpolatedImageImpl::getYRange(
+        double& ymin, double& ymax, std::vector<double>& splits) const 
+    { 
+        Bounds<int> b = _multi.getInitBounds();
+        double scale = _multi.getScale();
+        double xrange = _xInterp->xrange();
+        int N = b.getXMax()-b.getXMin()+1;
+        ymin = -(N/2 + xrange) * scale;
+        ymax = ((N-1)/2 + xrange) * scale;
+        int ixrange = _xInterp->ixrange();
+        if (ixrange > 0) {
+            splits.resize(N-2+ixrange);
+            double y = ymin-0.5*scale*(ixrange-2);
+            for(int i=0;i<N-2+ixrange;++i, y+=scale) splits[i] = y;
+        }
     }
 
     Position<double> SBInterpolatedImage::SBInterpolatedImageImpl::centroid() const 

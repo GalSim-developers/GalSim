@@ -62,7 +62,7 @@ class RealGalaxy(GSObject):
                                         flux=None, pad_factor = 0, noise_pad=False, pad_image=None,
                                         use_cache = True)
 
-    This initializes real_galaxy with three SBInterpolatedImage objects (one for the deconvolved
+    This initializes real_galaxy with three InterpolatedImage objects (one for the deconvolved
     galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
     keywords for choosing a galaxy; exactly one must be set.  In future we may add more such
     options, e.g., to choose at random but accounting for the non-constant weight factors
@@ -100,12 +100,12 @@ class RealGalaxy(GSObject):
     @param flux                 Total flux, if None then original flux in galaxy is adopted without
                                 change [default `flux = None`].
     @param pad_factor           Factor by which to pad the Image when creating the
-                                SBInterpolatedImage; `pad_factor <= 0` results in the use of the
+                                InterpolatedImage; `pad_factor <= 0` results in the use of the
                                 default value, 4.  We strongly recommend leaving this parameter at
                                 its default value; see text above for details.
                                 [Default `pad_factor = 0`.]
     @param noise_pad            When creating the SBProfile attribute for this GSObject, pad the
-                                SBInterpolated image with zeros, or with noise of a level specified
+                                Interpolated image with zeros, or with noise of a level specified
                                 in the training dataset?  There are several options here: 
                                     Use `noise_pad = False` if you wish to pad with zeros.
                                     Use `noise_pad = True` if you wish to pad with uncorrelated
@@ -234,7 +234,7 @@ class RealGalaxy(GSObject):
 
         # Calculate the PSF "deconvolution" kernel
         psf_inv = galsim.Deconvolve(self.original_PSF, gsparams=gsparams)
-        # Initialize the InterpolatedImage attribute
+        # Initialize the SBProfile attribute
         GSObject.__init__(self, galsim.Convolve([self.original_image, psf_inv], gsparams=gsparams))
 
     def getHalfLightRadius(self):
@@ -484,16 +484,16 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
         if isinstance(target_PSF, Class):
             lan5 = galsim.Lanczos(5, conserve_flux = True, tol = 1.e-4)
             interp2d = galsim.InterpolantXY(lan5)
-            target_PSF = galsim.SBInterpolatedImage(
-                target_PSF.view(), xInterp=interp2d, dx = target_pixel_scale)
+            target_PSF = galsim.InterpolatedImage(
+                target_PSF.view(), x_interpolant=interp2d, dx = target_pixel_scale)
             break
     for Class in galsim.ImageView.itervalues():
         if isinstance(target_PSF, Class):
             lan5 = galsim.Lanczos(5, conserve_flux = True, tol = 1.e-4)
             interp2d = galsim.InterpolantXY(lan5)
-            target_PSF = galsim.SBInterpolatedImage(target_PSF,
-                                                    xInterp=interp2d,
-                                                    dx = target_pixel_scale)
+            target_PSF = galsim.InterpolatedImage(target_PSF,
+                                                  x_interpolant=interp2d,
+                                                  dx=target_pixel_scale)
             break
     if isinstance(target_PSF, galsim.GSObject):
         target_PSF = target_PSF.SBProfile
