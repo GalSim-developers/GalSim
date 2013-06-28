@@ -39,7 +39,7 @@ shear_and_magnification_list = [(0.001, 0., 1.),(0.01, 0., 1.), (0.1, 0., 1.),
 # --- IMPORTANT BUT NOT TESTED PARAMETERS ---
 # Catalog parameters
 catalog_dir = '../../examples/data'
-catalog_filename = 'real_galaxy_catalog_examples.fits'
+catalog_filename = 'real_galaxy_catalog_example.fits'
 first_index = 0
 pixel_scale = 0.03
 nitems = 100 # How many galaxies to test
@@ -50,6 +50,8 @@ rseed = 999888444
 nproc = 8
 original_filename = 'interpolant_test_output_original.dat'
 delta_filename = 'interpolant_test_output_delta.dat'
+original_file = open(original_filename,'w')
+delta_file = open(delta_filename,'w')
 
 # --- Helper functions to run the main part of the code ---
 def get_config():
