@@ -605,7 +605,8 @@ namespace galsim {
             MoffatIntegrand I(_beta, k, _pow_beta);
 
 #ifdef DEBUGLOGGING
-            integ::IntRegion<double> reg(0, _maxRrD, dbgout);
+            std::ostream* integ_dbgout = verbose_level >= 3 ? dbgout : 0;
+            integ::IntRegion<double> reg(0, _maxRrD, integ_dbgout);
 #else
             integ::IntRegion<double> reg(0, _maxRrD);
 #endif
