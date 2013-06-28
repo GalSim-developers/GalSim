@@ -211,28 +211,12 @@ def print_results(g1_list, g2_list, sigma_list, test_answer, outfile=None):
             raise TypeError('Unknown image type in %s'%test_answer)
 
     if test_answer.shear[0]!=0 or test_answer.shear[1]!=0:
-        # Determine expected g1 given intrinsic g1 and applied shear
-        # (equations from Bernstein & Jarvis 01 (astro-ph/0107431) 
-        #  which is in terms of distortions)
-        intrinsic_shear_d1 = numpy.tanh(2.*numpy.arctanh(g1_list))
-        intrinsic_shear_d2 = numpy.tanh(2.*numpy.arctanh(g2_list))
-        applied_shears_d1 = numpy.tanh(2.*numpy.arctanh(test_answer.shear[0]))
-        applied_shears_d2 = numpy.tanh(2.*numpy.arctanh(test_answer.shear[1]))
-        applied_shears_mag_sq = applied_shears_d1**2+applied_shears_d2**2
-        expected_d1 = (intrinsic_shear_d1+applied_shears_d1+
-                       (applied_shears_d2/applied_shears_mag_sq)
-                       *(1.-numpy.sqrt(1.-applied_shears_mag_sq))
-                       *(intrinsic_shear_d2*applied_shears_d1-intrinsic_shear_d1*applied_shears_d2)
-                      )/(1.+applied_shears_d1*intrinsic_shear_d1
-                           +applied_shears_d2*intrinsic_shear_d2)
-        expected_d2 = (intrinsic_shear_d2+applied_shears_d2+
-                       (applied_shears_d1/applied_shears_mag_sq)
-                       *(1.-numpy.sqrt(1.-applied_shears_mag_sq))
-                       *(intrinsic_shear_d1*applied_shears_d2-intrinsic_shear_d2*applied_shears_d1)
-                      )/(1.+applied_shears_d1*intrinsic_shear_d1
-                           +applied_shears_d2*intrinsic_shear_d2)
-        expected_g1 = numpy.tanh(0.5*numpy.arctanh(expected_d1))
-        expected_g2 = numpy.tanh(0.5*numpy.arctanh(expected_d2))
+        test_shear = galsim.Shear(g1=test_answer.shear[0], g2=test_answer.shear[1])
+        expected_shears = [galsim.Shear(g1=tg[0], g2=tg[1])+test_shear 
+                                if (tg[0]!=-10 and tg[1]!=-10) else -10 
+                                for tg in zip(g1_list,g2_list)]
+        expected_g1 = [e.getG1() if isinstance(e,galsim.Shear) else -10 for e in expected_shears]
+        expected_g2 = [e.getG2() if isinstance(e,galsim.Shear) else -10 for e in expected_shears]
         expected_size = numpy.sqrt(test_answer.magnification)*numpy.array(sigma_list)
     elif test_answer.angle!=0:
         sin2theta = numpy.sin(2.*numpy.pi/180.*test_answer.angle)
