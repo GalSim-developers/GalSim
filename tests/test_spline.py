@@ -20,7 +20,7 @@
 """@brief Tests for the numerical spline routines used to tabulate some of the k space interpolators
 for which an analytic result is not available (Cubic, Quintic, Lanczos).
 
-Compares kValue outputs from an SBInterpolatedImage (sum of Guassians) that were created
+Compares kValue outputs from an InterpolatedImage (sum of Guassians) that were created
 using a previous version of the code (commit: 4d71631d7379f76bb0e3ee582b5a1fbdc0def666), using the
 script devutils/external/test_spline/make_spline_arrays.py.
 """
@@ -68,8 +68,9 @@ def test_Cubic_spline():
     """
     import time
     t1 = time.time()
-    interp = galsim.InterpolantXY(galsim.Cubic(tol=1.e-4))
-    testobj = galsim.SBInterpolatedImage(image.view(), interp, dx=dx)
+    interp = galsim.Cubic(tol=1.e-4)
+    testobj = galsim.InterpolatedImage(image.view(), x_interpolant=interp, dx=dx,
+                                       normalization='sb')
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
     for i in xrange(len(KXVALS)):
@@ -77,6 +78,9 @@ def test_Cubic_spline():
         testKvals[i] = np.abs(testobj.kValue(posk))
     # Compare with saved array
     refKvals = np.loadtxt(os.path.join(TESTDIR, "absfKCubic_test.txt"))
+    print 'ref = ',refKvals
+    print 'test = ',testKvals
+    print 'kValue(0) = ',testobj.kValue(galsim.PositionD(0.,0.))
     np.testing.assert_array_almost_equal(refKvals/testKvals, 1., DECIMAL,
                                          err_msg="Spline-interpolated kValues do not match saved "+
                                                  "data for k space Cubic interpolant.")
@@ -88,8 +92,9 @@ def test_Quintic_spline():
     """
     import time
     t1 = time.time()
-    interp = galsim.InterpolantXY(galsim.Quintic(tol=1.e-4))
-    testobj = galsim.SBInterpolatedImage(image.view(), interp, dx=dx)
+    interp = galsim.Quintic(tol=1.e-4)
+    testobj = galsim.InterpolatedImage(image.view(), x_interpolant=interp, dx=dx,
+                                       normalization='sb')
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
     for i in xrange(len(KXVALS)):
@@ -97,6 +102,8 @@ def test_Quintic_spline():
         testKvals[i] = np.abs(testobj.kValue(posk))
     # Compare with saved array
     refKvals = np.loadtxt(os.path.join(TESTDIR, "absfKQuintic_test.txt"))
+    print 'ref = ',refKvals
+    print 'test = ',testKvals
     np.testing.assert_array_almost_equal(refKvals/testKvals, 1., DECIMAL,
                                          err_msg="Spline-interpolated kValues do not match saved "+
                                                  "data for k space Quintic interpolant.")
@@ -108,8 +115,9 @@ def test_Lanczos5_spline():
     """
     import time
     t1 = time.time()
-    interp = galsim.InterpolantXY(galsim.Lanczos(5, conserve_flux=True, tol=1.e-4))
-    testobj = galsim.SBInterpolatedImage(image.view(), interp, dx=dx)
+    interp = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4)
+    testobj = galsim.InterpolatedImage(image.view(), x_interpolant=interp, dx=dx,
+                                       normalization='sb')
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
     for i in xrange(len(KXVALS)):
@@ -117,6 +125,8 @@ def test_Lanczos5_spline():
         testKvals[i] = np.abs(testobj.kValue(posk))
     # Compare with saved array
     refKvals = np.loadtxt(os.path.join(TESTDIR, "absfKLanczos5_test.txt"))
+    print 'ref = ',refKvals
+    print 'test = ',testKvals
     np.testing.assert_array_almost_equal(refKvals/testKvals, 1., DECIMAL,
                                          err_msg="Spline-interpolated kValues do not match saved "+
                                                  "data for k space Lanczos-5 interpolant.")
@@ -128,8 +138,9 @@ def test_Lanczos7_spline():
     """
     import time
     t1 = time.time()
-    interp = galsim.InterpolantXY(galsim.Lanczos(7, conserve_flux=True, tol=1.e-4))
-    testobj = galsim.SBInterpolatedImage(image.view(), interp, dx=dx)
+    interp = galsim.Lanczos(7, conserve_flux=True, tol=1.e-4)
+    testobj = galsim.InterpolatedImage(image.view(), x_interpolant=interp, dx=dx,
+                                       normalization='sb')
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
     for i in xrange(len(KXVALS)):
@@ -137,6 +148,8 @@ def test_Lanczos7_spline():
         testKvals[i] = np.abs(testobj.kValue(posk))
     # Compare with saved array
     refKvals = np.loadtxt(os.path.join(TESTDIR, "absfKLanczos7_test.txt"))
+    print 'ref = ',refKvals
+    print 'test = ',testKvals
     np.testing.assert_array_almost_equal(refKvals/testKvals, 1., DECIMAL,
                                          err_msg="Spline-interpolated kValues do not match saved "+
                                                  "data for k space Lanczos-7 interpolant.")

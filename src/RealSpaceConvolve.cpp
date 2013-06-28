@@ -34,7 +34,7 @@
 #ifdef DEBUGLOGGING
 #include <fstream>
 std::ostream* dbgout = new std::ofstream("debug.out");
-int verbose_level = 1;
+int verbose_level = 2;
 #endif
 
 #include <numeric>
@@ -73,7 +73,7 @@ namespace galsim {
 
         integ::IntRegion<double> operator()(double x) const
         {
-            xdbg<<"Get IntRegion for pos = "<<_pos<<" at x = "<<x<<std::endl;
+            xxdbg<<"Get IntRegion for pos = "<<_pos<<" at x = "<<x<<std::endl;
             // First figure out each profiles y region separately.
             double ymin1,ymax1;
             splits1.clear();
@@ -84,14 +84,14 @@ namespace galsim {
 
             // Then take the overlap relevant for the calculation:
             //     _p1.xValue(x,y) * _p2.xValue(x0-x,y0-y)
-            xdbg<<"p1's y range = "<<ymin1<<" ... "<<ymax1<<std::endl;
-            xdbg<<"p2's y range = "<<ymin2<<" ... "<<ymax2<<std::endl;
+            xxdbg<<"p1's y range = "<<ymin1<<" ... "<<ymax1<<std::endl;
+            xxdbg<<"p2's y range = "<<ymin2<<" ... "<<ymax2<<std::endl;
             double ymin = std::max(ymin1, _pos.y-ymax2);
             double ymax = std::min(ymax1, _pos.y-ymin2);
-            xdbg<<"Y region for x = "<<x<<" = "<<ymin<<" ... "<<ymax<<std::endl;
+            xxdbg<<"Y region for x = "<<x<<" = "<<ymin<<" ... "<<ymax<<std::endl;
             if (ymax < ymin) ymax = ymin;
 #ifdef DEBUGLOGGING
-            std::ostream* integ_dbgout = verbose_level >= 2 ? dbgout : 0;
+            std::ostream* integ_dbgout = verbose_level >= 3 ? dbgout : 0;
             integ::IntRegion<double> reg(ymin,ymax,integ_dbgout);
 #else
             integ::IntRegion<double> reg(ymin,ymax);
@@ -163,26 +163,26 @@ namespace galsim {
         xdbg<<"Start UpdateXRange given xmin,xmax = "<<xmin<<','<<xmax<<std::endl;
         // Find the overlap at x = xmin:
         double yrangea = func(xmin);
-        xdbg<<"yrange at x = xmin = "<<yrangea<<std::endl;
+        xxdbg<<"yrange at x = xmin = "<<yrangea<<std::endl;
 
         // Find the overlap at x = xmax:
         double yrangeb = func(xmax);
-        xdbg<<"yrange at x = xmax = "<<yrangeb<<std::endl;
+        xxdbg<<"yrange at x = xmax = "<<yrangeb<<std::endl;
 
         if (yrangea < 0. && yrangeb < 0.) {
-            xdbg<<"Both ends are disjoint.  Check the splits.\n";
+            xxdbg<<"Both ends are disjoint.  Check the splits.\n";
             std::vector<double> use_splits = splits;
             if (use_splits.size() == 0) {
-                xdbg<<"No splits provided.  Use the middle instead.\n";
+                xxdbg<<"No splits provided.  Use the middle instead.\n";
                 use_splits.push_back( (xmin+xmax)/2. );
             }
             for (size_t k=0;k<use_splits.size();++k) {
                 double xmid = use_splits[k];
                 double yrangec = func(xmid);
-                xdbg<<"yrange at x = "<<xmid<<" = "<<yrangec<<std::endl;
+                xxdbg<<"yrange at x = "<<xmid<<" = "<<yrangec<<std::endl;
                 if (yrangec > 0.) {
-                    xdbg<<"Found a non-disjoint split\n";
-                    xdbg<<"Separately adjust both xmin and xmax by finding zero crossings.\n";
+                    xxdbg<<"Found a non-disjoint split\n";
+                    xxdbg<<"Separately adjust both xmin and xmax by finding zero crossings.\n";
                     Solve<OverlapFinder> solver1(func,xmin,xmid);
                     solver1.setMethod(Brent);
                     double root = solver1.root();
@@ -201,7 +201,7 @@ namespace galsim {
         } else if (yrangea > 0. && yrangeb > 0.) {
             xdbg<<"Neither end is disjoint.  Integrate the full range\n";
         } else {
-            xdbg<<"One end is disjoint.  Find the zero crossing.\n";
+            xxdbg<<"One end is disjoint.  Find the zero crossing.\n";
             Solve<OverlapFinder> solver(func,xmin,xmax);
             solver.setMethod(Brent);
             double root = solver.root();
@@ -217,26 +217,26 @@ namespace galsim {
         xdbg<<"Start AddSplitsAtBends given xmin,xmax = "<<xmin<<','<<xmax<<std::endl;
         // Find the overlap at x = xmin:
         double yrangea = func(xmin);
-        xdbg<<"yrange at x = xmin = "<<yrangea<<std::endl;
+        xxdbg<<"yrange at x = xmin = "<<yrangea<<std::endl;
 
         // Find the overlap at x = xmax:
         double yrangeb = func(xmax);
-        xdbg<<"yrange at x = xmax = "<<yrangeb<<std::endl;
+        xxdbg<<"yrange at x = xmax = "<<yrangeb<<std::endl;
 
         if (yrangea * yrangeb > 0.) {
-            xdbg<<"Both ends are the same sign.  Check the splits.\n";
+            xxdbg<<"Both ends are the same sign.  Check the splits.\n";
             std::vector<double> use_splits = splits;
             if (use_splits.size() == 0) {
-                xdbg<<"No splits provided.  Use the middle instead.\n";
+                xxdbg<<"No splits provided.  Use the middle instead.\n";
                 use_splits.push_back( (xmin+xmax)/2. );
             }
             for (size_t k=0;k<use_splits.size();++k) {
                 double xmid = use_splits[k];
                 double yrangec = func(xmid);
-                xdbg<<"yrange at x = "<<xmid<<" = "<<yrangec<<std::endl;
+                xxdbg<<"yrange at x = "<<xmid<<" = "<<yrangec<<std::endl;
                 if (yrangea * yrangec < 0.) {
-                    xdbg<<"Found split with the opposite sign\n";
-                    xdbg<<"Find crossings on both sides:\n";
+                    xxdbg<<"Found split with the opposite sign\n";
+                    xxdbg<<"Find crossings on both sides:\n";
                     Solve<OverlapFinder> solver1(func,xmin,xmid);
                     solver1.setMethod(Brent);
                     double root = solver1.root();
@@ -252,7 +252,7 @@ namespace galsim {
             }
             xdbg<<"All split locations have the same sign, so don't add any new splits\n";
         } else {
-            xdbg<<"Ends have opposite signs.  Look for zero crossings.\n";
+            xxdbg<<"Ends have opposite signs.  Look for zero crossings.\n";
             Solve<OverlapFinder> solver(func,xmin,xmax);
             solver.setMethod(Brent);
             double root = solver.root();
@@ -349,9 +349,9 @@ namespace galsim {
         ConvolveFunc conv(p1,p2,pos);
 
 #ifdef DEBUGLOGGING
-        std::ostream* integ_dbgout = verbose_level >= 2 ? dbgout : 0;
+        std::ostream* integ_dbgout = verbose_level >= 3 ? dbgout : 0;
         integ::IntRegion<double> xreg(xmin,xmax,integ_dbgout);
-        if (dbgout && verbose_level >= 2) xreg.useFXMap();
+        if (dbgout && verbose_level >= 3) xreg.useFXMap();
         xdbg<<"xreg = "<<xmin<<" ... "<<xmax<<std::endl;
 #else
         integ::IntRegion<double> xreg(xmin,xmax);
