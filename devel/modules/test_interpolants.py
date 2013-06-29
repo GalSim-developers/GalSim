@@ -212,7 +212,7 @@ def print_results(g1_list, g2_list, sigma_list, test_answer, outfile=None):
 
     if test_answer.shear[0]!=0 or test_answer.shear[1]!=0:
         test_shear = galsim.Shear(g1=test_answer.shear[0], g2=test_answer.shear[1])
-        expected_shears = [galsim.Shear(g1=tg[0], g2=tg[1])+test_shear 
+        expected_shears = [test_shear+galsim.Shear(g1=tg[0], g2=tg[1])
                                 if (tg[0]!=-10 and tg[1]!=-10) else -10 
                                 for tg in zip(g1_list,g2_list)]
         expected_g1 = [e.getG1() if isinstance(e,galsim.Shear) else -10 for e in expected_shears]
