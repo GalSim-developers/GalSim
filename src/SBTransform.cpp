@@ -137,7 +137,9 @@ namespace galsim {
         // stepk <- Pi/(Pi/stepk + |shift|)
         if (_cen.x != 0. || _cen.y != 0.) {
             double shift = sqrt( _cen.x*_cen.x + _cen.y*_cen.y );
+            dbg<<"stepk from adaptee = "<<_stepk<<std::endl;
             _stepk = M_PI / (M_PI/_stepk + shift);
+            dbg<<"shift = "<<shift<<", stepk -> "<<_stepk<<std::endl;
         }
 
         xdbg<<"Transformation init\n";
