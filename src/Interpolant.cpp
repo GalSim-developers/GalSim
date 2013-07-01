@@ -205,7 +205,7 @@ namespace galsim {
             return ((x>0.)?(M_PI/2.):(-M_PI/2.)) - f*cos(x) - g*sin(x);
         } else {
             // Here I used Maple to calculate the Pade approximation for Si(x), which is accurate
-            // to better than 1.e-17 for x < 4:
+            // to better than 1.e-16 for x < 4:
             return
                 x*(1. + 
                    x2*(-4.54393409816329991e-2 + 
