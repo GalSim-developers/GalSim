@@ -139,7 +139,7 @@ namespace galsim {
             "fixed in src/Interpolant.cpp to be 0.1 times the input `tol` value, where `tol` is\n"
             "typically very small already (default `tol=1e-4`).\n\n"
             "Note that pure Lanczos, when interpolating a set of constant-valued samples, does\n"
-            "not return this constant.  Setting `flux_conserve` in the constructor tweaks the\n"
+            "not return this constant.  Setting `conserve_flux` in the constructor tweaks the\n"
             "function so that it approximately conserves the value of constant (DC) input data.\n"
             "Only the first order correction is applied, which should be accurate to about 1.e-5.\n";
             bp::class_<Lanczos,bp::bases<Interpolant>,boost::noncopyable>(
