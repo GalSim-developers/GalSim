@@ -51,7 +51,8 @@ namespace galsim {
         template <typename A>
         static std::string BuildErrorMessage(A val, A min, A max)
         {
-            std::ostringstream oss;
+            // See discussion in Std.h about this initial value.
+            std::ostringstream oss(" ");
             oss << "Argument "<<val<<" out of range ("<<min<<".."<<max<<")";
             return oss.str();
         }
