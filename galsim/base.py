@@ -427,7 +427,6 @@ class GSObject(object):
         if kwargs:
             raise TypeError("applyShift() got unexpected keyword arguments: %s",kwargs.keys())
                 
-        print 'calling SBProfile applyShift with ',dx,dy
         self.SBProfile.applyShift(dx,dy)
         self.__class__ = GSObject
 
@@ -623,7 +622,6 @@ class GSObject(object):
             if (image.xmax-image.xmin+1) % 2 == 0: dx -= 0.5
             if (image.ymax-image.ymin+1) % 2 == 0: dy -= 0.5
 
-        print 'In fix_center: offset = ',(dx,dy),', scale = ',scale
         if dx == 0. and dy == 0.:
             return self
         else:
