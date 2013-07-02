@@ -20,6 +20,12 @@
  */
 #define BOOST_PYTHON_MAX_ARITY 20  // We have a function with 17 params here...
                                    // c.f. www.boost.org/libs/python/doc/v2/configuration.html
+#ifndef __INTEL_COMPILER
+#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+#endif
+#endif
+
 #include "boost/python.hpp"
 #include "boost/python/stl_iterator.hpp"
 

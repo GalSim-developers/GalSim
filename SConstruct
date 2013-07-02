@@ -1215,6 +1215,12 @@ def CheckPyFITS(config):
 
 def CheckBoostPython(config):
     bp_source_file = """
+
+#ifndef __INTEL_COMPILER
+#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+#endif
+#endif
 #include "boost/python.hpp"
 
 int check_bp_run() { return 23; }
@@ -1245,6 +1251,11 @@ BOOST_PYTHON_MODULE(check_bp) {
 # know that C++ exceptions might be a bit uninformative.
 def CheckPythonExcept(config):
     cpp_source_file = """
+#ifndef __INTEL_COMPILER
+#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+#endif
+#endif
 #include "boost/python.hpp"
 #include <stdexcept>
 
