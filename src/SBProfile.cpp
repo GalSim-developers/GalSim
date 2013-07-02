@@ -679,16 +679,28 @@ namespace galsim {
         // The KTable wants the locations of the + and - ky values swapped.
         mkt.colRange(0,N/2) = val.colRange(N/2,N);
         mkt.colRange(N/2+1,N) = val.colRange(1,N/2);
+
+#if 1
+        // We set the N/2 column and row explicitly to 0.  There are subtle effects with how
+        // the FFT routine handles it, since it has to play double duty as both +N/2 and -N/2.
+        // I thought the below stuff was working, but I'm still seeing weird artifacts sometimes
+        // with profiles that should be symmetrical ending up with odd assymetries after the
+        // FFT.  Since the values at k > N/2 are implicitly 0 anyway (being off the edge), it's 
+        // reasonable to extend this 0 to the last row and column in the KTable.
+        mkt.col(N/2).setZero();
+        mkt.row(N/2).setZero();
+#else
         // For the N/2 column, we use the average of the ky = +N/2 and -N/2 values
         // Otherwise you can get strange effects when the profile isn't radially symmetric.
         // e.g. A shift will induce a spurious shear. (BAD!!)
         mkt.col(N/2) = 0.5*val.col(0) + 0.5*val.col(N);
-        // Similarly, the N/2 row should really be the average of the kx = +N/2 and -N/2 values,
-        // which again is exactly 0.  We didn't calculate the kx = -N/2 values, but we know that
-        // f(-kx,-ky) = conj(f(kx,ky)), so the calculation becomes:
+        // Similarly, the N/2 row should really be the average of the kx = +N/2 and -N/2 values.
+        // We didn't calculate the kx = -N/2 values, but we know that f(-kx,-ky) = conj(f(kx,ky)),
+        // so the calculation becomes:
         mkt.row(N/2).subVector(1,N/2) += mkt.row(N/2).subVector(N-1,N/2,-1).conjugate();
         mkt.row(N/2).subVector(1,N/2) *= 0.5;
         mkt.row(N/2).subVector(N-1,N/2,-1) = mkt.row(N/2).subVector(1,N/2).conjugate();
+#endif
 
 #ifdef OUTPUT_FFT
         xdbg<<"val.row(0) = "<<val.row(0)<<std::endl;
