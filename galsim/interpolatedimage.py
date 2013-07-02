@@ -341,16 +341,10 @@ class InterpolatedImage(GSObject):
             # Just make sure pad_image is the right type
             if ( isinstance(image, galsim.BaseImageF) and 
                  not isinstance(pad_image, galsim.BaseImageF) ):
-                # TODO: We should add the ability within galsim to make an ImageF from an ImageD
-                #       directly, rather than have to do workaround.
-                new_pad_image = galsim.ImageF(pad_image.bounds)
-                new_pad_image.array = pad_image.array
-                pad_image = new_pad_image
+                pad_image = galsim.ImageF(pad_image)
             elif ( isinstance(image, galsim.BaseImageD) and 
                    not isinstance(pad_image, galsim.BaseImageD) ):
-                new_pad_image = galsim.ImageD(pad_image.bounds)
-                new_pad_image.array[:,:] = pad_image.array
-                pad_image = new_pad_image
+                pad_image = galsim.ImageD(pad_image)
 
         # Make the SBInterpolatedImage out of the image.
         sbinterpolatedimage = galsim.SBInterpolatedImage(

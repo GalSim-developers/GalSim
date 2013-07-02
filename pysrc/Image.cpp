@@ -39,10 +39,22 @@ namespace galsim {
 template <typename T>
 struct PyImage {
 
+    template <typename U>
+    static Image<T>* MakeFromImage(const BaseImage<U>& rhs)
+    { return new Image<T>(rhs); }
+
     template <typename U, typename W>
     static void wrapImageTemplates(W& wrapper) {
+        typedef Image<T>* (*constructFrom_func_type)(const BaseImage<U>&);
         typedef void (Image<T>::* copyFrom_func_type)(const BaseImage<U>&);
         wrapper
+            .def(
+                "__init__",
+                bp::make_constructor(
+                    constructFrom_func_type(&MakeFromImage), 
+                    bp::default_call_policies(), bp::args("other")
+                )
+            )
             .def("copyFrom", copyFrom_func_type(&Image<T>::copyFrom));
     }
 
@@ -172,7 +184,6 @@ struct PyImage {
                     (bp::arg("bounds"), bp::arg("scale")=0.,
                      bp::arg("init_value")=T(0))
             ))
-            .def(bp::init<const BaseImage<T>&>(bp::args("other")))
             .def("subImage", subImage_func_type(&Image<T>::subImage), bp::args("bounds"))
             .def("view", view_func_type(&Image<T>::view))
             .add_property("array", &GetArray)
