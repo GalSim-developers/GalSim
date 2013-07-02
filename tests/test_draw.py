@@ -624,10 +624,10 @@ def test_offset():
         im.scale = scale
         true_center = im.bounds.trueCenter()
         np.testing.assert_almost_equal(
-                cenx, true_center.x, 5, 
+                cenx, true_center.x, 6, 
                 "im.bounds.trueCenter().x is wrong for (nx,ny) = %d,%d"%(nx,ny))
         np.testing.assert_almost_equal(
-                ceny, true_center.y, 5, 
+                ceny, true_center.y, 6, 
                 "im.bounds.trueCenter().y is wrong for (nx,ny) = %d,%d"%(nx,ny))
 
         # Check that the default draw command puts the centroid in the center of the image.
@@ -635,10 +635,10 @@ def test_offset():
         moments = getmoments(im)
         print 'moments = ',moments
         np.testing.assert_almost_equal(
-                moments[0], cenx, 6,
+                moments[0], cenx, 5,
                 "obj.draw(im) not centered correctly for (nx,ny) = %d,%d"%(nx,ny))
         np.testing.assert_almost_equal(
-                moments[1], ceny, 6,
+                moments[1], ceny, 5,
                 "obj.draw(im) not centered correctly for (nx,ny) = %d,%d"%(nx,ny))
 
         # Test that a few pixel values match xValue.
