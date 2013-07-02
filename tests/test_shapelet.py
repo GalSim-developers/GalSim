@@ -41,14 +41,12 @@ def test_shapelet_gaussian():
     t1 = time.time()
 
     ftypes = [np.float32, np.float64]
-    dx = 0.2
+    scale = 0.2
     test_flux = 23.
 
     # First, a Shapelet with only b_00 = 1 should be identically a Gaussian
-    im1 = galsim.ImageF(64,64)
-    im1.scale = dx
-    im2 = galsim.ImageF(64,64)
-    im2.scale = dx
+    im1 = galsim.ImageF(64,64, scale=scale)
+    im2 = galsim.ImageF(64,64, scale=scale)
     for sigma in [1., 0.6, 2.4]:
         gauss = galsim.Gaussian(flux=test_flux, sigma=sigma)
         gauss.draw(im1)
@@ -74,12 +72,11 @@ def test_shapelet_draw():
     t1 = time.time()
 
     ftypes = [np.float32, np.float64]
-    dx = 0.2
+    scale = 0.2
     test_flux = 23.
 
-    pix = galsim.Pixel(dx)
-    im = galsim.ImageF(129,129)
-    im.scale = dx
+    pix = galsim.Pixel(scale)
+    im = galsim.ImageF(129,129, scale=scale)
     for sigma in [1., 0.3, 2.4]:
         for order in [0, 2, 8]:
             shapelet = galsim.Shapelet(sigma=sigma, order=order)
@@ -105,8 +102,8 @@ def test_shapelet_draw():
             conv = galsim.Convolve([pix,shapelet])
             conv.draw(im, normalization="surface brightness")
             flux = im.array.sum()
-            print 'img.sum = ',flux,'  cf. ',test_flux/(dx*dx)
-            np.testing.assert_almost_equal(flux * dx*dx / test_flux, 1., 4,
+            print 'img.sum = ',flux,'  cf. ',test_flux/(scale*scale)
+            np.testing.assert_almost_equal(flux * scale*scale / test_flux, 1., 4,
                     err_msg="Surface brightness normalization for Shapelet "
                     "disagrees with expected result")
             conv.draw(im, normalization="flux")
@@ -122,8 +119,8 @@ def test_shapelet_draw():
             im.setCenter(0,0)
             x,y = np.meshgrid(np.arange(im.array.shape[0]).astype(float) + im.getXMin(), 
                               np.arange(im.array.shape[1]).astype(float) + im.getYMin())
-            x *= dx
-            y *= dx
+            x *= scale
+            y *= scale
             flux = im.array.sum()
             mx = (x*im.array).sum() / flux
             my = (y*im.array).sum() / flux
@@ -185,10 +182,10 @@ def test_shapelet_fit():
         psf = galsim.Moffat(beta=3.4, half_light_radius=1.2, flux=flux)
         psf.applyShear(g1=0.11,g2=0.07)
         psf.applyShift(0.03,0.04)
-        dx = 0.2
-        pixel = galsim.Pixel(dx)
+        scale = 0.2
+        pixel = galsim.Pixel(scale)
         conv = galsim.Convolve([psf,pixel])
-        im1 = conv.draw(dx=dx, normalization=norm)
+        im1 = conv.draw(dx=scale, normalization=norm)
 
         sigma = 1.2  # Match half-light-radius as a decent first approximation.
         shapelet = galsim.Shapelet(sigma=sigma, order=10)
@@ -238,9 +235,8 @@ def test_shapelet_adjustments():
 
     nx = 128
     ny = 128
-    dx = 0.2
-    im = galsim.ImageF(nx,ny)
-    im.scale = dx
+    scale = 0.2
+    im = galsim.ImageF(nx,ny, scale=scale)
 
     sigma = 1.8
     order = 6
@@ -254,7 +250,7 @@ def test_shapelet_adjustments():
 
     ref_shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
     ref_im = galsim.ImageF(nx,ny)
-    ref_shapelet.draw(ref_im, dx=dx)
+    ref_shapelet.draw(ref_im, dx=scale)
 
     # Test setSigma
     shapelet = galsim.Shapelet(sigma=1., order=order, bvec=bvec)

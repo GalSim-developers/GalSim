@@ -86,7 +86,7 @@ def do_shoot(prof, img, name):
     # Test photon shooting for a particular profile (given as prof). 
     # Since shooting implicitly convolves with the pixel, we need to compare it to 
     # the given profile convolved with a pixel.
-    pix = galsim.Pixel(xw=img.getScale())
+    pix = galsim.Pixel(xw=img.scale)
     compar = galsim.Convolve(prof,pix)
     compar.draw(img)
     flux_max = img.array.max()
@@ -134,16 +134,15 @@ def do_shoot(prof, img, name):
             err_msg="Photon shooting for %s disagrees with expected result"%name)
 
     # Test normalization
-    dx = img.getScale()
+    dx = img.scale
     # Test with a large image to make sure we capture enough of the flux
     # even for slow convergers like Airy (which needs a _very_ large image) or Sersic.
     if 'Airy' in name:
-        img = galsim.ImageD(2048,2048)
+        img = galsim.ImageD(2048,2048, scale=dx)
     elif 'Sersic' in name or 'DeVauc' in name:
-        img = galsim.ImageD(512,512)
+        img = galsim.ImageD(512,512, scale=dx)
     else:
-        img = galsim.ImageD(128,128)
-    img.setScale(dx)
+        img = galsim.ImageD(128,128, scale=dx)
     compar.setFlux(test_flux)
     compar.draw(img, normalization="surface brightness")
     print 'img.sum = ',img.array.sum(),'  cf. ',test_flux/(dx*dx)
@@ -178,14 +177,12 @@ def do_kvalue(prof, name):
     Gaussian (effectively a delta function).
     """
 
-    im1 = galsim.ImageF(16,16)
-    im1.scale = 0.2
+    im1 = galsim.ImageF(16,16, scale=0.2)
     prof.draw(im1)
 
     delta = galsim.Gaussian(sigma = 1.e-8)
     conv = galsim.Convolve([prof,delta])
-    im2 = galsim.ImageF(16,16)
-    im2.scale = 0.2
+    im2 = galsim.ImageF(16,16, scale=0.2)
     conv.draw(im2)
     printval(im1,im2)
     np.testing.assert_array_almost_equal(

@@ -144,8 +144,7 @@ def main(argv):
     logger.info('Read in PSF image from bzipped FITS file')
 
     # Setup the image:
-    full_image = galsim.ImageF(image_size, image_size)
-    full_image.setScale(pixel_scale)
+    full_image = galsim.ImageF(image_size, image_size, scale=pixel_scale)
 
     # The default convention for indexing an image is to follow the FITS standard where the 
     # lower-left pixel is called (1,1).  However, this can be counter-intuitive to people more 
@@ -264,7 +263,7 @@ def main(argv):
     # Now add noise according to this correlation function to the full_image.  We have to do this
     # step at the end, rather than adding to individual postage stamps, in order to get the noise
     # level right in the overlap regions between postage stamps.
-    full_image.addNoise(cn) # Note image must have the right scale [set by setScale()], as here
+    full_image.addNoise(cn) # Note image must have the right scale, as it does here.
     logger.info('Added noise to final large image')
 
     # Now write the image to disk.  It is automatically compressed with Rice compression,

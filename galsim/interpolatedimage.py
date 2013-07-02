@@ -248,7 +248,7 @@ class InterpolatedImage(GSObject):
             raise ValueError("Supplied image is not an image of floats or doubles!")
 
         # it must have well-defined bounds, otherwise seg fault in SBInterpolatedImage constructor
-        if not image.getBounds().isDefined():
+        if not image.bounds.isDefined():
             raise ValueError("Supplied image does not have bounds defined!")
 
         # check what normalization was specified for the image: is it an image of surface
@@ -284,7 +284,7 @@ class InterpolatedImage(GSObject):
                 raise ValueError("dx may not be <= 0.0")
             # Don't change the original image.  Make a new view if we need to set the scale.
             image = image.view()
-            image.setScale(dx)
+            image.scale = dx
 
         # Set up the GaussianDeviate if not provided one, or check that the user-provided one is
         # of a valid type.

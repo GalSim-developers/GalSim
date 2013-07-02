@@ -351,13 +351,11 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
         else:
             im = galsim.ImageF(1,1)
         im.setOrigin(config['image_origin'])
-        im.setScale(im.scale)
         im.setZero()
         if do_noise and sky_level_pixel:
             im += sky_level_pixel
         if make_weight_image:
-            weight_im = galsim.ImageF(im.bounds)
-            weight_im.setScale(im.scale)
+            weight_im = galsim.ImageF(im.bounds, scale=im.scale)
             weight_im.setZero()
         else:
             weight_im = None
@@ -366,8 +364,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
         if icenter:
             im.setCenter(icenter.x, icenter.y)
         if make_weight_image:
-            weight_im = galsim.ImageF(im.bounds)
-            weight_im.setScale(im.scale)
+            weight_im = galsim.ImageF(im.bounds, scale=im.scale)
             weight_im.setZero()
         else:
             weight_im = None
@@ -383,8 +380,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
         if icenter:
             im.setCenter(icenter.x, icenter.y)
         if make_weight_image:
-            weight_im = galsim.ImageF(im.bounds)
-            weight_im.setScale(im.scale)
+            weight_im = galsim.ImageF(im.bounds, scale=im.scale)
             weight_im.setZero()
         else:
             weight_im = None
@@ -399,8 +395,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
         raise AttributeError("Unknown draw_method %s."%draw_method)
 
     if make_badpix_image:
-        badpix_im = galsim.ImageS(im.bounds)
-        badpix_im.setScale(im.scale)
+        badpix_im = galsim.ImageS(im.bounds, scale=im.scale)
         badpix_im.setZero()
     else:
         badpix_im = None
@@ -600,7 +595,7 @@ def AddNoiseFFT(im, weight_im, noise, base, rng, sky_level_pixel, logger=None):
                 "noise.type = %s"%type)
         extra_sky_level_pixel = 0.
         if 'sky_level' in params:
-            pixel_scale = im.getScale()
+            pixel_scale = im.scale
             extra_sky_level_pixel = params['sky_level'] * pixel_scale**2
         if 'sky_level_pixel' in params:
             extra_sky_level_pixel = params['sky_level_pixel']
@@ -638,7 +633,7 @@ def AddNoiseFFT(im, weight_im, noise, base, rng, sky_level_pixel, logger=None):
                 "noise.type = %s"%type)
         extra_sky_level_pixel = 0.
         if 'sky_level' in params:
-            pixel_scale = im.getScale()
+            pixel_scale = im.scale
             extra_sky_level_pixel = params['sky_level'] * pixel_scale**2
         if 'sky_level_pixel' in params:
             extra_sky_level_pixel = params['sky_level_pixel']
@@ -810,7 +805,7 @@ def AddNoisePhot(im, weight_im, noise, base, rng, sky_level_pixel, logger=None):
             raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
                 "noise.type = %s"%type)
         if 'sky_level' in params:
-            pixel_scale = im.getScale()
+            pixel_scale = im.scale
             sky_level_pixel += params['sky_level'] * pixel_scale**2
         if 'sky_level_pixel' in params:
             sky_level_pixel += params['sky_level_pixel']
@@ -846,7 +841,7 @@ def AddNoisePhot(im, weight_im, noise, base, rng, sky_level_pixel, logger=None):
             raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
                 "noise.type = %s"%type)
         if 'sky_level' in params:
-            pixel_scale = im.getScale()
+            pixel_scale = im.scale
             sky_level_pixel += params['sky_level'] * pixel_scale**2
         if 'sky_level_pixel' in params:
             sky_level_pixel += params['sky_level_pixel']
@@ -945,8 +940,7 @@ def DrawPSFStamp(psf, pix, config, bounds, final_shift):
         #print 'psf shift (2) = ',final_shift*pixel_scale
         final_psf.applyShift(final_shift.x*pixel_scale, final_shift.y*pixel_scale)
 
-    psf_im = galsim.ImageF(bounds)
-    psf_im.setScale(pixel_scale)
+    psf_im = galsim.ImageF(bounds, scale=pixel_scale)
     final_psf.draw(psf_im, dx=pixel_scale)
 
     return psf_im

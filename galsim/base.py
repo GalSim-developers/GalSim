@@ -67,8 +67,7 @@ class GSObject(object):
         >>> psf = galsim.Moffat(beta=3, fwhm=2.85)
         >>> pix = galsim.Pixel(0.05)                       # Note the very small pixel scale!
         >>> conv = galsim.Convolve([gal,psf,pix])
-        >>> im = galsim.ImageD(1000,1000)
-        >>> im.scale = 0.05                                # Use the same pixel scale on the image.
+        >>> im = galsim.ImageD(1000,1000, scale=0.05)      # Use the same pixel scale on the image.
         >>> conv.draw(im,normalization='sb')               # This uses the default GSParams.
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
@@ -587,7 +586,7 @@ class GSObject(object):
             image = galsim.ImageF(N,N)
 
         # Resize the given image if necessary
-        elif not image.getBounds().isDefined():
+        elif not image.bounds.isDefined():
             # Can't add to image if need to resize
             if add_to_image:
                 raise ValueError("Cannot add_to_image if image bounds are not defined")
@@ -604,9 +603,9 @@ class GSObject(object):
 
         # Set the image scale
         if dx_is_dk:
-            image.setScale(dk)
+            image.scale = dk
         else:
-            image.setScale(dx)
+            image.scale = dx
 
         return image
 
@@ -1017,8 +1016,8 @@ class GSObject(object):
             if dk is None:
                 if re.scale != im.scale:
                     raise ValueError("re and im do not have the same input scale")
-            if re.getBounds().isDefined() or im.getBounds().isDefined():
-                if re.getBounds() != im.getBounds():
+            if re.bounds.isDefined() or im.bounds.isDefined():
+                if re.bounds != im.bounds:
                     raise ValueError("re and im do not have the same defined bounds")
 
         # Make sure images are setup correctly

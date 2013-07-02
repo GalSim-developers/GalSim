@@ -163,11 +163,14 @@ struct PyImage {
         bp::class_< Image<T>, bp::bases< BaseImage<T> > >
             pyImage(("Image" + suffix).c_str(), "", bp::no_init);
         pyImage
-            .def(bp::init<int,int,T>(
-                    (bp::args("ncol","nrow"), bp::arg("init_value")=T(0))
+            .def(bp::init<>())
+            .def(bp::init<int,int,double,T>(
+                    (bp::args("ncol","nrow"), bp::arg("scale")=0.,
+                     bp::arg("init_value")=T(0))
             ))
-            .def(bp::init<const Bounds<int>&, T>(
-                    (bp::arg("bounds")=Bounds<int>(), bp::arg("init_value")=T(0))
+            .def(bp::init<const Bounds<int>&, double, T>(
+                    (bp::arg("bounds"), bp::arg("scale")=0.,
+                     bp::arg("init_value")=T(0))
             ))
             .def(bp::init<const BaseImage<T>&>(bp::args("other")))
             .def("subImage", subImage_func_type(&Image<T>::subImage), bp::args("bounds"))
@@ -219,7 +222,7 @@ struct PyImage {
                 bp::make_constructor(
                     &MakeFromArray, bp::default_call_policies(),
                     (bp::arg("array"), bp::arg("xmin")=1, bp::arg("ymin")=1, 
-                     bp::arg("scale")=1.0)
+                     bp::arg("scale")=0.)
                 )
             )
             .def(bp::init<const ImageView<T>&>(bp::args("other")))
@@ -266,7 +269,7 @@ struct PyImage {
                 bp::make_constructor(
                     &MakeConstFromArray, bp::default_call_policies(),
                     (bp::arg("array"), bp::arg("xmin")=1, bp::arg("ymin")=1,
-                     bp::arg("scale")=1.0)
+                     bp::arg("scale")=0.)
                 )
             )
             .def(bp::init<const BaseImage<T>&>(bp::args("other")))

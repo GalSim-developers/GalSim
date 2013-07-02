@@ -354,8 +354,8 @@ def wavefront_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0.,
     an optical PSF with lambda/diam = lam_over_diam on an output grid of spacing dx.
 
     The ImageView output can be used to directly instantiate an SBInterpolatedImage, and its 
-    .getScale() method will reflect the spacing of the output grid in the system of units adopted
-    for lam_over_diam.
+    scale will reflect the spacing of the output grid in the system of units adopted for 
+    lam_over_diam.
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
     
@@ -398,15 +398,14 @@ def wavefront_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0.,
         astig2=astig2, coma1=coma1, coma2=coma2, trefoil1=trefoil1, trefoil2=trefoil2, spher=spher,
         circular_pupil=circular_pupil, obscuration=obscuration, nstruts=nstruts,
         strut_thick=strut_thick, strut_angle=strut_angle)
-    imreal = galsim.ImageViewD(np.ascontiguousarray(array.real.astype(np.float64)))
-    imimag = galsim.ImageViewD(np.ascontiguousarray(array.imag.astype(np.float64)))
     if array_shape[0] != array_shape[1]:
         import warnings
         warnings.warn(
             "Wavefront Images' scales will not be correct in both directions for non-square "+
             "arrays, only square grids currently supported by galsim.Images.")
-    imreal.setScale(2. * np.pi / array_shape[0])
-    imimag.setScale(2. * np.pi / array_shape[0])
+    scale = 2. * np.pi / array_shape[0]
+    imreal = galsim.ImageViewD(np.ascontiguousarray(array.real.astype(np.float64)), scale=scale)
+    imimag = galsim.ImageViewD(np.ascontiguousarray(array.imag.astype(np.float64)), scale=scale)
     return (imreal, imimag)
 
 def psf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0., coma1=0.,
@@ -467,8 +466,8 @@ def psf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     uses surface brightness rather than flux units for pixel values, matching SBProfile.
 
     The ImageView output can be used to directly instantiate an SBInterpolatedImage, and its 
-    .getScale() method will reflect the spacing of the output grid in the system of units adopted
-    for lam_over_diam.
+    scale will reflect the spacing of the output grid in the system of units adopted for 
+    lam_over_diam.
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
 
@@ -503,8 +502,7 @@ def psf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
         astig2=astig2, coma1=coma1, coma2=coma2, trefoil1=trefoil1, trefoil2=trefoil2, spher=spher,
         circular_pupil=circular_pupil, obscuration=obscuration, flux=flux, nstruts=nstruts,
         strut_thick=strut_thick, strut_angle=strut_angle)
-    im = galsim.ImageViewD(array.astype(np.float64))
-    im.setScale(dx)
+    im = galsim.ImageViewD(array.astype(np.float64), scale=dx)
     return im
 
 def otf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0., coma1=0.,
@@ -565,8 +563,8 @@ def otf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     otf[0, 0] = 1+0j by default.  The scale of the output ImageViewD is correct in k space units.
 
     The ImageView output can be used to directly instantiate an SBInterpolatedImage, and its 
-    .getScale() method will reflect the spacing of the output grid in the system of units adopted
-    for lam_over_diam.
+    scale will reflect the spacing of the output grid in the system of units adopted for 
+    lam_over_diam.
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
     
@@ -600,15 +598,14 @@ def otf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
         astig2=astig2, coma1=coma1, coma2=coma2, trefoil1=trefoil1, trefoil2=trefoil2, spher=spher,
         circular_pupil=circular_pupil, obscuration=obscuration, nstruts=nstruts,
         strut_thick=strut_thick, strut_angle=strut_angle)
-    imreal = galsim.ImageViewD(np.ascontiguousarray(array.real.astype(np.float64)))
-    imimag = galsim.ImageViewD(np.ascontiguousarray(array.imag.astype(np.float64)))
     if array_shape[0] != array_shape[1]:
         import warnings
         warnings.warn(
             "OTF Images' scales will not be correct in both directions for non-square arrays, "+
             "only square grids currently supported by galsim.Images.")
-    imreal.setScale(2. * np.pi / array_shape[0])
-    imimag.setScale(2. * np.pi / array_shape[0])
+    scale = 2. * np.pi / array_shape[0]
+    imreal = galsim.ImageViewD(np.ascontiguousarray(array.real.astype(np.float64)), scale=scale)
+    imimag = galsim.ImageViewD(np.ascontiguousarray(array.imag.astype(np.float64)), scale=scale)
     return (imreal, imimag)
 
 def mtf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0., coma1=0.,
@@ -665,8 +662,8 @@ def mtf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     mtf[0, 0] = 1 by default.  The scale of the output ImageViewD is correct in k space units.
 
     The ImageView output can be used to directly instantiate an SBInterpolatedImage, and its 
-    .getScale() method will reflect the spacing of the output grid in the system of units adopted
-    for lam_over_diam.
+    scale will reflect the spacing of the output grid in the system of units adopted for 
+    lam_over_diam.
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
 
@@ -700,13 +697,12 @@ def mtf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
         astig2=astig2, coma1=coma1, coma2=coma2, trefoil1=trefoil1, trefoil2=trefoil2, spher=spher,
         circular_pupil=circular_pupil, obscuration=obscuration, nstruts=nstruts,
         strut_thick=strut_thick, strut_angle=strut_angle)
-    im = galsim.ImageViewD(array.astype(np.float64))
     if array_shape[0] != array_shape[1]:
         import warnings
         warnings.warn(
             "MTF Image scale will not be correct in both directions for non-square arrays, only "+
             "square grids currently supported by galsim.Images.")
-    im.setScale(2. * np.pi / array_shape[0])
+    im = galsim.ImageViewD(array.astype(np.float64), scale = 2. * np.pi / array_shape[0])
     return im
 
 def ptf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0., coma1=0.,
@@ -769,8 +765,8 @@ def ptf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     ptf[0, 0] = 0. by default.  The scale of the output ImageViewD is correct in k space units.
 
     The ImageView output can be used to directly instantiate an SBInterpolatedImage, and its 
-    .getScale() method will reflect the spacing of the output grid in the system of units adopted
-    for lam_over_diam.
+    scale will reflect the spacing of the output grid in the system of units adopted for 
+    lam_over_diam.
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
 
@@ -804,11 +800,10 @@ def ptf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
         astig2=astig2, coma1=coma1, coma2=coma2, trefoil1=trefoil1, trefoil2=trefoil2, spher=spher,
         circular_pupil=circular_pupil, obscuration=obscuration, nstruts=nstruts,
         strut_thick=strut_thick, strut_angle=strut_angle)
-    im = galsim.ImageViewD(array.astype(np.float64))
     if array_shape[0] != array_shape[1]:
         import warnings
         warnings.warn(
             "PTF Image scale will not be correct in both directions for non-square arrays, only "+
             "square grids currently supported by galsim.Images.")
-    im.setScale(2. * np.pi / array_shape[0])
+    im = galsim.ImageViewD(array.astype(np.float64), scale = 2. * np.pi / array_shape[0])
     return im

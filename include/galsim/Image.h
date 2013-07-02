@@ -627,6 +627,8 @@ namespace galsim {
 
         /**
          * @brief Default constructor leaves the image's data pointer as null.
+         *
+         * The scale is initially set to 0.0.
          */
         Image() : BaseImage<T>(Bounds<int>(), 0.) {}
 
@@ -634,17 +636,13 @@ namespace galsim {
          *  @brief Create a new image with origin at (1,1).
          *
          *  An exception is thrown if ncol or nrow <= 0
-         *
-         *  The scale is initially set to 0.0.
          */
-        Image(int ncol, int nrow, T init_value = T(0));
+        Image(int ncol, int nrow, double scale, T init_value = T(0));
 
         /**
          *  @brief Create a new image with the given bounding box and initial value.
-         *
-         *  The scale is initially set to 0.0.
          */
-        Image(const Bounds<int>& bounds, T init_value = T(0));
+        Image(const Bounds<int>& bounds, double scale, T init_value = T(0));
 
         /**
          *  @brief Deep copy constructor.
@@ -657,7 +655,7 @@ namespace galsim {
          *
          *  The scale is initially set to 0.0.
          */
-        Image(const AssignableToImage<T>& rhs) : BaseImage<T>(rhs.getBounds(),1.) 
+        Image(const AssignableToImage<T>& rhs) : BaseImage<T>(rhs.getBounds(),0.) 
         { rhs.assignTo(view()); }
 
         /**

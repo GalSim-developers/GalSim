@@ -201,8 +201,7 @@ def test_draw():
     # Test if we provide an image with a defined scale.  It should:
     #   - write to the existing image
     #   - use the image's scale 
-    im9 = galsim.ImageD(200,200)
-    im9.setScale(0.51)
+    im9 = galsim.ImageD(200,200, scale=0.51)
     obj2.draw(im9)
     np.testing.assert_almost_equal(im9.scale, 0.51, 9,
                                    "obj2.draw(im9) produced image with wrong scale")
@@ -214,7 +213,7 @@ def test_draw():
     # Test if we provide an image with a defined scale <= 0.  It should:
     #   - write to the existing image
     #   - set the scale to obj2.nyquistDx()
-    im9.setScale(-0.51)
+    im9.scale = -0.51
     im9.setZero()
     obj2.draw(im9)
     np.testing.assert_almost_equal(im9.scale, dx_nyq, 9,
@@ -223,7 +222,7 @@ def test_draw():
                                    "obj2.draw(im9) produced image with wrong flux")
     np.testing.assert_almost_equal(CalculateScale(im9), 2, 2,
                                    "Measured wrong scale after obj2.draw(im9)")
-    im9.setScale(0)
+    im9.scale = 0
     im9.setZero()
     obj2.draw(im9)
     np.testing.assert_almost_equal(im9.scale, dx_nyq, 9,
@@ -238,7 +237,7 @@ def test_draw():
     #   - write to the existing image
     #   - use the provided dx
     #   - write the new dx value to the image's scale
-    im9.setScale(0.73)
+    im9.scale = 0.73
     im9.setZero()
     obj2.draw(im9, dx=0.51)
     np.testing.assert_almost_equal(im9.scale, 0.51, 9,
@@ -251,7 +250,7 @@ def test_draw():
     # Test if we provide an image and dx <= 0.  It should:
     #   - write to the existing image
     #   - set the scale to obj2.nyquistDx()
-    im9.setScale(0.73)
+    im9.scale = 0.73
     im9.setZero()
     obj2.draw(im9, dx=-0.51)
     np.testing.assert_almost_equal(im9.scale, dx_nyq, 9,
@@ -260,7 +259,7 @@ def test_draw():
                                    "obj2.draw(im9,dx<0) produced image with wrong flux")
     np.testing.assert_almost_equal(CalculateScale(im9), 2, 2,
                                    "Measured wrong scale after obj2.draw(im9,dx<0)")
-    im9.setScale(0.73)
+    im9.scale = 0.73
     im9.setZero()
     obj2.draw(im9, dx=0)
     np.testing.assert_almost_equal(im9.scale, dx_nyq, 9,
@@ -390,10 +389,8 @@ def test_drawK():
     # Test if we provide an image with a defined scale.  It should:
     #   - write to the existing image
     #   - use the image's scale 
-    re9 = galsim.ImageD(401,401)
-    im9 = galsim.ImageD(401,401)
-    re9.setScale(0.51)
-    im9.setScale(0.51)
+    re9 = galsim.ImageD(401,401, scale=0.51)
+    im9 = galsim.ImageD(401,401, scale=0.51)
     obj.drawK(re9, im9)
     np.testing.assert_almost_equal(re9.scale, 0.51, 9,
                                    "obj.drawK(re9,im9) produced real image with wrong scale")
@@ -409,8 +406,8 @@ def test_drawK():
     # Test if we provide an image with a defined scale <= 0.  It should:
     #   - write to the existing image
     #   - set the scale to obj.stepK()
-    re3.setScale(-0.51)
-    im3.setScale(-0.51)
+    re3.scale = -0.51
+    im3.scale = -0.51
     re3.setZero()
     obj.drawK(re3, im3)
     np.testing.assert_almost_equal(re3.scale, stepk, 9,
@@ -423,8 +420,8 @@ def test_drawK():
                                    "obj.drawK(re3,im3) produced non-zero imaginary image")
     np.testing.assert_almost_equal(CalculateScale(re3), 2, 1,
                                    "Measured wrong scale after obj.drawK(re3,im3)")
-    re3.setScale(0)
-    im3.setScale(0)
+    re3.scale = 0
+    im3.scale = 0
     re3.setZero()
     obj.drawK(re3, im3)
     np.testing.assert_almost_equal(re3.scale, stepk, 9,
@@ -442,8 +439,8 @@ def test_drawK():
     #   - write to the existing image
     #   - use the provided dx
     #   - write the new dx value to the image's scale
-    re9.setScale(0.73)
-    im9.setScale(0.73)
+    re9.scale = 0.73
+    im9.scale = 0.73
     re9.setZero()
     obj.drawK(re9, im9, dk=0.51)
     np.testing.assert_almost_equal(re9.scale, 0.51, 9,
@@ -460,8 +457,8 @@ def test_drawK():
     # Test if we provide an image and dk <= 0.  It should:
     #   - write to the existing image
     #   - set the scale to obj.stepK()
-    re3.setScale(0.73)
-    im3.setScale(0.73)
+    re3.scale = 0.73
+    im3.scale = 0.73
     re3.setZero()
     obj.drawK(re3, im3, dk=-0.51)
     np.testing.assert_almost_equal(re3.scale, stepk, 9,
@@ -474,8 +471,8 @@ def test_drawK():
                                    "obj.drawK(re3,im3,dk<0) produced non-zero imaginary image")
     np.testing.assert_almost_equal(CalculateScale(re3), 2, 1,
                                    "Measured wrong scale after obj.drawK(re3,im3,dk<0)")
-    re3.setScale(0.73)
-    im3.setScale(0.73)
+    re3.scale = 0.73
+    im3.scale = 0.73
     re3.setZero()
     obj.drawK(re3, im3, dk=0)
     np.testing.assert_almost_equal(re3.scale, stepk, 9,
@@ -620,8 +617,7 @@ def test_offset():
         cenx = (nx+1.)/2.
         ceny = (ny+1.)/2.
         print 'cen = ',cenx,ceny
-        im = galsim.ImageD(nx,ny)
-        im.scale = scale
+        im = galsim.ImageD(nx,ny, scale=scale)
         true_center = im.bounds.trueCenter()
         np.testing.assert_almost_equal(
                 cenx, true_center.x, 6, 
@@ -646,8 +642,7 @@ def test_offset():
         # latter use real-space convolution, so they should just match to our overall accuracy 
         # requirement, which is something like 1.e-3 or so.  But an image of just the galaxy 
         # should use real-space drawing, so should be pretty much exact.
-        im2 = galsim.ImageD(nx,ny)
-        im2.scale = scale
+        im2 = galsim.ImageD(nx,ny, scale=scale)
         gal.draw(im2, normalization='sb')
         for x,y in xy_list:
             print 'x,y = ',x,y

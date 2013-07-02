@@ -112,7 +112,8 @@ void BaseImage<T>::allocateMem()
 }
 
 template <typename T>
-Image<T>::Image(int ncol, int nrow, T init_value) : BaseImage<T>(Bounds<int>(1,ncol,1,nrow), 0.) 
+Image<T>::Image(int ncol, int nrow, double scale, T init_value) :
+    BaseImage<T>(Bounds<int>(1,ncol,1,nrow), scale) 
 {
     if (ncol <= 0 || nrow <= 0) {
         std::ostringstream oss;
@@ -134,7 +135,8 @@ Image<T>::Image(int ncol, int nrow, T init_value) : BaseImage<T>(Bounds<int>(1,n
 }
 
 template <typename T>
-Image<T>::Image(const Bounds<int>& bounds, const T init_value) : BaseImage<T>(bounds, 0.)
+Image<T>::Image(const Bounds<int>& bounds, double scale, const T init_value) :
+    BaseImage<T>(bounds, scale)
 {
     fill(init_value);
 }

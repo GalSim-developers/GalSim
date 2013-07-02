@@ -497,10 +497,9 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
     nproc = params.get('nproc',1)
 
-    full_image = galsim.ImageF(full_xsize,full_ysize)
+    full_image = galsim.ImageF(full_xsize, full_ysize, scale=pixel_scale)
     full_image.setOrigin(config['image_origin'])
     full_image.setZero()
-    full_image.setScale(pixel_scale)
 
     # Also define the overall image center, since we need that to calculate the position 
     # of each stamp relative to the center.
@@ -508,26 +507,23 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     #print 'image_cen = ',full_image.bounds.trueCenter()
 
     if make_psf_image:
-        full_psf_image = galsim.ImageF(full_xsize,full_ysize)
+        full_psf_image = galsim.ImageF(full_xsize, full_ysize, scale=pixel_scale)
         full_psf_image.setOrigin(config['image_origin'])
         full_psf_image.setZero()
-        full_psf_image.setScale(pixel_scale)
     else:
         full_psf_image = None
 
     if make_weight_image:
-        full_weight_image = galsim.ImageF(full_xsize,full_ysize)
+        full_weight_image = galsim.ImageF(full_xsize, full_ysize, scale=pixel_scale)
         full_weight_image.setOrigin(config['image_origin'])
         full_weight_image.setZero()
-        full_weight_image.setScale(pixel_scale)
     else:
         full_weight_image = None
 
     if make_badpix_image:
-        full_badpix_image = galsim.ImageS(full_xsize,full_ysize)
+        full_badpix_image = galsim.ImageS(full_xsize, full_ysize, scale=pixel_scale)
         full_badpix_image.setOrigin(config['image_origin'])
         full_badpix_image.setZero()
-        full_badpix_image.setScale(pixel_scale)
     else:
         full_badpix_image = None
 
@@ -707,10 +703,9 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     nproc = params.get('nproc',1)
 
-    full_image = galsim.ImageF(full_xsize,full_ysize)
+    full_image = galsim.ImageF(full_xsize, full_ysize, scale=pixel_scale)
     full_image.setOrigin(config['image_origin'])
     full_image.setZero()
-    full_image.setScale(pixel_scale)
 
     # Also define the overall image center, since we need that to calculate the position 
     # of each stamp relative to the center.
@@ -718,26 +713,23 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     #print 'image_cen = ',full_image.bounds.trueCenter()
 
     if make_psf_image:
-        full_psf_image = galsim.ImageF(full_xsize,full_ysize)
+        full_psf_image = galsim.ImageF(full_xsize, full_ysize, scale=pixel_scale)
         full_psf_image.setOrigin(config['image_origin'])
         full_psf_image.setZero()
-        full_psf_image.setScale(pixel_scale)
     else:
         full_psf_image = None
 
     if make_weight_image:
-        full_weight_image = galsim.ImageF(full_xsize,full_ysize)
+        full_weight_image = galsim.ImageF(full_xsize, full_ysize, scale=pixel_scale)
         full_weight_image.setOrigin(config['image_origin'])
         full_weight_image.setZero()
-        full_weight_image.setScale(pixel_scale)
     else:
         full_weight_image = None
 
     if make_badpix_image:
-        full_badpix_image = galsim.ImageS(full_xsize,full_ysize)
+        full_badpix_image = galsim.ImageS(full_xsize, full_ysize, scale=pixel_scale)
         full_badpix_image.setOrigin(config['image_origin'])
         full_badpix_image.setZero()
-        full_badpix_image.setScale(pixel_scale)
     else:
         full_badpix_image = None
 

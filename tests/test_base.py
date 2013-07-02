@@ -65,10 +65,9 @@ def test_gaussian():
     mySBP = galsim.SBGaussian(flux=1, sigma=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_1.fits"))
     savedImg.setCenter(0,0)
-    myImg = galsim.ImageF(savedImg.bounds)
-    myImg.setCenter(0,0)
     dx = 0.2
-    myImg.setScale(dx)
+    myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    myImg.setCenter(0,0)
     tot = mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
@@ -369,8 +368,7 @@ def test_exponential():
     r0 = re/1.67839
     mySBP = galsim.SBExponential(flux=1., scale_radius=r0)
     savedImg = galsim.fits.read(os.path.join(imgdir, "exp_1.fits"))
-    myImg = galsim.ImageF(savedImg.bounds)
-    myImg.setScale(0.2)
+    myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
     mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
@@ -547,8 +545,7 @@ def test_sersic():
     # Test SBSersic
     mySBP = galsim.SBSersic(n=3, flux=1, half_light_radius=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_3_1.fits"))
-    myImg = galsim.ImageF(savedImg.bounds)
-    myImg.setScale(0.2)
+    myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
     mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
@@ -588,8 +585,7 @@ def test_sersic():
     # Test Truncated SBSersic
     mySBP = galsim.SBSersic(n=3, flux=1, half_light_radius=1, trunc=10)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_3_1_10.fits"))
-    myImg = galsim.ImageF(savedImg.bounds)
-    myImg.setScale(0.2)
+    myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
     mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
@@ -881,8 +877,7 @@ def test_sersic_05():
     # cf test_gaussian()
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_1.fits"))
     savedImg.setCenter(0,0)
-    myImg = galsim.ImageF(savedImg.bounds)
-    myImg.setScale(0.2)
+    myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
     sersic = galsim.Sersic(n=0.5, flux=1, half_light_radius=1 * hlr_sigma)
     myImg = sersic.draw(myImg, normalization="surface brightness", use_true_center=False)
     print 'saved image center = ',savedImg(0,0)
@@ -919,8 +914,7 @@ def test_sersic_1():
     # The real value of re/r0 = 1.6783469900166605
     hlr_r0 =  1.6783469900166605
     savedImg = galsim.fits.read(os.path.join(imgdir, "exp_1.fits"))
-    myImg = galsim.ImageF(savedImg.bounds)
-    myImg.setScale(0.2)
+    myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
     sersic = galsim.Sersic(n=1, flux=1., half_light_radius=r0 * hlr_r0)
     sersic.draw(myImg, normalization="surface brightness", use_true_center=False)
     np.testing.assert_array_almost_equal(
@@ -953,8 +947,7 @@ def test_airy():
     t1 = time.time()
     mySBP = galsim.SBAiry(lam_over_diam=1./0.8, obscuration=0.1, flux=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "airy_.8_.1.fits"))
-    myImg = galsim.ImageF(savedImg.bounds)
-    myImg.setScale(0.2)
+    myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
     mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
@@ -1098,8 +1091,7 @@ def test_box():
     t1 = time.time()
     mySBP = galsim.SBBox(xw=1, yw=1, flux=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "box_1.fits"))
-    myImg = galsim.ImageF(savedImg.bounds)
-    myImg.setScale(0.2)
+    myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
     mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
@@ -1147,8 +1139,7 @@ def test_moffat():
     fwhm_backwards_compatible = 1.3178976627539716
     mySBP = galsim.SBMoffat(beta=2, half_light_radius=1, trunc=5*fwhm_backwards_compatible, flux=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_2_5.fits"))
-    myImg = galsim.ImageF(savedImg.bounds)
-    myImg.setScale(0.2)
+    myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
     mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
@@ -1507,8 +1498,7 @@ def test_kolmogorov():
     #mySBP.draw(image=savedImg, dx=0.2)
     #savedImg.write(os.path.join(imgdir, "kolmogorov.fits"))
     savedImg = galsim.fits.read(os.path.join(imgdir, "kolmogorov.fits"))
-    myImg = galsim.ImageF(savedImg.bounds)
-    myImg.setScale(0.2)
+    myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
     mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
@@ -1574,10 +1564,10 @@ def test_kolmogorov_properties():
 
         # Also check the realized flux in a drawn image
         dx = lor / 10.
-        img = galsim.ImageF(256,256)
+        img = galsim.ImageF(256,256, scale=dx)
         pix = galsim.Pixel(dx)
         conv = galsim.Convolve([psf,pix])
-        conv.draw(image=img, dx=dx)
+        conv.draw(image=img)
         out_flux = img.array.sum()
         np.testing.assert_almost_equal(out_flux, test_flux, 3,
                                        err_msg="Flux of Kolmogorov (image array) is incorrect.")

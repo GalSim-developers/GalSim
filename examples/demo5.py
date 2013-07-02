@@ -159,12 +159,10 @@ def main(argv):
 
     # This profile is placed with different orientations and noise realizations
     # at each postage stamp in the gal image.
-    gal_image = galsim.ImageF(stamp_xsize * nx_tiles-1 , stamp_ysize * ny_tiles-1)
-    psf_image = galsim.ImageF(stamp_xsize * nx_tiles-1 , stamp_ysize * ny_tiles-1)
-
-    # Set the pixel_scale of the images:
-    gal_image.setScale(pixel_scale)
-    psf_image.setScale(pixel_scale)
+    gal_image = galsim.ImageF(stamp_xsize * nx_tiles-1 , stamp_ysize * ny_tiles-1,
+                              scale=pixel_scale)
+    psf_image = galsim.ImageF(stamp_xsize * nx_tiles-1 , stamp_ysize * ny_tiles-1,
+                              scale=pixel_scale)
 
     shift_radius_sq = shift_radius**2
 

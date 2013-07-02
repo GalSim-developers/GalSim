@@ -116,12 +116,10 @@ def main(argv):
         """
         t1 = time.time()
 
-        full_image = galsim.ImageF(image_size, image_size)
-        full_image.setScale(pixel_scale)
+        full_image = galsim.ImageF(image_size, image_size, scale=pixel_scale)
 
         # The weight image will hold the inverse variance for each pixel.
-        weight_image = galsim.ImageF(image_size, image_size)
-        weight_image.setScale(pixel_scale)
+        weight_image = galsim.ImageF(image_size, image_size, scale=pixel_scale)
 
         # It is common for astrometric images to also have a bad pixel mask.  We don't have any
         # defect simulation currently, so our bad pixel masks are currently all zeros. 
@@ -129,16 +127,14 @@ def main(argv):
         # be able to mark those defects on a bad pixel mask.
         # Note: the S in ImageS means to use "short int" for the data type.
         # This is a typical choice for a bad pixel image.
-        badpix_image = galsim.ImageS(image_size, image_size)
-        badpix_image.setScale(pixel_scale)
+        badpix_image = galsim.ImageS(image_size, image_size, scale=pixel_scale)
 
         # We also draw a PSF image at the location of every galaxy.  This isn't normally done,
         # and since some of the PSFs overlap, it's not necessarily so useful to have this kind 
         # of image.  But in this case, it's fun to look at the psf image, especially with 
         # something like log scaling in ds9 to see how crazy an aberrated OpticalPSF with 
         # struts can look when there is no atmospheric component to blur it out.
-        psf_image = galsim.ImageF(image_size, image_size)
-        psf_image.setScale(pixel_scale)
+        psf_image = galsim.ImageF(image_size, image_size, scale=pixel_scale)
 
         # Setup the NFWHalo stuff:
         nfw = galsim.NFWHalo(mass=mass, conc=nfw_conc, redshift=nfw_z_halo,
