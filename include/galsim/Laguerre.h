@@ -372,7 +372,7 @@ namespace galsim {
         void write(std::ostream& os, int maxorder=-1) const;
         friend std::ostream& operator<<(std::ostream& os, const LVector& lv);
 
-        // read from an ostream
+        // read from an istream
         void read(std::istream& is);
         friend std::istream& operator>>(std::istream& is, LVector& lv);
 
