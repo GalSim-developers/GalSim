@@ -90,7 +90,7 @@ namespace galsim {
                 "                              change the spacing with table_spacing. Using \n"
                 "                              table_spacing < 1 will use a spacing value that \n"
                 "                              much smaller than the default, which should \n"
-                "                              produce more accurate interpolations"
+                "                              produce more accurate interpolations.\n"
                 "realspace_relerr=1.e-3        The relative accuracy for realspace convolution.\n"
                 "realspace_abserr=1.e-6        The absolute accuracy for realspace convolution.\n"
                 "integration_relerr=1.e-5      The relative accuracy for integrals (other than\n"

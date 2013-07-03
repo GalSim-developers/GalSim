@@ -35,6 +35,7 @@ namespace {
 
 struct PyCppShear {
 
+#if 0
     static bp::handle<> getMatrix(const CppShear& self) {
         static npy_intp dim[2] = {2, 2};
         // Because the C++ version sets references that are passed in, and that's not possible in
@@ -48,6 +49,7 @@ struct PyCppShear {
         Py_DECREF(r);
         return bp::handle<>(r2);
     }
+#endif
 
     static void wrap() {
         static const char* doc = 

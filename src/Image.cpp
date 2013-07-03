@@ -245,7 +245,7 @@ template <typename T>
 class ReturnInverse
 {
 public: 
-    T operator()(const T val) const { return val==T(0) ? T(0) : T(1)/val; }
+    double operator()(const T val) const { return val==T(0) ? 0. : 1./double(val); }
 };
 
 template <typename T>
