@@ -495,7 +495,7 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level_pixel, final_shi
 
     if final_shift:
         #print 'final.shift = ',final_shift*pixel_scale
-        final.applyShift(final_shift.x*pixel_scale, final_shift.y*pixel_scale)
+        final.applyShift(final_shift*pixel_scale)
 
     if xsize:
         im = galsim.ImageF(xsize, ysize)
@@ -713,7 +713,7 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, final_sh
 
     if final_shift:
         #print 'final.shift = ',final_shift*pixel_scale
-        final.applyShift(final_shift.x*pixel_scale, final_shift.y*pixel_scale)
+        final.applyShift(final_shift*pixel_scale)
 
     if xsize:
         im = galsim.ImageF(xsize, ysize)
@@ -933,12 +933,12 @@ def DrawPSFStamp(psf, pix, config, bounds, final_shift):
     if 'shift' in config['gal']:
         gal_shift = galsim.config.GetCurrentValue(config['gal'],'shift')
         #print 'psf shift (1): ',gal_shift.x,gal_shift.y
-        final_psf.applyShift(gal_shift.x, gal_shift.y)
+        final_psf.applyShift(gal_shift)
 
     # Also apply any "final" shift to the psf.
     if final_shift:
         #print 'psf shift (2) = ',final_shift*pixel_scale
-        final_psf.applyShift(final_shift.x*pixel_scale, final_shift.y*pixel_scale)
+        final_psf.applyShift(final_shift*pixel_scale)
 
     psf_im = galsim.ImageF(bounds, scale=pixel_scale)
     final_psf.draw(psf_im, dx=pixel_scale)
