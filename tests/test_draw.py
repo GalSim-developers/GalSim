@@ -72,7 +72,7 @@ def test_draw():
     np.testing.assert_almost_equal(im1.scale, dx_nyq, 9,
                                    "obj.draw() produced image with wrong scale")
     print 'im1.bounds = ',im1.bounds
-    assert im1.bounds == galsim.BoundsI(1,54,1,54),(
+    assert im1.bounds == galsim.BoundsI(1,56,1,56),(
             "obj.draw() produced image with wrong bounds")
     np.testing.assert_almost_equal(CalculateScale(im1), 2, 1,
                                    "Measured wrong scale after obj.draw()")
@@ -86,7 +86,7 @@ def test_draw():
                                    "obj2.draw() produced image with wrong scale")
     np.testing.assert_almost_equal(im2.array.astype(float).sum(), test_flux, 2,
                                    "obj2.draw() produced image with wrong flux")
-    assert im2.bounds == galsim.BoundsI(1,54,1,54),(
+    assert im2.bounds == galsim.BoundsI(1,56,1,56),(
             "obj2.draw() produced image with wrong bounds")
     np.testing.assert_almost_equal(CalculateScale(im2), 2, 1,
                                    "Measured wrong scale after obj2.draw()")
@@ -96,7 +96,7 @@ def test_draw():
     #   - also return that image
     #   - set the scale to obj2.nyquistDx()
     #   - zero out any existing data
-    im3 = galsim.ImageD(54,54)
+    im3 = galsim.ImageD(56,56)
     im4 = obj2.draw(im3)
     np.testing.assert_almost_equal(im3.scale, dx_nyq, 9,
                                    "obj2.draw(im3) produced image with wrong scale")
@@ -129,7 +129,7 @@ def test_draw():
                                    "Measured wrong scale after obj2.draw(im5)")
     np.testing.assert_almost_equal(im5.array.sum(), im2.array.astype(float).sum(), 6,
                                    "obj2.draw(im5) produced image with different flux than im2")
-    assert im5.bounds == galsim.BoundsI(1,54,1,54),(
+    assert im5.bounds == galsim.BoundsI(1,56,1,56),(
             "obj2.draw(im5) produced image with wrong bounds")
 
     # Test if we provide wmult.  It should:
@@ -146,7 +146,7 @@ def test_draw():
     np.testing.assert_almost_equal(CalculateScale(im6), 2, 2,
                                    "Measured wrong scale after obj2.draw(wmult)")
     print 'im6.bounds = ',im6.bounds
-    assert im6.bounds == galsim.BoundsI(1,214,1,214),(
+    assert im6.bounds == galsim.BoundsI(1,220,1,220),(
             "obj2.draw(wmult) produced image with wrong bounds")
 
     # Test if we provide an image argument and wmult.  It should:
@@ -180,7 +180,7 @@ def test_draw():
     np.testing.assert_almost_equal(CalculateScale(im7), 2, 1,
                                    "Measured wrong scale after obj2.draw(dx)")
     print 'im7.bounds = ',im7.bounds
-    assert im7.bounds == galsim.BoundsI(1,66,1,66),(
+    assert im7.bounds == galsim.BoundsI(1,68,1,68),(
             "obj2.draw(dx) produced image with wrong bounds")
 
     # Test with dx and wmult.  It should:
@@ -195,7 +195,7 @@ def test_draw():
     np.testing.assert_almost_equal(CalculateScale(im8), 2, 2,
                                    "Measured wrong scale after obj2.draw(dx,wmult)")
     print 'im8.bounds = ',im8.bounds
-    assert im8.bounds == galsim.BoundsI(1,264,1,264),(
+    assert im8.bounds == galsim.BoundsI(1,270,1,270),(
             "obj2.draw(dx,wmult) produced image with wrong bounds")
 
     # Test if we provide an image with a defined scale.  It should:
