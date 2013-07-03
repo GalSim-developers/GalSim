@@ -32,7 +32,7 @@ import os
 # To re-run this script:
 # - First type `git checkout c601a85034f89bba5d608ab6b2944f4f5f168491`
 # - Type `scons install` in the main GalSim directory.
-# - Then type `python make_spline_testarrays.py` in this directory.
+# - Then type `python make_interpolant_comparison_files.py` in this directory.
 
 # Some arbitrary kx, ky k space values to test
 kxvals = np.array((1.30, 0.71, -4.30)) * np.pi / 2.
@@ -55,7 +55,7 @@ image = galsim.ImageD(128,128)
 dx = 0.4
 final.draw(image=image, dx=dx)
 
-dir = '../../../tests/spline_comparison_files'
+dir = '../../../tests/interpolant_comparison_files'
 
 # First make a Cubic interpolant
 interp = galsim.InterpolantXY(galsim.Cubic(tol=1.e-4))
