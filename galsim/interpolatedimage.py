@@ -195,11 +195,11 @@ class InterpolatedImage(GSObject):
                            sets whether to use the true center of the provided image as the 
                            center of the profile (if `use_true_center=True`) or the nominal
                            center returned by `image.bounds.center()` (if `use_true_center=False`)
-                           [default `use_true_center = True`]
+                           [Default `use_true_center = True`]
     @param offset          The location in the image at which to take the center the profile to be
                            relative to the center of the image (either the true center if 
                            use_true_center=True, or the nominal center if use_true_center=False).  
-                           [default `offset = galsim.Position(0.,0.)`]
+                           [Default `offset = None`]
     @param gsparams        You may also specify a gsparams argument.  See the docstring for
                            galsim.GSParams using help(galsim.GSParams) for more information about
                            this option.
@@ -233,8 +233,7 @@ class InterpolatedImage(GSObject):
     def __init__(self, image, x_interpolant = None, k_interpolant = None, normalization = 'flux',
                  dx = None, flux = None, pad_factor = 0., noise_pad = 0., rng = None,
                  pad_image = None, calculate_stepk=True, calculate_maxk=True,
-                 use_cache=True, use_true_center=True, offset=galsim.PositionD(0.,0.),
-                 gsparams=None):
+                 use_cache=True, use_true_center=True, offset=None, gsparams=None):
 
         # first try to read the image as a file.  If it's not either a string or a valid
         # pyfits hdu or hdulist, then an exception will be raised, which we ignore and move on.
@@ -375,9 +374,9 @@ class InterpolatedImage(GSObject):
         GSObject.__init__(self, sbinterpolatedimage)
 
         # Apply the offset, and possibly fix the centering for even-sized images
-        # Note the minus sign in front of image.scale, since we want to fix the center in the 
-        # opposite sense of what the draw function does.
-        prof = self._fix_center(image, -image.scale, offset, use_true_center)
+        # Note reverse=True, since we want to fix the center in the opposite sense of what the 
+        # draw function does.
+        prof = self._fix_center(image, dx, offset, use_true_center, reverse=True)
         GSObject.__init__(self, prof.SBProfile)
 
 
