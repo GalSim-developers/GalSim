@@ -25,10 +25,10 @@ from galsim_test_helpers import *
 """Unit tests for the InterpolatedImage class.
 """
 
+path, filename = os.path.split(__file__) # Get the path to this file for use below...
 try:
     import galsim
 except ImportError:
-    path, filename = os.path.split(__file__)
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
@@ -36,6 +36,30 @@ except ImportError:
 test_flux = 0.7
 # for dx tests - avoid 1.0 because factors of dx^2 won't show up!
 test_scale = 2.0
+
+# For reference tests:
+TESTDIR=os.path.join(path, "interpolant_comparison_files")
+
+# Some arbitrary kx, ky k space values to test
+KXVALS = np.array((1.30, 0.71, -4.30)) * np.pi / 2.
+KYVALS = np.array((0.80, -0.02, -0.31,)) * np.pi / 2.
+
+# First make an image that we'll use for interpolation:
+g1 = galsim.Gaussian(sigma = 3.1, flux=2.4)
+g1.applyShear(g1=0.2,g2=0.1)
+g2 = galsim.Gaussian(sigma = 1.9, flux=3.1)
+g2.applyShear(g1=-0.4,g2=0.3)
+g2.applyShift(-0.3,0.5)
+g3 = galsim.Gaussian(sigma = 4.1, flux=1.6)
+g3.applyShear(g1=0.1,g2=-0.1)
+g3.applyShift(0.7,-0.2)
+
+final = g1 + g2 + g3
+ref_image = galsim.ImageD(128,128)
+dx = 0.4
+# The reference image was drawn with the old convention, which is now use_true_center=False
+final.draw(image=ref_image, dx=dx, normalization='sb', use_true_center=False)
+
 
 def test_sbinterpolatedimage():
     """Test that we can make SBInterpolatedImages from Images of various types, and convert back.
@@ -131,6 +155,7 @@ def test_roundtrip():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
 def test_fluxnorm():
     """Test that InterpolatedImage class responds properly to instructions about flux normalization.
     """
@@ -185,6 +210,7 @@ def test_fluxnorm():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
 def test_exceptions():
     """Test failure modes for InterpolatedImage class.
     """
@@ -212,6 +238,7 @@ def test_exceptions():
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_operations_simple():
     """Simple test of operations on InterpolatedImage: shear, magnification, rotation, shifting."""
@@ -377,6 +404,7 @@ def test_operations_simple():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
 def test_operations():
     """Test of operations on complicated InterpolatedImage: shear, magnification, rotation,
     shifting.
@@ -432,6 +460,7 @@ def test_operations():
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_uncorr_padding():
     """Test for uncorrelated noise padding of InterpolatedImage."""
@@ -499,6 +528,7 @@ def test_uncorr_padding():
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_pad_image():
     """Test padding an InterpolatedImage with a pad_image."""
@@ -573,6 +603,7 @@ def test_pad_image():
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_corr_padding():
     """Test for correlated noise padding of InterpolatedImage."""
@@ -658,6 +689,7 @@ def test_corr_padding():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
 def test_realspace_conv():
     """Test that real-space convolution of an InterpolatedImage matches the FFT result
     """
@@ -735,6 +767,104 @@ def test_realspace_conv():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
+def test_Cubic_ref():
+    """Test use of Cubic interpolant against some reference values
+    """
+    import time
+    t1 = time.time()
+    interp = galsim.Cubic(tol=1.e-4)
+    testobj = galsim.InterpolatedImage(ref_image.view(), x_interpolant=interp, dx=dx,
+                                       normalization='sb')
+    testKvals = np.zeros(len(KXVALS))
+    # Make test kValues
+    for i in xrange(len(KXVALS)):
+        posk = galsim.PositionD(KXVALS[i], KYVALS[i])
+        testKvals[i] = np.abs(testobj.kValue(posk))
+    # Compare with saved array
+    refKvals = np.loadtxt(os.path.join(TESTDIR, "absfKCubic_test.txt"))
+    print 'ref = ',refKvals
+    print 'test = ',testKvals
+    print 'kValue(0) = ',testobj.kValue(galsim.PositionD(0.,0.))
+    np.testing.assert_array_almost_equal(
+            refKvals/testKvals, 1., 5,
+            err_msg="kValues do not match reference valeus for Cubic interpolant.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
+def test_Quintic_ref():
+    """Test use of Quintic interpolant against some reference values
+    """
+    import time
+    t1 = time.time()
+    interp = galsim.Quintic(tol=1.e-4)
+    testobj = galsim.InterpolatedImage(ref_image.view(), x_interpolant=interp, dx=dx,
+                                       normalization='sb')
+    testKvals = np.zeros(len(KXVALS))
+    # Make test kValues
+    for i in xrange(len(KXVALS)):
+        posk = galsim.PositionD(KXVALS[i], KYVALS[i])
+        testKvals[i] = np.abs(testobj.kValue(posk))
+    # Compare with saved array
+    refKvals = np.loadtxt(os.path.join(TESTDIR, "absfKQuintic_test.txt"))
+    print 'ref = ',refKvals
+    print 'test = ',testKvals
+    np.testing.assert_array_almost_equal(
+            refKvals/testKvals, 1., 5,
+            err_msg="kValues do not match reference valeus for Quintic interpolant.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
+def test_Lanczos5_ref():
+    """Test use of Lanczos5 interpolant against some reference values
+    """
+    import time
+    t1 = time.time()
+    interp = galsim.Lanczos(5, conserve_flux=False, tol=1.e-4)
+    testobj = galsim.InterpolatedImage(ref_image.view(), x_interpolant=interp, dx=dx,
+                                       normalization='sb')
+    testKvals = np.zeros(len(KXVALS))
+    # Make test kValues
+    for i in xrange(len(KXVALS)):
+        posk = galsim.PositionD(KXVALS[i], KYVALS[i])
+        testKvals[i] = np.abs(testobj.kValue(posk))
+    # Compare with saved array
+    refKvals = np.loadtxt(os.path.join(TESTDIR, "absfKLanczos5_test.txt"))
+    print 'ref = ',refKvals
+    print 'test = ',testKvals
+    np.testing.assert_array_almost_equal(
+            refKvals/testKvals, 1., 5,
+            err_msg="kValues do not match reference valeus for Lanczos-5 interpolant.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    
+
+def test_Lanczos7_ref():
+    """Test use of Lanczos7 interpolant against some reference values
+    """
+    import time
+    t1 = time.time()
+    interp = galsim.Lanczos(7, conserve_flux=False, tol=1.e-4)
+    testobj = galsim.InterpolatedImage(ref_image.view(), x_interpolant=interp, dx=dx,
+                                       normalization='sb')
+    testKvals = np.zeros(len(KXVALS))
+    # Make test kValues
+    for i in xrange(len(KXVALS)):
+        posk = galsim.PositionD(KXVALS[i], KYVALS[i])
+        testKvals[i] = np.abs(testobj.kValue(posk))
+    # Compare with saved array
+    refKvals = np.loadtxt(os.path.join(TESTDIR, "absfKLanczos7_test.txt"))
+    print 'ref = ',refKvals
+    print 'test = ',testKvals
+    np.testing.assert_array_almost_equal(
+            refKvals/testKvals, 1., 5,
+            err_msg="kValues do not match reference valeus for Lanczos-7 interpolant.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 def test_conserve_flux():
     """Test that the conserve_flux option for Lanczos does so.
     Note: the idea of conserving flux is a bit of a misnomer.  No interpolant does so
@@ -811,4 +941,9 @@ if __name__ == "__main__":
     test_uncorr_padding()
     test_corr_padding()
     test_realspace_conv()
+    test_Cubic_ref()
+    test_Quintic_ref()
+    test_Lanczos5_ref()
+    test_Lanczos7_ref()
     test_conserve_flux()
+
