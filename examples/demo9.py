@@ -38,6 +38,7 @@ New features introduced in this demo:
 - g1,g2 = nfw.getShear(pos, z)
 - mag = nfw.getMagnification(pos, z)
 - pos = bounds.trueCenter()
+- obj.draw(..., offset)
 
 - Make multiple output files.
 - Place galaxies at random positions on a larger image.
@@ -198,9 +199,10 @@ def main(argv):
             ix_nominal = int(math.floor(x_nominal+0.5))
             iy_nominal = int(math.floor(y_nominal+0.5))
 
-            # The remainder will be accounted for in a shift
+            # The remainder will be accounted for in an offset when we draw.
             dx = x_nominal - ix_nominal
             dy = y_nominal - iy_nominal
+            offset = galsim.PositionD(dx,dy)
 
             # Make the pixel:
             pix = galsim.Pixel(pixel_scale)
@@ -245,11 +247,11 @@ def main(argv):
             # Build the final object
             final = galsim.Convolve([psf, pix, gal])
 
-            # Account for the non-integral portion of the position
-            final.applyShift(dx*pixel_scale,dy*pixel_scale)
-
             # Draw the stamp image
-            stamp = final.draw(dx=pixel_scale)
+            # To draw the image at a position other than the center of the image, you can
+            # use the offset parameter, which applies an offset _in pixels_ relative to the
+            # center of the image.
+            stamp = final.draw(dx=pixel_scale, offset=offset)
 
             # Recenter the stamp at the desired position:
             stamp.setCenter(ix_nominal,iy_nominal)
@@ -260,9 +262,8 @@ def main(argv):
 
             # Also draw the PSF
             psf_final = galsim.Convolve([psf, pix])
-            psf_final.applyShift(dx*pixel_scale, dy*pixel_scale)
             psf_stamp = galsim.ImageF(stamp.bounds) # Use same bounds as galaxy stamp
-            psf_final.draw(psf_stamp, dx=pixel_scale)
+            psf_final.draw(psf_stamp, dx=pixel_scale, offset=offset)
             psf_image[bounds] += psf_stamp[bounds]
 
 

@@ -220,11 +220,11 @@ def main(argv):
         y_nom = y+0.5
         ix_nom = int(math.floor(x_nom+0.5))
         iy_nom = int(math.floor(y_nom+0.5))
-        final.applyShift((x_nom-ix_nom)*pixel_scale,(y_nom-iy_nom)*pixel_scale)
+        offset = galsim.PositionD(x_nom-ix_nom, y_nom-iy_nom)
 
         # Draw it with our desired stamp size
         stamp = galsim.ImageF(stamp_size,stamp_size)
-        final.draw(image=stamp, dx=pixel_scale)
+        final.draw(image=stamp, dx=pixel_scale, offset=offset)
 
         # Rescale flux to get the S/N we want.  We have to do that before we add it to the big 
         # image, which might have another galaxy near that point (so our S/N calculation would 
