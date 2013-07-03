@@ -76,7 +76,7 @@ print absoutk
 np.savetxt(os.path.join(dir,'absfKQuintic_test.txt'), absoutk)
 
 # Then make a Lanczos5 interpolant
-interp = galsim.InterpolantXY(galsim.Lanczos(5, conserve_flux=True, tol=1.e-4))
+interp = galsim.InterpolantXY(galsim.Lanczos(5, conserve_flux=False, tol=1.e-4))
 testobj = galsim.SBInterpolatedImage(image.view(), interp, dx=dx)
 for i in xrange(len(kxvals)):
     posk = galsim.PositionD(kxvals[i], kyvals[i])
@@ -85,7 +85,7 @@ print absoutk
 np.savetxt(os.path.join(dir,'absfKLanczos5_test.txt'), absoutk)
 
 # Then make a Lanczos7 interpolant
-interp = galsim.InterpolantXY(galsim.Lanczos(7, conserve_flux=True, tol=1.e-4))
+interp = galsim.InterpolantXY(galsim.Lanczos(7, conserve_flux=False, tol=1.e-4))
 testobj = galsim.SBInterpolatedImage(image.view(), interp, dx=dx)
 for i in xrange(len(kxvals)):
     posk = galsim.PositionD(kxvals[i], kyvals[i])
