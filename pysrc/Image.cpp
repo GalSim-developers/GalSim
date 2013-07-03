@@ -74,7 +74,8 @@ struct PyImage {
     static bp::object GetArrayImpl(bp::object self, bool isConst) 
     {
         // --- Try to get cached array ---
-        if (PyObject_HasAttrString(self.ptr(), "_array")) return self.attr("_array");
+        if (PyObject_HasAttrString(self.ptr(), "_array") && self.attr("_array") != bp::object()) 
+            return self.attr("_array");
 
         const BaseImage<T>& image = bp::extract<const BaseImage<T>&>(self);
 
@@ -86,6 +87,17 @@ struct PyImage {
 
         self.attr("_array") = numpy_array;
         return numpy_array;
+    }
+
+    static void CallResize(bp::object self, const Bounds<int>& new_bounds)
+    {
+        // We need to make sure the _array attribute is deleted 
+        if (PyObject_HasAttrString(self.ptr(), "_array"))
+            self.attr("_array") = bp::object();
+
+        // Now call the regular resize method.
+        Image<T>& image = bp::extract<Image<T>&>(self);
+        image.resize(new_bounds);
     }
 
     static bp::object GetArray(bp::object image) { return GetArrayImpl(image, false); }
@@ -205,7 +217,7 @@ struct PyImage {
             .def("fill", &Image<T>::fill)
             .def("setZero", &Image<T>::setZero)
             .def("invertSelf", &Image<T>::invertSelf)
-            .def("resize", &Image<T>::resize)
+            .def("resize", &CallResize)
             .enable_pickling()
             ;
         wrapImageTemplates<float>(pyImage);
