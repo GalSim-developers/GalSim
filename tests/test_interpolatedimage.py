@@ -735,6 +735,71 @@ def test_realspace_conv():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_conserve_flux():
+    """Test that the conserve_flux option for Lanczos does so.
+    Note: the idea of conserving flux is a bit of a misnomer.  No interpolant does so
+    precisely in general.  What we are really testing is that a flat background input
+    image has a relatively flat output image.
+    """
+    import time
+    t1 = time.time()
+    import numpy
+
+    im1_size = 40
+    scale1 = 0.23
+    init_val = 1.
+
+    im2_size = 100
+    scale2 = 0.011  
+
+    im1 = galsim.ImageF(im1_size, im1_size, scale1, init_val)
+
+    # im2 has a much smaller scale, but the same size, so interpolating an "infinite" 
+    # constant field.
+    im2 = galsim.ImageF(im2_size, im2_size, scale2)
+
+    for interp in ['linear', 'cubic', 'quintic']:
+        print 'Testing interpolant ',interp
+        obj = galsim.InterpolatedImage(im1, x_interpolant=interp, normalization='sb')
+        obj.draw(im2, normalization='sb')
+        print 'The maximum error is ',numpy.max(abs(im2.array-init_val))
+        numpy.testing.assert_array_almost_equal(
+                im2.array,init_val,5,
+                '%s did not preserve a flat input flux using xvals.'%interp)
+
+        # Convolve with a delta function to force FFT drawing.
+        delta = galsim.Gaussian(sigma=1.e-8)
+        obj2 = galsim.Convolve([obj,delta])
+        obj2.draw(im2, normalization='sb')
+        print 'The maximum error is ',numpy.max(abs(im2.array-init_val))
+        numpy.testing.assert_array_almost_equal(
+                im2.array,init_val,5,
+                '%s did not preserve a flat input flux using uvals.'%interp)
+ 
+    for n in [3,5,7]:
+        print 'Testing Lanczos interpolant with n = ',n
+        lan = galsim.Lanczos(n, conserve_flux=True)
+        obj = galsim.InterpolatedImage(im1, x_interpolant=lan, normalization='sb')
+        obj.draw(im2, normalization='sb')
+        im2.write('junk.fits')
+        print 'The maximum error is ',numpy.max(abs(im2.array-init_val))
+        numpy.testing.assert_array_almost_equal(
+                im2.array,init_val,5,
+                'Lanczos %d did not preserve a flat input flux using xvals.'%n)
+    
+        # Convolve with a delta function to force FFT drawing.
+        delta = galsim.Gaussian(sigma=1.e-8)
+        obj2 = galsim.Convolve([obj,delta])
+        obj2.draw(im2, normalization='sb')
+        print 'The maximum error is ',numpy.max(abs(im2.array-init_val))
+        numpy.testing.assert_array_almost_equal(
+                im2.array,init_val,5,
+                'Lanczos %d did not preserve a flat input flux using uvals.'%n)
+ 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 if __name__ == "__main__":
     test_sbinterpolatedimage()
     test_pad_image()
@@ -746,3 +811,4 @@ if __name__ == "__main__":
     test_uncorr_padding()
     test_corr_padding()
     test_realspace_conv()
+    test_conserve_flux()
