@@ -43,6 +43,7 @@ New features introduced in this demo:
 - pos.x, pos.y
 - sub_image = image[bounds]
 - obj2 = obj.createSheared(e, beta)
+- obj2 = obj.createShifted(dx, dy)
 
 - Build a single large image, and access sub-images within it.
 - Set the galaxy size based on the PSF size and a resolution factor.
