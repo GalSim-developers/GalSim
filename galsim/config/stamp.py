@@ -493,16 +493,12 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level_pixel, final_shi
     else:
         wmult = 1.0
 
-    if final_shift:
-        #print 'final.shift = ',final_shift*pixel_scale
-        final.applyShift(final_shift*pixel_scale)
-
     if xsize:
         im = galsim.ImageF(xsize, ysize)
     else:
         im = None
 
-    im = final.draw(image=im, dx=pixel_scale, wmult=wmult)
+    im = final.draw(image=im, dx=pixel_scale, wmult=wmult, offset=final_shift)
     im.setOrigin(config['image_origin'])
 
     if 'gal' in config and 'signal_to_noise' in config['gal']:
@@ -711,10 +707,6 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, final_sh
     else:
         pixel_scale = 1.0
 
-    if final_shift:
-        #print 'final.shift = ',final_shift*pixel_scale
-        final.applyShift(final_shift*pixel_scale)
-
     if xsize:
         im = galsim.ImageF(xsize, ysize)
     else:
@@ -730,7 +722,8 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, final_sh
 
         n_photons = galsim.config.ParseValue(
             config['image'], 'n_photons', config, int)[0]
-        im = final.drawShoot(image=im, dx=pixel_scale, n_photons=n_photons, rng=rng)
+        im = final.drawShoot(image=im, dx=pixel_scale, n_photons=n_photons, rng=rng,
+                             offset=final_shift)
         im.setOrigin(config['image_origin'])
 
     else:
@@ -755,7 +748,8 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, final_sh
                 raise ValueError("noise_var calculated to be < 0.")
             max_extra_noise *= noise_var
 
-        im = final.drawShoot(image=im, dx=pixel_scale, max_extra_noise=max_extra_noise, rng=rng)
+        im = final.drawShoot(image=im, dx=pixel_scale, max_extra_noise=max_extra_noise, rng=rng,
+                             offset=final_shift)
         im.setOrigin(config['image_origin'])
 
     return im
@@ -935,13 +929,8 @@ def DrawPSFStamp(psf, pix, config, bounds, final_shift):
         #print 'psf shift (1): ',gal_shift.x,gal_shift.y
         final_psf.applyShift(gal_shift)
 
-    # Also apply any "final" shift to the psf.
-    if final_shift:
-        #print 'psf shift (2) = ',final_shift*pixel_scale
-        final_psf.applyShift(final_shift*pixel_scale)
-
     psf_im = galsim.ImageF(bounds, scale=pixel_scale)
-    final_psf.draw(psf_im, dx=pixel_scale)
+    final_psf.draw(psf_im, dx=pixel_scale, offset=final_shift)
 
     return psf_im
            
