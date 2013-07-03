@@ -30,7 +30,7 @@ import os
 # 8a9b04085b873f63be4fb56ae4fa5a0ca78a0387
 #
 # To re-run this script:
-# - First type `git checkout c601a85034f89bba5d608ab6b2944f4f5f168491`
+# - First type `git checkout 5d749338c6092f2f54d5f604eef977fba13c997c`
 # - Type `scons install` in the main GalSim directory.
 # - Then type `python make_interpolant_comparison_files.py` in this directory.
 
