@@ -92,7 +92,7 @@ class OpticalPSF(GSObject):
                            which interpolant should be used.  Options are 'nearest', 'sinc', 
                            'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the 
                            integer order to use. [default `interpolant = galsim.Quintic()`]
-    @param oversampling    Optional oversampling factor for the SBInterpolatedImage table 
+    @param oversampling    Optional oversampling factor for the InterpolatedImage table 
                            [default `oversampling = 1.5`], setting oversampling < 1 will produce 
                            aliasing in the PSF (not good).
     @param pad_factor      Additional multiple by which to zero-pad the PSF image to avoid folding
@@ -177,23 +177,15 @@ class OpticalPSF(GSObject):
             trefoil2=trefoil2, spher=spher, circular_pupil=circular_pupil, obscuration=obscuration,
             flux=flux, nstruts=nstruts, strut_thick=strut_thick, strut_angle=strut_angle)
         
-        # If interpolant not specified on input, use a Quintic interpolant
-        if interpolant is None:
-            quintic = galsim.Quintic(tol=1e-4)
-            self.interpolant = galsim.InterpolantXY(quintic)
-        else:
-            self.interpolant = galsim.utilities.convert_interpolant_to_2d(interpolant)
-
         # Initialize the SBProfile
         GSObject.__init__(
-            self, galsim.SBInterpolatedImage(optimage, xInterp=self.interpolant, dx=dx_lookup,
-                                             gsparams=gsparams))
-
+            self, galsim.InterpolatedImage(optimage, x_interpolant=interpolant, dx=dx_lookup,
+                                           calculate_stepk=True, calculate_maxk=True,
+                                           use_true_center=False, normalization='sb',
+                                           gsparams=gsparams))
         # The above procedure ends up with a larger image than we really need, which
         # means that the default stepK value will be smaller than we need.  
-        # Thus, we call the function calculateStepK() to refine the value.
-        self.SBProfile.calculateStepK()
-        self.SBProfile.calculateMaxK()
+        # Hence calculate_stepk=True and calculate_maxk=True above.
 
 
 def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_diam=2., circular_pupil=True,
