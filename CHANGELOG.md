@@ -4,6 +4,9 @@ Changes from v0.4 to current version:
 * Added document describing the operations being carried out by the lensing engine when it draws
   shears according to a user-specified power spectrum. (Issue #248)
 
+* Added a simple prescription for adding diffraction spikes, due to secondary mirror / instrument
+  support struts obscuring the pupil, to the OpticalPSF. (Issue #302)
+
 * Added the ability to draw lensing shears and convergences self-consistently
   from the same input shear power spectrum. (Issue #304)
 
@@ -85,7 +88,8 @@ Changes from v0.4 to current version:
 
 * Added ability to truncate Sersic profiles with optional trunc parameter. (Issue #388)
 
-* Added ability to specify Sersic profiles by the scale radius. (Issue #420)
+* Fixed some bugs in the InterpolatedImage class, one related to padding of images with noise 
+  fields and one related to real-space convolution.  (Issues #389, #432)
 
 * Added trefoil to optical aberration. (Issue #390)
 
@@ -103,12 +107,9 @@ Changes from v0.4 to current version:
 * Fixed some issues with image arithmetic (failure to check/respect shape and scale), added the
   ability to raise all elements in an image to a float/int power. (Issue #419)
 
-* Added a simple prescription for adding diffraction spikes, due to secondary mirror / instrument
-  support struts obscuring the pupil, to the OpticalPSF. (Issue #302)
+* Added ability to specify Sersic profiles by the scale radius. (Issue #420)
 
 * Fixed some bugs in the Sersic class that were leading to low level ringing features in the
   images when drawn with FFTs.  In addition, now Sersic with n=0.5 or 1 agree with Gaussian and
   Exponential at the expected accuracy tolerance. (Issue #426)
 
-* Fixed some bugs in the InterpolatedImage class, one related to padding of images with noise fields
-  and one related to real-space convolution.  (Issues #389, #432)
