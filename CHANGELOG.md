@@ -112,3 +112,11 @@ Changes from v0.4 to current version:
 
 * Fixed some bugs in the InterpolatedImage class, one related to padding of images with noise fields
   and one related to real-space convolution.  (Issues #389, #432)
+
+* Fixed a bug in the rendering of shifted images.  (Issue #424)
+
+* Added the offset parameter to the draw and drawShoot commands, and also to the constructor 
+  of InterpolatedImage.  (Issue #439)
+
+* Added scale as a constructor parameter for Images.  (Issue #439)
+
