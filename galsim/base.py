@@ -650,7 +650,7 @@ class GSObject(object):
             # For even-sized images, the SBProfile draw function centers the result in the 
             # pixel just up and right of the real center.  So shift it back to make sure it really
             # draws in the center.
-            # Also, remeber that numpy's shape is ordered as [y,x]
+            # Also, remember that numpy's shape is ordered as [y,x]
             if shape[1] % 2 == 0: dx -= 0.5
             if shape[0] % 2 == 0: dy -= 0.5
 
