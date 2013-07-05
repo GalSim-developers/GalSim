@@ -35,7 +35,7 @@ except ImportError:
 # for flux normalization tests
 test_flux = 0.7
 # for dx tests - avoid 1.0 because factors of dx^2 won't show up!
-test_dx = 2.0
+test_scale = 2.0
 
 def test_sbinterpolatedimage():
     """Test that we can make SBInterpolatedImages from Images of various types, and convert back.
@@ -62,8 +62,7 @@ def test_sbinterpolatedimage():
                         array_type)
         sbinterp = galsim.SBInterpolatedImage(image_in, lan3_2d, dx=1.0)
         test_array = np.zeros(ref_array.shape, dtype=array_type)
-        image_out = galsim.ImageView[array_type](test_array)
-        image_out.setScale(1.0)
+        image_out = galsim.ImageView[array_type](test_array, scale=1.0)
         sbinterp.draw(image_out.view())
         np.testing.assert_array_equal(
                 ref_array.astype(array_type),image_out.array,
@@ -111,10 +110,9 @@ def test_roundtrip():
                 ref_array.astype(array_type),image_in.array,
                 err_msg="Array from input Image differs from reference array for type %s"%
                         array_type)
-        interp = galsim.InterpolatedImage(image_in, dx=test_dx)
+        interp = galsim.InterpolatedImage(image_in, dx=test_scale)
         test_array = np.zeros(ref_array.shape, dtype=array_type)
-        image_out = galsim.ImageView[array_type](test_array)
-        image_out.setScale(test_dx)
+        image_out = galsim.ImageView[array_type](test_array, scale=test_scale)
         interp.draw(image_out)
         np.testing.assert_array_equal(
                 ref_array.astype(array_type),image_out.array,
@@ -127,7 +125,7 @@ def test_roundtrip():
         # the 10^-5 level.
         # Anyway, Quintic seems to be accurate enough.
         quint = galsim.Quintic(1.e-4)
-        interp = galsim.InterpolatedImage(image_in, x_interpolant=quint, dx=test_dx, flux=1.)
+        interp = galsim.InterpolatedImage(image_in, x_interpolant=quint, dx=test_scale, flux=1.)
         do_shoot(interp,image_out,"InterpolatedImage")
 
     t2 = time.time()
@@ -148,9 +146,7 @@ def test_fluxnorm():
     im_scale = 1.3
 
     # First, make some Image with some total flux value (sum of pixel values) and scale
-    im = galsim.ImageF(im_lin_scale, im_lin_scale)
-    im.fill(im_fill_value)
-    im.setScale(im_scale)
+    im = galsim.ImageF(im_lin_scale, im_lin_scale, scale=im_scale, init_value=im_fill_value)
     total_flux = im_fill_value*(im_lin_scale**2)
     np.testing.assert_equal(total_flux, im.array.sum(),
                             err_msg='Created array with wrong total flux')
@@ -204,11 +200,10 @@ def test_exceptions():
         np.testing.assert_raises(ValueError, galsim.InterpolatedImage, im)
         # Image must have bounds defined
         im = galsim.ImageF()
-        im.setScale(1.)
+        im.scale = 1.
         np.testing.assert_raises(ValueError, galsim.InterpolatedImage, im)
         # Weird flux normalization
-        im = galsim.ImageF(5, 5)
-        im.setScale(1.)
+        im = galsim.ImageF(5, 5, scale=1.)
         np.testing.assert_raises(ValueError, galsim.InterpolatedImage, im, normalization = 'foo')
         # Weird interpolant - give it something random like a GSObject
         np.testing.assert_raises(Exception, galsim.InterpolatedImage, im, x_interpolant = g)
@@ -400,7 +395,7 @@ def test_operations():
     mu = 0.92
     new_int_im = int_im.createMagnified(mu)
     test_im = galsim.ImageF(im.bounds)
-    new_int_im.draw(image = test_im, dx = im.getScale())
+    new_int_im.draw(image = test_im, dx = im.scale)
     new_mom = test_im.FindAdaptiveMom()
     np.testing.assert_almost_equal(new_mom.moments_sigma/np.sqrt(mu),
         orig_mom.moments_sigma, test_decimal,
@@ -417,7 +412,7 @@ def test_operations():
     y_shift = -0.16
     new_int_im = int_im.createShifted(x_shift, y_shift)
     test_im = galsim.ImageF(im.bounds)
-    new_int_im.draw(image = test_im, dx = im.getScale())
+    new_int_im.draw(image = test_im, dx = im.scale)
     new_mom = test_im.FindAdaptiveMom()
     np.testing.assert_almost_equal(new_mom.moments_sigma, orig_mom.moments_sigma,
         test_decimal,
@@ -454,8 +449,7 @@ def test_uncorr_padding():
     orig_seed = 151241
 
     # first, make a noise image
-    orig_img = galsim.ImageF(orig_nx, orig_ny)
-    orig_img.setScale(1.)
+    orig_img = galsim.ImageF(orig_nx, orig_ny, scale=1.)
     gd = galsim.GaussianDeviate(orig_seed, mean=0., sigma=np.sqrt(noise_var))
     orig_img.addNoise(galsim.DeviateNoise(gd))
 
@@ -522,8 +516,7 @@ def test_pad_image():
     # make the original image 
     orig_nx = 64
     orig_ny = 64
-    orig_img = galsim.ImageF(orig_nx, orig_ny)
-    orig_img.setScale(1.)
+    orig_img = galsim.ImageF(orig_nx, orig_ny, scale=1.)
     galsim.Exponential(scale_radius=1.7,flux=1000).draw(orig_img)
     orig_img.addNoise(noise)
     orig_img.setCenter(0,0)
@@ -532,8 +525,7 @@ def test_pad_image():
     pad_factor = 4
     big_nx = pad_factor*orig_nx
     big_ny = pad_factor*orig_ny
-    big_img = galsim.ImageF(big_nx, big_ny)
-    big_img.setScale(1.)
+    big_img = galsim.ImageF(big_nx, big_ny, scale=1.)
     big_img.setCenter(0,0)
 
     # Use a few different kinds of shapes for that padding. 
@@ -543,8 +535,7 @@ def test_pad_image():
         print pad_nx, pad_ny
 
         # make the pad_image 
-        pad_img = galsim.ImageF(pad_nx, pad_ny)
-        pad_img.setScale(1.)
+        pad_img = galsim.ImageF(pad_nx, pad_ny, scale=1.)
         pad_img.addNoise(noise)
         pad_img.setCenter(0,0)
 
@@ -606,8 +597,7 @@ def test_corr_padding():
     cn = galsim.CorrelatedNoise(galsim.BaseDeviate(orig_seed), im)
 
     # first, make a noise image
-    orig_img = galsim.ImageF(orig_nx, orig_ny)
-    orig_img.setScale(1.)
+    orig_img = galsim.ImageF(orig_nx, orig_ny, scale=1.)
     orig_img.addNoise(cn)
 
     # make it into an InterpolatedImage with some zero-padding

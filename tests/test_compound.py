@@ -73,8 +73,7 @@ def test_convolve():
     myConv = galsim.SBConvolve([mySBP,mySBP2])
     # Using an exact Maple calculation for the comparison.  Only accurate to 4 decimal places.
     savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_pixel.fits"))
-    myImg = galsim.ImageF(savedImg.bounds)
-    myImg.setScale(0.2)
+    myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
     myConv.draw(myImg.view())
     printval(myImg, savedImg)
  
@@ -205,8 +204,7 @@ def test_shearconvolve():
     mySBP2 = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
     myConv = galsim.SBConvolve([mySBP,mySBP2])
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear_convolve_box.fits"))
-    myImg = galsim.ImageF(savedImg.bounds)
-    myImg.setScale(0.2)
+    myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
     myConv.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
@@ -278,8 +276,7 @@ def test_realspace_convolve():
     conv = galsim.SBConvolve([psf,pixel],real_space=True)
     # Note: Using an image created from Maple "exact" calculations.
     saved_img = galsim.fits.read(os.path.join(imgdir, "moffat_pixel.fits"))
-    img = galsim.ImageF(saved_img.bounds)
-    img.setScale(0.2)
+    img = galsim.ImageF(saved_img.bounds, scale=0.2)
     conv.draw(img.view())
     printval(img, saved_img)
     arg = abs(saved_img.array-img.array).argmax()
@@ -358,8 +355,7 @@ def test_realspace_distorted_convolve():
 
     # Note: Using an image created from Maple "exact" calculations.
     saved_img = galsim.fits.read(os.path.join(imgdir, "moffat_pixel_distorted.fits"))
-    img = galsim.ImageF(saved_img.bounds)
-    img.setScale(0.2)
+    img = galsim.ImageF(saved_img.bounds, scale=0.2)
     conv.draw(img.view())
     printval(img, saved_img)
     np.testing.assert_array_almost_equal(
@@ -430,8 +426,7 @@ def test_realspace_shearconvolve():
     pix = galsim.SBBox(xw=0.2, yw=0.2, flux=1.)
     conv = galsim.SBConvolve([psf,pix],real_space=True)
     saved_img = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear_convolve_box.fits"))
-    img = galsim.ImageF(saved_img.bounds)
-    img.setScale(0.2)
+    img = galsim.ImageF(saved_img.bounds, scale=0.2)
     conv.draw(img.view())
     printval(img, saved_img)
     np.testing.assert_array_almost_equal(
@@ -490,8 +485,7 @@ def test_add():
     mySBP2 = galsim.SBGaussian(flux=0.25, sigma=3)
     myAdd = galsim.SBAdd([mySBP, mySBP2])
     savedImg = galsim.fits.read(os.path.join(imgdir, "double_gaussian.fits"))
-    myImg = galsim.ImageF(savedImg.bounds)
-    myImg.setScale(0.2)
+    myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
     myAdd.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
@@ -634,12 +628,10 @@ def test_autoconvolve():
 
     mySBP = galsim.SBMoffat(beta=3.8, fwhm=1.3, flux=5)
     myConv = galsim.SBConvolve([mySBP,mySBP])
-    myImg1 = galsim.ImageF(80,80)
-    myImg1.setScale(0.4)
+    myImg1 = galsim.ImageF(80,80, scale=0.4)
     myConv.draw(myImg1.view())
     myAutoConv = galsim.SBAutoConvolve(mySBP)
-    myImg2 = galsim.ImageF(80,80)
-    myImg2.setScale(0.4)
+    myImg2 = galsim.ImageF(80,80, scale=0.4)
     myAutoConv.draw(myImg2.view())
     printval(myImg1, myImg2)
     np.testing.assert_array_almost_equal(
@@ -730,12 +722,10 @@ def test_autocorrelate():
     # Here we rotate by 180 degrees to create mirror image
     mySBP2.applyRotation(180. * galsim.degrees)
     myConv = galsim.SBConvolve([mySBP1, mySBP2])
-    myImg1 = galsim.ImageF(80,80)
-    myImg1.setScale(0.7)
+    myImg1 = galsim.ImageF(80,80, scale=0.7)
     myConv.draw(myImg1.view())
     myAutoCorr = galsim.SBAutoCorrelate(mySBP1)
-    myImg2 = galsim.ImageF(80,80)
-    myImg2.setScale(0.7)
+    myImg2 = galsim.ImageF(80,80, scale=0.7)
     myAutoCorr.draw(myImg2.view())
     printval(myImg1, myImg2)
     np.testing.assert_array_almost_equal(

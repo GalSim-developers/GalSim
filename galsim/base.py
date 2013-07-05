@@ -67,8 +67,7 @@ class GSObject(object):
         >>> psf = galsim.Moffat(beta=3, fwhm=2.85)
         >>> pix = galsim.Pixel(0.05)                       # Note the very small pixel scale!
         >>> conv = galsim.Convolve([gal,psf,pix])
-        >>> im = galsim.ImageD(1000,1000)
-        >>> im.scale = 0.05                                # Use the same pixel scale on the image.
+        >>> im = galsim.ImageD(1000,1000, scale=0.05)      # Use the same pixel scale on the image.
         >>> conv.draw(im,normalization='sb')               # This uses the default GSParams.
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
@@ -393,7 +392,7 @@ class GSObject(object):
         self.SBProfile.applyRotation(theta)
         self.__class__ = GSObject
 
-    def applyShift(self, dx, dy):
+    def applyShift(self, *args, **kwargs):
         """Apply a (dx, dy) shift to this object.
            
         After this call, the caller's type will be a GSObject.
@@ -403,7 +402,31 @@ class GSObject(object):
 
         @param dx Horizontal shift to apply (float).
         @param dy Vertical shift to apply (float).
+
+        Note: you may supply dx,dy as either two arguments, as a tuple, or as a 
+        galsim.PositionD or galsim.PositionF object.
         """
+        if len(args) == 0:
+            # Then dx,dy need to be kwargs
+            # If not, then python will raise an appropriate error.
+            dx = kwargs.pop('dx')
+            dy = kwargs.pop('dy')
+        elif len(args) == 1:
+            if isinstance(args[0], galsim.PositionD) or isinstance(args[0], galsim.PositionF):
+                dx = args[0].x
+                dy = args[0].y
+            else:
+                # Let python raise the appropriate exception if this isn't valid.
+                dx = args[0][0]
+                dy = args[0][1]
+        elif len(args) == 2:
+            dx = args[0]
+            dy = args[1]
+        else:
+            raise TypeError("Too many arguments supplied to applyShift ")
+        if kwargs:
+            raise TypeError("applyShift() got unexpected keyword arguments: %s",kwargs.keys())
+                
         self.SBProfile.applyShift(dx,dy)
         self.__class__ = GSObject
 
@@ -495,15 +518,19 @@ class GSObject(object):
         ret.applyRotation(theta)
         return ret
         
-    def createShifted(self, dx, dy):
+    def createShifted(self, *args, **kwargs):
         """Returns a new GSObject by applying a shift.
 
         @param dx Horizontal shift to apply (float).
         @param dy Vertical shift to apply (float).
+
+        Note: you may supply dx,dy as either two arguments, as a tuple, or as a 
+        galsim.PositionD or galsim.PositionF object.
+
         @returns The shifted GSObject.
         """
         ret = self.copy()
-        ret.applyShift(dx, dy)
+        ret.applyShift(*args, **kwargs)
         return ret
 
     # Make sure the image is defined with the right size and scale for the draw and
@@ -558,7 +585,7 @@ class GSObject(object):
             image = galsim.ImageF(N,N)
 
         # Resize the given image if necessary
-        elif not image.getBounds().isDefined():
+        elif not image.bounds.isDefined():
             # Can't add to image if need to resize
             if add_to_image:
                 raise ValueError("Cannot add_to_image if image bounds are not defined")
@@ -575,29 +602,66 @@ class GSObject(object):
 
         # Set the image scale
         if dx_is_dk:
-            image.setScale(dk)
+            image.scale = dk
         else:
-            image.setScale(dx)
+            image.scale = dx
 
         return image
 
-    def _fix_center(self, image, scale):
-        # For even-sized images, the SBProfile draw function centers the result in the 
-        # pixel just up and right of the real center.  So shift it back to make sure it really
-        # draws in the center.
-        even_x = (image.xmax-image.xmin+1) % 2 == 0
-        even_y = (image.ymax-image.ymin+1) % 2 == 0
-        if even_x:
-            if even_y: prof = self.createShifted(-0.5*scale,-0.5*scale)
-            else: prof = self.createShifted(-0.5*scale,0.)
+    def _fix_center(self, image, scale, offset, use_true_center, reverse):
+        # This is a touch circular since we may not know the image shape or scale yet. 
+        # So we need to repeat a little bit of what will be done again in _draw_setup_image
+        #
+        # - If the image is None, then it will be built with even sizes, and all fix_center
+        #   cares about is the odd/even-ness of the shape, so juse use (0,0).
+        # - If scale is None, first try to get it from the image if given.
+        # - If scale is None, and image is None (or im.scale <= 0), then use the nyquist scale.
+        #   Here is the really circular one, since the nyquist scale depends on stepK, which
+        #   changes when we offset, but we need scale to know how much to offset.  So just 
+        #   use the current nyquist scale and hope the offset isn't too large, so it won't
+        #   make that large a difference.
+
+        if image is None or not image.bounds.isDefined():
+            shape = (0,0)
         else:
-            if even_y: prof = self.createShifted(0.,-0.5*scale)
-            else: prof = self
-        return prof
+            shape = image.array.shape
+
+        if scale is None:
+            if image is not None and image.scale > 0.:
+                scale = image.scale
+            else:
+                scale = self.SBProfile.nyquistDx()
+        elif scale <= 0:
+            scale = self.SBProfile.nyquistDx()
+        elif type(scale) != float:
+            scale = float(scale)
+
+        # For InterpolatedImage offsets, we apply the offset in the opposite direction.
+        if reverse: scale = -scale
+
+        if offset is None:
+            dx = 0.
+            dy = 0.
+        else:
+            dx = offset.x
+            dy = offset.y
+
+        if use_true_center:
+            # For even-sized images, the SBProfile draw function centers the result in the 
+            # pixel just up and right of the real center.  So shift it back to make sure it really
+            # draws in the center.
+            # Also, remember that numpy's shape is ordered as [y,x]
+            if shape[1] % 2 == 0: dx -= 0.5
+            if shape[0] % 2 == 0: dy -= 0.5
+
+        if dx == 0. and dy == 0.:
+            return self
+        else:
+            return self.createShifted(dx*scale, dy*scale)
 
 
     def draw(self, image=None, dx=None, gain=1., wmult=1., normalization="flux",
-             add_to_image=False, use_true_center=True):
+             add_to_image=False, use_true_center=True, offset=None):
         """Draws an Image of the object, with bounds optionally set by an input Image.
 
         The draw method is used to draw an Image of the GSObject, typically using Fourier space
@@ -648,7 +712,7 @@ class GSObject(object):
                       If `image = None`, then an automatically-sized image will be created.
                       If `image != None`, but its bounds are undefined (e.g. if it was 
                         constructed with `image = galsim.ImageF()`), then it will be resized
-                        appropriately based on the profile's size (default `image = None`).
+                        appropriately based on the profile's size (Default `image = None`).
 
         @param dx     If provided, use this as the pixel scale for the image.
                       If `dx` is `None` and `image != None`, then take the provided image's pixel 
@@ -688,13 +752,17 @@ class GSObject(object):
         @param add_to_image  Whether to add flux to the existing image rather than clear out
                              anything in the image before drawing.
                              Note: This requires that image be provided (i.e. `image` is not `None`)
-                             and that it have defined bounds (default `add_to_image = False`).
+                             and that it have defined bounds (Default `add_to_image = False`).
 
         @param use_true_center  Normally, the profile is drawn to be centered at the true center
                                 of the image (using the function `image.bounds.trueCenter()`).
                                 If you would rather use the integer center (given by
                                 `image.bounds.center()`), set this to `False`.  
-                                (default `use_true_center = True`)
+                                (Default `use_true_center = True`)
+
+        @param offset The location at which to center the profile being drawn relative to the
+                      center of the image (either the true center if use_true_center=True, 
+                      or the nominal center if use_true_center=False). (Default `offset = None`)
 
         @returns      The drawn image.
         """
@@ -709,14 +777,13 @@ class GSObject(object):
         if gain <= 0.:
             raise ValueError("Invalid gain <= 0. in draw command")
 
-        # Make sure image is setup correctly
-        image = self._draw_setup_image(image,dx,wmult,add_to_image)
+        # Apply the offset, and possibly fix the centering for even-sized images
+        # Note: We need to do this before we call _draw_setup_image, since the shift
+        # affects stepK (especially if the offset is rather large).
+        prof = self._fix_center(image, dx, offset, use_true_center, reverse=False)
 
-        # Fix the centering for even-sized images
-        if use_true_center:
-            prof = self._fix_center(image, image.scale)
-        else:
-            prof = self
+        # Make sure image is setup correctly
+        image = prof._draw_setup_image(image,dx,wmult,add_to_image)
 
         # SBProfile draw command uses surface brightness normalization.  So if we
         # want flux normalization, we need to scale the flux by dx^2
@@ -731,7 +798,7 @@ class GSObject(object):
         return image
 
     def drawShoot(self, image=None, dx=None, gain=1., wmult=1., normalization="flux",
-                  add_to_image=False, use_true_center=True,
+                  add_to_image=False, use_true_center=True, offset=None,
                   n_photons=0., rng=None, max_extra_noise=0., poisson_flux=None):
         """Draw an image of the object by shooting individual photons drawn from the surface 
         brightness profile of the object.
@@ -801,13 +868,17 @@ class GSObject(object):
         @param add_to_image     Whether to add flux to the existing image rather than clear out
                                 anything in the image before drawing.
                                 Note: This requires that image be provided (i.e. `image != None`)
-                                and that it have defined bounds (default `add_to_image = False`).
+                                and that it have defined bounds (Default `add_to_image = False`).
                               
         @param use_true_center  Normally, the profile is drawn to be centered at the true center
                                 of the image (using the function `image.bounds.trueCenter()`).
                                 If you would rather use the integer center (given by
                                 `image.bounds.center()`), set this to `False`.  
-                                (default `use_true_center = True`)
+                                (Default `use_true_center = True`)
+
+        @param offset The location at which to center the profile being drawn relative to the
+                      center of the image (either the true center if user_true_center=True, 
+                      or the nominal center if use_true_center=False). (Default `offset = None`)
 
         @param n_photons        If provided, the number of photons to use.
                                 If not provided (i.e. `n_photons = 0`), use as many photons as
@@ -843,7 +914,7 @@ class GSObject(object):
                                 (Default `max_extra_noise = 0.`)
 
         @param poisson_flux     Whether to allow total object flux scaling to vary according to 
-                                Poisson statistics for `n_photons` samples (default 
+                                Poisson statistics for `n_photons` samples (Default 
                                 `poisson_flux = True` unless n_photons is given, in which case
                                 the default is `poisson_flux = False`).
 
@@ -890,14 +961,11 @@ class GSObject(object):
             msg += "This will only shoot a single photon (since flux = 1)."
             warnings.warn(msg)
 
-        # Make sure image is setup correctly
-        image = self._draw_setup_image(image,dx,wmult,add_to_image)
+        # Apply the offset, and possibly fix the centering for even-sized images
+        prof = self._fix_center(image, dx, offset, use_true_center, reverse=False)
 
-        # Fix the centering for even-sized images
-        if use_true_center:
-            prof = self._fix_center(image, image.scale)
-        else:
-            prof = self
+        # Make sure image is setup correctly
+        image = prof._draw_setup_image(image,dx,wmult,add_to_image)
 
         # SBProfile drawShoot command uses surface brightness normalization.  So if we
         # want flux normalization, we need to scale the flux by dx^2
@@ -936,14 +1004,14 @@ class GSObject(object):
                       If `re = None`, then an automatically-sized image will be created.
                       If `re != None`, but its bounds are undefined (e.g. if it was 
                         constructed with `re = galsim.ImageF()`), then it will be resized
-                        appropriately based on the profile's size (default `re = None`).
+                        appropriately based on the profile's size (Default `re = None`).
 
         @param im     If provided, this will be the imaginary part of the k-space image.
                       A provided im must match the size and scale of re.
                       If `im = None`, then an automatically-sized image will be created.
                       If `im != None`, but its bounds are undefined (e.g. if it was 
                         constructed with `im = galsim.ImageF()`), then it will be resized
-                        appropriately based on the profile's size (default `im = None`).
+                        appropriately based on the profile's size (Default `im = None`).
 
         @param dk     If provided, use this as the pixel scale for the images.
                       If `dk` is `None` and `re, im != None`, then take the provided images' pixel 
@@ -959,7 +1027,7 @@ class GSObject(object):
         @param add_to_image  Whether to add to the existing images rather than clear out
                              anything in the image before drawing.
                              Note: This requires that images be provided (i.e. `re`, `im` are
-                             not `None`) and that they have defined bounds (default 
+                             not `None`) and that they have defined bounds (Default 
                              `add_to_image = False`).
 
         @returns      (re, im)  (created if necessary)
@@ -978,8 +1046,8 @@ class GSObject(object):
             if dk is None:
                 if re.scale != im.scale:
                     raise ValueError("re and im do not have the same input scale")
-            if re.getBounds().isDefined() or im.getBounds().isDefined():
-                if re.getBounds() != im.getBounds():
+            if re.bounds.isDefined() or im.bounds.isDefined():
+                if re.bounds != im.bounds:
                     raise ValueError("re and im do not have the same defined bounds")
 
         # Make sure images are setup correctly
@@ -1257,7 +1325,7 @@ class Kolmogorov(GSObject):
     @param half_light_radius  Half-light radius of the Kolmogorov PSF.
                               One of `lam_over_r0`, `fwhm` and `half_light_radius` (and only one) 
                               must be specified.
-    @param flux               Optional flux value [default `flux = 1.`].
+    @param flux               Optional flux value [Default `flux = 1.`].
     @param gsparams           You may also specify a gsparams argument.  See the docstring for
                               galsim.GSParams using help(galsim.GSParams) for more information about
                               this option.

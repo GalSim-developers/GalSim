@@ -195,7 +195,11 @@ class InterpolatedImage(GSObject):
                            sets whether to use the true center of the provided image as the 
                            center of the profile (if `use_true_center=True`) or the nominal
                            center returned by `image.bounds.center()` (if `use_true_center=False`)
-                           [default `use_true_center = True`]
+                           [Default `use_true_center = True`]
+    @param offset          The location in the image at which to take the center the profile to be
+                           relative to the center of the image (either the true center if 
+                           use_true_center=True, or the nominal center if use_true_center=False).  
+                           [Default `offset = None`]
     @param gsparams        You may also specify a gsparams argument.  See the docstring for
                            galsim.GSParams using help(galsim.GSParams) for more information about
                            this option.
@@ -229,7 +233,7 @@ class InterpolatedImage(GSObject):
     def __init__(self, image, x_interpolant = None, k_interpolant = None, normalization = 'flux',
                  dx = None, flux = None, pad_factor = 0., noise_pad = 0., rng = None,
                  pad_image = None, calculate_stepk=True, calculate_maxk=True,
-                 use_cache=True, use_true_center=True, gsparams=None):
+                 use_cache=True, use_true_center=True, offset=None, gsparams=None):
 
         # first try to read the image as a file.  If it's not either a string or a valid
         # pyfits hdu or hdulist, then an exception will be raised, which we ignore and move on.
@@ -243,7 +247,7 @@ class InterpolatedImage(GSObject):
             raise ValueError("Supplied image is not an image of floats or doubles!")
 
         # it must have well-defined bounds, otherwise seg fault in SBInterpolatedImage constructor
-        if not image.getBounds().isDefined():
+        if not image.bounds.isDefined():
             raise ValueError("Supplied image does not have bounds defined!")
 
         # check what normalization was specified for the image: is it an image of surface
@@ -279,7 +283,7 @@ class InterpolatedImage(GSObject):
                 raise ValueError("dx may not be <= 0.0")
             # Don't change the original image.  Make a new view if we need to set the scale.
             image = image.view()
-            image.setScale(dx)
+            image.scale = dx
 
         # Set up the GaussianDeviate if not provided one, or check that the user-provided one is
         # of a valid type.
@@ -336,16 +340,10 @@ class InterpolatedImage(GSObject):
             # Just make sure pad_image is the right type
             if ( isinstance(image, galsim.BaseImageF) and 
                  not isinstance(pad_image, galsim.BaseImageF) ):
-                # TODO: We should add the ability within galsim to make an ImageF from an ImageD
-                #       directly, rather than have to do workaround.
-                new_pad_image = galsim.ImageF(pad_image.bounds)
-                new_pad_image.array = pad_image.array
-                pad_image = new_pad_image
+                pad_image = galsim.ImageF(pad_image)
             elif ( isinstance(image, galsim.BaseImageD) and 
                    not isinstance(pad_image, galsim.BaseImageD) ):
-                new_pad_image = galsim.ImageD(pad_image.bounds)
-                new_pad_image.array[:,:] = pad_image.array
-                pad_image = new_pad_image
+                pad_image = galsim.ImageD(pad_image)
 
         # Make the SBInterpolatedImage out of the image.
         sbinterpolatedimage = galsim.SBInterpolatedImage(
@@ -375,13 +373,12 @@ class InterpolatedImage(GSObject):
         # Initialize the SBProfile
         GSObject.__init__(self, sbinterpolatedimage)
 
-        # Fix the center to be in the right place.
-        # Note the minus sign in front of image.scale, since we want to fix the center in the 
-        # opposite sense of what the draw function does.
-        if use_true_center:
-            prof = self._fix_center(image, -image.scale)
-            GSObject.__init__(self, prof.SBProfile)
-            
+        # Apply the offset, and possibly fix the centering for even-sized images
+        # Note reverse=True, since we want to fix the center in the opposite sense of what the 
+        # draw function does.
+        prof = self._fix_center(image, dx, offset, use_true_center, reverse=True)
+        GSObject.__init__(self, prof.SBProfile)
+
 
     def buildNoisePadImage(self, pad_factor, noise_pad, rng):
         """A helper function that builds the pad_image from the given noise_pad specification.

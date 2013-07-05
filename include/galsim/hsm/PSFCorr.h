@@ -185,8 +185,7 @@ namespace hsm {
      */
     class HSMError : public std::runtime_error {
     public:
-        HSMError(const std::string& m="") :
-            std::runtime_error("HSM Error: " + m) {}
+        HSMError(const std::string& m) : std::runtime_error("HSM Error: " + m) {}
     };
 
     //! @endcond

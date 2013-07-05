@@ -18,6 +18,12 @@
  * You should have received a copy of the GNU General Public License
  * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
  */
+#ifndef __INTEL_COMPILER
+#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+#endif
+#endif
+
 #include "boost/python.hpp"
 #include "integ/Int.h"
 
