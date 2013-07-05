@@ -161,7 +161,8 @@ def plot_interpolants(plotfile, filenamebase):
                 plt.ylabel('m')
                 plt.title(subinterp_title+', '+ptitle+', '+ctitle)
                 plt.xlim([1.5,9]) # so the legend doesn't overlap
-                plt.ylim([-0.005,+0.005])
+                if numpy.any(x!=expected_size):
+                    plt.ylim([-0.0005,+0.0005])
                 plt.legend()
                 plt.savefig(filenamebase+subinterp_title[0]+'_'+optitle+'_'+octitle+'.png')
                 plt.clf()
@@ -201,7 +202,8 @@ def plot_interpolants(plotfile, filenamebase):
             plt.xlabel('pad_factor')
             plt.ylabel('m')
             plt.xlim([1.5,9])
-            plt.ylim([-0.005,+0.005])
+            if numpy.any(x!=expected_size):
+                plt.ylim([-0.0005,+0.0005])
             plt.title(subinterp_title+', '+ptitle+', '+ctitle)
             plt.legend()
             plt.savefig(filenamebase+subinterp_title[0]+'_'+optitle+'_'+octitle+'.png')
@@ -245,7 +247,7 @@ def plot_interpolants(plotfile, filenamebase):
                 plt.xlabel('pad_factor')
                 plt.ylabel('m')
                 plt.xlim([1.5,9])
-                plt.ylim([-0.005,+0.005])
+                plt.ylim([-0.0005,+0.0005])
                 plt.title(subinterp_title+', '+ptitle+', '+ctitle)
                 plt.legend()
                 plt.savefig(filenamebase+subinterp_title[0]+'_'+optitle+'_'+octitle+'.png')
