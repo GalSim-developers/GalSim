@@ -33,7 +33,7 @@ results_original = galsim.hsm.FindAdaptiveMom(image0)
 
 print G1INT, G2INT
 print results_original.observed_shape.g1, results_original.observed_shape.g2
-print galsim.Shear(g1=G1INT,g2=G2INT)+galsim.Shear(g1=G1TEST, g2=G2TEST)
+print galsim.Shear(g1=G1TEST, g2=G2TEST)+galsim.Shear(g1=G1INT,g2=G2INT)
 print results_sheared.observed_shape.g1, results_sheared.observed_shape.g2
 print results_test.observed_shape.g1, results_test.observed_shape.g2
 #image_sheared.write('sersic-sheared.fits')
