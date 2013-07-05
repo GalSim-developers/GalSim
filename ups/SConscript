@@ -3,8 +3,8 @@
 import os
 Import('env')
 
-RunInstall = env['_InstallProgram']
-RunUninstall = env['_UninstallProgram']
+RunInstall = env['_RunInstall']
+RunUninstall = env['_RunUninstall']
 
 for fname in ['GalSim.table']:
 
