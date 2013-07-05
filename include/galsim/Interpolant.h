@@ -575,11 +575,14 @@ namespace galsim {
         bool _conserve_flux; // Set to insure conservation of constant (sky) flux
         double _tolerance;  // u-space accuracy parameter
         double _uMax;  // truncation point for Fourier transform
-        double _u1; // coefficient for flux correction
+        std::vector<double> _K; // coefficients for flux correction in xval
+        std::vector<double> _C; // coefficients for flux correction in uval
         boost::shared_ptr<Table<double,double> > _xtab; // Table for x values
         boost::shared_ptr<Table<double,double> > _utab; // Table for Fourier transform
+
         double xCalc(double x) const;
         double uCalc(double u) const;
+        double uCalcRaw(double u) const; // uCalc without any flux conservation.
 
         // Store the tables in a map, so repeat constructions are quick.
         typedef std::pair<int,std::pair<bool,double> > KeyType;
@@ -587,7 +590,6 @@ namespace galsim {
         static std::map<KeyType,boost::shared_ptr<Table<double,double> > > _cache_utab; 
         static std::map<KeyType,double> _cache_umax; 
     };
-
 
 }
 
