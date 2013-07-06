@@ -367,7 +367,7 @@ def _GenerateFromInputCatalog(param, param_name, base, value_type):
         val = _GetBoolValue(input_cat.get(**kwargs),param_name)
 
     #print 'InputCatalog: ',val
-    return val, False
+    return val, safe
 
 
 def _GenerateFromFitsHeader(param, param_name, base, value_type):
