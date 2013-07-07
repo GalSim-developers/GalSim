@@ -29,10 +29,14 @@
 #include "FFT.h"
 #include "Std.h"
 
+#ifdef __SSE2__
+#include "xmmintrin.h"
+#endif
+
 #ifdef DEBUGLOGGING
 #include <fstream>
 std::ostream* dbgout = new std::ofstream("debug.out");
-int verbose_level = 2;
+int verbose_level = 0;
 #endif
 
 namespace galsim {
@@ -192,6 +196,100 @@ namespace galsim {
         return int(x-N*std::floor(x/N)) - (N>>1);
     }
 
+    template <typename T>
+    inline bool IsAligned(const T* p)
+    { return (reinterpret_cast<size_t>(p) & 0xf) == 0; }
+
+    template <bool yn>
+    struct Maybe // true
+    {
+        template <typename T>
+        static inline void increment(T& p) { ++p; }
+        template <typename T>
+        static inline void increment(T& p, int n) { p += n; }
+
+        template <typename T>
+        static inline std::complex<T> conj(const std::complex<T>& x) { return std::conj(x); }
+
+        template <typename T, typename T2>
+        static inline T plus(const T& x, const T2& y) { return x+y; }
+    };
+    template <>
+    struct Maybe<false>
+    {
+        template <typename T>
+        static inline void increment(T& p) { --p; }
+        template <typename T>
+        static inline void increment(T& p, int n) { p -= n; }
+
+        template <typename T>
+        static inline std::complex<T> conj(const std::complex<T>& x) { return x; }
+
+        template <typename T, typename T2>
+        static inline T plus(const T& x, const T2& y) { return x-y; }
+    };
+
+    // A helper function for fast calculation of a dot product of real and complex vectors
+    template <bool c2>
+    static std::complex<double> ZDot(int n, const double* A, const std::complex<double>* B)
+    {
+        if (n) {
+#ifdef __SSE2__
+            std::complex<double> sum(0);
+            while (n && !IsAligned(A) ) {
+                sum += *A * *B;
+                ++A;
+                Maybe<!c2>::increment(B);
+                --n;
+            }
+
+            int n_2 = (n>>1);
+            int nb = n-(n_2<<1);
+
+            if (n_2) {
+                union { __m128d xm; double xd[2]; } xsum;
+                xsum.xm = _mm_set1_pd(0.);
+                __m128d xsum2 = _mm_set1_pd(0.);
+                const std::complex<double>* B1 = Maybe<!c2>::plus(B,1);
+                assert(IsAligned(A));
+                assert(IsAligned(B));
+                do {
+                    const __m128d& xA = *(const __m128d*)(A);
+                    const __m128d& xB1 = *(const __m128d*)(B);
+                    const __m128d& xB2 = *(const __m128d*)(B1);
+                    A+=2;
+                    Maybe<!c2>::increment(B,2);
+                    Maybe<!c2>::increment(B1,2);
+                    __m128d xA1 = _mm_shuffle_pd(xA,xA,_MM_SHUFFLE2(0,0));
+                    __m128d xA2 = _mm_shuffle_pd(xA,xA,_MM_SHUFFLE2(1,1));
+                    __m128d x1 = _mm_mul_pd(xA1,xB1);
+                    __m128d x2 = _mm_mul_pd(xA2,xB2);
+                    xsum.xm = _mm_add_pd(xsum.xm,x1);
+                    xsum2 = _mm_add_pd(xsum2,x2);
+                } while (--n_2);
+                xsum.xm = _mm_add_pd(xsum.xm,xsum2);
+                sum += std::complex<double>(xsum.xd[0],xsum.xd[1]);
+            }
+            if (nb) {
+                sum += *A * *B;
+                ++A;
+                Maybe<!c2>::increment(B);
+            }
+            return Maybe<c2>::conj(sum);
+#else
+            std::complex<double> sum = 0.;
+            do {
+                sum += *A * *B;
+                ++A;
+                Maybe<!c2>::increment(B);
+            } while (--n);
+            return Maybe<c2>::conj(sum);
+#endif
+        } else {
+            return 0.;
+        }
+    }
+    
     // Interpolate table to some specific k.  We WILL wrap the KTable to cover
     // entire interpolation kernel:
     std::complex<double> KTable::interpolate(
@@ -291,7 +389,7 @@ namespace galsim {
                         dbg<<"xwt["<<i<<"] = "<<_xwt[i]<<std::endl;
                     }
                 } else {
-                    // Then might need to wrap do the sum that's in xvalWrapped...
+                    // Then might need to wrap to do the sum that's in xvalWrapped...
                     for (int i=0; i<nx; ++i, ++ix) {
                         dbg<<"Call xvalWrapped1d for ix-kx = "<<ix<<" - "<<kx<<" = "<<
                             ix-kx<<std::endl;
@@ -348,18 +446,19 @@ namespace galsim {
                         dbg<<"index = "<<index(ix,iy)<<", sumy -> "<<sumy<<std::endl;
                     }
 #else
+
                     // Faster way using ptrs, which doesn't need to do index(ix,iy) every time.
                     int count = nx;
-                    std::vector<double>::const_iterator xwt_it = _xwt.begin();
+                    const double* xwt_it = &_xwt[0];
                     // First do any initial negative ix values:
                     if (ix < 0) {
                         dbg<<"Some initial negative ix: ix = "<<ix<<std::endl;
-                        const std::complex<double>* ptr = _array.get() + index(ix,iy);
                         int count1 = std::min(count, -ix);
                         dbg<<"count1 = "<<count1<<std::endl;
                         count -= count1;
-                        // Note: ptr goes down in this loop, since ix is negative.
-                        for(; count1; --count1) sumy += (*xwt_it++) * conj(*ptr--);
+                        const std::complex<double>* ptr = _array.get() + index(ix,iy);
+                        sumy += ZDot<true>(count1, xwt_it, ptr);
+                        xwt_it += count1;
                         ix = 0;
                     }
 
@@ -370,7 +469,8 @@ namespace galsim {
                         int count1 = std::min(count, No2+1-ix);
                         dbg<<"count1 = "<<count1<<std::endl;
                         count -= count1;
-                        for(; count1; --count1) sumy += (*xwt_it++) * (*ptr++);
+                        sumy += ZDot<false>(count1, xwt_it, ptr);
+                        xwt_it += count1;
 
                         // Finally if we've wrapped around again, do more negative ix values:
                         if (count) {
@@ -379,11 +479,11 @@ namespace galsim {
                             ix = -No2 + 1;
                             const std::complex<double>* ptr = _array.get() + index(ix,iy);
                             xassert(count < No2-1);
-                            for(; count; --count) sumy += (*xwt_it++) * conj(*ptr--);
+                            sumy += ZDot<true>(count, xwt_it, ptr);
+                            //xwt_it += count;
                         }
                     }
-                    xassert(xwt_it == _xwt.end());
-                    xassert(count == 0);
+                    //xassert(xwt_it == &_xwt[0] + _xwt.size());
 #endif
                     // Add to back of cache
                     if (_cache.empty()) _cacheStartY = iy;
