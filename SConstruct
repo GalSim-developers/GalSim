@@ -713,6 +713,25 @@ def CheckLibsSimple(config,try_libs,source_file,prepend=True):
     return result
  
 
+def AddRPATH(env, rpath, prepend=False):
+    """ 
+    Add rpath to the scons environment.
+    This is really  a workaround for SCons bug.  The normal command should just be:
+        config.env.AppendUnique(RPATH=rpath)
+    But this doesn't always work correctly, since RPATH sometimes clashes with LINKFLAGS.
+    So if LINKFLAGS is already set, we need this workaround.
+    See: http://scons.tigris.org/issues/show_bug.cgi?id=1644
+    (Fixed in version 2.1.)
+    """
+    if prepend:
+        env.PrependUnique(RPATH=rpath)
+    else:
+        env.AppendUnique(RPATH=rpath)
+    major , minor , junk = SCons.__version__.split('.',2)
+    if int(major) < 2 or (int(major) == 2 and int(minor) == 0):
+        env.Append( LINKFLAGS = ["$__RPATH"] )
+
+
 def CheckLibsFull(config,try_libs,source_file,prepend=True):
     init_libs = []
     if 'LIBS' in config.env._dict.keys():
@@ -724,61 +743,54 @@ def CheckLibsFull(config,try_libs,source_file,prepend=True):
         config.env.AppendUnique(LIBS=try_libs)
     result = TryRunResult(config,source_file,'.cpp')
 
+    if result: return result
+
+    init_rpath = []
+    init_link = []
+    if 'RPATH' in config.env._dict.keys():
+        init_rpath = config.env['RPATH']
+    if 'LINKFLAGS' in config.env._dict.keys():
+        init_link = config.env['LINKFLAGS']
+
     # Sometimes we need to add a directory to RPATH, so try each one.
     if not result and 'LIBPATH' in config.env._dict.keys():
-        init_rpath = []
-        if 'RPATH' in config.env._dict.keys():
-            init_rpath = config.env['RPATH']
-
         for rpath in config.env['LIBPATH']:
-            if prepend:
-                config.env.PrependUnique(RPATH=rpath)
-            else:
-                config.env.AppendUnique(RPATH=rpath)
+            AddRPATH(config.env,rpath,prepend)
             result = TryRunResult(config,source_file,'.cpp')
             if result: 
                 break
             else:
                 config.env.Replace(RPATH=init_rpath)
+                config.env.Replace(LINKFLAGS=init_link)
 
         # If that doesn't work, also try adding all of them, just in case we need more than one.
         if not result :
-            if prepend:
-                config.env.PrependUnique(RPATH=config.env['LIBPATH'])
-            else:
-                config.env.AppendUnique(RPATH=config.env['LIBPATH'])
+            AddRPATH(config.env,config.env['LIBPATH'],prepend)
             result = TryRunResult(config,source_file,'.cpp')
             if not result:
                 config.env.Replace(RPATH=init_rpath)
+                config.env.Replace(LINKFLAGS=init_link)
 
     # Next try the LIBRARY_PATH to see if any of these help.
     if not result and 'LIBRARY_PATH' in os.environ.keys():
-        init_rpath = []
-        if 'RPATH' in config.env._dict.keys():
-            init_rpath = config.env['RPATH']
-
         library_path=os.environ['LIBRARY_PATH']
         library_path=library_path.split(os.pathsep)
         for rpath in library_path:
-            if prepend:
-                config.env.PrependUnique(RPATH=rpath)
-            else:
-                config.env.AppendUnique(RPATH=rpath)
+            AddRPATH(config.env,rpath,prepend)
             result = TryRunResult(config,source_file,'.cpp')
             if result: 
                 break
             else:
                 config.env.Replace(RPATH=init_rpath)
+                config.env.Replace(LINKFLAGS=init_link)
 
         # If that doesn't work, also try adding all of them, just in case we need more than one.
         if not result :
-            if prepend:
-                config.env.PrependUnique(RPATH=library_path)
-            else:
-                config.env.AppendUnique(RPATH=library_path)
+            AddRPATH(config.env,library_path,prepend)
             result = TryRunResult(config,source_file,'.cpp')
             if not result:
                 config.env.Replace(RPATH=init_rpath)
+                config.env.Replace(LINKFLAGS=init_link)
 
     # If nothing worked, go back to the original LIBS
     if not result :
@@ -1661,9 +1673,10 @@ if not GetOption('help'):
     DoConfig(env)
 
     # subdirectory SConscript files can use this function
-    env['__readfunc'] = ReadFileList
-    env['_InstallProgram'] = RunInstall
-    env['_UninstallProgram'] = RunUninstall
+    env['_ReadFileList'] = ReadFileList
+    env['_RunInstall'] = RunInstall
+    env['_RunUninstall'] = RunUninstall
+    env['_AddRPATH'] = AddRPATH
 
     # Both bin and examples use this:
     env['BUILDERS']['ExecScript'] = Builder(action = BuildExecutableScript)
