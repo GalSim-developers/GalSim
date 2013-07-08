@@ -4,6 +4,7 @@ import SCons
 import os
 
 Import('env')
+AddRPATH = env['_AddRPATH']
 
 libs=['galsim']
 
@@ -19,19 +20,9 @@ lib_install_dir = os.path.join(env['FINAL_PREFIX'], lib_dir)
 
 # Include the library location within the executable.
 if 'install' in COMMAND_LINE_TARGETS:
-    env1.Append( RPATH = Dir(lib_install_dir).abspath )
+    AddRPATH(env1,Dir(lib_install_dir).abspath)
 else:
-    env1.Append( RPATH = Dir('#lib').abspath )
-
-# Workaround for SCons bug: The above doesn't always work correctly.
-# RPATH clashes with LINKFLAGS.  So if LINKFLAGS is already set, we need this workaround.
-# See: http://scons.tigris.org/issues/show_bug.cgi?id=1644
-# Fixed in version 2.1.
-major , minor , junk = SCons.__version__.split('.',2)
-if major < 2 or (major == 2 and minor == 0):
-    env1.Append( LINKFLAGS = ["$__RPATH"] )
-if env['PREFIX'] != '':
-    env1.AppendUnique(LIBPATH=os.path.join(env['FINAL_PREFIX'], 'lib'))
+    AddRPATH(env1,Dir('#lib').abspath)
 
 int_example = env1.Program(os.path.join('#bin','int_example'), 'IntExample.cpp')
 test_random = env1.Program(os.path.join('#bin','test_random'), 'testRandom.cpp')
