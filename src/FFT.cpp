@@ -62,6 +62,7 @@ namespace galsim {
         _N = ((N+1)>>1)<<1; //Round size up to even.
         _No2 = _N>>1;
         _Nd = _N;
+        _halfNd = 0.5*_Nd;
         _invNd = 1./_Nd;
         _array.resize(_N*(_No2+1));
         _array.fill(value);
@@ -197,7 +198,7 @@ namespace galsim {
     // Wrap int(floor(k)) to a number from [-N/2..N/2).
     int KTable::wrapKValue(double k) const
     {
-        k += 0.5*_Nd;
+        k += _halfNd;
         return int(k-_Nd*std::floor(k*_invNd)) - _No2;
     }
 
@@ -385,10 +386,10 @@ namespace galsim {
                     // Then simple xval is fine (and faster)
                     // Just need to keep ix-kx to [-N/2,N/2)
                     double arg = ix-kx;
-                    if (std::abs(arg) >= 0.5*_Nd) arg -= _Nd*std::floor(arg*_invNd+0.5);
-                    for (int i=0; i<nx; ++i, ++ix, arg+=1.) {
+                    if (std::abs(arg) >= _halfNd) arg -= _Nd*std::floor(arg*_invNd+0.5);
+                    for (int i=0; i<nx; ++i, ++ix, ++arg) {
                         dbg<<"Call xval for arg = "<<arg<<std::endl;
-                        if (arg > 0.5*_Nd) arg -= _Nd;
+                        if (arg > _halfNd) arg -= _Nd;
                         _xwt[i] = ixy->xval1d(arg);
                         dbg<<"xwt["<<i<<"] = "<<_xwt[i]<<std::endl;
                     }
@@ -426,12 +427,12 @@ namespace galsim {
             if (ny<=0) ny += _N;
             int iy = iyMin;
             double arg = iy-ky;
-            if (simple_xval && std::abs(arg) > 0.5*_Nd) {
+            if (simple_xval && std::abs(arg) > _halfNd) {
                 arg -= _Nd*std::floor(arg*_invNd+0.5);
             }
-            for (int j=0; j<ny; ++j, ++iy, arg+=1.) {
+            for (; ny; --ny, ++iy, ++arg) {
                 if (iy >= _No2) iy -= _N;   // wrap iy if needed
-                dbg<<"j = "<<j<<", iy = "<<iy<<std::endl;
+                dbg<<"ny = "<<ny<<", iy = "<<iy<<std::endl;
                 std::complex<double> sumy = 0.;
                 if (nextSaved != _cache.end()) {
                     // This row is cached
@@ -495,7 +496,7 @@ namespace galsim {
                     nextSaved = _cache.end();
                 }
                 if (simple_xval) {
-                    if (arg > 0.5*_Nd) arg -= _Nd;
+                    if (arg > _halfNd) arg -= _Nd;
                     dbg<<"Call xval for arg = "<<arg<<std::endl;
                     sum += sumy * ixy->xval1d(arg);
                 } else {
@@ -511,10 +512,10 @@ namespace galsim {
             int nx = ixMax - ixMin;
             if (nx<=0) nx += _N;
             int iy = iyMin;
-            for (int j=0; j<ny; ++j, ++iy) {
+            for (; ny; --ny, ++iy) {
                 if (iy >= _No2) iy -= _N;   // wrap iy if needed
                 int ix = ixMin;
-                for (int i=0; i<nx; ++i, ++ix) {
+                for (int i=nx; i; --i, ++ix) {
                     if (ix > _No2) ix -= _N; //check for wrap
                     // use kval to keep track of conjugations
                     sum += interp.xvalWrapped(ix-kx, iy-ky, _N)*kval(ix,iy);
@@ -548,13 +549,13 @@ namespace galsim {
                 kx = ix*_dk;
                 *(zptr++) = func(kx,ky);               // [kx/dk] = ix = 1 to (N/2-1)
             }
-            *(zptr++) = tmp2[iy] = func(0.5*_Nd*_dk,ky); // [kx/dk] = ix =N/2
+            *(zptr++) = tmp2[iy] = func(_halfNd*_dk,ky); // [kx/dk] = ix =N/2
         }
         // Wrap to the negative ky's
         // [ky/dk] = iy = -N/2
         for (int ix=0; ix<_No2+1; ++ix) {
             kx = ix*_dk;
-            *(zptr++) = func(kx,-0.5*_Nd*_dk);         // [kx/dk] = ix = 0 to N/2   
+            *(zptr++) = func(kx,-_halfNd*_dk);         // [kx/dk] = ix = 0 to N/2   
         }
         // [ky/dk] = iy = (-N/2+1) to (-1)
         for (int iy=-_No2+1; iy<0; ++iy) {
@@ -588,7 +589,7 @@ namespace galsim {
                 sum += func(kx,ky,val);
                 sum += func(-kx,-ky,conj(val));
             }
-            kx = 0.5*_dk*_Nd;
+            kx = _halfNd*_dk;
             val = *(zptr++);
             sum += func(kx,ky,val); // x Nyquist freq
         }
@@ -605,7 +606,7 @@ namespace galsim {
                 sum += func(kx,ky,val);
                 sum += func(-kx,-ky,conj(val));
             }
-            kx = 0.5*_dk*_Nd;
+            kx = _halfNd*_dk;
             val = *(zptr++);
             sum += func(kx,ky,val); // x Nyquist
         }
@@ -706,7 +707,7 @@ namespace galsim {
         }
 
         // wrap to the negative ky's
-        yphase = std::polar(1.,y*(-0.5*_Nd));
+        yphase = std::polar(1.,y*(-_halfNd));
         for (int iy=-_No2; iy<0; ++iy) {
             phase = yphase;
             z= *(zptr++);
@@ -753,7 +754,7 @@ namespace galsim {
         }
 
         // wrap to the negative ky's
-        yphase = std::polar(1.,0.5*_Nd*y0);
+        yphase = std::polar(1.,_halfNd*y0);
         for (int iy=-_No2; iy<0; ++iy) {
             phase = yphase;
             for (int ix=0; ix<=_No2; ++ix) {
@@ -772,6 +773,7 @@ namespace galsim {
         _N = ((N+1)>>1)<<1; //Round size up to even.
         _No2 = _N>>1;
         _Nd = _N;
+        _halfNd = 0.5*_Nd;
         _invNd = 1./_Nd;
         _array.resize(_N*_N);
         _array.fill(value);
@@ -991,8 +993,8 @@ namespace galsim {
         std::complex<double> sum=0.;
 
         const double* zptr=_array.get();
-        std::complex<double> yphase=std::polar(1.,0.5*ky*_Nd);
-        std::complex<double> xphase=std::polar(1.,0.5*kx*_Nd);
+        std::complex<double> yphase=std::polar(1.,_halfNd*kx);
+        std::complex<double> xphase=std::polar(1.,_halfNd*kx);
         std::complex<double> phase;
         for (int iy=0; iy<_N; ++iy) {
             phase = yphase * xphase;

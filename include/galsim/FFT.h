@@ -205,13 +205,14 @@ namespace galsim {
         typedef std::complex<double> function2(double kx, double ky, std::complex<double> val);
     public:
         /// dummy constructor
-        KTable() : _N(0), _No2(0), _Nd(0.), _invNd(0.), _dk(0.), _invdk(0.) {} 
+        KTable() : _N(0), _No2(0), _Nd(0.), _halfNd(0.), _invNd(0.), _dk(0.), _invdk(0.) {} 
 
         /// Construct with size and spacing.  Default is to zero out the table.
         KTable(int N, double dk, std::complex<double> value=0.);
 
         KTable(const KTable& rhs) : 
-            _array(rhs._array), _N(rhs._N), _No2(rhs._No2), _Nd(rhs._Nd), _invNd(rhs._invNd),
+            _array(rhs._array),
+            _N(rhs._N), _No2(rhs._No2), _Nd(rhs._Nd), _halfNd(rhs._halfNd), _invNd(rhs._invNd),
             _dk(rhs._dk), _invdk(rhs._invdk) {}
 
         KTable& operator=(const KTable& rhs) 
@@ -222,6 +223,7 @@ namespace galsim {
                 _N=rhs._N;
                 _No2=rhs._No2;
                 _Nd=rhs._Nd;
+                _halfNd=rhs._halfNd;
                 _invNd=rhs._invNd;
                 _dk=rhs._dk; 
                 _invdk=rhs._invdk; 
@@ -322,6 +324,7 @@ namespace galsim {
         int _N; // Size in each dimension.
         int _No2; // N/2
         double _Nd; // double version of N to avoid repeated int->double conversions
+        double _halfNd; // 0.5 * N
         double _invNd; // 1/N
         double _dk; // k-space increment
         double _invdk; // 1/dk
@@ -379,7 +382,8 @@ namespace galsim {
         XTable(int N, double dx, double value=0.);
 
         XTable(const XTable& rhs) :
-            _array(rhs._array), _N(rhs._N), _No2(rhs._No2), _Nd(rhs._Nd), _invNd(rhs._invNd),
+            _array(rhs._array),
+            _N(rhs._N), _No2(rhs._No2), _Nd(rhs._Nd), _halfNd(rhs._halfNd), _invNd(rhs._invNd),
             _dx(rhs._dx), _invdx(rhs._invdx) {}
 
         XTable& operator=(const XTable& rhs) 
@@ -390,6 +394,7 @@ namespace galsim {
                 _N=rhs._N;
                 _No2=rhs._No2;
                 _Nd=rhs._Nd;
+                _halfNd=rhs._halfNd;
                 _invNd=rhs._invNd;
                 _dx=rhs._dx; 
                 _invdx=rhs._invdx; 
@@ -471,6 +476,7 @@ namespace galsim {
         int _N; // Size in each dimension.
         int _No2; // N/2
         double _Nd; // double version of N to avoid repeated int->double conversions
+        double _halfNd; // 0.5 * N
         double _invNd; // 1/N
         double _dx; // k-space increment
         double _invdx; // 1/dx
