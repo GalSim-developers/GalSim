@@ -216,8 +216,12 @@ def _BuildAdd(config, key, base, ignore, gsparams):
     if not isinstance(items,list):
         raise AttributeError("items entry for config.%s entry is not a list."%type)
     safe = True
+
     for i in range(len(items)):
         gsobject, safe1 = BuildGSObject(items, i, base, gsparams)
+        # Skip items with flux=0
+        if 'flux' in items[i] and galsim.config.value.GetCurrentValue(items[i],'flux') == 0.:
+            continue
         safe = safe and safe1
         gsobjects.append(gsobject)
     #print 'After built component items for ',type,' safe = ',safe
