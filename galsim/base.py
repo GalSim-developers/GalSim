@@ -41,7 +41,7 @@ import collections
 import galsim
 import utilities
 
-version = '0.5'
+version = '0.5.1'
 
 class GSObject(object):
     """Base class for defining the interface with which all GalSim Objects access their shared 
