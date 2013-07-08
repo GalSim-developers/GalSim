@@ -19,7 +19,7 @@ Distribution
 
 Please feel free to fork this repository at any time.  However, please be aware
 that the code is still actively being developed and tested (hence the current
-version number is below 1.0).  The release of v1.0 in late 2013 will be
+version number is below 1.0).  The release of v1.0 in mid-2013 will be
 accompanied with a publication that users should cite.
 
 
