@@ -2,6 +2,8 @@
 
 import os
 Import('env')
+RunInstall = env['_RunInstall']
+RunUninstall = env['_RunUninstall']
 
 install_subdir = 'bin'
 
@@ -14,11 +16,9 @@ AlwaysBuild(targets)
 Default(targets)
         
 if 'install' in COMMAND_LINE_TARGETS:
-    RunInstall = env['_InstallProgram']
     RunInstall(env, targets, install_subdir)
 
 if 'uninstall' in COMMAND_LINE_TARGETS:
-    RunUninstall = env['_UninstallProgram']
     RunUninstall(env, targets, install_subdir)
 
 

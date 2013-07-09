@@ -5,7 +5,7 @@ import sys
 import glob
 
 Import('env')
-ReadFileList=env['__readfunc']
+ReadFileList=env['_ReadFileList']
 
 python_dir = 'galsim'
 python_install_dir = os.path.join(env['PYPREFIX'], python_dir)
