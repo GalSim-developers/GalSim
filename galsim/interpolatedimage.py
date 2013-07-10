@@ -81,7 +81,9 @@ class InterpolatedImage(GSObject):
                                                           k_interpolant = None,
                                                           normalization = 'flux', dx = None,
                                                           flux = None, pad_factor = 0.,
-                                                          noise_pad = 0., rng = None,
+                                                          noise_pad = 0., 
+                                                          override_var = None,
+                                                          rng = None,
                                                           pad_image = None,
                                                           calculate_stepk = True,
                                                           calculate_maxk = True,
@@ -150,11 +152,18 @@ class InterpolatedImage(GSObject):
                            It is important to keep in mind that the calculation of the correlation
                            function that is internally stored within a galsim.CorrelatedNoise is a 
                            non-negligible amount of overhead, so the recommended means of specifying
-                           a correlated noise field for padding are (b) or (d). In the case of (d),
+                           a correlated noise field for padding are (b) or (d).  In the case of (d),
                            if the same file is used repeatedly, then the `use_cache` keyword (see 
                            below) can be used to prevent the need for repeated 
                            galsim.CorrelatedNoise initializations.
                            (Default `noise_pad = 0.`, i.e., pad with zeros.)
+    @param override_var    If set as a float (default `override_var = None`) will scale any noise
+                           padding added via the `noise_pad` keyword argument to have a variance of
+                           `override_var`.  Note, this even overrides the variance of any cached
+                           galsim.CorrelatedNoise instances being stored according to the
+                           `use_cache` keyword, and in doing so updates the variance of the stored
+                           galsim.CorrelatedNoise via its .setVariance() method (while not otherwise
+                           changing the cached noise model).
     @param rng             If padding by noise, the user can optionally supply the random noise
                            generator to use for drawing random numbers as `rng` (may be any kind of
                            `galsim.BaseDeviate` object).  Such a user-input random number generator
@@ -220,6 +229,7 @@ class InterpolatedImage(GSObject):
         'flux' : float ,
         'pad_factor' : float ,
         'noise_pad' : str ,
+        'override_var' : float ,
         'pad_image' : str ,
         'calculate_stepk' : bool ,
         'calculate_maxk' : bool,
@@ -231,8 +241,8 @@ class InterpolatedImage(GSObject):
 
     # --- Public Class methods ---
     def __init__(self, image, x_interpolant = None, k_interpolant = None, normalization = 'flux',
-                 dx = None, flux = None, pad_factor = 0., noise_pad = 0., rng = None,
-                 pad_image = None, calculate_stepk=True, calculate_maxk=True,
+                 dx = None, flux = None, pad_factor = 0., noise_pad = 0., override_var = None, 
+                 rng = None, pad_image = None, calculate_stepk=True, calculate_maxk=True,
                  use_cache=True, use_true_center=True, offset=None, gsparams=None):
 
         # first try to read the image as a file.  If it's not either a string or a valid
@@ -320,7 +330,7 @@ class InterpolatedImage(GSObject):
         if noise_pad and pad_image:
             # if both noise_pad and pad_image are set, then we need to build up a larger
             # pad_image and place the given pad_image in the center.
-            new_pad_image = self.buildNoisePadImage(pad_factor, noise_pad, rng)
+            new_pad_image = self.buildNoisePadImage(pad_factor, noise_pad, override_var, rng)
 
             # We will change the bounds here, so make a new view to avoid modifying the 
             # input pad_image.
@@ -333,7 +343,7 @@ class InterpolatedImage(GSObject):
             pad_image = new_pad_image
         elif noise_pad:
             # Just build the noise image
-            pad_image = self.buildNoisePadImage(pad_factor, noise_pad, rng)
+            pad_image = self.buildNoisePadImage(pad_factor, noise_pad, override_var, rng)
         elif pad_image:
             # Just make sure pad_image is the right type
             if ( isinstance(image, galsim.BaseImageF) and 
@@ -378,10 +388,12 @@ class InterpolatedImage(GSObject):
         GSObject.__init__(self, prof.SBProfile)
 
 
-    def buildNoisePadImage(self, pad_factor, noise_pad, rng):
+    def buildNoisePadImage(self, pad_factor, noise_pad, override_var, rng):
         """A helper function that builds the pad_image from the given noise_pad specification.
         """
         import numpy as np
+
+        # Build the pad image
         if pad_factor <= 0.:
             pad_factor = galsim._galsim.getDefaultPadFactor()
         padded_size = int(np.ceil(np.max(self.orig_image.array.shape) * pad_factor))
@@ -389,7 +401,6 @@ class InterpolatedImage(GSObject):
             pad_image = galsim.ImageF(padded_size, padded_size)
         if isinstance(self.orig_image, galsim.BaseImageD):
             pad_image = galsim.ImageD(padded_size, padded_size)
-
         # Figure out what kind of noise to apply to the image
         if isinstance(noise_pad, float):
             noise = galsim.GaussianNoise(rng, sigma = np.sqrt(noise_pad))
@@ -413,8 +424,14 @@ class InterpolatedImage(GSObject):
             raise ValueError(
                 "Input noise_pad must be a float/int, a CorrelatedNoise, Image, or filename "+
                 "containing an image to use to make a CorrelatedNoise!")
+        # If the override_var keyword is set, check its type and scale the noise variance
+        if override_var is not None:
+           if isinstance(override_var, float) and (override_var >= 0.):
+               noise.setVariance(override_var)
+           else:
+               raise ValueError("The override_var kwarg must be a float >= 0 if set.")
+        # Add the noise
         pad_image.addNoise(noise)
 
         return pad_image
-
 
