@@ -159,7 +159,8 @@ class InterpolatedImage(GSObject):
                            (Default `noise_pad = 0.`, i.e., pad with zeros.)
     @param override_var    If set as a float (default `override_var = None`) will scale any noise
                            padding added via the `noise_pad` keyword argument to have a variance of
-                           `override_var`.  Note, this even overrides the variance of any cached
+                           `override_var`, with the exception of `noise_pad = 0.` in which case this
+                           keyword is ignored.  Note, this even overrides the variance of any cached
                            galsim.CorrelatedNoise instances being stored according to the
                            `use_cache` keyword, and in doing so updates the variance of the stored
                            galsim.CorrelatedNoise via its .setVariance() method (while not otherwise
@@ -402,8 +403,11 @@ class InterpolatedImage(GSObject):
         if isinstance(self.orig_image, galsim.BaseImageD):
             pad_image = galsim.ImageD(padded_size, padded_size)
         # Figure out what kind of noise to apply to the image
+        preserve_var = False  # Switch to decide whether to allow later variance overrides
         if isinstance(noise_pad, float):
             noise = galsim.GaussianNoise(rng, sigma = np.sqrt(noise_pad))
+            if noise_pad == 0.:
+                preserve_var = True  # Don't rescale in the noise_pad = 0. case
         elif isinstance(noise_pad, galsim.correlatednoise._BaseCorrelatedNoise):
             noise = noise_pad.copy()
             if rng: # Let a user supplied RNG take precedence over that in user CN
@@ -425,11 +429,12 @@ class InterpolatedImage(GSObject):
                 "Input noise_pad must be a float/int, a CorrelatedNoise, Image, or filename "+
                 "containing an image to use to make a CorrelatedNoise!")
         # If the override_var keyword is set, check its type and scale the noise variance
-        if override_var is not None:
-           if isinstance(override_var, float) and (override_var >= 0.):
-               noise.setVariance(override_var)
-           else:
-               raise ValueError("The override_var kwarg must be a float >= 0 if set.")
+        if not preserve_var:
+            if override_var is not None:
+                if isinstance(override_var, float) and (override_var >= 0.):
+                    noise.setVariance(override_var)
+                else:
+                    raise ValueError("The override_var kwarg must be a float >= 0 if set.")
         # Add the noise
         pad_image.addNoise(noise)
 
