@@ -376,7 +376,17 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams):
     """
     if 'real_catalog' not in base:
         raise ValueError("No real galaxy catalog available for building type = RealGalaxy")
-    real_cat = base['real_catalog']
+
+    if 'num' in config:
+        num, safe = ParseValue(config, 'num', base, int)
+    else:
+        num, safe = (0, True)
+    ignore.append('num')
+
+    if num < 0 or num >= len(base['real_catalog']):
+        raise ValueError("num given for RealGalaxy is invalid")
+
+    real_cat = base['real_catalog'][num]
 
     # Special: if index is Sequence or Random, and max isn't set, set it to real_cat.nobjects-1
     if 'id' not in config:

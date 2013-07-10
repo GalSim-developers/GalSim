@@ -29,6 +29,7 @@ valid_input_types = {
     # - whether the class has a nobjects field, in which case it also must have a constructor
     #   kwarg nobjects_only to efficiently do only enough to calculate nobjects.
     'catalog' : ('InputCatalog', [], True), 
+    'dict' : ('DictFile', [], False), 
     'real_catalog' : ('RealGalaxyCatalog', [], True),
     'nfw_halo' : ('NFWHalo', [], False),
     'power_spectrum' : ('PowerSpectrum',
@@ -62,16 +63,22 @@ def ProcessInput(config, file_num=0, logger=None):
         #print 'valid_input_types = ',valid_input_types
         for key in [ k for k in valid_input_types.keys() if k in input ]:
             #print 'key = ',key
-            field = input[key]
-            #print 'field = ',field
-            field['type'], ignore = valid_input_types[key][0:2]
-            #print 'type, ignore = ',field['type'],ignore
-            input_obj = galsim.config.gsobject._BuildSimple(field, key, config, ignore)[0]
-            #print 'input_obj = ',input_obj
-            if logger and  valid_input_types[key][2]:
-                logger.info('Read %d objects from %s',input_obj.nobjects,key)
-            # Store input_obj in the config for use by BuildGSObject function.
-            config[key] = input_obj
+            fields = input[key]
+
+            # If it's not currently a list, make it a list with one element.
+            if not isinstance(fields, list): fields = [ fields ]
+
+            config[key] = []
+            for field in fields:
+                #print 'field = ',field
+                field['type'], ignore = valid_input_types[key][0:2]
+                #print 'type, ignore = ',field['type'],ignore
+                input_obj = galsim.config.gsobject._BuildSimple(field, key, config, ignore)[0]
+                #print 'input_obj = ',input_obj
+                if logger and  valid_input_types[key][2]:
+                    logger.info('Read %d objects from %s',input_obj.nobjects,key)
+                # Store input_obj in the config for use by BuildGSObject function.
+                config[key].append(input_obj)
 
         # Check that there are no other attributes specified.
         valid_keys = valid_input_types.keys()
@@ -92,6 +99,10 @@ def ProcessInputNObjects(config):
             #print 'valid_input_types[key] = ',valid_input_types[key]
             if key in input and valid_input_types[key][2]:
                 field = input[key]
+
+                # If it's a list, just use the first one.
+                if isinstance(field, list): field = field[0]
+
                 #print 'field = ',field
                 type, ignore = valid_input_types[key][0:2]
                 #print 'type, ignore = ',type,ignore
