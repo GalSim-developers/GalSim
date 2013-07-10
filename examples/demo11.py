@@ -15,8 +15,9 @@ particularly irregular ones.  These are taken from the same catalog of 100 objec
 The noise added to the image is spatially correlated in the same way as often seen in coadd images
 from the Hubble Space Telescope (HST) Advanced Camera for Surveys, using a correlation function
 determined from the HST COSMOS coadd images in the F814W filter (see, e.g., Leauthaud et al 2007).
-Applying this noise uses an FFT of the size of the full output image: this may cause memory-related
-slowdowns in systems with less than 2GB RAM.
+This is the same correlated noise used to pad RealGalaxy images in Demo #6.  However, applying this
+noise to the entire field uses an FFT of the size of the full output image: this may cause
+memory-related slowdowns in systems with less than 2GB RAM.
 
 New features introduced in this demo:
 
@@ -25,8 +26,7 @@ New features introduced in this demo:
 - ps = galsim.PowerSpectrum(..., units)
 - distdev = galsim.DistDeviate(rng, function, x_min, x_max)
 - gal.applyLensing(g1, g2, mu)
-- cn = galsim.correlatednoise.getCOSMOSNoise(rng, file_name, ...)
-- image.addNoise(cn)
+- image.addNoise(correlated_noise)
 - image.setOrigin(x,y)
 
 - Power spectrum shears and magnifications for non-gridded positions.
@@ -251,19 +251,19 @@ def main(argv):
     # correlation information: the path to this file is a required argument. 
     cf_file_name = os.path.join('..', 'examples', 'data', 'acs_I_unrot_sci_20_cf.fits')
 
-    # Then use this to initialize the correlation function that we will use to add noise to the
+    # Then use this to initialize the correlated noise instance that we will use to add noise to the
     # full_image.  We set the dx_cosmos keyword equal to our pixel scale, so that the noise among
     # neighboring pixels is correlated at the same level as it was among neighboring pixels in HST
     # COSMOS.  Using the original pixel scale, dx_cosmos=0.03 [arcsec], would leave very little
     # correlation among our larger 0.2 arcsec pixels. We also set the point (zero-distance) variance
     # to our desired value.
-    cn = galsim.correlatednoise.getCOSMOSNoise(
+    correlated_noise = galsim.correlatednoise.getCOSMOSNoise(
         rng, cf_file_name, dx_cosmos=pixel_scale, variance=noise_variance)
 
-    # Now add noise according to this correlation function to the full_image.  We have to do this
+    # Now add noise according to this correlated noise to the full_image.  We have to do this
     # step at the end, rather than adding to individual postage stamps, in order to get the noise
     # level right in the overlap regions between postage stamps.
-    full_image.addNoise(cn) # Note image must have the right scale, as it does here.
+    full_image.addNoise(correlated_noise) # Note image must have the right scale, as it does here.
     logger.info('Added noise to final large image')
 
     # Now write the image to disk.  It is automatically compressed with Rice compression,
