@@ -407,13 +407,14 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams):
                 raise ValueError("Only noise_pad dicts with type='COSMOS' are currently supported")
             # OK so having checked that if a dict that the noise_pad is a type=COSMOS, we make the
             # CorrelatedNoise instance requested using getCOSMOSNoise()
-            req = { 'file_name' : str }
-            opt = { 'dx_cosmos' : float, 'variance' : float }
-            kwargs = galsim.config.GetAllParams(config, 'noise_pad', base, req=req, opt=opt)[0]
-
-        # Build the correlated noise 
-        cn = galsim.correlatednoise.getCOSMOSNoise(rng, **kwargs)
-
+            req_cn = { 'file_name' : str }
+            opt_cn = { 'dx_cosmos' : float } # Variance not allowed as the RealGalaxy resets it
+            kwargs_cn = galsim.config.GetAllParams(
+                config[key], 'noise_pad', base, req=req, opt=opt)[0]
+            # Build the correlated noise 
+            cn = galsim.correlatednoise.getCOSMOSNoise(kwargs['rng'], **kwargs_cn)
+            kwargs = kwargs.copy() # Preventing any destruction from next line... Over cautious?
+            kwargs['noise_pad'] = cn
 
     return galsim.RealGalaxy(real_cat, **kwargs), safe
 
