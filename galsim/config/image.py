@@ -447,22 +447,25 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     # If we have a power spectrum in config, we need to get a new realization at the start
     # of each image.
     if 'power_spectrum' in config:
-        # PowerSpectrum can only do a square FFT, so make it the larger of the two n's.
-        n_tiles = max(nx_tiles, ny_tiles)
-        stamp_size = max(stamp_xsize, stamp_ysize)
-        if 'grid_spacing' in config['input']['power_spectrum']:
-            grid_dx = galsim.config.ParseValue(config['input']['power_spectrum'],
-                                               'grid_spacing', config, float)[0]
-        else:
-            grid_dx = stamp_size * pixel_scale
-        if 'interpolant' in config['input']['power_spectrum']:
-            interpolant = galsim.config.ParseValue(config['input']['power_spectrum'],
-                                                   'interpolant', config, str)[0]
-        else:
-            interpolant = None
+        input_ps = config['input']['power_spectrum']
+        if not isinstance(input_ps, list):
+            input_ps = [ input_ps ]
 
-        config['power_spectrum'].buildGrid(grid_spacing=grid_dx, ngrid=n_tiles, rng=rng,
-                                           interpolant=interpolant)
+        for i in range(len(config['power_spectrum'])):
+            # PowerSpectrum can only do a square FFT, so make it the larger of the two n's.
+            n_tiles = max(nx_tiles, ny_tiles)
+            stamp_size = max(stamp_xsize, stamp_ysize)
+            if 'grid_spacing' in input_ps[i]:
+                grid_dx = galsim.config.ParseValue(input_ps[i], 'grid_spacing', config, float)[0]
+            else:
+                grid_dx = stamp_size * pixel_scale
+            if 'interpolant' in input_ps[i]:
+                interpolant = galsim.config.ParseValue(input_ps[i], 'interpolant', config, str)[0]
+            else:
+                interpolant = None
+
+            config['power_spectrum'][i].buildGrid(grid_spacing=grid_dx, ngrid=n_tiles, rng=rng,
+                                                  interpolant=interpolant)
         # We don't care about the output here.  This just builds the grid, which we'll
         # access for each object using its position.
 
@@ -669,21 +672,25 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     # If we have a power spectrum in config, we need to get a new realization at the start
     # of each image.
     if 'power_spectrum' in config:
-        if 'grid_spacing' not in config['input']['power_spectrum']:
-            raise AttributeError(
-                "power_spectrum.grid_spacing required for image.type=Scattered")
-        grid_dx = galsim.config.ParseValue(config['input']['power_spectrum'],
-                                           'grid_spacing', config, float)[0]
-        full_size = max(full_xsize, full_ysize)
-        grid_nx = full_size * pixel_scale / grid_dx + 1
-        if 'interpolant' in config['input']['power_spectrum']:
-            interpolant = galsim.config.ParseValue(config['input']['power_spectrum'],
-                                                   'interpolant', config, str)[0]
-        else:
-            interpolant = None
+        input_ps = config['input']['power_spectrum']
+        if not isinstance(input_ps, list):
+            input_ps = [ input_ps ]
 
-        config['power_spectrum'].buildGrid(grid_spacing=grid_dx, ngrid=grid_nx, rng=rng,
-                                           interpolant=interpolant)
+        for i in range(len(config['power_spectrum'])):
+            # PowerSpectrum can only do a square FFT, so make it the larger of the two sizes.
+            if 'grid_spacing' not in input_ps[i]:
+                raise AttributeError(
+                    "power_spectrum.grid_spacing required for image.type=Scattered")
+            grid_dx = galsim.config.ParseValue(input_ps[i], 'grid_spacing', config, float)[0]
+            full_size = max(full_xsize, full_ysize)
+            grid_nx = full_size * pixel_scale / grid_dx + 1
+            if 'interpolant' in input_ps[i]:
+                interpolant = galsim.config.ParseValue(input_ps[i], 'interpolant', config, str)[0]
+            else:
+                interpolant = None
+
+            config['power_spectrum'][i].buildGrid(grid_spacing=grid_dx, ngrid=grid_nx, rng=rng,
+                                                  interpolant=interpolant)
         # We don't care about the output here.  This just builds the grid, which we'll
         # access for each object using its position.
 
