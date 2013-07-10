@@ -109,17 +109,22 @@ class RealGalaxy(GSObject):
                                 in the training dataset?  There are several options here: 
                                     Use `noise_pad = False` if you wish to pad with zeros.
                                     Use `noise_pad = True` if you wish to pad with uncorrelated
-                                        noise of the proper variance.
+                                        noise of the proper variance for this object from the
+                                        `real_galaxy_catalog`.
                                     Set `noise_pad` equal to a galsim.CorrelatedNoise, an Image, or
                                         a filename containing an Image of an example noise field
                                         that will be used to calculate the noise power spectrum and
                                         generate noise in the padding region.  Any random number
                                         generator passed to the `rng` keyword will take precedence
-                                        over that carried in an input galsim.CorrelatedNoise.
+                                        over that carried in an input galsim.CorrelatedNoise.  As
+                                        for `noise_pad = True`, the variance of the noise model will
+                                        be scaled to match the proper value for this object in the
+                                        `real_galaxy_catalog`.
                                 In the last case, if the same file is used repeatedly, then use of
                                 the `use_cache` keyword (see below) can be used to prevent the need
-                                for repeated galsim.CorrelatedNoise initializations.
-                                [default `noise_pad = False`]
+                                for repeated galsim.CorrelatedNoise initializations.  The variance
+                                is still updated according to the value for this object in the
+                                `real_galaxy_catalog`.  [Default `noise_pad = False`.]
     @param pad_image            Image to be used for deterministically padding the original image.
                                 This can be specified in two ways:
                                    (a) as a galsim.Image; or
@@ -214,7 +219,8 @@ class RealGalaxy(GSObject):
 
         self.original_image = galsim.InterpolatedImage(
                 gal_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant,
-                dx=self.pixel_scale, pad_factor=pad_factor, noise_pad=noise_pad, rng=rng,
+                dx=self.pixel_scale, pad_factor=pad_factor, noise_pad=noise_pad,
+                override_var=real_galaxy_catalog[use_index], rng=rng,
                 pad_image=pad_image, use_cache=use_cache, gsparams=gsparams)
         # If flux is None, leave flux as given by original image
         if flux != None:
