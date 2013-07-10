@@ -166,14 +166,32 @@ class Catalog(object):
 
 
 class Dict(object):
-    """A class that reads a python dict from a file and/or writes it to a file.
+    """A class that reads a python dict from a file
 
-    After construction, the following fields are available:
+    After construction, it behaves like a regular python dict, with one exception.
+    In order to facilitate getting values in a hierarchy of fields, we allow the '.'
+    character to chain keys together for the get method.  So,
 
-        self.nobjects   The number of objects in the catalog.
-        self.ncols      The number of columns in the catalog.
-        self.isfits     Whether the catalog is a fits catalog.
-        self.names      For a fits catalog, the valid column names.
+        d.get('noise.properties.variance')
+
+    is expanded into
+
+        d['noise']['properties']['variance'] 
+
+    Furthermore, if a "key" is really an integer, then it is used as such, which accesses 
+    the corresponding element in a list.  e.g.
+
+        d.get('noise_models.2.variance')
+        
+    is equivalent to 
+
+        d['noise_models'][2]['variance']
+
+    This makes it much easier to access arbitrary elements within parameter files.
+
+    Caveat: The above prescription means that an element whose key really has a '.' in it
+    won't be accessed correctly.  This is probably a rare occurrence, but the workaround is
+    to set `key_split` to a different character or string and use that to chain the keys.
 
 
     @param file_name     Filename storing the dict. (Required)
@@ -182,16 +200,18 @@ class Dict(object):
     @param file_type     Options are 'Pickle', 'YAML', or 'JSON'.  If None, infer from the file 
                          name ending ('.p', '.yaml', '.json' respetively).
                          (default `file_type = None`)
+    @param key_split     The character (or string) to use to split chained keys.  (c.f. the 
+                         description of this feature above.)  (default `key_split = '.'`)
     """
     _req_params = { 'file_name' : str }
-    _opt_params = { 'dir' : str , 'file_type' : str }
+    _opt_params = { 'dir' : str , 'file_type' : str, 'key_split' : str }
     _single_params = []
     _takes_rng = False
 
     # nobjects_only is an intentionally undocumented kwarg that should be used only by
     # the config structure.  It indicates that all we care about is the nobjects parameter.
     # So skip any other calculations that might normally be necessary on construction.
-    def __init__(self, file_name, dir=None, file_type=None):
+    def __init__(self, file_name, dir=None, file_type=None, key_split='.'):
 
         # First build full file_name
         self.file_name = file_name.strip()
@@ -212,6 +232,8 @@ class Dict(object):
         if file_type not in ['PICKLE','YAML','JSON']:
             raise ValueError("file_type must be one of Pickle, YAML, or JSON if specified.")
         self.file_type = file_type
+
+        self.key_split = key_split
 
         f = open(self.file_name)
 
@@ -243,7 +265,21 @@ class Dict(object):
         return self.dict.__iter__
 
     def get(self, key, default=None):
-        return self.dict.get(key, default)
+        # Make a list of keys according to our key_split parameter
+        chain = key.split(self.key_split)
+        d = self.dict
+        while len(chain):
+            key = chain.pop(0)
+            
+            # Try to convert to an integer:
+            try: key = int(key)
+            except ValueError: pass
+
+            # If there are more keys, just set d to the next in the chanin.
+            if chain: d = d[key]
+            # Otherwise, return the result.
+            else: return d.get(key,default)
+        raise ValueError("Invalid key given to Dict.get()")
 
     def keys(self):
         return self.dict.keys()

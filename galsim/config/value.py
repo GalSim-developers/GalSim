@@ -397,10 +397,8 @@ def _GenerateFromDict(param, param_name, base, value_type):
         raise ValueError("num given for Dictis invalid")
     d = base['dict'][num]
 
-    if key not in d:
-        raise ValueError("key %s is not in the given Dict"%key)
+    return d.get(key), safe
 
-    return d[key], safe
 
 
 def _GenerateFromFitsHeader(param, param_name, base, value_type):

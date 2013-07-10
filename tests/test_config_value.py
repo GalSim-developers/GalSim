@@ -77,7 +77,8 @@ def test_float_value():
                     'index' : { 'type' : 'Sequence', 'first' : 10, 'step' : -3 } },
         'dict1' : { 'type' : 'Dict', 'key' : 'f' },
         'dict2' : { 'type' : 'Dict', 'num' : 1, 'key' : 'f' },
-        'dict3' : { 'type' : 'Dict', 'num' : 2, 'key' : 'f' }
+        'dict3' : { 'type' : 'Dict', 'num' : 2, 'key' : 'f' },
+        'dict4' : { 'type' : 'Dict', 'num' : 1, 'key' : 'noise.models.1.gain' }
     }
 
     galsim.config.ProcessInput(config)
@@ -208,14 +209,12 @@ def test_float_value():
     np.testing.assert_array_almost_equal(list2, [ 10.8, 7.0, 4.3, 1.8, 10.8 ])
 
     # Test values read from a Dict
-    pickle_dict = galsim.Dict(dir='config_input', file_name='dict.p')
-    yaml_dict = galsim.Dict(dir='config_input', file_name='dict.yaml')
-    json_dict = galsim.Dict(dir='config_input', file_name='dict.json')
     dict = []
     dict.append(galsim.config.ParseValue(config,'dict1',config, float)[0])
     dict.append(galsim.config.ParseValue(config,'dict2',config, float)[0])
     dict.append(galsim.config.ParseValue(config,'dict3',config, float)[0])
-    np.testing.assert_array_almost_equal(dict, [ 23.17, 0.1, -17.23 ])
+    dict.append(galsim.config.ParseValue(config,'dict4',config, float)[0])
+    np.testing.assert_array_almost_equal(dict, [ 23.17, 0.1, -17.23, 1.9 ])
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
