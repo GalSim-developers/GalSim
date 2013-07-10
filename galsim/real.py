@@ -220,7 +220,7 @@ class RealGalaxy(GSObject):
         self.original_image = galsim.InterpolatedImage(
                 gal_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant,
                 dx=self.pixel_scale, pad_factor=pad_factor, noise_pad=noise_pad,
-                override_var=real_galaxy_catalog[use_index], rng=rng,
+                override_var=real_galaxy_catalog.variance[use_index], rng=rng,
                 pad_image=pad_image, use_cache=use_cache, gsparams=gsparams)
         # If flux is None, leave flux as given by original image
         if flux != None:
