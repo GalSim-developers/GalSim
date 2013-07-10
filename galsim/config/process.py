@@ -28,8 +28,8 @@ valid_input_types = {
     #   used later).
     # - whether the class has a nobjects field, in which case it also must have a constructor
     #   kwarg nobjects_only to efficiently do only enough to calculate nobjects.
-    'catalog' : ('InputCatalog', [], True), 
-    'dict' : ('DictFile', [], False), 
+    'catalog' : ('Catalog', [], True), 
+    'dict' : ('Dict', [], False), 
     'real_catalog' : ('RealGalaxyCatalog', [], True),
     'nfw_halo' : ('NFWHalo', [], False),
     'power_spectrum' : ('PowerSpectrum',

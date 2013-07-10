@@ -25,8 +25,8 @@ import galsim
 valid_value_types = {
     'List' : [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ],
     'Eval' : [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ],
-    'InputCatalog' : [ float, int, bool, str ],
-    'DictFile' : [ float, int, bool, str ],
+    'Catalog' : [ float, int, bool, str ],
+    'Dict' : [ float, int, bool, str ],
     'FitsHeader' : [ float, int, bool, str ],
     'Sequence' : [ float, int, bool ],
     'Random' : [ float, int, bool, galsim.Angle ],
@@ -339,11 +339,11 @@ def _GenerateFromDegrees(param, param_name, base, value_type):
     """
     return _GenerateFromDeg(param, param_name, base, value_type)
 
-def _GenerateFromInputCatalog(param, param_name, base, value_type):
+def _GenerateFromCatalog(param, param_name, base, value_type):
     """@brief Return a value read from an input catalog
     """
     if 'catalog' not in base:
-        raise ValueError("No input catalog available for %s.type = InputCatalog"%param_name)
+        raise ValueError("No input catalog available for %s.type = Catalog"%param_name)
 
     if 'num' in param:
         num, safe = ParseValue(param, 'num', base, int)
@@ -351,12 +351,12 @@ def _GenerateFromInputCatalog(param, param_name, base, value_type):
         num, safe = (0, True)
 
     if num < 0 or num >= len(base['catalog']):
-        raise ValueError("num given for InputCatalog is invalid")
+        raise ValueError("num given for Catalog is invalid")
 
     input_cat = base['catalog'][num]
 
     # Setup the indexing sequence if it hasn't been specified.
-    # The normal thing with an InputCatalog is to just use each object in order,
+    # The normal thing with an Catalog is to just use each object in order,
     # so we don't require the user to specify that by hand.  We can do it for them.
     SetDefaultIndex(param, input_cat.nobjects)
 
@@ -377,15 +377,15 @@ def _GenerateFromInputCatalog(param, param_name, base, value_type):
     elif value_type is bool:
         val = _GetBoolValue(input_cat.get(**kwargs),param_name)
 
-    #print 'InputCatalog: ',val
+    #print 'Catalog: ',val
     return val, safe
 
 
-def _GenerateFromDictFile(param, param_name, base, value_type):
-    """@brief Return a value read from a DictFile
+def _GenerateFromDict(param, param_name, base, value_type):
+    """@brief Return a value read from an input dict.
     """
     if 'dict' not in base:
-        raise ValueError("No input dict available for %s.type = DictFile"%param_name)
+        raise ValueError("No input dict available for %s.type = Dict"%param_name)
 
     req = { 'key' : str }
     opt = { 'num' : int }
@@ -394,11 +394,11 @@ def _GenerateFromDictFile(param, param_name, base, value_type):
 
     num = kwargs.get('num',0)
     if num < 0 or num >= len(base['dict']):
-        raise ValueError("num given for DictFile is invalid")
+        raise ValueError("num given for Dictis invalid")
     d = base['dict'][num]
 
     if key not in d:
-        raise ValueError("key %s is not in the given DictFile"%key)
+        raise ValueError("key %s is not in the given Dict"%key)
 
     return d[key], safe
 
@@ -1003,7 +1003,7 @@ def _GenerateFromEval(param, param_name, base, value_type):
         rng = base['rng']
     for key in galsim.config.valid_input_types.keys():
         if key in base:
-            eval(key + ' = base[key]')
+            exec(key + ' = base[key]')
 
     try:
         val = value_type(eval(string))

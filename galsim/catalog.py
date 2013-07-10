@@ -22,7 +22,7 @@ Routines for controlling catalog Input/Output with GalSim.
 
 import galsim
 
-class InputCatalog(object):
+class Catalog(object):
     """A class storing the data from an input catalog.
 
     Each row corresponds to a different object to be built, and each column stores some item of
@@ -121,7 +121,7 @@ class InputCatalog(object):
         self.nobjects = len(raw_data.field(self.names[0]))
         if (nobjects_only): return
         # The pyfits raw_data is a FITS_rec object, which isn't picklable, so we need to 
-        # copy the fields into a new structure to make sure our InputCatalog is picklable.
+        # copy the fields into a new structure to make sure our Catalog is picklable.
         # The simplest is probably a dict keyed by the field names, which we save as self.data.
         self.data = {}
         for name in self.names:
@@ -165,7 +165,7 @@ class InputCatalog(object):
         return int(self.get(index,col))
 
 
-class DictFile(object):
+class Dict(object):
     """A class that reads a python dict from a file and/or writes it to a file.
 
     After construction, the following fields are available:
