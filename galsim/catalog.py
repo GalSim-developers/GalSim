@@ -164,3 +164,102 @@ class InputCatalog(object):
         """
         return int(self.get(index,col))
 
+
+class DictFile(object):
+    """A class that reads a python dict from a file and/or writes it to a file.
+
+    After construction, the following fields are available:
+
+        self.nobjects   The number of objects in the catalog.
+        self.ncols      The number of columns in the catalog.
+        self.isfits     Whether the catalog is a fits catalog.
+        self.names      For a fits catalog, the valid column names.
+
+
+    @param file_name     Filename storing the dict. (Required)
+    @param dir           Optionally a directory name can be provided if the file_name does not 
+                         already include it.
+    @param file_type     Options are 'Pickle', 'YAML', or 'JSON'.  If None, infer from the file 
+                         name ending ('.p', '.yaml', '.json' respetively).
+                         (default `file_type = None`)
+    """
+    _req_params = { 'file_name' : str }
+    _opt_params = { 'dir' : str , 'file_type' : str }
+    _single_params = []
+    _takes_rng = False
+
+    # nobjects_only is an intentionally undocumented kwarg that should be used only by
+    # the config structure.  It indicates that all we care about is the nobjects parameter.
+    # So skip any other calculations that might normally be necessary on construction.
+    def __init__(self, file_name, dir=None, file_type=None):
+
+        # First build full file_name
+        self.file_name = file_name.strip()
+        if dir:
+            import os
+            self.file_name = os.path.join(dir,self.file_name)
+    
+        if not file_type:
+            if self.file_name.lower().endswith('.p'):
+                file_type = 'PICKLE'
+            elif self.file_name.lower().endswith('.yaml'):
+                file_type = 'YAML'
+            elif self.file_name.lower().endswith('.json'):
+                file_type = 'JSON'
+            else:
+                raise ValueError('Unable to determine file_type from file_name ending')
+        file_type = file_type.upper()
+        if file_type not in ['PICKLE','YAML','JSON']:
+            raise ValueError("file_type must be one of Pickle, YAML, or JSON if specified.")
+        self.file_type = file_type
+
+        f = open(self.file_name)
+
+        if file_type == 'PICKLE':
+            import cPickle
+            self.dict = cPickle.load(f)
+        elif file_type == 'YAML':
+            import yaml
+            self.dict = yaml.load(f)
+        else:
+            import json
+            self.dict = json.load(f)
+
+        f.close()
+
+
+    # The rest of the functions are typical non-mutating functions for a dict, for which we just
+    # pass the request along to self.dict.
+    def __len__(self):
+        return len(self.dict)
+
+    def __getitem__(self, key):
+        return self.dict[key]
+
+    def __contains__(self, key):
+        return key in self.dict
+
+    def __iter__(self):
+        return self.dict.__iter__
+
+    def get(self, key, default=None):
+        return self.dict.get(key, default)
+
+    def keys(self):
+        return self.dict.keys()
+
+    def values(self):
+        return self.dict.values()
+
+    def items(self):
+        return self.dict.iteritems()
+
+    def iterkeys(self):
+        return self.dict.iterkeys()
+
+    def itervalues(self):
+        return self.dict.itervalues()
+
+    def iteritems(self):
+        return self.dict.iteritems()
+

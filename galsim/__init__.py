@@ -30,7 +30,7 @@ from compound import Add, Convolve, Deconvolve, AutoConvolve, AutoCorrelate
 from shear import Shear
 from lensing_ps import PowerSpectrum
 from nfw_halo import NFWHalo, Cosmology
-from catalog import InputCatalog
+from catalog import InputCatalog, DictFile
 from table import LookupTable
 from random import DistDeviate
 from correlatednoise import CorrelatedNoise, getCOSMOSNoise
