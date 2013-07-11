@@ -309,7 +309,7 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
     config['seq_index'] = image_num
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
-               'n_photons', 'wmult', 'gsparams' ]
+               'n_photons', 'wmult', 'offset', 'gsparams' ]
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 'index_convention' : str,
             'pixel_scale' : float , 'sky_level' : float , 'sky_level_pixel' : float }
     params = galsim.config.GetAllParams(
@@ -372,7 +372,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     config['seq_index'] = image_num
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
-               'image_pos', 'n_photons', 'wmult', 'gsparams' ]
+               'image_pos', 'n_photons', 'wmult', 'offset', 'gsparams' ]
     req = { 'nx_tiles' : int , 'ny_tiles' : int }
     opt = { 'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
             'border' : int , 'xborder' : int , 'yborder' : int ,
@@ -604,7 +604,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     config['seq_index'] = image_num
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
-               'image_pos', 'sky_pos', 'n_photons', 'wmult',
+               'image_pos', 'sky_pos', 'n_photons', 'wmult', 'offset',
                'stamp_size', 'stamp_xsize', 'stamp_ysize', 'gsparams' ]
     req = { 'nobjects' : int }
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 

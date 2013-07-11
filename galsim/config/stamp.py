@@ -276,8 +276,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
 
     elif 'sky_pos' in config['image']:
         import math
-        sky_pos = galsim.config.ParseValue(config['image'],'sky_pos',config,
-                                           galsim.PositionD)[0]
+        sky_pos = galsim.config.ParseValue(config['image'], 'sky_pos', config, galsim.PositionD)[0]
         # Save this value for possible use in Eval's.
         config['sky_pos'] = sky_pos
         #print 'sky_pos = ',sky_pos
@@ -310,7 +309,11 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
 
     else:
         icenter = None
-        final_shift = None
+        final_shift = galsim.PositionD(0.,0.)
+
+    if 'offset' in config['image']:
+        offset = galsim.config.ParseValue(config['image'], 'offset', config, galsim.PositionD)[0]
+        final_shift += offset
 
     gsparams = {}
     if 'gsparams' in config['image']:
