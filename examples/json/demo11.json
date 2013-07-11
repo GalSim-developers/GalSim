@@ -26,7 +26,7 @@
 "#" : " - float_value type : RandomDistribution(function, x_min, x_max) ",
 "#" : " - pix type : None ",
 "#" : " - input.power_spectrum : (e_power_file, delta2, units) ",
-"#" : " - noise type : COSMOS ",
+"#" : " - noise type : COSMOS (file_name, dx_cosmos, variance)",
 "#" : " - image.index_convention : (0 or 'C' or 'python') vs (1 or 'Fortran' or 'FITS')",
 
 "#" : " - Power spectrum shears and magnifications for non-gridded positions.",

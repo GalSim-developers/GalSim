@@ -47,6 +47,8 @@
 # - obj type : RealGalaxy (index)
 # - obj : rotate 
 # - obj : magnify
+# - obj : noise_pad
+# - value type : COSMOS (file_name)
 # - image : sky_level
 # - value type : Sequence (first, last, step)
 # - output type : DataCube (file_name, dir, nimages)
