@@ -27,6 +27,12 @@
 # larger set of images.  See https://github.com/GalSim-developers/GalSim/wiki for a link
 # to the download page.
 #
+# The real galaxy images are padded prior to use with noise that matches that in the original
+# COSMOS observations.  This noise is spatially correlated in the same way as often seen in
+# coadd images from the Hubble Space Telescope (HST) Advanced Camera for Surveys such as
+# COSMOS, using a correlation function determined from the HST coadd images in the F814W
+# filter (see, e.g., Leauthaud et al 2007).
+#
 # The galaxy images include images of the effective PSF for the original observations, 
 # so GalSim considers the galaxy profile to be the observed image deconvolved by that PSF.
 # In this case, we then randomly rotate the galaxies, apply a given gravitational shear as 
@@ -113,6 +119,10 @@ gal :
         # If the sequential values exceed last, they will repeat back starting at first, so it's
         # ok to have nobjects greater than the number of real galaxies in the catalog.
     
+    noise_pad :
+        type : COSMOS
+        file_name : ../examples/data/acs_I_unrot_sci_20_cf.fits
+
     rotate :
         # An angle of type Random means uniform within 0 .. 2pi radians
         type : Random
@@ -160,7 +170,7 @@ input :
     # If the images are in a different directory, you may also specify image_dir, which gives
     # the relative path from dir to wherever the images are located.
     real_catalog :
-        dir : data
+        dir : ../examples/data
         file_name : real_galaxy_catalog_example.fits
         preload : True   # This usually makes a big improvement in speed
 

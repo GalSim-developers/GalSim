@@ -51,6 +51,7 @@ valid_value_types = {
     'NFWHaloMagnification' : [ float ],
     'PowerSpectrumShear' : [ galsim.Shear ],
     'PowerSpectrumMagnification' : [ float ],
+    'COSMOS' : [ galsim.correlatednoise._BaseCorrelatedNoise ],
 }
  
 def ParseValue(config, param_name, base, value_type):
@@ -93,6 +94,7 @@ def ParseValue(config, param_name, base, value_type):
 
         type = param['type']
         #print 'type = ',type
+        #print param['type'], value_type
 
         # First check if the value_type is valid.
         if type not in valid_value_types.keys():
@@ -962,6 +964,20 @@ def _GenerateFromEval(param, param_name, base, value_type):
         raise ValueError("Unable to evaluate string %r as a %s for %s"%(
                 string,value_type,param_name))
 
+def _GenerateFromCOSMOS(param, param_name, base, value_type):
+    """@brief Return a galsim.correlatednoise._BaseCorrelatedNoise constructed from a type : COSMOS
+    dict of parameters.
+    """
+    req = { 'file_name' : str }
+    opt = { 'rng' : galsim.BaseDeviate, 'dx_cosmos' : float, 'variance' : float }
+    kwargs, safe = GetAllParams(param, param_name, base, req=req, opt=opt)
+    if 'rng' not in kwargs:
+        if 'rng' not in base:
+            raise ValueError("No base['rng'] available for %s.type = COSMOS"%(param_name))
+        kwargs['rng'] = base['rng']
+    cn = galsim.correlatednoise.getCOSMOSNoise(**kwargs)
+    # print, "kwargs, correlated_noise = ", kwargs, cn
+    return cn, safe
 
 def SetDefaultIndex(config, num):
     """

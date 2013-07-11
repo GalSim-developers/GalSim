@@ -233,7 +233,7 @@ class InterpolatedImage(GSObject):
         'override_var' : float ,
         'pad_image' : str ,
         'calculate_stepk' : bool ,
-        'calculate_maxk' : bool,
+        'calculate_maxk' : bool ,
         'use_true_center' : bool
     }
     _single_params = []

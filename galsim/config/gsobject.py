@@ -396,26 +396,6 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams):
             raise IndexError(
                 "%s index has gone past the number of entries in the catalog"%index)
 
-    if 'noise_pad' in kwargs:
-        noise_pad = kwargs['noise_pad']
-        # Check to see if the noise_pad is a dict, in which case it describes the COSMOS noise
-        # correlation function to be used for padding
-        if isinstance(noise_pad, dict):
-            if not 'type' in noise_pad:
-                raise AttributeError("type required if noise_pad input to RealGalaxy is a dict")
-            if (noise_pad['type']).upper() != 'COSMOS':
-                raise ValueError("Only noise_pad dicts with type='COSMOS' are currently supported")
-            # OK so having checked that if a dict that the noise_pad is a type=COSMOS, we make the
-            # CorrelatedNoise instance requested using getCOSMOSNoise()
-            req_cn = { 'file_name' : str }
-            opt_cn = { 'dx_cosmos' : float } # Variance not allowed as the RealGalaxy resets it
-            kwargs_cn = galsim.config.GetAllParams(
-                config[key], 'noise_pad', base, req=req, opt=opt)[0]
-            # Build the correlated noise 
-            cn = galsim.correlatednoise.getCOSMOSNoise(kwargs['rng'], **kwargs_cn)
-            kwargs = kwargs.copy() # Preventing any destruction from next line... Over cautious?
-            kwargs['noise_pad'] = cn
-
     return galsim.RealGalaxy(real_cat, **kwargs), safe
 
 

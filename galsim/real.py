@@ -153,15 +153,16 @@ class RealGalaxy(GSObject):
     The RealGalaxy is a GSObject, and inherits all of the GSObject methods (draw(), applyShear(), 
     etc. except drawShoot() which is unavailable), and operator bindings.
     """
+    import galsim.correlatednoise
 
     # Initialization parameters of the object, with type information
     _req_params = {}
     _opt_params = { "x_interpolant" : str ,
-                    "k_interpolant" : str,
+                    "k_interpolant" : str ,
                     "flux" : float ,
-                    "pad_factor" : float,
-                    "noise_pad" : str,
-                    "pad_image" : str}
+                    "pad_factor" : float ,
+                    "noise_pad" : galsim.correlatednoise._BaseCorrelatedNoise ,
+                    "pad_image" : str }
     _single_params = [ { "index" : int , "id" : str } ]
     _takes_rng = True
     _cache_noise_pad = {}
