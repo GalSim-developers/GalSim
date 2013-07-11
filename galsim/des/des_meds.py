@@ -21,8 +21,7 @@
 This module defines the `MultiExposureObject` class for representing multiple exposure data for a single object, and the `WCSTransform` class used to store general, locally-linearized WCS information per exposure.  The `write_meds` function
 can be used to write a list of `MultiExposureObject` instances to a single MEDS file.
 
-Importing this module with `import des.des_meds` also adds these data structures to the config framework, so that MEDS
-file output can subsequently be simulated directly using a config file.
+Importing this module also adds these data structures to the config framework, so that MEDS file output can subsequently be simulated directly using a config file.
 """
 
 import numpy
@@ -43,6 +42,11 @@ EMPTY_JAC = 999
 class WCSTransform(object):
     """
     Very simple class which holds a WCS transformation, including a Jacobian and a shifted centroid.
+    The (u,v) coordinate plane is the local tangent plane at the location of the galaxy with 
+    North = +v, West = +u. The 'u' coordinace scales as cos(DEC) * dRA.
+    Here, 'row' is a row in the image; 'col' is a column in the image. 
+    The row/col notation is the same as arrays indexed in C and python, arr[row,col].
+
     Available fields:
     self.dudrow  -  element 1,1 of the Jacobian matrix
     self.dudcol  -  element 1,2 of the Jacobian matrix
@@ -52,7 +56,6 @@ class WCSTransform(object):
     self.col0    -  vertical position of the centroid as given by SExtractor, in pixel coordinates 
     """
 
-
     def __init__(self, dudrow, dudcol, dvdrow, dvdcol, row0, col0):
     
         self.dudrow =      dudrow
@@ -61,8 +64,6 @@ class WCSTransform(object):
         self.dvdcol =      dvdcol
         self.row0 =        row0
         self.col0 =        col0
-
-
 
 class MultiExposureObject(object):
     """
