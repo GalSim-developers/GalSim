@@ -247,5 +247,4 @@ def test_shear_methods():
 
 if __name__ == "__main__":
     test_shear_initialization()
-    test_ellipse_initialization()
     test_shear_methods()
