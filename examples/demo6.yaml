@@ -122,6 +122,8 @@ gal :
         # ok to have nobjects greater than the number of real galaxies in the catalog.
     
     noise_pad :
+        # This loads a correlated noise model using galsim.getCOSMOSNoise(file_name) to use for
+        # padding the RealGalaxy.
         type : COSMOS
         file_name : ../examples/data/acs_I_unrot_sci_20_cf.fits
 

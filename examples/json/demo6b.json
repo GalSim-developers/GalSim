@@ -9,6 +9,12 @@
 "#" : "larger set of images.  See https://github.com/GalSim-developers/GalSim/wiki for a link",
 "#" : "to the download page.",
 
+"#" : "The real galaxy images are padded prior to use with noise that matches that in the original",
+"#" : "COSMOS observations.  This noise is spatially correlated in the same way as often seen in ",
+"#" : "coadd images from the Hubble Space Telescope (HST) Advanced Camera for Surveys such as ",
+"#" : "COSMOS, using a correlation function determined from the HST coadd images in the F814W ",
+"#" : "filter (see, e.g., Leauthaud et al 2007).",
+
 "#" : "The galaxy images include images of the effective PSF for the original observations, ",
 "#" : "so GalSim considers the galaxy profile to be the observed image deconvolved by that PSF.",
 "#" : "In this case, we then randomly rotate the galaxies, apply a given gravitational shear as ",
@@ -23,6 +29,8 @@
 "#" : "- obj type : RealGalaxy (index)",
 "#" : "- obj : rotate ",
 "#" : "- obj : magnify",
+"#" : "- obj : noise_pad",
+"#" : "- value type : COSMOS (file_name)",
 "#" : "- image : sky_level",
 "#" : "- value type : Sequence (first, last, step)",
 "#" : "- output type : DataCube (file_name, dir, nimages)",
@@ -32,7 +40,7 @@
 "#" : "For this example, we actually have two config files, since we have two different kinds",
 "#" : "of output files to make.  The first, demo6a.json is for the PSF output,",
 "#" : "and the second, demo6b.json is for the convolved galaxy images.",
-"#" : "Out JSON parser can take multiple input files on the command line, and will run all",
+"#" : "Our JSON parser can take multiple input files on the command line, and will run all",
 "#" : "of them.",
 
 "#" : "Define what kind of PSF to use",
@@ -57,6 +65,13 @@
         "#" : "  step = 1",
         "#" : "If the sequential values exceed last, they will repeat starting at first, so it's",
         "#" : "ok to have nobjects greater than the number of real galaxies in the catalog."
+    },
+
+    "noise_pad" : {
+        "#" : "This loads a correlated noise model using galsim.getCOSMOSNoise(file_name) to use ",
+        "#" : "for padding the RealGalaxy.",
+        "type" : "COSMOS",
+        "file_name" : "../examples/data/acs_I_unrot_sci_20_cf.fits"
     },
     
     "rotate" : {
@@ -110,7 +125,7 @@
     "#" : "If the images are in a different directory, you may also specify image_dir, which gives",
     "#" : "the relative path from dir to wherever the images are located.",
     "real_catalog" : {
-        "dir" : "data",
+        "dir" : "../examples/data",
         "file_name" : "real_galaxy_catalog_example.fits",
 
         "#" : "This usually makes a big improvement in speed",
