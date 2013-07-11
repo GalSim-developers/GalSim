@@ -74,6 +74,9 @@ def PlotStatsForParam(config,param_name):
         bias_moments_list[iv] = bias_moments
         bias_hsmcorr_list[iv] = bias_hsmcorr
 
+    # import cPickle as pickle 
+    # filename_pickle = 'pickle.%s.pp' % param
+    # pickle.dump([bias_moments_list,bias_hsmcorr_list],open(filename_pickle,'w'),protocol=2)
         
     # yaml is bad at converting lists of floats in scientific notation to floats
     values_float = map(float,param['values'])
@@ -94,6 +97,8 @@ def PlotStatsForParam(config,param_name):
         pylab.plot(numpy.ones([len(m1)])*values_float[iv],m1,'x')
         pylab.errorbar(values_float[iv],numpy.mean(m1),yerr=numpy.std(m1,ddof=1),fmt='o',capsize=30)
         # pylab.plot(numpy.ones([len(m2)])*values_float[iv],m2,'o')
+
+
 
     pylab.ylabel('m1')
     pylab.xlabel(param_name)

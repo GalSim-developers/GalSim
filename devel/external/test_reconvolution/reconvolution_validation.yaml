@@ -20,12 +20,12 @@ vary_params:
         rebuild_reconv : True  
     maxk_threshold :   
         path : ['gsparams','maxk_threshold' ] 
-        values : [ 1.0e-1 , 1.0e-2 , 5.0e-3 , 1.0e-3 , 5.0e-4 , 1.0e-4 , 5.0e-5 , 1.0e-5 ]  
+        values : [ 1.0e-1 , 1.0e-2 , 5.0e-3 , 1.0e-3 , 5.0e-4 , 1.0e-4 , 5.0e-5 , 1.0e-4 ]  
         rebuild_direct : True
         rebuild_reconv : True 
     kvalue_accuracy : 
         path : ['gsparams','kvalue_accuracy']
-        values : [ 1.0e-3 , 1.0e-4 , 1.0e-5 , 1.0e-6 , 1.0e-7 , 1.0e-8 ] 
+        values : [ 1.0e-3 , 1.0e-4 , 1.0e-5 , 1.0e-6 , 1.0e-7  ] 
         rebuild_direct : True 
         rebuild_reconv : True 
     snr :
@@ -132,10 +132,12 @@ reconvolved_images :
         random_seed : 2222211
         nproc : 5
         pixel_scale : 0.2   # pixel scale for the ground observation
-        type : Tiled
-        nx_tiles : 1        # we are generating galaxies in one long tiled stripe
-        ny_tiles :  *n_images
-        stamp_size : 128    #  big in order for the space images to contain the galaxies fully
+        # type : Tiled
+        # nx_tiles : 1        # we are generating galaxies in one long tiled stripe
+        # ny_tiles :  *n_images
+        # stamp_size : 128    #  big in order for the space images to contain the galaxies fully
+        type : Single
+        size : 128
         # this field is required for the photon image, 
         # but we don't want to add any noise, so we set the variance to 0
         noise : { type : Gaussian, sigma : 0. }

@@ -192,7 +192,9 @@ def GetReconvImage(config):
     galsim.config.ProcessInput(reconv_config)
 
     # get number of images
-    n_gals = len(galsim.config.GetNObjForMultiFits(reconv_config,0,0))
+    # n_gals = galsim.config.GetNObjForImage(reconv_config,0)
+    n_gals = config['reconvolution_validation_settings']['n_images']
+    # import pdb;pdb.set_trace()
 
     # get the reconvolved galaxies
     img_gals,img_psfs,_,_ = galsim.config.BuildImages(config=reconv_config,make_psf_image=True,
@@ -224,7 +226,8 @@ def GetDirectImage(config):
     galsim.config.ProcessInput(direct_config)
 
     # get number of images
-    n_gals = len(galsim.config.GetNObjForMultiFits(direct_config,0,0))
+    # n_gals = len(galsim.config.GetNObjForMultiFits(direct_config,0,0))
+    n_gals = config['reconvolution_validation_settings']['n_images']
 
     # get the direct galaxies
     img_gals,img_psfs,_,_ = galsim.config.BuildImages(config=direct_config,make_psf_image=True,
@@ -234,7 +237,7 @@ def GetDirectImage(config):
 
 def GetShapeMeasurements(image_gal, image_psf, ident=-1):
     """
-    @brief measure the image with FindAdaptiveMom and EstimateShearHSM.
+    @brief measure the image with FindAdaptiveMom and EstimateShear.
     @param image_gal    galsim image of the galaxy
     @param image_psf    galsim image of the PSF
     @param ident        id of the galaxy (default -1)
@@ -246,16 +249,16 @@ def GetShapeMeasurements(image_gal, image_psf, ident=-1):
     HSM_SHEAR_EST = "KSB"
 
     # find adaptive moments  
-    try: moments = galsim.FindAdaptiveMom(image_gal)
+    try: moments = galsim.hsm.FindAdaptiveMom(image_gal)
     except Exception,e: raise RuntimeError('FindAdaptiveMom error, message: %s' % e)
 
     # find HSM moments
     if image_psf == None: hsmcorr_phot_e1 =  hsmcorr_phot_e2  = NO_PSF_VALUE 
     else:
         try: 
-            hsmcorr   = galsim.EstimateShearHSM(image_gal,image_psf,strict=True,  
+            hsmcorr   = galsim.hsm.EstimateShear(image_gal,image_psf,strict=True,  
                                                                        shear_est=HSM_SHEAR_EST)
-        except Exception,e: raise RuntimeError('EstimateShearHSM error, message: %s' % e)
+        except Exception,e: raise RuntimeError('EstimateShear error, message: %s' % e)
                 
         logger.debug('galaxy %d : adaptive moments G1=% 2.6f\tG2=% 2.6f\tsigma=%2.6f\t hsm \
             corrected moments G1=% 2.6f\tG2=% 2.6f' 
