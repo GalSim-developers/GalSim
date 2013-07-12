@@ -225,11 +225,11 @@ class GSObject(object):
         
         xValue() is available if obj.isAnalyticX() == True.
 
-        As in SBProfile, this function assumes all are real-valued.  xValue() may not be implemented
-        for derived classes (e.g. SBConvolve) that require a Discrete Fourier Transform to determine
-        real space values.  In this case, an SBError will be thrown at the C++ layer (raises a
-        RuntimeError in Python).  Users who wish to use the xValue() method for an object that is
-        the convolution of other profiles can do so by drawing the convolved profile into an image,
+        This function assumes all are real-valued.  xValue() may not be implemented for derived 
+        classes (e.g. Convolve) that require a Discrete Fourier Transform to determine real space 
+        values.  In this case, an exception will be thrown at the C++ layer (raises a RuntimeError
+        in Python).  Users who wish to use the xValue() method for an object that is the 
+        convolution of other profiles can do so by drawing the convolved profile into an image,
         using the image to initialize a new InterpolatedImage, and then using the xValue() method
         for that new object.
         
@@ -246,7 +246,7 @@ class GSObject(object):
         kValue() can be used for all of our simple base classes.  However, if a Convolve object
         representing the convolution of multiple objects uses real-space convolution rather than the
         DFT approach, i.e., real_space=True (either by argument or if it decides on its own to do
-        so), then it is not analytic in k-space, so kValue() will raise an exception.  An SBError
+        so), then it is not analytic in k-space, so kValue() will raise an exception.  An exception
         will be thrown at the C++ layer (raises a RuntimeError in Python).
 
         @param position  A 2D galsim.PositionD/galsim.PositionI instance giving the position in k 
@@ -822,8 +822,8 @@ class GSObject(object):
         n_photons) as draw() produces when the same object is convolved with `Pixel(xw=dx)` when
         drawing onto an image with pixel scale `dx`.
 
-        Note that the drawShoot method is unavailable for objects which contain an SBDeconvolve,
-        or are compound objects (e.g. Add, Convolve) that include an SBDeconvolve.
+        Note that the drawShoot method is unavailable for Deconvolve objects or compound objects 
+        (e.g. Add, Convolve) that include a Deconvolve.
 
         On return, the image will have a member `added_flux`, which will be set to be the total
         flux of photons that landed inside the image bounds.  This may be useful as a sanity check 
@@ -984,9 +984,8 @@ class GSObject(object):
             # so the traceback shows as much detail as possible.
             import warnings
             warnings.warn(
-                "Unable to drawShoot from this GSObject, perhaps it contains an SBDeconvolve "+
-                "in the SBProfile attribute or is a compound including one or more Deconvolve "+
-                "objects.")
+                "Unable to drawShoot from this GSObject, perhaps it is a Deconvolve "+
+                "or is a compound including one or more Deconvolve objects.")
             raise
 
         return image
@@ -1070,10 +1069,11 @@ class GSObject(object):
 # The __init__ method is usually simple and all the GSObject methods & attributes are inherited.
 # 
 class Gaussian(GSObject):
-    """A class describing Gaussian profile objects.  Has an SBGaussian in the SBProfile attribute.
+    """A class describing a 2-D Gaussian surface brightness profile.
 
-    For more details of the Gaussian Surface Brightness profile, please see the SBGaussian
-    documentation produced by doxygen.
+    The Gaussian surface brightness profile is characterized by two properties, its `flux`
+    and the characteristic size `sigma` where the radial profile of the circular Gaussian
+    drops off as `exp[-r^2 / (2. * sigma^2)]`.
 
     Initialization
     --------------
@@ -1142,11 +1142,15 @@ class Gaussian(GSObject):
 
 
 class Moffat(GSObject):
-    """A class describing Moffat PSF profiles.  Has an SBMoffat in the SBProfile attribute.
+    """A class describing a Moffat surface brightness profile.
 
-    For more details of the Moffat Surface Brightness profile, please see the SBMoffat
-    documentation produced by doxygen, or refer to 
-    http://home.fnal.gov/~neilsen/notebook/astroPSF/astroPSF.html.
+    The Moffat surface brightness profile is I(R) propto [1 + (r/r_scale)^2]^(-beta).  The
+    SBProfile representation of a Moffat profile also includes an optional truncation beyond a
+    given radius.
+
+    For more information, refer to 
+
+        http://home.fnal.gov/~neilsen/notebook/astroPSF/astroPSF.html
 
     Initialization
     --------------
@@ -1217,10 +1221,12 @@ class Moffat(GSObject):
 
 
 class Airy(GSObject):
-    """A class describing Airy PSF profiles.  Has an SBAiry in the SBProfile attribute.
+    """A class describing the surface brightness profile for an Airy disk (perfect 
+    diffraction-limited PSF for a * circular aperture), with an optional central obscuration.
 
-    For more details of the Airy Surface Brightness profile, please see the SBAiry documentation
-    produced by doxygen, or refer to http://en.wikipedia.org/wiki/Airy_disc.
+    For more information, refer to 
+    
+        http://en.wikipedia.org/wiki/Airy_disc
 
     Initialization
     --------------
@@ -1292,10 +1298,12 @@ class Airy(GSObject):
 
 
 class Kolmogorov(GSObject):
-    """A class describing Kolmogorov PSF profiles.  Has an SBKolmogorov in the SBProfile attribute.
-       
-    Represents a long exposure Kolmogorov PSF.  For more information, refer to 
-    http://en.wikipedia.org/wiki/Atmospheric_seeing#The_Kolmogorov_model_of_turbulence.
+    """A class describing a Kolmogorov surface brightness profile, which represents a long 
+    exposure atmospheric PSF.
+    
+    For more information, refer to 
+
+        http://en.wikipedia.org/wiki/Atmospheric_seeing#The_Kolmogorov_model_of_turbulence
 
     Initialization
     --------------
@@ -1393,7 +1401,7 @@ class Kolmogorov(GSObject):
 
 
 class Pixel(GSObject):
-    """A class describing pixels.  Has an SBBox in the SBProfile attribute.
+    """A class describing a pixel profile.  This is just a 2-d top-hat function.
 
     This class is typically used to represent a Pixel response function, and therefore is only
     needed when drawing images using Fourier transform or real-space convolution (with the draw
@@ -1445,10 +1453,17 @@ class Pixel(GSObject):
 
 
 class Sersic(GSObject):
-    """A class describing Sersic profile objects.  Has an SBSersic in the SBProfile attribute.
+    """A class describing a Sersic profile.
 
-    For more details of the Sersic Surface Brightness profile, please see the SBSersic documentation
-    produced by doxygen, or refer to http://en.wikipedia.org/wiki/Sersic_profile.
+    The Sersic surface brightness profile is characterized by three properties: its Sersic index
+    `n`, its `flux`, and either the `half_light_radius` or `scale_radius`.  Given these properties,
+    the surface brightness profile scales as `I(r) propto exp[-(r/scale_radius)^{1/n}]`, or 
+    `I(r) propto exp[-b*(r/half_light_radius)^{1/n}]` (where b is calculated to give the right 
+    half-light radius).
+    
+    For more information, refer to 
+
+        http://en.wikipedia.org/wiki/Sersic_profile
 
     Initialization
     --------------
@@ -1458,12 +1473,6 @@ class Sersic(GSObject):
 
         half_light_radius
         scale_radius
-
-    where `I_n(r) ~ exp[-(r/scale_radius)^{1/n}] = exp[-b_n (r/half_light_radius)^{1/n}]`, and
-    where `b_n` is implicitly defined by the condition
-    `\int_{0}^{half_light_radius} I_n(r) 2pi r dr} = 0.5 \int_{0}^{infinity} I_n(r) 2pi r dr`.
-    Note that `b_n = (half_light_radius/scale_radius)^{1/n}` (when there is no truncation; see
-    below).
 
     The code is limited to 0.3 <= n <= 4.2, with an exception thrown for values outside that range.
 
@@ -1632,11 +1641,11 @@ class Sersic(GSObject):
 
 
 class Exponential(GSObject):
-    """A class describing exponential profile objects.  Has an SBExponential in the SBProfile 
-    attribute.
+    """A class describing an exponential profile.
 
-    For more details of the Exponential Surface Brightness profile, please see the SBExponential
-    documentation produced by doxygen.
+    Surface brightness profile with I(r) propto exp[-r/scale_radius].  This is a special case of 
+    the Sersic profile, but is given a separate class since the Fourier transform has closed form 
+    and can be generated without lookup tables.
 
     Initialization
     --------------
@@ -1695,151 +1704,27 @@ class Exponential(GSObject):
 
 
 class DeVaucouleurs(GSObject):
-    """A class describing DeVaucouleurs profile objects.  Has an SBDeVaucouleurs in the SBProfile 
-    attribute.
+    """A class describing DeVaucouleurs profile objects.
 
-    For more details of the DeVaucouleurs Surface Brightness profile, please see the
-    SBDeVaucouleurs documentation produced by doxygen, or refer to 
-    http://en.wikipedia.org/wiki/De_Vaucouleurs'_law.
+    Surface brightness profile with I(r) propto exp[-(r/scale_radius)^{1/4}].  
+    This is completely equivalent to a Sersic with n=4.
+
+    For more information, refer to 
+
+        http://en.wikipedia.org/wiki/De_Vaucouleurs'_law
 
     Initialization
     --------------
 
-    A DeVaucouleurs is initialized with one (and only one) of two possible size parameters
+    A DeVaucouleurs is initialized with a `flux` and  one (and only one) of two possible size 
+    parameters
 
         half_light_radius
         scale_radius
 
-    where `I_n(r) ~ exp[-(r/scale_radius)^{1/4}] = exp[-b (r/half_light_radius)^{1/4}]`, and
-    where `b` is implicitly defined by the condition
-    `\int_{0}^{half_light_radius} I_n(r) 2pi r dr} = 0.5 \int_{0}^{infinity} I_n(r) 2pi r dr`.
-    Note that `b = (half_light_radius/scale_radius)^{1/4}` (when there is no truncation; see
-    below).
-
-    Several optional parameters are available:  Truncation radius `trunc` [default `trunc = 0.`,
-    indicating no truncation] and a `flux` parameter [default `flux = 1`].  If `trunc` is set to
-    a non-zero value, then it is assumed to be in the same system of units as `half_light_radius`
-    or `scale_radius`.
-
-    Note that the code will be more efficient if the truncation is always the same multiple of
-    `scale_radius`, since it caches many calculations that depend on the ratio `trunc/scale_radius`.
-    The `scale_radius` is always calculated internally for a `half_light_radius` input, and vice
-    versa.  Internal calculations are based on the `scale_radius`.
-
-    Example:
-
-        >>> dvc_obj = galsim.DeVaucouleurs(half_light_radius=2.5, flux=40.)
-        >>> dvc_obj.getHalfLightRadius()
-        2.5
-        >>> dvc_obj.getScaleRadius()
-        0.0007226509117045296
-        >>> dvc_obj.getFlux()
-        40.0
-
-        >>> dvc_obj = galsim.DeVaucouleurs(scale_radius=0.0005, flux=40.)
-        >>> dvc_obj.getHalfLightRadius()
-        1.7297425074184196
-        >>> dvc_obj.getScaleRadius()
-        0.0005
-        >>> dvc_obj.getFlux()
-        40.0
-
-    Another optional parameter, `flux_untruncated`, specifies whether the `flux` and
-    `half_light_radius` specification correspond to the untruncated profile or the truncated
-    profile.  (The example here is specifically for the case where the truncated DeVaucouleurs is
-    specified by the `half_light_radius`.  For the case when it is specified by the `scale_radius`,
-    see below.)  If `flux_untruncated` is True (and `trunc > 0`), then the profile will be identical
-    to the version without truncation up to the truncation radius, beyond which it drops to 0.
-    In this case, the actual half-light radius will be different from the specified half-light
-    radius.  The getHalfLightRadius() method will return the true half-light radius.  Similarly,
-    the actual flux will not be the same as the specified value; the true flux is also returned
-    by the getFlux() method.
-
-    Example:
-
-        >>> dvc_obj1 = galsim.DeVaucouleurs(half_light_radius=2.5, flux=40.)
-        >>> dvc_obj2 = galsim.DeVaucouleurs(half_light_radius=2.5, flux=40., trunc=10.)
-        >>> dvc_obj3 = galsim.DeVaucouleurs(half_light_radius=2.5, flux=40., trunc=10., \\
-                                            flux_untruncated=True)
-
-        >>> dvc_obj1.xValue(galsim.PositionD(0.,0.))
-        604.6895805977035
-        >>> dvc_obj2.xValue(galsim.PositionD(0.,0.))
-        311.21124599256984     # Normalization and scale radius adjusted (same half-light radius)
-        >>> dvc_obj3.xValue(galsim.PositionD(0.,0.))
-        604.6895805977036
-
-        >>> dvc_obj1.xValue(galsim.PositionD(10.0001,0.))
-        0.011781304853168086
-        >>> dvc_obj2.xValue(galsim.PositionD(10.0001,0.))
-        0.0
-        >>> dvc_obj3.xValue(galsim.PositionD(10.0001,0.))
-        0.0
-
-        >>> dvc_obj1.getHalfLightRadius()
-        2.5
-        >>> dvc_obj2.getHalfLightRadius()
-        2.5
-        >>> dvc_obj3.getHalfLightRadius()
-        1.886276572775526      # The true half-light radius is smaller than the specified value
-
-        >>> dvc_obj1.getFlux()
-        40.0
-        >>> dvc_obj2.getFlux()
-        40.0
-        >>> dvc_obj3.getFlux()
-        33.863171136497485     # Flux is missing due to truncation
-
-        >>> dvc_obj1.getScaleRadius()
-        0.0007226509117045296
-        >>> dvc_obj2.getScaleRadius()
-        0.0011682634210583717  # the scale radius needed adjustment to accommodate HLR
-        >>> dvc_obj3.getScaleRadius()
-        0.0007226509117045296  # the scale radius is still identical to the untruncated case
-
-    When the truncated DeVaucouleurs scale is specified with `scale_radius`, the behavior between
-    the three cases (untruncated, `flux_untruncated=true` and `flux_untruncated=false`) will be
-    somewhat different from above.  Since it is the scale radius that is being specified, and since
-    truncation does not change the scale radius the way it can change the half-light radius, the
-    scale radius will remain unchanged in all cases.  This also results in the half-light radius
-    being the same between the two truncated cases (although different from the untruncated case).
-    The flux normalization is the only difference between `flux_untruncated=True` and
-    `flux_untruncated=False` in this case.
-
-    Example:
-
-        >>> dvc_obj1 = galsim.DeVaucouleurs(scale_radius=0.005, flux=40.)
-        >>> dvc_obj2 = galsim.DeVaucouleurs(scale_radius=0.005, flux=40., trunc=10.)
-        >>> dvc_obj3 = galsim.DeVaucouleurs(scale_radius=0.005, flux=40., trunc=10., \\
-                                            flux_untruncated=True)
-
-        >>> dvc_obj1.xValue(galsim.PositionD(0.,0.))
-        12.63134468983296
-        >>> dvc_obj2.xValue(galsim.PositionD(0.,0.))
-        35.599406762789826    # Normalization adjusted to accomodate the flux within trunc radius
-        >>> dvc_obj3.xValue(galsim.PositionD(0.,0.))
-        12.631344689832964
-
-        >>> dvc_obj1.getHalfLightRadius()
-        17.297425074184197
-        >>> dvc_obj2.getHalfLightRadius()
-        4.227095063833963
-        >>> dvc_obj3.getHalfLightRadius()
-        4.227095063833963     # For the truncated cases, the half-light radii are the same
-
-        >>> dvc_obj1.getFlux()
-        40.0
-        >>> dvc_obj2.getFlux()
-        40.0
-        >>> dvc_obj3.getFlux()
-        14.192758631063299    # Flux is missing due to truncation
-
-        >>> dvc_obj1.getScaleRadius()
-        0.005
-        >>> dvc_obj2.getScaleRadius()
-        0.005
-        >>> dvc_obj3.getScaleRadius()
-        0.005
+    The optional truncation works the same way as for a Sersic object using the optional 
+    parameters `trunc` and `flux_untruncated`.  See the documentation there for more details
+    about these parameters.
 
     You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
     help(galsim.GSParams) for more information about this option.
