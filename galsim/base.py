@@ -1724,7 +1724,7 @@ class DeVaucouleurs(GSObject):
 
     The optional truncation works the same way as for a Sersic object using the optional 
     parameters `trunc` and `flux_untruncated`.  See the documentation there for more details
-    these parameters.
+    about these parameters.
 
     You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
     help(galsim.GSParams) for more information about this option.
