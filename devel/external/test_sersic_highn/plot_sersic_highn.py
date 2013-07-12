@@ -57,7 +57,6 @@ for test_case in ("basic",):# "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2"
         # First fit a line to the points
         c, m, var_c, cov_cm, var_m = fitting.fitline(
             g1obs_draw[0:data.shape[0]/ntest, i], delta_g1obs[0:data.shape[0]/ntest, i])
-        print m, np.sqrt(var_m)
         if i < 7:
             fmt='x'
         else:
@@ -106,10 +105,17 @@ for test_case in ("basic",):# "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2"
     XMAX = 1.25 # in arcsec
     plt.clf()
     plt.xlim(XMIN, XMAX)
+    print ""
+    print ""
+    print ""
     for i in range(ntest):
         # First fit a line to the points
         c, m, var_c, cov_cm, var_m = fitting.fitline(
             sigma_draw[0:data.shape[0]/ntest, i], delta_sigma[0:data.shape[0]/ntest, i])
+        print "sigma results for n = "+str(test_sersic_highn_basic.SERSIC_N_TEST[i])+":"
+        print "c = %.2e +/- %.2e arcsec" % (
+            c * test_sersic_highn_basic.PIXEL_SCALE,
+            np.sqrt(var_c) * test_sersic_highn_basic.PIXEL_SCALE)
         if i < 7:
             fmt='x'
         else:
