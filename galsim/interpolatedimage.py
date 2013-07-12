@@ -26,16 +26,15 @@ from galsim import GSObject
 
 
 class InterpolatedImage(GSObject):
-    """A class describing non-parametric objects specified using an Image, which can be interpolated
-    for the purpose of carrying out transformations.
+    """A class describing non-parametric profiles specified using an Image, which can be 
+    interpolated for the purpose of carrying out transformations.
 
-    The input Image and optional interpolants are used to create an SBInterpolatedImage.  The
-    InterpolatedImage class is useful if you have a non-parametric description of an object as an
-    Image, that you wish to manipulate / transform using GSObject methods such as applyShear(),
+    The InterpolatedImage class is useful if you have a non-parametric description of an object as 
+    an Image, that you wish to manipulate / transform using GSObject methods such as applyShear(),
     applyMagnification(), applyShift(), etc.  The input Image can be any BaseImage (i.e., Image,
     ImageView, or ConstImageView).  Note that when convolving an InterpolatedImage, the use of
-    real-space convolution is not recommended, since it is a great deal slower than Fourier-space
-    convolution.
+    real-space convolution is not recommended, since it is typically a great deal slower than 
+    Fourier-space convolution for this kind of object.
 
     The constructor needs to know how the Image was drawn: is it an Image of flux or of surface
     brightness?  Since our default for drawing Images using draw() and drawShoot() is that
@@ -131,10 +130,9 @@ class InterpolatedImage(GSObject):
     @param flux            Optionally specify a total flux for the object, which overrides the
                            implied flux normalization from the Image itself.
     @param pad_factor      Factor by which to pad the Image with either noise (if noise_pad is
-                           given) or zeros when creating the SBInterpolatedImage;
-                           `pad_factor <= 0` results in the use of the default value, 4.  We
-                           strongly recommend leaving this parameter at its default value; see text
-                           above for details.  (Default `pad_factor = 0`)
+                           given) or zeros; `pad_factor <= 0` results in the use of the default 
+                           value, 4.  We strongly recommend leaving this parameter at its default 
+                           value; see text above for details.  (Default `pad_factor = 0`)
     @param noise_pad       Noise properties to use when padding the original image with
                            noise.  This can be specified in several ways:
                                (a) as a float, which is interpreted as being a variance to use when
