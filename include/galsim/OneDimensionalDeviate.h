@@ -165,7 +165,7 @@ namespace galsim {
         void checkFlux() const; // Calculate flux if it has not already been done.
         mutable double _flux; // Integrated flux in this interval (can be negative)
 
-        // Finds the x or radius coord that would enclose fraction of this intervals flux 
+        // Finds the x or radius coord that would enclose fraction of this interval's flux 
         // if flux were constant.
         double interpolateFlux(double fraction) const; 
 

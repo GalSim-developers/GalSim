@@ -662,7 +662,7 @@ def test_offset():
             # For integer offsets, we expect the centroids to come out pretty much exact.
             # (Only edge effects of the image should produce any error, and those are very small.)
             # However, for non-integer effects, we don't actually expect the centroids to be 
-            # right, even with perfect image rendering.  To see why, imaging using a delta function
+            # right, even with perfect image rendering.  To see why, imagine using a delta function
             # for the galaxy.  The centroid changes discretely, not continuously as the offset
             # varies.  The effect isn't as severe of course for our Exponential, but the effect
             # is still there in part.  Hence, only use 2 decimal places for non-integer offsets.

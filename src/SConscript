@@ -5,7 +5,7 @@ import sys
 import glob
 
 Import('env')
-ReadFileList=env['__readfunc']
+ReadFileList = env['_ReadFileList']
 
 env1 = env.Clone()
 

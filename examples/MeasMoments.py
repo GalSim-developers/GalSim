@@ -66,7 +66,7 @@ if sky_level > 0.:
     image -= sky_level
 
 # measure adaptive moments
-result = galsim.FindAdaptiveMom(image, guess_sig = guess_sigma)
+result = galsim.hsm.FindAdaptiveMom(image, guess_sig = guess_sigma)
 
 # manipulate results to get moments
 e1_val = result.observed_shape.e1
@@ -78,7 +78,7 @@ myy = (result.moments_sigma**2) / b_val
 mxy = 0.5 * e2_val * (mxx + myy)
 
 # output results
-print '%d   %12.6f   %12.6f   %12.6f   %12.6f   %12.6f   %03d    %12.6f   %12.6f %12.6f' % \
+print '%d   %12.6f   %12.6f   %12.6f   %12.6f   %12.6f   %03d    %12.6f   %12.6f %12.6f %12.6f' % \
         (result.moments_status, mxx, myy, mxy, e1_val, e2_val, result.moments_n_iter,
          result.moments_amp, result.moments_centroid.x-result.image_bounds.getXMin(),
-         result.moments_centroid.y-result.image_bounds.getYMin())
+         result.moments_centroid.y-result.image_bounds.getYMin(), result.moments_sigma)
