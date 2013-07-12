@@ -42,6 +42,9 @@
 #if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 2)
 #pragma GCC diagnostic ignored "-Wuninitialized"
 #endif
+#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+#endif
 
 #endif
 
@@ -130,9 +133,9 @@ namespace galsim {
          * counter is the seed, so BaseDeviates constructed in rapid succession may not be 
          * independent. 
          *
-         * @param[in] lseed A long-integer seed for the RNG. (default=0)
+         * @param[in] lseed A long-integer seed for the RNG.
          */
-        BaseDeviate(long lseed=0) : _rng(new rng_type()) { seed(lseed); }
+        BaseDeviate(long lseed) : _rng(new rng_type()) { seed(lseed); }
 
         /**
          * @brief Construct a new BaseDeviate, sharing the random number generator with rhs.
@@ -153,7 +156,7 @@ namespace galsim {
          * counter is the seed, so BaseDeviates constructed in rapid succession may not be 
          * independent. 
          *
-         * @param[in] lseed A long-integer seed for the RNG. (default=0)
+         * @param[in] lseed A long-integer seed for the RNG.
          *
          * Note that this will reseed all Deviates currently sharing the RNG with this one.
          */
@@ -225,9 +228,9 @@ namespace galsim {
          * counter is the seed, so BaseDeviates constructed in rapid succession may not be 
          * independent. 
          *
-         * @param[in] lseed A long-integer seed for the RNG. (default=0)
+         * @param[in] lseed A long-integer seed for the RNG.
          */
-        UniformDeviate(long lseed=0) : BaseDeviate(lseed), _urd(0.,1.) {} 
+        UniformDeviate(long lseed) : BaseDeviate(lseed), _urd(0.,1.) {} 
 
         /// @brief Construct a new UniformDeviate, sharing the random number generator with rhs.
         UniformDeviate(const BaseDeviate& rhs) : BaseDeviate(rhs), _urd(0.,1.) {}
@@ -268,11 +271,11 @@ namespace galsim {
          * counter is the seed, so BaseDeviates constructed in rapid succession may not be 
          * independent. 
          *
-         * @param[in] lseed Seed to use. (default = 0)
-         * @param[in] mean  Mean of the output distribution (default = 0)
-         * @param[in] sigma Standard deviation of the distribution (default = 1)
+         * @param[in] lseed Seed to use.
+         * @param[in] mean  Mean of the output distribution
+         * @param[in] sigma Standard deviation of the distribution
          */
-        GaussianDeviate(long lseed=0, double mean=0., double sigma=1.) : 
+        GaussianDeviate(long lseed, double mean, double sigma) : 
             BaseDeviate(lseed), _normal(mean,sigma) {}
 
         /**
@@ -283,7 +286,7 @@ namespace galsim {
          * @param[in] mean  Mean of the output distribution
          * @param[in] sigma Standard deviation of the distribution
          */
-        GaussianDeviate(const BaseDeviate& rhs, double mean=0., double sigma=1.) :
+        GaussianDeviate(const BaseDeviate& rhs, double mean, double sigma) :
             BaseDeviate(rhs), _normal(mean,sigma) {}
 
         /**
@@ -361,11 +364,11 @@ namespace galsim {
          * counter is the seed, so BaseDeviates constructed in rapid succession may not be 
          * independent. 
          *
-         * @param[in] lseed Seed to use (default = 0)
-         * @param[in] N Number of "coin flips" per trial (default = 1)
-         * @param[in] p Probability of success per coin flip. (default = 0.5)
+         * @param[in] lseed Seed to use
+         * @param[in] N Number of "coin flips" per trial
+         * @param[in] p Probability of success per coin flip.
          */
-        BinomialDeviate(long lseed=0, int N=1, double p=0.5) :
+        BinomialDeviate(long lseed, int N, double p) :
             BaseDeviate(lseed), _bd(N,p) {}
 
         /**
@@ -376,7 +379,7 @@ namespace galsim {
          * @param[in] N Number of "coin flips" per trial
          * @param[in] p Probability of success per coin flip.
          */
-        BinomialDeviate(const BaseDeviate& rhs, int N=1, double p=0.5) :
+        BinomialDeviate(const BaseDeviate& rhs, int N, double p) :
             BaseDeviate(rhs), _bd(N,p) {}
 
         /**
@@ -451,10 +454,10 @@ namespace galsim {
          * counter is the seed, so BaseDeviates constructed in rapid succession may not be 
          * independent. 
          *
-         * @param[in] lseed Seed to use (default = 0)
-         * @param[in] mean  Mean of the output distribution (default = 1)
+         * @param[in] lseed Seed to use
+         * @param[in] mean  Mean of the output distribution
          */
-        PoissonDeviate(long lseed=0, double mean=1.) : BaseDeviate(lseed), _pd(mean) {}
+        PoissonDeviate(long lseed, double mean) : BaseDeviate(lseed), _pd(mean) {}
 
         /**
          * @brief Construct a new Poisson-distributed RNG, sharing the random number 
@@ -463,7 +466,7 @@ namespace galsim {
          * @param[in] rhs   Other deviate with which to share the RNG
          * @param[in] mean  Mean of the output distribution
          */
-        PoissonDeviate(const BaseDeviate& rhs, double mean=1.) : BaseDeviate(rhs), _pd(mean) {}
+        PoissonDeviate(const BaseDeviate& rhs, double mean) : BaseDeviate(rhs), _pd(mean) {}
 
         /**
          * @brief Construct a copy that shares the RNG with rhs.
@@ -527,11 +530,11 @@ namespace galsim {
          * counter is the seed, so BaseDeviates constructed in rapid succession may not be 
          * independent. 
          *
-         * @param[in] lseed Seed to use (default = 0)
-         * @param[in] a    Shape parameter of the output distribution, must be > 0. (default = 1)
-         * @param[in] b    Scale parameter of the distribution, must be > 0. (default = 1)
+         * @param[in] lseed Seed to use
+         * @param[in] a    Shape parameter of the output distribution, must be > 0.
+         * @param[in] b    Scale parameter of the distribution, must be > 0.
          */
-        WeibullDeviate(long lseed=0, double a=1., double b=1.) : 
+        WeibullDeviate(long lseed, double a, double b) : 
             BaseDeviate(lseed), _weibull(a,b) {}
 
         /**
@@ -542,7 +545,7 @@ namespace galsim {
          * @param[in] a    Shape parameter of the output distribution, must be > 0.
          * @param[in] b    Scale parameter of the distribution, must be > 0.
          */
-        WeibullDeviate(const BaseDeviate& rhs, double a=1., double b=1.) :
+        WeibullDeviate(const BaseDeviate& rhs, double a, double b) :
             BaseDeviate(rhs), _weibull(a,b) {}
 
         /**
@@ -623,11 +626,11 @@ namespace galsim {
          * counter is the seed, so BaseDeviates constructed in rapid succession may not be 
          * independent. 
          *
-         * @param[in] lseed  Seed to use (default = 0)
-         * @param[in] k      Shape parameter of the output distribution, must be > 0. (default = 0)
-         * @param[in] theta  Scale parameter of the distribution, must be > 0. (default = 1)
+         * @param[in] lseed  Seed to use.
+         * @param[in] k      Shape parameter of the output distribution, must be > 0.
+         * @param[in] theta  Scale parameter of the distribution, must be > 0.
          */
-        GammaDeviate(long lseed=0, double k=0., double theta=1.) : 
+        GammaDeviate(long lseed, double k, double theta) : 
             BaseDeviate(lseed), _gamma(k,theta) {}
 
         /**
@@ -638,7 +641,7 @@ namespace galsim {
          * @param[in] k      Shape parameter of the output distribution, must be > 0.
          * @param[in] theta  Scale parameter of the distribution, must be > 0.
          */
-        GammaDeviate(const BaseDeviate& rhs, double k=0., double theta=1.) :
+        GammaDeviate(const BaseDeviate& rhs, double k, double theta) :
             BaseDeviate(rhs), _gamma(k,theta) {}
 
         /**
@@ -721,11 +724,10 @@ namespace galsim {
          * counter is the seed, so BaseDeviates constructed in rapid succession may not be 
          * independent. 
          *
-         * @param[in] lseed Seed to use (default = 0)
+         * @param[in] lseed Seed to use
          * @param[in] n     Number of degrees of freedom for the output distribution, must be > 0.
-         *                  (default = 1)
          */
-        Chi2Deviate(long lseed=0, double n=1.) : BaseDeviate(lseed), _chi_squared(n) {}
+        Chi2Deviate(long lseed, double n) : BaseDeviate(lseed), _chi_squared(n) {}
 
         /**
          * @brief Construct a new Chi^2-distributed RNG, sharing the random number 
@@ -734,7 +736,7 @@ namespace galsim {
          * @param[in] rhs   Other deviate with which to share the RNG
          * @param[in] n     Number of degrees of freedom for the output distribution, must be > 0.
          */
-        Chi2Deviate(const BaseDeviate& rhs, double n=1.) : BaseDeviate(rhs), _chi_squared(n) {}
+        Chi2Deviate(const BaseDeviate& rhs, double n) : BaseDeviate(rhs), _chi_squared(n) {}
 
         /**
          * @brief Construct a copy that shares the RNG with rhs.

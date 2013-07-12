@@ -33,7 +33,7 @@ from galsim import GSObject
 # --- Compound GSObject classes: Add, Convolve, AutoConvolve, and AutoCorrelate ---
 
 class Add(GSObject):
-    """A class for adding 2 or more GSObjects.  Has an SBAdd in the SBProfile attribute.
+    """A class for adding 2 or more GSObjects.
 
     The Add class is used to represent the sum of multiple GSObjects.  For example, it might be used
     to represent a multiple-component galaxy as the sum of an Exponential and a DeVaucouleurs, or to
@@ -87,7 +87,7 @@ class Add(GSObject):
             GSObject.__init__(self, galsim.SBAdd(SBList, gsparams=gsparams))
 
 class Convolve(GSObject):
-    """A class for convolving 2 or more GSObjects.  Has an SBConvolve in the SBProfile attribute.
+    """A class for convolving 2 or more GSObjects.
 
     The objects to be convolved may be provided either as multiple unnamed arguments (e.g. 
     `Convolve(psf, gal, pix)`) or as a list (e.g. `Convolve([psf, gal, pix])`).  Any number of 
@@ -228,7 +228,7 @@ class Convolve(GSObject):
 
 
 class Deconvolve(GSObject):
-    """Base class for defining the python interface to the SBDeconvolve C++ class.
+    """A class for deconvolving a GSObject.
 
     The Deconvolve class represents a deconvolution kernel.  Note that the Deconvolve class, or
     compound objects (Add, Convolve) that include a Deconvolve as one of the components, cannot be

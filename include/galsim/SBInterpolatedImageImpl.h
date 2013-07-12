@@ -155,7 +155,7 @@ namespace galsim {
             bool isPositive;
             double flux;
 
-            Pixel(double x_=0., double y_=0., double flux_=0.): 
+            Pixel(double x_, double y_, double flux_): 
                 x(x_), y(y_), flux(flux_) { isPositive = flux>=0.; }
             double getFlux() const { return flux; }
         };
