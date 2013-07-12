@@ -114,16 +114,14 @@ def test_scattered():
 
     image, _, _, _  = galsim.config.BuildImage(config)
 
-    image2 = galsim.ImageF(size,size)
+    image2 = galsim.ImageF(size,size, scale=scale)
     image2.setZero()
-    image2.scale = scale
     gal = galsim.Gaussian(sigma=sigma, flux=flux)
     pix = galsim.Pixel(scale)
     conv = galsim.Convolve([pix,gal])
 
     for (i,x,y) in [ (0,x1,y1), (1,x2,y2), (2,x3,y3) ]:
-        stamp = galsim.ImageF(stamp_size+i,stamp_size+i)
-        stamp.scale = scale
+        stamp = galsim.ImageF(stamp_size+i,stamp_size+i, scale=scale)
         if (stamp_size+i) % 2 == 0: 
             x += 0.5
             y += 0.5

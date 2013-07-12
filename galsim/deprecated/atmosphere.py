@@ -167,8 +167,8 @@ def kolmogorov_mtf_image(array_shape=(256, 256), dx=1., lam_over_r0=1.):
     turbulence as an ImageViewD.
 
     The ImageView output can be used to directly instantiate an SBInterpolatedImage, and its 
-    .getScale() method will reflect the spacing of the output grid in the system of units adopted.
-    for lam_over_r0.
+    scale will reflect the spacing of the output grid in the system of units adopted for 
+    lam_over_r0.
 
     @param array_shape     the NumPy array shape desired for the array view of the ImageViewD.
     @param dx              grid spacing of PSF in real space units
@@ -208,8 +208,8 @@ def kolmogorov_psf_image(array_shape=(256, 256), dx=1., lam_over_r0=1., flux=1.)
     """Return long exposure Kolmogorov PSF as an ImageViewD.
 
     The ImageView output can be used to directly instantiate an SBInterpolatedImage, and its 
-    .getScale() method will reflect the spacing of the output grid in the system of units adopted.
-    for lam_over_diam.
+    scale will reflect the spacing of the output grid in the system of units adopted for 
+    lam_over_diam.
 
     @param array_shape     the NumPy array shape desired for the array view of the ImageViewD.
     @param dx              grid spacing of PSF in real space units

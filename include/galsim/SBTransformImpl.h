@@ -47,8 +47,8 @@ namespace galsim {
         bool isAnalyticX() const { return _adaptee.isAnalyticX(); }
         bool isAnalyticK() const { return _adaptee.isAnalyticK(); }
 
-        double maxK() const { return _adaptee.maxK() / _minor; }
-        double stepK() const { return _adaptee.stepK() / _major; }
+        double maxK() const { return _maxk; }
+        double stepK() const { return _stepk; }
 
         void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const;
 
@@ -104,8 +104,8 @@ namespace galsim {
         double _absdet;  ///< Determinant (flux magnification) of `M` matrix * fluxScaling
         double _fluxScaling;  ///< Amount to multiply flux by.
         double _invdet;  ///< Inverse determinant of `M` matrix.
-        double _major; ///< Major axis of ellipse produced from unit circle.
-        double _minor; ///< Minor axis of ellipse produced from unit circle.
+        double _maxk;
+        double _stepk;
         bool _stillIsAxisymmetric; ///< Is output SBProfile shape still circular?
         double _xmin, _xmax, _ymin, _ymax; ///< Ranges propagated from adaptee
         double _coeff_b, _coeff_c, _coeff_c2; ///< Values used in getYRangeX(x,ymin,ymax);

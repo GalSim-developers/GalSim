@@ -73,34 +73,32 @@ namespace galsim {
         /** 
          * @brief Construct from a std::vector of images.
          *
-         * @param[in] images    List of images to use
-         * @param[in] dx        Stepsize between pixels in image data table (default value of 
-         *                      `dx = 0.` checks the Image header for a suitable stepsize, sets 
-         *                      to `1.` if none is found). 
-         * @param[in] pad_factor Multiple by which to increase the image size when zero-padding for 
-         *                       the Fourier transform (default `pad_factor = 4`)
-         *
+         * @param[in] images      List of images to use
+         * @param[in] dx          Stepsize between pixels in image data table (if dx==0.,
+         *                        it checks the Image header for a suitable stepsize, or sets 
+         *                        to 1 if none is found). 
+         * @param[in] pad_factor  Multiple by which to increase the image size when zero-padding 
+         *                        for the Fourier transform. (If 0, use sbp::default_pad_factor.)
          */
         template <typename T>
         MultipleImageHelper(const std::vector<boost::shared_ptr<BaseImage<T> > >& images,
-                            double dx=0., double pad_factor=0.);
+                            double dx, double pad_factor);
 
         /** 
          * @brief Convenience constructor that only takes a single image.
          *
-         * @param[in] image     Single input image
-         * @param[in] dx        Stepsize between pixels in image data table (default value of 
-         *                      `dx = 0.` checks the Image header for a suitable stepsize, sets 
-         *                      to `1.` if none is found). 
-         * @param[in] pad_factor Multiple by which to increase the image size when zero-padding for 
-         *                      the Fourier transform (default `pad_factor = 4`)
-         * @param[in] pad_image Image to use for padding the SBInterpolatedImage, if `pad_factor` is
-         *                      not equal to 1.
+         * @param[in] image       Single input image
+         * @param[in] dx          Stepsize between pixels in image data table (if dx==0.,
+         *                        it checks the Image header for a suitable stepsize, or sets 
+         *                        to 1 if none is found). 
+         * @param[in] pad_factor  Multiple by which to increase the image size when zero-padding
+         *                        for the Fourier transform. (If 0, use sbp::default_pad_factor.)
+         * @param[in] pad_image   Image to use for padding the SBInterpolatedImage if desired.
          */
         template <typename T>
         MultipleImageHelper(const BaseImage<T>& image,
-                            double dx=0., double pad_factor=0.,
-                            boost::shared_ptr<BaseImage<T> > pad_image = Image<T>());
+                            double dx, double pad_factor,
+                            boost::shared_ptr<BaseImage<T> > pad_image);
 
         /// @brief Copies are shallow, so can pass by value without any copying.
         MultipleImageHelper(const MultipleImageHelper& rhs) : _pimpl(rhs._pimpl) {}
@@ -224,18 +222,17 @@ namespace galsim {
          * @brief Initialize internal quantities and allocate data tables based on a supplied 2D 
          * image.
          *
-         * @param[in] image      Input Image (any of ImageF, ImageD, ImageS, ImageI).
-         * @param[in] xInterp    Interpolation scheme to adopt between pixels 
-         * @param[in] kInterp    Interpolation scheme to adopt in k-space
-         * @param[in] dx         Stepsize between pixels in image data table (default value of 
-         *                       `dx = 0.` checks the Image header for a suitable stepsize, sets 
-         *                       to `1.` if none is found). 
-         * @param[in] pad_factor Multiple by which to increase the image size when zero-padding for 
-         *                       the Fourier transform (default `pad_factor = 4`)
-         * @param[in] pad_image  Image to use for padding the SBInterpolatedImage, if `pad_factor`
-         *                       is not equal to 1.
-         * @param[in] gsparams   GSParams object storing constants that control the accuracy of
-         *                       image operations and rendering, if different from the default.
+         * @param[in] image       Input Image (any of ImageF, ImageD, ImageS, ImageI).
+         * @param[in] xInterp     Interpolation scheme to adopt between pixels 
+         * @param[in] kInterp     Interpolation scheme to adopt in k-space
+         * @param[in] dx          Stepsize between pixels in image data table (if dx==0.,
+         *                        it checks the Image header for a suitable stepsize, or sets 
+         *                        to 1 if none is found). 
+         * @param[in] pad_factor  Multiple by which to increase the image size when zero-padding
+         *                        for the Fourier transform. (If 0, use sbp::default_pad_factor.)
+         * @param[in] pad_image   Image to use for padding the SBInterpolatedImage if desired.
+         * @param[in] gsparams    GSParams object storing constants that control the accuracy of
+         *                        image operations and rendering.
          */
         template <typename T> 
         SBInterpolatedImage(

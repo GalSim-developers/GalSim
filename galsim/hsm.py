@@ -192,8 +192,7 @@ def _convertMask(image, weight = None, badpix = None):
                 mask = weight
             else:
                 # If we need to mask bad pixels, we'll need a copy anyway.
-                mask = galsim.ImageI(weight.bounds)
-                mask.array[:,:] = weight.array
+                mask = galsim.ImageI(weight)
 
         # otherwise, we need to convert it to the right type
         else:

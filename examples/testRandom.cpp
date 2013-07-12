@@ -40,10 +40,10 @@ main(int argc,
              << endl;
         exit(1);
     }
-    galsim::UniformDeviate u;
+    galsim::UniformDeviate u(0);
     int nTrials = atoi(argv[1]);
     if (argc>2) u.seed(atoi(argv[2]));
-    galsim::GaussianDeviate gd(u);
+    galsim::GaussianDeviate gd(u,0.,1.);
     galsim::BinomialDeviate bd(u,10,0.4);
     galsim::PoissonDeviate pd(u, 3.5);
 
