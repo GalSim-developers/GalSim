@@ -70,8 +70,8 @@ def run_tests(random_seed, outfile, config=None, gsparams=None, wmult=None, logg
     n_cosmos, hlr_cosmos, gabs_cosmos = galaxy_sample.get()
     # Only take the first NOBS objects
     n_cosmos = n_cosmos[0: NOBS]
-    hlr_cosmos = [hlr_cosmos[28],] * NOBS
-    gabs_cosmos = [gabs_cosmos[28],] * NOBS
+    hlr_cosmos = hlr_cosmos[0: NOBS]
+    gabs_cosmos = gabs_cosmos[0: NOBS]
     ntest = len(SERSIC_N_TEST)
     # Setup a UniformDeviate
     ud = galsim.UniformDeviate(random_seed)
@@ -87,17 +87,11 @@ def run_tests(random_seed, outfile, config=None, gsparams=None, wmult=None, logg
         random_theta = 2. * np.pi * ud()
         g1 = gabs * np.cos(2. * random_theta)
         g2 = gabs * np.sin(2. * random_theta)
-        print "After random rotation:"
-        print "g1 = %.20e" % g1
-        print "g2 = %.20e" % g2
-        print "hlr = %.20e" % hlr
         for j, sersic_n in zip(range(ntest), SERSIC_N_TEST):
             print "Exploring Sersic n = "+str(sersic_n)
             if use_config:
-                incr_seed = random_seed + i * NOBS * ntest + j * ntest + 1
-                print "Random_seed = "+str(incr_seed)
                 # Increment the random seed so that each test gets a unique one
-                config['image']['random_seed'] = incr_seed
+                config['image']['random_seed'] = random_seed + i * NOBS * ntest + j * ntest + 1
                 config['gal'] = {
                     "type" : "Sersic" , "n" : sersic_n , "half_light_radius" : hlr ,
                     "ellip" : {
@@ -111,11 +105,11 @@ def run_tests(random_seed, outfile, config=None, gsparams=None, wmult=None, logg
                     test_ran = True
                 except RuntimeError as err:
                     test_ran = False
-                    # Uncomment lines below to ouput a check image
-                    import copy
-                    checkimage = galsim.config.BuildImage(copy.deepcopy(config))[0] #im = first element
-                    checkimage.write('junk_'+str(i + 1)+'_'+str(j + 1)+'_'+str(incr_seed)+'.fits')
                     pass
+                # Uncomment lines below to ouput a check image
+                #import copy
+                #checkimage = galsim.config.BuildImage(copy.deepcopy(config))[0] #im = first element
+                #checkimage.write('junk_'+str(i + 1)+'_'+str(j + 1)+'.fits')
             else:
                 test_gsparams = galsim.GSParams(maximum_fft_size=MAX_FFT_SIZE)
                 galaxy = galsim.Sersic(sersic_n, half_light_radius=hlr, gsparams=test_gsparams)
