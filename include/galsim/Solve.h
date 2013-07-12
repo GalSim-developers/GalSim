@@ -145,7 +145,7 @@ namespace galsim {
 
     public:
         /// Constructor taking the function to solve, and the range (if known).
-        Solve(const F& func_, T lb_=0., T ub_=1.) :
+        Solve(const F& func_, T lb_, T ub_) :
             func(func_), lBound(lb_), uBound(ub_), xTolerance(defaultTolerance),
             maxSteps(defaultMaxSteps), boundsAreEvaluated(false), m(Bisect) {}
 

@@ -134,6 +134,9 @@ namespace galsim {
                     xxdbg<<"value = "<<value<<", sums = "<<sum<<','<<sumx<<','<<sumy<<std::endl;
                 }
             }
+            if (sum == 0.) throw std::runtime_error(
+                "Trying to initialize InterpolatedImage with an empty image.");
+
             _pimpl->flux[i] = sum * dx2;
             _pimpl->xflux[i] = sumx * dx3;
             _pimpl->yflux[i] = sumy * dx3;
@@ -219,6 +222,9 @@ namespace galsim {
                 sumy += value*y;
             }
         }
+        if (sum == 0.) throw std::runtime_error(
+            "Trying to initialize InterpolatedImage with an empty image.");
+
         _pimpl->flux[0] = sum * dx2;
         _pimpl->xflux[0] = sumx * dx3;
         _pimpl->yflux[0] = sumy * dx3;

@@ -38,7 +38,7 @@ New features introduced in this demo:
 - obj = galsim.Sersic(n, half_light_radius, trunc)
 - obj2 = obj.copy()
 - obj.applyDilation(scale)
-- image.setScale(pixel_scale)
+- image.scale = pixel_scale
 - obj.draw(image)  -- i.e. taking the scale from the image rather than a dx= argument
 - obj.drawShoot(image, max_extra_noise, rng)
 - dev = galsim.PoissonDeviate(rng, mean)
@@ -220,11 +220,10 @@ def main(argv):
                 final_nopix = galsim.Convolve([psf, gal1])
 
                 # Create the large, double width output image
-                image = galsim.ImageF(2*nx+2,ny)
-
                 # Rather than provide a dx= argument to the draw commands, we can also
-                # set the pixel scale in the image itself with setScale.
-                image.setScale(pixel_scale)
+                # set the pixel scale in the image constructor.
+                # Note: You can also change it after the construction with im.scale=pixel_scale
+                image = galsim.ImageF(2*nx+2, ny, scale=pixel_scale)
 
                 # Assign the following two "ImageViews", fft_image and phot_image.
                 # Using the syntax below, these are views into the larger image.  

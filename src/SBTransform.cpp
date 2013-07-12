@@ -117,16 +117,30 @@ namespace galsim {
         if (det==0.) throw SBError("Attempt to SBTransform with degenerate matrix");
         _absdet = std::abs(det);
         _invdet = 1./det;
-
-        double h1 = hypot( _mA+_mD, _mB-_mC);
-        double h2 = hypot( _mA-_mD, _mB+_mC);
-        _major = 0.5*std::abs(h1+h2);
-        _minor = 0.5*std::abs(h1-h2);
-        if (_major<_minor) std::swap(_major,_minor);
         _stillIsAxisymmetric = _adaptee.isAxisymmetric() 
             && (_mB==-_mC) 
             && (_mA==_mD)
             && (_cen.x==0.) && (_cen.y==0.); // Need pure rotation
+
+        // Calculate maxK, stepK:
+        double h1 = hypot( _mA+_mD, _mB-_mC);
+        double h2 = hypot( _mA-_mD, _mB+_mC);
+        double major = 0.5*std::abs(h1+h2);
+        double minor = 0.5*std::abs(h1-h2);
+        if (major < minor) std::swap(major,minor);
+        _maxk = _adaptee.maxK() / minor;
+        _stepk = _adaptee.stepK() / major;
+
+        // If we have a shift, we need to further modify stepk
+        //     stepk = Pi/R
+        // R <- R + |shift|
+        // stepk <- Pi/(Pi/stepk + |shift|)
+        if (_cen.x != 0. || _cen.y != 0.) {
+            double shift = sqrt( _cen.x*_cen.x + _cen.y*_cen.y );
+            dbg<<"stepk from adaptee = "<<_stepk<<std::endl;
+            _stepk = M_PI / (M_PI/_stepk + shift);
+            dbg<<"shift = "<<shift<<", stepk -> "<<_stepk<<std::endl;
+        }
 
         xdbg<<"Transformation init\n";
         xdbg<<"matrix = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
@@ -134,9 +148,11 @@ namespace galsim {
         xdbg<<"_invdet = "<<_invdet<<std::endl;
         xdbg<<"_absdet = "<<_absdet<<std::endl;
         xdbg<<"_fluxScaling = "<<_fluxScaling<<std::endl;
-        xdbg<<"_major, _minor = "<<_major<<", "<<_minor<<std::endl;
-        xdbg<<"maxK() = "<<_adaptee.maxK() / _minor<<std::endl;
-        xdbg<<"stepK() = "<<_adaptee.stepK() / _major<<std::endl;
+        xdbg<<"major, minor = "<<major<<", "<<minor<<std::endl;
+        xdbg<<"maxK() = "<<_maxk<<std::endl;
+        xdbg<<"stepK() = "<<_stepk<<std::endl;
+
+
 
         // Calculate the values for getXRange and getYRange:
         if (_adaptee.isAxisymmetric()) {
