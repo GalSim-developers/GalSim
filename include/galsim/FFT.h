@@ -83,7 +83,7 @@ namespace galsim {
     class FFTError : public std::runtime_error 
     {
     public:
-        FFTError(const std::string& m="") : std::runtime_error("FFT error: " + m) {}
+        FFTError(const std::string& m) : std::runtime_error("FFT error: " + m) {}
     };
 
     /// @brief Exception class for XTable and KTable access ouside the allowed range

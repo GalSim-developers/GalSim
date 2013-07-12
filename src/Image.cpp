@@ -35,7 +35,8 @@ namespace galsim {
 std::string MakeErrorMessage(
     const std::string& m, const int min, const int max, const int tried)
 {
-    std::ostringstream oss;
+    // See discussion in Std.h about this initial value.
+    std::ostringstream oss(" ");
     oss << "Attempt to access "<<m<<" number "<<tried
         << ", range is "<<min<<" to "<<max;
     return oss.str();
@@ -47,7 +48,7 @@ ImageBoundsError::ImageBoundsError(
 
 std::string MakeErrorMessage(const int x, const int y, const Bounds<int> b) 
 {
-    std::ostringstream oss;
+    std::ostringstream oss(" ");
     bool found=false;
     if (x<b.getXMin() || x>b.getXMax()) {
         oss << "Attempt to access column number "<<x
@@ -99,9 +100,8 @@ void BaseImage<T>::allocateMem()
 
     ptrdiff_t nElements = _stride * (this->_bounds.getYMax() - this->_bounds.getYMin() + 1);
     if (_stride <= 0 || nElements <= 0) {
-        std::ostringstream oss;
-        oss << "Attempt to create an Image with defined but invalid Bounds ("<<this->_bounds<<")\n";
-        throw ImageError(oss.str());
+        FormatAndThrow<ImageError>() << 
+            "Attempt to create an Image with defined but invalid Bounds ("<<this->_bounds<<")";
     }
 
     // The ArrayDeleter is because we use "new T[]" rather than an normal new.
@@ -112,10 +112,11 @@ void BaseImage<T>::allocateMem()
 }
 
 template <typename T>
-Image<T>::Image(int ncol, int nrow, T init_value) : BaseImage<T>(Bounds<int>(1,ncol,1,nrow)) 
+Image<T>::Image(int ncol, int nrow, double scale, T init_value) :
+    BaseImage<T>(Bounds<int>(1,ncol,1,nrow), scale) 
 {
     if (ncol <= 0 || nrow <= 0) {
-        std::ostringstream oss;
+        std::ostringstream oss(" ");
         if (ncol <= 0) {
             if (nrow <= 0) {
                 oss << "Attempt to create an Image with non-positive ncol ("<<
@@ -134,7 +135,8 @@ Image<T>::Image(int ncol, int nrow, T init_value) : BaseImage<T>(Bounds<int>(1,n
 }
 
 template <typename T>
-Image<T>::Image(const Bounds<int>& bounds, const T init_value) : BaseImage<T>(bounds)
+Image<T>::Image(const Bounds<int>& bounds, double scale, const T init_value) :
+    BaseImage<T>(bounds, scale)
 {
     fill(init_value);
 }
@@ -202,10 +204,9 @@ ConstImageView<T> BaseImage<T>::subImage(const Bounds<int>& bounds) const
 {
     if (!_data) throw ImageError("Attempt to make subImage of an undefined image");
     if (!this->_bounds.includes(bounds)) {
-        std::ostringstream os;
-        os << "Subimage bounds (" << bounds << ") are outside original image bounds (" 
-           << this->_bounds << ")";
-        throw ImageError(os.str());
+        FormatAndThrow<ImageError>() << 
+            "Subimage bounds (" << bounds << ") are outside original image bounds (" << 
+            this->_bounds << ")";
     }
     T* newdata = _data
         + (bounds.getYMin() - this->_bounds.getYMin()) * _stride
@@ -218,10 +219,9 @@ ImageView<T> ImageView<T>::subImage(const Bounds<int>& bounds) const
 {
     if (!this->_data) throw ImageError("Attempt to make subImage of an undefined image");
     if (!this->_bounds.includes(bounds)) {
-        std::ostringstream os;
-        os << "Subimage bounds (" << bounds << ") are outside original image bounds (" 
-           << this->_bounds << ")";
-        throw ImageError(os.str());
+        FormatAndThrow<ImageError>() << 
+            "Subimage bounds (" << bounds << ") are outside original image bounds (" << 
+            this->_bounds << ")";
     }
     T* newdata = this->_data
         + (bounds.getYMin() - this->_bounds.getYMin()) * this->_stride
@@ -245,7 +245,7 @@ template <typename T>
 class ReturnInverse
 {
 public: 
-    T operator()(const T val) const { return val==T(0) ? T(0) : T(1)/val; }
+    double operator()(const T val) const { return val==T(0) ? 0. : 1./double(val); }
 };
 
 template <typename T>

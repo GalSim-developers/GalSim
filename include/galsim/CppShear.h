@@ -80,15 +80,17 @@ namespace galsim {
         friend CppShear operator*(const double, const CppShear& );
 
     public:
+        /// Default constructor = (0,0)
+        CppShear() : hasMatrix(true), matrixA(0), matrixB(0), matrixC(0) {}
+
         /** 
          * @brief Construct without variance / without initializing transformation matrix.
          *
          * @param[in] g1 first component (reduced shear definition).
          * @param[in] g2 second shear component (reduced shear definition).
          */
-        explicit CppShear(double g1=0., double g2=0.) :
-            hasMatrix(false), matrixA(0), matrixB(0), matrixC(0)
-                { setG1G2(g1, g2); }
+        CppShear(double g1, double g2) : hasMatrix(false)
+        { setG1G2(g1, g2); }
 
         /// @brief Copy constructor.
         CppShear(const CppShear& rhs) :
@@ -106,22 +108,22 @@ namespace galsim {
         }
 
         /// @brief Set (e1, e2) using distortion definition.
-        CppShear& setE1E2(double e1in=0., double e2in=0.);
+        CppShear& setE1E2(double e1in, double e2in);
 
         /** 
          * @brief Set (|e|, beta) polar ellipticity representation using distortion definition.
          * beta must be an Angle.
          */
-        CppShear& setEBeta(double etain=0., Angle betain=Angle());
+        CppShear& setEBeta(double etain, Angle betain);
 
         /// @brief Set (eta1, eta2) using conformal shear definition.
-        CppShear& setEta1Eta2(double eta1in=0., double eta2in=0.);
+        CppShear& setEta1Eta2(double eta1in, double eta2in);
 
         /// @brief Set (|eta|, beta) using conformal shear definition. beta must be an Angle.
-        CppShear& setEtaBeta(double =0., Angle betain=Angle());
+        CppShear& setEtaBeta(double eta, Angle betain);
 
         /// @brief set (g1, g2) using reduced shear |g| = (a-b)/(a+b) definition.
-        CppShear& setG1G2(double g1in=0., double g2in=0.);
+        CppShear& setG1G2(double g1in, double g2in);
 
         /// @brief Get e1 using distortion definition.
         double getE1() const { return e1; }

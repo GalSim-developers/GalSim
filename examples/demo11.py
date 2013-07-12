@@ -144,8 +144,7 @@ def main(argv):
     logger.info('Read in PSF image from bzipped FITS file')
 
     # Setup the image:
-    full_image = galsim.ImageF(image_size, image_size)
-    full_image.setScale(pixel_scale)
+    full_image = galsim.ImageF(image_size, image_size, scale=pixel_scale)
 
     # The default convention for indexing an image is to follow the FITS standard where the 
     # lower-left pixel is called (1,1).  However, this can be counter-intuitive to people more 
@@ -221,11 +220,11 @@ def main(argv):
         y_nom = y+0.5
         ix_nom = int(math.floor(x_nom+0.5))
         iy_nom = int(math.floor(y_nom+0.5))
-        final.applyShift((x_nom-ix_nom)*pixel_scale,(y_nom-iy_nom)*pixel_scale)
+        offset = galsim.PositionD(x_nom-ix_nom, y_nom-iy_nom)
 
         # Draw it with our desired stamp size
         stamp = galsim.ImageF(stamp_size,stamp_size)
-        final.draw(image=stamp, dx=pixel_scale)
+        final.draw(image=stamp, dx=pixel_scale, offset=offset)
 
         # Rescale flux to get the S/N we want.  We have to do that before we add it to the big 
         # image, which might have another galaxy near that point (so our S/N calculation would 
@@ -264,7 +263,7 @@ def main(argv):
     # Now add noise according to this correlation function to the full_image.  We have to do this
     # step at the end, rather than adding to individual postage stamps, in order to get the noise
     # level right in the overlap regions between postage stamps.
-    full_image.addNoise(cn) # Note image must have the right scale [set by setScale()], as here
+    full_image.addNoise(cn) # Note image must have the right scale, as it does here.
     logger.info('Added noise to final large image')
 
     # Now write the image to disk.  It is automatically compressed with Rice compression,

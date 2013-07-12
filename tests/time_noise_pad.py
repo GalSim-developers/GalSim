@@ -50,8 +50,7 @@ def test_corr_padding_cf():
     cf = galsim.ImageCorrFunc(galsim.fits.read(imgfile))
 
     # first, make the base image
-    orig_img = galsim.ImageF(orig_nx, orig_ny)
-    orig_img.setScale(1.)
+    orig_img = galsim.ImageF(orig_nx, orig_ny, scale=1.)
     gal = galsim.Gaussian(sigma=2.5, flux=100.)
     gal.draw(orig_img)
 
@@ -85,8 +84,7 @@ def test_corr_padding_im():
     im = galsim.fits.read(imgfile)
 
     # first, make the base image
-    orig_img = galsim.ImageF(orig_nx, orig_ny)
-    orig_img.setScale(1.)
+    orig_img = galsim.ImageF(orig_nx, orig_ny, scale=1.)
     gal = galsim.Gaussian(sigma=2.5, flux=100.)
     gal.draw(orig_img)
 
@@ -119,8 +117,7 @@ def test_corr_padding_imgfile():
     # Make an Image
 
     # first, make the base image
-    orig_img = galsim.ImageF(orig_nx, orig_ny)
-    orig_img.setScale(1.)
+    orig_img = galsim.ImageF(orig_nx, orig_ny, scale=1.)
     gal = galsim.Gaussian(sigma=2.5, flux=100.)
     gal.draw(orig_img)
 
@@ -149,8 +146,7 @@ def test_corr_nopadding():
     orig_seed = 151241
 
     # first, make the base image
-    orig_img = galsim.ImageF(orig_nx, orig_ny)
-    orig_img.setScale(1.)
+    orig_img = galsim.ImageF(orig_nx, orig_ny, scale=1.)
     gal = galsim.Gaussian(sigma=2.5, flux=100.)
     gal.draw(orig_img)
 

@@ -24,10 +24,8 @@ var2 = 0.
 
 noisearrays = cPickle.load(open(NOISEIMFILE, 'rb'))
 for noisearray, i in zip(noisearrays, range(len(noisearrays))):
-    noise1 = galsim.ImageViewD((noisearray.copy()).astype(np.float64))
-    noise2 = galsim.ImageViewD((noisearray.copy()).astype(np.float64))
-    noise1.setScale(1.)
-    noise2.setScale(1.)
+    noise1 = galsim.ImageViewD((noisearray.copy()).astype(np.float64), scale=1.)
+    noise2 = galsim.ImageViewD((noisearray.copy()).astype(np.float64), scale=1.)
     cn1.applyWhiteningTo(noise1)
     cn2.applyWhiteningTo(noise2)
     var1 += noise1.array.var()

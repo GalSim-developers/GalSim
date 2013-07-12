@@ -61,10 +61,9 @@ def test_smallshear():
     myShear = galsim.Shear(e1=e1, e2=e2)
     # test the SBProfile version using applyShear
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear.fits"))
-    myImg = galsim.ImageF(savedImg.bounds)
+    myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
     mySBP = galsim.SBGaussian(flux=1, sigma=1)
     mySBP.applyShear(myShear._shear)
-    myImg.setScale(0.2)
     mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
@@ -120,10 +119,9 @@ def test_largeshear():
     myShear = galsim.Shear(e1=e1, e2=e2)
     # test the SBProfile version using applyShear
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_largeshear.fits"))
-    myImg = galsim.ImageF(savedImg.bounds)
+    myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
     mySBP = galsim.SBDeVaucouleurs(flux=1, half_light_radius=1)
     mySBP.applyShear(myShear._shear)
-    myImg.setScale(0.2)
     mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(myImg.array, savedImg.array, 5,
@@ -184,8 +182,7 @@ def test_rotate():
     mySBP.applyShear(myShear._shear)
     mySBP.applyRotation(45.0 * galsim.degrees)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_ellip_rotated.fits"))
-    myImg = galsim.ImageF(savedImg.bounds)
-    myImg.setScale(0.2)
+    myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
     mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
@@ -240,8 +237,7 @@ def test_mag():
     mySBP = galsim.SBExponential(flux=1, scale_radius=r0)
     mySBP.applyScale(1.5)
     savedImg = galsim.fits.read(os.path.join(imgdir, "exp_mag.fits"))
-    myImg = galsim.ImageF(savedImg.bounds)
-    myImg.setScale(0.2)
+    myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
     mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
@@ -351,11 +347,9 @@ def test_lens():
     ser2 = ser.createLensed(g1, g2, mu)
     ser.applyShear(g1=g1, g2=g2)
     ser.applyMagnification(mu)
-    im = galsim.ImageF(imsize, imsize)
-    im.setScale(pix_scale)
+    im = galsim.ImageF(imsize, imsize, scale=pix_scale)
     im = ser.draw(im.view())
-    im2 = galsim.ImageF(imsize, imsize)
-    im2.setScale(pix_scale)
+    im2 = galsim.ImageF(imsize, imsize, scale=pix_scale)
     im2 = ser2.draw(im2.view())
     np.testing.assert_array_almost_equal(im.array, im2.array, 5,
         err_msg="Lensing of Sersic profile done in two different ways gives different answer")
@@ -372,8 +366,7 @@ def test_shift():
     mySBP = galsim.SBBox(xw=0.2, yw=0.2, flux=1)
     mySBP.applyShift(0.2, -0.2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "box_shift.fits"))
-    myImg = galsim.ImageF(savedImg.bounds)
-    myImg.setScale(0.2)
+    myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
     mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
@@ -424,8 +417,7 @@ def test_rescale():
     mySBP = galsim.SBSersic(n=3, flux=1, half_light_radius=1)
     mySBP.setFlux(2)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_doubleflux.fits"))
-    myImg = galsim.ImageF(savedImg.bounds)
-    myImg.setScale(0.2)
+    myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
     mySBP.draw(myImg.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
