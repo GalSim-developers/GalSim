@@ -49,7 +49,7 @@ namespace galsim {
          * @param[in] rng   The BaseDeviate to use for the random number generation.
          */
         BaseNoise(boost::shared_ptr<BaseDeviate> rng) : _rng(rng) 
-        { if (!rng.get()) _rng.reset(new BaseDeviate()); }
+        { if (!_rng) _rng.reset(new BaseDeviate(0)); }
 
         /**
          * @brief Copy constructor shares the underlying rng.
@@ -227,7 +227,7 @@ namespace galsim {
          *                       the input image, but which is taken to have already been 
          *                       subtracted off.
          */
-        PoissonNoise(boost::shared_ptr<BaseDeviate> rng, double sky_level=0.) :
+        PoissonNoise(boost::shared_ptr<BaseDeviate> rng, double sky_level) :
             BaseNoise(rng), _sky_level(sky_level)
         {}
 
@@ -353,7 +353,7 @@ namespace galsim {
          * @param[in] read_noise RMS of Gaussian noise, in electrons (if gain>0.) or ADU (gain<=0.)
          */
         CCDNoise(boost::shared_ptr<BaseDeviate> rng,
-                 double sky_level=0., double gain=1., double read_noise=0.) :
+                 double sky_level, double gain, double read_noise) :
             BaseNoise(rng),
             _sky_level(sky_level), _gain(gain), _read_noise(read_noise)
         {}

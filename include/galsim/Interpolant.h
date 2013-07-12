@@ -43,13 +43,8 @@ namespace galsim {
      */
     class InterpolantFunction: public FluxDensity {
     public:
-        /**
-         * @brief Constructor
-         * @param[in] interp Interpolant (one-d) that we'll want to sample
-         */
         InterpolantFunction(const Interpolant& interp): _interp(interp) {}
-        /// @brief operator() will return the xval() of the `Interpolant`
-        double operator()(double x) const;
+        double operator()(double x) const; // returns the xval() of the `Interpolant`
         ~InterpolantFunction() {}
     private:
         const Interpolant& _interp;  // Interpolant being wrapped
@@ -179,14 +174,13 @@ namespace galsim {
 
     protected:
 
-        /// @brief GSParams struct for storing values of GalSim numerical parameters
         const GSParamsPtr _gsparams;
-        InterpolantFunction _interp; ///< The function to interface the Interpolant to sampler
+        InterpolantFunction _interp;
 
-        /// Class that draws photons from this Interpolant
+        // Class that draws photons from this Interpolant
         mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;  
 
-        /// @brief Allocate photon sampler and do all of its pre-calculations
+        // Allocate photon sampler and do all of its pre-calculations
         virtual void checkSampler() const 
         {
             if (_sampler.get()) return;
@@ -228,7 +222,6 @@ namespace galsim {
         virtual double getPositiveFlux() const=0;
         virtual double getNegativeFlux() const=0;
         virtual boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const=0;
-
     };
 
     /**
@@ -240,10 +233,6 @@ namespace galsim {
     class InterpolantXY : public Interpolant2d 
     {
     public:
-        /**
-         * @brief Constructor
-         * @param[in] i1d  One-dimensional `Interpolant` to be applied to x and y coordinates.
-         */
         InterpolantXY(boost::shared_ptr<Interpolant> i1d) : _i1d(i1d) {}
         ~InterpolantXY() {}
 

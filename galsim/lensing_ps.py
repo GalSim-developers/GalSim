@@ -441,14 +441,9 @@ class PowerSpectrum(object):
         # Set up the images to be interpolated.
         # Note: We don't make the SBInterpolatedImages yet, since it's not picklable. 
         #       So we wait to create them when we are actually going to use them.
-        self.im_g1 = galsim.ImageViewD(self.grid_g1)
-        self.im_g1.setScale(grid_spacing)
-
-        self.im_g2 = galsim.ImageViewD(self.grid_g2)
-        self.im_g2.setScale(grid_spacing)
-
-        self.im_kappa = galsim.ImageViewD(self.grid_kappa)
-        self.im_kappa.setScale(grid_spacing)
+        self.im_g1 = galsim.ImageViewD(self.grid_g1, scale=grid_spacing)
+        self.im_g2 = galsim.ImageViewD(self.grid_g2, scale=grid_spacing)
+        self.im_kappa = galsim.ImageViewD(self.grid_kappa, scale=grid_spacing)
 
         # Dealing with the center here is a bit confusing, especially if ngrid is even.
         # The InterpolatedImage will consider position (0,0) to correspond to 
@@ -576,11 +571,9 @@ class PowerSpectrum(object):
             # get reduced shear (just discard magnification)
             g1_r, g2_r, _ = galsim.lensing_ps.theoryToObserved(self.im_g1.array, self.im_g2.array,
                                                                self.im_kappa.array)
-            g1_r = galsim.ImageViewD(g1_r)
-            g1_r.setScale(self.im_g1.getScale())
+            g1_r = galsim.ImageViewD(g1_r, scale=self.im_g1.scale)
             g1_r.setOrigin(self.im_g1.getXMin(), self.im_g1.getYMin())
-            g2_r = galsim.ImageViewD(g2_r)
-            g2_r.setScale(self.im_g2.getScale())
+            g2_r = galsim.ImageViewD(g2_r, scale=self.im_g2.scale)
             g2_r.setOrigin(self.im_g2.getXMin(), self.im_g2.getYMin())
             # Make an SBInterpolatedImage, which will do the heavy lifting for the
             # interpolation.
@@ -735,7 +728,7 @@ class PowerSpectrum(object):
         _, _, mu = galsim.lensing_ps.theoryToObserved(self.im_g1.array, self.im_g2.array,
                                                       self.im_kappa.array)
         mu = galsim.ImageViewD(mu)
-        mu.setScale(self.im_kappa.getScale())
+        mu.scale = self.im_kappa.scale
         mu.setOrigin(self.im_kappa.getXMin(), self.im_kappa.getYMin())
         # Make an SBInterpolatedImage, which will do the heavy lifting for the 
         # interpolation.
@@ -813,13 +806,13 @@ class PowerSpectrum(object):
         g1_r, g2_r, mu = galsim.lensing_ps.theoryToObserved(self.im_g1.array, self.im_g2.array,
                                                             self.im_kappa.array)
         g1_r = galsim.ImageViewD(g1_r)
-        g1_r.setScale(self.im_kappa.getScale())
+        g1_r.scale = self.im_kappa.scale
         g1_r.setOrigin(self.im_kappa.getXMin(), self.im_kappa.getYMin())
         g2_r = galsim.ImageViewD(g2_r)
-        g2_r.setScale(self.im_kappa.getScale())
+        g2_r.scale = self.im_kappa.scale
         g2_r.setOrigin(self.im_kappa.getXMin(), self.im_kappa.getYMin())
         mu = galsim.ImageViewD(mu)
-        mu.setScale(self.im_kappa.getScale())
+        mu.scale = self.im_kappa.scale
         mu.setOrigin(self.im_kappa.getXMin(), self.im_kappa.getYMin())
         # Make an SBInterpolatedImage, which will do the heavy lifting for the 
         # interpolation.

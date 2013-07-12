@@ -149,10 +149,8 @@ def main(argv):
     grid_g1, grid_g2 = ps.buildGrid(grid_spacing=stamp_size*pixel_scale, ngrid=n_tiles, rng=rng)
 
     # Setup the images:
-    gal_image = galsim.ImageF(stamp_size * n_tiles , stamp_size * n_tiles)
-    psf_image = galsim.ImageF(stamp_size * n_tiles , stamp_size * n_tiles)
-    gal_image.setScale(pixel_scale)
-    psf_image.setScale(pixel_scale)
+    gal_image = galsim.ImageF(stamp_size * n_tiles , stamp_size * n_tiles, scale=pixel_scale)
+    psf_image = galsim.ImageF(stamp_size * n_tiles , stamp_size * n_tiles, scale=pixel_scale)
 
     im_center = gal_image.bounds.trueCenter()
 

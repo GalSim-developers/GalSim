@@ -69,8 +69,7 @@ def main(argv):
 
     rng = galsim.UniformDeviate(1534225)
     bounds = galsim.BoundsI(-dim/2, dim/2+1, -dim/2, dim/2+1)
-    img = galsim.ImageF(bounds)
-    img.setScale(dxOut)
+    img = galsim.ImageF(bounds, scale=dxOut)
     galaxy.drawShoot(image=img, n_photons=nPhotons, rng=rng)
     img.write(outname)
 

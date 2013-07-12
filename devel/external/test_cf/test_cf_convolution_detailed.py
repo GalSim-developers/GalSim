@@ -115,8 +115,8 @@ if __name__ == "__main__":
         int(size_factor * largeim_size * 6) + 256) # large image to beat down noise + padding
     print "Padded underlying COSMOS noise image bounds = "+str(cosimage_padded.bounds)
 
-    cosimage.setScale(dx_cosmos) # Use COSMOS pixel scale
-    cosimage_padded.setScale(dx_cosmos) # Use COSMOS pixel scale
+    cosimage.scale = dx_cosmos # Use COSMOS pixel scale
+    cosimage_padded.scale = dx_cosmos # Use COSMOS pixel scale
     cosimage.addNoise(cn)
     cosimage_padded.addNoise(cn)
 
@@ -138,8 +138,8 @@ if __name__ == "__main__":
     convimage3_padded = galsim.ImageD(
         int(largeim_size * size_factor) + 32, int(largeim_size * size_factor) + 32)
     # Set the scales of convimage2 & 3 to be 0.18 so that addNoise() works correctly
-    convimage2.setScale(0.18)
-    convimage3_padded.setScale(0.18)
+    convimage2.scale = 0.18
+    convimage3_padded.scale = 0.18
     print "Padded convolved image bounds = "+str(convimage3_padded.bounds)
     print ""
 

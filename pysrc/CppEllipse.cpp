@@ -18,6 +18,12 @@
  * You should have received a copy of the GNU General Public License
  * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
  */
+#ifndef __INTEL_COMPILER
+#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+#endif
+#endif
+
 #include "boost/python.hpp"
 #include "deprecated/CppEllipse.h"
 #include "NumpyHelper.h"
@@ -29,6 +35,7 @@ namespace {
 
 struct PyCppEllipse {
 
+#if 0
     static bp::handle<> getMatrix(const CppEllipse& self) {
         static npy_intp dim[2] = {2, 2};
         // Because the C++ version sets references that are passed in, and that's not possible in
@@ -40,6 +47,7 @@ struct PyCppEllipse {
         Py_DECREF(r);
         return bp::handle<>(r2);
     }
+#endif
 
     static void wrap() {
         static const char* doc = 

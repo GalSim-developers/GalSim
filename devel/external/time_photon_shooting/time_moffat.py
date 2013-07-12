@@ -56,8 +56,7 @@ def time_moffat_shoot():
     rng = galsim.UniformDeviate(RANDOM_SEED)
 
     # Build the image for drawing the galaxy into
-    image = galsim.ImageF(IMAGE_XMAX, IMAGE_YMAX)
-    image.setScale(PIXEL_SCALE)
+    image = galsim.ImageF(IMAGE_XMAX, IMAGE_YMAX, PIXEL_SCALE)
 
     # Start the timer
     t1 = time.time()

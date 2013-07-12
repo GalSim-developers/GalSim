@@ -47,14 +47,17 @@ def printval(image1, image2):
     #print "saved image.center = ",image2.array[xcen-3:xcen+4,ycen-3:ycen+4]
 
 def getmoments(image1):
-    xgrid, ygrid = np.meshgrid(np.arange(np.shape(image1.array)[0]) + image1.getXMin(), 
-                               np.arange(np.shape(image1.array)[1]) + image1.getYMin())
-    mx = np.mean(xgrid * image1.array) / np.mean(image1.array)
-    my = np.mean(ygrid * image1.array) / np.mean(image1.array)
-    mxx = np.mean(((xgrid-mx)**2) * image1.array) / np.mean(image1.array)
-    myy = np.mean(((ygrid-my)**2) * image1.array) / np.mean(image1.array)
-    mxy = np.mean((xgrid-mx) * (ygrid-my) * image1.array) / np.mean(image1.array)
+    print 'shape = ',image1.array.shape
+    print 'bounds = ',image1.bounds
+    xgrid, ygrid = np.meshgrid(np.arange(image1.array.shape[1]) + image1.getXMin(), 
+                               np.arange(image1.array.shape[0]) + image1.getYMin())
+    mx = np.sum(xgrid * image1.array) / np.sum(image1.array)
+    my = np.sum(ygrid * image1.array) / np.sum(image1.array)
+    mxx = np.sum(((xgrid-mx)**2) * image1.array) / np.sum(image1.array)
+    myy = np.sum(((ygrid-my)**2) * image1.array) / np.sum(image1.array)
+    mxy = np.sum((xgrid-mx) * (ygrid-my) * image1.array) / np.sum(image1.array)
     print "    ", mx-image1.getXMin(), my-image1.getYMin(), mxx, myy, mxy
+    return mx, my, mxx, myy, mxy
 
 def convertToShear(e1,e2):
     # Convert a distortion (e1,e2) to a shear (g1,g2)
@@ -83,7 +86,7 @@ def do_shoot(prof, img, name):
     # Test photon shooting for a particular profile (given as prof). 
     # Since shooting implicitly convolves with the pixel, we need to compare it to 
     # the given profile convolved with a pixel.
-    pix = galsim.Pixel(xw=img.getScale())
+    pix = galsim.Pixel(xw=img.scale)
     compar = galsim.Convolve(prof,pix)
     compar.draw(img)
     flux_max = img.array.max()
@@ -131,16 +134,15 @@ def do_shoot(prof, img, name):
             err_msg="Photon shooting for %s disagrees with expected result"%name)
 
     # Test normalization
-    dx = img.getScale()
+    dx = img.scale
     # Test with a large image to make sure we capture enough of the flux
     # even for slow convergers like Airy (which needs a _very_ large image) or Sersic.
     if 'Airy' in name:
-        img = galsim.ImageD(2048,2048)
+        img = galsim.ImageD(2048,2048, scale=dx)
     elif 'Sersic' in name or 'DeVauc' in name:
-        img = galsim.ImageD(512,512)
+        img = galsim.ImageD(512,512, scale=dx)
     else:
-        img = galsim.ImageD(128,128)
-    img.setScale(dx)
+        img = galsim.ImageD(128,128, scale=dx)
     compar.setFlux(test_flux)
     compar.draw(img, normalization="surface brightness")
     print 'img.sum = ',img.array.sum(),'  cf. ',test_flux/(dx*dx)
@@ -175,14 +177,12 @@ def do_kvalue(prof, name):
     Gaussian (effectively a delta function).
     """
 
-    im1 = galsim.ImageF(16,16)
-    im1.scale = 0.2
+    im1 = galsim.ImageF(16,16, scale=0.2)
     prof.draw(im1)
 
     delta = galsim.Gaussian(sigma = 1.e-8)
     conv = galsim.Convolve([prof,delta])
-    im2 = galsim.ImageF(16,16)
-    im2.scale = 0.2
+    im2 = galsim.ImageF(16,16, scale=0.2)
     conv.draw(im2)
     printval(im1,im2)
     np.testing.assert_array_almost_equal(
