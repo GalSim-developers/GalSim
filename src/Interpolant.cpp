@@ -674,7 +674,7 @@ namespace galsim {
         //
         // Unfortunately, it turns out that while K(1) << 1, the series from there on starts
         // to converge more slowly, so the gains from each subsequent term become less.
-        // The value of K(1)..K(4) are: 1.416e-3, 4.390e-5, 7.716e-6, 2.343e-6.
+        // For n=3, the values of K(1)..K(4) are: 1.416e-3, 4.390e-5, 7.716e-6, 2.343e-6.
         // Thus, it would be hard to use this method to get to significantly better accuracy
         // than about 1.e-6.
         // 
