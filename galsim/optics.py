@@ -47,8 +47,8 @@ import utilities
 from galsim import GSObject
 
 class OpticalPSF(GSObject):
-    """A class describing aberrated PSFs due to telescope optics.  Has an SBInterpolatedImage in the
-    SBProfile attribute.
+    """A class describing aberrated PSFs due to telescope optics.  It's underlying implementation
+    uses an InterpolatedImage to characterize the profile.
 
     Input aberration coefficients are assumed to be supplied in units of wavelength, and correspond
     to the Zernike polynomials in the Noll convention definined in
@@ -92,9 +92,9 @@ class OpticalPSF(GSObject):
                            which interpolant should be used.  Options are 'nearest', 'sinc', 
                            'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the 
                            integer order to use. [default `interpolant = galsim.Quintic()`]
-    @param oversampling    Optional oversampling factor for the InterpolatedImage table 
-                           [default `oversampling = 1.5`], setting oversampling < 1 will produce 
-                           aliasing in the PSF (not good).
+    @param oversampling    Optional oversampling factor for the InterpolatedImage. Setting 
+                           oversampling < 1 will produce aliasing in the PSF (not good).
+                           [default `oversampling = 1.5`]
     @param pad_factor      Additional multiple by which to zero-pad the PSF image to avoid folding
                            compared to what would be employed for a simple galsim.Airy 
                            [default `pad_factor = 1.5`].  Note that `pad_factor` may need to be 

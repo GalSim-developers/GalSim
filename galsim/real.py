@@ -43,8 +43,9 @@ from galsim import GSObject
 
 
 class RealGalaxy(GSObject):
-    """A class describing real galaxies from some training dataset.  Has an SBConvolve in the
-    SBProfile attribute.
+    """A class describing real galaxies from some training dataset.  It's underlying implementation
+    uses Convolve instance of an InterpolatedImage (for the observed galaxy) with a Deconvolve
+    of another InterpolatedImage (for the PSF).
 
     This class uses a catalog describing galaxies in some training data (for more details, see the
     RealGalaxyCatalog documentation) to read in data about realistic galaxies that can be used for
@@ -66,9 +67,7 @@ class RealGalaxy(GSObject):
     galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
     keywords for choosing a galaxy; exactly one must be set.  In future we may add more such
     options, e.g., to choose at random but accounting for the non-constant weight factors
-    (probabilities for objects to make it into the training sample).  Like other GSObjects, the
-    RealGalaxy contains an SBProfile attribute which is an SBConvolve representing the deconvolved
-    HST galaxy.
+    (probabilities for objects to make it into the training sample).  
 
     Note that preliminary tests suggest that for optimal balance between accuracy and speed,
     `k_interpolant` and `pad_factor` should be kept at their default values.  The user should be
@@ -104,9 +103,8 @@ class RealGalaxy(GSObject):
                                 default value, 4.  We strongly recommend leaving this parameter at
                                 its default value; see text above for details.
                                 [Default `pad_factor = 0`.]
-    @param noise_pad            When creating the SBProfile attribute for this GSObject, pad the
-                                Interpolated image with zeros, or with noise of a level specified
-                                in the training dataset?  There are several options here: 
+    @param noise_pad            Pad the Interpolated image with zeros, or with noise of a level 
+                                specified in the training dataset?  There are several options here: 
                                     Use `noise_pad = False` if you wish to pad with zeros.
                                     Use `noise_pad = True` if you wish to pad with uncorrelated
                                         noise of the proper variance for this object from the
