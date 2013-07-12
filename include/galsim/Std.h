@@ -79,7 +79,21 @@ template <class E=std::runtime_error>
 class FormatAndThrow 
 {
 public:
-    FormatAndThrow() {}
+    // OK, this is a bit weird, but mostly innocuous.  Mac's default gcc compiler for OSX >= 10.6
+    // is apparently compiled with something called "fully dynamic strings".  If you combine
+    // this with libraries that don't use fully dynamic strings, then you can have problems with
+    // zero-length strings, such as the one in the default constructor for ostringstream.
+    // It manifests with crashes, saying "pointer being freed was not allocated".
+    // Here are some web sites that discuss the problem:
+    //     http://newartisans.com/2009/10/a-c-gotcha-on-snow-leopard/
+    //     http://gcc.gnu.org/bugzilla/show_bug.cgi?id=53838
+    //     https://trac.macports.org/ticket/35070
+    //     https://code.google.com/p/googletest/issues/detail?id=189
+    // Anyway, my workaround is to initialize the string with a space and a backspace, which 
+    // should print as nothing, so it should have no apparent result, and it avoids the 
+    // attempted deallocation of the global empty string.
+    
+    FormatAndThrow() : oss(" ") {}
 
     template <class T>
     FormatAndThrow& operator<<(const T& t) 

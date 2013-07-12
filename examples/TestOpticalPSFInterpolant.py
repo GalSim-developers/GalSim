@@ -101,10 +101,8 @@ def Script4():
         #print 'Made epsf1, epsf2'
 
         # Create the large, double width output image
-        image1 = galsim.ImageF(nx,ny)
-        image2 = galsim.ImageF(nx,ny)
-        image1.setScale(pixel_scale)
-        image2.setScale(pixel_scale)
+        image1 = galsim.ImageF(nx,ny, scale=pixel_scale)
+        image2 = galsim.ImageF(nx,ny, scale=pixel_scale)
         #print 'Made images'
 
         # Draw the profile

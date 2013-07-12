@@ -379,19 +379,26 @@ namespace galsim {
 
         const int m = I.getXMax()-I.getXMin()+1;
         const int n = I.getYMax()-I.getYMin()+1;
+        xdbg<<"m,n = "<<m<<','<<n<<std::endl;
         tmv::Vector<double> x(m);
         const int xmin = I.getXMin();
         for (int i=0;i<m;++i) x.ref(i) = (xmin+i)*dx;
+        xdbg<<"xmin = "<<xmin<<std::endl;
+        xdbg<<"x = "<<x<<std::endl;
 
         tmv::Vector<double> y(n);
         const int ymin = I.getYMin();
+        xdbg<<"ymin = "<<ymin<<std::endl;
         for (int i=0;i<n;++i) y.ref(i) = (ymin+i)*dx;
+        xdbg<<"y = "<<y<<std::endl;
 
         tmv::Matrix<double> val(m,n);
 #ifdef DEBUGLOGGING
         val.setAllTo(999.);
 #endif
         assert(xmin <= 0 && ymin <= 0 && -xmin < m && -ymin < n);
+        xdbg<<"Call fillXValue with "<<xmin*dx<<','<<dx<<','<<-xmin<<
+            ','<<ymin*dx<<','<<dx<<','<<-ymin<<std::endl;
         fillXValue(val.view(),xmin*dx,dx,-xmin,ymin*dx,dx,-ymin);
 
         // Sometimes rounding errors cause the nominal (0,0) to be slightly off.
@@ -727,6 +734,7 @@ namespace galsim {
                              double x0, double dx, int nx1, double y0, double dy, int ny1)
     {
         dbg<<"Start FillQuadrant\n";
+        dbg<<x0<<" "<<dx<<" "<<nx1<<"   "<<y0<<" "<<dy<<" "<<ny1<<std::endl;
         // Figure out which quadrant is the largest.  Need to use that one.
         const int nx = val.colsize();
         const int nx2 = nx - nx1-1;
@@ -745,7 +753,7 @@ namespace galsim {
                 // Upper right is the big quadrant
                 xdbg<<"Use Upper right (nx2,ny2)"<<std::endl;
                 q.reset(new tmv::MatrixView<T>(val.subMatrix(nx1,nx,ny1,ny)));
-                QuadrantHelper<T>::fill(prof,*q,0.,dx,0.,dy);
+                QuadrantHelper<T>::fill(prof,*q,nx1==0?x0:0.,dx,ny1==0?y0:0.,dy);
                 ur_done = true;
                 // Also do the rest of the ix=0 row and iy=0 col
                 val.row(nx1,0,ny1).reverse() = q->row(0,1,ny1+1);
@@ -754,7 +762,7 @@ namespace galsim {
                 // Lower right is the big quadrant
                 xdbg<<"Use Lower right (nx2,ny1)"<<std::endl;
                 q.reset(new tmv::MatrixView<T>(val.subMatrix(nx1,nx,ny1,-1,1,-1)));
-                QuadrantHelper<T>::fill(prof,val.subMatrix(nx1,nx,0,ny1+1),0.,dx,y0,dy);
+                QuadrantHelper<T>::fill(prof,val.subMatrix(nx1,nx,0,ny1+1),nx1==0?x0:0.,dx,y0,dy);
                 lr_done = true;
                 val.row(nx1,ny1+1,ny) = q->row(0,1,ny2+1);
                 val.col(ny1,0,nx1).reverse() = q->row(0,1,nx1+1);
@@ -764,7 +772,7 @@ namespace galsim {
                 // Upper left is the big quadrant
                 xdbg<<"Use Upper left (nx1,ny2)"<<std::endl;
                 q.reset(new tmv::MatrixView<T>(val.subMatrix(nx1,-1,ny1,ny,-1,1)));
-                QuadrantHelper<T>::fill(prof,val.subMatrix(0,nx1+1,ny1,ny),x0,dx,0.,dy);
+                QuadrantHelper<T>::fill(prof,val.subMatrix(0,nx1+1,ny1,ny),x0,dx,ny1==0?y0:0.,dy);
                 ul_done = true;
                 val.row(nx1,0,ny1).reverse() = q->row(0,1,ny1+1);
                 val.col(ny1,nx1+1,nx) = q->col(0,1,nx2+1);

@@ -42,7 +42,7 @@ namespace galsim {
     class TableError : public std::runtime_error 
     {
     public:
-        TableError(const std::string& m="") : std::runtime_error("Table Error: " +m) {}
+        TableError(const std::string& m) : std::runtime_error("Table Error: " +m) {}
     };
 
     /// @brief Exception class for Table access ouside the allowed range
@@ -51,7 +51,8 @@ namespace galsim {
         template <typename A>
         static std::string BuildErrorMessage(A val, A min, A max)
         {
-            std::ostringstream oss;
+            // See discussion in Std.h about this initial value.
+            std::ostringstream oss(" ");
             oss << "Argument "<<val<<" out of range ("<<min<<".."<<max<<")";
             return oss.str();
         }
@@ -115,13 +116,13 @@ namespace galsim {
         enum interpolant { linear, spline, floor, ceil };
 
         /// Construct empty table
-        Table(interpolant i=linear) : iType(i), isReady(false) {} 
+        Table(interpolant i) : iType(i), isReady(false) {} 
 
         /// Table from two arrays:
-        Table(const A* argvec, const V* valvec, int N, interpolant in=linear);
-        Table(const std::vector<A>& a, const std::vector<V>& v, interpolant in=linear);
+        Table(const A* argvec, const V* valvec, int N, interpolant in);
+        Table(const std::vector<A>& a, const std::vector<V>& v, interpolant in);
 
-        Table(std::istream& is, interpolant in=linear) : iType(in), isReady(false)
+        Table(std::istream& is, interpolant in) : iType(in), isReady(false)
         { read(is); }
 
         void clear() { v.clear(); isReady=false; }
@@ -231,12 +232,12 @@ namespace galsim {
     public:
         //@{ 
         /// Constructors just use Table constructors:
-        TableDD(interpolant i=linear) : Table<double,double>(i) {}
-        TableDD(const double* argvec, const double* valvec, int N, interpolant in=linear) :
+        TableDD(interpolant i) : Table<double,double>(i) {}
+        TableDD(const double* argvec, const double* valvec, int N, interpolant in) :
             Table<double,double>(argvec,valvec,N,in) {}
         TableDD(const std::vector<double>& a, const std::vector<double>& v,
                 interpolant in=linear) : Table<double,double>(a,v,in) {}
-        TableDD(std::istream& is, interpolant in=linear) : Table<double,double>(is,in) {}
+        TableDD(std::istream& is, interpolant in) : Table<double,double>(is,in) {}
         //@}
 
         /// Virtual function from FluxDensity just calls Table version.

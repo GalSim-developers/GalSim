@@ -19,6 +19,12 @@
  * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
  */
 
+#ifndef __INTEL_COMPILER
+#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+#endif
+#endif
+
 #include "boost/python.hpp" // header that includes Python.h always needs to come first
 
 #include "NumpyHelper.h"
@@ -39,10 +45,22 @@ namespace galsim {
 template <typename T>
 struct PyImage {
 
+    template <typename U>
+    static Image<T>* MakeFromImage(const BaseImage<U>& rhs)
+    { return new Image<T>(rhs); }
+
     template <typename U, typename W>
     static void wrapImageTemplates(W& wrapper) {
+        typedef Image<T>* (*constructFrom_func_type)(const BaseImage<U>&);
         typedef void (Image<T>::* copyFrom_func_type)(const BaseImage<U>&);
         wrapper
+            .def(
+                "__init__",
+                bp::make_constructor(
+                    constructFrom_func_type(&MakeFromImage), 
+                    bp::default_call_policies(), bp::args("other")
+                )
+            )
             .def("copyFrom", copyFrom_func_type(&Image<T>::copyFrom));
     }
 
@@ -56,7 +74,8 @@ struct PyImage {
     static bp::object GetArrayImpl(bp::object self, bool isConst) 
     {
         // --- Try to get cached array ---
-        if (PyObject_HasAttrString(self.ptr(), "_array")) return self.attr("_array");
+        if (PyObject_HasAttrString(self.ptr(), "_array") && self.attr("_array") != bp::object()) 
+            return self.attr("_array");
 
         const BaseImage<T>& image = bp::extract<const BaseImage<T>&>(self);
 
@@ -68,6 +87,17 @@ struct PyImage {
 
         self.attr("_array") = numpy_array;
         return numpy_array;
+    }
+
+    static void CallResize(bp::object self, const Bounds<int>& new_bounds)
+    {
+        // We need to make sure the _array attribute is deleted 
+        if (PyObject_HasAttrString(self.ptr(), "_array"))
+            self.attr("_array") = bp::object();
+
+        // Now call the regular resize method.
+        Image<T>& image = bp::extract<Image<T>&>(self);
+        image.resize(new_bounds);
     }
 
     static bp::object GetArray(bp::object image) { return GetArrayImpl(image, false); }
@@ -163,13 +193,15 @@ struct PyImage {
         bp::class_< Image<T>, bp::bases< BaseImage<T> > >
             pyImage(("Image" + suffix).c_str(), "", bp::no_init);
         pyImage
-            .def(bp::init<int,int,T>(
-                    (bp::args("ncol","nrow"), bp::arg("init_value")=T(0))
+            .def(bp::init<>())
+            .def(bp::init<int,int,double,T>(
+                    (bp::args("ncol","nrow"), bp::arg("scale")=0.,
+                     bp::arg("init_value")=T(0))
             ))
-            .def(bp::init<const Bounds<int>&, T>(
-                    (bp::arg("bounds")=Bounds<int>(), bp::arg("init_value")=T(0))
+            .def(bp::init<const Bounds<int>&, double, T>(
+                    (bp::arg("bounds"), bp::arg("scale")=0.,
+                     bp::arg("init_value")=T(0))
             ))
-            .def(bp::init<const BaseImage<T>&>(bp::args("other")))
             .def("subImage", subImage_func_type(&Image<T>::subImage), bp::args("bounds"))
             .def("view", view_func_type(&Image<T>::view))
             .add_property("array", &GetArray)
@@ -185,7 +217,7 @@ struct PyImage {
             .def("fill", &Image<T>::fill)
             .def("setZero", &Image<T>::setZero)
             .def("invertSelf", &Image<T>::invertSelf)
-            .def("resize", &Image<T>::resize)
+            .def("resize", &CallResize)
             .enable_pickling()
             ;
         wrapImageTemplates<float>(pyImage);
@@ -219,7 +251,7 @@ struct PyImage {
                 bp::make_constructor(
                     &MakeFromArray, bp::default_call_policies(),
                     (bp::arg("array"), bp::arg("xmin")=1, bp::arg("ymin")=1, 
-                     bp::arg("scale")=1.0)
+                     bp::arg("scale")=0.)
                 )
             )
             .def(bp::init<const ImageView<T>&>(bp::args("other")))
@@ -266,7 +298,7 @@ struct PyImage {
                 bp::make_constructor(
                     &MakeConstFromArray, bp::default_call_policies(),
                     (bp::arg("array"), bp::arg("xmin")=1, bp::arg("ymin")=1,
-                     bp::arg("scale")=1.0)
+                     bp::arg("scale")=0.)
                 )
             )
             .def(bp::init<const BaseImage<T>&>(bp::args("other")))

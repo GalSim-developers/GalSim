@@ -97,7 +97,7 @@ namespace galsim {
          * @param[in] isRadial     Set true if this is an annulus on a plane, false for linear
          *                         interval.
          * @param[in] gsparams     GSParams object storing constants that control the accuracy of
-         *                         operations, if different from the default.
+         *                         operations.
          */
         Interval(const FluxDensity& fluxDensity,
                  double xLower,
@@ -155,32 +155,28 @@ namespace galsim {
 
     private:
 
-        const FluxDensity* _fluxDensityPtr;  ///< Pointer to the parent FluxDensity function.
-        double _xLower; ///< Interval lower bound
-        double _xUpper; ///< Interval upper bound
-        bool _isRadial; ///< True if domain is an annulus, otherwise domain is a linear interval.
-        /// @brief GSParams struct for storing values of GalSim rendering and image operation
-        /// parameters if different from defaults.
+        const FluxDensity* _fluxDensityPtr;  // Pointer to the parent FluxDensity function.
+        double _xLower; // Interval lower bound
+        double _xUpper; // Interval upper bound
+        bool _isRadial; // True if domain is an annulus, otherwise domain is a linear interval.
         GSParamsPtr _gsparams;
 
-        mutable bool _fluxIsReady; ///< True if flux has been integrated
-        void checkFlux() const; ///< Calculate flux if it has not already been done.
-        mutable double _flux; ///< Integrated flux in this interval (can be negative)
+        mutable bool _fluxIsReady; // True if flux has been integrated
+        void checkFlux() const; // Calculate flux if it has not already been done.
+        mutable double _flux; // Integrated flux in this interval (can be negative)
 
-        /// @brief Finds the x or radius coord that would enclose fraction of this intervals flux 
-        /// if flux were constant.
+        // Finds the x or radius coord that would enclose fraction of this interval's flux 
+        // if flux were constant.
         double interpolateFlux(double fraction) const; 
 
-        /**
-         * Set this variable true if returning equal fluxes with rejection method, vs returning 
-         * non-unity flux weight.
-         */
+        // Set this variable true if returning equal fluxes with rejection method, vs returning 
+        // non-unity flux weight.
         bool _useRejectionMethod;
 
-        /// 1. / (Maximum absolute flux density in the interval (assumed to be at an endpoint))
+        // 1. / (Maximum absolute flux density in the interval (assumed to be at an endpoint))
         double _invMaxAbsDensity; 
 
-        double _invMeanAbsDensity; ///< 1. / (Mean absolute flux density in the interval)
+        double _invMeanAbsDensity; // 1. / (Mean absolute flux density in the interval)
 
     };
 
@@ -252,13 +248,11 @@ namespace galsim {
 
     private:
 
-        const FluxDensity& _fluxDensity; ///< Function being sampled
-        ProbabilityTree<Interval> _pt; ///< Binary tree of intervals for photon shooting
-        double _positiveFlux; ///< Stored total positive flux
-        double _negativeFlux; ///< Stored total negative flux
-        const bool _isRadial; ///< True for 2d axisymmetric function, false for 1d function
-        /// @brief GSParams struct for storing values of GalSim rendering and image operation
-        /// parameters if different from defaults.
+        const FluxDensity& _fluxDensity; // Function being sampled
+        ProbabilityTree<Interval> _pt; // Binary tree of intervals for photon shooting
+        double _positiveFlux; // Stored total positive flux
+        double _negativeFlux; // Stored total negative flux
+        const bool _isRadial; // True for 2d axisymmetric function, false for 1d function
         const GSParamsPtr _gsparams;
     };
 
