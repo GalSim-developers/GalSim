@@ -196,10 +196,10 @@ class InterpolatedImage(GSObject):
                            center of the profile (if `use_true_center=True`) or the nominal
                            center returned by `image.bounds.center()` (if `use_true_center=False`)
                            [Default `use_true_center = True`]
-    @param offset          The location in the image at which to take the center the profile to be
-                           relative to the center of the image (either the true center if 
-                           use_true_center=True, or the nominal center if use_true_center=False).  
-                           [Default `offset = None`]
+    @param offset          The location in the input image to use as the center of the profile.
+                           This should be specified relative to the center of the input image 
+                           (either the true center if use_true_center=True, or the nominal center 
+                           if use_true_center=False).  [Default `offset = None`]
     @param gsparams        You may also specify a gsparams argument.  See the docstring for
                            galsim.GSParams using help(galsim.GSParams) for more information about
                            this option.
