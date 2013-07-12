@@ -77,16 +77,22 @@ for Class in _galsim.Image.itervalues():
 
     There are several ways to construct an Image:
 
-        Image(ncol, nrow, init_value=0)        # size and initial value - origin @ (1,1)
-        Image(bounds=BoundsI(), init_value=0)  # bounding box and initial value
+        Image(ncol, nrow, scale=0, init_value=0) # size, scale, and initial value, origin @ (1,1)
+        Image(bounds, scale=0 init_value=0)      # bounding box, scale, and initial value
 
-    An Image also has a '.array' attribute that provides a numpy view into the Image's pixels.
+    The default scale=0 essentially means that it is undefined.  When drawing onto such an image,
+    a suitable scale will be automatically set.
+
+    After construction, the scale and bounds may be set with 
+
+        im.bounds = new_bounds
+        im.scale = new_scale
+
+    An Image also has an 'array' attribute that provides a numpy view into the Image's pixels.
 
     The individual elements in the array attribute are accessed as im.array[y,x], matching the
     standard numpy convention, while the Image class's own accessors are all (x,y).
     """
-    Class.getScale.__func__.__doc__ = "Get the sample scale dx for the image."
-    Class.setScale.__func__.__doc__ = "Set the sample scale dx for the image."
 
 
 for Class in _galsim.ImageView.itervalues():

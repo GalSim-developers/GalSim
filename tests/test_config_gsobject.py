@@ -861,7 +861,7 @@ def test_add():
         'gal5' : { 
             'type' : 'Add',
             'items' : [
-                { 'type' : 'Exponential' , 'scale_radius' : 1.7, 'flux' : 100 },
+                { 'type' : 'Exponential' , 'scale_radius' : 3.4, 'flux' : 100 },
                 { 'type' : 'Gaussian' , 'sigma' : 1, 'flux' : 50 }
             ],
             'gsparams' : { 'maxk_threshold' : 1.e-2,
@@ -909,14 +909,14 @@ def test_add():
     # Check that the Add items correctly inherit their gsparams from the top level
     gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
     gsparams = galsim.GSParams(maxk_threshold=1.e-2, alias_threshold=1.e-2, stepk_minimum_hlr=3)
-    gal5b_1 = galsim.Exponential(scale_radius=1.7, flux=100, gsparams=gsparams)
+    gal5b_1 = galsim.Exponential(scale_radius=3.4, flux=100, gsparams=gsparams)
     gal5b_2 = galsim.Gaussian(sigma=1, flux=50, gsparams=gsparams)
     gal5b = galsim.Add([gal5b_1, gal5b_2])
     gsobject_compare(gal5a, gal5b, conv=galsim.Gaussian(sigma=1))
 
     try:
         # Make sure they don't match when using the default GSParams
-        gal5c_1 = galsim.Exponential(scale_radius=1.7, flux=100)
+        gal5c_1 = galsim.Exponential(scale_radius=3.4, flux=100)
         gal5c_2 = galsim.Gaussian(sigma=1, flux=50)
         gal5c = galsim.Add([gal5c_1, gal5c_2])
         np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c,
@@ -1104,7 +1104,7 @@ def test_list():
         'gal' : { 
             'type' : 'List' ,
             'items' : [
-                { 'type' : 'Exponential' , 'scale_radius' : 1.7, 'flux' : 100 },
+                { 'type' : 'Exponential' , 'scale_radius' : 3.4, 'flux' : 100 },
                 { 'type' : 'Exponential' , 'scale_radius' : 3, 'flux' : 10 }
             ],
             'gsparams' : { 'maxk_threshold' : 1.e-2,
@@ -1116,12 +1116,12 @@ def test_list():
     config['seq_index'] = 0
     gal5a = galsim.config.BuildGSObject(config, 'gal')[0]
     gsparams = galsim.GSParams(maxk_threshold=1.e-2, alias_threshold=1.e-2, stepk_minimum_hlr=3)
-    gal5b = galsim.Exponential(scale_radius=1.7, flux=100, gsparams=gsparams)
+    gal5b = galsim.Exponential(scale_radius=3.4, flux=100, gsparams=gsparams)
     gsobject_compare(gal5a, gal5b, conv=galsim.Gaussian(sigma=1))
 
     try:
         # Make sure they don't match when using the default GSParams
-        gal5c = galsim.Exponential(scale_radius=1.7, flux=100)
+        gal5c = galsim.Exponential(scale_radius=3.4, flux=100)
         np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c,
                                  conv=galsim.Gaussian(sigma=1))
     except ImportError:

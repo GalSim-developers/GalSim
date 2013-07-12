@@ -132,8 +132,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             >>> correlated_noise.applyTo(image)
 
         On output the Image instance `image` will have been given additional noise according to the
-        given CorrelatedNoise instance `correlated_noise`.  image.getScale() is used to determine
-        the input image pixel separation, and if image.getScale() <= 0 a pixel scale of 1 is
+        given CorrelatedNoise instance `correlated_noise`.  image.scale is used to determine
+        the input image pixel separation, and if image.scale <= 0 a pixel scale of 1 is
         assumed.
 
         Note that the correlated noise field in `image` will be periodic across its boundaries: this
@@ -166,7 +166,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         self._profile_for_stored = self._profile
 
         # Then retrieve or redraw the sqrt(power spectrum) needed for making the noise field
-        rootps = self._get_update_rootps(image.array.shape, image.getScale())
+        rootps = self._get_update_rootps(image.array.shape, image.scale)
 
         # Finally generate a random field in Fourier space with the right PS
         noise_array = _generate_noise_from_rootps(self.getRNG(), rootps)
@@ -196,8 +196,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         Note that the code doesn't check that the "if" above is true: the user MUST make sure this 
         is the case for the final noise to be uncorrelated.
 
-        image.getScale() is used to determine the input image pixel separation, and if 
-        image.getScale() <= 0 a pixel scale of 1 is assumed.
+        image.scale is used to determine the input image pixel separation, and if 
+        image.scale <= 0 a pixel scale of 1 is assumed.
 
         If you are interested in a theoretical calculation of the variance in the final noise field
         after whitening, the applyWhiteningTo() method in fact returns this variance.  For example:
@@ -211,8 +211,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
             >>> cosmos_file='YOUR/REPO/PATH/GalSim/examples/data/acs_I_unrot_sci_20_cf.fits'
             >>> cn = galsim.getCOSMOSNoise(galsim.BaseDeviate(), cosmos_file)
-            >>> image = galsim.ImageD(256, 256)
-            >>> image.setScale(0.03) # Should match the COSMOS default since didn't specify another
+            >>> image = galsim.ImageD(256, 256, scale=0.03)
+                  # The scale should match the COSMOS default since didn't specify another
             >>> image.addNoise(cn)
 
         The `image` will then contain a realization of a random noise field with COSMOS-like
@@ -253,7 +253,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # Then retrieve or redraw the sqrt(power spectrum) needed for making the whitening noise,
         # and the total variance of the combination
         rootps_whitening, variance = self._get_update_rootps_whitening(
-            image.array.shape, image.getScale())
+            image.array.shape, image.scale)
 
         # Finally generate a random field in Fourier space with the right PS and add to image
         noise_array = _generate_noise_from_rootps(self.getRNG(), rootps_whitening)
@@ -484,9 +484,9 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             newcf = galsim.ImageD(shape[1], shape[0]) # set the corr func to be the correct size
             # set the scale based on dx...
             if dx <= 0.:
-                newcf.setScale(1.) # sometimes new Images have getScale() = 0
+                newcf.scale = 1. # New Images have scale() = 0 unless otherwise set.
             else:
-                newcf.setScale(dx)
+                newcf.scale = dx
             # Then draw this correlation function into an array
             self.draw(newcf, dx=None) # setting dx=None uses the newcf image scale set above
 
@@ -494,7 +494,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             rootps = np.sqrt(np.abs(np.fft.fft2(newcf.array)) * np.product(shape))
 
             # Then add this and the relevant scale to the _rootps_store for later use
-            self._rootps_store.append((rootps, newcf.getScale()))
+            self._rootps_store.append((rootps, newcf.scale))
 
         return rootps
 
@@ -588,8 +588,8 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
         >>> cn = galsim.CorrelatedNoise(rng, image)
 
-    Instantiates a CorrelatedNoise using the pixel scale information contained in image.getScale()
-    (assumes the scale is unity if image.getScale() <= 0.) by calculating the correlation function
+    Instantiates a CorrelatedNoise using the pixel scale information contained in image.scale
+    (assumes the scale is unity if image.scale <= 0.) by calculating the correlation function
     in the input `image`.  The input `rng` must be a galsim.BaseDeviate or derived class instance,
     setting the random number generation for the noise.
 
@@ -658,9 +658,9 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
         >>> cn.applyTo(im)
 
-    is equivalent.  See the .addNoise() method docstring for more information.  The
-    image.getScale() method is used to get the pixel scale of the input image unless this is <= 0,
-    in which case a scale of 1 is assumed.
+    is equivalent.  See the .addNoise() method docstring for more information.  The image.scale 
+    is used to get the pixel scale of the input image unless this is <= 0, in which case a scale 
+    of 1 is assumed.
 
     Another method that may be of use is
 
@@ -782,12 +782,12 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
         # Correctly record the original image scale if set
         if dx > 0.:
-            cf_image.setScale(dx)
-        elif image.getScale() > 0.:
-            cf_image.setScale(image.getScale())
+            cf_image.scale = dx
+        elif image.scale > 0.:
+            cf_image.scale = image.scale
         else: # sometimes Images are instantiated with scale=0, in which case we will assume unit
               # pixel scale
-            cf_image.setScale(1.)
+            cf_image.scale = 1.
 
         # If x_interpolant not specified on input, use bilinear
         if x_interpolant == None:
@@ -798,7 +798,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
         # Then initialize...
         cf_object = galsim.InterpolatedImage(
-            cf_image, x_interpolant=x_interpolant, dx=cf_image.getScale(), normalization="sb",
+            cf_image, x_interpolant=x_interpolant, dx=cf_image.scale, normalization="sb",
             calculate_stepk=False, calculate_maxk=False, #<-these internal calculations do not seem
             gsparams=gsparams)                           #  to do very well with often sharp-peaked
                                                          #  correlation function images...
@@ -808,7 +808,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
             # If it corresponds to the CF above, store useful data as a (rootps, dx) tuple for
             # efficient later use:
             self._profile_for_stored = self._profile
-            self._rootps_store.append((np.sqrt(ps_array), cf_image.getScale()))
+            self._rootps_store.append((np.sqrt(ps_array), cf_image.scale))
 
 
 def _cf_periodicity_dilution_correction(cf_shape):
@@ -918,8 +918,7 @@ def getCOSMOSNoise(rng, file_name, dx_cosmos=0.03, variance=0., x_interpolant=No
         >>> import galsim
         >>> rng = galsim.UniformDeviate(123456)
         >>> cf = galsim.correlatednoise.getCOSMOSNoise(rng, filestring)
-        >>> im = galsim.ImageD(300, 300)
-        >>> im.setScale(0.03)
+        >>> im = galsim.ImageD(300, 300, scale=0.03)
         >>> cf.applyTo(im)
         >>> im.write('out.fits')
 

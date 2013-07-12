@@ -629,8 +629,7 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto'):
         hdu.data.byteswap(True)   # Note inplace is just an arg, not a kwarg, inplace=True throws
                                    # a TypeError exception in EPD Python 2.7.2
 
-    image = Class(array=data, xmin=xmin, ymin=ymin)
-    image.scale = scale
+    image = Class(array=data, xmin=xmin, ymin=ymin, scale=scale)
 
     # If we opened a file, don't forget to close it.
     if fin: 
@@ -822,8 +821,7 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto')
     nimages = hdu.data.shape[0]
     image_list = []
     for k in range(nimages):
-        image = Class(array=hdu.data[k,:,:], xmin=xmin, ymin=ymin)
-        image.scale = scale
+        image = Class(array=hdu.data[k,:,:], xmin=xmin, ymin=ymin, scale=scale)
         image_list.append(image)
 
     # If we opened a file, don't forget to close it.

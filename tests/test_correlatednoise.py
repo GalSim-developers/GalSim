@@ -455,8 +455,7 @@ def test_output_generation_basic():
     # Draw this for reference
     cn.draw(refim, dx=.18)
     # Generate a large image containing noise according to this function
-    outimage = galsim.ImageD(xnoise_large.bounds)
-    outimage.setScale(.18)
+    outimage = galsim.ImageD(xnoise_large.bounds, scale=0.18)
     outimage.addNoise(cn)
     # Summed (average) CorrelatedNoises should be approximately equal to the input, so average
     # multiple CFs
@@ -510,8 +509,7 @@ def test_output_generation_rotated():
         # Draw this for reference
         cn_rot.draw(refim, dx=1.)
         # Generate a large image containing noise according to this function
-        outimage = galsim.ImageD(largeim_size, largeim_size)
-        outimage.setScale(1.)
+        outimage = galsim.ImageD(largeim_size, largeim_size, scale=1.)
         outimage.addNoise(cn_rot)
         # Summed (average) CorrelatedNoises should be approximately equal to the input, so avg
         # multiple CFs
@@ -552,8 +550,7 @@ def test_output_generation_magnified():
     for scale in scales:
         cn_scl = cn.createExpanded(scale)
         # Generate a large image containing noise according to this function
-        outimage = galsim.ImageD(largeim_size, largeim_size)
-        outimage.setScale(scale)
+        outimage = galsim.ImageD(largeim_size, largeim_size, scale=scale)
         outimage.addNoise(cn_scl)
         # Summed (average) CorrelatedNoises should be approximately equal to the input, so avg
         # multiple CFs
@@ -607,10 +604,8 @@ def test_copy():
             "funtion when queried using ._profile.xValue().")
     # Check that the copied correlated noise generates the same noise field as its parent when
     # they are initialized with the same RNG immediately prior to noise generation
-    outim1 = galsim.ImageD(smallim_size, smallim_size)
-    outim2 = galsim.ImageD(smallim_size, smallim_size)
-    outim1.setScale(1.)
-    outim2.setScale(1.)
+    outim1 = galsim.ImageD(smallim_size, smallim_size, scale=1.)
+    outim2 = galsim.ImageD(smallim_size, smallim_size, scale=1.)
     cn_copy = cn.copy()
     cn.setRNG(galsim.UniformDeviate(rseed))
     cn_copy.setRNG(galsim.UniformDeviate(rseed))
@@ -651,8 +646,8 @@ def test_cosmos_and_whitening():
     dx_cosmos = 7.5 # Use some non-default, non-unity value of COSMOS pixel spacing
     ccn = galsim.getCOSMOSNoise(
         gd, '../examples/data/acs_I_unrot_sci_20_cf.fits', dx_cosmos=dx_cosmos)
-    outimage = galsim.ImageD(3 * largeim_size, 3 * largeim_size) # large image to beat down noise
-    outimage.setScale(dx_cosmos) # Set image scale 
+    # large image to beat down noise
+    outimage = galsim.ImageD(3 * largeim_size, 3 * largeim_size, scale=dx_cosmos)
     outimage.addNoise(ccn)  # Add the COSMOS noise
     # Then estimate correlation function from generated noise
     cntest_correlated = galsim.CorrelatedNoise(ccn.getRNG(), outimage)
@@ -727,7 +722,7 @@ def test_cosmos_and_whitening():
     ccn_convolved.convolveWith(galsim.Convolve([psf_ground, pix_ground]))
     # Reset the outimage, and set its pixel scale to now be the ground-based resolution
     outimage.setZero()
-    outimage.setScale(dx_ground)
+    outimage.scale = dx_ground
     # Add correlated noise
     outimage.addNoise(ccn_convolved)
     # Then whiten
@@ -788,8 +783,8 @@ def test_convolve_cosmos():
     # in devel/external/test_cf/test_cf_convolution_detailed.py
     cosimage_padded = galsim.ImageD(
         (2 * smallim_size) * 6 + 256, # Note 6 here since 0.18 = 6 * 0.03
-        (2 * smallim_size) * 6 + 256) # large image to beat down noise + padding
-    cosimage_padded.setScale(dx_cosmos) # Use COSMOS pixel scale
+        (2 * smallim_size) * 6 + 256, # large image to beat down noise + padding
+        scale = dx_cosmos)            # Use COSMOS pixel scale
     cosimage_padded.addNoise(cn) # Add cosmos noise
     # Put this noise into a GSObject and then convolve
     imobj_padded = galsim.InterpolatedImage(

@@ -77,7 +77,7 @@ namespace galsim {
         typedef boost::variate_generator<OurURNG&, 
                 boost::normal_distribution<> > GaussGenerator;
     public:
-        GaussianDeviate(UniformDeviate& u_, double mean=0., double sigma=1.) : 
+        GaussianDeviate(UniformDeviate& u_, double mean, double sigma) : 
             u(u_), 
             normal(new boost::normal_distribution<>(mean,sigma)),
             gen(new GaussGenerator(u.urng,*normal))     {}
@@ -117,7 +117,7 @@ namespace galsim {
         typedef boost::variate_generator<OurURNG&, 
                 boost::binomial_distribution<> > BinomialGenerator;
     public:
-        BinomialDeviate(UniformDeviate& u_, const int N=1, const double p=0.5): 
+        BinomialDeviate(UniformDeviate& u_, const int N, const double p): 
             u(u_), 
             binomial(new boost::binomial_distribution<>(N,p)),
             gen(new BinomialGenerator(u.urng,*binomial))     {}
@@ -157,7 +157,7 @@ namespace galsim {
         typedef boost::variate_generator<OurURNG&, 
                 boost::poisson_distribution<> > PoissonGenerator;
     public:
-        PoissonDeviate(UniformDeviate& u_, const double mean=1.): 
+        PoissonDeviate(UniformDeviate& u_, const double mean): 
             u(u_), 
             poisson(new boost::poisson_distribution<>(mean)),
             gen(new PoissonGenerator(u.urng,*poisson))     {}
