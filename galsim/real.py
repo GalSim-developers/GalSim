@@ -478,10 +478,8 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
         if isinstance(target_PSF, Class):
             target_PSF = galsim.InterpolatedImage(target_PSF.view(), dx=target_pixel_scale)
             break
-    if isinstance(target_PSF, galsim.GSObject):
-        target_PSF = target_PSF.SBProfile
-    if not isinstance(target_PSF, galsim.SBProfile):
-        raise RuntimeError("Error: target PSF is not an Image, ImageView, SBProfile, or GSObject!")
+    if not isinstance(target_PSF, galsim.GSObject):
+        raise RuntimeError("Error: target PSF is not an Image, ImageView, or GSObject!")
     if rotation_angle != None and not isinstance(rotation_angle, galsim.Angle):
         raise RuntimeError("Error: specified rotation angle is not an Angle instance!")
     if (target_pixel_scale < real_galaxy.pixel_scale):
@@ -519,7 +517,7 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
         real_galaxy_copy.applyShear(g1=g1, g2=g2)
 
     # convolve, resample
-    out_gal = galsim.Convolve([real_galaxy_copy, galsim.GSObject(target_PSF)])
+    out_gal = galsim.Convolve([real_galaxy_copy, target_PSF])
     image = out_gal.draw(image=image, dx = target_pixel_scale)
 
     # return simulated image
