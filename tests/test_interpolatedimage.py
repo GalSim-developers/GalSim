@@ -905,8 +905,8 @@ def test_conserve_flux():
         numpy.testing.assert_array_almost_equal(
                 im2.array,init_val,5,
                 '%s did not preserve a flat input flux using uvals.'%interp)
- 
-    for n in [3,5,7]:
+
+    for n in [3,4,5,6,7,8]:  # 8 tests the generic formulae, since not specialized.
         print 'Testing Lanczos interpolant with n = ',n
         lan = galsim.Lanczos(n, conserve_flux=True)
         obj = galsim.InterpolatedImage(im1, x_interpolant=lan, normalization='sb')
