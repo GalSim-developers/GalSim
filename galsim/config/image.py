@@ -544,16 +544,10 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     badpix_images = stamp_images[3]
 
     for k in range(nobjects):
-        ix = ix_list[k]
-        iy = iy_list[k]
-        xmin = ix * (stamp_xsize + xborder) + 1
-        xmax = xmin + stamp_xsize-1
-        ymin = iy * (stamp_ysize + yborder) + 1
-        ymax = ymin + stamp_ysize-1
-        b = galsim.BoundsI(xmin,xmax,ymin,ymax)
         #print 'full bounds = ',full_image.bounds
-        #print 'stamp bounds = ',b
-        #print 'original stamp bounds = ',images[k].bounds
+        #print 'stamp bounds = ',images[k].bounds
+        assert full_image.bounds.includes(images[k].bounds)
+        b = images[k].bounds
         full_image[b] += images[k]
         if make_psf_image:
             full_psf_image[b] += psf_images[k]
