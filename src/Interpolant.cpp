@@ -836,25 +836,12 @@ namespace galsim {
     {
         // F(u) = ( (vp+1) Si((vp+1)pi) - (vp-1) Si((vp-1)pi) +
         //          (vm-1) Si((vm-1)pi) - (vm+1) Si((vm+1)pi) ) / 2pi
-        //      = (vp+1) int(sin(x)/x, x=(vp+1)pi..inf) - (vp-1) int(sin(x)/x, x=(vp-1)pi..inf)
-        //      = int( (vp+1) sin(u+(vp+1)pi)/(u+(vp+1)pi) - (vp-1) sin(u+(vp-1)pi)/(u+(vp-1)pi) ,
-        //                u=0..inf)
-        //      = int( -sin(u+vp pi) [ (vp+1)/(u+(vp+1)pi) - (vp-1)/(u+(vp-1)pi) ], u=0..inf)
-        //      = int( -sin(u+vp pi) [ jk
-        //
         double vp=_n*(2.*u+1.);
         double vm=_n*(2.*u-1.);
         double retval = (vm-1.)*Si(M_PI*(vm-1.))
             -(vm+1.)*Si(M_PI*(vm+1.))
             -(vp-1.)*Si(M_PI*(vp-1.))
             +(vp+1.)*Si(M_PI*(vp+1.));
-        dbg<<"uCalcRaw for u = "<<u<<std::endl;
-        dbg<<"vp = "<<vp<<", vm = "<<vm<<std::endl;
-        dbg<<"Si("<<vm-1.<<" pi) = "<<Si(M_PI*(vm-1.))<<std::endl;
-        dbg<<"Si("<<vm+1.<<" pi) = "<<Si(M_PI*(vm+1.))<<std::endl;
-        dbg<<"Si("<<vp-1.<<" pi) = "<<Si(M_PI*(vp-1.))<<std::endl;
-        dbg<<"Si("<<vp+1.<<" pi) = "<<Si(M_PI*(vp+1.))<<std::endl;
-        dbg<<"retval = "<<retval<<std::endl;
         return retval/(2.*M_PI);
     }
 
