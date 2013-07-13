@@ -226,24 +226,29 @@ def _BuildAdd(config, key, base, ignore, gsparams):
         gsobjects.append(gsobject)
     #print 'After built component items for ',type,' safe = ',safe
 
-    # Special: if the last item in a Sum doesn't specify a flux, we scale it
-    # to bring the total flux up to 1.
-    if ('flux' not in items[-1]) and all('flux' in item for item in items[0:-1]):
-        sum = 0
-        for item in items[0:-1]:
-            sum += galsim.config.value.GetCurrentValue(item,'flux')
-        #print 'sum = ',sum
-        f = 1. - sum
-        #print 'f = ',f
-        if (f < 0):
-            import warnings
-            warnings.warn(
-                "Automatically scaling the last item in Sum to make the total flux\n" +
-                "equal 1 requires the last item to have negative flux = %f"%f)
-        gsobjects[-1].setFlux(f)
-    if gsparams: gsparams = galsim.GSParams(**gsparams)
-    else: gsparams = None
-    gsobject = galsim.Add(gsobjects,gsparams=gsparams)
+    if len(gsobjects) == 0:
+        raise ValueError("No valid items for %s"%key)
+    elif len(gsobjects) == 1:
+        gsobject = gsobjects[0]
+    else:
+        # Special: if the last item in a Sum doesn't specify a flux, we scale it
+        # to bring the total flux up to 1.
+        if ('flux' not in items[-1]) and all('flux' in item for item in items[0:-1]):
+            sum = 0
+            for item in items[0:-1]:
+                sum += galsim.config.value.GetCurrentValue(item,'flux')
+            #print 'sum = ',sum
+            f = 1. - sum
+            #print 'f = ',f
+            if (f < 0):
+                import warnings
+                warnings.warn(
+                    "Automatically scaling the last item in Sum to make the total flux\n" +
+                    "equal 1 requires the last item to have negative flux = %f"%f)
+            gsobjects[-1].setFlux(f)
+        if gsparams: gsparams = galsim.GSParams(**gsparams)
+        else: gsparams = None
+        gsobject = galsim.Add(gsobjects,gsparams=gsparams)
 
     if 'flux' in config:
         flux, safe1 = galsim.config.ParseValue(config, 'flux', base, float)
@@ -272,10 +277,15 @@ def _BuildConvolve(config, key, base, ignore, gsparams):
         gsobjects.append(gsobject)
     #print 'After built component items for ',type,' safe = ',safe
 
-    if gsparams: gsparams = galsim.GSParams(**gsparams)
-    else: gsparams = None
-    gsobject = galsim.Convolve(gsobjects,gsparams=gsparams)
-
+    if len(gsobjects) == 0:
+        raise ValueError("No valid items for %s"%key)
+    elif len(gsobjects) == 1:
+        gsobject = gsobjects[0]
+    else:
+        if gsparams: gsparams = galsim.GSParams(**gsparams)
+        else: gsparams = None
+        gsobject = galsim.Convolve(gsobjects,gsparams=gsparams)
+    
     if 'flux' in config:
         flux, safe1 = galsim.config.ParseValue(config, 'flux', base, float)
         #print 'flux = ',flux
