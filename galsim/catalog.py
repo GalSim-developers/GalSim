@@ -197,8 +197,8 @@ class Dict(object):
     @param file_name     Filename storing the dict. (Required)
     @param dir           Optionally a directory name can be provided if the file_name does not 
                          already include it.
-    @param file_type     Options are 'Pickle', 'YAML', or 'JSON'.  If None, infer from the file 
-                         name ending ('.p', '.yaml', '.json' respetively).
+    @param file_type     Options are 'Pickle', 'YAML', or 'JSON' or None.  If None, infer from 
+                         the file name extension ('.p*', '.y*', '.j*' respetively).
                          (default `file_type = None`)
     @param key_split     The character (or string) to use to split chained keys.  (c.f. the 
                          description of this feature above.)  (default `key_split = '.'`)
@@ -220,11 +220,13 @@ class Dict(object):
             self.file_name = os.path.join(dir,self.file_name)
     
         if not file_type:
-            if self.file_name.lower().endswith('.p'):
+            import os
+            name, ext = os.path.splitext(self.file_name)
+            if ext.lower().startswith('.p'):
                 file_type = 'PICKLE'
-            elif self.file_name.lower().endswith('.yaml'):
+            elif ext.lower().startswith('.y'):
                 file_type = 'YAML'
-            elif self.file_name.lower().endswith('.json'):
+            elif ext.lower().startswith('.j'):
                 file_type = 'JSON'
             else:
                 raise ValueError('Unable to determine file_type from file_name ending')
