@@ -661,7 +661,7 @@ namespace galsim {
     double Lanczos::xCalc(double x) const
     {
         assert(x >= 0);
-        assert(x <= _n);
+        assert(x <= _nd);
 
         double res; // res will be the result to return.
         double s;   // s will be sin(pi x) which we save for the flux conservation correction.
@@ -674,7 +674,7 @@ namespace galsim {
             // functions and having the constructor just set the function once.  Then calls to 
             // xval wouldn't have any jumps from the case or (if you wanted) even the
             // _conserve_dc check.
-            switch (_in) {
+            switch (_n) {
               case 1 : {
                   // Then xval = 1/pi^2 sin(pi x)^2 / x^2
                   s = sin(M_PI*x);
@@ -754,8 +754,8 @@ namespace galsim {
                   // The second sin call isn't much slower than the multiplications 
                   // required to get sin(pi x) from sin(pi x/n)
                   s = sin(M_PI*x);
-                  double sn = sin(M_PI*x/_n);
-                  res = (_n/(M_PI*M_PI)) * s*sn/(x*x);
+                  double sn = sin(M_PI*x/_nd);
+                  res = (_nd/(M_PI*M_PI)) * s*sn/(x*x);
                   break;
               }
             }
@@ -766,7 +766,7 @@ namespace galsim {
             double pix = M_PI*x;
             double temp = (1./6.) * pix*pix;
             s = pix * (1. - temp);
-            res = 1. - temp * (1. + 1./(_n*_n));
+            res = 1. - temp * (1. + 1./(_nd*_nd));
             // For x < 1.e-4, the errors in this approximation are less than 1.e-16.
         }
 
@@ -836,8 +836,8 @@ namespace galsim {
     {
         // F(u) = ( (vp+1) Si((vp+1)pi) - (vp-1) Si((vp-1)pi) +
         //          (vm-1) Si((vm-1)pi) - (vm+1) Si((vm+1)pi) ) / 2pi
-        double vp=_n*(2.*u+1.);
-        double vm=_n*(2.*u-1.);
+        double vp=_nd*(2.*u+1.);
+        double vm=_nd*(2.*u-1.);
         double retval = (vm-1.)*Si(M_PI*(vm-1.))
             -(vm+1.)*Si(M_PI*(vm+1.))
             -(vp-1.)*Si(M_PI*(vp-1.))
@@ -901,12 +901,12 @@ namespace galsim {
     }
 
     Lanczos::Lanczos(int n, bool conserve_dc, double tol, const GSParamsPtr& gsparams) :  
-        Interpolant(gsparams), _in(n), _n(n), _conserve_dc(conserve_dc), _tolerance(tol)
+        Interpolant(gsparams), _n(n), _nd(n), _conserve_dc(conserve_dc), _tolerance(tol)
     {
         dbg<<"Start constructor for Lanczos n = "<<n<<std::endl;
         // Reduce range slightly from n so we're not including points with zero weight in
         // interpolations:
-        _range = _n*(1-0.1*std::sqrt(_tolerance));
+        _range = _nd*(1-0.1*std::sqrt(_tolerance));
 
         for(double u=0.;u<=10.;u+=0.1) dbg<<"F("<<u<<") = "<<uCalcRaw(u)<<std::endl;
 
@@ -939,7 +939,7 @@ namespace galsim {
             dbg<<"S("<<x<<") = ";
             double sum = 0.;
             for (int i=-_n;i<_n;++i) {
-                double val = sinc(x+i)*sinc((x+i)/_n);
+                double val = sinc(x+i)*sinc((x+i)/_nd);
                 sum += val;
                 dbg<<val<<" + ";
             }
@@ -982,15 +982,15 @@ namespace galsim {
                 gsparams->table_spacing * std::pow(gsparams->xvalue_accuracy/10.,0.25);
             // Make sure steps hit the integer values exactly.
             const double xStep = 1. / std::ceil(1./xStep1);
-            for(double x=0.; x<_n; x+=xStep) _xtab->addEntry(x, xCalc(x));
+            for(double x=0.; x<_nd; x+=xStep) _xtab->addEntry(x, xCalc(x));
 #endif
 
             // Build utab = table of u values
             _utab.reset(new Table<double,double>(Table<double,double>::spline));
             const double uStep = 
-                gsparams->table_spacing * std::pow(gsparams->kvalue_accuracy/10.,0.25) / _n;
+                gsparams->table_spacing * std::pow(gsparams->kvalue_accuracy/10.,0.25) / _nd;
             _uMax = 0.;
-            for (double u=0.; u - _uMax < 1./_n || u<1.1; u+=uStep) {
+            for (double u=0.; u - _uMax < 1./_nd || u<1.1; u+=uStep) {
                 double uval = uCalc(u);
                 _utab->addEntry(u, uval);
                 if (std::abs(uval) > _tolerance) _uMax = u;
@@ -1011,7 +1011,7 @@ namespace galsim {
     double Lanczos::xval(double x) const
     {
         x = std::abs(x);
-        if (x >= _n) return 0.;
+        if (x >= _nd) return 0.;
         else {
 #ifdef USE_TABLES
             return (*_xtab)(x);

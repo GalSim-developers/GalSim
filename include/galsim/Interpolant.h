@@ -561,7 +561,7 @@ namespace galsim {
         ~Lanczos() {}
 
         double xrange() const { return _range; }
-        int ixrange() const { return 2*_in; }
+        int ixrange() const { return 2*_n; }
         double urange() const { return _uMax; }
         double getTolerance() const { return _tolerance; }
 
@@ -569,8 +569,8 @@ namespace galsim {
         double uval(double u) const;
 
     private:
-        int _in; // Store the filter order, n
-        double _n; // Store n as a double, since that's often how it is used.
+        int _n; // Store the filter order, n
+        double _nd; // Store n as a double, since that's often how it is used.
         double _range; // Reduce range slightly from n so we're not using zero-valued endpoints.
         bool _conserve_dc; // Set to insure conservation of constant (sky) flux
         double _tolerance;  // u-space accuracy parameter
