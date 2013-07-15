@@ -540,8 +540,8 @@ namespace galsim {
      *
      * Note that pure Lanczos, when interpolating a set of constant-valued samples, does not return
      * this constant.  Setting conserve_dc in the constructor tweaks the function so that it 
-     * approximately conserves the value of constant (DC) input data.
-     * Only the first order correction is applied, which should be accurate to about 1.e-5.
+     * approximately conserves the value of constant (DC) input data (accurate to better than 
+     * 1.e-5 when used in two dimensions).
      */
     class Lanczos : public Interpolant 
     {
