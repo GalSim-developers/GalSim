@@ -822,7 +822,7 @@ def test_Lanczos5_ref():
     """
     import time
     t1 = time.time()
-    interp = galsim.Lanczos(5, conserve_flux=False, tol=1.e-4)
+    interp = galsim.Lanczos(5, conserve_dc=False, tol=1.e-4)
     testobj = galsim.InterpolatedImage(ref_image.view(), x_interpolant=interp, dx=dx,
                                        normalization='sb')
     testKvals = np.zeros(len(KXVALS))
@@ -846,7 +846,7 @@ def test_Lanczos7_ref():
     """
     import time
     t1 = time.time()
-    interp = galsim.Lanczos(7, conserve_flux=False, tol=1.e-4)
+    interp = galsim.Lanczos(7, conserve_dc=False, tol=1.e-4)
     testobj = galsim.InterpolatedImage(ref_image.view(), x_interpolant=interp, dx=dx,
                                        normalization='sb')
     testKvals = np.zeros(len(KXVALS))
@@ -865,8 +865,8 @@ def test_Lanczos7_ref():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
-def test_conserve_flux():
-    """Test that the conserve_flux option for Lanczos does so.
+def test_conserve_dc():
+    """Test that the conserve_dc option for Lanczos does so.
     Note: the idea of conserving flux is a bit of a misnomer.  No interpolant does so
     precisely in general.  What we are really testing is that a flat background input
     image has a relatively flat output image.
@@ -908,7 +908,7 @@ def test_conserve_flux():
 
     for n in [3,4,5,6,7,8]:  # 8 tests the generic formulae, since not specialized.
         print 'Testing Lanczos interpolant with n = ',n
-        lan = galsim.Lanczos(n, conserve_flux=True)
+        lan = galsim.Lanczos(n, conserve_dc=True)
         obj = galsim.InterpolatedImage(im1, x_interpolant=lan, normalization='sb')
         obj.draw(im2, normalization='sb')
         im2.write('junk.fits')
@@ -945,5 +945,5 @@ if __name__ == "__main__":
     test_Quintic_ref()
     test_Lanczos5_ref()
     test_Lanczos7_ref()
-    test_conserve_flux()
+    test_conserve_dc()
 

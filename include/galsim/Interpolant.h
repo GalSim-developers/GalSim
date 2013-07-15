@@ -539,7 +539,7 @@ namespace galsim {
      * small already (default 1e-4).
      *
      * Note that pure Lanczos, when interpolating a set of constant-valued samples, does not return
-     * this constant.  Setting conserve_flux in the constructor tweaks the function so that it 
+     * this constant.  Setting conserve_dc in the constructor tweaks the function so that it 
      * approximately conserves the value of constant (DC) input data.
      * Only the first order correction is applied, which should be accurate to about 1.e-5.
      */
@@ -550,13 +550,13 @@ namespace galsim {
          * @brief Constructor
          *
          * @param[in] n              Filter order; must be given on input and cannot be changed.  
-         * @param[in] conserve_flux  Set true to adjust filter to be more nearly correct for 
+         * @param[in] conserve_dc    Set true to adjust filter to be more nearly correct for 
          *                           constant inputs.
          * @param[in] tol            Sets accuracy and extent of Fourier transform.
          * @param[in] gsparams       GSParams object storing constants that control the accuracy of
          *                           operations, if different from the default.
          */
-        Lanczos(int n, bool conserve_flux=true, double tol=1.e-4, 
+        Lanczos(int n, bool conserve_dc=true, double tol=1.e-4, 
                 const GSParamsPtr& gsparams=GSParamsPtr::getDefault());
         ~Lanczos() {}
 
@@ -572,7 +572,7 @@ namespace galsim {
         int _in; // Store the filter order, n
         double _n; // Store n as a double, since that's often how it is used.
         double _range; // Reduce range slightly from n so we're not using zero-valued endpoints.
-        bool _conserve_flux; // Set to insure conservation of constant (sky) flux
+        bool _conserve_dc; // Set to insure conservation of constant (sky) flux
         double _tolerance;  // u-space accuracy parameter
         double _uMax;  // truncation point for Fourier transform
         std::vector<double> _K; // coefficients for flux correction in xval

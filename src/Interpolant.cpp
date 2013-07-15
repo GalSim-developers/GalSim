@@ -673,7 +673,7 @@ namespace galsim {
             // SBMoffat's kValue and pow functions, making these different cases all different 
             // functions and having the constructor just set the function once.  Then calls to 
             // xval wouldn't have any jumps from the case or (if you wanted) even the
-            // _conserve_flux check.
+            // _conserve_dc check.
             switch (_in) {
               case 1 : {
                   // Then xval = 1/pi^2 sin(pi x)^2 / x^2
@@ -802,7 +802,7 @@ namespace galsim {
         // this framework for the correction.
 
         // res /= 1. - 2.*_K1*(1.-cos(2.*M_PI*x)) - 2*_K2*(1.-cos(4.*M_PI*x)) - ...;
-        if (_conserve_flux) {
+        if (_conserve_dc) {
             dbg<<"xCalc for x = "<<x<<std::endl;
             dbg<<"res = "<<res<<" / ";
             double ssq = s*s;
@@ -889,7 +889,7 @@ namespace galsim {
         //
         // These coefficients are constant, so they are stored in _C.
 
-        if (_conserve_flux) {
+        if (_conserve_dc) {
             retval *= _C[0];
             retval += _C[1] * (uCalcRaw(u+1.) + uCalcRaw(u-1.));
             retval += _C[2] * (uCalcRaw(u+2.) + uCalcRaw(u-2.));
@@ -900,8 +900,8 @@ namespace galsim {
         return retval;
     }
 
-    Lanczos::Lanczos(int n, bool conserve_flux, double tol, const GSParamsPtr& gsparams) :  
-        Interpolant(gsparams), _in(n), _n(n), _conserve_flux(conserve_flux), _tolerance(tol)
+    Lanczos::Lanczos(int n, bool conserve_dc, double tol, const GSParamsPtr& gsparams) :  
+        Interpolant(gsparams), _in(n), _n(n), _conserve_dc(conserve_dc), _tolerance(tol)
     {
         dbg<<"Start constructor for Lanczos n = "<<n<<std::endl;
         // Reduce range slightly from n so we're not including points with zero weight in
@@ -964,7 +964,7 @@ namespace galsim {
             _cache_utab.clear();  
         }
 
-        KeyType key(n,std::pair<bool,double>(_conserve_flux,tol));
+        KeyType key(n,std::pair<bool,double>(_conserve_dc,tol));
 
         if (_cache_umax.count(key)) {
             // Then uMax and tab are already cached.
