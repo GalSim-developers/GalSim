@@ -702,8 +702,8 @@ namespace galsim {
               case 3 : {
                   // Then xval = 3/pi^2 sin(pi x) sin(pi x/3) / x^2
                   // Let sn = sin(pi x/3)
-                  // Then sin(pi x) = s*(3-4s^2)
-                  // xval = 3/pi^2 s^2*(3-4s) / x^2
+                  // Then sin(pi x) = sn*(3-4sn^2)
+                  // xval = 3/pi^2 sn^2*(3-4sn) / x^2
                   double sn = sin((M_PI/3.)*x);
                   s = sn*(3.-4.*sn*sn);
                   res = (3./(M_PI*M_PI)) * s*sn/(x*x);
