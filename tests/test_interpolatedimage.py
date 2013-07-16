@@ -788,7 +788,7 @@ def test_Cubic_ref():
     print 'kValue(0) = ',testobj.kValue(galsim.PositionD(0.,0.))
     np.testing.assert_array_almost_equal(
             refKvals/testKvals, 1., 5,
-            err_msg="kValues do not match reference valeus for Cubic interpolant.")
+            err_msg="kValues do not match reference values for Cubic interpolant.")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -812,7 +812,7 @@ def test_Quintic_ref():
     print 'test = ',testKvals
     np.testing.assert_array_almost_equal(
             refKvals/testKvals, 1., 5,
-            err_msg="kValues do not match reference valeus for Quintic interpolant.")
+            err_msg="kValues do not match reference values for Quintic interpolant.")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -836,7 +836,7 @@ def test_Lanczos5_ref():
     print 'test = ',testKvals
     np.testing.assert_array_almost_equal(
             refKvals/testKvals, 1., 5,
-            err_msg="kValues do not match reference valeus for Lanczos-5 interpolant.")
+            err_msg="kValues do not match reference values for Lanczos-5 interpolant.")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
     
@@ -860,7 +860,7 @@ def test_Lanczos7_ref():
     print 'test = ',testKvals
     np.testing.assert_array_almost_equal(
             refKvals/testKvals, 1., 5,
-            err_msg="kValues do not match reference valeus for Lanczos-7 interpolant.")
+            err_msg="kValues do not match reference values for Lanczos-7 interpolant.")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
