@@ -82,7 +82,7 @@ namespace galsim {
         virtual double xrange() const =0;
 
         /**
-         * @brief The total range as an integer.  Typically xrange() == 0.5 * ixrange.
+         * @brief The total range as an integer.  Typically xrange() == 0.5 * ixrange().
          */
         virtual int ixrange() const =0;
 

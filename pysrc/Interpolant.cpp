@@ -129,8 +129,8 @@ namespace galsim {
             "devel/modules/finterp.pdf in the GalSim repository.)  This objection does not apply\n"
             "when shooting photons, in which case the linear interpolant is quite efficient (but\n"
             "not necessarily the best choice in terms of accuracy).\n\n"
-            "Tolerance `tol` determines how far onto sinc^2 wiggles the uval will go.  Very far, by\n"
-            "default! (default `tol=1e-3`)\n";
+            "Tolerance `tol` determines how far onto sinc^2 wiggles the uval will go.  Very far,\n"
+            "by default! (default `tol=1e-3`)\n";
             bp::class_<Linear,bp::bases<Interpolant>,boost::noncopyable>(
                 "Linear", linear_doc, bp::init<double>(bp::arg("tol")=1E-3)
             );
