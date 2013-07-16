@@ -38,6 +38,8 @@ shear_and_magnification_list = [(0.001, 0., 1.),(0.01, 0., 1.), (0.1, 0., 1.),
 #                                ( 0.47, -0.33,  1.5), ( 0.61, 0.095,  0.16)]
 # --- IMPORTANT BUT NOT TESTED PARAMETERS ---
 # Catalog parameters
+#catalog_dir = '../../../extragalsimstuff/Public' # Melanie's parameters, during testing
+#catalog_filename = 'real_galaxy_catalog.fits'
 catalog_dir = '../../examples/data'
 catalog_filename = 'real_galaxy_catalog_example.fits'
 first_index = 0
@@ -80,7 +82,9 @@ def get_config():
     }
 
     galaxy_config = { 'type': 'RealGalaxyOriginal', 
-                      'index': { 'type': 'Sequence', 'first': first_index, 'nitems': nitems } }
+                      'index': { 'type': 'Sequence', 'first': first_index, 'nitems': nitems },
+                      'noise_pad': {'type': 'COSMOS', 
+                                    'file_name': '../../examples/data/acs_I_unrot_sci_20_cf.fits'}}
     catalog_config = {'real_catalog' : { 'dir' : catalog_dir, 
         'file_name' :  catalog_filename, 'preload' : True} }
     original_config['gal'] = galaxy_config
