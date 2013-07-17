@@ -148,6 +148,9 @@ namespace galsim {
             // where f(x) = int(sin(t)/(x+t),t=0..inf) 
             //       g(x) = int(cos(t)/(x+t),t=0..inf)
             //
+            // (By asymptotic, I mean that f and g approach 1/x and 1/x^2 respectively as x -> inf.
+            //  The formula as given is exact.)
+            //
             // I used Maple to calculate a Chebyshev-Pade approximation of 1/sqrt(y) f(1/sqrt(y)) 
             // from 0..1/4^2, which leads to the following formula for f(x).  It is accurate to 
             // better than 1.e-16 for x > 4.
@@ -201,7 +204,14 @@ namespace galsim {
                                         y*(4.01839087307656620e13 + 
                                            y*(3.99653257887490811e13))))))))));
 
-            return ((x>0.)?(M_PI/2.):(-M_PI/2.)) - f*cos(x) - g*sin(x);
+#ifdef _GLIBCXX_HAVE_SINCOS
+            double sinx,cosx;
+            sincos(x,&sinx,&cosx);
+#else
+            double cosx = std::cos(x);
+            double sinx = std::sin(x);
+#endif
+            return ((x>0.)?(M_PI/2.):(-M_PI/2.)) - f*cosx - g*sinx;
         } else {
             // Here I used Maple to calculate the Pade approximation for Si(x), which is accurate
             // to better than 1.e-16 for x < 4:
