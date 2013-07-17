@@ -1,6 +1,9 @@
 Changes from v0.5 to current version:
 ------------------------------------
 
+* Added MEDS file output to the des module.  Also made it easier for modules such as this to add 
+  new input and output formats to the config structure.  (Issue #376)
+
 * Fixed a bug in the rendering of shifted images.  (Issue #424)
 
 * Added the offset parameter to the draw and drawShoot commands, and also to the constructor 
