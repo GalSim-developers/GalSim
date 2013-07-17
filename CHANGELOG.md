@@ -1,6 +1,9 @@
 Changes from v0.5 to current version:
 ------------------------------------
 
+* Updated the allowed range for Sersic n to 0.3 -- 6.2.  Beyond this range we find that the 
+  code has numerical problems leading to significant inaccuracies.  (Issue #325)
+
 * Fixed a bug in the rendering of shifted images.  (Issue #424)
 
 * Added the offset parameter to the draw and drawShoot commands, and also to the constructor 
