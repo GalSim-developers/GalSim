@@ -670,7 +670,7 @@ class GSObject(object):
         method can create a new Image or can draw into an existing one, depending on the choice of
         the `image` keyword parameter.  Other keywords of particular relevance for users are those
         that set the pixel scale for the image (`dx`), that choose the normalization convention for
-        the flux (`normalization`), and that decide whether the clear the input Image before drawing
+        the flux (`normalization`), and that decide whether to clear the input Image before drawing
         into it (`add_to_image`).
 
         The object will always be drawn with its nominal center at the center location of the 
