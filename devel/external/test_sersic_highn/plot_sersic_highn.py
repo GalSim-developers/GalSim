@@ -53,7 +53,7 @@ for test_case in ("basic",):# "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2"
     plt.axhline(ls='--', color='k')
     plt.axvline(ls='--', color='k')
     plt.xlim(XMIN, XMAX)
-    for i in range(ntest):
+    for i in range(ntest)[:-1]:
         # First fit a line to the points
         c, m, var_c, cov_cm, var_m = fitting.fitline(
             g1obs_draw[0:data.shape[0]/ntest, i], delta_g1obs[0:data.shape[0]/ntest, i])
@@ -72,14 +72,14 @@ for test_case in ("basic",):# "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2"
     plt.legend()
     plt.title(test_case)
     plt.subplots_adjust(left=0.15)
-    plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomin_g1.png'))
+    plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomin_g1.eps'))
 
     # Then do the plots of g2
     plt.clf()
     plt.axhline(ls='--', color='k')
     plt.axvline(ls='--', color='k')
     plt.xlim(XMIN, XMAX)
-    for i in range(ntest):
+    for i in range(ntest)[:-1]:
         # First fit a line to the points
         c, m, var_c, cov_cm, var_m = fitting.fitline(
             g2obs_draw[0:data.shape[0]/ntest, i], delta_g2obs[0:data.shape[0]/ntest, i])
@@ -97,7 +97,7 @@ for test_case in ("basic",):# "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2"
     plt.ylim(-YMAX_ZOOMIN, YMAX_ZOOMIN)
     plt.legend()
     plt.title(test_case)
-    plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomin_g2.png'))
+    plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomin_g2.eps'))
 
     # Then do the plots of sigma
     YMAX_ZOOMIN = 1.e-4 # in arcsec
@@ -108,7 +108,7 @@ for test_case in ("basic",):# "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2"
     print ""
     print ""
     print ""
-    for i in range(ntest):
+    for i in range(ntest)[:-1]:
         # First fit a line to the points
         c, m, var_c, cov_cm, var_m = fitting.fitline(
             sigma_draw[0:data.shape[0]/ntest, i], delta_sigma[0:data.shape[0]/ntest, i])
@@ -132,5 +132,5 @@ for test_case in ("basic",):# "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2"
     plt.axhline(ls='--', color='k')
     plt.legend()
     plt.title(test_case)
-    plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomin_sigma.png'))
+    plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomin_sigma.eps'))
 
