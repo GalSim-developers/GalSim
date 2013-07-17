@@ -258,8 +258,6 @@ class InterpolatedImage(GSObject):
         # are of a valid type
         if x_interpolant is None:
             self.x_interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1e-4))
-            # FIXME: Is there a reason the default is Quintic?  I thought Gary's recommendation
-            # was Lanczos 5 for the x interpolant and Quintic for the k interpolant?  - MJ
         else:
             self.x_interpolant = galsim.utilities.convert_interpolant_to_2d(x_interpolant)
         if k_interpolant is None:
