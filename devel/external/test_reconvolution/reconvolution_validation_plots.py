@@ -33,7 +33,8 @@ def PlotStatsForParam(config,param_name):
     bias_list = {'m1' : [], 'm2' : [], 'c1' : [], 'c2' : [], 
                         'm1_std' : [], 'm2_std' : [], 'c1_std' : [], 'c2_std' : [] }
     bias_moments_list = copy.deepcopy(bias_list)
-    bias_hsmcorr_list = copy.deepcopy(bias_list)
+    bias_hsmcorr_list = copy.deepcopy(bias_list) 
+
 
     # loop over values changed for the varied parameter
     for iv,value in enumerate(param['values']):
@@ -74,12 +75,19 @@ def PlotStatsForParam(config,param_name):
         bias_moments_list[iv] = bias_moments
         bias_hsmcorr_list[iv] = bias_hsmcorr
 
-    # import cPickle as pickle 
-    # filename_pickle = 'pickle.%s.pp' % param
-    # pickle.dump([bias_moments_list,bias_hsmcorr_list],open(filename_pickle,'w'),protocol=2)
-        
+
     # yaml is bad at converting lists of floats in scientific notation to floats
     values_float = map(float,param['values'])
+
+    # get the tick labels
+    values_float_ticklabels = map(str,values_float)
+
+    # if very large value is used, put it closer to other points
+    for ivf,vf in enumerate(values_float):
+        if vf > 1e10:
+            values_float_ticklabels[ivf] = str(vf)
+            values_float_sorted = sorted(values_float) 
+            values_float[ivf] = values_float_sorted[-2]*10
 
     # set some plot parameters
     fig_xsize,fig_ysize,legend_ncol,legend_loc = 12,10,2,3
@@ -89,17 +97,22 @@ def PlotStatsForParam(config,param_name):
     pylab.title('Weighted moments - uncorrected')
     pylab.xscale('log')
 
+    # add the scattered m values to plot
     for iv,value in enumerate(param['values']):
 
         m1 = [b['m1'] for b in bias_moments_list[iv]]
         # m2 = [b['m2'] for b in bias_moments_list[iv]]
 
+        print any(numpy.isnan(m1))
+
         pylab.plot(numpy.ones([len(m1)])*values_float[iv],m1,'x')
         pylab.errorbar(values_float[iv],numpy.mean(m1),yerr=numpy.std(m1,ddof=1),fmt='o',capsize=30)
         # pylab.plot(numpy.ones([len(m2)])*values_float[iv],m2,'o')
 
-
-
+    print values_float
+    print values_float_ticklabels
+    pylab.xticks(values_float , values_float_ticklabels)
+    pylab.yscale('symlog',linthreshy=1e-2)
     pylab.ylabel('m1')
     pylab.xlabel(param_name)
     pylab.xlim([min(values_float)*0.5, max(values_float)*1.5])
@@ -113,6 +126,7 @@ def PlotStatsForParam(config,param_name):
     pylab.figure(2,figsize=(fig_xsize,fig_ysize))
     pylab.title('Weighted moments - corrected')
     pylab.xscale('log')
+    pylab.yscale('symlog',linthreshy=1e-3)
 
     for iv,value in enumerate(param['values']):
 
@@ -177,128 +191,179 @@ def GetBias(config,filename_results_direct,filename_results_reconv):
     Errors on m and c are empty for now.
     """
 
-    # get number of shears, angles and galaxies, useful later
-    n_shears = config['reconvolution_validation_settings']['n_shears']
-    n_angles = config['reconvolution_validation_settings']['n_angles']
-    n_gals = config['reconvolution_validation_settings']['n_gals']
+    name1 = os.path.basename(filename_results_reconv).replace('results','').replace('yaml',
+        '').replace('cat','').replace('..','.')
+    name1= name1.strip('.')
+    name2 = os.path.basename(filename_results_direct).replace('results','').replace('yaml',
+        '').replace('cat','').replace('..','.')
+    name2= name2.strip('.')
 
-    # initialise lists for results
-    bias_moments_list = []
-    bias_hsmcorr_list = []
+    filename_pickle = 'results.%s.%s.pickle' % (name1,name2)
+    import cPickle as pickle
 
-    # load results
-    results_direct = numpy.loadtxt(filename_results_direct)
-    results_reconv = numpy.loadtxt(filename_results_reconv)
+    if os.path.isfile(filename_pickle):
+        logging.info('using existing results file %s' % filename_pickle)
+        pickle_dict = pickle.load(open(filename_pickle))
+        bias_moments_list = pickle_dict['moments']
+        bias_hsmcorr_list = pickle_dict['hsmcorr']
 
-    # check if ring test is complete, we should have n_angles results for each galaxy and each shear
-    for gi in range(n_gals):
-    
-        # initialise lists for results and truth
-        moments_reconv_G1 = []
-        moments_reconv_G2 = []
-        hsmcorr_reconv_G1 = []
-        hsmcorr_reconv_G2 = []
-        moments_direct_G1 = []
-        moments_direct_G2 = []
-        hsmcorr_direct_G1 = []
-        hsmcorr_direct_G2 = []
-        true_G1 = []
-        true_G2 = []
-    
-        # this will count how many shear we are using
-        n_used_shears = 0
+    else:
+        logging.info('file %s not found, analysing results' % filename_pickle)   
 
-        # loop over shears
-        for si in range(n_shears):
+        # get number of shears, angles and galaxies, useful later
+        n_shears = config['reconvolution_validation_settings']['n_shears']
+        n_angles = config['reconvolution_validation_settings']['n_angles']
+        n_gals = config['reconvolution_validation_settings']['n_gals']
 
-            # calculate indices of galaxies which belong to this ring test
-            start_id = gi*si
-            end_id = gi*si + n_angles
+        # initialise lists for results
+        bias_moments_list = []
+        bias_hsmcorr_list = []
 
-            # select galaxies from this ring
-            select_reconv = numpy.logical_and(results_reconv[:,0] >= start_id,
-                results_reconv[:,0] < end_id)
-            select_direct = numpy.logical_and(results_direct[:,0] >= start_id,
-                results_direct[:,0] < end_id)
+        # load results
+        results_direct = numpy.loadtxt(filename_results_direct)
+        results_reconv = numpy.loadtxt(filename_results_reconv)
 
-            # count how many galaxies we got
-            n_found_angles_reconv = sum(select_reconv)
-            n_found_angles_direct = sum(select_direct)
+        # check if ring test is complete, we should have n_angles results for each galaxy and each shear
+        for gi in range(n_gals):
+        
+            # initialise lists for results and truth
+            moments_reconv_G1 = []
+            moments_reconv_G2 = []
+            hsmcorr_reconv_G1 = []
+            hsmcorr_reconv_G2 = []
+            moments_direct_G1 = []
+            moments_direct_G2 = []
+            hsmcorr_direct_G1 = []
+            hsmcorr_direct_G2 = []
+            true_G1 = []
+            true_G2 = []
+        
+            # this will count how many shear we are using
+            n_used_shears = 0
 
-            # initialise the variable which will tell us if to skip this shear
-            skip_shear = False
+            # loop over shears
+            for si in range(n_shears):
 
-            # do not include shear which has missing data           
-            if (n_found_angles_reconv != n_angles) or (n_found_angles_direct != n_angles):
-                skip_shear = True
+                # calculate indices of galaxies which belong to this ring test
+                start_id = gi*si
+                end_id = gi*si + n_angles
 
-            # do not include the shear which has an error in one of the angles
-            for col in range(1,7):
-                if any(results_reconv[select_reconv,col].astype(int) == HSM_ERROR_VALUE) or any(
-                    results_direct[select_direct,col].astype(int) == HSM_ERROR_VALUE): 
+                # select galaxies from this ring
+                select_reconv = numpy.logical_and(results_reconv[:,0] >= start_id,
+                    results_reconv[:,0] < end_id)
+                select_direct = numpy.logical_and(results_direct[:,0] >= start_id,
+                    results_direct[:,0] < end_id)
+
+                # count how many galaxies we got
+                n_found_angles_reconv = sum(select_reconv)
+                n_found_angles_direct = sum(select_direct)
+
+                # initialise the variable which will tell us if to skip this shear
+                skip_shear = False
+
+                # do not include shear which has missing data           
+                if (n_found_angles_reconv != n_angles) or (n_found_angles_direct != n_angles):
                     skip_shear = True
-            
-            # continue with loop if bad ring
-            if skip_shear:
-                logging.warning('gal %d shear %d has HSM errors or missing data- skipping' % (gi,si))
-                continue
 
-            # increment the number of used shears
-            n_used_shears += 1
-
-            # get the shear from the ring
-            moments_reconv_G1.append(         numpy.mean( results_reconv[select_reconv,1]) )
-            moments_reconv_G2.append(         numpy.mean( results_reconv[select_reconv,2]) )
-            hsmcorr_reconv_G1.append(         numpy.mean( results_reconv[select_reconv,3]) )
-            hsmcorr_reconv_G2.append(         numpy.mean( results_reconv[select_reconv,4]) )
-            moments_direct_G1.append(         numpy.mean( results_direct[select_direct,1]) )
-            moments_direct_G2.append(         numpy.mean( results_direct[select_direct,2]) )
-            hsmcorr_direct_G1.append(         numpy.mean( results_direct[select_direct,3]) )
-            hsmcorr_direct_G2.append(         numpy.mean( results_direct[select_direct,4]) )
-            true_G1.append( config['reconvolved_images']['gal']['shear']['items'][si]['g1'] )
-            true_G2.append( config['reconvolved_images']['gal']['shear']['items'][si]['g2'] )
-
-        # convert to numpy
-        moments_reconv_G1 = numpy.asarray(moments_reconv_G1)
-        moments_reconv_G2 = numpy.asarray(moments_reconv_G2)
-        hsmcorr_reconv_G1 = numpy.asarray(hsmcorr_reconv_G1)
-        hsmcorr_reconv_G2 = numpy.asarray(hsmcorr_reconv_G2)
-        moments_direct_G1 = numpy.asarray(moments_direct_G1)
-        moments_direct_G2 = numpy.asarray(moments_direct_G2)
-        hsmcorr_direct_G1 = numpy.asarray(hsmcorr_direct_G1)
-        hsmcorr_direct_G2 = numpy.asarray(hsmcorr_direct_G2)
-        true_G1 = numpy.asarray(true_G1)
-        true_G2 = numpy.asarray(true_G2)
-
-        # get the shear bias for moments
-        c1,m1,cov1 = _getLineFit(true_G1,moments_direct_G1-moments_reconv_G1,
-            numpy.ones(moments_direct_G1.shape))
-        c2,m2,cov2 = _getLineFit(true_G2,moments_direct_G2-moments_reconv_G2,
-            numpy.ones(moments_direct_G2.shape))
-
+                # do not include the shear which has an error in one of the angles
+                for col in range(1,7):
+                    if any(results_reconv[select_reconv,col].astype(int) == HSM_ERROR_VALUE) or any(
+                        results_direct[select_direct,col].astype(int) == HSM_ERROR_VALUE): 
+                        skip_shear = True
                 
-        # create result dict
-        bias_moments = {'c1' : c1, 'm1': m1,  'c2' : c2, 'm2': m2, 
-                        'c1_std' : 0. ,
-                        'c2_std' : 0. ,
-                        'm1_std' : 0. ,
-                        'm2_std' : 0. }
-        
-        # get the shear bias for hsmcorr
-        c1,m1,cov1 = _getLineFit(true_G1,hsmcorr_direct_G1-hsmcorr_reconv_G1,
-            numpy.ones(hsmcorr_direct_G1.shape))
-        c2,m2,cov2 = _getLineFit(true_G2,hsmcorr_direct_G2-hsmcorr_reconv_G2,
-            numpy.ones(hsmcorr_direct_G2.shape))
-        
-        # create result dict
-        bias_hsmcorr = {'c1' : c1, 'm1': m1,  'c2' : c2, 'm2': m2, 
-                        'c1_std' : 0. ,
-                        'c2_std' : 0. ,
-                        'm1_std' : 0. ,
-                        'm2_std' : 0. }
-        
+                # continue with loop if bad ring
+                if skip_shear:
+                    logging.warning('gal %d shear %d has HSM errors or missing data- skipping' % (gi,si))
+                    continue
+
+                # increment the number of used shears
+                n_used_shears += 1
+
+                # get the shear from the ring
+                moments_reconv_G1.append(         numpy.mean( results_reconv[select_reconv,1]) )
+                moments_reconv_G2.append(         numpy.mean( results_reconv[select_reconv,2]) )
+                hsmcorr_reconv_G1.append(         numpy.mean( results_reconv[select_reconv,3]) )
+                hsmcorr_reconv_G2.append(         numpy.mean( results_reconv[select_reconv,4]) )
+                moments_direct_G1.append(         numpy.mean( results_direct[select_direct,1]) )
+                moments_direct_G2.append(         numpy.mean( results_direct[select_direct,2]) )
+                hsmcorr_direct_G1.append(         numpy.mean( results_direct[select_direct,3]) )
+                hsmcorr_direct_G2.append(         numpy.mean( results_direct[select_direct,4]) )
+                true_G1.append( config['reconvolved_images']['gal']['shear']['items'][si]['g1'] )
+                true_G2.append( config['reconvolved_images']['gal']['shear']['items'][si]['g2'] )
+
+            # convert to numpy
+            moments_reconv_G1 = numpy.asarray(moments_reconv_G1)
+            moments_reconv_G2 = numpy.asarray(moments_reconv_G2)
+            hsmcorr_reconv_G1 = numpy.asarray(hsmcorr_reconv_G1)
+            hsmcorr_reconv_G2 = numpy.asarray(hsmcorr_reconv_G2)
+            moments_direct_G1 = numpy.asarray(moments_direct_G1)
+            moments_direct_G2 = numpy.asarray(moments_direct_G2)
+            hsmcorr_direct_G1 = numpy.asarray(hsmcorr_direct_G1)
+            hsmcorr_direct_G2 = numpy.asarray(hsmcorr_direct_G2)
+            true_G1 = numpy.asarray(true_G1)
+            true_G2 = numpy.asarray(true_G2)
+
+            # get the shear bias for moments
+            c1,m1,cov1 = _getLineFit(true_G1,moments_direct_G1-moments_reconv_G1,
+                numpy.ones(moments_direct_G1.shape))
+            c2,m2,cov2 = _getLineFit(true_G2,moments_direct_G2-moments_reconv_G2,
+                numpy.ones(moments_direct_G2.shape))
+
+                    
+            # create result dict
+            bias_moments = {'c1' : c1, 'm1': m1,  'c2' : c2, 'm2': m2, 
+                            'c1_std' : 0. ,
+                            'c2_std' : 0. ,
+                            'm1_std' : 0. ,
+                            'm2_std' : 0. }
+            
+            # get the shear bias for hsmcorr
+            c1,m1,cov1 = _getLineFit(true_G1,hsmcorr_direct_G1-hsmcorr_reconv_G1,
+                numpy.ones(hsmcorr_direct_G1.shape))
+            c2,m2,cov2 = _getLineFit(true_G2,hsmcorr_direct_G2-hsmcorr_reconv_G2,
+                numpy.ones(hsmcorr_direct_G2.shape))
+            
+            # create result dict
+            bias_hsmcorr = {'c1' : c1, 'm1': m1,  'c2' : c2, 'm2': m2, 
+                            'c1_std' : 0. ,
+                            'c2_std' : 0. ,
+                            'm1_std' : 0. ,
+                            'm2_std' : 0. }
+            
 
 
+            if config['debug']:
+                name1 = os.path.basename(filename_results_reconv).replace('results','').replace('yaml',
+                    '').replace('cat','').replace('reconvolution_validation','')
+                name1= name1.strip('.')
+                name2 = os.path.basename(filename_results_direct).replace('results','').replace('yaml',
+                    '').replace('cat','').replace('reconvolution_validation','').replace('..','.')
+                name2= name2.strip('.')
+
+                filename_fig = 'fig.linefit.%s.%s.%03d.png' % (name1,name2,gi)
+                import pylab
+                pylab.figure(figsize=(10,5))           
+                pylab.plot(true_G1,moments_direct_G1-moments_reconv_G1,'bx');
+                pylab.plot(true_G2,moments_direct_G2-moments_reconv_G2,'rx');
+                pylab.plot(true_G1,true_G1*bias_moments['m1'] + bias_moments['c1'],'b-')
+                pylab.plot(true_G2,true_G2*bias_moments['m2'] + bias_moments['c2'],'r-')
+                x1,x2,y1,y2 = pylab.axis()
+                pylab.axis((min(true_G1)*1.1,max(true_G1)*1.1,y1,y2))
+                pylab.xlabel('true_Gi')
+                pylab.ylabel('moments_direct_G1-moments_reconv_G1')
+                pylab.legend(['G1','G2'])
+                pylab.savefig(filename_fig)
+                pylab.close()
+                logging.info('saved figure %s' % filename_fig)
+
+
+            logging.info( 'gal %3d used %3d shears, m1 = % 2.3e, m2=% 2.3e ' % (gi,n_used_shears,bias_moments['m1'],bias_moments['m2']))
+
+            # append the results list
+            bias_moments_list.append(bias_moments)
+            bias_hsmcorr_list.append(bias_hsmcorr)
+
+        # may want to scatter plot the m1,m2 of all galaxies in the results file
         if config['debug']:
             name1 = os.path.basename(filename_results_reconv).replace('results','').replace('yaml',
                 '').replace('cat','').replace('reconvolution_validation','')
@@ -306,46 +371,18 @@ def GetBias(config,filename_results_direct,filename_results_reconv):
             name2 = os.path.basename(filename_results_direct).replace('results','').replace('yaml',
                 '').replace('cat','').replace('reconvolution_validation','').replace('..','.')
             name2= name2.strip('.')
+            filename_fig = 'fig.mscatter.%s.%s.png' % (name1,name2)
+            m1_list = numpy.asarray([b['m1'] for b in bias_moments_list])
+            m2_list = numpy.asarray([b['m2'] for b in bias_moments_list])
 
-            filename_fig = 'fig.linefit.%s.%s.%03d.png' % (name1,name2,gi)
-            import pylab
-            pylab.figure(figsize=(10,5))           
-            pylab.plot(true_G1,moments_direct_G1-moments_reconv_G1,'bx');
-            pylab.plot(true_G2,moments_direct_G2-moments_reconv_G2,'rx');
-            pylab.plot(true_G1,true_G1*bias_moments['m1'] + bias_moments['c1'],'b-')
-            pylab.plot(true_G2,true_G2*bias_moments['m2'] + bias_moments['c2'],'r-')
-            x1,x2,y1,y2 = pylab.axis()
-            pylab.axis((min(true_G1)*1.1,max(true_G1)*1.1,y1,y2))
-            pylab.xlabel('true_Gi')
-            pylab.ylabel('moments_direct_G1-moments_reconv_G1')
-            pylab.legend(['G1','G2'])
+            pylab.figure()
+            pylab.scatter(m1,m2)
             pylab.savefig(filename_fig)
             pylab.close()
-            logging.info('saved figure %s' % filename_fig)
 
-
-        logging.info( 'gal %3d used %3d shears, m1 = % 2.3e, m2=% 2.3e ' % (gi,n_used_shears,bias_moments['m1'],bias_moments['m2']))
-
-        # append the results list
-        bias_moments_list.append(bias_moments)
-        bias_hsmcorr_list.append(bias_hsmcorr)
-
-    # may want to scatter plot the m1,m2 of all galaxies in the results file
-    if config['debug']:
-        name1 = os.path.basename(filename_results_reconv).replace('results','').replace('yaml',
-            '').replace('cat','').replace('reconvolution_validation','')
-        name1= name1.strip('.')
-        name2 = os.path.basename(filename_results_direct).replace('results','').replace('yaml',
-            '').replace('cat','').replace('reconvolution_validation','').replace('..','.')
-        name2= name2.strip('.')
-        filename_fig = 'fig.mscatter.%s.%s.png' % (name1,name2)
-        m1_list = numpy.asarray([b['m1'] for b in bias_moments_list])
-        m2_list = numpy.asarray([b['m2'] for b in bias_moments_list])
-
-        pylab.figure()
-        pylab.scatter(m1,m2)
-        pylab.savefig(filename_fig)
-        pylab.close()
+        pickle_dict = {'moments' : bias_moments_list, 'hsmcorr' : bias_hsmcorr_list}
+        pickle.dump(pickle_dict,open(filename_pickle,'w'),protocol=2)
+        logging.info('saved %s' % filename_pickle)
 
     return bias_moments_list,bias_hsmcorr_list
     
