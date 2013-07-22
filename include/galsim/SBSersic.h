@@ -35,7 +35,7 @@ namespace galsim {
         // Note: If these change, update the comments about the allowed range both below and
         // in galsim/base.py.
         const double minimum_sersic_n = 0.3;   // (Lower bounds has hard limit at ~0.29)
-        const double maximum_sersic_n = 4.2;
+        const double maximum_sersic_n = 6.2;
 
         // How many Sersic profiles to save in the cache
         const int max_sersic_cache = 100;
@@ -48,7 +48,7 @@ namespace galsim {
      * The Sersic Surface Brightness Profile is characterized by three properties: its Sersic index
      * `n`, its `flux`, and the half-light radius `re` (or scale radius `r0`).  Given these
      * properties, the surface brightness profile scales as `I(r) propto exp[-(r/r0)^{1/n}]`, or
-     * `I(r) propto exp[-b*(r/re)^{1/n}]`.  The code is limited to 0.3 <= n <= 4.2, with an 
+     * `I(r) propto exp[-b*(r/re)^{1/n}]`.  The code is limited to 0.3 <= n <= 6.2, with an 
      * exception thrown for values outside that range.
      *
      * The SBProfile representation of a Sersic profile also includes an optional truncation beyond

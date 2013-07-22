@@ -1474,7 +1474,10 @@ class Sersic(GSObject):
         half_light_radius
         scale_radius
 
-    The code is limited to 0.3 <= n <= 4.2, with an exception thrown for values outside that range.
+    The code is limited to 0.3 <= n <= 6.2, with an exception thrown for values outside that range.
+    Below n=0.3, there are severe numerical problems.  Above n=6.2, we found that the code begins
+    to be inaccurate when sheared or magnified (at the level of upcoming shear surveys), so 
+    we do not recommend extending beyond this.  See Issues #325 and #450 for more details.
 
     Several optional parameters are available:  Truncation radius `trunc` [default `trunc = 0.`,
     indicating no truncation] and a `flux` parameter [default `flux = 1`].  If `trunc` is set to

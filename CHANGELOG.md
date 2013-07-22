@@ -1,6 +1,9 @@
 Changes from v0.5 to current version:
 ------------------------------------
 
+* Updated the allowed range for Sersic n to 0.3 -- 6.2.  Beyond this range we find that the 
+  code has numerical problems leading to significant inaccuracies.  (Issue #325)
+
 * Added MEDS file output to the des module.  Also made it easier for modules such as this to add 
   new input and output formats to the config structure.  (Issue #376)
 
