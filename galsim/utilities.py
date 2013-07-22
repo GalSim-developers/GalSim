@@ -421,6 +421,7 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, pixel_scal
             g2obslist.append(res.observed_shape.g2)
             sigmalist.append(res.moments_sigma)
             logging.debug('Completed '+str(i + 1)+'/'+str(ntrials)+' trials in this iteration')
+            #im.write('check_shoot_trial'+str(i + 1)) CHECK IMAGE
         return g1obslist, g2obslist, sigmalist
 
     # OK, that's the end of the helper functions-within-helper functions, back to the main unit
@@ -712,11 +713,15 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
         config2['image']['random_seed'] = start_random_seed + itercount * (n_trials_per_iter + 1)
 
         # Run the trials using galsim.config.BuildImages function
-        trial_images = galsim.config.BuildImages( nimages = n_trials_per_iter, obj_num = obj_num , 
-          config = config2, logger=logger, nproc=config2['image']['nproc'])[0] 
+        trial_images = galsim.config.BuildImages(nimages=n_trials_per_iter, obj_num=obj_num, 
+          config=config2, logger=logger, nproc=config2['image']['nproc'])[0]
 
         # Collect results 
         trial_results = [image.FindAdaptiveMom() for image in trial_images]
+
+        # Output some difference check images (uncomment if desired)
+        #for image, ino in zip(trial_images, range(n_trials_per_iter)):
+        #    (image - im_draw).write('check_diff_trial'+str(ino + 1)+'_iter'+str(itercount)+'.fits')
 
         # Get lists of g1,g2,sigma estimate (this might be quicker using a single list comprehension
         # to get a list of (g1,g2,sigma) tuples, and then unzip with zip(*), but this is clearer)
