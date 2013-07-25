@@ -145,6 +145,22 @@ def PlotStatsForParam(config,param_name):
     pylab.savefig(filename_fig)
     pylab.close()
     logging.info('saved figure %s' % filename_fig)
+
+    # now plot the log std of m1 as a function of parameter
+
+    for iv,value in enumerate(param['values']):
+             m1 = [b['m1'] for b in bias_moments_list[iv]]
+            pylab.plot(values_float[iv],numpy.std(m1,ddof=1),'x')
+           
+    pylab.ylabel('std(m_1)',interpreter='latex')
+    pylab.xlabel(param_name)
+    pylab.xlim([min(values_float)*0.5, max(values_float)*1.5])
+    # pylab.legend(ncol=legend_ncol,loc=legend_loc,mode="expand")
+    filename_fig = 'fig.moments.stdm1.%s.%s.png' % (config['filename_config'],param_name)
+    pylab.savefig(filename_fig)
+    pylab.close()
+    logging.info('saved figure %s' % filename_fig)
+
     
 def _getLineFit(X,y,sig):
         """
