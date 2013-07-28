@@ -466,6 +466,9 @@ class PowerSpectrum(object):
         self.bounds = galsim.BoundsD((b.xmin-0.5)*grid_spacing, (b.xmax+0.5)*grid_spacing,
                                      (b.ymin-0.5)*grid_spacing, (b.ymax+0.5)*grid_spacing)
         self.bounds.shift(-nominal_center - self.offset)
+        # Expand the bounds slightly to make sure rounding errors don't lead to points on the 
+        # edge being considered off the edge.
+        self.bounds.expand( 1. + 1.e-15 )
 
         if get_convergence:
             return self.grid_g1, self.grid_g2, self.grid_kappa
@@ -590,7 +593,7 @@ class PowerSpectrum(object):
             if not self.bounds.includes(iter_pos):
                 import warnings
                 warnings.warn(
-                    "Warning: position (%f,%f) not within the bounds "%(pos.x,pos.y) +
+                    "Warning: position (%f,%f) not within the bounds "%(iter_pos.x,iter_pos.y) +
                     "of the gridded shear values: " + str(self.bounds) +
                     ".  Returning a shear of (0,0) for this point.")
                 g1.append(0.)
@@ -663,7 +666,7 @@ class PowerSpectrum(object):
             if not self.bounds.includes(iter_pos):
                 import warnings
                 warnings.warn(
-                    "Warning: position (%f,%f) not within the bounds "%(pos.x,pos.y) +
+                    "Warning: position (%f,%f) not within the bounds "%(iter_pos.x,iter_pos.y) +
                     "of the gridded convergence values: " + str(self.bounds) + 
                     ".  Returning a convergence of 0 for this point.")
                 kappa.append(0.)
@@ -741,7 +744,7 @@ class PowerSpectrum(object):
             if not self.bounds.includes(iter_pos):
                 import warnings
                 warnings.warn(
-                    "Warning: position (%f,%f) not within the bounds "%(pos.x,pos.y) +
+                    "Warning: position (%f,%f) not within the bounds "%(iter_pos.x,iter_pos.y) +
                     "of the gridded convergence values: " + str(self.bounds) + 
                     ".  Returning a magnification of 0 for this point.")
                 mu.append(0.)
@@ -827,8 +830,8 @@ class PowerSpectrum(object):
             if not self.bounds.includes(iter_pos):
                 import warnings
                 warnings.warn(
-                    "Warning: position (%f,%f) not within the bounds "%(pos.x,pos.y) +
-                    "of the gridded convergence values: " + str(self.bounds) + 
+                    "Warning: position (%f,%f) not within the bounds "%(iter_pos.x,iter_pos.y) +
+                    "of the gridded values: " + str(self.bounds) + 
                     ".  Returning 0 for lensing observables at this point.")
                 g1.append(0.)
                 g2.append(0.)
