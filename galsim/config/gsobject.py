@@ -221,6 +221,7 @@ def _BuildAdd(config, key, base, ignore, gsparams):
         gsobject, safe1 = BuildGSObject(items, i, base, gsparams)
         # Skip items with flux=0
         if 'flux' in items[i] and galsim.config.value.GetCurrentValue(items[i],'flux') == 0.:
+            #print 'skip -- flux == 0'
             continue
         safe = safe and safe1
         gsobjects.append(gsobject)
@@ -478,6 +479,10 @@ def _TransformObject(gsobject, config, base):
         if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _RotateObject(gsobject, config, 'rotation', base)
         safe = safe and safe1
+    if 'shear' in config:
+        if orig: gsobject = gsobject.copy(); orig = False
+        gsobject, safe1 = _EllipObject(gsobject, config, 'shear', base)
+        safe = safe and safe1
     if 'magnify' in config:
         if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _MagnifyObject(gsobject, config, 'magnify', base)
@@ -485,10 +490,6 @@ def _TransformObject(gsobject, config, base):
     if 'magnification' in config:
         if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _MagnifyObject(gsobject, config, 'magnification', base)
-        safe = safe and safe1
-    if 'shear' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
-        gsobject, safe1 = _EllipObject(gsobject, config, 'shear', base)
         safe = safe and safe1
     if 'shift' in config:
         if orig: gsobject = gsobject.copy(); orig = False
