@@ -404,7 +404,7 @@ class GSObject(object):
         @param dy Vertical shift to apply (float).
 
         Note: you may supply dx,dy as either two arguments, as a tuple, or as a 
-        galsim.PositionD or galsim.PositionF object.
+        galsim.PositionD or galsim.PositionI object.
         """
         if len(args) == 0:
             # Then dx,dy need to be kwargs
@@ -412,7 +412,7 @@ class GSObject(object):
             dx = kwargs.pop('dx')
             dy = kwargs.pop('dy')
         elif len(args) == 1:
-            if isinstance(args[0], galsim.PositionD) or isinstance(args[0], galsim.PositionF):
+            if isinstance(args[0], galsim.PositionD) or isinstance(args[0], galsim.PositionI):
                 dx = args[0].x
                 dy = args[0].y
             else:
@@ -525,7 +525,7 @@ class GSObject(object):
         @param dy Vertical shift to apply (float).
 
         Note: you may supply dx,dy as either two arguments, as a tuple, or as a 
-        galsim.PositionD or galsim.PositionF object.
+        galsim.PositionD or galsim.PositionI object.
 
         @returns The shifted GSObject.
         """
@@ -643,9 +643,14 @@ class GSObject(object):
             dx = 0.
             dy = 0.
         else:
-            dx = offset.x
-            dy = offset.y
-
+            if isinstance(offset, galsim.PositionD) or isinstance(offset, galsim.PositionI):
+                dx = offset.x
+                dy = offset.y
+            else:
+                # Let python raise the appropriate exception if this isn't valid.
+                dx = offset[0]
+                dy = offset[1]
+ 
         if use_true_center:
             # For even-sized images, the SBProfile draw function centers the result in the 
             # pixel just up and right of the real center.  So shift it back to make sure it really

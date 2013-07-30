@@ -311,10 +311,6 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
         icenter = None
         final_shift = galsim.PositionD(0.,0.)
 
-    if 'offset' in config['image']:
-        offset = galsim.config.ParseValue(config['image'], 'offset', config, galsim.PositionD)[0]
-        final_shift += offset
-
     gsparams = {}
     if 'gsparams' in config['image']:
         gsparams = galsim.config.UpdateGSParams(
@@ -347,7 +343,12 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 logger.debug('Skipping object')
         skip = True
 
+    if not skip and 'offset' in config['image']:
+        offset = galsim.config.ParseValue(config['image'], 'offset', config, galsim.PositionD)[0]
+        final_shift += offset
+
     draw_method = galsim.config.ParseValue(config['image'],'draw_method',config,str)[0]
+
     if skip: 
         if xsize and ysize:
             im = galsim.ImageF(xsize, ysize)
@@ -362,6 +363,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             weight_im.setZero()
         else:
             weight_im = None
+
     elif draw_method == 'fft':
         im = DrawStampFFT(psf,pix,gal,config,xsize,ysize,sky_level_pixel,final_shift)
         if icenter:
