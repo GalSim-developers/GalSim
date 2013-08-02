@@ -380,7 +380,7 @@ class RealGalaxyCatalog(object):
 
         self.preloaded = False
         self.do_preload = preload
-        self.saved_cf = {}
+        self.saved_noise_im = {}
 
         # eventually I think we'll want information about the training dataset, 
         # i.e. (dataset, ID within dataset)
@@ -464,7 +464,7 @@ class RealGalaxyCatalog(object):
                     'index %d given to getNoise is out of range (0..%d)'%(
                         i,len(self.noise_file_name)-1))
 
-            if self.noise_file_name[i] in self.saved_cf:
+            if self.noise_file_name[i] in self.saved_noise_im:
                 im = self.saved_noise_im[self.noise_file_name[i]]
             else:
                 import pyfits
@@ -476,7 +476,7 @@ class RealGalaxyCatalog(object):
                 im = galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
                 self.saved_noise_im[self.noise_file_name[i]] = im
 
-            cf = galsim.correlatednosie._BaseCorrelatedNoise(
+            cf = galsim.correlatednoise._BaseCorrelatedNoise(
                 rng, galsim.InterpolatedImage(im, dx=self.pixel_scale[i], normalization="sb",
                                                 calculate_stepk=False, calculate_maxk=False,
                                                 x_interpolant='linear', gsparams=gsparams))
