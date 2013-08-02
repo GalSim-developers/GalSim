@@ -168,6 +168,11 @@ class RealGalaxy(GSObject):
         import pyfits
         import numpy as np
 
+        if rng is None:
+            rng = galsim.BaseDeviate()
+        elif not isinstance(rng, galsim.BaseDeviate):
+            raise TypeError("The rng provided to RealGalaxy constructor is not a BaseDeviate")
+ 
         # Code block below will be for galaxy selection; not all are currently implemented.  Each
         # option must return an index within the real_galaxy_catalog.        
         if index is not None:
@@ -179,12 +184,7 @@ class RealGalaxy(GSObject):
                 raise AttributeError('Too many methods for selecting a galaxy!')
             use_index = real_galaxy_catalog._get_index_for_id(id)
         elif random is True:
-            if rng is None:
-                uniform_deviate = galsim.UniformDeviate()
-            elif isinstance(rng, galsim.BaseDeviate):
-                uniform_deviate = galsim.UniformDeviate(rng)
-            else:
-                raise TypeError("The rng provided to RealGalaxy constructor is not a BaseDeviate")
+            uniform_deviate = galsim.UniformDeviate(rng)
             use_index = int(real_galaxy_catalog.nobjects * uniform_deviate()) 
         else:
             raise AttributeError('No method specified for selecting a galaxy!')
@@ -192,6 +192,7 @@ class RealGalaxy(GSObject):
         # read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors.
         gal_image = real_galaxy_catalog.getGal(use_index)
         PSF_image = real_galaxy_catalog.getPSF(use_index)
+        noise = real_galaxy_catalog.getNoise(use_index, rng, gsparams)
 
         # save any other relevant information as instance attributes
         self.catalog_file = real_galaxy_catalog.file_name
@@ -201,9 +202,11 @@ class RealGalaxy(GSObject):
         # handle noise-padding options
         try:
             noise_pad = galsim.config.value._GetBoolValue(noise_pad,'')
+            # If it's a bool and True, use the correlated noise specified in the catalog
             # If it's a bool, set it to the correct noise level from the catalog.
+            # (Use the stored correlated noise if present.)
             if noise_pad:
-                noise_pad = float(real_galaxy_catalog.variance[use_index])
+                noise_pad = noise
             else:
                 noise_pad = 0.
         except:
@@ -230,6 +233,10 @@ class RealGalaxy(GSObject):
         # Initialize the SBProfile attribute
         GSObject.__init__(
             self, galsim.Convolve([self.original_image, psf_inv], gsparams=gsparams))
+
+        # Save the noise in the image as an accessible attribute
+        noise.convolveWith(psf_inv, gsparams)
+        self.noise = noise
 
     def getHalfLightRadius(self):
         raise NotImplementedError("Half light radius calculation not implemented for RealGalaxy "
@@ -306,16 +313,19 @@ class RealGalaxyCatalog(object):
                       containing the galaxy/PDF images.
     @param dir        The directory of catalog file (optional).
     @param preload    Whether to preload the header information. [Default `preload = False`]
+    @param noise_dir  The directory of the noise files if different from the directory of the 
+                      image files.  [Default `noise_dir = image_dir`]
     """
     _req_params = { 'file_name' : str }
-    _opt_params = { 'image_dir' : str , 'dir' : str, 'preload' : bool }
+    _opt_params = { 'image_dir' : str , 'dir' : str, 'preload' : bool, 'noise_dir' : str }
     _single_params = []
     _takes_rng = False
 
     # nobject_only is an intentionally undocumented kwarg that should be used only by
     # the config structure.  It indicates that all we care about is the nobjects parameter.
     # So skip any other calculations that might normally be necessary on construction.
-    def __init__(self, file_name, image_dir=None, dir=None, preload=False, nobjects_only=False):
+    def __init__(self, file_name, image_dir=None, dir=None, preload=False, nobjects_only=False,
+                 noise_dir=None):
         import os
         # First build full file_name
         if dir is None:
@@ -334,6 +344,12 @@ class RealGalaxyCatalog(object):
                 self.image_dir = os.path.join(dir,image_dir)
         if not os.path.isdir(self.image_dir):
             raise RuntimeError(self.image_dir+' directory does not exist!')
+        if noise_dir is None:
+            self.noise_dir = self.image_dir
+        else:
+            if not os.path.isdir(noise_dir):
+                raise RuntimeError(noise_dir+' directory does not exist!')
+            self.noise_dir = noise_dir
 
         import pyfits
         cat = pyfits.getdata(self.file_name)
@@ -346,6 +362,11 @@ class RealGalaxyCatalog(object):
         self.ident = [ "%s"%val for val in ident ]
         self.gal_file_name = cat.field('gal_filename') # file containing the galaxy image
         self.PSF_file_name = cat.field('PSF_filename') # file containing the PSF image
+        # A temporary measure until all real_galaxy catalogs have this field:
+        try:
+            self.noise_file_name = cat.field('noise_filename') # file containing the noise cf
+        except:
+            self.noise_file_name = None
         self.gal_hdu = cat.field('gal_hdu') # HDU containing the galaxy image
         self.PSF_hdu = cat.field('PSF_hdu') # HDU containing the PSF image
         self.pixel_scale = cat.field('pixel_scale') # pixel scale for image (could be different
@@ -359,6 +380,7 @@ class RealGalaxyCatalog(object):
 
         self.preloaded = False
         self.do_preload = preload
+        self.saved_cf = {}
 
         # eventually I think we'll want information about the training dataset, 
         # i.e. (dataset, ID within dataset)
@@ -385,13 +407,10 @@ class RealGalaxyCatalog(object):
         """
         import pyfits
         import os
+        import numpy
         self.preloaded = True
         self.loaded_files = {}
-        for file_name in self.gal_file_name:
-            if file_name not in self.loaded_files:
-                full_file_name = os.path.join(self.image_dir,file_name)
-                self.loaded_files[file_name] = pyfits.open(full_file_name)
-        for file_name in self.PSF_file_name:
+        for file_name in numpy.concatenate((self.gal_file_name , self.PSF_file_name)):
             if file_name not in self.loaded_files:
                 full_file_name = os.path.join(self.image_dir,file_name)
                 self.loaded_files[file_name] = pyfits.open(full_file_name)
@@ -431,6 +450,39 @@ class RealGalaxyCatalog(object):
             file_name = os.path.join(self.image_dir,self.PSF_file_name[i])
             array = pyfits.getdata(file_name,self.PSF_hdu[i])
         return galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
+
+    def getNoise(self, i, rng=None, gsparams=None):
+        """Returns the noise cf at index `i` as a CorrelatedNoise object.
+        """
+        if self.noise_file_name is None:
+            cf = galsim.UncorrelatedNoise(rng, self.pixel_scale[i], self.variance[i], gsparams)
+
+        else:
+
+            if i >= len(self.noise_file_name):
+                raise IndexError(
+                    'index %d given to getNoise is out of range (0..%d)'%(
+                        i,len(self.noise_file_name)-1))
+
+            if self.noise_file_name[i] in self.saved_cf:
+                im = self.saved_noise_im[self.noise_file_name[i]]
+            else:
+                import pyfits
+                import os
+                import numpy
+
+                file_name = os.path.join(self.noise_dir,self.noise_file_name[i])
+                array = pyfits.getdata(file_name)
+                im = galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
+                self.saved_noise_im[self.noise_file_name[i]] = im
+
+            cf = galsim.correlatednosie._BaseCorrelatedNoise(
+                rng, galsim.InterpolatedImage(im, dx=self.pixel_scale[i], normalization="sb",
+                                                calculate_stepk=False, calculate_maxk=False,
+                                                x_interpolant='linear', gsparams=gsparams))
+            cf.setVariance(self.variance[i])
+
+        return cf
 
 
 def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotation_angle=None, 
