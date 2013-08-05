@@ -676,7 +676,6 @@ def test_offset():
             obj.draw(im, normalization='sb', offset=offset)
             moments = getmoments(im)
             print 'moments = ',moments
-            im.write('junk.fits')
             np.testing.assert_almost_equal(
                     moments[0], cenx+offx, decimal,
                     "obj.draw(im,offset) not centered correctly for (nx,ny) = %d,%d"%(nx,ny))

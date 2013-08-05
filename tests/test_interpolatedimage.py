@@ -911,7 +911,6 @@ def test_conserve_flux():
         lan = galsim.Lanczos(n, conserve_flux=True)
         obj = galsim.InterpolatedImage(im1, x_interpolant=lan, normalization='sb')
         obj.draw(im2, normalization='sb')
-        im2.write('junk.fits')
         print 'The maximum error is ',numpy.max(abs(im2.array-init_val))
         numpy.testing.assert_array_almost_equal(
                 im2.array,init_val,5,
