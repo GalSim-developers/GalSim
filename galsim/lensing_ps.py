@@ -326,7 +326,7 @@ class PowerSpectrum(object):
                                 smaller than the default.  i.e. 
                                     kmin = 2. * pi / (ngrid * grid_spacing) / kmin_factor
                                 [default `kmin_factor = 1`; must be an integer]
-        @param kmin_factor      (Optional) Factor by which the overall grid in fourier space is 
+        @param kmax_factor      (Optional) Factor by which the overall grid in fourier space is 
                                 larger than the default.  i.e. 
                                     kmax = pi / grid_spacing * kmax_factor
                                 [default `kmax_factor = 1`; must be an integer]

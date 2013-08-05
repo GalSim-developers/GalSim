@@ -675,7 +675,7 @@ class GSObject(object):
         method can create a new Image or can draw into an existing one, depending on the choice of
         the `image` keyword parameter.  Other keywords of particular relevance for users are those
         that set the pixel scale for the image (`dx`), that choose the normalization convention for
-        the flux (`normalization`), and that decide whether the clear the input Image before drawing
+        the flux (`normalization`), and that decide whether to clear the input Image before drawing
         into it (`add_to_image`).
 
         The object will always be drawn with its nominal center at the center location of the 
@@ -1479,7 +1479,10 @@ class Sersic(GSObject):
         half_light_radius
         scale_radius
 
-    The code is limited to 0.3 <= n <= 4.2, with an exception thrown for values outside that range.
+    The code is limited to 0.3 <= n <= 6.2, with an exception thrown for values outside that range.
+    Below n=0.3, there are severe numerical problems.  Above n=6.2, we found that the code begins
+    to be inaccurate when sheared or magnified (at the level of upcoming shear surveys), so 
+    we do not recommend extending beyond this.  See Issues #325 and #450 for more details.
 
     Several optional parameters are available:  Truncation radius `trunc` [default `trunc = 0.`,
     indicating no truncation] and a `flux` parameter [default `flux = 1`].  If `trunc` is set to

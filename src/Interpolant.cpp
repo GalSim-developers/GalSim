@@ -148,6 +148,9 @@ namespace galsim {
             // where f(x) = int(sin(t)/(x+t),t=0..inf) 
             //       g(x) = int(cos(t)/(x+t),t=0..inf)
             //
+            // (By asymptotic, I mean that f and g approach 1/x and 1/x^2 respectively as x -> inf.
+            //  The formula as given is exact.)
+            //
             // I used Maple to calculate a Chebyshev-Pade approximation of 1/sqrt(y) f(1/sqrt(y)) 
             // from 0..1/4^2, which leads to the following formula for f(x).  It is accurate to 
             // better than 1.e-16 for x > 4.
@@ -201,7 +204,14 @@ namespace galsim {
                                         y*(4.01839087307656620e13 + 
                                            y*(3.99653257887490811e13))))))))));
 
-            return ((x>0.)?(M_PI/2.):(-M_PI/2.)) - f*cos(x) - g*sin(x);
+#ifdef _GLIBCXX_HAVE_SINCOS
+            double sinx,cosx;
+            sincos(x,&sinx,&cosx);
+#else
+            double cosx = std::cos(x);
+            double sinx = std::sin(x);
+#endif
+            return ((x>0.)?(M_PI/2.):(-M_PI/2.)) - f*cosx - g*sinx;
         } else {
             // Here I used Maple to calculate the Pade approximation for Si(x), which is accurate
             // to better than 1.e-16 for x < 4:
@@ -661,7 +671,7 @@ namespace galsim {
     double Lanczos::xCalc(double x) const
     {
         assert(x >= 0);
-        assert(x <= _n);
+        assert(x <= _nd);
 
         double res; // res will be the result to return.
         double s;   // s will be sin(pi x) which we save for the flux conservation correction.
@@ -673,8 +683,8 @@ namespace galsim {
             // SBMoffat's kValue and pow functions, making these different cases all different 
             // functions and having the constructor just set the function once.  Then calls to 
             // xval wouldn't have any jumps from the case or (if you wanted) even the
-            // _conserve_flux check.
-            switch (_in) {
+            // _conserve_dc check.
+            switch (_n) {
               case 1 : {
                   // Then xval = 1/pi^2 sin(pi x)^2 / x^2
                   s = sin(M_PI*x);
@@ -702,8 +712,8 @@ namespace galsim {
               case 3 : {
                   // Then xval = 3/pi^2 sin(pi x) sin(pi x/3) / x^2
                   // Let sn = sin(pi x/3)
-                  // Then sin(pi x) = s*(3-4s^2)
-                  // xval = 3/pi^2 s^2*(3-4s) / x^2
+                  // Then sin(pi x) = sn*(3-4sn^2)
+                  // xval = 3/pi^2 sn^2*(3-4sn) / x^2
                   double sn = sin((M_PI/3.)*x);
                   s = sn*(3.-4.*sn*sn);
                   res = (3./(M_PI*M_PI)) * s*sn/(x*x);
@@ -754,8 +764,8 @@ namespace galsim {
                   // The second sin call isn't much slower than the multiplications 
                   // required to get sin(pi x) from sin(pi x/n)
                   s = sin(M_PI*x);
-                  double sn = sin(M_PI*x/_n);
-                  res = (_n/(M_PI*M_PI)) * s*sn/(x*x);
+                  double sn = sin(M_PI*x/_nd);
+                  res = (_nd/(M_PI*M_PI)) * s*sn/(x*x);
                   break;
               }
             }
@@ -766,7 +776,7 @@ namespace galsim {
             double pix = M_PI*x;
             double temp = (1./6.) * pix*pix;
             s = pix * (1. - temp);
-            res = 1. - temp * (1. + 1./(_n*_n));
+            res = 1. - temp * (1. + 1./(_nd*_nd));
             // For x < 1.e-4, the errors in this approximation are less than 1.e-16.
         }
 
@@ -802,7 +812,7 @@ namespace galsim {
         // this framework for the correction.
 
         // res /= 1. - 2.*_K1*(1.-cos(2.*M_PI*x)) - 2*_K2*(1.-cos(4.*M_PI*x)) - ...;
-        if (_conserve_flux) {
+        if (_conserve_dc) {
             dbg<<"xCalc for x = "<<x<<std::endl;
             dbg<<"res = "<<res<<" / ";
             double ssq = s*s;
@@ -836,8 +846,8 @@ namespace galsim {
     {
         // F(u) = ( (vp+1) Si((vp+1)pi) - (vp-1) Si((vp-1)pi) +
         //          (vm-1) Si((vm-1)pi) - (vm+1) Si((vm+1)pi) ) / 2pi
-        double vp=_n*(2.*u+1.);
-        double vm=_n*(2.*u-1.);
+        double vp=_nd*(2.*u+1.);
+        double vm=_nd*(2.*u-1.);
         double retval = (vm-1.)*Si(M_PI*(vm-1.))
             -(vm+1.)*Si(M_PI*(vm+1.))
             -(vp-1.)*Si(M_PI*(vp-1.))
@@ -889,7 +899,7 @@ namespace galsim {
         //
         // These coefficients are constant, so they are stored in _C.
 
-        if (_conserve_flux) {
+        if (_conserve_dc) {
             retval *= _C[0];
             retval += _C[1] * (uCalcRaw(u+1.) + uCalcRaw(u-1.));
             retval += _C[2] * (uCalcRaw(u+2.) + uCalcRaw(u-2.));
@@ -900,13 +910,13 @@ namespace galsim {
         return retval;
     }
 
-    Lanczos::Lanczos(int n, bool conserve_flux, double tol, const GSParamsPtr& gsparams) :  
-        Interpolant(gsparams), _in(n), _n(n), _conserve_flux(conserve_flux), _tolerance(tol)
+    Lanczos::Lanczos(int n, bool conserve_dc, double tol, const GSParamsPtr& gsparams) :  
+        Interpolant(gsparams), _n(n), _nd(n), _conserve_dc(conserve_dc), _tolerance(tol)
     {
         dbg<<"Start constructor for Lanczos n = "<<n<<std::endl;
         // Reduce range slightly from n so we're not including points with zero weight in
         // interpolations:
-        _range = _n*(1-0.1*std::sqrt(_tolerance));
+        _range = _nd*(1-0.1*std::sqrt(_tolerance));
 
         for(double u=0.;u<=10.;u+=0.1) dbg<<"F("<<u<<") = "<<uCalcRaw(u)<<std::endl;
 
@@ -939,7 +949,7 @@ namespace galsim {
             dbg<<"S("<<x<<") = ";
             double sum = 0.;
             for (int i=-_n;i<_n;++i) {
-                double val = sinc(x+i)*sinc((x+i)/_n);
+                double val = sinc(x+i)*sinc((x+i)/_nd);
                 sum += val;
                 dbg<<val<<" + ";
             }
@@ -964,7 +974,7 @@ namespace galsim {
             _cache_utab.clear();  
         }
 
-        KeyType key(n,std::pair<bool,double>(_conserve_flux,tol));
+        KeyType key(n,std::pair<bool,double>(_conserve_dc,tol));
 
         if (_cache_umax.count(key)) {
             // Then uMax and tab are already cached.
@@ -982,15 +992,15 @@ namespace galsim {
                 gsparams->table_spacing * std::pow(gsparams->xvalue_accuracy/10.,0.25);
             // Make sure steps hit the integer values exactly.
             const double xStep = 1. / std::ceil(1./xStep1);
-            for(double x=0.; x<_n; x+=xStep) _xtab->addEntry(x, xCalc(x));
+            for(double x=0.; x<_nd; x+=xStep) _xtab->addEntry(x, xCalc(x));
 #endif
 
             // Build utab = table of u values
             _utab.reset(new Table<double,double>(Table<double,double>::spline));
             const double uStep = 
-                gsparams->table_spacing * std::pow(gsparams->kvalue_accuracy/10.,0.25) / _n;
+                gsparams->table_spacing * std::pow(gsparams->kvalue_accuracy/10.,0.25) / _nd;
             _uMax = 0.;
-            for (double u=0.; u - _uMax < 1./_n || u<1.1; u+=uStep) {
+            for (double u=0.; u - _uMax < 1./_nd || u<1.1; u+=uStep) {
                 double uval = uCalc(u);
                 _utab->addEntry(u, uval);
                 if (std::abs(uval) > _tolerance) _uMax = u;
@@ -1011,7 +1021,7 @@ namespace galsim {
     double Lanczos::xval(double x) const
     {
         x = std::abs(x);
-        if (x >= _n) return 0.;
+        if (x >= _nd) return 0.;
         else {
 #ifdef USE_TABLES
             return (*_xtab)(x);

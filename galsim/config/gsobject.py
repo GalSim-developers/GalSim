@@ -18,10 +18,11 @@
 #
 import galsim
 
-# These are in addition to the classes in galsim/base.py that can use the default builder
-# using the req, opt, single class variables.  The types in this list require a special
-# builder function defined below.
 valid_gsobject_types = {
+    # Note: these are just the types that need a special builder.  Most of GSObject sub-classes
+    # in base.py (and some elsewhere) can use the default builder, called _BuildSimple, which
+    # just uses the req, opt, and single class variables.
+    # See the des module for examples of how to extend this from a module.
     'None' : '_BuildNone',
     'Add' : '_BuildAdd',
     'Sum' : '_BuildAdd',
