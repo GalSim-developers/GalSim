@@ -208,9 +208,6 @@ class Dict(object):
     _single_params = []
     _takes_rng = False
 
-    # nobjects_only is an intentionally undocumented kwarg that should be used only by
-    # the config structure.  It indicates that all we care about is the nobjects parameter.
-    # So skip any other calculations that might normally be necessary on construction.
     def __init__(self, file_name, dir=None, file_type=None, key_split='.'):
 
         # First build full file_name
@@ -251,21 +248,6 @@ class Dict(object):
 
         f.close()
 
-
-    # The rest of the functions are typical non-mutating functions for a dict, for which we just
-    # pass the request along to self.dict.
-    def __len__(self):
-        return len(self.dict)
-
-    def __getitem__(self, key):
-        return self.dict[key]
-
-    def __contains__(self, key):
-        return key in self.dict
-
-    def __iter__(self):
-        return self.dict.__iter__
-
     def get(self, key, default=None):
         # Make a list of keys according to our key_split parameter
         chain = key.split(self.key_split)
@@ -282,6 +264,20 @@ class Dict(object):
             # Otherwise, return the result.
             else: return d.get(key,default)
         raise ValueError("Invalid key given to Dict.get()")
+
+    # The rest of the functions are typical non-mutating functions for a dict, for which we just
+    # pass the request along to self.dict.
+    def __len__(self):
+        return len(self.dict)
+
+    def __getitem__(self, key):
+        return self.dict[key]
+
+    def __contains__(self, key):
+        return key in self.dict
+
+    def __iter__(self):
+        return self.dict.__iter__
 
     def keys(self):
         return self.dict.keys()

@@ -202,9 +202,7 @@ class RealGalaxy(GSObject):
         # handle noise-padding options
         try:
             noise_pad = galsim.config.value._GetBoolValue(noise_pad,'')
-            # If it's a bool and True, use the correlated noise specified in the catalog
-            # If it's a bool, set it to the correct noise level from the catalog.
-            # (Use the stored correlated noise if present.)
+            # If it's a bool and True, use the correlated noise specified in the catalog.
             if noise_pad:
                 noise_pad = noise
             else:
@@ -362,7 +360,8 @@ class RealGalaxyCatalog(object):
         self.ident = [ "%s"%val for val in ident ]
         self.gal_file_name = cat.field('gal_filename') # file containing the galaxy image
         self.PSF_file_name = cat.field('PSF_filename') # file containing the PSF image
-        # A temporary measure until all real_galaxy catalogs have this field:
+        # We don't require the noise_filename column.  If it is not present, we will use
+        # Uncorrelated noise based on the variance column.
         try:
             self.noise_file_name = cat.field('noise_filename') # file containing the noise cf
         except:
