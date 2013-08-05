@@ -280,6 +280,31 @@ class GSObject(object):
         self.SBProfile.setFlux(flux)
         self.__class__ = GSObject
 
+    def applyExpansion(self, scale):
+        """Rescale the linear size of the profile by the given scale factor.
+
+        This doesn't correspond to either of the normal operations one would typically want to
+        do to a galaxy.  See the functions applyDilation and applyMagnification for the more 
+        typical usage.  But this function is conceptually simple.  It rescales the linear 
+        dimension of the profile, while preserving surface brightness.  As a result, the flux
+        will necessarily change as well.
+        
+        See applyDilation for a version that applies a linear scale factor in the size while
+        preserving flux.
+
+        See applyMagnification for a version that applies a scale factor to the area while 
+        preserving surface brightness.
+
+        After this call, the caller's type will be a GSObject.
+        This means that if the caller was a derived type that had extra methods beyond
+        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
+        are no longer available.
+
+        @param scale The factor by which to scale the linear dimension of the object.
+        """
+        import numpy as np
+        self.SBProfile.applyExpansion(scale)
+ 
     def applyDilation(self, scale):
         """Apply a dilation of the linear size by the given scale.
 
@@ -299,7 +324,7 @@ class GSObject(object):
         """
         old_flux = self.getFlux()
         import numpy as np
-        self.SBProfile.applyScale(scale)
+        self.applyExpansion(scale)
         self.setFlux(old_flux) # conserve flux
 
     def applyMagnification(self, mu):
@@ -322,7 +347,7 @@ class GSObject(object):
         @param mu The lensing magnification to apply.
         """
         import numpy as np
-        self.SBProfile.applyScale(np.sqrt(mu))
+        self.applyExpansion(np.sqrt(mu))
        
     def applyShear(self, *args, **kwargs):
         """Apply an area-preserving shear to this object, where arguments are either a galsim.Shear,
