@@ -248,8 +248,10 @@ def BasicCCFlags(env):
 
     if env['FLAGS'] == '':
         if compiler == 'g++':
-            env.Replace(CCFLAGS=['-O2'])
-            env.Append(CCFLAGS=['-ftree-vectorize'])
+            env.Replace(CCFLAGS=['-O2','-fno-strict-aliasing'])
+            # Unfortunately this next flag requires strict-aliasing, but allowing that 
+            # opens up a Pandora's box of bugs and warnings, so I don't want to do that.
+            #env.Append(CCFLAGS=['-ftree-vectorize'])
             if env['WITH_PROF']:
                 env.Append(CCFLAGS=['-pg'])
                 env.Append(LINKFLAGS=['-pg'])
