@@ -198,7 +198,7 @@ class Dict(object):
     @param dir           Optionally a directory name can be provided if the file_name does not 
                          already include it.
     @param file_type     Options are 'Pickle', 'YAML', or 'JSON' or None.  If None, infer from 
-                         the file name extension ('.p*', '.y*', '.j*' respetively).
+                         the file name extension ('.p*', '.y*', '.j*' respectively).
                          (default `file_type = None`)
     @param key_split     The character (or string) to use to split chained keys.  (c.f. the 
                          description of this feature above.)  (default `key_split = '.'`)
