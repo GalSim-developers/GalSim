@@ -22,6 +22,7 @@
 # New features introduced in this demo:
 #
 # - obj type : InterpolatedImage(image, dx)
+# - obj type : RealGalaxy(..., whiten)
 # - float_value type : RandomDistribution(function, x_min, x_max)
 # - pix type : None
 # - input.power_spectrum : (e_power_file, delta2, units)
@@ -93,6 +94,11 @@ gal :
     rotation :
         type : Random
 
+    # Another option available for the RealGalaxy type is whiten.  If set to true, then
+    # we will keep track of the original correlated noise in the image and whiten it before 
+    # adding the additional noise (specified below in image.noise).
+    whiten : true
+
     # The galaxy S/N is set to be 100, but this is based on a point variance-only calculation
     # (such as discussed in Leauthaud et al 2007).  The true SNR is somewhat lower, due to the
     # presence of correlation in the noise.
@@ -123,18 +129,6 @@ image :
     # The default is 1.
     index_convention : 0
 
-    # In demo9, we said that you can specify either image_pos or sky_pos to 
-    # place each postage stamp on the full image.  If you don't specify either one, then the 
-    # default is random x and y within the full image.
-    #
-    # image_pos : 
-    #     type : XY 
-    #     x : { type : Random , min : 0 , max : xsize-1 }
-    #     y : { type : Random , min : 0 , max : ysize-1 }
-    #
-    # Note: if image_convention were 1 as is the default, then these would instead be 
-    #     min : 1 , max : {x,y}size 
-
     # Add correlated noise to the image -- the correlation function comes from the HST COSMOS images
     # and is described in more detail in the galsim.correlatednoise.getCOSMOSNoise() docstring.
     # This function requires a FITS file, stored in the GalSim repository, that represents this
@@ -148,6 +142,18 @@ image :
     pixel_scale : 0.20  # arcsec / pixel
 
     random_seed : 24783923
+
+    # In demo9, we said that you can specify either image_pos or sky_pos to 
+    # place each postage stamp on the full image.  If you don't specify either one, then the 
+    # default is random x and y within the full image.
+    #
+    # image_pos : 
+    #     type : XY 
+    #     x : { type : Random , min : 0 , max : xsize-1 }
+    #     y : { type : Random , min : 0 , max : ysize-1 }
+    #
+    # Note: if image_convention were 1 as is the default, then these would instead be 
+    #     min : 1 , max : {x,y}size 
 
 
 # Define the input files

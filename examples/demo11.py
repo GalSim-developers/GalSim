@@ -27,7 +27,9 @@ New features introduced in this demo:
 - distdev = galsim.DistDeviate(rng, function, x_min, x_max)
 - gal.applyLensing(g1, g2, mu)
 - correlated_noise.applyWhiteningTo(image)
-- cn = galsim.correlatednoise.getCOSMOSNoise(rng, file_name, ...)
+- cn = galsim.getCOSMOSNoise(rng, file_name, ...)
+- vn = galsim.VariableGaussianNoise(rng, var_image)
+- ucn = galsim.UncorrelatedNoise(rng, pixel_scale, variance)
 - image.addNoise(cn)
 - image.setOrigin(x,y)
 
@@ -296,6 +298,9 @@ def main(argv):
 
     # Now max_current_variance is the noise level across the full image.  We don't want to add that
     # twice, so subtract off this much from the COSMOS noise that we want to end up in the image.
+    # The UncorrelatedNoise class is a kind of "CorrelatedNoise" that has no correlations.
+    # Its correlation function has the given variance at zero lag, and 0 elsewhere.  We can thus
+    # subtract off this value from the correlated noise that we want for the final noise field.
     cn -= galsim.UncorrelatedNoise(rng, pixel_scale, max_current_variance)
 
     # Now add noise according to this correlation function to the full_image.  We have to do this
