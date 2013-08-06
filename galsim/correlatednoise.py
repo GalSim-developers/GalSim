@@ -270,7 +270,36 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         @param scale The linear rescaling factor to apply.
         """
-        self._profile.applyMagnification(scale**2)
+        self._profile.applyExpansion(scale)
+
+    def applyDilation(self, scale):
+        """Apply the appropriate changes to the scale and variance for when the object has
+        an applied dilation.
+        
+        @param scale The linear dilation scale factor.
+        """
+        self.applyExpansion(scale)
+        # Expansion changes the flux by scale**2, applyDilation reverses that to conserve flux,
+        # so the variance needs to change by scale**-4.
+        self.scaleVariance(1./(scale**4))
+
+    def applyMagnification(self, mu):
+        """Apply the appropriate changes to the scale and variance for when the object has
+        an applied magnification.
+
+        @param mu The lensing magnification
+        """
+        self.applyExpansion(np.sqrt(mu))
+
+    def applyLensing(self, g1, g2, mu):
+        """Apply the appropriate changes for when the object has an applied shear and magnification.
+
+        @param g1   First component of lensing (reduced) shear to apply to the object.
+        @param g2   Second component of lensing (reduced) shear to apply to the object.
+        @param mu   Lensing magnification to apply to the object.
+        """
+        self.applyShear(g1=g1,g2=g2)
+        self.applyMagnification(mu)
 
     def applyRotation(self, theta):
         """Apply a rotation theta to this correlated noise model.
