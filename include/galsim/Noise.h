@@ -628,8 +628,9 @@ namespace galsim {
          * @param[in] rng         The BaseDeviate to use for the random number generation.
          * @param[in] var_image   Image with the variance values for the noise in each pixel.
          */
-        VariableGaussianNoise(boost::shared_ptr<BaseDeviate> rng, ConstImageView<float> var_image) :
-            BaseNoise(rng), _var_image(var_image)
+        VariableGaussianNoise(boost::shared_ptr<BaseDeviate> rng,
+                              const BaseImage<float>& var_image) :
+            BaseNoise(rng), _var_image(var_image.view())
         {}
 
         /**

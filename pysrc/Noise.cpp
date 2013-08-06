@@ -195,7 +195,7 @@ namespace galsim {
             // Note that class docstrings are now added in galsim/random.py
             bp::class_<VariableGaussianNoise, bp::bases<BaseNoise> > pyVariableGaussianNoise(
                 "VariableGaussianNoise", "", 
-                bp::init<boost::shared_ptr<BaseDeviate>, ConstImageView<float> >(
+                bp::init<boost::shared_ptr<BaseDeviate>, const BaseImage<float>& >(
                     (bp::arg("rng")=bp::object(), bp::arg("var_image")))
             );
             pyVariableGaussianNoise
