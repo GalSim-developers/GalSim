@@ -77,6 +77,15 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         self._profile += other._profile
         return _BaseCorrelatedNoise(self.getRNG(), self._profile)
 
+    def __sub__(self, other):
+        ret = self.copy()
+        ret -= other
+        return ret
+
+    def __isub__(self, other):
+        self._profile -= other._profile
+        return _BaseCorrelatedNoise(self.getRNG(), self._profile)
+
     # Make op* and op*= work to adjust the overall variance of an object
     def __imul__(self, other):
         self._profile.scaleVariance(other)
