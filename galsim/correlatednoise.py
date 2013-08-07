@@ -525,31 +525,35 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
                 newcf.scale = 1. # New Images have scale() = 0 unless otherwise set.
             else:
                 newcf.scale = dx
-            # Then draw this correlation function into an array
-            self.draw(newcf, dx=None) # setting dx=None uses the newcf image scale set above
+            # Then draw this correlation function into an array.
+            # Setting dx=None uses the newcf image scale set above.
+            self.draw(newcf, dx=None)
 
             # Since we just drew it, save the variance value for posterity.
             var = newcf(newcf.bounds.center())
-            self._variance_stored = var # Store variance for next time 
+            self._variance_stored = var
 
             # Then calculate the sqrt(PS) that will be used to generate the actual noise
             ps = np.fft.fft2(newcf.array) * np.product(shape)
-            print 'newcf = ',newcf.array
-            print 'ps = ',ps
-            print 'var = ',var
-            print 'min cf = ',np.min(newcf.array)
-            print 'max cf = ',np.max(newcf.array)
-            print 'min real = ',np.min(np.real(ps))
-            print 'max real = ',np.max(np.real(ps))
-            print 'min imag = ',np.min(np.imag(ps))
-            print 'max imag = ',np.max(np.imag(ps))
-            if np.any(np.real(ps) < -1.e-12 * var):
-                raise RuntimeError("Found negative values in CorrelationFunction power spectrum." +
-                                   "It should be positive real.")
-            if np.any(np.abs(np.imag(ps)) > 1.e-12 * var):
-                raise RuntimeError("Found complex values in CorrelationFunction power spectrum." +
-                                   "It should be positive real.")
-            rootps = np.sqrt(np.abs(np.real(ps)) * np.product(shape))
+            if True:
+                rootps = np.sqrt(np.abs(ps))
+            else:
+                print 'newcf = ',newcf.array
+                print 'ps = ',ps
+                print 'var = ',var
+                print 'min cf = ',np.min(newcf.array)
+                print 'max cf = ',np.max(newcf.array)
+                print 'min real = ',np.min(np.real(ps))
+                print 'max real = ',np.max(np.real(ps))
+                print 'min imag = ',np.min(np.imag(ps))
+                print 'max imag = ',np.max(np.imag(ps))
+                if np.any(np.real(ps) < -1.e-12 * var):
+                    raise RuntimeError("Found negative values in CorrelationFunction power spectrum." +
+                                    "It should be positive real.")
+                if np.any(np.abs(np.imag(ps)) > 1.e-12 * var):
+                    raise RuntimeError("Found complex values in CorrelationFunction power spectrum." +
+                                    "It should be positive real.")
+                rootps = np.sqrt(np.abs(np.real(ps)))
 
             # Then add this and the relevant scale to the _rootps_store for later use
             self._rootps_store.append((rootps, newcf.scale))
