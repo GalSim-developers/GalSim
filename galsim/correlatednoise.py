@@ -1034,7 +1034,7 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
 
     Basic example:
 
-        >>> cn = galsim.UncorrelatedNoise(rng, pixel_scale, variance)
+        >>> ucn = galsim.UncorrelatedNoise(rng, pixel_scale, variance)
 
     Instantiates an UncorrelatedNoise using the given pixel scale and variance value.
     The input `rng` must be a galsim.BaseDeviate or derived class instance, setting the random 

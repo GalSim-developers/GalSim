@@ -323,7 +323,8 @@ class RealGalaxyCatalog(object):
         self.ident = [ "%s"%val for val in ident ]
         self.gal_file_name = cat.field('gal_filename') # file containing the galaxy image
         self.PSF_file_name = cat.field('PSF_filename') # file containing the PSF image
-        # A temporary measure until all real_galaxy catalogs have this field:
+        # We don't require the noise_filename column.  If it is not present, we will use
+        # Uncorrelated noise based on the variance column.
         try:
             self.noise_file_name = cat.field('noise_filename') # file containing the noise cf
         except:
