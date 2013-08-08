@@ -64,12 +64,21 @@ pix :
 
 # Define the galaxy profile
 gal :
-    type : RealGalaxy
-    id : 
-        # We select randomly among these 5 IDs.
-        type : List
-        items : [ 106416, 106731, 108402, 116045, 116448 ]
-        index : { type : Random }
+    type : List
+    items :
+        # Another option available for the RealGalaxy type is whiten.  If set to true, then
+        # we will keep track of the original correlated noise in the image and whiten it before 
+        # adding the additional noise (specified below in image.noise).
+        - { type : RealGalaxy, id : 106416, whiten : true }
+        - { type : RealGalaxy, id : 106731, whiten : true }
+        - { type : RealGalaxy, id : 108402, whiten : true }
+        - { type : RealGalaxy, id : 116045, whiten : true }
+        - { type : RealGalaxy, id : 116448, whiten : true }
+    index : { type : Random }
+    # Note: we could also have set the main gal type to RealGalaxy and had id be a list with a 
+    # random index.  However, the above structure lets the code cache the constructed items
+    # in the list and reuse them.  For RealGalaxy, which has a relatively large construction 
+    # cost, this is a significant savings.
 
     dilation :
         # We draw the sizes from a power law distribution.
@@ -93,11 +102,6 @@ gal :
 
     rotation :
         type : Random
-
-    # Another option available for the RealGalaxy type is whiten.  If set to true, then
-    # we will keep track of the original correlated noise in the image and whiten it before 
-    # adding the additional noise (specified below in image.noise).
-    whiten : true
 
     # The galaxy S/N is set to be 100, but this is based on a point variance-only calculation
     # (such as discussed in Leauthaud et al 2007).  The true SNR is somewhat lower, due to the

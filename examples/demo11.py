@@ -104,13 +104,11 @@ def main(argv):
     # Then we'll choose randomly from this list.
     id_list = [ 106416, 106731, 108402, 116045, 116448 ]
 
-    # Make the 5 galaxies we're going to use here rather than remake them each time.
-    # This means the Fourier transforms of the real galaxy images don't need to be recalculated 
-    # each time, so it's a bit more efficient.
-    # The new noise_pad=True option here means that when the real galaxy image is extrapolated
-    # beyond the original extent of the image in the catalog, it gets padded with the same
-    # noise as was present in the original image.
-    gal_list = [ galsim.RealGalaxy(real_galaxy_catalog, id=id, noise_pad=True) for id in id_list ]
+    # We will cache the galaxies that we make in order to save some of the calculations that
+    # happen on construction.  In particular, we don't want to recalculate the Fourier transforms 
+    # of the real galaxy images, so it's more efficient.
+    # We start with them all = None, and fill them in as we make them.
+    gal_list = [ None ] * len(id_list)
 
     # Setup the PowerSpectrum object we'll be using:
     # To do this, we first have to read in the tabulated power spectrum.
@@ -204,6 +202,17 @@ def main(argv):
         index = int(ud() * len(gal_list))
         gal = gal_list[index]
 
+        # If we haven't made this galaxy yet, we need to do so.
+        if gal is None:
+            # The new noise_pad=True option here means that when the real galaxy image is 
+            # extrapolated beyond the original extent of the image in the catalog, it gets padded 
+            # with the same noise as was present in the original image.  This is important
+            # to do when you are planning to whiten the resulting image, otherwise the areas
+            # that were padded won't have the correct noise after whitening.
+            gal = galsim.RealGalaxy(real_galaxy_catalog, rng=ud, id=id_list[index], noise_pad=True) 
+            # Save it for next time we use this galaxy.
+            gal_list[index] = gal
+
         # Draw the size from a plausible size distribution: N(r) ~ r^-3.5
         # For this, we use the class DistDeviate which can draw deviates from an arbitrary
         # probability distribution.  This distribution can be defined either as a functional
@@ -269,6 +278,7 @@ def main(argv):
         time2 = time.time()
         tot_time = time2-time1
         logger.info('Galaxy %d: position relative to corner = %s, t=%f s', k, str(pos), tot_time)
+        #sys.exit()
 
     # Add correlated noise to the image -- the correlation function comes from the HST COSMOS images
     # and is described in more detail in the galsim.correlatednoise.getCOSMOSNoise() docstring.
@@ -292,7 +302,7 @@ def main(argv):
     # So all we need to do is build an image with how much noise to add to each pixel to get us
     # up to the maximum value that we already have in the image.
     max_current_variance = numpy.max(noise_image.array)
-    noise_image.array[:,:] = max_current_variance - noise_image.array[:,:]
+    noise_image = max_current_variance - noise_image
     vn = galsim.VariableGaussianNoise(rng, noise_image)
     full_image.addNoise(vn)
 
