@@ -107,7 +107,7 @@ class RealGalaxy(GSObject):
                                     Use `noise_pad = False` if you wish to pad with zeros.
                                     Use `noise_pad = True` if you wish to pad with the noise
                                         specified in the RealGalaxyCatalog for this object.
-                                [default `noise_pad = True`]
+                                [default `noise_pad = False`]
     @param gsparams             You may also specify a gsparams argument.  See the docstring for
                                 galsim.GSParams using help(galsim.GSParams) for more information
                                 about this option.
@@ -132,7 +132,7 @@ class RealGalaxy(GSObject):
     # --- Public Class methods ---
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
                  rng=None, x_interpolant=None, k_interpolant=None, flux=None, pad_factor=0,
-                 noise_pad=True, gsparams=None):
+                 noise_pad=False, gsparams=None):
 
         import pyfits
         import numpy as np
