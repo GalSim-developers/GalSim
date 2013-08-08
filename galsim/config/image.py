@@ -542,7 +542,9 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     psf_images = stamp_images[1]
     weight_images = stamp_images[2]
     badpix_images = stamp_images[3]
+    current_vars = stamp_images[4]
 
+    max_current_var = 0
     for k in range(nobjects):
         #print 'full bounds = ',full_image.bounds
         #print 'stamp bounds = ',images[k].bounds
@@ -555,19 +557,37 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
             full_weight_image[b] += weight_images[k]
         if make_badpix_image:
             full_badpix_image[b] |= badpix_images[k]
+        if current_vars[k] > max_current_var: max_current_var = current_vars[k]
 
     if not do_noise:
         if 'noise' in config['image']:
             # If we didn't apply noise in each stamp, then we need to apply it now.
             draw_method = galsim.config.GetCurrentValue(config['image'],'draw_method')
+
+            if max_current_var > 0:
+                import numpy
+                # Then there was whitening applied in to the individual stamps.
+                # But there could be a different variance in each postage stamp, so the first
+                # thing we need to do is bring everything up to a common level.
+                noise_image = galsim.ImageF(full_image.bounds, full_image.scale)
+                for k in range(nobjects): noise_image[images[k].bounds] += current_vars[k]
+                # Update this, since overlapping postage stamps may have let to a larger 
+                # value in some pixels.
+                max_current_var = numpy.max(noise_image.array)
+                # Figure out how much noise we need to add to each pixel.
+                noise_image = max_current_var - noise_image
+                # Add it.
+                full_image.addNoise(galsim.VariableGaussianNoise(rng,noise_image))
+            # Now max_current_var is how much noise is in each pixel.
+
             if draw_method == 'fft':
                 galsim.config.AddNoiseFFT(
-                    full_image,full_weight_image,config['image']['noise'],config,rng,
-                    sky_level_pixel)
+                    full_image,full_weight_image,max_current_var,config['image']['noise'],config,
+                    rng,sky_level_pixel)
             elif draw_method == 'phot':
                 galsim.config.AddNoisePhot(
-                    full_image,full_weight_image,config['image']['noise'],config,rng,
-                    sky_level_pixel)
+                    full_image,full_weight_image,max_current_var,config['image']['noise'],config,
+                    rng,sky_level_pixel)
             else:
                 raise AttributeError("Unknown draw_method %s."%draw_method)
         elif sky_level_pixel:
@@ -746,7 +766,9 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     psf_images = stamp_images[1]
     weight_images = stamp_images[2]
     badpix_images = stamp_images[3]
+    current_vars = stamp_images[4]
 
+    max_current_var = 0.
     for k in range(nobjects):
         bounds = images[k].bounds & full_image.bounds
         #print 'stamp bounds = ',images[k].bounds
@@ -768,16 +790,37 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
                     "whose bounds are (%d,%d,%d,%d)."%(
                         full_image.bounds.xmin, full_image.bounds.xmax,
                         full_image.bounds.ymin, full_image.bounds.ymax))
+        if current_vars[k] > max_current_var: max_current_var = current_vars[k]
 
     if 'noise' in config['image']:
         # Apply the noise to the full image
         draw_method = galsim.config.GetCurrentValue(config['image'],'draw_method')
+        if max_current_var > 0:
+            import numpy
+            # Then there was whitening applied in to the individual stamps.
+            # But there could be a different variance in each postage stamp, so the first
+            # thing we need to do is bring everything up to a common level.
+            noise_image = galsim.ImageF(full_image.bounds, full_image.scale)
+            for k in range(nobjects): 
+                b = images[k].bounds & full_image.bounds
+                if b.isDefined(): noise_image[b] += current_vars[k]
+            # Update this, since overlapping postage stamps may have let to a larger 
+            # value in some pixels.
+            max_current_var = numpy.max(noise_image.array)
+            # Figure out how much noise we need to add to each pixel.
+            noise_image = max_current_var - noise_image
+            # Add it.
+            full_image.addNoise(galsim.VariableGaussianNoise(rng,noise_image))
+        # Now max_current_var is how much noise is in each pixel.
+
         if draw_method == 'fft':
             galsim.config.AddNoiseFFT(
-                full_image,full_weight_image,config['image']['noise'],config,rng,sky_level_pixel)
+                full_image,full_weight_image,max_current_var,config['image']['noise'],config,
+                rng,sky_level_pixel)
         elif draw_method == 'phot':
             galsim.config.AddNoisePhot(
-                full_image,full_weight_image,config['image']['noise'],config,rng,sky_level_pixel)
+                full_image,full_weight_image,max_current_var,config['image']['noise'],config,
+                rng,sky_level_pixel)
         else:
             raise AttributeError("Unknown draw_method %s."%draw_method)
 
