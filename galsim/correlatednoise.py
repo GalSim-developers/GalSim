@@ -520,7 +520,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # generate the required array of the square root of the power spectrum
         if use_stored is False:
             newcf = galsim.ImageD(shape[1], shape[0]) # set the corr func to be the correct size
-            # set the scale based on dx...
+            # Set the scale based on dx...
             if dx <= 0.:
                 newcf.scale = 1. # New Images have scale() = 0 unless otherwise set.
             else:
@@ -528,14 +528,23 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             # Then draw this correlation function into an array
             self.draw(newcf, dx=None) # setting dx=None uses the newcf image scale set above
 
+            # Roll the CF so that it is centred on [0, 0] (this ensures that a physical CF will
+            # have a wholly real PS after DFT)
+            newcf_rolled_array = galsim.utilities.roll2d(
+                newcf.array, (-(newcf.array.shape[0] / 2), -(newcf.array.shape[1] / 2)))
+
+            import matplotlib.pyplot as plt
+            import pdb; pdb.set_trace()
+
             # Since we just drew it, save the variance value for posterity.
-            var = newcf(newcf.bounds.center())
+            #var = newcf(newcf.bounds.center())
+            var = newcf_rolled_array[0, 0]
             self._variance_stored = var # Store variance for next time 
 
             # Then calculate the sqrt(PS) that will be used to generate the actual noise
-            ps = np.fft.fft2(newcf.array) * np.product(shape)
-            print 'newcf = ',newcf.array
-            print 'ps = ',ps
+            ps = np.fft.fft2(newcf_rolled_array) * np.product(shape)
+#            print 'newcf = ',newcf_rolled_array
+#            print 'ps = ',ps
             print 'var = ',var
             print 'min cf = ',np.min(newcf.array)
             print 'max cf = ',np.max(newcf.array)
