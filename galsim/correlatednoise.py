@@ -576,7 +576,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             print 'max real = ', np.max(ps)
 #            print 'min imag = ',np.min(np.imag(ps))
 #            print 'max imag = ',np.max(np.imag(ps))
-            if np.any(np.real(ps) < -1.e-12 * var):
+            if np.any(np.real(ps) < -1.e-12 * var * np.product(shape)**2):
 #                import matplotlib.pyplot as plt
 #                import pdb; pdb.set_trace()
                 raise RuntimeError("Found negative values in power spectrum of the correlated "+
