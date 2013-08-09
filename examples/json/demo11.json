@@ -70,12 +70,28 @@
     "#" : "Another option available for the RealGalaxy type is whiten.  If set to true, then",
     "#" : "we will keep track of the original correlated noise in the image and whiten it before",
     "#" : "adding the additional noise (specified below in image.noise).",
+
+    "#" : "When whitening, the code will automatically pad the image of the galaxy to a larger ",
+    "#" : "size to help prevent aliaing and such when we take the FFT.  For whitening to work,",
+    "#" : "this padding needs to use the same noise as is present in the original image, which is",
+    "#" : "done automatically when whiten=true.  Furthermore, the padding has to be large enough ",
+    "#" : "that the padded image is larger than the postage stamp onto which we will be drawing.",
+    "#" : "(Otherwise, the noise whitening won't work correctly.) This is a bit complicated for",
+    "#" : "the code to figure out on its own, espeicially with the possibility of compound",
+    "#" : "objects, dilations, shears, etc.  So we require the user to provide the minimum size to",
+    "#" : "use for padding with the min_pad_size parameter.",
+
+    "#" : "In this case, the postage stamp will be 20 arcsec. The dilation might be as much as a ",
+    "#" : "factor of 3^2.5 = 15.6. The shear and magnification are not significant, but the image ",
+    "#" : "can be rotated, which adds an extra factor of sqrt(2). So the net required pad_size is",
+    "#" : "    min_pad_size = 20 * 15.6 * sqrt(2) = 441",
+    "#" : "We round this up to 500 to be safe.",
     "items" : [
-        { "type" : "RealGalaxy", "id" : 106416, "whiten" : "true" },
-        { "type" : "RealGalaxy", "id" : 106731, "whiten" : "true" },
-        { "type" : "RealGalaxy", "id" : 108402, "whiten" : "true" },
-        { "type" : "RealGalaxy", "id" : 116045, "whiten" : "true" },
-        { "type" : "RealGalaxy", "id" : 116448, "whiten" : "true" }
+        { "type" : "RealGalaxy", "id" : 106416, "whiten" : "true", "min_pad_size" : 500 },
+        { "type" : "RealGalaxy", "id" : 106731, "whiten" : "true", "min_pad_size" : 500 },
+        { "type" : "RealGalaxy", "id" : 108402, "whiten" : "true", "min_pad_size" : 500 },
+        { "type" : "RealGalaxy", "id" : 116045, "whiten" : "true", "min_pad_size" : 500 },
+        { "type" : "RealGalaxy", "id" : 116448, "whiten" : "true", "min_pad_size" : 500 }
     ],
     "index" : { "type" : "Random" },
     "#" : "Note: we could also have set the main gal type to RealGalaxy and had id be a list with",
@@ -90,9 +106,9 @@
         "#" : "The function should be given in terms of the variable x, since internally",
         "#" : "it is parsed with eval('lambda x : ' + function).",
         "type" : "RandomDistribution",
-        "function" : "x**-3.5",
+        "function" : "x**-2.5",
         "x_min" : 1,
-        "x_max" : 5
+        "x_max" : 3
     },
 
     "shear" : {

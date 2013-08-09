@@ -76,15 +76,11 @@ class InterpolatedImage(GSObject):
     Initialization
     --------------
     
-        >>> interpolated_image = galsim.InterpolatedImage(image, x_interpolant = None,
-                                                          k_interpolant = None,
-                                                          normalization = 'flux', dx = None,
-                                                          flux = None, pad_factor = 0.,
-                                                          noise_pad = 0., rng = None,
-                                                          pad_image = None,
-                                                          calculate_stepk = True,
-                                                          calculate_maxk = True,
-                                                          use_cache = True)
+        >>> interpolated_image = galsim.InterpolatedImage(
+                image, x_interpolant = None, k_interpolant = None, normalization = 'flux',
+                dx = None, flux = None, pad_factor = 0., min_pad_factor = 0, noise_pad = 0.,
+                rng = None, pad_image = None, calculate_stepk = True, calculate_maxk = True,
+                use_cache = True)
 
     Initializes interpolated_image as a galsim.InterpolatedImage() instance.
 
@@ -133,6 +129,11 @@ class InterpolatedImage(GSObject):
                            given) or zeros; `pad_factor <= 0` results in the use of the default 
                            value, 4.  We strongly recommend leaving this parameter at its default 
                            value; see text above for details.  (Default `pad_factor = 0`)
+    @param min_pad_size    Minimum size to pad image.  Only relevant if larger than 
+                           pad_factor * size of original image.  This is important if you 
+                           are planning to whiten the resulting image.  You want to make sure
+                           that the padded image is larger than the postage stamp onto which
+                           you are drawing this object.  [Default `min_pad_size = 0`.]
     @param noise_pad       Noise properties to use when padding the original image with
                            noise.  This can be specified in several ways:
                                (a) as a float, which is interpreted as being a variance to use when
@@ -217,6 +218,7 @@ class InterpolatedImage(GSObject):
         'dx' : float ,
         'flux' : float ,
         'pad_factor' : float ,
+        'min_pad_size' : float ,
         'noise_pad' : str ,
         'pad_image' : str ,
         'calculate_stepk' : bool ,
@@ -229,8 +231,8 @@ class InterpolatedImage(GSObject):
 
     # --- Public Class methods ---
     def __init__(self, image, x_interpolant = None, k_interpolant = None, normalization = 'flux',
-                 dx = None, flux = None, pad_factor = 0., noise_pad = 0., rng = None,
-                 pad_image = None, calculate_stepk=True, calculate_maxk=True,
+                 dx = None, flux = None, pad_factor = 0., min_pad_size=0, noise_pad = 0.,
+                 rng = None, pad_image = None, calculate_stepk=True, calculate_maxk=True,
                  use_cache=True, use_true_center=True, offset=None, gsparams=None):
 
         # first try to read the image as a file.  If it's not either a string or a valid
@@ -309,6 +311,11 @@ class InterpolatedImage(GSObject):
 
         # This will be passed to SBInterpolatedImage, so make sure it is the right type.
         pad_factor = float(pad_factor)
+        if pad_factor <= 0.: pad_factor = galsim._galsim.getDefaultPadFactor()
+
+        if pad_factor * min(image.array.shape) < min_pad_size:
+            # +1 to make sure rounding errors later don't end up with a smaller size.
+            pad_factor = float(min_pad_size+1) / float(min(image.array.shape))
 
         # Store the image as an attribute
         self.orig_image = image
@@ -380,8 +387,6 @@ class InterpolatedImage(GSObject):
         """A helper function that builds the pad_image from the given noise_pad specification.
         """
         import numpy as np
-        if pad_factor <= 0.:
-            pad_factor = galsim._galsim.getDefaultPadFactor()
         padded_size = int(np.ceil(np.max(self.orig_image.array.shape) * pad_factor))
         if isinstance(self.orig_image, galsim.BaseImageF):
             pad_image = galsim.ImageF(padded_size, padded_size)

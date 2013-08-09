@@ -209,7 +209,22 @@ def main(argv):
             # with the same noise as was present in the original image.  This is important
             # to do when you are planning to whiten the resulting image, otherwise the areas
             # that were padded won't have the correct noise after whitening.
-            gal = galsim.RealGalaxy(real_galaxy_catalog, rng=ud, id=id_list[index], noise_pad=True) 
+
+            # Furthermore, when whitening, the padding has to be large enough that the padded 
+            # image is larger than the postage stamp onto which we will be drawing. (Otherwise, 
+            # the noise whitening won't work correctly.) This is a bit complicated for the code to 
+            # figure out on its own, espeicially with the possibility of compound objects,
+            # dilations, shears, etc.  So we require the user to provide the minimum size to use 
+            # for padding with the min_pad_size parameter.
+
+            # In this case, the postage stamp will be 20 arcsec. The dilation might be as much as a 
+            # factor of 3^2.5 = 15.6. The shear and magnification are not significant, but the 
+            # image can be rotated, which adds an extra factor of sqrt(2). So the net required 
+            # pad_size is
+            #     min_pad_size = 20 * 15.6 * sqrt(2) = 441
+            # We round this up to 500 to be safe.
+            gal = galsim.RealGalaxy(real_galaxy_catalog, rng=ud, id=id_list[index], noise_pad=True,
+                                    min_pad_size=500) 
             # Save it for next time we use this galaxy.
             gal_list[index] = gal
 
@@ -218,7 +233,7 @@ def main(argv):
         # probability distribution.  This distribution can be defined either as a functional
         # form as we do here, or as tabulated lists of x and p values, from which the 
         # function is interpolated.
-        distdev = galsim.DistDeviate(ud, function=lambda x:x**-3.5, x_min=1, x_max=5)
+        distdev = galsim.DistDeviate(ud, function=lambda x:x**-2.5, x_min=1, x_max=3)
         dilat = distdev()
         # Use createDilated rather than applyDilation, so we don't change the galaxies in the 
         # original gal_list -- createDilated makes a new copy.
