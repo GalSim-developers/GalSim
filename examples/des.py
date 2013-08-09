@@ -115,7 +115,7 @@ def main(argv):
         fitpsf_image.scale = pixel_scale
 
         # Read the other input files
-        cat = galsim.InputCatalog(cat_file, hdu=2, dir=img_dir)
+        cat = galsim.Catalog(cat_file, hdu=2, dir=img_dir)
         psfex = galsim.des.DES_PSFEx(psfex_file, dir=wl_dir)
         fitpsf = galsim.des.DES_Shapelet(fitpsf_file, dir=wl_dir)
 

@@ -404,7 +404,7 @@ class GSObject(object):
         @param dy Vertical shift to apply (float).
 
         Note: you may supply dx,dy as either two arguments, as a tuple, or as a 
-        galsim.PositionD or galsim.PositionF object.
+        galsim.PositionD or galsim.PositionI object.
         """
         if len(args) == 0:
             # Then dx,dy need to be kwargs
@@ -412,7 +412,7 @@ class GSObject(object):
             dx = kwargs.pop('dx')
             dy = kwargs.pop('dy')
         elif len(args) == 1:
-            if isinstance(args[0], galsim.PositionD) or isinstance(args[0], galsim.PositionF):
+            if isinstance(args[0], galsim.PositionD) or isinstance(args[0], galsim.PositionI):
                 dx = args[0].x
                 dy = args[0].y
             else:
@@ -525,7 +525,7 @@ class GSObject(object):
         @param dy Vertical shift to apply (float).
 
         Note: you may supply dx,dy as either two arguments, as a tuple, or as a 
-        galsim.PositionD or galsim.PositionF object.
+        galsim.PositionD or galsim.PositionI object.
 
         @returns The shifted GSObject.
         """
@@ -643,9 +643,14 @@ class GSObject(object):
             dx = 0.
             dy = 0.
         else:
-            dx = offset.x
-            dy = offset.y
-
+            if isinstance(offset, galsim.PositionD) or isinstance(offset, galsim.PositionI):
+                dx = offset.x
+                dy = offset.y
+            else:
+                # Let python raise the appropriate exception if this isn't valid.
+                dx = offset[0]
+                dy = offset[1]
+ 
         if use_true_center:
             # For even-sized images, the SBProfile draw function centers the result in the 
             # pixel just up and right of the real center.  So shift it back to make sure it really
@@ -670,7 +675,7 @@ class GSObject(object):
         method can create a new Image or can draw into an existing one, depending on the choice of
         the `image` keyword parameter.  Other keywords of particular relevance for users are those
         that set the pixel scale for the image (`dx`), that choose the normalization convention for
-        the flux (`normalization`), and that decide whether the clear the input Image before drawing
+        the flux (`normalization`), and that decide whether to clear the input Image before drawing
         into it (`add_to_image`).
 
         The object will always be drawn with its nominal center at the center location of the 
@@ -1474,7 +1479,10 @@ class Sersic(GSObject):
         half_light_radius
         scale_radius
 
-    The code is limited to 0.3 <= n <= 4.2, with an exception thrown for values outside that range.
+    The code is limited to 0.3 <= n <= 6.2, with an exception thrown for values outside that range.
+    Below n=0.3, there are severe numerical problems.  Above n=6.2, we found that the code begins
+    to be inaccurate when sheared or magnified (at the level of upcoming shear surveys), so 
+    we do not recommend extending beyond this.  See Issues #325 and #450 for more details.
 
     Several optional parameters are available:  Truncation radius `trunc` [default `trunc = 0.`,
     indicating no truncation] and a `flux` parameter [default `flux = 1`].  If `trunc` is set to

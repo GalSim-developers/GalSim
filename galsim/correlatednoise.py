@@ -961,3 +961,34 @@ def getCOSMOSNoise(rng, file_name, dx_cosmos=0.03, variance=0., x_interpolant=No
     if variance > 0.:
         ret.setVariance(variance)
     return ret
+
+class UncorrelatedNoise(_BaseCorrelatedNoise):
+    """A class that represents 2D correlated noise fields that are actually (at least initially)
+    uncorrelated.  Subsequent applications of things like applyShear or convolveWith will induce 
+    correlations.
+
+    Initialization
+    --------------
+
+    Basic example:
+
+        >>> ucn = galsim.UncorrelatedNoise(rng, pixel_scale, variance)
+
+    Instantiates an UncorrelatedNoise using the given pixel scale and variance value.
+    The input `rng` must be a galsim.BaseDeviate or derived class instance, setting the random 
+    number generation for the noise.
+
+
+    Methods and Use
+    ---------------
+
+    This class is used in the same way as CorrelatedNoise.  See the documentation for that 
+    class for more details.
+    """
+    def __init__(self, rng, pixel_scale, variance, gsparams=None):
+        # Need variance == xvalue(0,0)
+        # Pixel has flux of f/dx^2, so us f = varaince * dx^2
+        cf_object = galsim.Pixel(xw=pixel_scale, flux=variance*pixel_scale**2, gsparams=gsparams)
+        _BaseCorrelatedNoise.__init__(self, rng, cf_object)
+
+

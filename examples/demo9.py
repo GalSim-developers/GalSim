@@ -38,7 +38,6 @@ New features introduced in this demo:
 - g1,g2 = nfw.getShear(pos, z)
 - mag = nfw.getMagnification(pos, z)
 - pos = bounds.trueCenter()
-- obj.draw(..., offset)
 
 - Make multiple output files.
 - Place galaxies at random positions on a larger image.
@@ -249,7 +248,7 @@ def main(argv):
 
             # Draw the stamp image
             # To draw the image at a position other than the center of the image, you can
-            # use the offset parameter, which applies an offset _in pixels_ relative to the
+            # use the offset parameter, which applies an offset in pixels relative to the
             # center of the image.
             stamp = final.draw(dx=pixel_scale, offset=offset)
 

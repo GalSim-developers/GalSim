@@ -148,6 +148,9 @@ namespace galsim {
             // where f(x) = int(sin(t)/(x+t),t=0..inf) 
             //       g(x) = int(cos(t)/(x+t),t=0..inf)
             //
+            // (By asymptotic, I mean that f and g approach 1/x and 1/x^2 respectively as x -> inf.
+            //  The formula as given is exact.)
+            //
             // I used Maple to calculate a Chebyshev-Pade approximation of 1/sqrt(y) f(1/sqrt(y)) 
             // from 0..1/4^2, which leads to the following formula for f(x).  It is accurate to 
             // better than 1.e-16 for x > 4.
@@ -201,7 +204,14 @@ namespace galsim {
                                         y*(4.01839087307656620e13 + 
                                            y*(3.99653257887490811e13))))))))));
 
-            return ((x>0.)?(M_PI/2.):(-M_PI/2.)) - f*cos(x) - g*sin(x);
+#ifdef _GLIBCXX_HAVE_SINCOS
+            double sinx,cosx;
+            sincos(x,&sinx,&cosx);
+#else
+            double cosx = std::cos(x);
+            double sinx = std::sin(x);
+#endif
+            return ((x>0.)?(M_PI/2.):(-M_PI/2.)) - f*cosx - g*sinx;
         } else {
             // Here I used Maple to calculate the Pade approximation for Si(x), which is accurate
             // to better than 1.e-16 for x < 4:
@@ -660,7 +670,116 @@ namespace galsim {
     
     double Lanczos::xCalc(double x) const
     {
-        double retval = sinc(x)*sinc(x/_n);
+        assert(x >= 0);
+        assert(x <= _nd);
+
+        double res; // res will be the result to return.
+        double s;   // s will be sin(pi x) which we save for the flux conservation correction.
+        if (x > 1.e-4) {
+            // For low values of n, we can save some time by calculating sin(pi x)
+            // from the value of sin(pi x / n) using trig identities.
+            //
+            // At some point it might be worth implementing the same trick as we did with 
+            // SBMoffat's kValue and pow functions, making these different cases all different 
+            // functions and having the constructor just set the function once.  Then calls to 
+            // xval wouldn't have any jumps from the case or (if you wanted) even the
+            // _conserve_dc check.
+            switch (_n) {
+              case 1 : {
+                  // Then xval = 1/pi^2 sin(pi x)^2 / x^2
+                  s = sin(M_PI*x);
+                  double temp = s/(M_PI * x);
+                  res = temp*temp;
+                  break;
+              }
+              case 2 : {
+                  // Then xval = 2/pi^2 sin(pi x) sin(pi x/2) / x^2
+                  // Let sn = sin(pi x/2), cn = cos(pi x/2)
+                  // Then sin(pi x) = 2 * sn * cn
+                  // xval = 4/pi^2 sn^2 cn / x^2
+                  double temp = M_PI/2. * x;
+#ifdef _GLIBCXX_HAVE_SINCOS
+                  double sn, cn;
+                  sincos(temp, &sn, &cn);
+#else
+                  double sn = sin(temp);
+                  double cn = cos(temp);
+#endif
+                  s = 2.*sn*cn;
+                  res = (2./(M_PI*M_PI)) * s*sn/(x*x);
+                  break;
+              }
+              case 3 : {
+                  // Then xval = 3/pi^2 sin(pi x) sin(pi x/3) / x^2
+                  // Let sn = sin(pi x/3)
+                  // Then sin(pi x) = sn*(3-4sn^2)
+                  // xval = 3/pi^2 sn^2*(3-4sn) / x^2
+                  double sn = sin((M_PI/3.)*x);
+                  s = sn*(3.-4.*sn*sn);
+                  res = (3./(M_PI*M_PI)) * s*sn/(x*x);
+                  break;
+              }
+              case 4 : {
+                  double temp = M_PI/4. * x;
+#ifdef _GLIBCXX_HAVE_SINCOS
+                  double sn, cn;
+                  sincos(temp, &sn, &cn);
+#else
+                  double sn = sin(temp);
+                  double cn = cos(temp);
+#endif
+                  s = sn*cn*(4.-8.*sn*sn);
+                  res = (4./(M_PI*M_PI)) * s*sn/(x*x);
+                  break;
+              }
+              case 5 : {
+                  double sn = sin((M_PI/5.)*x);
+                  double snsq = sn*sn;
+                  s = sn*(5.-snsq*(20.-16.*snsq));
+                  res = (5./(M_PI*M_PI)) * s*sn/(x*x);
+                  break;
+              }
+              case 6 : {
+                  double temp = M_PI/6. * x;
+#ifdef _GLIBCXX_HAVE_SINCOS
+                  double sn, cn;
+                  sincos(temp, &sn, &cn);
+#else
+                  double sn = sin(temp);
+                  double cn = cos(temp);
+#endif
+                  double snsq = sn*sn;
+                  s = sn*cn*(6.-32.*snsq*(1.-snsq));
+                  res = (6./(M_PI*M_PI)) * s*sn/(x*x);
+                  break;
+              }
+              case 7 : {
+                  double sn = sin((M_PI/7.)*x);
+                  double snsq = sn*sn;
+                  s = sn*(7.-snsq*(56.-snsq*(112.-64.*snsq)));
+                  res = (7./(M_PI*M_PI)) * s*sn/(x*x);
+              }
+              default : {
+                  // Above n=7, there isn't much advantage anymore to specialization.
+                  // The second sin call isn't much slower than the multiplications 
+                  // required to get sin(pi x) from sin(pi x/n)
+                  s = sin(M_PI*x);
+                  double sn = sin(M_PI*x/_nd);
+                  res = (_nd/(M_PI*M_PI)) * s*sn/(x*x);
+                  break;
+              }
+            }
+        } else { // x < 1.e-4
+            // res = n/(pi x)^2 * sin(pi x) * sin(pi x / n)
+            //     ~= (1 - 1/6 pix^2) * (1 - 1/6 pix^2 / n^2)
+            //     = 1 - 1/6 pix^2 ( 1 + 1/n^2 )
+            double pix = M_PI*x;
+            double temp = (1./6.) * pix*pix;
+            s = pix * (1. - temp);
+            res = 1. - temp * (1. + 1./(_nd*_nd));
+            // For x < 1.e-4, the errors in this approximation are less than 1.e-16.
+        }
+
         // Gary's original write up about this is in devel/modules/finterp.pdf.
         // We start with Gary's eqn 22, and extend the subsequent derivation to 3rd order.
         // (More in uCalc below than here...)
@@ -674,7 +793,7 @@ namespace galsim {
         //
         // Unfortunately, it turns out that while K(1) << 1, the series from there on starts
         // to converge more slowly, so the gains from each subsequent term become less.
-        // The value of K(1)..K(4) are: 1.416e-3, 4.390e-5, 7.716e-6, 2.343e-6.
+        // For n=3, the values of K(1)..K(4) are: 1.416e-3, 4.390e-5, 7.716e-6, 2.343e-6.
         // Thus, it would be hard to use this method to get to significantly better accuracy
         // than about 1.e-6.
         // 
@@ -692,44 +811,47 @@ namespace galsim {
         // But certainly, it will be hard to get much more accurate that this, at least with
         // this framework for the correction.
 
-        if (_conserve_flux) {
+        // res /= 1. - 2.*_K1*(1.-cos(2.*M_PI*x)) - 2*_K2*(1.-cos(4.*M_PI*x)) - ...;
+        if (_conserve_dc) {
             dbg<<"xCalc for x = "<<x<<std::endl;
-            dbg<<"retval = "<<retval<<" / ";
+            dbg<<"res = "<<res<<" / ";
+            double ssq = s*s;
             double factor = (1.
-                             - 2.*_K[1]*(1.-std::cos(2.*M_PI*x))
-                             - 2.*_K[2]*(1.-std::cos(4.*M_PI*x))
-                             - 2.*_K[3]*(1.-std::cos(6.*M_PI*x))
-                             - 2.*_K[4]*(1.-std::cos(8.*M_PI*x))
-                             - 2.*_K[5]*(1.-std::cos(10.*M_PI*x)));
-            retval /= factor;
-            dbg<<factor<<" = "<<retval<<std::endl;
+                             - 4.*_K[1]*ssq
+                             - 16.*_K[2]*ssq*(1.-ssq)
+                             - 4.*_K[3]*ssq*(9.-ssq*(24.-16.*ssq))
+                             - 64.*_K[4]*ssq*(1.-ssq*(5.-ssq*(8.-4.*ssq)))
+                             - 4.*_K[5]*ssq*(25.-ssq*(200.-ssq*(560.-ssq*(640.-256.*ssq)))));
+            res /= factor;
+#ifdef DEBUGLOGGING
+            dbg<<factor<<" = "<<res<<std::endl;
+            dbg<<"factor = 1 - "<<2.*_K[1]*(1.-std::cos(2.*M_PI*x))
+                <<" - "<<2.*_K[2]*(1.-std::cos(4.*M_PI*x))
+                <<" - "<<2.*_K[3]*(1.-std::cos(6.*M_PI*x))
+                <<" - "<<2.*_K[4]*(1.-std::cos(8.*M_PI*x))
+                <<" - "<<2.*_K[5]*(1.-std::cos(10.*M_PI*x))<<" = "
+                << (1.
+                    - 2.*_K[1]*(1.-std::cos(2.*M_PI*x))
+                    - 2.*_K[2]*(1.-std::cos(4.*M_PI*x))
+                    - 2.*_K[3]*(1.-std::cos(6.*M_PI*x))
+                    - 2.*_K[4]*(1.-std::cos(8.*M_PI*x))
+                    - 2.*_K[5]*(1.-std::cos(10.*M_PI*x))) 
+                <<" = "<<factor<<std::endl;
+#endif
         }
-        return retval;
+        return res;
     }
 
     double Lanczos::uCalcRaw(double u) const 
     {
         // F(u) = ( (vp+1) Si((vp+1)pi) - (vp-1) Si((vp-1)pi) +
         //          (vm-1) Si((vm-1)pi) - (vm+1) Si((vm+1)pi) ) / 2pi
-        //      = (vp+1) int(sin(x)/x, x=(vp+1)pi..inf) - (vp-1) int(sin(x)/x, x=(vp-1)pi..inf)
-        //      = int( (vp+1) sin(u+(vp+1)pi)/(u+(vp+1)pi) - (vp-1) sin(u+(vp-1)pi)/(u+(vp-1)pi) ,
-        //                u=0..inf)
-        //      = int( -sin(u+vp pi) [ (vp+1)/(u+(vp+1)pi) - (vp-1)/(u+(vp-1)pi) ], u=0..inf)
-        //      = int( -sin(u+vp pi) [ jk
-        //
-        double vp=_n*(2.*u+1.);
-        double vm=_n*(2.*u-1.);
+        double vp=_nd*(2.*u+1.);
+        double vm=_nd*(2.*u-1.);
         double retval = (vm-1.)*Si(M_PI*(vm-1.))
             -(vm+1.)*Si(M_PI*(vm+1.))
             -(vp-1.)*Si(M_PI*(vp-1.))
             +(vp+1.)*Si(M_PI*(vp+1.));
-        dbg<<"uCalcRaw for u = "<<u<<std::endl;
-        dbg<<"vp = "<<vp<<", vm = "<<vm<<std::endl;
-        dbg<<"Si("<<vm-1.<<" pi) = "<<Si(M_PI*(vm-1.))<<std::endl;
-        dbg<<"Si("<<vm+1.<<" pi) = "<<Si(M_PI*(vm+1.))<<std::endl;
-        dbg<<"Si("<<vp-1.<<" pi) = "<<Si(M_PI*(vp-1.))<<std::endl;
-        dbg<<"Si("<<vp+1.<<" pi) = "<<Si(M_PI*(vp+1.))<<std::endl;
-        dbg<<"retval = "<<retval<<std::endl;
         return retval/(2.*M_PI);
     }
 
@@ -777,7 +899,7 @@ namespace galsim {
         //
         // These coefficients are constant, so they are stored in _C.
 
-        if (_conserve_flux) {
+        if (_conserve_dc) {
             retval *= _C[0];
             retval += _C[1] * (uCalcRaw(u+1.) + uCalcRaw(u-1.));
             retval += _C[2] * (uCalcRaw(u+2.) + uCalcRaw(u-2.));
@@ -788,13 +910,13 @@ namespace galsim {
         return retval;
     }
 
-    Lanczos::Lanczos(int n, bool conserve_flux, double tol, const GSParamsPtr& gsparams) :  
-        Interpolant(gsparams), _in(n), _n(n), _conserve_flux(conserve_flux), _tolerance(tol)
+    Lanczos::Lanczos(int n, bool conserve_dc, double tol, const GSParamsPtr& gsparams) :  
+        Interpolant(gsparams), _n(n), _nd(n), _conserve_dc(conserve_dc), _tolerance(tol)
     {
         dbg<<"Start constructor for Lanczos n = "<<n<<std::endl;
         // Reduce range slightly from n so we're not including points with zero weight in
         // interpolations:
-        _range = _n*(1-0.1*std::sqrt(_tolerance));
+        _range = _nd*(1-0.1*std::sqrt(_tolerance));
 
         for(double u=0.;u<=10.;u+=0.1) dbg<<"F("<<u<<") = "<<uCalcRaw(u)<<std::endl;
 
@@ -827,7 +949,7 @@ namespace galsim {
             dbg<<"S("<<x<<") = ";
             double sum = 0.;
             for (int i=-_n;i<_n;++i) {
-                double val = sinc(x+i)*sinc((x+i)/_n);
+                double val = sinc(x+i)*sinc((x+i)/_nd);
                 sum += val;
                 dbg<<val<<" + ";
             }
@@ -852,7 +974,7 @@ namespace galsim {
             _cache_utab.clear();  
         }
 
-        KeyType key(n,std::pair<bool,double>(_conserve_flux,tol));
+        KeyType key(n,std::pair<bool,double>(_conserve_dc,tol));
 
         if (_cache_umax.count(key)) {
             // Then uMax and tab are already cached.
@@ -870,15 +992,15 @@ namespace galsim {
                 gsparams->table_spacing * std::pow(gsparams->xvalue_accuracy/10.,0.25);
             // Make sure steps hit the integer values exactly.
             const double xStep = 1. / std::ceil(1./xStep1);
-            for(double x=0.; x<_n; x+=xStep) _xtab->addEntry(x, xCalc(x));
+            for(double x=0.; x<_nd; x+=xStep) _xtab->addEntry(x, xCalc(x));
 #endif
 
             // Build utab = table of u values
             _utab.reset(new Table<double,double>(Table<double,double>::spline));
             const double uStep = 
-                gsparams->table_spacing * std::pow(gsparams->kvalue_accuracy/10.,0.25) / _n;
+                gsparams->table_spacing * std::pow(gsparams->kvalue_accuracy/10.,0.25) / _nd;
             _uMax = 0.;
-            for (double u=0.; u - _uMax < 1./_n || u<1.1; u+=uStep) {
+            for (double u=0.; u - _uMax < 1./_nd || u<1.1; u+=uStep) {
                 double uval = uCalc(u);
                 _utab->addEntry(u, uval);
                 if (std::abs(uval) > _tolerance) _uMax = u;
@@ -899,80 +1021,12 @@ namespace galsim {
     double Lanczos::xval(double x) const
     {
         x = std::abs(x);
-        if (x >= _n) return 0.;
+        if (x >= _nd) return 0.;
         else {
 #ifdef USE_TABLES
             return (*_xtab)(x);
 #else
-            double res, s;
-            if (x > 1.e-4) {
-                // TODO: We usually only use n=3,5,7.  If we start using any other values on a
-                // regular basis, it's worth it to specialize that case here.
-                // Also, at some point it might be worth doing the same trick we did with 
-                // SBMoffat's kValue and pow functions, making these different cases all different 
-                // functions and having the constructor just set the function once.  Then calls to 
-                // xval wouldn't have any jumps from the case or (if you wanted) even the
-                // _conserve_flux check.
-                switch (_in) {
-                  case 3 : {
-                      // Then xval = 3/pi^2 sin(pi x) sin(pi x /3) / x^2
-                      // Let s = sin(pi x /3)
-                      // Then sin(pi x) = s*(3-4s^2)
-                      // xval = 3/pi^2 s^2*(3-4s) / x^2
-                      double sn = sin((M_PI/3.)*x);
-                      s = sn*(3.-4.*sn*sn);
-                      res = (3./(M_PI*M_PI)) * s*sn/(x*x);
-                      break;
-                  }
-                  case 5 : {
-                      double sn = sin((M_PI/5.)*x);
-                      double snsq = sn*sn;
-                      s = sn*(5.-snsq*(20.-16.*snsq));
-                      res = (5./(M_PI*M_PI)) * s*sn/(x*x);
-                      break;
-                  }
-                  case 7 : {
-                      double sn = sin((M_PI/7.)*x);
-                      double snsq = sn*sn;
-                      s = sn*(7.-snsq*(56.-snsq*(112.-64.*snsq)));
-                      res = (7./(M_PI*M_PI)) * s*sn/(x*x);
-                  }
-                  default : {
-                      // xval = n/pi^2 sin(pi x) sin(pi x /n) / x^2
-                      s = sin(M_PI*x);
-                      double sn = sin(M_PI*x/_n);
-                      res = (_n/(M_PI*M_PI)) * s*sn/(x*x);
-                      break;
-                  }
-                }
-            } else { // x < 1.e-4
-                // res = n/(pi x)^2 * sin(pi x) * sin(pi x / n)
-                //     ~= (1 - 1/6 pix^2) * (1 - 1/6 pix^2 / n^2)
-                //     = 1 - 1/6 pix^2 ( 1 + 1/n^2 )
-                double pix = M_PI*x;
-                double temp = (1./6.) * pix*pix;
-                s = pix * (1. - temp);
-                res = 1. - temp * (1. + 1./(_n*_n));
-            }
-            // res /= 1. - 2.*_K1*(1.-cos(2.*M_PI*x)) - 2*_K2*(1.-cos(4.*M_PI*x)) - ...;
-            if (_conserve_flux) {
-                dbg<<"xCalc for x = "<<x<<std::endl;
-                dbg<<"res = "<<res<<" / ";
-                double factor = (1.
-                                 - 2.*_K[1]*(1.-std::cos(2.*M_PI*x))
-                                 - 2.*_K[2]*(1.-std::cos(4.*M_PI*x))
-                                 - 2.*_K[3]*(1.-std::cos(6.*M_PI*x))
-                                 - 2.*_K[4]*(1.-std::cos(8.*M_PI*x))
-                                 - 2.*_K[5]*(1.-std::cos(10.*M_PI*x)));
-                res /= factor;
-                dbg<<factor<<" = "<<res<<std::endl;
-                dbg<<"factor = 1 - "<<2.*_K[1]*(1.-std::cos(2.*M_PI*x))
-                    <<" - "<<2.*_K[2]*(1.-std::cos(4.*M_PI*x))
-                    <<" - "<<2.*_K[3]*(1.-std::cos(6.*M_PI*x))
-                    <<" - "<<2.*_K[4]*(1.-std::cos(8.*M_PI*x))
-                    <<" - "<<2.*_K[5]*(1.-std::cos(10.*M_PI*x))<<" = "<<factor<<std::endl;
-            }
-            return res;
+            return xCalc(x);
 #endif
         }
     }

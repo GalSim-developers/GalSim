@@ -791,7 +791,7 @@ def test_interpolated_image():
     gsobject_compare(gal3a, gal3b)
 
     gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
-    interp = galsim.InterpolantXY(galsim.Lanczos(n=5,conserve_flux=True))
+    interp = galsim.InterpolantXY(galsim.Lanczos(n=5,conserve_dc=True))
     gal4b = galsim.InterpolatedImage(im, x_interpolant=interp, dx=0.7)
     gal4b.setFlux(1.e5)
     gsobject_compare(gal4a, gal4b)

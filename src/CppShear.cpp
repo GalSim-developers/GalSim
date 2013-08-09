@@ -60,12 +60,15 @@ namespace galsim {
     CppShear& CppShear::setEta1Eta2(double eta1in, double eta2in) 
     {
         dbg<<"CppShear setEta1Eta2 "<<eta1in<<','<<eta2in<<'\n';
-        double scale;
         hasMatrix = false;
-        // get ratio of e amplitude to eta amplitude:
-        scale = std::sqrt(eta1in*eta1in + eta2in*eta2in);
-        if (scale>0.001) scale = std::tanh(scale)/scale;
-        else scale=1.;
+        double etasq = eta1in*eta1in + eta2in*eta2in;
+        double scale; // ratio of e amplitude to eta amplitude:
+        if (etasq > 1.e-8) {
+            double eta = sqrt(etasq);
+            scale = tanh(eta)/eta;
+        } else {
+            scale = 1. - (1./3.)*etasq;
+        }
         e1 = eta1in*scale;
         e2 = eta2in*scale;
         return *this;
@@ -74,9 +77,8 @@ namespace galsim {
     CppShear& CppShear::setEtaBeta(double etain, Angle betain) 
     {
         dbg<<"CppShear setEtaBeta "<<etain<<','<<betain<<'\n';
-        double e;
         hasMatrix = false;
-        e = std::tanh(etain);
+        double e = std::tanh(etain);
         e1 = e * std::cos(2.*betain.rad());
         e2 = e * std::sin(2.*betain.rad());
         return *this;
@@ -84,11 +86,14 @@ namespace galsim {
 
     void CppShear::getEta1Eta2(double& eta1, double& eta2) const 
     {
-        double scale;
-        // get ratio of eta amplitude to e amplitude:
-        scale = std::sqrt(e1*e1 + e2*e2);
-        if (scale>0.001) scale = atanh(scale)/scale;
-        else scale=1.;
+        double esq = getESq();
+        double scale; // ratio of eta amplitude to e amplitude:
+        if (esq > 1.e-8) {
+            double e = sqrt(esq);
+            scale = atanh(e)/e;
+        } else {
+            scale = 1. + (1./3.)*esq;
+        }
         eta1 = e1*scale;
         eta2 = e2*scale;
     }
@@ -97,7 +102,7 @@ namespace galsim {
     {
         // get ratio of eta amplitude to e amplitude:
         double esq = getESq();
-        double scale = (esq>1.e-6) ? (1.-std::sqrt(1.-esq))/esq : 0.5;
+        double scale = (esq>1.e-8) ? (1.-sqrt(1.-esq))/esq : (0.5 + 0.125*esq);
         g1 = e1*scale;
         g2 = e2*scale;
     }
@@ -128,7 +133,7 @@ namespace galsim {
         double denom = 1. + e1*s2.e1 + e2*s2.e2;
         if (denom==0.) { e1=e2=0.; return *this; }
 
-        double temp = 1.-std::sqrt(1.-s1sq);
+        double temp = 1.-sqrt(1.-s1sq);
         double e1new = e1 + s2.e1 + temp*(e1 * s2.e2 - e2 * s2.e1)*e2/s1sq;
         e2 = e2 + s2.e2 + temp*(e2 * s2.e1 - e1 * s2.e2)*e1/s1sq;
         e1 = e1new/denom;
@@ -202,22 +207,29 @@ namespace galsim {
         //  Matrix is defined here to be for forward point map, source plane
         // to image plane for a circular source that acquires this shape.
         // +eta in xx posn.
-        double esq= e1*e1+e2*e2;
+        double esq = getESq();
         dbg<<"esq = "<<esq<<'\n';
         assert (esq < 1.); //Must be realizable
 
-        if (esq < 1.e-4) {
-            //Small-e approximation ok to part in 10^-6.
-            matrixA = 1.+0.5*e1+0.125*esq;
-            matrixB = 1.-0.5*e1+0.125*esq;
-            matrixC = +0.5*e2;
+        if (esq < 1.e-8) {
+            // A = 1+(1/8)*esq + e1*(1/2+(3/16)*esq)
+            // B = 1+(1/8)*esq - e1*(1/2+(3/16)*esq)
+            // C = e2*(1/2+(3/16)*esq)
+            double temp = 0.5 + (3./16.)*esq;
+            matrixC = e2*temp;
+            temp *= e1;
+            matrixA = matrixB = 1. + (1./8.)*esq;
+            matrixA += temp;
+            matrixB -= temp;
         } else {
-            double temp = std::sqrt(1.-esq);
-            double cc=std::sqrt(0.5*(1.+1./temp));
-            temp = (1.-temp)/esq;
-            matrixA = cc*(1.+temp*e1);
-            matrixB = cc*(1.-temp*e1);
-            matrixC = +cc*temp*e2;
+            double temp = sqrt(1.-esq);
+            double cc=sqrt(0.5*(1.+1./temp));
+            temp = cc*(1.-temp)/esq;
+            matrixC = temp*e2;
+            temp *= e1;
+            matrixA = matrixB = cc;
+            matrixA += temp;
+            matrixB -= temp;
         }
         dbg<<"matrix = "<<matrixA<<','<<matrixB<<','<<matrixC<<'\n';
         hasMatrix = true;

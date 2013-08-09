@@ -53,6 +53,7 @@ New features introduced in this demo:
 - obj.applyMagnification(mu)
 - image += background
 - noise = galsim.PoissonNoise()  # with no sky_level given
+- obj.draw(..., offset)
 - galsim.fits.writeCube([list of images], file_name)
 """
 
@@ -193,13 +194,23 @@ def main(argv):
         # Make the combined profile
         final = galsim.Convolve([psf, pix, gal])
 
+        # Offset by up to 1/2 pixel in each direction
+        # We had previously (in demo4 and demo5) used applyShift(dx,dy) as a way to shift the 
+        # center of the image.  Since that is applied to the galaxy, the units are arcsec (since 
+        # the galaxy profile itself doesn't know about the pixel scale).  Here, the offset applies 
+        # to the drawn image, which does know about the pixel scale, so the units of offset are 
+        # pixels, not arcsec.  Here, we apply an offset of up to half a pixel in each direction.
+        dx = rng() - 0.5
+        dy = rng() - 0.5
+
         # Draw the profile
         if k == 0:
-            im = final.draw(dx=pixel_scale)
+            # Note that the offset argument may be a galsim.PositionD object or a tuple (dx,dy).
+            im = final.draw(dx=pixel_scale, offset=(dx,dy))
             xsize, ysize = im.array.shape
         else:
             im = galsim.ImageF(xsize,ysize)
-            final.draw(im, dx=pixel_scale)
+            final.draw(im, dx=pixel_scale, offset=(dx,dy))
 
         logger.debug('   Drew image')
         t3 = time.time()

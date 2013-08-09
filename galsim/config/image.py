@@ -19,17 +19,23 @@
 
 import galsim
 
-def BuildImages(nimages, config, logger=None, image_num=0, obj_num=0, nproc=1,
+valid_image_types = { 
+    'Single' : 'BuildSingleImage',
+    'Tiled' : 'BuildTiledImage',
+    'Scattered' : 'BuildScatteredImage',
+}
+
+def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
                 make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
     Build a number of postage stamp images as specified by the config dict.
 
     @param nimages             How many images to build.
     @param config              A configuration dict.
+    @param nproc               How many processes to use.
     @param logger              If given, a logger object to log progress.
     @param image_num           If given, the current image_num (default = 0)
     @param obj_num             If given, the current obj_num (default = 0)
-    @param nproc               How many processes to use.
     @param make_psf_image      Whether to make psf_image.
     @param make_weight_image   Whether to make weight_image.
     @param make_badpix_image   Whether to make badpix_image.
@@ -214,12 +220,6 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0,
     """
     Build an image according to the information in config.
 
-    This function acts as a wrapper for:
-        BuildSingleImage 
-        BuildTiledImage 
-        BuildScatteredImage 
-    choosing between these three using the contents of config if specified (default = Single)
-
     @param config              A configuration dict.
     @param logger              If given, a logger object to log progress.
     @param image_num           If given, the current image_num (default = 0)
@@ -255,11 +255,10 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0,
         image['type'] = 'Single'  # Default is Single
     type = image['type']
 
-    valid_types = [ 'Single', 'Tiled', 'Scattered' ]
-    if type not in valid_types:
+    if type not in valid_image_types:
         raise AttributeError("Invalid image.type=%s."%type)
 
-    build_func = eval('Build' + type + 'Image')
+    build_func = eval(valid_image_types[type])
     all_images = build_func(
             config=config, logger=logger,
             image_num=image_num, obj_num=obj_num,
@@ -309,7 +308,7 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
     config['seq_index'] = image_num
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
-               'n_photons', 'wmult', 'gsparams' ]
+               'n_photons', 'wmult', 'offset', 'gsparams' ]
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 'index_convention' : str,
             'pixel_scale' : float , 'sky_level' : float , 'sky_level_pixel' : float }
     params = galsim.config.GetAllParams(
@@ -372,7 +371,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     config['seq_index'] = image_num
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
-               'image_pos', 'n_photons', 'wmult', 'gsparams' ]
+               'image_pos', 'n_photons', 'wmult', 'offset', 'gsparams' ]
     req = { 'nx_tiles' : int , 'ny_tiles' : int }
     opt = { 'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
             'border' : int , 'xborder' : int , 'yborder' : int ,
@@ -447,22 +446,25 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     # If we have a power spectrum in config, we need to get a new realization at the start
     # of each image.
     if 'power_spectrum' in config:
-        # PowerSpectrum can only do a square FFT, so make it the larger of the two n's.
-        n_tiles = max(nx_tiles, ny_tiles)
-        stamp_size = max(stamp_xsize, stamp_ysize)
-        if 'grid_spacing' in config['input']['power_spectrum']:
-            grid_dx = galsim.config.ParseValue(config['input']['power_spectrum'],
-                                               'grid_spacing', config, float)[0]
-        else:
-            grid_dx = stamp_size * pixel_scale
-        if 'interpolant' in config['input']['power_spectrum']:
-            interpolant = galsim.config.ParseValue(config['input']['power_spectrum'],
-                                                   'interpolant', config, str)[0]
-        else:
-            interpolant = None
+        input_ps = config['input']['power_spectrum']
+        if not isinstance(input_ps, list):
+            input_ps = [ input_ps ]
 
-        config['power_spectrum'].buildGrid(grid_spacing=grid_dx, ngrid=n_tiles, rng=rng,
-                                           interpolant=interpolant)
+        for i in range(len(config['power_spectrum'])):
+            # PowerSpectrum can only do a square FFT, so make it the larger of the two n's.
+            n_tiles = max(nx_tiles, ny_tiles)
+            stamp_size = max(stamp_xsize, stamp_ysize)
+            if 'grid_spacing' in input_ps[i]:
+                grid_dx = galsim.config.ParseValue(input_ps[i], 'grid_spacing', config, float)[0]
+            else:
+                grid_dx = stamp_size * pixel_scale
+            if 'interpolant' in input_ps[i]:
+                interpolant = galsim.config.ParseValue(input_ps[i], 'interpolant', config, str)[0]
+            else:
+                interpolant = None
+
+            config['power_spectrum'][i].buildGrid(grid_spacing=grid_dx, ngrid=n_tiles, rng=rng,
+                                                  interpolant=interpolant)
         # We don't care about the output here.  This just builds the grid, which we'll
         # access for each object using its position.
 
@@ -529,8 +531,9 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
     stamp_images = galsim.config.BuildStamps(
             nobjects=nobjects, config=config,
-            xsize=stamp_xsize, ysize=stamp_ysize, obj_num=obj_num, 
-            nproc=nproc, sky_level_pixel=sky_level_pixel, do_noise=do_noise, logger=logger,
+            nproc=nproc, logger=logger, obj_num=obj_num,
+            xsize=stamp_xsize, ysize=stamp_ysize,
+            sky_level_pixel=sky_level_pixel, do_noise=do_noise,
             make_psf_image=make_psf_image,
             make_weight_image=make_weight_image,
             make_badpix_image=make_badpix_image)
@@ -541,16 +544,10 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     badpix_images = stamp_images[3]
 
     for k in range(nobjects):
-        ix = ix_list[k]
-        iy = iy_list[k]
-        xmin = ix * (stamp_xsize + xborder) + 1
-        xmax = xmin + stamp_xsize-1
-        ymin = iy * (stamp_ysize + yborder) + 1
-        ymax = ymin + stamp_ysize-1
-        b = galsim.BoundsI(xmin,xmax,ymin,ymax)
         #print 'full bounds = ',full_image.bounds
-        #print 'stamp bounds = ',b
-        #print 'original stamp bounds = ',images[k].bounds
+        #print 'stamp bounds = ',images[k].bounds
+        assert full_image.bounds.includes(images[k].bounds)
+        b = images[k].bounds
         full_image[b] += images[k]
         if make_psf_image:
             full_psf_image[b] += psf_images[k]
@@ -601,7 +598,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     config['seq_index'] = image_num
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
-               'image_pos', 'sky_pos', 'n_photons', 'wmult',
+               'image_pos', 'sky_pos', 'n_photons', 'wmult', 'offset',
                'stamp_size', 'stamp_xsize', 'stamp_ysize', 'gsparams' ]
     req = { 'nobjects' : int }
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 
@@ -669,21 +666,25 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     # If we have a power spectrum in config, we need to get a new realization at the start
     # of each image.
     if 'power_spectrum' in config:
-        if 'grid_spacing' not in config['input']['power_spectrum']:
-            raise AttributeError(
-                "power_spectrum.grid_spacing required for image.type=Scattered")
-        grid_dx = galsim.config.ParseValue(config['input']['power_spectrum'],
-                                           'grid_spacing', config, float)[0]
-        full_size = max(full_xsize, full_ysize)
-        grid_nx = full_size * pixel_scale / grid_dx + 1
-        if 'interpolant' in config['input']['power_spectrum']:
-            interpolant = galsim.config.ParseValue(config['input']['power_spectrum'],
-                                                   'interpolant', config, str)[0]
-        else:
-            interpolant = None
+        input_ps = config['input']['power_spectrum']
+        if not isinstance(input_ps, list):
+            input_ps = [ input_ps ]
 
-        config['power_spectrum'].buildGrid(grid_spacing=grid_dx, ngrid=grid_nx, rng=rng,
-                                           interpolant=interpolant)
+        for i in range(len(config['power_spectrum'])):
+            # PowerSpectrum can only do a square FFT, so make it the larger of the two sizes.
+            if 'grid_spacing' not in input_ps[i]:
+                raise AttributeError(
+                    "power_spectrum.grid_spacing required for image.type=Scattered")
+            grid_dx = galsim.config.ParseValue(input_ps[i], 'grid_spacing', config, float)[0]
+            full_size = max(full_xsize, full_ysize)
+            grid_nx = full_size * pixel_scale / grid_dx + 1
+            if 'interpolant' in input_ps[i]:
+                interpolant = galsim.config.ParseValue(input_ps[i], 'interpolant', config, str)[0]
+            else:
+                interpolant = None
+
+            config['power_spectrum'][i].buildGrid(grid_spacing=grid_dx, ngrid=grid_nx, rng=rng,
+                                                  interpolant=interpolant)
         # We don't care about the output here.  This just builds the grid, which we'll
         # access for each object using its position.
 
@@ -734,8 +735,9 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         full_badpix_image = None
 
     stamp_images = galsim.config.BuildStamps(
-            nobjects=nobjects, config=config, obj_num=obj_num,
-            nproc=nproc, sky_level_pixel=sky_level_pixel, do_noise=False, logger=logger,
+            nobjects=nobjects, config=config, 
+            nproc=nproc, logger=logger,obj_num=obj_num,
+            sky_level_pixel=sky_level_pixel, do_noise=False,
             make_psf_image=make_psf_image,
             make_weight_image=make_weight_image,
             make_badpix_image=make_badpix_image)

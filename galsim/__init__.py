@@ -30,10 +30,10 @@ from compound import Add, Convolve, Deconvolve, AutoConvolve, AutoCorrelate
 from shear import Shear
 from lensing_ps import PowerSpectrum
 from nfw_halo import NFWHalo, Cosmology
-from catalog import InputCatalog
+from catalog import Catalog, Dict
 from table import LookupTable
 from random import DistDeviate
-from correlatednoise import CorrelatedNoise, getCOSMOSNoise
+from correlatednoise import CorrelatedNoise, getCOSMOSNoise, UncorrelatedNoise
 from fits import FitsHeader
 
 # packages with docs and such, so nothing really to import by name.

@@ -18,40 +18,41 @@
 #
 import galsim
 
-# If you want to extend this, you need to add your item to the list for whatever type
-# you have a new generator for.  The generator should be called _GenerateFromMyType
-# where MyType is the new type you are implementing.  See the des module for some examples.
-
 valid_value_types = {
-    'List' : [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ],
-    'Eval' : [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ],
-    'InputCatalog' : [ float, int, bool, str ],
-    'FitsHeader' : [ float, int, bool, str ],
-    'Sequence' : [ float, int, bool ],
-    'Random' : [ float, int, bool, galsim.Angle ],
-    'RandomGaussian' : [ float ],
-    'RandomDistribution' : [ float ],
-    'RandomCircle' : [ galsim.PositionD ],
-    'NumberedFile' : [ str ],
-    'FormattedStr' : [ str ],
-    'Rad' : [ galsim.Angle ],
-    'Radians' : [ galsim.Angle ],
-    'Deg' : [ galsim.Angle ],
-    'Degrees' : [ galsim.Angle ],
-    'E1E2' : [ galsim.Shear ],
-    'EBeta' : [ galsim.Shear ],
-    'G1G2' : [ galsim.Shear ],
-    'GBeta' : [ galsim.Shear ],
-    'Eta1Eta2' : [ galsim.Shear ],
-    'EtaBeta' : [ galsim.Shear ],
-    'QBeta' : [ galsim.Shear ],
-    'XY' : [ galsim.PositionD ],
-    'RTheta' : [ galsim.PositionD ],
-    'NFWHaloShear' : [ galsim.Shear ],
-    'NFWHaloMagnification' : [ float ],
-    'PowerSpectrumShear' : [ galsim.Shear ],
-    'PowerSpectrumMagnification' : [ float ],
-    'COSMOS' : [ galsim.correlatednoise._BaseCorrelatedNoise ],
+    # The values are tuples with:
+    # - the build function to call
+    # - a list of types for which the type is valid
+    'List' : ('_GenerateFromList', 
+              [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ]),
+    'Eval' : ('_GenerateFromEval', 
+              [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ]),
+    'Catalog' : ('_GenerateFromCatalog', [ float, int, bool, str ]),
+    'Dict' : ('_GenerateFromDict', [ float, int, bool, str ]),
+    'FitsHeader' : ('_GenerateFromFitsHeader', [ float, int, bool, str ]),
+    'Sequence' : ('_GenerateFromSequence', [ float, int, bool ]),
+    'Random' : ('_GenerateFromRandom', [ float, int, bool, galsim.Angle ]),
+    'RandomGaussian' : ('_GenerateFromRandomGaussian', [ float ]),
+    'RandomDistribution' : ('_GenerateFromRandomDistribution', [ float ]),
+    'RandomCircle' : ('_GenerateFromRandomCircle', [ galsim.PositionD ]),
+    'NumberedFile' : ('_GenerateFromNumberedFile', [ str ]),
+    'FormattedStr' : ('_GenerateFromFormattedStr', [ str ]),
+    'Rad' : ('_GenerateFromRad', [ galsim.Angle ]),
+    'Radians' : ('_GenerateFromRad', [ galsim.Angle ]),
+    'Deg' : ('_GenerateFromDeg', [ galsim.Angle ]),
+    'Degrees' : ('_GenerateFromDeg', [ galsim.Angle ]),
+    'E1E2' : ('_GenerateFromE1E2', [ galsim.Shear ]),
+    'EBeta' : ('_GenerateFromEBeta', [ galsim.Shear ]),
+    'G1G2' : ('_GenerateFromG1G2', [ galsim.Shear ]),
+    'GBeta' : ('_GenerateFromGBeta', [ galsim.Shear ]),
+    'Eta1Eta2' : ('_GenerateFromEta1Eta2', [ galsim.Shear ]),
+    'EtaBeta' : ('_GenerateFromEtaBeta', [ galsim.Shear ]),
+    'QBeta' : ('_GenerateFromQBeta', [ galsim.Shear ]),
+    'XY' : ('_GenerateFromXY', [ galsim.PositionD ]),
+    'RTheta' : ('_GenerateFromRTheta', [ galsim.PositionD ]),
+    'NFWHaloShear' : ('_GenerateFromNFWHaloShear', [ galsim.Shear ]),
+    'NFWHaloMagnification' : ('_GenerateFromNFWHaloMagnification', [ float ]),
+    'PowerSpectrumShear' : ('_GenerateFromPowerSpectrumShear', [ galsim.Shear ]),
+    'PowerSpectrumMagnification' : ('_GenerateFromPowerSpectrumMagnification', [ float ]),
 }
  
 def ParseValue(config, param_name, base, value_type):
@@ -97,16 +98,16 @@ def ParseValue(config, param_name, base, value_type):
         #print param['type'], value_type
 
         # First check if the value_type is valid.
-        if type not in valid_value_types.keys():
+        if type not in valid_value_types:
             raise AttributeError(
                 "Unrecognized type = %s specified for parameter %s"%(type,param_name))
             
-        if value_type not in valid_value_types[type]:
+        if value_type not in valid_value_types[type][1]:
             raise AttributeError(
                 "Invalid value_type = %s specified for parameter %s with type = %s."%(
                     value_type, param_name, type))
 
-        generate_func = eval('_GenerateFrom' + type)
+        generate_func = eval(valid_value_types[type][0])
         #print 'generate_func = ',generate_func
         val, safe = generate_func(param, param_name, base, value_type)
         #print 'returned val, safe = ',val,safe
@@ -330,25 +331,24 @@ def _GenerateFromDeg(param, param_name, base, value_type):
     kwargs, safe = GetAllParams(param, param_name, base, req=req)
     return kwargs['theta'] * galsim.degrees, safe
 
-def _GenerateFromRadians(param, param_name, base, value_type):
-    """@brief Alias for Rad
-    """
-    return _GenerateFromRad(param, param_name, base, value_type)
-
-def _GenerateFromDegrees(param, param_name, base, value_type):
-    """@brief Alias for Deg
-    """
-    return _GenerateFromDeg(param, param_name, base, value_type)
-
-def _GenerateFromInputCatalog(param, param_name, base, value_type):
+def _GenerateFromCatalog(param, param_name, base, value_type):
     """@brief Return a value read from an input catalog
     """
     if 'catalog' not in base:
-        raise ValueError("No input catalog available for %s.type = InputCatalog"%param_name)
-    input_cat = base['catalog']
+        raise ValueError("No input catalog available for %s.type = Catalog"%param_name)
+
+    if 'num' in param:
+        num, safe = ParseValue(param, 'num', base, int)
+    else:
+        num, safe = (0, True)
+
+    if num < 0 or num >= len(base['catalog']):
+        raise ValueError("num given for Catalog is invalid")
+
+    input_cat = base['catalog'][num]
 
     # Setup the indexing sequence if it hasn't been specified.
-    # The normal thing with an InputCatalog is to just use each object in order,
+    # The normal thing with a Catalog is to just use each object in order,
     # so we don't require the user to specify that by hand.  We can do it for them.
     SetDefaultIndex(param, input_cat.nobjects)
 
@@ -357,7 +357,8 @@ def _GenerateFromInputCatalog(param, param_name, base, value_type):
     # which of course doesn't exist in python.  This does the same thing (so long as the 
     # middle item evaluates to true).
     req = { 'col' : input_cat.isfits and str or int , 'index' : int }
-    kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    kwargs, safe1 = GetAllParams(param, param_name, base, req=req, ignore=['num'])
+    safe = safe and safe1
 
     if value_type is str:
         val = input_cat.get(**kwargs)
@@ -368,8 +369,28 @@ def _GenerateFromInputCatalog(param, param_name, base, value_type):
     elif value_type is bool:
         val = _GetBoolValue(input_cat.get(**kwargs),param_name)
 
-    #print 'InputCatalog: ',val
-    return val, False
+    #print 'Catalog: ',val
+    return val, safe
+
+
+def _GenerateFromDict(param, param_name, base, value_type):
+    """@brief Return a value read from an input dict.
+    """
+    if 'dict' not in base:
+        raise ValueError("No input dict available for %s.type = Dict"%param_name)
+
+    req = { 'key' : str }
+    opt = { 'num' : int }
+    kwargs, safe = GetAllParams(param, param_name, base, req=req, opt=opt)
+    key = kwargs['key']
+
+    num = kwargs.get('num',0)
+    if num < 0 or num >= len(base['dict']):
+        raise ValueError("num given for Dictis invalid")
+    d = base['dict'][num]
+
+    return d.get(key), safe
+
 
 
 def _GenerateFromFitsHeader(param, param_name, base, value_type):
@@ -377,11 +398,16 @@ def _GenerateFromFitsHeader(param, param_name, base, value_type):
     """
     if 'fits_header' not in base:
         raise ValueError("No fits header available for %s.type = FitsHeader"%param_name)
-    header = base['fits_header']
 
     req = { 'key' : str }
-    kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    opt = { 'num' : int }
+    kwargs, safe1 = GetAllParams(param, param_name, base, req=req, opt=opt)
     key = kwargs['key']
+
+    num = kwargs.get('num',0)
+    if num < 0 or num >= len(base['fits_header']):
+        raise ValueError("num given for FitsHeader is invalid")
+    header = base['fits_header'][num]
 
     if key not in header.keys():
         raise ValueError("key %s not found in the FITS header in %s"%(key,kwargs['file_name']))
@@ -730,14 +756,18 @@ def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
 
     if 'nfw_halo' not in base:
         raise ValueError("NFWHaloShear requested, but no input.nfw_halo defined.")
-    
-    req = {}
-    # Only Check, not Get.  (There's nothing to get -- just make sure there aren't extra params.)
-    CheckAllParams(param, param_name, req=req)
+
+    opt = { 'num' : int }
+    kwargs = GetAllParams(param, param_name, base, opt=opt)[0]
+
+    num = kwargs.get('num',0)
+    if num < 0 or num >= len(base['nfw_halo']):
+        raise ValueError("num given for NFWHaloShear is invalid")
+    nfw_halo = base['nfw_halo'][num]
 
     #print 'NFWHaloShear: pos = ',pos,' z = ',redshift
     try:
-        g1,g2 = base['nfw_halo'].getShear(pos,redshift)
+        g1,g2 = nfw_halo.getShear(pos,redshift)
         #print 'g1,g2 = ',g1,g2
         shear = galsim.Shear(g1=g1,g2=g2)
     except Exception as e:
@@ -764,12 +794,17 @@ def _GenerateFromNFWHaloMagnification(param, param_name, base, value_type):
 
     if 'nfw_halo' not in base:
         raise ValueError("NFWHaloMagnification requested, but no input.nfw_halo defined.")
-    
-    opt = { 'max_mu' : float }
+ 
+    opt = { 'max_mu' : float, 'num' : int }
     kwargs = GetAllParams(param, param_name, base, opt=opt)[0]
 
+    num = kwargs.get('num',0)
+    if num < 0 or num >= len(base['nfw_halo']):
+        raise ValueError("num given for NFWHaloMagnification is invalid")
+    nfw_halo = base['nfw_halo'][num]
+
     #print 'NFWHaloMagnification: pos = ',pos,' z = ',redshift
-    mu = base['nfw_halo'].getMagnification(pos,redshift)
+    mu = nfw_halo.getMagnification(pos,redshift)
 
     max_mu = kwargs.get('max_mu', 25.)
     if not max_mu > 0.: 
@@ -797,13 +832,17 @@ def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
     if 'power_spectrum' not in base:
         raise ValueError("PowerSpectrumShear requested, but no input.power_spectrum defined.")
     
-    req = {}
-    # Only Check, not Get.  (There's nothing to get -- just make sure there aren't extra params.)
-    CheckAllParams(param, param_name, req=req)
+    opt = { 'num' : int }
+    kwargs = GetAllParams(param, param_name, base, opt=opt)[0]
+
+    num = kwargs.get('num',0)
+    if num < 0 or num >= len(base['power_spectrum']):
+        raise ValueError("num given for PowerSpectrumShear is invalid")
+    power_spectrum = base['power_spectrum'][num]
 
     #print 'PowerSpectrumShear: pos = ',pos
     try:
-        g1,g2 = base['power_spectrum'].getShear(pos)
+        g1,g2 = power_spectrum.getShear(pos)
         #print 'g1,g2 = ',g1,g2
         shear = galsim.Shear(g1=g1,g2=g2)
     except Exception as e:
@@ -825,11 +864,16 @@ def _GenerateFromPowerSpectrumMagnification(param, param_name, base, value_type)
     if 'power_spectrum' not in base:
         raise ValueError("PowerSpectrumMagnification requested, but no input.power_spectrum "
                          "defined.")
-    
-    opt = { 'max_mu' : float }
+
+    opt = { 'max_mu' : float, 'num' : int }
     kwargs = GetAllParams(param, param_name, base, opt=opt)[0]
 
-    mu = base['power_spectrum'].getMagnification(pos)
+    num = kwargs.get('num',0)
+    if num < 0 or num >= len(base['power_spectrum']):
+        raise ValueError("num given for PowerSpectrumShear is invalid")
+    power_spectrum = base['power_spectrum'][num]
+
+    mu = power_spectrum.getMagnification(pos)
 
     max_mu = kwargs.get('max_mu', 25.)
     if not max_mu > 0.: 
@@ -947,14 +991,9 @@ def _GenerateFromEval(param, param_name, base, value_type):
         sky_pos = base['sky_pos']
     if 'rng' in base:
         rng = base['rng']
-    if 'catalog' in base:
-        catalog = base['catalog']
-    if 'real_catalog' in base:
-        real_catalog = base['real_catalog']
-    if 'nfw_halo' in base:
-        nfw_halo = base['nfw_halo']
-    if 'power_spectrum' in base:
-        power_spectrum = base['power_spectrum']
+    for key in galsim.config.valid_input_types.keys():
+        if key in base:
+            exec(key + ' = base[key]')
 
     try:
         val = value_type(eval(string))
