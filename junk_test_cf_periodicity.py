@@ -3,7 +3,7 @@ import galsim
 
 TESTDIM = 50
 
-rng = galsim.BaseDeviate()
+rng = galsim.BaseDeviate()#1233235555)
 test_image1 = galsim.ImageD(TESTDIM, TESTDIM)
 test_image2 = galsim.ImageD(TESTDIM, TESTDIM)
 
@@ -13,6 +13,7 @@ failed3 = 0
 failed4 = 0
 failed5 = 0
 failed6 = 0
+failed7 = 0
 
 TESTSTART = 25
 TESTEND = 125
@@ -37,32 +38,59 @@ for dim in range(TESTSTART, TESTEND):
     noiseft = np.fft.fft2(noise_array)
     ps = np.abs(noiseft)**2
     cf = np.fft.ifft2(ps)
+    # Get the periodicity correction to try this
     periodicity_correction = galsim.correlatednoise._cf_periodicity_dilution_correction(cf.shape)
 
+    # Use the CF in a number of different ways to retrieve the PS and test results
     ps_from_cfreal = np.fft.ifft2(cf.real)
     ps_from_cfabs = np.fft.ifft2(np.abs(cf))
     ps_from_cfreal_with_correction = np.fft.ifft2(cf.real * periodicity_correction)
-    if np.any(ps_from_cfreal.real < -1.e-12 * np.mean(ps_from_cfreal).real):
-        import matplotlib.pyplot as plt
-        print ps_from_cfreal
-        print ps_from_cfreal.min()
+    import matplotlib.pyplot as plt
+    if np.any(ps_from_cfreal.real < -1.e-12 * np.mean(ps_from_cfreal.real)):
         failed3 += 1
-    if np.any(ps_from_cfabs.real < -1.e-12 * np.mean(ps_from_cfabs).real):
+    if np.any(ps_from_cfabs.real < -1.e-12 * np.mean(ps_from_cfabs.real)):
         failed4 += 1
     if np.any(
         ps_from_cfreal_with_correction.real < 
-        -1.e-12 * np.mean(ps_from_cfreal_with_correction).real):
+        -1.e-12 * np.mean(ps_from_cfreal_with_correction.real)):
         failed5 += 1
-
-print "With periodicity correction failed                               "+\
+    # Then try putting this correlation function into an array of the same dimensions as test_image3
+    # as all these tests so far have been for arrays of dimensions (dim, dim).
+    if dim <= TESTDIM:
+        cf = galsim.utilities.roll2d(cf, ((dim - 1) / 2, (dim - 1)/ 2))
+        cf_testsize = np.zeros((TESTDIM, TESTDIM), dtype=np.complex)
+        cf_testsize[0:dim, 0:dim] += cf
+        cf_testsize = galsim.utilities.roll2d(
+            cf_testsize, (-((dim - 1) / 2), -((dim - 1) / 2))) # roll back
+    if dim > TESTDIM:
+        cf = galsim.utilities.roll2d(cf, (TESTDIM / 2 - 1, TESTDIM / 2 - 1))
+        cf_testsize = np.zeros((TESTDIM, TESTDIM), dtype=np.complex)
+        cf_testsize += cf[0: TESTDIM, 0: TESTDIM]
+        cf_testsize = galsim.utilities.roll2d(
+            cf_testsize, (-(TESTDIM / 2 - 1), -(TESTDIM / 2 - 1))) # roll back
+    ps_from_cfreal_testsize = np.fft.ifft2(cf_testsize.real)
+    if np.any(
+        ps_from_cfreal_testsize.real < -1.e-12 * np.mean(ps_from_cfreal_testsize.real)):
+        failed6 += 1
+    # Then test the Hermitian stuff
+    ps_from_halfcfreal_testsize = np.fft.irfft2(cf_testsize[:, 0:TESTDIM / 2 + 1])
+    if np.any(
+        ps_from_halfcfreal_testsize.real < -1.e-12 * np.mean(ps_from_halfcfreal_testsize.real)):
+        failed7 += 1
+print ""
+print "With periodicity correction failed                                              "+\
     str(failed1)+"/"+str(TESTEND - TESTSTART)+" times"
-print "Without periodicity correction failed                            "+\
+print "Without periodicity correction failed                                           "+\
     str(failed2)+"/"+str(TESTEND - TESTSTART)+" times"
-print "By hand, PS from real part of CF failed                          "+\
+print "By hand, PS from real part of CF failed                                         "+\
     str(failed3)+"/"+str(TESTEND - TESTSTART)+" times"
-print "By hand, PS from abs() of CF failed                              "+\
+print "By hand, PS from abs() of CF failed                                             "+\
     str(failed4)+"/"+str(TESTEND - TESTSTART)+" times"
-print "By hand, PS from real part of CF + periodicity correction failed "+\
+print "By hand, PS from real part of CF + periodicity correction failed                "+\
     str(failed5)+"/"+str(TESTEND - TESTSTART)+" times"
-
+print "By hand, PS from real part of CF, expanded to test size, failed                 "+\
+    str(failed6)+"/"+str(TESTEND - TESTSTART)+" times"
+print "By hand, PS from Hermitian half real part of CF, expanded to test size, failed  "+\
+    str(failed7)+"/"+str(TESTEND - TESTSTART)+" times"
+print ""
 
