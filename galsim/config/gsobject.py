@@ -429,6 +429,12 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams):
             raise IndexError(
                 "%s index has gone past the number of entries in the catalog"%param_name)
 
+    if whiten:
+        if 'noise_pad' in kwargs and not kwargs['noise_pad']:
+            raise ValueError("RealGalaxy with whiten=True must also have noise_pad=True")
+        elif 'noise_pad' not in kwargs:
+            kwargs['noise_pad'] = True
+
     gal = galsim.RealGalaxy(real_cat, **kwargs)
 
     # If we are not going to whiten the noise, then we don't need to keep it as an attribute.

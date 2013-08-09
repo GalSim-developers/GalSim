@@ -4,20 +4,21 @@
 "#" : "The eleventh JSON configuration file in our tutorial about using Galsim config files.",
 "#" : "(This file is designed to be viewed in a window 100 characters wide.)",
 
-"#" : "This script uses a constant PSF from real data (an image read in from a bzipped FITS file, ",
-"#" : "not a parametric model) and variable shear and magnification according to some cosmological ",
-"#" : "model for which we have a tabulated power spectrum at specific k values only.  The 288 ",
-"#" : "galaxies in the 0.2 x 0.2 degree field (representing a low number density of 2/arcmin^2) ",
-"#" : "are randomly located and permitted to overlap, but we do take care to avoid being too close ",
-"#" : "to the edge of the large image.  For the galaxies, we use a random selection from 5 ",
-"#" : "specific RealGalaxy objects, selected to be 5 particularly irregular ones. These are taken ",
-"#" : "from the same catalog of 100 objects that demo6 used.",
+"#" : "This script uses a constant PSF from real data (an image read in from a bzipped FITS file,",
+"#" : "not a parametric model) and variable shear and magnification according to some cosmological",
+"#" : "model for which we have a tabulated power spectrum at specific k values only.  The 288",
+"#" : "galaxies in the 0.2 x 0.2 degree field (representing a low number density of 2/arcmin^2)",
+"#" : "are randomly located and permitted to overlap, but we do take care to avoid being too close",
+"#" : "to the edge of the large image.  For the galaxies, we use a random selection from 5",
+"#" : "specific RealGalaxy objects, selected to be 5 particularly irregular ones. These are taken",
+"#" : "from the same catalog of 100 objects that demo6 used.  We also use the whitening option to",
+"#" : "remove the correlations in the noise originally present in the HST images.",
 
-"#" : "The noise added to the image is spatially correlated in the same way as often seen in ", 
-"#" : "coadd images from the Hubble Space Telescope (HST) Advanced Camera for Surveys, using a ",
-"#" : "correlation function determined from the HST COSMOS coadd images in the F814W filter ",
-"#" : "(see, e.g., Leauthaud et al 2007).  Applying this noise uses an FFT of the size of the ",
-"#" : "full output image: this may cause memory-related slowdowns in systems with less than 2GB ",
+"#" : "The noise added to the image is spatially correlated in the same way as often seen in", 
+"#" : "coadd images from the Hubble Space Telescope (HST) Advanced Camera for Surveys, using a",
+"#" : "correlation function determined from the HST COSMOS coadd images in the F814W filter",
+"#" : "(see, e.g., Leauthaud et al 2007).  Applying this noise uses an FFT of the size of the",
+"#" : "full output image: this may cause memory-related slowdowns in systems with less than 2GB",
 "#" : "RAM.",
 
 "#" : "New features introduced in this demo:",
@@ -65,24 +66,22 @@
 
 "#" : "Define the galaxy profile",
 "gal" : {
-    "type" : "RealGalaxy",
-    "id" : {
-        "#" : "We select randomly among these 5 IDs.",
-        "type" : "List",
-        "items" : [ 106416, 106731, 108402, 116045, 116448 ],
-        "index" : { "type" : "Random" }
-    },
-
-    "shear" : {
-        "#" : "We again use PowerSpectrumShear, which is set up below using input:power_spectrum.",
-        "type" : "PowerSpectrumShear"
-    },
-
-    "magnification" : {
-        "#" : "We use PowerSpectrumMagnification for this, which is set up below using input :",
-        "#" : "power_spectrum.",
-        "type" : "PowerSpectrumMagnification"
-    },
+    "type" : "List",
+    "#" : "Another option available for the RealGalaxy type is whiten.  If set to true, then",
+    "#" : "we will keep track of the original correlated noise in the image and whiten it before",
+    "#" : "adding the additional noise (specified below in image.noise).",
+    "items" : [
+        { "type" : "RealGalaxy", "id" : 106416, "whiten" : "true" },
+        { "type" : "RealGalaxy", "id" : 106731, "whiten" : "true" },
+        { "type" : "RealGalaxy", "id" : 108402, "whiten" : "true" },
+        { "type" : "RealGalaxy", "id" : 116045, "whiten" : "true" },
+        { "type" : "RealGalaxy", "id" : 116448, "whiten" : "true" }
+    ],
+    "index" : { "type" : "Random" },
+    "#" : "Note: we could also have set the main gal type to RealGalaxy and had id be a list with",
+    "#" : "a random index.  However, the above structure lets the code cache the constructed items",
+    "#" : "in the list and reuse them.  For RealGalaxy, which has a relatively large construction",
+    "#" : "cost, this is a significant savings.",
 
     "dilation" : {
         "#" : "We draw the sizes from a power law distribution.",
@@ -96,9 +95,18 @@
         "x_max" : 5
     },
 
-    "rotation" : {
-        "type" : "Random"
+    "shear" : {
+        "#" : "We again use PowerSpectrumShear, which is set up below using input:power_spectrum.",
+        "type" : "PowerSpectrumShear"
     },
+
+    "magnification" : {
+        "#" : "We use PowerSpectrumMagnification for this, which is set up below using input :",
+        "#" : "power_spectrum.",
+        "type" : "PowerSpectrumMagnification"
+    },
+
+    "rotation" : { "type" : "Random" },
 
     "#" : "The galaxy S/N is set to be 100, but this is based on a point variance-only calculation",
     "#" : "(such as discussed in Leauthaud et al 2007).  The true SNR is somewhat lower, due to ",

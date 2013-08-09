@@ -347,7 +347,7 @@ def _GenerateFromCatalog(param, param_name, base, value_type):
     input_cat = base['catalog'][num]
 
     # Setup the indexing sequence if it hasn't been specified.
-    # The normal thing with an Catalog is to just use each object in order,
+    # The normal thing with a Catalog is to just use each object in order,
     # so we don't require the user to specify that by hand.  We can do it for them.
     SetDefaultIndex(param, input_cat.nobjects)
 

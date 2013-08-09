@@ -18,3 +18,14 @@ Changes from v0.5 to current version:
   `conserve_dc=True` parameter).  (Issue #442)
 
 * Switched default interpolant for `RealGalaxy` to `Quintic`.  (Issue #442)
+
+* Added the ability to have multiple input catalogs in the same config file.  (Issue #449)
+
+* Added a Dict class to read in a python dictionary from a file.  This can be YAML, JSON, or 
+  Pickle formats.  (Issue #449)
+
+* Changed the name of InputCatalog to just Catalog.  (Issue #449)
+
+* Added offset as a config option for the image field, which applies the given offset in pixels 
+  when calling the draw command.  (Issue #449)
+

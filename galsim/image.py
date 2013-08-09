@@ -190,6 +190,12 @@ def Image_sub(self, other):
     result -= other
     return result
 
+def Image_rsub(self, other):
+    result = self.copy()
+    result *= -1
+    result += other
+    return result
+
 def Image_isub(self, other):
     check_image_consistency(self, other)
     try:
@@ -214,6 +220,12 @@ def Image_imul(self, other):
 def Image_div(self, other):
     result = self.copy()
     result /= other
+    return result
+
+def Image_rdiv(self, other):
+    result = self.copy()
+    result.invertSelf()
+    result *= other
     return result
 
 def Image_idiv(self, other):
@@ -302,12 +314,15 @@ for Class in _galsim.Image.itervalues():
     Class.__radd__ = Image_add
     Class.__iadd__ = Image_iadd
     Class.__sub__ = Image_sub
+    Class.__rsub__ = Image_rsub
     Class.__isub__ = Image_isub
     Class.__mul__ = Image_mul
     Class.__rmul__ = Image_mul
     Class.__imul__ = Image_imul
     Class.__div__ = Image_div
+    Class.__rdiv__ = Image_div
     Class.__truediv__ = Image_div
+    Class.__rtruediv__ = Image_rdiv
     Class.__idiv__ = Image_idiv
     Class.__itruediv__ = Image_idiv
     Class.__ipow__ = Image_ipow
@@ -324,12 +339,15 @@ for Class in _galsim.ImageView.itervalues():
     Class.__radd__ = Image_add
     Class.__iadd__ = Image_iadd
     Class.__sub__ = Image_sub
+    Class.__rsub__ = Image_rsub
     Class.__isub__ = Image_isub
     Class.__mul__ = Image_mul
     Class.__rmul__ = Image_mul
     Class.__imul__ = Image_imul
     Class.__div__ = Image_div
+    Class.__rdiv__ = Image_rdiv
     Class.__truediv__ = Image_div
+    Class.__rtruediv__ = Image_rdiv
     Class.__idiv__ = Image_idiv
     Class.__itruediv__ = Image_idiv
     Class.__ipow__ = Image_ipow
@@ -342,11 +360,14 @@ for Class in _galsim.ConstImageView.itervalues():
     Class.__add__ = Image_add
     Class.__radd__ = Image_add
     Class.__sub__ = Image_sub
+    Class.__rsub__ = Image_rsub
     Class.__mul__ = Image_mul
     Class.__rmul__ = Image_mul
     Class.__div__ = Image_div
-    Class.__pow__ = Image_pow
+    Class.__rdiv__ = Image_rdiv
     Class.__truediv__ = Image_div
+    Class.__rtruediv__ = Image_rdiv
+    Class.__pow__ = Image_pow
     Class.copy = Image_copy
     Class.__getinitargs__ = ImageView_getinitargs
 
