@@ -533,27 +533,12 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             var = newcf(newcf.bounds.center())
             self._variance_stored = var
 
+            if var <= 0.:
+                raise RuntimeError("CorrelatedNoise found to have negative variance.")
+
             # Then calculate the sqrt(PS) that will be used to generate the actual noise
-            ps = np.fft.fft2(newcf.array) * np.product(shape)
-            if True:
-                rootps = np.sqrt(np.abs(ps))
-            else:
-                print 'newcf = ',newcf.array
-                print 'ps = ',ps
-                print 'var = ',var
-                print 'min cf = ',np.min(newcf.array)
-                print 'max cf = ',np.max(newcf.array)
-                print 'min real = ',np.min(np.real(ps))
-                print 'max real = ',np.max(np.real(ps))
-                print 'min imag = ',np.min(np.imag(ps))
-                print 'max imag = ',np.max(np.imag(ps))
-                if np.any(np.real(ps) < -1.e-12 * var):
-                    raise RuntimeError("Found negative values in CorrelationFunction power spectrum." +
-                                    "It should be positive real.")
-                if np.any(np.abs(np.imag(ps)) > 1.e-12 * var):
-                    raise RuntimeError("Found complex values in CorrelationFunction power spectrum." +
-                                    "It should be positive real.")
-                rootps = np.sqrt(np.abs(np.real(ps)))
+            ps = np.fft.fft2(newcf.array)
+            rootps = np.sqrt(np.abs(ps) * np.product(shape))
 
             # Then add this and the relevant scale to the _rootps_store for later use
             self._rootps_store.append((rootps, newcf.scale))
@@ -1050,6 +1035,8 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
     def __init__(self, rng, pixel_scale, variance, gsparams=None):
         # Need variance == xvalue(0,0)
         # Pixel has flux of f/dx^2, so us f = varaince * dx^2
+        if variance < 0:
+            raise ValueError("Input keyword variance must be zero or positive.")
         cf_object = galsim.Pixel(xw=pixel_scale, flux=variance*pixel_scale**2, gsparams=gsparams)
         _BaseCorrelatedNoise.__init__(self, rng, cf_object)
 
