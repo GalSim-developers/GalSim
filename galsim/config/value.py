@@ -18,39 +18,40 @@
 #
 import galsim
 
-# If you want to extend this, you need to add your item to the list for whatever type
-# you have a new generator for.  The generator should be called _GenerateFromMyType
-# where MyType is the new type you are implementing.  See the des module for some examples.
-
 valid_value_types = {
-    'List' : [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ],
-    'Eval' : [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ],
-    'InputCatalog' : [ float, int, bool, str ],
-    'FitsHeader' : [ float, int, bool, str ],
-    'Sequence' : [ float, int, bool ],
-    'Random' : [ float, int, bool, galsim.Angle ],
-    'RandomGaussian' : [ float ],
-    'RandomDistribution' : [ float ],
-    'RandomCircle' : [ galsim.PositionD ],
-    'NumberedFile' : [ str ],
-    'FormattedStr' : [ str ],
-    'Rad' : [ galsim.Angle ],
-    'Radians' : [ galsim.Angle ],
-    'Deg' : [ galsim.Angle ],
-    'Degrees' : [ galsim.Angle ],
-    'E1E2' : [ galsim.Shear ],
-    'EBeta' : [ galsim.Shear ],
-    'G1G2' : [ galsim.Shear ],
-    'GBeta' : [ galsim.Shear ],
-    'Eta1Eta2' : [ galsim.Shear ],
-    'EtaBeta' : [ galsim.Shear ],
-    'QBeta' : [ galsim.Shear ],
-    'XY' : [ galsim.PositionD ],
-    'RTheta' : [ galsim.PositionD ],
-    'NFWHaloShear' : [ galsim.Shear ],
-    'NFWHaloMagnification' : [ float ],
-    'PowerSpectrumShear' : [ galsim.Shear ],
-    'PowerSpectrumMagnification' : [ float ],
+    # The values are tuples with:
+    # - the build function to call
+    # - a list of types for which the type is valid
+    'List' : ('_GenerateFromList', 
+              [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ]),
+    'Eval' : ('_GenerateFromEval', 
+              [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ]),
+    'InputCatalog' : ('_GenerateFromInputCatalog', [ float, int, bool, str ]),
+    'FitsHeader' : ('_GenerateFromFitsHeader', [ float, int, bool, str ]),
+    'Sequence' : ('_GenerateFromSequence', [ float, int, bool ]),
+    'Random' : ('_GenerateFromRandom', [ float, int, bool, galsim.Angle ]),
+    'RandomGaussian' : ('_GenerateFromRandomGaussian', [ float ]),
+    'RandomDistribution' : ('_GenerateFromRandomDistribution', [ float ]),
+    'RandomCircle' : ('_GenerateFromRandomCircle', [ galsim.PositionD ]),
+    'NumberedFile' : ('_GenerateFromNumberedFile', [ str ]),
+    'FormattedStr' : ('_GenerateFromFormattedStr', [ str ]),
+    'Rad' : ('_GenerateFromRad', [ galsim.Angle ]),
+    'Radians' : ('_GenerateFromRad', [ galsim.Angle ]),
+    'Deg' : ('_GenerateFromDeg', [ galsim.Angle ]),
+    'Degrees' : ('_GenerateFromDeg', [ galsim.Angle ]),
+    'E1E2' : ('_GenerateFromE1E2', [ galsim.Shear ]),
+    'EBeta' : ('_GenerateFromEBeta', [ galsim.Shear ]),
+    'G1G2' : ('_GenerateFromG1G2', [ galsim.Shear ]),
+    'GBeta' : ('_GenerateFromGBeta', [ galsim.Shear ]),
+    'Eta1Eta2' : ('_GenerateFromEta1Eta2', [ galsim.Shear ]),
+    'EtaBeta' : ('_GenerateFromEtaBeta', [ galsim.Shear ]),
+    'QBeta' : ('_GenerateFromQBeta', [ galsim.Shear ]),
+    'XY' : ('_GenerateFromXY', [ galsim.PositionD ]),
+    'RTheta' : ('_GenerateFromRTheta', [ galsim.PositionD ]),
+    'NFWHaloShear' : ('_GenerateFromNFWHaloShear', [ galsim.Shear ]),
+    'NFWHaloMagnification' : ('_GenerateFromNFWHaloMagnification', [ float ]),
+    'PowerSpectrumShear' : ('_GenerateFromPowerSpectrumShear', [ galsim.Shear ]),
+    'PowerSpectrumMagnification' : ('_GenerateFromPowerSpectrumMagnification', [ float ]),
 }
  
 def ParseValue(config, param_name, base, value_type):
@@ -95,16 +96,16 @@ def ParseValue(config, param_name, base, value_type):
         #print 'type = ',type
 
         # First check if the value_type is valid.
-        if type not in valid_value_types.keys():
+        if type not in valid_value_types:
             raise AttributeError(
                 "Unrecognized type = %s specified for parameter %s"%(type,param_name))
             
-        if value_type not in valid_value_types[type]:
+        if value_type not in valid_value_types[type][1]:
             raise AttributeError(
                 "Invalid value_type = %s specified for parameter %s with type = %s."%(
                     value_type, param_name, type))
 
-        generate_func = eval('_GenerateFrom' + type)
+        generate_func = eval(valid_value_types[type][0])
         #print 'generate_func = ',generate_func
         val, safe = generate_func(param, param_name, base, value_type)
         #print 'returned val, safe = ',val,safe
@@ -327,16 +328,6 @@ def _GenerateFromDeg(param, param_name, base, value_type):
     req = { 'theta' : float }
     kwargs, safe = GetAllParams(param, param_name, base, req=req)
     return kwargs['theta'] * galsim.degrees, safe
-
-def _GenerateFromRadians(param, param_name, base, value_type):
-    """@brief Alias for Rad
-    """
-    return _GenerateFromRad(param, param_name, base, value_type)
-
-def _GenerateFromDegrees(param, param_name, base, value_type):
-    """@brief Alias for Deg
-    """
-    return _GenerateFromDeg(param, param_name, base, value_type)
 
 def _GenerateFromInputCatalog(param, param_name, base, value_type):
     """@brief Return a value read from an input catalog

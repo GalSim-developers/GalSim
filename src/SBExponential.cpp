@@ -116,7 +116,7 @@ namespace galsim {
             return _flux*(1. - 1.5*ksq*(1. - 1.25*ksq));
         } else {
             double temp = 1. + ksq;
-            return _flux/(temp*sqrt(temp));
+            return _flux / (temp * sqrt(temp));
             // NB: flux*std::pow(temp,-1.5) is slower.
         }
     }
