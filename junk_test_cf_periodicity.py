@@ -93,4 +93,3 @@ print "By hand, PS from real part of CF, expanded to test size, failed          
 print "By hand, PS from Hermitian half real part of CF, expanded to test size, failed  "+\
     str(failed7)+"/"+str(TESTEND - TESTSTART)+" times"
 print ""
-
