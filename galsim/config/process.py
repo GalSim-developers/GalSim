@@ -28,6 +28,7 @@ valid_input_types = {
     #   used later).
     # - whether the class has a nobjects field, in which case it also must have a constructor
     #   kwarg nobjects_only to efficiently do only enough to calculate nobjects.
+    # See the des module for examples of how to extend this from a module.
     'catalog' : ('InputCatalog', [], True), 
     'real_catalog' : ('RealGalaxyCatalog', [], True),
     'nfw_halo' : ('NFWHalo', [], False),
@@ -38,6 +39,18 @@ valid_input_types = {
     'fits_header' : ('FitsHeader', [], False), 
 }
 
+valid_output_types = { 
+    # The values are tuples with:
+    # - the build function to call
+    # - a function that merely counts the number of objects that will be built by the function
+    # - whether the Builder takes nproc.
+    # - whether the Builder takes psf_file_name, weight_file_name, and badpix_file_name.
+    # - whether the Builder takes psf_hdu, weight_hdu, and badpix_hdu.
+    # See the des module for examples of how to extend this from a module.
+    'Fits' : ('BuildFits', 'GetNObjForFits', False, True, True),
+    'MultiFits' : ('BuildMultiFits', 'GetNObjForMultiFits', True, True, False),
+    'DataCube' : ('BuildDataCube', 'GetNObjForDataCube', True, True, False),
+}
 
 def ProcessInput(config, file_num=0, logger=None):
     """
@@ -87,10 +100,11 @@ def ProcessInputNObjects(config):
             raise AttributeError("config.input is not a dict.")
 
         #print 'valid_input_types = ',valid_input_types
-        for key in valid_input_types.keys():
+        for key in valid_input_types:
             #print 'key = ',key
             #print 'valid_input_types[key] = ',valid_input_types[key]
-            if key in input and valid_input_types[key][2]:
+            has_nobjects = valid_input_types[key][2]
+            if key in input and has_nobjects:
                 field = input[key]
                 #print 'field = ',field
                 type, ignore = valid_input_types[key][0:2]
@@ -141,14 +155,26 @@ def Process(config, logger=None):
     type = output['type']
 
     # Check that the type is valid
-    valid_types = [ 'Fits' , 'MultiFits', 'DataCube' ]
-    if type not in valid_types:
+    if type not in valid_output_types:
         raise AttributeError("Invalid output.type=%s."%type)
 
     # build_func is the function we'll call to build each file.
-    build_func = eval('Build'+type)
+    build_func = eval(valid_output_types[type][0])
+
     # nobj_func is the function that builds the nobj_per_file list
-    nobj_func = eval('GetNObjFor'+type)
+    nobj_func = eval(valid_output_types[type][1])
+
+    # can_do_multiple says whether the function can in principal do multiple files
+    can_do_multiple = valid_output_types[type][2]
+
+    # extra_file_name says whether the function takes psf_file_name, etc.
+    extra_file_name = valid_output_types[type][3]
+
+    # extra_hdu says whether the function takes psf_hdu, etc.
+    extra_hdu = valid_output_types[type][4]
+    #print 'type = ',type
+    #print 'extra_file_name = ',extra_file_name
+    #print 'extra_hdu = ',extra_hdu
 
     # We need to know how many objects we'll need for each file (and each image within each file)
     # to get the indexing correct for any sequence items.  (e.g. random_seed)
@@ -171,7 +197,7 @@ def Process(config, logger=None):
     # If set, nproc2 will be passed to the build function to be acted on at that level.
     nproc2 = None
     if nproc > nfiles:
-        if nfiles == 1 and (type == 'MultiFits' or type == 'DataCube'):
+        if nfiles == 1 and can_do_multiple:
             nproc2 = nproc 
             nproc = 1
         else:
@@ -186,8 +212,8 @@ def Process(config, logger=None):
         try:
             from multiprocessing import cpu_count
             ncpu = cpu_count()
-            if nfiles == 1 and (type == 'MultiFits' or type == 'DataCube'):
-                nproc2 = ncpu # Use this value in BuildImage rather than here.
+            if nfiles == 1 and can_do_multiple:
+                nproc2 = ncpu # Use this value in BuildImages rather than here.
                 nproc = 1
                 if logger:
                     logger.debug("ncpu = %d.",ncpu)
@@ -203,7 +229,7 @@ def Process(config, logger=None):
                 logger.warn("config.output.nproc <= 0, but unable to determine number of cpus.")
             nproc = 1
             if logger:
-                logger.info("Unable to determine ncpu.  Using %d processes",nproc)
+                logger.info("Using %d processes",nproc)
     
     # Set up the multi-process worker function if we're going to need it.
     if nproc > 1:
@@ -277,21 +303,25 @@ def Process(config, logger=None):
         # set from an input catalog.
         nobj = nobj_func(kwargs['config'],file_num,image_num)
 
-        if type in [ 'MultiFits', 'DataCube' ]:
-            if 'nimages' not in output:
-                raise AttributeError("Attribute nimages is required for output.type = %s"%type)
-            kwargs['nimages'] = galsim.config.ParseValue(output,'nimages',kwargs['config'],int)[0]
-
         # Check if we need to build extra images for write out as well
         for extra_key in [ key for key in extra_keys if key in output ]:
-            #print 'extra = ',extra
-            extra_file_name = None
+            #print 'extra_key = ',extra_key
             output_extra = output[extra_key]
 
             output_extra['type'] = 'default'
-            single = [ { 'file_name' : str, 'hdu' : int } ]
-            opt = { 'dir' : str }
+            req = {}
+            single = []
+            opt = {}
             ignore = []
+            if extra_file_name and extra_hdu:
+                single += [ { 'file_name' : str, 'hdu' : int } ]
+                opt['dir'] = str
+            elif extra_file_name:
+                req['file_name'] = str
+                opt['dir'] = str
+            elif extra_hdu:
+                req['hdu'] = int
+
             if extra_key == 'psf': 
                 ignore.append('real_space')
             if extra_key == 'weight': 
@@ -299,31 +329,28 @@ def Process(config, logger=None):
             if 'file_name' in output_extra:
                 SetDefaultExt(output_extra['file_name'],'.fits')
             params, safe = galsim.config.GetAllParams(output_extra,extra_key,kwargs['config'],
-                                                      opt=opt, single=single, ignore=ignore)
+                                                      req=req, opt=opt, single=single,
+                                                      ignore=ignore)
 
             if 'file_name' in params:
-                extra_file_name = params['file_name']
+                f = params['file_name']
                 if 'dir' in params:
                     dir = params['dir']
                     if dir and not os.path.isdir(dir): os.mkdir(dir)
                 # else keep dir from above.
                 if dir:
-                    extra_file_name = os.path.join(dir,extra_file_name)
+                    f = os.path.join(dir,f)
                 # If we already wrote this file, skip it this time around.
-                # (Typically this is applicable for psf, where we only want 1 psf file.)
+                # (Typically this is applicable for psf, where we may only want 1 psf file.)
                 #print 'last_file_name for ',key,' = ',last_file_name[key]
-                #print 'extra_file_name = ',extra_file_name
-                if last_file_name[key] == extra_file_name:
+                #print 'f = ',f
+                if last_file_name[key] == f:
                     #print 'skipping'
                     continue
                 #print 'assigning this to kwargs'
-                kwargs[ extra_key+'_file_name' ] = extra_file_name
-                last_file_name[key] = extra_file_name
-            elif type != 'Fits':
-                raise AttributeError(
-                    "Only the file_name version of %s output is possible for "%extra_key+
-                    "output type == %s."%type)
-            else:
+                kwargs[ extra_key+'_file_name' ] = f
+                last_file_name[key] = f
+            elif 'hdu' in params:
                 kwargs[ extra_key+'_hdu' ] = params['hdu']
     
         # This is where we actually build the file.
@@ -475,14 +502,13 @@ def BuildFits(file_name, config, logger=None,
     return t2-t1
 
 
-def BuildMultiFits(file_name, nimages, config, nproc=1, logger=None,
+def BuildMultiFits(file_name, config, nproc=1, logger=None,
                    image_num=0, obj_num=0,
                    psf_file_name=None, weight_file_name=None, badpix_file_name=None):
     """
     Build a multi-extension fits file as specified in config.
     
     @param file_name         The name of the output file.
-    @param nimages           The number of images (and hence hdus in the output file)
     @param config            A configuration dict.
     @param nproc             How many processes to use.
     @param logger            If given, a logger object to log progress.
@@ -511,9 +537,13 @@ def BuildMultiFits(file_name, nimages, config, nproc=1, logger=None,
     else:
         make_badpix_image = False
 
+    if 'output' not in config or 'nimages' not in config['output']:
+        raise AttributeError("Attribute output.nimages is required for output.type = MultiFits")
+    nimages = galsim.config.ParseValue(config['output'],'nimages',config,int)[0]
+
     all_images = galsim.config.BuildImages(
-        nimages, config=config, logger=logger,
-        image_num=image_num, obj_num=obj_num, nproc=nproc,
+        nimages, config=config, nproc=nproc, logger=logger,
+        image_num=image_num, obj_num=obj_num,
         make_psf_image=make_psf_image, 
         make_weight_image=make_weight_image,
         make_badpix_image=make_badpix_image)
@@ -547,14 +577,13 @@ def BuildMultiFits(file_name, nimages, config, nproc=1, logger=None,
     return t2-t1
 
 
-def BuildDataCube(file_name, nimages, config, nproc=1, logger=None, 
+def BuildDataCube(file_name, config, nproc=1, logger=None, 
                   image_num=0, obj_num=0,
                   psf_file_name=None, weight_file_name=None, badpix_file_name=None):
     """
     Build a multi-image fits data cube as specified in config.
     
     @param file_name         The name of the output file.
-    @param nimages           The number of images in the data cube
     @param config            A configuration dict.
     @param nproc             How many processes to use.
     @param logger            If given, a logger object to log progress.
@@ -582,6 +611,10 @@ def BuildDataCube(file_name, nimages, config, nproc=1, logger=None,
         make_badpix_image = True
     else:
         make_badpix_image = False
+
+    if 'output' not in config or 'nimages' not in config['output']:
+        raise AttributeError("Attribute output.nimages is required for output.type = DataCube")
+    nimages = galsim.config.ParseValue(config['output'],'nimages',config,int)[0]
 
     # All images need to be the same size for a data cube.
     # Enforce this by buliding the first image outside the below loop and setting
@@ -612,8 +645,8 @@ def BuildDataCube(file_name, nimages, config, nproc=1, logger=None,
     badpix_images = [ all_images[3] ]
 
     all_images = galsim.config.BuildImages(
-        nimages-1, config=config, logger=logger,
-        image_num=image_num+1, obj_num=obj_num, nproc=nproc, 
+        nimages-1, config=config, nproc=nproc, logger=logger,
+        image_num=image_num+1, obj_num=obj_num,
         make_psf_image=make_psf_image, 
         make_weight_image=make_weight_image,
         make_badpix_image=make_badpix_image)
