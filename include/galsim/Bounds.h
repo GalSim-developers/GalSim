@@ -39,8 +39,11 @@ namespace galsim {
         /// @brief Publicly visible x & y attributes of the position.
         T x,y;
 
+        ///@brief Default Constructor = (0,0)
+        Position() : x(0), y(0) {}
+
         ///@brief Constructor.
-        Position(const T xin=0, const T yin=0) : x(xin), y(yin) {}
+        Position(const T xin, const T yin) : x(xin), y(yin) {}
 
         ///@brief Assignment.
         Position& operator=(const Position<T>& rhs) 

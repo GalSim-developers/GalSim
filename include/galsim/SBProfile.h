@@ -53,7 +53,7 @@ namespace galsim {
     class SBError : public std::runtime_error 
     {
     public:
-        SBError(const std::string& m="") : std::runtime_error("SB Error: " + m) {}
+        SBError(const std::string& m) : std::runtime_error("SB Error: " + m) {}
     };
 
     //! @endcond
@@ -177,14 +177,13 @@ namespace galsim {
          *
          * @param[in] dx      The pixel scale of the image
          * @param[in] wmult   If desired, a scaling to make the image larger than normal.
-         *                    (default `wmult` = 1)
          *
          * @returns the recommended image size.
          *
          * The basic formula is 2pi * wmult / (dx * stepK())
          * But then we round up to the next even integer value.
          */
-        int getGoodImageSize(double dx, double wmult = 1.) const;
+        int getGoodImageSize(double dx, double wmult) const;
 
         /**
          * @brief Check whether the SBProfile is known to have rotational symmetry about x=y=0
@@ -387,7 +386,7 @@ namespace galsim {
          *            However, some profiles need more than this because some of the shot
          *            photons are negative (usually due to interpolants).
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
-         * @param[in] gain  Number of photons per ADU. (default `gain` = 1.)
+         * @param[in] gain  Number of photons per ADU. 
          * @param[in] max_extra_noise If provided, the allowed extra noise in each pixel.
          *            This is only relevant if N=0, so the number of photons is being 
          *            automatically calculated.  In that case, if the image noise is 
@@ -399,12 +398,10 @@ namespace galsim {
          *            max_extra_noise = sky_level / 100 where sky_level is the flux per pixel 
          *            due to the sky.  Note that this uses a "variance" definition of noise,
          *            not a "sigma" definition.
-         *            (default `max_extra_noise = 0.`)
          * @param[in] poisson_flux Whether to allow total object flux scaling to vary according to 
          *                         Poisson statistics for `N` samples 
-         *                         (default `poisson_flux = true`).
          * @param[in] add_to_image Whether to add flux to the existing image rather than draw
-         *                         an image from scratch.  (default `add_to_image = false`).
+         *                         an image from scratch.  
          * @returns The total flux of photons the landed inside the image bounds.
          *
          * Note: N is input as a double so that very large values of N don't have to
@@ -413,8 +410,8 @@ namespace galsim {
          */
         template <typename T>
         double drawShoot(
-            ImageView<T> image, double N, UniformDeviate ud, double gain=1.,
-            double max_extra_noise=0., bool poisson_flux=true, bool add_to_image=false) const;
+            ImageView<T> image, double N, UniformDeviate ud, double gain,
+            double max_extra_noise, bool poisson_flux, bool add_to_image) const;
 
 
         /** 
@@ -429,14 +426,13 @@ namespace galsim {
          * to anything already on the input image.
          *
          * @param[in,out]    image (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
-         * @param[in] gain   Number of photons per ADU. (default `gain` = 1.)
+         * @param[in] gain   Number of photons per ADU.
          * @param[in] wmult  If desired, a scaling to make intermediate images larger than normal.
-         *                   (default `wmult` = 1)
          *
          * @returns summed flux.
          */
         template <typename T>
-        double draw(ImageView<T> image, double gain=1., double wmult=1.) const; 
+        double draw(ImageView<T> image, double gain, double wmult) const; 
 
         /** 
          * @brief Draw an image of the SBProfile in real space forcing the use of real methods 
@@ -448,12 +444,12 @@ namespace galsim {
          * to anything already on the input image.
          *
          * @param[in,out]    image (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
-         * @param[in] gain   Number of photons per ADU. (default `gain` = 1.)
+         * @param[in] gain   Number of photons per ADU.
          *
          * @returns summed flux.
          */
         template <typename T>
-        double plainDraw(ImageView<T> image, double gain=1.) const; 
+        double plainDraw(ImageView<T> image, double gain) const; 
 
         /** 
          * @brief Draw an image of the SBProfile in real space forcing the use of Fourier transform
@@ -467,14 +463,13 @@ namespace galsim {
          * to anything already on the input image.
          *
          * @param[in,out]    image (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
-         * @param[in] gain   Number of photons per ADU. (default `gain` = 1.)
+         * @param[in] gain   Number of photons per ADU.
          * @param[in] wmult  If desired, a scaling to make intermediate images larger than normal.
-         *                   (default `wmult` = 1)
          *
          * @returns summed flux.
          */
         template <typename T>
-        double fourierDraw(ImageView<T> image, double gain=1., double wmult=1.) const; 
+        double fourierDraw(ImageView<T> image, double gain, double wmult) const; 
 
         /** 
          * @brief Draw an image of the SBProfile in k space.
@@ -493,12 +488,11 @@ namespace galsim {
          *                   (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
          * @param[in,out]    im image of imaginary argument of SBProfile in k space
          *                   (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
-         * @param[in] gain   Number of photons per ADU. (default `gain` = 1.)
+         * @param[in] gain   Number of photons per ADU.
          * @param[in] wmult  If desired, a scaling to make intermediate images larger than normal.
-         *                   (default `wmult` = 1)
          */
         template <typename T>
-        void drawK(ImageView<T> re, ImageView<T> im, double gain=1., double wmult=1.) const; 
+        void drawK(ImageView<T> re, ImageView<T> im, double gain, double wmult) const; 
 
         /** 
          * @brief Draw an image of the SBProfile in k space forcing the use of k space methods 
@@ -515,10 +509,10 @@ namespace galsim {
          *                   (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
          * @param[in,out]    im image of imaginary argument of SBProfile in k space
          *                   (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
-         * @param[in] gain   Number of photons per ADU. (default `gain` = 1.)
+         * @param[in] gain   Number of photons per ADU.
          */
         template <typename T>
-        void plainDrawK(ImageView<T> re, ImageView<T> im, double gain=1.) const; 
+        void plainDrawK(ImageView<T> re, ImageView<T> im, double gain) const; 
 
         /**
          * @brief Draw an image of the SBProfile in k space forcing the use of Fourier transform 
@@ -538,12 +532,11 @@ namespace galsim {
          *                   (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
          * @param[in,out]    im image of imaginary argument of SBProfile in k space
          *                   (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
-         * @param[in] gain   Number of photons per ADU. (default `gain` = 1.)
+         * @param[in] gain   Number of photons per ADU.
          * @param[in] wmult  If desired, a scaling to make intermediate images larger than normal.
-         *                   (default `wmult` = 1)
          */
         template <typename T>
-        void fourierDrawK(ImageView<T> re, ImageView<T> im, double gain=1., double wmult=1.) const; 
+        void fourierDrawK(ImageView<T> re, ImageView<T> im, double gain, double wmult) const; 
 
     protected:
 

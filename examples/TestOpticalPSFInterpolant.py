@@ -56,12 +56,12 @@ def Script4():
     i1d_list = [ "galsim.Linear(tol=1.e-4)",
                  "galsim.Cubic(tol=1.e-4)",
                  "galsim.Quintic(tol=1.e-4)",
-                 "galsim.Lanczos(3, conserve_flux=False, tol=1.e-4)",
-                 "galsim.Lanczos(5, conserve_flux=False, tol=1.e-4)",
-                 "galsim.Lanczos(7, conserve_flux=False, tol=1.e-4)",
-                 "galsim.Lanczos(3, conserve_flux=True, tol=1.e-4)",
-                 "galsim.Lanczos(5, conserve_flux=True, tol=1.e-4)",
-                 "galsim.Lanczos(7, conserve_flux=True, tol=1.e-4)" ]
+                 "galsim.Lanczos(3, conserve_dc=False, tol=1.e-4)",
+                 "galsim.Lanczos(5, conserve_dc=False, tol=1.e-4)",
+                 "galsim.Lanczos(7, conserve_dc=False, tol=1.e-4)",
+                 "galsim.Lanczos(3, conserve_dc=True, tol=1.e-4)",
+                 "galsim.Lanczos(5, conserve_dc=True, tol=1.e-4)",
+                 "galsim.Lanczos(7, conserve_dc=True, tol=1.e-4)" ]
 
     for i1d_name in i1d_list:
         print 'i1d = ',i1d_name
@@ -101,10 +101,8 @@ def Script4():
         #print 'Made epsf1, epsf2'
 
         # Create the large, double width output image
-        image1 = galsim.ImageF(nx,ny)
-        image2 = galsim.ImageF(nx,ny)
-        image1.setScale(pixel_scale)
-        image2.setScale(pixel_scale)
+        image1 = galsim.ImageF(nx,ny, scale=pixel_scale)
+        image2 = galsim.ImageF(nx,ny, scale=pixel_scale)
         #print 'Made images'
 
         # Draw the profile

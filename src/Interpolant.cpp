@@ -90,7 +90,6 @@
 
 namespace galsim {
 
-
     //
     // Some auxilliary functions we will want: 
     //
@@ -140,7 +139,7 @@ namespace galsim {
             return t;
         }
 #else
-        double x2=x*x;
+        double x2 = x*x;
         if (x2 > 16.) {
             // For |x| > 4, we use the asymptotic formula:
             //
@@ -149,79 +148,96 @@ namespace galsim {
             // where f(x) = int(sin(t)/(x+t),t=0..inf) 
             //       g(x) = int(cos(t)/(x+t),t=0..inf)
             //
-            // I used Maple to calculate a Chebyshev-Pade approximation of x f(1/sqrt(x)) 
+            // (By asymptotic, I mean that f and g approach 1/x and 1/x^2 respectively as x -> inf.
+            //  The formula as given is exact.)
+            //
+            // I used Maple to calculate a Chebyshev-Pade approximation of 1/sqrt(y) f(1/sqrt(y)) 
             // from 0..1/4^2, which leads to the following formula for f(x).  It is accurate to 
             // better than 1.e-16 for x > 4.
+            double y=1./x2;
             double f = 
-                (2.9228757957538833314e-1 +
-                 x2*(1.7393895125560691844 +
-                     x2*(1.4843569641472129741 +
-                         x2*(4.1403338988005243212e-1 +
-                             x2*(4.9333315428536661539e-2 +
-                                 x2*(2.8429749161947546956e-3 +
-                                     x2*(8.4100015376621292675e-5 +
-                                         x2*(1.3000589538293421518e-6 +
-                                             x2*(1.0267966224598433436e-8 +
-                                                 x2*(3.8016278060118867942e-11 +
-                                                     x2*5.0738999858936402742e-14))))))))))
+                (1. + 
+                 y*(7.44437068161936700618e2 +
+                    y*(1.96396372895146869801e5 +
+                       y*(2.37750310125431834034e7 +
+                          y*(1.43073403821274636888e9 +
+                             y*(4.33736238870432522765e10 +
+                                y*(6.40533830574022022911e11 +
+                                   y*(4.20968180571076940208e12 +
+                                      y*(1.00795182980368574617e13 +
+                                         y*(4.94816688199951963482e12 +
+                                            y*(-4.94701168645415959931e11)))))))))))
                 / (x*(1. +
-                      x2*(2.9148380188554292145 +
-                          x2*(1.9494777665153591426 +
-                              x2*(4.8275776941609546205e-1 +
-                                  x2*(5.3885122690917902419e-2 +
-                                      x2*(2.9904260275598761625e-3 +
-                                          x2*(8.6516916084330689535e-5 +
-                                              x2*(1.3198666277119026515e-6 +
-                                                  x2*(1.0342984000742052697e-8 +
-                                                      x2*(3.8117756059833395003e-11 +
-                                                          x2*5.0738999858936496265e-14)))))))))));
+                      y*(7.46437068161927678031e2 +
+                         y*(1.97865247031583951450e5 +
+                            y*(2.41535670165126845144e7 +
+                               y*(1.47478952192985464958e9 +
+                                  y*(4.58595115847765779830e10 +
+                                     y*(7.08501308149515401563e11 +
+                                        y*(5.06084464593475076774e12 +
+                                           y*(1.43468549171581016479e13 +
+                                              y*(1.11535493509914254097e13)))))))))));
 
-            // Similarly, a Chebyshev-Pade approximation of x^2 g(1/sqrt(x)) from 0..1/4^2 
+            // Similarly, a Chebyshev-Pade approximation of 1/y g(1/sqrt(y)) from 0..1/4^2 
             // leads to the following formula for g(x), which is also accurate to better than 
             // 1.e-16 for x > 4.
             double g = 
-                (8.4828843437259621661e-2 +
-                 x2*(6.2327273861766541484e-1 +
-                     x2*(4.3474062026050096164e-1 +
-                         x2*(9.1691399687059297877e-2 +
-                             x2*(7.8720742120482611215e-3 +
-                                 x2*(3.1255564808284666926e-4 +
-                                     x2*(6.0478037735341365671e-6 +
-                                         x2*(5.6892312377254620964e-8 +
-                                             x2*(2.4178501464859261578e-10 +
-                                                 x2*3.6002097105194320494e-13)))))))))
-                / (x2*(1. +
-                       x2*(1.7232606082363163365 +
-                           x2*(7.5213347582751063265e-1 +
-                               x2*(1.2514518374719181762e-1 +
-                                   x2*(9.3966368894558064447e-3 +
-                                       x2*(3.4487831019961461566e-4 +
-                                           x2*(6.3702215252541326054e-6 +
-                                               x2*(5.8312780713351624742e-8 +
-                                                   x2*(2.4394514047299639664e-10 +
-                                                       x2*3.6002097105200748110e-13))))))))));
+                y*(1. + 
+                   y*(8.1359520115168615e2 + 
+                      y*(2.35239181626478200e5 +
+                         y*(3.12557570795778731e7 +
+                            y*(2.06297595146763354e9 + 
+                               y*(6.83052205423625007e10 + 
+                                  y*(1.09049528450362786e12 +
+                                     y*(7.57664583257834349e12 + 
+                                        y*(1.81004487464664575e13 + 
+                                           y*(6.43291613143049485e12 +
+                                              y*(-1.36517137670871689e12)))))))))))
+                / (1. +
+                   y*(8.19595201151451564e2 + 
+                      y*(2.40036752835578777e5 + 
+                         y*(3.26026661647090822e7 +
+                            y*(2.23355543278099360e9 + 
+                               y*(7.87465017341829930e10 + 
+                                  y*(1.39866710696414565e12 +
+                                     y*(1.17164723371736605e13 + 
+                                        y*(4.01839087307656620e13 + 
+                                           y*(3.99653257887490811e13))))))))));
 
-            return ((x>0.)?(M_PI/2.):(-M_PI/2.)) - f*cos(x) - g*sin(x);
+#ifdef _GLIBCXX_HAVE_SINCOS
+            double sinx,cosx;
+            sincos(x,&sinx,&cosx);
+#else
+            double cosx = std::cos(x);
+            double sinx = std::sin(x);
+#endif
+            return ((x>0.)?(M_PI/2.):(-M_PI/2.)) - f*cosx - g*sinx;
         } else {
             // Here I used Maple to calculate the Pade approximation for Si(x), which is accurate
             // to better than 1.e-16 for x < 4:
             return
-                x*(1. +
-                   x2*(-4.5439340981632999087e-2 +
-                       x2*(1.1545722575101668180e-3 +
-                           x2*(-1.4101853682133025376e-5 +
-                               x2*(9.4328080943871302503e-8 +
-                                   x2*(-3.5320197899716835676e-10 +
-                                       x2*(7.0824028227487591119e-13 +
-                                           x2*(-6.0533821201042247740e-16))))))))
-                / (1. +
-                   x2*(1.0116214573922556468e-2 +
-                       x2*(4.9917511616975510645e-5 +
-                           x2*(1.5565498630874561372e-7 +
-                               x2*(3.2806757105578973403e-10 +
-                                   x2*(4.5049097575386581026e-13 +
-                                       x2*3.2110705119371216769e-16))))));
+                x*(1. + 
+                   x2*(-4.54393409816329991e-2 + 
+                       x2*(1.15457225751016682e-3 + 
+                           x2*(-1.41018536821330254e-5 + 
+                               x2*(9.43280809438713025e-8 +
+                                   x2*(-3.53201978997168357e-10 +
+                                       x2*(7.08240282274875911e-13 +
+                                           x2*(-6.05338212010422477e-16))))))))
+                / (1. + 
+                   x2*(1.01162145739225565e-2 +
+                       x2*(4.99175116169755106e-5 + 
+                           x2*(1.55654986308745614e-7 +
+                               x2*(3.28067571055789734e-10 + 
+                                   x2*(4.5049097575386581e-13 + 
+                                       x2*(3.21107051193712168e-16)))))));
+
         }
+        // Note: I also put these formulae on wikipedia, so other people can use them.
+        //     http://en.wikipedia.org/wiki/Trigonometric_integral
+        // There was a notable lack of information online about how to efficiently calculate
+        // Si(x), so hopefully this will help people in the future to not have to reproduce
+        // my work.  -MJ
 #endif
     }
 
@@ -360,14 +376,14 @@ namespace galsim {
 
     double Linear::xval(double x) const 
     {
-        x=std::abs(x);
+        x = std::abs(x);
         if (x > 1.) return 0.;
         else return 1.-x;
     }
     double Linear::uval(double u) const 
     { 
-        double sincu = sinc(u);
-        return sincu*sincu;
+        double s = sinc(u);
+        return s*s;
     }
 
     boost::shared_ptr<PhotonArray> Linear::shoot(int N, UniformDeviate ud) const 
@@ -392,8 +408,8 @@ namespace galsim {
     double Cubic::xval(double x) const 
     { 
         x = std::abs(x);
-        if (x < 1) return 1. + x*x*(1.5*x-2.5);
-        else if (x < 2) return -0.5*(x-1.)*(x-2.)*(x-2.);
+        if (x < 1.) return 1. + x*x*(1.5*x-2.5);
+        else if (x < 2.) return -0.5*(x-1.)*(x-2.)*(x-2.);
         else return 0.;
     }
 
@@ -408,7 +424,7 @@ namespace galsim {
         return s*s*s*(3.*s-2.*c);
 #endif
     }
-    
+
     class CubicIntegrand : public std::unary_function<double,double>
     {
     public:
@@ -430,6 +446,7 @@ namespace galsim {
     Cubic::Cubic(double tol, const GSParamsPtr& gsparams) : 
         Interpolant(gsparams), _tolerance(tol)
     {
+        dbg<<"Start Cubic:  tol = "<<tol<<std::endl;
         // Reduce range slightly from n so we're not including points with zero weight in
         // interpolations:
         _range = 2.-0.1*_tolerance;
@@ -456,7 +473,7 @@ namespace galsim {
                 double s = sinc(u);
                 double c = cos(M_PI*u);
                 double ft2 = s*s*s*(3.*s-2.*c);
-                dbg<<"u = "<<u<<", ft = "<<ft<<"  "<<ft2<<std::endl;
+                dbg<<"u = "<<u<<", ft = "<<ft<<"  "<<ft2<<"  diff = "<<ft-ft2<<std::endl;
 #endif
                 _tab->addEntry(u, ft);
                 if (std::abs(ft) > _tolerance) _uMax = u;
@@ -487,7 +504,7 @@ namespace galsim {
  
     double Quintic::xval(double x) const 
     {
-        x=std::abs(x);
+        x = std::abs(x);
 #ifdef ALT_QUINTIC
         // Gary claims in finterp.pdf that his quintic function (below) has the following 
         // properties:
@@ -553,11 +570,11 @@ namespace galsim {
     class QuinticIntegrand : public std::unary_function<double,double>
     {
     public:
-        QuinticIntegrand(double u, const Quintic& c): _u(u), _c(c) {}
-        double operator()(double x) const { return _c.xval(x)*std::cos(2*M_PI*_u*x); }
+        QuinticIntegrand(double u, const Quintic& q): _u(u), _q(q) {}
+        double operator()(double x) const { return _q.xval(x)*std::cos(2*M_PI*_u*x); }
     private:
         double _u;
-        const Quintic& _c;
+        const Quintic& _q;
     };
 
     double Quintic::uCalc(double u) const 
@@ -571,6 +588,7 @@ namespace galsim {
     Quintic::Quintic(double tol, const GSParamsPtr& gsparams) :
         Interpolant(gsparams), _tolerance(tol)
     {
+        dbg<<"Start Quintic:  tol = "<<tol<<std::endl;
         // Reduce range slightly from n so we're not including points with zero weight in
         // interpolations:
         _range = 3.-0.1*_tolerance;
@@ -606,7 +624,7 @@ namespace galsim {
 #else
                 double ft2 = s*ssq*ssq*(s*(55.-19.*piusq) + 2.*c*(piusq-27.));
 #endif
-                dbg<<"u = "<<u<<", ft = "<<ft<<"  "<<ft2<<std::endl;
+                dbg<<"u = "<<u<<", ft = "<<ft<<"  "<<ft2<<"  diff = "<<ft-ft2<<std::endl;
 #endif
                 if (std::abs(ft) > _tolerance) _uMax = u;
             }
@@ -652,15 +670,184 @@ namespace galsim {
     
     double Lanczos::xCalc(double x) const
     {
-        double retval = sinc(x)*sinc(x/_n);
-        if (_conserve_flux) retval *= 1. + 2.*_u1*(1.-std::cos(2.*M_PI*x));
-        return retval;
+        assert(x >= 0);
+        assert(x <= _nd);
+
+        double res; // res will be the result to return.
+        double s;   // s will be sin(pi x) which we save for the flux conservation correction.
+        if (x > 1.e-4) {
+            // For low values of n, we can save some time by calculating sin(pi x)
+            // from the value of sin(pi x / n) using trig identities.
+            //
+            // At some point it might be worth implementing the same trick as we did with 
+            // SBMoffat's kValue and pow functions, making these different cases all different 
+            // functions and having the constructor just set the function once.  Then calls to 
+            // xval wouldn't have any jumps from the case or (if you wanted) even the
+            // _conserve_dc check.
+            switch (_n) {
+              case 1 : {
+                  // Then xval = 1/pi^2 sin(pi x)^2 / x^2
+                  s = sin(M_PI*x);
+                  double temp = s/(M_PI * x);
+                  res = temp*temp;
+                  break;
+              }
+              case 2 : {
+                  // Then xval = 2/pi^2 sin(pi x) sin(pi x/2) / x^2
+                  // Let sn = sin(pi x/2), cn = cos(pi x/2)
+                  // Then sin(pi x) = 2 * sn * cn
+                  // xval = 4/pi^2 sn^2 cn / x^2
+                  double temp = M_PI/2. * x;
+#ifdef _GLIBCXX_HAVE_SINCOS
+                  double sn, cn;
+                  sincos(temp, &sn, &cn);
+#else
+                  double sn = sin(temp);
+                  double cn = cos(temp);
+#endif
+                  s = 2.*sn*cn;
+                  res = (2./(M_PI*M_PI)) * s*sn/(x*x);
+                  break;
+              }
+              case 3 : {
+                  // Then xval = 3/pi^2 sin(pi x) sin(pi x/3) / x^2
+                  // Let sn = sin(pi x/3)
+                  // Then sin(pi x) = sn*(3-4sn^2)
+                  // xval = 3/pi^2 sn^2*(3-4sn) / x^2
+                  double sn = sin((M_PI/3.)*x);
+                  s = sn*(3.-4.*sn*sn);
+                  res = (3./(M_PI*M_PI)) * s*sn/(x*x);
+                  break;
+              }
+              case 4 : {
+                  double temp = M_PI/4. * x;
+#ifdef _GLIBCXX_HAVE_SINCOS
+                  double sn, cn;
+                  sincos(temp, &sn, &cn);
+#else
+                  double sn = sin(temp);
+                  double cn = cos(temp);
+#endif
+                  s = sn*cn*(4.-8.*sn*sn);
+                  res = (4./(M_PI*M_PI)) * s*sn/(x*x);
+                  break;
+              }
+              case 5 : {
+                  double sn = sin((M_PI/5.)*x);
+                  double snsq = sn*sn;
+                  s = sn*(5.-snsq*(20.-16.*snsq));
+                  res = (5./(M_PI*M_PI)) * s*sn/(x*x);
+                  break;
+              }
+              case 6 : {
+                  double temp = M_PI/6. * x;
+#ifdef _GLIBCXX_HAVE_SINCOS
+                  double sn, cn;
+                  sincos(temp, &sn, &cn);
+#else
+                  double sn = sin(temp);
+                  double cn = cos(temp);
+#endif
+                  double snsq = sn*sn;
+                  s = sn*cn*(6.-32.*snsq*(1.-snsq));
+                  res = (6./(M_PI*M_PI)) * s*sn/(x*x);
+                  break;
+              }
+              case 7 : {
+                  double sn = sin((M_PI/7.)*x);
+                  double snsq = sn*sn;
+                  s = sn*(7.-snsq*(56.-snsq*(112.-64.*snsq)));
+                  res = (7./(M_PI*M_PI)) * s*sn/(x*x);
+              }
+              default : {
+                  // Above n=7, there isn't much advantage anymore to specialization.
+                  // The second sin call isn't much slower than the multiplications 
+                  // required to get sin(pi x) from sin(pi x/n)
+                  s = sin(M_PI*x);
+                  double sn = sin(M_PI*x/_nd);
+                  res = (_nd/(M_PI*M_PI)) * s*sn/(x*x);
+                  break;
+              }
+            }
+        } else { // x < 1.e-4
+            // res = n/(pi x)^2 * sin(pi x) * sin(pi x / n)
+            //     ~= (1 - 1/6 pix^2) * (1 - 1/6 pix^2 / n^2)
+            //     = 1 - 1/6 pix^2 ( 1 + 1/n^2 )
+            double pix = M_PI*x;
+            double temp = (1./6.) * pix*pix;
+            s = pix * (1. - temp);
+            res = 1. - temp * (1. + 1./(_nd*_nd));
+            // For x < 1.e-4, the errors in this approximation are less than 1.e-16.
+        }
+
+        // Gary's original write up about this is in devel/modules/finterp.pdf.
+        // We start with Gary's eqn 22, and extend the subsequent derivation to 3rd order.
+        // (More in uCalc below than here...)
+        //
+        // An image with uniform f(x) = 1 when interpolated with Lanczos will have an error of:
+        // E(x) = 2 * Sum_j K(j) (cos(2 pi j x) - 1)
+        //      = -2 K(1) (1-cos(2pix)) - 2 K(2) (1-cos(4pix)) - 2 K(3) (1-cos(6pix)) ...
+        // 
+        // To preserve a uniform flux, we want to divide by (1 + the above value) to correct
+        // for the error. 
+        //
+        // Unfortunately, it turns out that while K(1) << 1, the series from there on starts
+        // to converge more slowly, so the gains from each subsequent term become less.
+        // For n=3, the values of K(1)..K(4) are: 1.416e-3, 4.390e-5, 7.716e-6, 2.343e-6.
+        // Thus, it would be hard to use this method to get to significantly better accuracy
+        // than about 1.e-6.
+        // 
+        // To give feel for how this correction goes, a 2-d unit flux field interpolated
+        // with Lanczos, n=3, has the following maximum errors:
+        //
+        // With no correction: 1.13e-2
+        // With _K1:           3.98e-4
+        // With _K2:           8.36e-5
+        // With _K3:           3.02e-5
+        // With _K4:           1.39e-5
+        // With _K5:           7.27e-6
+        //
+        // I stopped here, since we have other approximations that are only accurate to 1.e-5.
+        // But certainly, it will be hard to get much more accurate that this, at least with
+        // this framework for the correction.
+
+        // res /= 1. - 2.*_K1*(1.-cos(2.*M_PI*x)) - 2*_K2*(1.-cos(4.*M_PI*x)) - ...;
+        if (_conserve_dc) {
+            dbg<<"xCalc for x = "<<x<<std::endl;
+            dbg<<"res = "<<res<<" / ";
+            double ssq = s*s;
+            double factor = (1.
+                             - 4.*_K[1]*ssq
+                             - 16.*_K[2]*ssq*(1.-ssq)
+                             - 4.*_K[3]*ssq*(9.-ssq*(24.-16.*ssq))
+                             - 64.*_K[4]*ssq*(1.-ssq*(5.-ssq*(8.-4.*ssq)))
+                             - 4.*_K[5]*ssq*(25.-ssq*(200.-ssq*(560.-ssq*(640.-256.*ssq)))));
+            res /= factor;
+#ifdef DEBUGLOGGING
+            dbg<<factor<<" = "<<res<<std::endl;
+            dbg<<"factor = 1 - "<<2.*_K[1]*(1.-std::cos(2.*M_PI*x))
+                <<" - "<<2.*_K[2]*(1.-std::cos(4.*M_PI*x))
+                <<" - "<<2.*_K[3]*(1.-std::cos(6.*M_PI*x))
+                <<" - "<<2.*_K[4]*(1.-std::cos(8.*M_PI*x))
+                <<" - "<<2.*_K[5]*(1.-std::cos(10.*M_PI*x))<<" = "
+                << (1.
+                    - 2.*_K[1]*(1.-std::cos(2.*M_PI*x))
+                    - 2.*_K[2]*(1.-std::cos(4.*M_PI*x))
+                    - 2.*_K[3]*(1.-std::cos(6.*M_PI*x))
+                    - 2.*_K[4]*(1.-std::cos(8.*M_PI*x))
+                    - 2.*_K[5]*(1.-std::cos(10.*M_PI*x))) 
+                <<" = "<<factor<<std::endl;
+#endif
+        }
+        return res;
     }
 
-    double Lanczos::uCalc(double u) const 
+    double Lanczos::uCalcRaw(double u) const 
     {
-        double vp=_n*(2.*u+1.);
-        double vm=_n*(2.*u-1.);
+        // F(u) = ( (vp+1) Si((vp+1)pi) - (vp-1) Si((vp-1)pi) +
+        //          (vm-1) Si((vm-1)pi) - (vm+1) Si((vm+1)pi) ) / 2pi
+        double vp=_nd*(2.*u+1.);
+        double vm=_nd*(2.*u-1.);
         double retval = (vm-1.)*Si(M_PI*(vm-1.))
             -(vm+1.)*Si(M_PI*(vm+1.))
             -(vp-1.)*Si(M_PI*(vp-1.))
@@ -668,15 +855,113 @@ namespace galsim {
         return retval/(2.*M_PI);
     }
 
-    Lanczos::Lanczos(int n, bool conserve_flux, double tol,
-                     const GSParamsPtr& gsparams) :  
-        Interpolant(gsparams), _in(n), _n(n), _conserve_flux(conserve_flux), _tolerance(tol)
+    double Lanczos::uCalc(double u) const 
     {
+        double retval = uCalcRaw(u);
+        // The correction (described in xCalc) to preserve a uniform flux profile can be 
+        // approximate by its series approximation, where I throw out terms that are 3rd
+        // order or higher in the coefficients (K1^3 ~ 3.e-9, so negligible), and the only
+        // 2nd order terms I keep have K1 as one of the terms (K2^2 ~ 2.e-9).
+        //
+        // (1+E(x))^-1 ~= 1 + 2K(1) (1-cos(2pix)) + 4K(1)^2 (1-cos(2pix))^2 
+        //                  + 2K(2) (1-cos(4pix)) + 4K(1)K(2) (1-cos(2pix)) (1-cos(4pix))
+        //                  + 2K(3) (1-cos(6pix)) + 4K(1)K(3) (1-cos(2pix)) (1-cos(6pix))
+        //                  + 2K(4) (1-cos(8pix)) + 2K(5) (1-cos(10pix))
+        //
+        // The effect in the Fourier transform will then be a convolution by the fourier transform
+        // of (1+E(x))^-1:
+        //
+        // F[(1+E(x))^-1] = 2pi ( 
+        //     D(k)
+        //     + K(1) (-D(k-2pi) + 2 D(k) - D(k+2pi))
+        //     + K(1)^2 (D(k-4pi) - 4 D(k-2pi) + 6 D(k) - 4 D(k+2pi) + D(k+4pi))
+        //     + K(2) (-D(k-4pi) + 2 D(k) - D(k+4pi))
+        //     + K(1) K(2) (D(k-6pi) - 2 D(k-4pi) - D(k-2pi) + 4 D(k) - D(k+2pi) 
+        //                  - 2 D(k+4pi) + D(k+6pi))
+        //     + K(3) (-D(k-6pi) + 2 D(k) - D(k+6pi))
+        //     + K(1) K(3) (D(k-8pi) - 2 D(k-6pi) + D(k-4pi) - 2 D(k-2pi) + 4 D(k) 
+        //                  - 2 D(k+2pi) + D(k+4pi) - 2 D(k+6pi) + D(k+8pi))
+        //     + K(4) (-D(k-8pi) + 2 D(k) - D(k+8pi))
+        //     + K(5) (-D(k-10pi) + 2 D(k) - D(k+10pi))
+        //     )
+        //
+        // where D(k) is the Dirac delta function.
+        //
+        // When convolved with the original F(u) (since we are multiplying in real space, it 
+        // becomes a convolution in k-space), we get:
+        //
+        // (1 + 2K1 + 6K1^2 + 2K2 + 2K1 K2 + 2K3 + 2K1 K3 + 2K4 + 2K5) F(u)
+        // + (-K1 - 4K1^2 - K1 K2 - 2K1 K3) ( F(u-1) + F(u+1) )
+        // + (K1^2 - K2 - 2K1 K2 + K1 K3) ( F(u-2) + F(u+2) )
+        // + (K1 K2 - K3 - 2K1 K3) ( F(u-3) + F(u+3) )
+        // + (K1 K3 - K4) ( F(u-4) + F(u+4) )
+        // + (-K5) ( F(u-5) + F(u+5) )
+        //
+        // These coefficients are constant, so they are stored in _C.
+
+        if (_conserve_dc) {
+            retval *= _C[0];
+            retval += _C[1] * (uCalcRaw(u+1.) + uCalcRaw(u-1.));
+            retval += _C[2] * (uCalcRaw(u+2.) + uCalcRaw(u-2.));
+            retval += _C[3] * (uCalcRaw(u+3.) + uCalcRaw(u-3.));
+            retval += _C[4] * (uCalcRaw(u+4.) + uCalcRaw(u-4.));
+            retval += _C[5] * (uCalcRaw(u+5.) + uCalcRaw(u-5.));
+        }
+        return retval;
+    }
+
+    Lanczos::Lanczos(int n, bool conserve_dc, double tol, const GSParamsPtr& gsparams) :  
+        Interpolant(gsparams), _n(n), _nd(n), _conserve_dc(conserve_dc), _tolerance(tol)
+    {
+        dbg<<"Start constructor for Lanczos n = "<<n<<std::endl;
         // Reduce range slightly from n so we're not including points with zero weight in
         // interpolations:
-        _range = _n*(1-0.1*std::sqrt(_tolerance));
+        _range = _nd*(1-0.1*std::sqrt(_tolerance));
 
-        _u1 = uCalc(1.);
+        for(double u=0.;u<=10.;u+=0.1) dbg<<"F("<<u<<") = "<<uCalcRaw(u)<<std::endl;
+
+        _K.resize(6);
+        _K[1] = uCalcRaw(1.);
+        _K[2] = uCalcRaw(2.);
+        _K[3] = uCalcRaw(3.);
+        _K[4] = uCalcRaw(4.);
+        _K[5] = uCalcRaw(5.);
+        dbg<<"K1,2,3,4,5 = "<<_K[1]<<','<<_K[2]<<','<<_K[3]<<','<<_K[4]<<','<<_K[5]<<std::endl;
+
+        // See comments in _uCalc above.
+        // C0 = 1 + 2K1 + 6K1^2 + 2K2 + 2K1 K2 + 2K3 + 2K1 K3 + 2K4 + 2K5
+        // C1 = -K1 - 4K1^2 - K1 K2 - 2K1 K3
+        // C2 = K1^2 - K2 - 2K1 K2 + K1 K3
+        // C3 = K1 K2 - K3 - 2K1 K3
+        // C4 = K1 K3 - K4
+        // C5 = -K5
+        _C.resize(6);
+        _C[0] = 1. + 2.*(_K[1]*(1. + 3.*_K[1] + _K[2] + _K[3]) + _K[2] + _K[3] + _K[4] + _K[5]);
+        _C[1] = -_K[1] * (1. + 4.*_K[1] + _K[2] + 2.*_K[3]);
+        _C[2] = _K[1]*(_K[1] - 2.*_K[2] + _K[3]) - _K[2];
+        _C[3] = _K[1]*(_K[1] - 2.*_K[3]) - _K[3];
+        _C[4] = _K[1]*_K[3] - _K[4];
+        _C[5] = -_K[5];
+        dbg<<"C0,1,2,3,4,5 = "<<_C[0]<<','<<_C[1]<<','<<_C[2]<<','<<_C[3]<<','<<_C[4]
+            <<','<<_C[5]<<std::endl;
+
+        for (double x=0.; x<1.; x+=0.1) {
+            dbg<<"S("<<x<<") = ";
+            double sum = 0.;
+            for (int i=-_n;i<_n;++i) {
+                double val = sinc(x+i)*sinc((x+i)/_nd);
+                sum += val;
+                dbg<<val<<" + ";
+            }
+            dbg<<" = "<<sum<<std::endl;
+            dbg<<"Nominal S("<<x<<") = "<< 
+                (1.
+                 - 2.*_K[1]*(1.-std::cos(2.*M_PI*x))
+                 - 2.*_K[2]*(1.-std::cos(4.*M_PI*x))
+                 - 2.*_K[3]*(1.-std::cos(6.*M_PI*x))
+                 - 2.*_K[4]*(1.-std::cos(8.*M_PI*x))
+                 - 2.*_K[5]*(1.-std::cos(10.*M_PI*x))) << std::endl;
+        }
 
         // Strangely, not all compilers correctly setup an empty map when it is a 
         // static variable, so you can get seg faults using it.
@@ -689,7 +974,7 @@ namespace galsim {
             _cache_utab.clear();  
         }
 
-        KeyType key(n,std::pair<bool,double>(_conserve_flux,tol));
+        KeyType key(n,std::pair<bool,double>(_conserve_dc,tol));
 
         if (_cache_umax.count(key)) {
             // Then uMax and tab are already cached.
@@ -707,29 +992,18 @@ namespace galsim {
                 gsparams->table_spacing * std::pow(gsparams->xvalue_accuracy/10.,0.25);
             // Make sure steps hit the integer values exactly.
             const double xStep = 1. / std::ceil(1./xStep1);
-            for(double x=0.; x<_n; x+=xStep) _xtab->addEntry(x, xCalc(x));
+            for(double x=0.; x<_nd; x+=xStep) _xtab->addEntry(x, xCalc(x));
 #endif
 
             // Build utab = table of u values
             _utab.reset(new Table<double,double>(Table<double,double>::spline));
             const double uStep = 
-                gsparams->table_spacing * std::pow(gsparams->kvalue_accuracy/10.,0.25) / _n;
+                gsparams->table_spacing * std::pow(gsparams->kvalue_accuracy/10.,0.25) / _nd;
             _uMax = 0.;
-            if (_conserve_flux) {
-                for (double u=0.; u - _uMax < 1./_n || u<1.1; u+=uStep) {
-                    double uval = uCalc(u);
-                    uval *= 1.+2.*_u1;
-                    uval -= _u1*uCalc(u+1.);
-                    uval -= _u1*uCalc(u-1.);
-                    _utab->addEntry(u, uval);
-                    if (std::abs(uval) > _tolerance) _uMax = u;
-                }
-            } else {
-                for (double u=0.; u - _uMax < 1./_n || u<1.1; u+=uStep) {
-                    double uval = uCalc(u);
-                    _utab->addEntry(u, uval);
-                    if (std::abs(uval) > _tolerance) _uMax = u;
-                }
+            for (double u=0.; u - _uMax < 1./_nd || u<1.1; u+=uStep) {
+                double uval = uCalc(u);
+                _utab->addEntry(u, uval);
+                if (std::abs(uval) > _tolerance) _uMax = u;
             }
             // Save these values in the cache.
 #ifdef USE_TABLES
@@ -747,94 +1021,19 @@ namespace galsim {
     double Lanczos::xval(double x) const
     {
         x = std::abs(x);
-        if (x >= _n) return 0.;
+        if (x >= _nd) return 0.;
         else {
 #ifdef USE_TABLES
             return (*_xtab)(x);
 #else
-            switch (_in) {
-                // TODO: We usually only use n=3,5,7.  If we start using any other values on a
-                // regular basis, it's worth it to specialize that case here.
-                // Also, at some point it might be worth doing the same trick we did with 
-                // SBMoffat's kValue and pow functions, making these different cases all different 
-                // functions and having the constructor just set the function once.  Then calls to 
-                // xval wouldn't have any jumps from the case or (if you wanted) even the
-                // _conserve_flux check.
-              case 3 : {
-                  if (x < 1.e-6) {
-                      double xsq = x*x;
-                      double res = 1. - 5./3. * xsq;
-                      if (_conserve_flux) res *= 1. + 4.*M_PI*M_PI*_u1*xsq;
-                      return res;
-                  } else {
-                      // Then xval = 3/pi^2 sin(pi x) sin(pi x /3) / x^2
-                      // Let s = sin(pi x /3)
-                      // Then sin(pi x) = s*(3-4s^2)
-                      // xval = 3/pi^2 s^2*(3-4s) / x^2
-                      double sn = sin((M_PI/3.)*x);
-                      double s = sn*(3.-4.*sn*sn);
-                      double res = (3./(M_PI*M_PI)) * s*sn/(x*x);
-                      if (_conserve_flux) res *= 1. + 4.*_u1*s*s;
-                      return res;
-                  }
-                  break;
-              }
-              case 5 : {
-                  if (x < 1.e-6) {
-                      double xsq = x*x;
-                      double res = 1. - 13./3. * xsq;
-                      if (_conserve_flux) res *= 1. + 4.*M_PI*M_PI*_u1*xsq;
-                      return res;
-                  } else {
-                      double sn = sin((M_PI/5.)*x);
-                      double snsq = sn*sn;
-                      double s = sn*(5.-snsq*(20.-16.*snsq));
-                      double res = (5./(M_PI*M_PI)) * s*sn/(x*x);
-                      if (_conserve_flux) res *= 1. + 4.*_u1*s*s;
-                      return res;
-                  }
-                  break;
-              }
-              case 7 : {
-                  if (x < 1.e-6) {
-                      double xsq = x*x;
-                      double res = 1. - 25./3. * xsq;
-                      if (_conserve_flux) res *= 1. + 4.*M_PI*M_PI*_u1*xsq;
-                      return res;
-                  } else {
-                      double sn = sin((M_PI/7.)*x);
-                      double snsq = sn*sn;
-                      double s = sn*(7.-snsq*(56.-snsq*(112.-64.*snsq)));
-                      double res = (7./(M_PI*M_PI)) * s*sn/(x*x);
-                      if (_conserve_flux) res *= 1. + 4.*_u1*s*s;
-                      return res;
-                  }
-                  break;
-              }
-              default : {
-                  if (x < 1.e-6) {
-                      double xsq = x*x;
-                      double res = 1. - (_n*_n+1.)/6. * xsq;
-                      if (_conserve_flux) res *= 1. + 4.*M_PI*M_PI*_u1*xsq;
-                      return res;
-                  } else {
-                      // xval = n/pi^2 sin(pi x) sin(pi x /n) / x^2
-                      double s = sin(M_PI*x);
-                      double sn = sin(M_PI*x/_n);
-                      double res = (_n/(M_PI*M_PI)) * s*sn/(x*x);
-                      // res *= 1. + 2.*_u1*(1.-cos(2.*M_PI*x));
-                      if (_conserve_flux) res *= 1. + 4.*_u1*s*s;
-                      return res;
-                  }
-                  break;
-              }
-            }
+            return xCalc(x);
 #endif
         }
     }
 
     double Lanczos::uval(double u) const
     {
+        // For this one, we always use the lookup table.
         u = std::abs(u);
         return u>_uMax ? 0. : (*_utab)(u);
     }

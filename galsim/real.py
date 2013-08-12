@@ -43,8 +43,9 @@ from galsim import GSObject
 
 
 class RealGalaxy(GSObject):
-    """A class describing real galaxies from some training dataset.  Has an SBConvolve in the
-    SBProfile attribute.
+    """A class describing real galaxies from some training dataset.  It's underlying implementation
+    uses Convolve instance of an InterpolatedImage (for the observed galaxy) with a Deconvolve
+    of another InterpolatedImage (for the PSF).
 
     This class uses a catalog describing galaxies in some training data (for more details, see the
     RealGalaxyCatalog documentation) to read in data about realistic galaxies that can be used for
@@ -66,9 +67,7 @@ class RealGalaxy(GSObject):
     galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
     keywords for choosing a galaxy; exactly one must be set.  In future we may add more such
     options, e.g., to choose at random but accounting for the non-constant weight factors
-    (probabilities for objects to make it into the training sample).  Like other GSObjects, the
-    RealGalaxy contains an SBProfile attribute which is an SBConvolve representing the deconvolved
-    HST galaxy.
+    (probabilities for objects to make it into the training sample).  
 
     Note that preliminary tests suggest that for optimal balance between accuracy and speed,
     `k_interpolant` and `pad_factor` should be kept at their default values.  The user should be
@@ -90,7 +89,7 @@ class RealGalaxy(GSObject):
                                 indicating which real-space interpolant should be used.  Options 
                                 are 'nearest', 'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' 
                                 where N should be the integer order to use. [default 
-                                `x_interpolant = galsim.Lanczos(5,...)'].
+                                `x_interpolant = galsim.Quintic()'].
     @param k_interpolant        Either an Interpolant2d (or Interpolant) instance or a string 
                                 indicating which k-space interpolant should be used.  Options are 
                                 'nearest', 'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' 
@@ -104,9 +103,8 @@ class RealGalaxy(GSObject):
                                 default value, 4.  We strongly recommend leaving this parameter at
                                 its default value; see text above for details.
                                 [Default `pad_factor = 0`.]
-    @param noise_pad            When creating the SBProfile attribute for this GSObject, pad the
-                                Interpolated image with zeros, or with noise of a level specified
-                                in the training dataset?  There are several options here: 
+    @param noise_pad            Pad the Interpolated image with zeros, or with noise of a level 
+                                specified in the training dataset?  There are several options here: 
                                     Use `noise_pad = False` if you wish to pad with zeros.
                                     Use `noise_pad = True` if you wish to pad with uncorrelated
                                         noise of the proper variance.
@@ -134,11 +132,11 @@ class RealGalaxy(GSObject):
                                 The purpose of this keyword is to allow for a more flexible
                                 representation of some noise field around an object; if the user
                                 wishes to represent the sky level around an object, they should do
-                                that when they have drawn the final image instead.  (Default
-                                `pad_image = None`.)
+                                that when they have drawn the final image instead.  [Default
+                                `pad_image = None`.]
     @param use_cache            Specify whether to cache noise_pad read in from a file to save
                                 having to build an CorrelatedNoise repeatedly from the same image.
-                                (Default `use_cache = True`)
+                                [Default `use_cache = True`]
     @param gsparams             You may also specify a gsparams argument.  See the docstring for
                                 galsim.GSParams using help(galsim.GSParams) for more information
                                 about this option.
@@ -194,11 +192,6 @@ class RealGalaxy(GSObject):
         # read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors.
         gal_image = real_galaxy_catalog.getGal(use_index)
         PSF_image = real_galaxy_catalog.getPSF(use_index)
-
-        # RealGalaxy uses a different default interpolant than InterpolatedImage, so set it here.
-        if x_interpolant is None:
-            lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4)
-            x_interpolant = galsim.InterpolantXY(lan5)
 
         # save any other relevant information as instance attributes
         self.catalog_file = real_galaxy_catalog.file_name
@@ -312,7 +305,7 @@ class RealGalaxyCatalog(object):
                       If a path (a string containing `/`), it is the full path to the directory
                       containing the galaxy/PDF images.
     @param dir        The directory of catalog file (optional).
-    @param preload    Whether to preload the header information. (default `preload = False`)
+    @param preload    Whether to preload the header information. [Default `preload = False`]
     """
     _req_params = { 'file_name' : str }
     _opt_params = { 'image_dir' : str , 'dir' : str, 'preload' : bool }
@@ -462,8 +455,8 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     @param target_PSF          The target PSF, either one of our base classes or an ImageView/Image.
     @param target_pixel_scale  The pixel scale for the final image, in arcsec.
     @param g1                  First component of shear to impose (components defined with respect
-                               to pixel coordinates), default `g1 = 0.`
-    @param g2                  Second component of shear to impose, default `g2 = 0.`
+                               to pixel coordinates), [Default `g1 = 0.`]
+    @param g2                  Second component of shear to impose, [Default `g2 = 0.`]
     @param rotation_angle      Angle by which to rotate the galaxy (must be a galsim.Angle 
                                instance).
     @param rand_rotate         If `rand_rotate = True` (default) then impose a random rotation on 
@@ -471,8 +464,8 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     @param rng                 A random number generator to use for selection of the random 
                                rotation angle. (optional, may be any kind of galsim.BaseDeviate 
                                or None)
-    @param target_flux         The target flux in the output galaxy image, default 
-                               `target_flux = 1000.`
+    @param target_flux         The target flux in the output galaxy image, [Default 
+                               `target_flux = 1000.`]
     @param image               As with the GSObject.draw() function, if an image is provided,
                                then it will be used and returned.
                                If `image=None`, then an appropriately sized image will be created.
@@ -481,25 +474,12 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     # do some checking of arguments
     if not isinstance(real_galaxy, galsim.RealGalaxy):
         raise RuntimeError("Error: simReal requires a RealGalaxy!")
-    for Class in galsim.Image.itervalues():
+    for Class in galsim.Image.values() + galsim.ImageView.values():
         if isinstance(target_PSF, Class):
-            lan5 = galsim.Lanczos(5, conserve_flux = True, tol = 1.e-4)
-            interp2d = galsim.InterpolantXY(lan5)
-            target_PSF = galsim.InterpolatedImage(
-                target_PSF.view(), x_interpolant=interp2d, dx = target_pixel_scale)
+            target_PSF = galsim.InterpolatedImage(target_PSF.view(), dx=target_pixel_scale)
             break
-    for Class in galsim.ImageView.itervalues():
-        if isinstance(target_PSF, Class):
-            lan5 = galsim.Lanczos(5, conserve_flux = True, tol = 1.e-4)
-            interp2d = galsim.InterpolantXY(lan5)
-            target_PSF = galsim.InterpolatedImage(target_PSF,
-                                                  x_interpolant=interp2d,
-                                                  dx=target_pixel_scale)
-            break
-    if isinstance(target_PSF, galsim.GSObject):
-        target_PSF = target_PSF.SBProfile
-    if not isinstance(target_PSF, galsim.SBProfile):
-        raise RuntimeError("Error: target PSF is not an Image, ImageView, SBProfile, or GSObject!")
+    if not isinstance(target_PSF, galsim.GSObject):
+        raise RuntimeError("Error: target PSF is not an Image, ImageView, or GSObject!")
     if rotation_angle != None and not isinstance(rotation_angle, galsim.Angle):
         raise RuntimeError("Error: specified rotation angle is not an Angle instance!")
     if (target_pixel_scale < real_galaxy.pixel_scale):
@@ -537,7 +517,7 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
         real_galaxy_copy.applyShear(g1=g1, g2=g2)
 
     # convolve, resample
-    out_gal = galsim.Convolve([real_galaxy_copy, galsim.GSObject(target_PSF)])
+    out_gal = galsim.Convolve([real_galaxy_copy, target_PSF])
     image = out_gal.draw(image=image, dx = target_pixel_scale)
 
     # return simulated image

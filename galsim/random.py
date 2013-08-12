@@ -262,10 +262,12 @@ generator.
      In this case, a new random number generator is created and it is seeded using the computer's
      microsecond counter.
 
-  2) Using a particular seed as the first argument to the constructor.
-     This will also create a new random number generator, but seed it with the provided value.
+  2) Using a particular seed as the first argument to the constructor.  This will also create a new
+     random number generator, but seed it with the provided value.  Using 0 (the default) means to
+     use the time of day as a seed, i.e., specifying a seed of 0 is equivalent to using the previous
+     constructor.
 
-  3) Passing another BaseDeviate as the first arguemnt to the constructor.
+  3) Passing another BaseDeviate as the first argument to the constructor.
      This will make the new Deviate share the same underlying random number generator with the other
      Deviate.  So you can make one Deviate (of any type), and seed it with a particular
      deterministic value.  Then if you pass that Deviate to any other one you make, they will all be
@@ -299,10 +301,12 @@ Seed the pseudo-random number generator.
 Multiple Calling Options
 ------------------------
 
-    >>> galsim.BaseDeviate.seed()       # Re-seed the PRNG using current time
+    >>> galsim.BaseDeviate.seed()       # Re-seed the PRNG using the current time.
 
-    >>> galsim.BaseDeviate.seed(lseed)  # Re-seed the PRNG using specified seed, where lseed
-                                        # is a long int
+    >>> galsim.BaseDeviate.seed(lseed)  # Re-seed the PRNG using the specified seed, where lseed
+                                        # is a long int.  Using 0 (the default) means to use the
+                                        # time of day as a seed, i.e., the equivalent of the
+                                        # previous call with no specified seed.
 
 """
 
@@ -312,14 +316,17 @@ Reset the pseudo-random number generator, severing connections to any other devi
 Multiple Calling Options
 ------------------------
 
-    >>> galsim.BaseDeviate.reset()        # Re-seed the PRNG using current time, and sever the
-                                          # connection to any other Deviate
+    >>> galsim.BaseDeviate.reset()        # Re-seed the PRNG using the current time, and sever the
+                                          # connection to any other Deviate.
 
-    >>> galsim.BaseDeviate.reset(lseed)   # Re-seed the PRNG using specified seed, where lseed is a
-                                          # long int, and sever the connection to any other Deviate
+    >>> galsim.BaseDeviate.reset(lseed)   # Re-seed the PRNG using the specified seed, where lseed
+                                          # is a long int, and sever the connection to any other
+                                          # Deviate. Using 0 (the default) means to use the
+                                          # time of day as a seed, i.e., the equivalent of the
+                                          # previous call with no specified seed.
 
     >>> galsim.BaseDeviate.reset(dev)     # Re-connect this Deviate with the same underlying random
-                                          # number generator supplied in dev
+                                          # number generator supplied in dev.
 
 """
 
@@ -332,13 +339,16 @@ Initialization
 --------------
 
     >>> u = galsim.UniformDeviate()       # Initializes u to be a UniformDeviate instance, and seeds
-                                          # the PRNG using current time
+                                          # the PRNG using current time.
 
     >>> u = galsim.UniformDeviate(lseed)  # Initializes u to be a UniformDeviate instance, and seeds
-                                          # the PRNG using specified long integer lseed
+                                          # the PRNG using the specified long integer lseed.  Using 0
+                                          # (the default) means to use the time of day as a seed,
+                                          # i.e., the equivalent of the previous call with no
+                                          # specified seed.
 
     >>> u = galsim.UniformDeviate(dev)    # Initializes u to be a UniformDeviate instance, and share
-                                          # the same underlying random number generator as dev
+                                          # the same underlying random number generator as dev.
 
 Calling
 -------
@@ -366,14 +376,19 @@ Initialization
 
     >>> g = galsim.GaussianDeviate(mean=0., sigma=1.)          # Initializes g to be a
                                                                # GaussianDeviate instance using the
-                                                               # current time for the seed
+                                                               # current time for the seed.
 
     >>> g = galsim.GaussianDeviate(lseed, mean=0., sigma=1.)   # Initializes g using the specified
-                                                               # seed, where lseed is a long int
+                                                               # seed, where lseed is a long
+                                                               # int. Using 0 (the default) means to
+                                                               # use the time of day as a seed,
+                                                               # i.e., the equivalent of the
+                                                               # previous call with no specified
+                                                               # seed.
 
     >>> g = galsim.GaussianDeviate(dev, mean=0., sigma=1.)     # Initializes g to share the same
                                                                # underlying random number generator
-                                                               # as dev
+                                                               # as dev.
 
 Parameters:
 
@@ -416,13 +431,17 @@ Initialization
 
     >>> b = galsim.BinomialDeviate(N=1., p=0.5)          # Initializes b to be a BinomialDeviate
                                                          # instance using the current time for the
-                                                         # seed
+                                                         # seed.
 
     >>> b = galsim.BinomialDeviate(lseed, N=1., p=0.5)   # Initializes b using the specified seed,
-                                                         # where lseed is a long int
+                                                         # where lseed is a long int.  Using 0 (the
+                                                         # default) means to use the time of day as
+                                                         # a seed, i.e., the equivalent of the
+                                                         # previous call with no specified seed.
 
     >>> b = galsim.BinomialDeviate(dev, N=1., p=0.5)     # Initializes b to share the same
-                                                         # underlying random number generator as dev
+                                                         # underlying random number generator as
+                                                         # dev.
 
 Parameters:
 
@@ -463,14 +482,17 @@ for more details.
 Initialization
 --------------
 
-    >>> p = galsim.PoissonDeviate(mean=1.)         # Initializes g to be a PoissonDeviate instance
-                                                   # using the current time for the seed
+    >>> p = galsim.PoissonDeviate(mean=1.)         # Initializes p to be a PoissonDeviate instance
+                                                   # using the current time for the seed.
 
-    >>> p = galsim.PoissonDeviate(lseed, mean=1.)  # Initializes g using the specified seed, where
-                                                   # lseed is a long int
+    >>> p = galsim.PoissonDeviate(lseed, mean=1.)  # Initializes p using the specified seed, where
+                                                   # lseed is a long int.  Using 0 (the default)
+                                                   # means to use the time of day as a seed, i.e.,
+                                                   # the equivalent of the previous call with no
+                                                   # specified seed.
 
-    >>> p = galsim.PoissonDeviate(dev, mean=1.)    # Initializes g to share the same underlying
-                                                   # random number generator as dev
+    >>> p = galsim.PoissonDeviate(dev, mean=1.)    # Initializes p to share the same underlying
+                                                   # random number generator as dev.
 
 Parameters:
 
@@ -512,13 +534,17 @@ Initialization
 --------------
 
     >>> w = galsim.WeibullDeviate(a=1., b=1.)         # Initializes w to be a WeibullDeviate
-                                                      # instance using the current time for the seed
+                                                      # instance using the current time for the
+                                                      # seed.
 
     >>> w = galsim.WeibullDeviate(lseed, a=1., b=1.)  # Initializes w using the specified seed,
-                                                      # where lseed is a long int
+                                                      # where lseed is a long int.  Using 0 (the
+                                                      # default) means to use the time of day as a
+                                                      # seed, i.e., the equivalent of the previous
+                                                      # call with no specified seed.
 
     >>> w = galsim.WeibullDeviate(dev, a=1., b=1.)    # Initializes w to share the same underlying
-                                                      # random number generator as dev
+                                                      # random number generator as dev.
 
 Parameters:
 
@@ -560,14 +586,18 @@ Initialization
 
     >>> gam = galsim.GammaDeviate(k=1., theta=1.)         # Initializes gam to be a GammaDeviate
                                                           # instance using the current time for
-                                                          # the seed
+                                                          # the seed.
 
     >>> gam = galsim.GammaDeviate(lseed, k=1., theta=1.)  # Initializes gam using the specified
-                                                          # seed, where lseed is a long int
+                                                          # seed, where lseed is a long int. Using 0
+                                                          # (the default) means to use the time of
+                                                          # day as a seed, i.e., the equivalent of
+                                                          # the previous call with no specified
+                                                          # seed.
 
     >>> gam = galsim.GammaDeviate(dev, k=1., theta=1.)    # Initializes gam to share the same
                                                           # underlying random number generator as
-                                                          # dev
+                                                          # dev.
 
 Parameters:
 
@@ -576,7 +606,7 @@ Parameters:
 
 Calling
 -------
-Taking the instance from the above examples, successive calls to g() will return successive, 
+Taking the instance from the above examples, successive calls to gam() will return successive, 
 pseudo-random Gamma-distributed deviates with shape and scale parameters k and theta. 
 
     >>> gam = galsim.GammaDeviate()
@@ -609,20 +639,23 @@ Initialization
 --------------
 
     >>> chis = galsim.Chi2Deviate(n=1.)          # Initializes chis to be a Chi2Deviate instance
-                                                 # using the current time for the seed
+                                                 # using the current time for the seed.
 
     >>> chis = galsim.Chi2Deviate(lseed, n=1.)   # Initializes chis using the specified seed, where
-                                                 # lseed is a long int
+                                                 # lseed is a long int.  Using 0 (the default) means
+                                                 # to use the time of day as a seed, i.e., the
+                                                 # equivalent of the previous call with no specified
+                                                 # seed.
 
     >>> chis = galsim.Chi2Deviate(dev, n=1.)     # Initializes chis to share the same underlying
-                                                 # random number generator as dev
+                                                 # random number generator as dev.
 
 Parameters:
     n   number of degrees of freedom for the output distribution [default `n = 1`].  Must be > 0.
 
 Calling
 -------
-Taking the instance from the above examples, successive calls to g() will return successive, 
+Taking the instance from the above examples, successive calls to chis() will return successive, 
 pseudo-random Chi^2-distributed deviates with degrees-of-freedom parameter n.
 
     >>> chis = galsim.Chi2Deviate()

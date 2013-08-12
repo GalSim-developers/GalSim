@@ -18,6 +18,12 @@
  * You should have received a copy of the GNU General Public License
  * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
  */
+#ifndef __INTEL_COMPILER
+#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+#endif
+#endif
+
 #include "boost/python.hpp"
 #include <cstdlib>
 #include "Interpolant.h"
@@ -123,8 +129,8 @@ namespace galsim {
             "devel/modules/finterp.pdf in the GalSim repository.)  This objection does not apply\n"
             "when shooting photons, in which case the linear interpolant is quite efficient (but\n"
             "not necessarily the best choice in terms of accuracy).\n\n"
-            "Tolerance `tol` determines how far onto sinc^2 wiggles the uval will go.  Very far, by\n"
-            "default! (default `tol=1e-3`)\n";
+            "Tolerance `tol` determines how far onto sinc^2 wiggles the uval will go.  Very far,\n"
+            "by default! (default `tol=1e-3`)\n";
             bp::class_<Linear,bp::bases<Interpolant>,boost::noncopyable>(
                 "Linear", linear_doc, bp::init<double>(bp::arg("tol")=1E-3)
             );
@@ -139,12 +145,12 @@ namespace galsim {
             "fixed in src/Interpolant.cpp to be 0.1 times the input `tol` value, where `tol` is\n"
             "typically very small already (default `tol=1e-4`).\n\n"
             "Note that pure Lanczos, when interpolating a set of constant-valued samples, does\n"
-            "not return this constant.  Setting `conserve_flux` in the constructor tweaks the\n"
-            "function so that it approximately conserves the value of constant (DC) input data.\n"
-            "Only the first order correction is applied, which should be accurate to about 1.e-5.\n";
+            "not return this constant.  Setting `conserve_dc` in the constructor tweaks the\n"
+            "function so that it approximately conserves the value of constant (DC) input data\n"
+            "(accurate to better than 1.e-5 when used in two dimensions).\n";
             bp::class_<Lanczos,bp::bases<Interpolant>,boost::noncopyable>(
                 "Lanczos", lanczos_doc, bp::init<int,bool,double>(
-                    (bp::arg("n"), bp::arg("conserve_flux")=true, bp::arg("tol")=1E-4)
+                    (bp::arg("n"), bp::arg("conserve_dc")=true, bp::arg("tol")=1E-4)
                 )
             );
 

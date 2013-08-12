@@ -42,6 +42,10 @@
 #pragma GCC diagnostic ignored "-Warray-bounds"
 #endif
 
+#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+#endif
+
 // Only clang seems to have this
 #ifdef __clang__
 #if __has_warning("-Wlogical-op-parentheses")
@@ -65,6 +69,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageBasic , T , test_types )
     // Tests are designed for these to be odd, but not necessarily equal
     const int ncol=7;  // x ranges from 1 .. ncol
     const int nrow=5;  // y ranges from 1 .. nrow
+    const double scale=1.; // We aren't really testing scale stuff here, so just use 1.
     T ref_array[nrow*ncol] = {
         // x  -> 
         11, 21, 31, 41, 51, 61, 71,  // y
@@ -75,7 +80,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageBasic , T , test_types )
     // Of course, when viewed as an image, the rows are generally drawn from bottom to top.
 
     // Check basic constructor from nrow,ncol
-    galsim::Image<T> im1(ncol,nrow);
+    galsim::Image<T> im1(ncol,nrow, scale);
     galsim::Bounds<int> bounds(1,ncol,1,nrow);
 
     BOOST_CHECK(im1.getXMin()==1);
@@ -88,7 +93,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageBasic , T , test_types )
     BOOST_CHECK(im1.getStride() == ncol);
 
     // Check alternate constructor from bounds
-    galsim::Image<T> im2(bounds);
+    galsim::Image<T> im2(bounds, scale);
     galsim::ImageView<T> im2_view = im2;
     galsim::ConstImageView<T> im2_cview = im2;
 

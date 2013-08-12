@@ -808,8 +808,9 @@ def test_Image_binary_add():
         try:
             # first, try two images with different scales
             image1 = galsim.ImageView[types[i]](ref_array.astype(types[i]))
+            image1.scale = 1.
             image2 = image1.copy()
-            image2.scale = image1.scale+1.
+            image2.scale = 2.
             np.testing.assert_raises(ValueError, image1.__add__, image2)
             # now, try two images with different shapes
             image2 = image1.subImage(galsim.BoundsI(image1.xmin, image1.xmax-1,

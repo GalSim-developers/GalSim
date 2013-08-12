@@ -72,7 +72,7 @@ def test_draw():
     np.testing.assert_almost_equal(im1.scale, dx_nyq, 9,
                                    "obj.draw() produced image with wrong scale")
     print 'im1.bounds = ',im1.bounds
-    assert im1.bounds == galsim.BoundsI(1,54,1,54),(
+    assert im1.bounds == galsim.BoundsI(1,56,1,56),(
             "obj.draw() produced image with wrong bounds")
     np.testing.assert_almost_equal(CalculateScale(im1), 2, 1,
                                    "Measured wrong scale after obj.draw()")
@@ -86,7 +86,7 @@ def test_draw():
                                    "obj2.draw() produced image with wrong scale")
     np.testing.assert_almost_equal(im2.array.astype(float).sum(), test_flux, 2,
                                    "obj2.draw() produced image with wrong flux")
-    assert im2.bounds == galsim.BoundsI(1,54,1,54),(
+    assert im2.bounds == galsim.BoundsI(1,56,1,56),(
             "obj2.draw() produced image with wrong bounds")
     np.testing.assert_almost_equal(CalculateScale(im2), 2, 1,
                                    "Measured wrong scale after obj2.draw()")
@@ -96,7 +96,7 @@ def test_draw():
     #   - also return that image
     #   - set the scale to obj2.nyquistDx()
     #   - zero out any existing data
-    im3 = galsim.ImageD(54,54)
+    im3 = galsim.ImageD(56,56)
     im4 = obj2.draw(im3)
     np.testing.assert_almost_equal(im3.scale, dx_nyq, 9,
                                    "obj2.draw(im3) produced image with wrong scale")
@@ -129,7 +129,7 @@ def test_draw():
                                    "Measured wrong scale after obj2.draw(im5)")
     np.testing.assert_almost_equal(im5.array.sum(), im2.array.astype(float).sum(), 6,
                                    "obj2.draw(im5) produced image with different flux than im2")
-    assert im5.bounds == galsim.BoundsI(1,54,1,54),(
+    assert im5.bounds == galsim.BoundsI(1,56,1,56),(
             "obj2.draw(im5) produced image with wrong bounds")
 
     # Test if we provide wmult.  It should:
@@ -146,7 +146,7 @@ def test_draw():
     np.testing.assert_almost_equal(CalculateScale(im6), 2, 2,
                                    "Measured wrong scale after obj2.draw(wmult)")
     print 'im6.bounds = ',im6.bounds
-    assert im6.bounds == galsim.BoundsI(1,214,1,214),(
+    assert im6.bounds == galsim.BoundsI(1,220,1,220),(
             "obj2.draw(wmult) produced image with wrong bounds")
 
     # Test if we provide an image argument and wmult.  It should:
@@ -180,7 +180,7 @@ def test_draw():
     np.testing.assert_almost_equal(CalculateScale(im7), 2, 1,
                                    "Measured wrong scale after obj2.draw(dx)")
     print 'im7.bounds = ',im7.bounds
-    assert im7.bounds == galsim.BoundsI(1,66,1,66),(
+    assert im7.bounds == galsim.BoundsI(1,68,1,68),(
             "obj2.draw(dx) produced image with wrong bounds")
 
     # Test with dx and wmult.  It should:
@@ -195,14 +195,13 @@ def test_draw():
     np.testing.assert_almost_equal(CalculateScale(im8), 2, 2,
                                    "Measured wrong scale after obj2.draw(dx,wmult)")
     print 'im8.bounds = ',im8.bounds
-    assert im8.bounds == galsim.BoundsI(1,264,1,264),(
+    assert im8.bounds == galsim.BoundsI(1,270,1,270),(
             "obj2.draw(dx,wmult) produced image with wrong bounds")
 
     # Test if we provide an image with a defined scale.  It should:
     #   - write to the existing image
     #   - use the image's scale 
-    im9 = galsim.ImageD(200,200)
-    im9.setScale(0.51)
+    im9 = galsim.ImageD(200,200, scale=0.51)
     obj2.draw(im9)
     np.testing.assert_almost_equal(im9.scale, 0.51, 9,
                                    "obj2.draw(im9) produced image with wrong scale")
@@ -214,7 +213,7 @@ def test_draw():
     # Test if we provide an image with a defined scale <= 0.  It should:
     #   - write to the existing image
     #   - set the scale to obj2.nyquistDx()
-    im9.setScale(-0.51)
+    im9.scale = -0.51
     im9.setZero()
     obj2.draw(im9)
     np.testing.assert_almost_equal(im9.scale, dx_nyq, 9,
@@ -223,7 +222,7 @@ def test_draw():
                                    "obj2.draw(im9) produced image with wrong flux")
     np.testing.assert_almost_equal(CalculateScale(im9), 2, 2,
                                    "Measured wrong scale after obj2.draw(im9)")
-    im9.setScale(0)
+    im9.scale = 0
     im9.setZero()
     obj2.draw(im9)
     np.testing.assert_almost_equal(im9.scale, dx_nyq, 9,
@@ -238,7 +237,7 @@ def test_draw():
     #   - write to the existing image
     #   - use the provided dx
     #   - write the new dx value to the image's scale
-    im9.setScale(0.73)
+    im9.scale = 0.73
     im9.setZero()
     obj2.draw(im9, dx=0.51)
     np.testing.assert_almost_equal(im9.scale, 0.51, 9,
@@ -251,7 +250,7 @@ def test_draw():
     # Test if we provide an image and dx <= 0.  It should:
     #   - write to the existing image
     #   - set the scale to obj2.nyquistDx()
-    im9.setScale(0.73)
+    im9.scale = 0.73
     im9.setZero()
     obj2.draw(im9, dx=-0.51)
     np.testing.assert_almost_equal(im9.scale, dx_nyq, 9,
@@ -260,7 +259,7 @@ def test_draw():
                                    "obj2.draw(im9,dx<0) produced image with wrong flux")
     np.testing.assert_almost_equal(CalculateScale(im9), 2, 2,
                                    "Measured wrong scale after obj2.draw(im9,dx<0)")
-    im9.setScale(0.73)
+    im9.scale = 0.73
     im9.setZero()
     obj2.draw(im9, dx=0)
     np.testing.assert_almost_equal(im9.scale, dx_nyq, 9,
@@ -390,10 +389,8 @@ def test_drawK():
     # Test if we provide an image with a defined scale.  It should:
     #   - write to the existing image
     #   - use the image's scale 
-    re9 = galsim.ImageD(401,401)
-    im9 = galsim.ImageD(401,401)
-    re9.setScale(0.51)
-    im9.setScale(0.51)
+    re9 = galsim.ImageD(401,401, scale=0.51)
+    im9 = galsim.ImageD(401,401, scale=0.51)
     obj.drawK(re9, im9)
     np.testing.assert_almost_equal(re9.scale, 0.51, 9,
                                    "obj.drawK(re9,im9) produced real image with wrong scale")
@@ -409,8 +406,8 @@ def test_drawK():
     # Test if we provide an image with a defined scale <= 0.  It should:
     #   - write to the existing image
     #   - set the scale to obj.stepK()
-    re3.setScale(-0.51)
-    im3.setScale(-0.51)
+    re3.scale = -0.51
+    im3.scale = -0.51
     re3.setZero()
     obj.drawK(re3, im3)
     np.testing.assert_almost_equal(re3.scale, stepk, 9,
@@ -423,8 +420,8 @@ def test_drawK():
                                    "obj.drawK(re3,im3) produced non-zero imaginary image")
     np.testing.assert_almost_equal(CalculateScale(re3), 2, 1,
                                    "Measured wrong scale after obj.drawK(re3,im3)")
-    re3.setScale(0)
-    im3.setScale(0)
+    re3.scale = 0
+    im3.scale = 0
     re3.setZero()
     obj.drawK(re3, im3)
     np.testing.assert_almost_equal(re3.scale, stepk, 9,
@@ -442,8 +439,8 @@ def test_drawK():
     #   - write to the existing image
     #   - use the provided dx
     #   - write the new dx value to the image's scale
-    re9.setScale(0.73)
-    im9.setScale(0.73)
+    re9.scale = 0.73
+    im9.scale = 0.73
     re9.setZero()
     obj.drawK(re9, im9, dk=0.51)
     np.testing.assert_almost_equal(re9.scale, 0.51, 9,
@@ -460,8 +457,8 @@ def test_drawK():
     # Test if we provide an image and dk <= 0.  It should:
     #   - write to the existing image
     #   - set the scale to obj.stepK()
-    re3.setScale(0.73)
-    im3.setScale(0.73)
+    re3.scale = 0.73
+    im3.scale = 0.73
     re3.setZero()
     obj.drawK(re3, im3, dk=-0.51)
     np.testing.assert_almost_equal(re3.scale, stepk, 9,
@@ -474,8 +471,8 @@ def test_drawK():
                                    "obj.drawK(re3,im3,dk<0) produced non-zero imaginary image")
     np.testing.assert_almost_equal(CalculateScale(re3), 2, 1,
                                    "Measured wrong scale after obj.drawK(re3,im3,dk<0)")
-    re3.setScale(0.73)
-    im3.setScale(0.73)
+    re3.scale = 0.73
+    im3.scale = 0.73
     re3.setZero()
     obj.drawK(re3, im3, dk=0)
     np.testing.assert_almost_equal(re3.scale, stepk, 9,
@@ -583,9 +580,192 @@ def test_drawK_Exponential_Moffat():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_offset():
+    """Test the offset parameter to the draw and drawShoot function.
+    """
+    import time
+    t1 = time.time()
+
+    scale = 0.23
+
+    # Use some more exact GSParams.  We'll be comparing FFT images to real-space convolved values,
+    # so we don't want to suffer from our overall accuracy being only about 10^-3.
+    # Update: It turns out the only one I needed to reduce to obtain the accuracy I wanted 
+    # below is maxk_threshold.  Perhaps this is a sign that we ought to lower it in general?
+    params = galsim.GSParams(maxk_threshold=1.e-4)
+
+    # We use a simple Exponential for our object:
+    gal = galsim.Exponential(flux=test_flux, scale_radius=0.5, gsparams=params)
+    pix = galsim.Pixel(scale, gsparams=params)
+    obj = galsim.Convolve([gal,pix], gsparams=params)
+
+    # The shapes of the images we will build
+    # Make sure all combinations of odd/even are represented.
+    shape_list = [ (256,256), (256,243), (249,260), (255,241), (270,260) ]
+
+    # Some reasonable (x,y) values at which to test the xValues (near the center)
+    xy_list = [ (128,128), (123,131), (126,124) ]
+
+    # The offsets to test
+    offset_list = [ (1,-3), (0.3,-0.1), (-2.3,-1.2) ]
+
+    # Make the images somewhat large so the moments are measured accurately.
+    for nx,ny in shape_list:
+        print '\n\n\nnx,ny = ',nx,ny
+
+        # First check that the image agrees with our calculation of the center
+        cenx = (nx+1.)/2.
+        ceny = (ny+1.)/2.
+        print 'cen = ',cenx,ceny
+        im = galsim.ImageD(nx,ny, scale=scale)
+        true_center = im.bounds.trueCenter()
+        np.testing.assert_almost_equal(
+                cenx, true_center.x, 6, 
+                "im.bounds.trueCenter().x is wrong for (nx,ny) = %d,%d"%(nx,ny))
+        np.testing.assert_almost_equal(
+                ceny, true_center.y, 6, 
+                "im.bounds.trueCenter().y is wrong for (nx,ny) = %d,%d"%(nx,ny))
+
+        # Check that the default draw command puts the centroid in the center of the image.
+        obj.draw(im, normalization='sb')
+        moments = getmoments(im)
+        print 'moments = ',moments
+        np.testing.assert_almost_equal(
+                moments[0], cenx, 5,
+                "obj.draw(im) not centered correctly for (nx,ny) = %d,%d"%(nx,ny))
+        np.testing.assert_almost_equal(
+                moments[1], ceny, 5,
+                "obj.draw(im) not centered correctly for (nx,ny) = %d,%d"%(nx,ny))
+
+        # Test that a few pixel values match xValue.
+        # Note: we don't expect the FFT drawn image to match the xValues precisely, since the 
+        # latter use real-space convolution, so they should just match to our overall accuracy 
+        # requirement, which is something like 1.e-3 or so.  But an image of just the galaxy 
+        # should use real-space drawing, so should be pretty much exact.
+        im2 = galsim.ImageD(nx,ny, scale=scale)
+        gal.draw(im2, normalization='sb')
+        for x,y in xy_list:
+            print 'x,y = ',x,y
+            print 'im(x,y) = ',im(x,y)
+            u = (x-cenx) * scale
+            v = (y-ceny) * scale
+            print 'xval(x-cenx,y-ceny) = ',obj.xValue(galsim.PositionD(u,v))
+            np.testing.assert_almost_equal(
+                    im(x,y), obj.xValue(galsim.PositionD(u,v)), 2,
+                    "im(%d,%d) does not match xValue(%f,%f)"%(x,y,u,v))
+            np.testing.assert_almost_equal(
+                    im2(x,y), gal.xValue(galsim.PositionD(u,v)), 6,
+                    "im2(%d,%d) does not match xValue(%f,%f)"%(x,y,u,v))
+
+        # Check that offset moves the centroid by the right amount.
+        for offx, offy in offset_list:
+            # For integer offsets, we expect the centroids to come out pretty much exact.
+            # (Only edge effects of the image should produce any error, and those are very small.)
+            # However, for non-integer effects, we don't actually expect the centroids to be 
+            # right, even with perfect image rendering.  To see why, imagine using a delta function
+            # for the galaxy.  The centroid changes discretely, not continuously as the offset
+            # varies.  The effect isn't as severe of course for our Exponential, but the effect
+            # is still there in part.  Hence, only use 2 decimal places for non-integer offsets.
+            if offx == int(offx) and offy == int(offy):
+                decimal = 4
+            else:
+                decimal = 2
+
+            print 'offx,offy = ',offx,offy
+            offset = galsim.PositionD(offx,offy)
+            obj.draw(im, normalization='sb', offset=offset)
+            moments = getmoments(im)
+            print 'moments = ',moments
+            np.testing.assert_almost_equal(
+                    moments[0], cenx+offx, decimal,
+                    "obj.draw(im,offset) not centered correctly for (nx,ny) = %d,%d"%(nx,ny))
+            np.testing.assert_almost_equal(
+                    moments[1], ceny+offy, decimal,
+                    "obj.draw(im,offset) not centered correctly for (nx,ny) = %d,%d"%(nx,ny))
+            # Test that a few pixel values match xValue
+            gal.draw(im2, normalization='sb', offset=offset)
+            for x,y in xy_list:
+                print 'x,y = ',x,y
+                print 'im(x,y) = ',im(x,y)
+                u = (x-cenx-offx) * scale
+                v = (y-ceny-offy) * scale
+                print 'xval(x-cenx-offx,y-ceny-offy) = ',obj.xValue(galsim.PositionD(u,v))
+                np.testing.assert_almost_equal(
+                        im(x,y), obj.xValue(galsim.PositionD(u,v)), 2,
+                        "im(%d,%d) does not match xValue(%f,%f)"%(x,y,u,v))
+                np.testing.assert_almost_equal(
+                        im2(x,y), gal.xValue(galsim.PositionD(u,v)), 6,
+                        "im2(%d,%d) does not match xValue(%f,%f)"%(x,y,u,v))
+
+            # Check that applyShift also moves the centroid by the right amount.
+            shifted_obj = obj.createShifted(offset * scale)
+            shifted_obj.draw(im, normalization='sb')
+            moments = getmoments(im)
+            print 'moments = ',moments
+            np.testing.assert_almost_equal(
+                    moments[0], cenx+offx, decimal,
+                    "shifted_obj.draw(im) not centered correctly for (nx,ny) = %d,%d"%(nx,ny))
+            np.testing.assert_almost_equal(
+                    moments[1], ceny+offy, decimal,
+                    "shifted_obj.draw(im) not centered correctly for (nx,ny) = %d,%d"%(nx,ny))
+            # Test that a few pixel values match xValue
+            shifted_gal = gal.createShifted(offset * scale)
+            shifted_gal.draw(im2, normalization='sb')
+            for x,y in xy_list:
+                print 'x,y = ',x,y
+                print 'im(x,y) = ',im(x,y)
+                u = (x-cenx) * scale
+                v = (y-ceny) * scale
+                print 'shifted xval(x-cenx,y-ceny) = ',shifted_obj.xValue(galsim.PositionD(u,v))
+                np.testing.assert_almost_equal(
+                        im(x,y), shifted_obj.xValue(galsim.PositionD(u,v)), 2,
+                        "im(%d,%d) does not match shifted xValue(%f,%f)"%(x,y,x-cenx,y-ceny))
+                np.testing.assert_almost_equal(
+                        im2(x,y), shifted_gal.xValue(galsim.PositionD(u,v)), 6,
+                        "im2(%d,%d) does not match shifted xValue(%f,%f)"%(x,y,x-cenx,y-ceny))
+                u = (x-cenx-offx) * scale
+                v = (y-ceny-offy) * scale
+                print 'xval(x-cenx-offx,y-ceny-offy) = ',obj.xValue(galsim.PositionD(u,v))
+                np.testing.assert_almost_equal(
+                        im(x,y), obj.xValue(galsim.PositionD(u,v)), 2,
+                        "im(%d,%d) does not match xValue(%f,%f)"%(x,y,u,v))
+                np.testing.assert_almost_equal(
+                        im2(x,y), gal.xValue(galsim.PositionD(u,v)), 6,
+                        "im2(%d,%d) does not match xValue(%f,%f)"%(x,y,u,v))
+
+        # Chcek the image's definition of the nominal center
+        nom_cenx = (nx+2)/2
+        nom_ceny = (ny+2)/2
+        nominal_center = im.bounds.center()
+        np.testing.assert_almost_equal(
+                nom_cenx, nominal_center.x, 6, 
+                "im.bounds.center().x is wrong for (nx,ny) = %d,%d"%(nx,ny))
+        np.testing.assert_almost_equal(
+                nom_ceny, nominal_center.y, 6, 
+                "im.bounds.center().y is wrong for (nx,ny) = %d,%d"%(nx,ny))
+
+        # Check that use_true_center = false is consistent with an offset by 0 or 0.5 pixels.
+        obj.draw(im, normalization='sb', use_true_center=False)
+        moments = getmoments(im)
+        print 'moments = ',moments
+        np.testing.assert_almost_equal(
+                moments[0], nom_cenx, 4,
+                "obj.draw(im, use_true_center=False) not centered correctly for (nx,ny) = %d,%d"%(
+                        nx,ny))
+        np.testing.assert_almost_equal(
+                moments[1], nom_ceny, 4,
+                "obj.draw(im, use_true_center=False) not centered correctly for (nx,ny) = %d,%d"%(
+                        nx,ny))
+        cen_offset = galsim.PositionD(nom_cenx - cenx, nom_ceny - ceny)
+        print 'cen_offset = ',cen_offset
+        obj.draw(im2, normalization='sb', offset=cen_offset)
+        np.testing.assert_array_almost_equal(
+                im.array, im2.array, 6,
+                "obj.draw(im, offset=%f,%f) different from use_true_center=False")
 
 if __name__ == "__main__":
     test_draw()
     test_drawK()
     test_drawK_Gaussian()
     test_drawK_Exponential_Moffat()
+    test_offset()

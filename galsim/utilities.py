@@ -192,12 +192,12 @@ class ComparisonShapeData(object):
     - sighs_draw: moments_sigma from HSM PSF corr. on a GSObject image rendered using .draw()
 
     - delta_g1obs: estimated mean difference between i) observed_shape.g1 from images of the same
-    GSObject rendered with .drawShoot(), and ii) `g1obs_draw`.
-    Defined `delta_g1obs = g1obs_draw - g1obs_shoot`.
+      GSObject rendered with .drawShoot(), and ii) `g1obs_draw`.
+      Defined `delta_g1obs = g1obs_draw - g1obs_shoot`.
 
     - delta_g2obs: estimated mean difference between i) observed_shape.g2 from images of the same
-    GSObject rendered with .drawShoot(), and ii) `g1obs_draw`.
-    Defined `delta_g2obs = g2obs_draw - g2obs_shoot`.
+      GSObject rendered with .drawShoot(), and ii) `g1obs_draw`.
+      Defined `delta_g2obs = g2obs_draw - g2obs_shoot`.
 
    - delta_g1hsm: estimated mean difference between i) hsmerved_shape.g1 from images of the same
     GSObject rendered with .drawShoot(), and ii) `g1hsm_draw`.
@@ -208,8 +208,8 @@ class ComparisonShapeData(object):
     Defined `delta_g2hsm = g2hsm_draw - g2hsm_shoot`.
 
     - delta_sigma: estimated mean difference between i) moments_sigma from images of the same
-    GSObject rendered with .drawShoot(), and ii) `sigma_draw`.
-    Defined `delta_sigma = sigma_draw - sigma_shoot`.
+      GSObject rendered with .drawShoot(), and ii) `sigma_draw`.
+      Defined `delta_sigma = sigma_draw - sigma_shoot`.
 
     - delta_sighs: estimated mean difference between i) moments_sigma from images of the same
     GSObject rendered with .drawShoot(), and ii) `sigma_draw`. 
@@ -230,23 +230,23 @@ class ComparisonShapeData(object):
     The ComparisonShapeData instance also stores much of the meta-information about the tests:
 
     - gsobject: the galsim.GSObject for which this test was performed (prior to PSF convolution if
-    a PSF was also supplied).
+      a PSF was also supplied).
 
     - psf_object: the optional additional PSF supplied by the user for tests of convolved objects,
-    will be `None` if not used.
+      will be `None` if not used.
 
     - size: the size of the images tested - all test images are currently square.
 
     - pixel_scale: the pixel scale in the images tested.
 
     - wmult: the `wmult` parameter used in .draw() (see the GSObject .draw() method docs for more
-    details).
+      details).
 
     - n_iterations: number of iterations of `n_trials` trials required to get delta quantities to
-    the above accuracy.
+      the above accuracy.
 
     - n_trials_per_iter: number of trial images used to estimate or successively re-estimate the
-    standard error on the delta quantities above for each iteration.
+      standard error on the delta quantities above for each iteration.
 
     - n_photons_per_trial: number of photons shot in drawShoot() for each trial.
 
@@ -257,13 +257,13 @@ class ComparisonShapeData(object):
     typically in the function compare_object_dft_vs_photon.
 
     - gsobject: optional galsim.GSObject for which this test was performed (prior to PSF convolution
-    if a PSF was also supplied).
+      if a PSF was also supplied).
 
     - psf_object: the optional additional PSF supplied by the user for tests of convolved objects,
-    will be `None` if not used.
+      will be `None` if not used.
 
     - config: optional config object describing the gsobject and PSF if the config comparison script
-    was used rather than the (single core only) direct object script.
+      was used rather than the (single core only) direct object script.
 
     Either config, or gsobject, or gsobject and psf_object, must be set when a ComparisonShapeData
     instance is created or an Exception is raised.
@@ -464,6 +464,7 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, pixel_scal
             g2obslist.append(res.observed_shape.g2)
             sigmalist.append(res.moments_sigma)
             logging.debug('Completed '+str(i + 1)+'/'+str(ntrials)+' trials in this iteration')
+            #im.write('check_shoot_trial'+str(i + 1)) CHECK IMAGE
         return g1obslist, g2obslist, sigmalist
 
     # OK, that's the end of the helper functions-within-helper functions, back to the main unit

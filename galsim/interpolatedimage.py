@@ -26,16 +26,15 @@ from galsim import GSObject
 
 
 class InterpolatedImage(GSObject):
-    """A class describing non-parametric objects specified using an Image, which can be interpolated
-    for the purpose of carrying out transformations.
+    """A class describing non-parametric profiles specified using an Image, which can be 
+    interpolated for the purpose of carrying out transformations.
 
-    The input Image and optional interpolants are used to create an SBInterpolatedImage.  The
-    InterpolatedImage class is useful if you have a non-parametric description of an object as an
-    Image, that you wish to manipulate / transform using GSObject methods such as applyShear(),
+    The InterpolatedImage class is useful if you have a non-parametric description of an object as 
+    an Image, that you wish to manipulate / transform using GSObject methods such as applyShear(),
     applyMagnification(), applyShift(), etc.  The input Image can be any BaseImage (i.e., Image,
     ImageView, or ConstImageView).  Note that when convolving an InterpolatedImage, the use of
-    real-space convolution is not recommended, since it is a great deal slower than Fourier-space
-    convolution.
+    real-space convolution is not recommended, since it is typically a great deal slower than 
+    Fourier-space convolution for this kind of object.
 
     The constructor needs to know how the Image was drawn: is it an Image of flux or of surface
     brightness?  Since our default for drawing Images using draw() and drawShoot() is that
@@ -131,10 +130,9 @@ class InterpolatedImage(GSObject):
     @param flux            Optionally specify a total flux for the object, which overrides the
                            implied flux normalization from the Image itself.
     @param pad_factor      Factor by which to pad the Image with either noise (if noise_pad is
-                           given) or zeros when creating the SBInterpolatedImage;
-                           `pad_factor <= 0` results in the use of the default value, 4.  We
-                           strongly recommend leaving this parameter at its default value; see text
-                           above for details.  (Default `pad_factor = 0`)
+                           given) or zeros; `pad_factor <= 0` results in the use of the default 
+                           value, 4.  We strongly recommend leaving this parameter at its default 
+                           value; see text above for details.  (Default `pad_factor = 0`)
     @param noise_pad       Noise properties to use when padding the original image with
                            noise.  This can be specified in several ways:
                                (a) as a float, which is interpreted as being a variance to use when
@@ -195,7 +193,11 @@ class InterpolatedImage(GSObject):
                            sets whether to use the true center of the provided image as the 
                            center of the profile (if `use_true_center=True`) or the nominal
                            center returned by `image.bounds.center()` (if `use_true_center=False`)
-                           [default `use_true_center = True`]
+                           [Default `use_true_center = True`]
+    @param offset          The location in the input image to use as the center of the profile.
+                           This should be specified relative to the center of the input image 
+                           (either the true center if use_true_center=True, or the nominal center 
+                           if use_true_center=False).  [Default `offset = None`]
     @param gsparams        You may also specify a gsparams argument.  See the docstring for
                            galsim.GSParams using help(galsim.GSParams) for more information about
                            this option.
@@ -229,7 +231,7 @@ class InterpolatedImage(GSObject):
     def __init__(self, image, x_interpolant = None, k_interpolant = None, normalization = 'flux',
                  dx = None, flux = None, pad_factor = 0., noise_pad = 0., rng = None,
                  pad_image = None, calculate_stepk=True, calculate_maxk=True,
-                 use_cache=True, use_true_center=True, gsparams=None):
+                 use_cache=True, use_true_center=True, offset=None, gsparams=None):
 
         # first try to read the image as a file.  If it's not either a string or a valid
         # pyfits hdu or hdulist, then an exception will be raised, which we ignore and move on.
@@ -243,7 +245,7 @@ class InterpolatedImage(GSObject):
             raise ValueError("Supplied image is not an image of floats or doubles!")
 
         # it must have well-defined bounds, otherwise seg fault in SBInterpolatedImage constructor
-        if not image.getBounds().isDefined():
+        if not image.bounds.isDefined():
             raise ValueError("Supplied image does not have bounds defined!")
 
         # check what normalization was specified for the image: is it an image of surface
@@ -256,8 +258,6 @@ class InterpolatedImage(GSObject):
         # are of a valid type
         if x_interpolant is None:
             self.x_interpolant = galsim.InterpolantXY(galsim.Quintic(tol=1e-4))
-            # FIXME: Is there a reason the default is Quintic?  I thought Gary's recommendation
-            # was Lanczos 5 for the x interpolant and Quintic for the k interpolant?  - MJ
         else:
             self.x_interpolant = galsim.utilities.convert_interpolant_to_2d(x_interpolant)
         if k_interpolant is None:
@@ -279,7 +279,7 @@ class InterpolatedImage(GSObject):
                 raise ValueError("dx may not be <= 0.0")
             # Don't change the original image.  Make a new view if we need to set the scale.
             image = image.view()
-            image.setScale(dx)
+            image.scale = dx
 
         # Set up the GaussianDeviate if not provided one, or check that the user-provided one is
         # of a valid type.
@@ -336,16 +336,10 @@ class InterpolatedImage(GSObject):
             # Just make sure pad_image is the right type
             if ( isinstance(image, galsim.BaseImageF) and 
                  not isinstance(pad_image, galsim.BaseImageF) ):
-                # TODO: We should add the ability within galsim to make an ImageF from an ImageD
-                #       directly, rather than have to do workaround.
-                new_pad_image = galsim.ImageF(pad_image.bounds)
-                new_pad_image.array = pad_image.array
-                pad_image = new_pad_image
+                pad_image = galsim.ImageF(pad_image)
             elif ( isinstance(image, galsim.BaseImageD) and 
                    not isinstance(pad_image, galsim.BaseImageD) ):
-                new_pad_image = galsim.ImageD(pad_image.bounds)
-                new_pad_image.array[:,:] = pad_image.array
-                pad_image = new_pad_image
+                pad_image = galsim.ImageD(pad_image)
 
         # Make the SBInterpolatedImage out of the image.
         sbinterpolatedimage = galsim.SBInterpolatedImage(
@@ -375,13 +369,12 @@ class InterpolatedImage(GSObject):
         # Initialize the SBProfile
         GSObject.__init__(self, sbinterpolatedimage)
 
-        # Fix the center to be in the right place.
-        # Note the minus sign in front of image.scale, since we want to fix the center in the 
-        # opposite sense of what the draw function does.
-        if use_true_center:
-            prof = self._fix_center(image, -image.scale)
-            GSObject.__init__(self, prof.SBProfile)
-            
+        # Apply the offset, and possibly fix the centering for even-sized images
+        # Note reverse=True, since we want to fix the center in the opposite sense of what the 
+        # draw function does.
+        prof = self._fix_center(image, dx, offset, use_true_center, reverse=True)
+        GSObject.__init__(self, prof.SBProfile)
+
 
     def buildNoisePadImage(self, pad_factor, noise_pad, rng):
         """A helper function that builds the pad_image from the given noise_pad specification.

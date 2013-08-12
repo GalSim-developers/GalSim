@@ -47,7 +47,7 @@ def main(argv):
     # Try different interpolants!
     #interp1d = galsim.Linear();
     #interp1d = galsim.Delta();
-    interp1d = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4);
+    interp1d = galsim.Lanczos(5, conserve_dc=True, tol=1.e-4);
     #interp1d = galsim.Quintic();
     interp2d = galsim.InterpolantXY(interp1d)
 
@@ -69,8 +69,7 @@ def main(argv):
 
     rng = galsim.UniformDeviate(1534225)
     bounds = galsim.BoundsI(-dim/2, dim/2+1, -dim/2, dim/2+1)
-    img = galsim.ImageF(bounds)
-    img.setScale(dxOut)
+    img = galsim.ImageF(bounds, scale=dxOut)
     galaxy.drawShoot(image=img, n_photons=nPhotons, rng=rng)
     img.write(outname)
 

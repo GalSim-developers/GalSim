@@ -32,8 +32,7 @@ namespace galsim {
      */
     class ImageError : public std::runtime_error {
     public: 
-        ImageError(const std::string& m="") : 
-            std::runtime_error("Image Error: " + m) {}
+        ImageError(const std::string& m) : std::runtime_error("Image Error: " + m) {}
 
     };
 
@@ -42,7 +41,7 @@ namespace galsim {
      */
     class ImageBoundsError : public ImageError {
     public: 
-        ImageBoundsError(const std::string& m="") : 
+        ImageBoundsError(const std::string& m) : 
             ImageError("Access to out-of-bounds pixel " + m) {}
 
         ImageBoundsError(const std::string& m, int min, int max, int tried);
@@ -113,12 +112,12 @@ namespace galsim {
             if (image.isContiguous()) {
                 const Iter ee = image.rowEnd(image.getYMax());
                 for (Iter it = image.rowBegin(image.getYMin()); it != ee; ++it) 
-                    *it = f(*it);
+                    *it = T(f(*it));
             } else {
                 for (int y = image.getYMin(); y <= image.getYMax(); ++y) {
                     const Iter ee = image.rowEnd(y);
                     for (Iter it = image.rowBegin(y); it != ee; ++it) 
-                        *it = f(*it);
+                        *it = T(f(*it));
                 }
             }
         }
@@ -141,7 +140,7 @@ namespace galsim {
             for (int y = bounds.getYMin(); y <= bounds.getYMax(); ++y) {
                 const Iter ee = image.getIter(bounds.getXMax()+1,y);      
                 for (Iter it = image.getIter(bounds.getXMin(),y); it != ee; ++it) 
-                    *it = f(*it);
+                    *it = T(f(*it));
             }
         }
         return f;
@@ -159,7 +158,7 @@ namespace galsim {
                 int x = image.getXMin();
                 const Iter ee = image.rowEnd(y);
                 for (Iter it = image.rowBegin(y); it != ee; ++it, ++x) 
-                    *it += f(x,y);
+                    *it += T(f(x,y));
             }
         }
         return f;
@@ -183,7 +182,7 @@ namespace galsim {
                 int x = bounds.getXMin();
                 const Iter ee = image.getIter(bounds.getXMax()+1,y);      
                 for (Iter it = image.getIter(bounds.getXMin(),y); it != ee; ++it, ++x) 
-                    *it += f(x,y);
+                    *it += T(f(x,y));
             }
         }
         return f;
@@ -201,7 +200,7 @@ namespace galsim {
                 int x = image.getXMin();
                 const Iter ee = image.rowEnd(y);      
                 for (Iter it = image.rowBegin(y); it != ee; ++it, ++x) 
-                    *it = f(x,y);
+                    *it = T(f(x,y));
             }
         }
         return f;
@@ -224,7 +223,7 @@ namespace galsim {
                 int x = bounds.getXMin();
                 const Iter ee = image.getIter(bounds.getXMax()+1,y);      
                 for (Iter it = image.getIter(bounds.getXMin(),y); it != ee; ++it, ++x) 
-                    *it = f(x,y);
+                    *it = T(f(x,y));
             }
         }
         return f;

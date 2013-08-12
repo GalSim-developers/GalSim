@@ -54,9 +54,7 @@ namespace galsim {
             double v1 = _p1.xValue(Position<double>(x,y));
             double v2 = _p2.xValue(Position<double>(_pos.x-x,_pos.y-y));
             xdbg<<"Value = "<<v1<<" * "<<v2<<" = "<<v1*v2<<std::endl;
-            return 
-                _p1.xValue(Position<double>(x,y)) *
-                _p2.xValue(Position<double>(_pos.x-x,_pos.y-y));
+            return v1*v2;
         }
     private:
         const SBProfile& _p1;

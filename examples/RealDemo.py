@@ -88,14 +88,12 @@ sim_image_bad_shear = galsim.simReal(real_galaxy, bad_epsf, pixel_scale, g1=g1, 
 print "Drawing images and writing to files!"
 
 N = real_galaxy.original_image.getGoodImageSize(real_galaxy.pixel_scale, wmult)
-orig_gal_img = galsim.ImageF(N, N)
-orig_gal_img.setScale(real_galaxy.pixel_scale)
+orig_gal_img = galsim.ImageF(N, N, scale=real_galaxy.pixel_scale)
 real_galaxy.original_image.draw(orig_gal_img.view())
 orig_gal_img.write(os.path.join(output_dir, 'demoreal.orig_gal.fits'), clobber=True)
 
 N = real_galaxy.original_PSF.getGoodImageSize(real_galaxy.pixel_scale, wmult)
-orig_psf_img = galsim.ImageF(N, N)
-orig_psf_img.setScale(real_galaxy.pixel_scale)
+orig_psf_img = galsim.ImageF(N, N, scale=real_galaxy.pixel_scale)
 real_galaxy.original_PSF.draw(orig_psf_img.view())
 orig_psf_img.write(os.path.join(output_dir, 'demoreal.orig_PSF.fits'), clobber=True)
 

@@ -43,13 +43,8 @@ namespace galsim {
      */
     class InterpolantFunction: public FluxDensity {
     public:
-        /**
-         * @brief Constructor
-         * @param[in] interp Interpolant (one-d) that we'll want to sample
-         */
         InterpolantFunction(const Interpolant& interp): _interp(interp) {}
-        /// @brief operator() will return the xval() of the `Interpolant`
-        double operator()(double x) const;
+        double operator()(double x) const; // returns the xval() of the `Interpolant`
         ~InterpolantFunction() {}
     private:
         const Interpolant& _interp;  // Interpolant being wrapped
@@ -87,7 +82,7 @@ namespace galsim {
         virtual double xrange() const =0;
 
         /**
-         * @brief The total range as an integer.  Typically xrange() == 0.5 * ixrange.
+         * @brief The total range as an integer.  Typically xrange() == 0.5 * ixrange().
          */
         virtual int ixrange() const =0;
 
@@ -179,14 +174,13 @@ namespace galsim {
 
     protected:
 
-        /// @brief GSParams struct for storing values of GalSim numerical parameters
         const GSParamsPtr _gsparams;
-        InterpolantFunction _interp; ///< The function to interface the Interpolant to sampler
+        InterpolantFunction _interp;
 
-        /// Class that draws photons from this Interpolant
+        // Class that draws photons from this Interpolant
         mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;  
 
-        /// @brief Allocate photon sampler and do all of its pre-calculations
+        // Allocate photon sampler and do all of its pre-calculations
         virtual void checkSampler() const 
         {
             if (_sampler.get()) return;
@@ -228,7 +222,6 @@ namespace galsim {
         virtual double getPositiveFlux() const=0;
         virtual double getNegativeFlux() const=0;
         virtual boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const=0;
-
     };
 
     /**
@@ -240,10 +233,6 @@ namespace galsim {
     class InterpolantXY : public Interpolant2d 
     {
     public:
-        /**
-         * @brief Constructor
-         * @param[in] i1d  One-dimensional `Interpolant` to be applied to x and y coordinates.
-         */
         InterpolantXY(boost::shared_ptr<Interpolant> i1d) : _i1d(i1d) {}
         ~InterpolantXY() {}
 
@@ -550,9 +539,9 @@ namespace galsim {
      * small already (default 1e-4).
      *
      * Note that pure Lanczos, when interpolating a set of constant-valued samples, does not return
-     * this constant.  Setting conserve_flux in the constructor tweaks the function so that it 
-     * approximately conserves the value of constant (DC) input data.
-     * Only the first order correction is applied, which should be accurate to about 1.e-5.
+     * this constant.  Setting conserve_dc in the constructor tweaks the function so that it 
+     * approximately conserves the value of constant (DC) input data (accurate to better than 
+     * 1.e-5 when used in two dimensions).
      */
     class Lanczos : public Interpolant 
     {
@@ -561,18 +550,18 @@ namespace galsim {
          * @brief Constructor
          *
          * @param[in] n              Filter order; must be given on input and cannot be changed.  
-         * @param[in] conserve_flux  Set true to adjust filter to be more nearly correct for 
+         * @param[in] conserve_dc    Set true to adjust filter to be more nearly correct for 
          *                           constant inputs.
          * @param[in] tol            Sets accuracy and extent of Fourier transform.
          * @param[in] gsparams       GSParams object storing constants that control the accuracy of
          *                           operations, if different from the default.
          */
-        Lanczos(int n, bool conserve_flux=true, double tol=1.e-4, 
+        Lanczos(int n, bool conserve_dc=true, double tol=1.e-4, 
                 const GSParamsPtr& gsparams=GSParamsPtr::getDefault());
         ~Lanczos() {}
 
         double xrange() const { return _range; }
-        int ixrange() const { return 2*_in; }
+        int ixrange() const { return 2*_n; }
         double urange() const { return _uMax; }
         double getTolerance() const { return _tolerance; }
 
@@ -580,17 +569,20 @@ namespace galsim {
         double uval(double u) const;
 
     private:
-        int _in; // Store the filter order, n
-        double _n; // Store n as a double, since that's often how it is used.
+        int _n; // Store the filter order, n
+        double _nd; // Store n as a double, since that's often how it is used.
         double _range; // Reduce range slightly from n so we're not using zero-valued endpoints.
-        bool _conserve_flux; // Set to insure conservation of constant (sky) flux
+        bool _conserve_dc; // Set to insure conservation of constant (sky) flux
         double _tolerance;  // u-space accuracy parameter
         double _uMax;  // truncation point for Fourier transform
-        double _u1; // coefficient for flux correction
+        std::vector<double> _K; // coefficients for flux correction in xval
+        std::vector<double> _C; // coefficients for flux correction in uval
         boost::shared_ptr<Table<double,double> > _xtab; // Table for x values
         boost::shared_ptr<Table<double,double> > _utab; // Table for Fourier transform
+
         double xCalc(double x) const;
         double uCalc(double u) const;
+        double uCalcRaw(double u) const; // uCalc without any flux conservation.
 
         // Store the tables in a map, so repeat constructions are quick.
         typedef std::pair<int,std::pair<bool,double> > KeyType;
@@ -598,7 +590,6 @@ namespace galsim {
         static std::map<KeyType,boost::shared_ptr<Table<double,double> > > _cache_utab; 
         static std::map<KeyType,double> _cache_umax; 
     };
-
 
 }
 

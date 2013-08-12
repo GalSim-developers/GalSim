@@ -134,6 +134,9 @@ namespace galsim {
                     xxdbg<<"value = "<<value<<", sums = "<<sum<<','<<sumx<<','<<sumy<<std::endl;
                 }
             }
+            if (sum == 0.) throw std::runtime_error(
+                "Trying to initialize InterpolatedImage with an empty image.");
+
             _pimpl->flux[i] = sum * dx2;
             _pimpl->xflux[i] = sumx * dx3;
             _pimpl->yflux[i] = sumy * dx3;
@@ -219,6 +222,9 @@ namespace galsim {
                 sumy += value*y;
             }
         }
+        if (sum == 0.) throw std::runtime_error(
+            "Trying to initialize InterpolatedImage with an empty image.");
+
         _pimpl->flux[0] = sum * dx2;
         _pimpl->xflux[0] = sumx * dx3;
         _pimpl->yflux[0] = sumy * dx3;
@@ -488,7 +494,7 @@ namespace galsim {
                 for (int i=i1;i<i2;++i,x0+=dx,++uxit) {
                     double y = y0;
                     uyit = uy.begin();
-                    RMIt valit(val.row(i).begin().getP(),val.stepj());
+                    RMIt valit(val.row(i,j1,j2).begin().getP(),val.stepj());
                     for (int j=j1;j<j2;++j,y+=dy) {
                         *valit++ = *uxit * *uyit++ * _ktab->interpolate(x0, y, *kInterpXY);
                     }
@@ -498,7 +504,7 @@ namespace galsim {
                 for (int i=i1;i<i2;++i,x0+=dx,++uxit) {
                     double y = y0;
                     It uyit = uy.begin();
-                    RMIt valit(val.row(i).begin().getP(),val.stepj());
+                    RMIt valit(val.row(i,j1,j2).begin().getP(),val.stepj());
                     for (int j=j1;j<j2;++j,y+=dy) {
                         double xKernelTransform = _xInterp->uval(*uxit, *uyit++);
                         *valit++ = xKernelTransform * _ktab->interpolate(x0, y, *kInterpXY);
@@ -506,6 +512,7 @@ namespace galsim {
                 }
             }
         } else {
+            typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CMIt;
             const InterpolantXY* xInterpXY = dynamic_cast<const InterpolantXY*>(_xInterp.get());
             if (xInterpXY) {
                 It uxit = ux.begin();
@@ -513,23 +520,21 @@ namespace galsim {
                 It uyit = uy.begin();
                 for (int j=j1;j<j2;++j,++uyit) *uyit = xInterpXY->uval1d(*uyit);
 
-                typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
-                CIt valit(val.linearView().begin().getP(),1);
                 uyit = uy.begin();
                 for (int j=j1;j<j2;++j,y0+=dy,++uyit) {
                     double x = x0;
                     uxit = ux.begin();
+                    CMIt valit(val.col(j,i1,i2).begin().getP(),1);
                     for (int i=i1;i<i2;++i,x+=dx) {
                         *valit++ = *uxit++ * *uyit * _ktab->interpolate(x, y0, *_kInterp);
                     }
                 }
             } else {
-                typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
-                CIt valit(val.linearView().begin().getP(),1);
                 It uyit = uy.begin();
                 for (int j=j1;j<j2;++j,y0+=dy,++uyit) {
                     double x = x0;
                     It uxit = ux.begin();
+                    CMIt valit(val.col(j,i1,i2).begin().getP(),1);
                     for (int i=i1;i<i2;++i,x+=dx) {
                         double xKernelTransform = _xInterp->uval(*uxit++, *uyit);
                         *valit++ = xKernelTransform * _ktab->interpolate(x, y0, *_kInterp);
