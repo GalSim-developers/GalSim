@@ -845,7 +845,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
         # Then initialize...
         cf_object = galsim.InterpolatedImage(
             cf_image, x_interpolant=x_interpolant, dx=cf_image.scale, normalization="sb",
-            calculate_stepk=True, calculate_maxk=False, #<-these internal calculations do not seem
+            calculate_stepk=False, calculate_maxk=False, #<-these internal calculations do not seem
             gsparams=gsparams)                           #  to do very well with often sharp-peaked
                                                          #  correlation function images...
         _BaseCorrelatedNoise.__init__(self, rng, cf_object)
@@ -1003,7 +1003,7 @@ def getCOSMOSNoise(rng, file_name, dx_cosmos=0.03, variance=0., x_interpolant=No
     # and peaked at the origin
     ret = _BaseCorrelatedNoise(
         rng, galsim.InterpolatedImage(
-            cfimage, dx=dx_cosmos, normalization="sb", calculate_stepk=True, calculate_maxk=False,
+            cfimage, dx=dx_cosmos, normalization="sb", calculate_stepk=False, calculate_maxk=False,
             x_interpolant=x_interpolant, gsparams=gsparams))
     # If the input keyword variance is non-zero, scale the correlation function to have this
     # variance
