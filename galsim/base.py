@@ -474,9 +474,9 @@ class GSObject(object):
         For more details about the allowed keyword arguments, see the documentation of galsim.Shear
         (for doxygen documentation, see galsim.shear.Shear).
 
-        The createSheared() method precisely preserves the area.  To include a lensing distortion with
-        the appropriate change in area, either use createSheared() with createMagnified(), or use
-        createLensed() which combines both operations.
+        The createSheared() method precisely preserves the area.  To include a lensing distortion
+        with the appropriate change in area, either use createSheared() with createMagnified(), or
+        use createLensed() which combines both operations.
 
         @returns The sheared GSObject.
         """
