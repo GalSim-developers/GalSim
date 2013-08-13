@@ -54,14 +54,17 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # Act as a container for the GSObject used to represent the correlation funcion.
         self._profile = gsobject
 
-        # When applying normal or whitening noise to an image, we normally do calculations. 
+        # When applying normal or whitening noise to an image, or even just in drawing a CF at a
+        # any given scale dx, we normally do calculations. 
         # If _profile_for_stored is profile, then it means that we can use the stored values in
-        # _rootps_store and/or _rootps_whitening_store and avoid having to redo the calculations.
-        # So for now, we start out with _profile_for_stored = None and _rootps_store and 
-        # _rootps_whitening_store empty.
+        # _rootps_store, _rootps_whitening_store and/or _profile_with_pixel, and avoid having to
+        # redo the calculations.
+        # So for now we start out with _profile_for_stored = None, and _rootps_store, 
+        # _rootps_whitening_store and _profile_with_pixel empty.
         self._profile_for_stored = None
         self._rootps_store = []
         self._rootps_whitening_store = []
+        self._profile_with_pixel = []
         # Also set up the cache for a stored value of the variance, needed for efficiency once the
         # noise field can get convolved with other GSObjects making isAnalyticX() False
         self._variance_stored = None
@@ -161,6 +164,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         if self._profile_for_stored is not self._profile:
             self._rootps_store = []
             self._rootps_whitening_store = []
+            self._profile_with_pixel = []
             self._variance_stored = None
         # Set profile_for_stored for next time.
         self._profile_for_stored = self._profile
@@ -246,6 +250,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         if self._profile_for_stored is not self._profile:
             self._rootps_store = []
             self._rootps_whitening_store = []
+            self._profile_with_pixel = []
             self._variance_stored = None
         # Set profile_for_stored for next time.
         self._profile_for_stored = self._profile
@@ -357,6 +362,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             if self._profile_for_stored is not self._profile:
                 self._rootps_store = []
                 self._rootps_whitening_store = []
+                self._profile_with_pixel = []
                 self._variance_stored = None
             # Set profile_for_stored for next time.
             self._profile_for_stored = self._profile
@@ -445,9 +451,45 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         See the general GSObject draw() method for more information the input parameters.
         """
-        return self._profile.draw(
-            image=image, dx=dx, gain=1., wmult=wmult, normalization="surface brightness",
+        # Make sure image is setup correctly.  Some steps will eventually get used twice as this is
+        # called again by _profile.draw(...), but getting scale for the image set correctly in this
+        # step ensures that this code stays in line with any changes to the default behaviour made
+        # in base.py.
+        image = self._profile._draw_setup_image(image, dx, wmult, add_to_image)
+
+        print image.scale
+ 
+        # If the profile has changed since last time (or if we have never been here before),
+        # clear out the stored values.
+        if self._profile_for_stored is not self._profile:
+            self._rootps_store = []
+            self._rootps_whitening_store = []
+            self._profile_with_pixel = []
+            self._variance_stored = None
+        # Set profile_for_stored for next time.
+        self._profile_for_stored = self._profile
+
+        # Then query the store of Pixel-convoled profiles to see if we have one which has been
+        # convolved with the desired galsim.Pixel(image.scale)... If so, just use that.
+        use_stored = False
+        for stored_profile, stored_scale in self._profile_with_pixel:
+            if stored_scale == image.scale:
+                use_stored = True
+                draw_this_profile = stored_profile
+                break
+
+        # If no suitable profiles are stored, build one by convolving with a
+        # galsim.Pixel(image.scale), and store it along with the scale for lookup later.
+        if use_stored == False:
+            draw_this_profile = galsim.Convolve([self._profile, galsim.Pixel(image.scale)])
+            self._profile_with_pixel.append((draw_this_profile, image.scale))
+
+        # Then draw, setting dx=None as image.scale contains the correct scale already
+        ret = draw_this_profile.draw(
+            image=image, dx=None, gain=1., wmult=wmult, normalization="surface brightness",
             add_to_image=add_to_image, use_true_center=False)
+        return ret
+
 
     def calculateCovarianceMatrix(self, bounds, dx):
         """Calculate the covariance matrix for an image with specified properties.
@@ -609,9 +651,8 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     or an Interpolant instance (if the latter one-dimensional case is supplied, an InterpolantXY
     will be automatically generated from it).
 
-    The default x_interpolant if `None` is set is a galsim.InterpolantXY(galsim.Linear(tol=1.e-4)),
-    which uses bilinear interpolation.  Initial tests indicate the favourable performance of this
-    interpolant in applications involving correlated pixel noise.
+    The default x_interpolant if `None` is set is a galsim.InterpolantXY(galsim.Nearest(tol=1.e-4)),
+    which is recommended as it reflects the square pixel structure common to imaging detectors.  
 
     There is also an option to switch off an internal correction for assumptions made about the
     periodicity in the input noise image.  If you wish to turn this off you may, e.g.
@@ -791,10 +832,15 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
         # If x_interpolant not specified on input, use bilinear
         if x_interpolant == None:
-            linear = galsim.Linear(tol=1.e-4)
+            linear = galsim.Nearest(tol=1.e-4)
             x_interpolant = galsim.InterpolantXY(linear)
         else:
             x_interpolant = utilities.convert_interpolant_to_2d(x_interpolant)
+
+        # Make the default GSParams possess a sufficiently large maximum_fft_size - this turns out
+        # to be necessary in general
+        if gsparams is None:
+            gsparams = galsim.GSParams(maximum_fft_size=262144) # This is 512^2
 
         # Then initialize...
         cf_object = galsim.InterpolatedImage(
@@ -887,14 +933,12 @@ def getCOSMOSNoise(rng, file_name, dx_cosmos=0.03, variance=0., x_interpolant=No
                           lookup table in real space.  Supplied kwarg must be an InterpolantXY
                           instance or an Interpolant instance (from which an InterpolantXY will be
                           automatically generated).  Defaults to use of the bilinear interpolant
-                          `galsim.InterpolantXY(galsim.Linear(tol=1.e-4))`, see below.
+                          `galsim.InterpolantXY(galsim.Nearest(tol=1.e-4))`, see below.
 
     @return A _BaseCorrelatedNoise instance representing correlated noise in F814W COSMOS images.
 
-    The interpolation used if `x_interpolant=None` (default) is a
-    galsim.InterpolantXY(galsim.Linear(tol=1.e-4)), which uses bilinear interpolation.  Initial
-    tests indicate the favourable performance of this interpolant in applications involving
-    correlated noise.
+    The default x_interpolant if `None` is set is a galsim.InterpolantXY(galsim.Nearest(tol=1.e-4)),
+    which is recommended as it reflects the square pixel structure common to imaging detectors.  
 
     You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
     help(galsim.GSParams) for more information about this option.
@@ -944,10 +988,15 @@ def getCOSMOSNoise(rng, file_name, dx_cosmos=0.03, variance=0., x_interpolant=No
 
     # If x_interpolant not specified on input, use bilinear
     if x_interpolant == None:
-        linear = galsim.Linear(tol=1.e-4)
+        linear = galsim.Nearest(tol=1.e-4)
         x_interpolant = galsim.InterpolantXY(linear)
     else:
         x_interpolant = utilities.convert_interpolant_to_2d(x_interpolant)
+
+    # Make the default GSParams possess a sufficiently large maximum_fft_size - this turns out
+    # to be necessary in general
+    if gsparams is None:
+        gsparams = galsim.GSParams(maximum_fft_size=262144) # This is 512^2
 
     # Use this info to then generate a correlated noise model DIRECTLY: note this is non-standard
     # usage, but tolerated since we can be sure that the input cfimage is appropriately symmetric
@@ -986,6 +1035,12 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
     class for more details.
     """
     def __init__(self, rng, pixel_scale, variance, gsparams=None):
+
+        # Make the default GSParams possess a sufficiently large maximum_fft_size - this turns out
+        # to be necessary in general
+        if gsparams is None:
+            gsparams = galsim.GSParams(maximum_fft_size=262144) # This is 512^2
+
         # Need variance == xvalue(0,0)
         # Pixel has flux of f/dx^2, so us f = varaince * dx^2
         cf_object = galsim.Pixel(xw=pixel_scale, flux=variance*pixel_scale**2, gsparams=gsparams)
