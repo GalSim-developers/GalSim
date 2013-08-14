@@ -247,8 +247,13 @@ class DistDeviate(_galsim.BaseDeviate):
                              'p<0 or p>1!  You entered: %f'%p)
         return self._inverseprobabilitytable(p)
     
-    def __call__(self):
+    # This is the private function that is required to make DistDeviate work as a derived 
+    # class of BaseDeviate.  See pysrc/Random.cpp.
+    def _val(self):
         return self.val(self._ud())
+
+    def __call__(self):
+        return self._val()
 
     def reset(self, rng=0):
         _galsim.BaseDeviate.reset(self,rng)
