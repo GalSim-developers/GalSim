@@ -70,7 +70,7 @@ for test_case in ("basic",):# "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2"
     plt.ylabel(r'$\Delta$g$_1$ (DFT - Photon)')
     plt.ylim(-YMAX_ZOOMIN, YMAX_ZOOMIN)
     plt.legend()
-    plt.title(test_case)
+    #plt.title(test_case)
     plt.subplots_adjust(left=0.15)
     plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomin_g1.png'))
 
@@ -96,7 +96,7 @@ for test_case in ("basic",):# "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2"
     plt.ylabel(r'$\Delta$g$_2$ (DFT - Photon)')
     plt.ylim(-YMAX_ZOOMIN, YMAX_ZOOMIN)
     plt.legend()
-    plt.title(test_case)
+    #plt.title(test_case)
     plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomin_g2.png'))
 
     # Then do the plots of sigma
@@ -131,6 +131,6 @@ for test_case in ("basic",):# "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2"
     plt.ylabel(r'$\Delta \sigma$ (DFT - Photon) [1e-5 arcsec]')
     plt.axhline(ls='--', color='k')
     plt.legend()
-    plt.title(test_case)
+    #plt.title(test_case)
     plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomin_sigma.png'))
 
