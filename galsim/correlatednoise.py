@@ -573,7 +573,9 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     a number of subsequent operations including interpolation, shearing, magnification and
     rendering of the correlation function profile into an output Image.  The class also allows
     correlated Gaussian noise fields to be generated according to the correlation function, and
-    added to an Image.
+    added to an Image: see the `.applyTo()` method.  It also provides a method for whitening
+    pre-existing noise that shares the same spatial correlations: see the `.applyWhiteningTo()`
+    method.
 
     It also allows the combination of multiple correlation functions by addition, and for the
     scaling of the total variance they represent by scalar factors.
@@ -588,13 +590,13 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
         >>> cn = galsim.CorrelatedNoise(rng, image)
 
-    Instantiates a CorrelatedNoise using the pixel scale information contained in image.scale
-    (assumes the scale is unity if image.scale <= 0.) by calculating the correlation function
+    Instantiates a CorrelatedNoise using the pixel scale information contained in `image.scale`
+    (assumes the scale is unity if `image.scale <= 0.`) by calculating the correlation function
     in the input `image`.  The input `rng` must be a galsim.BaseDeviate or derived class instance,
     setting the random number generation for the noise.
 
-    Optional Inputs
-    ---------------
+    Optional Inputs: Interpolant
+    ----------------------------
 
         >>> cn = galsim.CorrelatedNoise(rng, image, dx=0.2)
 
@@ -610,8 +612,32 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     will be automatically generated from it).
 
     The default x_interpolant if `None` is set is a galsim.InterpolantXY(galsim.Linear(tol=1.e-4)),
-    which uses bilinear interpolation.  Initial tests indicate the favourable performance of this
-    interpolant in applications involving correlated pixel noise.
+    which uses bilinear interpolation.  The use of this interpolant is an approximation that gives
+    good empirical results without requiring internal convolution of the correlation function
+    profile by a galsim.Pixel object when applying correlated noise to images: such an internal
+    convolution has been found to be computationally costly in practice, requiring the Fourier
+    transform of very large arrays.  
+
+    The use of the bilinear interpolants means that the representation of correlated noise will be
+    noticeably inaccurate in at least the following two regimes:
+
+      i)  If the pixel scale of the desired final output (e.g. the target image of `.draw()`,
+          `.applyTo()` or `.applyWhiteningTo()`) is small relative to the separation between pixels
+          in the `image` used to instantiate `cn` as shown above.
+      ii) If the CorrelatedNoise instance `cn` was instantiated with an image of scale comparable
+          to that in the final output, and `cn` has been rotated or otherwise transformed (e.g.
+          via the `.applyRotation()`, `.applyShear()` methods, see below).
+
+    Conversely, the approximation will work best in the case where the correlated noise used to
+    instantiate the `cn` is taken from an input image for which `image.scale` is smaller than that
+    in the desired output.  This is the most common use case in the practical treatment of
+    correlated noise when simulating galaxies from space telescopes, such as COSMOS.
+
+    Changing from the default bilinear interpolant is made possible, but not recommended.  For more
+    information please see the discussion on https://github.com/GalSim-developers/GalSim/pull/452.
+
+    Optional Inputs: Periodicity Correction
+    ---------------------------------------
 
     There is also an option to switch off an internal correction for assumptions made about the
     periodicity in the input noise image.  If you wish to turn this off you may, e.g.
@@ -891,10 +917,31 @@ def getCOSMOSNoise(rng, file_name, dx_cosmos=0.03, variance=0., x_interpolant=No
 
     @return A _BaseCorrelatedNoise instance representing correlated noise in F814W COSMOS images.
 
-    The interpolation used if `x_interpolant=None` (default) is a
-    galsim.InterpolantXY(galsim.Linear(tol=1.e-4)), which uses bilinear interpolation.  Initial
-    tests indicate the favourable performance of this interpolant in applications involving
-    correlated noise.
+    The default x_interpolant is a galsim.InterpolantXY(galsim.Linear(tol=1.e-4)), which uses
+    bilinear interpolation.  The use of this interpolant is an approximation that gives good
+    empirical results without requiring internal convolution of the correlation function profile by
+    a galsim.Pixel object when applying correlated noise to images: such an internal convolution has
+    been found to be computationally costly in practice, requiring the Fourier transform of very
+    large arrays.  
+
+    The use of the bilinear interpolants means that the representation of correlated noise will be
+    noticeably inaccurate in at least the following two regimes:
+
+      i)  If the pixel scale of the desired final output (e.g. the target image of `.draw()`,
+          `.applyTo()` or `.applyWhiteningTo()`) is small relative to the separation between pixels
+          in the `image` used to instantiate `cn` as shown above.
+      ii) If the CorrelatedNoise instance `cn` was instantiated with an image of scale comparable
+          to that in the final output, and `cn` has been rotated or otherwise transformed (e.g.
+          via the `.applyRotation()`, `.applyShear()` methods, see below).
+
+    Conversely, the approximation will work best in the case where the correlated noise used to
+    instantiate the `cn` is taken from an input image for which `image.scale` is smaller than that
+    in the desired output.  This is the most common use case in the practical treatment of
+    correlated noise when simulating galaxies from COSMOS, for which this function is expressly
+    designed.
+
+    Changing from the default bilinear interpolant is made possible, but not recommended.  For more
+    information please see the discussion on https://github.com/GalSim-developers/GalSim/pull/452.
 
     You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
     help(galsim.GSParams) for more information about this option.
