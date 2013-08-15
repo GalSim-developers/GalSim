@@ -1025,7 +1025,6 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
     The input `rng` must be a galsim.BaseDeviate or derived class instance, setting the random 
     number generation for the noise.
 
-
     Methods and Use
     ---------------
 
@@ -1035,7 +1034,8 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
     def __init__(self, rng, pixel_scale, variance, gsparams=None):
         # Need variance == xvalue(0,0)
         # Pixel has flux of f/dx^2, so us f = varaince * dx^2
-        cf_object = galsim.Pixel(xw=pixel_scale, flux=variance*pixel_scale**2, gsparams=gsparams)
+        cf_object = galsim.AutoConvolve(
+            galsim.Pixel(xw=pixel_scale, flux=variance*pixel_scale**2, gsparams=gsparams))
         _BaseCorrelatedNoise.__init__(self, rng, cf_object)
 
 
