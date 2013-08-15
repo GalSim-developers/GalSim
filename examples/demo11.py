@@ -23,10 +23,15 @@ New features introduced in this demo:
 
 - psf = galsim.InterpolatedImage(psf_filename, dx, flux)
 - tab = galsim.LookupTable(file)
+- gal = galsim.RealGalaxy(..., noise_pad=True)
 - ps = galsim.PowerSpectrum(..., units)
 - distdev = galsim.DistDeviate(rng, function, x_min, x_max)
 - gal.applyLensing(g1, g2, mu)
-- image.addNoise(correlated_noise)
+- correlated_noise.applyWhiteningTo(image)
+- cn = galsim.getCOSMOSNoise(rng, file_name, ...)
+- vn = galsim.VariableGaussianNoise(rng, var_image)
+- ucn = galsim.UncorrelatedNoise(rng, pixel_scale, variance)
+- image.addNoise(cn)
 - image.setOrigin(x,y)
 
 - Power spectrum shears and magnifications for non-gridded positions.
@@ -100,10 +105,11 @@ def main(argv):
     # Then we'll choose randomly from this list.
     id_list = [ 106416, 106731, 108402, 116045, 116448 ]
 
-    # Make the 5 galaxies we're going to use here rather than remake them each time.
-    # This means the Fourier transforms of the real galaxy images don't need to be recalculated 
-    # each time, so it's a bit more efficient.
-    gal_list = [ galsim.RealGalaxy(real_galaxy_catalog, id=id) for id in id_list ]
+    # We will cache the galaxies that we make in order to save some of the calculations that
+    # happen on construction.  In particular, we don't want to recalculate the Fourier transforms 
+    # of the real galaxy images, so it's more efficient.
+    # We start with them all = None, and fill them in as we make them.
+    gal_list = [ None ] * len(id_list)
 
     # Setup the PowerSpectrum object we'll be using:
     # To do this, we first have to read in the tabulated power spectrum.
@@ -171,6 +177,11 @@ def main(argv):
                  center = center, rng = rng)
     logger.info('Made gridded shears')
 
+    # We keep track of how much noise is already in the image from the RealGalaxies.
+    # The default initial value is all pixels = 0.
+    noise_image = galsim.ImageF(image_size, image_size, scale=pixel_scale)
+    noise_image.setOrigin(0,0)
+
     # Now we need to loop over our objects:
     for k in range(nobj):
         time1 = time.time()
@@ -192,12 +203,38 @@ def main(argv):
         index = int(ud() * len(gal_list))
         gal = gal_list[index]
 
+        # If we haven't made this galaxy yet, we need to do so.
+        if gal is None:
+            # The new noise_pad=True option here means that when the real galaxy image is 
+            # extrapolated beyond the original extent of the image in the catalog, it gets padded 
+            # with the same noise as was present in the original image.  This is important
+            # to do when you are planning to whiten the resulting image, otherwise the areas
+            # that were padded won't have the correct noise after whitening.
+
+            # Furthermore, when whitening, the padding has to be large enough that the padded 
+            # image is larger than the postage stamp onto which we will be drawing. (Otherwise, 
+            # the noise whitening won't work correctly.) This is a bit complicated for the code to 
+            # figure out on its own, espeicially with the possibility of compound objects,
+            # dilations, shears, etc.  So we require the user to provide the minimum size to use 
+            # for padding with the min_pad_size parameter.
+
+            # In this case, the postage stamp will be 20 arcsec. The dilation might be as much as a 
+            # factor of 3^2.5 = 15.6. The shear and magnification are not significant, but the 
+            # image can be rotated, which adds an extra factor of sqrt(2). So the net required 
+            # pad_size is
+            #     min_pad_size = 20 * 15.6 * sqrt(2) = 441
+            # We round this up to 500 to be safe.
+            gal = galsim.RealGalaxy(real_galaxy_catalog, rng=ud, id=id_list[index], noise_pad=True,
+                                    min_pad_size=500) 
+            # Save it for next time we use this galaxy.
+            gal_list[index] = gal
+
         # Draw the size from a plausible size distribution: N(r) ~ r^-3.5
         # For this, we use the class DistDeviate which can draw deviates from an arbitrary
         # probability distribution.  This distribution can be defined either as a functional
         # form as we do here, or as tabulated lists of x and p values, from which the 
         # function is interpolated.
-        distdev = galsim.DistDeviate(ud, function=lambda x:x**-3.5, x_min=1, x_max=5)
+        distdev = galsim.DistDeviate(ud, function=lambda x:x**-2.5, x_min=1, x_max=3)
         dilat = distdev()
         # Use createDilated rather than applyDilation, so we don't change the galaxies in the 
         # original gal_list -- createDilated makes a new copy.
@@ -226,6 +263,14 @@ def main(argv):
         stamp = galsim.ImageF(stamp_size,stamp_size)
         final.draw(image=stamp, dx=pixel_scale, offset=offset)
 
+        # Now we can whiten the noise on the postage stamp.
+        # Galsim automatically propagates the noise correctly from the initial RealGalaxy object
+        # through the applied shear, distortion, rotation, and convolution into the final object's
+        # noise attribute.
+        # The returned value is the variance of the Gaussian noise that is present after
+        # the whitening process.
+        new_variance = final.noise.applyWhiteningTo(stamp)
+
         # Rescale flux to get the S/N we want.  We have to do that before we add it to the big 
         # image, which might have another galaxy near that point (so our S/N calculation would 
         # erroneously include the flux from the other object).
@@ -233,6 +278,7 @@ def main(argv):
         sn_meas = math.sqrt( numpy.sum(stamp.array**2) / noise_variance )
         flux_scaling = gal_signal_to_noise / sn_meas
         stamp *= flux_scaling
+        new_variance *= flux_scaling**2
 
         # Recenter the stamp at the desired position:
         stamp.setCenter(ix_nom,iy_nom)
@@ -241,9 +287,14 @@ def main(argv):
         bounds = stamp.bounds & full_image.bounds
         full_image[bounds] += stamp[bounds]
 
+        # We need to keep track of how much variance we have currently in the image, so when
+        # we add more noise, we can omit what is already there.
+        noise_image[bounds] += new_variance
+
         time2 = time.time()
         tot_time = time2-time1
         logger.info('Galaxy %d: position relative to corner = %s, t=%f s', k, str(pos), tot_time)
+        #sys.exit()
 
     # Add correlated noise to the image -- the correlation function comes from the HST COSMOS images
     # and is described in more detail in the galsim.correlatednoise.getCOSMOSNoise() docstring.
@@ -257,10 +308,28 @@ def main(argv):
     # COSMOS.  Using the original pixel scale, dx_cosmos=0.03 [arcsec], would leave very little
     # correlation among our larger 0.2 arcsec pixels. We also set the point (zero-distance) variance
     # to our desired value.
-    correlated_noise = galsim.correlatednoise.getCOSMOSNoise(
+    cn = galsim.getCOSMOSNoise(
         rng, cf_file_name, dx_cosmos=pixel_scale, variance=noise_variance)
 
-    # Now add noise according to this correlated noise to the full_image.  We have to do this
+    # We already have some noise in the image, but it isn't uniform.  So the first thing to do is
+    # to make the Gaussian noise uniform across the whole image.  We have a special noise class
+    # that can do this.  VariableGaussianNoise takes an image of variance values and applies
+    # Gaussian noise with the corresponding variance to each pixel.
+    # So all we need to do is build an image with how much noise to add to each pixel to get us
+    # up to the maximum value that we already have in the image.
+    max_current_variance = numpy.max(noise_image.array)
+    noise_image = max_current_variance - noise_image
+    vn = galsim.VariableGaussianNoise(rng, noise_image)
+    full_image.addNoise(vn)
+
+    # Now max_current_variance is the noise level across the full image.  We don't want to add that
+    # twice, so subtract off this much from the COSMOS noise that we want to end up in the image.
+    # The UncorrelatedNoise class is a kind of "CorrelatedNoise" that has no correlations.
+    # Its correlation function has the given variance at zero lag, and 0 elsewhere.  We can thus
+    # subtract off this value from the correlated noise that we want for the final noise field.
+    cn -= galsim.UncorrelatedNoise(rng, pixel_scale, max_current_variance)
+
+    # Now add noise according to this correlation function to the full_image.  We have to do this
     # step at the end, rather than adding to individual postage stamps, in order to get the noise
     # level right in the overlap regions between postage stamps.
     full_image.addNoise(correlated_noise) # Note image must have the right scale, as it does here.

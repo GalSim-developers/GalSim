@@ -183,7 +183,7 @@ namespace galsim {
         _pimpl = d._pimpl;
     }
 
-    void SBProfile::applyScale(double scale)
+    void SBProfile::applyExpansion(double scale)
     {
         SBTransform d(*this,scale,0.,0.,scale);
         _pimpl = d._pimpl;

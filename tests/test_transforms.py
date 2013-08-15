@@ -235,7 +235,7 @@ def test_mag():
     re = 1.0
     r0 = re/1.67839
     mySBP = galsim.SBExponential(flux=1, scale_radius=r0)
-    mySBP.applyScale(1.5)
+    mySBP.applyExpansion(1.5)
     savedImg = galsim.fits.read(os.path.join(imgdir, "exp_mag.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
     mySBP.draw(myImg.view())

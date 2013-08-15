@@ -668,12 +668,10 @@ def test_realgalaxy():
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
                    'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } 
                  },
-        'gal5' : { 'type' : 'RealGalaxy' , 'index' : 41, 'noise_pad' : 'True' },
-        'gal6' : { 'type' : 'RealGalaxy' , 'index' : 41, 'noise_pad' : 'blankimg.fits' },
-        'gal7' : { 'type' : 'RealGalaxy' , 'index' : 32, 'pad_image' : 'blankimg.fits' },
-        'gal8' : { 'type' : 'RealGalaxy' ,
-                   'index' : 87, 'pad_image' : 'blankimg.fits', 'noise_pad' : 'blankimg.fits'
-                 }
+        'gal5' : { 'type' : 'RealGalaxy' , 'index' : 41, 'noise_pad' : 'true' },
+        'gal6' : { 'type' : 'RealGalaxy' , 'index' : 41, 'noise_pad' : 'False' },
+        'gal7' : { 'type' : 'RealGalaxy' , 'index' : 32, 'whiten' : True, 'pad_factor' : 5 },
+        'gal8' : { 'type' : 'RealGalaxy' , 'index' : 32, 'whiten' : True, 'min_pad_size' : 500 }
     }
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
@@ -725,20 +723,25 @@ def test_realgalaxy():
 
     config['seq_index'] = 5
     gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
-    gal6b = galsim.RealGalaxy(real_cat, index = 41, rng = rng, noise_pad = 'blankimg.fits')
+    gal6b = galsim.RealGalaxy(real_cat, index = 41, noise_pad = False)
     gsobject_compare(gal6a, gal6b, conv=conv)
 
     config['seq_index'] = 6
     gal7a = galsim.config.BuildGSObject(config, 'gal7')[0]
-    gal7b = galsim.RealGalaxy(real_cat, index = 32, pad_image = 'blankimg.fits')
+    gal7b = galsim.RealGalaxy(real_cat, index = 32, rng = rng, noise_pad=True, pad_factor = 5)
     gsobject_compare(gal7a, gal7b, conv=conv)
-    
+    # If whiten=True, it doesn't do anything to the profile yet, but it does force noise_pad=True
+    # and it saves the noise attribute in the galaxy.
+    gsobject_compare(gal7a.noise._profile, gal7b.noise._profile, conv=conv)
+
     config['seq_index'] = 7
     gal8a = galsim.config.BuildGSObject(config, 'gal8')[0]
-    gal8b = galsim.RealGalaxy(real_cat, index = 87, rng = rng, noise_pad = 'blankimg.fits',
-                              pad_image = 'blankimg.fits')
+    gal8b = galsim.RealGalaxy(real_cat, index = 32, rng = rng, noise_pad=True, min_pad_size= 500)
     gsobject_compare(gal8a, gal8b, conv=conv)
-
+    # If whiten=True, it doesn't do anything to the profile yet, but it does force noise_pad=True
+    # and it saves the noise attribute in the galaxy.
+    gsobject_compare(gal8a.noise._profile, gal8b.noise._profile, conv=conv)
+    
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 

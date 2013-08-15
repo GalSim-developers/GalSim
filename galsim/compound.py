@@ -70,21 +70,28 @@ class Add(GSObject):
         elif len(args) == 1:
             # 1 argument.  Should be either a GSObject or a list of GSObjects
             if isinstance(args[0], GSObject):
-                SBList = [args[0].SBProfile]
+                args = [args[0]]
             elif isinstance(args[0], list):
-                SBList = []
-                for obj in args[0]:
-                    if isinstance(obj, GSObject):
-                        SBList.append(obj.SBProfile)
-                    else:
-                        raise TypeError("Input list must contain only GSObjects.")
+                args = args[0]
             else:
                 raise TypeError("Single input argument must be a GSObject or list of them.")
-            GSObject.__init__(self, galsim.SBAdd(SBList, gsparams=gsparams))
-        elif len(args) >= 2:
-            # >= 2 arguments.  Convert to a list of SBProfiles
+        # else args is already the list of objects
+
+        if len(args) == 1:
+            # No need to make an SBAdd in this case.
+            GSObject.__init__(self, args[0])
+            if hasattr(args[0],'noise'): self.noise = args[0].noise
+        else:
+            # If any of the objects have a noise attribute, then we propagate the sum of the 
+            # noises (they add like variances) to the final sum.
+            noise = None
+            for obj in args:
+                if hasattr(obj,'noise'):
+                    if noise is None: noise = obj.noise
+                    else: noise += obj.noise
             SBList = [obj.SBProfile for obj in args]
             GSObject.__init__(self, galsim.SBAdd(SBList, gsparams=gsparams))
+            if noise is not None: self.noise = noise
 
 class Convolve(GSObject):
     """A class for convolving 2 or more GSObjects.
@@ -130,27 +137,18 @@ class Convolve(GSObject):
             raise ValueError("Convolve must be initialized with at least one GSObject.")
         elif len(args) == 1:
             if isinstance(args[0], GSObject):
-                SBList = [args[0].SBProfile]
+                args = [args[0]]
             elif isinstance(args[0], list):
-                SBList=[]
-                for obj in args[0]:
-                    if isinstance(obj, GSObject):
-                        SBList.append(obj.SBProfile)
-                    else:
-                        raise TypeError("Input list must contain only GSObjects.")
+                args = args[0]
             else:
                 raise TypeError("Single input argument must be a GSObject or list of them.")
-        elif len(args) >= 2:
-            # >= 2 arguments.  Convert to a list of SBProfiles
-            SBList = []
-            for obj in args:
-                if isinstance(obj, GSObject):
-                    SBList.append(obj.SBProfile)
-                else:
-                    raise TypeError("Input args must contain only GSObjects.")
+        # else args is already the list of objects
 
-        # Having built the list of SBProfiles or thrown exceptions if necessary, see now whether
-        # to perform real space convolution...
+        if len(args) == 1:
+            # No need to make an SBConvolve in this case.  Can early exit.
+            GSObject.__init__(self, args[0])
+            if hasattr(args[0],'noise'): self.noise = args[0].noise
+            return
 
         # Check kwargs
         # real_space can be True or False (default if omitted is None), which specifies whether to 
@@ -159,7 +157,6 @@ class Convolve(GSObject):
         # we will usually do the fourier method.  However, if there are 2 components _and_ both of 
         # them have hard edges, then we use real-space convolution.
         real_space = kwargs.pop("real_space", None)
-
         gsparams = kwargs.pop("gsparams", None)
 
         # Make sure there is nothing left in the dict.
@@ -167,22 +164,17 @@ class Convolve(GSObject):
             raise TypeError(
                 "Convolve constructor got unexpected keyword argument(s): %s"%kwargs.keys())
 
-
-        # If 1 argument, check if it is a list:
-        if len(args) == 1 and isinstance(args[0], list):
-            args = args[0]
-
+        # Check whether to perform real space convolution...
+        # Start by checking if all objects have a hard edge.
         hard_edge = True
         for obj in args:
             if not obj.hasHardEdges():
                 hard_edge = False
 
         if real_space is None:
-            # Figure out if it makes more sense to use real-space convolution.
+            # The automatic determination is to use real_space if 2 items, both with hard edges.
             if len(args) == 2:
                 real_space = hard_edge
-            elif len(args) == 1:
-                real_space = obj.isAnalyticX()
             else:
                 real_space = False
         
@@ -222,9 +214,29 @@ class Convolve(GSObject):
                         real_space = False
                         break
 
-        # Then finally initialize the SBProfile using the objects' SBProfiles in SBList
+        # If one of the objects has a noise attribute, then we convolve it by the others.
+        # More than one is not allowed.
+        noise = None
+        noise_convolve = []
+        for obj in args:
+            if hasattr(obj,'noise'):
+                if noise is not None: 
+                    import warnings
+                    warnings.warn("Unable to propagate noise in galsim.Convolve when multiple "+
+                                  "objects have noise attribute")
+                    noise = None
+                    break
+                noise = obj.noise
+                others = [ obj2 for obj2 in args if obj2 is not obj ]
+                assert len(others) > 0
+                if len(others) == 1: noise.convolveWith(others[0])
+                else: noise.convolveWith(galsim.Convolve(others))
+
+        # Then finally initialize the SBProfile using the objects' SBProfiles.
+        SBList = [ obj.SBProfile for obj in args ]
         GSObject.__init__(self, galsim.SBConvolve(SBList, real_space=real_space,
                                                   gsparams=gsparams))
+        if noise is not None: self.noise = noise
 
 
 class Deconvolve(GSObject):
@@ -240,12 +252,13 @@ class Deconvolve(GSObject):
     deconvolved.
     """
     # --- Public Class methods ---
-    def __init__(self, farg, gsparams=None):
-        if isinstance(farg, GSObject):
-            self.farg = farg
-            GSObject.__init__(self, galsim.SBDeconvolve(self.farg.SBProfile, gsparams=gsparams))
-        else:
+    def __init__(self, obj, gsparams=None):
+        if not isinstance(obj, GSObject):
             raise TypeError("Argument to Deconvolve must be a GSObject.")
+        GSObject.__init__(self, galsim.SBDeconvolve(obj.SBProfile, gsparams=gsparams))
+        if hasattr(obj,'noise'):
+            import warnings
+            warnings.warn("Unable to propagate noise in galsim.Deconvolve")
 
 
 class AutoConvolve(GSObject):
@@ -267,6 +280,9 @@ class AutoConvolve(GSObject):
         if not isinstance(obj, GSObject):
             raise TypeError("Argument to AutoConvolve must be a GSObject.")
         GSObject.__init__(self, galsim.SBAutoConvolve(obj.SBProfile, gsparams=gsparams))
+        if hasattr(obj,'noise'):
+            import warnings
+            warnings.warn("Unable to propagate noise in galsim.AutoConvolve")
 
 
 class AutoCorrelate(GSObject):
@@ -293,6 +309,9 @@ class AutoCorrelate(GSObject):
         if not isinstance(obj, GSObject):
             raise TypeError("Argument to AutoCorrelate must be a GSObject.")
         GSObject.__init__(self, galsim.SBAutoCorrelate(obj.SBProfile, gsparams=gsparams))
+        if hasattr(obj,'noise'):
+            import warnings
+            warnings.warn("Unable to propagate noise in galsim.AutoConvolve")
 
 
 

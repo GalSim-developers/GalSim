@@ -59,16 +59,16 @@ namespace galsim {
 
     SBInterpolatedImage::~SBInterpolatedImage() {}
 
-    void SBInterpolatedImage::calculateStepK() const 
+    void SBInterpolatedImage::calculateStepK(double max_stepk) const 
     { 
         assert(dynamic_cast<const SBInterpolatedImageImpl*>(_pimpl.get()));
-        return static_cast<const SBInterpolatedImageImpl&>(*_pimpl).calculateStepK(); 
+        return static_cast<const SBInterpolatedImageImpl&>(*_pimpl).calculateStepK(max_stepk); 
     }
 
-    void SBInterpolatedImage::calculateMaxK() const 
+    void SBInterpolatedImage::calculateMaxK(double min_maxk) const 
     {
         assert(dynamic_cast<const SBInterpolatedImageImpl*>(_pimpl.get()));
-        return static_cast<const SBInterpolatedImageImpl&>(*_pimpl).calculateMaxK(); 
+        return static_cast<const SBInterpolatedImageImpl&>(*_pimpl).calculateMaxK(min_maxk); 
     }
 
     template <class T>
@@ -624,7 +624,7 @@ namespace galsim {
     // size region around the center encloses (1-alias_threshold) of the total flux.
     // This can be useful if you make the image bigger than you need to, just to be
     // safe, but then want to use as large a stepk value as possible.
-    void SBInterpolatedImage::SBInterpolatedImageImpl::calculateStepK() const
+    void SBInterpolatedImage::SBInterpolatedImageImpl::calculateStepK(double max_stepk) const
     {
         dbg<<"Start SBInterpolatedImage calculateStepK()\n";
         dbg<<"Current value of stepk = "<<_stepk<<std::endl;
@@ -652,6 +652,7 @@ namespace galsim {
         int dy = b.getYMin() + ((b.getYMax()-b.getYMin()+1)/2);
         dbg<<"b = "<<b<<std::endl;
         dbg<<"dx,dy = "<<dx<<','<<dy<<std::endl;
+        int min_d = max_stepk == 0. ? 0 : int(ceil(M_PI/max_stepk));
         for (int d=1; d<=Nino2; ++d) {
             xdbg<<"d = "<<d<<std::endl;
             xdbg<<"d1 = "<<d1<<std::endl;
@@ -667,7 +668,7 @@ namespace galsim {
             }
             if (flux < thresh) {
                 d1 = 0; // Mark that we haven't gotten to a good enclosing radius yet.
-            } else {
+            } else if (d > min_d) {
                 if (d1 == 0) d1 = d; // Mark this radius as a good one.
             }
         }
@@ -697,10 +698,11 @@ namespace galsim {
     inline double fast_norm(const std::complex<double>& z)
     { return real(z)*real(z) + imag(z)*imag(z); }
 
-    void SBInterpolatedImage::SBInterpolatedImageImpl::calculateMaxK() const
+    void SBInterpolatedImage::SBInterpolatedImageImpl::calculateMaxK(double min_maxk) const
     {
         dbg<<"Start SBInterpolatedImage calculateMaxK()\n";
         dbg<<"Current value of maxk = "<<_maxk<<std::endl;
+        dbg<<"min_maxk = "<<min_maxk<<std::endl;
         dbg<<"Find the smallest k such that all values outside of this are less than "
             <<this->gsparams->maxk_threshold<<std::endl;
         checkK();
@@ -723,7 +725,8 @@ namespace galsim {
         // kx and ky when drawing.  Since kx<0 is just the conjugate of the corresponding
         // point at (-kx,-ky), we only check the right half of the square.  i.e. the 
         // upper-right and lower-right quadrants.
-        for(int ix=0; ix<=N/2; ++ix) {
+        int min_ix = int(std::ceil(min_maxk / dk));
+        for(int ix=min_ix; ix<=N/2; ++ix) {
             xdbg<<"Start search for ix = "<<ix<<std::endl;
             // Search along the two sides with either kx = ix or ky = ix.
             for(int iy=0; iy<=ix; ++iy) {

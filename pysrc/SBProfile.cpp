@@ -264,7 +264,7 @@ namespace galsim {
                      (bp::arg("s")))
                 .def("applyRotation", &SBProfile::applyRotation, bp::args("theta"))
                 .def("applyShift", &SBProfile::applyShift, bp::args("dx", "dy"))
-                .def("applyScale", &SBProfile::applyScale, bp::args("scale"))
+                .def("applyExpansion", &SBProfile::applyExpansion, bp::args("scale"))
                 .def("shoot", &SBProfile::shoot, bp::args("n", "u"))
                 ;
             wrapTemplates<float>(pySBProfile);

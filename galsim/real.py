@@ -60,8 +60,7 @@ class RealGalaxy(GSObject):
     
         real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index=None, id=None, random=False, 
                                         rng=None, x_interpolant=None, k_interpolant=None,
-                                        flux=None, pad_factor = 0, noise_pad=False, pad_image=None,
-                                        use_cache = True)
+                                        flux=None, pad_factor=0, min_pad_size=0, noise_pad=False)
 
     This initializes real_galaxy with three InterpolatedImage objects (one for the deconvolved
     galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
@@ -103,40 +102,17 @@ class RealGalaxy(GSObject):
                                 default value, 4.  We strongly recommend leaving this parameter at
                                 its default value; see text above for details.
                                 [Default `pad_factor = 0`.]
+    @param min_pad_size         Minimum size to pad image.  Only relevant if larger than 
+                                pad_factor * size of original image.  This is important if you 
+                                are planning to whiten the resulting image.  You want to make sure
+                                that the padded image is larger than the postage stamp onto which
+                                you are drawing this object.  [Default `min_pad_size = 0`.]
     @param noise_pad            Pad the Interpolated image with zeros, or with noise of a level 
-                                specified in the training dataset?  There are several options here: 
+                                specified in the training dataset?  
                                     Use `noise_pad = False` if you wish to pad with zeros.
-                                    Use `noise_pad = True` if you wish to pad with uncorrelated
-                                        noise of the proper variance.
-                                    Set `noise_pad` equal to a galsim.CorrelatedNoise, an Image, or
-                                        a filename containing an Image of an example noise field
-                                        that will be used to calculate the noise power spectrum and
-                                        generate noise in the padding region.  Any random number
-                                        generator passed to the `rng` keyword will take precedence
-                                        over that carried in an input galsim.CorrelatedNoise.  
-                                In the last case, if the same file is used repeatedly, then use of
-                                the `use_cache` keyword (see below) can be used to prevent the need
-                                for repeated galsim.CorrelatedNoise initializations.  
-                                [default `noise_pad = False`.]
-    @param pad_image            Image to be used for deterministically padding the original image.
-                                This can be specified in two ways:
-                                   (a) as a galsim.Image; or
-                                   (b) as a string which is interpreted as a filename containing an
-                                       image to use.
-                                The size of the image that is passed in is taken to specify the
-                                amount of padding, and so the `pad_factor` keyword should be equal
-                                to 1, i.e., no padding.  The `pad_image` scale is ignored, and taken
-                                to be equal to that of the `image`. Note that `pad_image` can be
-                                used together with `noise_pad`.  However, the user should be careful
-                                to ensure that the image used for padding has roughly zero mean.
-                                The purpose of this keyword is to allow for a more flexible
-                                representation of some noise field around an object; if the user
-                                wishes to represent the sky level around an object, they should do
-                                that when they have drawn the final image instead.  [Default
-                                `pad_image = None`.]
-    @param use_cache            Specify whether to cache noise_pad read in from a file to save
-                                having to build an CorrelatedNoise repeatedly from the same image.
-                                [Default `use_cache = True`]
+                                    Use `noise_pad = True` if you wish to pad with the noise
+                                        specified in the RealGalaxyCatalog for this object.
+                                [default `noise_pad = False`]
     @param gsparams             You may also specify a gsparams argument.  See the docstring for
                                 galsim.GSParams using help(galsim.GSParams) for more information
                                 about this option.
@@ -152,18 +128,17 @@ class RealGalaxy(GSObject):
     _opt_params = { "x_interpolant" : str ,
                     "k_interpolant" : str ,
                     "flux" : float ,
-                    "pad_factor" : float ,
-                    "noise_pad" : str ,
-                    "pad_image" : str }
+                    "pad_factor" : float,
+                    "min_pad_size" : int,
+                    "noise_pad" : bool
+                  }
     _single_params = [ { "index" : int , "id" : str } ]
     _takes_rng = True
-    _cache_noise_pad = {}
-    _cache_variance = {}
 
     # --- Public Class methods ---
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
                  rng=None, x_interpolant=None, k_interpolant=None, flux=None, pad_factor=0,
-                 noise_pad=False, pad_image=None, use_cache=True, gsparams=None):
+                 min_pad_size=0, noise_pad=False, gsparams=None):
 
         import pyfits
         import numpy as np
@@ -199,32 +174,30 @@ class RealGalaxy(GSObject):
         self.index = use_index
         self.pixel_scale = float(real_galaxy_catalog.pixel_scale[use_index])
 
-        # handle noise-padding options
-        try:
-            noise_pad = galsim.config.value._GetBoolValue(noise_pad,'')
-            # If it's a bool and True, use the correlated noise specified in the catalog.
-            if noise_pad:
-                noise_pad = noise
-            else:
-                noise_pad = 0.
-        except:
-            # If it's not a bool, or convertible to a bool, leave it alone.
-            pass
+        # Convert noise_pad to the right noise to pass to InterpolatedImage
+        if noise_pad:
+            noise_pad = noise
+        else:
+            noise_pad = 0.
 
-        self.original_image = galsim.InterpolatedImage(
-                gal_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant,
-                dx=self.pixel_scale, pad_factor=pad_factor, noise_pad=noise_pad, rng=rng,
-                pad_image=pad_image, use_cache=use_cache, gsparams=gsparams)
-        # If flux is None, leave flux as given by original image
-        if flux != None:
-            self.original_image.setFlux(flux)
-
-        # also make the original PSF image, with far less fanfare: we don't need to pad with
-        # anything interesting.
+        # Build the InterpolatedImage of the PSF.
         self.original_PSF = galsim.InterpolatedImage(
             PSF_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant, 
             flux=1.0, dx=self.pixel_scale, gsparams=gsparams)
-        #self.original_PSF.setFlux(1.0)
+
+        # Build the InterpolatedImage of the galaxy.
+        # Use the stepK() value of the PSF as a maximum value for stepK of the galaxy.
+        # (Otherwise, low surfact brightness galaxies can get a spuriously high stepk, which
+        # leads to problems.)
+        self.original_image = galsim.InterpolatedImage(
+                gal_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant,
+                dx=self.pixel_scale, pad_factor=pad_factor, min_pad_size=min_pad_size,
+                calculate_stepk=self.original_PSF.stepK(),
+                noise_pad=noise_pad, rng=rng, gsparams=gsparams)
+
+        # If flux is None, leave flux as given by original image
+        if flux != None:
+            self.original_image.setFlux(flux)
 
         # Calculate the PSF "deconvolution" kernel
         psf_inv = galsim.Deconvolve(self.original_PSF, gsparams=gsparams)
