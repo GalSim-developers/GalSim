@@ -265,11 +265,21 @@ namespace galsim {
         /// @brief Destructor
         ~SBInterpolatedImage();
 
-        /// @brief Refine the value of stepK if the input image was larger than necessary.
-        void calculateStepK() const;
+        /**
+         * @brief Refine the value of stepK if the input image was larger than necessary.
+         *
+         * @param[in] max_stepk  Optional maximum value of stepk if you have some a priori
+         *                       knowledge about an appropriate maximum. 
+         */
+        void calculateStepK(double max_stepk=0.) const;
 
-        /// @brief Refine the value of stepK if the input image had a smaller scale than necessary.
-        void calculateMaxK() const;
+        /**
+         * @brief Refine the value of stepK if the input image had a smaller scale than necessary.
+         *
+         * @param[in] min_maxk  Optional minimum value of maxk if you have some a priori
+         *                      knowledge about an appropriate minimum. 
+         */
+        void calculateMaxK(double min_maxk=0.) const;
 
     protected:
 
