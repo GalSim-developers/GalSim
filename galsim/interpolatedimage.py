@@ -181,11 +181,20 @@ class InterpolatedImage(GSObject):
     @param calculate_stepk Specify whether to perform an internal determination of the extent of 
                            the object being represented by the InterpolatedImage; often this is 
                            useful in choosing an optimal value for the stepsize in the Fourier 
-                           space lookup table. (Default `calculate_stepk = True`)
+                           space lookup table.  
+                           If you know a priori an appropriate maximum value for stepk, then 
+                           you may also supply that here instead of a bool value, in which case
+                           the stepk value is still calculated, but will not go above the
+                           provided value. 
+                           (Default `calculate_stepk = True`)
     @param calculate_maxk  Specify whether to perform an internal determination of the highest 
                            spatial frequency needed to accurately render the object being 
                            represented by the InterpolatedImage; often this is useful in choosing 
                            an optimal value for the extent of the Fourier space lookup table.
+                           If you know a priori an appropriate minimum value for maxk, then 
+                           you may also supply that here instead of a bool value, in which case
+                           the maxk value is still calculated, but will not go below the
+                           provided value. 
                            (Default `calculate_maxk = True`)
     @param use_cache       Specify whether to cache noise_pad read in from a file to save having
                            to build a CorrelatedNoise object repeatedly from the same image.
@@ -356,9 +365,17 @@ class InterpolatedImage(GSObject):
         # GalSim cannot automatically know what stepK and maxK are appropriate for the 
         # input image.  So it is usually worth it to do a manual calculation here.
         if calculate_stepk:
-            sbinterpolatedimage.calculateStepK()
+            if calculate_stepk is True:
+                sbinterpolatedimage.calculateStepK()
+            else:
+                # If not a bool, then value is max_stepk
+                sbinterpolatedimage.calculateStepK(max_stepk=calculate_stepk)
         if calculate_maxk:
-            sbinterpolatedimage.calculateMaxK()
+            if calculate_maxk is True:
+                sbinterpolatedimage.calculateMaxK()
+            else:
+                # If not a bool, then value is min_maxk
+                sbinterpolatedimage.calculateMaxK(min_maxk=calculate_maxk)
 
         # If the user specified a flux, then set to that flux value.
         if flux != None:

@@ -180,20 +180,24 @@ class RealGalaxy(GSObject):
         else:
             noise_pad = 0.
 
+        # Build the InterpolatedImage of the PSF.
+        self.original_PSF = galsim.InterpolatedImage(
+            PSF_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant, 
+            flux=1.0, dx=self.pixel_scale, gsparams=gsparams)
+
         # Build the InterpolatedImage of the galaxy.
+        # Use the stepK() value of the PSF as a maximum value for stepK of the galaxy.
+        # (Otherwise, low surfact brightness galaxies can get a spuriously high stepk, which
+        # leads to problems.)
         self.original_image = galsim.InterpolatedImage(
                 gal_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant,
                 dx=self.pixel_scale, pad_factor=pad_factor, min_pad_size=min_pad_size,
+                calculate_stepk=self.original_PSF.stepK(),
                 noise_pad=noise_pad, rng=rng, gsparams=gsparams)
 
         # If flux is None, leave flux as given by original image
         if flux != None:
             self.original_image.setFlux(flux)
-
-        # Build the InterpolatedImage of the PSF.
-        self.original_PSF = galsim.InterpolatedImage(
-            PSF_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant, 
-            flux=1.0, dx=self.pixel_scale, gsparams=gsparams)
 
         # Calculate the PSF "deconvolution" kernel
         psf_inv = galsim.Deconvolve(self.original_PSF, gsparams=gsparams)
