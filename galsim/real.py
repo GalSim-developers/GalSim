@@ -165,9 +165,9 @@ class RealGalaxy(GSObject):
             raise AttributeError('No method specified for selecting a galaxy!')
 
         # read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors.
-        gal_image = real_galaxy_catalog.getGal(use_index)
-        PSF_image = real_galaxy_catalog.getPSF(use_index)
-        noise = real_galaxy_catalog.getNoise(use_index, rng, gsparams)
+        self.gal_image = real_galaxy_catalog.getGal(use_index)
+        self.PSF_image = real_galaxy_catalog.getPSF(use_index)
+        self.noise = real_galaxy_catalog.getNoise(use_index, rng, gsparams)
 
         # save any other relevant information as instance attributes
         self.catalog_file = real_galaxy_catalog.file_name
@@ -176,13 +176,13 @@ class RealGalaxy(GSObject):
 
         # Convert noise_pad to the right noise to pass to InterpolatedImage
         if noise_pad:
-            noise_pad = noise
+            noise_pad = self.noise
         else:
             noise_pad = 0.
 
         # Build the InterpolatedImage of the PSF.
         self.original_PSF = galsim.InterpolatedImage(
-            PSF_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant, 
+            self.PSF_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant, 
             flux=1.0, dx=self.pixel_scale, gsparams=gsparams)
 
         # Build the InterpolatedImage of the galaxy.
@@ -190,7 +190,7 @@ class RealGalaxy(GSObject):
         # (Otherwise, low surfact brightness galaxies can get a spuriously high stepk, which
         # leads to problems.)
         self.original_image = galsim.InterpolatedImage(
-                gal_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant,
+                self.gal_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant,
                 dx=self.pixel_scale, pad_factor=pad_factor, min_pad_size=min_pad_size,
                 calculate_stepk=self.original_PSF.stepK(),
                 noise_pad=noise_pad, rng=rng, gsparams=gsparams)
@@ -206,8 +206,7 @@ class RealGalaxy(GSObject):
             self, galsim.Convolve([self.original_image, psf_inv], gsparams=gsparams))
 
         # Save the noise in the image as an accessible attribute
-        noise.convolveWith(psf_inv, gsparams)
-        self.noise = noise
+        self.noise.convolveWith(psf_inv, gsparams)
 
     def getHalfLightRadius(self):
         raise NotImplementedError("Half light radius calculation not implemented for RealGalaxy "
