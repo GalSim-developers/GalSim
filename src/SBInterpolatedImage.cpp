@@ -616,6 +616,7 @@ namespace galsim {
         dbg<<"Start SBInterpolatedImage calculateStepK()\n";
         dbg<<"Current value of stepk = "<<_stepk<<std::endl;
         dbg<<"Find box that encloses "<<1.-this->gsparams->alias_threshold<<" of the flux.\n";
+        dbg<<"Max_stepk = "<<max_stepk<<std::endl;
         dbg<<"xtab size = "<<_xtab->getN()<<", scale = "<<_xtab->getDx()<<std::endl;
         //int N = _xtab->getN();
         double scale = _xtab->getDx();
@@ -639,7 +640,9 @@ namespace galsim {
         int dy = b.getYMin() + ((b.getYMax()-b.getYMin()+1)/2);
         dbg<<"b = "<<b<<std::endl;
         dbg<<"dx,dy = "<<dx<<','<<dy<<std::endl;
-        int min_d = max_stepk == 0. ? 0 : int(ceil(M_PI/max_stepk));
+        int min_d = max_stepk == 0. ? 0 : int(ceil(M_PI/max_stepk/scale));
+        dbg<<"min_d = "<<min_d<<std::endl;
+        double max_flux = flux;
         for (int d=1; d<=Nino2; ++d) {
             xdbg<<"d = "<<d<<std::endl;
             xdbg<<"d1 = "<<d1<<std::endl;
@@ -653,6 +656,15 @@ namespace galsim {
                 if (b.includes(Position<int>(-x+dx,d+dy))) flux += _xtab->xval(-x,d);  // top
                 if (b.includes(Position<int>(-d+dx,-x+dy))) flux += _xtab->xval(-d,-x); // left
             }
+            if (flux > max_flux) {
+                max_flux = flux;
+                if (flux > fluxTot) {
+                    // If flux w/in some radius is more than the total, then we have a case of
+                    // noise artificially lowering the nominal flux.  We will use the radius
+                    // of the  maximum flux we get during this procedure.
+                    d1 = d;
+                }
+            }
             if (flux < thresh) {
                 d1 = 0; // Mark that we haven't gotten to a good enclosing radius yet.
             } else if (d > min_d) {
@@ -660,8 +672,10 @@ namespace galsim {
             }
         }
         dbg<<"Done: flux = "<<flux<<std::endl;
+        dbg<<"max_flux = "<<max_flux<<", current fluxTot = "<<fluxTot<<std::endl;
         // Should have added up to the total flux.
         assert( std::abs(flux - fluxTot) < 1.e-3 * std::abs(fluxTot) );
+
         if (d1 == 0) {
             dbg<<"No smaller radius found.  Keep current value of stepk\n";
             return;
