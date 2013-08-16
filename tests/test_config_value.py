@@ -39,15 +39,19 @@ def test_float_value():
     t1 = time.time()
 
     config = {
-        'input' : { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' } },
+        'input' : { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' },
+                    'dict' : [ 
+                        { 'dir' : 'config_input', 'file_name' : 'dict.p' },
+                        { 'dir' : 'config_input', 'file_name' : 'dict.yaml' },
+                        { 'dir' : 'config_input', 'file_name' : 'dict.json' } ] },
 
         'val1' : 9.9,
         'val2' : int(400),
         'str1' : '8.73',
         'str2' : '2.33e-9',
         'str3' : '6.e-9', 
-        'cat1' : { 'type' : 'InputCatalog' , 'col' : 0 },
-        'cat2' : { 'type' : 'InputCatalog' , 'col' : 1 },
+        'cat1' : { 'type' : 'Catalog' , 'col' : 0 },
+        'cat2' : { 'type' : 'Catalog' , 'col' : 1 },
         'ran1' : { 'type' : 'Random', 'min' : 0.5, 'max' : 3 },
         'ran2' : { 'type' : 'Random', 'min' : -5, 'max' : 0 },
         'gauss1' : { 'type' : 'RandomGaussian', 'sigma' : 1 },
@@ -70,7 +74,11 @@ def test_float_value():
         'list1' : { 'type' : 'List', 'items' : [ 73, 8.9, 3.14 ] },
         'list2' : { 'type' : 'List',
                     'items' : [ 0.6, 1.8, 2.1, 3.7, 4.3, 5.5, 6.1, 7.0, 8.6, 9.3, 10.8, 11.2 ],
-                    'index' : { 'type' : 'Sequence', 'first' : 10, 'step' : -3 } }
+                    'index' : { 'type' : 'Sequence', 'first' : 10, 'step' : -3 } },
+        'dict1' : { 'type' : 'Dict', 'key' : 'f' },
+        'dict2' : { 'type' : 'Dict', 'num' : 1, 'key' : 'f' },
+        'dict3' : { 'type' : 'Dict', 'num' : 2, 'key' : 'f' },
+        'dict4' : { 'type' : 'Dict', 'num' : 1, 'key' : 'noise.models.1.gain' }
     }
 
     galsim.config.ProcessInput(config)
@@ -92,8 +100,8 @@ def test_float_value():
     str3 = galsim.config.ParseValue(config,'str3',config, float)[0]
     np.testing.assert_almost_equal(str3, 6.0e-9)
 
-    # Test values read from an InputCatalog
-    input_cat = galsim.InputCatalog(dir='config_input', file_name='catalog.txt')
+    # Test values read from a Catalog
+    input_cat = galsim.Catalog(dir='config_input', file_name='catalog.txt')
     cat1 = []
     cat2 = []
     for k in range(5):
@@ -200,6 +208,14 @@ def test_float_value():
     np.testing.assert_array_almost_equal(list1, [ 73, 8.9, 3.14, 73, 8.9 ])
     np.testing.assert_array_almost_equal(list2, [ 10.8, 7.0, 4.3, 1.8, 10.8 ])
 
+    # Test values read from a Dict
+    dict = []
+    dict.append(galsim.config.ParseValue(config,'dict1',config, float)[0])
+    dict.append(galsim.config.ParseValue(config,'dict2',config, float)[0])
+    dict.append(galsim.config.ParseValue(config,'dict3',config, float)[0])
+    dict.append(galsim.config.ParseValue(config,'dict4',config, float)[0])
+    np.testing.assert_array_almost_equal(dict, [ 23.17, 0.1, -17.23, 1.9 ])
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -212,15 +228,19 @@ def test_int_value():
     t1 = time.time()
 
     config = {
-        'input' : { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' } },
+        'input' : { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' },
+                    'dict' : [ 
+                        { 'dir' : 'config_input', 'file_name' : 'dict.p' },
+                        { 'dir' : 'config_input', 'file_name' : 'dict.yaml' },
+                        { 'dir' : 'config_input', 'file_name' : 'dict.json' } ] },
 
         'val1' : 9,
         'val2' : float(8.7),  # Reading as int will drop the fraction.
         'val3' : -400.8,      # Not floor - negatives will round up.
         'str1' : '8',
         'str2' : '-2',
-        'cat1' : { 'type' : 'InputCatalog' , 'col' : 2 },
-        'cat2' : { 'type' : 'InputCatalog' , 'col' : 3 },
+        'cat1' : { 'type' : 'Catalog' , 'col' : 2 },
+        'cat2' : { 'type' : 'Catalog' , 'col' : 3 },
         'ran1' : { 'type' : 'Random', 'min' : 0, 'max' : 3 },
         'ran2' : { 'type' : 'Random', 'min' : -5, 'max' : 10 },
         'seq1' : { 'type' : 'Sequence' },
@@ -231,7 +251,10 @@ def test_int_value():
         'list1' : { 'type' : 'List', 'items' : [ 73, 8, 3 ] },
         'list2' : { 'type' : 'List',
                     'items' : [ 6, 8, 1, 7, 3, 5, 1, 0, 6, 3, 8, 2 ],
-                    'index' : { 'type' : 'Sequence', 'first' : 10, 'step' : -3 } }
+                    'index' : { 'type' : 'Sequence', 'first' : 10, 'step' : -3 } },
+        'dict1' : { 'type' : 'Dict', 'key' : 'i' },
+        'dict2' : { 'type' : 'Dict', 'num' : 1, 'key' : 'i' },
+        'dict3' : { 'type' : 'Dict', 'num' : 2, 'key' : 'i' }
     }
 
     galsim.config.ProcessInput(config)
@@ -253,8 +276,8 @@ def test_int_value():
     str2 = galsim.config.ParseValue(config,'str2',config, int)[0]
     np.testing.assert_equal(str2, -2)
 
-    # Test values read from an InputCatalog
-    input_cat = galsim.InputCatalog(dir='config_input', file_name='catalog.txt')
+    # Test values read from a Catalog
+    input_cat = galsim.Catalog(dir='config_input', file_name='catalog.txt')
     cat1 = []
     cat2 = []
     for k in range(5):
@@ -306,6 +329,16 @@ def test_int_value():
     np.testing.assert_array_equal(list1, [ 73, 8, 3, 73, 8 ])
     np.testing.assert_array_equal(list2, [ 8, 0, 3, 8, 8 ])
 
+    # Test values read from a Dict
+    pickle_dict = galsim.Dict(dir='config_input', file_name='dict.p')
+    yaml_dict = galsim.Dict(dir='config_input', file_name='dict.yaml')
+    json_dict = galsim.Dict(dir='config_input', file_name='dict.json')
+    dict = []
+    dict.append(galsim.config.ParseValue(config,'dict1',config, int)[0])
+    dict.append(galsim.config.ParseValue(config,'dict2',config, int)[0])
+    dict.append(galsim.config.ParseValue(config,'dict3',config, int)[0])
+    np.testing.assert_array_equal(dict, [ 17, 1, -23 ])
+ 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -318,7 +351,11 @@ def test_bool_value():
     t1 = time.time()
 
     config = {
-        'input' : { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' } },
+        'input' : { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' },
+                    'dict' : [ 
+                        { 'dir' : 'config_input', 'file_name' : 'dict.p' },
+                        { 'dir' : 'config_input', 'file_name' : 'dict.yaml' },
+                        { 'dir' : 'config_input', 'file_name' : 'dict.json' } ] },
 
         'val1' : True,
         'val2' : 1,
@@ -327,15 +364,18 @@ def test_bool_value():
         'str2' : '0',
         'str3' : 'yes',
         'str4' : 'No',
-        'cat1' : { 'type' : 'InputCatalog' , 'col' : 4 },
-        'cat2' : { 'type' : 'InputCatalog' , 'col' : 5 },
+        'cat1' : { 'type' : 'Catalog' , 'col' : 4 },
+        'cat2' : { 'type' : 'Catalog' , 'col' : 5 },
         'ran1' : { 'type' : 'Random' },
         'seq1' : { 'type' : 'Sequence' },
         'seq2' : { 'type' : 'Sequence', 'first' : True, 'repeat' : 2 },
         'list1' : { 'type' : 'List', 'items' : [ 'yes', 'no', 'no' ] },
         'list2' : { 'type' : 'List',
                     'items' : [ 0, 1, 1, 1, 1, 0, 0, 1, 0, 1, 0, 0 ],
-                    'index' : { 'type' : 'Sequence', 'first' : 10, 'step' : -3 } }
+                    'index' : { 'type' : 'Sequence', 'first' : 10, 'step' : -3 } },
+        'dict1' : { 'type' : 'Dict', 'key' : 'b' },
+        'dict2' : { 'type' : 'Dict', 'num' : 1, 'key' : 'b' },
+        'dict3' : { 'type' : 'Dict', 'num' : 2, 'key' : 'b' }
     }
 
     galsim.config.ProcessInput(config)
@@ -363,8 +403,8 @@ def test_bool_value():
     str4 = galsim.config.ParseValue(config,'str4',config, bool)[0]
     np.testing.assert_equal(str4, False)
 
-    # Test values read from an InputCatalog
-    input_cat = galsim.InputCatalog(dir='config_input', file_name='catalog.txt')
+    # Test values read from a Catalog
+    input_cat = galsim.Catalog(dir='config_input', file_name='catalog.txt')
     cat1 = []
     cat2 = []
     for k in range(5):
@@ -404,6 +444,16 @@ def test_bool_value():
     np.testing.assert_array_equal(list1, [ 1, 0, 0, 1, 0 ])
     np.testing.assert_array_equal(list2, [ 0, 1, 1, 1, 0 ])
 
+    # Test values read from a Dict
+    pickle_dict = galsim.Dict(dir='config_input', file_name='dict.p')
+    yaml_dict = galsim.Dict(dir='config_input', file_name='dict.yaml')
+    json_dict = galsim.Dict(dir='config_input', file_name='dict.json')
+    dict = []
+    dict.append(galsim.config.ParseValue(config,'dict1',config, bool)[0])
+    dict.append(galsim.config.ParseValue(config,'dict2',config, bool)[0])
+    dict.append(galsim.config.ParseValue(config,'dict3',config, bool)[0])
+    np.testing.assert_array_equal(dict, [ True, False, False ])
+ 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -416,15 +466,19 @@ def test_str_value():
     t1 = time.time()
 
     config = {
-        'input' : { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' } },
+        'input' : { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' },
+                    'dict' : [ 
+                        { 'dir' : 'config_input', 'file_name' : 'dict.p' },
+                        { 'dir' : 'config_input', 'file_name' : 'dict.yaml' },
+                        { 'dir' : 'config_input', 'file_name' : 'dict.json' } ] },
 
         'val1' : -93,
         'val2' : True,
         'val3' : 123.8,
         'str1' : "Norwegian",
         'str2' : u"Blue",
-        'cat1' : { 'type' : 'InputCatalog' , 'col' : 6 },
-        'cat2' : { 'type' : 'InputCatalog' , 'col' : 7 },
+        'cat1' : { 'type' : 'Catalog' , 'col' : 6 },
+        'cat2' : { 'type' : 'Catalog' , 'col' : 7 },
         'list1' : { 'type' : 'List', 'items' : [ 'Beautiful', 'plumage!', 'Ay?' ] },
         'file1' : { 'type' : 'NumberedFile', 'root' : 'file', 'num' : 5,
                     'ext' : '.fits.fz', 'digits' : 3 },
@@ -438,6 +492,9 @@ def test_str_value():
                   'format' : '%%%d %i %x %o%i %lf=%g=%e %hi%u %r%s %%',
                   'items' : [4, 5, 12, 9, 9, math.pi, math.pi, math.pi, 11, -11, 
                              'Goodbye cruel world.', ', said Pink.'] },
+        'dict1' : { 'type' : 'Dict', 'key' : 's' },
+        'dict2' : { 'type' : 'Dict', 'num' : 1, 'key' : 's' },
+        'dict3' : { 'type' : 'Dict', 'num' : 2, 'key' : 's' }
     }
 
     galsim.config.ProcessInput(config)
@@ -459,8 +516,8 @@ def test_str_value():
     str2 = galsim.config.ParseValue(config,'str2',config, str)[0]
     np.testing.assert_equal(str2, 'Blue')
 
-    # Test values read from an InputCatalog
-    input_cat = galsim.InputCatalog(dir='config_input', file_name='catalog.txt')
+    # Test values read from a Catalog
+    input_cat = galsim.Catalog(dir='config_input', file_name='catalog.txt')
     cat1 = []
     cat2 = []
     for k in range(3):
@@ -498,7 +555,16 @@ def test_str_value():
     np.testing.assert_equal(fs2, 
         "%4 5 c 119 3.141593=3.14159=3.141593e+00 11-11 'Goodbye cruel world.', said Pink. %")
 
-
+    # Test values read from a Dict
+    pickle_dict = galsim.Dict(dir='config_input', file_name='dict.p')
+    yaml_dict = galsim.Dict(dir='config_input', file_name='dict.yaml')
+    json_dict = galsim.Dict(dir='config_input', file_name='dict.json')
+    dict = []
+    dict.append(galsim.config.ParseValue(config,'dict1',config, str)[0])
+    dict.append(galsim.config.ParseValue(config,'dict2',config, str)[0])
+    dict.append(galsim.config.ParseValue(config,'dict3',config, str)[0])
+    np.testing.assert_array_equal(dict, [ 'Life', 'of', 'Brian' ])
+ 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -523,9 +589,9 @@ def test_angle_value():
         'str7' : '-240 arcmin',
         'str8' : '1800 arcsec',
         'cat1' : { 'type' : 'Radians' , 
-                   'theta' : { 'type' : 'InputCatalog' , 'col' : 10 } },
+                   'theta' : { 'type' : 'Catalog' , 'col' : 10 } },
         'cat2' : { 'type' : 'Degrees' , 
-                   'theta' : { 'type' : 'InputCatalog' , 'col' : 11 } },
+                   'theta' : { 'type' : 'Catalog' , 'col' : 11 } },
         'ran1' : { 'type' : 'Random' },
         'seq1' : { 'type' : 'Rad', 'theta' : { 'type' : 'Sequence' } },
         'seq2' : { 'type' : 'Deg', 'theta' : { 'type' : 'Sequence', 'first' : 45, 'step' : 80 } },
@@ -569,8 +635,8 @@ def test_angle_value():
     str8 = galsim.config.ParseValue(config,'str8',config, galsim.Angle)[0]
     np.testing.assert_almost_equal(str8 / galsim.degrees, 0.5)
 
-    # Test values read from an InputCatalog
-    input_cat = galsim.InputCatalog(dir='config_input', file_name='catalog.txt')
+    # Test values read from a Catalog
+    input_cat = galsim.Catalog(dir='config_input', file_name='catalog.txt')
     cat1 = []
     cat2 = []
     for k in range(5):

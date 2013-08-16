@@ -34,7 +34,7 @@ We write the images out into a multi-extension fits file.
 
 New features introduced in this demo:
 
-- cat = galsim.InputCatalog(file_name, dir)
+- cat = galsim.Catalog(file_name, dir)
 - obj = galsim.Moffat(beta, fwhm, trunc)
 - obj = galsim.Add([list of objects])
 - obj.setFlux(flux)
@@ -101,7 +101,7 @@ def main(argv):
     logger.info('    - Poisson noise (sky level = %.1e).', sky_level)
 
     # Read in the input catalog
-    cat = galsim.InputCatalog(cat_file_name)
+    cat = galsim.Catalog(cat_file_name)
 
     # save a list of the galaxy images in the "images" list variable:
     images = []
