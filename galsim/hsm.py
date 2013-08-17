@@ -349,15 +349,14 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
     ImageViewI(), ImageViewD() etc. classes.
 
     Like EstimateShear, FindAdaptiveMom works on Image inputs, and fails if the object is small
-    compared to the pixel scale.  For more details, see galsim.EstimateShear (for doxygen
-    documentation, see galsim.psfcorr.EstimateShear).
+    compared to the pixel scale.  For more details, see galsim.hsm.EstimateShear.
 
     Example usage
     -------------
 
         >>> my_gaussian = galsim.Gaussian(flux = 1.0, sigma = 1.0)
         >>> my_gaussian_image = my_gaussian.draw(dx = 0.2)
-        >>> my_moments = galsim.FindAdaptiveMom(my_gaussian_image)
+        >>> my_moments = galsim.hsm.FindAdaptiveMom(my_gaussian_image)
 
     OR
     
