@@ -125,6 +125,11 @@ class Convolve(GSObject):
     Also, note that parameters related to the Fourier-space calculations must be set when
     initializing the individual GSObjects that go into the Convolve, NOT when creating the Convolve
     (at which point the accuracy and threshold parameters will simply be ignored).
+
+    @param args       Unnamed args should be a list of objects to convolve.
+    @param real_space Whether to use real space convolution.  Default is to automatically select
+                      this according to whether the object has hard edges.
+    @param gsparams   Optional gsparams argument.
     """
                     
     # --- Public Class methods ---
@@ -250,6 +255,9 @@ class Deconvolve(GSObject):
     help(galsim.GSParams) for more information about this option.  Note: if gsparams is unspecified
     (or None), then the Deconvolve instance inherits the same GSParams as the object being
     deconvolved.
+
+    @param obj        The object to deconvolve.
+    @param gsparams   Optional gsparams argument.
     """
     # --- Public Class methods ---
     def __init__(self, obj, gsparams=None):
@@ -267,19 +275,44 @@ class AutoConvolve(GSObject):
     It is equivalent in functionality to galsim.Convolve([obj,obj]), but takes advantage of
     the fact that the two profiles are the same for some efficiency gains.
 
-    @param obj       The object to be convolved with itself.
-    @param gsparams  You may also specify a gsparams argument.  See the docstring for
-                     galsim.GSParams using help(galsim.GSParams) for more information about this
-                     option.  Note that parameters related to the Fourier-space calculations must be
-                     set when initializing the GSObject that goes into the AutoConvolve, NOT when
-                     creating the AutoConvolve (at which point the accuracy and threshold parameters
-                     will simply be ignored).
+    @param obj        The object to be convolved with itself.
+    @param real_space Whether to use real space convolution.  Default is to automatically select
+                      this according to whether the object has hard edges.
+    @param gsparams   Optional gsparams argument.
     """
     # --- Public Class methods ---
-    def __init__(self, obj, gsparams=None):
+    def __init__(self, obj, real_space=None, gsparams=None):
         if not isinstance(obj, GSObject):
             raise TypeError("Argument to AutoConvolve must be a GSObject.")
-        GSObject.__init__(self, galsim.SBAutoConvolve(obj.SBProfile, gsparams=gsparams))
+
+        # Check whether to perform real space convolution...
+        # Start by checking if obj has a hard edge.
+        hard_edge = obj.hasHardEdges()
+
+        if real_space is None:
+            # The automatic determination is to use real_space if obj has hard edges.
+            real_space = hard_edge
+        
+        # Warn if doing DFT convolution for objects with hard edges.
+        if not real_space and hard_edge:
+            import warnings
+            msg = """
+            Doing auto-convolution of object with hard edges.
+            This might be more accurate and/or faster using real_space=True"""
+            warnings.warn(msg)
+
+        # Can't do real space if object is not analytic, so check for that.
+        if real_space and not obj.isAnalyticX():
+            import warnings
+            msg = """
+            Object to be auto-convolved is not analytic in real space.
+            Cannot use real space convolution.
+            Switching to DFT method."""
+            warnings.warn(msg)
+            real_space = False
+
+        GSObject.__init__(self, galsim.SBAutoConvolve(obj.SBProfile, real_space=real_space,
+                                                      gsparams=gsparams))
         if hasattr(obj,'noise'):
             import warnings
             warnings.warn("Unable to propagate noise in galsim.AutoConvolve")
@@ -295,23 +328,48 @@ class AutoCorrelate(GSObject):
     This class is primarily targeted for use by the galsim.CorrelatedNoise models when convolving 
     with a GSObject.
 
-    @param obj       The object to be correlated with itself.
-
-    @param gsparams  You may also specify a gsparams argument.  See the docstring for
-                     galsim.GSParams using help(galsim.GSParams) for more information about this
-                     option.  Note that parameters related to the Fourier-space calculations must be
-                     set when initializing the GSObject that goes into the AutoCorrelate, NOT when
-                     creating the AutoCorrelate (at which point the accuracy and threshold
-                     parameters will simply be ignored).
+    @param obj        The object to be convolved with itself.
+    @param real_space Whether to use real space convolution.  Default is to automatically select
+                      this according to whether the object has hard edges.
+    @param gsparams   Optional gsparams argument.
     """
     # --- Public Class methods ---
-    def __init__(self, obj, gsparams=None):
+    def __init__(self, obj, real_space=None, gsparams=None):
         if not isinstance(obj, GSObject):
             raise TypeError("Argument to AutoCorrelate must be a GSObject.")
-        GSObject.__init__(self, galsim.SBAutoCorrelate(obj.SBProfile, gsparams=gsparams))
+
+        # Check whether to perform real space convolution...
+        # Start by checking if obj has a hard edge.
+        hard_edge = obj.hasHardEdges()
+
+        if real_space is None:
+            # The automatic determination is to use real_space if obj has hard edges.
+            real_space = hard_edge
+        
+        # Warn if doing DFT convolution for objects with hard edges.
+        if not real_space and hard_edge:
+            import warnings
+            msg = """
+            Doing auto-convolution of object with hard edges.
+            This might be more accurate and/or faster using real_space=True"""
+            warnings.warn(msg)
+
+        # Can't do real space if object is not analytic, so check for that.
+        if real_space and not obj.isAnalyticX():
+            import warnings
+            msg = """
+            Object to be auto-convolved is not analytic in real space.
+            Cannot use real space convolution.
+            Switching to DFT method."""
+            warnings.warn(msg)
+            real_space = False
+
+        GSObject.__init__(self, galsim.SBAutoCorrelate(obj.SBProfile, real_space=real_space,
+                                                       gsparams=gsparams))
+
         if hasattr(obj,'noise'):
             import warnings
-            warnings.warn("Unable to propagate noise in galsim.AutoConvolve")
+            warnings.warn("Unable to propagate noise in galsim.AutoCorrelate")
 
 
 

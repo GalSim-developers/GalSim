@@ -9,6 +9,20 @@ Changes from v0.5 to current version:
 
 * Fixed a bug in the rendering of shifted images.  (Issue #424)
 
+* Made RealGalaxy objects keep track of their (correlated) noise.  Functions like applyShear,
+  Convolve, and such automatically keep this updated so the final object also knows the current
+  noise profile so it can be appropriately whitened.  (Issue #430)
+
+* Added option to set a minimum pad size for RealGalaxy.  Required to make sure whitening will
+  work correctly.  (Issue #430)
+
+* Added whiten option to config for RealGalaxy objects to whiten the image.  (Issue #430)
+
+* Added VariableGaussianNoise to apply Gaussian noise with a variable sigma across the image.
+  (Issue #430)
+
+* Fixed a bug in InterpolatedImage calculateStepK function for noisy images.  (Issue #454)
+
 * Added the offset parameter to the draw and drawShoot commands, and also to the constructor 
   of InterpolatedImage.  (Issue #439)
 

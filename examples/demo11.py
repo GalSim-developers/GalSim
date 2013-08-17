@@ -293,7 +293,6 @@ def main(argv):
         time2 = time.time()
         tot_time = time2-time1
         logger.info('Galaxy %d: position relative to corner = %s, t=%f s', k, str(pos), tot_time)
-        #sys.exit()
 
     # Add correlated noise to the image -- the correlation function comes from the HST COSMOS images
     # and is described in more detail in the galsim.correlatednoise.getCOSMOSNoise() docstring.
