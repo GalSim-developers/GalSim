@@ -455,7 +455,7 @@ namespace galsim {
         dbg << 
             " After adjustments: dx " << dx << " dk " << dk << 
             " maxK " << dk*NFT/2 << std::endl;
-        assert(dk <= stepK());
+        assert(dk <= stepK()*(1. + 1.e-12)); // Add a little slop in case of rounding errors.
         boost::shared_ptr<XTable> xt;
         if (NFT*dk/2 > maxK()) {
             dbg<<"NFT*dk/2 = "<<NFT*dk/2<<" > maxK() = "<<maxK()<<std::endl;
