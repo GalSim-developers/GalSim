@@ -21,8 +21,6 @@ Changes from v0.5 to current version:
 * Added VariableGaussianNoise to apply Gaussian noise with a variable sigma across the image.
   (Issue #430)
 
-* Fixed a bug in InterpolatedImage calculateStepK function for noisy images.  (Issue #454)
-
 * Added the offset parameter to the draw and drawShoot commands, and also to the constructor 
   of InterpolatedImage.  (Issue #439)
 
@@ -42,4 +40,6 @@ Changes from v0.5 to current version:
 
 * Added offset as a config option for the image field, which applies the given offset in pixels 
   when calling the draw command.  (Issue #449)
+
+* Fixed a bug in InterpolatedImage calculateStepK function for noisy images.  (Issue #454)
 
