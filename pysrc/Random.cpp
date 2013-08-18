@@ -48,12 +48,12 @@ namespace galsim {
     protected:
         // This is the special magic needed so the virtual function calls back to the 
         // function defined in the python layer.
-        double val()
+        double _val()
         {
-            if (bp::override py_func = this->get_override("val")) 
+            if (bp::override py_func = this->get_override("_val")) 
                 return py_func();
             else 
-                return BaseDeviate::val();
+                return BaseDeviate::_val();
         }
     };
 

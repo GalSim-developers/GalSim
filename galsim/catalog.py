@@ -22,7 +22,7 @@ Routines for controlling catalog Input/Output with GalSim.
 
 import galsim
 
-class InputCatalog(object):
+class Catalog(object):
     """A class storing the data from an input catalog.
 
     Each row corresponds to a different object to be built, and each column stores some item of
@@ -121,7 +121,7 @@ class InputCatalog(object):
         self.nobjects = len(raw_data.field(self.names[0]))
         if (nobjects_only): return
         # The pyfits raw_data is a FITS_rec object, which isn't picklable, so we need to 
-        # copy the fields into a new structure to make sure our InputCatalog is picklable.
+        # copy the fields into a new structure to make sure our Catalog is picklable.
         # The simplest is probably a dict keyed by the field names, which we save as self.data.
         self.data = {}
         for name in self.names:
@@ -163,4 +163,137 @@ class InputCatalog(object):
         """Return the data for the given index and col as an int if possible
         """
         return int(self.get(index,col))
+
+
+class Dict(object):
+    """A class that reads a python dict from a file
+
+    After construction, it behaves like a regular python dict, with one exception.
+    In order to facilitate getting values in a hierarchy of fields, we allow the '.'
+    character to chain keys together for the get method.  So,
+
+        d.get('noise.properties.variance')
+
+    is expanded into
+
+        d['noise']['properties']['variance'] 
+
+    Furthermore, if a "key" is really an integer, then it is used as such, which accesses 
+    the corresponding element in a list.  e.g.
+
+        d.get('noise_models.2.variance')
+        
+    is equivalent to 
+
+        d['noise_models'][2]['variance']
+
+    This makes it much easier to access arbitrary elements within parameter files.
+
+    Caveat: The above prescription means that an element whose key really has a '.' in it
+    won't be accessed correctly.  This is probably a rare occurrence, but the workaround is
+    to set `key_split` to a different character or string and use that to chain the keys.
+
+
+    @param file_name     Filename storing the dict. (Required)
+    @param dir           Optionally a directory name can be provided if the file_name does not 
+                         already include it.
+    @param file_type     Options are 'Pickle', 'YAML', or 'JSON' or None.  If None, infer from 
+                         the file name extension ('.p*', '.y*', '.j*' respectively).
+                         (default `file_type = None`)
+    @param key_split     The character (or string) to use to split chained keys.  (c.f. the 
+                         description of this feature above.)  (default `key_split = '.'`)
+    """
+    _req_params = { 'file_name' : str }
+    _opt_params = { 'dir' : str , 'file_type' : str, 'key_split' : str }
+    _single_params = []
+    _takes_rng = False
+
+    def __init__(self, file_name, dir=None, file_type=None, key_split='.'):
+
+        # First build full file_name
+        self.file_name = file_name.strip()
+        if dir:
+            import os
+            self.file_name = os.path.join(dir,self.file_name)
+    
+        if not file_type:
+            import os
+            name, ext = os.path.splitext(self.file_name)
+            if ext.lower().startswith('.p'):
+                file_type = 'PICKLE'
+            elif ext.lower().startswith('.y'):
+                file_type = 'YAML'
+            elif ext.lower().startswith('.j'):
+                file_type = 'JSON'
+            else:
+                raise ValueError('Unable to determine file_type from file_name ending')
+        file_type = file_type.upper()
+        if file_type not in ['PICKLE','YAML','JSON']:
+            raise ValueError("file_type must be one of Pickle, YAML, or JSON if specified.")
+        self.file_type = file_type
+
+        self.key_split = key_split
+
+        f = open(self.file_name)
+
+        if file_type == 'PICKLE':
+            import cPickle
+            self.dict = cPickle.load(f)
+        elif file_type == 'YAML':
+            import yaml
+            self.dict = yaml.load(f)
+        else:
+            import json
+            self.dict = json.load(f)
+
+        f.close()
+
+    def get(self, key, default=None):
+        # Make a list of keys according to our key_split parameter
+        chain = key.split(self.key_split)
+        d = self.dict
+        while len(chain):
+            key = chain.pop(0)
+            
+            # Try to convert to an integer:
+            try: key = int(key)
+            except ValueError: pass
+
+            # If there are more keys, just set d to the next in the chanin.
+            if chain: d = d[key]
+            # Otherwise, return the result.
+            else: return d.get(key,default)
+        raise ValueError("Invalid key given to Dict.get()")
+
+    # The rest of the functions are typical non-mutating functions for a dict, for which we just
+    # pass the request along to self.dict.
+    def __len__(self):
+        return len(self.dict)
+
+    def __getitem__(self, key):
+        return self.dict[key]
+
+    def __contains__(self, key):
+        return key in self.dict
+
+    def __iter__(self):
+        return self.dict.__iter__
+
+    def keys(self):
+        return self.dict.keys()
+
+    def values(self):
+        return self.dict.values()
+
+    def items(self):
+        return self.dict.iteritems()
+
+    def iterkeys(self):
+        return self.dict.iterkeys()
+
+    def itervalues(self):
+        return self.dict.itervalues()
+
+    def iteritems(self):
+        return self.dict.iteritems()
 

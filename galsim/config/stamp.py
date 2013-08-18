@@ -276,8 +276,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
 
     elif 'sky_pos' in config['image']:
         import math
-        sky_pos = galsim.config.ParseValue(config['image'],'sky_pos',config,
-                                           galsim.PositionD)[0]
+        sky_pos = galsim.config.ParseValue(config['image'], 'sky_pos', config, galsim.PositionD)[0]
         # Save this value for possible use in Eval's.
         config['sky_pos'] = sky_pos
         #print 'sky_pos = ',sky_pos
@@ -310,7 +309,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
 
     else:
         icenter = None
-        final_shift = None
+        final_shift = galsim.PositionD(0.,0.)
 
     gsparams = {}
     if 'gsparams' in config['image']:
@@ -344,7 +343,12 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 logger.debug('Skipping object')
         skip = True
 
+    if not skip and 'offset' in config['image']:
+        offset = galsim.config.ParseValue(config['image'], 'offset', config, galsim.PositionD)[0]
+        final_shift += offset
+
     draw_method = galsim.config.ParseValue(config['image'],'draw_method',config,str)[0]
+
     if skip: 
         if xsize and ysize:
             im = galsim.ImageF(xsize, ysize)
@@ -359,6 +363,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             weight_im.setZero()
         else:
             weight_im = None
+
     elif draw_method == 'fft':
         im = DrawStampFFT(psf,pix,gal,config,xsize,ysize,sky_level_pixel,final_shift)
         if icenter:
