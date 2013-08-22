@@ -349,8 +349,7 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
     ImageViewI(), ImageViewD() etc. classes.
 
     Like EstimateShear, FindAdaptiveMom works on Image inputs, and fails if the object is small
-    compared to the pixel scale.  For more details, see galsim.EstimateShear (for doxygen
-    documentation, see galsim.psfcorr.EstimateShear).
+    compared to the pixel scale.  For more details, see galsim.hsm.EstimateShear.
 
     Example usage
     -------------

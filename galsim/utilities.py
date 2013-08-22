@@ -552,10 +552,10 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
         gal :
           type : Sersic    
           half_light_radius : 
-            type : InputCatalog , 
+            type : Catalog , 
             col : 2,  index : { type: Sequence, repeat: *n_trials_per_iter} }
           n : 
-            type : InputCatalog , 
+            type : Catalog , 
             col : 1,  
             index : { type: Sequence, repeat: *n_trials_per_iter} 
         ...

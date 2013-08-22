@@ -18,7 +18,7 @@
 
 "#" : "- obj type : Moffat (..., trunc)",
 "#" : "- obj type : DeVaucouleurs (flux, half_light_radius)",
-"#" : "- value type : InputCatalog (col)",
+"#" : "- value type : Catalog (col)",
 "#" : "- shift type : XY (x, y)",
 "#" : "- shear type : E1E2 (e1, e2)",
 "#" : "- image : xsize, ysize",
@@ -37,27 +37,27 @@
         "#" : "Parameters do not need to be constant.  There are a number of ways to",
         "#" : "specify variables that might change from object to object.",
         "#" : "In this case, the parameter specification also has a type.",
-        "#" : "type = InputCatalog means read the value from a catalog:",
-        "type" : "InputCatalog",
+        "#" : "type = Catalog means read the value from a catalog:",
+        "type" : "Catalog",
 
-        "#" : "InputCatalog requires the extra value of which column to use in the catalog:",
+        "#" : "Catalog requires the extra value of which column to use in the catalog:",
         "#" : "Note: the first column is called 0, not 1, as per the usual python ",
         "#" : "0-based indexing scheme.",
         "col" : 1
     },
 
     "#" : "You can also specify both of these on the same line using {}",
-    "trunc" : { "type" : "InputCatalog" , "col" : 4 },
+    "trunc" : { "type" : "Catalog" , "col" : 4 },
 
     "#" : "The nesting goes as deep as it needs to",
     "ellip" : {
         "type" : "E1E2",
         "e1" : {
-            "type" : "InputCatalog",
+            "type" : "Catalog",
             "col" : 2
         }, 
         "e2" : {
-            "type" : "InputCatalog",
+            "type" : "Catalog",
             "col" : 3
         }
     },
@@ -74,21 +74,21 @@
     "items" : [
         { 
             "type" : "Exponential",
-            "half_light_radius" : { "type" : "InputCatalog" , "col" : 5 },
+            "half_light_radius" : { "type" : "Catalog" , "col" : 5 },
             "ellip" : {
                 "type" : "E1E2",
-                "e1" : { "type" : "InputCatalog" , "col" : 6 },
-                "e2" : { "type" : "InputCatalog" , "col" : 7 }
+                "e1" : { "type" : "Catalog" , "col" : 6 },
+                "e2" : { "type" : "Catalog" , "col" : 7 }
             },
             "flux" : 0.6
         },
         {
             "type" : "DeVaucouleurs",
-            "half_light_radius" : { "type" : "InputCatalog" , "col" : 8 },
+            "half_light_radius" : { "type" : "Catalog" , "col" : 8 },
             "ellip" : {
                 "type" : "E1E2",
-                "e1" : { "type" : "InputCatalog" , "col" : 9 },
-                "e2" : { "type" : "InputCatalog" , "col" : 10 }
+                "e1" : { "type" : "Catalog" , "col" : 9 },
+                "e2" : { "type" : "Catalog" , "col" : 10 }
             },
             "flux" : 0.4
         }
@@ -112,8 +112,8 @@
 
     "shift" : {
         "type" : "XY",
-        "x" : { "type" : "InputCatalog" , "col" : 11 },
-        "y" : { "type" : "InputCatalog" , "col" : 12 }
+        "x" : { "type" : "Catalog" , "col" : 11 },
+        "y" : { "type" : "Catalog" , "col" : 12 }
     }
 },
 

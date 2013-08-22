@@ -125,18 +125,18 @@ namespace galsim {
     {
         typedef typename FFTW_Traits<T>::fftw_type fftw_type;
     public:
-        FFTW_Array() : _n(0), _array(0) {}
+        FFTW_Array() : _n(0) {}
 
-        FFTW_Array(size_t n) : _n(0), _array(0)
+        FFTW_Array(size_t n) : _n(0)
         { resize(n); }
 
-        FFTW_Array(size_t n, T val) : _n(0), _array(0)
+        FFTW_Array(size_t n, T val) : _n(0)
         {
             resize(n);
             fill(val);
         }
 
-        FFTW_Array(const FFTW_Array<T>& rhs) : _n(0), _array(0)
+        FFTW_Array(const FFTW_Array<T>& rhs) : _n(0)
         {
             resize(rhs._n);
             for (size_t i=0; i<_n; ++i) _array[i] = rhs._array[i];
@@ -146,41 +146,41 @@ namespace galsim {
         {
             if (this != &rhs) {
                 resize(rhs._n);
-                for (size_t i=0; i<_n; ++i) _array[i] = rhs._array[i];
+                for (size_t i=0; i<_n; ++i) _array.get()[i] = rhs._array.get()[i];
             }
             return *this;
         }
 
-        ~FFTW_Array() { if (_array) fftw_free(_array); _array=0; }
+        ~FFTW_Array() {}
 
         void resize(size_t n)
         { 
             if (_n != n) {
-                if (_array) fftw_free(_array);
                 _n = n;
-                if (_n > 0) _array = (T*) fftw_malloc(sizeof(T)*_n);
-                else _array = 0;
+                _array.resize(n);
             }
         }
 
-        void fill(T val) { for (size_t i=0; i<_n; ++i) _array[i] = val; }
+        void fill(T val) { for (size_t i=0; i<_n; ++i) _array.get()[i] = val; }
 
         size_t size() { return _n; }
 
-        T* get() { return _array; }
-        const T* get() const { return _array; }
+        T* get() { return _array.get(); }
+        const T* get() const { return _array.get(); }
 
         fftw_type* get_fftw()
-        { return reinterpret_cast<fftw_type*>(_array); }
+        { return reinterpret_cast<fftw_type*>(_array.get()); }
         const fftw_type* get_fftw() const
-        { return reinterpret_cast<const fftw_type*>(_array); }
+        { return reinterpret_cast<const fftw_type*>(_array.get()); }
 
-        T& operator[](size_t i) { return _array[i]; }
-        const T& operator[](size_t i) const { return _array[i]; }
+        T& operator[](size_t i) { return _array.get()[i]; }
+        const T& operator[](size_t i) const { return _array.get()[i]; }
 
     private:
         size_t _n;
-        T* _array;
+        // fftw_malloc doesn't seem to actually guarantee 16 byte alignment, so we instead
+        // use TMV's AlignedArray class to handle the byte alignment for us.
+        tmv::AlignedArray<T> _array;
     };
 
     //! @endcond
@@ -205,12 +205,15 @@ namespace galsim {
         typedef std::complex<double> function2(double kx, double ky, std::complex<double> val);
     public:
         /// dummy constructor
-        KTable() : _N(0), _dk(0) {} 
+        KTable() : _N(0), _No2(0), _Nd(0.), _halfNd(0.), _invNd(0.), _dk(0.), _invdk(0.) {} 
 
         /// Construct with size and spacing.  Default is to zero out the table.
         KTable(int N, double dk, std::complex<double> value=0.);
 
-        KTable(const KTable& rhs) : _array(rhs._array), _N(rhs._N), _dk(rhs._dk) {}
+        KTable(const KTable& rhs) : 
+            _array(rhs._array),
+            _N(rhs._N), _No2(rhs._No2), _Nd(rhs._Nd), _halfNd(rhs._halfNd), _invNd(rhs._invNd),
+            _dk(rhs._dk), _invdk(rhs._invdk) {}
 
         KTable& operator=(const KTable& rhs) 
         {
@@ -218,7 +221,12 @@ namespace galsim {
                 clearCache();
                 _array = rhs._array;
                 _N=rhs._N;
+                _No2=rhs._No2;
+                _Nd=rhs._Nd;
+                _halfNd=rhs._halfNd;
+                _invNd=rhs._invNd;
                 _dk=rhs._dk; 
+                _invdk=rhs._invdk; 
             }
             return *this;
         }
@@ -314,13 +322,18 @@ namespace galsim {
 
         FFTW_Array<std::complex<double> > _array;
         int _N; // Size in each dimension.
+        int _No2; // N/2
+        double _Nd; // double version of N to avoid repeated int->double conversions
+        double _halfNd; // 0.5 * N
+        double _invNd; // 1/N
         double _dk; // k-space increment
+        double _invdk; // 1/dk
 
         size_t index(int ix, int iy) const  //Return index into data array.
         {
             // this is also responsible for bounds checking when FFT_DEBUG is turned on.
 #ifdef FFT_DEBUG
-            if (ix<-_N/2 || ix>_N/2 || iy<-_N/2 || iy>_N/2)
+            if (ix<-_No2 || ix>_No2 || iy<-_No2 || iy>_No2)
                 FormatAndThrow<FFTOutofRange>() << "KTable index (" << ix << "," << iy
                     << ") out of range for N=" << _N;
 #endif
@@ -328,13 +341,13 @@ namespace galsim {
                 ix=-ix; iy=-iy; //need the conjugate in this case
             }
             if (iy<0) iy+=_N;
-            return iy*(_N/2+1)+ix;
+            return iy*(_No2+1)+ix;
         }
 
         // This skips all the adjustments to ix,iy, so both should be positive and 
         // folded appropriately.
         size_t index2(int ix, int iy) const  //Return index into data array.
-        { return iy*(_N/2+1)+ix; }
+        { return iy*(_No2+1)+ix; }
 
 #ifdef FFT_DEBUG
         void check_array() const 
@@ -342,6 +355,8 @@ namespace galsim {
 #else
         void check_array() const {}
 #endif
+
+        int wrapKValue(double k) const;  // wrap floor(k) to be within [-N/2,N/2-1]
 
         // Objects used to accelerate interpolation with separable interpolants:
         mutable std::deque<std::complex<double> > _cache;
@@ -366,7 +381,10 @@ namespace galsim {
         /// Construct with size and spacing.  Default is to zero out the table.
         XTable(int N, double dx, double value=0.);
 
-        XTable(const XTable& rhs) : _array(rhs._array), _N(rhs._N), _dx(rhs._dx) {}
+        XTable(const XTable& rhs) :
+            _array(rhs._array),
+            _N(rhs._N), _No2(rhs._No2), _Nd(rhs._Nd), _halfNd(rhs._halfNd), _invNd(rhs._invNd),
+            _dx(rhs._dx), _invdx(rhs._invdx) {}
 
         XTable& operator=(const XTable& rhs) 
         {
@@ -374,7 +392,12 @@ namespace galsim {
                 clearCache();
                 _array = rhs._array;
                 _N=rhs._N;
+                _No2=rhs._No2;
+                _Nd=rhs._Nd;
+                _halfNd=rhs._halfNd;
+                _invNd=rhs._invNd;
                 _dx=rhs._dx; 
+                _invdx=rhs._invdx; 
             }
             return *this;
         }
@@ -450,15 +473,20 @@ namespace galsim {
 
     private:
         FFTW_Array<double> _array; //hold the values.
-        int _N; //Size in each dimension.
-        double _dx; //k-space increment
+        int _N; // Size in each dimension.
+        int _No2; // N/2
+        double _Nd; // double version of N to avoid repeated int->double conversions
+        double _halfNd; // 0.5 * N
+        double _invNd; // 1/N
+        double _dx; // k-space increment
+        double _invdx; // 1/dx
 
         size_t index(int ix, int iy) const //Return index into data array.
         {
             // this is also responsible for bounds checking.
             // origin will be in center.
-            ix += _N/2;
-            iy += _N/2;
+            ix += _No2;
+            iy += _No2;
 #ifdef FFT_DEBUG
             if (ix<0 || ix>=_N || iy<0 || iy>=_N) 
                 FormatAndThrow<FFTOutofRange>() << "XTable index (" << ix << "," << iy
@@ -491,17 +519,17 @@ namespace galsim {
         clearCache(); // invalidate any stored interpolations
         std::complex<double>* zptr=_array.get();
         double kx, ky;
-        for (int iy=0; iy< _N/2; iy++) {
+        for (int iy=0; iy< _No2; iy++) {
             ky = iy*_dk;
-            for (int ix=0; ix< _N/2+1 ; ix++) {
+            for (int ix=0; ix< _No2+1 ; ix++) {
                 kx = ix*_dk;
                 *(zptr++) = f(kx,ky);
             }
         }
         // wrap to the negative ky's
-        for (int iy=-_N/2; iy< 0; iy++) {
+        for (int iy=-_No2; iy< 0; iy++) {
             ky = iy*_dk;
-            for (int ix=0; ix< _N/2+1 ; ix++) {
+            for (int ix=0; ix< _No2+1 ; ix++) {
                 kx = ix*_dk;
                 *(zptr++) = f(kx,ky);
             }
