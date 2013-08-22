@@ -51,7 +51,7 @@ namespace galsim {
 
     void SBAdd::SBAddImpl::add(const SBProfile& rhs)
     {
-        xdbg<<"Start SBAdd::add.  Adding item # "<<_plist.size()+1<<std::endl;
+        dbg<<"Start SBAdd::add.  Adding item # "<<_plist.size()+1<<std::endl;
         // Add new summand(s) to the _plist:
         assert(GetImpl(rhs));
         const SBAddImpl *sba = dynamic_cast<const SBAddImpl*>(GetImpl(rhs));
@@ -72,7 +72,7 @@ namespace galsim {
 
         // Accumulate properties of all summands
         for(ConstIter it=_plist.begin(); it!=_plist.end(); ++it) {
-            xdbg<<"SBAdd component has maxK, stepK = "<<
+            dbg<<"SBAdd component has maxK, stepK = "<<
                 it->maxK()<<" , "<<it->stepK()<<std::endl;
             _sumflux += it->getFlux();
             _sumfx += it->getFlux() * it->centroid().x;
@@ -86,7 +86,7 @@ namespace galsim {
             _allAnalyticX = _allAnalyticX && it->isAnalyticX();
             _allAnalyticK = _allAnalyticK && it->isAnalyticK();
         }
-        xdbg<<"Net maxK, stepK = "<<_maxMaxK<<" , "<<_minStepK<<std::endl;
+        dbg<<"Net maxK, stepK = "<<_maxMaxK<<" , "<<_minStepK<<std::endl;
     }
 
     double SBAdd::SBAddImpl::xValue(const Position<double>& p) const 

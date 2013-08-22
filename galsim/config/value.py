@@ -26,7 +26,8 @@ valid_value_types = {
               [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ]),
     'Eval' : ('_GenerateFromEval', 
               [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ]),
-    'InputCatalog' : ('_GenerateFromInputCatalog', [ float, int, bool, str ]),
+    'Catalog' : ('_GenerateFromCatalog', [ float, int, bool, str ]),
+    'Dict' : ('_GenerateFromDict', [ float, int, bool, str ]),
     'FitsHeader' : ('_GenerateFromFitsHeader', [ float, int, bool, str ]),
     'Sequence' : ('_GenerateFromSequence', [ float, int, bool ]),
     'Random' : ('_GenerateFromRandom', [ float, int, bool, galsim.Angle ]),
@@ -329,15 +330,26 @@ def _GenerateFromDeg(param, param_name, base, value_type):
     kwargs, safe = GetAllParams(param, param_name, base, req=req)
     return kwargs['theta'] * galsim.degrees, safe
 
-def _GenerateFromInputCatalog(param, param_name, base, value_type):
+def _GenerateFromCatalog(param, param_name, base, value_type):
     """@brief Return a value read from an input catalog
     """
     if 'catalog' not in base:
-        raise ValueError("No input catalog available for %s.type = InputCatalog"%param_name)
-    input_cat = base['catalog']
+        raise ValueError("No input catalog available for %s.type = Catalog"%param_name)
+
+    if 'num' in param:
+        num, safe = ParseValue(param, 'num', base, int)
+    else:
+        num, safe = (0, True)
+
+    if num < 0:
+        raise ValueError("Invalid num < 0 supplied for Catalog: num = %d"%num)
+    if num >= len(base['catalog']):
+        raise ValueError("Invalid num supplied for Catalog (too large): num = %d"%num)
+
+    input_cat = base['catalog'][num]
 
     # Setup the indexing sequence if it hasn't been specified.
-    # The normal thing with an InputCatalog is to just use each object in order,
+    # The normal thing with a Catalog is to just use each object in order,
     # so we don't require the user to specify that by hand.  We can do it for them.
     SetDefaultIndex(param, input_cat.nobjects)
 
@@ -346,7 +358,8 @@ def _GenerateFromInputCatalog(param, param_name, base, value_type):
     # which of course doesn't exist in python.  This does the same thing (so long as the 
     # middle item evaluates to true).
     req = { 'col' : input_cat.isfits and str or int , 'index' : int }
-    kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    kwargs, safe1 = GetAllParams(param, param_name, base, req=req, ignore=['num'])
+    safe = safe and safe1
 
     if value_type is str:
         val = input_cat.get(**kwargs)
@@ -357,8 +370,30 @@ def _GenerateFromInputCatalog(param, param_name, base, value_type):
     elif value_type is bool:
         val = _GetBoolValue(input_cat.get(**kwargs),param_name)
 
-    #print 'InputCatalog: ',val
-    return val, False
+    #print 'Catalog: ',val
+    return val, safe
+
+
+def _GenerateFromDict(param, param_name, base, value_type):
+    """@brief Return a value read from an input dict.
+    """
+    if 'dict' not in base:
+        raise ValueError("No input dict available for %s.type = Dict"%param_name)
+
+    req = { 'key' : str }
+    opt = { 'num' : int }
+    kwargs, safe = GetAllParams(param, param_name, base, req=req, opt=opt)
+    key = kwargs['key']
+
+    num = kwargs.get('num',0)
+    if num < 0:
+        raise ValueError("Invalid num < 0 supplied for Dict: num = %d"%num)
+    if num >= len(base['dict']):
+        raise ValueError("Invalid num supplied for Dict (too large): num = %d"%num)
+    d = base['dict'][num]
+
+    return d.get(key), safe
+
 
 
 def _GenerateFromFitsHeader(param, param_name, base, value_type):
@@ -366,11 +401,18 @@ def _GenerateFromFitsHeader(param, param_name, base, value_type):
     """
     if 'fits_header' not in base:
         raise ValueError("No fits header available for %s.type = FitsHeader"%param_name)
-    header = base['fits_header']
 
     req = { 'key' : str }
-    kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    opt = { 'num' : int }
+    kwargs, safe1 = GetAllParams(param, param_name, base, req=req, opt=opt)
     key = kwargs['key']
+
+    num = kwargs.get('num',0)
+    if num < 0:
+        raise ValueError("Invalid num < 0 supplied for FitsHeader: num = %d"%num)
+    if num >= len(base['fits_header']):
+        raise ValueError("Invalid num supplied for FitsHeader (too large): num = %d"%num)
+    header = base['fits_header'][num]
 
     if key not in header.keys():
         raise ValueError("key %s not found in the FITS header in %s"%(key,kwargs['file_name']))
@@ -719,14 +761,20 @@ def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
 
     if 'nfw_halo' not in base:
         raise ValueError("NFWHaloShear requested, but no input.nfw_halo defined.")
-    
-    req = {}
-    # Only Check, not Get.  (There's nothing to get -- just make sure there aren't extra params.)
-    CheckAllParams(param, param_name, req=req)
+
+    opt = { 'num' : int }
+    kwargs = GetAllParams(param, param_name, base, opt=opt)[0]
+
+    num = kwargs.get('num',0)
+    if num < 0:
+        raise ValueError("Invalid num < 0 supplied for NFWHalowShear: num = %d"%num)
+    if num >= len(base['nfw_halo']):
+        raise ValueError("Invalid num supplied for NFWHaloShear (too large): num = %d"%num)
+    nfw_halo = base['nfw_halo'][num]
 
     #print 'NFWHaloShear: pos = ',pos,' z = ',redshift
     try:
-        g1,g2 = base['nfw_halo'].getShear(pos,redshift)
+        g1,g2 = nfw_halo.getShear(pos,redshift)
         #print 'g1,g2 = ',g1,g2
         shear = galsim.Shear(g1=g1,g2=g2)
     except Exception as e:
@@ -753,12 +801,19 @@ def _GenerateFromNFWHaloMagnification(param, param_name, base, value_type):
 
     if 'nfw_halo' not in base:
         raise ValueError("NFWHaloMagnification requested, but no input.nfw_halo defined.")
-    
-    opt = { 'max_mu' : float }
+ 
+    opt = { 'max_mu' : float, 'num' : int }
     kwargs = GetAllParams(param, param_name, base, opt=opt)[0]
 
+    num = kwargs.get('num',0)
+    if num < 0:
+        raise ValueError("Invalid num < 0 supplied for NFWHaloMagnification: num = %d"%num)
+    if num >= len(base['nfw_halo']):
+        raise ValueError("Invalid num supplied for NFWHaloMagnification (too large): num = %d"%num)
+    nfw_halo = base['nfw_halo'][num]
+
     #print 'NFWHaloMagnification: pos = ',pos,' z = ',redshift
-    mu = base['nfw_halo'].getMagnification(pos,redshift)
+    mu = nfw_halo.getMagnification(pos,redshift)
 
     max_mu = kwargs.get('max_mu', 25.)
     if not max_mu > 0.: 
@@ -786,13 +841,19 @@ def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
     if 'power_spectrum' not in base:
         raise ValueError("PowerSpectrumShear requested, but no input.power_spectrum defined.")
     
-    req = {}
-    # Only Check, not Get.  (There's nothing to get -- just make sure there aren't extra params.)
-    CheckAllParams(param, param_name, req=req)
+    opt = { 'num' : int }
+    kwargs = GetAllParams(param, param_name, base, opt=opt)[0]
+
+    num = kwargs.get('num',0)
+    if num < 0:
+        raise ValueError("Invalid num < 0 supplied for PowerSpectrumShear: num = %d"%num)
+    if num >= len(base['power_spectrum']):
+        raise ValueError("Invalid num supplied for PowerSpectrumShear (too large): num = %d"%num)
+    power_spectrum = base['power_spectrum'][num]
 
     #print 'PowerSpectrumShear: pos = ',pos
     try:
-        g1,g2 = base['power_spectrum'].getShear(pos)
+        g1,g2 = power_spectrum.getShear(pos)
         #print 'g1,g2 = ',g1,g2
         shear = galsim.Shear(g1=g1,g2=g2)
     except Exception as e:
@@ -814,11 +875,19 @@ def _GenerateFromPowerSpectrumMagnification(param, param_name, base, value_type)
     if 'power_spectrum' not in base:
         raise ValueError("PowerSpectrumMagnification requested, but no input.power_spectrum "
                          "defined.")
-    
-    opt = { 'max_mu' : float }
+
+    opt = { 'max_mu' : float, 'num' : int }
     kwargs = GetAllParams(param, param_name, base, opt=opt)[0]
 
-    mu = base['power_spectrum'].getMagnification(pos)
+    num = kwargs.get('num',0)
+    if num < 0:
+        raise ValueError("Invalid num < 0 supplied for PowerSpectrumMagnification: num = %d"%num)
+    if num >= len(base['power_spectrum']):
+        raise ValueError(
+            "Invalid num supplied for PowerSpectrumMagnification (too large): num = %d"%num)
+    power_spectrum = base['power_spectrum'][num]
+
+    mu = power_spectrum.getMagnification(pos)
 
     max_mu = kwargs.get('max_mu', 25.)
     if not max_mu > 0.: 
@@ -936,14 +1005,9 @@ def _GenerateFromEval(param, param_name, base, value_type):
         sky_pos = base['sky_pos']
     if 'rng' in base:
         rng = base['rng']
-    if 'catalog' in base:
-        catalog = base['catalog']
-    if 'real_catalog' in base:
-        real_catalog = base['real_catalog']
-    if 'nfw_halo' in base:
-        nfw_halo = base['nfw_halo']
-    if 'power_spectrum' in base:
-        power_spectrum = base['power_spectrum']
+    for key in galsim.config.valid_input_types.keys():
+        if key in base:
+            exec(key + ' = base[key]')
 
     try:
         val = value_type(eval(string))
