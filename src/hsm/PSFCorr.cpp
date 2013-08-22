@@ -664,7 +664,8 @@ namespace hsm {
         long xmax = data.getXMax();
         long ymin = data.getYMin();
         long ymax = data.getYMax();
-        dbg<<"Entering find_ellipmom_1: "<<x0<<" "<<y0<<" "<<Mxx<<" "<<Myy<<" "<<Mxy<<" "<<(Mxx-Myy)/(Mxx+Myy)<<" "<<2.*Mxy/(Mxx+Myy)<<std::endl;
+        dbg<<"Entering find_ellipmom_1 with Mxx, Myy, Mxy: "<<Mxx<<" "<<Myy<<" "<<Mxy<<std::endl;
+        dbg<<"e1,e2 = "<<(Mxx-Myy)/(Mxx+Myy)<<" "<<2.*Mxy/(Mxx+Myy)<<std::endl;
         dbg<<"x0, y0: "<<x0<<" "<<y0<<std::endl;
         dbg<<"xmin, xmax: "<<xmin<<" "<<xmax<<std::endl;
 
@@ -795,7 +796,7 @@ namespace hsm {
         double Amp,Bx,By,Cxx,Cxy,Cyy;
         double semi_a2, semi_b2, semi_geomean2, two_psi;
         double dx, dy, dxx, dxy, dyy;
-        double shiftscale, shiftscale0=0;
+        double shiftscale, shiftscale0=0.;
         double x00 = x0;
         double y00 = y0;
 
@@ -862,12 +863,11 @@ namespace hsm {
             if (std::abs(dyy)>convergence_factor) convergence_factor = std::abs(dyy);
             convergence_factor = std::sqrt(convergence_factor);
             // Note: the line below used to not be commented out.  However, it was causing this
-            // routine to fail to convergence in the case where the object is very flattened, because
-            // of the division by shiftscale which is the semi-minor axis.  Moreover, since
-            // shiftscale0 (on top) is the original guess for the object size, it led to an
+            // routine to fail to convergence in the case where the object is very flattened,
+            // because of the division by shiftscale which is the semi-minor axis.  Moreover,
+            // since shiftscale0 (on top) is the original guess for the object size, it led to an
             // unnatural dependence on the initial guess.
             //if (shiftscale<shiftscale0) convergence_factor *= shiftscale0/shiftscale;
-            dbg<<"In find_ellipmom_2: "<<std::abs(dx)<<" "<<std::abs(dy)<<" "<<std::abs(dxx)<<" "<<std::abs(dyy)<<" "<<std::abs(dxy)<<" "<<shiftscale<<" "<<shiftscale0<<" "<<semi_a2<<" "<<semi_b2<<" "<<convergence_factor<<std::endl;
 
             /* Now update moments */
             x0 += dx * shiftscale;
