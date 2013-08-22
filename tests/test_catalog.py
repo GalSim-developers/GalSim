@@ -39,9 +39,10 @@ def test_single_row():
     f = open(filename, 'w')
     f.write("3 4 5\n")
     f.close()
-    cat = galsim.catalog.InputCatalog(filename, file_type='ascii')
-    np.testing.assert_array_equal(cat.data, np.array([["3","4","5"]]),
-                                  err_msg="galsim.catalog.InputCatalog.__init__ failed to read 1-row file")
+    cat = galsim.catalog.Catalog(filename, file_type='ascii')
+    np.testing.assert_array_equal(
+        cat.data, np.array([["3","4","5"]]),
+        err_msg="galsim.catalog.Catalog.__init__ failed to read 1-row file")
     os.remove(filename)
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

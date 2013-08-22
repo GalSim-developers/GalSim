@@ -237,11 +237,23 @@ class DistDeviate(_galsim.BaseDeviate):
         self.x_max = x_max
 
         
-    def val(self):
-        return self._inverseprobabilitytable(self._ud())
+    def val(self,p):
+        """
+        Return the value x of the input function to DistDeviate such that 
+        p = cumulative probability(x).
+        """
+        if p<0 or p>1:
+            raise ValueError('Cannot request cumulative probability value from DistDeviate for '
+                             'p<0 or p>1!  You entered: %f'%p)
+        return self._inverseprobabilitytable(p)
     
+    # This is the private function that is required to make DistDeviate work as a derived 
+    # class of BaseDeviate.  See pysrc/Random.cpp.
+    def _val(self):
+        return self.val(self._ud())
+
     def __call__(self):
-        return self.val()
+        return self._val()
 
     def reset(self, rng=0):
         _galsim.BaseDeviate.reset(self,rng)
