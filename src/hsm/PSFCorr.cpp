@@ -794,7 +794,7 @@ namespace hsm {
 
         double convergence_factor = 1.0;
         double Amp,Bx,By,Cxx,Cxy,Cyy;
-        double semi_a2, semi_b2, semi_geomean2, two_psi;
+        double semi_a2, semi_b2, two_psi;
         double dx, dy, dxx, dxy, dyy;
         double shiftscale, shiftscale0=0.;
         double x00 = x0;
@@ -831,18 +831,14 @@ namespace hsm {
             }
 
             shiftscale = std::sqrt(semi_b2);
-            semi_geomean2 = std::sqrt(semi_a2*semi_b2);
             if (num_iter == 0) shiftscale0 = shiftscale;
 
             /* Now compute changes to x0, etc. */
             dx = 2. * Bx / (Amp * shiftscale);
             dy = 2. * By / (Amp * shiftscale);
-            // Note: Before, the lines below had a devision by semi_b2 instead of semi_geomean2.
-            // This was causing issues with convergence for very flattened galaxies (i.e., that have
-            // a small semi-minor axis).
-            dxx = 4. * (Cxx/Amp - 0.5*Mxx) / semi_geomean2;
-            dxy = 4. * (Cxy/Amp - 0.5*Mxy) / semi_geomean2;
-            dyy = 4. * (Cyy/Amp - 0.5*Myy) / semi_geomean2;
+            dxx = 4. * (Cxx/Amp - 0.5*Mxx) / semi_b2;
+            dxy = 4. * (Cxy/Amp - 0.5*Mxy) / semi_b2;
+            dyy = 4. * (Cyy/Amp - 0.5*Myy) / semi_b2;
 
             if (dx     >  hsmparams->bound_correct_wt) dx     =  hsmparams->bound_correct_wt;
             if (dx     < -hsmparams->bound_correct_wt) dx     = -hsmparams->bound_correct_wt;
@@ -862,12 +858,7 @@ namespace hsm {
             if (std::abs(dxy)>convergence_factor) convergence_factor = std::abs(dxy);
             if (std::abs(dyy)>convergence_factor) convergence_factor = std::abs(dyy);
             convergence_factor = std::sqrt(convergence_factor);
-            // Note: the line below used to not be commented out.  However, it was causing this
-            // routine to fail to convergence in the case where the object is very flattened,
-            // because of the division by shiftscale which is the semi-minor axis.  Moreover,
-            // since shiftscale0 (on top) is the original guess for the object size, it led to an
-            // unnatural dependence on the initial guess.
-            //if (shiftscale<shiftscale0) convergence_factor *= shiftscale0/shiftscale;
+            if (shiftscale<shiftscale0) convergence_factor *= shiftscale0/shiftscale;
 
             /* Now update moments */
             x0 += dx * shiftscale;
