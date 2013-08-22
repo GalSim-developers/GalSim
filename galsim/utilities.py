@@ -183,9 +183,11 @@ class ComparisonShapeData(object):
 
     - g2obs_draw: observed_shape.g2 from adaptive moments on a GSObject image rendered using .draw()
 
-    - g1hsm_draw: corrected_shape.g1 from adaptive moments on an image rendered using .draw()
+    - g1hsm_draw: corrected_shape.g1 from adaptive moments on a GSObject image rendered using
+      .draw()
 
-    - g2hsm_draw: corrected_shape.g2 from adaptive moments on an image rendered using .draw()
+    - g2hsm_draw: corrected_shape.g2 from adaptive moments on a GSObject image rendered using
+      .draw()
 
     - sigma_draw: moments_sigma from adaptive moments on a GSObject image rendered using .draw()
 
