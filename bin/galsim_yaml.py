@@ -71,6 +71,9 @@ def parse_args():
         parser.add_argument(
             '-l', '--log_file', type=str, action='store', default=None,
             help='filename for storing logging output [default is to stream to stdout]')
+        parser.add_argument(
+            '-i', '--import', type=str, action='store', default=None, nargs='*',
+            help='python modules to import before parsing yaml file')
         args = parser.parse_args()
 
     except ImportError:
@@ -78,7 +81,7 @@ def parse_args():
         import optparse
 
         # Usage string not automatically generated for optparse, so generate it
-        usage = "Usage: galsim_yaml [-h] [-v {0,1,2,3}] [-l LOG_FILE] config_file"
+        usage = "Usage: galsim_yaml [-h] [-v {0,1,2,3}] [-l LOG_FILE] [-m module(s)] config_file"
         # Build the parser
         parser = optparse.OptionParser(usage=usage, epilog=epilog, description=description)
         # optparse only allows string choices, so take verbosity as a string and make it int later
@@ -88,15 +91,15 @@ def parse_args():
         parser.add_option(
             '-l', '--log_file', type=str, action='store', default=None,
             help='filename for storing logging output [default is to stream to stdout]')
-        (options, posargs) = parser.parse_args()
+        parser.add_option(
+            '-m', '--modules', type=str, action='store', default=None, 
+            help='python module or modules to import before parsing yaml file')
+        (args, posargs) = parser.parse_args()
 
-        # Since optparse doesn't put all the positional arguments together with the options,
-        # make a galsim.AttributeDict() (functionally very similar to an optparse.Values instance
-        # such as options) to store everything.
-        args = galsim.utilities.AttributeDict()
-        args.verbosity = int(options.verbosity) # remembering to convert to an integer type
-        args.log_file = options.log_file
-        # Parse the positional arguments by hand
+        # Remembering to convert to an integer type
+        args.verbosity = int(args.verbosity) 
+
+        # Store the positional arguments in the args object as well:
         if len(posargs) == 1:
             args.config_file = posargs[0]
         else:
@@ -155,6 +158,14 @@ def main():
     # Set the root value in base_config
     if 'root' not in base_config:
         base_config['root'] = os.path.splitext(config_file)[0]
+
+    if args.modules is not None:
+        if not isinstance(args.modules,list): args.modules = [args.modules]
+        for module in args.modules:
+            try:
+                exec('import galsim.'+module)
+            except:
+                exec('import '+module)
 
     for config in all_config[1:]:
 
