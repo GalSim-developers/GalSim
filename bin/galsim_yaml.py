@@ -26,7 +26,6 @@ import os
 import galsim
 import logging
 import copy
-import yaml
 
 def MergeConfig(config1, config2, logger=None):
     """
@@ -56,15 +55,15 @@ def parse_args():
     """
 
     # Short description strings common to both parsing mechanisms
-    description = "galsim_yaml: YAML configuration file parser for GalSim"
-    epilog = "For JSON-formatted configuration files, use galsim_json"
+    description = "galsim_yaml: configuration file parser for GalSim"
+    epilog = "Works with both YAML and JSON markup formats."
     
     try:
         import argparse
         
         # Build the parser and add arguments
         parser = argparse.ArgumentParser(description=description, add_help=True, epilog=epilog)
-        parser.add_argument('config_file', type=str, help='the YAML configuration file')
+        parser.add_argument('config_file', type=str, nargs='+', help='the configuration file(s)')
         parser.add_argument(
             '-v', '--verbosity', type=int, action='store', default=2, choices=(0, 1, 2, 3),
             help='integer verbosity level: min=0, max=3 [default=2]')
@@ -72,8 +71,13 @@ def parse_args():
             '-l', '--log_file', type=str, action='store', default=None,
             help='filename for storing logging output [default is to stream to stdout]')
         parser.add_argument(
-            '-i', '--import', type=str, action='store', default=None, nargs='*',
-            help='python modules to import before parsing yaml file')
+            '-f', '--file_type', type=str, action='store', choices=('yaml','json'),
+            default=None,
+            help=('type of config_file: yaml or json are currently supported. ' +
+                  '[default is to automatically determine the type from the extension]'))
+        parser.add_argument(
+            '-m', '--module', type=str, action='append', default=None, 
+            help='python module to import before parsing config file')
         args = parser.parse_args()
 
     except ImportError:
@@ -81,7 +85,9 @@ def parse_args():
         import optparse
 
         # Usage string not automatically generated for optparse, so generate it
-        usage = "Usage: galsim_yaml [-h] [-v {0,1,2,3}] [-l LOG_FILE] [-m module(s)] config_file"
+        usage = """Usage: galsim_yaml [-h] [-v {0,1,2,3}] [-l LOG_FILE] [-f file_type] 
+                   [-m module] config_file [config_file ...]
+        """
         # Build the parser
         parser = optparse.OptionParser(usage=usage, epilog=epilog, description=description)
         # optparse only allows string choices, so take verbosity as a string and make it int later
@@ -92,25 +98,24 @@ def parse_args():
             '-l', '--log_file', type=str, action='store', default=None,
             help='filename for storing logging output [default is to stream to stdout]')
         parser.add_option(
-            '-m', '--modules', type=str, action='store', default=None, 
-            help='python module or modules to import before parsing yaml file')
+            '-f', '--file_type', type="choice", action='store', choices=('yaml','json'),
+            default=None,
+            help=('type of config_file: yaml or json are currently supported. ' +
+                  '[default is to automatically determine the type from the extension]'))
+        parser.add_option(
+            '-m', '--module', type=str, action='store', default=None, 
+            help='python module to import before parsing config file')
         (args, posargs) = parser.parse_args()
 
         # Remembering to convert to an integer type
         args.verbosity = int(args.verbosity) 
 
         # Store the positional arguments in the args object as well:
-        if len(posargs) == 1:
-            args.config_file = posargs[0]
+        if len(posargs) >= 1:
+            args.config_file = posargs
         else:
             print usage
-            if len(posargs) == 0:
-                sys.exit('galsim_yaml: error: too few arguments')
-            else:
-                argstring = posargs[1]
-                for addme in posargs[2:]:
-                    argstring = argstring+' '+addme
-                sys.exit('galsim_yaml: error: unrecognised arguments: '+argstring)
+            sys.exit('galsim_yaml: error: too few arguments')
 
     # Return the args
     return args
@@ -133,49 +138,79 @@ def main():
         logging.basicConfig(format="%(message)s", level=logging_level, filename=args.log_file)
     logger = logging.getLogger('galsim_yaml')
     
-    config_file = args.config_file
-    logger.info('Using config file %s', config_file)
+    # Determine the file type from the extension if necessary:
+    if args.file_type is None:
+        import os
+        name, ext = os.path.splitext(args.config_file[0])
+        if ext.lower().startswith('.j'):
+            args.file_type = 'json'
+        else:
+            # Let YAML be the default if the extension is not .y* or .j*.
+            args.file_type = 'yaml'
+        logger.debug('File type determined to be %s', args.file_type)
+    else:
+        logger.debug('File type specified to be %s', args.file_type)
 
-    all_config = [ c for c in yaml.load_all(open(config_file).read()) ]
-    logger.debug('Successfully read in config file.')
+    for config_file in args.config_file:
+        logger.info('Using config file %s', config_file)
+    
+        if args.file_type == 'yaml':
+            import yaml
 
-    # If there is only 1 yaml document, then it is of course used for the configuration.
-    # If there are multiple yamls documents, then the first one defines a common starting
-    # point for the later documents.
-    # So the configurations are taken to be:
-    #   all_cong[0] + allconfig[1]
-    #   all_cong[0] + allconfig[2]
-    #   all_cong[0] + allconfig[3]
-    #   ...
-    # See demo6.yaml and demo8.yaml in the examples directory for examples of this feature.
+            all_config = [ c for c in yaml.load_all(open(config_file).read()) ]
 
-    if len(all_config) == 1:
-        # If we only have 1, prepend an empty "base_config"
-        all_config = [{}] + all_config
+            # If there is only 1 yaml document, then it is of course used for the configuration.
+            # If there are multiple yamls documents, then the first one defines a common starting
+            # point for the later documents.
+            # So the configurations are taken to be:
+            #   all_cong[0] + allconfig[1]
+            #   all_cong[0] + allconfig[2]
+            #   all_cong[0] + allconfig[3]
+            #   ...
+            # See demo6.yaml and demo8.yaml in the examples directory for examples of this feature.
 
-    base_config = all_config[0]
+            if len(all_config) > 1:
+                # Break off the first one if more than one:
+                base_config = all_config[0]
+                all_config = all_config[1:]
+            else:
+                # Else just use an empty base_config dict.
+                base_config = {}
 
-    # Set the root value in base_config
-    if 'root' not in base_config:
-        base_config['root'] = os.path.splitext(config_file)[0]
+        else:
+            import json
 
-    if args.modules is not None:
-        if not isinstance(args.modules,list): args.modules = [args.modules]
-        for module in args.modules:
-            try:
-                exec('import galsim.'+module)
-            except:
-                exec('import '+module)
+            config = json.load(open(config_file))
 
-    for config in all_config[1:]:
+            # JSON files are just processed as is.  This is equivalent to having an empty 
+            # base_config, so we just do that and use the same structure.
+            base_config = {}
+            all_config = [ config ]
+            
+        logger.debug('Successfully read in config file.')
 
-        # Merge the base_config information into this config file.
-        MergeConfig(config,base_config)
+        # Set the root value in base_config
+        if 'root' not in base_config:
+            base_config['root'] = os.path.splitext(config_file)[0]
 
-        logger.debug("Process config dict: \n%s", config)
+        # Import any modules if requested
+        if args.module:
+            for module in args.module:
+                try:
+                    exec('import galsim.'+module)
+                except:
+                    exec('import '+module)
 
-        # Process the configuration
-        galsim.config.Process(config, logger)
+        # Process each config document
+        for config in all_config:
+
+            # Merge the base_config information into this config file.
+            MergeConfig(config,base_config)
+
+            logger.debug("Process config dict: \n%s", config)
+
+            # Process the configuration
+            galsim.config.Process(config, logger)
 
 
 if __name__ == "__main__":
