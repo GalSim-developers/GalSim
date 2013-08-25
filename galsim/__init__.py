@@ -48,7 +48,6 @@ from . import random
 from . import fits
 from . import config
 from . import integ
-from . import des
 from . import pse
 from . import hsm
 from . import deprecated
