@@ -127,13 +127,13 @@ class InterpolatedImage(GSObject):
                            (Default `dx = None`.)
     @param flux            Optionally specify a total flux for the object, which overrides the
                            implied flux normalization from the Image itself.
-    @param pad_factor      Factor by which to pad the Image with either noise (if noise_pad is
-                           given) or zeros; `pad_factor <= 0` results in the use of the default 
-                           value, 4.  We strongly recommend leaving this parameter at its default 
-                           value; see text above for details.  (Default `pad_factor = 0`)
+    @param pad_factor      Factor by which to pad the Image with zeros; `pad_factor <= 0` results 
+                           in the use of the default value, 4.  We strongly recommend leaving this 
+                           parameter at its default value; see text above for details. 
+                           (Default `pad_factor = 0`)
     @param noise_pad_size  If provided, the image will be padded out to this size with the noise 
                            specified by `noise_pad`. This is important if you are planning to 
-                           whiten the resulting image.  You want to make sure that the padded 
+                           whiten the resulting image.  You want to make sure that the noise-padded 
                            image is larger than the postage stamp onto which you are drawing this 
                            object.  [Default `noise_pad_size = None`.]
     @param noise_pad       Noise properties to use when padding the original image with
@@ -173,15 +173,11 @@ class InterpolatedImage(GSObject):
                                    image to use.
                            The `pad_image` scale is ignored, and taken to be equal to that
                            of the `image`.
-                           Normally, the padding is just taken to be the size of the pad_image.
-                           However, if pad_factor is also given, and the resulting padded size is 
-                           larger than the pad_image, then the image will be further padded with
-                           either noise (if noise_pad is given) or zeros.
                            The user should be careful to ensure that the image used for padding has 
                            roughly zero mean.  The purpose of this keyword is to allow for a more 
                            flexible representation of some noise field around an object; if the 
                            user wishes to represent the sky level around an object, they should do 
-                           that when they have drawn the final image instead.  
+                           that after they have drawn the final image instead.  
                            (Default `pad_image = None`.)
     @param calculate_stepk Specify whether to perform an internal determination of the extent of 
                            the object being represented by the InterpolatedImage; often this is 
@@ -229,7 +225,7 @@ class InterpolatedImage(GSObject):
         'dx' : float ,
         'flux' : float ,
         'pad_factor' : float ,
-        'noise_pad_size' : float ,
+        'noise_pad_size' : int ,
         'noise_pad' : str ,
         'pad_image' : str ,
         'calculate_stepk' : bool ,
@@ -328,13 +324,12 @@ class InterpolatedImage(GSObject):
 
         # This will be passed to SBInterpolatedImage, so make sure it is the right type.
         pad_factor = float(pad_factor)
-        if pad_factor <= 0.: pad_factor = galsim._galsim.getDefaultPadFactor()
 
         # Make sure the image fits in the noise pad image:
         if noise_pad_size:
             if noise_pad_size <= min(image.array.shape):
                 # Don't need any noise padding in this case.
-                noise_pad_size = None
+                noise_pad_size = 0
             elif noise_pad_size < max(image.array.shape):
                 noise_pad_size = max(image.array.shape)
 

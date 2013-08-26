@@ -60,7 +60,7 @@ class RealGalaxy(GSObject):
     
         real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index=None, id=None, random=False, 
                                         rng=None, x_interpolant=None, k_interpolant=None,
-                                        flux=None, pad_factor=0, min_pad_size=0, noise_pad=False)
+                                        flux=None, pad_factor=0, noise_pad_size=0)
 
     This initializes real_galaxy with three InterpolatedImage objects (one for the deconvolved
     galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
