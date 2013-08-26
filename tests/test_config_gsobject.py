@@ -720,7 +720,7 @@ def test_realgalaxy():
     gal5b = galsim.RealGalaxy(real_cat, index = 41, rng = rng, noise_pad_size = 500)
     gsobject_compare(gal5a, gal5b, conv=conv)
 
-    config['seq_index'] = 4
+    config['seq_index'] = 5
     gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
     gal6b = galsim.RealGalaxy(real_cat, index = 32, rng = rng, pad_factor = 5)
     gsobject_compare(gal6a, gal6b, conv=conv)
@@ -728,7 +728,7 @@ def test_realgalaxy():
     # attribute in the galaxy.
     gsobject_compare(gal6a.noise._profile, gal6b.noise._profile, conv=conv)
 
-    config['seq_index'] = 7
+    config['seq_index'] = 6
     gal7a = galsim.config.BuildGSObject(config, 'gal7')[0]
     gal7b = galsim.RealGalaxy(real_cat, index = 32, rng = rng, noise_pad_size = 500)
     gsobject_compare(gal7a, gal7b, conv=conv)
