@@ -342,8 +342,10 @@ def _GenerateFromCatalog(param, param_name, base, value_type):
     else:
         num, safe = (0, True)
 
-    if num < 0 or num >= len(base['catalog']):
-        raise ValueError("num given for Catalog is invalid")
+    if num < 0:
+        raise ValueError("Invalid num < 0 supplied for Catalog: num = %d"%num)
+    if num >= len(base['catalog']):
+        raise ValueError("Invalid num supplied for Catalog (too large): num = %d"%num)
 
     input_cat = base['catalog'][num]
 
@@ -385,8 +387,10 @@ def _GenerateFromDict(param, param_name, base, value_type):
     key = kwargs['key']
 
     num = kwargs.get('num',0)
-    if num < 0 or num >= len(base['dict']):
-        raise ValueError("num given for Dictis invalid")
+    if num < 0:
+        raise ValueError("Invalid num < 0 supplied for Dict: num = %d"%num)
+    if num >= len(base['dict']):
+        raise ValueError("Invalid num supplied for Dict (too large): num = %d"%num)
     d = base['dict'][num]
 
     return d.get(key), safe
@@ -405,8 +409,10 @@ def _GenerateFromFitsHeader(param, param_name, base, value_type):
     key = kwargs['key']
 
     num = kwargs.get('num',0)
-    if num < 0 or num >= len(base['fits_header']):
-        raise ValueError("num given for FitsHeader is invalid")
+    if num < 0:
+        raise ValueError("Invalid num < 0 supplied for FitsHeader: num = %d"%num)
+    if num >= len(base['fits_header']):
+        raise ValueError("Invalid num supplied for FitsHeader (too large): num = %d"%num)
     header = base['fits_header'][num]
 
     if key not in header.keys():
@@ -761,8 +767,10 @@ def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
     kwargs = GetAllParams(param, param_name, base, opt=opt)[0]
 
     num = kwargs.get('num',0)
-    if num < 0 or num >= len(base['nfw_halo']):
-        raise ValueError("num given for NFWHaloShear is invalid")
+    if num < 0:
+        raise ValueError("Invalid num < 0 supplied for NFWHalowShear: num = %d"%num)
+    if num >= len(base['nfw_halo']):
+        raise ValueError("Invalid num supplied for NFWHaloShear (too large): num = %d"%num)
     nfw_halo = base['nfw_halo'][num]
 
     #print 'NFWHaloShear: pos = ',pos,' z = ',redshift
@@ -799,8 +807,10 @@ def _GenerateFromNFWHaloMagnification(param, param_name, base, value_type):
     kwargs = GetAllParams(param, param_name, base, opt=opt)[0]
 
     num = kwargs.get('num',0)
-    if num < 0 or num >= len(base['nfw_halo']):
-        raise ValueError("num given for NFWHaloMagnification is invalid")
+    if num < 0:
+        raise ValueError("Invalid num < 0 supplied for NFWHaloMagnification: num = %d"%num)
+    if num >= len(base['nfw_halo']):
+        raise ValueError("Invalid num supplied for NFWHaloMagnification (too large): num = %d"%num)
     nfw_halo = base['nfw_halo'][num]
 
     #print 'NFWHaloMagnification: pos = ',pos,' z = ',redshift
@@ -836,8 +846,10 @@ def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
     kwargs = GetAllParams(param, param_name, base, opt=opt)[0]
 
     num = kwargs.get('num',0)
-    if num < 0 or num >= len(base['power_spectrum']):
-        raise ValueError("num given for PowerSpectrumShear is invalid")
+    if num < 0:
+        raise ValueError("Invalid num < 0 supplied for PowerSpectrumShear: num = %d"%num)
+    if num >= len(base['power_spectrum']):
+        raise ValueError("Invalid num supplied for PowerSpectrumShear (too large): num = %d"%num)
     power_spectrum = base['power_spectrum'][num]
 
     #print 'PowerSpectrumShear: pos = ',pos
@@ -869,8 +881,11 @@ def _GenerateFromPowerSpectrumMagnification(param, param_name, base, value_type)
     kwargs = GetAllParams(param, param_name, base, opt=opt)[0]
 
     num = kwargs.get('num',0)
-    if num < 0 or num >= len(base['power_spectrum']):
-        raise ValueError("num given for PowerSpectrumShear is invalid")
+    if num < 0:
+        raise ValueError("Invalid num < 0 supplied for PowerSpectrumMagnification: num = %d"%num)
+    if num >= len(base['power_spectrum']):
+        raise ValueError(
+            "Invalid num supplied for PowerSpectrumMagnification (too large): num = %d"%num)
     power_spectrum = base['power_spectrum'][num]
 
     mu = power_spectrum.getMagnification(pos)

@@ -50,16 +50,20 @@ namespace galsim {
         initialize(); 
     }
 
-
     void SBConvolve::SBConvolveImpl::add(const SBProfile& rhs) 
     {
         dbg<<"Start SBConvolveImpl::add.  Adding item # "<<_plist.size()+1<<std::endl;
 
         // Add new terms(s) to the _plist:
         assert(GetImpl(rhs));
-        const SBConvolveImpl *sbc = dynamic_cast<const SBConvolveImpl*>(GetImpl(rhs));
-        if (sbc) {  
-            dbg<<"  (Item is really "<<sbc->_plist.size()<<" items.)\n";
+        const SBProfileImpl* p = GetImpl(rhs);
+        const SBConvolveImpl* sbc = dynamic_cast<const SBConvolveImpl*>(p);
+        const SBAutoConvolve::SBAutoConvolveImpl* sbc2 =
+            dynamic_cast<const SBAutoConvolve::SBAutoConvolveImpl*>(p);
+        const SBAutoCorrelate::SBAutoCorrelateImpl* sbc3 =
+            dynamic_cast<const SBAutoCorrelate::SBAutoCorrelateImpl*>(p);
+        if (sbc) {
+            dbg<<"  (Item is really "<<sbc->_plist.size()<<" items.)"<<std::endl;
             // If rhs is an SBConvolve, copy its list here
             for (ConstIter pptr = sbc->_plist.begin(); pptr!=sbc->_plist.end(); ++pptr) {
                 if (!pptr->isAnalyticK() && !_real_space) 
@@ -68,6 +72,28 @@ namespace galsim {
                     throw SBError("Real_space SBConvolve requires members to be analytic in x");
                 _plist.push_back(*pptr);
             }
+        } else if (sbc2) {
+            dbg<<"  (Item is really AutoConvolve.)"<<std::endl;
+            // If rhs is an SBAutoConvolve, put two of its item here:
+            const SBProfile& obj = sbc2->getAdaptee();
+            if (!obj.isAnalyticK() && !_real_space) 
+                throw SBError("SBConvolve requires members to be analytic in k");
+            if (!obj.isAnalyticX() && _real_space)
+                throw SBError("Real_space SBConvolve requires members to be analytic in x");
+            _plist.push_back(obj);
+            _plist.push_back(obj);
+        } else if (sbc3) {
+            dbg<<"  (Item is really AutoCorrelate items.)"<<std::endl;
+            // If rhs is an SBAutoCorrelate, put its item and 180 degree rotated verion here:
+            const SBProfile& obj = sbc3->getAdaptee();
+            if (!obj.isAnalyticK() && !_real_space) 
+                throw SBError("SBConvolve requires members to be analytic in k");
+            if (!obj.isAnalyticX() && _real_space)
+                throw SBError("Real_space SBConvolve requires members to be analytic in x");
+            _plist.push_back(obj);
+            SBProfile temp = obj;
+            temp.applyRotation(180. * degrees);
+            _plist.push_back(temp);
         } else {
             if (!rhs.isAnalyticK() && !_real_space) 
                 throw SBError("SBConvolve requires members to be analytic in k");
@@ -225,17 +251,17 @@ namespace galsim {
     //
     // AutoConvolve 
     // 
-    
-    SBAutoConvolve::SBAutoConvolve(const SBProfile& s,
+
+    SBAutoConvolve::SBAutoConvolve(const SBProfile& s, bool real_space,
                                    const GSParamsPtr& gsparams) :
-        SBProfile(new SBAutoConvolveImpl(s, gsparams)) {}
+        SBProfile(new SBAutoConvolveImpl(s, real_space, gsparams)) {}
     SBAutoConvolve::SBAutoConvolve(const SBAutoConvolve& rhs) : SBProfile(rhs) {}
     SBAutoConvolve::~SBAutoConvolve() {}
 
-    SBAutoConvolve::SBAutoConvolveImpl::SBAutoConvolveImpl(const SBProfile& s,
+    SBAutoConvolve::SBAutoConvolveImpl::SBAutoConvolveImpl(const SBProfile& s, bool real_space,
                                                            const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams ? gsparams : GetImpl(s)->gsparams),
-        _adaptee(s) {}
+        _adaptee(s), _real_space(real_space) {}
 
     double SBAutoConvolve::SBAutoConvolveImpl::xValue(const Position<double>& pos) const
     { return RealSpaceConvolve(_adaptee,_adaptee,pos,getFlux(),this->gsparams); }
@@ -257,13 +283,13 @@ namespace galsim {
         double x0, double dx, double dxy,
         double y0, double dy, double dyx) const
     {
-        dbg<<"SBConvolve fillKValue\n";
+        dbg<<"SBAutoConvolve fillKValue\n";
         dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
         dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
         GetImpl(_adaptee)->fillKValue(val,x0,dx,dxy,y0,dy,dyx);
         val = ElemProd(val,val);
     }
- 
+
     double SBAutoConvolve::SBAutoConvolveImpl::getPositiveFlux() const 
     {
         double p = _adaptee.getPositiveFlux();
@@ -293,16 +319,18 @@ namespace galsim {
     //
     // AutoCorrelate
     // 
-    
-    SBAutoCorrelate::SBAutoCorrelate(const SBProfile& s, const GSParamsPtr& gsparams) :
-        SBProfile(new SBAutoCorrelateImpl(s, gsparams)) {}
+
+    SBAutoCorrelate::SBAutoCorrelate(const SBProfile& s, bool real_space,
+                                     const GSParamsPtr& gsparams) :
+        SBProfile(new SBAutoCorrelateImpl(s, real_space, gsparams)) {}
     SBAutoCorrelate::SBAutoCorrelate(const SBAutoCorrelate& rhs) : SBProfile(rhs) {}
     SBAutoCorrelate::~SBAutoCorrelate() {}
 
-    SBAutoCorrelate::SBAutoCorrelateImpl::SBAutoCorrelateImpl(const SBProfile& s,
-                                                              const GSParamsPtr& gsparams) :
+    SBAutoCorrelate::SBAutoCorrelateImpl::SBAutoCorrelateImpl(
+        const SBProfile& s, bool real_space,
+        const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams ? gsparams : GetImpl(s)->gsparams),
-        _adaptee(s) {}
+        _adaptee(s), _real_space(real_space) {}
 
     double SBAutoCorrelate::SBAutoCorrelateImpl::xValue(const Position<double>& pos) const
     { 
@@ -334,7 +362,7 @@ namespace galsim {
         GetImpl(_adaptee)->fillKValue(val,x0,dx,dxy,y0,dy,dyx);
         val = ElemProd(val,val.conjugate());
     }
- 
+
     double SBAutoCorrelate::SBAutoCorrelateImpl::getPositiveFlux() const 
     {
         double p = _adaptee.getPositiveFlux();

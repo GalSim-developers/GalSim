@@ -396,8 +396,10 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams):
         num, safe = (0, True)
     ignore.append('num')
 
-    if num < 0 or num >= len(base['real_catalog']):
-        raise ValueError("num given for RealGalaxy is invalid")
+    if num < 0:
+        raise ValueError("Invalid num < 0 supplied for RealGalaxy: num = %d"%num)
+    if num >= len(base['real_catalog']):
+        raise ValueError("Invalid num supplied for RealGalaxy (too large): num = %d"%num)
 
     real_cat = base['real_catalog'][num]
 
@@ -429,12 +431,6 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams):
         if index >= real_cat.nobjects:
             raise IndexError(
                 "%s index has gone past the number of entries in the catalog"%index)
-
-    if whiten:
-        if 'noise_pad' in kwargs and not kwargs['noise_pad']:
-            raise ValueError("RealGalaxy with whiten=True must also have noise_pad=True")
-        elif 'noise_pad' not in kwargs:
-            kwargs['noise_pad'] = True
 
     gal = galsim.RealGalaxy(real_cat, **kwargs)
 

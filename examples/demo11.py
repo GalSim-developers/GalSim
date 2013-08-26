@@ -23,7 +23,7 @@ New features introduced in this demo:
 
 - psf = galsim.InterpolatedImage(psf_filename, dx, flux)
 - tab = galsim.LookupTable(file)
-- gal = galsim.RealGalaxy(..., noise_pad=True)
+- gal = galsim.RealGalaxy(..., noise_pad_size)
 - ps = galsim.PowerSpectrum(..., units)
 - distdev = galsim.DistDeviate(rng, function, x_min, x_max)
 - gal.applyLensing(g1, g2, mu)
@@ -205,27 +205,23 @@ def main(argv):
 
         # If we haven't made this galaxy yet, we need to do so.
         if gal is None:
-            # The new noise_pad=True option here means that when the real galaxy image is 
-            # extrapolated beyond the original extent of the image in the catalog, it gets padded 
-            # with the same noise as was present in the original image.  This is important
-            # to do when you are planning to whiten the resulting image, otherwise the areas
-            # that were padded won't have the correct noise after whitening.
-
-            # Furthermore, when whitening, the padding has to be large enough that the padded 
-            # image is larger than the postage stamp onto which we will be drawing. (Otherwise, 
-            # the noise whitening won't work correctly.) This is a bit complicated for the code to 
-            # figure out on its own, espeicially with the possibility of compound objects,
-            # dilations, shears, etc.  So we require the user to provide the minimum size to use 
-            # for padding with the min_pad_size parameter.
-
+            # When whitening the image, we need to make sure the original correlated noise is
+            # present throughout the whole image, otherwise the whitening will do the wrong thing
+            # to the parts of the image that don't include the original image.  The RealGalaxy
+            # stores the correct noise profile to use as the gal.noise attribute.  This noise
+            # profile is automatically updated as we shear, dilate, convolve, etc.  But we need to 
+            # tell it how large to pad with this noise by hand.  This is a bit complicated for the 
+            # code to figure out on its own, so we have to supply the size for noise padding 
+            # with the noise_pad_size parameter.
+        
             # In this case, the postage stamp will be 20 arcsec. The dilation might be as much as a 
             # factor of 3^2.5 = 15.6. The shear and magnification are not significant, but the 
             # image can be rotated, which adds an extra factor of sqrt(2). So the net required 
-            # pad_size is
-            #     min_pad_size = 20 * 15.6 * sqrt(2) = 441
+            # padded size is
+            #     noise_pad_size = 20 * 15.6 * sqrt(2) = 441
             # We round this up to 500 to be safe.
-            gal = galsim.RealGalaxy(real_galaxy_catalog, rng=ud, id=id_list[index], noise_pad=True,
-                                    min_pad_size=500) 
+            gal = galsim.RealGalaxy(real_galaxy_catalog, rng=ud, id=id_list[index],
+                                    noise_pad_size=500) 
             # Save it for next time we use this galaxy.
             gal_list[index] = gal
 
@@ -294,7 +290,6 @@ def main(argv):
         time2 = time.time()
         tot_time = time2-time1
         logger.info('Galaxy %d: position relative to corner = %s, t=%f s', k, str(pos), tot_time)
-        #sys.exit()
 
     # Add correlated noise to the image -- the correlation function comes from the HST COSMOS images
     # and is described in more detail in the galsim.correlatednoise.getCOSMOSNoise() docstring.

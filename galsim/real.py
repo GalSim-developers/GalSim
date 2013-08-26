@@ -60,7 +60,7 @@ class RealGalaxy(GSObject):
     
         real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index=None, id=None, random=False, 
                                         rng=None, x_interpolant=None, k_interpolant=None,
-                                        flux=None, pad_factor=0, min_pad_size=0, noise_pad=False)
+                                        flux=None, pad_factor=0, noise_pad_size=0)
 
     This initializes real_galaxy with three InterpolatedImage objects (one for the deconvolved
     galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
@@ -102,17 +102,12 @@ class RealGalaxy(GSObject):
                                 default value, 4.  We strongly recommend leaving this parameter at
                                 its default value; see text above for details.
                                 [Default `pad_factor = 0`.]
-    @param min_pad_size         Minimum size to pad image.  Only relevant if larger than 
-                                pad_factor * size of original image.  This is important if you 
-                                are planning to whiten the resulting image.  You want to make sure
-                                that the padded image is larger than the postage stamp onto which
-                                you are drawing this object.  [Default `min_pad_size = 0`.]
-    @param noise_pad            Pad the Interpolated image with zeros, or with noise of a level 
-                                specified in the training dataset?  
-                                    Use `noise_pad = False` if you wish to pad with zeros.
-                                    Use `noise_pad = True` if you wish to pad with the noise
-                                        specified in the RealGalaxyCatalog for this object.
-                                [default `noise_pad = False`]
+    @param noise_pad_size       If provided, the image will be padded out to this size with the
+                                noise specified in the real galaxy catalog. This is important if 
+                                you are planning to whiten the resulting image.  You want to make 
+                                sure that the padded image is larger than the postage stamp onto 
+                                which you are drawing this object.  
+                                [Default `noise_pad_size = None`.]
     @param gsparams             You may also specify a gsparams argument.  See the docstring for
                                 galsim.GSParams using help(galsim.GSParams) for more information
                                 about this option.
@@ -129,8 +124,7 @@ class RealGalaxy(GSObject):
                     "k_interpolant" : str ,
                     "flux" : float ,
                     "pad_factor" : float,
-                    "min_pad_size" : int,
-                    "noise_pad" : bool
+                    "noise_pad_size" : int,
                   }
     _single_params = [ { "index" : int , "id" : str } ]
     _takes_rng = True
@@ -138,7 +132,7 @@ class RealGalaxy(GSObject):
     # --- Public Class methods ---
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
                  rng=None, x_interpolant=None, k_interpolant=None, flux=None, pad_factor=0,
-                 min_pad_size=0, noise_pad=False, gsparams=None):
+                 noise_pad_size=0, gsparams=None):
 
         import pyfits
         import numpy as np
@@ -165,9 +159,9 @@ class RealGalaxy(GSObject):
             raise AttributeError('No method specified for selecting a galaxy!')
 
         # read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors.
-        gal_image = real_galaxy_catalog.getGal(use_index)
-        PSF_image = real_galaxy_catalog.getPSF(use_index)
-        noise = real_galaxy_catalog.getNoise(use_index, rng, gsparams)
+        self.gal_image = real_galaxy_catalog.getGal(use_index)
+        self.PSF_image = real_galaxy_catalog.getPSF(use_index)
+        self.noise = real_galaxy_catalog.getNoise(use_index, rng, gsparams)
 
         # save any other relevant information as instance attributes
         self.catalog_file = real_galaxy_catalog.file_name
@@ -175,14 +169,14 @@ class RealGalaxy(GSObject):
         self.pixel_scale = float(real_galaxy_catalog.pixel_scale[use_index])
 
         # Convert noise_pad to the right noise to pass to InterpolatedImage
-        if noise_pad:
-            noise_pad = noise
+        if noise_pad_size:
+            noise_pad = self.noise
         else:
             noise_pad = 0.
 
         # Build the InterpolatedImage of the PSF.
         self.original_PSF = galsim.InterpolatedImage(
-            PSF_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant, 
+            self.PSF_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant, 
             flux=1.0, dx=self.pixel_scale, gsparams=gsparams)
 
         # Build the InterpolatedImage of the galaxy.
@@ -190,8 +184,8 @@ class RealGalaxy(GSObject):
         # (Otherwise, low surfact brightness galaxies can get a spuriously high stepk, which
         # leads to problems.)
         self.original_image = galsim.InterpolatedImage(
-                gal_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant,
-                dx=self.pixel_scale, pad_factor=pad_factor, min_pad_size=min_pad_size,
+                self.gal_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant,
+                dx=self.pixel_scale, pad_factor=pad_factor, noise_pad_size=noise_pad_size,
                 calculate_stepk=self.original_PSF.stepK(),
                 noise_pad=noise_pad, rng=rng, gsparams=gsparams)
 
@@ -206,8 +200,7 @@ class RealGalaxy(GSObject):
             self, galsim.Convolve([self.original_image, psf_inv], gsparams=gsparams))
 
         # Save the noise in the image as an accessible attribute
-        noise.convolveWith(psf_inv, gsparams)
-        self.noise = noise
+        self.noise.convolveWith(psf_inv, gsparams)
 
     def getHalfLightRadius(self):
         raise NotImplementedError("Half light radius calculation not implemented for RealGalaxy "
