@@ -13,8 +13,11 @@ Changes from v0.5 to current version:
   Convolve, and such automatically keep this updated so the final object also knows the current
   noise profile so it can be appropriately whitened.  (Issue #430)
 
-* Added option to set a minimum pad size for RealGalaxy.  Required to make sure whitening will
-  work correctly.  (Issue #430)
+* Changed the noise padding options for RealGalaxy and InterpolatedImage somewhat.  Now there is
+  a parameter `noise_pad_size` which (optionally) sets a minimum size to pad out the image with
+  the same noise as is in the main image.  This is required to make sure whitening will work
+  correctly.  (Outside of this noise padding, `pad_factor` still sets the amount of zero-padding
+  to use to remove the ghost images in the FFT.)  (Issue #430)
 
 * Added whiten option to config for RealGalaxy objects to whiten the image.  (Issue #430)
 
