@@ -102,17 +102,12 @@ class RealGalaxy(GSObject):
                                 default value, 4.  We strongly recommend leaving this parameter at
                                 its default value; see text above for details.
                                 [Default `pad_factor = 0`.]
-    @param min_pad_size         Minimum size to pad image.  Only relevant if larger than 
-                                pad_factor * size of original image.  This is important if you 
-                                are planning to whiten the resulting image.  You want to make sure
-                                that the padded image is larger than the postage stamp onto which
-                                you are drawing this object.  [Default `min_pad_size = 0`.]
-    @param noise_pad            Pad the Interpolated image with zeros, or with noise of a level 
-                                specified in the training dataset?  
-                                    Use `noise_pad = False` if you wish to pad with zeros.
-                                    Use `noise_pad = True` if you wish to pad with the noise
-                                        specified in the RealGalaxyCatalog for this object.
-                                [default `noise_pad = False`]
+    @param noise_pad_size       If provided, the image will be padded out to this size with the
+                                noise specified in the real galaxy catalog. This is important if 
+                                you are planning to whiten the resulting image.  You want to make 
+                                sure that the padded image is larger than the postage stamp onto 
+                                which you are drawing this object.  
+                                [Default `noise_pad_size = None`.]
     @param gsparams             You may also specify a gsparams argument.  See the docstring for
                                 galsim.GSParams using help(galsim.GSParams) for more information
                                 about this option.
@@ -129,8 +124,7 @@ class RealGalaxy(GSObject):
                     "k_interpolant" : str,
                     "flux" : float ,
                     "pad_factor" : float,
-                    "min_pad_size" : int,
-                    "noise_pad" : bool
+                    "noise_pad_size" : int,
                   }
     _single_params = [ { "index" : int , "id" : str } ]
     _takes_rng = True
@@ -138,7 +132,7 @@ class RealGalaxy(GSObject):
     # --- Public Class methods ---
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
                  rng=None, x_interpolant=None, k_interpolant=None, flux=None, pad_factor=0,
-                 min_pad_size=0, noise_pad=False, gsparams=None):
+                 noise_pad_size=0, gsparams=None):
 
         import pyfits
         import numpy as np
@@ -175,7 +169,7 @@ class RealGalaxy(GSObject):
         self.pixel_scale = float(real_galaxy_catalog.pixel_scale[use_index])
 
         # Convert noise_pad to the right noise to pass to InterpolatedImage
-        if noise_pad:
+        if noise_pad_size:
             noise_pad = self.noise
         else:
             noise_pad = 0.
@@ -191,7 +185,7 @@ class RealGalaxy(GSObject):
         # leads to problems.)
         self.original_image = galsim.InterpolatedImage(
                 self.gal_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant,
-                dx=self.pixel_scale, pad_factor=pad_factor, min_pad_size=min_pad_size,
+                dx=self.pixel_scale, pad_factor=pad_factor, noise_pad_size=noise_pad_size,
                 calculate_stepk=self.original_PSF.stepK(),
                 noise_pad=noise_pad, rng=rng, gsparams=gsparams)
 
