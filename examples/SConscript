@@ -2,7 +2,7 @@
 
 # Note: We don't require or recommend running scons examples anymore.
 # However, it will still work and will create executable versions of these
-# examples in the GalSim/bin directory.
+# examples in the GalSim/examples_bin directory.
 
 import SCons
 import os
@@ -28,8 +28,8 @@ if 'install' in COMMAND_LINE_TARGETS:
 else:
     AddRPATH(env1,Dir('#lib').abspath)
 
-int_example = env1.Program(os.path.join('#bin','int_example'), 'IntExample.cpp')
-test_random = env1.Program(os.path.join('#bin','test_random'), 'testRandom.cpp')
+int_example = env1.Program(os.path.join('#examples_bin','int_example'), 'IntExample.cpp')
+test_random = env1.Program(os.path.join('#examples_bin','test_random'), 'testRandom.cpp')
 
 targets = [ int_example, test_random ]
 
@@ -41,7 +41,7 @@ scripts = [ 'demo1', 'demo2', 'demo3', 'demo4', 'demo5',
             'Shera', 'ShootInterpolated', 'TestOpticalPSFInterpolant', 'TestImages' ]
 
 for script in scripts:
-    exec_script = env.ExecScript(os.path.join('#bin',script), script + '.py')
+    exec_script = env.ExecScript(os.path.join('#examples_bin',script), script + '.py')
     # SCons isn't clever enough to realize that these need to be rebuilt if the PYTHON
     # value changes.  And since they are quick to build, might as well always do them 
     # whenever someone runs scons examples.

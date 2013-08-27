@@ -402,6 +402,15 @@ GalSim in Python.  To run these scripts, type (e.g.):
 
     python demo1.py
 
+You can also create executable versions of these scripts if you prefer by typing
+
+    scons examples
+
+This will put executable versions (with the first line '#!/bin/env python') in
+the GalSim/examples_bin directory.  (We do not include that first line by
+default, since you might specify a different python to be used.  Running
+`scons examples` will put whatever python executable you specify after '#!'.)
+
 There are also a corresponding set of config files:
 
     demo1.yaml, demo2.yaml, ...
