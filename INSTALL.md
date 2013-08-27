@@ -620,11 +620,7 @@ You can list these options from the command line with
    bit of performance, you can set this to False.
 
 * `WARN` (False) specifies whether to add warning compiler flags such as 
-   `-Wall`.  Developers should set this to True and fix everything that comes 
-   up as a warning (on both `g++` and `icpc`).  However, end users can leave
-   it as False in case their compiler is a stickler for something that did not
-   get caught in development.  TODO: Move this prescription that developers 
-   should set it to True somewhere else. Maybe in the credo.txt file?
+   `-Wall`.
 
 * `PYTHON` (/usr/bin/env python) specifies which version of Python you are 
    planning to use GalSim with.  If you choose not to use the default here, 
