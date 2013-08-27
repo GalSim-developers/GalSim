@@ -1,5 +1,9 @@
 # vim: set filetype=python :
 
+# Note: We don't require or recommend running scons examples anymore.
+# However, it will still work and will create executable versions of these
+# examples in the GalSim/bin directory.
+
 import SCons
 import os
 
@@ -26,9 +30,8 @@ else:
 
 int_example = env1.Program(os.path.join('#bin','int_example'), 'IntExample.cpp')
 test_random = env1.Program(os.path.join('#bin','test_random'), 'testRandom.cpp')
-sizeof_SIFD = env1.Program(os.path.join('#bin','sizeof_SIFD'), 'sizeof_SIFD.cpp')
 
-targets = [ int_example, test_random, sizeof_SIFD ]
+targets = [ int_example, test_random ]
 
 # Also build executable versions of the demo scripts:
 scripts = [ 'demo1', 'demo2', 'demo3', 'demo4', 'demo5',
@@ -50,7 +53,7 @@ env.Alias(target='examples',source=targets)
 
 # I think we don't actually want to install the example programs.
 # But here is how we would do it for real programs that the user will want
-# to have installed:
+# to have installed.  To actually do this, type `scons install examples`.
 if 'install' in COMMAND_LINE_TARGETS:
 
     installed_bin = env1.Install(dir=bin_install_dir, source=targets)
