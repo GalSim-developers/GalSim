@@ -102,9 +102,7 @@ def main(argv):
  
     # Read in galaxy catalog
     cat_file_name = 'real_galaxy_catalog_example.fits'
-    # This script is designed to be run from the examples directory so dir is a relative path.  
-    # But the '../examples/' part lets bin/demo10 also be run from the bin directory.
-    dir = '../examples/data'
+    dir = 'data'
     real_galaxy_catalog = galsim.RealGalaxyCatalog(cat_file_name, dir=dir)
     real_galaxy_catalog.preload()
     logger.info('Read in %d real galaxies from catalog', real_galaxy_catalog.nobjects)
