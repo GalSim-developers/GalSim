@@ -43,6 +43,7 @@ that.
 import galsim
 import os
 import math
+import galsim.des
 
 def main(argv):
     # For the file names, I pick a particular exposure.  The directory structure corresponds 
@@ -140,7 +141,9 @@ def main(argv):
             dx = x-ix
             dy = y-iy
             image_pos = galsim.PositionD(x,y)
-            print '    pos = ',image_pos
+            #print '    pos = ',image_pos
+            sys.stdout.write('.')
+            sys.stdout.flush()
 
             # Also get the flux of the galaxy from the catalog
             flux = cat.getFloat(k,flux_col)
@@ -206,6 +209,7 @@ def main(argv):
             else:
                 pass
                 #print '...not in fitpsf.bounds'
+        print
 
         # Add background level
         psfex_image += sky_level
