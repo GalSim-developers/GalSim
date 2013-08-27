@@ -67,7 +67,7 @@ These should installed onto your Python system so that they can be imported by:
 
     >>> import numpy
     >>> import pyfits
-    >>> import yaml [ if using the galsim_yaml executable or otherwise plan to
+    >>> import yaml [ if using the galsim executable or otherwise plan to
                       parse .yaml configuration files ]
 
 within Python.  You can test this by loading up the Python interpreter for the
@@ -406,7 +406,7 @@ GalSim in Python.
 There are also a corresponding set of config files:
     demo1.yaml, demo2.yaml, ...
 
-These files can be run using the executable galsim_yaml, and will produce the
+These files can be run using the executable galsim, and will produce the
 same output images as the Python scripts. They are also well commented, and
 can be considered a parallel tutorial for learning the config file usage of
 GalSim.
@@ -463,17 +463,16 @@ in an interactive Python session, you should run `/sw/bin/python2.7` (simply
 always change your `PATH` environment variable to make the fink Python the 
 system default if you wish...)
 
-2. The executables `galsim_yaml` and `galsim_json`, which parse YAML and JSON 
-configuration files, will be installed in `/sw/bin`.  You should not need to do
-anything special to use these, since `/sw/bin` should already be in your path if
-using fink.
+2. The executable `galsim`, which parses YAML or JSON configuration files, 
+will be installed in `/sw/bin`.  You should not need to do anything special 
+to use these, since `/sw/bin` should already be in your path if using fink.
 
 3. If you want to run through the example scripts (such as the demo tutorials 
 `demo1.py`, `demo2.py` etc. and the `.yaml` and `.json` config versions of the 
 same demos), you will still need to download the GalSim tarball.  But you can 
 skip all the instructions above about installation and just use the fink 
 version.  So `python2.7 demo1.py` (assuming `which python2.7` is the fink one) 
-and `galsim_yaml demo1.yaml` should run those scripts for you.   
+and `galsim demo1.yaml` should run those scripts for you.   
 
 4. At the end of the fink installation, there will be a WARNING message.  Just 
 ignore it.  It happens because fink installs things a bit differently from how 

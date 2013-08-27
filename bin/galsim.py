@@ -55,7 +55,7 @@ def parse_args():
     """
 
     # Short description strings common to both parsing mechanisms
-    description = "galsim_yaml: configuration file parser for GalSim"
+    description = "galsim: configuration file parser for GalSim.\nVersion %s"%galsim.version
     epilog = "Works with both YAML and JSON markup formats."
     
     try:
@@ -85,7 +85,7 @@ def parse_args():
         import optparse
 
         # Usage string not automatically generated for optparse, so generate it
-        usage = """Usage: galsim_yaml [-h] [-v {0,1,2,3}] [-l LOG_FILE] [-f file_type] 
+        usage = """Usage: galsim [-h] [-v {0,1,2,3}] [-l LOG_FILE] [-f file_type] 
                    [-m module] config_file [config_file ...]
         """
         # Build the parser
@@ -115,7 +115,7 @@ def parse_args():
             args.config_file = posargs
         else:
             print usage
-            sys.exit('galsim_yaml: error: too few arguments')
+            sys.exit('galsim: error: too few arguments')
 
     # Return the args
     return args
@@ -136,7 +136,7 @@ def main():
         logging.basicConfig(format="%(message)s", level=logging_level, stream=sys.stdout)
     else:
         logging.basicConfig(format="%(message)s", level=logging_level, filename=args.log_file)
-    logger = logging.getLogger('galsim_yaml')
+    logger = logging.getLogger('galsim')
     
     # Determine the file type from the extension if necessary:
     if args.file_type is None:
