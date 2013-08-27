@@ -141,7 +141,7 @@ lib_targets = [lib]
 Default(lib_targets)
 
 tools = [ 'sizeof_SIFD' ]
-tool_targets = [ env.Program(os.path.join('#bin/',tool), tool + '.cpp') for tool in tools ]
+tool_targets = [ env1.Program(os.path.join('#bin/',tool), tool + '.cpp') for tool in tools ]
 
 # These don't need to be installed.  Leave them in the GalSim/bin directory.
 Default(tool_targets)

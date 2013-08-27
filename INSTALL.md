@@ -388,33 +388,35 @@ install it, you can run all the Python tests with the script run_all_tests in
 the tests directory. If this finishes without an error, then all the tests
 have passed.
 
-There are also some example executables that come with GalSim, and will be
-useful for testing and development particularly outside the Python layer. These
-can be built by typing
 
-    scons examples
+4. Running example scripts
+==========================
 
-The executables will then be visible in `GalSim/bin/`.
+The examples directory has a series of demo scripts:
 
-The examples directory also has a series of demo scripts:
     demo1.py, demo2.py, ...
 
 These can be considered a tutorial on getting up to speed with GalSim. Reading
 through these in order will introduce you to how to use most of the features of
-GalSim in Python.
+GalSim in Python.  To run these scripts, type (e.g.):
+
+    python demo1.py
 
 There are also a corresponding set of config files:
+
     demo1.yaml, demo2.yaml, ...
 
 These files can be run using the executable galsim, and will produce the
-same output images as the Python scripts. They are also well commented, and
-can be considered a parallel tutorial for learning the config file usage of
-GalSim.
+same output images as the Python scripts:
 
-All demo scripts are designed to be run in the `GalSim/examples` directory. Or,
-the executable versions of the demos in `GalSim/bin` (which are the outputs of
-running `scons examples`) can be run from either `GalSim/bin` or
-`GalSim/examples`. 
+    galsim demo1.yaml
+
+They are also well commented, and can be considered a parallel tutorial for 
+learning the config file usage of GalSim.
+
+All demo scripts are designed to be run in the `GalSim/examples` directory.
+Some of them access files in subdirectoried of the examples directory, so they
+would not work correctly from other locations.
 
 
 4. Platform-specific notes
