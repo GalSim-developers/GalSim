@@ -22,8 +22,18 @@ in a configuration file.
 """
 
 import sys
-import os
+
+# The only wrinkle about letting this executable be called galsim is that we want to
+# make sure that `import galsim` doesn't import itself.  We want it to import the real
+# galsim module of course.  So the solution is to get rid of the current directory
+# from python's default search path
+temp = sys.path[0]
+sys.path = sys.path[1:]
 import galsim
+# Now put it back in case anyone else relies on this feature.
+sys.path = [temp] + sys.path
+
+import os
 import logging
 import copy
 
