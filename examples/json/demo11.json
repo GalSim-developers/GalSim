@@ -83,14 +83,14 @@
     "#" : "In this case, the postage stamp will be 20 arcsec. The dilation might be as much as a ",
     "#" : "factor of 3^2.5 = 15.6. The shear and magnification are not significant, but the image ",
     "#" : "can be rotated, which adds an extra factor of sqrt(2). So the net required pad_size is",
-    "#" : "    noise_pad_size = 20 * 15.6 * sqrt(2) = 441",
-    "#" : "We round this up to 500 to be safe.",
+    "#" : "    noise_pad_size = 20 * 15.6 * sqrt(2) * 0.2 arcsec/pixel = 88",
+    "#" : "We round this up to 100 to be safe.",
     "items" : [
-        { "type" : "RealGalaxy", "id" : 106416, "whiten" : "true", "noise_pad_size" : 500 },
-        { "type" : "RealGalaxy", "id" : 106731, "whiten" : "true", "noise_pad_size" : 500 },
-        { "type" : "RealGalaxy", "id" : 108402, "whiten" : "true", "noise_pad_size" : 500 },
-        { "type" : "RealGalaxy", "id" : 116045, "whiten" : "true", "noise_pad_size" : 500 },
-        { "type" : "RealGalaxy", "id" : 116448, "whiten" : "true", "noise_pad_size" : 500 }
+        { "type" : "RealGalaxy", "id" : 106416, "whiten" : "true", "noise_pad_size" : 100 },
+        { "type" : "RealGalaxy", "id" : 106731, "whiten" : "true", "noise_pad_size" : 100 },
+        { "type" : "RealGalaxy", "id" : 108402, "whiten" : "true", "noise_pad_size" : 100 },
+        { "type" : "RealGalaxy", "id" : 116045, "whiten" : "true", "noise_pad_size" : 100 },
+        { "type" : "RealGalaxy", "id" : 116448, "whiten" : "true", "noise_pad_size" : 100 }
     ],
     "index" : { "type" : "Random" },
     "#" : "Note: we could also have set the main gal type to RealGalaxy and had id be a list with",

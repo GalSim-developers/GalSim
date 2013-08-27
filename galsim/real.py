@@ -102,11 +102,11 @@ class RealGalaxy(GSObject):
                                 default value, 4.  We strongly recommend leaving this parameter at
                                 its default value; see text above for details.
                                 [Default `pad_factor = 0`.]
-    @param noise_pad_size       If provided, the image will be padded out to this size with the
-                                noise specified in the real galaxy catalog. This is important if 
-                                you are planning to whiten the resulting image.  You want to make 
-                                sure that the padded image is larger than the postage stamp onto 
-                                which you are drawing this object.  
+    @param noise_pad_size       If provided, the image will be padded out to this size (in arcsec)
+                                with the noise specified in the real galaxy catalog. This is 
+                                important if you are planning to whiten the resulting image.  You 
+                                want to make sure that the padded image is larger than the postage 
+                                stamp onto which you are drawing this object.  
                                 [Default `noise_pad_size = None`.]
     @param gsparams             You may also specify a gsparams argument.  See the docstring for
                                 galsim.GSParams using help(galsim.GSParams) for more information
@@ -124,7 +124,7 @@ class RealGalaxy(GSObject):
                     "k_interpolant" : str,
                     "flux" : float ,
                     "pad_factor" : float,
-                    "noise_pad_size" : int,
+                    "noise_pad_size" : float,
                   }
     _single_params = [ { "index" : int , "id" : str } ]
     _takes_rng = True

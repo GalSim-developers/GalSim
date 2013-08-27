@@ -102,6 +102,7 @@ def test_gaussian():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
 def test_moffat():
     """Test various ways to build a Moffat
     """
@@ -170,6 +171,7 @@ def test_moffat():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
 def test_airy():
     """Test various ways to build a Airy
     """
@@ -231,9 +233,9 @@ def test_airy():
     except ImportError:
         print 'The assert_raises tests require nose'
 
-
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_kolmogorov():
     """Test various ways to build a Kolmogorov
@@ -292,9 +294,9 @@ def test_kolmogorov():
     except ImportError:
         print 'The assert_raises tests require nose'
 
-
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_opticalpsf():
     """Test various ways to build a OpticalPSF
@@ -360,9 +362,9 @@ def test_opticalpsf():
     gal4b.applyShift(dx = 0.7, dy = -1.2) 
     gsobject_compare(gal4a, gal4b)
 
-
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_exponential():
     """Test various ways to build a Exponential
@@ -423,9 +425,9 @@ def test_exponential():
     except ImportError:
         print 'The assert_raises tests require nose'
 
-
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_sersic():
     """Test various ways to build a Sersic
@@ -501,9 +503,9 @@ def test_sersic():
     except ImportError:
         print 'The assert_raises tests require nose'
 
-
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_devaucouleurs():
     """Test various ways to build a DeVaucouleurs
@@ -564,10 +566,9 @@ def test_devaucouleurs():
     except ImportError:
         print 'The assert_raises tests require nose'
 
-
-
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_pixel():
     """Test various ways to build a Pixel
@@ -640,6 +641,7 @@ def test_pixel():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
 def test_realgalaxy():
     """Test various ways to build a RealGalaxy
     """
@@ -668,9 +670,9 @@ def test_realgalaxy():
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
                    'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } 
                  },
-        'gal5' : { 'type' : 'RealGalaxy' , 'index' : 41, 'noise_pad_size' : 500 },
+        'gal5' : { 'type' : 'RealGalaxy' , 'index' : 41, 'noise_pad_size' : 15 },
         'gal6' : { 'type' : 'RealGalaxy' , 'index' : 32, 'whiten' : True, 'pad_factor' : 5 },
-        'gal7' : { 'type' : 'RealGalaxy' , 'index' : 32, 'whiten' : True, 'noise_pad_size' : 500 }
+        'gal7' : { 'type' : 'RealGalaxy' , 'index' : 32, 'whiten' : True, 'noise_pad_size' : 15 }
     }
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
@@ -717,7 +719,7 @@ def test_realgalaxy():
 
     config['seq_index'] = 4
     gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
-    gal5b = galsim.RealGalaxy(real_cat, index = 41, rng = rng, noise_pad_size = 500)
+    gal5b = galsim.RealGalaxy(real_cat, index = 41, rng = rng, noise_pad_size = 15)
     gsobject_compare(gal5a, gal5b, conv=conv)
 
     config['seq_index'] = 5
@@ -730,7 +732,7 @@ def test_realgalaxy():
 
     config['seq_index'] = 6
     gal7a = galsim.config.BuildGSObject(config, 'gal7')[0]
-    gal7b = galsim.RealGalaxy(real_cat, index = 32, rng = rng, noise_pad_size = 500)
+    gal7b = galsim.RealGalaxy(real_cat, index = 32, rng = rng, noise_pad_size = 15)
     gsobject_compare(gal7a, gal7b, conv=conv)
     gsobject_compare(gal7a.noise._profile, gal7b.noise._profile, conv=conv)
     
@@ -919,7 +921,6 @@ def test_add():
     except ImportError:
         print 'The assert_raises tests require nose'
 
-
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -1037,7 +1038,6 @@ def test_convolve():
     except ImportError:
         print 'The assert_raises tests require nose'
 
-
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -1124,6 +1124,7 @@ def test_list():
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_ring():
     """Test building a GSObject from a ring test:
@@ -1254,7 +1255,6 @@ def test_ring():
                                  conv=galsim.Gaussian(sigma=1))
     except ImportError:
         print 'The assert_raises tests require nose'
-
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

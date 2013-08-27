@@ -217,10 +217,10 @@ def main(argv):
             # factor of 3^2.5 = 15.6. The shear and magnification are not significant, but the 
             # image can be rotated, which adds an extra factor of sqrt(2). So the net required 
             # padded size is
-            #     noise_pad_size = 20 * 15.6 * sqrt(2) = 441
-            # We round this up to 500 to be safe.
+            #     noise_pad_size = 20 * 15.6 * sqrt(2) * 0.2 arcsec/pixel = 88
+            # We round this up to 100 to be safe.
             gal = galsim.RealGalaxy(real_galaxy_catalog, rng=ud, id=id_list[index],
-                                    noise_pad_size=500) 
+                                    noise_pad_size=100) 
             # Save it for next time we use this galaxy.
             gal_list[index] = gal
 
