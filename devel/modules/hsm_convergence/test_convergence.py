@@ -19,7 +19,7 @@ dirname_figs = 'figures'
 def getGSObjectSersicsSample(i):
     """
     Gets all the objects needed to draw images of Sersic galaxy with index i, supplied in the Sersics sample.
-    Requiers a global sersic_sample_catalog to be initialised earlier.
+    Requires a global sersic_sample_catalog to be initialised earlier.
     Returns gso containig fields 'gal','psf','pix','galpsf'.
     The PSF used here can be either 'ground' or 'space', 
     is configured in the config['sersics_sample']['psf_type'].

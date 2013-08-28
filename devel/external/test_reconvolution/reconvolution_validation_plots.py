@@ -164,7 +164,7 @@ def PlotStatsForParam(config,param_name):
     
 def _getLineFit(X,y,sig):
         """
-        @brief get linear least squares fit with uncertainity estimates
+        @brief get linear least squares fit with uncertainty estimates
         y(X) = b*X + a
         see numerical recipies 15.2.9
         @param X    function arguments 

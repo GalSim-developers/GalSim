@@ -1,4 +1,4 @@
-# if you want, use less galaxies
+# if you want, use fewer galaxies
 n_gals: &n_gals 3
 
 # settings for the photon_vs_fft
@@ -74,7 +74,7 @@ image :
     noise :
         type : Gaussian
         sigma : 0.         
-    # at this point specify the defaults, but if has to be specified here if will be changed later
+    # at this point specify the defaults, but it has to be specified here if will be changed later
     # using vary_params
     gsparams :
          minimum_fft_size : 128      

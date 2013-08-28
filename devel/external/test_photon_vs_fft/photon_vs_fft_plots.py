@@ -1,5 +1,5 @@
 """@file photon_vs_fft_plots.py 
-Create various plot from data produced by photon_vs_fft.py.
+Create various plots from data produced by photon_vs_fft.py.
 """
 
 import logging
@@ -160,9 +160,9 @@ def PlotStatsForParam(config,param_name):
 
 def _getLineFit(X,y,sig):
         """
-        @brief get linear least squares fit with uncertainity estimates
+        @brief get linear least squares fit with uncertainty estimates
         y(X) = b*X + a
-        see numerical recipies 15.2.9
+        see numerical recipes 15.2.9
         @param X    function arguments 
         @param y    function values
         @param sig  function values standard deviations   
