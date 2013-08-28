@@ -24,6 +24,9 @@ Changes from v0.5 to current version:
 * Added VariableGaussianNoise to apply Gaussian noise with a variable sigma across the image.
   (Issue #430)
 
+* Added `Current` type in config to use the current value of some other item in the config file
+  as part of a calculation.  Example of this is in demo11.yaml.  (Issue #430)
+
 * Added the offset parameter to the draw and drawShoot commands, and also to the constructor 
   of InterpolatedImage.  (Issue #439)
 
