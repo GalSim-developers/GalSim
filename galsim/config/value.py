@@ -65,6 +65,7 @@ def ParseValue(config, param_name, base, value_type):
     param = config[param_name]
     #print 'ParseValue for param_name = ',param_name,', value_type = ',str(value_type)
     #print 'param = ',param
+    #print 'seq_index = ',base.get('seq_index',0)
 
     # First see if we can assign by param by a direct constant value
     if isinstance(param, value_type):
@@ -91,7 +92,7 @@ def ParseValue(config, param_name, base, value_type):
         raise AttributeError(
             "%s.type attribute required in config for non-constant parameter %s."%(
                 param_name,param_name))
-    elif 'current_val' in param and param['current_seq_index'] == base['seq_index']:
+    elif 'current_val' in param and param['current_seq_index'] == base.get('seq_index',0):
         if param['current_value_type'] != value_type:
             raise ValueError(
                 "Attempt to parse %s multiple times with different value types"%param_name)
@@ -126,7 +127,7 @@ def ParseValue(config, param_name, base, value_type):
         # Save the current value for possible use the Current type
         param['current_val'] = val
         param['current_safe'] = safe
-        param['current_seq_index'] = base['seq_index']
+        param['current_seq_index'] = base.get('seq_index',0)
         param['current_value_type'] = value_type
         #print param_name,' = ',val
         return val, safe

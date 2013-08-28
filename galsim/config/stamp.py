@@ -265,6 +265,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             ysize = galsim.config.ParseValue(config['image'],'stamp_ysize',config,int)[0]
         elif 'stamp_size' in config['image']:
             ysize = galsim.config.ParseValue(config['image'],'stamp_size',config,int)[0]
+    #print 'xsize,ysize = ',xsize,ysize
 
     # Determine where this object is going to go:
     if 'image_pos' in config['image']:
@@ -314,6 +315,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
     else:
         icenter = None
         final_shift = galsim.PositionD(0.,0.)
+        #print 'no final_shift'
 
     gsparams = {}
     if 'gsparams' in config['image']:
