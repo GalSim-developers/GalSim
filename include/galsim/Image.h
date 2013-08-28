@@ -226,7 +226,7 @@ namespace galsim {
          *
          *  (x0,y0) becomes the new center of the image if the x and y ranges are odd.
          *  If the x range is even, then the new center will be x0 + 1/2.
-         *  Likewisw for y.
+         *  Likewise for y.
          *
          *  xmin_new = x0 - (xmax - xmin)/2
          *  xmax_new = xmin_new + xmax - xmin
@@ -415,7 +415,7 @@ namespace galsim {
      *  and the data in im2 will be copied to the sub-image of im1.
      *
      *  Also note that through the python interface, we can make an ImageView that
-     *  views a numpy array rather than anything that was creates as an Image.
+     *  views a numpy array rather than anything that was created as an Image.
      *  We have some tricky stuff in pysrc/Image.cpp to get the C++ shared_ptr to
      *  interact correctly with numpy's reference counting so the data are deleted
      *  when the last numpy array _or_ ImageView finally goes out of scope.
