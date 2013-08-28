@@ -74,7 +74,7 @@ def parse_args():
         
         # Build the parser and add arguments
         parser = argparse.ArgumentParser(description=description, add_help=True, epilog=epilog)
-        parser.add_argument('config_file', type=str, nargs='+', help='the configuration file(s)')
+        parser.add_argument('config_file', type=str, nargs='*', help='the configuration file(s)')
         parser.add_argument(
             '-v', '--verbosity', type=int, action='store', default=2, choices=(0, 1, 2, 3),
             help='integer verbosity level: min=0, max=3 [default=2]')
@@ -93,6 +93,10 @@ def parse_args():
             '-m', '--module', type=str, action='append', default=None, 
             help='python module to import before parsing config file')
         args = parser.parse_args()
+
+        if len(args.config_file) == 0 and not args.version:
+            print usage
+            sys.exit('galsim: error: too few arguments')
 
     except ImportError:
         # Use optparse instead
@@ -130,9 +134,12 @@ def parse_args():
         # Store the positional arguments in the args object as well:
         if len(posargs) >= 1:
             args.config_file = posargs
+        elif args.version:
+            pass
         else:
             print usage
             sys.exit('galsim: error: too few arguments')
+
     if args.version:
         print version_str
         sys.exit()
