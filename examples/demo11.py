@@ -93,9 +93,7 @@ def main(argv):
  
     # Read in galaxy catalog
     cat_file_name = 'real_galaxy_catalog_example.fits'
-    # This script is designed to be run from the examples directory so dir is a relative path.  
-    # But the '../examples/' part lets bin/demo11 also be run from the bin directory.
-    dir = '../examples/data'
+    dir = 'data'
     real_galaxy_catalog = galsim.RealGalaxyCatalog(cat_file_name, dir=dir)
     real_galaxy_catalog.preload()
     logger.info('Read in %d real galaxies from catalog', real_galaxy_catalog.nobjects)
@@ -128,7 +126,7 @@ def main(argv):
     # terms of ell and C_ell; ell is inverse radians and C_ell in radians^2.  Since GalSim tends to
     # work in terms of arcsec, we have to tell it that the inputs are radians^-1 so it can convert
     # to store in terms of arcsec^-1.
-    pk_file = os.path.join('..', 'examples', 'data','cosmo-fid.zmed1.00.out')
+    pk_file = os.path.join('data','cosmo-fid.zmed1.00.out')
     ps = galsim.PowerSpectrum(pk_file, units = galsim.radians)
     # The argument here is "e_power_function" which defines the E-mode power to use.
     logger.info('Set up power spectrum from tabulated P(k)')
@@ -142,7 +140,7 @@ def main(argv):
     # filename).  We want to read the image directly into an InterpolatedImage GSObject, so we can
     # manipulate it as needed (here, the only manipulation needed is convolution).  We want a PSF
     # with flux 1, and we can set the pixel scale using a keyword.
-    psf_file = os.path.join('..', 'examples', 'data','example_sdss_psf_sky0.fits.bz2')
+    psf_file = os.path.join('data','example_sdss_psf_sky0.fits.bz2')
     psf = galsim.InterpolatedImage(psf_file, dx = pixel_scale, flux = 1.)
     # We do not include a pixel response function galsim.Pixel here, because the image that was read
     # in from file already included it.
@@ -213,18 +211,19 @@ def main(argv):
             # code to figure out on its own, so we have to supply the size for noise padding 
             # with the noise_pad_size parameter.
         
-            # In this case, the postage stamp will be 20 arcsec. The dilation might be as much as a 
-            # factor of 3^2.5 = 15.6. The shear and magnification are not significant, but the 
-            # image can be rotated, which adds an extra factor of sqrt(2). So the net required 
-            # padded size is
-            #     noise_pad_size = 20 * 15.6 * sqrt(2) * 0.2 arcsec/pixel = 88
-            # We round this up to 100 to be safe.
+            # In this case, the postage stamp will be 100 pixels for the undilated galaxies. 
+            # We scale down the postage stamp size as we dilate the galaxies (otherwise we waste 
+            # a lot of CPU and memory by whitening a much larger image than we really need).
+            # The shear and magnification are not significant, but the image can be rotated, 
+            # which adds an extra factor of sqrt(2). So the net required padded size is
+            #     noise_pad_size = 100 * sqrt(2) * 0.2 arcsec/pixel = 28.2 arcsec
+            # We round this up to 30 to be safe.
             gal = galsim.RealGalaxy(real_galaxy_catalog, rng=ud, id=id_list[index],
-                                    noise_pad_size=100) 
+                                    noise_pad_size=30) 
             # Save it for next time we use this galaxy.
             gal_list[index] = gal
 
-        # Draw the size from a plausible size distribution: N(r) ~ r^-3.5
+        # Draw the size from a plausible size distribution: N(r) ~ r^-2.5
         # For this, we use the class DistDeviate which can draw deviates from an arbitrary
         # probability distribution.  This distribution can be defined either as a functional
         # form as we do here, or as tabulated lists of x and p values, from which the 
@@ -248,14 +247,14 @@ def main(argv):
         final = galsim.Convolve(psf, gal)
 
         # Account for the fractional part of the position:
-        x_nom = x+0.5 # Because stamp size is even!  See discussion in demo9.py
-        y_nom = y+0.5
-        ix_nom = int(math.floor(x_nom+0.5))
-        iy_nom = int(math.floor(y_nom+0.5))
-        offset = galsim.PositionD(x_nom-ix_nom, y_nom-iy_nom)
+        ix = int(math.floor(x+0.5))
+        iy = int(math.floor(y+0.5))
+        offset = galsim.PositionD(x-ix, y-iy)
 
-        # Draw it with our desired stamp size
-        stamp = galsim.ImageF(stamp_size,stamp_size)
+        # Draw it with our desired stamp size (scaled down by the dilation factor):
+        # Note: make stamp size odd to make the above calculation of the offset easier.
+        this_stamp_size = 2 * int(math.ceil(stamp_size / dilat / 2)) + 1
+        stamp = galsim.ImageF(this_stamp_size,this_stamp_size)
         final.draw(image=stamp, dx=pixel_scale, offset=offset)
 
         # Now we can whiten the noise on the postage stamp.
@@ -276,7 +275,7 @@ def main(argv):
         new_variance *= flux_scaling**2
 
         # Recenter the stamp at the desired position:
-        stamp.setCenter(ix_nom,iy_nom)
+        stamp.setCenter(ix,iy)
 
         # Find the overlapping bounds:
         bounds = stamp.bounds & full_image.bounds
@@ -294,7 +293,7 @@ def main(argv):
     # and is described in more detail in the galsim.correlatednoise.getCOSMOSNoise() docstring.
     # This function requires a FITS file, stored in the GalSim repository, that represents this
     # correlation information: the path to this file is a required argument. 
-    cf_file_name = os.path.join('..', 'examples', 'data', 'acs_I_unrot_sci_20_cf.fits')
+    cf_file_name = os.path.join('data', 'acs_I_unrot_sci_20_cf.fits')
 
     # Then use this to initialize the correlation function that we will use to add noise to the
     # full_image.  We set the dx_cosmos keyword equal to our pixel scale, so that the noise among
