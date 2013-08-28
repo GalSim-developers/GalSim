@@ -65,7 +65,8 @@ def parse_args():
     """
 
     # Short description strings common to both parsing mechanisms
-    description = "galsim: configuration file parser for GalSim.\nVersion %s"%galsim.version
+    version_str = "GalSim Version %s"%galsim.version
+    description = "galsim: configuration file parser for GalSim.\n" + version_str
     epilog = "Works with both YAML and JSON markup formats."
     
     try:
@@ -77,6 +78,9 @@ def parse_args():
         parser.add_argument(
             '-v', '--verbosity', type=int, action='store', default=2, choices=(0, 1, 2, 3),
             help='integer verbosity level: min=0, max=3 [default=2]')
+        parser.add_argument(
+            '--version', action='store_const', default=False, const=True,
+            help='show the version of GalSim and exit')
         parser.add_argument(
             '-l', '--log_file', type=str, action='store', default=None,
             help='filename for storing logging output [default is to stream to stdout]')
@@ -104,6 +108,9 @@ def parse_args():
         parser.add_option(
             '-v', '--verbosity', type="choice", action='store', choices=('0', '1', '2', '3'),
             default='2', help='integer verbosity level: min=0, max=3 [default=2]')
+        parser.add_argument(
+            '--version', action='store_const', default=False, const=True,
+            help='show the version of GalSim and exit')
         parser.add_option(
             '-l', '--log_file', type=str, action='store', default=None,
             help='filename for storing logging output [default is to stream to stdout]')
@@ -126,6 +133,10 @@ def parse_args():
         else:
             print usage
             sys.exit('galsim: error: too few arguments')
+    if args.version:
+        print version_str
+        sys.exit()
+        
 
     # Return the args
     return args
