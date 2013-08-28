@@ -140,11 +140,25 @@
 
     "nobjects" : 288,
 
-    "#" : "This time we use stamp_size to set the size of the postage stamp image for each object.",
-    "#" : "In demo9, we left it out, so GalSim automatically determined a good size for each ",
-    "#" : "object.  That's usually fine, but here we just want to demonstrate the stamp_size ",
-    "#" : "functionality.",
-    "stamp_size" : 100,
+    "#" : "This time we use stamp_size to set the size of the postage stamps.  In demo9, we left",
+    "#" : "it out, so GalSim automatically determined a good size for each object. That's usually",
+    "#" : "fine, but here we want to scale the stamp size by the same dilation we used for the",
+    "#" : "galaxies.  This makes sure the noise padding used for the RealGalaxy is large enough",
+    "#" : "that the whitening process whitens the entire postage stamp correctly.",
+
+    "#" : "To access the value of the dilation for the current galaxy, we use a new type: Current.",
+    "#" : "This lets you access current values of other keys in the config file.  In this case,",
+    "#" : "we want gal.dilation, which accesses the current value of that key for each galaxy.",
+
+    "#" : "We couple this with Eval to perform a calculation of the stamp size that matches the ",
+    "#" : "calculation in the python script, where we wanted the size to be odd to make it easier",
+    "#" : "to deal with the image offsets:",
+    "stamp_size" : {
+        "type" : "Eval",
+        "str" : "2 * int(math.ceil(base_stamp_size / dilat / 2)) + 1",
+        "ibase_stamp_size" : 100,
+        "fdilat" : { "type" : "Current", "key" : "gal.dilation" }
+    },
     
     "#" : "The default convention on positions is to follow the FITS standard where the lower left",
     "#" : "pixel is called (1,1).  However, this can be counter-intuitive to people more used",

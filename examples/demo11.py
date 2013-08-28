@@ -71,7 +71,10 @@ def main(argv):
     # Define some parameters we'll use below.
     # Normally these would be read in from some parameter file.
 
-    stamp_size = 100                  # number of pixels in each dimension of galaxy images
+    base_stamp_size = 100             # number of pixels in each dimension of galaxy images
+                                      # This will be scaled down according to the dilation.
+                                      # Hence the "base_" prefix.
+
     pixel_scale = 0.2                 # arcsec/pixel
     image_size = 0.2 * galsim.degrees # size of big image in each dimension
     image_size = int((image_size / galsim.arcsec) / pixel_scale) # convert to pixels
@@ -185,6 +188,18 @@ def main(argv):
         # The usual random number generator using a different seed for each galaxy.
         ud = galsim.UniformDeviate(random_seed+k)
 
+        # Draw the size from a plausible size distribution: N(r) ~ r^-2.5
+        # For this, we use the class DistDeviate which can draw deviates from an arbitrary
+        # probability distribution.  This distribution can be defined either as a functional
+        # form as we do here, or as tabulated lists of x and p values, from which the 
+        # function is interpolated.
+        # N.B. This calculation logically belongs later in the script, but given how the config 
+        #      structure works and the fact that we also use this value for the stamp size 
+        #      calculation, in order to get the output file to match the YAML output file, it
+        #      turns out this is where we need to put this use of the random number generator.
+        distdev = galsim.DistDeviate(ud, function=lambda x:x**-2.5, x_min=1, x_max=3)
+        dilat = distdev()
+
         # Choose a random position in the image
         x = ud()*(image_size-1)
         y = ud()*(image_size-1)
@@ -223,13 +238,7 @@ def main(argv):
             # Save it for next time we use this galaxy.
             gal_list[index] = gal
 
-        # Draw the size from a plausible size distribution: N(r) ~ r^-2.5
-        # For this, we use the class DistDeviate which can draw deviates from an arbitrary
-        # probability distribution.  This distribution can be defined either as a functional
-        # form as we do here, or as tabulated lists of x and p values, from which the 
-        # function is interpolated.
-        distdev = galsim.DistDeviate(ud, function=lambda x:x**-2.5, x_min=1, x_max=3)
-        dilat = distdev()
+        # Apply the dilation we calculated above.
         # Use createDilated rather than applyDilation, so we don't change the galaxies in the 
         # original gal_list -- createDilated makes a new copy.
         gal = gal.createDilated(dilat)
@@ -252,8 +261,8 @@ def main(argv):
         offset = galsim.PositionD(x-ix, y-iy)
 
         # Draw it with our desired stamp size (scaled down by the dilation factor):
-        # Note: make stamp size odd to make the above calculation of the offset easier.
-        this_stamp_size = 2 * int(math.ceil(stamp_size / dilat / 2)) + 1
+        # Note: We make the stamp size odd to make the above calculation of the offset easier.
+        this_stamp_size = 2 * int(math.ceil(base_stamp_size / dilat / 2)) + 1
         stamp = galsim.ImageF(this_stamp_size,this_stamp_size)
         final.draw(image=stamp, dx=pixel_scale, offset=offset)
 
