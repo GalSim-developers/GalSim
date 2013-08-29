@@ -404,7 +404,7 @@ def _GenerateFromFitsHeader(param, param_name, base, value_type):
 
     req = { 'key' : str }
     opt = { 'num' : int }
-    kwargs, safe1 = GetAllParams(param, param_name, base, req=req, opt=opt)
+    kwargs, safe = GetAllParams(param, param_name, base, req=req, opt=opt)
     key = kwargs['key']
 
     num = kwargs.get('num',0)

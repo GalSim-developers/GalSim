@@ -18,7 +18,7 @@
 #
 # This is a GalSim configuration file.  To run it, (using galsim v0.2 or later) do
 #
-#     galsim_yaml shear_test1.yaml
+#     galsim shear_test1.yaml
 #
 # It builds 15 files of galaxy images with tiled postage stamps where all the galaxies have the
 # same applied shear: (0.03, 0.02).
