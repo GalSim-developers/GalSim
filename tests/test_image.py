@@ -1446,7 +1446,7 @@ def test_Image_resize():
             xmin = int(ud() * 200) - 100
             ymin = int(ud() * 200) - 100
             xmax = xmin + shape[0] - 1
-            ymax = ymin + shape[0] - 1
+            ymax = ymin + shape[1] - 1
             b = galsim.BoundsI(xmin, xmax, ymin, ymax)
             im1.resize(b)
             im2.resize(b)
