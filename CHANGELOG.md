@@ -37,3 +37,4 @@ Changes from v0.5 to current version:
   now run `galsim -m des config_file`.  This also allows you to develop your own (external to 
   GalSim) module and use it with galsim.  Just use `galsim -m [your_module]` here.  (Issue #460)
 
+* Fixed bug in Image class resize function.  (Issue #461)

@@ -60,6 +60,7 @@ except ImportError:
 # Setup info for tests, not likely to change
 ntypes = 4
 types = [np.int16, np.int32, np.float32, np.float64]
+simple_types = [int, int, float, float]
 tchar = ['S', 'I', 'F', 'D']
 
 ncol = 7
@@ -1420,6 +1421,58 @@ def test_Image_subImage():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
+def test_Image_resize():
+    """Test that the Image resize function works correctly.
+    """
+    import time
+    t1 = time.time()
+
+    # Use a random number generator for some values here.
+    ud = galsim.UniformDeviate(515324)
+
+    for i in xrange(ntypes):
+
+        # im1 starts with basic constructor with a given size
+        array_type = types[i]
+        im1 = galsim.Image[array_type](5,5)
+
+        # im2 stars with null constructor
+        im2 = galsim.Image[array_type]()
+
+        # Resize to a bunch of different shapes (larger and smaller) to test reallocations
+        for shape in [ (10,10), (3,20), (21,8), (1,3), (13,30) ]:
+            # Have the xmin, ymin value be random numbers from -100..100:
+            xmin = int(ud() * 200) - 100
+            ymin = int(ud() * 200) - 100
+            xmax = xmin + shape[0] - 1
+            ymax = ymin + shape[1] - 1
+            b = galsim.BoundsI(xmin, xmax, ymin, ymax)
+            im1.resize(b)
+            im2.resize(b)
+
+            np.testing.assert_equal(
+                b, im1.bounds, err_msg="im1 has wrong bounds after resize to b = %s"%b)
+            np.testing.assert_equal(
+                b, im2.bounds, err_msg="im2 has wrong bounds after resize to b = %s"%b)
+            
+            # Fill the images with random numbers
+            for x in range(xmin,xmax+1):
+                for y in range(ymin,ymax+1):
+                    val = simple_types[i](ud()*500)
+                    im1.setValue(x,y,val)
+                    im2.setValue(x,y,val)
+
+            # They should be equal now.  This doesn't completely guarantee that nothing is
+            # wrong, but hopefully if we are misallocating memory here, something will be 
+            # clobbered or we will get a seg fault.
+            np.testing.assert_array_equal(
+                im1.array, im2.array, err_msg="im1 != im2 after resize to b = %s"%b)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 def test_ConstImageView_array_constness():
     """Test that ConstImageView instances cannot be modified via their .array attributes, and that
     if this is attempted a RuntimeError is raised.
@@ -1480,4 +1533,5 @@ if __name__ == "__main__":
     test_Image_inplace_scalar_divide()
     test_Image_inplace_scalar_pow()
     test_Image_subImage()
+    test_Image_resize()
     test_ConstImageView_array_constness()
