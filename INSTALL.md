@@ -25,7 +25,7 @@ that to satisfy all dependencies before installing.
 i) Python (2.6 or 2.7 series), with some additional modules installed
 ---------------------------------------------------------------------
 
-The interface to the GalSim code is via the Python package "galsim", and its
+The interface to the GalSim code is via the Python package `galsim`, and its
 associated modules. Therefore you must have Python installed on your system.
 Python is free, and available from a number of sources online (see below).
 Currently GalSim only supports Python versions 2.6.X and 2.7.X, but earlier
@@ -110,7 +110,7 @@ http://www.python.org/getit/.
 ### Making sure you are using the right Python ###
 
 Some users will find they have a few versions of Python around their operating
-system (determined, for example, using "locate python" at the prompt). A common
+system (determined, for example, using `locate python` at the prompt). A common
 way this will happen if there is already an older build (e.g. Python 2.4.X)
 being used by the operating system and then you install a newer version from
 one of the sources described above.
@@ -337,7 +337,7 @@ Python you are using.  You can check with
 
     python -c "import sys; print sys.path"
 
-If your PYPREFIX directory is not there, then Python will not be able to find
+If your `PYPREFIX` directory is not there, then Python will not be able to find
 the installed galsim module.  You should therefore add this directory to your
 PYTHONPATH environment variable.  For example, if you use bash, then you 
 should add the line
@@ -350,11 +350,11 @@ The installed files can be removed with the command
 
     scons uninstall
 
-Finally, to clean all compiled objects from the GalSim directory, you can use
+Finally, to clean all compiled objects from the `GalSim` directory, you can use
 
     scons -c
 
-This is rather like a "make clean" command.
+This is rather like a `make clean` command.
 
 If you are having trouble with installing, you may find some helpful hints at
 the GalSim Installation FAQ page on the Wiki:
@@ -385,14 +385,14 @@ include `nosetests`.
 
 Note: if your system does not have `nosetests` installed, and you do not want to
 install it, you can run all the Python tests with the script run_all_tests in
-the tests directory. If this finishes without an error, then all the tests
+the `tests` directory. If this finishes without an error, then all the tests
 have passed.
 
 
 4. Running example scripts
 ==========================
 
-The examples directory has a series of demo scripts:
+The `examples` directory has a series of demo scripts:
 
     demo1.py, demo2.py, ...
 
@@ -406,10 +406,10 @@ You can also create executable versions of these scripts if you prefer by typing
 
     scons examples
 
-This will put executable versions (with the first line '#!/bin/env python') in
-the `GalSim/examples_bin directory`.  (We do not include that first line by
+This will put executable versions (with the first line `#!/bin/env python`) in
+the `examples_bin` directory.  (We do not include that first line by
 default, since you might specify a different python to be used.  Running
-`scons examples` will put whatever python executable you specify after '#!'.)
+`scons examples` will put whatever python executable you specify after `#!`.)
 
 There are also a corresponding set of config files:
 
@@ -424,7 +424,7 @@ They are also well commented, and can be considered a parallel tutorial for
 learning the config file usage of GalSim.
 
 All demo scripts are designed to be run in the `GalSim/examples` directory.
-Some of them access files in subdirectories of the examples directory, so they
+Some of them access files in subdirectories of the `examples` directory, so they
 would not work correctly from other locations.
 
 
