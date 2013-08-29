@@ -45,7 +45,7 @@
 "gal" : {
     
     "#" : "For this demo, we have pairs of galaxies that are 90 degree rotations of each other",
-    "#" : "to elliminate the effect of shape noise.  (To first order at least.)",
+    "#" : "to eliminate the effect of shape noise.  (To first order at least.)",
     "#" : "In GalSim, we declare this as a Ring type.  The ring can have any number of",
     "#" : "values set around a ring in e1-e2 space.  For 90 degree rotated pairs, this ",
     "#" : "corresponds to only 2 values on the ring.  It is up to the user to make sure the",

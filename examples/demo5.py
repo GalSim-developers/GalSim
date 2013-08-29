@@ -108,10 +108,12 @@ def main(argv):
     #       Therefore, our r_gal/r_psf = 0.98 approximately corresponds to 
     #       their r_obs / r_psf = 1.4.
 
-    gal_ellip_rms = 0.2             # using "shear" definition of ellipticity.
-    gal_ellip_max = 0.6             #
-    gal_g1 = 0.013                  #
-    gal_g2 = -0.008                 #
+    gal_ellip_rms = 0.2             # using "distortion" definition of ellipticity:
+                                    #   e = (a^2-b^2)/(a^2+b^2), where a and b are the 
+                                    #   semi-major and semi-minor axes, respectively.
+    gal_ellip_max = 0.6             # Maximum value of e, to avoid getting near e=1.
+    gal_g1 = 0.013                  # Applied shear, using normal shear definition:
+    gal_g2 = -0.008                 #   g = (a-b)/(a+b)
 
     shift_radius = 1.0              # arcsec (=pixels)
 

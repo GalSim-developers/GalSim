@@ -49,3 +49,4 @@ Changes from v0.5 to current version:
 
 * Fixed a bug in InterpolatedImage calculateStepK function for noisy images.  (Issue #454)
 
+* Fixed bug in Image class resize function.  (Issue #461)
