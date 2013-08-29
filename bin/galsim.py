@@ -79,9 +79,6 @@ def parse_args():
             '-v', '--verbosity', type=int, action='store', default=2, choices=(0, 1, 2, 3),
             help='integer verbosity level: min=0, max=3 [default=2]')
         parser.add_argument(
-            '--version', action='store_const', default=False, const=True,
-            help='show the version of GalSim and exit')
-        parser.add_argument(
             '-l', '--log_file', type=str, action='store', default=None,
             help='filename for storing logging output [default is to stream to stdout]')
         parser.add_argument(
@@ -92,29 +89,33 @@ def parse_args():
         parser.add_argument(
             '-m', '--module', type=str, action='append', default=None, 
             help='python module to import before parsing config file')
+        parser.add_argument(
+            '--version', action='store_const', default=False, const=True,
+            help='show the version of GalSim')
         args = parser.parse_args()
 
-        if len(args.config_file) == 0 and not args.version:
-            print usage
-            sys.exit('galsim: error: too few arguments')
+        if len(args.config_file) == 0:
+            if args.version:
+                print version_str
+            else:
+                parser.print_help()
+            sys.exit()
+        elif args.version:
+            print version_str
 
     except ImportError:
         # Use optparse instead
         import optparse
 
         # Usage string not automatically generated for optparse, so generate it
-        usage = """Usage: galsim [-h] [-v {0,1,2,3}] [-l LOG_FILE] [-f file_type] 
-                   [-m module] config_file [config_file ...]
-        """
+        usage = """usage: galsim [-h] [-v {0,1,2,3}] [-l LOG_FILE] [-f {yaml,json}] [-m MODULE]
+              [--version] config_file [config_file ...]"""
         # Build the parser
         parser = optparse.OptionParser(usage=usage, epilog=epilog, description=description)
         # optparse only allows string choices, so take verbosity as a string and make it int later
         parser.add_option(
             '-v', '--verbosity', type="choice", action='store', choices=('0', '1', '2', '3'),
             default='2', help='integer verbosity level: min=0, max=3 [default=2]')
-        parser.add_argument(
-            '--version', action='store_const', default=False, const=True,
-            help='show the version of GalSim and exit')
         parser.add_option(
             '-l', '--log_file', type=str, action='store', default=None,
             help='filename for storing logging output [default is to stream to stdout]')
@@ -126,24 +127,25 @@ def parse_args():
         parser.add_option(
             '-m', '--module', type=str, action='store', default=None, 
             help='python module to import before parsing config file')
+        parser.add_option(
+            '--version', action='store_const', default=False, const=True,
+            help='show the version of GalSim')
         (args, posargs) = parser.parse_args()
 
         # Remembering to convert to an integer type
         args.verbosity = int(args.verbosity) 
 
         # Store the positional arguments in the args object as well:
-        if len(posargs) >= 1:
-            args.config_file = posargs
-        elif args.version:
-            pass
+        if len(posargs) == 0:
+            if args.version:
+                print version_str
+            else:
+                print usage
+            sys.exit()
         else:
-            print usage
-            sys.exit('galsim: error: too few arguments')
-
-    if args.version:
-        print version_str
-        sys.exit()
-        
+            args.config_file = posargs
+            if args.version:
+                print version_str
 
     # Return the args
     return args
