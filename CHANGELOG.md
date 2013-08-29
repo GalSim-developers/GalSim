@@ -49,4 +49,12 @@ Changes from v0.5 to current version:
 
 * Fixed a bug in InterpolatedImage calculateStepK function for noisy images.  (Issue #454)
 
+* Added `galsim` executable to be preferred over either `galsim_yaml` or `galsim_json`, although 
+  the old names are still valid for backwards compatibility.  (Issue #460)
+
+* Removed `des` module from default imports of GalSim.  Now you need to explicitly write
+  `import galsim.des` to use that functionality.  For runs using the galsim executable, you would 
+  now run `galsim -m des config_file`.  This also allows you to develop your own (external to 
+  GalSim) module and use it with galsim.  Just use `galsim -m [your_module]` here.  (Issue #460)
+
 * Fixed bug in Image class resize function.  (Issue #461)

@@ -28,16 +28,16 @@
 # python code.  And even advanced pythonistas may find it more useful for many tasks than
 # writing the corresponding python code.
 #
-# The executable that reads these YAML files is called galsim_yaml, which should be installed
+# The executable that reads these YAML files is called galsim, which should be installed
 # in your PREFIX/bin directory (after doing `scons install`, that is, where PREFIX is either 
 # /usr/local or whatever other PREFIX you set when running scons).  So to run this config
 # file, you should be able to type simply:
 #
-#     galsim_yaml demo1.yaml
+#     galsim demo1.yaml
 #
 # If you haven't run `scons install` for whatever reason, you can instead write:
 #
-#     ../bin/galsim_yaml demo1.yaml
+#     ../bin/galsim demo1.yaml
 #
 # If you don't have PyYAML installed, you can use JSON files instead.  The directory json has 
 # JSON configuration files that are exactly equivalent to these YAML files.  The YAML format
@@ -45,7 +45,7 @@
 # to read and has a few extra nice features.  But if you don't want to install PyYAML for some
 # reason, you can use the json/demo*.json instead by typing (for demo1):
 #
-#     galsim_json json/demo1.json
+#     galsim json/demo1.json
 #
 # See https://github.com/GalSim-developers/GalSim/wiki/Config-Documentation for 
 # more complete documentation about how to use the GalSim configuration machinery.

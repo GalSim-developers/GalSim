@@ -357,13 +357,16 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
 
     if skip: 
         if xsize and ysize:
+            # If the size is set, we need to do something reasonable to return this size.
             im = galsim.ImageF(xsize, ysize)
+            im.setOrigin(config['image_origin'])
+            im.setZero()
+            if do_noise and sky_level_pixel:
+                im += sky_level_pixel
         else:
-            im = galsim.ImageF(1,1)
-        im.setOrigin(config['image_origin'])
-        im.setZero()
-        if do_noise and sky_level_pixel:
-            im += sky_level_pixel
+            # Otherwise, we don't set the bounds, so it will be noticed as invalid upstream.
+            im = galsim.ImageF()
+
         if make_weight_image:
             weight_im = galsim.ImageF(im.bounds, scale=im.scale)
             weight_im.setZero()
