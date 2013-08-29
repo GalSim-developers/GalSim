@@ -166,7 +166,9 @@ input :
     power_spectrum :
         # In this case, we read the e_power_function from a file.  This is done simply by 
         # providing the file name for the e_power_function parameter.  The input file is
-        # expected to have two columns of numbers:  k and P(k).
+        # expected to have two columns of numbers:  k and P(k).  GalSim is not capable of computing
+        # shear power spectra as a function of cosmology and redshift; users are expected to provide
+        # their own, or use the examples already in the repository.
         e_power_function : "../examples/data/cosmo-fid.zmed1.00.out"
 
         # The default units of k are arcsec^-1 to match all the other units.  But again,

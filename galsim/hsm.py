@@ -87,7 +87,8 @@ class ShapeData(object):
       then moments_amp relates to the flux via flux = (moments_amp)*(pixel scale)^2.
 
     - moments_centroid: a galsim.PositionD object representing the centroid based on adaptive
-      moments.
+      moments.  The convention for centroids is such that the center of the lower-left pixel is
+      (0,0).
 
     - moments_rho4: the weighted radial fourth moment of the image.
 
@@ -298,10 +299,12 @@ def EstimateShear(gal_image, PSF_image, weight = None, badpix = None, sky_var = 
     @param precision         The convergence criterion for the moments; default `precision = 1e-6`.
     @param guess_x_centroid  An initial guess for the x component of the object centroid (useful in
                              case it is not located at the center, which is the default
-                             assumption).
+                             assumption).  The convention for centroids is such that the center of
+                             the lower-left pixel is (0,0).
     @param guess_y_centroid  An initial guess for the y component of the object centroid (useful in
                              case it is not located at the center, which is the default
-                             assumption).
+                             assumption).  The convention for centroids is such that the center of
+                             the lower-left pixel is (0,0).
     @param strict            If `strict = True` (default), then there will be a `RuntimeError` 
                              exception if shear estimation fails.  If set to `False`, then 
                              information about failures will be silently stored in the output 
@@ -407,10 +410,12 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
     @param precision         The convergence criterion for the moments; default `precision = 1e-6`.
     @param guess_x_centroid  An initial guess for the x component of the object centroid (useful in
                              case it is not located at the center, which is the default
-                             assumption).
+                             assumption).  The convention for centroids is such that the center of
+                             the lower-left pixel is (0,0).
     @param guess_y_centroid  An initial guess for the y component of the object centroid (useful in
                              case it is not located at the center, which is the default
-                             assumption).
+                             assumption).  The convention for centroids is such that the center of
+                             the lower-left pixel is (0,0).
     @param strict            If `strict = True` (default), then there will be a `RuntimeError`
                              exception when moment measurement fails.  If set to `False`, then 
                              information about failures will be silently stored in the output 

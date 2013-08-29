@@ -106,8 +106,13 @@ def main(argv):
     gal_list = [ galsim.RealGalaxy(real_galaxy_catalog, id=id) for id in id_list ]
 
     # Setup the PowerSpectrum object we'll be using:
-    # To do this, we first have to read in the tabulated power spectrum.
-    # We use a tabulated power spectrum from iCosmo (http://icosmo.org), with the following
+    # To do this, we first have to read in the tabulated shear power spectrum, often denoted
+    # C_ell(ell), where ell has units of inverse angle and C_ell has units of angle^2.  However,
+    # GalSim works in the flat-sky approximation, so we use this notation interchangeably with
+    # P(k).  GalSim does not calculate shear power spectra for users, who must be able to provide
+    # their own (or use the examples in the repository).
+    # 
+    # Here we use a tabulated power spectrum from iCosmo (http://icosmo.org), with the following
     # cosmological parameters and survey design:
     # H_0 = 70 km/s/Mpc
     # Omega_m = 0.25

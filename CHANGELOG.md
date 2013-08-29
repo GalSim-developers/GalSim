@@ -29,3 +29,4 @@ Changes from v0.5 to current version:
 * Added offset as a config option for the image field, which applies the given offset in pixels 
   when calling the draw command.  (Issue #449)
 
+* Fixed bug in Image class resize function.  (Issue #461)
