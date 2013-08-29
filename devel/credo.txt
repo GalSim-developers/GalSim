@@ -88,7 +88,7 @@ Broad reasons why: Seemingly greater experience among GalSim-developers.
 
 One of the SCons defaults is WARN=false.  This is recommended for end users, so we don't 
 saddle them with a bunch of warning messages if they use a new compiler that we haven't
-tested on yet.  However, devleopers should always run with WARN=true to help catch
+tested on yet.  However, developers should always run with WARN=true to help catch
 bugs.  Even if you know the warning is benign, please fix it.  We want all compilations 
 to be warning-free on as many compilers as possible.  
 

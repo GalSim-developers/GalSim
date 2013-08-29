@@ -424,7 +424,7 @@ They are also well commented, and can be considered a parallel tutorial for
 learning the config file usage of GalSim.
 
 All demo scripts are designed to be run in the `GalSim/examples` directory.
-Some of them access files in subdirectoried of the examples directory, so they
+Some of them access files in subdirectories of the examples directory, so they
 would not work correctly from other locations.
 
 
