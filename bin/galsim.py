@@ -140,7 +140,7 @@ def parse_args():
             if args.version:
                 print version_str
             else:
-                print usage
+                parser.print_help()
             sys.exit()
         else:
             args.config_file = posargs
