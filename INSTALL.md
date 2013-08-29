@@ -130,8 +130,8 @@ at the prompt. This will tell you the location of the executable, something like
     /path/to/executable/bin/python
 
 If this is not the Python you want, please edit your startup scripts (e.g.
-.profile or .bashrc), and be sure to specify where your desired Python version
-resides when installing the Boost C++ libraries (see Section 1.v).
+`.profile` or `.bashrc`), and be sure to specify where your desired Python
+version resides when installing the Boost C++ libraries (see Section 1.v).
 
 See Section 4 of this document for some suggestions about getting Python, Boost
 and all the other dependencies all working well together on your specific
@@ -171,7 +171,7 @@ file for how to install it. Usually installing TMV just requires the command
 
 but there are additional options you might consider, so you should read the TMV
 INSTALL file for full details. Also note, you may not need to specify the
-installation directory if you are comfortable installing it into /usr/local.
+installation directory if you are comfortable installing it into `/usr/local`.
 However, if you are trying to install it into a system directory then you need
 to use sudo scons install [PREFIX=<installdir>].
 
@@ -179,7 +179,7 @@ Note: On Mac OS 10.7, the Apple BLAS library has problems when run using
 multiple processes.  So if you have such a system, we recommend getting a 
 different BLAS library, such as ATLAS (and making sure TMV finds it instead
 of the system BLAS) or compiling TMV with no BLAS library at all (using 
-the SCons option WITH_BLAS=false).  Otherwise, Galsim programs may hang
+the SCons option `WITH_BLAS=false`).  Otherwise, Galsim programs may hang
 when run with multiple processes.  e.g. `scons tests` by default uses 
 multiple processes, and multiple people reported problems using the Apple
 system BLAS on OS 10.7.
@@ -407,7 +407,7 @@ You can also create executable versions of these scripts if you prefer by typing
     scons examples
 
 This will put executable versions (with the first line '#!/bin/env python') in
-the GalSim/examples_bin directory.  (We do not include that first line by
+the `GalSim/examples_bin directory`.  (We do not include that first line by
 default, since you might specify a different python to be used.  Running
 `scons examples` will put whatever python executable you specify after '#!'.)
 
@@ -415,7 +415,7 @@ There are also a corresponding set of config files:
 
     demo1.yaml, demo2.yaml, ...
 
-These files can be run using the executable galsim, and will produce the
+These files can be run using the executable `galsim`, and will produce the
 same output images as the Python scripts:
 
     galsim demo1.yaml
