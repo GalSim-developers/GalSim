@@ -34,5 +34,6 @@ Changes from v0.5 to current version:
 
 * Removed `des` module from default imports of GalSim.  Now you need to explicitly write
   `import galsim.des` to use that functionality.  For runs using the galsim executable, you would 
-  now run `galsim -m des config_file`.  (Issue #460)
+  now run `galsim -m des config_file`.  This also allows you to develop your own (external to 
+  GalSim) module and use it with galsim.  Just use `galsim -m [your_module]` here.  (Issue #460)
 
