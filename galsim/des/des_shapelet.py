@@ -217,12 +217,20 @@ galsim.config.process.valid_input_types['des_shapelet'] = ('galsim.des.DES_Shape
 def BuildDES_Shapelet(config, key, base, ignore, gsparams):
     """@brief Build a RealGalaxy type GSObject from user input.
     """
-    opt = { 'flux' : float }
+    opt = { 'flux' : float ,
+            'num' : int }
     kwargs, safe = galsim.config.GetAllParams(config, key, base, opt=opt, ignore=ignore)
 
     if 'des_shapelet' not in base:
         raise ValueError("No DES_Shapelet instance available for building type = DES_Shapelet")
-    des_shapelet = base['des_shapelet']
+
+    num = kwargs.get('num', 0)
+    if num < 0:
+        raise ValueError("Invalid num < 0 supplied for DES_Shapelet: num = %d"%num)
+    if num >= len(base['des_shapelet']):
+        raise ValueError("Invalid num supplied for DES_Shapelet (too large): num = %d"%num)
+
+    des_shapelet = base['des_shapelet'][num]
 
     if 'image_pos' not in base:
         raise ValueError("DES_Shapelet requested, but no image_pos defined in base.")

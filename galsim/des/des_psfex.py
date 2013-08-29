@@ -227,13 +227,21 @@ galsim.config.process.valid_input_types['des_psfex'] = ('galsim.des.DES_PSFEx', 
 def BuildDES_PSFEx(config, key, base, ignore, gsparams):
     """@brief Build a RealGalaxy type GSObject from user input.
     """
-    opt = { 'flux' : float }
+    opt = { 'flux' : float ,
+            'num' : int }
     kwargs, safe = galsim.config.GetAllParams(config, key, base, opt=opt, ignore=ignore)
 
     if 'des_psfex' not in base:
         raise ValueError("No DES_PSFEx instance available for building type = DES_PSFEx")
-    des_psfex = base['des_psfex']
 
+    num = kwargs.get('num', 0)
+    if num < 0:
+        raise ValueError("Invalid num < 0 supplied for DES_PSFEx: num = %d"%num)
+    if num >= len(base['des_psfex']):
+        raise ValueError("Invalid num supplied for DES_PSFEx (too large): num = %d"%num)
+
+    des_psfex = base['des_psfex'][num]
+ 
     if 'image_pos' not in base:
         raise ValueError("DES_PSFEx requested, but no image_pos defined in base.")
     image_pos = base['image_pos']

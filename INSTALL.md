@@ -25,7 +25,7 @@ that to satisfy all dependencies before installing.
 i) Python (2.6 or 2.7 series), with some additional modules installed
 ---------------------------------------------------------------------
 
-The interface to the GalSim code is via the Python package "galsim", and its
+The interface to the GalSim code is via the Python package `galsim`, and its
 associated modules. Therefore you must have Python installed on your system.
 Python is free, and available from a number of sources online (see below).
 Currently GalSim only supports Python versions 2.6.X and 2.7.X, but earlier
@@ -67,7 +67,7 @@ These should installed onto your Python system so that they can be imported by:
 
     >>> import numpy
     >>> import pyfits
-    >>> import yaml [ if using the galsim_yaml executable or otherwise plan to
+    >>> import yaml [ if using the galsim executable or otherwise plan to
                       parse .yaml configuration files ]
 
 within Python.  You can test this by loading up the Python interpreter for the
@@ -110,7 +110,7 @@ http://www.python.org/getit/.
 ### Making sure you are using the right Python ###
 
 Some users will find they have a few versions of Python around their operating
-system (determined, for example, using "locate python" at the prompt). A common
+system (determined, for example, using `locate python` at the prompt). A common
 way this will happen if there is already an older build (e.g. Python 2.4.X)
 being used by the operating system and then you install a newer version from
 one of the sources described above.
@@ -130,8 +130,8 @@ at the prompt. This will tell you the location of the executable, something like
     /path/to/executable/bin/python
 
 If this is not the Python you want, please edit your startup scripts (e.g.
-.profile or .bashrc), and be sure to specify where your desired Python version
-resides when installing the Boost C++ libraries (see Section 1.v).
+`.profile` or `.bashrc`), and be sure to specify where your desired Python
+version resides when installing the Boost C++ libraries (see Section 1.v).
 
 See Section 4 of this document for some suggestions about getting Python, Boost
 and all the other dependencies all working well together on your specific
@@ -171,7 +171,7 @@ file for how to install it. Usually installing TMV just requires the command
 
 but there are additional options you might consider, so you should read the TMV
 INSTALL file for full details. Also note, you may not need to specify the
-installation directory if you are comfortable installing it into /usr/local.
+installation directory if you are comfortable installing it into `/usr/local`.
 However, if you are trying to install it into a system directory then you need
 to use sudo scons install [PREFIX=<installdir>].
 
@@ -179,7 +179,7 @@ Note: On Mac OS 10.7, the Apple BLAS library has problems when run using
 multiple processes.  So if you have such a system, we recommend getting a 
 different BLAS library, such as ATLAS (and making sure TMV finds it instead
 of the system BLAS) or compiling TMV with no BLAS library at all (using 
-the SCons option WITH_BLAS=false).  Otherwise, Galsim programs may hang
+the SCons option `WITH_BLAS=false`).  Otherwise, Galsim programs may hang
 when run with multiple processes.  e.g. `scons tests` by default uses 
 multiple processes, and multiple people reported problems using the Apple
 system BLAS on OS 10.7.
@@ -337,7 +337,7 @@ Python you are using.  You can check with
 
     python -c "import sys; print sys.path"
 
-If your PYPREFIX directory is not there, then Python will not be able to find
+If your `PYPREFIX` directory is not there, then Python will not be able to find
 the installed galsim module.  You should therefore add this directory to your
 PYTHONPATH environment variable.  For example, if you use bash, then you 
 should add the line
@@ -350,11 +350,11 @@ The installed files can be removed with the command
 
     scons uninstall
 
-Finally, to clean all compiled objects from the GalSim directory, you can use
+Finally, to clean all compiled objects from the `GalSim` directory, you can use
 
     scons -c
 
-This is rather like a "make clean" command.
+This is rather like a `make clean` command.
 
 If you are having trouble with installing, you may find some helpful hints at
 the GalSim Installation FAQ page on the Wiki:
@@ -385,36 +385,47 @@ include `nosetests`.
 
 Note: if your system does not have `nosetests` installed, and you do not want to
 install it, you can run all the Python tests with the script run_all_tests in
-the tests directory. If this finishes without an error, then all the tests
+the `tests` directory. If this finishes without an error, then all the tests
 have passed.
 
-There are also some example executables that come with GalSim, and will be
-useful for testing and development particularly outside the Python layer. These
-can be built by typing
 
-    scons examples
+4. Running example scripts
+==========================
 
-The executables will then be visible in `GalSim/bin/`.
+The `examples` directory has a series of demo scripts:
 
-The examples directory also has a series of demo scripts:
     demo1.py, demo2.py, ...
 
 These can be considered a tutorial on getting up to speed with GalSim. Reading
 through these in order will introduce you to how to use most of the features of
-GalSim in Python.
+GalSim in Python.  To run these scripts, type (e.g.):
+
+    python demo1.py
+
+You can also create executable versions of these scripts if you prefer by typing
+
+    scons examples
+
+This will put executable versions (with the first line `#!/bin/env python`) in
+the `examples_bin` directory.  (We do not include that first line by
+default, since you might specify a different python to be used.  Running
+`scons examples` will put whatever python executable you specify after `#!`.)
 
 There are also a corresponding set of config files:
+
     demo1.yaml, demo2.yaml, ...
 
-These files can be run using the executable galsim_yaml, and will produce the
-same output images as the Python scripts. They are also well commented, and
-can be considered a parallel tutorial for learning the config file usage of
-GalSim.
+These files can be run using the executable `galsim`, and will produce the
+same output images as the Python scripts:
 
-All demo scripts are designed to be run in the `GalSim/examples` directory. Or,
-the executable versions of the demos in `GalSim/bin` (which are the outputs of
-running `scons examples`) can be run from either `GalSim/bin` or
-`GalSim/examples`. 
+    galsim demo1.yaml
+
+They are also well commented, and can be considered a parallel tutorial for 
+learning the config file usage of GalSim.
+
+All demo scripts are designed to be run in the `GalSim/examples` directory.
+Some of them access files in subdirectories of the `examples` directory, so they
+would not work correctly from other locations.
 
 
 4. Platform-specific notes
@@ -463,17 +474,16 @@ in an interactive Python session, you should run `/sw/bin/python2.7` (simply
 always change your `PATH` environment variable to make the fink Python the 
 system default if you wish...)
 
-2. The executables `galsim_yaml` and `galsim_json`, which parse YAML and JSON 
-configuration files, will be installed in `/sw/bin`.  You should not need to do
-anything special to use these, since `/sw/bin` should already be in your path if
-using fink.
+2. The executable `galsim`, which parses YAML or JSON configuration files, 
+will be installed in `/sw/bin`.  You should not need to do anything special 
+to use these, since `/sw/bin` should already be in your path if using fink.
 
 3. If you want to run through the example scripts (such as the demo tutorials 
 `demo1.py`, `demo2.py` etc. and the `.yaml` and `.json` config versions of the 
 same demos), you will still need to download the GalSim tarball.  But you can 
 skip all the instructions above about installation and just use the fink 
 version.  So `python2.7 demo1.py` (assuming `which python2.7` is the fink one) 
-and `galsim_yaml demo1.yaml` should run those scripts for you.   
+and `galsim demo1.yaml` should run those scripts for you.   
 
 4. At the end of the fink installation, there will be a WARNING message.  Just 
 ignore it.  It happens because fink installs things a bit differently from how 
@@ -610,11 +620,7 @@ You can list these options from the command line with
    bit of performance, you can set this to False.
 
 * `WARN` (False) specifies whether to add warning compiler flags such as 
-   `-Wall`.  Developers should set this to True and fix everything that comes 
-   up as a warning (on both `g++` and `icpc`).  However, end users can leave
-   it as False in case their compiler is a stickler for something that did not
-   get caught in development.  TODO: Move this prescription that developers 
-   should set it to True somewhere else. Maybe in the credo.txt file?
+   `-Wall`.
 
 * `PYTHON` (/usr/bin/env python) specifies which version of Python you are 
    planning to use GalSim with.  If you choose not to use the default here, 

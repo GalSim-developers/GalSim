@@ -19,8 +19,8 @@
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
 
-bin1=../bin  # For python scripts
-bin2=../bin  # For galsim_json executable
+python=../bin/installed_python  # For python scripts
+bin=../bin  # For galsim executable
 
 if [ ! -d "output" ]; then
     mkdir output
@@ -32,38 +32,38 @@ fi
 /bin/rm -rf output/*
 /bin/rm -rf output_json/*
 
-time $bin1/demo1 || exit
-time $bin2/galsim_json json/demo1.json || exit
+time $python demo1.py || exit
+time $bin/galsim json/demo1.json || exit
 
-time $bin1/demo2 || exit
-time $bin2/galsim_json json/demo2.json || exit
+time $python demo2.py || exit
+time $bin/galsim json/demo2.json || exit
 
-time $bin1/demo3 || exit
-time $bin2/galsim_json json/demo3.json || exit
+time $python demo3.py || exit
+time $bin/galsim json/demo3.json || exit
 
-time $bin1/demo4 || exit
-time $bin2/galsim_json json/demo4.json || exit
+time $python demo4.py || exit
+time $bin/galsim json/demo4.json || exit
 
-time $bin1/demo5 || exit
-time $bin2/galsim_json json/demo5.json || exit
+time $python demo5.py || exit
+time $bin/galsim json/demo5.json || exit
 
-time $bin1/demo6 || exit
-time $bin2/galsim_json json/demo6a.json json/demo6b.json || exit
+time $python demo6.py || exit
+time $bin/galsim json/demo6a.json json/demo6b.json || exit
 
-time $bin1/demo7 || exit
-time $bin2/galsim_json json/demo7.json || exit
+time $python demo7.py || exit
+time $bin/galsim json/demo7.json || exit
 
-time $bin1/demo8 || exit
-time $bin2/galsim_json json/demo8a.json json/demo8b.json || exit
+time $python demo8.py || exit
+time $bin/galsim json/demo8a.json json/demo8b.json || exit
 
-time $bin1/demo9 || exit
-time $bin2/galsim_json json/demo9.json || exit
+time $python demo9.py || exit
+time $bin/galsim json/demo9.json || exit
 
-time $bin1/demo10 || exit
-time $bin2/galsim_json json/demo10.json || exit
+time $python demo10.py || exit
+time $bin/galsim json/demo10.json || exit
 
-time $bin1/demo11 || exit
-time $bin2/galsim_json json/demo11.json || exit
+time $python demo11.py || exit
+time $bin/galsim json/demo11.json || exit
 
 echo 'Checking diffs: (No output means success)'
 
