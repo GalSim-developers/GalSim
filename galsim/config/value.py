@@ -124,7 +124,7 @@ def ParseValue(config, param_name, base, value_type):
         if not isinstance(val,value_type):
             val = value_type(val)
 
-        # Save the current value for possible use the Current type
+        # Save the current value for possible use by the Current type
         param['current_val'] = val
         param['current_safe'] = safe
         param['current_seq_index'] = base.get('seq_index',0)
@@ -1039,18 +1039,15 @@ def _GenerateFromCurrent(param, param_name, base, value_type):
     """
     #print 'Start Current for ',param_name
     req = { 'key' : str }
-    opt = { 'key_split' : str }
-    params, safe = GetAllParams(param, param_name, base, req=req, opt=opt)
+    params, safe = GetAllParams(param, param_name, base, req=req)
     #print 'params = ',params
 
     key = params['key']
     #print 'key = ',key
 
-    key_split = params.get('key_split','.')
-
     # This next bit is basically identical to the code for Dict.get(key) in catalog.py.
-    # Make a list of keys according to our key_split parameter
-    chain = key.split(key_split)
+    # Make a list of keys
+    chain = key.split('.')
     d = base
     while len(chain):
         k = chain.pop(0)
