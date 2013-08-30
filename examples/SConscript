@@ -1,5 +1,9 @@
 # vim: set filetype=python :
 
+# Note: We don't require or recommend running scons examples anymore.
+# However, it will still work and will create executable versions of these
+# examples in the GalSim/examples_bin directory.
+
 import SCons
 import os
 
@@ -24,11 +28,10 @@ if 'install' in COMMAND_LINE_TARGETS:
 else:
     AddRPATH(env1,Dir('#lib').abspath)
 
-int_example = env1.Program(os.path.join('#bin','int_example'), 'IntExample.cpp')
-test_random = env1.Program(os.path.join('#bin','test_random'), 'testRandom.cpp')
-sizeof_SIFD = env1.Program(os.path.join('#bin','sizeof_SIFD'), 'sizeof_SIFD.cpp')
+int_example = env1.Program(os.path.join('#examples_bin','int_example'), 'IntExample.cpp')
+test_random = env1.Program(os.path.join('#examples_bin','test_random'), 'testRandom.cpp')
 
-targets = [ int_example, test_random, sizeof_SIFD ]
+targets = [ int_example, test_random ]
 
 # Also build executable versions of the demo scripts:
 scripts = [ 'demo1', 'demo2', 'demo3', 'demo4', 'demo5',
@@ -38,7 +41,7 @@ scripts = [ 'demo1', 'demo2', 'demo3', 'demo4', 'demo5',
             'Shera', 'ShootInterpolated', 'TestOpticalPSFInterpolant', 'TestImages' ]
 
 for script in scripts:
-    exec_script = env.ExecScript(os.path.join('#bin',script), script + '.py')
+    exec_script = env.ExecScript(os.path.join('#examples_bin',script), script + '.py')
     # SCons isn't clever enough to realize that these need to be rebuilt if the PYTHON
     # value changes.  And since they are quick to build, might as well always do them 
     # whenever someone runs scons examples.
@@ -50,7 +53,7 @@ env.Alias(target='examples',source=targets)
 
 # I think we don't actually want to install the example programs.
 # But here is how we would do it for real programs that the user will want
-# to have installed:
+# to have installed.  To actually do this, type `scons install examples`.
 if 'install' in COMMAND_LINE_TARGETS:
 
     installed_bin = env1.Install(dir=bin_install_dir, source=targets)
