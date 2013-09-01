@@ -190,12 +190,12 @@ def main():
             all_config = [ c for c in yaml.load_all(open(config_file).read()) ]
 
             # If there is only 1 yaml document, then it is of course used for the configuration.
-            # If there are multiple yamls documents, then the first one defines a common starting
+            # If there are multiple yaml documents, then the first one defines a common starting
             # point for the later documents.
             # So the configurations are taken to be:
-            #   all_cong[0] + allconfig[1]
-            #   all_cong[0] + allconfig[2]
-            #   all_cong[0] + allconfig[3]
+            #   all_config[0] + all_config[1]
+            #   all_config[0] + all_config[2]
+            #   all_config[0] + all_config[3]
             #   ...
             # See demo6.yaml and demo8.yaml in the examples directory for examples of this feature.
 
