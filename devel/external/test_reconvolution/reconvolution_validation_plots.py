@@ -149,7 +149,7 @@ def PlotStatsForParam(config,param_name):
     # now plot the log std of m1 as a function of parameter
 
     for iv,value in enumerate(param['values']):
-             m1 = [b['m1'] for b in bias_moments_list[iv]]
+            m1 = [b['m1'] for b in bias_moments_list[iv]]
             pylab.plot(values_float[iv],numpy.std(m1,ddof=1),'x')
            
     pylab.ylabel('std(m_1)',interpreter='latex')
