@@ -33,10 +33,6 @@ import galsim
 # Now put it back in case anyone else relies on this feature.
 sys.path = [temp] + sys.path
 
-import os
-import logging
-import copy
-
 def MergeConfig(config1, config2, logger=None):
     """
     Merge config2 into config1 such that it has all the information from either config1 or 
@@ -47,6 +43,7 @@ def MergeConfig(config1, config2, logger=None):
     """
     for (key, value) in config2.items():
         if not key in config1:
+            import copy
             # If this key isn't in config1 yet, just add it
             config1[key] = copy.deepcopy(value)
         elif isinstance(value,dict) and isinstance(config1[key],dict):
@@ -155,6 +152,7 @@ def main():
     args = parse_args()
 
     # Parse the integer verbosity level from the command line args into a logging_level string
+    import logging
     logging_levels = { 0: logging.CRITICAL, 
                        1: logging.WARNING,
                        2: logging.INFO,
@@ -221,6 +219,7 @@ def main():
 
         # Set the root value in base_config
         if 'root' not in base_config:
+            import os
             base_config['root'] = os.path.splitext(config_file)[0]
 
         # Import any modules if requested
