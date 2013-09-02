@@ -521,20 +521,24 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level_pixel, final_shi
     else:
         current_var = 0.
 
-    if 'gal' in config and 'signal_to_noise' in config['gal']:
+    if (('gal' in config and 'signal_to_noise' in config['gal']) or
+        ('gal' not in config and 'psf' in config and 'signal_to_noise' in config['psf'])):
         import math
         import numpy
-        if 'flux' in config['gal']:
+        if 'gal' in config: root_key = 'gal'
+        else: root_key = 'psf'
+
+        if 'flux' in config[root_key]:
             raise AttributeError(
-                'Only one of signal_to_noise or flux may be specified for gal')
+                'Only one of signal_to_noise or flux may be specified for %s'%root_key)
 
         if 'image' in config and 'noise' in config['image']:
             noise_var = CalculateNoiseVar(config['image']['noise'], config, pixel_scale, 
                                           sky_level_pixel)
         else:
             raise AttributeError(
-                "Need to specify noise level when using gal.signal_to_noise")
-        sn_target = galsim.config.ParseValue(config['gal'], 'signal_to_noise', config, float)[0]
+                "Need to specify noise level when using %s.signal_to_noise"%root_key)
+        sn_target = galsim.config.ParseValue(config[root_key], 'signal_to_noise', config, float)[0]
             
         # Now determine what flux we need to get our desired S/N
         # There are lots of definitions of S/N, but here is the one used by Great08
@@ -760,9 +764,10 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, final_sh
         final.applyShear(wcs_shear)
         config['wcs_shear'] = wcs_shear
                     
-    if 'signal_to_noise' in config['gal']:
+    if (('gal' in config and 'signal_to_noise' in config['gal']) or
+        ('gal' not in config and 'psf' in config and 'signal_to_noise' in config['psf'])):
         raise NotImplementedError(
-            "gal.signal_to_noise not implemented for draw_method = phot")
+            "signal_to_noise option not implemented for draw_method = phot")
 
     if 'image' in config and 'pixel_scale' in config['image']:
         pixel_scale = galsim.config.ParseValue(config['image'], 'pixel_scale', config, float)[0]

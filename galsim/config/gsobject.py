@@ -126,6 +126,10 @@ def BuildGSObject(config, key, base=None, gsparams={}):
         # I don't know an easy way to do that.
         ignore += [ 'resolution' , 're_from_res' ]
 
+    # Allow signal_to_noise for PSFs only if there is not also a galaxy.
+    if 'gal' not in base and key == 'psf':
+        ignore += [ 'signal_to_noise']
+
     # If we are specifying the size according to a resolution, then we 
     # need to get the PSF's half_light_radius.
     if 'resolution' in ck:
