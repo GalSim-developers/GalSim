@@ -417,7 +417,11 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
     t5 = time.time()
 
     if make_psf_image:
-        psf_im = DrawPSFStamp(psf,pix,config,im.bounds,final_shift)
+        psf_im = DrawPSFStamp(psf,pix,config,im.bounds,sky_level_pixel,final_shift)
+        if ('output' in config and 'psf' in config['output'] and 
+                'signal_to_noise' in config['output']['psf'] and
+                'noise' in config['image']):
+            AddNoiseFFT(psf_im,None,0,config['image']['noise'],config,rng,0,logger)
     else:
         psf_im = None
 
@@ -1000,7 +1004,7 @@ def AddNoisePhot(im, weight_im, current_var, noise, base, rng, sky_level_pixel, 
         raise AttributeError("Invalid type %s for noise",type)
 
 
-def DrawPSFStamp(psf, pix, config, bounds, final_shift):
+def DrawPSFStamp(psf, pix, config, bounds, sky_level_pixel, final_shift):
     """
     Draw an image using the given psf and pix profiles.
 
@@ -1040,10 +1044,34 @@ def DrawPSFStamp(psf, pix, config, bounds, final_shift):
         #print 'psf shift (1): ',gal_shift.x,gal_shift.y
         final_psf.applyShift(gal_shift)
 
-    psf_im = galsim.ImageF(bounds, scale=pixel_scale)
-    final_psf.draw(psf_im, dx=pixel_scale, offset=final_shift)
+    im = galsim.ImageF(bounds, scale=pixel_scale)
+    final_psf.draw(im, dx=pixel_scale, offset=final_shift)
 
-    return psf_im
+    if (('output' in config and 'psf' in config['output'] 
+            and 'signal_to_noise' in config['output']['psf']) or
+        ('gal' not in config and 'psf' in config and 'signal_to_noise' in config['psf'])):
+        import math
+        import numpy
+
+        if 'image' in config and 'noise' in config['image']:
+            noise_var = CalculateNoiseVar(config['image']['noise'], config, pixel_scale, 
+                                          sky_level_pixel)
+        else:
+            raise AttributeError(
+                "Need to specify noise level when using psf.signal_to_noise")
+
+        if ('output' in config and 'psf' in config['output'] 
+                and 'signal_to_noise' in config['output']['psf']):
+            cf = config['output']['psf']
+        else:
+            cf = config['psf']
+        sn_target = galsim.config.ParseValue(cf, 'signal_to_noise', config, float)[0]
+            
+        sn_meas = math.sqrt( numpy.sum(im.array**2) / noise_var )
+        flux = sn_target / sn_meas
+        im *= flux
+
+    return im
            
 def CalculateWCSShear(wcs, base):
     """

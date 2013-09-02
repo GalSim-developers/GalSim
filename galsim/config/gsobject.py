@@ -151,7 +151,7 @@ def BuildGSObject(config, key, base=None, gsparams={}):
         ck['half_light_radius'] = gal_re
 
     # Make sure the PSF gets flux=1 unless explicitly overridden by the user.
-    if key == 'psf' and 'flux' not in ck:
+    if key == 'psf' and 'flux' not in ck and 'signal_to_noise' not in ck:
         ck['flux'] = 1
 
     if 'gsparams' in ck:

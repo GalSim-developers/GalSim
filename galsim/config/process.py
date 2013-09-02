@@ -334,9 +334,9 @@ def Process(config, logger=None):
                 req['hdu'] = int
 
             if extra_key == 'psf': 
-                ignore.append('real_space')
+                ignore += ['real_space', 'signal_to_noise']
             if extra_key == 'weight': 
-                ignore.append('include_obj_var')
+                ignore += ['include_obj_var']
             if 'file_name' in output_extra:
                 SetDefaultExt(output_extra['file_name'],'.fits')
             params, safe = galsim.config.GetAllParams(output_extra,extra_key,kwargs['config'],
