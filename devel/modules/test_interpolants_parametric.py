@@ -205,7 +205,7 @@ def draw_sersic_images(narr, hlrarr, gobsarr, random_seed=None, nmin=0.3, nmax=4
     # Return this list of drawn images
     return sersic_images
 
-def run_tests(use_interpolants, nitems=test_interpolants.nitems):
+def run_tests(use_interpolants, nitems=test_interpolants.default_nitems):
     """Run the tests for the specified interpolants."""
 
     import sys
@@ -220,7 +220,7 @@ def run_tests(use_interpolants, nitems=test_interpolants.nitems):
     # Get the COSMOS galaxy sample parameters
     ns_cosmos, hlrs_cosmos, gobss_cosmos = galaxy_sample.get()
     # Only use the first nitems galaxies in these lists, starting at test_interpolants.first_index
-    istart = test_interpolants.first_index
+    istart = test_interpolants.default_first_index
     iend = istart + nitems
     ns_cosmos = ns_cosmos[istart: iend]
     hlrs_cosmos = hlrs_cosmos[istart: iend]
@@ -287,14 +287,14 @@ def run_tests(use_interpolants, nitems=test_interpolants.nitems):
                         shift=None, x_interpolant=interpolant, padding=padding,
                         image_type=image_type)
                     test_interpolants.print_results(
-                        g1_list, g2_list, sigma_list, dataXint, outfile=outfile)
+                        outfile, g1_list, g2_list, sigma_list, dataXint)
                     dataKint = calculate_interpolated_image_g1g2sigma(
                         sersic_images, psf=psf, dx_input=test_interpolants.pixel_scale,
                         dx_test=dx_test, shear=None, magnification=None, angle=angle*galsim.degrees,
                         shift=None, k_interpolant=interpolant, padding=padding,
                         image_type=image_type)
                     test_interpolants.print_results(
-                        g1_list, g2_list, sigma_list, dataKint, outfile=outfile)
+                        outfile, g1_list, g2_list, sigma_list, dataKint)
                 sys.stdout.write('\n')
  
                 print 'Running Shear/Magnification tests'
@@ -308,14 +308,14 @@ def run_tests(use_interpolants, nitems=test_interpolants.nitems):
                         shift=None, x_interpolant=interpolant, padding=padding,
                         image_type=image_type)
                     test_interpolants.print_results(
-                        g1_list, g2_list, sigma_list, dataXint, outfile=outfile)
+                        outfile, g1_list, g2_list, sigma_list, dataXint)
                     dataKint = calculate_interpolated_image_g1g2sigma(
                         sersic_images, psf=psf, dx_input=test_interpolants.pixel_scale,
                         dx_test=dx_test, shear=(g1, g2), magnification=mag, angle=None,
                         shift=None, k_interpolant=interpolant, padding=padding,
                         image_type=image_type)
                     test_interpolants.print_results(
-                        g1_list, g2_list, sigma_list, dataKint, outfile=outfile)
+                        outfile, g1_list, g2_list, sigma_list, dataKint)
                 sys.stdout.write('\n')
 
                 print 'Running Shift tests'
@@ -329,14 +329,14 @@ def run_tests(use_interpolants, nitems=test_interpolants.nitems):
                         shift=shift, x_interpolant=interpolant, padding=padding,
                         image_type=image_type)
                     test_interpolants.print_results(
-                        g1_list, g2_list, sigma_list, dataXint, outfile=outfile)
+                        outfile, g1_list, g2_list, sigma_list, dataXint)
                     dataKint = calculate_interpolated_image_g1g2sigma(
                         sersic_images, psf=psf, dx_input=test_interpolants.pixel_scale,
                         dx_test=dx_test, shear=None, magnification=None, angle=None,
                         shift=shift, k_interpolant=interpolant, padding=padding,
                         image_type=image_type)
                     test_interpolants.print_results(
-                        g1_list, g2_list, sigma_list, dataKint, outfile=outfile)
+                        outfile, g1_list, g2_list, sigma_list, dataKint)
                 sys.stdout.write('\n')
 
                 print ''
