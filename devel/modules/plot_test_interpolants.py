@@ -48,7 +48,6 @@ def percentiles(x):
             numpy.array((sortx[threequarter]-mean,)), 
             numpy.array((mean-min(x),)), numpy.array((max(x)-mean,)))
         
-
 # plotfile should be the output from test_interpolants.py, filenamebase the root of the .png files
 # this script will output, to which something like "_x_dg1_g1.png" will be appended
 def plot_interpolants(plotfile, filenamebase):
@@ -63,10 +62,11 @@ def plot_interpolants(plotfile, filenamebase):
     # Begin by plotting data from the file containing the info with shear, rotation, etc.
     plotdata = numpy.loadtxt(plotfile)
     # Remove measurement failures
-    no_result_mask = ((abs(plotdata[:,10]+10)>5.5) & (abs(plotdata[:,12]+10)>5.5) &
-                        (abs(plotdata[:,10]+plotdata[:,11]+10)>3) & 
-                        (abs(plotdata[:,12]+plotdata[:,13]+10)>3) &
-                        (plotdata[:,14]>0) & (plotdata[:,14]+plotdata[:,15]>0))  
+    no_result_mask = ((abs(plotdata[:,10]+10)>5.5) & (abs(plotdata[:,13]+10)>5.5) &
+                      (abs(plotdata[:,11]+10)>5.5) & (abs(plotdata[:,14]+10)>5.5) &
+                      (abs(plotdata[:,11]+plotdata[:,12]+10)>3) & 
+                      (abs(plotdata[:,14]+plotdata[:,15]+10)>3) &
+                      (plotdata[:,16]>0) & (plotdata[:,17]>0) & (plotdata[:,14]+plotdata[:,15]>0))
     plotdata = plotdata[no_result_mask]
     # Make lists of the various tested quantities
     x_interpolants = list(set(plotdata[:,1]))
@@ -80,12 +80,17 @@ def plot_interpolants(plotfile, filenamebase):
     paddings.sort()
     paddings = [int(i) for i in paddings]
     # And give some of the columns more sensible names, for better human readability
-    expected_g1 = plotdata[:,10]
-    expected_g2 = plotdata[:,12]
-    expected_size = plotdata[:,14]
-    g1_difference = plotdata[:,11]
-    g2_difference = plotdata[:,13]
-    frac_size_difference = plotdata[:,15]
+    intrinsic_g1 = plotdata[:,10]
+    intrinsic_g2 = plotdata[:,13]
+    intrinsic_size = plotdata[:,16]
+    expected_g1 = plotdata[:,11]
+    expected_g2 = plotdata[:,14]
+    expected_size = plotdata[:,17]
+    expected_g1_difference = expected_g1 - intrinsic_g1
+    expected_g2_difference = expected_g2 - intrinsic_g2
+    g1_difference = plotdata[:,12]
+    g2_difference = plotdata[:,15]
+    frac_size_difference = plotdata[:,18]
     applied_shears_g1 = plotdata[:,4]
     applied_shears_g2 = plotdata[:,5]
     applied_magnification = plotdata[:,6]        
@@ -122,136 +127,66 @@ def plot_interpolants(plotfile, filenamebase):
     pad_masks = [abs(plotdata[:,3]-i)<1.E-5 for i in paddings]
     for subinterp_index, subinterp_title, subinterp_mask in zip(
                 subinterpolant_indices,subinterpolant_titles,subinterpolant_masks):
-        combomask = [g1_only, g2_only, magnification_only] # These are plotted the same
-        combomask_titles = ["only G1", "only G2", "only magnification"]
-        combomask_filetitles = ["g1", "g2", "mag"]
+        combomask = [g1_only, g2_only, magnification_only, allthree, shift1_only, shift2_only] 
+        combomask_titles = ["only G1", "only G2", "only magnification", "G1+G2+magnification",
+                            "90 degree shifts", "45 degree shifts"]
+        combomask_filetitles = ["g1", "g2", "mag", "all", "shift1", "shift2"]
         for cmask, ctitle, octitle in zip(combomask,combomask_titles,combomask_filetitles):
             mask = [[cmask & subinterp_mask & p & i for p in pad_masks] 
                                                 for i in interpolant_masks]
             data_types = [(expected_g1, g1_difference, "dg1",
                                 "delta g1 as a function of expected g1"), 
-                            (expected_g2, g2_difference, "dg2",
+                          (expected_g1_difference, g1_difference, "ddg1",
+                                "delta g1 as a function of (expected - intrinsic) g1"),
+                          (applied_g1, g1_difference, "dag1",
+                                "delta g1 as a function of applied g1"),                                
+                          (applied_g2, g1_difference, "dg1-ag2",
+                                "delta g1 as a function of applied g2"),                                
+                          (expected_g2, g2_difference, "dg2",
                                 "delta g2 as a function of expected g2"), 
-                            (expected_size, frac_size_difference, "dsize", 
-                                "delta size/expected size as a function of expected size")]
+                          (expected_g2_difference, g2_difference, "ddg2",
+                                "delta g2 as a function of (expected - intrinsic) g2"),
+                          (applied_g2, g2_difference, "dag2",
+                                "delta g2 as a function of applied g2"),                                
+                          (applied_g1, g2_difference, "dg2-ag1",
+                                "delta g2 as a function of applied g1"),                                
+                          (expected_size, frac_size_difference, "dsize", 
+                                "delta size/expected size as a function of expected size"),
+                          (applied_magnification, frac_size_difference, "dasize", 
+                                "delta size/expected size as a function of applied magnification")]
 
             # Plot m vs pad_factor for the various interpolant + added shear permutations
             for x,y,optitle,ptitle in data_types:
-                ixoffset = int(-0.5*len(interpolants)) # to offset for clarity
-                xoffset = 2/20.
-                plt.axhline(0.,color='black')
-                for i in range(len(interpolants)-1):
-                    for j in range(len(paddings)):
-                        m,c,merr,cerr = linefit(x[mask[i][j]],y[mask[i][j]])
-                        plt.errorbar(paddings[j]+ixoffset*xoffset,m,yerr=merr,
-                            color=interpolant_colors[interpolants[i]],)
-                        if j==1:
-                            plt.plot(paddings[j]+ixoffset*xoffset,m,
-                                marker='o',
-                                color=interpolant_colors[interpolants[i]],
-                                label=interpolant_titles[interpolants[i]])
-                        else:
-                            plt.plot(paddings[j]+ixoffset*xoffset,m,
-                                marker='o',
-                                color=interpolant_colors[interpolants[i]])
-                        if j==1 and i==len(interpolants)-2:
-                            ymean = m
-                    ixoffset+=1
-                plt.xlabel('pad_factor')
-                plt.ylabel('m')
-                plt.title(subinterp_title+', '+ptitle+', '+ctitle)
-                plt.xlim([1.5,9]) # so the legend doesn't overlap
-                if numpy.any(x!=expected_size):
-                    plt.ylim([-0.0005,+0.0005])
-                plt.legend()
-                plt.savefig(filenamebase+subinterp_title[0]+'_'+optitle+'_'+octitle+'.png')
-                plt.clf()
-        # Plot m and c in the case where we've added all 3 components
-        cmask = allthree
-        ctitle = "G1+G2+magnification"
-        octitle = "all"
-        mask = [[cmask & subinterp_mask & p & i for p in pad_masks] for i in interpolant_masks]
-        data_types = [(expected_g1, g1_difference, "dg1", 
-                                "delta g1 as a function of expected g1"), 
-                        (expected_g2, g2_difference, "dg2", 
-                                "delta g2 as a function of expected g2"), 
-                        (expected_size, frac_size_difference, "dsize", 
-                                "delta size/expected size as a function of expected size")]
-            
-        for x,y,optitle,ptitle in data_types:
-            ixoffset = int(-0.5*len(interpolants))
-            for i in range(len(interpolants)-1):
-                xoffset = 2/20.
-                plt.axhline(0.,color='black')
-                for j in range(len(paddings)):
-                    m,c,merr,cerr = linefit(x[mask[i][j]],y[mask[i][j]])
-                    plt.errorbar(paddings[j]+ixoffset*xoffset,m,yerr=merr,
-                        color=interpolant_colors[interpolants[i]],)
-                    if j==1:
-                        plt.plot(paddings[j]+ixoffset*xoffset,m,
-                            marker='o',
-                            color=interpolant_colors[interpolants[i]],
-                            label=interpolant_titles[interpolants[i]])
-                        if i==len(interpolants)-2:
-                            ymean = m
-                    else:
-                        plt.plot(paddings[j]+ixoffset*xoffset,m,
-                            marker='o',
-                            color=interpolant_colors[interpolants[i]])
-                ixoffset+=1
-            plt.xlabel('pad_factor')
-            plt.ylabel('m')
-            plt.xlim([1.5,9])
-            if numpy.any(x!=expected_size):
-                plt.ylim([-0.0005,+0.0005])
-            plt.title(subinterp_title+', '+ptitle+', '+ctitle)
-            plt.legend()
-            plt.savefig(filenamebase+subinterp_title[0]+'_'+optitle+'_'+octitle+'.png')
-            plt.clf()
-        
-        # Plot m and c for the different shift cases
-        combomask = [shift1_only,shift2_only] # These are plotted the same
-        combomask_titles = ["90 degree shifts", "45 degree shifts"]
-        combomask_filetitles = ["shift1", "shift2"]
-        for cmask, ctitle, octitle in zip(combomask,combomask_titles,combomask_filetitles):
-            mask = [[cmask & subinterp_mask & p & i for p in pad_masks] 
-                                                for i in interpolant_masks]
-            data_types = [(expected_g1, g1_difference, "dg1", 
-                                "delta g1 as a function of expected g1"), 
-                            (expected_g2, g2_difference, "dg2", 
-                                "delta g2 as a function of expected g2"), 
-                            (expected_size, frac_size_difference, "dsize", 
-                                "delta size/expected size as a function of expected size")]
-            
-            for x,y,optitle,ptitle in data_types:
-                ixoffset = int(-0.5*len(interpolants))
-                for i in range(len(interpolants)-1):
+                if len(list(set(x)))>1: # Don't plot if there's only one x-value
+                    ixoffset = int(-0.5*len(interpolants)) # to offset for clarity
                     xoffset = 2/20.
                     plt.axhline(0.,color='black')
-                    for j in range(len(paddings)):
-                        m,c,merr,cerr = linefit(x[mask[i][j]],y[mask[i][j]])
-                        plt.errorbar(paddings[j]+ixoffset*xoffset,m,yerr=merr,
-                            color=interpolant_colors[interpolants[i]],)
-                        if j==1:
-                            plt.plot(paddings[j]+ixoffset*xoffset,m,
-                                marker='o',
-                                color=interpolant_colors[interpolants[i]],
-                                label=interpolant_titles[interpolants[i]])
-                            if i==len(interpolants)-2:
+                    for i in range(len(interpolants)-1):
+                        for j in range(len(paddings)):
+                            m,c,merr,cerr = linefit(x[mask[i][j]],y[mask[i][j]])
+                            plt.errorbar(paddings[j]+ixoffset*xoffset,m,yerr=merr,
+                                color=interpolant_colors[interpolants[i]],)
+                            if j==1:
+                                plt.plot(paddings[j]+ixoffset*xoffset,m,
+                                    marker='o',
+                                    color=interpolant_colors[interpolants[i]],
+                                    label=interpolant_titles[interpolants[i]])
+                            else:
+                                plt.plot(paddings[j]+ixoffset*xoffset,m,
+                                    marker='o',
+                                    color=interpolant_colors[interpolants[i]])
+                            if j==1 and i==len(interpolants)-2:
                                 ymean = m
-                        else:
-                            plt.plot(paddings[j]+ixoffset*xoffset,m,
-                                marker='o',
-                                color=interpolant_colors[interpolants[i]])
-                    ixoffset+=1
-                plt.xlabel('pad_factor')
-                plt.ylabel('m')
-                plt.xlim([1.5,9])
-                plt.ylim([-0.0005,+0.0005])
-                plt.title(subinterp_title+', '+ptitle+', '+ctitle)
-                plt.legend()
-                plt.savefig(filenamebase+subinterp_title[0]+'_'+optitle+'_'+octitle+'.png')
-                plt.clf()
+                        ixoffset+=1
+                    plt.xlabel('pad_factor')
+                    plt.ylabel('m')
+                    plt.title(subinterp_title+', '+ptitle+', '+ctitle)
+                    plt.xlim([1.5,9]) # so the legend doesn't overlap
+                    if numpy.any(x!=expected_size | x!=applied_magnification):
+                        plt.ylim([-0.0005,+0.0005])
+                    plt.legend()
+                    plt.savefig(filenamebase+subinterp_title[0]+'_'+optitle+'_'+octitle+'.png')
+
 
         # Plot differentials as a function of angles
         data_types = [(applied_angle, g1_difference, "applied angle", "delta g1", "dg1"), 
