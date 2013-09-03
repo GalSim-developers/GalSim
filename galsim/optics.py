@@ -44,7 +44,7 @@ complex number. The OTF is the autocorrelation function of the wavefront.
 import numpy as np
 import galsim
 import utilities
-from galsim import GSObject
+from galsim import GSObject, goodFFTSize
 
 class OpticalPSF(GSObject):
     """A class describing aberrated PSFs due to telescope optics.  It's underlying implementation
@@ -148,8 +148,6 @@ class OpticalPSF(GSObject):
                  nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees,
                  gsparams=None):
 
-        # Currently we load optics, noise etc in galsim/__init__.py, but this might change (???)
-        import galsim.optics
         
         # Choose dx for lookup table using Nyquist for optical aperture and the specified
         # oversampling factor
@@ -168,7 +166,8 @@ class OpticalPSF(GSObject):
         
         # Boost Airy image size by a user-specifed pad_factor to allow for larger, aberrated PSFs,
         # also make npix always *odd* so that opticalPSF lookup table array is correctly centred:
-        npix = 1 + 2 * (np.ceil(pad_factor * (np.pi / stepk_airy) / dx_lookup)).astype(int)
+        #npix = 1 + 2 * (np.ceil(pad_factor * (np.pi / stepk_airy) / dx_lookup)).astype(int)
+        npix = goodFFTSize(int(np.ceil(pad_factor * 2. * np.pi / (dx_lookup * stepk_airy) )))
         
         # Make the psf image using this dx and array shape
         optimage = galsim.optics.psf_image(
