@@ -227,7 +227,6 @@ class InterpolatedImage(GSObject):
         'pad_factor' : float ,
         'noise_pad_size' : int ,
         'noise_pad' : str ,
-        'override_var' : float ,
         'pad_image' : str ,
         'calculate_stepk' : bool ,
         'calculate_maxk' : bool ,
@@ -453,13 +452,6 @@ class InterpolatedImage(GSObject):
             raise ValueError(
                 "Input noise_pad must be a float/int, a CorrelatedNoise, Image, or filename "+
                 "containing an image to use to make a CorrelatedNoise!")
-        # If the override_var keyword is set, check its type and scale the noise variance
-        if not preserve_var:
-            if override_var is not None:
-                if isinstance(override_var, float) and (override_var >= 0.):
-                    noise.setVariance(override_var)
-                else:
-                    raise ValueError("The override_var kwarg must be a float >= 0 if set.")
         # Add the noise
         pad_image.addNoise(noise)
 
