@@ -207,31 +207,36 @@ def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_diam=2., circul
                            defined to be positive in the counter-clockwise direction; must be a
                            galsim.Angle instance [default `strut_angle = 0. * galsim.degrees`].
  
-    Returns a tuple (rho, theta, in_pupil), the first two of which are the coordinates of the
-    pupil in unit disc-scaled coordinates for use by Zernike polynomials for describing the
-    wavefront across the pupil plane.  The array in_pupil is a vector of Bools used to specify
-    where in the pupil plane described by rho, theta is illuminated.  See also optics.wavefront. 
+    Returns a tuple (rho, in_pupil), the first of which is the coordinates of the pupil
+    in unit disc-scaled coordinates for use by Zernike polynomials (as a complex number)
+    for describing the wavefront across the pupil plane.  rhosq is |rho|**2, returned for 
+    convenience, since it needs to be calculated here, and will be used again in the wavefront
+    function.  The array in_pupil is a vector of Bools used to specify where in the pupil plane 
+    described by rho is illuminated.  See also optics.wavefront. 
     """
     kmax_internal = dx * 2. * np.pi / lam_over_diam # INTERNAL kmax in units of array grid spacing
     # Build kx, ky coords
     kx, ky = utilities.kxky(array_shape)
-    # Then define unit disc rho and theta pupil coords for Zernike polynomials
-    rho = np.sqrt((kx**2 + ky**2) / (.5 * kmax_internal)**2)
-    theta = np.arctan2(ky, kx)
+    # Then define unit disc rho pupil coords for Zernike polynomials
+    rho = (kx + 1j * ky) / (.5 * kmax_internal)
+    rhosq = np.abs(rho)**2
+    # Amazingly, the above line is faster than the following. (~ 25% faster)
+    # See the longer comment about this in psf function.
+    #rhosq = rho.real**2 + rho.imag**2
+
     # Cut out circular pupil if desired (default, square pupil optionally supported) and include 
     # central obscuration
     if obscuration >= 1.:
         raise ValueError("Pupil fully obscured! obscuration ="+str(obscuration)+" (>= 1)")
     if circular_pupil:
-        in_pupil = (rho < 1.)
+        in_pupil = (rhosq < 1.)
         if obscuration > 0.:
-            in_pupil = in_pupil * (rho >= obscuration)  # * acts like "and" for boolean arrays
+            in_pupil *= rhosq >= obscuration**2  # * acts like "and" for boolean arrays
     else:
         in_pupil = (np.abs(kx) < .5 * kmax_internal) * (np.abs(ky) < .5 * kmax_internal)
         if obscuration > 0.:
-            in_pupil = in_pupil * (
-                (np.abs(kx) >= .5 * obscuration * kmax_internal) *
-                (np.abs(ky) >= .5 * obscuration * kmax_internal))
+            in_pupil *= ( (np.abs(kx) >= .5 * obscuration * kmax_internal) *
+                          (np.abs(ky) >= .5 * obscuration * kmax_internal) )
     if nstruts > 0:
         if not isinstance(strut_angle, galsim.Angle):
             raise TypeError("Input kwarg strut_angle must be a galsim.Angle instance.")
@@ -252,7 +257,7 @@ def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_diam=2., circul
             in_pupil *= (
                 (np.abs(kxs) >= .5 * strut_thick * kmax_internal) +
                 ((kys < 0.) * (np.abs(kxs) < .5 * strut_thick * kmax_internal)))
-    return rho, theta, in_pupil
+    return rho, in_pupil
 
 def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0.,
               coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0., circular_pupil=True,
@@ -301,36 +306,55 @@ def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     Outputs the wavefront for kx, ky locations corresponding to kxky(array_shape).
     """
     # Define the pupil coordinates and non-zero regions based on input kwargs
-    rho, theta, in_pupil = generate_pupil_plane(
+    rho_all, in_pupil = generate_pupil_plane(
         array_shape=array_shape, dx=dx, lam_over_diam=lam_over_diam, circular_pupil=circular_pupil,
         obscuration=obscuration, nstruts=nstruts, strut_thick=strut_thick, strut_angle=strut_angle)
-    pi = np.pi # minor but saves Python checking the entire np. namespace every time I need pi    
+
     # Then make wavefront image
     wf = np.zeros(array_shape, dtype=complex)
-    wf[in_pupil] = 1.
-    # Defocus
-    wf[in_pupil] *= np.exp(2j * pi * defocus * np.sqrt(3.) * (2. * rho[in_pupil]**2 - 1.))
-    # Astigmatism (like e2)
-    wf[in_pupil] *= np.exp(2j * pi * astig1 * np.sqrt(6.) * rho[in_pupil]**2
-                           * np.sin(2. * theta[in_pupil]))
-    # Astigmatism (like e1)
-    wf[in_pupil] *= np.exp(2j * pi * astig2 * np.sqrt(6.) * rho[in_pupil]**2
-                           * np.cos(2. * theta[in_pupil]))
-    # Coma along x2
-    wf[in_pupil] *= np.exp(2j * pi * coma1 * np.sqrt(8.) * (3. * rho[in_pupil]**2 - 2.)
-                           * rho[in_pupil] * np.sin(theta[in_pupil]))
-    # Coma along x1
-    wf[in_pupil] *= np.exp(2j * pi * coma2 * np.sqrt(8.) * (3. * rho[in_pupil]**2 - 2.)
-                           * rho[in_pupil]* np.cos(theta[in_pupil]))
+
+    # It is much faster to pull out the elements we will use one, rather than use the 
+    # subscript each time.  At the end we will fill the appropriate part of wf with the
+    # values calculated from this rho vector.
+    rho = rho_all[in_pupil]  
+    rhosq = np.abs(rho)**2
+
+    # Old version for reference:
+
+    # rho2 = rho * rho
+    # rho3 = rho2 * rho
+    # Defocus:
+    # wf[in_pupil] += np.sqrt(3.) * (2. * rhosq - 1.) * defocus
+    # Astigmatism:
+    # wf[in_pupil] += np.sqrt(6.) * ( astig1 * rho2.imag + astig2 * rho2.real )
+    # Coma:
+    # wf[in_pupil] += np.sqrt(8.) * (3. * rhosq - 2.) * ( coma1 * rho.imag + coma2 * rho.real )
     # Trefoil (one of the arrows along x2)
-    wf[in_pupil] *= np.exp(2j * pi * trefoil1 * np.sqrt(8.) * rho[in_pupil]**3
-                           * np.sin(3. * theta[in_pupil]))
-    # Trefoil (one of the arrows along x1)
-    wf[in_pupil] *= np.exp(2j * pi * trefoil2 * np.sqrt(8.) * rho[in_pupil]**3
-                           * np.cos(3. * theta[in_pupil]))
+    # wf[in_pupil] += np.sqrt(8.) * ( trefoil1 * rho3.imag + trefoil2 * rho3.real )
     # Spherical aberration
-    wf[in_pupil] *= np.exp(2j * pi * spher * np.sqrt(5.)
-                           * (6. * rho[in_pupil]**4 - 6. * rho[in_pupil]**2 + 1.))
+    # wf[in_pupil] += np.sqrt(5.) * (6. * rhosq**2 - 6. * rhosq + 1.) * spher
+
+    # Faster to use Horner's method in rho:
+    temp = (
+            # Constant terms:
+            -np.sqrt(3.) * defocus
+
+            # Terms with rhosq, but no rho, rho**2, etc.
+            + rhosq * ( 2. * np.sqrt(3.) * defocus
+                        - 6. * np.sqrt(5.) * spher
+                        + rhosq * (6. * np.sqrt(5.) * spher) )
+
+            # Now the powers of rho.
+            # We eventually take the real part
+            + ( rho * ( (rhosq-2./3.) * (3. * np.sqrt(8.) * (coma2 - 1j * coma1))
+                        + rho * ( (np.sqrt(6.) * (astig2 - 1j * astig1))
+                                   + rho * (np.sqrt(8.) * (trefoil2 - 1j * trefoil1)) 
+                                )
+                      ) 
+              ).real
+    )
+
+    wf[in_pupil] = np.exp(2j * np.pi * temp)
 
     return wf
 
@@ -443,10 +467,25 @@ def psf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
         astig2=astig2, coma1=coma1, coma2=coma2, trefoil1=trefoil1, trefoil2=trefoil2, spher=spher,
         circular_pupil=circular_pupil, obscuration=obscuration, nstruts=nstruts,
         strut_thick=strut_thick, strut_angle=strut_angle)
-    ftwf = np.fft.fft2(wf)  # I think this (and the below) is quicker than np.abs(ftwf)**2
+
+    ftwf = np.fft.fft2(wf)
+
+    # MJ: You wouldn't think that using an abs here would be efficient, but I did some timing 
+    #     tests on my laptop, and of the three options:
+    #         im = (ftwf * ftwf.conj()).real
+    #         im = ftwf.real**2 + ftwf.imag**2
+    #         im = np.abs(ftwf)**2
+    #     the third one was fastest.
+    #     Average times were about 0.0265, 0.0170, and 0.0105, respectively.
+    #     I'm guessing numpy must do some kind of delayed calculation magic with the np.abs()
+    #     function that lets them figure out that they don't need the sqrt here.
+    im = np.abs(ftwf)**2
+
     # The roll operation below restores the c_contiguous flag, so no need for a direct action
-    im = utilities.roll2d((ftwf * ftwf.conj()).real, (array_shape[0] / 2, array_shape[1] / 2)) 
-    return im * (flux / (im.sum() * dx**2))
+    im = utilities.roll2d(im, (array_shape[0] / 2, array_shape[1] / 2)) 
+    im *= (flux / (im.sum() * dx**2))
+
+    return im
 
 def psf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0.,
               coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0., circular_pupil=True,
