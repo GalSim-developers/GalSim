@@ -235,9 +235,9 @@ def print_results(f, g1_list, g2_list, sigma_list, test_answer, first_index=0):
             str(test_answer.shear[1])+' '+
             str(test_answer.magnification)+' '+str(test_answer.angle)+' '+
             str(test_answer.shiftx)+' '+str(test_answer.shifty)+' '+
-            str(g1_list[i])+str(expected_g1[i])+' '+str(test_answer.g1obs[i]-expected_g1[i])+' '+
-            str(g2_list[i])+str(expected_g2[i])+' '+str(test_answer.g2obs[i]-expected_g2[i])+' '+
-            str(expected_size[i])+' '+
+            str(g1_list[i])+' '+str(expected_g1[i])+' '+str(test_answer.g1obs[i]-expected_g1[i])+' '+
+            str(g2_list[i])+' '+str(expected_g2[i])+' '+str(test_answer.g2obs[i]-expected_g2[i])+' '+
+            str(sigma_list[i])+' '+str(expected_size[i])+' '+
             str((test_answer.sigmaobs[i]-expected_size[i])/expected_size[i])'\n')
         
 def main(args):
