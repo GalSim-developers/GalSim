@@ -24,7 +24,7 @@
 "#" : "- image type : Tiled (..., order)",
 "#" : "- image.psf : real_space",
 "#" : "- input : power_spectrum (e_power_function, b_power_function)",
-"#" : "- output.psf : hdu",
+"#" : "- output.psf : hdu, signal_to_noise, real_space",
 
 
 "#" : "Define the PSF profile",
@@ -198,7 +198,14 @@
         "#" : "artifacts that can show up with Fourier convolution.",
         "#" : "The level of the artifacts is quite low, but when drawing with",
         "#" : "no noise, they are apparent with ds9's zscale viewing.",
-        "real_space" : true
+        "real_space" : true,
+    
+        "#" : "For cases where there is only a PSF, it too may have a signal_to_noise item.",
+        "#" : "This can be here (output.psf) or in the main psf field if there is no gal field.",
+        "#" : "If there is no signal_to_noise set here, then the default is to have no noise.",
+        "#" : "If there is a signal_to_noise value, then it uses the same kind of noise as in the",
+        "#" : "main image.",
+        "signal_to_noise" : 1000
     }
 }
 
