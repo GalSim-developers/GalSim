@@ -49,6 +49,8 @@ Changes from v0.5 to current version:
 
 * Fixed a bug in InterpolatedImage calculateStepK function for noisy images.  (Issue #454)
 
+* Added 'signal_to_noise' option in config for PSFs when there is not also a galaxy.  (Issue #459)
+
 * Added `galsim` executable to be preferred over either `galsim_yaml` or `galsim_json`, although 
   the old names are still valid for backwards compatibility.  (Issue #460)
 
@@ -58,3 +60,5 @@ Changes from v0.5 to current version:
   GalSim) module and use it with galsim.  Just use `galsim -m [your_module]` here.  (Issue #460)
 
 * Fixed bug in Image class resize function.  (Issue #461)
+
+* Sped up the OpticalPSF calculations significantly.  (Issue #466)
