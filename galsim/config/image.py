@@ -20,9 +20,9 @@
 import galsim
 
 valid_image_types = { 
-    'Single' : 'BuildSingleImage',
-    'Tiled' : 'BuildTiledImage',
-    'Scattered' : 'BuildScatteredImage',
+    'Single' : ( 'BuildSingleImage', 'GetNObjForSingleImage' ),
+    'Tiled' : ( 'BuildTiledImage', 'GetNObjForTiledImage' ),
+    'Scattered' : ( 'BuildScatteredImage', 'GetNObjForScatteredImage' ),
 }
 
 def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
@@ -258,7 +258,7 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0,
     if type not in valid_image_types:
         raise AttributeError("Invalid image.type=%s."%type)
 
-    build_func = eval(valid_image_types[type])
+    build_func = eval(valid_image_types[type][0])
     all_images = build_func(
             config=config, logger=logger,
             image_num=image_num, obj_num=obj_num,
@@ -832,5 +832,48 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     return full_image, full_psf_image, full_weight_image, full_badpix_image
 
+
+def GetNObjForImage(config, image_num):
+    if 'image' in config and 'type' in config['image']:
+        image_type = config['image']['type']
+    else:
+        image_type = 'Single'
+
+    # Check that the type is valid
+    if image_type not in valid_image_types:
+        raise AttributeError("Invalid image.type=%s."%type)
+
+    nobj_func = eval(valid_image_types[image_type][1])
+
+    return nobj_func(config,image_num)
+
+def GetNObjForSingleImage(config, image_num):
+    return 1
+
+def GetNObjForScatteredImage(config, image_num):
+
+    config['seq_index'] = image_num
+
+    # Allow nobjects to be automatic based on input catalog
+    if 'nobjects' not in config['image']:
+        nobj = ProcessInputNObjects(config)
+        if nobj:
+            config['image']['nobjects'] = nobj
+            return nobj
+        else:
+            raise AttributeError("Attribute nobjects is required for image.type = Scattered")
+    else:
+        return galsim.config.ParseValue(config['image'],'nobjects',config,int)[0]
+
+def GetNObjForTiledImage(config, image_num):
+    
+    config['seq_index'] = image_num
+
+    if 'nx_tiles' not in config['image'] or 'ny_tiles' not in config['image']:
+        raise AttributeError(
+            "Attributes nx_tiles and ny_tiles are required for image.type = Tiled")
+    nx = galsim.config.ParseValue(config['image'],'nx_tiles',config,int)[0]
+    ny = galsim.config.ParseValue(config['image'],'ny_tiles',config,int)[0]
+    return nx*ny
 
 

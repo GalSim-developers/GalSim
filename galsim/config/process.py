@@ -638,7 +638,7 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
             make_psf_image=make_psf_image, 
             make_weight_image=make_weight_image,
             make_badpix_image=make_badpix_image)
-    obj_num += GetNObjForImage(config, image_num)
+    obj_num += galsim.config.GetNObjForImage(config, image_num)
     t3 = time.time()
     if logger:
         # Note: numpy shape is y,x
@@ -731,37 +731,6 @@ def GetNObjForDataCube(config, file_num, image_num):
         nobj.append(GetNObjForImage(config, image_num+j))
     return nobj
  
-def GetNObjForImage(config, image_num):
-    if 'image' in config and 'type' in config['image']:
-        image_type = config['image']['type']
-    else:
-        image_type = 'Single'
-
-    config['seq_index'] = image_num
-
-    if image_type == 'Single':
-        return 1
-    elif image_type == 'Scattered':
-        # Allow nobjects to be automatic based on input catalog
-        if 'nobjects' not in config['image']:
-            nobj = ProcessInputNObjects(config)
-            if nobj:
-                config['image']['nobjects'] = nobj
-                return nobj
-            else:
-                raise AttributeError("Attribute nobjects is required for image.type = Scattered")
-        else:
-            return galsim.config.ParseValue(config['image'],'nobjects',config,int)[0]
-    elif image_type == 'Tiled':
-        if 'nx_tiles' not in config['image'] or 'ny_tiles' not in config['image']:
-            raise AttributeError(
-                "Attributes nx_tiles and ny_tiles are required for image.type = Tiled")
-        nx = galsim.config.ParseValue(config['image'],'nx_tiles',config,int)[0]
-        ny = galsim.config.ParseValue(config['image'],'ny_tiles',config,int)[0]
-        return nx*ny
-    else:
-        raise AttributeError("Invalid image.type=%s."%image_type)
-
 def SetDefaultExt(config, ext):
     """
     Some items have a default extension for a NumberedFile type.
