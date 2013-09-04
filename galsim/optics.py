@@ -156,9 +156,12 @@ class OpticalPSF(GSObject):
         airy = galsim.Airy(lam_over_diam = lam_over_diam, obscuration = obscuration,
                            gsparams = gsparams)
         stepk_airy = airy.stepK()
-        
+
         # Boost Airy image size by a user-specifed pad_factor to allow for larger, aberrated PSFs
-        npix = goodFFTSize(int(np.ceil(pad_factor * 2. * np.pi / (dx_lookup * stepk_airy) )))
+        stepk = stepk_airy / pad_factor
+        
+        # Get a good FFT size.  i.e. 2^n or 3 * 2^n.
+        npix = goodFFTSize(int(np.ceil(2. * np.pi / (dx_lookup * stepk) )))
 
         # Make the psf image using this dx and array shape
         optimage = galsim.optics.psf_image(
@@ -176,6 +179,17 @@ class OpticalPSF(GSObject):
         # The above procedure ends up with a larger image than we really need, which
         # means that the default stepK value will be smaller than we need.  
         # Hence calculate_stepk=True and calculate_maxk=True above.
+
+        # Check the calculated stepk value.  If it is smaller than stepk, then there might
+        # be aliasing.  However, don't warn if they did set pad_factor already.
+        final_stepk = self.SBProfile.stepK()
+        if pad_factor == 1.5 and final_stepk < stepk:
+            import warnings
+            warnings.warn(
+                "The calculated stepk (%f) for OpticalPSF is smaller than what was "%final_stepk +
+                "used to build the wavefront (%f).  This could lead to aliasing problems. "%stepk +
+                "Using pad_factor >= %f is recommended."%(pad_factor * stepk / final_stepk))
+
 
 
 def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_diam=2., circular_pupil=True,
