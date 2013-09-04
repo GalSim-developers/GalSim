@@ -692,7 +692,11 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
 def GetNObjForFits(config, file_num, image_num):
     ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc' ]
     galsim.config.CheckAllParams(config['output'], 'output', ignore=ignore)
-    nobj = [ GetNObjForImage(config, image_num) ]
+    try : 
+        nobj = [ galsim.config.GetNObjForImage(config, image_num) ]
+    except ValueError : # (This may be raised if something needs the input stuff)
+        ProcessInput(config, file_num=file_num)
+        nobj = [ galsim.config.GetNObjForImage(config, image_num) ]
     return nobj
     
 def GetNObjForMultiFits(config, file_num, image_num):
@@ -708,9 +712,11 @@ def GetNObjForMultiFits(config, file_num, image_num):
     params = galsim.config.GetAllParams(config['output'],'output',config,ignore=ignore,req=req)[0]
     config['seq_index'] = file_num
     nimages = params['nimages']
-    nobj = []
-    for j in range(nimages):
-        nobj.append(GetNObjForImage(config, image_num+j))
+    try :
+        nobj = [ galsim.config.GetNObjForImage(config, image_num+j) for j in range(nimages) ]
+    except ValueError : # (This may be raised if something needs the input stuff)
+        ProcessInput(config, file_num=file_num)
+        nobj = [ galsim.config.GetNObjForImage(config, image_num+j) for j in range(nimages) ]
     return nobj
 
 def GetNObjForDataCube(config, file_num, image_num):
@@ -726,9 +732,11 @@ def GetNObjForDataCube(config, file_num, image_num):
     params = galsim.config.GetAllParams(config['output'],'output',config,ignore=ignore,req=req)[0]
     config['seq_index'] = file_num
     nimages = params['nimages']
-    nobj = []
-    for j in range(nimages):
-        nobj.append(GetNObjForImage(config, image_num+j))
+    try :
+        nobj = [ galsim.config.GetNObjForImage(config, image_num+j) for j in range(nimages) ]
+    except ValueError : # (This may be raised if something needs the input stuff)
+        ProcessInput(config, file_num=file_num)
+        nobj = [ galsim.config.GetNObjForImage(config, image_num+j) for j in range(nimages) ]
     return nobj
  
 def SetDefaultExt(config, ext):
