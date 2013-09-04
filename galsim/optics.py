@@ -68,7 +68,7 @@ class OpticalPSF(GSObject):
         >>> optical_psf = galsim.OpticalPSF(lam_over_diam, defocus=0., astig1=0., astig2=0.,
                                             coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0.,
                                             circular_pupil=True, obscuration=0., interpolant=None,
-                                            oversampling=1.5, pad_factor=1.5, nstruts=0,
+                                            oversampling=1., pad_factor=1.5, nstruts=0,
                                             strut_thick=0.05, strut_angle=0.*galsim.degrees)
 
     Initializes optical_psf as a galsim.OpticalPSF() instance.
@@ -94,7 +94,7 @@ class OpticalPSF(GSObject):
                            integer order to use. [default `interpolant = galsim.Quintic()`]
     @param oversampling    Optional oversampling factor for the InterpolatedImage. Setting 
                            oversampling < 1 will produce aliasing in the PSF (not good).
-                           [default `oversampling = 1.5`]
+                           [default `oversampling = 1.`]
     @param pad_factor      Additional multiple by which to zero-pad the PSF image to avoid folding
                            compared to what would be employed for a simple galsim.Airy 
                            [default `pad_factor = 1.5`].  Note that `pad_factor` may need to be 
@@ -143,32 +143,23 @@ class OpticalPSF(GSObject):
     # --- Public Class methods ---
     def __init__(self, lam_over_diam, defocus=0.,
                  astig1=0., astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0., 
-                 circular_pupil=True, obscuration=0., interpolant=None, oversampling=1.5,
+                 circular_pupil=True, obscuration=0., interpolant=None, oversampling=1.,
                  pad_factor=1.5, flux=1.,
                  nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees,
                  gsparams=None):
 
-        
         # Choose dx for lookup table using Nyquist for optical aperture and the specified
         # oversampling factor
         dx_lookup = .5 * lam_over_diam / oversampling
         
-        # We need alias_threshold here, so don't wait to make this a default GSParams instance
-        # if the user didn't specify anything else.
-        if not gsparams:
-            gsparams = galsim.GSParams()
-
-        # Use a similar prescription as SBAiry to set Airy stepK and thus reference unpadded image
-        # size in physical units
-        stepk_airy = min(
-            gsparams.alias_threshold * .5 * np.pi**3 * (1. - obscuration) / lam_over_diam,
-            np.pi / 5. / lam_over_diam)
+        # Start with the stepk value for Airy:
+        airy = galsim.Airy(lam_over_diam = lam_over_diam, obscuration = obscuration,
+                           gsparams = gsparams)
+        stepk_airy = airy.stepK()
         
-        # Boost Airy image size by a user-specifed pad_factor to allow for larger, aberrated PSFs,
-        # also make npix always *odd* so that opticalPSF lookup table array is correctly centred:
-        #npix = 1 + 2 * (np.ceil(pad_factor * (np.pi / stepk_airy) / dx_lookup)).astype(int)
+        # Boost Airy image size by a user-specifed pad_factor to allow for larger, aberrated PSFs
         npix = goodFFTSize(int(np.ceil(pad_factor * 2. * np.pi / (dx_lookup * stepk_airy) )))
-        
+
         # Make the psf image using this dx and array shape
         optimage = galsim.optics.psf_image(
             lam_over_diam=lam_over_diam, dx=dx_lookup, array_shape=(npix, npix), defocus=defocus,
@@ -579,7 +570,7 @@ def otf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
         circular_pupil=circular_pupil, obscuration=obscuration, nstruts=nstruts,
         strut_thick=strut_thick, strut_angle=strut_angle)
     ftwf = np.fft.fft2(wf)  # I think this (and the below) is quicker than np.abs(ftwf)**2
-    otf = np.fft.ifft2((ftwf * ftwf.conj()).real)
+    otf = np.fft.ifft2(np.abs(ftwf)**2)
     # Make unit flux before returning
     return np.ascontiguousarray(otf) / otf[0, 0].real
 
