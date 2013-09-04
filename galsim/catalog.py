@@ -262,7 +262,10 @@ class Dict(object):
             # If there are more keys, just set d to the next in the chanin.
             if chain: d = d[k]
             # Otherwise, return the result.
-            else: return d.get(k,default)
+            else: 
+                if k not in d and default is None:
+                    raise ValueError("key=%s not found in dictionary"%key)
+                return d.get(k,default)
 
         raise ValueError("Invalid key=%s given to Dict.get()"%key)
 
