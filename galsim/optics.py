@@ -183,7 +183,7 @@ class OpticalPSF(GSObject):
         # Check the calculated stepk value.  If it is smaller than stepk, then there might
         # be aliasing.  However, don't warn if they did set pad_factor already.
         final_stepk = self.SBProfile.stepK()
-        if pad_factor == 1.5 and final_stepk < stepk:
+        if final_stepk < stepk:
             import warnings
             warnings.warn(
                 "The calculated stepk (%f) for OpticalPSF is smaller than what was "%final_stepk +

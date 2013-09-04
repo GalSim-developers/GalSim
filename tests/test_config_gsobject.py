@@ -337,23 +337,21 @@ def test_opticalpsf():
     gal2b = galsim.OpticalPSF(lam_over_diam = 2, flux = 100,
                               defocus = 0.23, astig1 = -0.12, astig2 = 0.11,
                               coma1 = -0.09, coma2 = 0.03, spher = 0.19,
-                              pad_factor = 1, oversampling = 1)
+                              pad_factor = 1.4, oversampling = 1.2)
     gsobject_compare(gal2a, gal2b)
 
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
     gal3b = galsim.OpticalPSF(lam_over_diam = 2, flux = 1.e6, 
                               defocus = 0.23, astig1 = -0.12, astig2 = 0.11,
-                              circular_pupil = False, obscuration = 0.3,
-                              pad_factor = 1, oversampling = 1)
+                              circular_pupil = False, obscuration = 0.3)
     gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
     gsobject_compare(gal3a, gal3b)
 
     gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
-    gal4b = galsim.OpticalPSF(lam_over_diam = 1, flux = 50,
-                              defocus = 0.23, astig1 = -0.12, astig2 = 0.11,
-                              coma1 = -0.09, coma2 = 0.03, spher = 0.19,
-                              circular_pupil = True, obscuration = 0.2,
-                              pad_factor = 1, oversampling = 1)
+    gal4b = galsim.OpticalPSF(lam_over_diam = 0.05, flux = 50,
+                              defocus = 0.03, astig1 = -0.04, astig2 = 0.07,
+                              coma1 = -0.09, coma2 = 0.03, spher = -0.09,
+                              circular_pupil = True, obscuration = 0.2)
     gal4b.applyDilation(3)
     gal4b.applyShear(e1 = 0.3)
     gal4b.applyRotation(12 * galsim.degrees)
