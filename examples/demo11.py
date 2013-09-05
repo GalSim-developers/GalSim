@@ -107,7 +107,7 @@ def main(argv):
 
     # We will cache the galaxies that we make in order to save some of the calculations that
     # happen on construction.  In particular, we don't want to recalculate the Fourier transforms 
-    # of the real galaxy images, so it's more efficient.
+    # of the real galaxy images, so it's more efficient so make a store of RealGalaxy instances.
     # We start with them all = None, and fill them in as we make them.
     gal_list = [ None ] * len(id_list)
 
