@@ -590,7 +590,7 @@ def otf(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig1=0., 
         astig2=astig2, coma1=coma1, coma2=coma2, trefoil1=trefoil1, trefoil2=trefoil2, spher=spher, 
         circular_pupil=circular_pupil, obscuration=obscuration, nstruts=nstruts,
         strut_thick=strut_thick, strut_angle=strut_angle)
-    ftwf = np.fft.fft2(wf)  # I think this (and the below) is quicker than np.abs(ftwf)**2
+    ftwf = np.fft.fft2(wf)
     otf = np.fft.ifft2(np.abs(ftwf)**2)
     # Make unit flux before returning
     return np.ascontiguousarray(otf) / otf[0, 0].real
