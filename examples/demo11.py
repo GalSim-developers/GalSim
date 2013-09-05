@@ -71,8 +71,8 @@ def main(argv):
     # Define some parameters we'll use below.
     # Normally these would be read in from some parameter file.
 
-    base_stamp_size = 100             # number of pixels in each dimension of galaxy images
-                                      # This will be scaled down according to the dilation.
+    base_stamp_size = 32              # number of pixels in each dimension of galaxy images
+                                      # This will be scaled up according to the dilation.
                                       # Hence the "base_" prefix.
 
     pixel_scale = 0.2                 # arcsec/pixel
@@ -202,7 +202,7 @@ def main(argv):
         #      structure works and the fact that we also use this value for the stamp size 
         #      calculation, in order to get the output file to match the YAML output file, it
         #      turns out this is where we need to put this use of the random number generator.
-        distdev = galsim.DistDeviate(ud, function=lambda x:x**-2.5, x_min=1, x_max=3)
+        distdev = galsim.DistDeviate(ud, function=lambda x:x**-2.5, x_min=1, x_max=5)
         dilat = distdev()
 
         # Choose a random position in the image
@@ -231,15 +231,15 @@ def main(argv):
             # code to figure out on its own, so we have to supply the size for noise padding 
             # with the noise_pad_size parameter.
         
-            # In this case, the postage stamp will be 100 pixels for the undilated galaxies. 
-            # We scale down the postage stamp size as we dilate the galaxies (otherwise we waste 
-            # a lot of CPU and memory by whitening a much larger image than we really need).
-            # The shear and magnification are not significant, but the image can be rotated, 
-            # which adds an extra factor of sqrt(2). So the net required padded size is
-            #     noise_pad_size = 100 * sqrt(2) * 0.2 arcsec/pixel = 28.2 arcsec
-            # We round this up to 30 to be safe.
+            # In this case, the postage stamp will be 32 pixels for the undilated galaxies. 
+            # We expand the postage stamp as we dilate the galaxies, so that factor doesn't
+            # come into play here.  The shear and magnification are not significant, but the 
+            # image can be rotated, which adds an extra factor of sqrt(2). So the net required 
+            # padded size is
+            #     noise_pad_size = 32 * sqrt(2) * 0.2 arcsec/pixel = 9.1 arcsec
+            # We round this up to 10 to be safe.
             gal = galsim.RealGalaxy(real_galaxy_catalog, rng=ud, id=id_list[index],
-                                    noise_pad_size=30) 
+                                    noise_pad_size=10) 
             # Save it for next time we use this galaxy.
             gal_list[index] = gal
 
@@ -265,9 +265,9 @@ def main(argv):
         iy = int(math.floor(y+0.5))
         offset = galsim.PositionD(x-ix, y-iy)
 
-        # Draw it with our desired stamp size (scaled down by the dilation factor):
+        # Draw it with our desired stamp size (scaled up by the dilation factor):
         # Note: We make the stamp size odd to make the above calculation of the offset easier.
-        this_stamp_size = 2 * int(math.ceil(base_stamp_size / dilat / 2)) + 1
+        this_stamp_size = 2 * int(math.ceil(base_stamp_size * dilat / 2)) + 1
         stamp = galsim.ImageF(this_stamp_size,this_stamp_size)
         final.draw(image=stamp, dx=pixel_scale, offset=offset)
 

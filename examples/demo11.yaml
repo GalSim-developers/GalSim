@@ -80,18 +80,18 @@ gal :
         # especially with the possibility of compound objects, dilations, shears, etc.  So we 
         # require the user to provide the size with the noise_pad_size parameter.
         #
-        # In this case, the postage stamp will be 100 arcsec for the undilated galaxies.
-        # We scale down the postage stamp size as we dilate the galaxies (otherwise we waste
-        # a log of CPU and memory by whitening a much larger image than we really need).
-        # The shear and magnification are not significant, but the image can be rotated, 
-        # which adds an extra factor of sqrt(2). So the net required padded size is
-        #     noise_pad_size = 100 * sqrt(2) * 0.2 arcsec/pixel = 28.2 arcsec
-        # We round this up to 30 to be safe.
-        - { type : RealGalaxy, id : 106416, whiten : true, noise_pad_size : 30 }
-        - { type : RealGalaxy, id : 106731, whiten : true, noise_pad_size : 30 }
-        - { type : RealGalaxy, id : 108402, whiten : true, noise_pad_size : 30 }
-        - { type : RealGalaxy, id : 116045, whiten : true, noise_pad_size : 30 }
-        - { type : RealGalaxy, id : 116448, whiten : true, noise_pad_size : 30 }
+        # In this case, the postage stamp will be 32 arcsec for the undilated galaxies.
+        # We expand the postage stamp as we dilate the galaxies, so that factor doesn't 
+        # come into play here.  The shear and magnification are not significant, but the 
+        # image can be rotated, which adds an extra factor of sqrt(2). So the net required 
+        # padded size is
+        #     noise_pad_size = 32 * sqrt(2) * 0.2 arcsec/pixel = 9.1 arcsec
+        # We round this up to 10 to be safe.
+        - { type : RealGalaxy, id : 106416, whiten : true, noise_pad_size : 10 }
+        - { type : RealGalaxy, id : 106731, whiten : true, noise_pad_size : 10 }
+        - { type : RealGalaxy, id : 108402, whiten : true, noise_pad_size : 10 }
+        - { type : RealGalaxy, id : 116045, whiten : true, noise_pad_size : 10 }
+        - { type : RealGalaxy, id : 116448, whiten : true, noise_pad_size : 10 }
     index : { type : Random }
     # Note: we could also have set the main gal type to RealGalaxy and had id be a list with
     # a random index.  However, the above structure lets the code cache the constructed items
@@ -107,7 +107,7 @@ gal :
         type : RandomDistribution
         function : x**-2.5
         x_min : 1
-        x_max : 3
+        x_max : 5
 
     shear : 
         # We again use PowerSpectrumShear, which is set up below using input : power_spectrum.
@@ -150,8 +150,8 @@ image :
     # to deal with the image offsets:
     stamp_size : 
         type : Eval
-        str : '2 * int(math.ceil(base_stamp_size / dilat / 2)) + 1'
-        ibase_stamp_size : 100  # pixels
+        str : '2 * int(math.ceil(base_stamp_size * dilat / 2)) + 1'
+        ibase_stamp_size : 32  # pixels
         fdilat : { type : Current, key : gal.dilation }
     
     # The default convention on positions is to follow the FITS standard where the lower left
