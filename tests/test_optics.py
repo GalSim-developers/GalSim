@@ -204,15 +204,12 @@ def test_OpticalPSF_flux():
     lods = (1.e-8, 4., 9.e5) # lambda/D values: don't choose unity in case symmetry hides something
     nlook = 512         # Need a bit bigger image than below to get enough flux
     image = galsim.ImageF(nlook,nlook)
-    import warnings
-    with warnings.catch_warnings():
-        # Suppress the warnings from pad_factor=1
-        warnings.simplefilter("ignore")
-        for lod in lods:
-            optics_test = galsim.OpticalPSF(lam_over_diam=lod, pad_factor=1)
-            optics_array = optics_test.draw(dx=.25*lod, image=image).array 
-            np.testing.assert_almost_equal(optics_array.sum(), 1., 2, 
-                    err_msg="Unaberrated Optical flux not quite unity.")
+    for lod in lods:
+        # With default pad_factor, it recommends increasing to 1.59.  Go a bit larger to 1.7.
+        optics_test = galsim.OpticalPSF(lam_over_diam=lod, pad_factor=1.7)
+        optics_array = optics_test.draw(dx=.25*lod, image=image).array 
+        np.testing.assert_almost_equal(optics_array.sum(), 1., 2, 
+                err_msg="Unaberrated Optical flux not quite unity.")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -224,18 +221,14 @@ def test_OpticalPSF_vs_Airy():
     lods = (4.e-7, 9., 16.4) # lambda/D values: don't choose unity in case symmetry hides something
     nlook = 100
     image = galsim.ImageF(nlook,nlook)
-    import warnings
-    with warnings.catch_warnings():
-        # Suppress the warnings from pad_factor=1
-        warnings.simplefilter("ignore")
-        for lod in lods:
-            airy_test = galsim.Airy(lam_over_diam=lod, obscuration=0., flux=1.)
-            #pad same as an Airy, natch!
-            optics_test = galsim.OpticalPSF(lam_over_diam=lod, pad_factor=1)
-            airy_array = airy_test.draw(dx=.25*lod, image=image).array
-            optics_array = optics_test.draw(dx=.25*lod, image=image).array 
-            np.testing.assert_array_almost_equal(optics_array, airy_array, decimal_dft, 
-                    err_msg="Unaberrated Optical not quite equal to Airy")
+    for lod in lods:
+        airy_test = galsim.Airy(lam_over_diam=lod, obscuration=0., flux=1.)
+        #pad same as an Airy, natch!
+        optics_test = galsim.OpticalPSF(lam_over_diam=lod, pad_factor=1, suppress_warning=True)
+        airy_array = airy_test.draw(dx=.25*lod, image=image).array
+        optics_array = optics_test.draw(dx=.25*lod, image=image).array 
+        np.testing.assert_array_almost_equal(optics_array, airy_array, decimal_dft, 
+                err_msg="Unaberrated Optical not quite equal to Airy")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -248,17 +241,14 @@ def test_OpticalPSF_vs_Airy_with_obs():
     obses = (0.1, 0.3, 0.5) # central obscuration radius ratios
     nlook = 100          # size of array region at the centre of each image to compare
     image = galsim.ImageF(nlook,nlook)
-    import warnings
-    with warnings.catch_warnings():
-        # Suppress the warnings from pad_factor=1
-        warnings.simplefilter("ignore")
-        for obs in obses:
-            airy_test = galsim.Airy(lam_over_diam=lod, obscuration=obs, flux=1.)
-            optics_test = galsim.OpticalPSF(lam_over_diam=lod, pad_factor=1, obscuration=obs)
-            airy_array = airy_test.draw(dx=1.,image=image).array
-            optics_array = optics_test.draw(dx=1.,image=image).array 
-            np.testing.assert_array_almost_equal(optics_array, airy_array, decimal_dft, 
-                    err_msg="Unaberrated Optical with obscuration not quite equal to Airy")
+    for obs in obses:
+        airy_test = galsim.Airy(lam_over_diam=lod, obscuration=obs, flux=1.)
+        optics_test = galsim.OpticalPSF(lam_over_diam=lod, pad_factor=1, obscuration=obs,
+                                        suppress_warning=True)
+        airy_array = airy_test.draw(dx=1.,image=image).array
+        optics_array = optics_test.draw(dx=1.,image=image).array 
+        np.testing.assert_array_almost_equal(optics_array, airy_array, decimal_dft, 
+                err_msg="Unaberrated Optical with obscuration not quite equal to Airy")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 

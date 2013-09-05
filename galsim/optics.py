@@ -73,43 +73,47 @@ class OpticalPSF(GSObject):
 
     Initializes optical_psf as a galsim.OpticalPSF() instance.
 
-    @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
-                           (user responsible for consistency).
-    @param defocus         defocus in units of incident light wavelength.
-    @param astig1          astigmatism (like e2) in units of incident light wavelength.
-    @param astig2          astigmatism (like e1) in units of incident light wavelength.
-    @param coma1           coma along y in units of incident light wavelength.
-    @param coma2           coma along x in units of incident light wavelength.
-    @param trefoil1        trefoil (one of the arrows along y) in units of incident light
-                           wavelength.
-    @param trefoil2        trefoil (one of the arrows along x) in units of incident light
-                           wavelength.
-    @param spher           spherical aberration in units of incident light wavelength.
-    @param circular_pupil  adopt a circular pupil?  [default `circular_pupil = True`]
-    @param obscuration     linear dimension of central obscuration as fraction of pupil linear
-                           dimension, [0., 1.).
-    @param interpolant     Either an Interpolant2d (or Interpolant) instance or a string indicating
-                           which interpolant should be used.  Options are 'nearest', 'sinc', 
-                           'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the 
-                           integer order to use. [default `interpolant = galsim.Quintic()`]
-    @param oversampling    Optional oversampling factor for the InterpolatedImage. Setting 
-                           oversampling < 1 will produce aliasing in the PSF (not good).
-                           [default `oversampling = 1.`]
-    @param pad_factor      Additional multiple by which to zero-pad the PSF image to avoid folding
-                           compared to what would be employed for a simple galsim.Airy 
-                           [default `pad_factor = 1.5`].  Note that `pad_factor` may need to be 
-                           increased for stronger aberrations, i.e. those larger than order unity.
-    @param flux            Total flux of the profile [default `flux=1.`].
-    @param nstruts         Number of radial support struts to add to the central obscuration
-                           [default `nstruts = 0`].
-    @param strut_thick     Thickness of support struts as a fraction of pupil diameter
-                           [default `strut_thick = 0.05`]
-    @param strut_angle     Angle made between the vertical and the strut starting closest to it,
-                           defined to be positive in the counter-clockwise direction; must be a
-                           galsim.Angle instance [default `strut_angle = 0. * galsim.degrees`].
-    @param gsparams        You may also specify a gsparams argument.  See the docstring for
-                           galsim.GSParams using help(galsim.GSParams) for more information about
-                           this option.
+    @param lam_over_diam    lambda / telescope diameter in the physical units adopted for dx 
+                            (user responsible for consistency).
+    @param defocus          defocus in units of incident light wavelength.
+    @param astig1           astigmatism (like e2) in units of incident light wavelength.
+    @param astig2           astigmatism (like e1) in units of incident light wavelength.
+    @param coma1            coma along y in units of incident light wavelength.
+    @param coma2            coma along x in units of incident light wavelength.
+    @param trefoil1         trefoil (one of the arrows along y) in units of incident light
+                            wavelength.
+    @param trefoil2         trefoil (one of the arrows along x) in units of incident light
+                            wavelength.
+    @param spher            spherical aberration in units of incident light wavelength.
+    @param circular_pupil   adopt a circular pupil?  [default `circular_pupil = True`]
+    @param obscuration      linear dimension of central obscuration as fraction of pupil linear
+                            dimension, [0., 1.).
+    @param interpolant      Either an Interpolant2d (or Interpolant) instance or a string indicating
+                            which interpolant should be used.  Options are 'nearest', 'sinc', 
+                            'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the 
+                            integer order to use. [default `interpolant = galsim.Quintic()`]
+    @param oversampling     Optional oversampling factor for the InterpolatedImage. Setting 
+                            oversampling < 1 will produce aliasing in the PSF (not good).
+                            [default `oversampling = 1.`]
+    @param pad_factor       Additional multiple by which to zero-pad the PSF image to avoid folding
+                            compared to what would be employed for a simple galsim.Airy 
+                            [default `pad_factor = 1.5`].  Note that `pad_factor` may need to be 
+                            increased for stronger aberrations, i.e. those larger than order unity.
+    @param suppress_warning If pad_factor is too small, the code will emit a warning telling you
+                            its best guess about how high you might want to raise it.  However,
+                            you can suppress this warning by using suppress_warning=True.
+                            [default `suppress_warning = False`]
+    @param flux             Total flux of the profile [default `flux=1.`].
+    @param nstruts          Number of radial support struts to add to the central obscuration
+                            [default `nstruts = 0`].
+    @param strut_thick      Thickness of support struts as a fraction of pupil diameter
+                            [default `strut_thick = 0.05`]
+    @param strut_angle      Angle made between the vertical and the strut starting closest to it,
+                            defined to be positive in the counter-clockwise direction; must be a
+                            galsim.Angle instance [default `strut_angle = 0. * galsim.degrees`].
+    @param gsparams         You may also specify a gsparams argument.  See the docstring for
+                            galsim.GSParams using help(galsim.GSParams) for more information about
+                            this option.
 
     Methods
     -------
@@ -132,6 +136,7 @@ class OpticalPSF(GSObject):
         "obscuration" : float ,
         "oversampling" : float ,
         "pad_factor" : float ,
+        "suppress_warning" : bool ,
         "interpolant" : str ,
         "flux" : float,
         "nstruts" : int,
@@ -144,7 +149,7 @@ class OpticalPSF(GSObject):
     def __init__(self, lam_over_diam, defocus=0.,
                  astig1=0., astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0., 
                  circular_pupil=True, obscuration=0., interpolant=None, oversampling=1.,
-                 pad_factor=1.5, flux=1.,
+                 pad_factor=1.5, suppress_warning=False, flux=1.,
                  nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees,
                  gsparams=None):
 
@@ -180,15 +185,17 @@ class OpticalPSF(GSObject):
         # means that the default stepK value will be smaller than we need.  
         # Hence calculate_stepk=True and calculate_maxk=True above.
 
-        # Check the calculated stepk value.  If it is smaller than stepk, then there might
-        # be aliasing.  However, don't warn if they did set pad_factor already.
-        final_stepk = self.SBProfile.stepK()
-        if final_stepk < stepk:
-            import warnings
-            warnings.warn(
-                "The calculated stepk (%f) for OpticalPSF is smaller than what was "%final_stepk +
-                "used to build the wavefront (%f).  This could lead to aliasing problems. "%stepk +
-                "Using pad_factor >= %f is recommended."%(pad_factor * stepk / final_stepk))
+        if not suppress_warning:
+            # Check the calculated stepk value.  If it is smaller than stepk, then there might
+            # be aliasing.  However, don't warn if they did set pad_factor already.
+            final_stepk = self.SBProfile.stepK()
+            if final_stepk < stepk:
+                import warnings
+                warnings.warn(
+                    "The calculated stepk (%f) for OpticalPSF is smaller "%final_stepk +
+                    "than what was used to build the wavefront (%f)."%stepk +
+                    "This could lead to aliasing problems. " +
+                    "Using pad_factor >= %f is recommended."%(pad_factor * stepk / final_stepk))
 
 
 
