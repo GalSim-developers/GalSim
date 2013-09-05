@@ -187,6 +187,7 @@ class RealGalaxy(GSObject):
                 self.gal_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant,
                 dx=self.pixel_scale, pad_factor=pad_factor, noise_pad_size=noise_pad_size,
                 calculate_stepk=self.original_PSF.stepK(),
+                calculate_maxk=self.original_PSF.maxK(),
                 noise_pad=noise_pad, rng=rng, gsparams=gsparams)
 
         # If flux is None, leave flux as given by original image

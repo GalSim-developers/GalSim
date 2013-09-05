@@ -192,9 +192,9 @@ class InterpolatedImage(GSObject):
                            spatial frequency needed to accurately render the object being 
                            represented by the InterpolatedImage; often this is useful in choosing 
                            an optimal value for the extent of the Fourier space lookup table.
-                           If you know a priori an appropriate minimum value for maxk, then 
+                           If you know a priori an appropriate maximum value for maxk, then 
                            you may also supply that here instead of a bool value, in which case
-                           the maxk value is still calculated, but will not go below the
+                           the maxk value is still calculated, but will not go above the
                            provided value. 
                            (Default `calculate_maxk = True`)
     @param use_true_center Similar to the same parameter in the GSObject.draw function, this
@@ -394,8 +394,8 @@ class InterpolatedImage(GSObject):
             if calculate_maxk is True:
                 sbinterpolatedimage.calculateMaxK()
             else:
-                # If not a bool, then value is min_maxk
-                sbinterpolatedimage.calculateMaxK(min_maxk=calculate_maxk)
+                # If not a bool, then value is max_maxk
+                sbinterpolatedimage.calculateMaxK(max_maxk=calculate_maxk)
 
         # If the user specified a flux, then set to that flux value.
         if flux != None:

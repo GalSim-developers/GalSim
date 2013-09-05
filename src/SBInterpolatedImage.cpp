@@ -60,10 +60,10 @@ namespace galsim {
         return static_cast<const SBInterpolatedImageImpl&>(*_pimpl).calculateStepK(max_stepk); 
     }
 
-    void SBInterpolatedImage::calculateMaxK(double min_maxk) const 
+    void SBInterpolatedImage::calculateMaxK(double max_maxk) const 
     {
         assert(dynamic_cast<const SBInterpolatedImageImpl*>(_pimpl.get()));
-        return static_cast<const SBInterpolatedImageImpl&>(*_pimpl).calculateMaxK(min_maxk); 
+        return static_cast<const SBInterpolatedImageImpl&>(*_pimpl).calculateMaxK(max_maxk); 
     }
 
     template <class T>
@@ -674,11 +674,11 @@ namespace galsim {
     inline double fast_norm(const std::complex<double>& z)
     { return real(z)*real(z) + imag(z)*imag(z); }
 
-    void SBInterpolatedImage::SBInterpolatedImageImpl::calculateMaxK(double min_maxk) const
+    void SBInterpolatedImage::SBInterpolatedImageImpl::calculateMaxK(double max_maxk) const
     {
         dbg<<"Start SBInterpolatedImage calculateMaxK()\n";
         dbg<<"Current value of maxk = "<<_maxk<<std::endl;
-        dbg<<"min_maxk = "<<min_maxk<<std::endl;
+        dbg<<"max_maxk = "<<max_maxk<<std::endl;
         dbg<<"Find the smallest k such that all values outside of this are less than "
             <<this->gsparams->maxk_threshold<<std::endl;
         checkK();
@@ -694,15 +694,16 @@ namespace galsim {
         int n_below_thresh = 0;
         int N = _ktab->getN();
         // Don't go past the current value of maxk
-        if (N/2 * dk > _maxk) 
-            N = int(_maxk*2./dk);
+        if (max_maxk == 0.) max_maxk = _maxk;
+        int max_ix = int(std::ceil(max_maxk / dk));
+        if (max_ix > N/2) max_ix = N/2;
+
         // We take the k value to be maximum of kx and ky.  This is appropriate, because
         // this is how maxK() is eventually used -- it sets the size in k-space for both
         // kx and ky when drawing.  Since kx<0 is just the conjugate of the corresponding
         // point at (-kx,-ky), we only check the right half of the square.  i.e. the 
         // upper-right and lower-right quadrants.
-        int min_ix = int(std::ceil(min_maxk / dk));
-        for(int ix=min_ix; ix<=N/2; ++ix) {
+        for(int ix=0; ix<=max_ix; ++ix) {
             xdbg<<"Start search for ix = "<<ix<<std::endl;
             // Search along the two sides with either kx = ix or ky = ix.
             for(int iy=0; iy<=ix; ++iy) {

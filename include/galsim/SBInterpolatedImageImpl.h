@@ -52,7 +52,7 @@ namespace galsim {
         double stepK() const { return _stepk; }
 
         void calculateMaxK(double max_stepk) const;
-        void calculateStepK(double min_maxk) const;
+        void calculateStepK(double max_maxk) const;
 
         void getXRange(double& xmin, double& xmax, std::vector<double>& ) const;
         void getYRange(double& ymin, double& ymax, std::vector<double>& ) const;
