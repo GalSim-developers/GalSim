@@ -187,7 +187,7 @@ class OpticalPSF(GSObject):
 
         if not suppress_warning:
             # Check the calculated stepk value.  If it is smaller than stepk, then there might
-            # be aliasing.  However, don't warn if they did set pad_factor already.
+            # be aliasing.
             final_stepk = self.SBProfile.stepK()
             if final_stepk < stepk:
                 import warnings
@@ -221,10 +221,9 @@ def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_diam=2., circul
  
     Returns a tuple (rho, in_pupil), the first of which is the coordinates of the pupil
     in unit disc-scaled coordinates for use by Zernike polynomials (as a complex number)
-    for describing the wavefront across the pupil plane.  rhosq is |rho|**2, returned for 
-    convenience, since it needs to be calculated here, and will be used again in the wavefront
-    function.  The array in_pupil is a vector of Bools used to specify where in the pupil plane 
-    described by rho is illuminated.  See also optics.wavefront. 
+    for describing the wavefront across the pupil plane.  The array in_pupil is a vector of 
+    Bools used to specify where in the pupil plane described by rho is illuminated.  See also 
+    optics.wavefront. 
     """
     kmax_internal = dx * 2. * np.pi / lam_over_diam # INTERNAL kmax in units of array grid spacing
     # Build kx, ky coords
@@ -232,7 +231,7 @@ def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_diam=2., circul
     # Then define unit disc rho pupil coords for Zernike polynomials
     rho = (kx + 1j * ky) / (.5 * kmax_internal)
     rhosq = np.abs(rho)**2
-    # Amazingly, the above line is faster than the following. (~ 25% faster)
+    # Amazingly, the above line is faster than the following. (~ 35% faster)
     # See the longer comment about this in psf function.
     #rhosq = rho.real**2 + rho.imag**2
 
@@ -325,7 +324,7 @@ def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
     # Then make wavefront image
     wf = np.zeros(array_shape, dtype=complex)
 
-    # It is much faster to pull out the elements we will use one, rather than use the 
+    # It is much faster to pull out the elements we will use once, rather than use the 
     # subscript each time.  At the end we will fill the appropriate part of wf with the
     # values calculated from this rho vector.
     rho = rho_all[in_pupil]  
@@ -335,16 +334,17 @@ def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., defocus=0., astig
 
     # rho2 = rho * rho
     # rho3 = rho2 * rho
+    # temp = np.zeros(rho.shape, dtype=complex)
     # Defocus:
-    # wf[in_pupil] += np.sqrt(3.) * (2. * rhosq - 1.) * defocus
+    # temp += np.sqrt(3.) * (2. * rhosq - 1.) * defocus
     # Astigmatism:
-    # wf[in_pupil] += np.sqrt(6.) * ( astig1 * rho2.imag + astig2 * rho2.real )
+    # temp += np.sqrt(6.) * ( astig1 * rho2.imag + astig2 * rho2.real )
     # Coma:
-    # wf[in_pupil] += np.sqrt(8.) * (3. * rhosq - 2.) * ( coma1 * rho.imag + coma2 * rho.real )
+    # temp += np.sqrt(8.) * (3. * rhosq - 2.) * ( coma1 * rho.imag + coma2 * rho.real )
     # Trefoil (one of the arrows along x2)
-    # wf[in_pupil] += np.sqrt(8.) * ( trefoil1 * rho3.imag + trefoil2 * rho3.real )
+    # temp += np.sqrt(8.) * ( trefoil1 * rho3.imag + trefoil2 * rho3.real )
     # Spherical aberration
-    # wf[in_pupil] += np.sqrt(5.) * (6. * rhosq**2 - 6. * rhosq + 1.) * spher
+    # temp += np.sqrt(5.) * (6. * rhosq**2 - 6. * rhosq + 1.) * spher
 
     # Faster to use Horner's method in rho:
     temp = (

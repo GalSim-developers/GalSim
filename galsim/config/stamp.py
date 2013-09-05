@@ -696,7 +696,7 @@ def AddNoiseFFT(im, weight_im, current_var, noise, base, rng, sky_level_pixel, l
                 weight_im += sky_level_pixel / gain + read_noise_var
 
         if current_var:
-            if sky_level_pixel + read_noise_var < current_var:
+            if sky_level_pixel / gain + read_noise_var < current_var:
                 raise RuntimeError(
                     "Whitening already added more noise than requested CCD noise.")
             if read_noise_var >= current_var:
@@ -945,7 +945,7 @@ def AddNoisePhot(im, weight_im, current_var, noise, base, rng, sky_level_pixel, 
                 weight_im += sky_level_pixel / gain + read_noise_var
 
         if current_var:
-            if sky_level_pixel + read_noise_var < current_var:
+            if sky_level_pixel / gain + read_noise_var < current_var:
                 raise RuntimeError(
                     "Whitening already added more noise than requested CCD noise.")
             if read_noise_var >= current_var:
