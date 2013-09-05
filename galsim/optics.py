@@ -73,20 +73,20 @@ class OpticalPSF(GSObject):
 
     Initializes optical_psf as a galsim.OpticalPSF() instance.
 
-    @param lam_over_diam    lambda / telescope diameter in the physical units adopted for dx 
+    @param lam_over_diam    Lambda / telescope diameter in the physical units adopted for dx 
                             (user responsible for consistency).
-    @param defocus          defocus in units of incident light wavelength.
-    @param astig1           astigmatism (like e2) in units of incident light wavelength.
-    @param astig2           astigmatism (like e1) in units of incident light wavelength.
-    @param coma1            coma along y in units of incident light wavelength.
-    @param coma2            coma along x in units of incident light wavelength.
-    @param trefoil1         trefoil (one of the arrows along y) in units of incident light
+    @param defocus          Defocus in units of incident light wavelength.
+    @param astig1           Astigmatism (like e2) in units of incident light wavelength.
+    @param astig2           Astigmatism (like e1) in units of incident light wavelength.
+    @param coma1            Coma along y in units of incident light wavelength.
+    @param coma2            Coma along x in units of incident light wavelength.
+    @param trefoil1         Trefoil (one of the arrows along y) in units of incident light
                             wavelength.
-    @param trefoil2         trefoil (one of the arrows along x) in units of incident light
+    @param trefoil2         Trefoil (one of the arrows along x) in units of incident light
                             wavelength.
-    @param spher            spherical aberration in units of incident light wavelength.
-    @param circular_pupil   adopt a circular pupil?  [default `circular_pupil = True`]
-    @param obscuration      linear dimension of central obscuration as fraction of pupil linear
+    @param spher            Spherical aberration in units of incident light wavelength.
+    @param circular_pupil   Adopt a circular pupil?  [default `circular_pupil = True`]
+    @param obscuration      Linear dimension of central obscuration as fraction of pupil linear
                             dimension, [0., 1.).
     @param interpolant      Either an Interpolant2d (or Interpolant) instance or a string indicating
                             which interpolant should be used.  Options are 'nearest', 'sinc', 
