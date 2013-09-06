@@ -14,13 +14,6 @@
 # from the same catalog of 100 objects that demo6 used.  We also use the whitening option to 
 # remove the correlations in the noise originally present in the HST images.
 #
-# The noise added to the image is spatially correlated in the same way as often seen in 
-# coadd images from the Hubble Space Telescope (HST) Advanced Camera for Surveys, using a 
-# correlation function determined from the HST COSMOS coadd images in the F814W filter 
-# (see, e.g., Leauthaud et al 2007).  Applying this noise uses an FFT of the size of the 
-# full output image: this may cause memory-related slowdowns in systems with less than 2GB 
-# RAM.
-#
 # New features introduced in this demo:
 #
 # - obj type : InterpolatedImage(image, dx)
@@ -28,7 +21,6 @@
 # - float_value type : RandomDistribution(function, x_min, x_max)
 # - pix type : None
 # - input.power_spectrum : (e_power_file, delta2, units)
-# - noise type : COSMOS
 # - image.index_convention : (0 or 'C' or 'python') vs (1 or 'Fortran' or 'FITS')
 #
 # - Power spectrum shears and magnifications for non-gridded positions.
@@ -121,9 +113,6 @@ gal :
     rotation :
         type : Random
 
-    # The galaxy S/N is set to be 100, but this is based on a point variance-only calculation
-    # (such as discussed in Leauthaud et al 2007).  The true SNR is somewhat lower, due to the
-    # presence of correlation in the noise.
     signal_to_noise : 100
 
 
@@ -165,15 +154,13 @@ image :
     # The default is 1.
     index_convention : 0
 
-    # Add correlated noise to the image -- the correlation function comes from the HST COSMOS images
-    # and is described in more detail in the galsim.correlatednoise.getCOSMOSNoise() docstring.
-    # This function requires a FITS file, stored in the GalSim repository, that represents this
-    # correlation information: the path to this file must be given as file_name.
+    # Add Gaussian noise.  When using the whitening feature, the whitening process will end
+    # up with white Gaussian noise.  So adding more Gaussian noise can be done coherently.
+    # Adding any other kind of noise (Poisson for instance) will actually result in some 
+    # Gaussian noise as well, with the total variance preserved.
     noise :
-        type : "COSMOS"
-        file_name : "data/acs_I_unrot_sci_20_cf.fits"
-        dx_cosmos : 0.20  # use the same pixel scale as image, reproducing COSMOS correlated noise
-        variance : 1.0e4   # variance sets value of zero distance correlation function
+        type : Gaussian
+        variance : 1.0e4   # Total variance including whatever the whitening process needs.
 
     pixel_scale : 0.20  # arcsec / pixel
 

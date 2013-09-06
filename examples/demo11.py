@@ -12,12 +12,6 @@ permitted to overlap, but we do take care to avoid being too close to the edge o
 For the galaxies, we use a random selection from 5 specific RealGalaxy objects, selected to be 5
 particularly irregular ones.  These are taken from the same catalog of 100 objects that demo6 used.
 
-The noise added to the image is spatially correlated in the same way as often seen in coadd images
-from the Hubble Space Telescope (HST) Advanced Camera for Surveys, using a correlation function
-determined from the HST COSMOS coadd images in the F814W filter (see, e.g., Leauthaud et al 2007).
-Applying this noise uses an FFT of the size of the full output image: this may cause memory-related
-slowdowns in systems with less than 2GB RAM.
-
 New features introduced in this demo:
 
 - psf = galsim.InterpolatedImage(psf_filename, dx, flux)
@@ -27,9 +21,7 @@ New features introduced in this demo:
 - distdev = galsim.DistDeviate(rng, function, x_min, x_max)
 - gal.applyLensing(g1, g2, mu)
 - correlated_noise.applyWhiteningTo(image)
-- cn = galsim.getCOSMOSNoise(rng, file_name, ...)
 - vn = galsim.VariableGaussianNoise(rng, var_image)
-- ucn = galsim.UncorrelatedNoise(rng, pixel_scale, variance)
 - image.addNoise(cn)
 - image.setOrigin(x,y)
 
@@ -58,12 +50,9 @@ def main(argv):
         telescope. However, in order that the galaxy resolution not be too poor, we tell GalSim that
         the pixel scale for that PSF image is 0.2" rather than 0.396".  We are simultaneously lying
         about the intrinsic size of the PSF and about the pixel scale when we do this.
-      - Noise is correlated with the same spatial correlation function as found in HST COSMOS weak
-        lensing science images, with a point (zero distance) variance that we normalize to 1.e4.
-      - Galaxies are real galaxies, each with S/N~100 based on a point variance-only calculation
-        (such as discussed in Leauthaud et al 2007).  The true SNR is somewhat lower, due to the
-        presence of correlation in the noise.
-
+      - The galaxy images include some initial correlated noise from the original HST observation.
+        However, we whiten the noise of the final image so the final image has stationary 
+        Gaussian noise, rather than correlated noise.
     """
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger("demo11")
@@ -303,21 +292,6 @@ def main(argv):
         tot_time = time2-time1
         logger.info('Galaxy %d: position relative to corner = %s, t=%f s', k, str(pos), tot_time)
 
-    # Add correlated noise to the image -- the correlation function comes from the HST COSMOS images
-    # and is described in more detail in the galsim.correlatednoise.getCOSMOSNoise() docstring.
-    # This function requires a FITS file, stored in the GalSim repository, that represents this
-    # correlation information: the path to this file is a required argument. 
-    cf_file_name = os.path.join('data', 'acs_I_unrot_sci_20_cf.fits')
-
-    # Then use this to initialize the correlation function that we will use to add noise to the
-    # full_image.  We set the dx_cosmos keyword equal to our pixel scale, so that the noise among
-    # neighboring pixels is correlated at the same level as it was among neighboring pixels in HST
-    # COSMOS.  Using the original pixel scale, dx_cosmos=0.03 [arcsec], would leave very little
-    # correlation among our larger 0.2 arcsec pixels. We also set the point (zero-distance) variance
-    # to our desired value.
-    cn = galsim.getCOSMOSNoise(
-        rng, cf_file_name, dx_cosmos=pixel_scale, variance=noise_variance)
-
     # We already have some noise in the image, but it isn't uniform.  So the first thing to do is
     # to make the Gaussian noise uniform across the whole image.  We have a special noise class
     # that can do this.  VariableGaussianNoise takes an image of variance values and applies
@@ -330,16 +304,14 @@ def main(argv):
     full_image.addNoise(vn)
 
     # Now max_current_variance is the noise level across the full image.  We don't want to add that
-    # twice, so subtract off this much from the COSMOS noise that we want to end up in the image.
-    # The UncorrelatedNoise class is a kind of "CorrelatedNoise" that has no correlations.
-    # Its correlation function has the given variance at zero lag, and 0 elsewhere.  We can thus
-    # subtract off this value from the correlated noise that we want for the final noise field.
-    cn -= galsim.UncorrelatedNoise(rng, pixel_scale, max_current_variance)
+    # twice, so subtract off this much from the intended noise that we want to end up in the image.
+    noise_variance -= max_current_variance
 
-    # Now add noise according to this correlation function to the full_image.  We have to do this
-    # step at the end, rather than adding to individual postage stamps, in order to get the noise
+    # Now add Gaussian noise with this variance to the final image.  We have to do this step
+    # at the end, rather than adding to individual postage stamps, in order to get the noise
     # level right in the overlap regions between postage stamps.
-    full_image.addNoise(cn) # Note image must have the right scale, as it does here.
+    noise = galsim.GaussianNoise(rng, sigma=math.sqrt(noise_variance))
+    full_image.addNoise(noise)
     logger.info('Added noise to final large image')
 
     # Now write the image to disk.  It is automatically compressed with Rice compression,
