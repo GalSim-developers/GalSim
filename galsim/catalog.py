@@ -253,17 +253,21 @@ class Dict(object):
         chain = key.split(self.key_split)
         d = self.dict
         while len(chain):
-            key = chain.pop(0)
+            k = chain.pop(0)
             
             # Try to convert to an integer:
-            try: key = int(key)
+            try: k = int(k)
             except ValueError: pass
 
             # If there are more keys, just set d to the next in the chanin.
-            if chain: d = d[key]
+            if chain: d = d[k]
             # Otherwise, return the result.
-            else: return d.get(key,default)
-        raise ValueError("Invalid key given to Dict.get()")
+            else: 
+                if k not in d and default is None:
+                    raise ValueError("key=%s not found in dictionary"%key)
+                return d.get(k,default)
+
+        raise ValueError("Invalid key=%s given to Dict.get()"%key)
 
     # The rest of the functions are typical non-mutating functions for a dict, for which we just
     # pass the request along to self.dict.

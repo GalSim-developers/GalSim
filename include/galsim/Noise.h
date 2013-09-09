@@ -116,7 +116,7 @@ namespace galsim {
 
 
     /** 
-     * @brief Class implementing simple Gaussain noise.
+     * @brief Class implementing simple Gaussian noise.
      *
      * The GaussianNoise class implements a simple Gaussian noise with a given sigma.
      */
@@ -611,6 +611,111 @@ namespace galsim {
         void doApplyTo(ImageView<int32_t>& data) { applyTo(data); }
         void doApplyTo(ImageView<int16_t>& data) { applyTo(data); }
     };
+
+    /** 
+     * @brief Class implementing variable Gaussian noise.
+     *
+     * The VariableGaussianNoise class implements Gaussian noise where each pixel may have 
+     * a different variance.
+     */
+    class VariableGaussianNoise : public BaseNoise
+    {
+    public:
+ 
+        /**
+         * @brief Construct a new noise model with a given variance image.
+         *
+         * @param[in] rng         The BaseDeviate to use for the random number generation.
+         * @param[in] var_image   Image with the variance values for the noise in each pixel.
+         */
+        VariableGaussianNoise(boost::shared_ptr<BaseDeviate> rng,
+                              const BaseImage<float>& var_image) :
+            BaseNoise(rng), _var_image(var_image.view())
+        {}
+
+        /**
+         * @brief Construct a copy that shares the RNG with rhs.
+         *
+         * Note: the default constructed op= function will do the same thing.
+         */
+        VariableGaussianNoise(const VariableGaussianNoise& rhs) : 
+            BaseNoise(rhs), _var_image(rhs._var_image)
+        {}
+ 
+        /**
+         * @brief Report current variance image.
+         */
+        ConstImageView<float> getVarImage() const { return _var_image; }
+
+        /**
+         * @brief Get the variance of the noise model
+         */
+        double getVariance() const 
+        { 
+            throw std::runtime_error("No single variance value for VariableGaussianNoise"); 
+            return 0.;
+        }
+
+        /**
+         * @brief Set the variance of the noise model
+         */
+        void setVariance(double variance) 
+        { 
+            throw std::runtime_error(
+                "Changing the variance is not allowed for VariableGaussianNoise");
+        }
+
+        /**
+         * @brief Scale the variance of the noise model
+         */
+        void scaleVariance(double variance_ratio) 
+        {
+            throw std::runtime_error(
+                "Changing the variance is not allowed for VariableGaussianNoise");
+        }
+
+        /**
+         * @brief Add noise to an Image.
+         */
+        template <typename T>
+        void applyTo(ImageView<T> data) 
+        {
+            if ( (data.getYMax()-data.getYMin() != _var_image.getYMax()-_var_image.getYMin()) ||
+                 (data.getXMax()-data.getXMin() != _var_image.getXMax()-_var_image.getXMin()) ) {
+                throw std::runtime_error("The given image does not have the same shape as the "
+                                         "variance image in VariableGaussianNoise object.");
+            }
+
+            // Typedef for image row iterable
+            typedef typename ImageView<T>::iterator ImIter;
+            typedef typename ConstImageView<float>::const_iterator CImFIter;
+
+            GaussianDeviate gd(*_rng, 0., 1.);
+            int y2 = _var_image.getYMin();
+            for (int y = data.getYMin(); y <= data.getYMax(); ++y, ++y2) {  // iterate over y
+                ImIter ee = data.rowEnd(y);
+                CImFIter var_it = _var_image.rowBegin(y2);
+                for (ImIter it = data.rowBegin(y); it != ee; ++it, ++var_it) {
+                    if (!(*var_it >= 0)) 
+                        throw std::runtime_error("variance image has elements < 0.");
+                    gd.setSigma(sqrt(*var_it));
+                    *it = T(*it + gd());
+                }
+            }
+        }
+
+    protected:
+        using BaseNoise::_rng;
+        void doApplyTo(ImageView<double>& data) { applyTo(data); }
+        void doApplyTo(ImageView<float>& data) { applyTo(data); }
+        void doApplyTo(ImageView<int32_t>& data) { applyTo(data); }
+        void doApplyTo(ImageView<int16_t>& data) { applyTo(data); }
+
+    private: 
+        ConstImageView<float> _var_image;
+
+    };
+
 
 };  // namespace galsim
 

@@ -37,6 +37,7 @@ except ImportError:
 def test_scattered():
     """Test aspects of building an Scattered image
     """
+    import copy
     import time
     t1 = time.time()
 
@@ -55,7 +56,7 @@ def test_scattered():
     y3 = 19.7
 
     # This part of the config will be the same for all tests
-    config = {
+    base_config = {
         'gal' : { 'type' : 'Gaussian', 
                   'sigma' : sigma,
                   'flux' : flux 
@@ -63,7 +64,7 @@ def test_scattered():
     }
 
     # Check that the stamps are centered at the correct location for both odd and even stamp size.
-    config['image'] = {
+    base_config['image'] = {
         'type' : 'Scattered',
         'size' : size,
         'pixel_scale' : scale,
@@ -73,6 +74,8 @@ def test_scattered():
     }
     for convention in [ 0, 1 ]:
         for test_stamp_size in [ stamp_size, stamp_size + 1 ]:
+            # Deep copy to make sure we don't have any "current_val" caches present.
+            config = copy.deepcopy(base_config)
             config['image']['stamp_size'] = test_stamp_size
             config['image']['index_convention'] = convention
     
@@ -98,6 +101,7 @@ def test_scattered():
 
     # Check that stamp_xsize, stamp_ysize, image_pos use the object count, rather than the 
     # image count.
+    config = copy.deepcopy(base_config)
     config['image'] = {
         'type' : 'Scattered',
         'size' : size,

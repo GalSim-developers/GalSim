@@ -95,16 +95,15 @@ def main(argv):
     # psf_e = 0.4 * (r/100)^1.5         -- large value at the edge, so visible by eye.
     # psf_beta = atan2(y/x) + pi/2      -- tangential pattern
 
-    gal_signal_to_noise = 100       # Great08 "LowNoise" run
     gal_dilation = 3                # Make the galaxies a bit larger than their original size.
+    gal_signal_to_noise = 100       # Pretty high.
+    psf_signal_to_noise = 1000      # Even higher.
 
     logger.info('Starting demo script 10')
  
     # Read in galaxy catalog
     cat_file_name = 'real_galaxy_catalog_example.fits'
-    # This script is designed to be run from the examples directory so dir is a relative path.  
-    # But the '../examples/' part lets bin/demo10 also be run from the bin directory.
-    dir = '../examples/data'
+    dir = 'data'
     real_galaxy_catalog = galsim.RealGalaxyCatalog(cat_file_name, dir=dir)
     real_galaxy_catalog.preload()
     logger.info('Read in %d real galaxies from catalog', real_galaxy_catalog.nobjects)
@@ -250,8 +249,11 @@ def main(argv):
         # For the PSF image, we also shift the PSF by the same amount.
         final_psf.applyShift(dx,dy)
 
-        # No noise on PSF images.  Just draw it as is.
+        # Draw the PSF image
         final_psf.draw(sub_psf_image)
+
+        # Again, add noise, but at higher S/N this time.
+        sub_psf_image.addNoiseSNR(noise, psf_signal_to_noise)
 
         logger.info('Galaxy (%d,%d): position relative to center = %s', ix,iy,str(pos))
 

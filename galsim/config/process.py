@@ -334,9 +334,9 @@ def Process(config, logger=None):
                 req['hdu'] = int
 
             if extra_key == 'psf': 
-                ignore.append('real_space')
+                ignore += ['real_space', 'signal_to_noise']
             if extra_key == 'weight': 
-                ignore.append('include_obj_var')
+                ignore += ['include_obj_var']
             if 'file_name' in output_extra:
                 SetDefaultExt(output_extra['file_name'],'.fits')
             params, safe = galsim.config.GetAllParams(output_extra,extra_key,kwargs['config'],
@@ -638,7 +638,7 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
             make_psf_image=make_psf_image, 
             make_weight_image=make_weight_image,
             make_badpix_image=make_badpix_image)
-    obj_num += GetNObjForImage(config, image_num)
+    obj_num += galsim.config.GetNObjForImage(config, image_num)
     t3 = time.time()
     if logger:
         # Note: numpy shape is y,x
@@ -692,7 +692,11 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
 def GetNObjForFits(config, file_num, image_num):
     ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc' ]
     galsim.config.CheckAllParams(config['output'], 'output', ignore=ignore)
-    nobj = [ GetNObjForImage(config, image_num) ]
+    try : 
+        nobj = [ galsim.config.GetNObjForImage(config, image_num) ]
+    except ValueError : # (This may be raised if something needs the input stuff)
+        ProcessInput(config, file_num=file_num)
+        nobj = [ galsim.config.GetNObjForImage(config, image_num) ]
     return nobj
     
 def GetNObjForMultiFits(config, file_num, image_num):
@@ -708,9 +712,11 @@ def GetNObjForMultiFits(config, file_num, image_num):
     params = galsim.config.GetAllParams(config['output'],'output',config,ignore=ignore,req=req)[0]
     config['seq_index'] = file_num
     nimages = params['nimages']
-    nobj = []
-    for j in range(nimages):
-        nobj.append(GetNObjForImage(config, image_num+j))
+    try :
+        nobj = [ galsim.config.GetNObjForImage(config, image_num+j) for j in range(nimages) ]
+    except ValueError : # (This may be raised if something needs the input stuff)
+        ProcessInput(config, file_num=file_num)
+        nobj = [ galsim.config.GetNObjForImage(config, image_num+j) for j in range(nimages) ]
     return nobj
 
 def GetNObjForDataCube(config, file_num, image_num):
@@ -726,42 +732,13 @@ def GetNObjForDataCube(config, file_num, image_num):
     params = galsim.config.GetAllParams(config['output'],'output',config,ignore=ignore,req=req)[0]
     config['seq_index'] = file_num
     nimages = params['nimages']
-    nobj = []
-    for j in range(nimages):
-        nobj.append(GetNObjForImage(config, image_num+j))
+    try :
+        nobj = [ galsim.config.GetNObjForImage(config, image_num+j) for j in range(nimages) ]
+    except ValueError : # (This may be raised if something needs the input stuff)
+        ProcessInput(config, file_num=file_num)
+        nobj = [ galsim.config.GetNObjForImage(config, image_num+j) for j in range(nimages) ]
     return nobj
  
-def GetNObjForImage(config, image_num):
-    if 'image' in config and 'type' in config['image']:
-        image_type = config['image']['type']
-    else:
-        image_type = 'Single'
-
-    config['seq_index'] = image_num
-
-    if image_type == 'Single':
-        return 1
-    elif image_type == 'Scattered':
-        # Allow nobjects to be automatic based on input catalog
-        if 'nobjects' not in config['image']:
-            nobj = ProcessInputNObjects(config)
-            if nobj:
-                config['image']['nobjects'] = nobj
-                return nobj
-            else:
-                raise AttributeError("Attribute nobjects is required for image.type = Scattered")
-        else:
-            return galsim.config.ParseValue(config['image'],'nobjects',config,int)[0]
-    elif image_type == 'Tiled':
-        if 'nx_tiles' not in config['image'] or 'ny_tiles' not in config['image']:
-            raise AttributeError(
-                "Attributes nx_tiles and ny_tiles are required for image.type = Tiled")
-        nx = galsim.config.ParseValue(config['image'],'nx_tiles',config,int)[0]
-        ny = galsim.config.ParseValue(config['image'],'ny_tiles',config,int)[0]
-        return nx*ny
-    else:
-        raise AttributeError("Invalid image.type=%s."%image_type)
-
 def SetDefaultExt(config, ext):
     """
     Some items have a default extension for a NumberedFile type.

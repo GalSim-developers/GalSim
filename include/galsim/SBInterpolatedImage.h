@@ -93,12 +93,10 @@ namespace galsim {
          *                        to 1 if none is found). 
          * @param[in] pad_factor  Multiple by which to increase the image size when zero-padding
          *                        for the Fourier transform. (If 0, use sbp::default_pad_factor.)
-         * @param[in] pad_image   Image to use for padding the SBInterpolatedImage if desired.
          */
         template <typename T>
         MultipleImageHelper(const BaseImage<T>& image,
-                            double dx, double pad_factor,
-                            boost::shared_ptr<BaseImage<T> > pad_image);
+                            double dx, double pad_factor);
 
         /// @brief Copies are shallow, so can pass by value without any copying.
         MultipleImageHelper(const MultipleImageHelper& rhs) : _pimpl(rhs._pimpl) {}
@@ -230,7 +228,6 @@ namespace galsim {
          *                        to 1 if none is found). 
          * @param[in] pad_factor  Multiple by which to increase the image size when zero-padding
          *                        for the Fourier transform. (If 0, use sbp::default_pad_factor.)
-         * @param[in] pad_image   Image to use for padding the SBInterpolatedImage if desired.
          * @param[in] gsparams    GSParams object storing constants that control the accuracy of
          *                        image operations and rendering.
          */
@@ -239,8 +236,7 @@ namespace galsim {
             const BaseImage<T>& image,
             boost::shared_ptr<Interpolant2d> xInterp,
             boost::shared_ptr<Interpolant2d> kInterp,
-            double dx, double pad_factor, boost::shared_ptr<BaseImage<T> > pad_image,
-            const GSParamsPtr& gsparams);
+            double dx, double pad_factor, const GSParamsPtr& gsparams);
 
         /** 
          * @brief Initialize internal quantities and allocate data tables based on a supplied 2D 
@@ -265,11 +261,21 @@ namespace galsim {
         /// @brief Destructor
         ~SBInterpolatedImage();
 
-        /// @brief Refine the value of stepK if the input image was larger than necessary.
-        void calculateStepK() const;
+        /**
+         * @brief Refine the value of stepK if the input image was larger than necessary.
+         *
+         * @param[in] max_stepk  Optional maximum value of stepk if you have some a priori
+         *                       knowledge about an appropriate maximum. 
+         */
+        void calculateStepK(double max_stepk=0.) const;
 
-        /// @brief Refine the value of stepK if the input image had a smaller scale than necessary.
-        void calculateMaxK() const;
+        /**
+         * @brief Refine the value of stepK if the input image had a smaller scale than necessary.
+         *
+         * @param[in] max_maxk  Optional maximum value of maxk if you have some a priori
+         *                      knowledge about an appropriate maximum. 
+         */
+        void calculateMaxK(double max_maxk=0.) const;
 
     protected:
 
