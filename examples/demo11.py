@@ -275,6 +275,7 @@ def main(argv):
         sn_meas = math.sqrt( numpy.sum(stamp.array**2) / noise_variance )
         flux_scaling = gal_signal_to_noise / sn_meas
         stamp *= flux_scaling
+        # This also scales up the current variance by flux_scaling**2.
         new_variance *= flux_scaling**2
 
         # Recenter the stamp at the desired position:
