@@ -105,10 +105,11 @@ namespace galsim {
         /**
          * @brief Constructor
          *
-         * @param[in] s         SBProfile to be convolved with itself.
-         * @param[in] gsparams  GSParams to use, if different from the default.
+         * @param[in] s           SBProfile to be convolved with itself.
+         * @param[in] real_space  Do convolution in real space?
+         * @param[in] gsparams    GSParams to use, if different from the default.
          */
-        SBAutoConvolve(const SBProfile& s, const GSParamsPtr& gsparams);
+        SBAutoConvolve(const SBProfile& s, bool real_space, const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor.
         SBAutoConvolve(const SBAutoConvolve& rhs);
@@ -119,6 +120,7 @@ namespace galsim {
     protected:
 
         class SBAutoConvolveImpl;
+        friend class SBConvolve;
 
     private:
         // op= is undefined
@@ -133,10 +135,11 @@ namespace galsim {
         /**
          * @brief Constructor
          *
-         * @param[in] s         SBProfile to be correlated with itself.
-         * @param[in] gsparams  GSParams to use, if different from the default.
+         * @param[in] s           SBProfile to be correlated with itself.
+         * @param[in] real_space  Do convolution in real space?
+         * @param[in] gsparams    GSParams to use, if different from the default.
          */
-        SBAutoCorrelate(const SBProfile& s, const GSParamsPtr& gsparams);
+        SBAutoCorrelate(const SBProfile& s, bool real_space, const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor.
         SBAutoCorrelate(const SBAutoCorrelate& rhs);
@@ -147,6 +150,7 @@ namespace galsim {
     protected:
 
         class SBAutoCorrelateImpl;
+        friend class SBConvolve;
 
     private:
         // op= is undefined

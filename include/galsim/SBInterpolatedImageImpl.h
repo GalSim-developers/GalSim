@@ -36,8 +36,7 @@ namespace galsim {
             const BaseImage<T>& image, 
             boost::shared_ptr<Interpolant2d> xInterp,
             boost::shared_ptr<Interpolant2d> kInterp,
-            double dx, double pad_factor,
-            boost::shared_ptr<BaseImage<T> > pad_image, const GSParamsPtr& gsparams);
+            double dx, double pad_factor, const GSParamsPtr& gsparams);
 
         SBInterpolatedImageImpl(
             const MultipleImageHelper& multi, const std::vector<double>& weights,
@@ -52,8 +51,8 @@ namespace galsim {
         double maxK() const { return _maxk; }
         double stepK() const { return _stepk; }
 
-        void calculateMaxK() const;
-        void calculateStepK() const;
+        void calculateMaxK(double max_stepk) const;
+        void calculateStepK(double max_maxk) const;
 
         void getXRange(double& xmin, double& xmax, std::vector<double>& ) const;
         void getYRange(double& ymin, double& ymax, std::vector<double>& ) const;

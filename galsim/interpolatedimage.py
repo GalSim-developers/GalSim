@@ -59,12 +59,14 @@ class InterpolatedImage(GSObject):
     error.  More details can be found in devel/modules/finterp.pdf, especially table 1, in the
     GalSim repository.
 
-    The user can choose to have the `noise_pad` image padding use zero (default), a Gaussian random
-    noise of some variance, or a Gaussian but correlated noise field that is specified either as a
-    CorrelatedNoise instance, an Image (from which a correlated noise model is derived), or a string
-    (interpreted as a filename containing an image to use for deriving a CorrelatedNoise).  The user
-    can also pass in a random number generator to be used for noise generation.  Finally, the user
-    can pass in a `pad_image` for deterministic image padding.
+    The user can choose to pad the image with a noise profile if desired.  To do so, specify
+    the target size for the noise padding in `noise_pad_size`, and specify the kind of noise
+    to use in `noise_pad`.  The `noise_pad` option may be a Gaussian random noise of some variance,
+    or a Gaussian but correlated noise field that is specified either as a CorrelatedNoise 
+    instance, an Image (from which a correlated noise model is derived), or a string (interpreted 
+    as a filename containing an image to use for deriving a CorrelatedNoise).  The user can also 
+    pass in a random number generator to be used for noise generation.  Finally, the user can pass 
+    in a `pad_image` for deterministic image padding.
 
     By default, the InterpolatedImage recalculates the Fourier-space step and number of points to
     use for further manipulations, rather than using the most conservative possibility.  For typical
@@ -76,15 +78,11 @@ class InterpolatedImage(GSObject):
     Initialization
     --------------
     
-        >>> interpolated_image = galsim.InterpolatedImage(image, x_interpolant = None,
-                                                          k_interpolant = None,
-                                                          normalization = 'flux', dx = None,
-                                                          flux = None, pad_factor = 0.,
-                                                          noise_pad = 0., rng = None,
-                                                          pad_image = None,
-                                                          calculate_stepk = True,
-                                                          calculate_maxk = True,
-                                                          use_cache = True)
+        >>> interpolated_image = galsim.InterpolatedImage(
+                image, x_interpolant = None, k_interpolant = None, normalization = 'flux',
+                dx = None, flux = None, pad_factor = 0., noise_pad_size = 0, noise_pad = 0.,
+                use_cache = True, pad_image = None, rng = None, calculate_stepk = True,
+                calculate_maxk = True, use_true_center = True, offset = None)
 
     Initializes interpolated_image as a galsim.InterpolatedImage() instance.
 
@@ -129,10 +127,15 @@ class InterpolatedImage(GSObject):
                            (Default `dx = None`.)
     @param flux            Optionally specify a total flux for the object, which overrides the
                            implied flux normalization from the Image itself.
-    @param pad_factor      Factor by which to pad the Image with either noise (if noise_pad is
-                           given) or zeros; `pad_factor <= 0` results in the use of the default 
-                           value, 4.  We strongly recommend leaving this parameter at its default 
-                           value; see text above for details.  (Default `pad_factor = 0`)
+    @param pad_factor      Factor by which to pad the Image with zeros; `pad_factor <= 0` results 
+                           in the use of the default value, 4.  We strongly recommend leaving this 
+                           parameter at its default value; see text above for details. 
+                           (Default `pad_factor = 0`)
+    @param noise_pad_size  If provided, the image will be padded out to this size (in arcsec) with 
+                           the noise specified by `noise_pad`. This is important if you are 
+                           planning to whiten the resulting image.  You want to make sure that the 
+                           noise-padded image is larger than the postage stamp onto which you are 
+                           drawing this object.  [Default `noise_pad_size = None`.]
     @param noise_pad       Noise properties to use when padding the original image with
                            noise.  This can be specified in several ways:
                                (a) as a float, which is interpreted as being a variance to use when
@@ -153,6 +156,9 @@ class InterpolatedImage(GSObject):
                            below) can be used to prevent the need for repeated 
                            galsim.CorrelatedNoise initializations.
                            (Default `noise_pad = 0.`, i.e., pad with zeros.)
+    @param use_cache       Specify whether to cache noise_pad read in from a file to save having
+                           to build a CorrelatedNoise object repeatedly from the same image.
+                           (Default `use_cache = True`)
     @param rng             If padding by noise, the user can optionally supply the random noise
                            generator to use for drawing random numbers as `rng` (may be any kind of
                            `galsim.BaseDeviate` object).  Such a user-input random number generator
@@ -167,28 +173,30 @@ class InterpolatedImage(GSObject):
                                    image to use.
                            The `pad_image` scale is ignored, and taken to be equal to that
                            of the `image`.
-                           Normally, the padding is just taken to be the size of the pad_image.
-                           However, if pad_factor is also given, and the resulting padded size is 
-                           larger than the pad_image, then the image will be further padded with
-                           either noise (if noise_pad is given) or zeros.
                            The user should be careful to ensure that the image used for padding has 
                            roughly zero mean.  The purpose of this keyword is to allow for a more 
                            flexible representation of some noise field around an object; if the 
                            user wishes to represent the sky level around an object, they should do 
-                           that when they have drawn the final image instead.  
+                           that after they have drawn the final image instead.  
                            (Default `pad_image = None`.)
     @param calculate_stepk Specify whether to perform an internal determination of the extent of 
                            the object being represented by the InterpolatedImage; often this is 
                            useful in choosing an optimal value for the stepsize in the Fourier 
-                           space lookup table. (Default `calculate_stepk = True`)
+                           space lookup table.  
+                           If you know a priori an appropriate maximum value for stepk, then 
+                           you may also supply that here instead of a bool value, in which case
+                           the stepk value is still calculated, but will not go above the
+                           provided value. 
+                           (Default `calculate_stepk = True`)
     @param calculate_maxk  Specify whether to perform an internal determination of the highest 
                            spatial frequency needed to accurately render the object being 
                            represented by the InterpolatedImage; often this is useful in choosing 
                            an optimal value for the extent of the Fourier space lookup table.
+                           If you know a priori an appropriate maximum value for maxk, then 
+                           you may also supply that here instead of a bool value, in which case
+                           the maxk value is still calculated, but will not go above the
+                           provided value. 
                            (Default `calculate_maxk = True`)
-    @param use_cache       Specify whether to cache noise_pad read in from a file to save having
-                           to build a CorrelatedNoise object repeatedly from the same image.
-                           (Default `use_cache = True`)
     @param use_true_center Similar to the same parameter in the GSObject.draw function, this
                            sets whether to use the true center of the provided image as the 
                            center of the profile (if `use_true_center=True`) or the nominal
@@ -217,6 +225,7 @@ class InterpolatedImage(GSObject):
         'dx' : float ,
         'flux' : float ,
         'pad_factor' : float ,
+        'noise_pad_size' : float ,
         'noise_pad' : str ,
         'pad_image' : str ,
         'calculate_stepk' : bool ,
@@ -229,8 +238,8 @@ class InterpolatedImage(GSObject):
 
     # --- Public Class methods ---
     def __init__(self, image, x_interpolant = None, k_interpolant = None, normalization = 'flux',
-                 dx = None, flux = None, pad_factor = 0., noise_pad = 0., rng = None,
-                 pad_image = None, calculate_stepk=True, calculate_maxk=True,
+                 dx = None, flux = None, pad_factor = 0., noise_pad_size=0, noise_pad = 0.,
+                 rng = None, pad_image = None, calculate_stepk=True, calculate_maxk=True,
                  use_cache=True, use_true_center=True, offset=None, gsparams=None):
 
         # first try to read the image as a file.  If it's not either a string or a valid
@@ -265,6 +274,10 @@ class InterpolatedImage(GSObject):
         else:
             self.k_interpolant = galsim.utilities.convert_interpolant_to_2d(k_interpolant)
 
+        # Make sure we don't change the original image in anything we do to it here.
+        # (e.g. set scale, etc.)
+        image = image.view()
+
         # Check for input dx, and check whether Image already has one set.  At the end of this
         # code block, either an exception will have been raised, or the input image will have a
         # valid scale set.
@@ -277,9 +290,11 @@ class InterpolatedImage(GSObject):
                 dx = float(dx)
             if dx <= 0.0:
                 raise ValueError("dx may not be <= 0.0")
-            # Don't change the original image.  Make a new view if we need to set the scale.
-            image = image.view()
             image.scale = dx
+
+        # Store the image as an attribute
+        self.orig_image = image
+        self.use_cache = use_cache
 
         # Set up the GaussianDeviate if not provided one, or check that the user-provided one is
         # of a valid type.
@@ -310,28 +325,37 @@ class InterpolatedImage(GSObject):
         # This will be passed to SBInterpolatedImage, so make sure it is the right type.
         pad_factor = float(pad_factor)
 
-        # Store the image as an attribute
-        self.orig_image = image
-        self.use_cache = use_cache
+        # Make sure the image fits in the noise pad image:
+        if noise_pad_size:
+            import math
+            # Convert from arcsec to pixels according to the image scale.
+            noise_pad_size = int(math.ceil(noise_pad_size / image.scale))
+            if noise_pad_size <= min(image.array.shape):
+                # Don't need any noise padding in this case.
+                noise_pad_size = 0
+            elif noise_pad_size < max(image.array.shape):
+                noise_pad_size = max(image.array.shape)
 
-        # See if we need to build a pad_image
-        if noise_pad and pad_image:
-            # if both noise_pad and pad_image are set, then we need to build up a larger
-            # pad_image and place the given pad_image in the center.
-            new_pad_image = self.buildNoisePadImage(pad_factor, noise_pad, rng)
+        # See if we need to pad out the image with either a pad_image or noise_pad
+        if noise_pad_size:
+            new_pad_image = self.buildNoisePadImage(noise_pad_size, noise_pad, rng)
 
-            # We will change the bounds here, so make a new view to avoid modifying the 
-            # input pad_image.
-            pad_image = pad_image.view()  
-            pad_image.setCenter(0,0)
-            new_pad_image.setCenter(0,0)
-            if not new_pad_image.bounds.includes(pad_image.bounds):
-                raise ValueError("pad_factor is too small to fit the provided pad_image.")
-            new_pad_image[pad_image.bounds] = pad_image
+            if pad_image:
+                # if both noise_pad and pad_image are set, then we need to build up a larger
+                # pad_image and place the given pad_image in the center.
+
+                # We will change the bounds here, so make a new view to avoid modifying the 
+                # input pad_image.
+                pad_image = pad_image.view()  
+                pad_image.setCenter(0,0)
+                new_pad_image.setCenter(0,0)
+                if new_pad_image.bounds.includes(pad_image.bounds):
+                    new_pad_image[pad_image.bounds] = pad_image
+                else:
+                    new_pad_image = pad_image
+            
             pad_image = new_pad_image
-        elif noise_pad:
-            # Just build the noise image
-            pad_image = self.buildNoisePadImage(pad_factor, noise_pad, rng)
+
         elif pad_image:
             # Just make sure pad_image is the right type
             if ( isinstance(image, galsim.BaseImageF) and 
@@ -341,17 +365,37 @@ class InterpolatedImage(GSObject):
                    not isinstance(pad_image, galsim.BaseImageD) ):
                 pad_image = galsim.ImageD(pad_image)
 
+        # Now place the given image in the center of the padding image:
+        if pad_image:
+            pad_image.setCenter(0,0)
+            image.setCenter(0,0)
+            if pad_image.bounds.includes(image.bounds):
+                pad_image[image.bounds] = image
+            else:
+                # If padding was smaller than original image, just use the original image.
+                pad_image = image
+        else:
+            pad_image = image
+
         # Make the SBInterpolatedImage out of the image.
         sbinterpolatedimage = galsim.SBInterpolatedImage(
-                image, xInterp=self.x_interpolant, kInterp=self.k_interpolant,
-                dx=dx, pad_factor=pad_factor, pad_image=pad_image, gsparams=gsparams)
+                pad_image, xInterp=self.x_interpolant, kInterp=self.k_interpolant,
+                dx=dx, pad_factor=pad_factor, gsparams=gsparams)
 
         # GalSim cannot automatically know what stepK and maxK are appropriate for the 
         # input image.  So it is usually worth it to do a manual calculation here.
         if calculate_stepk:
-            sbinterpolatedimage.calculateStepK()
+            if calculate_stepk is True:
+                sbinterpolatedimage.calculateStepK()
+            else:
+                # If not a bool, then value is max_stepk
+                sbinterpolatedimage.calculateStepK(max_stepk=calculate_stepk)
         if calculate_maxk:
-            sbinterpolatedimage.calculateMaxK()
+            if calculate_maxk is True:
+                sbinterpolatedimage.calculateMaxK()
+            else:
+                # If not a bool, then value is max_maxk
+                sbinterpolatedimage.calculateMaxK(max_maxk=calculate_maxk)
 
         # If the user specified a flux, then set to that flux value.
         if flux != None:
@@ -376,17 +420,14 @@ class InterpolatedImage(GSObject):
         GSObject.__init__(self, prof.SBProfile)
 
 
-    def buildNoisePadImage(self, pad_factor, noise_pad, rng):
+    def buildNoisePadImage(self, noise_pad_size, noise_pad, rng):
         """A helper function that builds the pad_image from the given noise_pad specification.
         """
         import numpy as np
-        if pad_factor <= 0.:
-            pad_factor = galsim._galsim.getDefaultPadFactor()
-        padded_size = int(np.ceil(np.max(self.orig_image.array.shape) * pad_factor))
         if isinstance(self.orig_image, galsim.BaseImageF):
-            pad_image = galsim.ImageF(padded_size, padded_size)
+            pad_image = galsim.ImageF(noise_pad_size, noise_pad_size)
         if isinstance(self.orig_image, galsim.BaseImageD):
-            pad_image = galsim.ImageD(padded_size, padded_size)
+            pad_image = galsim.ImageD(noise_pad_size, noise_pad_size)
 
         # Figure out what kind of noise to apply to the image
         if isinstance(noise_pad, float):

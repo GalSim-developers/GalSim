@@ -17,6 +17,7 @@ Default(targets)
 tools = [ 'installed_python' ]
 tool_targets = [ env.ExecScript(tool, tool + '.py') for tool in tools ]
 
+AlwaysBuild(tool_targets)
 Default(tool_targets)
         
 if 'install' in COMMAND_LINE_TARGETS:

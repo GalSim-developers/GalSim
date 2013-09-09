@@ -251,7 +251,7 @@ namespace galsim {
          * This transforms the object by the given transformation.  As with scaleFlux, it does not
          * invalidate any previous uses of this object.
          */
-        void applyScale(double scale);
+        void applyExpansion(double scale);
 
         /**
          * @brief Apply a given shear.
