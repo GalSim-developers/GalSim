@@ -636,7 +636,7 @@ namespace galsim {
                 if (flux > fluxTot) {
                     // If flux w/in some radius is more than the total, then we have a case of
                     // noise artificially lowering the nominal flux.  We will use the radius
-                    // of the  maximum flux we get during this procedure.
+                    // of the maximum flux we get during this procedure.
                     d1 = d;
                 }
             }

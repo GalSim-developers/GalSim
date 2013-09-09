@@ -566,12 +566,12 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
             if max_current_var > 0:
                 import numpy
-                # Then there was whitening applied in to the individual stamps.
+                # Then there was whitening applied in the individual stamps.
                 # But there could be a different variance in each postage stamp, so the first
                 # thing we need to do is bring everything up to a common level.
                 noise_image = galsim.ImageF(full_image.bounds, full_image.scale)
                 for k in range(nobjects): noise_image[images[k].bounds] += current_vars[k]
-                # Update this, since overlapping postage stamps may have let to a larger 
+                # Update this, since overlapping postage stamps may have led to a larger 
                 # value in some pixels.
                 max_current_var = numpy.max(noise_image.array)
                 # Figure out how much noise we need to add to each pixel.
@@ -799,14 +799,14 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         draw_method = galsim.config.GetCurrentValue(config['image'],'draw_method')
         if max_current_var > 0:
             import numpy
-            # Then there was whitening applied in to the individual stamps.
+            # Then there was whitening applied in the individual stamps.
             # But there could be a different variance in each postage stamp, so the first
             # thing we need to do is bring everything up to a common level.
             noise_image = galsim.ImageF(full_image.bounds, full_image.scale)
             for k in range(nobjects): 
                 b = images[k].bounds & full_image.bounds
                 if b.isDefined(): noise_image[b] += current_vars[k]
-            # Update this, since overlapping postage stamps may have let to a larger 
+            # Update this, since overlapping postage stamps may have led to a larger 
             # value in some pixels.
             max_current_var = numpy.max(noise_image.array)
             # Figure out how much noise we need to add to each pixel.
