@@ -116,7 +116,7 @@ namespace galsim {
 
 
     /** 
-     * @brief Class implementing simple Gaussain noise.
+     * @brief Class implementing simple Gaussian noise.
      *
      * The GaussianNoise class implements a simple Gaussian noise with a given sigma.
      */
@@ -613,7 +613,7 @@ namespace galsim {
     };
 
     /** 
-     * @brief Class implementing variable Gaussain noise.
+     * @brief Class implementing variable Gaussian noise.
      *
      * The VariableGaussianNoise class implements Gaussian noise where each pixel may have 
      * a different variance.

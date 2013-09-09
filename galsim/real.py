@@ -181,7 +181,7 @@ class RealGalaxy(GSObject):
 
         # Build the InterpolatedImage of the galaxy.
         # Use the stepK() value of the PSF as a maximum value for stepK of the galaxy.
-        # (Otherwise, low surfact brightness galaxies can get a spuriously high stepk, which
+        # (Otherwise, low surface brightness galaxies can get a spuriously high stepk, which
         # leads to problems.)
         self.original_image = galsim.InterpolatedImage(
                 self.gal_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant,
