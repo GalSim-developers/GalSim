@@ -68,7 +68,7 @@ class OpticalPSF(GSObject):
         >>> optical_psf = galsim.OpticalPSF(lam_over_diam, defocus=0., astig1=0., astig2=0.,
                                             coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0.,
                                             circular_pupil=True, obscuration=0., interpolant=None,
-                                            oversampling=1., pad_factor=1.5, nstruts=0,
+                                            oversampling=1.5, pad_factor=1.5, nstruts=0,
                                             strut_thick=0.05, strut_angle=0.*galsim.degrees)
 
     Initializes optical_psf as a galsim.OpticalPSF() instance.
@@ -94,7 +94,9 @@ class OpticalPSF(GSObject):
                             integer order to use. [default `interpolant = galsim.Quintic()`]
     @param oversampling     Optional oversampling factor for the InterpolatedImage. Setting 
                             oversampling < 1 will produce aliasing in the PSF (not good).
-                            [default `oversampling = 1.`]
+                            Usually oversampling should be somewhat larger than 1.  1.5 is 
+                            usually a safe choice.
+                            [default `oversampling = 1.5`]
     @param pad_factor       Additional multiple by which to zero-pad the PSF image to avoid folding
                             compared to what would be employed for a simple galsim.Airy 
                             [default `pad_factor = 1.5`].  Note that `pad_factor` may need to be 
@@ -148,11 +150,12 @@ class OpticalPSF(GSObject):
     # --- Public Class methods ---
     def __init__(self, lam_over_diam, defocus=0.,
                  astig1=0., astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0., 
-                 circular_pupil=True, obscuration=0., interpolant=None, oversampling=1.,
+                 circular_pupil=True, obscuration=0., interpolant=None, oversampling=1.5,
                  pad_factor=1.5, suppress_warning=False, flux=1.,
                  nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees,
                  gsparams=None):
 
+        
         # Choose dx for lookup table using Nyquist for optical aperture and the specified
         # oversampling factor
         dx_lookup = .5 * lam_over_diam / oversampling
