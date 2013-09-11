@@ -633,7 +633,7 @@ namespace galsim {
             }
             if (flux > max_flux) {
                 max_flux = flux;
-                if (flux > fluxTot) {
+                if (flux > 1.01 * fluxTot) {
                     // If flux w/in some radius is more than the total, then we have a case of
                     // noise artificially lowering the nominal flux.  We will use the radius
                     // of the maximum flux we get during this procedure.
@@ -646,7 +646,7 @@ namespace galsim {
                 if (d1 == 0) d1 = d; // Mark this radius as a good one.
             }
         }
-        dbg<<"Done: flux = "<<flux<<std::endl;
+        dbg<<"Done: flux = "<<flux<<", d1 = "<<d1<<std::endl;
         dbg<<"max_flux = "<<max_flux<<", current fluxTot = "<<fluxTot<<std::endl;
         // Should have added up to the total flux.
         assert( std::abs(flux - fluxTot) < 1.e-3 * std::abs(fluxTot) );
@@ -658,7 +658,7 @@ namespace galsim {
         // (Note: Since this isn't a radial profile, R isn't really a radius, but rather 
         //        the size of the square box that is enclosing (1-alias_thresh) of the flux.)
         double R = (d1+0.5) * scale;
-        dbg<<"d = "<<d1<<" => R = "<<R<<std::endl;
+        dbg<<"d1 = "<<d1<<" => R = "<<R<<std::endl;
         // Add xInterp range in quadrature just like convolution:
         double R2 = _xInterp->xrange() * _multi.getScale();
         dbg<<"R(image) = "<<R<<", R(interpolant) = "<<R2<<std::endl;
