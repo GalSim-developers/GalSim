@@ -195,8 +195,8 @@ class OpticalPSF(GSObject):
             if final_stepk < stepk:
                 import warnings
                 warnings.warn(
-                    "The calculated stepk (%f) for OpticalPSF is smaller "%final_stepk +
-                    "than what was used to build the wavefront (%f)."%stepk +
+                    "The calculated stepk (%g) for OpticalPSF is smaller "%final_stepk +
+                    "than what was used to build the wavefront (%g)."%stepk +
                     "This could lead to aliasing problems. " +
                     "Using pad_factor >= %f is recommended."%(pad_factor * stepk / final_stepk))
 
