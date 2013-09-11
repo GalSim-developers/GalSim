@@ -325,3 +325,44 @@ def DeviateNoise_copy(self):
     return _galsim.DeviateNoise(self.getRNG())
 _galsim.DeviateNoise.copy = DeviateNoise_copy
 
+# VariableGaussianNoise docstrings
+_galsim.VariableGaussianNoise.__doc__ = """
+Class implementing Gaussian noise that has a different variance in each pixel.
+
+Initialization
+--------------
+
+    >>> variable_noise = galsim.VariableGaussianNoise(rng, var_image)
+
+Parameters:
+
+    rng         A BaseDeviate instance to use for generating the random numbers.
+    var_image   The variance of the noise to apply to each pixel.  This image must be the 
+                same shape as the image for which you eventually call addNoise.
+
+Methods
+-------
+To add noise to every element of an image, use the syntax image.addNoise(variable_noise).
+"""
+
+_galsim.VariableGaussianNoise.applyTo.__func__.__doc__ = """
+Add VariableGaussian noise to an input Image.
+
+Calling
+-------
+
+    >>> variable_noise.applyTo(image)
+
+On output the Image instance image will have been given additional Gaussian noise according 
+to the variance image of the given VariableGaussianNoise instance.
+
+Note: The syntax image.addNoise(variable_noise) is preferred.
+"""
+_galsim.VariableGaussianNoise.getVarImage.__func__.__doc__ = "Get variance image."
+
+def VariableGaussianNoise_copy(self):
+    return _galsim.VariableGaussianNoise(self.getRNG(),self.getVarImage())
+_galsim.VariableGaussianNoise.copy = VariableGaussianNoise_copy
+
+
+

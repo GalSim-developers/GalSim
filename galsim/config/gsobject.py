@@ -126,6 +126,10 @@ def BuildGSObject(config, key, base=None, gsparams={}):
         # I don't know an easy way to do that.
         ignore += [ 'resolution' , 're_from_res' ]
 
+    # Allow signal_to_noise for PSFs only if there is not also a galaxy.
+    if 'gal' not in base and key == 'psf':
+        ignore += [ 'signal_to_noise']
+
     # If we are specifying the size according to a resolution, then we 
     # need to get the PSF's half_light_radius.
     if 'resolution' in ck:
@@ -147,7 +151,7 @@ def BuildGSObject(config, key, base=None, gsparams={}):
         ck['half_light_radius'] = gal_re
 
     # Make sure the PSF gets flux=1 unless explicitly overridden by the user.
-    if key == 'psf' and 'flux' not in ck:
+    if key == 'psf' and 'flux' not in ck and 'signal_to_noise' not in ck:
         ck['flux'] = 1
 
     if 'gsparams' in ck:
@@ -406,11 +410,19 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams):
     if 'id' not in config:
         galsim.config.SetDefaultIndex(config, real_cat.nobjects)
 
-    kwargs, safe = galsim.config.GetAllParams(config, key, base, 
+    if 'whiten' in config:
+        whiten, safe1 = galsim.config.ParseValue(config, 'whiten', base, bool)
+        safe = safe and safe1
+    else:
+        whiten = False
+    ignore.append('whiten')
+
+    kwargs, safe1 = galsim.config.GetAllParams(config, key, base, 
         req = galsim.__dict__['RealGalaxy']._req_params,
         opt = galsim.__dict__['RealGalaxy']._opt_params,
         single = galsim.__dict__['RealGalaxy']._single_params,
         ignore = ignore)
+    safe = safe and safe1
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
 
     if 'rng' not in base:
@@ -423,7 +435,14 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams):
             raise IndexError(
                 "%s index has gone past the number of entries in the catalog"%param_name)
 
-    return galsim.RealGalaxy(real_cat, **kwargs), safe
+    gal = galsim.RealGalaxy(real_cat, **kwargs)
+
+    # If we are not going to whiten the noise, then we don't need to keep it as an attribute.
+    # In fact, that is how we communicate to the upper levels that we do need to whiten.
+    # If the galaxy has a noise attribute, then we do the whitening step.
+    if not whiten: del gal.noise
+
+    return gal, safe
 
 
 def _BuildSimple(config, key, base, ignore, gsparams={}):

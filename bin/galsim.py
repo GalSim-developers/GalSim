@@ -33,10 +33,6 @@ import galsim
 # Now put it back in case anyone else relies on this feature.
 sys.path = [temp] + sys.path
 
-import os
-import logging
-import copy
-
 def MergeConfig(config1, config2, logger=None):
     """
     Merge config2 into config1 such that it has all the information from either config1 or 
@@ -47,6 +43,7 @@ def MergeConfig(config1, config2, logger=None):
     """
     for (key, value) in config2.items():
         if not key in config1:
+            import copy
             # If this key isn't in config1 yet, just add it
             config1[key] = copy.deepcopy(value)
         elif isinstance(value,dict) and isinstance(config1[key],dict):
@@ -155,6 +152,7 @@ def main():
     args = parse_args()
 
     # Parse the integer verbosity level from the command line args into a logging_level string
+    import logging
     logging_levels = { 0: logging.CRITICAL, 
                        1: logging.WARNING,
                        2: logging.INFO,
@@ -190,12 +188,12 @@ def main():
             all_config = [ c for c in yaml.load_all(open(config_file).read()) ]
 
             # If there is only 1 yaml document, then it is of course used for the configuration.
-            # If there are multiple yamls documents, then the first one defines a common starting
+            # If there are multiple yaml documents, then the first one defines a common starting
             # point for the later documents.
             # So the configurations are taken to be:
-            #   all_cong[0] + allconfig[1]
-            #   all_cong[0] + allconfig[2]
-            #   all_cong[0] + allconfig[3]
+            #   all_config[0] + all_config[1]
+            #   all_config[0] + all_config[2]
+            #   all_config[0] + all_config[3]
             #   ...
             # See demo6.yaml and demo8.yaml in the examples directory for examples of this feature.
 
@@ -221,6 +219,7 @@ def main():
 
         # Set the root value in base_config
         if 'root' not in base_config:
+            import os
             base_config['root'] = os.path.splitext(config_file)[0]
 
         # Import any modules if requested

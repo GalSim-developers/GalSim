@@ -26,6 +26,8 @@ valid_value_types = {
               [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ]),
     'Eval' : ('_GenerateFromEval', 
               [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ]),
+    'Current' : ('_GenerateFromCurrent', 
+              [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ]),
     'Catalog' : ('_GenerateFromCatalog', [ float, int, bool, str ]),
     'Dict' : ('_GenerateFromDict', [ float, int, bool, str ]),
     'FitsHeader' : ('_GenerateFromFitsHeader', [ float, int, bool, str ]),
@@ -63,6 +65,7 @@ def ParseValue(config, param_name, base, value_type):
     param = config[param_name]
     #print 'ParseValue for param_name = ',param_name,', value_type = ',str(value_type)
     #print 'param = ',param
+    #print 'seq_index = ',base.get('seq_index',0)
 
     # First see if we can assign by param by a direct constant value
     if isinstance(param, value_type):
@@ -89,6 +92,12 @@ def ParseValue(config, param_name, base, value_type):
         raise AttributeError(
             "%s.type attribute required in config for non-constant parameter %s."%(
                 param_name,param_name))
+    elif 'current_val' in param and param['current_seq_index'] == base.get('seq_index',0):
+        if param['current_value_type'] != value_type:
+            raise ValueError(
+                "Attempt to parse %s multiple times with different value types"%param_name)
+        #print 'Using current value of ',param_name,' = ',param['current_val']
+        return param['current_val'], param['current_safe']
     else:
         # Otherwise, we need to generate the value according to its type
         # (See valid_value_types defined at the top of the file.)
@@ -114,7 +123,12 @@ def ParseValue(config, param_name, base, value_type):
         # Make sure we really got the right type back.  (Just in case...)
         if not isinstance(val,value_type):
             val = value_type(val)
+
+        # Save the current value for possible use by the Current type
         param['current_val'] = val
+        param['current_safe'] = safe
+        param['current_seq_index'] = base.get('seq_index',0)
+        param['current_value_type'] = value_type
         #print param_name,' = ',val
         return val, safe
 
@@ -206,9 +220,10 @@ def CheckAllParams(param, param_name, req={}, opt={}, single=[], ignore=[]):
                 "One of the attributes %s is required for %s.type = %s"%(
                     s.keys(),param_name,param['type']))
 
-    # Check that there aren't any extra keys in param:
+    # Check that there aren't any extra keys in param aside from a few we expect:
     valid_keys += ignore
-    valid_keys += [ 'type', 'current_val' ]  # These might be there, and it's ok.
+    valid_keys += [ 'type' ]
+    valid_keys += [ 'current_val', 'current_safe', 'current_seq_index', 'current_value_type' ] 
     valid_keys += [ '#' ] # When we read in json files, there represent comments
     for key in param.keys():
         if key not in valid_keys:
@@ -950,7 +965,8 @@ def _GenerateFromEval(param, param_name, base, value_type):
     #print 'Start Eval for ',param_name
     req = { 'str' : str }
     opt = {}
-    ignore = [ 'type' , 'current_val' ]
+    ignore = [ 'type', 'current_val', 'current_safe', 'current_seq_index',
+               'current_value_type', '#' ]
     for key in param.keys():
         if key not in (ignore + req.keys()):
             opt[key] = _type_by_letter(key)
@@ -1016,6 +1032,38 @@ def _GenerateFromEval(param, param_name, base, value_type):
     except:
         raise ValueError("Unable to evaluate string %r as a %s for %s"%(
                 string,value_type,param_name))
+
+
+def _GenerateFromCurrent(param, param_name, base, value_type):
+    """@brief Get the current value of another config item.
+    """
+    #print 'Start Current for ',param_name
+    req = { 'key' : str }
+    params, safe = GetAllParams(param, param_name, base, req=req)
+    #print 'params = ',params
+
+    key = params['key']
+    #print 'key = ',key
+
+    # This next bit is basically identical to the code for Dict.get(key) in catalog.py.
+    # Make a list of keys
+    chain = key.split('.')
+    d = base
+    while len(chain):
+        k = chain.pop(0)
+
+        # Try to convert to an integer:
+        try: k = int(k)
+        except ValueError: pass
+
+        if chain: 
+            # If there are more keys, just set d to the next in the chanin.
+            d = d[k]
+        else: 
+            # Otherwise, parse the value for this key
+            return ParseValue(d, k, base, value_type)
+
+    raise ValueError("Invalid key = %s given for %s.type = Current"%(key,param_name))
 
 
 def SetDefaultIndex(config, num):

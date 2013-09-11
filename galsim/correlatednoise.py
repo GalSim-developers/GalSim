@@ -77,6 +77,15 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         self._profile += other._profile
         return _BaseCorrelatedNoise(self.getRNG(), self._profile)
 
+    def __sub__(self, other):
+        ret = self.copy()
+        ret -= other
+        return ret
+
+    def __isub__(self, other):
+        self._profile -= other._profile
+        return _BaseCorrelatedNoise(self.getRNG(), self._profile)
+
     # Make op* and op*= work to adjust the overall variance of an object
     def __imul__(self, other):
         self._profile.scaleVariance(other)
@@ -270,7 +279,36 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         @param scale The linear rescaling factor to apply.
         """
-        self._profile.applyMagnification(scale**2)
+        self._profile.applyExpansion(scale)
+
+    def applyDilation(self, scale):
+        """Apply the appropriate changes to the scale and variance for when the object has
+        an applied dilation.
+        
+        @param scale The linear dilation scale factor.
+        """
+        self.applyExpansion(scale)
+        # Expansion changes the flux by scale**2, applyDilation reverses that to conserve flux,
+        # so the variance needs to change by scale**-4.
+        self.scaleVariance(1./(scale**4))
+
+    def applyMagnification(self, mu):
+        """Apply the appropriate changes to the scale and variance for when the object has
+        an applied magnification.
+
+        @param mu The lensing magnification
+        """
+        self.applyExpansion(np.sqrt(mu))
+
+    def applyLensing(self, g1, g2, mu):
+        """Apply the appropriate changes for when the object has an applied shear and magnification.
+
+        @param g1   First component of lensing (reduced) shear to apply to the object.
+        @param g2   Second component of lensing (reduced) shear to apply to the object.
+        @param mu   Lensing magnification to apply to the object.
+        """
+        self.applyShear(g1=g1,g2=g2)
+        self.applyMagnification(mu)
 
     def applyRotation(self, theta):
         """Apply a rotation theta to this correlated noise model.
@@ -487,11 +525,20 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
                 newcf.scale = 1. # New Images have scale() = 0 unless otherwise set.
             else:
                 newcf.scale = dx
-            # Then draw this correlation function into an array
-            self.draw(newcf, dx=None) # setting dx=None uses the newcf image scale set above
+            # Then draw this correlation function into an array.
+            # Setting dx=None uses the newcf image scale set above.
+            self.draw(newcf, dx=None)
+
+            # Since we just drew it, save the variance value for posterity.
+            var = newcf(newcf.bounds.center())
+            self._variance_stored = var
+
+            if var <= 0.:
+                raise RuntimeError("CorrelatedNoise found to have negative variance.")
 
             # Then calculate the sqrt(PS) that will be used to generate the actual noise
-            rootps = np.sqrt(np.abs(np.fft.fft2(newcf.array)) * np.product(shape))
+            ps = np.fft.fft2(newcf.array)
+            rootps = np.sqrt(np.abs(ps) * np.product(shape))
 
             # Then add this and the relevant scale to the _rootps_store for later use
             self._rootps_store.append((rootps, newcf.scale))
@@ -1034,6 +1081,8 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
     def __init__(self, rng, pixel_scale, variance, gsparams=None):
         # Need variance == xvalue(0,0)
         # Pixel has flux of f/dx^2, so us f = varaince * dx^2
+        if variance < 0:
+            raise ValueError("Input keyword variance must be zero or positive.")
         cf_object = galsim.AutoConvolve(
             galsim.Pixel(xw=pixel_scale, flux=variance*pixel_scale**2, gsparams=gsparams))
         _BaseCorrelatedNoise.__init__(self, rng, cf_object)
