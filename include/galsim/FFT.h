@@ -125,28 +125,28 @@ namespace galsim {
     {
         typedef typename FFTW_Traits<T>::fftw_type fftw_type;
     public:
-        FFTW_Array() : _n(0) {}
+        FFTW_Array() : _n(0), _p(0) {}
 
-        FFTW_Array(size_t n) : _n(0)
+        FFTW_Array(size_t n) : _n(0), _p(0)
         { resize(n); }
 
-        FFTW_Array(size_t n, T val) : _n(0)
+        FFTW_Array(size_t n, T val) : _n(0), _p(0)
         {
             resize(n);
             fill(val);
         }
 
-        FFTW_Array(const FFTW_Array<T>& rhs) : _n(0)
+        FFTW_Array(const FFTW_Array<T>& rhs) : _n(0), _p(0)
         {
             resize(rhs._n);
-            for (size_t i=0; i<_n; ++i) _array[i] = rhs._array[i];
+            for (size_t i=0; i<_n; ++i) _p[i] = rhs._p[i];
         }
 
         FFTW_Array<T>& operator=(const FFTW_Array<T>& rhs)
         {
             if (this != &rhs) {
                 resize(rhs._n);
-                for (size_t i=0; i<_n; ++i) _array.get()[i] = rhs._array.get()[i];
+                for (size_t i=0; i<_n; ++i) _p[i] = rhs._p[i];
             }
             return *this;
         }
@@ -158,29 +158,34 @@ namespace galsim {
             if (_n != n) {
                 _n = n;
                 _array.resize(n);
+                _p = _array.get();
             }
         }
 
-        void fill(T val) { for (size_t i=0; i<_n; ++i) _array.get()[i] = val; }
+        void fill(T val) 
+        {
+            for (size_t i=0; i<_n; ++i) _p[i] = val; 
+        }
 
         size_t size() { return _n; }
 
-        T* get() { return _array.get(); }
-        const T* get() const { return _array.get(); }
+        T* get() { return _p; }
+        const T* get() const { return _p; }
 
         fftw_type* get_fftw()
-        { return reinterpret_cast<fftw_type*>(_array.get()); }
+        { return reinterpret_cast<fftw_type*>(_p); }
         const fftw_type* get_fftw() const
-        { return reinterpret_cast<const fftw_type*>(_array.get()); }
+        { return reinterpret_cast<const fftw_type*>(_p); }
 
-        T& operator[](size_t i) { return _array.get()[i]; }
-        const T& operator[](size_t i) const { return _array.get()[i]; }
+        T& operator[](size_t i) { return _p[i]; }
+        const T& operator[](size_t i) const { return _p[i]; }
 
     private:
         size_t _n;
         // fftw_malloc doesn't seem to actually guarantee 16 byte alignment, so we instead
         // use TMV's AlignedArray class to handle the byte alignment for us.
         tmv::AlignedArray<T> _array;
+        T* _p;
     };
 
     //! @endcond
