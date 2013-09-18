@@ -29,6 +29,7 @@ def linefit(x,y):
     sigsqaprime = sigsq/n
     sigsqb = sigsq/numpy.sum((x-xavg)**2)
     sigsqa = sigsqaprime + (xavg)**2*sigsqb
+    # B is the slope, A the y-intercept
     return (b, a, numpy.sqrt(sigsqb), numpy.sqrt(sigsqa))
 
 def percentiles(x):
