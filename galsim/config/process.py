@@ -552,6 +552,16 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
         raise AttributeError("Attribute output.nimages is required for output.type = MultiFits")
     nimages = galsim.config.ParseValue(config['output'],'nimages',config,int)[0]
 
+    if nproc > nimages:
+        # Only warn if nproc was specifically set, not if it is -1.
+        if (logger and
+            not ('nproc' in config['output'] and 
+                 galsim.config.ParseValue(config['output'],'nproc',config,int)[0] == -1)):
+            logger.warn(
+                "Trying to use more processes than images: output.nproc=%d, "%nproc +
+                "nimages=%d.  Reducing nproc to %d."%(nimages,nimages))
+        nproc = nimages
+
     all_images = galsim.config.BuildImages(
         nimages, config=config, nproc=nproc, logger=logger,
         image_num=image_num, obj_num=obj_num,
@@ -655,17 +665,28 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     weight_images = [ all_images[2] ]
     badpix_images = [ all_images[3] ]
 
-    all_images = galsim.config.BuildImages(
-        nimages-1, config=config, nproc=nproc, logger=logger,
-        image_num=image_num+1, obj_num=obj_num,
-        make_psf_image=make_psf_image, 
-        make_weight_image=make_weight_image,
-        make_badpix_image=make_badpix_image)
+    if nimages > 1:
+        if nproc > nimages-1:
+            # Only warn if nproc was specifically set, not if it is -1.
+            if (logger and
+                not ('nproc' in config['output'] and
+                     galsim.config.ParseValue(config['output'],'nproc',config,int)[0] == -1)):
+                logger.warn(
+                    "Trying to use more processes than (nimages-1): output.nproc=%d, "%nproc +
+                    "nimages=%d.  Reducing nproc to %d."%(nimages,nimages-1))
+            nproc = nimages-1
 
-    main_images += all_images[0]
-    psf_images += all_images[1]
-    weight_images += all_images[2]
-    badpix_images += all_images[3]
+        all_images = galsim.config.BuildImages(
+            nimages-1, config=config, nproc=nproc, logger=logger,
+            image_num=image_num+1, obj_num=obj_num,
+            make_psf_image=make_psf_image,
+            make_weight_image=make_weight_image,
+            make_badpix_image=make_badpix_image)
+
+        main_images += all_images[0]
+        psf_images += all_images[1]
+        weight_images += all_images[2]
+        badpix_images += all_images[3]
 
     galsim.fits.writeCube(main_images, file_name)
     if logger:
