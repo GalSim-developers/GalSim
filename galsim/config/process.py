@@ -293,7 +293,7 @@ def Process(config, logger=None):
         # Prepend a dir to the beginning of the filename if requested.
         if 'dir' in output:
             dir = galsim.config.ParseValue(output, 'dir', config, str)[0]
-            if dir and not os.path.isdir(dir): os.mkdir(dir)
+            if dir and not os.path.isdir(dir): os.makedirs(dir)
             file_name = os.path.join(dir,file_name)
         else:
             dir = None
@@ -347,7 +347,7 @@ def Process(config, logger=None):
                 f = params['file_name']
                 if 'dir' in params:
                     dir = params['dir']
-                    if dir and not os.path.isdir(dir): os.mkdir(dir)
+                    if dir and not os.path.isdir(dir): os.makedirs(dir)
                 # else keep dir from above.
                 if dir:
                     f = os.path.join(dir,f)
