@@ -342,7 +342,7 @@ Parameters:
 
 Methods
 -------
-To add noise to every element of an image, use the syntax image.addNoise(vat_noise).
+To add noise to every element of an image, use the syntax image.addNoise(variable_noise).
 """
 
 _galsim.VariableGaussianNoise.applyTo.__func__.__doc__ = """

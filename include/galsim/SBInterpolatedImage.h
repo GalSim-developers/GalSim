@@ -272,10 +272,10 @@ namespace galsim {
         /**
          * @brief Refine the value of stepK if the input image had a smaller scale than necessary.
          *
-         * @param[in] min_maxk  Optional minimum value of maxk if you have some a priori
-         *                      knowledge about an appropriate minimum. 
+         * @param[in] max_maxk  Optional maximum value of maxk if you have some a priori
+         *                      knowledge about an appropriate maximum. 
          */
-        void calculateMaxK(double min_maxk=0.) const;
+        void calculateMaxK(double max_maxk=0.) const;
 
     protected:
 

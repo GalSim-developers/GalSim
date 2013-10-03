@@ -43,7 +43,7 @@ namespace galsim {
         virtual double xValue(const Position<double>& p) const =0;
         virtual std::complex<double> kValue(const Position<double>& k) const =0; 
 
-        // Caclulate xValues and kValues for a bunch of positions at once.
+        // Calculate xValues and kValues for a bunch of positions at once.
         // For some profiles, this may be more efficient than repeated calls of xValue(pos)
         // since it affords the opportunity for vectorization of the calculations.
         //

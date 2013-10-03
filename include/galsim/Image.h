@@ -147,6 +147,14 @@ namespace galsim {
         const T* getData() const { return _data; }
 
         /**
+         *  @brief Return how many data elements are currently allocated in memory.
+         *
+         *  This is usually the same as getBounds().area(), but it may not be if the image
+         *  has been resized.
+         */
+        ptrdiff_t getNElements() const { return _nElements; }
+
+        /**
          *  @brief Return the number of elements between rows in memory.
          */
         int getStride() const { return _stride; }
@@ -226,7 +234,7 @@ namespace galsim {
          *
          *  (x0,y0) becomes the new center of the image if the x and y ranges are odd.
          *  If the x range is even, then the new center will be x0 + 1/2.
-         *  Likewisw for y.
+         *  Likewise for y.
          *
          *  xmin_new = x0 - (xmax - xmin)/2
          *  xmax_new = xmin_new + xmax - xmin
@@ -303,7 +311,8 @@ namespace galsim {
     protected:
 
         boost::shared_ptr<T> _owner;  // manages ownership; _owner.get() != _data if subimage
-        T * _data;                    // pointer to be used for this image
+        T* _data;                     // pointer to be used for this image
+        ptrdiff_t _nElements;         // number of elements allocated in memory
         int _stride;                  // number of elements between rows (!= width for subimages)
         double _scale;                // pixel scale (used by SBInterpolatedImage and SBProfile;
                                       // units?!)
@@ -317,9 +326,11 @@ namespace galsim {
         /**
          *  @brief Constructor is protected since a BaseImage is a virtual base class.
          */
-        BaseImage(T* data, boost::shared_ptr<T> owner, int stride, const Bounds<int>& b, 
-                  double scale) :
-            AssignableToImage<T>(b), _owner(owner), _data(data), _stride(stride), _scale(scale) {}
+        BaseImage(T* data, ptrdiff_t nElements, boost::shared_ptr<T> owner, 
+                  int stride, const Bounds<int>& b, double scale) :
+            AssignableToImage<T>(b), 
+            _owner(owner), _data(data), _nElements(nElements),
+            _stride(stride), _scale(scale) {}
 
         /**
          *  @brief Copy constructor also protected
@@ -329,7 +340,8 @@ namespace galsim {
          */
         BaseImage(const BaseImage<T>& rhs) :
             AssignableToImage<T>(rhs),
-            _owner(rhs._owner), _data(rhs._data), _stride(rhs._stride), _scale(rhs._scale) {}
+            _owner(rhs._owner), _data(rhs._data), _nElements(rhs._nElements),
+            _stride(rhs._stride), _scale(rhs._scale) {}
 
         /**
          *  @brief Also have a constructor that just takes a bounds.  
@@ -376,7 +388,7 @@ namespace galsim {
          */
         ConstImageView(T* data, const boost::shared_ptr<T>& owner, int stride,
                        const Bounds<int>& b, double scale) :
-            BaseImage<T>(data,owner,stride,b,scale) {}
+            BaseImage<T>(data,0,owner,stride,b,scale) {}
 
         /**
          *  @brief Copy Constructor from a BaseImage makes a new view of the same data
@@ -415,7 +427,7 @@ namespace galsim {
      *  and the data in im2 will be copied to the sub-image of im1.
      *
      *  Also note that through the python interface, we can make an ImageView that
-     *  views a numpy array rather than anything that was creates as an Image.
+     *  views a numpy array rather than anything that was created as an Image.
      *  We have some tricky stuff in pysrc/Image.cpp to get the C++ shared_ptr to
      *  interact correctly with numpy's reference counting so the data are deleted
      *  when the last numpy array _or_ ImageView finally goes out of scope.
@@ -439,7 +451,7 @@ namespace galsim {
          */
         ImageView(T* data, const boost::shared_ptr<T>& owner, int stride, const Bounds<int>& b,
                   double scale) :
-            BaseImage<T>(data, owner, stride, b, scale) {}
+            BaseImage<T>(data, 0, owner, stride, b, scale) {}
 
         /**
          *  @brief Shallow copy constructor.

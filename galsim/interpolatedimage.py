@@ -131,11 +131,11 @@ class InterpolatedImage(GSObject):
                            in the use of the default value, 4.  We strongly recommend leaving this 
                            parameter at its default value; see text above for details. 
                            (Default `pad_factor = 0`)
-    @param noise_pad_size  If provided, the image will be padded out to this size with the noise 
-                           specified by `noise_pad`. This is important if you are planning to 
-                           whiten the resulting image.  You want to make sure that the noise-padded 
-                           image is larger than the postage stamp onto which you are drawing this 
-                           object.  [Default `noise_pad_size = None`.]
+    @param noise_pad_size  If provided, the image will be padded out to this size (in arcsec) with 
+                           the noise specified by `noise_pad`. This is important if you are 
+                           planning to whiten the resulting image.  You want to make sure that the 
+                           noise-padded image is larger than the postage stamp onto which you are 
+                           drawing this object.  [Default `noise_pad_size = None`.]
     @param noise_pad       Noise properties to use when padding the original image with
                            noise.  This can be specified in several ways:
                                (a) as a float, which is interpreted as being a variance to use when
@@ -192,9 +192,9 @@ class InterpolatedImage(GSObject):
                            spatial frequency needed to accurately render the object being 
                            represented by the InterpolatedImage; often this is useful in choosing 
                            an optimal value for the extent of the Fourier space lookup table.
-                           If you know a priori an appropriate minimum value for maxk, then 
+                           If you know a priori an appropriate maximum value for maxk, then 
                            you may also supply that here instead of a bool value, in which case
-                           the maxk value is still calculated, but will not go below the
+                           the maxk value is still calculated, but will not go above the
                            provided value. 
                            (Default `calculate_maxk = True`)
     @param use_true_center Similar to the same parameter in the GSObject.draw function, this
@@ -225,7 +225,7 @@ class InterpolatedImage(GSObject):
         'dx' : float ,
         'flux' : float ,
         'pad_factor' : float ,
-        'noise_pad_size' : int ,
+        'noise_pad_size' : float ,
         'noise_pad' : str ,
         'pad_image' : str ,
         'calculate_stepk' : bool ,
@@ -327,6 +327,9 @@ class InterpolatedImage(GSObject):
 
         # Make sure the image fits in the noise pad image:
         if noise_pad_size:
+            import math
+            # Convert from arcsec to pixels according to the image scale.
+            noise_pad_size = int(math.ceil(noise_pad_size / image.scale))
             if noise_pad_size <= min(image.array.shape):
                 # Don't need any noise padding in this case.
                 noise_pad_size = 0
@@ -391,8 +394,8 @@ class InterpolatedImage(GSObject):
             if calculate_maxk is True:
                 sbinterpolatedimage.calculateMaxK()
             else:
-                # If not a bool, then value is min_maxk
-                sbinterpolatedimage.calculateMaxK(min_maxk=calculate_maxk)
+                # If not a bool, then value is max_maxk
+                sbinterpolatedimage.calculateMaxK(max_maxk=calculate_maxk)
 
         # If the user specified a flux, then set to that flux value.
         if flux != None:

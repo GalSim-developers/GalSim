@@ -108,7 +108,7 @@ def BuildGSObject(config, key, base=None, gsparams={}):
 
     # Set up the initial default list of attributes to ignore while building the object:
     ignore = [ 
-        'dilate', 'dilation', 'ellip', 'rotate', 'rotation',
+        'dilate', 'dilation', 'ellip', 'rotate', 'rotation', 'scale_flux',
         'magnify', 'magnification', 'shear', 'shift', 
         'gsparams', 'skip', 'current_val', 'safe' 
     ]
@@ -126,6 +126,10 @@ def BuildGSObject(config, key, base=None, gsparams={}):
         # Ideally, we'd like to check that it's something within the gal hierarchy, but
         # I don't know an easy way to do that.
         ignore += [ 'resolution' , 're_from_res' ]
+
+    # Allow signal_to_noise for PSFs only if there is not also a galaxy.
+    if 'gal' not in base and key == 'psf':
+        ignore += [ 'signal_to_noise']
 
     # If we are specifying the size according to a resolution, then we 
     # need to get the PSF's half_light_radius.
@@ -148,7 +152,7 @@ def BuildGSObject(config, key, base=None, gsparams={}):
         ck['half_light_radius'] = gal_re
 
     # Make sure the PSF gets flux=1 unless explicitly overridden by the user.
-    if key == 'psf' and 'flux' not in ck:
+    if key == 'psf' and 'flux' not in ck and 'signal_to_noise' not in ck:
         ck['flux'] = 1
 
     if 'gsparams' in ck:
@@ -505,6 +509,10 @@ def _TransformObject(gsobject, config, base):
         if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _RotateObject(gsobject, config, 'rotation', base)
         safe = safe and safe1
+    if 'scale_flux' in config:
+        if orig: gsobject = gsobject.copy(); orig = False
+        gsobject, safe1 = _ScaleFluxObject(gsobject, config, 'scale_flux', base)
+        safe = safe and safe1
     if 'shear' in config:
         if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _EllipObject(gsobject, config, 'shear', base)
@@ -540,6 +548,16 @@ def _RotateObject(gsobject, config, key, base):
     """
     theta, safe = galsim.config.ParseValue(config, key, base, galsim.Angle)
     gsobject = gsobject.createRotated(theta)
+    return gsobject, safe
+
+def _ScaleFluxObject(gsobject, config, key, base):
+    """@brief Scales the flux of a supplied GSObject based on user input.
+
+    @returns transformed GSObject.
+    """
+    flux_ratio, safe = galsim.config.ParseValue(config, key, base, float)
+    gsobject = gsobject.copy()
+    gsobject.scaleFlux(flux_ratio)
     return gsobject, safe
 
 def _DilateObject(gsobject, config, key, base):

@@ -265,6 +265,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             ysize = galsim.config.ParseValue(config['image'],'stamp_ysize',config,int)[0]
         elif 'stamp_size' in config['image']:
             ysize = galsim.config.ParseValue(config['image'],'stamp_size',config,int)[0]
+    #print 'xsize,ysize = ',xsize,ysize
 
     # Determine where this object is going to go:
     if 'image_pos' in config['image']:
@@ -314,6 +315,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
     else:
         icenter = None
         final_shift = galsim.PositionD(0.,0.)
+        #print 'no final_shift'
 
     gsparams = {}
     if 'gsparams' in config['image']:
@@ -355,13 +357,16 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
 
     if skip: 
         if xsize and ysize:
+            # If the size is set, we need to do something reasonable to return this size.
             im = galsim.ImageF(xsize, ysize)
+            im.setOrigin(config['image_origin'])
+            im.setZero()
+            if do_noise and sky_level_pixel:
+                im += sky_level_pixel
         else:
-            im = galsim.ImageF(1,1)
-        im.setOrigin(config['image_origin'])
-        im.setZero()
-        if do_noise and sky_level_pixel:
-            im += sky_level_pixel
+            # Otherwise, we don't set the bounds, so it will be noticed as invalid upstream.
+            im = galsim.ImageF()
+
         if make_weight_image:
             weight_im = galsim.ImageF(im.bounds, scale=im.scale)
             weight_im.setZero()
@@ -412,7 +417,11 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
     t5 = time.time()
 
     if make_psf_image:
-        psf_im = DrawPSFStamp(psf,pix,config,im.bounds,final_shift)
+        psf_im = DrawPSFStamp(psf,pix,config,im.bounds,sky_level_pixel,final_shift)
+        if ('output' in config and 'psf' in config['output'] and 
+                'signal_to_noise' in config['output']['psf'] and
+                'noise' in config['image']):
+            AddNoiseFFT(psf_im,None,0,config['image']['noise'],config,rng,0,logger)
     else:
         psf_im = None
 
@@ -516,20 +525,24 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level_pixel, final_shi
     else:
         current_var = 0.
 
-    if 'gal' in config and 'signal_to_noise' in config['gal']:
+    if (('gal' in config and 'signal_to_noise' in config['gal']) or
+        ('gal' not in config and 'psf' in config and 'signal_to_noise' in config['psf'])):
         import math
         import numpy
-        if 'flux' in config['gal']:
+        if 'gal' in config: root_key = 'gal'
+        else: root_key = 'psf'
+
+        if 'flux' in config[root_key]:
             raise AttributeError(
-                'Only one of signal_to_noise or flux may be specified for gal')
+                'Only one of signal_to_noise or flux may be specified for %s'%root_key)
 
         if 'image' in config and 'noise' in config['image']:
             noise_var = CalculateNoiseVar(config['image']['noise'], config, pixel_scale, 
                                           sky_level_pixel)
         else:
             raise AttributeError(
-                "Need to specify noise level when using gal.signal_to_noise")
-        sn_target = galsim.config.ParseValue(config['gal'], 'signal_to_noise', config, float)[0]
+                "Need to specify noise level when using %s.signal_to_noise"%root_key)
+        sn_target = galsim.config.ParseValue(config[root_key], 'signal_to_noise', config, float)[0]
             
         # Now determine what flux we need to get our desired S/N
         # There are lots of definitions of S/N, but here is the one used by Great08
@@ -683,7 +696,7 @@ def AddNoiseFFT(im, weight_im, current_var, noise, base, rng, sky_level_pixel, l
                 weight_im += sky_level_pixel / gain + read_noise_var
 
         if current_var:
-            if sky_level_pixel + read_noise_var < current_var:
+            if sky_level_pixel / gain + read_noise_var < current_var:
                 raise RuntimeError(
                     "Whitening already added more noise than requested CCD noise.")
             if read_noise_var >= current_var:
@@ -755,9 +768,10 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, final_sh
         final.applyShear(wcs_shear)
         config['wcs_shear'] = wcs_shear
                     
-    if 'signal_to_noise' in config['gal']:
+    if (('gal' in config and 'signal_to_noise' in config['gal']) or
+        ('gal' not in config and 'psf' in config and 'signal_to_noise' in config['psf'])):
         raise NotImplementedError(
-            "gal.signal_to_noise not implemented for draw_method = phot")
+            "signal_to_noise option not implemented for draw_method = phot")
 
     if 'image' in config and 'pixel_scale' in config['image']:
         pixel_scale = galsim.config.ParseValue(config['image'], 'pixel_scale', config, float)[0]
@@ -931,7 +945,7 @@ def AddNoisePhot(im, weight_im, current_var, noise, base, rng, sky_level_pixel, 
                 weight_im += sky_level_pixel / gain + read_noise_var
 
         if current_var:
-            if sky_level_pixel + read_noise_var < current_var:
+            if sky_level_pixel / gain + read_noise_var < current_var:
                 raise RuntimeError(
                     "Whitening already added more noise than requested CCD noise.")
             if read_noise_var >= current_var:
@@ -990,7 +1004,7 @@ def AddNoisePhot(im, weight_im, current_var, noise, base, rng, sky_level_pixel, 
         raise AttributeError("Invalid type %s for noise",type)
 
 
-def DrawPSFStamp(psf, pix, config, bounds, final_shift):
+def DrawPSFStamp(psf, pix, config, bounds, sky_level_pixel, final_shift):
     """
     Draw an image using the given psf and pix profiles.
 
@@ -1030,10 +1044,34 @@ def DrawPSFStamp(psf, pix, config, bounds, final_shift):
         #print 'psf shift (1): ',gal_shift.x,gal_shift.y
         final_psf.applyShift(gal_shift)
 
-    psf_im = galsim.ImageF(bounds, scale=pixel_scale)
-    final_psf.draw(psf_im, dx=pixel_scale, offset=final_shift)
+    im = galsim.ImageF(bounds, scale=pixel_scale)
+    final_psf.draw(im, dx=pixel_scale, offset=final_shift)
 
-    return psf_im
+    if (('output' in config and 'psf' in config['output'] 
+            and 'signal_to_noise' in config['output']['psf']) or
+        ('gal' not in config and 'psf' in config and 'signal_to_noise' in config['psf'])):
+        import math
+        import numpy
+
+        if 'image' in config and 'noise' in config['image']:
+            noise_var = CalculateNoiseVar(config['image']['noise'], config, pixel_scale, 
+                                          sky_level_pixel)
+        else:
+            raise AttributeError(
+                "Need to specify noise level when using psf.signal_to_noise")
+
+        if ('output' in config and 'psf' in config['output'] 
+                and 'signal_to_noise' in config['output']['psf']):
+            cf = config['output']['psf']
+        else:
+            cf = config['psf']
+        sn_target = galsim.config.ParseValue(cf, 'signal_to_noise', config, float)[0]
+            
+        sn_meas = math.sqrt( numpy.sum(im.array**2) / noise_var )
+        flux = sn_target / sn_meas
+        im *= flux
+
+    return im
            
 def CalculateWCSShear(wcs, base):
     """

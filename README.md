@@ -133,7 +133,7 @@ be used.  These are called `demo1.py`-`demo11.py`, and can be run either using
 examples` and then using the executable `bin/demo1`.  A completely parallel
 sequence of configuration scripts, `demo1.yaml`-`demo11.yaml`, demonstrates how
 to make the same set of simulations using config scripts that can be input to
-`bin/galsim_yaml`.  
+`bin/galsim`.  
 
 All demonstration scripts (including `bin/demo1`, etc) are meant to be run 
 within the `examples/` directory.  The demos can be run in a different 

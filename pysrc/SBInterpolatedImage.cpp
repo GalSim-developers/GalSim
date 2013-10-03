@@ -95,7 +95,7 @@ namespace galsim {
                 .def("calculateStepK", &SBInterpolatedImage::calculateStepK,
                      bp::arg("max_stepk")=0.)
                 .def("calculateMaxK", &SBInterpolatedImage::calculateMaxK,
-                     bp::arg("min_maxk")=0.)
+                     bp::arg("max_maxk")=0.)
                 ;
             wrapTemplates<float>(pySBInterpolatedImage);
             wrapTemplates<double>(pySBInterpolatedImage);

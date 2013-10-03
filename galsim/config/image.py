@@ -20,9 +20,9 @@
 import galsim
 
 valid_image_types = { 
-    'Single' : 'BuildSingleImage',
-    'Tiled' : 'BuildTiledImage',
-    'Scattered' : 'BuildScatteredImage',
+    'Single' : ( 'BuildSingleImage', 'GetNObjForSingleImage' ),
+    'Tiled' : ( 'BuildTiledImage', 'GetNObjForTiledImage' ),
+    'Scattered' : ( 'BuildScatteredImage', 'GetNObjForScatteredImage' ),
 }
 
 def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
@@ -258,7 +258,7 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0,
     if type not in valid_image_types:
         raise AttributeError("Invalid image.type=%s."%type)
 
-    build_func = eval(valid_image_types[type])
+    build_func = eval(valid_image_types[type][0])
     all_images = build_func(
             config=config, logger=logger,
             image_num=image_num, obj_num=obj_num,
@@ -566,12 +566,12 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
             if max_current_var > 0:
                 import numpy
-                # Then there was whitening applied in to the individual stamps.
+                # Then there was whitening applied in the individual stamps.
                 # But there could be a different variance in each postage stamp, so the first
                 # thing we need to do is bring everything up to a common level.
                 noise_image = galsim.ImageF(full_image.bounds, full_image.scale)
                 for k in range(nobjects): noise_image[images[k].bounds] += current_vars[k]
-                # Update this, since overlapping postage stamps may have let to a larger 
+                # Update this, since overlapping postage stamps may have led to a larger 
                 # value in some pixels.
                 max_current_var = numpy.max(noise_image.array)
                 # Figure out how much noise we need to add to each pixel.
@@ -774,6 +774,8 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         #print 'stamp bounds = ',images[k].bounds
         #print 'full bounds = ',full_image.bounds
         #print 'Overlap = ',bounds
+        #print 'stamp scale = ',images[k].scale
+        #print 'full scale = ',full_image.scale
         if bounds.isDefined():
             full_image[bounds] += images[k][bounds]
             if make_psf_image:
@@ -797,14 +799,14 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         draw_method = galsim.config.GetCurrentValue(config['image'],'draw_method')
         if max_current_var > 0:
             import numpy
-            # Then there was whitening applied in to the individual stamps.
+            # Then there was whitening applied in the individual stamps.
             # But there could be a different variance in each postage stamp, so the first
             # thing we need to do is bring everything up to a common level.
             noise_image = galsim.ImageF(full_image.bounds, full_image.scale)
             for k in range(nobjects): 
                 b = images[k].bounds & full_image.bounds
                 if b.isDefined(): noise_image[b] += current_vars[k]
-            # Update this, since overlapping postage stamps may have let to a larger 
+            # Update this, since overlapping postage stamps may have led to a larger 
             # value in some pixels.
             max_current_var = numpy.max(noise_image.array)
             # Figure out how much noise we need to add to each pixel.
@@ -830,5 +832,48 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     return full_image, full_psf_image, full_weight_image, full_badpix_image
 
+
+def GetNObjForImage(config, image_num):
+    if 'image' in config and 'type' in config['image']:
+        image_type = config['image']['type']
+    else:
+        image_type = 'Single'
+
+    # Check that the type is valid
+    if image_type not in valid_image_types:
+        raise AttributeError("Invalid image.type=%s."%type)
+
+    nobj_func = eval(valid_image_types[image_type][1])
+
+    return nobj_func(config,image_num)
+
+def GetNObjForSingleImage(config, image_num):
+    return 1
+
+def GetNObjForScatteredImage(config, image_num):
+
+    config['seq_index'] = image_num
+
+    # Allow nobjects to be automatic based on input catalog
+    if 'nobjects' not in config['image']:
+        nobj = ProcessInputNObjects(config)
+        if nobj:
+            config['image']['nobjects'] = nobj
+            return nobj
+        else:
+            raise AttributeError("Attribute nobjects is required for image.type = Scattered")
+    else:
+        return galsim.config.ParseValue(config['image'],'nobjects',config,int)[0]
+
+def GetNObjForTiledImage(config, image_num):
+    
+    config['seq_index'] = image_num
+
+    if 'nx_tiles' not in config['image'] or 'ny_tiles' not in config['image']:
+        raise AttributeError(
+            "Attributes nx_tiles and ny_tiles are required for image.type = Tiled")
+    nx = galsim.config.ParseValue(config['image'],'nx_tiles',config,int)[0]
+    ny = galsim.config.ParseValue(config['image'],'ny_tiles',config,int)[0]
+    return nx*ny
 
 

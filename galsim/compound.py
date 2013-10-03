@@ -80,18 +80,22 @@ class Add(GSObject):
         if len(args) == 1:
             # No need to make an SBAdd in this case.
             GSObject.__init__(self, args[0])
-            if hasattr(args[0],'noise'): self.noise = args[0].noise
+            if hasattr(args[0],'noise'): 
+                self.noise = args[0].noise
         else:
             # If any of the objects have a noise attribute, then we propagate the sum of the 
             # noises (they add like variances) to the final sum.
             noise = None
             for obj in args:
                 if hasattr(obj,'noise'):
-                    if noise is None: noise = obj.noise
-                    else: noise += obj.noise
+                    if noise is None: 
+                        noise = obj.noise
+                    else: 
+                        noise += obj.noise
             SBList = [obj.SBProfile for obj in args]
             GSObject.__init__(self, galsim.SBAdd(SBList, gsparams=gsparams))
-            if noise is not None: self.noise = noise
+            if noise is not None: 
+                self.noise = noise
 
 class Convolve(GSObject):
     """A class for convolving 2 or more GSObjects.
@@ -152,7 +156,8 @@ class Convolve(GSObject):
         if len(args) == 1:
             # No need to make an SBConvolve in this case.  Can early exit.
             GSObject.__init__(self, args[0])
-            if hasattr(args[0],'noise'): self.noise = args[0].noise
+            if hasattr(args[0],'noise'): 
+                self.noise = args[0].noise
             return
 
         # Check kwargs
@@ -234,14 +239,17 @@ class Convolve(GSObject):
                 noise = obj.noise
                 others = [ obj2 for obj2 in args if obj2 is not obj ]
                 assert len(others) > 0
-                if len(others) == 1: noise.convolveWith(others[0])
-                else: noise.convolveWith(galsim.Convolve(others))
+                if len(others) == 1: 
+                    noise.convolveWith(others[0])
+                else: 
+                    noise.convolveWith(galsim.Convolve(others))
 
         # Then finally initialize the SBProfile using the objects' SBProfiles.
         SBList = [ obj.SBProfile for obj in args ]
         GSObject.__init__(self, galsim.SBConvolve(SBList, real_space=real_space,
                                                   gsparams=gsparams))
-        if noise is not None: self.noise = noise
+        if noise is not None: 
+            self.noise = noise
 
 
 class Deconvolve(GSObject):
