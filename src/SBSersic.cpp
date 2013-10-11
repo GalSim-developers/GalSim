@@ -435,6 +435,7 @@ namespace galsim {
         double kmin = std::pow(_gsparams->kvalue_accuracy / kderiv6, 1./6.);
         dbg<<"kmin = "<<kmin<<std::endl;
         _ksq_min = kmin * kmin;
+        dbg<<"ksq_min = "<<_ksq_min<<std::endl;
  
         // Normalization for integral at k=0:
         double hankel_norm = getFluxFraction()*_n*_gamma2n;
@@ -470,6 +471,7 @@ namespace galsim {
         double sf=0., skf=0., sk=0., sk2=0.;
 
         // Don't go past k = 500
+        _ksq_max = -1.;
         for (double logk = std::log(kmin)-0.001; logk < std::log(500.); logk += dlogk) {
             double k = std::exp(logk);
             double ksq = k*k;
@@ -538,6 +540,9 @@ namespace galsim {
             }
             fit_vals.push_front(f0);
         }
+        // If didn't find a goot approximation for large k, just use the largest k we put in
+        // in the table.  (Need to use some approximation after this anyway!)
+        if (_ksq_max <= 0.) _ksq_max = std::exp(2. * _ft.argMax());
         xdbg<<"ft.argMax = "<<_ft.argMax()<<std::endl;
         xdbg<<"ksq_max = "<<_ksq_max<<std::endl;
 
