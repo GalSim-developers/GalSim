@@ -8,9 +8,10 @@ import numpy
 
 # --- THINGS WE ARE TESTING  ---
 # Interpolants
-interpolant_list = ['nearest', 'sinc', 'linear', 'cubic', 'quintic', 
+interpolant_list = ['cubic', 'quintic', 
                     'lanczos3', 'lanczos4', 'lanczos5', 'lanczos7']
-use_interpolants = [interpolant_list[4]]
+# use_interpolants may be overwritten here or in main() to only test some of the above interpolants                    
+use_interpolants = interpolant_list
 # Padding options
 padding_list = range(4,7,2)
 # Range of rotation angles
@@ -35,20 +36,18 @@ shear_and_magnification_list =  [(0.05, 0., 1.),(0.03, 0., 1.), (0.01, 0., 1.),
                                  (0.016, -0.011, 1.02), (0.020, 0.003, 0.97)]
 # --- IMPORTANT BUT NOT TESTED PARAMETERS ---
 # Catalog parameters
-catalog_dir = '../../../extragalsimstuff/NewPublic' # Melanie's parameters, during testing
-catalog_filename = 'cut_real_galaxy_catalog.fits'
-#catalog_dir = '../../examples/data'
-#catalog_filename = 'real_galaxy_catalog_example.fits'
+catalog_dir = '../../examples/data'
+catalog_filename = 'real_galaxy_catalog_example.fits'
 default_first_index = 0 # Note: both of these may be superceded via command-line arguments!
 default_nitems = 100 # How many galaxies to test
-pixel_scale = 0.03
+pixel_scale = 0.03 # COSMOS pixel scale
 imsize = 512
 # Random seed
 rseed = 999888444
 
 # --- COMPUTATIONAL DETAILS AND FILENAMES ---
 nproc = 8
-default_file_root = 'interpolant_test_output_'
+default_file_root = 'interpolant_test_output_' # May be overwritten on the command line
 
 # --- Helper functions to run the main part of the code ---
 def get_config(nitems=default_nitems,first_index=default_first_index,file_root=default_file_root):
@@ -98,10 +97,14 @@ def get_config(nitems=default_nitems,first_index=default_first_index,file_root=d
                                                     ignore)[0] ]
     original_config['real_catalog'] = input_obj
     delta_config['real_catalog'] = input_obj
+    # original_config doesn't do the convolution by a tiny-Gaussian pseudo-delta function, which
+    # means the k-space interpolants may have no effect.  It is here for legacy reasons, but it's
+    # probably best to just use the delta versions.
     return [(delta_config,delta_filename)]#, (original_config,original_filename)]
 
 class InterpolationData:
-# Quick container class for passing around data from these tests.  
+    """ Quick container class for passing around data from the interpolation tests.
+    """
     def __init__(self, config, g1obs=None, g2obs=None, sigmaobs=None, 
                  err_g1obs=None, err_g2obs=None, err_sigmaobs=None):
         self.g1obs = g1obs
@@ -185,7 +188,7 @@ def test_realgalaxy(base_config, shear=None, magnification=None, angle=None, shi
         raise ValueError("Must pass random seed to test_realgalaxy with 'seed'")
     pass_config = copy.deepcopy(config) # To pass to the InterpolationData routine
     trial_images = galsim.config.BuildImages(nimages = config['gal']['index']['nitems'], 
-        config = config, logger=logger, nproc=config['image']['nproc'])[0]
+        config = config, nproc=config['image']['nproc'])[0]
     if 'psf' in config and config['psf']['type'] is not 'Gaussian': # use EstimateShearErrors
         config = copy.deepcopy(base_config)
         del config['gal']
@@ -238,7 +241,7 @@ def print_results(f, g1_list, g2_list, sigma_list, test_answer, first_index=0):
             str(g1_list[i])+' '+str(expected_g1[i])+' '+str(test_answer.g1obs[i]-expected_g1[i])+' '+
             str(g2_list[i])+' '+str(expected_g2[i])+' '+str(test_answer.g2obs[i]-expected_g2[i])+' '+
             str(sigma_list[i])+' '+str(expected_size[i])+' '+
-            str((test_answer.sigmaobs[i]-expected_size[i])/expected_size[i])'\n')
+            str((test_answer.sigmaobs[i]-expected_size[i])/expected_size[i])+'\n')
         
 def main(args):
     # Draw the original galaxies and measure their shapes
