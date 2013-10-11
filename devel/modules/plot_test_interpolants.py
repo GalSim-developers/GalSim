@@ -171,7 +171,7 @@ def plot_interpolants(plotfile, filenamebase):
                 ymin = -0.0002
                 writeplot = False # In case none of the masks pass our plotability tests
                 ixoffset = -0.5*len(interpolants) # to offset for clarity
-                xoffset = 2/15.
+                xoffset = 2/30.
                 plt.axhline(0.,color='black')
                 for i in range(len(interpolants)-1):
                     for j in range(len(paddings)):
@@ -212,15 +212,15 @@ def plot_interpolants(plotfile, filenamebase):
             # Plot average errors
             data_types = [(g1_difference, "g1", "g1_errors",
                                 "average g1 errors"), 
-                          (g1_difference, "g2", "g2_errors",
+                          (g2_difference, "g2", "g2_errors",
                                 "average g2 errors"), 
-                           (g1_difference, "size/expected size", "frac_size_errors",
+                          (frac_size_difference, "size/expected size", "frac_size_errors",
                                 "average fractional size errors")]
             # Plot average error vs pad_factor for the various interpolant + 
             # added shear permutations
             for x,ytitle,optitle,ptitle in data_types:
                 ixoffset = -0.5*len(interpolants) # to offset for clarity
-                xoffset = 2/15.
+                xoffset = 2/30.
                 plt.axhline(0.,color='black')
                 for i in range(len(interpolants)-1):
                     for j in range(len(paddings)):
@@ -242,8 +242,7 @@ def plot_interpolants(plotfile, filenamebase):
                 plt.xlim([3.5,8]) # so the legend doesn't overlap
                 plt.legend()
                 plt.tight_layout()
-                if writeplot:
-                    plt.savefig(filenamebase+'.'+subinterp_title[0]+'.'+optitle+'.'+octitle+'.png')
+                plt.savefig(filenamebase+'.'+subinterp_title[0]+'.'+optitle+'.'+octitle+'.png')
                 plt.clf()
 
 
