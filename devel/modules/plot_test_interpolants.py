@@ -221,18 +221,17 @@ def plot_interpolants(plotfile, filenamebase):
             for x,ytitle,optitle,ptitle in data_types:
                 ixoffset = -0.5*len(interpolants) # to offset for clarity
                 xoffset = 2/30.
-                plt.axhline(0.,color='black')
                 for i in range(len(interpolants)-1):
                     for j in range(len(paddings)):
                         mx = x[mask[i][j]]
                         datapoint = [numpy.average(numpy.abs(mx))]
                         if j==1:
-                            plt.plot(paddings[j]+ixoffset*xoffset,m,
+                            plt.plot(paddings[j]+ixoffset*xoffset,datapoint,
                                 marker='o',
                                 color=interpolant_colors[interpolants[i]],
                                 label=interpolant_titles[interpolants[i]])
                         else:
-                            plt.plot(paddings[j]+ixoffset*xoffset,m,
+                            plt.plot(paddings[j]+ixoffset*xoffset,datapoint,
                                 marker='o',
                                 color=interpolant_colors[interpolants[i]])
                     ixoffset+=1
