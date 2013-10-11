@@ -1,0 +1,538 @@
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+1	 1.01257658e-01	-1.06383411e-01	 1.35284499e-01	-1.40371308e-01	 4.38959943e+00	 4.38309084e+00	 9.76390423e-06	 9.83102988e-06	 1.32778644e-05	 1.34053464e-05	 5.55827229e-05	 5.60636072e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+2	 6.06354966e-02	 5.36221048e-02	 1.19233399e-01	 1.09300412e-01	 2.52855630e+00	 2.52694431e+00	 9.86510805e-06	 9.96452400e-06	 2.05693496e-05	 2.09404030e-05	 3.24468524e-05	 3.22861322e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+3	 1.94116433e-01	-1.13088023e-02	 4.38638582e-01	-3.23823454e-02	 2.39924595e+00	 2.40024031e+00	 9.98208993e-06	 9.66014927e-06	 3.65740652e-05	 2.37694306e-05	 3.08437126e-05	 3.24072207e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+4	-3.95859445e-02	-9.20466120e-02	-9.76134180e-02	-2.36730567e-01	 2.33909546e+00	 2.32964989e+00	 9.75229595e-06	 9.52029601e-06	 2.87156808e-05	 3.10559251e-05	 3.29411301e-05	 3.28331533e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+5	 7.41823095e-02	-1.01134567e-01	 1.11590419e-01	-1.52105586e-01	 3.82444500e+00	 3.80398824e+00	 9.97196416e-06	 1.00199574e-05	 1.55968021e-05	 1.60469076e-05	 6.12133767e-05	 6.18453382e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+6	-5.71406669e-02	 3.69387552e-02	-6.71488699e-02	 4.45316700e-02	 4.87777863e+00	 4.87733323e+00	 9.73579621e-06	 9.92108497e-06	 1.18245975e-05	 1.19207175e-05	 6.08464259e-05	 6.06944198e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+7	 3.29766780e-02	 1.42989327e-01	 6.02172556e-02	 2.31474679e-01	 2.99202270e+00	 2.98966855e+00	 9.58746609e-06	 9.61955131e-06	 1.62434315e-05	 1.78876173e-05	 3.39668960e-05	 3.51067981e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+8	-1.37369446e-01	-1.21584769e-01	-3.47337829e-01	-2.99782231e-01	 2.52082732e+00	 2.48380079e+00	 9.72240437e-06	 9.79943115e-06	 3.58132534e-05	 3.43181205e-05	 3.83116716e-05	 3.90002359e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+9	 2.80989520e-02	 2.79385439e-01	 5.53186763e-02	 6.74584792e-01	 2.74559176e+00	 2.70295641e+00	 8.62198341e-06	 9.87054468e-06	 2.22907923e-05	 4.46359785e-05	 3.58761282e-05	 3.81393259e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+10	 1.55944012e-01	 1.26615144e-01	 2.99930581e-01	 2.46380928e-01	 2.78160595e+00	 2.77356838e+00	 9.59708653e-06	 9.72223485e-06	 2.32680654e-05	 2.16428849e-05	 3.51618982e-05	 3.74762536e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+11	 4.80491450e-02	 1.12776805e-01	 8.43541369e-02	 2.22057238e-01	 2.69199087e+00	 2.69264593e+00	 9.58486808e-06	 9.03855434e-06	 1.78682772e-05	 1.89122703e-05	 3.14185215e-05	 3.17554827e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+12	-1.81871298e-01	-1.72756086e-01	-3.40786186e-01	-3.34269152e-01	 2.97287536e+00	 2.93311385e+00	 9.94585211e-06	 9.57903384e-06	 2.56398427e-05	 2.44917564e-05	 4.36588892e-05	 4.41032923e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+13	-4.03853992e-02	 1.31060964e-01	-7.25822099e-02	 2.36172026e-01	 3.08000914e+00	 3.06298498e+00	 9.96156463e-06	 9.68830520e-06	 1.79736191e-05	 1.95438736e-05	 4.32800464e-05	 4.33160607e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+14	-2.35918790e-01	-7.25842657e-02	-4.75583747e-01	-1.39600263e-01	 3.06797349e+00	 2.99008384e+00	 1.01296509e-05	 9.39871832e-06	 3.26282614e-05	 2.18883568e-05	 4.92360749e-05	 4.99648314e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+15	-2.60054959e-02	 1.25921896e-01	-4.14423916e-02	 2.10633980e-01	 2.96396371e+00	 2.95999334e+00	 9.79155304e-06	 9.59796486e-06	 1.64406174e-05	 1.83772212e-05	 3.93285429e-05	 3.98663720e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+16	 1.76148859e-01	-2.55927606e-02	 3.19725144e-01	-3.97042346e-02	 2.96981715e+00	 2.95002639e+00	 9.88670307e-06	 9.21315288e-06	 2.21254504e-05	 1.68876359e-05	 4.04131381e-05	 4.19497693e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+17	-3.30695792e-02	-2.58769665e-01	-4.58345232e-02	-4.24403797e-01	 3.53455037e+00	 3.49871653e+00	 8.66872894e-06	 9.84260798e-06	 1.48704239e-05	 2.20212215e-05	 4.42151030e-05	 4.74948334e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+18	 6.23662091e-02	-3.29302414e-02	 1.42960615e-01	-5.77987247e-02	 2.44143444e+00	 2.44172225e+00	 9.41080984e-06	 9.97750997e-06	 2.08092043e-05	 2.04862097e-05	 2.86775499e-05	 2.89969284e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+19	 4.10645196e-02	 1.36863622e-01	 8.24728919e-02	 3.79449634e-01	 2.40109031e+00	 2.38340599e+00	 9.44384516e-06	 9.80787476e-06	 2.61751450e-05	 3.40925399e-05	 3.13082385e-05	 3.16622541e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+20	-1.55577788e-01	 1.33731866e-01	-3.28951513e-01	 3.01501878e-01	 2.84992386e+00	 2.79911333e+00	 9.94374969e-06	 9.95848482e-06	 2.71025749e-05	 2.71115479e-05	 4.24835493e-05	 4.28363980e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+21	-1.24836423e-01	-9.33756259e-02	-2.07977519e-01	-1.56158726e-01	 3.02133917e+00	 3.01579031e+00	 9.67357475e-06	 9.55342714e-06	 1.81276254e-05	 1.68636857e-05	 3.82999629e-05	 3.92728218e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+22	-9.14113636e-04	-1.54163040e-01	-6.36997774e-03	-2.11442230e-01	 3.74122118e+00	 3.73508897e+00	 9.87747048e-06	 9.98038453e-06	 1.39682163e-05	 1.57065311e-05	 4.70189336e-05	 4.73839483e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+23	 1.46668072e-01	-5.55298683e-03	 2.66671010e-01	 3.22540606e-03	 3.12995447e+00	 3.10670811e+00	 9.73345688e-06	 9.48247138e-06	 2.02431105e-05	 1.71954067e-05	 4.38537737e-05	 4.40064378e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+24	-2.85803427e-02	-3.09674299e-02	-6.47986472e-02	-1.07695629e-01	 2.04576092e+00	 2.04470644e+00	 9.94419171e-06	 9.87603991e-06	 3.91685826e-05	 3.91999016e-05	 2.77741405e-05	 2.76612551e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+25	 1.46368000e-03	 1.16827951e-01	 1.56325928e-02	 2.60988799e-01	 2.46525081e+00	 2.45464943e+00	 9.69836236e-06	 9.83770131e-06	 2.35503750e-05	 2.74855495e-05	 3.30653620e-05	 3.29974631e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+26	-3.20454715e-01	-7.34257825e-02	-6.85057940e-01	-1.47784695e-01	 2.97446691e+00	 2.95103928e+00	 9.71259291e-06	 9.01140961e-06	 3.86810397e-05	 2.14852923e-05	 3.67067973e-05	 4.26067123e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+27	-1.90682767e-01	 9.05968107e-02	-5.37087423e-01	 2.51642442e-01	 2.26111823e+00	 2.28141664e+00	 9.81257667e-06	 9.72587395e-06	 4.97240548e-05	 3.33833256e-05	 2.78998817e-05	 2.91479432e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+28	 8.08994638e-02	 8.77510924e-02	 1.02713234e-01	 1.15491543e-01	 3.79630678e+00	 3.79898884e+00	 9.43285146e-06	 9.34658886e-06	 1.27401889e-05	 1.29658103e-05	 4.25237956e-05	 4.28724994e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+29	 3.32459065e-02	-1.94943154e-02	 7.43573396e-02	-3.88214975e-02	 2.63715320e+00	 2.63528802e+00	 9.95999313e-06	 9.69514456e-06	 2.28288996e-05	 2.18707141e-05	 3.89847011e-05	 3.90343109e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+30	 2.91921267e-02	 2.88029769e-03	 4.06507872e-02	-3.69702518e-03	 3.06604761e+00	 3.06598619e+00	 9.68648994e-06	 8.98364783e-06	 1.49003733e-05	 1.37459466e-05	 3.57105859e-05	 3.57957646e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+31	 1.31465587e-01	 1.04131399e-02	 4.54490413e-01	 3.45698697e-02	 2.02634169e+00	 2.03213342e+00	 9.91790421e-06	 9.74935684e-06	 5.78457099e-05	 3.43389553e-05	 2.46782302e-05	 2.47020549e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+32	-1.97050026e-01	 3.59120947e-02	-4.33890708e-01	 7.63249815e-02	 2.60885833e+00	 2.58833138e+00	 9.72401475e-06	 9.08238141e-06	 3.21883848e-05	 2.16468037e-05	 3.42828507e-05	 3.56689280e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+33	-1.22487721e-01	 1.52972355e-02	-5.72892089e-01	 7.44684976e-02	 1.97537799e+00	 1.96981729e+00	 9.66724451e-06	 9.04967535e-06	 8.99166875e-05	 4.49911233e-05	 2.38655508e-05	 2.40597374e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+34	 7.19099293e-02	-7.26089459e-02	 2.06777649e-01	-2.04862164e-01	 2.32865805e+00	 2.31774041e+00	 9.78966566e-06	 9.57169053e-06	 3.15131922e-05	 3.13993221e-05	 3.20568573e-05	 3.17941454e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+35	-3.28548703e-02	 1.59807576e-01	-4.91568764e-02	 2.79668467e-01	 3.03050010e+00	 3.02212256e+00	 9.32754595e-06	 9.63558152e-06	 1.59960638e-05	 1.96366559e-05	 3.84667730e-05	 3.95589781e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+36	 7.59450634e-02	 2.48756518e-02	 2.90633262e-01	 1.02106767e-01	 1.98164918e+00	 1.98536817e+00	 9.72299393e-06	 9.55862236e-06	 4.36897404e-05	 3.56256501e-05	 2.41506128e-05	 2.44752812e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+37	 3.14218061e-03	-7.42494105e-02	 1.51236308e-02	-1.77739366e-01	 2.35108243e+00	 2.34727806e+00	 8.96276844e-06	 9.98558178e-06	 2.25718693e-05	 2.77441136e-05	 3.22328993e-05	 3.21829588e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+38	 3.50327946e-02	 1.02975223e-01	 7.12028843e-02	 3.15256751e-01	 2.11015485e+00	 2.10587415e+00	 9.61296479e-06	 9.57756632e-06	 3.17656072e-05	 4.21241569e-05	 2.54071912e-05	 2.57068148e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+39	-1.42402716e-02	-4.05276161e-02	-3.25860259e-02	-9.24104933e-02	 2.44602917e+00	 2.44472309e+00	 9.55944034e-06	 9.88413023e-06	 2.17777396e-05	 2.30843786e-05	 2.95867037e-05	 2.97023887e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+40	-1.93246288e-01	 1.03969818e-01	-3.65629718e-01	 1.89069916e-01	 3.08540210e+00	 3.03906104e+00	 9.66059772e-06	 9.91902479e-06	 2.41774704e-05	 2.10073915e-05	 4.43897594e-05	 4.56652043e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+41	-2.01534291e-02	 7.35227915e-02	-6.94968888e-02	 2.42723869e-01	 2.00703077e+00	 2.00587854e+00	 9.21683700e-06	 9.52489004e-06	 3.49267185e-05	 4.22480305e-05	 2.37929418e-05	 2.38948928e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+42	-1.54532526e-01	 3.71732543e-02	-2.83048764e-01	 5.94192059e-02	 2.68129476e+00	 2.67990963e+00	 9.46377084e-06	 9.20452579e-06	 2.11943354e-05	 1.75899433e-05	 3.15500906e-05	 3.32355370e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+43	 1.15439765e-02	-4.48387152e-02	 9.31866314e-03	-5.77040669e-02	 4.43608516e+00	 4.43461904e+00	 9.58658786e-06	 9.85471590e-06	 1.24165710e-05	 1.28816517e-05	 6.10309682e-05	 6.10729251e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+44	-5.48287992e-02	 7.55305631e-02	-1.41663584e-01	 1.97370134e-01	 2.38479315e+00	 2.37563413e+00	 9.29547762e-06	 9.80826087e-06	 2.62795711e-05	 2.88311933e-05	 3.43844752e-05	 3.43054185e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+45	 3.15159538e-01	 1.09001070e-01	 9.23714465e-01	 3.23722952e-01	 2.58979254e+00	 2.55484806e+00	 9.51616504e-06	 8.87992924e-06	 7.42886528e-05	 3.52763557e-05	 3.43864334e-05	 3.83991686e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+46	-8.73241749e-02	-7.21087159e-02	-1.46908957e-01	-1.29492692e-01	 2.90178085e+00	 2.89814979e+00	 9.56723597e-06	 9.10640335e-06	 1.71404734e-05	 1.61653909e-05	 3.61457575e-05	 3.66042594e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+47	-2.36150143e-02	-2.03918474e-02	-3.71023885e-02	-3.18696348e-02	 4.48553914e+00	 4.48308745e+00	 1.20867047e-05	 1.16515022e-05	 1.66513712e-05	 1.60683781e-05	 8.96920324e-05	 8.94289675e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+48	-2.38164524e-02	-3.78211943e-02	-3.14832085e-02	-4.66468358e-02	 3.56951442e+00	 3.56898320e+00	 9.70939704e-06	 9.80572346e-06	 1.37297948e-05	 1.38999331e-05	 4.48089812e-05	 4.49210189e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+49	 2.93283779e-01	-2.09524799e-01	 7.69044056e-01	-5.63717750e-01	 2.78735415e+00	 2.75486925e+00	 9.29368996e-06	 9.85151254e-06	 5.45099369e-05	 4.68400222e-05	 3.83080617e-05	 4.56447270e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+50	-1.40850915e-01	 2.10806671e-01	-3.95305036e-01	 5.90348512e-01	 2.46079680e+00	 2.43976003e+00	 9.41923280e-06	 9.70321430e-06	 4.00337998e-05	 5.15135008e-05	 3.14832942e-05	 3.34383467e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+51	-9.39352113e-02	-1.02963230e-01	-1.66850921e-01	-2.01226887e-01	 2.68511155e+00	 2.68250143e+00	 9.45339825e-06	 8.96434706e-06	 1.93733277e-05	 1.85426350e-05	 3.46722128e-05	 3.55400445e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+52	 9.29363307e-02	 8.10304158e-02	 2.33184335e-01	 1.93727682e-01	 2.18443381e+00	 2.18693413e+00	 9.66175172e-06	 9.52396333e-06	 3.05399062e-05	 2.93674329e-05	 2.56999143e-05	 2.59812422e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+53	-7.77114894e-02	-2.38585714e-01	-1.38088248e-01	-4.26624034e-01	 3.08584049e+00	 3.07144078e+00	 9.09495181e-06	 9.79364370e-06	 1.75777234e-05	 2.51236930e-05	 3.56924125e-05	 3.75203257e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+54	-2.28193754e-01	-4.24766791e-02	-5.90786814e-01	-1.06844514e-01	 2.51994301e+00	 2.48722001e+00	 9.96222414e-06	 9.29852469e-06	 4.74046262e-05	 2.63996939e-05	 3.48790098e-05	 3.53054697e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+55	 1.13035046e-02	-1.03986185e-01	 1.15616768e-02	-2.29510575e-01	 2.56038692e+00	 2.55102034e+00	 9.35904759e-06	 9.63689677e-06	 2.10961187e-05	 2.45371265e-05	 3.34985599e-05	 3.37228438e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+56	-9.75575226e-03	-1.28101523e-01	-4.56728766e-02	-2.81410666e-01	 2.49260921e+00	 2.48563718e+00	 9.78930536e-06	 9.62583349e-06	 2.14915561e-05	 2.45169638e-05	 3.00450147e-05	 3.14541401e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+57	 5.54946215e-02	 7.03653022e-02	 1.32268786e-01	 1.76305800e-01	 2.27798092e+00	 2.27846795e+00	 9.66111481e-06	 9.25785224e-06	 2.51109710e-05	 2.51785822e-05	 2.91513453e-05	 2.91331613e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+58	-2.36256188e-02	 1.68607024e-02	-4.26088510e-02	 1.89922880e-02	 2.86815656e+00	 2.86779929e+00	 9.40967891e-06	 9.66179402e-06	 1.64376535e-05	 1.67486100e-05	 3.62467737e-05	 3.62718039e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+59	-1.24156597e-02	 8.49145830e-03	-2.24018317e-02	 1.36368004e-02	 3.83971465e+00	 3.83916991e+00	 1.32865810e-05	 1.31637492e-05	 2.07237719e-05	 2.05414434e-05	 9.56776409e-05	 9.56707473e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+60	 1.79162391e-01	-4.23964952e-02	 4.96405587e-01	-1.33296436e-01	 2.39750418e+00	 2.36470124e+00	 9.98161825e-06	 9.08196706e-06	 4.49063222e-05	 2.80495158e-05	 3.20284917e-05	 3.20879318e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+61	 3.10633862e-01	 1.55692387e-01	 7.10550084e-01	 3.58712353e-01	 2.94357824e+00	 2.90458277e+00	 9.43015944e-06	 9.65899902e-06	 4.52788429e-05	 2.99790825e-05	 3.91463902e-05	 4.51165211e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+62	-1.67830023e-01	 4.25092440e-02	-3.67213296e-01	 1.03265992e-01	 2.68723135e+00	 2.65645493e+00	 9.81093348e-06	 9.44046514e-06	 3.04103591e-05	 2.27812836e-05	 3.86720917e-05	 3.92242443e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+63	 4.51928162e-02	 1.58387290e-03	 1.15721369e-01	-1.84562151e-03	 2.68414161e+00	 2.68061439e+00	 9.99294233e-06	 9.65326777e-06	 2.24974691e-05	 2.08301253e-05	 3.90713335e-05	 3.90266204e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+64	 1.16070314e-01	 3.63701630e-03	 2.35174267e-01	 8.72363028e-03	 2.40752958e+00	 2.40429416e+00	 9.39875697e-06	 9.59389383e-06	 2.42255971e-05	 2.14675374e-05	 2.88293925e-05	 2.97038926e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+65	 7.83333793e-02	 5.34275525e-02	 3.86181099e-01	 3.62340680e-01	 1.91467181e+00	 1.91129104e+00	 9.87792196e-06	 9.75348233e-06	 8.27208952e-05	 7.95871923e-05	 2.55459117e-05	 2.57686195e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+66	-5.34047476e-02	 1.99789315e-01	-9.55296907e-02	 3.35357822e-01	 3.23529698e+00	 3.20506000e+00	 9.83773655e-06	 9.89858441e-06	 1.76407000e-05	 2.12097613e-05	 4.35150613e-05	 4.56084632e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+67	-3.12745132e-02	-1.28991682e-01	-4.63997088e-02	-1.92248017e-01	 3.47094384e+00	 3.46145220e+00	 9.45729440e-06	 9.85948597e-06	 1.43269059e-05	 1.63974338e-05	 4.42663695e-05	 4.41837792e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+68	 3.59335539e-02	-1.69960424e-02	 1.39313897e-01	-6.28525164e-02	 2.08193659e+00	 2.08037655e+00	 9.77310001e-06	 9.81650986e-06	 3.77102378e-05	 3.59336862e-05	 2.85581650e-05	 2.85705215e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+69	-1.87941267e-02	-1.14128033e-01	-6.03163686e-02	-3.44989831e-01	 2.30014861e+00	 2.28637361e+00	 9.15133276e-06	 9.85975498e-06	 2.77755679e-05	 3.71774908e-05	 3.03240632e-05	 3.01993905e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+70	-1.45275351e-01	 1.89818945e-01	-2.98295128e-01	 4.09443743e-01	 2.65481394e+00	 2.64692685e+00	 9.61960994e-06	 8.99933634e-06	 2.57486943e-05	 2.82048186e-05	 3.33516603e-05	 3.49356989e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+71	-1.54041318e-01	-1.28948917e-01	-4.85286284e-01	-4.18848799e-01	 2.35183905e+00	 2.31366390e+00	 9.41407998e-06	 9.98474213e-06	 5.05025067e-05	 4.69313591e-05	 3.29427980e-05	 3.33611018e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+72	-3.66063278e-02	-3.22246847e-02	-5.24434966e-02	-4.90039559e-02	 4.05848703e+00	 4.05633691e+00	 9.84774920e-06	 9.64933564e-06	 1.33304449e-05	 1.30810069e-05	 5.74312850e-05	 5.78082001e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+73	 4.20859817e-02	-8.25336742e-02	 1.31815591e-01	-2.69322456e-01	 2.05360245e+00	 2.05553705e+00	 9.71525488e-06	 9.48654639e-06	 3.32718317e-05	 4.02373766e-05	 2.52920464e-05	 2.52848733e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+74	-4.84185054e-02	-8.87556638e-02	-1.85539582e-01	-4.44261546e-01	 1.90421727e+00	 1.90988978e+00	 9.71544347e-06	 9.86860518e-06	 4.79483828e-05	 7.66734801e-05	 2.31569018e-05	 2.34083884e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+75	-6.73419082e-02	-9.77275809e-02	-1.73367541e-01	-2.73715333e-01	 2.29798312e+00	 2.28785754e+00	 9.53296053e-06	 9.79016359e-06	 3.08360821e-05	 3.34944664e-05	 3.02063899e-05	 3.04240586e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+76	 5.52142105e-02	-1.01269669e-01	 2.02273951e-01	-3.63827023e-01	 2.11387271e+00	 2.10322466e+00	 9.13353758e-06	 9.82810996e-06	 4.05723276e-05	 5.33338839e-05	 2.54622110e-05	 2.57040287e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+77	-3.97454649e-01	 1.07338851e-02	-6.25431411e-01	 1.71782116e-02	 4.86633482e+00	 4.62624560e+00	 9.74724221e-06	 9.36810348e-06	 2.75678357e-05	 1.65872698e-05	 9.52197585e-05	 9.89702376e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+78	 3.35258530e-02	 2.04152596e-02	 1.15181346e-01	 6.13143668e-02	 2.16767369e+00	 2.16719679e+00	 9.84103603e-06	 9.52913513e-06	 2.91055887e-05	 2.61776191e-05	 2.74931663e-05	 2.75222008e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+79	-1.14132646e-01	 9.78502662e-02	-2.47647683e-01	 1.98876668e-01	 2.41249059e+00	 2.42114196e+00	 9.69574524e-06	 9.63732041e-06	 2.46724485e-05	 2.34840194e-05	 3.05838531e-05	 3.16982518e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+80	 1.93615670e-01	 6.39806853e-02	 3.18780002e-01	 1.09457675e-01	 3.15855291e+00	 3.14920027e+00	 9.49582721e-06	 9.84354935e-06	 1.94501121e-05	 1.69958505e-05	 4.20023219e-05	 4.42691256e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+81	-5.87503640e-02	 3.65988014e-02	-2.15022528e-01	 8.31541024e-02	 2.09402805e+00	 2.09167281e+00	 9.99710957e-06	 9.10861669e-06	 3.88088191e-05	 3.13731162e-05	 2.63621305e-05	 2.63045294e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+82	-6.21355779e-03	 1.31757856e-01	-1.89111528e-02	 2.21282388e-01	 2.88388099e+00	 2.88269745e+00	 9.40200732e-06	 9.77095111e-06	 1.59622057e-05	 1.84881249e-05	 3.63772055e-05	 3.71789201e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+83	 6.23137755e-02	 1.12605880e-01	 1.14782925e-01	 1.98177908e-01	 2.75853109e+00	 2.75253597e+00	 9.73404981e-06	 9.73600718e-06	 1.89648935e-05	 2.00372621e-05	 3.42672164e-05	 3.49695355e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+84	-1.44356892e-02	-5.30149969e-02	-2.04785969e-02	-7.01179957e-02	 3.02956450e+00	 3.02945255e+00	 9.61036387e-06	 9.70162897e-06	 1.48609690e-05	 1.52272679e-05	 3.38839400e-05	 3.40254311e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+85	 2.51275214e-02	-1.69517663e-03	 3.48437044e-02	-1.87325772e-03	 3.41859643e+00	 3.41820790e+00	 9.89411524e-06	 9.76438578e-06	 1.51937900e-05	 1.49418848e-05	 4.73043891e-05	 4.72559009e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+86	 4.77472022e-02	-5.28547762e-02	 8.96575928e-02	-8.08481247e-02	 2.85917842e+00	 2.85649637e+00	 9.76267434e-06	 9.52549741e-06	 1.75020452e-05	 1.74681245e-05	 3.99455573e-05	 4.03175437e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+87	-1.27020907e-01	 1.54959798e-01	-3.99312657e-01	 5.04309231e-01	 2.16469824e+00	 2.16279954e+00	 9.75791537e-06	 9.46614707e-06	 5.03662042e-05	 5.54948137e-05	 2.80997847e-05	 2.86620478e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+88	 9.98276608e-02	-9.00053681e-03	 1.69387155e-01	-1.95903875e-02	 2.67282418e+00	 2.67538661e+00	 9.48810257e-06	 9.53061954e-06	 1.83730360e-05	 1.67020702e-05	 3.37140093e-05	 3.42643976e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+89	 5.06279159e-02	-5.63182467e-02	 9.26880269e-02	-1.13026060e-01	 2.73017457e+00	 2.72794911e+00	 9.83766434e-06	 9.73096897e-06	 1.82300600e-05	 1.85586354e-05	 3.44003324e-05	 3.46311271e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+90	-2.20005165e-01	-8.08782519e-02	-3.92454053e-01	-1.44318761e-01	 3.12449309e+00	 3.09791984e+00	 9.90764856e-06	 9.58881505e-06	 2.52324528e-05	 1.89665700e-05	 4.28409012e-05	 4.39646933e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+91	-1.43707922e-02	-2.23142442e-02	-2.15879567e-02	-3.40312628e-02	 3.25066436e+00	 3.25042580e+00	 9.23923742e-06	 9.80001942e-06	 1.38345118e-05	 1.47170381e-05	 3.73859937e-05	 3.74176679e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+92	 5.42904740e-02	 4.03868864e-02	 9.01615665e-02	 7.38603003e-02	 2.77573660e+00	 2.77750721e+00	 9.96074507e-06	 9.93435450e-06	 1.67540417e-05	 1.63503061e-05	 3.17192267e-05	 3.15727443e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+93	 5.31875572e-03	 5.60057619e-03	-1.23687557e-02	-3.93313471e-03	 2.26729097e+00	 2.26737768e+00	 9.58546640e-06	 9.93940720e-06	 2.65416328e-05	 2.75363603e-05	 3.13253559e-05	 3.13127815e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+94	-7.65051376e-02	-9.96127603e-02	-4.02296085e-01	-4.34536683e-01	 2.01867906e+00	 2.01022819e+00	 9.44270441e-06	 9.96100750e-06	 6.84779936e-05	 7.50204496e-05	 2.67151942e-05	 2.69800068e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+95	-6.60116000e-02	 6.38895992e-02	-1.14954502e-01	 1.11401247e-01	 2.90477012e+00	 2.89947610e+00	 9.79205087e-06	 9.45702156e-06	 1.78311586e-05	 1.71080735e-05	 3.70637211e-05	 3.74685704e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+96	 6.52955274e-02	 8.10615860e-02	 1.09232104e-01	 1.27079348e-01	 3.06782907e+00	 3.06127849e+00	 9.55444066e-06	 9.92448998e-06	 1.65940726e-05	 1.69209420e-05	 4.12205746e-05	 4.18108017e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+97	 7.09645293e-02	 9.15147369e-03	 2.51377387e-01	 1.73258016e-02	 2.01885346e+00	 2.02003247e+00	 9.68682051e-06	 9.27870024e-06	 3.96429891e-05	 3.06400916e-05	 2.39567401e-05	 2.40566058e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+98	 1.12540372e-01	 8.58652314e-02	 1.66917989e-01	 1.27208056e-01	 3.54830821e+00	 3.53737624e+00	 9.97970787e-06	 9.37037347e-06	 1.58481506e-05	 1.42652391e-05	 4.83487087e-05	 4.97989838e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+99	 9.99846467e-02	-3.27405917e-02	 3.02335583e-01	-1.05310437e-01	 2.17161811e+00	 2.16808980e+00	 9.71121138e-06	 9.02878269e-06	 3.79853130e-05	 2.74868027e-05	 2.70339148e-05	 2.73730913e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+100	-3.01491940e-02	 1.93722941e-01	-4.43041790e-02	 2.77040675e-01	 3.72870782e+00	 3.72371750e+00	 9.89927783e-06	 9.67241219e-06	 1.43605309e-05	 1.62439535e-05	 4.68313088e-05	 4.87631949e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+101	 5.22574454e-02	 6.37747030e-02	 8.96604758e-02	 9.47025700e-02	 3.33651247e+00	 3.32883045e+00	 1.01824127e-05	 1.04235183e-05	 1.74442084e-05	 1.78992436e-05	 5.53077850e-05	 5.56204724e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+102	-4.58452979e-02	 7.83768807e-02	-6.74458930e-02	 1.23018107e-01	 3.23644060e+00	 3.23254225e+00	 9.22084712e-06	 9.69784643e-06	 1.43806327e-05	 1.56852679e-05	 3.76244140e-05	 3.79685813e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+103	-2.22497882e-01	-3.37464615e-01	-6.08341625e-01	-9.17071447e-01	 2.93388469e+00	 2.90824430e+00	 8.26553653e-06	 9.57854558e-06	 5.02940976e-05	 6.77093554e-05	 4.02282728e-05	 4.92302564e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+104	-5.45667201e-02	 3.51169428e-01	-1.32491234e-01	 8.62689400e-01	 2.84327681e+00	 2.82996657e+00	 8.51978627e-06	 9.63754014e-06	 2.34272487e-05	 5.49010205e-05	 3.62702651e-05	 4.06497105e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+105	 1.25314967e-01	-6.24116226e-02	 2.86361066e-01	-1.51328719e-01	 2.33902791e+00	 2.33506041e+00	 9.93558315e-06	 9.26636708e-06	 3.04956803e-05	 2.49749343e-05	 2.90954960e-05	 3.02720509e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+106	 8.98714729e-02	 7.48544984e-02	 2.34322562e-01	 1.98117303e-01	 2.18625003e+00	 2.18646190e+00	 9.94122097e-06	 9.75206076e-06	 3.23942104e-05	 2.98023853e-05	 2.59866380e-05	 2.67444977e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+107	 2.86791812e-02	-5.31770297e-02	 5.90667098e-02	-1.32018095e-01	 2.31162304e+00	 2.30856447e+00	 9.83012052e-06	 9.65549503e-06	 2.84768350e-05	 2.89235006e-05	 3.20029556e-05	 3.19693350e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+108	-4.39355559e-02	 1.15653934e-01	-6.90699806e-02	 1.72760314e-01	 3.26641052e+00	 3.25883210e+00	 9.86615121e-06	 9.89478236e-06	 1.57320860e-05	 1.65856253e-05	 4.28281159e-05	 4.33401651e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+109	 3.07679253e-02	-1.00330916e-02	 5.69124913e-02	-2.59627699e-02	 2.08763107e+00	 2.08749949e+00	 9.75247043e-06	 8.54435376e-06	 2.99817141e-05	 2.59967605e-05	 2.51395673e-05	 2.51248399e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+110	 1.77640646e-02	 1.31744550e-01	 2.38101483e-02	 1.73529674e-01	 4.88799466e+00	 4.86647569e+00	 9.81974209e-06	 9.83037570e-06	 1.28094944e-05	 1.36786118e-05	 7.31572323e-05	 7.38575429e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+111	 1.93859213e-02	-1.78322299e-02	 4.59916962e-02	-3.95069418e-02	 2.22552162e+00	 2.22558987e+00	 9.23146280e-06	 9.87361068e-06	 2.21932629e-05	 2.36208036e-05	 2.57600224e-05	 2.56958736e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+112	-1.14512109e-01	-1.96257744e-03	-2.17365960e-01	-2.60002641e-03	 2.65582415e+00	 2.65080169e+00	 9.15042960e-06	 9.93434958e-06	 1.98513137e-05	 1.95207384e-05	 3.54918186e-05	 3.59011531e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+113	-3.94208950e-01	 3.26589691e-02	-6.60346825e-01	 5.18869642e-02	 4.19497961e+00	 4.03451381e+00	 9.91515381e-06	 9.26074676e-06	 3.08319840e-05	 1.72965184e-05	 7.03522368e-05	 7.84115187e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+114	-2.54042651e-01	 1.16418914e-01	-4.52018619e-01	 2.05391787e-01	 3.26723870e+00	 3.23590419e+00	 9.84663854e-06	 9.97126321e-06	 2.57806063e-05	 2.04774776e-05	 4.62739086e-05	 5.00149233e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+115	-3.44049229e-02	 5.58647959e-02	-4.80252366e-02	 7.21409341e-02	 3.27347423e+00	 3.27355127e+00	 9.81799942e-06	 9.38428783e-06	 1.43020461e-05	 1.37484894e-05	 3.55885647e-05	 3.56304763e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+116	 8.81710758e-02	 3.61429300e-01	 1.71096143e-01	 7.16113177e-01	 3.42386597e+00	 3.34982515e+00	 9.26603767e-06	 9.79454221e-06	 2.16081972e-05	 3.88890580e-05	 4.69610342e-05	 5.34469505e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+117	 1.31985250e-01	-9.22615851e-04	 2.71904000e-01	-1.20480672e-02	 2.82543321e+00	 2.80930838e+00	 9.66575385e-06	 9.85381593e-06	 2.12769184e-05	 1.93702661e-05	 3.66050275e-05	 3.69932279e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+118	 4.42744356e-02	 4.02865743e-02	 1.08615124e-01	 1.02471051e-01	 2.24946542e+00	 2.24849407e+00	 9.78941067e-06	 9.76049106e-06	 2.53180139e-05	 2.57403697e-05	 2.68891905e-05	 2.69199200e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+119	 1.50575515e-01	-4.98662421e-02	 4.91209339e-01	-1.81904037e-01	 2.09480384e+00	 2.09859972e+00	 9.74712632e-06	 9.23476168e-06	 5.69186879e-05	 3.75081372e-05	 2.43568161e-05	 2.47989492e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+120	 1.68188305e-02	-3.10218358e-03	 2.71769875e-02	-6.69326872e-03	 3.52726706e+00	 3.52681334e+00	 1.18720425e-05	 1.16259384e-05	 1.95153982e-05	 1.90603377e-05	 7.38310917e-05	 7.37599458e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+121	 9.32878241e-02	 1.71106757e-01	 1.24404054e-01	 2.20220342e-01	 4.49156230e+00	 4.47348522e+00	 9.58802363e-06	 9.37031818e-06	 1.31045944e-05	 1.39555834e-05	 5.96328337e-05	 6.04116907e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+122	 8.02382561e-02	-2.83350930e-04	 1.72373105e-01	-7.16739074e-04	 2.58450298e+00	 2.57898851e+00	 9.75124838e-06	 9.43211284e-06	 2.26186557e-05	 2.03000399e-05	 3.39385804e-05	 3.40061606e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+123	-2.49655223e-02	 2.30156840e-02	-2.14742216e-01	 5.75324611e-02	 1.76215133e+00	 1.76195871e+00	 9.53903898e-06	 8.88862232e-06	 9.51452227e-05	 7.54601415e-05	 2.10343395e-05	 2.10709326e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+124	-3.40187496e-01	-2.27668031e-01	-8.94090116e-01	-6.01833474e-01	 3.01215735e+00	 2.98928141e+00	 9.18086564e-06	 9.72104608e-06	 5.79050260e-05	 4.70395797e-05	 4.20466777e-05	 5.23410167e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+125	 5.65771328e-02	 7.51004688e-02	 1.09747681e-01	 1.57025067e-01	 2.25866326e+00	 2.26069287e+00	 9.87119566e-06	 9.94603384e-06	 2.40691064e-05	 2.40650282e-05	 2.91522090e-05	 2.96393659e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+126	 4.46407926e-04	-4.57747684e-03	-1.46448023e-03	-1.11771735e-02	 2.05806787e+00	 2.05806510e+00	 9.45074565e-06	 9.86681500e-06	 3.00686823e-05	 3.13907875e-05	 2.37125895e-05	 2.37160213e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+127	 2.40512736e-01	-3.23980395e-01	 4.52272089e-01	-6.06617342e-01	 3.73684017e+00	 3.73238235e+00	 9.60805249e-06	 9.91427232e-06	 2.55711504e-05	 3.20585391e-05	 5.25718776e-05	 6.74574768e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+128	 3.95958857e-02	-1.18717255e-02	 6.82059413e-02	-1.98897045e-02	 2.99575415e+00	 2.99499468e+00	 9.19779630e-06	 9.80032743e-06	 1.51341309e-05	 1.59886947e-05	 3.75321296e-05	 3.75564466e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+129	-1.21866016e-01	 1.02351213e-01	-1.89225579e-01	 1.47890396e-01	 3.87082155e+00	 3.83959142e+00	 9.78539939e-06	 9.78353812e-06	 1.60729548e-05	 1.54360593e-05	 5.92414043e-05	 6.00829480e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+130	-1.03264224e-01	 1.01199645e-01	-2.59942402e-01	 2.70707045e-01	 2.50468259e+00	 2.48073312e+00	 9.06015650e-06	 9.90929978e-06	 2.75450212e-05	 2.97027563e-05	 3.51845478e-05	 3.51701834e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+131	-7.64434157e-02	-5.47897789e-02	-1.21107121e-01	-7.44628143e-02	 3.17062988e+00	 3.17133201e+00	 9.66142195e-06	 9.84532179e-06	 1.52115630e-05	 1.47786633e-05	 3.57926560e-05	 3.61879515e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+132	 1.83802926e-01	 6.18585774e-03	 3.72209840e-01	 1.33508161e-02	 2.70173200e+00	 2.68527696e+00	 9.93864514e-06	 9.99272699e-06	 2.80511465e-05	 2.05025628e-05	 3.64412228e-05	 3.65671421e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+133	-1.10676298e-02	 1.15424441e-01	-1.45424498e-02	 1.57839171e-01	 3.89014267e+00	 3.88654122e+00	 9.77107661e-06	 9.79910282e-06	 1.32542827e-05	 1.39969293e-05	 4.37215133e-05	 4.45024065e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+134	-3.20921014e-01	-3.74794605e-02	-8.05419867e-01	-9.33627068e-02	 2.61413352e+00	 2.66027513e+00	 9.50950062e-06	 9.24109285e-06	 5.50567531e-05	 2.49951622e-05	 3.56041477e-05	 3.96014707e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+135	-2.79683439e-01	-1.70131372e-01	-7.58044012e-01	-4.59890024e-01	 2.76276127e+00	 2.67050493e+00	 9.97005311e-06	 9.30413526e-06	 6.21313754e-05	 4.40069049e-05	 4.11930378e-05	 4.46752740e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+136	-3.13189022e-02	 8.01630359e-03	-6.67752939e-02	-8.33274512e-03	 2.22412316e+00	 2.22368685e+00	 9.59315945e-06	 9.93571879e-06	 2.84676417e-05	 2.90909585e-05	 2.85662785e-05	 2.85462718e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+137	 9.53895196e-02	 1.51271307e-01	 1.22216872e-01	 1.98491288e-01	 5.03016413e+00	 4.99585983e+00	 9.58357097e-06	 9.91771424e-06	 1.28948305e-05	 1.40383806e-05	 7.21882931e-05	 7.43691853e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+138	-4.32864135e-01	 2.03441670e-01	-9.96139434e-01	 4.64835611e-01	 3.61692066e+00	 3.61248791e+00	 9.69188218e-06	 9.72181844e-06	 6.06315583e-05	 3.64080895e-05	 5.75115479e-05	 8.23414483e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+139	 4.53348769e-02	-9.31193278e-03	 8.60548873e-02	-1.95778644e-02	 2.62646038e+00	 2.62528006e+00	 9.71171933e-06	 9.52284621e-06	 1.92838239e-05	 1.86979224e-05	 3.21348852e-05	 3.22429838e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+140	-1.95710136e-02	 3.49872974e-01	-3.32723664e-02	 5.33535663e-01	 4.64808681e+00	 4.50169426e+00	 9.17851027e-06	 9.95876792e-06	 1.50072106e-05	 2.33952450e-05	 7.74992952e-05	 8.00166658e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+141	-9.11739165e-03	 5.26023534e-02	-6.43285419e-03	 1.16057480e-01	 2.54074734e+00	 2.53927723e+00	 9.81131343e-06	 9.54541411e-06	 1.99424498e-05	 2.03879811e-05	 3.04775958e-05	 3.06405374e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+142	-2.10328758e-03	-1.91881313e-02	 1.48952833e-03	-2.95547654e-02	 3.16464011e+00	 3.16434164e+00	 9.70539629e-06	 9.71034709e-06	 1.65979126e-05	 1.66833856e-05	 4.55125548e-05	 4.55139799e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+143	 3.60153794e-01	 2.13157742e-01	 6.93850631e-01	 4.12742321e-01	 3.77847207e+00	 3.67077739e+00	 9.82438719e-06	 8.47358491e-06	 3.73120568e-05	 2.62009077e-05	 5.77097193e-05	 6.54875723e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+144	 4.88145965e-03	-8.10115542e-03	-4.04955385e-03	-1.74625967e-02	 2.16339514e+00	 2.16338852e+00	 9.34026345e-06	 9.86282339e-06	 3.01906409e-05	 3.19385987e-05	 2.90770543e-05	 2.90804654e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+145	-6.13671344e-02	-2.88903190e-02	-4.11100689e-01	-2.03615655e-01	 1.77484970e+00	 1.77771643e+00	 9.53487610e-06	 9.76809000e-06	 1.05891115e-04	 7.89329860e-05	 2.02031565e-05	 2.03896677e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+146	-1.35475362e-01	-2.02915012e-01	-2.65738306e-01	-3.93686560e-01	 3.21363370e+00	 3.13322299e+00	 9.28282384e-06	 9.97793689e-06	 2.17992062e-05	 2.64323483e-05	 4.89193783e-05	 4.93206727e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+147	-2.21014979e-01	 2.20810145e-01	-4.68132636e-01	 4.69966579e-01	 2.98450321e+00	 2.93882520e+00	 9.81725119e-06	 9.83677050e-06	 3.28719433e-05	 3.37408150e-05	 4.37592987e-05	 4.59807296e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+148	-1.07476337e-02	-1.28243576e-01	-6.53183547e-02	-6.59421359e-01	 1.98870513e+00	 1.97789116e+00	 8.93853596e-06	 9.74195987e-06	 4.81439929e-05	 1.06479616e-04	 2.44478424e-05	 2.49078608e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+149	-1.74071353e-01	 2.72654094e-01	-4.02994350e-01	 6.36381830e-01	 2.89901130e+00	 2.83613426e+00	 8.78389624e-06	 9.53518618e-06	 3.08900123e-05	 3.92524456e-05	 3.98433008e-05	 4.26097304e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+150	 1.28169045e-01	 1.42520608e-01	 2.35588497e-01	 2.65393621e-01	 2.83053109e+00	 2.83166700e+00	 8.52732653e-06	 9.57415404e-06	 1.83042602e-05	 2.07051233e-05	 3.17716658e-05	 3.33701877e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+151	-2.51797100e-02	-8.90788112e-02	-7.51323937e-02	-2.58536124e-01	 2.23824633e+00	 2.23157980e+00	 9.27755541e-06	 9.84627997e-06	 2.91559432e-05	 3.48838574e-05	 2.83469917e-05	 2.85358120e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+152	 2.80892109e-02	-7.97475377e-02	 4.22637173e-02	-1.84996591e-01	 2.36490720e+00	 2.36618403e+00	 9.63054896e-06	 9.73464226e-06	 2.06411681e-05	 2.35007607e-05	 2.93277029e-05	 2.98102098e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+153	 3.17484460e-02	 1.59400668e-02	 1.41112077e-01	 1.15669595e-02	 2.11242955e+00	 2.11118752e+00	 8.97241297e-06	 9.69350457e-06	 3.29068095e-05	 3.33206809e-05	 2.61307346e-05	 2.61697974e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+154	 3.65667729e-02	 2.13839537e-01	 8.22962877e-02	 4.45605118e-01	 2.76462592e+00	 2.73085277e+00	 9.10840745e-06	 9.99335270e-06	 2.00202605e-05	 3.13352409e-05	 3.61397260e-05	 3.73612567e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+155	 1.04111155e-01	-1.91162716e-02	 2.15232150e-01	-2.89894025e-02	 2.81052044e+00	 2.79739525e+00	 9.81259472e-06	 9.42064960e-06	 2.14479428e-05	 1.92550087e-05	 4.30707931e-05	 4.30130068e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+156	-2.26274511e-02	 2.24899841e-02	-7.93010675e-02	 9.09835471e-02	 2.10878045e+00	 2.10789191e+00	 9.90534009e-06	 9.36489779e-06	 3.29237216e-05	 3.14429592e-05	 2.58612044e-05	 2.59172199e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+157	 2.85362676e-01	-3.01326292e-02	 6.68199255e-01	-8.58417268e-02	 2.67445686e+00	 2.67077982e+00	 9.70832705e-06	 9.60627984e-06	 4.18750281e-05	 2.45542059e-05	 3.33122848e-05	 3.77734137e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+158	 1.41956413e-01	-2.21750079e-02	 3.66337646e-01	-5.73481250e-02	 2.42496772e+00	 2.40468911e+00	 9.86908810e-06	 9.69389934e-06	 3.55490940e-05	 2.63124004e-05	 3.77043695e-05	 3.77279757e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+159	-6.24974262e-02	 4.33678291e-02	-1.28802058e-01	 8.64842835e-02	 2.67720882e+00	 2.67222589e+00	 9.85427283e-06	 9.39934931e-06	 2.10417213e-05	 1.94533499e-05	 3.72680147e-05	 3.75472359e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+160	-2.77043584e-02	-1.41724099e-02	-3.60526472e-02	-3.13375962e-02	 2.65999159e+00	 2.66014038e+00	 9.87165205e-06	 9.29869595e-06	 1.70842727e-05	 1.60834363e-05	 3.00059409e-05	 2.99367828e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+161	 2.34950374e-01	-1.28756953e-01	 6.08068685e-01	-3.37856845e-01	 2.48416775e+00	 2.48124706e+00	 9.95475717e-06	 9.73118354e-06	 4.48944179e-05	 3.31649582e-05	 3.06666455e-05	 3.36165432e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+162	 9.56220937e-02	-7.80422088e-03	 1.75344251e-01	-1.20016286e-02	 2.89614605e+00	 2.88940292e+00	 9.68794799e-06	 9.91812127e-06	 1.89705431e-05	 1.78291187e-05	 3.80318947e-05	 3.79457309e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+163	-6.82802462e-02	 8.14375176e-02	-1.20958611e-01	 1.46250617e-01	 2.77910763e+00	 2.77936777e+00	 9.71319207e-06	 9.28259875e-06	 1.73196982e-05	 1.67001911e-05	 3.38126382e-05	 3.42988102e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+164	-2.17959704e-01	 1.06849562e-01	-5.03445390e-01	 2.46742410e-01	 2.80474103e+00	 2.73920552e+00	 9.86437134e-06	 8.92607243e-06	 3.43918397e-05	 2.58188466e-05	 4.15014385e-05	 4.34023988e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+165	-4.46996521e-02	-1.20052637e-01	-7.66383237e-02	-2.11040321e-01	 2.73252435e+00	 2.73471882e+00	 9.61002651e-06	 9.29341012e-06	 1.69557697e-05	 1.82591957e-05	 3.21804920e-05	 3.23270914e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+166	-1.33404153e-01	 2.80772817e-01	-2.09882896e-01	 4.58472885e-01	 3.98944286e+00	 3.88444632e+00	 9.82228365e-06	 9.67466307e-06	 1.85374427e-05	 2.31888601e-05	 7.11511467e-05	 7.32462296e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+167	-6.07851081e-02	 8.90182198e-02	-1.91494257e-01	 2.23383949e-01	 2.13834256e+00	 2.13651834e+00	 8.96906592e-06	 9.87848560e-06	 2.98714104e-05	 3.42194133e-05	 2.61026379e-05	 2.64258698e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+168	 1.23214162e-02	-5.97410120e-02	 2.02910253e-02	-8.68971315e-02	 3.43668794e+00	 3.43734762e+00	 9.73222922e-06	 9.98168634e-06	 1.35076830e-05	 1.39521715e-05	 3.73292225e-05	 3.73315181e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+169	 1.34780894e-01	-1.27708670e-01	 3.30556721e-01	-3.11268439e-01	 2.54893699e+00	 2.51869638e+00	 9.49806145e-06	 9.79637294e-06	 3.01542913e-05	 3.12684565e-05	 3.66645793e-05	 3.69869107e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+170	 1.04208135e-01	 1.95168264e-02	 2.77428957e-01	 4.74598584e-02	 2.17006653e+00	 2.17019377e+00	 9.70608626e-06	 9.69737915e-06	 3.52788992e-05	 2.68041604e-05	 2.80716690e-05	 2.84624466e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+171	 7.45872112e-02	 5.01057823e-02	 2.45251264e-01	 1.72332817e-01	 2.10030209e+00	 2.09458752e+00	 9.62629338e-06	 9.74751003e-06	 4.10415154e-05	 3.85769621e-05	 2.72209935e-05	 2.74147037e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+172	-1.44443528e-01	-6.83266367e-02	-3.01420259e-01	-1.29321397e-01	 2.81344724e+00	 2.78274529e+00	 1.00930578e-05	 9.42793133e-06	 2.63521483e-05	 2.20075649e-05	 4.27987812e-05	 4.33125253e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+173	-2.80516812e-01	-6.53019958e-03	-5.64723560e-01	-1.33255288e-02	 3.02877453e+00	 2.97370940e+00	 9.82154088e-06	 9.60464626e-06	 3.32365488e-05	 2.06021336e-05	 4.42304481e-05	 4.63925709e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+174	 5.91657110e-02	 2.63166265e-01	 1.76053234e-01	 7.78171560e-01	 2.41562200e+00	 2.40320078e+00	 9.03004581e-06	 9.73532806e-06	 3.18044429e-05	 6.76708196e-05	 3.16949464e-05	 3.37805752e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+175	 1.52281985e-01	-3.28459483e-01	 4.00339422e-01	-8.63192375e-01	 2.71578093e+00	 2.75783047e+00	 9.53251694e-06	 9.96425386e-06	 3.73464028e-05	 6.55537776e-05	 3.59853739e-05	 4.38491516e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+176	-4.81326760e-02	 1.77940315e-02	-1.37838705e-01	 3.02621027e-02	 2.00026221e+00	 2.00051654e+00	 9.57743327e-06	 9.93524242e-06	 3.36645258e-05	 3.30664304e-05	 2.46958204e-05	 2.47693278e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+177	-8.77548227e-02	-5.51242829e-02	-1.38766428e-01	-7.92995576e-02	 3.53709712e+00	 3.52839630e+00	 9.76378021e-06	 9.03088291e-06	 1.53469033e-05	 1.36789686e-05	 4.58750752e-05	 4.62152137e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+178	 4.27236732e-02	 6.37715274e-02	 1.27395763e-01	 2.42288593e-01	 2.02515339e+00	 2.02558122e+00	 9.55776304e-06	 9.78630473e-06	 3.51186585e-05	 4.13742860e-05	 2.40714465e-05	 2.39994988e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+179	-1.01504324e-01	 1.25849745e-03	-6.24361093e-01	-3.74135348e-02	 1.90051426e+00	 1.89497303e+00	 9.58906132e-06	 9.37455379e-06	 1.24940747e-04	 5.80401553e-05	 2.29955415e-05	 2.31872538e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+180	-5.46884151e-02	-6.55322242e-02	-1.13689523e-01	-1.58267719e-01	 2.37501624e+00	 2.37097867e+00	 9.70196944e-06	 8.89235558e-06	 2.44048813e-05	 2.35345167e-05	 2.94836813e-05	 2.98455464e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+181	 1.10103109e-01	 5.82384972e-02	 1.46410845e-01	 7.60526637e-02	 4.38529702e+00	 4.37466550e+00	 9.59442198e-06	 9.42147505e-06	 1.30422650e-05	 1.26183311e-05	 5.97658178e-05	 6.12676988e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+182	 8.53068268e-02	 1.55303906e-01	 1.76191725e-01	 3.31755838e-01	 2.67907387e+00	 2.65115860e+00	 9.75834676e-06	 9.71179797e-06	 2.36400177e-05	 2.82659798e-05	 3.76403940e-05	 3.76585579e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+183	 3.76533639e-01	-6.35773427e-02	 5.46279384e-01	-9.26869797e-02	 5.17842639e+00	 5.10198607e+00	 9.75376378e-06	 9.67701018e-06	 2.22809821e-05	 1.48686034e-05	 7.24806752e-05	 8.42488663e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+184	 1.56323405e-01	-3.01477048e-01	 3.94736478e-01	-7.75552643e-01	 2.68160536e+00	 2.73012751e+00	 8.98035261e-06	 9.77266409e-06	 3.50545079e-05	 5.44508977e-05	 3.61211315e-05	 4.20217087e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+185	 8.38523481e-02	-8.47983329e-02	 2.14840402e-01	-2.09211858e-01	 2.20490885e+00	 2.21034751e+00	 9.69872742e-06	 9.17606495e-06	 2.91336360e-05	 2.63701055e-05	 2.52466668e-05	 2.57936857e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+186	 1.18359244e-01	 5.14516164e-02	 2.49107548e-01	 9.91584476e-02	 2.64292509e+00	 2.63061426e+00	 9.85140675e-06	 9.48425564e-06	 2.42430109e-05	 2.10948456e-05	 3.46454032e-05	 3.44485683e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+187	 1.63970774e-02	 1.92417055e-02	 1.47538974e-01	 7.49583382e-02	 1.81331820e+00	 1.81358969e+00	 9.94427781e-06	 9.24827754e-06	 6.15088263e-05	 5.34828997e-05	 2.20147681e-05	 2.19737779e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+188	 9.68797643e-02	 4.64009578e-02	 1.36063277e-01	 7.32098231e-02	 3.70418379e+00	 3.69740707e+00	 9.11951441e-06	 9.92744041e-06	 1.35262441e-05	 1.41690576e-05	 4.99768765e-05	 5.03770194e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+189	-1.22559417e-01	-4.53579986e-02	-1.64131167e-01	-6.10649573e-02	 4.13613428e+00	 4.12768558e+00	 9.81365882e-06	 9.87542211e-06	 1.39045185e-05	 1.33930609e-05	 5.47057646e-05	 5.56100736e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+190	-8.78330499e-02	 6.40233953e-02	-3.07077788e-01	 2.65525271e-01	 2.01437509e+00	 2.00754695e+00	 9.45743531e-06	 9.66644048e-06	 5.97443347e-05	 5.31522851e-05	 2.75113240e-05	 2.75283826e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+191	-2.78742647e-01	 3.29289586e-01	-5.75718443e-01	 6.71991781e-01	 3.61557009e+00	 3.60322105e+00	 8.92051774e-06	 9.48432830e-06	 3.26914427e-05	 3.77016634e-05	 5.55874657e-05	 7.21648927e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+192	 2.19812509e-01	-1.99212144e-02	 3.27163735e-01	-2.69004042e-02	 3.98380343e+00	 3.93151007e+00	 9.60022310e-06	 9.52389533e-06	 1.74929884e-05	 1.47450265e-05	 6.06795751e-05	 6.29411623e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+193	 5.50199841e-02	-2.39638304e-01	 1.52688810e-01	-7.17009614e-01	 2.29829013e+00	 2.31144188e+00	 9.52476984e-06	 9.81141994e-06	 3.25287499e-05	 6.27540289e-05	 2.85390013e-05	 3.13459468e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+194	-1.00442419e-01	-4.47783875e-01	-2.45823382e-01	-1.08653625e+00	 3.37665853e+00	 3.25187352e+00	 9.37620393e-06	 9.80343863e-06	 2.92916350e-05	 7.10183261e-05	 5.63877822e-05	 7.12287745e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+195	-8.95561626e-02	-1.28632003e-01	-2.12814358e-01	-3.20822087e-01	 2.37088061e+00	 2.36463776e+00	 9.35427819e-06	 9.75226008e-06	 2.69316708e-05	 3.16228204e-05	 3.18700987e-05	 3.17579282e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+196	 1.81543035e-02	 4.92337069e-02	 5.44359067e-02	 1.51653235e-01	 1.93854716e+00	 1.93916391e+00	 9.57235314e-06	 9.75999350e-06	 3.65521266e-05	 4.04096301e-05	 2.33282962e-05	 2.33113818e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+197	 2.50914794e-01	-1.85563241e-02	 5.19912435e-01	-3.23512019e-02	 2.95402232e+00	 2.90088847e+00	 9.77610191e-06	 9.35858135e-06	 3.02068087e-05	 2.01585276e-05	 4.05925430e-05	 4.21443040e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+198	-1.30866778e-02	 4.52231140e-02	-3.37570937e-02	 8.40033732e-02	 2.74728720e+00	 2.74739382e+00	 9.89622927e-06	 9.92018756e-06	 1.69871848e-05	 1.71377320e-05	 2.98920665e-05	 3.00526239e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+199	-9.79341779e-02	 4.18558021e-01	-1.84511649e-01	 7.76073507e-01	 3.92392631e+00	 3.79539658e+00	 8.51307822e-06	 9.64911023e-06	 1.91367692e-05	 3.82641711e-05	 5.98864147e-05	 7.23176569e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+200	 1.16693094e-01	-2.69440311e-02	 2.81033304e-01	-6.88663864e-02	 2.44107914e+00	 2.42689789e+00	 9.86723603e-06	 9.96690162e-06	 3.16291921e-05	 2.68941231e-05	 3.40389638e-05	 3.40488826e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+201	-2.97074531e-01	 2.96752631e-01	-8.03474409e-01	 8.07691477e-01	 2.92664433e+00	 2.98972431e+00	 9.73172978e-06	 9.78232071e-06	 6.24470407e-05	 6.32265453e-05	 4.18968143e-05	 5.25698038e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+202	-6.14665302e-02	 4.96459093e-02	-2.44253846e-01	 2.84506617e-01	 1.92513620e+00	 1.92207225e+00	 9.17888726e-06	 9.53478741e-06	 5.47910727e-05	 6.15160033e-05	 2.32962174e-05	 2.34626077e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+203	 2.07737450e-01	 1.33529752e-02	 5.24064138e-01	 2.36142434e-02	 2.51748267e+00	 2.48233193e+00	 9.76163778e-06	 9.14810217e-06	 4.33145623e-05	 2.48641129e-05	 3.46221637e-05	 3.46148028e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+204	-1.34199238e-01	 2.23650111e-01	-3.91683844e-01	 6.70464221e-01	 2.37145123e+00	 2.36946192e+00	 9.59288919e-06	 9.88734111e-06	 4.31297391e-05	 5.87122466e-05	 3.08696226e-05	 3.38888511e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+205	-1.08280846e-01	 4.21545021e-02	-2.65287088e-01	 8.09602514e-02	 2.58450167e+00	 2.57028499e+00	 9.74543273e-06	 9.78475481e-06	 2.61314901e-05	 2.27279923e-05	 3.60475480e-05	 3.58135628e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+206	-3.17422068e-02	 8.24878291e-04	-1.66610166e-01	-6.20534439e-04	 1.93476186e+00	 1.93562989e+00	 9.97862691e-06	 9.57900939e-06	 4.09233973e-05	 3.46245608e-05	 2.19848033e-05	 2.19990873e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+207	 7.96526262e-02	-3.77377252e-02	 1.25198653e-01	-5.54886528e-02	 3.59525630e+00	 3.58752155e+00	 9.85906260e-06	 9.45587514e-06	 1.51266339e-05	 1.41451509e-05	 4.97123135e-05	 4.97987995e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+208	-1.86234947e-02	 2.82089831e-02	-3.43862296e-02	 4.01363598e-02	 2.66123765e+00	 2.66087042e+00	 9.54262275e-06	 9.51598765e-06	 1.82593615e-05	 1.81872695e-05	 3.40825960e-05	 3.41559641e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+209	 3.78607225e-02	 2.54070988e-01	 9.50214200e-02	 6.66778319e-01	 2.49166288e+00	 2.46554483e+00	 9.42612994e-06	 9.75281108e-06	 2.90979754e-05	 5.29462847e-05	 3.56953088e-05	 3.76016849e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+210	 3.30387430e-02	 1.34154586e-01	 8.99905061e-02	 3.74977809e-01	 2.12712664e+00	 2.13456857e+00	 9.47304531e-06	 9.62889685e-06	 2.80005017e-05	 3.93068956e-05	 2.41244196e-05	 2.48319420e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+211	 2.00909725e-02	-2.61271632e-03	 9.95814358e-02	-3.18423761e-03	 1.98502357e+00	 1.98470600e+00	 8.88686758e-06	 9.80509599e-06	 3.83323830e-05	 3.92573022e-05	 2.57382187e-05	 2.57268169e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+212	 6.51516113e-03	 1.15731381e-02	 1.18627831e-02	 6.22991133e-02	 2.15039290e+00	 2.15011930e+00	 9.76041988e-06	 9.45857321e-06	 3.22052197e-05	 3.16196790e-05	 2.60873792e-05	 2.61054399e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+213	-6.63762915e-02	-2.99126694e-02	-1.03379667e-01	-4.65900594e-02	 3.16990065e+00	 3.16888615e+00	 9.95482107e-06	 9.60392879e-06	 1.55955923e-05	 1.45971455e-05	 4.08943725e-05	 4.13157142e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+214	-2.05187398e-02	-6.13706680e-02	-7.54561166e-02	-2.42508585e-01	 2.18946648e+00	 2.18388702e+00	 9.14311277e-06	 9.83294832e-06	 3.05435698e-05	 3.79562682e-05	 2.74356384e-05	 2.75245012e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+215	-1.02367149e-01	 4.20958513e-02	-4.18581481e-01	 1.85938535e-01	 2.06231676e+00	 2.05167908e+00	 9.93192247e-06	 9.95370768e-06	 6.57151475e-05	 5.01957141e-05	 2.98268434e-05	 3.00506384e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+216	-9.59067331e-02	 1.02704545e-01	-3.37894116e-01	 3.77562242e-01	 2.12005098e+00	 2.10991611e+00	 9.84505382e-06	 9.19720582e-06	 4.91565470e-05	 4.95504728e-05	 2.60855138e-05	 2.65279257e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+217	-7.82104227e-02	 6.46814788e-02	-1.37494013e-01	 1.17511751e-01	 3.16103287e+00	 3.14725090e+00	 1.02924957e-05	 1.00834251e-05	 1.93503416e-05	 1.88519762e-05	 4.94163719e-05	 4.95700497e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+218	 9.27628154e-02	 6.48066973e-02	 1.94043442e-01	 1.31646034e-01	 2.82609431e+00	 2.80992766e+00	 9.86745138e-06	 9.72590829e-06	 2.26176398e-05	 2.08682074e-05	 4.01997721e-05	 4.02422057e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+219	 1.51288291e-02	 3.55400964e-03	 2.90232828e-02	 1.00101384e-02	 1.90508965e+00	 1.90511344e+00	 9.54994092e-06	 9.81864592e-06	 3.79180684e-05	 3.87448443e-05	 2.35689094e-05	 2.35619227e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+220	-1.87732038e-01	 1.03330240e-02	-3.62333189e-01	 1.65961501e-02	 2.97948878e+00	 2.94610760e+00	 9.61825400e-06	 8.45625652e-06	 2.36083639e-05	 1.66921246e-05	 4.14612365e-05	 4.26285128e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+221	 5.10303147e-03	 1.11288817e-01	 1.52511491e-02	 1.71251764e-01	 2.98408196e+00	 2.98121269e+00	 9.47233524e-06	 9.55728496e-06	 1.55821214e-05	 1.68258091e-05	 3.54248107e-05	 3.60648277e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+222	-2.91535954e-02	 4.41056972e-03	-1.20600462e-01	-1.13119305e-02	 2.04369155e+00	 2.04285961e+00	 9.97583396e-06	 9.55172258e-06	 4.15033136e-05	 3.65584195e-05	 2.82966493e-05	 2.83179531e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+223	-8.56740401e-03	-5.78243001e-02	-1.76458870e-02	-1.00151102e-01	 2.88717795e+00	 2.88552608e+00	 9.17786368e-06	 9.65537091e-06	 1.58124341e-05	 1.71202173e-05	 3.69553994e-05	 3.69525128e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+224	 1.62254988e-02	 4.35780522e-02	 3.68580033e-02	 6.47900950e-02	 3.08373191e+00	 3.08317699e+00	 9.90713652e-06	 9.06273508e-06	 1.53999364e-05	 1.42924373e-05	 3.66423497e-05	 3.69392161e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+225	-2.15046802e-02	-1.32364417e-01	-2.44871242e-02	-2.28088265e-01	 2.83228840e+00	 2.83851026e+00	 9.00903763e-06	 9.62788491e-06	 1.50590630e-05	 1.81572867e-05	 3.00033950e-05	 3.09291293e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+226	-7.21365394e-02	 4.30584955e-02	-1.35606845e-01	 9.04632973e-02	 2.51733224e+00	 2.51584647e+00	 9.68374235e-06	 9.78568873e-06	 2.04698195e-05	 2.03155605e-05	 3.09951914e-05	 3.11688914e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+227	 1.32468793e-01	 1.39820268e-01	 3.04231946e-01	 3.19882360e-01	 2.49398326e+00	 2.48903539e+00	 9.55486593e-06	 9.46958224e-06	 2.72120207e-05	 2.79032222e-05	 3.09326287e-05	 3.31497492e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+228	 3.36316875e-02	 8.67582600e-02	 5.11805405e-02	 1.24932999e-01	 3.54084910e+00	 3.53595406e+00	 9.91375280e-06	 9.95008080e-06	 1.46500134e-05	 1.50019300e-05	 4.58996558e-05	 4.64442377e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+229	 1.39969458e-01	-3.13574227e-02	 5.44062966e-01	-1.42315615e-01	 2.11380951e+00	 2.09655076e+00	 9.68044481e-06	 9.53929428e-06	 7.20412221e-05	 4.32306650e-05	 2.71921077e-05	 2.68845880e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+231	 5.68199310e-03	 3.25911402e-04	 1.30313132e-02	-2.53848771e-02	 1.78221846e+00	 1.78221800e+00	 9.73118413e-06	 9.99297546e-06	 7.12787585e-05	 7.32530965e-05	 2.23645863e-05	 2.23736215e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+232	 3.06090778e-01	 2.82197045e-01	 6.08255038e-01	 5.58443841e-01	 3.70845538e+00	 3.56144898e+00	 9.39823493e-06	 9.71982013e-06	 3.45306466e-05	 3.38573151e-05	 6.22258162e-05	 6.70565589e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+233	-7.70168330e-02	 1.29574442e-01	-1.34765153e-01	 2.46364807e-01	 2.88726541e+00	 2.87481989e+00	 9.10493315e-06	 9.66893754e-06	 1.74426363e-05	 2.05994608e-05	 3.61105217e-05	 3.67630537e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+234	-1.80112722e-01	-4.16279894e-01	-3.69794728e-01	-8.55262959e-01	 3.79429419e+00	 3.80409527e+00	 9.70983045e-06	 9.80952564e-06	 2.91989727e-05	 4.64590750e-05	 5.59804320e-05	 7.69105253e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+235	 4.13021781e-02	 1.56352091e-02	 1.52968876e-01	 5.44768176e-02	 2.08824415e+00	 2.08648987e+00	 9.76911983e-06	 9.46289184e-06	 3.76647006e-05	 3.38424309e-05	 2.71456555e-05	 2.71251815e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+236	 3.24903496e-02	 1.60337097e-01	 3.75452169e-02	 1.85527220e-01	 6.26405541e+00	 6.25317929e+00	 9.09349912e-06	 9.93001503e-06	 1.06196931e-05	 1.24551460e-05	 7.15384112e-05	 7.48880450e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+237	 4.43506152e-02	-7.14647506e-02	 1.27051303e-01	-2.17295910e-01	 2.30682277e+00	 2.29889386e+00	 9.78211780e-06	 9.82301244e-06	 3.06404772e-05	 3.30791370e-05	 3.13826658e-05	 3.15422885e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+238	 4.04676449e-03	 3.56258277e-03	 2.08697689e-03	 2.45341314e-03	 3.51099689e+00	 3.51101327e+00	 9.34458153e-06	 9.77160301e-06	 1.35637222e-05	 1.41919853e-05	 4.39032454e-05	 4.38892082e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+239	 1.23396968e-01	-3.24371883e-02	 2.40695207e-01	-6.41216286e-02	 2.65967964e+00	 2.64940770e+00	 9.84320986e-06	 9.52567930e-06	 2.33451222e-05	 1.99845066e-05	 3.70646881e-05	 3.72056204e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+240	 1.19120896e-02	 4.86820939e-02	 1.76781974e-02	 7.40645045e-02	 3.82585904e+00	 3.82216667e+00	 9.65691134e-06	 1.04884507e-05	 1.45485441e-05	 1.59513844e-05	 6.66943833e-05	 6.66428507e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+241	-9.12925016e-02	 1.47583254e-02	-1.58898972e-01	 2.89871784e-02	 2.68360705e+00	 2.68370923e+00	 9.34487018e-06	 9.57375826e-06	 1.80091474e-05	 1.71522248e-05	 3.38202666e-05	 3.40735168e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+242	-3.09815349e-01	 2.51014636e-01	-5.56715897e-01	 4.54774273e-01	 3.81185324e+00	 3.71153919e+00	 9.66479768e-06	 9.13727886e-06	 2.77173766e-05	 2.43103948e-05	 5.81051055e-05	 6.79072679e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+243	-1.37963697e-01	 9.20242110e-02	-3.84555631e-01	 2.55352691e-01	 2.30894997e+00	 2.29601341e+00	 9.31238779e-06	 9.65874331e-06	 3.77211573e-05	 3.30401267e-05	 2.67498281e-05	 2.73936588e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+244	 1.13663914e-01	-8.50106062e-02	 1.64296330e-01	-1.35207078e-01	 3.58126417e+00	 3.56694370e+00	 9.83756970e-06	 9.71615737e-06	 1.58405197e-05	 1.51634807e-05	 4.84750466e-05	 4.90260980e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+245	-1.03681974e-01	-1.13658356e-02	-2.42992450e-01	-4.39394857e-02	 2.60511813e+00	 2.59227753e+00	 9.99183758e-06	 9.61949855e-06	 2.65561436e-05	 2.18933594e-05	 3.89623972e-05	 3.90874089e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+246	-2.25666410e-02	-2.05483389e-01	-6.00198209e-02	-6.88072796e-01	 2.27865644e+00	 2.24693350e+00	 8.60658587e-06	 9.83630911e-06	 3.16104512e-05	 7.04438008e-05	 2.92069939e-05	 2.97302502e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+247	 1.38803419e-02	-2.76665223e-02	 1.99603147e-02	-6.10400360e-02	 2.19981670e+00	 2.19947528e+00	 9.67653280e-06	 9.82433902e-06	 2.73682095e-05	 2.78887436e-05	 2.92600171e-05	 2.92448187e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+248	 1.12031546e-01	 4.87980817e-03	 2.11537600e-01	 5.74379510e-03	 2.79296078e+00	 2.78537978e+00	 9.67778501e-06	 9.59728737e-06	 1.96105053e-05	 1.79071641e-05	 3.59509612e-05	 3.62728713e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+249	 2.11564144e-01	 3.13643354e-01	 5.08931600e-01	 7.48311435e-01	 2.94428964e+00	 2.94950843e+00	 9.25204534e-06	 9.87144245e-06	 3.61778340e-05	 4.73059379e-05	 3.91284857e-05	 4.81094589e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+250	 9.33483302e-02	-6.63889998e-02	 4.21595066e-01	-2.80568535e-01	 2.11756023e+00	 2.10332325e+00	 9.77002403e-06	 9.31629152e-06	 5.81505776e-05	 4.67294529e-05	 2.59797948e-05	 2.60738459e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+251	 5.27950030e-02	-2.49347232e-01	 9.08542624e-02	-4.40300387e-01	 3.23360052e+00	 3.21023176e+00	 9.29332576e-06	 9.81175878e-06	 1.65646898e-05	 2.38791106e-05	 4.29349982e-05	 4.66297827e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+252	-7.80158395e-03	 1.29532529e-02	-4.67668747e-02	 1.49656113e-02	 1.84646852e+00	 1.84645038e+00	 9.64942910e-06	 9.79749180e-06	 5.21223539e-05	 5.27025026e-05	 2.34471984e-05	 2.34404661e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+253	-8.87993744e-02	 1.65025481e-01	-2.52824835e-01	 4.64881273e-01	 2.33035618e+00	 2.31124693e+00	 9.49110851e-06	 9.87005320e-06	 3.37079877e-05	 4.70472838e-05	 3.03704383e-05	 3.07636342e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+254	-2.92944860e-02	-3.75268957e-02	-4.16407708e-02	-5.24900901e-02	 3.34575031e+00	 3.34446127e+00	 9.81076310e-06	 9.51075824e-06	 1.52553670e-05	 1.47945894e-05	 4.21735696e-05	 4.20758679e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+255	 1.34911112e-02	 2.24254260e-02	 3.30708072e-02	 3.11002061e-02	 2.49520120e+00	 2.49504015e+00	 9.92432596e-06	 9.77564544e-06	 2.02804186e-05	 1.99997442e-05	 3.15716061e-05	 3.16381846e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+256	-7.64849805e-02	-7.59086768e-02	-1.74425192e-01	-1.97573814e-01	 2.38455123e+00	 2.37484943e+00	 9.78341214e-06	 9.75816419e-06	 2.82198983e-05	 2.93918013e-05	 3.40607299e-05	 3.42253222e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+257	 1.83039967e-02	-2.93459078e-03	 4.10029297e-02	-2.17071151e-02	 2.25025278e+00	 2.25006364e+00	 9.70424127e-06	 8.92458227e-06	 2.61823916e-05	 2.38996328e-05	 2.71786829e-05	 2.72120142e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+258	 6.98742914e-02	-1.43792503e-02	 1.04374050e-01	-2.11793654e-02	 3.55157276e+00	 3.54869804e+00	 9.21012699e-06	 9.95840674e-06	 1.35969971e-05	 1.42927991e-05	 4.54803681e-05	 4.56472445e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+259	 3.07863914e-01	-1.57471503e-01	 7.84230884e-01	-3.96548295e-01	 2.87168611e+00	 2.81475883e+00	 9.56396946e-06	 9.04494168e-06	 5.23440089e-05	 3.55046841e-05	 4.07490226e-05	 4.58121370e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+260	 5.88773020e-02	-7.53844452e-02	 1.72632896e-01	-2.19328921e-01	 2.11435759e+00	 2.11486959e+00	 9.98153895e-06	 8.86710163e-06	 3.17769211e-05	 3.05999763e-05	 2.47529584e-05	 2.51113949e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+261	 8.57681226e-02	 4.61218415e-02	 1.40689694e-01	 9.00278899e-02	 2.76150635e+00	 2.75798054e+00	 9.60377021e-06	 9.70417025e-06	 1.84915883e-05	 1.80312936e-05	 3.46664602e-05	 3.48956967e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+262	 6.29460738e-02	 1.00593748e-01	 1.37808639e-01	 2.39113383e-01	 2.71387994e+00	 2.69535582e+00	 9.78596251e-06	 9.24807049e-06	 2.24837473e-05	 2.31824070e-05	 4.00136491e-05	 3.99224177e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+263	-3.79433511e-02	-2.35585386e-01	-8.63962850e-02	-5.08306468e-01	 2.83336083e+00	 2.79517867e+00	 9.47069179e-06	 9.86233571e-06	 2.04839217e-05	 3.32833638e-05	 3.83499072e-05	 3.95158618e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+264	 1.29349403e-01	 1.17664471e-01	 2.37351476e-01	 2.17365369e-01	 3.03344688e+00	 3.00582228e+00	 9.65040861e-06	 9.68312084e-06	 2.02201128e-05	 1.98095116e-05	 4.31908044e-05	 4.37306632e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+265	-1.53269239e-02	-2.35865796e-02	-3.22792769e-02	-4.32984390e-02	 2.46148699e+00	 2.46117042e+00	 9.87382788e-06	 9.65528003e-06	 2.11672229e-05	 2.06809431e-05	 3.15562924e-05	 3.16050677e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+266	-2.76344714e-04	 1.12783577e-01	 1.27485167e-02	 4.22922317e-01	 2.00597875e+00	 2.00364690e+00	 9.75158705e-06	 9.19340287e-06	 3.90354666e-05	 5.94344911e-05	 2.50325546e-05	 2.53261709e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+267	 1.16179458e-01	 3.40492045e-02	 3.14995753e-01	 6.98761937e-02	 2.32232531e+00	 2.31029425e+00	 9.80541679e-06	 9.24683486e-06	 3.56581248e-05	 2.66694446e-05	 3.20413633e-05	 3.22409882e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+268	-2.25087050e-01	 7.56775456e-02	-4.60141171e-01	 1.56574633e-01	 2.89122811e+00	 2.84714648e+00	 9.84757200e-06	 9.28313566e-06	 3.02729513e-05	 2.13492409e-05	 3.94759581e-05	 4.13304182e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+269	 6.24994890e-02	-4.32145923e-02	 1.09091146e-01	-6.23359470e-02	 3.08319097e+00	 3.07817799e+00	 9.80467654e-06	 9.47331613e-06	 1.75585684e-05	 1.65600443e-05	 4.23987597e-05	 4.24742022e-05	
+# id G1_moments G2_moments G1_hsmcorr G2_hsmcorr moments_sigma hsmcorr_sigma err_g1obs err_g2obs err_g1hsm err_g2hsm err_sigma err_sigma_hsm
+270	-8.14731913e-02	-2.45260055e-02	-1.04188004e-01	-3.19111831e-02	 4.11018010e+00	 4.10935035e+00	 8.99599534e-06	 9.75072397e-06	 1.18601688e-05	 1.26155989e-05	 4.71720835e-05	 4.78414298e-05	
