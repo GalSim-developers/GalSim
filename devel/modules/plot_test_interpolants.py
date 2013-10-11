@@ -146,18 +146,18 @@ def plot_interpolants(plotfile, filenamebase):
                                 "delta_g1_as_f_of_expected_minus_intrinsic_g1",
                                 "delta g1 as a function of (expected - intrinsic) g1"),
                           (applied_shears_g1, g1_difference, "delta_g1_as_f_of_applied_g1",
-                                "delta g1 as a function of applied g1"),                                
+                                "delta g1 as a function of applied g1"), 
                           (applied_shears_g2, g1_difference, "delta_g1_as_f_of_applied_g2",
-                                "delta g1 as a function of applied g2"),                                
+                                "delta g1 as a function of applied g2"), 
                           (expected_g2, g2_difference, "delta_g2_as_f_of_expected_g2",
                                 "delta g2 as a function of expected g2"), 
                           (expected_g2_difference, g2_difference, 
                                 "delta_g2_as_f_of_expected_minus_intrinsic_g2",
                                 "delta g2 as a function of (expected - intrinsic) g2"),
                           (applied_shears_g2, g2_difference, "delta_g2_as_f_of_applied_g2",
-                                "delta g2 as a function of applied g2"),                                
+                                "delta g2 as a function of applied g2"), 
                           (applied_shears_g1, g2_difference, "delta_g2_as_f_of_applied_g1",
-                                "delta g2 as a function of applied g1"),                                
+                                "delta g2 as a function of applied g1"),  
                           (expected_size, frac_size_difference, 
                                 "delta_frac_size_as_f_of_expected_size", 
                                 "delta size/expected size as a function of expected size"),
@@ -216,7 +216,8 @@ def plot_interpolants(plotfile, filenamebase):
                                 "average g2 errors"), 
                            (g1_difference, "size/expected size", "frac_size_errors",
                                 "average fractional size errors")]
-            # Plot average error vs pad_factor for the various interpolant + added shear permutations
+            # Plot average error vs pad_factor for the various interpolant + 
+            # added shear permutations
             for x,ytitle,optitle,ptitle in data_types:
                 ixoffset = -0.5*len(interpolants) # to offset for clarity
                 xoffset = 2/15.
@@ -247,10 +248,12 @@ def plot_interpolants(plotfile, filenamebase):
 
 
         # Plot differentials as a function of angles
-        data_types = [(applied_angle, g1_difference, "applied angle", "delta g1", "delta_g1_as_f_of_applied_angle"), 
-                        (applied_angle, g2_difference, "applied angle", "delta g2", "delta_g2_as_f_of_applied_angle"), 
+        data_types = [(applied_angle, g1_difference, "applied angle", "delta g1",
+                         "delta_g1_as_f_of_applied_angle"), 
+                        (applied_angle, g2_difference, "applied angle", "delta g2",
+                         "delta_g2_as_f_of_applied_angle"), 
                         (applied_angle, frac_size_difference, "applied angle", 
-                                                    "delta size/expected size", "delta_frac_size_as_f_of_applied_angle")]
+                         "delta size/expected size", "delta_frac_size_as_f_of_applied_angle")]
         
         for x,y,xtitle,ytitle,optitle in data_types:
             for j in range(len(paddings)):
@@ -288,8 +291,8 @@ def plot_interpolants(plotfile, filenamebase):
                 plt.title('\n'.join(wrap(subinterp_title+', '+padding_titles[j]+', '
                             +'quartiles, min and max by angle',60)))
                 plt.legend()
-                plt.savefig(filenamebase+'.'+subinterp_title[0]+'.'+optitle+'.pad'+str(paddings[j])+'.png',
-                                    bbox_inches='tight')
+                plt.savefig(filenamebase+'.'+subinterp_title[0]+'.'+optitle+
+                            '.pad'+str(paddings[j])+'.png', bbox_inches='tight')
                 plt.clf()
             
 if __name__=='__main__':
