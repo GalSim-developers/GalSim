@@ -557,7 +557,7 @@ namespace galsim {
             xdbg<<"maxk -> "<<_maxk<<std::endl;
         } else {
             // Then we never did find a value of k such that f(k) < maxk_threshold
-            // This means that ksq_max is wrong, and also maxk needs to be larger.
+            // This means that maxk needs to be larger.  Use the high-k approximation.
             xdbg<<"Never found f(k) < maxk_threshold.\n";
             _highk_a = (sf*sk2 - sk*skf) / (n_fit*sk2 - sk*sk);
             _highk_b = (n_fit*skf - sk*sf) / (n_fit*sk2 - sk*sk);
