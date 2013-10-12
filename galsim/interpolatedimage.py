@@ -430,11 +430,8 @@ class InterpolatedImage(GSObject):
             pad_image = galsim.ImageD(noise_pad_size, noise_pad_size)
 
         # Figure out what kind of noise to apply to the image
-        preserve_var = False  # Switch to decide whether to allow later variance overrides
         if isinstance(noise_pad, float):
             noise = galsim.GaussianNoise(rng, sigma = np.sqrt(noise_pad))
-            if noise_pad == 0.:
-                preserve_var = True  # Don't rescale in the noise_pad = 0. case
         elif isinstance(noise_pad, galsim.correlatednoise._BaseCorrelatedNoise):
             noise = noise_pad.copy()
             if rng: # Let a user supplied RNG take precedence over that in user CN
