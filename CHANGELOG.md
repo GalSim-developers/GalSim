@@ -59,6 +59,8 @@ Changes from v0.5 to current version:
   now run `galsim -m des config_file`.  This also allows you to develop your own (external to 
   GalSim) module and use it with galsim.  Just use `galsim -m [your_module]` here.  (Issue #460)
 
-* Fixed bug in Image class resize function.  (Issue #461)
+* Fixed a bug in Image class resize function.  (Issue #461)
 
 * Sped up the OpticalPSF calculations significantly.  (Issue #466)
+
+* Fixed a bug in the fourier space rendering of truncated Sersic profiles.  (Issue #470)
