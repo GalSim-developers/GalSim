@@ -717,6 +717,10 @@ namespace galsim {
         // Note: This isn't a very good initial guess, but the solver tends to converge pretty
         // rapidly anyway.
 
+        // We need _b below, so call getHLR(), since it may not be calculated yet. 
+        // We don't care about the return value, but it also stores the b value in _b.
+        getHLR(); 
+
         // If trunc = sqrt(2) * re, then x = 2^(1/2n), and the initial guess for b is:
         // b = log( 0.5 * 2^(1/2n)^(2n-1) ) / (sqrt(2)-1)
         //   = -(1/2n) * log(2) / (sqrt(2)-1)
@@ -724,12 +728,20 @@ namespace galsim {
         // on trunc/re is.  It's possible that the full formulae can give a positive solution
         // even if the initial estimate is negative.  But unless someone complains (and proposes
         // a better prescription for this), we'll take this as a de facto limit.
-        if (b1 <= 0.) {
-            throw SBError("Sersic truncation is too small for the given half_light_radius.");
+        if (b1 < 1.e-3 * _b) {
+            //throw SBError("Sersic truncation is too small for the given half_light_radius.");
+            // Update: Ricardo Herbonnet (rightly) complained.
+            // He pointed out that this formula for b1 is always == 0 for n = 0.5.
+            // So we can't just be throwing an exception here.
+            // Since we expand the bracket below anyway, switch to just using _b/2 and 
+            // letting the expansion happen.
+            // I also updated the above check from b1 <= 0 to b1 < 1.e-3 * _b.
+            // Probably if we are getting really close to zero, it is better to start with 
+            // _b/2 instead and expand it down.
+            b1 = _b/2;
         }
 
         // The upper limit to b corresponds to the half-light radius of the untruncated profile.
-        getHLR(); // This also stores the corresponding b value in _b
         double b2 = _b;
         SersicTruncatedHLR func(_n, x);
         Solve<SersicTruncatedHLR> solver(func,b1,b2);

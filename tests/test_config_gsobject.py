@@ -660,7 +660,7 @@ def test_realgalaxy():
         'gal3' : { 'type' : 'RealGalaxy' , 'id' : 103176, 'flux' : 1.e6,
                    'ellip' : { 'type' : 'QBeta' , 'q' : 0.6, 'beta' : 0.39 * galsim.radians } 
                  },
-        'gal4' : { 'type' : 'RealGalaxy' , 'index' : 5, 'flux' : 50,
+        'gal4' : { 'type' : 'RealGalaxy' , 'index' : 5, 'scale_flux' : 50,
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees, 
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
@@ -703,7 +703,7 @@ def test_realgalaxy():
     config['seq_index'] = 3
     gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
     gal4b = galsim.RealGalaxy(real_cat, index = 5)
-    gal4b.setFlux(50)
+    gal4b.scaleFlux(50)
     gal4b.applyDilation(3)
     gal4b.applyShear(e1 = 0.3)
     gal4b.applyRotation(12 * galsim.degrees)
