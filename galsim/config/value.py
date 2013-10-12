@@ -1034,21 +1034,6 @@ def _GenerateFromEval(param, param_name, base, value_type):
         raise ValueError("Unable to evaluate string %r as a %s for %s"%(
                 string,value_type,param_name))
 
-def _GenerateFromCOSMOS(param, param_name, base, value_type):
-    """@brief Return a galsim.correlatednoise._BaseCorrelatedNoise constructed from a type : COSMOS
-    dict of parameters.
-    """
-    req = { 'file_name' : str }
-    opt = { 'rng' : galsim.BaseDeviate, 'dx_cosmos' : float, 'variance' : float }
-    kwargs, safe = GetAllParams(param, param_name, base, req=req, opt=opt)
-    if 'rng' not in kwargs:
-        if 'rng' not in base:
-            raise ValueError("No base['rng'] available for %s.type = COSMOS"%(param_name))
-        kwargs['rng'] = base['rng']
-    cn = galsim.correlatednoise.getCOSMOSNoise(**kwargs)
-    # print, "kwargs, correlated_noise = ", kwargs, cn
-    return cn, safe
-
 def _GenerateFromCurrent(param, param_name, base, value_type):
     """@brief Get the current value of another config item.
     """
