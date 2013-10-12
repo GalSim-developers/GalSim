@@ -423,14 +423,14 @@ namespace galsim {
             gamma8n = boost::math::tgamma_lower(8.*_n, z);
         }
         // The quadratic term of small-k expansion:
-        _kderiv2 = -gamma4n / (4.*_gamma2n);
+        _kderiv2 = -gamma4n / (4.*_gamma2n) / getFluxFraction();
         // And a quartic term:
-        _kderiv4 = gamma6n / (64.*_gamma2n);
+        _kderiv4 = gamma6n / (64.*_gamma2n) / getFluxFraction();
         dbg<<"kderiv2,4 = "<<_kderiv2<<"  "<<_kderiv4<<std::endl;
 
         // When is it safe to use low-k approximation?  
         // See when next term past quartic is at accuracy threshold
-        double kderiv6 = gamma8n / (2304.*_gamma2n);
+        double kderiv6 = gamma8n / (2304.*_gamma2n) / getFluxFraction();
         dbg<<"kderiv6 = "<<kderiv6<<std::endl;
         double kmin = std::pow(_gsparams->kvalue_accuracy / kderiv6, 1./6.);
         dbg<<"kmin = "<<kmin<<std::endl;
