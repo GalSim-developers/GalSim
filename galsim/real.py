@@ -347,6 +347,7 @@ class RealGalaxyCatalog(object):
         self.preloaded = False
         self.do_preload = preload
         self.saved_noise_im = {}
+        self.loaded_files = {}
 
         # eventually I think we'll want information about the training dataset, 
         # i.e. (dataset, ID within dataset)
@@ -375,7 +376,6 @@ class RealGalaxyCatalog(object):
         import os
         import numpy
         self.preloaded = True
-        self.loaded_files = {}
         for file_name in numpy.concatenate((self.gal_file_name , self.PSF_file_name)):
             # numpy sometimes add a space at the end of the string that is not present in 
             # the original file.  Stupid.  But this next line removes it.
@@ -384,40 +384,41 @@ class RealGalaxyCatalog(object):
                 full_file_name = os.path.join(self.image_dir,file_name)
                 self.loaded_files[file_name] = pyfits.open(full_file_name)
 
+    def _getFile(self, file_name):
+        import pyfits
+        import os
+
+        if self.do_preload and not self.preloaded:
+            self.preload()
+        if file_name in self.loaded_files:
+            f = self.loaded_files[file_name]
+        else:
+            full_name = os.path.join(self.image_dir,file_name)
+            f = pyfits.open(full_name)
+            self.loaded_files[file_name] = f
+        return f
+
     def getGal(self, i):
         """Returns the galaxy at index `i` as an ImageViewD object.
         """
+        import numpy
         if i >= len(self.gal_file_name):
             raise IndexError(
                 'index %d given to getGal is out of range (0..%d)'%(i,len(self.gal_file_name)-1))
-        import pyfits
-        import os
-        import numpy
-        if self.do_preload and not self.preloaded:
-            self.preload()
-        if self.preloaded:
-            array = self.loaded_files[self.gal_file_name[i]][self.gal_hdu[i]].data
-        else:
-            file_name = os.path.join(self.image_dir,self.gal_file_name[i])
-            array = pyfits.getdata(file_name,self.gal_hdu[i])
+        f = self._getFile(self.gal_file_name[i])
+        array = f[self.gal_hdu[i]].data
         return galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
+
 
     def getPSF(self, i):
         """Returns the PSF at index `i` as an ImageViewD object.
         """
+        import numpy
         if i >= len(self.PSF_file_name):
             raise IndexError(
                 'index %d given to getPSF is out of range (0..%d)'%(i,len(self.PSF_file_name)-1))
-        import pyfits
-        import os
-        import numpy
-        if self.do_preload and not self.preloaded:
-            self.preload()
-        if self.preloaded:
-            array = self.loaded_files[self.PSF_file_name[i]][self.PSF_hdu[i]].data
-        else:
-            file_name = os.path.join(self.image_dir,self.PSF_file_name[i])
-            array = pyfits.getdata(file_name,self.PSF_hdu[i])
+        f = self._getFile(self.PSF_file_name[i])
+        array = f[self.PSF_hdu[i]].data
         return galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
 
     def getNoise(self, i, rng=None, gsparams=None):
