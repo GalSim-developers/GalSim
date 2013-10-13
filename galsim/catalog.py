@@ -77,6 +77,11 @@ class Catalog(object):
         else:
             self.read_ascii(comments, nobjects_only)
             
+    # When we make a proxy of this class (cf. galsim/config/stamp.py), the attributes
+    # don't get proxied.  Only callable methods are.  So make method versions of these.
+    def getNObjects(self) : return self.nobjects
+    def isFits(self) : return self.isfits
+
     def read_ascii(self, comments, nobjects_only):
         """Read in an input catalog from an ASCII file.
         """

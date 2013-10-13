@@ -133,7 +133,6 @@ class RealGalaxy(GSObject):
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
                  rng=None, x_interpolant=None, k_interpolant=None, flux=None, pad_factor=0,
                  noise_pad_size=0, gsparams=None):
-
         import pyfits
         import numpy as np
 
@@ -151,7 +150,7 @@ class RealGalaxy(GSObject):
         elif id is not None:
             if random is True:
                 raise AttributeError('Too many methods for selecting a galaxy!')
-            use_index = real_galaxy_catalog._get_index_for_id(id)
+            use_index = real_galaxy_catalog.getIndexForID(id)
         elif random is True:
             uniform_deviate = galsim.UniformDeviate(rng)
             use_index = int(real_galaxy_catalog.nobjects * uniform_deviate()) 
@@ -161,12 +160,25 @@ class RealGalaxy(GSObject):
         # read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors.
         self.gal_image = real_galaxy_catalog.getGal(use_index)
         self.PSF_image = real_galaxy_catalog.getPSF(use_index)
-        self.noise = real_galaxy_catalog.getNoise(use_index, rng, gsparams)
+
+        #self.noise = real_galaxy_catalog.getNoise(use_index, rng, gsparams)
+        # This is a duplication of the RealGalaxyCatalog.getNoise() function, since 
+        # we want it to be possible to have the rgc in another process, and the BaseCorrelatedNoise
+        # object is not picklable.  So we just build it here instead.
+        noise_im, pixel_scale, var = real_galaxy_catalog.getNoiseProperties(use_index)
+        if noise_im is None:
+            self.noise = galsim.UncorrelatedNoise(rng, pixel_scale, var, gsparams)
+        else:
+            ii = galsim.InterpolatedImage(noise_im, dx=pixel_scale, normalization="sb",
+                                          calculate_stepk=False, calculate_maxk=False,
+                                          x_interpolant='linear', gsparams=gsparams)
+            self.noise = galsim.correlatednoise._BaseCorrelatedNoise(rng, ii)
+            self.noise.setVariance(var)
 
         # save any other relevant information as instance attributes
-        self.catalog_file = real_galaxy_catalog.file_name
+        self.catalog_file = real_galaxy_catalog.getFileName()
         self.index = use_index
-        self.pixel_scale = float(real_galaxy_catalog.pixel_scale[use_index])
+        self.pixel_scale = float(pixel_scale)
 
         # Convert noise_pad to the right noise to pass to InterpolatedImage
         if noise_pad_size:
@@ -353,7 +365,10 @@ class RealGalaxyCatalog(object):
         # i.e. (dataset, ID within dataset)
         # also note: will be adding bits of information, like noise properties and galaxy fit params
 
-    def _get_index_for_id(self, id):
+    def getNObjects(self) : return self.nobjects
+    def getFileName(self) : return self.file_name
+
+    def getIndexForID(self, id):
         """Internal function to find which index number corresponds to the value ID in the ident 
         field.
         """
@@ -421,12 +436,12 @@ class RealGalaxyCatalog(object):
         array = f[self.PSF_hdu[i]].data
         return galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
 
-    def getNoise(self, i, rng=None, gsparams=None):
-        """Returns the noise cf at index `i` as a CorrelatedNoise object.
+    def getNoiseProperties(self, i):
+        """Returns the components needed to make the noise cf at index `i`.
         """
-        if self.noise_file_name is None:
-            cf = galsim.UncorrelatedNoise(rng, self.pixel_scale[i], self.variance[i], gsparams)
 
+        if self.noise_file_name is None:
+            im = None
         else:
 
             if i >= len(self.noise_file_name):
@@ -446,12 +461,22 @@ class RealGalaxyCatalog(object):
                 im = galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
                 self.saved_noise_im[self.noise_file_name[i]] = im
 
-            cf = galsim.correlatednoise._BaseCorrelatedNoise(
-                rng, galsim.InterpolatedImage(im, dx=self.pixel_scale[i], normalization="sb",
-                                                calculate_stepk=False, calculate_maxk=False,
-                                                x_interpolant='linear', gsparams=gsparams))
-            cf.setVariance(self.variance[i])
+        return im, self.pixel_scale[i], self.variance[i]
 
+    def getNoise(self, i, rng=None, gsparams=None):
+        """Returns the noise cf at index `i` as a CorrelatedNoise object.
+           Note: the return value from this function is not picklable, so this cannot be used
+           across processes.
+        """
+        im, scale, var = self.getNoiseProperties(i)
+        if im is None:
+            cf = galsim.UncorrelatedNoise(rng, scale, var, gsparams)
+        else:
+            ii = galsim.InterpolatedImage(im, dx=scale, normalization="sb",
+                                          calculate_stepk=False, calculate_maxk=False,
+                                          x_interpolant='linear', gsparams=gsparams)
+            cf = galsim.correlatednoise._BaseCorrelatedNoise(rng, ii)
+            cf.setVariance(var)
         return cf
 
 
