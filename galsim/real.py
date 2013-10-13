@@ -399,7 +399,13 @@ class RealGalaxyCatalog(object):
             file_name = file_name.strip()
             if file_name not in self.loaded_files:
                 full_file_name = os.path.join(self.image_dir,file_name)
-                self.loaded_files[file_name] = pyfits.open(full_file_name)
+                # I use memmap=False, because I was getting problems with running out of 
+                # file handles in the great3 real_gal run, which uses a lot of rgc files.
+                # I think there must be a bug in pyfits that leaves file handles open somewhere
+                # when memmap = True.  Anyway, I don't know what the performance implications are 
+                # (since I couldn't finish the run with the default memmap=True), but I don't think
+                # there is much impact either way with memory mapping in our case.
+                self.loaded_files[file_name] = pyfits.open(full_file_name,memmap=False)
 
     def _getFile(self, file_name):
         import pyfits
@@ -411,7 +417,7 @@ class RealGalaxyCatalog(object):
             f = self.loaded_files[file_name]
         else:
             full_name = os.path.join(self.image_dir,file_name)
-            f = pyfits.open(full_name)
+            f = pyfits.open(full_name,memmap=False)
             self.loaded_files[file_name] = f
         return f
 
