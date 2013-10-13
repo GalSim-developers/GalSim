@@ -49,17 +49,23 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
     """
     def worker(input, output):
         for (kwargs, config, obj_num, nobj, info) in iter(input.get, 'STOP'):
+            #print 'Proc %s: Start at stamp %d'%(current_process().name,obj_num)
             results = []
             # Make new copies of config and kwargs so we can update them without
             # clobbering the versions for other tasks on the queue.
             # (The config modifications come in BuildSingleStamp.)
             import copy
+            #print 'Proc %s: Before copy'%current_process().name
             kwargs1 = copy.copy(kwargs)
-            config1 = copy.deepcopy(config)
+            #print 'Proc %s: After copy kwargs'%current_process().name
+            config1 = galsim.config.CopyConfig(config)
+            #print 'Proc %s: After copy config'%current_process().name
             for i in range(nobj):
                 kwargs1['config'] = config1
                 kwargs1['obj_num'] = obj_num + i
+                #print 'Proc %s: Before Build Stamp %d'%(current_process().name,obj_num+i)
                 results.append(BuildSingleStamp(**kwargs1))
+                #print 'Proc %s: Finished Stamp %d'%(current_process().name,obj_num+i)
             output.put( (results, info, current_process().name) )
     
     # The kwargs to pass to build_func.

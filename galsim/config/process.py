@@ -53,6 +53,22 @@ valid_output_types = {
     'DataCube' : ('BuildDataCube', 'GetNObjForDataCube', True, True, False),
 }
 
+def CopyConfig(config):
+    """
+    If you want to use a config dict for multiprocessing, you need to deep copy
+    the gal, psf, and pix fields, since they get cache values that are not picklable.
+    If you don't do the deep copy, then python balks when trying to send the updated
+    config dict back to the root process.  We do this a few different times, so encapsulate
+    the copy semantics once here.
+    """
+    import copy
+    config1 = copy.copy(config)
+    if 'gal' in config: config1['gal'] = copy.deepcopy(config['gal'])
+    if 'psf' in config: config1['psf'] = copy.deepcopy(config['psf'])
+    if 'pix' in config: config1['pix'] = copy.deepcopy(config['pix'])
+    return config1
+
+
 def ProcessInput(config, file_num=0, logger=None):
     """
     Process the input field, reading in any specified input files or setting up
@@ -307,8 +323,8 @@ def Process(config, logger=None):
         if nproc2:
             kwargs['nproc'] = nproc2
 
-        import copy
-        kwargs['config'] = copy.deepcopy(config)
+        kwargs['config'] = CopyConfig(config)
+
         output = kwargs['config']['output']
         # This also updates nimages or nobjects as needed if they are being automatically
         # set from an input catalog.
@@ -641,8 +657,7 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     # Enforce this by buliding the first image outside the below loop and setting
     # config['image_xsize'] and config['image_ysize'] to be the size of the first image.
     t2 = time.time()
-    import copy
-    config1 = copy.deepcopy(config)
+    config1 = CopyConfig(config)
     all_images = galsim.config.BuildImage(
             config=config1, logger=logger, image_num=image_num, obj_num=obj_num,
             make_psf_image=make_psf_image, 

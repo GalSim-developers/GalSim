@@ -50,7 +50,7 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
             # clobbering the versions for other tasks on the queue.
             import copy
             kwargs1 = copy.copy(kwargs)
-            config1 = copy.deepcopy(config)
+            config1 = galsim.config.CopyConfig(config)
             for i in range(nim):
                 t1 = time.time()
                 kwargs1['config'] = config1
