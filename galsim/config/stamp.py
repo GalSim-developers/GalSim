@@ -107,6 +107,7 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
     
     if nproc > 1:
         from multiprocessing import Process, Queue, current_process
+        from multiprocessing.managers import BaseManager
 
         # Initialize the images list to have the correct size.
         # This is important here, since we'll be getting back images in a random order,
@@ -133,6 +134,33 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
             import math
             # This formula keeps nobj a multiple of min_nobj, so Rings are intact.
             nobj_per_task = min_nobj * int(math.sqrt(float(max_nobj) / float(min_nobj)))
+
+        # A simple class that is constructed with an arbitrary object.
+        # Then generator() will return that object.
+        class SimpleGenerator:
+            def __init__(self, obj): self._obj = obj
+            def __call__(self): return self._obj
+            
+        class InputManager(BaseManager): pass
+        if 'input' in config:
+            input = config['input']
+            input_lists = {}
+            input_generators = {}
+            for key in [ k for k in galsim.config.valid_input_types.keys() if k in input ]:
+                # Copy over the existing input item, since we're going to clobber the config one.
+                input_lists[key] = config[key]
+                # Register this object with the manager
+                for i in range(len(config[key])):
+                    tag = key + str(i)
+                    input_generators[tag] = SimpleGenerator(input_lists[key][i])
+                    InputManager.register(tag, callable = input_generators[tag])
+            manager = InputManager()
+            manager.start()
+            for key in [ k for k in galsim.config.valid_input_types.keys() if k in input ]:
+                # Put proxy objects in the config dict where the input items were
+                for i in range(len(input_lists[key])):
+                    tag = key + str(i)
+                    config[key][i] = getattr(manager,tag)()
 
         # Set up the task list
         task_queue = Queue()
@@ -193,6 +221,13 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
         for j in range(nproc):
             p_list[j].join()
         task_queue.close()
+
+        # Put back all the input items that we made proxies for
+        if 'input' in config:
+            input = config['input']
+            for key in [ k for k in galsim.config.valid_input_types.keys() if k in input ]:
+                config[key] = input_lists[key]
+
 
     else : # nproc == 1
 
