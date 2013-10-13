@@ -361,6 +361,8 @@ class RealGalaxyCatalog(object):
         self.saved_noise_im = {}
         self.loaded_files = {}
 
+        if preload: self.preload()
+
         # eventually I think we'll want information about the training dataset, 
         # i.e. (dataset, ID within dataset)
         # also note: will be adding bits of information, like noise properties and galaxy fit params
