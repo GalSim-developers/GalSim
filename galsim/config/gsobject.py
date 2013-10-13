@@ -406,9 +406,9 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams):
 
     real_cat = base['real_catalog'][num]
 
-    # Special: if index is Sequence or Random, and max isn't set, set it to real_cat.nobjects-1
+    # Special: if index is Sequence or Random, and max isn't set, set it to real_cat.getNObjects()-1
     if 'id' not in config:
-        galsim.config.SetDefaultIndex(config, real_cat.nobjects)
+        galsim.config.SetDefaultIndex(config, real_cat.getNObjects())
 
     if 'whiten' in config:
         whiten, safe1 = galsim.config.ParseValue(config, 'whiten', base, bool)
@@ -431,7 +431,7 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams):
 
     if 'index' in kwargs:
         index = kwargs['index']
-        if index >= real_cat.nobjects:
+        if index >= real_cat.getNObjects():
             raise IndexError(
                 "%s index has gone past the number of entries in the catalog"%param_name)
 

@@ -366,13 +366,13 @@ def _GenerateFromCatalog(param, param_name, base, value_type):
     # Setup the indexing sequence if it hasn't been specified.
     # The normal thing with a Catalog is to just use each object in order,
     # so we don't require the user to specify that by hand.  We can do it for them.
-    SetDefaultIndex(param, input_cat.nobjects)
+    SetDefaultIndex(param, input_cat.getNObjects())
 
     # Coding note: the and/or bit is equivalent to a C ternary operator:
-    #     input_cat.isfits ? str : int
+    #     input_cat.isFits() ? str : int
     # which of course doesn't exist in python.  This does the same thing (so long as the 
     # middle item evaluates to true).
-    req = { 'col' : input_cat.isfits and str or int , 'index' : int }
+    req = { 'col' : input_cat.isFits() and str or int , 'index' : int }
     kwargs, safe1 = GetAllParams(param, param_name, base, req=req, ignore=['num'])
     safe = safe and safe1
 

@@ -26,7 +26,7 @@ valid_input_types = {
     # - the class name to build.
     # - a list of keys to ignore on the initial creation (e.g. PowerSpectrum has values that are 
     #   used later).
-    # - whether the class has a nobjects field, in which case it also must have a constructor
+    # - whether the class has a getNObjects method, in which case it also must have a constructor
     #   kwarg nobjects_only to efficiently do only enough to calculate nobjects.
     # See the des module for examples of how to extend this from a module.
     'catalog' : ('Catalog', [], True), 
@@ -89,7 +89,7 @@ def ProcessInput(config, file_num=0, logger=None):
                 input_obj = galsim.config.gsobject._BuildSimple(field, key, config, ignore)[0]
                 #print 'input_obj = ',input_obj
                 if logger and  valid_input_types[key][2]:
-                    logger.info('Read %d objects from %s',input_obj.nobjects,key)
+                    logger.info('Read %d objects from %s',input_obj.getNObjects(),key)
                 # Store input_obj in the config for use by BuildGSObject function.
                 config[key].append(input_obj)
 
@@ -131,8 +131,8 @@ def ProcessInputNObjects(config):
                                                     ignore = ignore)[0]
                 kwargs['nobjects_only'] = True
                 input_obj = init_func(**kwargs)
-                #print 'Found nobjects = %d for %s'%(input_obj.nobjects,key)
-                return input_obj.nobjects
+                #print 'Found nobjects = %d for %s'%(input_obj.getNOjects(),key)
+                return input_obj.getNObjects()
     # If didn't find anything, return None.
     return None
 
