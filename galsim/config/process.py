@@ -288,6 +288,7 @@ def Process(config, logger=None):
     for key in extra_keys:
         last_file_name[key] = None
 
+    nfiles_use = nfiles
     for file_num in range(nfiles):
         #print 'file, image, obj = ',file_num, image_num, obj_num
         # Set the index for any sequences in the input or output parameters.
@@ -329,6 +330,28 @@ def Process(config, logger=None):
         # This also updates nimages or nobjects as needed if they are being automatically
         # set from an input catalog.
         nobj = nobj_func(kwargs['config'],file_num,image_num)
+
+        # nobj is a list of nobj for each image in that file.
+        # So len(nobj) = nimages and sum(nobj) is the total number of objects
+        # This gets the values of image_num and obj_num ready for the next loop.
+        image_num += len(nobj)
+        obj_num += sum(nobj)
+
+        # Check if we ought to skip this file
+        if ('skip' in output 
+                and galsim.config.ParseValue(output, 'skip', config, bool)[0]):
+            if logger:
+                logger.info('Skipping file %d = %s because output.skip = True',file_num,file_name)
+            nfiles_use -= 1
+            continue
+        if ('noclobber' in output 
+                and galsim.config.ParseValue(output, 'noclobber', config, bool)[0]
+                and os.path.isfile(file_name)):
+            if logger:
+                logger.info('Skipping file %d = %s because output.noclobber = True' +
+                            ' and file exists',file_num,file_name)
+            nfiles_use -= 1
+            continue
 
         # Check if we need to build extra images for write out as well
         for extra_key in [ key for key in extra_keys if key in output ]:
@@ -393,12 +416,7 @@ def Process(config, logger=None):
             t = build_func(**kwargs)
             if logger:
                 logger.warn('File %d = %s: time = %f sec', file_num, file_name, t)
-
-        # nobj is a list of nobj for each image in that file.
-        # So len(nobj) = nimages and sum(nobj) is the total number of objects
-        image_num += len(nobj)
-        obj_num += sum(nobj)
-
+    #print 'nfiles_use = ',nfiles_use
 
     # If we're doing multiprocessing, here is the machinery to run through the task_queue
     # and process the results.
@@ -412,7 +430,7 @@ def Process(config, logger=None):
             p_list.append(p)
 
         # Log the results.
-        for k in range(nfiles):
+        for k in range(nfiles_use):
             t, file_num, file_name, proc = done_queue.get()
             #print 'received results for ',file_num,file_name,t,proc
             if logger:
@@ -726,7 +744,8 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     return t4-t1
 
 def GetNObjForFits(config, file_num, image_num):
-    ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc' ]
+    ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc',
+               'skip', 'noclobber' ]
     galsim.config.CheckAllParams(config['output'], 'output', ignore=ignore)
     try : 
         nobj = [ galsim.config.GetNObjForImage(config, image_num) ]
@@ -736,7 +755,8 @@ def GetNObjForFits(config, file_num, image_num):
     return nobj
     
 def GetNObjForMultiFits(config, file_num, image_num):
-    ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc' ]
+    ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc', 
+               'skip', 'noclobber' ]
     req = { 'nimages' : int }
     # Allow nimages to be automatic based on input catalog if image type is Single
     if ( 'nimages' not in config['output'] and 
@@ -756,7 +776,8 @@ def GetNObjForMultiFits(config, file_num, image_num):
     return nobj
 
 def GetNObjForDataCube(config, file_num, image_num):
-    ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc' ]
+    ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc',
+               'skip', 'noclobber' ]
     req = { 'nimages' : int }
     # Allow nimages to be automatic based on input catalog if image type is Single
     if ( 'nimages' not in config['output'] and 
