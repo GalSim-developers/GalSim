@@ -569,6 +569,7 @@ class PowerSpectrum(object):
             interpolant2d = galsim.InterpolantXY(galsim.Linear())
         else:
             interpolant2d = galsim.utilities.convert_interpolant_to_2d(self.interpolant)
+        quint2d = galsim.InterpolantXY(galsim.Quintic())
 
         if reduced:
             # get reduced shear (just discard magnification)
@@ -580,11 +581,11 @@ class PowerSpectrum(object):
             g2_r.setOrigin(self.im_g2.getXMin(), self.im_g2.getYMin())
             # Make an SBInterpolatedImage, which will do the heavy lifting for the
             # interpolation.
-            sbii_g1 = galsim.SBInterpolatedImage(g1_r, xInterp=interpolant2d)
-            sbii_g2 = galsim.SBInterpolatedImage(g2_r, xInterp=interpolant2d)
+            sbii_g1 = galsim.SBInterpolatedImage(g1_r, xInterp=interpolant2d, kInterp=quint2d)
+            sbii_g2 = galsim.SBInterpolatedImage(g2_r, xInterp=interpolant2d, kInterp=quint2d)
         else:
-            sbii_g1 = galsim.SBInterpolatedImage(self.im_g1, xInterp=interpolant2d)
-            sbii_g2 = galsim.SBInterpolatedImage(self.im_g2, xInterp=interpolant2d)
+            sbii_g1 = galsim.SBInterpolatedImage(self.im_g1, xInterp=interpolant2d, kInterp=quint2d)
+            sbii_g2 = galsim.SBInterpolatedImage(self.im_g2, xInterp=interpolant2d, kInterp=quint2d)
 
         # interpolate if necessary
         g1,g2 = [], []
@@ -654,10 +655,12 @@ class PowerSpectrum(object):
             interpolant2d = galsim.InterpolantXY(galsim.Linear())
         else:
             interpolant2d = galsim.utilities.convert_interpolant_to_2d(self.interpolant)
+        quint2d = galsim.InterpolantXY(galsim.Quintic())
 
         # Make an SBInterpolatedImage, which will do the heavy lifting for the 
         # interpolation.
-        sbii_kappa = galsim.SBInterpolatedImage(self.im_kappa, xInterp=interpolant2d)
+        sbii_kappa = galsim.SBInterpolatedImage(self.im_kappa, xInterp=interpolant2d,
+                                                kInterp=quint2d)
 
         # interpolate if necessary
         kappa = []
@@ -726,6 +729,7 @@ class PowerSpectrum(object):
             interpolant2d = galsim.InterpolantXY(galsim.Linear())
         else:
             interpolant2d = galsim.utilities.convert_interpolant_to_2d(self.interpolant)
+        quint2d = galsim.InterpolantXY(galsim.Quintic())
 
         # Calculate the magnification based on the convergence and shear
         _, _, mu = galsim.lensing_ps.theoryToObserved(self.im_g1.array, self.im_g2.array,
@@ -737,7 +741,7 @@ class PowerSpectrum(object):
 
         # Make an SBInterpolatedImage, which will do the heavy lifting for the 
         # interpolation.
-        sbii_mu = galsim.SBInterpolatedImage(im_mu, xInterp=interpolant2d)
+        sbii_mu = galsim.SBInterpolatedImage(im_mu, xInterp=interpolant2d, kInterp=quint2d)
 
         # interpolate if necessary
         mu = []
@@ -806,6 +810,7 @@ class PowerSpectrum(object):
             interpolant2d = galsim.InterpolantXY(galsim.Linear())
         else:
             interpolant2d = galsim.utilities.convert_interpolant_to_2d(self.interpolant)
+        quint2d = galsim.InterpolantXY(galsim.Quintic())
 
         # Calculate the magnification based on the convergence and shear
         g1_r, g2_r, mu = galsim.lensing_ps.theoryToObserved(self.im_g1.array, self.im_g2.array,
@@ -821,9 +826,9 @@ class PowerSpectrum(object):
         im_mu.setOrigin(self.im_kappa.getXMin(), self.im_kappa.getYMin())
         # Make an SBInterpolatedImage, which will do the heavy lifting for the 
         # interpolation.
-        sbii_g1 = galsim.SBInterpolatedImage(im_g1_r, xInterp=interpolant2d)
-        sbii_g2 = galsim.SBInterpolatedImage(im_g2_r, xInterp=interpolant2d)
-        sbii_mu = galsim.SBInterpolatedImage(im_mu, xInterp=interpolant2d)
+        sbii_g1 = galsim.SBInterpolatedImage(im_g1_r, xInterp=interpolant2d, kInterp=quint2d)
+        sbii_g2 = galsim.SBInterpolatedImage(im_g2_r, xInterp=interpolant2d, kInterp=quint2d)
+        sbii_mu = galsim.SBInterpolatedImage(im_mu, xInterp=interpolant2d, kInterp=quint2d)
 
         # interpolate if necessary
         g1, g2, mu = [], [], []

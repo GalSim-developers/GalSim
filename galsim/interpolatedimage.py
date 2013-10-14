@@ -47,7 +47,7 @@ class InterpolatedImage(GSObject):
     scale `dx`.
 
     The user may optionally specify an interpolant, `x_interpolant`, for real-space manipulations
-    (e.g., shearing, resampling).  If none is specified, then by default, a 5th order Lanczos
+    (e.g., shearing, resampling).  If none is specified, then by default, a Quintic polynomial
     interpolant is used.  The user may also choose to specify two quantities that can affect the
     Fourier space convolution: the k-space interpolant (`k_interpolant`) and the amount of padding
     to include around the original images (`pad_factor`).  The default values for `x_interpolant`,

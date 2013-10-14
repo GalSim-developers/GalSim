@@ -37,19 +37,6 @@ namespace galsim {
 
         /// @brief FT must be at least this much larger than input
         const double default_pad_factor = 4.;
-
-        /// @brief The default k-space interpolator
-        const boost::shared_ptr<Quintic> defaultKInterpolant1d(
-            new Quintic(1.e-5, GSParamsPtr::getDefault()));
-        const boost::shared_ptr<InterpolantXY> defaultKInterpolant2d(
-            new InterpolantXY(defaultKInterpolant1d));
-
-        /// @brief The default real-space interpolator
-        const boost::shared_ptr<Lanczos> defaultXInterpolant1d(
-            new Lanczos(5, true, 1.e-5, GSParamsPtr::getDefault()));
-        const boost::shared_ptr<InterpolantXY> defaultXInterpolant2d(
-            new InterpolantXY(defaultXInterpolant1d));
-
     }
 
     // We'll expose this to the python layer.
@@ -190,12 +177,8 @@ namespace galsim {
      * kind of interpolation.  
      *
      * You can provide different interpolation schemes for real and fourier space
-     * (passed as xInterp and kInterp respectively).  If either one is omitted, the 
-     * defaults are:
-     *
-     * xInterp = Lanczos(5, fluxConserve=true, tol=kvalue_accuracy)
-     *
-     * kInterp = Quintic(tol=kvalue_accuracy)
+     * (passed as xInterp and kInterp respectively).  These are required, but there are 
+     * sensible defaults in the python layer wrapper class, InterpolatedImage.
      *
      * The ideal k-space interpolant is a sinc function; however, the quintic interpolant is the
      * default, based on detailed investigations on the tradeoffs between accuracy and speed.  Note

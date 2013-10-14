@@ -238,8 +238,8 @@ namespace galsim {
     void SBInterpolatedImage::SBInterpolatedImageImpl::initialize()
     {
         dbg<<"SBInterpolate initialize\n";
-        if (!_xInterp.get()) _xInterp = sbp::defaultXInterpolant2d;
-        if (!_kInterp.get()) _kInterp = sbp::defaultKInterpolant2d;
+        assert(_xInterp.get());
+        assert(_kInterp.get());
 
         dbg<<"N = "<<_multi.getNin()<<", xrange = "<<_xInterp->xrange();
         dbg<<", scale = "<<_multi.getScale()<<std::endl;
