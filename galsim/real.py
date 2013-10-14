@@ -39,7 +39,7 @@ some lower-resolution telescope.
 
 import galsim
 import utilities
-from galsim import GSObject
+from galsim import GSObject, goodFFTSize
 
 
 class RealGalaxy(GSObject):
@@ -133,6 +133,7 @@ class RealGalaxy(GSObject):
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
                  rng=None, x_interpolant=None, k_interpolant=None, flux=None, pad_factor=0,
                  noise_pad_size=0, gsparams=None):
+
         import pyfits
         import numpy as np
 
@@ -182,6 +183,9 @@ class RealGalaxy(GSObject):
 
         # Convert noise_pad to the right noise to pass to InterpolatedImage
         if noise_pad_size:
+            import numpy as np
+            # Round up to a good size for doing FFTs
+            noise_pad_size = goodFFTSize(int(np.ceil(noise_pad_size)))
             noise_pad = self.noise
         else:
             noise_pad = 0.
