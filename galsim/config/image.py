@@ -436,6 +436,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     # Set the rng to use for image stuff.
     if 'random_seed' in config['image']:
         config['seq_index'] = obj_num+nobjects
+        config['obj_num'] = obj_num+nobjects
         # Technically obj_num+nobjects will be the index of the random seed used for the next 
         # image's first object (if there is a next image).  But I don't think that will have 
         # any adverse effects.
@@ -676,6 +677,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     if 'random_seed' in config['image']:
         #print 'random_seed = ',config['image']['random_seed']
         config['seq_index'] = obj_num+nobjects
+        config['obj_num'] = obj_num+nobjects
         #print 'seq_index = ',config['seq_index']
         # Technically obj_num+nobjects will be the index of the random seed used for the next 
         # image's first object (if there is a next image).  But I don't think that will have 

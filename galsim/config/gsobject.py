@@ -70,8 +70,7 @@ def BuildGSObject(config, key, base=None, gsparams={}):
     if not base:
         base = config
  
-    #print 'Start BuildGSObject: config = ',config
-    #print 'gsparams = ',gsparams
+    #print base['obj_num'],'Start BuildGSObject: config = ',config
     if isinstance(config,dict):
         if not key in config:
             raise AttributeError("key %s not found in config"%key)
@@ -91,7 +90,7 @@ def BuildGSObject(config, key, base=None, gsparams={}):
 
     # If we have previously saved an object and marked it as safe, then use it.
     if 'current_val' in ck and ck['safe']:
-        #print 'current is safe:  ',ck['current_val'], True
+        #print base['obj_num'],'current is safe:  ',ck['current_val'], True
         return ck['current_val'], True
 
     # Ring is only allowed for top level gal (since it requires special handling in 
@@ -226,11 +225,10 @@ def _BuildAdd(config, key, base, ignore, gsparams):
         gsobject, safe1 = BuildGSObject(items, i, base, gsparams)
         # Skip items with flux=0
         if 'flux' in items[i] and galsim.config.value.GetCurrentValue(items[i],'flux') == 0.:
-            #print 'skip -- flux == 0'
+            #print base['obj_num'],'skip -- flux == 0'
             continue
         safe = safe and safe1
         gsobjects.append(gsobject)
-    #print 'After built component items for ',type,' safe = ',safe
 
     if len(gsobjects) == 0:
         raise ValueError("No valid items for %s"%key)
@@ -243,9 +241,7 @@ def _BuildAdd(config, key, base, ignore, gsparams):
             sum = 0
             for item in items[0:-1]:
                 sum += galsim.config.value.GetCurrentValue(item,'flux')
-            #print 'sum = ',sum
             f = 1. - sum
-            #print 'f = ',f
             if (f < 0):
                 import warnings
                 warnings.warn(
@@ -258,7 +254,7 @@ def _BuildAdd(config, key, base, ignore, gsparams):
 
     if 'flux' in config:
         flux, safe1 = galsim.config.ParseValue(config, 'flux', base, float)
-        #print 'flux = ',flux
+        #print base['obj_num'],'flux = ',flux
         gsobject.setFlux(flux)
         safe = safe and safe1
 
@@ -281,7 +277,6 @@ def _BuildConvolve(config, key, base, ignore, gsparams):
         gsobject, safe1 = BuildGSObject(items, i, base, gsparams)
         safe = safe and safe1
         gsobjects.append(gsobject)
-    #print 'After built component items for ',type,' safe = ',safe
 
     if len(gsobjects) == 0:
         raise ValueError("No valid items for %s"%key)
@@ -294,7 +289,7 @@ def _BuildConvolve(config, key, base, ignore, gsparams):
     
     if 'flux' in config:
         flux, safe1 = galsim.config.ParseValue(config, 'flux', base, float)
-        #print 'flux = ',flux
+        #print base['obj_num'],'flux = ',flux
         gsobject.setFlux(flux)
         safe = safe and safe1
 
@@ -317,15 +312,13 @@ def _BuildList(config, key, base, ignore, gsparams):
     index, safe = galsim.config.ParseValue(config, 'index', base, int)
     if index < 0 or index >= len(items):
         raise AttributeError("index %d out of bounds for config.%s"%(index,type))
-    #print items[index]['type']
-    #print 'index = ',index,' From ',key,' List: ',items[index]
 
     gsobject, safe1 = BuildGSObject(items, index, base, gsparams)
     safe = safe and safe1
 
     if 'flux' in config:
         flux, safe1 = galsim.config.ParseValue(config, 'flux', base, float)
-        #print 'flux = ',flux
+        #print base['obj_num'],'flux = ',flux
         gsobject.setFlux(flux)
         safe = safe and safe1
 
@@ -350,16 +343,13 @@ def _BuildRing(config, key, base, ignore, gsparams):
         full_rotation = math.pi * galsim.radians
 
     dtheta = full_rotation / num
-    #print 'dtheta = ',dtheta
+    #print base['obj_num'],'Ring dtheta = ',dtheta
 
     k = base['seq_index']
-    #print 'k = ',k
     if k % num == 0:
-        #print 'first pass -- rebuilding'
         # Then this is the first in the Ring.  
         gsobject = BuildGSObject(config, 'first', base, gsparams)[0]
     else:
-        #print 'not first pass rotate by ',dtheta
         if not isinstance(config['first'],dict) or 'current_val' not in config['first']:
             raise RuntimeError("Building Ring after the first item, but no current_val stored.")
         gsobject = config['first']['current_val'].createRotated(k*dtheta)
@@ -530,6 +520,7 @@ def _EllipObject(gsobject, config, key, base):
     @returns transformed GSObject.
     """
     shear, safe = galsim.config.ParseValue(config, key, base, galsim.Shear)
+    #print base['obj_num'],'shear = ',shear
     gsobject = gsobject.createSheared(shear)
     return gsobject, safe
 
@@ -539,6 +530,7 @@ def _RotateObject(gsobject, config, key, base):
     @returns transformed GSObject.
     """
     theta, safe = galsim.config.ParseValue(config, key, base, galsim.Angle)
+    #print base['obj_num'],'theta = ',theta
     gsobject = gsobject.createRotated(theta)
     return gsobject, safe
 
@@ -548,6 +540,7 @@ def _ScaleFluxObject(gsobject, config, key, base):
     @returns transformed GSObject.
     """
     flux_ratio, safe = galsim.config.ParseValue(config, key, base, float)
+    #print base['obj_num'],'flux_ratio = ',flux_ratio
     gsobject = gsobject.copy()
     gsobject.scaleFlux(flux_ratio)
     return gsobject, safe
@@ -558,6 +551,7 @@ def _DilateObject(gsobject, config, key, base):
     @returns transformed GSObject.
     """
     scale, safe = galsim.config.ParseValue(config, key, base, float)
+    #print base['obj_num'],'scale = ',scale
     gsobject = gsobject.createDilated(scale)
     return gsobject, safe
 
@@ -567,6 +561,7 @@ def _MagnifyObject(gsobject, config, key, base):
     @returns transformed GSObject.
     """
     mu, safe = galsim.config.ParseValue(config, key, base, float)
+    #print base['obj_num'],'mu = ',mu
     gsobject = gsobject.createMagnified(mu)
     return gsobject, safe
 
@@ -576,6 +571,7 @@ def _ShiftObject(gsobject, config, key, base):
     @returns transformed GSObject.
     """
     shift, safe = galsim.config.ParseValue(config, key, base, galsim.PositionD)
+    #print base['obj_num'],'shift = ',shift
     gsobject = gsobject.createShifted(shift.x,shift.y)
     return gsobject, safe
 
