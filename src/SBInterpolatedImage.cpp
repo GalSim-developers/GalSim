@@ -34,8 +34,6 @@
 
 namespace galsim {
 
-    double getDefaultPadFactor() { return sbp::default_pad_factor; }
-
     template <typename T> 
     SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<T>& image,
@@ -97,7 +95,7 @@ namespace galsim {
             _pimpl->dx = dx;
         }
 
-        if (pad_factor <= 0.) pad_factor = sbp::default_pad_factor;
+        assert(pad_factor > 0.);
         _pimpl->Nk = goodFFTSize(int(pad_factor*_pimpl->Ninitial));
 
         double dx2 = _pimpl->dx*_pimpl->dx;
@@ -163,7 +161,7 @@ namespace galsim {
 
         // Figure out what size we need based on pad_factor
         dbg<<"pad_factor = "<<pad_factor<<std::endl;
-        if (pad_factor <= 0.) pad_factor = sbp::default_pad_factor;
+        assert(pad_factor > 0.);
         _pimpl->Nk = goodFFTSize(int(pad_factor*_pimpl->Ninitial));
 
         dbg<<"Ninitial = "<<_pimpl->Ninitial<<std::endl;
