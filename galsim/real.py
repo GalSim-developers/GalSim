@@ -39,7 +39,7 @@ some lower-resolution telescope.
 
 import galsim
 import utilities
-from galsim import GSObject, goodFFTSize
+from galsim import GSObject
 
 
 class RealGalaxy(GSObject):
@@ -166,11 +166,11 @@ class RealGalaxy(GSObject):
         # This is a duplication of the RealGalaxyCatalog.getNoise() function, since 
         # we want it to be possible to have the rgc in another process, and the BaseCorrelatedNoise
         # object is not picklable.  So we just build it here instead.
-        noise_im, pixel_scale, var = real_galaxy_catalog.getNoiseProperties(use_index)
-        if noise_im is None:
+        noise_image, pixel_scale, var = real_galaxy_catalog.getNoiseProperties(use_index)
+        if noise_image is None:
             self.noise = galsim.UncorrelatedNoise(rng, pixel_scale, var, gsparams)
         else:
-            ii = galsim.InterpolatedImage(noise_im, dx=pixel_scale, normalization="sb",
+            ii = galsim.InterpolatedImage(noise_image, dx=pixel_scale, normalization="sb",
                                           calculate_stepk=False, calculate_maxk=False,
                                           x_interpolant='linear', gsparams=gsparams)
             self.noise = galsim.correlatednoise._BaseCorrelatedNoise(rng, ii)
@@ -183,9 +183,6 @@ class RealGalaxy(GSObject):
 
         # Convert noise_pad to the right noise to pass to InterpolatedImage
         if noise_pad_size:
-            import numpy as np
-            # Round up to a good size for doing FFTs
-            noise_pad_size = goodFFTSize(int(np.ceil(noise_pad_size)))
             noise_pad = self.noise
         else:
             noise_pad = 0.
