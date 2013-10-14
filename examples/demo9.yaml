@@ -44,6 +44,8 @@
 # - output : nproc
 # - output : weight
 # - output : badpix
+# - output : skip
+# - output : noclobber
 
 
 # We again use the multiple document feature.  So start with the common information:
@@ -307,3 +309,24 @@ output :
     # determine the number of CPUs you have and use that many processes.
     nproc : -1
 
+---
+
+output :
+
+    # It is possible to skip particular output files if you want.  
+    # This example is a bit contrived for the sake of the example.  It skips every 6th file.
+    skip :
+        type : List
+        items : [ 0, 0, 0, 0, 0, 1 ]
+
+---
+
+output :
+    
+    # Another option is to skip any file that is already written.
+    # This might be useful if you ran out of memory for a few files on a really big job using
+    # multiprocessing (nproc != 1).  You could follow this up with a run with nproc = 1 to get
+    # the full machine memory and noclobber = True to only do the files that failed in the 
+    # previous run.
+    # Here we do all the files that weren't done above because of the skip option.
+    noclobber : True
