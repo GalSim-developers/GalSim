@@ -283,6 +283,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
     t1 = time.time()
 
     config['seq_index'] = obj_num 
+    config['obj_num'] = obj_num
     # Initialize the random number generator we will be using.
     if 'random_seed' in config['image']:
         seed = galsim.config.ParseValue(config['image'],'random_seed',config,int)[0]

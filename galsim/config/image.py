@@ -306,6 +306,7 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
           but the latter 3 might be None depending on the parameters make_*_image.    
     """
     config['seq_index'] = image_num
+    config['image_num'] = image_num
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
                'n_photons', 'wmult', 'offset', 'gsparams' ]
@@ -369,6 +370,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
           but the latter 3 might be None depending on the parameters make_*_image.    
     """
     config['seq_index'] = image_num
+    config['image_num'] = image_num
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
                'image_pos', 'n_photons', 'wmult', 'offset', 'gsparams' ]
@@ -616,6 +618,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
           but the latter 3 might be None depending on the parameters make_*_image.    
     """
     config['seq_index'] = image_num
+    config['image_num'] = image_num
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
                'image_pos', 'sky_pos', 'n_photons', 'wmult', 'offset',
@@ -853,6 +856,7 @@ def GetNObjForSingleImage(config, image_num):
 def GetNObjForScatteredImage(config, image_num):
 
     config['seq_index'] = image_num
+    config['image_num'] = image_num
 
     # Allow nobjects to be automatic based on input catalog
     if 'nobjects' not in config['image']:
@@ -868,6 +872,7 @@ def GetNObjForScatteredImage(config, image_num):
 def GetNObjForTiledImage(config, image_num):
     
     config['seq_index'] = image_num
+    config['image_num'] = image_num
 
     if 'nx_tiles' not in config['image'] or 'ny_tiles' not in config['image']:
         raise AttributeError(

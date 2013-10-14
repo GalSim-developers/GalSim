@@ -81,6 +81,7 @@ def ProcessInput(config, file_num=0, logger=None):
         etc.
     """
     config['seq_index'] = file_num
+    config['file_num'] = file_num
     # Process the input field (read any necessary input files)
     if 'input' in config:
         input = config['input']
@@ -295,6 +296,7 @@ def Process(config, logger=None):
         # These sequences are indexed by the file_num.
         # (In image, they are indexed by image_num, and after that by obj_num.)
         config['seq_index'] = file_num
+        config['file_num'] = file_num
 
         # Get the file_name
         if 'file_name' in output:
@@ -767,6 +769,7 @@ def GetNObjForMultiFits(config, file_num, image_num):
             config['output']['nimages'] = ProcessInputNObjects(config)
     params = galsim.config.GetAllParams(config['output'],'output',config,ignore=ignore,req=req)[0]
     config['seq_index'] = file_num
+    config['file_num'] = file_num
     nimages = params['nimages']
     try :
         nobj = [ galsim.config.GetNObjForImage(config, image_num+j) for j in range(nimages) ]
@@ -788,6 +791,7 @@ def GetNObjForDataCube(config, file_num, image_num):
             config['output']['nimages'] = ProcessInputNObjects(config)
     params = galsim.config.GetAllParams(config['output'],'output',config,ignore=ignore,req=req)[0]
     config['seq_index'] = file_num
+    config['file_num'] = file_num
     nimages = params['nimages']
     try :
         nobj = [ galsim.config.GetNObjForImage(config, image_num+j) for j in range(nimages) ]

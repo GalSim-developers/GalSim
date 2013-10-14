@@ -1021,13 +1021,19 @@ def _GenerateFromEval(param, param_name, base, value_type):
         sky_pos = base['sky_pos']
     if 'rng' in base:
         rng = base['rng']
+    if 'file_num' in base:
+        file_num = base['file_num']
+    if 'image_num' in base:
+        image_num = base['image_num']
+    if 'obj_num' in base:
+        obj_num = base['obj_num']
     for key in galsim.config.valid_input_types.keys():
         if key in base:
             exec(key + ' = base[key]')
 
     try:
         val = value_type(eval(string))
-        #print 'Needed pos: val = ',val
+        #print 'Needed extra variables: val = ',val
         return val, False
     except:
         raise ValueError("Unable to evaluate string %r as a %s for %s"%(
