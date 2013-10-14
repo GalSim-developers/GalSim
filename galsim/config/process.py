@@ -66,6 +66,7 @@ def CopyConfig(config):
     if 'gal' in config: config1['gal'] = copy.deepcopy(config['gal'])
     if 'psf' in config: config1['psf'] = copy.deepcopy(config['psf'])
     if 'pix' in config: config1['pix'] = copy.deepcopy(config['pix'])
+    if 'image' in config: config1['image'] = copy.deepcopy(config['image'])
     return config1
 
 
