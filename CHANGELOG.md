@@ -61,4 +61,5 @@ Changes from v0.5 to current version:
 
 * Fixed bug in Image class resize function.  (Issue #461)
 
-* Sped up the OpticalPSF calculations significantly.  (Issue #466)
+* Sped up the OpticalPSF and RealGalaxy calculations significantly.  (Issue #466, #474)
+
