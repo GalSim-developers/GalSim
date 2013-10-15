@@ -47,18 +47,20 @@ class InterpolatedImage(GSObject):
     scale `dx`.
 
     The user may optionally specify an interpolant, `x_interpolant`, for real-space manipulations
-    (e.g., shearing, resampling).  If none is specified, then by default, a 5th order Lanczos
-    interpolant is used.  The user may also choose to specify two quantities that can affect the
-    Fourier space convolution: the k-space interpolant (`k_interpolant`) and the amount of padding
-    to include around the original images (`pad_factor`).  The default values for `x_interpolant`,
-    `k_interpolant`, and `pad_factor` were chosen based on preliminary tests suggesting that they
-    lead to a high degree of accuracy without being excessively slow.  Users should be particularly
-    wary about changing `k_interpolant` and `pad_factor` from the defaults without careful testing.
-    The user is given complete freedom to choose interpolants and pad factors, and no warnings are
-    raised when the code is modified to choose some combination that is known to give significant
-    error.  More details can be found in devel/modules/finterp.pdf, especially table 1, in the
-    GalSim repository.
-
+    (e.g., shearing, resampling).  If none is specified, then by default, a quintic interpolant is
+    used.  The user may also choose to specify two quantities that can affect the Fourier space 
+    convolution: the k-space interpolant (`k_interpolant`) and the amount of padding to include 
+    around the original images (`pad_factor`).  The default values for `x_interpolant`,
+    `k_interpolant`, and `pad_factor` were chosen based on the tests of branch #389 to reach good
+    accuracy without being excessively slow.  Users should be particularly wary about changing 
+    `k_interpolant` and `pad_factor` from the defaults without careful testing.  The user is given 
+    complete freedom to choose interpolants and pad factors, and no warnings are raised when the 
+    code is modified to choose some combination that is known to give significant error.  More 
+    details can be found in devel/modules/finterp.pdf, especially table 1, in the GalSim 
+    repository, and in comment 
+    https://github.com/GalSim-developers/GalSim/issues/389#issuecomment-26166621 and following
+    comments.  
+    
     The user can choose to pad the image with a noise profile if desired.  To do so, specify
     the target size for the noise padding in `noise_pad_size`, and specify the kind of noise
     to use in `noise_pad`.  The `noise_pad` option may be a Gaussian random noise of some variance,
