@@ -1,6 +1,15 @@
+# reconvolution_validation.yaml is a configuration script for use with reconvolution_validation.py.
+# It is not a standard galsim.config script, although the main driver uses parts of it as such.
+# See README.md, reconvolution_validation.py and comments in this file for usage details.
+
+
+# these settings control the details of ring tests performed by the reconvolution validation driver.
 reconvolution_validation_settings:
-    n_gals : &n_gals 10
+    # number of galaxies in the input catalog to use
+    n_gals : &n_gals 270
+    # number of shears to use (see gal->shear->items)
     n_shears : &n_shears 10
+    # number of angles in a ring test 
     n_angles : &n_angles 8
 
     # n_repeat_gal  = n_shears * n_angles
@@ -8,10 +17,9 @@ reconvolution_validation_settings:
     # n_repeat_shear = n_angles 
     n_repeat_shear : &n_repeat_shear 8
     # n_images = n_shears * n_angles *n_gals
-    n_images : &n_images 800
+    n_images : &n_images 21600
 
 # the test will be run one time for all the values of all the varied parameters listed here
-# the default configuration will not be ran
 vary_params:
     alias_threshold : 
         path : ['gsparams','alias_threshold']
@@ -34,6 +42,7 @@ vary_params:
         rebuild_direct : False 
         rebuild_reconv : True 
 
+# galsim.config dict corresponding to mock cosmos images
 cosmos_images:
         
     gal :
@@ -88,6 +97,7 @@ cosmos_images:
         psf :
             file_name : rgc_val_psf.fits    
 
+# galsim.config dict corresponding to the images reconvolved to the ground based seeing
 reconvolved_images :
     # this is the reconvolving PSF
     psf : 
@@ -120,22 +130,10 @@ reconvolved_images :
                 - { type : G1G2 , g1 : -0.020 , g2 : -0.020 }
                 - { type : G1G2 , g1 : -0.00  , g2 : +0.00  }
 
-                # - { type : G1G2 , g1 : +0.050 , g2 :  0.000 }
-                # - { type : G1G2 , g1 : -0.050 , g2 :  0.000 }
-                # - { type : G1G2 , g1 :  0.000 , g2 : +0.050 }
-                # - { type : G1G2 , g1 :  0.000 , g2 : -0.050 }
-                # - { type : G1G2 , g1 : +0.050 , g2 : +0.050 }
-                # - { type : G1G2 , g1 : +0.050 , g2 : -0.050 }
-                # - { type : G1G2 , g1 : -0.050 , g2 : +0.050 }
-                # - { type : G1G2 , g1 : -0.050 , g2 : -0.050 }
     image :
         random_seed : 2222211
         nproc : 5
         pixel_scale : 0.2   # pixel scale for the ground observation
-        # type : Tiled
-        # nx_tiles : 1        # we are generating galaxies in one long tiled stripe
-        # ny_tiles :  *n_images
-        # stamp_size : 128    #  big in order for the space images to contain the galaxies fully
         type : Single
         size : 128
         # this field is required for the photon image, 
@@ -148,7 +146,9 @@ reconvolved_images :
             file_name : rgc_val.fits     # will be created by the script
             preload : True   
 
-# although outside of the main config here, the script will take care of it
+# gsparams are outside cosmos_images and reconvolved_images, so there is only one point 
+# where those can be changed. Although outside of the main config here, 
+# the reconvolution_validation.py script will take care of it
 gsparams :  
     minimum_fft_size : 128      
     maximum_fft_size : 20000     

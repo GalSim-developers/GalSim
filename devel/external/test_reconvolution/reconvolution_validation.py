@@ -1,3 +1,10 @@
+"""
+@file reconvolution_validation.py
+Calculate the accuracy of the reconvolution engine
+by comparing the shapes of reconvolved images of elliptical galaxies with
+those created directly.
+"""
+
 import os
 import pdb
 import pyfits
@@ -19,6 +26,8 @@ NO_PSF_VALUE    = -98
 def _ErrorResults(ERROR_VALUE,ident):
     """
     @brief Return a results structure with all fields set to ERROR_VALUE, and with id ident
+    @param ERROR_VALUE value to fill in result dict fields
+    @param ident id of the galaxy
     """
 
     result = {  'moments_g1' : ERROR_VALUE,
