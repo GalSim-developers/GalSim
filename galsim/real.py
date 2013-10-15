@@ -363,6 +363,11 @@ class RealGalaxyCatalog(object):
         self.loaded_files = {}
         self.logger = logger
 
+        # The pyfits commands aren't thread safe.  So we need to make sure the methods that
+        # use pyfits are not run concurrently from multiple threads.
+        from multiprocessing import Lock
+        self.lock = Lock()
+
         # Preload all files if desired
         if preload: self.preload()
 
@@ -432,24 +437,28 @@ class RealGalaxyCatalog(object):
     def getGal(self, i):
         """Returns the galaxy at index `i` as an ImageViewD object.
         """
+        self.lock.acquire()
         import numpy
         if i >= len(self.gal_file_name):
             raise IndexError(
                 'index %d given to getGal is out of range (0..%d)'%(i,len(self.gal_file_name)-1))
         f = self._getFile(self.gal_file_name[i])
         array = f[self.gal_hdu[i]].data
+        self.lock.release()
         return galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
 
 
     def getPSF(self, i):
         """Returns the PSF at index `i` as an ImageViewD object.
         """
+        self.lock.acquire()
         import numpy
         if i >= len(self.PSF_file_name):
             raise IndexError(
                 'index %d given to getPSF is out of range (0..%d)'%(i,len(self.PSF_file_name)-1))
         f = self._getFile(self.PSF_file_name[i])
         array = f[self.PSF_hdu[i]].data
+        self.lock.release()
         return galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
 
     def getNoiseProperties(self, i):
@@ -465,6 +474,7 @@ class RealGalaxyCatalog(object):
                     'index %d given to getNoise is out of range (0..%d)'%(
                         i,len(self.noise_file_name)-1))
 
+            self.lock.acquire()
             if self.noise_file_name[i] in self.saved_noise_im:
                 im = self.saved_noise_im[self.noise_file_name[i]]
             else:
@@ -476,6 +486,7 @@ class RealGalaxyCatalog(object):
                 array = pyfits.getdata(file_name)
                 im = galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
                 self.saved_noise_im[self.noise_file_name[i]] = im
+            self.lock.release()
 
         return im, self.pixel_scale[i], self.variance[i]
 
