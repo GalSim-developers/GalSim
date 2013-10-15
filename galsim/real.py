@@ -299,13 +299,13 @@ class RealGalaxyCatalog(object):
     _opt_params = { 'image_dir' : str , 'dir' : str, 'preload' : bool, 'noise_dir' : str }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
+    _takes_logger = True
 
     # nobject_only is an intentionally undocumented kwarg that should be used only by
     # the config structure.  It indicates that all we care about is the nobjects parameter.
     # So skip any other calculations that might normally be necessary on construction.
     def __init__(self, file_name, image_dir=None, dir=None, preload=False, nobjects_only=False,
-                 noise_dir=None):
+                 noise_dir=None, logger=None):
         import os
         # First build full file_name
         if dir is None:
@@ -363,6 +363,7 @@ class RealGalaxyCatalog(object):
         self.do_preload = preload
         self.saved_noise_im = {}
         self.loaded_files = {}
+        self.logger = logger
 
         if preload: self.preload()
 
@@ -395,6 +396,8 @@ class RealGalaxyCatalog(object):
         import pyfits
         import os
         import numpy
+        if self.logger:
+            self.logger.debug('RealGalaxyCatalog: start preload')
         self.preloaded = True
         for file_name in numpy.concatenate((self.gal_file_name , self.PSF_file_name)):
             # numpy sometimes add a space at the end of the string that is not present in 
@@ -405,9 +408,11 @@ class RealGalaxyCatalog(object):
                 # I use memmap=False, because I was getting problems with running out of 
                 # file handles in the great3 real_gal run, which uses a lot of rgc files.
                 # I think there must be a bug in pyfits that leaves file handles open somewhere
-                # when memmap = True.  Anyway, I don't know what the performance implications are 
-                # (since I couldn't finish the run with the default memmap=True), but I don't think
-                # there is much impact either way with memory mapping in our case.
+                # when memmap = True.  Anyway, I don't know what the performance implications
+                # are (since I couldn't finish the run with the default memmap=True), but I
+                # don't think there is much impact either way with memory mapping in our case.
+                if self.logger:
+                    self.logger.debug('RealGalaxyCatalog: preloading %s',full_file_name)
                 self.loaded_files[file_name] = pyfits.open(full_file_name,memmap=False)
 
     def _getFile(self, file_name):
@@ -417,9 +422,13 @@ class RealGalaxyCatalog(object):
         if self.do_preload and not self.preloaded:
             self.preload()
         if file_name in self.loaded_files:
+            if self.logger:
+                self.logger.debug('RealGalaxyCatalog: File %s is already open',file_name)
             f = self.loaded_files[file_name]
         else:
             full_name = os.path.join(self.image_dir,file_name)
+            if self.logger:
+                self.logger.debug('RealGalaxyCatalog: open file %s',file_name)
             f = pyfits.open(full_name,memmap=False)
             self.loaded_files[file_name] = f
         return f
