@@ -319,33 +319,33 @@ class ComparisonShapeData(object):
        self.time = time
 
     def __str__(self):
-       retval = "g1obs_draw  = "+str(self.g1obs_draw)+"\n"+\
-                "delta_g1obs = "+str(self.delta_g1obs)+" +/- "+str(self.err_g1obs)+"\n"+\
-                "\n"+\
-                "g2obs_draw  = "+str(self.g2obs_draw)+"\n"+\
-                "delta_g2obs = "+str(self.delta_g2obs)+" +/- "+str(self.err_g2obs)+"\n"+\
-                "\n"+\
-                "g1hsm_draw  = "+str(self.g1hsm_draw)+"\n"+\
-                "delta_g1hsm = "+str(self.delta_g1hsm)+" +/- "+str(self.err_g1hsm)+"\n"+\
-                "\n"+\
-                "g2hsm_draw  = "+str(self.g2hsm_draw)+"\n"+\
-                "delta_g2hsm = "+str(self.delta_g2hsm)+" +/- "+str(self.err_g2hsm)+"\n"+\
-                "\n"+\
-                "sigma_draw  = "+str(self.sigma_draw)+"\n"+\
-                "delta_sigma = "+str(self.delta_sigma)+" +/- "+str(self.err_sigma)+"\n"+\
-                "\n"+\
-                "sigma_draw_hsm  = "+str(self.sighs_draw)+"\n"+\
-                "delta_sigma_hsm = "+str(self.delta_sighs)+" +/- "+str(self.err_sighs)+"\n"+\
-                "\n"+\
-                "image size = "+str(self.size)+"\n"+\
-                "pixel scale = "+str(self.pixel_scale)+"\n"+\
-                "wmult = "+str(self.wmult)+"\n"+\
-                "\n"+\
-                "total time taken = "+str(self.time)+" s\n"+\
-                "total number of iterations = "+str(self.n_iterations)+"\n"+\
-                "number of trials per iteration = "+str(self.n_trials_per_iter)+"\n"+\
-                "number of photons per trial = "+str(self.n_photons_per_trial)+"\n"
-       return retval
+        retval = "g1obs_draw  = "+str(self.g1obs_draw)+"\n"+\
+                 "delta_g1obs = "+str(self.delta_g1obs)+" +/- "+str(self.err_g1obs)+"\n"+\
+                 "\n"+\
+                 "g2obs_draw  = "+str(self.g2obs_draw)+"\n"+\
+                 "delta_g2obs = "+str(self.delta_g2obs)+" +/- "+str(self.err_g2obs)+"\n"+\
+                 "\n"+\
+                 "g1hsm_draw  = "+str(self.g1hsm_draw)+"\n"+\
+                 "delta_g1hsm = "+str(self.delta_g1hsm)+" +/- "+str(self.err_g1hsm)+"\n"+\
+                 "\n"+\
+                 "g2hsm_draw  = "+str(self.g2hsm_draw)+"\n"+\
+                 "delta_g2hsm = "+str(self.delta_g2hsm)+" +/- "+str(self.err_g2hsm)+"\n"+\
+                 "\n"+\
+                 "sigma_draw  = "+str(self.sigma_draw)+"\n"+\
+                 "delta_sigma = "+str(self.delta_sigma)+" +/- "+str(self.err_sigma)+"\n"+\
+                 "\n"+\
+                 "sigma_draw_hsm  = "+str(self.sighs_draw)+"\n"+\
+                 "delta_sigma_hsm = "+str(self.delta_sighs)+" +/- "+str(self.err_sighs)+"\n"+\
+                 "\n"+\
+                 "image size = "+str(self.size)+"\n"+\
+                 "pixel scale = "+str(self.pixel_scale)+"\n"+\
+                 "wmult = "+str(self.wmult)+"\n"+\
+                 "\n"+\
+                 "total time taken = "+str(self.time)+" s\n"+\
+                 "total number of iterations = "+str(self.n_iterations)+"\n"+\
+                 "number of trials per iteration = "+str(self.n_trials_per_iter)+"\n"+\
+                 "number of photons per trial = "+str(self.n_photons_per_trial)+"\n"
+        return retval
 
     # Reuse the __str__ method for __repr__
     __repr__ = __str__

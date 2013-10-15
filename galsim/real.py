@@ -377,6 +377,9 @@ class RealGalaxyCatalog(object):
         self.preloaded = True
         self.loaded_files = {}
         for file_name in numpy.concatenate((self.gal_file_name , self.PSF_file_name)):
+            # numpy sometimes add a space at the end of the string that is not present in 
+            # the original file.  Stupid.  But this next line removes it.
+            file_name = file_name.strip()
             if file_name not in self.loaded_files:
                 full_file_name = os.path.join(self.image_dir,file_name)
                 self.loaded_files[file_name] = pyfits.open(full_file_name)
