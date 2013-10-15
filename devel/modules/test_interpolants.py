@@ -1,6 +1,11 @@
 """
 A test of the behavior of shear, magnification, shift, rotation, etc for different interpolants and
 gsparams when applied to RealGalaxy objects.
+
+This file (or test_interpolants_parametric.py, which calls the print function of this script) is 
+meant to be used with plot_test_interpolants.py.  The column mapping is hard-coded into both the
+print function here and the main function of plot_test_interpolants.py, so changes to the column
+structure here should be replicated there.
 """
 
 import galsim
@@ -207,6 +212,9 @@ def test_realgalaxy(base_config, shear=None, magnification=None, angle=None, shi
 def print_results(f, g1_list, g2_list, sigma_list, test_answer, first_index=0):
     """Print the results to a file specified either via outfile kwarg or chosen using
     test_answer.image_type.
+    
+    If you intend to use this with plot_test_interpolants.py, and you change the column order,
+    make sure to change it in plot_test_interpolants.py as well--it's hard-coded both places!
     """
     if test_answer.shear[0]!=0 or test_answer.shear[1]!=0: 
         # If there's an applied shear, compute the value of the expected shear
