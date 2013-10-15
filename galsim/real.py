@@ -359,12 +359,11 @@ class RealGalaxyCatalog(object):
         self.weight = cat.field('weight') # weight factor to account for size-dependent
                                           # probability
 
-        self.preloaded = False
-        self.do_preload = preload
         self.saved_noise_im = {}
         self.loaded_files = {}
         self.logger = logger
 
+        # Preload all files if desired
         if preload: self.preload()
 
         # eventually I think we'll want information about the training dataset, 
@@ -418,9 +417,6 @@ class RealGalaxyCatalog(object):
     def _getFile(self, file_name):
         import pyfits
         import os
-
-        if self.do_preload and not self.preloaded:
-            self.preload()
         if file_name in self.loaded_files:
             if self.logger:
                 self.logger.debug('RealGalaxyCatalog: File %s is already open',file_name)
