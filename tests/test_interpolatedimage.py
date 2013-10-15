@@ -931,7 +931,6 @@ if __name__ == "__main__":
     test_corr_padding()
 
     test_sbinterpolatedimage()
-    test_pad_image()
     test_roundtrip()
     test_fluxnorm()
     test_exceptions()

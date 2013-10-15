@@ -27,12 +27,6 @@ images distributed with GalSim only includes 100 galaxies, but you can download 
 larger set of images.  See https://github.com/GalSim-developers/GalSim/wiki for a link
 to the download page.
 
-The real galaxy images are padded prior to use with noise that matches that in the original
-COSMOS observations.  This noise is spatially correlated in the same way as often seen in
-coadd images from the Hubble Space Telescope (HST) Advanced Camera for Surveys such as
-COSMOS, using a correlation function determined from the HST coadd images in the F814W
-filter (see, e.g., Leauthaud et al 2007).
-
 The galaxy images include images of the effective PSF for the original observations, 
 so GalSim considers the galaxy profile to be the observed image deconvolved by that PSF.
 In this case, we then randomly rotate the galaxies, apply a given gravitational shear as
@@ -46,9 +40,8 @@ New features introduced in this demo:
 
 - real_cat = galsim.RealGalaxyCatalog(file_name, dir)
 - real_cat.preload()
-- correlated_noise = galsim.correlatednoise.getCOSMOSNoise(rng, file_name)
 - obj = galsim.Gaussian(fwhm, flux)
-- obj = galsim.RealGalaxy(real_cat, index, noise_pad=correlated_noise, ...)
+- obj = galsim.RealGalaxy(real_cat, index)
 - obj.applyRotation(theta)
 - obj.applyMagnification(mu)
 - image += background
@@ -94,14 +87,14 @@ def main(argv):
     psf_file_name = os.path.join('output','psf_real.fits')
 
     random_seed = 1512413
-    sky_level = 1.e6          # ADU / arcsec^2
-    pixel_scale = 0.15        # arcsec
-    gal_flux = 1.e5           # arbitrary choice, makes nice (not too) noisy images
-    gal_g1 = -0.027           #
-    gal_g2 = 0.031            #
-    gal_mu = 1.082            # mu = ( (1-kappa)^2 - g1^2 - g2^2 )^-1
-    psf_inner_fwhm = 0.6      # arcsec
-    psf_outer_fwhm = 2.3      # arcsec
+    sky_level = 1.e6        # ADU / arcsec^2
+    pixel_scale = 0.15      # arcsec
+    gal_flux = 1.e5         # arbitrary choice, makes nice (not too) noisy images
+    gal_g1 = -0.027         #
+    gal_g2 = 0.031          #
+    gal_mu = 1.082          # mu = ( (1-kappa)^2 - g1^2 - g2^2 )^-1
+    psf_inner_fwhm = 0.6    # arcsec
+    psf_outer_fwhm = 2.3    # arcsec
     psf_inner_fraction = 0.8  # fraction of total PSF flux in the inner Gaussian
     psf_outer_fraction = 0.2  # fraction of total PSF flux in the inner Gaussian
     ngal = 100  
@@ -128,36 +121,19 @@ def main(argv):
     logger.info('Read in %d real galaxies from catalog', real_galaxy_catalog.nobjects)
 
     # Make the ePSF
-    # First make the double Gaussian PSF
+    # first make the double Gaussian PSF
     psf1 = galsim.Gaussian(fwhm = psf_inner_fwhm, flux = psf_inner_fraction)
     psf2 = galsim.Gaussian(fwhm = psf_outer_fwhm, flux = psf_outer_fraction)
     psf = psf1+psf2
-    # Make the pixel response
+    # make the pixel response
     pix = galsim.Pixel(pixel_scale)
-    # Convolve PSF and pixel response function to get the effective PSF (ePSF)
+    # convolve PSF and pixel response function to get the effective PSF (ePSF)
     epsf = galsim.Convolve([psf, pix])
-    # Draw this one with no noise
+    # Draw this one with no noise.
     epsf_image = epsf.draw(dx = pixel_scale)
-    # Write to file
+    # write to file
     epsf_image.write(psf_file_name)
     logger.info('Created ePSF and wrote to file %r',psf_file_name)
-
-    # We want to pad the RealGalaxy with correlated noise matching that in COSMOS from which the
-    # galaxy images originally derive.  The correlation function is described in more detail in
-    # the galsim.correlatednoise.getCOSMOSNoise() docstring.
-    # This function requires a FITS file, stored in the GalSim repository, that represents this
-    # correlation information.  The path to this file is a required argument:
-    cf_file_name = os.path.join(dir, 'acs_I_unrot_sci_20_cf.fits')
-
-    # Then use this file retrieve correlated noise instance that we will use to intialize the
-    # RealGalaxy instances via the `noise_pad` keyword.
-    # We do not change the default COSMOS pixel scale, dx_cosmos=0.03 [arcsec].  The variance does
-    # not need to be set here since the RealGalaxy uses the variance in the real_galaxy_catalog, for
-    # each object, to set this.
-    # Note also that the rng set here will be overridden later by supplying the rng when
-    # initializing the RealGalaxy.
-    correlated_noise = galsim.correlatednoise.getCOSMOSNoise(
-        rng=galsim.BaseDeviate(), file_name=cf_file_name)
 
     # Build the images
     all_images = []
@@ -168,10 +144,7 @@ def main(argv):
         # Initialize the random number generator we will be using.
         rng = galsim.UniformDeviate(random_seed+k)
 
-        # Initialize the RealGalaxy model.  Note that by supplying the rng here we override that
-        # originally supplied when initializing the correlated_noise being used for padding.
-        gal = galsim.RealGalaxy(
-            real_galaxy_catalog, index=k, rng=rng, noise_pad=correlated_noise)
+        gal = galsim.RealGalaxy(real_galaxy_catalog, index = k)
         logger.debug('   Read in training sample galaxy and PSF from file')
         t2 = time.time()
 
@@ -179,7 +152,7 @@ def main(argv):
         gal.setFlux(gal_flux)
 
         # Rotate by a random angle
-        theta = 2. * math.pi * rng() * galsim.radians
+        theta = 2.*math.pi * rng() * galsim.radians
         gal.applyRotation(theta)
 
         # Apply the desired shear
@@ -237,7 +210,7 @@ def main(argv):
     # Now write the image to disk.
     # We write the images to a fits data cube.
     galsim.fits.writeCube(all_images, cube_file_name)
-    logger.info('Wrote image to fits data cube %r', cube_file_name)
+    logger.info('Wrote image to fits data cube %r',cube_file_name)
 
 
 if __name__ == "__main__":

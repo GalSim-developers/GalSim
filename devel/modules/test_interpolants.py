@@ -1,5 +1,6 @@
 """
-A test of the behavior of shear, magnification, shift, rotation, etc for different interpolants and gsparams when applied to RealGalaxy objects.
+A test of the behavior of shear, magnification, shift, rotation, etc for different interpolants and
+gsparams when applied to RealGalaxy objects.
 """
 
 import galsim
@@ -10,7 +11,7 @@ import numpy
 # Interpolants
 interpolant_list = ['cubic', 'quintic', 
                     'lanczos3', 'lanczos4', 'lanczos5', 'lanczos7']
-# use_interpolants may be overwritten here or in main() to only test some of the above interpolants                    
+# use_interpolants may be overwritten here or in main() to only test some of the above interpolants
 use_interpolants = interpolant_list
 # Padding options
 padding_list = range(4,7,2)
