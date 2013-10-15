@@ -3,6 +3,8 @@ Photon vs FFT
 (1) GOAL:
 
 Compare photon sampled images to those rendered by FFT. 
+Repeat this comparison for a range of varied galsim parameters, which control the drawing engines.
+This exploration will allow to find a parameter set which will guarantee accurate image rendering.
 Bias on the FFT rendered shape wrt to photon image shape has to be smaller than m<0.0002.
 
 (2) RUNNING THE TEST
@@ -20,7 +22,7 @@ you can use rebuild_pht=False flag.
 Example command
 python ~/code/GalSim/devel/external/test_photon_vs_fft/photon_vs_fft.py photon_vs_fft.ground.yaml 
 You may want to run the defaults and varied parameters separately.
-For example, to test the FFT parameters I had to compute the default photon images measurement o
+For example, to test the FFT parameters I had to compute the default photon images measurement 
 only once. I used a cluster computer to calculate defaults for photon galaxies,
 and then my desktop to calculate varied_params.
 To do it, I used flags --default_only and --vary_params_only, respectively.
