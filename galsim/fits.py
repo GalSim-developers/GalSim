@@ -888,6 +888,8 @@ class FitsHeader(object):
     _opt_params = { 'dir' : str , 'hdu' : int , 'compression' : str }
     _single_params = []
     _takes_rng = False
+    _takes_logger = False
+
     def __init__(self, file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto'):
         import pyfits     # put this at function scope to keep pyfits optional
     

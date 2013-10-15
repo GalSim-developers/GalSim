@@ -504,7 +504,7 @@ def BuildPSF(config, logger=None, gsparams={}):
     if 'psf' in config:
         if not isinstance(config['psf'], dict):
             raise AttributeError("config.psf is not a dict.")
-        psf = galsim.config.BuildGSObject(config, 'psf', config, gsparams)[0]
+        psf = galsim.config.BuildGSObject(config, 'psf', config, gsparams, logger)[0]
     else:
         psf = None
 
@@ -518,7 +518,7 @@ def BuildPix(config, logger=None, gsparams={}):
     if 'pix' in config: 
         if not isinstance(config['pix'], dict):
             raise AttributeError("config.pix is not a dict.")
-        pix = galsim.config.BuildGSObject(config, 'pix', config, gsparams)[0]
+        pix = galsim.config.BuildGSObject(config, 'pix', config, gsparams, logger)[0]
     else:
         pix = None
 
@@ -533,7 +533,7 @@ def BuildGal(config, logger=None, gsparams={}):
     if 'gal' in config:
         if not isinstance(config['gal'], dict):
             raise AttributeError("config.gal is not a dict.")
-        gal = galsim.config.BuildGSObject(config, 'gal', config, gsparams)[0]
+        gal = galsim.config.BuildGSObject(config, 'gal', config, gsparams, logger)[0]
     else:
         gal = None
     return gal

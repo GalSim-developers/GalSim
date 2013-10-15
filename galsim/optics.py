@@ -146,6 +146,7 @@ class OpticalPSF(GSObject):
         "strut_angle" : galsim.Angle }
     _single_params = []
     _takes_rng = False
+    _takes_logger = False
 
     # --- Public Class methods ---
     def __init__(self, lam_over_diam, defocus=0.,

@@ -779,7 +779,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         full_badpix_image = None
 
     stamp_images = galsim.config.BuildStamps(
-            nobjects=nobjects, config=config, 
+            nobjects=nobjects, config=config,
             nproc=nproc, logger=logger,obj_num=obj_num,
             sky_level_pixel=sky_level_pixel, do_noise=False,
             make_psf_image=make_psf_image,

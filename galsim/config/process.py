@@ -101,7 +101,8 @@ def ProcessInput(config, file_num=0, logger=None):
             config[key] = []
             for field in fields:
                 field['type'], ignore = valid_input_types[key][0:2]
-                input_obj = galsim.config.gsobject._BuildSimple(field, key, config, ignore)[0]
+                input_obj = galsim.config.gsobject._BuildSimple(
+                        field, key, config, ignore, {}, logger)[0]
                 if logger:
                     logger.debug('Built input object %s, %s',key,field['type'])
                     if valid_input_types[key][2]:

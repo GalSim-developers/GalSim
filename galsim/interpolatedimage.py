@@ -234,6 +234,7 @@ class InterpolatedImage(GSObject):
     }
     _single_params = []
     _takes_rng = True
+    _takes_logger = False
     _cache_noise_pad = {}
 
     # --- Public Class methods ---

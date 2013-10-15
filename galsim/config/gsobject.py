@@ -46,7 +46,7 @@ class SkipThisObject(Exception):
         self.msg = message
 
 
-def BuildGSObject(config, key, base=None, gsparams={}):
+def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     """Build a GSObject using config dict for key=key.
 
     @param config     A dict with the configuration information.
@@ -60,6 +60,7 @@ def BuildGSObject(config, key, base=None, gsparams={}):
     @param gsparams   Optionally, provide non-default gsparams items.  Any gsparams specified
                       at this level will be added to the list.  This should be a dict with
                       whatever kwargs should be used in constructing the GSParams object.
+    @param logger     Optionally, provide a logger for logging debug statements.
 
     @returns gsobject, safe 
         gsobject is the built object 
@@ -159,11 +160,11 @@ def BuildGSObject(config, key, base=None, gsparams={}):
     # See if this type has a specialized build function:
     if type in valid_gsobject_types:
         build_func = eval(valid_gsobject_types[type])
-        gsobject, safe = build_func(ck, key, base, ignore, gsparams)
+        gsobject, safe = build_func(ck, key, base, ignore, gsparams, logger)
     # Next, we check if this name is in the galsim dictionary.
     elif type in galsim.__dict__:
         if issubclass(galsim.__dict__[type], galsim.GSObject):
-            gsobject, safe = _BuildSimple(ck, key, base, ignore, gsparams)
+            gsobject, safe = _BuildSimple(ck, key, base, ignore, gsparams, logger)
         else:
             TypeError("Input config type = %s is not a GSObject."%type)
     # Otherwise, it's not a valid type.
@@ -201,13 +202,13 @@ def UpdateGSParams(gsparams, config, key, base):
     return ret
 
 
-def _BuildNone(config, key, base, ignore, gsparams):
+def _BuildNone(config, key, base, ignore, gsparams, logger):
     """@brief Special type=None returns None
     """
     return None, True
 
 
-def _BuildAdd(config, key, base, ignore, gsparams):
+def _BuildAdd(config, key, base, ignore, gsparams, logger):
     """@brief  Build an Add object
     """
     req = { 'items' : list }
@@ -222,7 +223,7 @@ def _BuildAdd(config, key, base, ignore, gsparams):
     safe = True
 
     for i in range(len(items)):
-        gsobject, safe1 = BuildGSObject(items, i, base, gsparams)
+        gsobject, safe1 = BuildGSObject(items, i, base, gsparams, logger)
         # Skip items with flux=0
         if 'flux' in items[i] and galsim.config.value.GetCurrentValue(items[i],'flux') == 0.:
             #print base['obj_num'],'skip -- flux == 0'
@@ -260,7 +261,7 @@ def _BuildAdd(config, key, base, ignore, gsparams):
 
     return gsobject, safe
 
-def _BuildConvolve(config, key, base, ignore, gsparams):
+def _BuildConvolve(config, key, base, ignore, gsparams, logger):
     """@brief  Build a Convolve object
     """
     req = { 'items' : list }
@@ -274,7 +275,7 @@ def _BuildConvolve(config, key, base, ignore, gsparams):
         raise AttributeError("items entry for config.%s entry is not a list."%type)
     safe = True
     for i in range(len(items)):
-        gsobject, safe1 = BuildGSObject(items, i, base, gsparams)
+        gsobject, safe1 = BuildGSObject(items, i, base, gsparams, logger)
         safe = safe and safe1
         gsobjects.append(gsobject)
 
@@ -295,7 +296,7 @@ def _BuildConvolve(config, key, base, ignore, gsparams):
 
     return gsobject, safe
 
-def _BuildList(config, key, base, ignore, gsparams):
+def _BuildList(config, key, base, ignore, gsparams, logger):
     """@brief  Build a GSObject selected from a List
     """
     req = { 'items' : list }
@@ -313,7 +314,7 @@ def _BuildList(config, key, base, ignore, gsparams):
     if index < 0 or index >= len(items):
         raise AttributeError("index %d out of bounds for config.%s"%(index,type))
 
-    gsobject, safe1 = BuildGSObject(items, index, base, gsparams)
+    gsobject, safe1 = BuildGSObject(items, index, base, gsparams, logger)
     safe = safe and safe1
 
     if 'flux' in config:
@@ -324,7 +325,7 @@ def _BuildList(config, key, base, ignore, gsparams):
 
     return gsobject, safe
 
-def _BuildRing(config, key, base, ignore, gsparams):
+def _BuildRing(config, key, base, ignore, gsparams, logger):
     """@brief  Build a GSObject in a Ring
     """
     req = { 'num' : int, 'first' : dict }
@@ -348,7 +349,7 @@ def _BuildRing(config, key, base, ignore, gsparams):
     k = base['seq_index']
     if k % num == 0:
         # Then this is the first in the Ring.  
-        gsobject = BuildGSObject(config, 'first', base, gsparams)[0]
+        gsobject = BuildGSObject(config, 'first', base, gsparams, logger)[0]
     else:
         if not isinstance(config['first'],dict) or 'current_val' not in config['first']:
             raise RuntimeError("Building Ring after the first item, but no current_val stored.")
@@ -357,7 +358,7 @@ def _BuildRing(config, key, base, ignore, gsparams):
     return gsobject, False
 
 
-def _BuildPixel(config, key, base, ignore, gsparams):
+def _BuildPixel(config, key, base, ignore, gsparams, logger):
     """@brief Build a Pixel type GSObject from user input.
     """
     kwargs, safe = galsim.config.GetAllParams(config, key, base, 
@@ -377,7 +378,7 @@ def _BuildPixel(config, key, base, ignore, gsparams):
     return galsim.Pixel(**kwargs), safe
 
 
-def _BuildRealGalaxy(config, key, base, ignore, gsparams):
+def _BuildRealGalaxy(config, key, base, ignore, gsparams, logger):
     """@brief Build a RealGalaxy type GSObject from user input.
     """
     if 'real_catalog' not in base:
@@ -435,7 +436,7 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams):
     return gal, safe
 
 
-def _BuildSimple(config, key, base, ignore, gsparams={}):
+def _BuildSimple(config, key, base, ignore, gsparams, logger):
     """@brief Build a simple GSObject (i.e. one without a specialized _Build function) or
     any other galsim object that defines _req_params, _opt_params and _single_params.
     """
@@ -452,6 +453,7 @@ def _BuildSimple(config, key, base, ignore, gsparams={}):
                                               single = init_func._single_params,
                                               ignore = ignore)
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
+    if logger and init_func._takes_logger: kwargs['logger'] = logger
 
     if init_func._takes_rng:
         if 'rng' not in base:
