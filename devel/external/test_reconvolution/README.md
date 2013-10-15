@@ -3,6 +3,8 @@ Photon vs FFT
 (1) GOAL:
 
 Compare images created using the reconvolution engine with those created by directly. 
+Repeat this comparison for a range of varied galsim parameters, which control the drawing engines.
+This exploration will allow to find a parameter set which will guarantee accurate image rendering.
 Bias on the reconvolved shape wrt to direct shape has to be smaller than m<0.0002.
 
 (2) RUNNING THE TEST
