@@ -17,9 +17,7 @@
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
 
-import time
 import galsim
-
 
 def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
                 xsize=0, ysize=0, sky_level_pixel=None, do_noise=True,
@@ -50,7 +48,8 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
     def worker(input, output):
         proc = current_process().name
         for (kwargs, config, obj_num, nobj, info, logger) in iter(input.get, 'STOP'):
-            logger.debug('%s: Received job to do %d stamps, starting with %d',proc,nobj,obj_num)
+            if logger:
+                logger.debug('%s: Received job to do %d stamps, starting with %d',proc,nobj,obj_num)
             results = []
             # Make new copies of config and kwargs so we can update them without
             # clobbering the versions for other tasks on the queue.
@@ -68,10 +67,12 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
                 # Note: numpy shape is y,x
                 ys, xs = result[0].array.shape
                 t = result[5]
-                logger.info('%s: Stamp %d: size = %d x %d, time = %f sec', 
-                            proc, obj_num+k, xs, ys, t)
+                if logger:
+                    logger.info('%s: Stamp %d: size = %d x %d, time = %f sec', 
+                                proc, obj_num+k, xs, ys, t)
             output.put( (results, info, proc) )
-            logger.debug('%s: Finished job %d -- %d',proc,obj_num,obj_num+nobj-1)
+            if logger:
+                logger.debug('%s: Finished job %d -- %d',proc,obj_num,obj_num+nobj-1)
     
     # The kwargs to pass to build_func.
     # We'll be adding to this below...
@@ -139,12 +140,6 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
             # This formula keeps nobj a multiple of min_nobj, so Rings are intact.
             nobj_per_task = min_nobj * int(math.sqrt(float(max_nobj) / float(min_nobj)))
 
-        # A simple class that is constructed with an arbitrary object.
-        # Then generator() will return that object.
-        class SimpleGenerator:
-            def __init__(self, obj): self._obj = obj
-            def __call__(self): return self._obj
-            
         # The input items can be rather large.  Especially RealGalaxyCatalog.  So it is 
         # unwieldy to copy them in the config file for each process.  Instead we use 
         # something called proxy objects, which are implemented using multiprocessing.BaseMatager.
@@ -156,8 +151,8 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
         # each object we need and with a name (called tag below) and then construct it by
         # calling that tag function.
         # One wrinkle about this is that you can only register classes or callable functions.
-        # Since we already have existing objects, we use the SimpleGenerator above as a function
-        # that just returns the object that we already have.
+        # Since we already have existing objects, we use galsim.utilities.SimpleGenerator as a 
+        # function that just returns the object that we already have.
         class InputManager(BaseManager): pass
         if 'input' in config:
             input = config['input']
@@ -169,7 +164,7 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
                 # Register this object with the manager
                 for i in range(len(config[key])):
                     tag = key + str(i)
-                    input_generators[tag] = SimpleGenerator(input_lists[key][i])
+                    input_generators[tag] = galsim.utilities.SimpleGenerator(input_lists[key][i])
                     InputManager.register(tag, callable = input_generators[tag])
             manager = InputManager()
             manager.start()
@@ -184,7 +179,7 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
         # workers all get a proxy logger which they can use normally.
         class LoggerManager(BaseManager): pass
         if logger:
-            logger_generator = SimpleGenerator(logger)
+            logger_generator = galsim.utilities.SimpleGenerator(logger)
             LoggerManager.register('logger', callable = logger_generator)
             logger_manager = LoggerManager()
             logger_manager.start()
@@ -192,12 +187,12 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
         # Set up the task list
         task_queue = Queue()
         for k in range(0,nobjects,nobj_per_task):
-            # Send kwargs, config, obj_num, nobj, k
             if logger:
                 logger_proxy = logger_manager.logger()
             else:
                 logger_proxy = None
             nobj1 = min(nobj_per_task, nobjects-k)
+            # Send kwargs, config, obj_num, nobj, k, logger
             task_queue.put( ( kwargs, config, obj_num+k, nobj1, k, logger_proxy ) )
 
         # Run the tasks
@@ -231,7 +226,8 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
                 badpix_images[k] = result[3]
                 current_vars[k] = result[4]
                 k += 1
-            logger.debug('%s: Successfully returned results for stamps %d--%d', proc, k0, k-1)
+            if logger:
+                logger.debug('%s: Successfully returned results for stamps %d--%d', proc, k0, k-1)
 
         # Stop the processes
         # The 'STOP's could have been put on the task list before starting the processes, or you
@@ -305,6 +301,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
 
     @return image, psf_image, weight_image, badpix_image, current_var, time
     """
+    import time
     t1 = time.time()
 
     config['seq_index'] = obj_num 

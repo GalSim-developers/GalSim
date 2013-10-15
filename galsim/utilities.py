@@ -99,6 +99,13 @@ def rotate_xy(x, y, theta):
     y_rot = x * sint + y * cost
     return x_rot, y_rot
 
+class SimpleGenerator:
+    """A simple class that is constructed with an arbitrary object.
+    Then generator() will return that object.
+    """
+    def __init__(self, obj): self._obj = obj
+    def __call__(self): return self._obj
+            
 class AttributeDict(object):
     """Dictionary class that allows for easy initialization and refs to key values via attributes.
 

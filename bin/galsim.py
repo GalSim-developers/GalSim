@@ -180,7 +180,7 @@ def main():
         logger.debug('File type specified to be %s', args.file_type)
 
     for config_file in args.config_file:
-        logger.info('Using config file %s', config_file)
+        logger.warn('Using config file %s', config_file)
     
         if args.file_type == 'yaml':
             import yaml

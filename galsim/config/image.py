@@ -44,23 +44,34 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
     """
     import time
     def worker(input, output):
-        for (kwargs, config, image_num, obj_num, nim, info) in iter(input.get, 'STOP'):
+        proc = current_process().name
+        for (kwargs, config, image_num, obj_num, nim, info, logger) in iter(input.get, 'STOP'):
+            if logger:
+                logger.debug('%s: Received job to do %d images, starting with %d',
+                             proc,nim,image_num)
             results = []
             # Make new copies of config and kwargs so we can update them without
             # clobbering the versions for other tasks on the queue.
             import copy
             kwargs1 = copy.copy(kwargs)
             config1 = galsim.config.CopyConfig(config)
-            for i in range(nim):
+            for k in range(nim):
                 t1 = time.time()
                 kwargs1['config'] = config1
-                kwargs1['image_num'] = image_num + i
+                kwargs1['image_num'] = image_num + k
                 kwargs1['obj_num'] = obj_num
+                kwargs1['logger'] = logger
                 im = BuildImage(**kwargs1)
-                obj_num += galsim.config.GetNObjForImage(config, image_num+i)
+                obj_num += galsim.config.GetNObjForImage(config, image_num+k)
                 t2 = time.time()
                 results.append( [im[0], im[1], im[2], im[3], t2-t1 ] )
+                ys, xs = im[0].array.shape
+                if logger:
+                    logger.info('%s: Image %d: size = %d x %d, time = %f sec', 
+                                proc, image_num+k, xs, ys, t2-t1)
             output.put( (results, info, current_process().name) )
+            if logger:
+                logger.debug('%s: Finished job %d -- %d',proc,image_num,image_num+nim-1)
     
     # The kwargs to pass to BuildImage
     kwargs = {
@@ -68,7 +79,6 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
         'make_weight_image' : make_weight_image,
         'make_badpix_image' : make_badpix_image
     }
-    # Apparently the logger isn't picklable, so can't send that as an arg.
 
     if nproc > nimages:
         if logger:
@@ -97,6 +107,7 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
  
     if nproc > 1:
         from multiprocessing import Process, Queue, current_process
+        from multiprocessing.managers import BaseManager
 
         # Initialize the images list to have the correct size.
         # This is important here, since we'll be getting back images in a random order,
@@ -128,15 +139,26 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
             nim_per_task = min_nim * int(math.sqrt(float(max_nim) / float(min_nim)))
         #print 'nim_per_task = ',nim_per_task
 
+        # The logger is not picklable, se we set up a proxy object.  See comments in stamp.py
+        # for more details about how this works.
+        class LoggerManager(BaseManager): pass
+        if logger:
+            logger_generator = galsim.utilities.SimpleGenerator(logger)
+            LoggerManager.register('logger', callable = logger_generator)
+            logger_manager = LoggerManager()
+            logger_manager.start()
+
         # Set up the task list
         task_queue = Queue()
         for k in range(0,nimages,nim_per_task):
-            # Send kwargs, config, im_num, nim, k
-            if k + nim_per_task > nimages:
-                task_queue.put( ( kwargs, config, image_num+k, obj_num, nimages-k, k ) )
+            if logger:
+                logger_proxy = logger_manager.logger()
             else:
-                task_queue.put( ( kwargs, config, image_num+k, obj_num, nim_per_task, k ) )
-            for i in range(nim_per_task):
+                logger_proxy = None
+            nim1 = min(nim_per_task, nimages-k)
+            # Send kwargs, config, im_num, nim, k, logger
+            task_queue.put( ( kwargs, config, image_num+k, obj_num, nim1, k, logger_proxy ) )
+            for i in range(nim1):
                 obj_num += galsim.config.GetNObjForImage(config, image_num+k+i)
 
         # Run the tasks
@@ -156,19 +178,16 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
         # You'll see that these logging statements get print out as the stamp images are still 
         # being drawn.  
         for i in range(0,nimages,nim_per_task):
-            results, k, proc = done_queue.get()
+            results, k0, proc = done_queue.get()
+            k = k0
             for result in results:
                 images[k] = result[0]
                 psf_images[k] = result[1]
                 weight_images[k] = result[2]
                 badpix_images[k] = result[3]
-                if logger:
-                    # Note: numpy shape is y,x
-                    ys, xs = result[0].array.shape
-                    t = result[4]
-                    logger.info('%s: Image %d: size = %d x %d, time = %f sec', 
-                                proc, image_num+k, xs, ys, t)
                 k += 1
+            if logger:
+                logger.debug('%s: Successfully returned results for images %d--%d', proc, k0, k-1)
 
         # Stop the processes
         # The 'STOP's could have been put on the task list before starting the processes, or you

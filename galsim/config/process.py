@@ -18,7 +18,6 @@
 #
 
 import os
-import time
 import galsim
 
 valid_input_types = { 
@@ -91,9 +90,9 @@ def ProcessInput(config, file_num=0, logger=None):
 
         # Read all input fields provided and create the corresponding object
         # with the parameters given in the config file.
-        #print 'valid_input_types = ',valid_input_types
         for key in [ k for k in valid_input_types.keys() if k in input ]:
-            #print 'key = ',key
+            if logger:
+                logger.debug('Process input key %s',key)
             fields = input[key]
 
             # If it's not currently a list, make it a list with one element.
@@ -101,13 +100,12 @@ def ProcessInput(config, file_num=0, logger=None):
 
             config[key] = []
             for field in fields:
-                #print 'field = ',field
                 field['type'], ignore = valid_input_types[key][0:2]
-                #print 'type, ignore = ',field['type'],ignore
                 input_obj = galsim.config.gsobject._BuildSimple(field, key, config, ignore)[0]
-                #print 'input_obj = ',input_obj
-                if logger and  valid_input_types[key][2]:
-                    logger.info('Read %d objects from %s',input_obj.getNObjects(),key)
+                if logger:
+                    logger.debug('Built input object %s, %s',key,field['type'])
+                    if valid_input_types[key][2]:
+                        logger.info('Read %d objects from %s',input_obj.getNObjects(),key)
                 # Store input_obj in the config for use by BuildGSObject function.
                 config[key].append(input_obj)
 
@@ -116,7 +114,7 @@ def ProcessInput(config, file_num=0, logger=None):
         galsim.config.CheckAllParams(input, 'input', ignore=valid_keys)
 
 
-def ProcessInputNObjects(config):
+def ProcessInputNObjects(config, logger=None):
     """Process the input field, just enough to determine the number of objects.
     """
     if 'input' in config:
@@ -124,10 +122,7 @@ def ProcessInputNObjects(config):
         if not isinstance(input, dict):
             raise AttributeError("config.input is not a dict.")
 
-        #print 'valid_input_types = ',valid_input_types
         for key in valid_input_types:
-            #print 'key = ',key
-            #print 'valid_input_types[key] = ',valid_input_types[key]
             has_nobjects = valid_input_types[key][2]
             if key in input and has_nobjects:
                 field = input[key]
@@ -135,9 +130,7 @@ def ProcessInputNObjects(config):
                 # If it's a list, just use the first one.
                 if isinstance(field, list): field = field[0]
 
-                #print 'field = ',field
                 type, ignore = valid_input_types[key][0:2]
-                #print 'type, ignore = ',type,ignore
                 if type in galsim.__dict__:
                     init_func = eval("galsim."+type)
                 else:
@@ -149,7 +142,8 @@ def ProcessInputNObjects(config):
                                                     ignore = ignore)[0]
                 kwargs['nobjects_only'] = True
                 input_obj = init_func(**kwargs)
-                #print 'Found nobjects = %d for %s'%(input_obj.getNOjects(),key)
+                if logger:
+                    logger.debug('Found nobjects = %d for %s',input_obj.getNOjects(),key)
                 return input_obj.getNObjects()
     # If didn't find anything, return None.
     return None
@@ -257,25 +251,36 @@ def Process(config, logger=None):
             if logger:
                 logger.warn("config.output.nproc <= 0, but unable to determine number of cpus.")
             nproc = 1
+
+    def worker(input, output):
+        proc = current_process().name
+        for (kwargs, file_num, file_name, logger) in iter(input.get, 'STOP'):
             if logger:
-                logger.info("Using %d processes",nproc)
-    
+                logger.debug('%s: Received job to do file %d, %s',proc,file_num,file_name)
+            ProcessInput(kwargs['config'], file_num=file_num, logger=logger)
+            if logger:
+                logger.debug('%s: After ProcessInput for file %d',proc,file_num)
+            kwargs['logger'] = logger
+            result = build_func(**kwargs)
+            if logger:
+                logger.debug('%s: After %s for file %d',proc,build_func,file_num)
+            output.put( (result, file_num, file_name, current_process().name) )
+
     # Set up the multi-process worker function if we're going to need it.
     if nproc > 1:
         # NB: See the function BuildStamps for more verbose comments about how
         # the multiprocessing stuff works.
         from multiprocessing import Process, Queue, current_process
+        from multiprocessing.managers import BaseManager
 
-        def worker(input, output):
-            import time
-            for (kwargs, file_num, file_name) in iter(input.get, 'STOP'):
-                #print current_process().name,': worker got: ',file_num,file_name,kwargs
-                ProcessInput(kwargs['config'], file_num=file_num)
-                #print current_process().name,': After ProcessInput for file ',file_num
-                result = build_func(**kwargs)
-                #print current_process().name,': result for ',file_num,' = ',result
-                output.put( (result, file_num, file_name, current_process().name) )
-                #print current_process().name,': put the result for ',file_num,' on output queue'
+        # The logger is not picklable, se we set up a proxy object.  See comments in stamp.py
+        # for more details about how this works.
+        class LoggerManager(BaseManager): pass
+        if logger:
+            logger_generator = galsim.utilities.SimpleGenerator(logger)
+            LoggerManager.register('logger', callable = logger_generator)
+            logger_manager = LoggerManager()
+            logger_manager.start()
 
         # Set up the task list
         task_queue = Queue()
@@ -344,14 +349,14 @@ def Process(config, logger=None):
         if ('skip' in output 
                 and galsim.config.ParseValue(output, 'skip', config, bool)[0]):
             if logger:
-                logger.info('Skipping file %d = %s because output.skip = True',file_num,file_name)
+                logger.warn('Skipping file %d = %s because output.skip = True',file_num,file_name)
             nfiles_use -= 1
             continue
         if ('noclobber' in output 
                 and galsim.config.ParseValue(output, 'noclobber', config, bool)[0]
                 and os.path.isfile(file_name)):
             if logger:
-                logger.info('Skipping file %d = %s because output.noclobber = True' +
+                logger.warn('Skipping file %d = %s because output.noclobber = True' +
                             ' and file exists',file_num,file_name)
             nfiles_use -= 1
             continue
@@ -405,25 +410,31 @@ def Process(config, logger=None):
                 last_file_name[key] = f
             elif 'hdu' in params:
                 kwargs[ extra_key+'_hdu' ] = params['hdu']
-    
+
         # This is where we actually build the file.
         # If we're doing multiprocessing, we send this information off to the task_queue.
         # Otherwise, we just call build_func.
         if nproc > 1:
-            #print 'put task on the queue: ',file_num,file_name,kwargs
-            task_queue.put( (kwargs, file_num, file_name) )
+            if logger:
+                logger_proxy = logger_manager.logger()
+            else:
+                logger_proxy = None
+            task_queue.put( (kwargs, file_num, file_name, logger_proxy) )
         else:
             ProcessInput(kwargs['config'], file_num=file_num, logger=logger)
-            # Apparently the logger isn't picklable, so can't send that for nproc > 1
             kwargs['logger'] = logger 
             t = build_func(**kwargs)
             if logger:
                 logger.warn('File %d = %s: time = %f sec', file_num, file_name, t)
-    #print 'nfiles_use = ',nfiles_use
+    if logger:
+        logger.debug('nfiles_use = %d',nfiles_use)
 
     # If we're doing multiprocessing, here is the machinery to run through the task_queue
     # and process the results.
     if nproc > 1:
+        logger.warn("Using %d processes",nproc)
+        import time
+        t1 = time.time()
         # Run the tasks
         done_queue = Queue()
         p_list = []
@@ -435,7 +446,6 @@ def Process(config, logger=None):
         # Log the results.
         for k in range(nfiles_use):
             t, file_num, file_name, proc = done_queue.get()
-            #print 'received results for ',file_num,file_name,t,proc
             if logger:
                 logger.warn('%s: File %d = %s: time = %f sec', proc, file_num, file_name, t)
 
@@ -445,6 +455,10 @@ def Process(config, logger=None):
         for j in range(nproc):
             p_list[j].join()
         task_queue.close()
+        t2 = time.time()
+        if logger:
+            logger.warn('Total time for %d files with %d processes = %f sec', 
+                        nfiles_use,nproc,t2-t1)
 
     if logger:
         logger.debug('Done building files')
@@ -472,6 +486,7 @@ def BuildFits(file_name, config, logger=None,
 
     @return time      Time taken to build file
     """
+    import time
     t1 = time.time()
 
     # hdus is a dict with hdus[i] = the item in all_images to put in the i-th hdu.
@@ -521,7 +536,6 @@ def BuildFits(file_name, config, logger=None,
     for h in range(len(hdus.keys())):
         assert h in hdus.keys()  # Checked for this above.
         hdulist.append(all_images[hdus[h]])
-        #print 'Add allimages[%d] to hdulist'%hdus[h]
 
     # This next line is ok even if the main image is the only one in the list.
     galsim.fits.writeMulti(hdulist, file_name)
@@ -568,6 +582,7 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
 
     @return time      Time taken to build file
     """
+    import time
     t1 = time.time()
 
     if psf_file_name:
@@ -653,6 +668,7 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
 
     @return time      Time taken to build file
     """
+    import time
     t1 = time.time()
 
     if psf_file_name:
