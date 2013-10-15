@@ -19,7 +19,7 @@ photon_vs_fft_settings :
 # added for the purpose of the photon_vs_fft
 # photon_vs_fft will run once for each value of each listed parameter
 # the results for the input galaxies will be saved to a file with a name
-# 'results.yaml_filename.param_name.param_index.cat'
+# 'results.yaml_filename.param_name.param_index.fft.cat' (or pht for photon)
 # later other scripts can be used to produce plots
 vary_params:
     alias_threshold : 

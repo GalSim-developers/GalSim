@@ -1,4 +1,4 @@
-# if you want, use fewer galaxies
+# if you want, use less galaxies
 n_gals: &n_gals 270
 
 # settings for the photon_vs_fft
@@ -19,7 +19,7 @@ photon_vs_fft_settings :
 # added for the purpose of the photon_vs_fft
 # photon_vs_fft will run once for each value of each listed parameter
 # the results for the input galaxies will be saved to a file with a name
-# 'results.yaml_filename.param_name.param_index.cat'
+# 'results.yaml_filename.param_name.param_index.fft.cat' (or pht for photon)
 # later other scripts can be used to produce plots
 vary_params:
     alias_threshold : 
@@ -32,7 +32,15 @@ vary_params:
         rebuild_pht : False
     kvalue_accuracy : 
         path : ['image','gsparams','kvalue_accuracy']
-        values : [ 1.0e-3 , 1.0e-4 , 1.0e-5 , 1.0e-6 , 1.0e-7 , 1.0e-8 ] 
+        values : [ 1.0e-3 , 1.0e-4 , 1.0e-5 , 1.0e-6 , 1.0e-7 ] 
+        rebuild_pht : False 
+    integration_relerr :
+        path : ['image','gsparams','integration_relerr']
+        values : [ 1e-3 , 1e-4, 1e-5 , 1e-6, 1e-7 ] 
+        rebuild_pht : False 
+    integration_abserr : 
+        path : ['image','gsparams','integration_abserr']
+        values : [ 1e-5 , 1e-6, 1e-7 , 1e-8, 1e-9 ]
         rebuild_pht : False 
 
 
@@ -74,7 +82,7 @@ image :
     noise :
         type : Gaussian
         sigma : 0.         
-    # at this point specify the defaults, but it has to be specified here if will be changed later
+    # at this point specify the defaults, but if has to be specified here if will be changed later
     # using vary_params
     gsparams :
          minimum_fft_size : 128      
@@ -102,3 +110,4 @@ output:
   
 
 
+You have new mail in /var/spool/mail/kacprzak
