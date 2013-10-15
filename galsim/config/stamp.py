@@ -48,25 +48,30 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
     (All in tuple are lists)
     """
     def worker(input, output):
-        for (kwargs, config, obj_num, nobj, info) in iter(input.get, 'STOP'):
-            #print 'Proc %s: Start at stamp %d'%(current_process().name,obj_num)
+        proc = current_process().name
+        for (kwargs, config, obj_num, nobj, info, logger) in iter(input.get, 'STOP'):
+            logger.debug('%s: Received job to do %d stamps, starting with %d',proc,nobj,obj_num)
             results = []
             # Make new copies of config and kwargs so we can update them without
             # clobbering the versions for other tasks on the queue.
             # (The config modifications come in BuildSingleStamp.)
             import copy
-            #print 'Proc %s: Before copy'%current_process().name
             kwargs1 = copy.copy(kwargs)
-            #print 'Proc %s: After copy kwargs'%current_process().name
             config1 = galsim.config.CopyConfig(config)
-            #print 'Proc %s: After copy config'%current_process().name
-            for i in range(nobj):
+            for k in range(nobj):
                 kwargs1['config'] = config1
-                kwargs1['obj_num'] = obj_num + i
-                #print 'Proc %s: Before Build Stamp %d'%(current_process().name,obj_num+i)
-                results.append(BuildSingleStamp(**kwargs1))
-                #print 'Proc %s: Finished Stamp %d'%(current_process().name,obj_num+i)
-            output.put( (results, info, current_process().name) )
+                kwargs1['obj_num'] = obj_num + k
+                kwargs1['logger'] = logger
+                result = BuildSingleStamp(**kwargs1)
+                results.append(result)
+                #print 'Proc %s: Finished Stamp %d'%(proc,obj_num+k)
+                # Note: numpy shape is y,x
+                ys, xs = result[0].array.shape
+                t = result[5]
+                logger.info('%s: Stamp %d: size = %d x %d, time = %f sec', 
+                            proc, obj_num+k, xs, ys, t)
+            output.put( (results, info, proc) )
+            logger.debug('%s: Finished job %d -- %d',proc,obj_num,obj_num+nobj-1)
     
     # The kwargs to pass to build_func.
     # We'll be adding to this below...
@@ -78,7 +83,6 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
         'make_weight_image' : make_weight_image,
         'make_badpix_image' : make_badpix_image
     }
-    # Apparently the logger isn't picklable, so can't send that as an arg.
 
     if nproc > nobjects:
         if logger:
@@ -141,6 +145,19 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
             def __init__(self, obj): self._obj = obj
             def __call__(self): return self._obj
             
+        # The input items can be rather large.  Especially RealGalaxyCatalog.  So it is 
+        # unwieldy to copy them in the config file for each process.  Instead we use 
+        # something called proxy objects, which are implemented using multiprocessing.BaseMatager.
+        # See http://docs.python.org/2/library/multiprocessing.html
+        # The real object is stored in the input_lists dict here in the base process.
+        # Each worker process gets a proxy object which is able to call public functions
+        # in the real object via multiprocessing communication channels.  (A Pipe, I believe.)
+        # The BaseManager base class handles all the details.  We just need to register
+        # each object we need and with a name (called tag below) and then construct it by
+        # calling that tag function.
+        # One wrinkle about this is that you can only register classes or callable functions.
+        # Since we already have existing objects, we use the SimpleGenerator above as a function
+        # that just returns the object that we already have.
         class InputManager(BaseManager): pass
         if 'input' in config:
             input = config['input']
@@ -162,14 +179,26 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
                     tag = key + str(i)
                     config[key][i] = getattr(manager,tag)()
 
+        # The logger is not picklable, so we use the same trick for it to allow the worker
+        # processes to log their progress.  The real logger stays in this process, and the 
+        # workers all get a proxy logger which they can use normally.
+        class LoggerManager(BaseManager): pass
+        if logger:
+            logger_generator = SimpleGenerator(logger)
+            LoggerManager.register('logger', callable = logger_generator)
+            logger_manager = LoggerManager()
+            logger_manager.start()
+
         # Set up the task list
         task_queue = Queue()
         for k in range(0,nobjects,nobj_per_task):
             # Send kwargs, config, obj_num, nobj, k
-            if k + nobj_per_task > nobjects:
-                task_queue.put( ( kwargs, config, obj_num+k, nobjects-k, k ) )
+            if logger:
+                logger_proxy = logger_manager.logger()
             else:
-                task_queue.put( ( kwargs, config, obj_num+k, nobj_per_task, k ) )
+                logger_proxy = None
+            nobj1 = min(nobj_per_task, nobjects-k)
+            task_queue.put( ( kwargs, config, obj_num+k, nobj1, k, logger_proxy ) )
 
         # Run the tasks
         # Each Process command starts up a parallel process that will keep checking the queue 
@@ -193,20 +222,16 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
         # You'll see that these logging statements get print out as the stamp images are still 
         # being drawn.  
         for i in range(0,nobjects,nobj_per_task):
-            results, k, proc = done_queue.get()
+            results, k0, proc = done_queue.get()
+            k = k0
             for result in results:
                 images[k] = result[0]
                 psf_images[k] = result[1]
                 weight_images[k] = result[2]
                 badpix_images[k] = result[3]
                 current_vars[k] = result[4]
-                if logger:
-                    # Note: numpy shape is y,x
-                    ys, xs = result[0].array.shape
-                    t = result[5]
-                    logger.info('%s: Stamp %d: size = %d x %d, time = %f sec', 
-                                proc, obj_num+k, xs, ys, t)
                 k += 1
+            logger.debug('%s: Successfully returned results for stamps %d--%d', proc, k0, k-1)
 
         # Stop the processes
         # The 'STOP's could have been put on the task list before starting the processes, or you
