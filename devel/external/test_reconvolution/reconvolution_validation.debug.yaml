@@ -1,3 +1,7 @@
+# reconvolution_validation.debug.yaml is a configuration script for use with reconvolution_validation.py.
+# this is a debug script which runs faster than the regular production script reconvolution_validation.yaml.
+# For more help text, see reconvolution_validation.yaml, README.md and reconvolution_validation.py.
+
 reconvolution_validation_settings:
     n_gals : &n_gals 10
     n_shears : &n_shears 8
