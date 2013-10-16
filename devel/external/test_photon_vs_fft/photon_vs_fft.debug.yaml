@@ -11,8 +11,6 @@ photon_vs_fft_settings :
     abs_tol_ellip : 1e-3
     # will repeat noise realisations until this accuracy on size is reached
     abs_tol_size :  1e-3
-    # number of noise realisations per iteration
-    n_trials_per_iter : 32 
     # number of photons to shoot per iteration
     n_photons_per_trial : 1e6
 
