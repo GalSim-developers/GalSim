@@ -1823,4 +1823,3 @@ class DeVaucouleurs(GSObject):
         """
         return self.SBProfile.getScaleRadius()
 
-

@@ -1,0 +1,13 @@
+This directory contains a number of scripts useful for testing GalSim functionality, but not necessary and/or feasible to run as unit tests; it also contains documentation on some of the GalSim developers' scientific choices.
+
+---Interpolation---
+
+finterp.pdf: a document by Gary Bernstein and Daniel Gruen describing some of the basic theoretical underpinnings of interpolation choice and doing some basic testing.
+
+test_interpolants.py: a script to test the deviations from expected behavior of the x- and k-space interpolants for the RealGalaxy class.
+
+test_interpolants_parametric.py: a script to perform the same tests as test_interpolants.py, but using as images InterpolatedImages constructed from parametric Sersics instead.
+
+plot_test_interpolants.py: makes readable graphs from the output of the previous two scripts.
+
+atmos_factfinding.pdf: a document by Barney Rowe and Joerg Dietrich outlining an early exploration of possibilities for writing our own atmospheric PSF model based on Gaussian random field realizations of phase screens, see https://github.com/GalSim-developers/GalSim/issues/169.
