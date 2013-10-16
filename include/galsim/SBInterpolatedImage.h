@@ -177,7 +177,7 @@ namespace galsim {
      * usage.
      *
      * There is also an optional argument for the pixel size (default is to get it from
-     * the image)
+     * the image).
      *
      * You can also make an SBInterpolatedImage as a weighted sum of several images
      * using MultipleImageHelper.  This helper object holds the images and their fourier
