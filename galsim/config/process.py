@@ -466,7 +466,7 @@ def Process(config, logger=None):
             t, file_num, file_name, proc = done_queue.get()
             if isinstance(t,Exception):
                 # t is really the exception, e
-                # proc is reall the traceback
+                # proc is really the traceback
                 if logger:
                     logger.error('Exception caught for file %d = %s', file_num, file_name)
                     logger.error('%s',proc)

@@ -183,13 +183,13 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
         # In the meanwhile, the main process keeps going.  We pull each set of images off of the 
         # done_queue and put them in the appropriate place in the lists.
         # This loop is happening while the other processes are still working on their tasks.
-        # You'll see that these logging statements get print out as the stamp images are still 
+        # You'll see that these logging statements get printed out as the stamp images are still 
         # being drawn.  
         for i in range(0,nimages,nim_per_task):
             results, k0, proc = done_queue.get()
             if isinstance(results,Exception):
                 # results is really the exception, e
-                # proc is reall the traceback
+                # proc is really the traceback
                 if logger:
                     logger.error('Exception caught during job starting with image %d', k0)
                     logger.error('%s',proc)

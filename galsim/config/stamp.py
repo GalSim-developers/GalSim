@@ -151,7 +151,7 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
 
         # The input items can be rather large.  Especially RealGalaxyCatalog.  So it is 
         # unwieldy to copy them in the config file for each process.  Instead we use 
-        # something called proxy objects, which are implemented using multiprocessing.BaseMatager.
+        # something called proxy objects, which are implemented using multiprocessing.BaseManager.
         # See http://docs.python.org/2/library/multiprocessing.html
         # The real object is stored in the input_lists dict here in the base process.
         # Each worker process gets a proxy object which is able to call public functions
@@ -229,7 +229,7 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
             results, k0, proc = done_queue.get()
             if isinstance(results,Exception):
                 # results is really the exception, e
-                # proc is reall the traceback
+                # proc is really the traceback
                 if logger:
                     logger.error('Exception caught during job starting with stamp %d', k0)
                     logger.error('%s',proc)

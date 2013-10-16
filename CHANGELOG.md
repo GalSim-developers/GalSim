@@ -63,4 +63,4 @@ Changes from v0.5 to current version:
 
 * Sped up the OpticalPSF and RealGalaxy calculations significantly.  (Issue #466, #474)
 
-* Added `output.skip` and `output.noclobber` options.  c.f. demo9.yaml.  (Issue #474)
+* Added `output.skip` and `output.noclobber` options to config.  c.f. demo9.yaml.  (Issue #474)
