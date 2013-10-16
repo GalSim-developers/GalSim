@@ -30,6 +30,7 @@
 #include "boost/python/stl_iterator.hpp"
 
 #include "SBProfile.h"
+#include "FFT.h"  // For goodFFTSize
 
 namespace bp = boost::python;
 
@@ -264,7 +265,7 @@ namespace galsim {
                      (bp::arg("s")))
                 .def("applyRotation", &SBProfile::applyRotation, bp::args("theta"))
                 .def("applyShift", &SBProfile::applyShift, bp::args("dx", "dy"))
-                .def("applyScale", &SBProfile::applyScale, bp::args("scale"))
+                .def("applyExpansion", &SBProfile::applyExpansion, bp::args("scale"))
                 .def("shoot", &SBProfile::shoot, bp::args("n", "u"))
                 ;
             wrapTemplates<float>(pySBProfile);
@@ -278,6 +279,9 @@ namespace galsim {
     {
         PySBProfile::wrap();
         PyGSParams::wrap();
+
+        bp::def("goodFFTSize", &goodFFTSize, (bp::arg("input_size")),
+                "Round up to the next larger 2^n or 3x2^n.");
     }
 
 } // namespace galsim

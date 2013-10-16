@@ -148,7 +148,7 @@ namespace galsim {
     {
     public:
 
-        SBAutoConvolveImpl(const SBProfile& s, const GSParamsPtr& gsparams);
+        SBAutoConvolveImpl(const SBProfile& s, bool real_space, const GSParamsPtr& gsparams);
 
         ~SBAutoConvolveImpl() {}
 
@@ -159,8 +159,8 @@ namespace galsim {
 
         bool isAxisymmetric() const { return _adaptee.isAxisymmetric(); }
         bool hasHardEdges() const { return false; }
-        bool isAnalyticX() const { return false; }
-        bool isAnalyticK() const { return true; }    // convolvees must all meet this
+        bool isAnalyticX() const { return _real_space; }
+        bool isAnalyticK() const { return !_real_space; }
         double maxK() const { return _adaptee.maxK(); }
         double stepK() const { return _adaptee.stepK() / sqrt(2.); }
 
@@ -181,9 +181,11 @@ namespace galsim {
                         double x0, double dx, double dxy,
                         double y0, double dy, double dyx) const;
 
+        const SBProfile& getAdaptee() const { return _adaptee; }
 
     private:
         SBProfile _adaptee;
+        bool _real_space;
 
         template <typename T>
         static T SQR(T x) { return x*x; }
@@ -197,7 +199,7 @@ namespace galsim {
     {
     public:
 
-        SBAutoCorrelateImpl(const SBProfile& s, const GSParamsPtr& gsparams);
+        SBAutoCorrelateImpl(const SBProfile& s, bool real_space, const GSParamsPtr& gsparams);
 
         ~SBAutoCorrelateImpl() {}
 
@@ -208,8 +210,8 @@ namespace galsim {
 
         bool isAxisymmetric() const { return _adaptee.isAxisymmetric(); }
         bool hasHardEdges() const { return false; }
-        bool isAnalyticX() const { return false; }
-        bool isAnalyticK() const { return true; }    // convolvees must all meet this
+        bool isAnalyticX() const { return _real_space; }
+        bool isAnalyticK() const { return !_real_space; }
         double maxK() const { return _adaptee.maxK(); }
         double stepK() const { return _adaptee.stepK() / sqrt(2.); }
 
@@ -230,8 +232,11 @@ namespace galsim {
                         double x0, double dx, double dxy,
                         double y0, double dy, double dyx) const;
 
+        const SBProfile& getAdaptee() const { return _adaptee; }
+
     private:
         SBProfile _adaptee;
+        bool _real_space;
 
         template <typename T>
         static T SQR(T x) { return x*x; }

@@ -198,7 +198,7 @@ namespace galsim {
          * However, we don't make it pure virtual, since we want to be able to make
          * BaseDeviate objects a direct way to define a common seed for other Deviates.
          */
-        double operator()() { return val(); }
+        double operator()() { return _val(); }
 
    protected:
 
@@ -207,7 +207,7 @@ namespace galsim {
         // This is the virtual function that is actually overridden.  This is because 
         // some derived classes prefer to return an int.  (e.g. Binom, Poisson)
         // So this provides the interface that returns a double.
-        virtual double val() 
+        virtual double _val() 
         { throw std::runtime_error("Cannot draw random values from a pure BaseDeviate object."); }
 
         /**
@@ -251,7 +251,7 @@ namespace galsim {
         void clearCache() { _urd.reset(); }
 
     protected:
-        double val() { return operator()(); }
+        double _val() { return operator()(); }
 
     private:
         boost::random::uniform_real_distribution<> _urd;
@@ -343,7 +343,7 @@ namespace galsim {
         void clearCache() { _normal.reset(); }
 
     protected:
-        double val() { return operator()(); }
+        double _val() { return operator()(); }
 
     private:
         boost::random::normal_distribution<> _normal;
@@ -434,7 +434,7 @@ namespace galsim {
         void clearCache() { _bd.reset(); }
 
     protected:
-        double val() { return double(operator()()); }
+        double _val() { return double(operator()()); }
 
     private:
         boost::random::binomial_distribution<> _bd;
@@ -504,7 +504,7 @@ namespace galsim {
         void clearCache() { _pd.reset(); }
 
     protected:
-        double val() { return double(operator()()); }
+        double _val() { return double(operator()()); }
 
     private:
         boost::random::poisson_distribution<> _pd;
@@ -602,7 +602,7 @@ namespace galsim {
         void clearCache() { _weibull.reset(); }
 
     protected:
-        double val() { return operator()(); }
+        double _val() { return operator()(); }
 
     private:
         boost::random::weibull_distribution<> _weibull;
@@ -698,7 +698,7 @@ namespace galsim {
         void clearCache() { _gamma.reset(); }
 
     protected:
-        double val() { return operator()(); }
+        double _val() { return operator()(); }
 
     private:
         // Note: confusingly, boost calls the internal values alpha and beta, even though they
@@ -775,7 +775,7 @@ namespace galsim {
         void clearCache() { _chi_squared.reset(); }
 
     protected:
-        double val() { return operator()(); }
+        double _val() { return operator()(); }
 
     private:
         boost::random::chi_squared_distribution<> _chi_squared;

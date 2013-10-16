@@ -60,8 +60,7 @@ class RealGalaxy(GSObject):
     
         real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index=None, id=None, random=False, 
                                         rng=None, x_interpolant=None, k_interpolant=None,
-                                        flux=None, pad_factor = 0, noise_pad=False, pad_image=None,
-                                        use_cache = True)
+                                        flux=None, pad_factor=4, noise_pad_size=0)
 
     This initializes real_galaxy with three InterpolatedImage objects (one for the deconvolved
     galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
@@ -69,10 +68,12 @@ class RealGalaxy(GSObject):
     options, e.g., to choose at random but accounting for the non-constant weight factors
     (probabilities for objects to make it into the training sample).  
 
-    Note that preliminary tests suggest that for optimal balance between accuracy and speed,
-    `k_interpolant` and `pad_factor` should be kept at their default values.  The user should be
-    aware that significant inaccuracy can result from using other combinations of these parameters;
-    see devel/modules/finterp.pdf, especially table 1, in the GalSim repository.
+    Note that tests suggest that for optimal balance between accuracy and speed,`k_interpolant` and
+    `pad_factor` should be kept at their default values.  The user should be aware that significant 
+    inaccuracy can result from using other combinations of these parameters; see 
+    devel/modules/finterp.pdf, especially table 1, in the GalSim repository, and comment
+    https://github.com/GalSim-developers/GalSim/issues/389#issuecomment-26166621 and following
+    comments. 
 
     @param real_galaxy_catalog  A RealGalaxyCatalog object with basic information about where to
                                 find the data, etc.
@@ -89,7 +90,7 @@ class RealGalaxy(GSObject):
                                 indicating which real-space interpolant should be used.  Options 
                                 are 'nearest', 'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' 
                                 where N should be the integer order to use. [default 
-                                `x_interpolant = galsim.Lanczos(5,...)'].
+                                `x_interpolant = galsim.Quintic()'].
     @param k_interpolant        Either an Interpolant2d (or Interpolant) instance or a string 
                                 indicating which k-space interpolant should be used.  Options are 
                                 'nearest', 'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' 
@@ -99,44 +100,15 @@ class RealGalaxy(GSObject):
     @param flux                 Total flux, if None then original flux in galaxy is adopted without
                                 change [default `flux = None`].
     @param pad_factor           Factor by which to pad the Image when creating the
-                                InterpolatedImage; `pad_factor <= 0` results in the use of the
-                                default value, 4.  We strongly recommend leaving this parameter at
-                                its default value; see text above for details.
-                                [Default `pad_factor = 0`.]
-    @param noise_pad            Pad the Interpolated image with zeros, or with noise of a level 
-                                specified in the training dataset?  There are several options here: 
-                                    Use `noise_pad = False` if you wish to pad with zeros.
-                                    Use `noise_pad = True` if you wish to pad with uncorrelated
-                                        noise of the proper variance.
-                                    Set `noise_pad` equal to a galsim.CorrelatedNoise, an Image, or
-                                        a filename containing an Image of an example noise field
-                                        that will be used to calculate the noise power spectrum and
-                                        generate noise in the padding region.  Any random number
-                                        generator passed to the `rng` keyword will take precedence
-                                        over that carried in an input galsim.CorrelatedNoise.
-                                In the last case, if the same file is used repeatedly, then use of
-                                the `use_cache` keyword (see below) can be used to prevent the need
-                                for repeated galsim.CorrelatedNoise initializations.
-                                [default `noise_pad = False`]
-    @param pad_image            Image to be used for deterministically padding the original image.
-                                This can be specified in two ways:
-                                   (a) as a galsim.Image; or
-                                   (b) as a string which is interpreted as a filename containing an
-                                       image to use.
-                                The size of the image that is passed in is taken to specify the
-                                amount of padding, and so the `pad_factor` keyword should be equal
-                                to 1, i.e., no padding.  The `pad_image` scale is ignored, and taken
-                                to be equal to that of the `image`. Note that `pad_image` can be
-                                used together with `noise_pad`.  However, the user should be careful
-                                to ensure that the image used for padding has roughly zero mean.
-                                The purpose of this keyword is to allow for a more flexible
-                                representation of some noise field around an object; if the user
-                                wishes to represent the sky level around an object, they should do
-                                that when they have drawn the final image instead.  (Default
-                                `pad_image = None`.)
-    @param use_cache            Specify whether to cache noise_pad read in from a file to save
-                                having to build an CorrelatedNoise repeatedly from the same image.
-                                (Default `use_cache = True`)
+                                InterpolatedImage.  We strongly recommend leaving this parameter
+                                at its default value; see text above for details.
+                                [Default `pad_factor = 4`.]
+    @param noise_pad_size       If provided, the image will be padded out to this size (in arcsec)
+                                with the noise specified in the real galaxy catalog. This is 
+                                important if you are planning to whiten the resulting image.  You 
+                                want to make sure that the padded image is larger than the postage 
+                                stamp onto which you are drawing this object.  
+                                [Default `noise_pad_size = None`.]
     @param gsparams             You may also specify a gsparams argument.  See the docstring for
                                 galsim.GSParams using help(galsim.GSParams) for more information
                                 about this option.
@@ -150,24 +122,27 @@ class RealGalaxy(GSObject):
     # Initialization parameters of the object, with type information
     _req_params = {}
     _opt_params = { "x_interpolant" : str ,
-                    "k_interpolant" : str,
+                    "k_interpolant" : str ,
                     "flux" : float ,
                     "pad_factor" : float,
-                    "noise_pad" : str,
-                    "pad_image" : str}
+                    "noise_pad_size" : float,
+                  }
     _single_params = [ { "index" : int , "id" : str } ]
     _takes_rng = True
-    _cache_noise_pad = {}
-    _cache_variance = {}
 
     # --- Public Class methods ---
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
-                 rng=None, x_interpolant=None, k_interpolant=None, flux=None, pad_factor=0,
-                 noise_pad=False, pad_image=None, use_cache=True, gsparams=None):
+                 rng=None, x_interpolant=None, k_interpolant=None, flux=None, pad_factor=4,
+                 noise_pad_size=0, gsparams=None):
 
         import pyfits
         import numpy as np
 
+        if rng is None:
+            rng = galsim.BaseDeviate()
+        elif not isinstance(rng, galsim.BaseDeviate):
+            raise TypeError("The rng provided to RealGalaxy constructor is not a BaseDeviate")
+ 
         # Code block below will be for galaxy selection; not all are currently implemented.  Each
         # option must return an index within the real_galaxy_catalog.        
         if index is not None:
@@ -179,62 +154,55 @@ class RealGalaxy(GSObject):
                 raise AttributeError('Too many methods for selecting a galaxy!')
             use_index = real_galaxy_catalog._get_index_for_id(id)
         elif random is True:
-            if rng is None:
-                uniform_deviate = galsim.UniformDeviate()
-            elif isinstance(rng, galsim.BaseDeviate):
-                uniform_deviate = galsim.UniformDeviate(rng)
-            else:
-                raise TypeError("The rng provided to RealGalaxy constructor is not a BaseDeviate")
+            uniform_deviate = galsim.UniformDeviate(rng)
             use_index = int(real_galaxy_catalog.nobjects * uniform_deviate()) 
         else:
             raise AttributeError('No method specified for selecting a galaxy!')
 
         # read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors.
-        gal_image = real_galaxy_catalog.getGal(use_index)
-        PSF_image = real_galaxy_catalog.getPSF(use_index)
-
-        # RealGalaxy uses a different default interpolant than InterpolatedImage, so set it here.
-        if x_interpolant is None:
-            lan5 = galsim.Lanczos(5, conserve_flux=True, tol=1.e-4)
-            x_interpolant = galsim.InterpolantXY(lan5)
+        self.gal_image = real_galaxy_catalog.getGal(use_index)
+        self.PSF_image = real_galaxy_catalog.getPSF(use_index)
+        self.noise = real_galaxy_catalog.getNoise(use_index, rng, gsparams)
 
         # save any other relevant information as instance attributes
         self.catalog_file = real_galaxy_catalog.file_name
         self.index = use_index
         self.pixel_scale = float(real_galaxy_catalog.pixel_scale[use_index])
 
-        # handle noise-padding options
-        try:
-            noise_pad = galsim.config.value._GetBoolValue(noise_pad,'')
-            # If it's a bool, set it to the correct noise level from the catalog.
-            if noise_pad:
-                noise_pad = float(real_galaxy_catalog.variance[use_index])
-            else:
-                noise_pad = 0.
-        except:
-            # If it's not a bool, or convertible to a bool, leave it alone.
-            pass
+        # Convert noise_pad to the right noise to pass to InterpolatedImage
+        if noise_pad_size:
+            noise_pad = self.noise
+        else:
+            noise_pad = 0.
 
+        # Build the InterpolatedImage of the PSF.
+        self.original_PSF = galsim.InterpolatedImage(
+            self.PSF_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant, 
+            flux=1.0, dx=self.pixel_scale, gsparams=gsparams)
+
+        # Build the InterpolatedImage of the galaxy.
+        # Use the stepK() value of the PSF as a maximum value for stepK of the galaxy.
+        # (Otherwise, low surface brightness galaxies can get a spuriously high stepk, which
+        # leads to problems.)
         self.original_image = galsim.InterpolatedImage(
-                gal_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant,
-                dx=self.pixel_scale, pad_factor=pad_factor, noise_pad=noise_pad, rng=rng,
-                pad_image=pad_image, use_cache=use_cache, gsparams=gsparams)
+                self.gal_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant,
+                dx=self.pixel_scale, pad_factor=pad_factor, noise_pad_size=noise_pad_size,
+                calculate_stepk=self.original_PSF.stepK(),
+                calculate_maxk=self.original_PSF.maxK(),
+                noise_pad=noise_pad, rng=rng, gsparams=gsparams)
+
         # If flux is None, leave flux as given by original image
         if flux != None:
             self.original_image.setFlux(flux)
-
-        # also make the original PSF image, with far less fanfare: we don't need to pad with
-        # anything interesting.
-        self.original_PSF = galsim.InterpolatedImage(
-            PSF_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant, 
-            flux=1.0, dx=self.pixel_scale, gsparams=gsparams)
-        #self.original_PSF.setFlux(1.0)
 
         # Calculate the PSF "deconvolution" kernel
         psf_inv = galsim.Deconvolve(self.original_PSF, gsparams=gsparams)
         # Initialize the SBProfile attribute
         GSObject.__init__(
             self, galsim.Convolve([self.original_image, psf_inv], gsparams=gsparams))
+
+        # Save the noise in the image as an accessible attribute
+        self.noise.convolveWith(psf_inv, gsparams)
 
     def getHalfLightRadius(self):
         raise NotImplementedError("Half light radius calculation not implemented for RealGalaxy "
@@ -310,17 +278,20 @@ class RealGalaxyCatalog(object):
                       If a path (a string containing `/`), it is the full path to the directory
                       containing the galaxy/PDF images.
     @param dir        The directory of catalog file (optional).
-    @param preload    Whether to preload the header information. (default `preload = False`)
+    @param preload    Whether to preload the header information. [Default `preload = False`]
+    @param noise_dir  The directory of the noise files if different from the directory of the 
+                      image files.  [Default `noise_dir = image_dir`]
     """
     _req_params = { 'file_name' : str }
-    _opt_params = { 'image_dir' : str , 'dir' : str, 'preload' : bool }
+    _opt_params = { 'image_dir' : str , 'dir' : str, 'preload' : bool, 'noise_dir' : str }
     _single_params = []
     _takes_rng = False
 
     # nobject_only is an intentionally undocumented kwarg that should be used only by
     # the config structure.  It indicates that all we care about is the nobjects parameter.
     # So skip any other calculations that might normally be necessary on construction.
-    def __init__(self, file_name, image_dir=None, dir=None, preload=False, nobjects_only=False):
+    def __init__(self, file_name, image_dir=None, dir=None, preload=False, nobjects_only=False,
+                 noise_dir=None):
         import os
         # First build full file_name
         if dir is None:
@@ -339,6 +310,12 @@ class RealGalaxyCatalog(object):
                 self.image_dir = os.path.join(dir,image_dir)
         if not os.path.isdir(self.image_dir):
             raise RuntimeError(self.image_dir+' directory does not exist!')
+        if noise_dir is None:
+            self.noise_dir = self.image_dir
+        else:
+            if not os.path.isdir(noise_dir):
+                raise RuntimeError(noise_dir+' directory does not exist!')
+            self.noise_dir = noise_dir
 
         import pyfits
         cat = pyfits.getdata(self.file_name)
@@ -351,6 +328,12 @@ class RealGalaxyCatalog(object):
         self.ident = [ "%s"%val for val in ident ]
         self.gal_file_name = cat.field('gal_filename') # file containing the galaxy image
         self.PSF_file_name = cat.field('PSF_filename') # file containing the PSF image
+        # We don't require the noise_filename column.  If it is not present, we will use
+        # Uncorrelated noise based on the variance column.
+        try:
+            self.noise_file_name = cat.field('noise_filename') # file containing the noise cf
+        except:
+            self.noise_file_name = None
         self.gal_hdu = cat.field('gal_hdu') # HDU containing the galaxy image
         self.PSF_hdu = cat.field('PSF_hdu') # HDU containing the PSF image
         self.pixel_scale = cat.field('pixel_scale') # pixel scale for image (could be different
@@ -364,6 +347,7 @@ class RealGalaxyCatalog(object):
 
         self.preloaded = False
         self.do_preload = preload
+        self.saved_noise_im = {}
 
         # eventually I think we'll want information about the training dataset, 
         # i.e. (dataset, ID within dataset)
@@ -390,13 +374,13 @@ class RealGalaxyCatalog(object):
         """
         import pyfits
         import os
+        import numpy
         self.preloaded = True
         self.loaded_files = {}
-        for file_name in self.gal_file_name:
-            if file_name not in self.loaded_files:
-                full_file_name = os.path.join(self.image_dir,file_name)
-                self.loaded_files[file_name] = pyfits.open(full_file_name)
-        for file_name in self.PSF_file_name:
+        for file_name in numpy.concatenate((self.gal_file_name , self.PSF_file_name)):
+            # numpy sometimes add a space at the end of the string that is not present in 
+            # the original file.  Stupid.  But this next line removes it.
+            file_name = file_name.strip()
             if file_name not in self.loaded_files:
                 full_file_name = os.path.join(self.image_dir,file_name)
                 self.loaded_files[file_name] = pyfits.open(full_file_name)
@@ -437,6 +421,39 @@ class RealGalaxyCatalog(object):
             array = pyfits.getdata(file_name,self.PSF_hdu[i])
         return galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
 
+    def getNoise(self, i, rng=None, gsparams=None):
+        """Returns the noise cf at index `i` as a CorrelatedNoise object.
+        """
+        if self.noise_file_name is None:
+            cf = galsim.UncorrelatedNoise(rng, self.pixel_scale[i], self.variance[i], gsparams)
+
+        else:
+
+            if i >= len(self.noise_file_name):
+                raise IndexError(
+                    'index %d given to getNoise is out of range (0..%d)'%(
+                        i,len(self.noise_file_name)-1))
+
+            if self.noise_file_name[i] in self.saved_noise_im:
+                im = self.saved_noise_im[self.noise_file_name[i]]
+            else:
+                import pyfits
+                import os
+                import numpy
+
+                file_name = os.path.join(self.noise_dir,self.noise_file_name[i])
+                array = pyfits.getdata(file_name)
+                im = galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
+                self.saved_noise_im[self.noise_file_name[i]] = im
+
+            cf = galsim.correlatednoise._BaseCorrelatedNoise(
+                rng, galsim.InterpolatedImage(im, dx=self.pixel_scale[i], normalization="sb",
+                                                calculate_stepk=False, calculate_maxk=False,
+                                                x_interpolant='linear', gsparams=gsparams))
+            cf.setVariance(self.variance[i])
+
+        return cf
+
 
 def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotation_angle=None, 
             rand_rotate=True, rng=None, target_flux=1000.0, image=None):
@@ -460,8 +477,8 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     @param target_PSF          The target PSF, either one of our base classes or an ImageView/Image.
     @param target_pixel_scale  The pixel scale for the final image, in arcsec.
     @param g1                  First component of shear to impose (components defined with respect
-                               to pixel coordinates), default `g1 = 0.`
-    @param g2                  Second component of shear to impose, default `g2 = 0.`
+                               to pixel coordinates), [Default `g1 = 0.`]
+    @param g2                  Second component of shear to impose, [Default `g2 = 0.`]
     @param rotation_angle      Angle by which to rotate the galaxy (must be a galsim.Angle 
                                instance).
     @param rand_rotate         If `rand_rotate = True` (default) then impose a random rotation on 
@@ -469,8 +486,8 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     @param rng                 A random number generator to use for selection of the random 
                                rotation angle. (optional, may be any kind of galsim.BaseDeviate 
                                or None)
-    @param target_flux         The target flux in the output galaxy image, default 
-                               `target_flux = 1000.`
+    @param target_flux         The target flux in the output galaxy image, [Default 
+                               `target_flux = 1000.`]
     @param image               As with the GSObject.draw() function, if an image is provided,
                                then it will be used and returned.
                                If `image=None`, then an appropriately sized image will be created.
@@ -479,25 +496,12 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     # do some checking of arguments
     if not isinstance(real_galaxy, galsim.RealGalaxy):
         raise RuntimeError("Error: simReal requires a RealGalaxy!")
-    for Class in galsim.Image.itervalues():
+    for Class in galsim.Image.values() + galsim.ImageView.values():
         if isinstance(target_PSF, Class):
-            lan5 = galsim.Lanczos(5, conserve_flux = True, tol = 1.e-4)
-            interp2d = galsim.InterpolantXY(lan5)
-            target_PSF = galsim.InterpolatedImage(
-                target_PSF.view(), x_interpolant=interp2d, dx = target_pixel_scale)
+            target_PSF = galsim.InterpolatedImage(target_PSF.view(), dx=target_pixel_scale)
             break
-    for Class in galsim.ImageView.itervalues():
-        if isinstance(target_PSF, Class):
-            lan5 = galsim.Lanczos(5, conserve_flux = True, tol = 1.e-4)
-            interp2d = galsim.InterpolantXY(lan5)
-            target_PSF = galsim.InterpolatedImage(target_PSF,
-                                                  x_interpolant=interp2d,
-                                                  dx=target_pixel_scale)
-            break
-    if isinstance(target_PSF, galsim.GSObject):
-        target_PSF = target_PSF.SBProfile
-    if not isinstance(target_PSF, galsim.SBProfile):
-        raise RuntimeError("Error: target PSF is not an Image, ImageView, SBProfile, or GSObject!")
+    if not isinstance(target_PSF, galsim.GSObject):
+        raise RuntimeError("Error: target PSF is not an Image, ImageView, or GSObject!")
     if rotation_angle != None and not isinstance(rotation_angle, galsim.Angle):
         raise RuntimeError("Error: specified rotation angle is not an Angle instance!")
     if (target_pixel_scale < real_galaxy.pixel_scale):
@@ -535,7 +539,7 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
         real_galaxy_copy.applyShear(g1=g1, g2=g2)
 
     # convolve, resample
-    out_gal = galsim.Convolve([real_galaxy_copy, galsim.GSObject(target_PSF)])
+    out_gal = galsim.Convolve([real_galaxy_copy, target_PSF])
     image = out_gal.draw(image=image, dx = target_pixel_scale)
 
     # return simulated image

@@ -32,6 +32,7 @@ valid_gsobject_types = {
     'Ring' : '_BuildRing',
     'Pixel' : '_BuildPixel',
     'RealGalaxy' : '_BuildRealGalaxy',
+    'RealGalaxyOriginal' : '_BuildRealGalaxyOriginal'
 }
 
 class SkipThisObject(Exception):
@@ -107,7 +108,7 @@ def BuildGSObject(config, key, base=None, gsparams={}):
 
     # Set up the initial default list of attributes to ignore while building the object:
     ignore = [ 
-        'dilate', 'dilation', 'ellip', 'rotate', 'rotation',
+        'dilate', 'dilation', 'ellip', 'rotate', 'rotation', 'scale_flux',
         'magnify', 'magnification', 'shear', 'shift', 
         'gsparams', 'skip', 'current_val', 'safe' 
     ]
@@ -125,6 +126,10 @@ def BuildGSObject(config, key, base=None, gsparams={}):
         # Ideally, we'd like to check that it's something within the gal hierarchy, but
         # I don't know an easy way to do that.
         ignore += [ 'resolution' , 're_from_res' ]
+
+    # Allow signal_to_noise for PSFs only if there is not also a galaxy.
+    if 'gal' not in base and key == 'psf':
+        ignore += [ 'signal_to_noise']
 
     # If we are specifying the size according to a resolution, then we 
     # need to get the PSF's half_light_radius.
@@ -147,7 +152,7 @@ def BuildGSObject(config, key, base=None, gsparams={}):
         ck['half_light_radius'] = gal_re
 
     # Make sure the PSF gets flux=1 unless explicitly overridden by the user.
-    if key == 'psf' and 'flux' not in ck:
+    if key == 'psf' and 'flux' not in ck and 'signal_to_noise' not in ck:
         ck['flux'] = 1
 
     if 'gsparams' in ck:
@@ -217,30 +222,40 @@ def _BuildAdd(config, key, base, ignore, gsparams):
     if not isinstance(items,list):
         raise AttributeError("items entry for config.%s entry is not a list."%type)
     safe = True
+
     for i in range(len(items)):
         gsobject, safe1 = BuildGSObject(items, i, base, gsparams)
+        # Skip items with flux=0
+        if 'flux' in items[i] and galsim.config.value.GetCurrentValue(items[i],'flux') == 0.:
+            #print 'skip -- flux == 0'
+            continue
         safe = safe and safe1
         gsobjects.append(gsobject)
     #print 'After built component items for ',type,' safe = ',safe
 
-    # Special: if the last item in a Sum doesn't specify a flux, we scale it
-    # to bring the total flux up to 1.
-    if ('flux' not in items[-1]) and all('flux' in item for item in items[0:-1]):
-        sum = 0
-        for item in items[0:-1]:
-            sum += galsim.config.value.GetCurrentValue(item,'flux')
-        #print 'sum = ',sum
-        f = 1. - sum
-        #print 'f = ',f
-        if (f < 0):
-            import warnings
-            warnings.warn(
-                "Automatically scaling the last item in Sum to make the total flux\n" +
-                "equal 1 requires the last item to have negative flux = %f"%f)
-        gsobjects[-1].setFlux(f)
-    if gsparams: gsparams = galsim.GSParams(**gsparams)
-    else: gsparams = None
-    gsobject = galsim.Add(gsobjects,gsparams=gsparams)
+    if len(gsobjects) == 0:
+        raise ValueError("No valid items for %s"%key)
+    elif len(gsobjects) == 1:
+        gsobject = gsobjects[0]
+    else:
+        # Special: if the last item in a Sum doesn't specify a flux, we scale it
+        # to bring the total flux up to 1.
+        if ('flux' not in items[-1]) and all('flux' in item for item in items[0:-1]):
+            sum = 0
+            for item in items[0:-1]:
+                sum += galsim.config.value.GetCurrentValue(item,'flux')
+            #print 'sum = ',sum
+            f = 1. - sum
+            #print 'f = ',f
+            if (f < 0):
+                import warnings
+                warnings.warn(
+                    "Automatically scaling the last item in Sum to make the total flux\n" +
+                    "equal 1 requires the last item to have negative flux = %f"%f)
+            gsobjects[-1].setFlux(f)
+        if gsparams: gsparams = galsim.GSParams(**gsparams)
+        else: gsparams = None
+        gsobject = galsim.Add(gsobjects,gsparams=gsparams)
 
     if 'flux' in config:
         flux, safe1 = galsim.config.ParseValue(config, 'flux', base, float)
@@ -269,10 +284,15 @@ def _BuildConvolve(config, key, base, ignore, gsparams):
         gsobjects.append(gsobject)
     #print 'After built component items for ',type,' safe = ',safe
 
-    if gsparams: gsparams = galsim.GSParams(**gsparams)
-    else: gsparams = None
-    gsobject = galsim.Convolve(gsobjects,gsparams=gsparams)
-
+    if len(gsobjects) == 0:
+        raise ValueError("No valid items for %s"%key)
+    elif len(gsobjects) == 1:
+        gsobject = gsobjects[0]
+    else:
+        if gsparams: gsparams = galsim.GSParams(**gsparams)
+        else: gsparams = None
+        gsobject = galsim.Convolve(gsobjects,gsparams=gsparams)
+    
     if 'flux' in config:
         flux, safe1 = galsim.config.ParseValue(config, 'flux', base, float)
         #print 'flux = ',flux
@@ -373,17 +393,37 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams):
     """
     if 'real_catalog' not in base:
         raise ValueError("No real galaxy catalog available for building type = RealGalaxy")
-    real_cat = base['real_catalog']
+
+    if 'num' in config:
+        num, safe = ParseValue(config, 'num', base, int)
+    else:
+        num, safe = (0, True)
+    ignore.append('num')
+
+    if num < 0:
+        raise ValueError("Invalid num < 0 supplied for RealGalaxy: num = %d"%num)
+    if num >= len(base['real_catalog']):
+        raise ValueError("Invalid num supplied for RealGalaxy (too large): num = %d"%num)
+
+    real_cat = base['real_catalog'][num]
 
     # Special: if index is Sequence or Random, and max isn't set, set it to real_cat.nobjects-1
     if 'id' not in config:
         galsim.config.SetDefaultIndex(config, real_cat.nobjects)
 
-    kwargs, safe = galsim.config.GetAllParams(config, key, base, 
+    if 'whiten' in config:
+        whiten, safe1 = galsim.config.ParseValue(config, 'whiten', base, bool)
+        safe = safe and safe1
+    else:
+        whiten = False
+    ignore.append('whiten')
+
+    kwargs, safe1 = galsim.config.GetAllParams(config, key, base, 
         req = galsim.__dict__['RealGalaxy']._req_params,
         opt = galsim.__dict__['RealGalaxy']._opt_params,
         single = galsim.__dict__['RealGalaxy']._single_params,
         ignore = ignore)
+    safe = safe and safe1
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
 
     if 'rng' not in base:
@@ -394,9 +434,23 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams):
         index = kwargs['index']
         if index >= real_cat.nobjects:
             raise IndexError(
-                "%s index has gone past the number of entries in the catalog"%param_name)
+                "%s index has gone past the number of entries in the catalog"%index)
 
-    return galsim.RealGalaxy(real_cat, **kwargs), safe
+    gal = galsim.RealGalaxy(real_cat, **kwargs)
+
+    # If we are not going to whiten the noise, then we don't need to keep it as an attribute.
+    # In fact, that is how we communicate to the upper levels that we do need to whiten.
+    # If the galaxy has a noise attribute, then we do the whitening step.
+    if not whiten: del gal.noise
+
+    return gal, safe
+
+
+def _BuildRealGalaxyOriginal(config, key, base, ignore, gsparams):
+    """@brief Return the original image from a RealGalaxy instance defined by user input.
+    """
+    image, safe = _BuildRealGalaxy(config, key, base, ignore, gsparams)
+    return image.original_image, safe    
 
 
 def _BuildSimple(config, key, base, ignore, gsparams={}):
@@ -455,6 +509,14 @@ def _TransformObject(gsobject, config, base):
         if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _RotateObject(gsobject, config, 'rotation', base)
         safe = safe and safe1
+    if 'scale_flux' in config:
+        if orig: gsobject = gsobject.copy(); orig = False
+        gsobject, safe1 = _ScaleFluxObject(gsobject, config, 'scale_flux', base)
+        safe = safe and safe1
+    if 'shear' in config:
+        if orig: gsobject = gsobject.copy(); orig = False
+        gsobject, safe1 = _EllipObject(gsobject, config, 'shear', base)
+        safe = safe and safe1
     if 'magnify' in config:
         if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _MagnifyObject(gsobject, config, 'magnify', base)
@@ -462,10 +524,6 @@ def _TransformObject(gsobject, config, base):
     if 'magnification' in config:
         if orig: gsobject = gsobject.copy(); orig = False
         gsobject, safe1 = _MagnifyObject(gsobject, config, 'magnification', base)
-        safe = safe and safe1
-    if 'shear' in config:
-        if orig: gsobject = gsobject.copy(); orig = False
-        gsobject, safe1 = _EllipObject(gsobject, config, 'shear', base)
         safe = safe and safe1
     if 'shift' in config:
         if orig: gsobject = gsobject.copy(); orig = False
@@ -490,6 +548,16 @@ def _RotateObject(gsobject, config, key, base):
     """
     theta, safe = galsim.config.ParseValue(config, key, base, galsim.Angle)
     gsobject = gsobject.createRotated(theta)
+    return gsobject, safe
+
+def _ScaleFluxObject(gsobject, config, key, base):
+    """@brief Scales the flux of a supplied GSObject based on user input.
+
+    @returns transformed GSObject.
+    """
+    flux_ratio, safe = galsim.config.ParseValue(config, key, base, float)
+    gsobject = gsobject.copy()
+    gsobject.scaleFlux(flux_ratio)
     return gsobject, safe
 
 def _DilateObject(gsobject, config, key, base):

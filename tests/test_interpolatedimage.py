@@ -25,10 +25,10 @@ from galsim_test_helpers import *
 """Unit tests for the InterpolatedImage class.
 """
 
+path, filename = os.path.split(__file__) # Get the path to this file for use below...
 try:
     import galsim
 except ImportError:
-    path, filename = os.path.split(__file__)
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
@@ -36,6 +36,30 @@ except ImportError:
 test_flux = 0.7
 # for dx tests - avoid 1.0 because factors of dx^2 won't show up!
 test_scale = 2.0
+
+# For reference tests:
+TESTDIR=os.path.join(path, "interpolant_comparison_files")
+
+# Some arbitrary kx, ky k space values to test
+KXVALS = np.array((1.30, 0.71, -4.30)) * np.pi / 2.
+KYVALS = np.array((0.80, -0.02, -0.31,)) * np.pi / 2.
+
+# First make an image that we'll use for interpolation:
+g1 = galsim.Gaussian(sigma = 3.1, flux=2.4)
+g1.applyShear(g1=0.2,g2=0.1)
+g2 = galsim.Gaussian(sigma = 1.9, flux=3.1)
+g2.applyShear(g1=-0.4,g2=0.3)
+g2.applyShift(-0.3,0.5)
+g3 = galsim.Gaussian(sigma = 4.1, flux=1.6)
+g3.applyShear(g1=0.1,g2=-0.1)
+g3.applyShift(0.7,-0.2)
+
+final = g1 + g2 + g3
+ref_image = galsim.ImageD(128,128)
+dx = 0.4
+# The reference image was drawn with the old convention, which is now use_true_center=False
+final.draw(image=ref_image, dx=dx, normalization='sb', use_true_center=False)
+
 
 def test_sbinterpolatedimage():
     """Test that we can make SBInterpolatedImages from Images of various types, and convert back.
@@ -46,6 +70,8 @@ def test_sbinterpolatedimage():
     # that SBInterpolatedImage that it is the same as the original
     lan3 = galsim.Lanczos(3, True, 1.E-4)
     lan3_2d = galsim.InterpolantXY(lan3)
+    quint = galsim.Quintic()
+    quint_2d = galsim.InterpolantXY(quint)
 
     ftypes = [np.float32, np.float64]
     ref_array = np.array([
@@ -60,7 +86,7 @@ def test_sbinterpolatedimage():
                 ref_array.astype(array_type),image_in.array,
                 err_msg="Array from input Image differs from reference array for type %s"%
                         array_type)
-        sbinterp = galsim.SBInterpolatedImage(image_in, lan3_2d, dx=1.0)
+        sbinterp = galsim.SBInterpolatedImage(image_in, lan3_2d, quint_2d, dx=1.0)
         test_array = np.zeros(ref_array.shape, dtype=array_type)
         image_out = galsim.ImageView[array_type](test_array, scale=1.0)
         sbinterp.draw(image_out.view())
@@ -76,7 +102,7 @@ def test_sbinterpolatedimage():
         # Anyway, Quintic seems to be accurate enough.
         quint = galsim.Quintic(1.e-4)
         quint_2d = galsim.InterpolantXY(quint)
-        sbinterp = galsim.SBInterpolatedImage(image_in, quint_2d, dx=1.0)
+        sbinterp = galsim.SBInterpolatedImage(image_in, quint_2d, quint_2d, dx=1.0)
         sbinterp.setFlux(1.)
         do_shoot(galsim.GSObject(sbinterp),image_out,"InterpolatedImage")
 
@@ -130,6 +156,7 @@ def test_roundtrip():
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_fluxnorm():
     """Test that InterpolatedImage class responds properly to instructions about flux normalization.
@@ -185,6 +212,7 @@ def test_fluxnorm():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
 def test_exceptions():
     """Test failure modes for InterpolatedImage class.
     """
@@ -212,6 +240,7 @@ def test_exceptions():
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_operations_simple():
     """Simple test of operations on InterpolatedImage: shear, magnification, rotation, shifting."""
@@ -377,6 +406,7 @@ def test_operations_simple():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
 def test_operations():
     """Test of operations on complicated InterpolatedImage: shear, magnification, rotation,
     shifting.
@@ -433,6 +463,7 @@ def test_operations():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
 def test_uncorr_padding():
     """Test for uncorrelated noise padding of InterpolatedImage."""
     import time
@@ -470,6 +501,7 @@ def test_uncorr_padding():
 
     # make it into an InterpolatedImage with noise-padding
     int_im = galsim.InterpolatedImage(orig_img, noise_pad=noise_var,
+                                      noise_pad_size=max(big_nx,big_ny),
                                       rng = galsim.GaussianDeviate(orig_seed))
     # draw into a larger image
     big_img = galsim.ImageF(big_nx, big_ny)
@@ -484,6 +516,7 @@ def test_uncorr_padding():
     # basically, redo all of the above steps and draw into a new image, make sure it's the same as
     # previous.
     int_im = galsim.InterpolatedImage(orig_img, noise_pad=noise_var,
+                                      noise_pad_size=max(big_nx,big_ny),
                                       rng = galsim.GaussianDeviate(orig_seed))
     big_img_2 = galsim.ImageF(big_nx, big_ny)
     int_im.draw(big_img_2, dx=1.)
@@ -499,6 +532,7 @@ def test_uncorr_padding():
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_pad_image():
     """Test padding an InterpolatedImage with a pad_image."""
@@ -528,10 +562,8 @@ def test_pad_image():
     big_img.setCenter(0,0)
 
     # Use a few different kinds of shapes for that padding. 
-    # In particular, we used to have a problem with a pad_image that was already the shape of 
-    # "getPaddedSize(pad_factor)", so include that.
     for (pad_nx, pad_ny) in [ (160,160), (179,191), (256,256), (305, 307) ]:
-        print pad_nx, pad_ny
+        print 'pad size = ',pad_nx, pad_ny
 
         # make the pad_image 
         pad_img = galsim.ImageF(pad_nx, pad_ny, scale=1.)
@@ -539,14 +571,17 @@ def test_pad_image():
         pad_img.setCenter(0,0)
 
         # make an interpolated image padded with the pad_image, and outside of that
+        orig_img.write('junk1.fits')
+        pad_img.write('junk2.fits')
         int_im = galsim.InterpolatedImage(orig_img, pad_image=pad_img, use_true_center=False)
 
         # draw into the larger image
         int_im.draw(big_img, use_true_center=False)
+        big_img.write('junk3.fits')
 
         # check that variance is diluted by expected amount 
         # Note -- we don't use np.var, since that computes the variance relative to the 
-        # actual mean value.  We just want sum(I^2) relative to the nominal I=0 value.
+        # actual mean value.  We just want sum(I^2)/Npix relative to the nominal I=0 value.
         var1 = np.sum(orig_img.array**2)
         if pad_nx > big_nx and pad_ny > big_ny:
             var2 = np.sum(pad_img[big_img.bounds].array**2)
@@ -562,7 +597,8 @@ def test_pad_image():
         if pad_nx < big_nx and pad_ny < big_ny:
             # now also pad with noise_pad outside of the pad_image
             int_im = galsim.InterpolatedImage(orig_img, pad_image=pad_img, noise_pad=noise_var/2,
-                                              pad_factor=pad_factor, rng=rng, use_true_center=False)
+                                              noise_pad_size=max(big_nx,big_ny),
+                                              rng=rng, use_true_center=False)
             int_im.draw(big_img, use_true_center=False)
     
             var3 = (noise_var/2) * float(big_nx*big_ny - pad_nx*pad_ny)
@@ -573,6 +609,7 @@ def test_pad_image():
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_corr_padding():
     """Test for correlated noise padding of InterpolatedImage."""
@@ -612,7 +649,7 @@ def test_corr_padding():
 
     # make it into an InterpolatedImage with noise-padding
     int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed),
-                                      noise_pad = im)
+                                      noise_pad = im, noise_pad_size = max(big_nx,big_ny))
 
     # draw into a larger image
     big_img = galsim.ImageF(big_nx, big_ny)
@@ -627,7 +664,8 @@ def test_corr_padding():
     # basically, redo all of the above steps and draw into a new image, make sure it's the same as
     # previous.
     int_im = galsim.InterpolatedImage(
-        orig_img, rng=galsim.GaussianDeviate(orig_seed), noise_pad=cn)
+        orig_img, rng=galsim.GaussianDeviate(orig_seed), noise_pad=cn,
+        noise_pad_size = max(big_nx,big_ny))
     big_img_2 = galsim.ImageF(big_nx, big_ny)
     int_im.draw(big_img_2, dx=1.)
     np.testing.assert_array_almost_equal(big_img_2.array, big_img.array, decimal=decimal_precise,
@@ -645,9 +683,9 @@ def test_corr_padding():
     inimg = galsim.fits.read(infile)
     incf = galsim.CorrelatedNoise(galsim.GaussianDeviate(), inimg) # input RNG will be ignored below
     int_im2 = galsim.InterpolatedImage(orig_img, rng=galsim.GaussianDeviate(orig_seed),
-                                       noise_pad=inimg)
+                                       noise_pad=inimg, noise_pad_size = max(big_nx,big_ny))
     int_im3 = galsim.InterpolatedImage(orig_img, rng=galsim.GaussianDeviate(orig_seed),
-                                       noise_pad=incf)
+                                       noise_pad=incf, noise_pad_size = max(big_nx,big_ny))
     big_img2 = galsim.ImageF(big_nx, big_ny)
     big_img3 = galsim.ImageF(big_nx, big_ny)
     int_im2.draw(big_img2, dx=1.)
@@ -657,6 +695,7 @@ def test_corr_padding():
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_realspace_conv():
     """Test that real-space convolution of an InterpolatedImage matches the FFT result
@@ -709,11 +748,8 @@ def test_realspace_conv():
         c2 = galsim.Convolve([gal,psf], real_space=False)
 
         im1 = c1.draw(dx=target_scale, image=galsim.ImageD(target_size,target_size))
-        print 'im1 = ',im1.array[:,:]
         im2 = c2.draw(dx=target_scale, image=galsim.ImageD(target_size,target_size))
-        print 'im2 = ',im2.array[:,:]
         np.testing.assert_array_almost_equal(im1.array, im2.array, 5)
-        print 'im1 == im2'
 
         # Now make the psf also an InterpolatedImage:
         psf=galsim.InterpolatedImage(psf_im, x_interpolant=interp, flux=1)
@@ -721,28 +757,194 @@ def test_realspace_conv():
         c4 = galsim.Convolve([gal,psf], real_space=False)
 
         im3 = c3.draw(dx=target_scale, image=galsim.ImageD(target_size,target_size))
-        print 'im3 = ',im3.array[:,:]
         im4 = c4.draw(dx=target_scale, image=galsim.ImageD(target_size,target_size), wmult=5)
-        print 'im4 = ',im4.array[:,:]
         np.testing.assert_array_almost_equal(im1.array, im3.array, 2)
         # Note: only 2 d.p. since the interpolated image version of the psf is really a different
         # profile from the original.  Especially for the lower order interpolants.  So we don't
         # expect these images to be equal to many decimal places.
-        print 'im1 == im3'
         np.testing.assert_array_almost_equal(im3.array, im4.array, 5)
-        print 'im3 == im4'
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
+def test_Cubic_ref():
+    """Test use of Cubic interpolant against some reference values
+    """
+    import time
+    t1 = time.time()
+    interp = galsim.Cubic(tol=1.e-4)
+    testobj = galsim.InterpolatedImage(ref_image.view(), x_interpolant=interp, dx=dx,
+                                       normalization='sb')
+    testKvals = np.zeros(len(KXVALS))
+    # Make test kValues
+    for i in xrange(len(KXVALS)):
+        posk = galsim.PositionD(KXVALS[i], KYVALS[i])
+        testKvals[i] = np.abs(testobj.kValue(posk))
+    # Compare with saved array
+    refKvals = np.loadtxt(os.path.join(TESTDIR, "absfKCubic_test.txt"))
+    print 'ref = ',refKvals
+    print 'test = ',testKvals
+    print 'kValue(0) = ',testobj.kValue(galsim.PositionD(0.,0.))
+    np.testing.assert_array_almost_equal(
+            refKvals/testKvals, 1., 5,
+            err_msg="kValues do not match reference values for Cubic interpolant.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
+def test_Quintic_ref():
+    """Test use of Quintic interpolant against some reference values
+    """
+    import time
+    t1 = time.time()
+    interp = galsim.Quintic(tol=1.e-4)
+    testobj = galsim.InterpolatedImage(ref_image.view(), x_interpolant=interp, dx=dx,
+                                       normalization='sb')
+    testKvals = np.zeros(len(KXVALS))
+    # Make test kValues
+    for i in xrange(len(KXVALS)):
+        posk = galsim.PositionD(KXVALS[i], KYVALS[i])
+        testKvals[i] = np.abs(testobj.kValue(posk))
+    # Compare with saved array
+    refKvals = np.loadtxt(os.path.join(TESTDIR, "absfKQuintic_test.txt"))
+    print 'ref = ',refKvals
+    print 'test = ',testKvals
+    np.testing.assert_array_almost_equal(
+            refKvals/testKvals, 1., 5,
+            err_msg="kValues do not match reference values for Quintic interpolant.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
+def test_Lanczos5_ref():
+    """Test use of Lanczos5 interpolant against some reference values
+    """
+    import time
+    t1 = time.time()
+    interp = galsim.Lanczos(5, conserve_dc=False, tol=1.e-4)
+    testobj = galsim.InterpolatedImage(ref_image.view(), x_interpolant=interp, dx=dx,
+                                       normalization='sb')
+    testKvals = np.zeros(len(KXVALS))
+    # Make test kValues
+    for i in xrange(len(KXVALS)):
+        posk = galsim.PositionD(KXVALS[i], KYVALS[i])
+        testKvals[i] = np.abs(testobj.kValue(posk))
+    # Compare with saved array
+    refKvals = np.loadtxt(os.path.join(TESTDIR, "absfKLanczos5_test.txt"))
+    print 'ref = ',refKvals
+    print 'test = ',testKvals
+    np.testing.assert_array_almost_equal(
+            refKvals/testKvals, 1., 5,
+            err_msg="kValues do not match reference values for Lanczos-5 interpolant.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    
+
+def test_Lanczos7_ref():
+    """Test use of Lanczos7 interpolant against some reference values
+    """
+    import time
+    t1 = time.time()
+    interp = galsim.Lanczos(7, conserve_dc=False, tol=1.e-4)
+    testobj = galsim.InterpolatedImage(ref_image.view(), x_interpolant=interp, dx=dx,
+                                       normalization='sb')
+    testKvals = np.zeros(len(KXVALS))
+    # Make test kValues
+    for i in xrange(len(KXVALS)):
+        posk = galsim.PositionD(KXVALS[i], KYVALS[i])
+        testKvals[i] = np.abs(testobj.kValue(posk))
+    # Compare with saved array
+    refKvals = np.loadtxt(os.path.join(TESTDIR, "absfKLanczos7_test.txt"))
+    print 'ref = ',refKvals
+    print 'test = ',testKvals
+    np.testing.assert_array_almost_equal(
+            refKvals/testKvals, 1., 5,
+            err_msg="kValues do not match reference values for Lanczos-7 interpolant.")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
+def test_conserve_dc():
+    """Test that the conserve_dc option for Lanczos does so.
+    Note: the idea of conserving flux is a bit of a misnomer.  No interpolant does so
+    precisely in general.  What we are really testing is that a flat background input
+    image has a relatively flat output image.
+    """
+    import time
+    t1 = time.time()
+    import numpy
+
+    im1_size = 40
+    scale1 = 0.23
+    init_val = 1.
+
+    im2_size = 100
+    scale2 = 0.011  
+
+    im1 = galsim.ImageF(im1_size, im1_size, scale1, init_val)
+
+    # im2 has a much smaller scale, but the same size, so interpolating an "infinite" 
+    # constant field.
+    im2 = galsim.ImageF(im2_size, im2_size, scale2)
+
+    for interp in ['linear', 'cubic', 'quintic']:
+        print 'Testing interpolant ',interp
+        obj = galsim.InterpolatedImage(im1, x_interpolant=interp, normalization='sb')
+        obj.draw(im2, normalization='sb')
+        print 'The maximum error is ',numpy.max(abs(im2.array-init_val))
+        numpy.testing.assert_array_almost_equal(
+                im2.array,init_val,5,
+                '%s did not preserve a flat input flux using xvals.'%interp)
+
+        # Convolve with a delta function to force FFT drawing.
+        delta = galsim.Gaussian(sigma=1.e-8)
+        obj2 = galsim.Convolve([obj,delta])
+        obj2.draw(im2, normalization='sb')
+        print 'The maximum error is ',numpy.max(abs(im2.array-init_val))
+        numpy.testing.assert_array_almost_equal(
+                im2.array,init_val,5,
+                '%s did not preserve a flat input flux using uvals.'%interp)
+
+    for n in [3,4,5,6,7,8]:  # 8 tests the generic formulae, since not specialized.
+        print 'Testing Lanczos interpolant with n = ',n
+        lan = galsim.Lanczos(n, conserve_dc=True)
+        obj = galsim.InterpolatedImage(im1, x_interpolant=lan, normalization='sb')
+        obj.draw(im2, normalization='sb')
+        print 'The maximum error is ',numpy.max(abs(im2.array-init_val))
+        numpy.testing.assert_array_almost_equal(
+                im2.array,init_val,5,
+                'Lanczos %d did not preserve a flat input flux using xvals.'%n)
+    
+        # Convolve with a delta function to force FFT drawing.
+        delta = galsim.Gaussian(sigma=1.e-8)
+        obj2 = galsim.Convolve([obj,delta])
+        obj2.draw(im2, normalization='sb')
+        print 'The maximum error is ',numpy.max(abs(im2.array-init_val))
+        numpy.testing.assert_array_almost_equal(
+                im2.array,init_val,5,
+                'Lanczos %d did not preserve a flat input flux using uvals.'%n)
+ 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 if __name__ == "__main__":
+    test_corr_padding()
+
     test_sbinterpolatedimage()
-    test_pad_image()
     test_roundtrip()
     test_fluxnorm()
     test_exceptions()
     test_operations_simple()
     test_operations()
     test_uncorr_padding()
+    test_pad_image()
     test_corr_padding()
     test_realspace_conv()
+    test_Cubic_ref()
+    test_Quintic_ref()
+    test_Lanczos5_ref()
+    test_Lanczos7_ref()
+    test_conserve_dc()
+

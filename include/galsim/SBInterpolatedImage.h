@@ -31,30 +31,6 @@
 
 namespace galsim {
 
-    namespace sbp {
-
-        // Magic numbers:
-
-        /// @brief FT must be at least this much larger than input
-        const double default_pad_factor = 4.;
-
-        /// @brief The default k-space interpolator
-        const boost::shared_ptr<Quintic> defaultKInterpolant1d(
-            new Quintic(1.e-5, GSParamsPtr::getDefault()));
-        const boost::shared_ptr<InterpolantXY> defaultKInterpolant2d(
-            new InterpolantXY(defaultKInterpolant1d));
-
-        /// @brief The default real-space interpolator
-        const boost::shared_ptr<Lanczos> defaultXInterpolant1d(
-            new Lanczos(5, true, 1.e-5, GSParamsPtr::getDefault()));
-        const boost::shared_ptr<InterpolantXY> defaultXInterpolant2d(
-            new InterpolantXY(defaultXInterpolant1d));
-
-    }
-
-    // We'll expose this to the python layer.
-    double getDefaultPadFactor();
-
     /**
      * @brief A Helper class that stores multiple images and their fourier transforms
      *
@@ -78,7 +54,7 @@ namespace galsim {
          *                        it checks the Image header for a suitable stepsize, or sets 
          *                        to 1 if none is found). 
          * @param[in] pad_factor  Multiple by which to increase the image size when zero-padding 
-         *                        for the Fourier transform. (If 0, use sbp::default_pad_factor.)
+         *                        for the Fourier transform.
          */
         template <typename T>
         MultipleImageHelper(const std::vector<boost::shared_ptr<BaseImage<T> > >& images,
@@ -92,13 +68,11 @@ namespace galsim {
          *                        it checks the Image header for a suitable stepsize, or sets 
          *                        to 1 if none is found). 
          * @param[in] pad_factor  Multiple by which to increase the image size when zero-padding
-         *                        for the Fourier transform. (If 0, use sbp::default_pad_factor.)
-         * @param[in] pad_image   Image to use for padding the SBInterpolatedImage if desired.
+         *                        for the Fourier transform.
          */
         template <typename T>
         MultipleImageHelper(const BaseImage<T>& image,
-                            double dx, double pad_factor,
-                            boost::shared_ptr<BaseImage<T> > pad_image);
+                            double dx, double pad_factor);
 
         /// @brief Copies are shallow, so can pass by value without any copying.
         MultipleImageHelper(const MultipleImageHelper& rhs) : _pimpl(rhs._pimpl) {}
@@ -192,12 +166,8 @@ namespace galsim {
      * kind of interpolation.  
      *
      * You can provide different interpolation schemes for real and fourier space
-     * (passed as xInterp and kInterp respectively).  If either one is omitted, the 
-     * defaults are:
-     *
-     * xInterp = Lanczos(5, fluxConserve=true, tol=kvalue_accuracy)
-     *
-     * kInterp = Quintic(tol=kvalue_accuracy)
+     * (passed as xInterp and kInterp respectively).  These are required, but there are 
+     * sensible defaults in the python layer wrapper class, InterpolatedImage.
      *
      * The ideal k-space interpolant is a sinc function; however, the quintic interpolant is the
      * default, based on detailed investigations on the tradeoffs between accuracy and speed.  Note
@@ -206,8 +176,8 @@ namespace galsim {
      * need to use a higher-order Lanczos interpolant instead, but this is not the recommended
      * usage.
      *
-     * There are also optional arguments for the pixel size (default is to get it from
-     * the image), and a factor by which to pad the image (default = 4).
+     * There is also an optional argument for the pixel size (default is to get it from
+     * the image).
      *
      * You can also make an SBInterpolatedImage as a weighted sum of several images
      * using MultipleImageHelper.  This helper object holds the images and their fourier
@@ -229,8 +199,7 @@ namespace galsim {
          *                        it checks the Image header for a suitable stepsize, or sets 
          *                        to 1 if none is found). 
          * @param[in] pad_factor  Multiple by which to increase the image size when zero-padding
-         *                        for the Fourier transform. (If 0, use sbp::default_pad_factor.)
-         * @param[in] pad_image   Image to use for padding the SBInterpolatedImage if desired.
+         *                        for the Fourier transform.
          * @param[in] gsparams    GSParams object storing constants that control the accuracy of
          *                        image operations and rendering.
          */
@@ -239,8 +208,7 @@ namespace galsim {
             const BaseImage<T>& image,
             boost::shared_ptr<Interpolant2d> xInterp,
             boost::shared_ptr<Interpolant2d> kInterp,
-            double dx, double pad_factor, boost::shared_ptr<BaseImage<T> > pad_image,
-            const GSParamsPtr& gsparams);
+            double dx, double pad_factor, const GSParamsPtr& gsparams);
 
         /** 
          * @brief Initialize internal quantities and allocate data tables based on a supplied 2D 
@@ -265,11 +233,21 @@ namespace galsim {
         /// @brief Destructor
         ~SBInterpolatedImage();
 
-        /// @brief Refine the value of stepK if the input image was larger than necessary.
-        void calculateStepK() const;
+        /**
+         * @brief Refine the value of stepK if the input image was larger than necessary.
+         *
+         * @param[in] max_stepk  Optional maximum value of stepk if you have some a priori
+         *                       knowledge about an appropriate maximum. 
+         */
+        void calculateStepK(double max_stepk=0.) const;
 
-        /// @brief Refine the value of stepK if the input image had a smaller scale than necessary.
-        void calculateMaxK() const;
+        /**
+         * @brief Refine the value of stepK if the input image had a smaller scale than necessary.
+         *
+         * @param[in] max_maxk  Optional maximum value of maxk if you have some a priori
+         *                      knowledge about an appropriate maximum. 
+         */
+        void calculateMaxK(double max_maxk=0.) const;
 
     protected:
 

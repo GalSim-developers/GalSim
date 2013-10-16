@@ -30,9 +30,9 @@ import os
 # 8a9b04085b873f63be4fb56ae4fa5a0ca78a0387
 #
 # To re-run this script:
-# - First type `git checkout c601a85034f89bba5d608ab6b2944f4f5f168491`
+# - First type `git checkout 5d749338c6092f2f54d5f604eef977fba13c997c`
 # - Type `scons install` in the main GalSim directory.
-# - Then type `python make_spline_testarrays.py` in this directory.
+# - Then type `python make_interpolant_comparison_files.py` in this directory.
 
 # Some arbitrary kx, ky k space values to test
 kxvals = np.array((1.30, 0.71, -4.30)) * np.pi / 2.
@@ -55,7 +55,7 @@ image = galsim.ImageD(128,128)
 dx = 0.4
 final.draw(image=image, dx=dx)
 
-dir = '../../../tests/spline_comparison_files'
+dir = '../../../tests/interpolant_comparison_files'
 
 # First make a Cubic interpolant
 interp = galsim.InterpolantXY(galsim.Cubic(tol=1.e-4))
@@ -76,7 +76,7 @@ print absoutk
 np.savetxt(os.path.join(dir,'absfKQuintic_test.txt'), absoutk)
 
 # Then make a Lanczos5 interpolant
-interp = galsim.InterpolantXY(galsim.Lanczos(5, conserve_flux=True, tol=1.e-4))
+interp = galsim.InterpolantXY(galsim.Lanczos(5, conserve_flux=False, tol=1.e-4))
 testobj = galsim.SBInterpolatedImage(image.view(), interp, dx=dx)
 for i in xrange(len(kxvals)):
     posk = galsim.PositionD(kxvals[i], kyvals[i])
@@ -85,7 +85,7 @@ print absoutk
 np.savetxt(os.path.join(dir,'absfKLanczos5_test.txt'), absoutk)
 
 # Then make a Lanczos7 interpolant
-interp = galsim.InterpolantXY(galsim.Lanczos(7, conserve_flux=True, tol=1.e-4))
+interp = galsim.InterpolantXY(galsim.Lanczos(7, conserve_flux=False, tol=1.e-4))
 testobj = galsim.SBInterpolatedImage(image.view(), interp, dx=dx)
 for i in xrange(len(kxvals)):
     posk = galsim.PositionD(kxvals[i], kyvals[i])

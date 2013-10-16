@@ -491,6 +491,9 @@ def test_output_generation_rotated():
     # the fact that we do not zero-pad while generating the noise field as we might while generating
     # a galaxy in an empty patch of sky: the Linear interpolatant has a limited real space support.
     #
+    # Update: See https://github.com/GalSim-developers/GalSim/pull/452 for a clearer discussion of
+    # why the Linear provides a good (but not perfect) approximate treatment.
+    #
     # Therefore, we rotate a CF with a support larger than the output region we simulate: this works
     # well at 2dp.
     #

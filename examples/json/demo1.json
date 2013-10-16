@@ -10,16 +10,16 @@
 "#" : "python code.  And even advanced pythonistas may find it more useful for many tasks than",
 "#" : "writing the corresponding python code.",
 
-"#" : "The executable that reads these JSON files is called galsim_json, which should be installed",
+"#" : "The executable that reads these JSON files is called galsim, which should be installed",
 "#" : "in your PREFIX/bin directory (after doing `scons install`, that is, where PREFIX is either",
 "#" : "/usr/local or whatever other PREFIX you set when running scons).  So to run this config",
 "#" : "file, you should be able to type simply (from the examples directory):",
 
-"#" : "    galsim_json json/demo1.json",
+"#" : "    galsim json/demo1.json",
 
 "#" : "If you haven't run `scons install` for whatever reason, you can instead write:",
 
-"#" : "    ../bin/galsim_json json/demo1.json",
+"#" : "    ../bin/galsim json/demo1.json",
 
 "#" : "See https://github.com/GalSim-developers/GalSim/wiki/Config-Documentation for ",
 "#" : "more complete documentation about how to use the GalSim configuration machinery.",

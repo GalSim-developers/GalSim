@@ -102,6 +102,7 @@ def test_gaussian():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
 def test_moffat():
     """Test various ways to build a Moffat
     """
@@ -170,6 +171,7 @@ def test_moffat():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
 def test_airy():
     """Test various ways to build a Airy
     """
@@ -231,9 +233,9 @@ def test_airy():
     except ImportError:
         print 'The assert_raises tests require nose'
 
-
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_kolmogorov():
     """Test various ways to build a Kolmogorov
@@ -292,9 +294,9 @@ def test_kolmogorov():
     except ImportError:
         print 'The assert_raises tests require nose'
 
-
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_opticalpsf():
     """Test various ways to build a OpticalPSF
@@ -307,19 +309,17 @@ def test_opticalpsf():
         'gal2' : { 'type' : 'OpticalPSF' , 'lam_over_diam' : 2, 'flux' : 100,
                    'defocus' : 0.23, 'astig1' : -0.12, 'astig2' : 0.11,
                    'coma1' : -0.09, 'coma2' : 0.03, 'spher' : 0.19,
-                   'pad_factor' : 1.0, 'oversampling' : 1.0 
+                   'pad_factor' : 1.4, 'oversampling' : 1.2 
                  },
         'gal3' : { 'type' : 'OpticalPSF' , 'lam_over_diam' : 2, 'flux' : 1.e6,
                    'defocus' : 0.23, 'astig1' : -0.12, 'astig2' : 0.11,
                    'circular_pupil' : False, 'obscuration' : 0.3,
-                   'pad_factor' : 1.0, 'oversampling' : 1.0,
                    'ellip' : { 'type' : 'QBeta' , 'q' : 0.6, 'beta' : 0.39 * galsim.radians } 
                  },
-        'gal4' : { 'type' : 'OpticalPSF' , 'lam_over_diam' : 1, 'flux' : 50,
-                   'defocus' : 0.23, 'astig1' : -0.12, 'astig2' : 0.11,
-                   'coma1' : -0.09, 'coma2' : 0.03, 'spher' : 0.19,
+        'gal4' : { 'type' : 'OpticalPSF' , 'lam_over_diam' : 0.05, 'flux' : 50,
+                   'defocus' : 0.03, 'astig1' : -0.04, 'astig2' : 0.07,
+                   'coma1' : -0.09, 'coma2' : 0.03, 'spher' : -0.09,
                    'circular_pupil' : True, 'obscuration' : 0.2,
-                   'pad_factor' : 1.0, 'oversampling' : 1.0,
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees, 
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
@@ -335,23 +335,21 @@ def test_opticalpsf():
     gal2b = galsim.OpticalPSF(lam_over_diam = 2, flux = 100,
                               defocus = 0.23, astig1 = -0.12, astig2 = 0.11,
                               coma1 = -0.09, coma2 = 0.03, spher = 0.19,
-                              pad_factor = 1, oversampling = 1)
+                              pad_factor = 1.4, oversampling = 1.2)
     gsobject_compare(gal2a, gal2b)
 
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
     gal3b = galsim.OpticalPSF(lam_over_diam = 2, flux = 1.e6, 
                               defocus = 0.23, astig1 = -0.12, astig2 = 0.11,
-                              circular_pupil = False, obscuration = 0.3,
-                              pad_factor = 1, oversampling = 1)
+                              circular_pupil = False, obscuration = 0.3)
     gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
     gsobject_compare(gal3a, gal3b)
 
     gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
-    gal4b = galsim.OpticalPSF(lam_over_diam = 1, flux = 50,
-                              defocus = 0.23, astig1 = -0.12, astig2 = 0.11,
-                              coma1 = -0.09, coma2 = 0.03, spher = 0.19,
-                              circular_pupil = True, obscuration = 0.2,
-                              pad_factor = 1, oversampling = 1)
+    gal4b = galsim.OpticalPSF(lam_over_diam = 0.05, flux = 50,
+                              defocus = 0.03, astig1 = -0.04, astig2 = 0.07,
+                              coma1 = -0.09, coma2 = 0.03, spher = -0.09,
+                              circular_pupil = True, obscuration = 0.2)
     gal4b.applyDilation(3)
     gal4b.applyShear(e1 = 0.3)
     gal4b.applyRotation(12 * galsim.degrees)
@@ -360,9 +358,9 @@ def test_opticalpsf():
     gal4b.applyShift(dx = 0.7, dy = -1.2) 
     gsobject_compare(gal4a, gal4b)
 
-
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_exponential():
     """Test various ways to build a Exponential
@@ -423,9 +421,9 @@ def test_exponential():
     except ImportError:
         print 'The assert_raises tests require nose'
 
-
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_sersic():
     """Test various ways to build a Sersic
@@ -501,9 +499,9 @@ def test_sersic():
     except ImportError:
         print 'The assert_raises tests require nose'
 
-
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_devaucouleurs():
     """Test various ways to build a DeVaucouleurs
@@ -564,10 +562,9 @@ def test_devaucouleurs():
     except ImportError:
         print 'The assert_raises tests require nose'
 
-
-
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_pixel():
     """Test various ways to build a Pixel
@@ -640,6 +637,7 @@ def test_pixel():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
 def test_realgalaxy():
     """Test various ways to build a RealGalaxy
     """
@@ -662,18 +660,14 @@ def test_realgalaxy():
         'gal3' : { 'type' : 'RealGalaxy' , 'id' : 103176, 'flux' : 1.e6,
                    'ellip' : { 'type' : 'QBeta' , 'q' : 0.6, 'beta' : 0.39 * galsim.radians } 
                  },
-        'gal4' : { 'type' : 'RealGalaxy' , 'index' : 5, 'flux' : 50,
+        'gal4' : { 'type' : 'RealGalaxy' , 'index' : 5, 'scale_flux' : 50,
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees, 
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
                    'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } 
                  },
-        'gal5' : { 'type' : 'RealGalaxy' , 'index' : 41, 'noise_pad' : 'True' },
-        'gal6' : { 'type' : 'RealGalaxy' , 'index' : 41, 'noise_pad' : 'blankimg.fits' },
-        'gal7' : { 'type' : 'RealGalaxy' , 'index' : 32, 'pad_image' : 'blankimg.fits' },
-        'gal8' : { 'type' : 'RealGalaxy' ,
-                   'index' : 87, 'pad_image' : 'blankimg.fits', 'noise_pad' : 'blankimg.fits'
-                 }
+        'gal5' : { 'type' : 'RealGalaxy' , 'index' : 23, 'noise_pad_size' : 10 },
+        'gal6' : { 'type' : 'RealGalaxy' , 'index' : 23, 'whiten' : True, 'noise_pad_size' : 8 }
     }
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
@@ -709,7 +703,7 @@ def test_realgalaxy():
     config['seq_index'] = 3
     gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
     gal4b = galsim.RealGalaxy(real_cat, index = 5)
-    gal4b.setFlux(50)
+    gal4b.scaleFlux(50)
     gal4b.applyDilation(3)
     gal4b.applyShear(e1 = 0.3)
     gal4b.applyRotation(12 * galsim.degrees)
@@ -720,25 +714,17 @@ def test_realgalaxy():
 
     config['seq_index'] = 4
     gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
-    gal5b = galsim.RealGalaxy(real_cat, index = 41, rng = rng, noise_pad = True)
+    gal5b = galsim.RealGalaxy(real_cat, index = 23, rng = rng, noise_pad_size = 10)
     gsobject_compare(gal5a, gal5b, conv=conv)
 
     config['seq_index'] = 5
     gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
-    gal6b = galsim.RealGalaxy(real_cat, index = 41, rng = rng, noise_pad = 'blankimg.fits')
+    gal6b = galsim.RealGalaxy(real_cat, index = 23, rng = rng, noise_pad_size = 8)
     gsobject_compare(gal6a, gal6b, conv=conv)
-
-    config['seq_index'] = 6
-    gal7a = galsim.config.BuildGSObject(config, 'gal7')[0]
-    gal7b = galsim.RealGalaxy(real_cat, index = 32, pad_image = 'blankimg.fits')
-    gsobject_compare(gal7a, gal7b, conv=conv)
+    # If whiten=True, it doesn't do anything to the profile yet, but it does save the noise 
+    # attribute in the galaxy.
+    gsobject_compare(gal6a.noise._profile, gal6b.noise._profile, conv=conv)
     
-    config['seq_index'] = 7
-    gal8a = galsim.config.BuildGSObject(config, 'gal8')[0]
-    gal8b = galsim.RealGalaxy(real_cat, index = 87, rng = rng, noise_pad = 'blankimg.fits',
-                              pad_image = 'blankimg.fits')
-    gsobject_compare(gal8a, gal8b, conv=conv)
-
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -791,7 +777,7 @@ def test_interpolated_image():
     gsobject_compare(gal3a, gal3b)
 
     gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
-    interp = galsim.InterpolantXY(galsim.Lanczos(n=5,conserve_flux=True))
+    interp = galsim.InterpolantXY(galsim.Lanczos(n=5,conserve_dc=True))
     gal4b = galsim.InterpolatedImage(im, x_interpolant=interp, dx=0.7)
     gal4b.setFlux(1.e5)
     gsobject_compare(gal4a, gal4b)
@@ -924,7 +910,6 @@ def test_add():
     except ImportError:
         print 'The assert_raises tests require nose'
 
-
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -1042,7 +1027,6 @@ def test_convolve():
     except ImportError:
         print 'The assert_raises tests require nose'
 
-
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -1129,6 +1113,7 @@ def test_list():
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_ring():
     """Test building a GSObject from a ring test:
@@ -1259,7 +1244,6 @@ def test_ring():
                                  conv=galsim.Gaussian(sigma=1))
     except ImportError:
         print 'The assert_raises tests require nose'
-
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

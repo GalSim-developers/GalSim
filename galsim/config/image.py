@@ -20,9 +20,9 @@
 import galsim
 
 valid_image_types = { 
-    'Single' : 'BuildSingleImage',
-    'Tiled' : 'BuildTiledImage',
-    'Scattered' : 'BuildScatteredImage',
+    'Single' : ( 'BuildSingleImage', 'GetNObjForSingleImage' ),
+    'Tiled' : ( 'BuildTiledImage', 'GetNObjForTiledImage' ),
+    'Scattered' : ( 'BuildScatteredImage', 'GetNObjForScatteredImage' ),
 }
 
 def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
@@ -258,7 +258,7 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0,
     if type not in valid_image_types:
         raise AttributeError("Invalid image.type=%s."%type)
 
-    build_func = eval(valid_image_types[type])
+    build_func = eval(valid_image_types[type][0])
     all_images = build_func(
             config=config, logger=logger,
             image_num=image_num, obj_num=obj_num,
@@ -308,7 +308,7 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
     config['seq_index'] = image_num
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
-               'n_photons', 'wmult', 'gsparams' ]
+               'n_photons', 'wmult', 'offset', 'gsparams' ]
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 'index_convention' : str,
             'pixel_scale' : float , 'sky_level' : float , 'sky_level_pixel' : float }
     params = galsim.config.GetAllParams(
@@ -371,7 +371,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     config['seq_index'] = image_num
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
-               'image_pos', 'n_photons', 'wmult', 'gsparams' ]
+               'image_pos', 'n_photons', 'wmult', 'offset', 'gsparams' ]
     req = { 'nx_tiles' : int , 'ny_tiles' : int }
     opt = { 'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
             'border' : int , 'xborder' : int , 'yborder' : int ,
@@ -446,22 +446,25 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     # If we have a power spectrum in config, we need to get a new realization at the start
     # of each image.
     if 'power_spectrum' in config:
-        # PowerSpectrum can only do a square FFT, so make it the larger of the two n's.
-        n_tiles = max(nx_tiles, ny_tiles)
-        stamp_size = max(stamp_xsize, stamp_ysize)
-        if 'grid_spacing' in config['input']['power_spectrum']:
-            grid_dx = galsim.config.ParseValue(config['input']['power_spectrum'],
-                                               'grid_spacing', config, float)[0]
-        else:
-            grid_dx = stamp_size * pixel_scale
-        if 'interpolant' in config['input']['power_spectrum']:
-            interpolant = galsim.config.ParseValue(config['input']['power_spectrum'],
-                                                   'interpolant', config, str)[0]
-        else:
-            interpolant = None
+        input_ps = config['input']['power_spectrum']
+        if not isinstance(input_ps, list):
+            input_ps = [ input_ps ]
 
-        config['power_spectrum'].buildGrid(grid_spacing=grid_dx, ngrid=n_tiles, rng=rng,
-                                           interpolant=interpolant)
+        for i in range(len(config['power_spectrum'])):
+            # PowerSpectrum can only do a square FFT, so make it the larger of the two n's.
+            n_tiles = max(nx_tiles, ny_tiles)
+            stamp_size = max(stamp_xsize, stamp_ysize)
+            if 'grid_spacing' in input_ps[i]:
+                grid_dx = galsim.config.ParseValue(input_ps[i], 'grid_spacing', config, float)[0]
+            else:
+                grid_dx = stamp_size * pixel_scale
+            if 'interpolant' in input_ps[i]:
+                interpolant = galsim.config.ParseValue(input_ps[i], 'interpolant', config, str)[0]
+            else:
+                interpolant = None
+
+            config['power_spectrum'][i].buildGrid(grid_spacing=grid_dx, ngrid=n_tiles, rng=rng,
+                                                  interpolant=interpolant)
         # We don't care about the output here.  This just builds the grid, which we'll
         # access for each object using its position.
 
@@ -539,18 +542,14 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     psf_images = stamp_images[1]
     weight_images = stamp_images[2]
     badpix_images = stamp_images[3]
+    current_vars = stamp_images[4]
 
+    max_current_var = 0
     for k in range(nobjects):
-        ix = ix_list[k]
-        iy = iy_list[k]
-        xmin = ix * (stamp_xsize + xborder) + 1
-        xmax = xmin + stamp_xsize-1
-        ymin = iy * (stamp_ysize + yborder) + 1
-        ymax = ymin + stamp_ysize-1
-        b = galsim.BoundsI(xmin,xmax,ymin,ymax)
         #print 'full bounds = ',full_image.bounds
-        #print 'stamp bounds = ',b
-        #print 'original stamp bounds = ',images[k].bounds
+        #print 'stamp bounds = ',images[k].bounds
+        assert full_image.bounds.includes(images[k].bounds)
+        b = images[k].bounds
         full_image[b] += images[k]
         if make_psf_image:
             full_psf_image[b] += psf_images[k]
@@ -558,19 +557,37 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
             full_weight_image[b] += weight_images[k]
         if make_badpix_image:
             full_badpix_image[b] |= badpix_images[k]
+        if current_vars[k] > max_current_var: max_current_var = current_vars[k]
 
     if not do_noise:
         if 'noise' in config['image']:
             # If we didn't apply noise in each stamp, then we need to apply it now.
             draw_method = galsim.config.GetCurrentValue(config['image'],'draw_method')
+
+            if max_current_var > 0:
+                import numpy
+                # Then there was whitening applied in the individual stamps.
+                # But there could be a different variance in each postage stamp, so the first
+                # thing we need to do is bring everything up to a common level.
+                noise_image = galsim.ImageF(full_image.bounds, full_image.scale)
+                for k in range(nobjects): noise_image[images[k].bounds] += current_vars[k]
+                # Update this, since overlapping postage stamps may have led to a larger 
+                # value in some pixels.
+                max_current_var = numpy.max(noise_image.array)
+                # Figure out how much noise we need to add to each pixel.
+                noise_image = max_current_var - noise_image
+                # Add it.
+                full_image.addNoise(galsim.VariableGaussianNoise(rng,noise_image))
+            # Now max_current_var is how much noise is in each pixel.
+
             if draw_method == 'fft':
                 galsim.config.AddNoiseFFT(
-                    full_image,full_weight_image,config['image']['noise'],config,rng,
-                    sky_level_pixel)
+                    full_image,full_weight_image,max_current_var,config['image']['noise'],config,
+                    rng,sky_level_pixel)
             elif draw_method == 'phot':
                 galsim.config.AddNoisePhot(
-                    full_image,full_weight_image,config['image']['noise'],config,rng,
-                    sky_level_pixel)
+                    full_image,full_weight_image,max_current_var,config['image']['noise'],config,
+                    rng,sky_level_pixel)
             else:
                 raise AttributeError("Unknown draw_method %s."%draw_method)
         elif sky_level_pixel:
@@ -601,7 +618,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     config['seq_index'] = image_num
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
-               'image_pos', 'sky_pos', 'n_photons', 'wmult',
+               'image_pos', 'sky_pos', 'n_photons', 'wmult', 'offset',
                'stamp_size', 'stamp_xsize', 'stamp_ysize', 'gsparams' ]
     req = { 'nobjects' : int }
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 
@@ -669,21 +686,25 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     # If we have a power spectrum in config, we need to get a new realization at the start
     # of each image.
     if 'power_spectrum' in config:
-        if 'grid_spacing' not in config['input']['power_spectrum']:
-            raise AttributeError(
-                "power_spectrum.grid_spacing required for image.type=Scattered")
-        grid_dx = galsim.config.ParseValue(config['input']['power_spectrum'],
-                                           'grid_spacing', config, float)[0]
-        full_size = max(full_xsize, full_ysize)
-        grid_nx = full_size * pixel_scale / grid_dx + 1
-        if 'interpolant' in config['input']['power_spectrum']:
-            interpolant = galsim.config.ParseValue(config['input']['power_spectrum'],
-                                                   'interpolant', config, str)[0]
-        else:
-            interpolant = None
+        input_ps = config['input']['power_spectrum']
+        if not isinstance(input_ps, list):
+            input_ps = [ input_ps ]
 
-        config['power_spectrum'].buildGrid(grid_spacing=grid_dx, ngrid=grid_nx, rng=rng,
-                                           interpolant=interpolant)
+        for i in range(len(config['power_spectrum'])):
+            # PowerSpectrum can only do a square FFT, so make it the larger of the two sizes.
+            if 'grid_spacing' not in input_ps[i]:
+                raise AttributeError(
+                    "power_spectrum.grid_spacing required for image.type=Scattered")
+            grid_dx = galsim.config.ParseValue(input_ps[i], 'grid_spacing', config, float)[0]
+            full_size = max(full_xsize, full_ysize)
+            grid_nx = full_size * pixel_scale / grid_dx + 1
+            if 'interpolant' in input_ps[i]:
+                interpolant = galsim.config.ParseValue(input_ps[i], 'interpolant', config, str)[0]
+            else:
+                interpolant = None
+
+            config['power_spectrum'][i].buildGrid(grid_spacing=grid_dx, ngrid=grid_nx, rng=rng,
+                                                  interpolant=interpolant)
         # We don't care about the output here.  This just builds the grid, which we'll
         # access for each object using its position.
 
@@ -745,12 +766,16 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     psf_images = stamp_images[1]
     weight_images = stamp_images[2]
     badpix_images = stamp_images[3]
+    current_vars = stamp_images[4]
 
+    max_current_var = 0.
     for k in range(nobjects):
         bounds = images[k].bounds & full_image.bounds
         #print 'stamp bounds = ',images[k].bounds
         #print 'full bounds = ',full_image.bounds
         #print 'Overlap = ',bounds
+        #print 'stamp scale = ',images[k].scale
+        #print 'full scale = ',full_image.scale
         if bounds.isDefined():
             full_image[bounds] += images[k][bounds]
             if make_psf_image:
@@ -767,16 +792,37 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
                     "whose bounds are (%d,%d,%d,%d)."%(
                         full_image.bounds.xmin, full_image.bounds.xmax,
                         full_image.bounds.ymin, full_image.bounds.ymax))
+        if current_vars[k] > max_current_var: max_current_var = current_vars[k]
 
     if 'noise' in config['image']:
         # Apply the noise to the full image
         draw_method = galsim.config.GetCurrentValue(config['image'],'draw_method')
+        if max_current_var > 0:
+            import numpy
+            # Then there was whitening applied in the individual stamps.
+            # But there could be a different variance in each postage stamp, so the first
+            # thing we need to do is bring everything up to a common level.
+            noise_image = galsim.ImageF(full_image.bounds, full_image.scale)
+            for k in range(nobjects): 
+                b = images[k].bounds & full_image.bounds
+                if b.isDefined(): noise_image[b] += current_vars[k]
+            # Update this, since overlapping postage stamps may have led to a larger 
+            # value in some pixels.
+            max_current_var = numpy.max(noise_image.array)
+            # Figure out how much noise we need to add to each pixel.
+            noise_image = max_current_var - noise_image
+            # Add it.
+            full_image.addNoise(galsim.VariableGaussianNoise(rng,noise_image))
+        # Now max_current_var is how much noise is in each pixel.
+
         if draw_method == 'fft':
             galsim.config.AddNoiseFFT(
-                full_image,full_weight_image,config['image']['noise'],config,rng,sky_level_pixel)
+                full_image,full_weight_image,max_current_var,config['image']['noise'],config,
+                rng,sky_level_pixel)
         elif draw_method == 'phot':
             galsim.config.AddNoisePhot(
-                full_image,full_weight_image,config['image']['noise'],config,rng,sky_level_pixel)
+                full_image,full_weight_image,max_current_var,config['image']['noise'],config,
+                rng,sky_level_pixel)
         else:
             raise AttributeError("Unknown draw_method %s."%draw_method)
 
@@ -786,5 +832,48 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     return full_image, full_psf_image, full_weight_image, full_badpix_image
 
+
+def GetNObjForImage(config, image_num):
+    if 'image' in config and 'type' in config['image']:
+        image_type = config['image']['type']
+    else:
+        image_type = 'Single'
+
+    # Check that the type is valid
+    if image_type not in valid_image_types:
+        raise AttributeError("Invalid image.type=%s."%type)
+
+    nobj_func = eval(valid_image_types[image_type][1])
+
+    return nobj_func(config,image_num)
+
+def GetNObjForSingleImage(config, image_num):
+    return 1
+
+def GetNObjForScatteredImage(config, image_num):
+
+    config['seq_index'] = image_num
+
+    # Allow nobjects to be automatic based on input catalog
+    if 'nobjects' not in config['image']:
+        nobj = ProcessInputNObjects(config)
+        if nobj:
+            config['image']['nobjects'] = nobj
+            return nobj
+        else:
+            raise AttributeError("Attribute nobjects is required for image.type = Scattered")
+    else:
+        return galsim.config.ParseValue(config['image'],'nobjects',config,int)[0]
+
+def GetNObjForTiledImage(config, image_num):
+    
+    config['seq_index'] = image_num
+
+    if 'nx_tiles' not in config['image'] or 'ny_tiles' not in config['image']:
+        raise AttributeError(
+            "Attributes nx_tiles and ny_tiles are required for image.type = Tiled")
+    nx = galsim.config.ParseValue(config['image'],'nx_tiles',config,int)[0]
+    ny = galsim.config.ParseValue(config['image'],'ny_tiles',config,int)[0]
+    return nx*ny
 
 

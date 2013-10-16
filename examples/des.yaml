@@ -70,8 +70,8 @@ eval_variables :
 
 # Define the PSF profile to use the DES shapelet files
 psf : 
-    skip : { type : InputCatalog, col : 'FLAGS' }
-    flux : { type : InputCatalog, col : 'FLUX_AUTO' }
+    skip : { type : Catalog, col : 'FLAGS' }
+    flux : { type : Catalog, col : 'FLUX_AUTO' }
 
 
 # Setup input files
@@ -117,8 +117,8 @@ image :
 
     image_pos : 
         type : XY 
-        x : { type : InputCatalog , col : 'X_IMAGE' }
-        y : { type : InputCatalog , col : 'Y_IMAGE' }
+        x : { type : Catalog , col : 'X_IMAGE' }
+        y : { type : Catalog , col : 'Y_IMAGE' }
 
     random_seed : 1339201
 

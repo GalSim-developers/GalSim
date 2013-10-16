@@ -660,12 +660,12 @@ namespace hsm {
         double Mxy, double Myy, double& A, double& Bx, double& By, double& Cxx,
         double& Cxy, double& Cyy, double& rho4w, boost::shared_ptr<HSMParams> hsmparams) 
     {
-        //long npix=0;
         long xmin = data.getXMin();
         long xmax = data.getXMax();
         long ymin = data.getYMin();
         long ymax = data.getYMax();
         dbg<<"Entering find_ellipmom_1 with Mxx, Myy, Mxy: "<<Mxx<<" "<<Myy<<" "<<Mxy<<std::endl;
+        dbg<<"e1,e2 = "<<(Mxx-Myy)/(Mxx+Myy)<<" "<<2.*Mxy/(Mxx+Myy)<<std::endl;
         dbg<<"x0, y0: "<<x0<<" "<<y0<<std::endl;
         dbg<<"xmin, xmax: "<<xmin<<" "<<xmax<<std::endl;
 
@@ -724,7 +724,8 @@ namespace hsm {
             double b = TwoMinv_xy__y_y0;
             double c = Minv_yy__y_y0__y_y0 - hsmparams->max_moment_nsig2;
             double d = b*b-4.*a*c;
-            assert(d >= 0.);
+            if (d < 0.)
+                throw HSMError("Failure in finding min/max x for some y!");
             double sqrtd = sqrt(d);
             double inv2a = Inv2Minv_xx;
             double x1 = inv2a*(-b - sqrtd) + x0;

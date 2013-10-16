@@ -32,7 +32,7 @@
 #include <fstream>
 std::ostream* dbgout = new std::ofstream("debug.out");
 //std::ostream* dbgout = &std::cout;
-int verbose_level = 2;
+int verbose_level = 1;
 // There are three levels of verbosity which can be helpful when debugging,
 // which are written as dbg, xdbg, xxdbg (all defined in Std.h).
 // It's Mike's way to have debug statements in the code that are really easy to turn 
@@ -183,7 +183,7 @@ namespace galsim {
         _pimpl = d._pimpl;
     }
 
-    void SBProfile::applyScale(double scale)
+    void SBProfile::applyExpansion(double scale)
     {
         SBTransform d(*this,scale,0.,0.,scale);
         _pimpl = d._pimpl;
@@ -237,14 +237,14 @@ namespace galsim {
         dbg<<"Start getGoodImageSize\n";
 
         // Find a good size based on dx and stepK
-        double Nd = 2*M_PI/(dx*stepK());
+        double Nd = 2.*M_PI/(dx*stepK());
         dbg<<"Nd = "<<Nd<<std::endl;
         Nd *= wmult; // make even bigger if desired
         dbg<<"Nd => "<<Nd<<std::endl;
 
         // Make it an integer
         // Some slop to keep from getting extra pixels due to roundoff errors in calculations.
-        int N = int(std::ceil(Nd-1.e-6));
+        int N = int(std::ceil(Nd*(1.-1.e-12)));
         dbg<<"N = "<<N<<std::endl;
 
         // Round up to an even value
@@ -455,7 +455,8 @@ namespace galsim {
         dbg << 
             " After adjustments: dx " << dx << " dk " << dk << 
             " maxK " << dk*NFT/2 << std::endl;
-        assert(dk <= stepK());
+        xdbg<<"dk - stepK() = "<<dk-(stepK()*(1.+1.e-8))<<std::endl;
+        xassert(dk <= stepK()*(1. + 1.e-8)); // Add a little slop in case of rounding errors.
         boost::shared_ptr<XTable> xt;
         if (NFT*dk/2 > maxK()) {
             dbg<<"NFT*dk/2 = "<<NFT*dk/2<<" > maxK() = "<<maxK()<<std::endl;

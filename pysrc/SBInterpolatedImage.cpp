@@ -41,12 +41,11 @@ namespace galsim {
                 .def(bp::init<const std::vector<boost::shared_ptr<BaseImage<U> > >&, 
                      double, double>(
                         (bp::arg("images"),
-                         bp::arg("dx")=0., bp::arg("pad_factor")=0.)
+                         bp::arg("dx")=0., bp::arg("pad_factor")=4.)
                 ))
-                .def(bp::init<const BaseImage<U>&, double, double, boost::shared_ptr<BaseImage<U> > >(
+                .def(bp::init<const BaseImage<U>&, double, double>(
                         (bp::arg("image"),
-                         bp::arg("dx")=0., bp::arg("pad_factor")=0.,
-                         bp::arg("pad_image")=bp::object())
+                         bp::arg("dx")=0., bp::arg("pad_factor")=4.)
                 ))
                 ;
         }
@@ -58,13 +57,11 @@ namespace galsim {
                 .def(bp::init<const BaseImage<U> &,
                      boost::shared_ptr<InterpolantXY>,
                      boost::shared_ptr<InterpolantXY>,
-                     double, double, boost::shared_ptr<BaseImage<U> >,
-                     boost::shared_ptr<GSParams> >(
+                     double, double, boost::shared_ptr<GSParams> >(
                          (bp::arg("image"),
-                          bp::arg("xInterp")=bp::object(),
-                          bp::arg("kInterp")=bp::object(),
-                          bp::arg("dx")=0., bp::arg("pad_factor")=0.,
-                          bp::arg("pad_image")=bp::object(),
+                          bp::arg("xInterp"),
+                          bp::arg("kInterp"),
+                          bp::arg("dx")=0., bp::arg("pad_factor")=4.,
                           bp::arg("gsparams")=bp::object())
                      )
                 )
@@ -90,22 +87,20 @@ namespace galsim {
                      boost::shared_ptr<InterpolantXY>,
                      boost::shared_ptr<GSParams> >(
                          (bp::args("multi","weights"),
-                          bp::arg("xInterp")=bp::object(),
-                          bp::arg("kInterp")=bp::object(),
+                          bp::arg("xInterp"),
+                          bp::arg("kInterp"),
                           bp::arg("gsparams")=bp::object())
                      )
                 )
-                .def("calculateStepK", &SBInterpolatedImage::calculateStepK)
-                .def("calculateMaxK", &SBInterpolatedImage::calculateMaxK)
+                .def("calculateStepK", &SBInterpolatedImage::calculateStepK,
+                     bp::arg("max_stepk")=0.)
+                .def("calculateMaxK", &SBInterpolatedImage::calculateMaxK,
+                     bp::arg("max_maxk")=0.)
                 ;
             wrapTemplates<float>(pySBInterpolatedImage);
             wrapTemplates<double>(pySBInterpolatedImage);
             wrapTemplates<int32_t>(pySBInterpolatedImage);
             wrapTemplates<int16_t>(pySBInterpolatedImage);
-
-            // A global function used by InterpolatedImage
-            bp::def("getDefaultPadFactor", &getDefaultPadFactor);
-
         }
 
     };
