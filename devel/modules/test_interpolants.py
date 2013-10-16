@@ -18,7 +18,9 @@ interpolant_list = ['cubic', 'quintic',
                     'lanczos3', 'lanczos4', 'lanczos5', 'lanczos7']
 # use_interpolants may be overwritten here or in main() to only test some of the above interpolants
 use_interpolants = interpolant_list
-# Padding options
+# Padding options.  We do not try pad_factor=2 as preliminary testing showed that it was
+# significantly more biased than 4 or 6: see e.g. the plots in the comment at
+# https://github.com/GalSim-developers/GalSim/issues/389#issuecomment-20386454 .
 padding_list = range(4,7,2)
 # Range of rotation angles
 angle_list = range(0,180,15)
