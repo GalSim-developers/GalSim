@@ -660,12 +660,12 @@ namespace hsm {
         double Mxy, double Myy, double& A, double& Bx, double& By, double& Cxx,
         double& Cxy, double& Cyy, double& rho4w, boost::shared_ptr<HSMParams> hsmparams) 
     {
-        //long npix=0;
         long xmin = data.getXMin();
         long xmax = data.getXMax();
         long ymin = data.getYMin();
         long ymax = data.getYMax();
         dbg<<"Entering find_ellipmom_1 with Mxx, Myy, Mxy: "<<Mxx<<" "<<Myy<<" "<<Mxy<<std::endl;
+        dbg<<"e1,e2 = "<<(Mxx-Myy)/(Mxx+Myy)<<" "<<2.*Mxy/(Mxx+Myy)<<std::endl;
         dbg<<"x0, y0: "<<x0<<" "<<y0<<std::endl;
         dbg<<"xmin, xmax: "<<xmin<<" "<<xmax<<std::endl;
 

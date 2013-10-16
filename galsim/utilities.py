@@ -183,7 +183,15 @@ class ComparisonShapeData(object):
 
     - g2obs_draw: observed_shape.g2 from adaptive moments on a GSObject image rendered using .draw()
 
+    - g1hsm_draw: corrected_shape.g1 from adaptive moments on a GSObject image rendered using
+      .draw()
+
+    - g2hsm_draw: corrected_shape.g2 from adaptive moments on a GSObject image rendered using
+      .draw()
+
     - sigma_draw: moments_sigma from adaptive moments on a GSObject image rendered using .draw()
+
+    - sighs_draw: moments_sigma from HSM PSF corr. on a GSObject image rendered using .draw()
 
     - delta_g1obs: estimated mean difference between i) observed_shape.g1 from images of the same
       GSObject rendered with .drawShoot(), and ii) `g1obs_draw`.
@@ -193,15 +201,33 @@ class ComparisonShapeData(object):
       GSObject rendered with .drawShoot(), and ii) `g1obs_draw`.
       Defined `delta_g2obs = g2obs_draw - g2obs_shoot`.
 
+    - delta_g1hsm: estimated mean difference between i) hsmerved_shape.g1 from images of the same
+      GSObject rendered with .drawShoot(), and ii) `g1hsm_draw`.
+      Defined `delta_g1hsm = g1hsm_draw - g1hsm_shoot`.
+
+    - delta_g2hsm: estimated mean difference between i) hsmerved_shape.g2 from images of the same
+      GSObject rendered with .drawShoot(), and ii) `g1hsm_draw`.
+      Defined `delta_g2hsm = g2hsm_draw - g2hsm_shoot`.
+
     - delta_sigma: estimated mean difference between i) moments_sigma from images of the same
       GSObject rendered with .drawShoot(), and ii) `sigma_draw`.
       Defined `delta_sigma = sigma_draw - sigma_shoot`.
+
+    - delta_sighs: estimated mean difference between i) moments_sigma from images of the same
+      GSObject rendered with .drawShoot(), and ii) `sigma_draw`. 
+      Defined `delta_sigma = sigma_draw - sigma_shoot`. Moments calculated using HSM PSF corr.
 
     - err_g1obs: standard error in `delta_g1obs` estimated from the test sample.
 
     - err_g2obs: standard error in `delta_g2obs` estimated from the test sample.
 
+    - err_g1hsm: standard error in `delta_g1hsm` estimated from the test sample.
+
+    - err_g2hsm: standard error in `delta_g2hsm` estimated from the test sample.
+
     - err_sigma: standard error in `delta_sigma` estimated from the test sample.
+
+    - err_sighs: standard error in `delta_sigma` estimated from the test sample using HSM PSF corr.
 
     The ComparisonShapeData instance also stores much of the meta-information about the tests:
 
@@ -244,43 +270,53 @@ class ComparisonShapeData(object):
     Either config, or gsobject, or gsobject and psf_object, must be set when a ComparisonShapeData
     instance is created or an Exception is raised.
     """
-    def __init__(self, g1obs_draw, g2obs_draw, sigma_draw, g1obs_shoot, g2obs_shoot, sigma_shoot,
-                 err_g1obs, err_g2obs, err_sigma, size, pixel_scale, wmult, n_iterations,
-                 n_trials_per_iter, n_photons_per_trial, time, gsobject=None, psf_object=None,
-                 config=None):
-        """In general use you should not need to instantiate a ComparisonShapeData instance,
-        as this is done within the `compare_dft_vs_photon_config`/`object` functions. 
-        """
+    def __init__(self, g1obs_draw, g2obs_draw, g1hsm_draw, g2hsm_draw, sigma_draw, sighs_draw , 
+                g1obs_shoot, g2obs_shoot, g1hsm_shoot, g2hsm_shoot, sigma_shoot, sighs_shoot ,
+                err_g1obs, err_g2obs, err_g1hsm, err_g2hsm, err_sigma, err_sighs ,size, pixel_scale, 
+                wmult, n_iterations, n_trials_per_iter, n_photons_per_trial, time, 
+                gsobject=None, psf_object=None, config=None):
+       """In general use you should not need to instantiate a ComparisonShapeData instance,
+       as this is done within the `compare_dft_vs_photon_config`/`object` functions. 
+       """
 
-        self.g1obs_draw = g1obs_draw
-        self.g2obs_draw = g2obs_draw
-        self.sigma_draw = sigma_draw
-        
-        self.delta_g1obs = g1obs_draw - g1obs_shoot
-        self.delta_g2obs = g2obs_draw - g2obs_shoot
-        self.delta_sigma = sigma_draw - sigma_shoot
+       self.g1hsm_draw = g1hsm_draw
+       self.g2hsm_draw = g2hsm_draw
+       self.g1obs_draw = g1obs_draw
+       self.g2obs_draw = g2obs_draw
+       self.sigma_draw = sigma_draw
+       self.sighs_draw = sighs_draw
+       
+       self.delta_g1hsm = g1hsm_draw - g1hsm_shoot
+       self.delta_g2hsm = g2hsm_draw - g2hsm_shoot
+       self.delta_g1obs = g1obs_draw - g1obs_shoot
+       self.delta_g2obs = g2obs_draw - g2obs_shoot
+       self.delta_sigma = sigma_draw - sigma_shoot
+       self.delta_sighs = sighs_draw - sighs_shoot
 
-        self.err_g1obs = err_g1obs
-        self.err_g2obs = err_g2obs
-        self.err_sigma = err_sigma
+       self.err_g1hsm = err_g1hsm
+       self.err_g2hsm = err_g2hsm
+       self.err_g1obs = err_g1obs
+       self.err_g2obs = err_g2obs
+       self.err_sigma = err_sigma
+       self.err_sighs = err_sighs
 
-        if gsobject is not None:
-            if config is not None:
-                raise ValueError("Specifying both a config and gsobject input kwarg is ambiguous")
-        elif config is None:
-            raise ValueError(
-                "Either config, or gsobject (with an optional psf_object) must be given as input.")
-        self.config = config
-        self.gsobject = gsobject
-        self.psf_object = psf_object
- 
-        self.size = size
-        self.pixel_scale = pixel_scale
-        self.wmult = wmult
-        self.n_iterations = n_iterations
-        self.n_trials_per_iter = n_trials_per_iter
-        self.n_photons_per_trial = n_photons_per_trial
-        self.time = time
+       if gsobject is not None:
+           if config is not None:
+               raise ValueError("Specifying both a config and gsobject input kwarg is ambiguous")
+       elif config is None:
+           raise ValueError(
+               "Either config, or gsobject (with an optional psf_object) must be given as input.")
+       self.config = config
+       self.gsobject = gsobject
+       self.psf_object = psf_object
+
+       self.size = size
+       self.pixel_scale = pixel_scale
+       self.wmult = wmult
+       self.n_iterations = n_iterations
+       self.n_trials_per_iter = n_trials_per_iter
+       self.n_photons_per_trial = n_photons_per_trial
+       self.time = time
 
     def __str__(self):
         retval = "g1obs_draw  = "+str(self.g1obs_draw)+"\n"+\
@@ -289,8 +325,17 @@ class ComparisonShapeData(object):
                  "g2obs_draw  = "+str(self.g2obs_draw)+"\n"+\
                  "delta_g2obs = "+str(self.delta_g2obs)+" +/- "+str(self.err_g2obs)+"\n"+\
                  "\n"+\
+                 "g1hsm_draw  = "+str(self.g1hsm_draw)+"\n"+\
+                 "delta_g1hsm = "+str(self.delta_g1hsm)+" +/- "+str(self.err_g1hsm)+"\n"+\
+                 "\n"+\
+                 "g2hsm_draw  = "+str(self.g2hsm_draw)+"\n"+\
+                 "delta_g2hsm = "+str(self.delta_g2hsm)+" +/- "+str(self.err_g2hsm)+"\n"+\
+                 "\n"+\
                  "sigma_draw  = "+str(self.sigma_draw)+"\n"+\
                  "delta_sigma = "+str(self.delta_sigma)+" +/- "+str(self.err_sigma)+"\n"+\
+                 "\n"+\
+                 "sigma_draw_hsm  = "+str(self.sighs_draw)+"\n"+\
+                 "delta_sigma_hsm = "+str(self.delta_sighs)+" +/- "+str(self.err_sighs)+"\n"+\
                  "\n"+\
                  "image size = "+str(self.size)+"\n"+\
                  "pixel scale = "+str(self.pixel_scale)+"\n"+\
@@ -494,8 +539,8 @@ def compare_dft_vs_photon_object(gsobject, psf_object=None, rng=None, pixel_scal
 
 def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None, pixel_scale=None,
                                  size=None, wmult=None, abs_tol_ellip=1.e-5, abs_tol_size=1.e-5,
-                                 n_trials_per_iter=32, n_photons_per_trial=1e7, moments=True,
-                                 hsm=False, logger=None):
+                                 n_trials_per_iter=32, n_max_iter=-1, n_photons_per_trial=1e7,
+                                 moments=True, hsm=False, logger=None):
     """Take an input config dictionary and render the object it describes in two ways, comparing
     results at high precision. 
 
@@ -563,16 +608,24 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     @param abs_tol_ellip          the test will keep iterating, adding ever greater numbers of
                                   trials, until estimates of the 1-sigma standard error on mean 
                                   ellipticity moments from photon-shot images are smaller than this
-                                  param value.
+                                  param value. If moments=False, then using the measurements 
+                                  from HSM.
 
     @param abs_tol_size           the test will keep iterating, adding ever greater numbers of
                                   trials, until estimates of the 1-sigma standard error on mean 
                                   size moments from photon-shot images are smaller than this param
-                                  value.
+                                  value. If moments=False, then using the measurements 
+                                  from HSM.
 
     @param n_trials_per_iter      number of trial images used to estimate (or successively
                                   re-estimate) the standard error on the delta quantities above for
                                   each iteration of the tests. Default = 32.
+
+    @param n_max_iter             maximum number of iterations. After reaching it, the current
+                                  uncertainty on shape measurement is reported, even if
+                                  abs_tol_ellip and abs_tol_size was not reported. If a negative
+                                  number is supplied, then there is no limit of number of 
+                                  iterations. Default=-1.
 
     @param n_photons_per_trial    number of photons shot in drawShoot() for each trial.  This should
                                   be large enough that any noise bias (a.k.a. noise rectification
@@ -583,8 +636,7 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
                                   estimates of simple observed estimates (default=`True`).
 
     @param hsm                    set True to compare rendered images using HSM shear estimates
-                                  (i.e. including a PSF correction for shears; default=`False` as
-                                  this feature is not yet implemented!)
+                                  (i.e. including a PSF correction for shears; default=`False`)
 
     @param logger                 logging Logger instance to record output and pass down to the
                                   config layer for debuging / verbose output if desired.
@@ -594,9 +646,8 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     import time     
 
     # Some sanity checks on inputs
-    if hsm is True:
-        # Raise an apologetic exception about the HSM not yet being implemented!
-        raise NotImplementedError('Sorry, HSM tests not yet implemented!')
+    if moments is False and hsm is False:
+        raise ValueError("At least one of 'moments','hsm' is required to be True")
 
     # Then check the config inputs, overriding and warning where necessary
     if random_seed is None:
@@ -680,19 +731,44 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     # If you want to use config later for multiprocessing, you have to deepcopy it here.
     import copy
     config1 = copy.deepcopy(config)
-    im_draw = galsim.config.BuildImage(config1, obj_num = obj_num, logger=logger)[0]
-    res_draw = im_draw.FindAdaptiveMom()
-    sigma_draw = res_draw.moments_sigma
-    g1obs_draw = res_draw.observed_shape.g1
-    g2obs_draw = res_draw.observed_shape.g2
 
+    # choose a shear estimator - I chose KSB, because then corrected_g1 is available
+    hsm_shear_est = 'KSB'
+
+    # get the fft image
+    im_draw,im_psf,_,_ = galsim.config.BuildImage(config1,obj_num=obj_num,
+                                                  nproc=config['image']['nproc'],
+                                                  make_psf_image=True, logger=logger)
+
+    # get the moments for FFT image
+    if moments:
+        res_draw = im_draw.FindAdaptiveMom()
+        sigma_draw = res_draw.moments_sigma
+        g1obs_draw = res_draw.observed_shape.g1
+        g2obs_draw = res_draw.observed_shape.g2
+
+    # Get the HSM for FFT image
+    if hsm:
+        res_draw_hsm= galsim.hsm.EstimateShear(im_draw,im_psf,strict=True,
+                                               shear_est=hsm_shear_est)
+        g1hsm_draw = res_draw_hsm.corrected_g1
+        g2hsm_draw = res_draw_hsm.corrected_g2
+        sighs_draw = res_draw_hsm.moments_sigma   # Short for sigma_hsm, to fit it in 5 characters
+
+    
     # Setup storage lists for the trial shooting results
+    sighs_shoot_list = []
     sigma_shoot_list = []
     g1obs_shoot_list = []
     g2obs_shoot_list = [] 
+    g1hsm_shoot_list = []
+    g2hsm_shoot_list = [] 
     sigmaerr = 666. # Slightly kludgy but will not accidentally fail the first `while` condition
+    sighserr = 666. # Shorthand for sigma_hsm, to fit it in 5 characters
     g1obserr = 666.
     g2obserr = 666.
+    g1hsmerr = 666.
+    g2hsmerr = 666.
 
     # Initialize iteration counter
     itercount = 0
@@ -706,50 +782,109 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     # Then begin while loop, farming out sets of n_trials_per_iter trials until we get the
     # statistical accuracy we require
     start_random_seed = config2['image']['random_seed'] 
-    start_random_seed = config2['image']['random_seed'] 
-    while (g1obserr > abs_tol_ellip) or (g2obserr > abs_tol_ellip) or (sigmaerr > abs_tol_size):
+
+    # If using moments, then the criteria will be on observed g1,g2,sigma, else on hsm corrected.
+    # Ideally we would use some sort of pointer here, but I am going to update these at the end 
+    # of the loop
+    if moments:     
+        err_g1_use,err_g2_use,err_sig_use = (g1obserr,g2obserr,sigmaerr)
+    else:           
+        err_g1_use,err_g2_use,err_sig_use = (g1hsmerr,g2hsmerr,sighserr)
+
+    while (err_g1_use>abs_tol_ellip) or (err_g2_use>abs_tol_ellip) or (err_sig_use>abs_tol_size) :
+        if n_max_iter > 0 and itercount >= n_max_iter: break
 
         # Reset the random_seed depending on the iteration number so that these never overlap
         config2['image']['random_seed'] = start_random_seed + itercount * (n_trials_per_iter + 1)
 
         # Run the trials using galsim.config.BuildImages function
-        trial_images = galsim.config.BuildImages(nimages=n_trials_per_iter, obj_num=obj_num, 
-          config=config2, logger=logger, nproc=config2['image']['nproc'])[0]
+        trial_images = galsim.config.BuildImages( 
+            nimages = n_trials_per_iter, obj_num = obj_num,
+            config = config2, logger = logger , nproc=config2['image']['nproc'])[0] 
 
         # Collect results 
-        trial_results = [image.FindAdaptiveMom() for image in trial_images]
+        trial_results = []
+        trial_results_hsm = []
+        for image in trial_images:
 
-        # Output some difference check images (uncomment if desired)
-        #for image, ino in zip(trial_images, range(n_trials_per_iter)):
-        #    (image - im_draw).write('check_diff_trial'+str(ino + 1)+'_iter'+str(itercount)+'.fits')
+            if moments:
+                trial_results += [image.FindAdaptiveMom()]
+
+            if hsm:
+                trial_results_hsm += [galsim.hsm.EstimateShear(image,im_psf,strict=True,
+                                                               shear_est=hsm_shear_est)]
 
         # Get lists of g1,g2,sigma estimate (this might be quicker using a single list comprehension
         # to get a list of (g1,g2,sigma) tuples, and then unzip with zip(*), but this is clearer)
-        g1obs_shoot_list.extend([res.observed_shape.g1 for res in trial_results]) 
-        g2obs_shoot_list.extend([res.observed_shape.g2 for res in trial_results]) 
-        sigma_shoot_list.extend([res.moments_sigma for res in trial_results])
+        if moments:
+            g1obs_shoot_list.extend([res.observed_shape.g1 for res in trial_results]) 
+            g2obs_shoot_list.extend([res.observed_shape.g2 for res in trial_results]) 
+            sigma_shoot_list.extend([res.moments_sigma for res in trial_results])
+        if hsm:
+            g1hsm_shoot_list.extend([res.corrected_g1 for res in trial_results_hsm]) 
+            g2hsm_shoot_list.extend([res.corrected_g2 for res in trial_results_hsm])   
+            sighs_shoot_list.extend([res.moments_sigma for res in trial_results_hsm])   
 
         #Then calculate new standard error
-        g1obserr = _stderr(g1obs_shoot_list)
-        g2obserr = _stderr(g2obs_shoot_list)
-        sigmaerr = _stderr(sigma_shoot_list)
+        if moments:
+            g1obserr = _stderr(g1obs_shoot_list)
+            g2obserr = _stderr(g2obs_shoot_list)
+            sigmaerr = _stderr(sigma_shoot_list)  
+        if hsm:
+            g1hsmerr = _stderr(g1hsm_shoot_list)
+            g2hsmerr = _stderr(g2hsm_shoot_list)
+            sighserr = _stderr(sighs_shoot_list)
+
         itercount += 1
         sys.stdout.write(".") # This doesn't add a carriage return at the end of the line, nice!
         if logger:
             logger.debug('Completed '+str(itercount)+' iterations')
             logger.debug(
-                '(g1obserr, g2obserr, sigmaerr) = '+str(g1obserr)+', '+str(g2obserr)+', '+
-            str(sigmaerr))
+                '(g1obserr, g2obserr, g1hsmerr, g2hsmerr, sigmaerr, sigmaerr_hsm) = '
+                +str(g1obserr)+', '+str(g2obserr)+', '+str(g1hsmerr)+', '+str(g2hsmerr)+', '
+                +str(sigmaerr) + ', ' + str(sighserr) )
+
+        # assing the variables governing the termination
+        if moments:     
+            err_g1_use,err_g2_use,err_sig_use = (g1obserr,g2obserr,sigmaerr)
+        else:           
+            err_g1_use,err_g2_use,err_sig_use = (g1hsmerr,g2hsmerr,sighserr)
 
     sys.stdout.write("\n")
+         
+    # prepare results for the ComparisonShapeData
+    NO_HSM_OUTPUT_VALUE = 77
+    NO_OBS_OUTPUT_VALUE = 88
+
+    if moments:
+        # get statistics
+        mean_g1obs = _mean(g1obs_shoot_list) 
+        mean_g2obs = _mean(g2obs_shoot_list) 
+        mean_sigma = _mean(sigma_shoot_list)
+    else:
+        # assign the values to a NO_OBS_OUTPUT_VALUE flag
+        mean_g1obs = mean_g2obs = NO_OBS_OUTPUT_VALUE
+        g1obserr = g2obserr = NO_OBS_OUTPUT_VALUE
+        g1obs_draw = g2obs_draw = NO_OBS_OUTPUT_VALUE
+        sigma_draw = mean_sigma = sigmaerr = NO_OBS_OUTPUT_VALUE
+    if hsm:
+        mean_g1hsm = _mean(g1hsm_shoot_list)
+        mean_g2hsm = _mean(g2hsm_shoot_list)
+        mean_sighs = _mean(sighs_shoot_list)
+    else:
+        mean_g1hsm = mean_g2hsm = NO_HSM_OUTPUT_VALUE
+        g1hsmerr = g2hsmerr = NO_HSM_OUTPUT_VALUE
+        g1hsm_draw = g2hsm_draw = NO_HSM_OUTPUT_VALUE
+        sighs_draw = mean_sighs = sighserr = NO_HSM_OUTPUT_VALUE
 
 
     # Take the runtime and collate results into a ComparisonShapeData
     runtime = time.time() - t1
     results = ComparisonShapeData(
-        g1obs_draw, g2obs_draw, sigma_draw,
-        _mean(g1obs_shoot_list), _mean(g2obs_shoot_list), _mean(sigma_shoot_list),
-        g1obserr, g2obserr, sigmaerr, config2['image']['size'], config2['image']['pixel_scale'],
+        g1obs_draw, g2obs_draw, g1hsm_draw, g2hsm_draw, sigma_draw, sighs_draw ,
+        mean_g1obs, mean_g2obs, mean_g1hsm , mean_g2hsm , mean_sigma , mean_sighs ,
+        g1obserr, g2obserr, g1hsmerr, g2hsmerr, sigmaerr, sighserr ,
+        config2['image']['size'], config2['image']['pixel_scale'],
         wmult, itercount, n_trials_per_iter, n_photons_per_trial, runtime, config=config2)
 
     if logger: logging.info('\n'+str(results))

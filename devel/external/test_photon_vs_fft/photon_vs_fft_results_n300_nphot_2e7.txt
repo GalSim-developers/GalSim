@@ -1,0 +1,3 @@
+# id max_diff_over_max_image E1_moments_fft E2_moments_fft E1_moments_photon E2_moments_photon E1_hsm_corr_fft E2_hsm_corr_fft E1_hsm_corr_photon E2_hsm_corr_photon moments_fft_sigma moments_photon_sigma hsm_fft_sigma hsm_photon_sigma
+0	 0.003205	 0.369151	-0.088699	 0.368819	-0.088326	0.512068	 0.257845	 0.511420	 0.258431	 2.949505	 2.949491	 2.811930	 2.811990
+1	 0.004369	 0.560213	-0.265539	 0.560779	-0.264782	0.890616	 0.551100	 0.890500	 0.549314	 3.735016	 3.737370	 3.615443	 3.617768
