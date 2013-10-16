@@ -27,9 +27,9 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-//std::ostream* dbgout = new std::ofstream("debug.out");
+std::ostream* dbgout = new std::ofstream("debug.out");
 //std::ostream* dbgout = &std::cout;
-//int verbose_level = 2;
+int verbose_level = 2;
 #endif
 
 namespace galsim {
@@ -43,10 +43,13 @@ namespace galsim {
                 image,xInterp,kInterp,dx,pad_factor,gsparams)) {}
 
     SBInterpolatedImage::SBInterpolatedImage(
-        const MultipleImageHelper& multi, const std::vector<double>& weights,
-        boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
+        const MultipleImageHelper& multi,
+        const std::vector<double>& weights,
+        boost::shared_ptr<Interpolant2d> xInterp,
+        boost::shared_ptr<Interpolant2d> kInterp,
         const GSParamsPtr& gsparams) :
-        SBProfile(new SBInterpolatedImageImpl(multi,weights,xInterp,kInterp,gsparams)) {}
+        SBProfile(new SBInterpolatedImageImpl(multi, weights, xInterp, kInterp, gsparams)) 
+    {}
 
     SBInterpolatedImage::SBInterpolatedImage(const SBInterpolatedImage& rhs) : SBProfile(rhs) {}
 
@@ -223,11 +226,17 @@ namespace galsim {
     { initialize(); }
 
     SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
-        const MultipleImageHelper& multi, const std::vector<double>& weights,
-        boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
+        const MultipleImageHelper& multi,
+        const std::vector<double>& weights,
+        boost::shared_ptr<Interpolant2d> xInterp,
+        boost::shared_ptr<Interpolant2d> kInterp,
         const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
-        _multi(multi), _wts(weights), _xInterp(xInterp), _kInterp(kInterp), _readyToShoot(false) 
+        _multi(multi),
+        _wts(weights),
+        _xInterp(xInterp),
+        _kInterp(kInterp),
+        _readyToShoot(false) 
     {
         assert(weights.size() == multi.size());
         initialize(); 

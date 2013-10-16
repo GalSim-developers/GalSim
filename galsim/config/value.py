@@ -104,6 +104,7 @@ def ParseValue(config, param_name, base, value_type):
 
         type = param['type']
         #print 'type = ',type
+        #print param['type'], value_type
 
         # First check if the value_type is valid.
         if type not in valid_value_types:
@@ -1032,7 +1033,6 @@ def _GenerateFromEval(param, param_name, base, value_type):
     except:
         raise ValueError("Unable to evaluate string %r as a %s for %s"%(
                 string,value_type,param_name))
-
 
 def _GenerateFromCurrent(param, param_name, base, value_type):
     """@brief Get the current value of another config item.

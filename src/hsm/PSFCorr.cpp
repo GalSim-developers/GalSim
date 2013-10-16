@@ -724,7 +724,8 @@ namespace hsm {
             double b = TwoMinv_xy__y_y0;
             double c = Minv_yy__y_y0__y_y0 - hsmparams->max_moment_nsig2;
             double d = b*b-4.*a*c;
-            assert(d >= 0.);
+            if (d < 0.)
+                throw HSMError("Failure in finding min/max x for some y!");
             double sqrtd = sqrt(d);
             double inv2a = Inv2Minv_xx;
             double x1 = inv2a*(-b - sqrtd) + x0;
