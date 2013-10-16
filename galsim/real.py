@@ -60,7 +60,7 @@ class RealGalaxy(GSObject):
     
         real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index=None, id=None, random=False, 
                                         rng=None, x_interpolant=None, k_interpolant=None,
-                                        flux=None, pad_factor=0, noise_pad_size=0)
+                                        flux=None, pad_factor=4, noise_pad_size=0)
 
     This initializes real_galaxy with three InterpolatedImage objects (one for the deconvolved
     galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
@@ -100,10 +100,9 @@ class RealGalaxy(GSObject):
     @param flux                 Total flux, if None then original flux in galaxy is adopted without
                                 change [default `flux = None`].
     @param pad_factor           Factor by which to pad the Image when creating the
-                                InterpolatedImage; `pad_factor <= 0` results in the use of the
-                                default value, 4.  We strongly recommend leaving this parameter at
-                                its default value; see text above for details.
-                                [Default `pad_factor = 0`.]
+                                InterpolatedImage.  We strongly recommend leaving this parameter
+                                at its default value; see text above for details.
+                                [Default `pad_factor = 4`.]
     @param noise_pad_size       If provided, the image will be padded out to this size (in arcsec)
                                 with the noise specified in the real galaxy catalog. This is 
                                 important if you are planning to whiten the resulting image.  You 
@@ -133,7 +132,7 @@ class RealGalaxy(GSObject):
 
     # --- Public Class methods ---
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
-                 rng=None, x_interpolant=None, k_interpolant=None, flux=None, pad_factor=0,
+                 rng=None, x_interpolant=None, k_interpolant=None, flux=None, pad_factor=4,
                  noise_pad_size=0, gsparams=None):
 
         import pyfits

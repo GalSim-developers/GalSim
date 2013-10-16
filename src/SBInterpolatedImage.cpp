@@ -34,8 +34,6 @@ int verbose_level = 2;
 
 namespace galsim {
 
-    double getDefaultPadFactor() { return sbp::default_pad_factor; }
-
     template <typename T> 
     SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<T>& image,
@@ -100,7 +98,7 @@ namespace galsim {
             _pimpl->dx = dx;
         }
 
-        if (pad_factor <= 0.) pad_factor = sbp::default_pad_factor;
+        assert(pad_factor > 0.);
         _pimpl->Nk = goodFFTSize(int(pad_factor*_pimpl->Ninitial));
 
         double dx2 = _pimpl->dx*_pimpl->dx;
@@ -166,7 +164,7 @@ namespace galsim {
 
         // Figure out what size we need based on pad_factor
         dbg<<"pad_factor = "<<pad_factor<<std::endl;
-        if (pad_factor <= 0.) pad_factor = sbp::default_pad_factor;
+        assert(pad_factor > 0.);
         _pimpl->Nk = goodFFTSize(int(pad_factor*_pimpl->Ninitial));
 
         dbg<<"Ninitial = "<<_pimpl->Ninitial<<std::endl;
@@ -247,8 +245,8 @@ namespace galsim {
     void SBInterpolatedImage::SBInterpolatedImageImpl::initialize()
     {
         dbg<<"SBInterpolate initialize\n";
-        if (!_xInterp.get()) _xInterp = sbp::defaultXInterpolant2d;
-        if (!_kInterp.get()) _kInterp = sbp::defaultKInterpolant2d;
+        assert(_xInterp.get());
+        assert(_kInterp.get());
 
         dbg<<"N = "<<_multi.getNin()<<", xrange = "<<_xInterp->xrange();
         dbg<<", scale = "<<_multi.getScale()<<std::endl;

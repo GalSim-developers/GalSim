@@ -82,7 +82,7 @@ class InterpolatedImage(GSObject):
     
         >>> interpolated_image = galsim.InterpolatedImage(
                 image, x_interpolant = None, k_interpolant = None, normalization = 'flux',
-                dx = None, flux = None, pad_factor = 0., noise_pad_size = 0, noise_pad = 0.,
+                dx = None, flux = None, pad_factor = 4., noise_pad_size = 0, noise_pad = 0.,
                 use_cache = True, pad_image = None, rng = None, calculate_stepk = True,
                 calculate_maxk = True, use_true_center = True, offset = None)
 
@@ -129,10 +129,9 @@ class InterpolatedImage(GSObject):
                            (Default `dx = None`.)
     @param flux            Optionally specify a total flux for the object, which overrides the
                            implied flux normalization from the Image itself.
-    @param pad_factor      Factor by which to pad the Image with zeros; `pad_factor <= 0` results 
-                           in the use of the default value, 4.  We strongly recommend leaving this 
-                           parameter at its default value; see text above for details. 
-                           (Default `pad_factor = 0`)
+    @param pad_factor      Factor by which to pad the Image with zeros.  We strongly recommend 
+                           leaving this parameter at its default value; see text above for details. 
+                           (Default `pad_factor = 4`)
     @param noise_pad_size  If provided, the image will be padded out to this size (in arcsec) with 
                            the noise specified by `noise_pad`. This is important if you are 
                            planning to whiten the resulting image.  You want to make sure that the 
@@ -240,7 +239,7 @@ class InterpolatedImage(GSObject):
 
     # --- Public Class methods ---
     def __init__(self, image, x_interpolant = None, k_interpolant = None, normalization = 'flux',
-                 dx = None, flux = None, pad_factor = 0., noise_pad_size=0, noise_pad = 0.,
+                 dx = None, flux = None, pad_factor = 4., noise_pad_size=0, noise_pad = 0.,
                  rng = None, pad_image = None, calculate_stepk=True, calculate_maxk=True,
                  use_cache=True, use_true_center=True, offset=None, gsparams=None):
 
@@ -326,6 +325,8 @@ class InterpolatedImage(GSObject):
 
         # This will be passed to SBInterpolatedImage, so make sure it is the right type.
         pad_factor = float(pad_factor)
+        if pad_factor <= 0.:
+            raise ValueError("Invalid pad_factor <= 0 in InterpolatedImage")
 
         # Make sure the image fits in the noise pad image:
         if noise_pad_size:
