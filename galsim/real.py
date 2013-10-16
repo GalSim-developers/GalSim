@@ -68,10 +68,12 @@ class RealGalaxy(GSObject):
     options, e.g., to choose at random but accounting for the non-constant weight factors
     (probabilities for objects to make it into the training sample).  
 
-    Note that preliminary tests suggest that for optimal balance between accuracy and speed,
-    `k_interpolant` and `pad_factor` should be kept at their default values.  The user should be
-    aware that significant inaccuracy can result from using other combinations of these parameters;
-    see devel/modules/finterp.pdf, especially table 1, in the GalSim repository.
+    Note that tests suggest that for optimal balance between accuracy and speed,`k_interpolant` and
+    `pad_factor` should be kept at their default values.  The user should be aware that significant 
+    inaccuracy can result from using other combinations of these parameters; see 
+    devel/modules/finterp.pdf, especially table 1, in the GalSim repository, and comment
+    https://github.com/GalSim-developers/GalSim/issues/389#issuecomment-26166621 and following
+    comments. 
 
     @param real_galaxy_catalog  A RealGalaxyCatalog object with basic information about where to
                                 find the data, etc.
@@ -120,7 +122,7 @@ class RealGalaxy(GSObject):
     # Initialization parameters of the object, with type information
     _req_params = {}
     _opt_params = { "x_interpolant" : str ,
-                    "k_interpolant" : str,
+                    "k_interpolant" : str ,
                     "flux" : float ,
                     "pad_factor" : float,
                     "noise_pad_size" : float,
