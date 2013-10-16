@@ -10,3 +10,4 @@ test_interpolants_parametric.py: a script to perform the same tests as test_inte
 
 plot_test_interpolants.py: makes readable graphs from the output of the previous two scripts.
 
+atmos_factfinding.pdf: a document by Barney Rowe and Joerg Dietrich outlining an early exploration of possibilities for writing our own atmospheric PSF model based on Gaussian random field realizations of phase screens, see https://github.com/GalSim-developers/GalSim/issues/169.
