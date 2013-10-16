@@ -272,7 +272,7 @@ def Process(config, logger=None):
                 import traceback
                 tr = traceback.format_exc()
                 if logger:
-                    logger.error('%s: Caught exception %s\n%s',proc,str(e),tr)
+                    logger.debug('%s: Caught exception %s\n%s',proc,str(e),tr)
                 output.put( (e, file_num, file_name, tr) )
 
     # Set up the multi-process worker function if we're going to need it.
@@ -430,11 +430,20 @@ def Process(config, logger=None):
                 logger_proxy = None
             task_queue.put( (kwargs, file_num, file_name, logger_proxy) )
         else:
-            ProcessInput(kwargs['config'], file_num=file_num, logger=logger)
-            kwargs['logger'] = logger 
-            t = build_func(**kwargs)
-            if logger:
-                logger.warn('File %d = %s: time = %f sec', file_num, file_name, t)
+            try:
+                ProcessInput(kwargs['config'], file_num=file_num, logger=logger)
+                kwargs['logger'] = logger 
+                t = build_func(**kwargs)
+                if logger:
+                    logger.warn('File %d = %s: time = %f sec', file_num, file_name, t)
+            except Exception as e:
+                import traceback
+                tr = traceback.format_exc()
+                if logger:
+                    logger.error('Exception caught for file %d = %s', file_num, file_name)
+                    logger.error('%s',tr)
+                    logger.error('%s',e)
+                    logger.error('File %s not written! Continuing on...',file_name)
     if logger:
         logger.debug('nfiles_use = %d',nfiles_use)
 
@@ -458,9 +467,11 @@ def Process(config, logger=None):
             if isinstance(t,Exception):
                 # t is really the exception, e
                 # proc is reall the traceback
-                logger.error('Exception caught for file %d = %s', file_num, file_name)
-                logger.error('Traceback: %s',proc)
-                logger.error('Continuing on...')
+                if logger:
+                    logger.error('Exception caught for file %d = %s', file_num, file_name)
+                    logger.error('%s',proc)
+                    logger.error('%s',t)
+                    logger.error('File %s not written! Continuing on...',file_name)
             else:
                 if logger:
                     logger.warn('%s: File %d = %s: time = %f sec', proc, file_num, file_name, t)
