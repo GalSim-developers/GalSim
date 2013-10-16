@@ -41,11 +41,11 @@ namespace galsim {
                 .def(bp::init<const std::vector<boost::shared_ptr<BaseImage<U> > >&, 
                      double, double>(
                         (bp::arg("images"),
-                         bp::arg("dx")=0., bp::arg("pad_factor")=0.)
+                         bp::arg("dx")=0., bp::arg("pad_factor")=4.)
                 ))
                 .def(bp::init<const BaseImage<U>&, double, double>(
                         (bp::arg("image"),
-                         bp::arg("dx")=0., bp::arg("pad_factor")=0.)
+                         bp::arg("dx")=0., bp::arg("pad_factor")=4.)
                 ))
                 ;
         }
@@ -59,9 +59,9 @@ namespace galsim {
                      boost::shared_ptr<InterpolantXY>,
                      double, double, boost::shared_ptr<GSParams> >(
                          (bp::arg("image"),
-                          bp::arg("xInterp")=bp::object(),
-                          bp::arg("kInterp")=bp::object(),
-                          bp::arg("dx")=0., bp::arg("pad_factor")=0.,
+                          bp::arg("xInterp"),
+                          bp::arg("kInterp"),
+                          bp::arg("dx")=0., bp::arg("pad_factor")=4.,
                           bp::arg("gsparams")=bp::object())
                      )
                 )
@@ -87,8 +87,8 @@ namespace galsim {
                      boost::shared_ptr<InterpolantXY>,
                      boost::shared_ptr<GSParams> >(
                          (bp::args("multi","weights"),
-                          bp::arg("xInterp")=bp::object(),
-                          bp::arg("kInterp")=bp::object(),
+                          bp::arg("xInterp"),
+                          bp::arg("kInterp"),
                           bp::arg("gsparams")=bp::object())
                      )
                 )
@@ -101,10 +101,6 @@ namespace galsim {
             wrapTemplates<double>(pySBInterpolatedImage);
             wrapTemplates<int32_t>(pySBInterpolatedImage);
             wrapTemplates<int16_t>(pySBInterpolatedImage);
-
-            // A global function used by InterpolatedImage
-            bp::def("getDefaultPadFactor", &getDefaultPadFactor);
-
         }
 
     };
