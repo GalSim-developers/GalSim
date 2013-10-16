@@ -50,6 +50,16 @@ default_params = galsim.GSParams(
         integration_relerr = 1.e-5,
         integration_abserr = 1.e-7)
 
+# Some parameters used in the two unit tests test_integer_shift_fft and test_integer_shift_photon:
+test_sigma = 1.8
+test_hlr = 1.8
+int_shift_x = 7
+int_shift_y = 3
+n_pix_x = 50
+n_pix_y = 60
+delta_sub = 30
+image_decimal_precise = 15
+
 
 def test_smallshear():
     """Test the application of a small shear to a Gaussian SBProfile against a known result.
@@ -558,6 +568,119 @@ def test_rescale():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_integer_shift_fft():
+    """Test if applyShift works correctly for integer shifts using draw method.
+    """
+    import time
+    t1 = time.time()
+
+    gal = galsim.Gaussian(sigma=test_sigma)
+    pix = galsim.Pixel(1.)
+    psf = galsim.Airy(lam_over_diam=test_hlr)
+
+    # shift galaxy only
+ 
+    final=galsim.Convolve([gal, psf, pix])
+    img_center = galsim.ImageD(n_pix_x,n_pix_y)
+    final.draw(img_center,dx=1)
+
+    gal.applyShift(dx=int_shift_x,dy=int_shift_y)
+    final=galsim.Convolve([gal, psf, pix])
+    img_shift = galsim.ImageD(n_pix_x,n_pix_y)
+    final.draw(img_shift,dx=1)
+
+    sub_center = img_center.array[
+        (n_pix_y - delta_sub) / 2 : (n_pix_y + delta_sub) / 2,
+        (n_pix_x - delta_sub) / 2 : (n_pix_x + delta_sub) / 2]
+    sub_shift = img_shift.array[
+        (n_pix_y - delta_sub) / 2  + int_shift_y : (n_pix_y + delta_sub) / 2  + int_shift_y,
+        (n_pix_x - delta_sub) / 2  + int_shift_x : (n_pix_x + delta_sub) / 2  + int_shift_x]
+
+    np.testing.assert_array_almost_equal(
+        sub_center, sub_shift, decimal=image_decimal_precise,
+        err_msg="Integer shift failed for FFT rendered Gaussian GSObject with shifted Galaxy only")
+
+    # shift PSF only
+
+    gal = galsim.Gaussian(sigma=test_sigma)
+    psf.applyShift(dx=int_shift_x,dy=int_shift_y)
+    final=galsim.Convolve([gal, psf, pix])
+    img_shift = galsim.ImageD(n_pix_x,n_pix_y)
+    final.draw(img_shift,dx=1)
+
+    sub_center = img_center.array[
+        (n_pix_y - delta_sub) / 2 : (n_pix_y + delta_sub) / 2,
+        (n_pix_x - delta_sub) / 2 : (n_pix_x + delta_sub) / 2]
+    sub_shift = img_shift.array[
+        (n_pix_y - delta_sub) / 2  + int_shift_y : (n_pix_y + delta_sub) / 2  + int_shift_y,
+        (n_pix_x - delta_sub) / 2  + int_shift_x : (n_pix_x + delta_sub) / 2  + int_shift_x]
+    np.testing.assert_array_almost_equal(
+        sub_center, sub_shift,  decimal=image_decimal_precise,
+        err_msg="Integer shift failed for FFT rendered Gaussian GSObject with only PSF shifted ")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_integer_shift_photon():
+    """Test if applyShift works correctly for integer shifts using drawShoot method.
+    """
+    import time
+    t1 = time.time()
+
+    n_photons_low = 10
+    seed = 10
+
+    gal = galsim.Gaussian(sigma=test_sigma)
+    pix = galsim.Pixel(1.)
+    psf = galsim.Airy(lam_over_diam=test_hlr)
+
+    # shift galaxy only
+ 
+    final=galsim.Convolve([gal, psf, pix])
+    img_center = galsim.ImageD(n_pix_x,n_pix_y)
+    test_deviate = galsim.BaseDeviate(seed)
+    final.drawShoot(img_center,dx=1,rng=test_deviate,n_photons=n_photons_low)
+
+    gal.applyShift(dx=int_shift_x,dy=int_shift_y)
+    final=galsim.Convolve([gal, psf, pix])
+    img_shift = galsim.ImageD(n_pix_x,n_pix_y)
+    test_deviate = galsim.BaseDeviate(seed)
+    final.drawShoot(img_shift,dx=1,rng=test_deviate,n_photons=n_photons_low)
+    
+    sub_center = img_center.array[
+        (n_pix_y - delta_sub) / 2 : (n_pix_y + delta_sub) / 2,
+        (n_pix_x - delta_sub) / 2 : (n_pix_x + delta_sub) / 2]
+    sub_shift = img_shift.array[
+        (n_pix_y - delta_sub) / 2  + int_shift_y : (n_pix_y + delta_sub) / 2  + int_shift_y,
+        (n_pix_x - delta_sub) / 2  + int_shift_x : (n_pix_x + delta_sub) / 2  + int_shift_x]
+
+
+    np.testing.assert_array_almost_equal(
+        sub_center, sub_shift, decimal=image_decimal_precise,
+        err_msg="Integer shift failed for FFT rendered Gaussian GSObject with shifted Galaxy only")
+
+    # shift PSF only
+
+    gal = galsim.Gaussian(sigma=test_sigma)
+    psf.applyShift(dx=int_shift_x,dy=int_shift_y)
+    final=galsim.Convolve([gal, psf, pix])
+    img_shift = galsim.ImageD(n_pix_x,n_pix_y)
+    test_deviate = galsim.BaseDeviate(seed)
+    final.drawShoot(img_shift,dx=1,rng=test_deviate,n_photons=n_photons_low)
+
+    sub_center = img_center.array[
+        (n_pix_y - delta_sub) / 2 : (n_pix_y + delta_sub) / 2,
+        (n_pix_x - delta_sub) / 2 : (n_pix_x + delta_sub) / 2]
+    sub_shift = img_shift.array[
+        (n_pix_y - delta_sub) / 2  + int_shift_y : (n_pix_y + delta_sub) / 2  + int_shift_y,
+        (n_pix_x - delta_sub) / 2  + int_shift_x : (n_pix_x + delta_sub) / 2  + int_shift_x]
+    np.testing.assert_array_almost_equal(
+        sub_center, sub_shift,  decimal=image_decimal_precise,
+        err_msg="Integer shift failed for FFT rendered Gaussian GSObject with only PSF shifted ")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 if __name__ == "__main__":
     test_smallshear()
@@ -567,3 +690,5 @@ if __name__ == "__main__":
     test_lens()
     test_shift()
     test_rescale()
+    test_integer_shift_fft()
+    test_integer_shift_photon()
