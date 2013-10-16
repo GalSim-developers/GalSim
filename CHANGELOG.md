@@ -7,6 +7,9 @@ Changes from v0.5 to current version:
 * Added MEDS file output to the des module.  Also made it easier for modules such as this to add 
   new input and output formats to the config structure.  (Issue #376)
 
+* Added RealGalaxyOriginal galaxy type in config.  This refers to the original _as observed_
+  galaxy image, not deconvolved by the PSF.  (Issue #389)
+
 * Fixed a bug in the rendering of shifted images.  (Issue #424)
 
 * Made RealGalaxy objects keep track of their (correlated) noise.  Functions like applyShear,
@@ -19,7 +22,7 @@ Changes from v0.5 to current version:
   correctly.  (Outside of this noise padding, `pad_factor` still sets the amount of zero-padding
   to use to remove the ghost images in the FFT.)  (Issue #430)
 
-* Added whiten option to config for RealGalaxy objects to whiten the image.  (Issue #430)
+* Added `whiten` option to config for RealGalaxy objects to whiten the image.  (Issue #430)
 
 * Added VariableGaussianNoise to apply Gaussian noise with a variable sigma across the image.
   (Issue #430)
