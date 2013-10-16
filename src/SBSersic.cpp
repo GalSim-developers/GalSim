@@ -543,7 +543,7 @@ namespace galsim {
             }
             fit_vals.push_front(f0);
         }
-        // If didn't find a goot approximation for large k, just use the largest k we put in
+        // If didn't find a good approximation for large k, just use the largest k we put in
         // in the table.  (Need to use some approximation after this anyway!)
         if (_ksq_max <= 0.) _ksq_max = std::exp(2. * _ft.argMax());
         xdbg<<"ft.argMax = "<<_ft.argMax()<<std::endl;
