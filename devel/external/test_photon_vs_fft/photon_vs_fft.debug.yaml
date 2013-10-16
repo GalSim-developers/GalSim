@@ -1,3 +1,11 @@
+# .debug. file - is a shorter version of the regular config files (space, ground), 
+# that I used to check if the code works. It may be handy for anyone who wants to repeat the 
+# tests later.
+
+# photon_vs_fft.debug.yaml is a configuration script for use with photon_vs_fft.py.
+# It is not a standard galsim.config script, although the main driver uses parts of it as such.
+# See README.md, photon_vs_fft.py and comments in this file for usage details.
+
 # if you want, use fewer galaxies
 n_gals: &n_gals 3
 

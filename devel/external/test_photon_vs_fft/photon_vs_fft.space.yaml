@@ -1,4 +1,9 @@
-# if you want, use less galaxies
+# photon_vs_fft.space.yaml is a configuration script for use with photon_vs_fft.py.
+# It is not a standard galsim.config script, although the main driver uses parts of it as such.
+# See README.md, photon_vs_fft.py and comments in this file for usage details.
+# File contains space observing conditions (PSF, pixel size) 
+
+# number of galaxies to use from the input catalog
 n_gals: &n_gals 270
 
 # settings for the photon_vs_fft
