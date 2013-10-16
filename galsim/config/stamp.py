@@ -47,32 +47,41 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
     """
     def worker(input, output):
         proc = current_process().name
-        for (kwargs, config, obj_num, nobj, info, logger) in iter(input.get, 'STOP'):
-            if logger:
-                logger.debug('%s: Received job to do %d stamps, starting with %d',proc,nobj,obj_num)
-            results = []
-            # Make new copies of config and kwargs so we can update them without
-            # clobbering the versions for other tasks on the queue.
-            # (The config modifications come in BuildSingleStamp.)
-            import copy
-            kwargs1 = copy.copy(kwargs)
-            config1 = galsim.config.CopyConfig(config)
-            for k in range(nobj):
-                kwargs1['config'] = config1
-                kwargs1['obj_num'] = obj_num + k
-                kwargs1['logger'] = logger
-                result = BuildSingleStamp(**kwargs1)
-                results.append(result)
-                #print 'Proc %s: Finished Stamp %d'%(proc,obj_num+k)
-                # Note: numpy shape is y,x
-                ys, xs = result[0].array.shape
-                t = result[5]
+        for job in iter(input.get, 'STOP'):
+            try :
+                (kwargs, config, obj_num, nobj, info, logger) = job
                 if logger:
-                    logger.info('%s: Stamp %d: size = %d x %d, time = %f sec', 
-                                proc, obj_num+k, xs, ys, t)
-            output.put( (results, info, proc) )
-            if logger:
-                logger.debug('%s: Finished job %d -- %d',proc,obj_num,obj_num+nobj-1)
+                    logger.debug('%s: Received job to do %d stamps, starting with %d',
+                                 proc,nobj,obj_num)
+                results = []
+                # Make new copies of config and kwargs so we can update them without
+                # clobbering the versions for other tasks on the queue.
+                # (The config modifications come in BuildSingleStamp.)
+                import copy
+                kwargs1 = copy.copy(kwargs)
+                config1 = galsim.config.CopyConfig(config)
+                for k in range(nobj):
+                    kwargs1['config'] = config1
+                    kwargs1['obj_num'] = obj_num + k
+                    kwargs1['logger'] = logger
+                    result = BuildSingleStamp(**kwargs1)
+                    results.append(result)
+                    #print 'Proc %s: Finished Stamp %d'%(proc,obj_num+k)
+                    # Note: numpy shape is y,x
+                    ys, xs = result[0].array.shape
+                    t = result[5]
+                    if logger:
+                        logger.info('%s: Stamp %d: size = %d x %d, time = %f sec', 
+                                    proc, obj_num+k, xs, ys, t)
+                output.put( (results, info, proc) )
+                if logger:
+                    logger.debug('%s: Finished job %d -- %d',proc,obj_num,obj_num+nobj-1)
+            except Exception as e:
+                import traceback
+                tr = traceback.format_exc()
+                if logger:
+                    logger.error('%s: Caught exception %s\n%s',proc,str(e),tr)
+                output.put( (e, info, tr) )
     
     # The kwargs to pass to build_func.
     # We'll be adding to this below...
@@ -218,6 +227,12 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
         # being drawn.  
         for i in range(0,nobjects,nobj_per_task):
             results, k0, proc = done_queue.get()
+            if isinstance(results,Exception):
+                # results is really the exception, e
+                # proc is reall the traceback
+                logger.error('Exception caught for file %d = %s', file_num, file_name)
+                logger.error('Traceback: %s',proc)
+                raise results
             k = k0
             for result in results:
                 images[k] = result[0]

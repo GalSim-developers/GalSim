@@ -45,33 +45,41 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
     import time
     def worker(input, output):
         proc = current_process().name
-        for (kwargs, config, image_num, obj_num, nim, info, logger) in iter(input.get, 'STOP'):
-            if logger:
-                logger.debug('%s: Received job to do %d images, starting with %d',
-                             proc,nim,image_num)
-            results = []
-            # Make new copies of config and kwargs so we can update them without
-            # clobbering the versions for other tasks on the queue.
-            import copy
-            kwargs1 = copy.copy(kwargs)
-            config1 = galsim.config.CopyConfig(config)
-            for k in range(nim):
-                t1 = time.time()
-                kwargs1['config'] = config1
-                kwargs1['image_num'] = image_num + k
-                kwargs1['obj_num'] = obj_num
-                kwargs1['logger'] = logger
-                im = BuildImage(**kwargs1)
-                obj_num += galsim.config.GetNObjForImage(config, image_num+k)
-                t2 = time.time()
-                results.append( [im[0], im[1], im[2], im[3], t2-t1 ] )
-                ys, xs = im[0].array.shape
+        for job in iter(input.get, 'STOP'):
+            try :
+                (kwargs, config, image_num, obj_num, nim, info, logger) = job
                 if logger:
-                    logger.info('%s: Image %d: size = %d x %d, time = %f sec', 
-                                proc, image_num+k, xs, ys, t2-t1)
-            output.put( (results, info, current_process().name) )
-            if logger:
-                logger.debug('%s: Finished job %d -- %d',proc,image_num,image_num+nim-1)
+                    logger.debug('%s: Received job to do %d images, starting with %d',
+                                proc,nim,image_num)
+                results = []
+                # Make new copies of config and kwargs so we can update them without
+                # clobbering the versions for other tasks on the queue.
+                import copy
+                kwargs1 = copy.copy(kwargs)
+                config1 = galsim.config.CopyConfig(config)
+                for k in range(nim):
+                    t1 = time.time()
+                    kwargs1['config'] = config1
+                    kwargs1['image_num'] = image_num + k
+                    kwargs1['obj_num'] = obj_num
+                    kwargs1['logger'] = logger
+                    im = BuildImage(**kwargs1)
+                    obj_num += galsim.config.GetNObjForImage(config, image_num+k)
+                    t2 = time.time()
+                    results.append( [im[0], im[1], im[2], im[3], t2-t1 ] )
+                    ys, xs = im[0].array.shape
+                    if logger:
+                        logger.info('%s: Image %d: size = %d x %d, time = %f sec', 
+                                    proc, image_num+k, xs, ys, t2-t1)
+                output.put( (results, info, proc) )
+                if logger:
+                    logger.debug('%s: Finished job %d -- %d',proc,image_num,image_num+nim-1)
+            except Exception as e:
+                import traceback
+                tr = traceback.format_exc()
+                if logger:
+                    logger.error('%s: Caught exception %s\n%s',proc,str(e),tr)
+                output.put( (e, info, tr) )
     
     # The kwargs to pass to BuildImage
     kwargs = {
@@ -179,6 +187,12 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
         # being drawn.  
         for i in range(0,nimages,nim_per_task):
             results, k0, proc = done_queue.get()
+            if isinstance(results,Exception):
+                # results is really the exception, e
+                # proc is reall the traceback
+                logger.error('Exception caught for file %d = %s', file_num, file_name)
+                logger.error('Traceback: %s',proc)
+                raise results
             k = k0
             for result in results:
                 images[k] = result[0]

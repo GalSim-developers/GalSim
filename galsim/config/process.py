@@ -255,17 +255,25 @@ def Process(config, logger=None):
 
     def worker(input, output):
         proc = current_process().name
-        for (kwargs, file_num, file_name, logger) in iter(input.get, 'STOP'):
-            if logger:
-                logger.debug('%s: Received job to do file %d, %s',proc,file_num,file_name)
-            ProcessInput(kwargs['config'], file_num=file_num, logger=logger)
-            if logger:
-                logger.debug('%s: After ProcessInput for file %d',proc,file_num)
-            kwargs['logger'] = logger
-            result = build_func(**kwargs)
-            if logger:
-                logger.debug('%s: After %s for file %d',proc,build_func,file_num)
-            output.put( (result, file_num, file_name, current_process().name) )
+        for job in iter(input.get, 'STOP'):
+            try:
+                (kwargs, file_num, file_name, logger) = job
+                if logger:
+                    logger.debug('%s: Received job to do file %d, %s',proc,file_num,file_name)
+                ProcessInput(kwargs['config'], file_num=file_num, logger=logger)
+                if logger:
+                    logger.debug('%s: After ProcessInput for file %d',proc,file_num)
+                kwargs['logger'] = logger
+                t = build_func(**kwargs)
+                if logger:
+                    logger.debug('%s: After %s for file %d',proc,build_func,file_num)
+                output.put( (t, file_num, file_name, proc) )
+            except Exception as e:
+                import traceback
+                tr = traceback.format_exc()
+                if logger:
+                    logger.error('%s: Caught exception %s\n%s',proc,str(e),tr)
+                output.put( (e, file_num, file_name, tr) )
 
     # Set up the multi-process worker function if we're going to need it.
     if nproc > 1:
@@ -447,8 +455,15 @@ def Process(config, logger=None):
         # Log the results.
         for k in range(nfiles_use):
             t, file_num, file_name, proc = done_queue.get()
-            if logger:
-                logger.warn('%s: File %d = %s: time = %f sec', proc, file_num, file_name, t)
+            if isinstance(t,Exception):
+                # t is really the exception, e
+                # proc is reall the traceback
+                logger.error('Exception caught for file %d = %s', file_num, file_name)
+                logger.error('Traceback: %s',proc)
+                logger.error('Continuing on...')
+            else:
+                if logger:
+                    logger.warn('%s: File %d = %s: time = %f sec', proc, file_num, file_name, t)
 
         # Stop the processes
         for j in range(nproc):
