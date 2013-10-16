@@ -174,6 +174,14 @@ namespace hsm {
         double failed_moments;
     };
 
+// clang doesn't like the mmgr new macro in this next line.
+#ifdef MEM_TEST
+#ifdef __clang__
+#if __has_warning("-Wpredefined-identifier-outside-function")
+#pragma GCC diagnostic ignored "-Wpredefined-identifier-outside-function"
+#endif
+#endif
+#endif
     const boost::shared_ptr<HSMParams> default_hsmparams(new HSMParams());
 
     // All code between the @cond and @endcond is excluded from Doxygen documentation
