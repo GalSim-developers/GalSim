@@ -19,9 +19,9 @@
  * along with GalSim.  If not, see <http://www.gnu.org/licenses/>
  */
 
+#include <vector>
 #include "BinomFact.h"
 #include "Std.h"
-#include <vector>
 
 namespace galsim {
 
