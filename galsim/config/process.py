@@ -164,17 +164,32 @@ def ProcessInput(config, file_num=0, logger=None):
             # If it's not currently a list, make it a list with one element.
             if not isinstance(fields, list): fields = [ fields ]
 
-            config[key] = []
-            for field in fields:
-                field['type'], ignore = valid_input_types[key][0:2]
-                input_obj = galsim.config.gsobject._BuildSimple(
-                        field, key, config, ignore, {}, logger)[0]
+            if key not in config:
                 if logger:
-                    logger.debug('Built input object %s, %s',key,field['type'])
-                    if valid_input_types[key][2]:
-                        logger.info('Read %d objects from %s',input_obj.getNObjects(),key)
-                # Store input_obj in the config for use by BuildGSObject function.
-                config[key].append(input_obj)
+                    logger.debug('%s not currently in config',key)
+                config[key] = [ None for i in range(len(fields)) ]
+                config[key+'_safe'] = [ None for i in range(len(fields)) ]
+            for i in range(len(fields)):
+                field = fields[i]
+                ck = config[key]
+                ck_safe = config[key+'_safe']
+                if logger:
+                    logger.debug('Current values for %s are %s, safe = %s',key,str(ck[i]),ck_safe[i])
+                field['type'], ignore = valid_input_types[key][0:2]
+                if ck[i] is not None and ck_safe[i]:
+                    if logger:
+                        logger.debug('Using %s already read in',key)
+                else:
+                    config['obj_num'] = -1
+                    input_obj, safe = galsim.config.gsobject._BuildSimple(
+                            field, key, config, ignore, {}, logger)
+                    if logger:
+                        logger.debug('Built input object %s, %s',key,field['type'])
+                        if valid_input_types[key][2]:
+                            logger.info('Read %d objects from %s',input_obj.getNObjects(),key)
+                    # Store input_obj in the config for use by BuildGSObject function.
+                    ck[i] = input_obj
+                    ck_safe[i] = safe
 
         # Check that there are no other attributes specified.
         valid_keys = valid_input_types.keys()
@@ -194,21 +209,24 @@ def ProcessInputNObjects(config, logger=None):
             if key in input and has_nobjects:
                 field = input[key]
 
-                # If it's a list, just use the first one.
-                if isinstance(field, list): field = field[0]
-
-                type, ignore = valid_input_types[key][0:2]
-                if type in galsim.__dict__:
-                    init_func = eval("galsim."+type)
+                if key in config and config[key+'_safe'][0]:
+                    input_obj = config[key][0]
                 else:
-                    init_func = eval(type)
-                kwargs = galsim.config.GetAllParams(field, key, config,
-                                                    req = init_func._req_params,
-                                                    opt = init_func._opt_params,
-                                                    single = init_func._single_params,
-                                                    ignore = ignore)[0]
-                kwargs['nobjects_only'] = True
-                input_obj = init_func(**kwargs)
+                    # If it's a list, just use the first one.
+                    if isinstance(field, list): field = field[0]
+
+                    type, ignore = valid_input_types[key][0:2]
+                    if type in galsim.__dict__:
+                        init_func = eval("galsim."+type)
+                    else:
+                        init_func = eval(type)
+                    kwargs = galsim.config.GetAllParams(field, key, config,
+                                                        req = init_func._req_params,
+                                                        opt = init_func._opt_params,
+                                                        single = init_func._single_params,
+                                                        ignore = ignore)[0]
+                    kwargs['nobjects_only'] = True
+                    input_obj = init_func(**kwargs)
                 if logger:
                     logger.debug('Found nobjects = %d for %s',input_obj.getNOjects(),key)
                 return input_obj.getNObjects()
@@ -328,9 +346,10 @@ def Process(config, logger=None):
                 (kwargs, file_num, file_name, logger) = job
                 if logger:
                     logger.debug('%s: Received job to do file %d, %s',proc,file_num,file_name)
-                ProcessInput(kwargs['config'], file_num=file_num, logger=logger)
-                if logger:
-                    logger.debug('%s: After ProcessInput for file %d',proc,file_num)
+                if file_num != 0:
+                    ProcessInput(kwargs['config'], file_num=file_num, logger=logger)
+                    if logger:
+                        logger.debug('%s: After ProcessInput for file %d',proc,file_num)
                 kwargs['logger'] = logger
                 t = build_func(**kwargs)
                 if logger:
@@ -374,6 +393,11 @@ def Process(config, logger=None):
     last_file_name = {}
     for key in extra_keys:
         last_file_name[key] = None
+
+    # Process the input field for the first file.  Usually we won't need to reprocess
+    # things, since they are often "safe", so they won't need to be reprocessed for the
+    # later file_nums.  This is important to do here if nproc != 1.
+    ProcessInput(config, file_num=0, logger=logger)
 
     nfiles_use = nfiles
     for file_num in range(nfiles):
@@ -505,7 +529,8 @@ def Process(config, logger=None):
             task_queue.put( (kwargs1, file_num, file_name, logger_proxy) )
         else:
             try:
-                ProcessInput(kwargs['config'], file_num=file_num, logger=logger)
+                if file_name != 0:
+                    ProcessInput(config, file_num=file_num, logger=logger)
                 kwargs['config'] = config
                 kwargs['logger'] = logger 
                 t = build_func(**kwargs)
