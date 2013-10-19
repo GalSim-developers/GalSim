@@ -71,8 +71,9 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     # allow that.  So None is the default, and if it's None, we set it to config.
     if not base:
         base = config
+    if logger:
+        logger.debug('obj %d: Start BuildGSObject',base['obj_num'])
  
-    #print base['obj_num'],'Start BuildGSObject: config = ',config
     if isinstance(config,dict):
         if not key in config:
             raise AttributeError("key %s not found in config"%key)
@@ -84,6 +85,8 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
 
     # Alias for convenience
     ck = config[key]
+    if False:
+        logger.debug('obj %d: ck = %s',base['obj_num'],str(ck))
 
     # Check that the input config has a type to even begin with!
     if not 'type' in ck:
@@ -92,7 +95,8 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
 
     # If we have previously saved an object and marked it as safe, then use it.
     if 'current_val' in ck and ck['safe']:
-        #print base['obj_num'],'current is safe:  ',ck['current_val'], True
+        if logger:
+            logger.debug('obj %d: current is safe: %s',base['obj_num'],str(ck['current_val']))
         return ck['current_val'], True
 
     # Ring is only allowed for top level gal (since it requires special handling in 
@@ -161,6 +165,8 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     # See if this type has a specialized build function:
     if type in valid_gsobject_types:
         build_func = eval(valid_gsobject_types[type])
+        if logger:
+            logger.debug('obj %d: build_func = %s',base['obj_num'],str(build_func))
         gsobject, safe = build_func(ck, key, base, ignore, gsparams, logger)
     # Next, we check if this name is in the galsim dictionary.
     elif type in galsim.__dict__:
@@ -180,7 +186,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
             pass
     
     # Apply any dilation, ellip, shear, etc. modifications.
-    gsobject, safe1 = _TransformObject(gsobject, ck, base)
+    gsobject, safe1 = _TransformObject(gsobject, ck, base, logger)
     safe = safe and safe1
 
     if 'no_save' not in base:
@@ -227,7 +233,8 @@ def _BuildAdd(config, key, base, ignore, gsparams, logger):
         gsobject, safe1 = BuildGSObject(items, i, base, gsparams, logger)
         # Skip items with flux=0
         if 'flux' in items[i] and galsim.config.value.GetCurrentValue(items[i],'flux') == 0.:
-            #print base['obj_num'],'skip -- flux == 0'
+            if logger:
+                logger.debug('obj %d: skip -- flux == 0',base['obj_num'])
             continue
         safe = safe and safe1
         gsobjects.append(gsobject)
@@ -256,7 +263,8 @@ def _BuildAdd(config, key, base, ignore, gsparams, logger):
 
     if 'flux' in config:
         flux, safe1 = galsim.config.ParseValue(config, 'flux', base, float)
-        #print base['obj_num'],'flux = ',flux
+        if logger:
+            logger.debug('obj %d: flux == %f',base['obj_num'],flux)
         gsobject.setFlux(flux)
         safe = safe and safe1
 
@@ -291,7 +299,8 @@ def _BuildConvolve(config, key, base, ignore, gsparams, logger):
     
     if 'flux' in config:
         flux, safe1 = galsim.config.ParseValue(config, 'flux', base, float)
-        #print base['obj_num'],'flux = ',flux
+        if logger:
+            logger.debug('obj %d: flux == %f',base['obj_num'],flux)
         gsobject.setFlux(flux)
         safe = safe and safe1
 
@@ -320,7 +329,8 @@ def _BuildList(config, key, base, ignore, gsparams, logger):
 
     if 'flux' in config:
         flux, safe1 = galsim.config.ParseValue(config, 'flux', base, float)
-        #print base['obj_num'],'flux = ',flux
+        if logger:
+            logger.debug('obj %d: flux == %f',base['obj_num'],flux)
         gsobject.setFlux(flux)
         safe = safe and safe1
 
@@ -345,7 +355,8 @@ def _BuildRing(config, key, base, ignore, gsparams, logger):
         full_rotation = math.pi * galsim.radians
 
     dtheta = full_rotation / num
-    #print base['obj_num'],'Ring dtheta = ',dtheta
+    if logger:
+        logger.debug('obj %d: Ring dtheta = %f',base['obj_num'],dtheta.rad())
 
     k = base['seq_index']
     if k % num == 0:
@@ -416,6 +427,7 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams, logger):
         ignore = ignore)
     safe = safe and safe1
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
+    if logger and galsim.RealGalaxy._takes_logger: kwargs['logger'] = logger
 
     if 'rng' not in base:
         raise ValueError("No base['rng'] available for %s.type = RealGalaxy"%(key))
@@ -426,6 +438,8 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams, logger):
         if index >= real_cat.getNObjects():
             raise IndexError(
                 "%s index has gone past the number of entries in the catalog"%index)
+    if logger:
+        logger.debug('obj %d: RealGalaxy kwargs = %s',base['obj_num'],str(kwargs))
 
     gal = galsim.RealGalaxy(real_cat, **kwargs)
 
@@ -454,6 +468,9 @@ def _BuildSimple(config, key, base, ignore, gsparams, logger):
         init_func = eval("galsim."+type)
     else:
         init_func = eval(type)
+    if logger:
+        logger.debug('obj %d: BuildSimple for type = %s',base['obj_num'],type)
+        logger.debug('obj %d: init_func = %s',base['obj_num'],str(init_func))
 
     kwargs, safe = galsim.config.GetAllParams(config, key, base, 
                                               req = init_func._req_params,
@@ -469,11 +486,14 @@ def _BuildSimple(config, key, base, ignore, gsparams, logger):
         kwargs['rng'] = base['rng']
         safe = False
 
+    if logger:
+        logger.debug('obj %d: kwargs = %s',base['obj_num'],str(kwargs))
+
     # Finally, after pulling together all the params, try making the GSObject.
     return init_func(**kwargs), safe
 
 
-def _TransformObject(gsobject, config, base):
+def _TransformObject(gsobject, config, base, logger):
     """@brief Applies ellipticity, rotation, gravitational shearing and centroid shifting to a
     supplied GSObject, in that order, from user input.
 
@@ -483,105 +503,111 @@ def _TransformObject(gsobject, config, base):
     orig = True
     if 'dilate' in config:
         if orig: gsobject = gsobject.copy(); orig = False
-        gsobject, safe1 = _DilateObject(gsobject, config, 'dilate', base)
+        gsobject, safe1 = _DilateObject(gsobject, config, 'dilate', base, logger)
         safe = safe and safe1
     if 'dilation' in config:
         if orig: gsobject = gsobject.copy(); orig = False
-        gsobject, safe1 = _DilateObject(gsobject, config, 'dilation', base)
+        gsobject, safe1 = _DilateObject(gsobject, config, 'dilation', base, logger)
         safe = safe and safe1
     if 'ellip' in config:
         if orig: gsobject = gsobject.copy(); orig = False
-        gsobject, safe1 = _EllipObject(gsobject, config, 'ellip', base)
+        gsobject, safe1 = _EllipObject(gsobject, config, 'ellip', base, logger)
         safe = safe and safe1
     if 'rotate' in config:
         if orig: gsobject = gsobject.copy(); orig = False
-        gsobject, safe1 = _RotateObject(gsobject, config, 'rotate', base)
+        gsobject, safe1 = _RotateObject(gsobject, config, 'rotate', base, logger)
         safe = safe and safe1
     if 'rotation' in config:
         if orig: gsobject = gsobject.copy(); orig = False
-        gsobject, safe1 = _RotateObject(gsobject, config, 'rotation', base)
+        gsobject, safe1 = _RotateObject(gsobject, config, 'rotation', base, logger)
         safe = safe and safe1
     if 'scale_flux' in config:
         if orig: gsobject = gsobject.copy(); orig = False
-        gsobject, safe1 = _ScaleFluxObject(gsobject, config, 'scale_flux', base)
+        gsobject, safe1 = _ScaleFluxObject(gsobject, config, 'scale_flux', base, logger)
         safe = safe and safe1
     if 'shear' in config:
         if orig: gsobject = gsobject.copy(); orig = False
-        gsobject, safe1 = _EllipObject(gsobject, config, 'shear', base)
+        gsobject, safe1 = _EllipObject(gsobject, config, 'shear', base, logger)
         safe = safe and safe1
     if 'magnify' in config:
         if orig: gsobject = gsobject.copy(); orig = False
-        gsobject, safe1 = _MagnifyObject(gsobject, config, 'magnify', base)
+        gsobject, safe1 = _MagnifyObject(gsobject, config, 'magnify', base, logger)
         safe = safe and safe1
     if 'magnification' in config:
         if orig: gsobject = gsobject.copy(); orig = False
-        gsobject, safe1 = _MagnifyObject(gsobject, config, 'magnification', base)
+        gsobject, safe1 = _MagnifyObject(gsobject, config, 'magnification', base, logger)
         safe = safe and safe1
     if 'shift' in config:
         if orig: gsobject = gsobject.copy(); orig = False
-        gsobject, safe1 = _ShiftObject(gsobject, config, 'shift', base)
+        gsobject, safe1 = _ShiftObject(gsobject, config, 'shift', base, logger)
         safe = safe and safe1
     return gsobject, safe
 
-def _EllipObject(gsobject, config, key, base):
+def _EllipObject(gsobject, config, key, base, logger):
     """@brief Applies ellipticity to a supplied GSObject from user input, also used for
     gravitational shearing.
 
     @returns transformed GSObject.
     """
     shear, safe = galsim.config.ParseValue(config, key, base, galsim.Shear)
-    #print base['obj_num'],'shear = ',shear
+    if logger:
+        logger.debug('obj %d: shear = %f,%f',base['obj_num'],shear.g1,shear.g2)
     gsobject = gsobject.createSheared(shear)
     return gsobject, safe
 
-def _RotateObject(gsobject, config, key, base):
+def _RotateObject(gsobject, config, key, base, logger):
     """@brief Applies rotation to a supplied GSObject based on user input.
 
     @returns transformed GSObject.
     """
     theta, safe = galsim.config.ParseValue(config, key, base, galsim.Angle)
-    #print base['obj_num'],'theta = ',theta
+    if logger:
+        logger.debug('obj %d: theta = %f rad',base['obj_num'],theta.rad())
     gsobject = gsobject.createRotated(theta)
     return gsobject, safe
 
-def _ScaleFluxObject(gsobject, config, key, base):
+def _ScaleFluxObject(gsobject, config, key, base, logger):
     """@brief Scales the flux of a supplied GSObject based on user input.
 
     @returns transformed GSObject.
     """
     flux_ratio, safe = galsim.config.ParseValue(config, key, base, float)
-    #print base['obj_num'],'flux_ratio = ',flux_ratio
+    if logger:
+        logger.debug('obj %d: flux_ratio  = %f',base['obj_num'],flux_ratio)
     gsobject = gsobject.copy()
     gsobject.scaleFlux(flux_ratio)
     return gsobject, safe
 
-def _DilateObject(gsobject, config, key, base):
+def _DilateObject(gsobject, config, key, base, logger):
     """@brief Applies dilation to a supplied GSObject based on user input.
 
     @returns transformed GSObject.
     """
     scale, safe = galsim.config.ParseValue(config, key, base, float)
-    #print base['obj_num'],'scale = ',scale
+    if logger:
+        logger.debug('obj %d: scale  = %f',base['obj_num'],scale)
     gsobject = gsobject.createDilated(scale)
     return gsobject, safe
 
-def _MagnifyObject(gsobject, config, key, base):
+def _MagnifyObject(gsobject, config, key, base, logger):
     """@brief Applies magnification to a supplied GSObject based on user input.
 
     @returns transformed GSObject.
     """
     mu, safe = galsim.config.ParseValue(config, key, base, float)
-    #print base['obj_num'],'mu = ',mu
+    if logger:
+        logger.debug('obj %d: mu  = %f',base['obj_num'],mu)
     gsobject = gsobject.createMagnified(mu)
     return gsobject, safe
 
-def _ShiftObject(gsobject, config, key, base):
+def _ShiftObject(gsobject, config, key, base, logger):
     """@brief Applies centroid shift to a supplied GSObject based on user input.
 
     @returns transformed GSObject.
     """
     shift, safe = galsim.config.ParseValue(config, key, base, galsim.PositionD)
-    #print base['obj_num'],'shift = ',shift
+    if logger:
+        logger.debug('obj %d: shift  = %f,%f',base['obj_num'],shift.x,shift.y)
     gsobject = gsobject.createShifted(shift.x,shift.y)
     return gsobject, safe
 

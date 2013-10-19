@@ -82,6 +82,8 @@ def ProcessInput(config, file_num=0, logger=None):
     """
     config['seq_index'] = file_num
     config['file_num'] = file_num
+    if logger:
+        logger.debug('Start ProcessInput for file %d',file_num)
     # Process the input field (read any necessary input files)
     if 'input' in config:
         input = config['input']
@@ -196,9 +198,10 @@ def Process(config, logger=None):
 
     # extra_hdu says whether the function takes psf_hdu, etc.
     extra_hdu = valid_output_types[type][4]
-    #print 'type = ',type
-    #print 'extra_file_name = ',extra_file_name
-    #print 'extra_hdu = ',extra_hdu
+    if logger:
+        logger.debug('type = %s',type)
+        logger.debug('extra_file_name = %s',extra_file_name)
+        logger.debug('extra_hdu = %d',extra_hdu)
 
     # We need to know how many objects we'll need for each file (and each image within each file)
     # to get the indexing correct for any sequence items.  (e.g. random_seed)
@@ -209,7 +212,8 @@ def Process(config, logger=None):
         nfiles = galsim.config.ParseValue(output, 'nfiles', config, int)[0]
     else:
         nfiles = 1 
-    #print 'nfiles = ',nfiles
+    if logger:
+        logger.debug('nfiles = %d',nfiles)
 
     # Figure out how many processes we will use for building the files.
     # (If nfiles = 1, but nimages > 1, we'll do the multi-processing at the image stage.)
@@ -306,7 +310,8 @@ def Process(config, logger=None):
 
     nfiles_use = nfiles
     for file_num in range(nfiles):
-        #print 'file, image, obj = ',file_num, image_num, obj_num
+        if logger:
+            logger.debug('file_num, image_num, obj_num = %d,%d,%d',file_num,image_num,obj_num)
         # Set the index for any sequences in the input or output parameters.
         # These sequences are indexed by the file_num.
         # (In image, they are indexed by image_num, and after that by obj_num.)
@@ -372,7 +377,8 @@ def Process(config, logger=None):
 
         # Check if we need to build extra images for write out as well
         for extra_key in [ key for key in extra_keys if key in output ]:
-            #print 'extra_key = ',extra_key
+            if logger:
+                logger.debug('extra_key = %s',extra_key)
             output_extra = output[extra_key]
 
             output_extra['type'] = 'default'
@@ -409,12 +415,10 @@ def Process(config, logger=None):
                     f = os.path.join(dir,f)
                 # If we already wrote this file, skip it this time around.
                 # (Typically this is applicable for psf, where we may only want 1 psf file.)
-                #print 'last_file_name for ',key,' = ',last_file_name[key]
-                #print 'f = ',f
                 if last_file_name[key] == f:
-                    #print 'skipping'
+                    if logger:
+                        logger.debug('skipping %s, since already written',f)
                     continue
-                #print 'assigning this to kwargs'
                 kwargs[ extra_key+'_file_name' ] = f
                 last_file_name[key] = f
             elif 'hdu' in params:
@@ -444,8 +448,6 @@ def Process(config, logger=None):
                     logger.error('%s',tr)
                     logger.error('%s',e)
                     logger.error('File %s not written! Continuing on...',file_name)
-    if logger:
-        logger.debug('nfiles_use = %d',nfiles_use)
 
     # If we're doing multiprocessing, here is the machinery to run through the task_queue
     # and process the results.
@@ -462,6 +464,8 @@ def Process(config, logger=None):
             p_list.append(p)
 
         # Log the results.
+        if logger:
+            logger.debug('nfiles_use = %d',nfiles_use)
         for k in range(nfiles_use):
             t, file_num, file_name, proc = done_queue.get()
             if isinstance(t,Exception):

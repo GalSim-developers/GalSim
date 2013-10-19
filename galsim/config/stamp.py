@@ -296,7 +296,7 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
 
 
     if logger:
-        logger.debug('Done making stamps')
+        logger.debug('image %d: Done making stamps',config['image_num'])
 
     return images, psf_images, weight_images, badpix_images, current_vars
  
@@ -328,7 +328,8 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
     # Initialize the random number generator we will be using.
     if 'random_seed' in config['image']:
         seed = galsim.config.ParseValue(config['image'],'random_seed',config,int)[0]
-        #print 'seed = ',seed
+        if logger:
+            logger.debug('obj %d: seed = %d',obj_num,seed)
         rng = galsim.BaseDeviate(seed)
     else:
         rng = galsim.BaseDeviate()
@@ -348,7 +349,8 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             ysize = galsim.config.ParseValue(config['image'],'stamp_ysize',config,int)[0]
         elif 'stamp_size' in config['image']:
             ysize = galsim.config.ParseValue(config['image'],'stamp_size',config,int)[0]
-    #print 'xsize,ysize = ',xsize,ysize
+    if False:
+        logger.debug('obj %d: xsize,ysize = %d,%d',config['obj_num'],xsize,ysize)
 
     # Determine where this object is going to go:
     if 'image_pos' in config['image']:
@@ -356,22 +358,26 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                                              galsim.PositionD)[0]
         # Save this value for possible use in Eval's.
         config['image_pos'] = image_pos
-        #print 'image_pos = ',image_pos
+        if logger:
+            logger.debug('obj %d: image_pos = %s',config['obj_num'],str(config['image_pos']))
 
         # Calculate and save the position relative to the image center
         config['sky_pos'] = (image_pos - config['image_cen']) * config['pixel_scale']
-        #print 'sky_pos = ',config['sky_pos']
+        if logger:
+            logger.debug('obj %d: sky_pos = %s',config['obj_num'],str(config['sky_pos']))
 
     elif 'sky_pos' in config['image']:
         sky_pos = galsim.config.ParseValue(config['image'], 'sky_pos', config, galsim.PositionD)[0]
         # Save this value for possible use in Eval's.
         config['sky_pos'] = sky_pos
-        #print 'sky_pos = ',sky_pos
+        if logger:
+            logger.debug('obj %d: sky_pos = %s',config['obj_num'],str(config['sky_pos']))
 
         # Calculate and save the position relative to the image center
         image_pos = (sky_pos / config['pixel_scale']) + config['image_cen']
         config['image_pos'] = image_pos
-        #print 'image_pos = ',config['image_pos']
+        if logger:
+            logger.debug('obj %d: image_pos = %s',config['obj_num'],str(config['image_pos']))
 
     else:
         image_pos = None
@@ -386,19 +392,23 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
         # even sized images.
         if xsize % 2 == 0: image_pos.x += 0.5
         if ysize % 2 == 0: image_pos.y += 0.5
-        #print 'nominal image_pos = ',image_pos
+        if False:
+            logger.debug('obj %d: nominal image_pos = %s',config['obj_num'],str(image_pos))
 
         icenter = galsim.PositionI(
             int(math.floor(image_pos.x+0.5)),
             int(math.floor(image_pos.y+0.5)) )
-        #print 'icenter = ',icenter
+        if False:
+            logger.debug('obj %d: nominal icenter = %s',config['obj_num'],str(icenter))
         final_shift = galsim.PositionD(image_pos.x-icenter.x , image_pos.y-icenter.y)
-        #print 'final_shift = ',final_shift
+        if False:
+            logger.debug('obj %d: final_shift = %s',config['obj_num'],str(final_shift))
 
     else:
         icenter = None
         final_shift = galsim.PositionD(0.,0.)
-        #print 'no final_shift'
+        if False:
+            logger.debug('obj %d: no final_shift',config['obj_num'])
 
     gsparams = {}
     if 'gsparams' in config['image']:
@@ -423,13 +433,13 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             raise AttributeError("At least one of gal or psf must be specified in config.")
 
     except galsim.config.gsobject.SkipThisObject, e:
-        #print 'Caught SkipThisObject: e =',e.msg
         if logger:
+            logger.debug('obj %d: Caught SkipThisObject: e = %s',config['obj_num'],e.msg)
             if e.msg:
                 # If there is a message, upgrade to warn level
-                logger.warn('Skipping object: %s',e.msg)
+                logger.warn('Skipping object %d: %s',config['obj_num'],e.msg)
             else:
-                logger.debug('Skipping object')
+                logger.debug('obj %d: Skipping object')
         skip = True
 
     if not skip and 'offset' in config['image']:
@@ -511,7 +521,8 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
     t6 = time.time()
 
     if logger:
-        logger.debug('   Times: %f, %f, %f, %f, %f', t2-t1, t3-t2, t4-t3, t5-t4, t6-t5)
+        logger.debug('obj %d: Times: %f, %f, %f, %f, %f',
+                     config['obj_num'], t2-t1, t3-t2, t4-t3, t5-t4, t6-t5)
     return im, psf_im, weight_im, badpix_im, current_var, t6-t1
 
 
@@ -523,6 +534,8 @@ def BuildPSF(config, logger=None, gsparams={}):
     if 'psf' in config:
         if not isinstance(config['psf'], dict):
             raise AttributeError("config.psf is not a dict.")
+        if False:
+            logger.debug('obj %d: Start BuildPSF with %s',config['obj_num'],str(config['psf']))
         psf = galsim.config.BuildGSObject(config, 'psf', config, gsparams, logger)[0]
     else:
         psf = None
@@ -537,6 +550,8 @@ def BuildPix(config, logger=None, gsparams={}):
     if 'pix' in config: 
         if not isinstance(config['pix'], dict):
             raise AttributeError("config.pix is not a dict.")
+        if False:
+            logger.debug('obj %d: Start BuildPix with %s',config['obj_num'],str(config['pix']))
         pix = galsim.config.BuildGSObject(config, 'pix', config, gsparams, logger)[0]
     else:
         pix = None
@@ -552,6 +567,8 @@ def BuildGal(config, logger=None, gsparams={}):
     if 'gal' in config:
         if not isinstance(config['gal'], dict):
             raise AttributeError("config.gal is not a dict.")
+        if False:
+            logger.debug('obj %d: Start BuildGal with %s',config['obj_num'],str(config['gal']))
         gal = galsim.config.BuildGSObject(config, 'gal', config, gsparams, logger)[0]
     else:
         gal = None
@@ -698,7 +715,8 @@ def AddNoiseFFT(im, weight_im, current_var, noise, base, rng, sky_level_pixel, l
         if weight_im:
             weight_im += sigma*sigma + current_var
         if logger:
-            logger.debug('   Added Gaussian noise with sigma = %f',sigma)
+            logger.debug('image %d, obj %d: Added Gaussian noise with sigma = %f',
+                         base['image_num'],base['obj_num'],sigma)
 
     elif type == 'Poisson':
         opt = {}
@@ -738,7 +756,8 @@ def AddNoiseFFT(im, weight_im, current_var, noise, base, rng, sky_level_pixel, l
 
         im.addNoise(galsim.PoissonNoise(rng, sky_level=extra_sky_level_pixel))
         if logger:
-            logger.debug('   Added Poisson noise with sky_level_pixel = %f',sky_level_pixel)
+            logger.debug('image %d, obj %d: Added Poisson noise with sky_level_pixel = %f',
+                         base['image_num'],base['obj_num'],sky_level_pixel)
 
     elif type == 'CCD':
         opt = { 'gain' : float , 'read_noise' : float }
@@ -794,12 +813,12 @@ def AddNoiseFFT(im, weight_im, current_var, noise, base, rng, sky_level_pixel, l
                 # Take the rest away from the sky level
                 extra_sky_level_pixel -= current_var * gain
 
-        #print 'CCDNoise with ',extra_sky_level_pixel,gain,read_noise
         im.addNoise(galsim.CCDNoise(rng, sky_level=extra_sky_level_pixel, gain=gain,
                                     read_noise=read_noise))
         if logger:
-            logger.debug('   Added CCD noise with sky_level_pixel = %f, ' +
-                         'gain = %f, read_noise = %f',sky_level_pixel,gain,read_noise)
+            logger.debug('image %d, obj %d: Added CCD noise with sky_level_pixel = %f, ' +
+                         'gain = %f, read_noise = %f',
+                         base['image_num'],base['obj_num'],extra_sky_level_pixel,gain,read_noise)
 
     elif type == 'COSMOS':
         req = { 'file_name' : str }
@@ -825,7 +844,8 @@ def AddNoiseFFT(im, weight_im, current_var, noise, base, rng, sky_level_pixel, l
         if weight_im: weight_im += cn_var
 
         if logger:
-            logger.debug('   Added COSMOS correlated noise with variance = %f',cn_var)
+            logger.debug('image %d, obj %d: Added COSMOS correlated noise with variance = %f',
+                         base['image_num'],base['obj_num'],cn_var)
 
     else:
         raise AttributeError("Invalid type %s for noise"%type)
@@ -956,7 +976,8 @@ def AddNoisePhot(im, weight_im, current_var, noise, base, rng, sky_level_pixel, 
         if weight_im:
             weight_im += sigma*sigma + current_var
         if logger:
-            logger.debug('   Added Gaussian noise with sigma = %f',sigma)
+            logger.debug('image %d, obj %d: Added Gaussian noise with sigma = %f',
+                         base['image_num'],base['obj_num'],sigma)
 
     elif type == 'Poisson':
         opt = {}
@@ -996,7 +1017,8 @@ def AddNoisePhot(im, weight_im, current_var, noise, base, rng, sky_level_pixel, 
                 weight_im += sky_level_pixel + current_var
 
         if logger:
-            logger.debug('   Added Poisson noise with sky_level_pixel = %f',sky_level_pixel)
+            logger.debug('image %d, obj %d: Added Poisson noise with sky_level_pixel = %f',
+                         base['image_num'],base['obj_num'],sky_level_pixel)
 
     elif type == 'CCD':
         opt = { 'gain' : float , 'read_noise' : float }
@@ -1054,8 +1076,9 @@ def AddNoisePhot(im, weight_im, current_var, noise, base, rng, sky_level_pixel, 
             im.addNoise(galsim.GaussianNoise(rng, sigma=read_noise))
 
         if logger:
-            logger.debug('   Added CCD noise with sky_level_pixel = %f, ' +
-                         'gain = %f, read_noise = %f',sky_level_pixel,gain,read_noise)
+            logger.debug('image %d, obj %d: Added CCD noise with sky_level_pixel = %f, ' +
+                         'gain = %f, read_noise = %f',
+                         base['image_num'],base['obj_num'],sky_level_pixel,gain,read_noise)
 
     elif type == 'COSMOS':
         req = { 'file_name' : str }
@@ -1081,7 +1104,8 @@ def AddNoisePhot(im, weight_im, current_var, noise, base, rng, sky_level_pixel, 
         if weight_im: weight_im += cn_var
 
         if logger:
-            logger.debug('   Added COSMOS correlated noise with variance = %f',cn_var)
+            logger.debug('image %d, obj %d: Added COSMOS correlated noise with variance = %f',
+                         base['image_num'],base['obj_num'],cn_var)
 
     else:
         raise AttributeError("Invalid type %s for noise",type)
@@ -1124,7 +1148,8 @@ def DrawPSFStamp(psf, pix, config, bounds, sky_level_pixel, final_shift):
     # Special: if the galaxy was shifted, then also shift the psf 
     if 'shift' in config['gal']:
         gal_shift = galsim.config.GetCurrentValue(config['gal'],'shift')
-        #print 'psf shift (1): ',gal_shift.x,gal_shift.y
+        if False:
+            logger.debug('obj %d: psf shift (1): %s',config['obj_num'],str(gal_shift))
         final_psf.applyShift(gal_shift)
 
     im = galsim.ImageF(bounds, scale=pixel_scale)

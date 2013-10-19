@@ -132,20 +132,21 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
         # Shoot for gemoetric mean of these two.
         max_nim = nimages / nproc
         min_nim = 1
-        #print 'gal' in config
         if ( ('image' not in config or 'type' not in config['image'] or 
                  config['image']['type'] == 'Single') and
              'gal' in config and isinstance(config['gal'],dict) and 'type' in config['gal'] and
              config['gal']['type'] == 'Ring' and 'num' in config['gal'] ):
             min_nim = galsim.config.ParseValue(config['gal'], 'num', config, int)[0]
-            #print 'Found ring: num = ',min_nim
+            if logger:
+                logger.debug('image %d: Found ring: num = %d',config['image_num'],min_nim)
         if max_nim < min_nim: 
             nim_per_task = min_nim
         else:
             import math
             # This formula keeps nim a multiple of min_nim, so Rings are intact.
             nim_per_task = min_nim * int(math.sqrt(float(max_nim) / float(min_nim)))
-        #print 'nim_per_task = ',nim_per_task
+        if logger:
+            logger.debug('image %d: nim_per_task = %d',config['image_num'],nim_per_task)
 
         # The logger is not picklable, se we set up a proxy object.  See comments in stamp.py
         # for more details about how this works.
@@ -247,7 +248,8 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
             obj_num += galsim.config.GetNObjForImage(config, image_num+k)
 
     if logger:
-        logger.debug('Done making images')
+        logger.debug('file %d: Done making images %d--%d',config['file_num'],
+                     image_num,image_num+nimages-1)
 
     return images, psf_images, weight_images, badpix_images
  
@@ -478,7 +480,8 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         # image's first object (if there is a next image).  But I don't think that will have 
         # any adverse effects.
         seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        #print 'seed = ',seed
+        if logger:
+            logger.debug('image %d: seed = %d',image_num,seed)
         rng = galsim.BaseDeviate(seed)
     else:
         rng = galsim.BaseDeviate()
@@ -546,7 +549,8 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     # Also define the overall image center, since we need that to calculate the position 
     # of each stamp relative to the center.
     config['image_cen'] = full_image.bounds.trueCenter()
-    #print 'image_cen = ',full_image.bounds.trueCenter()
+    if logger:
+        logger.debug('image %d: image_cen = %s',config['image_num'],str(config['image_cen']))
 
     if make_psf_image:
         full_psf_image = galsim.ImageF(full_xsize, full_ysize, scale=pixel_scale)
@@ -586,8 +590,10 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
     max_current_var = 0
     for k in range(nobjects):
-        #print 'full bounds = ',full_image.bounds
-        #print 'stamp bounds = ',images[k].bounds
+        if False:
+            logger.debug('image %d: full bounds = %s',config['image_num'],str(full_image.bounds))
+            logger.debug('image %d: stamp %d bounds = %s',
+                         config['image_num'],k,str(images[k].bounds))
         assert full_image.bounds.includes(images[k].bounds)
         b = images[k].bounds
         full_image[b] += images[k]
@@ -712,15 +718,14 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     # Set the rng to use for image stuff.
     if 'random_seed' in config['image']:
-        #print 'random_seed = ',config['image']['random_seed']
         config['seq_index'] = obj_num+nobjects
         config['obj_num'] = obj_num+nobjects
-        #print 'seq_index = ',config['seq_index']
         # Technically obj_num+nobjects will be the index of the random seed used for the next 
         # image's first object (if there is a next image).  But I don't think that will have 
         # any adverse effects.
         seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        #print 'seed = ',seed
+        if logger:
+            logger.debug('image %d: seed = %d',image_num,seed)
         rng = galsim.BaseDeviate(seed)
     else:
         rng = galsim.BaseDeviate()
@@ -773,7 +778,9 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     # Also define the overall image center, since we need that to calculate the position 
     # of each stamp relative to the center.
     config['image_cen'] = full_image.bounds.trueCenter()
-    #print 'image_cen = ',full_image.bounds.trueCenter()
+    if logger:
+        logger.debug('image %d: image_cen = %s',
+                     config['image_num'],str(full_image.bounds.trueCenter()))
 
     if make_psf_image:
         full_psf_image = galsim.ImageF(full_xsize, full_ysize, scale=pixel_scale)
@@ -813,11 +820,11 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     max_current_var = 0.
     for k in range(nobjects):
         bounds = images[k].bounds & full_image.bounds
-        #print 'stamp bounds = ',images[k].bounds
-        #print 'full bounds = ',full_image.bounds
-        #print 'Overlap = ',bounds
-        #print 'stamp scale = ',images[k].scale
-        #print 'full scale = ',full_image.scale
+        if False:
+            logger.debug('image %d: full bounds = %s',config['image_num'],str(full_image.bounds))
+            logger.debug('image %d: stamp %d bounds = %s',
+                         config['image_num'],k,str(images[k].bounds))
+            logger.debug('image %d: Overlap = ',config['image_num'],str(bounds))
         if bounds.isDefined():
             full_image[bounds] += images[k][bounds]
             if make_psf_image:
