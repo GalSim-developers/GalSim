@@ -132,7 +132,7 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
              config['gal']['type'] == 'Ring' and 'num' in config['gal'] ):
             min_nim = galsim.config.ParseValue(config['gal'], 'num', config, int)[0]
             if logger:
-                logger.debug('image %d: Found ring: num = %d',config['image_num'],min_nim)
+                logger.debug('file %d: Found ring: num = %d',config['file_num'],min_nim)
         if max_nim < min_nim: 
             nim_per_task = min_nim
         else:
@@ -140,7 +140,7 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
             # This formula keeps nim a multiple of min_nim, so Rings are intact.
             nim_per_task = min_nim * int(math.sqrt(float(max_nim) / float(min_nim)))
         if logger:
-            logger.debug('image %d: nim_per_task = %d',config['image_num'],nim_per_task)
+            logger.debug('file %d: nim_per_task = %d',config['file_num'],nim_per_task)
 
         # The logger is not picklable, se we set up a proxy object.  See comments in process.py
         # for more details about how this works.
