@@ -387,7 +387,9 @@ class RealGalaxyCatalog(object):
         # The pyfits commands aren't thread safe.  So we need to make sure the methods that
         # use pyfits are not run concurrently from multiple threads.
         from multiprocessing import Lock
-        self.lock = Lock()
+        self.gal_lock = Lock()
+        self.psf_lock = Lock()
+        self.noise_lock = Lock()
 
         # Preload all files if desired
         if preload: self.preload()
@@ -424,7 +426,7 @@ class RealGalaxyCatalog(object):
         if self.logger:
             self.logger.debug('RealGalaxyCatalog: start preload')
         self.preloaded = True
-        for file_name in numpy.concatenate((self.gal_file_name , self.PSF_file_name)):
+        for file_name in numpy.concatenate((self.gal_file_name , self.psf_file_name)):
             # numpy sometimes add a space at the end of the string that is not present in 
             # the original file.  Stupid.  But this next line removes it.
             file_name = file_name.strip()
@@ -458,34 +460,56 @@ class RealGalaxyCatalog(object):
     def getGal(self, i):
         """Returns the galaxy at index `i` as an ImageViewD object.
         """
-        self.lock.acquire()
+        if self.logger:
+            self.logger.debug('RealGalaxyCatalog %d: Start getGal',i)
+        self.gal_lock.acquire()
+        if self.logger:
+            self.logger.debug('RealGalaxyCatalog %d: Acquired gal_lock',i)
         import numpy
         if i >= len(self.gal_file_name):
             raise IndexError(
                 'index %d given to getGal is out of range (0..%d)'%(i,len(self.gal_file_name)-1))
         f = self._getFile(self.gal_file_name[i])
+        if False:
+            self.logger.debug('RealGalaxyCatalog %d: Got f',i)
         array = f[self.gal_hdu[i]].data
-        self.lock.release()
+        if False:
+            self.logger.debug('RealGalaxyCatalog %d: Got array',i)
+        self.gal_lock.release()
+        if self.logger:
+            self.logger.debug('RealGalaxyCatalog %d: Released gal_lock',i)
         return galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
 
 
     def getPSF(self, i):
         """Returns the PSF at index `i` as an ImageViewD object.
         """
-        self.lock.acquire()
+        if self.logger:
+            self.logger.debug('RealGalaxyCatalog %d: Start getPSF',i)
+        self.psf_lock.acquire()
+        if self.logger:
+            self.logger.debug('RealGalaxyCatalog %d: Acquired psf_lock',i)
         import numpy
-        if i >= len(self.PSF_file_name):
+        if i >= len(self.psf_file_name):
             raise IndexError(
-                'index %d given to getPSF is out of range (0..%d)'%(i,len(self.PSF_file_name)-1))
-        f = self._getFile(self.PSF_file_name[i])
-        array = f[self.PSF_hdu[i]].data
-        self.lock.release()
+                'index %d given to getPSF is out of range (0..%d)'%(i,len(self.psf_file_name)-1))
+        f = self._getFile(self.psf_file_name[i])
+        if False:
+            self.logger.debug('RealGalaxyCatalog %d: Got f',i)
+        array = f[self.psf_hdu[i]].data
+        if False:
+            self.logger.debug('RealGalaxyCatalog %d: Got array',i)
+        self.psf_lock.release()
+        if self.logger:
+            self.logger.debug('RealGalaxyCatalog %d: Released psf_lock',i)
         return galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
 
     def getNoiseProperties(self, i):
         """Returns the components needed to make the noise cf at index `i`.
         """
 
+        if self.logger:
+            self.logger.debug('RealGalaxyCatalog %d: Start getNoise',i)
         if self.noise_file_name is None:
             im = None
         else:
@@ -495,9 +519,13 @@ class RealGalaxyCatalog(object):
                     'index %d given to getNoise is out of range (0..%d)'%(
                         i,len(self.noise_file_name)-1))
 
-            self.lock.acquire()
+            self.noise_lock.acquire()
+            if self.logger:
+                self.logger.debug('RealGalaxyCatalog %d: Acquired noise_lock',i)
             if self.noise_file_name[i] in self.saved_noise_im:
                 im = self.saved_noise_im[self.noise_file_name[i]]
+                if self.logger:
+                    self.logger.debug('RealGalaxyCatalog %d: Got saved noise im',i)
             else:
                 import pyfits
                 import os
@@ -507,7 +535,11 @@ class RealGalaxyCatalog(object):
                 array = pyfits.getdata(file_name)
                 im = galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
                 self.saved_noise_im[self.noise_file_name[i]] = im
-            self.lock.release()
+                if self.logger:
+                    self.logger.debug('RealGalaxyCatalog %d: Built noise im',i)
+            self.noise_lock.release()
+            if self.logger:
+                self.logger.debug('RealGalaxyCatalog %d: Released noise_lock',i)
 
         return im, self.pixel_scale[i], self.variance[i]
 
