@@ -390,6 +390,7 @@ class RealGalaxyCatalog(object):
         self.gal_lock = Lock()
         self.psf_lock = Lock()
         self.noise_lock = Lock()
+        self.loaded_lock = Lock()
 
         # Preload all files if desired
         if preload: self.preload()
@@ -454,7 +455,9 @@ class RealGalaxyCatalog(object):
             if self.logger:
                 self.logger.debug('RealGalaxyCatalog: open file %s',file_name)
             f = pyfits.open(full_name,memmap=False)
+            self.loaded_lock.acquire()
             self.loaded_files[file_name] = f
+            self.loaded_lock.release()
         return f
 
     def getGal(self, i):

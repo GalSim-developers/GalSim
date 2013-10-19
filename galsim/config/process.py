@@ -105,6 +105,10 @@ def CopyConfig(config):
                 config['input_manager'].start()
             for key in input_list:
                 # Put proxy objects in the config dict where the input items were
+                # Note: If we don't initialize with an empty array, then the below assignment
+                # to config1[key][i] is also assigning to the same items in config, which we
+                # definitely don't want!
+                config1[key] = [ None for i in range(len(config[key])) ]
                 for i in range(len(config[key])):
                     tag = key + str(i)
                     config1[key][i] = getattr(config['input_manager'],tag)()
@@ -529,8 +533,10 @@ def Process(config, logger=None):
             task_queue.put( (kwargs1, file_num, file_name, logger_proxy) )
         else:
             try:
-                if file_name != 0:
+                if file_num != 0:
                     ProcessInput(config, file_num=file_num, logger=logger)
+                    if logger:
+                        logger.debug('After ProcessInput for file %d',file_num)
                 kwargs['config'] = config
                 kwargs['logger'] = logger 
                 t = build_func(**kwargs)
@@ -582,6 +588,8 @@ def Process(config, logger=None):
         for j in range(nproc):
             p_list[j].join()
         task_queue.close()
+        if 'input_manager' in config:
+            del config['input_manager']
         t2 = time.time()
         if logger:
             logger.warn('Total time for %d files with %d processes = %f sec', 
@@ -827,6 +835,8 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
             make_psf_image=make_psf_image, 
             make_weight_image=make_weight_image,
             make_badpix_image=make_badpix_image)
+    if 'input_manager' in config:
+        del config['input_manager']
     obj_num += galsim.config.GetNObjForImage(config, image_num)
     t3 = time.time()
     if logger:
