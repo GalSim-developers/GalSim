@@ -49,24 +49,16 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
         proc = current_process().name
         for job in iter(input.get, 'STOP'):
             try :
-                (kwargs, config, obj_num, nobj, info, logger) = job
+                (kwargs, obj_num, nobj, info, logger) = job
                 if logger:
                     logger.debug('%s: Received job to do %d stamps, starting with %d',
                                  proc,nobj,obj_num)
                 results = []
-                # Make new copies of config and kwargs so we can update them without
-                # clobbering the versions for other tasks on the queue.
-                # (The config modifications come in BuildSingleStamp.)
-                import copy
-                kwargs1 = copy.copy(kwargs)
-                config1 = galsim.config.CopyConfig(config)
                 for k in range(nobj):
-                    kwargs1['config'] = config1
-                    kwargs1['obj_num'] = obj_num + k
-                    kwargs1['logger'] = logger
-                    result = BuildSingleStamp(**kwargs1)
+                    kwargs['obj_num'] = obj_num + k
+                    kwargs['logger'] = logger
+                    result = BuildSingleStamp(**kwargs)
                     results.append(result)
-                    #print 'Proc %s: Finished Stamp %d'%(proc,obj_num+k)
                     # Note: numpy shape is y,x
                     ys, xs = result[0].array.shape
                     t = result[5]
@@ -148,44 +140,9 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
             import math
             # This formula keeps nobj a multiple of min_nobj, so Rings are intact.
             nobj_per_task = min_nobj * int(math.sqrt(float(max_nobj) / float(min_nobj)))
-
-        # The input items can be rather large.  Especially RealGalaxyCatalog.  So it is 
-        # unwieldy to copy them in the config file for each process.  Instead we use 
-        # something called proxy objects, which are implemented using multiprocessing.BaseManager.
-        # See http://docs.python.org/2/library/multiprocessing.html
-        # The real object is stored in the input_lists dict here in the base process.
-        # Each worker process gets a proxy object which is able to call public functions
-        # in the real object via multiprocessing communication channels.  (A Pipe, I believe.)
-        # The BaseManager base class handles all the details.  We just need to register
-        # each object we need and with a name (called tag below) and then construct it by
-        # calling that tag function.
-        # One wrinkle about this is that you can only register classes or callable functions.
-        # Since we already have existing objects, we use galsim.utilities.SimpleGenerator as a 
-        # function that just returns the object that we already have.
-        class InputManager(BaseManager): pass
-        if 'input' in config:
-            input = config['input']
-            input_lists = {}
-            input_generators = {}
-            for key in [ k for k in galsim.config.valid_input_types.keys() if k in input ]:
-                # Copy over the existing input item, since we're going to clobber the config one.
-                input_lists[key] = config[key]
-                # Register this object with the manager
-                for i in range(len(config[key])):
-                    tag = key + str(i)
-                    input_generators[tag] = galsim.utilities.SimpleGenerator(input_lists[key][i])
-                    InputManager.register(tag, callable = input_generators[tag])
-            manager = InputManager()
-            manager.start()
-            for key in [ k for k in galsim.config.valid_input_types.keys() if k in input ]:
-                # Put proxy objects in the config dict where the input items were
-                for i in range(len(input_lists[key])):
-                    tag = key + str(i)
-                    config[key][i] = getattr(manager,tag)()
-
-        # The logger is not picklable, so we use the same trick for it to allow the worker
-        # processes to log their progress.  The real logger stays in this process, and the 
-        # workers all get a proxy logger which they can use normally.
+        
+        # The logger is not picklable, se we set up a proxy object.  See comments in process.py
+        # for more details about how this works.
         class LoggerManager(BaseManager): pass
         if logger:
             logger_generator = galsim.utilities.SimpleGenerator(logger)
@@ -196,13 +153,15 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
         # Set up the task list
         task_queue = Queue()
         for k in range(0,nobjects,nobj_per_task):
+            import copy
+            kwargs1 = copy.copy(kwargs)
+            kwargs1['config'] = galsim.config.CopyConfig(config)
             if logger:
                 logger_proxy = logger_manager.logger()
             else:
                 logger_proxy = None
             nobj1 = min(nobj_per_task, nobjects-k)
-            # Send kwargs, config, obj_num, nobj, k, logger
-            task_queue.put( ( kwargs, config, obj_num+k, nobj1, k, logger_proxy ) )
+            task_queue.put( ( kwargs1, obj_num+k, nobj1, k, logger_proxy ) )
 
         # Run the tasks
         # Each Process command starts up a parallel process that will keep checking the queue 
@@ -261,13 +220,6 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
         for j in range(nproc):
             p_list[j].join()
         task_queue.close()
-
-        # Put back all the input items that we made proxies for
-        if 'input' in config:
-            input = config['input']
-            for key in [ k for k in galsim.config.valid_input_types.keys() if k in input ]:
-                config[key] = input_lists[key]
-
 
     else : # nproc == 1
 

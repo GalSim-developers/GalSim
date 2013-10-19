@@ -52,6 +52,15 @@ valid_output_types = {
     'DataCube' : ('BuildDataCube', 'GetNObjForDataCube', True, True, False),
 }
 
+class InputGetter:
+    """A simple class that is returns a given config[key][i] when called with obj()
+    """
+    def __init__(self, config, key, i):
+        self.config = config
+        self.key = key
+        self.i = i
+    def __call__(self): return self.config[self.key][self.i]
+            
 def CopyConfig(config):
     """
     If you want to use a config dict for multiprocessing, you need to deep copy
@@ -61,11 +70,66 @@ def CopyConfig(config):
     the copy semantics once here.
     """
     import copy
+    from multiprocessing.managers import BaseManager
     config1 = copy.copy(config)
-    if 'gal' in config: config1['gal'] = copy.deepcopy(config['gal'])
-    if 'psf' in config: config1['psf'] = copy.deepcopy(config['psf'])
-    if 'pix' in config: config1['pix'] = copy.deepcopy(config['pix'])
-    if 'image' in config: config1['image'] = copy.deepcopy(config['image'])
+  
+    # The input items can be rather large.  Especially RealGalaxyCatalog.  So it is 
+    # unwieldy to copy them in the config file for each process.  Instead we use 
+    # something called proxy objects, which are implemented using multiprocessing.BaseManager.
+    # See http://docs.python.org/2/library/multiprocessing.html
+    # The real object stays in the original config dict.
+    # The copy, config1, gets a proxy object which is able to call public functions
+    # in the real object via multiprocessing communication channels.  (A Pipe, I believe.)
+    # The BaseManager base class handles all the details.  We just need to register
+    # each object we need with a name (called tag below) and then construct it by
+    # calling that tag function.
+    # One wrinkle about this is that you can only register classes or callable functions.
+    # Since we already have existing objects, we use InputGetter as a function that just
+    # returns the current value of config[key][i].
+    if 'input' in config:
+        input = config['input']
+        # Only need to do this if we have any processed input objects in config:
+        input_list = [ k for k in galsim.config.valid_input_types.keys() if k in input ]
+        if any([ (k in config) for k in input_list]):
+            if 'input_manager' not in config:
+                config['input_generators'] = {}
+                ig = config['input_generators']
+                class InputManager(BaseManager): pass
+                for key in input_list:
+                    # Register this object with the manager
+                    for i in range(len(config[key])):
+                        tag = key + str(i)
+                        ig[tag] = InputGetter(config,key,i)
+                        InputManager.register(tag, callable = ig[tag])
+                config['input_manager'] = InputManager()
+                config['input_manager'].start()
+            for key in input_list:
+                # Put proxy objects in the config dict where the input items were
+                for i in range(len(config[key])):
+                    tag = key + str(i)
+                    config1[key][i] = getattr(config['input_manager'],tag)()
+            # Make sure the manager isn't in the copy (e.g. from a previous CopyConfig call).
+            if 'input_manager' in config1:
+                del config1['input_manager']
+            if 'input_generators' in config1:
+                del config1['input_generators']
+
+    # Now deepcopy all the regular config fields to make sure things like current_val don't
+    # get clobberd by two processes writing to the same dict.
+    if 'gal' in config:
+        config1['gal'] = copy.deepcopy(config['gal'])
+    if 'psf' in config:
+        config1['psf'] = copy.deepcopy(config['psf'])
+    if 'pix' in config:
+        config1['pix'] = copy.deepcopy(config['pix'])
+    if 'image' in config:
+        config1['image'] = copy.deepcopy(config['image'])
+    if 'input' in config:
+        config1['input'] = copy.deepcopy(config['input'])
+    if 'output' in config:
+        config1['output'] = copy.deepcopy(config['output'])
+    if 'eval_variables' in config:
+        config1['eval_variables'] = copy.deepcopy(config['eval_variables'])
     return config1
 
 
@@ -286,8 +350,11 @@ def Process(config, logger=None):
         from multiprocessing import Process, Queue, current_process
         from multiprocessing.managers import BaseManager
 
-        # The logger is not picklable, se we set up a proxy object.  See comments in stamp.py
-        # for more details about how this works.
+        # The logger is not picklable, so we use the same trick for it as we used for the 
+        # input fields in CopyConfig to allow the worker processes to log their progress.
+        # The real logger stays in this process, and the workers all get a proxy logger which 
+        # they can use normally.  We use galsim.utilities.SimpleGenerator as the callable that
+        # just returns the existing logger object.
         class LoggerManager(BaseManager): pass
         if logger:
             logger_generator = galsim.utilities.SimpleGenerator(logger)
@@ -346,12 +413,10 @@ def Process(config, logger=None):
         if nproc2:
             kwargs['nproc'] = nproc2
 
-        kwargs['config'] = CopyConfig(config)
-
-        output = kwargs['config']['output']
+        output = config['output']
         # This also updates nimages or nobjects as needed if they are being automatically
         # set from an input catalog.
-        nobj = nobj_func(kwargs['config'],file_num,image_num)
+        nobj = nobj_func(config,file_num,image_num)
 
         # nobj is a list of nobj for each image in that file.
         # So len(nobj) = nimages and sum(nobj) is the total number of objects
@@ -401,7 +466,7 @@ def Process(config, logger=None):
                 ignore += ['include_obj_var']
             if 'file_name' in output_extra:
                 SetDefaultExt(output_extra['file_name'],'.fits')
-            params, safe = galsim.config.GetAllParams(output_extra,extra_key,kwargs['config'],
+            params, safe = galsim.config.GetAllParams(output_extra,extra_key,config,
                                                       req=req, opt=opt, single=single,
                                                       ignore=ignore)
 
@@ -428,14 +493,20 @@ def Process(config, logger=None):
         # If we're doing multiprocessing, we send this information off to the task_queue.
         # Otherwise, we just call build_func.
         if nproc > 1:
+            import copy
+            # Make new copies of config and kwargs so we can update them without
+            # clobbering the versions for other tasks on the queue.
+            kwargs1 = copy.copy(kwargs)
+            kwargs1['config'] = CopyConfig(config)
             if logger:
                 logger_proxy = logger_manager.logger()
             else:
                 logger_proxy = None
-            task_queue.put( (kwargs, file_num, file_name, logger_proxy) )
+            task_queue.put( (kwargs1, file_num, file_name, logger_proxy) )
         else:
             try:
                 ProcessInput(kwargs['config'], file_num=file_num, logger=logger)
+                kwargs['config'] = config
                 kwargs['logger'] = logger 
                 t = build_func(**kwargs)
                 if logger:

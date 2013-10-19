@@ -47,24 +47,18 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
         proc = current_process().name
         for job in iter(input.get, 'STOP'):
             try :
-                (kwargs, config, image_num, obj_num, nim, info, logger) = job
+                (kwargs, image_num, obj_num, nim, info, logger) = job
                 if logger:
                     logger.debug('%s: Received job to do %d images, starting with %d',
                                 proc,nim,image_num)
                 results = []
-                # Make new copies of config and kwargs so we can update them without
-                # clobbering the versions for other tasks on the queue.
-                import copy
-                kwargs1 = copy.copy(kwargs)
-                config1 = galsim.config.CopyConfig(config)
                 for k in range(nim):
                     t1 = time.time()
-                    kwargs1['config'] = config1
-                    kwargs1['image_num'] = image_num + k
-                    kwargs1['obj_num'] = obj_num
-                    kwargs1['logger'] = logger
-                    im = BuildImage(**kwargs1)
-                    obj_num += galsim.config.GetNObjForImage(config, image_num+k)
+                    kwargs['image_num'] = image_num + k
+                    kwargs['obj_num'] = obj_num
+                    kwargs['logger'] = logger
+                    im = BuildImage(**kwargs)
+                    obj_num += galsim.config.GetNObjForImage(kwargs['config'], image_num+k)
                     t2 = time.time()
                     results.append( [im[0], im[1], im[2], im[3], t2-t1 ] )
                     ys, xs = im[0].array.shape
@@ -148,7 +142,7 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
         if logger:
             logger.debug('image %d: nim_per_task = %d',config['image_num'],nim_per_task)
 
-        # The logger is not picklable, se we set up a proxy object.  See comments in stamp.py
+        # The logger is not picklable, se we set up a proxy object.  See comments in process.py
         # for more details about how this works.
         class LoggerManager(BaseManager): pass
         if logger:
@@ -160,13 +154,15 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
         # Set up the task list
         task_queue = Queue()
         for k in range(0,nimages,nim_per_task):
+            import copy
+            kwargs1 = copy.copy(kwargs)
+            kwargs1['config'] = galsim.config.CopyConfig(config)
             if logger:
                 logger_proxy = logger_manager.logger()
             else:
                 logger_proxy = None
             nim1 = min(nim_per_task, nimages-k)
-            # Send kwargs, config, im_num, nim, k, logger
-            task_queue.put( ( kwargs, config, image_num+k, obj_num, nim1, k, logger_proxy ) )
+            task_queue.put( ( kwargs1, image_num+k, obj_num, nim1, k, logger_proxy ) )
             for i in range(nim1):
                 obj_num += galsim.config.GetNObjForImage(config, image_num+k+i)
 
