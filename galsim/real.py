@@ -129,12 +129,12 @@ class RealGalaxy(GSObject):
                   }
     _single_params = [ { "index" : int , "id" : str } ]
     _takes_rng = True
-    _takes_logger = False
+    _takes_logger = True
 
     # --- Public Class methods ---
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
                  rng=None, x_interpolant=None, k_interpolant=None, flux=None, pad_factor=4,
-                 noise_pad_size=0, gsparams=None):
+                 noise_pad_size=0, gsparams=None, logger=None):
 
         import pyfits
         import numpy as np
@@ -160,15 +160,25 @@ class RealGalaxy(GSObject):
         else:
             raise AttributeError('No method specified for selecting a galaxy!')
 
+        if logger:
+            logger.debug('RealGalaxy %d: Start RealGalaxy constructor.',use_index)
+
+
         # read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors.
         self.gal_image = real_galaxy_catalog.getGal(use_index)
-        self.PSF_image = real_galaxy_catalog.getPSF(use_index)
+        if logger:
+            logger.debug('RealGalaxy %d: Got gal_image',use_index)
+        self.psf_image = real_galaxy_catalog.getPSF(use_index)
+        if logger:
+            logger.debug('RealGalaxy %d: Got psf_image',use_index)
 
         #self.noise = real_galaxy_catalog.getNoise(use_index, rng, gsparams)
         # This is a duplication of the RealGalaxyCatalog.getNoise() function, since 
         # we want it to be possible to have the rgc in another process, and the BaseCorrelatedNoise
         # object is not picklable.  So we just build it here instead.
         noise_image, pixel_scale, var = real_galaxy_catalog.getNoiseProperties(use_index)
+        if logger:
+            logger.debug('RealGalaxy %d: Got noise_image',use_index)
         if noise_image is None:
             self.noise = galsim.UncorrelatedNoise(rng, pixel_scale, var, gsparams)
         else:
@@ -177,6 +187,8 @@ class RealGalaxy(GSObject):
                                           x_interpolant='linear', gsparams=gsparams)
             self.noise = galsim.correlatednoise._BaseCorrelatedNoise(rng, ii)
             self.noise.setVariance(var)
+        if logger:
+            logger.debug('RealGalaxy %d: Finished building noise',use_index)
 
         # save any other relevant information as instance attributes
         self.catalog_file = real_galaxy_catalog.getFileName()
@@ -190,9 +202,11 @@ class RealGalaxy(GSObject):
             noise_pad = 0.
 
         # Build the InterpolatedImage of the PSF.
-        self.original_PSF = galsim.InterpolatedImage(
-            self.PSF_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant, 
+        self.original_psf = galsim.InterpolatedImage(
+            self.psf_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant, 
             flux=1.0, dx=self.pixel_scale, gsparams=gsparams)
+        if logger:
+            logger.debug('RealGalaxy %d: Made original_psf',use_index)
 
         # Build the InterpolatedImage of the galaxy.
         # Use the stepK() value of the PSF as a maximum value for stepK of the galaxy.
@@ -201,22 +215,28 @@ class RealGalaxy(GSObject):
         self.original_image = galsim.InterpolatedImage(
                 self.gal_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant,
                 dx=self.pixel_scale, pad_factor=pad_factor, noise_pad_size=noise_pad_size,
-                calculate_stepk=self.original_PSF.stepK(),
-                calculate_maxk=self.original_PSF.maxK(),
+                calculate_stepk=self.original_psf.stepK(),
+                calculate_maxk=self.original_psf.maxK(),
                 noise_pad=noise_pad, rng=rng, gsparams=gsparams)
+        if logger:
+            logger.debug('RealGalaxy %d: Made original_image',use_index)
 
         # If flux is None, leave flux as given by original image
         if flux != None:
             self.original_image.setFlux(flux)
 
         # Calculate the PSF "deconvolution" kernel
-        psf_inv = galsim.Deconvolve(self.original_PSF, gsparams=gsparams)
+        psf_inv = galsim.Deconvolve(self.original_psf, gsparams=gsparams)
         # Initialize the SBProfile attribute
         GSObject.__init__(
             self, galsim.Convolve([self.original_image, psf_inv], gsparams=gsparams))
+        if logger:
+            logger.debug('RealGalaxy %d: Made gsobject',use_index)
 
         # Save the noise in the image as an accessible attribute
         self.noise.convolveWith(psf_inv, gsparams)
+        if logger:
+            logger.debug('RealGalaxy %d: Finished building RealGalaxy',use_index)
 
     def getHalfLightRadius(self):
         raise NotImplementedError("Half light radius calculation not implemented for RealGalaxy "
@@ -342,7 +362,7 @@ class RealGalaxyCatalog(object):
         # Hence this way of doing the conversion:
         self.ident = [ "%s"%val for val in ident ]
         self.gal_file_name = cat.field('gal_filename') # file containing the galaxy image
-        self.PSF_file_name = cat.field('PSF_filename') # file containing the PSF image
+        self.psf_file_name = cat.field('PSF_filename') # file containing the PSF image
         # We don't require the noise_filename column.  If it is not present, we will use
         # Uncorrelated noise based on the variance column.
         try:
@@ -350,7 +370,7 @@ class RealGalaxyCatalog(object):
         except:
             self.noise_file_name = None
         self.gal_hdu = cat.field('gal_hdu') # HDU containing the galaxy image
-        self.PSF_hdu = cat.field('PSF_hdu') # HDU containing the PSF image
+        self.psf_hdu = cat.field('PSF_hdu') # HDU containing the PSF image
         self.pixel_scale = cat.field('pixel_scale') # pixel scale for image (could be different
         # if we have training data from other datasets... let's be general here and make it a 
         # vector in case of mixed training set)
