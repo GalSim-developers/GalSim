@@ -438,10 +438,12 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams, logger):
         if index >= real_cat.getNObjects():
             raise IndexError(
                 "%s index has gone past the number of entries in the catalog"%index)
+
+    kwargs['real_galaxy_catalog'] = real_cat
     if logger:
         logger.debug('obj %d: RealGalaxy kwargs = %s',base['obj_num'],str(kwargs))
 
-    gal = galsim.RealGalaxy(real_cat, **kwargs)
+    gal = galsim.RealGalaxy(**kwargs)
 
     # If we are not going to whiten the noise, then we don't need to keep it as an attribute.
     # In fact, that is how we communicate to the upper levels that we do need to whiten.
