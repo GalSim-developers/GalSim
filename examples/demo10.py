@@ -105,7 +105,6 @@ def main(argv):
     cat_file_name = 'real_galaxy_catalog_example.fits'
     dir = 'data'
     real_galaxy_catalog = galsim.RealGalaxyCatalog(cat_file_name, dir=dir)
-    real_galaxy_catalog.preload()
     logger.info('Read in %d real galaxies from catalog', real_galaxy_catalog.nobjects)
 
     # List of IDs to use.  We select 5 particularly irregular galaxies for this demo. 

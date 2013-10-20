@@ -37,7 +37,7 @@
 #
 # New features introduced in this demo:
 #
-# - input : real_catalog (file_name, dir, image_dir, preload)
+# - input : real_catalog (file_name, dir, image_dir)
 # - obj type : RealGalaxy (index)
 # - obj : rotate 
 # - obj : magnify
@@ -174,7 +174,6 @@ input :
     real_catalog :
         dir : data
         file_name : real_galaxy_catalog_example.fits
-        preload : True   # This usually makes a big improvement in speed
 
 
 # Define the name and format of the output file
