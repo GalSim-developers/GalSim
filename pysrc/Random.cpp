@@ -43,6 +43,7 @@ namespace galsim {
     public:
         BaseDeviateCallBack(long lseed=0) : BaseDeviate(lseed) {}
         BaseDeviateCallBack(const BaseDeviate& rhs) : BaseDeviate(rhs) {}
+        BaseDeviateCallBack(std::string& str) : BaseDeviate(str) {}
         ~BaseDeviateCallBack() {}
 
     protected:
@@ -64,6 +65,7 @@ namespace galsim {
             pyBaseDeviate
                 .def(bp::init<long>(bp::arg("lseed")=0))
                 .def(bp::init<const BaseDeviate&>(bp::arg("dev")))
+                .def(bp::init<std::string>(bp::arg("str")))
                 .def("seed", (void (BaseDeviate::*) (long) )&BaseDeviate::seed,
                      (bp::arg("lseed")=0), "")
                 .def("reset", (void (BaseDeviate::*) (long) )&BaseDeviate::reset,
@@ -71,6 +73,8 @@ namespace galsim {
                 .def("reset", (void (BaseDeviate::*) (const BaseDeviate&) )&BaseDeviate::reset, 
                      (bp::arg("dev")), "")
                 .def("clearCache", &BaseDeviate::clearCache, "")
+                .def("serialize", &BaseDeviate::serialize, "")
+                .enable_pickling()
                 ;
         }
 
@@ -84,7 +88,9 @@ namespace galsim {
             pyUniformDeviate
                 .def(bp::init<long>(bp::arg("lseed")=0))
                 .def(bp::init<const BaseDeviate&>(bp::arg("dev")))
+                .def(bp::init<std::string>(bp::arg("str")))
                 .def("__call__", &UniformDeviate::operator(), "")
+                .enable_pickling()
                 ;
         }
 
@@ -102,11 +108,15 @@ namespace galsim {
                 .def(bp::init<const BaseDeviate&, double, double>(
                         (bp::arg("dev"), bp::arg("mean")=0., bp::arg("sigma")=1.)
                 ))
+                .def(bp::init<std::string, double, double>(
+                        (bp::arg("str"), bp::arg("mean")=0., bp::arg("sigma")=1.)
+                ))
                 .def("__call__", &GaussianDeviate::operator(), "")
                 .def("getMean", &GaussianDeviate::getMean, "")
                 .def("setMean", &GaussianDeviate::setMean, "")
                 .def("getSigma", &GaussianDeviate::getSigma, "")
                 .def("setSigma", &GaussianDeviate::setSigma, "")
+                .enable_pickling()
                 ;
         }
 
@@ -124,11 +134,15 @@ namespace galsim {
                 .def(bp::init<const BaseDeviate&, int, double>(
                         (bp::arg("dev"), bp::arg("N")=1, bp::arg("p")=0.5)
                 ))
+                .def(bp::init<std::string, int, double>(
+                        (bp::arg("str")=0, bp::arg("N")=1, bp::arg("p")=0.5)
+                ))
                 .def("__call__", &BinomialDeviate::operator(), "")
                 .def("getN", &BinomialDeviate::getN, "")
                 .def("setN", &BinomialDeviate::setN, "")
                 .def("getP", &BinomialDeviate::getP, "")
                 .def("setP", &BinomialDeviate::setP, "")
+                .enable_pickling()
                 ;
         }
 
@@ -146,9 +160,13 @@ namespace galsim {
                 .def(bp::init<const BaseDeviate&, double>(
                         (bp::arg("dev"), bp::arg("mean")=1.)
                 ))
+                .def(bp::init<std::string, double>(
+                        (bp::arg("str")=0, bp::arg("mean")=1.)
+                ))
                 .def("__call__", &PoissonDeviate::operator(), "")
                 .def("getMean", &PoissonDeviate::getMean, "")
                 .def("setMean", &PoissonDeviate::setMean, "")
+                .enable_pickling()
                 ;
         }
 
@@ -167,11 +185,15 @@ namespace galsim {
                 .def(bp::init<const BaseDeviate&, double, double>(
                         (bp::arg("dev"), bp::arg("a")=1., bp::arg("b")=1.)
                 ))
+                .def(bp::init<std::string, double, double>(
+                        (bp::arg("str")=0, bp::arg("a")=1., bp::arg("b")=1.)
+                ))
                 .def("__call__", &WeibullDeviate::operator(), "")
                 .def("getA", &WeibullDeviate::getA, "")
                 .def("setA", &WeibullDeviate::setA, "")
                 .def("getB", &WeibullDeviate::getB, "")
                 .def("setB", &WeibullDeviate::setB, "")
+                .enable_pickling()
                 ;
         }
 
@@ -189,11 +211,15 @@ namespace galsim {
                 .def(bp::init<const BaseDeviate&, double, double>(
                         (bp::arg("dev"), bp::arg("k")=1., bp::arg("theta")=1.)
                 ))
+                .def(bp::init<std::string, double, double>(
+                        (bp::arg("str")=0, bp::arg("k")=1., bp::arg("theta")=1.)
+                ))
                 .def("__call__", &GammaDeviate::operator(), "")
                 .def("getK", &GammaDeviate::getK, "")
                 .def("setK", &GammaDeviate::setK, "")
                 .def("getTheta", &GammaDeviate::getTheta, "")
                 .def("setTheta", &GammaDeviate::setTheta, "")
+                .enable_pickling()
                 ;
         }
 
@@ -211,9 +237,13 @@ namespace galsim {
                 .def(bp::init<const BaseDeviate&, double>(
                         (bp::arg("dev"), bp::arg("n")=1.)
                 ))
+                .def(bp::init<std::string, double>(
+                        (bp::arg("str")=0, bp::arg("n")=1.)
+                ))
                 .def("__call__", &Chi2Deviate::operator(), "")
                 .def("getN", &Chi2Deviate::getN, "")
                 .def("setN", &Chi2Deviate::setN, "")
+                .enable_pickling()
                 ;
         }
 

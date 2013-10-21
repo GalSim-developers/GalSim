@@ -55,7 +55,6 @@
 // Undefine this to use Boost.Random from the local distribution.
 #define DIVERT_BOOST_RANDOM
 
-#include "Image.h"
 #ifdef DIVERT_BOOST_RANDOM
 #include "galsim/boost1_48_0/random/mersenne_twister.hpp"
 #include "galsim/boost1_48_0/random/normal_distribution.hpp"
@@ -75,6 +74,9 @@
 #include "boost/random/gamma_distribution.hpp"
 #include "boost/random/chi_squared_distribution.hpp"
 #endif
+#include <sstream>
+
+#include "Image.h"
 
 namespace galsim {
 
@@ -143,11 +145,30 @@ namespace galsim {
         BaseDeviate(const BaseDeviate& rhs) : _rng(rhs._rng) {}
 
         /**
+         * @brief Construct a new BaseDeviate from a serialization string
+         */
+        BaseDeviate(const std::string& str) : _rng(new rng_type())
+        { 
+            std::istringstream iss(str);
+            iss >> *_rng;
+        }
+
+        /**
          * @brief Destructor
          *
          * Only deletes the underlying RNG if this is the last one using it.
          */
         virtual ~BaseDeviate() {}
+
+        /**
+         * @brief return a serialization string for this BaseDeviate
+         */
+        std::string serialize()
+        { 
+            std::ostringstream oss;
+            oss << *_rng; 
+            return oss.str();
+        }
 
         /**
          * @brief Re-seed the PRNG using specified seed
@@ -238,6 +259,9 @@ namespace galsim {
         /// @brief Construct a copy that shares the RNG with rhs.
         UniformDeviate(const UniformDeviate& rhs) : BaseDeviate(rhs), _urd(0.,1.) {}
 
+        /// @brief Construct a new UniformDeviate from a serialization string
+        UniformDeviate(const std::string& str) : BaseDeviate(str), _urd(0.,1.) {}
+
         /**
          * @brief Draw a new random number from the distribution
          *
@@ -296,6 +320,10 @@ namespace galsim {
          */
         GaussianDeviate(const GaussianDeviate& rhs) : BaseDeviate(rhs), _normal(rhs._normal) {}
  
+        /// @brief Construct a new GaussianDeviate from a serialization string
+        GaussianDeviate(const std::string& str, double mean, double sigma) : 
+            BaseDeviate(str), _normal(mean,sigma) {}
+
         /**
          * @brief Draw a new random number from the distribution
          *
@@ -368,8 +396,7 @@ namespace galsim {
          * @param[in] N Number of "coin flips" per trial
          * @param[in] p Probability of success per coin flip.
          */
-        BinomialDeviate(long lseed, int N, double p) :
-            BaseDeviate(lseed), _bd(N,p) {}
+        BinomialDeviate(long lseed, int N, double p) : BaseDeviate(lseed), _bd(N,p) {}
 
         /**
          * @brief Construct a new binomial-distributed RNG, sharing the random number 
@@ -379,8 +406,7 @@ namespace galsim {
          * @param[in] N Number of "coin flips" per trial
          * @param[in] p Probability of success per coin flip.
          */
-        BinomialDeviate(const BaseDeviate& rhs, int N, double p) :
-            BaseDeviate(rhs), _bd(N,p) {}
+        BinomialDeviate(const BaseDeviate& rhs, int N, double p) : BaseDeviate(rhs), _bd(N,p) {}
 
         /**
          * @brief Construct a copy that shares the RNG with rhs.
@@ -388,6 +414,9 @@ namespace galsim {
          * Note: the default constructed op= function will do the same thing.
          */
         BinomialDeviate(const BinomialDeviate& rhs) : BaseDeviate(rhs), _bd(rhs._bd) {}
+
+        /// @brief Construct a new BinomialDeviate from a serialization string
+        BinomialDeviate(const std::string& str, int N, double p) : BaseDeviate(str), _bd(N,p) {}
 
         /**
          * @brief Draw a new random number from the distribution
@@ -475,6 +504,9 @@ namespace galsim {
          */
         PoissonDeviate(const PoissonDeviate& rhs) : BaseDeviate(rhs), _pd(rhs._pd) {}
  
+        /// @brief Construct a new PoissonDeviate from a serialization string
+        PoissonDeviate(const std::string& str, double mean) : BaseDeviate(str), _pd(mean) {}
+
         /**
          * @brief Draw a new random number from the distribution
          *
@@ -554,6 +586,10 @@ namespace galsim {
          * Note: the default constructed op= function will do the same thing.
          */
         WeibullDeviate(const WeibullDeviate& rhs) : BaseDeviate(rhs), _weibull(rhs._weibull) {}
+
+        /// @brief Construct a new WeibullDeviate from a serialization string
+        WeibullDeviate(const std::string& str, double a, double b) :
+            BaseDeviate(str), _weibull(a,b) {}
 
         /**
          * @brief Draw a new random number from the distribution.
@@ -651,6 +687,10 @@ namespace galsim {
          */
         GammaDeviate(const GammaDeviate& rhs) : BaseDeviate(rhs), _gamma(rhs._gamma) {}
 
+        /// @brief Construct a new GammaDeviate from a serialization string
+        GammaDeviate(const std::string& str, double k, double theta) : 
+            BaseDeviate(str), _gamma(k,theta) {}
+
         /**
          * @brief Draw a new random number from the distribution.
          *
@@ -745,6 +785,9 @@ namespace galsim {
          */
         Chi2Deviate(const Chi2Deviate& rhs) : BaseDeviate(rhs), _chi_squared(rhs._chi_squared) {}
  
+        /// @brief Construct a new Chi2Deviate from a serialization string
+        Chi2Deviate(const std::string& str, double n) : BaseDeviate(str), _chi_squared(n) {}
+
         /**
          * @brief Draw a new random number from the distribution.
          *

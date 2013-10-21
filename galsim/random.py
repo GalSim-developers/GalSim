@@ -684,3 +684,38 @@ Returns a Chi2-distributed deviate with current n degrees of freedom.
 """
 _galsim.Chi2Deviate.getN.__func__.__doc__ = "Get current distribution n degrees of freedom."
 _galsim.Chi2Deviate.setN.__func__.__doc__ = "Set current distribution n degrees of freedom."
+
+
+# Some functions to enable pickling of deviates
+def BaseDeviate_getinitargs(self):
+    return self.serialize(), 
+_galsim.BaseDeviate.__getinitargs__ = BaseDeviate_getinitargs
+
+def UniformDeviate_getinitargs(self):
+    return self.serialize(),
+_galsim.UniformDeviate.__getinitargs__ = UniformDeviate_getinitargs
+
+def GaussianDeviate_getinitargs(self):
+    return self.serialize(), self.getMean(), self.getSigma()
+_galsim.GaussianDeviate.__getinitargs__ = GaussianDeviate_getinitargs
+
+def BinomialDeviate_getinitargs(self):
+    return self.serialize(), self.getN(), self.getP()
+_galsim.BinomialDeviate.__getinitargs__ = BinomialDeviate_getinitargs
+
+def PoissonDeviate_getinitargs(self):
+    return self.serialize(), self.getMean()
+_galsim.PoissonDeviate.__getinitargs__ = PoissonDeviate_getinitargs
+
+def WeibullDeviate_getinitargs(self):
+    return self.serialize(), self.getA(), self.getB()
+_galsim.WeibullDeviate.__getinitargs__ = WeibullDeviate_getinitargs
+
+def GammaDeviate_getinitargs(self):
+    return self.serialize(), self.getK(), self.getTheta()
+_galsim.GammaDeviate.__getinitargs__ = GammaDeviate_getinitargs
+
+def Chi2Deviate_getinitargs(self):
+    return self.serialize(), self.getN()
+_galsim.Chi2Deviate.__getinitargs__ = Chi2Deviate_getinitargs
+
