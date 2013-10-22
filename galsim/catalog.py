@@ -91,12 +91,12 @@ class Catalog(object):
             # See the script devel/testlinecounting.py that tests several possibilities.
             # An even faster version using buffering is possible although it requires some care
             # around edge cases, so we use this one instead, which is "correct by inspection".
-            f = open(self.file_name)
-            if (len(comments) == 1):
-                c = comments[0]
-                self.nobjects = sum(1 for line in f if line[0] != c)
-            else:
-                self.nobjects = sum(1 for line in f if not line.startswith(comments))
+            with open(self.file_name) as f:
+                if (len(comments) == 1):
+                    c = comments[0]
+                    self.nobjects = sum(1 for line in f if line[0] != c)
+                else:
+                    self.nobjects = sum(1 for line in f if not line.startswith(comments))
             return
 
         import numpy
@@ -241,19 +241,18 @@ class Dict(object):
 
         self.key_split = key_split
 
-        f = open(self.file_name)
+        with open(self.file_name) as f:
 
-        if file_type == 'PICKLE':
-            import cPickle
-            self.dict = cPickle.load(f)
-        elif file_type == 'YAML':
-            import yaml
-            self.dict = yaml.load(f)
-        else:
-            import json
-            self.dict = json.load(f)
+            if file_type == 'PICKLE':
+                import cPickle
+                self.dict = cPickle.load(f)
+            elif file_type == 'YAML':
+                import yaml
+                self.dict = yaml.load(f)
+            else:
+                import json
+                self.dict = json.load(f)
 
-        f.close()
 
     def get(self, key, default=None):
         # Make a list of keys according to our key_split parameter
