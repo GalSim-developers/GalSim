@@ -61,7 +61,7 @@ namespace galsim {
     struct PyBaseDeviate {
 
         static void wrap() {
-            bp::class_<BaseDeviateCallBack, boost::shared_ptr<BaseDeviate> > pyBaseDeviate(
+            bp::class_<BaseDeviateCallBack, boost::shared_ptr<BaseDeviateCallBack> > pyBaseDeviate(
                 "BaseDeviate", "", bp::no_init);
             pyBaseDeviate
                 .def(bp::init<long>(bp::arg("lseed")=0))
