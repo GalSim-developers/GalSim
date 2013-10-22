@@ -173,9 +173,9 @@ class RealGalaxy(GSObject):
             logger.debug('RealGalaxy %d: Got psf_image',use_index)
 
         #self.noise = real_galaxy_catalog.getNoise(use_index, rng, gsparams)
-        # This is a duplication of the RealGalaxyCatalog.getNoise() function, since 
-        # we want it to be possible to have the rgc in another process, and the BaseCorrelatedNoise
-        # object is not picklable.  So we just build it here instead.
+        # This is a duplication of the RealGalaxyCatalog.getNoise() function, since we
+        # want it to be possible to have the RealGalaxyCatalog in another process, and the
+        # BaseCorrelatedNoise object is not picklable.  So we just build it here instead.
         noise_image, pixel_scale, var = real_galaxy_catalog.getNoiseProperties(use_index)
         if logger:
             logger.debug('RealGalaxy %d: Got noise_image',use_index)
@@ -190,7 +190,7 @@ class RealGalaxy(GSObject):
         if logger:
             logger.debug('RealGalaxy %d: Finished building noise',use_index)
 
-        # save any other relevant information as instance attributes
+        # Save any other relevant information as instance attributes
         self.catalog_file = real_galaxy_catalog.getFileName()
         self.index = use_index
         self.pixel_scale = float(pixel_scale)
@@ -361,18 +361,27 @@ class RealGalaxyCatalog(object):
         self.nobjects = len(cat) # number of objects in the catalog
         if nobjects_only: return  # Exit early if that's all we needed.
         ident = cat.field('ident') # ID for object in the training sample
+
         # We want to make sure that the ident array contains all strings.
         # Strangely, ident.astype(str) produces a string with each element == '1'.
         # Hence this way of doing the conversion:
         self.ident = [ "%s"%val for val in ident ]
+
         self.gal_file_name = cat.field('gal_filename') # file containing the galaxy image
         self.psf_file_name = cat.field('PSF_filename') # file containing the PSF image
+
+        # Add the directories:
+        self.gal_file_name = [ os.path.join(self.image_dir,f) for f in self.gal_file_name ]
+        self.psf_file_name = [ os.path.join(self.image_dir,f) for f in self.psf_file_name ]
+
         # We don't require the noise_filename column.  If it is not present, we will use
         # Uncorrelated noise based on the variance column.
         try:
             self.noise_file_name = cat.field('noise_filename') # file containing the noise cf
+            self.noise_file_name = [ os.path.join(self.noise_dir,f) for f in self.noise_file_name ]
         except:
             self.noise_file_name = None
+
         self.gal_hdu = cat.field('gal_hdu') # HDU containing the galaxy image
         self.psf_hdu = cat.field('PSF_hdu') # HDU containing the PSF image
         self.pixel_scale = cat.field('pixel_scale') # pixel scale for image (could be different
@@ -391,10 +400,9 @@ class RealGalaxyCatalog(object):
         # The pyfits commands aren't thread safe.  So we need to make sure the methods that
         # use pyfits are not run concurrently from multiple threads.
         from multiprocessing import Lock
-        self.gal_lock = Lock()
-        self.psf_lock = Lock()
-        self.noise_lock = Lock()
-        self.loaded_lock = Lock()
+        self.locks = {}  # There will be one for each loaded file to use when accessing the file.
+        self.loaded_lock = Lock()  # This one guards building new files
+        self.noise_lock = Lock()  # This is for the noise files
 
         # Preload all files if desired
         if preload: self.preload()
@@ -426,8 +434,8 @@ class RealGalaxyCatalog(object):
         stored in the same file as different HDUs.
         """
         import pyfits
-        import os
         import numpy
+        from multiprocessing import Lock
         if self.logger:
             self.logger.debug('RealGalaxyCatalog: start preload')
         self.preloaded = True
@@ -436,83 +444,80 @@ class RealGalaxyCatalog(object):
             # the original file.  Stupid.  But this next line removes it.
             file_name = file_name.strip()
             if file_name not in self.loaded_files:
-                full_file_name = os.path.join(self.image_dir,file_name)
+                if self.logger:
+                    self.logger.debug('RealGalaxyCatalog: preloading %s',file_name)
                 # I use memmap=False, because I was getting problems with running out of 
                 # file handles in the great3 real_gal run, which uses a lot of rgc files.
                 # I think there must be a bug in pyfits that leaves file handles open somewhere
                 # when memmap = True.  Anyway, I don't know what the performance implications
                 # are (since I couldn't finish the run with the default memmap=True), but I
                 # don't think there is much impact either way with memory mapping in our case.
-                if self.logger:
-                    self.logger.debug('RealGalaxyCatalog: preloading %s',full_file_name)
-                self.loaded_files[file_name] = pyfits.open(full_file_name,memmap=False)
+                self.loaded_files[file_name] = pyfits.open(file_name,memmap=False)
+                self.locks[file_name] = Lock()
 
     def _getFile(self, file_name):
         import pyfits
-        import os
+        from multiprocessing import Lock
         if file_name in self.loaded_files:
             if self.logger:
                 self.logger.debug('RealGalaxyCatalog: File %s is already open',file_name)
             f = self.loaded_files[file_name]
+            lock = self.locks[file_name]
         else:
-            full_name = os.path.join(self.image_dir,file_name)
-            if self.logger:
-                self.logger.debug('RealGalaxyCatalog: open file %s',file_name)
-            f = pyfits.open(full_name,memmap=False)
             self.loaded_lock.acquire()
-            self.loaded_files[file_name] = f
+            # Check again in case two processes both hit the else at the same time.
+            if file_name in self.loaded_files:
+                if self.logger:
+                    self.logger.debug('RealGalaxyCatalog: File %s is already open',file_name)
+                f = self.loaded_files[file_name]
+                lock = self.locks[file_name]
+            else:
+                if self.logger:
+                    self.logger.debug('RealGalaxyCatalog: open file %s',file_name)
+                f = pyfits.open(file_name,memmap=False)
+                self.loaded_files[file_name] = f
+                lock = Lock()
+                self.locks[file_name] = lock
             self.loaded_lock.release()
-        return f
+        return f,lock
 
     def getGal(self, i):
         """Returns the galaxy at index `i` as an ImageViewD object.
         """
+        import numpy
         if self.logger:
             self.logger.debug('RealGalaxyCatalog %d: Start getGal',i)
-        self.gal_lock.acquire()
-        if self.logger:
-            self.logger.debug('RealGalaxyCatalog %d: Acquired gal_lock',i)
-        import numpy
         if i >= len(self.gal_file_name):
             raise IndexError(
                 'index %d given to getGal is out of range (0..%d)'%(i,len(self.gal_file_name)-1))
-        f = self._getFile(self.gal_file_name[i])
-        if False:
-            self.logger.debug('RealGalaxyCatalog %d: Got f',i)
+        f,lock = self._getFile(self.gal_file_name[i])
+        # For some reason the more elegant `with lock:` syntax isn't working for me.
+        # It gives an EOFError.  But doing an explicit acquire and release seems to work fine.
+        lock.acquire()
         array = f[self.gal_hdu[i]].data
-        if False:
-            self.logger.debug('RealGalaxyCatalog %d: Got array',i)
-        self.gal_lock.release()
-        if self.logger:
-            self.logger.debug('RealGalaxyCatalog %d: Released gal_lock',i)
+        lock.release()
         return galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
 
 
     def getPSF(self, i):
         """Returns the PSF at index `i` as an ImageViewD object.
         """
+        import numpy
         if self.logger:
             self.logger.debug('RealGalaxyCatalog %d: Start getPSF',i)
-        self.psf_lock.acquire()
-        if self.logger:
-            self.logger.debug('RealGalaxyCatalog %d: Acquired psf_lock',i)
-        import numpy
         if i >= len(self.psf_file_name):
             raise IndexError(
                 'index %d given to getPSF is out of range (0..%d)'%(i,len(self.psf_file_name)-1))
-        f = self._getFile(self.psf_file_name[i])
-        if False:
-            self.logger.debug('RealGalaxyCatalog %d: Got f',i)
+        f,lock = self._getFile(self.psf_file_name[i])
+        lock.acquire()
         array = f[self.psf_hdu[i]].data
-        if False:
-            self.logger.debug('RealGalaxyCatalog %d: Got array',i)
-        self.psf_lock.release()
-        if self.logger:
-            self.logger.debug('RealGalaxyCatalog %d: Released psf_lock',i)
+        lock.release()
         return galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
 
     def getNoiseProperties(self, i):
         """Returns the components needed to make the noise cf at index `i`.
+           Specifically, the noise image (or None), the pixel_scale, and the noise variance,
+           as a tuple (im, scale, var).
         """
 
         if self.logger:
@@ -520,33 +525,30 @@ class RealGalaxyCatalog(object):
         if self.noise_file_name is None:
             im = None
         else:
-
             if i >= len(self.noise_file_name):
                 raise IndexError(
                     'index %d given to getNoise is out of range (0..%d)'%(
                         i,len(self.noise_file_name)-1))
-
-            self.noise_lock.acquire()
-            if self.logger:
-                self.logger.debug('RealGalaxyCatalog %d: Acquired noise_lock',i)
             if self.noise_file_name[i] in self.saved_noise_im:
                 im = self.saved_noise_im[self.noise_file_name[i]]
                 if self.logger:
                     self.logger.debug('RealGalaxyCatalog %d: Got saved noise im',i)
             else:
-                import pyfits
-                import os
-                import numpy
-
-                file_name = os.path.join(self.noise_dir,self.noise_file_name[i])
-                array = pyfits.getdata(file_name)
-                im = galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
-                self.saved_noise_im[self.noise_file_name[i]] = im
-                if self.logger:
-                    self.logger.debug('RealGalaxyCatalog %d: Built noise im',i)
-            self.noise_lock.release()
-            if self.logger:
-                self.logger.debug('RealGalaxyCatalog %d: Released noise_lock',i)
+                self.noise_lock.acquire()
+                # Again, a second check in case two processes get here at the same time.
+                if self.noise_file_name[i] in self.saved_noise_im:
+                    im = self.saved_noise_im[self.noise_file_name[i]]
+                    if self.logger:
+                        self.logger.debug('RealGalaxyCatalog %d: Got saved noise im',i)
+                else:
+                    import pyfits
+                    import numpy
+                    array = pyfits.getdata(self.noise_file_name[i])
+                    im = galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
+                    self.saved_noise_im[self.noise_file_name[i]] = im
+                    if self.logger:
+                        self.logger.debug('RealGalaxyCatalog %d: Built noise im',i)
+                self.noise_lock.release()
 
         return im, self.pixel_scale[i], self.variance[i]
 
