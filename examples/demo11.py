@@ -159,6 +159,7 @@ def main(argv):
     # whole image.  In this case, both the power spectrum realization and the noise on the 
     # full image we apply later.
     rng = galsim.BaseDeviate(random_seed+nobj)
+
     # We want to make random positions within our image.  However, currently for shears from a power
     # spectrum we first have to get shears on a grid of positions, and then we can choose random
     # positions within that.  So, let's make the grid.  We're going to make it as large as the
@@ -167,7 +168,7 @@ def main(argv):
     # represented exactly).  Lensing engine wants positions in arcsec, so calculate that:
     ps.buildGrid(grid_spacing = grid_spacing,
                  ngrid = int(image_size_arcsec / grid_spacing)+1,
-                 center = center, rng = rng)
+                 center = center, rng = rng.duplicate())
     logger.info('Made gridded shears')
 
     # We keep track of how much noise is already in the image from the RealGalaxies.

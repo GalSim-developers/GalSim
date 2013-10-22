@@ -144,7 +144,14 @@ def main(argv):
     rng = galsim.BaseDeviate(random_seed+nobj)
 
     # Now have the PowerSpectrum object build a grid of shear values for us to use.
-    grid_g1, grid_g2 = ps.buildGrid(grid_spacing=stamp_size*pixel_scale, ngrid=n_tiles, rng=rng)
+    # Also, because of some technical details about how the config stuff handles the random
+    # number generator here, we need to duplicate the rng object if we want to have the 
+    # two output files match.  This means that technically, the same sequence of random numbers
+    # will be used in building the grid as will be used by the other uses of rng (permuting the 
+    # postage stamps and adding noise).  But since they are used in such completely different 
+    # ways, it is hard to imagine how this could lead to any kind of bias in the images.
+    grid_g1, grid_g2 = ps.buildGrid(grid_spacing=stamp_size*pixel_scale, ngrid=n_tiles,
+                                    rng=rng.duplicate())
 
     # Setup the images:
     gal_image = galsim.ImageF(stamp_size * n_tiles , stamp_size * n_tiles, scale=pixel_scale)
