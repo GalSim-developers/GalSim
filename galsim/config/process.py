@@ -151,7 +151,7 @@ def ProcessInput(config, file_num=0, logger=None):
     config['seq_index'] = file_num
     config['file_num'] = file_num
     if logger:
-        logger.debug('Start ProcessInput for file %d',file_num)
+        logger.debug('file %d: Start ProcessInput',file_num)
     # Process the input field (read any necessary input files)
     if 'input' in config:
         input = config['input']
@@ -162,7 +162,7 @@ def ProcessInput(config, file_num=0, logger=None):
         # with the parameters given in the config file.
         for key in [ k for k in valid_input_types.keys() if k in input ]:
             if logger:
-                logger.debug('Process input key %s',key)
+                logger.debug('file %d: Process input key %s',file_num,key)
             fields = input[key]
 
             # If it's not currently a list, make it a list with one element.
@@ -170,7 +170,7 @@ def ProcessInput(config, file_num=0, logger=None):
 
             if key not in config:
                 if logger:
-                    logger.debug('%s not currently in config',key)
+                    logger.debug('file %d: %s not currently in config',file_num,key)
                 config[key] = [ None for i in range(len(fields)) ]
                 config[key+'_safe'] = [ None for i in range(len(fields)) ]
             for i in range(len(fields)):
@@ -178,11 +178,13 @@ def ProcessInput(config, file_num=0, logger=None):
                 ck = config[key]
                 ck_safe = config[key+'_safe']
                 if logger:
-                    logger.debug('Current values for %s are %s, safe = %s',key,str(ck[i]),ck_safe[i])
-                field['type'], ignore = valid_input_types[key][0:2]
+                    logger.debug('file %d: Current values for %s are %s, safe = %s',
+                                 file_num, key, str(ck[i]), ck_safe[i])
+                type, ignore = valid_input_types[key][0:2]
+                field['type'] = type
                 if ck[i] is not None and ck_safe[i]:
                     if logger:
-                        logger.debug('Using %s already read in',key)
+                        logger.debug('file %d: Using %s already read in',file_num,key)
                 else:
                     config['obj_num'] = -1
                     input_obj, safe = galsim.config.gsobject._BuildSimple(
@@ -232,7 +234,8 @@ def ProcessInputNObjects(config, logger=None):
                     kwargs['nobjects_only'] = True
                     input_obj = init_func(**kwargs)
                 if logger:
-                    logger.debug('Found nobjects = %d for %s',input_obj.getNOjects(),key)
+                    logger.debug('file %d: Found nobjects = %d for %s',
+                                 config['file_num'],input_obj.getNOjects(),key)
                 return input_obj.getNObjects()
     # If didn't find anything, return None.
     return None
@@ -536,7 +539,7 @@ def Process(config, logger=None):
                 if file_num != 0:
                     ProcessInput(config, file_num=file_num, logger=logger)
                     if logger:
-                        logger.debug('After ProcessInput for file %d',file_num)
+                        logger.debug('file %d: After ProcessInput',file_num)
                 kwargs['config'] = config
                 kwargs['logger'] = logger 
                 t = build_func(**kwargs)
@@ -676,24 +679,29 @@ def BuildFits(file_name, config, logger=None,
     galsim.fits.writeMulti(hdulist, file_name)
     if logger:
         if len(hdus.keys()) == 1:
-            logger.debug('Wrote image to fits file %r',file_name)
+            logger.debug('file %d: Wrote image to fits file %r',
+                         config['file_num'],file_name)
         else:
-            logger.debug('Wrote image (with extra hdus) to multi-extension fits file %r',file_name)
+            logger.debug('file %d: Wrote image (with extra hdus) to multi-extension fits file %r',
+                         config['file_num'],file_name)
 
     if psf_file_name:
         all_images[1].write(psf_file_name)
         if logger:
-            logger.debug('Wrote psf image to fits file %r',psf_file_name)
+            logger.debug('file %d: Wrote psf image to fits file %r',
+                         config['file_num'],psf_file_name)
 
     if weight_file_name:
         all_images[2].write(weight_file_name)
         if logger:
-            logger.debug('Wrote weight image to fits file %r',weight_file_name)
+            logger.debug('file %d: Wrote weight image to fits file %r',
+                         config['file_num'],weight_file_name)
 
     if badpix_file_name:
         all_images[3].write(badpix_file_name)
         if logger:
-            logger.debug('Wrote badpix image to fits file %r',badpix_file_name)
+            logger.debug('file %d: Wrote badpix image to fits file %r',
+                         config['file_num'],badpix_file_name)
 
     t2 = time.time()
     return t2-t1
@@ -763,22 +771,26 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
 
     galsim.fits.writeMulti(main_images, file_name)
     if logger:
-        logger.debug('Wrote images to multi-extension fits file %r',file_name)
+        logger.debug('file %d: Wrote images to multi-extension fits file %r',
+                     config['file_num'],file_name)
 
     if psf_file_name:
         galsim.fits.writeMulti(psf_images, psf_file_name)
         if logger:
-            logger.debug('Wrote psf images to multi-extension fits file %r',psf_file_name)
+            logger.debug('file %d: Wrote psf images to multi-extension fits file %r',
+                         config['file_num'],psf_file_name)
 
     if weight_file_name:
         galsim.fits.writeMulti(weight_images, weight_file_name)
         if logger:
-            logger.debug('Wrote weight images to multi-extension fits file %r',weight_file_name)
+            logger.debug('file %d: Wrote weight images to multi-extension fits file %r',
+                         config['file_num'],weight_file_name)
 
     if badpix_file_name:
         galsim.fits.writeMulti(badpix_images, badpix_file_name)
         if logger:
-            logger.debug('Wrote badpix images to multi-extension fits file %r',badpix_file_name)
+            logger.debug('file %d: Wrote badpix images to multi-extension fits file %r',
+                         config['file_num'],badpix_file_name)
 
 
     t2 = time.time()
@@ -879,22 +891,26 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
 
     galsim.fits.writeCube(main_images, file_name)
     if logger:
-        logger.debug('Wrote image to fits data cube %r',file_name)
+        logger.debug('file %d: Wrote image to fits data cube %r',
+                     config['file_num'],file_name)
 
     if psf_file_name:
         galsim.fits.writeCube(psf_images, psf_file_name)
         if logger:
-            logger.debug('Wrote psf images to fits data cube %r',psf_file_name)
+            logger.debug('file %d: Wrote psf images to fits data cube %r',
+                         config['file_num'],psf_file_name)
 
     if weight_file_name:
         galsim.fits.writeCube(weight_images, weight_file_name)
         if logger:
-            logger.debug('Wrote weight images to fits data cube %r',weight_file_name)
+            logger.debug('file %d: Wrote weight images to fits data cube %r',
+                         config['file_num'],weight_file_name)
 
     if badpix_file_name:
         galsim.fits.writeCube(badpix_images, badpix_file_name)
         if logger:
-            logger.debug('Wrote badpix images to fits data cube %r',badpix_file_name)
+            logger.debug('file %d: Wrote badpix images to fits data cube %r',
+                         config['file_num'],badpix_file_name)
 
     t4 = time.time()
     return t4-t1
