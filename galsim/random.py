@@ -48,6 +48,7 @@ def permute(rng, *args):
 
 
 class DistDeviate(_galsim.BaseDeviate):
+
     """A class to draw random numbers from a user-defined probability distribution.
     
     DistDeviate is a BaseDeviate class that can be used to draw from an arbitrary probability
@@ -124,7 +125,7 @@ class DistDeviate(_galsim.BaseDeviate):
     2.108800962574702
     """    
     def __init__(self, rng=0, function=None, x_min=None, 
-                 x_max=None, interpolant=None, npoints=256):
+                 x_max=None, interpolant=None, npoints=256, _init=True):
         """Initializes a DistDeviate instance.
         
         The rng, if given, must be something that can initialize a BaseDeviate instance, such as 
@@ -134,6 +135,9 @@ class DistDeviate(_galsim.BaseDeviate):
         
         import numpy
         import galsim
+
+        # Special internal "private" constructor option that doesn't do any initialization.
+        if not _init: return
  
         # Set up the PRNG
         _galsim.BaseDeviate.__init__(self,rng)
@@ -259,6 +263,12 @@ class DistDeviate(_galsim.BaseDeviate):
         _galsim.BaseDeviate.reset(self,rng)
         # Make sure the stored _ud object stays in sync with self.
         self._ud.reset(self)
+
+    def duplicate(self):
+        dup = DistDeviate(_init=False)
+        dup.__dict__.update(self.__dict__)
+        dup._ud = self._ud.duplicate()
+        return dup
 
 
 # BaseDeviate docstrings
