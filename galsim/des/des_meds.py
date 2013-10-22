@@ -272,18 +272,25 @@ def write_meds(file_name, obj_list, clobber=True):
 
             # assign the start row to the end of image vector
             start_rows[i] = n_vec
+            # update n_vec to point to the end of image vector
+            n_vec += len(obj.images[i].array.flatten()) 
 
             # append the image vectors
             # if vector not is already initialised
-            if vec['image'] == []:
-                vec['image'] = obj.images[i].array.flatten()
-                vec['seg'] = obj.segs[i].array.flatten()
-                vec['weight'] = obj.weights[i].array.flatten()
-            # if vector already exists
-            else:
-                vec['image'] = numpy.concatenate([vec['image'], obj.images[i].array.flatten()])
-                vec['seg'] = numpy.concatenate([vec['seg'], obj.segs[i].array.flatten()])
-                vec['weight'] = numpy.concatenate([vec['weight'], obj.weights[i].array.flatten()])
+            # if vec['image'] == []:
+            #     vec['image'] = obj.images[i].array.flatten()
+            #     vec['seg'] = obj.segs[i].array.flatten()
+            #     vec['weight'] = obj.weights[i].array.flatten()
+            # # if vector already exists
+            # else:
+            #     vec['image'] = numpy.concatenate([vec['image'], obj.images[i].array.flatten()])
+            #     vec['seg'] = numpy.concatenate([vec['seg'], obj.segs[i].array.flatten()])
+            #     vec['weight'] = numpy.concatenate([vec['weight'], obj.weights[i].array.flatten()])
+
+            vec['image'].append(obj.images[i].array.flatten())
+            vec['seg'].append(obj.segs[i].array.flatten())
+            vec['weight'].append(obj.weights[i].array.flatten())
+
 
             # append the Jacobian
             dudrow[i] = obj.wcstrans[i].dudrow
@@ -300,8 +307,8 @@ def write_meds(file_name, obj_list, clobber=True):
                     MAX_MEMORY/1e9)
 
             # update n_vec to point to the end of image vector
-            n_vec = len(vec['image'])
-
+            # n_vec = len(vec['image'])
+ 
 
         # update the start rows fields in the catalog
         cat['start_row'].append(start_rows)
@@ -313,6 +320,11 @@ def write_meds(file_name, obj_list, clobber=True):
         cat['dvdcol'].append(dvdcol)
         cat['row0'].append(row0)
         cat['col0'].append(col0)
+
+    # concatenate list to one big vector
+    vec['image'] = numpy.concatenate(vec['image'])
+    vec['seg'] = numpy.concatenate(vec['seg'])
+    vec['weight'] = numpy.concatenate(vec['weight'])
 
     # get the primary HDU
     primary = pyfits.PrimaryHDU()
