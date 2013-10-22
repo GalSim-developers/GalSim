@@ -72,8 +72,10 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
                 import traceback
                 tr = traceback.format_exc()
                 if logger:
-                    logger.debug('%s: Caught exception %s\n%s',proc,str(e),tr)
+                    logger.error('%s: Caught exception %s\n%s',proc,str(e),tr)
                 output.put( (e, info, tr) )
+        if logger:
+            logger.debug('%s: Received STOP',proc)
     
     # The kwargs to pass to build_func.
     # We'll be adding to this below...
@@ -191,7 +193,6 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
                 # proc is really the traceback
                 if logger:
                     logger.error('Exception caught during job starting with stamp %d', k0)
-                    logger.error('%s',proc)
                     logger.error('Aborting the rest of this image')
                 for j in range(nproc):
                     p_list[j].terminate()
