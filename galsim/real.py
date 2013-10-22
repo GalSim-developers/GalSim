@@ -411,6 +411,16 @@ class RealGalaxyCatalog(object):
         # i.e. (dataset, ID within dataset)
         # also note: will be adding bits of information, like noise properties and galaxy fit params
 
+    def __del__(self):
+        # Make sure to clean up pyfits open files if people forget to call close()
+        self.close()
+
+    def close(self):
+        import pyfits
+        for f in self.loaded_files.values():
+            f.close()
+        self.loaded_files = {}
+
     def getNObjects(self) : return self.nobjects
     def getFileName(self) : return self.file_name
 
@@ -438,7 +448,6 @@ class RealGalaxyCatalog(object):
         from multiprocessing import Lock
         if self.logger:
             self.logger.debug('RealGalaxyCatalog: start preload')
-        self.preloaded = True
         for file_name in numpy.concatenate((self.gal_file_name , self.psf_file_name)):
             # numpy sometimes add a space at the end of the string that is not present in 
             # the original file.  Stupid.  But this next line removes it.
