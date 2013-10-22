@@ -173,8 +173,8 @@ namespace galsim {
          *
          * Both this and the returned duplicate will produce identical sequences of values.
          */
-        boost::shared_ptr<BaseDeviate> duplicate()
-        { return boost::shared_ptr<BaseDeviate>(new BaseDeviate(serialize())); }
+        BaseDeviate duplicate()
+        { return BaseDeviate(serialize()); }
 
         /**
          * @brief Re-seed the PRNG using specified seed
@@ -273,8 +273,8 @@ namespace galsim {
          *
          * Both this and the returned duplicate will produce identical sequences of values.
          */
-        boost::shared_ptr<UniformDeviate> duplicate()
-        { return boost::shared_ptr<UniformDeviate>(new UniformDeviate(serialize())); }
+        UniformDeviate duplicate()
+        { return UniformDeviate(serialize()); }
 
         /**
          * @brief Draw a new random number from the distribution
@@ -343,11 +343,8 @@ namespace galsim {
          *
          * Both this and the returned duplicate will produce identical sequences of values.
          */
-        boost::shared_ptr<GaussianDeviate> duplicate()
-        {
-            return boost::shared_ptr<GaussianDeviate>(
-                new GaussianDeviate(serialize(),getMean(),getSigma())); 
-        }
+        GaussianDeviate duplicate()
+        { return GaussianDeviate(serialize(),getMean(),getSigma()); }
 
         /**
          * @brief Draw a new random number from the distribution
@@ -448,11 +445,8 @@ namespace galsim {
          *
          * Both this and the returned duplicate will produce identical sequences of values.
          */
-        boost::shared_ptr<BinomialDeviate> duplicate()
-        {
-            return boost::shared_ptr<BinomialDeviate>(
-                new BinomialDeviate(serialize(),getN(),getP())); 
-        }
+        BinomialDeviate duplicate()
+        { return BinomialDeviate(serialize(),getN(),getP()); }
 
         /**
          * @brief Draw a new random number from the distribution
@@ -548,8 +542,8 @@ namespace galsim {
          *
          * Both this and the returned duplicate will produce identical sequences of values.
          */
-        boost::shared_ptr<PoissonDeviate> duplicate()
-        { return boost::shared_ptr<PoissonDeviate>(new PoissonDeviate(serialize(),getMean())); }
+        PoissonDeviate duplicate()
+        { return PoissonDeviate(serialize(),getMean()); }
 
         /**
          * @brief Draw a new random number from the distribution
@@ -640,11 +634,8 @@ namespace galsim {
          *
          * Both this and the returned duplicate will produce identical sequences of values.
          */
-        boost::shared_ptr<WeibullDeviate> duplicate()
-        { 
-            return boost::shared_ptr<WeibullDeviate>(
-                new WeibullDeviate(serialize(),getA(),getB())); 
-        }
+        WeibullDeviate duplicate()
+        { return WeibullDeviate(serialize(),getA(),getB()); }
 
         /**
          * @brief Draw a new random number from the distribution.
@@ -751,8 +742,8 @@ namespace galsim {
          *
          * Both this and the returned duplicate will produce identical sequences of values.
          */
-        boost::shared_ptr<GammaDeviate> duplicate()
-        { return boost::shared_ptr<GammaDeviate>(new GammaDeviate(serialize(),getK(),getTheta())); }
+        GammaDeviate duplicate()
+        { return GammaDeviate(serialize(),getK(),getTheta()); }
 
         /**
          * @brief Draw a new random number from the distribution.
@@ -856,8 +847,8 @@ namespace galsim {
          *
          * Both this and the returned duplicate will produce identical sequences of values.
          */
-        boost::shared_ptr<Chi2Deviate> duplicate()
-        { return boost::shared_ptr<Chi2Deviate>(new Chi2Deviate(serialize(),getN())); }
+        Chi2Deviate duplicate()
+        { return Chi2Deviate(serialize(),getN()); }
 
         /**
          * @brief Draw a new random number from the distribution.
