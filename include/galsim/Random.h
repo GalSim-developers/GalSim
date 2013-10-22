@@ -160,15 +160,21 @@ namespace galsim {
          */
         virtual ~BaseDeviate() {}
 
-        /**
-         * @brief return a serialization string for this BaseDeviate
-         */
+        /// @brief return a serialization string for this BaseDeviate
         std::string serialize()
         { 
             std::ostringstream oss;
             oss << *_rng; 
             return oss.str();
         }
+
+        /**
+         * @brief Construct a duplicate of this BaseDeviate object.
+         *
+         * Both this and the returned duplicate will produce identical sequences of values.
+         */
+        boost::shared_ptr<BaseDeviate> duplicate()
+        { return boost::shared_ptr<BaseDeviate>(new BaseDeviate(serialize())); }
 
         /**
          * @brief Re-seed the PRNG using specified seed
@@ -263,6 +269,14 @@ namespace galsim {
         UniformDeviate(const std::string& str) : BaseDeviate(str), _urd(0.,1.) {}
 
         /**
+         * @brief Construct a duplicate of this UniformDeviate object.
+         *
+         * Both this and the returned duplicate will produce identical sequences of values.
+         */
+        boost::shared_ptr<UniformDeviate> duplicate()
+        { return boost::shared_ptr<UniformDeviate>(new UniformDeviate(serialize())); }
+
+        /**
          * @brief Draw a new random number from the distribution
          *
          * @return A uniform deviate in the interval [0.,1.)
@@ -323,6 +337,17 @@ namespace galsim {
         /// @brief Construct a new GaussianDeviate from a serialization string
         GaussianDeviate(const std::string& str, double mean, double sigma) : 
             BaseDeviate(str), _normal(mean,sigma) {}
+
+        /**
+         * @brief Construct a duplicate of this GaussianDeviate object.
+         *
+         * Both this and the returned duplicate will produce identical sequences of values.
+         */
+        boost::shared_ptr<GaussianDeviate> duplicate()
+        {
+            return boost::shared_ptr<GaussianDeviate>(
+                new GaussianDeviate(serialize(),getMean(),getSigma())); 
+        }
 
         /**
          * @brief Draw a new random number from the distribution
@@ -419,6 +444,17 @@ namespace galsim {
         BinomialDeviate(const std::string& str, int N, double p) : BaseDeviate(str), _bd(N,p) {}
 
         /**
+         * @brief Construct a duplicate of this BinomialDeviate object.
+         *
+         * Both this and the returned duplicate will produce identical sequences of values.
+         */
+        boost::shared_ptr<BinomialDeviate> duplicate()
+        {
+            return boost::shared_ptr<BinomialDeviate>(
+                new BinomialDeviate(serialize(),getN(),getP())); 
+        }
+
+        /**
          * @brief Draw a new random number from the distribution
          *
          * @return A binomial deviate with current N and p
@@ -508,6 +544,14 @@ namespace galsim {
         PoissonDeviate(const std::string& str, double mean) : BaseDeviate(str), _pd(mean) {}
 
         /**
+         * @brief Construct a duplicate of this PoissonDeviate object.
+         *
+         * Both this and the returned duplicate will produce identical sequences of values.
+         */
+        boost::shared_ptr<PoissonDeviate> duplicate()
+        { return boost::shared_ptr<PoissonDeviate>(new PoissonDeviate(serialize(),getMean())); }
+
+        /**
          * @brief Draw a new random number from the distribution
          *
          * @return A Poisson deviate with current mean
@@ -590,6 +634,17 @@ namespace galsim {
         /// @brief Construct a new WeibullDeviate from a serialization string
         WeibullDeviate(const std::string& str, double a, double b) :
             BaseDeviate(str), _weibull(a,b) {}
+
+        /**
+         * @brief Construct a duplicate of this WeibullDeviate object.
+         *
+         * Both this and the returned duplicate will produce identical sequences of values.
+         */
+        boost::shared_ptr<WeibullDeviate> duplicate()
+        { 
+            return boost::shared_ptr<WeibullDeviate>(
+                new WeibullDeviate(serialize(),getA(),getB())); 
+        }
 
         /**
          * @brief Draw a new random number from the distribution.
@@ -692,6 +747,14 @@ namespace galsim {
             BaseDeviate(str), _gamma(k,theta) {}
 
         /**
+         * @brief Construct a duplicate of this GammaDeviate object.
+         *
+         * Both this and the returned duplicate will produce identical sequences of values.
+         */
+        boost::shared_ptr<GammaDeviate> duplicate()
+        { return boost::shared_ptr<GammaDeviate>(new GammaDeviate(serialize(),getK(),getTheta())); }
+
+        /**
          * @brief Draw a new random number from the distribution.
          *
          * @return A Gamma deviate with current shape k and scale theta.
@@ -787,6 +850,14 @@ namespace galsim {
  
         /// @brief Construct a new Chi2Deviate from a serialization string
         Chi2Deviate(const std::string& str, double n) : BaseDeviate(str), _chi_squared(n) {}
+
+        /**
+         * @brief Construct a duplicate of this Chi2Deviate object.
+         *
+         * Both this and the returned duplicate will produce identical sequences of values.
+         */
+        boost::shared_ptr<Chi2Deviate> duplicate()
+        { return boost::shared_ptr<Chi2Deviate>(new Chi2Deviate(serialize(),getN())); }
 
         /**
          * @brief Draw a new random number from the distribution.

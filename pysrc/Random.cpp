@@ -61,7 +61,8 @@ namespace galsim {
     struct PyBaseDeviate {
 
         static void wrap() {
-            bp::class_<BaseDeviateCallBack> pyBaseDeviate("BaseDeviate", "", bp::no_init);
+            bp::class_<BaseDeviateCallBack, boost::shared_ptr<BaseDeviate> > pyBaseDeviate(
+                "BaseDeviate", "", bp::no_init);
             pyBaseDeviate
                 .def(bp::init<long>(bp::arg("lseed")=0))
                 .def(bp::init<const BaseDeviate&>(bp::arg("dev")))
@@ -74,6 +75,7 @@ namespace galsim {
                      (bp::arg("dev")), "")
                 .def("clearCache", &BaseDeviate::clearCache, "")
                 .def("serialize", &BaseDeviate::serialize, "")
+                .def("duplicate", &BaseDeviate::duplicate, "")
                 .enable_pickling()
                 ;
         }
@@ -83,12 +85,15 @@ namespace galsim {
     struct PyUniformDeviate {
 
         static void wrap() {
-            bp::class_<UniformDeviate, bp::bases<BaseDeviate> > pyUniformDeviate(
-                "UniformDeviate", "", bp::no_init);
+            bp::class_<
+                UniformDeviate,
+                boost::shared_ptr<UniformDeviate>, 
+                bp::bases<BaseDeviate> > pyUniformDeviate("UniformDeviate", "", bp::no_init);
             pyUniformDeviate
                 .def(bp::init<long>(bp::arg("lseed")=0))
                 .def(bp::init<const BaseDeviate&>(bp::arg("dev")))
                 .def(bp::init<std::string>(bp::arg("str")))
+                .def("duplicate", &UniformDeviate::duplicate, "")
                 .def("__call__", &UniformDeviate::operator(), "")
                 .enable_pickling()
                 ;
@@ -99,8 +104,10 @@ namespace galsim {
     struct PyGaussianDeviate {
 
         static void wrap() {
-            bp::class_<GaussianDeviate, bp::bases<BaseDeviate> > pyGaussianDeviate(
-                "GaussianDeviate", "", bp::no_init);
+            bp::class_<
+                GaussianDeviate,
+                boost::shared_ptr<GaussianDeviate>,
+                bp::bases<BaseDeviate> > pyGaussianDeviate("GaussianDeviate", "", bp::no_init);
             pyGaussianDeviate
                 .def(bp::init<long, double, double>(
                         (bp::arg("lseed")=0, bp::arg("mean")=0., bp::arg("sigma")=1.)
@@ -111,6 +118,7 @@ namespace galsim {
                 .def(bp::init<std::string, double, double>(
                         (bp::arg("str"), bp::arg("mean")=0., bp::arg("sigma")=1.)
                 ))
+                .def("duplicate", &GaussianDeviate::duplicate, "")
                 .def("__call__", &GaussianDeviate::operator(), "")
                 .def("getMean", &GaussianDeviate::getMean, "")
                 .def("setMean", &GaussianDeviate::setMean, "")
@@ -125,8 +133,10 @@ namespace galsim {
     struct PyBinomialDeviate {
 
         static void wrap() {
-            bp::class_<BinomialDeviate, bp::bases<BaseDeviate> > pyBinomialDeviate(
-                "BinomialDeviate", "", bp::no_init);
+            bp::class_<
+                BinomialDeviate,
+                boost::shared_ptr<BinomialDeviate>,
+                bp::bases<BaseDeviate> > pyBinomialDeviate("BinomialDeviate", "", bp::no_init);
             pyBinomialDeviate
                 .def(bp::init<long, int, double>(
                         (bp::arg("lseed")=0, bp::arg("N")=1, bp::arg("p")=0.5)
@@ -137,6 +147,7 @@ namespace galsim {
                 .def(bp::init<std::string, int, double>(
                         (bp::arg("str")=0, bp::arg("N")=1, bp::arg("p")=0.5)
                 ))
+                .def("duplicate", &BinomialDeviate::duplicate, "")
                 .def("__call__", &BinomialDeviate::operator(), "")
                 .def("getN", &BinomialDeviate::getN, "")
                 .def("setN", &BinomialDeviate::setN, "")
@@ -151,8 +162,10 @@ namespace galsim {
     struct PyPoissonDeviate {
 
         static void wrap() {
-            bp::class_<PoissonDeviate, bp::bases<BaseDeviate> > pyPoissonDeviate(
-                "PoissonDeviate", "", bp::no_init);
+            bp::class_<
+                PoissonDeviate,
+                boost::shared_ptr<PoissonDeviate>,
+                bp::bases<BaseDeviate> > pyPoissonDeviate("PoissonDeviate", "", bp::no_init);
             pyPoissonDeviate
                 .def(bp::init<long, double>(
                         (bp::arg("lseed")=0, bp::arg("mean")=1.)
@@ -163,6 +176,7 @@ namespace galsim {
                 .def(bp::init<std::string, double>(
                         (bp::arg("str")=0, bp::arg("mean")=1.)
                 ))
+                .def("duplicate", &PoissonDeviate::duplicate, "")
                 .def("__call__", &PoissonDeviate::operator(), "")
                 .def("getMean", &PoissonDeviate::getMean, "")
                 .def("setMean", &PoissonDeviate::setMean, "")
@@ -176,8 +190,10 @@ namespace galsim {
 
         static void wrap() {
 
-            bp::class_<WeibullDeviate, bp::bases<BaseDeviate> > pyWeibullDeviate(
-                "WeibullDeviate", "", bp::no_init);
+            bp::class_<
+                WeibullDeviate,
+                boost::shared_ptr<WeibullDeviate>,
+                bp::bases<BaseDeviate> > pyWeibullDeviate("WeibullDeviate", "", bp::no_init);
             pyWeibullDeviate
                 .def(bp::init<long, double, double>(
                         (bp::arg("lseed")=0, bp::arg("a")=1., bp::arg("b")=1.)
@@ -188,6 +204,7 @@ namespace galsim {
                 .def(bp::init<std::string, double, double>(
                         (bp::arg("str")=0, bp::arg("a")=1., bp::arg("b")=1.)
                 ))
+                .def("duplicate", &WeibullDeviate::duplicate, "")
                 .def("__call__", &WeibullDeviate::operator(), "")
                 .def("getA", &WeibullDeviate::getA, "")
                 .def("setA", &WeibullDeviate::setA, "")
@@ -202,8 +219,10 @@ namespace galsim {
     struct PyGammaDeviate {
 
         static void wrap() {
-            bp::class_<GammaDeviate, bp::bases<BaseDeviate> > pyGammaDeviate(
-                "GammaDeviate", "", bp::no_init);
+            bp::class_<
+                GammaDeviate,
+                boost::shared_ptr<GammaDeviate>,
+                bp::bases<BaseDeviate> > pyGammaDeviate("GammaDeviate", "", bp::no_init);
             pyGammaDeviate
                 .def(bp::init<long, double, double>(
                         (bp::arg("lseed")=0, bp::arg("k")=1., bp::arg("theta")=1.)
@@ -214,6 +233,7 @@ namespace galsim {
                 .def(bp::init<std::string, double, double>(
                         (bp::arg("str")=0, bp::arg("k")=1., bp::arg("theta")=1.)
                 ))
+                .def("duplicate", &GammaDeviate::duplicate, "")
                 .def("__call__", &GammaDeviate::operator(), "")
                 .def("getK", &GammaDeviate::getK, "")
                 .def("setK", &GammaDeviate::setK, "")
@@ -228,8 +248,10 @@ namespace galsim {
     struct PyChi2Deviate {
 
         static void wrap() {
-            bp::class_<Chi2Deviate, bp::bases<BaseDeviate> > pyChi2Deviate(
-                "Chi2Deviate", "", bp::no_init);
+            bp::class_<
+                Chi2Deviate,
+                boost::shared_ptr<Chi2Deviate>,
+                bp::bases<BaseDeviate> > pyChi2Deviate("Chi2Deviate", "", bp::no_init);
             pyChi2Deviate
                 .def(bp::init<long, double>(
                         (bp::arg("lseed")=0, bp::arg("n")=1.)
@@ -240,6 +262,7 @@ namespace galsim {
                 .def(bp::init<std::string, double>(
                         (bp::arg("str")=0, bp::arg("n")=1.)
                 ))
+                .def("duplicate", &Chi2Deviate::duplicate, "")
                 .def("__call__", &Chi2Deviate::operator(), "")
                 .def("getN", &Chi2Deviate::getN, "")
                 .def("setN", &Chi2Deviate::setN, "")
