@@ -462,6 +462,7 @@ def Process(config, logger=None):
         # Assign some of the kwargs we know now:
         kwargs = {
             'file_name' : file_name,
+            'file_num' : file_num,
             'image_num' : image_num,
             'obj_num' : obj_num
         }
@@ -625,7 +626,7 @@ def Process(config, logger=None):
 
 
 def BuildFits(file_name, config, logger=None, 
-              image_num=0, obj_num=0,
+              file_num=0, image_num=0, obj_num=0,
               psf_file_name=None, psf_hdu=None,
               weight_file_name=None, weight_hdu=None,
               badpix_file_name=None, badpix_hdu=None):
@@ -648,6 +649,9 @@ def BuildFits(file_name, config, logger=None,
     """
     import time
     t1 = time.time()
+
+    config['seq_index'] = file_num
+    config['file_num'] = file_num
 
     # hdus is a dict with hdus[i] = the item in all_images to put in the i-th hdu.
     hdus = {}
@@ -730,7 +734,7 @@ def BuildFits(file_name, config, logger=None,
 
 
 def BuildMultiFits(file_name, config, nproc=1, logger=None,
-                   image_num=0, obj_num=0,
+                   file_num=0, image_num=0, obj_num=0,
                    psf_file_name=None, weight_file_name=None, badpix_file_name=None):
     """
     Build a multi-extension fits file as specified in config.
@@ -749,6 +753,9 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
     """
     import time
     t1 = time.time()
+
+    config['seq_index'] = file_num
+    config['file_num'] = file_num
 
     if psf_file_name:
         make_psf_image = True
@@ -820,7 +827,7 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
 
 
 def BuildDataCube(file_name, config, nproc=1, logger=None, 
-                  image_num=0, obj_num=0,
+                  file_num=0, image_num=0, obj_num=0,
                   psf_file_name=None, weight_file_name=None, badpix_file_name=None):
     """
     Build a multi-image fits data cube as specified in config.
@@ -839,6 +846,9 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     """
     import time
     t1 = time.time()
+
+    config['seq_index'] = file_num
+    config['file_num'] = file_num
 
     if psf_file_name:
         make_psf_image = True
