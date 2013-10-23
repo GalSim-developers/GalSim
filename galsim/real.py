@@ -168,6 +168,7 @@ class RealGalaxy(GSObject):
         self.gal_image = real_galaxy_catalog.getGal(use_index)
         if logger:
             logger.debug('RealGalaxy %d: Got gal_image',use_index)
+
         self.psf_image = real_galaxy_catalog.getPSF(use_index)
         if logger:
             logger.debug('RealGalaxy %d: Got psf_image',use_index)
@@ -179,6 +180,7 @@ class RealGalaxy(GSObject):
         noise_image, pixel_scale, var = real_galaxy_catalog.getNoiseProperties(use_index)
         if logger:
             logger.debug('RealGalaxy %d: Got noise_image',use_index)
+
         if noise_image is None:
             self.noise = galsim.UncorrelatedNoise(rng, pixel_scale, var, gsparams)
         else:
@@ -400,9 +402,10 @@ class RealGalaxyCatalog(object):
         # The pyfits commands aren't thread safe.  So we need to make sure the methods that
         # use pyfits are not run concurrently from multiple threads.
         from multiprocessing import Lock
-        self.locks = {}  # There will be one for each loaded file to use when accessing the file.
-        self.loaded_lock = Lock()  # This one guards building new files
-        self.noise_lock = Lock()  # This is for the noise files
+        self.gal_lock = Lock()  # Use this when accessing gal files
+        self.psf_lock = Lock()  # Use this when accessing psf files
+        self.loaded_lock = Lock()  # Use this when opening new files from disk
+        self.noise_lock = Lock()  # Use this for building the noise image(s) (usually just one)
 
         # Preload all files if desired
         if preload: self.preload()
@@ -462,7 +465,6 @@ class RealGalaxyCatalog(object):
                 # are (since I couldn't finish the run with the default memmap=True), but I
                 # don't think there is much impact either way with memory mapping in our case.
                 self.loaded_files[file_name] = pyfits.open(file_name,memmap=False)
-                self.locks[file_name] = Lock()
 
     def _getFile(self, file_name):
         import pyfits
@@ -471,7 +473,6 @@ class RealGalaxyCatalog(object):
             if self.logger:
                 self.logger.debug('RealGalaxyCatalog: File %s is already open',file_name)
             f = self.loaded_files[file_name]
-            lock = self.locks[file_name]
         else:
             self.loaded_lock.acquire()
             # Check again in case two processes both hit the else at the same time.
@@ -479,16 +480,13 @@ class RealGalaxyCatalog(object):
                 if self.logger:
                     self.logger.debug('RealGalaxyCatalog: File %s is already open',file_name)
                 f = self.loaded_files[file_name]
-                lock = self.locks[file_name]
             else:
                 if self.logger:
                     self.logger.debug('RealGalaxyCatalog: open file %s',file_name)
                 f = pyfits.open(file_name,memmap=False)
                 self.loaded_files[file_name] = f
-                lock = Lock()
-                self.locks[file_name] = lock
             self.loaded_lock.release()
-        return f,lock
+        return f
 
     def getGal(self, i):
         """Returns the galaxy at index `i` as an ImageViewD object.
@@ -499,13 +497,14 @@ class RealGalaxyCatalog(object):
         if i >= len(self.gal_file_name):
             raise IndexError(
                 'index %d given to getGal is out of range (0..%d)'%(i,len(self.gal_file_name)-1))
-        f,lock = self._getFile(self.gal_file_name[i])
-        # For some reason the more elegant `with lock:` syntax isn't working for me.
+        f = self._getFile(self.gal_file_name[i])
+        # For some reason the more elegant `with gal_lock:` syntax isn't working for me.
         # It gives an EOFError.  But doing an explicit acquire and release seems to work fine.
-        lock.acquire()
+        self.gal_lock.acquire()
         array = f[self.gal_hdu[i]].data
-        lock.release()
-        return galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
+        self.gal_lock.release()
+        im = galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
+        return im
 
 
     def getPSF(self, i):
@@ -517,10 +516,10 @@ class RealGalaxyCatalog(object):
         if i >= len(self.psf_file_name):
             raise IndexError(
                 'index %d given to getPSF is out of range (0..%d)'%(i,len(self.psf_file_name)-1))
-        f,lock = self._getFile(self.psf_file_name[i])
-        lock.acquire()
+        f = self._getFile(self.psf_file_name[i])
+        self.psf_lock.acquire()
         array = f[self.psf_hdu[i]].data
-        lock.release()
+        self.psf_lock.release()
         return galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))
 
     def getNoiseProperties(self, i):
