@@ -330,13 +330,12 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
         image_pos = None
         sky_pos = None
 
-    if image_pos:
-        # Save this value for possible use in Eval's.
+    # Save these values for possible use in Evals or other modules
+    if image_pos is not None:
         config['image_pos'] = image_pos
         if logger:
             logger.debug('obj %d: image_pos = %s',config['obj_num'],str(config['image_pos']))
-    if sky_pos:
-        # Save this value for possible use in Eval's.
+    if sky_pos is not None:
         config['sky_pos'] = sky_pos
         if logger:
             logger.debug('obj %d: sky_pos = %s',config['obj_num'],str(config['sky_pos']))
