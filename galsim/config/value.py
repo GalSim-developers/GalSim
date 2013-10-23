@@ -451,7 +451,7 @@ def _GenerateFromFitsHeader(param, param_name, base, value_type):
     if key not in header.keys():
         raise ValueError("key %s not found in the FITS header in %s"%(key,kwargs['file_name']))
 
-    val = header[key]
+    val = header.get(key)
     #print base['obj_num'],'Header: key = %s, val = %s'%(key,val)
     return val, safe
 
