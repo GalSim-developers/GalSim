@@ -122,7 +122,7 @@ def parse_args():
             help=('type of config_file: yaml or json are currently supported. ' +
                   '[default is to automatically determine the type from the extension]'))
         parser.add_option(
-            '-m', '--module', type=str, action='store', default=None, 
+            '-m', '--module', type=str, action='append', default=None, 
             help='python module to import before parsing config file')
         parser.add_option(
             '--version', action='store_const', default=False, const=True,
