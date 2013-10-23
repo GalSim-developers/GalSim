@@ -304,37 +304,42 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             ysize = galsim.config.ParseValue(config['image'],'stamp_size',config,int)[0]
     if False:
         logger.debug('obj %d: xsize,ysize = %d,%d',config['obj_num'],xsize,ysize)
+    if xsize: config['stamp_xsize'] = xsize
+    if ysize: config['stamp_ysize'] = ysize
 
     # Determine where this object is going to go:
-    if 'image_pos' in config['image']:
-        image_pos = galsim.config.ParseValue(config['image'],'image_pos',config,
-                                             galsim.PositionD)[0]
+    if 'image_pos' in config['image'] and 'sky_pos' in config['image']:
+        image_pos = galsim.config.ParseValue(
+            config['image'], 'image_pos', config, galsim.PositionD)[0]
+        sky_pos = galsim.config.ParseValue(
+            config['image'], 'sky_pos', config, galsim.PositionD)[0]
+
+    elif 'image_pos' in config['image']:
+        image_pos = galsim.config.ParseValue(
+            config['image'], 'image_pos', config, galsim.PositionD)[0]
+        # Calculate and save the position relative to the image center
+        sky_pos = (image_pos - config['image_center']) * config['pixel_scale']
+
+    elif 'sky_pos' in config['image']:
+        sky_pos = galsim.config.ParseValue(
+            config['image'], 'sky_pos', config, galsim.PositionD)[0]
+        # Calculate and save the position relative to the image center
+        image_pos = (sky_pos / config['pixel_scale']) + config['image_center']
+
+    else:
+        image_pos = None
+        sky_pos = None
+
+    if image_pos:
         # Save this value for possible use in Eval's.
         config['image_pos'] = image_pos
         if logger:
             logger.debug('obj %d: image_pos = %s',config['obj_num'],str(config['image_pos']))
-
-        # Calculate and save the position relative to the image center
-        config['sky_pos'] = (image_pos - config['image_cen']) * config['pixel_scale']
-        if logger:
-            logger.debug('obj %d: sky_pos = %s',config['obj_num'],str(config['sky_pos']))
-
-    elif 'sky_pos' in config['image']:
-        sky_pos = galsim.config.ParseValue(config['image'], 'sky_pos', config, galsim.PositionD)[0]
+    if sky_pos:
         # Save this value for possible use in Eval's.
         config['sky_pos'] = sky_pos
         if logger:
             logger.debug('obj %d: sky_pos = %s',config['obj_num'],str(config['sky_pos']))
-
-        # Calculate and save the position relative to the image center
-        image_pos = (sky_pos / config['pixel_scale']) + config['image_cen']
-        config['image_pos'] = image_pos
-        if logger:
-            logger.debug('obj %d: image_pos = %s',config['obj_num'],str(config['image_pos']))
-
-    else:
-        image_pos = None
-
 
     if image_pos is not None:
         import math

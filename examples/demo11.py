@@ -167,7 +167,7 @@ def main(argv):
     # scales, below the interesting scales on which we want the shear power spectrum to be
     # represented exactly).  Lensing engine wants positions in arcsec, so calculate that:
     ps.buildGrid(grid_spacing = grid_spacing,
-                 ngrid = int(image_size_arcsec / grid_spacing)+1,
+                 ngrid = int(math.ceil(image_size_arcsec / grid_spacing)),
                  center = center, rng = rng.duplicate())
     logger.info('Made gridded shears')
 

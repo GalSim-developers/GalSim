@@ -353,18 +353,26 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
     convention = params.get('index_convention','1')
     _set_image_origin(config,convention)
 
-    # If image_xsize and image_ysize were set in config, this overrides the read-in params.
-    if 'image_xsize' in config and 'image_ysize' in config:
-        xsize = config['image_xsize']
-        ysize = config['image_ysize']
+    # If image_force_xsize and image_force_ysize were set in config, this overrides the 
+    # read-in params.
+    if 'image_force_xsize' in config and 'image_force_ysize' in config:
+        xsize = config['image_force_xsize']
+        ysize = config['image_force_ysize']
     else:
         size = params.get('size',0)
         xsize = params.get('xsize',size)
         ysize = params.get('ysize',size)
+    config['image_xsize'] = xsize
+    config['image_ysize'] = ysize
 
     if (xsize == 0) != (ysize == 0):
         raise AttributeError(
             "Both (or neither) of image.xsize and image.ysize need to be defined  and != 0.")
+
+    if 'sky_pos' in config['image']:
+        config['image']['image_pos'] = (0,0)
+        # We allow sky_pos to be in config[image], but we don't want it to lead to a final_shift
+        # in BuildSingleStamp.  The easiest way to do this is to set image_pos to (0,0).
 
     pixel_scale = params.get('pixel_scale',1.0)
     config['pixel_scale'] = pixel_scale
@@ -420,10 +428,14 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     nx_tiles = params['nx_tiles']
     ny_tiles = params['ny_tiles']
     nobjects = nx_tiles * ny_tiles
+    config['nx_tiles'] = nx_tiles
+    config['ny_tiles'] = ny_tiles
 
     stamp_size = params.get('stamp_size',0)
     stamp_xsize = params.get('stamp_xsize',stamp_size)
     stamp_ysize = params.get('stamp_ysize',stamp_size)
+    config['tile_xsize'] = stamp_xsize
+    config['tile_ysize'] = stamp_ysize
 
     convention = params.get('index_convention','1')
     _set_image_origin(config,convention)
@@ -455,15 +467,17 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     full_xsize = (stamp_xsize + xborder) * nx_tiles - xborder
     full_ysize = (stamp_ysize + yborder) * ny_tiles - yborder
 
-    # If image_xsize and image_ysize were set in config, make sure it matches.
-    if ( 'image_xsize' in config and 'image_ysize' in config and
-         (full_xsize != config['image_xsize'] or full_ysize != config['image_ysize']) ):
+    # If image_force_xsize and image_force_ysize were set in config, make sure it matches.
+    if ( ('image_force_xsize' in config and full_xsize != config['image_force_xsize']) or
+         ('image_force_ysize' in config and full_ysize != config['image_force_ysize']) ):
         raise ValueError(
-            "Unable to reconcile saved image_xsize and image_ysize with provided "+
+            "Unable to reconcile required image xsize and ysize with provided "+
             "nx_tiles=%d, ny_tiles=%d, "%(nx_tiles,ny_tiles) +
             "xborder=%d, yborder=%d\n"%(xborder,yborder) +
             "Calculated full_size = (%d,%d) "%(full_xsize,full_ysize)+
-            "!= required (%d,%d)."%(config['image_xsize'],config['image_ysize']))
+            "!= required (%d,%d)."%(config['image_force_xsize'],config['image_force_ysize']))
+    config['image_xsize'] = full_xsize
+    config['image_ysize'] = full_ysize
 
     if 'pix' not in config:
         config['pix'] = { 'type' : 'Pixel' , 'xw' : pixel_scale }
@@ -481,31 +495,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         rng = galsim.BaseDeviate(seed)
     else:
         rng = galsim.BaseDeviate()
-
-    # If we have a power spectrum in config, we need to get a new realization at the start
-    # of each image.
-    if 'power_spectrum' in config:
-        input_ps = config['input']['power_spectrum']
-        if not isinstance(input_ps, list):
-            input_ps = [ input_ps ]
-
-        for i in range(len(config['power_spectrum'])):
-            # PowerSpectrum can only do a square FFT, so make it the larger of the two n's.
-            n_tiles = max(nx_tiles, ny_tiles)
-            stamp_size = max(stamp_xsize, stamp_ysize)
-            if 'grid_spacing' in input_ps[i]:
-                grid_dx = galsim.config.ParseValue(input_ps[i], 'grid_spacing', config, float)[0]
-            else:
-                grid_dx = stamp_size * pixel_scale
-            if 'interpolant' in input_ps[i]:
-                interpolant = galsim.config.ParseValue(input_ps[i], 'interpolant', config, str)[0]
-            else:
-                interpolant = None
-
-            config['power_spectrum'][i].buildGrid(grid_spacing=grid_dx, ngrid=n_tiles, rng=rng,
-                                                  interpolant=interpolant)
-        # We don't care about the output here.  This just builds the grid, which we'll
-        # access for each object using its position.
+    config['rng'] = rng
 
     # Make a list of ix,iy values according to the specified order:
     order = params.get('order','row').lower()
@@ -544,9 +534,9 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
     # Also define the overall image center, since we need that to calculate the position 
     # of each stamp relative to the center.
-    config['image_cen'] = full_image.bounds.trueCenter()
+    config['image_center'] = full_image.bounds.trueCenter()
     if logger:
-        logger.debug('image %d: image_cen = %s',config['image_num'],str(config['image_cen']))
+        logger.debug('image %d: image_center = %s',config['image_num'],str(config['image_center']))
 
     if make_psf_image:
         full_psf_image = galsim.ImageF(full_xsize, full_ysize, scale=pixel_scale)
@@ -568,6 +558,22 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         full_badpix_image.setZero()
     else:
         full_badpix_image = None
+
+    # Sometimes an input field needs to do something special at the start of an image.
+    if 'input' in config:
+        for key in [ k for k in galsim.config.valid_input_types.keys() if k in config['input'] ]:
+            if galsim.config.valid_input_types[key][3]:
+                assert key in config
+                fields = config['input'][key]
+                if not isinstance(fields, list):
+                    fields = [ fields ]
+                input_objs = config[key]
+
+                for i in range(len(fields)):
+                    field = fields[i]
+                    input_obj = input_objs[i]
+                    func = eval(galsim.config.valid_input_types[key][3])
+                    func(input_obj, field, config)
 
     stamp_images = galsim.config.BuildStamps(
             nobjects=nobjects, config=config,
@@ -702,12 +708,14 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     if 'sky_level' in params:
         sky_level_pixel = params['sky_level'] * pixel_scale**2
 
-    # If image_xsize and image_ysize were set in config, make sure it matches.
-    if ( 'image_xsize' in config and 'image_ysize' in config and
-         (full_xsize != config['image_xsize'] or full_ysize != config['image_ysize']) ):
+    # If image_force_xsize and image_force_ysize were set in config, make sure it matches.
+    if ( ('image_force_xsize' in config and full_xsize != config['image_force_xsize']) or
+         ('image_force_ysize' in config and full_ysize != config['image_force_ysize']) ):
         raise ValueError(
-            "Unable to reconcile saved image_xsize and image_ysize with provided "+
+            "Unable to reconcile required image xsize and ysize with provided "+
             "xsize=%d, ysize=%d, "%(full_xsize,full_ysize))
+    config['image_xsize'] = full_xsize
+    config['image_ysize'] = full_ysize
 
     if 'pix' not in config:
         config['pix'] = { 'type' : 'Pixel' , 'xw' : pixel_scale }
@@ -725,31 +733,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         rng = galsim.BaseDeviate(seed)
     else:
         rng = galsim.BaseDeviate()
-
-    # If we have a power spectrum in config, we need to get a new realization at the start
-    # of each image.
-    if 'power_spectrum' in config:
-        input_ps = config['input']['power_spectrum']
-        if not isinstance(input_ps, list):
-            input_ps = [ input_ps ]
-
-        for i in range(len(config['power_spectrum'])):
-            # PowerSpectrum can only do a square FFT, so make it the larger of the two sizes.
-            if 'grid_spacing' not in input_ps[i]:
-                raise AttributeError(
-                    "power_spectrum.grid_spacing required for image.type=Scattered")
-            grid_dx = galsim.config.ParseValue(input_ps[i], 'grid_spacing', config, float)[0]
-            full_size = max(full_xsize, full_ysize)
-            grid_nx = full_size * pixel_scale / grid_dx + 1
-            if 'interpolant' in input_ps[i]:
-                interpolant = galsim.config.ParseValue(input_ps[i], 'interpolant', config, str)[0]
-            else:
-                interpolant = None
-
-            config['power_spectrum'][i].buildGrid(grid_spacing=grid_dx, ngrid=grid_nx, rng=rng,
-                                                  interpolant=interpolant)
-        # We don't care about the output here.  This just builds the grid, which we'll
-        # access for each object using its position.
+    config['rng'] = rng
 
     if 'image_pos' in config['image'] and 'sky_pos' in config['image']:
         raise AttributeError("Both image_pos and sky_pos specified for Scattered image.")
@@ -773,10 +757,9 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     # Also define the overall image center, since we need that to calculate the position 
     # of each stamp relative to the center.
-    config['image_cen'] = full_image.bounds.trueCenter()
+    config['image_center'] = full_image.bounds.trueCenter()
     if logger:
-        logger.debug('image %d: image_cen = %s',
-                     config['image_num'],str(full_image.bounds.trueCenter()))
+        logger.debug('image %d: image_center = %s',config['image_num'],str(config['image_center']))
 
     if make_psf_image:
         full_psf_image = galsim.ImageF(full_xsize, full_ysize, scale=pixel_scale)
@@ -798,6 +781,22 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         full_badpix_image.setZero()
     else:
         full_badpix_image = None
+
+    # Sometimes an input field needs to do something special at the start of an image.
+    if 'input' in config:
+        for key in [ k for k in galsim.config.valid_input_types.keys() if k in config['input'] ]:
+            if galsim.config.valid_input_types[key][3]:
+                assert key in config
+                fields = config['input'][key]
+                if not isinstance(fields, list):
+                    fields = [ fields ]
+                input_objs = config[key]
+
+                for i in range(len(fields)):
+                    field = fields[i]
+                    input_obj = input_objs[i]
+                    func = eval(galsim.config.valid_input_types[key][3])
+                    func(input_obj, field, config)
 
     stamp_images = galsim.config.BuildStamps(
             nobjects=nobjects, config=config,
@@ -922,5 +921,34 @@ def GetNObjForTiledImage(config, image_num):
     nx = galsim.config.ParseValue(config['image'],'nx_tiles',config,int)[0]
     ny = galsim.config.ParseValue(config['image'],'ny_tiles',config,int)[0]
     return nx*ny
+
+def PowerSpectrumInit(ps, config, base):
+    if 'grid_spacing' in config:
+        grid_spacing = galsim.config.ParseValue(config, 'grid_spacing', base, float)[0]
+    elif 'tile_xsize' in base:
+        # Then we have a tiled image.  Can use the tile spacing as the grid spacing.
+        stamp_size = min(base['tile_xsize'], base['tile_ysize'])
+        grid_spacing = stamp_size * base['pixel_scale']
+    else:
+        raise AttributeError("power_spectrum.grid_spacing required for non-tiled images")
+
+    if 'tile_xsize' in base and base['tile_xsize'] == base['tile_ysize']:
+        # PowerSpectrum can only do a square FFT, so make it the larger of the two n's.
+        ngrid = max(base['nx_tiles'], base['ny_tiles'])
+        # Normally that's good, but if tiles aren't square, need to drop through to the
+        # second option.
+    else:
+        import math
+        image_size = max(base['image_xsize'], base['image_ysize'])
+        ngrid = int(math.ceil(image_size * base['pixel_scale'] / grid_spacing))
+
+    if 'interpolant' in config:
+        interpolant = galsim.config.ParseValue(config, 'interpolant', base, str)[0]
+    else:
+        interpolant = None
+
+    # We don't care about the output here.  This just builds the grid, which we'll
+    # access for each object using its position.
+    ps.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid, rng=base['rng'], interpolant=interpolant)
 
 

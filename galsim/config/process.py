@@ -24,19 +24,21 @@ valid_input_types = {
     # The values are tuples with:
     # - the class name to build.
     # - a list of keys to ignore on the initial creation (e.g. PowerSpectrum has values that are 
-    #   used later).
+    #   used later in PowerSpectrumInit).
     # - whether the class has a getNObjects method, in which case it also must have a constructor
     #   kwarg nobjects_only to efficiently do only enough to calculate nobjects.
+    # - A function to call at the start of each image (or None)
     # See the des module for examples of how to extend this from a module.
-    'catalog' : ('Catalog', [], True), 
-    'dict' : ('Dict', [], False), 
-    'real_catalog' : ('RealGalaxyCatalog', [], True),
-    'nfw_halo' : ('NFWHalo', [], False),
-    'power_spectrum' : ('PowerSpectrum',
-                        # power_spectrum uses these extra parameters for buildGrid later.
+    'catalog' : ('galsim.Catalog', [], True, None), 
+    'dict' : ('galsim.Dict', [], False, None), 
+    'real_catalog' : ('galsim.RealGalaxyCatalog', [], True, None),
+    'nfw_halo' : ('galsim.NFWHalo', [], False, None),
+    'power_spectrum' : ('galsim.PowerSpectrum',
+                        # power_spectrum uses these extra parameters in PowerSpectrumInit
                         ['grid_spacing', 'interpolant'], 
-                        False),
-    'fits_header' : ('FitsHeader', [], False), 
+                        False,
+                        'galsim.config.PowerSpectrumInit'),
+    'fits_header' : ('galsim.FitsHeader', [], False, None), 
 }
 
 valid_output_types = { 
@@ -859,7 +861,8 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
 
     # All images need to be the same size for a data cube.
     # Enforce this by buliding the first image outside the below loop and setting
-    # config['image_xsize'] and config['image_ysize'] to be the size of the first image.
+    # config['image_force_xsize'] and config['image_force_ysize'] to be the size of the first 
+    # image.
     t2 = time.time()
     config1 = CopyConfig(config)
     all_images = galsim.config.BuildImage(
@@ -876,8 +879,8 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
 
     # Note: numpy shape is y,x
     image_ysize, image_xsize = all_images[0].array.shape
-    config['image_xsize'] = image_xsize
-    config['image_ysize'] = image_ysize
+    config['image_force_xsize'] = image_xsize
+    config['image_force_ysize'] = image_ysize
 
     main_images = [ all_images[0] ]
     psf_images = [ all_images[1] ]

@@ -150,15 +150,19 @@ def _GetAngleValue(param, param_name):
 
 
 def _GetPositionValue(param, param_name):
-    """ @brief Convert a string that looks like "a,b" into a galsim.PositionD.
+    """ @brief Convert a tuple or a string that looks like "a,b" into a galsim.PositionD.
     """
-    try :
-        x, y = param.split(',')
-        x = float(x.strip())
-        y = float(y.strip())
-        return galsim.PositionD(x,y)
-    except :
-        raise AttributeError("Unable to parse %s param = %s as a PositionD."%(param_name,param))
+    try:
+        x = float(param[0])
+        y = float(param[1])
+    except:
+        try:
+            x, y = param.split(',')
+            x = float(x.strip())
+            y = float(y.strip())
+        except:
+            raise AttributeError("Unable to parse %s param = %s as a PositionD."%(param_name,param))
+    return galsim.PositionD(x,y)
 
 
 def _GetBoolValue(param, param_name):
@@ -1001,6 +1005,20 @@ def _GenerateFromEval(param, param_name, base, value_type):
         image_pos = base['image_pos']
     if 'sky_pos' in base:
         sky_pos = base['sky_pos']
+    if 'image_center' in base:
+        image_center = base['image_center']
+    if 'image_origin' in base:
+        image_origin = base['image_origin']
+    if 'image_xsize' in base:
+        image_xsize = base['image_xsize']
+    if 'image_ysize' in base:
+        image_ysize = base['image_ysize']
+    if 'stamp_xsize' in base:
+        stamp_xsize = base['stamp_xsize']
+    if 'stamp_ysize' in base:
+        stamp_ysize = base['stamp_ysize']
+    if 'pixel_scale' in base:
+        pixel_sclae = base['pixel_scale']
     if 'rng' in base:
         rng = base['rng']
     if 'file_num' in base:
