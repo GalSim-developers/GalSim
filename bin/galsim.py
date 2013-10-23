@@ -185,7 +185,8 @@ def main():
         if args.file_type == 'yaml':
             import yaml
 
-            all_config = [ c for c in yaml.load_all(open(config_file).read()) ]
+            with open(config_file) as f:
+                all_config = [ c for c in yaml.load_all(f.read()) ]
 
             # If there is only 1 yaml document, then it is of course used for the configuration.
             # If there are multiple yaml documents, then the first one defines a common starting
@@ -208,7 +209,8 @@ def main():
         else:
             import json
 
-            config = json.load(open(config_file))
+            with open(config_file) as f:
+                config = json.load(f)
 
             # JSON files are just processed as is.  This is equivalent to having an empty 
             # base_config, so we just do that and use the same structure.
