@@ -68,6 +68,7 @@ class DES_Shapelet(object):
     _opt_params = { 'file_type' : str , 'dir' : str }
     _single_params = []
     _takes_rng = False
+    _takes_logger = False
 
     def __init__(self, file_name, dir=None, file_type=None):
         if dir:
@@ -157,6 +158,15 @@ class DES_Shapelet(object):
         self.interp_matrix = cat.field('interp_matrix')[0].reshape((self.npca,self.fit_size)).T
         assert self.interp_matrix.shape == (self.fit_size, self.npca)
 
+    def getBounds(self):
+        return self.bounds
+
+    def getSigma(self):
+        return self.sigma
+
+    def getOrder(self):
+        return self.psf_order
+
     def getPSF(self, pos, gsparams=None):
         """Returns the PSF at position pos
 
@@ -164,6 +174,11 @@ class DES_Shapelet(object):
         @param gsparams  (Optional) A GSParams instance to pass to the constructed GSObject.
 
         @returns a galsim.Shapelet instance.
+        """
+        return galsim.Shapelet(self.sigma, self.psf_order, self.getB(pos), gsparams=gsparams)
+
+    def getB(self, pos):
+        """Get the B vector as a numpy array at position pos
         """
         if not self.bounds.includes(pos):
             raise IndexError("position in DES_Shapelet.getPSF is out of bounds")
@@ -188,8 +203,7 @@ class DES_Shapelet(object):
         b = numpy.dot(b1,self.rot_matrix)
         assert len(b) == self.psf_size
         b += self.ave_psf
-        ret = galsim.Shapelet(self.sigma, self.psf_order, b, gsparams=gsparams)
-        return ret
+        return b
 
     def _definePxy(self, x, min, max):
         import numpy
@@ -206,7 +220,8 @@ class DES_Shapelet(object):
 import galsim.config
 
 # First we need to add the class itself as a valid input_type.
-galsim.config.process.valid_input_types['des_shapelet'] = ('galsim.des.DES_Shapelet', [], False)
+galsim.config.process.valid_input_types['des_shapelet'] = ('galsim.des.DES_Shapelet',
+                                                           [], False, None)
 
 # Also make a builder to create the PSF object for a given position.
 # The builders require 4 args.
@@ -214,7 +229,7 @@ galsim.config.process.valid_input_types['des_shapelet'] = ('galsim.des.DES_Shape
 # key is the key name one level up in the config structure.  Probably 'psf' in this case.
 # base is the top level config dictionary where some global variables are stored.
 # ignore is a list of key words that might be in the config dictionary that you should ignore.
-def BuildDES_Shapelet(config, key, base, ignore, gsparams):
+def BuildDES_Shapelet(config, key, base, ignore, gsparams, logger):
     """@brief Build a RealGalaxy type GSObject from user input.
     """
     opt = { 'flux' : float ,
@@ -240,11 +255,17 @@ def BuildDES_Shapelet(config, key, base, ignore, gsparams):
     if gsparams: gsparams = galsim.GSParams(**gsparams)
     else: gsparams = None
 
-    if des_shapelet.bounds.includes(image_pos):
-        psf = des_shapelet.getPSF(image_pos, gsparams)
+    if des_shapelet.getBounds().includes(image_pos):
+        #psf = des_shapelet.getPSF(image_pos, gsparams)
+        # Because of the serialization issues, the above call doesn't work.  So we need to 
+        # repeat the internals of getPSF here.
+        b = des_shapelet.getB(image_pos)
+        sigma = des_shapelet.getSigma()
+        order = des_shapelet.getOrder()
+        psf = galsim.Shapelet(sigma, order, b, gsparams=gsparams)
     else:
         message = 'Position '+str(image_pos)+' not in interpolation bounds: '
-        message += str(des_shapelet.bounds)
+        message += str(des_shapelet.getBounds())
         raise galsim.config.gsobject.SkipThisObject(message)
 
     if 'flux' in kwargs:
