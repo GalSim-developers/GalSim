@@ -218,11 +218,6 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
             p_list[j].join()
         task_queue.close()
 
-        # Also delete the input_manager we used in config to make sure we make new proxies
-        # if there is another file to process.
-        if 'input_manager' in config:
-            del config['input_manager']
-
     else : # nproc == 1
 
         images = []

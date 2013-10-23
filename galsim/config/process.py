@@ -613,8 +613,6 @@ def Process(config, logger=None):
         for j in range(nproc):
             p_list[j].join()
         task_queue.close()
-        if 'input_manager' in config:
-            del config['input_manager']
         t2 = time.time()
         if logger:
             logger.warn('Total time for %d files with %d processes = %f sec', 
@@ -869,8 +867,6 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
             make_psf_image=make_psf_image, 
             make_weight_image=make_weight_image,
             make_badpix_image=make_badpix_image)
-    if 'input_manager' in config:
-        del config['input_manager']
     obj_num += galsim.config.GetNObjForImage(config, image_num)
     t3 = time.time()
     if logger:

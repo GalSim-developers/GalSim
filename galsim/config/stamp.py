@@ -221,8 +221,6 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
         for j in range(nproc):
             p_list[j].join()
         task_queue.close()
-        if 'input_manager' in config:
-            del config['input_manager']
 
     else : # nproc == 1
 
