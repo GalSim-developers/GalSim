@@ -905,7 +905,7 @@ def GetNObjForScatteredImage(config, image_num):
 
     # Allow nobjects to be automatic based on input catalog
     if 'nobjects' not in config['image']:
-        nobj = ProcessInputNObjects(config)
+        nobj = galsim.config.ProcessInputNObjects(config)
         if nobj:
             config['image']['nobjects'] = nobj
             return nobj
