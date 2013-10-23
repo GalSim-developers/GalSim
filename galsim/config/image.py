@@ -592,6 +592,8 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
     max_current_var = 0
     for k in range(nobjects):
+        # This is our signal that the object was skipped.
+        if not images[k].bounds.isDefined(): continue
         if False:
             logger.debug('image %d: full bounds = %s',config['image_num'],str(full_image.bounds))
             logger.debug('image %d: stamp %d bounds = %s',
@@ -814,6 +816,8 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     max_current_var = 0.
     for k in range(nobjects):
+        # This is our signal that the object was skipped.
+        if not images[k].bounds.isDefined(): continue
         bounds = images[k].bounds & full_image.bounds
         if False:
             logger.debug('image %d: full bounds = %s',config['image_num'],str(full_image.bounds))

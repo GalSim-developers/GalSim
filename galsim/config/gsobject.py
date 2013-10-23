@@ -108,7 +108,9 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     if 'skip' in ck:
         skip = galsim.config.ParseValue(ck, 'skip', base, bool)[0]
         if skip: 
-            raise SkipThisObject('config.skip = True')
+            if logger:
+                logger.debug('obj %d: Skipping because field skip=True',base['obj_num'])
+            raise SkipThisObject()
 
     # Set up the initial default list of attributes to ignore while building the object:
     ignore = [ 
@@ -234,7 +236,7 @@ def _BuildAdd(config, key, base, ignore, gsparams, logger):
         # Skip items with flux=0
         if 'flux' in items[i] and galsim.config.value.GetCurrentValue(items[i],'flux') == 0.:
             if logger:
-                logger.debug('obj %d: skip -- flux == 0',base['obj_num'])
+                logger.debug('obj %d: Not including component with flux == 0',base['obj_num'])
             continue
         safe = safe and safe1
         gsobjects.append(gsobject)

@@ -394,10 +394,8 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
         if logger:
             logger.debug('obj %d: Caught SkipThisObject: e = %s',config['obj_num'],e.msg)
             if e.msg:
-                # If there is a message, upgrade to warn level
-                logger.warn('Skipping object %d: %s',config['obj_num'],e.msg)
-            else:
-                logger.debug('obj %d: Skipping object')
+                # If there is a message, upgrade to info level
+                logger.info('Skipping object %d: %s',config['obj_num'],e.msg)
         skip = True
 
     if not skip and 'offset' in config['image']:
@@ -423,6 +421,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             weight_im.setZero()
         else:
             weight_im = None
+        current_var = 0
 
     elif draw_method == 'fft':
         im, current_var = DrawStampFFT(psf,pix,gal,config,xsize,ysize,sky_level_pixel,final_shift)
