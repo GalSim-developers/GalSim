@@ -668,17 +668,16 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     config['seq_index'] = image_num
     config['image_num'] = image_num
 
+    nobjects = GetNObjForScatteredImage(config,image_num)
+
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
                'image_pos', 'sky_pos', 'n_photons', 'wmult', 'offset',
-               'stamp_size', 'stamp_xsize', 'stamp_ysize', 'gsparams' ]
-    req = { 'nobjects' : int }
+               'stamp_size', 'stamp_xsize', 'stamp_ysize', 'gsparams', 'nobjects' ]
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 
             'pixel_scale' : float , 'nproc' : int , 'index_convention' : str,
             'sky_level' : float , 'sky_level_pixel' : float }
     params = galsim.config.GetAllParams(
-        config['image'], 'image', config, req=req, opt=opt, ignore=ignore)[0]
-
-    nobjects = params['nobjects']
+        config['image'], 'image', config, opt=opt, ignore=ignore)[0]
 
     # Special check for the size.  Either size or both xsize and ysize is required.
     if 'size' not in params:
@@ -906,13 +905,12 @@ def GetNObjForScatteredImage(config, image_num):
     # Allow nobjects to be automatic based on input catalog
     if 'nobjects' not in config['image']:
         nobj = galsim.config.ProcessInputNObjects(config)
-        if nobj:
-            config['image']['nobjects'] = nobj
-            return nobj
-        else:
+        if nobj is None:
             raise AttributeError("Attribute nobjects is required for image.type = Scattered")
+        return nobj
     else:
-        return galsim.config.ParseValue(config['image'],'nobjects',config,int)[0]
+        nobj = galsim.config.ParseValue(config['image'],'nobjects',config,int)[0]
+        return nobj
 
 def GetNObjForTiledImage(config, image_num):
     
