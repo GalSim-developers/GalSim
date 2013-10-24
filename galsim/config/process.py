@@ -473,6 +473,8 @@ def Process(config, logger=None):
         # This also updates nimages or nobjects as needed if they are being automatically
         # set from an input catalog.
         nobj = nobj_func(config,file_num,image_num)
+        if logger:
+            logger.debug('file %d: nobj = %s',file_num,str(nobj))
 
         # nobj is a list of nobj for each image in that file.
         # So len(nobj) = nimages and sum(nobj) is the total number of objects
@@ -652,6 +654,9 @@ def BuildFits(file_name, config, logger=None,
 
     config['seq_index'] = file_num
     config['file_num'] = file_num
+    if logger:
+        logger.debug('file %d: BuildFits for %s: file, image, obj = %d,%d,%d',
+                      config['file_num'],file_name,file_num,image_num,obj_num)
 
     # hdus is a dict with hdus[i] = the item in all_images to put in the i-th hdu.
     hdus = {}
@@ -756,6 +761,9 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
 
     config['seq_index'] = file_num
     config['file_num'] = file_num
+    if logger:
+        logger.debug('file %d: BuildMultiFits for %s: file, image, obj = %d,%d,%d',
+                      config['file_num'],fiel_name,file_num,image_num,obj_num)
 
     if psf_file_name:
         make_psf_image = True
@@ -849,6 +857,9 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
 
     config['seq_index'] = file_num
     config['file_num'] = file_num
+    if logger:
+        logger.debug('file %d: BuildDataCube for %s: file, image, obj = %d,%d,%d',
+                      config['file_num'],file_name,file_num,image_num,obj_num)
 
     if psf_file_name:
         make_psf_image = True
@@ -965,9 +976,9 @@ def GetNObjForMultiFits(config, file_num, image_num):
     if ( 'nimages' not in config['output'] and 
          ( 'image' not in config or 'type' not in config['image'] or 
            config['image']['type'] == 'Single' ) ):
-        nobj = ProcessInputNObjects(config)
+        nobjects = ProcessInputNObjects(config)
         if nobj:
-            config['output']['nimages'] = ProcessInputNObjects(config)
+            config['output']['nimages'] = nobjects
     params = galsim.config.GetAllParams(config['output'],'output',config,ignore=ignore,req=req)[0]
     config['seq_index'] = file_num
     config['file_num'] = file_num
@@ -987,9 +998,9 @@ def GetNObjForDataCube(config, file_num, image_num):
     if ( 'nimages' not in config['output'] and 
          ( 'image' not in config or 'type' not in config['image'] or 
            config['image']['type'] == 'Single' ) ):
-        nobj = ProcessInputNObjects(config)
+        nobjects = ProcessInputNObjects(config)
         if nobj:
-            config['output']['nimages'] = ProcessInputNObjects(config)
+            config['output']['nimages'] = nobjects
     params = galsim.config.GetAllParams(config['output'],'output',config,ignore=ignore,req=req)[0]
     config['seq_index'] = file_num
     config['file_num'] = file_num
