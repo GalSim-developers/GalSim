@@ -347,25 +347,27 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
         # even-sized images have their nominal center offset by 1/2 pixel up and to the right.
         # N.B. This works even if xsize,ysize == 0, since the auto-sizing always produces
         # even sized images.
-        if xsize % 2 == 0: image_pos.x += 0.5
-        if ysize % 2 == 0: image_pos.y += 0.5
+        nominal_x = image_pos.x        # Make sure we don't change image_pos, which is
+        nominal_y = image_pos.y        # stored in config['image_pos'].
+        if xsize % 2 == 0: nominal_x += 0.5
+        if ysize % 2 == 0: nominal_y += 0.5
         if False:
-            logger.debug('obj %d: nominal image_pos = %s',config['obj_num'],str(image_pos))
+            logger.debug('obj %d: nominal pos = %f,%f',config['obj_num'],nominal_x,nominal_y)
 
         icenter = galsim.PositionI(
-            int(math.floor(image_pos.x+0.5)),
-            int(math.floor(image_pos.y+0.5)) )
+            int(math.floor(nominal_x+0.5)),
+            int(math.floor(nominal_y+0.5)) )
         if False:
             logger.debug('obj %d: nominal icenter = %s',config['obj_num'],str(icenter))
-        final_shift = galsim.PositionD(image_pos.x-icenter.x , image_pos.y-icenter.y)
+        offset = galsim.PositionD(nominal_x-icenter.x , nominal_y-icenter.y)
         if False:
-            logger.debug('obj %d: final_shift = %s',config['obj_num'],str(final_shift))
+            logger.debug('obj %d: offset = %s',config['obj_num'],str(offset))
 
     else:
         icenter = None
-        final_shift = galsim.PositionD(0.,0.)
+        offset = galsim.PositionD(0.,0.)
         if False:
-            logger.debug('obj %d: no final_shift',config['obj_num'])
+            logger.debug('obj %d: no offset',config['obj_num'])
 
     gsparams = {}
     if 'gsparams' in config['image']:
@@ -398,8 +400,8 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
         skip = True
 
     if not skip and 'offset' in config['image']:
-        offset = galsim.config.ParseValue(config['image'], 'offset', config, galsim.PositionD)[0]
-        final_shift += offset
+        offset1 = galsim.config.ParseValue(config['image'], 'offset', config, galsim.PositionD)[0]
+        offset += offset1
 
     draw_method = galsim.config.ParseValue(config['image'],'draw_method',config,str)[0]
 
@@ -423,7 +425,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
         current_var = 0
 
     elif draw_method == 'fft':
-        im, current_var = DrawStampFFT(psf,pix,gal,config,xsize,ysize,sky_level_pixel,final_shift)
+        im, current_var = DrawStampFFT(psf,pix,gal,config,xsize,ysize,sky_level_pixel,offset)
         if icenter:
             im.setCenter(icenter.x, icenter.y)
         if make_weight_image:
@@ -439,7 +441,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 im += sky_level_pixel
 
     elif draw_method == 'phot':
-        im, current_var = DrawStampPhot(psf,gal,config,xsize,ysize,rng,sky_level_pixel,final_shift)
+        im, current_var = DrawStampPhot(psf,gal,config,xsize,ysize,rng,sky_level_pixel,offset)
         if icenter:
             im.setCenter(icenter.x, icenter.y)
         if make_weight_image:
@@ -466,7 +468,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
     t5 = time.time()
 
     if make_psf_image:
-        psf_im = DrawPSFStamp(psf,pix,config,im.bounds,sky_level_pixel,final_shift)
+        psf_im = DrawPSFStamp(psf,pix,config,im.bounds,sky_level_pixel,offset)
         if ('output' in config and 'psf' in config['output'] and 
                 'signal_to_noise' in config['output']['psf'] and
                 'noise' in config['image']):
@@ -532,7 +534,7 @@ def BuildGal(config, logger=None, gsparams={}):
 
 
 
-def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level_pixel, final_shift):
+def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level_pixel, offset):
     """
     Draw an image using the given psf, pix and gal profiles (which may be None)
     using the FFT method for doing the convolution.
@@ -572,7 +574,7 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level_pixel, final_shi
     else:
         im = None
 
-    im = final.draw(image=im, dx=pixel_scale, wmult=wmult, offset=final_shift)
+    im = final.draw(image=im, dx=pixel_scale, wmult=wmult, offset=offset)
     im.setOrigin(config['image_origin'])
 
     # Whiten if requested.  Our signal to do so is that the object will have a noise attribute.
@@ -807,7 +809,7 @@ def AddNoiseFFT(im, weight_im, current_var, noise, base, rng, sky_level_pixel, l
         raise AttributeError("Invalid type %s for noise"%type)
 
 
-def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, final_shift):
+def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, offset):
     """
     Draw an image using the given psf and gal profiles (which may be None)
     using the photon shooting method for doing the convolution.
@@ -853,7 +855,7 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, final_sh
         n_photons = galsim.config.ParseValue(
             config['image'], 'n_photons', config, int)[0]
         im = final.drawShoot(image=im, dx=pixel_scale, n_photons=n_photons, rng=rng,
-                             offset=final_shift)
+                             offset=offset)
         im.setOrigin(config['image_origin'])
 
     else:
@@ -879,7 +881,7 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, final_sh
             max_extra_noise *= noise_var
 
         im = final.drawShoot(image=im, dx=pixel_scale, max_extra_noise=max_extra_noise, rng=rng,
-                             offset=final_shift)
+                             offset=offset)
         im.setOrigin(config['image_origin'])
 
     # Whiten if requested.  Our signal to do so is that the object will have a noise attribute.
@@ -1067,7 +1069,7 @@ def AddNoisePhot(im, weight_im, current_var, noise, base, rng, sky_level_pixel, 
         raise AttributeError("Invalid type %s for noise",type)
 
 
-def DrawPSFStamp(psf, pix, config, bounds, sky_level_pixel, final_shift):
+def DrawPSFStamp(psf, pix, config, bounds, sky_level_pixel, offset):
     """
     Draw an image using the given psf and pix profiles.
 
@@ -1109,7 +1111,7 @@ def DrawPSFStamp(psf, pix, config, bounds, sky_level_pixel, final_shift):
         final_psf.applyShift(gal_shift)
 
     im = galsim.ImageF(bounds, scale=pixel_scale)
-    final_psf.draw(im, dx=pixel_scale, offset=final_shift)
+    final_psf.draw(im, dx=pixel_scale, offset=offset)
 
     if (('output' in config and 'psf' in config['output'] 
             and 'signal_to_noise' in config['output']['psf']) or

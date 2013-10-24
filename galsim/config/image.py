@@ -823,7 +823,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
             logger.debug('image %d: full bounds = %s',config['image_num'],str(full_image.bounds))
             logger.debug('image %d: stamp %d bounds = %s',
                          config['image_num'],k,str(images[k].bounds))
-            logger.debug('image %d: Overlap = ',config['image_num'],str(bounds))
+            logger.debug('image %d: Overlap = %s',config['image_num'],str(bounds))
         if bounds.isDefined():
             full_image[bounds] += images[k][bounds]
             if make_psf_image:
