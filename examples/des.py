@@ -230,6 +230,9 @@ def main(argv):
                 os.path.join(out_dir,psfex_image_file),
                 os.path.join(out_dir,fitpsf_image_file))
 
+        # Increment the random seed by the number of objects in the file
+        random_seed += nobj
+
 if __name__ == "__main__":
     import sys
     main(sys.argv)
