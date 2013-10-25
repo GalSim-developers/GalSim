@@ -1,5 +1,5 @@
-Changes from v0.5 to current version:
-------------------------------------
+Changes from v0.5 to v1.0:
+--------------------------
 
 * Updated the allowed range for Sersic n to 0.3 -- 6.2.  Beyond this range we find that the 
   code has numerical problems leading to significant inaccuracies.  (Issue #325)
