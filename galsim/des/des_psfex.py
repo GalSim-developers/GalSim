@@ -53,6 +53,7 @@ class DES_PSFEx(object):
     _opt_params = { 'dir' : str }
     _single_params = []
     _takes_rng = False
+    _takes_logger = False
 
     def __init__(self, file_name, dir=None):
 
@@ -165,6 +166,8 @@ class DES_PSFEx(object):
         self.y_scale = pol_scal2
         self.sample_scale = psf_samp
 
+    def getSampleScale(self): 
+        return self.sample_scale
 
     def getPSF(self, pos, pixel_scale, gsparams=None):
         """Returns the PSF at position pos
@@ -179,6 +182,17 @@ class DES_PSFEx(object):
 
         @returns an InterpolatedImage instance.
         """
+        im = galsim.ImageViewF(self.getPSFArray(pos))
+        # We need the scale in arcsec/psfex_pixel, which is 
+        #    (arcsec / image_pixel) * (image_pixel / psfex_pixel)
+        #    = pixel_scale * sample_scale
+        im.scale = pixel_scale * self.sample_scale
+        return galsim.InterpolatedImage(im, flux=1, x_interpolant=galsim.Lanczos(3),
+                                        gsparams=gsparams)
+
+    def getPSFArray(self, pos):
+        """Returns the PSF image as a numpy array at position pos
+        """
         import numpy
         xto = self._define_xto( (pos.x - self.x_zero) / self.x_scale )
         yto = self._define_xto( (pos.y - self.y_zero) / self.y_scale )
@@ -186,7 +200,6 @@ class DES_PSFEx(object):
         P = numpy.array([ xto[nx] * yto[ny] for ny in range(order+1) for nx in range(order+1-ny) ])
         assert len(P) == self.fit_size
         ar = numpy.tensordot(P,self.basis,(0,0)).astype(numpy.float32)
-
         # Note: This is equivalent to:
         #   ar = self.basis[0].astype(numpy.float32)
         #   for n in range(1,self.fit_order+1):
@@ -195,14 +208,7 @@ class DES_PSFEx(object):
         #           k = nx+ny*(self.fit_order+1)-ny*(ny-1)/2
         #           ar += xto[nx] * yto[ny] * self.basis[k]
         # which is pretty much Peter's version of this code.
-
-        im = galsim.ImageViewF(array=ar)
-        # We need the scale in arcsec/psfex_pixel, which is 
-        #    (arcsec / image_pixel) * (image_pixel / psfex_pixel)
-        #    = pixel_scale * sample_scale
-        im.scale = pixel_scale * self.sample_scale
-        return galsim.InterpolatedImage(im, flux=1, x_interpolant=galsim.Lanczos(3),
-                                        gsparams=gsparams)
+        return ar
 
     def _define_xto(self, x):
         import numpy
@@ -216,7 +222,8 @@ class DES_PSFEx(object):
 import galsim.config
 
 # First we need to add the class itself as a valid input_type.
-galsim.config.process.valid_input_types['des_psfex'] = ('galsim.des.DES_PSFEx', [], False)
+galsim.config.process.valid_input_types['des_psfex'] = ('galsim.des.DES_PSFEx',
+                                                        [], False, None)
 
 # Also make a builder to create the PSF object for a given position.
 # The builders require 4 args.
@@ -224,7 +231,7 @@ galsim.config.process.valid_input_types['des_psfex'] = ('galsim.des.DES_PSFEx', 
 # key is the key name one level up in the config structure.  Probably 'psf' in this case.
 # base is the top level config dictionary where some global variables are stored.
 # ignore is a list of key words that might be in the config dictionary that you should ignore.
-def BuildDES_PSFEx(config, key, base, ignore, gsparams):
+def BuildDES_PSFEx(config, key, base, ignore, gsparams, logger):
     """@brief Build a RealGalaxy type GSObject from user input.
     """
     opt = { 'flux' : float ,
@@ -254,7 +261,12 @@ def BuildDES_PSFEx(config, key, base, ignore, gsparams):
     if gsparams: gsparams = galsim.GSParams(**gsparams)
     else: gsparams = None
 
-    psf = des_psfex.getPSF(image_pos, pixel_scale, gsparams=gsparams)
+    #psf = des_psfex.getPSF(image_pos, pixel_scale, gsparams=gsparams)
+    # Because of the serialization issues, the above call doesn't work.  So we need to 
+    # repeat the last bit of getPSF here.
+    im = galsim.ImageViewF(des_psfex.getPSFArray(image_pos))
+    im.scale = pixel_scale * des_psfex.getSampleScale()
+    psf = galsim.InterpolatedImage(im, flux=1, x_interpolant=galsim.Lanczos(3), gsparams=gsparams)
 
     if 'flux' in kwargs:
         psf.setFlux(kwargs['flux'])

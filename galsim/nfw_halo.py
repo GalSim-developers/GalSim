@@ -117,6 +117,7 @@ class NFWHalo(object):
     _opt_params = { 'halo_pos' : galsim.PositionD , 'omega_m' : float , 'omega_lam' : float }
     _single_params = []
     _takes_rng = False
+    _takes_logger = False
 
     def __init__(self, mass, conc, redshift, halo_pos=galsim.PositionD(0,0), 
                  omega_m=None, omega_lam=None, cosmo=None):

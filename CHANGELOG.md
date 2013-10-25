@@ -64,6 +64,9 @@ Changes from v0.5 to current version:
 
 * Fixed a bug in Image class resize function.  (Issue #461)
 
-* Sped up the OpticalPSF calculations significantly.  (Issue #466)
+* Sped up the OpticalPSF and RealGalaxy calculations significantly.  (Issue #466, #474)
 
 * Fixed a bug in the fourier space rendering of truncated Sersic profiles.  (Issue #470)
+
+* Added `output.skip` and `output.noclobber` options to config.  c.f. demo9.yaml.  (Issue #474)
+

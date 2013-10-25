@@ -48,6 +48,7 @@ def permute(rng, *args):
 
 
 class DistDeviate(_galsim.BaseDeviate):
+
     """A class to draw random numbers from a user-defined probability distribution.
     
     DistDeviate is a BaseDeviate class that can be used to draw from an arbitrary probability
@@ -124,7 +125,7 @@ class DistDeviate(_galsim.BaseDeviate):
     2.108800962574702
     """    
     def __init__(self, rng=0, function=None, x_min=None, 
-                 x_max=None, interpolant=None, npoints=256):
+                 x_max=None, interpolant=None, npoints=256, _init=True):
         """Initializes a DistDeviate instance.
         
         The rng, if given, must be something that can initialize a BaseDeviate instance, such as 
@@ -134,6 +135,9 @@ class DistDeviate(_galsim.BaseDeviate):
         
         import numpy
         import galsim
+
+        # Special internal "private" constructor option that doesn't do any initialization.
+        if not _init: return
  
         # Set up the PRNG
         _galsim.BaseDeviate.__init__(self,rng)
@@ -259,6 +263,12 @@ class DistDeviate(_galsim.BaseDeviate):
         _galsim.BaseDeviate.reset(self,rng)
         # Make sure the stored _ud object stays in sync with self.
         self._ud.reset(self)
+
+    def duplicate(self):
+        dup = DistDeviate(_init=False)
+        dup.__dict__.update(self.__dict__)
+        dup._ud = self._ud.duplicate()
+        return dup
 
 
 # BaseDeviate docstrings
@@ -684,3 +694,38 @@ Returns a Chi2-distributed deviate with current n degrees of freedom.
 """
 _galsim.Chi2Deviate.getN.__func__.__doc__ = "Get current distribution n degrees of freedom."
 _galsim.Chi2Deviate.setN.__func__.__doc__ = "Set current distribution n degrees of freedom."
+
+
+# Some functions to enable pickling of deviates
+def BaseDeviate_getinitargs(self):
+    return self.serialize(), 
+_galsim.BaseDeviate.__getinitargs__ = BaseDeviate_getinitargs
+
+def UniformDeviate_getinitargs(self):
+    return self.serialize(),
+_galsim.UniformDeviate.__getinitargs__ = UniformDeviate_getinitargs
+
+def GaussianDeviate_getinitargs(self):
+    return self.serialize(), self.getMean(), self.getSigma()
+_galsim.GaussianDeviate.__getinitargs__ = GaussianDeviate_getinitargs
+
+def BinomialDeviate_getinitargs(self):
+    return self.serialize(), self.getN(), self.getP()
+_galsim.BinomialDeviate.__getinitargs__ = BinomialDeviate_getinitargs
+
+def PoissonDeviate_getinitargs(self):
+    return self.serialize(), self.getMean()
+_galsim.PoissonDeviate.__getinitargs__ = PoissonDeviate_getinitargs
+
+def WeibullDeviate_getinitargs(self):
+    return self.serialize(), self.getA(), self.getB()
+_galsim.WeibullDeviate.__getinitargs__ = WeibullDeviate_getinitargs
+
+def GammaDeviate_getinitargs(self):
+    return self.serialize(), self.getK(), self.getTheta()
+_galsim.GammaDeviate.__getinitargs__ = GammaDeviate_getinitargs
+
+def Chi2Deviate_getinitargs(self):
+    return self.serialize(), self.getN()
+_galsim.Chi2Deviate.__getinitargs__ = Chi2Deviate_getinitargs
+

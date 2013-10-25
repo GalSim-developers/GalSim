@@ -105,7 +105,6 @@ def main(argv):
     cat_file_name = 'real_galaxy_catalog_example.fits'
     dir = 'data'
     real_galaxy_catalog = galsim.RealGalaxyCatalog(cat_file_name, dir=dir)
-    real_galaxy_catalog.preload()
     logger.info('Read in %d real galaxies from catalog', real_galaxy_catalog.nobjects)
 
     # List of IDs to use.  We select 5 particularly irregular galaxies for this demo. 
@@ -144,9 +143,6 @@ def main(argv):
     nobj = n_tiles * n_tiles
     rng = galsim.BaseDeviate(random_seed+nobj)
 
-    # Now have the PowerSpectrum object build a grid of shear values for us to use.
-    grid_g1, grid_g2 = ps.buildGrid(grid_spacing=stamp_size*pixel_scale, ngrid=n_tiles, rng=rng)
-
     # Setup the images:
     gal_image = galsim.ImageF(stamp_size * n_tiles , stamp_size * n_tiles, scale=pixel_scale)
     psf_image = galsim.ImageF(stamp_size * n_tiles , stamp_size * n_tiles, scale=pixel_scale)
@@ -165,6 +161,16 @@ def main(argv):
     # randomly permute any number of lists.  All lists will have the same random permutation
     # applied.
     galsim.random.permute(rng, ix_list, iy_list)
+
+    # Now have the PowerSpectrum object build a grid of shear values for us to use.
+    # Also, because of some technical details about how the config stuff handles the random
+    # number generator here, we need to duplicate the rng object if we want to have the 
+    # two output files match.  This means that technically, the same sequence of random numbers
+    # will be used in building the grid as will be used by the other uses of rng (permuting the 
+    # postage stamps and adding noise).  But since they are used in such completely different 
+    # ways, it is hard to imagine how this could lead to any kind of bias in the images.
+    grid_g1, grid_g2 = ps.buildGrid(grid_spacing=stamp_size*pixel_scale, ngrid=n_tiles,
+                                    rng=rng.duplicate())
 
     # Build each postage stamp:
     for k in range(nobj):

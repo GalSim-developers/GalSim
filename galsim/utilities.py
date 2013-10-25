@@ -99,6 +99,13 @@ def rotate_xy(x, y, theta):
     y_rot = x * sint + y * cost
     return x_rot, y_rot
 
+class SimpleGenerator:
+    """A simple class that is constructed with an arbitrary object.
+    Then generator() will return that object.
+    """
+    def __init__(self, obj): self._obj = obj
+    def __call__(self): return self._obj
+            
 class AttributeDict(object):
     """Dictionary class that allows for easy initialization and refs to key values via attributes.
 
@@ -729,8 +736,7 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
     # Draw the FFT image, only needs to be done once
     # The BuidImage function stores things in the config that aren't picklable.
     # If you want to use config later for multiprocessing, you have to deepcopy it here.
-    import copy
-    config1 = copy.deepcopy(config)
+    config1 = galsim.config.CopyConfig(config)
 
     # choose a shear estimator - I chose KSB, because then corrected_g1 is available
     hsm_shear_est = 'KSB'
@@ -775,7 +781,7 @@ def compare_dft_vs_photon_config(config, gal_num=0, random_seed=None, nproc=None
 
     # Change the draw_method to photon shooting
     # We'll also use a new copy here so that this function is non-destructive of any input
-    config2 = copy.deepcopy(config)
+    config2 = galsim.config.CopyConfig(config)
     config2['image']['draw_method'] = 'phot'
     config2['image']['n_photons'] = n_photons_per_trial
 

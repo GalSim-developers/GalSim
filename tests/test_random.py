@@ -129,10 +129,20 @@ def test_uniform():
     import time
     t1 = time.time()
     u = galsim.UniformDeviate(testseed)
+    u2 = u.duplicate()
+    u3 = galsim.UniformDeviate(u.serialize())
     testResult = (u(), u(), u())
     np.testing.assert_array_almost_equal(
             np.array(testResult), np.array(uResult), precision, 
             err_msg='Wrong uniform random number sequence generated')
+    testResult = (u2(), u2(), u2())
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(uResult), precision, 
+            err_msg='Wrong uniform random number sequence generated with duplicate')
+    testResult = (u3(), u3(), u3())
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(uResult), precision, 
+            err_msg='Wrong uniform random number sequence generated from serialize')
 
     # Check that the mean and variance come out right
     vals = [u() for i in range(nvals)]
@@ -219,10 +229,20 @@ def test_gaussian():
     import time
     t1 = time.time()
     g = galsim.GaussianDeviate(testseed, mean=gMean, sigma=gSigma)
+    g2 = g.duplicate()
+    g3 = galsim.GaussianDeviate(g.serialize(), mean=gMean, sigma=gSigma)
     testResult = (g(), g(), g())
     np.testing.assert_array_almost_equal(   
             np.array(testResult), np.array(gResult), precision,
             err_msg='Wrong Gaussian random number sequence generated')
+    testResult = (g2(), g2(), g2())
+    np.testing.assert_array_almost_equal(   
+            np.array(testResult), np.array(gResult), precision,
+            err_msg='Wrong Gaussian random number sequence generated with duplicate')
+    testResult = (g3(), g3(), g3())
+    np.testing.assert_array_almost_equal(   
+            np.array(testResult), np.array(gResult), precision,
+            err_msg='Wrong Gaussian random number sequence generated from serialize')
 
     # Check that the mean and variance come out right
     vals = [g() for i in range(nvals)]
@@ -392,10 +412,20 @@ def test_binomial():
     import time
     t1 = time.time()
     b = galsim.BinomialDeviate(testseed, N=bN, p=bp)
+    b2 = b.duplicate()
+    b3 = galsim.BinomialDeviate(b.serialize(), N=bN, p=bp)
     testResult = (b(), b(), b())
     np.testing.assert_array_almost_equal(
             np.array(testResult), np.array(bResult), precision,
             err_msg='Wrong binomial random number sequence generated')
+    testResult = (b2(), b2(), b2())
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(bResult), precision,
+            err_msg='Wrong binomial random number sequence generated with duplicate')
+    testResult = (b3(), b3(), b3())
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(bResult), precision,
+            err_msg='Wrong binomial random number sequence generated from serialize')
  
     # Check that the mean and variance come out right
     vals = [b() for i in range(nvals)]
@@ -491,10 +521,20 @@ def test_poisson():
     import time
     t1 = time.time()
     p = galsim.PoissonDeviate(testseed, mean=pMean)
+    p2 = p.duplicate()
+    p3 = galsim.PoissonDeviate(p.serialize(), mean=pMean)
     testResult = (p(), p(), p())
     np.testing.assert_array_almost_equal(   
             np.array(testResult), np.array(pResult), precision, 
             err_msg='Wrong Poisson random number sequence generated')
+    testResult = (p2(), p2(), p2())
+    np.testing.assert_array_almost_equal(   
+            np.array(testResult), np.array(pResult), precision, 
+            err_msg='Wrong Poisson random number sequence generated with duplicate')
+    testResult = (p3(), p3(), p3())
+    np.testing.assert_array_almost_equal(   
+            np.array(testResult), np.array(pResult), precision, 
+            err_msg='Wrong Poisson random number sequence generated from serialize')
 
     # Check that the mean and variance come out right
     vals = [p() for i in range(nvals)]
@@ -650,10 +690,20 @@ def test_weibull():
     import time
     t1 = time.time()
     w = galsim.WeibullDeviate(testseed, a=wA, b=wB)
+    w2 = w.duplicate()
+    w3 = galsim.WeibullDeviate(w.serialize(), a=wA, b=wB)
     testResult = (w(), w(), w())
     np.testing.assert_array_almost_equal(
             np.array(testResult), np.array(wResult), precision, 
             err_msg='Wrong Weibull random number sequence generated')
+    testResult = (w2(), w2(), w2())
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(wResult), precision, 
+            err_msg='Wrong Weibull random number sequence generated with duplicate')
+    testResult = (w3(), w3(), w3())
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(wResult), precision, 
+            err_msg='Wrong Weibull random number sequence generated from serialize')
 
     # Check that the mean and variance come out right
     vals = [w() for i in range(nvals)]
@@ -757,10 +807,20 @@ def test_gamma():
     import time
     t1 = time.time()
     g = galsim.GammaDeviate(testseed, k=gammaK, theta=gammaTheta)
+    g2 = g.duplicate()
+    g3 = galsim.GammaDeviate(g.serialize(), k=gammaK, theta=gammaTheta)
     testResult = (g(), g(), g())
     np.testing.assert_array_almost_equal(
             np.array(testResult), np.array(gammaResult), precision, 
             err_msg='Wrong Gamma random number sequence generated')
+    testResult = (g2(), g2(), g2())
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(gammaResult), precision, 
+            err_msg='Wrong Gamma random number sequence generated with duplicate')
+    testResult = (g3(), g3(), g3())
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(gammaResult), precision, 
+            err_msg='Wrong Gamma random number sequence generated from serialize')
 
     # Check that the mean and variance come out right
     vals = [g() for i in range(nvals)]
@@ -854,10 +914,20 @@ def test_chi2():
     import time
     t1 = time.time()
     c = galsim.Chi2Deviate(testseed, n=chi2N)
+    c2 = c.duplicate()
+    c3 = galsim.Chi2Deviate(c.serialize(), n=chi2N)
     testResult = (c(), c(), c())
     np.testing.assert_array_almost_equal(
             np.array(testResult), np.array(chi2Result), precision, 
             err_msg='Wrong Chi^2 random number sequence generated')
+    testResult = (c2(), c2(), c2())
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(chi2Result), precision, 
+            err_msg='Wrong Chi^2 random number sequence generated with duplicate')
+    testResult = (c3(), c3(), c3())
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(chi2Result), precision, 
+            err_msg='Wrong Chi^2 random number sequence generated from serialize')
 
     # Check that the mean and variance come out right
     vals = [c() for i in range(nvals)]
@@ -952,10 +1022,20 @@ def test_distfunction():
     t1 = time.time()
 
     d = galsim.DistDeviate(testseed, function=dfunction, x_min=dmin, x_max=dmax)
+    d2 = d.duplicate()
+    d3 = galsim.DistDeviate(d.serialize(), function=dfunction, x_min=dmin, x_max=dmax)
     testResult = (d(), d(), d())
     np.testing.assert_array_almost_equal(
             np.array(testResult), np.array(dFunctionResult), precision,
             err_msg='Wrong DistDeviate random number sequence generated')
+    testResult = (d2(), d2(), d2())
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(dFunctionResult), precision,
+            err_msg='Wrong DistDeviate random number sequence generated with duplicate')
+    testResult = (d3(), d3(), d3())
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(dFunctionResult), precision,
+            err_msg='Wrong DistDeviate random number sequence generated from serialize')
 
     # Check that the mean and variance come out right
     vals = [d() for i in range(nvals)]
@@ -1048,6 +1128,8 @@ def test_distfunction():
 
     # Test filling an image
     d.seed(testseed)
+    print 'd = ',d
+    print 'd._ud = ',d._ud
     testimage = galsim.ImageViewD(np.zeros((3, 1)))
     testimage.addNoise(galsim.DeviateNoise(d))
     np.testing.assert_array_almost_equal(
@@ -1064,6 +1146,8 @@ def test_distLookupTable():
     t1 = time.time()
 
     d = galsim.DistDeviate(testseed, function=dLookupTable)
+    d2 = d.duplicate()
+    d3 = galsim.DistDeviate(d.serialize(), function=dLookupTable)
     np.testing.assert_equal(
             d.x_min, dLookupTable.x_min,
             err_msg='DistDeviate and the LookupTable passed to it have different lower bounds')
@@ -1075,6 +1159,14 @@ def test_distLookupTable():
     np.testing.assert_array_almost_equal(
             np.array(testResult), np.array(dLookupTableResult), precision,
             err_msg='Wrong DistDeviate random number sequence using LookupTable')
+    testResult = (d2(), d2(), d2())
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(dLookupTableResult), precision,
+            err_msg='Wrong DistDeviate random number sequence using LookupTable with duplicate')
+    testResult = (d3(), d3(), d3())
+    np.testing.assert_array_almost_equal(
+            np.array(testResult), np.array(dLookupTableResult), precision,
+            err_msg='Wrong DistDeviate random number sequence using LookupTable from serialize')
 
     # Check that the mean and variance come out right
     vals = [d() for i in range(nvals)]

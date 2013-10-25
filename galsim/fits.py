@@ -108,9 +108,8 @@ class _ReadFile:
                     # It would be pretty odd for this filename to already exist, but just in case...
                     while os.path.isfile(tmp):
                         tmp = tmp + '.tmp'
-                    tmpout = open(tmp,"w")
-                    tmpout.write(data)
-                    tmpout.close()
+                    with open(tmp,"w") as tmpout:
+                        tmpout.write(data)
                     hdus = pyfits.open(tmp)
                     return hdus, tmp
         elif file_compress == 'bzip2':
@@ -134,9 +133,8 @@ class _ReadFile:
                 # It would be pretty odd for this filename to already exist, but just in case...
                 while os.path.isfile(tmp):
                     tmp = tmp + '.tmp'
-                tmpout = open(tmp,"w")
-                tmpout.write(data)
-                tmpout.close()
+                with open(tmp,"w") as tmpout:
+                    tmpout.write(data)
                 hdus = pyfits.open(tmp)
                 return hdus, tmp
         else:
@@ -179,45 +177,44 @@ class _WriteFile:
                 while os.path.isfile(tmp):
                     tmp = tmp + '.tmp'
                 hdus.writeto(tmp)
-                buf = open(tmp,"r")
-                data = buf.read()
-                buf.close()
+                with open(tmp,"r") as buf:
+                    data = buf.read()
                 os.remove(tmp)
 
             if file_compress == 'gzip':
                 import gzip
                 # There is a compresslevel option (for both gzip and bz2), but we just use the 
                 # default.
-                fout = gzip.GzipFile(file, 'wb')  
+                fout = gzip.GzipFile(file, 'wb')
+                fout.write(data)
+                fout.close()
             elif file_compress == 'bzip2':
                 import bz2
                 fout = bz2.BZ2File(file, 'wb')
+                fout.write(data)
+                fout.close()
             else:
                 raise ValueError("Unknown file_compression")
     
-            fout.write(data)
-            fout.close()
-
         # There is a bug in pyfits where they don't add the size of the variable length array
         # to the TFORMx header keywords.  They should have size at the end of them.
         # This bug has been fixed in version 3.1.2.
         # (See http://trac.assembla.com/pyfits/ticket/199)
         import pyfits
         if pyfits_compress and pyfits.__version__ < '3.1.2':
-            hdus = pyfits.open(file,'update',disable_image_compression=True)
-            for hdu in hdus[1:]: # Skip PrimaryHDU
-                # Find the maximum variable array length  
-                max_ar_len = max([ len(ar[0]) for ar in hdu.data ])
-                # Add '(N)' to the TFORMx keywords for the variable array items
-                s = '(%d)'%max_ar_len
-                for key in hdu.header.keys():
-                    if key.startswith('TFORM'):
-                        tform = hdu.header[key]
-                        # Only update if the form is a P (= variable length data)
-                        # and the (*) is not there already.
-                        if 'P' in tform and '(' not in tform:
-                            hdu.header[key] = tform + s
-            hdus.close()
+            with pyfits.open(file,'update',disable_image_compression=True) as hdus:
+                for hdu in hdus[1:]: # Skip PrimaryHDU
+                    # Find the maximum variable array length  
+                    max_ar_len = max([ len(ar[0]) for ar in hdu.data ])
+                    # Add '(N)' to the TFORMx keywords for the variable array items
+                    s = '(%d)'%max_ar_len
+                    for key in hdu.header.keys():
+                        if key.startswith('TFORM'):
+                            tform = hdu.header[key]
+                            # Only update if the form is a P (= variable length data)
+                            # and the (*) is not there already.
+                            if 'P' in tform and '(' not in tform:
+                                hdu.header[key] = tform + s
 
             # Workaround for a bug in some pyfits 3.0.x versions
             # It was fixed in 3.0.8.  I'm not sure when the bug was 
@@ -888,6 +885,8 @@ class FitsHeader(object):
     _opt_params = { 'dir' : str , 'hdu' : int , 'compression' : str }
     _single_params = []
     _takes_rng = False
+    _takes_logger = False
+
     def __init__(self, file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto'):
         import pyfits     # put this at function scope to keep pyfits optional
     

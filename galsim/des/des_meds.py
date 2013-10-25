@@ -401,7 +401,7 @@ galsim.config.process.valid_output_types['des_meds'] = (
     False,  # Takes *_file_name arguments for psf, weight, badpix
     False)  # Takes *_hdu arguments for psf, weight, badpix
 
-def BuildMEDS(file_name, config, nproc=1, logger=None, image_num=0, obj_num=0):
+def BuildMEDS(file_name, config, nproc=1, logger=None, file_num=0, image_num=0, obj_num=0):
     """
     Build a meds file as specified in config.
 
@@ -409,6 +409,7 @@ def BuildMEDS(file_name, config, nproc=1, logger=None, image_num=0, obj_num=0):
     @param config            A configuration dict.
     @param nproc             How many processes to use.
     @param logger            If given, a logger object to log progress.
+    @param file_num          If given, the current file_num (default = 0)
     @param image_num         If given, the current image_num (default = 0)
     @param obj_num           If given, the current obj_num (default = 0)
 
@@ -416,6 +417,9 @@ def BuildMEDS(file_name, config, nproc=1, logger=None, image_num=0, obj_num=0):
     """
     import time
     t1 = time.time()
+
+    config['seq_index'] = file_num
+    config['file_num'] = file_num
 
     ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc' ]
     req = { 'nobjects' : int , 'nstamps_per_object' : int }

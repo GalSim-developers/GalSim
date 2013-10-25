@@ -49,6 +49,7 @@ class Catalog(object):
     _opt_params = { 'dir' : str , 'file_type' : str , 'comments' : str , 'hdu' : int }
     _single_params = []
     _takes_rng = False
+    _takes_logger = False
 
     # nobjects_only is an intentionally undocumented kwarg that should be used only by
     # the config structure.  It indicates that all we care about is the nobjects parameter.
@@ -77,6 +78,11 @@ class Catalog(object):
         else:
             self.read_ascii(comments, nobjects_only)
             
+    # When we make a proxy of this class (cf. galsim/config/stamp.py), the attributes
+    # don't get proxied.  Only callable methods are.  So make method versions of these.
+    def getNObjects(self) : return self.nobjects
+    def isFits(self) : return self.isfits
+
     def read_ascii(self, comments, nobjects_only):
         """Read in an input catalog from an ASCII file.
         """
@@ -85,12 +91,12 @@ class Catalog(object):
             # See the script devel/testlinecounting.py that tests several possibilities.
             # An even faster version using buffering is possible although it requires some care
             # around edge cases, so we use this one instead, which is "correct by inspection".
-            f = open(self.file_name)
-            if (len(comments) == 1):
-                c = comments[0]
-                self.nobjects = sum(1 for line in f if line[0] != c)
-            else:
-                self.nobjects = sum(1 for line in f if not line.startswith(comments))
+            with open(self.file_name) as f:
+                if (len(comments) == 1):
+                    c = comments[0]
+                    self.nobjects = sum(1 for line in f if line[0] != c)
+                else:
+                    self.nobjects = sum(1 for line in f if not line.startswith(comments))
             return
 
         import numpy
@@ -207,6 +213,7 @@ class Dict(object):
     _opt_params = { 'dir' : str , 'file_type' : str, 'key_split' : str }
     _single_params = []
     _takes_rng = False
+    _takes_logger = False
 
     def __init__(self, file_name, dir=None, file_type=None, key_split='.'):
 
@@ -234,19 +241,18 @@ class Dict(object):
 
         self.key_split = key_split
 
-        f = open(self.file_name)
+        with open(self.file_name) as f:
 
-        if file_type == 'PICKLE':
-            import cPickle
-            self.dict = cPickle.load(f)
-        elif file_type == 'YAML':
-            import yaml
-            self.dict = yaml.load(f)
-        else:
-            import json
-            self.dict = json.load(f)
+            if file_type == 'PICKLE':
+                import cPickle
+                self.dict = cPickle.load(f)
+            elif file_type == 'YAML':
+                import yaml
+                self.dict = yaml.load(f)
+            else:
+                import json
+                self.dict = json.load(f)
 
-        f.close()
 
     def get(self, key, default=None):
         # Make a list of keys according to our key_split parameter

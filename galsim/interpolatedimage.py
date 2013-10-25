@@ -22,7 +22,7 @@ InterpolatedImage is a class that allows one to treat an image as a profile.
 """
 
 import galsim
-from galsim import GSObject
+from galsim import GSObject, goodFFTSize
 
 
 class InterpolatedImage(GSObject):
@@ -235,6 +235,7 @@ class InterpolatedImage(GSObject):
     }
     _single_params = []
     _takes_rng = True
+    _takes_logger = False
     _cache_noise_pad = {}
 
     # --- Public Class methods ---
@@ -333,6 +334,8 @@ class InterpolatedImage(GSObject):
             import math
             # Convert from arcsec to pixels according to the image scale.
             noise_pad_size = int(math.ceil(noise_pad_size / image.scale))
+            # Round up to a good size for doing FFTs
+            noise_pad_size = goodFFTSize(noise_pad_size)
             if noise_pad_size <= min(image.array.shape):
                 # Don't need any noise padding in this case.
                 noise_pad_size = 0

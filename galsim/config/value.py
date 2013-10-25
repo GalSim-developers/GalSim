@@ -79,6 +79,9 @@ def ParseValue(config, param_name, base, value_type):
         elif value_type is bool:
             # For bool, we allow a few special string conversions
             val = _GetBoolValue(param, param_name)
+        elif value_type is galsim.PositionD:
+            # For PositionD, we allow a string of x,y
+            val = _GetPositionValue(param, param_name)
         else:
             # Make sure strings are converted to float (or other type) if necessary.
             # In particular things like 1.e6 aren't converted to float automatically
@@ -96,7 +99,7 @@ def ParseValue(config, param_name, base, value_type):
         if param['current_value_type'] != value_type:
             raise ValueError(
                 "Attempt to parse %s multiple times with different value types"%param_name)
-        #print 'Using current value of ',param_name,' = ',param['current_val']
+        #print base['obj_num'],'Using current value of ',param_name,' = ',param['current_val']
         return param['current_val'], param['current_safe']
     else:
         # Otherwise, we need to generate the value according to its type
@@ -147,23 +150,25 @@ def _GetAngleValue(param, param_name):
 
 
 def _GetPositionValue(param, param_name):
-    """ @brief Convert a string that looks like "a,b" into a galsim.PositionD.
+    """ @brief Convert a tuple or a string that looks like "a,b" into a galsim.PositionD.
     """
-    try :
-        x, y = param.split(',')
-        x = x.strip()
-        y = y.strip()
-        return galsim.PositionD(x,y)
-    except :
-        raise AttributeError("Unable to parse %s param = %s as a PositionD."%(param_name,param))
+    try:
+        x = float(param[0])
+        y = float(param[1])
+    except:
+        try:
+            x, y = param.split(',')
+            x = float(x.strip())
+            y = float(y.strip())
+        except:
+            raise AttributeError("Unable to parse %s param = %s as a PositionD."%(param_name,param))
+    return galsim.PositionD(x,y)
 
 
 def _GetBoolValue(param, param_name):
     """ @brief Convert a string to a bool
     """
-    #print 'GetBoolValue: param = ',param
     if isinstance(param,str):
-        #print 'param.strip.upper = ',param.strip().upper()
         if param.strip().upper() in [ 'TRUE', 'YES' ]:
             return True
         elif param.strip().upper() in [ 'FALSE', 'NO' ]:
@@ -270,7 +275,7 @@ def _GenerateFromG1G2(param, param_name, base, value_type):
     """
     req = { 'g1' : float, 'g2' : float }
     kwargs, safe = GetAllParams(param, param_name, base, req=req)
-    #print 'Generate from G1G2: kwargs = ',kwargs
+    #print base['obj_num'],'Generate from G1G2: kwargs = ',kwargs
     return galsim.Shear(**kwargs), safe
 
 def _GenerateFromE1E2(param, param_name, base, value_type):
@@ -278,6 +283,7 @@ def _GenerateFromE1E2(param, param_name, base, value_type):
     """
     req = { 'e1' : float, 'e2' : float }
     kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    #print base['obj_num'],'Generate from E1E2: kwargs = ',kwargs
     return galsim.Shear(**kwargs), safe
 
 def _GenerateFromEta1Eta2(param, param_name, base, value_type):
@@ -285,6 +291,7 @@ def _GenerateFromEta1Eta2(param, param_name, base, value_type):
     """
     req = { 'eta1' : float, 'eta2' : float }
     kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    #print base['obj_num'],'Generate from Eta1Eta2: kwargs = ',kwargs
     return galsim.Shear(**kwargs), safe
 
 def _GenerateFromGBeta(param, param_name, base, value_type):
@@ -292,6 +299,7 @@ def _GenerateFromGBeta(param, param_name, base, value_type):
     """
     req = { 'g' : float, 'beta' : galsim.Angle }
     kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    #print base['obj_num'],'Generate from GBeta: kwargs = ',kwargs
     return galsim.Shear(**kwargs), safe
 
 def _GenerateFromEBeta(param, param_name, base, value_type):
@@ -299,6 +307,7 @@ def _GenerateFromEBeta(param, param_name, base, value_type):
     """
     req = { 'e' : float, 'beta' : galsim.Angle }
     kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    #print base['obj_num'],'Generate from EBeta: kwargs = ',kwargs
     return galsim.Shear(**kwargs), safe
 
 def _GenerateFromEtaBeta(param, param_name, base, value_type):
@@ -306,6 +315,7 @@ def _GenerateFromEtaBeta(param, param_name, base, value_type):
     """
     req = { 'eta' : float, 'beta' : galsim.Angle }
     kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    #print base['obj_num'],'Generate from EtaBeta: kwargs = ',kwargs
     return galsim.Shear(**kwargs), safe
 
 def _GenerateFromQBeta(param, param_name, base, value_type):
@@ -313,6 +323,7 @@ def _GenerateFromQBeta(param, param_name, base, value_type):
     """
     req = { 'q' : float, 'beta' : galsim.Angle }
     kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    #print base['obj_num'],'Generate from QBeta: kwargs = ',kwargs
     return galsim.Shear(**kwargs), safe
 
 def _GenerateFromXY(param, param_name, base, value_type):
@@ -320,6 +331,7 @@ def _GenerateFromXY(param, param_name, base, value_type):
     """
     req = { 'x' : float, 'y' : float }
     kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    #print base['obj_num'],'Generate from XY: kwargs = ',kwargs
     return galsim.PositionD(**kwargs), safe
 
 def _GenerateFromRTheta(param, param_name, base, value_type):
@@ -330,6 +342,7 @@ def _GenerateFromRTheta(param, param_name, base, value_type):
     r = kwargs['r']
     theta = kwargs['theta']
     import math
+    #print base['obj_num'],'Generate from RTheta: kwargs = ',kwargs
     return galsim.PositionD(r*math.cos(theta.rad()), r*math.sin(theta.rad())), safe
 
 def _GenerateFromRad(param, param_name, base, value_type):
@@ -337,6 +350,7 @@ def _GenerateFromRad(param, param_name, base, value_type):
     """
     req = { 'theta' : float }
     kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    #print base['obj_num'],'Generate from Rad: kwargs = ',kwargs
     return kwargs['theta'] * galsim.radians, safe
 
 def _GenerateFromDeg(param, param_name, base, value_type):
@@ -344,6 +358,7 @@ def _GenerateFromDeg(param, param_name, base, value_type):
     """
     req = { 'theta' : float }
     kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    #print base['obj_num'],'Generate from Deg: kwargs = ',kwargs
     return kwargs['theta'] * galsim.degrees, safe
 
 def _GenerateFromCatalog(param, param_name, base, value_type):
@@ -367,13 +382,13 @@ def _GenerateFromCatalog(param, param_name, base, value_type):
     # Setup the indexing sequence if it hasn't been specified.
     # The normal thing with a Catalog is to just use each object in order,
     # so we don't require the user to specify that by hand.  We can do it for them.
-    SetDefaultIndex(param, input_cat.nobjects)
+    SetDefaultIndex(param, input_cat.getNObjects())
 
     # Coding note: the and/or bit is equivalent to a C ternary operator:
-    #     input_cat.isfits ? str : int
+    #     input_cat.isFits() ? str : int
     # which of course doesn't exist in python.  This does the same thing (so long as the 
     # middle item evaluates to true).
-    req = { 'col' : input_cat.isfits and str or int , 'index' : int }
+    req = { 'col' : input_cat.isFits() and str or int , 'index' : int }
     kwargs, safe1 = GetAllParams(param, param_name, base, req=req, ignore=['num'])
     safe = safe and safe1
 
@@ -386,7 +401,8 @@ def _GenerateFromCatalog(param, param_name, base, value_type):
     elif value_type is bool:
         val = _GetBoolValue(input_cat.get(**kwargs),param_name)
 
-    #print 'Catalog: ',val
+    #print base['obj_num'],
+    #print 'Catalog: col = %s, index = %s, val = %s'%(kwargs['col'],kwargs['index'],val)
     return val, safe
 
 
@@ -408,7 +424,9 @@ def _GenerateFromDict(param, param_name, base, value_type):
         raise ValueError("Invalid num supplied for Dict (too large): num = %d"%num)
     d = base['dict'][num]
 
-    return d.get(key), safe
+    val = d.get(key)
+    #print base['obj_num'],'Dict: key = %s, val = %s'%(key,val)
+    return val, safe
 
 
 
@@ -432,7 +450,10 @@ def _GenerateFromFitsHeader(param, param_name, base, value_type):
 
     if key not in header.keys():
         raise ValueError("key %s not found in the FITS header in %s"%(key,kwargs['file_name']))
-    return header[key], safe
+
+    val = header.get(key)
+    #print base['obj_num'],'Header: key = %s, val = %s'%(key,val)
+    return val, safe
 
 
 def _GenerateFromRandom(param, param_name, base, value_type):
@@ -448,12 +469,12 @@ def _GenerateFromRandom(param, param_name, base, value_type):
         import math
         CheckAllParams(param, param_name)
         val = ud() * 2 * math.pi * galsim.radians
-        #print 'Random angle = ',val
+        #print base['obj_num'],'Random angle = ',val
         return val, False
     elif value_type is bool:
         CheckAllParams(param, param_name)
         val = ud() < 0.5
-        #print 'Random bool = ',val
+        #print base['obj_num'],'Random bool = ',val
         return val, False
     else:
         req = { 'min' : value_type , 'max' : value_type }
@@ -470,7 +491,7 @@ def _GenerateFromRandom(param, param_name, base, value_type):
         else:
             val = ud() * (max-min) + min
 
-        #print 'Random = ',val
+        #print base['obj_num'],'Random = ',val
         return val, False
 
 
@@ -526,11 +547,9 @@ def _GenerateFromRandomGaussian(param, param_name, base, value_type):
             max -= mean
     
         # Emulate a do-while loop
-        #print 'sigma = ',sigma
         import math
         while True:
             val = gd()
-            #print 'val = ',val
             if do_abs: val = math.fabs(val)
             if val >= min and val <= max: break
         if do_neg: val = -val
@@ -539,7 +558,7 @@ def _GenerateFromRandomGaussian(param, param_name, base, value_type):
         val = gd()
         if 'mean' in kwargs: val += kwargs['mean']
 
-    #print 'RandomGaussian: ',val
+    #print base['obj_num'],'RandomGaussian: ',val
     return val, False
 
 
@@ -574,8 +593,7 @@ def _GenerateFromRandomDistribution(param, param_name, base, value_type):
     distdev.reset(rng)
 
     val = distdev()
-    #print 'distdev = ',val
-
+    #print base['obj_num'],'distdev = ',val
     return val, False
 
 
@@ -602,7 +620,6 @@ def _GenerateFromRandomCircle(param, param_name, base, value_type):
     while True:
         x = (2*ud()-1) * radius
         y = (2*ud()-1) * radius
-        #print 'x,y = ',x,y
         rsq = x**2 + y**2
         if rsq >= min_rsq and rsq <= max_rsq: break
 
@@ -610,14 +627,13 @@ def _GenerateFromRandomCircle(param, param_name, base, value_type):
     if 'center' in kwargs:
         pos += kwargs['center']
 
-    #print 'RandomCircle: ',pos
+    #print base['obj_num'],'RandomCircle: ',pos
     return pos, False
 
 
 def _GenerateFromSequence(param, param_name, base, value_type):
     """@brief Return next in a sequence of integers
     """
-    #print 'Start Sequence for ',param_name,' -- param = ',param
     opt = { 'first' : value_type, 'last' : value_type, 'step' : value_type,
             'repeat' : int, 'nitems' : int }
     kwargs, safe = GetAllParams(param, param_name, base, opt=opt)
@@ -627,7 +643,6 @@ def _GenerateFromSequence(param, param_name, base, value_type):
     repeat = kwargs.get('repeat',1)
     last = kwargs.get('last',None)
     nitems = kwargs.get('nitems',None)
-    #print 'first, step, last, repeat, nitems = ',first,step,last,repeat,nitems
     if repeat <= 0:
         raise ValueError(
             "Invalid repeat=%d (must be > 0) for %s.type = Sequence"%(repeat,param_name))
@@ -647,38 +662,28 @@ def _GenerateFromSequence(param, param_name, base, value_type):
             first = 0
             step = 1
             nitems = 2
-        #print 'bool sequence: first, step, repeat, n => ',first,step,repeat,nitems
 
     elif value_type is float:
         if last is not None:
             nitems = int( (last-first)/step + 0.5 ) + 1
-        #print 'float sequence: first, step, repeat, n => ',first,step,repeat,nitems
     else:
         if last is not None:
             nitems = (last - first)/step + 1
-        #print 'int sequence: first, step, repeat, n => ',first,step,repeat,nitems
 
     k = base['seq_index']
-    #print 'k = ',k
-
     k = k / repeat
-    #print 'k/repeat = ',k
 
     if nitems is not None and nitems > 0:
-        #print 'nitems = ',nitems
         k = k % nitems
-        #print 'k%nitems = ',k
 
     index = first + k*step
-    #print 'first + k*step = ',index
-
+    #print base['obj_num'],'Sequence index = %s + %d*%s = %s'%(first,k,step,index)
     return index, False
 
 
 def _GenerateFromNumberedFile(param, param_name, base, value_type):
     """@brief Return a file_name using a root, a number, and an extension
     """
-    #print 'Start NumberedFile for ',param_name,' -- param = ',param
     if 'num' not in param:
         param['num'] = { 'type' : 'Sequence' }
     req = { 'root' : str , 'num' : int }
@@ -692,24 +697,18 @@ def _GenerateFromNumberedFile(param, param_name, base, value_type):
         template += '%d'
     if 'ext' in kwargs:
         template += kwargs['ext']
-    #print 'template = ',template
     s = eval("'%s'%%%d"%(template,kwargs['num']))
-    #print 'num = ',kwargs['num']
-    #print 's = ',s
-    
+    #print base['obj_num'],'NumberedFile = ',s
     return s, safe
 
 def _GenerateFromFormattedStr(param, param_name, base, value_type):
     """@brief Create a string from a format string
     """
-    #print 'Start FormattedStr for ',param_name,' -- param = ',param
     req = { 'format' : str }
     # Ignore items for now, we'll deal with it differently.
     ignore = [ 'items' ]
     params, safe = GetAllParams(param, param_name, base, req=req, ignore=ignore)
-    #print 'params = ',params
     format = params['format']
-    #print 'format = ',format
 
     # Check that items is present and is a list.
     if 'items' not in param:
@@ -742,7 +741,6 @@ def _GenerateFromFormattedStr(param, param_name, base, value_type):
             val_types.append(str)
         else:
             raise ValueError("Unable to parse '%s' as a valid format string"%format)
-    #print 'val_types = ',val_types
 
     if len(val_types) != len(items):
         raise ValueError(
@@ -750,16 +748,12 @@ def _GenerateFromFormattedStr(param, param_name, base, value_type):
             "format string (%d)"%len(val_types))
     vals = []
     for index in range(len(items)):
-        #print 'index = ',index,', val_type = ',val_types[index]
         val, safe1 = ParseValue(items, index, base, val_types[index])
-        #print 'val = ',val
         safe = safe and safe1
         vals.append(val)
-    #print 'vals = ',vals
 
     final_str = format%tuple(vals)
-    #print 'final_str = ',final_str
-
+    #print base['obj_num'],'FormattedStr = ',final_str
     return final_str, safe
 
 
@@ -769,7 +763,6 @@ def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
     if 'sky_pos' not in base:
         raise ValueError("NFWHaloShear requested, but no position defined.")
     pos = base['sky_pos']
-    #print 'nfw pos = ',pos
 
     if 'gal' not in base or 'redshift' not in base['gal']:
         raise ValueError("NFWHaloShear requested, but no gal.redshift defined.")
@@ -788,18 +781,15 @@ def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
         raise ValueError("Invalid num supplied for NFWHaloShear (too large): num = %d"%num)
     nfw_halo = base['nfw_halo'][num]
 
-    #print 'NFWHaloShear: pos = ',pos,' z = ',redshift
     try:
         g1,g2 = nfw_halo.getShear(pos,redshift)
-        #print 'g1,g2 = ',g1,g2
         shear = galsim.Shear(g1=g1,g2=g2)
     except Exception as e:
-        #print e
         import warnings
         warnings.warn("Warning: NFWHalo shear is invalid -- probably strong lensing!  " +
                       "Using shear = 0.")
         shear = galsim.Shear(g1=0,g2=0)
-    #print 'shear = ',shear
+    #print base['obj_num'],'NFW shear = ',shear
     return shear, False
 
 
@@ -809,7 +799,6 @@ def _GenerateFromNFWHaloMagnification(param, param_name, base, value_type):
     if 'sky_pos' not in base:
         raise ValueError("NFWHaloMagnification requested, but no position defined.")
     pos = base['sky_pos']
-    #print 'nfw pos = ',pos
 
     if 'gal' not in base or 'redshift' not in base['gal']:
         raise ValueError("NFWHaloMagnification requested, but no gal.redshift defined.")
@@ -828,7 +817,6 @@ def _GenerateFromNFWHaloMagnification(param, param_name, base, value_type):
         raise ValueError("Invalid num supplied for NFWHaloMagnification (too large): num = %d"%num)
     nfw_halo = base['nfw_halo'][num]
 
-    #print 'NFWHaloMagnification: pos = ',pos,' z = ',redshift
     mu = nfw_halo.getMagnification(pos,redshift)
 
     max_mu = kwargs.get('max_mu', 25.)
@@ -838,12 +826,11 @@ def _GenerateFromNFWHaloMagnification(param, param_name, base, value_type):
                 max_mu,param_name))
 
     if mu < 0 or mu > max_mu:
-        #print 'mu = ',mu
         import warnings
         warnings.warn("Warning: NFWHalo mu = %f means strong lensing!  Using mu=%f"%(mu,max_mu))
         mu = max_mu
 
-    #print 'mu = ',mu
+    #print base['obj_num'],'NFW mu = ',mu
     return mu, False
 
 
@@ -867,18 +854,15 @@ def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
         raise ValueError("Invalid num supplied for PowerSpectrumShear (too large): num = %d"%num)
     power_spectrum = base['power_spectrum'][num]
 
-    #print 'PowerSpectrumShear: pos = ',pos
     try:
         g1,g2 = power_spectrum.getShear(pos)
-        #print 'g1,g2 = ',g1,g2
         shear = galsim.Shear(g1=g1,g2=g2)
     except Exception as e:
-        #print e
         import warnings
         warnings.warn("Warning: PowerSpectrum shear is invalid -- probably strong lensing!  " +
                       "Using shear = 0.")
         shear = galsim.Shear(g1=0,g2=0)
-    #print 'shear = ',shear
+    #print base['obj_num'],'PS shear = ',shear
     return shear, False
 
 def _GenerateFromPowerSpectrumMagnification(param, param_name, base, value_type):
@@ -912,11 +896,11 @@ def _GenerateFromPowerSpectrumMagnification(param, param_name, base, value_type)
                 max_mu,param_name))
 
     if mu < 0 or mu > max_mu:
-        #print 'mu = ',mu
         import warnings
         warnings.warn("Warning: PowerSpectrum mu = %f means strong lensing!  Using mu=%f"%(
             mu,max_mu))
         mu = max_mu
+    #print base['obj_num'],'PS mu = ',mu
     return mu, False
 
 def _GenerateFromList(param, param_name, base, value_type):
@@ -938,6 +922,7 @@ def _GenerateFromList(param, param_name, base, value_type):
         raise AttributeError("index %d out of bounds for parameter %s"%(index,param_name))
     val, safe1 = ParseValue(items, index, base, value_type)
     safe = safe and safe1
+    #print base['obj_num'],'List index = %d, val = %s'%(index,val)
     return val, safe
  
 def _type_by_letter(key):
@@ -1010,7 +995,7 @@ def _GenerateFromEval(param, param_name, base, value_type):
     # Try evaluating the string as is.
     try:
         val = value_type(eval(string))
-        #print 'Simple success: val = ',val
+        #print base['obj_num'],'Simple Eval(%s) = %s'%(string,val)
         return val, safe
     except:
         pass
@@ -1020,15 +1005,35 @@ def _GenerateFromEval(param, param_name, base, value_type):
         image_pos = base['image_pos']
     if 'sky_pos' in base:
         sky_pos = base['sky_pos']
+    if 'image_center' in base:
+        image_center = base['image_center']
+    if 'image_origin' in base:
+        image_origin = base['image_origin']
+    if 'image_xsize' in base:
+        image_xsize = base['image_xsize']
+    if 'image_ysize' in base:
+        image_ysize = base['image_ysize']
+    if 'stamp_xsize' in base:
+        stamp_xsize = base['stamp_xsize']
+    if 'stamp_ysize' in base:
+        stamp_ysize = base['stamp_ysize']
+    if 'pixel_scale' in base:
+        pixel_sclae = base['pixel_scale']
     if 'rng' in base:
         rng = base['rng']
+    if 'file_num' in base:
+        file_num = base['file_num']
+    if 'image_num' in base:
+        image_num = base['image_num']
+    if 'obj_num' in base:
+        obj_num = base['obj_num']
     for key in galsim.config.valid_input_types.keys():
         if key in base:
             exec(key + ' = base[key]')
 
     try:
         val = value_type(eval(string))
-        #print 'Needed pos: val = ',val
+        #print base['obj_num'],'Eval(%s) needed extra variables: val = %s'%(string,val)
         return val, False
     except:
         raise ValueError("Unable to evaluate string %r as a %s for %s"%(
@@ -1037,13 +1042,10 @@ def _GenerateFromEval(param, param_name, base, value_type):
 def _GenerateFromCurrent(param, param_name, base, value_type):
     """@brief Get the current value of another config item.
     """
-    #print 'Start Current for ',param_name
     req = { 'key' : str }
     params, safe = GetAllParams(param, param_name, base, req=req)
-    #print 'params = ',params
 
     key = params['key']
-    #print 'key = ',key
 
     # This next bit is basically identical to the code for Dict.get(key) in catalog.py.
     # Make a list of keys
@@ -1061,7 +1063,9 @@ def _GenerateFromCurrent(param, param_name, base, value_type):
             d = d[k]
         else: 
             # Otherwise, parse the value for this key
-            return ParseValue(d, k, base, value_type)
+            val,safe = ParseValue(d, k, base, value_type)
+            #print base['obj_num'],'Current key = %s, value = %s'%(key,val)
+            return val,safe
 
     raise ValueError("Invalid key = %s given for %s.type = Current"%(key,param_name))
 

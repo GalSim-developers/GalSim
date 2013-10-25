@@ -57,7 +57,7 @@ time $python demo8.py || exit
 time $bin/galsim demo8.yaml || exit
 
 time $python demo9.py || exit
-time $bin/galsim demo9.yaml || exit
+time $bin/galsim -v1 demo9.yaml || exit
 
 time $python demo10.py || exit
 time $bin/galsim demo10.yaml || exit

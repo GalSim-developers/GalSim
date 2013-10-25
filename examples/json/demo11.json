@@ -190,12 +190,7 @@
     "#" : "In this case, we need to define where the real galaxy input catalog is.",
     "real_catalog" : {
         "dir" : "data",
-        "file_name" : "real_galaxy_catalog_example.fits",
-
-        "#" : "Even though we only have 5 galaxies again, preloading makes a big difference in the",
-        "#" : "running time, because we are selecting among the 5 in a random order, so it helps ",
-        "#" : "to have pyfits load all the images in memory and store them.",
-        "preload" : "True"
+        "file_name" : "real_galaxy_catalog_example.fits"
     },
 
     "#" : "We also initialize the power spectrum here.",

@@ -186,11 +186,6 @@ input :
         dir : "data"
         file_name : real_galaxy_catalog_example.fits
 
-        # Even though we only have 5 galaxies again, preloading makes a big difference in the 
-        # running time, because we are selecting among the 5 in a random order, so it helps
-        # to have pyfits load all the images in memory and store them.
-        preload : True 
-
     # We also initialize the power spectrum here.
     power_spectrum :
         # In this case, we read the e_power_function from a file.  This is done simply by 

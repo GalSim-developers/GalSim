@@ -1163,10 +1163,12 @@ class Gaussian(GSObject):
     # _opt_params are optional
     # _single_params are a list of sets for which exactly one in the list is required.
     # _takes_rng indicates whether the constructor should be given the current rng.
+    # _takes_logger indicates whether the constructor takes a logger object for debug logging.
     _req_params = {}
     _opt_params = { "flux" : float }
     _single_params = [ { "sigma" : float, "half_light_radius" : float, "fwhm" : float } ]
     _takes_rng = False
+    _takes_logger = False
     
     # --- Public Class methods ---
     def __init__(self, half_light_radius=None, sigma=None, fwhm=None, flux=1., gsparams=None):
@@ -1241,6 +1243,7 @@ class Moffat(GSObject):
     _opt_params = { "trunc" : float , "flux" : float }
     _single_params = [ { "scale_radius" : float, "half_light_radius" : float, "fwhm" : float } ]
     _takes_rng = False
+    _takes_logger = False
 
     # --- Public Class methods ---
     def __init__(self, beta, scale_radius=None, half_light_radius=None, fwhm=None, trunc=0.,
@@ -1306,6 +1309,7 @@ class Airy(GSObject):
     _opt_params = { "flux" : float , "obscuration" : float }
     _single_params = []
     _takes_rng = False
+    _takes_logger = False
 
     # --- Public Class methods ---
     def __init__(self, lam_over_diam, obscuration=0., flux=1., gsparams=None):
@@ -1407,6 +1411,7 @@ class Kolmogorov(GSObject):
     _opt_params = { "flux" : float }
     _single_params = [ { "lam_over_r0" : float, "fwhm" : float, "half_light_radius" : float } ]
     _takes_rng = False
+    _takes_logger = False
 
     # --- Public Class methods ---
     def __init__(self, lam_over_r0=None, fwhm=None, half_light_radius=None, flux=1.,
@@ -1485,6 +1490,7 @@ class Pixel(GSObject):
     _opt_params = { "yw" : float , "flux" : float }
     _single_params = []
     _takes_rng = False
+    _takes_logger = False
 
     # --- Public Class methods ---
     def __init__(self, xw, yw=None, flux=1., gsparams=None):
@@ -1669,6 +1675,7 @@ class Sersic(GSObject):
     _opt_params = { "flux" : float, "trunc": float, "flux_untruncated" : bool }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
+    _takes_logger = False
 
     # --- Public Class methods ---
     def __init__(self, n, half_light_radius=None, scale_radius=None,
@@ -1736,6 +1743,7 @@ class Exponential(GSObject):
     _opt_params = { "flux" : float }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
+    _takes_logger = False
 
     # --- Public Class methods ---
     def __init__(self, half_light_radius=None, scale_radius=None, flux=1., gsparams=None):
@@ -1794,6 +1802,7 @@ class DeVaucouleurs(GSObject):
     _opt_params = { "flux" : float, "trunc" : float, "flux_untruncated" : bool }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
+    _takes_logger = False
 
     # --- Public Class methods ---
     def __init__(self, half_light_radius=None, scale_radius=None, flux=1., trunc=0.,

@@ -57,7 +57,7 @@ time $python demo8.py || exit
 time $bin/galsim json/demo8a.json json/demo8b.json || exit
 
 time $python demo9.py || exit
-time $bin/galsim json/demo9.json || exit
+time $bin/galsim -v1 json/demo9.json || exit
 
 time $python demo10.py || exit
 time $bin/galsim json/demo10.json || exit

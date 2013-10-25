@@ -475,8 +475,8 @@ def test_uncorr_padding():
     orig_nx = 147
     orig_ny = 174
     noise_var = 1.73
-    big_nx = 259
-    big_ny = 282
+    big_nx = 519
+    big_ny = 482
     orig_seed = 151241
 
     # first, make a noise image
@@ -930,8 +930,6 @@ def test_conserve_dc():
 
 
 if __name__ == "__main__":
-    test_corr_padding()
-
     test_sbinterpolatedimage()
     test_roundtrip()
     test_fluxnorm()

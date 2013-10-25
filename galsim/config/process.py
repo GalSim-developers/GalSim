@@ -18,26 +18,27 @@
 #
 
 import os
-import time
 import galsim
 
 valid_input_types = { 
     # The values are tuples with:
     # - the class name to build.
     # - a list of keys to ignore on the initial creation (e.g. PowerSpectrum has values that are 
-    #   used later).
-    # - whether the class has a nobjects field, in which case it also must have a constructor
+    #   used later in PowerSpectrumInit).
+    # - whether the class has a getNObjects method, in which case it also must have a constructor
     #   kwarg nobjects_only to efficiently do only enough to calculate nobjects.
+    # - A function to call at the start of each image (or None)
     # See the des module for examples of how to extend this from a module.
-    'catalog' : ('Catalog', [], True), 
-    'dict' : ('Dict', [], False), 
-    'real_catalog' : ('RealGalaxyCatalog', [], True),
-    'nfw_halo' : ('NFWHalo', [], False),
-    'power_spectrum' : ('PowerSpectrum',
-                        # power_spectrum uses these extra parameters for buildGrid later.
+    'catalog' : ('galsim.Catalog', [], True, None), 
+    'dict' : ('galsim.Dict', [], False, None), 
+    'real_catalog' : ('galsim.RealGalaxyCatalog', [], True, None),
+    'nfw_halo' : ('galsim.NFWHalo', [], False, None),
+    'power_spectrum' : ('galsim.PowerSpectrum',
+                        # power_spectrum uses these extra parameters in PowerSpectrumInit
                         ['grid_spacing', 'interpolant'], 
-                        False),
-    'fits_header' : ('FitsHeader', [], False), 
+                        False,
+                        'galsim.config.PowerSpectrumInit'),
+    'fits_header' : ('galsim.FitsHeader', [], False, None), 
 }
 
 valid_output_types = { 
@@ -53,6 +54,49 @@ valid_output_types = {
     'DataCube' : ('BuildDataCube', 'GetNObjForDataCube', True, True, False),
 }
 
+class InputGetter:
+    """A simple class that is returns a given config[key][i] when called with obj()
+    """
+    def __init__(self, config, key, i):
+        self.config = config
+        self.key = key
+        self.i = i
+    def __call__(self): return self.config[self.key][self.i]
+            
+def CopyConfig(config):
+    """
+    If you want to use a config dict for multiprocessing, you need to deep copy
+    the gal, psf, and pix fields, since they get cache values that are not picklable.
+    If you don't do the deep copy, then python balks when trying to send the updated
+    config dict back to the root process.  We do this a few different times, so encapsulate
+    the copy semantics once here.
+    """
+    import copy
+    config1 = copy.copy(config)
+  
+    # Make sure the input_manager isn't in the copy
+    if 'input_manager' in config1:
+        del config1['input_manager']
+
+    # Now deepcopy all the regular config fields to make sure things like current_val don't
+    # get clobberd by two processes writing to the same dict.
+    if 'gal' in config:
+        config1['gal'] = copy.deepcopy(config['gal'])
+    if 'psf' in config:
+        config1['psf'] = copy.deepcopy(config['psf'])
+    if 'pix' in config:
+        config1['pix'] = copy.deepcopy(config['pix'])
+    if 'image' in config:
+        config1['image'] = copy.deepcopy(config['image'])
+    if 'input' in config:
+        config1['input'] = copy.deepcopy(config['input'])
+    if 'output' in config:
+        config1['output'] = copy.deepcopy(config['output'])
+    if 'eval_variables' in config:
+        config1['eval_variables'] = copy.deepcopy(config['eval_variables'])
+    return config1
+
+
 def ProcessInput(config, file_num=0, logger=None):
     """
     Process the input field, reading in any specified input files or setting up
@@ -65,40 +109,124 @@ def ProcessInput(config, file_num=0, logger=None):
         etc.
     """
     config['seq_index'] = file_num
+    config['file_num'] = file_num
+    if logger:
+        logger.debug('file %d: Start ProcessInput',file_num)
     # Process the input field (read any necessary input files)
     if 'input' in config:
         input = config['input']
         if not isinstance(input, dict):
             raise AttributeError("config.input is not a dict.")
 
+        # We'll iterate through this list of keys a few times
+        all_keys = [ k for k in valid_input_types.keys() if k in input ]
+
+        # First, make sure all the input fields are lists.  If not, then we make them a 
+        # list with one element.
+        for key in all_keys:
+            if not isinstance(input[key], list): input[key] = [ input[key] ]
+ 
+        # The input items can be rather large.  Especially RealGalaxyCatalog.  So it is
+        # unwieldy to copy them in the config file for each process.  Instead we use proxy
+        # objects which are implemented using multiprocessing.BaseManager.  See
+        #
+        #     http://docs.python.org/2/library/multiprocessing.html
+        #
+        # The input manager keeps track of all the real objects for us.  We use it to put
+        # a proxy object in the config dict, which is copyable to other processes.
+        # The input manager itself should not be copied, so the function CopyConfig makes
+        # sure to only keep that in the original config dict, not the one that gets passed
+        # to other processed.
+        # The proxy objects are  able to call public functions in the real object via 
+        # multiprocessing communication channels.  (A Pipe, I believe.)  The BaseManager 
+        # base class handles all the details.  We just need to register each class we need 
+        # with a name (called tag below) and then construct it by calling that tag function.
+        if 'input_manager' not in config:
+            from multiprocessing.managers import BaseManager
+            class InputManager(BaseManager): pass
+ 
+            # Register each input field with the InputManager class
+            for key in all_keys:
+                fields = input[key]
+
+                # Register this object with the manager
+                for i in range(len(fields)):
+                    field = fields[i]
+                    tag = key + str(i)
+                    # This next bit mimics the operation of BuildSimple, except that we don't
+                    # actually build the object here.  Just register the class name.
+                    type = valid_input_types[key][0]
+                    if type in galsim.__dict__:
+                        init_func = eval("galsim."+type)
+                    else:
+                        init_func = eval(type)
+                    InputManager.register(tag, init_func)
+            # Start up the input_manager
+            config['input_manager'] = InputManager()
+            config['input_manager'].start()
+
         # Read all input fields provided and create the corresponding object
         # with the parameters given in the config file.
-        #print 'valid_input_types = ',valid_input_types
-        for key in [ k for k in valid_input_types.keys() if k in input ]:
-            #print 'key = ',key
+        for key in all_keys:
+            if logger:
+                logger.debug('file %d: Process input key %s',file_num,key)
             fields = input[key]
 
-            # If it's not currently a list, make it a list with one element.
-            if not isinstance(fields, list): fields = [ fields ]
+            if key not in config:
+                if logger:
+                    logger.debug('file %d: %s not currently in config',file_num,key)
+                config[key] = [ None for i in range(len(fields)) ]
+                config[key+'_safe'] = [ None for i in range(len(fields)) ]
+            for i in range(len(fields)):
+                field = fields[i]
+                ck = config[key]
+                ck_safe = config[key+'_safe']
+                if logger:
+                    logger.debug('file %d: Current values for %s are %s, safe = %s',
+                                 file_num, key, str(ck[i]), ck_safe[i])
+                type, ignore = valid_input_types[key][0:2]
+                field['type'] = type
+                if ck[i] is not None and ck_safe[i]:
+                    if logger:
+                        logger.debug('file %d: Using %s already read in',file_num,key)
+                else:
+                    if logger:
+                        logger.debug('file %d: Build input type %s',file_num,type)
+                    # This is almost identical to the operation of BuildSimple.  However,
+                    # rather than call the regular function here, we have input_manager do so.
+                    if type in galsim.__dict__:
+                        init_func = eval("galsim."+type)
+                    else:
+                        init_func = eval(type)
+                    kwargs, safe = galsim.config.GetAllParams(field, key, config,
+                                                              req = init_func._req_params,
+                                                              opt = init_func._opt_params,
+                                                              single = init_func._single_params,
+                                                              ignore = ignore)
+                    if logger and init_func._takes_logger: kwargs['logger'] = logger
+                    if init_func._takes_rng:
+                        if 'rng' not in config:
+                            raise ValueError("No config['rng'] available for %s.type = %s"%(
+                                             key,type))
+                        kwargs['rng'] = config['rng']
+                        safe = False
 
-            config[key] = []
-            for field in fields:
-                #print 'field = ',field
-                field['type'], ignore = valid_input_types[key][0:2]
-                #print 'type, ignore = ',field['type'],ignore
-                input_obj = galsim.config.gsobject._BuildSimple(field, key, config, ignore)[0]
-                #print 'input_obj = ',input_obj
-                if logger and  valid_input_types[key][2]:
-                    logger.info('Read %d objects from %s',input_obj.nobjects,key)
-                # Store input_obj in the config for use by BuildGSObject function.
-                config[key].append(input_obj)
+                    tag = key + str(i)
+                    input_obj = getattr(config['input_manager'],tag)(**kwargs)
+                    if logger:
+                        logger.debug('file %d: Built input object %s, %s',file_num,key,type)
+                        if valid_input_types[key][2]:
+                            logger.info('Read %d objects from %s',input_obj.getNObjects(),key)
+                    # Store input_obj in the config for use by BuildGSObject function.
+                    ck[i] = input_obj
+                    ck_safe[i] = safe
 
         # Check that there are no other attributes specified.
         valid_keys = valid_input_types.keys()
         galsim.config.CheckAllParams(input, 'input', ignore=valid_keys)
 
 
-def ProcessInputNObjects(config):
+def ProcessInputNObjects(config, logger=None):
     """Process the input field, just enough to determine the number of objects.
     """
     if 'input' in config:
@@ -106,33 +234,33 @@ def ProcessInputNObjects(config):
         if not isinstance(input, dict):
             raise AttributeError("config.input is not a dict.")
 
-        #print 'valid_input_types = ',valid_input_types
         for key in valid_input_types:
-            #print 'key = ',key
-            #print 'valid_input_types[key] = ',valid_input_types[key]
             has_nobjects = valid_input_types[key][2]
             if key in input and has_nobjects:
                 field = input[key]
 
-                # If it's a list, just use the first one.
-                if isinstance(field, list): field = field[0]
-
-                #print 'field = ',field
-                type, ignore = valid_input_types[key][0:2]
-                #print 'type, ignore = ',type,ignore
-                if type in galsim.__dict__:
-                    init_func = eval("galsim."+type)
+                if key in config and config[key+'_safe'][0]:
+                    input_obj = config[key][0]
                 else:
-                    init_func = eval(type)
-                kwargs = galsim.config.GetAllParams(field, key, config,
-                                                    req = init_func._req_params,
-                                                    opt = init_func._opt_params,
-                                                    single = init_func._single_params,
-                                                    ignore = ignore)[0]
-                kwargs['nobjects_only'] = True
-                input_obj = init_func(**kwargs)
-                #print 'Found nobjects = %d for %s'%(input_obj.nobjects,key)
-                return input_obj.nobjects
+                    # If it's a list, just use the first one.
+                    if isinstance(field, list): field = field[0]
+
+                    type, ignore = valid_input_types[key][0:2]
+                    if type in galsim.__dict__:
+                        init_func = eval("galsim."+type)
+                    else:
+                        init_func = eval(type)
+                    kwargs = galsim.config.GetAllParams(field, key, config,
+                                                        req = init_func._req_params,
+                                                        opt = init_func._opt_params,
+                                                        single = init_func._single_params,
+                                                        ignore = ignore)[0]
+                    kwargs['nobjects_only'] = True
+                    input_obj = init_func(**kwargs)
+                if logger:
+                    logger.debug('file %d: Found nobjects = %d for %s',
+                                 config['file_num'],input_obj.getNOjects(),key)
+                return input_obj.getNObjects()
     # If didn't find anything, return None.
     return None
 
@@ -183,9 +311,10 @@ def Process(config, logger=None):
 
     # extra_hdu says whether the function takes psf_hdu, etc.
     extra_hdu = valid_output_types[type][4]
-    #print 'type = ',type
-    #print 'extra_file_name = ',extra_file_name
-    #print 'extra_hdu = ',extra_hdu
+    if logger:
+        logger.debug('type = %s',type)
+        logger.debug('extra_file_name = %s',extra_file_name)
+        logger.debug('extra_hdu = %d',extra_hdu)
 
     # We need to know how many objects we'll need for each file (and each image within each file)
     # to get the indexing correct for any sequence items.  (e.g. random_seed)
@@ -196,7 +325,8 @@ def Process(config, logger=None):
         nfiles = galsim.config.ParseValue(output, 'nfiles', config, int)[0]
     else:
         nfiles = 1 
-    #print 'nfiles = ',nfiles
+    if logger:
+        logger.debug('nfiles = %d',nfiles)
 
     # Figure out how many processes we will use for building the files.
     # (If nfiles = 1, but nimages > 1, we'll do the multi-processing at the image stage.)
@@ -239,31 +369,54 @@ def Process(config, logger=None):
             if logger:
                 logger.warn("config.output.nproc <= 0, but unable to determine number of cpus.")
             nproc = 1
-            if logger:
-                logger.info("Using %d processes",nproc)
-    
-    # Set up the multi-process worker function if we're going to need it.
+
+    def worker(input, output):
+        proc = current_process().name
+        for job in iter(input.get, 'STOP'):
+            try:
+                (kwargs, file_num, file_name, logger) = job
+                if logger:
+                    logger.debug('%s: Received job to do file %d, %s',proc,file_num,file_name)
+                if file_num != 0:
+                    ProcessInput(kwargs['config'], file_num=file_num, logger=logger)
+                    if logger:
+                        logger.debug('%s: After ProcessInput for file %d',proc,file_num)
+                kwargs['logger'] = logger
+                t = build_func(**kwargs)
+                if logger:
+                    logger.debug('%s: After %s for file %d',proc,build_func,file_num)
+                output.put( (t, file_num, file_name, proc) )
+            except Exception as e:
+                import traceback
+                tr = traceback.format_exc()
+                if logger:
+                    logger.debug('%s: Caught exception %s\n%s',proc,str(e),tr)
+                output.put( (e, file_num, file_name, tr) )
+
+    # Set up the multi-process task_queue if we're going to need it.
     if nproc > 1:
         # NB: See the function BuildStamps for more verbose comments about how
         # the multiprocessing stuff works.
         from multiprocessing import Process, Queue, current_process
-
-        def worker(input, output):
-            import time
-            for (kwargs, file_num, file_name) in iter(input.get, 'STOP'):
-                #print current_process().name,': worker got: ',file_num,file_name,kwargs
-                ProcessInput(kwargs['config'], file_num=file_num)
-                #print current_process().name,': After ProcessInput for file ',file_num
-                result = build_func(**kwargs)
-                #print current_process().name,': result for ',file_num,' = ',result
-                output.put( (result, file_num, file_name, current_process().name) )
-                #print current_process().name,': put the result for ',file_num,' on output queue'
-
-        # Set up the task list
         task_queue = Queue()
 
-    # Now start working on the files.
+    # The logger is not picklable, so we use the same trick for it as we used for the 
+    # input fields in CopyConfig to allow the worker processes to log their progress.
+    # The real logger stays in this process, and the workers all get a proxy logger which 
+    # they can use normally.  We use galsim.utilities.SimpleGenerator as the callable that
+    # just returns the existing logger object.
+    from multiprocessing.managers import BaseManager
+    class LoggerManager(BaseManager): pass
+    if logger:
+        logger_generator = galsim.utilities.SimpleGenerator(logger)
+        LoggerManager.register('logger', callable = logger_generator)
+        logger_manager = LoggerManager()
+        logger_manager.start()
+        logger_proxy = logger_manager.logger()
+    else:
+        logger_proxy = None
 
+    # Now start working on the files.
     image_num = 0
     obj_num = 0
 
@@ -272,12 +425,20 @@ def Process(config, logger=None):
     for key in extra_keys:
         last_file_name[key] = None
 
+    # Process the input field for the first file.  Usually we won't need to reprocess
+    # things, since they are often "safe", so they won't need to be reprocessed for the
+    # later file_nums.  This is important to do here if nproc != 1.
+    ProcessInput(config, file_num=0, logger=logger_proxy)
+
+    nfiles_use = nfiles
     for file_num in range(nfiles):
-        #print 'file, image, obj = ',file_num, image_num, obj_num
+        if logger:
+            logger.debug('file_num, image_num, obj_num = %d,%d,%d',file_num,image_num,obj_num)
         # Set the index for any sequences in the input or output parameters.
         # These sequences are indexed by the file_num.
         # (In image, they are indexed by image_num, and after that by obj_num.)
         config['seq_index'] = file_num
+        config['file_num'] = file_num
 
         # Get the file_name
         if 'file_name' in output:
@@ -301,22 +462,46 @@ def Process(config, logger=None):
         # Assign some of the kwargs we know now:
         kwargs = {
             'file_name' : file_name,
+            'file_num' : file_num,
             'image_num' : image_num,
             'obj_num' : obj_num
         }
         if nproc2:
             kwargs['nproc'] = nproc2
 
-        import copy
-        kwargs['config'] = copy.deepcopy(config)
-        output = kwargs['config']['output']
+        output = config['output']
         # This also updates nimages or nobjects as needed if they are being automatically
         # set from an input catalog.
-        nobj = nobj_func(kwargs['config'],file_num,image_num)
+        nobj = nobj_func(config,file_num,image_num)
+        if logger:
+            logger.debug('file %d: nobj = %s',file_num,str(nobj))
+
+        # nobj is a list of nobj for each image in that file.
+        # So len(nobj) = nimages and sum(nobj) is the total number of objects
+        # This gets the values of image_num and obj_num ready for the next loop.
+        image_num += len(nobj)
+        obj_num += sum(nobj)
+
+        # Check if we ought to skip this file
+        if ('skip' in output 
+                and galsim.config.ParseValue(output, 'skip', config, bool)[0]):
+            if logger:
+                logger.warn('Skipping file %d = %s because output.skip = True',file_num,file_name)
+            nfiles_use -= 1
+            continue
+        if ('noclobber' in output 
+                and galsim.config.ParseValue(output, 'noclobber', config, bool)[0]
+                and os.path.isfile(file_name)):
+            if logger:
+                logger.warn('Skipping file %d = %s because output.noclobber = True' +
+                            ' and file exists',file_num,file_name)
+            nfiles_use -= 1
+            continue
 
         # Check if we need to build extra images for write out as well
         for extra_key in [ key for key in extra_keys if key in output ]:
-            #print 'extra_key = ',extra_key
+            if logger:
+                logger.debug('extra_key = %s',extra_key)
             output_extra = output[extra_key]
 
             output_extra['type'] = 'default'
@@ -339,7 +524,7 @@ def Process(config, logger=None):
                 ignore += ['include_obj_var']
             if 'file_name' in output_extra:
                 SetDefaultExt(output_extra['file_name'],'.fits')
-            params, safe = galsim.config.GetAllParams(output_extra,extra_key,kwargs['config'],
+            params, safe = galsim.config.GetAllParams(output_extra,extra_key,config,
                                                       req=req, opt=opt, single=single,
                                                       ignore=ignore)
 
@@ -353,40 +538,55 @@ def Process(config, logger=None):
                     f = os.path.join(dir,f)
                 # If we already wrote this file, skip it this time around.
                 # (Typically this is applicable for psf, where we may only want 1 psf file.)
-                #print 'last_file_name for ',key,' = ',last_file_name[key]
-                #print 'f = ',f
                 if last_file_name[key] == f:
-                    #print 'skipping'
+                    if logger:
+                        logger.debug('skipping %s, since already written',f)
                     continue
-                #print 'assigning this to kwargs'
                 kwargs[ extra_key+'_file_name' ] = f
                 last_file_name[key] = f
             elif 'hdu' in params:
                 kwargs[ extra_key+'_hdu' ] = params['hdu']
-    
+
         # This is where we actually build the file.
         # If we're doing multiprocessing, we send this information off to the task_queue.
         # Otherwise, we just call build_func.
         if nproc > 1:
-            #print 'put task on the queue: ',file_num,file_name,kwargs
-            task_queue.put( (kwargs, file_num, file_name) )
-        else:
-            ProcessInput(kwargs['config'], file_num=file_num, logger=logger)
-            # Apparently the logger isn't picklable, so can't send that for nproc > 1
-            kwargs['logger'] = logger 
-            t = build_func(**kwargs)
+            import copy
+            # Make new copies of config and kwargs so we can update them without
+            # clobbering the versions for other tasks on the queue.
+            kwargs1 = copy.copy(kwargs)
+            kwargs1['config'] = CopyConfig(config)
             if logger:
-                logger.warn('File %d = %s: time = %f sec', file_num, file_name, t)
-
-        # nobj is a list of nobj for each image in that file.
-        # So len(nobj) = nimages and sum(nobj) is the total number of objects
-        image_num += len(nobj)
-        obj_num += sum(nobj)
-
+                logger_proxy = logger_manager.logger()
+            else:
+                logger_proxy = None
+            task_queue.put( (kwargs1, file_num, file_name, logger_proxy) )
+        else:
+            try:
+                if file_num != 0:
+                    ProcessInput(config, file_num=file_num, logger=logger_proxy)
+                    if logger:
+                        logger.debug('file %d: After ProcessInput',file_num)
+                kwargs['config'] = config
+                kwargs['logger'] = logger 
+                t = build_func(**kwargs)
+                if logger:
+                    logger.warn('File %d = %s: time = %f sec', file_num, file_name, t)
+            except Exception as e:
+                import traceback
+                tr = traceback.format_exc()
+                if logger:
+                    logger.error('Exception caught for file %d = %s', file_num, file_name)
+                    logger.error('%s',tr)
+                    logger.error('%s',e)
+                    logger.error('File %s not written! Continuing on...',file_name)
 
     # If we're doing multiprocessing, here is the machinery to run through the task_queue
     # and process the results.
     if nproc > 1:
+        logger.warn("Using %d processes",nproc)
+        import time
+        t1 = time.time()
         # Run the tasks
         done_queue = Queue()
         p_list = []
@@ -396,11 +596,21 @@ def Process(config, logger=None):
             p_list.append(p)
 
         # Log the results.
-        for k in range(nfiles):
+        if logger:
+            logger.debug('nfiles_use = %d',nfiles_use)
+        for k in range(nfiles_use):
             t, file_num, file_name, proc = done_queue.get()
-            #print 'received results for ',file_num,file_name,t,proc
-            if logger:
-                logger.warn('%s: File %d = %s: time = %f sec', proc, file_num, file_name, t)
+            if isinstance(t,Exception):
+                # t is really the exception, e
+                # proc is really the traceback
+                if logger:
+                    logger.error('Exception caught for file %d = %s', file_num, file_name)
+                    logger.error('%s',proc)
+                    logger.error('%s',t)
+                    logger.error('File %s not written! Continuing on...',file_name)
+            else:
+                if logger:
+                    logger.warn('%s: File %d = %s: time = %f sec', proc, file_num, file_name, t)
 
         # Stop the processes
         for j in range(nproc):
@@ -408,13 +618,17 @@ def Process(config, logger=None):
         for j in range(nproc):
             p_list[j].join()
         task_queue.close()
+        t2 = time.time()
+        if logger:
+            logger.warn('Total time for %d files with %d processes = %f sec', 
+                        nfiles_use,nproc,t2-t1)
 
     if logger:
         logger.debug('Done building files')
 
 
 def BuildFits(file_name, config, logger=None, 
-              image_num=0, obj_num=0,
+              file_num=0, image_num=0, obj_num=0,
               psf_file_name=None, psf_hdu=None,
               weight_file_name=None, weight_hdu=None,
               badpix_file_name=None, badpix_hdu=None):
@@ -435,7 +649,14 @@ def BuildFits(file_name, config, logger=None,
 
     @return time      Time taken to build file
     """
+    import time
     t1 = time.time()
+
+    config['seq_index'] = file_num
+    config['file_num'] = file_num
+    if logger:
+        logger.debug('file %d: BuildFits for %s: file, image, obj = %d,%d,%d',
+                      config['file_num'],file_name,file_num,image_num,obj_num)
 
     # hdus is a dict with hdus[i] = the item in all_images to put in the i-th hdu.
     hdus = {}
@@ -484,37 +705,41 @@ def BuildFits(file_name, config, logger=None,
     for h in range(len(hdus.keys())):
         assert h in hdus.keys()  # Checked for this above.
         hdulist.append(all_images[hdus[h]])
-        #print 'Add allimages[%d] to hdulist'%hdus[h]
 
     # This next line is ok even if the main image is the only one in the list.
     galsim.fits.writeMulti(hdulist, file_name)
     if logger:
         if len(hdus.keys()) == 1:
-            logger.debug('Wrote image to fits file %r',file_name)
+            logger.debug('file %d: Wrote image to fits file %r',
+                         config['file_num'],file_name)
         else:
-            logger.debug('Wrote image (with extra hdus) to multi-extension fits file %r',file_name)
+            logger.debug('file %d: Wrote image (with extra hdus) to multi-extension fits file %r',
+                         config['file_num'],file_name)
 
     if psf_file_name:
         all_images[1].write(psf_file_name)
         if logger:
-            logger.debug('Wrote psf image to fits file %r',psf_file_name)
+            logger.debug('file %d: Wrote psf image to fits file %r',
+                         config['file_num'],psf_file_name)
 
     if weight_file_name:
         all_images[2].write(weight_file_name)
         if logger:
-            logger.debug('Wrote weight image to fits file %r',weight_file_name)
+            logger.debug('file %d: Wrote weight image to fits file %r',
+                         config['file_num'],weight_file_name)
 
     if badpix_file_name:
         all_images[3].write(badpix_file_name)
         if logger:
-            logger.debug('Wrote badpix image to fits file %r',badpix_file_name)
+            logger.debug('file %d: Wrote badpix image to fits file %r',
+                         config['file_num'],badpix_file_name)
 
     t2 = time.time()
     return t2-t1
 
 
 def BuildMultiFits(file_name, config, nproc=1, logger=None,
-                   image_num=0, obj_num=0,
+                   file_num=0, image_num=0, obj_num=0,
                    psf_file_name=None, weight_file_name=None, badpix_file_name=None):
     """
     Build a multi-extension fits file as specified in config.
@@ -531,7 +756,14 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
 
     @return time      Time taken to build file
     """
+    import time
     t1 = time.time()
+
+    config['seq_index'] = file_num
+    config['file_num'] = file_num
+    if logger:
+        logger.debug('file %d: BuildMultiFits for %s: file, image, obj = %d,%d,%d',
+                      config['file_num'],fiel_name,file_num,image_num,obj_num)
 
     if psf_file_name:
         make_psf_image = True
@@ -576,22 +808,26 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
 
     galsim.fits.writeMulti(main_images, file_name)
     if logger:
-        logger.debug('Wrote images to multi-extension fits file %r',file_name)
+        logger.debug('file %d: Wrote images to multi-extension fits file %r',
+                     config['file_num'],file_name)
 
     if psf_file_name:
         galsim.fits.writeMulti(psf_images, psf_file_name)
         if logger:
-            logger.debug('Wrote psf images to multi-extension fits file %r',psf_file_name)
+            logger.debug('file %d: Wrote psf images to multi-extension fits file %r',
+                         config['file_num'],psf_file_name)
 
     if weight_file_name:
         galsim.fits.writeMulti(weight_images, weight_file_name)
         if logger:
-            logger.debug('Wrote weight images to multi-extension fits file %r',weight_file_name)
+            logger.debug('file %d: Wrote weight images to multi-extension fits file %r',
+                         config['file_num'],weight_file_name)
 
     if badpix_file_name:
         galsim.fits.writeMulti(badpix_images, badpix_file_name)
         if logger:
-            logger.debug('Wrote badpix images to multi-extension fits file %r',badpix_file_name)
+            logger.debug('file %d: Wrote badpix images to multi-extension fits file %r',
+                         config['file_num'],badpix_file_name)
 
 
     t2 = time.time()
@@ -599,7 +835,7 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
 
 
 def BuildDataCube(file_name, config, nproc=1, logger=None, 
-                  image_num=0, obj_num=0,
+                  file_num=0, image_num=0, obj_num=0,
                   psf_file_name=None, weight_file_name=None, badpix_file_name=None):
     """
     Build a multi-image fits data cube as specified in config.
@@ -616,7 +852,14 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
 
     @return time      Time taken to build file
     """
+    import time
     t1 = time.time()
+
+    config['seq_index'] = file_num
+    config['file_num'] = file_num
+    if logger:
+        logger.debug('file %d: BuildDataCube for %s: file, image, obj = %d,%d,%d',
+                      config['file_num'],file_name,file_num,image_num,obj_num)
 
     if psf_file_name:
         make_psf_image = True
@@ -639,10 +882,10 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
 
     # All images need to be the same size for a data cube.
     # Enforce this by buliding the first image outside the below loop and setting
-    # config['image_xsize'] and config['image_ysize'] to be the size of the first image.
+    # config['image_force_xsize'] and config['image_force_ysize'] to be the size of the first 
+    # image.
     t2 = time.time()
-    import copy
-    config1 = copy.deepcopy(config)
+    config1 = CopyConfig(config)
     all_images = galsim.config.BuildImage(
             config=config1, logger=logger, image_num=image_num, obj_num=obj_num,
             make_psf_image=make_psf_image, 
@@ -657,8 +900,8 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
 
     # Note: numpy shape is y,x
     image_ysize, image_xsize = all_images[0].array.shape
-    config['image_xsize'] = image_xsize
-    config['image_ysize'] = image_ysize
+    config['image_force_xsize'] = image_xsize
+    config['image_force_ysize'] = image_ysize
 
     main_images = [ all_images[0] ]
     psf_images = [ all_images[1] ]
@@ -690,28 +933,33 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
 
     galsim.fits.writeCube(main_images, file_name)
     if logger:
-        logger.debug('Wrote image to fits data cube %r',file_name)
+        logger.debug('file %d: Wrote image to fits data cube %r',
+                     config['file_num'],file_name)
 
     if psf_file_name:
         galsim.fits.writeCube(psf_images, psf_file_name)
         if logger:
-            logger.debug('Wrote psf images to fits data cube %r',psf_file_name)
+            logger.debug('file %d: Wrote psf images to fits data cube %r',
+                         config['file_num'],psf_file_name)
 
     if weight_file_name:
         galsim.fits.writeCube(weight_images, weight_file_name)
         if logger:
-            logger.debug('Wrote weight images to fits data cube %r',weight_file_name)
+            logger.debug('file %d: Wrote weight images to fits data cube %r',
+                         config['file_num'],weight_file_name)
 
     if badpix_file_name:
         galsim.fits.writeCube(badpix_images, badpix_file_name)
         if logger:
-            logger.debug('Wrote badpix images to fits data cube %r',badpix_file_name)
+            logger.debug('file %d: Wrote badpix images to fits data cube %r',
+                         config['file_num'],badpix_file_name)
 
     t4 = time.time()
     return t4-t1
 
 def GetNObjForFits(config, file_num, image_num):
-    ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc' ]
+    ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc',
+               'skip', 'noclobber' ]
     galsim.config.CheckAllParams(config['output'], 'output', ignore=ignore)
     try : 
         nobj = [ galsim.config.GetNObjForImage(config, image_num) ]
@@ -721,17 +969,19 @@ def GetNObjForFits(config, file_num, image_num):
     return nobj
     
 def GetNObjForMultiFits(config, file_num, image_num):
-    ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc' ]
+    ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc', 
+               'skip', 'noclobber' ]
     req = { 'nimages' : int }
     # Allow nimages to be automatic based on input catalog if image type is Single
     if ( 'nimages' not in config['output'] and 
          ( 'image' not in config or 'type' not in config['image'] or 
            config['image']['type'] == 'Single' ) ):
-        nobj = ProcessInputNObjects(config)
+        nobjects = ProcessInputNObjects(config)
         if nobj:
-            config['output']['nimages'] = ProcessInputNObjects(config)
+            config['output']['nimages'] = nobjects
     params = galsim.config.GetAllParams(config['output'],'output',config,ignore=ignore,req=req)[0]
     config['seq_index'] = file_num
+    config['file_num'] = file_num
     nimages = params['nimages']
     try :
         nobj = [ galsim.config.GetNObjForImage(config, image_num+j) for j in range(nimages) ]
@@ -741,17 +991,19 @@ def GetNObjForMultiFits(config, file_num, image_num):
     return nobj
 
 def GetNObjForDataCube(config, file_num, image_num):
-    ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc' ]
+    ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc',
+               'skip', 'noclobber' ]
     req = { 'nimages' : int }
     # Allow nimages to be automatic based on input catalog if image type is Single
     if ( 'nimages' not in config['output'] and 
          ( 'image' not in config or 'type' not in config['image'] or 
            config['image']['type'] == 'Single' ) ):
-        nobj = ProcessInputNObjects(config)
+        nobjects = ProcessInputNObjects(config)
         if nobj:
-            config['output']['nimages'] = ProcessInputNObjects(config)
+            config['output']['nimages'] = nobjects
     params = galsim.config.GetAllParams(config['output'],'output',config,ignore=ignore,req=req)[0]
     config['seq_index'] = file_num
+    config['file_num'] = file_num
     nimages = params['nimages']
     try :
         nobj = [ galsim.config.GetNObjForImage(config, image_num+j) for j in range(nimages) ]

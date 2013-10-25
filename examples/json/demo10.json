@@ -168,10 +168,7 @@
     "#" : "In this case, we need to define where the real galaxy input catalog is.",
     "real_catalog" : {
         "dir" : "data",
-        "file_name" : "real_galaxy_catalog_example.fits",
-
-        "#" : "Not so important this time, since only using 5 items in the catalog.",
-        "preload" : false  
+        "file_name" : "real_galaxy_catalog_example.fits"
     },
 
     "#" : "We also initialize the power spectrum here.",

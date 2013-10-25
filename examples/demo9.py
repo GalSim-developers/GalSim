@@ -47,7 +47,6 @@ New features introduced in this demo:
 
 import sys
 import os
-import subprocess
 import math
 import numpy
 import logging

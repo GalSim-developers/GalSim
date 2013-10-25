@@ -42,25 +42,42 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
 
     @return (images, psf_images, weight_images, badpix_images)  (All in tuple are lists)
     """
+    if logger:
+        logger.debug('file %d: BuildImages nimages = %d: image, obj = %d,%d',
+                      config['file_num'],nimages,image_num,obj_num)
+
     import time
     def worker(input, output):
-        for (kwargs, config, image_num, obj_num, nim, info) in iter(input.get, 'STOP'):
-            results = []
-            # Make new copies of config and kwargs so we can update them without
-            # clobbering the versions for other tasks on the queue.
-            import copy
-            kwargs1 = copy.copy(kwargs)
-            config1 = copy.deepcopy(config)
-            for i in range(nim):
-                t1 = time.time()
-                kwargs1['config'] = config1
-                kwargs1['image_num'] = image_num + i
-                kwargs1['obj_num'] = obj_num
-                im = BuildImage(**kwargs1)
-                obj_num += galsim.config.GetNObjForImage(config, image_num+i)
-                t2 = time.time()
-                results.append( [im[0], im[1], im[2], im[3], t2-t1 ] )
-            output.put( (results, info, current_process().name) )
+        proc = current_process().name
+        for job in iter(input.get, 'STOP'):
+            try :
+                (kwargs, image_num, obj_num, nim, info, logger) = job
+                if logger:
+                    logger.debug('%s: Received job to do %d images, starting with %d',
+                                proc,nim,image_num)
+                results = []
+                for k in range(nim):
+                    t1 = time.time()
+                    kwargs['image_num'] = image_num + k
+                    kwargs['obj_num'] = obj_num
+                    kwargs['logger'] = logger
+                    im = BuildImage(**kwargs)
+                    obj_num += galsim.config.GetNObjForImage(kwargs['config'], image_num+k)
+                    t2 = time.time()
+                    results.append( [im[0], im[1], im[2], im[3], t2-t1 ] )
+                    ys, xs = im[0].array.shape
+                    if logger:
+                        logger.info('%s: Image %d: size = %d x %d, time = %f sec', 
+                                    proc, image_num+k, xs, ys, t2-t1)
+                output.put( (results, info, proc) )
+                if logger:
+                    logger.debug('%s: Finished job %d -- %d',proc,image_num,image_num+nim-1)
+            except Exception as e:
+                import traceback
+                tr = traceback.format_exc()
+                if logger:
+                    logger.debug('%s: Caught exception %s\n%s',proc,str(e),tr)
+                output.put( (e, info, tr) )
     
     # The kwargs to pass to BuildImage
     kwargs = {
@@ -68,7 +85,6 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
         'make_weight_image' : make_weight_image,
         'make_badpix_image' : make_badpix_image
     }
-    # Apparently the logger isn't picklable, so can't send that as an arg.
 
     if nproc > nimages:
         if logger:
@@ -97,6 +113,7 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
  
     if nproc > 1:
         from multiprocessing import Process, Queue, current_process
+        from multiprocessing.managers import BaseManager
 
         # Initialize the images list to have the correct size.
         # This is important here, since we'll be getting back images in a random order,
@@ -113,30 +130,44 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
         # Shoot for gemoetric mean of these two.
         max_nim = nimages / nproc
         min_nim = 1
-        #print 'gal' in config
         if ( ('image' not in config or 'type' not in config['image'] or 
                  config['image']['type'] == 'Single') and
              'gal' in config and isinstance(config['gal'],dict) and 'type' in config['gal'] and
              config['gal']['type'] == 'Ring' and 'num' in config['gal'] ):
             min_nim = galsim.config.ParseValue(config['gal'], 'num', config, int)[0]
-            #print 'Found ring: num = ',min_nim
+            if logger:
+                logger.debug('file %d: Found ring: num = %d',config['file_num'],min_nim)
         if max_nim < min_nim: 
             nim_per_task = min_nim
         else:
             import math
             # This formula keeps nim a multiple of min_nim, so Rings are intact.
             nim_per_task = min_nim * int(math.sqrt(float(max_nim) / float(min_nim)))
-        #print 'nim_per_task = ',nim_per_task
+        if logger:
+            logger.debug('file %d: nim_per_task = %d',config['file_num'],nim_per_task)
+
+        # The logger is not picklable, se we set up a proxy object.  See comments in process.py
+        # for more details about how this works.
+        class LoggerManager(BaseManager): pass
+        if logger:
+            logger_generator = galsim.utilities.SimpleGenerator(logger)
+            LoggerManager.register('logger', callable = logger_generator)
+            logger_manager = LoggerManager()
+            logger_manager.start()
 
         # Set up the task list
         task_queue = Queue()
         for k in range(0,nimages,nim_per_task):
-            # Send kwargs, config, im_num, nim, k
-            if k + nim_per_task > nimages:
-                task_queue.put( ( kwargs, config, image_num+k, obj_num, nimages-k, k ) )
+            import copy
+            kwargs1 = copy.copy(kwargs)
+            kwargs1['config'] = galsim.config.CopyConfig(config)
+            if logger:
+                logger_proxy = logger_manager.logger()
             else:
-                task_queue.put( ( kwargs, config, image_num+k, obj_num, nim_per_task, k ) )
-            for i in range(nim_per_task):
+                logger_proxy = None
+            nim1 = min(nim_per_task, nimages-k)
+            task_queue.put( ( kwargs1, image_num+k, obj_num, nim1, k, logger_proxy ) )
+            for i in range(nim1):
                 obj_num += galsim.config.GetNObjForImage(config, image_num+k+i)
 
         # Run the tasks
@@ -153,22 +184,29 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
         # In the meanwhile, the main process keeps going.  We pull each set of images off of the 
         # done_queue and put them in the appropriate place in the lists.
         # This loop is happening while the other processes are still working on their tasks.
-        # You'll see that these logging statements get print out as the stamp images are still 
+        # You'll see that these logging statements get printed out as the stamp images are still 
         # being drawn.  
         for i in range(0,nimages,nim_per_task):
-            results, k, proc = done_queue.get()
+            results, k0, proc = done_queue.get()
+            if isinstance(results,Exception):
+                # results is really the exception, e
+                # proc is really the traceback
+                if logger:
+                    logger.error('Exception caught during job starting with image %d', k0)
+                    logger.error('%s',proc)
+                    logger.error('Aborting the rest of this file')
+                for j in range(nproc):
+                    p_list[j].terminate()
+                raise results
+            k = k0
             for result in results:
                 images[k] = result[0]
                 psf_images[k] = result[1]
                 weight_images[k] = result[2]
                 badpix_images[k] = result[3]
-                if logger:
-                    # Note: numpy shape is y,x
-                    ys, xs = result[0].array.shape
-                    t = result[4]
-                    logger.info('%s: Image %d: size = %d x %d, time = %f sec', 
-                                proc, image_num+k, xs, ys, t)
                 k += 1
+            if logger:
+                logger.debug('%s: Successfully returned results for images %d--%d', proc, k0, k-1)
 
         # Stop the processes
         # The 'STOP's could have been put on the task list before starting the processes, or you
@@ -210,7 +248,8 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
             obj_num += galsim.config.GetNObjForImage(config, image_num+k)
 
     if logger:
-        logger.debug('Done making images')
+        logger.debug('file %d: Done making images %d--%d',config['file_num'],
+                     image_num,image_num+nimages-1)
 
     return images, psf_images, weight_images, badpix_images
  
@@ -233,6 +272,10 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0,
     Note: All 4 images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.
     """
+    if logger:
+        logger.debug('image %d: BuildImage: image, obj = %d,%d',
+                      image_num,image_num,obj_num)
+
     # Make config['image'] exist if it doesn't yet.
     if 'image' not in config:
         config['image'] = {}
@@ -306,6 +349,10 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
           but the latter 3 might be None depending on the parameters make_*_image.    
     """
     config['seq_index'] = image_num
+    config['image_num'] = image_num
+    if logger:
+        logger.debug('image %d: BuildSingleImage: image, obj = %d,%d',
+                      config['image_num'],image_num,obj_num)
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
                'n_photons', 'wmult', 'offset', 'gsparams' ]
@@ -317,18 +364,26 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
     convention = params.get('index_convention','1')
     _set_image_origin(config,convention)
 
-    # If image_xsize and image_ysize were set in config, this overrides the read-in params.
-    if 'image_xsize' in config and 'image_ysize' in config:
-        xsize = config['image_xsize']
-        ysize = config['image_ysize']
+    # If image_force_xsize and image_force_ysize were set in config, this overrides the 
+    # read-in params.
+    if 'image_force_xsize' in config and 'image_force_ysize' in config:
+        xsize = config['image_force_xsize']
+        ysize = config['image_force_ysize']
     else:
         size = params.get('size',0)
         xsize = params.get('xsize',size)
         ysize = params.get('ysize',size)
+    config['image_xsize'] = xsize
+    config['image_ysize'] = ysize
 
     if (xsize == 0) != (ysize == 0):
         raise AttributeError(
             "Both (or neither) of image.xsize and image.ysize need to be defined  and != 0.")
+
+    if 'sky_pos' in config['image']:
+        config['image']['image_pos'] = (0,0)
+        # We allow sky_pos to be in config[image], but we don't want it to lead to a final_shift
+        # in BuildSingleStamp.  The easiest way to do this is to set image_pos to (0,0).
 
     pixel_scale = params.get('pixel_scale',1.0)
     config['pixel_scale'] = pixel_scale
@@ -369,6 +424,10 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
           but the latter 3 might be None depending on the parameters make_*_image.    
     """
     config['seq_index'] = image_num
+    config['image_num'] = image_num
+    if logger:
+        logger.debug('image %d: BuildTiledImage: image, obj = %d,%d',
+                      config['image_num'],image_num,obj_num)
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
                'image_pos', 'n_photons', 'wmult', 'offset', 'gsparams' ]
@@ -383,10 +442,14 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     nx_tiles = params['nx_tiles']
     ny_tiles = params['ny_tiles']
     nobjects = nx_tiles * ny_tiles
+    config['nx_tiles'] = nx_tiles
+    config['ny_tiles'] = ny_tiles
 
     stamp_size = params.get('stamp_size',0)
     stamp_xsize = params.get('stamp_xsize',stamp_size)
     stamp_ysize = params.get('stamp_ysize',stamp_size)
+    config['tile_xsize'] = stamp_xsize
+    config['tile_ysize'] = stamp_ysize
 
     convention = params.get('index_convention','1')
     _set_image_origin(config,convention)
@@ -418,15 +481,17 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     full_xsize = (stamp_xsize + xborder) * nx_tiles - xborder
     full_ysize = (stamp_ysize + yborder) * ny_tiles - yborder
 
-    # If image_xsize and image_ysize were set in config, make sure it matches.
-    if ( 'image_xsize' in config and 'image_ysize' in config and
-         (full_xsize != config['image_xsize'] or full_ysize != config['image_ysize']) ):
+    # If image_force_xsize and image_force_ysize were set in config, make sure it matches.
+    if ( ('image_force_xsize' in config and full_xsize != config['image_force_xsize']) or
+         ('image_force_ysize' in config and full_ysize != config['image_force_ysize']) ):
         raise ValueError(
-            "Unable to reconcile saved image_xsize and image_ysize with provided "+
+            "Unable to reconcile required image xsize and ysize with provided "+
             "nx_tiles=%d, ny_tiles=%d, "%(nx_tiles,ny_tiles) +
             "xborder=%d, yborder=%d\n"%(xborder,yborder) +
             "Calculated full_size = (%d,%d) "%(full_xsize,full_ysize)+
-            "!= required (%d,%d)."%(config['image_xsize'],config['image_ysize']))
+            "!= required (%d,%d)."%(config['image_force_xsize'],config['image_force_ysize']))
+    config['image_xsize'] = full_xsize
+    config['image_ysize'] = full_ysize
 
     if 'pix' not in config:
         config['pix'] = { 'type' : 'Pixel' , 'xw' : pixel_scale }
@@ -434,39 +499,17 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     # Set the rng to use for image stuff.
     if 'random_seed' in config['image']:
         config['seq_index'] = obj_num+nobjects
+        config['obj_num'] = obj_num+nobjects
         # Technically obj_num+nobjects will be the index of the random seed used for the next 
         # image's first object (if there is a next image).  But I don't think that will have 
         # any adverse effects.
         seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        #print 'seed = ',seed
+        if logger:
+            logger.debug('image %d: seed = %d',image_num,seed)
         rng = galsim.BaseDeviate(seed)
     else:
         rng = galsim.BaseDeviate()
-
-    # If we have a power spectrum in config, we need to get a new realization at the start
-    # of each image.
-    if 'power_spectrum' in config:
-        input_ps = config['input']['power_spectrum']
-        if not isinstance(input_ps, list):
-            input_ps = [ input_ps ]
-
-        for i in range(len(config['power_spectrum'])):
-            # PowerSpectrum can only do a square FFT, so make it the larger of the two n's.
-            n_tiles = max(nx_tiles, ny_tiles)
-            stamp_size = max(stamp_xsize, stamp_ysize)
-            if 'grid_spacing' in input_ps[i]:
-                grid_dx = galsim.config.ParseValue(input_ps[i], 'grid_spacing', config, float)[0]
-            else:
-                grid_dx = stamp_size * pixel_scale
-            if 'interpolant' in input_ps[i]:
-                interpolant = galsim.config.ParseValue(input_ps[i], 'interpolant', config, str)[0]
-            else:
-                interpolant = None
-
-            config['power_spectrum'][i].buildGrid(grid_spacing=grid_dx, ngrid=n_tiles, rng=rng,
-                                                  interpolant=interpolant)
-        # We don't care about the output here.  This just builds the grid, which we'll
-        # access for each object using its position.
+    config['rng'] = rng
 
     # Make a list of ix,iy values according to the specified order:
     order = params.get('order','row').lower()
@@ -505,8 +548,9 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
     # Also define the overall image center, since we need that to calculate the position 
     # of each stamp relative to the center.
-    config['image_cen'] = full_image.bounds.trueCenter()
-    #print 'image_cen = ',full_image.bounds.trueCenter()
+    config['image_center'] = full_image.bounds.trueCenter()
+    if logger:
+        logger.debug('image %d: image_center = %s',config['image_num'],str(config['image_center']))
 
     if make_psf_image:
         full_psf_image = galsim.ImageF(full_xsize, full_ysize, scale=pixel_scale)
@@ -529,6 +573,22 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     else:
         full_badpix_image = None
 
+    # Sometimes an input field needs to do something special at the start of an image.
+    if 'input' in config:
+        for key in [ k for k in galsim.config.valid_input_types.keys() if k in config['input'] ]:
+            if galsim.config.valid_input_types[key][3]:
+                assert key in config
+                fields = config['input'][key]
+                if not isinstance(fields, list):
+                    fields = [ fields ]
+                input_objs = config[key]
+
+                for i in range(len(fields)):
+                    field = fields[i]
+                    input_obj = input_objs[i]
+                    func = eval(galsim.config.valid_input_types[key][3])
+                    func(input_obj, field, config)
+
     stamp_images = galsim.config.BuildStamps(
             nobjects=nobjects, config=config,
             nproc=nproc, logger=logger, obj_num=obj_num,
@@ -546,8 +606,12 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
     max_current_var = 0
     for k in range(nobjects):
-        #print 'full bounds = ',full_image.bounds
-        #print 'stamp bounds = ',images[k].bounds
+        # This is our signal that the object was skipped.
+        if not images[k].bounds.isDefined(): continue
+        if False:
+            logger.debug('image %d: full bounds = %s',config['image_num'],str(full_image.bounds))
+            logger.debug('image %d: stamp %d bounds = %s',
+                         config['image_num'],k,str(images[k].bounds))
         assert full_image.bounds.includes(images[k].bounds)
         b = images[k].bounds
         full_image[b] += images[k]
@@ -616,18 +680,21 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
           but the latter 3 might be None depending on the parameters make_*_image.    
     """
     config['seq_index'] = image_num
+    config['image_num'] = image_num
+    if logger:
+        logger.debug('image %d: BuildScatteredImage: image, obj = %d,%d',
+                      config['image_num'],image_num,obj_num)
+
+    nobjects = GetNObjForScatteredImage(config,image_num)
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
                'image_pos', 'sky_pos', 'n_photons', 'wmult', 'offset',
-               'stamp_size', 'stamp_xsize', 'stamp_ysize', 'gsparams' ]
-    req = { 'nobjects' : int }
+               'stamp_size', 'stamp_xsize', 'stamp_ysize', 'gsparams', 'nobjects' ]
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 
             'pixel_scale' : float , 'nproc' : int , 'index_convention' : str,
             'sky_level' : float , 'sky_level_pixel' : float }
     params = galsim.config.GetAllParams(
-        config['image'], 'image', config, req=req, opt=opt, ignore=ignore)[0]
-
-    nobjects = params['nobjects']
+        config['image'], 'image', config, opt=opt, ignore=ignore)[0]
 
     # Special check for the size.  Either size or both xsize and ysize is required.
     if 'size' not in params:
@@ -659,54 +726,32 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     if 'sky_level' in params:
         sky_level_pixel = params['sky_level'] * pixel_scale**2
 
-    # If image_xsize and image_ysize were set in config, make sure it matches.
-    if ( 'image_xsize' in config and 'image_ysize' in config and
-         (full_xsize != config['image_xsize'] or full_ysize != config['image_ysize']) ):
+    # If image_force_xsize and image_force_ysize were set in config, make sure it matches.
+    if ( ('image_force_xsize' in config and full_xsize != config['image_force_xsize']) or
+         ('image_force_ysize' in config and full_ysize != config['image_force_ysize']) ):
         raise ValueError(
-            "Unable to reconcile saved image_xsize and image_ysize with provided "+
+            "Unable to reconcile required image xsize and ysize with provided "+
             "xsize=%d, ysize=%d, "%(full_xsize,full_ysize))
+    config['image_xsize'] = full_xsize
+    config['image_ysize'] = full_ysize
 
     if 'pix' not in config:
         config['pix'] = { 'type' : 'Pixel' , 'xw' : pixel_scale }
 
     # Set the rng to use for image stuff.
     if 'random_seed' in config['image']:
-        #print 'random_seed = ',config['image']['random_seed']
         config['seq_index'] = obj_num+nobjects
-        #print 'seq_index = ',config['seq_index']
+        config['obj_num'] = obj_num+nobjects
         # Technically obj_num+nobjects will be the index of the random seed used for the next 
         # image's first object (if there is a next image).  But I don't think that will have 
         # any adverse effects.
         seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        #print 'seed = ',seed
+        if logger:
+            logger.debug('image %d: seed = %d',image_num,seed)
         rng = galsim.BaseDeviate(seed)
     else:
         rng = galsim.BaseDeviate()
-
-    # If we have a power spectrum in config, we need to get a new realization at the start
-    # of each image.
-    if 'power_spectrum' in config:
-        input_ps = config['input']['power_spectrum']
-        if not isinstance(input_ps, list):
-            input_ps = [ input_ps ]
-
-        for i in range(len(config['power_spectrum'])):
-            # PowerSpectrum can only do a square FFT, so make it the larger of the two sizes.
-            if 'grid_spacing' not in input_ps[i]:
-                raise AttributeError(
-                    "power_spectrum.grid_spacing required for image.type=Scattered")
-            grid_dx = galsim.config.ParseValue(input_ps[i], 'grid_spacing', config, float)[0]
-            full_size = max(full_xsize, full_ysize)
-            grid_nx = full_size * pixel_scale / grid_dx + 1
-            if 'interpolant' in input_ps[i]:
-                interpolant = galsim.config.ParseValue(input_ps[i], 'interpolant', config, str)[0]
-            else:
-                interpolant = None
-
-            config['power_spectrum'][i].buildGrid(grid_spacing=grid_dx, ngrid=grid_nx, rng=rng,
-                                                  interpolant=interpolant)
-        # We don't care about the output here.  This just builds the grid, which we'll
-        # access for each object using its position.
+    config['rng'] = rng
 
     if 'image_pos' in config['image'] and 'sky_pos' in config['image']:
         raise AttributeError("Both image_pos and sky_pos specified for Scattered image.")
@@ -730,8 +775,9 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     # Also define the overall image center, since we need that to calculate the position 
     # of each stamp relative to the center.
-    config['image_cen'] = full_image.bounds.trueCenter()
-    #print 'image_cen = ',full_image.bounds.trueCenter()
+    config['image_center'] = full_image.bounds.trueCenter()
+    if logger:
+        logger.debug('image %d: image_center = %s',config['image_num'],str(config['image_center']))
 
     if make_psf_image:
         full_psf_image = galsim.ImageF(full_xsize, full_ysize, scale=pixel_scale)
@@ -754,8 +800,24 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     else:
         full_badpix_image = None
 
+    # Sometimes an input field needs to do something special at the start of an image.
+    if 'input' in config:
+        for key in [ k for k in galsim.config.valid_input_types.keys() if k in config['input'] ]:
+            if galsim.config.valid_input_types[key][3]:
+                assert key in config
+                fields = config['input'][key]
+                if not isinstance(fields, list):
+                    fields = [ fields ]
+                input_objs = config[key]
+
+                for i in range(len(fields)):
+                    field = fields[i]
+                    input_obj = input_objs[i]
+                    func = eval(galsim.config.valid_input_types[key][3])
+                    func(input_obj, field, config)
+
     stamp_images = galsim.config.BuildStamps(
-            nobjects=nobjects, config=config, 
+            nobjects=nobjects, config=config,
             nproc=nproc, logger=logger,obj_num=obj_num,
             sky_level_pixel=sky_level_pixel, do_noise=False,
             make_psf_image=make_psf_image,
@@ -770,12 +832,14 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     max_current_var = 0.
     for k in range(nobjects):
+        # This is our signal that the object was skipped.
+        if not images[k].bounds.isDefined(): continue
         bounds = images[k].bounds & full_image.bounds
-        #print 'stamp bounds = ',images[k].bounds
-        #print 'full bounds = ',full_image.bounds
-        #print 'Overlap = ',bounds
-        #print 'stamp scale = ',images[k].scale
-        #print 'full scale = ',full_image.scale
+        if False:
+            logger.debug('image %d: full bounds = %s',config['image_num'],str(full_image.bounds))
+            logger.debug('image %d: stamp %d bounds = %s',
+                         config['image_num'],k,str(images[k].bounds))
+            logger.debug('image %d: Overlap = %s',config['image_num'],str(bounds))
         if bounds.isDefined():
             full_image[bounds] += images[k][bounds]
             if make_psf_image:
@@ -853,21 +917,22 @@ def GetNObjForSingleImage(config, image_num):
 def GetNObjForScatteredImage(config, image_num):
 
     config['seq_index'] = image_num
+    config['image_num'] = image_num
 
     # Allow nobjects to be automatic based on input catalog
     if 'nobjects' not in config['image']:
-        nobj = ProcessInputNObjects(config)
-        if nobj:
-            config['image']['nobjects'] = nobj
-            return nobj
-        else:
+        nobj = galsim.config.ProcessInputNObjects(config)
+        if nobj is None:
             raise AttributeError("Attribute nobjects is required for image.type = Scattered")
+        return nobj
     else:
-        return galsim.config.ParseValue(config['image'],'nobjects',config,int)[0]
+        nobj = galsim.config.ParseValue(config['image'],'nobjects',config,int)[0]
+        return nobj
 
 def GetNObjForTiledImage(config, image_num):
     
     config['seq_index'] = image_num
+    config['image_num'] = image_num
 
     if 'nx_tiles' not in config['image'] or 'ny_tiles' not in config['image']:
         raise AttributeError(
@@ -875,5 +940,34 @@ def GetNObjForTiledImage(config, image_num):
     nx = galsim.config.ParseValue(config['image'],'nx_tiles',config,int)[0]
     ny = galsim.config.ParseValue(config['image'],'ny_tiles',config,int)[0]
     return nx*ny
+
+def PowerSpectrumInit(ps, config, base):
+    if 'grid_spacing' in config:
+        grid_spacing = galsim.config.ParseValue(config, 'grid_spacing', base, float)[0]
+    elif 'tile_xsize' in base:
+        # Then we have a tiled image.  Can use the tile spacing as the grid spacing.
+        stamp_size = min(base['tile_xsize'], base['tile_ysize'])
+        grid_spacing = stamp_size * base['pixel_scale']
+    else:
+        raise AttributeError("power_spectrum.grid_spacing required for non-tiled images")
+
+    if 'tile_xsize' in base and base['tile_xsize'] == base['tile_ysize']:
+        # PowerSpectrum can only do a square FFT, so make it the larger of the two n's.
+        ngrid = max(base['nx_tiles'], base['ny_tiles'])
+        # Normally that's good, but if tiles aren't square, need to drop through to the
+        # second option.
+    else:
+        import math
+        image_size = max(base['image_xsize'], base['image_ysize'])
+        ngrid = int(math.ceil(image_size * base['pixel_scale'] / grid_spacing))
+
+    if 'interpolant' in config:
+        interpolant = galsim.config.ParseValue(config, 'interpolant', base, str)[0]
+    else:
+        interpolant = None
+
+    # We don't care about the output here.  This just builds the grid, which we'll
+    # access for each object using its position.
+    ps.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid, rng=base['rng'], interpolant=interpolant)
 
 

@@ -124,6 +124,8 @@ def main(argv):
         print 'Catalog has ',nobj,' objects'
 
         for k in range(nobj):
+            sys.stdout.write('.')
+            sys.stdout.flush()
             # The usual random number generator using a different seed for each galaxy.
             # I'm not actually using the rng for object creation (everything comes from the
             # input files), but the rng that matches the config version is here just in case.
@@ -135,15 +137,16 @@ def main(argv):
 
             # Get the position from the galaxy catalog
             x = cat.getFloat(k,x_col)
-            y = cat.getFloat(k,y_col)
-            ix = int(math.floor(x+0.5))
+            y = cat.getFloat(k,y_col) 
+            image_pos = galsim.PositionD(x,y)
+            #print '    pos = ',image_pos
+            x += 0.5   # + 0.5 to account for even-size postage stamps
+            y += 0.5
+            ix = int(math.floor(x+0.5))  # round to nearest pixel
             iy = int(math.floor(y+0.5))
             dx = x-ix
             dy = y-iy
-            image_pos = galsim.PositionD(x,y)
-            #print '    pos = ',image_pos
-            sys.stdout.write('.')
-            sys.stdout.flush()
+            offset = galsim.PositionD(dx,dy)
 
             # Also get the flux of the galaxy from the catalog
             flux = cat.getFloat(k,flux_col)
@@ -160,11 +163,8 @@ def main(argv):
                 # Make the final image, convolving with pix
                 final = galsim.Convolve([pix,psf])
 
-                # Apply partial-pixel shift 
-                final.applyShift(dx*pixel_scale,dy*pixel_scale)
-
                 # Draw the postage stamp image
-                stamp = final.draw(dx=pixel_scale)
+                stamp = final.draw(dx=pixel_scale, offset=offset)
 
                 # Recenter the stamp at the desired position:
                 stamp.setCenter(ix,iy)
@@ -194,11 +194,8 @@ def main(argv):
                 # Make the final image, convolving with pix
                 final = galsim.Convolve([pix,psf])
 
-                # Apply partial-pixel shift 
-                final.applyShift(dx*pixel_scale,dy*pixel_scale)
-
                 # Draw the postage stamp image
-                stamp = final.draw(dx=pixel_scale)
+                stamp = final.draw(dx=pixel_scale, offset=offset)
 
                 # Recenter the stamp at the desired position:
                 stamp.setCenter(ix,iy)
@@ -232,6 +229,9 @@ def main(argv):
         print 'Wrote images to %s and %s'%(
                 os.path.join(out_dir,psfex_image_file),
                 os.path.join(out_dir,fitpsf_image_file))
+
+        # Increment the random seed by the number of objects in the file
+        random_seed += nobj
 
 if __name__ == "__main__":
     import sys

@@ -122,7 +122,7 @@ def parse_args():
             help=('type of config_file: yaml or json are currently supported. ' +
                   '[default is to automatically determine the type from the extension]'))
         parser.add_option(
-            '-m', '--module', type=str, action='store', default=None, 
+            '-m', '--module', type=str, action='append', default=None, 
             help='python module to import before parsing config file')
         parser.add_option(
             '--version', action='store_const', default=False, const=True,
@@ -180,12 +180,13 @@ def main():
         logger.debug('File type specified to be %s', args.file_type)
 
     for config_file in args.config_file:
-        logger.info('Using config file %s', config_file)
+        logger.warn('Using config file %s', config_file)
     
         if args.file_type == 'yaml':
             import yaml
 
-            all_config = [ c for c in yaml.load_all(open(config_file).read()) ]
+            with open(config_file) as f:
+                all_config = [ c for c in yaml.load_all(f.read()) ]
 
             # If there is only 1 yaml document, then it is of course used for the configuration.
             # If there are multiple yaml documents, then the first one defines a common starting
@@ -208,7 +209,8 @@ def main():
         else:
             import json
 
-            config = json.load(open(config_file))
+            with open(config_file) as f:
+                config = json.load(f)
 
             # JSON files are just processed as is.  This is equivalent to having an empty 
             # base_config, so we just do that and use the same structure.
