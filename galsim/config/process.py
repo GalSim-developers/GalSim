@@ -763,7 +763,7 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
     config['file_num'] = file_num
     if logger:
         logger.debug('file %d: BuildMultiFits for %s: file, image, obj = %d,%d,%d',
-                      config['file_num'],fiel_name,file_num,image_num,obj_num)
+                      config['file_num'],file_name,file_num,image_num,obj_num)
 
     if psf_file_name:
         make_psf_image = True
