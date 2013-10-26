@@ -52,9 +52,7 @@ namespace galsim {
     struct LRUCacheHelper<Value,boost::tuple<Key1> >
     {
         static Value* NewValue(const boost::tuple<Key1>& key)
-        { 
-            return new Value(boost::get<0>(key)); 
-        }
+        { return new Value(boost::get<0>(key)); }
     };
 
     template <typename Value, typename Key1, typename Key2>
@@ -64,7 +62,6 @@ namespace galsim {
         { return new Value(boost::get<0>(key), boost::get<1>(key)); }
     };
 
-    // Special first few tuple cases
     template <typename Value, typename Key1, typename Key2, typename Key3>
     struct LRUCacheHelper<Value,boost::tuple<Key1,Key2,Key3> >
     {
@@ -72,7 +69,6 @@ namespace galsim {
         { return new Value(boost::get<0>(key), boost::get<1>(key), boost::get<2>(key)); }
     };
 
-    // Special first few tuple cases
     template <typename Value, typename Key1, typename Key2, typename Key3, typename Key4>
     struct LRUCacheHelper<Value,boost::tuple<Key1,Key2,Key3,Key4> >
     {
@@ -116,63 +112,41 @@ namespace galsim {
          *
          * @param[in] nmax  How many values to save in the cache.
          */
-        LRUCache(size_t nmax) : _nmax(nmax) 
-        {
-            //std::cout<<"New LRUCache "<<this<<" with nmax = "<<_nmax<<std::endl;
-        }
+        LRUCache(size_t nmax) : _nmax(nmax) {}
 
         /**
          * @brief Destructor
          *
          * Delete all items stored in the cache.
          */
-        ~LRUCache() {
-            //std::cout<<"Delete LRUCache "<<this<<std::endl;
-            clear(); 
-        }
-
-        void clear() 
-        { _cache.clear(); _entries.clear(); }
+        ~LRUCache() {}
 
         boost::shared_ptr<Value> get(const Key& key)
         {
-            //std::cout<<"LRUCache "<<this<<": get Key "<<&key<<std::endl;
-            //std::cout<<"cache has "<<_cache.size()<<" items\n";
-            //std::cout<<"entries has "<<_entries.size()<<" items\n";
             assert(_entries.size() == _cache.size());
             MapIter iter = _cache.find(key);
             if (iter != _cache.end()) {
-                //std::cout<<"Found key in cache"<<std::endl;
-                //std::cout<<"value = "<<iter->second->second.get()<<std::endl;
                 // Item is cached.
                 // Move it to the front of the list.
                 if (iter != _cache.begin()) 
                     _entries.splice(_entries.begin(), _entries, iter->second);
-                //std::cout<<"Moved key to front\n";
                 // Return the item's value
                 assert(_entries.size() == _cache.size());
                 return iter->second->second;
             } else {
-                //std::cout<<"key not in cache yet"<<std::endl;
                 // Item is not cached.
                 // Make a new one.
                 boost::shared_ptr<Value> value(LRUCacheHelper<Value,Key>::NewValue(key));
-                //std::cout<<"Made new value "<<value.get()<<std::endl;
                 // Remove items from the cache as necessary.
                 while (_entries.size() >= _nmax) {
-                    //std::cout<<"Erasing element from back"<<std::endl;
                     bool erased = _cache.erase(_entries.back().first);
-                    //std::cout<<"erased from _cache: "<<erased<<std::endl;
                     assert(erased);
                     _entries.pop_back();
-                    //std::cout<<"erased from _entries"<<std::endl;
                 }
                 // Add the new value to the front.
                 _entries.push_front(Entry(key,value));
-                //std::cout<<"Added new entry to front of list"<<std::endl;
                 // Also put it in the cache
                 _cache[key] = _entries.begin();
-                //std::cout<<"Added new entry to cache"<<std::endl;
                 // Return the new value
                 assert(_entries.size() == _cache.size());
                 return value;
