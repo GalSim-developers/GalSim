@@ -22,8 +22,8 @@ development.
 Distribution
 ------------
 
-## WARNING: The following is now strictly true yet.  It will be when the 
-            version 1.0 release is complete.
+## WARNING: The following is not strictly true yet.  It will be when the 
+##          version 1.0 release is complete.
 
 The current released version of GalSim is version 1.0.  To get the code, you 
 can grab the tarball (or zip file) from
