@@ -7,20 +7,40 @@ GalSim is open-source software for simulating images of astronomical objects
 (stars, galaxies) in a variety of ways.  The bulk of the calculations are
 carried out in C++, and the user interface is in python.  In addition, the code
 can operate directly on "config" files, for those users who prefer not to work
-in python.  The code is being developed as a collaborative project for the
-upcoming weak lensing community data challenge, GREAT3
-(http://great3challenge.info/), though it has additional capabilities beyond
-those needed for the challenge.  At the end of this file, there is a list of 
-the code capabilities and plans for future development.
+in python.  The impetus for the software package was a weak lensing community
+data challenge, called GREAT3:
+
+    http://great3challenge.info/
+    
+However, the code has numerous  additional capabilities beyond those needed for 
+the challenge, and has been useful for a number of projects that needed to 
+simulate high-fidelity galaxy images with accurate sizes and shears.  At the 
+end of this file, there is a list of the code capabilities and plans for future 
+development.
 
 
 Distribution
 ------------
 
-Please feel free to fork this repository at any time.  However, please be aware
-that the code is still actively being developed and tested (hence the current
-version number is below 1.0).  The release of v1.0 in late 2013 will be
-accompanied with a publication that users should cite.
+## WARNING: The following is now strictly true yet.  It will be when the 
+            version 1.0 release is complete.
+
+The current released version of GalSim is version 1.0.  To get the code, you 
+can grab the tarball (or zip file) from
+
+    https://github.com/GalSim-developers/GalSim/releases/tag/v1.0
+
+Also, feel free to fork the repository:
+
+    https://github.com/GalSim-developers/GalSim/fork
+
+Or clone the master branch with either of the following:
+
+    git clone git@github.com:GalSim-developers/GalSim.git
+    git clone https://github.com/GalSim-developers/GalSim.git
+
+The code is also distributed via Fink, Macports, and Homebrea for Mac users.
+See INSTALL.md for more information.
 
 
 Keeping up-to-date with GalSim
@@ -53,7 +73,7 @@ How to communicate with the GalSim developers
 If you have any comments, questions, or suggestions, please open up an Issue on
 our GitHub repository:
 
-https://github.com/GalSim-developers/GalSim/issues?state=open
+    https://github.com/GalSim-developers/GalSim/issues?state=open
 
 Alternatively, if you prefer e-mail, then you can find contact information on
 the GREAT3 webpage linked above.
@@ -84,7 +104,7 @@ Getting started
   main repository directory to specify all doxygen settings.  Alternatively,
   you can view the documentation online at
 
-  http://galsim-developers.github.com/GalSim/
+      http://galsim-developers.github.com/GalSim/
 
 
 Reference documentation
@@ -95,7 +115,7 @@ For an overview of GalSim workflow and python tools, please see
 the configuration files to generate simulations, a FAQ for installation issues,
 and other useful references can be found on the GalSim wiki,
 
-https://github.com/GalSim-developers/GalSim/wiki
+    https://github.com/GalSim-developers/GalSim/wiki
 
 More thorough documentation for all parts of the code can be found in the
 doxygen documentation mentioned in the previous section, or in the python
@@ -181,7 +201,7 @@ at a terminal from within the repository.
 The version of the code at any given snapshot can be downloaded from our
 GitHub webpage, or checked out from the repository using the tag name, e.g.:
 
-    $ git checkout v0.2
+    $ git checkout v1.0
 
 This will then update your directory tree to the snapshot of the code at the 
 milestone requested.  (You will also get a message about being in a "detached" 
@@ -198,37 +218,44 @@ Summary of current capabilities
 
 Currently, GalSim has the following capabilities:
 
-* Can generate PSFs from a variety of simple parametric models and first-order
-  optics.
+* Can generate PSFs from a variety of simple parametric models such as Moffat,
+  Kolmogorov, and Airy, as well as an optical PSF model that includes Zernike
+  aberrations up to spherical, and an optional central obscruration and 
+  struts.
 
-* Can simulate galaxies from a variety of simple parametric models and based on
-  HST training data.  Some additional testing will be done in future versions 
-  to ensure that the treatment of the latter is sufficiently accurate to use 
-  for precision tests of shear.
+* Can simulate galaxies from a variety of simple parametric models as well as
+  from real HST data.  For information about downloading a suite of COSMOS 
+  images, see
 
-* Can make the images either via i) Fourier transform / real-space convolution 
-  (real-space being occasionally faster than Fourier), and interpolation (for 
-  shearing); or via ii) photon-shooting.  The exception is that simulations 
-  based on real galaxies images must be carried out using Fourier methods only.
+      https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data
 
-* Can add uncorrelated noise using a variety of noise models.
+* Can make the images either via i) Fourier transform, ii) real-space 
+  convolution (real-space being occasionally faster than Fourier), or 
+  iii) photon-shooting.  The exception is that object that include a 
+  deconvolution (such as RealGalaxy objects) must be carried out using Fourier 
+  methods only.
+
+* Can apply shear, magnification, dilation, or rotation to a galaxy profile
+  including lensing-based models from a power spectrum or NFW halo profile.
 
 * Can draw galaxy images into arbitrary locations within a larger image.
 
-* It is possible to carry out nearly any simulation that a user might want 
-  using two parallel methods: directly using python code, or by specifying the
-  simulation properties in an input configuration script.
+* Can add noise using a variety of noise models, including correlated noise.
 
-* Constant shears and lensing magnifications can be applied to the galaxies.
+* Can whiten existing correlated noise that is already in an image.
 
-* Non-constant shears and magnifications can be drawn from a shear field
-  expected for an NFW profile dark matter halo (as for weak lensing by galaxy
-  clusters).  For gridded galaxy positions, lensing shears can be drawn 
-  randomly from a specified shear power spectrum, and they can then be 
-  interpolated to non-gridded positions.
+* Can read in input values from a catalog, a dictionary file (such as a JSON
+  or YAML file), or a fits header.
 
-* Simulating correlated Gaussian noise fields as according to user-specified,
-  correlation functions derived from images.
+* Can write images in a variety of formats: regular FITS files, FITS data
+  cubes, or multi-extension FITS files.  It can also compress the output files
+  using various compressions including gzip, bzip2, and rice.
+
+* Can carry out nearly any simulation that a user might want using two parallel 
+  methods: directly using python code, or by specifying the simulation 
+  properties in an input configuration script.  See the demo scripts in 
+  the examples directory for examples of each.
+
 
 
 Summary of planned future development
@@ -238,6 +265,21 @@ In addition to carrying out further testing on some existing parts of the code,
 we plan to add the following additional capabilities in future versions of
 GalSim:
 
-* PSFs from stochastic atmosphere models.
+* Support for generic world coordinate systems (WCS).  (cf. Issue #364)
 
-* Simulating simple detector defects or image artifacts.
+* PSFs from stochastic atmosphere models.  (cf. devel/modules/atmos_factfinding.pdf)
+
+* Simulating simple detector defects or image artifacts. 
+
+* Support for flexion.  (cf. Issue #361)
+
+* Support for chromatic effects.  (cf. Issue #467)
+
+There are many others as well.  Please see 
+
+    https://github.com/GalSim-developers/GalSim/issues
+
+for a list of the current open issues.  And feel free to add an issue if there
+is something useful that you think should be possible, but is not currently
+implemented.
+
