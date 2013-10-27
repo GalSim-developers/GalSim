@@ -977,7 +977,7 @@ def GetNObjForMultiFits(config, file_num, image_num):
          ( 'image' not in config or 'type' not in config['image'] or 
            config['image']['type'] == 'Single' ) ):
         nobjects = ProcessInputNObjects(config)
-        if nobj:
+        if nobjects:
             config['output']['nimages'] = nobjects
     params = galsim.config.GetAllParams(config['output'],'output',config,ignore=ignore,req=req)[0]
     config['seq_index'] = file_num
@@ -999,7 +999,7 @@ def GetNObjForDataCube(config, file_num, image_num):
          ( 'image' not in config or 'type' not in config['image'] or 
            config['image']['type'] == 'Single' ) ):
         nobjects = ProcessInputNObjects(config)
-        if nobj:
+        if nobjects:
             config['output']['nimages'] = nobjects
     params = galsim.config.GetAllParams(config['output'],'output',config,ignore=ignore,req=req)[0]
     config['seq_index'] = file_num
