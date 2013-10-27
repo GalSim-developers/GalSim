@@ -49,6 +49,11 @@ namespace galsim {
             if (scale_radius.ptr() != Py_None) {
                 s = bp::extract<double>(scale_radius);
             }
+            // Duplicate the GSParams object.  Otherwise, the original gsparams constructed
+            // in the python layer might be garbage collected before the LRUCache is cleaned
+            // up, which can lead to segmentation faults.  cf. Isue #455.
+            if (gsparams.get())
+                gsparams.reset(new GSParams(*gsparams));
             return new SBExponential(s, flux, gsparams);
         }
 
