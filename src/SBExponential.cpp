@@ -72,7 +72,7 @@ namespace galsim {
         double r0, double flux, const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
         _flux(flux), _r0(r0), _r0_sq(_r0*_r0), _inv_r0(1./r0), _inv_r0_sq(_inv_r0*_inv_r0),
-        _info(cache.get(this->gsparams))
+        _info(cache.get(this->gsparams.duplicate()))
     {
         // For large k, we clip the result of kValue to 0.
         // We do this when the correct answer is less than kvalue_accuracy.

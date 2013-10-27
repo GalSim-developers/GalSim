@@ -303,6 +303,8 @@ namespace galsim {
         GSParams* get() { return _p.get(); }
         operator bool() const { return _p.get(); }
 
+        GSParamsPtr duplicate() const { return GSParamsPtr(new GSParams(*_p)); }
+
         static const GSParamsPtr& getDefault() 
         {
             static GSParamsPtr def(new GSParams());
