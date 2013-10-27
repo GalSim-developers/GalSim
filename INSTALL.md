@@ -485,15 +485,10 @@ skip all the instructions above about installation and just use the fink
 version.  So `python2.7 demo1.py` (assuming `which python2.7` is the fink one) 
 and `galsim demo1.yaml` should run those scripts for you.   
 
-4. At the end of the fink installation, there will be a WARNING message.  Just 
-ignore it.  It happens because fink installs things a bit differently from how 
-we do it in the local build directory.  There are plans to suppress the warning
-in an imminent release version.
-
-If you want to work with GalSim as a developer, rather than just a user, then 
-you cannot use the fink-installed GalSim.  However, the process above will have
-installed all the prerequisites.  So `fink uninstall galsim` will leave you able
-to install GalSim using the master branch with:
+4.  If you want to work with GalSim as a developer, rather than just a user, 
+then you cannot use the fink-installed GalSim.  However, the process above will
+have installed all the prerequisites.  So `fink uninstall galsim` will leave 
+you able to install GalSim using the master branch with:
 
     scons TMV_DIR=/sw PYTHON=/sw/bin/python2.7
 
