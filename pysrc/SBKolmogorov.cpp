@@ -35,25 +35,12 @@ namespace galsim {
 
     struct PySBKolmogorov 
     {
-        static SBKolmogorov* construct(
-            double lam_over_r0, double flux, boost::shared_ptr<GSParams> gsparams)
-        {
-            // Duplicate the GSParams object.  Otherwise, the original gsparams constructed
-            // in the python layer might be garbage collected before the LRUCache is cleaned
-            // up, which can lead to segmentation faults.  cf. Isue #455.
-            if (gsparams.get())
-                gsparams.reset(new GSParams(*gsparams));
-            return new SBKolmogorov(lam_over_r0, flux, gsparams);
-        }
-
         static void wrap() 
         {
             bp::class_<SBKolmogorov,bp::bases<SBProfile> >("SBKolmogorov", bp::no_init)
-                .def("__init__",
-                     bp::make_constructor(
-                         &construct, bp::default_call_policies(),
-                         (bp::arg("lam_over_r0"), bp::arg("flux")=1.,
-                          bp::arg("gsparams")=bp::object()))
+                .def(bp::init<double,double,boost::shared_ptr<GSParams> >(
+                        (bp::arg("lam_over_r0"), bp::arg("flux")=1.,
+                         bp::arg("gsparams")=bp::object()))
                 )
                 .def(bp::init<const SBKolmogorov &>())
                 .def("getLamOverR0", &SBKolmogorov::getLamOverR0)

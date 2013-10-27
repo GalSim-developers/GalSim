@@ -51,7 +51,8 @@
 
 namespace galsim {
 
-    SBExponential::SBExponential(double r0, double flux, const GSParamsPtr& gsparams) :
+    SBExponential::SBExponential(double r0, double flux,
+                                 const GSParamsPtr& gsparams) :
         SBProfile(new SBExponentialImpl(r0, flux, gsparams)) {}
 
     SBExponential::SBExponential(const SBExponential& rhs) : SBProfile(rhs) {}

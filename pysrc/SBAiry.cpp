@@ -35,26 +35,12 @@ namespace galsim {
 
     struct PySBAiry 
     {
-        static SBAiry* construct(
-            double lam_over_diam, double obscuration, double flux,
-            boost::shared_ptr<GSParams> gsparams)
-        {
-            // Duplicate the GSParams object.  Otherwise, the original gsparams constructed
-            // in the python layer might be garbage collected before the LRUCache is cleaned
-            // up, which can lead to segmentation faults.  cf. Isue #455.
-            if (gsparams.get())
-                gsparams.reset(new GSParams(*gsparams));
-            return new SBAiry(lam_over_diam, obscuration, flux, gsparams);
-        }
-
         static void wrap() 
         {
             bp::class_<SBAiry,bp::bases<SBProfile> >("SBAiry", bp::no_init)
-                .def("__init__",
-                     bp::make_constructor(
-                         &construct, bp::default_call_policies(),
-                         (bp::arg("lam_over_diam"), bp::arg("obscuration")=0., bp::arg("flux")=1.,
-                          bp::arg("gsparams")=bp::object())
+                .def(bp::init<double,double,double,boost::shared_ptr<GSParams> >(
+                        (bp::arg("lam_over_diam"), bp::arg("obscuration")=0., bp::arg("flux")=1.,
+                         bp::arg("gsparams")=bp::object())
                 ))
                 .def(bp::init<const SBAiry &>())
                 .def("getLamOverD", &SBAiry::getLamOverD)
