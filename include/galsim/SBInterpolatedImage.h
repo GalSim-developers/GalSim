@@ -219,6 +219,8 @@ namespace galsim {
          * @param[in] weights   The weights to use for each component image.
          * @param[in] xInterp   Interpolation scheme to adopt between pixels 
          * @param[in] kInterp   Interpolation scheme to adopt in k-space
+         * @param[in] gsparams  GSParams object storing constants that control the accuracy of
+         *                      image operations and rendering.
          */
         SBInterpolatedImage(
             const MultipleImageHelper& multi,

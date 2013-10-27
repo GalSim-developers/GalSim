@@ -638,6 +638,7 @@ def BuildFits(file_name, config, logger=None,
     @param file_name         The name of the output file.
     @param config            A configuration dict.
     @param logger            If given, a logger object to log progress.
+    @param file_num          If given, the current file_num (default = 0)
     @param image_num         If given, the current image_num (default = 0)
     @param obj_num           If given, the current obj_num (default = 0)
     @param psf_file_name     If given, write a psf image to this file
@@ -748,6 +749,7 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
     @param config            A configuration dict.
     @param nproc             How many processes to use.
     @param logger            If given, a logger object to log progress.
+    @param file_num          If given, the current file_num (default = 0)
     @param image_num         If given, the current image_num (default = 0)
     @param obj_num           If given, the current obj_num (default = 0)
     @param psf_file_name     If given, write a psf image to this file
@@ -844,6 +846,7 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     @param config            A configuration dict.
     @param nproc             How many processes to use.
     @param logger            If given, a logger object to log progress.
+    @param file_num          If given, the current file_num (default = 0)
     @param image_num         If given, the current image_num (default = 0)
     @param obj_num           If given, the current obj_num (default = 0)
     @param psf_file_name     If given, write a psf image to this file

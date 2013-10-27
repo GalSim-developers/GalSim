@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
-"""@file psfcorr.py 
+"""@file hsm.py 
 Routines for adaptive moment estimation and PSF correction.
 
 This file contains the python interface to C++ routines for estimation of second moments of images,
@@ -222,7 +222,7 @@ def EstimateShear(gal_image, PSF_image, weight = None, badpix = None, sky_var = 
     """Carry out moments-based PSF correction routines.
 
     Carry out PSF correction using one of the methods of the HSM package (see references in
-    docstring for file psfcorr.py) to estimate galaxy shears, correcting for the convolution by the
+    docstring for file hsm.py) to estimate galaxy shears, correcting for the convolution by the
     PSF.
 
     This method works from Image inputs rather than galsim.base.GSObject inputs, which provides

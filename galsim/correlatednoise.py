@@ -961,6 +961,8 @@ def getCOSMOSNoise(rng, file_name, dx_cosmos=0.03, variance=0., x_interpolant=No
                           instance or an Interpolant instance (from which an InterpolantXY will be
                           automatically generated).  Defaults to use of the bilinear interpolant
                           `galsim.InterpolantXY(galsim.Linear(tol=1.e-4))`, see below.
+     @param gsparams      You may also specify a gsparams argument.  See the docstring for 
+                          GSObject for more information about this option.
 
     @return A _BaseCorrelatedNoise instance representing correlated noise in F814W COSMOS images.
 

@@ -211,6 +211,8 @@ def write_meds(file_name, obj_list, clobber=True):
     ----------
     @param file_name:    Name of meds file to be written
     @param obj_list:     List of MultiExposureObjects
+    @param clobber       Setting `clobber=True` when `file_name` is given will silently overwrite 
+                         existing files. (Default `clobber = True`.)
     """
 
     import numpy
