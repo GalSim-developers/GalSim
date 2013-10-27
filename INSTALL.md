@@ -154,7 +154,7 @@ See Section 4 for some more suggestions about installing this on your platform.
 iii) FFTW (http://www.fftw.org)
 -------------------------------
 
-These Fast Fourier Transform libraries must be installed as GalSim will link
+These Fast Fourier Transform libraries must be installed, as GalSim will link
 to them during the build. We require version 3 (or greater presumably), which
 is often distributed as fftw3.  See Section 4 for some suggestions about 
 installing this on your platform.

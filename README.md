@@ -12,7 +12,7 @@ data challenge, called GREAT3:
 
     http://great3challenge.info/
     
-However, the code has numerous  additional capabilities beyond those needed for 
+However, the code has numerous additional capabilities beyond those needed for 
 the challenge, and has been useful for a number of projects that needed to 
 simulate high-fidelity galaxy images with accurate sizes and shears.  At the 
 end of this file, there is a list of the code capabilities and plans for future 
@@ -39,7 +39,7 @@ Or clone the master branch with either of the following:
     git clone git@github.com:GalSim-developers/GalSim.git
     git clone https://github.com/GalSim-developers/GalSim.git
 
-The code is also distributed via Fink, Macports, and Homebrea for Mac users.
+The code is also distributed via Fink, Macports, and Homebrew for Mac users.
 See INSTALL.md for more information.
 
 
@@ -231,7 +231,7 @@ Currently, GalSim has the following capabilities:
 
 * Can make the images either via i) Fourier transform, ii) real-space 
   convolution (real-space being occasionally faster than Fourier), or 
-  iii) photon-shooting.  The exception is that object that include a 
+  iii) photon-shooting.  The exception is that objects that include a 
   deconvolution (such as RealGalaxy objects) must be carried out using Fourier 
   methods only.
 
@@ -254,15 +254,14 @@ Currently, GalSim has the following capabilities:
 * Can carry out nearly any simulation that a user might want using two parallel 
   methods: directly using python code, or by specifying the simulation 
   properties in an input configuration script.  See the demo scripts in 
-  the examples directory for examples of each.
+  the examples/ directory for examples of each.
 
 
 
 Summary of planned future development
 -------------------------------------
 
-In addition to carrying out further testing on some existing parts of the code,
-we plan to add the following additional capabilities in future versions of
+We plan to add the following additional capabilities in future versions of
 GalSim:
 
 * Support for generic world coordinate systems (WCS).  (cf. Issue #364)
