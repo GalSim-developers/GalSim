@@ -254,6 +254,30 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
     return images, psf_images, weight_images, badpix_images, current_vars
  
 
+def RemoveCurrent(config, keep_safe=False):
+    """
+    Remove any "current values" stored in the config dict at any level.
+    If keep_safe = True (default = False), then any current values that are marked
+    as safe will be preserved.
+    """
+    # End recursion if this is not a dict.
+    if not isinstance(config,dict): return
+
+    # Delete the current_val at this level, if any
+    if 'current_val' in config:
+        if not (keep_safe and config['current_safe']):
+            del config['current_val']
+            del config['current_safe']
+
+    # Recurse to lower levels, if any
+    for key in config:
+        if isinstance(config[key],list):
+            for item in config[key]:
+                RemoveCurrent(item, keep_safe)
+        else:
+            RemoveCurrent(config[key], keep_safe)
+
+
 def BuildSingleStamp(config, xsize=0, ysize=0,
                      obj_num=0, sky_level_pixel=None, do_noise=True, logger=None,
                      make_psf_image=False, make_weight_image=False, make_badpix_image=False):
@@ -511,6 +535,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                     logger.info('This is try %d/%d, so trying again.',itry+1,ntries)
                 # Need to remvoe the "current_val"s from the config dict.  Otherwise,
                 # the value generators will do a quick return with the cached value.
+                RemoveCurrent(config, keep_safe=True)
                 continue
 
         else:
