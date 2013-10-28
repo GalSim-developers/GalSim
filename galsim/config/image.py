@@ -354,7 +354,7 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
         logger.debug('image %d: BuildSingleImage: image, obj = %d,%d',
                       config['image_num'],image_num,obj_num)
 
-    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
+    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc', 'retry_failures',
                'n_photons', 'wmult', 'offset', 'gsparams' ]
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 'index_convention' : str,
             'pixel_scale' : float , 'sky_level' : float , 'sky_level_pixel' : float }
@@ -429,7 +429,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         logger.debug('image %d: BuildTiledImage: image, obj = %d,%d',
                       config['image_num'],image_num,obj_num)
 
-    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
+    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc', 'retry_failures',
                'image_pos', 'n_photons', 'wmult', 'offset', 'gsparams' ]
     req = { 'nx_tiles' : int , 'ny_tiles' : int }
     opt = { 'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
@@ -687,7 +687,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     nobjects = GetNObjForScatteredImage(config,image_num)
 
-    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
+    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc', 'retry_failures',
                'image_pos', 'sky_pos', 'n_photons', 'wmult', 'offset',
                'stamp_size', 'stamp_xsize', 'stamp_ysize', 'gsparams', 'nobjects' ]
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 
