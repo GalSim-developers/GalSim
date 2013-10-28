@@ -104,9 +104,9 @@ def main(argv):
                 "n" : 1.5,
                 "half_light_radius" : { "type" : "Random" , "min" : 0.5 , "max" : 1.5 },
                 "ellip" : {
-                    "type" : "EBeta",
-                    "e" : { "type" : "Random" , "min" : 0.2 , "max" : 0.8 },
-                    "beta" : { "type" : "Random" }
+                    "type" : "E1E2",
+                    "e1" : { "type" : "RandomGaussian" , "sigma" : 0.4 },
+                    "e2" : { "type" : "RandomGaussian" , "sigma" : 0.4 }
                 }
             }
         ],
@@ -121,7 +121,8 @@ def main(argv):
         'pixel_scale' : 0.28,
         'draw_method' : 'phot',
         'noise' : { 'sky_level' : 1.e4 },
-        'random_seed' : 22345921
+        'random_seed' : 22345921,
+        'retry_failures' : 2
     }
 
     # Make a copy of the config dict as it exists now.
