@@ -128,7 +128,7 @@ def main(argv):
     # Make a copy of the config dict as it exists now.
     save_config = copy.deepcopy(config)
 
-    # Now that we have the config dict setup, there are a number of functions we can use
+    # Now that we have set up the config dict, there are a number of functions we can use
     # to process it in various ways.  The simplest is to do the full end-to-end processing
     # as is done by the program galsim:
     #

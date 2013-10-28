@@ -9,11 +9,14 @@
 "#" : "do the same thing as these demo*.json files directly in python.  Now we turn the tables",
 "#" : "and show how to use some of the machinery in the GalSim configuration processing ",
 "#" : "from within python itself.  As such, this config file doesn't add much in the way",
-"#" : "of new features -- just the ability to build an image using multiple processes.",
-"#" : "We build the same image using a single process and again using 4 processes.",
+"#" : "of new features -- just an option to retry building objects that fail the first time, ",
+"#" : "and the ability to build an image using multiple processes.  We intentionally have the",
+"#" : "ellipticity occasionally come out larger than 1, so we redo these objects.",
+"#" : "And we build the same image using a single process and again using 4 processes.",
 
 "#" : "New features introduced in this demo:",
 
+"#" : "- image : retry_failures",
 "#" : "- image : nproc",
 
 "#" : "There are two .json files to do this.  The first one (demo8a.json) does the ",
