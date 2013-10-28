@@ -69,13 +69,19 @@ You should receive notification that your unsubscription was successful.
 How to communicate with the GalSim developers
 ---------------------------------------------
 
-If you have any comments, questions, or suggestions, please open up an Issue on
-our GitHub repository:
+If you have a question about how to use GalSim, a good place to ask it is at
+StackOverflow:
+
+    http://stackoverflow.com/
+
+Some of the GalSim devlopers have alerts set up to be automatically notified 
+about questions with the 'galsim' tag, so there is a good change that your 
+question will be answered.
+
+If you find something that you think is a bug, or if you have a suggestion
+for a new feature, please open up an Issue on our GitHub repository:
 
     https://github.com/GalSim-developers/GalSim/issues?state=open
-
-Alternatively, if you prefer e-mail, then you can find contact information on
-the GREAT3 webpage linked above.
 
 
 Installation

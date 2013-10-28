@@ -360,6 +360,12 @@ If you are having trouble with installing, you may find some helpful hints at
 the GalSim Installation FAQ page on the Wiki:
 https://github.com/GalSim-developers/GalSim/wiki/Installation%20FAQ
 
+You can ask about your particular problem on stackoverflow.com.  Some of the 
+GalSim developers have automatic alerts set up for the tag 'galsim'.  So you 
+can ask your question there, and there is a good chance it will be answered.
+(You might also search that site to see if anyone else asked about the same 
+problems.
+
 If you are still having trouble, please consider opening a new Issue on the
 GalSim Github page at https://github.com/GalSim-developers/GalSim/issues to help
 find a solution for the problem.
