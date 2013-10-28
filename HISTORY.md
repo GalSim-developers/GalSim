@@ -1,7 +1,8 @@
 Below is a summary of the major changes with each new tagged version of GalSim.
 Each version also includes various other minor changes and bug fixes, which are 
 not listed here for brevity.  See the CHANGLELOG.md files associated with each 
-version for a more complete list.
+version for a more complete list.  Issue numbers related to each change are 
+given in parentheses.
 
 v0.5
 ----
