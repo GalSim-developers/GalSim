@@ -315,7 +315,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
     if 'gd' in config:
         del config['gd']  # In case it was set.
 
-    if 'retry_failures' in config['image']:
+    if 'image' in config and 'retry_failures' in config['image']:
         ntries = galsim.config.ParseValue(config['image'],'retry_failures',config,int)[0]
         # This is how many _re_-tries.  Do at least 1, so ntries is 1 more than this.
         ntries = ntries + 1

@@ -627,6 +627,27 @@ def Process(config, logger=None):
         logger.debug('Done building files')
 
 
+# A helper function to retry io commands
+def _retry_io(func, args, ntries, file_name, logger):
+    for itry in range(ntries):
+        try: 
+            ret = func(*args)
+        except IOError as e:
+            if itry == ntries-1:
+                # Then this was the last try.  Just re-raise the exception.
+                raise
+            else:
+                if logger:
+                    logger.info('Files %s: Caught exception %s',file_name,str(e))
+                    logger.info('This is try %d/%d, so sleep for %d sec and try again.',
+                                itry+1,ntries,itry+1)
+                    import time
+                    time.sleep(itry+1)
+                    continue
+        else:
+            break
+    return ret
+
 def BuildFits(file_name, config, logger=None, 
               file_num=0, image_num=0, obj_num=0,
               psf_file_name=None, psf_hdu=None,
@@ -706,9 +727,16 @@ def BuildFits(file_name, config, logger=None,
     for h in range(len(hdus.keys())):
         assert h in hdus.keys()  # Checked for this above.
         hdulist.append(all_images[hdus[h]])
+    # We can use hdulist in writeMulti even if the main image is the only one in the list.
 
-    # This next line is ok even if the main image is the only one in the list.
-    galsim.fits.writeMulti(hdulist, file_name)
+    if 'output' in config and 'retry_io' in config['output']:
+        ntries = galsim.config.ParseValue(config['output'],'retry_io',config,int)[0]
+        # This is how many _re_-tries.  Do at least 1, so ntries is 1 more than this.
+        ntries = ntries + 1
+    else:
+        ntries = 1
+
+    _retry_io(galsim.fits.writeMulti, (hdulist, file_name), ntries, file_name, logger)
     if logger:
         if len(hdus.keys()) == 1:
             logger.debug('file %d: Wrote image to fits file %r',
@@ -718,19 +746,22 @@ def BuildFits(file_name, config, logger=None,
                          config['file_num'],file_name)
 
     if psf_file_name:
-        all_images[1].write(psf_file_name)
+        _retry_io(galsim.fits.write, (all_images[1], psf_file_name),
+                  ntries, psf_file_name, logger)
         if logger:
             logger.debug('file %d: Wrote psf image to fits file %r',
                          config['file_num'],psf_file_name)
 
     if weight_file_name:
-        all_images[2].write(weight_file_name)
+        _retry_io(galsim.fits.write, (all_images[2], weight_file_name),
+                  ntries, weight_file_name, logger)
         if logger:
             logger.debug('file %d: Wrote weight image to fits file %r',
                          config['file_num'],weight_file_name)
 
     if badpix_file_name:
-        all_images[3].write(badpix_file_name)
+        _retry_io(galsim.fits.write, (all_images[3], badpix_file_name),
+                  ntries, badpix_file_name, logger)
         if logger:
             logger.debug('file %d: Wrote badpix image to fits file %r',
                          config['file_num'],badpix_file_name)
@@ -808,25 +839,35 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
     weight_images = all_images[2]
     badpix_images = all_images[3]
 
-    galsim.fits.writeMulti(main_images, file_name)
+    if 'output' in config and 'retry_io' in config['output']:
+        ntries = galsim.config.ParseValue(config['output'],'retry_io',config,int)[0]
+        # This is how many _re_-tries.  Do at least 1, so ntries is 1 more than this.
+        ntries = ntries + 1
+    else:
+        ntries = 1
+
+    _retry_io(galsim.fits.writeMulti, (main_images, file_name), ntries, file_name, logger)
     if logger:
         logger.debug('file %d: Wrote images to multi-extension fits file %r',
                      config['file_num'],file_name)
 
     if psf_file_name:
-        galsim.fits.writeMulti(psf_images, psf_file_name)
+        _retry_io(galsim.fits.writeMulti, (psf_images, psf_file_name),
+                  ntries, psf_file_name, logger)
         if logger:
             logger.debug('file %d: Wrote psf images to multi-extension fits file %r',
                          config['file_num'],psf_file_name)
 
     if weight_file_name:
-        galsim.fits.writeMulti(weight_images, weight_file_name)
+        _retry_io(galsim.fits.writeMulti, (weight_images, weight_file_name),
+                  ntries, weight_file_name, logger)
         if logger:
             logger.debug('file %d: Wrote weight images to multi-extension fits file %r',
                          config['file_num'],weight_file_name)
 
     if badpix_file_name:
-        galsim.fits.writeMulti(badpix_images, badpix_file_name)
+        _retry_io(galsim.fits.writeMulti, (all_images, badpix_file_name),
+                  ntries, badpix_file_name, logger)
         if logger:
             logger.debug('file %d: Wrote badpix images to multi-extension fits file %r',
                          config['file_num'],badpix_file_name)
@@ -934,25 +975,35 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
         weight_images += all_images[2]
         badpix_images += all_images[3]
 
-    galsim.fits.writeCube(main_images, file_name)
+    if 'output' in config and 'retry_io' in config['output']:
+        ntries = galsim.config.ParseValue(config['output'],'retry_io',config,int)[0]
+        # This is how many _re_-tries.  Do at least 1, so ntries is 1 more than this.
+        ntries = ntries + 1
+    else:
+        ntries = 1
+
+    _retry_io(galsim.fits.writeCube, (main_images, file_name), ntries, file_name, logger)
     if logger:
         logger.debug('file %d: Wrote image to fits data cube %r',
                      config['file_num'],file_name)
 
     if psf_file_name:
-        galsim.fits.writeCube(psf_images, psf_file_name)
+        _retry_io(galsim.fits.writeCube, (psf_images, psf_file_name),
+                  ntries, psf_file_name, logger)
         if logger:
             logger.debug('file %d: Wrote psf images to fits data cube %r',
                          config['file_num'],psf_file_name)
 
     if weight_file_name:
-        galsim.fits.writeCube(weight_images, weight_file_name)
+        _retry_io(galsim.fits.writeCube, (weight_images, weight_file_name),
+                  ntries, weight_file_name, logger)
         if logger:
             logger.debug('file %d: Wrote weight images to fits data cube %r',
                          config['file_num'],weight_file_name)
 
     if badpix_file_name:
-        galsim.fits.writeCube(badpix_images, badpix_file_name)
+        _retry_io(galsim.fits.writeCube, (badpix_images, badpix_file_name),
+                  ntries, badpix_file_name, logger)
         if logger:
             logger.debug('file %d: Wrote badpix images to fits data cube %r',
                          config['file_num'],badpix_file_name)
