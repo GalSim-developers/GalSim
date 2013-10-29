@@ -638,8 +638,8 @@ def _retry_io(func, args, ntries, file_name, logger):
                 raise
             else:
                 if logger:
-                    logger.info('Files %s: Caught exception %s',file_name,str(e))
-                    logger.info('This is try %d/%d, so sleep for %d sec and try again.',
+                    logger.warn('Files %s: Caught exception %s',file_name,str(e))
+                    logger.warn('This is try %d/%d, so sleep for %d sec and try again.',
                                 itry+1,ntries,itry+1)
                     import time
                     time.sleep(itry+1)
@@ -1013,7 +1013,7 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
 
 def GetNObjForFits(config, file_num, image_num):
     ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc',
-               'skip', 'noclobber' ]
+               'skip', 'noclobber', 'retry_io' ]
     galsim.config.CheckAllParams(config['output'], 'output', ignore=ignore)
     try : 
         nobj = [ galsim.config.GetNObjForImage(config, image_num) ]
@@ -1024,7 +1024,7 @@ def GetNObjForFits(config, file_num, image_num):
     
 def GetNObjForMultiFits(config, file_num, image_num):
     ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc', 
-               'skip', 'noclobber' ]
+               'skip', 'noclobber', 'retry_io' ]
     req = { 'nimages' : int }
     # Allow nimages to be automatic based on input catalog if image type is Single
     if ( 'nimages' not in config['output'] and 
@@ -1046,7 +1046,7 @@ def GetNObjForMultiFits(config, file_num, image_num):
 
 def GetNObjForDataCube(config, file_num, image_num):
     ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc',
-               'skip', 'noclobber' ]
+               'skip', 'noclobber', 'retry_io' ]
     req = { 'nimages' : int }
     # Allow nimages to be automatic based on input catalog if image type is Single
     if ( 'nimages' not in config['output'] and 
