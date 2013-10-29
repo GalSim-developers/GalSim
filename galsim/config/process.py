@@ -638,7 +638,7 @@ def _retry_io(func, args, ntries, file_name, logger):
                 raise
             else:
                 if logger:
-                    logger.warn('File %s: Caught exception: %s',file_name,str(e))
+                    logger.warn('File %s: Caught IOError: %s',file_name,str(e))
                     logger.warn('This is try %d/%d, so sleep for %d sec and try again.',
                                 itry+1,ntries,itry+1)
                     import time
