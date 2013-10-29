@@ -153,30 +153,27 @@ Demonstration scripts
 ---------------------
 
 There are a number of scripts in `examples/` that demonstrate how the code can
-be used.  These are called `demo1.py`-`demo11.py`, and can be run either using
-(e.g.) `python demo1.py` while sitting in `examples/`, or by doing `scons
-examples` and then using the executable `bin/demo1`.  A completely parallel
-sequence of configuration scripts, `demo1.yaml`-`demo11.yaml`, demonstrates how
-to make the same set of simulations using config scripts that can be input to
-`bin/galsim`.  
+be used.  These are called `demo1.py`...`demo11.py`.  You can run them by 
+typing (e.g.) `python demo1.py` while sitting in `examples/`, All demo scripts 
+are designed to be run in the `examples/` directory.  Some of them access 
+files in subdirectories of the `examples/` directory, so they would not work 
+correctly from other locations.
 
-All demonstration scripts (including `bin/demo1`, etc) are meant to be run 
-within the `examples/` directory.  The demos can be run in a different 
-directory, but then the demo script will not be able to find the required files
-or directories.
+A completely parallel sequence of configuration files, called `demo1.yaml`...
+`demo11.yaml`, demonstrates how to make the same set of simulations using 
+config files that are parsed by the executable `bin/galsim`.  
 
-As the project develops through further versions, and adds
-further capabilities to the software, more demo scripts will be added to
-`examples/` to illustrate what GalSim can do.
+As the project develops through further versions, and adds further 
+capabilities to the software, more demo scripts may be added to `examples/`
+to illustrate what GalSim can do.
 
 
 Additional scripts
 ------------------
 
-While the demo scripts can be run from the command-line while sitting in
-`examples/` without any arguments, the remaining scripts are auxiliary 
-utilities that take various command-line arguments, which are always explained 
-in comments at the top of the file.
+There are some additional scripts in the `examples/` directory as well.
+These utilities take various command-line arguments, which are explained 
+in comments at the top of each file.
 
 * `ShootInterpolated.py` is a script that takes as input a filename for a FITS
 image, which it will simulate (optionally sheared and/or resampled) via
@@ -187,6 +184,11 @@ elliptical Gaussian) for a FITS image.
 
 * `MeasShape.py` can be used to carry out PSF correction using one of four
 methods, given FITS images of the galaxy and PSF.
+
+* `des.py` creates an image based on DES PSF estimates using DES catalogs
+as input.  It is primarily designed to demonstrate the usage of the des
+module, and is accompanies by a config file, `des.yaml` that does the same
+thing.
 
 
 Tagged versions
