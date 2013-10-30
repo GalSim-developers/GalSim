@@ -76,8 +76,7 @@ StackOverflow:
 
 Some of the GalSim devlopers have alerts set up to be automatically notified 
 about questions with the 'galsim' tag, so there is a good change that your 
-question will be answered.  [ NOTE: This isn't working yet.  We're waiting on
-the moderators to (hopefully) add the galsim tag for us. ]
+question will be answered.
 
 If you find something that you think is a bug, or if you have a suggestion
 for a new feature, please open up an Issue on our GitHub repository:
