@@ -364,7 +364,8 @@ You can ask about your particular problem on stackoverflow.com.  Some of the
 GalSim developers have automatic alerts set up for the tag 'galsim'.  So you 
 can ask your question there, and there is a good chance it will be answered.
 (You might also search that site to see if anyone else asked about the same 
-problems.
+problems.  [ NOTE: This isn't working yet.  We're waiting on the moderators to 
+(hopefully) add the galsim tag for us. ]
 
 If you are still having trouble, please consider opening a new Issue on the
 GalSim Github page at https://github.com/GalSim-developers/GalSim/issues to help
