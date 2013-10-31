@@ -419,9 +419,13 @@ class RealGalaxyCatalog(object):
         self.close()
 
     def close(self):
-        import pyfits
-        for f in self.loaded_files.values():
-            f.close()
+        # Need to close any open files.
+        # Make sure to check if loaded_files exists, since the constructor could abort
+        # before it gets to the place where loaded_files is built.
+        if hasattr(self, 'loaded_files'):
+            import pyfits
+            for f in self.loaded_files.values():
+                f.close()
         self.loaded_files = {}
 
     def getNObjects(self) : return self.nobjects
