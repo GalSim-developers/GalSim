@@ -14,7 +14,7 @@ Process for updating fink with a new version:
 - Make sure check_yaml works if you set python to /sw/bin/python2.7 and bin to /sw/bin
 - In tests directory run /sw/bin/nosetests2.7
 - git add new info file for this version.
-- Submit to: http://sourceforge.net/tracker/?func=add&group_id=17203&atid=414256
+- Submit to: http://sourceforge.net/p/fink/package-submissions/
   - Don't forget to change the name to galsim.info (without the version number).
   - Group = Undergoing Validation
   - Mention that you have done the above tests.
