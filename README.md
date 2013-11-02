@@ -22,12 +22,10 @@ development.
 Distribution
 ------------
 
-## WARNING: The following is not strictly true yet.  It will be when the version 1.0 release is complete.
-
 The current released version of GalSim is version 1.0.  To get the code, you 
 can grab the tarball (or zip file) from
 
-    https://github.com/GalSim-developers/GalSim/releases/tag/v1.0
+    https://github.com/GalSim-developers/GalSim/releases/tag/v1.0.0
 
 Also, feel free to fork the repository:
 
@@ -194,21 +192,19 @@ thing.
 Tagged versions
 ---------------
 
-After every GalSim release and development milestone we tag a snapshot of the 
-code at that moment, with the tag name `vX.X` or `milestoneN` where N is the 
-milestone number.  The milestoneN versions are not recommended now that we
-have official tagged versions, `vX.X`.
-
-You can see the available tags using the command
+Each GalSim release is tagged in git with the tag name `vX.X.X`.  You can see 
+the available tags using the command
 
     git tag -l
 
-at a terminal from within the repository.
+at a terminal from within the repository.  In addition to the official
+releases, we also have tags for various other milestones that were important
+at one time or another.
 
 The version of the code at any given snapshot can be downloaded from our
 GitHub webpage, or checked out from the repository using the tag name, e.g.:
 
-    $ git checkout v1.0
+    git checkout v1.0.0
 
 This will then update your directory tree to the snapshot of the code at the 
 milestone requested.  (You will also get a message about being in a "detached" 
