@@ -75,7 +75,7 @@ StackOverflow:
     http://stackoverflow.com/
 
 Some of the GalSim devlopers have alerts set up to be automatically notified 
-about questions with the 'galsim' tag, so there is a good change that your 
+about questions with the 'galsim' tag, so there is a good chance that your 
 question will be answered.
 
 If you find something that you think is a bug, or if you have a suggestion
