@@ -4,6 +4,45 @@ not listed here for brevity.  See the CHANGLELOG.md files associated with each
 version for a more complete list.  Issue numbers related to each change are 
 given in parentheses.
 
+v1.0
+----
+
+* Notable bug fixes and improvements:
+  * Fixed bug in the rendering of shifted images. (#424)
+  * Improved the fidelity of the Lanczos `conserve_dc=True` option. (#442)
+  * Switched default interpolant for RealGalaxy to Quintic, since it was
+    found to be more accurate in general. (#442)
+  * Fixed a bug in InterpolatedImage calculateStepK function. (#454)
+  * Fixed a bug in Image class resize function. (#461)
+  * Sped up OpticalPSF and RealGalaxy significantly. (#466, #474)
+  * Fixed a bug in the fourier rendering of truncated Sersic profiles. (#470)
+
+* Added `galsim` executable (instead of `galsim_yaml`, `galsim_json`). (#460)
+
+* Updates to functionality of specific classes and functions:
+  * Updated the allowed range for Sersic n to 0.3 -- 6.2. (#325)
+  * Made RealGalaxy objects keep track of their (correlated) noise. (#430)
+  * Changed noise padding options for RealGalaxy and InterpolatedImage. (#430)
+  * Added VariableGaussianNoise class. (#430)
+  * Added offset parameter to both draw and drawShoot. (#439)
+  * Changed the name of InputCatalog to just Catalog. (#449)
+  * Added Dict class. (#449)
+
+* Updates to config options:
+  * Added RealGalaxyOriginal galaxy type. (#389)
+  * Added whiten option for RealGalaxy objects. (#430)
+  * Added `Current` type. (#430)
+  * Added offset option in image field. (#449)
+  * Added the ability to have multiple input catalogs, dicts, etc. (#449)
+  * Added `signal_to_noise` option for PSFs when there is no galaxy. (#459)
+  * Added `output.skip` and `output.noclobber` options. (#474)
+
+* Updates to des module:
+  * Added MEDS file output. (#376)
+  * Removed des module from default imports of GalSim.  Now need to import
+    galsim.des explicitly or load with `galsim -m des ...` (#460)
+
+
 v0.5
 ----
 
