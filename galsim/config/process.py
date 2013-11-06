@@ -79,7 +79,7 @@ def CopyConfig(config):
         del config1['input_manager']
 
     # Now deepcopy all the regular config fields to make sure things like current_val don't
-    # get clobberd by two processes writing to the same dict.
+    # get clobbered by two processes writing to the same dict.
     if 'gal' in config:
         config1['gal'] = copy.deepcopy(config['gal'])
     if 'psf' in config:
