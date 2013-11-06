@@ -19,7 +19,7 @@ plot_test_interpolants.py: makes readable graphs from the output of the previous
 
 corrfuncs/test_cf_interpolant.py: makes upsampled plots of correlation functions to see how their
 interpolants behaves and check whether this corresponds to what is physically required.  See the
-full discussion at TODO ADD LINK
+full discussion at https://github.com/GalSim-developers/GalSim/pull/452#discussion-diff-5701561
 
 corrfuncs/test_cf_periodicity.py: tests to see how the assumption of purely positive power spectra
 holds up under the periodicity correction, and other effects.  See the full discussion at

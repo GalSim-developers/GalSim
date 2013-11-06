@@ -2,7 +2,8 @@
 interpolants behave.
 
 A simple script used to quickly generate plots for the discussion of which interpolant should be
-used to describe correlation functions.  See the discussion on: TODO ADD LINK TO PR FOR #430 
+used to describe correlation functions.  See the discussion at
+https://github.com/GalSim-developers/GalSim/pull/452#discussion-diff-5701561 
 """
 import numpy as np
 import matplotlib.pyplot as plt
