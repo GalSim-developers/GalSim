@@ -1,3 +1,9 @@
+"""test_cf_interpolant.py:  Make upsampled plots of correlation functions to see how their
+interpolants behave.
+
+A simple script used to quickly generate plots for the discussion of which interpolant should be
+used to describe correlation functions.  See the discussion on: TODO ADD LINK TO PR FOR #430 
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 import galsim
@@ -22,6 +28,4 @@ plt.pcolor(test_image.array)
 plt.colorbar()
 plt.savefig('cf_nearest.png')
 plt.show()
-
-
 
