@@ -129,7 +129,7 @@ def main(argv):
 
     # Now that we have the config dict setup, there are a number of functions we can use
     # to process it in various ways.  The simplest is to do the full end-to-end processing
-    # as is done by the program galsim_yaml:
+    # as is done by the program galsim:
     #
     #     galsim.config.Process(config)
     #

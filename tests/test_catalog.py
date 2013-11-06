@@ -36,9 +36,8 @@ def test_single_row():
     import time
     t1 = time.time()
     filename = "test394.txt"
-    f = open(filename, 'w')
-    f.write("3 4 5\n")
-    f.close()
+    with open(filename, 'w') as f:
+        f.write("3 4 5\n")
     cat = galsim.catalog.Catalog(filename, file_type='ascii')
     np.testing.assert_array_equal(
         cat.data, np.array([["3","4","5"]]),

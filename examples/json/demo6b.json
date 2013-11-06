@@ -19,11 +19,12 @@
        
 "#" : "New features introduced in this demo:",
 
-"#" : "- input : real_catalog (file_name, dir, image_dir, preload)",
+"#" : "- input : real_catalog (file_name, dir, image_dir)",
 "#" : "- obj type : RealGalaxy (index)",
 "#" : "- obj : rotate ",
 "#" : "- obj : magnify",
 "#" : "- image : sky_level",
+"#" : "- image : offset",
 "#" : "- value type : Sequence (first, last, step)",
 "#" : "- output type : DataCube (file_name, dir, nimages)",
 
@@ -93,6 +94,18 @@
     "#" : "image.sky_level will remain as the background level in the final image.",
     "noise" : {},
 
+    "#" : "We can also offset the object from the center of the image.  We had previously",
+    "#" : "(in demo4 and demo5) used galaxy.shift as a way to shift the center of the image.",
+    "#" : "Since that is applied to the galaxy, the units are arcsec (since the galaxy profile",
+    "#" : "itself doesn't know about the pixel scale).  Here, the offset applies to the drawn",
+    "#" : "image, which does know about the pixel scale, so the units of offset are pixels, ",
+    "#" : "not arcsec.  Here, we apply an offset of up to half a pixel in each direction.",
+    "offset" : {
+        "type" : "XY",
+        "x" : { "type" : "Random", "min" : -0.5, "max" : 0.5 },
+        "y" : { "type" : "Random", "min" : -0.5, "max" : 0.5 }
+    },
+ 
     "#" : "Define the initial random number seed",
     "random_seed" : 1512413,
 
@@ -111,10 +124,7 @@
     "#" : "the relative path from dir to wherever the images are located.",
     "real_catalog" : {
         "dir" : "data",
-        "file_name" : "real_galaxy_catalog_example.fits",
-
-        "#" : "This usually makes a big improvement in speed",
-        "preload" : true
+        "file_name" : "real_galaxy_catalog_example.fits"
     }
 },
 

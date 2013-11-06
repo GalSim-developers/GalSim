@@ -46,9 +46,9 @@ for test_case in ("basic",):# "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2"
         g2_output[0:data.shape[0]/ntest, j] = data[range(j, data.shape[0], ntest), 12]
 
     # First do the plots of g1
-    YMAX_ZOOMIN = 2.5e-4
+    YMAX_ZOOMIN = 1e-4
     XMIN = -.6
-    XMAX = .8
+    XMAX = .5
     plt.clf()
     plt.axhline(ls='--', color='k')
     plt.axvline(ls='--', color='k')
@@ -70,9 +70,9 @@ for test_case in ("basic",):# "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2"
     plt.ylabel(r'$\Delta$g$_1$ (DFT - Photon)')
     plt.ylim(-YMAX_ZOOMIN, YMAX_ZOOMIN)
     plt.legend()
-    plt.title(test_case)
+    #plt.title(test_case)
     plt.subplots_adjust(left=0.15)
-    plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomin_g1.eps'))
+    plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomin_g1.png'))
 
     # Then do the plots of g2
     plt.clf()
@@ -96,13 +96,13 @@ for test_case in ("basic",):# "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2"
     plt.ylabel(r'$\Delta$g$_2$ (DFT - Photon)')
     plt.ylim(-YMAX_ZOOMIN, YMAX_ZOOMIN)
     plt.legend()
-    plt.title(test_case)
-    plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomin_g2.eps'))
+    #plt.title(test_case)
+    plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomin_g2.png'))
 
     # Then do the plots of sigma
-    YMAX_ZOOMIN = 1.e-4 # in arcsec
+    YMAX_ZOOMIN = 5 # in 1e-5 arcsec
     XMIN = 0.
-    XMAX = 1.25 # in arcsec
+    XMAX = 0.7 # in arcsec
     plt.clf()
     plt.xlim(XMIN, XMAX)
     print ""
@@ -122,15 +122,15 @@ for test_case in ("basic",):# "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2"
             fmt='o'
         plt.errorbar(
             sigma_draw[0:data.shape[0]/ntest, i] * test_sersic_highn_basic.PIXEL_SCALE,
-            delta_sigma[0:data.shape[0]/ntest, i] * test_sersic_highn_basic.PIXEL_SCALE,
-            yerr=err_sigma[0:data.shape[0]/ntest, i] * test_sersic_highn_basic.PIXEL_SCALE, fmt=fmt,
+            1e5*delta_sigma[0:data.shape[0]/ntest, i] * test_sersic_highn_basic.PIXEL_SCALE,
+            yerr=1e5*err_sigma[0:data.shape[0]/ntest, i] * test_sersic_highn_basic.PIXEL_SCALE, fmt=fmt,
             label=r"n = %.1f, m = %.2e $\pm$ %.2e" % (
                 test_sersic_highn_basic.SERSIC_N_TEST[i], m, np.sqrt(var_m)))
-    plt.ylim(-.5 * YMAX_ZOOMIN, YMAX_ZOOMIN)
+    plt.ylim(-.3 * YMAX_ZOOMIN, YMAX_ZOOMIN)
     plt.xlabel(r'$\sigma$ (DFT) [arcsec]')
-    plt.ylabel(r'$\Delta \sigma$ (DFT - Photon) [arcsec]')
+    plt.ylabel(r'$\Delta \sigma$ (DFT - Photon) [1e-5 arcsec]')
     plt.axhline(ls='--', color='k')
     plt.legend()
-    plt.title(test_case)
-    plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomin_sigma.eps'))
+    #plt.title(test_case)
+    plt.savefig(os.path.join('plots', 'sersic_highn_'+test_case+'_zoomin_sigma.png'))
 

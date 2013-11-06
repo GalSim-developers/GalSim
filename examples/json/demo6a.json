@@ -19,11 +19,12 @@
        
 "#" : "New features introduced in this demo:",
 
-"#" : "- input : real_catalog (file_name, dir, image_dir, preload)",
+"#" : "- input : real_catalog (file_name, dir, image_dir)",
 "#" : "- obj type : RealGalaxy (index)",
 "#" : "- obj : rotate ",
 "#" : "- obj : magnify",
 "#" : "- image : sky_level",
+"#" : "- image : offset",
 "#" : "- value type : Sequence (first, last, step)",
 "#" : "- output type : DataCube (file_name, dir, nimages)",
 

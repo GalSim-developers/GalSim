@@ -197,6 +197,9 @@ and are pushed to the repository using
 
 git push --tags
 
+See https://github.com/GalSim-developers/GalSim/wiki/Checklist-for-making-a-new-tagged-release
+for a full checklist of things to do when tagging a released version.
+
 To use a code version corresponding to some tag, you can use
 
 git checkout TAGNAME
@@ -214,11 +217,21 @@ that you have a detached HEAD.  This is okay; it means that git doesn't know wha
 a commit (i.e., you're not on any branch).  But, by definition, we should not be changing tagged
 versions; we should be working on specific branches, so this warning is not a problem.
 
+Each Mojor.minor version number may have more than one revision for bug fixes.  These are tracked
+with the branches named releases/Major.minor.  For example: releases/1.0.  Bug fixes should be 
+merged into the master branch, and also into all release versions that are being actively 
+maintained.  Then a new tag should be made for the revised code, updating the last digit 
+(e.g. v1.0.1).
+
 --- Deleting branches on the origin ---
 
 PLEASE NOTE: We have not decided any policy about cleaning up old branches on the origin yet, so
 please do not use this for deleting branches that have been successfully merged into the master
 branch.  Use it only for cleanup jobs, as in Issue #122.
+
+Note that branches can be easily deleted on GitHub itself.  Click the branches tab and press 
+"Delete branch" for the branch you want to delete.  This is probably easier than the method 
+described below.
 
 The rather obtuse syntax for deleting a branch on the origin uses a push command as follows:
 

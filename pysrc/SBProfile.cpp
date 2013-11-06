@@ -30,6 +30,7 @@
 #include "boost/python/stl_iterator.hpp"
 
 #include "SBProfile.h"
+#include "FFT.h"  // For goodFFTSize
 
 namespace bp = boost::python;
 
@@ -278,6 +279,9 @@ namespace galsim {
     {
         PySBProfile::wrap();
         PyGSParams::wrap();
+
+        bp::def("goodFFTSize", &goodFFTSize, (bp::arg("input_size")),
+                "Round up to the next larger 2^n or 3x2^n.");
     }
 
 } // namespace galsim

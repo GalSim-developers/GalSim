@@ -84,7 +84,7 @@ public:
 
 template <typename T>
 BaseImage<T>::BaseImage(const Bounds<int>& b, double scale) :
-    AssignableToImage<T>(b), _owner(), _data(0), _stride(0), _scale(scale)
+    AssignableToImage<T>(b), _owner(), _data(0), _nElements(0), _stride(0), _scale(scale)
 {
     if (this->_bounds.isDefined()) allocateMem();
     // Else _data is left as 0, stride = 0.
@@ -98,8 +98,8 @@ void BaseImage<T>::allocateMem()
     // for whether this is necessary.
     _stride = this->_bounds.getXMax() - this->_bounds.getXMin() + 1;
 
-    ptrdiff_t nElements = _stride * (this->_bounds.getYMax() - this->_bounds.getYMin() + 1);
-    if (_stride <= 0 || nElements <= 0) {
+    _nElements = _stride * (this->_bounds.getYMax() - this->_bounds.getYMin() + 1);
+    if (_stride <= 0 || _nElements <= 0) {
         FormatAndThrow<ImageError>() << 
             "Attempt to create an Image with defined but invalid Bounds ("<<this->_bounds<<")";
     }
@@ -107,7 +107,7 @@ void BaseImage<T>::allocateMem()
     // The ArrayDeleter is because we use "new T[]" rather than an normal new.
     // Without ArrayDeleter, shared_ptr would just use a regular delete, rather
     // than the required "delete []".
-    _owner.reset(new T[nElements], ArrayDeleter<T>());
+    _owner.reset(new T[_nElements], ArrayDeleter<T>());
     _data = _owner.get();
 }
 
@@ -146,14 +146,17 @@ void Image<T>::resize(const Bounds<int>& new_bounds)
 {
     if (!new_bounds.isDefined()) {
         // Then this is really a deallocation.  Clear out the existing memory.
+        this->_bounds = new_bounds;
         this->_owner.reset();
         this->_data = 0;
+        this->_nElements = 0;
         this->_stride = 0;
-    } else if (this->_bounds.isDefined() && 
-               this->_bounds.area() <= new_bounds.area() && 
+    } else if (this->_bounds.isDefined() &&
+               new_bounds.area() <= this->_nElements && 
                this->_owner.unique()) {
         // Then safe to keep existing memory allocation.
         // Just redefine the bounds and stride.
+        this->_bounds = new_bounds;
         this->_stride = new_bounds.getXMax() - new_bounds.getXMin() + 1;
     } else {
         // Then we want to do the reallocation.

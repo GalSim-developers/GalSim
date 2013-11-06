@@ -90,7 +90,7 @@ namespace galsim {
         _inv_Dsq_pisq(_inv_D_pi * _inv_D_pi),
         _xnorm(flux * _Dsq),
         _knorm(flux / (M_PI * (1.-_obssq))),
-        _info(cache.get(std::make_pair(_obscuration, this->gsparams)))
+        _info(cache.get(std::make_pair(_obscuration, this->gsparams.duplicate())))
     {
         xdbg<<"SBAiryImpl constructor: gsparams = "<<gsparams.get()<<std::endl;
         xdbg<<"this->gsparams = "<<this->gsparams.get()<<std::endl;

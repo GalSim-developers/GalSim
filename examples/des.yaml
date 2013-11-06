@@ -17,7 +17,9 @@
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
 #
-# Draw DES PSFs at the locations of observed galaxies.
+# Draw DES PSFs at the locations of observed galaxies.  To run it type:
+# 
+#     galsim -m des des.yaml
 #
 # This demo probably isn't so useful as an actual program, but it does showcase how to
 # use the DES module that comes with GalSim, which can be modified to do what you actually
@@ -47,25 +49,25 @@
 eval_variables :
     # Note: the s at the start of sroot means the variable is a str.
     # This will be used as simply root in the Eval items below that use it.
-    sroot : 'DECam_00154912_'
+    sroot : &root 'DECam_00154912_'
 
     # Directories in the Galsim repo
-    simg_dir : 'des_data'
-    swl_dir : 'des_data'
+    simg_dir : &img_dir 'des_data'
+    swl_dir : &wl_dir 'des_data'
 
     # Directories on Mike's laptop
-    #simg_dir : '/Users/Mike/Astro/des/SV/DECam_00154912_wl'
-    #swl_dir : '/Users/Mike/Astro/des/SV/DECam_00154912_wl'
+    #simg_dir : &img_dir '/Users/Mike/Astro/des/SV/DECam_00154912_wl'
+    #swl_dir : &wl_dir '/Users/Mike/Astro/des/SV/DECam_00154912_wl'
     
     # Directories on folio
-    #simg_dir : '/data3/DECAM/SV/DECam_154912'
-    #swl_dir : '/data3/DECAM/wl/DECam_00154912_wl'
+    #simg_dir : &img_dir '/data3/DECAM/SV/DECam_154912'
+    #swl_dir : &wl_dir '/data3/DECAM/wl/DECam_00154912_wl'
 
     # Set which chips to run on
-    ifirst_chip : 1
-    ilast_chip : 62
-    #ifirst_chip : 12
-    #ilast_chip : 12
+    ifirst_chip : &first_chip 1
+    ilast_chip : &last_chip 62
+    #ifirst_chip : &first_chip 12
+    #ilast_chip : &last_chip 12
     
 
 # Define the PSF profile to use the DES shapelet files
@@ -77,23 +79,23 @@ psf :
 # Setup input files
 input :
     catalog :
-        dir : { type : Eval, str : 'img_dir' }
+        dir : *img_dir
         file_name : 
             type : NumberedFile
-            root : { type : Eval, str : 'root' }
+            root : *root
             digits : 2
             ext : '_cat.fits'
-            num : { type : Sequence, first : { type : Eval, str : 'first_chip' } }
+            num : { type : Sequence, first : *first_chip }
         hdu : 2
 
     fits_header :
-        dir : { type : Eval, str : 'img_dir' }
+        dir : *img_dir
         file_name : 
             type : NumberedFile
-            root : { type : Eval, str : 'root' }
+            root : *root
             digits : 2
             ext : '.fits.fz'
-            num : { type : Sequence, first : { type : Eval, str : 'first_chip' } }
+            num : { type : Sequence, first : *first_chip }
 
 
 
@@ -129,9 +131,9 @@ output :
 
     file_name :
         type : NumberedFile
-        root : { type : Eval, str : 'root' }
+        root : *root
         digits : 2
-        num : { type : Sequence, first : { type : Eval, str : 'first_chip' } }
+        num : { type : Sequence, first : *first_chip }
         # ext is defined below, since it is different for the two runs
 
     dir : 'output_yaml'
@@ -151,6 +153,7 @@ psf :
 
 input :
     des_shapelet :
+        # Can't use *wl_dir here, since the anchors don't follow across yaml documents.
         dir : { type : Eval, str : 'wl_dir' }
         file_name :
             type : NumberedFile

@@ -626,6 +626,10 @@ def test_sersic():
     sersic = galsim.Sersic(n=3, flux=test_flux, scale_radius=0.05, trunc=10, flux_untruncated=True)
     do_kvalue(sersic, "Truncated Sersic w/ flux_untruncated, scale radius specified")
 
+    # Test severely truncated Sersic
+    sersic = galsim.Sersic(n=4, flux=test_flux, half_light_radius=1, trunc=1.45)
+    do_kvalue(sersic, "Severely truncated n=4 Sersic")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 

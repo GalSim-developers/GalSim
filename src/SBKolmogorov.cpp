@@ -77,7 +77,7 @@ namespace galsim {
         _inv_k0sq(1./_k0sq),
         _flux(flux), 
         _xnorm(_flux * _k0sq),
-        _info(cache.get(this->gsparams))
+        _info(cache.get(this->gsparams.duplicate()))
     {
         dbg<<"SBKolmogorov:\n";
         dbg<<"lam_over_r0 = "<<_lam_over_r0<<std::endl;

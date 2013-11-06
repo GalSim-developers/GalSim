@@ -116,6 +116,8 @@ def test_float_value():
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
     for k in range(6):
+        config['seq_index'] = k  # The Random type doesn't use seq_index, but this keeps it
+                                 # from thinking current_val is still current.
         ran1 = galsim.config.ParseValue(config,'ran1',config, float)[0]
         np.testing.assert_almost_equal(ran1, rng() * 2.5 + 0.5)
 
@@ -125,6 +127,7 @@ def test_float_value():
     # Test values generated from a Gaussian deviate
     gd = galsim.GaussianDeviate(rng)
     for k in range(6):
+        config['seq_index'] = k
         gauss1 = galsim.config.ParseValue(config,'gauss1',config, float)[0]
         gd.setMean(0)
         gd.setSigma(1)
@@ -166,14 +169,17 @@ def test_float_value():
     # Test values generated from a distribution in a file
     dd=galsim.DistDeviate(rng,function='config_input/distribution.txt',interpolant='linear')
     for k in range(6):
+        config['seq_index'] = k
         dist1 = galsim.config.ParseValue(config,'dist1',config, float)[0]
         np.testing.assert_almost_equal(dist1, dd())
     dd=galsim.DistDeviate(rng,function='config_input/distribution2.txt',interpolant='linear')
     for k in range(6):
+        config['seq_index'] = k
         dist2 = galsim.config.ParseValue(config,'dist2',config, float)[0]
         np.testing.assert_almost_equal(dist2, dd())
     dd=galsim.DistDeviate(rng,function=lambda x: x*x,x_min=0.,x_max=2.)
     for k in range(6):
+        config['seq_index'] = k
         dist3 = galsim.config.ParseValue(config,'dist3',config, float)[0]
         np.testing.assert_almost_equal(dist3, dd())
 
@@ -292,6 +298,7 @@ def test_int_value():
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
     for k in range(6):
+        config['seq_index'] = k
         ran1 = galsim.config.ParseValue(config,'ran1',config, int)[0]
         np.testing.assert_equal(ran1, int(math.floor(rng() * 4)))
 
@@ -419,6 +426,7 @@ def test_bool_value():
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
     for k in range(6):
+        config['seq_index'] = k
         ran1 = galsim.config.ParseValue(config,'ran1',config, bool)[0]
         np.testing.assert_equal(ran1, rng() < 0.5)
 
@@ -651,6 +659,7 @@ def test_angle_value():
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
     for k in range(6):
+        config['seq_index'] = k
         ran1 = galsim.config.ParseValue(config,'ran1',config, galsim.Angle)[0]
         theta = rng() * 2 * math.pi
         np.testing.assert_almost_equal(ran1.rad(), theta)
@@ -794,6 +803,7 @@ def test_pos_value():
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
     for k in range(6):
+        config['seq_index'] = k
         ran1 = galsim.config.ParseValue(config,'ran1',config, galsim.PositionD)[0]
         # Emulate a do-while loop
         while True:

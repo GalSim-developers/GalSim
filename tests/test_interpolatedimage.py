@@ -70,6 +70,8 @@ def test_sbinterpolatedimage():
     # that SBInterpolatedImage that it is the same as the original
     lan3 = galsim.Lanczos(3, True, 1.E-4)
     lan3_2d = galsim.InterpolantXY(lan3)
+    quint = galsim.Quintic()
+    quint_2d = galsim.InterpolantXY(quint)
 
     ftypes = [np.float32, np.float64]
     ref_array = np.array([
@@ -84,7 +86,7 @@ def test_sbinterpolatedimage():
                 ref_array.astype(array_type),image_in.array,
                 err_msg="Array from input Image differs from reference array for type %s"%
                         array_type)
-        sbinterp = galsim.SBInterpolatedImage(image_in, lan3_2d, dx=1.0)
+        sbinterp = galsim.SBInterpolatedImage(image_in, lan3_2d, quint_2d, dx=1.0)
         test_array = np.zeros(ref_array.shape, dtype=array_type)
         image_out = galsim.ImageView[array_type](test_array, scale=1.0)
         sbinterp.draw(image_out.view())
@@ -100,7 +102,7 @@ def test_sbinterpolatedimage():
         # Anyway, Quintic seems to be accurate enough.
         quint = galsim.Quintic(1.e-4)
         quint_2d = galsim.InterpolantXY(quint)
-        sbinterp = galsim.SBInterpolatedImage(image_in, quint_2d, dx=1.0)
+        sbinterp = galsim.SBInterpolatedImage(image_in, quint_2d, quint_2d, dx=1.0)
         sbinterp.setFlux(1.)
         do_shoot(galsim.GSObject(sbinterp),image_out,"InterpolatedImage")
 
@@ -473,8 +475,8 @@ def test_uncorr_padding():
     orig_nx = 147
     orig_ny = 174
     noise_var = 1.73
-    big_nx = 259
-    big_ny = 282
+    big_nx = 519
+    big_ny = 482
     orig_seed = 151241
 
     # first, make a noise image
@@ -499,6 +501,7 @@ def test_uncorr_padding():
 
     # make it into an InterpolatedImage with noise-padding
     int_im = galsim.InterpolatedImage(orig_img, noise_pad=noise_var,
+                                      noise_pad_size=max(big_nx,big_ny),
                                       rng = galsim.GaussianDeviate(orig_seed))
     # draw into a larger image
     big_img = galsim.ImageF(big_nx, big_ny)
@@ -513,6 +516,7 @@ def test_uncorr_padding():
     # basically, redo all of the above steps and draw into a new image, make sure it's the same as
     # previous.
     int_im = galsim.InterpolatedImage(orig_img, noise_pad=noise_var,
+                                      noise_pad_size=max(big_nx,big_ny),
                                       rng = galsim.GaussianDeviate(orig_seed))
     big_img_2 = galsim.ImageF(big_nx, big_ny)
     int_im.draw(big_img_2, dx=1.)
@@ -558,10 +562,8 @@ def test_pad_image():
     big_img.setCenter(0,0)
 
     # Use a few different kinds of shapes for that padding. 
-    # In particular, we used to have a problem with a pad_image that was already the shape of 
-    # "getPaddedSize(pad_factor)", so include that.
     for (pad_nx, pad_ny) in [ (160,160), (179,191), (256,256), (305, 307) ]:
-        print pad_nx, pad_ny
+        print 'pad size = ',pad_nx, pad_ny
 
         # make the pad_image 
         pad_img = galsim.ImageF(pad_nx, pad_ny, scale=1.)
@@ -569,14 +571,17 @@ def test_pad_image():
         pad_img.setCenter(0,0)
 
         # make an interpolated image padded with the pad_image, and outside of that
+        orig_img.write('junk1.fits')
+        pad_img.write('junk2.fits')
         int_im = galsim.InterpolatedImage(orig_img, pad_image=pad_img, use_true_center=False)
 
         # draw into the larger image
         int_im.draw(big_img, use_true_center=False)
+        big_img.write('junk3.fits')
 
         # check that variance is diluted by expected amount 
         # Note -- we don't use np.var, since that computes the variance relative to the 
-        # actual mean value.  We just want sum(I^2) relative to the nominal I=0 value.
+        # actual mean value.  We just want sum(I^2)/Npix relative to the nominal I=0 value.
         var1 = np.sum(orig_img.array**2)
         if pad_nx > big_nx and pad_ny > big_ny:
             var2 = np.sum(pad_img[big_img.bounds].array**2)
@@ -592,7 +597,8 @@ def test_pad_image():
         if pad_nx < big_nx and pad_ny < big_ny:
             # now also pad with noise_pad outside of the pad_image
             int_im = galsim.InterpolatedImage(orig_img, pad_image=pad_img, noise_pad=noise_var/2,
-                                              pad_factor=pad_factor, rng=rng, use_true_center=False)
+                                              noise_pad_size=max(big_nx,big_ny),
+                                              rng=rng, use_true_center=False)
             int_im.draw(big_img, use_true_center=False)
     
             var3 = (noise_var/2) * float(big_nx*big_ny - pad_nx*pad_ny)
@@ -643,7 +649,7 @@ def test_corr_padding():
 
     # make it into an InterpolatedImage with noise-padding
     int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed),
-                                      noise_pad = im)
+                                      noise_pad = im, noise_pad_size = max(big_nx,big_ny))
 
     # draw into a larger image
     big_img = galsim.ImageF(big_nx, big_ny)
@@ -658,7 +664,8 @@ def test_corr_padding():
     # basically, redo all of the above steps and draw into a new image, make sure it's the same as
     # previous.
     int_im = galsim.InterpolatedImage(
-        orig_img, rng=galsim.GaussianDeviate(orig_seed), noise_pad=cn)
+        orig_img, rng=galsim.GaussianDeviate(orig_seed), noise_pad=cn,
+        noise_pad_size = max(big_nx,big_ny))
     big_img_2 = galsim.ImageF(big_nx, big_ny)
     int_im.draw(big_img_2, dx=1.)
     np.testing.assert_array_almost_equal(big_img_2.array, big_img.array, decimal=decimal_precise,
@@ -676,9 +683,9 @@ def test_corr_padding():
     inimg = galsim.fits.read(infile)
     incf = galsim.CorrelatedNoise(galsim.GaussianDeviate(), inimg) # input RNG will be ignored below
     int_im2 = galsim.InterpolatedImage(orig_img, rng=galsim.GaussianDeviate(orig_seed),
-                                       noise_pad=inimg)
+                                       noise_pad=inimg, noise_pad_size = max(big_nx,big_ny))
     int_im3 = galsim.InterpolatedImage(orig_img, rng=galsim.GaussianDeviate(orig_seed),
-                                       noise_pad=incf)
+                                       noise_pad=incf, noise_pad_size = max(big_nx,big_ny))
     big_img2 = galsim.ImageF(big_nx, big_ny)
     big_img3 = galsim.ImageF(big_nx, big_ny)
     int_im2.draw(big_img2, dx=1.)
@@ -741,11 +748,8 @@ def test_realspace_conv():
         c2 = galsim.Convolve([gal,psf], real_space=False)
 
         im1 = c1.draw(dx=target_scale, image=galsim.ImageD(target_size,target_size))
-        print 'im1 = ',im1.array[:,:]
         im2 = c2.draw(dx=target_scale, image=galsim.ImageD(target_size,target_size))
-        print 'im2 = ',im2.array[:,:]
         np.testing.assert_array_almost_equal(im1.array, im2.array, 5)
-        print 'im1 == im2'
 
         # Now make the psf also an InterpolatedImage:
         psf=galsim.InterpolatedImage(psf_im, x_interpolant=interp, flux=1)
@@ -753,16 +757,12 @@ def test_realspace_conv():
         c4 = galsim.Convolve([gal,psf], real_space=False)
 
         im3 = c3.draw(dx=target_scale, image=galsim.ImageD(target_size,target_size))
-        print 'im3 = ',im3.array[:,:]
         im4 = c4.draw(dx=target_scale, image=galsim.ImageD(target_size,target_size), wmult=5)
-        print 'im4 = ',im4.array[:,:]
         np.testing.assert_array_almost_equal(im1.array, im3.array, 2)
         # Note: only 2 d.p. since the interpolated image version of the psf is really a different
         # profile from the original.  Especially for the lower order interpolants.  So we don't
         # expect these images to be equal to many decimal places.
-        print 'im1 == im3'
         np.testing.assert_array_almost_equal(im3.array, im4.array, 5)
-        print 'im3 == im4'
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -931,13 +931,13 @@ def test_conserve_dc():
 
 if __name__ == "__main__":
     test_sbinterpolatedimage()
-    test_pad_image()
     test_roundtrip()
     test_fluxnorm()
     test_exceptions()
     test_operations_simple()
     test_operations()
     test_uncorr_padding()
+    test_pad_image()
     test_corr_padding()
     test_realspace_conv()
     test_Cubic_ref()

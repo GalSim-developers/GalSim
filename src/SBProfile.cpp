@@ -237,14 +237,14 @@ namespace galsim {
         dbg<<"Start getGoodImageSize\n";
 
         // Find a good size based on dx and stepK
-        double Nd = 2*M_PI/(dx*stepK());
+        double Nd = 2.*M_PI/(dx*stepK());
         dbg<<"Nd = "<<Nd<<std::endl;
         Nd *= wmult; // make even bigger if desired
         dbg<<"Nd => "<<Nd<<std::endl;
 
         // Make it an integer
         // Some slop to keep from getting extra pixels due to roundoff errors in calculations.
-        int N = int(std::ceil(Nd-1.e-6));
+        int N = int(std::ceil(Nd*(1.-1.e-12)));
         dbg<<"N = "<<N<<std::endl;
 
         // Round up to an even value
@@ -455,7 +455,8 @@ namespace galsim {
         dbg << 
             " After adjustments: dx " << dx << " dk " << dk << 
             " maxK " << dk*NFT/2 << std::endl;
-        assert(dk <= stepK());
+        xdbg<<"dk - stepK() = "<<dk-(stepK()*(1.+1.e-8))<<std::endl;
+        xassert(dk <= stepK()*(1. + 1.e-8)); // Add a little slop in case of rounding errors.
         boost::shared_ptr<XTable> xt;
         if (NFT*dk/2 > maxK()) {
             dbg<<"NFT*dk/2 = "<<NFT*dk/2<<" > maxK() = "<<maxK()<<std::endl;

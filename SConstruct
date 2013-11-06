@@ -66,7 +66,7 @@ opts.Add('EXTRA_FLAGS','Extra compiler flags to use in addition to automatic one
 opts.Add('LINKFLAGS','Additional flags to use when linking','')
 opts.Add(BoolVariable('DEBUG','Turn on debugging statements',True))
 opts.Add(BoolVariable('EXTRA_DEBUG','Turn on extra debugging info',False))
-opts.Add(BoolVariable('WARN','Add warning compiler flags, like -Wall', True))
+opts.Add(BoolVariable('WARN','Add warning compiler flags, like -Wall', False))
 opts.Add('PYTHON','Name of python executable','')
 
 opts.Add(BoolVariable('WITH_UPS','Install ups/ directory for use with EUPS', False))
@@ -248,7 +248,8 @@ def BasicCCFlags(env):
 
     if env['FLAGS'] == '':
         if compiler == 'g++':
-            env.Replace(CCFLAGS=['-O2','-fno-strict-aliasing'])
+            env.Replace(CCFLAGS=['-O2'])
+            env.Append(CCFLAGS=['-fno-strict-aliasing'])
             # Unfortunately this next flag requires strict-aliasing, but allowing that 
             # opens up a Pandora's box of bugs and warnings, so I don't want to do that.
             #env.Append(CCFLAGS=['-ftree-vectorize'])

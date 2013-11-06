@@ -39,7 +39,6 @@ slider to quickly move through the different images.
 New features introduced in this demo:
 
 - real_cat = galsim.RealGalaxyCatalog(file_name, dir)
-- real_cat.preload()
 - obj = galsim.Gaussian(fwhm, flux)
 - obj = galsim.RealGalaxy(real_cat, index)
 - obj.applyRotation(theta)
@@ -79,9 +78,7 @@ def main(argv):
     # Define some parameters we'll use below.
 
     cat_file_name = 'real_galaxy_catalog_example.fits'
-    # This script is designed to be run from the examples directory so dir is a relative path.  
-    # But the '../examples/' part lets bin/demo6 also be run from the bin directory.
-    dir = '../examples/data'
+    dir = 'data'
     # Make output directory if not already present.
     if not os.path.isdir('output'):
         os.mkdir('output')
@@ -114,12 +111,6 @@ def main(argv):
     # If the images are in a different directory, you may also specify image_dir, which gives
     # the relative path from dir to wherever the images are located.
     real_galaxy_catalog = galsim.RealGalaxyCatalog(cat_file_name, dir=dir)
-
-    # Preloading the header information usually speeds up subsequent access.
-    # Basically, it tells pyfits to read all the headers in once and save them, rather
-    # than re-open the galaxy catalog fits file each time you want to access a new galaxy.
-    # If you are doing more than a few galaxies, then it seems to be worthwhile.
-    real_galaxy_catalog.preload()
     logger.info('Read in %d real galaxies from catalog', real_galaxy_catalog.nobjects)
 
     # Make the ePSF

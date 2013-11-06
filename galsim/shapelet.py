@@ -110,6 +110,7 @@ class Shapelet(GSObject):
     _opt_params = {}
     _single_params = []
     _takes_rng = False
+    _takes_logger = False
 
     # --- Public Class methods ---
     def __init__(self, sigma, order, bvec=None, gsparams=None):

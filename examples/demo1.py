@@ -28,11 +28,8 @@ look at those files first as they will probably have a quicker learning curve fo
 can look through these python scripts, which show how to do the same thing.  Of course, experienced
 pythonistas may prefer to start with these scripts and then look at the corresponding YAML files.
 
-If you run `scons examples`, executable versions of these demo scripts will be created in 
-the GalSim bin directory.  So if that has been done, you can write either of the following
-to run this script:
+To run this script, simply write:
 
-    ../bin/demo1
     python demo1.py
 
 

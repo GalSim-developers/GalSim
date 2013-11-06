@@ -7,13 +7,18 @@ RunUninstall = env['_RunUninstall']
 
 install_subdir = 'bin'
 
-scripts = [ 'galsim_yaml', 'galsim_json' ]
-targets = []
-for script in scripts:
-    targets.append(env.ExecScript(script, script + '.py'))
+scripts = [ 'galsim' , 'galsim_yaml', 'galsim_json' ]
+targets = [ env.ExecScript(script, script + '.py') for script in scripts ]
 
 AlwaysBuild(targets)
 Default(targets)
+
+# Don't install this.  Just leave the executable in GalSim/bin.
+tools = [ 'installed_python' ]
+tool_targets = [ env.ExecScript(tool, tool + '.py') for tool in tools ]
+
+AlwaysBuild(tool_targets)
+Default(tool_targets)
         
 if 'install' in COMMAND_LINE_TARGETS:
     RunInstall(env, targets, install_subdir)

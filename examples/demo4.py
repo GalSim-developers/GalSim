@@ -78,7 +78,7 @@ def main(argv):
     logger = logging.getLogger("demo4")
 
     # Define some parameters we'll use below and make directories if needed.
-    cat_file_name = os.path.join('..', 'examples', 'input','galsim_default_input.asc')
+    cat_file_name = os.path.join('input','galsim_default_input.asc')
     if not os.path.isdir('output'):
         os.mkdir('output')
     multi_file_name = os.path.join('output','multi.fits')

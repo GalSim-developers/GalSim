@@ -87,7 +87,7 @@ namespace galsim {
         SBProfileImpl(gsparams),
         _n(n), _flux(flux), _trunc(trunc), 
         // Start with untruncated SersicInfo regardless of value of trunc
-        _info(cache.get(boost::make_tuple(_n, 0., this->gsparams)))
+        _info(cache.get(boost::make_tuple(_n, 0., this->gsparams.duplicate())))
     {
         dbg<<"Start SBSersic constructor:\n";
         dbg<<"n = "<<_n<<std::endl;
@@ -114,7 +114,7 @@ namespace galsim {
                        }
 
                        // Update _info with the correct truncated version.
-                       _info = cache.get(boost::make_tuple(_n,_trunc/_r0,this->gsparams));
+                       _info = cache.get(boost::make_tuple(_n,_trunc/_r0,this->gsparams.duplicate()));
 
                        if (flux_untruncated) {
                            // Update the stored _flux and _re with the correct values
@@ -132,7 +132,7 @@ namespace galsim {
                    _r0 = size;
                    if (_truncated) {
                        // Update _info with the correct truncated version.
-                       _info = cache.get(boost::make_tuple(_n,_trunc/_r0,this->gsparams));
+                       _info = cache.get(boost::make_tuple(_n,_trunc/_r0,this->gsparams.duplicate()));
 
                        if (flux_untruncated) {
                            // Update the stored _flux with the correct value
@@ -423,18 +423,19 @@ namespace galsim {
             gamma8n = boost::math::tgamma_lower(8.*_n, z);
         }
         // The quadratic term of small-k expansion:
-        _kderiv2 = -gamma4n / (4.*_gamma2n);
+        _kderiv2 = -gamma4n / (4.*_gamma2n) / getFluxFraction();
         // And a quartic term:
-        _kderiv4 = gamma6n / (64.*_gamma2n);
+        _kderiv4 = gamma6n / (64.*_gamma2n) / getFluxFraction();
         dbg<<"kderiv2,4 = "<<_kderiv2<<"  "<<_kderiv4<<std::endl;
 
         // When is it safe to use low-k approximation?  
         // See when next term past quartic is at accuracy threshold
-        double kderiv6 = gamma8n / (2304.*_gamma2n);
+        double kderiv6 = gamma8n / (2304.*_gamma2n) / getFluxFraction();
         dbg<<"kderiv6 = "<<kderiv6<<std::endl;
         double kmin = std::pow(_gsparams->kvalue_accuracy / kderiv6, 1./6.);
         dbg<<"kmin = "<<kmin<<std::endl;
         _ksq_min = kmin * kmin;
+        dbg<<"ksq_min = "<<_ksq_min<<std::endl;
  
         // Normalization for integral at k=0:
         double hankel_norm = getFluxFraction()*_n*_gamma2n;
@@ -470,6 +471,9 @@ namespace galsim {
         double sf=0., skf=0., sk=0., sk2=0.;
 
         // Don't go past k = 500
+        _ksq_max = -1.;
+        _maxk = kmin; // Just in case we break on the first iteration.
+        bool found_maxk = false;
         for (double logk = std::log(kmin)-0.001; logk < std::log(500.); logk += dlogk) {
             double k = std::exp(logk);
             double ksq = k*k;
@@ -502,6 +506,7 @@ namespace galsim {
             // Keep track of whether we are below the maxk_threshold yet:
             if (std::abs(val) > _gsparams->maxk_threshold) { _maxk = k; n_correct = 0; }
             else {
+                found_maxk = true;
                 // Once we are past the last maxk_threshold value,  figure out if the 
                 // high-k approximation is good enough.
                 _highk_a = (sf*sk2 - sk*skf) / (n_fit*sk2 - sk*sk);
@@ -538,13 +543,35 @@ namespace galsim {
             }
             fit_vals.push_front(f0);
         }
+        // If didn't find a good approximation for large k, just use the largest k we put in
+        // in the table.  (Need to use some approximation after this anyway!)
+        if (_ksq_max <= 0.) _ksq_max = std::exp(2. * _ft.argMax());
         xdbg<<"ft.argMax = "<<_ft.argMax()<<std::endl;
         xdbg<<"ksq_max = "<<_ksq_max<<std::endl;
 
-        // This is the last value that didn't satisfy the requirement, so just go to 
-        // the next value.
-        _maxk *= exp(dlogk);
-        xdbg<<"maxk with val >= "<<_gsparams->maxk_threshold<<" = "<<_maxk<<std::endl;
+        if (found_maxk) {
+            // This is the last value that didn't satisfy the requirement, so just go to 
+            // the next value.
+            xdbg<<"maxk with val > "<<_gsparams->maxk_threshold<<" = "<<_maxk<<std::endl;
+            _maxk *= exp(dlogk);
+            xdbg<<"maxk -> "<<_maxk<<std::endl;
+        } else {
+            // Then we never did find a value of k such that f(k) < maxk_threshold
+            // This means that maxk needs to be larger.  Use the high-k approximation.
+            xdbg<<"Never found f(k) < maxk_threshold.\n";
+            _highk_a = (sf*sk2 - sk*skf) / (n_fit*sk2 - sk*sk);
+            _highk_b = (n_fit*skf - sk*sf) / (n_fit*sk2 - sk*sk);
+            xdbg<<"Use current best guess for high-k approximation.\n";
+            xdbg<<"a,b = "<<_highk_a<<", "<<_highk_b<<std::endl;
+            // Use that approximation to determine maxk
+            // f(maxk) = (a + b/k)/k^2 = maxk_threshold 
+            _maxk = sqrt(_highk_a / _gsparams->maxk_threshold);
+            xdbg<<"initial maxk = "<<_maxk<<std::endl;
+            for (int i=0; i<3; ++i) {
+                _maxk = sqrt( (_highk_a - _highk_b/_maxk) / _gsparams->maxk_threshold );
+                xdbg<<"maxk => "<<_maxk<<std::endl;
+            }
+        }
     }
 
     // Function object for finding the r that encloses all except a particular flux fraction.
@@ -717,6 +744,10 @@ namespace galsim {
         // Note: This isn't a very good initial guess, but the solver tends to converge pretty
         // rapidly anyway.
 
+        // We need _b below, so call getHLR(), since it may not be calculated yet. 
+        // We don't care about the return value, but it also stores the b value in _b.
+        getHLR(); 
+
         // If trunc = sqrt(2) * re, then x = 2^(1/2n), and the initial guess for b is:
         // b = log( 0.5 * 2^(1/2n)^(2n-1) ) / (sqrt(2)-1)
         //   = -(1/2n) * log(2) / (sqrt(2)-1)
@@ -724,12 +755,20 @@ namespace galsim {
         // on trunc/re is.  It's possible that the full formulae can give a positive solution
         // even if the initial estimate is negative.  But unless someone complains (and proposes
         // a better prescription for this), we'll take this as a de facto limit.
-        if (b1 <= 0.) {
-            throw SBError("Sersic truncation is too small for the given half_light_radius.");
+        if (b1 < 1.e-3 * _b) {
+            //throw SBError("Sersic truncation is too small for the given half_light_radius.");
+            // Update: Ricardo Herbonnet (rightly) complained.
+            // He pointed out that this formula for b1 is always == 0 for n = 0.5.
+            // So we can't just be throwing an exception here.
+            // Since we expand the bracket below anyway, switch to just using _b/2 and 
+            // letting the expansion happen.
+            // I also updated the above check from b1 <= 0 to b1 < 1.e-3 * _b.
+            // Probably if we are getting really close to zero, it is better to start with 
+            // _b/2 instead and expand it down.
+            b1 = _b/2;
         }
 
         // The upper limit to b corresponds to the half-light radius of the untruncated profile.
-        getHLR(); // This also stores the corresponding b value in _b
         double b2 = _b;
         SersicTruncatedHLR func(_n, x);
         Solve<SersicTruncatedHLR> solver(func,b1,b2);

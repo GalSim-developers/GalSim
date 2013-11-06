@@ -174,6 +174,14 @@ namespace hsm {
         double failed_moments;
     };
 
+// clang doesn't like the mmgr new macro in this next line.
+#ifdef MEM_TEST
+#ifdef __clang__
+#if __has_warning("-Wpredefined-identifier-outside-function")
+#pragma GCC diagnostic ignored "-Wpredefined-identifier-outside-function"
+#endif
+#endif
+#endif
     const boost::shared_ptr<HSMParams> default_hsmparams(new HSMParams());
 
     // All code between the @cond and @endcond is excluded from Doxygen documentation
@@ -345,6 +353,8 @@ namespace hsm {
      * @param[in] guess_y_centroid Optional argument with an initial guess for the y centroid of the
      *                             galaxy; if not set, then the code will try the center of the
      *                             image.
+     * @param[in] hsmparams        Optional argument to specify parameters to be used for shape
+     *                             measurement routines, as an HSMParams object.
      * @return A CppShapeData object containing the results of shape measurement.
      */
     template <typename T, typename U>
@@ -380,6 +390,8 @@ namespace hsm {
      * @param[in] guess_y_centroid  Optional argument with an initial guess for the y centroid of
      *                              the galaxy; if not set, then the code will try the center of the
      *                              image.
+     * @param[in] hsmparams         Optional argument to specify parameters to be used for shape
+     *                              measurement routines, as an HSMParams object.
      * @return A CppShapeData object containing the results of moment measurement.
      */
     template <typename T>
@@ -405,6 +417,8 @@ namespace hsm {
      * @param[in] shear_est    A string indicating the desired method of PSF correction: REGAUSS,
      *                         LINEAR, BJ, or KSB.
      * @param[in] flags        A parameter for REGAUSS (typical usage is 0xe).
+     * @param[in] hsmparams    Optional argument to specify parameters to be used for shape
+     *                         measurement routines, as an HSMParams object.
      * @return A status flag that should be zero if the measurement was successful.
      */
     unsigned int general_shear_estimator(
@@ -433,6 +447,8 @@ namespace hsm {
      * @param[out] rho4     The weighted radial fourth moment.
      * @param[in] epsilon   The required level of accuracy.
      * @param[out] num_iter The number of iterations needed to converge.
+     * @param[in] hsmparams Optional argument to specify parameters to be used for shape
+     *                      measurement routines, as an HSMParams object.
      */
     void find_ellipmom_2(
         ConstImageView<double> data, double& A, double& x0, double& y0,
