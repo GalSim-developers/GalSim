@@ -1,3 +1,8 @@
+"""test_cf_periodicity.py:  See how the assumption of purely positive power spectra holds up under
+the periodicity correction, and other effects.
+
+See the full discussion at https://github.com/GalSim-developers/GalSim/issues/430 
+"""
 import numpy as np
 import galsim
 
