@@ -18,4 +18,3 @@ Process for updating fink with a new version:
   - Don't forget to change the name to galsim.info (without the version number).
   - Group = Undergoing Validation
   - Mention that you have done the above tests.
-  - If you comment-reply, hit reload on the page first to not change the status back.
