@@ -15,6 +15,16 @@ using as images InterpolatedImages constructed from parametric Sersics instead.
 
 plot_test_interpolants.py: makes readable graphs from the output of the previous two scripts.
 
+---Correlation functions---
+
+corrfuncs/test_cf_interpolant.py: makes upsampled plots of correlation functions to see how their
+interpolants behaves and check whether this corresponds to what is physically required.  See the
+full discussion at TODO ADD LINK
+
+corrfuncs/test_cf_periodicity.py: tests to see how the assumption of purely positive power spectra
+holds up under the periodicity correction, and other effects.  See the full discussion at
+https://github.com/GalSim-developers/GalSim/issues/430.
+
 ---Other GalSim functionality---
 
 lensing_engine.pdf: a document describing the mathematics behind the GalSim "lensing engine"
