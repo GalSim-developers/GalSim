@@ -21,6 +21,7 @@
 # Import things from other files we want to be in the galsim namespace
 from ._galsim import *
 from base import *
+from chromatic import *
 from real import RealGalaxy, RealGalaxyCatalog, simReal
 from optics import OpticalPSF
 from shapelet import Shapelet
