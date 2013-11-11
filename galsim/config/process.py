@@ -485,6 +485,7 @@ def Process(config, logger=None):
         # (In image, they are indexed by image_num, and after that by obj_num.)
         config['seq_index'] = file_num
         config['file_num'] = file_num
+        config['start_obj_num'] = obj_num
 
         # Process the input fields that might be relevant at file scope:
         ProcessInput(config, file_num=file_num, logger=logger_proxy, file_scope_only=True)
@@ -699,6 +700,7 @@ def BuildFits(file_name, config, logger=None,
 
     config['seq_index'] = file_num
     config['file_num'] = file_num
+    config['start_obj_num'] = obj_num
     if logger:
         logger.debug('file %d: BuildFits for %s: file, image, obj = %d,%d,%d',
                       config['file_num'],file_name,file_num,image_num,obj_num)
@@ -807,6 +809,7 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
 
     config['seq_index'] = file_num
     config['file_num'] = file_num
+    config['start_obj_num'] = obj_num
     if logger:
         logger.debug('file %d: BuildMultiFits for %s: file, image, obj = %d,%d,%d',
                       config['file_num'],file_name,file_num,image_num,obj_num)
@@ -904,6 +907,7 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
 
     config['seq_index'] = file_num
     config['file_num'] = file_num
+    config['start_obj_num'] = obj_num
     if logger:
         logger.debug('file %d: BuildDataCube for %s: file, image, obj = %d,%d,%d',
                       config['file_num'],file_name,file_num,image_num,obj_num)
