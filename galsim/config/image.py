@@ -582,7 +582,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     # Sometimes an input field needs to do something special at the start of an image.
     if 'input' in config:
         for key in [ k for k in galsim.config.valid_input_types.keys() if k in config['input'] ]:
-            if galsim.config.valid_input_types[key][3]:
+            if galsim.config.valid_input_types[key][4]:
                 assert key in config
                 fields = config['input'][key]
                 if not isinstance(fields, list):
@@ -592,7 +592,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
                 for i in range(len(fields)):
                     field = fields[i]
                     input_obj = input_objs[i]
-                    func = eval(galsim.config.valid_input_types[key][3])
+                    func = eval(galsim.config.valid_input_types[key][4])
                     func(input_obj, field, config)
 
     stamp_images = galsim.config.BuildStamps(
@@ -809,7 +809,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     # Sometimes an input field needs to do something special at the start of an image.
     if 'input' in config:
         for key in [ k for k in galsim.config.valid_input_types.keys() if k in config['input'] ]:
-            if galsim.config.valid_input_types[key][3]:
+            if galsim.config.valid_input_types[key][4]:
                 assert key in config
                 fields = config['input'][key]
                 if not isinstance(fields, list):
@@ -819,7 +819,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
                 for i in range(len(fields)):
                     field = fields[i]
                     input_obj = input_objs[i]
-                    func = eval(galsim.config.valid_input_types[key][3])
+                    func = eval(galsim.config.valid_input_types[key][4])
                     func(input_obj, field, config)
 
     stamp_images = galsim.config.BuildStamps(

@@ -27,23 +27,25 @@ valid_input_types = {
     #   used later in PowerSpectrumInit).
     # - whether the class has a getNObjects method, in which case it also must have a constructor
     #   kwarg nobjects_only to efficiently do only enough to calculate nobjects.
+    # - whether the class might be relevant at the file- or image-scope level, rather than just
+    #   at the object level.  Notably, this is true for dict.
     # - A function to call at the start of each image (or None)
     # - A list of types that should have their "current" values invalidated when the input
     #   object changes.
     # See the des module for examples of how to extend this from a module.
-    'catalog' : ('galsim.Catalog', [], True, None, ['Catalog']), 
-    'dict' : ('galsim.Dict', [], False, None, ['Dict']), 
-    'real_catalog' : ('galsim.RealGalaxyCatalog', [], True, None, 
+    'catalog' : ('galsim.Catalog', [], True, False, None, ['Catalog']), 
+    'dict' : ('galsim.Dict', [], False, True, None, ['Dict']), 
+    'real_catalog' : ('galsim.RealGalaxyCatalog', [], True, False, None, 
                       ['RealGalaxy', 'RealGalaxyOriginal']),
-    'nfw_halo' : ('galsim.NFWHalo', [], False, None,
+    'nfw_halo' : ('galsim.NFWHalo', [], False, False, None,
                   ['NFWHaloShear','NFWHaloMagnification']),
     'power_spectrum' : ('galsim.PowerSpectrum',
                         # power_spectrum uses these extra parameters in PowerSpectrumInit
                         ['grid_spacing', 'interpolant'], 
-                        False,
+                        False, False,
                         'galsim.config.PowerSpectrumInit',
                         ['PowerSpectrumShear','PowerSpectrumMagnification']),
-    'fits_header' : ('galsim.FitsHeader', [], False, None, ['FitsHeader']), 
+    'fits_header' : ('galsim.FitsHeader', [], False, True, None, ['FitsHeader']), 
 }
 
 valid_output_types = { 
@@ -133,7 +135,7 @@ def CopyConfig(config):
     return config1
 
 
-def ProcessInput(config, file_num=0, logger=None):
+def ProcessInput(config, file_num=0, logger=None, file_scope_only=False):
     """
     Process the input field, reading in any specified input files or setting up
     any objects that need to be initialized.
@@ -204,6 +206,9 @@ def ProcessInput(config, file_num=0, logger=None):
         # Read all input fields provided and create the corresponding object
         # with the parameters given in the config file.
         for key in all_keys:
+            # Skip this key if not relevant for file_scope_only run.
+            if file_scope_only and not valid_input_types[key][3]: continue
+
             if logger:
                 logger.debug('file %d: Process input key %s',file_num,key)
             fields = input[key]
@@ -257,7 +262,7 @@ def ProcessInput(config, file_num=0, logger=None):
                     ck[i] = input_obj
                     ck_safe[i] = safe
                     # Invalidate any currently cached values that use this kind of input object:
-                    for value_type in valid_input_types[key][4]:
+                    for value_type in valid_input_types[key][5]:
                         RemoveCurrent(config, type=value_type)
                         if logger:
                             logger.debug('file %d: Cleared current_vals for items with type %s',
@@ -419,10 +424,9 @@ def Process(config, logger=None):
                 (kwargs, file_num, file_name, logger) = job
                 if logger:
                     logger.debug('%s: Received job to do file %d, %s',proc,file_num,file_name)
-                if file_num != 0:
-                    ProcessInput(kwargs['config'], file_num=file_num, logger=logger)
-                    if logger:
-                        logger.debug('%s: After ProcessInput for file %d',proc,file_num)
+                ProcessInput(kwargs['config'], file_num=file_num, logger=logger)
+                if logger:
+                    logger.debug('%s: After ProcessInput for file %d',proc,file_num)
                 kwargs['logger'] = logger
                 t = build_func(**kwargs)
                 if logger:
@@ -481,6 +485,9 @@ def Process(config, logger=None):
         # (In image, they are indexed by image_num, and after that by obj_num.)
         config['seq_index'] = file_num
         config['file_num'] = file_num
+
+        # Process the input fields that might be relevant at file scope:
+        ProcessInput(config, file_num=file_num, logger=logger_proxy, file_scope_only=True)
 
         # Get the file_name
         if 'file_name' in output:
@@ -598,17 +605,12 @@ def Process(config, logger=None):
             # clobbering the versions for other tasks on the queue.
             kwargs1 = copy.copy(kwargs)
             kwargs1['config'] = CopyConfig(config)
-            if logger:
-                logger_proxy = logger_manager.logger()
-            else:
-                logger_proxy = None
             task_queue.put( (kwargs1, file_num, file_name, logger_proxy) )
         else:
             try:
-                if file_num != 0:
-                    ProcessInput(config, file_num=file_num, logger=logger_proxy)
-                    if logger:
-                        logger.debug('file %d: After ProcessInput',file_num)
+                ProcessInput(config, file_num=file_num, logger=logger_proxy)
+                if logger:
+                    logger.debug('file %d: After ProcessInput',file_num)
                 kwargs['config'] = config
                 kwargs['logger'] = logger 
                 t = build_func(**kwargs)
