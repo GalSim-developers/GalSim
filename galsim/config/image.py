@@ -692,6 +692,8 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
                       config['image_num'],image_num,obj_num)
 
     nobjects = GetNObjForScatteredImage(config,image_num)
+    if logger:
+        logger.debug('image %d: nobj = %d',config['image_num'],nobjects)
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
                'image_pos', 'sky_pos', 'n_photons', 'wmult', 'offset',

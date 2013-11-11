@@ -490,6 +490,19 @@ def Process(config, logger=None):
         # Process the input fields that might be relevant at file scope:
         ProcessInput(config, file_num=file_num, logger=logger_proxy, file_scope_only=True)
 
+        # It is possible that some items at image scope could need a random number generator.
+        # For example, in demo9, we have a random number of objects per image.
+        # So we need to build an rng here.
+        if 'random_seed' in config['image']:
+            seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+            seed += obj_num
+            if logger:
+                logger.debug('file %d: seed = %d',file_num,seed)
+            rng = galsim.BaseDeviate(seed)
+        else:
+            rng = galsim.BaseDeviate()
+        config['rng'] = rng
+
         # Get the file_name
         if 'file_name' in output:
             SetDefaultExt(output['file_name'],'.fits')
