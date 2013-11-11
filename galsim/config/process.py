@@ -28,17 +28,22 @@ valid_input_types = {
     # - whether the class has a getNObjects method, in which case it also must have a constructor
     #   kwarg nobjects_only to efficiently do only enough to calculate nobjects.
     # - A function to call at the start of each image (or None)
+    # - A list of types that should have their "current" values invalidated when the input
+    #   object changes.
     # See the des module for examples of how to extend this from a module.
-    'catalog' : ('galsim.Catalog', [], True, None), 
-    'dict' : ('galsim.Dict', [], False, None), 
-    'real_catalog' : ('galsim.RealGalaxyCatalog', [], True, None),
-    'nfw_halo' : ('galsim.NFWHalo', [], False, None),
+    'catalog' : ('galsim.Catalog', [], True, None, ['Catalog']), 
+    'dict' : ('galsim.Dict', [], False, None, ['Dict']), 
+    'real_catalog' : ('galsim.RealGalaxyCatalog', [], True, None, 
+                      ['RealGalaxy', 'RealGalaxyOriginal']),
+    'nfw_halo' : ('galsim.NFWHalo', [], False, None,
+                  ['NFWHaloShear','NFWHaloMagnification']),
     'power_spectrum' : ('galsim.PowerSpectrum',
                         # power_spectrum uses these extra parameters in PowerSpectrumInit
                         ['grid_spacing', 'interpolant'], 
                         False,
-                        'galsim.config.PowerSpectrumInit'),
-    'fits_header' : ('galsim.FitsHeader', [], False, None), 
+                        'galsim.config.PowerSpectrumInit',
+                        ['PowerSpectrumShear','PowerSpectrumMagnification']),
+    'fits_header' : ('galsim.FitsHeader', [], False, None, ['FitsHeader']), 
 }
 
 valid_output_types = { 
@@ -54,6 +59,36 @@ valid_output_types = {
     'DataCube' : ('BuildDataCube', 'GetNObjForDataCube', True, True, False),
 }
 
+
+def RemoveCurrent(config, keep_safe=False, type=None):
+    """
+    Remove any "current values" stored in the config dict at any level.
+    If keep_safe = True (default = False), then any current values that are marked
+    as safe will be preserved.
+    If type is provided, it will only clear the current value of objects that use
+    this particular type.  If type = None, it remove current values of all types.
+    """
+    # End recursion if this is not a dict.
+    if not isinstance(config,dict): return
+
+    # Delete the current_val at this level, if any
+    if ( 'current_val' in config 
+          and not (keep_safe and config['current_safe'])
+          and (type == None or ('type' in config and config['type'] == type)) ):
+        del config['current_val']
+        del config['current_safe']
+        del config['current_value_type']
+        del config['current_seq_index']
+
+    # Recurse to lower levels, if any
+    for key in config:
+        if isinstance(config[key],list):
+            for item in config[key]:
+                RemoveCurrent(item, keep_safe, type)
+        else:
+            RemoveCurrent(config[key], keep_safe, type)
+
+
 class InputGetter:
     """A simple class that is returns a given config[key][i] when called with obj()
     """
@@ -62,7 +97,7 @@ class InputGetter:
         self.key = key
         self.i = i
     def __call__(self): return self.config[self.key][self.i]
-            
+
 def CopyConfig(config):
     """
     If you want to use a config dict for multiprocessing, you need to deep copy
@@ -94,6 +129,7 @@ def CopyConfig(config):
         config1['output'] = copy.deepcopy(config['output'])
     if 'eval_variables' in config:
         config1['eval_variables'] = copy.deepcopy(config['eval_variables'])
+
     return config1
 
 
@@ -220,6 +256,12 @@ def ProcessInput(config, file_num=0, logger=None):
                     # Store input_obj in the config for use by BuildGSObject function.
                     ck[i] = input_obj
                     ck_safe[i] = safe
+                    # Invalidate any currently cached values that use this kind of input object:
+                    for value_type in valid_input_types[key][4]:
+                        RemoveCurrent(config, type=value_type)
+                        if logger:
+                            logger.debug('file %d: Cleared current_vals for items with type %s',
+                                         file_num,value_type)
 
         # Check that there are no other attributes specified.
         valid_keys = valid_input_types.keys()

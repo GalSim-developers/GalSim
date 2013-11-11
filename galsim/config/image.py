@@ -444,6 +444,9 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     nobjects = nx_tiles * ny_tiles
     config['nx_tiles'] = nx_tiles
     config['ny_tiles'] = ny_tiles
+    if logger:
+        logger.debug('image %d: n_tiles = %d, %d',config['image_num'],
+                     config['nx_tiles'],config['ny_tiles'])
 
     stamp_size = params.get('stamp_size',0)
     stamp_xsize = params.get('stamp_xsize',stamp_size)
@@ -492,6 +495,9 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
             "!= required (%d,%d)."%(config['image_force_xsize'],config['image_force_ysize']))
     config['image_xsize'] = full_xsize
     config['image_ysize'] = full_ysize
+    if logger:
+        logger.debug('image %d: image_size = %d, %d',config['image_num'],
+                     config['image_xsize'],config['image_ysize'])
 
     if 'pix' not in config:
         config['pix'] = { 'type' : 'Pixel' , 'xw' : pixel_scale }

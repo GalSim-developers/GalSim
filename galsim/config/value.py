@@ -99,6 +99,7 @@ def ParseValue(config, param_name, base, value_type):
         if param['current_value_type'] != value_type:
             raise ValueError(
                 "Attempt to parse %s multiple times with different value types"%param_name)
+        #print 'seq_index = ',base.get('seq_index',0)
         #print base['obj_num'],'Using current value of ',param_name,' = ',param['current_val']
         return param['current_val'], param['current_safe']
     else:
@@ -401,7 +402,7 @@ def _GenerateFromCatalog(param, param_name, base, value_type):
     elif value_type is bool:
         val = _GetBoolValue(input_cat.get(**kwargs),param_name)
 
-    #print base['obj_num'],
+    #print base['file_num'],
     #print 'Catalog: col = %s, index = %s, val = %s'%(kwargs['col'],kwargs['index'],val)
     return val, safe
 
@@ -425,7 +426,7 @@ def _GenerateFromDict(param, param_name, base, value_type):
     d = base['dict'][num]
 
     val = d.get(key)
-    #print base['obj_num'],'Dict: key = %s, val = %s'%(key,val)
+    #print base['file_num'],'Dict: key = %s, val = %s'%(key,val)
     return val, safe
 
 
@@ -452,7 +453,7 @@ def _GenerateFromFitsHeader(param, param_name, base, value_type):
         raise ValueError("key %s not found in the FITS header in %s"%(key,kwargs['file_name']))
 
     val = header.get(key)
-    #print base['obj_num'],'Header: key = %s, val = %s'%(key,val)
+    #print base['file_num'],'Header: key = %s, val = %s'%(key,val)
     return val, safe
 
 

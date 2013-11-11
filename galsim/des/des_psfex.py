@@ -223,7 +223,7 @@ import galsim.config
 
 # First we need to add the class itself as a valid input_type.
 galsim.config.process.valid_input_types['des_psfex'] = ('galsim.des.DES_PSFEx',
-                                                        [], False, None)
+                                                        [], False, None, ['DES_PSFEx'])
 
 # Also make a builder to create the PSF object for a given position.
 # The builders require 4 args.
