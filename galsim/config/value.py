@@ -1098,13 +1098,18 @@ def SetDefaultIndex(config, num, base):
     # in the file.  The index calculation then becomes
     #     first + (seq_index - start_seq_index) % nitems
     # which does go in the expected order.
+    start_seq_index = 0
+    if ( 'start_obj_num' in base 
+         and 'seq_index' in base and 'obj_num' in base
+         and base['seq_index'] == base['obj_num'] ):
+        start_seq_index = base['start_obj_num']
 
     if 'index' not in config:
         config['index'] = {
             'type' : 'Sequence',
             'nitems' : num,
             'default' : True,
-            'start_seq_index' : base.get('start_obj_num',0)
+            'start_seq_index' : start_seq_index
         }
     elif ( isinstance(config['index'],dict) 
            and 'type' in config['index'] ):
@@ -1115,14 +1120,14 @@ def SetDefaultIndex(config, num, base):
              and 'default' in index ):
             index['nitems'] = num
             index['default'] = True
-            index['start_seq_index'] = base.get('start_obj_num',0)
+            index['start_seq_index'] = start_seq_index
         elif ( type == 'Sequence' 
                and 'nitems' not in index
                and ('step' not in index or (isinstance(index['step'],int) and index['step'] > 0) )
                and ('last' not in index or 'default' in index) ):
             index['last'] = num-1
             index['default'] = True
-            index['start_seq_index'] = base.get('start_obj_num',0)
+            index['start_seq_index'] = start_seq_index
         elif ( type == 'Sequence'
                and 'nitems' not in index
                and ('step' in index and (isinstance(index['step'],int) and index['step'] < 0) ) ):
@@ -1137,17 +1142,17 @@ def SetDefaultIndex(config, num, base):
                 index['first'] = num-1
                 index['last'] = 0
                 index['default'] = 1
-                index['start_seq_index'] = base.get('start_obj_num',0)
+                index['start_seq_index'] = start_seq_index
             elif ( 'first' not in index 
                    or ('default' in index and index['default'] == 2) ):
                 index['first'] = num-1
                 index['default'] = 2
-                index['start_seq_index'] = base.get('start_obj_num',0)
+                index['start_seq_index'] = start_seq_index
             elif ( 'last' not in index 
                    or ('default' in index and index['default'] == 3) ):
                 index['last'] = 0
                 index['default'] = 3
-                index['start_seq_index'] = base.get('start_obj_num',0)
+                index['start_seq_index'] = start_seq_index
         elif ( type == 'Random'
                and ('min' not in index or 'default' in index)
                and ('max' not in index or 'default' in index) ):
