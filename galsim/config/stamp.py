@@ -300,7 +300,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
     import time
     t1 = time.time()
 
-    config['seq_index'] = obj_num 
+    config['seq_index'] = obj_num - config.get('start_obj_num',0)
     config['obj_num'] = obj_num
     # Initialize the random number generator we will be using.
     if 'random_seed' in config['image']:

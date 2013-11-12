@@ -80,6 +80,7 @@ def RemoveCurrent(config, keep_safe=False, type=None):
         del config['current_val']
         del config['current_safe']
         del config['current_seq_index']
+        del config['current_file_num']
         del config['current_value_type']
 
     # Recurse to lower levels, if any
@@ -504,14 +505,14 @@ def Process(config, logger=None):
         if 'first_seed' in config:
             config['image']['random_seed'] = {
                 'type' : 'Sequence' ,
-                'first' : config['first_seed']
+                'first' : config['first_seed'] + obj_num 
             }
 
         # It is possible that some items at image scope could need a random number generator.
         # For example, in demo9, we have a random number of objects per image.
         # So we need to build an rng here.
         if 'random_seed' in config['image']:
-            config['seq_index'] = obj_num
+            config['seq_index'] = 0
             seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
             config['seq_index'] = file_num
             if logger:
@@ -761,7 +762,7 @@ def BuildFits(file_name, config, logger=None,
          and 'random_seed' in config['image'] 
          and not isinstance(config['image']['random_seed'],dict) ):
         first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
+        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first + obj_num }
 
     # hdus is a dict with hdus[i] = the item in all_images to put in the i-th hdu.
     hdus = {}
@@ -886,7 +887,7 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
          and 'random_seed' in config['image'] 
          and not isinstance(config['image']['random_seed'],dict) ):
         first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
+        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first + obj_num }
 
     if psf_file_name:
         make_psf_image = True
@@ -1000,7 +1001,7 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
          and 'random_seed' in config['image'] 
          and not isinstance(config['image']['random_seed'],dict) ):
         first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
+        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first + obj_num }
 
     if psf_file_name:
         make_psf_image = True
