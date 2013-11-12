@@ -22,12 +22,10 @@ development.
 Distribution
 ------------
 
-## WARNING: The following is not strictly true yet.  It will be when the version 1.0 release is complete.
-
 The current released version of GalSim is version 1.0.  To get the code, you 
 can grab the tarball (or zip file) from
 
-    https://github.com/GalSim-developers/GalSim/releases/tag/v1.0
+    https://github.com/GalSim-developers/GalSim/releases/tag/v1.0.0
 
 Also, feel free to fork the repository:
 
@@ -69,13 +67,19 @@ You should receive notification that your unsubscription was successful.
 How to communicate with the GalSim developers
 ---------------------------------------------
 
-If you have any comments, questions, or suggestions, please open up an Issue on
-our GitHub repository:
+If you have a question about how to use GalSim, a good place to ask it is at
+StackOverflow:
+
+    http://stackoverflow.com/
+
+Some of the GalSim devlopers have alerts set up to be automatically notified 
+about questions with the 'galsim' tag, so there is a good chance that your 
+question will be answered.
+
+If you find something that you think is a bug, or if you have a suggestion
+for a new feature, please open up an Issue on our GitHub repository:
 
     https://github.com/GalSim-developers/GalSim/issues?state=open
-
-Alternatively, if you prefer e-mail, then you can find contact information on
-the GREAT3 webpage linked above.
 
 
 Installation
@@ -147,30 +151,27 @@ Demonstration scripts
 ---------------------
 
 There are a number of scripts in `examples/` that demonstrate how the code can
-be used.  These are called `demo1.py`-`demo11.py`, and can be run either using
-(e.g.) `python demo1.py` while sitting in `examples/`, or by doing `scons
-examples` and then using the executable `bin/demo1`.  A completely parallel
-sequence of configuration scripts, `demo1.yaml`-`demo11.yaml`, demonstrates how
-to make the same set of simulations using config scripts that can be input to
-`bin/galsim`.  
+be used.  These are called `demo1.py`...`demo11.py`.  You can run them by 
+typing (e.g.) `python demo1.py` while sitting in `examples/`, All demo scripts 
+are designed to be run in the `examples/` directory.  Some of them access 
+files in subdirectories of the `examples/` directory, so they would not work 
+correctly from other locations.
 
-All demonstration scripts (including `bin/demo1`, etc) are meant to be run 
-within the `examples/` directory.  The demos can be run in a different 
-directory, but then the demo script will not be able to find the required files
-or directories.
+A completely parallel sequence of configuration files, called `demo1.yaml`...
+`demo11.yaml`, demonstrates how to make the same set of simulations using 
+config files that are parsed by the executable `bin/galsim`.  
 
-As the project develops through further versions, and adds
-further capabilities to the software, more demo scripts will be added to
-`examples/` to illustrate what GalSim can do.
+As the project develops through further versions, and adds further 
+capabilities to the software, more demo scripts may be added to `examples/`
+to illustrate what GalSim can do.
 
 
 Additional scripts
 ------------------
 
-While the demo scripts can be run from the command-line while sitting in
-`examples/` without any arguments, the remaining scripts are auxiliary 
-utilities that take various command-line arguments, which are always explained 
-in comments at the top of the file.
+There are some additional scripts in the `examples/` directory as well.
+These utilities take various command-line arguments, which are explained 
+in comments at the top of each file.
 
 * `ShootInterpolated.py` is a script that takes as input a filename for a FITS
 image, which it will simulate (optionally sheared and/or resampled) via
@@ -182,25 +183,28 @@ elliptical Gaussian) for a FITS image.
 * `MeasShape.py` can be used to carry out PSF correction using one of four
 methods, given FITS images of the galaxy and PSF.
 
+* `des.py` creates an image based on DES PSF estimates using DES catalogs
+as input.  It is primarily designed to demonstrate the usage of the des
+module, and is accompanies by a config file, `des.yaml` that does the same
+thing.
+
 
 Tagged versions
 ---------------
 
-After every GalSim release and development milestone we tag a snapshot of the 
-code at that moment, with the tag name `vX.X` or `milestoneN` where N is the 
-milestone number.  The milestoneN versions are not recommended now that we
-have official tagged versions, `vX.X`.
-
-You can see the available tags using the command
+Each GalSim release is tagged in git with the tag name `vX.X.X`.  You can see 
+the available tags using the command
 
     git tag -l
 
-at a terminal from within the repository.
+at a terminal from within the repository.  In addition to the official
+releases, we also have tags for various other milestones that were important
+at one time or another.
 
 The version of the code at any given snapshot can be downloaded from our
 GitHub webpage, or checked out from the repository using the tag name, e.g.:
 
-    $ git checkout v1.0
+    git checkout v1.0.0
 
 This will then update your directory tree to the snapshot of the code at the 
 milestone requested.  (You will also get a message about being in a "detached" 

@@ -153,7 +153,12 @@ image :
     size : 512  # pixels
 
     # nobjects is required to specify how many objects to place on the image.
-    nobjects : 20
+    # It could just be a number (say, 20), but in this case, we let the number
+    # of sources be different for each cluster.
+    nobjects :
+        type : Random
+        min : 15
+        max : 30
 
     # You can optionally specify stamp_size or (stamp_xsize,stamp_ysize) to set the size of
     # the postage stamp image to draw for each object.  However, if you omit these,

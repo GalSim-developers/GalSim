@@ -44,7 +44,13 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
     """
     if logger:
         logger.debug('file %d: BuildImages nimages = %d: image, obj = %d,%d',
-                      config['file_num'],nimages,image_num,obj_num)
+                     config['file_num'],nimages,image_num,obj_num)
+
+    if ( 'image' in config 
+         and 'random_seed' in config['image'] 
+         and not isinstance(config['image']['random_seed'],dict) ):
+        first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
     import time
     def worker(input, output):
@@ -54,7 +60,7 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
                 (kwargs, image_num, obj_num, nim, info, logger) = job
                 if logger:
                     logger.debug('%s: Received job to do %d images, starting with %d',
-                                proc,nim,image_num)
+                                 proc,nim,image_num)
                 results = []
                 for k in range(nim):
                     t1 = time.time()
@@ -273,8 +279,7 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0,
           but the latter 3 might be None depending on the parameters make_*_image.
     """
     if logger:
-        logger.debug('image %d: BuildImage: image, obj = %d,%d',
-                      image_num,image_num,obj_num)
+        logger.debug('image %d: BuildImage: image, obj = %d,%d',image_num,image_num,obj_num)
 
     # Make config['image'] exist if it doesn't yet.
     if 'image' not in config:
@@ -282,14 +287,6 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0,
     image = config['image']
     if not isinstance(image, dict):
         raise AttributeError("config.image is not a dict.")
-
-    # Normally, random_seed is just a number, which really means to use that number
-    # for the first item and go up sequentially from there for each object.
-    # However, we allow for random_seed to be a gettable parameter, so for the 
-    # normal case, we just convert it into a Sequence.
-    if 'random_seed' in image and not isinstance(image['random_seed'],dict):
-        first_seed = galsim.config.ParseValue(image, 'random_seed', config, int)[0]
-        image['random_seed'] = { 'type' : 'Sequence' , 'first' : first_seed }
 
     if 'draw_method' not in image:
         image['draw_method'] = 'fft'
@@ -351,8 +348,11 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
     config['seq_index'] = image_num
     config['image_num'] = image_num
     if logger:
-        logger.debug('image %d: BuildSingleImage: image, obj = %d,%d',
-                      config['image_num'],image_num,obj_num)
+        logger.debug('image %d: BuildSingleImage: image, obj = %d,%d',image_num,image_num,obj_num)
+
+    if 'random_seed' in config['image'] and not isinstance(config['image']['random_seed'],dict):
+        first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc', 'retry_failures',
                'n_photons', 'wmult', 'offset', 'gsparams' ]
@@ -426,8 +426,11 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     config['seq_index'] = image_num
     config['image_num'] = image_num
     if logger:
-        logger.debug('image %d: BuildTiledImage: image, obj = %d,%d',
-                      config['image_num'],image_num,obj_num)
+        logger.debug('image %d: BuildTiledImage: image, obj = %d,%d',image_num,image_num,obj_num)
+
+    if 'random_seed' in config['image'] and not isinstance(config['image']['random_seed'],dict):
+        first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc', 'retry_failures',
                'image_pos', 'n_photons', 'wmult', 'offset', 'gsparams' ]
@@ -444,6 +447,8 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     nobjects = nx_tiles * ny_tiles
     config['nx_tiles'] = nx_tiles
     config['ny_tiles'] = ny_tiles
+    if logger:
+        logger.debug('image %d: n_tiles = %d, %d',image_num,nx_tiles,ny_tiles)
 
     stamp_size = params.get('stamp_size',0)
     stamp_xsize = params.get('stamp_xsize',stamp_size)
@@ -492,6 +497,8 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
             "!= required (%d,%d)."%(config['image_force_xsize'],config['image_force_ysize']))
     config['image_xsize'] = full_xsize
     config['image_ysize'] = full_ysize
+    if logger:
+        logger.debug('image %d: image_size = %d, %d',image_num,full_xsize,full_ysize)
 
     if 'pix' not in config:
         config['pix'] = { 'type' : 'Pixel' , 'xw' : pixel_scale }
@@ -550,7 +557,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     # of each stamp relative to the center.
     config['image_center'] = full_image.bounds.trueCenter()
     if logger:
-        logger.debug('image %d: image_center = %s',config['image_num'],str(config['image_center']))
+        logger.debug('image %d: image_center = %s',image_num,str(config['image_center']))
 
     if make_psf_image:
         full_psf_image = galsim.ImageF(full_xsize, full_ysize, scale=pixel_scale)
@@ -576,7 +583,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     # Sometimes an input field needs to do something special at the start of an image.
     if 'input' in config:
         for key in [ k for k in galsim.config.valid_input_types.keys() if k in config['input'] ]:
-            if galsim.config.valid_input_types[key][3]:
+            if galsim.config.valid_input_types[key][4]:
                 assert key in config
                 fields = config['input'][key]
                 if not isinstance(fields, list):
@@ -586,7 +593,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
                 for i in range(len(fields)):
                     field = fields[i]
                     input_obj = input_objs[i]
-                    func = eval(galsim.config.valid_input_types[key][3])
+                    func = eval(galsim.config.valid_input_types[key][4])
                     func(input_obj, field, config)
 
     stamp_images = galsim.config.BuildStamps(
@@ -609,9 +616,8 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         # This is our signal that the object was skipped.
         if not images[k].bounds.isDefined(): continue
         if False:
-            logger.debug('image %d: full bounds = %s',config['image_num'],str(full_image.bounds))
-            logger.debug('image %d: stamp %d bounds = %s',
-                         config['image_num'],k,str(images[k].bounds))
+            logger.debug('image %d: full bounds = %s',image_num,str(full_image.bounds))
+            logger.debug('image %d: stamp %d bounds = %s',image_num,k,str(images[k].bounds))
         assert full_image.bounds.includes(images[k].bounds)
         b = images[k].bounds
         full_image[b] += images[k]
@@ -683,9 +689,15 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     config['image_num'] = image_num
     if logger:
         logger.debug('image %d: BuildScatteredImage: image, obj = %d,%d',
-                      config['image_num'],image_num,obj_num)
+                     image_num,image_num,obj_num)
+
+    if 'random_seed' in config['image'] and not isinstance(config['image']['random_seed'],dict):
+        first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
     nobjects = GetNObjForScatteredImage(config,image_num)
+    if logger:
+        logger.debug('image %d: nobj = %d',image_num,nobjects)
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc', 'retry_failures',
                'image_pos', 'sky_pos', 'n_photons', 'wmult', 'offset',
@@ -777,7 +789,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     # of each stamp relative to the center.
     config['image_center'] = full_image.bounds.trueCenter()
     if logger:
-        logger.debug('image %d: image_center = %s',config['image_num'],str(config['image_center']))
+        logger.debug('image %d: image_center = %s',image_num,str(config['image_center']))
 
     if make_psf_image:
         full_psf_image = galsim.ImageF(full_xsize, full_ysize, scale=pixel_scale)
@@ -803,7 +815,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     # Sometimes an input field needs to do something special at the start of an image.
     if 'input' in config:
         for key in [ k for k in galsim.config.valid_input_types.keys() if k in config['input'] ]:
-            if galsim.config.valid_input_types[key][3]:
+            if galsim.config.valid_input_types[key][4]:
                 assert key in config
                 fields = config['input'][key]
                 if not isinstance(fields, list):
@@ -813,7 +825,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
                 for i in range(len(fields)):
                     field = fields[i]
                     input_obj = input_objs[i]
-                    func = eval(galsim.config.valid_input_types[key][3])
+                    func = eval(galsim.config.valid_input_types[key][4])
                     func(input_obj, field, config)
 
     stamp_images = galsim.config.BuildStamps(
@@ -836,10 +848,9 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         if not images[k].bounds.isDefined(): continue
         bounds = images[k].bounds & full_image.bounds
         if False:
-            logger.debug('image %d: full bounds = %s',config['image_num'],str(full_image.bounds))
-            logger.debug('image %d: stamp %d bounds = %s',
-                         config['image_num'],k,str(images[k].bounds))
-            logger.debug('image %d: Overlap = %s',config['image_num'],str(bounds))
+            logger.debug('image %d: full bounds = %s',image_num,str(full_image.bounds))
+            logger.debug('image %d: stamp %d bounds = %s',image_num,k,str(images[k].bounds))
+            logger.debug('image %d: Overlap = %s',image_num,str(bounds))
         if bounds.isDefined():
             full_image[bounds] += images[k][bounds]
             if make_psf_image:

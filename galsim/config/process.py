@@ -27,18 +27,25 @@ valid_input_types = {
     #   used later in PowerSpectrumInit).
     # - whether the class has a getNObjects method, in which case it also must have a constructor
     #   kwarg nobjects_only to efficiently do only enough to calculate nobjects.
+    # - whether the class might be relevant at the file- or image-scope level, rather than just
+    #   at the object level.  Notably, this is true for dict.
     # - A function to call at the start of each image (or None)
+    # - A list of types that should have their "current" values invalidated when the input
+    #   object changes.
     # See the des module for examples of how to extend this from a module.
-    'catalog' : ('galsim.Catalog', [], True, None), 
-    'dict' : ('galsim.Dict', [], False, None), 
-    'real_catalog' : ('galsim.RealGalaxyCatalog', [], True, None),
-    'nfw_halo' : ('galsim.NFWHalo', [], False, None),
+    'catalog' : ('galsim.Catalog', [], True, False, None, ['Catalog']), 
+    'dict' : ('galsim.Dict', [], False, True, None, ['Dict']), 
+    'real_catalog' : ('galsim.RealGalaxyCatalog', [], True, False, None, 
+                      ['RealGalaxy', 'RealGalaxyOriginal']),
+    'nfw_halo' : ('galsim.NFWHalo', [], False, False, None,
+                  ['NFWHaloShear','NFWHaloMagnification']),
     'power_spectrum' : ('galsim.PowerSpectrum',
                         # power_spectrum uses these extra parameters in PowerSpectrumInit
                         ['grid_spacing', 'interpolant'], 
-                        False,
-                        'galsim.config.PowerSpectrumInit'),
-    'fits_header' : ('galsim.FitsHeader', [], False, None), 
+                        False, False,
+                        'galsim.config.PowerSpectrumInit',
+                        ['PowerSpectrumShear','PowerSpectrumMagnification']),
+    'fits_header' : ('galsim.FitsHeader', [], False, True, None, ['FitsHeader']), 
 }
 
 valid_output_types = { 
@@ -54,6 +61,36 @@ valid_output_types = {
     'DataCube' : ('BuildDataCube', 'GetNObjForDataCube', True, True, False),
 }
 
+
+def RemoveCurrent(config, keep_safe=False, type=None):
+    """
+    Remove any "current values" stored in the config dict at any level.
+    If keep_safe = True (default = False), then any current values that are marked
+    as safe will be preserved.
+    If type is provided, it will only clear the current value of objects that use
+    this particular type.  If type = None, it remove current values of all types.
+    """
+    # End recursion if this is not a dict.
+    if not isinstance(config,dict): return
+
+    # Delete the current_val at this level, if any
+    if ( 'current_val' in config 
+          and not (keep_safe and config['current_safe'])
+          and (type == None or ('type' in config and config['type'] == type)) ):
+        del config['current_val']
+        del config['current_safe']
+        del config['current_seq_index']
+        del config['current_value_type']
+
+    # Recurse to lower levels, if any
+    for key in config:
+        if isinstance(config[key],list):
+            for item in config[key]:
+                RemoveCurrent(item, keep_safe, type)
+        else:
+            RemoveCurrent(config[key], keep_safe, type)
+
+
 class InputGetter:
     """A simple class that is returns a given config[key][i] when called with obj()
     """
@@ -62,7 +99,7 @@ class InputGetter:
         self.key = key
         self.i = i
     def __call__(self): return self.config[self.key][self.i]
-            
+
 def CopyConfig(config):
     """
     If you want to use a config dict for multiprocessing, you need to deep copy
@@ -79,7 +116,7 @@ def CopyConfig(config):
         del config1['input_manager']
 
     # Now deepcopy all the regular config fields to make sure things like current_val don't
-    # get clobberd by two processes writing to the same dict.
+    # get clobbered by two processes writing to the same dict.
     if 'gal' in config:
         config1['gal'] = copy.deepcopy(config['gal'])
     if 'psf' in config:
@@ -94,10 +131,11 @@ def CopyConfig(config):
         config1['output'] = copy.deepcopy(config['output'])
     if 'eval_variables' in config:
         config1['eval_variables'] = copy.deepcopy(config['eval_variables'])
+
     return config1
 
 
-def ProcessInput(config, file_num=0, logger=None):
+def ProcessInput(config, file_num=0, logger=None, file_scope_only=False):
     """
     Process the input field, reading in any specified input files or setting up
     any objects that need to be initialized.
@@ -168,6 +206,9 @@ def ProcessInput(config, file_num=0, logger=None):
         # Read all input fields provided and create the corresponding object
         # with the parameters given in the config file.
         for key in all_keys:
+            # Skip this key if not relevant for file_scope_only run.
+            if file_scope_only and not valid_input_types[key][3]: continue
+
             if logger:
                 logger.debug('file %d: Process input key %s',file_num,key)
             fields = input[key]
@@ -220,6 +261,12 @@ def ProcessInput(config, file_num=0, logger=None):
                     # Store input_obj in the config for use by BuildGSObject function.
                     ck[i] = input_obj
                     ck_safe[i] = safe
+                    # Invalidate any currently cached values that use this kind of input object:
+                    for value_type in valid_input_types[key][5]:
+                        RemoveCurrent(config, type=value_type)
+                        if logger:
+                            logger.debug('file %d: Cleared current_vals for items with type %s',
+                                         file_num,value_type)
 
         # Check that there are no other attributes specified.
         valid_keys = valid_input_types.keys()
@@ -377,10 +424,9 @@ def Process(config, logger=None):
                 (kwargs, file_num, file_name, logger) = job
                 if logger:
                     logger.debug('%s: Received job to do file %d, %s',proc,file_num,file_name)
-                if file_num != 0:
-                    ProcessInput(kwargs['config'], file_num=file_num, logger=logger)
-                    if logger:
-                        logger.debug('%s: After ProcessInput for file %d',proc,file_num)
+                ProcessInput(kwargs['config'], file_num=file_num, logger=logger)
+                if logger:
+                    logger.debug('%s: After ProcessInput for file %d',proc,file_num)
                 kwargs['logger'] = logger
                 t = build_func(**kwargs)
                 if logger:
@@ -430,6 +476,16 @@ def Process(config, logger=None):
     # later file_nums.  This is important to do here if nproc != 1.
     ProcessInput(config, file_num=0, logger=logger_proxy)
 
+    # Normally, random_seed is just a number, which really means to use that number
+    # for the first item and go up sequentially from there for each object.
+    # However, we allow for random_seed to be a gettable parameter, so for the 
+    # normal case, we just convert it into a Sequence.
+    if ( 'image' in config 
+         and 'random_seed' in config['image'] 
+         and not isinstance(config['image']['random_seed'],dict) ):
+        config['first_seed'] = galsim.config.ParseValue(
+                config['image'], 'random_seed', config, int)[0]
+
     nfiles_use = nfiles
     for file_num in range(nfiles):
         if logger:
@@ -439,6 +495,31 @@ def Process(config, logger=None):
         # (In image, they are indexed by image_num, and after that by obj_num.)
         config['seq_index'] = file_num
         config['file_num'] = file_num
+        config['start_obj_num'] = obj_num
+
+        # Process the input fields that might be relevant at file scope:
+        ProcessInput(config, file_num=file_num, logger=logger_proxy, file_scope_only=True)
+
+        # Set up random_seed appropriately if necessary.
+        if 'first_seed' in config:
+            config['image']['random_seed'] = {
+                'type' : 'Sequence' ,
+                'first' : config['first_seed']
+            }
+
+        # It is possible that some items at image scope could need a random number generator.
+        # For example, in demo9, we have a random number of objects per image.
+        # So we need to build an rng here.
+        if 'random_seed' in config['image']:
+            config['seq_index'] = obj_num
+            seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+            config['seq_index'] = file_num
+            if logger:
+                logger.debug('file %d: seed = %d',file_num,seed)
+            rng = galsim.BaseDeviate(seed)
+        else:
+            rng = galsim.BaseDeviate()
+        config['rng'] = rng
 
         # Get the file_name
         if 'file_name' in output:
@@ -556,17 +637,12 @@ def Process(config, logger=None):
             # clobbering the versions for other tasks on the queue.
             kwargs1 = copy.copy(kwargs)
             kwargs1['config'] = CopyConfig(config)
-            if logger:
-                logger_proxy = logger_manager.logger()
-            else:
-                logger_proxy = None
             task_queue.put( (kwargs1, file_num, file_name, logger_proxy) )
         else:
             try:
-                if file_num != 0:
-                    ProcessInput(config, file_num=file_num, logger=logger_proxy)
-                    if logger:
-                        logger.debug('file %d: After ProcessInput',file_num)
+                ProcessInput(config, file_num=file_num, logger=logger_proxy)
+                if logger:
+                    logger.debug('file %d: After ProcessInput',file_num)
                 kwargs['config'] = config
                 kwargs['logger'] = logger 
                 t = build_func(**kwargs)
@@ -676,9 +752,16 @@ def BuildFits(file_name, config, logger=None,
 
     config['seq_index'] = file_num
     config['file_num'] = file_num
+    config['start_obj_num'] = obj_num
     if logger:
         logger.debug('file %d: BuildFits for %s: file, image, obj = %d,%d,%d',
                       config['file_num'],file_name,file_num,image_num,obj_num)
+
+    if ( 'image' in config 
+         and 'random_seed' in config['image'] 
+         and not isinstance(config['image']['random_seed'],dict) ):
+        first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
     # hdus is a dict with hdus[i] = the item in all_images to put in the i-th hdu.
     hdus = {}
@@ -794,9 +877,16 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
 
     config['seq_index'] = file_num
     config['file_num'] = file_num
+    config['start_obj_num'] = obj_num
     if logger:
         logger.debug('file %d: BuildMultiFits for %s: file, image, obj = %d,%d,%d',
                       config['file_num'],file_name,file_num,image_num,obj_num)
+
+    if ( 'image' in config 
+         and 'random_seed' in config['image'] 
+         and not isinstance(config['image']['random_seed'],dict) ):
+        first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
     if psf_file_name:
         make_psf_image = True
@@ -901,9 +991,16 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
 
     config['seq_index'] = file_num
     config['file_num'] = file_num
+    config['start_obj_num'] = obj_num
     if logger:
         logger.debug('file %d: BuildDataCube for %s: file, image, obj = %d,%d,%d',
                       config['file_num'],file_name,file_num,image_num,obj_num)
+
+    if ( 'image' in config 
+         and 'random_seed' in config['image'] 
+         and not isinstance(config['image']['random_seed'],dict) ):
+        first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
     if psf_file_name:
         make_psf_image = True

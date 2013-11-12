@@ -73,7 +73,6 @@ def main(argv):
 
     mass_list = [ 7.e14, 4.e14, 2.e14, 1.e14 ]  # mass in Msun/h
     nfiles = 5             # number of files per item in mass list
-    nobj = 20              # number of objects to draw for each file
 
     image_size = 512       # pixels
     pixel_scale = 0.05     # arcsec / pixel
@@ -109,7 +108,7 @@ def main(argv):
 
     logger.info('Starting demo script 9')
 
-    def build_file(seed, file_name, mass):
+    def build_file(seed, file_name, mass, nobj):
         """A function that does all the work to build a single file.
            Returns the total time taken.
         """
@@ -332,10 +331,19 @@ def main(argv):
         for j in range(nfiles):
             file_name = "cluster%04d.fits"%j
             full_name = os.path.join(dir,file_name)
+
+            # Each image has a different number of objects.
+            # We us a random number from 15 to 30.
+            ud = galsim.UniformDeviate(seed)
+            min = 15
+            max = 30
+            nobj = int(math.floor(ud() * (max-min+1))) + min
+            logger.info('Number of objects for %s = %d',full_name,nobj)
+
             # We put on the task queue the args to the buld_file function and
             # some extra info to pass through to the output queue.
             # Our extra info is just the file name that we use to write out which file finished.
-            task_queue.put( ( (seed, full_name, mass), full_name ) )
+            task_queue.put( ( (seed, full_name, mass, nobj), full_name ) )
             # Need to step by the number of galaxies in each file.
             seed += nobj
 

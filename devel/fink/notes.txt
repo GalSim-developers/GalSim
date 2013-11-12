@@ -8,12 +8,13 @@ Process for updating fink with a new version:
 - Update /sw/fink/dists/local/main/finkinfo/galsim.info link to point to new info file.
 - fink validate galsim.info
 - fink -m --build-as-nobody rebuild galsim
-- dpkg -c /sw/fink/debs/galsim_0.3-1_darwin-i386.deb
-- fink validate /sw/fink/debs/galsim_0.3-1_darwin-i386.deb
+- dpkg -c /sw/fink/debs/galsim_[...].deb
+- fink validate /sw/fink/debs/galsim_[...].deb
 - fink install galsim
+- Make sure check_yaml works if you set python to /sw/bin/python2.7 and bin to /sw/bin
+- In tests directory run /sw/bin/nosetests2.7
 - git add new info file for this version.
-- Submit to: http://sourceforge.net/tracker/?func=add&group_id=17203&atid=414256
+- Submit to: http://sourceforge.net/p/fink/package-submissions/
   - Don't forget to change the name to galsim.info (without the version number).
   - Group = Undergoing Validation
   - Mention that you have done the above tests.
-  - If you comment-reply, rit reload on the page first to not change the status back.
