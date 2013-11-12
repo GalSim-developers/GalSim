@@ -272,7 +272,6 @@ def main(argv):
         # If you didn't care about that, you could instead construct this as a continuation
         # of the last RNG from the above loop
         rng = galsim.BaseDeviate(seed+nobj)
-        print 'Seed for %s = %d'%(file_name,seed+nobj)
         full_image.addNoise(galsim.PoissonNoise(rng,sky_level=sky_level_pixel))
 
         # For the weight image, we only want the noise from the sky.  (If we were including

@@ -79,8 +79,8 @@ def RemoveCurrent(config, keep_safe=False, type=None):
           and (type == None or ('type' in config and config['type'] == type)) ):
         del config['current_val']
         del config['current_safe']
-        del config['current_value_type']
         del config['current_seq_index']
+        del config['current_value_type']
 
     # Recurse to lower levels, if any
     for key in config:

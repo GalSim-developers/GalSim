@@ -57,6 +57,13 @@ valid_value_types = {
     'PowerSpectrumMagnification' : ('_GenerateFromPowerSpectrumMagnification', [ float ]),
 }
  
+# Standard keys to ignore while parsing values:
+standard_ignore = [ 
+    'type',
+    'current_val', 'current_safe', 'current_seq_index', 'current_value_type',
+    '#' # When we read in json files, there represent comments
+]
+
 def ParseValue(config, param_name, base, value_type):
     """@brief Read or generate a parameter value from config.
 
@@ -229,9 +236,7 @@ def CheckAllParams(param, param_name, req={}, opt={}, single=[], ignore=[]):
 
     # Check that there aren't any extra keys in param aside from a few we expect:
     valid_keys += ignore
-    valid_keys += [ 'type' ]
-    valid_keys += [ 'current_val', 'current_safe', 'current_seq_index', 'current_value_type' ] 
-    valid_keys += [ '#' ] # When we read in json files, there represent comments
+    valid_keys += standard_ignore
     for key in param.keys():
         if key not in valid_keys:
             raise AttributeError(
@@ -955,8 +960,7 @@ def _GenerateFromEval(param, param_name, base, value_type):
     #print 'Start Eval for ',param_name
     req = { 'str' : str }
     opt = {}
-    ignore = [ 'type', 'current_val', 'current_safe', 'current_seq_index',
-               'current_value_type', '#' ]
+    ignore = standard_ignore
     for key in param.keys():
         if key not in (ignore + req.keys()):
             opt[key] = _type_by_letter(key)

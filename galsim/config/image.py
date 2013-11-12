@@ -44,7 +44,7 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
     """
     if logger:
         logger.debug('file %d: BuildImages nimages = %d: image, obj = %d,%d',
-                      config['file_num'],nimages,image_num,obj_num)
+                     config['file_num'],nimages,image_num,obj_num)
 
     import time
     def worker(input, output):
@@ -54,7 +54,7 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
                 (kwargs, image_num, obj_num, nim, info, logger) = job
                 if logger:
                     logger.debug('%s: Received job to do %d images, starting with %d',
-                                proc,nim,image_num)
+                                 proc,nim,image_num)
                 results = []
                 for k in range(nim):
                     t1 = time.time()
@@ -273,8 +273,7 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0,
           but the latter 3 might be None depending on the parameters make_*_image.
     """
     if logger:
-        logger.debug('image %d: BuildImage: image, obj = %d,%d',
-                      image_num,image_num,obj_num)
+        logger.debug('image %d: BuildImage: image, obj = %d,%d',image_num,image_num,obj_num)
 
     # Make config['image'] exist if it doesn't yet.
     if 'image' not in config:
@@ -351,8 +350,7 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
     config['seq_index'] = image_num
     config['image_num'] = image_num
     if logger:
-        logger.debug('image %d: BuildSingleImage: image, obj = %d,%d',
-                      config['image_num'],image_num,obj_num)
+        logger.debug('image %d: BuildSingleImage: image, obj = %d,%d',image_num,image_num,obj_num)
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
                'n_photons', 'wmult', 'offset', 'gsparams' ]
@@ -426,8 +424,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     config['seq_index'] = image_num
     config['image_num'] = image_num
     if logger:
-        logger.debug('image %d: BuildTiledImage: image, obj = %d,%d',
-                      config['image_num'],image_num,obj_num)
+        logger.debug('image %d: BuildTiledImage: image, obj = %d,%d',image_num,image_num,obj_num)
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
                'image_pos', 'n_photons', 'wmult', 'offset', 'gsparams' ]
@@ -445,8 +442,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     config['nx_tiles'] = nx_tiles
     config['ny_tiles'] = ny_tiles
     if logger:
-        logger.debug('image %d: n_tiles = %d, %d',config['image_num'],
-                     config['nx_tiles'],config['ny_tiles'])
+        logger.debug('image %d: n_tiles = %d, %d',image_num,nx_tiles,ny_tiles)
 
     stamp_size = params.get('stamp_size',0)
     stamp_xsize = params.get('stamp_xsize',stamp_size)
@@ -496,8 +492,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     config['image_xsize'] = full_xsize
     config['image_ysize'] = full_ysize
     if logger:
-        logger.debug('image %d: image_size = %d, %d',config['image_num'],
-                     config['image_xsize'],config['image_ysize'])
+        logger.debug('image %d: image_size = %d, %d',image_num,full_xsize,full_ysize)
 
     if 'pix' not in config:
         config['pix'] = { 'type' : 'Pixel' , 'xw' : pixel_scale }
@@ -556,7 +551,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     # of each stamp relative to the center.
     config['image_center'] = full_image.bounds.trueCenter()
     if logger:
-        logger.debug('image %d: image_center = %s',config['image_num'],str(config['image_center']))
+        logger.debug('image %d: image_center = %s',image_num,str(config['image_center']))
 
     if make_psf_image:
         full_psf_image = galsim.ImageF(full_xsize, full_ysize, scale=pixel_scale)
@@ -615,9 +610,8 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         # This is our signal that the object was skipped.
         if not images[k].bounds.isDefined(): continue
         if False:
-            logger.debug('image %d: full bounds = %s',config['image_num'],str(full_image.bounds))
-            logger.debug('image %d: stamp %d bounds = %s',
-                         config['image_num'],k,str(images[k].bounds))
+            logger.debug('image %d: full bounds = %s',image_num,str(full_image.bounds))
+            logger.debug('image %d: stamp %d bounds = %s',image_num,k,str(images[k].bounds))
         assert full_image.bounds.includes(images[k].bounds)
         b = images[k].bounds
         full_image[b] += images[k]
@@ -689,11 +683,11 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     config['image_num'] = image_num
     if logger:
         logger.debug('image %d: BuildScatteredImage: image, obj = %d,%d',
-                      config['image_num'],image_num,obj_num)
+                     image_num,image_num,obj_num)
 
     nobjects = GetNObjForScatteredImage(config,image_num)
     if logger:
-        logger.debug('image %d: nobj = %d',config['image_num'],nobjects)
+        logger.debug('image %d: nobj = %d',image_num,nobjects)
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
                'image_pos', 'sky_pos', 'n_photons', 'wmult', 'offset',
@@ -785,7 +779,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     # of each stamp relative to the center.
     config['image_center'] = full_image.bounds.trueCenter()
     if logger:
-        logger.debug('image %d: image_center = %s',config['image_num'],str(config['image_center']))
+        logger.debug('image %d: image_center = %s',image_num,str(config['image_center']))
 
     if make_psf_image:
         full_psf_image = galsim.ImageF(full_xsize, full_ysize, scale=pixel_scale)
@@ -844,10 +838,9 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         if not images[k].bounds.isDefined(): continue
         bounds = images[k].bounds & full_image.bounds
         if False:
-            logger.debug('image %d: full bounds = %s',config['image_num'],str(full_image.bounds))
-            logger.debug('image %d: stamp %d bounds = %s',
-                         config['image_num'],k,str(images[k].bounds))
-            logger.debug('image %d: Overlap = %s',config['image_num'],str(bounds))
+            logger.debug('image %d: full bounds = %s',image_num,str(full_image.bounds))
+            logger.debug('image %d: stamp %d bounds = %s',image_num,k,str(images[k].bounds))
+            logger.debug('image %d: Overlap = %s',image_num,str(bounds))
         if bounds.isDefined():
             full_image[bounds] += images[k][bounds]
             if make_psf_image:
