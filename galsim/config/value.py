@@ -1096,7 +1096,7 @@ def SetDefaultIndex(config, num, base):
     # (for the normal case that repeat = step = 1)
     # But if the number of items keeps changing, then this will effectively start at a 
     # random place within the range (0 .. nitems-1) and wrap around when it gets to the 
-    # end.  If the user is counding on this indexing being done for them, they probably
+    # end.  If the user is counting on this indexing being done for them, they probably
     # expect the index to go from 0 .. nitems-1 in order.  
     # So we fix this by setting start_seq_index, which is set to be the first object number
     # in the file.  The index calculation then becomes
@@ -1135,7 +1135,7 @@ def SetDefaultIndex(config, num, base):
         elif ( type == 'Sequence'
                and 'nitems' not in index
                and ('step' in index and (isinstance(index['step'],int) and index['step'] < 0) ) ):
-            # Normally, the value of default doesn't matter.  It's presence is sufficient
+            # Normally, the value of default doesn't matter.  Its presence is sufficient
             # to indicate True.  However, here we have three options.  
             # 1) first and last are both set by default
             # 2) first (only) is set by default
