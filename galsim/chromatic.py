@@ -46,7 +46,7 @@ class ChromaticObject(object):
         dwave = wave[1] - wave[0]
 
         #Initialize Image from first wavelength.
-        prof = self.evaluateAtWavelength(wave[0]) * throughput[0]
+        prof = self.evaluateAtWavelength(wave[0]) * throughput[0] * dwave
         image = prof.draw(image=image)
 
         #And now build it up at remaining wavelengths
@@ -144,7 +144,7 @@ class ChromaticConvolve(ChromaticObject):
 
 class ChromaticShiftAndDilate(ChromaticObject):
     """Class representing chromatic profiles whose wavelength dependence consists of shifting and
-    scaling a fiducial profile.
+    dilating a fiducial profile.
 
     By simply shifting and dilating a fiducial PSF, a number of wavelength-dependent effects can be
     effected.  For instance, differential chromatic refraction is just shifting the PSF center as a
