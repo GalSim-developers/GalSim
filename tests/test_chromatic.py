@@ -183,7 +183,7 @@ def test_direct_vs_galsim():
     PSF_beta = 3.0
     PSF_e1 = 0.01
     PSF_e2 = 0.06
-    zenith_angle = 20 * np.pi/180 # radians
+    zenith_angle = 20 * np.pi/180 # 20 degrees -> radians
     shear_g1 = 0.01
     shear_g2 = 0.02
     filter_wave, filter_throughput = np.genfromtxt('test_filters/LSST_r.dat').T
@@ -203,9 +203,9 @@ def test_direct_vs_galsim():
                                     shear_g1, shear_g2,
                                     filter_wave, filter_throughput)
     printval(direct_img, galsim_img)
-    # Since peak is around 1, this tests consistency to part in 10^4 level.
+    # Since peak is around 1, this tests consistency to part in 10^5 level.
     np.testing.assert_array_almost_equal(
-            direct_img.array, galsim_img.array, 4,
+            direct_img.array, galsim_img.array, 5,
             err_msg="Directly computed chromatic image disagrees with image created using "
                     "galsim.chromatic")
 
