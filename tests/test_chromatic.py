@@ -175,7 +175,7 @@ def test_direct_vs_galsim():
     galaxy_hlr = 1.0
     galaxy_e1 = 0.4
     galaxy_e2 = 0.2
-    galaxy_wave, galaxy_flambda = np.genfromtxt('test_spectra/CWW_Im_ext.sed').T
+    galaxy_wave, galaxy_flambda = np.genfromtxt('../examples/data/CWW_Im_ext.sed').T
     galaxy_photons = galaxy_flambda * galaxy_wave # ergs -> N_photons
     galaxy_photons *= 2.e-7 # Manually adjusting to have peak of ~1 count
     galaxy_wave /= 10 # Angstrom -> nm
@@ -186,7 +186,7 @@ def test_direct_vs_galsim():
     zenith_angle = 20 * np.pi/180 # 20 degrees -> radians
     shear_g1 = 0.01
     shear_g2 = 0.02
-    filter_wave, filter_throughput = np.genfromtxt('test_filters/LSST_r.dat').T
+    filter_wave, filter_throughput = np.genfromtxt('../examples/data/LSST_r.dat').T
     wgood = (filter_wave > 500) & (filter_wave < 720) # truncate out-of-band wavelengths
     filter_wave = filter_wave[wgood][0::100]  # sparsify from 1 Ang binning to 100 Ang binning
     filter_throughput = filter_throughput[wgood][0::100]
