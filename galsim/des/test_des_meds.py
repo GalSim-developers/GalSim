@@ -201,7 +201,8 @@ def test_meds_config():
                   'n' : 3,
                   'half_light_radius' : { 'type' : 'Sequence', 'first' : 1.7, 'step' : 0.2,
                                           'repeat' : n_per_obj },
-                  'shear' : { 'type' : 'G1G2', 'g1' : g1, 'g2' : g2 }
+                  'shear' : { 'type' : 'G1G2', 'g1' : g1, 'g2' : g2 },
+                  'shift' : { 'type' : 'XY' , 'x' : 1, 'y' : 2}
                 },
         'psf' : { 'type' : 'Moffat', 'beta' : 2.9, 'fwhm' : 0.7 },
         'image' : { 'pixel_scale' : pixel_scale,
