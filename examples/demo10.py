@@ -186,7 +186,7 @@ def main(argv):
         sub_psf_image = psf_image[b]
 
         pos = b.trueCenter() - im_center
-        pos = galsim.PositionD(pos.x * pixel_scale , pos.y * pixel_scale)
+        pos *= pixel_scale
         # The image comes out as about 211 arcsec across, so we define our variable
         # parameters in terms of (r/100 arcsec), so roughly the scale size of the image.
         r = math.sqrt(pos.x**2 + pos.y**2) / 100
