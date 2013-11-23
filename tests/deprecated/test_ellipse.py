@@ -19,7 +19,6 @@
 import numpy as np
 import os
 import sys
-import pyfits
 
 try:
     import galsim
@@ -27,6 +26,8 @@ except ImportError:
     path, filename = os.path.split(__file__)
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
+
+from galsim import pyfits
 
 ##### set up necessary info for tests
 # a few shear values over which we will loop so we can check them all

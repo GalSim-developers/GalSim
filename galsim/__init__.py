@@ -17,6 +17,11 @@
 # along with GalSim.  If not, see <http://www.gnu.org/licenses/>
 #
 
+# Two options for pyfits module:
+try:
+    import astropy.io.fits as pyfits
+except:
+    import pyfits
 
 # Import things from other files we want to be in the galsim namespace
 from ._galsim import *

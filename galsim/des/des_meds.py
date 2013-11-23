@@ -217,7 +217,7 @@ def write_meds(file_name, obj_list, clobber=True):
 
     import numpy
     import sys
-    import pyfits
+    from galsim import pyfits
 
     # initialise the catalog
     cat = {}

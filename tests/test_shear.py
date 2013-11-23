@@ -19,7 +19,6 @@
 import numpy as np
 import os
 import sys
-import pyfits
 
 from galsim_test_helpers import *
 
@@ -29,6 +28,7 @@ except ImportError:
     path, filename = os.path.split(__file__)
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
+
 import galsim.utilities
 
 # Below are a set of tests to make sure that we have achieved consistency in defining shears and
