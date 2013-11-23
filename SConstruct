@@ -1223,7 +1223,10 @@ def CheckPyFITS(config):
 
     result, output = TryScript(config,"import pyfits",python)
     if not result:
-        ErrorExit("Unable to import pyfits using the python executable:\n%s"%python)
+        result, output = TryScript(config,"import astropy.io.fits",python)
+    if not result:
+        ErrorExit("Unable to import pyfits or astropy.io.fits using the python executable:\n" +
+                  python)
 
     config.Result(1)
     return 1

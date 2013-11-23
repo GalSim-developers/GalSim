@@ -7,7 +7,6 @@ those created directly.
 
 import os
 import pdb
-import pyfits
 import logging
 import sys
 import numpy
@@ -19,6 +18,7 @@ import yaml
 import galsim
 import copy
 import datetime  
+from galsim import pyfits
 
 HSM_ERROR_VALUE = -99
 NO_PSF_VALUE    = -98

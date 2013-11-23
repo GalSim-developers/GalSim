@@ -117,7 +117,7 @@ def doplot(r, t_xip, t_xim, t_xiket, xip, xim, xix, xik, xiket, xikex, pref):
     print 'Wrote to file ',figfile
 
 def run_corr2(x, y, g1, g2, k):
-    import pyfits
+    from galsim import pyfits
     import os
     # Use fits binary table for faster I/O. (Converting to/from strings is slow.)
     assert x.shape == y.shape
