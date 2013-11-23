@@ -41,20 +41,32 @@ if env1['MEM_TEST']:
 # Library file containing generic code
 obj_lib = env1.SharedObject(lib_files)
 
-# TODO: Should get this from somewhere.  Not hard-coded here.
-version = 0,1
-compat_version = 0,1
+def get_version():
+    version = '0.0' # Just in case we fall through, it won't completely fail.
+    with open(os.path.join('..','galsim','base.py')) as f:
+        for line in f:
+            if line.startswith('version = '):
+                # Line with version number looks like:
+                # version = '1.0.0'
+                version = line.split()[2]
+                # Remove quotes:
+                version = version[1:-1]
+                # Stop when we found the right line.
+                break
+    print 'GalSim version ',version
+    lvers = version.split('.')
+    while len(lvers) < 3: lvers.append('0')
+    return tuple(lvers)
 
-if 'install' in COMMAND_LINE_TARGETS:
-    lib_final_dir = os.path.join(env['FINAL_PREFIX'],'lib')
-else:
-    lib_final_dir = os.path.join(GetBuildPath('#lib'))
+version = get_version()
+compat_version = version[:2]
+
+lib_final_dir = os.path.join(env['FINAL_PREFIX'],'lib')
 
 if sys.platform == 'darwin':
     # Some stuff to get it to set the right compatibility version and library name:
-    lib_final_name = os.path.join(lib_final_dir,'libgalsim.%s.dylib'%version[0])
-    #lib_full_name = os.path.join(GetBuildPath('#lib'),'libgalsim.%s.%s.dylib'%version)
-    lib_short_name = os.path.join(GetBuildPath('#lib'),'libgalsim.%s.dylib'%version[0])
+    lib_final_name = os.path.join(lib_final_dir,'libgalsim.%s.%s.dylib'%compat_version)
+    lib_full_name = os.path.join(GetBuildPath('#lib'),'libgalsim.%s.%s.dylib'%compat_version)
     link_name = os.path.join(GetBuildPath('#lib'),'libgalsim.dylib')
     # TODO: If we have more than one lib, we need a different SHLINKFLAGS for each one.
     # The easiest way to do this is to have multiple environments that differ in their
@@ -63,8 +75,8 @@ if sys.platform == 'darwin':
         '-dynamic',
         '-Wl,-install_name,%s'%lib_final_name,
         '-Wl,-compatibility_version,%s.%s'%compat_version,
-        '-Wl,-current_version,%s.%s'%version ] )
-    env1.Replace(SHLIBSUFFIX = '.%s.dylib'%version[0])
+        '-Wl,-current_version,%s.%s.%s'%version ] )
+    env1.Replace(SHLIBSUFFIX = '.%s.%s.dylib'%compat_version)
 
 elif sys.platform.startswith('linux'):  # Should work for both linux2 and linux3
     # On linux, we don't need to include the other libraries here.  They need to be 
@@ -113,12 +125,11 @@ elif sys.platform.startswith('linux'):  # Should work for both linux2 and linux3
     # Removes all -l lib flags, and add the explicit static library files.
     env1.Replace(LIBS=new_libs)
 
-    lib_final_name = 'libgalsim.so.%s'%version[0]
-    #lib_full_name = os.path.join(GetBuildPath('#lib'),'libgalsim.so.%s.%s'%version)
-    lib_short_name = os.path.join(GetBuildPath('#lib'),'libgalsim.so.%s'%version[0])
+    lib_final_name = 'libgalsim.so.%s.%s'%compat_version
+    lib_full_name = os.path.join(GetBuildPath('#lib'),'libgalsim.so.%s.%s'%compat_version)
     link_name = os.path.join(GetBuildPath('#lib'),'libgalsim.so')
     env1.AppendUnique(SHLINKFLAGS=['-Wl,-soname,%s'%lib_final_name ])
-    env1.Replace(SHLIBSUFFIX = '.so.%s'%version[0])
+    env1.Replace(SHLIBSUFFIX = '.so.%s.%s'%compat_version)
 
 elif sys.platform == 'win32':
     raise ValueError('Sorry, building on windows is not supported yet...')
@@ -130,11 +141,11 @@ lib = env1.SharedLibrary(os.path.join('#lib','galsim'), obj_lib)
 
 def SymLink(target, source, env):
     t = os.path.abspath(str(target[0]))
-    if os.path.exists(t): os.remove(t)
+    if os.path.lexists(t): os.remove(t)
     os.symlink(env['LibName'], t)
 
 # This just makes a link in the #lib directory.  Need to redo this in the install directory.
-link = env1.Command( link_name , lib , SymLink, LibName=lib_short_name)
+link = env1.Command( link_name , lib , SymLink, LibName=lib_full_name)
 Default(link)
 
 lib_targets = [lib]
