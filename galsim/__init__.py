@@ -20,8 +20,13 @@
 # Two options for pyfits module:
 try:
     import astropy.io.fits as pyfits
+    pyfits_version = '4.0'  # astropy.io.fits doesn't define a __version__ attribute,
+                            # so mock it up as 4.0.  We might need to revisit this if
+                            # we need to start discriminating on different astropy
+                            # versions.
 except:
     import pyfits
+    pyfits_version = pyfits.__version__
 
 # Import things from other files we want to be in the galsim namespace
 from ._galsim import *

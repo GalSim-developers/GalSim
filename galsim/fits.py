@@ -27,7 +27,7 @@ routines for handling multiple Images.
 import os
 from sys import byteorder
 from . import _galsim
-from galsim import pyfits
+from galsim import pyfits, pyfits_version
 
 # Convert sys.byteorder into the notation numpy dtypes use
 native_byteorder = {'big': '>', 'little': '<'}[byteorder]
@@ -55,7 +55,7 @@ def _parse_compression(compression, file_name):
         if 'CompImageHDU' not in pyfits.__dict__:
             raise NotImplementedError(
                 'Compressed Images not supported before pyfits version 2.0. You have version %s.'%(
-                    pyfits.__version__))
+                    pyfits_version))
             
     return file_compress, pyfits_compress
 
@@ -199,7 +199,7 @@ class _WriteFile:
         # to the TFORMx header keywords.  They should have size at the end of them.
         # This bug has been fixed in version 3.1.2.
         # (See http://trac.assembla.com/pyfits/ticket/199)
-        if pyfits_compress and pyfits.__version__ < '3.1.2':
+        if pyfits_compress and pyfits_version < '3.1.2':
             with pyfits.open(file,'update',disable_image_compression=True) as hdus:
                 for hdu in hdus[1:]: # Skip PrimaryHDU
                     # Find the maximum variable array length  
@@ -217,7 +217,7 @@ class _WriteFile:
             # Workaround for a bug in some pyfits 3.0.x versions
             # It was fixed in 3.0.8.  I'm not sure when the bug was 
             # introduced, but I believe it was 3.0.3.  
-            if (pyfits.__version__ > '3.0' and pyfits.__version__ < '3.0.8' and
+            if (pyfits_version > '3.0' and pyfits_version < '3.0.8' and
                 'COMPRESSION_ENABLED' in pyfits.hdu.compressed.__dict__):
                 pyfits.hdu.compressed.COMPRESSION_ENABLED = True
                 
