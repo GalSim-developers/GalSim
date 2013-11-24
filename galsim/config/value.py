@@ -57,6 +57,13 @@ valid_value_types = {
     'PowerSpectrumMagnification' : ('_GenerateFromPowerSpectrumMagnification', [ float ]),
 }
  
+# Standard keys to ignore while parsing values:
+standard_ignore = [ 
+    'type',
+    'current_val', 'current_safe', 'current_seq_index', 'current_value_type',
+    '#' # When we read in json files, there represent comments
+]
+
 def ParseValue(config, param_name, base, value_type):
     """@brief Read or generate a parameter value from config.
 
@@ -99,6 +106,7 @@ def ParseValue(config, param_name, base, value_type):
         if param['current_value_type'] != value_type:
             raise ValueError(
                 "Attempt to parse %s multiple times with different value types"%param_name)
+        #print 'seq_index = ',base.get('seq_index',0)
         #print base['obj_num'],'Using current value of ',param_name,' = ',param['current_val']
         return param['current_val'], param['current_safe']
     else:
@@ -228,9 +236,7 @@ def CheckAllParams(param, param_name, req={}, opt={}, single=[], ignore=[]):
 
     # Check that there aren't any extra keys in param aside from a few we expect:
     valid_keys += ignore
-    valid_keys += [ 'type' ]
-    valid_keys += [ 'current_val', 'current_safe', 'current_seq_index', 'current_value_type' ] 
-    valid_keys += [ '#' ] # When we read in json files, there represent comments
+    valid_keys += standard_ignore
     for key in param.keys():
         if key not in valid_keys:
             raise AttributeError(
@@ -382,7 +388,7 @@ def _GenerateFromCatalog(param, param_name, base, value_type):
     # Setup the indexing sequence if it hasn't been specified.
     # The normal thing with a Catalog is to just use each object in order,
     # so we don't require the user to specify that by hand.  We can do it for them.
-    SetDefaultIndex(param, input_cat.getNObjects())
+    SetDefaultIndex(param, input_cat.getNObjects(), base)
 
     # Coding note: the and/or bit is equivalent to a C ternary operator:
     #     input_cat.isFits() ? str : int
@@ -401,7 +407,7 @@ def _GenerateFromCatalog(param, param_name, base, value_type):
     elif value_type is bool:
         val = _GetBoolValue(input_cat.get(**kwargs),param_name)
 
-    #print base['obj_num'],
+    #print base['file_num'],
     #print 'Catalog: col = %s, index = %s, val = %s'%(kwargs['col'],kwargs['index'],val)
     return val, safe
 
@@ -425,7 +431,7 @@ def _GenerateFromDict(param, param_name, base, value_type):
     d = base['dict'][num]
 
     val = d.get(key)
-    #print base['obj_num'],'Dict: key = %s, val = %s'%(key,val)
+    #print base['file_num'],'Dict: key = %s, val = %s'%(key,val)
     return val, safe
 
 
@@ -452,7 +458,7 @@ def _GenerateFromFitsHeader(param, param_name, base, value_type):
         raise ValueError("key %s not found in the FITS header in %s"%(key,kwargs['file_name']))
 
     val = header.get(key)
-    #print base['obj_num'],'Header: key = %s, val = %s'%(key,val)
+    #print base['file_num'],'Header: key = %s, val = %s'%(key,val)
     return val, safe
 
 
@@ -477,8 +483,9 @@ def _GenerateFromRandom(param, param_name, base, value_type):
         #print base['obj_num'],'Random bool = ',val
         return val, False
     else:
+        ignore = [ 'default' ]
         req = { 'min' : value_type , 'max' : value_type }
-        kwargs, safe = GetAllParams(param, param_name, base, req=req)
+        kwargs, safe = GetAllParams(param, param_name, base, req=req, ignore=ignore)
 
         min = kwargs['min']
         max = kwargs['max']
@@ -634,15 +641,17 @@ def _GenerateFromRandomCircle(param, param_name, base, value_type):
 def _GenerateFromSequence(param, param_name, base, value_type):
     """@brief Return next in a sequence of integers
     """
+    ignore = [ 'default' ]
     opt = { 'first' : value_type, 'last' : value_type, 'step' : value_type,
-            'repeat' : int, 'nitems' : int }
-    kwargs, safe = GetAllParams(param, param_name, base, opt=opt)
+            'repeat' : int, 'nitems' : int, 'start_seq_index' : int }
+    kwargs, safe = GetAllParams(param, param_name, base, opt=opt, ignore=ignore)
 
     step = kwargs.get('step',1)
     first = kwargs.get('first',0)
     repeat = kwargs.get('repeat',1)
     last = kwargs.get('last',None)
     nitems = kwargs.get('nitems',None)
+    start_seq_index = kwargs.get('start_seq_index',0)
     if repeat <= 0:
         raise ValueError(
             "Invalid repeat=%d (must be > 0) for %s.type = Sequence"%(repeat,param_name))
@@ -670,14 +679,14 @@ def _GenerateFromSequence(param, param_name, base, value_type):
         if last is not None:
             nitems = (last - first)/step + 1
 
-    k = base['seq_index']
+    k = base['seq_index'] - start_seq_index
     k = k / repeat
 
     if nitems is not None and nitems > 0:
         k = k % nitems
 
     index = first + k*step
-    #print base['obj_num'],'Sequence index = %s + %d*%s = %s'%(first,k,step,index)
+    #print base['seq_index'],'Sequence index = %s + %d*%s = %s'%(first,k,step,index)
     return index, False
 
 
@@ -915,7 +924,7 @@ def _GenerateFromList(param, param_name, base, value_type):
         raise AttributeError("items entry for parameter %s is not a list."%param_name)
 
     # Setup the indexing sequence if it hasn't been specified using the length of items.
-    SetDefaultIndex(param, len(items))
+    SetDefaultIndex(param, len(items), base)
     index, safe = ParseValue(param, 'index', base, int)
 
     if index < 0 or index >= len(items):
@@ -951,8 +960,7 @@ def _GenerateFromEval(param, param_name, base, value_type):
     #print 'Start Eval for ',param_name
     req = { 'str' : str }
     opt = {}
-    ignore = [ 'type', 'current_val', 'current_safe', 'current_seq_index',
-               'current_value_type', '#' ]
+    ignore = standard_ignore
     for key in param.keys():
         if key not in (ignore + req.keys()):
             opt[key] = _type_by_letter(key)
@@ -1070,31 +1078,89 @@ def _GenerateFromCurrent(param, param_name, base, value_type):
     raise ValueError("Invalid key = %s given for %s.type = Current"%(key,param_name))
 
 
-def SetDefaultIndex(config, num):
+def SetDefaultIndex(config, num, base):
     """
     When the number of items in a list is known, we allow the user to omit some of 
     the parameters of a Sequence or Random and set them automatically based on the 
     size of the list, catalog, etc.
     """
+    # We use a default item (set to True) to indicate that the value of nitems, last, or max
+    # has been set here, rather than by the user.  This way if the number of items in the 
+    # catalog changes from one file to the next, it will be update correctly to the new
+    # number of catalog entries.
+
+    # The other wrinkle that needs to be addressed is that if the number of items in the
+    # catalogs are different from file to file, then GenerateFromSequence makes an 
+    # assumption that is not correct.  It calculates the index to use as:
+    #     first + seq_index % nitems
+    # (for the normal case that repeat = step = 1)
+    # But if the number of items keeps changing, then this will effectively start at a 
+    # random place within the range (0 .. nitems-1) and wrap around when it gets to the 
+    # end.  If the user is counting on this indexing being done for them, they probably
+    # expect the index to go from 0 .. nitems-1 in order.  
+    # So we fix this by setting start_seq_index, which is set to be the first object number
+    # in the file.  The index calculation then becomes
+    #     first + (seq_index - start_seq_index) % nitems
+    # which does go in the expected order.
+    start_seq_index = 0
+    if ( 'start_obj_num' in base 
+         and 'seq_index' in base and 'obj_num' in base
+         and base['seq_index'] == base['obj_num'] ):
+        start_seq_index = base['start_obj_num']
+
     if 'index' not in config:
-        config['index'] = { 'type' : 'Sequence', 'nitems' : num }
-    elif isinstance(config['index'],dict) and 'type' in config['index'] :
+        config['index'] = {
+            'type' : 'Sequence',
+            'nitems' : num,
+            'default' : True,
+            'start_seq_index' : start_seq_index
+        }
+    elif ( isinstance(config['index'],dict) 
+           and 'type' in config['index'] ):
         index = config['index']
         type = index['type']
-        if ( type == 'Sequence' and 
-             ('step' not in index or (isinstance(index['step'],int) and index['step'] > 0) ) and
-             'last' not in index and 'nitems' not in index ):
+        if ( type == 'Sequence' 
+             and 'nitems' in index 
+             and 'default' in index ):
+            index['nitems'] = num
+            index['default'] = True
+            index['start_seq_index'] = start_seq_index
+        elif ( type == 'Sequence' 
+               and 'nitems' not in index
+               and ('step' not in index or (isinstance(index['step'],int) and index['step'] > 0) )
+               and ('last' not in index or 'default' in index) ):
             index['last'] = num-1
-        elif ( type == 'Sequence' and 
-             ('step' in index and (isinstance(index['step'],int) and index['step'] < 0) ) ):
-            if 'first' not in index:
+            index['default'] = True
+            index['start_seq_index'] = start_seq_index
+        elif ( type == 'Sequence'
+               and 'nitems' not in index
+               and ('step' in index and (isinstance(index['step'],int) and index['step'] < 0) ) ):
+            # Normally, the value of default doesn't matter.  Its presence is sufficient
+            # to indicate True.  However, here we have three options.  
+            # 1) first and last are both set by default
+            # 2) first (only) is set by default
+            # 3) last (only) is set by default
+            # So set default to the option we are using, so we update with the correct method.
+            if ( ('first' not in index and 'last' not in index)
+                 or ('default' in index and index['default'] == 1) ):
                 index['first'] = num-1
-            if 'last' not in index and 'nitems' not in index:
                 index['last'] = 0
-        elif type == 'Random':
-            if 'max' not in index:
-                index['max'] = num-1
-            if 'min' not in index:
-                index['min'] = 0
-
+                index['default'] = 1
+                index['start_seq_index'] = start_seq_index
+            elif ( 'first' not in index 
+                   or ('default' in index and index['default'] == 2) ):
+                index['first'] = num-1
+                index['default'] = 2
+                index['start_seq_index'] = start_seq_index
+            elif ( 'last' not in index 
+                   or ('default' in index and index['default'] == 3) ):
+                index['last'] = 0
+                index['default'] = 3
+                index['start_seq_index'] = start_seq_index
+        elif ( type == 'Random'
+               and ('min' not in index or 'default' in index)
+               and ('max' not in index or 'default' in index) ):
+            index['min'] = 0
+            index['max'] = num-1
+            index['default'] = True
 
