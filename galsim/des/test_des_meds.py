@@ -34,6 +34,7 @@ import numpy
 import os
 import sys
 import galsim
+import galsim.des
 
 
 def test_meds():

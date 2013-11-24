@@ -276,17 +276,6 @@ def write_meds(file_name, obj_list, clobber=True):
             n_vec += len(obj.images[i].array.flatten()) 
 
             # append the image vectors
-            # if vector not is already initialised
-            # if vec['image'] == []:
-            #     vec['image'] = obj.images[i].array.flatten()
-            #     vec['seg'] = obj.segs[i].array.flatten()
-            #     vec['weight'] = obj.weights[i].array.flatten()
-            # # if vector already exists
-            # else:
-            #     vec['image'] = numpy.concatenate([vec['image'], obj.images[i].array.flatten()])
-            #     vec['seg'] = numpy.concatenate([vec['seg'], obj.segs[i].array.flatten()])
-            #     vec['weight'] = numpy.concatenate([vec['weight'], obj.weights[i].array.flatten()])
-
             vec['image'].append(obj.images[i].array.flatten())
             vec['seg'].append(obj.segs[i].array.flatten())
             vec['weight'].append(obj.weights[i].array.flatten())
