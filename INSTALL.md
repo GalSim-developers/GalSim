@@ -54,8 +54,11 @@ The GalSim package also requires
 
 * the numerical Python module NumPy (http://www.numpy.org)
 
-* the astronomical FITS file input/output module PyFITS
-  (http://www.stsci.edu/institute/software_hardware/pyfits)
+* the astronomical FITS file input/output module PyFITS available
+  either as a standalone package:
+      http://www.stsci.edu/institute/software_hardware/pyfits
+  or as part of the astropy library:
+      http://www.astropy.org/
 
 * Optional dependency: the Python YAML parser and emitter module PyYAML
   (http://pyyaml.org/wiki/PyYAML)
@@ -66,7 +69,8 @@ The GalSim package also requires
 These should installed onto your Python system so that they can be imported by:
 
     >>> import numpy
-    >>> import pyfits
+    >>> import astropy.io.fits  [ Either this... ]
+    >>> import pyfits           [ ... or this.   ]
     >>> import yaml [ if using the galsim executable or otherwise plan to
                       parse .yaml configuration files ]
 
