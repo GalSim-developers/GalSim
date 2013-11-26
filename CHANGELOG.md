@@ -11,3 +11,7 @@ Changes from v1.0.0 to v1.0.1:
   - There had not been a random number generator available in the config
     for items at the file-level scope.  So if you wanted nobjects to be
     a random variate, that had not been possible.
+
+* Support astropy.io.fits in lieu of stand-alone pyfits module. (#488)
+  This is where pyfits will live going forward.  So we now support both
+  the astropy distribution as well as the legacy pyfits module.
