@@ -9,6 +9,7 @@ v1.0.1
 
 * Fixed some bugs in the config machinery when files have varying numbers
   of objects. (#487)
+* Support astropy.io.fits in lieu of stand-alone pyfits module. (#488)
 
 
 v1.0

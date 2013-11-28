@@ -8,7 +8,7 @@ This program converts that into a fits file called moffat_pixel.fits.
 """
 
 import numpy
-import pyfits
+from galsim import pyfits
 import os
 
 for input_file in [ "moffat_pixel.dat" , "moffat_pixel_distorted.dat" ]:
