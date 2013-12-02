@@ -52,3 +52,4 @@ from . import integ
 from . import pse
 from . import hsm
 from . import deprecated
+from . import dcr
