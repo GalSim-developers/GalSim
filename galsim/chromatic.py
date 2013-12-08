@@ -128,10 +128,7 @@ class ChromaticAdd(ChromaticObject):
         @param wave  Wavelength in nanometers.
         @returns     GSObject for profile at specified wavelength
         """
-        return galsim.Add([obj.evaluateAtWavelength(wave)
-                           if hasattr(obj, 'evaluateAtWavelength')
-                           else obj
-                           for obj in self.objlist])
+        return galsim.Add([obj.evaluateAtWavelength(wave) for obj in self.objlist])
 
     def applyShear(self, *args, **kwargs):
         for obj in self.objlist:
@@ -150,10 +147,7 @@ class ChromaticConvolve(ChromaticObject):
         @param wave  Wavelength in nanometers.
         @returns     GSObject for profile at specified wavelength
         """
-        return galsim.Convolve([obj.evaluateAtWavelength(wave)
-                                if hasattr(obj, 'evaluateAtWavelength')
-                                else obj
-                                for obj in self.objlist])
+        return galsim.Convolve([obj.evaluateAtWavelength(wave) for obj in self.objlist])
 
 class ChromaticShiftAndDilate(ChromaticObject):
     """Class representing chromatic profiles whose wavelength dependence consists of shifting and
