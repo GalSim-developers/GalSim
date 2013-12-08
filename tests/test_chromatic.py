@@ -148,7 +148,9 @@ def test_direct_vs_galsim():
     galaxy_hlr = 1.0 # arcsec
     galaxy_e1 = 0.4
     galaxy_e2 = 0.2
-    galaxy_wave, galaxy_flambda = np.genfromtxt('../examples/data/CWW_Im_ext.sed').T
+    path, filename = os.path.split(__file__)
+    datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
+    galaxy_wave, galaxy_flambda = np.genfromtxt(os.path.join(datapath, 'CWW_Im_ext.sed')).T
     galaxy_photons = galaxy_flambda * galaxy_wave # ergs -> N_photons
     galaxy_photons *= 2.e-7 # Manually adjusting to have peak of ~1 count
     galaxy_wave /= 10 # Angstrom -> nm
@@ -159,7 +161,7 @@ def test_direct_vs_galsim():
     zenith_angle = 20 * galsim.degrees
     shear_g1 = 0.01
     shear_g2 = 0.02
-    filter_wave, filter_throughput = np.genfromtxt('../examples/data/LSST_r.dat').T
+    filter_wave, filter_throughput = np.genfromtxt(os.path.join(datapath, 'LSST_r.dat')).T
     wgood = (filter_wave > 500) & (filter_wave < 720) # truncate out-of-band wavelengths
     filter_wave = filter_wave[wgood][0::100]  # sparsify from 1 Ang binning to 100 Ang binning
     filter_throughput = filter_throughput[wgood][0::100]
@@ -190,7 +192,9 @@ def test_chromatic_add():
     bulge_hlr = 1.0 # arcsec
     bulge_e1 = 0.4
     bulge_e2 = 0.2
-    bulge_wave, bulge_flambda = np.genfromtxt('../examples/data/CWW_E_ext.sed').T
+    path, filename = os.path.split(__file__)
+    datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
+    bulge_wave, bulge_flambda = np.genfromtxt(os.path.join(datapath, 'CWW_E_ext.sed')).T
     bulge_photons = bulge_flambda * bulge_wave # ergs -> N_photons
     bulge_photons *= 2.e-7 # Manually adjusting to have peak of ~1 count
     bulge_wave /= 10 # Angstrom -> nm
@@ -203,7 +207,7 @@ def test_chromatic_add():
     disk_hlr = 1.0 # arcsec
     disk_e1 = 0.4
     disk_e2 = 0.2
-    disk_wave, disk_flambda = np.genfromtxt('../examples/data/CWW_Sbc_ext.sed').T
+    disk_wave, disk_flambda = np.genfromtxt(os.path.join(datapath, 'CWW_Sbc_ext.sed')).T
     disk_photons = disk_flambda * disk_wave # ergs -> N_photons
     disk_photons *= 2.e-7 # Manually adjusting to have peak of ~1 count
     disk_wave /= 10 # Angstrom -> nm
@@ -238,7 +242,9 @@ def test_chromatic_add():
                                         half_light_radius=PSF_hlr)
     PSF.applyShear(e1=PSF_e1, e2=PSF_e2)
 
-    filter_wave, filter_throughput = np.genfromtxt('../examples/data/LSST_r.dat').T
+    path, filename = os.path.split(__file__)
+    datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
+    filter_wave, filter_throughput = np.genfromtxt(os.path.join(datapath, 'LSST_r.dat')).T
     wgood = (filter_wave > 500) & (filter_wave < 720) # truncate out-of-band wavelengths
     filter_wave = filter_wave[wgood][0::100]  # sparsify from 1 Ang binning to 100 Ang binning
     filter_throughput = filter_throughput[wgood][0::100]
