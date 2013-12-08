@@ -28,7 +28,7 @@ except ImportError:
     import galsim
 
 def refraction_in_pixels(wave, zenith_angle, pixel_scale):
-    """Compute the shift in PSF centroid due to refraction.
+    """Compute the shift in PSF centroid (in pixels) due to refraction.
 
     @param wave   Wavelength in nanometers (Array)
     @param zenith_angle  zenith angle as a galsim.Angle
@@ -182,5 +182,96 @@ def test_direct_vs_galsim():
             err_msg="Directly computed chromatic image disagrees with image created using "
                     "galsim.chromatic")
 
+def test_chromatic_add():
+    """Test the `+` operator on ChromaticObjects"""
+
+    #bulge component parameters
+    bulge_n = 4.0
+    bulge_hlr = 1.0 # arcsec
+    bulge_e1 = 0.4
+    bulge_e2 = 0.2
+    bulge_wave, bulge_flambda = np.genfromtxt('../examples/data/CWW_E_ext.sed').T
+    bulge_photons = bulge_flambda * bulge_wave # ergs -> N_photons
+    bulge_photons *= 2.e-7 # Manually adjusting to have peak of ~1 count
+    bulge_wave /= 10 # Angstrom -> nm
+    bulge = galsim.ChromaticBaseObject(galsim.Sersic, bulge_wave, bulge_photons,
+                                     n=bulge_n, half_light_radius=bulge_hlr)
+    bulge.applyShear(e1=bulge_e1, e2=bulge_e2)
+
+    #disk component parameters
+    disk_n = 1.0
+    disk_hlr = 1.0 # arcsec
+    disk_e1 = 0.4
+    disk_e2 = 0.2
+    disk_wave, disk_flambda = np.genfromtxt('../examples/data/CWW_Sbc_ext.sed').T
+    disk_photons = disk_flambda * disk_wave # ergs -> N_photons
+    disk_photons *= 2.e-7 # Manually adjusting to have peak of ~1 count
+    disk_wave /= 10 # Angstrom -> nm
+    disk = galsim.ChromaticBaseObject(galsim.Sersic, disk_wave, disk_photons,
+                                     n=disk_n, half_light_radius=disk_hlr)
+    disk.applyShear(e1=disk_e1, e2=disk_e2)
+
+    shear_g1 = 0.01
+    shear_g2 = 0.02
+
+    zenith_angle = 20 * galsim.degrees
+
+    #line that actually tests the `+` operator
+    obj = bulge + disk
+    obj.applyShear(g1=shear_g1, g2=shear_g2)
+
+    #now work out the PSF
+    PSF_hlr = 0.3 # arcsec
+    PSF_beta = 3.0
+    PSF_e1 = 0.01
+    PSF_e2 = 0.06
+
+    pixel_scale = 0.2 * galsim.arcsec
+    stamp_size = 31
+    r610 = refraction_in_pixels(610, zenith_angle, pixel_scale)
+    dilate_fn = lambda wave: (0, refraction_in_pixels(wave, zenith_angle, pixel_scale) - r610)
+
+    PSF = galsim.ChromaticShiftAndDilate(galsim.Moffat,
+                                        shift_fn=dilate_fn,
+                                        dilate_fn=relative_seeing,
+                                        beta=PSF_beta,
+                                        half_light_radius=PSF_hlr)
+    PSF.applyShear(e1=PSF_e1, e2=PSF_e2)
+
+    filter_wave, filter_throughput = np.genfromtxt('../examples/data/LSST_r.dat').T
+    wgood = (filter_wave > 500) & (filter_wave < 720) # truncate out-of-band wavelengths
+    filter_wave = filter_wave[wgood][0::100]  # sparsify from 1 Ang binning to 100 Ang binning
+    filter_throughput = filter_throughput[wgood][0::100]
+
+    pixel = galsim.Pixel(pixel_scale / galsim.arcsec)
+    gal = galsim.ChromaticConvolve([obj, PSF, pixel])
+    image = galsim.ImageD(stamp_size, stamp_size, pixel_scale / galsim.arcsec)
+    gal.draw(filter_wave, filter_throughput, image=image)
+
+    # Compare this image to one drawn directly from the individual profiles
+    bulge_img = galsim_computation(bulge_n, bulge_hlr, bulge_e1, bulge_e2,
+                                   bulge_wave, bulge_photons,
+                                   PSF_hlr, PSF_beta, PSF_e1, PSF_e2, zenith_angle,
+                                   shear_g1, shear_g2,
+                                   filter_wave, filter_throughput)
+    disk_img = galsim_computation(disk_n, disk_hlr, disk_e1, disk_e2,
+                                   disk_wave, disk_photons,
+                                   PSF_hlr, PSF_beta, PSF_e1, PSF_e2, zenith_angle,
+                                   shear_g1, shear_g2,
+                                   filter_wave, filter_throughput)
+
+    printval(image, bulge_img+disk_img)
+    np.testing.assert_array_almost_equal(
+            image.array, bulge_img.array+disk_img.array, 5,
+            err_msg="`+` operator doesn't match manual image addition")
+
+    bulge_img += disk_img
+    printval(image, bulge_img)
+    np.testing.assert_array_almost_equal(
+            image.array, bulge_img.array, 5,
+            err_msg="`+` operator doesn't match manual image addition")
+
+
 if __name__ == "__main__":
     test_direct_vs_galsim()
+    test_chromatic_add()

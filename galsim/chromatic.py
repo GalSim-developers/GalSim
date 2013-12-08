@@ -56,6 +56,14 @@ class ChromaticObject(object):
 
         return image
 
+    def __add__(self, other):
+        return galsim.ChromaticAdd([self, other])
+
+    def __iadd__(self, other):
+        obj = galsim.ChromaticAdd([self, other])
+        self = obj
+        return self
+
 class ChromaticBaseObject(ChromaticObject):
     """Construct chromatic versions of the galsim.base objects.
 
@@ -124,6 +132,11 @@ class ChromaticAdd(ChromaticObject):
                            if hasattr(obj, 'evaluateAtWavelength')
                            else obj
                            for obj in self.objlist])
+
+    def applyShear(self, *args, **kwargs):
+        for obj in self.objlist:
+            obj.applyShear(*args, **kwargs)
+
 
 class ChromaticConvolve(ChromaticObject):
     """Convolve ChromaticObjects and/or GSObjects together.  GSObjects are treated as having flat
