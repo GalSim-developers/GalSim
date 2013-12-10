@@ -1016,7 +1016,7 @@ PyMODINIT_FUNC initcheck_python(void)
     source_file2 = "import distutils.sysconfig; print distutils.sysconfig.get_python_inc()"
     result, py_inc = TryScript(config,source_file2,python)
     if not result:
-        ErrorExit('Unable to get python include path python executable:\n%s',python)
+        ErrorExit('Unable to get python include path python executable:\n%s'%python)
 
     config.env.AppendUnique(CPPPATH=py_inc)
     if not config.TryCompile(python_source_file,'.cpp'):
@@ -1024,7 +1024,7 @@ PyMODINIT_FUNC initcheck_python(void)
                   '%s'%py_inc)
     
     # Now see if we can build it as a LoadableModule and run in from python.
-    # Sometimes (e.g. most linux systems), we don't need the python library to dot this.
+    # Sometimes (e.g. most linux systems), we don't need the python library to do this.
     # So the first attempt below with [''] for the libs will work.
     if CheckModuleLibs(config,[''],python_source_file,'check_python'):
         config.Result(1)
@@ -1035,7 +1035,7 @@ PyMODINIT_FUNC initcheck_python(void)
     source_file3 = "import distutils.sysconfig; print distutils.sysconfig.get_config_var('LIBRARY')"
     result, py_libfile = TryScript(config,source_file3,python)
     if not result:
-        ErrorExit('Unable to get python library name using python executable:\n%s',python)
+        ErrorExit('Unable to get python library name using python executable:\n%s'%python)
     py_lib = os.path.splitext(py_libfile)[0]
     if py_lib.startswith('lib'): 
         py_lib = py_lib[3:]
@@ -1069,7 +1069,7 @@ PyMODINIT_FUNC initcheck_python(void)
     source_file4 = "import distutils.sysconfig; print distutils.sysconfig.get_config_var('LIBDIR')"
     result, py_libdir = TryScript(config,source_file4,python)
     if not result:
-        ErrorExit('Unable to get python library path using python executable:\n%s',python)
+        ErrorExit('Unable to get python library path using python executable:\n%s'%python)
 
     # Check if LIBDIR/LIBRARY is actually a file:
     if os.path.isfile(os.path.join(py_libdir,py_libfile)):
@@ -1223,7 +1223,10 @@ def CheckPyFITS(config):
 
     result, output = TryScript(config,"import pyfits",python)
     if not result:
-        ErrorExit("Unable to import pyfits using the python executable:\n%s"%python)
+        result, output = TryScript(config,"import astropy.io.fits",python)
+    if not result:
+        ErrorExit("Unable to import pyfits or astropy.io.fits using the python executable:\n" +
+                  python)
 
     config.Result(1)
     return 1

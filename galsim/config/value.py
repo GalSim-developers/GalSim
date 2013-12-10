@@ -1115,7 +1115,7 @@ def SetDefaultIndex(config, num):
         elif ( type == 'Sequence'
                and 'nitems' not in index
                and ('step' in index and (isinstance(index['step'],int) and index['step'] < 0) ) ):
-            # Normally, the value of default doesn't matter.  It's presence is sufficient
+            # Normally, the value of default doesn't matter.  Its presence is sufficient
             # to indicate True.  However, here we have three options.  
             # 1) first and last are both set by default
             # 2) first (only) is set by default

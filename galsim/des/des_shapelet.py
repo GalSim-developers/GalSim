@@ -133,7 +133,7 @@ class DES_Shapelet(object):
     def read_fits(self):
         """Read in a DES_Shapelet stored using the the FITS-file version.
         """
-        import pyfits
+        from galsim import pyfits
         cat = pyfits.getdata(self.file_name,1)
         # These fields each only contain one element, hence the [0]'s.
         self.psf_order = cat.field('psf_order')[0]

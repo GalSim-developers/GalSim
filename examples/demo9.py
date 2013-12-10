@@ -333,7 +333,7 @@ def main(argv):
             full_name = os.path.join(dir,file_name)
 
             # Each image has a different number of objects.
-            # We us a random number from 15 to 30.
+            # We use a random number from 15 to 30.
             ud = galsim.UniformDeviate(seed)
             min = 15
             max = 30

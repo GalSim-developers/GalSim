@@ -64,7 +64,7 @@ class DES_PSFEx(object):
         self.read()
 
     def read(self):
-        import pyfits
+        from galsim import pyfits
         hdu = pyfits.open(self.file_name)[1]
         # Number of parameters used for the interpolation.  We require this to be 2.
         pol_naxis = hdu.header['POLNAXIS']
