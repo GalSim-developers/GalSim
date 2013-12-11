@@ -36,6 +36,7 @@
 # - float_value : NFWHaloMagnification (redshift)
 # - input : nfw_halo (mass, conc, redshift)
 # - shear_value : Eta1Eta2 (eta1, eta2)
+# - shear_value : Sum (items)
 # - image type : Scattered (size, nobjects)
 # - str_value type : NumberedFile (root, num, ext, digits)
 # - str_value type : FormattedStr (format, items)
@@ -101,7 +102,19 @@ gal :
         type : NFWHaloMagnification
 
     shear:
-        type : NFWHaloShear
+        # All value types that can be added up can use a Sum type to list the items to be 
+        # added together.  The only one that can be slightly non-intuitive is the Sum of
+        # Shear items.  Shear addition is not commutative, so the order of the elements
+        # matters.  The items in the Sum should be listed in order from the observer
+        # to the source.  This is a somewhat standard convention for what g_a + g_b means
+        # in shear space.  g_b is applied to the profile first, and then g_a is applied.
+        # In our case, we have a field shear (a constant value across the field) that is 
+        # taken to be a kind of cosmic shear component behind the foreground cluster, so 
+        # it is listed second.
+        type : Sum
+        items :
+            - { type : NFWHaloShear }
+            - { type : G1G2, g1 : 0.03, g2 : 0.01 }
 
     # Note: the redshift could be variable for each galaxy.  We just use a constant here.
     redshift : 0.6 
