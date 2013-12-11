@@ -28,7 +28,7 @@ import galsim
 class ChromaticObject(object):
     """Base class for defining wavelength dependent objects.
     """
-    def draw(self, wave, throughput, image=None):
+    def draw(self, wave, throughput, image=None, add_to_image=False):
         """Draws an Image of a chromatic object as observed through a bandpass filter.
 
         Draws the image wavelength by wavelength using a Riemann sum.
@@ -47,7 +47,7 @@ class ChromaticObject(object):
 
         #Initialize Image from first wavelength.
         prof = self.evaluateAtWavelength(wave[0]) * throughput[0] * dwave
-        image = prof.draw(image=image)
+        image = prof.draw(image=image, add_to_image=add_to_image)
 
         #And now build it up at remaining wavelengths
         for w, tp in zip(wave, throughput)[1:]:
@@ -60,8 +60,7 @@ class ChromaticObject(object):
         return galsim.ChromaticAdd([self, other])
 
     def __iadd__(self, other):
-        obj = galsim.ChromaticAdd([self, other])
-        self = obj
+        self = galsim.ChromaticAdd([self, other])
         return self
 
 class ChromaticBaseObject(ChromaticObject):
@@ -101,9 +100,9 @@ class ChromaticBaseObject(ChromaticObject):
         @param kwargs   Additional positional and keyword arguments are forwarded to the gsobj
                         constructor.
         """
-        self.wave = wave
-        self.photons = photons
+        self.photons = galsim.LookupTable(wave, photons)
         self.gsobj = gsobj(*args, **kwargs)
+        self.separable = True
 
     def applyShear(self, *args, **kwargs):
         self.gsobj.applyShear(*args, **kwargs)
@@ -113,9 +112,7 @@ class ChromaticBaseObject(ChromaticObject):
         @param wave  Wavelength in nanometers.
         @returns     GSObject for profile at specified wavelength
         """
-        import numpy as np
-        p = np.interp(wave, self.wave, self.photons)
-        return p * self.gsobj
+        return self.photons(wave) * self.gsobj
 
 class ChromaticAdd(ChromaticObject):
     """Add ChromaticObjects and/or GSObjects together.  GSObjects are treated as having flat spectra.
@@ -134,6 +131,11 @@ class ChromaticAdd(ChromaticObject):
         for obj in self.objlist:
             obj.applyShear(*args, **kwargs)
 
+    def draw(self, wave, throughput, image=None, add_to_image=False):
+        # add up one component at a time...?
+        image = self.objlist[0].draw(wave, throughput, image=image)
+        for obj in self.objlist[1:]:
+            image = obj.draw(wave, throughput, image=image, add_to_image=True)
 
 class ChromaticConvolve(ChromaticObject):
     """Convolve ChromaticObjects and/or GSObjects together.  GSObjects are treated as having flat
@@ -148,6 +150,73 @@ class ChromaticConvolve(ChromaticObject):
         @returns     GSObject for profile at specified wavelength
         """
         return galsim.Convolve([obj.evaluateAtWavelength(wave) for obj in self.objlist])
+
+    def draw(self, wave, throughput, image=None, add_to_image=False):
+        from operator import mul
+        # extend any `ChromaticConvolve`s and recurse, maybe there's a more pythonic way to do this?
+        extendme = []
+        deleteme = []
+        for i, obj in enumerate(self.objlist):
+            if isinstance(obj, ChromaticConvolve):
+                extendme.extend(obj.objlist)
+                deleteme.append(i)
+        if extendme != []:
+            self.objlist.extend(extendme)
+            for i in deleteme[::-1]: # delete in reverse order so subsequent indices are the same
+                self.objlist.pop(i)
+            return self.draw(wave, throughput, image=image, add_to_image=add_to_image)
+
+        # now split up any adds:
+        returnme = False
+        for i, obj in enumerate(self.objlist):
+            if isinstance(obj, ChromaticAdd):
+                returnme = True
+                self.objlist.pop(i)
+                tmplist = self.objlist
+                tmplist.append(obj.objlist[0])
+                tmpobj = ChromaticConvolve(tmplist)
+                image = tmpobj.draw(wave, throughput, image=image, add_to_image=add_to_image)
+                for tmpobj in obj.objlist[1:]:
+                    image = tmpobj.draw(wave, throughput, image=image, add_to_image=True)
+        if returnme:
+            return image
+
+        # at this point, should have a list of atomic seperable or inseperable objects.
+        # listify these
+        sep_profs = []
+        insep_profs = []
+        sep_photons = []
+        for obj in self.objlist:
+            if obj.separable:
+                if isinstance(obj, galsim.GSObject):
+                    sep_profs.append(obj)
+                else:
+                    sep_profs.append(obj.gsobj)
+                sep_photons.append(obj.photons)
+            else:
+                insep_profs.append(obj)
+
+        # make an effective profile from inseparables and the chromatic part of separables
+        dwave = wave[1] - wave[0]
+        # and what happens when insep_profs == []? I dunno
+        mono_prof = galsim.Convolve([insp.evaluateAtWavelength(wave[0]) for insp in insep_profs])
+        mono_prof *= throughput[0] * dwave
+        for s in sep_photons:
+            mono_prof *= s(wave[0])
+
+        effective_prof_image = mono_prof.draw()
+        for w, tp in zip(wave, throughput)[1:]:
+            mono_prof = galsim.Convolve([insp.evaluateAtWavelength(w) for insp in insep_profs])
+            mono_prof *= tp * dwave
+            for s in sep_photons:
+                mono_prof *= s(w)
+            mono_prof.draw(image=effective_prof_image, add_to_image=True)
+
+        effective_prof = galsim.InterpolatedImage(effective_prof_image)
+        sep_profs.append(effective_prof)
+        final_prof = galsim.Convolve(sep_profs)
+        return final_prof.draw(image=image, add_to_image=add_to_image)
+
 
 class ChromaticShiftAndDilate(ChromaticObject):
     """Class representing chromatic profiles whose wavelength dependence consists of shifting and
@@ -173,6 +242,7 @@ class ChromaticShiftAndDilate(ChromaticObject):
         self.gsobj = gsobj(**kwargs)
         self.shift_fn = shift_fn
         self.dilate_fn = dilate_fn
+        self.separable = False
 
     def applyShear(self, *args, **kwargs):
         self.gsobj.applyShear(*args, **kwargs)

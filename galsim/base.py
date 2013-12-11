@@ -115,6 +115,9 @@ class GSObject(object):
             self.SBProfile = obj
         else:
             raise TypeError("GSObject must be initialized with an SBProfile or another GSObject!")
+        # a couple of definitions for using GSObjects as duck-typed ChromaticObjects
+        self.photons = lambda x: 1
+        self.separable = True
 
     # Make op+ of two GSObjects work to return an Add object
     def __add__(self, other):
