@@ -27,7 +27,9 @@ valid_value_types = {
     'Eval' : ('_GenerateFromEval', 
               [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ]),
     'Current' : ('_GenerateFromCurrent', 
-              [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ]),
+                 [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ]),
+    'Sum' : ('_GenerateFromSum', 
+             [ float, int, galsim.Angle, galsim.Shear, galsim.PositionD ]),
     'Catalog' : ('_GenerateFromCatalog', [ float, int, bool, str ]),
     'Dict' : ('_GenerateFromDict', [ float, int, bool, str ]),
     'FitsHeader' : ('_GenerateFromFitsHeader', [ float, int, bool, str ]),
@@ -935,6 +937,25 @@ def _GenerateFromList(param, param_name, base, value_type):
     safe = safe and safe1
     #print base['obj_num'],'List index = %d, val = %s'%(index,val)
     return val, safe
+ 
+def _GenerateFromSum(param, param_name, base, value_type):
+    """@brief Return next item from a provided list
+    """
+    req = { 'items' : list }
+    # Only Check, not Get.  We need to handle items a bit differently, since it's a list.
+    CheckAllParams(param, param_name, req=req)
+    items = param['items']
+    if not isinstance(items,list):
+        raise AttributeError("items entry for parameter %s is not a list."%param_name)
+
+    sum, safe = ParseValue(items, 0, base, value_type)
+
+    for k in range(1,len(items)):
+        val, safe1 = ParseValue(items, k, base, value_type)
+        sum += val
+        safe = safe and safe1
+        
+    return sum, safe
  
 def _type_by_letter(key):
     if len(key) < 2:
