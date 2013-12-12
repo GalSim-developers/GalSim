@@ -40,8 +40,8 @@ def gsobject_compare(obj1, obj2, conv=None):
 
     im1 = galsim.ImageD(16,16)
     im2 = galsim.ImageD(16,16)
-    obj1.draw(dx=0.2, image=im1, normalization='sb')
-    obj2.draw(dx=0.2, image=im2, normalization='sb')
+    obj1.draw(scale=0.2, image=im1, normalization='sb')
+    obj2.draw(scale=0.2, image=im2, normalization='sb')
     np.testing.assert_array_almost_equal(im1.array, im2.array, 10)
 
 
@@ -573,28 +573,28 @@ def test_pixel():
     t1 = time.time()
 
     config = {
-        'gal1' : { 'type' : 'Pixel' , 'xw' : 2 },
-        'gal2' : { 'type' : 'Pixel' , 'xw' : 1.7, 'yw' : 1.7, 'flux' : 100 },
-        'gal3' : { 'type' : 'Pixel' , 'xw' : 2, 'yw' : 2.1, 'flux' : 1.e6,
+        'gal1' : { 'type' : 'Pixel' , 'scale' : 2 },
+        'gal2' : { 'type' : 'Pixel' , 'scale' : 1.7, 'flux' : 100 },
+        'gal3' : { 'type' : 'Box' , 'width' : 2, 'height' : 2.1, 'flux' : 1.e6,
                    'ellip' : { 'type' : 'QBeta' , 'q' : 0.6, 'beta' : 0.39 * galsim.radians } 
                  },
-        'gal4' : { 'type' : 'Pixel' , 'xw' : 1, 'yw' : 1.2, 'flux' : 50,
+        'gal4' : { 'type' : 'Box' , 'width' : 1, 'height' : 1.2, 'flux' : 50,
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees, 
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
                    'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 } 
                  },
-        'gal5' : { 'type' : 'Pixel' , 'xw' : 2, 'flux' : 50,
+        'gal5' : { 'type' : 'Pixel' , 'scale' : 2, 'flux' : 50,
                    'gsparams' : { 'realspace_relerr' : 1.e-2 , 'realspace_abserr' : 1.e-4 } 
                  }
     }
 
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
-    gal1b = galsim.Pixel(xw = 2)
+    gal1b = galsim.Pixel(scale = 2)
     gsobject_compare(gal1a, gal1b)
 
     gal2a = galsim.config.BuildGSObject(config, 'gal2')[0]
-    gal2b = galsim.Pixel(xw = 1.7, yw = 1.7, flux = 100)
+    gal2b = galsim.Pixel(scale = 1.7, flux = 100)
     gsobject_compare(gal2a, gal2b)
 
     # The config stuff emits a warning about the rectangular pixel.
@@ -604,14 +604,14 @@ def test_pixel():
         warnings.simplefilter("ignore")
 
         gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
-        gal3b = galsim.Pixel(xw = 2, yw = 2.1, flux = 1.e6)
+        gal3b = galsim.Box(width = 2, height = 2.1, flux = 1.e6)
         gal3b.applyShear(q = 0.6, beta = 0.39 * galsim.radians)
         # Drawing sheared Pixel without convolution doesn't work, so we need to 
         # do the extra convolution by a Gaussian here 
         gsobject_compare(gal3a, gal3b, conv=galsim.Gaussian(0.1))
 
         gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
-        gal4b = galsim.Pixel(xw = 1, yw = 1.2, flux = 50)
+        gal4b = galsim.Box(width = 1, height = 1.2, flux = 50)
         gal4b.applyDilation(3)
         gal4b.applyShear(e1 = 0.3)
         gal4b.applyRotation(12 * galsim.degrees)
@@ -622,14 +622,14 @@ def test_pixel():
 
     gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
     gsparams = galsim.GSParams(realspace_relerr=1.e-2, realspace_abserr=1.e-4)
-    gal5b = galsim.Pixel(xw=2, flux=50, gsparams=gsparams)
+    gal5b = galsim.Pixel(scale=2, flux=50, gsparams=gsparams)
     # Convolution of a pixel with a truncated Moffat will use realspace convolution
     conv = galsim.Moffat(beta=2.8, fwhm=1.3, trunc=3.7)
     gsobject_compare(gal5a, gal5b, conv=conv)
 
     try:
         # Make sure they don't match when using the default GSParams
-        gal5c = galsim.Pixel(xw=2, flux=50)
+        gal5c = galsim.Pixel(scale=2, flux=50)
         np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c, conv=conv)
     except ImportError:
         print 'The assert_raises tests require nose'
@@ -745,7 +745,7 @@ def test_interpolated_image():
                    'x_interpolant' : 'cubic', 'normalization' : 'sb', 'flux' : 1.e4 
                  },
         'gal4' : { 'type' : 'InterpolatedImage', 'image' : file_name,
-                   'x_interpolant' : 'lanczos5', 'dx' : 0.7, 'flux' : 1.e5 
+                   'x_interpolant' : 'lanczos5', 'scale' : 0.7, 'flux' : 1.e5 
                  },
         'gal5' : { 'type' : 'InterpolatedImage', 'image' : file_name,
                    'noise_pad' : 0.001 
@@ -778,7 +778,7 @@ def test_interpolated_image():
 
     gal4a = galsim.config.BuildGSObject(config, 'gal4')[0]
     interp = galsim.InterpolantXY(galsim.Lanczos(n=5,conserve_dc=True))
-    gal4b = galsim.InterpolatedImage(im, x_interpolant=interp, dx=0.7)
+    gal4b = galsim.InterpolatedImage(im, x_interpolant=interp, scale=0.7)
     gal4b.setFlux(1.e5)
     gsobject_compare(gal4a, gal4b)
 

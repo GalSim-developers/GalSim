@@ -36,13 +36,13 @@ New features introduced in this demo:
 - obj = galsim.Sersic(n, flux, scale_radius)
 - obj = galsim.Kolmogorov(fwhm)
 - obj = galsim.OpticalPSF(lam_over_diam, defocus, coma1, coma2, astig1, astig2, obscuration)
-- obj = galsim.Pixel(xw, yw)
+- obj = galsim.Pixel(scale)
 - obj.applyShear(e, beta)  -- including how to specify an angle in GalSim
 - shear = galsim.Shear(q, beta)
 - obj.applyShear(shear)
 - obj3 = x1 * obj1 + x2 * obj2
 - image = galsim.ImageF(image_size, image_size)
-- obj.draw(image, dx)
+- obj.draw(image, scale)
 - shear3 = shear1 + shear2
 - noise = galsim.CCDNoise(rng, sky_level, gain, read_noise)
 """
@@ -197,10 +197,9 @@ def main(argv):
     psf.applyShear(g1=wcs_g1, g2=wcs_g2)
     logger.debug('Applied WCS distortion')
 
-    # While Pixels are usually square, you can make them rectangular if you want
-    # by specifying xw and yw separately.  Here they are still the same value, but if you
-    # wanted non-square pixels, just specify a different value for xw and yw.
-    pix = galsim.Pixel(xw=pixel_scale, yw=pixel_scale)
+    # Define the pixel size.  It's not usually necessary, but the pixel scale parameter
+    # is named scale, so you can use a keyword argument if you want.
+    pix = galsim.Pixel(scale=pixel_scale)
     logger.debug('Made pixel profile')
 
     # The final profile is the convolution of the WCS-sheared (psf+gal) profile with the pixel.
@@ -219,14 +218,14 @@ def main(argv):
     # ImageF, since 32-bit floats are fine.  We just want to set the size explicitly.
     image = galsim.ImageF(image_size, image_size)
     # Draw the image with a particular pixel scale.
-    final.draw(image=image, dx=pixel_scale)
+    final.draw(image=image, scale=pixel_scale)
 
     # Also draw the effective PSF by itself and the optical PSF component alone.
     image_epsf = galsim.ImageF(image_size, image_size)
-    final_epsf.draw(image_epsf, dx=pixel_scale)
+    final_epsf.draw(image_epsf, scale=pixel_scale)
     # Note: we draw the optical part of the PSF at its own Nyquist-sampled pixel size
     # in order to better see the features of the (highly structured) profile.
-    image_opticalpsf = optics.draw(dx=lam_over_diam/2.)
+    image_opticalpsf = optics.draw(scale=lam_over_diam/2.)
     logger.debug('Made image of the profile')
 
     # Add a constant sky level to the image.

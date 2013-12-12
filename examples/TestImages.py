@@ -130,7 +130,7 @@ for bt in bulge2Total:
 
                 # Convolve with PSF, and draw image
                 convGalaxy = galsim.SBConvolve([PSF,galaxy.SBProfile])
-                convGalaxyImg = convGalaxy.draw(dx = pixelScale)
+                convGalaxyImg = convGalaxy.draw(scale = pixelScale)
 
                 # More noise realizations?
                 for invsnind in range(len(invSN)):

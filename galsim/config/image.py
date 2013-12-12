@@ -390,7 +390,7 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
     pixel_scale = params.get('pixel_scale',1.0)
     config['pixel_scale'] = pixel_scale
     if 'pix' not in config:
-        config['pix'] = { 'type' : 'Pixel' , 'xw' : pixel_scale }
+        config['pix'] = { 'type' : 'Pixel' , 'scale' : pixel_scale }
 
     if 'sky_level' in params and 'sky_level_pixel' in params:
         raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
@@ -504,7 +504,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         logger.debug('image %d: image_size = %d, %d',image_num,full_xsize,full_ysize)
 
     if 'pix' not in config:
-        config['pix'] = { 'type' : 'Pixel' , 'xw' : pixel_scale }
+        config['pix'] = { 'type' : 'Pixel' , 'scale' : pixel_scale }
 
     # Set the rng to use for image stuff.
     if 'random_seed' in config['image']:
@@ -752,7 +752,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     config['image_ysize'] = full_ysize
 
     if 'pix' not in config:
-        config['pix'] = { 'type' : 'Pixel' , 'xw' : pixel_scale }
+        config['pix'] = { 'type' : 'Pixel' , 'scale' : pixel_scale }
 
     # Set the rng to use for image stuff.
     if 'random_seed' in config['image']:

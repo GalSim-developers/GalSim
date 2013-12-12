@@ -581,7 +581,7 @@ class GSObject(object):
 
     # Make sure the image is defined with the right size and scale for the draw and
     # drawShoot commands.
-    def _draw_setup_image(self, image, dx, wmult, add_to_image, dx_is_dk=False):
+    def _draw_setup_image(self, image, scale, wmult, add_to_image, scale_is_dk=False):
 
         # Make sure the type of wmult is correct and has a valid value
         if type(wmult) != float:
@@ -589,45 +589,45 @@ class GSObject(object):
         if wmult <= 0:
             raise ValueError("Invalid wmult <= 0 in draw command")
 
-        # Save the input value, since we'll need to make a new dx (in case image is None)
-        if dx_is_dk: dk = dx
+        # Save the input value, since we'll need to make a new scale (in case image is None)
+        if scale_is_dk: dk = scale
 
-        # Check dx value and adjust if necessary
-        if dx is None:
+        # Check scale value and adjust if necessary
+        if scale is None:
             if image is not None and image.scale > 0.:
-                if dx_is_dk:
-                    # dx = 2pi / (N*dk)
+                if scale_is_dk:
+                    # scale = 2pi / (N*dk)
                     dk = image.scale
                     import numpy as np
-                    dx = 2.*np.pi/( np.max(image.array.shape) * image.scale )
+                    scale = 2.*np.pi/( np.max(image.array.shape) * image.scale )
                 else:
-                    dx = image.scale
+                    scale = image.scale
             else:
-                dx = self.SBProfile.nyquistDx()
-                if dx_is_dk:
+                scale = self.SBProfile.nyquistDx()
+                if scale_is_dk:
                     dk = self.stepK()
-        elif dx <= 0:
-            dx = self.SBProfile.nyquistDx()
-            if dx_is_dk:
+        elif scale <= 0:
+            scale = self.SBProfile.nyquistDx()
+            if scale_is_dk:
                 dk = self.stepK()
-        elif type(dx) != float:
-            if dx_is_dk:
-                dk = float(dx)
+        elif type(scale) != float:
+            if scale_is_dk:
+                dk = float(scale)
                 if image is not None:
                     import numpy as np
-                    dx = 2.*np.pi/( np.max(image.array.shape) * dk )
+                    scale = 2.*np.pi/( np.max(image.array.shape) * dk )
                 else:
-                    dx = self.SBProfile.nyquistDx()
+                    scale = self.SBProfile.nyquistDx()
             else:
-                dx = float(dx)
-        # At this point dx is really dx, not dk.
+                scale = float(scale)
+        # At this point scale is really scale, not dk.
 
         # Make image if necessary
         if image is None:
             # Can't add to image if none is provided.
             if add_to_image:
                 raise ValueError("Cannot add_to_image if image is None")
-            N = self.SBProfile.getGoodImageSize(dx,wmult)
+            N = self.SBProfile.getGoodImageSize(scale,wmult)
             image = galsim.ImageF(N,N)
 
         # Resize the given image if necessary
@@ -635,7 +635,7 @@ class GSObject(object):
             # Can't add to image if need to resize
             if add_to_image:
                 raise ValueError("Cannot add_to_image if image bounds are not defined")
-            N = self.SBProfile.getGoodImageSize(dx,wmult)
+            N = self.SBProfile.getGoodImageSize(scale,wmult)
             bounds = galsim.BoundsI(1,N,1,N)
             image.resize(bounds)
             image.setZero()
@@ -647,10 +647,10 @@ class GSObject(object):
                 image.setZero()
 
         # Set the image scale
-        if dx_is_dk:
+        if scale_is_dk:
             image.scale = dk
         else:
-            image.scale = dx
+            image.scale = scale
 
         return image
 
@@ -711,7 +711,7 @@ class GSObject(object):
             return self.createShifted(dx*scale, dy*scale)
 
 
-    def draw(self, image=None, dx=None, gain=1., wmult=1., normalization="flux",
+    def draw(self, image=None, scale=None, gain=1., wmult=1., normalization="flux",
              add_to_image=False, use_true_center=True, offset=None):
         """Draws an Image of the object, with bounds optionally set by an input Image.
 
@@ -720,9 +720,9 @@ class GSObject(object):
         used), and using interpolation to carry out image transformations such as shearing.  This
         method can create a new Image or can draw into an existing one, depending on the choice of
         the `image` keyword parameter.  Other keywords of particular relevance for users are those
-        that set the pixel scale for the image (`dx`), that choose the normalization convention for
-        the flux (`normalization`), and that decide whether to clear the input Image before drawing
-        into it (`add_to_image`).
+        that set the pixel scale for the image (`scale`), that choose the normalization 
+        convention for the flux (`normalization`), and that decide whether to clear the input 
+        Image before drawing into it (`add_to_image`).
 
         The object will always be drawn with its nominal center at the center location of the 
         image.  There is thus a distinction in the behavior at the center for even- and odd-sized
@@ -765,13 +765,14 @@ class GSObject(object):
                         constructed with `image = galsim.ImageF()`), then it will be resized
                         appropriately based on the profile's size (Default `image = None`).
 
-        @param dx     If provided, use this as the pixel scale for the image.
-                      If `dx` is `None` and `image != None`, then take the provided image's pixel 
-                        scale.
-                      If `dx` is `None` and `image == None`, then use the Nyquist scale 
+        @param scale  If provided, use this as the pixel scale for the image.
+                      If `scale` is `None` and `image != None`, then take the provided image's 
+                        pixel scale.
+                      If `scale` is `None` and `image == None`, then use the Nyquist scale 
                         `= pi/maxK()`.
-                      If `dx <= 0` (regardless of image), then use the Nyquist scale `= pi/maxK()`.
-                      (Default `dx = None`.)
+                      If `scale <= 0` (regardless of image), then use the Nyquist scale 
+                        `= pi/maxK()`.
+                      (Default `scale = None`.)
 
         @param gain   The number of photons per ADU ("analog to digital units", the units of the 
                       numbers output from a CCD).  (Default `gain =  1.`)
@@ -831,24 +832,24 @@ class GSObject(object):
         # Apply the offset, and possibly fix the centering for even-sized images
         # Note: We need to do this before we call _draw_setup_image, since the shift
         # affects stepK (especially if the offset is rather large).
-        prof = self._fix_center(image, dx, offset, use_true_center, reverse=False)
+        prof = self._fix_center(image, scale, offset, use_true_center, reverse=False)
 
         # Make sure image is setup correctly
-        image = prof._draw_setup_image(image,dx,wmult,add_to_image)
+        image = prof._draw_setup_image(image,scale,wmult,add_to_image)
 
         # SBProfile draw command uses surface brightness normalization.  So if we
-        # want flux normalization, we need to scale the flux by dx^2
+        # want flux normalization, we need to scale the flux by scale^2
         if normalization.lower() == "flux" or normalization.lower() == "f":
             # Rather than change the flux of the GSObject though, we change the gain.
             # gain is photons / ADU.  The photons are the given flux, and we want to 
-            # multiply the ADU by dx^2.  i.e. divide gain by dx^2.
+            # multiply the ADU by scale^2.  i.e. divide gain by scale^2.
             gain /= image.scale**2
 
         image.added_flux = prof.SBProfile.draw(image.view(), gain, wmult)
 
         return image
 
-    def drawShoot(self, image=None, dx=None, gain=1., wmult=1., normalization="flux",
+    def drawShoot(self, image=None, scale=None, gain=1., wmult=1., normalization="flux",
                   add_to_image=False, use_true_center=True, offset=None,
                   n_photons=0., rng=None, max_extra_noise=0., poisson_flux=None):
         """Draw an image of the object by shooting individual photons drawn from the surface 
@@ -858,9 +859,10 @@ class GSObject(object):
         to randomly sample the profile of the object. The resulting image will thus have Poisson
         noise due to the finite number of photons shot.  drawShoot() can create a new Image or use
         an existing one, depending on the choice of the `image` keyword parameter.  Other keywords
-        of particular relevance for users are those that set the pixel scale for the image (`dx`),
-        that choose the normalization convention for the flux (`normalization`), and that decide
-        whether the clear the input Image before shooting photons into it (`add_to_image`).
+        of particular relevance for users are those that set the pixel scale for the image 
+        (`scale`), that choose the normalization convention for the flux (`normalization`), and 
+        that decide whether the clear the input Image before shooting photons into it 
+        (`add_to_image`).
 
         As for the draw command, the object will always be drawn with its nominal center at the 
         center location of the image.  See the documentation for draw for more discussion about
@@ -870,8 +872,8 @@ class GSObject(object):
         convolved with the square image pixel.  So when using drawShoot() instead of draw(), you
         should not explicitly include the pixel response by convolving with a Pixel GSObject.  Using
         drawShoot without convolving with a Pixel will produce the equivalent image (for very large
-        n_photons) as draw() produces when the same object is convolved with `Pixel(xw=dx)` when
-        drawing onto an image with pixel scale `dx`.
+        n_photons) as draw() produces when the same object is convolved with `Pixel(scale=scale)` 
+        when drawing onto an image with pixel scale `scale`.
 
         Note that the drawShoot method is unavailable for Deconvolve objects or compound objects 
         (e.g. Add, Convolve) that include a Deconvolve.
@@ -894,13 +896,14 @@ class GSObject(object):
                         on the profile's size.
                       (Default `image = None`.)
 
-        @param dx     If provided, use this as the pixel scale for the image.
-                      If `dx` is `None` and `image != None`, then take the provided image's pixel 
-                        scale.
-                      If `dx` is `None` and `image == None`, then use the Nyquist scale 
+        @param scale  If provided, use this as the pixel scale for the image.
+                      If `scale` is `None` and `image != None`, then take the provided image's 
+                        pixel scale.
+                      If `scale` is `None` and `image == None`, then use the Nyquist scale 
                         `= pi/maxK()`.
-                      If `dx <= 0` (regardless of image), then use the Nyquist scale `= pi/maxK()`.
-                      (Default `dx = None`.)
+                      If `scale <= 0` (regardless of image), then use the Nyquist scale 
+                        `= pi/maxK()`.
+                      (Default `scale = None`.)
 
         @param gain   The number of photons per ADU ("analog to digital units", the units of the 
                       numbers output from a CCD).  (Default `gain =  1.`)
@@ -1013,17 +1016,17 @@ class GSObject(object):
             warnings.warn(msg)
 
         # Apply the offset, and possibly fix the centering for even-sized images
-        prof = self._fix_center(image, dx, offset, use_true_center, reverse=False)
+        prof = self._fix_center(image, scale, offset, use_true_center, reverse=False)
 
         # Make sure image is setup correctly
-        image = prof._draw_setup_image(image,dx,wmult,add_to_image)
+        image = prof._draw_setup_image(image,scale,wmult,add_to_image)
 
         # SBProfile drawShoot command uses surface brightness normalization.  So if we
-        # want flux normalization, we need to scale the flux by dx^2
+        # want flux normalization, we need to scale the flux by scale^2
         if normalization.lower() == "flux" or normalization.lower() == "f":
             # Rather than change the flux of the GSObject though, we change the gain.
             # gain is photons / ADU.  The photons are the given flux, and we want to 
-            # multiply the ADU by dx^2.  i.e. divide gain by dx^2.
+            # multiply the ADU by scale^2.  i.e. divide gain by scale^2.
             gain /= image.scale**2
 
         try:
@@ -1041,7 +1044,7 @@ class GSObject(object):
 
         return image
 
-    def drawK(self, re=None, im=None, dk=None, gain=1., add_to_image=False):
+    def drawK(self, re=None, im=None, scale=None, gain=1., add_to_image=False):
         """Draws the k-space Images (real and imaginary parts) of the object, with bounds
         optionally set by input Images.
 
@@ -1063,13 +1066,14 @@ class GSObject(object):
                         constructed with `im = galsim.ImageF()`), then it will be resized
                         appropriately based on the profile's size (Default `im = None`).
 
-        @param dk     If provided, use this as the pixel scale for the images.
-                      If `dk` is `None` and `re, im != None`, then take the provided images' pixel 
-                        scale (which must be equal).
-                      If `dk` is `None` and `re, im == None`, then use the Nyquist scale 
+        @param scale  If provided, use this as the pixel scale for the images.
+                      If `scale` is `None` and `re, im != None`, then take the provided images' 
+                        pixel scale (which must be equal).
+                      If `scale` is `None` and `re, im == None`, then use the Nyquist scale 
                         `= pi/maxK()`.
-                      If `dk <= 0` (regardless of image), then use the Nyquist scale `= pi/maxK()`.
-                      (Default `dk = None`.)
+                      If `scale <= 0` (regardless of image), then use the Nyquist scale 
+                         `= pi/maxK()`.
+                      (Default `scale = None`.)
 
         @param gain   The number of photons per ADU ("analog to digital units", the units of the 
                       numbers output from a CCD).  (Default `gain =  1.`)
@@ -1093,7 +1097,7 @@ class GSObject(object):
         else:
             if im is None:
                 raise ValueError("im is None, but re is not None")
-            if dk is None:
+            if scale is None:
                 if re.scale != im.scale:
                     raise ValueError("re and im do not have the same input scale")
             if re.bounds.isDefined() or im.bounds.isDefined():
@@ -1101,8 +1105,8 @@ class GSObject(object):
                     raise ValueError("re and im do not have the same defined bounds")
 
         # Make sure images are setup correctly
-        re = self._draw_setup_image(re,dk,1.0,add_to_image,dx_is_dk=True)
-        im = self._draw_setup_image(im,dk,1.0,add_to_image,dx_is_dk=True)
+        re = self._draw_setup_image(re,scale,1.0,add_to_image,scale_is_dk=True)
+        im = self._draw_setup_image(im,scale,1.0,add_to_image,scale_is_dk=True)
 
         # wmult isn't really used by drawK, but we need to provide it.
         wmult = 1.0
@@ -1457,7 +1461,7 @@ class Kolmogorov(GSObject):
 
 
 class Pixel(GSObject):
-    """A class describing a pixel profile.  This is just a 2-d top-hat function.
+    """A class describing a pixel profile.  This is just a 2-d square top-hat function.
 
     This class is typically used to represent a Pixel response function, and therefore is only
     needed when drawing images using Fourier transform or real-space convolution (with the draw
@@ -1465,8 +1469,9 @@ class Pixel(GSObject):
 
     Initialization
     --------------
-    A Pixel is initialized with an x dimension width `xw`, an optional y dimension width (if
-    unspecifed `yw=xw` is assumed) and an optional flux parameter [default `flux = 1.`].
+    A Pixel is initialized with a `scale` parameter, that represents the pixel scale, the size 
+    of the box in both the x and y dimensions.  There is also an optional flux parameter 
+    [default `flux = 1.`].
 
     You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
     help(galsim.GSParams) for more information about this option.
@@ -1486,25 +1491,68 @@ class Pixel(GSObject):
     """
 
     # Initialization parameters of the object, with type information
-    _req_params = { "xw" : float }
-    _opt_params = { "yw" : float , "flux" : float }
+    _req_params = { "scale" : float }
+    _opt_params = { "flux" : float }
     _single_params = []
     _takes_rng = False
     _takes_logger = False
 
     # --- Public Class methods ---
-    def __init__(self, xw, yw=None, flux=1., gsparams=None):
-        if yw is None:
-            yw = xw
-        GSObject.__init__(self, galsim.SBBox(xw=xw, yw=yw, flux=flux, gsparams=gsparams))
+    def __init__(self, scale, flux=1., gsparams=None):
+        GSObject.__init__(self, galsim.SBBox(xw=scale, yw=scale, flux=flux, gsparams=gsparams))
 
-    def getXWidth(self):
+    def getScale(self):
+        """Return the pixel scale
+        """
+        return self.SBProfile.getXWidth()
+
+
+class Box(GSObject):
+    """A class describing a box profile.  This is just a 2-d top-hat function, where the 
+    width and height are allowed to be different.
+
+    Initialization
+    --------------
+    A Box is initialized with an x dimension `width`, a y dimension `height`, and an optional 
+    flux parameter [default `flux = 1.`].
+
+    You may also specify a gsparams argument.  See the docstring for galsim.GSParams using
+    help(galsim.GSParams) for more information about this option.
+
+    Methods
+    -------
+    The Box is a GSObject, and inherits all of the GSObject methods (draw(), drawShoot(), 
+    applyShear() etc.) and operator bindings.
+
+    Note: We have not implemented drawing a sheared or rotated Box in real space.  It's a 
+          bit tricky to get right at the edges where fractional fluxes are required.  
+          Fortunately, this is almost never needed.  Box profiles are almost always convolved
+          by something else rather than drawn by themselves, in which case either the fourier
+          space method is used, or photon shooting.  Both of these are implemented in GalSim.
+          If need to draw sheared or rotated Boxes in real space, please file an issue, and
+          maybe we'll implement that function.  Until then, you will get an exception if you try.
+    """
+
+    # Initialization parameters of the object, with type information
+    _req_params = { "width" : float, "height" : float }
+    _opt_params = { "flux" : float }
+    _single_params = []
+    _takes_rng = False
+    _takes_logger = False
+
+    # --- Public Class methods ---
+    def __init__(self, width, height, flux=1., gsparams=None):
+        width = float(width)
+        height = float(height)
+        GSObject.__init__(self, galsim.SBBox(xw=width, yw=height, flux=flux, gsparams=gsparams))
+
+    def getWidth(self):
         """Return the width of the pixel in the x dimension.
         """
         return self.SBProfile.getXWidth()
 
-    def getYWidth(self):
-        """Return the width of the pixel in the y dimension.
+    def getHeight(self):
+        """Return the height of the pixel in the y dimension.
         """
         return self.SBProfile.getYWidth()
 

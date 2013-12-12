@@ -634,7 +634,7 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level_pixel, offset):
     else:
         im = None
 
-    im = final.draw(image=im, dx=pixel_scale, wmult=wmult, offset=offset)
+    im = final.draw(image=im, scale=pixel_scale, wmult=wmult, offset=offset)
     im.setOrigin(config['image_origin'])
 
     # Whiten if requested.  Our signal to do so is that the object will have a noise attribute.
@@ -840,7 +840,7 @@ def AddNoiseFFT(im, weight_im, current_var, noise, base, rng, sky_level_pixel, l
 
     elif type == 'COSMOS':
         req = { 'file_name' : str }
-        opt = { 'dx_cosmos' : float, 'variance' : float }
+        opt = { 'cosmos_scale' : float, 'variance' : float }
         
         kwargs = galsim.config.GetAllParams(noise, 'noise', base, req=req, opt=opt)[0]
 
@@ -914,7 +914,7 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, offset):
 
         n_photons = galsim.config.ParseValue(
             config['image'], 'n_photons', config, int)[0]
-        im = final.drawShoot(image=im, dx=pixel_scale, n_photons=n_photons, rng=rng,
+        im = final.drawShoot(image=im, scale=pixel_scale, n_photons=n_photons, rng=rng,
                              offset=offset)
         im.setOrigin(config['image_origin'])
 
@@ -940,7 +940,7 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, offset):
                 raise ValueError("noise_var calculated to be < 0.")
             max_extra_noise *= noise_var
 
-        im = final.drawShoot(image=im, dx=pixel_scale, max_extra_noise=max_extra_noise, rng=rng,
+        im = final.drawShoot(image=im, scale=pixel_scale, max_extra_noise=max_extra_noise, rng=rng,
                              offset=offset)
         im.setOrigin(config['image_origin'])
 
@@ -1100,7 +1100,7 @@ def AddNoisePhot(im, weight_im, current_var, noise, base, rng, sky_level_pixel, 
 
     elif type == 'COSMOS':
         req = { 'file_name' : str }
-        opt = { 'dx_cosmos' : float, 'variance' : float }
+        opt = { 'cosmos_scale' : float, 'variance' : float }
         
         kwargs = galsim.config.GetAllParams(noise, 'noise', base, req=req, opt=opt)[0]
 
@@ -1171,7 +1171,7 @@ def DrawPSFStamp(psf, pix, config, bounds, sky_level_pixel, offset):
         final_psf.applyShift(gal_shift)
 
     im = galsim.ImageF(bounds, scale=pixel_scale)
-    final_psf.draw(im, dx=pixel_scale, offset=offset)
+    final_psf.draw(im, scale=pixel_scale, offset=offset)
 
     if (('output' in config and 'psf' in config['output'] 
             and 'signal_to_noise' in config['output']['psf']) or
@@ -1281,7 +1281,7 @@ def CalculateNoiseVar(noise, base, pixel_scale, sky_level_pixel):
 
     elif type == 'COSMOS':
         req = { 'file_name' : str }
-        opt = { 'dx_cosmos' : float, 'variance' : float }
+        opt = { 'cosmos_scale' : float, 'variance' : float }
         
         kwargs = galsim.config.GetAllParams(noise, 'noise', base, req=req, opt=opt)[0]
 

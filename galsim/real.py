@@ -183,7 +183,7 @@ class RealGalaxy(GSObject):
         if noise_image is None:
             self.noise = galsim.UncorrelatedNoise(rng, pixel_scale, var, gsparams)
         else:
-            ii = galsim.InterpolatedImage(noise_image, dx=pixel_scale, normalization="sb",
+            ii = galsim.InterpolatedImage(noise_image, scale=pixel_scale, normalization="sb",
                                           calculate_stepk=False, calculate_maxk=False,
                                           x_interpolant='linear', gsparams=gsparams)
             self.noise = galsim.correlatednoise._BaseCorrelatedNoise(rng, ii)
@@ -205,7 +205,7 @@ class RealGalaxy(GSObject):
         # Build the InterpolatedImage of the PSF.
         self.original_psf = galsim.InterpolatedImage(
             self.psf_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant, 
-            flux=1.0, dx=self.pixel_scale, gsparams=gsparams)
+            flux=1.0, scale=self.pixel_scale, gsparams=gsparams)
         if logger:
             logger.debug('RealGalaxy %d: Made original_psf',use_index)
 
@@ -215,7 +215,7 @@ class RealGalaxy(GSObject):
         # leads to problems.)
         self.original_image = galsim.InterpolatedImage(
                 self.gal_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant,
-                dx=self.pixel_scale, pad_factor=pad_factor, noise_pad_size=noise_pad_size,
+                scale=self.pixel_scale, pad_factor=pad_factor, noise_pad_size=noise_pad_size,
                 calculate_stepk=self.original_psf.stepK(),
                 calculate_maxk=self.original_psf.maxK(),
                 noise_pad=noise_pad, rng=rng, gsparams=gsparams)
@@ -567,7 +567,7 @@ class RealGalaxyCatalog(object):
         if im is None:
             cf = galsim.UncorrelatedNoise(rng, scale, var, gsparams)
         else:
-            ii = galsim.InterpolatedImage(im, dx=scale, normalization="sb",
+            ii = galsim.InterpolatedImage(im, scale=scale, normalization="sb",
                                           calculate_stepk=False, calculate_maxk=False,
                                           x_interpolant='linear', gsparams=gsparams)
             cf = galsim.correlatednoise._BaseCorrelatedNoise(rng, ii)
@@ -618,7 +618,7 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
         raise RuntimeError("Error: simReal requires a RealGalaxy!")
     for Class in galsim.Image.values() + galsim.ImageView.values():
         if isinstance(target_PSF, Class):
-            target_PSF = galsim.InterpolatedImage(target_PSF.view(), dx=target_pixel_scale)
+            target_PSF = galsim.InterpolatedImage(target_PSF.view(), scale=target_pixel_scale)
             break
     if not isinstance(target_PSF, galsim.GSObject):
         raise RuntimeError("Error: target PSF is not an Image, ImageView, or GSObject!")
@@ -660,7 +660,7 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
 
     # convolve, resample
     out_gal = galsim.Convolve([real_galaxy_copy, target_PSF])
-    image = out_gal.draw(image=image, dx = target_pixel_scale)
+    image = out_gal.draw(image=image, scale = target_pixel_scale)
 
     # return simulated image
     return image

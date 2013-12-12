@@ -30,7 +30,6 @@ valid_gsobject_types = {
     'Convolution' : '_BuildConvolve',
     'List' : '_BuildList',
     'Ring' : '_BuildRing',
-    'Pixel' : '_BuildPixel',
     'RealGalaxy' : '_BuildRealGalaxy',
     'RealGalaxyOriginal' : '_BuildRealGalaxyOriginal'
 }
@@ -370,26 +369,6 @@ def _BuildRing(config, key, base, ignore, gsparams, logger):
         gsobject = config['first']['current_val'].createRotated(k*dtheta)
 
     return gsobject, False
-
-
-def _BuildPixel(config, key, base, ignore, gsparams, logger):
-    """@brief Build a Pixel type GSObject from user input.
-    """
-    kwargs, safe = galsim.config.GetAllParams(config, key, base, 
-        req = galsim.__dict__['Pixel']._req_params,
-        opt = galsim.__dict__['Pixel']._opt_params,
-        single = galsim.__dict__['Pixel']._single_params,
-        ignore = ignore)
-    if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
-
-    if 'yw' in kwargs.keys() and (kwargs['xw'] != kwargs['yw']):
-        import warnings
-        warnings.warn(
-            "xw != yw found (%f != %f) "%(kwargs['xw'], kwargs['yw']) +
-            "This is supported for the pixel, but not the draw routines. " +
-            "There might be weirdness....")
-
-    return galsim.Pixel(**kwargs), safe
 
 
 def _BuildRealGalaxy(config, key, base, ignore, gsparams, logger):
