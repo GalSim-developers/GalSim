@@ -10,6 +10,8 @@ v1.0.1
 * Fixed some bugs in the config machinery when files have varying numbers
   of objects. (#487)
 * Support astropy.io.fits in lieu of standalone pyfits module. (#488)
+* Fixed a bug in config where 'safe' objects were not being correctly 
+  invalidated when a new input item should have invalidated them.
 
 
 v1.0

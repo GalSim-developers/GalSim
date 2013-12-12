@@ -94,7 +94,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     type = ck['type']
 
     # If we have previously saved an object and marked it as safe, then use it.
-    if 'current_val' in ck and ck['safe']:
+    if 'current_val' in ck and ck['current_safe']:
         if logger:
             logger.debug('obj %d: current is safe: %s',base['obj_num'],str(ck['current_val']))
         return ck['current_val'], True
@@ -116,7 +116,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     ignore = [ 
         'dilate', 'dilation', 'ellip', 'rotate', 'rotation', 'scale_flux',
         'magnify', 'magnification', 'shear', 'shift', 
-        'gsparams', 'skip', 'current_val', 'safe' 
+        'gsparams', 'skip', 'current_val', 'current_safe' 
     ]
     # There are a few more that are specific to which key we have.
     if key == 'gal':
@@ -193,7 +193,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
 
     if 'no_save' not in base:
         ck['current_val'] = gsobject
-        ck['safe'] = safe
+        ck['current_safe'] = safe
 
     return gsobject, safe
 

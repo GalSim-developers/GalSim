@@ -12,6 +12,12 @@ Changes from v1.0.0 to v1.0.1:
     for items at the file-level scope.  So if you wanted nobjects to be
     a random variate, that had not been possible.
 
+* Fixed a bug in config where objects that are considered "safe" (that is,
+  unchanging from object to object -- the psf profile, for example) during 
+  the processing of a given file were not being correctly invalidated for 
+  the next file in a multi-file run if the next file uses a different 
+  catalog for instance.
+
 * Support astropy.io.fits in lieu of stand-alone pyfits module. (#488)
   This is where pyfits will live going forward.  So we now support both
   the astropy distribution as well as the legacy pyfits module.
