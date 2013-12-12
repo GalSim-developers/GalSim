@@ -63,7 +63,9 @@ def parse_args():
 
     # Short description strings common to both parsing mechanisms
     version_str = "GalSim Version %s"%galsim.version
-    description = "galsim: configuration file parser for GalSim.\n" + version_str
+    description = "galsim: configuration file parser for %s.  "%version_str 
+    description += "See https://github.com/GalSim-developers/GalSim/wiki/Config-Documentation "
+    description += "for documentation about using this program."
     epilog = "Works with both YAML and JSON markup formats."
     
     try:
