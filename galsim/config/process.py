@@ -438,29 +438,22 @@ def Process(config, logger=None):
 
     def worker(input, output):
         proc = current_process().name
-        print 'Start proc = ',proc
         for job in iter(input.get, 'STOP'):
-            print proc,': job = ',job
             try:
                 (kwargs, file_num, file_name, logger) = job
-                print proc,': file = ',file_num,file_name
                 if logger:
                     logger.debug('%s: Received job to do file %d, %s',proc,file_num,file_name)
                 ProcessInput(kwargs['config'], file_num=file_num, logger=logger)
-                print proc,': after ProcessInput'
                 if logger:
                     logger.debug('%s: After ProcessInput for file %d',proc,file_num)
                 kwargs['logger'] = logger
                 t = build_func(**kwargs)
-                print proc,': after build_func: t = ',t
                 if logger:
                     logger.debug('%s: After %s for file %d',proc,build_func,file_num)
                 output.put( (t, file_num, file_name, proc) )
             except Exception as e:
-                print proc,': caught exception ',str(e)
                 import traceback
                 tr = traceback.format_exc()
-                print proc,': trace = ',tr
                 if logger:
                     logger.debug('%s: Caught exception %s\n%s',proc,str(e),tr)
                 output.put( (e, file_num, file_name, tr) )
