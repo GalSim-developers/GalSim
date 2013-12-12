@@ -68,8 +68,9 @@ class OpticalPSF(GSObject):
         >>> optical_psf = galsim.OpticalPSF(lam_over_diam, defocus=0., astig1=0., astig2=0.,
                                             coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0.,
                                             circular_pupil=True, obscuration=0., interpolant=None,
-                                            oversampling=1.5, pad_factor=1.5, nstruts=0,
-                                            strut_thick=0.05, strut_angle=0.*galsim.degrees)
+                                            oversampling=1.5, pad_factor=1.5, max_size=None,
+                                            nstruts=0, strut_thick=0.05,
+                                            strut_angle=0.*galsim.degrees)
 
     Initializes optical_psf as a galsim.OpticalPSF() instance.
 
@@ -105,6 +106,12 @@ class OpticalPSF(GSObject):
                             its best guess about how high you might want to raise it.  However,
                             you can suppress this warning by using suppress_warning=True.
                             [default `suppress_warning = False`]
+    @param max_size         Set a maximum size of the internal image for the optical PSF profile
+                            in arcsec.  Sometimes the code calculates a rather large image size
+                            to describe the optical PSF profile.  If you will eventually be 
+                            drawing onto a smallish postage stamp, you might want to save some
+                            CPU time by setting max_size to be the size of your postage stamp.
+                            [default `max_size = None`]
     @param flux             Total flux of the profile [default `flux=1.`].
     @param nstruts          Number of radial support struts to add to the central obscuration
                             [default `nstruts = 0`].
@@ -139,6 +146,7 @@ class OpticalPSF(GSObject):
         "oversampling" : float ,
         "pad_factor" : float ,
         "suppress_warning" : bool ,
+        "max_size" : float ,
         "interpolant" : str ,
         "flux" : float,
         "nstruts" : int,
@@ -152,7 +160,7 @@ class OpticalPSF(GSObject):
     def __init__(self, lam_over_diam, defocus=0.,
                  astig1=0., astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0., 
                  circular_pupil=True, obscuration=0., interpolant=None, oversampling=1.5,
-                 pad_factor=1.5, suppress_warning=False, flux=1.,
+                 pad_factor=1.5, suppress_warning=False, max_size=None, flux=1.,
                  nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees,
                  gsparams=None):
 
@@ -169,8 +177,13 @@ class OpticalPSF(GSObject):
         # Boost Airy image size by a user-specifed pad_factor to allow for larger, aberrated PSFs
         stepk = stepk_airy / pad_factor
         
+        # Check the desired image size against max_size if provided
+        twoR = 2. * np.pi / stepk  # The desired image size in arcsec
+        if max_size != None and twoR > max_size:
+            twoR = max_size
+
         # Get a good FFT size.  i.e. 2^n or 3 * 2^n.
-        npix = goodFFTSize(int(np.ceil(2. * np.pi / (dx_lookup * stepk) )))
+        npix = goodFFTSize(int(np.ceil(twoR / dx_lookup)))
 
         # Make the psf image using this dx and array shape
         optimage = galsim.optics.psf_image(
