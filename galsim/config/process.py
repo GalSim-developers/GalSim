@@ -73,23 +73,31 @@ def RemoveCurrent(config, keep_safe=False, type=None):
     # End recursion if this is not a dict.
     if not isinstance(config,dict): return
 
+    # Recurse to lower levels, if any
+    force = False  # If lower levels removed anything, then force removal at this level as well.
+    for key in config:
+        if isinstance(config[key],list):
+            for item in config[key]:
+                force = RemoveCurrent(item, keep_safe, type) or force
+        else:
+            force = RemoveCurrent(config[key], keep_safe, type) or force
+    if force: 
+        keep_safe = False
+        type = None
+
     # Delete the current_val at this level, if any
     if ( 'current_val' in config 
           and not (keep_safe and config['current_safe'])
           and (type == None or ('type' in config and config['type'] == type)) ):
         del config['current_val']
         del config['current_safe']
-        del config['current_seq_index']
-        del config['current_file_num']
-        del config['current_value_type']
-
-    # Recurse to lower levels, if any
-    for key in config:
-        if isinstance(config[key],list):
-            for item in config[key]:
-                RemoveCurrent(item, keep_safe, type)
-        else:
-            RemoveCurrent(config[key], keep_safe, type)
+        if 'current_seq_index' in config:
+            del config['current_seq_index']
+            del config['current_value_type']
+            del config['current_value_type']
+        return True
+    else:
+        return force
 
 
 class InputGetter:
@@ -257,6 +265,8 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False):
                     input_obj = getattr(config['input_manager'],tag)(**kwargs)
                     if logger:
                         logger.debug('file %d: Built input object %s, %s',file_num,key,type)
+                        if 'file_name' in kwargs:
+                            logger.debug('file %d: file_name = %s',file_num,kwargs['file_name'])
                         if valid_input_types[key][2]:
                             logger.info('Read %d objects from %s',input_obj.getNObjects(),key)
                     # Store input_obj in the config for use by BuildGSObject function.
