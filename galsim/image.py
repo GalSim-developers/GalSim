@@ -26,17 +26,17 @@ from . import _galsim
 import numpy
 
 # Sometimes (on 32-bit systems) there are two numpy.int32 types.  This can lead to some confusion 
-# when doing arithmetic with images.  So just make sure both of them point to ImageI in the Image 
-# dict.  One of them is what you get when you just write numpy.int32.  The other is what numpy 
-# decides an int16 + int32 is.  The first one is usually the one that's already in the Image dict,
-# but we assign both versions just to be sure.
+# when doing arithmetic with images.  So just make sure both of them point to ImageAllocI in the 
+# ImageAlloc dict.  One of them is what you get when you just write numpy.int32.  The other is 
+# what numpy decides an int16 + int32 is.  The first one is usually the one that's already in the 
+# ImageAlloc dict, but we assign both versions just to be sure.
 
-_galsim.Image[numpy.int32] = _galsim.ImageI
+_galsim.ImageAlloc[numpy.int32] = _galsim.ImageAllocI
 _galsim.ImageView[numpy.int32] = _galsim.ImageViewI
 _galsim.ConstImageView[numpy.int32] = _galsim.ConstImageViewI
 
 alt_int32 = ( numpy.array([0]).astype(numpy.int32) + 1).dtype.type
-_galsim.Image[alt_int32] = _galsim.ImageI
+_galsim.ImageAlloc[alt_int32] = _galsim.ImageAllocI
 _galsim.ImageView[alt_int32] = _galsim.ImageViewI
 _galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
 
@@ -44,7 +44,7 @@ _galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
 # just in case there are systems where this doesn't work but the above does.
 alt_int32 = ( numpy.array([0]).astype(numpy.int16) + 
               numpy.array([0]).astype(numpy.int32) ).dtype.type
-_galsim.Image[alt_int32] = _galsim.ImageI
+_galsim.ImageAlloc[alt_int32] = _galsim.ImageAllocI
 _galsim.ImageView[alt_int32] = _galsim.ImageViewI
 _galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
 
@@ -53,32 +53,32 @@ _galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
 # http://projects.scipy.org/numpy/ticket/1246
 
 
-# First of all we add docstrings to the Image, ImageView and ConstImageView classes for each of the
-# S, F, I & D datatypes
+# First of all we add docstrings to the ImageAlloc, ImageView and ConstImageView classes for each 
+# of the S, F, I & D datatypes
 #
-for Class in _galsim.Image.itervalues():
+for Class in _galsim.ImageAlloc.itervalues():
     Class.__doc__ = """
-    The ImageS, ImageI, ImageF and ImageD classes.
+    The ImageAllocS, ImageAllocI, ImageAllocF and ImageAllocD classes.
     
-    Image[SIFD], ImageView[SIFD] and ConstImage[SIFD] are the classes that represent the primary way
-    to pass image data between Python and the GalSim C++ library.
+    ImageAlloc[SIFD], ImageView[SIFD] and ConstImage[SIFD] are the classes that represent the 
+    primary way to pass image data between Python and the GalSim C++ library.
 
     There is a separate Python class for each C++ template instantiation, and these can be accessed
-    using numpy types as keys in the Image dict:
+    using numpy types as keys in the ImageAlloc dict:
 
-        ImageS == Image[numpy.int16]
-        ImageI == Image[numpy.int32]
-        ImageF == Image[numpy.float32]
-        ImageD == Image[numpy.float64]
+        ImageAllocS == ImageAlloc[numpy.int16]
+        ImageAllocI == ImageAlloc[numpy.int32]
+        ImageAllocF == ImageAlloc[numpy.float32]
+        ImageAllocD == ImageAlloc[numpy.float64]
     
-    An Image can be thought of as containing a 2-d, row-contiguous numpy array (which it may share
-    with other ImageView objects), an origin point, and a pixel scale (the origin and pixel scale
-    are not shared).
+    An ImageAlloc can be thought of as containing a 2-d, row-contiguous numpy array (which it may 
+    share with other ImageView objects), an origin point, and a pixel scale (the origin and pixel 
+    scale are not shared).
 
-    There are several ways to construct an Image:
+    There are several ways to construct an ImageAlloc:
 
-        Image(ncol, nrow, scale=0, init_value=0) # size, scale, and initial value, origin @ (1,1)
-        Image(bounds, scale=0 init_value=0)      # bounding box, scale, and initial value
+        ImageAlloc(ncol, nrow, scale=0, init_value=0) # size, scale, and initial value, origin @ (1,1)
+        ImageAlloc(bounds, scale=0 init_value=0)      # bounding box, scale, and initial value
 
     The default scale=0 essentially means that it is undefined.  When drawing onto such an image,
     a suitable scale will be automatically set.
@@ -88,10 +88,11 @@ for Class in _galsim.Image.itervalues():
         im.bounds = new_bounds
         im.scale = new_scale
 
-    An Image also has an 'array' attribute that provides a numpy view into the Image's pixels.
+    An ImageAlloc also has an 'array' attribute that provides a numpy view into the ImageAlloc's 
+    pixels.
 
     The individual elements in the array attribute are accessed as im.array[y,x], matching the
-    standard numpy convention, while the Image class's own accessors are all (x,y).
+    standard numpy convention, while the ImageAlloc class's own accessors are all (x,y).
     """
 
 
@@ -164,7 +165,7 @@ def Image_getitem(self, key):
 
 # Define a utility function to be used by the arithmetic functions below
 def check_image_consistency(im1, im2):
-    if (type(im2) in _galsim.Image.values() or
+    if (type(im2) in _galsim.ImageAlloc.values() or
         type(im2) in _galsim.ImageView.values() or
         type(im2) in _galsim.ConstImageView.values()):
         if im1.scale != im2.scale:
@@ -288,26 +289,26 @@ def Image_ior(self, other):
     return self
 
 def Image_copy(self):
-    # self can be an Image or an ImageView, but the return type needs to be an Image.
+    # self can be an ImageAlloc or an ImageView, but the return type needs to be an ImageAlloc.
     # So use the array.dtype.type attribute to get the type of the underlying data,
-    # which in turn can be used to index our Image dictionary:
-    return _galsim.Image[self.array.dtype.type](self)
+    # which in turn can be used to index our ImageAlloc dictionary:
+    return _galsim.ImageAlloc[self.array.dtype.type](self)
 
 # Some functions to enable pickling of images
 def ImageView_getinitargs(self):
     return self.array, self.xmin, self.ymin, self.scale
 
 # An image is really pickled as an ImageView
-def Image_getstate(self):
+def ImageAlloc_getstate(self):
     return self.array, self.xmin, self.ymin, self.scale
 
-def Image_setstate(self, args):
+def ImageAlloc_setstate(self, args):
     self_type = args[0].dtype.type
     self.__class__ = _galsim.ImageView[self_type]
     self.__init__(*args)
 
-# inject these as methods of Image classes
-for Class in _galsim.Image.itervalues():
+# inject these as methods of ImageAlloc classes
+for Class in _galsim.ImageAlloc.itervalues():
     Class.__setitem__ = Image_setitem
     Class.__getitem__ = Image_getitem
     Class.__add__ = Image_add
@@ -329,8 +330,8 @@ for Class in _galsim.Image.itervalues():
     Class.__pow__ = Image_pow
     Class.copy = Image_copy
     Class.__getstate_manages_dict__ = 1
-    Class.__getstate__ = Image_getstate
-    Class.__setstate__ = Image_setstate
+    Class.__getstate__ = ImageAlloc_getstate
+    Class.__setstate__ = ImageAlloc_setstate
 
 for Class in _galsim.ImageView.itervalues():
     Class.__setitem__ = Image_setitem
@@ -373,14 +374,24 @@ for Class in _galsim.ConstImageView.itervalues():
 
 import numpy as np
 for int_type in [ np.int16, np.int32 ]:
-    for Class in [ _galsim.Image[int_type], _galsim.ImageView[int_type],
+    for Class in [ _galsim.ImageAlloc[int_type], _galsim.ImageView[int_type],
                    _galsim.ConstImageView[int_type] ]:
         Class.__and__ = Image_and
         Class.__xor__ = Image_xor
         Class.__or__ = Image_or
-    for Class in [ _galsim.Image[int_type], _galsim.ImageView[int_type] ]:
+    for Class in [ _galsim.ImageAlloc[int_type], _galsim.ImageView[int_type] ]:
         Class.__iand__ = Image_iand
         Class.__ixor__ = Image_ixor
         Class.__ior__ = Image_ior
+
+# For now, copy ImageAlloc to Image in python.
+Image = {}
+for key, Class in _galsim.ImageAlloc.iteritems():
+    Image[key] = Class
+ImageS = _galsim.ImageAllocS
+ImageI = _galsim.ImageAllocI
+ImageF = _galsim.ImageAllocF
+ImageD = _galsim.ImageAllocD
+    
 
 del Class    # cleanup public namespace

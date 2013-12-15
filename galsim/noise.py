@@ -85,7 +85,7 @@ def addNoiseSNR(image, noise, snr, preserve_flux=False):
         image.addNoise(noise)
 
 # inject addNoise and addNoiseSNR as methods of Image classes
-for Class in _galsim.Image.itervalues():
+for Class in _galsim.ImageAlloc.itervalues():
     Class.addNoise = addNoise
     Class.addNoiseSNR = addNoiseSNR
 

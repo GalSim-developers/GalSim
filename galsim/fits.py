@@ -956,7 +956,7 @@ class FitsHeader(object):
 
 
 # inject write as methods of Image classes
-for Class in _galsim.Image.itervalues():
+for Class in _galsim.ImageAlloc.itervalues():
     Class.write = write
 
 for Class in _galsim.ImageView.itervalues():

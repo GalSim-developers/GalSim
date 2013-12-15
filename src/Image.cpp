@@ -112,7 +112,7 @@ void BaseImage<T>::allocateMem()
 }
 
 template <typename T>
-Image<T>::Image(int ncol, int nrow, double scale, T init_value) :
+ImageAlloc<T>::ImageAlloc(int ncol, int nrow, double scale, T init_value) :
     BaseImage<T>(Bounds<int>(1,ncol,1,nrow), scale) 
 {
     if (ncol <= 0 || nrow <= 0) {
@@ -135,14 +135,14 @@ Image<T>::Image(int ncol, int nrow, double scale, T init_value) :
 }
 
 template <typename T>
-Image<T>::Image(const Bounds<int>& bounds, double scale, const T init_value) :
+ImageAlloc<T>::ImageAlloc(const Bounds<int>& bounds, double scale, const T init_value) :
     BaseImage<T>(bounds, scale)
 {
     fill(init_value);
 }
 
 template <typename T>
-void Image<T>::resize(const Bounds<int>& new_bounds) 
+void ImageAlloc<T>::resize(const Bounds<int>& new_bounds) 
 {
     if (!new_bounds.isDefined()) {
         // Then this is really a deallocation.  Clear out the existing memory.
@@ -187,7 +187,7 @@ T& ImageView<T>::at(const int xpos, const int ypos) const
 }
 
 template <typename T>
-T& Image<T>::at(const int xpos, const int ypos)
+T& ImageAlloc<T>::at(const int xpos, const int ypos)
 {
     if (!this->_data) throw ImageError("Attempt to access values of an undefined image");
     if (!this->_bounds.includes(xpos, ypos)) throw ImageBoundsError(xpos, ypos, this->_bounds);
@@ -195,7 +195,7 @@ T& Image<T>::at(const int xpos, const int ypos)
 }
 
 template <typename T>
-const T& Image<T>::at(const int xpos, const int ypos) const
+const T& ImageAlloc<T>::at(const int xpos, const int ypos) const
 {
     if (!this->_data) throw ImageError("Attempt to access values of an undefined image");
     if (!this->_bounds.includes(xpos, ypos)) throw ImageBoundsError(xpos, ypos, this->_bounds);
@@ -286,10 +286,10 @@ template class BaseImage<double>;
 template class BaseImage<float>;
 template class BaseImage<int32_t>;
 template class BaseImage<int16_t>;
-template class Image<double>;
-template class Image<float>;
-template class Image<int32_t>;
-template class Image<int16_t>;
+template class ImageAlloc<double>;
+template class ImageAlloc<float>;
+template class ImageAlloc<int32_t>;
+template class ImageAlloc<int16_t>;
 template class ImageView<double>;
 template class ImageView<float>;
 template class ImageView<int32_t>;

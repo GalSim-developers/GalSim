@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageBasic , T , test_types )
     // Of course, when viewed as an image, the rows are generally drawn from bottom to top.
 
     // Check basic constructor from nrow,ncol
-    galsim::Image<T> im1(ncol,nrow, scale);
+    galsim::ImageAlloc<T> im1(ncol,nrow, scale);
     galsim::Bounds<int> bounds(1,ncol,1,nrow);
 
     BOOST_CHECK(im1.getXMin()==1);
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageBasic , T , test_types )
     BOOST_CHECK(im1.getStride() == ncol);
 
     // Check alternate constructor from bounds
-    galsim::Image<T> im2(bounds, scale);
+    galsim::ImageAlloc<T> im2(bounds, scale);
     galsim::ImageView<T> im2_view = im2;
     galsim::ConstImageView<T> im2_cview = im2;
 
@@ -193,8 +193,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
 
     galsim::ConstImageView<T> ref_im(ref_array, boost::shared_ptr<T>(), ncol, bounds, 1.);
 
-    galsim::Image<T> im1 = ref_im;
-    galsim::Image<T> im2 = T(2) * ref_im;
+    galsim::ImageAlloc<T> im1 = ref_im;
+    galsim::ImageAlloc<T> im2 = T(2) * ref_im;
     for (int y=1; y<=nrow; ++y) {
         for (int x=1; x<=ncol; ++x) {
             BOOST_CHECK(im2(x,y) == 2 * ref_im(x,y));
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
 
     // Test image addition
     { 
-        galsim::Image<T> im3 = im1 + im2;
+        galsim::ImageAlloc<T> im3 = im1 + im2;
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
 
     // Test image subtraction
     { 
-        galsim::Image<T> im3 = im1 - im2;
+        galsim::ImageAlloc<T> im3 = im1 - im2;
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
 
     // Test binary multiplication
     { 
-        galsim::Image<T> im3 = im1 * im2;
+        galsim::ImageAlloc<T> im3 = im1 * im2;
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
@@ -302,7 +302,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
                 im1(x,y) = 4 * ref_im(x,y) * ref_im(x,y);
             }
         }
-        galsim::Image<T> im3 = im1 / im2;
+        galsim::ImageAlloc<T> im3 = im1 / im2;
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
@@ -335,7 +335,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
 
     // Test image scalar addition
     { 
-        galsim::Image<T> im3 = im1 + T(3);
+        galsim::ImageAlloc<T> im3 = im1 + T(3);
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
@@ -365,7 +365,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
 
     // Test image subtraction
     { 
-        galsim::Image<T> im3 = im1 - T(3);
+        galsim::ImageAlloc<T> im3 = im1 - T(3);
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
@@ -395,7 +395,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
 
     // Test binary multiplication
     { 
-        galsim::Image<T> im3 = im1 * T(3);
+        galsim::ImageAlloc<T> im3 = im1 * T(3);
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
@@ -430,7 +430,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
                 im1(x,y) = ref_im(x,y) * 27;
             }
         }
-        galsim::Image<T> im3 = im1 / T(3);
+        galsim::ImageAlloc<T> im3 = im1 / T(3);
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {

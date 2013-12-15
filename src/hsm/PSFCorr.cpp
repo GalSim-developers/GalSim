@@ -72,7 +72,7 @@ namespace hsm {
     // non-zero elements in the masked_image, so subsequent operations can safely use this
     // instead of the full masked_image.
     template <typename T>
-    ImageView<double> MakeMaskedImage(Image<double>& masked_image,
+    ImageView<double> MakeMaskedImage(ImageAlloc<double>& masked_image,
                                       const ImageView<T>& image,
                                       const ImageView<int>& mask)
     {
@@ -164,10 +164,10 @@ namespace hsm {
         }
 
         // Apply the mask
-        Image<double> full_masked_gal_image;
+        ImageAlloc<double> full_masked_gal_image;
         ImageView<double> masked_gal_image = 
             MakeMaskedImage(full_masked_gal_image,gal_image,gal_mask_image);
-        Image<double> masked_PSF_image(PSF_image);
+        ImageAlloc<double> masked_PSF_image(PSF_image);
         ConstImageView<double> masked_gal_image_cview = masked_gal_image.view();
         ConstImageView<double> masked_PSF_image_cview = masked_PSF_image.view();
 
@@ -257,7 +257,7 @@ namespace hsm {
         // Apply the mask
         dbg<<"obj bounds = "<<object_image.getBounds()<<std::endl;
         dbg<<"mask bounds = "<<object_mask_image.getBounds()<<std::endl;
-        Image<double> full_masked_object_image;
+        ImageAlloc<double> full_masked_object_image;
         ImageView<double> masked_object_image = 
             MakeMaskedImage(full_masked_object_image,object_image,object_mask_image);
         ConstImageView<double> masked_object_image_cview = masked_object_image.view();
@@ -1609,7 +1609,7 @@ namespace hsm {
         Minvf_yy =  Mfxx/detMf;
         sum = 0.;
         Bounds<int> fgauss_bounds(fgauss_xmin, fgauss_xmax, fgauss_ymin, fgauss_ymax);
-        Image<double> fgauss(fgauss_bounds, 1.); // Scale = 1. Any value would be fine.
+        ImageAlloc<double> fgauss(fgauss_bounds, 1.); // Scale = 1. Any value would be fine.
         for(int y=fgauss.getYMin();y<=fgauss.getYMax();y++) {
             for(int x=fgauss.getXMin();x<=fgauss.getXMax();x++) {
                 dx = x - x0_gal + x0_psf;
@@ -1647,7 +1647,7 @@ namespace hsm {
         /* Now let's compute the residual from the PSF fit.  This is called
          * - epsilon in Hirata & Seljak.
          */
-        Image<double> PSF_resid(pbounds, 1.);
+        ImageAlloc<double> PSF_resid(pbounds, 1.);
         detM = Mxxpsf * Myypsf - Mxypsf * Mxypsf;
         Minvpsf_xx =  Myypsf/detM;
         Minvpsf_xy = -Mxypsf/detM;
@@ -1664,7 +1664,7 @@ namespace hsm {
         }
 
         /* Now compute the re-Gaussianized galaxy image */
-        Image<double> Iprime = gal_image;
+        ImageAlloc<double> Iprime = gal_image;
         ConstImageView<double> fgauss_view = fgauss.view();
         ConstImageView<double> PSF_resid_view = PSF_resid.view();
         ImageView<double> Iprime_view = Iprime.view();

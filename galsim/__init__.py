@@ -30,6 +30,7 @@ except:
 
 # Import things from other files we want to be in the galsim namespace
 from ._galsim import *
+from image import Image, ImageS, ImageI, ImageF, ImageD
 from base import *
 from real import RealGalaxy, RealGalaxyCatalog, simReal
 from optics import OpticalPSF
@@ -51,7 +52,6 @@ from . import position
 from . import bounds
 from . import angle
 from . import noise
-from . import image
 from . import random
 
 # packages we intentionally keep separate.  E.g. requires galsim.fits.read(...)

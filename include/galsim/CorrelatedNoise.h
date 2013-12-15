@@ -73,7 +73,7 @@ namespace galsim {
      * code duplication.  If, in future, it becomes critical to speed up this function this can be
      * revisited.
      */
-    Image<double> calculateCovarianceMatrix(
+    ImageAlloc<double> calculateCovarianceMatrix(
         const SBProfile& sbp, const Bounds<int>& bounds, double dx);
 
     /**

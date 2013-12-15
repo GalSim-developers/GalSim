@@ -46,13 +46,13 @@ template <typename T>
 struct PyImage {
 
     template <typename U>
-    static Image<T>* MakeFromImage(const BaseImage<U>& rhs)
-    { return new Image<T>(rhs); }
+    static ImageAlloc<T>* MakeFromImage(const BaseImage<U>& rhs)
+    { return new ImageAlloc<T>(rhs); }
 
     template <typename U, typename W>
-    static void wrapImageTemplates(W& wrapper) {
-        typedef Image<T>* (*constructFrom_func_type)(const BaseImage<U>&);
-        typedef void (Image<T>::* copyFrom_func_type)(const BaseImage<U>&);
+    static void wrapImageAllocTemplates(W& wrapper) {
+        typedef ImageAlloc<T>* (*constructFrom_func_type)(const BaseImage<U>&);
+        typedef void (ImageAlloc<T>::* copyFrom_func_type)(const BaseImage<U>&);
         wrapper
             .def(
                 "__init__",
@@ -61,7 +61,7 @@ struct PyImage {
                     bp::default_call_policies(), bp::args("other")
                 )
             )
-            .def("copyFrom", copyFrom_func_type(&Image<T>::copyFrom));
+            .def("copyFrom", copyFrom_func_type(&ImageAlloc<T>::copyFrom));
     }
 
     template <typename U, typename W>
@@ -96,7 +96,7 @@ struct PyImage {
             self.attr("_array") = bp::object();
 
         // Now call the regular resize method.
-        Image<T>& image = bp::extract<Image<T>&>(self);
+        ImageAlloc<T>& image = bp::extract<ImageAlloc<T>&>(self);
         image.resize(new_bounds);
     }
 
@@ -136,30 +136,30 @@ struct PyImage {
         return new ConstImageView<T>(data, owner, stride, bounds, scale);
     }
 
-    static bp::object wrapImage(const std::string& suffix) {
+    static bp::object wrapImageAlloc(const std::string& suffix) {
         bp::object getScale = bp::make_function(&BaseImage<T>::getScale);
         bp::object setScale = bp::make_function(&BaseImage<T>::setScale);
 
         // Need some typedefs and explicit casts here to resolve overloads of methods
         // that have both const and non-const versions or (x,y) and pos version
-        typedef const T& (Image<T>::* at_func_type)(const int, const int) const;
-        typedef const T& (Image<T>::* at_pos_func_type)(const Position<int>&) const;
+        typedef const T& (ImageAlloc<T>::* at_func_type)(const int, const int) const;
+        typedef const T& (ImageAlloc<T>::* at_pos_func_type)(const Position<int>&) const;
         typedef void (BaseImage<T>::* shift_func_type)(const int, const int);
         typedef void (BaseImage<T>::* shift_pos_func_type)(const Position<int>&);
         typedef void (BaseImage<T>::* setOrigin_func_type)(const int, const int);
         typedef void (BaseImage<T>::* setOrigin_pos_func_type)(const Position<int>&);
         typedef void (BaseImage<T>::* setCenter_func_type)(const int, const int);
         typedef void (BaseImage<T>::* setCenter_pos_func_type)(const Position<int>&);
-        typedef ImageView<T> (Image<T>::* subImage_func_type)(const Bounds<int>&);
-        typedef ImageView<T> (Image<T>::* view_func_type)();
+        typedef ImageView<T> (ImageAlloc<T>::* subImage_func_type)(const Bounds<int>&);
+        typedef ImageView<T> (ImageAlloc<T>::* view_func_type)();
 
         bp::object at = bp::make_function(
-            at_func_type(&Image<T>::at),
+            at_func_type(&ImageAlloc<T>::at),
             bp::return_value_policy<bp::copy_const_reference>(),
             bp::args("x", "y")
         );
         bp::object at_pos = bp::make_function(
-            at_pos_func_type(&Image<T>::at),
+            at_pos_func_type(&ImageAlloc<T>::at),
             bp::return_value_policy<bp::copy_const_reference>(),
             bp::args("pos")
         );
@@ -176,12 +176,12 @@ struct PyImage {
             .add_property("scale", getScale, setScale)
             .def("subImage", &BaseImage<T>::subImage, bp::args("bounds"))
             .add_property("array", &GetConstArray)
-            .def("shift", shift_func_type(&Image<T>::shift), bp::args("x", "y"))
-            .def("shift", shift_pos_func_type(&Image<T>::shift), bp::args("pos"))
-            .def("setCenter", setCenter_func_type(&Image<T>::setCenter), bp::args("x", "y"))
-            .def("setCenter", setCenter_pos_func_type(&Image<T>::setCenter), bp::args("pos"))
-            .def("setOrigin", setOrigin_func_type(&Image<T>::setOrigin), bp::args("x", "y"))
-            .def("setOrigin", setOrigin_pos_func_type(&Image<T>::setOrigin), bp::args("pos"))
+            .def("shift", shift_func_type(&BaseImage<T>::shift), bp::args("x", "y"))
+            .def("shift", shift_pos_func_type(&BaseImage<T>::shift), bp::args("pos"))
+            .def("setCenter", setCenter_func_type(&BaseImage<T>::setCenter), bp::args("x", "y"))
+            .def("setCenter", setCenter_pos_func_type(&BaseImage<T>::setCenter), bp::args("pos"))
+            .def("setOrigin", setOrigin_func_type(&BaseImage<T>::setOrigin), bp::args("x", "y"))
+            .def("setOrigin", setOrigin_pos_func_type(&BaseImage<T>::setOrigin), bp::args("pos"))
             .def("getBounds", getBounds)
             .add_property("bounds", getBounds)
             ;
@@ -190,9 +190,9 @@ struct PyImage {
         ADD_CORNER(pyBaseImage, getXMax, xmax);
         ADD_CORNER(pyBaseImage, getYMax, ymax);
 
-        bp::class_< Image<T>, bp::bases< BaseImage<T> > >
-            pyImage(("Image" + suffix).c_str(), "", bp::no_init);
-        pyImage
+        bp::class_< ImageAlloc<T>, bp::bases< BaseImage<T> > >
+            pyImageAlloc(("ImageAlloc" + suffix).c_str(), "", bp::no_init);
+        pyImageAlloc
             .def(bp::init<>())
             .def(bp::init<int,int,double,T>(
                     (bp::args("ncol","nrow"), bp::arg("scale")=0.,
@@ -202,8 +202,8 @@ struct PyImage {
                     (bp::arg("bounds"), bp::arg("scale")=0.,
                      bp::arg("init_value")=T(0))
             ))
-            .def("subImage", subImage_func_type(&Image<T>::subImage), bp::args("bounds"))
-            .def("view", view_func_type(&Image<T>::view))
+            .def("subImage", subImage_func_type(&ImageAlloc<T>::subImage), bp::args("bounds"))
+            .def("view", view_func_type(&ImageAlloc<T>::view))
             .add_property("array", &GetArray)
             // In python, there is no way to have a function return a mutable reference
             // so you can't make im(x,y) = val work correctly.  Thus, the __call__
@@ -211,21 +211,21 @@ struct PyImage {
             .def("__call__", at) // always used checked accessors in Python
             .def("at", at)
             .def("__call__", at_pos)
-            // For some reason, this next line causes help(galsim.ImageD) to hang and/or crash.
+            // For some reason, this next line causes help(galsim.ImageAllocD) to hang and/or crash.
             //.def("at", at_pos)
-            .def("setValue", &Image<T>::setValue, bp::args("x","y","value"))
-            .def("fill", &Image<T>::fill)
-            .def("setZero", &Image<T>::setZero)
-            .def("invertSelf", &Image<T>::invertSelf)
+            .def("setValue", &ImageAlloc<T>::setValue, bp::args("x","y","value"))
+            .def("fill", &ImageAlloc<T>::fill)
+            .def("setZero", &ImageAlloc<T>::setZero)
+            .def("invertSelf", &ImageAlloc<T>::invertSelf)
             .def("resize", &CallResize)
             .enable_pickling()
             ;
-        wrapImageTemplates<float>(pyImage);
-        wrapImageTemplates<double>(pyImage);
-        wrapImageTemplates<int16_t>(pyImage);
-        wrapImageTemplates<int32_t>(pyImage);
+        wrapImageAllocTemplates<float>(pyImageAlloc);
+        wrapImageAllocTemplates<double>(pyImageAlloc);
+        wrapImageAllocTemplates<int16_t>(pyImageAlloc);
+        wrapImageAllocTemplates<int32_t>(pyImageAlloc);
 
-        return pyImage;
+        return pyImageAlloc;
     }
 
     static bp::object wrapImageView(const std::string& suffix) {
@@ -265,7 +265,7 @@ struct PyImage {
             .def("setValue", &ImageView<T>::setValue, bp::args("x","y","value"))
             .def("fill", &ImageView<T>::fill)
             .def("setZero", &ImageView<T>::setZero)
-            .def("invertSelf", &Image<T>::invertSelf)
+            .def("invertSelf", &ImageView<T>::invertSelf)
             .enable_pickling()
             ;
         wrapImageViewTemplates<float>(pyImageView);
@@ -316,12 +316,12 @@ struct PyImage {
 };
 
 void pyExportImage() {
-    bp::dict pyImageDict;  // dict that lets us say "Image[numpy.float32]", etc.
+    bp::dict pyImageAllocDict;  // dict that lets us say "Image[numpy.float32]", etc.
 
-    pyImageDict[GetNumPyType<int16_t>()] = PyImage<int16_t>::wrapImage("S");
-    pyImageDict[GetNumPyType<int32_t>()] = PyImage<int32_t>::wrapImage("I");
-    pyImageDict[GetNumPyType<float>()] = PyImage<float>::wrapImage("F");
-    pyImageDict[GetNumPyType<double>()] = PyImage<double>::wrapImage("D");
+    pyImageAllocDict[GetNumPyType<int16_t>()] = PyImage<int16_t>::wrapImageAlloc("S");
+    pyImageAllocDict[GetNumPyType<int32_t>()] = PyImage<int32_t>::wrapImageAlloc("I");
+    pyImageAllocDict[GetNumPyType<float>()] = PyImage<float>::wrapImageAlloc("F");
+    pyImageAllocDict[GetNumPyType<double>()] = PyImage<double>::wrapImageAlloc("D");
 
     bp::dict pyConstImageViewDict; 
 
@@ -338,7 +338,7 @@ void pyExportImage() {
     pyImageViewDict[GetNumPyType<double>()] = PyImage<double>::wrapImageView("D");
 
     bp::scope scope;  // a default constructed scope represents the module we're creating
-    scope.attr("Image") = pyImageDict;
+    scope.attr("ImageAlloc") = pyImageAllocDict;
     scope.attr("ConstImageView") = pyConstImageViewDict;
     scope.attr("ImageView") = pyImageViewDict;
 }

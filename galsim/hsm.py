@@ -447,7 +447,7 @@ def FindAdaptiveMom(object_image, weight = None, badpix = None, guess_sig = 5.0,
 for Class in _galsim.ImageView.itervalues():
     Class.FindAdaptiveMom = FindAdaptiveMom
 
-for Class in _galsim.Image.itervalues():
+for Class in _galsim.ImageAlloc.itervalues():
     Class.FindAdaptiveMom = FindAdaptiveMom
 
 del Class # cleanup public namespace
