@@ -433,7 +433,7 @@ class PowerSpectrum(object):
         self.grid_g1, self.grid_g2, self.grid_kappa = psr(gd)
         if kmin_factor != 1 or kmax_factor != 1:
             # Need to make sure the rows are continguous so we can use it in the constructor 
-            # of the ImageViewD objects below.  This requires a copy.
+            # of the ImageD objects below.  This requires a copy.
             s = slice(0,ngrid*kmax_factor,kmax_factor)
             self.grid_g1 = np.array(self.grid_g1[s,s], copy=True, order='C')
             self.grid_g2 = np.array(self.grid_g2[s,s], copy=True, order='C')
@@ -442,9 +442,9 @@ class PowerSpectrum(object):
         # Set up the images to be interpolated.
         # Note: We don't make the SBInterpolatedImages yet, since it's not picklable. 
         #       So we wait to create them when we are actually going to use them.
-        self.im_g1 = galsim.ImageViewD(self.grid_g1, scale=grid_spacing)
-        self.im_g2 = galsim.ImageViewD(self.grid_g2, scale=grid_spacing)
-        self.im_kappa = galsim.ImageViewD(self.grid_kappa, scale=grid_spacing)
+        self.im_g1 = galsim.ImageD(self.grid_g1, scale=grid_spacing)
+        self.im_g2 = galsim.ImageD(self.grid_g2, scale=grid_spacing)
+        self.im_kappa = galsim.ImageD(self.grid_kappa, scale=grid_spacing)
 
         # Dealing with the center here is a bit confusing, especially if ngrid is even.
         # The InterpolatedImage will consider position (0,0) to correspond to 
@@ -576,17 +576,19 @@ class PowerSpectrum(object):
             # get reduced shear (just discard magnification)
             g1_r, g2_r, _ = galsim.lensing_ps.theoryToObserved(self.im_g1.array, self.im_g2.array,
                                                                self.im_kappa.array)
-            g1_r = galsim.ImageViewD(g1_r, scale=self.im_g1.scale)
+            g1_r = galsim.ImageD(g1_r, scale=self.im_g1.scale)
             g1_r.setOrigin(self.im_g1.getXMin(), self.im_g1.getYMin())
-            g2_r = galsim.ImageViewD(g2_r, scale=self.im_g2.scale)
+            g2_r = galsim.ImageD(g2_r, scale=self.im_g2.scale)
             g2_r.setOrigin(self.im_g2.getXMin(), self.im_g2.getYMin())
             # Make an SBInterpolatedImage, which will do the heavy lifting for the
             # interpolation.
-            sbii_g1 = galsim.SBInterpolatedImage(g1_r, xInterp=interpolant2d, kInterp=quint2d)
-            sbii_g2 = galsim.SBInterpolatedImage(g2_r, xInterp=interpolant2d, kInterp=quint2d)
+            sbii_g1 = galsim.SBInterpolatedImage(g1_r.image, xInterp=interpolant2d, kInterp=quint2d)
+            sbii_g2 = galsim.SBInterpolatedImage(g2_r.image, xInterp=interpolant2d, kInterp=quint2d)
         else:
-            sbii_g1 = galsim.SBInterpolatedImage(self.im_g1, xInterp=interpolant2d, kInterp=quint2d)
-            sbii_g2 = galsim.SBInterpolatedImage(self.im_g2, xInterp=interpolant2d, kInterp=quint2d)
+            sbii_g1 = galsim.SBInterpolatedImage(self.im_g1.image, xInterp=interpolant2d,
+                                                 kInterp=quint2d)
+            sbii_g2 = galsim.SBInterpolatedImage(self.im_g2.image, xInterp=interpolant2d,
+                                                 kInterp=quint2d)
 
         # interpolate if necessary
         g1,g2 = [], []
@@ -660,7 +662,7 @@ class PowerSpectrum(object):
 
         # Make an SBInterpolatedImage, which will do the heavy lifting for the 
         # interpolation.
-        sbii_kappa = galsim.SBInterpolatedImage(self.im_kappa, xInterp=interpolant2d,
+        sbii_kappa = galsim.SBInterpolatedImage(self.im_kappa.image, xInterp=interpolant2d,
                                                 kInterp=quint2d)
 
         # interpolate if necessary
@@ -736,13 +738,13 @@ class PowerSpectrum(object):
         _, _, mu = galsim.lensing_ps.theoryToObserved(self.im_g1.array, self.im_g2.array,
                                                       self.im_kappa.array)
         # Interpolate mu-1, so the zero values off the edge are appropriate.
-        im_mu = galsim.ImageViewD(mu-1)
+        im_mu = galsim.ImageD(mu-1)
         im_mu.scale = self.im_kappa.scale
         im_mu.setOrigin(self.im_kappa.getXMin(), self.im_kappa.getYMin())
 
         # Make an SBInterpolatedImage, which will do the heavy lifting for the 
         # interpolation.
-        sbii_mu = galsim.SBInterpolatedImage(im_mu, xInterp=interpolant2d, kInterp=quint2d)
+        sbii_mu = galsim.SBInterpolatedImage(im_mu.image, xInterp=interpolant2d, kInterp=quint2d)
 
         # interpolate if necessary
         mu = []
@@ -816,20 +818,20 @@ class PowerSpectrum(object):
         # Calculate the magnification based on the convergence and shear
         g1_r, g2_r, mu = galsim.lensing_ps.theoryToObserved(self.im_g1.array, self.im_g2.array,
                                                             self.im_kappa.array)
-        im_g1_r = galsim.ImageViewD(g1_r)
+        im_g1_r = galsim.ImageD(g1_r)
         im_g1_r.scale = self.im_kappa.scale
         im_g1_r.setOrigin(self.im_kappa.getXMin(), self.im_kappa.getYMin())
-        im_g2_r = galsim.ImageViewD(g2_r)
+        im_g2_r = galsim.ImageD(g2_r)
         im_g2_r.scale = self.im_kappa.scale
         im_g2_r.setOrigin(self.im_kappa.getXMin(), self.im_kappa.getYMin())
-        im_mu = galsim.ImageViewD(mu-1)
+        im_mu = galsim.ImageD(mu-1)
         im_mu.scale = self.im_kappa.scale
         im_mu.setOrigin(self.im_kappa.getXMin(), self.im_kappa.getYMin())
         # Make an SBInterpolatedImage, which will do the heavy lifting for the 
         # interpolation.
-        sbii_g1 = galsim.SBInterpolatedImage(im_g1_r, xInterp=interpolant2d, kInterp=quint2d)
-        sbii_g2 = galsim.SBInterpolatedImage(im_g2_r, xInterp=interpolant2d, kInterp=quint2d)
-        sbii_mu = galsim.SBInterpolatedImage(im_mu, xInterp=interpolant2d, kInterp=quint2d)
+        sbii_g1 = galsim.SBInterpolatedImage(im_g1_r.image, xInterp=interpolant2d, kInterp=quint2d)
+        sbii_g2 = galsim.SBInterpolatedImage(im_g2_r.image, xInterp=interpolant2d, kInterp=quint2d)
+        sbii_mu = galsim.SBInterpolatedImage(im_mu.image, xInterp=interpolant2d, kInterp=quint2d)
 
         # interpolate if necessary
         g1, g2, mu = [], [], []
@@ -1064,10 +1066,8 @@ def kappaKaiserSquires(g1, g2):
     drawn randomly according to some power spectrum, the power spectrum that is used should be
     modified to go to zero above the relevant maximum k value for the grid being used.
 
-    @param g1  Square galsim.ImageF, galsim.ImageD or NumPy array containing the first component of
-               shear.
-    @param g2  Square galsim.ImageF, galsim.ImageD or NumPy array containing the second component of
-               shear.
+    @param g1  Square galsim.Image or NumPy array containing the first component of shear.
+    @param g2  Square galsim.Image or NumPy array containing the second component of shear.
 
     @return kappa_E, kappa_B  The first element of this tuple represents the convergence field
                               underlying the input shears; the second element is the convergence
@@ -1076,14 +1076,13 @@ def kappaKaiserSquires(g1, g2):
     """
     # Checks on inputs
     import galsim.utilities
-    if (isinstance(g1, (galsim.ImageD, galsim.ImageF)) and
-        isinstance(g2, (galsim.ImageD, galsim.ImageF))):
+    if isinstance(g1, galsim.Image) and isinstance(g2, galsim.Image):
         g1 = g1.array
         g2 = g2.array
     elif isinstance(g1, np.ndarray) and isinstance(g2, np.ndarray):
         pass
     else:
-        raise TypeError("Input g1 and g2 must be galsim Image (float types) or NumPy arrays.")
+        raise TypeError("Input g1 and g2 must be galsim Image or NumPy arrays.")
     if g1.shape != g2.shape:
         raise ValueError("Input g1 and g2 must be the same shape.")
     if g1.shape[0] != g1.shape[1]:

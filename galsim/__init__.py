@@ -44,6 +44,7 @@ from nfw_halo import NFWHalo, Cosmology
 from catalog import Catalog, Dict
 from table import LookupTable
 from random import DistDeviate
+from noise import VariableGaussianNoise
 from correlatednoise import CorrelatedNoise, getCOSMOSNoise, UncorrelatedNoise
 from fits import FitsHeader
 
@@ -51,7 +52,6 @@ from fits import FitsHeader
 from . import position
 from . import bounds
 from . import angle
-from . import noise
 from . import random
 
 # packages we intentionally keep separate.  E.g. requires galsim.fits.read(...)

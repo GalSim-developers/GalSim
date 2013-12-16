@@ -160,10 +160,11 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # for noise generation applications.
 
         # Check that the input has defined bounds
-        if not hasattr(image, "bounds"):
-            raise ValueError(
-                "Input image argument does not have a bounds attribute, it must be a galsim.Image "+
-                "or galsim.ImageView-type object with defined bounds.")
+        if isinstance(image, galsim.Image):
+            # It should be a BaseImage, but if a regular Image is provided, just convert.
+            image = image.image
+        if not image.bounds.isDefined():
+            raise ValueError("Input image argument must have defined bounds.")
 
         # If the profile has changed since last time (or if we have never been here before),
         # clear out the stored values.
@@ -180,7 +181,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # Finally generate a random field in Fourier space with the right PS
         noise_array = _generate_noise_from_rootps(self.getRNG(), rootps)
         # Add it to the image
-        image += galsim.ImageViewD(noise_array, scale=image.scale)
+        image += galsim.Image(noise_array, scale=image.scale).image
         return image
 
     def applyWhiteningTo(self, image):
@@ -245,10 +246,10 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # for noise generation applications.
 
         # Check that the input has defined bounds
-        if not hasattr(image, "bounds"):
-            raise ValueError(
-                "Input image argument does not have a bounds attribute, it must be a galsim.Image "+
-                "or galsim.ImageView-type object with defined bounds.")
+        if not isinstance(image, galsim.Image):
+            raise TypeError("Input image not a galsim.Image object")
+        if not image.bounds.isDefined():
+            raise ValueError("Input image argument must have defined bounds.")
 
         # If the profile has changed since last time (or if we have never been here before),
         # clear out the stored values.
@@ -266,7 +267,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         # Finally generate a random field in Fourier space with the right PS and add to image
         noise_array = _generate_noise_from_rootps(self.getRNG(), rootps_whitening)
-        image += galsim.ImageViewD(noise_array, scale=image.scale)
+        image += galsim.Image(noise_array, scale=image.scale)
 
         # Return the variance to the interested user
         return variance
@@ -802,10 +803,8 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
         subtract_mean=False, gsparams=None):
 
         # Check that the input image is in fact a galsim.ImageSIFD class instance
-        if not isinstance(image, (
-            galsim.BaseImageD, galsim.BaseImageF, galsim.BaseImageS, galsim.BaseImageI)):
-            raise TypeError(
-                "Input image not a galsim.Image class object (e.g. ImageD, ImageViewS etc.)")
+        if not isinstance(image, galsim.Image):
+            raise TypeError("Input image not a galsim.Image object")
         # Build a noise correlation function (CF) from the input image, using DFTs
         # Calculate the power spectrum then a (preliminary) CF 
         ft_array = np.fft.fft2(image.array)
@@ -851,7 +850,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
             cf_array[cf_array_prelim.shape[0], :] = bottom_row[::-1] # inverts order as required
   
         # Wrap correlation function in an image 
-        cf_image = galsim.ImageViewD(np.ascontiguousarray(cf_array))
+        cf_image = galsim.Image(np.ascontiguousarray(cf_array))
 
         # Correctly record the original image scale if set
         if scale > 0.:
@@ -918,15 +917,8 @@ def _Image_getCorrelatedNoise(image):
     """
     return CorrelatedNoise(image)
 
-# Then add this Image method to the Image classes
-for Class in galsim.Image.itervalues():
-    Class.getCorrelatedNoise = _Image_getCorrelatedNoise
-
-for Class in galsim.ImageView.itervalues():
-    Class.getCorrelatedNoise = _Image_getCorrelatedNoise
-
-for Class in galsim.ConstImageView.itervalues():
-    Class.getCorrelatedNoise = _Image_getCorrelatedNoise
+# Then add this Image method to the Image class
+galsim.Image.getCorrelatedNoise = _Image_getCorrelatedNoise
 
 # Free function for returning a COSMOS noise field correlation function
 def getCOSMOSNoise(rng, file_name, cosmos_scale=0.03, variance=0., x_interpolant=None,

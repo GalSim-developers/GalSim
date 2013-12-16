@@ -393,20 +393,20 @@ def wavefront_image(array_shape=(256, 256), scale=1., lam_over_diam=2., defocus=
                     astig1=0., astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0.,
                     circular_pupil=True, obscuration=0., nstruts=0, strut_thick=0.05,
                     strut_angle=0.*galsim.degrees):
-    """Return wavefront as a (real, imag) tuple of ImageViewD objects rather than complex NumPy
+    """Return wavefront as a (real, imag) tuple of Image objects rather than complex NumPy
     array.
 
     Outputs a circular pupil wavefront of unit amplitude that can be easily transformed to produce
     an optical PSF with lambda/diam = lam_over_diam on an output grid of spacing scale.
 
-    The ImageView output can be used to directly instantiate an SBInterpolatedImage, and its 
+    The Image output can be used to directly instantiate an SBInterpolatedImage, and its 
     scale will reflect the spacing of the output grid in the system of units adopted for 
     lam_over_diam.
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * scale.
     
     The pupil sample locations are arranged in standard DFT element ordering format, so that
-    (kx, ky) = (0, 0) is the [0, 0] array element.  The scale of the output ImageViewD is correct in
+    (kx, ky) = (0, 0) is the [0, 0] array element.  The scale of the output Image is correct in
     k space units.
 
     Input aberration coefficients are assumed to be supplied in units of wavelength, and correspond
@@ -451,8 +451,8 @@ def wavefront_image(array_shape=(256, 256), scale=1., lam_over_diam=2., defocus=
             "Wavefront Images' scales will not be correct in both directions for non-square "+
             "arrays, only square grids currently supported by galsim.Images.")
     scale = 2. * np.pi / array_shape[0]
-    imreal = galsim.ImageViewD(np.ascontiguousarray(array.real.astype(np.float64)), scale=scale)
-    imimag = galsim.ImageViewD(np.ascontiguousarray(array.imag.astype(np.float64)), scale=scale)
+    imreal = galsim.Image(np.ascontiguousarray(array.real.astype(np.float64)), scale=scale)
+    imimag = galsim.Image(np.ascontiguousarray(array.imag.astype(np.float64)), scale=scale)
     return (imreal, imimag)
 
 def psf(array_shape=(256, 256), scale=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0.,
@@ -524,18 +524,18 @@ def psf(array_shape=(256, 256), scale=1., lam_over_diam=2., defocus=0., astig1=0
 def psf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0.,
               coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0., circular_pupil=True,
               obscuration=0., nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees, flux=1.):
-    """Return circular (default) or square pupil PSF with low-order aberrations as an ImageViewD.
+    """Return circular (default) or square pupil PSF with low-order aberrations as an Image.
 
     The PSF is centred on the array[array_shape[0] / 2, array_shape[1] / 2] pixel by default, and
     uses surface brightness rather than flux units for pixel values, matching SBProfile.
 
-    The ImageView output can be used to directly instantiate an SBInterpolatedImage, and its 
+    The Image output can be used to directly instantiate an SBInterpolatedImage, and its 
     scale will reflect the spacing of the output grid in the system of units adopted for 
     lam_over_diam.
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * scale.
 
-    @param array_shape     the NumPy array shape desired for the array view of the ImageViewD.
+    @param array_shape     the NumPy array shape desired for the array view of the Image.
     @param scale           grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for scale 
                            (user responsible for consistency).
@@ -567,7 +567,7 @@ def psf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., defocus=0., as
         trefoil1=trefoil1, trefoil2=trefoil2, spher=spher,
         circular_pupil=circular_pupil, obscuration=obscuration, flux=flux, nstruts=nstruts,
         strut_thick=strut_thick, strut_angle=strut_angle)
-    im = galsim.ImageViewD(array.astype(np.float64), scale=scale)
+    im = galsim.Image(array.astype(np.float64), scale=scale)
     return im
 
 def otf(array_shape=(256, 256), scale=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0.,
@@ -624,18 +624,18 @@ def otf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., defocus=0., as
               coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0., circular_pupil=True,
               obscuration=0., nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees):
     """Return the complex OTF of a circular (default) or square pupil with low-order aberrations as 
-    a (real, imag) tuple of ImageViewD objects, rather than a complex NumPy array.
+    a (real, imag) tuple of Image objects, rather than a complex NumPy array.
 
     OTF array element ordering follows the DFT standard of kxky(array_shape), and has
-    otf[0, 0] = 1+0j by default.  The scale of the output ImageViewD is correct in k space units.
+    otf[0, 0] = 1+0j by default.  The scale of the output Image is correct in k space units.
 
-    The ImageView output can be used to directly instantiate an SBInterpolatedImage, and its 
+    The Image output can be used to directly instantiate an SBInterpolatedImage, and its 
     scale will reflect the spacing of the output grid in the system of units adopted for 
     lam_over_diam.
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * scale.
     
-    @param array_shape     the NumPy array shape desired for array views of ImageViewD tuple.
+    @param array_shape     the NumPy array shape desired for array views of Image tuple.
     @param scale           grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for scale 
                            (user responsible for consistency).
@@ -672,8 +672,8 @@ def otf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., defocus=0., as
             "OTF Images' scales will not be correct in both directions for non-square arrays, "+
             "only square grids currently supported by galsim.Images.")
     scale = 2. * np.pi / array_shape[0]
-    imreal = galsim.ImageViewD(np.ascontiguousarray(array.real.astype(np.float64)), scale=scale)
-    imimag = galsim.ImageViewD(np.ascontiguousarray(array.imag.astype(np.float64)), scale=scale)
+    imreal = galsim.Image(np.ascontiguousarray(array.real.astype(np.float64)), scale=scale)
+    imimag = galsim.Image(np.ascontiguousarray(array.imag.astype(np.float64)), scale=scale)
     return (imreal, imimag)
 
 def mtf(array_shape=(256, 256), scale=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0.,
@@ -726,18 +726,18 @@ def mtf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., defocus=0., as
               coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0., circular_pupil=True,
               obscuration=0., nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees):
     """Return the MTF of a circular (default) or square pupil with low-order aberrations as an 
-    ImageViewD.
+    Image.
 
     MTF array element ordering follows the DFT standard of kxky(array_shape), and has
-    mtf[0, 0] = 1 by default.  The scale of the output ImageViewD is correct in k space units.
+    mtf[0, 0] = 1 by default.  The scale of the output Image is correct in k space units.
 
-    The ImageView output can be used to directly instantiate an SBInterpolatedImage, and its 
+    The Image output can be used to directly instantiate an SBInterpolatedImage, and its 
     scale will reflect the spacing of the output grid in the system of units adopted for 
     lam_over_diam.
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * scale.
 
-    @param array_shape     the NumPy array shape desired for the array view of the ImageViewD.
+    @param array_shape     the NumPy array shape desired for the array view of the Image.
     @param scale           grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for scale 
                            (user responsible for consistency).
@@ -773,7 +773,7 @@ def mtf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., defocus=0., as
         warnings.warn(
             "MTF Image scale will not be correct in both directions for non-square arrays, only "+
             "square grids currently supported by galsim.Images.")
-    im = galsim.ImageViewD(array.astype(np.float64), scale = 2. * np.pi / array_shape[0])
+    im = galsim.Image(array.astype(np.float64), scale = 2. * np.pi / array_shape[0])
     return im
 
 def ptf(array_shape=(256, 256), scale=1., lam_over_diam=2., defocus=0., astig1=0., astig2=0.,
@@ -832,18 +832,18 @@ def ptf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., defocus=0., as
               coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0., circular_pupil=True,
               obscuration=0., nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees):
     """Return the PTF [radians] of a circular (default) or square pupil with low-order aberrations
-    as an ImageViewD.
+    as an Image.
 
     PTF array element ordering follows the DFT standard of kxky(array_shape), and has
-    ptf[0, 0] = 0. by default.  The scale of the output ImageViewD is correct in k space units.
+    ptf[0, 0] = 0. by default.  The scale of the output Image is correct in k space units.
 
-    The ImageView output can be used to directly instantiate an SBInterpolatedImage, and its 
+    The Image output can be used to directly instantiate an SBInterpolatedImage, and its 
     scale will reflect the spacing of the output grid in the system of units adopted for 
     lam_over_diam.
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * scale.
 
-    @param array_shape     the NumPy array shape desired for the array view of the ImageViewD.
+    @param array_shape     the NumPy array shape desired for the array view of the Image.
     @param scale           grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for scale 
                            (user responsible for consistency).
@@ -879,5 +879,5 @@ def ptf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., defocus=0., as
         warnings.warn(
             "PTF Image scale will not be correct in both directions for non-square arrays, only "+
             "square grids currently supported by galsim.Images.")
-    im = galsim.ImageViewD(array.astype(np.float64), scale = 2. * np.pi / array_shape[0])
+    im = galsim.Image(array.astype(np.float64), scale = 2. * np.pi / array_shape[0])
     return im

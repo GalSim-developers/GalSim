@@ -209,10 +209,7 @@ struct PyImage {
             // so you can't make im(x,y) = val work correctly.  Thus, the __call__
             // function (which is the im(x,y) syntax) is just the const version.
             .def("__call__", at) // always used checked accessors in Python
-            .def("at", at)
             .def("__call__", at_pos)
-            // For some reason, this next line causes help(galsim.ImageAllocD) to hang and/or crash.
-            //.def("at", at_pos)
             .def("setValue", &ImageAlloc<T>::setValue, bp::args("x","y","value"))
             .def("fill", &ImageAlloc<T>::fill)
             .def("setZero", &ImageAlloc<T>::setZero)
@@ -259,9 +256,7 @@ struct PyImage {
             .def("view", &ImageView<T>::view)
             .add_property("array", &GetArray)
             .def("__call__", at) // always used checked accessors in Python
-            .def("at", at)
             .def("__call__", at_pos)
-            //.def("at", at_pos)
             .def("setValue", &ImageView<T>::setValue, bp::args("x","y","value"))
             .def("fill", &ImageView<T>::fill)
             .def("setZero", &ImageView<T>::setZero)
@@ -304,9 +299,7 @@ struct PyImage {
             .def(bp::init<const BaseImage<T>&>(bp::args("other")))
             .def("view", &ConstImageView<T>::view)
             .def("__call__", at) // always used checked accessors in Python
-            .def("at", at)
             .def("__call__", at_pos)
-            //.def("at", at_pos)
             .enable_pickling()
             ;
 

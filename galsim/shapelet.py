@@ -248,7 +248,7 @@ class Shapelet(GSObject):
         sigma = self.SBProfile.getSigma()
         bvec = self.SBProfile.getBVec().copy()
 
-        galsim.ShapeletFitImage(sigma, bvec, image, center)
+        galsim.ShapeletFitImage(sigma, bvec, image.image, center)
 
         if normalization.lower() == "flux" or normalization.lower() == "f":
             bvec /= image.scale**2

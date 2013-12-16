@@ -81,15 +81,15 @@ def test_sbinterpolatedimage():
         [0.04, 0.11, 0.10, 0.01] ]) 
 
     for array_type in ftypes:
-        image_in = galsim.ImageView[array_type](ref_array.astype(array_type))
+        image_in = galsim.Image(ref_array.astype(array_type))
         np.testing.assert_array_equal(
                 ref_array.astype(array_type),image_in.array,
                 err_msg="Array from input Image differs from reference array for type %s"%
                         array_type)
-        sbinterp = galsim.SBInterpolatedImage(image_in, lan3_2d, quint_2d, dx=1.0)
+        sbinterp = galsim.SBInterpolatedImage(image_in.image, lan3_2d, quint_2d, dx=1.0)
         test_array = np.zeros(ref_array.shape, dtype=array_type)
-        image_out = galsim.ImageView[array_type](test_array, scale=1.0)
-        sbinterp.draw(image_out.view())
+        image_out = galsim.Image(test_array, scale=1.0)
+        sbinterp.draw(image_out.image.view())
         np.testing.assert_array_equal(
                 ref_array.astype(array_type),image_out.array,
                 err_msg="Array from output Image differs from reference array for type %s"%
@@ -102,7 +102,7 @@ def test_sbinterpolatedimage():
         # Anyway, Quintic seems to be accurate enough.
         quint = galsim.Quintic(1.e-4)
         quint_2d = galsim.InterpolantXY(quint)
-        sbinterp = galsim.SBInterpolatedImage(image_in, quint_2d, quint_2d, dx=1.0)
+        sbinterp = galsim.SBInterpolatedImage(image_in.image, quint_2d, quint_2d, dx=1.0)
         sbinterp.setFlux(1.)
         do_shoot(galsim.GSObject(sbinterp),image_out,"InterpolatedImage")
 
@@ -131,14 +131,14 @@ def test_roundtrip():
         [0.04, 0.11, 0.10, 0.01] ]) 
 
     for array_type in ftypes:
-        image_in = galsim.ImageView[array_type](ref_array.astype(array_type))
+        image_in = galsim.Image(ref_array.astype(array_type))
         np.testing.assert_array_equal(
                 ref_array.astype(array_type),image_in.array,
                 err_msg="Array from input Image differs from reference array for type %s"%
                         array_type)
         interp = galsim.InterpolatedImage(image_in, scale=test_scale)
         test_array = np.zeros(ref_array.shape, dtype=array_type)
-        image_out = galsim.ImageView[array_type](test_array, scale=test_scale)
+        image_out = galsim.Image(test_array, scale=test_scale)
         interp.draw(image_out)
         np.testing.assert_array_equal(
                 ref_array.astype(array_type),image_out.array,
@@ -774,7 +774,7 @@ def test_Cubic_ref():
     import time
     t1 = time.time()
     interp = galsim.Cubic(tol=1.e-4)
-    testobj = galsim.InterpolatedImage(ref_image.view(), x_interpolant=interp, scale=scale,
+    testobj = galsim.InterpolatedImage(ref_image, x_interpolant=interp, scale=scale,
                                        normalization='sb')
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
@@ -799,7 +799,7 @@ def test_Quintic_ref():
     import time
     t1 = time.time()
     interp = galsim.Quintic(tol=1.e-4)
-    testobj = galsim.InterpolatedImage(ref_image.view(), x_interpolant=interp, scale=scale,
+    testobj = galsim.InterpolatedImage(ref_image, x_interpolant=interp, scale=scale,
                                        normalization='sb')
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
@@ -823,7 +823,7 @@ def test_Lanczos5_ref():
     import time
     t1 = time.time()
     interp = galsim.Lanczos(5, conserve_dc=False, tol=1.e-4)
-    testobj = galsim.InterpolatedImage(ref_image.view(), x_interpolant=interp, scale=scale,
+    testobj = galsim.InterpolatedImage(ref_image, x_interpolant=interp, scale=scale,
                                        normalization='sb')
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
@@ -847,7 +847,7 @@ def test_Lanczos7_ref():
     import time
     t1 = time.time()
     interp = galsim.Lanczos(7, conserve_dc=False, tol=1.e-4)
-    testobj = galsim.InterpolatedImage(ref_image.view(), x_interpolant=interp, scale=scale,
+    testobj = galsim.InterpolatedImage(ref_image, x_interpolant=interp, scale=scale,
                                        normalization='sb')
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
@@ -882,11 +882,11 @@ def test_conserve_dc():
     im2_size = 100
     scale2 = 0.011  
 
-    im1 = galsim.ImageF(im1_size, im1_size, scale1, init_val)
+    im1 = galsim.ImageF(im1_size, im1_size, scale=scale1, init_value=init_val)
 
     # im2 has a much smaller scale, but the same size, so interpolating an "infinite" 
     # constant field.
-    im2 = galsim.ImageF(im2_size, im2_size, scale2)
+    im2 = galsim.ImageF(im2_size, im2_size, scale=scale2)
 
     for interp in ['linear', 'cubic', 'quintic']:
         print 'Testing interpolant ',interp

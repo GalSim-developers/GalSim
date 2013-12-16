@@ -642,7 +642,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
                 # Then there was whitening applied in the individual stamps.
                 # But there could be a different variance in each postage stamp, so the first
                 # thing we need to do is bring everything up to a common level.
-                noise_image = galsim.ImageF(full_image.bounds, full_image.scale)
+                noise_image = galsim.ImageF(full_image.bounds, scale=full_image.scale)
                 for k in range(nobjects): noise_image[images[k].bounds] += current_vars[k]
                 # Update this, since overlapping postage stamps may have led to a larger 
                 # value in some pixels.
@@ -881,7 +881,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
             # Then there was whitening applied in the individual stamps.
             # But there could be a different variance in each postage stamp, so the first
             # thing we need to do is bring everything up to a common level.
-            noise_image = galsim.ImageF(full_image.bounds, full_image.scale)
+            noise_image = galsim.ImageF(full_image.bounds, scale=full_image.scale)
             for k in range(nobjects): 
                 b = images[k].bounds & full_image.bounds
                 if b.isDefined(): noise_image[b] += current_vars[k]

@@ -31,10 +31,9 @@ class InterpolatedImage(GSObject):
 
     The InterpolatedImage class is useful if you have a non-parametric description of an object as 
     an Image, that you wish to manipulate / transform using GSObject methods such as applyShear(),
-    applyMagnification(), applyShift(), etc.  The input Image can be any BaseImage (i.e., Image,
-    ImageView, or ConstImageView).  Note that when convolving an InterpolatedImage, the use of
-    real-space convolution is not recommended, since it is typically a great deal slower than 
-    Fourier-space convolution for this kind of object.
+    applyMagnification(), applyShift(), etc.  Note that when convolving an InterpolatedImage, the 
+    use of real-space convolution is not recommended, since it is typically a great deal slower 
+    than Fourier-space convolution for this kind of object.
 
     The constructor needs to know how the Image was drawn: is it an Image of flux or of surface
     brightness?  Since our default for drawing Images using draw() and drawShoot() is that
@@ -105,8 +104,8 @@ class InterpolatedImage(GSObject):
     re-drawn at a different size.
 
     @param image           The Image from which to construct the object.
-                           This may be either an Image (or ImageView) instance or a string
-                           indicating a fits file from which to read the image.
+                           This may be either an Image instance or a string indicating a fits 
+                           file from which to read the image.
     @param x_interpolant   Either an Interpolant2d (or Interpolant) instance or a string indicating
                            which real-space interpolant should be used.  Options are 'nearest',
                            'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the
@@ -243,6 +242,7 @@ class InterpolatedImage(GSObject):
                  scale = None, flux = None, pad_factor = 4., noise_pad_size=0, noise_pad = 0.,
                  rng = None, pad_image = None, calculate_stepk=True, calculate_maxk=True,
                  use_cache=True, use_true_center=True, offset=None, gsparams=None):
+        import numpy
 
         # first try to read the image as a file.  If it's not either a string or a valid
         # pyfits hdu or hdulist, then an exception will be raised, which we ignore and move on.
@@ -252,7 +252,9 @@ class InterpolatedImage(GSObject):
             pass
 
         # make sure image is really an image and has a float type
-        if not isinstance(image, galsim.BaseImageF) and not isinstance(image, galsim.BaseImageD):
+        if not isinstance(image, galsim.Image):
+            raise ValueError("Supplied image is not an Image instance")
+        if image.dtype != numpy.float32 and image.dtype != numpy.float64:
             raise ValueError("Supplied image is not an image of floats or doubles!")
 
         # it must have well-defined bounds, otherwise seg fault in SBInterpolatedImage constructor
@@ -307,10 +309,12 @@ class InterpolatedImage(GSObject):
 
         # Check that given pad_image is valid:
         if pad_image:
+            import numpy
             if isinstance(pad_image, str):
                 pad_image = galsim.fits.read(pad_image)
-            if ( not isinstance(pad_image, galsim.BaseImageF) and 
-                 not isinstance(pad_image, galsim.BaseImageD) ):
+            if not isinstance(pad_image, galsim.Image):
+                raise ValueError("Supplied pad_image is not an Image!")
+            if pad_image.dtype != numpy.float32 and pad_image.dtype != numpy.float64:
                 raise ValueError("Supplied pad_image is not one of the allowed types!")
 
         # Check that the given noise_pad is valid:
@@ -364,12 +368,7 @@ class InterpolatedImage(GSObject):
 
         elif pad_image:
             # Just make sure pad_image is the right type
-            if ( isinstance(image, galsim.BaseImageF) and 
-                 not isinstance(pad_image, galsim.BaseImageF) ):
-                pad_image = galsim.ImageF(pad_image)
-            elif ( isinstance(image, galsim.BaseImageD) and 
-                   not isinstance(pad_image, galsim.BaseImageD) ):
-                pad_image = galsim.ImageD(pad_image)
+            pad_image = galsim.Image(pad_image, dtype=image.dtype)
 
         # Now place the given image in the center of the padding image:
         if pad_image:
@@ -385,7 +384,7 @@ class InterpolatedImage(GSObject):
 
         # Make the SBInterpolatedImage out of the image.
         sbinterpolatedimage = galsim.SBInterpolatedImage(
-                pad_image, xInterp=self.x_interpolant, kInterp=self.k_interpolant,
+                pad_image.image, xInterp=self.x_interpolant, kInterp=self.k_interpolant,
                 dx=scale, pad_factor=pad_factor, gsparams=gsparams)
 
         # GalSim cannot automatically know what stepK and maxK are appropriate for the 
@@ -430,10 +429,9 @@ class InterpolatedImage(GSObject):
         """A helper function that builds the pad_image from the given noise_pad specification.
         """
         import numpy as np
-        if isinstance(self.orig_image, galsim.BaseImageF):
-            pad_image = galsim.ImageF(noise_pad_size, noise_pad_size)
-        if isinstance(self.orig_image, galsim.BaseImageD):
-            pad_image = galsim.ImageD(noise_pad_size, noise_pad_size)
+
+        # Make it with the same dtype as the orig_image
+        pad_image = galsim.Image(noise_pad_size, noise_pad_size, dtype=self.orig_image.dtype)
 
         # Figure out what kind of noise to apply to the image
         if isinstance(noise_pad, float):
@@ -442,7 +440,7 @@ class InterpolatedImage(GSObject):
             noise = noise_pad.copy()
             if rng: # Let a user supplied RNG take precedence over that in user CN
                 noise.setRNG(rng)
-        elif isinstance(noise_pad,galsim.BaseImageF) or isinstance(noise_pad,galsim.BaseImageD):
+        elif isinstance(noise_pad,galsim.Image):
             noise = galsim.CorrelatedNoise(rng, noise_pad)
         elif self.use_cache and noise_pad in InterpolatedImage._cache_noise_pad:
             noise = InterpolatedImage._cache_noise_pad[noise_pad]

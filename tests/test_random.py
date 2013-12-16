@@ -214,7 +214,7 @@ def test_uniform():
     
     # Test filling an image
     u.seed(testseed)
-    testimage = galsim.ImageViewD(np.zeros((3, 1)))
+    testimage = galsim.ImageD(np.zeros((3, 1)))
     testimage.addNoise(galsim.DeviateNoise(u))
     np.testing.assert_array_almost_equal(
             testimage.array.flatten(), np.array(uResult), precision,
@@ -324,7 +324,7 @@ def test_gaussian():
     
     # Test filling an image
     g.seed(testseed)
-    testimage = galsim.ImageViewD(np.zeros((3, 1)))
+    testimage = galsim.ImageD(np.zeros((3, 1)))
     testimage.addNoise(galsim.DeviateNoise(g))
     np.testing.assert_array_almost_equal(
             testimage.array.flatten(), np.array(gResult), precision,
@@ -333,7 +333,7 @@ def test_gaussian():
     # GaussianNoise is equivalent, but no mean allowed.
     rng.seed(testseed)
     gn = galsim.GaussianNoise(rng, sigma=gSigma)
-    testimage = galsim.ImageViewD(np.zeros((3, 1)))
+    testimage = galsim.ImageD(np.zeros((3, 1)))
     testimage.addNoise(gn)
     np.testing.assert_array_almost_equal(
             testimage.array.flatten(), np.array(gResult)-gMean, precision,
@@ -506,7 +506,7 @@ def test_binomial():
     
     # Test filling an image
     b.seed(testseed)
-    testimage = galsim.ImageViewD(np.zeros((3, 1)))
+    testimage = galsim.ImageD(np.zeros((3, 1)))
     testimage.addNoise(galsim.DeviateNoise(b))
     np.testing.assert_array_almost_equal(
             testimage.array.flatten(), np.array(bResult), precision,
@@ -615,7 +615,7 @@ def test_poisson():
     
     # Test filling an image
     p.seed(testseed)
-    testimage = galsim.ImageViewI(np.zeros((3, 1), dtype=np.int32))
+    testimage = galsim.ImageI(np.zeros((3, 1), dtype=np.int32))
     testimage.addNoise(galsim.DeviateNoise(p))
     np.testing.assert_array_equal(
             testimage.array.flatten(), np.array(pResult),
@@ -792,7 +792,7 @@ def test_weibull():
     
     # Test filling an image
     w.seed(testseed)
-    testimage = galsim.ImageViewD(np.zeros((3, 1)))
+    testimage = galsim.ImageD(np.zeros((3, 1)))
     testimage.addNoise(galsim.DeviateNoise(w))
     np.testing.assert_array_almost_equal(
             testimage.array.flatten(), np.array(wResult), precision,
@@ -899,7 +899,7 @@ def test_gamma():
     
     # Test filling an image
     g.seed(testseed)
-    testimage = galsim.ImageViewD(np.zeros((3, 1)))
+    testimage = galsim.ImageD(np.zeros((3, 1)))
     testimage.addNoise(galsim.DeviateNoise(g))
     np.testing.assert_array_almost_equal(
             testimage.array.flatten(), np.array(gammaResult), precision,
@@ -1006,7 +1006,7 @@ def test_chi2():
     
     # Test filling an image
     c.seed(testseed)
-    testimage = galsim.ImageViewD(np.zeros((3, 1)))
+    testimage = galsim.ImageD(np.zeros((3, 1)))
     testimage.addNoise(galsim.DeviateNoise(c))
     np.testing.assert_array_almost_equal(
             testimage.array.flatten(), np.array(chi2Result), precision,
@@ -1130,7 +1130,7 @@ def test_distfunction():
     d.seed(testseed)
     print 'd = ',d
     print 'd._ud = ',d._ud
-    testimage = galsim.ImageViewD(np.zeros((3, 1)))
+    testimage = galsim.ImageD(np.zeros((3, 1)))
     testimage.addNoise(galsim.DeviateNoise(d))
     np.testing.assert_array_almost_equal(
             testimage.array.flatten(), np.array(dFunctionResult), precision,
@@ -1205,7 +1205,7 @@ def test_distLookupTable():
 
     # Test filling an image
     d.seed(testseed)
-    testimage = galsim.ImageViewD(np.zeros((3, 1)))
+    testimage = galsim.ImageD(np.zeros((3, 1)))
     testimage.addNoise(galsim.DeviateNoise(d))
     np.testing.assert_array_almost_equal(
             testimage.array.flatten(), np.array(dLookupTableResult), precision,
@@ -1225,8 +1225,8 @@ def test_ccdnoise():
 
         rng = galsim.BaseDeviate(testseed)
         ccdnoise = galsim.CCDNoise(rng, gain=cGain, read_noise=cReadNoise)
-        testImage = galsim.ImageView[types[i]]((np.zeros((2, 2))+sky).astype(types[i]))
-        ccdnoise.applyTo(testImage)
+        testImage = galsim.Image((np.zeros((2, 2))+sky).astype(types[i]))
+        ccdnoise.applyTo(testImage.image)
         np.testing.assert_array_almost_equal(
                 testImage.array, cResult, prec,
                 err_msg="Wrong CCD noise random sequence generated for Image"+typestrings[i]+".")
@@ -1234,7 +1234,7 @@ def test_ccdnoise():
         # Check that reseeding the rng reseeds the internal deviate in CCDNoise
         rng.seed(testseed)
         testImage.fill(sky)
-        ccdnoise.applyTo(testImage)
+        ccdnoise.applyTo(testImage.image)
         np.testing.assert_array_almost_equal(
                 testImage.array, cResult, prec,
                 err_msg="Wrong CCD noise random sequence generated for Image"+typestrings[i]+
@@ -1253,7 +1253,7 @@ def test_ccdnoise():
         rng.seed(testseed)
         ccdnoise = galsim.CCDNoise(rng, sky_level=sky, gain=cGain, read_noise=cReadNoise)
         testImage.fill(0)
-        ccdnoise.applyTo(testImage)
+        ccdnoise.applyTo(testImage.image)
         np.testing.assert_array_almost_equal(
                 testImage.array, cResult-sky, prec,
                 err_msg="Wrong CCD noise random sequence generated for Image"+typestrings[i]+

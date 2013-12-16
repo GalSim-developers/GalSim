@@ -68,7 +68,7 @@ def test_gaussian():
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     myImg.setCenter(0,0)
-    tot = mySBP.draw(myImg.view())
+    tot = mySBP.draw(myImg.image.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -369,7 +369,7 @@ def test_exponential():
     mySBP = galsim.SBExponential(flux=1., scale_radius=r0)
     savedImg = galsim.fits.read(os.path.join(imgdir, "exp_1.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
-    mySBP.draw(myImg.view())
+    mySBP.draw(myImg.image.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -546,7 +546,7 @@ def test_sersic():
     mySBP = galsim.SBSersic(n=3, flux=1, half_light_radius=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_3_1.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
-    mySBP.draw(myImg.view())
+    mySBP.draw(myImg.image.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -586,7 +586,7 @@ def test_sersic():
     mySBP = galsim.SBSersic(n=3, flux=1, half_light_radius=1, trunc=10)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_3_1_10.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
-    mySBP.draw(myImg.view())
+    mySBP.draw(myImg.image.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -952,7 +952,7 @@ def test_airy():
     mySBP = galsim.SBAiry(lam_over_diam=1./0.8, obscuration=0.1, flux=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "airy_.8_.1.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
-    mySBP.draw(myImg.view())
+    mySBP.draw(myImg.image.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -1096,7 +1096,7 @@ def test_box():
     mySBP = galsim.SBBox(xw=1, yw=1, flux=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "box_1.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
-    mySBP.draw(myImg.view())
+    mySBP.draw(myImg.image.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -1144,7 +1144,7 @@ def test_moffat():
     mySBP = galsim.SBMoffat(beta=2, half_light_radius=1, trunc=5*fwhm_backwards_compatible, flux=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_2_5.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
-    mySBP.draw(myImg.view())
+    mySBP.draw(myImg.image.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -1503,7 +1503,7 @@ def test_kolmogorov():
     #savedImg.write(os.path.join(imgdir, "kolmogorov.fits"))
     savedImg = galsim.fits.read(os.path.join(imgdir, "kolmogorov.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
-    mySBP.draw(myImg.view())
+    mySBP.draw(myImg.image.view())
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,

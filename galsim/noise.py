@@ -22,6 +22,7 @@ layer.
 """
 
 from . import _galsim
+import galsim
 
 def addNoise(image, noise):
     """Noise addition Image method, adding noise according to a supplied noise model.
@@ -37,7 +38,7 @@ def addNoise(image, noise):
     If the supplied noise model object does not have an applyTo() method, then this will raise an
     AttributeError exception.
     """
-    noise.applyTo(image.view())
+    noise.applyTo(image.image.view())
 
 def addNoiseSNR(image, noise, snr, preserve_flux=False):
     """Adds CCDNoise to an image in a way that achieves the specified signal-to-noise ratio.
@@ -84,16 +85,8 @@ def addNoiseSNR(image, noise, snr, preserve_flux=False):
         image *= flux
         image.addNoise(noise)
 
-# inject addNoise and addNoiseSNR as methods of Image classes
-for Class in _galsim.ImageAlloc.itervalues():
-    Class.addNoise = addNoise
-    Class.addNoiseSNR = addNoiseSNR
-
-for Class in _galsim.ImageView.itervalues():
-    Class.addNoise = addNoise
-    Class.addNoiseSNR = addNoiseSNR
-
-del Class # cleanup public namespace
+galsim.Image.addNoise = addNoise
+galsim.Image.addNoiseSNR = addNoiseSNR
 
 # Then add docstrings for C++ layer Noise classes
 
@@ -325,44 +318,73 @@ def DeviateNoise_copy(self):
     return _galsim.DeviateNoise(self.getRNG())
 _galsim.DeviateNoise.copy = DeviateNoise_copy
 
-# VariableGaussianNoise docstrings
-_galsim.VariableGaussianNoise.__doc__ = """
-Class implementing Gaussian noise that has a different variance in each pixel.
+# VariableGaussianNoise is a thin wrapper of the C++ VarGaussianNoise
+# This way the python layer can have the argument be a galsim.Image object, 
+# but the C++ version can take a C++ BaseImage object.
 
-Initialization
---------------
+class VariableGaussianNoise(_galsim.BaseNoise):
+    """
+    Class implementing Gaussian noise that has a different variance in each pixel.
 
-    >>> variable_noise = galsim.VariableGaussianNoise(rng, var_image)
+    Initialization
+    --------------
+    
+        >>> variable_noise = galsim.VariableGaussianNoise(rng, var_image)
 
-Parameters:
+    Parameters:
 
-    rng         A BaseDeviate instance to use for generating the random numbers.
-    var_image   The variance of the noise to apply to each pixel.  This image must be the 
-                same shape as the image for which you eventually call addNoise.
+        rng         A BaseDeviate instance to use for generating the random numbers.
+        var_image   The variance of the noise to apply to each pixel.  This image must be the 
+                    same shape as the image for which you eventually call addNoise.
 
-Methods
--------
-To add noise to every element of an image, use the syntax image.addNoise(variable_noise).
-"""
+    Methods
+    -------
+    To add noise to every element of an image, use the syntax image.addNoise(variable_noise).
+    """
+    def __init__(self, rng, var_image):
+        if not isinstance(rng, galsim.BaseDeviate):
+            raise TypeError(
+                "Supplied rng argument not a galsim.BaseDeviate or derived class instance.")
 
-_galsim.VariableGaussianNoise.applyTo.__func__.__doc__ = """
-Add VariableGaussian noise to an input Image.
+        # Make sure var_image is an ImageF, converting dtype if necessary
+        var_iamge = galsim.ImageF(var_image)
 
-Calling
--------
+        # Make the noise object using the image.image as needed in the C++ layer.
+        self.noise = _galsim.VarGaussianNoise(rng, var_image.image)
 
-    >>> variable_noise.applyTo(image)
+    def applyTo(self, image):
+        """
+        Add VariableGaussian noise to an input Image.
 
-On output the Image instance image will have been given additional Gaussian noise according 
-to the variance image of the given VariableGaussianNoise instance.
+        Calling
+        -------
 
-Note: The syntax image.addNoise(variable_noise) is preferred.
-"""
-_galsim.VariableGaussianNoise.getVarImage.__func__.__doc__ = "Get variance image."
+            >>> variable_noise.applyTo(image)
 
-def VariableGaussianNoise_copy(self):
-    return _galsim.VariableGaussianNoise(self.getRNG(),self.getVarImage())
-_galsim.VariableGaussianNoise.copy = VariableGaussianNoise_copy
+        On output the Image instance image will have been given additional Gaussian noise according 
+        to the variance image of the given VariableGaussianNoise instance.
 
+        Note: The syntax image.addNoise(variable_noise) is preferred.
+        """
+        if isinstance(image, galsim.Image):
+            image = image.image
+        self.noise.applyTo(image.view())
 
+    def getVarImage(self):
+        return galsim.Image(self.noise.getVarImage())
+
+    def getRNG(self):
+        return self.noise.getRNG()
+
+    def copy(self):
+        return VariableGaussianNoise(self.getRNG(),self.getVarImage())
+
+    def getVariance(self):
+        raise RuntimeError("No single variance value for VariableGaussianNoise")
+
+    def setVariance(self, variance):
+        raise RuntimeError("Changing the variance is not allowed for VariableGaussianNoise")
+
+    def scaleVariance(self, variance):
+        raise RuntimeError("Changing the variance is not allowed for VariableGaussianNoise")
 

@@ -67,7 +67,7 @@ class GSObject(object):
         >>> psf = galsim.Moffat(beta=3, fwhm=2.85)
         >>> pix = galsim.Pixel(0.05)                       # Note the very small pixel scale!
         >>> conv = galsim.Convolve([gal,psf,pix])
-        >>> im = galsim.ImageD(1000,1000, scale=0.05)      # Use the same pixel scale on the image.
+        >>> im = galsim.Image(1000,1000, scale=0.05)       # Use the same pixel scale on the image.
         >>> conv.draw(im,normalization='sb')               # This uses the default GSParams.
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
@@ -77,7 +77,7 @@ class GSObject(object):
         >>> big_fft_params = galsim.GSParams(maximum_fft_size = 10240)
         >>> conv = galsim.Convolve([gal,psf,pix],gsparams=big_fft_params)
         >>> conv.draw(im,normalization='sb')               # Now it works (but is slow!)
-        <galsim._galsim.ImageD object at 0x1037823c0>
+        <galsim.Image object at 0x1037823c0>
         >>> im.write('high_res_sersic.fits')
 
     Note that for compound objects like Convolve or Add, not all gsparams can be changed when the
@@ -628,7 +628,7 @@ class GSObject(object):
             if add_to_image:
                 raise ValueError("Cannot add_to_image if image is None")
             N = self.SBProfile.getGoodImageSize(scale,wmult)
-            image = galsim.ImageF(N,N)
+            image = galsim.Image(N,N)
 
         # Resize the given image if necessary
         elif not image.bounds.isDefined():
@@ -762,7 +762,7 @@ class GSObject(object):
         @param image  If provided, this will be the image on which to draw the profile.
                       If `image = None`, then an automatically-sized image will be created.
                       If `image != None`, but its bounds are undefined (e.g. if it was 
-                        constructed with `image = galsim.ImageF()`), then it will be resized
+                        constructed with `image = galsim.Image()`), then it will be resized
                         appropriately based on the profile's size (Default `image = None`).
 
         @param scale  If provided, use this as the pixel scale for the image.
@@ -845,7 +845,7 @@ class GSObject(object):
             # multiply the ADU by scale^2.  i.e. divide gain by scale^2.
             gain /= image.scale**2
 
-        image.added_flux = prof.SBProfile.draw(image.view(), gain, wmult)
+        image.added_flux = prof.SBProfile.draw(image.image.view(), gain, wmult)
 
         return image
 
@@ -892,7 +892,7 @@ class GSObject(object):
         @param image  If provided, this will be the image on which to draw the profile.
                       If `image = None`, then an automatically-sized image will be created.
                       If `image != None`, but its bounds are undefined (e.g. if it was constructed 
-                        with `image = galsim.ImageF()`), then it will be resized appropriately base 
+                        with `image = galsim.Image()`), then it will be resized appropriately base 
                         on the profile's size.
                       (Default `image = None`.)
 
@@ -1031,7 +1031,7 @@ class GSObject(object):
 
         try:
             image.added_flux = prof.SBProfile.drawShoot(
-                image.view(), n_photons, uniform_deviate, gain, max_extra_noise,
+                image.image.view(), n_photons, uniform_deviate, gain, max_extra_noise,
                 poisson_flux, add_to_image)
         except RuntimeError:
             # Give some extra explanation as a warning, then raise the original exception
@@ -1056,14 +1056,14 @@ class GSObject(object):
         @param re     If provided, this will be the real part of the k-space image.
                       If `re = None`, then an automatically-sized image will be created.
                       If `re != None`, but its bounds are undefined (e.g. if it was 
-                        constructed with `re = galsim.ImageF()`), then it will be resized
+                        constructed with `re = galsim.Image()`), then it will be resized
                         appropriately based on the profile's size (Default `re = None`).
 
         @param im     If provided, this will be the imaginary part of the k-space image.
                       A provided im must match the size and scale of re.
                       If `im = None`, then an automatically-sized image will be created.
                       If `im != None`, but its bounds are undefined (e.g. if it was 
-                        constructed with `im = galsim.ImageF()`), then it will be resized
+                        constructed with `im = galsim.Image()`), then it will be resized
                         appropriately based on the profile's size (Default `im = None`).
 
         @param scale  If provided, use this as the pixel scale for the images.
@@ -1110,7 +1110,9 @@ class GSObject(object):
 
         # wmult isn't really used by drawK, but we need to provide it.
         wmult = 1.0
-        self.SBProfile.drawK(re.view(), im.view(), gain, wmult)
+        re.image.scale = re.scale
+        im.image.scale = im.scale
+        self.SBProfile.drawK(re.image.view(), im.image.view(), gain, wmult)
 
         return re,im
 

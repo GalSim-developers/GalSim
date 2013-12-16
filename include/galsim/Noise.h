@@ -615,10 +615,10 @@ namespace galsim {
     /** 
      * @brief Class implementing variable Gaussian noise.
      *
-     * The VariableGaussianNoise class implements Gaussian noise where each pixel may have 
+     * The VarGaussianNoise class implements Gaussian noise where each pixel may have 
      * a different variance.
      */
-    class VariableGaussianNoise : public BaseNoise
+    class VarGaussianNoise : public BaseNoise
     {
     public:
  
@@ -628,7 +628,7 @@ namespace galsim {
          * @param[in] rng         The BaseDeviate to use for the random number generation.
          * @param[in] var_image   Image with the variance values for the noise in each pixel.
          */
-        VariableGaussianNoise(boost::shared_ptr<BaseDeviate> rng,
+        VarGaussianNoise(boost::shared_ptr<BaseDeviate> rng,
                               const BaseImage<float>& var_image) :
             BaseNoise(rng), _var_image(var_image.view())
         {}
@@ -638,7 +638,7 @@ namespace galsim {
          *
          * Note: the default constructed op= function will do the same thing.
          */
-        VariableGaussianNoise(const VariableGaussianNoise& rhs) : 
+        VarGaussianNoise(const VarGaussianNoise& rhs) : 
             BaseNoise(rhs), _var_image(rhs._var_image)
         {}
  

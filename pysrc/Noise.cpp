@@ -189,17 +189,17 @@ namespace galsim {
 
     };
 
-    struct PyVariableGaussianNoise {
+    struct PyVarGaussianNoise {
 
         static void wrap() {
             // Note that class docstrings are now added in galsim/random.py
-            bp::class_<VariableGaussianNoise, bp::bases<BaseNoise> > pyVariableGaussianNoise(
-                "VariableGaussianNoise", "", 
+            bp::class_<VarGaussianNoise, bp::bases<BaseNoise> > pyVarGaussianNoise(
+                "VarGaussianNoise", "", 
                 bp::init<boost::shared_ptr<BaseDeviate>, const BaseImage<float>& >(
                     (bp::arg("rng")=bp::object(), bp::arg("var_image")))
             );
-            pyVariableGaussianNoise
-                .def("getVarImage", &VariableGaussianNoise::getVarImage, "")
+            pyVarGaussianNoise
+                .def("getVarImage", &VarGaussianNoise::getVarImage, "")
                 ;
         }
 
@@ -212,7 +212,7 @@ namespace galsim {
         PyPoissonNoise::wrap();
         PyCCDNoise::wrap();
         PyDeviateNoise::wrap();
-        PyVariableGaussianNoise::wrap();
+        PyVarGaussianNoise::wrap();
     }
 
 } // namespace galsim

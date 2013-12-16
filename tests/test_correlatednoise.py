@@ -65,7 +65,7 @@ def setup_uncorrelated_noise(deviate, size):
 def make_xcorr_from_uncorr(uncorr_image):
     """Make some x-correlated noise using shift and add using an input uncorrelated noise field.
     """
-    xnoise_image = galsim.ImageViewD(
+    xnoise_image = galsim.ImageD(
         uncorr_image.array + np.roll(uncorr_image.array, 1, axis=1)) # note NumPy thus [y,x]
     xnoise_image *= (np.sqrt(2.) / 2.) # Preserve variance
     return xnoise_image
@@ -73,7 +73,7 @@ def make_xcorr_from_uncorr(uncorr_image):
 def make_ycorr_from_uncorr(uncorr_image):
     """Make some y-correlated noise using shift and add using an input uncorrelated noise field.
     """
-    ynoise_image = galsim.ImageViewD(
+    ynoise_image = galsim.ImageD(
         uncorr_image.array + np.roll(uncorr_image.array, 1, axis=0)) # note NumPy thus [y,x]
     ynoise_image *= (np.sqrt(2.) / 2.) # Preserve variance
     return ynoise_image
@@ -160,7 +160,7 @@ def test_uncorrelated_noise_symmetry_90degree_rotation():
         90. * galsim.degrees, 180. * galsim.degrees, 270. * galsim.degrees, 360. * galsim.degrees]
     # loop over rotation angles and check
     for i, angle in zip(range(len(angles)), angles):
-        noise_ref = galsim.ImageViewD(
+        noise_ref = galsim.ImageD(
             np.ascontiguousarray(np.rot90(uncorr_noise_small.array, k=i+1)))
         cn_ref = galsim.CorrelatedNoise(ud, noise_ref, scale=1.)
         # First we'll check the createRotated() method
@@ -231,7 +231,7 @@ def test_xcorr_noise_basics_symmetry_90degree_rotation():
         90. * galsim.degrees, 180. * galsim.degrees, 270. * galsim.degrees, 360. * galsim.degrees]
     # loop over rotation angles and check
     for i, angle in zip(range(len(angles)), angles):
-        noise_ref = galsim.ImageViewD(
+        noise_ref = galsim.ImageD(
             np.ascontiguousarray(np.rot90(xnoise.array, k=i+1)))
         xcn_ref = galsim.CorrelatedNoise(ud, noise_ref, scale=1.)
         # First we'll check the createRotated() method
@@ -302,7 +302,7 @@ def test_ycorr_noise_basics_symmetry_90degree_rotation():
         90. * galsim.degrees, 180. * galsim.degrees, 270. * galsim.degrees, 360. * galsim.degrees]
     # loop over rotation angles and check
     for i, angle in zip(range(len(angles)), angles):
-        noise_ref = galsim.ImageViewD(
+        noise_ref = galsim.ImageD(
             np.ascontiguousarray(np.rot90(ynoise.array, k=i+1)))
         ycn_ref = galsim.CorrelatedNoise(ud, noise_ref, scale=1.)
         # First we'll check the createRotated() method

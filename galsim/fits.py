@@ -26,7 +26,7 @@ routines for handling multiple Images.
 
 import os
 from sys import byteorder
-from . import _galsim
+import galsim
 from galsim import pyfits, pyfits_version
 
 # Convert sys.byteorder into the notation numpy dtypes use
@@ -558,7 +558,7 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto'):
                                    '*.gz' => 'gzip'
                                    '*.bz2' => 'bzip2'
                                    otherwise None
-    @returns An ImageView instance
+    @returns An Image
     """
     
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
@@ -594,14 +594,12 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto'):
     ymin = hdu.header.get("GS_YMIN", 1)
     scale = hdu.header.get("GS_SCALE", 1.0)
     pixel = hdu.data.dtype.type
-    if pixel in _galsim.ImageView.keys():
-        Class = _galsim.ImageView[pixel]
+    if pixel in galsim.Image.valid_dtypes:
         data = hdu.data
     else:
         import warnings
         warnings.warn("No C++ Image template instantiation for pixel type %s" % pixel)
         warnings.warn("   Using float64 instead.")
-        Class = _galsim.ImageViewD
         import numpy
         data = hdu.data.astype(numpy.float64)
 
@@ -618,7 +616,7 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto'):
         hdu.data.byteswap(True)   # Note inplace is just an arg, not a kwarg, inplace=True throws
                                    # a TypeError exception in EPD Python 2.7.2
 
-    image = Class(array=data, xmin=xmin, ymin=ymin, scale=scale)
+    image = galsim.Image(array=data, xmin=xmin, ymin=ymin, scale=scale)
 
     # If we opened a file, don't forget to close it.
     if fin: 
@@ -667,7 +665,7 @@ def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto'):
                                    '*.gz' => 'gzip'
                                    '*.bz2' => 'bzip2'
                                    otherwise None
-    @returns A Python list of ImageView instances.
+    @returns A Python list of Images
     """
 
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
@@ -711,7 +709,7 @@ def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto'):
     return image_list
 
 def readCube(file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto'):
-    """Construct a Python list of ImageViews from a FITS data cube.
+    """Construct a Python list of Images from a FITS data cube.
 
     Not all FITS pixel types are supported (only those with C++ Image template instantiations are:
     `short`, `int`, `float`, and `double`).  If the FITS header has GS_* keywords, these will be  
@@ -744,7 +742,7 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto')
                                    '*.gz' => 'gzip'
                                    '*.bz2' => 'bzip2'
                                    otherwise None
-    @returns A Python list of ImageView instances.
+    @returns A Python list of Images
     """
   
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
@@ -780,14 +778,12 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto')
     ymin = hdu.header.get("GS_YMIN", 1)
     scale = hdu.header.get("GS_SCALE", 1.0)
     pixel = hdu.data.dtype.type
-    if pixel in _galsim.ImageView.keys():
-        Class = _galsim.ImageView[pixel]
+    if pixel in galsim.Image.valid_dtypes:
         data = hdu.data
     else:
         import warnings
         warnings.warn("No C++ Image template instantiation for pixel type %s" % pixel)
         warnings.warn("Using float")
-        Class = _galsim.ImageViewD
         import numpy
         data = hdu.data.astype(numpy.float64)
 
@@ -807,7 +803,7 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto')
     nimages = hdu.data.shape[0]
     image_list = []
     for k in range(nimages):
-        image = Class(array=hdu.data[k,:,:], xmin=xmin, ymin=ymin, scale=scale)
+        image = galsim.Image(array=hdu.data[k,:,:], xmin=xmin, ymin=ymin, scale=scale)
         image_list.append(image)
 
     # If we opened a file, don't forget to close it.
@@ -955,14 +951,6 @@ class FitsHeader(object):
         return self.header.iteritems()
 
 
-# inject write as methods of Image classes
-for Class in _galsim.ImageAlloc.itervalues():
-    Class.write = write
+# inject write as methods of Image class
+galsim.Image.write = write
 
-for Class in _galsim.ImageView.itervalues():
-    Class.write = write
-
-for Class in _galsim.ConstImageView.itervalues():
-    Class.write = write
-
-del Class    # cleanup public namespace
