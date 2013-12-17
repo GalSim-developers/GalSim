@@ -69,22 +69,22 @@ namespace galsim {
         }
 
         template <typename T>
-        void applyTo(ImageView<T> data)
+        void applyToView(ImageView<T> data)
         {
-            if (bp::override py_func = this->get_override("applyTo"))
+            if (bp::override py_func = this->get_override("applyToView"))
                 py_func(data);
             else
-                throw std::runtime_error("Cannot call applyTo from a pure BaseNoise instance");
+                throw std::runtime_error("Cannot call applyToView from a pure BaseNoise instance");
         }
 
         void doApplyTo(ImageView<double>& data)
-        { applyTo(data); }
+        { applyToView(data); }
         void doApplyTo(ImageView<float>& data)
-        { applyTo(data); }
+        { applyToView(data); }
         void doApplyTo(ImageView<int32_t>& data)
-        { applyTo(data); }
+        { applyToView(data); }
         void doApplyTo(ImageView<int16_t>& data)
-        { applyTo(data); }
+        { applyToView(data); }
     };
 
     struct PyBaseNoise {
@@ -93,7 +93,7 @@ namespace galsim {
         static void wrapTemplates(W& wrapper) {
             typedef void (BaseNoise::* applyTo_func_type)(ImageView<U>);
             wrapper
-                .def("applyTo", applyTo_func_type(&BaseNoise::applyTo), "", 
+                .def("applyToView", applyTo_func_type(&BaseNoise::applyToView), "", 
                      (bp::arg("image")))
                 ;
         }

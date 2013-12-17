@@ -42,8 +42,9 @@ class InterpolatedImage(GSObject):
     specify 'surface brightness' normalization if desired, or alternatively, can instead specify 
     the desired flux for the object.
 
-    If the input Image has a scale associated with it, then there is no need to specify an input
-    scale `scale`.
+    If the input Image has a scale or wcs associated with it, then there is no need to specify one
+    as a parameter here.  But if one is provided, that will override any scale or wcs that
+    is native to the Image.
 
     The user may optionally specify an interpolant, `x_interpolant`, for real-space manipulations
     (e.g., shearing, resampling).  If none is specified, then by default, a quintic interpolant is
@@ -81,7 +82,8 @@ class InterpolatedImage(GSObject):
     
         >>> interpolated_image = galsim.InterpolatedImage(
                 image, x_interpolant = None, k_interpolant = None, normalization = 'flux',
-                scale = None, flux = None, pad_factor = 4., noise_pad_size = 0, noise_pad = 0.,
+                scale = None, wcs = None, flux = None, pad_factor = 4.,
+                noise_pad_size = 0, noise_pad = 0.,
                 use_cache = True, pad_image = None, rng = None, calculate_stepk = True,
                 calculate_maxk = True, use_true_center = True, offset = None)
 
@@ -126,6 +128,8 @@ class InterpolatedImage(GSObject):
                            override the pixel scale stored by the provided Image, in any.  
                            If `scale` is `None`, then take the provided image's pixel scale.
                            (Default `scale = None`.)
+    @param wcs             A WCS object that provides a non-trivial mapping between sky units and
+                           pixel units.  (Default `wcs = None`.)
     @param flux            Optionally specify a total flux for the object, which overrides the
                            implied flux normalization from the Image itself.
     @param pad_factor      Factor by which to pad the Image with zeros.  We strongly recommend 
@@ -171,8 +175,8 @@ class InterpolatedImage(GSObject):
                                (a) as a galsim.Image; or
                                (b) as a string which is interpreted as a filename containing an
                                    image to use.
-                           The `pad_image` scale is ignored, and taken to be equal to that
-                           of the `image`.
+                           The `pad_image` scale or wcs is ignored.  It uses the same scale or
+                           wcs for both the `image` and the `pad_image`.
                            The user should be careful to ensure that the image used for padding has 
                            roughly zero mean.  The purpose of this keyword is to allow for a more 
                            flexible representation of some noise field around an object; if the 
@@ -239,7 +243,8 @@ class InterpolatedImage(GSObject):
 
     # --- Public Class methods ---
     def __init__(self, image, x_interpolant = None, k_interpolant = None, normalization = 'flux',
-                 scale = None, flux = None, pad_factor = 4., noise_pad_size=0, noise_pad = 0.,
+                 scale = None, wcs = None, flux = None, pad_factor = 4.,
+                 noise_pad_size=0, noise_pad = 0.,
                  rng = None, pad_image = None, calculate_stepk=True, calculate_maxk=True,
                  use_cache=True, use_true_center=True, offset=None, gsparams=None):
         import numpy
@@ -286,9 +291,9 @@ class InterpolatedImage(GSObject):
         # code block, either an exception will have been raised, or the input image will have a
         # valid scale set.
         if scale is None:
-            scale = image.scale
-            if scale == 0:
+            if image.scale == None or image.scale <= 0:
                 raise ValueError("No information given with Image or keywords about pixel scale!")
+            scale = image.scale
         else:
             if type(scale) != float:
                 scale = float(scale)
@@ -385,7 +390,7 @@ class InterpolatedImage(GSObject):
         # Make the SBInterpolatedImage out of the image.
         sbinterpolatedimage = galsim.SBInterpolatedImage(
                 pad_image.image, xInterp=self.x_interpolant, kInterp=self.k_interpolant,
-                dx=scale, pad_factor=pad_factor, gsparams=gsparams)
+                pad_factor=pad_factor, gsparams=gsparams)
 
         # GalSim cannot automatically know what stepK and maxK are appropriate for the 
         # input image.  So it is usually worth it to do a manual calculation here.
@@ -402,6 +407,9 @@ class InterpolatedImage(GSObject):
                 # If not a bool, then value is max_maxk
                 sbinterpolatedimage.calculateMaxK(max_maxk=calculate_maxk)
 
+        # Correct for the image's pixel scale
+        sbinterpolatedimage.applyExpansion(image.scale)
+
         # If the user specified a flux, then set to that flux value.
         if flux != None:
             if type(flux) != flux:
@@ -410,8 +418,8 @@ class InterpolatedImage(GSObject):
         # If the user specified a flux normalization for the input Image, then since
         # SBInterpolatedImage works in terms of surface brightness, have to rescale the values to
         # get proper normalization.
-        elif flux is None and normalization.lower() in ['flux','f'] and scale != 1.:
-            sbinterpolatedimage.scaleFlux(1./(scale**2))
+        elif flux is None and normalization.lower() in ['flux','f'] and image.scale != 1.:
+            sbinterpolatedimage.scaleFlux(1./(image.scale**2))
         # If the input Image normalization is 'sb' then since that is the SBInterpolated default
         # assumption, no rescaling is needed.
 
@@ -421,7 +429,7 @@ class InterpolatedImage(GSObject):
         # Apply the offset, and possibly fix the centering for even-sized images
         # Note reverse=True, since we want to fix the center in the opposite sense of what the 
         # draw function does.
-        prof = self._fix_center(image, scale, offset, use_true_center, reverse=True)
+        prof = self._fix_center(image, image.scale, offset, use_true_center, reverse=True)
         GSObject.__init__(self, prof.SBProfile)
 
 

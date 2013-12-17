@@ -115,30 +115,28 @@ struct PyImage {
     }
 
     static ImageView<T>* MakeFromArray(
-        const bp::object& array, int xmin, int ymin, double scale) 
+        const bp::object& array, int xmin, int ymin) 
     {
         Bounds<int> bounds;
         int stride = 0;
         T* data = 0;
         boost::shared_ptr<T> owner;
         BuildConstructorArgs(array, xmin, ymin, false, data, owner, stride, bounds);
-        return new ImageView<T>(data, owner, stride, bounds, scale);
+        return new ImageView<T>(data, owner, stride, bounds);
     }
 
     static ConstImageView<T>* MakeConstFromArray(
-        const bp::object& array, int xmin, int ymin, double scale) 
+        const bp::object& array, int xmin, int ymin)
     {
         Bounds<int> bounds;
         int stride = 0;
         T* data = 0;
         boost::shared_ptr<T> owner;
         BuildConstructorArgs(array, xmin, ymin, true, data, owner, stride, bounds);
-        return new ConstImageView<T>(data, owner, stride, bounds, scale);
+        return new ConstImageView<T>(data, owner, stride, bounds);
     }
 
     static bp::object wrapImageAlloc(const std::string& suffix) {
-        bp::object getScale = bp::make_function(&BaseImage<T>::getScale);
-        bp::object setScale = bp::make_function(&BaseImage<T>::setScale);
 
         // Need some typedefs and explicit casts here to resolve overloads of methods
         // that have both const and non-const versions or (x,y) and pos version
@@ -171,9 +169,6 @@ struct PyImage {
         bp::class_< BaseImage<T>, boost::noncopyable >
             pyBaseImage(("BaseImage" + suffix).c_str(), "", bp::no_init);
         pyBaseImage
-            .def("getScale", getScale)
-            .def("setScale", setScale)
-            .add_property("scale", getScale, setScale)
             .def("subImage", &BaseImage<T>::subImage, bp::args("bounds"))
             .add_property("array", &GetConstArray)
             .def("shift", shift_func_type(&BaseImage<T>::shift), bp::args("x", "y"))
@@ -194,13 +189,11 @@ struct PyImage {
             pyImageAlloc(("ImageAlloc" + suffix).c_str(), "", bp::no_init);
         pyImageAlloc
             .def(bp::init<>())
-            .def(bp::init<int,int,double,T>(
-                    (bp::args("ncol","nrow"), bp::arg("scale")=0.,
-                     bp::arg("init_value")=T(0))
+            .def(bp::init<int,int,T>(
+                    (bp::args("ncol","nrow"), bp::arg("init_value")=T(0))
             ))
-            .def(bp::init<const Bounds<int>&, double, T>(
-                    (bp::arg("bounds"), bp::arg("scale")=0.,
-                     bp::arg("init_value")=T(0))
+            .def(bp::init<const Bounds<int>&, T>(
+                    (bp::arg("bounds"), bp::arg("init_value")=T(0))
             ))
             .def("subImage", subImage_func_type(&ImageAlloc<T>::subImage), bp::args("bounds"))
             .def("view", view_func_type(&ImageAlloc<T>::view))
@@ -247,8 +240,7 @@ struct PyImage {
                 "__init__",
                 bp::make_constructor(
                     &MakeFromArray, bp::default_call_policies(),
-                    (bp::arg("array"), bp::arg("xmin")=1, bp::arg("ymin")=1, 
-                     bp::arg("scale")=0.)
+                    (bp::arg("array"), bp::arg("xmin")=1, bp::arg("ymin")=1)
                 )
             )
             .def(bp::init<const ImageView<T>&>(bp::args("other")))
@@ -292,8 +284,7 @@ struct PyImage {
                 "__init__",
                 bp::make_constructor(
                     &MakeConstFromArray, bp::default_call_policies(),
-                    (bp::arg("array"), bp::arg("xmin")=1, bp::arg("ymin")=1,
-                     bp::arg("scale")=0.)
+                    (bp::arg("array"), bp::arg("xmin")=1, bp::arg("ymin")=1)
                 )
             )
             .def(bp::init<const BaseImage<T>&>(bp::args("other")))

@@ -160,9 +160,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # for noise generation applications.
 
         # Check that the input has defined bounds
-        if isinstance(image, galsim.Image):
-            # It should be a BaseImage, but if a regular Image is provided, just convert.
-            image = image.image
+        if not isinstance(image, galsim.Image):
+            raise TypeError("Input image argument must be a galsim.Image.")
         if not image.bounds.isDefined():
             raise ValueError("Input image argument must have defined bounds.")
 
@@ -183,6 +182,9 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # Add it to the image
         image += galsim.Image(noise_array, scale=image.scale).image
         return image
+
+    def applyToView(self, image_view):
+        raise RuntimeError("CorrelatedNoise can only be applied to a regular image, not a View")
 
     def applyWhiteningTo(self, image):
         """Apply noise designed to whiten correlated Gaussian random noise in an input Image.

@@ -374,22 +374,21 @@ namespace galsim {
     double SBProfile::SBProfileImpl::fillXImage(ImageView<T>& I, double gain) const 
     {
         xdbg<<"Start fillXImage"<<std::endl;
-        double dx = I.getScale();
-        xdbg<<"dx = "<<dx<<", gain = "<<gain<<std::endl;
+        xdbg<<"gain = "<<gain<<std::endl;
 
         const int m = I.getXMax()-I.getXMin()+1;
         const int n = I.getYMax()-I.getYMin()+1;
         xdbg<<"m,n = "<<m<<','<<n<<std::endl;
         tmv::Vector<double> x(m);
         const int xmin = I.getXMin();
-        for (int i=0;i<m;++i) x.ref(i) = (xmin+i)*dx;
+        for (int i=0;i<m;++i) x.ref(i) = (xmin+i);
         xdbg<<"xmin = "<<xmin<<std::endl;
         xdbg<<"x = "<<x<<std::endl;
 
         tmv::Vector<double> y(n);
         const int ymin = I.getYMin();
         xdbg<<"ymin = "<<ymin<<std::endl;
-        for (int i=0;i<n;++i) y.ref(i) = (ymin+i)*dx;
+        for (int i=0;i<n;++i) y.ref(i) = (ymin+i);
         xdbg<<"y = "<<y<<std::endl;
 
         tmv::Matrix<double> val(m,n);
@@ -397,9 +396,9 @@ namespace galsim {
         val.setAllTo(999.);
 #endif
         assert(xmin <= 0 && ymin <= 0 && -xmin < m && -ymin < n);
-        xdbg<<"Call fillXValue with "<<xmin*dx<<','<<dx<<','<<-xmin<<
-            ','<<ymin*dx<<','<<dx<<','<<-ymin<<std::endl;
-        fillXValue(val.view(),xmin*dx,dx,-xmin,ymin*dx,dx,-ymin);
+        xdbg<<"Call fillXValue with "<<xmin<<','<<1.<<','<<-xmin<<
+            ','<<ymin<<','<<1.<<','<<-ymin<<std::endl;
+        fillXValue(val.view(),xmin,1.,-xmin,ymin,1.,-ymin);
 
         // Sometimes rounding errors cause the nominal (0,0) to be slightly off.
         // So redo (0,0) just to be sure.
@@ -414,7 +413,7 @@ namespace galsim {
         //mI += val;
         addMatrix(mI,val);
         double totalflux = val.sumElements();
-        return totalflux * gain * (dx*dx);
+        return totalflux * gain;
     }
 
     // Now the more complex case: real space via FT from k space.
@@ -425,15 +424,13 @@ namespace galsim {
     double SBProfile::fourierDraw(ImageView<T> I, double gain, double wmult) const 
     {
         dbg<<"Start fourierDraw"<<std::endl;
-        double dx = I.getScale();
         Bounds<int> imgBounds; // Bounds for output image
-        dbg<<"  maxK() = "<<maxK()<<" dx "<<dx<<std::endl;
+        dbg<<"  maxK() = "<<maxK()<<std::endl;
         dbg<<"  stepK() = "<<stepK()<<std::endl;
         dbg<<"  image bounds = "<<I.getBounds()<<std::endl;
-        dbg<<"  image scale = "<<I.getScale()<<std::endl;
         dbg<<"  wmult = "<<wmult<<std::endl;
 
-        int Nnofold = getGoodImageSize(dx,wmult);
+        int Nnofold = getGoodImageSize(1.,wmult);
         dbg<<"Nnofold = "<<Nnofold<<std::endl;
 
         // We must make something big enough to cover the target image size:
@@ -451,9 +448,9 @@ namespace galsim {
 
         // Move the output image to be centered near zero
         I.setCenter(0,0);
-        double dk = 2.*M_PI/(NFT*dx);
+        double dk = 2.*M_PI/NFT;
         dbg << 
-            " After adjustments: dx " << dx << " dk " << dk << 
+            " After adjustments: dk " << dk << 
             " maxK " << dk*NFT/2 << std::endl;
         xdbg<<"dk - stepK() = "<<dk-(stepK()*(1.+1.e-8))<<std::endl;
         xassert(dk <= stepK()*(1. + 1.e-8)); // Add a little slop in case of rounding errors.
@@ -491,7 +488,7 @@ namespace galsim {
 #ifdef OUTPUT_FFT
         std::ofstream fout("xt.dat");
         tmv::MatrixView<double> mxt(xt->getArray(),Nxt,Nxt,1,Nxt,tmv::NonConj);
-        fout << tmv::EigenIO() << (mxt*dx*dx) << std::endl;
+        fout << tmv::EigenIO() << mxt << std::endl;
         fout.close();
 #endif
 
@@ -513,9 +510,7 @@ namespace galsim {
             }
         }
 
-        I.setScale(dx);
-
-        return sum * gain * (dx*dx);
+        return sum * gain;
     }
 
     template <typename T>
@@ -531,11 +526,7 @@ namespace galsim {
     void SBProfile::plainDrawK(ImageView<T> Re, ImageView<T> Im, double gain) const 
     {
         // Make sure input images match or are both null
-        assert(Re.getScale() == Im.getScale());
-        assert(Re.getBounds() == Im.getBounds());
-
-        double dk = Re.getScale();
-        dbg<<"Start plainDrawK: dk = "<<dk<<std::endl;
+        dbg<<"Start plainDrawK: \n";
 
         // recenter an existing image, to be consistent with fourierDrawK:
         Re.setCenter(0,0);
@@ -554,7 +545,7 @@ namespace galsim {
 #endif
         // Calculate all the kValues at once, since this is often faster than many calls to kValue.
         assert(xmin <= 0 && ymin <= 0 && -xmin < m && -ymin < n);
-        _pimpl->fillKValue(val.view(),xmin*dk,dk,-xmin,ymin*dk,dk,-ymin);
+        _pimpl->fillKValue(val.view(),xmin,1.,-xmin,ymin,1.,-ymin);
         dbg<<"F(k=0) = "<<val(-xmin,-ymin)<<std::endl;
 
         if (gain != 1.) val /= gain;
@@ -577,18 +568,15 @@ namespace galsim {
     {
         // Make sure input images match or are both null
         assert(Re.getBounds() == Im.getBounds());
-        assert(Re.getScale() == Im.getScale());
-
-        double dk = Re.getScale();
 
         // Do we need to oversample in k to avoid folding from real space?
         // Note a little room for numerical slop before triggering oversampling:
-        int oversamp = int( std::ceil(dk/stepK() - 0.0001));
+        int oversamp = int( std::ceil(1./stepK() - 0.0001));
 
         // Now decide how big the FT must be to avoid folding
         double kRange = 2*maxK()*wmult;
         // Some slop to keep from getting extra pixels due to roundoff errors in calculations.
-        int Nnofold = int(std::ceil(oversamp*kRange / dk -0.0001));
+        int Nnofold = int(std::ceil(oversamp*kRange -0.0001));
         dbg<<"Nnofold = "<<Nnofold<<std::endl;
 
         // And if there is a target image size, we must make something big enough to cover
@@ -598,7 +586,7 @@ namespace galsim {
         ySize = Re.getYMax()-Re.getYMin()+1;
         if (xSize * oversamp > Nnofold) Nnofold = xSize*oversamp;
         if (ySize * oversamp > Nnofold) Nnofold = ySize*oversamp;
-        kRange = Nnofold * dk / oversamp;
+        kRange = Nnofold / oversamp;
 
         // Round up to a power of 2 to get required FFT size
         // Round up to a good size for making FFTs:
@@ -613,7 +601,7 @@ namespace galsim {
         Re.setCenter(0,0);
         Im.setCenter(0,0);
 
-        double dx = 2.*M_PI*oversamp/(NFT*dk);
+        double dx = 2.*M_PI*oversamp/NFT;
         XTable xt(NFT,dx);
         assert(_pimpl.get());
         _pimpl->fillXGrid(xt);
@@ -638,9 +626,6 @@ namespace galsim {
                 Im(x,y) = c.imag();
             }
         }
-
-        Re.setScale(dk);
-        Im.setScale(dk);
     }
 
     void SBProfile::SBProfileImpl::fillXGrid(XTable& xt) const 

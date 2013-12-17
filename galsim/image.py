@@ -288,21 +288,16 @@ class Image(object):
                 raise TypeError("Cannot specify init_value without setting an initial size")
 
         # Construct the wcs and scale attribute
+        self.scale = scale
         self.wcs = None
         if wcs is not None:
             raise NotImplementedError("Sorry wcs not implemented yet.")
-        if scale is not None:
-            self.image.scale = float(scale)
 
     # bounds and array are really properties which pass the request to the image
     @property
     def bounds(self): return self.image.bounds
     @property
     def array(self): return self.image.array
-    @property
-    def scale(self): return self.image.scale
-    @scale.setter
-    def scale(self, value): self.image.scale = value
 
     # Convenience functions
     @property
@@ -591,16 +586,12 @@ for Class in _galsim.ImageAlloc.itervalues():
 
     There are several ways to construct an ImageAlloc:
 
-        ImageAlloc(ncol, nrow, scale=0, init_value=0) # size, scale, and initial value, origin @ (1,1)
-        ImageAlloc(bounds, scale=0 init_value=0)      # bounding box, scale, and initial value
+        ImageAlloc(ncol, nrow, init_value=0)  # size and initial value, origin @ (1,1)
+        ImageAlloc(bounds, init_value=0)      # bounding box and initial value
 
-    The default scale=0 essentially means that it is undefined.  When drawing onto such an image,
-    a suitable scale will be automatically set.
-
-    After construction, the scale and bounds may be set with 
+    After construction, the bounds may be set with 
 
         im.bounds = new_bounds
-        im.scale = new_scale
 
     An ImageAlloc also has an 'array' attribute that provides a numpy view into the ImageAlloc's 
     pixels.
@@ -683,11 +674,11 @@ def check_image_consistency(im1, im2):
          type(im2) in _galsim.ImageAlloc.values() or
          type(im2) in _galsim.ImageView.values() or
          type(im2) in _galsim.ConstImageView.values()):
-        if im1.scale != im2.scale:
-            raise ValueError("Image scales are inconsistent")
         if im1.array.shape != im2.array.shape:
             raise ValueError("Image shapes are inconsistent")
     if isinstance(im2, Image):
+        if im1.scale != im2.scale:
+            raise ValueError("Image scales are inconsistent")
         if im1.wcs != im2.wcs:
             raise ValueError("Image wcs attributes are different")
 
@@ -814,11 +805,11 @@ def Image_copy(self):
 
 # Some functions to enable pickling of images
 def ImageView_getinitargs(self):
-    return self.array, self.xmin, self.ymin, self.scale
+    return self.array, self.xmin, self.ymin
 
 # An image is really pickled as an ImageView
 def ImageAlloc_getstate(self):
-    return self.array, self.xmin, self.ymin, self.scale
+    return self.array, self.xmin, self.ymin
 
 def ImageAlloc_setstate(self, args):
     self_type = args[0].dtype.type

@@ -129,11 +129,6 @@ namespace galsim {
         virtual ~BaseImage() {}
 
         /**
-         *  @brief Return the pixel scale.
-         */
-        double getScale() const { return _scale; }
-
-        /**
          *  @brief Return a shared pointer that manages the lifetime of the image's pixels.
          *
          *  The actual pointer will point to a parent image rather than the image itself
@@ -223,11 +218,6 @@ namespace galsim {
         void setOrigin(const Position<int>& pos) { setOrigin(pos.x,pos.y); }
         //@}
 
-        /**
-         *  @brief Set the pixel scale 
-         */
-        void setScale(double scale) { _scale = scale; }
-
         //@{
         /**
          *  @brief Move the center of the image, changing the logical location of the pixels.
@@ -314,8 +304,6 @@ namespace galsim {
         T* _data;                     // pointer to be used for this image
         ptrdiff_t _nElements;         // number of elements allocated in memory
         int _stride;                  // number of elements between rows (!= width for subimages)
-        double _scale;                // pixel scale (used by SBInterpolatedImage and SBProfile;
-                                      // units?!)
 
         inline int addressPixel(int y) const
         { return (y - this->getYMin()) * _stride; }
@@ -327,10 +315,10 @@ namespace galsim {
          *  @brief Constructor is protected since a BaseImage is a virtual base class.
          */
         BaseImage(T* data, ptrdiff_t nElements, boost::shared_ptr<T> owner, 
-                  int stride, const Bounds<int>& b, double scale) :
+                  int stride, const Bounds<int>& b) :
             AssignableToImage<T>(b), 
             _owner(owner), _data(data), _nElements(nElements),
-            _stride(stride), _scale(scale) {}
+            _stride(stride) {}
 
         /**
          *  @brief Copy constructor also protected
@@ -341,7 +329,7 @@ namespace galsim {
         BaseImage(const BaseImage<T>& rhs) :
             AssignableToImage<T>(rhs),
             _owner(rhs._owner), _data(rhs._data), _nElements(rhs._nElements),
-            _stride(rhs._stride), _scale(rhs._scale) {}
+            _stride(rhs._stride) {}
 
         /**
          *  @brief Also have a constructor that just takes a bounds.  
@@ -354,7 +342,7 @@ namespace galsim {
          *  Most often, this is used for default-constructing an ImageAlloc which is then
          *  resized later.
          */
-        BaseImage(const Bounds<int>& b, double scale);
+        BaseImage(const Bounds<int>& b);
 
         /**
          *  @brief Allocate new memory for the image
@@ -387,8 +375,8 @@ namespace galsim {
          *  @brief Direct constructor given all the necessary information
          */
         ConstImageView(T* data, const boost::shared_ptr<T>& owner, int stride,
-                       const Bounds<int>& b, double scale) :
-            BaseImage<T>(data,0,owner,stride,b,scale) {}
+                       const Bounds<int>& b) :
+            BaseImage<T>(data,0,owner,stride,b) {}
 
         /**
          *  @brief Copy Constructor from a BaseImage makes a new view of the same data
@@ -449,16 +437,14 @@ namespace galsim {
         /**
          *  @brief Direct constructor given all the necessary information
          */
-        ImageView(T* data, const boost::shared_ptr<T>& owner, int stride, const Bounds<int>& b,
-                  double scale) :
-            BaseImage<T>(data, 0, owner, stride, b, scale) {}
+        ImageView(T* data, const boost::shared_ptr<T>& owner, int stride, const Bounds<int>& b) :
+            BaseImage<T>(data, 0, owner, stride, b) {}
 
         /**
          *  @brief Shallow copy constructor.
          *
          *  The original image and its copy will share pixel values, but their bounding
-         *  boxes and scales will not be shared (even though they will be set to the same
-         *  values initially).
+         *  boxes will not be shared (even though they will be set to the same values initially).
          */
         ImageView(const ImageView<T>& rhs) : BaseImage<T>(rhs) {}
 
@@ -466,8 +452,7 @@ namespace galsim {
          *  @brief Shallow copy constructor from ImageAlloc.
          *
          *  The original image and its copy will share pixel values, but their bounding
-         *  boxes and scales will not be shared (even though they will be set to the same
-         *  values initially).
+         *  boxes will not be shared (even though they will be set to the same values initially).
          */
         ImageView(ImageAlloc<T>& rhs) : BaseImage<T>(rhs) {}
 
@@ -622,9 +607,7 @@ namespace galsim {
      *  its parent and multiple siblings.  ImageAllocs may also share pixel values with NumPy 
      *  arrays when the allocation happens in the C++ layer.
      *
-     *  An ImageAlloc also contains a bounding box; its origin need not be (0,0) or (1,1).  It also
-     *  contains a single floating-point pixel scale, though this may be intepreted differently
-     *  in different contexts.
+     *  An ImageAlloc also contains a bounding box; its origin need not be (0,0) or (1,1).
      *
      *  The const semantics for this are pretty normal.  You cannot change either the 
      *  pixel values or the ancillary information (like bounds) for a const ImageAlloc,
@@ -640,44 +623,38 @@ namespace galsim {
 
         /**
          * @brief Default constructor leaves the image's data pointer as null.
-         *
-         * The scale is initially set to 0.0.
          */
-        ImageAlloc() : BaseImage<T>(Bounds<int>(), 0.) {}
+        ImageAlloc() : BaseImage<T>(Bounds<int>()) {}
 
         /**
          *  @brief Create a new image with origin at (1,1).
          *
          *  An exception is thrown if ncol or nrow <= 0
          */
-        ImageAlloc(int ncol, int nrow, double scale, T init_value = T(0));
+        ImageAlloc(int ncol, int nrow, T init_value = T(0));
 
         /**
          *  @brief Create a new image with the given bounding box and initial value.
          */
-        ImageAlloc(const Bounds<int>& bounds, double scale, T init_value = T(0));
+        ImageAlloc(const Bounds<int>& bounds, T init_value = T(0));
 
         /**
          *  @brief Deep copy constructor.
          */
-        ImageAlloc(const ImageAlloc<T>& rhs) : BaseImage<T>(rhs._bounds, rhs._scale) 
+        ImageAlloc(const ImageAlloc<T>& rhs) : BaseImage<T>(rhs._bounds)
         { copyFrom(rhs); }
 
         /**
          *  @brief Can construct from any AssignableToImage
-         *
-         *  The scale is initially set to 0.0.
          */
-        ImageAlloc(const AssignableToImage<T>& rhs) : BaseImage<T>(rhs.getBounds(),0.) 
+        ImageAlloc(const AssignableToImage<T>& rhs) : BaseImage<T>(rhs.getBounds()) 
         { rhs.assignTo(view()); }
 
         /**
-         *  @brief If rhs is a BaseImage, then also get the scale.  
-         *
-         *  Also, BaseImage type doesn't have to match.
+         *  @brief If rhs is a BaseImage, then type doesn't have to match.
          */
         template <typename U>
-        ImageAlloc(const BaseImage<U>& rhs) : BaseImage<T>(rhs.getBounds(), rhs.getScale())
+        ImageAlloc(const BaseImage<U>& rhs) : BaseImage<T>(rhs.getBounds())
         { copyFrom(rhs); }
 
         /**
@@ -744,8 +721,7 @@ namespace galsim {
          */
         ImageView<T> view() 
         {
-            return ImageView<T>(this->_data, this->_owner, this->_stride,
-                                this->_bounds, this->_scale); 
+            return ImageView<T>(this->_data, this->_owner, this->_stride, this->_bounds); 
         }
         ConstImageView<T> view() const { return ConstImageView<T>(*this); }
         //@}

@@ -83,8 +83,8 @@ public:
 } // anonymous
 
 template <typename T>
-BaseImage<T>::BaseImage(const Bounds<int>& b, double scale) :
-    AssignableToImage<T>(b), _owner(), _data(0), _nElements(0), _stride(0), _scale(scale)
+BaseImage<T>::BaseImage(const Bounds<int>& b) :
+    AssignableToImage<T>(b), _owner(), _data(0), _nElements(0), _stride(0)
 {
     if (this->_bounds.isDefined()) allocateMem();
     // Else _data is left as 0, stride = 0.
@@ -112,8 +112,8 @@ void BaseImage<T>::allocateMem()
 }
 
 template <typename T>
-ImageAlloc<T>::ImageAlloc(int ncol, int nrow, double scale, T init_value) :
-    BaseImage<T>(Bounds<int>(1,ncol,1,nrow), scale) 
+ImageAlloc<T>::ImageAlloc(int ncol, int nrow, T init_value) :
+    BaseImage<T>(Bounds<int>(1,ncol,1,nrow)) 
 {
     if (ncol <= 0 || nrow <= 0) {
         std::ostringstream oss(" ");
@@ -135,8 +135,8 @@ ImageAlloc<T>::ImageAlloc(int ncol, int nrow, double scale, T init_value) :
 }
 
 template <typename T>
-ImageAlloc<T>::ImageAlloc(const Bounds<int>& bounds, double scale, const T init_value) :
-    BaseImage<T>(bounds, scale)
+ImageAlloc<T>::ImageAlloc(const Bounds<int>& bounds, const T init_value) :
+    BaseImage<T>(bounds)
 {
     fill(init_value);
 }
@@ -214,7 +214,7 @@ ConstImageView<T> BaseImage<T>::subImage(const Bounds<int>& bounds) const
     T* newdata = _data
         + (bounds.getYMin() - this->_bounds.getYMin()) * _stride
         + (bounds.getXMin() - this->_bounds.getXMin());
-    return ConstImageView<T>(newdata,_owner,_stride,bounds,this->_scale);
+    return ConstImageView<T>(newdata,_owner,_stride,bounds);
 }
 
 template <typename T>
@@ -229,7 +229,7 @@ ImageView<T> ImageView<T>::subImage(const Bounds<int>& bounds) const
     T* newdata = this->_data
         + (bounds.getYMin() - this->_bounds.getYMin()) * this->_stride
         + (bounds.getXMin() - this->_bounds.getXMin());
-    return ImageView<T>(newdata,this->_owner,this->_stride,bounds,this->_scale);
+    return ImageView<T>(newdata,this->_owner,this->_stride,bounds);
 }
 
 namespace {

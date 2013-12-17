@@ -86,7 +86,7 @@ def test_sbinterpolatedimage():
                 ref_array.astype(array_type),image_in.array,
                 err_msg="Array from input Image differs from reference array for type %s"%
                         array_type)
-        sbinterp = galsim.SBInterpolatedImage(image_in.image, lan3_2d, quint_2d, dx=1.0)
+        sbinterp = galsim.SBInterpolatedImage(image_in.image, lan3_2d, quint_2d)
         test_array = np.zeros(ref_array.shape, dtype=array_type)
         image_out = galsim.Image(test_array, scale=1.0)
         sbinterp.draw(image_out.image.view())
@@ -102,7 +102,7 @@ def test_sbinterpolatedimage():
         # Anyway, Quintic seems to be accurate enough.
         quint = galsim.Quintic(1.e-4)
         quint_2d = galsim.InterpolantXY(quint)
-        sbinterp = galsim.SBInterpolatedImage(image_in.image, quint_2d, quint_2d, dx=1.0)
+        sbinterp = galsim.SBInterpolatedImage(image_in.image, quint_2d, quint_2d)
         sbinterp.setFlux(1.)
         do_shoot(galsim.GSObject(sbinterp),image_out,"InterpolatedImage")
 

@@ -38,9 +38,9 @@ namespace galsim {
     SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<T>& image,
         boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
-        double dx, double pad_factor, const GSParamsPtr& gsparams) :
+        double pad_factor, const GSParamsPtr& gsparams) :
         SBProfile(new SBInterpolatedImageImpl(
-                image,xInterp,kInterp,dx,pad_factor,gsparams)) {}
+                image,xInterp,kInterp,pad_factor,gsparams)) {}
 
     SBInterpolatedImage::SBInterpolatedImage(
         const MultipleImageHelper& multi,
@@ -69,8 +69,7 @@ namespace galsim {
 
     template <class T>
     MultipleImageHelper::MultipleImageHelper(
-        const std::vector<boost::shared_ptr<BaseImage<T> > >& images,
-        double dx, double pad_factor) :
+        const std::vector<boost::shared_ptr<BaseImage<T> > >& images, double pad_factor) :
         _pimpl(new MultipleImageHelperImpl)
     {
         if (images.size() == 0) 
@@ -86,25 +85,9 @@ namespace galsim {
             _pimpl->init_bounds += images[i]->getBounds();
         }
 
-        if (dx<=0.) {
-            _pimpl->dx = images[0]->getScale();
-            for (size_t i=1; i<images.size(); ++i) {
-                double dxi = images[i]->getScale();
-                if (dxi != _pimpl->dx) throw std::runtime_error(
-                    "No dx given to MultipleImageHelper, "
-                    "and images do not all have the same scale.");
-            }
-        } else {
-            _pimpl->dx = dx;
-        }
-
         assert(pad_factor > 0.);
         _pimpl->Nk = goodFFTSize(int(pad_factor*_pimpl->Ninitial));
 
-        double dx2 = _pimpl->dx*_pimpl->dx;
-        double dx3 = _pimpl->dx*dx2;
-
-            
         // fill data from images, shifting to center the image in the table
         _pimpl->vx.resize(images.size());
         _pimpl->vk.resize(images.size());
@@ -116,7 +99,7 @@ namespace galsim {
             double sum = 0.;
             double sumx = 0.;
             double sumy = 0.;
-            _pimpl->vx[i].reset(new XTable(_pimpl->Nk, _pimpl->dx));
+            _pimpl->vx[i].reset(new XTable(_pimpl->Nk, 1.));
 
             const BaseImage<T>& img = *images[i];
             int xStart = -((img.getXMax()-img.getXMin()+1)/2);
@@ -137,25 +120,20 @@ namespace galsim {
             if (sum == 0.) throw std::runtime_error(
                 "Trying to initialize InterpolatedImage with an empty image.");
 
-            _pimpl->flux[i] = sum * dx2;
-            _pimpl->xflux[i] = sumx * dx3;
-            _pimpl->yflux[i] = sumy * dx3;
+            _pimpl->flux[i] = sum;
+            _pimpl->xflux[i] = sumx;
+            _pimpl->yflux[i] = sumy;
             dbg<<"flux = "<<_pimpl->flux[i]<<
                 ", xflux = "<<_pimpl->xflux[i]<<", yflux = "<<_pimpl->yflux[i]<<std::endl;
         }
     }
 
     template <class T>
-    MultipleImageHelper::MultipleImageHelper(const BaseImage<T>& image, double dx, 
+    MultipleImageHelper::MultipleImageHelper(const BaseImage<T>& image,
         double pad_factor) : _pimpl(new MultipleImageHelperImpl)
     {
         dbg<<"Start MultipleImageHelper constructor for one image\n";
         dbg<<"image bounds = "<<image.getBounds()<<std::endl;
-
-        if (dx<=0.) _pimpl->dx = image.getScale();
-        else _pimpl->dx = dx;
-        dbg<<"image scale = "<<image.getScale()<<std::endl;
-        dbg<<"dx = "<<_pimpl->dx<<std::endl;
 
         // Store the size of the original image, blocked out into a square.
         _pimpl->Ninitial = std::max( image.getYMax()-image.getYMin()+1,
@@ -170,16 +148,13 @@ namespace galsim {
         dbg<<"Ninitial = "<<_pimpl->Ninitial<<std::endl;
         dbg<<"Nk = "<<_pimpl->Nk<<std::endl;
 
-        double dx2 = _pimpl->dx*_pimpl->dx;
-        double dx3 = _pimpl->dx*dx2;
-
         // fill data from images, shifting to center the image in the table
         _pimpl->vx.resize(1);
         _pimpl->vk.resize(1);
         _pimpl->flux.resize(1);
         _pimpl->xflux.resize(1);
         _pimpl->yflux.resize(1);
-        _pimpl->vx[0].reset(new XTable(_pimpl->Nk, _pimpl->dx));
+        _pimpl->vx[0].reset(new XTable(_pimpl->Nk, 1.));
 
         // Copy the given image to the center
         // Also accumulate the flux and centroid of the original image
@@ -202,9 +177,9 @@ namespace galsim {
         if (sum == 0.) throw std::runtime_error(
             "Trying to initialize InterpolatedImage with an empty image.");
 
-        _pimpl->flux[0] = sum * dx2;
-        _pimpl->xflux[0] = sumx * dx3;
-        _pimpl->yflux[0] = sumy * dx3;
+        _pimpl->flux[0] = sum;
+        _pimpl->xflux[0] = sumx;
+        _pimpl->yflux[0] = sumy;
         dbg<<"flux = "<<_pimpl->flux[0]<<
             ", xflux = "<<_pimpl->xflux[0]<<", yflux = "<<_pimpl->yflux[0]<<std::endl;
     }
@@ -219,9 +194,9 @@ namespace galsim {
     SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
         const BaseImage<T>& image, 
         boost::shared_ptr<Interpolant2d> xInterp, boost::shared_ptr<Interpolant2d> kInterp,
-        double dx, double pad_factor, const GSParamsPtr& gsparams) :
+        double pad_factor, const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
-        _multi(image,dx,pad_factor), _wts(1,1.), _xInterp(xInterp), _kInterp(kInterp),
+        _multi(image,pad_factor), _wts(1,1.), _xInterp(xInterp), _kInterp(kInterp),
         _readyToShoot(false)
     { initialize(); }
 
@@ -248,8 +223,7 @@ namespace galsim {
         assert(_xInterp.get());
         assert(_kInterp.get());
 
-        dbg<<"N = "<<_multi.getNin()<<", xrange = "<<_xInterp->xrange();
-        dbg<<", scale = "<<_multi.getScale()<<std::endl;
+        dbg<<"N = "<<_multi.getNin()<<", xrange = "<<_xInterp->xrange()<<std::endl;
 
         if (_multi.size() == 1 && _wts[0] == 1.) {
             _xtab = _multi.getXTable(0);
@@ -269,9 +243,9 @@ namespace galsim {
         // We add the size of the image and the size of the interpolant in quadrature.
         // (Note: Since this isn't a radial profile, R isn't really a radius, but rather 
         //        the size of the square box that is enclosing all the flux.)
-        double R = _multi.getNin()/2. * _multi.getScale();
+        double R = _multi.getNin()/2.;
         // Add xInterp range in quadrature just like convolution:
-        double R2 = _xInterp->xrange() * _multi.getScale();
+        double R2 = _xInterp->xrange();
         dbg<<"R(image) = "<<R<<", R(interpolant) = "<<R2<<std::endl;
         R = sqrt(R*R + R2*R2);
         dbg<<"=> R = "<<R<<std::endl;
@@ -293,7 +267,7 @@ namespace galsim {
         // probably not worth it.  It will probably be very rare that the final maxK
         // value of the FFT will be due to an SBInterpolatedImage.  Usually, this will
         // be convolved by a PSF that will have a smaller maxK.
-        _uscale = _multi.getScale() / (2.*M_PI);
+        _uscale = 1. / (2.*M_PI);
         _maxk = _maxk1 = _xInterp->urange()/_uscale;
         dbg<<"maxk = "<<_maxk<<std::endl;
 
@@ -315,16 +289,15 @@ namespace galsim {
         double& xmin, double& xmax, std::vector<double>& splits) const 
     {
         Bounds<int> b = _multi.getInitBounds();
-        double scale = _multi.getScale();
         double xrange = _xInterp->xrange();
         int N = b.getXMax()-b.getXMin()+1;
-        xmin = -(N/2 + xrange) * scale;
-        xmax = ((N-1)/2 + xrange) * scale;
+        xmin = -(N/2 + xrange);
+        xmax = ((N-1)/2 + xrange);
         int ixrange = _xInterp->ixrange();
         if (ixrange > 0) {
             splits.resize(N-2+ixrange);
-            double x = xmin-0.5*scale*(ixrange-2);
-            for(int i=0;i<N-2+ixrange;++i, x+=scale) splits[i] = x;
+            double x = xmin-0.5*(ixrange-2);
+            for(int i=0;i<N-2+ixrange;++i, ++x) splits[i] = x;
         }
     }
 
@@ -332,16 +305,15 @@ namespace galsim {
         double& ymin, double& ymax, std::vector<double>& splits) const 
     { 
         Bounds<int> b = _multi.getInitBounds();
-        double scale = _multi.getScale();
         double xrange = _xInterp->xrange();
         int N = b.getXMax()-b.getXMin()+1;
-        ymin = -(N/2 + xrange) * scale;
-        ymax = ((N-1)/2 + xrange) * scale;
+        ymin = -(N/2 + xrange);
+        ymax = ((N-1)/2 + xrange);
         int ixrange = _xInterp->ixrange();
         if (ixrange > 0) {
             splits.resize(N-2+ixrange);
-            double y = ymin-0.5*scale*(ixrange-2);
-            for(int i=0;i<N-2+ixrange;++i, y+=scale) splits[i] = y;
+            double y = ymin-0.5*(ixrange-2);
+            for(int i=0;i<N-2+ixrange;++i, ++y) splits[i] = y;
         }
     }
 
@@ -667,7 +639,7 @@ namespace galsim {
         double R = (d1+0.5) * scale;
         dbg<<"d1 = "<<d1<<" => R = "<<R<<std::endl;
         // Add xInterp range in quadrature just like convolution:
-        double R2 = _xInterp->xrange() * _multi.getScale();
+        double R2 = _xInterp->xrange();
         dbg<<"R(image) = "<<R<<", R(interpolant) = "<<R2<<std::endl;
         R = sqrt(R*R + R2*R2);
         dbg<<"=> R = "<<R<<std::endl;
@@ -770,8 +742,6 @@ namespace galsim {
         Bounds<int> b = _multi.getInitBounds();
         int xStart = -((b.getXMax()-b.getXMin()+1)/2);
         int y = -((b.getYMax()-b.getYMin()+1)/2);
-        double scale = _multi.getScale();
-        double scalesq = scale*scale;
 
         // We loop over the original bounds, since this is the region over which we 
         // always calculate the flux.
@@ -781,12 +751,11 @@ namespace galsim {
         // xx,yy are the positions scaled by the pixel scale
         for (int iy = b.getYMin(); iy<= b.getYMax(); ++iy, ++y) {
             int x = xStart;
-            double yy = y * scale;
+            double yy = y;
             for (int ix = b.getXMin(); ix<= b.getXMax(); ++ix, ++x) {
                 double flux = _xtab->xval(x,y);
                 if (flux==0.) continue;
-                flux *= scalesq;
-                double xx = x * scale;
+                double xx = x;
                 if (flux > 0.) {
                     _positiveFlux += flux;
                 } else {
@@ -860,58 +829,54 @@ namespace galsim {
     // instantiate template functions for expected image types
     template SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<float>& image, boost::shared_ptr<Interpolant2d> xInterp,
-        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor,
+        boost::shared_ptr<Interpolant2d> kInterp, double pad_factor,
         const GSParamsPtr& gsparams);
     template SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<double>& image, boost::shared_ptr<Interpolant2d> xInterp,
-        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor,
+        boost::shared_ptr<Interpolant2d> kInterp, double pad_factor,
         const GSParamsPtr& gsparams);
     template SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<int32_t>& image, boost::shared_ptr<Interpolant2d> xInterp,
-        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor,
+        boost::shared_ptr<Interpolant2d> kInterp, double pad_factor,
         const GSParamsPtr& gsparams);
     template SBInterpolatedImage::SBInterpolatedImage(
         const BaseImage<int16_t>& image, boost::shared_ptr<Interpolant2d> xInterp,
-        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor,
+        boost::shared_ptr<Interpolant2d> kInterp, double pad_factor,
         const GSParamsPtr& gsparams);
 
     template MultipleImageHelper::MultipleImageHelper(
-        const std::vector<boost::shared_ptr<BaseImage<float> > >& images,
-        double dx, double pad_factor);
+        const std::vector<boost::shared_ptr<BaseImage<float> > >& images, double pad_factor);
     template MultipleImageHelper::MultipleImageHelper(
-        const std::vector<boost::shared_ptr<BaseImage<double> > >& images,
-        double dx, double pad_factor);
+        const std::vector<boost::shared_ptr<BaseImage<double> > >& images, double pad_factor);
     template MultipleImageHelper::MultipleImageHelper(
-        const std::vector<boost::shared_ptr<BaseImage<int32_t> > >& images,
-        double dx, double pad_factor);
+        const std::vector<boost::shared_ptr<BaseImage<int32_t> > >& images, double pad_factor);
     template MultipleImageHelper::MultipleImageHelper(
-        const std::vector<boost::shared_ptr<BaseImage<int16_t> > >& images,
-        double dx, double pad_factor);
+        const std::vector<boost::shared_ptr<BaseImage<int16_t> > >& images, double pad_factor);
 
     template MultipleImageHelper::MultipleImageHelper(
-        const BaseImage<float>& image, double dx, double pad_factor);
+        const BaseImage<float>& image, double pad_factor);
     template MultipleImageHelper::MultipleImageHelper(
-        const BaseImage<double>& image, double dx, double pad_factor);
+        const BaseImage<double>& image, double pad_factor);
     template MultipleImageHelper::MultipleImageHelper(
-        const BaseImage<int32_t>& image, double dx, double pad_factor);
+        const BaseImage<int32_t>& image, double pad_factor);
     template MultipleImageHelper::MultipleImageHelper(
-        const BaseImage<int16_t>& image, double dx, double pad_factor);
+        const BaseImage<int16_t>& image, double pad_factor);
 
     template SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
         const BaseImage<float>& image, boost::shared_ptr<Interpolant2d> xInterp,
-        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor,
+        boost::shared_ptr<Interpolant2d> kInterp, double pad_factor,
         const GSParamsPtr& gsparams);
     template SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
         const BaseImage<double>& image, boost::shared_ptr<Interpolant2d> xInterp,
-        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor,
+        boost::shared_ptr<Interpolant2d> kInterp, double pad_factor,
         const GSParamsPtr& gsparams);
     template SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
         const BaseImage<int32_t>& image, boost::shared_ptr<Interpolant2d> xInterp,
-        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor,
+        boost::shared_ptr<Interpolant2d> kInterp, double pad_factor,
         const GSParamsPtr& gsparams);
     template SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
         const BaseImage<int16_t>& image, boost::shared_ptr<Interpolant2d> xInterp,
-        boost::shared_ptr<Interpolant2d> kInterp, double dx, double pad_factor,
+        boost::shared_ptr<Interpolant2d> kInterp, double pad_factor,
         const GSParamsPtr& gsparams);
 
 } // namespace galsim

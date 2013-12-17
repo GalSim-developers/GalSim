@@ -1226,7 +1226,7 @@ def test_ccdnoise():
         rng = galsim.BaseDeviate(testseed)
         ccdnoise = galsim.CCDNoise(rng, gain=cGain, read_noise=cReadNoise)
         testImage = galsim.Image((np.zeros((2, 2))+sky).astype(types[i]))
-        ccdnoise.applyTo(testImage.image)
+        ccdnoise.applyTo(testImage)
         np.testing.assert_array_almost_equal(
                 testImage.array, cResult, prec,
                 err_msg="Wrong CCD noise random sequence generated for Image"+typestrings[i]+".")
@@ -1234,7 +1234,7 @@ def test_ccdnoise():
         # Check that reseeding the rng reseeds the internal deviate in CCDNoise
         rng.seed(testseed)
         testImage.fill(sky)
-        ccdnoise.applyTo(testImage.image)
+        ccdnoise.applyTo(testImage)
         np.testing.assert_array_almost_equal(
                 testImage.array, cResult, prec,
                 err_msg="Wrong CCD noise random sequence generated for Image"+typestrings[i]+
@@ -1253,7 +1253,7 @@ def test_ccdnoise():
         rng.seed(testseed)
         ccdnoise = galsim.CCDNoise(rng, sky_level=sky, gain=cGain, read_noise=cReadNoise)
         testImage.fill(0)
-        ccdnoise.applyTo(testImage.image)
+        ccdnoise.applyTo(testImage)
         np.testing.assert_array_almost_equal(
                 testImage.array, cResult-sky, prec,
                 err_msg="Wrong CCD noise random sequence generated for Image"+typestrings[i]+

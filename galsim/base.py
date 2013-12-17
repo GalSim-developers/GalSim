@@ -706,7 +706,7 @@ class GSObject(object):
             if shape[0] % 2 == 0: dy -= 0.5
 
         if dx == 0. and dy == 0.:
-            return self
+            return self.copy()
         else:
             return self.createShifted(dx*scale, dy*scale)
 
@@ -844,6 +844,10 @@ class GSObject(object):
             # gain is photons / ADU.  The photons are the given flux, and we want to 
             # multiply the ADU by scale^2.  i.e. divide gain by scale^2.
             gain /= image.scale**2
+
+        # Convert the profile in sky coordinates to the profile in chip coordinates:
+        prof.applyDilation(1./image.scale)
+        gain *= image.scale**2
 
         image.added_flux = prof.SBProfile.draw(image.image.view(), gain, wmult)
 
@@ -1029,6 +1033,10 @@ class GSObject(object):
             # multiply the ADU by scale^2.  i.e. divide gain by scale^2.
             gain /= image.scale**2
 
+        # Convert the profile in sky coordinates to the profile in chip coordinates:
+        prof.applyDilation(1./image.scale)
+        gain *= image.scale**2
+
         try:
             image.added_flux = prof.SBProfile.drawShoot(
                 image.image.view(), n_photons, uniform_deviate, gain, max_extra_noise,
@@ -1108,11 +1116,13 @@ class GSObject(object):
         re = self._draw_setup_image(re,scale,1.0,add_to_image,scale_is_dk=True)
         im = self._draw_setup_image(im,scale,1.0,add_to_image,scale_is_dk=True)
 
+        # Convert the profile in sky coordinates to the profile in chip coordinates:
+        prof = self.copy()
+        prof.applyDilation(re.scale)
+
         # wmult isn't really used by drawK, but we need to provide it.
         wmult = 1.0
-        re.image.scale = re.scale
-        im.image.scale = im.scale
-        self.SBProfile.drawK(re.image.view(), im.image.view(), gain, wmult)
+        prof.SBProfile.drawK(re.image.view(), im.image.view(), gain, wmult)
 
         return re,im
 
