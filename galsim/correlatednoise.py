@@ -174,6 +174,10 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # Set profile_for_stored for next time.
         self._profile_for_stored = self._profile
 
+        if image.wcs is not None and not isinstance(image.wcs, galsim.PixelScale):
+            raise NotImplementedError("Sorry, correlated noise cannot (yet) be applied to an "+
+                                      "image with a non-trivial WCS.")
+
         # Then retrieve or redraw the sqrt(power spectrum) needed for making the noise field
         rootps = self._get_update_rootps(image.array.shape, image.scale)
 

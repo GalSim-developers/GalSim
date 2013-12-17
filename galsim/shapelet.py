@@ -248,6 +248,10 @@ class Shapelet(GSObject):
         sigma = self.SBProfile.getSigma()
         bvec = self.SBProfile.getBVec().copy()
 
+        if image.wcs != None and not isinstance(image.wcs, galsim.PixelScale):
+            raise NotImplementedError("Sorry, cannot (yet) fit a shapelet model to an image "+
+                                      "with a non-trivial WCS.")
+
         galsim.ShapeletFitImage(sigma, bvec, image.image, image.scale, center)
 
         if normalization.lower() == "flux" or normalization.lower() == "f":

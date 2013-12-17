@@ -37,6 +37,7 @@ from optics import OpticalPSF
 from shapelet import Shapelet
 from interpolatedimage import InterpolatedImage
 from compound import Add, Convolve, Deconvolve, AutoConvolve, AutoCorrelate
+from wcs import BaseWCS, PixelScale
 
 from shear import Shear
 from lensing_ps import PowerSpectrum

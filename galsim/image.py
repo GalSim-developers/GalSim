@@ -126,6 +126,10 @@ class Image(object):
         im.scale = new_scale
         im.wcs = new_wcs
 
+    Note that im.scale will only work if the WCS is a galsim.PixelScale.  Once you set the 
+    wcs to be something non-trivial, then you must interact with it via the wcs attribute.
+    The im.scale syntax with raise an exception.
+
     There are also two read-only attributes:
 
         im.bounds
@@ -287,17 +291,37 @@ class Image(object):
             if init_value != None:
                 raise TypeError("Cannot specify init_value without setting an initial size")
 
-        # Construct the wcs and scale attribute
-        self.scale = scale
-        self.wcs = None
-        if wcs is not None:
-            raise NotImplementedError("Sorry wcs not implemented yet.")
+        # Construct the wcs attribute
+        if scale is not None:
+            if wcs is not None:
+                raise TypeError("Cannot provide both scale and wcs to Image constructor")
+            self.wcs = galsim.PixelScale(scale)
+        else:
+            if wcs is not None and not isinstance(wcs,galsim.BaseWCS):
+                raise TypeError("wcs parameters must be a galsim.BaseWCS instance")
+            self.wcs = wcs
 
     # bounds and array are really properties which pass the request to the image
     @property
     def bounds(self): return self.image.bounds
     @property
     def array(self): return self.image.array
+
+    # Allow scale to work as a PixelScale wcs.
+    @property
+    def scale(self): 
+        if self.wcs:
+            if not isinstance(self.wcs, galsim.PixelScale):
+                raise TypeError("image.wcs is not a simple PixelScale.  scale is undefined.")
+            return self.wcs.scale
+        else:
+            return None
+
+    @scale.setter
+    def scale(self, value):
+        if self.wcs and not isinstance(self.wcs, galsim.PixelScale):
+            raise TypeError("image.wcs is not a simple PixelScale.  scale is undefined.")
+        self.wcs = galsim.PixelScale(value)
 
     # Convenience functions
     @property
@@ -315,7 +339,7 @@ class Image(object):
     def getBounds(self): return self.image.getBounds()
 
     def copy(self):
-        return Image(image=self.image.copy(), scale=self.scale, wcs=self.wcs)
+        return Image(image=self.image.copy(), wcs=self.wcs)
 
     def resize(self, bounds):
         """Resize the image to have a new bounds (must be a BoundsI instance)
@@ -335,7 +359,7 @@ class Image(object):
             raise TypeError("bounds must be a galsim.BoundsI instance")
         subimage = self.image.subImage(bounds)
         # TODO: Make sure new WCS is correct for the subImage.  Not trivial!
-        return Image(image=subimage, scale=self.scale, wcs=self.wcs)
+        return Image(image=subimage, wcs=self.wcs)
 
     def __getitem__(self, bounds):
         """Return a view of a portion of the full image
@@ -355,9 +379,9 @@ class Image(object):
         """
         if make_const:
             return Image(image=_galsim.ConstImageView[self.dtype](self.image.view()),
-                         scale=self.scale, wcs=self.wcs)
+                         wcs=self.wcs)
         else:
-            return Image(image=self.image.view(), scale=self.scale, wcs=self.wcs)
+            return Image(image=self.image.view(), wcs=self.wcs)
 
     def shift(self, *args, **kwargs):
         """Shift the pixel coordinates by some (integral) dx,dy.
@@ -677,8 +701,6 @@ def check_image_consistency(im1, im2):
         if im1.array.shape != im2.array.shape:
             raise ValueError("Image shapes are inconsistent")
     if isinstance(im2, Image):
-        if im1.scale != im2.scale:
-            raise ValueError("Image scales are inconsistent")
         if im1.wcs != im2.wcs:
             raise ValueError("Image wcs attributes are different")
 

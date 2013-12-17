@@ -579,15 +579,19 @@ class GSObject(object):
         ret.applyShift(*args, **kwargs)
         return ret
 
-    # Make sure the image is defined with the right size and scale for the draw and
+    # Make sure the image is defined with the right size and wcs for the draw and
     # drawShoot commands.
     def _draw_setup_image(self, image, scale, wmult, add_to_image, scale_is_dk=False):
 
-        # Make sure the type of wmult is correct and has a valid value
-        if type(wmult) != float:
-            wmult = float(wmult)
-        if wmult <= 0:
-            raise ValueError("Invalid wmult <= 0 in draw command")
+        # If image already exists, and its wcs is not a PixelScale, then we're all set.
+        # No need to run through the rest of this.  (And in fact, trying to access 
+        # image.scale would raise an exception.)
+        if (image is not None and image.wcs is not None and 
+                not isinstance(image.wcs, galsim.PixelScale)):
+            # Clear the image if we are not adding to it.
+            if not add_to_image:
+                image.setZero()
+            return image
 
         # Save the input value, since we'll need to make a new scale (in case image is None)
         if scale_is_dk: dk = scale
@@ -673,17 +677,19 @@ class GSObject(object):
             shape = image.array.shape
 
         if scale is None:
-            if image is not None and image.scale > 0.:
-                scale = image.scale
+            if (image is not None and image.wcs is not None and 
+                    (not isinstance(image.wcs, galsim.PixelScale) or image.scale > 0.)):
+                if use_true_center:
+                    im_cen = image.bounds.trueCenter()
+                else:
+                    im_cen = image.bounds.center()
+                wcs = image.wcs.local(chip_pos=im_cen)
             else:
-                scale = self.SBProfile.nyquistDx()
+                wcs = galsim.PixelScale(self.SBProfile.nyquistDx())
         elif scale <= 0:
-            scale = self.SBProfile.nyquistDx()
-        elif type(scale) != float:
-            scale = float(scale)
-
-        # For InterpolatedImage offsets, we apply the offset in the opposite direction.
-        if reverse: scale = -scale
+            wcs = galsim.PixelScale(self.SBProfile.nyquistDx())
+        else:
+            wcs = galsim.PixelScale(float(scale))
 
         if offset is None:
             dx = 0.
@@ -705,13 +711,18 @@ class GSObject(object):
             if shape[1] % 2 == 0: dx -= 0.5
             if shape[0] % 2 == 0: dy -= 0.5
 
+        # For InterpolatedImage offsets, we apply the offset in the opposite direction.
+        if reverse: 
+            dx = -dx
+            dy = -dy
+
         if dx == 0. and dy == 0.:
             return self.copy()
         else:
-            return self.createShifted(dx*scale, dy*scale)
+            return self.createShifted(wcs.toSky(galsim.PositionD(dx,dy)))
 
 
-    def draw(self, image=None, scale=None, gain=1., wmult=1., normalization="flux",
+    def draw(self, image=None, scale=None, wcs=None, gain=1., wmult=1., normalization="flux",
              add_to_image=False, use_true_center=True, offset=None):
         """Draws an Image of the object, with bounds optionally set by an input Image.
 
@@ -720,9 +731,9 @@ class GSObject(object):
         used), and using interpolation to carry out image transformations such as shearing.  This
         method can create a new Image or can draw into an existing one, depending on the choice of
         the `image` keyword parameter.  Other keywords of particular relevance for users are those
-        that set the pixel scale for the image (`scale`), that choose the normalization 
-        convention for the flux (`normalization`), and that decide whether to clear the input 
-        Image before drawing into it (`add_to_image`).
+        that set the pixel scale or wcs for the image (`scale`, `wcs`), that choose the 
+        normalization convention for the flux (`normalization`), and that decide whether to clear 
+        the input Image before drawing into it (`add_to_image`).
 
         The object will always be drawn with its nominal center at the center location of the 
         image.  There is thus a distinction in the behavior at the center for even- and odd-sized
@@ -773,6 +784,9 @@ class GSObject(object):
                       If `scale <= 0` (regardless of image), then use the Nyquist scale 
                         `= pi/maxK()`.
                       (Default `scale = None`.)
+
+        @param wcs    If provided, use this as the wcs for the image.
+                      Only one of scale and wcs is allowed to be not None.  (Default `wcs - None`.)
 
         @param gain   The number of photons per ADU ("analog to digital units", the units of the 
                       numbers output from a CCD).  (Default `gain =  1.`)
@@ -829,6 +843,24 @@ class GSObject(object):
         if gain <= 0.:
             raise ValueError("Invalid gain <= 0. in draw command")
 
+        # Make sure the type of wmult is correct and has a valid value
+        if type(wmult) != float:
+            wmult = float(wmult)
+        if wmult <= 0:
+            raise ValueError("Invalid wmult <= 0 in draw command")
+
+        # Check for non-trivial wcs
+        if wcs is not None:
+            if scale is not None:
+                raise ValueError("Cannot provide both wcs and scale")
+            if image is None:
+                raise ValueError("Cannot provide wcs when image == None")
+            if not image.bounds.isDefined():
+                raise ValueError("Cannot provide wcs when image has undefined bounds")
+            if not isinstance(wcs, galsim.BaseWCS()):
+                raise TypeError("wcs must be a BaseWCS instance")
+            image.wcs = wcs
+
         # Apply the offset, and possibly fix the centering for even-sized images
         # Note: We need to do this before we call _draw_setup_image, since the shift
         # affects stepK (especially if the offset is rather large).
@@ -837,23 +869,24 @@ class GSObject(object):
         # Make sure image is setup correctly
         image = prof._draw_setup_image(image,scale,wmult,add_to_image)
 
-        # SBProfile draw command uses surface brightness normalization.  So if we
-        # want flux normalization, we need to scale the flux by scale^2
-        if normalization.lower() == "flux" or normalization.lower() == "f":
-            # Rather than change the flux of the GSObject though, we change the gain.
-            # gain is photons / ADU.  The photons are the given flux, and we want to 
-            # multiply the ADU by scale^2.  i.e. divide gain by scale^2.
-            gain /= image.scale**2
+        if use_true_center:
+            im_cen = image.bounds.trueCenter()
+        else:
+            im_cen = image.bounds.center()
+
+        # Surface brightness normalization requires scaling the flux value of each pixel
+        # by the area of the pixel.  We do this by changing the gain.
+        if normalization.lower() in ['surface brightness','sb']:
+            gain *= image.wcs.pixelArea(chip_pos=im_cen)
 
         # Convert the profile in sky coordinates to the profile in chip coordinates:
-        prof.applyDilation(1./image.scale)
-        gain *= image.scale**2
+        image.wcs.applyTo(prof, chip_pos=im_cen)
 
         image.added_flux = prof.SBProfile.draw(image.image.view(), gain, wmult)
 
         return image
 
-    def drawShoot(self, image=None, scale=None, gain=1., wmult=1., normalization="flux",
+    def drawShoot(self, image=None, scale=None, wcs=None, gain=1., wmult=1., normalization="flux",
                   add_to_image=False, use_true_center=True, offset=None,
                   n_photons=0., rng=None, max_extra_noise=0., poisson_flux=None):
         """Draw an image of the object by shooting individual photons drawn from the surface 
@@ -902,12 +935,15 @@ class GSObject(object):
 
         @param scale  If provided, use this as the pixel scale for the image.
                       If `scale` is `None` and `image != None`, then take the provided image's 
-                        pixel scale.
+                        pixel scale (or wcs).
                       If `scale` is `None` and `image == None`, then use the Nyquist scale 
                         `= pi/maxK()`.
                       If `scale <= 0` (regardless of image), then use the Nyquist scale 
                         `= pi/maxK()`.
                       (Default `scale = None`.)
+
+        @param wcs    If provided, use this as the wcs for the image.
+                      Only one of scale and wcs is allowed to be not None.  (Default `wcs - None`.)
 
         @param gain   The number of photons per ADU ("analog to digital units", the units of the 
                       numbers output from a CCD).  (Default `gain =  1.`)
@@ -990,6 +1026,12 @@ class GSObject(object):
         if gain <= 0.:
             raise ValueError("Invalid gain <= 0. in draw command")
 
+        # Make sure the type of wmult is correct and has a valid value
+        if type(wmult) != float:
+            wmult = float(wmult)
+        if wmult <= 0:
+            raise ValueError("Invalid wmult <= 0 in draw command")
+
         # Make sure the type of n_photons is correct and has a valid value:
         if type(n_photons) != float:
             n_photons = float(n_photons)
@@ -1019,23 +1061,36 @@ class GSObject(object):
             msg += "This will only shoot a single photon (since flux = 1)."
             warnings.warn(msg)
 
+        # Check for non-trivial wcs
+        if wcs is not None:
+            if scale is not None:
+                raise ValueError("Cannot provide both wcs and scale")
+            if image is None:
+                raise ValueError("Cannot provide wcs when image == None")
+            if not image.bounds.isDefined():
+                raise ValueError("Cannot provide wcs when image has undefined bounds")
+            if not isinstance(wcs, galsim.BaseWCS()):
+                raise TypeError("wcs must be a BaseWCS instance")
+            image.wcs = wcs
+
         # Apply the offset, and possibly fix the centering for even-sized images
         prof = self._fix_center(image, scale, offset, use_true_center, reverse=False)
 
         # Make sure image is setup correctly
         image = prof._draw_setup_image(image,scale,wmult,add_to_image)
 
-        # SBProfile drawShoot command uses surface brightness normalization.  So if we
-        # want flux normalization, we need to scale the flux by scale^2
-        if normalization.lower() == "flux" or normalization.lower() == "f":
-            # Rather than change the flux of the GSObject though, we change the gain.
-            # gain is photons / ADU.  The photons are the given flux, and we want to 
-            # multiply the ADU by scale^2.  i.e. divide gain by scale^2.
-            gain /= image.scale**2
+        if use_true_center:
+            im_cen = image.bounds.trueCenter()
+        else:
+            im_cen = image.bounds.center()
+
+        # Surface brightness normalization requires scaling the flux value of each pixel
+        # by the area of the pixel.  We do this by changing the gain.
+        if normalization.lower() in ['surface brightness','sb']:
+            gain *= image.wcs.pixelArea(chip_pos=im_cen)
 
         # Convert the profile in sky coordinates to the profile in chip coordinates:
-        prof.applyDilation(1./image.scale)
-        gain *= image.scale**2
+        image.wcs.applyTo(prof, chip_pos=im_cen)
 
         try:
             image.added_flux = prof.SBProfile.drawShoot(
@@ -1060,6 +1115,10 @@ class GSObject(object):
         drawShoot functions, the (0,0) point will always be one of the actual pixel values.
         For even-sized images, it will be 1/2 pixel above and to the right of the true 
         center of the image.
+
+        Unlike for the draw and drawShoot commands, a wcs other than a simple pixel scale
+        is not allowed.  There is no wcs parameter here, and if the images have a non-trivial
+        wcs (and you don't override it with the scale parameter), a TypeError will be raised.
 
         @param re     If provided, this will be the real part of the k-space image.
                       If `re = None`, then an automatically-sized image will be created.
@@ -1106,6 +1165,7 @@ class GSObject(object):
             if im is None:
                 raise ValueError("im is None, but re is not None")
             if scale is None:
+                # This check will raise a TypeError if re.wcs or im.wcs is not a PixelScale
                 if re.scale != im.scale:
                     raise ValueError("re and im do not have the same input scale")
             if re.bounds.isDefined() or im.bounds.isDefined():
@@ -1118,7 +1178,8 @@ class GSObject(object):
 
         # Convert the profile in sky coordinates to the profile in chip coordinates:
         prof = self.copy()
-        prof.applyDilation(re.scale)
+        prof.applyDilation(re.scale)  # This is equivalent and possibly more intuitive.
+        #re.wcs.applyInverseTo(prof)
 
         # wmult isn't really used by drawK, but we need to provide it.
         wmult = 1.0
