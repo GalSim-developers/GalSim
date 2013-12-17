@@ -72,11 +72,13 @@ def test_gaussian():
     # python draw command: applyDilation(1/dx) with gain = 1/dx**2.  The latter is more
     # correct, but when we don't care about getting the added_flux return value correct,
     # this does the same thing.  For drawShoot, where getting the flux correct is more 
-    # important to get the number of photons correct, this version with applyExpansion 
-    # does not work.
+    # important, since we need to get the number of photons correct, this version with 
+    # applyExpansion does not work.
     mySBP.applyExpansion(1./dx)
     tot = mySBP.draw(myImg.image.view())
-    tot *= dx**2
+    tot *= dx**2  # This is the only place we test the added_flux output, so here we need
+                  # to correct for the fact that applyExpansion isn't quite accurate in 
+                  # this respect.
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,

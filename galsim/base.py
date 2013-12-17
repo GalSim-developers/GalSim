@@ -71,13 +71,14 @@ class GSObject(object):
         >>> conv.draw(im,normalization='sb')               # This uses the default GSParams.
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
-          File "/Library/Python/2.6/site-packages/galsim/base.py", line 579, in draw
-            self.SBProfile.draw(image.view(), gain, wmult)
+          File "galsim/base.py", line 885, in draw
+            image.added_flux = prof.SBProfile.draw(image.view(), gain, wmult)
         RuntimeError: SB Error: fourierDraw() requires an FFT that is too large, 6144
+        If you can handle the large FFT, you may update gsparams.maximum_fft_size.
         >>> big_fft_params = galsim.GSParams(maximum_fft_size = 10240)
         >>> conv = galsim.Convolve([gal,psf,pix],gsparams=big_fft_params)
         >>> conv.draw(im,normalization='sb')               # Now it works (but is slow!)
-        <galsim.Image object at 0x1037823c0>
+        <galsim.image.Image object at 0x101ea8e50>
         >>> im.write('high_res_sersic.fits')
 
     Note that for compound objects like Convolve or Add, not all gsparams can be changed when the
@@ -1178,8 +1179,13 @@ class GSObject(object):
 
         # Convert the profile in sky coordinates to the profile in chip coordinates:
         prof = self.copy()
-        prof.applyDilation(re.scale)  # This is equivalent and possibly more intuitive.
-        #re.wcs.applyInverseTo(prof)
+        # The scale in the wcs objects is the dk scale, not dx.  So the conversion to 
+        # chip coordinates needs to apply the inverse pixel scale.
+        # The following are all equivalent ways to do this:
+        #    re.wcs.applyInverseTo(prof)
+        #    galsim.PixelScale(1./re.scale).applyTo(prof)
+        #    prof.applyDilation(re.scale)
+        prof.applyDilation(re.scale)
 
         # wmult isn't really used by drawK, but we need to provide it.
         wmult = 1.0

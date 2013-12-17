@@ -184,11 +184,12 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # Finally generate a random field in Fourier space with the right PS
         noise_array = _generate_noise_from_rootps(self.getRNG(), rootps)
         # Add it to the image
-        image += galsim.Image(noise_array, scale=image.scale).image
+        image += galsim.Image(noise_array, scale=image.scale)
         return image
 
     def applyToView(self, image_view):
-        raise RuntimeError("CorrelatedNoise can only be applied to a regular image, not a View")
+        raise RuntimeError(
+            "CorrelatedNoise can only be applied to a regular Image, not an ImageView")
 
     def applyWhiteningTo(self, image):
         """Apply noise designed to whiten correlated Gaussian random noise in an input Image.

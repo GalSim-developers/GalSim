@@ -312,7 +312,7 @@ class Image(object):
     def scale(self): 
         if self.wcs:
             if not isinstance(self.wcs, galsim.PixelScale):
-                raise TypeError("image.wcs is not a simple PixelScale.  scale is undefined.")
+                raise TypeError("image.wcs is not a simple PixelScale; scale is undefined.")
             return self.wcs.scale
         else:
             return None
@@ -320,7 +320,7 @@ class Image(object):
     @scale.setter
     def scale(self, value):
         if self.wcs and not isinstance(self.wcs, galsim.PixelScale):
-            raise TypeError("image.wcs is not a simple PixelScale.  scale is undefined.")
+            raise TypeError("image.wcs is not a simple PixelScale; scale is undefined.")
         self.wcs = galsim.PixelScale(value)
 
     # Convenience functions
@@ -554,25 +554,25 @@ class Image(object):
 
 # These are essentially aliases for the regular Image with the correct dtype
 def ImageS(*args, **kwargs):
-    """Alias for galsim.Image(dtype=numpy.int16, ...)
+    """Alias for galsim.Image(..., dtype=numpy.int16)
     """
     kwargs['dtype'] = numpy.int16
     return Image(*args, **kwargs)
 
 def ImageI(*args, **kwargs):
-    """Alias for galsim.Image(dtype=numpy.int32, ...)
+    """Alias for galsim.Image(..., dtype=numpy.int32)
     """
     kwargs['dtype'] = numpy.int32
     return Image(*args, **kwargs)
 
 def ImageF(*args, **kwargs):
-    """Alias for galsim.Image(dtype=numpy.float32, ...)
+    """Alias for galsim.Image(..., dtype=numpy.float32)
     """
     kwargs['dtype'] = numpy.float32
     return Image(*args, **kwargs)
 
 def ImageD(*args, **kwargs):
-    """Alias for galsim.Image(dtype=numpy.float64, ...)
+    """Alias for galsim.Image(..., dtype=numpy.float64)
     """
     kwargs['dtype'] = numpy.float64
     return Image(*args, **kwargs)

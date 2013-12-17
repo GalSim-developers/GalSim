@@ -225,7 +225,7 @@ def main(argv):
                 # Note: You can also change it after the construction with im.scale=pixel_scale
                 image = galsim.ImageF(2*nx+2, ny, scale=pixel_scale)
 
-                # Assign the following two "ImageViews", fft_image and phot_image.
+                # Assign the following two Image "views", fft_image and phot_image.
                 # Using the syntax below, these are views into the larger image.  
                 # Changes/additions to the sub-images referenced by the views are automatically 
                 # reflected in the original image.
