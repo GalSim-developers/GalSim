@@ -66,7 +66,7 @@ struct PyPosition {
             ;
         // These are done separately to avoid a clang warning about 
         // "multiple unsequenced modifications to 'self' [-Wunsequenced]"
-        // Clange doesn't understand that bp::self isn't actually being modified here!  :)
+        // Clang doesn't understand that bp::self isn't actually being modified here!  :)
         pyPosition.def(bp::self += bp::self);
         pyPosition.def(bp::self -= bp::self);
         pyPosition.def(bp::self *= bp::other<T>());
