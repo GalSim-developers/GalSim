@@ -47,15 +47,11 @@ struct PyPosition {
 
     static void wrap(std::string const & suffix) {
         
-        bp::class_< Position<T> >(("Position" + suffix).c_str(), bp::no_init)
-            .def(bp::init< const Position<T> & >(bp::args("other")))
+        bp::class_< Position<T> > pyPosition(("Position" + suffix).c_str(), bp::no_init);
+        pyPosition.def(bp::init< const Position<T> & >(bp::args("other")))
             .def(bp::init<T,T>((bp::arg("x")=T(0), bp::arg("y")=T(0))))
             .def_readwrite("x", &Position<T>::x)
             .def_readwrite("y", &Position<T>::y)
-            .def(bp::self += bp::self)
-            .def(bp::self -= bp::self)
-            .def(bp::self *= bp::other<T>())
-            .def(bp::self /= bp::other<T>())
             .def(bp::self * bp::other<T>())
             .def(bp::self / bp::other<T>())
             .def(bp::other<T>() * bp::self)
@@ -68,6 +64,13 @@ struct PyPosition {
             .def("assign", &Position<T>::operator=, bp::return_self<>())
             .enable_pickling()
             ;
+        // These are done separately to avoid a clang warning about 
+        // "multiple unsequenced modifications to 'self' [-Wunsequenced]"
+        // Clange doesn't understand that bp::self isn't actually being modified here!  :)
+        pyPosition.def(bp::self += bp::self);
+        pyPosition.def(bp::self -= bp::self);
+        pyPosition.def(bp::self *= bp::other<T>());
+        pyPosition.def(bp::self /= bp::other<T>());
     }
 
 };
@@ -84,9 +87,6 @@ struct PyBounds {
             .def("isDefined", &Bounds<T>::isDefined)
             .def("center", &Bounds<T>::center)
             .def("trueCenter", &Bounds<T>::trueCenter)
-            .def(bp::self += bp::self)
-            .def(bp::self += bp::other< Position<T> >())
-            .def(bp::self += bp::other<T>())
             .def("addBorder", &Bounds<T>::addBorder)
             .def("expand", &Bounds<T>::expand, "grow by the given factor about center")
             .def(bp::self & bp::self)
@@ -103,6 +103,9 @@ struct PyBounds {
             .def("assign", &Bounds<T>::operator=, bp::return_self<>())
             .enable_pickling()
             ;
+        pyBounds.def(bp::self += bp::self);
+        pyBounds.def(bp::self += bp::other< Position<T> >());
+        pyBounds.def(bp::self += bp::other<T>());
         ADD_CORNER(getXMin, setXMin, xmin);
         ADD_CORNER(getXMax, setXMax, xmax);
         ADD_CORNER(getYMin, setYMin, ymin);
