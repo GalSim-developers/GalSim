@@ -293,3 +293,107 @@ class PixelScale(BaseWCS):
         return not self.__eq__(other)
  
 
+class ShearWCS(BaseWCS):
+    """This WCS is a uniformly sheared coordinate system.
+
+    The conversion functions are:
+
+        u = (x + g1 x + g2 y) * scale / sqrt(1-g1**2-g2**2)
+        v = (y - g1 y + g2 x) * scale / sqrt(1-g1**2-g2**2)
+
+    Initialization
+    --------------
+    A ShearWCS object is initialized with the command:
+
+        wcs = galsim.ShearWCS(scale, shear)
+
+    @param scale        The pixel scale, typically in units of arcsec/pixel.
+    @param shear        The shear, which should be a galsim.Shear instance.
+    """
+    _req_params = { "scale" : float, "shear" : galsim.Shear }
+    _opt_params = {}
+    _single_params = []
+    _takes_rng = False
+    _takes_logger = False
+
+    def __init__(self, scale, shear):
+        self._is_variable = False
+        self.scale = scale
+        self.shear = shear
+
+    def _posToWorld(self, image_pos):
+        if not(isinstance(image_pos, galsim.PositionD) or isinstance(image_pos, galsim.PositionI)):
+            raise TypeError("toWorld requires a PositionD or PositionI argument")
+        import numpy
+        g1 = self.shear.g1
+        g2 = self.shear.g2
+        gsq = g1*g1+g2*g2
+        u = image_pos.x * (1.+g1) + image_pos.y * g2
+        v = image_pos.y * (1.-g1) + image_pos.x * g2
+        factor = self.scale / numpy.sqrt(1.-gsq)
+        u *= factor
+        v *= factor
+        return galsim.PositionD(u,v)
+
+    def _posToImage(self, world_pos):
+        if not isinstance(world_pos, galsim.PositionD):
+            raise TypeError("toImage requires a PositionD argument")
+        # The inverse transformation is
+        # x = (u - g1 u - g2 v) / scale / sqrt(1-g1**2-g2**2)
+        # y = (v + g1 v - g2 u) / scale / sqrt(1-g1**2-g2**2)
+        import numpy
+        g1 = self.shear.g1
+        g2 = self.shear.g2
+        gsq = g1*g1+g2*g2
+        x = world_pos.x * (1.-g1) - world_pos.y * g2
+        y = world_pos.y * (1.+g1) - world_pos.x * g2
+        factor = 1. / (self.scale * numpy.sqrt(1.-gsq))
+        x *= factor
+        y *= factor
+        return galsim.PositionD(x,y)
+
+    def _profileToWorld(self, image_profile):
+        world_profile = image_profile.createDilated(self.scale)
+        world_profile.applyShear(self.shear)
+        return world_profile
+
+    def _profileToImage(self, world_profile):
+        image_profile = world_profile.createDilated(1./self.scale)
+        image_profile.applyShear(-self.shear)
+        return image_profile
+
+    def _pixelArea(self):
+        return self.scale*self.scale
+
+    def _minScale(self):
+        # min stretch is (1-|g|) / sqrt(1-|g|^2)
+        import numpy
+        g1 = self.shear.g1
+        g2 = self.shear.g2
+        g = numpy.sqrt(g1*g1+g2*g2)
+        return self.scale / numpy.sqrt(1.+g) 
+
+    def _maxScale(self):
+        # max stretch is (1+|g|) / sqrt(1-|g|^2)
+        import numpy
+        g1 = self.shear.g1
+        g2 = self.shear.g2
+        g = numpy.sqrt(g1*g1+g2*g2)
+        return self.scale / numpy.sqrt(1.-g)
+
+    def _toAffine(self):
+        raise NotImplementedError("Waiting until AffineTransform is defined")
+
+    def copy(self):
+        return ShearWCS(self.scale, self.shear)
+
+    def __eq__(self, other):
+        if not isinstance(other, ShearWCS): 
+            return False
+        else: 
+            return self.scale == other.scale and self.shear == other.shear
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+

@@ -39,7 +39,7 @@ from interpolatedimage import InterpolatedImage
 from compound import Add, Convolve, Deconvolve, AutoConvolve, AutoCorrelate
 
 from shear import Shear
-from wcs import BaseWCS, PixelScale
+from wcs import BaseWCS, PixelScale, ShearWCS
 from lensing_ps import PowerSpectrum
 from nfw_halo import NFWHalo, Cosmology
 from catalog import Catalog, Dict
