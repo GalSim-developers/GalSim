@@ -166,8 +166,8 @@ image :
 
     random_seed : 24783923
 
-    # In demo9, we said that you can specify either image_pos or sky_pos to 
-    # place each postage stamp on the full image.  If you don't specify either one, then the 
+    # In demo9, we said that you can specify either image_pos or world_pos to place
+    # each postage stamp on the full image.  If you don't specify either one, then the 
     # default is random x and y within the full image.
     #
     # image_pos : 

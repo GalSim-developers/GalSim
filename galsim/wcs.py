@@ -20,6 +20,7 @@
 All the classes to implement different WCS transformations for GalSim Images.
 """
 
+import galsim
 
 class BaseWCS(object):
     """The base class for all other kinds of WCS transformations.  It doesn't really
@@ -28,10 +29,205 @@ class BaseWCS(object):
     def __init__(self):
         raise TypeError("BaseWCS is an abstract base class.  It cannot be instantiated.")
 
+        # All derived classes must define the following:
+        #
+        #     _is_variable     boolean variable declaring whether the pixel is variable
+        #     _posToWorld      function converting image_pos to world_pos
+        #     _posToImage      function converting world_pos to image_pos
+        #     copy
+        #     __eq__
+        #     __ne__
+        #
+        # Non-variable WCS classes must define the following:
+        #
+        #     _profileToWorld  function converting image_profile to world_profile
+        #     _profileToImage  function converting world_profile to image_profile
+        #     _pixelArea       function returning the pixel area
+        #     _minScale        function returning the minimum linear pixel scale
+        #     _maxScale        function returning the maximum linear pixel scale
+        #     _toAffine        function returning an equivalent AffineTransform
+        #
+        # Variable WCS classes must define the following:
+        #
+        #     _local           function returning a non-variable WCS at a given location
+        #     _atOrigin        function returning a WCS with a given new origin point
+
+
+    def toWorld(self, arg, **kwargs):
+        """Convert from image coordinates to world coordinates
+
+        There are essentially two overloaded versions of this function here.
+
+        1. The first converts a position from image coordinates to world coordinates.
+           The argument may be either a PositionD or PositionI argument.  It returns
+           the corresponding position in world coordinates as a PositionD if the WCS 
+           is linear, or a CelestialCoord if it is in terms of RA/Dec.
+
+               world_pos = wcs.toWorld(image_pos)
+
+        2. The second converts a surface brightness profile (a GSObject) from image 
+           coordinates to world coordinates, returning the profile in world coordinates
+           as a new GSObject.  For variable WCS transforms, you must provide either
+           image_pos or world_pos to say where the profile is located so the right
+           transformation can be performed.
+
+               world_profile = wcs.toWorld(image_profile, image_pos=None, world_pos=None)
+        """
+        if isinstance(arg, galsim.GSObject):
+            if self.isVariable():
+                return self.local(**kwargs)._profileToWorld(arg)
+            else:
+                return self._profileToWorld(arg)
+        else:
+            return self._posToWorld(arg)
+
+    def toImage(self, arg, **kwargs):
+        """Convert from world coordinates to image coordinates
+
+        There are essentially two overloaded versions of this function here.
+
+        1. The first converts a position from world coordinates to image coordinates.
+           If the WCS is linear, the argument may be either a PositionD or PositionI 
+           argument.  If the WCS is defined on the sphere in terms of RA/Dec, then 
+           the argument must be a CelestialCoord.  It returns the corresponding 
+           position in image coordinates as a PositionD.
+
+               image_pos = wcs.toImage(world_pos)
+
+        2. The second converts a surface brightness profile (a GSObject) from world 
+           coordinates to image coordinates, returning the profile in image coordinates
+           as a new GSObject.  For variable WCS transforms, you must provide either
+           image_pos or world_pos to say where the profile is located so the right
+           transformation can be performed.
+
+               image_profile = wcs.toImage(world_profile, image_pos=None, world_pos=None)
+        """
+        if isinstance(arg, galsim.GSObject):
+            if self.isVariable():
+                return self.local(**kwargs)._profileToImage(arg)
+            else:
+                return self._profileToImage(arg)
+        else:
+            return self._posToImage(arg)
+
+    def pixelArea(self, image_pos=None, world_pos=None):
+        """Return the area of a pixel in arcsec**2 (or in whatever units you are using for 
+        world coordinates).
+
+        For variable WCS transforms, you must provide either image_pos or world_pos
+        to say where the pixel is located.
+
+        @param image_pos    The image coordinate position (for variable WCS objects)
+        @param world_pos    The world coordinate position (for variable WCS objects)
+        @returns            The pixel area in arcsec**2
+        """
+        return self.local(image_pos, world_pos)._pixelArea()
+
+    def minLinearScale(self, image_pos=None, world_pos=None):
+        """Return the minimum linear scale of the transformation in any direction.
+
+        This is basically the semi-minor axis of the Jacobian.  Sometimes you need a
+        linear scale size for some calculation.  This function returns the smallest
+        scale in any direction.  The function maxLinearScale returns the largest.
+
+        For variable WCS transforms, you must provide either image_pos or world_pos
+        to say where the pixel is located.
+
+        @param image_pos    The image coordinate position (for variable WCS objects)
+        @param world_pos    The world coordinate position (for variable WCS objects)
+        @returns            The minimum pixel area in any direction in arcsec
+        """
+        return self.local(image_pos, world_pos)._minScale()
+
+    def maxLinearScale(self, image_pos=None, world_pos=None):
+        """Return the maximum linear scale of the transformation in any direction.
+
+        This is basically the semi-major axis of the Jacobian.  Sometimes you need a
+        linear scale size for some calculation.  This function returns the largest
+        scale in any direction.  The function minLinearScale returns the smallest.
+
+        For variable WCS transforms, you must provide either image_pos or world_pos
+        to say where the pixel is located.
+
+        @param image_pos    The image coordinate position (for variable WCS objects)
+        @param world_pos    The world coordinate position (for variable WCS objects)
+        @returns            The maximum pixel area in any direction in arcsec
+        """
+        return self.local(image_pos, world_pos)._maxScale()
+
+    def isVariable(self):
+        """Return whether the WCS solution has a pixel that varies in either area
+        or shape across the field.
+        """
+        return self._is_variable
+
+    def local(self, image_pos=None, world_pos=None):
+        """Return the local linear approximation of the WCS at a given point.
+
+        @param image_pos    The image coordinate position (for variable WCS objects)
+        @param world_pos    The world coordinate position (for variable WCS objects)
+        @returns local_wcs  A WCS object with wcs.isVariable() == False
+        """
+        if image_pos and world_pos:
+            raise TypeError("Only one of image_pos or world_pos may be provided")
+        if self.isVariable():
+            return self._local(image_pos, world_pos)
+        else:
+            return self
+
+    def localAffine(self, image_pos=None, world_pos=None):
+        """Return the local AffineTransform of the WCS at a given point.
+
+        This is basically the same as wcs.local(...), but the return value is 
+        guaranteed to be an AffineTransform, which has a few extra methods
+        that are useful in some situations.  e.g. you can directly access
+        the jacobian matrix to do calculations based on that. 
+        
+        If you do not need the extra functionality, then you should use local
+        instead, since it may be more efficient.
+
+        @param image_pos    The image coordinate position (for variable WCS objects)
+        @param world_pos    The world coordinate position (for variable WCS objects)
+        @returns local_wcs  An AffineTransform object
+        """
+        return self.local(image_pos, world_pos)._toAffine()
+
+    def atNewOrigin(self, new_origin):
+        """Returns a new WCS object that has the origin point moved to a new location.
+
+        If you change the definition of the origin of an image with setOrigin or 
+        setCenter, we need to adjust the WCS to use the same new defintion for what
+        (x,y) means.  The way we do this is to make a new wcs using the new value 
+        for what the image means by (x,y) = (0,0).
+
+        The new_origin argument is the image position in the current WCS that you
+        want to be defined as (0,0) in the returned WCS.
+
+        The following code should help make clear what we mean by this:
+
+            world_cen = wcs.toWorld(image_cen)
+            world_pos = wcs.toWorld(image_pos)
+
+            new_wcs = wcs.atNewOrigin(image_cen)
+            world_cen2 = new_wcs.toWorld(PositionD(0.,0.))
+            world_pos2 = new_wcs.toWorld(image_pos - image_cen)
+
+            assert world_cen == world_cen2
+            assert world_pos == world_pos2
+
+        Note: In actual operations, the above asserts might fail due to numerical
+        rounding differences.  But the point is that they should be essentially the
+        same positions in world coordinates.
+
+        @param new_origin   The image coordinate that you want to become (0,0)
+        @returns new_wcs    A new WCS with that position as the origin.
+        """
+        return self._atOrigin(new_origin)
+
 
 class PixelScale(BaseWCS):
     """This is the simplest possible WCS transformation.  It only involves a unit conversion
-    from pixels to arcsec (or whatever units you want to take for your sky coordinate system).
+    from pixels to arcsec (or whatever units you want to take for your world coordinate system).
 
     The conversion functions are:
 
@@ -53,105 +249,47 @@ class PixelScale(BaseWCS):
     _takes_logger = False
 
     def __init__(self, scale):
+        self._is_variable = False
         self.scale = scale
 
-    def toSky(self, chip_pos):
-        """Convert from chip coordinates to sky coordinates
+    def _posToWorld(self, image_pos):
+        if not(isinstance(image_pos, galsim.PositionD) or isinstance(image_pos, galsim.PositionI)):
+            raise TypeError("toWorld requires a PositionD or PositionI argument")
+        return image_pos * self.scale
 
-        @param chip_pos     The chip coordinates as a galsim.PositionD
-        @returns sky_pos    The sky coordinates as a galsim.PositionD
-        """
-        return chip_pos * self.scale
+    def _posToImage(self, world_pos):
+        if not isinstance(world_pos, galsim.PositionD):
+            raise TypeError("toImage requires a PositionD argument")
+        return world_pos / self.scale
 
-    def toChip(self, sky_pos):
-        """Convert from sky coordinates to chip coordinates
+    def _profileToWorld(self, image_profile):
+        return image_profile.createDilated(self.scale)
 
-        @param sky_pos      The sky coordinates as a galsim.PositionD
-        @returns chip_pos   The chip coordinates as a galsim.PositionD
-        """
-        return sky_pos / self.scale
+    def _profileToImage(self, world_profile):
+        return world_profile.createDilated(1./self.scale)
 
-    def pixelArea(self, chip_pos=None, sky_pos=None):
-        """Return the area of a pixel in arcsec**2 (or in whatever units you are using for 
-        sky coordinates).
+    def _pixelArea(self):
+        return self.scale*self.scale
 
-        For compatibility with other WCS classes, this takes chip_pos or sky_pos, but
-        both are ignored by the PixelScale version of this function.
-
-        @param sky_pos      The sky coordinates as a galsim.PositionD (ignored)
-        @param chip_pos     The chip coordinates as a galsim.PositionD (ignored)
-        @returns            The pixel area in arcsec**2
-        """
-        return self.scale**2
-
-    def linearScale(self, chip_pos=None, sky_pos=None):
-        """Return a reasonable estimate of the linear scale of the transformation
-
-        I'm not sure yet what this really means for wcs's other than PixelScale, 
-        but there are some places where we need a linear scale factor, so this is it.
-        I think for other WCS types, this will just be the sqrt of the pixelArea().
-
-        For compatibility with other WCS classes, this takes chip_pos or sky_pos, but
-        both are ignored by the PixelScale version of this function.
-
-        @param sky_pos      The sky coordinates as a galsim.PositionD (ignored)
-        @param chip_pos     The chip coordinates as a galsim.PositionD (ignored)
-        @returns            The pixel area in arcsec**2
-        """
+    def _minScale(self):
         return self.scale
 
-    def applyTo(self, profile, chip_pos=None, sky_pos=None):
-        """Apply the appropriate transformation to convert a profile in sky coordinates
-        to the corresponding profile in chip coordinates.
+    def _maxScale(self):
+        return self.scale
 
-        For compatibility with other WCS classes, this takes chip_pos or sky_pos, but
-        both are ignored by the PixelScale version of this function.
-
-        @param profile      The profile to be converted from sky coordinates to chip coordinates.
-        @param sky_pos      The sky coordinates as a galsim.PositionD (ignored)
-        @param chip_pos     The chip coordinates as a galsim.PositionD (ignored)
-        """
-        profile.applyDilation(1./self.scale)
-
-    def applyInverseTo(self, profile, chip_pos=None, sky_pos=None):
-        """Apply the appropriate transformation to convert a profile in chip coordinates
-        back to the corresponding profile in sky coordinates.
-
-        For compatibility with other WCS classes, this takes chip_pos or sky_pos, but
-        both are ignored by the PixelScale version of this function.
-
-        @param profile      The profile to be converted from chip coordinates to sky coordinates.
-        @param sky_pos      The sky coordinates as a galsim.PositionD (ignored)
-        @param chip_pos     The chip coordinates as a galsim.PositionD (ignored)
-        """
-        profile.applyDilation(self.scale)
-
-    def isVariable(self):
-        """Return whether this WCS solution has a variable function."""
-        return False
-
-    def local(self, chip_pos=None, sky_pos=None):
-        """Return the local linear approximation of this WCS at a given point.
-
-        Since a PixelScale is already linear, this just returns itself.
-
-        For compatibility with other WCS classes, this takes chip_pos or sky_pos, but
-        both are ignored by the PixelScale version of this function.
-
-        @param sky_pos      The sky coordinates as a galsim.PositionD (ignored)
-        @param chip_pos     The chip coordinates as a galsim.PositionD (ignored)
-        @returns local_wcs  A WCS object with wcs.isVariable() == False
-        """
-        return self
+    def _toAffine(self):
+        raise NotImplementedError("Waiting until AffineTransform is defined")
 
     def copy(self):
         return PixelScale(self.scale)
 
     def __eq__(self, other):
-        if not isinstance(other, PixelScale): return False
-        else: return self.scale == other.scale
+        if not isinstance(other, PixelScale): 
+            return False
+        else: 
+            return self.scale == other.scale
 
     def __ne__(self, other):
         return not self.__eq__(other)
-
+ 
 

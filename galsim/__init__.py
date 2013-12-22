@@ -37,9 +37,9 @@ from optics import OpticalPSF
 from shapelet import Shapelet
 from interpolatedimage import InterpolatedImage
 from compound import Add, Convolve, Deconvolve, AutoConvolve, AutoCorrelate
-from wcs import BaseWCS, PixelScale
 
 from shear import Shear
+from wcs import BaseWCS, PixelScale
 from lensing_ps import PowerSpectrum
 from nfw_halo import NFWHalo, Cosmology
 from catalog import Catalog, Dict

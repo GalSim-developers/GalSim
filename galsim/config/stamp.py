@@ -346,37 +346,37 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             if ysize: config['stamp_ysize'] = ysize
 
             # Determine where this object is going to go:
-            if 'image_pos' in config['image'] and 'sky_pos' in config['image']:
+            if 'image_pos' in config['image'] and 'world_pos' in config['image']:
                 image_pos = galsim.config.ParseValue(
                     config['image'], 'image_pos', config, galsim.PositionD)[0]
-                sky_pos = galsim.config.ParseValue(
-                    config['image'], 'sky_pos', config, galsim.PositionD)[0]
+                world_pos = galsim.config.ParseValue(
+                    config['image'], 'world_pos', config, galsim.PositionD)[0]
 
             elif 'image_pos' in config['image']:
                 image_pos = galsim.config.ParseValue(
                     config['image'], 'image_pos', config, galsim.PositionD)[0]
                 # Calculate and save the position relative to the image center
-                sky_pos = (image_pos - config['image_center']) * config['pixel_scale']
+                world_pos = (image_pos - config['image_center']) * config['pixel_scale']
 
-            elif 'sky_pos' in config['image']:
-                sky_pos = galsim.config.ParseValue(
-                    config['image'], 'sky_pos', config, galsim.PositionD)[0]
+            elif 'world_pos' in config['image']:
+                world_pos = galsim.config.ParseValue(
+                    config['image'], 'world_pos', config, galsim.PositionD)[0]
                 # Calculate and save the position relative to the image center
-                image_pos = (sky_pos / config['pixel_scale']) + config['image_center']
+                image_pos = (world_pos / config['pixel_scale']) + config['image_center']
 
             else:
                 image_pos = None
-                sky_pos = None
+                world_pos = None
 
             # Save these values for possible use in Evals or other modules
             if image_pos is not None:
                 config['image_pos'] = image_pos
                 if logger:
                     logger.debug('obj %d: image_pos = %s',obj_num,str(config['image_pos']))
-            if sky_pos is not None:
-                config['sky_pos'] = sky_pos
+            if world_pos is not None:
+                config['world_pos'] = world_pos
                 if logger:
-                    logger.debug('obj %d: sky_pos = %s',obj_num,str(config['sky_pos']))
+                    logger.debug('obj %d: world_pos = %s',obj_num,str(config['world_pos']))
 
             if image_pos is not None:
                 import math

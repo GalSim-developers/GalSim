@@ -1,7 +1,7 @@
 Changes from v1.0 to v1.1:
 --------------------------
 
-API changes:
+Python layer API changes:
 
 * Changed the name of the `dx` parameter in the `draw`, `drawShoot`, `drawK`
   methods of `GSObject` and the constructors of `InterpolatedImage` and
@@ -44,6 +44,7 @@ API changes:
 
 Updates to config options:
 
+* Changed the name of sky_pos to world_pos. (Issue #364)
 * Added a new image.retry_failures item that can be set so that if the 
   construction of a GSObject fails for any reason, you can ask it to retry.
   An example of this functionality has been added to demo8. (Issue #482)

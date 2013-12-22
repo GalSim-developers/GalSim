@@ -342,7 +342,9 @@ class InterpolatedImage(GSObject):
         if noise_pad_size:
             import math
             # Convert from arcsec to pixels according to the wcs
-            scale = self.image.wcs.linearScale(chip_pos=im_cen)
+            # Use the minimum scale, since we want to make sure noise_pad_size is
+            # as large as we need in any direction.
+            scale = self.image.wcs.minLinearScale(image_pos=im_cen)
             noise_pad_size = int(math.ceil(noise_pad_size / scale))
             # Round up to a good size for doing FFTs
             noise_pad_size = goodFFTSize(noise_pad_size)
@@ -411,8 +413,9 @@ class InterpolatedImage(GSObject):
         # Initialize the SBProfile
         GSObject.__init__(self, sbinterpolatedimage)
 
-        # Bring the profile from chip coordinates into sky coordinates
-        self.image.wcs.applyInverseTo(self, chip_pos=im_cen)
+        # Bring the profile from image coordinates into world coordinates
+        prof = self.image.wcs.toWorld(self, image_pos=im_cen)
+        GSObject.__init__(self, prof)
 
         # If the user specified a flux, then set to that flux value.
         if flux != None:
@@ -420,13 +423,13 @@ class InterpolatedImage(GSObject):
         # If the user specified a surface brightness normalization for the input Image, then
         # need to rescale flux by the pixel area to get proper normalization.
         elif normalization.lower() in ['surface brightness','sb']:
-            self.scaleFlux(self.image.wcs.pixelArea(chip_pos=im_cen))
+            self.scaleFlux(self.image.wcs.pixelArea(image_pos=im_cen))
 
         # Apply the offset, and possibly fix the centering for even-sized images
         # Note reverse=True, since we want to fix the center in the opposite sense of what the 
         # draw function does.
         prof = self._fix_center(self.image, None, offset, use_true_center, reverse=True)
-        GSObject.__init__(self, prof.SBProfile)
+        GSObject.__init__(self, prof)
 
 
     def buildNoisePadImage(self, noise_pad_size, noise_pad, rng):

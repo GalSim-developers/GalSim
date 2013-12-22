@@ -382,9 +382,9 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
         raise AttributeError(
             "Both (or neither) of image.xsize and image.ysize need to be defined  and != 0.")
 
-    if 'sky_pos' in config['image']:
+    if 'world_pos' in config['image']:
         config['image']['image_pos'] = (0,0)
-        # We allow sky_pos to be in config[image], but we don't want it to lead to a final_shift
+        # We allow world_pos to be in config[image], but we don't want it to lead to a final_shift
         # in BuildSingleStamp.  The easiest way to do this is to set image_pos to (0,0).
 
     pixel_scale = params.get('pixel_scale',1.0)
@@ -704,7 +704,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         logger.debug('image %d: nobj = %d',image_num,nobjects)
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc', 'retry_failures',
-               'image_pos', 'sky_pos', 'n_photons', 'wmult', 'offset',
+               'image_pos', 'world_pos', 'n_photons', 'wmult', 'offset',
                'stamp_size', 'stamp_xsize', 'stamp_ysize', 'gsparams', 'nobjects' ]
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 
             'pixel_scale' : float , 'nproc' : int , 'index_convention' : str,
@@ -769,10 +769,10 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         rng = galsim.BaseDeviate()
     config['rng'] = rng
 
-    if 'image_pos' in config['image'] and 'sky_pos' in config['image']:
-        raise AttributeError("Both image_pos and sky_pos specified for Scattered image.")
+    if 'image_pos' in config['image'] and 'world_pos' in config['image']:
+        raise AttributeError("Both image_pos and world_pos specified for Scattered image.")
 
-    if 'image_pos' not in config['image'] and 'sky_pos' not in config['image']:
+    if 'image_pos' not in config['image'] and 'world_pos' not in config['image']:
         xmin = config['image_origin'].x
         xmax = xmin + full_xsize-1
         ymin = config['image_origin'].y

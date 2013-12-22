@@ -16,7 +16,7 @@
 
 "#" : "New features introduced in this demo:",
 
-"#" : " - obj type : InterpolatedImage(image, dx) ",
+"#" : " - obj type : InterpolatedImage(image, scale) ",
 "#" : " - obj type : RealGalaxy(..., whiten)",
 "#" : " - float_value type : RandomDistribution(function, x_min, x_max) ",
 "#" : " - pix type : None ",
@@ -44,7 +44,7 @@
     "#" : "This file is a real SDSS PSF, which means pixel scale of 0.396 arcsec.  However, the ",
     "#" : "typical seeing is 1.2 arcsec and we want to simulate better seeing, so we will just ",
     "#" : "tell GalSim that the pixel scale is 0.2 arcsec to match our image : pixel_scale below.",
-    "dx" : 0.2
+    "scale" : 0.2
 },
  
 "#" : "Define the pixel profile",
@@ -160,8 +160,8 @@
     "#" : "The default is 1.",
     "index_convention" : 0,
 
-    "#" : "In demo9, we said that you can specify either stamp_image_pos or stamp_sky_pos to",
-    "#" : "place each postage stamp on the full image.  If you don't specify either one, then the",
+    "#" : "In demo9, we said that you can specify either image_pos or world_pos to place",
+    "#" : "each postage stamp on the full image.  If you don't specify either one, then the",
     "#" : "default is random x and y within the full image.",
 
     "#" : "stamp_image_pos : ",

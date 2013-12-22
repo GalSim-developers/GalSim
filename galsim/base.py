@@ -684,7 +684,7 @@ class GSObject(object):
                     im_cen = image.bounds.trueCenter()
                 else:
                     im_cen = image.bounds.center()
-                wcs = image.wcs.local(chip_pos=im_cen)
+                wcs = image.wcs.local(image_pos=im_cen)
             else:
                 wcs = galsim.PixelScale(self.SBProfile.nyquistDx())
         elif scale <= 0:
@@ -720,7 +720,7 @@ class GSObject(object):
         if dx == 0. and dy == 0.:
             return self.copy()
         else:
-            return self.createShifted(wcs.toSky(galsim.PositionD(dx,dy)))
+            return self.createShifted(wcs.toWorld(galsim.PositionD(dx,dy)))
 
 
     def draw(self, image=None, scale=None, wcs=None, gain=1., wmult=1., normalization="flux",
@@ -878,10 +878,10 @@ class GSObject(object):
         # Surface brightness normalization requires scaling the flux value of each pixel
         # by the area of the pixel.  We do this by changing the gain.
         if normalization.lower() in ['surface brightness','sb']:
-            gain *= image.wcs.pixelArea(chip_pos=im_cen)
+            gain *= image.wcs.pixelArea(image_pos=im_cen)
 
-        # Convert the profile in sky coordinates to the profile in chip coordinates:
-        image.wcs.applyTo(prof, chip_pos=im_cen)
+        # Convert the profile in world coordinates to the profile in image coordinates:
+        prof = image.wcs.toImage(prof, image_pos=im_cen)
 
         image.added_flux = prof.SBProfile.draw(image.image.view(), gain, wmult)
 
@@ -1088,10 +1088,10 @@ class GSObject(object):
         # Surface brightness normalization requires scaling the flux value of each pixel
         # by the area of the pixel.  We do this by changing the gain.
         if normalization.lower() in ['surface brightness','sb']:
-            gain *= image.wcs.pixelArea(chip_pos=im_cen)
+            gain *= image.wcs.pixelArea(image_pos=im_cen)
 
-        # Convert the profile in sky coordinates to the profile in chip coordinates:
-        image.wcs.applyTo(prof, chip_pos=im_cen)
+        # Convert the profile in world coordinates to the profile in chip coordinates:
+        prof = image.wcs.toImage(prof, image_pos=im_cen)
 
         try:
             image.added_flux = prof.SBProfile.drawShoot(
@@ -1177,15 +1177,14 @@ class GSObject(object):
         re = self._draw_setup_image(re,scale,1.0,add_to_image,scale_is_dk=True)
         im = self._draw_setup_image(im,scale,1.0,add_to_image,scale_is_dk=True)
 
-        # Convert the profile in sky coordinates to the profile in chip coordinates:
-        prof = self.copy()
+        # Convert the profile in world coordinates to the profile in image coordinates:
         # The scale in the wcs objects is the dk scale, not dx.  So the conversion to 
-        # chip coordinates needs to apply the inverse pixel scale.
+        # image coordinates needs to apply the inverse pixel scale.
         # The following are all equivalent ways to do this:
-        #    re.wcs.applyInverseTo(prof)
-        #    galsim.PixelScale(1./re.scale).applyTo(prof)
-        #    prof.applyDilation(re.scale)
-        prof.applyDilation(re.scale)
+        #    re.wcs.ToSky(prof)
+        #    galsim.PixelScale(1./re.scale).toImage(prof)
+        #    prof.createDilated(re.scale)
+        prof = self.createDilated(re.scale)
 
         # wmult isn't really used by drawK, but we need to provide it.
         wmult = 1.0
