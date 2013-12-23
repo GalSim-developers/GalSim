@@ -31,7 +31,7 @@ class BaseWCS(object):
 
         # All derived classes must define the following:
         #
-        #     _is_variable     boolean variable declaring whether the pixel is variable
+        #     _is_local        boolean variable declaring whether the WCS is local, linear
         #     _posToWorld      function converting image_pos to world_pos
         #     _posToImage      function converting world_pos to image_pos
         #     copy
@@ -47,9 +47,11 @@ class BaseWCS(object):
         #     _maxScale        function returning the maximum linear pixel scale
         #     _toAffine        function returning an equivalent AffineTransform
         #
-        # Variable WCS classes must define the following:
+        # Variable WCS classes and those where (x,y) = (0,0) is not (necessarily) at
+        # (u,v) = (0,0) must define the following:
         #
         #     _local           function returning a non-variable WCS at a given location
+        #                      where (x,y) = (0,0) is at (u,v) = (0,)
 
 
     def toWorld(self, arg, **kwargs):
@@ -73,10 +75,7 @@ class BaseWCS(object):
                world_profile = wcs.toWorld(image_profile, image_pos=None, world_pos=None)
         """
         if isinstance(arg, galsim.GSObject):
-            if self.isVariable():
-                return self.local(**kwargs)._profileToWorld(arg)
-            else:
-                return self._profileToWorld(arg)
+            return self.local(**kwargs)._profileToWorld(arg)
         else:
             return self._posToWorld(arg)
 
@@ -102,10 +101,7 @@ class BaseWCS(object):
                image_profile = wcs.toImage(world_profile, image_pos=None, world_pos=None)
         """
         if isinstance(arg, galsim.GSObject):
-            if self.isVariable():
-                return self.local(**kwargs)._profileToImage(arg)
-            else:
-                return self._profileToImage(arg)
+            return self.local(**kwargs)._profileToImage(arg)
         else:
             return self._posToImage(arg)
 
@@ -154,25 +150,28 @@ class BaseWCS(object):
         """
         return self.local(image_pos, world_pos)._maxScale()
 
-    def isVariable(self):
-        """Return whether the WCS solution has a pixel that varies in either area
-        or shape across the field.
+    def isLocal(self):
+        """Return whether the WCS solution is a local, linear approximation.
+        
+        There are two requirements for this to be true:
+            1. The image position (x,y) = (0,0) is at the world position (u,v) = (0,0).
+            2. The pixel area and shape do not vary with position.
         """
-        return self._is_variable
+        return self._is_local
 
     def local(self, image_pos=None, world_pos=None):
         """Return the local linear approximation of the WCS at a given point.
 
         @param image_pos    The image coordinate position (for variable WCS objects)
         @param world_pos    The world coordinate position (for variable WCS objects)
-        @returns local_wcs  A WCS object with wcs.isVariable() == False
+        @returns local_wcs  A WCS object with wcs.isLocal() == True
         """
         if image_pos and world_pos:
             raise TypeError("Only one of image_pos or world_pos may be provided")
-        if self.isVariable():
-            return self._local(image_pos, world_pos)
-        else:
+        if self._is_local:
             return self
+        else:
+            return self._local(image_pos, world_pos)
 
     def localAffine(self, image_pos=None, world_pos=None):
         """Return the local AffineTransform of the WCS at a given point.
@@ -215,7 +214,7 @@ class PixelScale(BaseWCS):
     _takes_logger = False
 
     def __init__(self, scale):
-        self._is_variable = False
+        self._is_local = True
         self._scale = scale
 
     # Help make sure PixelScale is read-only.
@@ -225,12 +224,12 @@ class PixelScale(BaseWCS):
     def _posToWorld(self, image_pos):
         if not(isinstance(image_pos, galsim.PositionD) or isinstance(image_pos, galsim.PositionI)):
             raise TypeError("toWorld requires a PositionD or PositionI argument")
-        return image_pos * self._scale
+        return galsim.PositionD(image_pos.x * self._scale, image_pos.y * self._scale)
 
     def _posToImage(self, world_pos):
         if not isinstance(world_pos, galsim.PositionD):
             raise TypeError("toImage requires a PositionD argument")
-        return world_pos / self._scale
+        return galsim.PositionD(world_pos.x / self._scale, world_pos.y / self._scale)
 
     def _profileToWorld(self, image_profile):
         return image_profile.createDilated(self._scale)
@@ -288,7 +287,7 @@ class ShearWCS(BaseWCS):
 
     def __init__(self, scale, shear):
         import numpy
-        self._is_variable = False
+        self._is_local = True
         self._scale = scale
         self._shear = shear
         self._g1 = shear.g1
@@ -402,7 +401,6 @@ class AffineTransform(BaseWCS):
     _takes_logger = False
 
     def __init__(self, dudx, dudy, dvdx, dvdy, image_origin=None, world_origin=None):
-        self._is_variable = False
         self._dudx = dudx
         self._dudy = dudy
         self._dvdx = dvdx
@@ -420,6 +418,7 @@ class AffineTransform(BaseWCS):
         else:
             self._u0 = world_origin.x
             self._v0 = world_origin.y
+        self._is_local = self._x0 == 0. and self._y0 == 0. and self._u0 == 0. and self._v0 == 0.
 
     @property
     def dudx(self): return self._dudx
@@ -429,6 +428,7 @@ class AffineTransform(BaseWCS):
     def dvdx(self): return self._dvdx
     @property
     def dvdy(self): return self._dvdy
+
     @property
     def image_origin(self): return galsim.PositionD(self._x0, self._y0)
     @property
@@ -479,10 +479,22 @@ class AffineTransform(BaseWCS):
     def _toAffine(self):
         return self
 
+    def _local(self, image_pos, world_pos):
+        return self.atOrigin(image_origin=galsim.PositionD(0.,0.),
+                             world_origin=galsim.PositionD(0.,0.))
+
     def copy(self):
         return AffineTransform(self._dudx, self._dudy, self._dvdx, self._dvdy, 
-                               galsim.PositionD(self._x0, self._y0),
-                               galsim.PositionD(self._u0, self._v0))
+                               self.image_origin, self.world_origin)
+
+    def atOrigin(self, image_origin=None, world_origin=None):
+        """Make a copy of this AffineTransform, but set new values for the image_origin
+        and/or the world_origin.
+        """
+        if image_origin is None: image_origin = self.image_origin
+        if world_origin is None: world_origin = self.world_origin
+        return AffineTransform(self._dudx, self._dudy, self._dvdx, self._dvdy, 
+                               image_origin, world_origin)
 
     def __eq__(self, other):
         if not isinstance(other, AffineTransform): 
@@ -493,6 +505,139 @@ class AffineTransform(BaseWCS):
                 self._dudy == other._dudy and 
                 self._dvdx == other._dvdx and 
                 self._dvdy == other._dvdy and 
+                self._x0 == other._x0 and 
+                self._y0 == other._y0 and 
+                self._u0 == other._u0 and 
+                self._y0 == other._y0)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+class UVFunction(BaseWCS):
+    """This WCS takes two arbitrary functions for u(x,y) and v(x,y).
+
+    The ufunc and vfunc parameters may be:
+        - python functions that take (x,y) arguments
+        - python objects with a __call__ method that takes (x,y) arguments
+        - strings which can be parsed with eval('lambda x,y: '+str)
+
+    Initialization
+    --------------
+    A UVFunction object is initialized with the command:
+
+        wcs = galsim.UVFunction(ufunc, vfunc, image_origin=None, world_origin=None)
+
+    @param ufunc          The function u(x,y)
+    @param vfucn          The function v(x,y)
+    @param image_origin   Optional origin position for the image coordinate system.
+                          If provided, it should be a PostionD or PositionI object.
+                          [ Default: `image_origin = None` ]
+    @param world_origin   Optional origin position for the world coordinate system.
+                          If provided, it should be a PostionD object.
+                          [ Default: `world_origin = None` ]
+    """
+    _req_params = { "ufunc" : str, "vfunc" : str }
+    _opt_params = { "image_origin" : galsim.PositionD, "world_origin": galsim.PositionD }
+    _single_params = []
+    _takes_rng = False
+    _takes_logger = False
+
+    def __init__(self, ufunc, vfunc, image_origin=None, world_origin=None):
+        if isinstance(ufunc, basestring):
+            self._ufunc = eval('lambda x,y : ' + ufunc)
+        else:
+            self._ufunc = ufunc
+        if isinstance(vfunc, basestring):
+            self._vfunc = eval('lambda x,y : ' + vfunc)
+        else:
+            self._vfunc = vfunc
+
+        if image_origin == None:
+            self._x0 = 0
+            self._y0 = 0
+        else:
+            self._x0 = image_origin.x
+            self._y0 = image_origin.y
+        if world_origin == None:
+            self._u0 = 0
+            self._v0 = 0
+        else:
+            self._u0 = world_origin.x
+            self._v0 = world_origin.y
+
+        self._is_local = False
+
+    @property
+    def ufunc(self): return self._ufunc
+    @property
+    def vfunc(self): return self._vfunc
+    @property
+    def image_origin(self): return galsim.PositionD(self._x0, self._y0)
+    @property
+    def world_origin(self): return galsim.PositionD(self._u0, self._v0)
+
+    def _u(self, x, y):
+        return self._ufunc(x-self._x0, y-self._y0) + self._u0
+
+    def _v(self, x, y):
+        return self._vfunc(x-self._x0, y-self._y0) + self._v0
+        
+    def _posToWorld(self, image_pos):
+        if not(isinstance(image_pos, galsim.PositionD) or isinstance(image_pos, galsim.PositionI)):
+            raise TypeError("toWorld requires a PositionD or PositionI argument")
+        u = self._u(image_pos.x, image_pos.y)
+        v = self._v(image_pos.x, image_pos.y)
+        return galsim.PositionD(u,v)
+
+    def _posToImage(self, world_pos):
+        raise NotImplementedError("World -> Image direction not implemented for UVFunction")
+
+    def _local(self, image_pos, world_pos):
+        print 'Start UVFunction local:'
+        print 'image_pos = ',image_pos
+        print 'world_pos = ',world_pos
+        if world_pos is not None:
+            raise NotImplementedError('UVFunction.local() cannot take world_pos.')
+        if image_pos is None:
+            raise TypeError('UVFunction.local() requires an image_pos argument')
+        x0 = image_pos.x
+        y0 = image_pos.y
+        u0 = self._u(x0,y0)
+        v0 = self._v(x0,y0)
+        print 'x0,y0 = ',x0,y0
+        print 'u0,v0 = ',u0,v0
+        # Use dx,dy = 1 pixel for numerical derivatives
+        dx = 1
+        dy = 1
+        dudx = 0.5*(self._u(x0+dx,y0) - self._u(x0-dx,y0))/dx
+        dudy = 0.5*(self._u(x0,y0+dy) - self._u(x0,y0-dy))/dy
+        dvdx = 0.5*(self._v(x0+dx,y0) - self._v(x0-dx,y0))/dx
+        dvdy = 0.5*(self._v(x0,y0+dy) - self._v(x0,y0-dy))/dy
+        print 'dudx = ',dudx
+        print 'dudy = ',dudy
+        print 'dvdx = ',dvdx
+        print 'dvdy = ',dvdy
+
+        return AffineTransform(dudx, dudy, dvdx, dvdy)
+
+    def copy(self):
+        return UVFunction(self._ufunc, self._vfunc, self.image_origin, self.world_origin)
+
+    def atOrigin(self, image_origin=None, world_origin=None):
+        """Make a copy of this AffineTransform, but set new values for the image_origin
+        and/or the world_origin.
+        """
+        if image_origin is None: image_origin = self.image_origin
+        if world_origin is None: world_origin = self.world_origin
+        return UVFunction(self._ufunc, self._vfunc, image_origin, world_origin)
+
+    def __eq__(self, other):
+        if not isinstance(other, AffineTransform): 
+            return False
+        else: 
+            return (
+                self._ufunc == other._ufunc and 
+                self._vfunc == other._vfunc and 
                 self._x0 == other._x0 and 
                 self._y0 == other._y0 and 
                 self._u0 == other._u0 and 

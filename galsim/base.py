@@ -233,7 +233,7 @@ class GSObject(object):
         """
         return self.SBProfile.getFlux()
 
-    def xValue(self, position):
+    def xValue(self, image_pos):
         """Returns the value of the object at a chosen 2D position in real space.
         
         xValue() is available if obj.isAnalyticX() == True.
@@ -249,9 +249,11 @@ class GSObject(object):
         @param position  A 2D galsim.PositionD/galsim.PositionI instance giving the position in real
                          space.
         """
-        return self.SBProfile.xValue(position)
+        # Explicitly use PositionD(x,y) syntax in case image_pos is a PositionI
+        # The C++ function requires a PositionD argument.
+        return self.SBProfile.xValue(galsim.PositionD(image_pos.x, image_pos.y))
 
-    def kValue(self, position):
+    def kValue(self, k_pos):
         """Returns the value of the object at a chosen 2D position in k space.
 
         kValue() is available if the given obj has obj.isAnalyticK() == True. 
@@ -265,7 +267,7 @@ class GSObject(object):
         @param position  A 2D galsim.PositionD/galsim.PositionI instance giving the position in k 
                          space.
         """
-        return self.SBProfile.kValue(position)
+        return self.SBProfile.kValue(galsim.PositionD(k_pos.x, k_pos.y))
 
     def scaleFlux(self, flux_ratio):
         """Multiply the flux of the object by flux_ratio
