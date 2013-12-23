@@ -125,7 +125,27 @@ def test_pixelscale():
 
     print 'PixelScale: scale = ',scale
 
+    # Do generic tests that apply to all WCS types
     do_wcs(wcs, ufunc, vfunc, 'PixelScale')
+
+    # Check localAffine()
+    affine = wcs.localAffine()
+    np.testing.assert_almost_equal(affine.dudx, scale,
+                                   err_msg = 'PixelScale dudx does not match expected value.')
+    np.testing.assert_almost_equal(affine.dudy, 0.,
+                                   err_msg = 'PixelScale dudy does not match expected value.')
+    np.testing.assert_almost_equal(affine.dvdx, 0.,
+                                   err_msg = 'PixelScale dvdx does not match expected value.')
+    np.testing.assert_almost_equal(affine.dvdy, scale,
+                                   err_msg = 'PixelScale dvdy does not match expected value.')
+    np.testing.assert_almost_equal(affine.image_origin.x, 0.,
+                                   err_msg = 'PixelScale x0 does not match expected value.')
+    np.testing.assert_almost_equal(affine.image_origin.y, 0.,
+                                   err_msg = 'PixelScale y0 does not match expected value.')
+    np.testing.assert_almost_equal(affine.world_origin.x, 0.,
+                                   err_msg = 'PixelScale u0 does not match expected value.')
+    np.testing.assert_almost_equal(affine.world_origin.y, 0.,
+                                   err_msg = 'PixelScale v0 does not match expected value.')
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -141,12 +161,81 @@ def test_shearwcs():
     g2 = -0.37
     shear = galsim.Shear(g1=g1,g2=g2)
     wcs = galsim.ShearWCS(scale, shear)
-    ufunc = lambda x,y: (x + g1*x + g2*y) * scale / np.sqrt(1.-g1*g1-g2*g2)
-    vfunc = lambda x,y: (y - g1*y + g2*x) * scale / np.sqrt(1.-g1*g1-g2*g2)
+    factor = 1./np.sqrt(1.-g1*g1-g2*g2)
+    ufunc = lambda x,y: (x + g1*x + g2*y) * scale * factor
+    vfunc = lambda x,y: (y - g1*y + g2*x) * scale * factor
 
     print 'ShearWCS: scale,g1,g2,shear = ',scale,g1,g2,shear
 
+    # Do generic tests that apply to all WCS types
     do_wcs(wcs, ufunc, vfunc, 'ShearWCS')
+
+    # Check localAffine()
+    affine = wcs.localAffine()
+    np.testing.assert_almost_equal(affine.dudx, (1.+g1) * scale * factor, 
+                                   err_msg = 'ShearWCS dudx does not match expected value.')
+    np.testing.assert_almost_equal(affine.dudy, g2 * scale * factor, 
+                                   err_msg = 'ShearWCS dudy does not match expected value.')
+    np.testing.assert_almost_equal(affine.dvdx, g2 * scale * factor, 
+                                   err_msg = 'ShearWCS dvdx does not match expected value.')
+    np.testing.assert_almost_equal(affine.dvdy, (1.-g1) * scale * factor, 
+                                   err_msg = 'ShearWCS dvdy does not match expected value.')
+    np.testing.assert_almost_equal(affine.image_origin.x, 0.,
+                                   err_msg = 'PixelScale x0 does not match expected value.')
+    np.testing.assert_almost_equal(affine.image_origin.y, 0.,
+                                   err_msg = 'PixelScale y0 does not match expected value.')
+    np.testing.assert_almost_equal(affine.world_origin.x, 0.,
+                                   err_msg = 'PixelScale u0 does not match expected value.')
+    np.testing.assert_almost_equal(affine.world_origin.y, 0.,
+                                   err_msg = 'PixelScale v0 does not match expected value.')
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_affinetransform():
+    """Test the AffineTransform class
+    """
+    import time
+    t1 = time.time()
+
+    # First a simple tweak on a simple scale factor
+    dudx = 0.2342
+    dudy = 0.0023
+    dvdx = 0.0019
+    dvdy = 0.2391
+
+    wcs = galsim.AffineTransform(dudx, dudy, dvdx, dvdy)
+    ufunc = lambda x,y: dudx*x + dudy*y
+    vfunc = lambda x,y: dvdx*x + dvdy*y
+
+    print 'AffineTransform: ',dudx, dudy, dvdx, dvdy
+    do_wcs(wcs, ufunc, vfunc, 'AffineTransform 1')
+
+    # Next one with a flip and significant rotation and a large (u,v) offset
+    dudy = 0.1432
+    dudx = 0.2342
+    dvdy = 0.2391
+    dvdx = 0.1409
+
+    wcs = galsim.AffineTransform(dudx, dudy, dvdx, dvdy)
+    ufunc = lambda x,y: dudx*x + dudy*y
+    vfunc = lambda x,y: dvdx*x + dvdy*y
+
+    print 'AffineTransform: ',dudx, dudy, dvdx, dvdy
+    do_wcs(wcs, ufunc, vfunc, 'AffineTransform 2')
+
+    # Finally a really crazy one that isn't remotely regular
+    dudy = -0.1432
+    dudx = 0.2342
+    dvdy = -0.3013
+    dvdx = 0.0924
+
+    wcs = galsim.AffineTransform(dudx, dudy, dvdx, dvdy)
+    ufunc = lambda x,y: dudx*x + dudy*y
+    vfunc = lambda x,y: dvdx*x + dvdy*y
+
+    print 'AffineTransform: ',dudx, dudy, dvdx, dvdy
+    do_wcs(wcs, ufunc, vfunc, 'AffineTransform 3')
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -154,4 +243,5 @@ def test_shearwcs():
 if __name__ == "__main__":
     test_pixelscale()
     test_shearwcs()
+    test_affinetransform()
 

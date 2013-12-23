@@ -50,7 +50,6 @@ class BaseWCS(object):
         # Variable WCS classes must define the following:
         #
         #     _local           function returning a non-variable WCS at a given location
-        #     _atOrigin        function returning a WCS with a given new origin point
 
 
     def toWorld(self, arg, **kwargs):
@@ -192,39 +191,6 @@ class BaseWCS(object):
         """
         return self.local(image_pos, world_pos)._toAffine()
 
-    def atNewOrigin(self, new_origin):
-        """Returns a new WCS object that has the origin point moved to a new location.
-
-        If you change the definition of the origin of an image with setOrigin or 
-        setCenter, we need to adjust the WCS to use the same new defintion for what
-        (x,y) means.  The way we do this is to make a new wcs using the new value 
-        for what the image means by (x,y) = (0,0).
-
-        The new_origin argument is the image position in the current WCS that you
-        want to be defined as (0,0) in the returned WCS.
-
-        The following code should help make clear what we mean by this:
-
-            world_cen = wcs.toWorld(image_cen)
-            world_pos = wcs.toWorld(image_pos)
-
-            new_wcs = wcs.atNewOrigin(image_cen)
-            world_cen2 = new_wcs.toWorld(PositionD(0.,0.))
-            world_pos2 = new_wcs.toWorld(image_pos - image_cen)
-
-            assert world_cen == world_cen2
-            assert world_pos == world_pos2
-
-        Note: In actual operations, the above asserts might fail due to numerical
-        rounding differences.  But the point is that they should be essentially the
-        same positions in world coordinates.
-
-        @param new_origin   The image coordinate that you want to become (0,0)
-        @returns new_wcs    A new WCS with that position as the origin.
-        """
-        return self._atOrigin(new_origin)
-
-
 class PixelScale(BaseWCS):
     """This is the simplest possible WCS transformation.  It only involves a unit conversion
     from pixels to arcsec (or whatever units you want to take for your world coordinate system).
@@ -250,44 +216,48 @@ class PixelScale(BaseWCS):
 
     def __init__(self, scale):
         self._is_variable = False
-        self.scale = scale
+        self._scale = scale
+
+    # Help make sure PixelScale is read-only.
+    @property
+    def scale(self): return self._scale
 
     def _posToWorld(self, image_pos):
         if not(isinstance(image_pos, galsim.PositionD) or isinstance(image_pos, galsim.PositionI)):
             raise TypeError("toWorld requires a PositionD or PositionI argument")
-        return image_pos * self.scale
+        return image_pos * self._scale
 
     def _posToImage(self, world_pos):
         if not isinstance(world_pos, galsim.PositionD):
             raise TypeError("toImage requires a PositionD argument")
-        return world_pos / self.scale
+        return world_pos / self._scale
 
     def _profileToWorld(self, image_profile):
-        return image_profile.createDilated(self.scale)
+        return image_profile.createDilated(self._scale)
 
     def _profileToImage(self, world_profile):
-        return world_profile.createDilated(1./self.scale)
+        return world_profile.createDilated(1./self._scale)
 
     def _pixelArea(self):
-        return self.scale*self.scale
+        return self._scale**2
 
     def _minScale(self):
-        return self.scale
+        return self._scale
 
     def _maxScale(self):
-        return self.scale
+        return self._scale
 
     def _toAffine(self):
-        raise NotImplementedError("Waiting until AffineTransform is defined")
+        return AffineTransform(self._scale, 0., 0., self._scale)
 
     def copy(self):
-        return PixelScale(self.scale)
+        return PixelScale(self._scale)
 
     def __eq__(self, other):
         if not isinstance(other, PixelScale): 
             return False
         else: 
-            return self.scale == other.scale
+            return self._scale == other._scale
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -317,72 +287,71 @@ class ShearWCS(BaseWCS):
     _takes_logger = False
 
     def __init__(self, scale, shear):
+        import numpy
         self._is_variable = False
-        self.scale = scale
-        self.shear = shear
+        self._scale = scale
+        self._shear = shear
+        self._g1 = shear.g1
+        self._g2 = shear.g2
+        self._gsq = self._g1**2 + self._g2**2
+        self._gfactor = 1. / numpy.sqrt(1. - self._gsq)
+
+    # Help make sure ShearWCS is read-only.
+    @property
+    def scale(self): return self._scale
+    @property
+    def shear(self): return self._shear
 
     def _posToWorld(self, image_pos):
         if not(isinstance(image_pos, galsim.PositionD) or isinstance(image_pos, galsim.PositionI)):
             raise TypeError("toWorld requires a PositionD or PositionI argument")
-        import numpy
-        g1 = self.shear.g1
-        g2 = self.shear.g2
-        gsq = g1*g1+g2*g2
-        u = image_pos.x * (1.+g1) + image_pos.y * g2
-        v = image_pos.y * (1.-g1) + image_pos.x * g2
-        factor = self.scale / numpy.sqrt(1.-gsq)
-        u *= factor
-        v *= factor
+        u = image_pos.x * (1.+self._g1) + image_pos.y * self._g2
+        v = image_pos.y * (1.-self._g1) + image_pos.x * self._g2
+        u *= self._scale * self._gfactor
+        v *= self._scale * self._gfactor
         return galsim.PositionD(u,v)
 
     def _posToImage(self, world_pos):
         if not isinstance(world_pos, galsim.PositionD):
             raise TypeError("toImage requires a PositionD argument")
         # The inverse transformation is
-        # x = (u - g1 u - g2 v) / scale / sqrt(1-g1**2-g2**2)
-        # y = (v + g1 v - g2 u) / scale / sqrt(1-g1**2-g2**2)
-        import numpy
-        g1 = self.shear.g1
-        g2 = self.shear.g2
-        gsq = g1*g1+g2*g2
-        x = world_pos.x * (1.-g1) - world_pos.y * g2
-        y = world_pos.y * (1.+g1) - world_pos.x * g2
-        factor = 1. / (self.scale * numpy.sqrt(1.-gsq))
-        x *= factor
-        y *= factor
+        # x = (u - g1 u - g2 v) / scale / sqrt(1-|g|^2)
+        # y = (v + g1 v - g2 u) / scale / sqrt(1-|g|^2)
+        x = world_pos.x * (1.-self._g1) - world_pos.y * self._g2
+        y = world_pos.y * (1.+self._g1) - world_pos.x * self._g2
+        x *= self._gfactor / self._scale
+        y *= self._gfactor / self._scale
         return galsim.PositionD(x,y)
 
     def _profileToWorld(self, image_profile):
-        world_profile = image_profile.createDilated(self.scale)
+        world_profile = image_profile.createDilated(self._scale)
         world_profile.applyShear(self.shear)
         return world_profile
 
     def _profileToImage(self, world_profile):
-        image_profile = world_profile.createDilated(1./self.scale)
+        image_profile = world_profile.createDilated(1./self._scale)
         image_profile.applyShear(-self.shear)
         return image_profile
 
     def _pixelArea(self):
-        return self.scale*self.scale
+        return self._scale**2
 
     def _minScale(self):
         # min stretch is (1-|g|) / sqrt(1-|g|^2)
         import numpy
-        g1 = self.shear.g1
-        g2 = self.shear.g2
-        g = numpy.sqrt(g1*g1+g2*g2)
-        return self.scale / numpy.sqrt(1.+g) 
+        return self._scale * (1. - numpy.sqrt(self._gsq)) * self._gfactor
 
     def _maxScale(self):
         # max stretch is (1+|g|) / sqrt(1-|g|^2)
         import numpy
-        g1 = self.shear.g1
-        g2 = self.shear.g2
-        g = numpy.sqrt(g1*g1+g2*g2)
-        return self.scale / numpy.sqrt(1.-g)
+        return self._scale * (1. + numpy.sqrt(self._gsq)) * self._gfactor
 
     def _toAffine(self):
-        raise NotImplementedError("Waiting until AffineTransform is defined")
+        return AffineTransform(
+            (1.+self._g1) * self._scale * self._gfactor, 
+            self._g2 * self._scale * self._gfactor,
+            self._g2 * self._scale * self._gfactor,
+            (1.-self._g1) * self._scale * self._gfactor)
 
     def copy(self):
         return ShearWCS(self.scale, self.shear)
@@ -396,4 +365,139 @@ class ShearWCS(BaseWCS):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+
+class AffineTransform(BaseWCS):
+    """This WCS is the most general linear transformation.  It involves a 2x2 Jacobian
+    matrix and an offset.  You can provide the offset in terms of either the image_pos
+    (x0,y0) where (u,v) = (0,0), or the world_pos (u0,v0) where (x,y) = (0,0). 
+    Or, in fact, you may provide both, in which case the image_pos (x0,y0) corresponds
+    to the world_pos (u0,v0).
+
+    The conversion functions are:
+
+        u = dudx (x-x0) + dudy (y-y0) + u0
+        v = dvdx (x-x0) + dvdy (y-y0) + v0
+
+    Initialization
+    --------------
+    An AffineTransform object is initialized with the command:
+
+        wcs = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, image_origin=None, world_origin=None)
+
+    @param dudx           du/dx
+    @param dudy           du/dy
+    @param dvdx           dv/dx
+    @param dvdy           dv/dy
+    @param image_origin   Optional origin position for the image coordinate system.
+                          If provided, it should be a PostionD or PositionI object.
+                          [ Default: `image_origin = None` ]
+    @param world_origin   Optional origin position for the world coordinate system.
+                          If provided, it should be a PostionD object.
+                          [ Default: `world_origin = None` ]
+    """
+    _req_params = { "dudx" : float, "dudy" : float, "dvdx" : float, "dvdy" : float }
+    _opt_params = { "image_origin" : galsim.PositionD, "world_origin": galsim.PositionD }
+    _single_params = []
+    _takes_rng = False
+    _takes_logger = False
+
+    def __init__(self, dudx, dudy, dvdx, dvdy, image_origin=None, world_origin=None):
+        self._is_variable = False
+        self._dudx = dudx
+        self._dudy = dudy
+        self._dvdx = dvdx
+        self._dvdy = dvdy
+        self._det = dudx * dvdy - dudy * dvdx
+        if image_origin == None:
+            self._x0 = 0
+            self._y0 = 0
+        else:
+            self._x0 = image_origin.x
+            self._y0 = image_origin.y
+        if world_origin == None:
+            self._u0 = 0
+            self._v0 = 0
+        else:
+            self._u0 = world_origin.x
+            self._v0 = world_origin.y
+
+    @property
+    def dudx(self): return self._dudx
+    @property
+    def dudy(self): return self._dudy
+    @property
+    def dvdx(self): return self._dvdx
+    @property
+    def dvdy(self): return self._dvdy
+    @property
+    def image_origin(self): return galsim.PositionD(self._x0, self._y0)
+    @property
+    def world_origin(self): return galsim.PositionD(self._u0, self._v0)
+
+    def _posToWorld(self, image_pos):
+        if not(isinstance(image_pos, galsim.PositionD) or isinstance(image_pos, galsim.PositionI)):
+            raise TypeError("toWorld requires a PositionD or PositionI argument")
+        x = image_pos.x
+        y = image_pos.y
+        u = self._dudx * (x-self._x0) + self._dudy * (y-self._y0) + self._u0
+        v = self._dvdx * (x-self._x0) + self._dvdy * (y-self._y0) + self._v0
+        return galsim.PositionD(u,v)
+
+    def _posToImage(self, world_pos):
+        if not isinstance(world_pos, galsim.PositionD):
+            raise TypeError("toImage requires a PositionD argument")
+        #  J = ( dudx  dudy )
+        #      ( dvdx  dvdy )
+        #  J^-1 = (1/det) (  dvdy  -dudy )
+        #                 ( -dvdx   dudx )
+        u = world_pos.x
+        v = world_pos.y
+        x = (self._dvdy * (u-self._u0) - self._dudy * (v-self._v0))/self._det + self._x0
+        y = (-self._dvdx * (u-self._u0) + self._dudx * (v-self._v0))/self._det + self._y0
+        return galsim.PositionD(x,y)
+
+    def _profileToWorld(self, image_profile):
+        ret = image_profile.createTransformed(self._dudx, self._dudy, self._dvdx, self._dvdy)
+        ret.scaleFlux(1./self._det)
+        return ret
+
+    def _profileToImage(self, world_profile):
+        ret = world_profile.createTransformed(self._dvdy/self._det, -self._dudy/self._det,
+                                               -self._dvdx/self._det, self._dudx/self._det)
+        ret.scaleFlux(self._det)
+        return ret
+
+    def _pixelArea(self):
+        return self._det
+
+    def _minScale(self):
+        raise NotImplementedError("TODO")
+
+    def _maxScale(self):
+        raise NotImplementedError("TODO")
+
+    def _toAffine(self):
+        return self
+
+    def copy(self):
+        return AffineTransform(self._dudx, self._dudy, self._dvdx, self._dvdy, 
+                               galsim.PositionD(self._x0, self._y0),
+                               galsim.PositionD(self._u0, self._v0))
+
+    def __eq__(self, other):
+        if not isinstance(other, AffineTransform): 
+            return False
+        else: 
+            return (
+                self._dudx == other._dudx and 
+                self._dudy == other._dudy and 
+                self._dvdx == other._dvdx and 
+                self._dvdy == other._dvdy and 
+                self._x0 == other._x0 and 
+                self._y0 == other._y0 and 
+                self._u0 == other._u0 and 
+                self._y0 == other._y0)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 

@@ -211,6 +211,12 @@ namespace galsim {
         _pimpl = d._pimpl;
     }
 
+    void SBProfile::applyJacobian(double dudx, double dudy, double dvdx, double dvdy)
+    {
+        SBTransform d(*this, dudx, dudy, dvdx, dvdy);
+        _pimpl = d._pimpl;
+    }
+
     void SBProfile::applyShift(double dx, double dy)
     { 
         SBTransform d(*this,1.,0.,0.,1., Position<double>(dx,dy));

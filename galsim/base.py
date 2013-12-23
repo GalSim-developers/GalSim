@@ -439,6 +439,41 @@ class GSObject(object):
         self.SBProfile.applyRotation(theta)
         self.__class__ = GSObject
 
+    def applyTransformation(self, dudx, dudy, dvdx, dvdy):
+        """Apply a transformation to this object defined by an arbitrary jacobian matrix.
+
+        This applies a jacobian matrix to the coordinate system in which this object 
+        is defined.  It changes a profile defined in terms of (x,y) to one defined in 
+        terms of (u,v) where:
+
+            u = dudx x + dudy y
+            v = dvdx x + dvdy y
+
+        That is, an arbitrary affine transform, but without the translation (which is 
+        easily effected via applyShift).
+
+        Note that this function is similar to applyExpansion in that it preserves
+        surface brightness, not flux.  If you want to preserve flux, you should also do
+
+            prof.scaleFlux( 1. / (dudx*dvdy - dudy*dvdx) )
+
+        After this call, the caller's type will be a GSObject.
+        This means that if the caller was a derived type that had extra methods beyond
+        those defined in GSObject (e.g. getSigma for a Gaussian), then these methods
+        are no longer available.
+
+        @param dudx     du/dx, where (x,y) are the current coords, and (u,v) are the new coords.
+        @param dudy     du/dy, where (x,y) are the current coords, and (u,v) are the new coords.
+        @param dvdx     dv/dx, where (x,y) are the current coords, and (u,v) are the new coords.
+        @param dvdy     dv/dy, where (x,y) are the current coords, and (u,v) are the new coords.
+        """
+        import numpy as np
+        if hasattr(self,'noise'):
+            self.noise.applyTransformation(dudx,dudy,dvdx,dvdy)
+        self.SBProfile.applyJacobian(dudx,dudy,dvdx,dvdy)
+        self.__class__ = GSObject
+ 
+
     def applyShift(self, *args, **kwargs):
         """Apply a (dx, dy) shift to this object.
            
@@ -563,6 +598,29 @@ class GSObject(object):
             raise TypeError("Input theta should be an Angle")
         ret = self.copy()
         ret.applyRotation(theta)
+        return ret
+        
+    def createTransformed(self, dudx, dudy, dvdx, dvdy):
+        """Returns a new GSObject by applying a transformation given by a jacobian matrix.
+
+        This applies a jacobian matrix to the coordinate system in which this object 
+        is defined.  It takes a profile defined in terms of (x,y) and returns the equivalent
+        profile defined in terms of (u,v) where:
+
+            u = dudx x + dudy y
+            v = dvdx x + dvdy y
+
+        That is, an arbitrary affine transform, but without the translation (which is 
+        easily effected via applyShift).
+
+        @param dudx     du/dx, where (x,y) are the current coords, and (u,v) are the new coords.
+        @param dudy     du/dy, where (x,y) are the current coords, and (u,v) are the new coords.
+        @param dvdx     dv/dx, where (x,y) are the current coords, and (u,v) are the new coords.
+        @param dvdy     dv/dy, where (x,y) are the current coords, and (u,v) are the new coords.
+        @returns        The transformed object.
+        """
+        ret = self.copy()
+        ret.applyTransformation(dudx,dudy,dvdx,dvdy)
         return ret
         
     def createShifted(self, *args, **kwargs):
