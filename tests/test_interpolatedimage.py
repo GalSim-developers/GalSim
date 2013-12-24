@@ -619,7 +619,7 @@ def test_corr_padding():
     # Set up some defaults for tests.
     decimal_precise=4
     decimal_coarse=2
-    imgfile = 'blankimg.fits'
+    imgfile = 'fits_files/blankimg.fits'
     orig_nx = 187
     orig_ny = 164
     big_nx = 319
@@ -679,7 +679,7 @@ def test_corr_padding():
         print 'The assert_raises tests require nose'
     # also, check that whether we give it a string, image, or cn, it gives the same noise field
     # (given the same random seed)
-    infile = 'blankimg.fits'
+    infile = 'fits_files/blankimg.fits'
     inimg = galsim.fits.read(infile)
     incf = galsim.CorrelatedNoise(galsim.GaussianDeviate(), inimg) # input RNG will be ignored below
     int_im2 = galsim.InterpolatedImage(orig_img, rng=galsim.GaussianDeviate(orig_seed),

@@ -95,7 +95,7 @@ class InterpolatedImage(GSObject):
 
         image = galsim.fits.read('data/147246.0_150.416558_1.998697_masknoise.fits')
         int_im1 = galsim.InterpolatedImage(image)
-        int_im2 = galsim.InterpolatedImage(image, noise_pad='../tests/blankimg.fits')
+        int_im2 = galsim.InterpolatedImage(image, noise_pad='data/blankimg.fits')
         im1 = galsim.ImageF(1000,1000)
         im2 = galsim.ImageF(1000,1000)
         int_im1.draw(im1)

@@ -751,10 +751,10 @@ def test_interpolated_image():
                    'noise_pad' : 0.001 
                  },
         'gal6' : { 'type' : 'InterpolatedImage', 'image' : file_name,
-                   'noise_pad' : 'blankimg.fits' 
+                   'noise_pad' : 'fits_files/blankimg.fits' 
                  },
         'gal7' : { 'type' : 'InterpolatedImage', 'image' : file_name,
-                   'pad_image' : 'blankimg.fits' 
+                   'pad_image' : 'fits_files/blankimg.fits' 
                  }
     }
     rng = galsim.UniformDeviate(1234)
@@ -787,11 +787,11 @@ def test_interpolated_image():
     gsobject_compare(gal5a, gal5b)
 
     gal6a = galsim.config.BuildGSObject(config, 'gal6')[0]
-    gal6b = galsim.InterpolatedImage(im, rng=rng, noise_pad='blankimg.fits')
+    gal6b = galsim.InterpolatedImage(im, rng=rng, noise_pad='fits_files/blankimg.fits')
     gsobject_compare(gal6a, gal6b)
 
     gal7a = galsim.config.BuildGSObject(config, 'gal7')[0]
-    gal7b = galsim.InterpolatedImage(im, pad_image = 'blankimg.fits')
+    gal7b = galsim.InterpolatedImage(im, pad_image = 'fits_files/blankimg.fits')
     gsobject_compare(gal7a, gal7b)
 
     t2 = time.time()
