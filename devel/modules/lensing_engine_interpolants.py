@@ -11,6 +11,7 @@ import numpy as np
 import os
 import subprocess
 import pyfits
+import matplotlib.pyplot as plt
 
 # Set some important quantities up top:
 # Which interpolants do we want to test?
@@ -22,16 +23,207 @@ kmin_factor = 3 # factor by which to have the lensing engine internally expand t
                 # large-scale shear correlations.
 # Define shear power spectrum file
 pk_file = os.path.join('..','..','examples','data','cosmo-fid.zmed1.00.out')
-# Define binning for PS / corr func.
-default_n_output_bins = 12
+# Define files for PS / corr func.
 tmp_cf_file = 'tmp.cf.dat'
 # Set defaults for command-line arguments
 ## subsampling factor for the finer grid for which we wish to test results.
 default_subsampling = 5
 ## number of realizations to run.
 default_n = 100
+## number of bins for output PS / corrfunc
+default_n_output_bins = 12
+## output prefix for power spectrum, correlation function plots
+default_ps_plot_prefix = "plots/interpolated_ps_"
+default_cf_plot_prefix = "plots/interpolated_cf_"
 
 # Utility functions go here, above main():
+def check_dir(dir):
+    """Utility to make an output directory if necessary.
+
+    Arguments:
+
+      dir ----- Desired output directory.
+
+    """
+    try:
+        os.makedirs(dir)
+        print "Created directory %s for outputs"%dir
+    except OSError:
+        if os.path.isdir(dir):
+            # It was already a directory.
+            pass
+        else:
+            # There was a problem, so exist.
+            raise
+
+def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix):
+    """Routine to make power spectrum plots and write them to file.
+
+    This routine makes a two-panel plot, with the first panel showing the two power spectra,
+    and the second showing their ratio.
+
+    Arguments:
+
+      ell ----------------- Wavenumber k (flat-sky version of ell) in 1/radians.
+
+      ps ------------------ Actual power spectrum, in radians^2.
+
+      interpolated_ps ----- Power spectrum including effects of the interpolant.
+
+      interpolant --------- Which interpolant was used?
+
+      ps_plot_prefix ------ Prefix to use for power spectrum plots.
+
+    """
+    # Sanity checks on acceptable inputs
+    assert ell.shape == ps.shape
+    assert ell.shape == interpolated_ps.shape
+
+    # Set up 2-panel plot
+    fig = plt.figure()
+    # Set up first panel with power spectra.
+    ax = fig.add_subplot(211)
+    ax.plot(ell, ell*(ell+1)*ps/(2.*np.pi), color='b', label='Power spectrum')
+    ax.plot(ell, ell*(ell+1)*interpolated_ps/(2.*np.pi), color='r',
+            label='Interpolated power spectrum')
+    ax.set_ylabel('Dimensionless power')
+    ax.set_title('Interpolant: %s'%interpolant)
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    plt.legend(loc='lower left')
+
+    # Set up second panel with ratio.
+    ax = fig.add_subplot(212)
+    ax.plot(ell, interpolated_ps/ps, color='k')
+    ax.set_xlabel('ell [1/radians]')
+    ax.set_ylabel('Interpolated / direct power')
+    ax.set_xscale('log')
+
+    # Write to file.
+    outfile = ps_plot_prefix + interpolant + '.png'
+    plt.savefig(outfile)
+    print "Wrote power spectrum plots to file %s"%outfile
+
+def generate_cf_plots(th, cf, interpolated_cf, interpolant, cf_plot_prefix):
+    """Routine to make correlation function plots and write them to file.
+
+    This routine makes a two-panel plot, with the first panel showing the two correlation functions,
+    and the second showing their ratio.
+
+    Arguments:
+
+      th ------------------ Angle theta (separation on sky), in degrees.
+
+      cf ------------------ Correlation function xi_+ (dimensionless).
+
+      interpolated_cf ----- Correlation function including effects of the interpolant.
+
+      interpolant --------- Which interpolant was used?
+
+      cf_plot_prefix ------ Prefix to use for correlation function plots.
+
+    """
+    # Sanity checks on acceptable inputs
+    assert th.shape == cf.shape
+    assert th.shape == interpolated_cf.shape
+
+    # Set up 2-panel plot
+    fig = plt.figure()
+    # Set up first panel with power spectra.
+    ax = fig.add_subplot(211)
+    ax.plot(th, cf, color='b', label='Correlation function')
+    ax.plot(th, interpolated_cf, color='r',
+            label='Interpolated')
+    ax.set_ylabel('xi_+')
+    ax.set_title('Interpolant: %s'%interpolant)
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    plt.legend(loc='lower left')
+
+    # Set up second panel with ratio.
+    ax = fig.add_subplot(212)
+    ax.plot(th, interpolated_cf/cf, color='k')
+    ax.set_xlabel('Separation [degrees]')
+    ax.set_ylabel('Interpolated / direct xi_+')
+    ax.set_xscale('log')
+
+    # Write to file.
+    outfile = cf_plot_prefix + interpolant + '.png'
+    plt.savefig(outfile)
+    print "Wrote correlation function plots to file %s"%outfile
+
+def write_ps_output(ell, ps, interpolated_ps, interpolant, ps_plot_prefix):
+    """Routine to write final power spectra to file.
+
+    This routine makes two output files: one ascii (.dat) and one FITS table (.fits).
+
+    Arguments:
+
+      ell ----------------- Wavenumber k (flat-sky version of ell) in 1/radians.
+
+      ps ------------------ Actual power spectrum, in radians^2.
+
+      interpolated_ps ----- Power spectrum including effects of the interpolant.
+
+      interpolant --------- Which interpolant was used?
+
+      ps_plot_prefix ------ Prefix to use for power spectrum data.
+
+    """
+    # Make ascii output.
+    outfile = ps_plot_prefix + interpolant + '.dat'
+    np.savetxt(outfile, np.column_stack((ell, ps, interpolated_ps)), fmt='%12.4e')
+    print "Wrote ascii output to file %s"%outfile
+
+    # Set up a FITS table for output file.
+    ell_col = pyfits.Column(name='ell', format='1D', array=ell)
+    ps_col = pyfits.Column(name='ps', format='1D', array=ps)
+    interpolated_ps_col = pyfits.Column(name='interpolated_ps', format='1D',
+                                        array=interpolated_ps)
+    cols = pyfits.ColDefs([ell_col, ps_col, interpolated_ps_col])
+    table = pyfits.new_table(cols)
+    phdu = pyfits.PrimaryHDU()
+    hdus = pyfits.HDUList([phdu,table])
+    outfile = ps_plot_prefix + interpolant + '.fits'
+    hdus.writeto(outfile, clobber=True)
+    print "Wrote FITS output to file %s"%outfile
+
+def write_cf_output(th, cf, interpolated_cf, interpolant, cf_plot_prefix):
+    """Routine to write final correlation functions to file.
+
+    This routine makes two output files: one ascii (.dat) and one FITS table (.fits).
+
+    Arguments:
+
+      th ------------------ Angle theta (separation on sky), in degrees.
+
+      cf ------------------ Correlation function xi_+ (dimensionless).
+
+      interpolated_cf ----- Correlation function including effects of the interpolant.
+
+      interpolant --------- Which interpolant was used?
+
+      cf_plot_prefix ------ Prefix to use for correlation function plots.
+
+    """
+    # Make ascii output.
+    outfile = cf_plot_prefix + interpolant + '.dat'
+    np.savetxt(outfile, np.column_stack((th, cf, interpolated_cf)), fmt='%12.4e')
+    print "Wrote ascii output to file %s"%outfile
+
+    # Set up a FITS table for output file.
+    th_col = pyfits.Column(name='theta', format='1D', array=th)
+    cf_col = pyfits.Column(name='xip', format='1D', array=cf)
+    interpolated_cf_col = pyfits.Column(name='interpolated_xip', format='1D',
+                                        array=interpolated_cf)
+    cols = pyfits.ColDefs([th_col, cf_col, interpolated_cf_col])
+    table = pyfits.new_table(cols)
+    phdu = pyfits.PrimaryHDU()
+    hdus = pyfits.HDUList([phdu,table])
+    outfile = cf_plot_prefix + interpolant + '.fits'
+    hdus.writeto(outfile, clobber=True)
+    print "Wrote FITS output to file %s"%outfile
+
 def getCF(x, y, g1, g2, dtheta, ngrid, n_output_bins):
     """Routine to estimate shear correlation functions using corr2.
 
@@ -89,8 +281,7 @@ def getCF(x, y, g1, g2, dtheta, ngrid, n_output_bins):
     xip_err = results[:,6]
     return r, xip, xip_err
 
-def main(n_realizations=default_n, subsampling=default_subsampling,
-         n_output_bins=default_n_output_bins):
+def main(n_realizations, subsampling, n_output_bins, ps_plot_prefix, cf_plot_prefix):
     """Main routine to drive all tests.
 
     Arguments:
@@ -100,6 +291,11 @@ def main(n_realizations=default_n, subsampling=default_subsampling,
         subsampling -------- Factor by which to subsample the default grid.
 
         n_output_bins ------ Number of bins for calculation of 2-point functions.
+
+        ps_plot_prefix ----- Prefix to use for power-spectrum outputs.
+
+        cf_plot_prefix ----- Prefix to use for correlation function outputs.
+
     """
     # Set up PowerSpectrum object.
     ps = galsim.PowerSpectrum(pk_file, units = galsim.radians)
@@ -192,13 +388,14 @@ def main(n_realizations=default_n, subsampling=default_subsampling,
 
         # Plot statistics, and ratios with vs. without interpolants.
         print "Running plotting routines for interpolant=%s..."%interpolant
-        generate_ps_plots(mean_ps, mean_interpolated_ps, interpolant)
-        generate_cf_plots(mean_cf, mean_interpolated_cf, interpolant)
+        generate_ps_plots(ell, mean_ps, mean_interpolated_ps, interpolant, ps_plot_prefix)
+        generate_cf_plots(th, mean_cf, mean_interpolated_cf, interpolant, cf_plot_prefix)
 
         # Output results.
         print "Outputting tables of results..."
-        write_ps_output(mean_ps, mean_interpolated_ps, interpolant)
-        write_cf_output(mean_cf, mean_interpolated_cf, interpolant)
+        write_ps_output(ell, mean_ps, mean_interpolated_ps, interpolant, ps_plot_prefix)
+        write_cf_output(th, mean_cf, mean_interpolated_cf, interpolant, cf_plot_prefix)
+        print ""
 
 if __name__ == "__main__":
     import argparse
@@ -215,7 +412,27 @@ if __name__ == "__main__":
                         '(default: %i)'%default_n_output_bins,
                         default=default_n_output_bins, type=int,
                         dest='n_output_bins')
+    parser.add_argument('--ps_plot_prefix',
+                        help='Prefix for output power spectrum plots '
+                        '(default: %s)'%default_ps_plot_prefix,
+                        default=default_ps_plot_prefix, type=str,
+                        dest='ps_plot_prefix')
+    parser.add_argument('--cf_plot_prefix',
+                        help='Prefix for output correlation function plots '
+                        '(default: %s)'%default_cf_plot_prefix,
+                        default=default_cf_plot_prefix, type=str,
+                        dest='cf_plot_prefix')
     args = parser.parse_args()
+    # Make directories if necessary.
+    dir = os.path.dirname(args.ps_plot_prefix)
+    if dir is not '':
+        check_dir(dir)
+    dir = os.path.dirname(args.cf_plot_prefix)
+    if dir is not '':
+        check_dir(dir)
+
     main(n_realizations=args.n_realizations,
          subsampling=args.subsampling,
-         n_output_bins=args.n_output_bins)
+         n_output_bins=args.n_output_bins,
+         ps_plot_prefix=args.ps_plot_prefix,
+         cf_plot_prefix=args.cf_plot_prefix)
