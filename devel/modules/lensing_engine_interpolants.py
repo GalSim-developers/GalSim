@@ -9,10 +9,12 @@ and also check the impact on the correlation function.
 import galsim
 import numpy as np
 import os
+import subprocess
+import pyfits
 
 # Set some important quantities up top:
 # Which interpolants do we want to test?
-interpolant_list = ['nearest', 'linear', 'cubic', 'quintic']
+interpolant_list = ['linear', 'cubic', 'quintic', 'nearest']
 # Define shear grid
 grid_size = 5. # degrees
 ngrid = 50 # grid points in nominal grid
@@ -21,7 +23,8 @@ kmin_factor = 3 # factor by which to have the lensing engine internally expand t
 # Define shear power spectrum file
 pk_file = os.path.join('..','..','examples','data','cosmo-fid.zmed1.00.out')
 # Define binning for PS / corr func.
-n_output_bins = 12
+default_n_output_bins = 12
+tmp_cf_file = 'tmp.cf.dat'
 # Set defaults for command-line arguments
 ## subsampling factor for the finer grid for which we wish to test results.
 default_subsampling = 5
@@ -29,7 +32,7 @@ default_subsampling = 5
 default_n = 100
 
 # Utility functions go here, above main():
-def getCF(x, y, g1, g2):
+def getCF(x, y, g1, g2, dtheta, ngrid, n_output_bins):
     """Routine to estimate shear correlation functions using corr2.
 
     This routine takes information about positions and shears, and writes to temporary FITS files
@@ -38,25 +41,65 @@ def getCF(x, y, g1, g2):
 
     Arguments:
 
-        x --------- x grid position (list).
+        x --------------- x grid position (1d NumPy array).
 
-        y --------- y grid position (list).
+        y --------------- y grid position (1d NumPy array).
 
-        g1 -------- g1 (list).
+        g1 -------------- g1 (1d NumPy array).
 
-        g2 -------- g2 (list).
+        g2 -------------- g2 (1d NumPy array).
+
+        ngrid ----------- Linear array size (i.e., number of points in each dimension).
+
+        dtheta ---------- Array spacing, in degrees.
+
+        n_output_bins --- Number of bins for calculation of correlatio function.
 
     """
+    # Basic sanity checks of inputs.
+    assert x.shape == y.shape
+    assert x.shape == g1.shape
+    assert x.shape == g2.shape
 
+    # Set up a FITS table for output file.
+    x_col = pyfits.Column(name='x', format='1D', array=x)
+    y_col = pyfits.Column(name='y', format='1D', array=y)
+    g1_col = pyfits.Column(name='g1', format='1D', array=g1)
+    g2_col = pyfits.Column(name='g2', format='1D', array=g2)
+    cols = pyfits.ColDefs([x_col, y_col, g1_col, g2_col])
+    table = pyfits.new_table(cols)
+    phdu = pyfits.PrimaryHDU()
+    hdus = pyfits.HDUList([phdu,table])
+    hdus.writeto('temp.fits',clobber=True)
+    
+    # Define some variables that corr2 needs: range of separations to use.
+    min_sep = dtheta
+    max_sep = ngrid * np.sqrt(2) * dtheta
+    subprocess.Popen(['corr2','corr2.params',
+                      'file_name=temp.fits',
+                      'e2_file_name=%s'%tmp_cf_file,
+                      'min_sep=%f'%min_sep,'max_sep=%f'%max_sep,
+                      'nbins=%f'%n_output_bins]).wait()
+    results = np.loadtxt(tmp_cf_file)
+    os.remove('temp.fits')
 
-def main(n_realizations, subsampling):
+    # Parse and return results
+    r = results[:,0]
+    xip = results[:,2]
+    xip_err = results[:,6]
+    return r, xip, xip_err
+
+def main(n_realizations=default_n, subsampling=default_subsampling,
+         n_output_bins=default_n_output_bins):
     """Main routine to drive all tests.
 
     Arguments:
 
         n_realizations ----- Number of random realizations of each shear field.
 
-        subsampling --------- Factor by which to subsample the default grid.
+        subsampling -------- Factor by which to subsample the default grid.
+
+        n_output_bins ------ Number of bins for calculation of 2-point functions.
     """
     # Set up PowerSpectrum object.
     ps = galsim.PowerSpectrum(pk_file, units = galsim.radians)
@@ -100,7 +143,8 @@ def main(n_realizations, subsampling):
             y = list(y.flatten())
 
             # Interpolate shears on the subsampled grid.
-            interpolated_g1, interpolated_g2 = ps.getShear(pos=(x,y))
+            interpolated_g1, interpolated_g2 = ps.getShear(pos=(x,y),
+                                                           units=galsim.degrees)
             # And put back into the format that the PowerSpectrumEstimator will want.
             interpolated_g1 = np.array(interpolated_g1).reshape((subsampled_ngrid,
                                                                  subsampled_ngrid))
@@ -119,16 +163,25 @@ def main(n_realizations, subsampling):
                 pse = galsim.pse.PowerSpectrumEstimator(subsampled_ngrid,
                                                         grid_size,
                                                         n_output_bins)            
-            ell, interpolated_ps, _, _ = pse.estimate(interpolated_g1, interpolated_g2)
-            ell, ps, _, _ = pse.estimate(g1, g2)
-            interpolated_cf = getCF(x, y, interpolated_g1, interpolated_g2)
-            cf = getCF(x, y, list(g1.flatten()), list(g2.flatten()))
+            ell, interpolated_ps_ee, _, _ = \
+                pse.estimate(interpolated_g1, interpolated_g2)
+            ell, ps_ee, _, _ = pse.estimate(g1, g2)
+            x = np.array(x)
+            y = np.array(y)
+            th, interpolated_cf, cf_err = getCF(x, y, interpolated_g1.flatten(),
+                                                interpolated_g2.flatten(),
+                                                subsampled_grid_spacing,
+                                                subsampled_ngrid,
+                                                n_output_bins)
+            _, cf, _ = getCF(x, y, g1.flatten(), g2.flatten(),
+                             subsampled_grid_spacing, subsampled_ngrid,
+                             n_output_bins)
 
             # Accumulate statistics.
-            mean_interpolated_ps += interpolated_ps
-            mean_ps = ps
+            mean_interpolated_ps += interpolated_ps_ee
+            mean_ps += ps_ee
             mean_interpolated_cf += interpolated_cf
-            mean_cf = cf
+            mean_cf += cf
 
         # Now get the average over all realizations
         print "Done generating realizations, now getting mean 2-point functions"
@@ -157,6 +210,12 @@ if __name__ == "__main__":
     parser.add_argument('-s','--subsampling', 
                         help='Subsampling factor to test (default: %i)'%default_subsampling,
                         default=default_subsampling, type=int, dest='subsampling')
+    parser.add_argument('-n_out','--n_output_bins',
+                        help='Number of bins for calculating 2-point functions '
+                        '(default: %i)'%default_n_output_bins,
+                        default=default_n_output_bins, type=int,
+                        dest='n_output_bins')
     args = parser.parse_args()
     main(n_realizations=args.n_realizations,
-         subsampling=args.subsampling)
+         subsampling=args.subsampling,
+         n_output_bins=args.n_output_bins)
