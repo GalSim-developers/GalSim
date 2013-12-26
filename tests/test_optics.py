@@ -352,6 +352,39 @@ def test_OpticalPSF_aberrations_struts():
     t2 = time.time()
     print 'time for %s = %.2f' % (funcname(), t2 - t1)
 
+def test_OpticalPSF_aberrations_kwargs():
+    """Test that OpticalPSF aberrations kwarg works just like specifying aberrations.
+    """
+    import time
+    t1 = time.time()
+
+    # Make an OpticalPSF with direct specification of aberrations.
+    lod = 0.04
+    obscuration = 0.3
+    opt1 = galsim.OpticalPSF(lod, obscuration=obscuration, defocus=0.1, coma2=0.3, spher=-0.1)
+
+    # Now make it with an aberrations list.
+    aberrations = [0.1, 0., 0., 0., 0.3, 0., 0., -0.1]
+    opt2 = galsim.OpticalPSF(lod, obscuration=obscuration, aberrations=aberrations)
+
+    # Make sure they agree.
+    np.testing.assert_array_equal(
+        opt1.draw(dx=0.2*lod).array, opt2.draw(dx=0.2*lod).array,
+        err_msg="Optical PSF depends on how aberrations are specified")
+
+    # Also, check for proper response to weird inputs.
+    try:
+        np.testing.assert_raises(TypeError,galsim.OpticalPSF,lod,aberrations=0.3)
+        np.testing.assert_raises(RuntimeError,galsim.OpticalPSF,lod,aberrations=[0.3,-0.3])
+        np.testing.assert_raises(RuntimeError,galsim.OpticalPSF,lod,aberrations=np.zeros(8),
+                                 defocus=-0.12)
+    except ImportError:
+        print 'The assert_raises tests require nose'
+
+
+    t2 = time.time()
+    print 'time for %s = %.2f' % (funcname(), t2 - t1)
+
 def test_OpticalPSF_flux_scaling():
     """Test flux scaling for OpticalPSF.
     """
@@ -441,4 +474,5 @@ if __name__ == "__main__":
     test_OpticalPSF_vs_Airy()
     test_OpticalPSF_vs_Airy_with_obs()
     test_OpticalPSF_aberrations_struts()
+    test_OpticalPSF_aberrations_kwargs()
     test_OpticalPSF_flux_scaling()
