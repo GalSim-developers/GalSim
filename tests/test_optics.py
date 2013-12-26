@@ -364,7 +364,7 @@ def test_OpticalPSF_aberrations_kwargs():
     opt1 = galsim.OpticalPSF(lod, obscuration=obscuration, defocus=0.1, coma2=0.3, spher=-0.1)
 
     # Now make it with an aberrations list.
-    aberrations = [0.1, 0., 0., 0., 0.3, 0., 0., -0.1]
+    aberrations = [0.0, 0.0, 0.0, 0.0, 0.1, 0., 0., 0., 0.3, 0., 0., -0.1]
     opt2 = galsim.OpticalPSF(lod, obscuration=obscuration, aberrations=aberrations)
 
     # Make sure they agree.

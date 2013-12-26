@@ -86,10 +86,15 @@ class OpticalPSF(GSObject):
     @param trefoil2         Trefoil (one of the arrows along x) in units of incident light
                             wavelength.
     @param spher            Spherical aberration in units of incident light wavelength.
-    @param aberrations      Optional keyword, to pass in a list, tuple, or NumPy array of 8
+    @param aberrations      Optional keyword, to pass in a list, tuple, or NumPy array of
                             aberrations in units of incident light wavelength (ordered according to
                             the Noll convention), rather than passing in individual values for each
-                            individual aberration.
+                            individual aberration.  Currently GalSim supports aberrations from
+                            defocus through third-order spherical ('spher'), which are aberrations
+                            4-11 in the Noll convention, and hence 'aberrations' should be an
+                            object of length 12, with the first four numbers being ignored, the 5th
+                            (index 4) being defocus, and so on through index 11 corresponding to
+                            'spher'.
     @param circular_pupil   Adopt a circular pupil?  [default `circular_pupil = True`]
     @param obscuration      Linear dimension of central obscuration as fraction of pupil linear
                             dimension, [0., 1.).
@@ -182,19 +187,19 @@ class OpticalPSF(GSObject):
             # this file.  We do this instead of passing around the individual values, so that only
             # two pieces of code will have to be changed if we want to support higher aberrations.
             # (The changes would be here, and in the wavefront() routine below.)
-            aberrations = np.zeros(8)
-            aberrations[0] = defocus
-            aberrations[1] = astig1
-            aberrations[2] = astig2
-            aberrations[3] = coma1
-            aberrations[4] = coma2
-            aberrations[5] = trefoil1
-            aberrations[6] = trefoil2
-            aberrations[7] = spher
+            aberrations = np.zeros(12)
+            aberrations[4] = defocus
+            aberrations[5] = astig1
+            aberrations[6] = astig2
+            aberrations[7] = coma1
+            aberrations[8] = coma2
+            aberrations[9] = trefoil1
+            aberrations[10] = trefoil2
+            aberrations[11] = spher
         else:
             # Aberrations were passed in, so check that there are the right number of entries.
-            if len(aberrations) != 8:
-                raise RuntimeError("Aberrations keyword should be an object of length 8!")
+            if len(aberrations) != 12:
+                raise RuntimeError("Aberrations keyword should be an object of length 12!")
             # Make sure no individual ones were passed in, since they will be ignored.
             if np.any( 
                 np.array([defocus,astig1,astig2,coma1,coma2,trefoil1,trefoil2,spher]) != 0):
@@ -327,9 +332,12 @@ def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=None,
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
-    @param aberrations     NumPy array containing the 8 supported aberrations in units of incident
+    @param aberrations     NumPy array containing the supported aberrations in units of incident
                            light wavelength, ordered according to the Noll convention: defocus,
-                           astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.
+                           astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.  Since these are
+                           aberrations 4-11 in the Noll convention, 'aberrations' should have length
+                           12, with defocus corresponding to index 4 and so on.  The first four
+                           numbers in this array will be ignored.
     @param circular_pupil  adopt a circular pupil?
     @param obscuration     linear dimension of central obscuration as fraction of pupil linear
                            dimension, [0., 1.).
@@ -359,7 +367,7 @@ def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=None,
 
     # Also check for aberrations:
     if aberrations is None:
-        aberrations = np.zeros(8)
+        aberrations = np.zeros(12)
 
     # Old version for reference:
 
@@ -379,20 +387,20 @@ def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=None,
 
     # Faster to use Horner's method in rho:
     temp = (
-            # Constant terms: includes defocus(0)
-            -np.sqrt(3.) * aberrations[0]
+            # Constant terms: includes defocus (4)
+            -np.sqrt(3.) * aberrations[4]
 
-            # Terms with rhosq, but no rho, rho**2, etc.: includes defocus(0) and spher(7)
-            + rhosq * ( 2. * np.sqrt(3.) * aberrations[0]
-                        - 6. * np.sqrt(5.) * aberrations[7]
-                        + rhosq * (6. * np.sqrt(5.) * aberrations[7]) )
+            # Terms with rhosq, but no rho, rho**2, etc.: includes defocus (4) and spher (11)
+            + rhosq * ( 2. * np.sqrt(3.) * aberrations[4]
+                        - 6. * np.sqrt(5.) * aberrations[11]
+                        + rhosq * (6. * np.sqrt(5.) * aberrations[11]) )
 
-            # Now the powers of rho: includes coma2(4), coma1(3), astig2(2), astig1(1), trefoil2(6),
-            # trefoil1(5).
+            # Now the powers of rho: includes coma2 (8), coma1 (7), astig2 (6), astig1 (5), trefoil2
+            # (10), trefoil1 (9).
             # We eventually take the real part
-            + ( rho * ( (rhosq-2./3.) * (3. * np.sqrt(8.) * (aberrations[4] - 1j * aberrations[3]))
-                        + rho * ( (np.sqrt(6.) * (aberrations[2] - 1j * aberrations[1]))
-                                   + rho * (np.sqrt(8.) * (aberrations[6] - 1j * aberrations[5])) 
+            + ( rho * ( (rhosq-2./3.) * (3. * np.sqrt(8.) * (aberrations[8] - 1j * aberrations[7]))
+                        + rho * ( (np.sqrt(6.) * (aberrations[6] - 1j * aberrations[5]))
+                                   + rho * (np.sqrt(8.) * (aberrations[10] - 1j * aberrations[9])) 
                                 )
                       ) 
               ).real
@@ -430,9 +438,12 @@ def wavefront_image(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
-    @param aberrations     NumPy array containing the 8 supported aberrations in units of incident
+    @param aberrations     NumPy array containing the supported aberrations in units of incident
                            light wavelength, ordered according to the Noll convention: defocus,
-                           astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.
+                           astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.  Since these are
+                           aberrations 4-11 in the Noll convention, 'aberrations' should have length
+                           12, with defocus corresponding to index 4 and so on.  The first four
+                           numbers in this array will be ignored.
     @param circular_pupil  adopt a circular pupil?
     @param obscuration     linear dimension of central obscuration as fraction of pupil linear
                            dimension, [0., 1.).
@@ -475,9 +486,12 @@ def psf(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=None,
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
-    @param aberrations     NumPy array containing the 8 supported aberrations in units of incident
+    @param aberrations     NumPy array containing the supported aberrations in units of incident
                            light wavelength, ordered according to the Noll convention: defocus,
-                           astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.
+                           astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.  Since these are
+                           aberrations 4-11 in the Noll convention, 'aberrations' should have length
+                           12, with defocus corresponding to index 4 and so on.  The first four
+                           numbers in this array will be ignored.
     @param circular_pupil  adopt a circular pupil?
     @param obscuration     linear dimension of central obscuration as fraction of pupil linear
                            dimension, [0., 1.).
@@ -532,9 +546,12 @@ def psf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=None,
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
-    @param aberrations     NumPy array containing the 8 supported aberrations in units of incident
+    @param aberrations     NumPy array containing the supported aberrations in units of incident
                            light wavelength, ordered according to the Noll convention: defocus,
-                           astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.
+                           astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.  Since these are
+                           aberrations 4-11 in the Noll convention, 'aberrations' should have length
+                           12, with defocus corresponding to index 4 and so on.  The first four
+                           numbers in this array will be ignored.
     @param circular_pupil  adopt a circular pupil?
     @param obscuration     linear dimension of central obscuration as fraction of pupil linear
                            dimension, [0., 1.).
@@ -571,9 +588,12 @@ def otf(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=None,
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
-    @param aberrations     NumPy array containing the 8 supported aberrations in units of incident
+    @param aberrations     NumPy array containing the supported aberrations in units of incident
                            light wavelength, ordered according to the Noll convention: defocus,
-                           astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.
+                           astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.  Since these are
+                           aberrations 4-11 in the Noll convention, 'aberrations' should have length
+                           12, with defocus corresponding to index 4 and so on.  The first four
+                           numbers in this array will be ignored.
     @param circular_pupil  adopt a circular pupil?
     @param obscuration     linear dimension of central obscuration as fraction of pupil linear
                            dimension, [0., 1.).
@@ -613,9 +633,12 @@ def otf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=None,
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
-    @param aberrations     NumPy array containing the 8 supported aberrations in units of incident
+    @param aberrations     NumPy array containing the supported aberrations in units of incident
                            light wavelength, ordered according to the Noll convention: defocus,
-                           astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.
+                           astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.  Since these are
+                           aberrations 4-11 in the Noll convention, 'aberrations' should have length
+                           12, with defocus corresponding to index 4 and so on.  The first four
+                           numbers in this array will be ignored.
     @param circular_pupil  adopt a circular pupil?
     @param obscuration     linear dimension of central obscuration as fraction of pupil linear
                            dimension, [0., 1.).
@@ -658,9 +681,12 @@ def mtf(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=None,
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
-    @param aberrations     NumPy array containing the 8 supported aberrations in units of incident
+    @param aberrations     NumPy array containing the supported aberrations in units of incident
                            light wavelength, ordered according to the Noll convention: defocus,
-                           astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.
+                           astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.  Since these are
+                           aberrations 4-11 in the Noll convention, 'aberrations' should have length
+                           12, with defocus corresponding to index 4 and so on.  The first four
+                           numbers in this array will be ignored.
     @param circular_pupil  adopt a circular pupil?
     @param obscuration     linear dimension of central obscuration as fraction of pupil linear
                            dimension, [0., 1.).
@@ -696,9 +722,12 @@ def mtf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=None,
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
-    @param aberrations     NumPy array containing the 8 supported aberrations in units of incident
+    @param aberrations     NumPy array containing the supported aberrations in units of incident
                            light wavelength, ordered according to the Noll convention: defocus,
-                           astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.
+                           astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.  Since these are
+                           aberrations 4-11 in the Noll convention, 'aberrations' should have length
+                           12, with defocus corresponding to index 4 and so on.  The first four
+                           numbers in this array will be ignored.
     @param circular_pupil  adopt a circular pupil?
     @param obscuration     linear dimension of central obscuration as fraction of pupil linear
                            dimension, [0., 1.).
@@ -739,9 +768,12 @@ def ptf(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=None,
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
-    @param aberrations     NumPy array containing the 8 supported aberrations in units of incident
+    @param aberrations     NumPy array containing the supported aberrations in units of incident
                            light wavelength, ordered according to the Noll convention: defocus,
-                           astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.
+                           astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.  Since these are
+                           aberrations 4-11 in the Noll convention, 'aberrations' should have length
+                           12, with defocus corresponding to index 4 and so on.  The first four
+                           numbers in this array will be ignored.
     @param circular_pupil  adopt a circular pupil?
     @param obscuration     linear dimension of central obscuration as fraction of pupil linear
                            dimension, [0., 1.)
@@ -783,9 +815,12 @@ def ptf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=None,
     @param dx              grid spacing of PSF in real space units
     @param lam_over_diam   lambda / telescope diameter in the physical units adopted for dx 
                            (user responsible for consistency).
-    @param aberrations     NumPy array containing the 8 supported aberrations in units of incident
+    @param aberrations     NumPy array containing the supported aberrations in units of incident
                            light wavelength, ordered according to the Noll convention: defocus,
-                           astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.
+                           astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher.  Since these are
+                           aberrations 4-11 in the Noll convention, 'aberrations' should have length
+                           12, with defocus corresponding to index 4 and so on.  The first four
+                           numbers in this array will be ignored.
     @param circular_pupil  adopt a circular pupil?
     @param obscuration     linear dimension of central obscuration as fraction of pupil linear
                            dimension, [0., 1.)

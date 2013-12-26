@@ -145,9 +145,9 @@ def main(argv):
     # become strong when Zernike aberrations summed in quadrature approach 0.5 wave.
     # The aberrations chosen in this case correspond to operating close to a 0.25 wave RMS optical
     # path difference.  Unlike in demo3, we specify the aberrations by making a list that we pass
-    # in using the 'aberrations' kwarg.  The order of aberrations is defocus, astig1, astig2, coma1,
-    # coma2, trefoil1, trefoil2, spher as in the Noll convention.
-    aberrations = [0.06, 0.12, -0.08, 0.07, 0.04, 0.0, 0.0, -0.13]
+    # in using the 'aberrations' kwarg.  The order of aberrations starting from index 4 is defocus,
+    # astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher as in the Noll convention.
+    aberrations = [0.0, 0.0, 0.0, 0.0, 0.06, 0.12, -0.08, 0.07, 0.04, 0.0, 0.0, -0.13]
     optics = galsim.OpticalPSF(
         lam_over_diam = 0.6 * psf_fwhm, obscuration = 0.4, aberrations = aberrations,
         gsparams=gsparams)
