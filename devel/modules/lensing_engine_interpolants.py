@@ -56,7 +56,8 @@ def check_dir(dir):
             # There was a problem, so exist.
             raise
 
-def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix):
+def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix,
+                      big_dth, small_dth):
     """Routine to make power spectrum plots and write them to file.
 
     This routine makes a two-panel plot, with the first panel showing the two power spectra,
@@ -74,10 +75,21 @@ def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix):
 
       ps_plot_prefix ------ Prefix to use for power spectrum plots.
 
+      big_dth ------------- Grid spacing for original, coarse grid (degrees).
+
+      small_dth ----------- Grid spacing for subsampled grid (degrees).
+
     """
     # Sanity checks on acceptable inputs
     assert ell.shape == ps.shape
     assert ell.shape == interpolated_ps.shape
+
+    # Calculate maximum k values, in 1/radians
+    # kmax = pi / (theta in radians)
+    #      = pi / (2pi * (theta in degrees) / 180.)
+    #      = 90 / (theta in degrees)
+    big_kmax = 90. / big_dth
+    small_kmax = 90. / small_dth
 
     # Set up 2-panel plot
     fig = plt.figure()
@@ -85,7 +97,16 @@ def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix):
     ax = fig.add_subplot(211)
     ax.plot(ell, ell*(ell+1)*ps/(2.*np.pi), color='b', label='Power spectrum')
     ax.plot(ell, ell*(ell+1)*interpolated_ps/(2.*np.pi), color='r',
-            label='Interpolated power spectrum')
+            label='Interpolated')
+    big_kmax_x_markers = np.array((big_kmax, big_kmax))
+    small_kmax_x_markers = np.array((small_kmax, small_kmax))
+    kmax_y_markers = np.array(( min(np.min(ps[ps>0]),
+                                    np.min(interpolated_ps[interpolated_ps>0])),
+                                1.3*max(np.max(ps), np.max(interpolated_ps))))
+    ax.plot(big_kmax_x_markers, big_kmax*(big_kmax+1)*kmax_y_markers/(2.*np.pi), '--',
+            color='k', label='Coarse spacing')
+    ax.plot(small_kmax_x_markers, big_kmax*(big_kmax+1)*kmax_y_markers/(2.*np.pi),
+            ':', color='k', label='Fine spacing')
     ax.set_ylabel('Dimensionless power')
     ax.set_title('Interpolant: %s'%interpolant)
     ax.set_xscale('log')
@@ -94,7 +115,11 @@ def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix):
 
     # Set up second panel with ratio.
     ax = fig.add_subplot(212)
-    ax.plot(ell, interpolated_ps/ps, color='k')
+    ratio = interpolated_ps/ps
+    ax.plot(ell, ratio, color='k')
+    ax.plot(big_kmax_x_markers, np.array((np.min(ratio), 1.3*np.max(ratio))), '--', color='k')
+    ax.plot(small_kmax_x_markers, np.array((np.min(ratio), 1.3*np.max(ratio))), ':', color='k')
+    ax.plot(ell, np.ones_like(ell), '--', color='r')
     ax.set_xlabel('ell [1/radians]')
     ax.set_ylabel('Interpolated / direct power')
     ax.set_xscale('log')
@@ -104,7 +129,8 @@ def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix):
     plt.savefig(outfile)
     print "Wrote power spectrum plots to file %s"%outfile
 
-def generate_cf_plots(th, cf, interpolated_cf, interpolant, cf_plot_prefix):
+def generate_cf_plots(th, cf, interpolated_cf, interpolant, cf_plot_prefix,
+                      big_dth, small_dth):
     """Routine to make correlation function plots and write them to file.
 
     This routine makes a two-panel plot, with the first panel showing the two correlation functions,
@@ -122,6 +148,10 @@ def generate_cf_plots(th, cf, interpolated_cf, interpolant, cf_plot_prefix):
 
       cf_plot_prefix ------ Prefix to use for correlation function plots.
 
+      big_dth ------------- Grid spacing for original, coarse grid (degrees).
+
+      small_dth ----------- Grid spacing for subsampled grid (degrees).
+
     """
     # Sanity checks on acceptable inputs
     assert th.shape == cf.shape
@@ -134,15 +164,26 @@ def generate_cf_plots(th, cf, interpolated_cf, interpolant, cf_plot_prefix):
     ax.plot(th, cf, color='b', label='Correlation function')
     ax.plot(th, interpolated_cf, color='r',
             label='Interpolated')
+    dth_big_x_markers = np.array((big_dth, big_dth))
+    dth_small_x_markers = np.array((small_dth, small_dth))
+    dth_y_markers = np.array(( min(np.min(cf[cf>0]),
+                                   np.min(interpolated_cf[interpolated_cf>0])),
+                               2*max(np.max(cf), np.max(interpolated_cf))))
+    ax.plot(dth_big_x_markers, dth_y_markers, '--', color='k', label='Coarse spacing')
+    ax.plot(dth_small_x_markers, dth_y_markers, ':', color='k', label='Fine spacing')
     ax.set_ylabel('xi_+')
     ax.set_title('Interpolant: %s'%interpolant)
     ax.set_xscale('log')
     ax.set_yscale('log')
-    plt.legend(loc='lower left')
+    plt.legend(loc='upper right')
 
     # Set up second panel with ratio.
     ax = fig.add_subplot(212)
-    ax.plot(th, interpolated_cf/cf, color='k')
+    ratio = interpolated_cf/cf
+    ax.plot(th, ratio, color='k')
+    ax.plot(dth_big_x_markers, np.array((np.min(ratio), 1.3*np.max(ratio))), '--', color='k')
+    ax.plot(dth_small_x_markers, np.array((np.min(ratio), 1.3*np.max(ratio))), ':', color='k')
+    ax.plot(th, np.ones_like(th), '--', color='r')
     ax.set_xlabel('Separation [degrees]')
     ax.set_ylabel('Interpolated / direct xi_+')
     ax.set_xscale('log')
@@ -388,8 +429,10 @@ def main(n_realizations, subsampling, n_output_bins, ps_plot_prefix, cf_plot_pre
 
         # Plot statistics, and ratios with vs. without interpolants.
         print "Running plotting routines for interpolant=%s..."%interpolant
-        generate_ps_plots(ell, mean_ps, mean_interpolated_ps, interpolant, ps_plot_prefix)
-        generate_cf_plots(th, mean_cf, mean_interpolated_cf, interpolant, cf_plot_prefix)
+        generate_ps_plots(ell, mean_ps, mean_interpolated_ps, interpolant, ps_plot_prefix,
+                          default_grid_spacing, subsampled_grid_spacing)
+        generate_cf_plots(th, mean_cf, mean_interpolated_cf, interpolant, cf_plot_prefix,
+                          default_grid_spacing, subsampled_grid_spacing)
 
         # Output results.
         print "Outputting tables of results..."
