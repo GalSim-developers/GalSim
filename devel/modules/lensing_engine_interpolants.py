@@ -56,6 +56,39 @@ def check_dir(dir):
             # There was a problem, so exist.
             raise
 
+def ft_interp(uvals, interpolant):
+    """Utility to calculate the Fourier transform of an interpolant.
+
+    The uvals are not the standard k or ell, but rather cycles per interpolation unit.
+
+    If we do not have a form available for a particular interpolant, this will raise a
+    NotImplementedError.
+
+    Arguments:
+
+      uvals --------- NumPy array of u values at which to get the FT of the interpolant.
+
+      interpolant --- String specifying the interpolant.
+
+    """
+    s = np.sinc(uvals)
+
+    if interpolant=='linear':
+        return s**2
+    elif interpolant=='nearest':
+        return s
+    elif interpolant=='cubic':
+        c = np.cos(np.pi*uvals)
+        return (s**3)*(3.*s-2.*c)
+    elif interpolant=='quintic':
+        piu = np.pi*uvals
+        c = np.cos(piu)
+        piusq = piu**2
+        return (s**5)*(s*(55.-19.*piusq) + 2.*c*(piusq-27.))
+    else:
+        raise NotImplementedError
+
+
 def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix,
                       big_dth, small_dth):
     """Routine to make power spectrum plots and write them to file.
@@ -117,12 +150,22 @@ def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix,
     ax = fig.add_subplot(212)
     ratio = interpolated_ps/ps
     ax.plot(ell, ratio, color='k')
+    fine_ell = np.arange(20000.)
+    fine_ell = fine_ell[(fine_ell > np.min(ell)) & (fine_ell < np.max(ell))]
+    u = fine_ell*big_dth/180./np.pi # check factors of pi and so on; the big_dth is needed to
+                                    # convert from actual distances to "interpolation units"
+    try:
+        theor_ratio = (ft_interp(u, interpolant))**2
+        ax.plot(fine_ell, theor_ratio, '--', color='g', label='Theory prediction')
+    except:
+        print "Could not get theoretical prediction for interpolant %s"%interpolant
     ax.plot(big_kmax_x_markers, np.array((np.min(ratio), 1.3*np.max(ratio))), '--', color='k')
     ax.plot(small_kmax_x_markers, np.array((np.min(ratio), 1.3*np.max(ratio))), ':', color='k')
     ax.plot(ell, np.ones_like(ell), '--', color='r')
     ax.set_xlabel('ell [1/radians]')
     ax.set_ylabel('Interpolated / direct power')
     ax.set_xscale('log')
+    plt.legend(loc='upper right')
 
     # Write to file.
     outfile = ps_plot_prefix + interpolant + '.png'
