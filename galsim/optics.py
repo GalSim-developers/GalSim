@@ -256,7 +256,7 @@ def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_diam=2., circul
     in unit disc-scaled coordinates for use by Zernike polynomials (as a complex number)
     for describing the wavefront across the pupil plane.  The array in_pupil is a vector of 
     Bools used to specify where in the pupil plane described by rho is illuminated.  See also 
-    optics.wavefront. 
+    wavefront(). 
     """
     kmax_internal = dx * 2. * np.pi / lam_over_diam # INTERNAL kmax in units of array grid spacing
     # Build kx, ky coords
@@ -310,7 +310,8 @@ def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=aberr
     
     Outputs a complex image (shape=array_shape) of a circular pupil wavefront of unit amplitude
     that can be easily transformed to produce an optical PSF with lambda/D = lam_over_diam on an
-    output grid of spacing dx.
+    output grid of spacing dx.  This routine would need to be modified in order to include higher
+    order aberrations than spher (order 11 in Noll convention).
 
     To ensure properly Nyquist sampled output any user should set lam_over_diam >= 2. * dx.
     
@@ -318,7 +319,7 @@ def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=aberr
     (kx, ky) = (0, 0) is the [0, 0] array element.
 
     Input aberration coefficients are assumed to be supplied in units of wavelength, and correspond
-    to the Zernike polynomials in the Noll convention definined in
+    to the Zernike polynomials in the Noll convention defined in
     Noll, J. Opt. Soc. Am. 66, 207-211(1976). For a brief summary of the polynomials, refer to
     http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials.
 
@@ -417,7 +418,7 @@ def wavefront_image(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations
     k space units.
 
     Input aberration coefficients are assumed to be supplied in units of wavelength, and correspond
-    to the Zernike polynomials in the Noll convention definined in
+    to the Zernike polynomials in the Noll convention defined in
     Noll, J. Opt. Soc. Am. 66, 207-211(1976). For a brief summary of the polynomials, refer to
     http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials.
 
