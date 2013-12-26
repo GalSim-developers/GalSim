@@ -373,7 +373,10 @@ def main(n_realizations, subsampling, n_output_bins, ps_plot_prefix, cf_plot_pre
 
         n_realizations ----- Number of random realizations of each shear field.
 
-        subsampling -------- Factor by which to subsample the default grid.
+        subsampling -------- Factor by which to subsample the default grid.  Should be an int > 1.
+                             (Note: have explicitly checked that if subsampling=1, the resulting
+                             two-point functions are the same for the direct calculation and
+                             'interpolation'.)
 
         n_output_bins ------ Number of bins for calculation of 2-point functions.
 
