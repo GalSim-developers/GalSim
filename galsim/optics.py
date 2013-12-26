@@ -67,9 +67,10 @@ class OpticalPSF(GSObject):
     
         >>> optical_psf = galsim.OpticalPSF(lam_over_diam, defocus=0., astig1=0., astig2=0.,
                                             coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0.,
-                                            circular_pupil=True, obscuration=0., interpolant=None,
-                                            oversampling=1.5, pad_factor=1.5, nstruts=0,
-                                            strut_thick=0.05, strut_angle=0.*galsim.degrees)
+                                            aberrations=None, circular_pupil=True, obscuration=0.,
+                                            interpolant=None, oversampling=1.5, pad_factor=1.5,
+                                            nstruts=0, strut_thick=0.05,
+                                            strut_angle=0.*galsim.degrees)
 
     Initializes optical_psf as a galsim.OpticalPSF() instance.
 
@@ -85,6 +86,10 @@ class OpticalPSF(GSObject):
     @param trefoil2         Trefoil (one of the arrows along x) in units of incident light
                             wavelength.
     @param spher            Spherical aberration in units of incident light wavelength.
+    @param aberrations      Optional keyword, to pass in a list, tuple, or NumPy array of 8
+                            aberrations in units of incident light wavelength (ordered according to
+                            the Noll convention), rather than passing in individual values for each
+                            individual aberration.
     @param circular_pupil   Adopt a circular pupil?  [default `circular_pupil = True`]
     @param obscuration      Linear dimension of central obscuration as fraction of pupil linear
                             dimension, [0., 1.).
@@ -149,8 +154,8 @@ class OpticalPSF(GSObject):
     _takes_logger = False
 
     # --- Public Class methods ---
-    def __init__(self, lam_over_diam, defocus=0.,
-                 astig1=0., astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0., 
+    def __init__(self, lam_over_diam, defocus=0., astig1=0., astig2=0., coma1=0., coma2=0.,
+                 trefoil1=0., trefoil2=0., spher=0., aberrations=None,
                  circular_pupil=True, obscuration=0., interpolant=None, oversampling=1.5,
                  pad_factor=1.5, suppress_warning=False, flux=1.,
                  nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees,
@@ -172,19 +177,30 @@ class OpticalPSF(GSObject):
         # Get a good FFT size.  i.e. 2^n or 3 * 2^n.
         npix = goodFFTSize(int(np.ceil(2. * np.pi / (dx_lookup * stepk) )))
 
-        # Repackage the aberrations into a single array, to be passed in to all the utilities in
-        # this file.  We do this instead of passing around the individual values, so that only two
-        # pieces of code will have to be changed if we want to support higher aberrations.  (The
-        # changes would be here, and in the wavefront() routine below.)
-        aberrations = np.zeros(8)
-        aberrations[0] = defocus
-        aberrations[1] = astig1
-        aberrations[2] = astig2
-        aberrations[3] = coma1
-        aberrations[4] = coma2
-        aberrations[5] = trefoil1
-        aberrations[6] = trefoil2
-        aberrations[7] = spher
+        if aberrations is None:
+            # Repackage the aberrations into a single array, to be passed in to all the utilities in
+            # this file.  We do this instead of passing around the individual values, so that only
+            # two pieces of code will have to be changed if we want to support higher aberrations.
+            # (The changes would be here, and in the wavefront() routine below.)
+            aberrations = np.zeros(8)
+            aberrations[0] = defocus
+            aberrations[1] = astig1
+            aberrations[2] = astig2
+            aberrations[3] = coma1
+            aberrations[4] = coma2
+            aberrations[5] = trefoil1
+            aberrations[6] = trefoil2
+            aberrations[7] = spher
+        else:
+            # Aberrations were passed in, so check that there are the right number of entries.
+            if len(aberrations) != 8:
+                raise RuntimeError("Aberrations keyword should be an object of length 8!")
+            # Make sure no individual ones were passed in, since they will be ignored.
+            if np.any( 
+                np.array([defocus,astig1,astig2,coma1,coma2,trefoil1,trefoil2,spher]) != 0):
+                raise RuntimeError("Cannot pass in individual aberrations and array!")
+            # Finally, just in case it was a tuple/list, make sure we end up with NumPy array:
+            aberrations = np.array(aberrations)
 
         # Make the psf image using this dx and array shape
         optimage = galsim.optics.psf_image(
