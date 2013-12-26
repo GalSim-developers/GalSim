@@ -12,6 +12,7 @@ import os
 import subprocess
 import pyfits
 import matplotlib.pyplot as plt
+from matplotlib.font_manager import FontProperties
 
 # Set some important quantities up top:
 # Which interpolants do we want to test?
@@ -35,6 +36,10 @@ default_n_output_bins = 12
 ## output prefix for power spectrum, correlation function plots
 default_ps_plot_prefix = "plots/interpolated_ps_"
 default_cf_plot_prefix = "plots/interpolated_cf_"
+
+# make small fonts possible in legend
+fontP = FontProperties()
+fontP.set_size('small')
 
 # Utility functions go here, above main():
 def check_dir(dir):
@@ -90,7 +95,7 @@ def ft_interp(uvals, interpolant):
 
 
 def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix,
-                      big_dth, small_dth):
+                      big_dth, small_dth, type='EE'):
     """Routine to make power spectrum plots and write them to file.
 
     This routine makes a two-panel plot, with the first panel showing the two power spectra,
@@ -112,6 +117,9 @@ def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix,
 
       small_dth ----------- Grid spacing for subsampled grid (degrees).
 
+      type ---------------- Type of power spectrum?  Options are 'EE', 'BB', 'EB'.  This affects the
+                            choice of plots to make.
+
     """
     # Sanity checks on acceptable inputs
     assert ell.shape == ps.shape
@@ -124,56 +132,70 @@ def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix,
     big_kmax = 90. / big_dth
     small_kmax = 90. / small_dth
 
-    # Set up 2-panel plot
+    # Set up plot
     fig = plt.figure()
     # Set up first panel with power spectra.
-    ax = fig.add_subplot(211)
+    if type=='EE':
+        ax = fig.add_subplot(211)
+    else:
+        ax = fig.add_subplot(111)
     ax.plot(ell, ell*(ell+1)*ps/(2.*np.pi), color='b', label='Power spectrum')
     ax.plot(ell, ell*(ell+1)*interpolated_ps/(2.*np.pi), color='r',
             label='Interpolated')
     big_kmax_x_markers = np.array((big_kmax, big_kmax))
     small_kmax_x_markers = np.array((small_kmax, small_kmax))
-    kmax_y_markers = np.array(( min(np.min(ps[ps>0]),
-                                    np.min(interpolated_ps[interpolated_ps>0])),
-                                1.3*max(np.max(ps), np.max(interpolated_ps))))
-    ax.plot(big_kmax_x_markers, big_kmax*(big_kmax+1)*kmax_y_markers/(2.*np.pi), '--',
-            color='k', label='Coarse spacing')
-    ax.plot(small_kmax_x_markers, big_kmax*(big_kmax+1)*kmax_y_markers/(2.*np.pi),
-            ':', color='k', label='Fine spacing')
-    ax.set_ylabel('Dimensionless power')
+    if type=='EE':
+        kmax_y_markers = np.array((
+                min(np.min((ell**2)*ps[ps>0]/(2.*np.pi)),
+                    np.min((ell**2)*interpolated_ps[interpolated_ps>0]/(2.*np.pi))),
+                max(np.max((ell**2)*ps/(2.*np.pi)),
+                    np.max((ell**2)*interpolated_ps/(2.*np.pi)))))
+    else:
+        kmax_y_markers = np.array((
+                min(np.min((ell**2)*ps/(2.*np.pi)),
+                    np.min((ell**2)*interpolated_ps/(2.*np.pi))),
+                max(np.max((ell**2)*ps/(2.*np.pi)),
+                    np.max((ell**2)*interpolated_ps/(2.*np.pi)))))
+    ax.plot(big_kmax_x_markers, kmax_y_markers, '--', color='k', label='Coarse spacing')
+    ax.plot(small_kmax_x_markers, kmax_y_markers, ':', color='k', label='Fine spacing')
+    ax.set_ylabel('Dimensionless %s power'%type)
     ax.set_title('Interpolant: %s'%interpolant)
     ax.set_xscale('log')
-    ax.set_yscale('log')
-    plt.legend(loc='lower left')
+    if type=='EE':
+        ax.set_yscale('log')
+    plt.legend(loc='lower left', prop=fontP)
 
-    # Set up second panel with ratio.
-    ax = fig.add_subplot(212)
-    ratio = interpolated_ps/ps
-    ax.plot(ell, ratio, color='k')
-    fine_ell = np.arange(20000.)
-    fine_ell = fine_ell[(fine_ell > np.min(ell)) & (fine_ell < np.max(ell))]
-    u = fine_ell*big_dth/180./np.pi # check factors of pi and so on; the big_dth is needed to
-                                    # convert from actual distances to "interpolation units"
-    try:
-        theor_ratio = (ft_interp(u, interpolant))**2
-        ax.plot(fine_ell, theor_ratio, '--', color='g', label='Theory prediction')
-    except:
-        print "Could not get theoretical prediction for interpolant %s"%interpolant
-    ax.plot(big_kmax_x_markers, np.array((np.min(ratio), 1.3*np.max(ratio))), '--', color='k')
-    ax.plot(small_kmax_x_markers, np.array((np.min(ratio), 1.3*np.max(ratio))), ':', color='k')
-    ax.plot(ell, np.ones_like(ell), '--', color='r')
-    ax.set_xlabel('ell [1/radians]')
-    ax.set_ylabel('Interpolated / direct power')
-    ax.set_xscale('log')
-    plt.legend(loc='upper right')
+    if type=='EE':
+        # Set up second panel with ratio.
+        ax = fig.add_subplot(212)
+        ratio = interpolated_ps/ps
+        ax.plot(ell, ratio, color='k')
+        fine_ell = np.arange(20000.)
+        fine_ell = fine_ell[(fine_ell > np.min(ell)) & (fine_ell < np.max(ell))]
+        u = fine_ell*big_dth/180./np.pi # check factors of pi and so on; the big_dth is needed to
+        # convert from actual distances to "interpolation units"
+        try:
+            theor_ratio = (ft_interp(u, interpolant))**2
+            ax.plot(fine_ell, theor_ratio, '--', color='g', label='Theory prediction')
+        except:
+            print "Could not get theoretical prediction for interpolant %s"%interpolant
+        ax.plot(big_kmax_x_markers, np.array((np.min(ratio), 1.3*np.max(ratio))), '--',
+                color='k')
+        ax.plot(small_kmax_x_markers, np.array((np.min(ratio), 1.3*np.max(ratio))), ':',
+                color='k')
+        ax.plot(ell, np.ones_like(ell), '--', color='r')
+        ax.set_xlabel('ell [1/radians]')
+        ax.set_ylabel('Interpolated / direct power')
+        ax.set_xscale('log')
+        plt.legend(loc='upper right', prop=fontP)
 
     # Write to file.
-    outfile = ps_plot_prefix + interpolant + '.png'
+    outfile = ps_plot_prefix + interpolant + '_' + type + '.png'
     plt.savefig(outfile)
     print "Wrote power spectrum plots to file %r"%outfile
 
 def generate_cf_plots(th, cf, interpolated_cf, interpolant, cf_plot_prefix,
-                      big_dth, small_dth):
+                      big_dth, small_dth, type='p'):
     """Routine to make correlation function plots and write them to file.
 
     This routine makes a two-panel plot, with the first panel showing the two correlation functions,
@@ -195,6 +217,8 @@ def generate_cf_plots(th, cf, interpolated_cf, interpolant, cf_plot_prefix,
 
       small_dth ----------- Grid spacing for subsampled grid (degrees).
 
+      type ---------------- Type of correlation function?  Options are 'p' and 'm' for xi_+ and
+                            xi_-.
     """
     # Sanity checks on acceptable inputs
     assert th.shape == cf.shape
@@ -214,11 +238,14 @@ def generate_cf_plots(th, cf, interpolated_cf, interpolant, cf_plot_prefix,
                                2*max(np.max(cf), np.max(interpolated_cf))))
     ax.plot(dth_big_x_markers, dth_y_markers, '--', color='k', label='Coarse spacing')
     ax.plot(dth_small_x_markers, dth_y_markers, ':', color='k', label='Fine spacing')
-    ax.set_ylabel('xi_+')
+    if type=='p':
+        ax.set_ylabel('xi_+')
+    else:
+        ax.set_ylabel('xi_-')
     ax.set_title('Interpolant: %s'%interpolant)
     ax.set_xscale('log')
     ax.set_yscale('log')
-    plt.legend(loc='upper right')
+    plt.legend(loc='upper right', prop=fontP)
 
     # Set up second panel with ratio.
     ax = fig.add_subplot(212)
@@ -233,11 +260,11 @@ def generate_cf_plots(th, cf, interpolated_cf, interpolant, cf_plot_prefix,
     ax.set_xscale('log')
 
     # Write to file.
-    outfile = cf_plot_prefix + interpolant + '.png'
+    outfile = cf_plot_prefix + interpolant + '_' + type + '.png'
     plt.savefig(outfile)
     print "Wrote correlation function plots to file %r"%outfile
 
-def write_ps_output(ell, ps, interpolated_ps, interpolant, ps_plot_prefix):
+def write_ps_output(ell, ps, interpolated_ps, interpolant, ps_plot_prefix, type='EE'):
     """Routine to write final power spectra to file.
 
     This routine makes two output files: one ascii (.dat) and one FITS table (.fits).
@@ -254,9 +281,11 @@ def write_ps_output(ell, ps, interpolated_ps, interpolant, ps_plot_prefix):
 
       ps_plot_prefix ------ Prefix to use for power spectrum data.
 
+      type ---------------- Type of power spectrum?  (e.g., 'EE', 'BB', etc.)
+
     """
     # Make ascii output.
-    outfile = ps_plot_prefix + interpolant + '.dat'
+    outfile = ps_plot_prefix + interpolant + '_' + type + '.dat'
     np.savetxt(outfile, np.column_stack((ell, ps, interpolated_ps)), fmt='%12.4e')
     print "Wrote ascii output to file %r"%outfile
 
@@ -269,11 +298,11 @@ def write_ps_output(ell, ps, interpolated_ps, interpolant, ps_plot_prefix):
     table = pyfits.new_table(cols)
     phdu = pyfits.PrimaryHDU()
     hdus = pyfits.HDUList([phdu,table])
-    outfile = ps_plot_prefix + interpolant + '.fits'
+    outfile = ps_plot_prefix + interpolant + '_' + type + '.fits'
     hdus.writeto(outfile, clobber=True)
     print "Wrote FITS output to file %r"%outfile
 
-def write_cf_output(th, cf, interpolated_cf, interpolant, cf_plot_prefix):
+def write_cf_output(th, cf, interpolated_cf, interpolant, cf_plot_prefix, type='p'):
     """Routine to write final correlation functions to file.
 
     This routine makes two output files: one ascii (.dat) and one FITS table (.fits).
@@ -290,9 +319,11 @@ def write_cf_output(th, cf, interpolated_cf, interpolant, cf_plot_prefix):
 
       cf_plot_prefix ------ Prefix to use for correlation function plots.
 
+      type ---------------- Type of correlation function?  Options are 'p' and 'm' for xi_+ and
+                            xi_-.
     """
     # Make ascii output.
-    outfile = cf_plot_prefix + interpolant + '.dat'
+    outfile = cf_plot_prefix + interpolant + '_' + type + '.dat'
     np.savetxt(outfile, np.column_stack((th, cf, interpolated_cf)), fmt='%12.4e')
     print "Wrote ascii output to file %r"%outfile
 
@@ -305,7 +336,7 @@ def write_cf_output(th, cf, interpolated_cf, interpolant, cf_plot_prefix):
     table = pyfits.new_table(cols)
     phdu = pyfits.PrimaryHDU()
     hdus = pyfits.HDUList([phdu,table])
-    outfile = cf_plot_prefix + interpolant + '.fits'
+    outfile = cf_plot_prefix + interpolant + '_' + type + '.fits'
     hdus.writeto(outfile, clobber=True)
     print "Wrote FITS output to file %r"%outfile
 
@@ -363,8 +394,9 @@ def getCF(x, y, g1, g2, dtheta, ngrid, n_output_bins):
     # Parse and return results
     r = results[:,0]
     xip = results[:,2]
+    xim = results[:,3]
     xip_err = results[:,6]
-    return r, xip, xip_err
+    return r, xip, xim, xip_err
 
 def main(n_realizations, subsampling, n_output_bins, ps_plot_prefix, cf_plot_prefix):
     """Main routine to drive all tests.
@@ -409,10 +441,16 @@ def main(n_realizations, subsampling, n_output_bins, ps_plot_prefix, cf_plot_pre
         print "  Generating %d realizations..."%n_realizations
 
         # Initialize arrays for two-point functions.
-        mean_interpolated_ps = np.zeros(n_output_bins)
-        mean_ps = np.zeros(n_output_bins)
-        mean_interpolated_cf = np.zeros(n_output_bins)
-        mean_cf = np.zeros(n_output_bins)
+        mean_interpolated_ps_ee = np.zeros(n_output_bins)
+        mean_ps_ee = np.zeros(n_output_bins)
+        mean_interpolated_ps_bb = np.zeros(n_output_bins)
+        mean_ps_bb = np.zeros(n_output_bins)
+        mean_interpolated_ps_eb = np.zeros(n_output_bins)
+        mean_ps_eb = np.zeros(n_output_bins)
+        mean_interpolated_cfp = np.zeros(n_output_bins)
+        mean_cfp = np.zeros(n_output_bins)
+        mean_interpolated_cfm = np.zeros(n_output_bins)
+        mean_cfm = np.zeros(n_output_bins)
 
         # Loop over realizations.
         for i_real in range(n_realizations):
@@ -449,44 +487,65 @@ def main(n_realizations, subsampling, n_output_bins, ps_plot_prefix, cf_plot_pre
                 pse = galsim.pse.PowerSpectrumEstimator(subsampled_ngrid,
                                                         grid_size,
                                                         n_output_bins)            
-            ell, interpolated_ps_ee, _, _ = \
+            ell, interpolated_ps_ee, interpolated_ps_bb, interpolated_ps_eb = \
                 pse.estimate(interpolated_g1, interpolated_g2)
-            ell, ps_ee, _, _ = pse.estimate(g1, g2)
-            th, interpolated_cf, cf_err = getCF(np.array(x), np.array(y),
-                                                interpolated_g1.flatten(),
-                                                interpolated_g2.flatten(),
-                                                subsampled_grid_spacing,
-                                                subsampled_ngrid,
-                                                n_output_bins)
-            _, cf, _ = getCF(np.array(x), np.array(y),
-                             g1.flatten(), g2.flatten(),
-                             subsampled_grid_spacing, subsampled_ngrid,
-                             n_output_bins)
+            ell, ps_ee, ps_bb, ps_eb = pse.estimate(g1, g2)
+            th, interpolated_cfp, interpolated_cfm, cf_err = \
+                getCF(np.array(x), np.array(y), interpolated_g1.flatten(),
+                      interpolated_g2.flatten(), subsampled_grid_spacing,
+                      subsampled_ngrid, n_output_bins)
+            _, cfp, cfm, _ = \
+                getCF(np.array(x), np.array(y), g1.flatten(), g2.flatten(),
+                      subsampled_grid_spacing, subsampled_ngrid, n_output_bins)
 
             # Accumulate statistics.
-            mean_interpolated_ps += interpolated_ps_ee
-            mean_ps += ps_ee
-            mean_interpolated_cf += interpolated_cf
-            mean_cf += cf
+            mean_interpolated_ps_ee += interpolated_ps_ee
+            mean_ps_ee += ps_ee
+            mean_interpolated_ps_bb += interpolated_ps_bb
+            mean_ps_bb += ps_bb
+            mean_interpolated_ps_eb += interpolated_ps_eb
+            mean_ps_eb += ps_eb
+            mean_interpolated_cfp += interpolated_cfp
+            mean_cfp += cfp
+            mean_interpolated_cfm += interpolated_cfm
+            mean_cfm += cfm
 
         # Now get the average over all realizations
         print "Done generating realizations, now getting mean 2-point functions"
-        mean_interpolated_ps /= n_realizations
-        mean_ps /= n_realizations
-        mean_interpolated_cf /= n_realizations
-        mean_cf /= n_realizations
+        mean_interpolated_ps_ee /= n_realizations
+        mean_ps_ee /= n_realizations
+        mean_interpolated_ps_bb /= n_realizations
+        mean_ps_bb /= n_realizations
+        mean_interpolated_ps_eb /= n_realizations
+        mean_ps_eb /= n_realizations
+        mean_interpolated_cfp /= n_realizations
+        mean_cfp /= n_realizations
+        mean_interpolated_cfm /= n_realizations
+        mean_cfm /= n_realizations
 
         # Plot statistics, and ratios with vs. without interpolants.
         print "Running plotting routines for interpolant=%s..."%interpolant
-        generate_ps_plots(ell, mean_ps, mean_interpolated_ps, interpolant, ps_plot_prefix,
-                          default_grid_spacing, subsampled_grid_spacing)
-        generate_cf_plots(th, mean_cf, mean_interpolated_cf, interpolant, cf_plot_prefix,
-                          default_grid_spacing, subsampled_grid_spacing)
+        generate_ps_plots(ell, mean_ps_ee, mean_interpolated_ps_ee, interpolant, ps_plot_prefix,
+                          default_grid_spacing, subsampled_grid_spacing, type='EE')
+        generate_ps_plots(ell, mean_ps_bb, mean_interpolated_ps_bb, interpolant, ps_plot_prefix,
+                          default_grid_spacing, subsampled_grid_spacing, type='BB')
+        generate_ps_plots(ell, mean_ps_eb, mean_interpolated_ps_eb, interpolant, ps_plot_prefix,
+                          default_grid_spacing, subsampled_grid_spacing, type='EB')
+        generate_cf_plots(th, mean_cfp, mean_interpolated_cfp, interpolant, cf_plot_prefix,
+                          default_grid_spacing, subsampled_grid_spacing, type='p')
+        generate_cf_plots(th, mean_cfm, mean_interpolated_cfm, interpolant, cf_plot_prefix,
+                          default_grid_spacing, subsampled_grid_spacing, type='m')
 
         # Output results.
         print "Outputting tables of results..."
-        write_ps_output(ell, mean_ps, mean_interpolated_ps, interpolant, ps_plot_prefix)
-        write_cf_output(th, mean_cf, mean_interpolated_cf, interpolant, cf_plot_prefix)
+        write_ps_output(ell, mean_ps_ee, mean_interpolated_ps_ee, interpolant, ps_plot_prefix,
+                        type='EE')
+        write_ps_output(ell, mean_ps_bb, mean_interpolated_ps_bb, interpolant, ps_plot_prefix,
+                        type='BB')
+        write_ps_output(ell, mean_ps_eb, mean_interpolated_ps_eb, interpolant, ps_plot_prefix,
+                        type='EB')
+        write_cf_output(th, mean_cfp, mean_interpolated_cfp, interpolant, cf_plot_prefix, type='p')
+        write_cf_output(th, mean_cfm, mean_interpolated_cfm, interpolant, cf_plot_prefix, type='m')
         print ""
 
 if __name__ == "__main__":
