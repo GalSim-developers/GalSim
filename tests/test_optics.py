@@ -364,13 +364,26 @@ def test_OpticalPSF_aberrations_kwargs():
     opt1 = galsim.OpticalPSF(lod, obscuration=obscuration, defocus=0.1, coma2=0.3, spher=-0.1)
 
     # Now make it with an aberrations list.
-    aberrations = [0.0, 0.0, 0.0, 0.0, 0.1, 0., 0., 0., 0.3, 0., 0., -0.1]
+    aberrations = np.zeros(12)
+    aberrations[4] = 0.1
+    aberrations[8] = 0.3
+    aberrations[11] = -0.1
+
     opt2 = galsim.OpticalPSF(lod, obscuration=obscuration, aberrations=aberrations)
 
     # Make sure they agree.
     np.testing.assert_array_equal(
         opt1.draw(dx=0.2*lod).array, opt2.draw(dx=0.2*lod).array,
-        err_msg="Optical PSF depends on how aberrations are specified")
+        err_msg="Optical PSF depends on how aberrations are specified (4,8,11)")
+
+    # Repeat with all aberrations up to index 11, using a regular list, not a numpy array
+    opt1 = galsim.OpticalPSF(lod, defocus=.5, astig1=0.5, astig2=0.3, coma1=0.4, coma2=-0.3,
+                             trefoil1=-0.2, trefoil2=0.1, spher=-0.8, obscuration=obscuration) 
+    aberrations = [ 0.0 ] * 4 + [ 0.5, 0.5, 0.3, 0.4, -0.3, -0.2, 0.1, -0.8 ]
+    opt2 = galsim.OpticalPSF(lod, obscuration=obscuration, aberrations=aberrations)
+    np.testing.assert_array_equal(
+        opt1.draw(dx=0.2*lod).array, opt2.draw(dx=0.2*lod).array,
+        err_msg="Optical PSF depends on how aberrations are specified (full list)")
 
     # Also, check for proper response to weird inputs.
     try:
