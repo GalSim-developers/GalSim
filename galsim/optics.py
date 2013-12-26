@@ -208,7 +208,7 @@ class OpticalPSF(GSObject):
             aberrations=aberrations, circular_pupil=circular_pupil, obscuration=obscuration,
             flux=flux, nstruts=nstruts, strut_thick=strut_thick, strut_angle=strut_angle)
         
-        # Initialize the SBProfile
+        # Initialize the GSObject (InterpolatedImage)
         GSObject.__init__(
             self, galsim.InterpolatedImage(optimage, x_interpolant=interpolant, dx=dx_lookup,
                                            calculate_stepk=True, calculate_maxk=True,
