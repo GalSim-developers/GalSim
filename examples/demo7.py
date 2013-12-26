@@ -147,7 +147,20 @@ def main(argv):
     # path difference.  Unlike in demo3, we specify the aberrations by making a list that we pass
     # in using the 'aberrations' kwarg.  The order of aberrations starting from index 4 is defocus,
     # astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher as in the Noll convention.
-    aberrations = [0.0, 0.0, 0.0, 0.0, 0.06, 0.12, -0.08, 0.07, 0.04, 0.0, 0.0, -0.13]
+    # We ignore the first 4 values to that the index number corresponds to the Zernike index
+    # in the Noll convention. This will be particularly convenient once we start allowing 
+    # coefficients beyond spherical (index 11).  c.f. The Wikipedia page about the Noll indices:
+    #
+    #     http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials
+
+    aberrations = [ 0.0 ] * 12          # Set the initial size.
+    aberrations[4] = 0.06               # Noll index 4 = Defocus
+    aberrations[5:7] = [ 0.12, -0.08 ]  # Noll index 5,6 = Astigmatism
+    aberrations[7:9] = [ 0.07, 0.04 ]   # Noll index 7,8 = Coma
+    aberrations[11] = -0.13             # Noll index 11 = Spherical
+    # You could also define these all at once if that is more convenient:
+    #aberrations = [0.0, 0.0, 0.0, 0.0, 0.06, 0.12, -0.08, 0.07, 0.04, 0.0, 0.0, -0.13]
+
     optics = galsim.OpticalPSF(
         lam_over_diam = 0.6 * psf_fwhm, obscuration = 0.4, aberrations = aberrations,
         gsparams=gsparams)
