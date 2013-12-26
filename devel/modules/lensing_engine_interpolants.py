@@ -256,7 +256,7 @@ def generate_cf_plots(th, cf, interpolated_cf, interpolant, cf_plot_prefix,
     ax.plot(th, np.ones_like(th), '--', color='r')
     ax.set_ylim(0.0,1.6)
     ax.set_xlabel('Separation [degrees]')
-    ax.set_ylabel('Interpolated / direct xi_+')
+    ax.set_ylabel('Interpolated / direct xi')
     ax.set_xscale('log')
 
     # Write to file.
