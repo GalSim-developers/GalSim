@@ -226,7 +226,7 @@ class OpticalPSF(GSObject):
                 import warnings
                 warnings.warn(
                     "The calculated stepk (%g) for OpticalPSF is smaller "%final_stepk +
-                    "than what was used to build the wavefront (%g)."%stepk +
+                    "than what was used to build the wavefront (%g). "%stepk +
                     "This could lead to aliasing problems. " +
                     "Using pad_factor >= %f is recommended."%(pad_factor * stepk / final_stepk))
 
@@ -303,7 +303,7 @@ def generate_pupil_plane(array_shape=(256, 256), dx=1., lam_over_diam=2., circul
                 ((kys < 0.) * (np.abs(kxs) < .5 * strut_thick * kmax_internal)))
     return rho, in_pupil
 
-def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=aberrations,
+def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=None,
               circular_pupil=True, obscuration=0., nstruts=0, strut_thick=0.05,
               strut_angle=0.*galsim.degrees):
     """Return a complex, aberrated wavefront across a circular (default) or square pupil.
@@ -357,6 +357,10 @@ def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=aberr
     rho = rho_all[in_pupil]  
     rhosq = np.abs(rho)**2
 
+    # Also check for aberrations:
+    if aberrations is None:
+        aberrations = np.zeros(8)
+
     # Old version for reference:
 
     # rho2 = rho * rho
@@ -398,7 +402,7 @@ def wavefront(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=aberr
 
     return wf
 
-def wavefront_image(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=aberrations,
+def wavefront_image(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=None,
                     circular_pupil=True, obscuration=0., nstruts=0, strut_thick=0.05,
                     strut_angle=0.*galsim.degrees):
     """Return wavefront as a (real, imag) tuple of ImageViewD objects rather than complex NumPy
@@ -454,7 +458,7 @@ def wavefront_image(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations
     imimag = galsim.ImageViewD(np.ascontiguousarray(array.imag.astype(np.float64)), scale=scale)
     return (imreal, imimag)
 
-def psf(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=aberrations,
+def psf(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=None,
         circular_pupil=True, obscuration=0., nstruts=0, strut_thick=0.05,
         strut_angle=0.*galsim.degrees, flux=1.):
     """Return NumPy array containing circular (default) or square pupil PSF with low-order 
@@ -510,7 +514,7 @@ def psf(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=aberrations
 
     return im
 
-def psf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=aberrations,
+def psf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=None,
               circular_pupil=True, obscuration=0., nstruts=0, strut_thick=0.05,
               strut_angle=0.*galsim.degrees, flux=1.):
     """Return circular (default) or square pupil PSF with low-order aberrations as an ImageViewD.
@@ -550,7 +554,7 @@ def psf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=aberr
     im = galsim.ImageViewD(array.astype(np.float64), scale=dx)
     return im
 
-def otf(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=aberrations,
+def otf(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=None,
         circular_pupil=True, obscuration=0., nstruts=0, strut_thick=0.05,
         strut_angle=0.*galsim.degrees):
     """Return the complex OTF of a circular (default) or square pupil with low-order aberrations as
@@ -590,7 +594,7 @@ def otf(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=aberrations
     # Make unit flux before returning
     return np.ascontiguousarray(otf) / otf[0, 0].real
 
-def otf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=aberrations,
+def otf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=None,
               circular_pupil=True, obscuration=0., nstruts=0, strut_thick=0.05,
               strut_angle=0.*galsim.degrees):
     """Return the complex OTF of a circular (default) or square pupil with low-order aberrations as 
@@ -637,7 +641,7 @@ def otf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=aberr
     imimag = galsim.ImageViewD(np.ascontiguousarray(array.imag.astype(np.float64)), scale=scale)
     return (imreal, imimag)
 
-def mtf(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=aberrations,
+def mtf(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=None,
         circular_pupil=True, obscuration=0., nstruts=0, strut_thick=0.05,
         strut_angle=0.*galsim.degrees):
     """Return NumPy array containing the MTF of a circular (default) or square pupil with low-order
@@ -673,7 +677,7 @@ def mtf(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=aberrations
         obscuration=obscuration, circular_pupil=circular_pupil, nstruts=nstruts,
         strut_thick=strut_thick, strut_angle=strut_angle))
 
-def mtf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=aberrations,
+def mtf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=None,
               circular_pupil=True, obscuration=0., nstruts=0, strut_thick=0.05,
               strut_angle=0.*galsim.degrees):
     """Return the MTF of a circular (default) or square pupil with low-order aberrations as an 
@@ -718,7 +722,7 @@ def mtf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=aberr
     im = galsim.ImageViewD(array.astype(np.float64), scale = 2. * np.pi / array_shape[0])
     return im
 
-def ptf(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=aberrations,
+def ptf(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=None,
         circular_pupil=True, obscuration=0., nstruts=0, strut_thick=0.05,
         strut_angle=0.*galsim.degrees):
     """Return NumPy array containing the PTF [radians] of a circular (default) or square pupil with
@@ -760,7 +764,7 @@ def ptf(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=aberrations
         strut_thick=strut_thick, strut_angle=strut_angle)[k2 < kmax_internal**2]) 
     return ptf
 
-def ptf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=aberrations,
+def ptf_image(array_shape=(256, 256), dx=1., lam_over_diam=2., aberrations=None,
               circular_pupil=True, obscuration=0., nstruts=0, strut_thick=0.05,
               strut_angle=0.*galsim.degrees):
     """Return the PTF [radians] of a circular (default) or square pupil with low-order aberrations
