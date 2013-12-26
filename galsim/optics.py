@@ -51,7 +51,7 @@ class OpticalPSF(GSObject):
     uses an InterpolatedImage to characterize the profile.
 
     Input aberration coefficients are assumed to be supplied in units of wavelength, and correspond
-    to the Zernike polynomials in the Noll convention definined in
+    to the Zernike polynomials in the Noll convention defined in
     Noll, J. Opt. Soc. Am. 66, 207-211(1976).  For a brief summary of the polynomials, refer to
     http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials.
 
