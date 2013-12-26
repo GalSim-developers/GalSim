@@ -127,7 +127,7 @@ def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix,
     # Write to file.
     outfile = ps_plot_prefix + interpolant + '.png'
     plt.savefig(outfile)
-    print "Wrote power spectrum plots to file %s"%outfile
+    print "Wrote power spectrum plots to file %r"%outfile
 
 def generate_cf_plots(th, cf, interpolated_cf, interpolant, cf_plot_prefix,
                       big_dth, small_dth):
@@ -191,7 +191,7 @@ def generate_cf_plots(th, cf, interpolated_cf, interpolant, cf_plot_prefix,
     # Write to file.
     outfile = cf_plot_prefix + interpolant + '.png'
     plt.savefig(outfile)
-    print "Wrote correlation function plots to file %s"%outfile
+    print "Wrote correlation function plots to file %r"%outfile
 
 def write_ps_output(ell, ps, interpolated_ps, interpolant, ps_plot_prefix):
     """Routine to write final power spectra to file.
@@ -214,7 +214,7 @@ def write_ps_output(ell, ps, interpolated_ps, interpolant, ps_plot_prefix):
     # Make ascii output.
     outfile = ps_plot_prefix + interpolant + '.dat'
     np.savetxt(outfile, np.column_stack((ell, ps, interpolated_ps)), fmt='%12.4e')
-    print "Wrote ascii output to file %s"%outfile
+    print "Wrote ascii output to file %r"%outfile
 
     # Set up a FITS table for output file.
     ell_col = pyfits.Column(name='ell', format='1D', array=ell)
@@ -227,7 +227,7 @@ def write_ps_output(ell, ps, interpolated_ps, interpolant, ps_plot_prefix):
     hdus = pyfits.HDUList([phdu,table])
     outfile = ps_plot_prefix + interpolant + '.fits'
     hdus.writeto(outfile, clobber=True)
-    print "Wrote FITS output to file %s"%outfile
+    print "Wrote FITS output to file %r"%outfile
 
 def write_cf_output(th, cf, interpolated_cf, interpolant, cf_plot_prefix):
     """Routine to write final correlation functions to file.
@@ -250,7 +250,7 @@ def write_cf_output(th, cf, interpolated_cf, interpolant, cf_plot_prefix):
     # Make ascii output.
     outfile = cf_plot_prefix + interpolant + '.dat'
     np.savetxt(outfile, np.column_stack((th, cf, interpolated_cf)), fmt='%12.4e')
-    print "Wrote ascii output to file %s"%outfile
+    print "Wrote ascii output to file %r"%outfile
 
     # Set up a FITS table for output file.
     th_col = pyfits.Column(name='theta', format='1D', array=th)
@@ -263,7 +263,7 @@ def write_cf_output(th, cf, interpolated_cf, interpolant, cf_plot_prefix):
     hdus = pyfits.HDUList([phdu,table])
     outfile = cf_plot_prefix + interpolant + '.fits'
     hdus.writeto(outfile, clobber=True)
-    print "Wrote FITS output to file %s"%outfile
+    print "Wrote FITS output to file %r"%outfile
 
 def getCF(x, y, g1, g2, dtheta, ngrid, n_output_bins):
     """Routine to estimate shear correlation functions using corr2.
@@ -341,6 +341,21 @@ def main(n_realizations, subsampling, n_output_bins, ps_plot_prefix, cf_plot_pre
     # Set up PowerSpectrum object.
     ps = galsim.PowerSpectrum(pk_file, units = galsim.radians)
 
+    # Get basic grid information
+    default_grid_spacing = grid_size / ngrid
+    default_ngrid = ngrid
+
+    # Set up subsampled grid and the corresponding x, y lists.
+    subsampled_grid_spacing = grid_size / (ngrid*subsampling)
+    subsampled_ngrid = ngrid*subsampling
+    min = (-subsampled_ngrid/2 + 0.5) * subsampled_grid_spacing
+    max = (subsampled_ngrid/2 - 0.5) * subsampled_grid_spacing
+    x, y = np.meshgrid(
+        np.arange(min,max+subsampled_grid_spacing,subsampled_grid_spacing),
+        np.arange(min,max+subsampled_grid_spacing,subsampled_grid_spacing))
+    x = list(x.flatten())
+    y = list(y.flatten())
+
     # Loop over interpolants.
     for interpolant in interpolant_list:
         print "Beginning tests for interpolant %r:"%interpolant
@@ -356,8 +371,6 @@ def main(n_realizations, subsampling, n_output_bins, ps_plot_prefix, cf_plot_pre
         for i_real in range(n_realizations):
 
             # Get shears on default grid.
-            default_grid_spacing = grid_size / ngrid
-            default_ngrid = ngrid
             # Note: kmax_factor = subsampling is given, so that when we rerun this later with the
             # subsampled grid, the same range of k will be used in both cases, and the only
             # difference is the interpolation.
@@ -367,17 +380,6 @@ def main(n_realizations, subsampling, n_output_bins, ps_plot_prefix, cf_plot_pre
                          interpolant = interpolant,
                          kmin_factor = kmin_factor,
                          kmax_factor = subsampling)
-
-            # Set up subsampled grid.
-            subsampled_grid_spacing = grid_size / (ngrid*subsampling)
-            subsampled_ngrid = ngrid*subsampling
-            min = (-subsampled_ngrid/2 + 0.5) * subsampled_grid_spacing
-            max = (subsampled_ngrid/2 - 0.5) * subsampled_grid_spacing
-            x, y = np.meshgrid(
-                np.arange(min,max+subsampled_grid_spacing,subsampled_grid_spacing),
-                np.arange(min,max+subsampled_grid_spacing,subsampled_grid_spacing))
-            x = list(x.flatten())
-            y = list(y.flatten())
 
             # Interpolate shears on the subsampled grid.
             interpolated_g1, interpolated_g2 = ps.getShear(pos=(x,y),
@@ -403,14 +405,14 @@ def main(n_realizations, subsampling, n_output_bins, ps_plot_prefix, cf_plot_pre
             ell, interpolated_ps_ee, _, _ = \
                 pse.estimate(interpolated_g1, interpolated_g2)
             ell, ps_ee, _, _ = pse.estimate(g1, g2)
-            x = np.array(x)
-            y = np.array(y)
-            th, interpolated_cf, cf_err = getCF(x, y, interpolated_g1.flatten(),
+            th, interpolated_cf, cf_err = getCF(np.array(x), np.array(y),
+                                                interpolated_g1.flatten(),
                                                 interpolated_g2.flatten(),
                                                 subsampled_grid_spacing,
                                                 subsampled_ngrid,
                                                 n_output_bins)
-            _, cf, _ = getCF(x, y, g1.flatten(), g2.flatten(),
+            _, cf, _ = getCF(np.array(x), np.array(y),
+                             g1.flatten(), g2.flatten(),
                              subsampled_grid_spacing, subsampled_ngrid,
                              n_output_bins)
 
