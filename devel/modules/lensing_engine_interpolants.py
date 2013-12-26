@@ -227,6 +227,7 @@ def generate_cf_plots(th, cf, interpolated_cf, interpolant, cf_plot_prefix,
     ax.plot(dth_big_x_markers, np.array((np.min(ratio), 1.3*np.max(ratio))), '--', color='k')
     ax.plot(dth_small_x_markers, np.array((np.min(ratio), 1.3*np.max(ratio))), ':', color='k')
     ax.plot(th, np.ones_like(th), '--', color='r')
+    ax.set_ylim(0.0,1.6)
     ax.set_xlabel('Separation [degrees]')
     ax.set_ylabel('Interpolated / direct xi_+')
     ax.set_xscale('log')
