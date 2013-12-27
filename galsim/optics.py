@@ -198,14 +198,26 @@ class OpticalPSF(GSObject):
             aberrations[11] = spher
         else:
             # Aberrations were passed in, so check that there are the right number of entries.
-            if len(aberrations) != 12:
-                raise RuntimeError("Aberrations keyword should be an object of length 12!")
+            if len(aberrations) > 12:
+                raise ValueError("Cannot (yet) specify aberrations past index=11")
+            if len(aberrations) <= 4:
+                raise ValueError("Aberrations keyword must have length > 4")
             # Make sure no individual ones were passed in, since they will be ignored.
             if np.any( 
                 np.array([defocus,astig1,astig2,coma1,coma2,trefoil1,trefoil2,spher]) != 0):
-                raise RuntimeError("Cannot pass in individual aberrations and array!")
+                raise TypeError("Cannot pass in individual aberrations and array!")
+
             # Finally, just in case it was a tuple/list, make sure we end up with NumPy array:
             aberrations = np.array(aberrations)
+            # And pad it out to length 12 if necessary.
+            if len(aberrations) < 12:
+                aberrations = np.append(aberrations, [0] * (12-len(aberrations)))
+
+            # Check for non-zero elements in first 4 values.  Probably a mistake.
+            if np.any(aberrations[0:4] != 0.0):
+                import warnings
+                warnings.warn(
+                    "Detected non-zero value in aberrations[0:4] -- these values are ignored!")
 
         # Make the psf image using this dx and array shape
         optimage = galsim.optics.psf_image(

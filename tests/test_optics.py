@@ -361,13 +361,13 @@ def test_OpticalPSF_aberrations_kwargs():
     # Make an OpticalPSF with direct specification of aberrations.
     lod = 0.04
     obscuration = 0.3
-    opt1 = galsim.OpticalPSF(lod, obscuration=obscuration, defocus=0.1, coma2=0.3, spher=-0.1)
+    opt1 = galsim.OpticalPSF(lod, obscuration=obscuration, defocus=0.1, coma1=-0.1, coma2=0.3)
 
-    # Now make it with an aberrations list.
-    aberrations = np.zeros(12)
+    # Now make it with an aberrations list.  (Note: should work with len < 12)
+    aberrations = np.zeros(9)
     aberrations[4] = 0.1
+    aberrations[7] = -0.1
     aberrations[8] = 0.3
-    aberrations[11] = -0.1
 
     opt2 = galsim.OpticalPSF(lod, obscuration=obscuration, aberrations=aberrations)
 
@@ -387,9 +387,16 @@ def test_OpticalPSF_aberrations_kwargs():
 
     # Also, check for proper response to weird inputs.
     try:
+        # aberrations must be a list or an array
         np.testing.assert_raises(TypeError,galsim.OpticalPSF,lod,aberrations=0.3)
-        np.testing.assert_raises(RuntimeError,galsim.OpticalPSF,lod,aberrations=[0.3,-0.3])
-        np.testing.assert_raises(RuntimeError,galsim.OpticalPSF,lod,aberrations=np.zeros(8),
+        # It must have at least 5 elements
+        np.testing.assert_raises(ValueError,galsim.OpticalPSF,lod,aberrations=[0.0]*4)
+        # It must (currently) have at most 12 elements
+        np.testing.assert_raises(ValueError,galsim.OpticalPSF,lod,aberrations=[0.0]*15)
+        # The first 4 elements must be 0. (Just a warning!)
+        np.testing.assert_warns(UserWarning,galsim.OpticalPSF,lod,aberrations=[0.3]*8)
+        # Cannot provide both aberrations and specific ones by name.
+        np.testing.assert_raises(TypeError,galsim.OpticalPSF,lod,aberrations=np.zeros(8),
                                  defocus=-0.12)
     except ImportError:
         print 'The assert_raises tests require nose'
