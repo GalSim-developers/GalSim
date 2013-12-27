@@ -471,10 +471,28 @@ class AffineTransform(BaseWCS):
         return self._det
 
     def _minScale(self):
-        raise NotImplementedError("TODO")
+        # The corners of the parallelogram defined by:
+        # J = ( a  b )
+        #     ( c  d )
+        # are:
+        #     (0,0)  (a,c)
+        #     (b,d)  (a+b,c+d)
+        # That is, the corners of the unit square with positions (0,0), (0,1), (1,0), (1,1) 
+        # are mapped onto these points.
+        #
+        # So the two diagonals are from (0,0) to (a+b, c+d) and from (a,c) to (b,d)
+        # We divide these values by sqrt(2) to account for the fact that the original
+        # square had a distance of sqrt(2) for each of these distances.
+        import numpy
+        d1 = numpy.sqrt( 0.5* ((self._dudx+self._dudy)**2 + (self._dvdx+self._dvdy)**2) )
+        d2 = numpy.sqrt( 0.5* ((self._dudx-self._dudy)**2 + (self._dvdx-self._dvdy)**2) )
+        return min(d1,d2)
 
     def _maxScale(self):
-        raise NotImplementedError("TODO")
+        import numpy
+        d1 = numpy.sqrt( 0.5* ((self._dudx+self._dudy)**2 + (self._dvdx+self._dvdy)**2) )
+        d2 = numpy.sqrt( 0.5* ((self._dudx-self._dudy)**2 + (self._dvdx-self._dvdy)**2) )
+        return max(d1,d2)
 
     def _toAffine(self):
         return self
