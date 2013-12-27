@@ -48,11 +48,11 @@ from random import DistDeviate
 from noise import VariableGaussianNoise
 from correlatednoise import CorrelatedNoise, getCOSMOSNoise, UncorrelatedNoise
 from fits import FitsHeader
+from angle import HMS_Angle, DMS_Angle, CelestialCoord
 
 # packages with docs and such, so nothing really to import by name.
 from . import position
 from . import bounds
-from . import angle
 from . import random
 
 # packages we intentionally keep separate.  E.g. requires galsim.fits.read(...)

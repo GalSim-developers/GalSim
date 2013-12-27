@@ -193,3 +193,86 @@ def DMS_Angle(str):
     """
     return parse_dms(str) * galsim.degrees
 
+
+class CelestialCoord(object):
+    """This is a lightweight wrapper of two Angles, ra and dec.  
+
+    Mostly this class exists to enforce the units when a position is really a location on
+    the celestial sphere rather than using PositionD as we normally do for positions.
+
+    Also, most of the arithmetic defined for PositionD is invalid on the sphere, so this 
+    prevents you from doing things like `coord1 - coord2` for (ra,dec) positions.
+
+    There is a `distanceTo` method which returns the great-circle angle between two
+    positions, but there isn't anything else in terms of arithmetic.
+
+    Initialization
+    --------------
+    A CelestialCoord object is initialized with the following command:
+
+        coord = galsim.CelestialCoord(ra, dec)
+
+    @param ra       The right ascension.  Must be a galsim.Angle object.
+    @param dec      The declination.  Must be a galsim.Angle object.
+    """
+    def __init__(self, ra, dec):
+        if not isinstance(ra, galsim.Angle):
+            raise TypeError("ra must be a galsim.Angle")
+        if not isinstance(dec, galsim.Angle):
+            raise TypeError("dec must be a galsim.Angle")
+        self._ra = ra
+        self._dec = dec
+
+    @property
+    def ra(self): return self._ra
+    @property
+    def dec(self): return self._dec
+
+    def distanceTo(self, other):
+        """Returns the great circle distance between this coord and another one.
+
+        The return value is a galsim.Angle object
+        """
+        # The easiest way to do this in a way that is stable for small separations
+        # is to calculate the (x,y,z) position on the unit sphere corresponding to each
+        # coordinate position.
+        #
+        # x = cos(dec) cos(ra)
+        # y = cos(dec) sin(ra)
+        # z = sin(dec)
+
+        # Note: if this is a common operation, it is faster to compute x,y,z for each point
+        # once in the constructor.  However, I don't think that is currently the case for 
+        # any use case in GalSim.  Really, this function is kind of just for grins...  :)
+        cosdec1 = math.cos(self._dec.rad())
+        sindec1 = math.sin(self._dec.rad())
+        cosra1 = math.cos(self._ra.rad())
+        sinra1 = math.sin(self._ra.rad())
+        cosdec2 = math.cos(other._dec.rad())
+        sindec2 = math.sin(other._dec.rad())
+        cosra2 = math.cos(other._ra.rad())
+        sinra2 = math.sin(other._ra.rad())
+
+        x1 = cosdec1 * cosra1
+        y1 = cosdec1 * sinra1
+        z1 = sindec1
+        x2 = cosdec2 * cosra2
+        y2 = cosdec2 * sinra2
+        z2 = sindec2
+
+        # The the direct distance between the two points is
+        #
+        # d^2 = (x1-x2)^2 + (y1-y2)^2 + (z1-z2)^2
+
+        dsq = (x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2
+
+        # This direct distance can then be converted to a great circle distance via
+        #
+        # sin(theta/2) = d/2
+
+        theta = 2. * math.asin(0.5 * math.sqrt(dsq))
+        return theta * galsim.radians
+
+    def copy(self): return CelestialCoord(self._ra, self._dec)
+
+
