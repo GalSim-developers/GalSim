@@ -244,6 +244,7 @@ class CelestialCoord(object):
         # Note: if this is a common operation, it is faster to compute x,y,z for each point
         # once in the constructor.  However, I don't think that is currently the case for 
         # any use case in GalSim.  Really, this function is kind of just for grins...  :)
+        import math
         cosdec1 = math.cos(self._dec.rad())
         sindec1 = math.sin(self._dec.rad())
         cosra1 = math.cos(self._ra.rad())

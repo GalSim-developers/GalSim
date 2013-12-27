@@ -611,9 +611,6 @@ class UVFunction(BaseWCS):
         raise NotImplementedError("World -> Image direction not implemented for UVFunction")
 
     def _local(self, image_pos, world_pos):
-        print 'Start UVFunction local:'
-        print 'image_pos = ',image_pos
-        print 'world_pos = ',world_pos
         if world_pos is not None:
             raise NotImplementedError('UVFunction.local() cannot take world_pos.')
         if image_pos is None:
@@ -622,8 +619,6 @@ class UVFunction(BaseWCS):
         y0 = image_pos.y
         u0 = self._u(x0,y0)
         v0 = self._v(x0,y0)
-        print 'x0,y0 = ',x0,y0
-        print 'u0,v0 = ',u0,v0
         # Use dx,dy = 1 pixel for numerical derivatives
         dx = 1
         dy = 1
@@ -631,10 +626,6 @@ class UVFunction(BaseWCS):
         dudy = 0.5*(self._u(x0,y0+dy) - self._u(x0,y0-dy))/dy
         dvdx = 0.5*(self._v(x0+dx,y0) - self._v(x0-dx,y0))/dx
         dvdy = 0.5*(self._v(x0,y0+dy) - self._v(x0,y0-dy))/dy
-        print 'dudx = ',dudx
-        print 'dudy = ',dudy
-        print 'dvdx = ',dvdx
-        print 'dvdy = ',dvdy
 
         return AffineTransform(dudx, dudy, dvdx, dvdy)
 
@@ -650,7 +641,7 @@ class UVFunction(BaseWCS):
         return UVFunction(self._ufunc, self._vfunc, image_origin, world_origin)
 
     def __eq__(self, other):
-        if not isinstance(other, AffineTransform): 
+        if not isinstance(other, UVFunction):
             return False
         else: 
             return (
@@ -659,6 +650,226 @@ class UVFunction(BaseWCS):
                 self._x0 == other._x0 and 
                 self._y0 == other._y0 and 
                 self._u0 == other._u0 and 
+                self._y0 == other._y0)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+ 
+
+class AstropyWCS(BaseWCS):
+    """This WCS uses astropy.wcs to read WCS information from a FITS file.
+
+    Initialization
+    --------------
+    An AstropyWCS object is initialized with one of the following commands:
+
+        wcs = galsim.AstropyWCS(file_name=file_name)  # Open a file on disk
+        wcs = galsim.AstropyWCS(hdu_list=hdu_list)    # Use an existing pyfits hdulist
+        wcs = galsim.AstropyWCS(wcs=wcs)              # Use an axisting astropy.wcs.WCS object
+
+    Exactly one of the parameters file_name, hdu_list or wcs is required.  Also, since the 
+    most common usage will probably be the first, you can also give a file_name without it 
+    being named:
+
+        wcs = galsim.AstropyWCS(file_name)
+
+    @param file_name      The FITS file from which to read the WCS information.  This is probably
+                          the usual parameter to provide.  [ Default: `file_name = None` ]
+    @param dir            Optional directory to prepend to the file name. [ Default `dir = None` ]
+    @param hdu_list       An open pyfits (or astropy.io) hdu_list.  [ Default: `hdu_list = None` ]
+    @param hdu            The hdu number to use. [ Default `hdu = 0` ]
+    @param wcs            An existing astropy.wcs.WCS object [ Default: `wcs = None` ]
+    @param image_origin   Optional origin position for the image coordinate system.
+                          If provided, it should be a PostionD or PositionI object.
+                          [ Default: `image_origin = None` ]
+    """
+    _req_params = { "file_name" : str }
+    _opt_params = { "image_origin" : galsim.PositionD }
+    _single_params = []
+    _takes_rng = False
+    _takes_logger = False
+
+    def __init__(self, file_name=None, dir=None, hdu_list=None, hdu=0, wcs=None,
+                 image_origin=None):
+        if file_name is not None:
+            from galsim import pyfits
+            if dir:
+                import os
+                file_name = os.path.join(dir,file_name)
+            if hdu_list is not None:    
+                raise TypeError("Cannot provide both file_name and hdu_list")
+            if wcs is not None:    
+                raise TypeError("Cannot provide both file_name and wcs")
+            hdu_list = pyfits.open(file_name, 'readonly')
+        if hdu_list is not None:
+            import astropy.wcs
+            if wcs is not None:    
+                raise TypeError("Cannot provide both hdu_list and wcs")
+            header = hdu_list[hdu].header
+            wcs = astropy.wcs.WCS(header)
+        if wcs is None:
+            raise TypeError("Must provide one of file_name, hdu_list, or wcs")
+            
+        self._wcs = wcs
+        self._is_local = False
+
+        if image_origin == None:
+            self._x0 = 0
+            self._y0 = 0
+        else:
+            self._x0 = image_origin.x
+            self._y0 = image_origin.y
+
+    @property
+    def wcs(self): return self._wcs
+    @property
+    def image_origin(self): return galsim.PositionD(self._x0, self._y0)
+
+    def _posToWorld(self, image_pos):
+        if not(isinstance(image_pos, galsim.PositionD) or isinstance(image_pos, galsim.PositionI)):
+            raise TypeError("toWorld requires a PositionD or PositionI argument")
+        x = image_pos.x - self._x0
+        y = image_pos.y - self._y0
+        # Apparently, the returned values aren't _necessarily_ (ra, dec).  They could be 
+        # (dec, ra) instead!  But if you add ra_dec_order=True, then it will be (ra, dec).
+        # I can't imagnie why that isn't the default, but there you go.
+        try:
+            # This currently fails with an AttributeError about astropy.wcs.Wcsprm.lattype
+            # c.f. https://github.com/astropy/astropy/pull/1463
+            # Once they fix it, this is what we want.
+            ra, dec = self._wcs.all_pix2world( [ [x, y] ], 1, ra_dec_order=True)[0]
+        except AttributeError:
+            # Until then, just assume that the returned values really are ra, dec.
+            ra, dec = self._wcs.all_pix2world( [ [x, y] ], 1)[0]
+
+        # astropy.wcs returns (ra, dec) in degrees.  Convert to our CelestialCoord class.
+        return galsim.CelestialCoord(ra * galsim.degrees, dec * galsim.degrees)
+
+    def _posToImage(self, world_pos):
+        ra = world_pos.ra / galsim.degrees
+        dec = world_pos.dec / galsim.degrees
+        # Here we have to work around another astropy.wcs bug.  The way they use scipy's
+        # Broyden's method doesn't work.  So I implement a fix here.
+        try:
+            # Try their version first (with and without ra_dec_order) in case they fix this.
+            import warnings
+            try:
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    x, y = self._wcs.all_world2pix( [ [ra, dec] ], 1, ra_dec_order=True)[0]
+            except AttributeError:
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    x, y = self._wcs.all_world2pix( [ [ra, dec] ], 1)[0]
+        except:
+            # This section is basically a copy of astropy.wcs's _all_world2pix function, but
+            # simplified a bit to remove some features we don't need, and with corrections 
+            # to make it work correctly.
+            import astropy.wcs
+            import scipy.optimize
+            import numpy
+            import warnings
+
+            world = [ra,dec]
+            origin = 1
+            tolerance = 1.e-6
+
+            # This call emits a RuntimeWarning about:
+            #     /sw/lib/python2.7/site-packages/scipy/optimize/nonlin.py:943: RuntimeWarning: invalid value encountered in divide
+            #       d = v / vdot(df, v)
+            # It seems to be harmless, so we explicitly ignore it here:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                x0 = self._wcs.wcs_world2pix(numpy.atleast_2d(world), origin).flatten()
+
+            func = lambda pix: (self._wcs.all_pix2world(numpy.atleast_2d(pix),
+                                origin) - world).flatten()
+
+            # This is the main bit that the astropy function is missing.
+            # The scipy.optimize.broyden1 function can't handle starting at exactly the right 
+            # solution.  It iterates to its limit and then ends with:
+            #     Traceback (most recent call last):
+            #       File "test_wcs.py", line 654, in <module>
+            #         test_astropywcs()
+            #       File "test_wcs.py", line 645, in test_astropywcs
+            #         pos = wcs.toImage(galsim.CelestialCoord(ra,dec))
+            #       File "/sw/lib/python2.7/site-packages/galsim/wcs.py", line 106, in toImage
+            #         return self._posToImage(arg)
+            #       File "/sw/lib/python2.7/site-packages/galsim/wcs.py", line 793, in _posToImage
+            #         soln = scipy.optimize.broyden1(func, x0, x_tol=tolerance, verbose=True, alpha=alpha)
+            #       File "<string>", line 8, in broyden1
+            #       File "/sw/lib/python2.7/site-packages/scipy/optimize/nonlin.py", line 331, in nonlin_solve
+            #         raise NoConvergence(_array_like(x, x0))
+            #     scipy.optimize.nonlin.NoConvergence: [ 113.74961526  179.99982209]
+            #
+            # Providing a good estimate of the scale size gets rid of this.  And even if we aren't
+            # starting at exactly the right value, it is hugely more efficient to give it an 
+            # estimate of alpha, since it is not typically near unity in this case, so it is much
+            # faster to start with something closer to the right value.
+            alpha = numpy.mean(numpy.abs(self._wcs.wcs.get_cdelt()))
+
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                soln = scipy.optimize.broyden1(func, x0, x_tol=tolerance, alpha=alpha)
+            x,y = soln
+
+        return galsim.PositionD(x + self._x0, y + self._y0)
+
+    def _local(self, image_pos, world_pos):
+        if world_pos is not None:
+            image_pos = self._posToImage(world_pos)
+        if image_pos is None:
+            raise TypeError('AstropyWCS.local() requires an image_pos or world_pos argument')
+        x0 = image_pos.x
+        y0 = image_pos.y
+        try:
+            ra0, dec0 = self._wcs.all_pix2world( [ [x0, y0] ], 1, ra_dec_order=True)[0]
+        except AttributeError:
+            ra0, dec0 = self._wcs.all_pix2world( [ [x0, y0] ], 1)[0]
+
+        # Use dx,dy = 1 pixel for numerical derivatives
+        dx = 1
+        dy = 1
+        # all_pix2world can take an array to do everything at once.
+        try:
+            world = self._wcs.all_pix2world([ [x0+dx,y0], [x0-dx,y0], [x0,y0+dy], [x0,y0-dy] ], 1,
+                                            ra_dec_order=True)
+        except AttributeError:
+            world = self._wcs.all_pix2world([ [x0+dx,y0], [x0-dx,y0], [x0,y0+dy], [x0,y0-dy] ], 1)
+
+        ra1, dec1 = world[0]
+        ra2, dec2 = world[1]
+        ra3, dec3 = world[2]
+        ra4, dec4 = world[3]
+        import numpy
+        # Note: our convention is that ra increases to the left! 
+        # i.e. The u,v plane is the tangent plane as seen from Earth with +v pointing
+        # north, and +u pointing west.
+        # That means the du values are the negative of dra.
+        dudx = -0.5*(ra1 - ra2)/dx * numpy.cos(dec0 * galsim.degrees / galsim.radians)
+        dudy = -0.5*(ra3 - ra4)/dy * numpy.cos(dec0 * galsim.degrees / galsim.radians)
+        dvdx = 0.5*(dec1 - dec2)/dx
+        dvdy = 0.5*(dec3 - dec4)/dy
+
+        # These values are all in degrees.  Convert to arcsec as per our usual standard.
+        return AffineTransform(dudx*3600., dudy*3600., dvdx*3600., dvdy*3600.)
+
+    def copy(self):
+        return AstropyWCS(wcs=self._wcs, image_origin=self.image_origin)
+
+    def atOrigin(self, image_origin=None):
+        """Make a copy of this AstropyWCS, but set a new value for the image_origin.
+        """
+        if image_origin is None: image_origin = self.image_origin
+        return AstropyWCS(wcs=self._wcs, image_origin=image_origin)
+
+    def __eq__(self, other):
+        if not isinstance(other, AstropyWCS):
+            return False
+        else: 
+            return (
+                self._wcs == other._wcs and 
+                self._x0 == other._x0 and 
                 self._y0 == other._y0)
 
     def __ne__(self, other):

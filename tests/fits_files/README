@@ -1,0 +1,24 @@
+The 1904_66*.fits files were downloaded from the web site:
+
+http://www.atnf.csiro.au/people/mcalabre/WCS/example_data.html
+
+Dr. Mark Calabretta gave us (MJ -- private communication) the OK to include 
+them in the GalSim distribution, so thanks very much to him for making these
+available to us to use for unit tests!  From Mark:
+
+    I'm happy for you to include whichever test files you want with
+    the GalSim package.
+
+
+The sipsample.fits file was downloaded from:
+
+http://fits.gsfc.nasa.gov/registry/sip.html
+
+I checked with the IRSA Help Desk about bundling it (Issue #402:
+https://irsasupport.ipac.caltech.edu/index.php?/Tickets/Ticket/View/402),
+and they said that it was fine to use this image with the following credit:
+
+    Observation made with the Spitzer Space Telescope, which is operated
+    by the Jet Propulsion Laboratory, California Institute of Technology
+    under a contract with NASA.
+

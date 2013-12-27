@@ -549,7 +549,102 @@ def test_uvfunction():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_astropywcs():
+    """Test the AstropyWCS class
+    """
+    import time
+    t1 = time.time()
+
+    try:
+        import astropy.wcs
+    except ImportError:
+        print 'Unable to import astropy.wcs.  Skipping AstropyWCS tests.'
+        return
+
+    # The 1904_66*.fits files were downloaded from the web site:
+    # 
+    # http://www.atnf.csiro.au/people/mcalabre/WCS/example_data.html
+    # 
+    # From that page: "The example maps and spectra are offered mainly as test
+    # material for software that deals with FITS WCS."
+    #
+    # I picked 4 that looked rather different in ds9, but there are a bunch more
+    # on that web page as well.  In particular, I included ZPN, since that uses
+    # PV values, so it is a bit different from the others.
+    # 
+    # The sipsample.fits file was downloaded from the web site:
+    #
+    # http://fits.gsfc.nasa.gov/registry/sip.html
+    #
+    # It's important to have at least one file that has some non-trivial telescope
+    # distortion term, so this seemed a good choice.
+    
+    file_names = [ '1904-66_HPX.fits',
+                   '1904-66_TAN.fits',
+                   '1904-66_TSC.fits',
+                   '1904-66_ZPN.fits',
+                   'sipsample.fits' ]
+
+    # For each file, I use ds9 to pick out two reference points.
+    # For the 1904-66 files, the two reference points are the brightest pixels in the same two 
+    # stars.  They don't have exactly the same ra, dec, due to the finite pixel size, but they
+    # are close.  The x,y values though are rather different.
+    # For sipsample, it is just two bright spots on opposite sides of the galaxy.
+    references = [
+        # HPX
+        [ ('193919.953', '-634341.90', 113.75, 180, 13.5996),
+          ('181936.455', '-634708.64', 143.75, 30, 11.4959) ],
+        # TAN
+        [ ('193934.162', '-634342.98', 116.75, 178, 13.4363),
+          ('181917.969', '-634815.69', 153.25, 35, 11.4444) ],
+        # TSC
+        [ ('193944.339', '-634210.26', 112.75, 161, 12.4841),
+          ('181906.848', '-635007.10', 140.75, 48, 11.6595) ],
+        # ZPN
+        [ ('193927.305', '-634747.56', 94.875, 151, 12.8477),
+          ('181924.624', '-635047.54', 121.875, 48, 11.0143) ],
+        # SIP
+        [ ('133001.463', '471251.69', 241.875, 75, 12.2444 ),
+          ('132943.737', '470913.78', 11.875, 106, 5.30282 ) ]
+    ]
+
+    dir = 'fits_files'
+    for file_name, ref_list in zip(file_names, references):
+        print 'file_name = ',file_name
+        print 'ref_list = ',ref_list
+        wcs = galsim.AstropyWCS(file_name, dir=dir)
+        print 'wcs = ',wcs
+
+        for ref in ref_list:
+            ra = galsim.HMS_Angle(ref[0])
+            dec = galsim.DMS_Angle(ref[1])
+            x = ref[2]
+            y = ref[3]
+            val = ref[4]
+            print ra,dec,x,y,val
+
+            # Check image -> world
+            ref_coord = galsim.CelestialCoord(ra,dec)
+            coord = wcs.toWorld(galsim.PositionD(x,y))
+            print 'ra = ', ra / galsim.degrees, coord.ra / galsim.degrees
+            print 'dec = ', dec / galsim.degrees, coord.dec / galsim.degrees
+            print 'dist = ', ref_coord.distanceTo(coord) / galsim.arcsec,' arcsec'
+            # The conversions should be accurate to at least 1.e-2 pixels.
+            scale = wcs.minLinearScale(galsim.PositionD(x,y))
+            print 'scale = ',scale
+            np.testing.assert_almost_equal(ref_coord.distanceTo(coord)/galsim.arcsec/scale, 0, 2)
+
+            # Check world -> image
+            pos = wcs.toImage(galsim.CelestialCoord(ra,dec))
+            print 'x = ', x, pos.x
+            print 'y = ', y, pos.y
+            np.testing.assert_almost_equal(x, pos.x, 2)
+            np.testing.assert_almost_equal(y, pos.y, 2)
+
+        #do_celestial_wcs(wcs, 'Astropy file '+file_name)
+
 if __name__ == "__main__":
+    test_astropywcs()
     test_pixelscale()
     test_shearwcs()
     test_affinetransform()
