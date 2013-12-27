@@ -64,7 +64,7 @@ class DES_PSFEx(object):
         self.read()
 
     def read(self):
-        import pyfits
+        from galsim import pyfits
         hdu = pyfits.open(self.file_name)[1]
         # Number of parameters used for the interpolation.  We require this to be 2.
         pol_naxis = hdu.header['POLNAXIS']
@@ -223,7 +223,7 @@ import galsim.config
 
 # First we need to add the class itself as a valid input_type.
 galsim.config.process.valid_input_types['des_psfex'] = ('galsim.des.DES_PSFEx',
-                                                        [], False, None)
+                                                        [], False, False, None, ['DES_PSFEx'])
 
 # Also make a builder to create the PSF object for a given position.
 # The builders require 4 args.

@@ -133,7 +133,7 @@ class DES_Shapelet(object):
     def read_fits(self):
         """Read in a DES_Shapelet stored using the the FITS-file version.
         """
-        import pyfits
+        from galsim import pyfits
         cat = pyfits.getdata(self.file_name,1)
         # These fields each only contain one element, hence the [0]'s.
         self.psf_order = cat.field('psf_order')[0]
@@ -221,7 +221,7 @@ import galsim.config
 
 # First we need to add the class itself as a valid input_type.
 galsim.config.process.valid_input_types['des_shapelet'] = ('galsim.des.DES_Shapelet',
-                                                           [], False, None)
+                                                           [], False, False, None, ['DES_Shapelet'])
 
 # Also make a builder to create the PSF object for a given position.
 # The builders require 4 args.

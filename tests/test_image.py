@@ -18,7 +18,6 @@
 #
 import os
 import sys
-import pyfits
 import numpy as np
 
 from galsim_test_helpers import *
@@ -56,6 +55,8 @@ except ImportError:
     path, filename = os.path.split(__file__)
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
+
+from galsim import pyfits
 
 # Setup info for tests, not likely to change
 ntypes = 4

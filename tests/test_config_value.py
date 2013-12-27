@@ -42,8 +42,8 @@ def test_float_value():
         'input' : { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' },
                     'dict' : [ 
                         { 'dir' : 'config_input', 'file_name' : 'dict.p' },
-                        { 'dir' : 'config_input', 'file_name' : 'dict.yaml' },
-                        { 'dir' : 'config_input', 'file_name' : 'dict.json' } ] },
+                        { 'dir' : 'config_input', 'file_name' : 'dict.json' },
+                        { 'dir' : 'config_input', 'file_name' : 'dict.yaml' } ] },
 
         'val1' : 9.9,
         'val2' : int(400),
@@ -78,10 +78,17 @@ def test_float_value():
         'dict1' : { 'type' : 'Dict', 'key' : 'f' },
         'dict2' : { 'type' : 'Dict', 'num' : 1, 'key' : 'f' },
         'dict3' : { 'type' : 'Dict', 'num' : 2, 'key' : 'f' },
-        'dict4' : { 'type' : 'Dict', 'num' : 1, 'key' : 'noise.models.1.gain' }
+        'dict4' : { 'type' : 'Dict', 'num' : 2, 'key' : 'noise.models.1.gain' }
     }
 
-    galsim.config.ProcessInput(config)
+    test_yaml = True
+    try:
+        galsim.config.ProcessInput(config)
+    except:
+        # We don't require PyYAML as a dependency, so if this fails, just remove the YAML dict.
+        del config['input']['dict'][2]
+        galsim.config.ProcessInput(config)
+        test_yaml = False
 
     # Test direct values
     val1 = galsim.config.ParseValue(config,'val1',config, float)[0]
@@ -218,9 +225,13 @@ def test_float_value():
     dict = []
     dict.append(galsim.config.ParseValue(config,'dict1',config, float)[0])
     dict.append(galsim.config.ParseValue(config,'dict2',config, float)[0])
-    dict.append(galsim.config.ParseValue(config,'dict3',config, float)[0])
-    dict.append(galsim.config.ParseValue(config,'dict4',config, float)[0])
-    np.testing.assert_array_almost_equal(dict, [ 23.17, 0.1, -17.23, 1.9 ])
+    if test_yaml:
+        dict.append(galsim.config.ParseValue(config,'dict3',config, float)[0])
+        dict.append(galsim.config.ParseValue(config,'dict4',config, float)[0])
+    else:
+        dict.append(0.1)
+        dict.append(1.9)
+    np.testing.assert_array_almost_equal(dict, [ 23.17, -17.23, 0.1, 1.9 ])
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -237,8 +248,8 @@ def test_int_value():
         'input' : { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' },
                     'dict' : [ 
                         { 'dir' : 'config_input', 'file_name' : 'dict.p' },
-                        { 'dir' : 'config_input', 'file_name' : 'dict.yaml' },
-                        { 'dir' : 'config_input', 'file_name' : 'dict.json' } ] },
+                        { 'dir' : 'config_input', 'file_name' : 'dict.json' },
+                        { 'dir' : 'config_input', 'file_name' : 'dict.yaml' } ] },
 
         'val1' : 9,
         'val2' : float(8.7),  # Reading as int will drop the fraction.
@@ -263,7 +274,14 @@ def test_int_value():
         'dict3' : { 'type' : 'Dict', 'num' : 2, 'key' : 'i' }
     }
 
-    galsim.config.ProcessInput(config)
+    test_yaml = True
+    try:
+        galsim.config.ProcessInput(config)
+    except:
+        # We don't require PyYAML as a dependency, so if this fails, just remove the YAML dict.
+        del config['input']['dict'][2]
+        galsim.config.ProcessInput(config)
+        test_yaml = False
 
     # Test direct values
     val1 = galsim.config.ParseValue(config,'val1',config, int)[0]
@@ -337,14 +355,14 @@ def test_int_value():
     np.testing.assert_array_equal(list2, [ 8, 0, 3, 8, 8 ])
 
     # Test values read from a Dict
-    pickle_dict = galsim.Dict(dir='config_input', file_name='dict.p')
-    yaml_dict = galsim.Dict(dir='config_input', file_name='dict.yaml')
-    json_dict = galsim.Dict(dir='config_input', file_name='dict.json')
     dict = []
     dict.append(galsim.config.ParseValue(config,'dict1',config, int)[0])
     dict.append(galsim.config.ParseValue(config,'dict2',config, int)[0])
-    dict.append(galsim.config.ParseValue(config,'dict3',config, int)[0])
-    np.testing.assert_array_equal(dict, [ 17, 1, -23 ])
+    if test_yaml:
+        dict.append(galsim.config.ParseValue(config,'dict3',config, int)[0])
+    else:
+        dict.append(1)
+    np.testing.assert_array_equal(dict, [ 17, -23, 1 ])
  
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -361,8 +379,8 @@ def test_bool_value():
         'input' : { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' },
                     'dict' : [ 
                         { 'dir' : 'config_input', 'file_name' : 'dict.p' },
-                        { 'dir' : 'config_input', 'file_name' : 'dict.yaml' },
-                        { 'dir' : 'config_input', 'file_name' : 'dict.json' } ] },
+                        { 'dir' : 'config_input', 'file_name' : 'dict.json' },
+                        { 'dir' : 'config_input', 'file_name' : 'dict.yaml' } ] },
 
         'val1' : True,
         'val2' : 1,
@@ -385,7 +403,14 @@ def test_bool_value():
         'dict3' : { 'type' : 'Dict', 'num' : 2, 'key' : 'b' }
     }
 
-    galsim.config.ProcessInput(config)
+    test_yaml = True
+    try:
+        galsim.config.ProcessInput(config)
+    except:
+        # We don't require PyYAML as a dependency, so if this fails, just remove the YAML dict.
+        del config['input']['dict'][2]
+        galsim.config.ProcessInput(config)
+        test_yaml = False
 
     # Test direct values
     val1 = galsim.config.ParseValue(config,'val1',config, bool)[0]
@@ -453,13 +478,13 @@ def test_bool_value():
     np.testing.assert_array_equal(list2, [ 0, 1, 1, 1, 0 ])
 
     # Test values read from a Dict
-    pickle_dict = galsim.Dict(dir='config_input', file_name='dict.p')
-    yaml_dict = galsim.Dict(dir='config_input', file_name='dict.yaml')
-    json_dict = galsim.Dict(dir='config_input', file_name='dict.json')
     dict = []
     dict.append(galsim.config.ParseValue(config,'dict1',config, bool)[0])
     dict.append(galsim.config.ParseValue(config,'dict2',config, bool)[0])
-    dict.append(galsim.config.ParseValue(config,'dict3',config, bool)[0])
+    if test_yaml:
+        dict.append(galsim.config.ParseValue(config,'dict3',config, bool)[0])
+    else:
+        dict.append(False)
     np.testing.assert_array_equal(dict, [ True, False, False ])
  
     t2 = time.time()
@@ -477,8 +502,8 @@ def test_str_value():
         'input' : { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' },
                     'dict' : [ 
                         { 'dir' : 'config_input', 'file_name' : 'dict.p' },
-                        { 'dir' : 'config_input', 'file_name' : 'dict.yaml' },
-                        { 'dir' : 'config_input', 'file_name' : 'dict.json' } ] },
+                        { 'dir' : 'config_input', 'file_name' : 'dict.json' },
+                        { 'dir' : 'config_input', 'file_name' : 'dict.yaml' } ] },
 
         'val1' : -93,
         'val2' : True,
@@ -505,7 +530,14 @@ def test_str_value():
         'dict3' : { 'type' : 'Dict', 'num' : 2, 'key' : 's' }
     }
 
-    galsim.config.ProcessInput(config)
+    test_yaml = True
+    try:
+        galsim.config.ProcessInput(config)
+    except:
+        # We don't require PyYAML as a dependency, so if this fails, just remove the YAML dict.
+        del config['input']['dict'][2]
+        galsim.config.ProcessInput(config)
+        test_yaml = False
 
     # Test direct values
     val1 = galsim.config.ParseValue(config,'val1',config, str)[0]
@@ -564,13 +596,13 @@ def test_str_value():
         "%4 5 c 119 3.141593=3.14159=3.141593e+00 11-11 'Goodbye cruel world.', said Pink. %")
 
     # Test values read from a Dict
-    pickle_dict = galsim.Dict(dir='config_input', file_name='dict.p')
-    yaml_dict = galsim.Dict(dir='config_input', file_name='dict.yaml')
-    json_dict = galsim.Dict(dir='config_input', file_name='dict.json')
     dict = []
     dict.append(galsim.config.ParseValue(config,'dict1',config, str)[0])
     dict.append(galsim.config.ParseValue(config,'dict2',config, str)[0])
-    dict.append(galsim.config.ParseValue(config,'dict3',config, str)[0])
+    if test_yaml:
+        dict.append(galsim.config.ParseValue(config,'dict3',config, str)[0])
+    else:
+        dict.append('Brian')
     np.testing.assert_array_equal(dict, [ 'Life', 'of', 'Brian' ])
  
     t2 = time.time()

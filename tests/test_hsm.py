@@ -18,7 +18,6 @@
 #
 import os
 import sys
-import pyfits
 import numpy as np
 import math
 

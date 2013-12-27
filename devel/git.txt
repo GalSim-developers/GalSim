@@ -223,6 +223,33 @@ merged into the master branch, and also into all release versions that are being
 maintained.  Then a new tag should be made for the revised code, updating the last digit 
 (e.g. v1.0.1).
 
+Here are the gory details about how to merge a bugfix branch into both master and a release branch.
+Let's say you have an issue branch, #488 say, with some changes that you want to merge both into 
+releases/1.0 and master.
+
+If there is just a single bugfix commit, then it's not too hard.  Just cherry-pick it:
+
+git checkout '#488'
+git log                                          # Note the SHA-1 of the commit you want.
+git checkout releases/1.0
+git cherry-pick 9f8c4f                           # Replay that commit onto 1.0 branch.
+git push
+
+If there are a number of commits, you can either cherry-pick each one, or use rebase:
+
+git rebase --onto releases/1.0 master '#488'     # Replay the commits in #488 onto 1.0 branch.
+git checkout releases/1.0
+git merge '#488'                                 # Fast forward merge, to bring 1.0 up to #488.
+git push
+git checkout '#488'
+git reset --hard origin/#488                     # Get #488 back where it was.
+
+Then either go to GitHub and merge the pull request from there, or continue on...
+
+git checkout master
+git merge '#488'
+git push
+
 --- Deleting branches on the origin ---
 
 PLEASE NOTE: We have not decided any policy about cleaning up old branches on the origin yet, so
