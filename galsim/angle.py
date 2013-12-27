@@ -114,7 +114,7 @@ Wrapping
 Depending on the context, theta = 2pi radians and theta = 0 radians are the same thing.
 If you want your angles to be wrapped to [-pi,pi) radians, you can do this by calling
 
-    >>> theta.wrap()
+    >>> theta = theta.wrap()
 
 This could be appropriate before testing for the equality of two angles for example, or 
 calculating the difference between them.
