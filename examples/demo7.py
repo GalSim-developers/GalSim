@@ -147,7 +147,7 @@ def main(argv):
     # path difference.  Unlike in demo3, we specify the aberrations by making a list that we pass
     # in using the 'aberrations' kwarg.  The order of aberrations starting from index 4 is defocus,
     # astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher as in the Noll convention.
-    # We ignore the first 4 values to that the index number corresponds to the Zernike index
+    # We ignore the first 4 values so that the index number corresponds to the Zernike index
     # in the Noll convention. This will be particularly convenient once we start allowing 
     # coefficients beyond spherical (index 11).  c.f. The Wikipedia page about the Noll indices:
     #
