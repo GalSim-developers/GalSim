@@ -154,4 +154,42 @@ def get_angle_unit(unit):
         return galsim.arcsec
     else :
         raise AttributeError("Unknown Angle unit: %s"%unit)
- 
+
+def parse_dms(s):
+    """Convert a string of the form ddmmss.decimal into decimal degrees."""
+
+    sign = 1
+    if s[0] == '-': 
+        sign = -1
+        s = s[1:]
+    elif s[0] == '+':
+        s = s[1:]
+
+    d = int(s[0:2])
+    m = int(s[2:4])
+    s = float(s[4:])
+
+    return sign * (d + m/60. + s/3600.)
+
+def HMS_Angle(str):
+    """Convert a string of the form hhmmss.decimal into an Angle.
+
+    There may be an initial + or - (or neither), then 2 digits for the hours, two for the 
+    minutes, and two for the seconds.  Then there may be a decimal point followed by more
+    digits.
+
+    @returns the corresponding Angle instance
+    """
+    return parse_dms(str) * galsim.hours
+
+def DMS_Angle(str):
+    """Convert a string of the form ddmmss.decimal into an Angle.
+
+    There may be an initial + or - (or neither), then 2 digits for the degrees, two for the 
+    minutes, and two for the seconds.  Then there may be a decimal point followed by more
+    digits.
+
+    @returns the corresponding Angle instance
+    """
+    return parse_dms(str) * galsim.degrees
+
