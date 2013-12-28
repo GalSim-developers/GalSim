@@ -656,6 +656,31 @@ class UVFunction(BaseWCS):
         return not self.__eq__(other)
  
 
+def makeAffineFromNumericalRaDec(ra, dec, dx, dy):
+    """Convert a list of list of ra, dec values for (0,0), (dx,0), (-dx,0), (0,dy), and (0,-dy)
+       into an AffineTransform object.  The input ra, dec values should be in degrees.
+    """
+    ra0, ra1, ra2, ra3, ra4 = ra
+    dec0, dec1, dec2, dec3, dec4 = dec
+    # Note: This currently doesn't use position (ra0, dec0), but the option is here in case it 
+    # would be useful in the future to have some check that the central value is consistent with 
+    # the derivatives found from the +-dx,dy positions.
+    # However, dec0 is used for the cos factor.
+    
+    import numpy
+    # Note: our convention is that ra increases to the left! 
+    # i.e. The u,v plane is the tangent plane as seen from Earth with +v pointing
+    # north, and +u pointing west.
+    # That means the du values are the negative of dra.
+    dudx = -0.5*(ra1 - ra2)/dx * numpy.cos(dec0 * galsim.degrees / galsim.radians)
+    dudy = -0.5*(ra3 - ra4)/dy * numpy.cos(dec0 * galsim.degrees / galsim.radians)
+    dvdx = 0.5*(dec1 - dec2)/dx
+    dvdy = 0.5*(dec3 - dec4)/dy
+
+    # These values are all in degrees.  Convert to arcsec as per our usual standard.
+    return AffineTransform(dudx*3600., dudy*3600., dvdx*3600., dvdy*3600.)
+
+
 class AstropyWCS(BaseWCS):
     """This WCS uses astropy.wcs to read WCS information from a FITS file.
 
@@ -820,42 +845,173 @@ class AstropyWCS(BaseWCS):
             image_pos = self._posToImage(world_pos)
         if image_pos is None:
             raise TypeError('AstropyWCS.local() requires an image_pos or world_pos argument')
-        x0 = image_pos.x
-        y0 = image_pos.y
-        try:
-            ra0, dec0 = self._wcs.all_pix2world( [ [x0, y0] ], 1, ra_dec_order=True)[0]
-        except AttributeError:
-            ra0, dec0 = self._wcs.all_pix2world( [ [x0, y0] ], 1)[0]
-
+        x0 = image_pos.x - self._x0
+        y0 = image_pos.y - self._y0
         # Use dx,dy = 1 pixel for numerical derivatives
         dx = 1
         dy = 1
+
         # all_pix2world can take an array to do everything at once.
         try:
-            world = self._wcs.all_pix2world([ [x0+dx,y0], [x0-dx,y0], [x0,y0+dy], [x0,y0-dy] ], 1,
-                                            ra_dec_order=True)
+            world = self._wcs.all_pix2world(
+                    [ [x0,y0], [x0+dx,y0], [x0-dx,y0], [x0,y0+dy], [x0,y0-dy] ], 1,
+                    ra_dec_order=True)
         except AttributeError:
-            world = self._wcs.all_pix2world([ [x0+dx,y0], [x0-dx,y0], [x0,y0+dy], [x0,y0-dy] ], 1)
+            world = self._wcs.all_pix2world(
+                    [ [x0,y0], [x0+dx,y0], [x0-dx,y0], [x0,y0+dy], [x0,y0-dy] ], 1)
 
-        ra1, dec1 = world[0]
-        ra2, dec2 = world[1]
-        ra3, dec3 = world[2]
-        ra4, dec4 = world[3]
-        import numpy
-        # Note: our convention is that ra increases to the left! 
-        # i.e. The u,v plane is the tangent plane as seen from Earth with +v pointing
-        # north, and +u pointing west.
-        # That means the du values are the negative of dra.
-        dudx = -0.5*(ra1 - ra2)/dx * numpy.cos(dec0 * galsim.degrees / galsim.radians)
-        dudy = -0.5*(ra3 - ra4)/dy * numpy.cos(dec0 * galsim.degrees / galsim.radians)
-        dvdx = 0.5*(dec1 - dec2)/dx
-        dvdy = 0.5*(dec3 - dec4)/dy
+        # Convert to a list of ra and dec separately
+        ra = [ w[0] for w in world ]
+        dec = [ w[1] for w in world ]
 
-        # These values are all in degrees.  Convert to arcsec as per our usual standard.
-        return AffineTransform(dudx*3600., dudy*3600., dvdx*3600., dvdy*3600.)
+        return makeAffineFromNumericalRaDec(ra, dec, dx, dy)
 
     def copy(self):
         return AstropyWCS(wcs=self._wcs, image_origin=self.image_origin)
+
+    def atOrigin(self, image_origin=None):
+        """Make a copy of this AstropyWCS, but set a new value for the image_origin.
+        """
+        if image_origin is None: image_origin = self.image_origin
+        return AstropyWCS(wcs=self._wcs, image_origin=image_origin)
+
+    def __eq__(self, other):
+        if not isinstance(other, AstropyWCS):
+            return False
+        else: 
+            return (
+                self._wcs == other._wcs and 
+                self._x0 == other._x0 and 
+                self._y0 == other._y0)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+class PyAstWCS(BaseWCS):
+    """This WCS uses PyAst (the python front end for the Starlink AST code) to read WCS 
+    information from a FITS file.
+
+    Initialization
+    --------------
+    A PyAstWCS object is initialized with one of the following commands:
+
+        wcs = galsim.PyAstWCS(file_name=file_name)  # Open a file on disk
+        wcs = galsim.PyAstWCS(hdu_list=hdu_list)    # Use an existing pyfits hdulist
+        wcs = galsim.PyAstWCS(wcsinfo=wcsinfo)      # Use an axisting starlink.Ast.FrameSet object
+
+    Exactly one of the parameters file_name, hdu_list or wcsinfo is required.  Also, since the 
+    most common usage will probably be the first, you can also give a file_name without it 
+    being named:
+
+        wcs = galsim.PyAstWCS(file_name)
+
+    @param file_name      The FITS file from which to read the WCS information.  This is probably
+                          the usual parameter to provide.  [ Default: `file_name = None` ]
+    @param dir            Optional directory to prepend to the file name. [ Default `dir = None` ]
+    @param hdu_list       An open pyfits (or astropy.io) hdu_list.  [ Default: `hdu_list = None` ]
+    @param hdu            The hdu number to use. [ Default `hdu = 0` ]
+    @param wcsinfo        An existing starlink.Ast.WcsMap object [ Default: `wcsinfo = None` ]
+    @param image_origin   Optional origin position for the image coordinate system.
+                          If provided, it should be a PostionD or PositionI object.
+                          [ Default: `image_origin = None` ]
+    """
+    _req_params = { "file_name" : str }
+    _opt_params = { "image_origin" : galsim.PositionD }
+    _single_params = []
+    _takes_rng = False
+    _takes_logger = False
+
+    def __init__(self, file_name=None, dir=None, hdu_list=None, hdu=0, wcsinfo=None,
+                 image_origin=None):
+        # Note: More much of this class implementation, I've followed the example provided here:
+        #    http://dsberry.github.io/starlink/node4.html
+        if file_name is not None:
+            from galsim import pyfits
+            if dir:
+                import os
+                file_name = os.path.join(dir,file_name)
+            if hdu_list is not None:    
+                raise TypeError("Cannot provide both file_name and hdu_list")
+            if wcsinfo is not None:    
+                raise TypeError("Cannot provide both file_name and wcsinfo")
+            hdu_list = pyfits.open(file_name, 'readonly')
+        if hdu_list is not None:
+            import starlink.Ast
+            import starlink.Atl
+            if wcsinfo is not None:    
+                raise TypeError("Cannot provide both hdu_list and wcsinfo")
+            fitschan = starlink.Ast.FitsChan( starlink.Atl.PyFITSAdapter(hdu_list[hdu]) )
+            wcsinfo = fitschan.read()
+        if wcsinfo is None:
+            raise TypeError("Must provide one of file_name, hdu_list, or wcsinfo")
+
+        #  Check that the FITS header contained WCS in a form that can be
+        #  understood by AST.
+        if wcsinfo == None:
+            raise RuntimeError("Failed to read WCS information from fits file")
+        #  Check that the object read from the FitsChan is of the expected class
+        #  (Ast.FrameSet).
+        elif not isinstance( wcsinfo, starlink.Ast.FrameSet ):
+            raise RuntimeError("A "+wcsinfo.__class__.__name__+" was read from test.fit - "+
+                                "was expecting a starlink.Ast.FrameSet")
+        #  We can only handle WCS with 2 pixel axes (given by Nin) and 2 WCS axes 
+        # (given by Nout).
+        elif wcsinfo.Nin != 2 or wcsinfo.Nout != 2:
+            raise RuntimeError("The world coordinate system is not 2-dimensional")
+
+        self._wcsinfo = wcsinfo
+        self._is_local = False
+
+        if image_origin == None:
+            self._x0 = 0
+            self._y0 = 0
+        else:
+            self._x0 = image_origin.x
+            self._y0 = image_origin.y
+
+    @property
+    def wcsinfo(self): return self._wcsinfo
+    @property
+    def image_origin(self): return galsim.PositionD(self._x0, self._y0)
+
+    def _posToWorld(self, image_pos):
+        if not(isinstance(image_pos, galsim.PositionD) or isinstance(image_pos, galsim.PositionI)):
+            raise TypeError("toWorld requires a PositionD or PositionI argument")
+        x = image_pos.x - self._x0
+        y = image_pos.y - self._y0
+        ra, dec = self._wcsinfo.tran( [ [x], [y] ] )
+        # PyAst returns ra, dec in radians
+        return galsim.CelestialCoord(ra[0] * galsim.radians, dec[0] * galsim.radians)
+
+    def _posToImage(self, world_pos):
+        ra = world_pos.ra / galsim.radians
+        dec = world_pos.dec / galsim.radians
+        x,y = self._wcsinfo.tran( [ [ra], [dec] ], False)
+        return galsim.PositionD(x[0] + self._x0, y[0] + self._y0)
+
+    def _local(self, image_pos, world_pos):
+        if world_pos is not None:
+            image_pos = self._posToImage(world_pos)
+        if image_pos is None:
+            raise TypeError('AstropyWCS.local() requires an image_pos or world_pos argument')
+
+        x0 = image_pos.x - self._x0
+        y0 = image_pos.y - self._y0
+        # Use dx,dy = 1 pixel for numerical derivatives
+        dx = 1
+        dy = 1
+
+        # wcsinfo.tran can take arrays to do everything at once.
+        ra, dec = self._wcsinfo.tran( [ [x0, x0+dx, x0-dx, x0,    x0],
+                                        [y0, y0,    y0,    y0+dy, y0-dy ] ])
+
+        # Convert to degrees as needed by makeAffineFromNumericalRaDec:
+        ra = [ r * galsim.radians / galsim.degrees for r in ra ]
+        dec = [ d * galsim.radians / galsim.degrees for d in dec ]
+        return makeAffineFromNumericalRaDec(ra, dec, dx, dy)
+
+    def copy(self):
+        return PyAstWCS(wcsinfo=self._wcsinfo, image_origin=self.image_origin)
 
     def atOrigin(self, image_origin=None):
         """Make a copy of this AstropyWCS, but set a new value for the image_origin.
