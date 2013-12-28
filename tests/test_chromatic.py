@@ -54,11 +54,11 @@ def direct_computation(galaxy_n, galaxy_hlr, galaxy_e1, galaxy_e2, galaxy_wave, 
                        shear_g1, shear_g2,
                        filter_wave, filter_throughput,
                        pixel_scale=0.2*galsim.arcsec, stamp_size=31):
-    """Compute a test image of a galaxy using a chromatic PSF directly, i.e. without using the
-    galsim.chromatic module.
+    """Create a test image of a galaxy by directly simulating a chromatic PSF wavelength-by-wavelength,
+    i.e., without using the galsim.chromatic module.
 
     @param galaxy_wave        Wavelength array for galaxy spectrum in nanometers
-    @param galaxy_photons     Flux(?) array for galaxy spectral density in units of photons per
+    @param galaxy_photons     Galaxy photon spectral energy distribution in units of photons per
                               nanometer.
     @param zenith_angle       as a galsim.Angle
     @param filter_wave        Wavelength array describing filter throughput in nanometers
@@ -125,10 +125,10 @@ def galsim_computation(galaxy_n, galaxy_hlr, galaxy_e1, galaxy_e2, galaxy_wave, 
     obj.applyShear(g1=shear_g1, g2=shear_g2)
 
     r610 = refraction_in_pixels(610, zenith_angle, pixel_scale)
-    dilate_fn = lambda wave: (0, refraction_in_pixels(wave, zenith_angle, pixel_scale) - r610)
+    shift_fn = lambda wave: (0, refraction_in_pixels(wave, zenith_angle, pixel_scale) - r610)
 
     PSF = galsim.ChromaticShiftAndDilate(galsim.Moffat,
-                                        shift_fn=dilate_fn,
+                                        shift_fn=shift_fn,
                                         dilate_fn=relative_seeing,
                                         beta=PSF_beta,
                                         half_light_radius=PSF_hlr)
@@ -181,20 +181,15 @@ def test_chromatic_direct_vs_galsim():
                                     shear_g1, shear_g2,
                                     filter_wave, filter_throughput)
     printval(direct_img, galsim_img)
-    # Since peak is around 1, this tests consistency to part in 10^5 level.
-    # np.testing.assert_array_almost_equal(
-    #         direct_img.array, galsim_img.array, 5,
-    #         err_msg="Directly computed chromatic image disagrees with image created using "
-    #                 "galsim.chromatic")
+    # Since peak is around 1, this tests consistency to part in 10^3 level.
+    np.testing.assert_array_almost_equal(
+            direct_img.array, galsim_img.array, 3,
+            err_msg="Directly computed chromatic image disagrees with image created using "
+                    "galsim.chromatic")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_chromatic_add():
-    """Test the `+` operator on ChromaticObjects"""
-    import time
-    t1 = time.time()
-
-    #bulge component parameters
+def sample_bulge_gal():
     bulge_n = 4.0
     bulge_hlr = 1.0 # arcsec
     bulge_e1 = 0.4
@@ -208,12 +203,15 @@ def test_chromatic_add():
     bulge = galsim.ChromaticBaseObject(galsim.Sersic, bulge_wave, bulge_photons,
                                      n=bulge_n, half_light_radius=bulge_hlr)
     bulge.applyShear(e1=bulge_e1, e2=bulge_e2)
+    return bulge
 
-    #disk component parameters
+def sample_disk_gal():
     disk_n = 1.0
     disk_hlr = 1.0 # arcsec
     disk_e1 = 0.4
     disk_e2 = 0.2
+    path, filename = os.path.split(__file__)
+    datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
     disk_wave, disk_flambda = np.genfromtxt(os.path.join(datapath, 'CWW_Sbc_ext.sed')).T
     disk_photons = disk_flambda * disk_wave # ergs -> N_photons
     disk_photons *= 2.e-7 # Manually adjusting to have peak of ~1 count
@@ -221,68 +219,76 @@ def test_chromatic_add():
     disk = galsim.ChromaticBaseObject(galsim.Sersic, disk_wave, disk_photons,
                                      n=disk_n, half_light_radius=disk_hlr)
     disk.applyShear(e1=disk_e1, e2=disk_e2)
+    return disk
 
-    shear_g1 = 0.01
-    shear_g2 = 0.02
-
+def sample_PSF(pixel_scale=0.2*galsim.arcsec):
     zenith_angle = 20 * galsim.degrees
-
-    #line that actually tests the `+` operator
-    obj = bulge + disk
-    obj.applyShear(g1=shear_g1, g2=shear_g2)
-
-    #now work out the PSF
     PSF_hlr = 0.3 # arcsec
     PSF_beta = 3.0
     PSF_e1 = 0.01
     PSF_e2 = 0.06
-
-    pixel_scale = 0.2 * galsim.arcsec
-    stamp_size = 31
     r610 = refraction_in_pixels(610, zenith_angle, pixel_scale)
-    dilate_fn = lambda wave: (0, refraction_in_pixels(wave, zenith_angle, pixel_scale) - r610)
+    shift_fn = lambda wave: (0, refraction_in_pixels(wave, zenith_angle, pixel_scale) - r610)
 
     PSF = galsim.ChromaticShiftAndDilate(galsim.Moffat,
-                                        shift_fn=dilate_fn,
+                                        shift_fn=shift_fn,
                                         dilate_fn=relative_seeing,
                                         beta=PSF_beta,
                                         half_light_radius=PSF_hlr)
     PSF.applyShear(e1=PSF_e1, e2=PSF_e2)
+    return PSF
 
+def sample_filter():
     path, filename = os.path.split(__file__)
     datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
     filter_wave, filter_throughput = np.genfromtxt(os.path.join(datapath, 'LSST_r.dat')).T
     wgood = (filter_wave > 500) & (filter_wave < 720) # truncate out-of-band wavelengths
     filter_wave = filter_wave[wgood][0::100]  # sparsify from 1 Ang binning to 100 Ang binning
     filter_throughput = filter_throughput[wgood][0::100]
+    return filter_wave, filter_throughput
+
+def test_chromatic_add():
+    """Test the `+` operator on ChromaticObjects"""
+    import time
+    t1 = time.time()
+
+    pixel_scale = 0.2 * galsim.arcsec
+    stamp_size = 31
+
+    bulge = sample_bulge_gal()
+    disk = sample_disk_gal()
+    PSF = sample_PSF(pixel_scale=pixel_scale)
+    filter_wave, filter_throughput = sample_filter()
+    shear_g1 = 0.01
+    shear_g2 = 0.02
+
+    #line that actually tests the `+` operator
+    obj = bulge + disk
+    obj.applyShear(g1=shear_g1, g2=shear_g2)
 
     pixel = galsim.Pixel(pixel_scale / galsim.arcsec)
     gal = galsim.ChromaticConvolve([obj, PSF, pixel])
     image = galsim.ImageD(stamp_size, stamp_size, pixel_scale / galsim.arcsec)
     gal.draw(filter_wave, filter_throughput, image=image)
 
-    # Compare this image to one drawn directly from the individual profiles
-    bulge_img = galsim_computation(bulge_n, bulge_hlr, bulge_e1, bulge_e2,
-                                   bulge_wave, bulge_photons,
-                                   PSF_hlr, PSF_beta, PSF_e1, PSF_e2, zenith_angle,
-                                   shear_g1, shear_g2,
-                                   filter_wave, filter_throughput)
-    disk_img = galsim_computation(disk_n, disk_hlr, disk_e1, disk_e2,
-                                   disk_wave, disk_photons,
-                                   PSF_hlr, PSF_beta, PSF_e1, PSF_e2, zenith_angle,
-                                   shear_g1, shear_g2,
-                                   filter_wave, filter_throughput)
+    bulge_img = galsim.ImageD(stamp_size, stamp_size, pixel_scale / galsim.arcsec)
+    bulge_part = galsim.ChromaticConvolve([bulge, PSF, pixel])
+    bulge_part.draw(filter_wave, filter_throughput, image=bulge_img)
+    disk_img = galsim.ImageD(stamp_size, stamp_size, pixel_scale / galsim.arcsec)
+    disk_part = galsim.ChromaticConvolve([disk, PSF, pixel])
+    disk_part.draw(filter_wave, filter_throughput, image=disk_img)
 
-    printval(image, bulge_img+disk_img)
-    # np.testing.assert_array_almost_equal(
-    #         image.array, bulge_img.array+disk_img.array, 5,
-    #         err_msg="`+` operator doesn't match manual image addition")
+    otherimage = bulge_img+disk_img
+    printval(image, otherimage)
+    np.testing.assert_array_almost_equal(
+            image.array, otherimage.array, 5,
+            err_msg="`+` operator doesn't match manual image addition")
 
     bulge_img += disk_img
     printval(image, bulge_img)
-    # np.testing.assert_array_almost_equal(
-    #         image.array, bulge_img.array, 5,
-    #         err_msg="`+` operator doesn't match manual image addition")
+    np.testing.assert_array_almost_equal(
+            image.array, bulge_img.array, 5,
+            err_msg="`+=` operator doesn't match manual image addition")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -337,10 +343,10 @@ def test_chromatic_add_draw():
     pixel_scale = 0.2 * galsim.arcsec
     stamp_size = 31
     r610 = refraction_in_pixels(610, zenith_angle, pixel_scale)
-    dilate_fn = lambda wave: (0, refraction_in_pixels(wave, zenith_angle, pixel_scale) - r610)
+    shift_fn = lambda wave: (0, refraction_in_pixels(wave, zenith_angle, pixel_scale) - r610)
 
     PSF = galsim.ChromaticShiftAndDilate(galsim.Moffat,
-                                        shift_fn=dilate_fn,
+                                        shift_fn=shift_fn,
                                         dilate_fn=relative_seeing,
                                         beta=PSF_beta,
                                         half_light_radius=PSF_hlr)
@@ -372,15 +378,15 @@ def test_chromatic_add_draw():
                                    filter_wave, filter_throughput)
 
     printval(image, bulge_img+disk_img)
-    # np.testing.assert_array_almost_equal(
-    #         image.array, bulge_img.array+disk_img.array, 5,
-    #         err_msg="ChromaticAdd.draw() doesn't match manual image addition")
+    np.testing.assert_array_almost_equal(
+            image.array, bulge_img.array+disk_img.array, 5,
+            err_msg="ChromaticAdd.draw() doesn't match manual image addition")
 
     bulge_img += disk_img
     printval(image, bulge_img)
-    # np.testing.assert_array_almost_equal(
-    #         image.array, bulge_img.array, 5,
-    #         err_msg="ChromaticAdd.draw() doesn't match manual image addition")
+    np.testing.assert_array_almost_equal(
+            image.array, bulge_img.array, 5,
+            err_msg="ChromaticAdd.draw() doesn't match manual image addition")
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 

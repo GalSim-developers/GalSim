@@ -31,13 +31,18 @@ class ChromaticObject(object):
     def draw(self, wave, throughput, image=None, add_to_image=False):
         """Draws an Image of a chromatic object as observed through a bandpass filter.
 
-        Draws the image wavelength by wavelength using a Riemann sum.
+        Draws the image wavelength by wavelength, i.e., using a Riemann sum.  This is often slow,
+        especially if each wavelength involves multiple convolutions, for example.  Hence, subclasses
+        should try to override this method if they can think of clever ways to reduce the number of
+        convolutions needed (see ChromaticConvolve below, for instance)
 
         @param wave        Wavelengths in nanometers describing bandpass filter.  For now these are
-                           assumed to be linearly spaced.
-
-        @param throughput  Dimensionless throughput at each wavelength, i.e. the probability that any
-                           particular photon at the corresponding wavelength is detected.
+                           assumed to be linearly spaced.  This needs to be indexable, iterable, and
+                           have at least two elements.
+        @param throughput  Dimensionless throughput at each wavelength, i.e., the probability that
+                           any particular photon at the corresponding wavelength is detected.  This
+                           needs to be indexable, iterable, and have the same number of elements as
+                           wave.
 
         @returns           The drawn image.
         """
@@ -49,7 +54,7 @@ class ChromaticObject(object):
         prof = self.evaluateAtWavelength(wave[0]) * throughput[0] * dwave
         image = prof.draw(image=image, add_to_image=add_to_image)
 
-        #And now build it up at remaining wavelengths
+        #And now add in the remaining wavelengths drawing each one in turn
         for w, tp in zip(wave, throughput)[1:]:
             prof = self.evaluateAtWavelength(w) * tp * dwave
             prof.draw(image=image, add_to_image=True)
@@ -67,7 +72,7 @@ class ChromaticBaseObject(ChromaticObject):
     """Construct chromatic versions of the galsim.base objects.
 
     This class extends the base GSObjects in basy.py by adding SEDs.  Useful to consistently generate
-    images through different filters, or, with the ChromaticAdd class, to construct
+    the same galaxy observed through different filters, or, with the ChromaticAdd class, to construct
     multi-component galaxies, each with a different SED. For example, a bulge+disk galaxy could be
     constructed:
 
@@ -80,28 +85,33 @@ class ChromaticBaseObject(ChromaticObject):
     >>> gal = galsim.ChromaticAdd([bulge, disk])
 
     Notice that positional and keyword arguments which apply to the specific base class being
-    generalized (e.g. n=4, half_light_radius = 1.0 for the bulge component) are passed to
+    generalized (e.g., n=4, half_light_radius = 1.0 for the bulge component) are passed to
     ChromaticBaseObject after the base object type and SED.
 
-    The SED is specified with a wavelength array, and a photon array.  At present the wavelength
+    The SED is specified with a wavelength array and a photon array.  At present, the wavelength
     array is assumed to be linear.  The photon array specifies the distribution of source photons
-    over wavelength, i.e it is proportional to f_lambda * lambda.  Flux normalization is set
+    over wavelength, i.e., it is proportional to f_lambda * lambda.  Flux normalization is set
     such that the Riemann sum over the wavelength and photon array is equal to the total number of
-    photons in an image with infinite area.
+    photons in an infinite aperture.
     """
     def __init__(self, gsobj, wave, photons, *args, **kwargs):
         """Initialize ChromaticBaseObject.
 
         @param gsobj    One of the GSObjects defined in base.py.  Possibly works with other GSObjects
                         too.
-        @param wave     Wavelength array in nanometers for SED.
-        @param photons  Photon array in photons per nanometers.
+        @param wave     Wavelength array in nanometers for SED.  Must be indexable, iterable, and
+                        have at least two elements.
+        @param photons  Photon array in photons per nanometers.  Must be indexable, iterable, and
+                        be the same length as wave.
         @param args
         @param kwargs   Additional positional and keyword arguments are forwarded to the gsobj
                         constructor.
         """
         self.photons = galsim.LookupTable(wave, photons)
         self.gsobj = gsobj(*args, **kwargs)
+        # We classify ChromaticObjects as either seperable, in which case the wavelength-dependent
+        # surface-brightness can be written f(x,y,lambda) = g(x,y) * h(lambda), or as inseperable,
+        # in which case the profile cannot be decomposed into factors.
         self.separable = True
 
     def applyShear(self, *args, **kwargs):
@@ -132,7 +142,7 @@ class ChromaticAdd(ChromaticObject):
             obj.applyShear(*args, **kwargs)
 
     def draw(self, wave, throughput, image=None, add_to_image=False):
-        # add up one component at a time...?
+        # most efficient to just add up one component at a time...?
         image = self.objlist[0].draw(wave, throughput, image=image)
         for obj in self.objlist[1:]:
             image = obj.draw(wave, throughput, image=image, add_to_image=True)
@@ -152,58 +162,99 @@ class ChromaticConvolve(ChromaticObject):
         return galsim.Convolve([obj.evaluateAtWavelength(wave) for obj in self.objlist])
 
     def draw(self, wave, throughput, image=None, add_to_image=False):
-        from operator import mul
-        # extend any `ChromaticConvolve`s and recurse, maybe there's a more pythonic way to do this?
-        extendme = []
-        deleteme = []
-        for i, obj in enumerate(self.objlist):
-            if isinstance(obj, ChromaticConvolve):
-                extendme.extend(obj.objlist)
-                deleteme.append(i)
-        if extendme != []:
-            self.objlist.extend(extendme)
-            for i in deleteme[::-1]: # delete in reverse order so subsequent indices are the same
-                self.objlist.pop(i)
-            return self.draw(wave, throughput, image=image, add_to_image=add_to_image)
+        # expand any `ChromaticConvolve`s in the object list
+        L = len(self.objlist)
+        i = 0
+        while i < L:
+            if isinstance(self.objlist[i], ChromaticConvolve):
+                # found a ChromaticConvolve object, so unpack its obj.objlist to end of self.objlist,
+                # delete obj from self.objlist, and undate list length `L` and list index `i`.
+                L += len(self.objlist[i].objlist) - 1
+                # appending to the end of the objlist means we don't have to recurse in order to
+                # expand a hierarchy of `ChromaticAdd`s; we just have to keep going until the end of
+                # the ever-expanding list.
+                self.objlist.extend(self.objlist[i].objlist)
+                del self.objlist[i]
+                i -= 1
+            i += 1
 
-        # now split up any adds:
+        # Now split up any `ChromaticAdd`s:
+        # This is the tricky part.  Some notation first:
+        #     I(f(x,y,lambda)) denotes the integral over wavelength of a chromatic surface brightness
+        #         profile f(x,y,lambda).
+        #     C(f1, f2) denotes the convolution of surface brightness profiles f1 & f2.
+        #     A(f1, f2) denotes the addition of surface brightness profiles f1 & f2.
+        #
+        # In general, chromatic s.b. profiles can be classified as either seperable or inseperable.
+        # Write seperable profiles as g(x,y) * h(lambda), and leave inseperable profiles as
+        # f(x,y,lambda).
+        # We will suppress the arguments `x`, `y`, `lambda`, hereforward, but generally an `f` refers
+        # to an inseperable profile, a `g` refers to the spatial part of a seperable profile, and an
+        # `h` refers to the spectral part of a seperable profile.
+        #
+        # Now, analyze a typical scenario, a bulge+disk galaxy model (each of which is seperable,
+        # e.g., an SED times an exponential profile for the disk, and another SED times a DeV profile
+        # for the bulge).  Suppose the PSF is inseperable.  (Chromatic PSF's will generally be
+        # inseper since we usually think of the PSF as being normalized to unit integral, no matter
+        # the wavelength we evaluate it at.)  Say there's also an achromatic pix to convolve with.
+        # The formula for this might look like:
+        #
+        # img = I(C(A(bulge, disk), PSF, pix))
+        #     = I(C(A(g1*h1, g2*h2), f3, g4))                #note pix is lambda-independent
+        #     = I(A(C(g1*h1, f3, g4)), C(A(g2*h2, f3, g4)))  #distribute the A over the C
+        #     = A(I(C(g1*h1, f3, g4)), I(C(g2*h2, f3, g4)))  #distribute the A over the I
+        #     = A(C(g1,I(h1*f3),g4), C(g2,I(h2*f3),g4))      #factor lambda-independent terms out of I
+        #
+        # The result is that the integral is now inside the convolution, meaning we only have to
+        # compute two convolutions instead of a convolution for each wavelength at which we evaluate
+        # the integrand.  This is technique, making an `effective` PSF profile for each of the bulge
+        # and disk, is a significant savings for most use cases.
+        # In general, we make effective profiles by splitting up `ChromaticAdd`s and collecting the
+        # inseperable terms to do integration first, and convolution last when possible.
+
+        # Here is the logic to turn I(C(A(...))) into A(C(..., I(...)))
         returnme = False
         for i, obj in enumerate(self.objlist):
-            if isinstance(obj, ChromaticAdd):
+            if isinstance(obj, ChromaticAdd):  #say obj.objlist = [A,B,C]
                 returnme = True
-                self.objlist.pop(i)
-                tmplist = self.objlist
-                tmplist.append(obj.objlist[0])
+                del self.objlist[i] #remove the add object from self.objlist
+                convlist = self.objlist #the remaining items to be convolved with each of A,B,C
+                tmplist = list(convlist)
+                tmplist.append(obj.objlist[0]) #add A to convolve list
                 tmpobj = ChromaticConvolve(tmplist)
                 image = tmpobj.draw(wave, throughput, image=image, add_to_image=add_to_image)
-                for tmpobj in obj.objlist[1:]:
+                for summand in obj.objlist[1:]: #now do B, C, and so on...
+                    tmplist = list(convlist)
+                    tmplist.append(summand)
+                    tmpobj = ChromaticConvolve(tmplist)
                     image = tmpobj.draw(wave, throughput, image=image, add_to_image=True)
         if returnme:
             return image
 
-        # at this point, should have a list of atomic seperable or inseperable objects.
-        # listify these
+        # If program gets this far, the objects in self.objlist should be atomic (non-ChromaticAdd
+        # and non-ChromaticConvolve), both seperable and inseperable.
+        # Classify these into lists.
         sep_profs = []
         insep_profs = []
         sep_photons = []
         for obj in self.objlist:
             if obj.separable:
                 if isinstance(obj, galsim.GSObject):
-                    sep_profs.append(obj)
+                    sep_profs.append(obj) # The g(x,y)'s (see above)
                 else:
                     sep_profs.append(obj.gsobj)
-                sep_photons.append(obj.photons)
+                sep_photons.append(obj.photons) # The h(lambda)'s (see above)
             else:
-                insep_profs.append(obj)
+                insep_profs.append(obj) # The f(x,y,lambda)'s (see above)
 
         # make an effective profile from inseparables and the chromatic part of separables
-        dwave = wave[1] - wave[0]
-        # and what happens when insep_profs == []? I dunno
+        dwave = wave[1] - wave[0] # assume wavelengths are linear
+        # and what happens when a list is empty?  I dunno...
+        # start assembling monochromatic profiles into an effective profile
         mono_prof = galsim.Convolve([insp.evaluateAtWavelength(wave[0]) for insp in insep_profs])
         mono_prof *= throughput[0] * dwave
         for s in sep_photons:
             mono_prof *= s(wave[0])
-
         effective_prof_image = mono_prof.draw()
         for w, tp in zip(wave, throughput)[1:]:
             mono_prof = galsim.Convolve([insp.evaluateAtWavelength(w) for insp in insep_profs])
@@ -222,9 +273,9 @@ class ChromaticShiftAndDilate(ChromaticObject):
     """Class representing chromatic profiles whose wavelength dependence consists of shifting and
     dilating a fiducial profile.
 
-    By simply shifting and dilating a fiducial PSF, a number of wavelength-dependent effects can be
-    effected.  For instance, differential chromatic refraction is just shifting the PSF center as a
-    function of wavelength.  The wavelength-dependence of seeing, and the wavelength-dependence of
+    By simply shifting and dilating a fiducial PSF, a variety of physical wavelength dependencies can
+    be effected.  For instance, differential chromatic refraction is just shifting the PSF center as
+    a function of wavelength.  The wavelength-dependence of seeing, and the wavelength-dependence of
     the diffraction limit are dilations.  This class can compactly represent all of these effects.
     See tests/test_chromatic.py for an example.
     """
