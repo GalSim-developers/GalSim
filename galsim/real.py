@@ -40,7 +40,7 @@ some lower-resolution telescope.
 import galsim
 import utilities
 from galsim import GSObject
-
+from galsim import pyfits
 
 class RealGalaxy(GSObject):
     """A class describing real galaxies from some training dataset.  It's underlying implementation
@@ -136,7 +136,6 @@ class RealGalaxy(GSObject):
                  rng=None, x_interpolant=None, k_interpolant=None, flux=None, pad_factor=4,
                  noise_pad_size=0, gsparams=None, logger=None):
 
-        import pyfits
         import numpy as np
 
         if rng is None:
@@ -358,7 +357,6 @@ class RealGalaxyCatalog(object):
                 raise RuntimeError(noise_dir+' directory does not exist!')
             self.noise_dir = noise_dir
 
-        import pyfits
         cat = pyfits.getdata(self.file_name)
         self.nobjects = len(cat) # number of objects in the catalog
         if nobjects_only: return  # Exit early if that's all we needed.
@@ -423,7 +421,6 @@ class RealGalaxyCatalog(object):
         # Make sure to check if loaded_files exists, since the constructor could abort
         # before it gets to the place where loaded_files is built.
         if hasattr(self, 'loaded_files'):
-            import pyfits
             for f in self.loaded_files.values():
                 f.close()
         self.loaded_files = {}
@@ -450,7 +447,6 @@ class RealGalaxyCatalog(object):
         a big speedup if memory isn't an issue.  Especially if many (or all) of the images are 
         stored in the same file as different HDUs.
         """
-        import pyfits
         import numpy
         from multiprocessing import Lock
         if self.logger:
@@ -471,7 +467,6 @@ class RealGalaxyCatalog(object):
                 self.loaded_files[file_name] = pyfits.open(file_name,memmap=False)
 
     def _getFile(self, file_name):
-        import pyfits
         from multiprocessing import Lock
         if file_name in self.loaded_files:
             if self.logger:
@@ -553,7 +548,6 @@ class RealGalaxyCatalog(object):
                     if self.logger:
                         self.logger.debug('RealGalaxyCatalog %d: Got saved noise im',i)
                 else:
-                    import pyfits
                     import numpy
                     array = pyfits.getdata(self.noise_file_name[i])
                     im = galsim.ImageViewD(numpy.ascontiguousarray(array.astype(numpy.float64)))

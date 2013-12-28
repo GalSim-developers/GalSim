@@ -27,6 +27,7 @@ routines for handling multiple Images.
 import os
 from sys import byteorder
 from . import _galsim
+from galsim import pyfits, pyfits_version
 
 # Convert sys.byteorder into the notation numpy dtypes use
 native_byteorder = {'big': '>', 'little': '<'}[byteorder]
@@ -51,11 +52,10 @@ def _parse_compression(compression, file_name):
     else:
         raise ValueError("Invalid compression %s"%compression)
     if pyfits_compress:
-        import pyfits
         if 'CompImageHDU' not in pyfits.__dict__:
             raise NotImplementedError(
                 'Compressed Images not supported before pyfits version 2.0. You have version %s.'%(
-                    pyfits.__version__))
+                    pyfits_version))
             
     return file_compress, pyfits_compress
 
@@ -71,7 +71,6 @@ class _ReadFile:
         self.bz2_in_mem = True
 
     def __call__(self, file, file_compress):
-        import pyfits
         if not file_compress:
             hdus = pyfits.open(file, 'readonly')
             return hdus, None
@@ -200,8 +199,7 @@ class _WriteFile:
         # to the TFORMx header keywords.  They should have size at the end of them.
         # This bug has been fixed in version 3.1.2.
         # (See http://trac.assembla.com/pyfits/ticket/199)
-        import pyfits
-        if pyfits_compress and pyfits.__version__ < '3.1.2':
+        if pyfits_compress and pyfits_version < '3.1.2':
             with pyfits.open(file,'update',disable_image_compression=True) as hdus:
                 for hdu in hdus[1:]: # Skip PrimaryHDU
                     # Find the maximum variable array length  
@@ -219,7 +217,7 @@ class _WriteFile:
             # Workaround for a bug in some pyfits 3.0.x versions
             # It was fixed in 3.0.8.  I'm not sure when the bug was 
             # introduced, but I believe it was 3.0.3.  
-            if (pyfits.__version__ > '3.0' and pyfits.__version__ < '3.0.8' and
+            if (pyfits_version > '3.0' and pyfits_version < '3.0.8' and
                 'COMPRESSION_ENABLED' in pyfits.hdu.compressed.__dict__):
                 pyfits.hdu.compressed.COMPRESSION_ENABLED = True
                 
@@ -257,7 +255,6 @@ def _write_header(hdu, add_wcs, scale, xmin, ymin):
 
 
 def _add_hdu(hdus, data, pyfits_compress):
-    import pyfits
     if pyfits_compress:
         if len(hdus) == 0:
             hdus.append(pyfits.PrimaryHDU())  # Need a blank PrimaryHDU
@@ -274,7 +271,6 @@ def _add_hdu(hdus, data, pyfits_compress):
 def _check_hdu(hdu, pyfits_compress):
     """Check that an input hdu is valid
     """
-    import pyfits
     if pyfits_compress:
         if not isinstance(hdu, pyfits.CompImageHDU):
             #print 'pyfits_compress = ',pyfits_compress
@@ -338,7 +334,6 @@ def write(image, file_name=None, dir=None, hdu_list=None, add_wcs=True, clobber=
                                    '*.bz2' => 'bzip2'
                                    otherwise None
     """
-    import pyfits    # put this at function scope to keep pyfits optional
   
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
@@ -380,7 +375,6 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, add_wcs=True
     @param clobber      See documentation for this parameter on the galsim.fits.write method.
     @param compression  See documentation for this parameter on the galsim.fits.write method.
     """
-    import pyfits    # put this at function scope to keep pyfits optional
 
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
@@ -432,7 +426,6 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, add_wcs=True,
     @param compression  See documentation for this parameter on the galsim.fits.write method.
     """
     import numpy
-    import pyfits    # put this at function scope to keep pyfits optional
 
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
@@ -567,7 +560,6 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto'):
                                    otherwise None
     @returns An ImageView instance
     """
-    import pyfits     # put this at function scope to keep pyfits optional
     
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
@@ -678,8 +670,6 @@ def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto'):
     @returns A Python list of ImageView instances.
     """
 
-    import pyfits     # put this at function scope to keep pyfits optional
-     
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
     if file_name and hdu_list is not None:
@@ -756,7 +746,6 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto')
                                    otherwise None
     @returns A Python list of ImageView instances.
     """
-    import pyfits     # put this at function scope to keep pyfits optional
   
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
@@ -888,7 +877,6 @@ class FitsHeader(object):
     _takes_logger = False
 
     def __init__(self, file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto'):
-        import pyfits     # put this at function scope to keep pyfits optional
     
         file_compress, pyfits_compress = _parse_compression(compression,file_name)
 

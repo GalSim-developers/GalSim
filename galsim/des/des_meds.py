@@ -37,7 +37,9 @@ MAX_MEMORY = 1e9
 MAX_NCUTOUTS = 11
 # flags for unavailable data
 EMPTY_START_INDEX = 9999
-EMPTY_JAC = 999
+EMPTY_JAC_diag    = 1
+EMPTY_JAC_offdiag = 0
+EMPTY_SHIFT = 0
 
 class WCSTransform(object):
     """
@@ -217,7 +219,7 @@ def write_meds(file_name, obj_list, clobber=True):
 
     import numpy
     import sys
-    import pyfits
+    from galsim import pyfits
 
     # initialise the catalog
     cat = {}
@@ -249,12 +251,12 @@ def write_meds(file_name, obj_list, clobber=True):
 
         # initialise the start indices for each image
         start_rows = numpy.ones(MAX_NCUTOUTS)*EMPTY_START_INDEX
-        dudrow = numpy.ones(MAX_NCUTOUTS)*EMPTY_JAC 
-        dudcol = numpy.ones(MAX_NCUTOUTS)*EMPTY_JAC
-        dvdrow = numpy.ones(MAX_NCUTOUTS)*EMPTY_JAC
-        dvdcol = numpy.ones(MAX_NCUTOUTS)*EMPTY_JAC
-        row0   = numpy.ones(MAX_NCUTOUTS)*EMPTY_JAC
-        col0   = numpy.ones(MAX_NCUTOUTS)*EMPTY_JAC
+        dudrow = numpy.ones(MAX_NCUTOUTS)*EMPTY_JAC_diag 
+        dudcol = numpy.ones(MAX_NCUTOUTS)*EMPTY_JAC_offdiag
+        dvdrow = numpy.ones(MAX_NCUTOUTS)*EMPTY_JAC_offdiag
+        dvdcol = numpy.ones(MAX_NCUTOUTS)*EMPTY_JAC_diag
+        row0   = numpy.ones(MAX_NCUTOUTS)*EMPTY_SHIFT
+        col0   = numpy.ones(MAX_NCUTOUTS)*EMPTY_SHIFT
 
         # get the number of cutouts (exposures)
         n_cutout = obj.n_cutouts
@@ -263,28 +265,21 @@ def write_meds(file_name, obj_list, clobber=True):
         cat['ncutout'].append(n_cutout)
         cat['box_size'].append(obj.box_size)
         cat['id'].append(obj.id)
-      
+
+        
         # loop over cutouts
         for i in range(n_cutout):
 
             # assign the start row to the end of image vector
             start_rows[i] = n_vec
-          
-            # append the image vectors
-            # if vector not is already initialised
-            # if vec['image'] == []:
-            #     vec['image'] = obj.images[i].array.flatten()
-            #     vec['seg'] = obj.segs[i].array.flatten()
-            #     vec['weight'] = obj.weights[i].array.flatten()
-            # # if vector already exists
-            # else:
-            #     vec['image'] = numpy.concatenate([vec['image'], obj.images[i].array.flatten()])
-            #     vec['seg'] = numpy.concatenate([vec['seg'], obj.segs[i].array.flatten()])
-            #     vec['weight'] = numpy.concatenate([vec['weight'], obj.weights[i].array.flatten()])
+            # update n_vec to point to the end of image vector
+            n_vec += len(obj.images[i].array.flatten()) 
 
+            # append the image vectors
             vec['image'].append(obj.images[i].array.flatten())
             vec['seg'].append(obj.segs[i].array.flatten())
             vec['weight'].append(obj.weights[i].array.flatten())
+
 
             # append the Jacobian
             dudrow[i] = obj.wcstrans[i].dudrow
@@ -301,7 +296,8 @@ def write_meds(file_name, obj_list, clobber=True):
                     MAX_MEMORY/1e9)
 
             # update n_vec to point to the end of image vector
-            n_vec = len(vec['image'])
+            # n_vec = len(vec['image'])
+ 
 
         # update the start rows fields in the catalog
         cat['start_row'].append(start_rows)
@@ -314,9 +310,10 @@ def write_meds(file_name, obj_list, clobber=True):
         cat['row0'].append(row0)
         cat['col0'].append(col0)
 
-    vec['image']  = numpy.concatenate(vec['image'])  
-    vec['seg']    = numpy.concatenate(vec['seg'])
-    vec['weight'] = numpy.concatenate(vec['weight'])  
+    # concatenate list to one big vector
+    vec['image'] = numpy.concatenate(vec['image'])
+    vec['seg'] = numpy.concatenate(vec['seg'])
+    vec['weight'] = numpy.concatenate(vec['weight'])
 
     # get the primary HDU
     primary = pyfits.PrimaryHDU()
@@ -440,7 +437,6 @@ def BuildMEDS(file_name, config, nproc=1, logger=None, file_num=0, image_num=0, 
     badpix_images = all_images[3]
 
     obj_list = []
-    logger.debug('building list of MultiExposureObject')
     for i in range(nobjects):
         k1 = i*nstamps_per_object
         k2 = (i+1)*nstamps_per_object

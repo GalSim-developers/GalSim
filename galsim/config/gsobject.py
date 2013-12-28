@@ -321,7 +321,7 @@ def _BuildList(config, key, base, ignore, gsparams, logger):
         raise AttributeError("items entry for config.%s entry is not a list."%type)
 
     # Setup the indexing sequence if it hasn't been specified using the length of items.
-    galsim.config.SetDefaultIndex(config, len(items))
+    galsim.config.SetDefaultIndex(config, len(items), base)
     index, safe = galsim.config.ParseValue(config, 'index', base, int)
     if index < 0 or index >= len(items):
         raise AttributeError("index %d out of bounds for config.%s"%(index,type))
@@ -413,7 +413,7 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams, logger):
 
     # Special: if index is Sequence or Random, and max isn't set, set it to real_cat.getNObjects()-1
     if 'id' not in config:
-        galsim.config.SetDefaultIndex(config, real_cat.getNObjects())
+        galsim.config.SetDefaultIndex(config, real_cat.getNObjects(), base)
 
     if 'whiten' in config:
         whiten, safe1 = galsim.config.ParseValue(config, 'whiten', base, bool)
