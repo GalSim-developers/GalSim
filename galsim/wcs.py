@@ -633,7 +633,7 @@ class UVFunction(BaseWCS):
         return UVFunction(self._ufunc, self._vfunc, self.image_origin, self.world_origin)
 
     def atOrigin(self, image_origin=None, world_origin=None):
-        """Make a copy of this AffineTransform, but set new values for the image_origin
+        """Make a copy of this UVFunction, but set new values for the image_origin
         and/or the world_origin.
         """
         if image_origin is None: image_origin = self.image_origin
@@ -767,8 +767,9 @@ class AstropyWCS(BaseWCS):
 
     def _fix_header(self, header):
         # We allow for the option to fix up the header information when a modification can
-        # make it readable by PyAst.  So far, we don't have any, but something could be added 
-        # in the future.
+        # make it readable by astropy.wcs. 
+        
+        # So far, we don't have any, but something could be added in the future.
         pass
 
     def _posToWorld(self, image_pos):
@@ -890,7 +891,7 @@ class AstropyWCS(BaseWCS):
     def copy(self):
         return AstropyWCS(wcs=self._wcs, image_origin=self.image_origin)
 
-    def atOrigin(self, image_origin=None):
+    def atOrigin(self, image_origin):
         """Make a copy of this AstropyWCS, but set a new value for the image_origin.
         """
         if image_origin is None: image_origin = self.image_origin
@@ -911,6 +912,16 @@ class AstropyWCS(BaseWCS):
 class PyAstWCS(BaseWCS):
     """This WCS uses PyAst (the python front end for the Starlink AST code) to read WCS 
     information from a FITS file.
+
+    Note: This class is very slow.  Even slower than WcsToolsWCS, which calls out to the 
+          command line and doesn't even keep the fits header in memeory.  I believe this
+          is because of the way they wrap the pyfits object.  They use a callback function
+          to read each line in the header individually and parse it in their C layer until
+          they have fully built an internal C-layer object with the entire FITS header.  Most 
+          of this is a waste, since most of the header is not needed.  And also the python 
+          callback function is intrisically rather slow, since it does a lot of string and 
+          dict operations.  So hopefully, they will improve this, since it is really a 
+          bad way to implement this.
 
     Initialization
     --------------
@@ -1006,12 +1017,11 @@ class PyAstWCS(BaseWCS):
 
     def _fix_header(self, header):
         # We allow for the option to fix up the header information when a modification can
-        # make it readable by PyAst.  So far, we just check for an obsolete TPV notation,
-        # but more checks could be added in the future.
-
-        # There was an older standard from SCamp that used TAN with PV.  This is now called
-        # TPV, which PyAst understands (astropy.wcs does not).  All we need to do is change
-        # the names of the CTYPE values.
+        # make it readable by PyAst.
+        
+        # There was an older proposed standard that used TAN with PV values, which is used by
+        # SCamp, so we want to support it if possible.  The standard is now called TPV, which 
+        # PyAst understands.  All we need to do is change the names of the CTYPE values.
         if ( 'CTYPE1' in header and header['CTYPE1'].endswith('TAN') and 
              'CTYPE2' in header and header['CTYPE2'].endswith('TAN') and
              'PV1_10' in header ):
@@ -1037,7 +1047,7 @@ class PyAstWCS(BaseWCS):
         if world_pos is not None:
             image_pos = self._posToImage(world_pos)
         if image_pos is None:
-            raise TypeError('AstropyWCS.local() requires an image_pos or world_pos argument')
+            raise TypeError('PyAstWCS.local() requires an image_pos or world_pos argument')
 
         x0 = image_pos.x - self._x0
         y0 = image_pos.y - self._y0
@@ -1057,14 +1067,172 @@ class PyAstWCS(BaseWCS):
     def copy(self):
         return PyAstWCS(wcsinfo=self._wcsinfo, image_origin=self.image_origin)
 
-    def atOrigin(self, image_origin=None):
-        """Make a copy of this AstropyWCS, but set a new value for the image_origin.
+    def atOrigin(self, image_origin):
+        """Make a copy of this PyAstWCS, but set a new value for the image_origin.
         """
         if image_origin is None: image_origin = self.image_origin
-        return AstropyWCS(wcs=self._wcs, image_origin=image_origin)
+        return PyAstWCS(wcsinfo=self._wcsinfo, image_origin=image_origin)
 
     def __eq__(self, other):
-        if not isinstance(other, AstropyWCS):
+        if not isinstance(other, PyAstWCS):
+            return False
+        else: 
+            return (
+                self._wcs == other._wcs and 
+                self._x0 == other._x0 and 
+                self._y0 == other._y0)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+class WcsToolsWCS(BaseWCS):
+    """This WCS uses wcstools executables to perform the appropriate WCS transformations
+    for a given FITS file.  
+    
+    Note: It uses the wcstools executalbes xy2sky and sky2xy, so it can be quite a bit less 
+          efficient than other options that keep the WCS in memory.
+
+    Initialization
+    --------------
+    A WcsToolsWCS object is initialized with the following command:
+
+        wcs = galsim.WcsToolsWCS(file_name)
+
+    @param file_name      The FITS file from which to read the WCS information.
+    @param dir            Optional directory to prepend to the file name. [ Default `dir = None` ]
+    @param image_origin   Optional origin position for the image coordinate system.
+                          If provided, it should be a PostionD or PositionI object.
+                          [ Default: `image_origin = None` ]
+    """
+    _req_params = { "file_name" : str }
+    _opt_params = { "dir" : str, "image_origin" : galsim.PositionD }
+    _single_params = []
+    _takes_rng = False
+    _takes_logger = False
+
+    def __init__(self, file_name, dir=None, image_origin=None):
+        import os
+        if dir:
+            file_name = os.path.join(dir, file_name)
+        if not os.path.isfile(file_name):
+            raise IOError('Cannot find file '+file_name)
+
+        import subprocess
+        # If xy2sky is not installed, this will raise an OSError
+        p = subprocess.Popen(['xy2sky', '-d', '-n', '10', file_name, '0', '0'],
+                             stdout=subprocess.PIPE)
+        results = p.communicate()[0]
+        p.stdout.close()
+
+        if len(results) == 0:
+            raise IOError('wcstools (specifically xy2sky) was unable to read '+file_name)
+
+        self._file_name = file_name
+        self._is_local = False
+
+        if image_origin == None:
+            self._x0 = 0
+            self._y0 = 0
+        else:
+            self._x0 = image_origin.x
+            self._y0 = image_origin.y
+
+    @property
+    def file_name(self): return self._file_name
+    @property
+    def image_origin(self): return galsim.PositionD(self._x0, self._y0)
+
+    def _posToWorld(self, image_pos):
+        if not(isinstance(image_pos, galsim.PositionD) or isinstance(image_pos, galsim.PositionI)):
+            raise TypeError("toWorld requires a PositionD or PositionI argument")
+        x = image_pos.x - self._x0
+        y = image_pos.y - self._y0
+
+        import subprocess
+        # We'd like to get the output to 10 digits of accuracy.  This corresponds to 
+        # an accuracy of about 1.e-6 arcsec.  But sometimes xy2sky cannot handle it, 
+        # in which case the output will start with *************.  If this happens, just
+        # decrease digits and try again.
+        for digits in range(10,5,-1):
+            # If xy2sky is not installed, this will raise an OSError
+            p = subprocess.Popen(['xy2sky', '-d', '-n', str(digits), self._file_name,
+                                  str(x), str(y)], stdout=subprocess.PIPE)
+            results = p.communicate()[0]
+            p.stdout.close()
+            if len(results) == 0:
+                raise IOError('wcstools (specifically xy2sky) was unable to read '+self._file_name)
+            if results[0] != '*': break
+        if results[0] == '*':
+            raise IOError('wcstools (specifically xy2sky) was unable to read '+self._file_name)
+        results = results.split()
+        ra = float(results[0])
+        dec = float(results[1])
+
+        return galsim.CelestialCoord(ra * galsim.degrees, dec * galsim.degrees)
+
+    def _posToImage(self, world_pos):
+        ra = world_pos.ra / galsim.degrees
+        dec = world_pos.dec / galsim.degrees
+
+        import subprocess
+        for digits in range(10,5,-1):
+            p = subprocess.Popen(['sky2xy', '-n', str(digits), self._file_name,
+                                  str(ra), str(dec)], stdout=subprocess.PIPE)
+            results = p.communicate()[0]
+            p.stdout.close()
+            if len(results) == 0:
+                raise IOError('wcstools (specifically sky2xy) was unable to read '+self._file_name)
+            if results[0] != '*': break
+        if results[0] == '*':
+            raise IOError('wcstools (specifically sky2xy) was unable to read '+self._file_name)
+        results = results.split()
+        x = float(results[4])
+        y = float(results[5])
+
+        return galsim.PositionD(x + self._x0, y + self._y0)
+
+    def _local(self, image_pos, world_pos):
+        if world_pos is not None:
+            image_pos = self._posToImage(world_pos)
+        if image_pos is None:
+            raise TypeError('WcsToolsWCS.local() requires an image_pos or world_pos argument')
+
+        x0 = image_pos.x - self._x0
+        y0 = image_pos.y - self._y0
+        # Use dx,dy = 1 pixel for numerical derivatives
+        dx = 1
+        dy = 1
+
+        import subprocess
+        for digits in range(10,5,-1):
+            xy = [ str(z) for z in [ x0,y0, x0+dx,y0, x0-dx,y0, x0,y0+dy, x0,y0-dy ] ]
+            p = subprocess.Popen(['xy2sky', '-d', '-n', str(digits), self._file_name] + xy,
+                                 stdout=subprocess.PIPE)
+            results = p.communicate()[0]
+            p.stdout.close()
+            if len(results) == 0:
+                raise IOError('wcstools (specifically xy2sky) was unable to read '+self._file_name)
+            if results[0] != '*': break
+        if results[0] == '*':
+            raise IOError('wcstools (specifically xy2sky) was unable to read '+self._file_name)
+        results = results.split()
+
+        ra = [ float(results[i]) for i in [ 0, 5, 10, 15, 20 ] ]
+        dec = [ float(results[i+1]) for i in [ 0, 5, 10, 15, 20 ] ]
+
+        return makeAffineFromNumericalRaDec(ra, dec, dx, dy)
+
+    def copy(self):
+        return WcsToolsWCS(file_name=self._file_name, image_origin=self.image_origin)
+
+    def atOrigin(self, image_origin):
+        """Make a copy of this WcsToolsWCS, but set a new value for the image_origin.
+        """
+        if image_origin is None: image_origin = self.image_origin
+        return WcsToolsWCS(file_name=self._file_name, image_origin=image_origin)
+
+    def __eq__(self, other):
+        if not isinstance(other, WcsToolsWCS):
             return False
         else: 
             return (

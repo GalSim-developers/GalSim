@@ -76,7 +76,7 @@ digits = 6
 # points on opposite sides of the image so any non-linearities in the WCS are maximized.
 # For most of them, I then use wcstools to get the ra and dec to 6 digits of accuracy.
 # (Unfortunately, ds9's ra and dec information is only accurate to 2 or 3 digits.)
-# The exceptions are HPX and TNX, for which I used the PyAst library to compute accurate values.
+# The exception is HPX, for which I used the PyAst library to compute accurate values.
 
 references = {
     # Note: the four 1904-66 files use the brightest pixels in the same two stars.
@@ -119,6 +119,8 @@ references = {
     'REGION' : ('region.fits',
             [ ('140211.202432', '543007.702200', 80, 80, 2241),
               ('140417.341523', '541628.554326', 45, 54, 1227) ] ),
+    # Strangely, ds9 seems to get this one wrong.  It differs by about 6 arcsec in dec.
+    # But PyAst and wcstools agree on these values, so I'm taking them to be accurate.
     'TNX' : ('tnx.fits',
             [ ('174653.214670', '-300854.377081', 8, 91, 7140),
               ('174658.101300', '-300756.600123', 222, 326, 15022) ] ),
@@ -695,7 +697,7 @@ def test_pyastwcs():
     try:
         import starlink.Ast
     except ImportError:
-        print 'Unable to import starlink.Ast.  Skipping PyAstyWCS tests.'
+        print 'Unable to import starlink.Ast.  Skipping PyAstWCS tests.'
         return
 
     test_tags = [ 'HPX', 'TAN', 'TSC', 'ZPN', 'SIP', 'TPV', 'ZPX', 'TAN-PV', 'REGION', 'TNX' ]
@@ -718,6 +720,39 @@ def test_pyastwcs():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
+def test_wcstools():
+    """Test the WcsToolsWCS class
+    """
+    import time
+    t1 = time.time()
+
+    dir = 'fits_files'
+    test_tags = [ 'TAN', 'TSC', 'ZPN', 'SIP', 'TPV', 'ZPX', 'REGION', 'TNX' ]
+
+    try:
+        galsim.WcsToolsWCS(references['TAN'][0], dir=dir)
+    except OSError:
+        print 'Unable to execute xy2sky.  Skipping WcsToolsWCS tests.'
+        return
+
+    for tag in test_tags:
+        file_name, ref_list = references[tag]
+        print tag,' file_name = ',file_name
+        wcs = galsim.WcsToolsWCS(file_name, dir=dir)
+        print 'wcs = ',wcs
+
+        print 'ref_list = ',ref_list
+        # The wcstools implementation of the SIP and TPV types only gets the inverse 
+        # transformations approximately correct.  So we need to be a bit looser in those checks.
+        approx = (tag == 'SIP' or tag == 'TPV')
+        do_ref(wcs, ref_list, approx)
+
+        #do_celestial_wcs(wcs, 'Astropy file '+file_name)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_pixelscale()
     test_shearwcs()
@@ -725,3 +760,4 @@ if __name__ == "__main__":
     test_uvfunction()
     test_astropywcs()
     test_pyastwcs()
+    test_wcstools()
