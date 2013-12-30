@@ -144,7 +144,7 @@ def CopyConfig(config):
     return config1
 
 
-def ProcessInput(config, file_num=0, logger=None, file_scope_only=False):
+def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_only=False):
     """
     Process the input field, reading in any specified input files or setting up
     any objects that need to be initialized.
@@ -261,10 +261,17 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False):
                         kwargs['rng'] = config['rng']
                         safe = False
 
+                    if safe_only and not safe:
+                        if logger:
+                            logger.debug('file %d: Skip %s %d, since not safe',file_num,key,i)
+                        ck[i] = None
+                        ck_safe[i] = None
+                        continue
+
                     tag = key + str(i)
                     input_obj = getattr(config['input_manager'],tag)(**kwargs)
                     if logger:
-                        logger.debug('file %d: Built input object %s, %s',file_num,key,type)
+                        logger.debug('file %d: Built input object %s %d',file_num,key,i)
                         if 'file_name' in kwargs:
                             logger.debug('file %d: file_name = %s',file_num,kwargs['file_name'])
                         if valid_input_types[key][2]:
@@ -273,6 +280,8 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False):
                     ck[i] = input_obj
                     ck_safe[i] = safe
                     # Invalidate any currently cached values that use this kind of input object:
+                    # TODO: This isn't quite correct if there are multiple versions of this input
+                    #       item.  e.g. you might want to invalidate dict0, but not dict1.
                     for value_type in valid_input_types[key][5]:
                         RemoveCurrent(config, type=value_type)
                         if logger:
@@ -482,10 +491,12 @@ def Process(config, logger=None):
     for key in extra_keys:
         last_file_name[key] = None
 
-    # Process the input field for the first file.  Usually we won't need to reprocess
-    # things, since they are often "safe", so they won't need to be reprocessed for the
-    # later file_nums.  This is important to do here if nproc != 1.
-    ProcessInput(config, file_num=0, logger=logger_proxy)
+    # Process the input field for the first file.  Often there are "safe" input items
+    # that won't need to be reprocessed each time.  So do them here once and keep them
+    # in the config for all file_nums.  This is more important if nproc != 1.
+    config['seq_index'] = 0
+    config['file_num'] = 0
+    ProcessInput(config, file_num=0, logger=logger_proxy, safe_only=True)
 
     # Normally, random_seed is just a number, which really means to use that number
     # for the first item and go up sequentially from there for each object.
@@ -647,6 +658,13 @@ def Process(config, logger=None):
             # Make new copies of config and kwargs so we can update them without
             # clobbering the versions for other tasks on the queue.
             kwargs1 = copy.copy(kwargs)
+            # Clear out unsafe proxy objects, since there seems to be a bug in the manager
+            # package where this can cause strange KeyError exceptions in the incref function.
+            # It seems to be related to having multiple identical proxy objects that then
+            # get deleted.  e.g. if the first N files use one dict, then the next N use another,
+            # and so forth.  I don't really get it, but clearing them out here seems to 
+            # fix the problem.
+            ProcessInput(config, file_num=file_num, logger=logger_proxy, safe_only=True)
             kwargs1['config'] = CopyConfig(config)
             task_queue.put( (kwargs1, file_num, file_name, logger_proxy) )
         else:
@@ -671,7 +689,8 @@ def Process(config, logger=None):
     # If we're doing multiprocessing, here is the machinery to run through the task_queue
     # and process the results.
     if nproc > 1:
-        logger.warn("Using %d processes",nproc)
+        if logger:
+            logger.warn("Using %d processes",nproc)
         import time
         t1 = time.time()
         # Run the tasks
