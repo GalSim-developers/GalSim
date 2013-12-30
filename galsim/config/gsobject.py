@@ -31,7 +31,8 @@ valid_gsobject_types = {
     'List' : '_BuildList',
     'Ring' : '_BuildRing',
     'RealGalaxy' : '_BuildRealGalaxy',
-    'RealGalaxyOriginal' : '_BuildRealGalaxyOriginal'
+    'RealGalaxyOriginal' : '_BuildRealGalaxyOriginal',
+    'OpticalPSF' : '_BuildOpticalPSF'
 }
 
 class SkipThisObject(Exception):
@@ -439,6 +440,31 @@ def _BuildRealGalaxyOriginal(config, key, base, ignore, gsparams, logger):
     """
     image, safe = _BuildRealGalaxy(config, key, base, ignore, gsparams, logger)
     return image.original_image, safe    
+
+
+def _BuildOpticalPSF(config, key, base, ignore, gsparams, logger):
+    """@brief Build an OpticalPSF.
+    """
+    kwargs, safe = galsim.config.GetAllParams(config, key, base, 
+        req = galsim.OpticalPSF._req_params,
+        opt = galsim.OpticalPSF._opt_params,
+        single = galsim.OpticalPSF._single_params,
+        ignore = [ 'aberrations' ] + ignore)
+    if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
+
+    if 'aberrations' in config:
+        aber_list = [0.0] * 4  # Initial 4 values are ignored.
+        aberrations = config['aberrations']
+        if not isinstance(aberrations,list):
+            raise AttributeError("aberrations entry for config.OpticalPSF entry is not a list.")
+        for i in range(len(aberrations)):
+            value, safe1 = galsim.config.ParseValue(aberrations, i, base, float)
+            aber_list.append(value)
+            safe = safe and safe1
+        kwargs['aberrations'] = aber_list
+            
+    return galsim.OpticalPSF(**kwargs), safe
+
 
 
 def _BuildSimple(config, key, base, ignore, gsparams, logger):

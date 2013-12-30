@@ -66,12 +66,19 @@
                   "type" : "OpticalPSF" , 
                   "lam_over_diam" : 0.39 ,
                   "obscuration" : 0.4 ,
-                  "defocus" : 0.06,
-                  "spher" : -0.13,
-                  "astig1" : 0.12,
-                  "astig2" : -0.08,
-                  "coma1" : 0.07,
-                  "coma2" : 0.04 
+                  "#" : "aberrations should be a list of coefficients in the Noll index convention",
+                  "#" : "starting with index 4 (defocus).  Here we go up to index 11 (spherical).",
+                  "#" : "c.f. http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials",
+                  "aberrations" : [
+                        0.06,
+                        0.12,
+                        -0.08,
+                        0.07,
+                        0.04,
+                        0.0,
+                        0.0,
+                        -0.13
+                  ]
                 }
             ]
         },

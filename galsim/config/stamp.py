@@ -533,7 +533,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 if logger:
                     logger.info('Object %d: Caught exception %s',obj_num,str(e))
                     logger.info('This is try %d/%d, so trying again.',itry+1,ntries)
-                # Need to remvoe the "current_val"s from the config dict.  Otherwise,
+                # Need to remove the "current_val"s from the config dict.  Otherwise,
                 # the value generators will do a quick return with the cached value.
                 RemoveCurrent(config, keep_safe=True)
                 continue

@@ -65,4 +65,7 @@ Updates to config options:
 Other new features:
 
 * New WCS classes.  See the new wcs.py file for details. (Issue #364)
-
+* Permit users to initialize OpticalPSF with a list or array of aberrations,
+  as an alternative to specifying each one individually.  (The innards of 
+  OpticalPSF were also rearranged to use arrays instead of individual values, 
+  but this is not important for users, just developers.) (Issue #409)
