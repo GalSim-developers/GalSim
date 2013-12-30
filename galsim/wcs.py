@@ -732,9 +732,10 @@ class AstropyWCS(BaseWCS):
             hdu, hdu_list, fin = galsim.fits.readFile(file_name, dir, hdu, compression)
 
         if hdu is not None:
-            import astropy.wcs
             if wcs is not None:    
                 raise TypeError("Cannot provide both pyfits hdu and wcs")
+            self._fix_header(hdu.header)
+            import astropy.wcs
             wcs = astropy.wcs.WCS(hdu.header)
         if wcs is None:
             raise TypeError("Must provide one of file_name, hdu (as a pyfits HDU), or wcs")
@@ -756,6 +757,12 @@ class AstropyWCS(BaseWCS):
     def wcs(self): return self._wcs
     @property
     def image_origin(self): return galsim.PositionD(self._x0, self._y0)
+
+    def _fix_header(self, header):
+        # We allow for the option to fix up the header information when a modification can
+        # make it readable by PyAst.  So far, we don't have any, but something could be added 
+        # in the future.
+        pass
 
     def _posToWorld(self, image_pos):
         if not(isinstance(image_pos, galsim.PositionD) or isinstance(image_pos, galsim.PositionI)):
@@ -948,10 +955,11 @@ class PyAstWCS(BaseWCS):
             hdu, hdu_list, fin = galsim.fits.readFile(file_name, dir, hdu, compression)
 
         if hdu is not None:
-            import starlink.Ast
-            import starlink.Atl
             if wcsinfo is not None:    
                 raise TypeError("Cannot provide both pyfits hdu and wcsinfo")
+            self._fix_header(hdu.header)
+            import starlink.Ast
+            import starlink.Atl
             fitschan = starlink.Ast.FitsChan( starlink.Atl.PyFITSAdapter(hdu) )
             wcsinfo = fitschan.read()
         if wcsinfo is None:
@@ -988,6 +996,20 @@ class PyAstWCS(BaseWCS):
     def wcsinfo(self): return self._wcsinfo
     @property
     def image_origin(self): return galsim.PositionD(self._x0, self._y0)
+
+    def _fix_header(self, header):
+        # We allow for the option to fix up the header information when a modification can
+        # make it readable by PyAst.  So far, we just check for an obsolete TPV notation,
+        # but more checks could be added in the future.
+
+        # There was an older standard from SCamp that used TAN with PV.  This is now called
+        # TPV, which PyAst understands (astropy.wcs does not).  All we need to do is change
+        # the names of the CTYPE values.
+        if ( 'CTYPE1' in header and header['CTYPE1'].endswith('TAN') and 
+             'CTYPE2' in header and header['CTYPE2'].endswith('TAN') and
+             'PV1_10' in header ):
+            header['CTYPE1'] = header['CTYPE1'].replace('TAN','TPV')
+            header['CTYPE2'] = header['CTYPE2'].replace('TAN','TPV')
 
     def _posToWorld(self, image_pos):
         if not(isinstance(image_pos, galsim.PositionD) or isinstance(image_pos, galsim.PositionI)):

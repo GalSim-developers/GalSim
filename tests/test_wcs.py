@@ -55,46 +55,75 @@ profiles.append(prof)
 # This mostly comes into play for functions with a non-trivial local approximation.
 digits = 6
 
-# The 1904_66*.fits files were downloaded from the web site:
+# The HPX, TAN, TSC, and ZPN files were downloaded from the web site:
 # 
 # http://www.atnf.csiro.au/people/mcalabre/WCS/example_data.html
 # 
-# From that page: "The example maps and spectra are offered mainly as test
-# material for software that deals with FITS WCS."
+# From that page: "The example maps and spectra are offered mainly as test material for 
+# software that deals with FITS WCS."
 #
-# I picked 4 that looked rather different in ds9, but there are a bunch more
-# on that web page as well.  In particular, I included ZPN, since that uses
-# PV values, so it is a bit different from the others.
+# I picked 4 that looked rather different in ds9, but there are a bunch more on that web 
+# page as well.  In particular, I included ZPN, since that uses PV values, so it is a bit 
+# different from the others.  Also, HPX is not implemented in wcstools, so that's also 
+# worth including.
 # 
-# The sipsample.fits file was downloaded from the web site:
+# The SIP, TPV, ZPX, REGION, and TNX are either new or "non-standard" that are not implemented 
+# by (at least older versions of) wcslib.  They were downloaded from the web site:
 #
-# http://fits.gsfc.nasa.gov/registry/sip.html
+# http://fits.gsfc.nasa.gov/fits_registry.html
 #
-# It's important to have at least one file that has some non-trivial telescope
-# distortion term, so this seemed a good choice.
-#   
-# For each file, I use ds9 to pick out two reference points.
-# For the 1904-66 files, the two reference points are the brightest pixels in the same two 
-# stars.  They don't have exactly the same ra, dec, due to the finite pixel size, but they
-# are close.  The x,y values though are rather different.
-# For sipsample, it is just two bright spots on opposite sides of the galaxy.
+# For each file, I use ds9 to pick out two reference points.  I generally try to pick two 
+# points on opposite sides of the image so any non-linearities in the WCS are maximized.
+# For most of them, I then use wcstools to get the ra and dec to 6 digits of accuracy.
+# (Unfortunately, ds9's ra and dec information is only accurate to 2 or 3 digits.)
+# The exceptions are HPX and TNX, for which I used the PyAst library to compute accurate values.
+
 references = {
-    # HPX
-    '1904-66_HPX.fits' : [ ('193919.953', '-634341.90', 113.75, 180, 13.5996),
-                           ('181936.455', '-634708.64', 143.75, 30, 11.4959) ],
-    # TAN
-    '1904-66_TAN.fits' : [ ('193934.162', '-634342.98', 116.75, 178, 13.4363),
-                           ('181917.969', '-634815.69', 153.25, 35, 11.4444) ],
-    # TSC
-    '1904-66_TSC.fits' : [ ('193944.339', '-634210.26', 112.75, 161, 12.4841),
-                           ('181906.848', '-635007.10', 140.75, 48, 11.6595) ],
-    # ZPN
-    '1904-66_ZPN.fits' : [ ('193927.305', '-634747.56', 94.875, 151, 12.8477),
-                           ('181924.624', '-635047.54', 121.875, 48, 11.0143) ],
-    # SIP
-    'sipsample.fits' : [ ('133001.463', '471251.69', 241.875, 75, 12.2444 ),
-                         ('132943.737', '470913.78', 11.875, 106, 5.30282 ) ]
+    # Note: the four 1904-66 files use the brightest pixels in the same two stars.
+    # The ra, dec are thus essentially the same (modulo the large pixel size of 3 arcmin).
+    # However, the image positions are quite different.
+    'HPX' : ('1904-66_HPX.fits' , 
+            [ ('193916.551671', '-634247.346862', 114, 180, 13.5996),
+              ('181935.761589', '-634608.860203', 144, 30, 11.4959) ] ),
+    'TAN' : ('1904-66_TAN.fits' ,
+            [ ('193930.753119', '-634259.217527', 117, 178, 13.4363),
+              ('181918.652839', '-634903.833411', 153, 35, 11.4444) ] ),
+    'TSC' : ('1904-66_TSC.fits' , 
+            [ ('193939.996553', '-634114.585586', 113, 161, 12.4841),
+              ('181905.985494', '-634905.781036', 141, 48, 11.6595) ] ),
+    'ZPN' : ('1904-66_ZPN.fits' ,
+            [ ('193924.948254', '-634643.636138', 95, 151, 12.8477),
+              ('181924.149409', '-634937.453404', 122, 48, 11.0143) ] ),
+    'SIP' : ('sipsample.fits' ,
+            [ ('133001.474154', '471251.794474', 242, 75, 12.2444),
+              ('132943.747626', '470913.879660', 12, 106, 5.30282) ] ),
+    'TPV' : ('tpv.fits',
+            [ ('033009.340034', '-284350.811107', 418, 78, 2859.54),
+              ('033015.728999', '-284501.488629', 148, 393, 2957.99) ] ),
+    # Strangely, zpx.fits is the same image as tpv.fits, but the WCS-computed RA, Dec 
+    # values are not anywhere close to TELRA, TELDEC in the header.  It's a bit 
+    # unfortunate, since my understanding is that ZPX can encode the same function as
+    # TPV, so they could have produced the equivalent function.  But instead they just
+    # inserted some totally off-the-wall different WCS transformation.
+    'ZPX' : ('zpx.fits',
+            [ ('212412.094326', '371034.575917', 418, 78, 2859.54),
+              ('212405.350816', '371144.596579', 148, 393, 2957.99) ] ),
+    # Older versions of the new TPV standard just used the TAN wcs name and expected
+    # the code to notice the PV values and use them correctly.  This did not become a
+    # FITS standard (or even a registered non-standard), but some old FITS files use
+    # this, so we want to support it.  I just edited the tpv.fits to change the 
+    # CTYPE values from TPV to TAN.
+    'TAN-PV' : ('tanpv.fits',
+            [ ('033009.340034', '-284350.811107', 418, 78, 2859.54),
+              ('033015.728999', '-284501.488629', 148, 393, 2957.99) ] ),
+    'REGION' : ('region.fits',
+            [ ('140211.202432', '543007.702200', 80, 80, 2241),
+              ('140417.341523', '541628.554326', 45, 54, 1227) ] ),
+    'TNX' : ('tnx.fits',
+            [ ('174653.214670', '-300854.377081', 8, 91, 7140),
+              ('174658.101300', '-300756.600123', 222, 326, 15022) ] ),
 }
+all_tags = [ 'HPX', 'TAN', 'TSC', 'ZPN', 'SIP', 'TPV', 'ZPX', 'TAN-PV', 'REGION', 'TNX' ]
 
 
 def do_wcs_pos(wcs, ufunc, vfunc, name):
@@ -591,7 +620,7 @@ def test_uvfunction():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def do_ref(wcs, ref_list):
+def do_ref(wcs, ref_list, approx=False):
     """Test that the given wcs object correctly converts the reference positions
     """
     for ref in ref_list:
@@ -605,21 +634,28 @@ def do_ref(wcs, ref_list):
         # Check image -> world
         ref_coord = galsim.CelestialCoord(ra,dec)
         coord = wcs.toWorld(galsim.PositionD(x,y))
-        print 'ra = ', ra / galsim.degrees, coord.ra / galsim.degrees
+        print 'ra = ', ra.wrap() / galsim.degrees, coord.ra.wrap() / galsim.degrees
         print 'dec = ', dec / galsim.degrees, coord.dec / galsim.degrees
         print 'dist = ', ref_coord.distanceTo(coord) / galsim.arcsec,' arcsec'
-        # The conversions should be accurate to at least 1.e-2 pixels.
-        scale = wcs.minLinearScale(galsim.PositionD(x,y))
-        print 'scale = ',scale
-        np.testing.assert_almost_equal(ref_coord.distanceTo(coord)/galsim.arcsec/scale, 0, 2)
+        dist = ref_coord.distanceTo(coord) / galsim.arcsec
+        np.testing.assert_almost_equal(dist, 0, 4)
+
+        # Normally, we check the agreement to 1.e-4 arcsec.
+        # However, we allow the caller to indicate the that inverse transform is
+        # only approximate.  In this case, we only check to 2 digits.
+        if approx:
+            digits = 2
+        else:
+            digits = 4
 
         # Check world -> image
         pos = wcs.toImage(galsim.CelestialCoord(ra,dec))
         print 'x = ', x, pos.x
         print 'y = ', y, pos.y
-        np.testing.assert_almost_equal(x, pos.x, 2)
-        np.testing.assert_almost_equal(y, pos.y, 2)
-
+        pixel_scale = wcs.minLinearScale(galsim.PositionD(x,y))
+        print 'pixel_scale = ',pixel_scale
+        np.testing.assert_almost_equal((x-pos.x)*pixel_scale, 0, digits)
+        np.testing.assert_almost_equal((y-pos.y)*pixel_scale, 0, digits)
 
 def test_astropywcs():
     """Test the AstropyWCS class
@@ -633,13 +669,15 @@ def test_astropywcs():
         print 'Unable to import astropy.wcs.  Skipping AstropyWCS tests.'
         return
 
+    test_tags = [ 'HPX', 'TAN', 'TSC', 'ZPN', 'SIP', 'REGION' ]
+
     dir = 'fits_files'
-    for file_name in references:
-        print 'file_name = ',file_name
+    for tag in test_tags:
+        file_name, ref_list = references[tag]
+        print tag,' file_name = ',file_name
         wcs = galsim.AstropyWCS(file_name, dir=dir)
         print 'wcs = ',wcs
 
-        ref_list = references[file_name]
         print 'ref_list = ',ref_list
         do_ref(wcs, ref_list)
 
@@ -660,15 +698,20 @@ def test_pyastwcs():
         print 'Unable to import starlink.Ast.  Skipping PyAstyWCS tests.'
         return
 
+    test_tags = [ 'HPX', 'TAN', 'TSC', 'ZPN', 'SIP', 'TPV', 'ZPX', 'TAN-PV', 'REGION', 'TNX' ]
+
     dir = 'fits_files'
-    for file_name in references:
-        print 'file_name = ',file_name
+    for tag in test_tags:
+        file_name, ref_list = references[tag]
+        print tag,' file_name = ',file_name
         wcs = galsim.PyAstWCS(file_name, dir=dir)
         print 'wcs = ',wcs
 
-        ref_list = references[file_name]
         print 'ref_list = ',ref_list
-        do_ref(wcs, ref_list)
+        # The PyAst implementation of the SIP type only gets the inverse transformation
+        # approximately correct.  So we need to be a bit looser in that check.
+        approx = (tag == 'SIP')
+        do_ref(wcs, ref_list, approx)
 
         #do_celestial_wcs(wcs, 'Astropy file '+file_name)
 

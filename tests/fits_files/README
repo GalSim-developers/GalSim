@@ -10,15 +10,12 @@ available to us to use for unit tests!  From Mark:
     the GalSim package.
 
 
-The sipsample.fits file was downloaded from:
+The files region.fits, sipsample.fits, tnx.fits, tpv.fits, zpx.fits are
+the sample files for the corresponding registrations of these WCS FITS
+conventions.  They are all in the public domain.  See:
 
-http://fits.gsfc.nasa.gov/registry/sip.html
+http://fits.gsfc.nasa.gov/fits_registry.html
 
-I checked with the IRSA Help Desk about bundling it (Issue #402:
-https://irsasupport.ipac.caltech.edu/index.php?/Tickets/Ticket/View/402),
-and they said that it was fine to use this image with the following credit:
-
-    Observation made with the Spitzer Space Telescope, which is operated
-    by the Jet Propulsion Laboratory, California Institute of Technology
-    under a contract with NASA.
+The file tanpv.fits is just a copy of tpv.fits with the CTYPE tags
+changed from TPV to TAN.
 
