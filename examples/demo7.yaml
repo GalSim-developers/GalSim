@@ -80,12 +80,18 @@ psf :
                     type : OpticalPSF 
                     lam_over_diam : 0.39
                     obscuration : 0.4
-                    defocus : 0.06
-                    spher : -0.13
-                    astig1 : 0.12
-                    astig2 : -0.08
-                    coma1 : 0.07
-                    coma2 : 0.04
+                    aberrations: 
+                        # This should be a list of coefficients in the Noll index convention
+                        # starting with index 4.
+                        # c.f. http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials
+                        - 0.06   # Noll index 4 = Defocus
+                        - 0.12   # Noll index 5,6 = Astigmatism
+                        - -0.08
+                        - 0.07   # Noll index 7,8 = Coma
+                        - 0.04
+                        - 0.0    # Noll index 9,10 = Trefoil -- unused here
+                        - 0.0
+                        - -0.13  # Noll index 11 = Spherical
         -
             type : Convolution
             items :
