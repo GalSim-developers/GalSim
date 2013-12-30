@@ -254,6 +254,30 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
     return images, psf_images, weight_images, badpix_images, current_vars
  
 
+def RemoveCurrent(config, keep_safe=False):
+    """
+    Remove any "current values" stored in the config dict at any level.
+    If keep_safe = True (default = False), then any current values that are marked
+    as safe will be preserved.
+    """
+    # End recursion if this is not a dict.
+    if not isinstance(config,dict): return
+
+    # Delete the current_val at this level, if any
+    if 'current_val' in config:
+        if not (keep_safe and config['current_safe']):
+            del config['current_val']
+            del config['current_safe']
+
+    # Recurse to lower levels, if any
+    for key in config:
+        if isinstance(config[key],list):
+            for item in config[key]:
+                RemoveCurrent(item, keep_safe)
+        else:
+            RemoveCurrent(config[key], keep_safe)
+
+
 def BuildSingleStamp(config, xsize=0, ysize=0,
                      obj_num=0, sky_level_pixel=None, do_noise=True, logger=None,
                      make_psf_image=False, make_weight_image=False, make_badpix_image=False):
@@ -276,7 +300,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
     import time
     t1 = time.time()
 
-    config['seq_index'] = obj_num 
+    config['seq_index'] = obj_num - config.get('start_obj_num',0)
     config['obj_num'] = obj_num
     # Initialize the random number generator we will be using.
     if 'random_seed' in config['image']:
@@ -291,196 +315,232 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
     if 'gd' in config:
         del config['gd']  # In case it was set.
 
-    # Determine the size of this stamp
-    if not xsize:
-        if 'stamp_xsize' in config['image']:
-            xsize = galsim.config.ParseValue(config['image'],'stamp_xsize',config,int)[0]
-        elif 'stamp_size' in config['image']:
-            xsize = galsim.config.ParseValue(config['image'],'stamp_size',config,int)[0]
-    if not ysize:
-        if 'stamp_ysize' in config['image']:
-            ysize = galsim.config.ParseValue(config['image'],'stamp_ysize',config,int)[0]
-        elif 'stamp_size' in config['image']:
-            ysize = galsim.config.ParseValue(config['image'],'stamp_size',config,int)[0]
-    if False:
-        logger.debug('obj %d: xsize,ysize = %d,%d',config['obj_num'],xsize,ysize)
-    if xsize: config['stamp_xsize'] = xsize
-    if ysize: config['stamp_ysize'] = ysize
-
-    # Determine where this object is going to go:
-    if 'image_pos' in config['image'] and 'sky_pos' in config['image']:
-        image_pos = galsim.config.ParseValue(
-            config['image'], 'image_pos', config, galsim.PositionD)[0]
-        sky_pos = galsim.config.ParseValue(
-            config['image'], 'sky_pos', config, galsim.PositionD)[0]
-
-    elif 'image_pos' in config['image']:
-        image_pos = galsim.config.ParseValue(
-            config['image'], 'image_pos', config, galsim.PositionD)[0]
-        # Calculate and save the position relative to the image center
-        sky_pos = (image_pos - config['image_center']) * config['pixel_scale']
-
-    elif 'sky_pos' in config['image']:
-        sky_pos = galsim.config.ParseValue(
-            config['image'], 'sky_pos', config, galsim.PositionD)[0]
-        # Calculate and save the position relative to the image center
-        image_pos = (sky_pos / config['pixel_scale']) + config['image_center']
-
+    if 'image' in config and 'retry_failures' in config['image']:
+        ntries = galsim.config.ParseValue(config['image'],'retry_failures',config,int)[0]
+        # This is how many _re_-tries.  Do at least 1, so ntries is 1 more than this.
+        ntries = ntries + 1
     else:
-        image_pos = None
-        sky_pos = None
+        ntries = 1
 
-    # Save these values for possible use in Evals or other modules
-    if image_pos is not None:
-        config['image_pos'] = image_pos
-        if logger:
-            logger.debug('obj %d: image_pos = %s',config['obj_num'],str(config['image_pos']))
-    if sky_pos is not None:
-        config['sky_pos'] = sky_pos
-        if logger:
-            logger.debug('obj %d: sky_pos = %s',config['obj_num'],str(config['sky_pos']))
+    for itry in range(ntries):
 
-    if image_pos is not None:
-        import math
-        # The image_pos refers to the location of the true center of the image, which is not 
-        # necessarily the nominal center we need for adding to the final image.  In particular,
-        # even-sized images have their nominal center offset by 1/2 pixel up and to the right.
-        # N.B. This works even if xsize,ysize == 0, since the auto-sizing always produces
-        # even sized images.
-        nominal_x = image_pos.x        # Make sure we don't change image_pos, which is
-        nominal_y = image_pos.y        # stored in config['image_pos'].
-        if xsize % 2 == 0: nominal_x += 0.5
-        if ysize % 2 == 0: nominal_y += 0.5
-        if False:
-            logger.debug('obj %d: nominal pos = %f,%f',config['obj_num'],nominal_x,nominal_y)
+        try:  # The rest of the stamp generation stage is wrapped in a try/except block.
+              # If we catch an exception, we continue the for loop to try again.
+              # On the last time through, we reraise any exception caught.
+              # If no exception is thrown, we simply break the loop and return.
 
-        icenter = galsim.PositionI(
-            int(math.floor(nominal_x+0.5)),
-            int(math.floor(nominal_y+0.5)) )
-        if False:
-            logger.debug('obj %d: nominal icenter = %s',config['obj_num'],str(icenter))
-        offset = galsim.PositionD(nominal_x-icenter.x , nominal_y-icenter.y)
-        if False:
-            logger.debug('obj %d: offset = %s',config['obj_num'],str(offset))
+            # Determine the size of this stamp
+            if not xsize:
+                if 'stamp_xsize' in config['image']:
+                    xsize = galsim.config.ParseValue(config['image'],'stamp_xsize',config,int)[0]
+                elif 'stamp_size' in config['image']:
+                    xsize = galsim.config.ParseValue(config['image'],'stamp_size',config,int)[0]
+            if not ysize:
+                if 'stamp_ysize' in config['image']:
+                    ysize = galsim.config.ParseValue(config['image'],'stamp_ysize',config,int)[0]
+                elif 'stamp_size' in config['image']:
+                    ysize = galsim.config.ParseValue(config['image'],'stamp_size',config,int)[0]
+            if False:
+                logger.debug('obj %d: xsize,ysize = %d,%d',obj_num,xsize,ysize)
+            if xsize: config['stamp_xsize'] = xsize
+            if ysize: config['stamp_ysize'] = ysize
 
-    else:
-        icenter = None
-        offset = galsim.PositionD(0.,0.)
-        if False:
-            logger.debug('obj %d: no offset',config['obj_num'])
+            # Determine where this object is going to go:
+            if 'image_pos' in config['image'] and 'sky_pos' in config['image']:
+                image_pos = galsim.config.ParseValue(
+                    config['image'], 'image_pos', config, galsim.PositionD)[0]
+                sky_pos = galsim.config.ParseValue(
+                    config['image'], 'sky_pos', config, galsim.PositionD)[0]
 
-    gsparams = {}
-    if 'gsparams' in config['image']:
-        gsparams = galsim.config.UpdateGSParams(
-            gsparams, config['image']['gsparams'], 'gsparams', config)
+            elif 'image_pos' in config['image']:
+                image_pos = galsim.config.ParseValue(
+                    config['image'], 'image_pos', config, galsim.PositionD)[0]
+                # Calculate and save the position relative to the image center
+                sky_pos = (image_pos - config['image_center']) * config['pixel_scale']
 
-    skip = False
-    try :
-        t4=t3=t2=t1  # in case we throw.
+            elif 'sky_pos' in config['image']:
+                sky_pos = galsim.config.ParseValue(
+                    config['image'], 'sky_pos', config, galsim.PositionD)[0]
+                # Calculate and save the position relative to the image center
+                image_pos = (sky_pos / config['pixel_scale']) + config['image_center']
 
-        psf = BuildPSF(config,logger,gsparams)
-        t2 = time.time()
+            else:
+                image_pos = None
+                sky_pos = None
 
-        pix = BuildPix(config,logger,gsparams)
-        t3 = time.time()
+            # Save these values for possible use in Evals or other modules
+            if image_pos is not None:
+                config['image_pos'] = image_pos
+                if logger:
+                    logger.debug('obj %d: image_pos = %s',obj_num,str(config['image_pos']))
+            if sky_pos is not None:
+                config['sky_pos'] = sky_pos
+                if logger:
+                    logger.debug('obj %d: sky_pos = %s',obj_num,str(config['sky_pos']))
 
-        gal = BuildGal(config,logger,gsparams)
-        t4 = time.time()
+            if image_pos is not None:
+                import math
+                # The image_pos refers to the location of the true center of the image, which is 
+                # not necessarily the nominal center we need for adding to the final image.  In 
+                # particular, even-sized images have their nominal center offset by 1/2 pixel up 
+                # and to the right.
+                # N.B. This works even if xsize,ysize == 0, since the auto-sizing always produces
+                # even sized images.
+                nominal_x = image_pos.x        # Make sure we don't change image_pos, which is
+                nominal_y = image_pos.y        # stored in config['image_pos'].
+                if xsize % 2 == 0: nominal_x += 0.5
+                if ysize % 2 == 0: nominal_y += 0.5
+                if False:
+                    logger.debug('obj %d: nominal pos = %f,%f',obj_num,nominal_x,nominal_y)
 
-        # Check that we have at least gal or psf.
-        if not (gal or psf):
-            raise AttributeError("At least one of gal or psf must be specified in config.")
+                icenter = galsim.PositionI(
+                    int(math.floor(nominal_x+0.5)),
+                    int(math.floor(nominal_y+0.5)) )
+                if False:
+                    logger.debug('obj %d: nominal icenter = %s',obj_num,str(icenter))
+                offset = galsim.PositionD(nominal_x-icenter.x , nominal_y-icenter.y)
+                if False:
+                    logger.debug('obj %d: offset = %s',obj_num,str(offset))
 
-    except galsim.config.gsobject.SkipThisObject, e:
-        if logger:
-            logger.debug('obj %d: Caught SkipThisObject: e = %s',config['obj_num'],e.msg)
-            if e.msg:
-                # If there is a message, upgrade to info level
-                logger.info('Skipping object %d: %s',config['obj_num'],e.msg)
-        skip = True
+            else:
+                icenter = None
+                offset = galsim.PositionD(0.,0.)
+                if False:
+                    logger.debug('obj %d: no offset',obj_num)
 
-    if not skip and 'offset' in config['image']:
-        offset1 = galsim.config.ParseValue(config['image'], 'offset', config, galsim.PositionD)[0]
-        offset += offset1
+            gsparams = {}
+            if 'gsparams' in config['image']:
+                gsparams = galsim.config.UpdateGSParams(
+                    gsparams, config['image']['gsparams'], 'gsparams', config)
 
-    draw_method = galsim.config.ParseValue(config['image'],'draw_method',config,str)[0]
+            skip = False
+            try :
+                t4=t3=t2=t1  # in case we throw.
+        
+                psf = BuildPSF(config,logger,gsparams)
+                t2 = time.time()
 
-    if skip: 
-        if xsize and ysize:
-            # If the size is set, we need to do something reasonable to return this size.
-            im = galsim.ImageF(xsize, ysize)
-            im.setOrigin(config['image_origin'])
-            im.setZero()
-            if do_noise and sky_level_pixel:
-                im += sky_level_pixel
+                pix = BuildPix(config,logger,gsparams)
+                t3 = time.time()
+
+                gal = BuildGal(config,logger,gsparams)
+                t4 = time.time()
+
+                # Check that we have at least gal or psf.
+                if not (gal or psf):
+                    raise AttributeError("At least one of gal or psf must be specified in config.")
+
+            except galsim.config.gsobject.SkipThisObject, e:
+                if logger:
+                    logger.debug('obj %d: Caught SkipThisObject: e = %s',obj_num,e.msg)
+                    if e.msg:
+                        # If there is a message, upgrade to info level
+                        logger.info('Skipping object %d: %s',obj_num,e.msg)
+                skip = True
+
+            if not skip and 'offset' in config['image']:
+                offset1 = galsim.config.ParseValue(config['image'], 'offset', config,
+                                                   galsim.PositionD)[0]
+                offset += offset1
+
+            draw_method = galsim.config.ParseValue(config['image'],'draw_method',config,str)[0]
+
+            if skip: 
+                if xsize and ysize:
+                    # If the size is set, we need to do something reasonable to return this size.
+                    im = galsim.ImageF(xsize, ysize)
+                    im.setOrigin(config['image_origin'])
+                    im.setZero()
+                    if do_noise and sky_level_pixel:
+                        im += sky_level_pixel
+                else:
+                    # Otherwise, we don't set the bounds, so it will be noticed as invalid upstream.
+                    im = galsim.ImageF()
+
+                if make_weight_image:
+                    weight_im = galsim.ImageF(im.bounds, scale=im.scale)
+                    weight_im.setZero()
+                else:
+                    weight_im = None
+                current_var = 0
+
+            elif draw_method == 'fft':
+                im, current_var = DrawStampFFT(psf,pix,gal,config,xsize,ysize,sky_level_pixel,
+                                               offset)
+                if icenter:
+                    im.setCenter(icenter.x, icenter.y)
+                if make_weight_image:
+                    weight_im = galsim.ImageF(im.bounds, scale=im.scale)
+                    weight_im.setZero()
+                else:
+                    weight_im = None
+                if do_noise:
+                    if 'noise' in config['image']:
+                        AddNoiseFFT(im,weight_im,current_var,config['image']['noise'],config,
+                                    rng,sky_level_pixel,logger)
+                    elif sky_level_pixel:
+                        im += sky_level_pixel
+
+            elif draw_method == 'phot':
+                im, current_var = DrawStampPhot(psf,gal,config,xsize,ysize,rng,sky_level_pixel,
+                                                offset)
+                if icenter:
+                    im.setCenter(icenter.x, icenter.y)
+                if make_weight_image:
+                    weight_im = galsim.ImageF(im.bounds, scale=im.scale)
+                    weight_im.setZero()
+                else:
+                    weight_im = None
+                if do_noise:
+                    if 'noise' in config['image']:
+                        AddNoisePhot(im,weight_im,current_var,config['image']['noise'],config,
+                                    rng,sky_level_pixel,logger)
+                    elif sky_level_pixel:
+                        im += sky_level_pixel
+
+            else:
+                raise AttributeError("Unknown draw_method %s."%draw_method)
+
+            if make_badpix_image:
+                badpix_im = galsim.ImageS(im.bounds, scale=im.scale)
+                badpix_im.setZero()
+            else:
+                badpix_im = None
+
+            t5 = time.time()
+
+            if make_psf_image:
+                psf_im = DrawPSFStamp(psf,pix,config,im.bounds,sky_level_pixel,offset)
+                if ('output' in config and 'psf' in config['output'] and 
+                        'signal_to_noise' in config['output']['psf'] and
+                        'noise' in config['image']):
+                    AddNoiseFFT(psf_im,None,0,config['image']['noise'],config,rng,0,logger)
+            else:
+                psf_im = None
+
+            t6 = time.time()
+
+            if logger:
+                logger.debug('obj %d: Times: %f, %f, %f, %f, %f',
+                             obj_num, t2-t1, t3-t2, t4-t3, t5-t4, t6-t5)
+
+        except Exception as e:
+
+            if itry == ntries-1:
+                # Then this was the last try.  Just re-raise the exception.
+                raise
+            else:
+                if logger:
+                    logger.info('Object %d: Caught exception %s',obj_num,str(e))
+                    logger.info('This is try %d/%d, so trying again.',itry+1,ntries)
+                # Need to remove the "current_val"s from the config dict.  Otherwise,
+                # the value generators will do a quick return with the cached value.
+                RemoveCurrent(config, keep_safe=True)
+                continue
+
         else:
-            # Otherwise, we don't set the bounds, so it will be noticed as invalid upstream.
-            im = galsim.ImageF()
+            break
 
-        if make_weight_image:
-            weight_im = galsim.ImageF(im.bounds, scale=im.scale)
-            weight_im.setZero()
-        else:
-            weight_im = None
-        current_var = 0
-
-    elif draw_method == 'fft':
-        im, current_var = DrawStampFFT(psf,pix,gal,config,xsize,ysize,sky_level_pixel,offset)
-        if icenter:
-            im.setCenter(icenter.x, icenter.y)
-        if make_weight_image:
-            weight_im = galsim.ImageF(im.bounds, scale=im.scale)
-            weight_im.setZero()
-        else:
-            weight_im = None
-        if do_noise:
-            if 'noise' in config['image']:
-                AddNoiseFFT(im,weight_im,current_var,config['image']['noise'],config,
-                            rng,sky_level_pixel,logger)
-            elif sky_level_pixel:
-                im += sky_level_pixel
-
-    elif draw_method == 'phot':
-        im, current_var = DrawStampPhot(psf,gal,config,xsize,ysize,rng,sky_level_pixel,offset)
-        if icenter:
-            im.setCenter(icenter.x, icenter.y)
-        if make_weight_image:
-            weight_im = galsim.ImageF(im.bounds, scale=im.scale)
-            weight_im.setZero()
-        else:
-            weight_im = None
-        if do_noise:
-            if 'noise' in config['image']:
-                AddNoisePhot(im,weight_im,current_var,config['image']['noise'],config,
-                             rng,sky_level_pixel,logger)
-            elif sky_level_pixel:
-                im += sky_level_pixel
-
-    else:
-        raise AttributeError("Unknown draw_method %s."%draw_method)
-
-    if make_badpix_image:
-        badpix_im = galsim.ImageS(im.bounds, scale=im.scale)
-        badpix_im.setZero()
-    else:
-        badpix_im = None
-
-    t5 = time.time()
-
-    if make_psf_image:
-        psf_im = DrawPSFStamp(psf,pix,config,im.bounds,sky_level_pixel,offset)
-        if ('output' in config and 'psf' in config['output'] and 
-                'signal_to_noise' in config['output']['psf'] and
-                'noise' in config['image']):
-            AddNoiseFFT(psf_im,None,0,config['image']['noise'],config,rng,0,logger)
-    else:
-        psf_im = None
-
-    t6 = time.time()
-
-    if logger:
-        logger.debug('obj %d: Times: %f, %f, %f, %f, %f',
-                     config['obj_num'], t2-t1, t3-t2, t4-t3, t5-t4, t6-t5)
     return im, psf_im, weight_im, badpix_im, current_var, t6-t1
 
 

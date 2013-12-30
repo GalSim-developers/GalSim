@@ -78,7 +78,8 @@ def test_float_value():
         'dict1' : { 'type' : 'Dict', 'key' : 'f' },
         'dict2' : { 'type' : 'Dict', 'num' : 1, 'key' : 'f' },
         'dict3' : { 'type' : 'Dict', 'num' : 2, 'key' : 'f' },
-        'dict4' : { 'type' : 'Dict', 'num' : 2, 'key' : 'noise.models.1.gain' }
+        'dict4' : { 'type' : 'Dict', 'num' : 2, 'key' : 'noise.models.1.gain' },
+        'sum1' : { 'type' : 'Sum', 'items' : [ 72, '2.33', { 'type' : 'Dict', 'key' : 'f' } ] }
     }
 
     test_yaml = True
@@ -233,6 +234,9 @@ def test_float_value():
         dict.append(1.9)
     np.testing.assert_array_almost_equal(dict, [ 23.17, -17.23, 0.1, 1.9 ])
 
+    sum1 = galsim.config.ParseValue(config,'sum1',config, float)[0]
+    np.testing.assert_almost_equal(sum1, 72 + 2.33 + 23.17)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -271,7 +275,8 @@ def test_int_value():
                     'index' : { 'type' : 'Sequence', 'first' : 10, 'step' : -3 } },
         'dict1' : { 'type' : 'Dict', 'key' : 'i' },
         'dict2' : { 'type' : 'Dict', 'num' : 1, 'key' : 'i' },
-        'dict3' : { 'type' : 'Dict', 'num' : 2, 'key' : 'i' }
+        'dict3' : { 'type' : 'Dict', 'num' : 2, 'key' : 'i' },
+        'sum1' : { 'type' : 'Sum', 'items' : [ 72.3, '2', { 'type' : 'Dict', 'key' : 'i' } ] }
     }
 
     test_yaml = True
@@ -364,6 +369,9 @@ def test_int_value():
         dict.append(1)
     np.testing.assert_array_equal(dict, [ 17, -23, 1 ])
  
+    sum1 = galsim.config.ParseValue(config,'sum1', config, int)[0]
+    np.testing.assert_almost_equal(sum1, 72 + 2 + 17)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -639,6 +647,7 @@ def test_angle_value():
                     'items' : [ 73 * galsim.arcmin,
                                 8.9 * galsim.arcmin,
                                 3.14 * galsim.arcmin ] },
+        'sum1' : { 'type' : 'Sum', 'items' : [ 72 * galsim.degrees, '2.33 degrees' ] }
     }
 
     galsim.config.ProcessInput(config)
@@ -715,6 +724,9 @@ def test_angle_value():
 
     np.testing.assert_array_almost_equal(list1, [ 73, 8.9, 3.14, 73, 8.9 ])
 
+    sum1 = galsim.config.ParseValue(config,'sum1', config, galsim.Angle)[0]
+    np.testing.assert_almost_equal(sum1 / galsim.degrees, 72 + 2.33)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -738,7 +750,11 @@ def test_shear_value():
         'list1' : { 'type' : 'List',
                     'items' : [ galsim.Shear(g1 = 0.2, g2 = -0.3),
                                 galsim.Shear(g1 = -0.5, g2 = 0.2),
-                                galsim.Shear(g1 = 0.1, g2 = 0.0) ] }
+                                galsim.Shear(g1 = 0.1, g2 = 0.0) ] },
+        'sum1' : { 'type' : 'Sum', 
+                  'items' : [ galsim.Shear(g1 = 0.2, g2 = -0.3),
+                              galsim.Shear(g1 = -0.5, g2 = 0.2),
+                              galsim.Shear(g1 = 0.1, g2 = 0.0) ] }
     }
 
     # Test direct values
@@ -802,6 +818,13 @@ def test_shear_value():
     np.testing.assert_almost_equal(list1[4].getG1(), -0.5)
     np.testing.assert_almost_equal(list1[4].getG2(), 0.2)
 
+    sum1 = galsim.config.ParseValue(config,'sum1', config, galsim.Shear)[0]
+    s = galsim.Shear(g1=0.2, g2=-0.3)
+    s += galsim.Shear(g1=-0.5, g2=0.2)
+    s += galsim.Shear(g1=0.1, g2=0.0)
+    np.testing.assert_almost_equal(sum1.getG1(), s.getG1())
+    np.testing.assert_almost_equal(sum1.getG2(), s.getG2())
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -818,8 +841,12 @@ def test_pos_value():
         'ran1' : { 'type' : 'RandomCircle', 'radius' : 3 },
         'list1' : { 'type' : 'List', 
                     'items' : [ galsim.PositionD(0.2, -0.3),
-                                galsim.PositionD(-0.5,0.2),
-                                galsim.PositionD(0.1, 0.0) ] }
+                                galsim.PositionD(-0.5, 0.2),
+                                galsim.PositionD(0.1, 0.0) ] },
+        'sum1' : { 'type' : 'Sum', 
+                   'items' : [ galsim.PositionD(0.2, -0.3),
+                               galsim.PositionD(-0.5, 0.2),
+                               galsim.PositionD(0.1, 0.0) ] }
     }
 
     # Test direct values
@@ -862,6 +889,10 @@ def test_pos_value():
     np.testing.assert_almost_equal(list1[3].y, -0.3)
     np.testing.assert_almost_equal(list1[4].x, -0.5)
     np.testing.assert_almost_equal(list1[4].y, 0.2)
+
+    sum1 = galsim.config.ParseValue(config,'sum1', config, galsim.PositionD)[0]
+    np.testing.assert_almost_equal(sum1.x, 0.2 - 0.5 + 0.1)
+    np.testing.assert_almost_equal(sum1.y, -0.3 + 0.2 + 0.0)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
