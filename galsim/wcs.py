@@ -736,7 +736,14 @@ class AstropyWCS(BaseWCS):
                 raise TypeError("Cannot provide both pyfits hdu and wcs")
             self._fix_header(hdu.header)
             import astropy.wcs
-            wcs = astropy.wcs.WCS(hdu.header)
+            import warnings
+            with warnings.catch_warnings():
+                # The constructor might emit warnings if it wants to fix the header
+                # information (e.g. RADECSYS -> RADESYSa).  We'd rather ignore these 
+                # warnings, since we don't much care if the input file is non-standard
+                # so long as we can make it work.
+                warnings.simplefilter("ignore")
+                wcs = astropy.wcs.WCS(hdu.header)
         if wcs is None:
             raise TypeError("Must provide one of file_name, hdu (as a pyfits HDU), or wcs")
             
