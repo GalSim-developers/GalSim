@@ -689,10 +689,10 @@ class AstropyWCS(BaseWCS):
     An AstropyWCS object is initialized with one of the following commands:
 
         wcs = galsim.AstropyWCS(file_name=file_name)  # Open a file on disk
-        wcs = galsim.AstropyWCS(hdu_list=hdu_list)    # Use an existing pyfits hdulist
+        wcs = galsim.AstropyWCS(hdu=hdu)              # Use an existing pyfits hdu
         wcs = galsim.AstropyWCS(wcs=wcs)              # Use an axisting astropy.wcs.WCS object
 
-    Exactly one of the parameters file_name, hdu_list or wcs is required.  Also, since the 
+    Exactly one of the parameters file_name, hdu or wcs is required.  Also, since the 
     most common usage will probably be the first, you can also give a file_name without it 
     being named:
 
@@ -701,39 +701,43 @@ class AstropyWCS(BaseWCS):
     @param file_name      The FITS file from which to read the WCS information.  This is probably
                           the usual parameter to provide.  [ Default: `file_name = None` ]
     @param dir            Optional directory to prepend to the file name. [ Default `dir = None` ]
-    @param hdu_list       An open pyfits (or astropy.io) hdu_list.  [ Default: `hdu_list = None` ]
-    @param hdu            The hdu number to use. [ Default `hdu = 0` ]
+    @param hdu            Either an open pyfits (or astropy.io) hdu, or the number of the HDU to 
+                          use if reading from a file.  The default is to use either the primary
+                          or first extension as appropriate for the given compression.
+                          (e.g. for rice, the first extension is the one you normally want.)
+    @param compression    Which decompression scheme to use (if any). See galsim.fits.read
+                          for the available options.  [ Default `compression = 'auto'` ]
     @param wcs            An existing astropy.wcs.WCS object [ Default: `wcs = None` ]
     @param image_origin   Optional origin position for the image coordinate system.
                           If provided, it should be a PostionD or PositionI object.
                           [ Default: `image_origin = None` ]
     """
     _req_params = { "file_name" : str }
-    _opt_params = { "image_origin" : galsim.PositionD }
+    _opt_params = { "dir" : str, "hdu" : int, "image_origin" : galsim.PositionD,
+                    "compression" : str }
     _single_params = []
     _takes_rng = False
     _takes_logger = False
 
-    def __init__(self, file_name=None, dir=None, hdu_list=None, hdu=0, wcs=None,
-                 image_origin=None):
+    def __init__(self, file_name=None, dir=None, hdu=None, compression='auto',
+                 wcs=None, image_origin=None):
         if file_name is not None:
             from galsim import pyfits
-            if dir:
-                import os
-                file_name = os.path.join(dir,file_name)
-            if hdu_list is not None:    
-                raise TypeError("Cannot provide both file_name and hdu_list")
+            if ( isinstance(hdu, pyfits.CompImageHDU) or 
+                 isinstance(hdu, pyfits.ImageHDU) or
+                 isinstance(hdu, pyfits.PrimaryHDU) ):
+                raise TypeError("Cannot provide both file_name and pyfits hdu")
             if wcs is not None:    
                 raise TypeError("Cannot provide both file_name and wcs")
-            hdu_list = pyfits.open(file_name, 'readonly')
-        if hdu_list is not None:
+            hdu, hdu_list, fin = galsim.fits.readFile(file_name, dir, hdu, compression)
+
+        if hdu is not None:
             import astropy.wcs
             if wcs is not None:    
-                raise TypeError("Cannot provide both hdu_list and wcs")
-            header = hdu_list[hdu].header
-            wcs = astropy.wcs.WCS(header)
+                raise TypeError("Cannot provide both pyfits hdu and wcs")
+            wcs = astropy.wcs.WCS(hdu.header)
         if wcs is None:
-            raise TypeError("Must provide one of file_name, hdu_list, or wcs")
+            raise TypeError("Must provide one of file_name, hdu (as a pyfits HDU), or wcs")
             
         self._wcs = wcs
         self._is_local = False
@@ -744,6 +748,9 @@ class AstropyWCS(BaseWCS):
         else:
             self._x0 = image_origin.x
             self._y0 = image_origin.y
+
+        if file_name is not None:
+            galsim.fits.closeHDUList(hdu_list, fin)
 
     @property
     def wcs(self): return self._wcs
@@ -896,10 +903,10 @@ class PyAstWCS(BaseWCS):
     A PyAstWCS object is initialized with one of the following commands:
 
         wcs = galsim.PyAstWCS(file_name=file_name)  # Open a file on disk
-        wcs = galsim.PyAstWCS(hdu_list=hdu_list)    # Use an existing pyfits hdulist
+        wcs = galsim.PyAstWCS(hdu=hdu)              # Use an existing pyfits hdu
         wcs = galsim.PyAstWCS(wcsinfo=wcsinfo)      # Use an axisting starlink.Ast.FrameSet object
 
-    Exactly one of the parameters file_name, hdu_list or wcsinfo is required.  Also, since the 
+    Exactly one of the parameters file_name, hdu or wcsinfo is required.  Also, since the 
     most common usage will probably be the first, you can also give a file_name without it 
     being named:
 
@@ -908,42 +915,47 @@ class PyAstWCS(BaseWCS):
     @param file_name      The FITS file from which to read the WCS information.  This is probably
                           the usual parameter to provide.  [ Default: `file_name = None` ]
     @param dir            Optional directory to prepend to the file name. [ Default `dir = None` ]
-    @param hdu_list       An open pyfits (or astropy.io) hdu_list.  [ Default: `hdu_list = None` ]
-    @param hdu            The hdu number to use. [ Default `hdu = 0` ]
+    @param hdu            Either an open pyfits (or astropy.io) hdu, or the number of the HDU to 
+                          use if reading from a file.  The default is to use either the primary
+                          or first extension as appropriate for the given compression.
+                          (e.g. for rice, the first extension is the one you normally want.)
+    @param compression    Which decompression scheme to use (if any). See galsim.fits.read
+                          for the available options.  [ Default `compression = 'auto'` ]
     @param wcsinfo        An existing starlink.Ast.WcsMap object [ Default: `wcsinfo = None` ]
     @param image_origin   Optional origin position for the image coordinate system.
                           If provided, it should be a PostionD or PositionI object.
                           [ Default: `image_origin = None` ]
     """
     _req_params = { "file_name" : str }
-    _opt_params = { "image_origin" : galsim.PositionD }
+    _opt_params = { "dir" : str, "hdu" : int, "image_origin" : galsim.PositionD,
+                    "compression" : str }
     _single_params = []
     _takes_rng = False
     _takes_logger = False
 
-    def __init__(self, file_name=None, dir=None, hdu_list=None, hdu=0, wcsinfo=None,
-                 image_origin=None):
+    def __init__(self, file_name=None, dir=None, hdu=None, compression='auto',
+                 wcsinfo=None, image_origin=None):
         # Note: More much of this class implementation, I've followed the example provided here:
         #    http://dsberry.github.io/starlink/node4.html
         if file_name is not None:
             from galsim import pyfits
-            if dir:
-                import os
-                file_name = os.path.join(dir,file_name)
-            if hdu_list is not None:    
-                raise TypeError("Cannot provide both file_name and hdu_list")
+            if ( isinstance(hdu, pyfits.CompImageHDU) or 
+                 isinstance(hdu, pyfits.ImageHDU) or
+                 isinstance(hdu, pyfits.PrimaryHDU) ):
+                raise TypeError("Cannot provide both file_name and pyfits hdu")
             if wcsinfo is not None:    
                 raise TypeError("Cannot provide both file_name and wcsinfo")
-            hdu_list = pyfits.open(file_name, 'readonly')
-        if hdu_list is not None:
+            hdu, hdu_list, fin = galsim.fits.readFile(file_name, dir, hdu, compression)
+
+        if hdu is not None:
             import starlink.Ast
             import starlink.Atl
             if wcsinfo is not None:    
-                raise TypeError("Cannot provide both hdu_list and wcsinfo")
-            fitschan = starlink.Ast.FitsChan( starlink.Atl.PyFITSAdapter(hdu_list[hdu]) )
+                raise TypeError("Cannot provide both pyfits hdu and wcsinfo")
+            fitschan = starlink.Ast.FitsChan( starlink.Atl.PyFITSAdapter(hdu) )
             wcsinfo = fitschan.read()
         if wcsinfo is None:
-            raise TypeError("Must provide one of file_name, hdu_list, or wcsinfo")
+            raise TypeError("Must provide one of file_name, hdu (as a pyfits HDU), or wcsinfo")
 
         #  Check that the FITS header contained WCS in a form that can be
         #  understood by AST.
@@ -968,6 +980,9 @@ class PyAstWCS(BaseWCS):
         else:
             self._x0 = image_origin.x
             self._y0 = image_origin.y
+
+        if file_name is not None:
+            galsim.fits.closeHDUList(hdu_list, fin)
 
     @property
     def wcsinfo(self): return self._wcsinfo

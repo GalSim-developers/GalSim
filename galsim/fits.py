@@ -32,6 +32,13 @@ from galsim import pyfits, pyfits_version
 # Convert sys.byteorder into the notation numpy dtypes use
 native_byteorder = {'big': '>', 'little': '<'}[byteorder]
 
+
+##############################################################################################
+#
+# We start off with some helper functions for some common operations that will be used in 
+# more than one of our primary read and write functions.
+#
+##############################################################################################
  
 def _parse_compression(compression, file_name):
     file_compress = None
@@ -70,24 +77,28 @@ class _ReadFile:
         self.gzip_in_mem = True
         self.bz2_in_mem = True
 
-    def __call__(self, file, file_compress):
+    def __call__(self, file, dir, file_compress):
+        if dir:
+            import os
+            file = os.path.join(dir,file)
+
         if not file_compress:
-            hdus = pyfits.open(file, 'readonly')
-            return hdus, None
+            hdu_list = pyfits.open(file, 'readonly')
+            return hdu_list, None
         elif file_compress == 'gzip':
             import gzip
             if self.gzip_in_mem:
                 try:
                     fin = gzip.GzipFile(file, 'rb')
-                    hdus = pyfits.open(fin, 'readonly')
+                    hdu_list = pyfits.open(fin, 'readonly')
                     # Sometimes this doesn't work.  The symptoms may be that this raises an
-                    # exception, or possibly the hdus list comes back empty, in which case the 
+                    # exception, or possibly the hdu_list comes back empty, in which case the 
                     # next line will raise an exception.
-                    hdu = hdus[0]
+                    hdu = hdu_list[0]
                     # pyfits doesn't actually read the file yet, so we can't close fin here.
                     # Need to pass it back to the caller and let them close it when they are 
-                    # done with hdus.
-                    return hdus, fin
+                    # done with hdu_list.
+                    return hdu_list, fin
                 except:
                     # Mark that we can't do this the efficient way so next time (and afterward)
                     # it will use the below code instead.
@@ -97,8 +108,8 @@ class _ReadFile:
                 try:
                     # This usually works, although pyfits internally uses a temporary file,
                     # which is why we prefer the above code if it works.
-                    hdus = pyfits.open(file, 'readonly')
-                    return hdus, None
+                    hdu_list = pyfits.open(file, 'readonly')
+                    return hdu_list, None
                 except:
                     # But just in case, here is an implementation that should always work.
                     fin = gzip.GzipFile(file, 'rb')
@@ -109,17 +120,17 @@ class _ReadFile:
                         tmp = tmp + '.tmp'
                     with open(tmp,"w") as tmpout:
                         tmpout.write(data)
-                    hdus = pyfits.open(tmp)
-                    return hdus, tmp
+                    hdu_list = pyfits.open(tmp)
+                    return hdu_list, tmp
         elif file_compress == 'bzip2':
             import bz2
             if self.bz2_in_mem:
                 try:
                     # This normally works.  But it might not on old versions of pyfits.
                     fin = bz2.BZ2File(file, 'rb')
-                    hdus = pyfits.open(fin, 'readonly')
-                    hdu = hdus[0]
-                    return hdus, fin
+                    hdu_list = pyfits.open(fin, 'readonly')
+                    hdu = hdu_list[0]
+                    return hdu_list, fin
                 except:
                     # Mark that we can't do this the efficient way so next time (and afterward)
                     # it will use the below code instead.
@@ -134,20 +145,22 @@ class _ReadFile:
                     tmp = tmp + '.tmp'
                 with open(tmp,"w") as tmpout:
                     tmpout.write(data)
-                hdus = pyfits.open(tmp)
-                return hdus, tmp
+                hdu_list = pyfits.open(tmp)
+                return hdu_list, tmp
         else:
             raise ValueError("Unknown file_compression")
 _read_file = _ReadFile()
 
-# Do the same trick for _write_file(file,hdus,clobber,file_compress,pyfits_compress):
+# Do the same trick for _write_file(file,hdu_list,clobber,file_compress,pyfits_compress):
 class _WriteFile:
     def __init__(self):
         # Store whether it is ok to use the in-memory version.
         self.in_mem = True
 
-    def __call__(self, file, hdus, clobber, file_compress, pyfits_compress):
+    def __call__(self, file, dir, hdu_list, clobber, file_compress, pyfits_compress):
         import os
+        if dir:
+            file = os.path.join(dir,file)
         if os.path.isfile(file):
             if clobber:
                 os.remove(file)
@@ -155,7 +168,7 @@ class _WriteFile:
                 raise IOError('File %r already exists'%file)
     
         if not file_compress:
-            hdus.writeto(file)
+            hdu_list.writeto(file)
         else:
             if self.in_mem:
                 try:
@@ -163,11 +176,11 @@ class _WriteFile:
                     # and then output that to a file.
                     import io
                     buf = io.BytesIO()
-                    hdus.writeto(buf)
+                    hdu_list.writeto(buf)
                     data = buf.getvalue()
                 except:
                     self.in_mem = False
-                    return self(file,hdus,clobber,file_compress)
+                    return self(file,hdu_list,clobber,file_compress)
             else:
                 # However, pyfits versions before 2.3 do not support writing to a buffer, so the
                 # abover code with fail.  We need to use a temporary in that case.
@@ -175,7 +188,7 @@ class _WriteFile:
                 # It would be pretty odd for this filename to already exist, but just in case...
                 while os.path.isfile(tmp):
                     tmp = tmp + '.tmp'
-                hdus.writeto(tmp)
+                hdu_list.writeto(tmp)
                 with open(tmp,"r") as buf:
                     data = buf.read()
                 os.remove(tmp)
@@ -200,8 +213,8 @@ class _WriteFile:
         # This bug has been fixed in version 3.1.2.
         # (See http://trac.assembla.com/pyfits/ticket/199)
         if pyfits_compress and pyfits_version < '3.1.2':
-            with pyfits.open(file,'update',disable_image_compression=True) as hdus:
-                for hdu in hdus[1:]: # Skip PrimaryHDU
+            with pyfits.open(file,'update',disable_image_compression=True) as hdu_list:
+                for hdu in hdu_list[1:]: # Skip PrimaryHDU
                     # Find the maximum variable array length  
                     max_ar_len = max([ len(ar[0]) for ar in hdu.data ])
                     # Add '(N)' to the TFORMx keywords for the variable array items
@@ -254,17 +267,17 @@ def _write_header(hdu, add_wcs, scale, xmin, ymin):
             hdu.header.update("CD2_1" + wcsname, 0, "CD2_1 = 0")
 
 
-def _add_hdu(hdus, data, pyfits_compress):
+def _add_hdu(hdu_list, data, pyfits_compress):
     if pyfits_compress:
-        if len(hdus) == 0:
-            hdus.append(pyfits.PrimaryHDU())  # Need a blank PrimaryHDU
+        if len(hdu_list) == 0:
+            hdu_list.append(pyfits.PrimaryHDU())  # Need a blank PrimaryHDU
         hdu = pyfits.CompImageHDU(data, compressionType=pyfits_compress)
     else:
-        if len(hdus) == 0:
+        if len(hdu_list) == 0:
             hdu = pyfits.PrimaryHDU(data)
         else:
             hdu = pyfits.ImageHDU(data)
-    hdus.append(hdu)
+    hdu_list.append(hdu)
     return hdu
 
 
@@ -290,6 +303,50 @@ def _check_hdu(hdu, pyfits_compress):
             #print 'hdu = ',hdu
             raise IOError('Found invalid HDU reading FITS file (expected an ImageHDU)')
 
+
+def _get_hdu(hdu_list, hdu, pyfits_compress):
+    if isinstance(hdu_list, pyfits.HDUList):
+        # Note: Nothing special needs to be done when reading a compressed hdu.
+        # However, such compressed hdu's may not be the PrimaryHDU, so if we think we are
+        # reading a compressed file, skip to hdu 1.
+        if hdu == None:
+            if pyfits_compress:
+                if len(hdu_list) <= 1:
+                    raise IOError('Expecting at least one extension HDU in galsim.read')
+                hdu = 1
+            else:
+                hdu = 0
+        if len(hdu_list) <= hdu:
+            raise IOError('Expecting at least %d HDUs in galsim.read'%(hdu+1))
+        hdu = hdu_list[hdu]
+    else:
+        hdu = hdu_list
+    _check_hdu(hdu, pyfits_compress)
+    return hdu
+
+
+# Unlike the other helpers, this one doesn't start with an underscore, since we make it 
+# available to people who use the function ReadFile.
+def closeHDUList(hdu_list, fin):
+    """If necessary, close the file handle that was opened to read in the hdu_list"""
+    hdu_list.close()
+    if fin: 
+        if isinstance(fin, basestring):
+            # In this case, it is a file name that we need to delete.
+            import os
+            os.remove(fin)
+        else:
+            fin.close()
+
+##############################################################################################
+#
+# Now the primary write functions.  We have:
+#    write(image, ...)
+#    writeMulti(image_list, ...)
+#    writeCube(image_list, ...)
+#    writeFile(hdu_list, ...)
+#
+##############################################################################################
 
 
 def write(image, file_name=None, dir=None, hdu_list=None, add_wcs=True, clobber=True,
@@ -338,9 +395,9 @@ def write(image, file_name=None, dir=None, hdu_list=None, add_wcs=True, clobber=
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
     if file_name and hdu_list is not None:
-        raise TypeError("Cannot provide both file_name and hdu_list to write()")
+        raise TypeError("Cannot provide both file_name and hdu_list")
     if not (file_name or hdu_list is not None):
-        raise TypeError("Must provide either file_name or hdu_list to write()")
+        raise TypeError("Must provide either file_name or hdu_list")
 
     if hdu_list is None:
         hdu_list = pyfits.HDUList()
@@ -349,10 +406,7 @@ def write(image, file_name=None, dir=None, hdu_list=None, add_wcs=True, clobber=
     _write_header(hdu, add_wcs, image.scale, image.xmin, image.ymin)
 
     if file_name:
-        if dir:
-            import os
-            file_name = os.path.join(dir,file_name)
-        _write_file(file_name, hdu_list, clobber, file_compress, pyfits_compress)
+        _write_file(file_name, dir, hdu_list, clobber, file_compress, pyfits_compress)
 
 
 def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, add_wcs=True, clobber=True,
@@ -379,9 +433,9 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, add_wcs=True
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
     if file_name and hdu_list is not None:
-        raise TypeError("Cannot provide both file_name and hdu_list to write()")
+        raise TypeError("Cannot provide both file_name and hdu_list")
     if not (file_name or hdu_list is not None):
-        raise TypeError("Must provide either file_name or hdu_list to write()")
+        raise TypeError("Must provide either file_name or hdu_list")
 
     if hdu_list is None:
         hdu_list = pyfits.HDUList()
@@ -391,10 +445,7 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, add_wcs=True
         _write_header(hdu, add_wcs, image.scale, image.xmin, image.ymin)
 
     if file_name:
-        if dir:
-            import os
-            file_name = os.path.join(dir,file_name)
-        _write_file(file_name, hdu_list, clobber, file_compress, pyfits_compress)
+        _write_file(file_name, dir, hdu_list, clobber, file_compress, pyfits_compress)
 
 
 
@@ -430,9 +481,9 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, add_wcs=True,
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
     if file_name and hdu_list is not None:
-        raise TypeError("Cannot provide both file_name and hdu_list to write()")
+        raise TypeError("Cannot provide both file_name and hdu_list")
     if not (file_name or hdu_list is not None):
-        raise TypeError("Must provide either file_name or hdu_list to write()")
+        raise TypeError("Must provide either file_name or hdu_list")
 
     if hdu_list is None:
         hdu_list = pyfits.HDUList()
@@ -475,14 +526,11 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, add_wcs=True,
     _write_header(hdu, add_wcs, scale, xmin, ymin)
 
     if file_name:
-        if dir:
-            import os
-            file_name = os.path.join(dir,file_name)
-        _write_file(file_name, hdu_list, clobber, file_compress, pyfits_compress)
+        _write_file(file_name, dir, hdu_list, clobber, file_compress, pyfits_compress)
 
 
 def writeFile(file_name, hdu_list, dir=None, clobber=True, compression='auto'):
-    """Write a Pyfits hdu_list to a FITS file.
+    """Write a Pyfits hdu_list to a FITS file, taking care of the GalSim compression options.
 
     If you have used the `write`, `writeMulti` or `writeCube` functions with the hdu_list
     option rather than writing directly to a file, you may subsequently use the pyfits
@@ -509,17 +557,24 @@ def writeFile(file_name, hdu_list, dir=None, clobber=True, compression='auto'):
                         directly are not available at this point.  If you want to use one of them,
                         it must be applied when writing each hdu.
     """
-    if dir:
-        import os
-        file_name = os.path.join(dir,file_name)
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
     if pyfits_compress:
         raise ValueError("Compression %s is invalid for writeFile"%compression)
-    _write_file(file_name, hdu_list, clobber, file_compress, pyfits_compress)
+    _write_file(file_name, dir, hdu_list, clobber, file_compress, pyfits_compress)
  
 
+##############################################################################################
+#
+# Now the primary read functions.  We have:
+#    image = read(...)
+#    image_list = readMulti(...)
+#    image_list = readCube(...)
+#    hdu, hdu_list, fin = readFile(...)
+#
+##############################################################################################
 
-def read(file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto'):
+
+def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
     """Construct an Image from a FITS file or pyfits HDUList.
 
     The normal usage for this function is to read a fits file and return the image contained
@@ -542,8 +597,9 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto'):
                         In the former case, the `hdu` in the list will be selected.  In the latter
                         two cases, the `hdu` parameter is ignored.  Either `file_name` or 
                         `hdu_list` is required.
-    @param hdu          The number of the HDU to use.  The default is to use the primary HDU,
-                        which is numbered 0.
+    @param hdu          The number of the HDU to return.  The default is to return either the 
+                        primary or first extension as appropriate for the given compression.
+                        (e.g. for rice, the first extension is the one you normally want.)
     @param compression  Which decompression scheme to use (if any).  Options are:
                         - None or 'none' = no decompression
                         - 'rice' = use rice decompression in tiles
@@ -568,27 +624,10 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto'):
     if not (file_name or hdu_list is not None):
         raise TypeError("Must provide either file_name or hdu_list to read()")
 
-    fin = None
     if file_name:
-        if dir:
-            import os
-            file_name = os.path.join(dir,file_name)
-        hdu_list, fin = _read_file(file_name, file_compress)
+        hdu_list, fin = _read_file(file_name, dir, file_compress)
 
-    if isinstance(hdu_list, pyfits.HDUList):
-        # Note: Nothing special needs to be done when reading a compressed hdu.
-        # However, such compressed hdu's may not be the PrimaryHDU, so if we think we are
-        # reading a compressed file, skip to hdu 1.
-        if pyfits_compress and hdu==0:
-            if len(hdu_list) <= 1:
-                raise IOError('Expecting at least one extension HDU in galsim.read')
-            hdu = 1
-        elif len(hdu_list) <= hdu:
-            raise IOError('Expecting at least %d HDUs in galsim.read'%(hdu+1))
-        hdu = hdu_list[hdu]
-    else:
-        hdu = hdu_list
-    _check_hdu(hdu, pyfits_compress)
+    hdu = _get_hdu(hdu_list, hdu, pyfits_compress)
 
     xmin = hdu.header.get("GS_XMIN", 1)
     ymin = hdu.header.get("GS_YMIN", 1)
@@ -619,14 +658,8 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto'):
     image = galsim.Image(array=data, xmin=xmin, ymin=ymin, scale=scale)
 
     # If we opened a file, don't forget to close it.
-    if fin: 
-        hdu_list.close()
-        if isinstance(fin, basestring):
-            # In this case, it is a file name that we need to delete.
-            import os
-            os.remove(fin)
-        else:
-            fin.close()
+    if file_name:
+        closeHDUList(hdu_list, fin)
 
     return image
 
@@ -675,12 +708,8 @@ def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto'):
     if not (file_name or hdu_list is not None):
         raise TypeError("Must provide either file_name or hdu_list to readMulti()")
 
-    fin = None
     if file_name:
-        if dir:
-            import os
-            file_name = os.path.join(dir,file_name)
-        hdu_list, fin = _read_file(file_name, file_compress)
+        hdu_list, fin = _read_file(file_name, dir, file_compress)
     elif not isinstance(hdu_list, pyfits.HDUList):
         raise TypeError("In readMulti, hdu_list is not an HDUList")
 
@@ -697,18 +726,12 @@ def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto'):
         image_list.append(read(hdu_list=hdu_list, hdu=hdu, compression=pyfits_compress))
 
     # If we opened a file, don't forget to close it.
-    if fin:
-        hdu_list.close()
-        if isinstance(fin, basestring):
-            # In this case, it is a file name that we need to delete.
-            import os
-            os.remove(fin)
-        else:
-            fin.close()
+    if file_name:
+        closeHDUList(hdu_list, fin)
 
     return image_list
 
-def readCube(file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto'):
+def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
     """Construct a Python list of Images from a FITS data cube.
 
     Not all FITS pixel types are supported (only those with C++ Image template instantiations are:
@@ -726,8 +749,9 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto')
                         In the former case, the `hdu` in the list will be selected.  In the latter
                         two cases, the `hdu` parameter is ignored.  Either `file_name` or 
                         `hdu_list` is required.
-    @param hdu          The number of the HDU to use.  The default is to use the primary HDU,
-                        which is numbered 0.
+    @param hdu          The number of the HDU to return.  The default is to return either the 
+                        primary or first extension as appropriate for the given compression.
+                        (e.g. for rice, the first extension is the one you normally want.)
     @param compression  Which decompression scheme to use (if any).  Options are:
                         - None or 'none' = no decompression
                         - 'rice' = use rice decompression in tiles
@@ -752,27 +776,10 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto')
     if not (file_name or hdu_list is not None):
         raise TypeError("Must provide either file_name or hdu_list to read()")
 
-    fin = None
     if file_name:
-        if dir:
-            import os
-            file_name = os.path.join(dir,file_name)
-        hdu_list, fin = _read_file(file_name, file_compress)
+        hdu_list, fin = _read_file(file_name, dir, file_compress)
 
-    if isinstance(hdu_list, pyfits.HDUList):
-        # Note: Nothing special needs to be done when reading a compressed hdu.
-        # However, such compressed hdu's may not be the PrimaryHDU, so if we think we are
-        # reading a compressed file, skip to hdu 1.
-        if pyfits_compress and hdu==0:
-            if len(hdu_list) <= 1:
-                raise IOError('Expecting at least one extension HDU in galsim.read')
-            hdu = 1
-        elif len(hdu_list) <= hdu:
-            raise IOError('Expecting at least %d HDUs in galsim.read'%(hdu+1))
-        hdu = hdu_list[hdu]
-    else:
-        hdu = hdu_list
-    _check_hdu(hdu, pyfits_compress)
+    hdu = _get_hdu(hdu_list, hdu, pyfits_compress)
 
     xmin = hdu.header.get("GS_XMIN", 1)
     ymin = hdu.header.get("GS_YMIN", 1)
@@ -807,17 +814,63 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto')
         image_list.append(image)
 
     # If we opened a file, don't forget to close it.
-    if fin: 
-        hdu_list.close()
-        if isinstance(fin, basestring):
-            # In this case, it is a file name that we need to delete.
-            import os
-            os.remove(fin)
-        else:
-            fin.close()
-
+    if file_name:
+        closeHDUList(hdu_list, fin)
 
     return image_list
+
+def readFile(file_name, dir=None, hdu=None, compression='auto'):
+    """Read in a Pyfits hdu_list from a FITS file, taking care of the GalSim compression options.
+
+    If you want to do something different with an hdu or hdu_list than one of our other read 
+    functions, you can use this function.  It handles the compression options in the standard 
+    GalSim way and just returns the hdu (and hdu_list) for you to use as you see fit.
+
+    This function is called as:
+    
+            hdu, hdu_list, fin = galsim.fits.readFile(...)
+
+    The first item in the returned tuple is the specified hdu (or the primary if none was 
+    specifically requested.  The other two are returned so you can properly close them.
+    They are the full HDUList and possible a file handle.  The appropriate cleanup can be
+    done with:
+
+            galsim.fits.closeHDUList(hdu_list, fin)
+
+    @param file_name    The name of the file to read in.
+    @param dir          Optionally a directory name can be provided if the file_name does not 
+                        already include it.
+    @param hdu          The number of the HDU to return.  The default is to return either the 
+                        primary or first extension as appropriate for the given compression.
+                        (e.g. for rice, the first extension is the one you normally want.)
+    @param compression  Which decompression scheme to use (if any).  Options are:
+                        - None or 'none' = no decompression
+                        - 'rice' = use rice decompression in tiles
+                        - 'gzip' = use gzip to decompress the full file
+                        - 'bzip2' = use bzip2 to decompress the full file
+                        - 'gzip_tile' = use gzip decompression in tiles
+                        - 'hcompress' = use hcompress decompression in tiles
+                        - 'plio' = use plio decompression in tiles
+                        - 'auto' = determine the decompression from the extension of the file name
+                                   (requires file_name to be given).  
+                                   '*.fz' => 'rice'
+                                   '*.gz' => 'gzip'
+                                   '*.bz2' => 'bzip2'
+                                   otherwise None
+    @returns A tuple with three items: (hdu, hdu_list, fin)
+    """
+    file_compress, pyfits_compress = _parse_compression(compression,file_name)
+    hdu_list, fin = _read_file(file_name, dir, file_compress)
+    hdu = _get_hdu(hdu_list, hdu, pyfits_compress)
+    return hdu, hdu_list, fin
+
+
+##############################################################################################
+#
+# Finally, we have a class for handling FITS headers called FitsHeader.
+#
+##############################################################################################
+
 
 class FitsHeader(object):
     """A class storing key/value pairs from a FITS Header
@@ -849,8 +902,9 @@ class FitsHeader(object):
                         In the former case, the `hdu` in the list will be selected.  In the latter
                         two cases, the `hdu` parameter is ignored.  Either `file_name` or 
                         `hdu_list` is required.
-    @param hdu          The number of the HDU to use.  The default is to use the primary HDU,
-                        which is numbered 0.
+    @param hdu          The number of the HDU to return.  The default is to return either the 
+                        primary or first extension as appropriate for the given compression.
+                        (e.g. for rice, the first extension is the one you normally want.)
     @param compression  Which decompression scheme to use (if any).  Options are:
                         - None or 'none' = no decompression
                         - 'rice' = use rice decompression in tiles
@@ -872,7 +926,7 @@ class FitsHeader(object):
     _takes_rng = False
     _takes_logger = False
 
-    def __init__(self, file_name=None, dir=None, hdu_list=None, hdu=0, compression='auto'):
+    def __init__(self, file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
     
         file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
@@ -881,39 +935,17 @@ class FitsHeader(object):
         if not (file_name or hdu_list is not None):
             raise TypeError("Must provide either file_name or hdu_list to read()")
 
-        fin = None
         if file_name:
-            if dir:
-                import os
-                file_name = os.path.join(dir,file_name)
-            hdu_list, fin = _read_file(file_name, file_compress)
+            hdu_list, fin = _read_file(file_name, dir, file_compress)
 
-        if isinstance(hdu_list, pyfits.HDUList):
-            # Note: Nothing special needs to be done when reading a compressed hdu.
-            # However, such compressed hdu's may not be the PrimaryHDU, so if we think we are
-            # reading a compressed file, skip to hdu 1.
-            if pyfits_compress and hdu==0:
-                if len(hdu_list) <= 1:
-                    raise IOError('Expecting at least one extension HDU in galsim.read')
-                hdu = 1
-            elif len(hdu_list) <= hdu:
-                raise IOError('Expecting at least %d HDUs in galsim.read'%(hdu+1))
-            hdu = hdu_list[hdu]
-        else:
-            hdu = hdu_list
-        _check_hdu(hdu, pyfits_compress)
+        hdu = _get_hdu(hdu_list, hdu, pyfits_compress)
+
         import copy
         self.header = copy.copy(hdu.header)
 
         # If we opened a file, don't forget to close it.
-        if fin: 
-            hdu_list.close()
-            if isinstance(fin, basestring):
-                # In this case, it is a file name that we need to delete.
-                import os
-                os.remove(fin)
-            else:
-                fin.close()
+        if file_name:
+            closeHDUList(hdu_list, fin)
 
     # The rest of the functions are typical non-mutating functions for a dict, for which we just
     # pass the request along to self.header.
