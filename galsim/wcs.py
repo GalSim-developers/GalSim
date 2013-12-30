@@ -31,7 +31,7 @@ class BaseWCS(object):
 
         # All derived classes must define the following:
         #
-        #     _is_variable     boolean variable declaring whether the pixel is variable
+        #     _is_local        boolean variable declaring whether the WCS is local, linear
         #     _posToWorld      function converting image_pos to world_pos
         #     _posToImage      function converting world_pos to image_pos
         #     copy
@@ -47,10 +47,11 @@ class BaseWCS(object):
         #     _maxScale        function returning the maximum linear pixel scale
         #     _toAffine        function returning an equivalent AffineTransform
         #
-        # Variable WCS classes must define the following:
+        # Variable WCS classes and those where (x,y) = (0,0) is not (necessarily) at
+        # (u,v) = (0,0) must define the following:
         #
         #     _local           function returning a non-variable WCS at a given location
-        #     _atOrigin        function returning a WCS with a given new origin point
+        #                      where (x,y) = (0,0) is at (u,v) = (0,)
 
 
     def toWorld(self, arg, **kwargs):
@@ -74,10 +75,7 @@ class BaseWCS(object):
                world_profile = wcs.toWorld(image_profile, image_pos=None, world_pos=None)
         """
         if isinstance(arg, galsim.GSObject):
-            if self.isVariable():
-                return self.local(**kwargs)._profileToWorld(arg)
-            else:
-                return self._profileToWorld(arg)
+            return self.local(**kwargs)._profileToWorld(arg)
         else:
             return self._posToWorld(arg)
 
@@ -103,10 +101,7 @@ class BaseWCS(object):
                image_profile = wcs.toImage(world_profile, image_pos=None, world_pos=None)
         """
         if isinstance(arg, galsim.GSObject):
-            if self.isVariable():
-                return self.local(**kwargs)._profileToImage(arg)
-            else:
-                return self._profileToImage(arg)
+            return self.local(**kwargs)._profileToImage(arg)
         else:
             return self._posToImage(arg)
 
@@ -155,25 +150,28 @@ class BaseWCS(object):
         """
         return self.local(image_pos, world_pos)._maxScale()
 
-    def isVariable(self):
-        """Return whether the WCS solution has a pixel that varies in either area
-        or shape across the field.
+    def isLocal(self):
+        """Return whether the WCS solution is a local, linear approximation.
+        
+        There are two requirements for this to be true:
+            1. The image position (x,y) = (0,0) is at the world position (u,v) = (0,0).
+            2. The pixel area and shape do not vary with position.
         """
-        return self._is_variable
+        return self._is_local
 
     def local(self, image_pos=None, world_pos=None):
         """Return the local linear approximation of the WCS at a given point.
 
         @param image_pos    The image coordinate position (for variable WCS objects)
         @param world_pos    The world coordinate position (for variable WCS objects)
-        @returns local_wcs  A WCS object with wcs.isVariable() == False
+        @returns local_wcs  A WCS object with wcs.isLocal() == True
         """
         if image_pos and world_pos:
             raise TypeError("Only one of image_pos or world_pos may be provided")
-        if self.isVariable():
-            return self._local(image_pos, world_pos)
-        else:
+        if self._is_local:
             return self
+        else:
+            return self._local(image_pos, world_pos)
 
     def localAffine(self, image_pos=None, world_pos=None):
         """Return the local AffineTransform of the WCS at a given point.
@@ -191,39 +189,6 @@ class BaseWCS(object):
         @returns local_wcs  An AffineTransform object
         """
         return self.local(image_pos, world_pos)._toAffine()
-
-    def atNewOrigin(self, new_origin):
-        """Returns a new WCS object that has the origin point moved to a new location.
-
-        If you change the definition of the origin of an image with setOrigin or 
-        setCenter, we need to adjust the WCS to use the same new defintion for what
-        (x,y) means.  The way we do this is to make a new wcs using the new value 
-        for what the image means by (x,y) = (0,0).
-
-        The new_origin argument is the image position in the current WCS that you
-        want to be defined as (0,0) in the returned WCS.
-
-        The following code should help make clear what we mean by this:
-
-            world_cen = wcs.toWorld(image_cen)
-            world_pos = wcs.toWorld(image_pos)
-
-            new_wcs = wcs.atNewOrigin(image_cen)
-            world_cen2 = new_wcs.toWorld(PositionD(0.,0.))
-            world_pos2 = new_wcs.toWorld(image_pos - image_cen)
-
-            assert world_cen == world_cen2
-            assert world_pos == world_pos2
-
-        Note: In actual operations, the above asserts might fail due to numerical
-        rounding differences.  But the point is that they should be essentially the
-        same positions in world coordinates.
-
-        @param new_origin   The image coordinate that you want to become (0,0)
-        @returns new_wcs    A new WCS with that position as the origin.
-        """
-        return self._atOrigin(new_origin)
-
 
 class PixelScale(BaseWCS):
     """This is the simplest possible WCS transformation.  It only involves a unit conversion
@@ -249,45 +214,50 @@ class PixelScale(BaseWCS):
     _takes_logger = False
 
     def __init__(self, scale):
-        self._is_variable = False
-        self.scale = scale
+        self._is_local = True
+        self._scale = scale
+
+    # Help make sure PixelScale is read-only.
+    @property
+    def scale(self): return self._scale
 
     def _posToWorld(self, image_pos):
         if not(isinstance(image_pos, galsim.PositionD) or isinstance(image_pos, galsim.PositionI)):
             raise TypeError("toWorld requires a PositionD or PositionI argument")
-        return image_pos * self.scale
+        return galsim.PositionD(image_pos.x * self._scale, image_pos.y * self._scale)
 
     def _posToImage(self, world_pos):
         if not isinstance(world_pos, galsim.PositionD):
             raise TypeError("toImage requires a PositionD argument")
-        return world_pos / self.scale
+        return galsim.PositionD(world_pos.x / self._scale, world_pos.y / self._scale)
 
     def _profileToWorld(self, image_profile):
-        return image_profile.createDilated(self.scale)
+        return image_profile.createDilated(self._scale)
 
     def _profileToImage(self, world_profile):
-        return world_profile.createDilated(1./self.scale)
+        return world_profile.createDilated(1./self._scale)
 
     def _pixelArea(self):
-        return self.scale*self.scale
+        return self._scale**2
 
     def _minScale(self):
-        return self.scale
+        return self._scale
 
     def _maxScale(self):
-        return self.scale
+        return self._scale
 
     def _toAffine(self):
+        #return AffineTransform(self._scale, 0., 0., self._scale)
         raise NotImplementedError("Waiting until AffineTransform is defined")
 
     def copy(self):
-        return PixelScale(self.scale)
+        return PixelScale(self._scale)
 
     def __eq__(self, other):
         if not isinstance(other, PixelScale): 
             return False
         else: 
-            return self.scale == other.scale
+            return self._scale == other._scale
 
     def __ne__(self, other):
         return not self.__eq__(other)
