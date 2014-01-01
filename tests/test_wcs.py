@@ -130,8 +130,9 @@ all_tags = [ 'HPX', 'TAN', 'TSC', 'ZPN', 'SIP', 'TPV', 'ZPX', 'TAN-PV', 'REGION'
 
 def do_wcs_pos(wcs, ufunc, vfunc, name):
 
+    print 'start do_wcs_pos for ',name, wcs
     # Check that (x,y) -> (u,v) and converse work correctly
-    if 'local' in name:
+    if 'local' in name or 'jacobian' in name:
         # If the "local" is really a non-local WCS which has been localized, then we cannot
         # count on the far positions to be sufficiently accurate. Just use near positions.
         x_list = near_x_list
@@ -150,25 +151,25 @@ def do_wcs_pos(wcs, ufunc, vfunc, name):
         print 'image_pos = ',image_pos
         print 'world_pos = ',world_pos
 
-        # The transformations are not guaranteed to be implemented in both directions,
-        # so guard against NotImplementedError being raised:
+        world_pos2 = wcs.toWorld(image_pos)
+        print 'toWorld(image_pos) = ',world_pos2
+        np.testing.assert_almost_equal(
+                world_pos.x, world_pos2.x, digits,
+                err_msg='wcs.toWorld returned wrong world position for '+name)
+        np.testing.assert_almost_equal(
+                world_pos.y, world_pos2.y, digits,
+                err_msg='wcs.toWorld returned wrong world position for '+name)
+            
         try:
-            print 'toWorld(image_pos) = ',wcs.toWorld(image_pos)
+            # The reverse transformation is not guaranteed to be implemented,
+            # so guard against NotImplementedError being raised:
+            image_pos2 = wcs.toImage(world_pos)
+            print 'toImage(world_pos) = ',image_pos2
             np.testing.assert_almost_equal(
-                    world_pos.x, wcs.toWorld(image_pos).x, digits,
-                    err_msg='wcs.toWorld returned wrong world position for '+name)
-            np.testing.assert_almost_equal(
-                    world_pos.y, wcs.toWorld(image_pos).y, digits,
-                    err_msg='wcs.toWorld returned wrong world position for '+name)
-        except NotImplementedError:
-            pass
-        try:
-            print 'toImage(world_pos) = ',wcs.toImage(world_pos)
-            np.testing.assert_almost_equal(
-                    image_pos.x, wcs.toImage(world_pos).x, digits,
+                    image_pos.x, image_pos2.x, digits,
                     err_msg='wcs.toImage returned wrong image position for '+name)
             np.testing.assert_almost_equal(
-                    image_pos.y, wcs.toImage(world_pos).y, digits,
+                    image_pos.y, image_pos2.y, digits,
                     err_msg='wcs.toImage returned wrong image position for '+name)
         except NotImplementedError:
             pass
@@ -190,7 +191,36 @@ def do_local_wcs(wcs, ufunc, vfunc, name):
     # have 'test' in it.
 
     print 'Start testing local WCS '+name
+    print 'wcs = ',wcs
 
+    # Check that local and atOrigin work correctly:
+    wcs2 = wcs.local()
+    assert wcs == wcs2, name+' local() is not == the original'
+    new_image_origin = galsim.PositionI(123,321)
+    wcs3 = wcs.atOrigin(new_image_origin)
+    assert wcs != wcs3, name+' is not != wcs.atOrigin(pos)'
+    assert wcs3 != wcs, name+' is not != wcs.atOrigin(pos) (reverse)'
+    wcs2 = wcs3.local()
+    assert wcs == wcs2, name+' is not equal after wcs.atOrigin(pos).local()'
+    world_pos1 = wcs.toWorld(galsim.PositionD(0,0))
+    world_pos2 = wcs3.toWorld(new_image_origin)
+    np.testing.assert_almost_equal(
+            world_pos2.x, world_pos1.x, digits,
+            err_msg='atOrigin(new_image_origin) returned wrong world position')
+    np.testing.assert_almost_equal(
+            world_pos2.y, world_pos1.y, digits,
+            err_msg='atOrigin(new_image_origin) returned wrong world position')
+    new_world_origin = galsim.PositionD(5352.7, 9234.3)
+    wcs5 = wcs.atOrigin(new_image_origin, new_world_origin)
+    world_pos3 = wcs5.toWorld(new_image_origin)
+    np.testing.assert_almost_equal(
+            world_pos3.x, new_world_origin.x, digits,
+            err_msg='atOrigin(new_image_origin, new_world_origin) returned wrong position')
+    np.testing.assert_almost_equal(
+            world_pos3.y, new_world_origin.y, digits,
+            err_msg='atOrigin(new_image_origin, new_world_origin) returned wrong position')
+
+ 
     # Check that (x,y) -> (u,v) and converse work correctly
     do_wcs_pos(wcs, ufunc, vfunc, name)
 
@@ -266,6 +296,52 @@ def do_local_wcs(wcs, ufunc, vfunc, name):
 def do_nonlocal_wcs(wcs, ufunc, vfunc, name):
 
     print 'Start testing non-local WCS '+name
+    print 'wcs = ',wcs
+
+    # Check that atOrigin and local work correctly:
+    new_image_origin = galsim.PositionI(123,321)
+    wcs3 = wcs.atOrigin(new_image_origin)
+    assert wcs != wcs3, name+' is not != wcs.atOrigin(pos)'
+    wcs4 = wcs.local(wcs.image_origin)
+    assert wcs != wcs4, name+' is not != wcs.local()'
+    assert wcs4 != wcs, name+' is not != wcs.local() (reverse)'
+    world_origin = wcs.toWorld(wcs.image_origin)
+    if wcs.isUniform():
+        if wcs.world_origin == galsim.PositionD(0,0):
+            wcs2 = wcs.local(wcs.image_origin).atOrigin(wcs.image_origin)
+            print 'image_origin = ',wcs.image_origin
+            print 'world_origin = ',world_origin
+            print 'wcs2 = ',wcs2
+            assert wcs == wcs2, name+' is not equal after wcs.local().atOrigin(image_origin)'
+        wcs2 = wcs.local(wcs.image_origin).atOrigin(wcs.image_origin, wcs.world_origin)
+        assert wcs == wcs2, name+' not equal after wcs.local().atOrigin(image_origin,world_origin)'
+    world_pos1 = wcs.toWorld(galsim.PositionD(0,0))
+    print 'new_image_origin = ',new_image_origin
+    wcs3 = wcs.atOrigin(new_image_origin)
+    world_pos2 = wcs3.toWorld(new_image_origin)
+    print 'wcs3 = ',wcs3
+    print 'world_pos1 = ',world_pos1
+    print 'world_pos2 = ',world_pos2
+    np.testing.assert_almost_equal(
+            world_pos2.x, world_pos1.x, digits,
+            err_msg='atOrigin(new_image_origin) returned wrong world position')
+    np.testing.assert_almost_equal(
+            world_pos2.y, world_pos1.y, digits,
+            err_msg='atOrigin(new_image_origin) returned wrong world position')
+    if wcs.isUniform():
+        new_world_origin = galsim.PositionD(5352.7, 9234.3)
+        wcs5 = wcs.atOrigin(new_image_origin, new_world_origin)
+        world_pos3 = wcs5.toWorld(new_image_origin)
+        print 'new_world_origin = ',new_world_origin
+        print 'wcs5 = ',wcs5
+        print 'world_pos3 = ',world_pos3
+        np.testing.assert_almost_equal(
+                world_pos3.x, new_world_origin.x, digits,
+                err_msg='atOrigin(new_image_origin, new_world_origin) returned wrong position')
+        np.testing.assert_almost_equal(
+                world_pos3.y, new_world_origin.y, digits,
+                err_msg='atOrigin(new_image_origin, new_world_origin) returned wrong position')
+
 
     # Check that (x,y) -> (u,v) and converse work correctly
     # These tests work regardless of whether the WCS is local or not.
@@ -287,20 +363,17 @@ def do_nonlocal_wcs(wcs, ufunc, vfunc, name):
         local_vfunc = lambda x,y: vfunc(x+x0,y+y0) - v0
         image_pos = galsim.PositionD(x0,y0)
         world_pos = galsim.PositionD(u0,v0)
-        # The local call is not guaranteed to be implemented with both image_pos and 
-        # world_pos.  So guard against NotImplementedError
+        do_local_wcs(wcs.local(image_pos=image_pos), local_ufunc, local_vfunc,
+                     name + '.local(image_pos)')
+        do_local_wcs(wcs.jacobian(image_pos=image_pos), local_ufunc, local_vfunc,
+                     name + '.jacobian(image_pos)')
         try:
-            do_local_wcs(wcs.local(image_pos=image_pos), local_ufunc, local_vfunc,
-                                name + '.local(image_pos)')
-            do_local_wcs(wcs.localAffine(image_pos=image_pos), local_ufunc, local_vfunc,
-                                name + '.localAffine(image_pos)')
-        except NotImplementedError:
-            pass
-        try:
+            # The local call is not guaranteed to be implemented for world_pos.
+            # So guard against NotImplementedError.
             do_local_wcs(wcs.local(world_pos=world_pos), local_ufunc, local_vfunc,
-                                name + '.local(world_pos)')
-            do_local_wcs(wcs.localAffine(world_pos=world_pos), local_ufunc, local_vfunc,
-                                name + '.localAffine(world_pos)')
+                         name + '.local(world_pos)')
+            do_local_wcs(wcs.jacobian(world_pos=world_pos), local_ufunc, local_vfunc,
+                         name + '.jacobian(world_pos)')
         except NotImplementedError:
             pass
 
@@ -314,20 +387,17 @@ def do_nonlocal_wcs(wcs, ufunc, vfunc, name):
         im2 = full_im2[b]
 
         for world_profile in profiles:
-            # The toImage call is not guaranteed to be implemented with both image_pos and 
-            # world_pos.  So guard against NotImplementedError
-            try:
-                image_profile = wcs.toImage(world_profile, image_pos=image_pos)
+            image_profile = wcs.toImage(world_profile, image_pos=image_pos)
 
-                world_profile.draw(im1, offset=(dx,dy))
-                image_profile.draw(im2, offset=(dx,dy))
-                np.testing.assert_array_almost_equal(
-                        im1.array, im2.array, digits,
-                        err_msg='world_profile and image_profile differed when drawn for '+name)
-            except NotImplementedError:
-                pass
+            world_profile.draw(im1, offset=(dx,dy))
+            image_profile.draw(im2, offset=(dx,dy))
+            np.testing.assert_array_almost_equal(
+                    im1.array, im2.array, digits,
+                    err_msg='world_profile and image_profile differed when drawn for '+name)
 
             try:
+                # The toImage call is not guaranteed to be implemented for world_pos.
+                # So guard against NotImplementedError.
                 image_profile = wcs.toImage(world_profile, world_pos=world_pos)
 
                 world_profile.draw(im1, offset=(dx,dy))
@@ -348,6 +418,13 @@ def test_pixelscale():
 
     scale = 0.23
     wcs = galsim.PixelScale(scale)
+
+    # Check basic copy and == , !=:
+    wcs2 = wcs.copy()
+    assert wcs == wcs2, 'PixelScale copy is not == the original'
+    wcs3 = galsim.PixelScale(scale + 0.1234)
+    assert wcs != wcs3, 'PixelScale is not != a different one'
+   
     ufunc = lambda x,y: x*scale
     vfunc = lambda x,y: y*scale
 
@@ -356,24 +433,59 @@ def test_pixelscale():
     # Do generic tests that apply to all WCS types
     do_local_wcs(wcs, ufunc, vfunc, 'PixelScale')
 
-    # Check localAffine()
-    affine = wcs.localAffine()
-    np.testing.assert_almost_equal(affine.dudx, scale,
+    # Check jacobian()
+    jac = wcs.jacobian()
+    np.testing.assert_almost_equal(jac.dudx, scale, digits,
                                    err_msg = 'PixelScale dudx does not match expected value.')
-    np.testing.assert_almost_equal(affine.dudy, 0.,
+    np.testing.assert_almost_equal(jac.dudy, 0., digits,
                                    err_msg = 'PixelScale dudy does not match expected value.')
-    np.testing.assert_almost_equal(affine.dvdx, 0.,
+    np.testing.assert_almost_equal(jac.dvdx, 0., digits,
                                    err_msg = 'PixelScale dvdx does not match expected value.')
-    np.testing.assert_almost_equal(affine.dvdy, scale,
+    np.testing.assert_almost_equal(jac.dvdy, scale, digits,
                                    err_msg = 'PixelScale dvdy does not match expected value.')
-    np.testing.assert_almost_equal(affine.image_origin.x, 0.,
-                                   err_msg = 'PixelScale x0 does not match expected value.')
-    np.testing.assert_almost_equal(affine.image_origin.y, 0.,
-                                   err_msg = 'PixelScale y0 does not match expected value.')
-    np.testing.assert_almost_equal(affine.world_origin.x, 0.,
-                                   err_msg = 'PixelScale u0 does not match expected value.')
-    np.testing.assert_almost_equal(affine.world_origin.y, 0.,
-                                   err_msg = 'PixelScale v0 does not match expected value.')
+
+    # Add an image origin offset
+    x0 = 1
+    y0 = 1
+    image_origin = galsim.PositionD(x0,y0)
+    wcs = galsim.OffsetWCS(scale, image_origin)
+
+    # Check basic copy and == , != for OffsetWCS:
+    wcs2 = wcs.copy()
+    print 'wcs = ',wcs
+    print 'wcs2 = ',wcs2
+    assert wcs == wcs2, 'OffsetWCS copy is not == the original'
+    wcs3a = galsim.OffsetWCS(scale+0.123, image_origin)
+    wcs3b = galsim.OffsetWCS(scale, image_origin*2)
+    wcs3c = galsim.OffsetWCS(scale, image_origin, image_origin)
+    assert wcs != wcs3a, 'OffsetWCS is not != a different one (scale)'
+    assert wcs != wcs3b, 'OffsetWCS is not != a different one (image_origin)'
+    assert wcs != wcs3c, 'OffsetWCS is not != a different one (world_origin)'
+
+    ufunc = lambda x,y: scale*(x-x0)
+    vfunc = lambda x,y: scale*(y-y0)
+    do_nonlocal_wcs(wcs, ufunc, vfunc, 'OffsetWCS 1')
+
+    # Add a world origin offset
+    u0 = 124.3
+    v0 = -141.9
+    world_origin = galsim.PositionD(u0,v0)
+    wcs = galsim.OffsetWCS(scale, world_origin=world_origin)
+    ufunc = lambda x,y: scale*x + u0
+    vfunc = lambda x,y: scale*y + v0
+    do_nonlocal_wcs(wcs, ufunc, vfunc, 'OffsetWCS 2')
+
+    # Add both kinds of offsets
+    x0 = -3
+    y0 = 104
+    u0 = 1423.9
+    v0 = 8242.7
+    image_origin = galsim.PositionD(x0,y0)
+    world_origin = galsim.PositionD(u0,v0)
+    wcs = galsim.OffsetWCS(scale, image_origin=image_origin, world_origin=world_origin)
+    ufunc = lambda x,y: scale*(x-x0) + u0
+    vfunc = lambda x,y: scale*(y-y0) + v0
+    do_nonlocal_wcs(wcs, ufunc, vfunc, 'OffsetWCS 3')
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -389,6 +501,15 @@ def test_shearwcs():
     g2 = -0.37
     shear = galsim.Shear(g1=g1,g2=g2)
     wcs = galsim.ShearWCS(scale, shear)
+
+    # Check basic copy and == , !=:
+    wcs2 = wcs.copy()
+    assert wcs == wcs2, 'ShearWCS copy is not == the original'
+    wcs3a = galsim.ShearWCS(scale + 0.1234, shear)
+    wcs3b = galsim.ShearWCS(scale, -shear)
+    assert wcs != wcs3a, 'ShearWCS is not != a different one (scale)'
+    assert wcs != wcs3b, 'ShearWCS is not != a different one (shear)'
+    
     factor = 1./np.sqrt(1.-g1*g1-g2*g2)
     ufunc = lambda x,y: (x + g1*x + g2*y) * scale * factor
     vfunc = lambda x,y: (y - g1*y + g2*x) * scale * factor
@@ -398,24 +519,59 @@ def test_shearwcs():
     # Do generic tests that apply to all WCS types
     do_local_wcs(wcs, ufunc, vfunc, 'ShearWCS')
 
-    # Check localAffine()
-    affine = wcs.localAffine()
-    np.testing.assert_almost_equal(affine.dudx, (1.+g1) * scale * factor, 
+    # Check jacobian()
+    jac = wcs.jacobian()
+    np.testing.assert_almost_equal(jac.dudx, (1.+g1) * scale * factor,  digits,
                                    err_msg = 'ShearWCS dudx does not match expected value.')
-    np.testing.assert_almost_equal(affine.dudy, g2 * scale * factor, 
+    np.testing.assert_almost_equal(jac.dudy, g2 * scale * factor,  digits,
                                    err_msg = 'ShearWCS dudy does not match expected value.')
-    np.testing.assert_almost_equal(affine.dvdx, g2 * scale * factor, 
+    np.testing.assert_almost_equal(jac.dvdx, g2 * scale * factor,  digits,
                                    err_msg = 'ShearWCS dvdx does not match expected value.')
-    np.testing.assert_almost_equal(affine.dvdy, (1.-g1) * scale * factor, 
+    np.testing.assert_almost_equal(jac.dvdy, (1.-g1) * scale * factor,  digits,
                                    err_msg = 'ShearWCS dvdy does not match expected value.')
-    np.testing.assert_almost_equal(affine.image_origin.x, 0.,
-                                   err_msg = 'PixelScale x0 does not match expected value.')
-    np.testing.assert_almost_equal(affine.image_origin.y, 0.,
-                                   err_msg = 'PixelScale y0 does not match expected value.')
-    np.testing.assert_almost_equal(affine.world_origin.x, 0.,
-                                   err_msg = 'PixelScale u0 does not match expected value.')
-    np.testing.assert_almost_equal(affine.world_origin.y, 0.,
-                                   err_msg = 'PixelScale v0 does not match expected value.')
+
+    # Add an image origin offset
+    x0 = 1
+    y0 = 1
+    image_origin = galsim.PositionD(x0,y0)
+    wcs = galsim.OffsetShearWCS(scale, shear, image_origin)
+
+    # Check basic copy and == , != for OffsetShearWCS:
+    wcs2 = wcs.copy()
+    assert wcs == wcs2, 'OffsetShearWCS copy is not == the original'
+    wcs3a = galsim.OffsetShearWCS(scale+0.123, shear, image_origin)
+    wcs3b = galsim.OffsetShearWCS(scale, -shear, image_origin)
+    wcs3c = galsim.OffsetShearWCS(scale, shear, image_origin*2)
+    wcs3d = galsim.OffsetShearWCS(scale, shear, image_origin, image_origin)
+    assert wcs != wcs3a, 'OffsetShearWCS is not != a different one (scale)'
+    assert wcs != wcs3b, 'OffsetShearWCS is not != a different one (shear)'
+    assert wcs != wcs3c, 'OffsetShearWCS is not != a different one (image_origin)'
+    assert wcs != wcs3d, 'OffsetShearWCS is not != a different one (world_origin)'
+
+    ufunc = lambda x,y: ((1+g1)*(x-x0) + g2*(y-y0)) * scale * factor
+    vfunc = lambda x,y: ((1-g1)*(y-y0) + g2*(x-x0)) * scale * factor
+    do_nonlocal_wcs(wcs, ufunc, vfunc, 'OffsetShearWCS 1')
+
+    # Add a world origin offset
+    u0 = 124.3
+    v0 = -141.9
+    world_origin = galsim.PositionD(u0,v0)
+    wcs = galsim.OffsetShearWCS(scale, shear, world_origin=world_origin)
+    ufunc = lambda x,y: ((1+g1)*x + g2*y) * scale * factor + u0
+    vfunc = lambda x,y: ((1-g1)*y + g2*x) * scale * factor + v0
+    do_nonlocal_wcs(wcs, ufunc, vfunc, 'OffsetShearWCS 2')
+
+    # Add both kinds of offsets
+    x0 = -3
+    y0 = 104
+    u0 = 1423.9
+    v0 = 8242.7
+    image_origin = galsim.PositionD(x0,y0)
+    world_origin = galsim.PositionD(u0,v0)
+    wcs = galsim.OffsetShearWCS(scale, shear, image_origin=image_origin, world_origin=world_origin)
+    ufunc = lambda x,y: ((1+g1)*(x-x0) + g2*(y-y0)) * scale * factor + u0
+    vfunc = lambda x,y: ((1-g1)*(y-y0) + g2*(x-x0)) * scale * factor + v0
+    do_nonlocal_wcs(wcs, ufunc, vfunc, 'OffsetShearWCS 3')
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -432,20 +588,51 @@ def test_affinetransform():
     dvdx = 0.0019
     dvdy = 0.2391
 
-    wcs = galsim.AffineTransform(dudx, dudy, dvdx, dvdy)
+    wcs = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)
+
+    # Check basic copy and == , !=:
+    wcs2 = wcs.copy()
+    assert wcs == wcs2, 'JacobianWCS copy is not == the original'
+    wcs3a = galsim.JacobianWCS(dudx+0.123, dudy, dvdx, dvdy)
+    wcs3b = galsim.JacobianWCS(dudx, dudy+0.123, dvdx, dvdy)
+    wcs3c = galsim.JacobianWCS(dudx, dudy, dvdx+0.123, dvdy)
+    wcs3d = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy+0.123)
+    assert wcs != wcs3a, 'JacobianWCS is not != a different one (dudx)'
+    assert wcs != wcs3b, 'JacobianWCS is not != a different one (dudy)'
+    assert wcs != wcs3c, 'JacobianWCS is not != a different one (dvdx)'
+    assert wcs != wcs3d, 'JacobianWCS is not != a different one (dvdy)'
+
     ufunc = lambda x,y: dudx*x + dudy*y
     vfunc = lambda x,y: dvdx*x + dvdy*y
 
-    print 'AffineTransform: ',dudx, dudy, dvdx, dvdy
-    do_local_wcs(wcs, ufunc, vfunc, 'Local AffineTransform 1')
+    print 'Jacobian: ',dudx, dudy, dvdx, dvdy
+    do_local_wcs(wcs, ufunc, vfunc, 'JacobianWCS 1')
 
     # Add an image origin offset
     x0 = 1
     y0 = 1
-    wcs = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, image_origin=galsim.PositionD(x0,y0))
+    image_origin = galsim.PositionD(x0,y0)
+    wcs = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, image_origin)
+
+    # Check basic copy and == , != for AffineTransform:
+    wcs2 = wcs.copy()
+    assert wcs == wcs2, 'AffineTransform copy is not == the original'
+    wcs3a = galsim.AffineTransform(dudx+0.123, dudy, dvdx, dvdy, image_origin)
+    wcs3b = galsim.AffineTransform(dudx, dudy+0.123, dvdx, dvdy, image_origin)
+    wcs3c = galsim.AffineTransform(dudx, dudy, dvdx+0.123, dvdy, image_origin)
+    wcs3d = galsim.AffineTransform(dudx, dudy, dvdx, dvdy+0.123, image_origin)
+    wcs3e = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, image_origin*2)
+    wcs3f = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, image_origin, image_origin)
+    assert wcs != wcs3a, 'AffineTransform is not != a different one (dudx)'
+    assert wcs != wcs3b, 'AffineTransform is not != a different one (dudy)'
+    assert wcs != wcs3c, 'AffineTransform is not != a different one (dvdx)'
+    assert wcs != wcs3d, 'AffineTransform is not != a different one (dvdy)'
+    assert wcs != wcs3e, 'AffineTransform is not != a different one (image_origin)'
+    assert wcs != wcs3f, 'AffineTransform is not != a different one (world_origin)'
+
     ufunc = lambda x,y: dudx*(x-x0) + dudy*(y-y0)
     vfunc = lambda x,y: dvdx*(x-x0) + dvdy*(y-y0)
-    do_nonlocal_wcs(wcs, ufunc, vfunc, 'Non-local AffineTransform 1')
+    do_nonlocal_wcs(wcs, ufunc, vfunc, 'AffineTransform 1')
 
     # Next one with a flip and significant rotation and a large (u,v) offset
     dudy = 0.1432
@@ -453,12 +640,12 @@ def test_affinetransform():
     dvdy = 0.2391
     dvdx = 0.1409
 
-    wcs = galsim.AffineTransform(dudx, dudy, dvdx, dvdy)
+    wcs = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)
     ufunc = lambda x,y: dudx*x + dudy*y
     vfunc = lambda x,y: dvdx*x + dvdy*y
 
-    print 'AffineTransform: ',dudx, dudy, dvdx, dvdy
-    do_local_wcs(wcs, ufunc, vfunc, 'AffineTransform 2')
+    print 'Jacobian: ',dudx, dudy, dvdx, dvdy
+    do_local_wcs(wcs, ufunc, vfunc, 'JacobianWCS 2')
 
     # Add a world origin offset
     u0 = 124.3
@@ -466,7 +653,7 @@ def test_affinetransform():
     wcs = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, world_origin=galsim.PositionD(u0,v0))
     ufunc = lambda x,y: dudx*x + dudy*y + u0
     vfunc = lambda x,y: dvdx*x + dvdy*y + v0
-    do_nonlocal_wcs(wcs, ufunc, vfunc, 'Non-local AffineTransform 2')
+    do_nonlocal_wcs(wcs, ufunc, vfunc, 'AffineTransform 2')
 
     # Finally a really crazy one that isn't remotely regular
     dudy = -0.1432
@@ -474,24 +661,25 @@ def test_affinetransform():
     dvdy = -0.3013
     dvdx = 0.0924
 
-    wcs = galsim.AffineTransform(dudx, dudy, dvdx, dvdy)
+    wcs = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)
     ufunc = lambda x,y: dudx*x + dudy*y
     vfunc = lambda x,y: dvdx*x + dvdy*y
 
-    print 'AffineTransform: ',dudx, dudy, dvdx, dvdy
-    do_local_wcs(wcs, ufunc, vfunc, 'AffineTransform 3')
+    print 'Jacobian: ',dudx, dudy, dvdx, dvdy
+    do_local_wcs(wcs, ufunc, vfunc, 'Jacobian 3')
 
     # Add both kinds of offsets
     x0 = -3
     y0 = 104
     u0 = 1423.9
     v0 = 8242.7
-    wcs = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, 
-                                 image_origin=galsim.PositionI(x0,y0),
-                                 world_origin=galsim.PositionD(u0,v0))
+    image_origin = galsim.PositionD(x0,y0)
+    world_origin = galsim.PositionD(u0,v0)
+    wcs = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, image_origin=image_origin,
+                                 world_origin=world_origin)
     ufunc = lambda x,y: dudx*(x-x0) + dudy*(y-y0) + u0
     vfunc = lambda x,y: dvdx*(x-x0) + dvdy*(y-y0) + v0
-    do_nonlocal_wcs(wcs, ufunc, vfunc, 'Non-local AffineTransform 3')
+    do_nonlocal_wcs(wcs, ufunc, vfunc, 'AffineTransform 3')
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -502,30 +690,26 @@ def radial_u(x, y):
     # to 5 decimal places when we do the local tests.
     #
     # We will use a functional form of rho/r0 = r/r0 + a (r/r0)^3 
-    # To be accurate to < 1.e-6 at an offset of 7 pixels at r = 700/2000, we need:
-    #     rho(r+dr) - rho(r) - drho/dr(r) * dr < 1.e-6
-    #     1/2 d2(rho)/dr^2 * dr^2  < 1.e-6
+    # To be accurate to < 1.e-6 arcsec at an offset of 7 pixels at r = 700, we need:
+    #     | rho(r+dr) - rho(r) - drho/dr(r) * dr | < 1.e-6
+    #     1/2 |d2(rho)/dr^2| * dr^2  < 1.e-6
     #     rho = r + a/r0^2 r^3 
     #     rho' = 1 + 3a/r0^2 r^2 
     #     rho'' = 6a/r0^2 r 
-    #     1/2 6a / 2000^2 * 700 * 7^2 < 1.e-6 
+    #     1/2 6|a| / 2000^2 * 700 * 7^2 < 1.e-6 
     #     |a| < 3.8e-5
 
-    import numpy
     r0 = 2000.  # scale factor for function
-    r = numpy.sqrt(x*x+y*y) / r0
     a = 2.3e-5
-    rho = r + a * r**3 
-    return x * rho / r
+    rho_over_r = 1 + a * (x*x+y*y)/(r0*r0)
+    return x * rho_over_r
 
 def radial_v(x, y):
     """A radial function used for a u(x,y) function """
-    import numpy
-    r0 = 2000.  # scale factor for function
-    r = numpy.sqrt(x*x+y*y) / r0
+    r0 = 2000.
     a = 2.3e-5
-    rho = r + a * r**3 
-    return y * rho / r
+    rho_over_r = 1 + a * (x*x+y*y)/(r0*r0)
+    return y * rho_over_r
 
 class Cubic(object):
     """A class that can act as a function, implementing a cubic radial function.  """
@@ -535,13 +719,11 @@ class Cubic(object):
         self._uv = whichuv
 
     def __call__(self, x, y): 
-        import numpy
-        r = numpy.sqrt(x*x+y*y) / self._r0
-        rho = r + self._a * r**3 
+        rho_over_r = 1 + self._a * (x*x+y*y)/(self._r0*self._r0)
         if self._uv == 'u':
-            return x * rho / r
+            return x * rho_over_r
         else:
-            return y * rho / r
+            return y * rho_over_r
 
 
 def test_uvfunction():
@@ -557,7 +739,7 @@ def test_uvfunction():
     ufunc = lambda x,y: x * scale
     vfunc = lambda x,y: y * scale
     wcs = galsim.UVFunction(ufunc, vfunc)
-    do_local_wcs(wcs, ufunc, vfunc, 'UVFunction like PixelScale')
+    do_local_wcs(wcs.local(galsim.PositionD(0,0)), ufunc, vfunc, 'UVFunction like PixelScale')
  
     # 2. Like ShearWCS
     scale = 0.23
@@ -567,18 +749,22 @@ def test_uvfunction():
     ufunc = lambda x,y: (x + g1*x + g2*y) * scale * factor
     vfunc = lambda x,y: (y - g1*y + g2*x) * scale * factor
     wcs = galsim.UVFunction(ufunc, vfunc)
-    do_local_wcs(wcs, ufunc, vfunc, 'UVFunction like ShearWCS')
+    do_local_wcs(wcs.local(galsim.PositionD(0,0)), ufunc, vfunc, 'UVFunction like ShearWCS')
 
     # 3. Like an AffineTransform
-    dudy = 0.1432
     dudx = 0.2342
-    dvdy = 0.2391
+    dudy = 0.1432
     dvdx = 0.1409
+    dvdy = 0.2391
 
     ufunc = lambda x,y: dudx*x + dudy*y
     vfunc = lambda x,y: dvdx*x + dvdy*y
     wcs = galsim.UVFunction(ufunc, vfunc)
-    do_local_wcs(wcs, ufunc, vfunc, 'UVFunction like AffineTransform')
+    do_local_wcs(wcs.local(galsim.PositionD(0,0)), ufunc, vfunc, 'UVFunction like AffineTransform')
+
+    # Check that passing functions as strings works correctly.
+    wcs = galsim.UVFunction(ufunc='%f*x + %f*y'%(dudx,dudy), vfunc='%f*x + %f*y'%(dvdx,dvdy))
+    do_local_wcs(wcs.local(galsim.PositionD(0,0)), ufunc, vfunc, 'UVFunction with string funcs')
 
     # 4. Next some UVFunctions with non-trivial offsets
     x0 = 1.3
@@ -587,23 +773,60 @@ def test_uvfunction():
     v0 = -141.9
     image_origin = galsim.PositionD(x0,y0)
     world_origin = galsim.PositionD(u0,v0)
-    wcs = wcs.atOrigin(image_origin, world_origin)
     ufunc2 = lambda x,y: dudx*(x-x0) + dudy*(y-y0) + u0
     vfunc2 = lambda x,y: dvdx*(x-x0) + dvdy*(y-y0) + v0
-    do_nonlocal_wcs(wcs, ufunc2, vfunc2, 'UVFunction with atOrigin')
-    wcs = galsim.UVFunction(ufunc, vfunc, image_origin, world_origin)
-    do_nonlocal_wcs(wcs, ufunc2, vfunc2, 'UVFunction with explicit origins')
     wcs = galsim.UVFunction(ufunc2, vfunc2)
     do_nonlocal_wcs(wcs, ufunc2, vfunc2, 'UVFunction with origins in funcs')
+    wcs = galsim.UVFunction(ufunc, vfunc, image_origin, world_origin)
+    do_nonlocal_wcs(wcs, ufunc2, vfunc2, 'UVFunction with origin arguments')
+
+    # Check basic copy and == , != for UVFunction
+    wcs2 = wcs.copy()
+    assert wcs == wcs2, 'UVFunction copy is not == the original'
+    wcs3a = galsim.UVFunction(radial_v, radial_v, image_origin, world_origin)
+    wcs3b = galsim.UVFunction(radial_u, radial_u, image_origin, world_origin)
+    wcs3c = galsim.UVFunction(radial_u, radial_v, image_origin*2, world_origin)
+    wcs3d = galsim.UVFunction(radial_u, radial_v, image_origin, world_origin*2)
+    assert wcs != wcs3a, 'UVFunction is not != a different one (ufunc)'
+    assert wcs != wcs3b, 'UVFunction is not != a different one (vfunc)'
+    assert wcs != wcs3c, 'UVFunction is not != a different one (image_origin)'
+    assert wcs != wcs3d, 'UVFunction is not != a different one (world_origin)'
 
     # 5. Now some non-trivial 3rd order radial function.
+    # This is only designed to be accurate to 5 digits, rather than usual 6.
     global digits
     orig_digits = digits
-    # This is only designed to be accurate to 5 digits, rather than usual 6.
     digits = 5
-    x0 = 1024
-    y0 = 1024
-    wcs = galsim.UVFunction(radial_u, radial_v, image_origin=galsim.PositionI(x0,y0))
+    image_origin = galsim.PositionD(x0,y0)
+    wcs = galsim.UVFunction(radial_u, radial_v, image_origin)
+
+    # Check jacobian()
+    for x,y in zip(far_x_list, far_y_list):
+        print 'x,y = ',x,y
+        image_pos = galsim.PositionD(x,y)
+        jac = wcs.jacobian(image_pos)
+        # u = x * rho_over_r
+        # v = y * rho_over_r
+        # For simplicity of notation, let rho_over_r = w(r) = 1 + a r^2/r0^2 
+        # dudx = w + x dwdr drdx = w + x (2ar/r0^2) (x/r) = w + 2a x^2/r0^2
+        # dudy = x dwdr drdy = x (2ar/r0^2) (y/r) = 2a xy/r0^2
+        # dvdx = y dwdr drdx = y (2ar/r0^2) (x/r) = 2a xy/r0^2
+        # dvdy = w + y dwdr drdy = w + y (2ar/r0^2) (y/r) = w + 2a y^2/r0^2
+        r0 = 2000.
+        a = 2.3e-5
+        factor = a/(r0*r0)
+        w = 1. + factor*(x*x+y*y)
+        print 'jac = ',jac.dudx,jac.dudy,jac.dvdx,jac.dvdy
+        print 'real jac = ',(w+2*factor*x*x), 2*factor*x*y, 2*factor*x*y, (w+2*factor*y*y)
+        np.testing.assert_almost_equal(jac.dudx, w + 2*factor*x*x, digits,
+                                       err_msg = 'UVFunction dudx does not match expected value.')
+        np.testing.assert_almost_equal(jac.dudy, 2*factor*x*y, digits,
+                                       err_msg = 'UVFunction dudy does not match expected value.')
+        np.testing.assert_almost_equal(jac.dvdx, 2*factor*x*y, digits,
+                                       err_msg = 'UVFunction dvdx does not match expected value.')
+        np.testing.assert_almost_equal(jac.dvdy, w + 2*factor*y*y, digits,
+                                       err_msg = 'UVFunction dvdy does not match expected value.')
+
     ufunc = lambda x,y: radial_u(x-x0, y-y0)
     vfunc = lambda x,y: radial_v(x-x0, y-y0)
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'Cubic radial UVFunction')
@@ -612,7 +835,7 @@ def test_uvfunction():
     # Use a different `a` parameter for u and v to make things more interesting.
     cubic_u = Cubic(2.9e-5, 2000., 'u')
     cubic_v = Cubic(-3.7e-5, 2000., 'v')
-    wcs = galsim.UVFunction(cubic_u, cubic_v, image_origin=galsim.PositionI(x0,y0))
+    wcs = galsim.UVFunction(cubic_u, cubic_v, image_origin=galsim.PositionD(x0,y0))
     ufunc = lambda x,y: cubic_u(x-x0, y-y0)
     vfunc = lambda x,y: cubic_v(x-x0, y-y0)
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'Cubic object UVFunction')
@@ -640,7 +863,8 @@ def do_ref(wcs, ref_list, approx=False):
         print 'dec = ', dec / galsim.degrees, coord.dec / galsim.degrees
         print 'dist = ', ref_coord.distanceTo(coord) / galsim.arcsec,' arcsec'
         dist = ref_coord.distanceTo(coord) / galsim.arcsec
-        np.testing.assert_almost_equal(dist, 0, 4)
+        np.testing.assert_almost_equal(dist, 0, 4,
+                                       err_msg = 'wcs.toWorld differed from expected value')
 
         # Normally, we check the agreement to 1.e-4 arcsec.
         # However, we allow the caller to indicate the that inverse transform is
@@ -656,8 +880,10 @@ def do_ref(wcs, ref_list, approx=False):
         print 'y = ', y, pos.y
         pixel_scale = wcs.minLinearScale(galsim.PositionD(x,y))
         print 'pixel_scale = ',pixel_scale
-        np.testing.assert_almost_equal((x-pos.x)*pixel_scale, 0, digits)
-        np.testing.assert_almost_equal((y-pos.y)*pixel_scale, 0, digits)
+        np.testing.assert_almost_equal((x-pos.x)*pixel_scale, 0, digits,
+                                       err_msg = 'wcs.toImage differed from expected value')
+        np.testing.assert_almost_equal((y-pos.y)*pixel_scale, 0, digits,
+                                       err_msg = 'wcs.toImage differed from expected value')
 
 def test_astropywcs():
     """Test the AstropyWCS class

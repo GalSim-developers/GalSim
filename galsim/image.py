@@ -337,6 +337,8 @@ class Image(object):
     def getYMin(self): return self.image.getYMin()
     def getYMax(self): return self.image.getYMax()
     def getBounds(self): return self.image.getBounds()
+    def center(self): return self.image.bounds.center()
+    def trueCenter(self): return self.image.bounds.trueCenter()
 
     def copy(self):
         return Image(image=self.image.copy(), wcs=self.wcs)
