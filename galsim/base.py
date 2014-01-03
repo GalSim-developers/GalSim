@@ -719,6 +719,28 @@ class GSObject(object):
 
         return image
 
+    def _obj_center(self, image, offset, use_true_center):
+        # This just encapsulates this calculation that we do in a few places.
+        if use_true_center:
+            obj_cen = image.bounds.trueCenter()
+        else:
+            obj_cen = image.bounds.center()
+            obj_cen = galsim.PositionD(obj_cen.x, obj_cen.y)
+        if offset:
+            obj_cen += offset
+        return obj_cen
+
+    def _parse_offset(self, offset):
+        if offset is None:
+            return galsim.PositionD(0,0)
+        else:
+            if isinstance(offset, galsim.PositionD) or isinstance(offset, galsim.PositionI):
+                return galsim.PositionD(offset.x, offset.y)
+            else:
+                # Let python raise the appropriate exception if this isn't valid.
+                return galsim.PositionD(offset[0], offset[1])
+       
+
     def _fix_center(self, image, scale, offset, use_true_center, reverse):
         # This is a touch circular since we may not know the image shape or scale yet. 
         # So we need to repeat a little bit of what will be done again in _draw_setup_image
@@ -740,47 +762,35 @@ class GSObject(object):
         if scale is None:
             if (image is not None and image.wcs is not None and 
                     (not isinstance(image.wcs, galsim.PixelScale) or image.scale > 0.)):
-                if use_true_center:
-                    im_cen = image.bounds.trueCenter()
-                else:
-                    im_cen = image.bounds.center()
-                wcs = image.wcs.local(image_pos=im_cen)
+                # Make sure we are using a local wcs
+                obj_cen = self._obj_center(image, offset, use_true_center)
+                wcs = image.wcs.local(image_pos=obj_cen)
             else:
                 wcs = galsim.PixelScale(self.SBProfile.nyquistDx())
         elif scale <= 0:
             wcs = galsim.PixelScale(self.SBProfile.nyquistDx())
         else:
             wcs = galsim.PixelScale(float(scale))
-
-        if offset is None:
-            dx = 0.
-            dy = 0.
-        else:
-            if isinstance(offset, galsim.PositionD) or isinstance(offset, galsim.PositionI):
-                dx = offset.x
-                dy = offset.y
-            else:
-                # Let python raise the appropriate exception if this isn't valid.
-                dx = offset[0]
-                dy = offset[1]
  
         if use_true_center:
             # For even-sized images, the SBProfile draw function centers the result in the 
             # pixel just up and right of the real center.  So shift it back to make sure it really
             # draws in the center.
             # Also, remember that numpy's shape is ordered as [y,x]
+            dx = offset.x
+            dy = offset.y
             if shape[1] % 2 == 0: dx -= 0.5
             if shape[0] % 2 == 0: dy -= 0.5
+            offset = galsim.PositionD(dx,dy)
 
         # For InterpolatedImage offsets, we apply the offset in the opposite direction.
         if reverse: 
-            dx = -dx
-            dy = -dy
+            offset = -offset
 
-        if dx == 0. and dy == 0.:
+        if offset == galsim.PositionD(0,0):
             return self.copy()
         else:
-            return self.createShifted(wcs.toWorld(galsim.PositionD(dx,dy)))
+            return self.createShifted(wcs.toWorld(offset))
 
 
     def draw(self, image=None, scale=None, wcs=None, gain=1., wmult=1., normalization="flux",
@@ -922,6 +932,9 @@ class GSObject(object):
                 raise TypeError("wcs must be a BaseWCS instance")
             image.wcs = wcs
 
+        # Make sure offset is a PositionD
+        offset = self._parse_offset(offset)
+
         # Apply the offset, and possibly fix the centering for even-sized images
         # Note: We need to do this before we call _draw_setup_image, since the shift
         # affects stepK (especially if the offset is rather large).
@@ -930,18 +943,16 @@ class GSObject(object):
         # Make sure image is setup correctly
         image = prof._draw_setup_image(image,scale,wmult,add_to_image)
 
-        if use_true_center:
-            im_cen = image.bounds.trueCenter()
-        else:
-            im_cen = image.bounds.center()
+        # Figure out the position of the center of the object
+        obj_cen = self._obj_center(image, offset, use_true_center)
 
         # Surface brightness normalization requires scaling the flux value of each pixel
         # by the area of the pixel.  We do this by changing the gain.
         if normalization.lower() in ['surface brightness','sb']:
-            gain *= image.wcs.pixelArea(image_pos=im_cen)
+            gain *= image.wcs.pixelArea(image_pos=obj_cen)
 
         # Convert the profile in world coordinates to the profile in image coordinates:
-        prof = image.wcs.toImage(prof, image_pos=im_cen)
+        prof = image.wcs.toImage(prof, image_pos=obj_cen)
 
         image.added_flux = prof.SBProfile.draw(image.image.view(), gain, wmult)
 
@@ -1134,24 +1145,24 @@ class GSObject(object):
                 raise TypeError("wcs must be a BaseWCS instance")
             image.wcs = wcs
 
+        # Make sure offset is a PositionD
+        offset = self._parse_offset(offset)
+
         # Apply the offset, and possibly fix the centering for even-sized images
         prof = self._fix_center(image, scale, offset, use_true_center, reverse=False)
 
         # Make sure image is setup correctly
         image = prof._draw_setup_image(image,scale,wmult,add_to_image)
 
-        if use_true_center:
-            im_cen = image.bounds.trueCenter()
-        else:
-            im_cen = image.bounds.center()
+        obj_cen = self._obj_center(image, offset, use_true_center)
 
         # Surface brightness normalization requires scaling the flux value of each pixel
         # by the area of the pixel.  We do this by changing the gain.
         if normalization.lower() in ['surface brightness','sb']:
-            gain *= image.wcs.pixelArea(image_pos=im_cen)
+            gain *= image.wcs.pixelArea(image_pos=obj_cen)
 
         # Convert the profile in world coordinates to the profile in chip coordinates:
-        prof = image.wcs.toImage(prof, image_pos=im_cen)
+        prof = image.wcs.toImage(prof, image_pos=obj_cen)
 
         try:
             image.added_flux = prof.SBProfile.drawShoot(

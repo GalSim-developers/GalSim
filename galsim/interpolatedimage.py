@@ -425,6 +425,9 @@ class InterpolatedImage(GSObject):
         elif normalization.lower() in ['surface brightness','sb']:
             self.scaleFlux(self.image.wcs.pixelArea(image_pos=im_cen))
 
+        # Make sure offset is a PositionD
+        offset = self._parse_offset(offset)
+
         # Apply the offset, and possibly fix the centering for even-sized images
         # Note reverse=True, since we want to fix the center in the opposite sense of what the 
         # draw function does.
