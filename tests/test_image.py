@@ -256,9 +256,11 @@ def test_Image_FITS_IO():
         # Test various compression schemes
         #
 
-        # These tests are a bit slow, so we only bother to run them for the first dtype.
-        # When working on the code, it is a good idea to comment out this line.
-        if i > 0: continue
+        # These tests are a bit slow, so we only bother to run them for the first dtype
+        # when doing the regular unit tests.  When running python test_image.py, all of them
+        # will run, so when working on the code, it is a good idea to run the tests that way.
+        if i > 0 and __name__ != "__main__":
+            continue
 
         # Test full-file gzip
         test_file = os.path.join(datadir, "test"+tchar[i]+".fits.gz")
@@ -355,6 +357,7 @@ def test_Image_MultiFITS_IO():
     """
     import time
     t1 = time.time()
+
     for i in xrange(ntypes):
         array_type = types[i]
 
@@ -442,14 +445,15 @@ def test_Image_MultiFITS_IO():
                     test_image_list[k].array, 
                     err_msg="Image"+tchar[i]+" readMulti failed after using writeFile")
 
-
         #
         # Test various compression schemes
         #
 
-        # These tests are a bit slow, so we only bother to run them for the first dtype.
-        # When working on the code, it is a good idea to comment out this line.
-        if i > 0: continue
+        # These tests are a bit slow, so we only bother to run them for the first dtype
+        # when doing the regular unit tests.  When running python test_image.py, all of them
+        # will run, so when working on the code, it is a good idea to run the tests that way.
+        if i > 0 and __name__ != "__main__":
+            continue
 
         # Test full-file gzip
         test_multi_file = os.path.join(datadir, "test_multi"+tchar[i]+".fits.gz")
@@ -646,9 +650,11 @@ def test_Image_CubeFITS_IO():
         # Test various compression schemes
         #
 
-        # These tests are a bit slow, so we only bother to run them for the first dtype.
-        # When working on the code, it is a good idea to comment out this line.
-        if i > 0: continue
+        # These tests are a bit slow, so we only bother to run them for the first dtype
+        # when doing the regular unit tests.  When running python test_image.py, all of them
+        # will run, so when working on the code, it is a good idea to run the tests that way.
+        if i > 0 and __name__ != "__main__":
+            continue
 
         # Test full-file gzip
         test_cube_file = os.path.join(datadir, "test_cube"+tchar[i]+".fits.gz")
