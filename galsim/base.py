@@ -490,28 +490,8 @@ class GSObject(object):
         Note: you may supply dx,dy as either two arguments, as a tuple, or as a 
         galsim.PositionD or galsim.PositionI object.
         """
-        if len(args) == 0:
-            # Then dx,dy need to be kwargs
-            # If not, then python will raise an appropriate error.
-            dx = kwargs.pop('dx')
-            dy = kwargs.pop('dy')
-        elif len(args) == 1:
-            if isinstance(args[0], galsim.PositionD) or isinstance(args[0], galsim.PositionI):
-                dx = args[0].x
-                dy = args[0].y
-            else:
-                # Let python raise the appropriate exception if this isn't valid.
-                dx = args[0][0]
-                dy = args[0][1]
-        elif len(args) == 2:
-            dx = args[0]
-            dy = args[1]
-        else:
-            raise TypeError("Too many arguments supplied to applyShift ")
-        if kwargs:
-            raise TypeError("applyShift() got unexpected keyword arguments: %s",kwargs.keys())
-                
-        self.SBProfile.applyShift(dx,dy)
+        delta = galsim.utilities.parse_pos_args(args, kwargs, 'dx', 'dy')
+        self.SBProfile.applyShift(delta)
         self.__class__ = GSObject
 
     # Also add methods which create a new GSObject with the transformations applied...
@@ -954,7 +934,9 @@ class GSObject(object):
         # Convert the profile in world coordinates to the profile in image coordinates:
         prof = image.wcs.toImage(prof, image_pos=obj_cen)
 
-        image.added_flux = prof.SBProfile.draw(image.image.view(), gain, wmult)
+        imview = image.view()
+        imview.setCenter(0,0)
+        image.added_flux = prof.SBProfile.draw(imview.image, gain, wmult)
 
         return image
 
@@ -1164,9 +1146,12 @@ class GSObject(object):
         # Convert the profile in world coordinates to the profile in chip coordinates:
         prof = image.wcs.toImage(prof, image_pos=obj_cen)
 
+        imview = image.view()
+        imview.setCenter(0,0)
+
         try:
             image.added_flux = prof.SBProfile.drawShoot(
-                image.image.view(), n_photons, uniform_deviate, gain, max_extra_noise,
+                imview.image, n_photons, uniform_deviate, gain, max_extra_noise,
                 poisson_flux, add_to_image)
         except RuntimeError:
             # Give some extra explanation as a warning, then raise the original exception
@@ -1259,7 +1244,13 @@ class GSObject(object):
 
         # wmult isn't really used by drawK, but we need to provide it.
         wmult = 1.0
-        prof.SBProfile.drawK(re.image.view(), im.image.view(), gain, wmult)
+
+        review = re.view()
+        review.setCenter(0,0)
+        imview = im.view()
+        imview.setCenter(0,0)
+
+        prof.SBProfile.drawK(review.image, imview.image, gain, wmult)
 
         return re,im
 

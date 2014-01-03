@@ -145,19 +145,18 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
     Class.setXMax.__func__.__doc__ = "Set the value of xmax."
     Class.setYMin.__func__.__doc__ = "Set the value of ymin."
     Class.setYMax.__func__.__doc__ = "Set the value of ymax."
-    Class.shift.__func__.__doc__ = """Shift the Bounds instance by a supplied dx, dy.
+    Class.shift.__func__.__doc__ = """Shift the Bounds instance by a supplied position
 
     Calling Examples
     ----------------
-    The input shift may be specified either via two arguments, for example
+    The input shift takes either a PositionI or PositionD instance, which must match 
+    the type of the bounds instance:
 
-        >>> bounds.shift(dx, dy)
+            bounds = BoundsI(1,32,1,32)
+            bounds.shift(galsim.PositionI(3, 2))
 
-    or equivalently by a single Position argument:
-
-        >>> bounds.shift(galsim.PositionD(dx, dy))
-
-    The type of PositionI/D should match that of the bounds instance.
+            bounds = BoundsD(0, 37.4, 0, 49.9)
+            bounds.shift(galsim.PositionD(3.9, 2.1))
     """ 
 
 

@@ -75,6 +75,7 @@ def test_smallshear():
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     mySBP = galsim.SBGaussian(flux=1, sigma=1)
     mySBP.applyShear(myShear._shear)
+    myImg.setCenter(0,0)
     mySBP.applyExpansion(1./dx)
     mySBP.draw(myImg.image.view())
     printval(myImg, savedImg)
@@ -135,6 +136,7 @@ def test_largeshear():
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     mySBP = galsim.SBDeVaucouleurs(flux=1, half_light_radius=1)
     mySBP.applyShear(myShear._shear)
+    myImg.setCenter(0,0)
     mySBP.applyExpansion(1./dx)
     mySBP.draw(myImg.image.view())
     printval(myImg, savedImg)
@@ -198,6 +200,7 @@ def test_rotate():
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_ellip_rotated.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    myImg.setCenter(0,0)
     mySBP.applyExpansion(1./dx)
     mySBP.draw(myImg.image.view())
     printval(myImg, savedImg)
@@ -255,6 +258,7 @@ def test_mag():
     savedImg = galsim.fits.read(os.path.join(imgdir, "exp_mag.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    myImg.setCenter(0,0)
     mySBP.applyExpansion(1./dx)
     mySBP.draw(myImg.image.view())
     printval(myImg, savedImg)
@@ -383,9 +387,10 @@ def test_shift():
     t1 = time.time()
     dx = 0.2
     mySBP = galsim.SBBox(xw=dx, yw=dx, flux=1)
-    mySBP.applyShift(dx, -dx)
+    mySBP.applyShift(galsim.PositionD(dx, -dx))
     savedImg = galsim.fits.read(os.path.join(imgdir, "box_shift.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    myImg.setCenter(0,0)
     mySBP.applyExpansion(1./dx)
     mySBP.draw(myImg.image.view())
     printval(myImg, savedImg)
@@ -439,6 +444,7 @@ def test_rescale():
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_doubleflux.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    myImg.setCenter(0,0)
     mySBP.applyExpansion(1./dx)
     mySBP.draw(myImg.image.view())
     printval(myImg, savedImg)

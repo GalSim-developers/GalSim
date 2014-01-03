@@ -170,6 +170,9 @@ namespace galsim {
         /// @brief Query whether the Bounds rectangle is defined.
         bool isDefined() const { return defined; }
 
+        /// @brief Return the origin of the image (xmin, ymin)
+        Position<T> origin() const { return Position<T>(xmin, ymin); }
+
         /// @brief Return the nominal center of the image. 
         ///
         /// This is the position of the pixel that is considered to be (0,0)

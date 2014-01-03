@@ -89,6 +89,7 @@ def test_sbinterpolatedimage():
         sbinterp = galsim.SBInterpolatedImage(image_in.image, lan3_2d, quint_2d)
         test_array = np.zeros(ref_array.shape, dtype=array_type)
         image_out = galsim.Image(test_array, scale=1.0)
+        image_out.setCenter(0,0)
         sbinterp.draw(image_out.image.view())
         np.testing.assert_array_equal(
                 ref_array.astype(array_type),image_out.array,
@@ -293,7 +294,7 @@ def test_operations_simple():
     ref_obj.draw(image=ref_im, scale=pix_scale)
     # define subregion for comparison
     new_bounds = galsim.BoundsI(1,comp_region,1,comp_region)
-    new_bounds.shift((im_size-comp_region)/2, (im_size-comp_region)/2)
+    new_bounds.shift(galsim.PositionI((im_size-comp_region)/2, (im_size-comp_region)/2))
     im_sub = im.subImage(new_bounds)
     ref_im_sub = ref_im.subImage(new_bounds)
     diff_im=im_sub-ref_im_sub
@@ -317,7 +318,7 @@ def test_operations_simple():
     ref_obj.draw(image=ref_im, scale=pix_scale)
     # define subregion for comparison
     new_bounds = galsim.BoundsI(1,comp_region,1,comp_region)
-    new_bounds.shift((im_size-comp_region)/2, (im_size-comp_region)/2)
+    new_bounds.shift(galsim.PositionI((im_size-comp_region)/2, (im_size-comp_region)/2))
     im_sub = im.subImage(new_bounds)
     ref_im_sub = ref_im.subImage(new_bounds)
     diff_im=im_sub-ref_im_sub
@@ -343,7 +344,7 @@ def test_operations_simple():
     ref_obj.draw(image=ref_im, scale=pix_scale)
     # define subregion for comparison
     new_bounds = galsim.BoundsI(1,comp_region,1,comp_region)
-    new_bounds.shift((im_size-comp_region)/2, (im_size-comp_region)/2)
+    new_bounds.shift(galsim.PositionI((im_size-comp_region)/2, (im_size-comp_region)/2))
     im_sub = im.subImage(new_bounds)
     ref_im_sub = ref_im.subImage(new_bounds)
     diff_im=im_sub-ref_im_sub
@@ -367,7 +368,7 @@ def test_operations_simple():
     ref_obj.draw(image=ref_im, scale=pix_scale)
     # define subregion for comparison
     new_bounds = galsim.BoundsI(1,comp_region,1,comp_region)
-    new_bounds.shift((im_size-comp_region)/2, (im_size-comp_region)/2)
+    new_bounds.shift(galsim.PositionI((im_size-comp_region)/2, (im_size-comp_region)/2))
     im_sub = im.subImage(new_bounds)
     ref_im_sub = ref_im.subImage(new_bounds)
     diff_im=im_sub-ref_im_sub
@@ -392,7 +393,7 @@ def test_operations_simple():
     ref_obj.draw(image=ref_im, scale=pix_scale)
     # define subregion for comparison
     new_bounds = galsim.BoundsI(1,comp_region,1,comp_region)
-    new_bounds.shift((im_size-comp_region)/2, (im_size-comp_region)/2)
+    new_bounds.shift(galsim.PositionI((im_size-comp_region)/2, (im_size-comp_region)/2))
     im_sub = im.subImage(new_bounds)
     ref_im_sub = ref_im.subImage(new_bounds)
     diff_im=im_sub-ref_im_sub

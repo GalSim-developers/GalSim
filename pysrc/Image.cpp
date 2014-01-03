@@ -142,12 +142,6 @@ struct PyImage {
         // that have both const and non-const versions or (x,y) and pos version
         typedef const T& (ImageAlloc<T>::* at_func_type)(const int, const int) const;
         typedef const T& (ImageAlloc<T>::* at_pos_func_type)(const Position<int>&) const;
-        typedef void (BaseImage<T>::* shift_func_type)(const int, const int);
-        typedef void (BaseImage<T>::* shift_pos_func_type)(const Position<int>&);
-        typedef void (BaseImage<T>::* setOrigin_func_type)(const int, const int);
-        typedef void (BaseImage<T>::* setOrigin_pos_func_type)(const Position<int>&);
-        typedef void (BaseImage<T>::* setCenter_func_type)(const int, const int);
-        typedef void (BaseImage<T>::* setCenter_pos_func_type)(const Position<int>&);
         typedef ImageView<T> (ImageAlloc<T>::* subImage_func_type)(const Bounds<int>&);
         typedef ImageView<T> (ImageAlloc<T>::* view_func_type)();
 
@@ -171,12 +165,6 @@ struct PyImage {
         pyBaseImage
             .def("subImage", &BaseImage<T>::subImage, bp::args("bounds"))
             .add_property("array", &GetConstArray)
-            .def("shift", shift_func_type(&BaseImage<T>::shift), bp::args("x", "y"))
-            .def("shift", shift_pos_func_type(&BaseImage<T>::shift), bp::args("pos"))
-            .def("setCenter", setCenter_func_type(&BaseImage<T>::setCenter), bp::args("x", "y"))
-            .def("setCenter", setCenter_pos_func_type(&BaseImage<T>::setCenter), bp::args("pos"))
-            .def("setOrigin", setOrigin_func_type(&BaseImage<T>::setOrigin), bp::args("x", "y"))
-            .def("setOrigin", setOrigin_pos_func_type(&BaseImage<T>::setOrigin), bp::args("pos"))
             .def("getBounds", getBounds)
             .add_property("bounds", getBounds)
             ;
@@ -207,6 +195,7 @@ struct PyImage {
             .def("fill", &ImageAlloc<T>::fill)
             .def("setZero", &ImageAlloc<T>::setZero)
             .def("invertSelf", &ImageAlloc<T>::invertSelf)
+            .def("shift", &ImageAlloc<T>::shift, bp::args("delta"))
             .def("resize", &CallResize)
             .enable_pickling()
             ;
@@ -253,6 +242,7 @@ struct PyImage {
             .def("fill", &ImageView<T>::fill)
             .def("setZero", &ImageView<T>::setZero)
             .def("invertSelf", &ImageView<T>::invertSelf)
+            .def("shift", &ImageView<T>::shift, bp::args("delta"))
             .enable_pickling()
             ;
         wrapImageViewTemplates<float>(pyImageView);

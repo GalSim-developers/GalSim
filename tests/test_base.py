@@ -380,6 +380,7 @@ def test_exponential():
     savedImg = galsim.fits.read(os.path.join(imgdir, "exp_1.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    myImg.setCenter(0,0)
     mySBP.applyExpansion(1./dx)
     mySBP.draw(myImg.image.view())
     printval(myImg, savedImg)
@@ -559,6 +560,7 @@ def test_sersic():
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_3_1.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    myImg.setCenter(0,0)
     mySBP.applyExpansion(1./dx)
     mySBP.draw(myImg.image.view())
     printval(myImg, savedImg)
@@ -600,6 +602,7 @@ def test_sersic():
     mySBP = galsim.SBSersic(n=3, flux=1, half_light_radius=1, trunc=10)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_3_1_10.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    myImg.setCenter(0,0)
     mySBP.applyExpansion(1./dx)
     mySBP.draw(myImg.image.view())
     printval(myImg, savedImg)
@@ -970,6 +973,7 @@ def test_airy():
     savedImg = galsim.fits.read(os.path.join(imgdir, "airy_.8_.1.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    myImg.setCenter(0,0)
     mySBP.applyExpansion(1./dx)
     mySBP.draw(myImg.image.view())
     printval(myImg, savedImg)
@@ -1116,6 +1120,7 @@ def test_box():
     savedImg = galsim.fits.read(os.path.join(imgdir, "box_1.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    myImg.setCenter(0,0)
     mySBP.applyExpansion(1./dx)
     mySBP.draw(myImg.image.view())
     printval(myImg, savedImg)
@@ -1166,6 +1171,7 @@ def test_moffat():
     savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_2_5.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    myImg.setCenter(0,0)
     mySBP.applyExpansion(1./dx)
     mySBP.draw(myImg.image.view())
     printval(myImg, savedImg)
@@ -1527,6 +1533,7 @@ def test_kolmogorov():
     #savedImg.write(os.path.join(imgdir, "kolmogorov.fits"))
     savedImg = galsim.fits.read(os.path.join(imgdir, "kolmogorov.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
+    myImg.setCenter(0,0)
     mySBP.applyExpansion(1./dx)
     mySBP.draw(myImg.image.view())
     printval(myImg, savedImg)

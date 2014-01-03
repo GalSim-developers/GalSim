@@ -287,7 +287,7 @@ namespace galsim {
          * This shifts the object by the given amount.  As with scaleFlux, it does not invalidate
          * any previous uses of this object.
          */
-        void applyShift(double dx, double dy);
+        void applyShift(const Position<double>& delta);
 
         /**
          * @brief Shoot photons through this SBProfile.
