@@ -54,6 +54,7 @@ class BaseWCS(object):
             OffsetShearWCS
             AffineTransform
             UVFunction
+            RaDecFunction
             AstropyWCS          -- requires astropy.wcs python module to be installed
             PyAstWCS            -- requires starlink.Ast python module to be installed
             WcsToolsWCS         -- requires wcstools command line functions to be installed
@@ -768,6 +769,7 @@ class JacobianWCS(BaseWCS):
 #     OffsetShearWCS
 #     AffineTransform
 #     UVFunction
+#     RaDecFunction
 #     AstropyWCS
 #     PyAstWCS
 #     WcsToolsWCS
@@ -1205,13 +1207,118 @@ def makeJacFromNumericalRaDec(ra, dec, dx, dy):
     # i.e. The u,v plane is the tangent plane as seen from Earth with +v pointing
     # north, and +u pointing west.
     # That means the du values are the negative of dra.
-    dudx = -0.5*(ra1 - ra2)/dx * numpy.cos(dec0 * galsim.degrees / galsim.radians)
-    dudy = -0.5*(ra3 - ra4)/dy * numpy.cos(dec0 * galsim.degrees / galsim.radians)
+    cosdec = numpy.cos(dec0 * galsim.degrees / galsim.radians)
+    dudx = -0.5*(ra1 - ra2)/dx * cosdec
+    dudy = -0.5*(ra3 - ra4)/dy * cosdec
     dvdx = 0.5*(dec1 - dec2)/dx
     dvdy = 0.5*(dec3 - dec4)/dy
 
     # These values are all in degrees.  Convert to arcsec as per our usual standard.
     return JacobianWCS(dudx*3600., dudy*3600., dvdx*3600., dvdy*3600.)
+
+class RaDecFunction(BaseWCS):
+    """This WCS takes two arbitrary functions for ra(x,y) and dec(x,y).
+
+    The rafunc and decfunc parameters may be:
+        - python functions that take (x,y) arguments
+        - python objects with a __call__ method that takes (x,y) arguments
+        - strings which can be parsed with eval('lambda x,y: '+str)
+    The functions should return galsim.Angle objects.
+
+    Initialization
+    --------------
+    A RaDecFunction object is initialized with the command:
+
+        wcs = galsim.RaDecFunction(rafunc, decfunc, image_origin=None)
+
+    @param rafunc         The function ra(x,y)
+    @param decfunc        The function dec(x,y)
+    @param image_origin   Optional origin position for the image coordinate system.
+                          If provided, it should be a PostionD or PositionI object.
+                          [ Default: `image_origin = None` ]
+    """
+    _req_params = { "rafunc" : str, "decfunc" : str }
+    _opt_params = { "image_origin" : galsim.PositionD }
+    _single_params = []
+    _takes_rng = False
+    _takes_logger = False
+
+    def __init__(self, rafunc, decfunc, image_origin=None):
+        self._is_local = False
+        self._is_uniform = False
+        self._is_celestial = True
+        if isinstance(rafunc, basestring):
+            self._rafunc = eval('lambda x,y : ' + rafunc)
+        else:
+            self._rafunc = rafunc
+        if isinstance(decfunc, basestring):
+            self._decfunc = eval('lambda x,y : ' + decfunc)
+        else:
+            self._decfunc = decfunc
+        if image_origin == None:
+            self._x0 = 0
+            self._y0 = 0
+        else:
+            self._x0 = image_origin.x
+            self._y0 = image_origin.y
+
+    @property
+    def rafunc(self): return self._rafunc
+    @property
+    def decfunc(self): return self._decfunc
+    @property
+    def image_origin(self): return galsim.PositionD(self._x0, self._y0)
+
+    def _ra(self, x, y):
+        return self._rafunc(x-self._x0, y-self._y0)
+
+    def _dec(self, x, y):
+        return self._decfunc(x-self._x0, y-self._y0)
+
+    def _posToWorld(self, image_pos):
+        ra = self._ra(image_pos.x, image_pos.y)
+        dec = self._dec(image_pos.x, image_pos.y)
+        return galsim.CelestialCoord(ra,dec)
+
+    def _posToImage(self, world_pos):
+        raise NotImplementedError("World -> Image direction not implemented for RaDecFunction")
+
+    def _local(self, image_pos, world_pos):
+        if world_pos is not None:
+            raise NotImplementedError('RaDecFunction.local() cannot take world_pos.')
+        x0 = image_pos.x - self._x0
+        y0 = image_pos.y - self._y0
+        # Use dx,dy = 1 pixel for numerical derivatives
+        dx = 1
+        dy = 1
+
+        pos_list = [ (x0,y0), (x0+dx,y0), (x0-dx,y0), (x0,y0+dy), (x0,y0-dy) ]
+        ra = [ self._ra(x,y) / galsim.degrees for (x,y) in pos_list ]
+        dec = [ self._dec(x,y) / galsim.degrees for (x,y) in pos_list ]
+
+        return makeJacFromNumericalRaDec(ra, dec, dx, dy)
+
+    def _atOrigin(self, image_origin):
+        return RaDecFunction(self._rafunc, self._decfunc, image_origin)
+
+    def copy(self):
+        return RaDecFunction(self._rafunc, self._decfunc, self.image_origin)
+
+    def __eq__(self, other):
+        if not isinstance(other, RaDecFunction):
+            return False
+        else:
+            return (
+                self._rafunc == other._rafunc and
+                self._decfunc == other._decfunc and
+                self._x0 == other._x0 and
+                self._y0 == other._y0)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __repr__(self):
+        return "RaDecFunction(%r,%r,%r)"%(self.rafunc, self.decfunc, self.image_origin)
 
 
 class AstropyWCS(BaseWCS):
@@ -1258,7 +1365,10 @@ class AstropyWCS(BaseWCS):
         self._is_local = False
         self._is_uniform = False
         self._is_celestial = True
+        import astropy.wcs
+        self._tag = None # Write something useful here.
         if file_name is not None:
+            self._tag = file_name
             from galsim import pyfits
             if ( isinstance(hdu, pyfits.CompImageHDU) or
                  isinstance(hdu, pyfits.ImageHDU) or
@@ -1269,10 +1379,10 @@ class AstropyWCS(BaseWCS):
             hdu, hdu_list, fin = galsim.fits.readFile(file_name, dir, hdu, compression)
 
         if hdu is not None:
+            if self._tag is None: self._tag = str(hdu)
             if wcs is not None:
                 raise TypeError("Cannot provide both pyfits hdu and wcs")
             self._fix_header(hdu.header)
-            import astropy.wcs
             import warnings
             with warnings.catch_warnings():
                 # The constructor might emit warnings if it wants to fix the header
@@ -1283,6 +1393,8 @@ class AstropyWCS(BaseWCS):
                 wcs = astropy.wcs.WCS(hdu.header)
         if wcs is None:
             raise TypeError("Must provide one of file_name, hdu (as a pyfits HDU), or wcs")
+        else:
+            if self._tag is None: self._tag = str(wcs)
         if file_name is not None:
             galsim.fits.closeHDUList(hdu_list, fin)
 
@@ -1437,22 +1549,12 @@ class AstropyWCS(BaseWCS):
         return not self.__eq__(other)
 
     def __repr__(self):
-        return "AstropyWCS(%r,%r)"%(self._wcs, self.image_origin)
+        return "AstropyWCS(%r,%r)"%(self._tag, self.image_origin)
 
 
 class PyAstWCS(BaseWCS):
     """This WCS uses PyAst (the python front end for the Starlink AST code) to read WCS
     information from a FITS file.  It requires the starlinkAst python module to be installed.
-
-    Note: This class is very slow.  Even slower than WcsToolsWCS, which calls out to the
-          command line and doesn't even keep the fits header in memeory.  I believe this
-          is because of the way they wrap the pyfits object.  They use a callback function
-          to read each line in the header individually and parse it in their C layer until
-          they have fully built an internal C-layer object with the entire FITS header.  Most
-          of this is a waste, since most of the header is not needed.  And also the python
-          callback function is intrisically rather slow, since it does a lot of string and
-          dict operations.  So hopefully, they will improve this, since it is really a
-          bad way to implement this.
 
     Initialization
     --------------
@@ -1494,9 +1596,13 @@ class PyAstWCS(BaseWCS):
         self._is_local = False
         self._is_uniform = False
         self._is_celestial = True
+        import starlink.Ast
+        import starlink.Atl
         # Note: More much of this class implementation, I've followed the example provided here:
         #    http://dsberry.github.io/starlink/node4.html
+        self._tag = None # Write something useful here.
         if file_name is not None:
+            self._tag = file_name
             from galsim import pyfits
             if ( isinstance(hdu, pyfits.CompImageHDU) or
                  isinstance(hdu, pyfits.ImageHDU) or
@@ -1507,14 +1613,14 @@ class PyAstWCS(BaseWCS):
             hdu, hdu_list, fin = galsim.fits.readFile(file_name, dir, hdu, compression)
 
         if hdu is not None:
+            if self._tag is None: self._tag = str(hdu)
             if wcsinfo is not None:
                 raise TypeError("Cannot provide both pyfits hdu and wcsinfo")
             self._fix_header(hdu.header)
-            import starlink.Ast
-            import starlink.Atl
             fitschan = starlink.Ast.FitsChan( starlink.Atl.PyFITSAdapter(hdu) )
             wcsinfo = fitschan.read()
         if wcsinfo is None:
+            if self._tag is None: self._tag = str(hdu)
             raise TypeError("Must provide one of file_name, hdu (as a pyfits HDU), or wcsinfo")
 
         #  Check that the FITS header contained WCS in a form that can be
@@ -1601,7 +1707,7 @@ class PyAstWCS(BaseWCS):
             return False
         else:
             return (
-                self._wcs == other._wcs and
+                self._wcsinfo == other._wcsinfo and
                 self._x0 == other._x0 and
                 self._y0 == other._y0)
 
@@ -1609,7 +1715,7 @@ class PyAstWCS(BaseWCS):
         return not self.__eq__(other)
 
     def __repr__(self):
-        return "PyAstWCS(%r,%r)"%(self._wcsinfo, self.image_origin)
+        return "PyAstWCS(%r,%r)"%(self._tag, self.image_origin)
 
 
 class WcsToolsWCS(BaseWCS):
@@ -1726,7 +1832,8 @@ class WcsToolsWCS(BaseWCS):
             raise RuntimeError('wcstools sky2xy returned invalid result for %f,%f'%(ra,dec))
         if len(vals) > 6:
             import warnings
-            warnings.warning('wcstools sky2xy indicates that %f,%f is off the image'%(ra,dec))
+            warnings.warn('wcstools sky2xy indicates that %f,%f is off the image\n'%(ra,dec) +
+                          'output is %r'%results)
         x = float(vals[4])
         y = float(vals[5])
         return galsim.PositionD(x + self._x0, y + self._y0)
