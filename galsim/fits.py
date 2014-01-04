@@ -236,37 +236,6 @@ class _WriteFile:
                 
 _write_file = _WriteFile()
 
-def _write_header(hdu, add_wcs, scale, xmin, ymin):
-    # In PyFITS 3.1, the update method was deprecated in favor of subscript assignment.
-    # When we no longer care about supporting versions before 3.1, we can switch these
-    # to e.g. hdu.header['GS_SCALE'] = (image.scale , "GalSim Image scale")
-    import warnings
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-
-        hdu.header.update("GS_SCALE", scale, "GalSim Image scale")
-        hdu.header.update("GS_XMIN", xmin, "GalSim Image minimum X coordinate")
-        hdu.header.update("GS_YMIN", ymin, "GalSim Image minimum Y coordinate")
-
-        if add_wcs:
-            if isinstance(add_wcs, basestring):
-                wcsname = add_wcs
-            else:
-                wcsname = ""
-            hdu.header.update("CTYPE1" + wcsname, "LINEAR", "name of the coordinate axis")
-            hdu.header.update("CTYPE2" + wcsname, "LINEAR", "name of the coordinate axis")
-            hdu.header.update("CRVAL1" + wcsname, xmin, 
-                            "coordinate system value at reference pixel")
-            hdu.header.update("CRVAL2" + wcsname, ymin, 
-                            "coordinate system value at reference pixel")
-            hdu.header.update("CRPIX1" + wcsname, 1, "coordinate system reference pixel")
-            hdu.header.update("CRPIX2" + wcsname, 1, "coordinate system reference pixel")
-            hdu.header.update("CD1_1" + wcsname, scale, "CD1_1 = pixel_scale")
-            hdu.header.update("CD2_2" + wcsname, scale, "CD2_2 = pixel_scale")
-            hdu.header.update("CD1_2" + wcsname, 0, "CD1_2 = 0")
-            hdu.header.update("CD2_1" + wcsname, 0, "CD2_1 = 0")
-
-
 def _add_hdu(hdu_list, data, pyfits_compress):
     if pyfits_compress:
         if len(hdu_list) == 0:
@@ -324,6 +293,37 @@ def _get_hdu(hdu_list, hdu, pyfits_compress):
     _check_hdu(hdu, pyfits_compress)
     return hdu
 
+def _writeDictToFitsHeader(h, fits_header):
+    # PyFits has changed its syntax for writing to fits headers, so rather than have our
+    # various things that write to the fits header do so directly, we have them write to
+    # a dict, which we then write to the actual fits header, making sure to do things 
+    # correctly given the PyFits version.
+    if pyfits_version < '3.1':
+        for key, value in h.iteritems():
+            if len(value) == 1:
+                fits_header.update(key, value[0])
+            else:
+                fits_header.update(key, value[0], value[1])
+    elif pyfits_version < '4.0':
+        for key, value in h.iteritems():
+            if len(value) == 1:
+                fits_header.set(key, value[0])
+            else:
+                fits_header.set(key, value[0], value[1])
+    else:
+        fits_header.update(h)
+    
+def _wcsFromFitsHeader(header):
+    xmin = header.get("GS_XMIN", 1)
+    ymin = header.get("GS_YMIN", 1)
+    origin = galsim.PositionI(xmin, ymin)
+    wcs_name = header.get("GS_WCS", None)
+    if wcs_name is None:
+        wcs = galsim.PixelScale(1.0)
+    else:
+        wcs_type = eval('galsim.' + wcs_name)
+        wcs = wcs_type._readHeader(header)
+    return wcs, origin
 
 # Unlike the other helpers, this one doesn't start with an underscore, since we make it 
 # available to people who use the function ReadFile.
@@ -349,8 +349,7 @@ def closeHDUList(hdu_list, fin):
 ##############################################################################################
 
 
-def write(image, file_name=None, dir=None, hdu_list=None, add_wcs=True, clobber=True,
-          compression='auto'):
+def write(image, file_name=None, dir=None, hdu_list=None, clobber=True, compression='auto'):
     """Write a single image to a FITS file.
 
     Write the image to a FITS file, with details depending on the arguments.  This function can be
@@ -369,11 +368,6 @@ def write(image, file_name=None, dir=None, hdu_list=None, add_wcs=True, clobber=
                         the user is responsible for calling either hdu_list.writeto(...) or 
                         galsim.fits.writeFile(...) afterwards.  Either `file_name` or `hdu_list` 
                         is required.
-    @param add_wcs      If `add_wcs` evaluates to `True`, a 'LINEAR' WCS will be added using the 
-                        Image's bounding box.  This is not necessary to ensure an Image can be 
-                        round-tripped through FITS, as the bounding box (and scale) are always 
-                        saved in custom header keys.  If `add_wcs` is a string, this will be used 
-                        as the WCS name. (Default `add_wcs = True`.)
     @param clobber      Setting `clobber=True` when `file_name` is given will silently overwrite 
                         existing files. (Default `clobber = True`.)
     @param compression  Which compression scheme to use (if any).  Options are:
@@ -403,13 +397,17 @@ def write(image, file_name=None, dir=None, hdu_list=None, add_wcs=True, clobber=
         hdu_list = pyfits.HDUList()
 
     hdu = _add_hdu(hdu_list, image.array, pyfits_compress)
-    _write_header(hdu, add_wcs, image.scale, image.xmin, image.ymin)
+    wcs = image.wcs
+    if wcs is None: wcs = galsim.PixelScale(1)
+    h = {}
+    wcs.writeHeader(h, image.bounds)
+    _writeDictToFitsHeader(h, hdu.header)
 
     if file_name:
         _write_file(file_name, dir, hdu_list, clobber, file_compress, pyfits_compress)
 
 
-def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, add_wcs=True, clobber=True,
+def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
                compression='auto'):
     """Write a Python list of images to a multi-extension FITS file.
 
@@ -425,7 +423,6 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, add_wcs=True
                         the user is responsible for calling either hdu_list.writeto(...) or 
                         galsim.fits.writeFile(...) afterwards.  Either `file_name` or `hdu_list` 
                         is required.
-    @param add_wcs      See documentation for this parameter on the galsim.fits.write method.
     @param clobber      See documentation for this parameter on the galsim.fits.write method.
     @param compression  See documentation for this parameter on the galsim.fits.write method.
     """
@@ -442,14 +439,18 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, add_wcs=True
 
     for image in image_list:
         hdu = _add_hdu(hdu_list, image.array, pyfits_compress)
-        _write_header(hdu, add_wcs, image.scale, image.xmin, image.ymin)
+        wcs = image.wcs
+        if wcs is None: wcs = galsim.PixelScale(1)
+        h = {}
+        wcs.writeHeader(h, image.bounds)
+        _writeDictToFitsHeader(h, hdu.header)
 
     if file_name:
         _write_file(file_name, dir, hdu_list, clobber, file_compress, pyfits_compress)
 
 
 
-def writeCube(image_list, file_name=None, dir=None, hdu_list=None, add_wcs=True, clobber=True,
+def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
               compression='auto'):
     """Write a Python list of images to a FITS file as a data cube.
 
@@ -472,7 +473,6 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, add_wcs=True,
                         the user is responsible for calling either hdu_list.writeto(...) or 
                         galsim.fits.writeFile(...) afterwards.  Either `file_name` or `hdu_list` 
                         is required.
-    @param add_wcs      See documentation for this parameter on the galsim.fits.write method.
     @param clobber      See documentation for this parameter on the galsim.fits.write method.
     @param compression  See documentation for this parameter on the galsim.fits.write method.
     """
@@ -495,10 +495,9 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, add_wcs=True,
         nimages = cube.shape[0]
         nx = cube.shape[1]
         ny = cube.shape[2]
-        # Use default values for xmin, ymin, scale
-        scale = 1
-        xmin = 1
-        ymin = 1
+        # Use default values for scale, bounds
+        wcs = galsim.PixelScale(1)
+        bounds = galsim.BoundsI(1,nx,1,ny)
     else:
         nimages = len(image_list)
         if (nimages == 0):
@@ -507,9 +506,10 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, add_wcs=True,
         dtype = im.array.dtype
         nx = im.xmax - im.xmin + 1
         ny = im.ymax - im.ymin + 1
-        scale = im.scale
-        xmin = im.xmin
-        ymin = im.ymin
+        # Use the first image's wcs and bounds
+        wcs = im.wcs
+        if wcs is None: wcs = galsim.PixelScale(1)
+        bounds = im.bounds
         # Note: numpy shape is y,x
         array_shape = (nimages, ny, nx)
         cube = numpy.zeros(array_shape, dtype=dtype)
@@ -523,7 +523,9 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, add_wcs=True,
             cube[k,:,:] = image_list[k].array
 
     hdu = _add_hdu(hdu_list, cube, pyfits_compress)
-    _write_header(hdu, add_wcs, scale, xmin, ymin)
+    h = {}
+    wcs.writeHeader(h, bounds)
+    _writeDictToFitsHeader(h, hdu.header)
 
     if file_name:
         _write_file(file_name, dir, hdu_list, clobber, file_compress, pyfits_compress)
@@ -584,7 +586,7 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
 
     Not all FITS pixel types are supported (only those with C++ Image template instantiations:
     `short`, `int`, `float`, and `double`).  If the FITS header has GS_* keywords, these will be 
-    used to initialize the bounding box and scale.  If not, the bounding box will have `(xmin,ymin)`
+    used to initialize the bounding box and WCS.  If not, the bounding box will have `(xmin,ymin)`
     at `(1,1)` and the scale will be set to 1.0.
 
     This function is called as `im = galsim.fits.read(...)`
@@ -629,9 +631,7 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
 
     hdu = _get_hdu(hdu_list, hdu, pyfits_compress)
 
-    xmin = hdu.header.get("GS_XMIN", 1)
-    ymin = hdu.header.get("GS_YMIN", 1)
-    scale = hdu.header.get("GS_SCALE", 1.0)
+    wcs, origin = _wcsFromFitsHeader(hdu.header)
     pixel = hdu.data.dtype.type
     if pixel in galsim.Image.valid_dtypes:
         data = hdu.data
@@ -655,7 +655,9 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
         hdu.data.byteswap(True)   # Note inplace is just an arg, not a kwarg, inplace=True throws
                                    # a TypeError exception in EPD Python 2.7.2
 
-    image = galsim.Image(array=data, xmin=xmin, ymin=ymin, scale=scale)
+    image = galsim.Image(array=data)
+    image.setOrigin(origin)
+    image.wcs = wcs
 
     # If we opened a file, don't forget to close it.
     if file_name:
@@ -672,7 +674,7 @@ def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto'):
 
     Not all FITS pixel types are supported (only those with C++ Image template instantiations:
     `short`, `int`, `float`, and `double`).  If the FITS header has GS_* keywords, these will be 
-    used to initialize the bounding box and scale.  If not, the bounding box will have `(xmin,ymin)`
+    used to initialize the bounding box and WCS.  If not, the bounding box will have `(xmin,ymin)`
     at `(1,1)` and the scale will be set to 1.0.
 
     This function is called as `im = galsim.fits.readMulti(...)`
@@ -736,7 +738,7 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
 
     Not all FITS pixel types are supported (only those with C++ Image template instantiations are:
     `short`, `int`, `float`, and `double`).  If the FITS header has GS_* keywords, these will be  
-    used to initialize the bounding boxes and scales.  If not, the bounding boxes will have 
+    used to initialize the bounding boxes and WCS's.  If not, the bounding boxes will have 
     `(xmin,ymin)` at `(1,1)` and the scale will be set to 1.0.
 
     This function is called as `image_list = galsim.fits.readCube(...)`
@@ -781,9 +783,7 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
 
     hdu = _get_hdu(hdu_list, hdu, pyfits_compress)
 
-    xmin = hdu.header.get("GS_XMIN", 1)
-    ymin = hdu.header.get("GS_YMIN", 1)
-    scale = hdu.header.get("GS_SCALE", 1.0)
+    wcs, origin = _wcsFromFitsHeader(hdu.header)
     pixel = hdu.data.dtype.type
     if pixel in galsim.Image.valid_dtypes:
         data = hdu.data
@@ -810,7 +810,9 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
     nimages = hdu.data.shape[0]
     image_list = []
     for k in range(nimages):
-        image = galsim.Image(array=hdu.data[k,:,:], xmin=xmin, ymin=ymin, scale=scale)
+        image = galsim.Image(array=hdu.data[k,:,:])
+        image.setOrigin(origin)
+        image.wcs = wcs
         image_list.append(image)
 
     # If we opened a file, don't forget to close it.

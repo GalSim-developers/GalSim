@@ -143,6 +143,8 @@ class BaseWCS(object):
         # Non-local WCS classes must define the following:
         #
         #     _local            function returning a local WCS at a given location
+        #     _writeHeader      function that writes the WCS to a fits header.
+        #     _readHeader       static function that reads the WCS from a fits header.
 
 
     def toWorld(self, arg, **kwargs):
@@ -344,6 +346,50 @@ class BaseWCS(object):
         """
         return self.local(image_pos, world_pos)._toJacobian()
 
+    def affine(self, image_pos=None, world_pos=None):
+        """Return the local AffineTransform of the WCS at a given point.
+
+        This returns a linearized version of the current WCS at a given point.  It 
+        returns an AffineTransform instance that is locally approximately the same
+        as the WCS in the vicinity of the given point.
+
+        It is similar to jacobian(), except that this preserves the offset information
+        between the image coordinates and world coordinates rather than setting both
+        origins to (0,0).  Instead, the image origin is taken to be `image_pos`.
+        
+        For non-celestial coordinate systems, the world origin is taken to be 
+        `wcs.toWorld(image_pos)`.  In fact, `wcs.affine(image_pos)` is really just
+        shorthand for:
+        
+                wcs.jacobian(image_pos).setOrigin(image_pos, wcs.toWorld(image_pos))
+
+        For celestial coordinate systems, there is not well-defined choice for the 
+        origin of the Euclidean world coordinate system.  So we just take (u,v) = (0,0)
+        at the given position.  So, `wcs.affine(image_pos)` is equivalent to:
+
+                wcs.jacobian(image_pos).setOrigin(image_pos, galsim.PositionD(0,0))
+
+        As usual, you may provide either `image_pos` or `world_pos` as you prefer.
+
+        @param image_pos        The image coordinate position (for variable WCS objects)
+        @param world_pos        The world coordinate position (for variable WCS objects)
+        @returns affine_wcs     An AffineTransform object
+        """
+        jac = self.jacobian(image_pos, world_pos)
+        # That call checked that only one of image_pos or world_pos is provided.
+        if world_pos is not None:
+            image_pos = self.toImage(world_pos)
+        elif image_pos is None:
+            # Both are None.  Must be a local WCS
+            image_pos = galsim.PositionD(0,0)
+
+        if self._is_celestial:
+            return jac.setOrigin(image_pos, galsim.PositionD(0,0))
+        else:
+            if world_pos is None:
+                world_pos = self.toWorld(image_pos)
+            return jac.setOrigin(image_pos, world_pos)
+
     def setOrigin(self, image_origin, world_origin=None):
         """Recenter the current WCS function at a new origin location, returning the new WCS.
 
@@ -454,6 +500,33 @@ class BaseWCS(object):
             if world_origin is not None:
                 raise TypeError("world_origin is invalid for non-uniform WCS classes")
             return self._setOrigin(image_origin)
+
+    def writeHeader(self, header, bounds):
+        """Write this WCS function to a fits header.
+
+        This is normally called automatically from within the galsim.fits.write() function.
+
+        The code will attempt to write standard FITS WCS keys so that the WCS will be readable 
+        by other software (e.g. ds9).  It may not be able to do so accurately, in which case a 
+        linearized version will be used instead.  (Specifically, it will use the local Jacobian 
+        at the image center.)  
+
+        However, this is not necessary for the WCS to survive a round trip through the FITS
+        header, as it will also write GalSim-specific key words that (normally) allow it to 
+        reconstruct the WCS correctly.
+
+        @param header       The fits header object to write the data to.
+        @param bounds       The bounds of the image.
+        """
+        # Always need these, so just do them here.
+        header["GS_XMIN"] = (bounds.xmin, "GalSim image minimum x coordinate")
+        header["GS_YMIN"] = (bounds.ymin, "GalSim image minimum y coordinate")
+        if self._is_local:
+            # Make it non-local...
+            self.setOrigin(self.image_origin)._writeHeader(header, bounds)
+        else:
+            self._writeHeader(header, bounds)
+
 
 
 #########################################################################################
@@ -838,6 +911,8 @@ class JacobianWCS(BaseWCS):
 #     __eq__            check if this equals another WCS object
 #     __ne__            check if this is not equal to another WCS object
 #     _local            function returning a local WCS at a given location
+#     _writeHeader      function that writes the WCS to a fits header.
+#     _readHeader       static function that reads the WCS from a fits header.
 #
 #########################################################################################
 
@@ -916,6 +991,24 @@ class OffsetWCS(BaseWCS):
 
     def _setOrigin(self, image_origin, world_origin):
         return OffsetWCS(self._scale, image_origin, world_origin)
+
+    def _writeHeader(self, header, bounds):
+        header["GS_WCS"]  = ("OffsetWCS", "Galsim WCS name")
+        header["GS_SCALE"] = (self.scale, "GalSim image scale")
+        header["GS_X0"] = (self.image_origin.x, "GalSim image origin x")
+        header["GS_Y0"] = (self.image_origin.y, "GalSim image origin y")
+        header["GS_U0"] = (self.world_origin.x, "GalSim world origin u")
+        header["GS_V0"] = (self.world_origin.y, "GalSim world origin v")
+        self.affine()._writeLinearWCS(header, bounds)
+
+    @staticmethod
+    def _readHeader(header):
+        scale = header["GS_SCALE"]
+        x0 = header["GS_X0"]
+        y0 = header["GS_Y0"]
+        u0 = header["GS_U0"]
+        v0 = header["GS_V0"]
+        return OffsetWCS(scale, galsim.PositionD(x0,y0), galsim.PositionD(u0,v0))
 
     def copy(self):
         return OffsetWCS(self._scale, self.image_origin, self.world_origin)
@@ -1005,6 +1098,29 @@ class OffsetShearWCS(BaseWCS):
 
     def _setOrigin(self, image_origin, world_origin):
         return OffsetShearWCS(self.scale, self.shear, image_origin, world_origin)
+
+    def _writeHeader(self, header, bounds):
+        header["GS_WCS"] = ("OffsetShearWCS", "Galsim WCS name")
+        header["GS_SCALE"] = (self.scale, "GalSim image scale")
+        header["GS_G1"] = (self.shear.g1, "GalSim image shear g1")
+        header["GS_G2"] = (self.shear.g2, "GalSim image shear g2")
+        header["GS_X0"] = (self.image_origin.x, "GalSim image origin x coordinate")
+        header["GS_Y0"] = (self.image_origin.y, "GalSim image origin y coordinate")
+        header["GS_U0"] = (self.world_origin.x, "GalSim world origin u coordinate")
+        header["GS_V0"] = (self.world_origin.y, "GalSim world origin v coordinate")
+        self.affine()._writeLinearWCS(header, bounds)
+
+    @staticmethod
+    def _readHeader(header):
+        scale = header["GS_SCALE"]
+        g1 = header["GS_G1"]
+        g2 = header["GS_G2"]
+        x0 = header["GS_X0"]
+        y0 = header["GS_Y0"]
+        u0 = header["GS_U0"]
+        v0 = header["GS_V0"]
+        return OffsetShearWCS(scale, galsim.Shear(g1=g1, g2=g2), galsim.PositionD(x0,y0),
+                              galsim.PositionD(u0,v0))
 
     def copy(self):
         return OffsetShearWCS(self.scale, self.shear, self.image_origin, self.world_origin)
@@ -1101,6 +1217,39 @@ class AffineTransform(BaseWCS):
     def _setOrigin(self, image_origin, world_origin):
         return AffineTransform(self.dudx, self.dudy, self.dvdx, self.dvdy,
                                image_origin, world_origin)
+
+    def _writeHeader(self, header, bounds):
+        header["GS_WCS"] = ("AffineTransform", "Galsim WCS name")
+        self._writeLinearWCS(header, bounds)
+
+    def _writeLinearWCS(self, header, bounds):
+        header["CTYPE1"] = ("LINEAR", "name of the world coordinate axis")
+        header["CTYPE2"] = ("LINEAR", "name of the world coordinate axis")
+        header["CRVAL1"] = (self.world_origin.x,
+                      "world coordinate at reference pixel")
+        header["CRVAL2"] = (self.world_origin.y,
+                      "world coordinate at reference pixel")
+        header["CRPIX1"] = (self.image_origin.x,
+                      "image coordinate of reference pixel")
+        header["CRPIX2"] = (self.image_origin.y,
+                      "image coordinate of reference pixel")
+        header["CD1_1"] = (self.dudx, "CD1_1 = dudx")
+        header["CD1_2"] = (self.dudy, "CD1_2 = dudy")
+        header["CD2_1"] = (self.dvdx, "CD2_1 = dvdx")
+        header["CD2_2"] = (self.dvdy, "CD2_2 = dvdy")
+
+    @staticmethod
+    def _readHeader(header):
+        dudx = header["CD1_1"]
+        dudy = header["CD1_2"]
+        dvdx = header["CD2_1"]
+        dvdy = header["CD2_2"]
+        x0 = header["CRPIX1"]
+        y0 = header["CRPIX2"]
+        u0 = header["CRVAL1"]
+        v0 = header["CRVAL2"]
+        return AffineTransform(dudx, dudy, dvdx, dvdy, galsim.PositionD(x0,y0),
+                               galsim.PositionD(u0,v0))
 
     def copy(self):
         return AffineTransform(self.dudx, self.dudy, self.dvdx, self.dvdy,
