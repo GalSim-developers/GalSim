@@ -400,7 +400,7 @@ def write(image, file_name=None, dir=None, hdu_list=None, clobber=True, compress
     wcs = image.wcs
     if wcs is None: wcs = galsim.PixelScale(1)
     h = {}
-    wcs.writeHeader(h, image.bounds)
+    h = wcs.writeHeader(h, image.bounds)
     _writeDictToFitsHeader(h, hdu.header)
 
     if file_name:
@@ -442,7 +442,7 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, clobber=True
         wcs = image.wcs
         if wcs is None: wcs = galsim.PixelScale(1)
         h = {}
-        wcs.writeHeader(h, image.bounds)
+        h = wcs.writeHeader(h, image.bounds)
         _writeDictToFitsHeader(h, hdu.header)
 
     if file_name:
@@ -524,7 +524,7 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
 
     hdu = _add_hdu(hdu_list, cube, pyfits_compress)
     h = {}
-    wcs.writeHeader(h, bounds)
+    h = wcs.writeHeader(h, bounds)
     _writeDictToFitsHeader(h, hdu.header)
 
     if file_name:

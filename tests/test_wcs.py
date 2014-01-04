@@ -191,10 +191,10 @@ def check_world(pos1, pos2, digits, err_msg):
         np.testing.assert_almost_equal(pos1.x, pos2.x, digits, err_msg)
         np.testing.assert_almost_equal(pos1.y, pos2.y, digits, err_msg)
 
-def do_wcs_image(wcs, name):
+def do_wcs_image(wcs, name, affine_io=False):
     
     print 'Start image tests for WCS '+name
-    print 'wcs = ',wcs
+    #print 'wcs = ',wcs
 
     # Use the "blank" image as our test image.  It's not blank in the sense of having all
     # zeros.  Rather, there are basically random values that we can use to test that 
@@ -205,14 +205,6 @@ def do_wcs_image(wcs, name):
     np.testing.assert_equal(im.origin().x, 1, "initial origin is not 1,1 as expected")
     np.testing.assert_equal(im.origin().y, 1, "initial origin is not 1,1 as expected")
     im.wcs = wcs
-
-    # Test writing the image to a fits file and reading it back in.
-    # The new image doesn't have to have the same wcs type.  But it does have to produce
-    # consistent values of the world coordinates.
-    test_name = 'test_' + name + '.fits'
-    im.write(test_name, dir=dir)
-    im2 = galsim.fits.read(test_name, dir=dir)
-    print 'im2.wcs = ',im2.wcs
     world1 = im.wcs.toWorld(im.origin())
     value1 = im(im.origin())
     world2 = im.wcs.toWorld(im.center())
@@ -221,17 +213,35 @@ def do_wcs_image(wcs, name):
     image_pos = im.origin() + offset
     world3 = im.wcs.toWorld(image_pos)
     value3 = im(image_pos)
+
+    if affine_io:
+        affine = im.wcs.affine(im.trueCenter())
+        world1b = affine.toWorld(im.origin())
+        world2b = affine.toWorld(im.center())
+        world3b = affine.toWorld(image_pos)
+    else:
+        world1b = world1
+        world2b = world2
+        world3b = world3
+
+    # Test writing the image to a fits file and reading it back in.
+    # The new image doesn't have to have the same wcs type.  But it does have to produce
+    # consistent values of the world coordinates.
+    test_name = 'test_' + name + '.fits'
+    im.write(test_name, dir=dir)
+    im2 = galsim.fits.read(test_name, dir=dir)
+    #print 'im2.wcs = ',im2.wcs
     np.testing.assert_equal(im2.origin().x, im.origin().x, "origin changed after write/read")
     np.testing.assert_equal(im2.origin().y, im.origin().y, "origin changed after write/read")
-    check_world(im2.wcs.toWorld(im.origin()), world1, digits,
+    check_world(im2.wcs.toWorld(im.origin()), world1b, digits,
                 "World position of origin is wrong after write/read.")
     np.testing.assert_almost_equal(im2(im.origin()), value1, digits,
                                    "Image value at origin is wrong after write/read.")
-    check_world(im2.wcs.toWorld(im.center()), world2, digits,
+    check_world(im2.wcs.toWorld(im.center()), world2b, digits,
                 "World position of center is wrong after write/read.")
     np.testing.assert_almost_equal(im2(im.center()), value2, digits,
                                    "Image value at center is wrong after write/read.")
-    check_world(im2.wcs.toWorld(image_pos), world3, digits,
+    check_world(im2.wcs.toWorld(image_pos), world3b, digits,
                 "World position of image_pos is wrong after write/read.")
     np.testing.assert_almost_equal(im2(image_pos), value3, digits,
                                    "Image value at center is wrong after write/read.")
@@ -260,19 +270,19 @@ def do_wcs_image(wcs, name):
 
     im.write(test_name, dir=dir)
     im2 = galsim.fits.read(test_name, dir=dir)
-    print 'im.wcs = ',im.wcs
-    print 'im2.wcs = ',im2.wcs
+    #print 'im.wcs = ',im.wcs
+    #print 'im2.wcs = ',im2.wcs
     np.testing.assert_equal(im2.origin().x, im.origin().x, "origin changed after write/read")
     np.testing.assert_equal(im2.origin().y, im.origin().y, "origin changed after write/read")
-    check_world(im2.wcs.toWorld(im.origin()), world1, digits,
+    check_world(im2.wcs.toWorld(im.origin()), world1b, digits,
                 "World position of origin is wrong after write/read.")
     np.testing.assert_almost_equal(im2(im.origin()), value1, digits,
                                    "Image value at origin is wrong after write/read.")
-    check_world(im2.wcs.toWorld(im.center()), world2, digits,
+    check_world(im2.wcs.toWorld(im.center()), world2b, digits,
                 "World position of center is wrong after write/read.")
     np.testing.assert_almost_equal(im2(im.center()), value2, digits,
                                    "Image value at center is wrong after write/read.")
-    check_world(im2.wcs.toWorld(image_pos), world3, digits,
+    check_world(im2.wcs.toWorld(image_pos), world3b, digits,
                 "World position of image_pos is wrong after write/read.")
     np.testing.assert_almost_equal(im2(image_pos), value3, digits,
                                    "Image value at center is wrong after write/read.")
@@ -300,19 +310,19 @@ def do_wcs_image(wcs, name):
 
     im.write(test_name, dir=dir)
     im2 = galsim.fits.read(test_name, dir=dir)
-    print 'im.wcs = ',im.wcs
-    print 'im2.wcs = ',im2.wcs
+    #print 'im.wcs = ',im.wcs
+    #print 'im2.wcs = ',im2.wcs
     np.testing.assert_equal(im2.origin().x, im.origin().x, "origin changed after write/read")
     np.testing.assert_equal(im2.origin().y, im.origin().y, "origin changed after write/read")
-    check_world(im2.wcs.toWorld(im.origin()), world1, digits,
+    check_world(im2.wcs.toWorld(im.origin()), world1b, digits,
                 "World position of origin is wrong after write/read.")
     np.testing.assert_almost_equal(im2(im.origin()), value1, digits,
                                    "Image value at origin is wrong after write/read.")
-    check_world(im2.wcs.toWorld(im.center()), world2, digits,
+    check_world(im2.wcs.toWorld(im.center()), world2b, digits,
                 "World position of center is wrong after write/read.")
     np.testing.assert_almost_equal(im2(im.center()), value2, digits,
                                    "Image value at center is wrong after write/read.")
-    check_world(im2.wcs.toWorld(image_pos), world3, digits,
+    check_world(im2.wcs.toWorld(image_pos), world3b, digits,
                 "World position of image_pos is wrong after write/read.")
     np.testing.assert_almost_equal(im2(image_pos), value3, digits,
                                    "Image value at center is wrong after write/read.")
@@ -340,19 +350,19 @@ def do_wcs_image(wcs, name):
 
     im.write(test_name, dir=dir)
     im2 = galsim.fits.read(test_name, dir=dir)
-    print 'im.wcs = ',im.wcs
-    print 'im2.wcs = ',im2.wcs
+    #print 'im.wcs = ',im.wcs
+    #print 'im2.wcs = ',im2.wcs
     np.testing.assert_equal(im2.origin().x, im.origin().x, "origin changed after write/read")
     np.testing.assert_equal(im2.origin().y, im.origin().y, "origin changed after write/read")
-    check_world(im2.wcs.toWorld(im.origin()), world1, digits,
+    check_world(im2.wcs.toWorld(im.origin()), world1b, digits,
                 "World position of origin is wrong after write/read.")
     np.testing.assert_almost_equal(im2(im.origin()), value1, digits,
                                    "Image value at origin is wrong after write/read.")
-    check_world(im2.wcs.toWorld(im.center()), world2, digits,
+    check_world(im2.wcs.toWorld(im.center()), world2b, digits,
                 "World position of center is wrong after write/read.")
     np.testing.assert_almost_equal(im2(im.center()), value2, digits,
                                    "Image value at center is wrong after write/read.")
-    check_world(im2.wcs.toWorld(image_pos), world3, digits,
+    check_world(im2.wcs.toWorld(image_pos), world3b, digits,
                 "World position of image_pos is wrong after write/read.")
     np.testing.assert_almost_equal(im2(image_pos), value3, digits,
                                    "Image value at center is wrong after write/read.")
@@ -361,7 +371,7 @@ def do_wcs_image(wcs, name):
 
 def do_local_wcs(wcs, ufunc, vfunc, name):
 
-    #print 'Start testing local WCS '+name
+    print 'Start testing local WCS '+name
     #print 'wcs = ',wcs
 
     # Check that local and setOrigin work correctly:
@@ -459,7 +469,7 @@ def do_local_wcs(wcs, ufunc, vfunc, name):
 
 def do_nonlocal_wcs(wcs, ufunc, vfunc, name):
 
-    #print 'Start testing non-local WCS '+name
+    print 'Start testing non-local WCS '+name
     #print 'wcs = ',wcs
 
     # Check that setOrigin and local work correctly:
@@ -568,7 +578,7 @@ def do_celestial_wcs(wcs, name):
     # (usually) we don't have an exact formula to compare with.  So the tests here
     # are a bit sparer.
 
-    #print 'Start testing celestial WCS '+name
+    print 'Start testing celestial WCS '+name
     #print 'wcs = ',wcs
     global digits
 
@@ -598,8 +608,6 @@ def do_celestial_wcs(wcs, name):
     orig_digits = digits
     if max_scale > 100:  # arcsec
         digits = 2
-    else:
-        digits = 4
 
     for x0,y0 in zip(near_x_list, near_y_list):
         image_pos = galsim.PositionD(x0,y0)
@@ -665,6 +673,8 @@ def test_pixelscale():
     import time
     t1 = time.time()
 
+    global digits
+    digits = 6
     scale = 0.23
     wcs = galsim.PixelScale(scale)
 
@@ -747,6 +757,8 @@ def test_shearwcs():
     import time
     t1 = time.time()
 
+    global digits
+    digits = 6
     scale = 0.23
     g1 = 0.14
     g2 = -0.37
@@ -837,6 +849,8 @@ def test_affinetransform():
     import time
     t1 = time.time()
 
+    global digits
+    digits = 6
     # First a simple tweak on a simple scale factor
     dudx = 0.2342
     dudy = 0.0023
@@ -987,8 +1001,10 @@ def test_uvfunction():
     import time
     t1 = time.time()
 
-    # First make some that are identical to simpler WCS classes:
+    global digits
+    digits = 6
 
+    # First make some that are identical to simpler WCS classes:
     # 1. Like PixelScale
     scale = 0.17
     ufunc = lambda x,y: x * scale
@@ -1055,8 +1071,6 @@ def test_uvfunction():
 
     # 5. Now some non-trivial 3rd order radial function.
     # This is only designed to be accurate to 5 digits, rather than usual 6.
-    global digits
-    orig_digits = digits
     digits = 5
     image_origin = galsim.PositionD(x0,y0)
     wcs = galsim.UVFunction(radial_u, radial_v, image_origin)
@@ -1100,8 +1114,6 @@ def test_uvfunction():
     ufunc = lambda x,y: cubic_u(x-x0, y-y0)
     vfunc = lambda x,y: cubic_v(x-x0, y-y0)
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'Cubic object UVFunction')
-    # Return digits to original value
-    digits = orig_digits
 
     # Check that using a wcs in the context of an image works correctly
     #do_wcs_image(wcs, 'UVFunction_object')
@@ -1116,8 +1128,10 @@ def test_radecfunction():
     import time
     t1 = time.time()
 
-    # Do a sterographic projection of the above UV functions around a given reference point.
+    global digits
+    digits = 6
 
+    # Do a sterographic projection of the above UV functions around a given reference point.
     funcs = []
 
     scale = 0.17
@@ -1310,6 +1324,7 @@ def test_radecfunction():
 def do_ref(wcs, ref_list, approx=False):
     """Test that the given wcs object correctly converts the reference positions
     """
+    global digits
     for ref in ref_list:
         ra = galsim.HMS_Angle(ref[0])
         dec = galsim.DMS_Angle(ref[1])
@@ -1322,15 +1337,14 @@ def do_ref(wcs, ref_list, approx=False):
         ref_coord = galsim.CelestialCoord(ra,dec)
         coord = wcs.toWorld(galsim.PositionD(x,y))
         dist = ref_coord.distanceTo(coord) / galsim.arcsec
-        np.testing.assert_almost_equal(dist, 0, 4, 'wcs.toWorld differed from expected value')
+        np.testing.assert_almost_equal(dist, 0, digits, 'wcs.toWorld differed from expected value')
 
         # Normally, we check the agreement to 1.e-4 arcsec.
         # However, we allow the caller to indicate the that inverse transform is
         # only approximate.  In this case, we only check to 2 digits.
+        orig_digits = digits
         if approx:
             digits = 2
-        else:
-            digits = 4
 
         # Check world -> image
         pos = wcs.toImage(galsim.CelestialCoord(ra,dec))
@@ -1339,6 +1353,7 @@ def do_ref(wcs, ref_list, approx=False):
                                        'wcs.toImage differed from expected value')
         np.testing.assert_almost_equal((y-pos.y)*pixel_scale, 0, digits,
                                        'wcs.toImage differed from expected value')
+        digits = orig_digits
 
 def test_astropywcs():
     """Test the AstropyWCS class
@@ -1360,6 +1375,8 @@ def test_astropywcs():
         test_tags = [ 'TAN' ]
 
     dir = 'fits_files'
+    global digits
+    digits = 4
     for tag in test_tags:
         file_name, ref_list = references[tag]
         print tag,' file_name = ',file_name
@@ -1369,7 +1386,7 @@ def test_astropywcs():
 
         do_celestial_wcs(wcs, 'Astropy file '+file_name)
 
-        #do_wcs_image(wcs, 'AstropyWCS_'+tag
+        do_wcs_image(wcs, 'AstropyWCS_'+tag)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1394,6 +1411,8 @@ def test_pyastwcs():
         test_tags = [ 'TPV' ]
 
     dir = 'fits_files'
+    global digits
+    digits = 4
     for tag in test_tags:
         file_name, ref_list = references[tag]
         print tag,' file_name = ',file_name
@@ -1406,7 +1425,7 @@ def test_pyastwcs():
 
         do_celestial_wcs(wcs, 'PyAst file '+file_name)
 
-        #do_wcs_image(wcs, 'PyAstWCS_'+tag
+        do_wcs_image(wcs, 'PyAstWCS_'+tag, affine_io=True)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1432,6 +1451,8 @@ def test_wcstools():
         print 'Unable to execute xy2sky.  Skipping WcsToolsWCS tests.'
         return
 
+    global digits
+    digits = 4
     for tag in test_tags:
         file_name, ref_list = references[tag]
         print tag,' file_name = ',file_name
@@ -1449,7 +1470,7 @@ def test_wcstools():
 
         do_celestial_wcs(wcs, 'WcsToolsWCS '+file_name)
 
-        #do_wcs_image(wcs, 'WCSToolsWCS_'+tag
+        do_wcs_image(wcs, 'WcsToolsWCS_'+tag)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

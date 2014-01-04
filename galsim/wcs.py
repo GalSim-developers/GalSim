@@ -523,9 +523,9 @@ class BaseWCS(object):
         header["GS_YMIN"] = (bounds.ymin, "GalSim image minimum y coordinate")
         if self._is_local:
             # Make it non-local...
-            self.setOrigin(self.image_origin)._writeHeader(header, bounds)
+            return self.setOrigin(self.image_origin)._writeHeader(header, bounds)
         else:
-            self._writeHeader(header, bounds)
+            return self._writeHeader(header, bounds)
 
 
 
@@ -999,7 +999,7 @@ class OffsetWCS(BaseWCS):
         header["GS_Y0"] = (self.image_origin.y, "GalSim image origin y")
         header["GS_U0"] = (self.world_origin.x, "GalSim world origin u")
         header["GS_V0"] = (self.world_origin.y, "GalSim world origin v")
-        self.affine()._writeLinearWCS(header, bounds)
+        return self.affine()._writeLinearWCS(header, bounds)
 
     @staticmethod
     def _readHeader(header):
@@ -1108,7 +1108,7 @@ class OffsetShearWCS(BaseWCS):
         header["GS_Y0"] = (self.image_origin.y, "GalSim image origin y coordinate")
         header["GS_U0"] = (self.world_origin.x, "GalSim world origin u coordinate")
         header["GS_V0"] = (self.world_origin.y, "GalSim world origin v coordinate")
-        self.affine()._writeLinearWCS(header, bounds)
+        return self.affine()._writeLinearWCS(header, bounds)
 
     @staticmethod
     def _readHeader(header):
@@ -1220,23 +1220,20 @@ class AffineTransform(BaseWCS):
 
     def _writeHeader(self, header, bounds):
         header["GS_WCS"] = ("AffineTransform", "Galsim WCS name")
-        self._writeLinearWCS(header, bounds)
+        return self._writeLinearWCS(header, bounds)
 
     def _writeLinearWCS(self, header, bounds):
         header["CTYPE1"] = ("LINEAR", "name of the world coordinate axis")
         header["CTYPE2"] = ("LINEAR", "name of the world coordinate axis")
-        header["CRVAL1"] = (self.world_origin.x,
-                      "world coordinate at reference pixel")
-        header["CRVAL2"] = (self.world_origin.y,
-                      "world coordinate at reference pixel")
-        header["CRPIX1"] = (self.image_origin.x,
-                      "image coordinate of reference pixel")
-        header["CRPIX2"] = (self.image_origin.y,
-                      "image coordinate of reference pixel")
+        header["CRVAL1"] = (self.world_origin.x, "world coordinate at reference pixel")
+        header["CRVAL2"] = (self.world_origin.y, "world coordinate at reference pixel")
+        header["CRPIX1"] = (self.image_origin.x, "image coordinate of reference pixel")
+        header["CRPIX2"] = (self.image_origin.y, "image coordinate of reference pixel")
         header["CD1_1"] = (self.dudx, "CD1_1 = dudx")
         header["CD1_2"] = (self.dudy, "CD1_2 = dudy")
         header["CD2_1"] = (self.dvdx, "CD2_1 = dvdx")
         header["CD2_2"] = (self.dvdy, "CD2_2 = dvdy")
+        return header
 
     @staticmethod
     def _readHeader(header):
@@ -1738,6 +1735,26 @@ class AstropyWCS(BaseWCS):
     def _setOrigin(self, image_origin):
         return AstropyWCS(wcs=self._wcs, image_origin=image_origin)
 
+    def _writeHeader(self, header, bounds):
+        # Make a new header with the contents of this WCS.
+        # Note: relax = True means to write out non-standard FITS types.
+        # Weirdly, this is the default when reading the header, but not when writing.
+        h = self._wcs.to_header(relax=True)
+        # Add in whatever was already written to the header dict.
+        h.update(header)
+        # And write the name as a special GalSim key
+        h["GS_WCS"] = ("AstropyWCS", "Galsim WCS name")
+        # Finally, update the CRPIX items if necessary.
+        h["CRPIX1"] = h["CRPIX1"] + self.image_origin.x
+        h["CRPIX2"] = h["CRPIX2"] + self.image_origin.y
+        return h
+
+    @staticmethod
+    def _readHeader(header):
+        import astropy.wcs
+        wcs = astropy.wcs.WCS(header)
+        return AstropyWCS(wcs=wcs)
+
     def copy(self):
         return AstropyWCS(wcs=self._wcs, image_origin=self.image_origin)
 
@@ -1803,8 +1820,8 @@ class PyAstWCS(BaseWCS):
         self._is_celestial = True
         import starlink.Ast
         import starlink.Atl
-        # Note: More much of this class implementation, I've followed the example provided here:
-        #    http://dsberry.github.io/starlink/node4.html
+        # Note: For much of this class implementation, I've followed the example provided here:
+        #       http://dsberry.github.io/starlink/node4.html
         self._tag = None # Write something useful here.
         if file_name is not None:
             self._tag = file_name
@@ -1905,6 +1922,46 @@ class PyAstWCS(BaseWCS):
     def _setOrigin(self, image_origin):
         return PyAstWCS(wcsinfo=self._wcsinfo, image_origin=image_origin)
 
+    def _writeHeader(self, header, bounds):
+        # I can't figure out how to get starlink.Ast to write the contents out to a fits
+        # header.  I thought the following would work.  But at the end, the line 
+        # h = hdu.header raises a `ValueError: The keyword '' is not in the header`. 
+        # I've tried a bunch of permutations of this but not found anything that works.
+        # 
+        # So for now, I'm wrapping this in a try block and if it fails, I just write the
+        # AffineTransform version instead.  Note: if this is a bug in starlink and they 
+        # fix it, then it will cause a unit test to fail, so we'll notice and maybe be
+        # able to do something about it.  Like check for a version number or something.
+        try:
+            from galsim import pyfits
+            hdu = pyfits.PrimaryHDU()
+            import starlink.Ast
+            fitschan = starlink.Ast.FitsChan( None, starlink.Atl.PyFITSAdapter(hdu) )
+            fitschan.write(self._wcsinfo)
+            fitschan.writefits()
+            h = hdu.header
+
+            # Add in whatever was already written to the header dict.
+            h.update(header)
+            # And write the name as a special GalSim key
+            h["GS_WCS"] = ("PyAstWCS", "Galsim WCS name")
+            # Finally, update the CRPIX items if necessary.
+            h["CRPIX1"] = h["CRPIX1"] + self.image_origin.x
+            h["CRPIX2"] = h["CRPIX2"] + self.image_origin.y
+            return h
+        except:
+            return self.affine(bounds.trueCenter())._writeHeader(header, bounds)
+
+    @staticmethod
+    def _readHeader(header):
+        from galsim import pyfits
+        hdu = pyfits.PrimaryHDU()
+        hdu.header = header
+        import starlink.Ast
+        fitschan = starlink.Ast.FitsChan( starlink.Atl.PyFITSAdapter(hdu) )
+        wcsinfo = fitschan.read()
+        return PyAstWCS(wcsinfo=wcsinfo)
+ 
     def copy(self):
         return PyAstWCS(wcsinfo=self._wcsinfo, image_origin=self.image_origin)
 
@@ -2088,6 +2145,38 @@ class WcsToolsWCS(BaseWCS):
 
     def _setOrigin(self, image_origin):
         return WcsToolsWCS(self._file_name, image_origin=image_origin)
+
+    def _writeHeader(self, header, bounds):
+        # These are all we need to load it back.  Just use the original file.
+        header["GS_WCS"]  = ("WcsToolsWCS", "Galsim WCS name")
+        header["GS_FILE"] = (self._file_name, "GalSim original file with WCS data")
+        header["GS_X0"] = (self.image_origin.x, "GalSim image origin x")
+        header["GS_Y0"] = (self.image_origin.y, "GalSim image origin y")
+
+        # We also copy over some of the fields we need.  wcstools doesn't seem to have something
+        # that lists _all_ the keys that define the WCS.  This just gets the approximate WCS.
+        import subprocess
+        p = subprocess.Popen(['wcshead', self._file_name], stdout=subprocess.PIPE)
+        results = p.communicate()[0]
+        p.stdout.close()
+        v = results.split()
+        header["CTYPE1"] = v[3]
+        header["CTYPE2"] = v[4]
+        header["CRVAL1"] = v[5]
+        header["CRVAL2"] = v[6]
+        header["CRPIX1"] = v[8]
+        header["CRPIX2"] = v[9]
+        header["CDELT1"] = v[10]
+        header["CDELT2"] = v[11]
+        header["CROTA2"] = v[12]
+        return header
+
+    @staticmethod
+    def _readHeader(header):
+        file = header["GS_FILE"]
+        x0 = header["GS_X0"]
+        y0 = header["GS_Y0"]
+        return WcsToolsWCS(file, image_origin=galsim.PositionD(x0,y0))
 
     def copy(self):
         return WcsToolsWCS(self._file_name, image_origin=self.image_origin)
