@@ -1932,10 +1932,13 @@ class PyAstWCS(BaseWCS):
         # AffineTransform version instead.  Note: if this is a bug in starlink and they 
         # fix it, then it will cause a unit test to fail, so we'll notice and maybe be
         # able to do something about it.  Like check for a version number or something.
+        #
+        # Update: I've posted an issue about this on the starlink github page:
+        # https://github.com/Starlink/starlink/issues/24
         try:
             from galsim import pyfits
-            hdu = pyfits.PrimaryHDU()
             import starlink.Ast
+            hdu = pyfits.PrimaryHDU()
             fitschan = starlink.Ast.FitsChan( None, starlink.Atl.PyFITSAdapter(hdu) )
             fitschan.write(self._wcsinfo)
             fitschan.writefits()
