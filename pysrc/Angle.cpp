@@ -67,6 +67,7 @@ struct PyAngle {
             .def(bp::self >= bp::self)
             .def(bp::self > bp::self)
             .def(str(bp::self))
+            .enable_pickling()
             ;
     }
 

@@ -163,6 +163,15 @@ galsim.Angle.__neg__ = __neg__
 galsim.Angle.hms = hms
 galsim.Angle.dms = dms
 
+# Enable pickling
+def Angle_getstate(self):
+    return self.rad()
+def Angle_setstate(self, theta):
+    self.__init__(theta, galsim.radians)
+galsim.Angle.__getstate__ = Angle_getstate
+galsim.Angle.__setstate__ = Angle_setstate
+
+
 def get_angle_unit(unit):
     """Convert a string into the corresponding AngleUnit
     """
