@@ -627,8 +627,7 @@ class GSObject(object):
         # If image already exists, and its wcs is not a PixelScale, then we're all set.
         # No need to run through the rest of this.  (And in fact, trying to access 
         # image.scale would raise an exception.)
-        if (image is not None and image.wcs is not None and 
-                not isinstance(image.wcs, galsim.PixelScale)):
+        if image is not None and image.wcs is not None and not image.wcs.isPixelScale():
             # Clear the image if we are not adding to it.
             if not add_to_image:
                 image.setZero()
@@ -740,11 +739,16 @@ class GSObject(object):
             shape = image.array.shape
 
         if scale is None:
-            if (image is not None and image.wcs is not None and 
-                    (not isinstance(image.wcs, galsim.PixelScale) or image.scale > 0.)):
-                # Make sure we are using a local wcs
-                obj_cen = self._obj_center(image, offset, use_true_center)
-                wcs = image.wcs.local(image_pos=obj_cen)
+            if image is not None and image.wcs is not None:
+                if image.wcs.isPixelScale():
+                    if image.scale <= 0:
+                        wcs = galsim.PixelScale(self.SBProfile.nyquistDx())
+                    else:
+                        wcs = image.wcs.local()
+                else:
+                    # Not a PixelScale.  Just make sure we are using a local wcs
+                    obj_cen = self._obj_center(image, offset, use_true_center)
+                    wcs = image.wcs.local(image_pos=obj_cen)
             else:
                 wcs = galsim.PixelScale(self.SBProfile.nyquistDx())
         elif scale <= 0:

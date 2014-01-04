@@ -335,7 +335,15 @@ namespace galsim {
     struct CalculateCenter<T, U, true>
     {
         static Position<U> call(const Bounds<T>& b)
-        { return Position<U>((b.getXMin()+b.getXMax()+1)/U(2),(b.getYMin()+b.getYMax()+1)/U(2)); }
+        {
+            // Write it this way to make sure the integer rounding goes the same way regardless
+            // of whether the values are positive or negative.
+            // e.g. (1,10,1,10) -> (6,6)
+            //      (-10,-1,-10,-1) -> (-5,-5)
+            // Just up and to the right of the true center in both cases.
+            return Position<U>(b.getXMin() + (b.getXMax()-b.getXMin()+1)/U(2),
+                               b.getYMin() + (b.getYMax()-b.getYMin()+1)/U(2)); 
+        }
     };
 
     template <class T>

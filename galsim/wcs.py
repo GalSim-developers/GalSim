@@ -89,7 +89,7 @@ class BaseWCS(object):
       coordinate system.
 
                 world_pos1 = wcs.toWorld(PositionD(0,0))
-                shifted = wcs.atOrigin(image_origin)
+                shifted = wcs.setOrigin(image_origin)
                 world_pos2 = shifted.toWorld(image_origin)
                 # world_pos1 should be equal to world_pos2
 
@@ -112,6 +112,7 @@ class BaseWCS(object):
                 wcs.isLocal()       # is this a local WCS?
                 wcs.isUniform()     # does this WCS have a uniform pixel size/shape?
                 wcs.isCelestial()   # are the world coordinates on the celestial sphere?
+                wcs.isPixelScale()  # is this a PixelScale or OffsetWCS?
     """
     def __init__(self):
         raise TypeError("BaseWCS is an abstract base class.  It cannot be instantiated.")
@@ -123,7 +124,7 @@ class BaseWCS(object):
         #     _is_celestial     boolean variable declaring whether the world coords are celestial
         #     _posToWorld       function converting image_pos to world_pos
         #     _posToImage       function converting world_pos to image_pos
-        #     _atOrigin         function returning a version with a new origin (or origins).
+        #     _setOrigin        function returning a version with a new origin (or origins).
         #     copy              return a copy
         #     __eq__            check if this equals another WCS object
         #     __ne__            check if this is not equal to another WCS object
@@ -165,13 +166,27 @@ class BaseWCS(object):
                world_profile = wcs.toWorld(image_profile, image_pos=None, world_pos=None)
         """
         if isinstance(arg, galsim.GSObject):
-            return self.local(**kwargs)._profileToWorld(arg)
+            return self.profileToWorld(arg, **kwargs)
         else:
-            if isinstance(arg, galsim.PositionI):
-                arg = galsim.PositionD(arg.x, arg.y)
-            elif not isinstance(arg, galsim.PositionD):
-                raise TypeError("toWorld requires a PositionD or PositionI argument")
-            return self._posToWorld(arg)
+            return self.posToWorld(arg, **kwargs)
+
+    def posToWorld(self, image_pos):
+        """Convert a position from image coordinates to world coordinates
+
+        This is equivalent to wcs.toWorld(image_pos).
+        """
+        if isinstance(image_pos, galsim.PositionI):
+            image_pos = galsim.PositionD(image_pos.x, image_pos.y)
+        elif not isinstance(image_pos, galsim.PositionD):
+            raise TypeError("toWorld requires a PositionD or PositionI argument")
+        return self._posToWorld(image_pos)
+
+    def profileToWorld(self, image_profile, image_pos=None, world_pos=None):
+        """Convert a profile from image coordinates to world coordinates
+
+        This is equivalent to wcs.toWorld(image_profile, ...).
+        """
+        return self.local(image_pos, world_pos)._profileToWorld(image_profile)
 
     def toImage(self, arg, **kwargs):
         """Convert from world coordinates to image coordinates
@@ -195,15 +210,29 @@ class BaseWCS(object):
                image_profile = wcs.toImage(world_profile, image_pos=None, world_pos=None)
         """
         if isinstance(arg, galsim.GSObject):
-            return self.local(**kwargs)._profileToImage(arg)
+            return self.profileToImage(arg, **kwargs)
         else:
-            if self._is_celestial and not isinstance(arg, galsim.CelestialCoord):
-                raise TypeError("toImage requires a CelestialCoord argument")
-            elif not self._is_celestial and isinstance(arg, galsim.PositionI):
-                arg = galsim.PositionD(arg.x, arg.y)
-            elif not self._is_celestial and not isinstance(arg, galsim.PositionD):
-                raise TypeError("toImage requires a PositionD or PositionI argument")
-            return self._posToImage(arg)
+            return self.posToImage(arg, **kwargs)
+
+    def posToImage(self, world_pos):
+        """Convert a position from world coordinates to image coordinates
+
+        This is equivalent to wcs.toImage(world_pos).
+        """
+        if self._is_celestial and not isinstance(world_pos, galsim.CelestialCoord):
+            raise TypeError("toImage requires a CelestialCoord argument")
+        elif not self._is_celestial and isinstance(world_pos, galsim.PositionI):
+            world_pos = galsim.PositionD(world_pos.x, world_pos.y)
+        elif not self._is_celestial and not isinstance(world_pos, galsim.PositionD):
+            raise TypeError("toImage requires a PositionD or PositionI argument")
+        return self._posToImage(world_pos)
+
+    def profileToImage(self, world_profile, image_pos=None, world_pos=None):
+        """Convert a profile from world coordinates to image coordinates
+
+        This is equivalent to wcs.toImage(world_profile, ...).
+        """
+        return self.local(image_pos, world_pos)._profileToImage(world_profile)
 
     def pixelArea(self, image_pos=None, world_pos=None):
         """Return the area of a pixel in arcsec**2 (or in whatever units you are using for
@@ -249,6 +278,16 @@ class BaseWCS(object):
         @returns            The maximum pixel area in any direction in arcsec
         """
         return self.local(image_pos, world_pos)._maxScale()
+
+    def isPixelScale(self):
+        """Return whether the WCS transformation is a simple PixelScale or OffsetWCS.
+
+        These are the simplest two WCS transformations.  PixelScale is local and OffsetWCS
+        is non-local.  If an Image object has one of these WCS transformations as its WCS,
+        then im.scale works to read and write the pixel scale.  If not, im.scale will
+        raise a TypeError exception.
+        """
+        return isinstance(self,PixelScale) or isinstance(self,OffsetWCS)
 
     def isLocal(self):
         """Return whether the WCS transformation is a local, linear approximation.
@@ -305,7 +344,7 @@ class BaseWCS(object):
         """
         return self.local(image_pos, world_pos)._toJacobian()
 
-    def atOrigin(self, image_origin, world_origin=None):
+    def setOrigin(self, image_origin, world_origin=None):
         """Recenter the current WCS function at a new origin location, returning the new WCS.
 
         This function creates a new WCS object (always to non-local WCS) that treats
@@ -316,7 +355,7 @@ class BaseWCS(object):
         So, for example, to set a WCS that has a constant pixel size with the world coordinates
         centered at the center of an image, you could write:
 
-                wcs = galsim.PixelScale(scale).atOrigin(im.center())
+                wcs = galsim.PixelScale(scale).setOrigin(im.center())
 
         This is equivalent to the following:
 
@@ -327,7 +366,7 @@ class BaseWCS(object):
         of what kind of WCS this is:
 
                 world_pos1 = wcs.toWorld(PositionD(0,0))
-                wcs2 = wcs.atOrigin(new_image_origin)
+                wcs2 = wcs.setOrigin(new_image_origin)
                 world_pos2 = wcs2.toWorld(new_image_origin)
                 # world_pos1 should be equal to world_pos2
 
@@ -335,12 +374,11 @@ class BaseWCS(object):
         you may also provide a world_origin argument which defines what (u,v) position you want
         to correspond to the new image_origin.  Continuing the previous example:
 
-                wcs3 = wcs.atOrigin(new_image_origin, new_world_origin)
+                wcs3 = wcs.setOrigin(new_image_origin, new_world_origin)
                 world_pos3 = wcs3.toWorld(new_image_origin)
                 # world_pos3 should be equal to new_world_origin
 
         @param image_origin  The image coordinate position to use as the origin.
-                             [ Default `image_origin=None` ]
         @param world_origin  The world coordinate position to use as the origin.  Only valid if
                              wcs.isUniform() == True.  [ Default `world_origin=None` ]
         @returns wcs         The new recentered WCS object
@@ -355,10 +393,10 @@ class BaseWCS(object):
         #     v = vfunc(x-x0, y-y0) + v0
         # where ufunc, vfunc represent the underlying wcs transformations.
         #
-        # The _atOrigin call is expecting new values for the (x0,y0) and (u0,v0), so
+        # The _setOrigin call is expecting new values for the (x0,y0) and (u0,v0), so
         # we need to figure out how to modify the parameters give the current values.
         #
-        #     Use (x1,y1) and (u1,v1) for the new values that we will pass to _atOrigin.
+        #     Use (x1,y1) and (u1,v1) for the new values that we will pass to _setOrigin.
         #     Use (x2,y2) and (u2,v2) for the values passed as arguments.
         #
         # If world_origin is None, we want the new functions to be:
@@ -411,11 +449,11 @@ class BaseWCS(object):
                 if not self._is_local:
                     world_origin += self.toWorld(galsim.PositionD(0,0))
                 world_origin -= self.toWorld(galsim.PositionD(0,0))
-            return self._atOrigin(image_origin, world_origin)
+            return self._setOrigin(image_origin, world_origin)
         else:
             if world_origin is not None:
                 raise TypeError("world_origin is invalid for non-uniform WCS classes")
-            return self._atOrigin(image_origin)
+            return self._setOrigin(image_origin)
 
 
 #########################################################################################
@@ -445,7 +483,7 @@ class BaseWCS(object):
 #     _minScale         function returning the minimum linear pixel scale
 #     _maxScale         function returning the maximum linear pixel scale
 #     _toJacobian       function returning an equivalent JacobianWCS
-#     _atOrigin         function returning a non-local WCS corresponding to this WCS
+#     _setOrigin        function returning a non-local WCS corresponding to this WCS
 #
 #########################################################################################
 
@@ -482,6 +520,11 @@ class PixelScale(BaseWCS):
     @property
     def scale(self): return self._scale
 
+    @property
+    def image_origin(self): return galsim.PositionD(0,0)
+    @property
+    def world_origin(self): return galsim.PositionD(0,0)
+
     def _posToWorld(self, image_pos):
         return galsim.PositionD(image_pos.x * self._scale, image_pos.y * self._scale)
 
@@ -506,7 +549,7 @@ class PixelScale(BaseWCS):
     def _toJacobian(self):
         return JacobianWCS(self._scale, 0., 0., self._scale)
 
-    def _atOrigin(self, image_origin, world_origin):
+    def _setOrigin(self, image_origin, world_origin):
         return OffsetWCS(self._scale, image_origin, world_origin)
 
     def copy(self):
@@ -565,6 +608,11 @@ class ShearWCS(BaseWCS):
     @property
     def shear(self): return self._shear
 
+    @property
+    def image_origin(self): return galsim.PositionD(0,0)
+    @property
+    def world_origin(self): return galsim.PositionD(0,0)
+
     def _posToWorld(self, image_pos):
         u = image_pos.x * (1.+self._g1) + image_pos.y * self._g2
         v = image_pos.y * (1.-self._g1) + image_pos.x * self._g2
@@ -612,7 +660,7 @@ class ShearWCS(BaseWCS):
             self._g2 * self._scale * self._gfactor,
             (1.-self._g1) * self._scale * self._gfactor)
 
-    def _atOrigin(self, image_origin, world_origin):
+    def _setOrigin(self, image_origin, world_origin):
         return OffsetShearWCS(self._scale, self._shear, image_origin, world_origin)
 
     def copy(self):
@@ -675,6 +723,11 @@ class JacobianWCS(BaseWCS):
     @property
     def dvdy(self): return self._dvdy
 
+    @property
+    def image_origin(self): return galsim.PositionD(0,0)
+    @property
+    def world_origin(self): return galsim.PositionD(0,0)
+
     def _posToWorld(self, image_pos):
         x = image_pos.x
         y = image_pos.y
@@ -734,7 +787,7 @@ class JacobianWCS(BaseWCS):
     def _toJacobian(self):
         return self
 
-    def _atOrigin(self, image_origin, world_origin):
+    def _setOrigin(self, image_origin, world_origin):
         return AffineTransform(self._dudx, self._dudy, self._dvdx, self._dvdy, image_origin,
                                world_origin)
 
@@ -861,7 +914,7 @@ class OffsetWCS(BaseWCS):
     def _local(self, image_pos, world_pos):
         return PixelScale(self._scale)
 
-    def _atOrigin(self, image_origin, world_origin):
+    def _setOrigin(self, image_origin, world_origin):
         return OffsetWCS(self._scale, image_origin, world_origin)
 
     def copy(self):
@@ -950,7 +1003,7 @@ class OffsetShearWCS(BaseWCS):
     def _local(self, image_pos, world_pos):
         return self._shearwcs
 
-    def _atOrigin(self, image_origin, world_origin):
+    def _setOrigin(self, image_origin, world_origin):
         return OffsetShearWCS(self.scale, self.shear, image_origin, world_origin)
 
     def copy(self):
@@ -1045,7 +1098,7 @@ class AffineTransform(BaseWCS):
     def _local(self, image_pos, world_pos):
         return self._jacwcs
 
-    def _atOrigin(self, image_origin, world_origin):
+    def _setOrigin(self, image_origin, world_origin):
         return AffineTransform(self.dudx, self.dudy, self.dvdx, self.dvdy,
                                image_origin, world_origin)
 
@@ -1129,6 +1182,7 @@ class UVFunction(BaseWCS):
     def ufunc(self): return self._ufunc
     @property
     def vfunc(self): return self._vfunc
+
     @property
     def image_origin(self): return galsim.PositionD(self._x0, self._y0)
     @property
@@ -1165,7 +1219,7 @@ class UVFunction(BaseWCS):
 
         return JacobianWCS(dudx, dudy, dvdx, dvdy)
 
-    def _atOrigin(self, image_origin, world_origin):
+    def _setOrigin(self, image_origin, world_origin):
         return UVFunction(self._ufunc, self._vfunc, image_origin, world_origin)
 
     def copy(self):
@@ -1266,6 +1320,7 @@ class RaDecFunction(BaseWCS):
     def rafunc(self): return self._rafunc
     @property
     def decfunc(self): return self._decfunc
+
     @property
     def image_origin(self): return galsim.PositionD(self._x0, self._y0)
 
@@ -1298,7 +1353,7 @@ class RaDecFunction(BaseWCS):
 
         return makeJacFromNumericalRaDec(ra, dec, dx, dy)
 
-    def _atOrigin(self, image_origin):
+    def _setOrigin(self, image_origin):
         return RaDecFunction(self._rafunc, self._decfunc, image_origin)
 
     def copy(self):
@@ -1408,6 +1463,7 @@ class AstropyWCS(BaseWCS):
 
     @property
     def wcs(self): return self._wcs
+
     @property
     def image_origin(self): return galsim.PositionD(self._x0, self._y0)
 
@@ -1530,7 +1586,7 @@ class AstropyWCS(BaseWCS):
 
         return makeJacFromNumericalRaDec(ra, dec, dx, dy)
 
-    def _atOrigin(self, image_origin):
+    def _setOrigin(self, image_origin):
         return AstropyWCS(wcs=self._wcs, image_origin=image_origin)
 
     def copy(self):
@@ -1649,6 +1705,7 @@ class PyAstWCS(BaseWCS):
 
     @property
     def wcsinfo(self): return self._wcsinfo
+
     @property
     def image_origin(self): return galsim.PositionD(self._x0, self._y0)
 
@@ -1696,7 +1753,7 @@ class PyAstWCS(BaseWCS):
         dec = [ d * galsim.radians / galsim.degrees for d in dec ]
         return makeJacFromNumericalRaDec(ra, dec, dx, dy)
 
-    def _atOrigin(self, image_origin):
+    def _setOrigin(self, image_origin):
         return PyAstWCS(wcsinfo=self._wcsinfo, image_origin=image_origin)
 
     def copy(self):
@@ -1773,6 +1830,7 @@ class WcsToolsWCS(BaseWCS):
 
     @property
     def file_name(self): return self._file_name
+
     @property
     def image_origin(self): return galsim.PositionD(self._x0, self._y0)
 
@@ -1879,7 +1937,7 @@ class WcsToolsWCS(BaseWCS):
 
         return makeJacFromNumericalRaDec(ra, dec, dx, dy)
 
-    def _atOrigin(self, image_origin):
+    def _setOrigin(self, image_origin):
         return WcsToolsWCS(self._file_name, image_origin=image_origin)
 
     def copy(self):

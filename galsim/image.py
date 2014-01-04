@@ -307,22 +307,23 @@ class Image(object):
     @property
     def array(self): return self.image.array
 
-
     # Allow scale to work as a PixelScale wcs.
     @property
     def scale(self): 
         if self.wcs:
-            if not isinstance(self.wcs, galsim.PixelScale):
+            if self.wcs.isPixelScale():
+                return self.wcs.scale
+            else:
                 raise TypeError("image.wcs is not a simple PixelScale; scale is undefined.")
-            return self.wcs.scale
         else:
             return None
 
     @scale.setter
     def scale(self, value):
-        if self.wcs and not isinstance(self.wcs, galsim.PixelScale):
+        if self.wcs is not None and not self.wcs.isPixelScale():
             raise TypeError("image.wcs is not a simple PixelScale; scale is undefined.")
-        self.wcs = galsim.PixelScale(value)
+        else:
+            self.wcs = galsim.PixelScale(value)
 
     # Convenience functions
     @property
@@ -391,10 +392,9 @@ class Image(object):
         Or you can provide dx, dy as named kwargs.
         """
         delta = galsim.utilities.parse_pos_args(args, kwargs, 'dx', 'dy', integer=True)
-        print 'start shift delta = ',delta
-        print 'bounds = ',self.image.bounds
         self.image.shift(delta)
-        print 'after shift: bounds = ',self.image.bounds
+        if self.wcs is not None:
+            self.wcs = self.wcs.setOrigin(galsim.PositionD(delta.x,delta.y))
 
     def setCenter(self, *args, **kwargs):
         """Set the center of the image to the given (integral) (xcen, ycen)
@@ -403,7 +403,7 @@ class Image(object):
         Or you can provide xcen, ycen as named kwargs.
         """
         cen = galsim.utilities.parse_pos_args(args, kwargs, 'xcen', 'ycen', integer=True)
-        self.image.shift(cen - self.image.bounds.center())
+        self.shift(cen - self.image.bounds.center())
 
     def setOrigin(self, *args, **kwargs):
         """Set the origin of the image to the given (integral) (x0, y0)
@@ -412,7 +412,7 @@ class Image(object):
         Or you can provide x0, y0 as named kwargs.
         """
         origin = galsim.utilities.parse_pos_args(args, kwargs, 'x0', 'y0', integer=True)
-        self.image.shift(origin - self.image.bounds.origin())
+        self.shift(origin - self.image.bounds.origin())
 
     def center(self):
         """Return the current nominal center of the image.  This is a PositionI instance,
@@ -421,7 +421,7 @@ class Image(object):
 
         e.g the nominal center of an image with bounds (1,32,1,32) will be (17, 17).
         """
-        return self.image.bounds.center()
+        return self.bounds.center()
 
     def trueCenter(self):
         """Return the current true center of the image.  This is a PositionD instance,
@@ -429,14 +429,14 @@ class Image(object):
         
         e.g the true center of an image with bounds (1,32,1,32) will be (16.5, 16.5).
         """
-        return self.image.bounds.trueCenter()
+        return self.bounds.trueCenter()
 
     def origin(self):
         """Return the origin of the image.  i.e. the position of the lower-left pixel.
 
         e.g the origin of an image with bounds (1,32,1,32) will be (1, 1).
         """
-        return self.image.bounds.origin()
+        return self.bounds.origin()
 
     def __call__(self, *args, **kwargs):
         """Get the pixel value at given position 
@@ -621,9 +621,6 @@ def check_image_consistency(im1, im2):
          type(im2) in _galsim.ConstImageView.values()):
         if im1.array.shape != im2.array.shape:
             raise ValueError("Image shapes are inconsistent")
-    if isinstance(im2, Image):
-        if im1.wcs != im2.wcs:
-            raise ValueError("Image wcs attributes are different")
 
 def Image_add(self, other):
     result = self.copy()

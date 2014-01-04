@@ -129,6 +129,9 @@ all_tags = [ 'HPX', 'TAN', 'TSC', 'ZPN', 'SIP', 'TPV', 'ZPX', 'TAN-PV', 'REGION'
 
 
 def do_wcs_pos(wcs, ufunc, vfunc, name):
+    # I would call this do_wcs_pos_tests, but nosetests takes any function with test 
+    # _anywhere_ in the name an tries to run it.  So make sure the name doesn't 
+    # have 'test' in it.  There are a bunch of other do* functions that work similarly.
 
     #print 'start do_wcs_pos for ',name, wcs
     # Check that (x,y) -> (u,v) and converse work correctly
@@ -177,45 +180,133 @@ def do_wcs_pos(wcs, ufunc, vfunc, name):
             'wcs.toWorld gave different value with PositionI image_pos for '+name)
 
 
+def check_world(pos1, pos2, digits, err_msg):
+    try:
+        x = pos1.x
+        y = pos2.y
+    except AttributeError:
+        np.testing.assert_almost_equal(pos1.distanceTo(pos2) / galsim.arcsec, 0, digits, err_msg)
+    else:
+        np.testing.assert_almost_equal(pos1.x, pos2.x, digits, err_msg)
+        np.testing.assert_almost_equal(pos1.y, pos2.y, digits, err_msg)
+
+def do_wcs_image(wcs, name):
+    
+    print 'Start image tests for WCS '+name
+    print 'wcs = ',wcs
+
+    # Use the "blank" image as our test image.  It's not blank in the sense of having all
+    # zeros.  Rather, there are basically random values that we can use to test that 
+    # the shifted values are correct.  And it is a conveniently small-ish, non-square image.
+    dir = 'fits_files'
+    file_name = 'blankimg.fits'
+    im = galsim.fits.read(file_name, dir=dir)
+    im.wcs = wcs
+    world1 = im.wcs.toWorld(im.origin())
+    value1 = im(im.origin())
+    world2 = im.wcs.toWorld(im.center())
+    value2 = im(im.center())
+    offset = galsim.PositionI(11,13)
+    image_pos = im.origin() + offset
+    world3 = im.wcs.toWorld(image_pos)
+    value3 = im(image_pos)
+    np.testing.assert_equal(im.origin().x, 1, "initial origin is not 1,1 as expected")
+    np.testing.assert_equal(im.origin().y, 1, "initial origin is not 1,1 as expected")
+
+    dx = 3
+    dy = 9
+    im.shift(3,9)
+    image_pos = im.origin() + offset
+    np.testing.assert_equal(im.origin().x, 1+dx, "shift set origin to wrong value")
+    np.testing.assert_equal(im.origin().y, 1+dy, "shift set origin to wrong value")
+    check_world(im.wcs.toWorld(im.origin()), world1, digits,
+                "World position of origin after shift is wrong.")
+    np.testing.assert_almost_equal(im(im.origin()), value1, digits,
+                                   "Image value at origin after shift is wrong.")
+    check_world(im.wcs.toWorld(im.center()), world2, digits,
+                "World position of center after shift is wrong.")
+    np.testing.assert_almost_equal(im(im.center()), value2, digits,
+                                   "Image value at center after shift is wrong.")
+    check_world(im.wcs.toWorld(image_pos), world3, digits,
+                "World position of image_pos after shift is wrong.")
+    np.testing.assert_almost_equal(im(image_pos), value3, digits,
+                                   "Image value at center after shift is wrong.")
+
+    new_origin = (-3432, 1907)
+    im.setOrigin(new_origin)
+    image_pos = im.origin() + offset
+    np.testing.assert_equal(im.origin().x, new_origin[0], "setOrigin set origin to wrong value")
+    np.testing.assert_equal(im.origin().y, new_origin[1], "setOrigin set origin to wrong value")
+    check_world(im.wcs.toWorld(im.origin()), world1, digits,
+                "World position of origin after setOrigin is wrong.")
+    np.testing.assert_almost_equal(im(im.origin()), value1, digits,
+                                   "Image value at origin after setOrigin is wrong.")
+    check_world(im.wcs.toWorld(im.center()), world2, digits,
+                "World position of center after setOrigin is wrong.")
+    np.testing.assert_almost_equal(im(im.center()), value2, digits,
+                                   "Image value at center after setOrigin is wrong.")
+    check_world(im.wcs.toWorld(image_pos), world3, digits,
+                "World position of image_pos after setOrigin is wrong.")
+    np.testing.assert_almost_equal(im(image_pos), value3, digits,
+                                   "Image value at center after setOrigin is wrong.")
+
+    new_center = galsim.PositionI(0,0)
+    im.setCenter(new_center)
+    image_pos = im.origin() + offset
+    np.testing.assert_equal(im.center().x, new_center.x, "setCenter set center to wrong value")
+    np.testing.assert_equal(im.center().y, new_center.y, "setCenter set center to wrong value")
+    check_world(im.wcs.toWorld(im.origin()), world1, digits,
+                "World position of origin after setCenter is wrong.")
+    np.testing.assert_almost_equal(im(im.origin()), value1, digits,
+                                   "Image value at origin after setCenter is wrong.")
+    check_world(im.wcs.toWorld(im.center()), world2, digits,
+                "World position of center after setCenter is wrong.")
+    np.testing.assert_almost_equal(im(im.center()), value2, digits,
+                                   "Image value at center after setCenter is wrong.")
+    check_world(im.wcs.toWorld(image_pos), world3, digits,
+                "World position of image_pos after setCenter is wrong.")
+    np.testing.assert_almost_equal(im(image_pos), value3, digits,
+                                   "Image value at center after setCenter is wrong.")
+
 
 def do_local_wcs(wcs, ufunc, vfunc, name):
-    # I would call this do_local_wcs_tests, but nosetests takes any function with test 
-    # _anywhere_ in the name an tries to run it.  So make sure the name doesn't 
-    # have 'test' in it.
 
     #print 'Start testing local WCS '+name
     #print 'wcs = ',wcs
 
-    # Check that local and atOrigin work correctly:
+    # Check that local and setOrigin work correctly:
     wcs2 = wcs.local()
     assert wcs == wcs2, name+' local() is not == the original'
     new_image_origin = galsim.PositionI(123,321)
-    wcs3 = wcs.atOrigin(new_image_origin)
-    assert wcs != wcs3, name+' is not != wcs.atOrigin(pos)'
-    assert wcs3 != wcs, name+' is not != wcs.atOrigin(pos) (reverse)'
+    wcs3 = wcs.setOrigin(new_image_origin)
+    assert wcs != wcs3, name+' is not != wcs.setOrigin(pos)'
+    assert wcs3 != wcs, name+' is not != wcs.setOrigin(pos) (reverse)'
     wcs2 = wcs3.local()
-    assert wcs == wcs2, name+' is not equal after wcs.atOrigin(pos).local()'
+    assert wcs == wcs2, name+' is not equal after wcs.setOrigin(pos).local()'
     world_pos1 = wcs.toWorld(galsim.PositionD(0,0))
     world_pos2 = wcs3.toWorld(new_image_origin)
     np.testing.assert_almost_equal(
             world_pos2.x, world_pos1.x, digits,
-            'atOrigin(new_image_origin) returned wrong world position')
+            'setOrigin(new_image_origin) returned wrong world position')
     np.testing.assert_almost_equal(
             world_pos2.y, world_pos1.y, digits,
-            'atOrigin(new_image_origin) returned wrong world position')
+            'setOrigin(new_image_origin) returned wrong world position')
     new_world_origin = galsim.PositionD(5352.7, 9234.3)
-    wcs5 = wcs.atOrigin(new_image_origin, new_world_origin)
+    wcs5 = wcs.setOrigin(new_image_origin, new_world_origin)
     world_pos3 = wcs5.toWorld(new_image_origin)
     np.testing.assert_almost_equal(
             world_pos3.x, new_world_origin.x, digits,
-            'atOrigin(new_image_origin, new_world_origin) returned wrong position')
+            'setOrigin(new_image_origin, new_world_origin) returned wrong position')
     np.testing.assert_almost_equal(
             world_pos3.y, new_world_origin.y, digits,
-            'atOrigin(new_image_origin, new_world_origin) returned wrong position')
+            'setOrigin(new_image_origin, new_world_origin) returned wrong position')
 
  
     # Check that (x,y) -> (u,v) and converse work correctly
     do_wcs_pos(wcs, ufunc, vfunc, name)
+
+    # Check that using a wcs in the context of an image works correctly
+    do_wcs_image(wcs, name)
 
     # Test the transformation of a GSObject
     # These only work for local WCS projections!
@@ -285,44 +376,47 @@ def do_nonlocal_wcs(wcs, ufunc, vfunc, name):
     #print 'Start testing non-local WCS '+name
     #print 'wcs = ',wcs
 
-    # Check that atOrigin and local work correctly:
+    # Check that setOrigin and local work correctly:
     new_image_origin = galsim.PositionI(123,321)
-    wcs3 = wcs.atOrigin(new_image_origin)
-    assert wcs != wcs3, name+' is not != wcs.atOrigin(pos)'
+    wcs3 = wcs.setOrigin(new_image_origin)
+    assert wcs != wcs3, name+' is not != wcs.setOrigin(pos)'
     wcs4 = wcs.local(wcs.image_origin)
     assert wcs != wcs4, name+' is not != wcs.local()'
     assert wcs4 != wcs, name+' is not != wcs.local() (reverse)'
     world_origin = wcs.toWorld(wcs.image_origin)
     if wcs.isUniform():
         if wcs.world_origin == galsim.PositionD(0,0):
-            wcs2 = wcs.local(wcs.image_origin).atOrigin(wcs.image_origin)
-            assert wcs == wcs2, name+' is not equal after wcs.local().atOrigin(image_origin)'
-        wcs2 = wcs.local(wcs.image_origin).atOrigin(wcs.image_origin, wcs.world_origin)
-        assert wcs == wcs2, name+' not equal after wcs.local().atOrigin(image_origin,world_origin)'
+            wcs2 = wcs.local(wcs.image_origin).setOrigin(wcs.image_origin)
+            assert wcs == wcs2, name+' is not equal after wcs.local().setOrigin(image_origin)'
+        wcs2 = wcs.local(wcs.image_origin).setOrigin(wcs.image_origin, wcs.world_origin)
+        assert wcs == wcs2, name+' not equal after wcs.local().setOrigin(image_origin,world_origin)'
     world_pos1 = wcs.toWorld(galsim.PositionD(0,0))
-    wcs3 = wcs.atOrigin(new_image_origin)
+    wcs3 = wcs.setOrigin(new_image_origin)
     world_pos2 = wcs3.toWorld(new_image_origin)
     np.testing.assert_almost_equal(
             world_pos2.x, world_pos1.x, digits,
-            'atOrigin(new_image_origin) returned wrong world position')
+            'setOrigin(new_image_origin) returned wrong world position')
     np.testing.assert_almost_equal(
             world_pos2.y, world_pos1.y, digits,
-            'atOrigin(new_image_origin) returned wrong world position')
+            'setOrigin(new_image_origin) returned wrong world position')
     if wcs.isUniform():
         new_world_origin = galsim.PositionD(5352.7, 9234.3)
-        wcs5 = wcs.atOrigin(new_image_origin, new_world_origin)
+        wcs5 = wcs.setOrigin(new_image_origin, new_world_origin)
         world_pos3 = wcs5.toWorld(new_image_origin)
         np.testing.assert_almost_equal(
                 world_pos3.x, new_world_origin.x, digits,
-                'atOrigin(new_image_origin, new_world_origin) returned wrong position')
+                'setOrigin(new_image_origin, new_world_origin) returned wrong position')
         np.testing.assert_almost_equal(
                 world_pos3.y, new_world_origin.y, digits,
-                'atOrigin(new_image_origin, new_world_origin) returned wrong position')
+                'setOrigin(new_image_origin, new_world_origin) returned wrong position')
 
 
     # Check that (x,y) -> (u,v) and converse work correctly
     # These tests work regardless of whether the WCS is local or not.
     do_wcs_pos(wcs, ufunc, vfunc, name)
+
+    # Check that using a wcs in the context of an image works correctly
+    do_wcs_image(wcs, name)
 
     # The GSObject transformation tests are only valid for a local WCS. 
     # But it should work for wcs.local()
@@ -393,19 +487,22 @@ def do_celestial_wcs(wcs, name):
     #print 'wcs = ',wcs
     global digits
 
-    # Check that atOrigin and local work correctly:
+    # Check that setOrigin and local work correctly:
     new_image_origin = galsim.PositionI(123,321)
-    wcs3 = wcs.atOrigin(new_image_origin)
-    assert wcs != wcs3, name+' is not != wcs.atOrigin(pos)'
+    wcs3 = wcs.setOrigin(new_image_origin)
+    assert wcs != wcs3, name+' is not != wcs.setOrigin(pos)'
     wcs4 = wcs.local(wcs.image_origin)
     assert wcs != wcs4, name+' is not != wcs.local()'
     assert wcs4 != wcs, name+' is not != wcs.local() (reverse)'
     world_pos1 = wcs.toWorld(galsim.PositionD(0,0))
-    wcs3 = wcs.atOrigin(new_image_origin)
+    wcs3 = wcs.setOrigin(new_image_origin)
     world_pos2 = wcs3.toWorld(new_image_origin)
     np.testing.assert_almost_equal(
             world_pos2.distanceTo(world_pos1) / galsim.arcsec, 0, digits,
-            'atOrigin(new_image_origin) returned wrong world position')
+            'setOrigin(new_image_origin) returned wrong world position')
+
+    # Check that using a wcs in the context of an image works correctly
+    do_wcs_image(wcs, name)
 
     world_origin = wcs.toWorld(wcs.image_origin)
 
@@ -476,6 +573,7 @@ def do_celestial_wcs(wcs, name):
                         'world_profile and image_profile differed when drawn for '+name)
             except NotImplementedError:
                 pass
+
     digits = orig_digits
 
 
@@ -1228,7 +1326,7 @@ def test_wcstools():
         # Recenter (x,y) = (0,0) at the image center to avoid wcstools warnings about going
         # off the image.
         im = galsim.fits.read(file_name, dir=dir)
-        wcs = wcs.atOrigin(image_origin = -im.bounds.center())
+        wcs = wcs.setOrigin(image_origin = -im.bounds.center())
 
         do_celestial_wcs(wcs, 'WcsToolsWCS '+file_name)
 

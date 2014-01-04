@@ -113,6 +113,11 @@ def parse_pos_args(args, kwargs, name1, name2, integer=False, others=[]):
     If there are other args/kwargs to parse after these, then their names should be 
     be given as the parameter `others`, which are passed back in a tuple after the position.
     """
+    def canindex(arg):
+        try: arg[0], arg[1]
+        except: return False
+        else: return True
+
     other_vals = []
     if len(args) == 0:
         # Then name1,name2 need to be kwargs
@@ -127,14 +132,14 @@ def parse_pos_args(args, kwargs, name1, name2, integer=False, others=[]):
         for arg in args[1:]:
             other_vals.append(arg)
             others.pop(0)
-    elif hasattr(args[0], '__getitem__') and len(args) < 1+len(others):
+    elif canindex(args[0]) and len(args) <= 1+len(others):
         x = args[0][0]
         y = args[0][1]
         for arg in args[1:]:
             other_vals.append(arg)
             others.pop(0)
     elif len(args) == 1:
-        raise TypeError("Cannot parse argument "+str(arg)+" as a position")
+        raise TypeError("Cannot parse argument "+str(args[0])+" as a position")
     elif len(args) <= 2 + len(others):
         x = args[0]
         y = args[1]
