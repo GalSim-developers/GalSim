@@ -1038,7 +1038,7 @@ def test_uvfunction():
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction with string funcs')
 
     # Check that using a wcs in the context of an image works correctly
-    #do_wcs_image(wcs, 'UVFunction_string')
+    do_wcs_image(wcs, 'UVFunction_string')
 
     # 4. Next some UVFunctions with non-trivial offsets
     x0 = 1.3
@@ -1055,7 +1055,7 @@ def test_uvfunction():
     do_nonlocal_wcs(wcs, ufunc2, vfunc2, 'UVFunction with origin arguments')
 
     # Check that using a wcs in the context of an image works correctly
-    #do_wcs_image(wcs, 'UVFunction_lambda')
+    do_wcs_image(wcs, 'UVFunction_lambda')
 
     # Check basic copy and == , != for UVFunction
     wcs2 = wcs.copy()
@@ -1104,7 +1104,7 @@ def test_uvfunction():
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'Cubic radial UVFunction')
 
     # Check that using a wcs in the context of an image works correctly
-    #do_wcs_image(wcs, 'UVFunction_func')
+    do_wcs_image(wcs, 'UVFunction_func')
 
     # Repeat with a function object rather than a regular function.
     # Use a different `a` parameter for u and v to make things more interesting.
@@ -1116,7 +1116,7 @@ def test_uvfunction():
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'Cubic object UVFunction')
 
     # Check that using a wcs in the context of an image works correctly
-    #do_wcs_image(wcs, 'UVFunction_object')
+    do_wcs_image(wcs, 'UVFunction_object')
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1316,7 +1316,8 @@ def test_radecfunction():
                                  str(center.dec/galsim.degrees))
 
     # Check that using a wcs in the context of an image works correctly
-    #do_wcs_image(wcs, 'RaDecFunction')
+    # (Uses the last wcs2 set in the above loops.)
+    do_wcs_image(wcs2, 'RaDecFunction')
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
