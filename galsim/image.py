@@ -360,7 +360,9 @@ class Image(object):
         if not isinstance(bounds, galsim.BoundsI):
             raise TypeError("bounds must be a galsim.BoundsI instance")
         subimage = self.image.subImage(bounds)
-        # TODO: Make sure new WCS is correct for the subImage.  Not trivial!
+        # NB. The wcs is still accurate, since the sub-image uses the same (x,y) values
+        # as the original image did for those pixels.  It's only once you recenter or 
+        # reorigin that you need to update the wcs.  So that's taken care of in im.shift.
         return Image(image=subimage, wcs=self.wcs)
 
     def __getitem__(self, bounds):

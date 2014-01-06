@@ -141,9 +141,10 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             >>> correlated_noise.applyTo(image)
 
         On output the Image instance `image` will have been given additional noise according to the
-        given CorrelatedNoise instance `correlated_noise`.  image.scale is used to determine
-        the input image pixel separation, and if image.scale <= 0 a pixel scale of 1 is
-        assumed.
+        given CorrelatedNoise instance `correlated_noise`.  Normally, image.scale is used to 
+        determine the input image pixel separation, and if image.scale <= 0 a pixel scale of 1 is
+        assumed.  If the image has a non-trivial WCS, it must at least be "uniform".  i.e.
+        `image.wcs.isUniform() == True`. 
 
         Note that the correlated noise field in `image` will be periodic across its boundaries: this
         is due to the fact that the internals of the CorrelatedNoise currently use a relatively
@@ -174,17 +175,17 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # Set profile_for_stored for next time.
         self._profile_for_stored = self._profile
 
-        if image.wcs is not None and not isinstance(image.wcs, galsim.PixelScale):
-            raise NotImplementedError("Sorry, correlated noise cannot (yet) be applied to an "+
-                                      "image with a non-trivial WCS.")
+        if image.wcs is not None and not image.wcs.isUniform():
+            raise NotImplementedError("Sorry, correlated noise cannot be applied to an "+
+                                      "image with a non-uniform WCS.")
 
         # Then retrieve or redraw the sqrt(power spectrum) needed for making the noise field
-        rootps = self._get_update_rootps(image.array.shape, image.scale)
+        rootps = self._get_update_rootps(image.array.shape, image.wcs)
 
         # Finally generate a random field in Fourier space with the right PS
         noise_array = _generate_noise_from_rootps(self.getRNG(), rootps)
         # Add it to the image
-        image += galsim.Image(noise_array, scale=image.scale)
+        image += galsim.Image(noise_array, wcs=image.wcs)
         return image
 
     def applyToView(self, image_view):
@@ -213,8 +214,9 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         Note that the code doesn't check that the "if" above is true: the user MUST make sure this 
         is the case for the final noise to be uncorrelated.
 
-        image.scale is used to determine the input image pixel separation, and if 
-        image.scale <= 0 a pixel scale of 1 is assumed.
+        Normally, image.scale is used to determine the input image pixel separation, and if 
+        image.wcs is None, a pixel scale of 1 is assumed.  If the image has a non-trivial WCS, it 
+        must at least be "uniform".  i.e.  `image.wcs.isUniform() == True`. 
 
         If you are interested in a theoretical calculation of the variance in the final noise field
         after whitening, the applyWhiteningTo() method in fact returns this variance.  For example:
@@ -270,11 +272,11 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # Then retrieve or redraw the sqrt(power spectrum) needed for making the whitening noise,
         # and the total variance of the combination
         rootps_whitening, variance = self._get_update_rootps_whitening(
-            image.array.shape, image.scale)
+            image.array.shape, image.wcs)
 
         # Finally generate a random field in Fourier space with the right PS and add to image
         noise_array = _generate_noise_from_rootps(self.getRNG(), rootps_whitening)
-        image += galsim.Image(noise_array, scale=image.scale)
+        image += galsim.Image(noise_array)
 
         # Return the variance to the interested user
         return variance
@@ -336,6 +338,16 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         """
         self._profile.applyShear(*args, **kwargs)
 
+    def applyTransformation(self, dudx, dudy, dvdx, dvdy):
+        """Apply an arbitrary jacobian transformation to this correlated noise model.
+         
+        @param dudx     du/dx, where (x,y) are the current coords, and (u,v) are the new coords.
+        @param dudy     du/dy, where (x,y) are the current coords, and (u,v) are the new coords.
+        @param dvdx     dv/dx, where (x,y) are the current coords, and (u,v) are the new coords.
+        @param dvdy     dv/dy, where (x,y) are the current coords, and (u,v) are the new coords.
+        """
+        self._profile.applyTransformation(dudx,dudy,dvdx,dvdy)
+
     # Also add methods which create a new _BaseCorrelatedNoise with the transformations applied...
     #
     def createExpanded(self, scale):
@@ -385,6 +397,23 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         """
         ret = self.copy()
         ret.applyShear(*args, **kwargs)
+        return ret
+
+    def createTransformed(self, dudx, dudy, dvdx, dvdy):
+        """Returns a new correlated noise model by applying a jacobian transformation.
+
+        The new instance will share the galsim.BaseDeviate random number generator with the parent.
+        Use the .setRNG() method after this operation if you wish to use a different random number
+        sequence.
+
+        @param dudx     du/dx, where (x,y) are the current coords, and (u,v) are the new coords.
+        @param dudy     du/dy, where (x,y) are the current coords, and (u,v) are the new coords.
+        @param dvdx     dv/dx, where (x,y) are the current coords, and (u,v) are the new coords.
+        @param dvdy     dv/dy, where (x,y) are the current coords, and (u,v) are the new coords.
+        @returns The transformed object.
+        """
+        ret = self.copy()
+        ret.applyTransformation(dudx,dudy,dvdx,dvdy)
         return ret
 
     def getVariance(self):
@@ -509,17 +538,19 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
 
         @return The covariance matrix (as an ImageD)
         """
+        # TODO: Allow this to take a JacobianWCS, rather than just a scale.
         return galsim._galsim._calculateCovarianceMatrix(self._profile.SBProfile, bounds, scale)
 
-    def _get_update_rootps(self, shape, scale):
+    def _get_update_rootps(self, shape, wcs):
         """Internal utility function for querying the rootps cache, used by applyTo and 
         applyWhiteningTo methods.
         """ 
         # First check whether we can just use a stored power spectrum (no drawing necessary if so)
         use_stored = False
-        for rootps_array, saved_scale in self._rootps_store:
+        for rootps_array, saved_wcs in self._rootps_store:
             if shape == rootps_array.shape:
-                if ((scale <= 0. and saved_scale == 1.) or (scale == saved_scale)):
+                if ( (wcs is None and saved_wcs.isPixelScale() and saved_wcs.sacle == 1.) or 
+                     wcs == saved_wcs ):
                     use_stored = True
                     rootps = rootps_array
                     break
@@ -528,14 +559,13 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # generate the required array of the square root of the power spectrum
         if use_stored is False:
             newcf = galsim.ImageD(shape[1], shape[0]) # set the corr func to be the correct size
-            # set the scale...
-            if scale <= 0.:
-                newcf.scale = 1. # New Images have scale() = 0 unless otherwise set.
+            # set the wcs...
+            if wcs is None:
+                newcf.scale = 1.
             else:
-                newcf.scale = scale
+                newcf.wcs = wcs
             # Then draw this correlation function into an array.
-            # Setting scale=None uses the newcf image scale set above.
-            self.draw(newcf, scale=None)
+            self.draw(newcf)
 
             # Since we just drew it, save the variance value for posterity.
             var = newcf(newcf.bounds.center())
@@ -548,12 +578,12 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             ps = np.fft.fft2(newcf.array)
             rootps = np.sqrt(np.abs(ps) * np.product(shape))
 
-            # Then add this and the relevant scale to the _rootps_store for later use
-            self._rootps_store.append((rootps, newcf.scale))
+            # Then add this and the relevant wcs to the _rootps_store for later use
+            self._rootps_store.append((rootps, newcf.wcs))
 
         return rootps
 
-    def _get_update_rootps_whitening(self, shape, scale, headroom=1.05):
+    def _get_update_rootps_whitening(self, shape, wcs, headroom=1.05):
         """Internal utility function for querying the rootps_whitening cache, used by the
         applyWhiteningTo method, and calculate & update it if not present.
 
@@ -561,9 +591,10 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         """ 
         # First check whether we can just use a stored whitening power spectrum
         use_stored = False
-        for rootps_whitening_array, saved_scale, var in self._rootps_whitening_store:
+        for rootps_whitening_array, saved_wcs, var in self._rootps_whitening_store:
             if shape == rootps_whitening_array.shape:
-                if ((scale <= 0. and saved_scale == 1.) or (scale == saved_scale)):
+                if ( (wcs is None and saved_wcs.isPixelScale() and saved_wcs.sacle == 1.) or 
+                     wcs == saved_wcs ):
                     use_stored = True
                     rootps_whitening = rootps_whitening_array
                     variance = var
@@ -576,7 +607,7 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
         # (and thus physical).
         if use_stored is False:
 
-            rootps = self._get_update_rootps(shape, scale)
+            rootps = self._get_update_rootps(shape, wcs)
             ps_whitening = -rootps * rootps
             ps_whitening += np.abs(np.min(ps_whitening)) * headroom # Headroom adds a little extra
             rootps_whitening = np.sqrt(ps_whitening)                # variance, for "safety"
@@ -587,8 +618,8 @@ class _BaseCorrelatedNoise(galsim.BaseNoise):
             # element we could use any as the PS should be flat
             variance = (rootps[0, 0]**2 + ps_whitening[0, 0]) / np.product(shape)
 
-            # Then add all this and the relevant scale to the _rootps_whitening_store
-            self._rootps_whitening_store.append((rootps_whitening, scale, variance))
+            # Then add all this and the relevant wcs to the _rootps_whitening_store
+            self._rootps_whitening_store.append((rootps_whitening, wcs, variance))
 
         return rootps_whitening, variance
 
