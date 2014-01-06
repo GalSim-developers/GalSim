@@ -299,20 +299,18 @@ def _writeDictToFitsHeader(h, fits_header):
     # a dict, which we then write to the actual fits header, making sure to do things 
     # correctly given the PyFits version.
     if pyfits_version < '3.1':
-        for key, value in h.iteritems():
-            if len(value) == 1:
-                fits_header.update(key, value[0])
-            else:
+        for key, value in sorted(h.items()):
+            try:
+                fits_header.update(key, value)
+            except:
                 fits_header.update(key, value[0], value[1])
-    elif pyfits_version < '4.0':
-        for key, value in h.iteritems():
-            if len(value) == 1:
-                fits_header.set(key, value[0])
-            else:
-                fits_header.set(key, value[0], value[1])
     else:
-        fits_header.update(h)
-    
+        for key, value in sorted(h.items()):
+            try:
+                fits_header.set(key, value)
+            except:
+                fits_header.set(key, value[0], value[1])
+
 def _wcsFromFitsHeader(header):
     xmin = header.get("GS_XMIN", 1)
     ymin = header.get("GS_YMIN", 1)
