@@ -1237,14 +1237,24 @@ class AffineTransform(BaseWCS):
 
     @staticmethod
     def _readHeader(header):
-        dudx = header["CD1_1"]
-        dudy = header["CD1_2"]
-        dvdx = header["CD2_1"]
-        dvdy = header["CD2_2"]
-        x0 = header["CRPIX1"]
-        y0 = header["CRPIX2"]
-        u0 = header["CRVAL1"]
-        v0 = header["CRVAL2"]
+        # We try to make this work to produce a linear WCS, no matter what kinds of key words
+        # are in the header.
+        if 'CD1_1' in header:
+            # The others should be too, but use get with a default to be safe
+            dudx = header.get("CD1_1",1.)
+            dudy = header.get("CD1_2",0.)
+            dvdx = header.get("CD2_1",0.)
+            dvdy = header.get("CD2_2",1.)
+        elif 'CDELT1' in header or 'CDELT2' in header:
+            dudx = header.get("CDELT1",1.)
+            dudy = 0.
+            dvdx = 0.
+            dvdy = header.get("CDELT2",1.)
+        x0 = header.get("CRPIX1",0.)
+        y0 = header.get("CRPIX2",0.)
+        u0 = header.get("CRVAL1",0.)
+        v0 = header.get("CRVAL2",0.)
+
         return AffineTransform(dudx, dudy, dvdx, dvdy, galsim.PositionD(x0,y0),
                                galsim.PositionD(u0,v0))
 
@@ -1689,7 +1699,6 @@ class AstropyWCS(BaseWCS):
         self._tag = None # Write something useful here.
         if file_name is not None:
             self._tag = file_name
-            from galsim import pyfits
             if header is not None:
                 raise TypeError("Cannot provide both file_name and pyfits header")
             if wcs is not None:
@@ -1698,7 +1707,7 @@ class AstropyWCS(BaseWCS):
             header = hdu.header
 
         if header is not None:
-            if self._tag is None: self._tag = str(header)
+            if self._tag is None: self._tag = 'header'
             if wcs is not None:
                 raise TypeError("Cannot provide both pyfits header and wcs")
             self._fix_header(header)
@@ -1713,9 +1722,21 @@ class AstropyWCS(BaseWCS):
         if wcs is None:
             raise TypeError("Must provide one of file_name, header, or wcs")
         else:
-            if self._tag is None: self._tag = str(wcs)
+            if self._tag is None: self._tag = 'wcs'
         if file_name is not None:
             galsim.fits.closeHDUList(hdu_list, fin)
+
+        # If astropy.wcs cannot parse the header, it won't notice from just doing the 
+        # WCS(header) command.  It will silently move on, thinking things are fine until
+        # later when if will fail (with `RuntimeError: NULL error object in wcslib`).
+        # We're rather get that to happen now rather than later.
+        try:
+            import warnings
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                ra, dec = wcs.all_pix2world( [ [0, 0] ], 1)[0]
+        except Exception as err:
+            raise RuntimeError("AstropyWCS was unable to read the WCS specification in the header.")
 
         self._wcs = wcs
         if image_origin == None:
@@ -1724,6 +1745,7 @@ class AstropyWCS(BaseWCS):
         else:
             self._x0 = image_origin.x
             self._y0 = image_origin.y
+
 
     @property
     def wcs(self): return self._wcs
@@ -1869,9 +1891,7 @@ class AstropyWCS(BaseWCS):
 
     @staticmethod
     def _readHeader(header):
-        import astropy.wcs
-        wcs = astropy.wcs.WCS(header)
-        return AstropyWCS(wcs=wcs)
+        return AstropyWCS(header=header)
 
     def copy(self):
         return AstropyWCS(wcs=self._wcs, image_origin=self.image_origin)
@@ -1946,7 +1966,6 @@ class PyAstWCS(BaseWCS):
         hdu = None
         if file_name is not None:
             self._tag = file_name
-            from galsim import pyfits
             if header is not None:
                 raise TypeError("Cannot provide both file_name and pyfits header")
             if wcsinfo is not None:
@@ -1955,19 +1974,20 @@ class PyAstWCS(BaseWCS):
             header = hdu.header
 
         if header is not None:
-            if self._tag is None: self._tag = str(header)
+            if self._tag is None: self._tag = 'header'
             if wcsinfo is not None:
                 raise TypeError("Cannot provide both pyfits header and wcsinfo")
             self._fix_header(header)
             # PyFITSAdapter requires an hdu, not a header, so if we were given a header directly,
             # then we need to mock it up.
             if hdu is None:
+                from galsim import pyfits
                 hdu = pyfits.PrimaryHDU()
                 hdu.header = header
             fitschan = starlink.Ast.FitsChan( starlink.Atl.PyFITSAdapter(hdu) )
             wcsinfo = fitschan.read()
         if wcsinfo is None:
-            if self._tag is None: self._tag = str(wcsinfo)
+            if self._tag is None: self._tag = 'wcsinfo'
             raise TypeError("Must provide one of file_name, header, or wcsinfo")
 
         #  Check that the FITS header contained WCS in a form that can be
@@ -2367,7 +2387,6 @@ class GSFitsWCS(BaseWCS):
         self._is_uniform = False
         self._is_celestial = True
         if file_name is not None:
-            from galsim import pyfits
             if header is not None:
                 raise TypeError("Cannot provide both file_name and pyfits header")
             hdu, hdu_list, fin = galsim.fits.readFile(file_name, dir, hdu, compression)
@@ -2649,7 +2668,6 @@ class GSFitsWCS(BaseWCS):
                     header["PV2_" + str(k)] = self.pv[1, j, i]
                     k = k + 1
                     if k == 3: k = k + 1
-
         return header
 
     @staticmethod
@@ -2681,5 +2699,82 @@ class GSFitsWCS(BaseWCS):
         return "GSFitsWCS(%r,%r,%r,%r,%r,%r,%r)"%(self.wcs_type, self.crpix, self.cd, self.center,
                                                   self.ra_units, self.dec_units, self.pv)
 
+
+
+# This is a list of all the WCS types that can potentially read a WCS from a FITS file.
+# The function FitsWCS will try each of these in order and return the first one that
+# succeeds.  AffineTransform should be last, since it will always succeed.
+# The list is defined here at global scope so that external modules can add extra
+# WCS types to the list if desired.
+
+fits_wcs_types = [ 
+
+    GSFitsWCS,      # This doesn't work for very many WCS types, but it works for the very common
+                    # TAN projection, and also TPV, which is used by SCamp.  If it does work, it 
+                    # is a good choice, since it is easily the fastest of any of these.
+
+    AstropyWCS,     # This requires `import astropy.wcs` to succeed.  So far, they only handle
+                    # the standard official WCS types.  So not TPV, for instance.
+
+    PyAstWCS,       # This requires `import starlink.Ast` to succeed.  This handles the largest
+                    # number of WCS types of any of these.  In fact, it worked for every one
+                    # we tried in our unit tests (which was not exhaustive).
+
+    WcsToolsWCS,    # This requires the wcstool command line functions to be installed.
+                    # It is very slow, so it should only be used as a last resort.
+
+    AffineTransform # Finally, this one is really the last resort, since it only reads in
+                    # the linear part of the WCS.  It defaults to the equivalent of a 
+                    # pixel scale of 1.0 if even these are not present.
+]
+
+def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto'):
+    """This factory function will try to read the WCS from a FITS file and return a WCS
+    object that will work.  It tries a number of different WCS classes until it finds one
+    that succeeds in reading the file.
+    
+    If none of them work, then the last class it tries, AffineTransform, is guaranteed to succeed, 
+    but it will only model the linear portion of the WCS (the CD matrix, CRPIX, and CRVAL), using 
+    reasonable defaults if even these are missing.
+
+    Note: The list of classes this function will try may be edited, e.g. by an external module 
+    that wants to add an additional WCS type.  The list is `galsim.wcs.fits_wcs_types`.
+
+    @param file_name      The FITS file from which to read the WCS information.  This is probably
+                          the usual parameter to provide.  [ Default: `file_name = None` ]
+    @param dir            Optional directory to prepend to the file name. [ Default `dir = None` ]
+    @param hdu            Optionally, the number of the HDU to use if reading from a file.
+                          The default is to use either the primary or first extension as 
+                          appropriate for the given compression.  (e.g. for rice, the first 
+                          extension is the one you normally want.) [ Default `hdu = None` ]
+    @param header         The header of an open pyfits (or astropy.io) hdu. 
+                          [ Default `header = None` ]
+    @param compression    Which decompression scheme to use (if any). See galsim.fits.read
+                          for the available options.  [ Default `compression = 'auto'` ]
+    """
+    if file_name is not None:
+        if header is not None:
+            raise TypeError("Cannot provide both file_name and pyfits header")
+        hdu, hdu_list, fin = galsim.fits.readFile(file_name, dir, hdu, compression)
+        header = hdu.header
+    else:
+        file_name = 'header' # For sensible error messages below.
+    if header is None:
+        raise TypeError("Must provide either file_name or header")
+
+    for type in fits_wcs_types:
+        try:
+            wcs = type._readHeader(header)
+            return wcs
+        except Exception as err:
+            pass
+    raise RuntimeError("All possible fits WCS types failed to read "+file_name)
+
+# Let this function work like a class in config.
+FitsWCS._req_params = { "file_name" : str }
+FitsWCS._opt_params = { "dir" : str, "hdu" : int, "compression" : str }
+FitsWCS._single_params = []
+FitsWCS._takes_rng = False
+FitsWCS._takes_logger = False
 
 

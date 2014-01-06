@@ -83,47 +83,47 @@ references = {
     # The ra, dec are thus essentially the same (modulo the large pixel size of 3 arcmin).
     # However, the image positions are quite different.
     'HPX' : ('1904-66_HPX.fits' , 
-            [ ('193916.551671', '-634247.346862', 114, 180, 13.5996),
-              ('181935.761589', '-634608.860203', 144, 30, 11.4959) ] ),
+            [ ('193916.551671', '-634247.346862', 114, 180, 13.59960),
+              ('181935.761589', '-634608.860203', 144, 30, 11.49591) ] ),
     'TAN' : ('1904-66_TAN.fits' ,
-            [ ('193930.753119', '-634259.217527', 117, 178, 13.4363),
-              ('181918.652839', '-634903.833411', 153, 35, 11.4444) ] ),
+            [ ('193930.753119', '-634259.217527', 117, 178, 13.43628),
+              ('181918.652839', '-634903.833411', 153, 35, 11.44438) ] ),
     'TSC' : ('1904-66_TSC.fits' , 
-            [ ('193939.996553', '-634114.585586', 113, 161, 12.4841),
-              ('181905.985494', '-634905.781036', 141, 48, 11.6595) ] ),
+            [ ('193939.996553', '-634114.585586', 113, 161, 12.48409),
+              ('181905.985494', '-634905.781036', 141, 48, 11.65945) ] ),
     'ZPN' : ('1904-66_ZPN.fits' ,
-            [ ('193924.948254', '-634643.636138', 95, 151, 12.8477),
-              ('181924.149409', '-634937.453404', 122, 48, 11.0143) ] ),
+            [ ('193924.948254', '-634643.636138', 95, 151, 12.84769),
+              ('181924.149409', '-634937.453404', 122, 48, 11.01434) ] ),
     'SIP' : ('sipsample.fits' ,
-            [ ('133001.474154', '471251.794474', 242, 75, 12.2444),
+            [ ('133001.474154', '471251.794474', 242, 75, 12.24437),
               ('132943.747626', '470913.879660', 12, 106, 5.30282) ] ),
     'TPV' : ('tpv.fits',
-            [ ('033009.340034', '-284350.811107', 418, 78, 2859.54),
-              ('033015.728999', '-284501.488629', 148, 393, 2957.99) ] ),
+            [ ('033009.340034', '-284350.811107', 418, 78, 2859.53882),
+              ('033015.728999', '-284501.488629', 148, 393, 2957.98584) ] ),
     # Strangely, zpx.fits is the same image as tpv.fits, but the WCS-computed RA, Dec 
     # values are not anywhere close to TELRA, TELDEC in the header.  It's a bit 
     # unfortunate, since my understanding is that ZPX can encode the same function as
     # TPV, so they could have produced the equivalent function.  But instead they just
     # inserted some totally off-the-wall different WCS transformation.
     'ZPX' : ('zpx.fits',
-            [ ('212412.094326', '371034.575917', 418, 78, 2859.54),
-              ('212405.350816', '371144.596579', 148, 393, 2957.99) ] ),
+            [ ('212412.094326', '371034.575917', 418, 78, 2859.53882),
+              ('212405.350816', '371144.596579', 148, 393, 2957.98584) ] ),
     # Older versions of the new TPV standard just used the TAN wcs name and expected
     # the code to notice the PV values and use them correctly.  This did not become a
     # FITS standard (or even a registered non-standard), but some old FITS files use
     # this, so we want to support it.  I just edited the tpv.fits to change the 
     # CTYPE values from TPV to TAN.
     'TAN-PV' : ('tanpv.fits',
-            [ ('033009.340034', '-284350.811107', 418, 78, 2859.54),
-              ('033015.728999', '-284501.488629', 148, 393, 2957.99) ] ),
+            [ ('033009.340034', '-284350.811107', 418, 78, 2859.53882),
+              ('033015.728999', '-284501.488629', 148, 393, 2957.98584) ] ),
     'REGION' : ('region.fits',
             [ ('140211.202432', '543007.702200', 80, 80, 2241),
               ('140417.341523', '541628.554326', 45, 54, 1227) ] ),
     # Strangely, ds9 seems to get this one wrong.  It differs by about 6 arcsec in dec.
     # But PyAst and wcstools agree on these values, so I'm taking them to be accurate.
     'TNX' : ('tnx.fits',
-            [ ('174653.214670', '-300854.377081', 8, 91, 7140),
-              ('174658.101300', '-300756.600123', 222, 326, 15022) ] ),
+            [ ('174653.214511', '-300847.895372', 32, 91, 7140),
+              ('174658.100741', '-300750.121787', 246, 326, 15022) ] ),
 }
 all_tags = [ 'HPX', 'TAN', 'TSC', 'ZPN', 'SIP', 'TPV', 'ZPX', 'TAN-PV', 'REGION', 'TNX' ]
 
@@ -1322,7 +1322,7 @@ def test_radecfunction():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def do_ref(wcs, ref_list, approx=False):
+def do_ref(wcs, ref_list, approx=False, image=None):
     """Test that the given wcs object correctly converts the reference positions
     """
     global digits
@@ -1356,6 +1356,10 @@ def do_ref(wcs, ref_list, approx=False):
                                        'wcs.toImage differed from expected value')
         digits = orig_digits
 
+        if image:
+            np.testing.assert_almost_equal(image(x,y), val, digits,
+                                           'image(x,y) differed from reference value')
+
 def test_astropywcs():
     """Test the AstropyWCS class
     """
@@ -1373,7 +1377,7 @@ def test_astropywcs():
     if __name__ == "__main__":
         test_tags = [ 'HPX', 'TAN', 'TSC', 'ZPN', 'SIP', 'REGION' ]
     else:
-        test_tags = [ 'TAN' ]
+        test_tags = [ 'SIP' ]
 
     dir = 'fits_files'
     global digits
@@ -1409,7 +1413,7 @@ def test_pyastwcs():
     if __name__ == "__main__":
         test_tags = [ 'HPX', 'TAN', 'TSC', 'ZPN', 'SIP', 'TPV', 'ZPX', 'TAN-PV', 'REGION', 'TNX' ]
     else:
-        test_tags = [ 'TPV' ]
+        test_tags = [ 'ZPX' ]
 
     dir = 'fits_files'
     global digits
@@ -1502,6 +1506,59 @@ def test_gsfitswcs():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_fitswcs():
+    """Test the FitsWCS factory function
+    """
+    import time
+    t1 = time.time()
+
+    if __name__ == "__main__":
+        # For more thorough unit tests (when running python test_wcs.py explicitly), this 
+        # will test everything.  If you don't have everything installed (especially 
+        test_tags = all_tags
+    else:
+        # These should always work, since GSFitsWCS will work on them.  So this 
+        # mostly just tests the basic interface of the FitsWCS function.
+        test_tags = [ 'TAN', 'TPV' ]
+
+    dir = 'fits_files'
+
+    global digits
+    digits = 4
+    for tag in test_tags:
+        file_name, ref_list = references[tag]
+        print tag,' file_name = ',file_name
+        wcs = galsim.FitsWCS(file_name, dir=dir)
+        print 'FitsWCS is really ',type(wcs)
+
+        if isinstance(wcs, galsim.AffineTransform):
+            import warnings
+            warnings.warn("None of the existing WCS classes were able to read "+file_name)
+        else:
+            approx = ( (tag == 'SIP' and isinstance(wcs, galsim.PyAstWCS)) or
+                       (tag in ['SIP', 'TPV'] and isinstance(wcs, galsim.WcsToolsWCS)) )
+            affine_io = isinstance(wcs, galsim.PyAstWCS)
+
+            do_ref(wcs, ref_list, approx)
+            do_celestial_wcs(wcs, 'FitsWCS '+file_name)
+            do_wcs_image(wcs, 'FitsWCS_'+tag, affine_io)
+
+            # Should also be able to build the file just from a fits.read() call, which 
+            # uses FitsWCS behind the scenes.
+            im = galsim.fits.read(file_name, dir=dir)
+            do_ref(im.wcs, ref_list, approx, im)
+
+        # Finally, also check that AffineTransform can read the file.
+        # We don't really have any accuracy checks here.  This really just checks that the
+        # read function doesn't raise an exception.
+        hdu, hdu_list, fin = galsim.fits.readFile(file_name, dir)
+        affine = galsim.AffineTransform._readHeader(hdu.header)
+        galsim.fits.closeHDUList(hdu_list, fin)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 if __name__ == "__main__":
     test_pixelscale()
     test_shearwcs()
@@ -1512,3 +1569,4 @@ if __name__ == "__main__":
     test_pyastwcs()
     test_wcstools()
     test_gsfitswcs()
+    test_fitswcs()

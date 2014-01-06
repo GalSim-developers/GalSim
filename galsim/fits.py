@@ -316,11 +316,13 @@ def _wcsFromFitsHeader(header):
     ymin = header.get("GS_YMIN", 1)
     origin = galsim.PositionI(xmin, ymin)
     wcs_name = header.get("GS_WCS", None)
-    if wcs_name is None:
-        wcs = galsim.PixelScale(1.0)
-    else:
+    if wcs_name:
         wcs_type = eval('galsim.' + wcs_name)
         wcs = wcs_type._readHeader(header)
+    elif 'CTYPE1' in header:
+        wcs = galsim.FitsWCS(header=header)
+    else:
+        wcs = galsim.PixelScale(1.)
     return wcs, origin
 
 # Unlike the other helpers, this one doesn't start with an underscore, since we make it 
