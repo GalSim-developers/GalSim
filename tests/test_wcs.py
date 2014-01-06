@@ -191,7 +191,7 @@ def check_world(pos1, pos2, digits, err_msg):
         np.testing.assert_almost_equal(pos1.x, pos2.x, digits, err_msg)
         np.testing.assert_almost_equal(pos1.y, pos2.y, digits, err_msg)
 
-def do_wcs_image(wcs, name, affine_io=False):
+def do_wcs_image(wcs, name, approx=False):
     
     print 'Start image tests for WCS '+name
     #print 'wcs = ',wcs
@@ -214,15 +214,12 @@ def do_wcs_image(wcs, name, affine_io=False):
     world3 = im.wcs.toWorld(image_pos)
     value3 = im(image_pos)
 
-    if affine_io:
-        affine = im.wcs.affine(im.trueCenter())
-        world1b = affine.toWorld(im.origin())
-        world2b = affine.toWorld(im.center())
-        world3b = affine.toWorld(image_pos)
+    if approx:
+        # Sometimes, the round trip doesn't preserve accuracy completely.
+        # In these cases, only test the positions after write/read to 1 digit.
+        digits2 = 1
     else:
-        world1b = world1
-        world2b = world2
-        world3b = world3
+        digits2 = digits
 
     # Test writing the image to a fits file and reading it back in.
     # The new image doesn't have to have the same wcs type.  But it does have to produce
@@ -233,15 +230,15 @@ def do_wcs_image(wcs, name, affine_io=False):
     #print 'im2.wcs = ',im2.wcs
     np.testing.assert_equal(im2.origin().x, im.origin().x, "origin changed after write/read")
     np.testing.assert_equal(im2.origin().y, im.origin().y, "origin changed after write/read")
-    check_world(im2.wcs.toWorld(im.origin()), world1b, digits,
+    check_world(im2.wcs.toWorld(im.origin()), world1, digits2,
                 "World position of origin is wrong after write/read.")
     np.testing.assert_almost_equal(im2(im.origin()), value1, digits,
                                    "Image value at origin is wrong after write/read.")
-    check_world(im2.wcs.toWorld(im.center()), world2b, digits,
+    check_world(im2.wcs.toWorld(im.center()), world2, digits2,
                 "World position of center is wrong after write/read.")
     np.testing.assert_almost_equal(im2(im.center()), value2, digits,
                                    "Image value at center is wrong after write/read.")
-    check_world(im2.wcs.toWorld(image_pos), world3b, digits,
+    check_world(im2.wcs.toWorld(image_pos), world3, digits2,
                 "World position of image_pos is wrong after write/read.")
     np.testing.assert_almost_equal(im2(image_pos), value3, digits,
                                    "Image value at center is wrong after write/read.")
@@ -274,15 +271,15 @@ def do_wcs_image(wcs, name, affine_io=False):
     #print 'im2.wcs = ',im2.wcs
     np.testing.assert_equal(im2.origin().x, im.origin().x, "origin changed after write/read")
     np.testing.assert_equal(im2.origin().y, im.origin().y, "origin changed after write/read")
-    check_world(im2.wcs.toWorld(im.origin()), world1b, digits,
+    check_world(im2.wcs.toWorld(im.origin()), world1, digits2,
                 "World position of origin is wrong after write/read.")
     np.testing.assert_almost_equal(im2(im.origin()), value1, digits,
                                    "Image value at origin is wrong after write/read.")
-    check_world(im2.wcs.toWorld(im.center()), world2b, digits,
+    check_world(im2.wcs.toWorld(im.center()), world2, digits2,
                 "World position of center is wrong after write/read.")
     np.testing.assert_almost_equal(im2(im.center()), value2, digits,
                                    "Image value at center is wrong after write/read.")
-    check_world(im2.wcs.toWorld(image_pos), world3b, digits,
+    check_world(im2.wcs.toWorld(image_pos), world3, digits2,
                 "World position of image_pos is wrong after write/read.")
     np.testing.assert_almost_equal(im2(image_pos), value3, digits,
                                    "Image value at center is wrong after write/read.")
@@ -314,15 +311,15 @@ def do_wcs_image(wcs, name, affine_io=False):
     #print 'im2.wcs = ',im2.wcs
     np.testing.assert_equal(im2.origin().x, im.origin().x, "origin changed after write/read")
     np.testing.assert_equal(im2.origin().y, im.origin().y, "origin changed after write/read")
-    check_world(im2.wcs.toWorld(im.origin()), world1b, digits,
+    check_world(im2.wcs.toWorld(im.origin()), world1, digits2,
                 "World position of origin is wrong after write/read.")
     np.testing.assert_almost_equal(im2(im.origin()), value1, digits,
                                    "Image value at origin is wrong after write/read.")
-    check_world(im2.wcs.toWorld(im.center()), world2b, digits,
+    check_world(im2.wcs.toWorld(im.center()), world2, digits2,
                 "World position of center is wrong after write/read.")
     np.testing.assert_almost_equal(im2(im.center()), value2, digits,
                                    "Image value at center is wrong after write/read.")
-    check_world(im2.wcs.toWorld(image_pos), world3b, digits,
+    check_world(im2.wcs.toWorld(image_pos), world3, digits2,
                 "World position of image_pos is wrong after write/read.")
     np.testing.assert_almost_equal(im2(image_pos), value3, digits,
                                    "Image value at center is wrong after write/read.")
@@ -354,15 +351,15 @@ def do_wcs_image(wcs, name, affine_io=False):
     #print 'im2.wcs = ',im2.wcs
     np.testing.assert_equal(im2.origin().x, im.origin().x, "origin changed after write/read")
     np.testing.assert_equal(im2.origin().y, im.origin().y, "origin changed after write/read")
-    check_world(im2.wcs.toWorld(im.origin()), world1b, digits,
+    check_world(im2.wcs.toWorld(im.origin()), world1, digits2,
                 "World position of origin is wrong after write/read.")
     np.testing.assert_almost_equal(im2(im.origin()), value1, digits,
                                    "Image value at origin is wrong after write/read.")
-    check_world(im2.wcs.toWorld(im.center()), world2b, digits,
+    check_world(im2.wcs.toWorld(im.center()), world2, digits2,
                 "World position of center is wrong after write/read.")
     np.testing.assert_almost_equal(im2(im.center()), value2, digits,
                                    "Image value at center is wrong after write/read.")
-    check_world(im2.wcs.toWorld(image_pos), world3b, digits,
+    check_world(im2.wcs.toWorld(image_pos), world3, digits2,
                 "World position of image_pos is wrong after write/read.")
     np.testing.assert_almost_equal(im2(image_pos), value3, digits,
                                    "Image value at center is wrong after write/read.")
@@ -1342,10 +1339,10 @@ def do_ref(wcs, ref_list, approx=False, image=None):
 
         # Normally, we check the agreement to 1.e-4 arcsec.
         # However, we allow the caller to indicate the that inverse transform is
-        # only approximate.  In this case, we only check to 2 digits.
+        # only approximate.  In this case, we only check to 1 digit.
         orig_digits = digits
         if approx:
-            digits = 2
+            digits = 1
 
         # Check world -> image
         pixel_scale = wcs.minLinearScale(galsim.PositionD(x,y))
@@ -1425,12 +1422,12 @@ def test_pyastwcs():
 
         # The PyAst implementation of the SIP type only gets the inverse transformation
         # approximately correct.  So we need to be a bit looser in that check.
-        approx = (tag == 'SIP')
+        approx = tag in [ 'SIP' , 'ZPX' ]
         do_ref(wcs, ref_list, approx)
 
         do_celestial_wcs(wcs, 'PyAst file '+file_name)
 
-        do_wcs_image(wcs, 'PyAstWCS_'+tag, affine_io=True)
+        do_wcs_image(wcs, 'PyAstWCS_'+tag, approx)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1465,7 +1462,7 @@ def test_wcstools():
 
         # The wcstools implementation of the SIP and TPV types only gets the inverse 
         # transformations approximately correct.  So we need to be a bit looser in those checks.
-        approx = (tag == 'SIP' or tag == 'TPV')
+        approx = tag in [ 'SIP' , 'TPV' ]
         do_ref(wcs, ref_list, approx)
 
         # Recenter (x,y) = (0,0) at the image center to avoid wcstools warnings about going
@@ -1535,13 +1532,12 @@ def test_fitswcs():
             import warnings
             warnings.warn("None of the existing WCS classes were able to read "+file_name)
         else:
-            approx = ( (tag == 'SIP' and isinstance(wcs, galsim.PyAstWCS)) or
+            approx = ( (tag in ['SIP', 'ZPX'] and isinstance(wcs, galsim.PyAstWCS)) or
                        (tag in ['SIP', 'TPV'] and isinstance(wcs, galsim.WcsToolsWCS)) )
-            affine_io = isinstance(wcs, galsim.PyAstWCS)
 
             do_ref(wcs, ref_list, approx)
             do_celestial_wcs(wcs, 'FitsWCS '+file_name)
-            do_wcs_image(wcs, 'FitsWCS_'+tag, affine_io)
+            do_wcs_image(wcs, 'FitsWCS_'+tag, approx)
 
             # Should also be able to build the file just from a fits.read() call, which 
             # uses FitsWCS behind the scenes.

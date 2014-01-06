@@ -1679,6 +1679,16 @@ class AstropyWCS(BaseWCS):
     """This WCS uses astropy.wcs to read WCS information from a FITS file.
     It requires the astropy.wcs python module to be installed.
 
+    Astropy may be installed using pip, fink, or port:
+
+            pip install astropy
+            fink install astropy-py27
+            port install py27-astropy
+
+    It also comes by default with Enthought and Anaconda. For more information, see their website:
+
+            http://www.astropy.org/
+
     Initialization
     --------------
     An AstropyWCS object is initialized with one of the following commands:
@@ -1747,8 +1757,7 @@ class AstropyWCS(BaseWCS):
                 wcs = astropy.wcs.WCS(header)
         if wcs is None:
             raise TypeError("Must provide one of file_name, header, or wcs")
-        else:
-            if self._tag is None: self._tag = 'wcs'
+        if self._tag is None: self._tag = 'wcs'
         if file_name is not None:
             galsim.fits.closeHDUList(hdu_list, fin)
 
@@ -1901,19 +1910,21 @@ class AstropyWCS(BaseWCS):
     def _setOrigin(self, image_origin):
         return AstropyWCS(wcs=self._wcs, image_origin=image_origin)
 
-    def _writeHeader(self, header, bounds):
+    def _writeHeader(self, inital_header, bounds):
         # Make a new header with the contents of this WCS.
         # Note: relax = True means to write out non-standard FITS types.
         # Weirdly, this is the default when reading the header, but not when writing.
-        h = self._wcs.to_header(relax=True)
+        header = self._wcs.to_header(relax=True)
+
         # Add in whatever was already written to the header dict.
-        h.update(header)
+        galsim.fits._writeDictToFitsHeader(inital_header, header)
+
         # And write the name as a special GalSim key
-        h["GS_WCS"] = ("AstropyWCS", "GalSim WCS name")
+        header["GS_WCS"] = ("AstropyWCS", "GalSim WCS name")
         # Finally, update the CRPIX items if necessary.
-        h["CRPIX1"] = h["CRPIX1"] + self.image_origin.x
-        h["CRPIX2"] = h["CRPIX2"] + self.image_origin.y
-        return h
+        header["CRPIX1"] = header["CRPIX1"] + self.image_origin.x
+        header["CRPIX2"] = header["CRPIX2"] + self.image_origin.y
+        return header
 
     @staticmethod
     def _readHeader(header):
@@ -1940,7 +1951,18 @@ class AstropyWCS(BaseWCS):
 
 class PyAstWCS(BaseWCS):
     """This WCS uses PyAst (the python front end for the Starlink AST code) to read WCS
-    information from a FITS file.  It requires the starlinkAst python module to be installed.
+    information from a FITS file.  It requires the starlink.Ast python module to be installed.
+
+    Starlink may be installed using pip:
+
+            pip install starlink-pyast
+
+    For more information, see their website:
+
+            https://pypi.python.org/pypi/starlink-pyast/
+
+    Note: There were bugs in starlink.Ast prior to version 2.6, so if you have an earlier version,
+    you should upgrate to at least 2.6.
 
     Initialization
     --------------
@@ -1984,8 +2006,7 @@ class PyAstWCS(BaseWCS):
         self._is_local = False
         self._is_uniform = False
         self._is_celestial = True
-        import starlink.Ast
-        import starlink.Atl
+        import starlink.Ast, starlink.Atl
         # Note: For much of this class implementation, I've followed the example provided here:
         #       http://dsberry.github.io/starlink/node4.html
         self._tag = None # Write something useful here.
@@ -2010,25 +2031,20 @@ class PyAstWCS(BaseWCS):
                 from galsim import pyfits
                 hdu = pyfits.PrimaryHDU()
                 hdu.header = header
-            fitschan = starlink.Ast.FitsChan( starlink.Atl.PyFITSAdapter(hdu) )
-            wcsinfo = fitschan.read()
-        if wcsinfo is None:
-            if self._tag is None: self._tag = 'wcsinfo'
-            raise TypeError("Must provide one of file_name, header, or wcsinfo")
+            fc = starlink.Ast.FitsChan( starlink.Atl.PyFITSAdapter(hdu) )
+            wcsinfo = fc.read()
+            if wcsinfo == None:
+                raise RuntimeError("Failed to read WCS information from fits file")
 
-        #  Check that the FITS header contained WCS in a form that can be
-        #  understood by AST.
-        if wcsinfo == None:
-            raise RuntimeError("Failed to read WCS information from fits file")
-        #  Check that the object read from the FitsChan is of the expected class
-        #  (Ast.FrameSet).
-        elif not isinstance( wcsinfo, starlink.Ast.FrameSet ):
-            raise RuntimeError("A "+wcsinfo.__class__.__name__+" was read from test.fit - "+
-                                "was expecting a starlink.Ast.FrameSet")
+        if wcsinfo is None:
+            raise TypeError("Must provide one of file_name, header, or wcsinfo")
+        if self._tag is None: self._tag = 'wcsinfo'
+
         #  We can only handle WCS with 2 pixel axes (given by Nin) and 2 WCS axes
         # (given by Nout).
-        elif wcsinfo.Nin != 2 or wcsinfo.Nout != 2:
+        if wcsinfo.Nin != 2 or wcsinfo.Nout != 2:
             raise RuntimeError("The world coordinate system is not 2-dimensional")
+
         if file_name is not None:
             galsim.fits.closeHDUList(hdu_list, fin)
 
@@ -2082,8 +2098,8 @@ class PyAstWCS(BaseWCS):
         dy = 1
 
         # wcsinfo.tran can take arrays to do everything at once.
-        ra, dec = self._wcsinfo.tran( [ [x0, x0+dx, x0-dx, x0,    x0],
-                                        [y0, y0,    y0,    y0+dy, y0-dy ] ])
+        ra, dec = self._wcsinfo.tran( [ [ x0, x0+dx, x0-dx, x0,    x0    ],
+                                        [ y0, y0,    y0,    y0+dy, y0-dy ] ])
 
         # Convert to degrees as needed by makeJacFromNumericalRaDec:
         ra = [ r * galsim.radians / galsim.degrees for r in ra ]
@@ -2093,42 +2109,42 @@ class PyAstWCS(BaseWCS):
     def _setOrigin(self, image_origin):
         return PyAstWCS(wcsinfo=self._wcsinfo, image_origin=image_origin)
 
-    def _writeHeader(self, header, bounds):
-        # I can't figure out how to get starlink.Ast to write the contents out to a fits
-        # header.  I thought the following would work.  But at the end, the line 
-        # h = hdu.header raises a `ValueError: The keyword '' is not in the header`. 
-        # I've tried a bunch of permutations of this but not found anything that works.
-        # 
-        # So for now, I'm wrapping this in a try block and if it fails, I just write the
-        # AffineTransform version instead.  Note: if this is a bug in starlink and they 
-        # fix it, then it will cause a unit test to fail, so we'll notice and maybe be
-        # able to do something about it.  Like check for a version number or something.
-        #
-        # Update: I've posted an issue about this on the starlink github page:
-        # https://github.com/Starlink/starlink/issues/24
-        try:
-            from galsim import pyfits
-            import starlink.Ast
-            hdu = pyfits.PrimaryHDU()
-            fitschan = starlink.Ast.FitsChan( None, starlink.Atl.PyFITSAdapter(hdu) )
-            fitschan.write(self._wcsinfo)
-            fitschan.writefits()
-            h = hdu.header
+    def _writeHeader(self, inital_header, bounds):
+        # See https://github.com/Starlink/starlink/issues/24 for helpful information from 
+        # David Berry, who assisted me in getting this working.
 
-            # Add in whatever was already written to the header dict.
-            h.update(header)
-            # And write the name as a special GalSim key
-            h["GS_WCS"] = ("PyAstWCS", "GalSim WCS name")
-            # Finally, update the CRPIX items if necessary.
-            h["CRPIX1"] = h["CRPIX1"] + self.image_origin.x
-            h["CRPIX2"] = h["CRPIX2"] + self.image_origin.y
-            return h
-        except:
-            return self.affine(bounds.trueCenter())._writeHeader(header, bounds)
+        # Note: As David described on that page, starlink knows how to write using a 
+        # FITS-WCS encoding that things like ds9 can read.  However, it doesn't do so at 
+        # very high precision.  So the WCS after a round trip through the FITS-WCS encoding
+        # is only accurate to about 1.e-2 arcsec.  The NATIVE encoding (which is the default
+        # used here) usually writes things with enough digits to remain accurate.  But even 
+        # then, there are a couple of WCS types where the round trip is only accurate to 
+        # about 1.e-2 arcsec.
+        
+        from galsim import pyfits
+        import starlink.Atl
+
+        hdu = pyfits.PrimaryHDU()
+        fc2 = starlink.Ast.FitsChan( None, starlink.Atl.PyFITSAdapter(hdu) )
+        fc2.write(self._wcsinfo)
+        fc2.writefits()
+        header = hdu.header
+
+        # Add in whatever was already written to the header dict.
+        galsim.fits._writeDictToFitsHeader(inital_header, header)
+
+        # And write the name as a special GalSim key
+        header["GS_WCS"] = ("PyAstWCS", "GalSim WCS name")
+        # And the image origin.
+        header["GS_X0"] = (self.image_origin.x, "GalSim image origin x")
+        header["GS_Y0"] = (self.image_origin.y, "GalSim image origin y")
+        return header
 
     @staticmethod
     def _readHeader(header):
-        return PyAstWCS(header=header)
+        x0 = header.get("GS_X0",0.)
+        y0 = header.get("GS_Y0",0.)
+        return PyAstWCS(header=header, image_origin=galsim.PositionD(x0,y0))
  
     def copy(self):
         return PyAstWCS(wcsinfo=self._wcsinfo, image_origin=self.image_origin)
@@ -2155,6 +2171,10 @@ class WcsToolsWCS(BaseWCS):
 
     Note: It uses the wcstools executalbes xy2sky and sky2xy, so it can be quite a bit less
           efficient than other options that keep the WCS in memory.
+
+    See their website for information on downloading and installing wcstools:
+
+            http://tdc-www.harvard.edu/software/wcstools/
 
     Initialization
     --------------
@@ -2793,6 +2813,7 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto')
             wcs = type._readHeader(header)
             return wcs
         except Exception as err:
+            #print 'caught ',err
             pass
     raise RuntimeError("All possible fits WCS types failed to read "+file_name)
 

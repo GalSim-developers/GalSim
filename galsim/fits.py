@@ -298,14 +298,23 @@ def _writeDictToFitsHeader(h, fits_header):
     # various things that write to the fits header do so directly, we have them write to
     # a dict, which we then write to the actual fits header, making sure to do things 
     # correctly given the PyFits version.
+
+    if isinstance(h, dict):
+        # For dicts, we want the keys in sorted order, so the normal python dict order doesn't
+        # randomly scramble things up.
+        items = sorted(h.items())
+    else:
+        # Otherwise, h is probably a PyFits header, so the keys come out in natural order.
+        items = h.items()
+
     if pyfits_version < '3.1':
-        for key, value in sorted(h.items()):
+        for key, value in items:
             try:
                 fits_header.update(key, value)
             except:
                 fits_header.update(key, value[0], value[1])
     else:
-        for key, value in sorted(h.items()):
+        for key, value in items:
             try:
                 fits_header.set(key, value)
             except:
