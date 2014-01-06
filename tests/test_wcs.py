@@ -614,12 +614,12 @@ def do_celestial_wcs(wcs, name):
         world_pos = wcs.toWorld(image_pos)
 
         # Check the calculation of the jacobian
-        jac = wcs.jacobian(image_pos)
         w1 = wcs.toWorld(galsim.PositionD(x0+0.5,y0))
         w2 = wcs.toWorld(galsim.PositionD(x0-0.5,y0))
         w3 = wcs.toWorld(galsim.PositionD(x0,y0+0.5))
         w4 = wcs.toWorld(galsim.PositionD(x0,y0-0.5))
         cosdec = np.cos(world_pos.dec.rad())
+        jac = wcs.jacobian(image_pos)
         np.testing.assert_array_almost_equal(
                 jac.dudx, (w2.ra - w1.ra)/galsim.arcsec * cosdec, digits,
                 'jacobian dudx incorrect for '+name)
@@ -1332,7 +1332,7 @@ def do_ref(wcs, ref_list, approx=False):
         x = ref[2]
         y = ref[3]
         val = ref[4]
-        #print ra,dec,x,y,val
+        #print 'Start ref: ',ra,dec,x,y,val
 
         # Check image -> world
         ref_coord = galsim.CelestialCoord(ra,dec)
@@ -1348,8 +1348,8 @@ def do_ref(wcs, ref_list, approx=False):
             digits = 2
 
         # Check world -> image
-        pos = wcs.toImage(galsim.CelestialCoord(ra,dec))
         pixel_scale = wcs.minLinearScale(galsim.PositionD(x,y))
+        pos = wcs.toImage(galsim.CelestialCoord(ra,dec))
         np.testing.assert_almost_equal((x-pos.x)*pixel_scale, 0, digits,
                                        'wcs.toImage differed from expected value')
         np.testing.assert_almost_equal((y-pos.y)*pixel_scale, 0, digits,
@@ -1476,6 +1476,32 @@ def test_wcstools():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_gsfitswcs():
+    """Test the GSFitsWCS class
+    """
+    import time
+    t1 = time.time()
+
+    test_tags = [ 'TAN', 'TPV', 'TAN-PV' ]
+
+    dir = 'fits_files'
+
+    global digits
+    digits = 4
+    for tag in test_tags:
+        file_name, ref_list = references[tag]
+        print tag,' file_name = ',file_name
+        wcs = galsim.GSFitsWCS(file_name, dir=dir)
+
+        do_ref(wcs, ref_list)
+
+        do_celestial_wcs(wcs, 'GSFitsWCS '+file_name)
+
+        do_wcs_image(wcs, 'GSFitsWCS_'+tag)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_pixelscale()
     test_shearwcs()
@@ -1485,3 +1511,4 @@ if __name__ == "__main__":
     test_astropywcs()
     test_pyastwcs()
     test_wcstools()
+    test_gsfitswcs()

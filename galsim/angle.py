@@ -539,6 +539,87 @@ class CelestialCoord(object):
 
         return CelestialCoord(ra,dec)
 
+    def deproject_jac(self, pos, projection='lambert'):
+        """Return the jacobian of the deprojection.
+
+        i.e. if the input position is (u,v) then return the matrix
+
+        J = ( dra/du cos(dec)  dra/dv cos(dec) )
+            (    ddec/du          ddec/dv      )
+        """
+        if projection not in [ 'lambert', 'stereographic', 'gnomonic', 'postel' ]:
+            raise ValueError('Unknown projection ' + projection)
+
+        u = pos.x * galsim.arcsec / galsim.radians
+        v = pos.y * galsim.arcsec / galsim.radians
+
+        # sin(dec) = cos(c) sin(dec0) + v sin(c)/r cos(dec0)
+        # tan(ra-ra0) = u sin(c)/r / (cos(dec0) cos(c) - v sin(dec0) sin(c)/r)
+        #
+        # d(sin(dec)) = cos(dec) ddec = s0 dc + (v ds + s dv) c0
+        # dtan(ra-ra0) = sec^2(ra-ra0) dra 
+        #              = ( (u ds + s du) A - u s (dc c0 - (v ds + s dv) s0 ) )/A^2 
+        # where s = sin(c) / r
+        #       c = cos(c)
+        #       s0 = sin(dec0)
+        #       c0 = cos(dec0) 
+        #       A = c c0 - v s s0
+
+        import math
+        rsq = u*u + v*v
+        rsq1 = (u+1.e-4)**2 + v**2
+        rsq2 = u**2 + (v+1.e-4)**2
+        if projection[0] == 'l':
+            c = 1. - rsq/2.
+            s = math.sqrt(4.-rsq) / 2.
+            dcdu = -u
+            dcdv = -v
+            dsdu = -u/(4.*s)
+            dsdv = -v/(4.*s)
+        elif projection[0] == 's':
+            s = 4. / (4.+rsq)
+            c = 2.*s-1.
+            ssq = s*s
+            dcdu = -u * ssq
+            dcdv = -v * ssq
+            dsdu = 0.5*dcdu
+            dsdv = 0.5*dcdv
+        elif projection[0] == 'g':
+            c = s = 1./math.sqrt(1.+rsq)
+            s3 = s*s*s
+            dcdu = dsdu = -u*s3
+            dcdv = dsdv = -v*s3
+        else:
+            r = math.sqrt(rsq)
+            if r == 0.:
+                c = s = 1
+            else:
+                c = math.cos(r)
+                s = math.sin(r)/r
+            dcdu = -s*u
+            dcdv = -s*v
+            dcdu = (c-s)*u/rsq
+            dcdv = (c-s)*v/rsq
+
+        self._set_aux()
+        s0 = self._sindec
+        c0 = self._cosdec
+        sindec = c * s0 + v * s * c0
+        cosdec = math.sqrt(1.-sindec*sindec)
+        dddu = ( s0 * dcdu + v * dsdu * c0 ) / cosdec
+        dddv = ( s0 * dcdv + (v * dsdv + s) * c0 ) / cosdec
+
+        tandra_num = u * s
+        tandra_denom = c * c0 - v * s * s0
+        # Note: A^2 sec^2(dra) = denom^2 (1 + tan^2(dra) = denom^2 + num^2
+        A2sec2dra = tandra_denom**2 + tandra_num**2
+        drdu = ((u * dsdu + s) * tandra_denom - u * s * ( dcdu * c0 - v * dsdu * s0 ))/A2sec2dra
+        drdv = (u * dsdv * tandra_denom - u * s * ( dcdv * c0 - (v * dsdv + s) * s0 ))/A2sec2dra
+
+        drdu *= cosdec
+        drdv *= cosdec
+        return drdu, drdv, dddu, dddv
+
     def precess(self, from_epoch, to_epoch):
         """This function precesses equatorial ra and dec from one epoch to another.
            It is adapted from a set if fortran subroutines found in precess.f,
