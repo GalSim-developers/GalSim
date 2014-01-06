@@ -42,6 +42,47 @@ There are five built-in AngleUnits which are always available for use:
     galsim.arcsec    # = galsim.AngleUnit(pi / 180. / 3600.)
 """
 
+def AngleUnit_repr(self):
+    if self is galsim.radians:
+        return 'galsim.radians'
+    elif self is galsim.degrees:
+        return 'galsim.degrees'
+    elif self is galsim.hours:
+        return 'galsim.house'
+    elif self is galsim.arcmin:
+        return 'galsim.arcmin'
+    elif self is galsim.arcsec:
+        return 'galsim.arcsec'
+    else:
+        return 'galsim.AngleUnit(' + str(self.getValue()) + ')'
+galsim.AngleUnit.__repr__ = AngleUnit_repr
+
+# Enable pickling
+def AngleUnit_getinitargs(self):
+    return self.getValue()
+galsim.AngleUnit.__getinitargs__ = AngleUnit_getinitargs
+
+
+def get_angle_unit(unit):
+    """Convert a string into the corresponding AngleUnit
+    """
+    unit = unit.strip().lower()
+    if unit.startswith('rad') :
+        return galsim.radians
+    elif unit.startswith('deg') :
+        return galsim.degrees
+    elif unit.startswith('hour') :
+        return galsim.hours
+    elif unit.startswith('hr') :
+        return galsim.hours
+    elif unit.startswith('arcmin') :
+        return galsim.arcmin
+    elif unit.startswith('arcsec') :
+        return galsim.arcsec
+    else :
+        raise AttributeError("Unknown Angle unit: %s"%unit)
+
+
 
 galsim.Angle.__doc__ = """A class representing an Angle.
 
@@ -170,26 +211,6 @@ def Angle_setstate(self, theta):
     self.__init__(theta, galsim.radians)
 galsim.Angle.__getstate__ = Angle_getstate
 galsim.Angle.__setstate__ = Angle_setstate
-
-
-def get_angle_unit(unit):
-    """Convert a string into the corresponding AngleUnit
-    """
-    unit = unit.strip().lower()
-    if unit.startswith('rad') :
-        return galsim.radians
-    elif unit.startswith('deg') :
-        return galsim.degrees
-    elif unit.startswith('hour') :
-        return galsim.hours
-    elif unit.startswith('hr') :
-        return galsim.hours
-    elif unit.startswith('arcmin') :
-        return galsim.arcmin
-    elif unit.startswith('arcsec') :
-        return galsim.arcsec
-    else :
-        raise AttributeError("Unknown Angle unit: %s"%unit)
 
 def parse_dms(s):
     """Convert a string of the form ddmmss.decimal into decimal degrees."""

@@ -81,6 +81,8 @@ namespace galsim {
         bool operator==(AngleUnit rhs) const { return (_val == rhs._val); }
         bool operator!=(AngleUnit rhs) const { return (_val != rhs._val); }
         //@}
+        
+        double getValue() const { return _val; }
 
     private:
         double _val;
