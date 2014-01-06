@@ -58,6 +58,15 @@ class BaseWCS(object):
             AstropyWCS          -- requires astropy.wcs python module to be installed
             PyAstWCS            -- requires starlink.Ast python module to be installed
             WcsToolsWCS         -- requires wcstools command line functions to be installed
+            GSFitsWCS           -- native code, but has less functionality than the above
+
+    There is also a factory function called FitsWCS, which is intended to act like a 
+    class initializer.  It tries to read a fits file using one of the above classes
+    and returns an instance of whichever one it found was successful.  It should always
+    be successful, since it's final attempt uses AffineTransform, which has reasonable 
+    defaults when the WCS key words are not in the file, but of course this will only be 
+    a very rough approximation of the true WCS.
+
 
     Some things you can do with a WCS object:
 
@@ -71,11 +80,20 @@ class BaseWCS(object):
       implemented.  If it is not implemented for a particular WCS class, a NotImplementedError
       will be raised.
 
+      The image_pos parameter should be a galsim.PositionD instance.  However, world_pos will
+      be a galsim.CelestialCoord if the transformation is in terms of celestial coordinates
+      (c.f. wcs.isCelestial()).  Otherwise, it will be a PositionD as well.
+
     - Convert a GSObject, which is naturally defined in world coordinates, to the equivalent
       profile using image coordinates (or vice versa):
 
                 image_profile = wcs.toImage(world_profile)
                 world_profile = wcs.toWorld(image_profile)
+
+      For non-uniform WCS types (c.f. wcs.isUniform()), these need either an image_pos or
+      world_pos parameter to say where this conversion should happen:
+
+                image_profile = wcs.toImage(world_profile, image_pos=image_pos)
 
     - Construct a local linear approximation of a WCS at a given location:
 
@@ -85,8 +103,16 @@ class BaseWCS(object):
       If wcs.toWorld(image_pos) is not implemented for a particular WCS class, then a
       NotImplementedError will be raised if you pass in a world_pos argument.
 
-    - Construct a non-local WCS using a given image position as the origin of the world
-      coordinate system.
+    - Construct a full affine approximation of a WCS at a given location:
+
+                affine_wcs = wcs.affine(image_pos = image_pos)
+                affine_wcs = wcs.affine(world_pos = world_pos)
+
+      This preserves the transformation near the location of image_pos, but it is linear, so
+      the transformed values may not agree as you get farther from the given point.
+
+    - Shift a transformation to use a new location for what is currently considered
+      image_pos = (0,0).  For local WCS types, this also converts to a non-local WCS.
 
                 world_pos1 = wcs.toWorld(PositionD(0,0))
                 shifted = wcs.setOrigin(image_origin)
