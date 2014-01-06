@@ -27,6 +27,9 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
+path, filename = os.path.split(__file__)
+datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
+
 def refraction_in_pixels(wave, zenith_angle, pixel_scale):
     """Compute the shift in PSF centroid (in pixels) due to refraction.
 
@@ -54,8 +57,8 @@ def direct_computation(galaxy_n, galaxy_hlr, galaxy_e1, galaxy_e2, galaxy_wave, 
                        shear_g1, shear_g2,
                        filter_wave, filter_throughput,
                        pixel_scale=0.2*galsim.arcsec, stamp_size=31):
-    """Create a test image of a galaxy by directly simulating a chromatic PSF wavelength-by-wavelength,
-    i.e., without using the galsim.chromatic module.
+    """Create a test image of a galaxy by directly simulating a chromatic PSF
+    wavelength-by-wavelength, i.e., without using the galsim.chromatic module.
 
     @param galaxy_wave        Wavelength array for galaxy spectrum in nanometers
     @param galaxy_photons     Galaxy photon spectral energy distribution in units of photons per
@@ -151,8 +154,6 @@ def test_chromatic_direct_vs_galsim():
     galaxy_hlr = 1.0 # arcsec
     galaxy_e1 = 0.4
     galaxy_e2 = 0.2
-    path, filename = os.path.split(__file__)
-    datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
     galaxy_wave, galaxy_flambda = np.genfromtxt(os.path.join(datapath, 'CWW_Im_ext.sed')).T
     galaxy_photons = galaxy_flambda * galaxy_wave # ergs -> N_photons
     galaxy_photons *= 2.e-7 # Manually adjusting to have peak of ~1 count
@@ -165,7 +166,7 @@ def test_chromatic_direct_vs_galsim():
     shear_g1 = 0.01
     shear_g2 = 0.02
     filter_wave, filter_throughput = np.genfromtxt(os.path.join(datapath, 'LSST_r.dat')).T
-    wgood = (filter_wave > 500) & (filter_wave < 720) # truncate out-of-band wavelengths
+    wgood = (filter_wave >= 500) & (filter_wave <= 720) # truncate out-of-band wavelengths
     filter_wave = filter_wave[wgood][0::100]  # sparsify from 1 Ang binning to 100 Ang binning
     filter_throughput = filter_throughput[wgood][0::100]
 
@@ -194,8 +195,6 @@ def sample_bulge_gal():
     bulge_hlr = 1.0 # arcsec
     bulge_e1 = 0.4
     bulge_e2 = 0.2
-    path, filename = os.path.split(__file__)
-    datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
     bulge_wave, bulge_flambda = np.genfromtxt(os.path.join(datapath, 'CWW_E_ext.sed')).T
     bulge_photons = bulge_flambda * bulge_wave # ergs -> N_photons
     bulge_photons *= 2.e-7 # Manually adjusting to have peak of ~1 count
@@ -210,8 +209,6 @@ def sample_disk_gal():
     disk_hlr = 1.0 # arcsec
     disk_e1 = 0.4
     disk_e2 = 0.2
-    path, filename = os.path.split(__file__)
-    datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
     disk_wave, disk_flambda = np.genfromtxt(os.path.join(datapath, 'CWW_Sbc_ext.sed')).T
     disk_photons = disk_flambda * disk_wave # ergs -> N_photons
     disk_photons *= 2.e-7 # Manually adjusting to have peak of ~1 count
@@ -239,10 +236,8 @@ def sample_PSF(pixel_scale=0.2*galsim.arcsec):
     return PSF
 
 def sample_filter():
-    path, filename = os.path.split(__file__)
-    datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
     filter_wave, filter_throughput = np.genfromtxt(os.path.join(datapath, 'LSST_r.dat')).T
-    wgood = (filter_wave > 500) & (filter_wave < 720) # truncate out-of-band wavelengths
+    wgood = (filter_wave >= 500) & (filter_wave <= 720) # truncate out-of-band wavelengths
     filter_wave = filter_wave[wgood][0::100]  # sparsify from 1 Ang binning to 100 Ang binning
     filter_throughput = filter_throughput[wgood][0::100]
     return filter_wave, filter_throughput
@@ -302,8 +297,6 @@ def test_chromatic_add_draw():
     bulge_hlr = 1.0 # arcsec
     bulge_e1 = 0.4
     bulge_e2 = 0.2
-    path, filename = os.path.split(__file__)
-    datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
     bulge_wave, bulge_flambda = np.genfromtxt(os.path.join(datapath, 'CWW_E_ext.sed')).T
     bulge_photons = bulge_flambda * bulge_wave # ergs -> N_photons
     bulge_photons *= 2.e-7 # Manually adjusting to have peak of ~1 count
@@ -352,10 +345,8 @@ def test_chromatic_add_draw():
                                         half_light_radius=PSF_hlr)
     PSF.applyShear(e1=PSF_e1, e2=PSF_e2)
 
-    path, filename = os.path.split(__file__)
-    datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
     filter_wave, filter_throughput = np.genfromtxt(os.path.join(datapath, 'LSST_r.dat')).T
-    wgood = (filter_wave > 500) & (filter_wave < 720) # truncate out-of-band wavelengths
+    wgood = (filter_wave >= 500) & (filter_wave <= 720) # truncate out-of-band wavelengths
     filter_wave = filter_wave[wgood][0::100]  # sparsify from 1 Ang binning to 100 Ang binning
     filter_throughput = filter_throughput[wgood][0::100]
 
@@ -390,8 +381,167 @@ def test_chromatic_add_draw():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_dcr_moments():
+    """Check that zenith-direction surface brightness distribution first and second moments obey
+    expected behavior for differential chromatic refraction when comparing stars drawn with
+    different SEDs."""
+
+    import time
+    t1 = time.time()
+
+    zenith_angle = 45.0 * galsim.degrees
+    pixel_scale = 0.2 * galsim.arcsec
+    stamp_size = 63
+
+    wave1, flambda1 = np.genfromtxt(os.path.join(datapath, 'CWW_Sbc_ext.sed')).T
+    wave2, flambda2 = np.genfromtxt(os.path.join(datapath, 'CWW_E_ext.sed')).T
+    photons1 = flambda1 * wave1
+    photons2 = flambda2 * wave2
+
+    gal1 = galsim.ChromaticBaseObject(galsim.Gaussian, wave1, photons1, fwhm=1.0)
+    gal2 = galsim.ChromaticBaseObject(galsim.Gaussian, wave2, photons2, fwhm=1.0)
+
+    r610 = refraction_in_pixels(610, zenith_angle, pixel_scale)
+    shift_fn = lambda wave: (0, refraction_in_pixels(wave, zenith_angle, pixel_scale) - r610)
+    PSF = galsim.ChromaticShiftAndDilate(galsim.Gaussian,
+                                         shift_fn=shift_fn,
+                                         fwhm=0.6)
+    pix = galsim.Pixel(pixel_scale / galsim.arcsec)
+
+    scn1 = galsim.ChromaticConvolve([gal1, PSF, pix])
+    scn2 = galsim.ChromaticConvolve([gal2, PSF, pix])
+
+    img1 = galsim.ImageD(stamp_size, stamp_size, 0.2)
+    img2 = galsim.ImageD(stamp_size, stamp_size, 0.2)
+
+    filter_wave, filter_throughput = np.genfromtxt(os.path.join(datapath, 'LSST_r.dat')).T
+    wgood = (filter_wave >= 500) & (filter_wave <= 720) # truncate out-of-band wavelengths
+    filter_wave = filter_wave[wgood][0::100]  # sparsify from 1 Ang binning to 100 Ang binning
+    filter_throughput = filter_throughput[wgood][0::100]
+
+    scn1.draw(filter_wave, filter_throughput, image=img1)
+    scn2.draw(filter_wave, filter_throughput, image=img2)
+
+    m1 = getmoments(img1)
+    m2 = getmoments(img2)
+    dR_image = (m1[1] - m2[1]) * pixel_scale / galsim.arcsec
+    dV_image = (m1[3] - m2[3]) * (pixel_scale / galsim.arcsec)**2
+
+    sed1 = galsim.LookupTable(wave1, photons1)
+    sed2 = galsim.LookupTable(wave2, photons2)
+    filt = galsim.LookupTable(filter_wave, filter_throughput)
+
+    #analytic first moment differences
+    numR1 = galsim.integ.int1d((lambda w:(refraction_in_pixels(w, zenith_angle, pixel_scale)
+                                          * filt(w) * sed1(w))),
+                               500, 720)
+    numR2 = galsim.integ.int1d((lambda w:(refraction_in_pixels(w, zenith_angle, pixel_scale)
+                                          * filt(w) * sed2(w))),
+                               500, 720)
+    den1 = galsim.integ.int1d((lambda w:(filt(w) * sed1(w))), 500, 720)
+    den2 = galsim.integ.int1d((lambda w:(filt(w) * sed2(w))), 500, 720)
+
+    R1 = numR1/den1
+    R2 = numR2/den2
+    dR_analytic = R1 - R2
+
+    #analytic second moment differences
+    numV1 = galsim.integ.int1d((lambda w:((refraction_in_pixels(w, zenith_angle, pixel_scale)-R1)**2
+                                          * filt(w) * sed1(w))),
+                               500, 720)
+    numV2 = galsim.integ.int1d((lambda w:((refraction_in_pixels(w, zenith_angle, pixel_scale)-R2)**2
+                                          * filt(w) * sed2(w))),
+                               500, 720)
+    V1 = numV1/den1
+    V2 = numV2/den2
+    dV_analytic = V1 - V2
+
+    np.testing.assert_almost_equal(dR_image, dR_analytic, 4,
+                                   err_msg="Moment Shift from DCR doesn't match analytic formula")
+    np.testing.assert_almost_equal(dV_image, dV_analytic, 4,
+                                   err_msg="Moment Shift from DCR doesn't match analytic formula")
+
+    print 'image delta R:    {}'.format(dR_image)
+    print 'analytic delta R: {}'.format(dR_analytic)
+    print 'image delta V:    {}'.format(dV_image)
+    print 'analytic delta V: {}'.format(dV_analytic)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_chromatic_seeing_moments():
+    """Check that surface brightness distribution second moments obey expected behavior
+    for chromatic seeing when comparing stars drawn with different SEDs."""
+
+    import time
+    t1 = time.time()
+
+    pixel_scale = 0.01 * galsim.arcsec
+    stamp_size = 512
+
+    wave1, flambda1 = np.genfromtxt(os.path.join(datapath, 'CWW_Sbc_ext.sed')).T
+    wave2, flambda2 = np.genfromtxt(os.path.join(datapath, 'CWW_E_ext.sed')).T
+    photons1 = flambda1 * wave1
+    photons2 = flambda2 * wave2
+
+    filter_wave, filter_throughput = np.genfromtxt(os.path.join(datapath, 'LSST_r.dat')).T
+    wgood = (filter_wave >= 500) & (filter_wave <= 720) # truncate out-of-band wavelengths
+    filter_wave = filter_wave[wgood][0::100]  # sparsify from 1 Ang binning to 100 Ang binning
+    filter_throughput = filter_throughput[wgood][0::100]
+
+    gal1 = galsim.ChromaticBaseObject(galsim.Gaussian, wave1, photons1, fwhm=1e-6)
+    gal2 = galsim.ChromaticBaseObject(galsim.Gaussian, wave2, photons2, fwhm=1e-6)
+
+    pix = galsim.Pixel(pixel_scale / galsim.arcsec)
+
+    indices = [-0.2, 0.6, 1.0]
+    for index in indices:
+
+        PSF = galsim.ChromaticShiftAndDilate(galsim.Gaussian,
+                                             dilate_fn=lambda w: (w/500.0)**index,
+                                             fwhm=0.5)
+
+        scn1 = galsim.ChromaticConvolve([gal1, PSF, pix])
+        scn2 = galsim.ChromaticConvolve([gal2, PSF, pix])
+
+        img1 = galsim.ImageD(stamp_size, stamp_size, 0.2)
+        img2 = galsim.ImageD(stamp_size, stamp_size, 0.2)
+
+        scn1.draw(filter_wave, filter_throughput, image=img1)
+        scn2.draw(filter_wave, filter_throughput, image=img2)
+
+        m1 = getmoments(img1)
+        m2 = getmoments(img2)
+        dr2byr2_image = ((m1[2]+m1[3]) - (m2[2]+m2[3])) / (m1[2]+m1[3])
+
+        sed1 = galsim.LookupTable(wave1, photons1)
+        sed2 = galsim.LookupTable(wave2, photons2)
+        filt = galsim.LookupTable(filter_wave, filter_throughput)
+
+        #analytic moment differences
+        num1 = galsim.integ.int1d(lambda w:(w/500.0)**(2*index) * filt(w) * sed1(w), 500, 720)
+        num2 = galsim.integ.int1d(lambda w:(w/500.0)**(2*index) * filt(w) * sed2(w), 500, 720)
+        den1 = galsim.integ.int1d(lambda w:filt(w) * sed1(w), 500, 720)
+        den2 = galsim.integ.int1d(lambda w:filt(w) * sed2(w), 500, 720)
+
+        r2_1 = num1/den1
+        r2_2 = num2/den2
+
+        dr2byr2_analytic = (r2_1 - r2_2) / r2_1
+
+        np.testing.assert_almost_equal(dr2byr2_image, dr2byr2_analytic, 4,
+                                       err_msg="Moment Shift from chromatic seeing doesn't"+
+                                               " match analytic formula")
+
+        print 'image delta(r^2) / r^2:    {}'.format(dr2byr2_image)
+        print 'analytic delta(r^2) / r^2: {}'.format(dr2byr2_analytic)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_chromatic_direct_vs_galsim()
     test_chromatic_add()
     test_chromatic_add_draw()
+    test_dcr_moments()
+    test_chromatic_seeing_moments()
