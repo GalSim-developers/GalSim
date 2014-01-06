@@ -207,10 +207,10 @@ class ChromaticConvolve(ChromaticObject):
         #
         # The result is that the integral is now inside the convolution, meaning we only have to
         # compute two convolutions instead of a convolution for each wavelength at which we evaluate
-        # the integrand.  This is technique, making an `effective` PSF profile for each of the bulge
-        # and disk, is a significant savings for most use cases.
+        # the integrand.  This technique, making an `effective` PSF profile for each of the bulge and
+        # disk, is a significant time savings most of the time.
         # In general, we make effective profiles by splitting up `ChromaticAdd`s and collecting the
-        # inseperable terms to do integration first, and convolution last when possible.
+        # inseperable terms on which to do integration first, and then finish with convolution last.
 
         # Here is the logic to turn I(C(A(...))) into A(C(..., I(...)))
         returnme = False
@@ -247,25 +247,34 @@ class ChromaticConvolve(ChromaticObject):
             else:
                 insep_profs.append(obj) # The f(x,y,lambda)'s (see above)
 
-        # make an effective profile from inseparables and the chromatic part of separables
         dwave = wave[1] - wave[0] # assume wavelengths are linear
-        # and what happens when a list is empty?  I dunno...
-        # start assembling monochromatic profiles into an effective profile
-        mono_prof = galsim.Convolve([insp.evaluateAtWavelength(wave[0]) for insp in insep_profs])
-        mono_prof *= throughput[0] * dwave
-        for s in sep_photons:
-            mono_prof *= s(wave[0])
-        effective_prof_image = mono_prof.draw()
-        for w, tp in zip(wave, throughput)[1:]:
-            mono_prof = galsim.Convolve([insp.evaluateAtWavelength(w) for insp in insep_profs])
-            mono_prof *= tp * dwave
+        # check if any inseperable profiles
+        if insep_profs == []:
+            multiplier = 0.0
+            for w, tp in zip(wave, throughput):
+                term = tp
+                for s in sep_photons:
+                    term *= s(w)
+                multiplier += term * dwave
+        else:
+            # make an effective profile from inseparables and the chromatic part of separables
+            # start assembling monochromatic profiles into an effective profile
+            multiplier = 1.0
+            mono_prof = galsim.Convolve([insp.evaluateAtWavelength(wave[0]) for insp in insep_profs])
+            mono_prof *= throughput[0] * dwave
             for s in sep_photons:
-                mono_prof *= s(w)
-            mono_prof.draw(image=effective_prof_image, add_to_image=True)
+                mono_prof *= s(wave[0])
+            effective_prof_image = mono_prof.draw()
+            for w, tp in zip(wave, throughput)[1:]:
+                mono_prof = galsim.Convolve([insp.evaluateAtWavelength(w) for insp in insep_profs])
+                mono_prof *= tp * dwave
+                for s in sep_photons:
+                    mono_prof *= s(w)
+                mono_prof.draw(image=effective_prof_image, add_to_image=True)
 
-        effective_prof = galsim.InterpolatedImage(effective_prof_image)
-        sep_profs.append(effective_prof)
-        final_prof = galsim.Convolve(sep_profs)
+            effective_prof = galsim.InterpolatedImage(effective_prof_image)
+            sep_profs.append(effective_prof)
+        final_prof = multiplier * galsim.Convolve(sep_profs)
         return final_prof.draw(image=image, add_to_image=add_to_image)
 
 
@@ -291,8 +300,14 @@ class ChromaticShiftAndDilate(ChromaticObject):
                           scale factor.
         """
         self.gsobj = gsobj(**kwargs)
-        self.shift_fn = shift_fn
-        self.dilate_fn = dilate_fn
+        if shift_fn is None:
+            self.shift_fn = lambda x: (0,0)
+        else:
+            self.shift_fn = shift_fn
+        if dilate_fn is None:
+            self.dilate_fn = lambda x: 1.0
+        else:
+            self.dilate_fn = dilate_fn
         self.separable = False
 
     def applyShear(self, *args, **kwargs):
