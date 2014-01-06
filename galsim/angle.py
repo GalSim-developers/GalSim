@@ -269,6 +269,7 @@ class CelestialCoord(object):
     There are two tangent plane projections you can use:
         - a Lambert projection, which preserves area
         - a stereographic projection, which preserves angles
+        - a gnomonic projection, which makes all great circles straight lines
         - a Postel projection, which preserves distances from the tangent point
     See the project and deproject functions for details.
 
@@ -392,6 +393,10 @@ class CelestialCoord(object):
             'stereographic' uses a stereographic proejection, which preserves angles, but
                     not area.  For more information, see
                     http://mathworld.wolfram.com/StereographicProjection.html
+            'gnomonic' uses a gnomonic projection (i.e. a projection from the center of the
+                    spehere, which has the property that all great circles become straight 
+                    lines.  For more information, see
+                    http://mathworld.wolfram.com/GnomonicProjection.html
             'postel' uses a Postel equidistant proejection, which preserves distances from
                     the projection point, but not area or angles.  For more information, see
                     http://mathworld.wolfram.com/AzimuthalEquidistantProjection.html
@@ -407,14 +412,16 @@ class CelestialCoord(object):
         # y = k ( cos(dec0) sin(dec) - sin(dec0) cos(dec) cos(ra-ra0) )
         #
         # Lambert:
-        #   k = sqrt( 2 ( 1 + sin(dec0) sin(dec) + cos(dec0) cos(phi) cos(ra-ra0) )^-1 )
+        #   k = sqrt( 2  / ( 1 + cos(c) ) )
         # Stereographic:
-        #   k = 2 ( 1 + sin(dec0) sin(dec) + cos(dec0) cos(phi) cos(ra-ra0) )^-1
+        #   k = 2 / ( 1 + cos(c) )
+        # Gnomonic:
+        #   k = 1 / cos(c)
         # Postel:
         #   k = c / sin(c)
-        #   where cos(c) = sin(dec0) sin(dec) + cos(dec0) cos(dec) cos(ra-ra0)
+        # where cos(c) = sin(dec0) sin(dec) + cos(dec0) cos(dec) cos(ra-ra0)
 
-        if projection not in [ 'lambert', 'stereographic', 'postel' ]:
+        if projection not in [ 'lambert', 'stereographic', 'gnomonic', 'postel' ]:
             raise ValueError('Unknown projection ' + projection)
 
         self._set_aux()
@@ -432,15 +439,17 @@ class CelestialCoord(object):
 
         # Calculate k according to which projection we are using
         cosc = self._sindec * other._sindec + self._cosdec * other._cosdec * cosdra
-        if projection == 'postel':
+        if projection[0] == 'l':
+            import math
+            k = math.sqrt( 2. / (1.+cosc) )
+        elif projection[0] == 's':
+            k = 2. / (1. + cosc)
+        elif projection[0] == 'g':
+            k = 1. / cosc
+        else:
             import math
             c = math.acos(cosc)
             k = c / math.sin(c)
-        else:
-            k = 2. / (1. + cosc)
-            if projection == 'lambert':
-                import math
-                k = math.sqrt(k)
 
         x = k * other._cosdec * sindra
         y = k * ( self._cosdec * other._sindec - self._sindec * other._cosdec * cosdra )
@@ -468,9 +477,10 @@ class CelestialCoord(object):
         # r = sqrt(u^2+v^2)
         # c = 2 sin^(-1)(r/2) for lambert
         # c = 2 tan^(-1)(r/2) for stereographic
-        # c = sqrt(x^2+y^2)   for postel
+        # c = tan^(-1)(r)     for gnomonic
+        # c = r               for postel
 
-        if projection not in [ 'lambert', 'stereographic', 'postel' ]:
+        if projection not in [ 'lambert', 'stereographic', 'gnomonic', 'postel' ]:
             raise ValueError('Unknown projection ' + projection)
 
         # Convert from arcsec to radians
@@ -489,20 +499,25 @@ class CelestialCoord(object):
         #
         # which means we only need cos(c) and sin(c)/r
         rsq = u*u + v*v
-        if projection == 'lambert':
+        if projection[0] == 'l':
             # c = 2 * arcsin(r/2)
             # Some trig manipulations reveal:
             # cos(c) = 1 - r^2/2
             # sin(c) = r sqrt(4-r^2) / 2
             cosc = 1. - rsq/2.
             sinc_over_r = math.sqrt(4.-rsq) / 2.
-        elif projection == 'stereographic':
+        elif projection[0] == 's':
             # c = 2 * arctan(r/2)
             # Some trig manipulations reveal:
             # cos(c) = (4-r^2) / (4+r^2)
             # sin(c) = 4r / (4+r^2)
             cosc = (4.-rsq) / (4.+rsq)
             sinc_over_r = 4. / (4.+rsq)
+        elif projection[0] == 'g':
+            # c = arctan(r)
+            # cos(c) = 1 / sqrt(1+r^2)
+            # sin(c) = r / sqrt(1+r^2)
+            cosc = sinc_over_r = 1./math.sqrt(1.+rsq)
         else:
             r = math.sqrt(rsq)
             if r == 0.:
@@ -517,7 +532,7 @@ class CelestialCoord(object):
         sindec = cosc * self._sindec + v * sinc_over_r * self._cosdec
         # Remember the - sign so +dra is -u.  East is left.
         tandra_num = -u * sinc_over_r
-        tandra_denom = self._cosdec * cosc - v * self._sindec * sinc_over_r
+        tandra_denom = cosc * self._cosdec - v * sinc_over_r * self._sindec
 
         dec = math.asin(sindec) * galsim.radians
         ra = self.ra + math.atan2(tandra_num, tandra_denom) * galsim.radians
