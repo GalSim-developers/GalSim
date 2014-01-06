@@ -214,36 +214,6 @@ def do_wcs_image(wcs, name, approx=False):
     world3 = im.wcs.toWorld(image_pos)
     value3 = im(image_pos)
 
-    if approx:
-        # Sometimes, the round trip doesn't preserve accuracy completely.
-        # In these cases, only test the positions after write/read to 1 digit.
-        digits2 = 1
-    else:
-        digits2 = digits
-
-    # Test writing the image to a fits file and reading it back in.
-    # The new image doesn't have to have the same wcs type.  But it does have to produce
-    # consistent values of the world coordinates.
-    test_name = 'test_' + name + '.fits'
-    im.write(test_name, dir=dir)
-    im2 = galsim.fits.read(test_name, dir=dir)
-    #print 'im2.wcs = ',im2.wcs
-    np.testing.assert_equal(im2.origin().x, im.origin().x, "origin changed after write/read")
-    np.testing.assert_equal(im2.origin().y, im.origin().y, "origin changed after write/read")
-    check_world(im2.wcs.toWorld(im.origin()), world1, digits2,
-                "World position of origin is wrong after write/read.")
-    np.testing.assert_almost_equal(im2(im.origin()), value1, digits,
-                                   "Image value at origin is wrong after write/read.")
-    check_world(im2.wcs.toWorld(im.center()), world2, digits2,
-                "World position of center is wrong after write/read.")
-    np.testing.assert_almost_equal(im2(im.center()), value2, digits,
-                                   "Image value at center is wrong after write/read.")
-    check_world(im2.wcs.toWorld(image_pos), world3, digits2,
-                "World position of image_pos is wrong after write/read.")
-    np.testing.assert_almost_equal(im2(image_pos), value3, digits,
-                                   "Image value at center is wrong after write/read.")
-
-
     # Test that im.shift does the right thing to the wcs
     # Also test parsing a position as x,y args.
     dx = 3
@@ -265,8 +235,18 @@ def do_wcs_image(wcs, name, approx=False):
     np.testing.assert_almost_equal(im(image_pos), value3, digits,
                                    "image value at center after shift is wrong.")
 
+    # Test writing the image to a fits file and reading it back in.
+    # The new image doesn't have to have the same wcs type.  But it does have to produce
+    # consistent values of the world coordinates.
+    test_name = 'test_' + name + '.fits'
     im.write(test_name, dir=dir)
     im2 = galsim.fits.read(test_name, dir=dir)
+    if approx:
+        # Sometimes, the round trip doesn't preserve accuracy completely.
+        # In these cases, only test the positions after write/read to 1 digit.
+        digits2 = 1
+    else:
+        digits2 = digits
     #print 'im.wcs = ',im.wcs
     #print 'im2.wcs = ',im2.wcs
     np.testing.assert_equal(im2.origin().x, im.origin().x, "origin changed after write/read")
@@ -305,26 +285,6 @@ def do_wcs_image(wcs, name, approx=False):
     np.testing.assert_almost_equal(im(image_pos), value3, digits,
                                    "Image value at center after setOrigin is wrong.")
 
-    im.write(test_name, dir=dir)
-    im2 = galsim.fits.read(test_name, dir=dir)
-    #print 'im.wcs = ',im.wcs
-    #print 'im2.wcs = ',im2.wcs
-    np.testing.assert_equal(im2.origin().x, im.origin().x, "origin changed after write/read")
-    np.testing.assert_equal(im2.origin().y, im.origin().y, "origin changed after write/read")
-    check_world(im2.wcs.toWorld(im.origin()), world1, digits2,
-                "World position of origin is wrong after write/read.")
-    np.testing.assert_almost_equal(im2(im.origin()), value1, digits,
-                                   "Image value at origin is wrong after write/read.")
-    check_world(im2.wcs.toWorld(im.center()), world2, digits2,
-                "World position of center is wrong after write/read.")
-    np.testing.assert_almost_equal(im2(im.center()), value2, digits,
-                                   "Image value at center is wrong after write/read.")
-    check_world(im2.wcs.toWorld(image_pos), world3, digits2,
-                "World position of image_pos is wrong after write/read.")
-    np.testing.assert_almost_equal(im2(image_pos), value3, digits,
-                                   "Image value at center is wrong after write/read.")
-
-
     # Test that im.setCenter does the right thing to the wcs.
     # Also test parsing a position as a PositionI object.
     new_center = galsim.PositionI(0,0)
@@ -344,26 +304,6 @@ def do_wcs_image(wcs, name, approx=False):
                 "World position of image_pos after setCenter is wrong.")
     np.testing.assert_almost_equal(im(image_pos), value3, digits,
                                    "Image value at center after setCenter is wrong.")
-
-    im.write(test_name, dir=dir)
-    im2 = galsim.fits.read(test_name, dir=dir)
-    #print 'im.wcs = ',im.wcs
-    #print 'im2.wcs = ',im2.wcs
-    np.testing.assert_equal(im2.origin().x, im.origin().x, "origin changed after write/read")
-    np.testing.assert_equal(im2.origin().y, im.origin().y, "origin changed after write/read")
-    check_world(im2.wcs.toWorld(im.origin()), world1, digits2,
-                "World position of origin is wrong after write/read.")
-    np.testing.assert_almost_equal(im2(im.origin()), value1, digits,
-                                   "Image value at origin is wrong after write/read.")
-    check_world(im2.wcs.toWorld(im.center()), world2, digits2,
-                "World position of center is wrong after write/read.")
-    np.testing.assert_almost_equal(im2(im.center()), value2, digits,
-                                   "Image value at center is wrong after write/read.")
-    check_world(im2.wcs.toWorld(image_pos), world3, digits2,
-                "World position of image_pos is wrong after write/read.")
-    np.testing.assert_almost_equal(im2(image_pos), value3, digits,
-                                   "Image value at center is wrong after write/read.")
-
 
 
 def do_local_wcs(wcs, ufunc, vfunc, name):
