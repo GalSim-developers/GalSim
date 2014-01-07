@@ -56,7 +56,7 @@ def direct_computation(galaxy_n, galaxy_hlr, galaxy_e1, galaxy_e2, galaxy_wave, 
                        PSF_hlr, PSF_beta, PSF_e1, PSF_e2, zenith_angle,
                        shear_g1, shear_g2,
                        filter_wave, filter_throughput,
-                       pixel_scale=0.2*galsim.arcsec, stamp_size=31):
+                       pixel_scale=0.2*galsim.arcsec, stamp_size=32):
     """Create a test image of a galaxy by directly simulating a chromatic PSF
     wavelength-by-wavelength, i.e., without using the galsim.chromatic module.
 
@@ -109,7 +109,7 @@ def galsim_computation(galaxy_n, galaxy_hlr, galaxy_e1, galaxy_e2, galaxy_wave, 
                        PSF_hlr, PSF_beta, PSF_e1, PSF_e2, zenith_angle,
                        shear_g1, shear_g2,
                        filter_wave, filter_throughput,
-                       pixel_scale=0.2*galsim.arcsec, stamp_size=31):
+                       pixel_scale=0.2*galsim.arcsec, stamp_size=32):
     """Compute a test image of a galaxy using the galsim.chromatic module.
 
     @param galaxy_wave        Wavelength array for galaxy spectrum in nanometers
@@ -248,7 +248,7 @@ def test_chromatic_add():
     t1 = time.time()
 
     pixel_scale = 0.2 * galsim.arcsec
-    stamp_size = 31
+    stamp_size = 32
 
     bulge = sample_bulge_gal()
     disk = sample_disk_gal()
@@ -334,7 +334,7 @@ def test_chromatic_add_draw():
     PSF_e2 = 0.06
 
     pixel_scale = 0.2 * galsim.arcsec
-    stamp_size = 31
+    stamp_size = 32
     r610 = refraction_in_pixels(610, zenith_angle, pixel_scale)
     shift_fn = lambda wave: (0, refraction_in_pixels(wave, zenith_angle, pixel_scale) - r610)
 
@@ -391,7 +391,7 @@ def test_dcr_moments():
 
     zenith_angle = 45.0 * galsim.degrees
     pixel_scale = 0.2 * galsim.arcsec
-    stamp_size = 63
+    stamp_size = 64
 
     wave1, flambda1 = np.genfromtxt(os.path.join(datapath, 'CWW_Sbc_ext.sed')).T
     wave2, flambda2 = np.genfromtxt(os.path.join(datapath, 'CWW_E_ext.sed')).T
@@ -539,9 +539,59 @@ def test_chromatic_seeing_moments():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_monochromatic_filter():
+    """Check that ChromaticObject drawn through a very narrow band filter matches analogous GSObject.
+    """
+
+    import time
+    t1 = time.time()
+
+    zenith_angle = 45.0 * galsim.degrees
+    pixel_scale = 0.2 * galsim.arcsec
+    stamp_size = 256
+
+    wave, flambda = np.genfromtxt(os.path.join(datapath, 'CWW_Sbc_ext.sed')).T
+    photons = flambda * wave
+    gal = galsim.ChromaticBaseObject(galsim.Gaussian, wave, photons, fwhm=1.0)
+
+    r610 = refraction_in_pixels(610, zenith_angle, pixel_scale)
+    shift_fn = lambda wave: (0, refraction_in_pixels(wave, zenith_angle, pixel_scale) - r610)
+    dilate_fn = lambda wave: (wave/500.0)**(-0.2)
+    PSF = galsim.ChromaticShiftAndDilate(galsim.Gaussian,
+                                         shift_fn=shift_fn,
+                                         dilate_fn=dilate_fn,
+                                         fwhm=0.6)
+    pix = galsim.Pixel(pixel_scale / galsim.arcsec)
+    scn = galsim.ChromaticConvolve([gal, PSF, pix])
+
+    gal2 = galsim.Gaussian(fwhm=1.0)
+
+    filter_waves = [350, 475, 625, 750, 875, 975] # approx ugrizy central wavelengths
+
+    for filter_wave in filter_waves:
+        img = galsim.ImageD(stamp_size, stamp_size, 0.2)
+        scn.draw([filter_wave - 0.1, filter_wave + 0.1], [1.0]*2, image=img)
+
+        PSF2 = galsim.Gaussian(fwhm=0.6)
+        PSF2.applyDilation(dilate_fn(filter_wave))
+        PSF2.applyShift(shift_fn(filter_wave))
+        scn2 = galsim.Convolve([gal2, PSF2, pix])
+        img2 = galsim.ImageD(stamp_size, stamp_size, 0.2)
+        scn2.draw(image=img2)
+
+        img /= img.array.max()
+        img2 /= img2.array.max()
+
+        np.testing.assert_array_almost_equal(img.array, img2.array, 3,
+                err_msg="ChromaticObject.draw() with monochromatic filter doesn't match"+
+                        "GSObject.draw()")
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_chromatic_direct_vs_galsim()
     test_chromatic_add()
     test_chromatic_add_draw()
     test_dcr_moments()
     test_chromatic_seeing_moments()
+    test_monochromatic_filter()
