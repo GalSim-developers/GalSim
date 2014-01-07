@@ -44,9 +44,9 @@ class BaseWCS(object):
 
     2. Non-local WCS classes may have a constant pixel size and shape, but they don't have to.
        They may also have an arbitrary origin in both image coordinates and world coordinates.
-       Furthermore, the world coordinates may be either a regular Euclidean coordinate
-       system (using galsim.PositionD objects for the world positions) or coordinates on
-       the celestial sphere (using galsim.CelestialCoord objects for the world positions).
+       Furthermore, the world coordinates may be either a regular Euclidean coordinate system 
+       (using galsim.PositionD for the world positions) or coordinates on the celestial sphere 
+       (using galsim.CelestialCoord for the world positions).
 
        Currently we define the following non-local WCS classes:
 
@@ -68,7 +68,7 @@ class BaseWCS(object):
     a very rough approximation of the true WCS.
 
 
-    Some things you can do with a WCS object:
+    Some things you can do with a WCS instance:
 
     - Convert positions between image coordinates and world coordinates (sometimes referred
       to as sky coordinates):
@@ -80,7 +80,7 @@ class BaseWCS(object):
       implemented.  If it is not implemented for a particular WCS class, a NotImplementedError
       will be raised.
 
-      The image_pos parameter should be a galsim.PositionD instance.  However, world_pos will
+      The image_pos parameter should be a galsim.PositionD.  However, world_pos will
       be a galsim.CelestialCoord if the transformation is in terms of celestial coordinates
       (c.f. wcs.isCelestial()).  Otherwise, it will be a PositionD as well.
 
@@ -127,7 +127,7 @@ class BaseWCS(object):
                 jac = local_wcs.jacobian()
                 # Use jac.dudx, jac.dudy, jac.dvdx, jac.dvdy
 
-      Global WCS objects also have these functions, but for them, you must supply either
+      Global WCS types also have these functions, but for them, you must supply either
       image_pos or world_pos.  So the following are equivalent:
 
                 area = wcs.pixelArea(image_pos)
@@ -152,8 +152,8 @@ class BaseWCS(object):
         #     _posToImage       function converting world_pos to image_pos
         #     _setOrigin        function returning a version with a new origin (or origins).
         #     copy              return a copy
-        #     __eq__            check if this equals another WCS object
-        #     __ne__            check if this is not equal to another WCS object
+        #     __eq__            check if this equals another WCS
+        #     __ne__            check if this is not equal to another WCS
         #     __repr__          convert to string
         #
         # Local WCS classes (i.e. those where (x,y) = (0,0) corresponds to (u,v) = (0,0)
@@ -269,8 +269,8 @@ class BaseWCS(object):
         For variable WCS transforms, you must provide either image_pos or world_pos
         to say where the pixel is located.
 
-        @param image_pos    The image coordinate position (for variable WCS objects)
-        @param world_pos    The world coordinate position (for variable WCS objects)
+        @param image_pos    The image coordinate position (for variable WCS types)
+        @param world_pos    The world coordinate position (for variable WCS types)
         @returns            The pixel area in arcsec**2
         """
         return self.local(image_pos, world_pos)._pixelArea()
@@ -285,8 +285,8 @@ class BaseWCS(object):
         For variable WCS transforms, you must provide either image_pos or world_pos
         to say where the pixel is located.
 
-        @param image_pos    The image coordinate position (for variable WCS objects)
-        @param world_pos    The world coordinate position (for variable WCS objects)
+        @param image_pos    The image coordinate position (for variable WCS types)
+        @param world_pos    The world coordinate position (for variable WCS types)
         @returns            The minimum pixel area in any direction in arcsec
         """
         return self.local(image_pos, world_pos)._minScale()
@@ -301,8 +301,8 @@ class BaseWCS(object):
         For variable WCS transforms, you must provide either image_pos or world_pos
         to say where the pixel is located.
 
-        @param image_pos    The image coordinate position (for variable WCS objects)
-        @param world_pos    The world coordinate position (for variable WCS objects)
+        @param image_pos    The image coordinate position (for variable WCS types)
+        @param world_pos    The world coordinate position (for variable WCS types)
         @returns            The maximum pixel area in any direction in arcsec
         """
         return self.local(image_pos, world_pos)._maxScale()
@@ -311,9 +311,9 @@ class BaseWCS(object):
         """Return whether the WCS transformation is a simple PixelScale or OffsetWCS.
 
         These are the simplest two WCS transformations.  PixelScale is local and OffsetWCS
-        is non-local.  If an Image object has one of these WCS transformations as its WCS,
-        then im.scale works to read and write the pixel scale.  If not, im.scale will
-        raise a TypeError exception.
+        is non-local.  If an Image has one of these WCS transformations as its WCS, then 
+        im.scale works to read and write the pixel scale.  If not, im.scale will raise a 
+        TypeError exception.
         """
         return isinstance(self,PixelScale) or isinstance(self,OffsetWCS)
 
@@ -337,9 +337,9 @@ class BaseWCS(object):
     def local(self, image_pos=None, world_pos=None):
         """Return the local linear approximation of the WCS at a given point.
 
-        @param image_pos    The image coordinate position (for variable WCS objects)
-        @param world_pos    The world coordinate position (for variable WCS objects)
-        @returns local_wcs  A WCS object with wcs.isLocal() == True
+        @param image_pos    The image coordinate position (for variable WCS types)
+        @param world_pos    The world coordinate position (for variable WCS types)
+        @returns local_wcs  A WCS with wcs.isLocal() == True
         """
         if image_pos and world_pos:
             raise TypeError("Only one of image_pos or world_pos may be provided")
@@ -366,9 +366,9 @@ class BaseWCS(object):
         If you do not need the extra functionality, then you should use wcs.local()
         instead, since it may be more efficient.
 
-        @param image_pos    The image coordinate position (for variable WCS objects)
-        @param world_pos    The world coordinate position (for variable WCS objects)
-        @returns local_wcs  A JacobianWCS object
+        @param image_pos    The image coordinate position (for variable WCS types)
+        @param world_pos    The world coordinate position (for variable WCS types)
+        @returns local_wcs  A JacobianWCS
         """
         return self.local(image_pos, world_pos)._toJacobian()
 
@@ -376,8 +376,8 @@ class BaseWCS(object):
         """Return the local AffineTransform of the WCS at a given point.
 
         This returns a linearized version of the current WCS at a given point.  It 
-        returns an AffineTransform instance that is locally approximately the same
-        as the WCS in the vicinity of the given point.
+        returns an AffineTransform that is locally approximately the same as the WCS in 
+        the vicinity of the given point.
 
         It is similar to jacobian(), except that this preserves the offset information
         between the image coordinates and world coordinates rather than setting both
@@ -397,9 +397,18 @@ class BaseWCS(object):
 
         As usual, you may provide either `image_pos` or `world_pos` as you prefer.
 
-        @param image_pos        The image coordinate position (for variable WCS objects)
-        @param world_pos        The world coordinate position (for variable WCS objects)
-        @returns affine_wcs     An AffineTransform object
+        You can use the returned AffineTransform to access the relevant values of the 2x2 
+        Jacobian matrix and the origins directly:
+
+                affine = wcs.affine(image_pos)
+                x,y = np.meshgrid(np.arange(0,32,1), np.arange(0,32,1))
+                u = affine.dudx * (x-affine.x0) + jac.dudy * (y-affine.y0) + affine.u0
+                v = affine.dvdx * (y-affine.y0) + jac.dvdy * (y-affine.y0) + affine.v0
+                ... use u,v values to work directly in sky coordinates.
+
+        @param image_pos        The image coordinate position (for variable WCS types)
+        @param world_pos        The world coordinate position (for variable WCS types)
+        @returns affine_wcs     An AffineTransform
         """
         jac = self.jacobian(image_pos, world_pos)
         # That call checked that only one of image_pos or world_pos is provided.
@@ -419,7 +428,7 @@ class BaseWCS(object):
     def setOrigin(self, image_origin, world_origin=None):
         """Recenter the current WCS function at a new origin location, returning the new WCS.
 
-        This function creates a new WCS object (always to non-local WCS) that treats
+        This function creates a new WCS instance (always a non-local WCS) that treats
         the image_origin position the same way the current WCS treats (x,y) = (0,0).
 
         If the current WCS is a local WCS, this essentially declares where on the image
@@ -453,7 +462,7 @@ class BaseWCS(object):
         @param image_origin  The image coordinate position to use as the origin.
         @param world_origin  The world coordinate position to use as the origin.  Only valid if
                              wcs.isUniform() == True.  [ Default `world_origin=None` ]
-        @returns wcs         The new recentered WCS object
+        @returns wcs         The new recentered WCS
         """
         if isinstance(image_origin, galsim.PositionI):
             image_origin = galsim.PositionD(image_origin.x, image_origin.y)
@@ -541,7 +550,7 @@ class BaseWCS(object):
         header, as it will also write GalSim-specific key words that (normally) allow it to 
         reconstruct the WCS correctly.
 
-        @param header       The fits header object to write the data to.
+        @param header       The fits header to write the data to.
         @param bounds       The bounds of the image.
         """
         # Always need these, so just do them here.
@@ -573,8 +582,8 @@ class BaseWCS(object):
 #     _posToWorld       function converting image_pos to world_pos
 #     _posToImage       function converting world_pos to image_pos
 #     copy              return a copy
-#     __eq__            check if this equals another WCS object
-#     __ne__            check if this is not equal to another WCS object
+#     __eq__            check if this equals another WCS
+#     __ne__            check if this is not equal to another WCS
 #     __repr__          convert to string
 #     _profileToWorld   function converting image_profile to world_profile
 #     _profileToImage   function converting world_profile to image_profile
@@ -597,7 +606,7 @@ class PixelScale(BaseWCS):
 
     Initialization
     --------------
-    A PixelScale object is initialized with the command:
+    A PixelScale is initialized with the command:
 
         wcs = galsim.PixelScale(scale)
 
@@ -676,12 +685,12 @@ class ShearWCS(BaseWCS):
 
     Initialization
     --------------
-    A ShearWCS object is initialized with the command:
+    A ShearWCS is initialized with the command:
 
         wcs = galsim.ShearWCS(scale, shear)
 
-    @param scale        The pixel scale, typically in units of arcsec/pixel.
-    @param shear        The shear, which should be a galsim.Shear instance.
+    @param scale          The pixel scale, typically in units of arcsec/pixel.
+    @param shear          The shear, which should be a galsim.Shear instance.
     """
     _req_params = { "scale" : float, "shear" : galsim.Shear }
     _opt_params = {}
@@ -785,9 +794,12 @@ class JacobianWCS(BaseWCS):
         u = dudx x + dudy y
         v = dvdx x + dvdy y
 
+    A JacobianWCS has attributes dudx, dudy, dvdx, dvdy that you can access directly if that 
+    is convenient.
+
     Initialization
     --------------
-    A JacobianWCS object is initialized with the command:
+    A JacobianWCS is initialized with the command:
 
         wcs = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)
 
@@ -934,8 +946,8 @@ class JacobianWCS(BaseWCS):
 #     _posToWorld       function converting image_pos to world_pos
 #     _posToImage       function converting world_pos to image_pos
 #     copy              return a copy
-#     __eq__            check if this equals another WCS object
-#     __ne__            check if this is not equal to another WCS object
+#     __eq__            check if this equals another WCS
+#     __ne__            check if this is not equal to another WCS
 #     _local            function returning a local WCS at a given location
 #     _writeHeader      function that writes the WCS to a fits header.
 #     _readHeader       static function that reads the WCS from a fits header.
@@ -954,16 +966,16 @@ class OffsetWCS(BaseWCS):
 
     Initialization
     --------------
-    An OffsetWCS object is initialized with the command:
+    An OffsetWCS is initialized with the command:
 
         wcs = galsim.OffsetWCS(scale, image_origin=None, world_origin=None)
 
     @param scale          The pixel scale, typically in units of arcsec/pixel.
     @param image_origin   Optional origin position for the image coordinate system.
-                          If provided, it should be a PostionD or PositionI object.
+                          If provided, it should be a PostionD or PositionI.
                           [ Default: `image_origin = None` ]
     @param world_origin   Optional origin position for the world coordinate system.
-                          If provided, it should be a PostionD object.
+                          If provided, it should be a PostionD.
                           [ Default: `world_origin = None` ]
     """
     _req_params = { "scale" : float }
@@ -1067,17 +1079,17 @@ class OffsetShearWCS(BaseWCS):
 
     Initialization
     --------------
-    An OffsetShearWCS object is initialized with the command:
+    An OffsetShearWCS is initialized with the command:
 
         wcs = galsim.OffsetShearWCS(scale, shear, image_origin=None, world_origin=None)
 
     @param scale          The pixel scale, typically in units of arcsec/pixel.
     @param shear          The shear, which should be a galsim.Shear instance.
     @param image_origin   Optional origin position for the image coordinate system.
-                          If provided, it should be a PostionD or PositionI object.
+                          If provided, it should be a PostionD or PositionI.
                           [ Default: `image_origin = None` ]
     @param world_origin   Optional origin position for the world coordinate system.
-                          If provided, it should be a PostionD object.
+                          If provided, it should be a PostionD.
                           [ Default: `world_origin = None` ]
     """
     _req_params = { "scale" : float, "shear" : galsim.Shear }
@@ -1179,9 +1191,12 @@ class AffineTransform(BaseWCS):
         u = dudx (x-x0) + dudy (y-y0) + u0
         v = dvdx (x-x0) + dvdy (y-y0) + v0
 
+    An AffineTransform has attributes dudx, dudy, dvdx, dvdy, x0, y0, u0, v0 that you can 
+    access directly if that is convenient.
+
     Initialization
     --------------
-    An AffineTransform object is initialized with the command:
+    An AffineTransform is initialized with the command:
 
         wcs = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, image_origin=None, world_origin=None)
 
@@ -1190,10 +1205,10 @@ class AffineTransform(BaseWCS):
     @param dvdx           dv/dx
     @param dvdy           dv/dy
     @param image_origin   Optional origin position for the image coordinate system.
-                          If provided, it should be a PostionD or PositionI object.
+                          If provided, it should be a PostionD or PositionI.
                           [ Default: `image_origin = None` ]
     @param world_origin   Optional origin position for the world coordinate system.
-                          If provided, it should be a PostionD object.
+                          If provided, it should be a PostionD.
                           [ Default: `world_origin = None` ]
     """
     _req_params = { "dudx" : float, "dudy" : float, "dvdx" : float, "dvdy" : float }
@@ -1227,6 +1242,15 @@ class AffineTransform(BaseWCS):
     def dvdy(self): return self._jacwcs.dvdy
 
     @property
+    def x0(self): return self._image_origin.x
+    @property
+    def y0(self): return self._image_origin.y
+    @property
+    def u0(self): return self._world_origin.x
+    @property
+    def v0(self): return self._world_origin.y
+
+    @property
     def image_origin(self): return self._image_origin
     @property
     def world_origin(self): return self._world_origin
@@ -1251,10 +1275,10 @@ class AffineTransform(BaseWCS):
     def _writeLinearWCS(self, header, bounds):
         header["CTYPE1"] = ("LINEAR", "name of the world coordinate axis")
         header["CTYPE2"] = ("LINEAR", "name of the world coordinate axis")
-        header["CRVAL1"] = (self.world_origin.x, "world coordinate at reference pixel")
-        header["CRVAL2"] = (self.world_origin.y, "world coordinate at reference pixel")
-        header["CRPIX1"] = (self.image_origin.x, "image coordinate of reference pixel")
-        header["CRPIX2"] = (self.image_origin.y, "image coordinate of reference pixel")
+        header["CRVAL1"] = (self.u0, "world coordinate at reference pixel = u0")
+        header["CRVAL2"] = (self.v0, "world coordinate at reference pixel = v0")
+        header["CRPIX1"] = (self.x0, "image coordinate of reference pixel = x0")
+        header["CRPIX2"] = (self.y0, "image coordinate of reference pixel = y0")
         header["CD1_1"] = (self.dudx, "CD1_1 = dudx")
         header["CD1_2"] = (self.dudy, "CD1_2 = dudy")
         header["CD2_1"] = (self.dvdx, "CD2_1 = dvdx")
@@ -1391,17 +1415,17 @@ class UVFunction(BaseWCS):
 
     Initialization
     --------------
-    A UVFunction object is initialized with the command:
+    A UVFunction is initialized with the command:
 
         wcs = galsim.UVFunction(ufunc, vfunc, image_origin=None, world_origin=None)
 
     @param ufunc          The function u(x,y)
     @param vfunc          The function v(x,y)
     @param image_origin   Optional origin position for the image coordinate system.
-                          If provided, it should be a PostionD or PositionI object.
+                          If provided, it should be a PostionD or PositionI.
                           [ Default: `image_origin = None` ]
     @param world_origin   Optional origin position for the world coordinate system.
-                          If provided, it should be a PostionD object.
+                          If provided, it should be a PostionD.
                           [ Default: `world_origin = None` ]
     """
     _req_params = { "ufunc" : str, "vfunc" : str }
@@ -1528,7 +1552,7 @@ class UVFunction(BaseWCS):
 
 def makeJacFromNumericalRaDec(ra, dec, dx, dy):
     """Convert a list of list of ra, dec values for (0,0), (dx,0), (-dx,0), (0,dy), and (0,-dy)
-       into an JacobianWCS object.  The input ra, dec values should be in degrees.
+       into a JacobianWCS.  The input ra, dec values should be in degrees.
     """
     ra0, ra1, ra2, ra3, ra4 = ra
     dec0, dec1, dec2, dec3, dec4 = dec
@@ -1558,18 +1582,18 @@ class RaDecFunction(BaseWCS):
         - python functions that take (x,y) arguments
         - python objects with a __call__ method that takes (x,y) arguments
         - strings which can be parsed with eval('lambda x,y: '+str)
-    The functions should return galsim.Angle objects.
+    The functions should return galsim.Angles.
 
     Initialization
     --------------
-    A RaDecFunction object is initialized with the command:
+    An RaDecFunction is initialized with the command:
 
         wcs = galsim.RaDecFunction(rafunc, decfunc, image_origin=None)
 
     @param rafunc         The function ra(x,y)
     @param decfunc        The function dec(x,y)
     @param image_origin   Optional origin position for the image coordinate system.
-                          If provided, it should be a PostionD or PositionI object.
+                          If provided, it should be a PostionD or PositionI.
                           [ Default: `image_origin = None` ]
     """
     _req_params = { "rafunc" : str, "decfunc" : str }
@@ -1691,11 +1715,11 @@ class AstropyWCS(BaseWCS):
 
     Initialization
     --------------
-    An AstropyWCS object is initialized with one of the following commands:
+    An AstropyWCS is initialized with one of the following commands:
 
         wcs = galsim.AstropyWCS(file_name=file_name)  # Open a file on disk
         wcs = galsim.AstropyWCS(header=header)        # Use an existing pyfits header
-        wcs = galsim.AstropyWCS(wcs=wcs)              # Use an axisting astropy.wcs.WCS object
+        wcs = galsim.AstropyWCS(wcs=wcs)              # Use an existing astropy.wcs.WCS instance
 
     Exactly one of the parameters file_name, header or wcs is required.  Also, since the
     most common usage will probably be the first, you can also give a file_name without it
@@ -1714,9 +1738,9 @@ class AstropyWCS(BaseWCS):
                           [ Default `header = None` ]
     @param compression    Which decompression scheme to use (if any). See galsim.fits.read
                           for the available options.  [ Default `compression = 'auto'` ]
-    @param wcs            An existing astropy.wcs.WCS object [ Default: `wcs = None` ]
+    @param wcs            An existing astropy.wcs.WCS instance [ Default: `wcs = None` ]
     @param image_origin   Optional origin position for the image coordinate system.
-                          If provided, it should be a PostionD or PositionI object.
+                          If provided, it should be a PostionD or PositionI.
                           [ Default: `image_origin = None` ]
     """
     _req_params = { "file_name" : str }
@@ -1966,11 +1990,11 @@ class PyAstWCS(BaseWCS):
 
     Initialization
     --------------
-    A PyAstWCS object is initialized with one of the following commands:
+    A PyAstWCS is initialized with one of the following commands:
 
         wcs = galsim.PyAstWCS(file_name=file_name)  # Open a file on disk
         wcs = galsim.PyAstWCS(header=header)        # Use an existing pyfits header
-        wcs = galsim.PyAstWCS(wcsinfo=wcsinfo)      # Use an axisting starlink.Ast.FrameSet object
+        wcs = galsim.PyAstWCS(wcsinfo=wcsinfo)      # Use an existing starlink.Ast.FrameSet
 
     Exactly one of the parameters file_name, header or wcsinfo is required.  Also, since the
     most common usage will probably be the first, you can also give a file_name without it
@@ -1989,9 +2013,9 @@ class PyAstWCS(BaseWCS):
                           [ Default `header = None` ]
     @param compression    Which decompression scheme to use (if any). See galsim.fits.read
                           for the available options.  [ Default `compression = 'auto'` ]
-    @param wcsinfo        An existing starlink.Ast.WcsMap object [ Default: `wcsinfo = None` ]
+    @param wcsinfo        An existing starlink.Ast.WcsMap [ Default: `wcsinfo = None` ]
     @param image_origin   Optional origin position for the image coordinate system.
-                          If provided, it should be a PostionD or PositionI object.
+                          If provided, it should be a PostionD or PositionI.
                           [ Default: `image_origin = None` ]
     """
     _req_params = { "file_name" : str }
@@ -2178,14 +2202,14 @@ class WcsToolsWCS(BaseWCS):
 
     Initialization
     --------------
-    A WcsToolsWCS object is initialized with the following command:
+    A WcsToolsWCS is initialized with the following command:
 
         wcs = galsim.WcsToolsWCS(file_name)
 
     @param file_name      The FITS file from which to read the WCS information.
     @param dir            Optional directory to prepend to the file name. [ Default `dir = None` ]
     @param image_origin   Optional origin position for the image coordinate system.
-                          If provided, it should be a PostionD or PositionI object.
+                          If provided, it should be a PostionD or PositionI.
                           [ Default: `image_origin = None` ]
     """
     _req_params = { "file_name" : str }
@@ -2395,7 +2419,7 @@ class GSFitsWCS(BaseWCS):
 
     Initialization
     --------------
-    An GSFitsWCS object is initialized with one of the following commands:
+    A GSFitsWCS is initialized with one of the following commands:
 
         wcs = galsim.GSFitsWCS(file_name=file_name)  # Open a file on disk
         wcs = galsim.GSFitsWCS(header=header)        # Use an existing pyfits header
@@ -2417,7 +2441,7 @@ class GSFitsWCS(BaseWCS):
     @param compression    Which decompression scheme to use (if any). See galsim.fits.read
                           for the available options.  [ Default `compression = 'auto'` ]
     @param image_origin   Optional origin position for the image coordinate system.
-                          If provided, it should be a PostionD or PositionI object.
+                          If provided, it should be a PostionD or PositionI.
                           [ Default: `image_origin = None` ]
     """
     _req_params = { "file_name" : str }
@@ -2775,9 +2799,9 @@ fits_wcs_types = [
 ]
 
 def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto'):
-    """This factory function will try to read the WCS from a FITS file and return a WCS
-    object that will work.  It tries a number of different WCS classes until it finds one
-    that succeeds in reading the file.
+    """This factory function will try to read the WCS from a FITS file and return a WCS that will 
+    work.  It tries a number of different WCS classes until it finds one that succeeds in reading 
+    the file.
     
     If none of them work, then the last class it tries, AffineTransform, is guaranteed to succeed, 
     but it will only model the linear portion of the WCS (the CD matrix, CRPIX, and CRVAL), using 
