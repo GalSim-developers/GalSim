@@ -231,6 +231,7 @@ def _write_header(hdu, add_wcs, scale, xmin, ymin):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
 
+        if scale is None: scale = 1.0
         hdu.header.update("GS_SCALE", scale, "GalSim Image scale")
         hdu.header.update("GS_XMIN", xmin, "GalSim Image minimum X coordinate")
         hdu.header.update("GS_YMIN", ymin, "GalSim Image minimum Y coordinate")
