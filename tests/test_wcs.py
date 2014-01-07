@@ -724,8 +724,8 @@ def test_shearwcs():
     assert wcs != wcs3b, 'ShearWCS is not != a different one (shear)'
     
     factor = 1./np.sqrt(1.-g1*g1-g2*g2)
-    ufunc = lambda x,y: (x + g1*x + g2*y) * scale * factor
-    vfunc = lambda x,y: (y - g1*y + g2*x) * scale * factor
+    ufunc = lambda x,y: (x - g1*x - g2*y) * scale * factor
+    vfunc = lambda x,y: (y + g1*y - g2*x) * scale * factor
 
     # Do generic tests that apply to all WCS types
     do_local_wcs(wcs, ufunc, vfunc, 'ShearWCS')
@@ -735,13 +735,13 @@ def test_shearwcs():
 
     # Check jacobian()
     jac = wcs.jacobian()
-    np.testing.assert_almost_equal(jac.dudx, (1.+g1) * scale * factor,  digits,
+    np.testing.assert_almost_equal(jac.dudx, (1.-g1) * scale * factor,  digits,
                                    'ShearWCS dudx does not match expected value.')
-    np.testing.assert_almost_equal(jac.dudy, g2 * scale * factor,  digits,
+    np.testing.assert_almost_equal(jac.dudy, -g2 * scale * factor,  digits,
                                    'ShearWCS dudy does not match expected value.')
-    np.testing.assert_almost_equal(jac.dvdx, g2 * scale * factor,  digits,
+    np.testing.assert_almost_equal(jac.dvdx, -g2 * scale * factor,  digits,
                                    'ShearWCS dvdx does not match expected value.')
-    np.testing.assert_almost_equal(jac.dvdy, (1.-g1) * scale * factor,  digits,
+    np.testing.assert_almost_equal(jac.dvdy, (1.+g1) * scale * factor,  digits,
                                    'ShearWCS dvdy does not match expected value.')
 
     # Add an image origin offset
@@ -762,8 +762,8 @@ def test_shearwcs():
     assert wcs != wcs3c, 'OffsetShearWCS is not != a different one (image_origin)'
     assert wcs != wcs3d, 'OffsetShearWCS is not != a different one (world_origin)'
 
-    ufunc = lambda x,y: ((1+g1)*(x-x0) + g2*(y-y0)) * scale * factor
-    vfunc = lambda x,y: ((1-g1)*(y-y0) + g2*(x-x0)) * scale * factor
+    ufunc = lambda x,y: ((1-g1)*(x-x0) - g2*(y-y0)) * scale * factor
+    vfunc = lambda x,y: ((1+g1)*(y-y0) - g2*(x-x0)) * scale * factor
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'OffsetShearWCS 1')
 
     # Add a world origin offset
@@ -771,8 +771,8 @@ def test_shearwcs():
     v0 = -141.9
     world_origin = galsim.PositionD(u0,v0)
     wcs = galsim.OffsetShearWCS(scale, shear, world_origin=world_origin)
-    ufunc = lambda x,y: ((1+g1)*x + g2*y) * scale * factor + u0
-    vfunc = lambda x,y: ((1-g1)*y + g2*x) * scale * factor + v0
+    ufunc = lambda x,y: ((1-g1)*x - g2*y) * scale * factor + u0
+    vfunc = lambda x,y: ((1+g1)*y - g2*x) * scale * factor + v0
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'OffsetShearWCS 2')
 
     # Add both kinds of offsets
@@ -783,8 +783,8 @@ def test_shearwcs():
     image_origin = galsim.PositionD(x0,y0)
     world_origin = galsim.PositionD(u0,v0)
     wcs = galsim.OffsetShearWCS(scale, shear, image_origin=image_origin, world_origin=world_origin)
-    ufunc = lambda x,y: ((1+g1)*(x-x0) + g2*(y-y0)) * scale * factor + u0
-    vfunc = lambda x,y: ((1-g1)*(y-y0) + g2*(x-x0)) * scale * factor + v0
+    ufunc = lambda x,y: ((1-g1)*(x-x0) - g2*(y-y0)) * scale * factor + u0
+    vfunc = lambda x,y: ((1+g1)*(y-y0) - g2*(x-x0)) * scale * factor + v0
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'OffsetShearWCS 3')
 
     # Check that using a wcs in the context of an image works correctly
@@ -967,8 +967,8 @@ def test_uvfunction():
     g1 = 0.14
     g2 = -0.37
     factor = 1./np.sqrt(1.-g1*g1-g2*g2)
-    ufunc = lambda x,y: (x + g1*x + g2*y) * scale * factor
-    vfunc = lambda x,y: (y - g1*y + g2*x) * scale * factor
+    ufunc = lambda x,y: (x - g1*x - g2*y) * scale * factor
+    vfunc = lambda x,y: (y + g1*y - g2*x) * scale * factor
     wcs = galsim.UVFunction(ufunc, vfunc)
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction like ShearWCS')
 
@@ -1093,8 +1093,8 @@ def test_radecfunction():
     g1 = 0.14
     g2 = -0.37
     factor = 1./np.sqrt(1.-g1*g1-g2*g2)
-    ufunc = lambda x,y: (x + g1*x + g2*y) * scale * factor
-    vfunc = lambda x,y: (y - g1*y + g2*x) * scale * factor
+    ufunc = lambda x,y: (x - g1*x - g2*y) * scale * factor
+    vfunc = lambda x,y: (y + g1*y - g2*x) * scale * factor
     funcs.append( (ufunc, vfunc, 'like ShearWCS') )
 
     dudx = 0.2342

@@ -684,10 +684,17 @@ class PixelScale(BaseWCS):
 class ShearWCS(BaseWCS):
     """This WCS is a uniformly sheared coordinate system.
 
-    The conversion functions are:
+    The shear is given as the shape that a round object has when observed in image coordinates.
 
-        u = (x + g1 x + g2 y) * scale / sqrt(1-g1**2-g2**2)
-        v = (y - g1 y + g2 x) * scale / sqrt(1-g1**2-g2**2)
+    The conversion functions in terms of (g1,g2) are therefore:
+
+        x = (u + g1 u + g2 v) / scale / sqrt(1-g1**2-g2**2)
+        y = (v - g1 v + g2 u) / scale / sqrt(1-g1**2-g2**2)
+
+    or, writing this in the usual way of (u,v) as a function of (x,y):
+
+        u = (x - g1 x - g2 y) * scale / sqrt(1-g1**2-g2**2)
+        v = (y + g1 y - g2 x) * scale / sqrt(1-g1**2-g2**2)
 
     Initialization
     --------------
@@ -728,30 +735,27 @@ class ShearWCS(BaseWCS):
     def world_origin(self): return galsim.PositionD(0,0)
 
     def _posToWorld(self, image_pos):
-        u = image_pos.x * (1.+self._g1) + image_pos.y * self._g2
-        v = image_pos.y * (1.-self._g1) + image_pos.x * self._g2
+        u = image_pos.x * (1.-self._g1) - image_pos.y * self._g2
+        v = image_pos.y * (1.+self._g1) - image_pos.x * self._g2
         u *= self._scale * self._gfactor
         v *= self._scale * self._gfactor
         return galsim.PositionD(u,v)
 
     def _posToImage(self, world_pos):
-        # The inverse transformation is
-        # x = (u - g1 u - g2 v) / scale / sqrt(1-|g|^2)
-        # y = (v + g1 v - g2 u) / scale / sqrt(1-|g|^2)
-        x = world_pos.x * (1.-self._g1) - world_pos.y * self._g2
-        y = world_pos.y * (1.+self._g1) - world_pos.x * self._g2
+        x = world_pos.x * (1.+self._g1) + world_pos.y * self._g2
+        y = world_pos.y * (1.-self._g1) + world_pos.x * self._g2
         x *= self._gfactor / self._scale
         y *= self._gfactor / self._scale
         return galsim.PositionD(x,y)
 
     def _profileToWorld(self, image_profile):
         world_profile = image_profile.createDilated(self._scale)
-        world_profile.applyShear(self.shear)
+        world_profile.applyShear(-self.shear)
         return world_profile
 
     def _profileToImage(self, world_profile):
         image_profile = world_profile.createDilated(1./self._scale)
-        image_profile.applyShear(-self.shear)
+        image_profile.applyShear(self.shear)
         return image_profile
 
     def _pixelArea(self):
@@ -769,10 +773,10 @@ class ShearWCS(BaseWCS):
 
     def _toJacobian(self):
         return JacobianWCS(
-            (1.+self._g1) * self._scale * self._gfactor,
-            self._g2 * self._scale * self._gfactor,
-            self._g2 * self._scale * self._gfactor,
-            (1.-self._g1) * self._scale * self._gfactor)
+            (1.-self._g1) * self._scale * self._gfactor,
+            -self._g2 * self._scale * self._gfactor,
+            -self._g2 * self._scale * self._gfactor,
+            (1.+self._g1) * self._scale * self._gfactor)
 
     def _setOrigin(self, image_origin, world_origin):
         return OffsetShearWCS(self._scale, self._shear, image_origin, world_origin)
@@ -1106,8 +1110,11 @@ class OffsetShearWCS(BaseWCS):
 
     The conversion functions are:
 
-        u = ( (1+g1) (x-x0) + g2 (y-y0) ) * scale / sqrt(1-g1**2-g2**2) + u0
-        v = ( (1-g1) (y-y0) + g2 (x-x0) ) * scale / sqrt(1-g1**2-g2**2) + v0
+        x = ( (1+g1) (u-u0) + g2 (v-v0) ) / scale / sqrt(1-g1**2-g2**2) + x0
+        y = ( (1-g1) (v-v0) + g2 (u-u0) ) / scale / sqrt(1-g1**2-g2**2) + y0
+
+        u = ( (1-g1) (x-x0) - g2 (y-y0) ) * scale / sqrt(1-g1**2-g2**2) + u0
+        v = ( (1+g1) (y-y0) - g2 (x-x0) ) * scale / sqrt(1-g1**2-g2**2) + v0
 
     Initialization
     --------------
