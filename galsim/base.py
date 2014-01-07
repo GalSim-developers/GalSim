@@ -1247,7 +1247,7 @@ class GSObject(object):
         # The scale in the wcs objects is the dk scale, not dx.  So the conversion to 
         # image coordinates needs to apply the inverse pixel scale.
         # The following are all equivalent ways to do this:
-        #    re.wcs.ToSky(prof)
+        #    re.wcs.toWorld(prof)
         #    galsim.PixelScale(1./re.scale).toImage(prof)
         #    prof.createDilated(re.scale)
         prof = self.createDilated(re.scale)
