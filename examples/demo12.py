@@ -63,29 +63,40 @@ def main(argv):
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger("demo12")
 
-    # read in two SEDs
+    # initialize (pseudo-)random number generator
+    random_seed = 1234567
+    rng = galsim.BaseDeviate(random_seed)
+    gaussian_noise = galsim.GaussianNoise(rng, sigma=1e5)
+
+    # read in SED and redshift it
     redshift = 2.1
-    SED_names = ['CWW_E_ext', 'CWW_Im_ext']
-    SEDs = {}
-    for SED_name in SED_names:
-        wave, flambda = numpy.genfromtxt('data/{}.sed'.format(SED_name)).T
-        SEDs[SED_name] = {'wave':wave/10 * (1+redshift), 'photons':flambda*wave}
-    logger.debug('Read in SEDs')
+    SED_name = 'CWW_E_ext'
+    wave, flambda = numpy.genfromtxt('data/{}.sed'.format(SED_name)).T
+    wave /= 10 # convert from Angstroms to nanometers
+    wave *= (1+redshift) #redshift the spectrum
+    photons = flambda*wave
+    logger.debug('Successfully read in SEDs')
 
     # read in the r-, i-, and z-band LSST filters
     filter_names = 'riz'
     filters = {}
     for filter_name in filter_names:
-        wave, throughput = numpy.genfromtxt('data/LSST_{}.dat'.format(filter_name)).T
-        filters[filter_name] = {'wave':wave, 'throughput':throughput}
+        fwave, throughput = numpy.genfromtxt('data/LSST_{}.dat'.format(filter_name)).T
+        filters[filter_name] = {'wave':fwave, 'throughput':throughput}
     logger.debug('Read in filters')
 
-    # Create chromatic object
-    gal = galsim.ChromaticBaseObject(galsim.Sersic,
-                                     SEDs['CWW_E_ext']['wave'],
-                                     SEDs['CWW_E_ext']['photons'],
+    # Here we create a chromatic version of a Sersic profile using the ChromaticBaseObject class.
+    # This class lets one create chromatic versions of any galsim GSObject class.  The first argument
+    # is the GSObject class to be chromaticized, and the second and third arguments are the
+    # wavelength and photon array for the profile's SED.  Any required or optional arguments for the
+    # GSObject are then inserted, such as the `n=1` and `half_light_radius=0.5` needed for
+    # galsim.Sersic profile as seen below.
+    gal = galsim.ChromaticBaseObject(galsim.Sersic, wave, photons,
                                      n=1, half_light_radius=0.5)
+    # You can still shear, shift,  and dilate the resulting chromatic object.
     gal.applyShear(g1=0.5, g2=0.3)
+    gal.applyDilation(1.05)
+    gal.applyShift((0.0, 0.1))
     logger.debug('Created ChromaticBaseObject')
 
     # now place this galaxy in a scene
@@ -98,7 +109,7 @@ def main(argv):
         filter_ = filters[filter_name]
         img = galsim.ImageF(64, 64, 0.2)
         scn.draw(wave=filter_['wave'], throughput=filter_['throughput'], image=img)
-        img.addNoise(galsim.GaussianNoise(sigma=1e5))
+        img.addNoise(gaussian_noise)
         logger.debug('Created {}-band image'.format(filter_name))
         galsim.fits.write(img, 'output/demo12_{}.fits'.format(filter_name))
         logger.debug('Wrote {}-band image to disk'.format(filter_name))
