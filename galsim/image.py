@@ -394,9 +394,10 @@ class Image(object):
         Or you can provide dx, dy as named kwargs.
         """
         delta = galsim.utilities.parse_pos_args(args, kwargs, 'dx', 'dy', integer=True)
-        self.image.shift(delta)
-        if self.wcs is not None:
-            self.wcs = self.wcs.setOrigin(galsim.PositionD(delta.x,delta.y))
+        if delta.x != 0 or delta.y != 0:
+            self.image.shift(delta)
+            if self.wcs is not None:
+                self.wcs = self.wcs.setOrigin(galsim.PositionD(delta.x,delta.y))
 
     def setCenter(self, *args, **kwargs):
         """Set the center of the image to the given (integral) (xcen, ycen)
