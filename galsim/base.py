@@ -908,7 +908,7 @@ class GSObject(object):
         if wcs is not None:
             if scale is not None:
                 raise ValueError("Cannot provide both wcs and scale")
-            if isinstance(wcs, galsim.PixelScale):
+            if wcs.isPixelScale():
                 # In this case, just get the scale and move on as if scale were provided.
                 scale = wcs.scale
             else:
@@ -945,6 +945,8 @@ class GSObject(object):
         imview = image.view()
         imview.setCenter(0,0)
         image.added_flux = prof.SBProfile.draw(imview.image, gain, wmult)
+
+        if wcs is not None: image.wcs = wcs
 
         return image
 
@@ -1131,7 +1133,7 @@ class GSObject(object):
                 raise ValueError("Cannot provide wcs when image == None")
             if not image.bounds.isDefined():
                 raise ValueError("Cannot provide wcs when image has undefined bounds")
-            if not isinstance(wcs, galsim.BaseWCS()):
+            if not isinstance(wcs, galsim.BaseWCS):
                 raise TypeError("wcs must be a BaseWCS instance")
             image.wcs = wcs
 
