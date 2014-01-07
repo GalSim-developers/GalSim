@@ -117,6 +117,12 @@ class ChromaticBaseObject(ChromaticObject):
     def applyShear(self, *args, **kwargs):
         self.gsobj.applyShear(*args, **kwargs)
 
+    def applyDilation(self, *args, **kwargs):
+        self.gsobj.applyDilation(*args, **kwargs)
+
+    def applyShift(self, *args, **kwargs):
+        self.gsobj.applyShift(*args, **kwargs)
+
     def evaluateAtWavelength(self, wave):
         """
         @param wave  Wavelength in nanometers.
@@ -142,7 +148,7 @@ class ChromaticAdd(ChromaticObject):
             obj.applyShear(*args, **kwargs)
 
     def draw(self, wave, throughput, image=None, add_to_image=False):
-        # most efficient to just add up one component at a time...?
+        # is the most efficient method to just add up one component at a time...?
         image = self.objlist[0].draw(wave, throughput, image=image)
         for obj in self.objlist[1:]:
             image = obj.draw(wave, throughput, image=image, add_to_image=True)
