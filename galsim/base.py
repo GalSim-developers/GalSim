@@ -908,13 +908,17 @@ class GSObject(object):
         if wcs is not None:
             if scale is not None:
                 raise ValueError("Cannot provide both wcs and scale")
-            if image is None:
-                raise ValueError("Cannot provide wcs when image == None")
-            if not image.bounds.isDefined():
-                raise ValueError("Cannot provide wcs when image has undefined bounds")
-            if not isinstance(wcs, galsim.BaseWCS()):
-                raise TypeError("wcs must be a BaseWCS instance")
-            image.wcs = wcs
+            if isinstance(wcs, galsim.PixelScale):
+                # In this case, just get the scale and move on as if scale were provided.
+                scale = wcs.scale
+            else:
+                if image is None:
+                    raise ValueError("Cannot provide wcs when image == None")
+                if not image.bounds.isDefined():
+                    raise ValueError("Cannot provide wcs when image has undefined bounds")
+                if not isinstance(wcs, galsim.BaseWCS):
+                    raise TypeError("wcs must be a BaseWCS instance")
+                image.wcs = wcs
 
         # Make sure offset is a PositionD
         offset = self._parse_offset(offset)

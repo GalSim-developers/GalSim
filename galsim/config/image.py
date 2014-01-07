@@ -389,8 +389,6 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
 
     pixel_scale = params.get('pixel_scale',1.0)
     config['pixel_scale'] = pixel_scale
-    if 'pix' not in config:
-        config['pix'] = { 'type' : 'Pixel' , 'scale' : pixel_scale }
 
     if 'sky_level' in params and 'sky_level_pixel' in params:
         raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
@@ -502,9 +500,6 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     config['image_ysize'] = full_ysize
     if logger:
         logger.debug('image %d: image_size = %d, %d',image_num,full_xsize,full_ysize)
-
-    if 'pix' not in config:
-        config['pix'] = { 'type' : 'Pixel' , 'scale' : pixel_scale }
 
     # Set the rng to use for image stuff.
     if 'random_seed' in config['image']:
@@ -653,7 +648,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
                 full_image.addNoise(galsim.VariableGaussianNoise(rng,noise_image))
             # Now max_current_var is how much noise is in each pixel.
 
-            if draw_method == 'fft':
+            if draw_method in [ 'fft', 'no_pixel' ]:
                 galsim.config.AddNoiseFFT(
                     full_image,full_weight_image,max_current_var,config['image']['noise'],config,
                     rng,sky_level_pixel)
@@ -750,9 +745,6 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
             "xsize=%d, ysize=%d, "%(full_xsize,full_ysize))
     config['image_xsize'] = full_xsize
     config['image_ysize'] = full_ysize
-
-    if 'pix' not in config:
-        config['pix'] = { 'type' : 'Pixel' , 'scale' : pixel_scale }
 
     # Set the rng to use for image stuff.
     if 'random_seed' in config['image']:
@@ -894,7 +886,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
             full_image.addNoise(galsim.VariableGaussianNoise(rng,noise_image))
         # Now max_current_var is how much noise is in each pixel.
 
-        if draw_method == 'fft':
+        if draw_method in [ 'fft', 'no_pixel' ]:
             galsim.config.AddNoiseFFT(
                 full_image,full_weight_image,max_current_var,config['image']['noise'],config,
                 rng,sky_level_pixel)

@@ -44,6 +44,8 @@ Python layer API changes:
 
 Updates to config options:
 
+* Remove pix top layer in config structure.  Add draw_method=no_pixel to 
+  do what `pix : None` used to do. (Issue #364)
 * Changed the name of sky_pos to world_pos. (Issue #364)
 * Added a new image.retry_failures item that can be set so that if the 
   construction of a GSObject fails for any reason, you can ask it to retry.

@@ -420,9 +420,6 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 psf = BuildPSF(config,logger,gsparams)
                 t2 = time.time()
 
-                pix = BuildPix(config,logger,gsparams)
-                t3 = time.time()
-
                 gal = BuildGal(config,logger,gsparams)
                 t4 = time.time()
 
@@ -445,6 +442,12 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
 
             draw_method = galsim.config.ParseValue(config['image'],'draw_method',config,str)[0]
 
+            if draw_method == 'no_pixel':
+                draw_method = 'fft'
+                no_pixel = True
+            else:
+                no_pixel = False
+                
             if skip: 
                 if xsize and ysize:
                     # If the size is set, we need to do something reasonable to return this size.
@@ -465,8 +468,8 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 current_var = 0
 
             elif draw_method == 'fft':
-                im, current_var = DrawStampFFT(psf,pix,gal,config,xsize,ysize,sky_level_pixel,
-                                               offset)
+                im, current_var = DrawStampFFT(psf,gal,config,xsize,ysize,sky_level_pixel,offset,
+                                               no_pixel)
                 if icenter:
                     im.setCenter(icenter.x, icenter.y)
                 if make_weight_image:
@@ -510,7 +513,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             t5 = time.time()
 
             if make_psf_image:
-                psf_im = DrawPSFStamp(psf,pix,config,im.bounds,sky_level_pixel,offset)
+                psf_im = DrawPSFStamp(psf,config,im.bounds,sky_level_pixel,offset,no_pixel)
                 if ('output' in config and 'psf' in config['output'] and 
                         'signal_to_noise' in config['output']['psf'] and
                         'noise' in config['image']):
@@ -560,22 +563,6 @@ def BuildPSF(config, logger=None, gsparams={}):
 
     return psf
 
-def BuildPix(config, logger=None, gsparams={}):
-    """
-    Parse the field config['pix'] returning the built pix object.
-    """
- 
-    if 'pix' in config: 
-        if not isinstance(config['pix'], dict):
-            raise AttributeError("config.pix is not a dict.")
-        if False:
-            logger.debug('obj %d: Start BuildPix with %s',config['obj_num'],str(config['pix']))
-        pix = galsim.config.BuildGSObject(config, 'pix', config, gsparams, logger)[0]
-    else:
-        pix = None
-
-    return pix
-
 
 def BuildGal(config, logger=None, gsparams={}):
     """
@@ -594,7 +581,7 @@ def BuildGal(config, logger=None, gsparams={}):
 
 
 
-def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level_pixel, offset):
+def DrawStampFFT(psf, gal, config, xsize, ysize, sky_level_pixel, offset, no_pixel):
     """
     Draw an image using the given psf, pix and gal profiles (which may be None)
     using the FFT method for doing the convolution.
@@ -606,23 +593,18 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level_pixel, offset):
     else:
         wcs_shear = None
 
+    fft_list = [ prof for prof in (psf,gal) if prof is not None ]
+    final = galsim.Convolve(fft_list)
+
     if wcs_shear:
-        nopix_list = [ prof for prof in (psf,gal) if prof is not None ]
-        nopix = galsim.Convolve(nopix_list)
-        nopix.applyShear(wcs_shear)
-        if pix:
-            final = galsim.Convolve([nopix, pix])
-        else:
-            final = nopix
+        final.applyShear(wcs_shear)
         config['wcs_shear'] = wcs_shear
-    else:
-        fft_list = [ prof for prof in (psf,pix,gal) if prof is not None ]
-        final = galsim.Convolve(fft_list)
 
     if 'image' in config and 'pixel_scale' in config['image']:
         pixel_scale = galsim.config.ParseValue(config['image'], 'pixel_scale', config, float)[0]
     else:
         pixel_scale = 1.0
+    wcs = galsim.PixelScale(pixel_scale)
 
     if 'image' in config and 'wmult' in config['image']:
         wmult = galsim.config.ParseValue(config['image'], 'wmult', config, float)[0]
@@ -634,7 +616,11 @@ def DrawStampFFT(psf, pix, gal, config, xsize, ysize, sky_level_pixel, offset):
     else:
         im = None
 
-    im = final.draw(image=im, scale=pixel_scale, wmult=wmult, offset=offset)
+    if not no_pixel:
+        pix = wcs.toWorld(galsim.Pixel(1.0))
+        final = galsim.Convolve(final, pix)
+
+    im = final.draw(image=im, wcs=wcs, wmult=wmult, offset=offset)
     im.setOrigin(config['image_origin'])
 
     # Whiten if requested.  Our signal to do so is that the object will have a noise attribute.
@@ -898,6 +884,7 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, offset):
         pixel_scale = galsim.config.ParseValue(config['image'], 'pixel_scale', config, float)[0]
     else:
         pixel_scale = 1.0
+    wcs = galsim.PixelScale(pixel_scale)
 
     if xsize:
         im = galsim.ImageF(xsize, ysize)
@@ -914,7 +901,7 @@ def DrawStampPhot(psf, gal, config, xsize, ysize, rng, sky_level_pixel, offset):
 
         n_photons = galsim.config.ParseValue(
             config['image'], 'n_photons', config, int)[0]
-        im = final.drawShoot(image=im, scale=pixel_scale, n_photons=n_photons, rng=rng,
+        im = final.drawShoot(image=im, wcs=wcs, n_photons=n_photons, rng=rng,
                              offset=offset)
         im.setOrigin(config['image_origin'])
 
@@ -1129,15 +1116,16 @@ def AddNoisePhot(im, weight_im, current_var, noise, base, rng, sky_level_pixel, 
         raise AttributeError("Invalid type %s for noise",type)
 
 
-def DrawPSFStamp(psf, pix, config, bounds, sky_level_pixel, offset):
+def DrawPSFStamp(psf, config, bounds, sky_level_pixel, offset, no_pixel):
     """
-    Draw an image using the given psf and pix profiles.
+    Draw an image using the given psf profile.
 
     @return the resulting image.
     """
 
     if not psf:
         raise AttributeError("DrawPSFStamp requires psf to be provided.")
+    psf = psf.copy()
 
     if 'wcs_shear' in config:
         wcs_shear = config['wcs_shear']
@@ -1145,9 +1133,7 @@ def DrawPSFStamp(psf, pix, config, bounds, sky_level_pixel, offset):
         wcs_shear = None
 
     if wcs_shear:
-        psf = psf.createSheared(wcs_shear)
-
-    psf_list = [ prof for prof in (psf,pix) if prof is not None ]
+        psf.applyShear(wcs_shear)
 
     if ('output' in config and 
         'psf' in config['output'] and 
@@ -1156,19 +1142,24 @@ def DrawPSFStamp(psf, pix, config, bounds, sky_level_pixel, offset):
     else:
         real_space = None
         
-    final_psf = galsim.Convolve(psf_list, real_space=real_space)
-
     if 'image' in config and 'pixel_scale' in config['image']:
         pixel_scale = galsim.config.ParseValue(config['image'], 'pixel_scale', config, float)[0]
     else:
         pixel_scale = 1.0
+    wcs = galsim.PixelScale(pixel_scale)
 
     # Special: if the galaxy was shifted, then also shift the psf 
     if 'shift' in config['gal']:
         gal_shift = galsim.config.GetCurrentValue(config['gal'],'shift')
         if False:
             logger.debug('obj %d: psf shift (1): %s',config['obj_num'],str(gal_shift))
-        final_psf.applyShift(gal_shift)
+        psf.applyShift(gal_shift)
+
+    if not no_pixel:
+        pix = wcs.toWorld(galsim.Pixel(1.0))
+        final_psf = galsim.Convolve(psf, pix, real_space=real_space)
+    else:
+        final_psf = psf
 
     im = galsim.ImageF(bounds, scale=pixel_scale)
     final_psf.draw(im, scale=pixel_scale, offset=offset)

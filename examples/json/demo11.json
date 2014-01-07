@@ -19,6 +19,7 @@
 "#" : " - obj type : InterpolatedImage(image, scale) ",
 "#" : " - obj type : RealGalaxy(..., whiten)",
 "#" : " - float_value type : RandomDistribution(function, x_min, x_max) ",
+"#" : " - image : draw_method (no_pixel) ",
 "#" : " - pix type : None ",
 "#" : " - input.power_spectrum : (e_power_file, delta2, units) ",
 "#" : " - image.index_convention : (0 or 'C' or 'python') vs (1 or 'Fortran' or 'FITS')",
@@ -45,16 +46,6 @@
     "#" : "typical seeing is 1.2 arcsec and we want to simulate better seeing, so we will just ",
     "#" : "tell GalSim that the pixel scale is 0.2 arcsec to match our image : pixel_scale below.",
     "scale" : 0.2
-},
- 
-"#" : "Define the pixel profile",
-"pix" : {
-    "#" : "Normally, we don't include the pix item, since we just use the default pixel, which is ",
-    "#" : "a square box with sides equal to the pixel scale (defined as image.pixel_scale).",
-    "#" : "However, in this case, the psf already includes the convolution with the pixel, so we",
-    "#" : "don't want to put it in again.  There is a special type : None to account for this",
-    "#" : "case, which means to not use any pixel, rather than use the default.",
-    "type" : "None"
 },
 
 "#" : "Define the galaxy profile",
@@ -171,6 +162,7 @@
     "#" : "Note: if the image_convention were 1 as is the default, then these would instead be ",
     "#" : "    min : 1 , max : {x,y}size",
 
+
     "#" : "Add Gaussian noise.  When using the whitening feature, the whitening process will end",
     "#" : "up with white Gaussian noise.  So adding more Gaussian noise can be done coherently.",
     "#" : "Adding any other kind of noise (Poisson for instance) will actually result in some ",
@@ -181,6 +173,13 @@
     },
 
     "pixel_scale" : 0.20,
+
+    "#" : "Normally, the draw routine accounts for a convolution by the pixel after converting to",
+    "#" : "image coordinates.  In this case we don't want it to do that, since the psf here is",
+    "#" : "what is sometimes called an 'effective PSF'.  It is already the convolution of the ",
+    "#" : "real PSF with a square pixel.  We can indicate that we don't want the draw routine to ",
+    "#" : "convolve by a pixel by using draw_method = no_pixel.",
+    "draw_method" : "no_pixel",
 
     "random_seed" : 24783923
 },
