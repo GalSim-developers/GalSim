@@ -151,6 +151,8 @@ class BaseWCS(object):
         #     _posToWorld       function converting image_pos to world_pos
         #     _posToImage       function converting world_pos to image_pos
         #     _setOrigin        function returning a version with a new origin (or origins).
+        #     _writeHeader      function that writes the WCS to a fits header.
+        #     _readHeader       static function that reads the WCS from a fits header.
         #     copy              return a copy
         #     __eq__            check if this equals another WCS
         #     __ne__            check if this is not equal to another WCS
@@ -169,8 +171,6 @@ class BaseWCS(object):
         # Non-local WCS classes must define the following:
         #
         #     _local            function returning a local WCS at a given location
-        #     _writeHeader      function that writes the WCS to a fits header.
-        #     _readHeader       static function that reads the WCS from a fits header.
 
 
     def toWorld(self, arg, **kwargs):
@@ -556,11 +556,7 @@ class BaseWCS(object):
         # Always need these, so just do them here.
         header["GS_XMIN"] = (bounds.xmin, "GalSim image minimum x coordinate")
         header["GS_YMIN"] = (bounds.ymin, "GalSim image minimum y coordinate")
-        if self._is_local:
-            # Make it non-local...
-            return self.setOrigin(self.image_origin)._writeHeader(header, bounds)
-        else:
-            return self._writeHeader(header, bounds)
+        return self._writeHeader(header, bounds)
 
 
 
@@ -659,6 +655,16 @@ class PixelScale(BaseWCS):
 
     def _setOrigin(self, image_origin, world_origin):
         return OffsetWCS(self._scale, image_origin, world_origin)
+
+    def _writeHeader(self, header, bounds):
+        header["GS_WCS"] = ("PixelScale", "GalSim WCS name")
+        header["GS_SCALE"] = (self.scale, "GalSim image scale")
+        return self.affine()._writeLinearWCS(header, bounds)
+
+    @staticmethod
+    def _readHeader(header):
+        scale = header["GS_SCALE"]
+        return PixelScale(scale)
 
     def copy(self):
         return PixelScale(self._scale)
@@ -770,6 +776,20 @@ class ShearWCS(BaseWCS):
 
     def _setOrigin(self, image_origin, world_origin):
         return OffsetShearWCS(self._scale, self._shear, image_origin, world_origin)
+
+    def _writeHeader(self, header, bounds):
+        header["GS_WCS"] = ("ShearWCS", "GalSim WCS name")
+        header["GS_SCALE"] = (self.scale, "GalSim image scale")
+        header["GS_G1"] = (self.shear.g1, "GalSim image shear g1")
+        header["GS_G2"] = (self.shear.g2, "GalSim image shear g2")
+        return self.affine()._writeLinearWCS(header, bounds)
+
+    @staticmethod
+    def _readHeader(header):
+        scale = header["GS_SCALE"]
+        g1 = header["GS_G1"]
+        g2 = header["GS_G2"]
+        return ShearWCS(scale, galsim.Shear(g1,g2))
 
     def copy(self):
         return ShearWCS(self._scale, self._shear)
@@ -901,6 +921,18 @@ class JacobianWCS(BaseWCS):
     def _setOrigin(self, image_origin, world_origin):
         return AffineTransform(self._dudx, self._dudy, self._dvdx, self._dvdy, image_origin,
                                world_origin)
+
+    def _writeHeader(self, header, bounds):
+        header["GS_WCS"]  = ("JacobianWCS", "GalSim WCS name")
+        return self.affine()._writeLinearWCS(header, bounds)
+
+    @staticmethod
+    def _readHeader(header):
+        dudx = header.get("CD1_1",1.)
+        dudy = header.get("CD1_2",0.)
+        dvdx = header.get("CD2_1",0.)
+        dvdy = header.get("CD2_2",1.)
+        return JacobianWCS(dudx, dudy, dvdx, dvdy)
 
     def copy(self):
         return JacobianWCS(self._dudx, self._dudy, self._dvdx, self._dvdy)

@@ -264,6 +264,19 @@ def do_wcs_image(wcs, name, approx=False):
     np.testing.assert_almost_equal(im2(image_pos), value3, digits,
                                    "Image value at center is wrong after write/read.")
 
+    if wcs.isUniform():
+        # Test that the regular CD, CRPIX, CRVAL items that are written to the header
+        # describe an equivalent WCS as this one.
+        hdu, hdu_list, fin = galsim.fits.readFile(test_name, dir=dir)
+        affine = galsim.AffineTransform._readHeader(hdu.header)
+        galsim.fits.closeHDUList(hdu_list, fin)
+        check_world(affine.toWorld(im.origin()), world1, digits2,
+                    "World position of origin is wrong after write/read.")
+        check_world(affine.toWorld(im.center()), world2, digits2,
+                    "World position of center is wrong after write/read.")
+        check_world(affine.toWorld(image_pos), world3, digits2,
+                    "World position of image_pos is wrong after write/read.")
+
 
     # Test that im.setOrigin does the right thing to the wcs
     # Also test parsing a position as a tuple.
