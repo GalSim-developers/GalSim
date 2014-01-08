@@ -149,7 +149,7 @@ def main(argv):
 
     # Update the wcs to use the image center as the origin of the WCS, as we did in demo9.
     im_center = gal_image.bounds.trueCenter()
-    wcs = galsim.OffsetWCS(scale=pixel_scale, image_origin=im_center)
+    wcs = galsim.OffsetWCS(scale=pixel_scale, origin=im_center)
     gal_image.wcs = wcs
     psf_image.wcs = wcs
 

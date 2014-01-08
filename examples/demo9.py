@@ -32,7 +32,7 @@ a space-like simulation.  (Some of the numbers used are the values for HST.)
 New features introduced in this demo:
 
 - psf = OpticalPSF(..., trefoil1, trefoil2, nstruts, strut_thick, strut_angle)
-- im.wcs = galsim.OffsetWCS(scale, image_origin)
+- im.wcs = galsim.OffsetWCS(scale, origin)
 - im = galsim.ImageS(xsize, ysize, wcs)
 - pos = galsim.PositionD(x, y)
 - nfw = galsim.NFWHalo(mass, conc, z, omega_m, omega_lam)
@@ -130,7 +130,7 @@ def main(argv):
         # Update the image WCS to us this point as the definition of (u,v) = (0,0).
         # The WCS had been a simple PixelScale, which is implicit in the use of the scale
         # parameter when we made the image.  Assigning to the wcs attribute overrides this.
-        wcs = galsim.OffsetWCS(scale=pixel_scale, image_origin=im_center)
+        wcs = galsim.OffsetWCS(scale=pixel_scale, origin=im_center)
         full_image.wcs = wcs
 
         # The weight image will hold the inverse variance for each pixel.
