@@ -114,6 +114,29 @@ class ChromaticBaseObject(ChromaticObject):
         # in which case the profile cannot be decomposed into factors.
         self.separable = True
 
+    # Make op* and op*= work to adjust the flux of an object
+    def __imul__(self, other):
+        self.gsobj.scaleFlux(other)
+        return self
+
+    def __mul__(self, other):
+        ret = self.copy()
+        ret *= other
+        return ret
+
+    def __rmul__(self, other):
+        ret = self.copy()
+        ret *= other
+        return ret
+
+    # Make a copy of an object
+    # Do I need to worry about `photons` being mutable here?
+    def copy(self):
+        cls = self.__class__
+        ret = cls.__new__(cls)
+        ret.__dict__.update(self.__dict__)
+        return ret
+
     def applyShear(self, *args, **kwargs):
         self.gsobj.applyShear(*args, **kwargs)
 
@@ -122,6 +145,18 @@ class ChromaticBaseObject(ChromaticObject):
 
     def applyShift(self, *args, **kwargs):
         self.gsobj.applyShift(*args, **kwargs)
+
+    def applyExpansion(self, *args, **kwargs):
+        self.gsobj.applyExpansion(*args, **kwargs)
+
+    def applyMagnification(self, *args, **kwargs):
+        self.gsobj.applyMagnification(*args, **kwargs)
+
+    def applyLensing(self, *args, **kwargs):
+        self.gsobj.applyLensing(*args, **kwargs)
+
+    def applyRotation(self, *args, **kwargs):
+        self.gsobj.applyRotation(*args, **kwargs)
 
     def evaluateAtWavelength(self, wave):
         """
@@ -143,15 +178,40 @@ class ChromaticAdd(ChromaticObject):
         """
         return galsim.Add([obj.evaluateAtWavelength(wave) for obj in self.objlist])
 
-    def applyShear(self, *args, **kwargs):
-        for obj in self.objlist:
-            obj.applyShear(*args, **kwargs)
-
     def draw(self, wave, throughput, image=None, add_to_image=False):
         # is the most efficient method to just add up one component at a time...?
         image = self.objlist[0].draw(wave, throughput, image=image)
         for obj in self.objlist[1:]:
             image = obj.draw(wave, throughput, image=image, add_to_image=True)
+
+    def applyShear(self, *args, **kwargs):
+        for obj in self.objlist:
+            obj.applyShear(*args, **kwargs)
+
+    def applyDilation(self, *args, **kwargs):
+        for obj in self.objlist:
+            obj.applyDilation(*args, **kwargs)
+
+    def applyShift(self, *args, **kwargs):
+        for obj in self.objlist:
+            obj.applyShift(*args, **kwargs)
+
+    def applyExpansion(self, *args, **kwargs):
+        for obj in self.objlist:
+            obj.applyExpansion(*args, **kwargs)
+
+    def applyMagnification(self, *args, **kwargs):
+        for obj in self.objlist:
+            obj.applyMagnification(*args, **kwargs)
+
+    def applyLensing(self, *args, **kwargs):
+        for obj in self.objlist:
+            obj.applyLensing(*args, **kwargs)
+
+    # Does this work?  About which point is the rotation applied?
+    def applyRotation(self, *args, **kwargs):
+        for obj in self.objlist:
+            obj.applyRotation(*args, **kwargs)
 
 class ChromaticConvolve(ChromaticObject):
     """Convolve ChromaticObjects and/or GSObjects together.  GSObjects are treated as having flat
@@ -168,19 +228,25 @@ class ChromaticConvolve(ChromaticObject):
         return galsim.Convolve([obj.evaluateAtWavelength(wave) for obj in self.objlist])
 
     def draw(self, wave, throughput, image=None, add_to_image=False):
+        # Only make temporary changes to objlist...
+        objlist = self.objlist[:]
+
         # expand any `ChromaticConvolve`s in the object list
-        L = len(self.objlist)
+        L = len(objlist)
         i = 0
         while i < L:
-            if isinstance(self.objlist[i], ChromaticConvolve):
-                # found a ChromaticConvolve object, so unpack its obj.objlist to end of self.objlist,
-                # delete obj from self.objlist, and undate list length `L` and list index `i`.
-                L += len(self.objlist[i].objlist) - 1
+            if isinstance(objlist[i], ChromaticConvolve):
+                # found a ChromaticConvolve object, so unpack its obj.objlist to end of objlist,
+                # delete obj from objlist, and update list length `L` and list index `i`.
+                L += len(objlist[i].objlist) - 1
                 # appending to the end of the objlist means we don't have to recurse in order to
                 # expand a hierarchy of `ChromaticAdd`s; we just have to keep going until the end of
                 # the ever-expanding list.
-                self.objlist.extend(self.objlist[i].objlist)
-                del self.objlist[i]
+                # I.e.  {{{A, B}, C}, D}  i = 0, length = 2
+                #    -> {D, {A, B}, C}    i = 1, length = 3
+                #    -> {D, C, A, B}      i = 2..3, length = 4
+                objlist.extend(objlist[i].objlist)
+                del objlist[i]
                 i -= 1
             i += 1
 
@@ -220,11 +286,11 @@ class ChromaticConvolve(ChromaticObject):
 
         # Here is the logic to turn I(C(A(...))) into A(C(..., I(...)))
         returnme = False
-        for i, obj in enumerate(self.objlist):
+        for i, obj in enumerate(objlist):
             if isinstance(obj, ChromaticAdd):  #say obj.objlist = [A,B,C]
                 returnme = True
-                del self.objlist[i] #remove the add object from self.objlist
-                convlist = self.objlist #the remaining items to be convolved with each of A,B,C
+                del objlist[i] #remove the add object from self.objlist
+                convlist = objlist #the remaining items to be convolved with each of A,B,C
                 tmplist = list(convlist)
                 tmplist.append(obj.objlist[0]) #add A to convolve list
                 tmpobj = ChromaticConvolve(tmplist)
