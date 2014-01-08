@@ -84,8 +84,11 @@ def main(argv):
     filters = {}
     for filter_name in filter_names:
         wave, throughput = numpy.genfromtxt('data/LSST_{}.dat'.format(filter_name)).T
-        filters[filter_name] = {'wave':wave, 'throughput':throughput}
+        #thin filters out a bit to increase speed
+        filters[filter_name] = {'wave':wave[::10], 'throughput':throughput[::10]}
     logger.debug('Read in filters')
+
+    pixel_scale = 0.2 # arcseconds
 
     #-----------------------------------------------------------------------------------------------
     # Part A: chromatic Sersic galaxy
@@ -109,17 +112,17 @@ def main(argv):
     gal.applyShift((0.0, 0.1))
     logger.debug('Created ChromaticGSObject')
 
-    # now place this galaxy in a scene
-    pixel_scale = 0.2 * galsim.arcsec
-    pix = galsim.Pixel(pixel_scale / galsim.arcsec)
+    # convolve with pixel and PSF to make final profile
+    pix = galsim.Pixel(pixel_scale)
     PSF = galsim.Moffat(fwhm=0.6, beta=2.5)
-    scn = galsim.ChromaticConvolve([gal, pix, PSF])
-    logger.debug('Created scene')
+    # Note we need ChromaticConvolve instead of Convolve
+    final = galsim.ChromaticConvolve([gal, pix, PSF])
+    logger.debug('Created final profile')
 
     for filter_name in filter_names:
         filter_ = filters[filter_name]
-        img = galsim.ImageF(64, 64, pixel_scale / galsim.arcsec)
-        scn.draw(wave=filter_['wave'], throughput=filter_['throughput'], image=img)
+        img = galsim.ImageF(64, 64, pixel_scale)
+        final.draw(wave=filter_['wave'], throughput=filter_['throughput'], image=img)
         img.addNoise(gaussian_noise)
         logger.debug('Created {}-band image'.format(filter_name))
         galsim.fits.write(img, 'output/demo12a_{}.fits'.format(filter_name))
@@ -127,7 +130,7 @@ def main(argv):
         logger.info('Added flux for {}-band image: {}'.format(filter_name, img.added_flux))
 
     # You can display the output in ds9 with a command line that looks something like:
-    # `ds9 output/demo12a_*.fits -match scale`
+    # `ds9 output/demo12a_*.fits -match scale -zoom 2 -match frame image`
 
     #-----------------------------------------------------------------------------------------------
     # Part B: chromatic bulge+disk galaxy
@@ -140,23 +143,21 @@ def main(argv):
                                      SEDs['CWW_E_ext']['photons'],
                                      half_light_radius=0.5)
     bulge.applyShear(g1=0.12, g2=0.07)
-#    bulge.applyShift((0,-2))
     logger.debug('Created bulge component')
     disk =  galsim.ChromaticGSObject(galsim.Exponential,
                                      SEDs['CWW_Im_ext']['wave'] * (1+redshift),
                                      SEDs['CWW_Im_ext']['photons'],
                                      half_light_radius=2.0)
     disk.applyShear(g1=0.4, g2=0.2)
-#    disk.applyShift((0, 2))
     logger.debug('Created disk component')
-    bdgal = bulge+disk*5
-    bdscn = galsim.ChromaticConvolve([bdgal, pix, PSF])
-    logger.debug('Created bulge+disk galaxy scene')
+    bdgal = bulge+disk*5 # you can add and multiply ChromaticGSObjects just like GSObjects
+    bdfinal = galsim.ChromaticConvolve([bdgal, pix, PSF])
+    logger.debug('Created bulge+disk galaxy final profile')
 
     for filter_name in filter_names:
         filter_ = filters[filter_name]
-        img = galsim.ImageF(64, 64, pixel_scale / galsim.arcsec)
-        bdscn.draw(wave=filter_['wave'], throughput=filter_['throughput'], image=img)
+        img = galsim.ImageF(64, 64, pixel_scale)
+        bdfinal.draw(wave=filter_['wave'], throughput=filter_['throughput'], image=img)
         img.addNoise(gaussian_noise)
         logger.debug('Created {}-band image'.format(filter_name))
         galsim.fits.write(img, 'output/demo12b_{}.fits'.format(filter_name))
@@ -164,7 +165,7 @@ def main(argv):
         logger.info('Added flux for {}-band image: {}'.format(filter_name, img.added_flux))
 
     # You can display the output in ds9 with a command line that looks something like:
-    # `ds9 -rgb -blue -scale limits -0.2 0.8 output/demo12b_r.fits -green -scale limits -0.25 1 output/demo12b_i.fits -red -scale limits -0.25 1 output/demo12b_z.fits`
+    # `ds9 -rgb -blue -scale limits -0.2 0.8 output/demo12b_r.fits -green -scale limits -0.25 1 output/demo12b_i.fits -red -scale limits -0.25 1 output/demo12b_z.fits -zoom 2`
 
     #-----------------------------------------------------------------------------------------------
     # Part C: chromatic bulge+disk galaxy
@@ -191,10 +192,10 @@ def main(argv):
     # First we define the shifting function due to DCR.  We normalize to the shift at 500 nm so the
     # images don't fall off of the postage stamp completely.
     zenith_angle = 30 * galsim.degrees
-    R500 = (galsim.dcr.atmosphere_refraction_angle(500.0, zenith_angle) / galsim.radians
-            / pixel_scale.rad())
-    shift_fn = lambda w:(0,(galsim.dcr.atmosphere_refraction_angle(w, zenith_angle) / galsim.radians
-                            / pixel_scale.rad()) - R500)
+    R500 = (galsim.dcr.atmosphere_refraction_angle(500.0, zenith_angle) / galsim.arcsec
+            / pixel_scale)
+    shift_fn = lambda w:(0,(galsim.dcr.atmosphere_refraction_angle(w, zenith_angle) / galsim.arcsec
+                            / pixel_scale) - R500)
 
     # Second define the dilation function due to Kolmogorov turbulence.
     dilate_fn = lambda w: (w/500.0)**(-0.2)
@@ -206,23 +207,23 @@ def main(argv):
     # dilate functions.
     PSF = galsim.ChromaticShiftAndDilate(galsim.Moffat, shift_fn, dilate_fn, beta=2.5, fwhm=0.6)
 
-    # now place this galaxy in a scene
-    pix = galsim.Pixel(pixel_scale / galsim.arcsec)
-    scn = galsim.ChromaticConvolve([gal, pix, PSF])
-    logger.debug('Created scene')
+    # convolve with pixel and PSF to create final profile
+    pix = galsim.Pixel(pixel_scale)
+    final = galsim.ChromaticConvolve([gal, pix, PSF])
+    logger.debug('Created chromatic PSF finale profile')
 
     gaussian_noise = galsim.GaussianNoise(rng, sigma=0.03)
     for filter_name in filter_names:
         filter_ = filters[filter_name]
-        img = galsim.ImageF(64, 64, pixel_scale / galsim.arcsec)
-        scn.draw(wave=filter_['wave'], throughput=filter_['throughput'], image=img)
+        img = galsim.ImageF(64, 64, pixel_scale)
+        final.draw(wave=filter_['wave'], throughput=filter_['throughput'], image=img)
         img.addNoise(gaussian_noise)
         logger.debug('Created {}-band image'.format(filter_name))
         galsim.fits.write(img, 'output/demo12c_{}.fits'.format(filter_name))
         logger.debug('Wrote {}-band image to disk'.format(filter_name))
         logger.info('Added flux for {}-band image: {}'.format(filter_name, img.added_flux))
     # You can display the output in ds9 with a command line that looks something like:
-    # `ds9 output/demo12a_*.fits -match scale`
+    # `ds9 output/demo12c_*.fits -match scale -zoom 2 -match frame image`
 
 if __name__ == "__main__":
     main(sys.argv)
