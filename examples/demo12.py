@@ -192,9 +192,8 @@ def main(argv):
     # First we define the shifting function due to DCR.  We normalize to the shift at 500 nm so the
     # images don't fall off of the postage stamp completely.
     zenith_angle = 30 * galsim.degrees
-    R500 = (galsim.dcr.atmosphere_refraction_angle(500.0, zenith_angle) / galsim.arcsec
-            / pixel_scale)
-    shift_fn = lambda w:(0,(galsim.dcr.atmosphere_refraction_angle(w, zenith_angle) / galsim.arcsec
+    R500 = galsim.dcr.get_refraction(500.0, zenith_angle) / galsim.arcsec / pixel_scale
+    shift_fn = lambda w:(0,(galsim.dcr.get_refraction(w, zenith_angle) / galsim.arcsec
                             / pixel_scale) - R500)
 
     # Second define the dilation function due to Kolmogorov turbulence.

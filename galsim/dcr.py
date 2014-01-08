@@ -56,7 +56,7 @@ def air_refractive_index(wave, pressure=69.328, temperature=293.15, H2O_pressure
     n_minus_one -= (0.0624 - 0.000680 * sigma_squared)/(1.0 + 0.003661 * T) * W * 1.e-6
     return n_minus_one + 1.0
 
-def atmosphere_refraction_angle(wave, zenith_angle, **kwargs):
+def get_refraction(wave, zenith_angle, **kwargs):
     """Compute the angle of refraction for a photon entering the atmosphere.
 
     Photons refract when transitioning from space, where the refractive index n = 1.0 exactly, to

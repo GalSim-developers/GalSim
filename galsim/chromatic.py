@@ -28,7 +28,8 @@ import galsim
 class ChromaticObject(object):
     """Base class for defining wavelength dependent objects.
     """
-    def draw(self, wave, throughput, image=None, add_to_image=False):
+    def draw(self, wave, throughput, image=None, add_to_image=False,
+             *args, **kwargs):
         """Draws an Image of a chromatic object as observed through a bandpass filter.
 
         Draws the image wavelength by wavelength, i.e., using a Riemann sum.  This is often slow,
@@ -57,7 +58,7 @@ class ChromaticObject(object):
         #And now add in the remaining wavelengths drawing each one in turn
         for w, tp in zip(wave, throughput)[1:]:
             prof = self.evaluateAtWavelength(w) * tp * dwave
-            prof.draw(image=image, add_to_image=True)
+            prof.draw(image=image, add_to_image=True, *args, **kwargs)
 
         return image
 
@@ -227,7 +228,7 @@ class ChromaticConvolve(ChromaticObject):
         """
         return galsim.Convolve([obj.evaluateAtWavelength(wave) for obj in self.objlist])
 
-    def draw(self, wave, throughput, image=None, add_to_image=False):
+    def draw(self, wave, throughput, image=None, add_to_image=False, *args, **kwargs):
         # Only make temporary changes to objlist...
         objlist = self.objlist[:]
 
@@ -294,12 +295,14 @@ class ChromaticConvolve(ChromaticObject):
                 tmplist = list(convlist)
                 tmplist.append(obj.objlist[0]) #add A to convolve list
                 tmpobj = ChromaticConvolve(tmplist)
-                image = tmpobj.draw(wave, throughput, image=image, add_to_image=add_to_image)
+                image = tmpobj.draw(wave, throughput, image=image, add_to_image=add_to_image,
+                                    *args, **kwargs)
                 for summand in obj.objlist[1:]: #now do B, C, and so on...
                     tmplist = list(convlist)
                     tmplist.append(summand)
                     tmpobj = ChromaticConvolve(tmplist)
-                    image = tmpobj.draw(wave, throughput, image=image, add_to_image=True)
+                    image = tmpobj.draw(wave, throughput, image=image, add_to_image=True,
+                                        *args, **kwargs)
         if returnme:
             return image
 
@@ -336,18 +339,20 @@ class ChromaticConvolve(ChromaticObject):
             mono_prof *= throughput[0] * dwave
             for s in sep_photons:
                 mono_prof *= s(wave[0])
-            effective_prof_image = mono_prof.draw()
+            effective_prof_image = mono_prof.draw(*args, **kwargs)
             for w, tp in zip(wave, throughput)[1:]:
                 mono_prof = galsim.Convolve([insp.evaluateAtWavelength(w) for insp in insep_profs])
                 mono_prof *= tp * dwave
                 for s in sep_photons:
                     mono_prof *= s(w)
-                mono_prof.draw(image=effective_prof_image, add_to_image=True)
+                mono_prof.draw(image=effective_prof_image, add_to_image=True,
+                               *args, **kwargs)
 
             effective_prof = galsim.InterpolatedImage(effective_prof_image)
             sep_profs.append(effective_prof)
         final_prof = multiplier * galsim.Convolve(sep_profs)
-        return final_prof.draw(image=image, add_to_image=add_to_image)
+        return final_prof.draw(image=image, add_to_image=add_to_image,
+                               *args, **kwargs)
 
 
 class ChromaticShiftAndDilate(ChromaticObject):
