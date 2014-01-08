@@ -56,20 +56,19 @@ _galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
 class Image(object):
     """A class for storing image data along with the pixel scale or wcs information
 
-    The python layer Image class is mostly a wrapper around the C++ classes
-    ImageAlloc and ImageView.  The former allocates its own memory, and the latter
-    views memory allocated by some other object (typically an ImageAlloc or a
-    numpy array).
+    The python layer Image class is mostly a wrapper around the C++ classes ImageAlloc and
+    ImageView.  The former allocates its own memory, and the latter views memory allocated by some
+    other object (typically an ImageAlloc or a numpy array).
 
-    The Image class contains an `image` attribute, which holds the appropriate C++ 
-    ImageAlloc or ImageView object.  Most operations that act on the pixel values
-    will just pass the command to C++ layer.  
+    The Image class contains an `image` attribute, which holds the appropriate C++ ImageAlloc or
+    ImageView object.  Most operations that act on the pixel values will just pass the command to
+    the C++ layer.
 
     There are 4 data types that the image object can use for the data values.  These are
-    numpy.int16, numpy.int32, numpy.float32, and numpy.float64.  If you are constructing
-    a new Image from scratch, the default is numpy.float32, but you can specify one of 
-    the other data types.  If you construct an Image from an existing allocation such as
-    a numpy array, then the dtype must be one of these or you will get an error.
+    numpy.int16, numpy.int32, numpy.float32, and numpy.float64.  If you are constructing a new Image
+    from scratch, the default is numpy.float32, but you can specify one of the other data types.  If
+    you construct an Image from an existing allocation such as a numpy array, then the dtype must be
+    one of these or you will get an error.
 
     There are several ways to construct an Image:
 
@@ -110,7 +109,7 @@ class Image(object):
     three options for this:
 
         scale       You can optionally specify a pixel scale to use.  This would normally have
-                    usits arcsec/pixel, but it doesn't have to be arcsec.  If you want to 
+                    units arcsec/pixel, but it doesn't have to be arcsec.  If you want to 
                     use different units for the physical scale of your galsim objects, then
                     the same unit would be used here.
         wcs         A WCS object that provides a non-trivial mapping between sky units and
@@ -128,7 +127,7 @@ class Image(object):
 
     Note that im.scale will only work if the WCS is a galsim.PixelScale.  Once you set the 
     wcs to be something non-trivial, then you must interact with it via the wcs attribute.
-    The im.scale syntax with raise an exception.
+    The im.scale syntax will raise an exception.
 
     There are also two read-only attributes:
 
@@ -412,7 +411,7 @@ class Image(object):
         self.image.shift(int(dx),int(dy))
 
     def setCenter(self, *args, **kwargs):
-        """The the center of the image to the given (integral) (xcen, ycen)
+        """Set the center of the image to the given (integral) (xcen, ycen)
 
         The arguments here may be either (xcen, ycen) or a PositionI instance.
         Or you can provide xcen, ycen as named kwargs.
@@ -440,7 +439,7 @@ class Image(object):
         self.image.setCenter(int(xcen),int(ycen))
 
     def setOrigin(self, *args, **kwargs):
-        """The the origin of the image to the given (integral) (x0, y0)
+        """Set the origin of the image to the given (integral) (x0, y0)
 
         The arguments here may be either (x0, y0) or a PositionI instance.
         Or you can provide x0, y0 as named kwargs.
@@ -547,7 +546,7 @@ class Image(object):
         self.image.setZero()
 
     def invertSelf(self):
-        """Set all pixel values to their invers: x -> 1/x.
+        """Set all pixel values to their inverse: x -> 1/x.
         """
         self.image.invertSelf()
 

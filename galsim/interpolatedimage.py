@@ -341,7 +341,7 @@ class InterpolatedImage(GSObject):
         # Make sure the image fits in the noise pad image:
         if noise_pad_size:
             import math
-            # Convert from arcsec to pixels according to the wcs
+            # Convert from arcsec to pixels according to the wcs.
             # Use the minimum scale, since we want to make sure noise_pad_size is
             # as large as we need in any direction.
             scale = self.image.wcs.minLinearScale(image_pos=im_cen)

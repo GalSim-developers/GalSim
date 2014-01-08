@@ -179,7 +179,7 @@ class BaseWCS(object):
         This is basically the same as wcs.local(...), but the return value is 
         guaranteed to be an AffineTransform, which has a few extra methods
         that are useful in some situations.  e.g. you can directly access
-        the jacobian matrix to do calculations based on that. 
+        the Jacobian matrix to do calculations based on that. 
         
         If you do not need the extra functionality, then you should use local
         instead, since it may be more efficient.
