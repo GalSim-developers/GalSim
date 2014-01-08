@@ -1070,7 +1070,7 @@ def AddNoisePhot(im, weight_im, current_var, noise, base, rng, sky_level_pixel, 
             if cn_var < current_var:
                 raise RuntimeError(
                     "Whitening already added more noise than requested COSMOS noise.")
-            cn -= galsim.UncorrelatedNoise(rng, base['pixel_scale'], current_var)
+            cn -= galsim.UncorrelatedNoise(rng, base['wcs'], current_var)
 
         # Add the noise to the image
         im.addNoise(cn)

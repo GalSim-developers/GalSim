@@ -1101,9 +1101,9 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
 
     Basic example:
 
-        >>> ucn = galsim.UncorrelatedNoise(rng, pixel_scale, variance)
+        >>> ucn = galsim.UncorrelatedNoise(rng, wcs, variance)
 
-    Instantiates an UncorrelatedNoise using the given pixel scale and variance value.
+    Instantiates an UncorrelatedNoise using the given local wcs and variance value.
     The input `rng` must be a galsim.BaseDeviate or derived class instance, setting the random 
     number generation for the noise.
 
@@ -1113,13 +1113,14 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
     This class is used in the same way as CorrelatedNoise.  See the documentation for that 
     class for more details.
     """
-    def __init__(self, rng, pixel_scale, variance, gsparams=None):
+    def __init__(self, rng, wcs, variance, gsparams=None):
         # Need variance == xvalue(0,0)
         # Pixel has flux of f/scale^2, so us f = varaince * scale^2
         if variance < 0:
             raise ValueError("Input keyword variance must be zero or positive.")
-        cf_object = galsim.AutoConvolve(
-            galsim.Pixel(scale=pixel_scale, flux=variance*pixel_scale**2, gsparams=gsparams))
+        image_pix = galsim.Pixel(scale=1.0, flux=variance * wcs.pixelArea(), gsparams=gsparams)
+        world_pix = wcs.toWorld(image_pix)
+        cf_object = galsim.AutoConvolve(world_pix)
         _BaseCorrelatedNoise.__init__(self, rng, cf_object)
 
 
