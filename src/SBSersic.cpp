@@ -186,7 +186,8 @@ namespace galsim {
             // quite come out to 0, and high-n Sersics vary a lot between r = 0 and 1.e-16!
             // By a lot, I mean ~0.5%, which is enough to care about.
             if (ix_zero != 0 && iy_zero != 0) 
-                val(ix_zero, iy_zero) = _xnorm * _info->xValue(0.);
+                // NB: _info->xValue(0) = 1
+                val(ix_zero, iy_zero) = _xnorm;
         } else {
             xdbg<<"Non-Quadrant\n";
             assert(val.stepi() == 1);
@@ -299,7 +300,8 @@ namespace galsim {
         if ( std::abs(i0 - inti0) < 1.e-12 && std::abs(j0 - intj0) < 1.e-12 &&
              inti0 >= 0 && inti0 < m && intj0 >= 0 && intj0 < n)  {
             dbg<<"Fixing central value from "<<val(inti0, intj0);
-            val(inti0, intj0) = _xnorm * _info->xValue(0.);
+            // NB: _info->xValue(0) = 1
+            val(inti0, intj0) = _xnorm;
             dbg<<" to "<<val(inti0, intj0)<<std::endl;
 #ifdef DEBUGLOGGING
             double x = x00;
