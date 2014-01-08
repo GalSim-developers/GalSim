@@ -122,8 +122,8 @@ def galsim_computation(galaxy_n, galaxy_hlr, galaxy_e1, galaxy_e2, galaxy_wave, 
     @returns                  GalSim ImageD
     """
 
-    obj = galsim.ChromaticBaseObject(galsim.Sersic, galaxy_wave, galaxy_photons,
-                                     n=galaxy_n, half_light_radius=galaxy_hlr)
+    obj = galsim.ChromaticGSObject(galsim.Sersic, galaxy_wave, galaxy_photons,
+                                   n=galaxy_n, half_light_radius=galaxy_hlr)
     obj.applyShear(e1=galaxy_e1, e2=galaxy_e2)
     obj.applyShear(g1=shear_g1, g2=shear_g2)
 
@@ -199,7 +199,7 @@ def sample_bulge_gal():
     bulge_photons = bulge_flambda * bulge_wave # ergs -> N_photons
     bulge_photons *= 2.e-7 # Manually adjusting to have peak of ~1 count
     bulge_wave /= 10 # Angstrom -> nm
-    bulge = galsim.ChromaticBaseObject(galsim.Sersic, bulge_wave, bulge_photons,
+    bulge = galsim.ChromaticGSObject(galsim.Sersic, bulge_wave, bulge_photons,
                                      n=bulge_n, half_light_radius=bulge_hlr)
     bulge.applyShear(e1=bulge_e1, e2=bulge_e2)
     return bulge
@@ -213,8 +213,8 @@ def sample_disk_gal():
     disk_photons = disk_flambda * disk_wave # ergs -> N_photons
     disk_photons *= 2.e-7 # Manually adjusting to have peak of ~1 count
     disk_wave /= 10 # Angstrom -> nm
-    disk = galsim.ChromaticBaseObject(galsim.Sersic, disk_wave, disk_photons,
-                                     n=disk_n, half_light_radius=disk_hlr)
+    disk = galsim.ChromaticGSObject(galsim.Sersic, disk_wave, disk_photons,
+                                    n=disk_n, half_light_radius=disk_hlr)
     disk.applyShear(e1=disk_e1, e2=disk_e2)
     return disk
 
@@ -301,7 +301,7 @@ def test_chromatic_add_draw():
     bulge_photons = bulge_flambda * bulge_wave # ergs -> N_photons
     bulge_photons *= 2.e-7 # Manually adjusting to have peak of ~1 count
     bulge_wave /= 10 # Angstrom -> nm
-    bulge = galsim.ChromaticBaseObject(galsim.Sersic, bulge_wave, bulge_photons,
+    bulge = galsim.ChromaticGSObject(galsim.Sersic, bulge_wave, bulge_photons,
                                      n=bulge_n, half_light_radius=bulge_hlr)
     bulge.applyShear(e1=bulge_e1, e2=bulge_e2)
 
@@ -314,8 +314,8 @@ def test_chromatic_add_draw():
     disk_photons = disk_flambda * disk_wave # ergs -> N_photons
     disk_photons *= 2.e-7 # Manually adjusting to have peak of ~1 count
     disk_wave /= 10 # Angstrom -> nm
-    disk = galsim.ChromaticBaseObject(galsim.Sersic, disk_wave, disk_photons,
-                                     n=disk_n, half_light_radius=disk_hlr)
+    disk = galsim.ChromaticGSObject(galsim.Sersic, disk_wave, disk_photons,
+                                    n=disk_n, half_light_radius=disk_hlr)
     disk.applyShear(e1=disk_e1, e2=disk_e2)
 
     shear_g1 = 0.01
@@ -398,8 +398,8 @@ def test_dcr_moments():
     photons1 = flambda1 * wave1
     photons2 = flambda2 * wave2
 
-    gal1 = galsim.ChromaticBaseObject(galsim.Gaussian, wave1, photons1, fwhm=1.0)
-    gal2 = galsim.ChromaticBaseObject(galsim.Gaussian, wave2, photons2, fwhm=1.0)
+    gal1 = galsim.ChromaticGSObject(galsim.Gaussian, wave1, photons1, fwhm=1.0)
+    gal2 = galsim.ChromaticGSObject(galsim.Gaussian, wave2, photons2, fwhm=1.0)
 
     r610 = refraction_in_pixels(610, zenith_angle, pixel_scale)
     shift_fn = lambda wave: (0, refraction_in_pixels(wave, zenith_angle, pixel_scale) - r610)
@@ -489,8 +489,8 @@ def test_chromatic_seeing_moments():
     filter_wave = filter_wave[wgood][0::100]  # sparsify from 1 Ang binning to 100 Ang binning
     filter_throughput = filter_throughput[wgood][0::100]
 
-    gal1 = galsim.ChromaticBaseObject(galsim.Gaussian, wave1, photons1, fwhm=1e-6)
-    gal2 = galsim.ChromaticBaseObject(galsim.Gaussian, wave2, photons2, fwhm=1e-6)
+    gal1 = galsim.ChromaticGSObject(galsim.Gaussian, wave1, photons1, fwhm=1e-6)
+    gal2 = galsim.ChromaticGSObject(galsim.Gaussian, wave2, photons2, fwhm=1e-6)
 
     pix = galsim.Pixel(pixel_scale / galsim.arcsec)
 
@@ -552,7 +552,7 @@ def test_monochromatic_filter():
 
     wave, flambda = np.genfromtxt(os.path.join(datapath, 'CWW_Sbc_ext.sed')).T
     photons = flambda * wave
-    gal = galsim.ChromaticBaseObject(galsim.Gaussian, wave, photons, fwhm=1.0)
+    gal = galsim.ChromaticGSObject(galsim.Gaussian, wave, photons, fwhm=1.0)
 
     r610 = refraction_in_pixels(610, zenith_angle, pixel_scale)
     shift_fn = lambda wave: (0, refraction_in_pixels(wave, zenith_angle, pixel_scale) - r610)

@@ -68,8 +68,8 @@ class ChromaticObject(object):
         self = galsim.ChromaticAdd([self, other])
         return self
 
-class ChromaticBaseObject(ChromaticObject):
-    """Construct chromatic versions of the galsim.base objects.
+class ChromaticGSObject(ChromaticObject):
+    """Construct chromatic versions of the galsim GSObjects.
 
     This class extends the base GSObjects in basy.py by adding SEDs.  Useful to consistently generate
     the same galaxy observed through different filters, or, with the ChromaticAdd class, to construct
@@ -78,15 +78,15 @@ class ChromaticBaseObject(ChromaticObject):
 
     >>> bulge_wave, bulge_photons = user_function_to_get_bulge_spectrum()
     >>> disk_wave, disk_photons = user_function_to_get_disk_spectrum()
-    >>> bulge = galsim.ChromaticBaseObject(galsim.Sersic, bulge_wave, bulge_photons,
-                                           n=4, half_light_radius=1.0)
-    >>> disk = galsim.ChromaticBaseObject(galsim.Sersic, disk_wave, disk_photons,
-                                          n=1, half_light_radius=2.0)
+    >>> bulge = galsim.ChromaticGSObject(galsim.Sersic, bulge_wave, bulge_photons,
+                                         n=4, half_light_radius=1.0)
+    >>> disk = galsim.ChromaticGSObject(galsim.Sersic, disk_wave, disk_photons,
+                                        n=1, half_light_radius=2.0)
     >>> gal = galsim.ChromaticAdd([bulge, disk])
 
     Notice that positional and keyword arguments which apply to the specific base class being
     generalized (e.g., n=4, half_light_radius = 1.0 for the bulge component) are passed to
-    ChromaticBaseObject after the base object type and SED.
+    ChromaticGSObject after the base object type and SED.
 
     The SED is specified with a wavelength array and a photon array.  At present, the wavelength
     array is assumed to be linear.  The photon array specifies the distribution of source photons
@@ -95,7 +95,7 @@ class ChromaticBaseObject(ChromaticObject):
     photons in an infinite aperture.
     """
     def __init__(self, gsobj, wave, photons, *args, **kwargs):
-        """Initialize ChromaticBaseObject.
+        """Initialize ChromaticGSObject.
 
         @param gsobj    One of the GSObjects defined in base.py.  Possibly works with other GSObjects
                         too.
