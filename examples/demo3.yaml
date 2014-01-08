@@ -42,7 +42,7 @@
 # - shear type : EBeta (q, beta) 
 # - noise type : CCD (sky_level, gain, read_noise)
 # - image : size
-# - image : wcs (shear)
+# - image : wcs type : Shear
 # - output : psf
  
 # Define the galaxy profile
@@ -142,10 +142,11 @@ image :
    
     # You may provide a WCS to be applied to the image.
     # In this case, we simply have a constant telescope distortion over the image.
+    # The valid types here are the class names in galsim/wcs.py.  See the docstring
+    # for galsim.BaseWCS to see descriptions of them all.  For the class names that 
+    # end in WCS, you may (optionally) drop the WCS part of the name, as we did here.
     wcs : 
-        # Eventually, we will have more sophisticated options for the WCS, but for now,
-        # the only valid type is Shear (which is the default, so can be left unspecified), 
-        # which just takes a given shear value for the telescope distortion.
+        type : Shear
         shear : 
             type : G1G2
             g1 : -0.02

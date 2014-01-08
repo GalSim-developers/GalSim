@@ -19,6 +19,9 @@
 
 import galsim
 
+# The items in each tuple are:
+#   - The function to call to build the image
+#   - The function to call to get the number of objects that will be built
 valid_image_types = { 
     'Single' : ( 'BuildSingleImage', 'GetNObjForSingleImage' ),
     'Tiled' : ( 'BuildTiledImage', 'GetNObjForTiledImage' ),
@@ -335,32 +338,67 @@ def _read_wcs(config, logger=None):
     """
     image = config['image']
 
-    # Start with the normal case of just a simple pixel scale
-    if 'pixel_scale' in image:
-        scale = galsim.config.ParseValue(image, 'pixel_scale', config, float)[0]
-    else:
-        scale = 1.0
-    config['pixel_scale'] = scale
-    wcs = galsim.PixelScale(scale)
-
     # If there is a wcs field, read it and update the wcs variable.
     if 'wcs' in image:
-        if 'shear' in image['wcs']:
-            shear = galsim.config.ParseValue(image['wcs'], 'shear', config, galsim.Shear)[0]
-            wcs = galsim.ShearWCS(scale, shear)
+        image_wcs = image['wcs']
+        if 'type' in image_wcs:
+            type = image_wcs['type']
+        elif 'origin' in image_wcs:
+            type = 'OffsetWCS'
+        else:
+            type = 'PixelScale'
 
         # Special case: origin == center means to use image_center for the wcs origin
-        if 'origin' in image['wcs']:
-            if image['wcs']['origin'] == 'center':
-                xsize = config['image_xsize']
-                ysize = config['image_ysize']
-                if xsize == 0 or ysize == 0:
-                    raise AttributeError("Cannot use origin=center if image size is not defined.")
-                origin = galsim.PositionD( (1.+xsize)/2., (1.+ysize)/2. )
-            else:
-                origin = galsim.config.ParseValue(image['wcs'], 'origin', config,
-                                                  galsim.PositionD)[0]
-            wcs = wcs.setOrigin(origin)
+        if 'origin' in image_wcs and image_wcs['origin'] == 'center':
+            xsize = config['image_xsize']
+            ysize = config['image_ysize']
+            if xsize == 0 or ysize == 0:
+                raise AttributeError("Cannot use origin=center if image size is not defined.")
+            origin = galsim.PositionD( (1.+xsize)/2., (1.+ysize)/2. )
+            if logger:
+                logger.debug('image %d: Using origin = %s',config['image_num'],str(origin))
+            image_wcs['origin'] = origin
+
+        if type + 'WCS' in galsim.__dict__:
+            cls = eval("galsim."+type+"WCS")
+        elif type in galsim.__dict__:
+            cls = eval("galsim."+type)
+        else:
+            cls = eval(type)
+        if logger:
+            logger.debug('image %d: Build WCS for type = %s',config['image_num'],type)
+            logger.debug('image %d: WCS class = %s',config['image_num'],str(cls))
+
+        req = cls._req_params
+        opt = cls._opt_params
+        single = cls._single_params
+
+        # Pull in the image layer pixel_scale as a scale item if necessary.
+        if ('scale' in req or 'scale' in opt) and 'scale' not in image_wcs:
+            image_wcs['scale'] = image['pixel_scale']
+
+        kwargs, safe = galsim.config.GetAllParams(image_wcs, type, config, req, opt, single)
+
+        if logger and cls._takes_logger: 
+            kwargs['logger'] = logger
+
+        # This would be weird, but might as well check...
+        if cls._takes_rng:
+            if 'rng' not in config:
+                raise ValueError("No config['rng'] available for %s.type = %s"%(key,type))
+            kwargs['rng'] = config['rng']
+
+        if logger:
+            logger.debug('image %d: kwargs = %s',config['image_num'],str(kwargs))
+        wcs = cls(**kwargs) 
+
+    else:
+        # Default if no wcs is to use PixelScale
+        if 'pixel_scale' in image:
+            scale = galsim.config.ParseValue(image, 'pixel_scale', config, float)[0]
+        else:
+            scale = 1.0
+        wcs = galsim.PixelScale(scale)
 
     # Write it to the config dict and also return it.
     config['wcs'] = wcs
@@ -990,7 +1028,7 @@ def PowerSpectrumInit(ps, config, base):
     elif 'tile_xsize' in base:
         # Then we have a tiled image.  Can use the tile spacing as the grid spacing.
         stamp_size = min(base['tile_xsize'], base['tile_ysize'])
-        grid_spacing = stamp_size * base['pixel_scale']
+        grid_spacing = stamp_size * base['wcs'].maxLinearScale()
     else:
         raise AttributeError("power_spectrum.grid_spacing required for non-tiled images")
 
@@ -1002,7 +1040,7 @@ def PowerSpectrumInit(ps, config, base):
     else:
         import math
         image_size = max(base['image_xsize'], base['image_ysize'])
-        ngrid = int(math.ceil(image_size * base['pixel_scale'] / grid_spacing))
+        ngrid = int(math.ceil(image_size * base['wcs'].maxLinearScale() / grid_spacing))
 
     if 'interpolant' in config:
         interpolant = galsim.config.ParseValue(config, 'interpolant', base, str)[0]
