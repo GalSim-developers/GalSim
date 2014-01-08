@@ -47,8 +47,8 @@ def printval(image1, image2):
     #print "saved image.center = ",image2.array[xcen-3:xcen+4,ycen-3:ycen+4]
 
 def getmoments(image1):
-    print 'shape = ',image1.array.shape
-    print 'bounds = ',image1.bounds
+    #print 'shape = ',image1.array.shape
+    #print 'bounds = ',image1.bounds
     xgrid, ygrid = np.meshgrid(np.arange(image1.array.shape[1]) + image1.getXMin(), 
                                np.arange(image1.array.shape[0]) + image1.getYMin())
     mx = np.sum(xgrid * image1.array) / np.sum(image1.array)
