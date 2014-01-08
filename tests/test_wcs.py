@@ -35,8 +35,8 @@ except ImportError:
 near_x_list = [ 0, 0.242, -1.342, -5 ]
 near_y_list = [ 0, -0.173, 2.003, -7 ]
 
-far_x_list = [ 10, 24.2, -134.2, -500 ]
-far_y_list = [ 10, -17.3, 200.3, -700 ]
+far_x_list = [ 10, -31.7, -183.6, -700 ]
+far_y_list = [ 10, 12.5, 103.3, 500 ]
 
 all_x_list = near_x_list + far_x_list
 all_y_list = near_y_list + far_y_list
@@ -133,6 +133,9 @@ def do_wcs_pos(wcs, ufunc, vfunc, name, x0=0, y0=0):
     # _anywhere_ in the name an tries to run it.  So make sure the name doesn't 
     # have 'test' in it.  There are a bunch of other do* functions that work similarly.
 
+    global digits
+    orig_digits = digits
+
     #print 'start do_wcs_pos for ',name, wcs
     # Check that (x,y) -> (u,v) and converse work correctly
     if 'local' in name or 'jacobian' in name or 'affine' in name:
@@ -140,6 +143,7 @@ def do_wcs_pos(wcs, ufunc, vfunc, name, x0=0, y0=0):
         # count on the far positions to be sufficiently accurate. Just use near positions.
         x_list = near_x_list
         y_list = near_y_list
+        digits = 2
     else:
         x_list = all_x_list
         y_list = all_y_list
@@ -149,23 +153,28 @@ def do_wcs_pos(wcs, ufunc, vfunc, name, x0=0, y0=0):
     for x,y,u,v in zip(x_list, y_list, u_list, v_list):
         image_pos = galsim.PositionD(x+x0,y+y0)
         world_pos = galsim.PositionD(u,v)
+        #print 'image_pos = ',image_pos
+        #print 'world_pos = ',world_pos
         world_pos2 = wcs.toWorld(image_pos)
+        #print 'world_pos2 = ',world_pos2
         np.testing.assert_almost_equal(
                 world_pos.x, world_pos2.x, digits,
                 'wcs.toWorld returned wrong world position for '+name)
         np.testing.assert_almost_equal(
                 world_pos.y, world_pos2.y, digits,
                 'wcs.toWorld returned wrong world position for '+name)
-            
+
+        scale = wcs.maxLinearScale(image_pos)
         try:
             # The reverse transformation is not guaranteed to be implemented,
             # so guard against NotImplementedError being raised:
             image_pos2 = wcs.toImage(world_pos)
+            #print 'image_pos2 = ',image_pos2
             np.testing.assert_almost_equal(
-                    image_pos.x, image_pos2.x, digits,
+                    image_pos.x*scale, image_pos2.x*scale, digits,
                     'wcs.toImage returned wrong image position for '+name)
             np.testing.assert_almost_equal(
-                    image_pos.y, image_pos2.y, digits,
+                    image_pos.y*scale, image_pos2.y*scale, digits,
                     'wcs.toImage returned wrong image position for '+name)
         except NotImplementedError:
             pass
@@ -179,6 +188,7 @@ def do_wcs_pos(wcs, ufunc, vfunc, name, x0=0, y0=0):
         np.testing.assert_almost_equal(
                 world_pos.y, wcs.toWorld(image_pos).y, digits,
                 'wcs.toWorld gave different value with PositionI image_pos for '+name)
+    digits = orig_digits
 
 
 def check_world(pos1, pos2, digits, err_msg):
@@ -363,19 +373,15 @@ def do_local_wcs(wcs, ufunc, vfunc, name):
     im1 = galsim.Image(64,64, wcs=wcs)
     im2 = galsim.Image(64,64, scale=1.)
 
-    # This isn't normally necessary, but it is when we use UVFunction as a local WCS
-    # The other classes just ignore the image_pos parameter.
-    origin = galsim.PositionD(0,0)
-
     for world_profile in profiles:
         # The profiles build above are in world coordinates (as usual)
     
         # Convert to image coordinates
-        image_profile = wcs.toImage(world_profile, image_pos=origin)
+        image_profile = wcs.toImage(world_profile)
 
         # Also check round trip (starting with either one)
-        world_profile2 = wcs.toWorld(image_profile, image_pos=origin)
-        image_profile2 = wcs.toImage(world_profile2, image_pos=origin)
+        world_profile2 = wcs.toWorld(image_profile)
+        image_profile2 = wcs.toImage(world_profile2)
 
         for x,y,u,v in zip(near_x_list, near_y_list, near_u_list, near_v_list):
             image_pos = galsim.PositionD(x,y)
@@ -425,6 +431,7 @@ def do_nonlocal_wcs(wcs, ufunc, vfunc, name):
     # Check that setOrigin and local work correctly:
     new_origin = galsim.PositionI(123,321)
     wcs3 = wcs.setOrigin(new_origin)
+    #print 'wcs3 = ',wcs3
     assert wcs != wcs3, name+' is not != wcs.setOrigin(pos)'
     wcs4 = wcs.local(wcs.origin)
     assert wcs != wcs4, name+' is not != wcs.local()'
@@ -471,6 +478,7 @@ def do_nonlocal_wcs(wcs, ufunc, vfunc, name):
     full_im2 = galsim.Image(galsim.BoundsI(-1023,1024,-1023,1024), scale=1.)
 
     for x0,y0,u0,v0 in zip(far_x_list, far_y_list, far_u_list, far_v_list):
+        #print 'x0,y0 = ',x0,y0
         local_ufunc = lambda x,y: ufunc(x+x0,y+y0) - u0
         local_vfunc = lambda x,y: vfunc(x+x0,y+y0) - v0
         image_pos = galsim.PositionD(x0,y0)
@@ -961,6 +969,12 @@ def test_uvfunction():
     vfunc = lambda x,y: y * scale
     wcs = galsim.UVFunction(ufunc, vfunc)
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction like PixelScale')
+
+    # Also check with inverse functions.
+    xfunc = lambda u,v: u / scale
+    yfunc = lambda u,v: v / scale
+    wcs = galsim.UVFunction(ufunc, vfunc, xfunc, yfunc)
+    do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction like PixelScale with inverse')
  
     # 2. Like ShearWCS
     scale = 0.23
@@ -971,6 +985,12 @@ def test_uvfunction():
     vfunc = lambda x,y: (y + g1*y - g2*x) * scale * factor
     wcs = galsim.UVFunction(ufunc, vfunc)
     do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction like ShearWCS')
+    
+    # Also check with inverse functions.
+    xfunc = lambda u,v: (u + g1*u + g2*v) / scale * factor
+    yfunc = lambda u,v: (v - g1*v + g2*u) / scale * factor
+    wcs = galsim.UVFunction(ufunc, vfunc, xfunc, yfunc)
+    do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction like ShearWCS with inverse')
 
     # 3. Like an AffineTransform
     dudx = 0.2342
@@ -990,6 +1010,15 @@ def test_uvfunction():
     # Check that using a wcs in the context of an image works correctly
     do_wcs_image(wcs, 'UVFunction_string')
 
+    # Also check with inverse functions.
+    det = dudx*dvdy - dudy*dvdx
+    wcs = galsim.UVFunction(
+            ufunc='%f*x + %f*y'%(dudx,dudy),
+            vfunc='%f*x + %f*y'%(dvdx,dvdy),
+            xfunc='(%f*u + %f*v)/(%.8f)'%(dvdy,-dudy,det),
+            yfunc='(%f*u + %f*v)/(%.8f)'%(-dvdx,dudx,det) )
+    do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction with string inverse funcs')
+
     # 4. Next some UVFunctions with non-trivial offsets
     x0 = 1.3
     y0 = -0.9
@@ -1001,7 +1030,7 @@ def test_uvfunction():
     vfunc2 = lambda x,y: dvdx*(x-x0) + dvdy*(y-y0) + v0
     wcs = galsim.UVFunction(ufunc2, vfunc2)
     do_nonlocal_wcs(wcs, ufunc2, vfunc2, 'UVFunction with origins in funcs')
-    wcs = galsim.UVFunction(ufunc, vfunc, origin, world_origin)
+    wcs = galsim.UVFunction(ufunc, vfunc, origin=origin, world_origin=world_origin)
     do_nonlocal_wcs(wcs, ufunc2, vfunc2, 'UVFunction with origin arguments')
 
     # Check that using a wcs in the context of an image works correctly
@@ -1010,10 +1039,10 @@ def test_uvfunction():
     # Check basic copy and == , != for UVFunction
     wcs2 = wcs.copy()
     assert wcs == wcs2, 'UVFunction copy is not == the original'
-    wcs3a = galsim.UVFunction(radial_v, radial_v, origin, world_origin)
-    wcs3b = galsim.UVFunction(radial_u, radial_u, origin, world_origin)
-    wcs3c = galsim.UVFunction(radial_u, radial_v, origin*2, world_origin)
-    wcs3d = galsim.UVFunction(radial_u, radial_v, origin, world_origin*2)
+    wcs3a = galsim.UVFunction(vfunc, vfunc, origin=origin, world_origin=world_origin)
+    wcs3b = galsim.UVFunction(ufunc, ufunc, origin=origin, world_origin=world_origin)
+    wcs3c = galsim.UVFunction(ufunc, vfunc, origin=origin*2, world_origin=world_origin)
+    wcs3d = galsim.UVFunction(ufunc, vfunc, origin=origin, world_origin=world_origin*2)
     assert wcs != wcs3a, 'UVFunction is not != a different one (ufunc)'
     assert wcs != wcs3b, 'UVFunction is not != a different one (vfunc)'
     assert wcs != wcs3c, 'UVFunction is not != a different one (origin)'
@@ -1023,7 +1052,7 @@ def test_uvfunction():
     # This is only designed to be accurate to 5 digits, rather than usual 6.
     digits = 5
     origin = galsim.PositionD(x0,y0)
-    wcs = galsim.UVFunction(radial_u, radial_v, origin)
+    wcs = galsim.UVFunction(radial_u, radial_v, origin=origin)
 
     # Check jacobian()
     for x,y in zip(far_x_list, far_y_list):
@@ -1056,7 +1085,7 @@ def test_uvfunction():
     # Check that using a wcs in the context of an image works correctly
     do_wcs_image(wcs, 'UVFunction_func')
 
-    # Repeat with a function object rather than a regular function.
+    # 6. Repeat with a function object rather than a regular function.
     # Use a different `a` parameter for u and v to make things more interesting.
     cubic_u = Cubic(2.9e-5, 2000., 'u')
     cubic_v = Cubic(-3.7e-5, 2000., 'v')
@@ -1067,6 +1096,31 @@ def test_uvfunction():
 
     # Check that using a wcs in the context of an image works correctly
     do_wcs_image(wcs, 'UVFunction_object')
+
+    # 7. Test the UVFunction that is used in demo9 to confirm that I got the 
+    # inverse function correct!
+    ufunc = lambda x,y : 0.05 * x * (1. + 1.e-6 * (x**2 + y**2))
+    vfunc = lambda x,y : 0.05 * y * (1. + 1.e-6 * (x**2 + y**2))
+    # w = 0.05 r + 5.e-8 r^3
+    # 0 = r^3 + 1e6 r - 2e7 w
+    # 
+    # Cardano's formula gives
+    # (http://en.wikipedia.org/wiki/Cubic_function#Cardano.27s_method)
+    # r = ( sqrt( (1e7 w)^2 + (1e6)^3/27 ) + (1e7 w) )^1/3 -
+    #     ( sqrt( (1e7 w)^2 + (1e6)^3/27 ) - (1e7 w) )^1/3
+    #   = 100 ( ( 10 sqrt( w^2 + 1.e4/27 ) + 10 w )^1/3 -
+    #           ( 10 sqrt( w^2 + 1.e4/27 ) - 10 w )^1/3 )
+    import math
+    xfunc = lambda u,v : (
+        lambda w: ( 0. if w==0. else
+            100.*u/w*(( 10*math.sqrt(w**2+1.e4/27.)+10.*w )**(1./3.) -
+                      ( 10*math.sqrt(w**2+1.e4/27.)-10.*w )**(1./3.))) )(math.sqrt(u**2+v**2))
+    yfunc = lambda u,v : (
+        lambda w: ( 0. if w==0. else
+            100.*v/w*(( 10*math.sqrt(w**2+1.e4/27.)+10.*w )**(1./3.) -
+                      ( 10*math.sqrt(w**2+1.e4/27.)-10.*w )**(1./3.))) )(math.sqrt(u**2+v**2))
+    wcs = galsim.UVFunction(ufunc, vfunc, xfunc, yfunc)
+    do_nonlocal_wcs(wcs, ufunc, vfunc, 'UVFunction from demo9')
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

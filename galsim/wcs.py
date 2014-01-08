@@ -1452,6 +1452,10 @@ class UVFunction(BaseWCS):
         - python objects with a __call__ method that takes (x,y) arguments
         - strings which can be parsed with eval('lambda x,y: '+str)
 
+    You may also provide the inverse functions x(u,v) and y(u,v) as xfunc and yfunc. 
+    These are not required, but if you do not provide them, then any operation that requires 
+    going from world to image coordinates will raise a NotImplementedError.
+
     Initialization
     --------------
     A UVFunction is initialized with the command:
@@ -1460,6 +1464,8 @@ class UVFunction(BaseWCS):
 
     @param ufunc          The function u(x,y)
     @param vfunc          The function v(x,y)
+    @param xfunc          The function x(u,v) (optional)
+    @param yfunc          The function y(u,v) (optional)
     @param origin         Optional origin position for the image coordinate system.
                           If provided, it should be a PostionD or PositionI.
                           [ Default: `origin = None` ]
@@ -1468,15 +1474,17 @@ class UVFunction(BaseWCS):
                           [ Default: `world_origin = None` ]
     """
     _req_params = { "ufunc" : str, "vfunc" : str }
-    _opt_params = { "origin" : galsim.PositionD, "world_origin": galsim.PositionD }
+    _opt_params = { "xfunc" : str, "yfunc" : str,
+                    "origin" : galsim.PositionD, "world_origin": galsim.PositionD }
     _single_params = []
     _takes_rng = False
     _takes_logger = False
 
-    def __init__(self, ufunc, vfunc, origin=None, world_origin=None):
+    def __init__(self, ufunc, vfunc, xfunc=None, yfunc=None, origin=None, world_origin=None):
         self._is_local = False
         self._is_uniform = False
         self._is_celestial = False
+        import math  # In case needed by function evals
         if isinstance(ufunc, basestring):
             self._ufunc = eval('lambda x,y : ' + ufunc)
         else:
@@ -1485,6 +1493,14 @@ class UVFunction(BaseWCS):
             self._vfunc = eval('lambda x,y : ' + vfunc)
         else:
             self._vfunc = vfunc
+        if isinstance(xfunc, basestring):
+            self._xfunc = eval('lambda u,v : ' + xfunc)
+        else:
+            self._xfunc = xfunc
+        if isinstance(yfunc, basestring):
+            self._yfunc = eval('lambda u,v : ' + yfunc)
+        else:
+            self._yfunc = yfunc
 
         if origin == None:
             self._x0 = 0
@@ -1504,6 +1520,10 @@ class UVFunction(BaseWCS):
     def ufunc(self): return self._ufunc
     @property
     def vfunc(self): return self._vfunc
+    @property
+    def xfunc(self): return self._xfunc
+    @property
+    def yfunc(self): return self._yfunc
 
     @property
     def origin(self): return galsim.PositionD(self._x0, self._y0)
@@ -1516,17 +1536,28 @@ class UVFunction(BaseWCS):
     def _v(self, x, y):
         return self._vfunc(x-self._x0, y-self._y0) + self._v0
 
+    def _x(self, u, v):
+        return self._xfunc(u-self._u0, v-self._v0) + self._x0
+
+    def _y(self, u, v):
+        return self._yfunc(u-self._u0, v-self._v0) + self._y0
+
     def _posToWorld(self, image_pos):
         u = self._u(image_pos.x, image_pos.y)
         v = self._v(image_pos.x, image_pos.y)
         return galsim.PositionD(u,v)
 
     def _posToImage(self, world_pos):
-        raise NotImplementedError("World -> Image direction not implemented for UVFunction")
+        if self._xfunc is None or self._yfunc is None:
+            raise NotImplementedError(
+                "World -> Image direction not implemented for this UVFunction")
+        x = self._x(world_pos.x, world_pos.y)
+        y = self._y(world_pos.x, world_pos.y)
+        return galsim.PositionD(x,y)
 
     def _local(self, image_pos, world_pos):
-        if world_pos is not None:
-            raise NotImplementedError('UVFunction.local() cannot take world_pos.')
+        if image_pos is None:
+            image_pos = self._posToImage(world_pos)
         x0 = image_pos.x - self._x0
         y0 = image_pos.y - self._y0
         u0 = self._u(x0,y0)
@@ -1542,7 +1573,7 @@ class UVFunction(BaseWCS):
         return JacobianWCS(dudx, dudy, dvdx, dvdy)
 
     def _setOrigin(self, origin, world_origin):
-        return UVFunction(self._ufunc, self._vfunc, origin, world_origin)
+        return UVFunction(self._ufunc, self._vfunc, self._xfunc, self._yfunc, origin, world_origin)
  
     def _writeHeader(self, header, bounds):
         header["GS_WCS"]  = ("UVFunction", "GalSim WCS name")
@@ -1553,6 +1584,10 @@ class UVFunction(BaseWCS):
 
         _writeFuncToHeader(self._ufunc, 'U', header)
         _writeFuncToHeader(self._vfunc, 'V', header)
+        if self._xfunc:
+            _writeFuncToHeader(self._xfunc, 'X', header)
+        if self._yfunc:
+            _writeFuncToHeader(self._yfunc, 'Y', header)
 
         return self.affine(bounds.trueCenter())._writeLinearWCS(header, bounds)
 
@@ -1564,10 +1599,18 @@ class UVFunction(BaseWCS):
         v0 = header["GS_V0"]
         ufunc = _readFuncFromHeader('U', header)
         vfunc = _readFuncFromHeader('V', header)
-        return UVFunction(ufunc, vfunc, galsim.PositionD(x0,y0), galsim.PositionD(u0,v0))
+        xfunc = None
+        yfunc = None
+        if 'GS_X' in header:
+            xfunc = _readFuncFromHeader('X', header)
+        if 'GS_Y' in header:
+            yfunc = _readFuncFromHeader('Y', header)
+        return UVFunction(ufunc, vfunc, xfunc, yfunc, galsim.PositionD(x0,y0),
+                          galsim.PositionD(u0,v0))
 
     def copy(self):
-        return UVFunction(self._ufunc, self._vfunc, self.origin, self.world_origin)
+        return UVFunction(self._ufunc, self._vfunc, self._xfunc, self._yfunc, self.origin,
+                          self.world_origin)
 
     def __eq__(self, other):
         if not isinstance(other, UVFunction):
@@ -1576,6 +1619,8 @@ class UVFunction(BaseWCS):
             return (
                 self._ufunc == other._ufunc and
                 self._vfunc == other._vfunc and
+                self._xfunc == other._xfunc and
+                self._yfunc == other._yfunc and
                 self._x0 == other._x0 and
                 self._y0 == other._y0 and
                 self._u0 == other._u0 and
@@ -1585,8 +1630,8 @@ class UVFunction(BaseWCS):
         return not self.__eq__(other)
 
     def __repr__(self):
-        return "UVFunction(%r,%r,%r,%r)"%(self.ufunc, self.vfunc,
-                                          self.origin, self.world_origin)
+        return "UVFunction(%r,%r,%r,%r,%r,%r)"%(self._ufunc, self._vfunc, self._xfunc, self._yfunc,
+                                                self.origin, self.world_origin)
 
 
 def makeJacFromNumericalRaDec(ra, dec, dx, dy):
@@ -1947,7 +1992,7 @@ class AstropyWCS(BaseWCS):
         return galsim.PositionD(x + self._x0, y + self._y0)
 
     def _local(self, image_pos, world_pos):
-        if world_pos is not None:
+        if image_pos is None:
             image_pos = self._posToImage(world_pos)
         x0 = image_pos.x - self._x0
         y0 = image_pos.y - self._y0
@@ -2152,7 +2197,7 @@ class PyAstWCS(BaseWCS):
         return galsim.PositionD(x[0] + self._x0, y[0] + self._y0)
 
     def _local(self, image_pos, world_pos):
-        if world_pos is not None:
+        if image_pos is None:
             image_pos = self._posToImage(world_pos)
         x0 = image_pos.x - self._x0
         y0 = image_pos.y - self._y0
@@ -2354,9 +2399,8 @@ class WcsToolsWCS(BaseWCS):
         return galsim.PositionD(x + self._x0, y + self._y0)
 
     def _local(self, image_pos, world_pos):
-        if world_pos is not None:
+        if image_pos is None:
             image_pos = self._posToImage(world_pos)
-
         x0 = image_pos.x - self._x0
         y0 = image_pos.y - self._y0
         # Use dx,dy = 1 pixel for numerical derivatives
