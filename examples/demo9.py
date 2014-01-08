@@ -32,7 +32,8 @@ a space-like simulation.  (Some of the numbers used are the values for HST.)
 New features introduced in this demo:
 
 - psf = OpticalPSF(..., trefoil1, trefoil2, nstruts, strut_thick, strut_angle)
-- im = galsim.ImageS(xsize, ysize)
+- im.wcs = galsim.OffsetWCS(scale, image_origin)
+- im = galsim.ImageS(xsize, ysize, wcs)
 - pos = galsim.PositionD(x, y)
 - nfw = galsim.NFWHalo(mass, conc, z, omega_m, omega_lam)
 - g1,g2 = nfw.getShear(pos, z)
@@ -118,10 +119,23 @@ def main(argv):
         """
         t1 = time.time()
 
-        full_image = galsim.ImageF(image_size, image_size, scale=pixel_scale)
+        # Build the image onto which we will draw the galaxies.
+        full_image = galsim.ImageF(image_size, image_size)
+
+        # The "true" center of the image is allowed to be halfway between two pixels, as is the 
+        # case for even-sized images.  full_image.bounds.center() is an integer position,
+        # which would be 1/2 pixel up and to the right of the true center in this case.
+        im_center = full_image.bounds.trueCenter()
+
+        # Update the image WCS to us this point as the definition of (u,v) = (0,0).
+        # The WCS had been a simple PixelScale, which is implicit in the use of the scale
+        # parameter when we made the image.  Assigning to the wcs attribute overrides this.
+        wcs = galsim.OffsetWCS(scale=pixel_scale, image_origin=im_center)
+        full_image.wcs = wcs
 
         # The weight image will hold the inverse variance for each pixel.
-        weight_image = galsim.ImageF(image_size, image_size, scale=pixel_scale)
+        # We can set the wcs directly on construction with the wcs parameter.
+        weight_image = galsim.ImageF(image_size, image_size, wcs=wcs)
 
         # It is common for astrometric images to also have a bad pixel mask.  We don't have any
         # defect simulation currently, so our bad pixel masks are currently all zeros. 
@@ -129,14 +143,14 @@ def main(argv):
         # be able to mark those defects on a bad pixel mask.
         # Note: the S in ImageS means to use "short int" for the data type.
         # This is a typical choice for a bad pixel image.
-        badpix_image = galsim.ImageS(image_size, image_size, scale=pixel_scale)
+        badpix_image = galsim.ImageS(image_size, image_size, wcs=wcs)
 
         # We also draw a PSF image at the location of every galaxy.  This isn't normally done,
         # and since some of the PSFs overlap, it's not necessarily so useful to have this kind 
         # of image.  But in this case, it's fun to look at the psf image, especially with 
         # something like log scaling in ds9 to see how crazy an aberrated OpticalPSF with 
         # struts can look when there is no atmospheric component to blur it out.
-        psf_image = galsim.ImageF(image_size, image_size, scale=pixel_scale)
+        psf_image = galsim.ImageF(image_size, image_size, wcs=wcs)
 
         # Setup the NFWHalo stuff:
         nfw = galsim.NFWHalo(mass=mass, conc=nfw_conc, redshift=nfw_z_halo,
@@ -148,11 +162,6 @@ def main(argv):
         # If you want to include either radiation or more complicated dark energy models,
         # you can define your own cosmology class that defines the functions a(z), E(a), and 
         # Da(z_source, z_lens).  Then you can pass this to NFWHalo as a `cosmo` parameter.
-
-        # The "true" center of the image is allowed to be halfway between two pixels, as is the 
-        # case for even-sized images.  full_image.bounds.center() is an integer position,
-        # which would be 1/2 pixel up and to the right of the true center in this case.
-        im_center = full_image.bounds.trueCenter()
 
         # Make the PSF profile outside the loop to minimize the (significant) OpticalPSF 
         # construction overhead.
@@ -185,7 +194,7 @@ def main(argv):
 
             # We also need the position in pixels to determine where to place the postage
             # stamp on the full image.
-            image_pos = pos / pixel_scale + im_center
+            image_pos = wcs.toImage(pos)
 
             # For even-sized postage stamps, the nominal center (returned by stamp.bounds.center())
             # cannot be at the true center (returned by stamp.bounds.trueCenter()) of the postage 

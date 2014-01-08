@@ -36,13 +36,12 @@ New features introduced in this demo:
 - obj = galsim.Sersic(n, flux, scale_radius)
 - obj = galsim.Kolmogorov(fwhm)
 - obj = galsim.OpticalPSF(lam_over_diam, defocus, coma1, coma2, astig1, astig2, obscuration)
-- obj = galsim.Pixel(scale)
 - obj.applyShear(e, beta)  -- including how to specify an angle in GalSim
 - shear = galsim.Shear(q, beta)
 - obj.applyShear(shear)
 - obj3 = x1 * obj1 + x2 * obj2
 - image = galsim.ImageF(image_size, image_size)
-- obj.draw(image, scale)
+- obj.draw(image, wcs)
 - shear3 = shear1 + shear2
 - noise = galsim.CCDNoise(rng, sky_level, gain, read_noise)
 """
@@ -182,28 +181,27 @@ def main(argv):
                                obscuration = opt_obscuration)
     logger.debug('Made optical PSF profile')
 
-    # Next we will convolve the psf and galaxy profiles. 
-    # Note: it's important to make sure the physical effects happen in the right order.
-    # The PSF and galaxy profiles should be convolved before the optical (WCS) distortion.  
-    # Then the pixelization is applied after that.
-    psf = galsim.Convolve([atmos, optics])
-    nopix = galsim.Convolve([psf, gal])
-    
-    # Now we can apply the WCS distortion (specified as g1,g2 in this case).
-    # We may eventually have a somewhat more seamless way to handle things like a WCS
-    # that would potentially vary across the image and include more than just a distortion
-    # term.  But for now, we just apply a given distortion to the unpixellated profile.
-    nopix.applyShear(g1=wcs_g1, g2=wcs_g2)
-    psf.applyShear(g1=wcs_g1, g2=wcs_g2)
-    logger.debug('Applied WCS distortion')
+    # So far, our WCS has been just a scaling between pixels and arcsec, which we have 
+    # defined as the "pixel scale".  This is fine for many purposes, so we have made it 
+    # easy to treat the WCS this way via the `scale` parameter to commands like draw.
 
-    # Define the pixel size.  It's not usually necessary, but the pixel scale parameter
-    # is named scale, so you can use a keyword argument if you want.
-    pix = galsim.Pixel(scale=pixel_scale)
+    # However, we also have the ability to model a more complicated WCS.  In this case,
+    # we use a WCS that includes a distortion (specified as g1,g2 in this case), which
+    # we call a ShearWCS.
+    wcs = galsim.ShearWCS(scale=pixel_scale, shear=galsim.Shear(g1=wcs_g1, g2=wcs_g2))
+    logger.debug('Made the WCS')
+
+    # Using a non-trivial WCS means that the pixel is no longer a square box profile.
+    # At least not in world coordinates, where we have typically been defining the profiles.
+    # It is a square in image coordinates though, so the easiest way to deal the pixel is
+    # to define it as a unit pixel in image coordinates and let the WCS object convert it 
+    # to world coordinates.
+    pix = wcs.toWorld(galsim.Pixel(1.0))
     logger.debug('Made pixel profile')
 
-    # The final profile is the convolution of the WCS-sheared (psf+gal) profile with the pixel.
-    final = galsim.Convolve([nopix, pix])
+    # Next we will convolve the components in world coordinates.
+    psf = galsim.Convolve([atmos, optics])
+    final = galsim.Convolve([psf, gal, pix])
     final_epsf = galsim.Convolve([psf, pix])
     logger.debug('Convolved components into final profile')
 
@@ -217,13 +215,15 @@ def main(argv):
     # However, you can make a different type if you prefer.  In this case, we still use
     # ImageF, since 32-bit floats are fine.  We just want to set the size explicitly.
     image = galsim.ImageF(image_size, image_size)
-    # Draw the image with a particular pixel scale.
-    final.draw(image=image, scale=pixel_scale)
+    # Draw the image with the given WCS.  Note that we use wcs rather than scale when the
+    # WCS is more complicated than just a pixel scale.
+    final.draw(image=image, wcs=wcs)
 
     # Also draw the effective PSF by itself and the optical PSF component alone.
     image_epsf = galsim.ImageF(image_size, image_size)
-    final_epsf.draw(image_epsf, scale=pixel_scale)
-    # Note: we draw the optical part of the PSF at its own Nyquist-sampled pixel size
+    final_epsf.draw(image_epsf, wcs=wcs)
+
+    # We also draw the optical part of the PSF at its own Nyquist-sampled pixel size
     # in order to better see the features of the (highly structured) profile.
     image_opticalpsf = optics.draw(scale=lam_over_diam/2.)
     logger.debug('Made image of the profile')
@@ -247,11 +247,10 @@ def main(argv):
     image -= sky_level * pixel_scale**2
     logger.debug('Added Gaussian and Poisson noise')
 
-    # Write the image to a file
+    # Write the images to files.
     file_name = os.path.join('output', 'demo3.fits')
     file_name_epsf = os.path.join('output','demo3_epsf.fits')
     file_name_opticalpsf = os.path.join('output','demo3_opticalpsf.fits')
-    
     image.write(file_name)
     image_epsf.write(file_name_epsf)
     image_opticalpsf.write(file_name_opticalpsf)
@@ -259,6 +258,8 @@ def main(argv):
     logger.info('Wrote effective PSF image to %r', file_name_epsf)
     logger.info('Wrote optics-only PSF image (Nyquist sampled) to %r', file_name_opticalpsf)
 
+    # Check that the HSM package, which is bundled with GalSim, finds a good estimate
+    # of the shear.
     results = galsim.hsm.EstimateShear(image, image_epsf)
 
     logger.info('HSM reports that the image has observed shape and size:')
@@ -268,9 +269,8 @@ def main(argv):
     logger.info('    e1, e2 = %.3f, %.3f',
                 results.corrected_e1, results.corrected_e2)
     logger.info('Expected values in the limit that noise and non-Gaussianity are negligible:')
-    # Convention for shear addition is to apply the second (RHS) term initially followed by the
-    # first (LHS).
-    # So wcs needs to be LHS and galaxy shape RHS.
+    # Convention for shear addition is to apply the second term initially followed by the first.
+    # So this needs to be the WCS shear + the galaxy shape in that order.
     total_shape = galsim.Shear(g1=wcs_g1, g2=wcs_g2) + gal_shape
     logger.info('    e1, e2 = %.3f, %.3f', total_shape.e1, total_shape.e2)
 

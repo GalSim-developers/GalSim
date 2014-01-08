@@ -328,6 +328,45 @@ def _set_image_origin(config, convention):
     config['image_origin'] = galsim.PositionI(origin,origin)
 
 
+def _read_wcs(config, logger=None):
+    """Read the wcs from the config dict, writing both the it and, if it is well-defined,
+    the pixel_scale to the config.  If the wcs does not have a well-defined pixel_scale, 
+    it will be stored as None.
+    """
+    image = config['image']
+
+    # Start with the normal case of just a simple pixel scale
+    if 'pixel_scale' in image:
+        scale = galsim.config.ParseValue(image, 'pixel_scale', config, float)[0]
+    else:
+        scale = 1.0
+    config['pixel_scale'] = scale
+    wcs = galsim.PixelScale(scale)
+
+    # If there is a wcs field, read it and update the wcs variable.
+    if 'wcs' in image:
+        if 'shear' in image['wcs']:
+            shear = galsim.config.ParseValue(image['wcs'], 'shear', config, galsim.Shear)[0]
+            wcs = galsim.ShearWCS(scale, shear)
+
+        # Special case: origin == center means to use image_center for the wcs origin
+        if 'origin' in image['wcs']:
+            if image['wcs']['origin'] == 'center':
+                xsize = config['image_xsize']
+                ysize = config['image_ysize']
+                if xsize == 0 or ysize == 0:
+                    raise AttributeError("Cannot use origin=center if image size is not defined.")
+                origin = galsim.PositionD( (1.+xsize)/2., (1.+ysize)/2. )
+            else:
+                origin = galsim.config.ParseValue(image['wcs'], 'origin', config,
+                                                  galsim.PositionD)[0]
+            wcs = wcs.setOrigin(origin)
+
+    # Write it to the config dict and also return it.
+    config['wcs'] = wcs
+    return wcs
+
+
 def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
                      make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
@@ -356,10 +395,10 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
         first += config.get('start_obj_num',0)
         config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
-    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc', 'retry_failures',
-               'n_photons', 'wmult', 'offset', 'gsparams' ]
+    ignore = [ 'random_seed', 'draw_method', 'noise', 'pixel_scale', 'wcs', 'nproc',
+               'retry_failures', 'n_photons', 'wmult', 'offset', 'gsparams' ]
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 'index_convention' : str,
-            'pixel_scale' : float , 'sky_level' : float , 'sky_level_pixel' : float }
+            'sky_level' : float , 'sky_level_pixel' : float }
     params = galsim.config.GetAllParams(
         config['image'], 'image', config, opt=opt, ignore=ignore)[0]
 
@@ -382,20 +421,19 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
         raise AttributeError(
             "Both (or neither) of image.xsize and image.ysize need to be defined  and != 0.")
 
+    wcs = _read_wcs(config, logger)
+
     if 'world_pos' in config['image']:
         config['image']['image_pos'] = (0,0)
         # We allow world_pos to be in config[image], but we don't want it to lead to a final_shift
         # in BuildSingleStamp.  The easiest way to do this is to set image_pos to (0,0).
-
-    pixel_scale = params.get('pixel_scale',1.0)
-    config['pixel_scale'] = pixel_scale
 
     if 'sky_level' in params and 'sky_level_pixel' in params:
         raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
             "noise.type = %s"%type)
     sky_level_pixel = params.get('sky_level_pixel',None)
     if 'sky_level' in params:
-        sky_level_pixel = params['sky_level'] * pixel_scale**2
+        sky_level_pixel = params['sky_level'] * wcs.pixelArea()
 
     return galsim.config.BuildSingleStamp(
             config=config, xsize=xsize, ysize=ysize, obj_num=obj_num,
@@ -433,12 +471,12 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         first += config.get('start_obj_num',0)
         config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
-    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc', 'retry_failures',
-               'image_pos', 'n_photons', 'wmult', 'offset', 'gsparams' ]
+    ignore = [ 'random_seed', 'draw_method', 'noise', 'pixel_scale', 'wcs', 'nproc',
+               'retry_failures', 'image_pos', 'n_photons', 'wmult', 'offset', 'gsparams' ]
     req = { 'nx_tiles' : int , 'ny_tiles' : int }
     opt = { 'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
             'border' : int , 'xborder' : int , 'yborder' : int ,
-            'pixel_scale' : float , 'nproc' : int , 'index_convention' : str,
+            'nproc' : int , 'index_convention' : str,
             'sky_level' : float , 'sky_level_pixel' : float , 'order' : str }
     params = galsim.config.GetAllParams(
         config['image'], 'image', config, req=req, opt=opt, ignore=ignore)[0]
@@ -468,16 +506,6 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     xborder = params.get("xborder",border)
     yborder = params.get("yborder",border)
 
-    pixel_scale = params.get('pixel_scale',1.0)
-    config['pixel_scale'] = pixel_scale
-
-    if 'sky_level' in params and 'sky_level_pixel' in params:
-        raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
-            "noise.type = %s"%type)
-    sky_level_pixel = params.get('sky_level_pixel',None)
-    if 'sky_level' in params:
-        sky_level_pixel = params['sky_level'] * pixel_scale**2
-
     do_noise = xborder >= 0 and yborder >= 0
     # TODO: Note: if one of these is < 0 and the other is > 0, then
     #       this will add noise to the border region.  Not exactly the 
@@ -500,6 +528,8 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     config['image_ysize'] = full_ysize
     if logger:
         logger.debug('image %d: image_size = %d, %d',image_num,full_xsize,full_ysize)
+
+    wcs = _read_wcs(config, logger)
 
     # Set the rng to use for image stuff.
     if 'random_seed' in config['image']:
@@ -547,7 +577,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
     nproc = params.get('nproc',1)
 
-    full_image = galsim.ImageF(full_xsize, full_ysize, scale=pixel_scale)
+    full_image = galsim.ImageF(full_xsize, full_ysize, wcs=wcs)
     full_image.setOrigin(config['image_origin'])
     full_image.setZero()
 
@@ -558,21 +588,21 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         logger.debug('image %d: image_center = %s',image_num,str(config['image_center']))
 
     if make_psf_image:
-        full_psf_image = galsim.ImageF(full_xsize, full_ysize, scale=pixel_scale)
+        full_psf_image = galsim.ImageF(full_xsize, full_ysize, wcs=wcs)
         full_psf_image.setOrigin(config['image_origin'])
         full_psf_image.setZero()
     else:
         full_psf_image = None
 
     if make_weight_image:
-        full_weight_image = galsim.ImageF(full_xsize, full_ysize, scale=pixel_scale)
+        full_weight_image = galsim.ImageF(full_xsize, full_ysize, wcs=wcs)
         full_weight_image.setOrigin(config['image_origin'])
         full_weight_image.setZero()
     else:
         full_weight_image = None
 
     if make_badpix_image:
-        full_badpix_image = galsim.ImageS(full_xsize, full_ysize, scale=pixel_scale)
+        full_badpix_image = galsim.ImageS(full_xsize, full_ysize, wcs=wcs)
         full_badpix_image.setOrigin(config['image_origin'])
         full_badpix_image.setZero()
     else:
@@ -593,6 +623,13 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
                     input_obj = input_objs[i]
                     func = eval(galsim.config.valid_input_types[key][4])
                     func(input_obj, field, config)
+
+    if 'sky_level' in params and 'sky_level_pixel' in params:
+        raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
+            "noise.type = %s"%type)
+    sky_level_pixel = params.get('sky_level_pixel',None)
+    if 'sky_level' in params:
+        sky_level_pixel = params['sky_level'] * wcs.pixelArea()
 
     stamp_images = galsim.config.BuildStamps(
             nobjects=nobjects, config=config,
@@ -698,11 +735,11 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     if logger:
         logger.debug('image %d: nobj = %d',image_num,nobjects)
 
-    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc', 'retry_failures',
-               'image_pos', 'world_pos', 'n_photons', 'wmult', 'offset',
+    ignore = [ 'random_seed', 'draw_method', 'noise', 'pixel_scale', 'wcs', 'nproc',
+               'retry_failures', 'image_pos', 'world_pos', 'n_photons', 'wmult', 'offset',
                'stamp_size', 'stamp_xsize', 'stamp_ysize', 'gsparams', 'nobjects' ]
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 
-            'pixel_scale' : float , 'nproc' : int , 'index_convention' : str,
+            'nproc' : int , 'index_convention' : str,
             'sky_level' : float , 'sky_level_pixel' : float }
     params = galsim.config.GetAllParams(
         config['image'], 'image', config, opt=opt, ignore=ignore)[0]
@@ -724,19 +761,9 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         full_xsize = params['size']
         full_ysize = params['size']
 
-    pixel_scale = params.get('pixel_scale',1.0)
-    config['pixel_scale'] = pixel_scale
 
     convention = params.get('index_convention','1')
     _set_image_origin(config,convention)
-
-    if 'sky_level' in params and 'sky_level_pixel' in params:
-        raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
-            "noise.type = %s"%type)
-    sky_level_pixel = params.get('sky_level_pixel',None)
-    if 'sky_level' in params:
-        sky_level_pixel = params['sky_level'] * pixel_scale**2
-
     # If image_force_xsize and image_force_ysize were set in config, make sure it matches.
     if ( ('image_force_xsize' in config and full_xsize != config['image_force_xsize']) or
          ('image_force_ysize' in config and full_ysize != config['image_force_ysize']) ):
@@ -745,6 +772,8 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
             "xsize=%d, ysize=%d, "%(full_xsize,full_ysize))
     config['image_xsize'] = full_xsize
     config['image_ysize'] = full_ysize
+
+    wcs = _read_wcs(config, logger)
 
     # Set the rng to use for image stuff.
     if 'random_seed' in config['image']:
@@ -777,7 +806,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     nproc = params.get('nproc',1)
 
-    full_image = galsim.ImageF(full_xsize, full_ysize, scale=pixel_scale)
+    full_image = galsim.ImageF(full_xsize, full_ysize, wcs=wcs)
     full_image.setOrigin(config['image_origin'])
     full_image.setZero()
 
@@ -788,21 +817,21 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         logger.debug('image %d: image_center = %s',image_num,str(config['image_center']))
 
     if make_psf_image:
-        full_psf_image = galsim.ImageF(full_xsize, full_ysize, scale=pixel_scale)
+        full_psf_image = galsim.ImageF(full_xsize, full_ysize, wcs=wcs)
         full_psf_image.setOrigin(config['image_origin'])
         full_psf_image.setZero()
     else:
         full_psf_image = None
 
     if make_weight_image:
-        full_weight_image = galsim.ImageF(full_xsize, full_ysize, scale=pixel_scale)
+        full_weight_image = galsim.ImageF(full_xsize, full_ysize, wcs=wcs)
         full_weight_image.setOrigin(config['image_origin'])
         full_weight_image.setZero()
     else:
         full_weight_image = None
 
     if make_badpix_image:
-        full_badpix_image = galsim.ImageS(full_xsize, full_ysize, scale=pixel_scale)
+        full_badpix_image = galsim.ImageS(full_xsize, full_ysize, wcs=wcs)
         full_badpix_image.setOrigin(config['image_origin'])
         full_badpix_image.setZero()
     else:
@@ -823,6 +852,13 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
                     input_obj = input_objs[i]
                     func = eval(galsim.config.valid_input_types[key][4])
                     func(input_obj, field, config)
+
+    if 'sky_level' in params and 'sky_level_pixel' in params:
+        raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
+            "noise.type = %s"%type)
+    sky_level_pixel = params.get('sky_level_pixel',None)
+    if 'sky_level' in params:
+        sky_level_pixel = params['sky_level'] * wcs.pixelArea()
 
     stamp_images = galsim.config.BuildStamps(
             nobjects=nobjects, config=config,
@@ -975,6 +1011,9 @@ def PowerSpectrumInit(ps, config, base):
 
     # We don't care about the output here.  This just builds the grid, which we'll
     # access for each object using its position.
-    ps.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid, rng=base['rng'], interpolant=interpolant)
+    print 'buildGrid with ',grid_spacing, ngrid, None
+    world_center = base['wcs'].toWorld(base['image_center'])
+    ps.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid, center=world_center,
+                 rng=base['rng'], interpolant=interpolant)
 
 

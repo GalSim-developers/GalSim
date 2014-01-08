@@ -153,6 +153,11 @@
 
     "pixel_scale" : { "type" : "Eval" , "str" : "pixel_scale" },
 
+    "wcs" : {
+        "#" : "Again, set the origin of the WCS to be the center of the image.",
+        "origin" : "center"
+    },
+
     "noise" : {
         "sky_level" : 1e6 
     },
