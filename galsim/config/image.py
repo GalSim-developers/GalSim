@@ -50,6 +50,7 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
          and 'random_seed' in config['image'] 
          and not isinstance(config['image']['random_seed'],dict) ):
         first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+        first += config.get('start_obj_num',0)
         config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
     import time
@@ -352,9 +353,10 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
 
     if 'random_seed' in config['image'] and not isinstance(config['image']['random_seed'],dict):
         first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+        first += config.get('start_obj_num',0)
         config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
-    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
+    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc', 'retry_failures',
                'n_photons', 'wmult', 'offset', 'gsparams' ]
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 'index_convention' : str,
             'pixel_scale' : float , 'sky_level' : float , 'sky_level_pixel' : float }
@@ -430,9 +432,10 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
     if 'random_seed' in config['image'] and not isinstance(config['image']['random_seed'],dict):
         first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+        first += config.get('start_obj_num',0)
         config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
-    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
+    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc', 'retry_failures',
                'image_pos', 'n_photons', 'wmult', 'offset', 'gsparams' ]
     req = { 'nx_tiles' : int , 'ny_tiles' : int }
     opt = { 'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
@@ -505,7 +508,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
     # Set the rng to use for image stuff.
     if 'random_seed' in config['image']:
-        config['seq_index'] = obj_num+nobjects
+        config['seq_index'] = nobjects
         config['obj_num'] = obj_num+nobjects
         # Technically obj_num+nobjects will be the index of the random seed used for the next 
         # image's first object (if there is a next image).  But I don't think that will have 
@@ -693,13 +696,14 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     if 'random_seed' in config['image'] and not isinstance(config['image']['random_seed'],dict):
         first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+        first += config.get('start_obj_num',0)
         config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
     nobjects = GetNObjForScatteredImage(config,image_num)
     if logger:
         logger.debug('image %d: nobj = %d',image_num,nobjects)
 
-    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc' ,
+    ignore = [ 'random_seed', 'draw_method', 'noise', 'wcs', 'nproc', 'retry_failures',
                'image_pos', 'sky_pos', 'n_photons', 'wmult', 'offset',
                'stamp_size', 'stamp_xsize', 'stamp_ysize', 'gsparams', 'nobjects' ]
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 
@@ -752,7 +756,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     # Set the rng to use for image stuff.
     if 'random_seed' in config['image']:
-        config['seq_index'] = obj_num+nobjects
+        config['seq_index'] = nobjects
         config['obj_num'] = obj_num+nobjects
         # Technically obj_num+nobjects will be the index of the random seed used for the next 
         # image's first object (if there is a next image).  But I don't think that will have 

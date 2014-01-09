@@ -73,22 +73,31 @@ def RemoveCurrent(config, keep_safe=False, type=None):
     # End recursion if this is not a dict.
     if not isinstance(config,dict): return
 
+    # Recurse to lower levels, if any
+    force = False  # If lower levels removed anything, then force removal at this level as well.
+    for key in config:
+        if isinstance(config[key],list):
+            for item in config[key]:
+                force = RemoveCurrent(item, keep_safe, type) or force
+        else:
+            force = RemoveCurrent(config[key], keep_safe, type) or force
+    if force: 
+        keep_safe = False
+        type = None
+
     # Delete the current_val at this level, if any
     if ( 'current_val' in config 
           and not (keep_safe and config['current_safe'])
           and (type == None or ('type' in config and config['type'] == type)) ):
         del config['current_val']
         del config['current_safe']
-        del config['current_seq_index']
-        del config['current_value_type']
-
-    # Recurse to lower levels, if any
-    for key in config:
-        if isinstance(config[key],list):
-            for item in config[key]:
-                RemoveCurrent(item, keep_safe, type)
-        else:
-            RemoveCurrent(config[key], keep_safe, type)
+        if 'current_seq_index' in config:
+            del config['current_seq_index']
+            del config['current_value_type']
+            del config['current_value_type']
+        return True
+    else:
+        return force
 
 
 class InputGetter:
@@ -135,7 +144,7 @@ def CopyConfig(config):
     return config1
 
 
-def ProcessInput(config, file_num=0, logger=None, file_scope_only=False):
+def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_only=False):
     """
     Process the input field, reading in any specified input files or setting up
     any objects that need to be initialized.
@@ -252,16 +261,27 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False):
                         kwargs['rng'] = config['rng']
                         safe = False
 
+                    if safe_only and not safe:
+                        if logger:
+                            logger.debug('file %d: Skip %s %d, since not safe',file_num,key,i)
+                        ck[i] = None
+                        ck_safe[i] = None
+                        continue
+
                     tag = key + str(i)
                     input_obj = getattr(config['input_manager'],tag)(**kwargs)
                     if logger:
-                        logger.debug('file %d: Built input object %s, %s',file_num,key,type)
+                        logger.debug('file %d: Built input object %s %d',file_num,key,i)
+                        if 'file_name' in kwargs:
+                            logger.debug('file %d: file_name = %s',file_num,kwargs['file_name'])
                         if valid_input_types[key][2]:
                             logger.info('Read %d objects from %s',input_obj.getNObjects(),key)
                     # Store input_obj in the config for use by BuildGSObject function.
                     ck[i] = input_obj
                     ck_safe[i] = safe
                     # Invalidate any currently cached values that use this kind of input object:
+                    # TODO: This isn't quite correct if there are multiple versions of this input
+                    #       item.  e.g. you might want to invalidate dict0, but not dict1.
                     for value_type in valid_input_types[key][5]:
                         RemoveCurrent(config, type=value_type)
                         if logger:
@@ -471,10 +491,12 @@ def Process(config, logger=None):
     for key in extra_keys:
         last_file_name[key] = None
 
-    # Process the input field for the first file.  Usually we won't need to reprocess
-    # things, since they are often "safe", so they won't need to be reprocessed for the
-    # later file_nums.  This is important to do here if nproc != 1.
-    ProcessInput(config, file_num=0, logger=logger_proxy)
+    # Process the input field for the first file.  Often there are "safe" input items
+    # that won't need to be reprocessed each time.  So do them here once and keep them
+    # in the config for all file_nums.  This is more important if nproc != 1.
+    config['seq_index'] = 0
+    config['file_num'] = 0
+    ProcessInput(config, file_num=0, logger=logger_proxy, safe_only=True)
 
     # Normally, random_seed is just a number, which really means to use that number
     # for the first item and go up sequentially from there for each object.
@@ -504,14 +526,14 @@ def Process(config, logger=None):
         if 'first_seed' in config:
             config['image']['random_seed'] = {
                 'type' : 'Sequence' ,
-                'first' : config['first_seed']
+                'first' : config['first_seed'] + obj_num 
             }
 
         # It is possible that some items at image scope could need a random number generator.
         # For example, in demo9, we have a random number of objects per image.
         # So we need to build an rng here.
         if 'random_seed' in config['image']:
-            config['seq_index'] = obj_num
+            config['seq_index'] = 0
             seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
             config['seq_index'] = file_num
             if logger:
@@ -636,6 +658,13 @@ def Process(config, logger=None):
             # Make new copies of config and kwargs so we can update them without
             # clobbering the versions for other tasks on the queue.
             kwargs1 = copy.copy(kwargs)
+            # Clear out unsafe proxy objects, since there seems to be a bug in the manager
+            # package where this can cause strange KeyError exceptions in the incref function.
+            # It seems to be related to having multiple identical proxy objects that then
+            # get deleted.  e.g. if the first N files use one dict, then the next N use another,
+            # and so forth.  I don't really get it, but clearing them out here seems to 
+            # fix the problem.
+            ProcessInput(config, file_num=file_num, logger=logger_proxy, safe_only=True)
             kwargs1['config'] = CopyConfig(config)
             task_queue.put( (kwargs1, file_num, file_name, logger_proxy) )
         else:
@@ -660,7 +689,8 @@ def Process(config, logger=None):
     # If we're doing multiprocessing, here is the machinery to run through the task_queue
     # and process the results.
     if nproc > 1:
-        logger.warn("Using %d processes",nproc)
+        if logger:
+            logger.warn("Using %d processes",nproc)
         import time
         t1 = time.time()
         # Run the tasks
@@ -703,6 +733,27 @@ def Process(config, logger=None):
         logger.debug('Done building files')
 
 
+# A helper function to retry io commands
+def _retry_io(func, args, ntries, file_name, logger):
+    for itry in range(ntries):
+        try: 
+            ret = func(*args)
+        except IOError as e:
+            if itry == ntries-1:
+                # Then this was the last try.  Just re-raise the exception.
+                raise
+            else:
+                if logger:
+                    logger.warn('File %s: Caught IOError: %s',file_name,str(e))
+                    logger.warn('This is try %d/%d, so sleep for %d sec and try again.',
+                                itry+1,ntries,itry+1)
+                    import time
+                    time.sleep(itry+1)
+                    continue
+        else:
+            break
+    return ret
+
 def BuildFits(file_name, config, logger=None, 
               file_num=0, image_num=0, obj_num=0,
               psf_file_name=None, psf_hdu=None,
@@ -740,7 +791,7 @@ def BuildFits(file_name, config, logger=None,
          and 'random_seed' in config['image'] 
          and not isinstance(config['image']['random_seed'],dict) ):
         first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
+        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first + obj_num }
 
     # hdus is a dict with hdus[i] = the item in all_images to put in the i-th hdu.
     hdus = {}
@@ -789,9 +840,16 @@ def BuildFits(file_name, config, logger=None,
     for h in range(len(hdus.keys())):
         assert h in hdus.keys()  # Checked for this above.
         hdulist.append(all_images[hdus[h]])
+    # We can use hdulist in writeMulti even if the main image is the only one in the list.
 
-    # This next line is ok even if the main image is the only one in the list.
-    galsim.fits.writeMulti(hdulist, file_name)
+    if 'output' in config and 'retry_io' in config['output']:
+        ntries = galsim.config.ParseValue(config['output'],'retry_io',config,int)[0]
+        # This is how many _re_-tries.  Do at least 1, so ntries is 1 more than this.
+        ntries = ntries + 1
+    else:
+        ntries = 1
+
+    _retry_io(galsim.fits.writeMulti, (hdulist, file_name), ntries, file_name, logger)
     if logger:
         if len(hdus.keys()) == 1:
             logger.debug('file %d: Wrote image to fits file %r',
@@ -801,19 +859,22 @@ def BuildFits(file_name, config, logger=None,
                          config['file_num'],file_name)
 
     if psf_file_name:
-        all_images[1].write(psf_file_name)
+        _retry_io(galsim.fits.write, (all_images[1], psf_file_name),
+                  ntries, psf_file_name, logger)
         if logger:
             logger.debug('file %d: Wrote psf image to fits file %r',
                          config['file_num'],psf_file_name)
 
     if weight_file_name:
-        all_images[2].write(weight_file_name)
+        _retry_io(galsim.fits.write, (all_images[2], weight_file_name),
+                  ntries, weight_file_name, logger)
         if logger:
             logger.debug('file %d: Wrote weight image to fits file %r',
                          config['file_num'],weight_file_name)
 
     if badpix_file_name:
-        all_images[3].write(badpix_file_name)
+        _retry_io(galsim.fits.write, (all_images[3], badpix_file_name),
+                  ntries, badpix_file_name, logger)
         if logger:
             logger.debug('file %d: Wrote badpix image to fits file %r',
                          config['file_num'],badpix_file_name)
@@ -855,7 +916,7 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
          and 'random_seed' in config['image'] 
          and not isinstance(config['image']['random_seed'],dict) ):
         first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
+        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first + obj_num }
 
     if psf_file_name:
         make_psf_image = True
@@ -898,25 +959,35 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
     weight_images = all_images[2]
     badpix_images = all_images[3]
 
-    galsim.fits.writeMulti(main_images, file_name)
+    if 'output' in config and 'retry_io' in config['output']:
+        ntries = galsim.config.ParseValue(config['output'],'retry_io',config,int)[0]
+        # This is how many _re_-tries.  Do at least 1, so ntries is 1 more than this.
+        ntries = ntries + 1
+    else:
+        ntries = 1
+
+    _retry_io(galsim.fits.writeMulti, (main_images, file_name), ntries, file_name, logger)
     if logger:
         logger.debug('file %d: Wrote images to multi-extension fits file %r',
                      config['file_num'],file_name)
 
     if psf_file_name:
-        galsim.fits.writeMulti(psf_images, psf_file_name)
+        _retry_io(galsim.fits.writeMulti, (psf_images, psf_file_name),
+                  ntries, psf_file_name, logger)
         if logger:
             logger.debug('file %d: Wrote psf images to multi-extension fits file %r',
                          config['file_num'],psf_file_name)
 
     if weight_file_name:
-        galsim.fits.writeMulti(weight_images, weight_file_name)
+        _retry_io(galsim.fits.writeMulti, (weight_images, weight_file_name),
+                  ntries, weight_file_name, logger)
         if logger:
             logger.debug('file %d: Wrote weight images to multi-extension fits file %r',
                          config['file_num'],weight_file_name)
 
     if badpix_file_name:
-        galsim.fits.writeMulti(badpix_images, badpix_file_name)
+        _retry_io(galsim.fits.writeMulti, (all_images, badpix_file_name),
+                  ntries, badpix_file_name, logger)
         if logger:
             logger.debug('file %d: Wrote badpix images to multi-extension fits file %r',
                          config['file_num'],badpix_file_name)
@@ -959,7 +1030,7 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
          and 'random_seed' in config['image'] 
          and not isinstance(config['image']['random_seed'],dict) ):
         first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
+        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first + obj_num }
 
     if psf_file_name:
         make_psf_image = True
@@ -1031,25 +1102,35 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
         weight_images += all_images[2]
         badpix_images += all_images[3]
 
-    galsim.fits.writeCube(main_images, file_name)
+    if 'output' in config and 'retry_io' in config['output']:
+        ntries = galsim.config.ParseValue(config['output'],'retry_io',config,int)[0]
+        # This is how many _re_-tries.  Do at least 1, so ntries is 1 more than this.
+        ntries = ntries + 1
+    else:
+        ntries = 1
+
+    _retry_io(galsim.fits.writeCube, (main_images, file_name), ntries, file_name, logger)
     if logger:
         logger.debug('file %d: Wrote image to fits data cube %r',
                      config['file_num'],file_name)
 
     if psf_file_name:
-        galsim.fits.writeCube(psf_images, psf_file_name)
+        _retry_io(galsim.fits.writeCube, (psf_images, psf_file_name),
+                  ntries, psf_file_name, logger)
         if logger:
             logger.debug('file %d: Wrote psf images to fits data cube %r',
                          config['file_num'],psf_file_name)
 
     if weight_file_name:
-        galsim.fits.writeCube(weight_images, weight_file_name)
+        _retry_io(galsim.fits.writeCube, (weight_images, weight_file_name),
+                  ntries, weight_file_name, logger)
         if logger:
             logger.debug('file %d: Wrote weight images to fits data cube %r',
                          config['file_num'],weight_file_name)
 
     if badpix_file_name:
-        galsim.fits.writeCube(badpix_images, badpix_file_name)
+        _retry_io(galsim.fits.writeCube, (badpix_images, badpix_file_name),
+                  ntries, badpix_file_name, logger)
         if logger:
             logger.debug('file %d: Wrote badpix images to fits data cube %r',
                          config['file_num'],badpix_file_name)
@@ -1059,7 +1140,7 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
 
 def GetNObjForFits(config, file_num, image_num):
     ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc',
-               'skip', 'noclobber' ]
+               'skip', 'noclobber', 'retry_io' ]
     galsim.config.CheckAllParams(config['output'], 'output', ignore=ignore)
     try : 
         nobj = [ galsim.config.GetNObjForImage(config, image_num) ]
@@ -1070,7 +1151,7 @@ def GetNObjForFits(config, file_num, image_num):
     
 def GetNObjForMultiFits(config, file_num, image_num):
     ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc', 
-               'skip', 'noclobber' ]
+               'skip', 'noclobber', 'retry_io' ]
     req = { 'nimages' : int }
     # Allow nimages to be automatic based on input catalog if image type is Single
     if ( 'nimages' not in config['output'] and 
@@ -1092,7 +1173,7 @@ def GetNObjForMultiFits(config, file_num, image_num):
 
 def GetNObjForDataCube(config, file_num, image_num):
     ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc',
-               'skip', 'noclobber' ]
+               'skip', 'noclobber', 'retry_io' ]
     req = { 'nimages' : int }
     # Allow nimages to be automatic based on input catalog if image type is Single
     if ( 'nimages' not in config['output'] and 

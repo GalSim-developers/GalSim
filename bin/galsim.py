@@ -63,7 +63,9 @@ def parse_args():
 
     # Short description strings common to both parsing mechanisms
     version_str = "GalSim Version %s"%galsim.version
-    description = "galsim: configuration file parser for GalSim.\n" + version_str
+    description = "galsim: configuration file parser for %s.  "%version_str 
+    description += "See https://github.com/GalSim-developers/GalSim/wiki/Config-Documentation "
+    description += "for documentation about using this program."
     epilog = "Works with both YAML and JSON markup formats."
     
     try:
@@ -71,7 +73,11 @@ def parse_args():
         
         # Build the parser and add arguments
         parser = argparse.ArgumentParser(description=description, add_help=True, epilog=epilog)
-        parser.add_argument('config_file', type=str, nargs='*', help='the configuration file(s)')
+        parser.add_argument('config_file', type=str, nargs='?', help='the configuration file')
+        parser.add_argument(
+            'variables', type=str, nargs='*',
+            help='additional variables or modifications to variables in the config file. ' +
+            'e.g. galsim foo.yaml output.nproc=-1 gal.rotate="{type : Random}"')
         parser.add_argument(
             '-v', '--verbosity', type=int, action='store', default=2, choices=(0, 1, 2, 3),
             help='integer verbosity level: min=0, max=3 [default=2]')
@@ -91,7 +97,7 @@ def parse_args():
             help='show the version of GalSim')
         args = parser.parse_args()
 
-        if len(args.config_file) == 0:
+        if args.config_file == None:
             if args.version:
                 print version_str
             else:
@@ -106,7 +112,7 @@ def parse_args():
 
         # Usage string not automatically generated for optparse, so generate it
         usage = """usage: galsim [-h] [-v {0,1,2,3}] [-l LOG_FILE] [-f {yaml,json}] [-m MODULE]
-              [--version] config_file [config_file ...]"""
+              [--version] config_file [variables ...]"""
         # Build the parser
         parser = optparse.OptionParser(usage=usage, epilog=epilog, description=description)
         # optparse only allows string choices, so take verbosity as a string and make it int later
@@ -140,7 +146,8 @@ def parse_args():
                 parser.print_help()
             sys.exit()
         else:
-            args.config_file = posargs
+            args.config_file = posargs[0]
+            args.variables = posargs[1:]
             if args.version:
                 print version_str
 
@@ -169,7 +176,7 @@ def main():
     # Determine the file type from the extension if necessary:
     if args.file_type is None:
         import os
-        name, ext = os.path.splitext(args.config_file[0])
+        name, ext = os.path.splitext(args.config_file)
         if ext.lower().startswith('.j'):
             args.file_type = 'json'
         else:
@@ -179,69 +186,98 @@ def main():
     else:
         logger.debug('File type specified to be %s', args.file_type)
 
-    for config_file in args.config_file:
-        logger.warn('Using config file %s', config_file)
+    logger.warn('Using config file %s', args.config_file)
     
-        if args.file_type == 'yaml':
-            import yaml
+    if args.file_type == 'yaml':
+        import yaml
 
-            with open(config_file) as f:
-                all_config = [ c for c in yaml.load_all(f.read()) ]
+        with open(args.config_file) as f:
+            all_config = [ c for c in yaml.load_all(f.read()) ]
 
-            # If there is only 1 yaml document, then it is of course used for the configuration.
-            # If there are multiple yaml documents, then the first one defines a common starting
-            # point for the later documents.
-            # So the configurations are taken to be:
-            #   all_config[0] + all_config[1]
-            #   all_config[0] + all_config[2]
-            #   all_config[0] + all_config[3]
-            #   ...
-            # See demo6.yaml and demo8.yaml in the examples directory for examples of this feature.
+        # If there is only 1 yaml document, then it is of course used for the configuration.
+        # If there are multiple yaml documents, then the first one defines a common starting
+        # point for the later documents.
+        # So the configurations are taken to be:
+        #   all_config[0] + all_config[1]
+        #   all_config[0] + all_config[2]
+        #   all_config[0] + all_config[3]
+        #   ...
+        # See demo6.yaml and demo8.yaml in the examples directory for examples of this feature.
 
-            if len(all_config) > 1:
-                # Break off the first one if more than one:
-                base_config = all_config[0]
-                all_config = all_config[1:]
-            else:
-                # Else just use an empty base_config dict.
-                base_config = {}
-
+        if len(all_config) > 1:
+            # Break off the first one if more than one:
+            base_config = all_config[0]
+            all_config = all_config[1:]
         else:
-            import json
-
-            with open(config_file) as f:
-                config = json.load(f)
-
-            # JSON files are just processed as is.  This is equivalent to having an empty 
-            # base_config, so we just do that and use the same structure.
+            # Else just use an empty base_config dict.
             base_config = {}
-            all_config = [ config ]
+
+    else:
+        import json
+
+        with open(args.config_file) as f:
+            config = json.load(f)
+
+        # JSON files are just processed as is.  This is equivalent to having an empty 
+        # base_config, so we just do that and use the same structure.
+        base_config = {}
+        all_config = [ config ]
             
-        logger.debug('Successfully read in config file.')
+    logger.debug('Successfully read in config file.')
 
-        # Set the root value in base_config
-        if 'root' not in base_config:
-            import os
-            base_config['root'] = os.path.splitext(config_file)[0]
-
-        # Import any modules if requested
-        if args.module:
-            for module in args.module:
+    # Add the additional variables to the config file
+    for v in args.variables:
+        logger.debug('Parsing additional variable: %s',v)
+        if '=' not in v:
+            raise ValueError('Improper variable specification.  Use field.item=value.')
+        key, value = v.split('=',1)
+        # This next bit is basically identical to the code for Dict.get(key) in catalog.py.
+        chain = key.split('.')
+        d = all_config[0]
+        while chain:
+            k = chain.pop(0)
+            try: k = int(k)
+            except ValueError: pass
+            if chain: d = d[k]
+            else: 
+                # Try to evaluate the value string to allow people to input things like
+                # gal.rotate='{type : Rotate}'
+                # But if it fails (particularly with json), just assign the value as a string.
                 try:
-                    exec('import galsim.'+module)
+                    if args.file_type == 'yaml':
+                        import yaml
+                        d[k] = yaml.load(value)
+                    else:
+                        import json
+                        d[k] = json.loads(value)
                 except:
-                    exec('import '+module)
+                    logger.debug('Unable to parse %s.  Treating it as a string.'%value)
+                    d[k] = value
 
-        # Process each config document
-        for config in all_config:
+    # Set the root value in base_config
+    if 'root' not in base_config:
+        import os
+        base_config['root'] = os.path.splitext(args.config_file)[0]
 
-            # Merge the base_config information into this config file.
-            MergeConfig(config,base_config)
+    # Import any modules if requested
+    if args.module:
+        for module in args.module:
+            try:
+                exec('import galsim.'+module)
+            except:
+                exec('import '+module)
 
-            logger.debug("Process config dict: \n%s", config)
+    # Process each config document
+    for config in all_config:
 
-            # Process the configuration
-            galsim.config.Process(config, logger)
+        # Merge the base_config information into this config file.
+        MergeConfig(config,base_config)
+
+        import pprint
+        logger.debug("Process config dict: \n%s", pprint.pformat(config))
+
+        # Process the configuration
+        galsim.config.Process(config, logger)
 
 
 if __name__ == "__main__":
