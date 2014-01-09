@@ -16,7 +16,7 @@ from matplotlib.font_manager import FontProperties
 
 # Set some important quantities up top:
 # Which interpolants do we want to test?
-interpolant_list = ['linear', 'cubic', 'quintic', 'sinc']
+interpolant_list = ['linear', 'cubic', 'quintic', 'nearest']
 # Define shear grid
 grid_size = 10. # degrees
 ngrid = 100 # grid points in nominal grid
@@ -167,14 +167,14 @@ def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix,
         ax.plot(ell, ratio, color='k')
         fine_ell = np.arange(20000.)
         fine_ell = fine_ell[(fine_ell > np.min(ell)) & (fine_ell < np.max(ell))]
-        u = fine_ell*big_dth/180./np.pi # check factors of pi and so on; the big_dth is needed to
+        u = fine_ell*dth/180./np.pi # check factors of pi and so on; the dth is needed to
         # convert from actual distances to "interpolation units"
         try:
             theor_ratio = (ft_interp(u, interpolant))**2
             ax.plot(fine_ell, theor_ratio, '--', color='g', label='Theory prediction')
         except:
             print "Could not get theoretical prediction for interpolant %s"%interpolant
-        ax.plot(kmax_x_markers, np.array((np.min(ratio), 1.3*np.max(ratio))), '--',
+        ax.plot(kmax_x_markers, np.array((np.min(ratio), np.max(ratio))), '--',
                 color='k')
         ax.plot(ell, np.ones_like(ell), '--', color='r')
         ax.set_xlabel('ell [1/radians]')
@@ -242,7 +242,7 @@ def generate_cf_plots(th, cf, interpolated_cf, interpolant, cf_plot_prefix,
     ax.plot(th, ratio, color='k')
     ax.plot(dth_x_markers, np.array((np.min(ratio), 1.3*np.max(ratio))), '--', color='k')
     ax.plot(th, np.ones_like(th), '--', color='r')
-    ax.set_ylim(0.0,1.6)
+    ax.set_ylim(0.85,1.15)
     ax.set_xlabel('Separation [degrees]')
     ax.set_ylabel('Interpolated / direct xi')
     ax.set_xscale('log')
@@ -371,7 +371,7 @@ def getCF(x, y, g1, g2, dtheta, ngrid, n_output_bins):
     # Define some variables that corr2 needs: range of separations to use.
     min_sep = dtheta
     max_sep = ngrid * np.sqrt(2) * dtheta
-    subprocess.Popen(['/Users/rmandelb/svn/mjarvis-read-only/corr2','corr2.params',
+    subprocess.Popen(['corr2','corr2.params',
                       'file_name=temp.fits',
                       'e2_file_name=%s'%tmp_cf_file,
                       'min_sep=%f'%min_sep,'max_sep=%f'%max_sep,
