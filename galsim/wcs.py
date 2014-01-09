@@ -18,6 +18,33 @@
 #
 """@file wcs.py
 All the classes to implement different WCS transformations for GalSim Images.
+
+WCS stands for World Coordinate System.  This is the traditional term for the coordinate system
+on the sky.  (I know, the world's down here, and the sky's up there, so you'd think it would
+be reversed, but that's the way it goes.  Astronomy is full of terms that don't quite make sense
+when you look at them too closely.)  
+
+There are two kinds of world coordinates that we use here:
+
+- Celestial coordinates are defined in terms of right ascension (ra) and declination (dec).
+  They are a spherical coordinate system on the sky, are akin to longitude and latitude on Earth.
+  c.f. http://en.wikipedia.org/wiki/Celestial_coordinate_system
+
+- Euclidean coordinates are defined relative to a tangent plane projection of the sky. 
+  If you imagine the sky coordinates on an actual sphere with a particular radius, then the 
+  tangent plane is tangent to that sphere.  We use the labels (u,v) for the coordinates in 
+  this system, where +v points north and +u points west.  (Yes, west, not east.  As you look
+  up into the sky, if north is up, then west is to the right.)
+
+The CelestialCoord class (in celestial.py) can convert between these two kinds of coordinates
+given a projection point.
+
+The classes in this file convert between one of these kinds of world coordinates and positions
+on an image, which we call image coordinates.  We use the labels (x,y) for the image coordinates.
+
+See the doc string for BaseWCS for explanations about the basic functionality that all WCS
+classes share.  The doc strings for the individual classes explain the features specific to
+each one.
 """
 
 import galsim
@@ -46,7 +73,7 @@ class BaseWCS(object):
        They may also have an arbitrary origin in both image coordinates and world coordinates.
        Furthermore, the world coordinates may be either a regular Euclidean coordinate system 
        (using galsim.PositionD for the world positions) or coordinates on the celestial sphere 
-       (using galsim.CelestialCoord for the world positions).
+       (using galsim.CelestialCoord for the world positions, marked with a * below).
 
        Currently we define the following non-local WCS classes:
 
@@ -54,11 +81,11 @@ class BaseWCS(object):
             OffsetShearWCS
             AffineTransform
             UVFunction
-            RaDecFunction
-            AstropyWCS          -- requires astropy.wcs python module to be installed
-            PyAstWCS            -- requires starlink.Ast python module to be installed
-            WcsToolsWCS         -- requires wcstools command line functions to be installed
-            GSFitsWCS           -- native code, but has less functionality than the above
+           *RaDecFunction
+           *AstropyWCS          -- requires astropy.wcs python module to be installed
+           *PyAstWCS            -- requires starlink.Ast python module to be installed
+           *WcsToolsWCS         -- requires wcstools command line functions to be installed
+           *GSFitsWCS           -- native code, but has less functionality than the above
 
     There is also a factory function called FitsWCS, which is intended to act like a 
     class initializer.  It tries to read a fits file using one of the above classes
