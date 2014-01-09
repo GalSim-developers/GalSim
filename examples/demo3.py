@@ -197,8 +197,9 @@ def main(argv):
     psf.applyShear(g1=wcs_g1, g2=wcs_g2)
     logger.debug('Applied WCS distortion')
 
-    # Define the pixel size.  It's not usually necessary, but the pixel scale parameter
-    # is named scale, so you can use a keyword argument if you want.
+    # Define the pixel size. 
+    # The pixel scale parameter is named scale, so you can (optionally) use a keyword argument 
+    # if you want.
     pix = galsim.Pixel(scale=pixel_scale)
     logger.debug('Made pixel profile')
 

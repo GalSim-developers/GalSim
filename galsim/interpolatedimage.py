@@ -128,8 +128,8 @@ class InterpolatedImage(GSObject):
                            override the pixel scale stored by the provided Image, in any.  
                            If `scale` is `None`, then take the provided image's pixel scale.
                            (Default `scale = None`.)
-    @param wcs             A WCS object that provides a non-trivial mapping between sky units and
-                           pixel units.  (Default `wcs = None`.)
+    @param wcs             If provided, use this as the wcs for the image.  At most one of scale or 
+                           wcs may be provided. (Default `wcs - None`.)
     @param flux            Optionally specify a total flux for the object, which overrides the
                            implied flux normalization from the Image itself.
     @param pad_factor      Factor by which to pad the Image with zeros.  We strongly recommend 

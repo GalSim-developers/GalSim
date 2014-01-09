@@ -952,6 +952,6 @@ class FitsHeader(object):
         return self.header.iteritems()
 
 
-# inject write as methods of Image class
+# inject write as method of Image class
 galsim.Image.write = write
 

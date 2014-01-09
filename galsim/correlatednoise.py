@@ -1084,7 +1084,7 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
     """
     def __init__(self, rng, pixel_scale, variance, gsparams=None):
         # Need variance == xvalue(0,0)
-        # Pixel has flux of f/scale^2, so us f = varaince * scale^2
+        # Pixel has flux of f/scale^2, so use f = variance * scale^2
         if variance < 0:
             raise ValueError("Input keyword variance must be zero or positive.")
         cf_object = galsim.AutoConvolve(

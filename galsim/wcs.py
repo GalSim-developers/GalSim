@@ -51,7 +51,7 @@ class BaseWCS(object):
         # (u,v) = (0,0) must define the following:
         #
         #     _local           function returning a non-variable WCS at a given location
-        #                      where (x,y) = (0,0) is at (u,v) = (0,)
+        #                      where (x,y) = (0,0) is at (u,v) = (0,0)
 
 
     def toWorld(self, arg, **kwargs):
