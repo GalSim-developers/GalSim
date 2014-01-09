@@ -100,6 +100,7 @@ def main(argv):
     # GSObject are then inserted, such as the `n=1` and `half_light_radius=0.5` needed for
     # galsim.Sersic profile as seen below.
 
+    logger.info('')
     logger.info('Starting part A: chromatic Sersic galaxy')
     redshift = 0.8
     gal = galsim.ChromaticGSObject(galsim.Sersic,
@@ -129,12 +130,13 @@ def main(argv):
         logger.debug('Wrote {}-band image to disk'.format(filter_name))
         logger.info('Added flux for {}-band image: {}'.format(filter_name, img.added_flux))
 
-    # You can display the output in ds9 with a command line that looks something like:
-    # `ds9 output/demo12a_*.fits -match scale -zoom 2 -match frame image`
+    logger.info('You can display the output in ds9 with a command line that looks something like:')
+    logger.info('ds9 output/demo12a_*.fits -match scale -zoom 2 -match frame image')
 
     #-----------------------------------------------------------------------------------------------
     # Part B: chromatic bulge+disk galaxy
 
+    logger.info('')
     logger.info('Starting part B: chromatic bulge+disk galaxy')
     redshift = 0.8
     gaussian_noise = galsim.GaussianNoise(rng, sigma=0.02)
@@ -164,12 +166,15 @@ def main(argv):
         logger.debug('Wrote {}-band image to disk'.format(filter_name))
         logger.info('Added flux for {}-band image: {}'.format(filter_name, img.added_flux))
 
-    # You can display the output in ds9 with a command line that looks something like:
-    # `ds9 -rgb -blue -scale limits -0.2 0.8 output/demo12b_r.fits -green -scale limits -0.25 1 output/demo12b_i.fits -red -scale limits -0.25 1 output/demo12b_z.fits -zoom 2`
+    logger.info('You can display the output in ds9 with a command line that looks something like:')
+    logger.info('ds9 -rgb -blue -scale limits -0.2 0.8 output/demo12b_r.fits -green -scale limits'
+                +' -0.25 1 output/demo12b_i.fits -red -scale limits -0.25 1 output/demo12b_z.fits'
+                +' -zoom 2')
 
     #-----------------------------------------------------------------------------------------------
     # Part C: chromatic bulge+disk galaxy
 
+    logger.info('')
     logger.info('Starting part C: chromatic PSF')
     redshift = 0.0
     gal = galsim.ChromaticGSObject(galsim.Sersic,
@@ -192,9 +197,8 @@ def main(argv):
     # First we define the shifting function due to DCR.  We normalize to the shift at 500 nm so the
     # images don't fall off of the postage stamp completely.
     zenith_angle = 30 * galsim.degrees
-    R500 = galsim.dcr.get_refraction(500.0, zenith_angle) / galsim.arcsec / pixel_scale
-    shift_fn = lambda w:(0,(galsim.dcr.get_refraction(w, zenith_angle) / galsim.arcsec
-                            / pixel_scale) - R500)
+    R500 = galsim.dcr.get_refraction(500.0, zenith_angle) / galsim.arcsec
+    shift_fn = lambda w:(0,(galsim.dcr.get_refraction(w, zenith_angle) / galsim.arcsec) - R500)
 
     # Second define the dilation function due to Kolmogorov turbulence.
     dilate_fn = lambda w: (w/500.0)**(-0.2)
@@ -221,8 +225,8 @@ def main(argv):
         galsim.fits.write(img, 'output/demo12c_{}.fits'.format(filter_name))
         logger.debug('Wrote {}-band image to disk'.format(filter_name))
         logger.info('Added flux for {}-band image: {}'.format(filter_name, img.added_flux))
-    # You can display the output in ds9 with a command line that looks something like:
-    # `ds9 output/demo12c_*.fits -match scale -zoom 2 -match frame image`
+    logger.info('You can display the output in ds9 with a command line that looks something like:')
+    logger.info('ds9 output/demo12c_*.fits -match scale -zoom 2 -match frame image -blink')
 
 if __name__ == "__main__":
     main(sys.argv)
