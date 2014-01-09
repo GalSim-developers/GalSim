@@ -33,6 +33,7 @@ test (Nakajima & Bernstein 2007) of 20 each.
 
 New features introduced in this demo:
 
+- im.wcs = galsim.OffsetWCS(scale, origin)
 - rng = galsim.BaseDeviate(seed)
 - obj = galsim.RealGalaxy(real_galaxy_catalog, id)
 - obj = galsim.Convolve([list], real_space)
@@ -147,7 +148,8 @@ def main(argv):
     gal_image = galsim.ImageF(stamp_size * n_tiles , stamp_size * n_tiles)
     psf_image = galsim.ImageF(stamp_size * n_tiles , stamp_size * n_tiles)
 
-    # Update the wcs to use the image center as the origin of the WCS, as we did in demo9.
+    # Update the image WCS to use the image center as the origin of the WCS. 
+    # The class that acts like a PixelScale except for this offset is called OffsetWCS.
     im_center = gal_image.bounds.trueCenter()
     wcs = galsim.OffsetWCS(scale=pixel_scale, origin=im_center)
     gal_image.wcs = wcs

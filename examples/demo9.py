@@ -32,13 +32,14 @@ a space-like simulation.  (Some of the numbers used are the values for HST.)
 New features introduced in this demo:
 
 - psf = OpticalPSF(..., trefoil1, trefoil2, nstruts, strut_thick, strut_angle)
-- im.wcs = galsim.OffsetWCS(scale, origin)
 - im = galsim.ImageS(xsize, ysize, wcs)
 - pos = galsim.PositionD(x, y)
 - nfw = galsim.NFWHalo(mass, conc, z, omega_m, omega_lam)
 - g1,g2 = nfw.getShear(pos, z)
 - mag = nfw.getMagnification(pos, z)
 - pos = bounds.trueCenter()
+- wcs.toWorld(profile, image_pos)
+- image_pos = wcs.toImage(pos)
 
 - Make multiple output files.
 - Place galaxies at random positions on a larger image.
@@ -76,7 +77,6 @@ def main(argv):
     nfiles = 5             # number of files per item in mass list
 
     image_size = 512       # pixels
-    pixel_scale = 0.05     # arcsec / pixel
     sky_level = 1.e2       # ADU / arcsec^2
 
     psf_lam_over_D = 0.077 # (900nm / 2.4m) * 206265 arcsec/rad = 0.077 arcsec
@@ -127,10 +127,80 @@ def main(argv):
         # which would be 1/2 pixel up and to the right of the true center in this case.
         im_center = full_image.bounds.trueCenter()
 
-        # Update the image WCS to us this point as the definition of (u,v) = (0,0).
-        # The WCS had been a simple PixelScale, which is implicit in the use of the scale
-        # parameter when we made the image.  Assigning to the wcs attribute overrides this.
-        wcs = galsim.OffsetWCS(scale=pixel_scale, origin=im_center)
+        # For the WCS, this time we use UVFunction, which lets you define arbitrary u(x,y)
+        # and v(x,y) functions.  We use a simple cubic radial function to create a 
+        # pincushion distortion.  This is a typical kind of telescope distortion, although
+        # we exaggerate the magnitude of the effect to make it more apparent.
+        # The pixel size in the center of the image is 0.05, but near the corners (r=362),
+        # the pixel size is approximately 0.057.
+        ufunc1 = lambda x,y : 0.05 * x * (1. + 1.e-6 * (x**2 + y**2))
+        vfunc1 = lambda x,y : 0.05 * y * (1. + 1.e-6 * (x**2 + y**2))
+
+        # It's not required to provide the inverse functions.  However, if we don't, then
+        # you will only be able to do toWorld operations, not the inverse toImage.
+        # The inverse function does not have to be exact either.  For example, you could provide
+        # a function that does some kind of iterative solution to whatever accuracy you care
+        # about.  But in this case, we can do the exact inverse.
+        #
+        # Let w = sqrt(u**2 + v**2) and r = sqrt(x**2 + y**2).  Then the solutions are:
+        # x = (u/w) r and y = (u/w) r, and we use Cardano's method to solve for r given w:
+        # See http://en.wikipedia.org/wiki/Cubic_function#Cardano.27s_method
+        # 
+        # w = 0.05 r + 1.e-6 * 0.05 * r**3
+        # r = 100 * ( ( 10*sqrt(w**2 + 1.e4/27) + 10*w )**(1./3.) -
+        #           - ( 10*sqrt(w**2 + 1.e4/27) - 10*w )**(1./3.) )
+
+        def xfunc1(u,v):
+            import math
+            wsq = u*u + v*v
+            if wsq == 0.: 
+                return 0.
+            else:
+                w = math.sqrt(wsq)
+                temp = math.sqrt(wsq + 1.e4/27)
+                r = 100. * ( ( 10.*(temp + w) )**(1./3.) - ( 10.*(temp - w) )**(1./3) )
+                return u * r/w
+
+        def yfunc1(u,v):
+            import math
+            wsq = u*u + v*v
+            if wsq == 0.: 
+                return 0.
+            else:
+                w = math.sqrt(wsq)
+                temp = math.sqrt(wsq + 1.e4/27)
+                r = 100. * ( ( 10.*(temp + w) )**(1./3.) - ( 10.*(temp - w) )**(1./3) )
+                return v * r/w
+
+        # You could pass the above functions to UVFunction, and normally we would do that.
+        # The only down side to doing so is that the specification of the WCS in the FITS
+        # file is rather ugly.  GalSim is able to turn the python byte code into strings, 
+        # but they are basically a really ugly mess of random-looking characters.  GalSim
+        # will be able to read it back in, but human readers will have no idea what WCS
+        # function was used.  To see what they look like, uncomment this line and comment 
+        # out the later wcs line.
+        #wcs = galsim.UVFunction(ufunc1, vfunc1, xfunc1, yfunc1, origin=im_center)
+
+        # If you provide the functions as strings, then those strings will be preserved
+        # in the FITS header in a form that is more legible to human readers.
+        # It also has the extra benefit of matching the output from demo9.yaml, which we
+        # always try to do.  The config file has no choice but to specify the functions
+        # as strings.
+
+        ufunc = '0.05 * x * (1. + 1.e-6 * (x**2 + y**2))'
+        vfunc = '0.05 * y * (1. + 1.e-6 * (x**2 + y**2))'
+        xfunc = ('( lambda w: ( 0 if w==0 else ' +
+                 '100.*u/w*(( 10.*(w**2+1.e4/27.)**0.5 + 10.*w )**(1./3.) - ' +
+                           '( 10.*(w**2+1.e4/27.)**0.5 - 10.*w )**(1./3.))))( (u**2+v**2)**0.5 )')
+        yfunc = ('( lambda w: ( 0 if w==0 else ' +
+                 '100.*v/w*(( 10.*(w**2+1.e4/27.)**0.5 + 10.*w )**(1./3.) - ' +
+                           '( 10.*(w**2+1.e4/27.)**0.5 - 10.*w )**(1./3.))))( (u**2+v**2)**0.5 )')
+
+        # The origin parameter defines where on the image should be considered (x,y) = (0,0)
+        # in the WCS functions.
+        wcs = galsim.UVFunction(ufunc, vfunc, xfunc, yfunc, origin=im_center)
+
+        # Assign this wcs to full_image
         full_image.wcs = wcs
 
         # The weight image will hold the inverse variance for each pixel.
@@ -214,8 +284,12 @@ def main(argv):
             dy = y_nominal - iy_nominal
             offset = galsim.PositionD(dx,dy)
 
-            # Make the pixel:
-            pix = galsim.Pixel(pixel_scale)
+            # Make the pixel the same way we did in demo3.  We make it in image coordinates
+            # and let the wcs convert it to world coordinates  The only difference here is
+            # that the wcs needs to know where we are on the image, since the shape of the 
+            # pixel is variable.  So we need to provide an image_pos parameter.
+            # (Or a world_pos parameter would also have worked.)
+            pix = wcs.toWorld(galsim.Pixel(1.0), image_pos=image_pos)
 
             # Determine the random values for the galaxy:
             flux = rng() * (gal_flux_max-gal_flux_min) + gal_flux_min
@@ -275,7 +349,9 @@ def main(argv):
             # To draw the image at a position other than the center of the image, you can
             # use the offset parameter, which applies an offset in pixels relative to the
             # center of the image.
-            stamp = final.draw(scale=pixel_scale, offset=offset)
+            # We also need to provide the local wcs at the current position.
+            local_wcs = wcs.local(image_pos)
+            stamp = final.draw(wcs=local_wcs, offset=offset)
 
             # Recenter the stamp at the desired position:
             stamp.setCenter(ix_nominal,iy_nominal)
@@ -287,12 +363,17 @@ def main(argv):
             # Also draw the PSF
             psf_final = galsim.Convolve([psf, pix])
             psf_stamp = galsim.ImageF(stamp.bounds) # Use same bounds as galaxy stamp
-            psf_final.draw(psf_stamp, scale=pixel_scale, offset=offset)
+            psf_final.draw(psf_stamp, wcs=local_wcs, offset=offset)
             psf_image[bounds] += psf_stamp[bounds]
 
 
         # Add Poisson noise to the full image
-        sky_level_pixel = sky_level * pixel_scale**2
+        # Note: The normal calculation of Poission noise isn't quite correct right now.
+        # We should have a different sky value in each pixel because the pixel area varies 
+        # across the image.  But we just use the pixel area at the center, which will
+        # underestimate the sky brightness near the edges.  (Well, everywhere really,
+        # but especially near the edges.)
+        sky_level_pixel = sky_level * wcs.pixelArea(im_center)
 
         # Going to the next seed isn't really required, but it matches the behavior of the 
         # config parser, so doing this will result in identical output files.

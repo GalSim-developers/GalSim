@@ -164,7 +164,15 @@ image :
     pixel_scale : { type : Eval , str : 'pixel_scale' }
 
     wcs :
-        # Again, set the origin of the WCS to be the center of the image.
+        # This time, we only want to set the world coordinates to be (0,0) at the center
+        # of the image.  So we again use the origin item in the wcs field.  This will
+        # automatically set up the wcs to be an 'OffsetWCS', which is just a pixel 
+        # scale conversion from pixels to arcsec, along with the origin location.
+        #
+        # The origin keyword is always available for any WCS type and always has the 
+        # effect of defining where on the image the origin should be.  Since the normal
+        # default WCS is PixelScale (which is used whenever no wcs field is present),
+        # adding the origin item turns this into an OffsetWCS.
         origin : center
 
     noise :

@@ -434,9 +434,9 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
         config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'pixel_scale', 'wcs', 'nproc',
+               'sky_level', 'sky_level_pixel',
                'retry_failures', 'n_photons', 'wmult', 'offset', 'gsparams' ]
-    opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 'index_convention' : str,
-            'sky_level' : float , 'sky_level_pixel' : float }
+    opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 'index_convention' : str }
     params = galsim.config.GetAllParams(
         config['image'], 'image', config, opt=opt, ignore=ignore)[0]
 
@@ -466,16 +466,9 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
         # We allow world_pos to be in config[image], but we don't want it to lead to a final_shift
         # in BuildSingleStamp.  The easiest way to do this is to set image_pos to (0,0).
 
-    if 'sky_level' in params and 'sky_level_pixel' in params:
-        raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
-            "noise.type = %s"%type)
-    sky_level_pixel = params.get('sky_level_pixel',None)
-    if 'sky_level' in params:
-        sky_level_pixel = params['sky_level'] * wcs.pixelArea()
-
     return galsim.config.BuildSingleStamp(
             config=config, xsize=xsize, ysize=ysize, obj_num=obj_num,
-            sky_level_pixel=sky_level_pixel, do_noise=True, logger=logger,
+            do_noise=True, logger=logger,
             make_psf_image=make_psf_image, 
             make_weight_image=make_weight_image,
             make_badpix_image=make_badpix_image)
@@ -510,12 +503,12 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'pixel_scale', 'wcs', 'nproc',
+               'sky_level', 'sky_level_pixel' ,
                'retry_failures', 'image_pos', 'n_photons', 'wmult', 'offset', 'gsparams' ]
     req = { 'nx_tiles' : int , 'ny_tiles' : int }
     opt = { 'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
             'border' : int , 'xborder' : int , 'yborder' : int ,
-            'nproc' : int , 'index_convention' : str,
-            'sky_level' : float , 'sky_level_pixel' : float , 'order' : str }
+            'nproc' : int , 'index_convention' : str, 'order' : str }
     params = galsim.config.GetAllParams(
         config['image'], 'image', config, req=req, opt=opt, ignore=ignore)[0]
 
@@ -662,18 +655,10 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
                     func = eval(galsim.config.valid_input_types[key][4])
                     func(input_obj, field, config)
 
-    if 'sky_level' in params and 'sky_level_pixel' in params:
-        raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
-            "noise.type = %s"%type)
-    sky_level_pixel = params.get('sky_level_pixel',None)
-    if 'sky_level' in params:
-        sky_level_pixel = params['sky_level'] * wcs.pixelArea()
-
     stamp_images = galsim.config.BuildStamps(
             nobjects=nobjects, config=config,
             nproc=nproc, logger=logger, obj_num=obj_num,
-            xsize=stamp_xsize, ysize=stamp_ysize,
-            sky_level_pixel=sky_level_pixel, do_noise=do_noise,
+            xsize=stamp_xsize, ysize=stamp_ysize, do_noise=do_noise,
             make_psf_image=make_psf_image,
             make_weight_image=make_weight_image,
             make_badpix_image=make_badpix_image)
@@ -703,6 +688,10 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         if current_vars[k] > max_current_var: max_current_var = current_vars[k]
 
     if not do_noise:
+        sky_level_pixel = galsim.config.stamp._get_sky_level_pixel(
+                config['image'], config, config['image_center'])
+        config['image_pos'] = config['image_center']
+
         if 'noise' in config['image']:
             # If we didn't apply noise in each stamp, then we need to apply it now.
             draw_method = galsim.config.GetCurrentValue(config['image'],'draw_method')
@@ -775,10 +764,10 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'pixel_scale', 'wcs', 'nproc',
                'retry_failures', 'image_pos', 'world_pos', 'n_photons', 'wmult', 'offset',
+               'sky_level', 'sky_level_pixel',
                'stamp_size', 'stamp_xsize', 'stamp_ysize', 'gsparams', 'nobjects' ]
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 
-            'nproc' : int , 'index_convention' : str,
-            'sky_level' : float , 'sky_level_pixel' : float }
+            'nproc' : int , 'index_convention' : str }
     params = galsim.config.GetAllParams(
         config['image'], 'image', config, opt=opt, ignore=ignore)[0]
 
@@ -891,17 +880,9 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
                     func = eval(galsim.config.valid_input_types[key][4])
                     func(input_obj, field, config)
 
-    if 'sky_level' in params and 'sky_level_pixel' in params:
-        raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
-            "noise.type = %s"%type)
-    sky_level_pixel = params.get('sky_level_pixel',None)
-    if 'sky_level' in params:
-        sky_level_pixel = params['sky_level'] * wcs.pixelArea()
-
     stamp_images = galsim.config.BuildStamps(
             nobjects=nobjects, config=config,
-            nproc=nproc, logger=logger,obj_num=obj_num,
-            sky_level_pixel=sky_level_pixel, do_noise=False,
+            nproc=nproc, logger=logger,obj_num=obj_num, do_noise=False,
             make_psf_image=make_psf_image,
             make_weight_image=make_weight_image,
             make_badpix_image=make_badpix_image)
@@ -938,6 +919,14 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
                         full_image.bounds.xmin, full_image.bounds.xmax,
                         full_image.bounds.ymin, full_image.bounds.ymax))
         if current_vars[k] > max_current_var: max_current_var = current_vars[k]
+
+    # TODO: This is not correct when the WCS has a variable pixel area.  Really, 
+    # we want to have sky level vary according to the pixel area, but we don't 
+    # do that currently.  We just take the pixel area at the center of the image.
+    sky_level_pixel = galsim.config.stamp._get_sky_level_pixel(
+            config['image'], config, config['image_center'])
+    # Use this within AddNoise functions when the image_pos is requested.
+    config['image_pos'] = config['image_center']
 
     if 'noise' in config['image']:
         # Apply the noise to the full image
@@ -1028,7 +1017,10 @@ def PowerSpectrumInit(ps, config, base):
     elif 'tile_xsize' in base:
         # Then we have a tiled image.  Can use the tile spacing as the grid spacing.
         stamp_size = min(base['tile_xsize'], base['tile_ysize'])
-        grid_spacing = stamp_size * base['wcs'].maxLinearScale()
+        # Note: we use the (max) pixel scale at the image center.  This isn't 
+        # necessarily optimal, but it seems like the best choice.
+        scale = base['wcs'].maxLinearScale(base['image_center'])
+        grid_spacing = stamp_size * scale
     else:
         raise AttributeError("power_spectrum.grid_spacing required for non-tiled images")
 
@@ -1040,7 +1032,8 @@ def PowerSpectrumInit(ps, config, base):
     else:
         import math
         image_size = max(base['image_xsize'], base['image_ysize'])
-        ngrid = int(math.ceil(image_size * base['wcs'].maxLinearScale() / grid_spacing))
+        scale = base['wcs'].maxLinearScale(base['image_center'])
+        ngrid = int(math.ceil(image_size * scale / grid_spacing))
 
     if 'interpolant' in config:
         interpolant = galsim.config.ParseValue(config, 'interpolant', base, str)[0]
@@ -1049,7 +1042,6 @@ def PowerSpectrumInit(ps, config, base):
 
     # We don't care about the output here.  This just builds the grid, which we'll
     # access for each object using its position.
-    print 'buildGrid with ',grid_spacing, ngrid, None
     world_center = base['wcs'].toWorld(base['image_center'])
     ps.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid, center=world_center,
                  rng=base['rng'], interpolant=interpolant)

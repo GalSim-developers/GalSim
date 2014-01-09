@@ -20,7 +20,7 @@
 import galsim
 
 def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
-                xsize=0, ysize=0, sky_level_pixel=None, do_noise=True,
+                xsize=0, ysize=0, do_noise=True,
                 make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
     Build a number of postage stamp images as specified by the config dict.
@@ -36,7 +36,6 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
     @param ysize               The size of a single stamp in the y direction.
                                (If 0, look for config.image.stamp_ysize, and if that's
                                 not there, use automatic sizing.)
-    @param sky_level_pixel     The background sky level to add to the image (in ADU/pixel).
     @param do_noise            Whether to add noise to the image (according to config['noise']).
     @param make_psf_image      Whether to make psf_image.
     @param make_weight_image   Whether to make weight_image.
@@ -81,7 +80,6 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
     # We'll be adding to this below...
     kwargs = {
         'xsize' : xsize, 'ysize' : ysize, 
-        'sky_level_pixel' : sky_level_pixel,
         'do_noise' : do_noise,
         'make_psf_image' : make_psf_image,
         'make_weight_image' : make_weight_image,
@@ -277,9 +275,22 @@ def RemoveCurrent(config, keep_safe=False):
         else:
             RemoveCurrent(config[key], keep_safe)
 
+def _get_sky_level_pixel(config, base, image_pos):
+    if 'sky_level' in config and 'sky_level_pixel' in config:
+        raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
+            "noise.type = %s"%type)
+    if 'sky_level_pixel' in config:
+        sky_level_pixel = galsim.config.ParseValue(config,'sky_level_pixel',base,float)[0]
+    elif 'sky_level' in config:
+        sky_level = galsim.config.ParseValue(config,'sky_level',base,float)[0]
+        sky_level_pixel = sky_level * base['wcs'].pixelArea(image_pos)
+    else:
+        sky_level_pixel = 0.
+    return sky_level_pixel
+
 
 def BuildSingleStamp(config, xsize=0, ysize=0,
-                     obj_num=0, sky_level_pixel=None, do_noise=True, logger=None,
+                     obj_num=0, do_noise=True, logger=None,
                      make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
     Build a single image using the given config file
@@ -288,7 +299,6 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
     @param xsize               The xsize of the image to build (if known).
     @param ysize               The ysize of the image to build (if known).
     @param obj_num             If given, the current obj_num (default = 0)
-    @param sky_level_pixel     The background sky level to add to the image (in ADU/pixel).
     @param do_noise            Whether to add noise to the image (according to config['noise']).
     @param logger              If given, a logger object to log progress.
     @param make_psf_image      Whether to make psf_image.
@@ -405,6 +415,10 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             else:
                 icenter = None
                 offset = galsim.PositionD(0.,0.)
+                # Set the image_pos to (0,0) in case the wcs needs it.  Probably, if 
+                # there is no image_pos or world_pos defined, then it is unlikely a
+                # non-trivial wcs will have been set.  So anything would actually be fine.
+                config['image_pos'] = galsim.PositionD(0.,0.)
                 if False:
                     logger.debug('obj %d: no offset',obj_num)
 
@@ -447,7 +461,9 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 no_pixel = True
             else:
                 no_pixel = False
-                
+
+            sky_level_pixel = _get_sky_level_pixel(config['image'], config, image_pos)
+
             if skip: 
                 if xsize and ysize:
                     # If the size is set, we need to do something reasonable to return this size.
@@ -461,7 +477,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                     im = galsim.ImageF()
 
                 if make_weight_image:
-                    weight_im = galsim.ImageF(im.bounds, scale=im.scale)
+                    weight_im = galsim.ImageF(im.bounds, wcs=im.wcs)
                     weight_im.setZero()
                 else:
                     weight_im = None
@@ -473,7 +489,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 if icenter:
                     im.setCenter(icenter.x, icenter.y)
                 if make_weight_image:
-                    weight_im = galsim.ImageF(im.bounds, scale=im.scale)
+                    weight_im = galsim.ImageF(im.bounds, wcs=im.wcs)
                     weight_im.setZero()
                 else:
                     weight_im = None
@@ -490,7 +506,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 if icenter:
                     im.setCenter(icenter.x, icenter.y)
                 if make_weight_image:
-                    weight_im = galsim.ImageF(im.bounds, scale=im.scale)
+                    weight_im = galsim.ImageF(im.bounds, wcs=im.wcs)
                     weight_im.setZero()
                 else:
                     weight_im = None
@@ -505,7 +521,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 raise AttributeError("Unknown draw_method %s."%draw_method)
 
             if make_badpix_image:
-                badpix_im = galsim.ImageS(im.bounds, scale=im.scale)
+                badpix_im = galsim.ImageS(im.bounds, wcs=im.wcs)
                 badpix_im.setZero()
             else:
                 badpix_im = None
@@ -602,7 +618,7 @@ def DrawStampFFT(psf, gal, config, xsize, ysize, sky_level_pixel, offset, no_pix
     else:
         im = None
 
-    wcs = config['wcs']
+    wcs = config['wcs'].local(image_pos = config['image_pos'])
     if not no_pixel:
         pix = wcs.toWorld(galsim.Pixel(1.0))
         final = galsim.Convolve(final, pix)
@@ -724,7 +740,7 @@ def AddNoiseFFT(im, weight_im, current_var, noise, base, rng, sky_level_pixel, l
                 "noise.type = %s"%type)
         extra_sky_level_pixel = 0.
         if 'sky_level' in params:
-            extra_sky_level_pixel = params['sky_level'] * im.wcs.pixelArea()
+            extra_sky_level_pixel = params['sky_level'] * im.wcs.pixelArea(base['image_pos'])
         if 'sky_level_pixel' in params:
             extra_sky_level_pixel = params['sky_level_pixel']
         sky_level_pixel += extra_sky_level_pixel
@@ -767,7 +783,7 @@ def AddNoiseFFT(im, weight_im, current_var, noise, base, rng, sky_level_pixel, l
                 "noise.type = %s"%type)
         extra_sky_level_pixel = 0.
         if 'sky_level' in params:
-            extra_sky_level_pixel = params['sky_level'] * im.wcs.pixelArea()
+            extra_sky_level_pixel = params['sky_level'] * im.wcs.pixelArea(base['image_pos'])
         if 'sky_level_pixel' in params:
             extra_sky_level_pixel = params['sky_level_pixel']
         sky_level_pixel += extra_sky_level_pixel
@@ -825,7 +841,7 @@ def AddNoiseFFT(im, weight_im, current_var, noise, base, rng, sky_level_pixel, l
             if cn_var < current_var:
                 raise RuntimeError(
                     "Whitening already added more noise than requested COSMOS noise.")
-            cn -= galsim.UncorrelatedNoise(rng, im.scale, current_var)
+            cn -= galsim.UncorrelatedNoise(rng, im.wcs, current_var)
 
         # Add the noise to the image
         im.addNoise(cn)
@@ -969,7 +985,7 @@ def AddNoisePhot(im, weight_im, current_var, noise, base, rng, sky_level_pixel, 
             raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
                 "noise.type = %s"%type)
         if 'sky_level' in params:
-            sky_level_pixel += params['sky_level'] * base['wcs'].pixelArea()
+            sky_level_pixel += params['sky_level'] * im.wcs.pixelArea(base['image_pos'])
         if 'sky_level_pixel' in params:
             sky_level_pixel += params['sky_level_pixel']
         if current_var:
@@ -1009,7 +1025,7 @@ def AddNoisePhot(im, weight_im, current_var, noise, base, rng, sky_level_pixel, 
             raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
                 "noise.type = %s"%type)
         if 'sky_level' in params:
-            sky_level_pixel += params['sky_level'] * base['wcs'].pixelArea()
+            sky_level_pixel += params['sky_level'] * im.wcs.pixelArea(base['image_pos'])
         if 'sky_level_pixel' in params:
             sky_level_pixel += params['sky_level_pixel']
         gain = params.get('gain',1.0)
@@ -1070,7 +1086,7 @@ def AddNoisePhot(im, weight_im, current_var, noise, base, rng, sky_level_pixel, 
             if cn_var < current_var:
                 raise RuntimeError(
                     "Whitening already added more noise than requested COSMOS noise.")
-            cn -= galsim.UncorrelatedNoise(rng, base['wcs'], current_var)
+            cn -= galsim.UncorrelatedNoise(rng, im.wcs, current_var)
 
         # Add the noise to the image
         im.addNoise(cn)
@@ -1111,7 +1127,7 @@ def DrawPSFStamp(psf, config, bounds, sky_level_pixel, offset, no_pixel):
             logger.debug('obj %d: psf shift (1): %s',config['obj_num'],str(gal_shift))
         psf.applyShift(gal_shift)
 
-    wcs = config['wcs']
+    wcs = config['wcs'].local(config['image_pos'])
     if not no_pixel:
         pix = wcs.toWorld(galsim.Pixel(1.0))
         final_psf = galsim.Convolve(psf, pix, real_space=real_space)
@@ -1180,7 +1196,7 @@ def CalculateNoiseVar(noise, base, sky_level_pixel):
             raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
                 "noise.type = %s"%type)
         if 'sky_level' in params:
-            sky_level_pixel += params['sky_level'] * base['wcs'].pixelArea()
+            sky_level_pixel += params['sky_level'] * base['wcs'].pixelArea(base['image_pos'])
         if 'sky_level_pixel' in params:
             sky_level_pixel += params['sky_level_pixel']
         var = sky_level_pixel
@@ -1199,7 +1215,7 @@ def CalculateNoiseVar(noise, base, sky_level_pixel):
             raise AttributeError("Only one of sky_level and sky_level_pixel is allowed for "
                 "noise.type = %s"%type)
         if 'sky_level' in params:
-            sky_level_pixel += params['sky_level'] * base['wcs'].pixelArea()
+            sky_level_pixel += params['sky_level'] * base['wcs'].pixelArea(base['image_pos'])
         if 'sky_level_pixel' in params:
             sky_level_pixel += params['sky_level_pixel']
         gain = params.get('gain',1.0)

@@ -94,7 +94,6 @@ def RemoveCurrent(config, keep_safe=False, type=None):
         if 'current_seq_index' in config:
             del config['current_seq_index']
             del config['current_value_type']
-            del config['current_value_type']
         return True
     else:
         return force
