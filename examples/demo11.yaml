@@ -168,11 +168,11 @@ image :
 
     pixel_scale : 0.20  # arcsec / pixel
 
-    # Normally, the draw routine accounts for a convolution by the pixel after converting to
-    # image coordinates.  In this case we don't want it to do that, since the psf here is
-    # what is sometimes called an "effective PSF".  It is already the convolution of the 
-    # real PSF with a square pixel.  We can indicate that we don't want the draw routine to 
-    # convolve by a pixel by using draw_method = no_pixel.
+    # Normally, the draw routine accounts for a convolution by the pixel.  In this case we 
+    # we don't want it to do that, since the psf here is what is sometimes called an 
+    # "effective PSF".  It is already the convolution of the real PSF with a square pixel.
+    # We can indicate that we don't want the draw routine to convolve by a pixel by using 
+    # draw_method = no_pixel.
     draw_method : no_pixel
 
     random_seed : 24783923

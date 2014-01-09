@@ -28,6 +28,25 @@ valid_image_types = {
     'Scattered' : ( 'BuildScatteredImage', 'GetNObjForScatteredImage' ),
 }
 
+
+# The only item in the tuple is the name of the WCS class (or build function).
+# We made it a tuple to make it easier to add extra features later.
+valid_wcs_types = { 
+    'PixelScale' : ( 'galsim.PixelScale', ),
+    'Offset' : ( 'galsim.OffsetWCS', ),
+    'Shear' : ( 'galsim.ShearWCS', ),
+    'OffsetShear' : ( 'galsim.OffsetShearWCS', ),
+    'Jacobian' : ( 'galsim.JacobianWCS', ),
+    'AffineTransform' : ( 'galsim.AffineTransform', ),
+    'UVFunction' : ( 'galsim.UVFunction', ),
+    # TODO: Not everything works with the celestial wcs classes.  There are a few places
+    # where we assume that the world coordinates are Euclidean (u,v) coordinates. It needs a 
+    # bit of work to make sure everything is working correctly with celestial coordinates.
+    'RaDecFunction' : ( 'galsim.RaDecFunction', ),
+    'Fits' : ( 'galsim.FitsWCS', ),
+}
+
+
 def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
                 make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
@@ -332,9 +351,9 @@ def _set_image_origin(config, convention):
 
 
 def _read_wcs(config, logger=None):
-    """Read the wcs from the config dict, writing both the it and, if it is well-defined,
-    the pixel_scale to the config.  If the wcs does not have a well-defined pixel_scale, 
-    it will be stored as None.
+    """Read the wcs from the config dict, writing both it and, if it is well-defined, the 
+    pixel_scale to the config.  If the wcs does not have a well-defined pixel_scale, it will 
+    be stored as None.
     """
     image = config['image']
 
@@ -344,7 +363,7 @@ def _read_wcs(config, logger=None):
         if 'type' in image_wcs:
             type = image_wcs['type']
         elif 'origin' in image_wcs:
-            type = 'OffsetWCS'
+            type = 'Offset'
         else:
             type = 'PixelScale'
 
@@ -359,38 +378,38 @@ def _read_wcs(config, logger=None):
                 logger.debug('image %d: Using origin = %s',config['image_num'],str(origin))
             image_wcs['origin'] = origin
 
-        if type + 'WCS' in galsim.__dict__:
-            cls = eval("galsim."+type+"WCS")
-        elif type in galsim.__dict__:
-            cls = eval("galsim."+type)
-        else:
-            cls = eval(type)
-        if logger:
-            logger.debug('image %d: Build WCS for type = %s',config['image_num'],type)
-            logger.debug('image %d: WCS class = %s',config['image_num'],str(cls))
+        if type not in valid_wcs_types:
+            raise AttributeError("Invalid image.wcs.type=%s."%type)
 
-        req = cls._req_params
-        opt = cls._opt_params
-        single = cls._single_params
+        build_func = eval(valid_wcs_types[type][0])
+
+        if logger:
+            logger.debug('image %d: Build WCS for type = %s using %s',
+                         config['image_num'],type,str(build_func))
+
+        req = build_func._req_params
+        opt = build_func._opt_params
+        single = build_func._single_params
 
         # Pull in the image layer pixel_scale as a scale item if necessary.
-        if ('scale' in req or 'scale' in opt) and 'scale' not in image_wcs:
+        if ( ('scale' in req or 'scale' in opt) and 'scale' not in image_wcs and 
+             'pixel_scale' in image ):
             image_wcs['scale'] = image['pixel_scale']
 
         kwargs, safe = galsim.config.GetAllParams(image_wcs, type, config, req, opt, single)
 
-        if logger and cls._takes_logger: 
+        if logger and build_func._takes_logger: 
             kwargs['logger'] = logger
 
         # This would be weird, but might as well check...
-        if cls._takes_rng:
+        if build_func._takes_rng:
             if 'rng' not in config:
                 raise ValueError("No config['rng'] available for %s.type = %s"%(key,type))
             kwargs['rng'] = config['rng']
 
         if logger:
             logger.debug('image %d: kwargs = %s',config['image_num'],str(kwargs))
-        wcs = cls(**kwargs) 
+        wcs = build_func(**kwargs) 
 
     else:
         # Default if no wcs is to use PixelScale
