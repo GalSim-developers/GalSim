@@ -34,37 +34,37 @@
 namespace galsim {
 
 
-    SBBox::SBBox(double xw, double yw, double flux, const GSParamsPtr& gsparams) :
-        SBProfile(new SBBoxImpl(xw,yw,flux,gsparams)) {}
+    SBBox::SBBox(double width, double height, double flux, const GSParamsPtr& gsparams) :
+        SBProfile(new SBBoxImpl(width,height,flux,gsparams)) {}
 
     SBBox::SBBox(const SBBox& rhs) : SBProfile(rhs) {}
 
     SBBox::~SBBox() {}
 
-    double SBBox::getXWidth() const 
+    double SBBox::getWidth() const 
     {
         assert(dynamic_cast<const SBBoxImpl*>(_pimpl.get()));
-        return static_cast<const SBBoxImpl&>(*_pimpl).getXWidth(); 
+        return static_cast<const SBBoxImpl&>(*_pimpl).getWidth(); 
     }
 
-    double SBBox::getYWidth() const 
+    double SBBox::getHeight() const 
     {
         assert(dynamic_cast<const SBBoxImpl*>(_pimpl.get()));
-        return static_cast<const SBBoxImpl&>(*_pimpl).getYWidth(); 
+        return static_cast<const SBBoxImpl&>(*_pimpl).getHeight(); 
     }
 
-    SBBox::SBBoxImpl::SBBoxImpl(double xw, double yw, double flux,
+    SBBox::SBBoxImpl::SBBoxImpl(double width, double height, double flux,
                                 const GSParamsPtr& gsparams) :
-        SBProfileImpl(gsparams), _xw(xw), _yw(yw), _flux(flux)
+        SBProfileImpl(gsparams), _width(width), _height(height), _flux(flux)
     {
-        if (_yw==0.) _yw=_xw;
-        _norm = _flux / (_xw * _yw);
+        if (_height==0.) _height=_width;
+        _norm = _flux / (_width * _height);
     }
 
 
     double SBBox::SBBoxImpl::xValue(const Position<double>& p) const 
     {
-        if (fabs(p.x) < 0.5*_xw && fabs(p.y) < 0.5*_yw) return _norm;
+        if (fabs(p.x) < 0.5*_width && fabs(p.y) < 0.5*_height) return _norm;
         else return 0.;  // do not use this function for filling image!
     }
 
@@ -78,7 +78,7 @@ namespace galsim {
 
     std::complex<double> SBBox::SBBoxImpl::kValue(const Position<double>& k) const
     {
-        return _flux * sinc(0.5*k.x*_xw)*sinc(0.5*k.y*_yw);
+        return _flux * sinc(0.5*k.x*_width)*sinc(0.5*k.y*_height);
     }
 
     void SBBox::SBBoxImpl::fillXValue(tmv::MatrixView<double> val,
@@ -110,17 +110,17 @@ namespace galsim {
         
         // It will be useful to do everything in units of dx,dy
         x0 /= dx;
-        double xw = _xw / dx;
+        double width = _width / dx;
         y0 /= dy;
-        double yw = _yw / dy;
+        double height = _height / dy;
         xdbg<<"x0,y0 -> "<<x0<<','<<y0<<std::endl;
-        xdbg<<"xw,yw -> "<<xw<<','<<yw<<std::endl;
+        xdbg<<"width,height -> "<<width<<','<<height<<std::endl;
 
         int ix_left, ix_right, iy_bottom, iy_top;
         double x_left, x_right, y_bottom, y_top;
 
         // Find the x edges:
-        double tmp = 0.5*xw + 0.5;
+        double tmp = 0.5*width + 0.5;
         ix_left = int(-tmp-x0+1);
         ix_right = int(tmp-x0);
 
@@ -142,7 +142,7 @@ namespace galsim {
         xdbg<<"ix_right = "<<ix_right<<" with partial flux "<<x_right<<std::endl;
         
         // Repeat for y values
-        tmp = 0.5*yw + 0.5;
+        tmp = 0.5*height + 0.5;
         iy_bottom = int(-tmp-y0+1);
         iy_top = int(tmp-y0);
 
@@ -203,13 +203,13 @@ namespace galsim {
             const int n = val.rowsize();
             typedef tmv::VIt<double,1,tmv::NonConj> It;
 
-            x0 *= 0.5*_xw;
-            dx *= 0.5*_xw;
-            y0 *= 0.5*_yw;
-            dy *= 0.5*_yw;
+            x0 *= 0.5*_width;
+            dx *= 0.5*_width;
+            y0 *= 0.5*_height;
+            dy *= 0.5*_height;
 
             // The Box profile in Fourier space is separable:
-            //    val = _flux * sinc(0.5 * x * _yw) * sinc(0.5 * y * _yw) 
+            //    val = _flux * sinc(0.5 * x * _height) * sinc(0.5 * y * _height) 
             tmv::Vector<double> sinc_x(m);
             It xit = sinc_x.begin();
             for (int i=0;i<m;++i,x0+=dx) *xit++ = sinc(x0);
@@ -250,12 +250,12 @@ namespace galsim {
         const int n = val.rowsize();
         typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
 
-        x0 *= 0.5*_xw;
-        dx *= 0.5*_xw;
-        dxy *= 0.5*_xw;
-        y0 *= 0.5*_yw;
-        dy *= 0.5*_yw;
-        dyx *= 0.5*_yw;
+        x0 *= 0.5*_width;
+        dx *= 0.5*_width;
+        dxy *= 0.5*_width;
+        y0 *= 0.5*_height;
+        dy *= 0.5*_height;
+        dyx *= 0.5*_height;
 
         It valit(val.linearView().begin().getP(),1);
         for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
@@ -269,15 +269,15 @@ namespace galsim {
     // Set maxK to the value where the FT is down to maxk_threshold
     double SBBox::SBBoxImpl::maxK() const 
     { 
-        return 2. / (this->gsparams->maxk_threshold * std::min(_xw,_yw));
+        return 2. / (this->gsparams->maxk_threshold * std::min(_width,_height));
     }
 
     // The amount of flux missed in a circle of radius pi/stepk should be at 
     // most alias_threshold of the flux.
     double SBBox::SBBoxImpl::stepK() const
     {
-        // In this case max(xw,yw) encloses all the flux, so use that.
-        return M_PI / std::max(_xw,_yw);
+        // In this case max(width,height) encloses all the flux, so use that.
+        return M_PI / std::max(_width,_height);
     }
 
     boost::shared_ptr<PhotonArray> SBBox::SBBoxImpl::shoot(int N, UniformDeviate u) const
@@ -286,7 +286,7 @@ namespace galsim {
         dbg<<"Target flux = "<<getFlux()<<std::endl;
         boost::shared_ptr<PhotonArray> result(new PhotonArray(N));
         for (int i=0; i<result->size(); i++)
-            result->setPhoton(i, _xw*(u()-0.5), _yw*(u()-0.5), _flux/N);
+            result->setPhoton(i, _width*(u()-0.5), _height*(u()-0.5), _flux/N);
         dbg<<"Box Realized flux = "<<result->getTotalFlux()<<std::endl;
         return result;
     }

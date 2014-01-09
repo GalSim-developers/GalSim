@@ -1112,7 +1112,7 @@ def test_box():
     """
     import time
     t1 = time.time()
-    mySBP = galsim.SBBox(xw=1, yw=1, flux=1)
+    mySBP = galsim.SBBox(1, 1, flux=1)
     savedImg = galsim.fits.read(os.path.join(imgdir, "box_1.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)

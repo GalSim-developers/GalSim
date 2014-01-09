@@ -1577,7 +1577,7 @@ class Pixel(GSObject):
 
     # --- Public Class methods ---
     def __init__(self, scale, flux=1., gsparams=None):
-        GSObject.__init__(self, galsim.SBBox(xw=scale, yw=scale, flux=flux, gsparams=gsparams))
+        GSObject.__init__(self, galsim.SBBox(scale, scale, flux=flux, gsparams=gsparams))
 
     def getScale(self):
         """Return the pixel scale
@@ -1622,7 +1622,7 @@ class Box(GSObject):
     def __init__(self, width, height, flux=1., gsparams=None):
         width = float(width)
         height = float(height)
-        GSObject.__init__(self, galsim.SBBox(xw=width, yw=height, flux=flux, gsparams=gsparams))
+        GSObject.__init__(self, galsim.SBBox(width, height, flux=flux, gsparams=gsparams))
 
     def getWidth(self):
         """Return the width of the pixel in the x dimension.

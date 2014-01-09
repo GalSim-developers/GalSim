@@ -33,7 +33,7 @@ namespace galsim {
      * @brief Surface Brightness Profile for the Boxcar function.
      *
      * The boxcar function is a rectangular box.  Convolution with a Boxcar function of dimensions
-     * `xw` x `yw` and sampling at pixel centres is equivalent to pixelation (i.e. Surface
+     * `width` x `height` and sampling at pixel centres is equivalent to pixelation (i.e. Surface
      * Brightness integration) across rectangular pixels of the same dimensions.  This class is
      * therefore useful for pixelating SBProfiles.
      */ 
@@ -43,13 +43,13 @@ namespace galsim {
         /** 
          * @brief Constructor.
          *
-         * @param[in] xw       width of Boxcar function along x.
-         * @param[in] yw       width of Boxcar function along y.
+         * @param[in] width    width of Boxcar function along x.
+         * @param[in] height   height of Boxcar function along y.
          * @param[in] flux     flux.
          * @param[in] gsparams GSParams object storing constants that control the accuracy of image
          *                     operations and rendering, if different from the default.
          */
-        SBBox(double xw, double yw, double flux, const GSParamsPtr& gsparams);
+        SBBox(double width, double height, double flux, const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor.
         SBBox(const SBBox& rhs);
@@ -58,10 +58,10 @@ namespace galsim {
         ~SBBox();
 
         /// @brief Returns the x dimension width of the Boxcar.
-        double getXWidth() const;
+        double getWidth() const;
 
         /// @brief Returns the y dimension width of the Boxcar.
-        double getYWidth() const;
+        double getHeight() const;
 
     protected:
 

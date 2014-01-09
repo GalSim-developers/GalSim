@@ -70,7 +70,7 @@ def test_convolve():
     mySBP = galsim.SBMoffat(beta=1.5, fwhm=fwhm_backwards_compatible, 
                             trunc=4*fwhm_backwards_compatible, flux=1)
     dx = 0.2
-    mySBP2 = galsim.SBBox(xw=dx, yw=dx, flux=1.)
+    mySBP2 = galsim.SBBox(dx, dx, flux=1.)
     myConv = galsim.SBConvolve([mySBP,mySBP2])
     # Using an exact Maple calculation for the comparison.  Only accurate to 4 decimal places.
     savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_pixel.fits"))
@@ -204,7 +204,7 @@ def test_shearconvolve():
     mySBP = galsim.SBGaussian(flux=1, sigma=1)
     mySBP.applyShear(myShear._shear)
     dx = 0.2
-    mySBP2 = galsim.SBBox(xw=dx, yw=dx, flux=1.)
+    mySBP2 = galsim.SBBox(dx, dx, flux=1.)
     myConv = galsim.SBConvolve([mySBP,mySBP2])
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear_convolve_box.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
@@ -277,7 +277,7 @@ def test_realspace_convolve():
     psf = galsim.SBMoffat(beta=1.5, half_light_radius=1,
                           trunc=4*fwhm_backwards_compatible, flux=1)
     dx = 0.2
-    pixel = galsim.SBBox(xw=dx, yw=dx, flux=1.)
+    pixel = galsim.SBBox(dx, dx, flux=1.)
     conv = galsim.SBConvolve([psf,pixel],real_space=True)
     # Note: Using an image created from Maple "exact" calculations.
     saved_img = galsim.fits.read(os.path.join(imgdir, "moffat_pixel.fits"))
@@ -354,7 +354,7 @@ def test_realspace_distorted_convolve():
     psf.applyShear(galsim.Shear(g1=0.11,g2=0.17)._shear)
     psf.applyRotation(13 * galsim.degrees)
     dx = 0.2
-    pixel = galsim.SBBox(xw=dx, yw=dx, flux=1.)
+    pixel = galsim.SBBox(dx, dx, flux=1.)
     pixel.applyShear(galsim.Shear(g1=0.2,g2=0.0)._shear)
     pixel.applyRotation(80 * galsim.degrees)
     pixel.applyShift(0.13,0.27)
@@ -432,7 +432,7 @@ def test_realspace_shearconvolve():
     myShear = galsim.Shear(e1=e1, e2=e2)
     psf.applyShear(myShear._shear)
     dx = 0.2
-    pix = galsim.SBBox(xw=dx, yw=dx, flux=1.)
+    pix = galsim.SBBox(dx, dx, flux=1.)
     conv = galsim.SBConvolve([psf,pix],real_space=True)
     saved_img = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear_convolve_box.fits"))
     img = galsim.ImageF(saved_img.bounds, scale=dx)
